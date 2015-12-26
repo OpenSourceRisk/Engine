@@ -1,0 +1,2 @@
+# configure gcc, no open mp support
+./configure CXXFLAGS="-O2 -g -Wall -Wno-unused-local-typedefs -Wno-unknown-pragmas -Wno-deprecated-declarations -L/home/peter/quaternion/dev/muparser-2.2.5/lib" LIBS="-lntl -lgmp -lm -lboost_timer -lboost_chrono -lboost_system" --with-ql-include=/home/peter/quaternion/dev/quantapp/QuantLib --with-ql-lib=/home/peter/quaternion/dev/quantapp/QuantLib/ql/.libs --with-mu-include=/home/peter/quaternion/dev/muparser-2.2.5/include --with-mu-lib=/home/peter/quaternion/dev/muparser-2.2.5/lib
