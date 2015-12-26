@@ -191,6 +191,7 @@ AC_CONFIG_FILES([
     qle/processes/Makefile
     qle/termstructures/Makefile
     qle/quotes/Makefile
+    m4/Makefile
     test/Makefile])
 AC_OUTPUT
 
