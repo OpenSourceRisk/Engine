@@ -30,131 +30,46 @@ namespace QuantExt {
 
 class Parametrization {
   public:
-    enum Model {
-        IR_LGM1F,
-        FXEQD_BS,
-        INF_JY,
-        INF_DK,
-        CRD_LGM1F,
-        CRD_BK,
-        CRD_CIR,
-        CRD_PK,
-        COM_GB
-    };
+    Parametrization(const Currency &currency);
     /*! interface */
-    virtual Model class() const = 0;
-    virtual Currency currency() const = 0; 
-    virtual Size size() const = 0;
-    virtual std::vector<Size> sectionStarts() const = 0;
-    virtual Array& times() const;
+    virtual const Currency currency() const;
+    virtual Size parameterSize(const Size) const;
+    virtual const Array &parameterTimes(const Size) const;
+
+  protected:
+    // this method should be called when input parameters
+    // linked via references or pointers change in order
+    // to ensure consistent results
+    virtual void update() const;
+    // step size for numerical differentiation
+    const Real h_, h2_;
+    // adjusted central difference scheme
+    const Time tr(const Time t) const;
+    const Time tl(const Time t) const;
+    const Time tr2(const Time t) const;
+    const Time tl2(const Time t) const;
+
+  private:
+    Currency currency_;
 };
 
-class IrLgm1fParametrization : Parametrization {
-  public:
-    /*! interface */
-    virtual Real zeta(const Time t) const = 0;
-    virtual Real H(const Time t) const = 0;
-    /*! inspectors */
-    virtual Real alpha(const Time t) const;
-    virtual Real Hprime(const Time t) const;
-    virtual Real Hprime2(const Time t) const;
-    virtual Real hullWhiteSigma(Time t) const;
-    virtual Real hullWhiteKappa(Time t) const;
-    /*! Parametrization interface implementation */
-    Size factors() const { return 1; }
-};
+// inline
 
-class FxEquityBsParametrization : Parametrization {
-  public:
-    /*! interface */
-    virtual Real variance(const Time t) const = 0;
-    /*! inspectors */
-    virtual Real sigma(const Time t) const;
-    virtual Real stdDevitation(const Time t) const;
-    /*! Parametrization interface implementation */
-    Size factors() const { return 1; }
-};
+inline Parametrization::tr(const Time t) const {
+    return t > 0.5 * h_ ? t + 0.5 * h_ : h_;
+}
 
-class InflationJYParametrization : Parametrization {
-  public:
-    InflationJYParametrization(
-        const boost::shared_ptr<IrLgm1fParametrization> nominal,
-        const boost::shared_ptr<IrLgm1fParametrization> real,
-        const boost::shared_ptr<FxEquityBsParametrization> inflIndex);
-    virtual Real rho_n_r(const Time t) const = 0;
-    virtual Real rho_n_i(const Time t) const = 0;
-    virtual Real rho_r_i(const Time t) const = 0;
-    /*! Parametrization interface implementation */
-    Size factors() const { return 2; }
-};
+inline Parametrization::tl(const Time t) const {
+    return std::max(t - 0.5 * h_, 0.0);
+}
 
-/*! do we need this explicitly or is the JY parametrization enough ? */
-// class InflationDKParametrization : Parametrization {
-//   public:
-//     /*! interface */
-//     virtual Real zeta_i(const Time t) const = 0;
-//     virtual Real H_i(const Time t) const = 0;
-//     virtual Real zeta_n(const Time t) const = 0;
-//     virtual Real H_n(const Time t) const = 0;
-//     virtual Real rho_n_i(const Time t) const = 0;
-//     /*! inspectors */
-//     virtual Real alpha_i(const Time t) const;
-//     virtual Real Hprime_i(const Time t) const;
-//     virtual Real Hprime2_i(const Time t) const;
-//     virtual Real alpha_n(const Time t) const;
-//     virtual Real Hprime_n(const Time t) const;
-//     virtual Real Hprime2_n(const Time t) const;
-//     /*! Parametrization interface implementation */
-//     Size factors() const { return 2; }
-// };
+inline Parametrization::tr2(const Time t) const {
+    return t > h2_ ? t + h2_ : h2_;
+}
 
-class CreditLgm1fParametrization : Parametrization {
-  public:
-    /*! interface */
-    virtual Real zeta(const Time t) const = 0;
-    virtual Real H(const Time t) const = 0;
-    /*! inspectors */
-    virtual Real alpha(const Time t) const;
-    virtual Real Hprime(const Time t) const;
-    virtual Real Hprime2(const Time t) const;
-    virtual Real hullWhiteSigma(Time t) const;
-    virtual Real hullWhiteKappa(Time t) const;
-    /*! Parametrization interface implementation */
-    Size factors() const { return 1; }
-};
-
-class CreditCirParametrization : Parametrization {
-  public:
-    /*! interface */
-    virtual Real a(const Time t) const = 0;
-    virtual Real sigma(const Time t) const = 0;
-    virtual Real theta(const Time t) const = 0;
-    /*! Parametrization interface implementation */
-    Size factors() const { return 1; }
-};
-
-class CreditBKParametrization : Parametrization {
-  public:
-    /*! interface */
-    virtual Real a(const Time t) const = 0;
-    virtual Real sigma(const Time t) const = 0;
-    /*! Parametrization interface implementation */
-    Size factors() const { return 1; }
-};
-
-/*! we leave this for later implementation */
-class CreditPKParametrization : Parametrization {};
-
-class ComGabillonParametrization : Parametrization {
-    /*! interface */
-    virtual Real g(const Time t) const = 0;
-    virtual Real sigma_s(const Time t) const = 0;
-    virtual Real sigma_l(const Time t) const = 0;
-    virtual Real rho_s_l(const Time t) const = 0;
-    virtual Real kappa(const Time t) const = 0;
-    /*! Parametrization interface implementation */
-    Size factors() const { return 2; }
-};
+inline Parametrization::tl2(const Time t) const {
+    return std::max(t - h2_, 0.0);
+}
 
 } // namespace QuantExt
 
