@@ -1,7 +1,7 @@
 /* -*- mode: c++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 
 /*
-  Copyright (C) 2016 ...
+  Copyright (C) 2016 Quaternion Risk Management
 */
 
 /*! \file testsuite.cpp
@@ -54,9 +54,9 @@ test_suite* init_unit_test_suite(int, char* []) {
   std::string header = "Testing the extension library";
   std::string rule = string(header.length(),'=');
 
-  BOOST_MESSAGE(rule);
-  BOOST_MESSAGE(header);
-  BOOST_MESSAGE(rule);
+  BOOST_TEST_MESSAGE(rule);
+  BOOST_TEST_MESSAGE(header);
+  BOOST_TEST_MESSAGE(rule);
 
   test_suite* test = BOOST_TEST_SUITE("QuantExtTestSuite");
   
