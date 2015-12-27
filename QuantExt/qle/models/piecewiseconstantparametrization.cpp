@@ -40,7 +40,7 @@ PiecewiseConstantParametrization::PiecewiseConstantParametrization(
     if (t2_.size() == 0 && y2_.size() == 0) {
         compute2_ = false;
     } else {
-        compute1_ = true;
+        compute2_ = true;
         QL_REQUIRE(t2_.size() + 1 == y2_.size(),
                    "t2 size (" << t2_.size() << ") + 1 = " << t2_.size() + 1
                                << " must be equal to y size (" << y2_.size()
