@@ -29,7 +29,7 @@ const Currency Parametrization::currency() const { return currency_; }
 Size Parametrization::parameterSize(const Size) const { return 0; }
 
 const Array &Parametrization::parameterTimes(const Size) const {
-    return Array();
+    return emptyTimes_;
 }
 
 } // namespace QuantExt

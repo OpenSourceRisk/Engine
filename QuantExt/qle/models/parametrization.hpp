@@ -54,6 +54,7 @@ class Parametrization {
 
   private:
     Currency currency_;
+    Array emptyTimes_;
 };
 
 // inline
