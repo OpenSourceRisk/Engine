@@ -24,7 +24,10 @@
 #ifndef quantext_model_parametrization_hpp
 #define quantext_model_parametrization_hpp
 
-#include <ql/qldefines.hpp>
+#include <ql/currency.hpp>
+#include <ql/math/array.hpp>
+
+using namespace QuantLib;
 
 namespace QuantExt {
 
@@ -44,10 +47,10 @@ class Parametrization {
     // step size for numerical differentiation
     const Real h_, h2_;
     // adjusted central difference scheme
-    const Time tr(const Time t) const;
-    const Time tl(const Time t) const;
-    const Time tr2(const Time t) const;
-    const Time tl2(const Time t) const;
+    Time tr(const Time t) const;
+    Time tl(const Time t) const;
+    Time tr2(const Time t) const;
+    Time tl2(const Time t) const;
 
   private:
     Currency currency_;
@@ -55,19 +58,21 @@ class Parametrization {
 
 // inline
 
-inline Parametrization::tr(const Time t) const {
+inline void Parametrization::update() const {}
+
+inline Time Parametrization::tr(const Time t) const {
     return t > 0.5 * h_ ? t + 0.5 * h_ : h_;
 }
 
-inline Parametrization::tl(const Time t) const {
+inline Time Parametrization::tl(const Time t) const {
     return std::max(t - 0.5 * h_, 0.0);
 }
 
-inline Parametrization::tr2(const Time t) const {
+inline Time Parametrization::tr2(const Time t) const {
     return t > h2_ ? t + h2_ : h2_;
 }
 
-inline Parametrization::tl2(const Time t) const {
+inline Time Parametrization::tl2(const Time t) const {
     return std::max(t - h2_, 0.0);
 }
 

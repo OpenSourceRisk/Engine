@@ -17,17 +17,19 @@
  FOR A PARTICULAR PURPOSE.  See the license for more details.
 */
 
-#include <qle/parametrization.hpp>
+#include <qle/models/parametrization.hpp>
 
 namespace QuantExt {
 
 Parametrization::Parametrization(const Currency &currency)
-    : currency_(currency), h_(1.0E-8), h_(1.0E-4) {}
+    : h_(1.0E-8), h2_(1.0E-4), currency_(currency) {}
 
-const Currency Parametrization::currency() { return currency_; }
+const Currency Parametrization::currency() const { return currency_; }
 
-Size Parametrization::parameterSize(const Size) { return 0; }
+Size Parametrization::parameterSize(const Size) const { return 0; }
 
-const Array &Parameterization::parameterTimes(const Size) { return Array(); }
+const Array &Parametrization::parameterTimes(const Size) const {
+    return Array();
+}
 
 } // namespace QuantExt

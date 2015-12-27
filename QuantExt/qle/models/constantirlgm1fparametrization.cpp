@@ -17,14 +17,14 @@
  FOR A PARTICULAR PURPOSE.  See the license for more details.
 */
 
-#include <qle/models/constantmodelparametrizations.hpp>
+#include <qle/models/constantirlgm1fparametrization.hpp>
 
 namespace QuantExt {
 
-IrLgm1fConstantParametrization::IrLgm1fParametrization(
-    const Handle<YieldTermStructure> &termStructure, const Real alpha,
-    const Real kappa)
-    : termStructure_(termStructure), alpha_(alpha), kappa_(kappa),
-      zeroKappaCutoff_(1.0E-6) {}
+IrLgm1fConstantParametrization::IrLgm1fConstantParametrization(
+    const Currency &currency, const Handle<YieldTermStructure> &termStructure,
+    const Real alpha, const Real kappa)
+    : IrLgm1fParametrization(currency), termStructure_(termStructure),
+      alpha_(alpha), kappa_(kappa), zeroKappaCutoff_(1.0E-6) {}
 
 } // namespace QuantExt

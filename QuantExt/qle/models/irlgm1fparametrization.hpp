@@ -25,11 +25,14 @@
 #define quantext_irlgm1f_parametrization_hpp
 
 #include <qle/models/parametrization.hpp>
+#include <ql/handle.hpp>
+#include <ql/termstructures/yieldtermstructure.hpp>
 
 namespace QuantExt {
 
 class IrLgm1fParametrization : Parametrization {
   public:
+    IrLgm1fParametrization(const Currency &currency);
     /*! interface */
     virtual Handle<YieldTermStructure> termStructure() const = 0;
     virtual Real zeta(const Time t) const = 0;
@@ -63,6 +66,7 @@ inline Real IrLgm1fParametrization::hullWhiteSigma(const Time t) const {
 inline Real IrLgm1fParametrization::hullWhiteA(const Time t) const {
     return -Hprime2(t) / Hprime(t);
 }
-} namespace QuantExt
+
+} // namespace QuantExt
 
 #endif

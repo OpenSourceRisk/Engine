@@ -30,8 +30,10 @@ namespace QuantExt {
 
 class IrLgm1fConstantParametrization : IrLgm1fParametrization {
   public:
-    IrLgm1fParametrization(const Handle<YieldTermStructure> &termStructure,
-                           const Real alpha, const Real kappa);
+    IrLgm1fConstantParametrization(
+        const Currency &currency,
+        const Handle<YieldTermStructure> &termStructure, const Real alpha,
+        const Real kappa);
     Handle<YieldTermStructure> termStructure() const;
     Real zeta(const Time t) const;
     Real H(const Time t) const;
@@ -50,33 +52,34 @@ class IrLgm1fConstantParametrization : IrLgm1fParametrization {
 
 // inline
 
-inline Handle<YieldTermStructure> termStructure() const {
+inline Handle<YieldTermStructure>
+IrLgm1fConstantParametrization::termStructure() const {
     return termStructure_;
 }
 
-inline Real IrLgmConstantParametrization::zeta(const Time t) const {
+inline Real IrLgm1fConstantParametrization::zeta(const Time t) const {
     return alpha_ * alpha_ * t;
 }
 
-inline Real IrLgmConstantParametrization::H(const Time t) const {
+inline Real IrLgm1fConstantParametrization::H(const Time t) const {
     if (std::fabs(kappa_) < zeroKappaCutoff_) {
         return t;
     } else {
-        (1.0 - std::exp(-kappa_ * t)) / kappa_;
+        return (1.0 - std::exp(-kappa_ * t)) / kappa_;
     }
 }
 
-inline Real alpha(const Time t) const { return alpha_; }
-
-inline Real Hprime(const Time t) const { return std::exp(-kappa_ * t); }
-
-inline Real Hprime2(const Time t) const {
-    return -kappa_ * std::exp(-kappa_ * t);
+inline Real IrLgm1fConstantParametrization::alpha(const Time t) const {
+    return alpha_;
 }
 
-Real hullWhiteSigma(Time t) const { return Hprime(t) * alpha(t); }
+inline Real IrLgm1fConstantParametrization::Hprime(const Time t) const {
+    return std::exp(-kappa_ * t);
+}
 
-Real hullWhiteKappa(Time t) const { return -Hprime2(t) / Hprime(t); }
+inline Real IrLgm1fConstantParametrization::Hprime2(const Time t) const {
+    return -kappa_ * std::exp(-kappa_ * t);
+}
 
 } // namespace QuantExt
 
