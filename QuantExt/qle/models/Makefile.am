@@ -7,19 +7,23 @@ SUBDIRS =
 noinst_LTLIBRARIES = libModels.la
 
 libModels_la_SOURCES = \
-	constantirlgm1fparametrization.cpp \
+	irlgm1fconstantparametrization.cpp \
 	irlgm1fparametrization.cpp \
+	irlgm1fpiecewiseconstanthullwhiteadaptor.cpp \
+	irlgm1fpiecewiseconstantparametrization.cpp \
 	parametrization.cpp \
 	piecewiseconstanthelper.cpp
 
 this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \
 	all.hpp \
-	constantirlgm1fparametrization.hpp \
 	crdhwparametrization.hpp \
 	eqbsparametrization.hpp \
 	fxbsparametrization.hpp \
 	infjyparametrization.hpp \
+	irlgm1fconstantparametrization.hpp \
+	irlgm1fpiecewiseconstanthullwhiteadaptor.hpp \
+	irlgm1fpiecewiseconstantparametrization.hpp \
 	irlgm1fparametrization.hpp \
 	parametrization.hpp \
 	piecewiseconstanthelper.hpp \
