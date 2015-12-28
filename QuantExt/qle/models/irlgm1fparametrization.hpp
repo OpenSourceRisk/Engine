@@ -30,7 +30,7 @@
 
 namespace QuantExt {
 
-class IrLgm1fParametrization : Parametrization {
+class IrLgm1fParametrization : public Parametrization {
   public:
     IrLgm1fParametrization(const Currency &currency);
     /*! interface */
@@ -39,10 +39,10 @@ class IrLgm1fParametrization : Parametrization {
     virtual Real H(const Time t) const = 0;
     /*! inspectors */
     virtual Real alpha(const Time t) const;
+    virtual Real kappa(const Time t) const;
     virtual Real Hprime(const Time t) const;
     virtual Real Hprime2(const Time t) const;
-    Real hullWhiteSigma(const Time t) const;
-    Real hullWhiteA(const Time t) const;
+    virtual Real hullWhiteSigma(const Time t) const;
 };
 
 // inline
@@ -56,14 +56,14 @@ inline Real IrLgm1fParametrization::Hprime(const Time t) const {
 }
 
 inline Real IrLgm1fParametrization::Hprime2(const Time t) const {
-    return (H(tr2(t)) - 2.0 * H(t) + H(tl2(t))) / (h2_ * h2_);
+    return (H(tr2(t)) - 2.0 * H(tm2(t)) + H(tl2(t))) / (h2_ * h2_);
 }
 
 inline Real IrLgm1fParametrization::hullWhiteSigma(const Time t) const {
     return Hprime(t) * alpha(t);
 }
 
-inline Real IrLgm1fParametrization::hullWhiteA(const Time t) const {
+inline Real IrLgm1fParametrization::kappa(const Time t) const {
     return -Hprime2(t) / Hprime(t);
 }
 
