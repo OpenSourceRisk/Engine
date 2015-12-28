@@ -21,12 +21,29 @@
 
 namespace QuantExt {
 
+namespace {
+void checkTimes(const Array &t) {
+    if (t.size() == 0)
+        return;
+    QL_REQUIRE(t.front() > 0.0, "first time (" << t.front()
+                                               << ") must be positive");
+    for (Size i = 0; i < t.size() - 1; ++i) {
+        QL_REQUIRE(t[i] < t[i + 1],
+                   "times must be strictly increasing, entries at ("
+                       << i << "," << i + 1 << ") are (" << t[i] << ","
+                       << t[i + 1]);
+    }
+}
+}
+
 PiecewiseConstantHelper1::PiecewiseConstantHelper1(const Array &t,
                                                    const Array &y)
     : t_(t), y_(y) {
     QL_REQUIRE(t_.size() + 1 == y_.size(),
                "t1 size (" << t_.size() << ") + 1 = " << t_.size() + 1
-                           << " must be equal to y1 size (" << y_.size());
+                           << " must be equal to y1 size (" << y_.size()
+                           << ")");
+    checkTimes(t);
     update();
 }
 
@@ -37,6 +54,7 @@ PiecewiseConstantHelper2::PiecewiseConstantHelper2(const Array &t,
                "t1 size (" << t_.size() << ") + 1 = " << t_.size() + 1
                            << " must be equal to y1 size (" << y_.size()
                            << ")");
+    checkTimes(t);
     update();
 }
 
