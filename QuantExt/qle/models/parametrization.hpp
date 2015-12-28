@@ -50,6 +50,7 @@ class Parametrization {
     Time tr(const Time t) const;
     Time tl(const Time t) const;
     Time tr2(const Time t) const;
+    Time tm2(const Time t) const;
     Time tl2(const Time t) const;
 
   private:
@@ -70,7 +71,11 @@ inline Time Parametrization::tl(const Time t) const {
 }
 
 inline Time Parametrization::tr2(const Time t) const {
-    return t > h2_ ? t + h2_ : h2_;
+    return t > h2_ ? t + h2_ : 2.0 * h2_;
+}
+
+inline Time Parametrization::tm2(const Time t) const {
+    return t > h2_ ? t : h2_;
 }
 
 inline Time Parametrization::tl2(const Time t) const {
