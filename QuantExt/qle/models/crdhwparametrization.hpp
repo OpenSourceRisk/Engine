@@ -29,7 +29,7 @@
 
 namespace QuantExt {
 
-class CreditHwParametrization : Parametrization {
+class CreditHwParametrization : public Parametrization {
   public:
     virtual Handle<DefaultProbabilityTermStructure>
     defaultTermStructure() const = 0;

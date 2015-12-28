@@ -28,7 +28,7 @@
 
 namespace QuantExt {
 
-class FxBsParametrization : Parametrization {
+class FxBsParametrization : public Parametrization {
   public:
     /*! interface */
     virtual Real variance(const Time t) const = 0;

@@ -28,7 +28,7 @@
 
 namespace QuantExt {
 
-class EquityBsParametrization : Parametrization {
+class EquityBsParametrization : public Parametrization {
   public:
     virtual Handle<YieldTermStructure> dividendTermStructure() const = 0;
     /*! interface */
