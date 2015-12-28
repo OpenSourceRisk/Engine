@@ -40,9 +40,8 @@ PiecewiseConstantHelper1::PiecewiseConstantHelper1(const Array &t,
                                                    const Array &y)
     : t_(t), y_(y) {
     QL_REQUIRE(t_.size() + 1 == y_.size(),
-               "t1 size (" << t_.size() << ") + 1 = " << t_.size() + 1
-                           << " must be equal to y1 size (" << y_.size()
-                           << ")");
+               "t size (" << t_.size() << ") + 1 = " << t_.size() + 1
+                          << " must be equal to y size (" << y_.size() << ")");
     checkTimes(t);
     update();
 }
@@ -51,9 +50,23 @@ PiecewiseConstantHelper2::PiecewiseConstantHelper2(const Array &t,
                                                    const Array &y)
     : zeroCutoff_(1.0E-6), t_(t), y_(y) {
     QL_REQUIRE(t_.size() + 1 == y_.size(),
-               "t1 size (" << t_.size() << ") + 1 = " << t_.size() + 1
-                           << " must be equal to y1 size (" << y_.size()
-                           << ")");
+               "t size (" << t_.size() << ") + 1 = " << t_.size() + 1
+                          << " must be equal to y size (" << y_.size() << ")");
+    checkTimes(t);
+    update();
+}
+
+PiecewiseConstantHelper3::PiecewiseConstantHelper3(const Array &t,
+                                                   const Array &y1,
+                                                   const Array &y2)
+    : zeroCutoff_(1.0E-6), t_(t), y1_(y1), y2_(y2) {
+    QL_REQUIRE(t_.size() + 1 == y1_.size(),
+               "t size (" << t_.size() << ") + 1 = " << t_.size() + 1
+                          << " must be equal to y1 size (" << y1_.size()
+                          << ")");
+    QL_REQUIRE(y1_.size() == y2_.size(),
+               "y1 size (" << y1_.size() << ") must be equal to y2 size ("
+                           << y2_.size() << ")");
     checkTimes(t);
     update();
 }
