@@ -108,7 +108,7 @@ inline Real PiecewiseConstantHelper1::int_y_sqr(const Time t) const {
     Real res = 0.0;
     if (i >= 1)
         res += b_[std::min(i - 1, b_.size() - 1)];
-    Real a = y_[std::min(i, t_.size() - 1)];
+    Real a = y_[std::min(i, y_.size() - 1)];
     res += a * a * (t - (i == 0 ? 0.0 : t_[i - 1]));
     return res;
 }
