@@ -10,7 +10,7 @@ libModels_la_SOURCES = \
 	constantirlgm1fparametrization.cpp \
 	irlgm1fparametrization.cpp \
 	parametrization.cpp \
-	piecewiseconstantparametrization.cpp
+	piecewiseconstanthelper.cpp
 
 this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \
@@ -22,7 +22,7 @@ this_include_HEADERS = \
 	infjyparametrization.hpp \
 	irlgm1fparametrization.hpp \
 	parametrization.hpp \
-	piecewiseconstantparametrization.hpp \
+	piecewiseconstanthelper.hpp \
 	xassetmodel.hpp
 
 all.hpp: Makefile.am
