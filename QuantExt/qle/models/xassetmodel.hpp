@@ -24,7 +24,12 @@
 #ifndef quantext_xasset_model_hpp
 #define quantext_xasset_model_hpp
 
-#include <qle/models/parametrization>
+#include <qle/models/parametrization.hpp>
+#include <ql/math/matrix.hpp>
+#include <ql/models/model.hpp>
+#include <ql/stochasticprocess.hpp>
+
+using namespace QuantLib;
 
 namespace QuantExt {
 

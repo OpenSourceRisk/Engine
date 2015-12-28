@@ -25,6 +25,7 @@
 #define quantext_crd_hw_parametrization_hpp
 
 #include <qle/models/parametrization.hpp>
+#include <ql/termstructures/defaulttermstructure.hpp>
 
 namespace QuantExt {
 

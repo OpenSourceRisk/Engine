@@ -34,13 +34,13 @@ class FxBsParametrization : Parametrization {
     virtual Real variance(const Time t) const = 0;
     /*! inspectors */
     virtual Real sigma(const Time t) const;
-    virtual Real stdDevitation(const Time t) const;
+    virtual Real stdDeviation(const Time t) const;
 };
 
 // inline
 
 inline Real FxBsParametrization::sigma(const Time t) const {
-    return std::sqrt((variance(tr(t)) - variance(tl(t)) / h_);
+    return std::sqrt((variance(tr(t)) - variance(tl(t))) / h_);
 }
 
 inline Real FxBsParametrization::stdDeviation(const Time t) const {

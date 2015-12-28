@@ -35,13 +35,13 @@ class EquityBsParametrization : Parametrization {
     virtual Real variance(const Time t) const = 0;
     /*! inspectors */
     virtual Real sigma(const Time t) const;
-    virtual Real stdDevitation(const Time t) const;
+    virtual Real stdDeviation(const Time t) const;
 };
 
 // inline
 
 inline Real EquityBsParametrization::sigma(const Time t) const {
-    return std::sqrt((variance(tr(t)) - variance(tl(t)) / h_);
+    return std::sqrt((variance(tr(t)) - variance(tl(t))) / h_);
 }
 
 inline Real EquityBsParametrization::stdDeviation(const Time t) const {
