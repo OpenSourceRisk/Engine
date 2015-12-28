@@ -17,7 +17,7 @@
  FOR A PARTICULAR PURPOSE.  See the license for more details.
 */
 
-#include <qle/models/constantirlgm1fparametrization.hpp>
+#include <qle/models/irlgm1fconstantparametrization.hpp>
 
 namespace QuantExt {
 

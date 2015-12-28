@@ -28,7 +28,7 @@
 
 namespace QuantExt {
 
-class IrLgm1fConstantParametrization : IrLgm1fParametrization {
+class IrLgm1fConstantParametrization : public IrLgm1fParametrization {
   public:
     IrLgm1fConstantParametrization(
         const Currency &currency,
@@ -39,10 +39,9 @@ class IrLgm1fConstantParametrization : IrLgm1fParametrization {
     Real H(const Time t) const;
     /*! inspectors */
     Real alpha(const Time t) const;
+    Real kappa(Time t) const;
     Real Hprime(const Time t) const;
     Real Hprime2(const Time t) const;
-    Real hullWhiteSigma(Time t) const;
-    Real hullWhiteKappa(Time t) const;
 
   private:
     const Handle<YieldTermStructure> termStructure_;
@@ -71,6 +70,10 @@ inline Real IrLgm1fConstantParametrization::H(const Time t) const {
 
 inline Real IrLgm1fConstantParametrization::alpha(const Time t) const {
     return alpha_;
+}
+
+inline Real IrLgm1fConstantParametrization::kappa(const Time t) const {
+    return kappa_;
 }
 
 inline Real IrLgm1fConstantParametrization::Hprime(const Time t) const {
