@@ -17,8 +17,8 @@
  FOR A PARTICULAR PURPOSE.  See the license for more details.
 */
 
-/*! \file constantparametrizations.hpp
-    \brief constant model parametrizations
+/*! \file irlgm1fconstantparametrization.hpp
+    \brief constant model parametrization
 */
 
 #ifndef quantext_constant_irlgm1f_parametrizations_hpp
