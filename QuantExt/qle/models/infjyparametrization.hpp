@@ -24,11 +24,11 @@
 #ifndef quantext_inf_jy_parametrization_hpp
 #define quantext_inf_jy_parametrization_hpp
 
-#include <ql/qldefines.hpp>
+#include <qle/models/irlgm1fparametrization.hpp>
 
 namespace QuantExt {
 
-class InflationJYParametrization : Parametrization {
+class InflationJYParametrization : public Parametrization {
   public:
     InflationJYParametrization(
         const boost::shared_ptr<IrLgm1fParametrization> real,
