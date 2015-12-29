@@ -32,4 +32,8 @@ const Array &Parametrization::parameterTimes(const Size) const {
     return emptyTimes_;
 }
 
+const Array &Parametrization::parameterValues(const Size) const {
+    return emptyValues_;
+}
+
 } // namespace QuantExt

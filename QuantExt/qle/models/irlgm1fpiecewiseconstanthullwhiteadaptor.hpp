@@ -46,6 +46,8 @@ class IrLgm1fPiecewiseConstantHullWhiteAdaptor
     Real Hprime(const Time t) const;
     Real Hprime2(const Time t) const;
     Real hullWhiteSigma(Time t) const;
+    const Array &parameterTimes(const Size) const;
+    const Array &parameterValues(const Size) const;
     /*! additional methods */
     void update() const;
 };
@@ -56,7 +58,8 @@ inline Real IrLgm1fPiecewiseConstantHullWhiteAdaptor::zeta(const Time t) const {
     return PiecewiseConstantHelper3::int_y1_sqr_exp_2_int_y2(t);
 }
 
-inline Real IrLgm1fPiecewiseConstantHullWhiteAdaptor::alpha(const Time t) const {
+inline Real
+IrLgm1fPiecewiseConstantHullWhiteAdaptor::alpha(const Time t) const {
     return hullWhiteSigma(t) / Hprime(t);
 }
 
@@ -64,7 +67,8 @@ inline Real IrLgm1fPiecewiseConstantHullWhiteAdaptor::H(const Time t) const {
     return PiecewiseConstantHelper2::int_exp_m_int_y(t);
 }
 
-inline Real IrLgm1fPiecewiseConstantHullWhiteAdaptor::kappa(const Time t) const {
+inline Real
+IrLgm1fPiecewiseConstantHullWhiteAdaptor::kappa(const Time t) const {
     return PiecewiseConstantHelper2::y(t);
 }
 
@@ -87,6 +91,24 @@ IrLgm1fPiecewiseConstantHullWhiteAdaptor::hullWhiteSigma(const Time t) const {
 inline void IrLgm1fPiecewiseConstantHullWhiteAdaptor::update() const {
     PiecewiseConstantHelper3::update();
     PiecewiseConstantHelper2::update();
+}
+
+inline const Array &
+IrLgm1fPiecewiseConstantHullWhiteAdaptor::parameterTimes(const Size i) const {
+    QL_REQUIRE(i < 2, "parameter " << i << " does not exist, only have 0..1");
+    if (i == 0)
+        return PiecewiseConstantHelper3::t_;
+    else
+        return PiecewiseConstantHelper2::t_;
+}
+
+const Array &
+IrLgm1fPiecewiseConstantHullWhiteAdaptor::parameterValues(const Size i) const {
+    QL_REQUIRE(i < 2, "parameter " << i << " does not exist, only have 0..1");
+    if (i == 0)
+        return PiecewiseConstantHelper3::y1_;
+    else
+        return PiecewiseConstantHelper2::y_;
 }
 
 } // namespace QuantExt

@@ -38,6 +38,7 @@ class Parametrization {
     virtual const Currency currency() const;
     virtual Size parameterSize(const Size) const;
     virtual const Array &parameterTimes(const Size) const;
+    virtual const Array &parameterValues(const Size) const;
 
   protected:
     // this method should be called when input parameters
@@ -55,7 +56,7 @@ class Parametrization {
 
   private:
     Currency currency_;
-    Array emptyTimes_;
+    Array emptyTimes_, emptyValues_;
 };
 
 // inline

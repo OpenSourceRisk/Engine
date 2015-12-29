@@ -39,8 +39,10 @@ class PiecewiseConstantHelper1 {
     //! int_0^t y^2(s) ds
     Real int_y_sqr(const Time t) const;
 
-  private:
+  protected:
     const Array &t_, &y_;
+
+  private:
     mutable std::vector<Real> b_;
 };
 
@@ -56,7 +58,11 @@ class PiecewiseConstantHelper2 {
 
   private:
     const Real zeroCutoff_;
+
+  protected:
     const Array &t_, &y_;
+
+  private:
     mutable std::vector<Real> b_, c_;
 };
 
@@ -71,7 +77,11 @@ class PiecewiseConstantHelper3 {
 
   private:
     const Real zeroCutoff_;
+
+  protected:
     const Array &t_, &y1_, &y2_;
+
+  private:
     mutable std::vector<Real> b_, c_;
 };
 

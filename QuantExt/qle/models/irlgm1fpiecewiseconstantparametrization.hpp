@@ -46,6 +46,8 @@ class IrLgm1fPiecewiseConstantParametrization
     Real kappa(Time t) const;
     Real Hprime(const Time t) const;
     Real Hprime2(const Time t) const;
+    const Array &parameterTimes(const Size) const;
+    const Array &parameterValues(const Size) const;
     /*! additional methods */
     void update() const;
 };
@@ -82,6 +84,24 @@ IrLgm1fPiecewiseConstantParametrization::Hprime2(const Time t) const {
 inline void IrLgm1fPiecewiseConstantParametrization::update() const {
     PiecewiseConstantHelper1::update();
     PiecewiseConstantHelper2::update();
+}
+
+inline const Array &
+IrLgm1fPiecewiseConstantParametrization::parameterTimes(const Size i) const {
+    QL_REQUIRE(i < 2, "parameter " << i << " does not exist, only have 0..1");
+    if (i == 0)
+        return PiecewiseConstantHelper1::t_;
+    else
+        return PiecewiseConstantHelper2::t_;
+}
+
+const Array &
+IrLgm1fPiecewiseConstantParametrization::parameterValues(const Size i) const {
+    QL_REQUIRE(i < 2, "parameter " << i << " does not exist, only have 0..1");
+    if (i == 0)
+        return PiecewiseConstantHelper1::y_;
+    else
+        return PiecewiseConstantHelper2::y_;
 }
 
 } // namespace QuantExt

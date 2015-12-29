@@ -24,7 +24,7 @@ namespace QuantExt {
 IrLgm1fConstantParametrization::IrLgm1fConstantParametrization(
     const Currency &currency, const Handle<YieldTermStructure> &termStructure,
     const Real alpha, const Real kappa)
-    : IrLgm1fParametrization(currency, termStructure), alpha_(alpha),
-      kappa_(kappa), zeroKappaCutoff_(1.0E-6) {}
+    : IrLgm1fParametrization(currency, termStructure), alpha_(Array(1, alpha)),
+      kappa_(Array(1, kappa)), zeroKappaCutoff_(1.0E-6) {}
 
 } // namespace QuantExt

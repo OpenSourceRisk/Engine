@@ -37,8 +37,13 @@ class FxBsPiecewiseConstantParametrization : public FxBsParametrization,
         const Handle<YieldTermStructure> &domesticTermStructure,
         const Handle<YieldTermStructure> &foreignTermStructure,
         const Array &times, const Array &sigma);
+    /*! inspectors */
     Real variance(const Time t) const;
     Real sigma(const Time t) const;
+    const Array &parameterTimes(const Size) const;
+    const Array &parameterValues(const Size) const;
+    /*! additional methods */
+    void update() const;
 };
 
 // inline
@@ -49,6 +54,22 @@ inline Real FxBsPiecewiseConstantParametrization::variance(const Time t) const {
 
 inline Real FxBsPiecewiseConstantParametrization::sigma(const Time t) const {
     return PiecewiseConstantHelper1::y(t);
+}
+
+inline const Array &
+FxBsPiecewiseConstantParametrization::parameterTimes(const Size i) const {
+    QL_REQUIRE(i == 0, "parameter " << i << " does not exist, only have 0");
+    return PiecewiseConstantHelper1::t_;
+}
+
+const Array &
+FxBsPiecewiseConstantParametrization::parameterValues(const Size i) const {
+    QL_REQUIRE(i == 0, "parameter " << i << " does not exist, only have 0");
+    return PiecewiseConstantHelper1::y_;
+}
+
+inline void FxBsPiecewiseConstantParametrization::update() const {
+    PiecewiseConstantHelper1::update();
 }
 
 } // namespace QuantExt

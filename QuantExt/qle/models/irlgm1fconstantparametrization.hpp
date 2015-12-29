@@ -41,40 +41,50 @@ class IrLgm1fConstantParametrization : public IrLgm1fParametrization {
     Real kappa(Time t) const;
     Real Hprime(const Time t) const;
     Real Hprime2(const Time t) const;
+    const Array &parameterValues(const Size) const;
 
   private:
-    const Real alpha_, kappa_;
+    const Array alpha_, kappa_;
     const Real zeroKappaCutoff_;
 };
 
 // inline
 
 inline Real IrLgm1fConstantParametrization::zeta(const Time t) const {
-    return alpha_ * alpha_ * t;
+    return alpha_[0] * alpha_[0] * t;
 }
 
 inline Real IrLgm1fConstantParametrization::H(const Time t) const {
-    if (std::fabs(kappa_) < zeroKappaCutoff_) {
+    if (std::fabs(kappa_[0]) < zeroKappaCutoff_) {
         return t;
     } else {
-        return (1.0 - std::exp(-kappa_ * t)) / kappa_;
+        return (1.0 - std::exp(-kappa_[0] * t)) / kappa_[0];
     }
 }
 
 inline Real IrLgm1fConstantParametrization::alpha(const Time t) const {
-    return alpha_;
+    return alpha_[0];
 }
 
 inline Real IrLgm1fConstantParametrization::kappa(const Time t) const {
-    return kappa_;
+    return kappa_[0];
 }
 
 inline Real IrLgm1fConstantParametrization::Hprime(const Time t) const {
-    return std::exp(-kappa_ * t);
+    return std::exp(-kappa_[0] * t);
 }
 
 inline Real IrLgm1fConstantParametrization::Hprime2(const Time t) const {
-    return -kappa_ * std::exp(-kappa_ * t);
+    return -kappa_[0] * std::exp(-kappa_[0] * t);
+}
+
+inline const Array &
+IrLgm1fConstantParametrization::parameterValues(const Size i) const {
+    QL_REQUIRE(i < 2, "parameter " << i << " does not exist, only have 0..1");
+    if (i == 0)
+        return alpha_;
+    else
+        return kappa_;
 }
 
 } // namespace QuantExt
