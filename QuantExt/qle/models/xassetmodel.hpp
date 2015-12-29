@@ -37,14 +37,19 @@ namespace QuantExt {
 
     There are two ways of calibrating the model:
 
-    - provide a calibrated parametrization for a component 
+    - provide a calibrated parametrization for a component
       extracted from some external model
     - do the calibration within the XAssetModel using one
       of the calibration procedures
 
     The inter-parametrization correlation matrix specified
-    here can not be calibrated currently, but is a fixed
-    external input. */
+    here can not be calibrated currently, but is a fixed,
+    external input.
+
+    The model's reference date is by definition the reference
+    date of the termstructure of the first parametrization,
+    i.e. of the domestic yield term structure.
+*/
 
 class XAssetModel : public CalibratedModel {
   public:
@@ -56,27 +61,91 @@ class XAssetModel : public CalibratedModel {
         - COM (optionally) ccy must be a subset of the IR ccys) */
     XAssetModel(const boost::shared_ptr<Parametrization> parametrizations,
                 const Matrix &correlation);
-    
+
     /*! allow for time dependent correlation (second constructor) ? */
 
     /*! inspectors */
     boost::shared_ptr<StochasticProcess> stateProcess() const;
 
     /*! LGM1F components */
-    Real numeraire(const Time t, const Size ccy = 0);
-    Real discountBond(const Size ccy, const Real x, const Time t, const Time T);
-    Real reducedDiscountBond(const Size ccy, const Real x, const Time t,
-                             const Time T);
-    Real zeroBondOption(const Size ccy, const Time t, const Time S,
-                        const Time T, const Real K, Option::Type type);
+    Real numeraire(const Size ccy, const Time t, const Real x) const;
+    Real discountBond(const Size ccy, const Time t, const Time T,
+                      const Real x) const;
+    Real reducedDiscountBond(const Size ccy, const Time t, const Time T,
+                             const Real x) const;
+    Real discountBondOption(const Size ccy, Option::Type type, const Real K,
+                            const Time t, const Time S, const Time T) const;
 
     /*! other components */
 
     /*! calibration procedures */
-    void calibrateIrAlphasIterative();
+    void calibrateIrVolatilitiesIterative();
     /* ... */
-    
+
+  private:
+    Size nIrLgm1f_;
+    const IrLgm1fParametrization *irlgm1f(const Size ccy);
+    std::vector<const boost::shared_ptr<Parametrization> > parametrizations_;
 };
+
+// inline
+
+const IrLgm1fParametrization *XAssetModel::irlgm1f(const Size ccy) {
+    QL_REQUIRE(ccy < nIrLgm1f_, "irlgm1f index (" << ccy << ") must be in 0..."
+                                                  << (nIrLgm1f_ - 1));
+    return boost::dynamic_pointer_cast<IrLgm1fParametrization>(
+               parametrizations_[ccy])
+        .get();
+}
+
+inline Real XAssetModel::numeraire(const Size ccy, const Time t,
+                                   const Real x) const {
+    const IrLgm1fParametrization *p = irlgm1f(ccy);
+    Real Ht = p->H(t);
+    return std::exp(Ht * x + 0.5 * Ht * Ht * p->zeta(t)) /
+           p->termStructure()->discount(t);
+}
+
+inline Real XAssetModel::discountBond(const Size ccy, const Time t,
+                                      const Time T, const Real x) const {
+    QL_REQURE(T >= t, "T(" << T << ") >= t(" << t
+                           << ") required in irlgm1f discountBond");
+    const IrLgm1fParametrization *p = irlgm1f(ccy);
+    Real Ht = p->H(t);
+    Real HT = p->H(T);
+    return p->termStructure()->discount(T) / p->termStructure()->discount(t) *
+           std::exp(-(HT - ht) * x - 0.5 * (HT * HT - Ht * Ht) * p->zeta(t));
+}
+
+inline Real XAssetModel::reducedDiscountBond(const Size ccy, const Time t,
+                                             const Time T, const Real x) const {
+    QL_REQURE(T >= t, "T(" << T << ") >= t(" << t
+                           << ") required in irlgm1f reducedDiscountBond");
+    const IrLgm1fParametrization *p = irlgm1f(ccy);
+    Real HT = p->H(T);
+    return p->termStructure()->discount(T) *
+           std::exp(-HT * x - 0.5 * HT * HT * p->zeta(t));
+}
+
+inline Real XAssetModel::discountBondOption(const Size ccy, Option::Type type,
+                                            const Real K, const Time t,
+                                            const Time S, const Time T) const {
+    QL_REQUIRE(T > S && S >= t,
+               "T(" << T << ") > S(" << S << ") >= t(" << t
+                    << ") required in irlgm1f discountBondOption");
+    const IrLgm1fParametrization *p = irlgm1f(ccy);
+    Real w = (type == Option::Call ? 1.0 : -1.0);
+    Real pS = p->termStructure()->discount(S);
+    Real pT = p->termStructure()->discount(T);
+    // slight generalization of Lichters, Stamm, Gallagher 11.2.1
+    // with t < S only resulting in a different time at which zeta
+    // has to be taken
+    Real sigma = sqrt(p->zeta(t)) * (p->H(T) - p->H(S));
+    Real dp = (std::log(pT / (K * pS)) / sigma + 0.5 * sigma);
+    Real dm = dp - sigma;
+    CumulativeNormalDistribution N;
+    return w * (pT * N(w * dp) - pS * K * N(w * dm));
+}
 
 } // namespace QuantExt
 
