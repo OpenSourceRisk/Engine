@@ -81,7 +81,7 @@ void XAssetModelTest::testParametrizationBaseClasses() {
 
     // piecewise constant helpers
 
-    Array noTimes, three(1, 3.0), zero(1, 0.0);
+    Array noTimes, three(1, 3.0), zero(1, 0.0), two(1, 2.0);
     PiecewiseConstantHelper1 helper11(noTimes, three);
     check("helper11.y", 0.0, helper11.y(0.0), 3.0);
     check("helper11.y", 1.0, helper11.y(1.0), 3.0);
@@ -104,6 +104,25 @@ void XAssetModelTest::testParametrizationBaseClasses() {
           (1.0 - std::exp(-3.0)) / 3.0);
     check("helper21.int_exp_m_int_y", 3.0, helper21.int_exp_m_int_y(3.0),
           (1.0 - std::exp(-9.0)) / 3.0);
+
+    // the helper type 3 is close to type 2, so we only do the easiest
+    // tests here, in the irlgm1f Hull White adaptor tests below the
+    // other tests will be implicit though
+    PiecewiseConstantHelper3 helper31(noTimes, three, two);
+    check("helper31.y1", 0.0, helper31.y1(0.0), 3.0);
+    check("helper31.y1", 1.0, helper31.y1(1.0), 3.0);
+    check("helper31.y1", 3.0, helper31.y1(3.0), 3.0);
+    check("helper31.y2", 0.0, helper31.y2(0.0), 2.0);
+    check("helper31.y2", 1.0, helper31.y2(1.0), 2.0);
+    check("helper31.y2", 3.0, helper31.y2(3.0), 2.0);
+    check("helper31.int_y1_sqr_int_exp_2_int_y2", 0.0,
+          helper31.int_y1_sqr_exp_2_int_y2(0.0), 0.0);
+    check("helper31.int_y1_sqr_int_exp_2_int_y2", 1.0,
+          helper31.int_y1_sqr_exp_2_int_y2(1.0),
+          9.0 / 4.0 * (std::exp(2.0 * 2.0 * 1.0) - 1.0));
+    check("helper31.int_y1_sqr_int_exp_2_int_y2", 3.0,
+          helper31.int_y1_sqr_exp_2_int_y2(3.0),
+          9.0 / 4.0 * (std::exp(2.0 * 2.0 * 3.0) - 1.0));
 
     PiecewiseConstantHelper2 helper22(noTimes, zero);
     check("helper22.y", 0.0, helper22.y(0.0), 0.0);
@@ -181,7 +200,7 @@ void XAssetModelTest::testParametrizationBaseClasses() {
                1.0E-10);
     }
 
-    // check update after times / value change
+    // check update after times or value change
 
     times[0] = 0.5;
     values[0] = 0.5;
@@ -214,9 +233,10 @@ void XAssetModelTest::testParametrizations() {
         Real H(const Time t) const { return t * t * t; }
     } irlgm1f_1((EURCurrency()));
 
-    // check numerical scheme (in particular near zero)
+    // check numerical differentiation scheme (in particular near zero)
+    // of the irlgm1f parametrization
 
-    Real h = 1.0E-8, h2 = 1.0E-4;
+    Real h = 1.0E-6, h2 = 1.0E-4;
 
     check("irlgm1f_1.alpha", 0.0, irlgm1f_1.alpha(0.0),
           std::sqrt((irlgm1f_1.zeta(h) - irlgm1f_1.zeta(0.0)) / h));
@@ -250,12 +270,7 @@ void XAssetModelTest::testParametrizations() {
     check("irlgm1f_1.kappa", 1.5, irlgm1f_1.kappa(1.5),
           -irlgm1f_1.Hprime2(1.5) / irlgm1f_1.Hprime(1.5));
 
-    // check irlgm1f parametrization (piecewise constant and constant)
-    // for consistency with sqrt(zeta') = alpha, -H'' / H' = kappa
-    // as well, check the Hull White adaptor by checking
-    // sqrt(zeta') H' = sigma, -H'' / H' = kappa
-    // in all cases we compute the derivatives with a numerical scheme
-    // here to ensure that we get out what we put in
+    // check the irlgm1f parametrizations
 
     Handle<YieldTermStructure> flatYts(boost::make_shared<FlatForward>(
         0, NullCalendar(), 0.02, Actual365Fixed()));
@@ -264,6 +279,159 @@ void XAssetModelTest::testParametrizations() {
                                              0.01);
     IrLgm1fConstantParametrization irlgm1f_3(EURCurrency(), flatYts, 0.01,
                                              0.00);
+
+    Array alphaTimes(99), kappaTimes(99), alpha(100), kappa(100), sigma(100);
+    for (Size i = 0; i < 100; ++i) {
+        if (i < 99) {
+            alphaTimes[i] = static_cast<Real>(i + 1);
+            kappaTimes[i] = alphaTimes[i];
+        }
+        // 0.0000 to 0.099
+        alpha[i] = sigma[i] = static_cast<Real>(i) * 0.0010;
+        // -0.05 to 0.049
+        kappa[i] = (static_cast<Real>(i) - 50.0) * 0.001;
+    }
+
+    IrLgm1fPiecewiseConstantParametrization irlgm1f_4(
+        EURCurrency(), flatYts, alphaTimes, alpha, kappaTimes, kappa);
+
+    IrLgm1fPiecewiseConstantHullWhiteAdaptor irlgm1f_5(
+        EURCurrency(), flatYts, alphaTimes, sigma, kappa);
+
+    Real t = 0.0, step = 1.0E-3;
+    while (t < 100.0) {
+
+        // check irlgm1f parametrization (piecewise constant and constant)
+        // for consistency with sqrt(zeta') = alpha and -H'' / H' = kappa
+
+        // as well, check the Hull White adaptor by checking
+        // sqrt(zeta') H' = sigma, -H'' / H' = kappa
+
+        Real zetaPrime2, zetaPrime3, zetaPrime4, zetaPrime5;
+        Real Hprime2, Hprime3, Hprime4, Hprime5;
+        Real Hprimeprime2, Hprimeprime3, Hprimeprime4, Hprimeprime5;
+        if (t < h / 2.0) {
+            zetaPrime2 = (irlgm1f_2.zeta(t + h) - irlgm1f_2.zeta(t)) / h;
+            zetaPrime3 = (irlgm1f_3.zeta(t + h) - irlgm1f_3.zeta(t)) / h;
+            zetaPrime4 = (irlgm1f_4.zeta(t + h) - irlgm1f_4.zeta(t)) / h;
+            zetaPrime5 = (irlgm1f_5.zeta(t + h) - irlgm1f_5.zeta(t)) / h;
+            Hprime2 = (irlgm1f_2.H(t + h) - irlgm1f_2.H(t)) / h;
+            Hprime3 = (irlgm1f_3.H(t + h) - irlgm1f_3.H(t)) / h;
+            Hprime4 = (irlgm1f_4.H(t + h) - irlgm1f_4.H(t)) / h;
+            Hprime5 = (irlgm1f_5.H(t + h) - irlgm1f_5.H(t)) / h;
+        } else {
+            zetaPrime2 =
+                (irlgm1f_2.zeta(t + h / 2.0) - irlgm1f_2.zeta(t - h / 2.0)) / h;
+            zetaPrime3 =
+                (irlgm1f_3.zeta(t + h / 2.0) - irlgm1f_3.zeta(t - h / 2.0)) / h;
+            zetaPrime4 =
+                (irlgm1f_4.zeta(t + h / 2.0) - irlgm1f_4.zeta(t - h / 2.0)) / h;
+            zetaPrime5 =
+                (irlgm1f_5.zeta(t + h / 2.0) - irlgm1f_5.zeta(t - h / 2.0)) / h;
+            Hprime2 = (irlgm1f_2.H(t + h / 2.0) - irlgm1f_2.H(t - h / 2.0)) / h;
+            Hprime3 = (irlgm1f_3.H(t + h / 2.0) - irlgm1f_3.H(t - h / 2.0)) / h;
+            Hprime4 = (irlgm1f_4.H(t + h / 2.0) - irlgm1f_4.H(t - h / 2.0)) / h;
+            Hprime5 = (irlgm1f_5.H(t + h / 2.0) - irlgm1f_5.H(t - h / 2.0)) / h;
+        }
+        if (t < h2) {
+            Hprimeprime2 = (irlgm1f_2.H(2.0 * h2) - 2.0 * irlgm1f_2.H(h2) +
+                            irlgm1f_2.H(0.0)) /
+                           (h2 * h2);
+            Hprimeprime3 = (irlgm1f_3.H(2.0 * h2) - 2.0 * irlgm1f_3.H(h2) +
+                            irlgm1f_3.H(0.0)) /
+                           (h2 * h2);
+            Hprimeprime4 = (irlgm1f_4.H(2.0 * h2) - 2.0 * irlgm1f_4.H(h2) +
+                            irlgm1f_4.H(0.0)) /
+                           (h2 * h2);
+            Hprimeprime5 = (irlgm1f_5.H(2.0 * h2) - 2.0 * irlgm1f_5.H(h2) +
+                            irlgm1f_5.H(0.0)) /
+                           (h2 * h2);
+        } else {
+            Hprimeprime2 = (irlgm1f_2.H(t + h2) - 2.0 * irlgm1f_2.H(t) +
+                            irlgm1f_2.H(t - h2)) /
+                           (h2 * h2);
+            Hprimeprime3 = (irlgm1f_3.H(t + h2) - 2.0 * irlgm1f_3.H(t) +
+                            irlgm1f_3.H(t - h2)) /
+                           (h2 * h2);
+            Hprimeprime4 = (irlgm1f_4.H(t + h2) - 2.0 * irlgm1f_4.H(t) +
+                            irlgm1f_4.H(t - h2)) /
+                           (h2 * h2);
+            Hprimeprime5 = (irlgm1f_5.H(t + h2) - 2.0 * irlgm1f_5.H(t) +
+                            irlgm1f_5.H(t - h2)) /
+                           (h2 * h2);
+        }
+        check2("sqrt(d/dt irlgm1f_2.zeta)", t, sqrt(zetaPrime2), 0.01, 1.0E-7);
+        check2("sqrt(d/dt irlgm1f_3.zeta)", t, sqrt(zetaPrime3), 0.01, 1.0E-7);
+        if (std::fabs(t - static_cast<int>(t + 0.5)) > h) {
+            // we can not expect this test to work when the numerical
+            // differentiation is going over a grid point where
+            // alpha (or sigma) jumps
+            check2("sqrt(d/dt irlgm1f_4.zeta)", t, sqrt(zetaPrime4),
+                   QL_PIECEWISE_FUNCTION(alphaTimes, alpha, t), 1.0E-7);
+            check2("sqrt(d/dt irlgm1f_5.zeta)*H'", t,
+                   sqrt(zetaPrime5) * Hprime5,
+                   QL_PIECEWISE_FUNCTION(alphaTimes, sigma, t), 1.0E-6);
+        }
+        check2("irlgm1f_2.(-H''/H')", t, -Hprimeprime2 / Hprime2, 0.01, 2.0E-5);
+        check2("irlgm1f_3.(-H''/H')", t, -Hprimeprime3 / Hprime3, 0.00, 2.0E-5);
+        if (std::fabs(t - static_cast<int>(t + 0.5)) > h2) {
+            // same as above, we avoid to test the grid points
+            check2("irlgm1f_4.(-H''/H')", t, -Hprimeprime4 / Hprime4,
+                   QL_PIECEWISE_FUNCTION(kappaTimes, kappa, t), 5.0E-5);
+            check2("irlgm1f_5.(-H''/H')", t, -Hprimeprime5 / Hprime5,
+                   QL_PIECEWISE_FUNCTION(alphaTimes, kappa, t), 5.0E-5);
+        }
+
+        // check the remaining inspectors
+
+        check("irlgm1f_2.alpha", t, irlgm1f_2.alpha(t), 0.01);
+        check("irlgm1f_3.alpha", t, irlgm1f_3.alpha(t), 0.01);
+        check("irlgm1f_4.alpha", t, irlgm1f_4.alpha(t),
+              QL_PIECEWISE_FUNCTION(alphaTimes, alpha, t));
+        check("irlgm1f_5.hullWhiteSigma", t, irlgm1f_5.hullWhiteSigma(t),
+              QL_PIECEWISE_FUNCTION(alphaTimes, sigma, t));
+
+        check("irlgm1f_2.kappa", t, irlgm1f_2.kappa(t), 0.01);
+        check("irlgm1f_3.kappa", t, irlgm1f_3.kappa(t), 0.00);
+        check("irlgm1f_4.kappa", t, irlgm1f_4.kappa(t),
+              QL_PIECEWISE_FUNCTION(kappaTimes, kappa, t));
+        check("irlgm1f_5.kappa", t, irlgm1f_5.kappa(t),
+              QL_PIECEWISE_FUNCTION(alphaTimes, kappa, t));
+
+        check2("irlgm1f_2.Hprime", t, irlgm1f_2.Hprime(t), Hprime2, 1.0E-6);
+        check2("irlgm1f_3.Hprime", t, irlgm1f_3.Hprime(t), Hprime3, 1.0E-6);
+        if (std::fabs(t - static_cast<int>(t + 0.5)) > h) {
+            // same as above, we avoid to test the grid points
+            check2("irlgm1f_4.Hprime", t, irlgm1f_4.Hprime(t), Hprime4, 1.0E-6);
+            check2("irlgm1f_5.Hprime", t, irlgm1f_5.Hprime(t), Hprime5, 1.0E-6);
+            check2("irlgm1f_5.alpha", t, irlgm1f_5.alpha(t),
+                   QL_PIECEWISE_FUNCTION(alphaTimes, sigma, t) /
+                       irlgm1f_5.Hprime(t),
+                   1.0E-6);
+        }
+
+        check2("irlgm1f_2.Hprime2", t, irlgm1f_2.Hprime2(t), Hprimeprime2,
+               2.0E-5);
+        check2("irlgm1f_3.Hprime2", t, irlgm1f_3.Hprime2(t), Hprimeprime3,
+               2.0E-5);
+        if (std::fabs(t - static_cast<int>(t + 0.5)) > h) {
+            // same as above, we avoid to test the grid points
+            check2("irlgm1f_4.Hprime2", t, irlgm1f_4.Hprime2(t), Hprimeprime4,
+                   2.0E-3);
+            check2("irlgm1f_5.Hprime2", t, irlgm1f_5.Hprime2(t), Hprimeprime5,
+                   2.0E-3);
+        }
+
+        check2("irlgm1f_2.hullWhiteSigma", t, irlgm1f_2.hullWhiteSigma(t),
+               0.01 * Hprime2, 1.0E-7);
+        check2("irlgm1f_3.hullWhiteSigma", t, irlgm1f_3.hullWhiteSigma(t),
+               0.01 * Hprime3, 1.0E-7);
+        check2("irlgm1f_4.hullWhiteSigma", t, irlgm1f_4.hullWhiteSigma(t),
+               QL_PIECEWISE_FUNCTION(alphaTimes, alpha, t) * Hprime4, 1.0E-7);
+        // irlgm1f_5.alpha check is above if you should have wondered ...
+
+        t += step;
+    }
 }
 
 test_suite *XAssetModelTest::suite() {
