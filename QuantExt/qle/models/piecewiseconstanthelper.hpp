@@ -121,9 +121,9 @@ inline void PiecewiseConstantHelper3::update() const {
             sum2 += y1_[i] * y1_[i] * (t_[i] - t0) * std::exp(2.0 * b2Tmp);
         } else {
             sum2 += y1_[i] * y1_[i] *
-                    (std::exp(2.0 * b2Tmp) -
-                     std::exp(2.0 * b2Tmp + 2.0 * y2_[i] * (t_[i] - t0))) /
-                    y2_[i];
+                    (std::exp(2.0 * b2Tmp + 2.0 * y2_[i] * (t_[i] - t0)) -
+                     std::exp(2.0 * b2Tmp)) /
+                    (2.0 * y2_[i]);
         }
         c_[i] = sum2;
     }
@@ -200,9 +200,11 @@ PiecewiseConstantHelper3::int_y1_sqr_exp_2_int_y2(const Time t) const {
     Real t0 = (i == 0 ? 0.0 : t_[i - 1]);
     Real b2Tmp = (i == 0 ? 0.0 : b_[i - 1]);
     if (std::fabs(a) < zeroCutoff_) {
-        res += b * b * std::exp(-b2Tmp) * (t - t0);
+        res += b * b * std::exp(2.0 * b2Tmp) * (t - t0);
     } else {
-        res += b * b * (std::exp(-b2Tmp) - std::exp(-b2Tmp - a * (t - t0))) / a;
+        res += b * b * (std::exp(2.0 * b2Tmp + 2.0 * a * (t - t0)) -
+                        std::exp(2.0 * b2Tmp)) /
+               (2.0 * a);
     }
     return res;
 }
