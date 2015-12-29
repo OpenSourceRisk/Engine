@@ -34,7 +34,6 @@ class IrLgm1fConstantParametrization : public IrLgm1fParametrization {
         const Currency &currency,
         const Handle<YieldTermStructure> &termStructure, const Real alpha,
         const Real kappa);
-    Handle<YieldTermStructure> termStructure() const;
     Real zeta(const Time t) const;
     Real H(const Time t) const;
     /*! inspectors */
@@ -44,17 +43,11 @@ class IrLgm1fConstantParametrization : public IrLgm1fParametrization {
     Real Hprime2(const Time t) const;
 
   private:
-    const Handle<YieldTermStructure> termStructure_;
     const Real alpha_, kappa_;
     const Real zeroKappaCutoff_;
 };
 
 // inline
-
-inline Handle<YieldTermStructure>
-IrLgm1fConstantParametrization::termStructure() const {
-    return termStructure_;
-}
 
 inline Real IrLgm1fConstantParametrization::zeta(const Time t) const {
     return alpha_ * alpha_ * t;

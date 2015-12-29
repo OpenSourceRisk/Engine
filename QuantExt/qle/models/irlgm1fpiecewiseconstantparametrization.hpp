@@ -21,8 +21,8 @@
     \brief piecewise constant model parametrization
 */
 
-#ifndef quantext_piecewiseconstant_irlgm1f_parametrizations_hpp
-#define quantext_piecewiseconstant_irlgm1f_parametrizations_hpp
+#ifndef quantext_piecewiseconstant_irlgm1f_parametrization_hpp
+#define quantext_piecewiseconstant_irlgm1f_parametrization_hpp
 
 #include <qle/models/irlgm1fparametrization.hpp>
 #include <qle/models/piecewiseconstanthelper.hpp>
@@ -39,7 +39,6 @@ class IrLgm1fPiecewiseConstantParametrization
         const Handle<YieldTermStructure> &termStructure,
         const Array &alphaTimes, const Array &alpha, const Array &kappaTimes,
         const Array &kappa);
-    Handle<YieldTermStructure> termStructure() const;
     Real zeta(const Time t) const;
     Real H(const Time t) const;
     /*! inspectors */
@@ -49,17 +48,9 @@ class IrLgm1fPiecewiseConstantParametrization
     Real Hprime2(const Time t) const;
     /*! additional methods */
     void update() const;
-
-  private:
-    const Handle<YieldTermStructure> termStructure_;
 };
 
 // inline
-
-inline Handle<YieldTermStructure>
-IrLgm1fPiecewiseConstantParametrization::termStructure() const {
-    return termStructure_;
-}
 
 inline Real IrLgm1fPiecewiseConstantParametrization::zeta(const Time t) const {
     return PiecewiseConstantHelper1::int_y_sqr(t);

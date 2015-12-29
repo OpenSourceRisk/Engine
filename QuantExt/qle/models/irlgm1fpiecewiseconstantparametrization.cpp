@@ -27,7 +27,7 @@ IrLgm1fPiecewiseConstantParametrization::
         const Handle<YieldTermStructure> &termStructure,
         const Array &alphaTimes, const Array &alpha, const Array &kappaTimes,
         const Array &kappa)
-    : IrLgm1fParametrization(currency),
+    : IrLgm1fParametrization(currency, termStructure),
       PiecewiseConstantHelper1(alphaTimes, alpha),
       PiecewiseConstantHelper2(kappaTimes, kappa) {}
 

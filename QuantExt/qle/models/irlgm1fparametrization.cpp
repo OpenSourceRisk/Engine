@@ -21,7 +21,8 @@
 
 namespace QuantExt {
 
-IrLgm1fParametrization::IrLgm1fParametrization(const Currency &currency)
-    : Parametrization(currency) {}
+IrLgm1fParametrization::IrLgm1fParametrization(
+    const Currency &currency, const Handle<YieldTermStructure> &termStructure)
+    : Parametrization(currency), termStructure_(termStructure) {}
 
 } // namespace QuantExt

@@ -26,7 +26,7 @@ IrLgm1fPiecewiseConstantHullWhiteAdaptor::
         const Currency &currency,
         const Handle<YieldTermStructure> &termStructure, const Array &times,
         const Array &sigma, const Array &kappa)
-    : IrLgm1fParametrization(currency),
+        : IrLgm1fParametrization(currency, termStructure),
       PiecewiseConstantHelper3(times, sigma, kappa),
       PiecewiseConstantHelper2(times, kappa) {}
 

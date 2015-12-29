@@ -38,7 +38,6 @@ class IrLgm1fPiecewiseConstantHullWhiteAdaptor
         const Currency &currency,
         const Handle<YieldTermStructure> &termStructure, const Array &times,
         const Array &sigma, const Array &kappa);
-    Handle<YieldTermStructure> termStructure() const;
     Real zeta(const Time t) const;
     Real H(const Time t) const;
     /*! inspectors */
@@ -49,17 +48,9 @@ class IrLgm1fPiecewiseConstantHullWhiteAdaptor
     Real hullWhiteSigma(Time t) const;
     /*! additional methods */
     void update() const;
-
-  private:
-    const Handle<YieldTermStructure> termStructure_;
 };
 
 // inline
-
-inline Handle<YieldTermStructure>
-IrLgm1fPiecewiseConstantHullWhiteAdaptor::termStructure() const {
-    return termStructure_;
-}
 
 inline Real IrLgm1fPiecewiseConstantHullWhiteAdaptor::zeta(const Time t) const {
     return PiecewiseConstantHelper3::int_y1_sqr_exp_2_int_y2(t);
