@@ -21,6 +21,7 @@
 #include "utilities.hpp"
 
 #include <qle/models/all.hpp>
+#include <ql/currencies/america.hpp>
 #include <ql/currencies/europe.hpp>
 #include <ql/math/array.hpp>
 #include <ql/math/comparison.hpp>
@@ -215,23 +216,25 @@ void XAssetModelTest::testParametrizationBaseClasses() {
           std::exp(-0.75));
 }
 
-void XAssetModelTest::testParametrizations() {
+void XAssetModelTest::testIrLgm1fParametrizations() {
 
-    BOOST_TEST_MESSAGE("Testing XAssetModel parametrizations...");
+    BOOST_TEST_MESSAGE("Testing XAssetModel parametrizations (irlgm1f)...");
 
     // test generic inspectors of irlgm1f parametrization
 
     class IrLgm1fTmpParametrization : public IrLgm1fParametrization {
       public:
-        IrLgm1fTmpParametrization(const Currency &currency)
-            : IrLgm1fParametrization(currency) {}
+        IrLgm1fTmpParametrization(
+            const Currency &currency,
+            const Handle<YieldTermStructure> &termStructure)
+            : IrLgm1fParametrization(currency, termStructure) {}
         Handle<YieldTermStructure> termStructure() const {
             return Handle<YieldTermStructure>();
         }
         // do not use this parametrization at home
         Real zeta(const Time t) const { return sin(t); }
         Real H(const Time t) const { return t * t * t; }
-    } irlgm1f_1((EURCurrency()));
+    } irlgm1f_1((EURCurrency()), Handle<YieldTermStructure>());
 
     // check numerical differentiation scheme (in particular near zero)
     // of the irlgm1f parametrization
@@ -434,10 +437,72 @@ void XAssetModelTest::testParametrizations() {
     }
 }
 
+void XAssetModelTest::testFxBsParametrizations() {
+
+    BOOST_TEST_MESSAGE("Testing XAssetModel parametrizations (fxbs)...");
+
+    Array times(3), sigma(4);
+    times[0] = 1.0;
+    times[1] = 2.0;
+    times[2] = 3.0;
+    sigma[0] = 0.10;
+    sigma[1] = 0.20;
+    sigma[2] = 0.0;
+    sigma[3] = 0.15;
+
+    Handle<YieldTermStructure> domYts(boost::make_shared<FlatForward>(
+        0, NullCalendar(), 0.02, Actual365Fixed()));
+
+    Handle<YieldTermStructure> forYts(boost::make_shared<FlatForward>(
+        0, NullCalendar(), 0.03, Actual365Fixed()));
+
+    FxBsPiecewiseConstantParametrization fxbs_1(USDCurrency(), domYts, forYts,
+                                                times, sigma);
+
+    check("fxbs_1.variance", 0.0, fxbs_1.variance(0.0), 0.0);
+    check("fxbs_1.variance", 0.5, fxbs_1.variance(0.5), 0.10 * 0.10 * 0.5);
+    check("fxbs_1.variance", 1.0, fxbs_1.variance(1.0), 0.10 * 0.10);
+    check("fxbs_1.variance", 1.5, fxbs_1.variance(1.5),
+          0.10 * 0.10 + 0.20 * 0.20 * 0.5);
+    check("fxbs_1.variance", 2.0, fxbs_1.variance(2.0),
+          0.10 * 0.10 + 0.20 * 0.20);
+    check("fxbs_1.variance", 2.2, fxbs_1.variance(2.2),
+          0.10 * 0.10 + 0.20 * 0.20);
+    check("fxbs_1.variance", 3.0, fxbs_1.variance(3.0),
+          0.10 * 0.10 + 0.20 * 0.20);
+    check("fxbs_1.variance", 5.0, fxbs_1.variance(5.0),
+          0.10 * 0.10 + 0.20 * 0.20 + 2 * 0.15 * 0.15);
+
+    check("fxbs_1.stdDeviation", 0.0, fxbs_1.stdDeviation(0.0), std::sqrt(0.0));
+    check("fxbs_1.stdDeviation", 0.5, fxbs_1.stdDeviation(0.5),
+          std::sqrt(0.10 * 0.10 * 0.5));
+    check("fxbs_1.stdDeviation", 1.0, fxbs_1.stdDeviation(1.0),
+          std::sqrt(0.10 * 0.10));
+    check("fxbs_1.stdDeviation", 1.5, fxbs_1.stdDeviation(1.5),
+          std::sqrt(0.10 * 0.10 + 0.20 * 0.20 * 0.5));
+    check("fxbs_1.stdDeviation", 2.0, fxbs_1.stdDeviation(2.0),
+          std::sqrt(0.10 * 0.10 + 0.20 * 0.20));
+    check("fxbs_1.stdDeviation", 2.2, fxbs_1.stdDeviation(2.2),
+          std::sqrt(0.10 * 0.10 + 0.20 * 0.20));
+    check("fxbs_1.stdDeviation", 3.0, fxbs_1.stdDeviation(3.0),
+          std::sqrt(0.10 * 0.10 + 0.20 * 0.20));
+    check("fxbs_1.stdDeviation", 5.0, fxbs_1.stdDeviation(5.0),
+          std::sqrt(0.10 * 0.10 + 0.20 * 0.20 + 2 * 0.15 * 0.15));
+
+    check("fxb2_1.sigma", 0.0, fxbs_1.sigma(0.0), 0.10);
+    check("fxb2_1.sigma", 0.5, fxbs_1.sigma(0.5), 0.10);
+    check("fxb2_1.sigma", 1.0, fxbs_1.sigma(1.0), 0.20);
+    check("fxb2_1.sigma", 2.0, fxbs_1.sigma(2.0), 0.00);
+    check("fxb2_1.sigma", 3.0, fxbs_1.sigma(3.0), 0.15);
+    check("fxb2_1.sigma", 5.0, fxbs_1.sigma(5.0), 0.15);
+}
+
 test_suite *XAssetModelTest::suite() {
     test_suite *suite = BOOST_TEST_SUITE("XAsset model tests");
     suite->add(
         QUANTEXT_TEST_CASE(&XAssetModelTest::testParametrizationBaseClasses));
-    suite->add(QUANTEXT_TEST_CASE(&XAssetModelTest::testParametrizations));
+    suite->add(
+        QUANTEXT_TEST_CASE(&XAssetModelTest::testIrLgm1fParametrizations));
+    suite->add(QUANTEXT_TEST_CASE(&XAssetModelTest::testFxBsParametrizations));
     return suite;
 }

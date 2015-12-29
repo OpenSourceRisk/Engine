@@ -28,7 +28,8 @@
 class XAssetModelTest {
   public:
     static void testParametrizationBaseClasses();
-    static void testParametrizations();
+    static void testIrLgm1fParametrizations();
+    static void testFxBsParametrizations();
     static boost::unit_test_framework::test_suite *suite();
 };
 
