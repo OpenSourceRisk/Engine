@@ -9,6 +9,7 @@ noinst_LTLIBRARIES = libModels.la
 libModels_la_SOURCES = \
 	fxbsparametrization.cpp \
 	fxbspiecewiseconstantparametrization.cpp \
+	gaussian1dxassetadaptor.cpp \
 	irlgm1fconstantparametrization.cpp \
 	irlgm1fparametrization.cpp \
 	irlgm1fpiecewiseconstanthullwhiteadaptor.cpp \
@@ -23,6 +24,7 @@ this_include_HEADERS = \
 	eqbsparametrization.hpp \
 	fxbsparametrization.hpp \
 	fxbspiecewiseconstantparametrization.hpp \
+	gaussian1dxassetadaptor.hpp \
 	infjyparametrization.hpp \
 	irlgm1fconstantparametrization.hpp \
 	irlgm1fpiecewiseconstanthullwhiteadaptor.hpp \
