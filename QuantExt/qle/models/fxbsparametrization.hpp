@@ -25,16 +25,29 @@
 #define quantext_fxbs_parametrization_hpp
 
 #include <qle/models/parametrization.hpp>
+#include <ql/handle.hpp>
+#include <ql/termstructures/yieldtermstructure.hpp>
+
+using namespace QuantLib;
 
 namespace QuantExt {
 
 class FxBsParametrization : public Parametrization {
   public:
+    FxBsParametrization(const Currency &foreignCurrency,
+                        const Handle<YieldTermStructure> &domesticTermStructure,
+                        const Handle<YieldTermStructure> &foreignTermStructure);
     /*! interface */
     virtual Real variance(const Time t) const = 0;
     /*! inspectors */
     virtual Real sigma(const Time t) const;
     virtual Real stdDeviation(const Time t) const;
+    const Handle<YieldTermStructure> domesticTermStructure() const;
+    const Handle<YieldTermStructure> foreignTermStructure() const;
+
+  private:
+    const Handle<YieldTermStructure> domesticTermStructure_,
+        foreignTermStructure_;
 };
 
 // inline
@@ -45,6 +58,16 @@ inline Real FxBsParametrization::sigma(const Time t) const {
 
 inline Real FxBsParametrization::stdDeviation(const Time t) const {
     return std::sqrt(variance(t));
+}
+
+inline const Handle<YieldTermStructure>
+FxBsParametrization::domesticTermStructure() const {
+    return domesticTermStructure_;
+}
+
+inline const Handle<YieldTermStructure>
+FxBsParametrization::foreignTermStructure() const {
+    return domesticTermStructure_;
 }
 
 } // namespace QuantExt
