@@ -23,9 +23,9 @@ namespace QuantExt {
 
 FxBsParametrization::FxBsParametrization(
     const Currency &foreignCurrency,
-    const Handle<YieldTermStructure> &domesticTermStructure,
-    const Handle<YieldTermStructure> &foreignTermStructure)
-    : Parametrization(foreignCurrency), domesticTermStructure_(domesticTermStructure),
-      foreignTermStructure_(foreignTermStructure) {}
-    
+    const Handle<YieldTermStructure> &foreignTermStructure,
+    const Handle<Quote> &fxSpotToday)
+    : Parametrization(foreignCurrency),
+      foreignTermStructure_(foreignTermStructure), fxSpotToday_(fxSpotToday) {}
+
 } // namespace QuantExt

@@ -34,8 +34,8 @@ class FxBsPiecewiseConstantParametrization : public FxBsParametrization,
   public:
     FxBsPiecewiseConstantParametrization(
         const Currency &currency,
-        const Handle<YieldTermStructure> &domesticTermStructure,
         const Handle<YieldTermStructure> &foreignTermStructure,
+        const Handle<Quote> &fxSpotToday,
         const Array &times, const Array &sigma);
     /*! inspectors */
     Real variance(const Time t) const;

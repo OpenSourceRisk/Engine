@@ -25,6 +25,7 @@
 #include <ql/currencies/europe.hpp>
 #include <ql/math/array.hpp>
 #include <ql/math/comparison.hpp>
+#include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
 
@@ -456,8 +457,9 @@ void XAssetModelTest::testFxBsParametrizations() {
     Handle<YieldTermStructure> forYts(boost::make_shared<FlatForward>(
         0, NullCalendar(), 0.03, Actual365Fixed()));
 
-    FxBsPiecewiseConstantParametrization fxbs_1(USDCurrency(), domYts, forYts,
-                                                times, sigma);
+    FxBsPiecewiseConstantParametrization fxbs_1(
+        USDCurrency(), forYts,
+        Handle<Quote>(boost::make_shared<SimpleQuote>(1.10)), times, sigma);
 
     check("fxbs_1.variance", 0.0, fxbs_1.variance(0.0), 0.0);
     check("fxbs_1.variance", 0.5, fxbs_1.variance(0.5), 0.10 * 0.10 * 0.5);

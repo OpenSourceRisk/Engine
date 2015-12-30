@@ -23,11 +23,9 @@ namespace QuantExt {
 
 FxBsPiecewiseConstantParametrization::FxBsPiecewiseConstantParametrization(
     const Currency &currency,
-    const Handle<YieldTermStructure> &domesticTermStructure,
-    const Handle<YieldTermStructure> &foreignTermStructure, const Array &times,
-    const Array &sigma)
-    : FxBsParametrization(currency, domesticTermStructure,
-                          foreignTermStructure),
+    const Handle<YieldTermStructure> &foreignTermStructure,
+    const Handle<Quote> &fxSpotToday, const Array &times, const Array &sigma)
+    : FxBsParametrization(currency, foreignTermStructure, fxSpotToday),
       PiecewiseConstantHelper1(times, sigma) {}
 
-} // namespace QuantExt 
+} // namespace QuantExt

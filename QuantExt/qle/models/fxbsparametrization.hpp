@@ -35,19 +35,19 @@ namespace QuantExt {
 class FxBsParametrization : public Parametrization {
   public:
     FxBsParametrization(const Currency &foreignCurrency,
-                        const Handle<YieldTermStructure> &domesticTermStructure,
-                        const Handle<YieldTermStructure> &foreignTermStructure);
+                        const Handle<YieldTermStructure> &foreignTermStructure,
+                        const Handle<Quote> &fxSpotToday);
     /*! interface */
     virtual Real variance(const Time t) const = 0;
     /*! inspectors */
     virtual Real sigma(const Time t) const;
     virtual Real stdDeviation(const Time t) const;
-    const Handle<YieldTermStructure> domesticTermStructure() const;
     const Handle<YieldTermStructure> foreignTermStructure() const;
+    const Handle<Quote> fxSpotToday() const;
 
   private:
-    const Handle<YieldTermStructure> domesticTermStructure_,
-        foreignTermStructure_;
+    const Handle<YieldTermStructure> foreignTermStructure_;
+    const Handle<Quote> fxSpotToday_;
 };
 
 // inline
@@ -61,13 +61,12 @@ inline Real FxBsParametrization::stdDeviation(const Time t) const {
 }
 
 inline const Handle<YieldTermStructure>
-FxBsParametrization::domesticTermStructure() const {
-    return domesticTermStructure_;
+FxBsParametrization::foreignTermStructure() const {
+    return foreignTermStructure_;
 }
 
-inline const Handle<YieldTermStructure>
-FxBsParametrization::foreignTermStructure() const {
-    return domesticTermStructure_;
+inline const Handle<Quote> FxBsParametrization::fxSpotToday() const {
+    return fxSpotToday_;
 }
 
 } // namespace QuantExt
