@@ -49,7 +49,7 @@ class Gaussian1dXAssetAdaptor : public Gaussian1dModel {
 
 // inline
 
-const Real Gaussian1dXAssetAdaptor::numeraireImpl(
+inline const Real Gaussian1dXAssetAdaptor::numeraireImpl(
     const Time t, const Real y, const Handle<YieldTermStructure> &yts) const {
     Real d =
         yts.empty() ? 1.0 : x_->irlgm1f(ccy_)->termStructure()->discount(t) /
@@ -58,7 +58,7 @@ const Real Gaussian1dXAssetAdaptor::numeraireImpl(
     return d * x_->numeraire(ccy_, t, x);
 }
 
-const Real Gaussian1dXAssetAdaptor::zerobondImpl(
+inline const Real Gaussian1dXAssetAdaptor::zerobondImpl(
     const Time T, const Time t, const Real y,
     const Handle<YieldTermStructure> &yts) const {
     Real d = yts.empty() ? 1.0

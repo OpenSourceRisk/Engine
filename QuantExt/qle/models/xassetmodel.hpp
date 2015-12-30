@@ -24,6 +24,7 @@
 #ifndef quantext_xasset_model_hpp
 #define quantext_xasset_model_hpp
 
+#include <qle/math/cumulativenormaldistribution.hpp>
 #include <qle/models/irlgm1fparametrization.hpp>
 #include <ql/math/matrix.hpp>
 #include <ql/math/distributions/normaldistribution.hpp>
@@ -92,7 +93,8 @@ class XAssetModel : public CalibratedModel {
 
 // inline
 
-const IrLgm1fParametrization *const XAssetModel::irlgm1f(const Size ccy) const {
+inline const IrLgm1fParametrization *const
+XAssetModel::irlgm1f(const Size ccy) const {
     QL_REQUIRE(ccy < nIrLgm1f_, "irlgm1f index (" << ccy << ") must be in 0..."
                                                   << (nIrLgm1f_ - 1));
     return boost::dynamic_pointer_cast<const IrLgm1fParametrization>(
@@ -145,7 +147,7 @@ inline Real XAssetModel::discountBondOption(const Size ccy, Option::Type type,
     Real sigma = sqrt(p->zeta(t)) * (p->H(T) - p->H(S));
     Real dp = (std::log(pT / (K * pS)) / sigma + 0.5 * sigma);
     Real dm = dp - sigma;
-    CumulativeNormalDistribution N;
+    QuantExt::CumulativeNormalDistribution N;
     return w * (pT * N(w * dp) - pS * K * N(w * dm));
 }
 
