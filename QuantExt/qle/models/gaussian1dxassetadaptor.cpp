@@ -17,15 +17,13 @@
  FOR A PARTICULAR PURPOSE.  See the license for more details.
 */
 
-
 #include <qle/models/gaussian1dxassetadaptor.hpp>
 
 namespace QuantExt {
 
-    Gaussian1dXAssetAdaptor(Size ccy,
-                            const boost::shared_ptr<XAssetModel> &model) {
-
-    }
-
+Gaussian1dXAssetAdaptor::Gaussian1dXAssetAdaptor(
+    Size ccy, const boost::shared_ptr<const XAssetModel> &model)
+    : Gaussian1dModel(model->irlgm1f(ccy)->termStructure()), ccy_(ccy),
+      x_(model) {}
 
 } // namespace QuantExt

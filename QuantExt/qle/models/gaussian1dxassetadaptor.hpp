@@ -25,6 +25,7 @@
 #ifndef quantext_gaussian1d_xasset_adaptor_hpp
 #define quantext_gaussian1d_xasset_adaptor_hpp
 
+#include <qle/models/gaussian1dxassetadaptor.hpp>
 #include <qle/models/xassetmodel.hpp>
 #include <ql/models/shortrate/onefactormodels/gaussian1dmodel.hpp>
 
@@ -32,8 +33,8 @@ namespace QuantExt {
 
 class Gaussian1dXAssetAdaptor : public Gaussian1dModel {
   public:
-    Gaussian1dXAssetAdaptor(Size ccy,
-                            const boost::shared_ptr<XAssetModel> &model);
+    Gaussian1dXAssetAdaptor(const Size ccy,
+                            const boost::shared_ptr<const XAssetModel> &model);
 
   private:
     /*! Gaussian1dModel interface */
@@ -41,9 +42,32 @@ class Gaussian1dXAssetAdaptor : public Gaussian1dModel {
                              const Handle<YieldTermStructure> &yts) const;
     const Real zerobondImpl(const Time T, const Time t, const Real y,
                             const Handle<YieldTermStructure> &yts) const;
-
-    const boost::shared_ptr<IrLgm1fParametrization> p_;
+    /*! members */
+    const Size ccy_;
+    const boost::shared_ptr<const XAssetModel> x_;
 };
+
+// inline
+
+const Real Gaussian1dXAssetAdaptor::numeraireImpl(
+    const Time t, const Real y, const Handle<YieldTermStructure> &yts) const {
+    Real d =
+        yts.empty() ? 1.0 : x_->irlgm1f(ccy_)->termStructure()->discount(t) /
+                                yts->discount(t);
+    Real x = y * std::sqrt(x_->irlgm1f(ccy_)->zeta(t));
+    return d * x_->numeraire(ccy_, t, x);
+}
+
+const Real Gaussian1dXAssetAdaptor::zerobondImpl(
+    const Time T, const Time t, const Real y,
+    const Handle<YieldTermStructure> &yts) const {
+    Real d = yts.empty() ? 1.0
+                         : x_->irlgm1f(ccy_)->termStructure()->discount(t) /
+                               x_->irlgm1f(ccy_)->termStructure()->discount(T) *
+                               yts->discount(T) / yts->discount(t);
+    Real x = y * std::sqrt(x_->irlgm1f(ccy_)->zeta(t));
+    return d * x_->discountBond(ccy_, t, T, x);
+}
 
 } // QuantExt
 
