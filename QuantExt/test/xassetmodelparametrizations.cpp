@@ -500,7 +500,7 @@ void XAssetModelParametrizationsTest::testFxBsParametrizations() {
 }
 
 test_suite *XAssetModelParametrizationsTest::suite() {
-    test_suite *suite = BOOST_TEST_SUITE("XAsset model tests");
+    test_suite *suite = BOOST_TEST_SUITE("XAsset model parametrizations tests");
     suite->add(QUANTEXT_TEST_CASE(
         &XAssetModelParametrizationsTest::testParametrizationBaseClasses));
     suite->add(QUANTEXT_TEST_CASE(
