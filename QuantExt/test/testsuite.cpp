@@ -28,6 +28,7 @@ using boost::unit_test::test_suite;
 #endif
 
 #include "xassetmodelparametrizations.hpp"
+#include "analyticlgmswaptionengine.hpp"
 
 namespace {
 
@@ -62,6 +63,7 @@ test_suite* init_unit_test_suite(int, char* []) {
   test->add(BOOST_TEST_CASE(startTimer));
 
   test->add(XAssetModelParametrizationsTest::suite());
+  test->add(AnalyticLgmSwaptionEngineTest::suite());
 
   test->add(BOOST_TEST_CASE(stopTimer));
 
