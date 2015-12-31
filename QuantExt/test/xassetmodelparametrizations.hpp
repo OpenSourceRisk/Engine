@@ -17,8 +17,8 @@
  FOR A PARTICULAR PURPOSE.  See the license for more details.
 */
 
-#ifndef quantext_test_xassetmodel_hpp
-#define quantext_test_xassetmodel_hpp
+#ifndef quantext_test_xassetmodelparametrizations_hpp
+#define quantext_test_xassetmodelparametrizations_hpp
 
 #include <boost/test/unit_test.hpp>
 
