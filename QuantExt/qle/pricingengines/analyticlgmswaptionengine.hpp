@@ -25,7 +25,6 @@
 #define quantext_analytic_lgm_swaption_engine_hpp
 
 #include <ql/instruments/swaption.hpp>
-#include <ql/pricingengines/genericmodelengine.hpp>
 #include <qle/models/xassetmodel.hpp>
 
 namespace QuantExt {
@@ -51,15 +50,23 @@ namespace QuantExt {
     Note: Eventually we might provide this engine based on an own LGM model
     class and an adaptor to the XAsset model, but for the time being it
     seems easier to just refer to the XAsset model and select the appropriate
-    LGM component via the currency index.
+    LGM component via the currency index, or provide the irlgm1f parametrization
+    directly in the second constructor.
 */
 
 class AnalyticLgmSwaptionEngine
-    : public GenericModelEngine<XAssetModel, Swaption::arguments,
-                                Swaption::results> {
+    : public GenericEngine<Swaption::arguments, Swaption::results> {
 
+    /* XAsset model based constructor */
     AnalyticLgmSwaptionEngine(const boost::shared_ptr<XAssetModel> &model,
                               const Size ccy,
+                              const Handle<YieldTermStructure> &discountCurve =
+                                  Handle<YieldTermStructure>());
+
+    /* parametrization based constructor, note that updates in the
+       parametrization are not observed by the engine, you would
+       have to call update() on the engine explicitly */
+    AnalyticLgmSwaptionEngine(const IrLgm1fParametrization *const irlgm1f,
                               const Handle<YieldTermStructure> &discountCurve =
                                   Handle<YieldTermStructure>());
 
@@ -67,8 +74,8 @@ class AnalyticLgmSwaptionEngine
 
   private:
     Real yStarHelper(const Real y) const;
-    const Size ccy_;
-    const Handle<YieldTermStructure> discountCurve_;
+    const IrLgm1fParametrization *const p_;
+    const Handle<YieldTermStructure> c_;
     mutable Real H0_, D0_, zetaex_;
     mutable std::vector<Real> S_, Hj_, Dj_;
     mutable Size j1_, k1_;
