@@ -57,6 +57,7 @@ namespace QuantExt {
 class AnalyticLgmSwaptionEngine
     : public GenericEngine<Swaption::arguments, Swaption::results> {
 
+  public:
     /* XAsset model based constructor */
     AnalyticLgmSwaptionEngine(const boost::shared_ptr<XAssetModel> &model,
                               const Size ccy,
