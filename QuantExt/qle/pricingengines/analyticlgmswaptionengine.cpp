@@ -27,19 +27,23 @@ namespace QuantExt {
 
 AnalyticLgmSwaptionEngine::AnalyticLgmSwaptionEngine(
     const boost::shared_ptr<XAssetModel> &model, const Size ccy,
-    const Handle<YieldTermStructure> &discountCurve)
+    const Handle<YieldTermStructure> &discountCurve,
+    const FloatSpreadMapping floatSpreadMapping)
     : GenericEngine<Swaption::arguments, Swaption::results>(),
       p_(model->irlgm1f(ccy)),
-      c_(discountCurve.empty() ? p_->termStructure() : discountCurve) {
+      c_(discountCurve.empty() ? p_->termStructure() : discountCurve),
+      floatSpreadMapping_(floatSpreadMapping) {
     registerWith(model);
     registerWith(c_);
 }
 
 AnalyticLgmSwaptionEngine::AnalyticLgmSwaptionEngine(
     const IrLgm1fParametrization *const irlgm1f,
-    const Handle<YieldTermStructure> &discountCurve)
+    const Handle<YieldTermStructure> &discountCurve,
+    const FloatSpreadMapping floatSpreadMapping)
     : GenericEngine<Swaption::arguments, Swaption::results>(), p_(irlgm1f),
-      c_(discountCurve.empty() ? p_->termStructure() : discountCurve) {
+      c_(discountCurve.empty() ? p_->termStructure() : discountCurve),
+      floatSpreadMapping_(floatSpreadMapping) {
     registerWith(c_);
 }
 
@@ -77,10 +81,14 @@ void AnalyticLgmSwaptionEngine::calculate() const {
     // b) a spread between the ibor indices forwarding curve and the
     //     discounting curve
     // here, we do not work with a spread correction directly, but
-    // multiply this implicitly with the nominal and fixed rate, so
-    // S_i is really an amount correction rather.
+    // with this multiplied by the nominal and accrual basis,
+    // so S_i is really an amount correction.
 
     S_.resize(arguments_.fixedCoupons.size() - j1_);
+    for (Size i = 0; i < S_.size(); ++i) {
+        S_[i] = 0.0;
+    }
+    S_m1 = 0.0;
     Size ratio = static_cast<Size>(
         static_cast<Real>(arguments_.floatingCoupons.size()) /
             static_cast<Real>(arguments_.fixedCoupons.size()) +
@@ -92,22 +100,51 @@ void AnalyticLgmSwaptionEngine::calculate() const {
     Size k = k1_;
     boost::shared_ptr<IborIndex> flatIbor = swap.iborIndex()->clone(c_);
     for (Size j = j1_; j < arguments_.fixedCoupons.size(); ++j) {
-        Real sum = 0.0;
+        Real sum1 = 0.0, sum2 = 0.0;
         for (Size rr = 0; rr < ratio && k < arguments_.floatingCoupons.size();
              ++rr, ++k) {
             Real amount = arguments_.floatingCoupons[k];
+            Real lambda1 = 0.0, lambda2 = 1.0;
+            if (floatSpreadMapping_ == proRata) {
+                // we do not use the exact pay dates but the ratio to determine
+                // the distance to the adjacent payment dates
+                lambda2 = static_cast<Real>(rr + 1) / static_cast<Real>(ratio);
+                lambda1 = 1.0 - lambda2;
+            }
             if (amount != Null<Real>()) {
                 // if no amount is given, we do not need a spread correction
-                // since then no curve is attached to the swap's ibor index
-                // and so we assume a one curve setup.
+                // due to different forward / discounting curves since then
+                // no curve is attached to the swap's ibor index and so we
+                // assume a one curve setup
+                // if QL_USE_INDEXED_COUPON is enabled, then we should
+                // rather estimate the fixing on the accrual times in order
+                // to exactly match 100 as the floating leg's price as of
+                // settlement, but the inaccuracy induced from this effect
+                // should be really small, so we ignore it
                 Real flatAmount =
                     flatIbor->fixing(arguments_.floatingFixingDates[k]) *
                     arguments_.floatingAccrualTimes[k];
-                sum += (amount - flatAmount) *
-                       c_->discount(arguments_.floatingPayDates[k]);
+                Real correction = (amount - flatAmount) *
+                                  c_->discount(arguments_.floatingPayDates[k]);
+                sum1 += lambda1 * correction;
+                sum2 += lambda2 * correction;
+            } else {
+                // if no amount is given we can still have a float spread
+                // that has to be converted into a fixed leg's payment
+                Real correction = arguments_.floatingSpreads[k] *
+                                  arguments_.floatingAccrualTimes[k] *
+                                  c_->discount(arguments_.floatingPayDates[k]);
+                sum1 += lambda1 * correction;
+                sum2 += lambda2 * correction;
             }
         }
-        S_[j - j1_] = sum / c_->discount(arguments_.fixedPayDates[j]);
+        if (j > j1_) {
+            S_[j - j1_ - 1] +=
+                sum1 / c_->discount(arguments_.fixedPayDates[j - 1]);
+        } else {
+            S_m1 += sum1 / c_->discount(arguments_.floatingResetDates[k1_]);
+        }
+        S_[j - j1_] += sum2 / c_->discount(arguments_.fixedPayDates[j]);
     }
 
     // do the actual pricing
@@ -139,6 +176,8 @@ void AnalyticLgmSwaptionEngine::calculate() const {
                     : 1.0 - N((yStar + (Hj_[j - j1_] - H0_) * zetaex_) /
                               sqrt_zetaex));
     }
+    sum += -S_m1 * D0_ * (type == Option::Call ? N(yStar / sqrt_zetaex)
+                                               : 1.0 - N(yStar / sqrt_zetaex));
     sum += Dj_.back() *
                (type == Option::Call
                     ? N((yStar + (Hj_.back() - H0_) * zetaex_) / sqrt_zetaex)
@@ -149,6 +188,7 @@ void AnalyticLgmSwaptionEngine::calculate() const {
 
     results_.value = sum;
 
+    results_.additionalResults["fixedAmountCorrectionSettlement"] = S_m1;
     results_.additionalResults["fixedAmountCorrections"] = S_;
 
 } // calculate
@@ -161,6 +201,7 @@ Real AnalyticLgmSwaptionEngine::yStarHelper(const Real y) const {
             std::exp(-(Hj_[j - j1_] - H0_) * y -
                      0.5 * (Hj_[j - 1] - H0_) * (Hj_[j - 1] - H0_) * zetaex_);
     }
+    sum += -S_m1 * D0_;
     sum += Dj_.back() *
            std::exp(-(Hj_.back() - H0_) * y -
                     0.5 * (Hj_.back() - H0_) * (Hj_.back() - H0_) * zetaex_);

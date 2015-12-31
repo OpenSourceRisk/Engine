@@ -36,9 +36,14 @@ namespace QuantExt {
     option expiry are considered to be
     part of the exercise into right.
 
-    Reference: Methodology for callable swaps and bermudan "exercise into"
-    swaptions, http://www.researchgate.net/publication/273720052,
-    section 3.3
+    References:
+
+    Hagan, Methodology for callable swaps and bermudan  "exercise into"
+   swaptions,
+    http://www.researchgate.net/publication/273720052, section 3.3
+
+    Lichters, Stamm, Gallagher: Modern Derivatives Pricing and Credit Exposure
+    Analysis, Palgrave Macmillan, 2015, 11.2.2
 
     \warning Cash settled swaptions are not supported
 
@@ -58,18 +63,25 @@ class AnalyticLgmSwaptionEngine
     : public GenericEngine<Swaption::arguments, Swaption::results> {
 
   public:
+    // nextCoupon is Mapping A, proRata is Mapping B
+    // in Lichters, Stamm, Gallagher (2015)
+    enum FloatSpreadMapping { nextCoupon, proRata };
+
     /* XAsset model based constructor */
-    AnalyticLgmSwaptionEngine(const boost::shared_ptr<XAssetModel> &model,
-                              const Size ccy,
-                              const Handle<YieldTermStructure> &discountCurve =
-                                  Handle<YieldTermStructure>());
+    AnalyticLgmSwaptionEngine(
+        const boost::shared_ptr<XAssetModel> &model, const Size ccy,
+        const Handle<YieldTermStructure> &discountCurve =
+            Handle<YieldTermStructure>(),
+        const FloatSpreadMapping floatSpreadMapping = proRata);
 
     /* parametrization based constructor, note that updates in the
        parametrization are not observed by the engine, you would
        have to call update() on the engine explicitly */
-    AnalyticLgmSwaptionEngine(const IrLgm1fParametrization *const irlgm1f,
-                              const Handle<YieldTermStructure> &discountCurve =
-                                  Handle<YieldTermStructure>());
+    AnalyticLgmSwaptionEngine(
+        const IrLgm1fParametrization *const irlgm1f,
+        const Handle<YieldTermStructure> &discountCurve =
+            Handle<YieldTermStructure>(),
+        const FloatSpreadMapping floatSpreadMapping = proRata);
 
     void calculate() const;
 
@@ -77,7 +89,8 @@ class AnalyticLgmSwaptionEngine
     Real yStarHelper(const Real y) const;
     const IrLgm1fParametrization *const p_;
     const Handle<YieldTermStructure> c_;
-    mutable Real H0_, D0_, zetaex_;
+    const FloatSpreadMapping floatSpreadMapping_;
+    mutable Real H0_, D0_, zetaex_, S_m1;
     mutable std::vector<Real> S_, Hj_, Dj_;
     mutable Size j1_, k1_;
 };
