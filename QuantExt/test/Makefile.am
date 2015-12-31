@@ -3,6 +3,7 @@ dist_data_DATA =
 QE_TESTS = \
 	testsuite.cpp \
 	utilities.hpp utilities.cpp \
+	analyticlgmswaptionengine.hpp analyticlgmswaptionengine.cpp \
 	xassetmodelparametrizations.hpp xassetmodelparametrizations.cpp
 
 dist-hook:
