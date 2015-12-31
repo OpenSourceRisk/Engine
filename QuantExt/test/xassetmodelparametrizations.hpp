@@ -25,7 +25,7 @@
 /* remember to document new and/or updated tests in the Doxygen
    comment block of the corresponding class */
 
-class XAssetModelTest {
+class XAssetModelParametrizationsTest {
   public:
     static void testParametrizationBaseClasses();
     static void testIrLgm1fParametrizations();

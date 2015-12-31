@@ -27,7 +27,7 @@ using boost::unit_test::test_suite;
 #  include <qle/auto_link.hpp>
 #endif
 
-#include "xassetmodel.hpp"
+#include "xassetmodelparametrizations.hpp"
 
 namespace {
 
@@ -61,7 +61,7 @@ test_suite* init_unit_test_suite(int, char* []) {
   
   test->add(BOOST_TEST_CASE(startTimer));
 
-  test->add(XAssetModelTest::suite());
+  test->add(XAssetModelParametrizationsTest::suite());
 
   test->add(BOOST_TEST_CASE(stopTimer));
 

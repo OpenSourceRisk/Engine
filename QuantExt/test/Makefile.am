@@ -3,7 +3,7 @@ dist_data_DATA =
 QE_TESTS = \
 	testsuite.cpp \
 	utilities.hpp utilities.cpp \
-	xassetmodel.hpp xassetmodel.cpp
+	xassetmodelparametrizations.hpp xassetmodelparametrizations.cpp
 
 dist-hook:
 	mkdir -p $(distdir)/build

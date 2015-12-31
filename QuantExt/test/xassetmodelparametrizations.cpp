@@ -17,7 +17,7 @@
  FOR A PARTICULAR PURPOSE.  See the license for more details.
 */
 
-#include "xassetmodel.hpp"
+#include "xassetmodelparametrizations.hpp"
 #include "utilities.hpp"
 
 #include <qle/models/all.hpp>
@@ -62,7 +62,7 @@ void check2(std::string s, const Real x, const Real y, const Real e,
 
 } // anonymous namespace
 
-void XAssetModelTest::testParametrizationBaseClasses() {
+void XAssetModelParametrizationsTest::testParametrizationBaseClasses() {
 
     BOOST_TEST_MESSAGE(
         "Testing XAssetModel parametrizations (base classes)...");
@@ -217,7 +217,7 @@ void XAssetModelTest::testParametrizationBaseClasses() {
           std::exp(-0.75));
 }
 
-void XAssetModelTest::testIrLgm1fParametrizations() {
+void XAssetModelParametrizationsTest::testIrLgm1fParametrizations() {
 
     BOOST_TEST_MESSAGE("Testing XAssetModel parametrizations (irlgm1f)...");
 
@@ -438,7 +438,7 @@ void XAssetModelTest::testIrLgm1fParametrizations() {
     }
 }
 
-void XAssetModelTest::testFxBsParametrizations() {
+void XAssetModelParametrizationsTest::testFxBsParametrizations() {
 
     BOOST_TEST_MESSAGE("Testing XAssetModel parametrizations (fxbs)...");
 
@@ -499,12 +499,13 @@ void XAssetModelTest::testFxBsParametrizations() {
     check("fxb2_1.sigma", 5.0, fxbs_1.sigma(5.0), 0.15);
 }
 
-test_suite *XAssetModelTest::suite() {
+test_suite *XAssetModelParametrizationsTest::suite() {
     test_suite *suite = BOOST_TEST_SUITE("XAsset model tests");
-    suite->add(
-        QUANTEXT_TEST_CASE(&XAssetModelTest::testParametrizationBaseClasses));
-    suite->add(
-        QUANTEXT_TEST_CASE(&XAssetModelTest::testIrLgm1fParametrizations));
-    suite->add(QUANTEXT_TEST_CASE(&XAssetModelTest::testFxBsParametrizations));
+    suite->add(QUANTEXT_TEST_CASE(
+        &XAssetModelParametrizationsTest::testParametrizationBaseClasses));
+    suite->add(QUANTEXT_TEST_CASE(
+        &XAssetModelParametrizationsTest::testIrLgm1fParametrizations));
+    suite->add(QUANTEXT_TEST_CASE(
+        &XAssetModelParametrizationsTest::testFxBsParametrizations));
     return suite;
 }
