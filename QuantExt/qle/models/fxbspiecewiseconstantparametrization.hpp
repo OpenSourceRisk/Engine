@@ -62,7 +62,7 @@ FxBsPiecewiseConstantParametrization::parameterTimes(const Size i) const {
     return PiecewiseConstantHelper1::t_;
 }
 
-const Array &
+inline const Array &
 FxBsPiecewiseConstantParametrization::parameterValues(const Size i) const {
     QL_REQUIRE(i == 0, "parameter " << i << " does not exist, only have 0");
     return PiecewiseConstantHelper1::y_;

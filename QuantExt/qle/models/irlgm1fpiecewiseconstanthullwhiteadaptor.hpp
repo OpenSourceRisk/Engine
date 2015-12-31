@@ -102,7 +102,7 @@ IrLgm1fPiecewiseConstantHullWhiteAdaptor::parameterTimes(const Size i) const {
         return PiecewiseConstantHelper2::t_;
 }
 
-const Array &
+inline const Array &
 IrLgm1fPiecewiseConstantHullWhiteAdaptor::parameterValues(const Size i) const {
     QL_REQUIRE(i < 2, "parameter " << i << " does not exist, only have 0..1");
     if (i == 0)
