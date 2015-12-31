@@ -7,7 +7,7 @@ noinst_LTLIBRARIES = libMath.la
 libMath_la_LIBADD = 
 
 libMath_la_SOURCES = \
-	all.hpp \
+	cumulativenormaldistribution.cpp \
 	piecewiseintegral.cpp
 
 this_includedir=${includedir}/${subdir}
