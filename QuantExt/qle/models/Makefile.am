@@ -15,7 +15,8 @@ libModels_la_SOURCES = \
 	irlgm1fpiecewiseconstanthullwhiteadaptor.cpp \
 	irlgm1fpiecewiseconstantparametrization.cpp \
 	parametrization.cpp \
-	piecewiseconstanthelper.cpp
+	piecewiseconstanthelper.cpp \
+	xassetmodel.cpp
 
 this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \

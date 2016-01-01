@@ -53,7 +53,7 @@ namespace QuantExt {
     i.e. of the domestic yield term structure.
 */
 
-class XAssetModel : public CalibratedModel {
+class XAssetModel /*: public CalibratedModel*/ {
   public:
     /*! Parametrizations must be given in the following order
         - IR (first parametrization defines the domestic currency)
@@ -61,16 +61,18 @@ class XAssetModel : public CalibratedModel {
         - INF (optionally, ccy must be a subset of the IR ccys)
         - CRD (optionally, ccy must be a subset of the IR ccys)
         - COM (optionally) ccy must be a subset of the IR ccys) */
-    XAssetModel(const boost::shared_ptr<Parametrization> parametrizations,
+    XAssetModel(std::vector<const boost::shared_ptr<const Parametrization> >
+                    &parametrizations,
                 const Matrix &correlation);
 
-    /*! allow for time dependent correlation (second constructor) ? */
+    /*! allow for time dependent correlation (2nd ctor) */
 
     /*! inspectors */
     boost::shared_ptr<StochasticProcess> stateProcess() const;
 
     /*! LGM1F components */
-    const IrLgm1fParametrization *const irlgm1f(const Size ccy) const;
+    const boost::shared_ptr<const IrLgm1fParametrization>
+    irlgm1f(const Size ccy) const;
     Real numeraire(const Size ccy, const Time t, const Real x) const;
     Real discountBond(const Size ccy, const Time t, const Time T,
                       const Real x) const;
@@ -87,24 +89,22 @@ class XAssetModel : public CalibratedModel {
 
   private:
     Size nIrLgm1f_;
-    std::vector<const boost::shared_ptr<const Parametrization> >
-        parametrizations_;
+    std::vector<const boost::shared_ptr<const Parametrization> > p_;
+    const Matrix rho_;
 };
 
 // inline
 
-inline const IrLgm1fParametrization *const
+inline const boost::shared_ptr<const IrLgm1fParametrization>
 XAssetModel::irlgm1f(const Size ccy) const {
     QL_REQUIRE(ccy < nIrLgm1f_, "irlgm1f index (" << ccy << ") must be in 0..."
                                                   << (nIrLgm1f_ - 1));
-    return boost::dynamic_pointer_cast<const IrLgm1fParametrization>(
-               parametrizations_[ccy])
-        .get();
+    return boost::dynamic_pointer_cast<const IrLgm1fParametrization>(p_[ccy]);
 }
 
 inline Real XAssetModel::numeraire(const Size ccy, const Time t,
                                    const Real x) const {
-    const IrLgm1fParametrization *const p = irlgm1f(ccy);
+    const boost::shared_ptr<const IrLgm1fParametrization> p = irlgm1f(ccy);
     Real Ht = p->H(t);
     return std::exp(Ht * x + 0.5 * Ht * Ht * p->zeta(t)) /
            p->termStructure()->discount(t);
@@ -114,7 +114,7 @@ inline Real XAssetModel::discountBond(const Size ccy, const Time t,
                                       const Time T, const Real x) const {
     QL_REQUIRE(T >= t, "T(" << T << ") >= t(" << t
                             << ") required in irlgm1f discountBond");
-    const IrLgm1fParametrization *const p = irlgm1f(ccy);
+    const boost::shared_ptr<const IrLgm1fParametrization> p = irlgm1f(ccy);
     Real Ht = p->H(t);
     Real HT = p->H(T);
     return p->termStructure()->discount(T) / p->termStructure()->discount(t) *
@@ -125,7 +125,7 @@ inline Real XAssetModel::reducedDiscountBond(const Size ccy, const Time t,
                                              const Time T, const Real x) const {
     QL_REQUIRE(T >= t, "T(" << T << ") >= t(" << t
                             << ") required in irlgm1f reducedDiscountBond");
-    const IrLgm1fParametrization *const p = irlgm1f(ccy);
+    const boost::shared_ptr<const IrLgm1fParametrization> p = irlgm1f(ccy);
     Real HT = p->H(T);
     return p->termStructure()->discount(T) *
            std::exp(-HT * x - 0.5 * HT * HT * p->zeta(t));
@@ -137,7 +137,7 @@ inline Real XAssetModel::discountBondOption(const Size ccy, Option::Type type,
     QL_REQUIRE(T > S && S >= t,
                "T(" << T << ") > S(" << S << ") >= t(" << t
                     << ") required in irlgm1f discountBondOption");
-    const IrLgm1fParametrization *const p = irlgm1f(ccy);
+    const boost::shared_ptr<const IrLgm1fParametrization> p = irlgm1f(ccy);
     Real w = (type == Option::Call ? 1.0 : -1.0);
     Real pS = p->termStructure()->discount(S);
     Real pT = p->termStructure()->discount(T);
