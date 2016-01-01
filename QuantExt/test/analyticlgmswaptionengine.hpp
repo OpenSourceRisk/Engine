@@ -29,6 +29,7 @@ class AnalyticLgmSwaptionEngineTest {
   public:
     static void testMonoCurve();
     static void testDualCurve();
+    static void testAgainstGaussian1dEngine();
     static boost::unit_test_framework::test_suite *suite();
 };
 
