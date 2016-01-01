@@ -18,12 +18,18 @@
 */
 
 #include <qle/models/gaussian1dxassetadaptor.hpp>
+#include <qle/processes/irlgm1fstateprocess.hpp>
+
+#include <boost/make_shared.hpp>
 
 namespace QuantExt {
 
 Gaussian1dXAssetAdaptor::Gaussian1dXAssetAdaptor(
     Size ccy, const boost::shared_ptr<const XAssetModel> &model)
     : Gaussian1dModel(model->irlgm1f(ccy)->termStructure()), ccy_(ccy),
-      x_(model) {}
+      x_(model) {
+    stateProcess_ =
+        boost::make_shared<IrLgm1fStateProcess>(model->irlgm1f(ccy));
+}
 
 } // namespace QuantExt
