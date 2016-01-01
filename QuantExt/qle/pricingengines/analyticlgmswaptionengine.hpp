@@ -67,16 +67,16 @@ class AnalyticLgmSwaptionEngine
     // in Lichters, Stamm, Gallagher (2015)
     enum FloatSpreadMapping { nextCoupon, proRata };
 
-    /* XAsset model based constructor */
+    /*! XAsset model based constructor */
     AnalyticLgmSwaptionEngine(
         const boost::shared_ptr<XAssetModel> &model, const Size ccy,
         const Handle<YieldTermStructure> &discountCurve =
             Handle<YieldTermStructure>(),
         const FloatSpreadMapping floatSpreadMapping = proRata);
 
-    /* parametrization based constructor, note that updates in the
-       parametrization are not observed by the engine, you would
-       have to call update() on the engine explicitly */
+    /*! parametrization based constructor, note that updates in the
+        parametrization are not observed by the engine, you would
+        have to call update() on the engine explicitly */
     AnalyticLgmSwaptionEngine(
         const IrLgm1fParametrization *const irlgm1f,
         const Handle<YieldTermStructure> &discountCurve =
