@@ -33,12 +33,12 @@ AnalyticLgmSwaptionEngine::AnalyticLgmSwaptionEngine(
       p_(model->irlgm1f(ccy)),
       c_(discountCurve.empty() ? p_->termStructure() : discountCurve),
       floatSpreadMapping_(floatSpreadMapping) {
-    registerWith(model);
+    // registerWith(model); //enable later when model is observable
     registerWith(c_);
 }
 
 AnalyticLgmSwaptionEngine::AnalyticLgmSwaptionEngine(
-    const IrLgm1fParametrization *const irlgm1f,
+    const boost::shared_ptr<const IrLgm1fParametrization> irlgm1f,
     const Handle<YieldTermStructure> &discountCurve,
     const FloatSpreadMapping floatSpreadMapping)
     : GenericEngine<Swaption::arguments, Swaption::results>(), p_(irlgm1f),

@@ -78,7 +78,7 @@ class AnalyticLgmSwaptionEngine
         parametrization are not observed by the engine, you would
         have to call update() on the engine explicitly */
     AnalyticLgmSwaptionEngine(
-        const IrLgm1fParametrization *const irlgm1f,
+        const boost::shared_ptr<const IrLgm1fParametrization> irlgm1f,
         const Handle<YieldTermStructure> &discountCurve =
             Handle<YieldTermStructure>(),
         const FloatSpreadMapping floatSpreadMapping = proRata);
@@ -87,7 +87,7 @@ class AnalyticLgmSwaptionEngine
 
   private:
     Real yStarHelper(const Real y) const;
-    const IrLgm1fParametrization *const p_;
+    const boost::shared_ptr<const IrLgm1fParametrization> p_;
     const Handle<YieldTermStructure> c_;
     const FloatSpreadMapping floatSpreadMapping_;
     mutable Real H0_, D0_, zetaex_, S_m1;
