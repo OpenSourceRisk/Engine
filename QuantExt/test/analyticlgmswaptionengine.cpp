@@ -27,10 +27,14 @@
 #include <ql/indexes/swap/euriborswap.hpp>
 #include <ql/math/array.hpp>
 #include <ql/math/comparison.hpp>
+#include <ql/models/shortrate/onefactormodels/gsr.hpp>
+#include <ql/pricingengines/swaption/fdhullwhiteswaptionengine.hpp>
+#include <ql/pricingengines/swap/discountingswapengine.hpp>
 #include <ql/pricingengines/swaption/gaussian1dswaptionengine.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
+#include <ql/time/calendars/target.hpp>
 
 #include <boost/make_shared.hpp>
 
@@ -294,62 +298,198 @@ void AnalyticLgmSwaptionEngineTest::testDualCurve() {
     }
 }
 
-void AnalyticLgmSwaptionEngineTest::testAgainstGaussian1dEngine() {
+void AnalyticLgmSwaptionEngineTest::testAgainstOtherEngines() {
 
-    BOOST_TEST_MESSAGE("Testing analytic LGM swaption engine against "
-                       "Gaussian1d integral engine...");
+    BOOST_TEST_MESSAGE(
+        "Testing analytic LGM swaption engine against "
+        "G1d adaptor / Gsr integral engines and Hull White FD engine...");
 
-    Real discountingRateLevel = 0.02;
-    Real forwardingRateLevel = 0.02;
-    Real strike = 0.02;
+    Real discountingRateLevel[] = {-0.0050, 0.01, 0.03, 0.10};
+    Real forwardingRateLevel[] = {-0.0100, 0.01, 0.04, 0.12};
+    // Hull White only allows for positive reversion levels
+    Real kappa[] = {0.01, 0.00001, 0.01, 0.05};
 
-    Real kappa = 0.01;
-    Real alpha = 0.01;
+    // the model volatilities are meant to be Hull White volatilities
+    // they are fed into the LGM model via the HW adaptor below
+    // the rationale is to have another independent model
+    // (QuantLib::HullWhite) and pricing engine
+    // (QUantLib::FdHullWhiteSwaptionEngine) available for validation
 
-    Handle<YieldTermStructure> discountingCurve(boost::make_shared<FlatForward>(
-        0, NullCalendar(), discountingRateLevel, Actual365Fixed()));
-    Handle<YieldTermStructure> forwardingCurve(boost::make_shared<FlatForward>(
-        0, NullCalendar(), forwardingRateLevel, Actual365Fixed()));
+    Real sigma[] = {0.0001, 0.01, 0.02};
 
-    const boost::shared_ptr<const IrLgm1fConstantParametrization> irlgm1f =
-        boost::make_shared<const IrLgm1fConstantParametrization>(
-            EURCurrency(), discountingCurve, alpha, kappa);
+    Real strikeOffset[] = {-0.05, -0.02, -0.01, 0.0, 0.01, 0.02, 0.05};
 
-    std::vector<const boost::shared_ptr<const Parametrization> > params;
-    params.push_back(irlgm1f);
+    Size no = 0;
 
-    Matrix rho(1, 1);
+    // tolerance for comparision fd engine vs integral engines
+    Real tol1 = 3.0E-4;
 
-    const boost::shared_ptr<const XAssetModel> xasset =
-        boost::make_shared<const XAssetModel>(params, rho);
+    // tolerance for comparision of integral engines based
+    // on GSR and LGM model
+    Real tol2 = 1.0E-4;
 
-    const boost::shared_ptr<Gaussian1dModel> g1d =
-        boost::make_shared<Gaussian1dXAssetAdaptor>(0, xasset);
+    // tolerance for LGM integral engine and analytical engine
+    // in the case of no basis between discounting and forwarding
+    Real tol3 = 0.6E-4;
 
-    boost::shared_ptr<SwapIndex> index =
-        boost::make_shared<EuriborSwapIsdaFixA>(10 * Years, forwardingCurve);
+    // tolerance for LGM integral engine and analytical engine
+    // in the case of a non zero basis between discounting and
+    // forwarding curve (mapping type a and b)
+    Real tol4a = 12.0E-4, tol4b = 8.0E-4;
 
-    Swaption swaption = MakeSwaption(index, 10 * Years, strike);
+    for (Size i = 0; i < LENGTH(discountingRateLevel); ++i) {
+        for (Size k = 0; k < LENGTH(kappa); ++k) {
+            for (Size l = 0; l < LENGTH(sigma); ++l) {
 
-    boost::shared_ptr<PricingEngine> engine_map_a =
-        boost::make_shared<AnalyticLgmSwaptionEngine>(
-            irlgm1f, discountingCurve, AnalyticLgmSwaptionEngine::nextCoupon);
-    boost::shared_ptr<PricingEngine> engine_map_b =
-        boost::make_shared<AnalyticLgmSwaptionEngine>(
-            irlgm1f, discountingCurve, AnalyticLgmSwaptionEngine::proRata);
+                Handle<YieldTermStructure> discountingCurve(
+                    boost::make_shared<FlatForward>(0, NullCalendar(),
+                                                    discountingRateLevel[i],
+                                                    Actual365Fixed()));
+                Handle<YieldTermStructure> forwardingCurve(
+                    boost::make_shared<FlatForward>(0, NullCalendar(),
+                                                    forwardingRateLevel[i],
+                                                    Actual365Fixed()));
 
-    boost::shared_ptr<PricingEngine> engine_g1d =
-        boost::make_shared<Gaussian1dSwaptionEngine>(g1d, 64, 7.0, true, false,
-                                                     discountingCurve);
+                Array times(0);
+                Array sigma_a(1, sigma[l]);
+                Array kappa_a(1, kappa[k]);
+                std::vector<Date> dates(0);
+                std::vector<Real> sigma_v(1, sigma[l]);
+                std::vector<Real> kappa_v(1, kappa[k]);
 
-    swaption.setPricingEngine(engine_map_a);
-    Real npv_map_a = swaption.NPV();
-    swaption.setPricingEngine(engine_map_b);
-    Real npv_map_b = swaption.NPV();
-    swaption.setPricingEngine(engine_g1d);
-    Real npv_g1d = swaption.NPV();
+                const boost::shared_ptr<
+                    const IrLgm1fPiecewiseConstantHullWhiteAdaptor> irlgm1f =
+                    boost::make_shared<
+                        const IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
+                        EURCurrency(), discountingCurve, times, sigma_a,
+                        kappa_a);
 
-    std::clog << npv_g1d << " " << npv_map_a << " " << npv_map_b << std::endl;
+                std::vector<const boost::shared_ptr<const Parametrization> >
+                    params;
+                params.push_back(irlgm1f);
+                Matrix rho(1, 1);
+                const boost::shared_ptr<const XAssetModel> xasset =
+                    boost::make_shared<const XAssetModel>(params, rho);
+
+                const boost::shared_ptr<Gaussian1dModel> g1d =
+                    boost::make_shared<Gaussian1dXAssetAdaptor>(0, xasset);
+
+                const boost::shared_ptr<Gsr> gsr = boost::make_shared<Gsr>(
+                    discountingCurve, dates, sigma_v, kappa_v);
+
+                const boost::shared_ptr<HullWhite> hw =
+                    boost::make_shared<HullWhite>(discountingCurve, kappa[k],
+                                                  sigma[l]);
+
+                boost::shared_ptr<PricingEngine> engine_map_a =
+                    boost::make_shared<AnalyticLgmSwaptionEngine>(
+                        irlgm1f, discountingCurve,
+                        AnalyticLgmSwaptionEngine::nextCoupon);
+                boost::shared_ptr<PricingEngine> engine_map_b =
+                    boost::make_shared<AnalyticLgmSwaptionEngine>(
+                        irlgm1f, discountingCurve,
+                        AnalyticLgmSwaptionEngine::proRata);
+
+                boost::shared_ptr<PricingEngine> engine_g1d =
+                    boost::make_shared<Gaussian1dSwaptionEngine>(
+                        g1d, 96, 7.0, true, false, discountingCurve);
+
+                boost::shared_ptr<PricingEngine> engine_gsr =
+                    boost::make_shared<Gaussian1dSwaptionEngine>(
+                        gsr, 96, 7.0, true, false, discountingCurve);
+
+                boost::shared_ptr<PricingEngine> engine_fd =
+                    boost::make_shared<FdHullWhiteSwaptionEngine>(hw, 400, 400,
+                                                                  0, 1.0E-8);
+
+                boost::shared_ptr<SwapIndex> index =
+                    boost::make_shared<EuriborSwapIsdaFixA>(
+                        10 * Years, forwardingCurve, discountingCurve);
+                Real atmStrike = index->fixing(TARGET().advance(
+                    Settings::instance().evaluationDate(), 5 * Years));
+
+                for (Size s = 0; s < LENGTH(strikeOffset); ++s) {
+
+                    Swaption swaption =
+                        MakeSwaption(index, 5 * Years,
+                                     atmStrike + strikeOffset[s])
+                            .withUnderlyingType(strikeOffset[s] > 0.0
+                                                    ? VanillaSwap::Payer
+                                                    : VanillaSwap::Receiver);
+
+                    swaption.setPricingEngine(engine_map_a);
+                    Real npv_map_a = swaption.NPV();
+                    swaption.setPricingEngine(engine_map_b);
+                    Real npv_map_b = swaption.NPV();
+                    swaption.setPricingEngine(engine_g1d);
+                    Real npv_g1d = swaption.NPV();
+                    swaption.setPricingEngine(engine_gsr);
+                    Real npv_gsr = swaption.NPV();
+                    swaption.setPricingEngine(engine_fd);
+                    Real npv_fd = swaption.NPV();
+
+                    if (std::abs(npv_fd - npv_gsr) > tol1) {
+                        BOOST_TEST_ERROR(
+                            "inconsistent swaption npvs (fd="
+                            << npv_fd << ", gsr=" << npv_gsr << ") for case #"
+                            << no << " with discounting rate="
+                            << discountingRateLevel[i]
+                            << ", forwarding rate=" << forwardingRateLevel[i]
+                            << ", kappa=" << kappa[k] << ", sigma=" << sigma[l]
+                            << ", strike offset=" << strikeOffset[s]);
+                    }
+
+                    if (std::abs(npv_gsr - npv_g1d) > tol2) {
+                        BOOST_TEST_ERROR(
+                            "inconsistent swaption npvs (gsr="
+                            << npv_gsr << ", npv_g1d=" << npv_g1d
+                            << ") for case #" << no << " with discounting rate="
+                            << discountingRateLevel[i]
+                            << ", forwarding rate=" << forwardingRateLevel[i]
+                            << ", kappa=" << kappa[k] << ", sigma=" << sigma[l]
+                            << ", strike offset=" << strikeOffset[s]);
+                    }
+
+                    Real tolTmpA = 0.0, tolTmpB = 0.0;
+                    if (std::abs(discountingRateLevel[i] -
+                                 forwardingRateLevel[i]) < 1.0E-6) {
+                        tolTmpA = tolTmpB = tol3;
+                    } else {
+                        tolTmpA = tol4a;
+                        tolTmpB = tol4b;
+                    }
+
+                    if (std::abs(npv_g1d - npv_map_a) > tolTmpA) {
+                        BOOST_TEST_ERROR(
+                            "inconsistent swaption npvs (g1d="
+                            << npv_g1d << ", map_a=" << npv_map_a
+                            << "), tolerance is " << tolTmpA << ", for case #"
+                            << no << " with discounting rate="
+                            << discountingRateLevel[i]
+                            << ", forwarding rate=" << forwardingRateLevel[i]
+                            << ", kappa=" << kappa[k] << ", sigma=" << sigma[l]
+                            << ", strike offset=" << strikeOffset[s]);
+                    }
+
+                    if (std::abs(npv_g1d - npv_map_b) > tolTmpB) {
+                        BOOST_TEST_ERROR(
+                            "inconsistent swaption npvs (g1d="
+                            << npv_g1d << ", map_b=" << npv_map_b
+                            << "), tolerance is " << tolTmpB << ", for case #"
+                            << no << " with discounting rate="
+                            << discountingRateLevel[i]
+                            << ", forwarding rate=" << forwardingRateLevel[i]
+                            << ", kappa=" << kappa[k] << ", sigma=" << sigma[l]
+                            << ", strike offset=" << strikeOffset[s]);
+                    }
+
+                    no++;
+                }
+            }
+        }
+    }
+
+    BOOST_TEST_ERROR("Discuss tolerances for basis correction with Roland, in their book it seems to work much better...");
 }
 
 test_suite *AnalyticLgmSwaptionEngineTest::suite() {
@@ -359,6 +499,6 @@ test_suite *AnalyticLgmSwaptionEngineTest::suite() {
     suite->add(
         QUANTEXT_TEST_CASE(&AnalyticLgmSwaptionEngineTest::testDualCurve));
     suite->add(QUANTEXT_TEST_CASE(
-        &AnalyticLgmSwaptionEngineTest::testAgainstGaussian1dEngine));
+        &AnalyticLgmSwaptionEngineTest::testAgainstOtherEngines));
     return suite;
 }
