@@ -116,11 +116,6 @@ void AnalyticLgmSwaptionEngine::calculate() const {
                 // due to different forward / discounting curves since then
                 // no curve is attached to the swap's ibor index and so we
                 // assume a one curve setup
-                // if QL_USE_INDEXED_COUPON is enabled, then we should
-                // rather estimate the fixing on the accrual times in order
-                // to exactly match 100 as the floating leg's price as of
-                // settlement, but the inaccuracy induced from this effect
-                // should be really small, so we ignore it
                 Real flatAmount =
                     flatIbor->fixing(arguments_.floatingFixingDates[k]) *
                     arguments_.floatingAccrualTimes[k];
@@ -158,7 +153,7 @@ void AnalyticLgmSwaptionEngine::calculate() const {
     for (Size j = j1_; j < arguments_.fixedCoupons.size(); ++j) {
         Hj_[j - j1_] = p_->H(p_->termStructure()->timeFromReference(
             arguments_.fixedPayDates[j]));
-        Dj_[j - j1_] = c_->discount(arguments_.fixedCoupons[j - j1_]);
+        Dj_[j - j1_] = c_->discount(arguments_.fixedPayDates[j - j1_]);
     }
 
     Brent b;
@@ -169,22 +164,25 @@ void AnalyticLgmSwaptionEngine::calculate() const {
     QuantExt::CumulativeNormalDistribution N;
     Real sqrt_zetaex = std::sqrt(zetaex_);
     Real sum = 0.0;
+    Real w = type == Option::Call ? -1.0 : 1.0;
     for (Size j = j1_; j < arguments_.fixedCoupons.size(); ++j) {
-        sum += (arguments_.fixedCoupons[j] - S_[j - j1_]) * Dj_[j - j1_] *
-               (type == Option::Call
+        sum += w * (arguments_.fixedCoupons[j] - S_[j - j1_]) * Dj_[j - j1_] *
+               (type == Option::Put
                     ? N((yStar + (Hj_[j - j1_] - H0_) * zetaex_) / sqrt_zetaex)
                     : 1.0 - N((yStar + (Hj_[j - j1_] - H0_) * zetaex_) /
                               sqrt_zetaex));
     }
-    sum += -S_m1 * D0_ * (type == Option::Call ? N(yStar / sqrt_zetaex)
+    sum +=
+        -w * S_m1 * D0_ * (type == Option::Put ? N(yStar / sqrt_zetaex)
                                                : 1.0 - N(yStar / sqrt_zetaex));
-    sum += Dj_.back() *
-               (type == Option::Call
-                    ? N((yStar + (Hj_.back() - H0_) * zetaex_) / sqrt_zetaex)
-                    : 1.0 - N((yStar + (Hj_.back() - H0_) * zetaex_) /
-                              sqrt_zetaex)) -
-           D0_ * (type == Option::Call ? N(yStar / sqrt_zetaex)
-                                       : 1.0 - N(yStar / sqrt_zetaex));
+    sum +=
+        w * (Dj_.back() *
+                 (type == Option::Put
+                      ? N((yStar + (Hj_.back() - H0_) * zetaex_) / sqrt_zetaex)
+                      : 1.0 - N((yStar + (Hj_.back() - H0_) * zetaex_) /
+                                sqrt_zetaex)) -
+             D0_ * (type == Option::Put ? N(yStar / sqrt_zetaex)
+                                        : 1.0 - N(yStar / sqrt_zetaex)));
 
     results_.value = sum;
 
