@@ -38,9 +38,7 @@ namespace QuantExt {
 
     References:
 
-    Hagan, Methodology for callable swaps and bermudan  "exercise into"
-   swaptions,
-    http://www.researchgate.net/publication/273720052, section 3.3
+    Hagan, Evaluating and hedging exotic swap instruments via LGM
 
     Lichters, Stamm, Gallagher: Modern Derivatives Pricing and Credit Exposure
     Analysis, Palgrave Macmillan, 2015, 11.2.2
@@ -50,21 +48,19 @@ namespace QuantExt {
     The basis between the given discounting curve (or - if not given - the
     model curve) and the forwarding curve attached to the underlying swap's
     ibor index is taken into account by a static correction spread for
-    the underlying's fixed leg.
+    the underlying's fixed leg. Likewise a spread on the floating leg is
+    taken into account.
 
-    Note: Eventually we might provide this engine based on an own LGM model
-    class and an adaptor to the XAsset model, but for the time being it
-    seems easier to just refer to the XAsset model and select the appropriate
-    LGM component via the currency index, or provide the irlgm1f parametrization
-    directly in the second constructor.
+    Note that we assume H'>0, but this is a general requirement of the
+    LGM parametrization anyway (see the base parametrization class).
 */
 
 class AnalyticLgmSwaptionEngine
     : public GenericEngine<Swaption::arguments, Swaption::results> {
 
   public:
-    // nextCoupon is Mapping A, proRata is Mapping B
-    // in Lichters, Stamm, Gallagher (2015)
+    /*! nextCoupon is Mapping A, proRata is Mapping B
+        in Lichters, Stamm, Gallagher (2015), 11.2.2 */
     enum FloatSpreadMapping { nextCoupon, proRata };
 
     /*! XAsset model based constructor */
