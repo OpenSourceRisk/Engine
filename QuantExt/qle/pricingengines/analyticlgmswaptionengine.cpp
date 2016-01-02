@@ -80,7 +80,7 @@ void AnalyticLgmSwaptionEngine::calculate() const {
     // a) a possibly non-zero float spread and
     // b) a spread between the ibor indices forwarding curve and the
     //     discounting curve
-    // here, we do not work with a spread correction directly, but
+    // here, we do not work with a spread corrections directly, but
     // with this multiplied by the nominal and accrual basis,
     // so S_i is really an amount correction.
 
@@ -126,7 +126,8 @@ void AnalyticLgmSwaptionEngine::calculate() const {
             } else {
                 // if no amount is given we can still have a float spread
                 // that has to be converted into a fixed leg's payment
-                Real correction = arguments_.floatingSpreads[k] *
+                Real correction = arguments_.nominal *
+                                  arguments_.floatingSpreads[k] *
                                   arguments_.floatingAccrualTimes[k] *
                                   c_->discount(arguments_.floatingPayDates[k]);
                 sum1 += lambda1 * correction;
@@ -141,6 +142,18 @@ void AnalyticLgmSwaptionEngine::calculate() const {
         }
         S_[j - j1_] += sum2 / c_->discount(arguments_.fixedPayDates[j]);
     }
+
+    // check the sign of the cash flows
+    for (Size j = j1_; j < arguments_.fixedCoupons.size(); ++j) {
+        QL_REQUIRE(arguments_.fixedCoupons[j] - S_[j - j1_] >= 0.0,
+                   "the (corrected) fixed leg flows must all be non negative, "
+                   "but the flow on "
+                       << arguments_.fixedPayDates[j] << " is "
+                       << arguments_.fixedCoupons[j] << " - " << S_[j - j1_]
+                       << " = " << (arguments_.fixedCoupons[j] - S_[j - j1_]));
+    }
+
+    Real w = type == Option::Call ? -1.0 : 1.0;
 
     // do the actual pricing
 
@@ -164,26 +177,14 @@ void AnalyticLgmSwaptionEngine::calculate() const {
     QuantExt::CumulativeNormalDistribution N;
     Real sqrt_zetaex = std::sqrt(zetaex_);
     Real sum = 0.0;
-    Real w = type == Option::Call ? -1.0 : 1.0;
     for (Size j = j1_; j < arguments_.fixedCoupons.size(); ++j) {
         sum += w * (arguments_.fixedCoupons[j] - S_[j - j1_]) * Dj_[j - j1_] *
-               (type == Option::Put
-                    ? N((yStar + (Hj_[j - j1_] - H0_) * zetaex_) / sqrt_zetaex)
-                    : 1.0 - N((yStar + (Hj_[j - j1_] - H0_) * zetaex_) /
-                              sqrt_zetaex));
+               N(w * (yStar + (Hj_[j - j1_] - H0_) * zetaex_) / sqrt_zetaex);
     }
-    sum +=
-        -w * S_m1 * D0_ * (type == Option::Put ? N(yStar / sqrt_zetaex)
-                                               : 1.0 - N(yStar / sqrt_zetaex));
-    sum +=
-        w * (Dj_.back() *
-                 (type == Option::Put
-                      ? N((yStar + (Hj_.back() - H0_) * zetaex_) / sqrt_zetaex)
-                      : 1.0 - N((yStar + (Hj_.back() - H0_) * zetaex_) /
-                                sqrt_zetaex)) -
-             D0_ * (type == Option::Put ? N(yStar / sqrt_zetaex)
-                                        : 1.0 - N(yStar / sqrt_zetaex)));
-
+    sum += -w * S_m1 * D0_ * N(w * yStar / sqrt_zetaex);
+    sum += w * (Dj_.back() * N(w * (yStar + (Hj_.back() - H0_) * zetaex_) /
+                               sqrt_zetaex) -
+                D0_ * N(w * yStar / sqrt_zetaex));
     results_.value = sum;
 
     results_.additionalResults["fixedAmountCorrectionSettlement"] = S_m1;
@@ -194,10 +195,10 @@ void AnalyticLgmSwaptionEngine::calculate() const {
 Real AnalyticLgmSwaptionEngine::yStarHelper(const Real y) const {
     Real sum = 0.0;
     for (Size j = j1_; j < arguments_.fixedCoupons.size(); ++j) {
-        sum +=
-            (arguments_.fixedCoupons[j] - S_[j - j1_]) * Dj_[j - j1_] *
-            std::exp(-(Hj_[j - j1_] - H0_) * y -
-                     0.5 * (Hj_[j - 1] - H0_) * (Hj_[j - 1] - H0_) * zetaex_);
+        sum += (arguments_.fixedCoupons[j] - S_[j - j1_]) * Dj_[j - j1_] *
+               std::exp(-(Hj_[j - j1_] - H0_) * y -
+                        0.5 * (Hj_[j - j1_] - H0_) * (Hj_[j - j1_] - H0_) *
+                            zetaex_);
     }
     sum += -S_m1 * D0_;
     sum += Dj_.back() *
