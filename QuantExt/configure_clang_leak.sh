@@ -1,0 +1,1 @@
+./configure CXX=clang++ CXXFLAGS="-m64 -O3 -g -Wall -std=c++11 -fsanitize=leak -Qunused-arguments -Wno-unused-local-typedef" --with-ql-include=/home/peter/openxva/QuantLib --with-ql-lib=/home/peter/openxva/QuantLib/ql/.libs --with-mu-include=/home/peter/quaternion/dev/muparser-2.2.5/include --with-mu-lib=/home/peter/quaternion/dev/muparser-2.2.5/lib
