@@ -38,7 +38,7 @@ AnalyticLgmSwaptionEngine::AnalyticLgmSwaptionEngine(
 }
 
 AnalyticLgmSwaptionEngine::AnalyticLgmSwaptionEngine(
-    const boost::shared_ptr<const IrLgm1fParametrization> irlgm1f,
+    const boost::shared_ptr<IrLgm1fParametrization> irlgm1f,
     const Handle<YieldTermStructure> &discountCurve,
     const FloatSpreadMapping floatSpreadMapping)
     : GenericEngine<Swaption::arguments, Swaption::results>(), p_(irlgm1f),

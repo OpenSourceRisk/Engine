@@ -34,7 +34,7 @@ namespace QuantExt {
 class Gaussian1dXAssetAdaptor : public Gaussian1dModel {
   public:
     Gaussian1dXAssetAdaptor(const Size ccy,
-                            const boost::shared_ptr<const XAssetModel> &model);
+                            const boost::shared_ptr<XAssetModel> &model);
 
   private:
     /*! Gaussian1dModel interface */
@@ -44,7 +44,7 @@ class Gaussian1dXAssetAdaptor : public Gaussian1dModel {
                             const Handle<YieldTermStructure> &yts) const;
     /*! members */
     const Size ccy_;
-    const boost::shared_ptr<const XAssetModel> x_;
+    const boost::shared_ptr<XAssetModel> x_;
 };
 
 // inline

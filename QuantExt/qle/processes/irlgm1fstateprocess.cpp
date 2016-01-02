@@ -22,7 +22,7 @@
 namespace QuantExt {
 
 IrLgm1fStateProcess::IrLgm1fStateProcess(
-    const boost::shared_ptr<const IrLgm1fParametrization> &parametrization)
+    const boost::shared_ptr<IrLgm1fParametrization> &parametrization)
     : p_(parametrization) {}
 
 } // namespace QuantExt

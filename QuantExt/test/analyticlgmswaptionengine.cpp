@@ -51,8 +51,8 @@ void AnalyticLgmSwaptionEngineTest::testMonoCurve() {
     Handle<YieldTermStructure> flatCurve(boost::make_shared<FlatForward>(
         0, NullCalendar(), 0.02, Actual365Fixed()));
 
-    const boost::shared_ptr<const IrLgm1fConstantParametrization> irlgm1f =
-        boost::make_shared<const IrLgm1fConstantParametrization>(
+    const boost::shared_ptr<IrLgm1fConstantParametrization> irlgm1f =
+        boost::make_shared<IrLgm1fConstantParametrization>(
             EURCurrency(), flatCurve, 0.01, 0.01);
 
     // no curve attached
@@ -186,8 +186,8 @@ void AnalyticLgmSwaptionEngineTest::testDualCurve() {
     Handle<YieldTermStructure> forwardCurve2(boost::make_shared<FlatForward>(
         0, NullCalendar(), 0.0190, Actual365Fixed()));
 
-    const boost::shared_ptr<const IrLgm1fConstantParametrization> irlgm1f =
-        boost::make_shared<const IrLgm1fConstantParametrization>(
+    const boost::shared_ptr<IrLgm1fConstantParametrization> irlgm1f =
+        boost::make_shared<IrLgm1fConstantParametrization>(
             EURCurrency(), discCurve, 0.01, 0.01);
 
     // forward curve attached
@@ -300,7 +300,7 @@ void AnalyticLgmSwaptionEngineTest::testAgainstOtherEngines() {
 
     BOOST_TEST_MESSAGE(
         "Testing analytic LGM swaption engine against "
-        "G1d adaptor / Gsr integral engines and Hull White FD engine...");
+        "G1d adaptor / Gsr integral engines and Hull White fd engine...");
 
     Real discountingRateLevel[] = {-0.0050, 0.01, 0.03, 0.10};
     Real forwardingRateLevel[] = {-0.0100, 0.01, 0.04, 0.12};
@@ -359,18 +359,17 @@ void AnalyticLgmSwaptionEngineTest::testAgainstOtherEngines() {
                 std::vector<Real> kappa_v(1, kappa[k]);
 
                 const boost::shared_ptr<
-                    const IrLgm1fPiecewiseConstantHullWhiteAdaptor> irlgm1f =
+                    IrLgm1fPiecewiseConstantHullWhiteAdaptor> irlgm1f =
                     boost::make_shared<
-                        const IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
+                        IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
                         EURCurrency(), discountingCurve, times, sigma_a,
                         kappa_a);
 
-                std::vector<const boost::shared_ptr<const Parametrization> >
-                    params;
+                std::vector<boost::shared_ptr<Parametrization> > params;
                 params.push_back(irlgm1f);
                 Matrix rho(1, 1);
-                const boost::shared_ptr<const XAssetModel> xasset =
-                    boost::make_shared<const XAssetModel>(params, rho);
+                const boost::shared_ptr<XAssetModel> xasset =
+                    boost::make_shared<XAssetModel>(params, rho);
 
                 const boost::shared_ptr<Gaussian1dModel> g1d =
                     boost::make_shared<Gaussian1dXAssetAdaptor>(0, xasset);

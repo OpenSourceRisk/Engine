@@ -34,7 +34,7 @@ namespace QuantExt {
 class IrLgm1fStateProcess : public StochasticProcess1D {
   public:
     IrLgm1fStateProcess(
-        const boost::shared_ptr<const IrLgm1fParametrization> &parametrization);
+        const boost::shared_ptr<IrLgm1fParametrization> &parametrization);
     //! \name StochasticProcess interface
     //@{
     Real x0() const;
@@ -45,7 +45,7 @@ class IrLgm1fStateProcess : public StochasticProcess1D {
     Real variance(Time t0, Real x0, Time dt) const;
     //@}
   private:
-    const boost::shared_ptr<const IrLgm1fParametrization> p_;
+    const boost::shared_ptr<IrLgm1fParametrization> p_;
 };
 
 // inline
