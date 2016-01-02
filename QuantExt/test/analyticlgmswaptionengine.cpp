@@ -38,8 +38,6 @@
 
 #include <boost/make_shared.hpp>
 
-#include <iostream> // only for debug, delete later on!
-
 using namespace QuantLib;
 using namespace QuantExt;
 
@@ -306,6 +304,7 @@ void AnalyticLgmSwaptionEngineTest::testAgainstOtherEngines() {
 
     Real discountingRateLevel[] = {-0.0050, 0.01, 0.03, 0.10};
     Real forwardingRateLevel[] = {-0.0100, 0.01, 0.04, 0.12};
+
     // Hull White only allows for positive reversion levels
     Real kappa[] = {0.01, 0.00001, 0.01, 0.05};
 
@@ -335,7 +334,9 @@ void AnalyticLgmSwaptionEngineTest::testAgainstOtherEngines() {
     // tolerance for LGM integral engine and analytical engine
     // in the case of a non zero basis between discounting and
     // forwarding curve (mapping type a and b)
-    Real tol4a = 12.0E-4, tol4b = 8.0E-4;
+    // this scales with sigma, the tolerances here are
+    // for sigma = 0.01
+    Real tol4a = 6.0E-4, tol4b = 4.0E-4;
 
     for (Size i = 0; i < LENGTH(discountingRateLevel); ++i) {
         for (Size k = 0; k < LENGTH(kappa); ++k) {
@@ -392,11 +393,11 @@ void AnalyticLgmSwaptionEngineTest::testAgainstOtherEngines() {
 
                 boost::shared_ptr<PricingEngine> engine_g1d =
                     boost::make_shared<Gaussian1dSwaptionEngine>(
-                        g1d, 96, 7.0, true, false, discountingCurve);
+                        g1d, 128, 7.0, true, false, discountingCurve);
 
                 boost::shared_ptr<PricingEngine> engine_gsr =
                     boost::make_shared<Gaussian1dSwaptionEngine>(
-                        gsr, 96, 7.0, true, false, discountingCurve);
+                        gsr, 128, 7.0, true, false, discountingCurve);
 
                 boost::shared_ptr<PricingEngine> engine_fd =
                     boost::make_shared<FdHullWhiteSwaptionEngine>(hw, 400, 400,
@@ -409,6 +410,15 @@ void AnalyticLgmSwaptionEngineTest::testAgainstOtherEngines() {
                     Settings::instance().evaluationDate(), 5 * Years));
 
                 for (Size s = 0; s < LENGTH(strikeOffset); ++s) {
+
+                    // we have to ensure positive effective fixed flows for
+                    // the analytic engine (this is checked there, but we
+                    // want to avoid exceptions thrown during testing)
+                    if (atmStrike + strikeOffset[s] -
+                            (forwardingRateLevel[i] - discountingRateLevel[i]) <
+                        0.0001) {
+                        continue;
+                    }
 
                     Swaption swaption =
                         MakeSwaption(index, 5 * Years,
@@ -455,8 +465,10 @@ void AnalyticLgmSwaptionEngineTest::testAgainstOtherEngines() {
                                  forwardingRateLevel[i]) < 1.0E-6) {
                         tolTmpA = tolTmpB = tol3;
                     } else {
-                        tolTmpA = tol4a;
-                        tolTmpB = tol4b;
+                        tolTmpA = tol4a * std::max(sigma[l], 0.01) /
+                                  0.01; // see above
+                        tolTmpB = tol4b * std::max(sigma[l], 0.01) /
+                                  0.01; // see above
                     }
 
                     if (std::abs(npv_g1d - npv_map_a) > tolTmpA) {
@@ -489,7 +501,9 @@ void AnalyticLgmSwaptionEngineTest::testAgainstOtherEngines() {
         }
     }
 
-    BOOST_TEST_ERROR("Discuss tolerances for basis correction with Roland, in their book it seems to work much better...");
+    BOOST_TEST_ERROR("Discuss tolerances for basis correction with Roland (pro "
+                     "rata mapping), in "
+                     "their book it seems to work much better...");
 }
 
 test_suite *AnalyticLgmSwaptionEngineTest::suite() {
