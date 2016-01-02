@@ -35,7 +35,9 @@ class IrLgm1fParametrization : public Parametrization {
     IrLgm1fParametrization(const Currency &currency,
                            const Handle<YieldTermStructure> &termStructure);
     /*! interface */
+    /*! zeta must satisfy zeta(0) = 0, zeta'(t) >= 0 */
     virtual Real zeta(const Time t) const = 0;
+    /*! H must satisfy H(0) = 0, H'(0) = 1, H'(t) > 0 */
     virtual Real H(const Time t) const = 0;
     /*! inspectors */
     virtual Real alpha(const Time t) const;
