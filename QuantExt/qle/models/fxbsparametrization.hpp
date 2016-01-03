@@ -38,6 +38,7 @@ class FxBsParametrization : public Parametrization {
                         const Handle<YieldTermStructure> &foreignTermStructure,
                         const Handle<Quote> &fxSpotToday);
     /*! interface */
+    /*! must satisfy variance(0) = 0.0, variance'(t) >= 0 */
     virtual Real variance(const Time t) const = 0;
     /*! inspectors */
     virtual Real sigma(const Time t) const;
