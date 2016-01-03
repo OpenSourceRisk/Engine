@@ -36,29 +36,33 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-/*! The model is operated under the domestic LGM measure
+/*! Cross asset model
 
-    There are two ways of calibrating the model:
+    Reference:
+
+    Lichters, Stamm, Gallagher: Modern Derivatives Pricing and Credit Exposure
+    Analysis, Palgrave Macmillan, 2015
+
+    The model is operated under the domestic LGM measure. There are two ways of
+    calibrating the model:
 
     - provide a calibrated parametrization for a component
       extracted from some external model
     - do the calibration within the XAssetModel using one
       of the calibration procedures
 
-    The inter-parametrization correlation matrix specified
-    here can not be calibrated currently, but is a fixed,
-    external input.
+    The inter-parametrization correlation matrix specified here can not be
+    calibrated currently, but is a fixed, external input.
 
-    The model does not own a reference date, the times
-    given in the parametrizations are absolute and
-    insensitive to shifts in the global evaluation date.
-    The termstructures are required to be consistent
-    with these times. The model does not observe
-    anything, so it's update() method must be explicitly
-    called to notify observers of changes in the
-    constituting parametrizations. The model ensures
-    the necessary updates of parametrizations during
-    calibration though.
+    The model does not own a reference date, the times given in the
+   parametrizations
+    are absolute and insensitive to shifts in the global evaluation date. The
+    termstructures are required to be consistent with these times. The model
+   does not
+    observe anything, so it's update() method must be explicitly called to
+   notify
+    observers of changes in the constituting parametrizations. The model ensures
+    the necessary updates of parametrizations during calibration though.
 */
 
 class XAssetModel : public CalibratedModel {
@@ -89,19 +93,60 @@ class XAssetModel : public CalibratedModel {
     Real discountBondOption(const Size ccy, Option::Type type, const Real K,
                             const Time t, const Time S, const Time T) const;
 
+    /*! FXBS components */
+    const boost::shared_ptr<FxBsParametrization> fxbs(const Size ccy) const;
+
     /*! other components */
 
+    /*! expectations and covariances,
+      notation follows Lichters, Stamm, Gallagher, 2015, i.e.
+      z is the ir lgm state variable,
+      x is the log spot fx */
+
+    /*! analytic moments rely on numerical integration, which can
+        be customized here */
+    void setIngtegrationPolicy(const boost::shared_ptr<Integrator> integrator,
+                               const bool usePiecewiseIntegration = true);
+
+    Real ir_expectation(const Size i, const Time t0, const Real zi_0,
+                        const Real z0_0, const Real dt);
+    Real fx_expectation(const Size i, const Time t0, const Real xi_0,
+                        const Real z0_0, const Real dt);
+    Real ir_ir_covariance(const Size i, const Size j, const Time t0,
+                          const Real zi_0, const Real zj_0, const Real z0_0,
+                          Time dt);
+    Real ir_fx_covariance(const Size i, const Size j, const Time t0,
+                          const Real zi_0, const Real xj_0, const Real z0_0,
+                          Time dt);
+    Real fx_fx_covariance(const Size i, const Size j, const Time t0,
+                          const Real xi_0, const Real xj_0, cosnt Real z0_0,
+                          Time dt);
+
     /*! calibration procedures */
+
+    /*! calibrate irlgm1f volatilities to a sequence of ir options with
+        expiry times equal to step times in the parametrization */
     void calibrateIrVolatilitiesIterative();
+    /*! calibrate irlgm1f reversion to a sequence of ir options with
+        maturities equal to step times in the parametrization */
+    void calibrateIrReversionsIterative();
+    /*! calibrate irlgm1f parameters globally to a set of ir options */
+    void calibrateIrGlobally();
+    /*! calibrate fx volatilities to a sequence of fx options with
+        expiry times equal to step times in the parametrization */
+    void calibrateFxVolatilitiesIterative();
+
     /* ... */
 
   private:
     void initialize();
+    void initializeCorrelation();
     void initializeParametrizations();
     void initializeArguments();
     Size nIrLgm1f_, nFxBs_;
     const std::vector<boost::shared_ptr<Parametrization> > p_;
     const Matrix rho_;
+    boost::shared_ptr<Integrator> integrator_;
 };
 
 // inline
@@ -111,6 +156,14 @@ XAssetModel::irlgm1f(const Size ccy) const {
     QL_REQUIRE(ccy < nIrLgm1f_, "irlgm1f index (" << ccy << ") must be in 0..."
                                                   << (nIrLgm1f_ - 1));
     return boost::dynamic_pointer_cast<IrLgm1fParametrization>(p_[ccy]);
+}
+
+inline const boost::shared_ptr<IrLgm1fParametrization>
+XAssetModel::fxbs(const Size ccy) const {
+    QL_REQUIRE(ccy < nFxBs_, "fxbs index (" << ccy << ") must be in 0..."
+                                            << (nFxBs_ - 1));
+    return boost::dynamic_pointer_cast<FxBsParametrization>(
+        p_[nIrLgm1f_ + ccy]);
 }
 
 inline Real XAssetModel::numeraire(const Size ccy, const Time t,
