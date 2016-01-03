@@ -33,6 +33,7 @@ this_include_HEADERS = \
 	irlgm1fparametrization.hpp \
 	parametrization.hpp \
 	piecewiseconstanthelper.hpp \
+	pseudoparameter.hpp \
 	xassetmodel.hpp
 
 all.hpp: Makefile.am
