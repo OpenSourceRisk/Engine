@@ -22,12 +22,56 @@
 namespace QuantExt {
 
 XAssetModel::XAssetModel(
-    const std::vector<boost::shared_ptr<Parametrization> >
-        &parametrizations,
+    const std::vector<boost::shared_ptr<Parametrization> > &parametrizations,
     const Matrix &correlation)
-    : p_(parametrizations), rho_(correlation) {
+    : CalibratedModel(0), p_(parametrizations), rho_(correlation) {
+    initialize();
+}
 
-    nIrLgm1f_ = p_.size(); // only to get it working
+void XAssetModel::initialize() {
+
+    initializeParametrizations();
+    initializeArguments();
+}
+
+void XAssetModel::initializeParametrizations() {
+
+    nIrLgm1f_ = 0;
+    nFxBs_ = 0;
+
+    Size i = 0;
+
+    while (i < p_.size() &&
+           boost::dynamic_pointer_cast<IrLgm1fParametrization>(p_[i]) != NULL) {
+        ++nIrLgm1f_;
+        ++i;
+    }
+
+    while (i < p_.size() &&
+           boost::dynamic_pointer_cast<FxBsParametrization>(p_[i]) != NULL) {
+        ++nFxBs_;
+        ++i;
+    }
+
+    QL_REQUIRE(nIrLgm1f_ > 0, "at least one ir parametrization must be given");
+
+    QL_REQUIRE(nFxBs_ == nIrLgm1f_ - 1, "there must be n-1 fx "
+                                        "for n ir parametrizations, found "
+                                            << nIrLgm1f_ << " ir and " << nFxBs_
+                                            << " fx parametrizations");
+
+    QL_REQUIRE(nIrLgm1f_ + nFxBs_ == p_.size(),
+               "the parametrizations must be given in the following order: ir, "
+               "fx (others not yet supported), found "
+                   << nIrLgm1f_ << " ir and " << nFxBs_
+                   << " parametrizations, but there are " << p_.size()
+                   << " parametrizations given in total");
+}
+
+void XAssetModel::initializeArguments() {
+
+    for (Size i = 0; i < nIrLgm1f_; ++i) {
+    }
 }
 
 } // namespace QuantExt

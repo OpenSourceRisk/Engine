@@ -26,6 +26,7 @@
 
 #include <qle/math/cumulativenormaldistribution.hpp>
 #include <qle/models/irlgm1fparametrization.hpp>
+#include <qle/models/fxbsparametrization.hpp>
 #include <ql/math/matrix.hpp>
 #include <ql/math/distributions/normaldistribution.hpp>
 #include <ql/models/model.hpp>
@@ -48,12 +49,19 @@ namespace QuantExt {
     here can not be calibrated currently, but is a fixed,
     external input.
 
-    The model's reference date is by definition the reference
-    date of the termstructure of the first parametrization,
-    i.e. of the domestic yield term structure.
+    The model does not own a reference date, the times
+    given in the parametrizations are absolute and
+    insensitive to shifts in the global evaluation date.
+    The termstructures are required to be consistent
+    with these times. The model does not observe
+    anything, so it's update() method must be explicitly
+    called to notify observers of changes in the
+    constituting parametrizations. The model ensures
+    the necessary updates of parametrizations during
+    calibration though.
 */
 
-class XAssetModel /*: public CalibratedModel*/ {
+class XAssetModel : public CalibratedModel {
   public:
     /*! Parametrizations must be given in the following order
         - IR (first parametrization defines the domestic currency)
@@ -61,9 +69,9 @@ class XAssetModel /*: public CalibratedModel*/ {
         - INF (optionally, ccy must be a subset of the IR ccys)
         - CRD (optionally, ccy must be a subset of the IR ccys)
         - COM (optionally) ccy must be a subset of the IR ccys) */
-    XAssetModel(
-        const std::vector<boost::shared_ptr<Parametrization> > &parametrizations,
-        const Matrix &correlation);
+    XAssetModel(const std::vector<boost::shared_ptr<Parametrization> >
+                    &parametrizations,
+                const Matrix &correlation);
 
     /*! allow for time dependent correlation (2nd ctor) */
 
@@ -88,7 +96,10 @@ class XAssetModel /*: public CalibratedModel*/ {
     /* ... */
 
   private:
-    Size nIrLgm1f_;
+    void initialize();
+    void initializeParametrizations();
+    void initializeArguments();
+    Size nIrLgm1f_, nFxBs_;
     const std::vector<boost::shared_ptr<Parametrization> > p_;
     const Matrix rho_;
 };
