@@ -29,6 +29,17 @@ IrLgm1fPiecewiseConstantParametrization::
         const Array &kappa)
     : IrLgm1fParametrization(currency, termStructure),
       PiecewiseConstantHelper1(alphaTimes, alpha),
-      PiecewiseConstantHelper2(kappaTimes, kappa) {}
+      PiecewiseConstantHelper2(kappaTimes, kappa) {
+    // store raw parameter values
+    for (Size i = 0; i < PiecewiseConstantHelper1::y_.size(); ++i) {
+        PiecewiseConstantHelper1::y_[i] =
+            inverse(0, PiecewiseConstantHelper1::y_[i]);
+    }
+    for (Size i = 0; i < PiecewiseConstantHelper2::y_.size(); ++i) {
+        PiecewiseConstantHelper2::y_[i] =
+            inverse(1, PiecewiseConstantHelper2::y_[i]);
+    }
+    update();
+}
 
 } // namespace QuantExt

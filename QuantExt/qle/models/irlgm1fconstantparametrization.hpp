@@ -41,17 +41,31 @@ class IrLgm1fConstantParametrization : public IrLgm1fParametrization {
     Real kappa(Time t) const;
     Real Hprime(const Time t) const;
     Real Hprime2(const Time t) const;
-    const Array &parameterValues(const Size) const;
+    Array &rawValues(const Size) const;
+
+  protected:
+    Real direct(const Size i, const Real x) const;
+    Real inverse(const Size j, const Real y) const;
 
   private:
-    const Array alpha_, kappa_;
+    mutable Array rawAlpha_, kappa_;
     const Real zeroKappaCutoff_;
 };
 
 // inline
 
+inline Real IrLgm1fConstantParametrization::direct(const Size i,
+                                                   const Real x) const {
+    return i == 0 ? x * x : x;
+}
+
+inline Real IrLgm1fConstantParametrization::inverse(const Size i,
+                                                    const Real y) const {
+    return i == 0 ? std::sqrt(y) : y;
+}
+
 inline Real IrLgm1fConstantParametrization::zeta(const Time t) const {
-    return alpha_[0] * alpha_[0] * t;
+    return direct(0, rawAlpha_[0]) * direct(0, rawAlpha_[0]) * t;
 }
 
 inline Real IrLgm1fConstantParametrization::H(const Time t) const {
@@ -63,7 +77,7 @@ inline Real IrLgm1fConstantParametrization::H(const Time t) const {
 }
 
 inline Real IrLgm1fConstantParametrization::alpha(const Time t) const {
-    return alpha_[0];
+    return direct(0, rawAlpha_[0]);
 }
 
 inline Real IrLgm1fConstantParametrization::kappa(const Time t) const {
@@ -78,11 +92,10 @@ inline Real IrLgm1fConstantParametrization::Hprime2(const Time t) const {
     return -kappa_[0] * std::exp(-kappa_[0] * t);
 }
 
-inline const Array &
-IrLgm1fConstantParametrization::parameterValues(const Size i) const {
+inline Array &IrLgm1fConstantParametrization::rawValues(const Size i) const {
     QL_REQUIRE(i < 2, "parameter " << i << " does not exist, only have 0..1");
     if (i == 0)
-        return alpha_;
+        return rawAlpha_;
     else
         return kappa_;
 }

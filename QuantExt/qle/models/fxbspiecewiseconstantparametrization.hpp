@@ -35,18 +35,32 @@ class FxBsPiecewiseConstantParametrization : public FxBsParametrization,
     FxBsPiecewiseConstantParametrization(
         const Currency &currency,
         const Handle<YieldTermStructure> &foreignTermStructure,
-        const Handle<Quote> &fxSpotToday,
-        const Array &times, const Array &sigma);
+        const Handle<Quote> &fxSpotToday, const Array &times,
+        const Array &sigma);
     /*! inspectors */
     Real variance(const Time t) const;
     Real sigma(const Time t) const;
     const Array &parameterTimes(const Size) const;
-    const Array &parameterValues(const Size) const;
+    Array &rawValues(const Size) const;
     /*! additional methods */
     void update() const;
+
+  protected:
+    Real direct(const Size i, const Real x) const;
+    Real inverse(const Size i, const Real y) const;
 };
 
 // inline
+
+inline Real FxBsPiecewiseConstantParametrization::direct(const Size,
+                                                         const Real x) const {
+    return PiecewiseConstantHelper1::direct(x);
+}
+
+inline Real FxBsPiecewiseConstantParametrization::inverse(const Size,
+                                                          const Real y) const {
+    return PiecewiseConstantHelper1::inverse(y);
+}
 
 inline Real FxBsPiecewiseConstantParametrization::variance(const Time t) const {
     return PiecewiseConstantHelper1::int_y_sqr(t);
@@ -62,8 +76,8 @@ FxBsPiecewiseConstantParametrization::parameterTimes(const Size i) const {
     return PiecewiseConstantHelper1::t_;
 }
 
-inline const Array &
-FxBsPiecewiseConstantParametrization::parameterValues(const Size i) const {
+inline Array &
+FxBsPiecewiseConstantParametrization::rawValues(const Size i) const {
     QL_REQUIRE(i == 0, "parameter " << i << " does not exist, only have 0");
     return PiecewiseConstantHelper1::y_;
 }

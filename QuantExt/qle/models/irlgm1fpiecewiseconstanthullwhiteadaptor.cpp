@@ -26,8 +26,15 @@ IrLgm1fPiecewiseConstantHullWhiteAdaptor::
         const Currency &currency,
         const Handle<YieldTermStructure> &termStructure, const Array &times,
         const Array &sigma, const Array &kappa)
-        : IrLgm1fParametrization(currency, termStructure),
+    : IrLgm1fParametrization(currency, termStructure),
       PiecewiseConstantHelper3(times, sigma, kappa),
-      PiecewiseConstantHelper2(times, kappa) {}
+      PiecewiseConstantHelper2(times, kappa) {
+    // store raw parameter values
+    for (Size i = 0; i < PiecewiseConstantHelper3::y1_.size(); ++i) {
+        PiecewiseConstantHelper3::y1_[i] =
+            inverse(0, PiecewiseConstantHelper3::y1_[i]);
+    }
+    update();
+}
 
 } // namespace QuantExt

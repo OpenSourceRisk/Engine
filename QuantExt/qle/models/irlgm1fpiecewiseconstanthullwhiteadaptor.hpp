@@ -47,12 +47,30 @@ class IrLgm1fPiecewiseConstantHullWhiteAdaptor
     Real Hprime2(const Time t) const;
     Real hullWhiteSigma(Time t) const;
     const Array &parameterTimes(const Size) const;
-    const Array &parameterValues(const Size) const;
+    Array &rawValues(const Size) const;
     /*! additional methods */
     void update() const;
+
+  protected:
+    Real direct(const Size i, const Real x) const;
+    Real inverse(const Size j, const Real y) const;
 };
 
 // inline
+
+inline Real
+IrLgm1fPiecewiseConstantHullWhiteAdaptor::direct(const Size i,
+                                                 const Real x) const {
+    return i == 0 ? PiecewiseConstantHelper3::direct1(x)
+                  : PiecewiseConstantHelper2::direct(x);
+}
+
+inline Real
+IrLgm1fPiecewiseConstantHullWhiteAdaptor::inverse(const Size i,
+                                                  const Real y) const {
+    return i == 0 ? PiecewiseConstantHelper3::inverse1(y)
+                  : PiecewiseConstantHelper2::inverse(y);
+}
 
 inline Real IrLgm1fPiecewiseConstantHullWhiteAdaptor::zeta(const Time t) const {
     return PiecewiseConstantHelper3::int_y1_sqr_exp_2_int_y2(t);
@@ -79,8 +97,7 @@ IrLgm1fPiecewiseConstantHullWhiteAdaptor::Hprime(const Time t) const {
 
 inline Real
 IrLgm1fPiecewiseConstantHullWhiteAdaptor::Hprime2(const Time t) const {
-    return -PiecewiseConstantHelper2::exp_m_int_y(t) *
-           PiecewiseConstantHelper2::y(t);
+    return -PiecewiseConstantHelper2::exp_m_int_y(t) * kappa(t);
 }
 
 inline Real
@@ -102,8 +119,8 @@ IrLgm1fPiecewiseConstantHullWhiteAdaptor::parameterTimes(const Size i) const {
         return PiecewiseConstantHelper2::t_;
 }
 
-inline const Array &
-IrLgm1fPiecewiseConstantHullWhiteAdaptor::parameterValues(const Size i) const {
+inline Array &
+IrLgm1fPiecewiseConstantHullWhiteAdaptor::rawValues(const Size i) const {
     QL_REQUIRE(i < 2, "parameter " << i << " does not exist, only have 0..1");
     if (i == 0)
         return PiecewiseConstantHelper3::y1_;
