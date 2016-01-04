@@ -1,11 +1,12 @@
-dist_data_DATA = 
 
-QE_TESTS = \
+QLE_TESTS = \
 	testsuite.cpp
 
 dist-hook:
 	mkdir -p $(distdir)/build
 	mkdir -p $(distdir)/bin
+	cp -p $(srcdir)/bin/runtest.bat $(distdir)/bin
+	rm -f $(distdir)/main.cpp
 
 if BOOST_UNIT_TEST_FOUND
 
@@ -31,22 +32,23 @@ main.cpp: Makefile.am
 	echo "#endif" >> $@
 
 
-bin_PROGRAMS = test-suite
+bin_PROGRAMS = quantext-test-suite
 
-test_suite_SOURCES = ${QE_TESTS}
-test_suite_LDADD = libUnitMain.la 
-test_suite_LDFLAGS = \
-	-L../qle -lQuantExt \
-	-lQuantLib \
-	-l${BOOST_UNIT_TEST_LIB}
+quantext_test_suite_SOURCES = ${QLE_TESTS}
+quantext_test_suite_LDADD = libUnitMain.la
+quantext_test_suite_LDFLAGS = \
+    -lQuantLib \
+    -l${BOOST_UNIT_TEST_LIB} \
+    -L../qle -lQuantExt
 
-TESTS = test-suite$(EXEEXT)
+TESTS = quantext-test-suite$(EXEEXT)
 TESTS_ENVIRONMENT = BOOST_TEST_LOG_LEVEL=message
 
 EXTRA_DIST =
 
 else
 
-EXTRA_DIST = ${QE_TESTS} 
+EXTRA_DIST = \
+	${QLE_TESTS}
 
 endif
