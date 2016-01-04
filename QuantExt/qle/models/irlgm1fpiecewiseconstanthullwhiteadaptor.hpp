@@ -17,7 +17,7 @@
  FOR A PARTICULAR PURPOSE.  See the license for more details.
 */
 
-/*! \file irlgm1fconstanthullwhiteadaptor.hpp
+/*! \file irlgm1fpiecewiseconstanthullwhiteadaptor.hpp
     \brief adaptor to emulate piecewise constant Hull White parameters
 */
 

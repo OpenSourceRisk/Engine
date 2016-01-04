@@ -25,11 +25,20 @@
 namespace QuantExt {
 
 Gaussian1dXAssetAdaptor::Gaussian1dXAssetAdaptor(
+    const boost::shared_ptr<Lgm> &model)
+    : Gaussian1dModel(model->parametrization()->termStructure()), x_(model) {
+    initialize();
+}
+
+Gaussian1dXAssetAdaptor::Gaussian1dXAssetAdaptor(
     Size ccy, const boost::shared_ptr<XAssetModel> &model)
-    : Gaussian1dModel(model->irlgm1f(ccy)->termStructure()), ccy_(ccy),
-      x_(model) {
-    stateProcess_ =
-        boost::make_shared<IrLgm1fStateProcess>(model->irlgm1f(ccy));
+    : Gaussian1dModel(model->irlgm1f(ccy)->termStructure()),
+      x_(boost::make_shared<Lgm>(model->irlgm1f(ccy))) {
+    initialize();
+}
+
+void Gaussian1dXAssetAdaptor::initialize() {
+    stateProcess_ = x_->stateProcess();
 }
 
 } // namespace QuantExt

@@ -25,7 +25,7 @@
 #define quantext_analytic_lgm_swaption_engine_hpp
 
 #include <ql/instruments/swaption.hpp>
-#include <qle/models/xassetmodel.hpp>
+#include <qle/models/lgm.hpp>
 
 namespace QuantExt {
 
@@ -62,6 +62,13 @@ class AnalyticLgmSwaptionEngine
     /*! nextCoupon is Mapping A, proRata is Mapping B
         in Lichters, Stamm, Gallagher (2015), 11.2.2 */
     enum FloatSpreadMapping { nextCoupon, proRata };
+
+    /*! Lgm model based constructor */
+    AnalyticLgmSwaptionEngine(
+        const boost::shared_ptr<Lgm> &model,
+        const Handle<YieldTermStructure> &discountCurve =
+            Handle<YieldTermStructure>(),
+        const FloatSpreadMapping floatSpreadMapping = proRata);
 
     /*! XAsset model based constructor */
     AnalyticLgmSwaptionEngine(

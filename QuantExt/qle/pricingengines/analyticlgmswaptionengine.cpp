@@ -26,6 +26,18 @@
 namespace QuantExt {
 
 AnalyticLgmSwaptionEngine::AnalyticLgmSwaptionEngine(
+    const boost::shared_ptr<Lgm> &model,
+    const Handle<YieldTermStructure> &discountCurve,
+    const FloatSpreadMapping floatSpreadMapping)
+    : GenericEngine<Swaption::arguments, Swaption::results>(),
+      p_(model->parametrization()),
+      c_(discountCurve.empty() ? p_->termStructure() : discountCurve),
+      floatSpreadMapping_(floatSpreadMapping) {
+    registerWith(model);
+    registerWith(c_);
+}
+
+AnalyticLgmSwaptionEngine::AnalyticLgmSwaptionEngine(
     const boost::shared_ptr<XAssetModel> &model, const Size ccy,
     const Handle<YieldTermStructure> &discountCurve,
     const FloatSpreadMapping floatSpreadMapping)
@@ -33,7 +45,7 @@ AnalyticLgmSwaptionEngine::AnalyticLgmSwaptionEngine(
       p_(model->irlgm1f(ccy)),
       c_(discountCurve.empty() ? p_->termStructure() : discountCurve),
       floatSpreadMapping_(floatSpreadMapping) {
-    // registerWith(model); //enable later when model is observable
+    registerWith(model);
     registerWith(c_);
 }
 
