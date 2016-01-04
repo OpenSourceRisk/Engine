@@ -11,6 +11,7 @@
 #include <qle/models/irlgm1fpiecewiseconstanthullwhiteadaptor.hpp>
 #include <qle/models/irlgm1fpiecewiseconstantparametrization.hpp>
 #include <qle/models/irlgm1fparametrization.hpp>
+#include <qle/models/lgm.hpp>
 #include <qle/models/parametrization.hpp>
 #include <qle/models/piecewiseconstanthelper.hpp>
 #include <qle/models/pseudoparameter.hpp>
