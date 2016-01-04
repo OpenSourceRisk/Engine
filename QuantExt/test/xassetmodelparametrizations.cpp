@@ -47,7 +47,7 @@ void check(std::string s, const Real x, const Real y, const Real e,
                                         << y << " instead (difference is "
                                         << (y - e) << ", n is " << n << ")");
     }
-};
+}
 
 // check for expected result up to truncation errors with absolute tolerance
 void check2(std::string s, const Real x, const Real y, const Real e,
@@ -58,7 +58,7 @@ void check2(std::string s, const Real x, const Real y, const Real e,
                                         << " instead (difference is " << (y - e)
                                         << ", abs tol=" << tol << ")");
     }
-};
+}
 
 } // anonymous namespace
 

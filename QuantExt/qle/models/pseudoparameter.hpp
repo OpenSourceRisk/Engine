@@ -41,7 +41,7 @@ class PseudoParameter : public Parameter {
     class Impl : public Parameter::Impl {
       public:
         Impl() {}
-        Real value(const Array &params, Time t) const {
+        Real value(const Array &, Time ) const {
             QL_FAIL("pseudo-parameter can not be asked to values");
         }
     };

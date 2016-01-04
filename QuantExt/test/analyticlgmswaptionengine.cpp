@@ -98,76 +98,68 @@ void AnalyticLgmSwaptionEngineTest::testMonoCurve() {
         swaption_nocurves.result<Real>("fixedAmountCorrectionSettlement");
 
     if (fixedAmountCorrections1.size() != 10) {
-        BOOST_TEST_ERROR(
-            "fixed coupon adjustment vector 1 should have size 10, "
-            "but actually has size "
-            << fixedAmountCorrections1.size());
+        BOOST_ERROR("fixed coupon adjustment vector 1 should have size 10, "
+                    "but actually has size "
+                    << fixedAmountCorrections1.size());
     }
     if (fixedAmountCorrections2.size() != 10) {
-        BOOST_TEST_ERROR(
-            "fixed coupon adjustment vector 2 should have size 10, "
-            "but actually has size "
-            << fixedAmountCorrections2.size());
+        BOOST_ERROR("fixed coupon adjustment vector 2 should have size 10, "
+                    "but actually has size "
+                    << fixedAmountCorrections2.size());
     }
     if (fixedAmountCorrections3.size() != 10) {
-        BOOST_TEST_ERROR(
-            "fixed coupon adjustment vector 3 should have size 10, "
-            "but actually has size "
-            << fixedAmountCorrections3.size());
+        BOOST_ERROR("fixed coupon adjustment vector 3 should have size 10, "
+                    "but actually has size "
+                    << fixedAmountCorrections3.size());
     }
     if (fixedAmountCorrections4.size() != 10) {
-        BOOST_TEST_ERROR(
-            "fixed coupon adjustment vector 4 should have size 10, "
-            "but actually has size "
-            << fixedAmountCorrections4.size());
+        BOOST_ERROR("fixed coupon adjustment vector 4 should have size 10, "
+                    "but actually has size "
+                    << fixedAmountCorrections4.size());
     }
 
     for (Size i = 0; i < 10; ++i) {
         if (!close_enough(fixedAmountCorrections1[i], 0.0)) {
-            BOOST_TEST_ERROR(
-                "fixed coupon adjustment (1) should be zero in mono "
-                "curve setup, but component "
-                << i << " is " << fixedAmountCorrections1[i]);
+            BOOST_ERROR("fixed coupon adjustment (1) should be zero in mono "
+                        "curve setup, but component "
+                        << i << " is " << fixedAmountCorrections1[i]);
         }
         if (!close_enough(fixedAmountCorrections2[i], 0.0)) {
-            BOOST_TEST_ERROR(
-                "fixed coupon adjustment (2) should be zero in mono "
-                "curve setup, but component "
-                << i << " is " << fixedAmountCorrections2[i]);
+            BOOST_ERROR("fixed coupon adjustment (2) should be zero in mono "
+                        "curve setup, but component "
+                        << i << " is " << fixedAmountCorrections2[i]);
         }
         if (!close_enough(fixedAmountCorrections3[i], 0.0)) {
-            BOOST_TEST_ERROR(
-                "fixed coupon adjustment (3) should be zero in mono "
-                "curve setup, but component "
-                << i << " is " << fixedAmountCorrections3[i]);
+            BOOST_ERROR("fixed coupon adjustment (3) should be zero in mono "
+                        "curve setup, but component "
+                        << i << " is " << fixedAmountCorrections3[i]);
         }
         if (!close_enough(fixedAmountCorrections4[i], 0.0)) {
-            BOOST_TEST_ERROR(
-                "fixed coupon adjustment (4) should be zero in mono "
-                "curve setup, but component "
-                << i << " is " << fixedAmountCorrections4[i]);
+            BOOST_ERROR("fixed coupon adjustment (4) should be zero in mono "
+                        "curve setup, but component "
+                        << i << " is " << fixedAmountCorrections4[i]);
         }
     }
 
     if (!close_enough(fixedAmountCorrectionSettlement1, 0.0)) {
-        BOOST_TEST_ERROR("fixed amount correction on settlement (1) should be "
-                         "zero in mono curve setup, but is "
-                         << fixedAmountCorrectionSettlement1);
+        BOOST_ERROR("fixed amount correction on settlement (1) should be "
+                    "zero in mono curve setup, but is "
+                    << fixedAmountCorrectionSettlement1);
     }
     if (!close_enough(fixedAmountCorrectionSettlement2, 0.0)) {
-        BOOST_TEST_ERROR("fixed amount correction on settlement (2) should be "
-                         "zero in mono curve setup, but is "
-                         << fixedAmountCorrectionSettlement2);
+        BOOST_ERROR("fixed amount correction on settlement (2) should be "
+                    "zero in mono curve setup, but is "
+                    << fixedAmountCorrectionSettlement2);
     }
     if (!close_enough(fixedAmountCorrectionSettlement3, 0.0)) {
-        BOOST_TEST_ERROR("fixed amount correction on settlement (3) should be "
-                         "zero in mono curve setup, but is "
-                         << fixedAmountCorrectionSettlement3);
+        BOOST_ERROR("fixed amount correction on settlement (3) should be "
+                    "zero in mono curve setup, but is "
+                    << fixedAmountCorrectionSettlement3);
     }
     if (!close_enough(fixedAmountCorrectionSettlement4, 0.0)) {
-        BOOST_TEST_ERROR("fixed amount correction on settlement (4) should be "
-                         "zero in mono curve setup, but is "
-                         << fixedAmountCorrectionSettlement4);
+        BOOST_ERROR("fixed amount correction on settlement (4) should be "
+                    "zero in mono curve setup, but is "
+                    << fixedAmountCorrectionSettlement4);
     }
 }
 
@@ -237,24 +229,24 @@ void AnalyticLgmSwaptionEngineTest::testDualCurve() {
     Real tolerance = 0.000025; // 0.25 bp
 
     if (!close_enough(fixedAmountCorrectionSettlement1a, 0.0)) {
-        BOOST_TEST_ERROR("fixed amount correction on settlement (1) should be "
-                         "0 for nextCoupon, but is "
-                         << fixedAmountCorrectionSettlement1a);
+        BOOST_ERROR("fixed amount correction on settlement (1) should be "
+                    "0 for nextCoupon, but is "
+                    << fixedAmountCorrectionSettlement1a);
     }
     if (!close_enough(fixedAmountCorrectionSettlement2a, 0.0)) {
-        BOOST_TEST_ERROR("fixed amount correction on settlement (2) should be "
-                         "0 for nextCoupon, but is "
-                         << fixedAmountCorrectionSettlement2a);
+        BOOST_ERROR("fixed amount correction on settlement (2) should be "
+                    "0 for nextCoupon, but is "
+                    << fixedAmountCorrectionSettlement2a);
     }
     if (std::abs(fixedAmountCorrectionSettlement1b - 0.00025) > tolerance) {
-        BOOST_TEST_ERROR("fixed amount correction on settlement (1) should be "
-                         "close to 2.5bp for proRata, but is "
-                         << fixedAmountCorrectionSettlement1b);
+        BOOST_ERROR("fixed amount correction on settlement (1) should be "
+                    "close to 2.5bp for proRata, but is "
+                    << fixedAmountCorrectionSettlement1b);
     }
     if (std::abs(fixedAmountCorrectionSettlement2b + 0.00025) > tolerance) {
-        BOOST_TEST_ERROR("fixed amount correction on settlement (2) should be "
-                         "close to -2.5bp for proRata, but is "
-                         << fixedAmountCorrectionSettlement2b);
+        BOOST_ERROR("fixed amount correction on settlement (2) should be "
+                    "close to -2.5bp for proRata, but is "
+                    << fixedAmountCorrectionSettlement2b);
     }
 
     // we can assume that the result vectors have the correct size, this
@@ -264,34 +256,34 @@ void AnalyticLgmSwaptionEngineTest::testDualCurve() {
         // amount correction should be close to +10bp (-10bp)
         // up to conventions, check this for plausibility
         if (std::abs(fixedAmountCorrections1a[i] - 0.0010) > tolerance) {
-            BOOST_TEST_ERROR("fixed coupon adjustment (1, nextCoupon) should "
-                             "be close to 10bp for "
-                             "a 10bp curve spread, but is "
-                             << fixedAmountCorrections1a[i] << " for component "
-                             << i);
+            BOOST_ERROR("fixed coupon adjustment (1, nextCoupon) should "
+                        "be close to 10bp for "
+                        "a 10bp curve spread, but is "
+                        << fixedAmountCorrections1a[i] << " for component "
+                        << i);
         }
         if (std::abs(fixedAmountCorrections2a[i] + 0.0010) > tolerance) {
-            BOOST_TEST_ERROR("fixed coupon adjustment (2, nextCoupon) should "
-                             "be close to -10bp for "
-                             "a -10bp curve spread, but is "
-                             << fixedAmountCorrections2a[i] << " for component "
-                             << i);
+            BOOST_ERROR("fixed coupon adjustment (2, nextCoupon) should "
+                        "be close to -10bp for "
+                        "a -10bp curve spread, but is "
+                        << fixedAmountCorrections2a[i] << " for component "
+                        << i);
         }
         if (std::abs(fixedAmountCorrections1b[i] -
                      (i == 9 ? 0.00075 : 0.0010)) > tolerance) {
-            BOOST_TEST_ERROR("fixed coupon adjustment (1, proRata) should "
-                             "be close to 10bp (7.5bp for component 9) for "
-                             "a 10bp curve spread, but is "
-                             << fixedAmountCorrections1b[i] << " for component "
-                             << i);
+            BOOST_ERROR("fixed coupon adjustment (1, proRata) should "
+                        "be close to 10bp (7.5bp for component 9) for "
+                        "a 10bp curve spread, but is "
+                        << fixedAmountCorrections1b[i] << " for component "
+                        << i);
         }
         if (std::abs(fixedAmountCorrections2b[i] +
                      (i == 9 ? 0.00075 : 0.0010)) > tolerance) {
-            BOOST_TEST_ERROR("fixed coupon adjustment (2, proRata) should "
-                             "be close to -10bp (-7.5bp for component 9) for "
-                             "a -10bp curve spread, but is "
-                             << fixedAmountCorrections2b[i] << " for component "
-                             << i);
+            BOOST_ERROR("fixed coupon adjustment (2, proRata) should "
+                        "be close to -10bp (-7.5bp for component 9) for "
+                        "a -10bp curve spread, but is "
+                        << fixedAmountCorrections2b[i] << " for component "
+                        << i);
         }
     }
 }
@@ -439,7 +431,7 @@ void AnalyticLgmSwaptionEngineTest::testAgainstOtherEngines() {
                     Real npv_fd = swaption.NPV();
 
                     if (std::abs(npv_fd - npv_gsr) > tol1) {
-                        BOOST_TEST_ERROR(
+                        BOOST_ERROR(
                             "inconsistent swaption npvs (fd="
                             << npv_fd << ", gsr=" << npv_gsr << ") for case #"
                             << no << " with discounting rate="
@@ -450,7 +442,7 @@ void AnalyticLgmSwaptionEngineTest::testAgainstOtherEngines() {
                     }
 
                     if (std::abs(npv_gsr - npv_g1d) > tol2) {
-                        BOOST_TEST_ERROR(
+                        BOOST_ERROR(
                             "inconsistent swaption npvs (gsr="
                             << npv_gsr << ", npv_g1d=" << npv_g1d
                             << ") for case #" << no << " with discounting rate="
@@ -472,7 +464,7 @@ void AnalyticLgmSwaptionEngineTest::testAgainstOtherEngines() {
                     }
 
                     if (std::abs(npv_g1d - npv_map_a) > tolTmpA) {
-                        BOOST_TEST_ERROR(
+                        BOOST_ERROR(
                             "inconsistent swaption npvs (g1d="
                             << npv_g1d << ", map_a=" << npv_map_a
                             << "), tolerance is " << tolTmpA << ", for case #"
@@ -484,7 +476,7 @@ void AnalyticLgmSwaptionEngineTest::testAgainstOtherEngines() {
                     }
 
                     if (std::abs(npv_g1d - npv_map_b) > tolTmpB) {
-                        BOOST_TEST_ERROR(
+                        BOOST_ERROR(
                             "inconsistent swaption npvs (g1d="
                             << npv_g1d << ", map_b=" << npv_map_b
                             << "), tolerance is " << tolTmpB << ", for case #"
@@ -501,9 +493,9 @@ void AnalyticLgmSwaptionEngineTest::testAgainstOtherEngines() {
         }
     }
 
-    BOOST_TEST_ERROR("Discuss tolerances for basis correction with Roland (pro "
-                     "rata mapping), in "
-                     "their book it seems to work much better...");
+    BOOST_ERROR("Discuss tolerances for basis correction with Roland (pro "
+                "rata mapping), in "
+                "their book it seems to work much better...");
 }
 
 test_suite *AnalyticLgmSwaptionEngineTest::suite() {

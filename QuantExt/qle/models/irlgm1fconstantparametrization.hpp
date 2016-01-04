@@ -75,11 +75,11 @@ inline Real IrLgm1fConstantParametrization::H(const Time t) const {
     }
 }
 
-inline Real IrLgm1fConstantParametrization::alpha(const Time t) const {
+inline Real IrLgm1fConstantParametrization::alpha(const Time) const {
     return direct(0, alpha_.params()[0]);
 }
 
-inline Real IrLgm1fConstantParametrization::kappa(const Time t) const {
+inline Real IrLgm1fConstantParametrization::kappa(const Time) const {
     return kappa_.params()[0];
 }
 

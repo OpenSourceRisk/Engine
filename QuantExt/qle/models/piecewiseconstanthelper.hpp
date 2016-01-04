@@ -158,7 +158,7 @@ inline void PiecewiseConstantHelper2::update() const {
         }
         c_[i] = sum2;
     }
-};
+}
 
 inline const Array &PiecewiseConstantHelper3::t() const { return t_; }
 
@@ -199,7 +199,7 @@ inline void PiecewiseConstantHelper3::update() const {
         }
         c_[i] = sum2;
     }
-};
+}
 
 inline Real PiecewiseConstantHelper1::y(const Time t) const {
     return direct(QL_PIECEWISE_FUNCTION(t_, y_.params(), t));
