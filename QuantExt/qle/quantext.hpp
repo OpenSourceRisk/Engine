@@ -6,6 +6,7 @@
 #endif
 
 
+#include <qle/currencies/all.hpp>
 #include <qle/math/all.hpp>
 #include <qle/models/all.hpp>
 #include <qle/pricingengines/all.hpp>

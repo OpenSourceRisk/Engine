@@ -1,10 +1,10 @@
 SUBDIRS = \
+    currencies \
 	math \
 	models \
 	pricingengines \
 	processes
 # cashflows \
-# currencies \
 # indexes \
 # instruments \
 # termstructures
@@ -23,6 +23,7 @@ lib_LTLIBRARIES = libQuantExt.la
 libQuantExt_la_LDFLAGS = -release $(PACKAGE_VERSION)
 
 libQuantExt_la_LIBADD = \
+    currencies/libCurrencies.la
 	math/libMath.la \
 	models/libModels.la \
 	pricingengines/libPricingEngines.la \

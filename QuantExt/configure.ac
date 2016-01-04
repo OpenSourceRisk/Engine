@@ -1,76 +1,52 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT([QuantExt], [0.1], [roland.lichters@quaternion.com], [QuantExt])
-AC_PREREQ(2.50)
+AC_INIT([QuantExt], [0.1],
+        [dev@quaternion.com],
+        [QuantExt])
+AC_PREREQ(2.62)
 AC_CONFIG_SRCDIR([qle/quantext.hpp])
 AC_CONFIG_AUX_DIR([config])
 AC_CONFIG_HEADERS([qle/config.hpp])
 AM_INIT_AUTOMAKE([foreign])
 AC_CONFIG_MACRO_DIR([m4])
 
-AC_COPYRIGHT([])
+AC_COPYRIGHT([
+Copyright (C) 2010 - 2016 Quaternion Risk Management Ltd.
+All Rights Reserved.])
 
 AC_PROG_AWK
 AC_PROG_INSTALL
 
 # Default compilation variables
-
-AC_SUBST([CXXFLAGS],[${CXXFLAGS='-g -O2 -Wall'}])
+AC_SUBST([CXXFLAGS],[${CXXFLAGS='-g -O2 -Wall -Wextra -pedantic'}])
 
 # Help the compiler find external software
 
 AC_ARG_WITH([boost-include],
             AC_HELP_STRING([--with-boost-include=INCLUDE_PATH],
-                           [Supply the location of Boost header directory boost/]),
-            [ql_boost_include_path=$withval],
-            [ql_boost_include_path=""])
+                           [Supply the location of Boost header files]),
+            [ql_boost_include_path="`cd ${withval} 2>/dev/null && pwd`"],
+            [ql_boost_include_path="${BOOST}"])
 if test [ -n "$ql_boost_include_path" ] ; then
+   AC_SUBST([BOOST_INCLUDE],["-I${ql_boost_include_path}"])
    AC_SUBST([CPPFLAGS],["${CPPFLAGS} -I${ql_boost_include_path}"])
 fi
 AC_ARG_WITH([boost-lib],
             AC_HELP_STRING([--with-boost-lib=LIB_PATH],
                            [Supply the location of Boost libraries]),
-            [ql_boost_lib_path=$withval],
-            [ql_boost_lib_path=""])
+            [ql_boost_lib_path="`cd ${withval} 2>/dev/null && pwd`"],
+            [ql_boost_lib_path="${BOOST}/stage/lib"])
 if test [ -n "$ql_boost_lib_path" ] ; then
+   AC_SUBST([BOOST_LIB],["-L${ql_boost_lib_path}"])
    AC_SUBST([LDFLAGS],["${LDFLAGS} -L${ql_boost_lib_path}"])
 fi
 
-AC_ARG_WITH([ql-include],
-            AC_HELP_STRING([--with-ql-include=INCLUDE_PATH],
-                           [Supply the location of QuantLib header directory ql/]),
-            [ql_include_path=${withval}],
-            [AC_MSG_ERROR([Specify the QuantLib include path: "--with-ql-include=path/to/ql])])
-if test [ -n "$ql_include_path" ] ; then
-   AC_SUBST([CPPFLAGS],["${CPPFLAGS} -I${ql_include_path}"])
-fi
-AC_ARG_WITH([ql-lib],
-            AC_HELP_STRING([--with-ql-lib=LIB_PATH],
-                           [Supply the location of the QuantLib library]),
-            [ql_lib_path=${withval}],
-            [AC_MSG_ERROR([Specify the QuantLib library path: "--with-ql-lib=path/to/lib])])
-if test [ -n "$ql_lib_path" ] ; then
-   AC_SUBST([LDFLAGS],["${LDFLAGS} -L${ql_lib_path}"])
-fi
+# QuantLib
+ql_path="`cd ../QuantLib 2>/dev/null && pwd`"
+AC_SUBST([CPPFLAGS],["${CPPFLAGS} -I${ql_path}"])
+AC_SUBST([LDFLAGS],["${LDFLAGS} -L${ql_path}/ql/.libs"])
 
-AC_ARG_WITH([mu-include],
-            AC_HELP_STRING([--with-mu-include=INCLUDE_PATH],
-                           [Supply the location of MuParser header directory ]),
-            [mu_include_path=${withval}],
-            [AC_MSG_ERROR([Specify the MuParser include path: "--with-mu-include=path/to/mu])])
-if test [ -n "$mu_include_path" ] ; then
-   AC_SUBST([CPPFLAGS],["${CPPFLAGS} -I${mu_include_path}"])
-fi
-AC_ARG_WITH([mu-lib],
-            AC_HELP_STRING([--with-mu-lib=LIB_PATH],
-                           [Supply the location of the MuParser library]),
-            [mu_lib_path=${withval}],
-            [AC_MSG_ERROR([Specify the MuParser library path: "--with-mu-lib=path/to/lib])])
-if test [ -n "$mu_lib_path" ] ; then
-   AC_SUBST([LDFLAGS],["${LDFLAGS} -L${mu_lib_path}"])
-fi
+# Continue setup
 
-
-# Checks for programs.
 AC_PROG_CC
 AC_PROG_CXX
 AC_PROG_CPP
@@ -78,41 +54,33 @@ AC_PROG_LIBTOOL
 
 AM_CONDITIONAL(ENABLE_STATIC, test "${enable_static}" == "yes")
 
-# Language
 AC_LANG([C++])
 
-# Check for mandatory features and header files
+AC_ARG_ENABLE([openmp],
+              AC_HELP_STRING([--enable-openmp],
+                             [If enabled, configure will try to detect
+                              and enable OpenMP support.]),
+              [ql_openmp=$enableval],
+              [ql_openmp=no])
+if test "$ql_openmp" = "yes" ; then
+   AC_OPENMP
+   AC_SUBST([CXXFLAGS],["${CXXFLAGS} ${OPENMP_CXXFLAGS}"])
+fi
 
-QL_CHECK_NAMESPACES
+# Check for mandatory features
 
-# Checks for header files.
-AC_HEADER_STDC
-AC_CHECK_HEADERS([float.h stdlib.h string.h unistd.h])
+QL_CHECK_ASINH
 
-# Checks for typedefs, structures, and compiler characteristics.
-AC_HEADER_STDBOOL
-AC_C_CONST
-AC_C_INLINE
-AC_TYPE_SIZE_T
-AC_STRUCT_TM
-
-# Checks for library functions.
-AC_FUNC_ERROR_AT_LINE
-AC_FUNC_VPRINTF
-AC_CHECK_FUNCS([floor pow sqrt strstr strtol])
-
-# Check for Boost components, macro defined in acinclude.m4
+# Check for Boost components
 QL_CHECK_BOOST
 AM_CONDITIONAL(BOOST_UNIT_TEST_FOUND, test "x${BOOST_UNIT_TEST_LIB}" != "x")
 
-# Check for QuantLib, macro defined in acinclude.m4
-QL_CHECK_QUANTLIB
+# Check for optional features
+QL_CHECK_LONG_LONG
 
-# Check for MuParser
-CHECK_MUPARSER_HEADER
-
-# Check compiling code that uses QuantLib
-QL_CHECK_FUNC([QuantLib::Date::todaysDate], [], [ql/quantlib.hpp])
+# Check for Emacs
+AM_PATH_LISPDIR
+AM_CONDITIONAL(EMACS_FOUND, test "${EMACS}" != "no")
 
 # Check for tools needed for building documentation
 AC_PATH_PROG([DOXYGEN], [doxygen])
@@ -122,46 +90,6 @@ AC_PATH_PROG([PDFLATEX], [pdflatex])
 AC_PATH_PROG([MAKEINDEX], [makeindex])
 AC_PATH_PROG([DVIPS], [dvips])
 
-# site configuration
-
-AC_ARG_ENABLE([tracing],
-              AC_HELP_STRING([--enable-tracing],
-                             [If enabled, tracing messages might be emitted
-                              by the library depending on run-time
-                              settings. Enabling this option can degrade
-                              performance.]),
-              [tracing=$enableval],
-              [tracing=no])
-if test "$tracing" = "yes" ; then
-   AC_DEFINE([ENABLE_TRACING],[1],
-             [Define this if tracing messages should allowed (whether they
-              are actually emitted will depend on run-time settings.)])
-
-fi
-
-AC_ARG_ENABLE([extra-safety-checks],
-              AC_HELP_STRING([--enable-extra-safety-checks],
-                             [If enabled, extra run-time checks are added
-                              to a few functions. This can prevent their
-                              inlining and degrade performance.]),
-              [belt_and_braces=$enableval],
-              [belt_and_braces=no])
-if test "$belt_and_braces" = "yes" ; then
-   AC_DEFINE([EXTRA_SAFETY_CHECKS],[1],
-             [Define this if extra safety checks should be performed.
-              This can degrade performance.])
-fi
-
-AC_ARG_ENABLE([deprecated-code],
-              AC_HELP_STRING([--enable-deprecated-code],
-                             [If enabled (the default,) deprecated code
-                              will be included in the library.]),
-              [ql_use_deprecated_code=$enableval],
-              [ql_use_deprecated_code=yes])
-if test "$ql_use_deprecated_code" = "no" ; then
-   AC_DEFINE([QL_DISABLE_DEPRECATED],[1],
-             [Define this if you want to disable deprecated code.])
-fi
 
 # manual configurations for specific hosts
 case $host in
@@ -195,4 +123,3 @@ AC_CONFIG_FILES([
     m4/Makefile
     test/Makefile])
 AC_OUTPUT
-

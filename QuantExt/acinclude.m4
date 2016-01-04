@@ -1,57 +1,36 @@
-# QL_TO_UPPER(STRING)
-# -------------------
-# Convert the passed string to uppercase
-AC_DEFUN([QL_TO_UPPER],
-[translit([$1],[abcdefghijklmnopqrstuvwxyz.],[ABCDEFGHIJKLMNOPQRSTUVWXYZ_])])
 
-# QL_CHECK_HEADER(HEADER)
-# -----------------------
-# Check whether <cheader> exists, falling back to <header.h>.
-# It defines HAVE_CHEADER or HAVE_HEADER_H and sets the rl_header
-# variable depending on the one found.
-AC_DEFUN([QL_CHECK_HEADER],
-[AC_CHECK_HEADER(
-    [c$1],
-    [AC_SUBST([rl_$1],[c$1])
-     AC_DEFINE(QL_TO_UPPER([have_c$1]),[1],
-               [Define to 1 if you have the <c$1> header file.])
+# QL_CHECK_LONG_LONG
+# ----------------------------------------------
+# Check whether long long is supported.
+AC_DEFUN([QL_CHECK_LONG_LONG],
+[AC_MSG_CHECKING([long long support])
+ AC_TRY_COMPILE(
+    [],
+    [long long i;
+     unsigned long long j;
     ],
-    [AC_CHECK_HEADER([$1.h],
-        [AC_SUBST([ql_$1],[$1.h])
-         AC_DEFINE(QL_TO_UPPER(have_$1_h),1,
-                   [Define to 1 if you have the <$1.h> header file.])
-        ],
-        [AC_MSG_ERROR([$1 not found])])
+    [AC_MSG_RESULT([yes])
+     AC_DEFINE([QL_HAVE_LONG_LONG],[],
+               [Define this if your compiler supports the long long type.])
+    ],
+    [AC_MSG_RESULT([no])
     ])
 ])
 
-# QL_CHECK_FUNC(FUNCTION,ARGS,HEADER)
-# -----------------------------------
-# Check whether FUNCTION (including namespace qualifier) when compiling
-# after including HEADER. 
-AC_DEFUN([QL_CHECK_FUNC],
-[AC_MSG_CHECKING([for compilation with $1])
- AC_TRY_COMPILE(
-    [@%:@include <$3>],
-    [$1($2);],
-    [AC_MSG_RESULT([yes])],
-    [AC_MSG_RESULT([no])
-     AC_MSG_ERROR([$1 did not compile])])
-])
-
-# QL_CHECK_NAMESPACES
+# QL_CHECK_ASINH
 # ----------------------------------------------
-# Check whether namespaces are supported.
-AC_DEFUN([QL_CHECK_NAMESPACES],
-[AC_MSG_CHECKING([namespace support])
+# Check whether the asinh function is defined in cmath.
+# It defines QL_HAVE_ASINH if found.
+AC_DEFUN([QL_CHECK_ASINH],
+[AC_MSG_CHECKING([for asinh])
  AC_TRY_COMPILE(
-    [namespace Foo { struct A {}; }
-     using namespace Foo;
+    [@%:@include<cmath>],
+    [double x = asinh(0.0);],
+    [AC_MSG_RESULT([yes])
+     AC_DEFINE([QL_HAVE_ASINH],[],
+               [Define this if your compiler defines asinh in <cmath>.])
     ],
-    [A a;],
-    [AC_MSG_RESULT([yes])],
     [AC_MSG_RESULT([no])
-     AC_MSG_ERROR([namespaces not supported])
     ])
 ])
 
@@ -76,11 +55,11 @@ AC_DEFUN([QL_CHECK_BOOST_DEVEL],
 # ----------------------
 # Check whether the Boost installation is up to date
 AC_DEFUN([QL_CHECK_BOOST_VERSION],
-[AC_MSG_CHECKING([Boost version])
+[AC_MSG_CHECKING([for Boost version >= 1.39])
  AC_REQUIRE([QL_CHECK_BOOST_DEVEL])
  AC_TRY_COMPILE(
     [@%:@include <boost/version.hpp>],
-    [@%:@if BOOST_VERSION < 103400
+    [@%:@if BOOST_VERSION < 103900
      @%:@error too old
      @%:@endif],
     [AC_MSG_RESULT([yes])],
@@ -89,9 +68,43 @@ AC_DEFUN([QL_CHECK_BOOST_VERSION],
     ])
 ])
 
+# QL_CHECK_BOOST_VERSION_1_58_OR_HIGHER
+# ----------------------
+# Check whether the Boost installation is version 1.58
+AC_DEFUN([QL_CHECK_BOOST_VERSION_1_58_OR_HIGHER],
+[AC_MSG_CHECKING([for Boost version >= 1.58])
+ AC_REQUIRE([QL_CHECK_BOOST_DEVEL])
+ AC_TRY_COMPILE(
+    [@%:@include <boost/version.hpp>],
+    [@%:@if BOOST_VERSION < 105800
+     @%:@error too old
+     @%:@endif],
+    [AC_MSG_RESULT([yes])],
+    [AC_MSG_RESULT([no])
+     AC_MSG_ERROR([Boost version 1.58 or higher is required for the thread-safe observer pattern])
+    ])
+])
+
+# QL_CHECK_BOOST_UBLAS
+# --------------------
+# Check whether the Boost headers are available
+AC_DEFUN([QL_CHECK_BOOST_UBLAS],
+[AC_MSG_CHECKING([for Boost::uBLAS support])
+ AC_TRY_COMPILE(
+    [@%:@include <boost/numeric/ublas/vector_proxy.hpp>
+     @%:@include <boost/numeric/ublas/triangular.hpp>
+     @%:@include <boost/numeric/ublas/lu.hpp>],
+    [],
+    [AC_MSG_RESULT([yes])],
+    [AC_MSG_RESULT([no])
+     AC_MSG_WARN([Some functionality will be disabled.])
+     AC_DEFINE([QL_NO_UBLAS_SUPPORT],[],
+               [Define this if your compiler does not support Boost::uBLAS.])
+    ])
+])
+
 # QL_CHECK_BOOST_UNIT_TEST
 # ------------------------
-# Check whether the Boost unit-test framework is available
 # Check whether the Boost unit-test framework is available
 AC_DEFUN([QL_CHECK_BOOST_UNIT_TEST],
 [AC_MSG_CHECKING([for Boost unit-test framework])
@@ -158,34 +171,53 @@ AC_DEFUN([QL_CHECK_BOOST_UNIT_TEST],
  fi
 ])
 
-# for boost_lib in boost_unit_test_framework-$CC boost_unit_test_framework \
-#           boost_unit_test_framework-mt-$CC boost_unit_test_framework-mt ; do
-#     LIBS="$ql_original_LIBS -l$boost_lib"
-#     boost_unit_found=no
-#     AC_LINK_IFELSE(
-#         [@%:@include <boost/test/unit_test.hpp>
-#          using namespace boost::unit_test_framework;
-#          test_suite*
-#          init_unit_test_suite(int argc, char** argv)
-#          {
-#              return (test_suite*) 0;
-#          }
-#         ],
-#         [boost_unit_found=$boost_lib
-#          break],
-#         [])
-# done
-# LIBS="$ql_original_LIBS"
-# if test "$boost_unit_found" = no ; then
-#     AC_MSG_RESULT([no])
-#     AC_SUBST([BOOST_UNIT_TEST_LIB],[""])
-#     AC_MSG_WARN([Boost unit-test framework not found])
-#     AC_MSG_WARN([The test suite will be disabled])
-# else
-#     AC_MSG_RESULT([yes])
-#     AC_SUBST([BOOST_UNIT_TEST_LIB],[$boost_lib])
-# fi
-#])
+# QL_CHECK_BOOST_TEST_THREAD_SIGNALS2_SYSTEM
+# ------------------------
+# Check whether the Boost thread and system is available
+AC_DEFUN([QL_CHECK_BOOST_TEST_THREAD_SIGNALS2_SYSTEM],
+[AC_MSG_CHECKING([whether Boost thread, signals2 and system are available])
+ AC_REQUIRE([AC_PROG_CC])
+ ql_original_LIBS=$LIBS
+ boost_thread_found=no
+ boost_thread_lib="-lboost_thread -lboost_system -lpthread"
+ LIBS="$ql_original_LIBS $boost_thread_lib"
+ AC_LINK_IFELSE([AC_LANG_SOURCE(
+     [@%:@include <boost/thread/locks.hpp>
+      @%:@include <boost/thread/recursive_mutex.hpp>
+      @%:@include <boost/signals2/signal.hpp>
+      
+      #ifndef BOOST_THREAD_PLATFORM_PTHREAD
+	  #error only pthread is supported on this plattform
+	  #endif
+
+      int main() {
+        boost::recursive_mutex m;
+        boost::lock_guard<boost::recursive_mutex> lock(m);
+  
+        boost::signals2::signal<void()> sig;
+  
+        return 0;
+	 }
+     ])],
+     [boost_thread_found=$boost_thread_lib
+      break],
+     [])
+ LIBS="$ql_original_LIBS"
+     
+ if test "$boost_thread_found" = no ; then
+     AC_MSG_RESULT([no])
+     AC_SUBST([BOOST_THREAD_LIB],[""])
+     AC_MSG_ERROR([Boost thread, signals2 and system libraries not found. 
+         These libraries are required by the thread-safe observer pattern.])
+ else
+     AC_MSG_RESULT([yes])
+     AC_SUBST([BOOST_THREAD_LIB],[$boost_thread_lib])
+ fi
+])
+     
+])
+
+
 
 # QL_CHECK_BOOST_TEST_STREAM
 # --------------------------
@@ -205,65 +237,13 @@ AC_DEFUN([QL_CHECK_BOOST_TEST_STREAM],
 ])
 
 # QL_CHECK_BOOST
-# --------------
+# ------------------------
 # Boost-related tests
 AC_DEFUN([QL_CHECK_BOOST],
 [AC_REQUIRE([QL_CHECK_BOOST_DEVEL])
  AC_REQUIRE([QL_CHECK_BOOST_VERSION])
+ AC_REQUIRE([QL_CHECK_BOOST_UBLAS])
  AC_REQUIRE([QL_CHECK_BOOST_UNIT_TEST])
  AC_REQUIRE([QL_CHECK_BOOST_TEST_STREAM])
-])
-
-# QL_CHECK_QUANTLIB
-# -----------------
-# Check whether the QuantLib headers are available
-AC_DEFUN([QL_CHECK_QUANTLIB_HEADER],
-[AC_MSG_CHECKING([for QuantLib header files])
- AC_TRY_COMPILE(
-    [@%:@include <ql/quantlib.hpp>],
-    [],
-    [AC_MSG_RESULT([yes])],
-    [AC_MSG_RESULT([no])
-     AC_MSG_ERROR([QuantLib header files not found])
-    ])
-])
-
-# QL_CHECK_QUANTLIB_VERSION
-# -------------------------
-# Check whether the QuantLib installation is up to date
-AC_DEFUN([QL_CHECK_QUANTLIB_VERSION],
-[AC_MSG_CHECKING([QuantLib version])
- AC_REQUIRE([QL_CHECK_QUANTLIB_HEADER])
- AC_TRY_COMPILE(
-    [@%:@include <ql/version.hpp>],
-    [@%:@if QL_HEX_VERSION < 0x010001f0
-     @%:@error too old
-     @%:@endif],
-    [AC_MSG_RESULT([yes])],
-    [AC_MSG_RESULT([no])
-     AC_MSG_ERROR([QuantLib outdated])
-    ])
-])
-
-# QL_CHECK_QUANTLIB
-# -----------------
-# QuantLib-related tests
-AC_DEFUN([QL_CHECK_QUANTLIB],
-[AC_REQUIRE([QL_CHECK_QUANTLIB_HEADER])
- AC_REQUIRE([QL_CHECK_QUANTLIB_VERSION])
-])
-
-# CHECK_MUPARSER_HEADER
-# ---------------------
-# Check whether the muParser headers are available
-AC_DEFUN([CHECK_MUPARSER_HEADER],
-[AC_MSG_CHECKING([for muParser header files])
- AC_TRY_COMPILE(
-    [@%:@include <muParser.h>],
-    [],
-    [AC_MSG_RESULT([yes])],
-    [AC_MSG_RESULT([no])
-     AC_MSG_ERROR([MuParser header files not found])
-    ])
 ])
 

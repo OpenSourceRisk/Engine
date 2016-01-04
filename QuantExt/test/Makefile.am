@@ -1,6 +1,5 @@
-dist_data_DATA = 
 
-QE_TESTS = \
+QLE_TESTS = \
 	testsuite.cpp \
 	utilities.hpp utilities.cpp \
 	analyticlgmswaptionengine.hpp analyticlgmswaptionengine.cpp \
@@ -9,6 +8,8 @@ QE_TESTS = \
 dist-hook:
 	mkdir -p $(distdir)/build
 	mkdir -p $(distdir)/bin
+	cp -p $(srcdir)/bin/runtest.bat $(distdir)/bin
+	rm -f $(distdir)/main.cpp
 
 if BOOST_UNIT_TEST_FOUND
 
@@ -36,12 +37,12 @@ main.cpp: Makefile.am
 
 bin_PROGRAMS = quantext-test-suite
 
-quantext_test_suite_SOURCES = ${QE_TESTS}
+quantext_test_suite_SOURCES = ${QLE_TESTS}
 quantext_test_suite_LDADD = libUnitMain.la
 quantext_test_suite_LDFLAGS = \
-	-L../qle -lQuantExt \
-	-lQuantLib \
-	-l${BOOST_UNIT_TEST_LIB}
+    -lQuantLib \
+    -l${BOOST_UNIT_TEST_LIB} \
+    -L../qle -lQuantExt
 
 TESTS = quantext-test-suite$(EXEEXT)
 TESTS_ENVIRONMENT = BOOST_TEST_LOG_LEVEL=message
@@ -50,6 +51,7 @@ EXTRA_DIST =
 
 else
 
-EXTRA_DIST = ${QE_TESTS} 
+EXTRA_DIST = \
+	${QLE_TESTS}
 
 endif
