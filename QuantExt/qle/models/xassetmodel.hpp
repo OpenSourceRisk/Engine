@@ -58,14 +58,12 @@ namespace QuantExt {
     calibrated currently, but is a fixed, external input.
 
     The model does not own a reference date, the times given in the
-   parametrizations
-    are absolute and insensitive to shifts in the global evaluation date. The
-    termstructures are required to be consistent with these times. The model
-   does not
-    observe anything, so it's update() method must be explicitly called to
-   notify
-    observers of changes in the constituting parametrizations. The model ensures
-    the necessary updates of parametrizations during calibration though.
+    parametrizations are absolute and insensitive to shifts in the global
+    evaluation date. The termstructures are required to be consistent with
+    these times. The model does not observe anything, so it's update() method
+    must be explicitly called to notify observers of changes in the constituting
+    parametrizations. The model ensures the necessary updates of
+    parametrizations during calibration though.
 */
 
 class XAssetModel : public CalibratedModel {
@@ -109,21 +107,20 @@ class XAssetModel : public CalibratedModel {
     /*! analytic moments rely on numerical integration, which can
         be customized here */
     void setIntegrationPolicy(const boost::shared_ptr<Integrator> integrator,
-                               const bool usePiecewiseIntegration = true) const;
+                              const bool usePiecewiseIntegration = true) const;
 
     Real ir_expectation(const Size i, const Time t0, const Real zi_0,
-                        const Real z0_0, const Real dt) const;
+                        const Real dt) const;
     Real fx_expectation(const Size i, const Time t0, const Real xi_0,
-                        const Real z0_0, const Real dt) const;
+                        const Real zi_0, const Real z0_0, const Real dt) const;
     Real ir_ir_covariance(const Size i, const Size j, const Time t0,
-                          const Real zi_0, const Real zj_0, const Real z0_0,
                           Time dt) const;
     Real ir_fx_covariance(const Size i, const Size j, const Time t0,
-                          const Real zi_0, const Real xj_0, const Real z0_0,
                           Time dt) const;
     Real fx_fx_covariance(const Size i, const Size j, const Time t0,
-                          const Real xi_0, const Real xj_0, const Real z0_0,
                           Time dt) const;
+
+    /* ... */
 
     /*! calibration procedures */
 
@@ -261,8 +258,7 @@ inline Real XAssetModel::integral_helper(const Size hi, const Size hj,
 }
 
 inline Real XAssetModel::ir_expectation(const Size i, const Time t0,
-                                        const Real zi_0, const Real z0_0,
-                                        const Real dt) const {
+                                        const Real zi_0, const Real dt) const {
     const Size na = Null<Size>();
     Real res = 0.0;
     if (i > 0) {
@@ -271,6 +267,111 @@ inline Real XAssetModel::ir_expectation(const Size i, const Time t0,
                integral(0, na, 0, i, na, na, t0, t0 + dt);
     }
     res += zi_0;
+    return res;
+}
+
+inline Real XAssetModel::fx_expectation(const Size i, const Time t0,
+                                        const Real xi_0, const Real zi_0,
+                                        const Real z0_0, const Real dt) const {
+    const Size na = Null<Size>();
+    Real res = std::log(irlgm1f(i + 1)->termStructure()->discount(t0 + dt) /
+                        irlgm1f(i + 1)->termStructure()->discount(t0) *
+                        irlgm1f(0)->termStructure()->discount(t0) /
+                        irlgm1f(0)->termStructure()->discount(t0 + dt));
+    res -= 0.5 * integral(na, na, na, na, i, i, t0, t0 + dt);
+    res += 0.5 * (irlgm1f(0)->H(t0 + dt) * irlgm1f(0)->H(t0 + dt) *
+                      irlgm1f(0)->zeta(t0 + dt) -
+                  irlgm1f(0)->H(t0) * irlgm1f(0)->H(t0) * irlgm1f(0)->zeta(t0) -
+                  integral(0, 0, 0, 0, na, na, t0, t0 + dt));
+    res -= 0.5 * (irlgm1f(i + 1)->H(t0 + dt) * irlgm1f(i + 1)->H(t0 + dt) *
+                      irlgm1f(i + 1)->zeta(t0 + dt) -
+                  irlgm1f(i + 1)->H(t0) * irlgm1f(i + 1)->H(t0) *
+                      irlgm1f(i + 1)->zeta(t0) -
+                  integral(i + 1, i + 1, i + 1, i + 1, na, na, t0, t0 + dt));
+    res += integral(0, na, 0, na, i, na, t0, t0 + dt);
+    res -= irlgm1f(i + 1)->H(t0 + dt) *
+           (-integral(i + 1, na, i + 1, i + 1, na, na, t0, t0 + dt) +
+            integral(0, na, i + 1, i + 1, na, na, t0, t0 + dt) -
+            integral(na, na, i + 1, na, i, na, t0, t0 + dt));
+    res += -integral(i + 1, i + 1, i + 1, i + 1, na, na, t0, t0 + dt) +
+           integral(0, 0, i + 1, i + 1, na, na, t0, t0 + dt) -
+           integral(i + 1, na, i + 1, na, i + 1, na, t0, t0 + dt);
+    res += xi_0 + (irlgm1f(0)->H(t0 + dt) - irlgm1f(0)->H(t0)) * z0_0 -
+           (irlgm1f(i + 1)->H(t0 + dt) - irlgm1f(i + 1)->H(t0)) * zi_0;
+    return res;
+}
+
+inline Real XAssetModel::ir_ir_covariance(const Size i, const Size j,
+                                          const Time t0, Time dt) const {
+
+    const Size na = Null<Size>();
+    Real res = integral(na, na, i, j, na, na, t0, t0 + dt);
+    return res;
+}
+
+inline Real XAssetModel::ir_fx_covariance(const Size i, const Size j,
+                                          const Time t0, Time dt) const {
+    const Size na = Null<Size>();
+    Real res =
+        irlgm1f(0)->H(t0 + dt) * integral(na, na, 0, i, na, na, t0, t0 + dt) -
+        integral(0, na, 0, i, na, na, t0, t0 + dt) -
+        irlgm1f(j + 1)->H(t0 + dt) *
+            integral(na, na, j + 1, i, na, na, t0, t0 + dt) +
+        integral(j + 1, na, j + 1, i, na, na, t0, t0 + dt) +
+        integral(na, na, i, na, j, na, t0, t0 + dt);
+    return res;
+}
+
+inline Real XAssetModel::fx_fx_covariance(const Size i, const Size j,
+                                          const Time t0, Time dt) const {
+    const Size na = Null<Size>();
+    Real res =
+        // row 1
+        irlgm1f(0)->H(t0 + dt) * irlgm1f(0)->H(t0 + dt) *
+            integral(na, na, 0, 0, na, na, t0, t0 + dt) -
+        2.0 * irlgm1f(0)->H(t0 + dt) *
+            integral(0, na, 0, 0, na, na, t0, t0 + dt) +
+        integral(0, 0, 0, 0, na, na, t0, t0 + dt) -
+        // row 2
+        irlgm1f(0)->H(t0 + dt) * irlgm1f(j + 1)->H(t0 + dt) *
+            integral(na, na, 0, j + 1, na, na, t0, t0 + dt) +
+        irlgm1f(j + 1)->H(t0 + dt) *
+            integral(0, na, 0, j + 1, na, na, t0, t0 + dt) +
+        irlgm1f(0)->H(t0 + dt) *
+            integral(j + 1, 0, j + 1, 0, na, na, t0, t0 + dt) -
+        integral(0, j + 1, 0, j + 1, na, na, t0, t0 + dt) -
+        // row 3
+        irlgm1f(0)->H(t0 + dt) * irlgm1f(i + 1)->H(t0 + dt) *
+            integral(na, na, 0, i + 1, na, na, t0, t0 + dt) +
+        irlgm1f(i + 1)->H(t0 + dt) *
+            integral(0, na, i + 1, i + 1, na, na, t0, t0 + dt) +
+        irlgm1f(0)->H(t0 + dt) *
+            integral(i + 1, na, i + 1, 0, na, na, t0, t0 + dt) -
+        integral(0, i + 1, 0, i + 1, na, na, t0, t0 + dt) +
+        // row 4
+        irlgm1f(0)->H(t0 + dt) * integral(na, na, 0, na, j, na, t0, t0 + dt) -
+        integral(0, na, 0, na, j, na, t0, t0 + dt) +
+        // row 5
+        irlgm1f(0)->H(t0 + dt) * integral(na, na, 0, na, i, na, t0, t0 + dt) -
+        integral(0, na, 0, na, i, na, t0, t0 + dt) -
+        // row 6
+        irlgm1f(i + 1)->H(t0 + dt) *
+            integral(na, na, i + 1, na, j, na, t0, t0 + dt) +
+        integral(i + 1, na, i + 1, na, j, na, t0, t0 + dt) -
+        // row 7
+        irlgm1f(i + 1)->H(t0 + dt) *
+            integral(na, na, j + 1, na, i, na, t0, t0 + dt) +
+        integral(j + 1, na, j + 1, na, i, na, t0, t0 + dt) +
+        // row 8
+        irlgm1f(i + 1)->H(t0 + dt) * irlgm1f(i + 1)->H(t0 + dt) *
+            integral(na, na, i + 1, j + 1, na, na, t0, t0 + dt) -
+        irlgm1f(j + 1)->H(t0 + dt) *
+            integral(i + 1, na, i + 1, j + 1, na, na, t0, t0 + dt) -
+        irlgm1f(i + 1)->H(t0 + dt) *
+            integral(j + 1, na, j + 1, i + 1, na, na, t0, t0 + dt) +
+        integral(i + 1, j + 1, i + 1, j + 1, na, na, t0, t0 + dt) +
+        // row 9
+        integral(na, na, na, na, i, j, t0, t0 + dt);
     return res;
 }
 
