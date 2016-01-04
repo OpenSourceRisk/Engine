@@ -17,8 +17,11 @@
  FOR A PARTICULAR PURPOSE.  See the license for more details.
 */
 
+#include <qle/math/piecewiseintegral.hpp>
 #include <qle/models/xassetmodel.hpp>
 #include <qle/models/pseudoparameter.hpp>
+#include <ql/math/integrals/simpsonintegral.hpp>
+#include <ql/math/matrixutilities/symmetricschurdecomposition.hpp>
 
 namespace QuantExt {
 
@@ -34,39 +37,37 @@ void XAssetModel::initialize() {
     initializeParametrizations();
     initializeCorrelation();
     initializeArguments();
+
+    // set default integrator
+    setIntegrationPolicy(boost::make_shared<SimpsonIntegral>(1.0E-8, 100),
+                         true);
 }
 
-void XAssetModel::initializeCorrelation() {
+void XAssetModel::setIntegrationPolicy(
+    const boost::shared_ptr<Integrator> integrator,
+    const bool usePiecewiseIntegration) const {
 
-    QL_REQUIRE(rho_.rows() == nIrLgm1f_ + nFxBs_ &&
-                   rho_.columns() == nIrLgm1f_ + nFxBs_,
-               "correlation matrix is " << rho_.rows() << " x "
-                                        << rho_.columns() << " but should be "
-                                        << nIrLgm1f_ + nFxBs_ << " x "
-                                        << nIrLgm1f_ + nFxBs_);
-
-    for (Size i = 0; i < rho_.rows(); ++i) {
-        for (Size j = 0; j < rho_.columns(); ++j) {
-            QL_REQUIRE(close_enough(rho_[i][j], rho_[j][i]),
-                       "correlation matrix is no symmetric, for (i,j)=("
-                           << i << "," << j << ") rho(i,j)=" << rho_[i][j]
-                           << " but rho(j,i)=" << rho_[j][i]);
-            QL_REQUIRE(rho_[i][j] >= -1.0 && rho_[i][j] <= 1.0,
-                       "correlation matrix has invalid entry at (i,j)=("
-                           << i << "," << j << ") equal to " << rho_[i][j]);
-        }
-        QL_REQUIRE(
-            close_enough(rho_[i][j], 1.0),
-            "correlation matrix must have unit diagonal elements, but rho(i,i)="
-                << rho_[i][i] << " for i=" << i);
+    if (!usePiecewiseIntegration) {
+        integrator_ = integrator;
+        return;
     }
 
-    SymmetricSchurDecomposition ssd(rho_);
-    for (Size i = 0; i < ssd.eigenvalues().size(); ++i) {
-        QL_REQUIRE(ssd.eigenvalues()[i] >= 0.0,
-                   "correlation matrix has negative eigenvalue #"
-                       << i << " (" << ssd.eigenvalues()[i] << ")");
+    // collect relevant times from parametrizations
+    std::vector<Time> allTimes;
+    for (Size i = 0; i < nIrLgm1f_; ++i) {
+        allTimes.insert(allTimes.end(), p_[i]->parameterTimes(0).begin(),
+                        p_[i]->parameterTimes(0).end());
+        allTimes.insert(allTimes.end(), p_[i]->parameterTimes(1).begin(),
+                        p_[i]->parameterTimes(1).end());
     }
+    for (Size i = 0; i < nFxBs_; ++i) {
+        allTimes.insert(allTimes.end(), p_[i]->parameterTimes(0).begin(),
+                        p_[i]->parameterTimes(0).end());
+    }
+
+    // use piecewise integrator avoiding the step points
+    integrator_ =
+        boost::make_shared<PiecewiseIntegral>(integrator, allTimes, true);
 }
 
 void XAssetModel::initializeParametrizations() {
@@ -106,19 +107,62 @@ void XAssetModel::initializeParametrizations() {
 
     // check currencies
 
-    std::set<Currency> currencies;
-    for (Size i = 0; i < nIrmLgm1f_; ++i) {
-        currencies.add(irLgm1f(i)->currency());
+    // without an order or a hash function on Currency this seems hard
+    // to do in a simpler way ...
+    Size uniqueCurrencies = 0;
+    std::vector<Currency> currencies;
+    for (Size i = 0; i < nIrLgm1f_; ++i) {
+        Size tmp = 1;
+        for (Size j = 0; j < i; ++j) {
+            if (irlgm1f(i)->currency() == currencies[j])
+                tmp = 0;
+        }
+        uniqueCurrencies += tmp;
+        currencies.push_back(irlgm1f(i)->currency());
     }
-    QL_REQUIRE(currencies.size() == nIrLgm1f_, "there are duplicate currencies "
-                                               "in the set of irlgm1f "
-                                               "parametrizations");
+    QL_REQUIRE(uniqueCurrencies == nIrLgm1f_, "there are duplicate currencies "
+                                              "in the set of irlgm1f "
+                                              "parametrizations");
     for (Size i = 0; i < nFxBs_; ++i) {
-        QL_REQUIRE(fxbs(i)->currecy() == irlgm1f(i + 1)->currenc(),
+        QL_REQUIRE(fxbs(i)->currency() == irlgm1f(i + 1)->currency(),
                    "fx parametrization #"
                        << i << " must be for currency of ir parametrization #"
                        << (i + 1) << ", but they are " << fxbs(i)->currency()
-                       << " and " << irlgm1f << " respectively");
+                       << " and " << irlgm1f(i + 1)->currency()
+                       << " respectively");
+    }
+}
+
+void XAssetModel::initializeCorrelation() {
+
+    QL_REQUIRE(rho_.rows() == nIrLgm1f_ + nFxBs_ &&
+                   rho_.columns() == nIrLgm1f_ + nFxBs_,
+               "correlation matrix is " << rho_.rows() << " x "
+                                        << rho_.columns() << " but should be "
+                                        << nIrLgm1f_ + nFxBs_ << " x "
+                                        << nIrLgm1f_ + nFxBs_);
+
+    for (Size i = 0; i < rho_.rows(); ++i) {
+        for (Size j = 0; j < rho_.columns(); ++j) {
+            QL_REQUIRE(close_enough(rho_[i][j], rho_[j][i]),
+                       "correlation matrix is no symmetric, for (i,j)=("
+                           << i << "," << j << ") rho(i,j)=" << rho_[i][j]
+                           << " but rho(j,i)=" << rho_[j][i]);
+            QL_REQUIRE(rho_[i][j] >= -1.0 && rho_[i][j] <= 1.0,
+                       "correlation matrix has invalid entry at (i,j)=("
+                           << i << "," << j << ") equal to " << rho_[i][j]);
+        }
+        QL_REQUIRE(
+            close_enough(rho_[i][i], 1.0),
+            "correlation matrix must have unit diagonal elements, but rho(i,i)="
+                << rho_[i][i] << " for i=" << i);
+    }
+
+    SymmetricSchurDecomposition ssd(rho_);
+    for (Size i = 0; i < ssd.eigenvalues().size(); ++i) {
+        QL_REQUIRE(ssd.eigenvalues()[i] >= 0.0,
+                   "correlation matrix has negative eigenvalue at "
+                       << i << " (" << ssd.eigenvalues()[i] << ")");
     }
 }
 
@@ -127,16 +171,13 @@ void XAssetModel::initializeArguments() {
     arguments_.resize(2 * nIrLgm1f_ + nFxBs_);
     for (Size i = 0; i < nIrLgm1f_; ++i) {
         // volatility
-        arguments_[2 * i] = PseudoParameter();
-        arguments_[2 * i].params() = irlgm1f(i)->rawValues(0);
+        arguments_[2 * i] = irlgm1f(i)->parameter(0);
         // reversion
-        arguments_[2 * i + 1] = PseudoParameter();
-        arguments_[2 * i].params() = irlgm1f(i)->rawValues(1);
+        arguments_[2 * i + 1] = irlgm1f(i)->parameter(1);
     }
     for (Size i = 0; i < nFxBs_; ++i) {
         // volatility
-        arguments_[i] = PseudoParameter();
-        arguments_[i].params() = fxbs(i)->rawValues(0);
+        arguments_[i] = fxbs(i)->parameter(0);
     }
 }
 

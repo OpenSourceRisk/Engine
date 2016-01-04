@@ -70,15 +70,23 @@ void XAssetModelParametrizationsTest::testParametrizationBaseClasses() {
     // base class
 
     Parametrization p1((EURCurrency()));
-    if (p1.parameterSize(42) != 0) {
-        BOOST_ERROR("empty parametrization should have zero parameter "
-                    "size, it is "
-                    << p1.parameterSize(42) << " instead");
-    }
+
     if (p1.parameterTimes(42) != Array()) {
         BOOST_ERROR("empty parametrization should have empty times "
-                    "array, is has size "
+                    "array, it has size "
                     << p1.parameterTimes(42).size() << " though");
+    }
+
+    if (p1.parameterValues(42) != Array()) {
+        BOOST_ERROR("empty parametrization should have empty values "
+                    "array, it has size "
+                    << p1.parameterValues(42).size() << " though");
+    }
+
+    if (p1.parameter(42).params().size() != 0) {
+        BOOST_ERROR("empty parametrization should have empty parameter "
+                    "array, it has size "
+                    << p1.parameter(42).params().size() << " though");
     }
 
     // piecewise constant helpers
@@ -86,9 +94,9 @@ void XAssetModelParametrizationsTest::testParametrizationBaseClasses() {
     // the helpers expect raw values in the sense of parameter transformation
     // which we generate here hard coded (kind of white box testing, since
     // the helper classes are never used directly in client code)
-    Array noTimes, three(1, 3.0), sqrt_three(1, std::sqrt(3.0)), zero(1, 0.0),
-        two(1, 2.0), sqrt_two(1, std::sqrt(2.0));
-    PiecewiseConstantHelper1 helper11(noTimes, sqrt_three);
+    Array noTimes;
+    PiecewiseConstantHelper1 helper11(noTimes);
+    helper11.p().setParam(0, std::sqrt(3.0));
     check("helper11.y", 0.0, helper11.y(0.0), 3.0);
     check("helper11.y", 1.0, helper11.y(1.0), 3.0);
     check("helper11.y", 3.0, helper11.y(3.0), 3.0);
@@ -96,7 +104,8 @@ void XAssetModelParametrizationsTest::testParametrizationBaseClasses() {
     check("helper11.int_y_sqr", 1.0, helper11.int_y_sqr(1.0), 9.0);
     check("helper11.int_y_sqr", 3.0, helper11.int_y_sqr(3.0), 27.0);
 
-    PiecewiseConstantHelper2 helper21(noTimes, three);
+    PiecewiseConstantHelper2 helper21(noTimes);
+    helper21.p().setParam(0, 3.0);
     check("helper21.y", 0.0, helper21.y(0.0), 3.0);
     check("helper21.y", 1.0, helper21.y(1.0), 3.0);
     check("helper21.y", 3.0, helper21.y(3.0), 3.0);
@@ -114,7 +123,9 @@ void XAssetModelParametrizationsTest::testParametrizationBaseClasses() {
     // the helper type 3 is close to type 2, so we only do the easiest
     // tests here, in the irlgm1f Hull White adaptor tests below the
     // other tests will be implicit though
-    PiecewiseConstantHelper3 helper31(noTimes, sqrt_three, two);
+    PiecewiseConstantHelper3 helper31(noTimes);
+    helper31.p1().setParam(0, std::sqrt(3.0));
+    helper31.p2().setParam(0, 2.0);
     check("helper31.y1", 0.0, helper31.y1(0.0), 3.0);
     check("helper31.y1", 1.0, helper31.y1(1.0), 3.0);
     check("helper31.y1", 3.0, helper31.y1(3.0), 3.0);
@@ -130,7 +141,8 @@ void XAssetModelParametrizationsTest::testParametrizationBaseClasses() {
           helper31.int_y1_sqr_exp_2_int_y2(3.0),
           9.0 / 4.0 * (std::exp(2.0 * 2.0 * 3.0) - 1.0));
 
-    PiecewiseConstantHelper2 helper22(noTimes, zero);
+    PiecewiseConstantHelper2 helper22(noTimes);
+    helper22.p().setParam(0, 0.0);
     check("helper22.y", 0.0, helper22.y(0.0), 0.0);
     check("helper22.y", 1.0, helper22.y(1.0), 0.0);
     check("helper22.y", 3.0, helper22.y(3.0), 0.0);
@@ -153,7 +165,12 @@ void XAssetModelParametrizationsTest::testParametrizationBaseClasses() {
     sqrt_values[1] = std::sqrt(2.0);
     sqrt_values[2] = std::sqrt(0.0);
     sqrt_values[3] = std::sqrt(3.0);
-    PiecewiseConstantHelper1 helper12(times, sqrt_values);
+    PiecewiseConstantHelper1 helper12(times);
+    helper12.p().setParam(0, sqrt_values[0]);
+    helper12.p().setParam(1, sqrt_values[1]);
+    helper12.p().setParam(2, sqrt_values[2]);
+    helper12.p().setParam(3, sqrt_values[3]);
+    helper12.update();
     check("helper12.y", 0.0, helper12.y(0.0), 1.0);
     check("helper12.y", 0.5, helper12.y(0.5), 1.0);
     check("helper12.y", 1.0, helper12.y(1.0), 2.0);
@@ -173,7 +190,12 @@ void XAssetModelParametrizationsTest::testParametrizationBaseClasses() {
     check("helper12.int_y_sqr", 5.0, helper12.int_y_sqr(5.0),
           1.0 + 4.0 + 9.0 * 2.0);
 
-    PiecewiseConstantHelper2 helper23(times, values);
+    PiecewiseConstantHelper2 helper23(times);
+    helper23.p().setParam(0, values[0]);
+    helper23.p().setParam(1, values[1]);
+    helper23.p().setParam(2, values[2]);
+    helper23.p().setParam(3, values[3]);
+    helper23.update();
     check("helper23.y", 0.0, helper23.y(0.0), 1.0);
     check("helper23.y", 0.5, helper23.y(0.5), 1.0);
     check("helper23.y", 1.0, helper23.y(1.0), 2.0);
@@ -212,10 +234,10 @@ void XAssetModelParametrizationsTest::testParametrizationBaseClasses() {
 
     // check update after value change
 
-    helper12.y()[0] = std::sqrt(0.5);
-    helper12.y()[1] = std::sqrt(1.0);
-    helper23.y()[0] = 0.5;
-    helper23.y()[1] = 1.0;
+    helper12.p().setParam(0, std::sqrt(0.5));
+    helper12.p().setParam(1, std::sqrt(1.0));
+    helper23.p().setParam(0, 0.5);
+    helper23.p().setParam(1, 1.0);
     helper12.update();
     helper23.update();
     check("update helper12.y", 1.0, helper12.y(1.0), 1.0);

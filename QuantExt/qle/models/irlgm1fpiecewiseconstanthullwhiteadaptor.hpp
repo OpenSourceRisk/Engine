@@ -47,7 +47,7 @@ class IrLgm1fPiecewiseConstantHullWhiteAdaptor
     Real Hprime2(const Time t) const;
     Real hullWhiteSigma(Time t) const;
     const Array &parameterTimes(const Size) const;
-    Array &rawValues(const Size) const;
+    Parameter &parameter(const Size) const;
     /*! additional methods */
     void update() const;
 
@@ -119,8 +119,8 @@ IrLgm1fPiecewiseConstantHullWhiteAdaptor::parameterTimes(const Size i) const {
         return PiecewiseConstantHelper2::t_;
 }
 
-inline Array &
-IrLgm1fPiecewiseConstantHullWhiteAdaptor::rawValues(const Size i) const {
+inline Parameter &
+IrLgm1fPiecewiseConstantHullWhiteAdaptor::parameter(const Size i) const {
     QL_REQUIRE(i < 2, "parameter " << i << " does not exist, only have 0..1");
     if (i == 0)
         return PiecewiseConstantHelper3::y1_;

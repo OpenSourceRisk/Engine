@@ -13,5 +13,6 @@
 #include <qle/models/irlgm1fparametrization.hpp>
 #include <qle/models/parametrization.hpp>
 #include <qle/models/piecewiseconstanthelper.hpp>
+#include <qle/models/pseudoparameter.hpp>
 #include <qle/models/xassetmodel.hpp>
 

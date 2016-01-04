@@ -25,7 +25,11 @@ IrLgm1fConstantParametrization::IrLgm1fConstantParametrization(
     const Currency &currency, const Handle<YieldTermStructure> &termStructure,
     const Real alpha, const Real kappa)
     : IrLgm1fParametrization(currency, termStructure),
-      rawAlpha_(Array(1, inverse(0, alpha))), kappa_(Array(1, kappa)),
-      zeroKappaCutoff_(1.0E-6) {}
+      zeroKappaCutoff_(1.0E-6) {
+    alpha_ = PseudoParameter(1);
+    kappa_ = PseudoParameter(1);
+    alpha_.setParam(0, inverse(0, alpha));
+    kappa_.setParam(0, inverse(1, kappa));
+}
 
 } // namespace QuantExt

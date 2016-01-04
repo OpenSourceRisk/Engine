@@ -25,6 +25,7 @@
 #define quantext_piecewiseconstant_helper_hpp
 
 #include <qle/math/piecewisefunction.hpp>
+#include <qle/models/pseudoparameter.hpp>
 #include <ql/math/array.hpp>
 
 using namespace QuantLib;
@@ -34,9 +35,9 @@ namespace QuantExt {
 class PiecewiseConstantHelper1 {
   public:
     /*! y are the raw values in the sense of parameter transformation */
-    PiecewiseConstantHelper1(const Array &t, const Array &y);
+    PiecewiseConstantHelper1(const Array &t);
     const Array &t() const;
-    Array &y() const;
+    Parameter &p() const;
     void update() const;
     Real y(const Time t) const;
     //! int_0^t y^2(s) ds
@@ -47,7 +48,7 @@ class PiecewiseConstantHelper1 {
     Real inverse(const Real y) const;
 
     const Array t_;
-    mutable Array y_;
+    mutable PseudoParameter y_;
 
   private:
     mutable std::vector<Real> b_;
@@ -56,9 +57,9 @@ class PiecewiseConstantHelper1 {
 class PiecewiseConstantHelper2 {
   public:
     /*! y are the raw values in the sense of parameter transformation */
-    PiecewiseConstantHelper2(const Array &t, const Array &y);
+    PiecewiseConstantHelper2(const Array &t);
     const Array &t() const;
-    Array &y() const;
+    Parameter &p() const;
     void update() const;
     Real y(const Time t) const;
     //! exp(int_0^t -y(s)) ds
@@ -73,7 +74,7 @@ class PiecewiseConstantHelper2 {
     Real direct(const Real x) const;
     Real inverse(const Real y) const;
     const Array t_;
-    mutable Array y_;
+    mutable PseudoParameter y_;
 
   private:
     mutable std::vector<Real> b_, c_;
@@ -82,10 +83,10 @@ class PiecewiseConstantHelper2 {
 class PiecewiseConstantHelper3 {
   public:
     /*! y1, y2 are the raw values in the sense of parameter transformation */
-    PiecewiseConstantHelper3(const Array &t, const Array &y1, const Array &y2);
+    PiecewiseConstantHelper3(const Array &t);
     const Array &t() const;
-    Array &y1() const;
-    Array &y2() const;
+    Parameter &p1() const;
+    Parameter &p2() const;
     void update() const;
     Real y1(const Time t) const;
     Real y2(const Time t) const;
@@ -101,7 +102,7 @@ class PiecewiseConstantHelper3 {
     Real direct2(const Real x) const;
     Real inverse2(const Real y) const;
     const Array t_;
-    mutable Array y1_, y2_;
+    mutable PseudoParameter y1_, y2_;
 
   private:
     mutable std::vector<Real> b_, c_;
@@ -111,7 +112,7 @@ class PiecewiseConstantHelper3 {
 
 inline const Array &PiecewiseConstantHelper1::t() const { return t_; }
 
-inline Array &PiecewiseConstantHelper1::y() const { return y_; }
+inline Parameter &PiecewiseConstantHelper1::p() const { return y_; }
 
 inline Real PiecewiseConstantHelper1::direct(const Real x) const {
     return x * x;
@@ -125,7 +126,7 @@ inline void PiecewiseConstantHelper1::update() const {
     Real sum = 0.0;
     b_.resize(t_.size());
     for (Size i = 0; i < t_.size(); ++i) {
-        sum += direct(y_[i]) * direct(y_[i]) *
+        sum += direct(y_.params()[i]) * direct(y_.params()[i]) *
                (t_[i] - (i == 0 ? 0.0 : t_[i - 1]));
         b_[i] = sum;
     }
@@ -133,7 +134,7 @@ inline void PiecewiseConstantHelper1::update() const {
 
 inline const Array &PiecewiseConstantHelper2::t() const { return t_; }
 
-inline Array &PiecewiseConstantHelper2::y() const { return y_; }
+inline Parameter &PiecewiseConstantHelper2::p() const { return y_; }
 
 inline Real PiecewiseConstantHelper2::direct(const Real x) const { return x; }
 
@@ -145,15 +146,15 @@ inline void PiecewiseConstantHelper2::update() const {
     c_.resize(t_.size());
     for (Size i = 0; i < t_.size(); ++i) {
         Real t0 = (i == 0 ? 0.0 : t_[i - 1]);
-        sum += direct(y_[i]) * (t_[i] - t0);
+        sum += direct(y_.params()[i]) * (t_[i] - t0);
         b_[i] = sum;
         Real b2Tmp = (i == 0 ? 0.0 : b_[i - 1]);
-        if (std::fabs(direct(y_[i])) < zeroCutoff_) {
+        if (std::fabs(direct(y_.params()[i])) < zeroCutoff_) {
             sum2 += (t_[i] - t0) * std::exp(-b2Tmp);
         } else {
             sum2 += (std::exp(-b2Tmp) -
-                     std::exp(-b2Tmp - direct(y_[i]) * (t_[i] - t0))) /
-                    direct(y_[i]);
+                     std::exp(-b2Tmp - direct(y_.params()[i]) * (t_[i] - t0))) /
+                    direct(y_.params()[i]);
         }
         c_[i] = sum2;
     }
@@ -161,9 +162,9 @@ inline void PiecewiseConstantHelper2::update() const {
 
 inline const Array &PiecewiseConstantHelper3::t() const { return t_; }
 
-inline Array &PiecewiseConstantHelper3::y1() const { return y1_; }
+inline Parameter &PiecewiseConstantHelper3::p1() const { return y1_; }
 
-inline Array &PiecewiseConstantHelper3::y2() const { return y2_; }
+inline Parameter &PiecewiseConstantHelper3::p2() const { return y2_; }
 
 inline Real PiecewiseConstantHelper3::direct1(const Real x) const {
     return x * x;
@@ -173,13 +174,9 @@ inline Real PiecewiseConstantHelper3::inverse1(const Real y) const {
     return std::sqrt(y);
 }
 
-inline Real PiecewiseConstantHelper3::direct2(const Real x) const {
-    return x;
-}
+inline Real PiecewiseConstantHelper3::direct2(const Real x) const { return x; }
 
-inline Real PiecewiseConstantHelper3::inverse2(const Real y) const {
-    return y;
-}
+inline Real PiecewiseConstantHelper3::inverse2(const Real y) const { return y; }
 
 inline void PiecewiseConstantHelper3::update() const {
     Real sum = 0.0, sum2 = 0.0;
@@ -187,37 +184,37 @@ inline void PiecewiseConstantHelper3::update() const {
     c_.resize(t_.size());
     for (Size i = 0; i < t_.size(); ++i) {
         Real t0 = (i == 0 ? 0.0 : t_[i - 1]);
-        sum += direct2(y2_[i]) * (t_[i] - t0);
+        sum += direct2(y2_.params()[i]) * (t_[i] - t0);
         b_[i] = sum;
         Real b2Tmp = (i == 0 ? 0.0 : b_[i - 1]);
-        if (std::fabs(direct2(y2_[i])) < zeroCutoff_) {
-            sum2 += direct1(y1_[i]) * direct1(y1_[i]) * (t_[i] - t0) *
-                    std::exp(2.0 * b2Tmp);
+        if (std::fabs(direct2(y2_.params()[i])) < zeroCutoff_) {
+            sum2 += direct1(y1_.params()[i]) * direct1(y1_.params()[i]) *
+                    (t_[i] - t0) * std::exp(2.0 * b2Tmp);
         } else {
-            sum2 +=
-                direct1(y1_[i]) * direct1(y1_[i]) *
-                (std::exp(2.0 * b2Tmp + 2.0 * direct2(y2_[i]) * (t_[i] - t0)) -
-                 std::exp(2.0 * b2Tmp)) /
-                (2.0 * direct2(y2_[i]));
+            sum2 += direct1(y1_.params()[i]) * direct1(y1_.params()[i]) *
+                    (std::exp(2.0 * b2Tmp +
+                              2.0 * direct2(y2_.params()[i]) * (t_[i] - t0)) -
+                     std::exp(2.0 * b2Tmp)) /
+                    (2.0 * direct2(y2_.params()[i]));
         }
         c_[i] = sum2;
     }
 };
 
 inline Real PiecewiseConstantHelper1::y(const Time t) const {
-    return direct(QL_PIECEWISE_FUNCTION(t_, y_, t));
+    return direct(QL_PIECEWISE_FUNCTION(t_, y_.params(), t));
 }
 
 inline Real PiecewiseConstantHelper2::y(const Time t) const {
-    return direct(QL_PIECEWISE_FUNCTION(t_, y_, t));
+    return direct(QL_PIECEWISE_FUNCTION(t_, y_.params(), t));
 }
 
 inline Real PiecewiseConstantHelper3::y1(const Time t) const {
-    return direct1(QL_PIECEWISE_FUNCTION(t_, y1_, t));
+    return direct1(QL_PIECEWISE_FUNCTION(t_, y1_.params(), t));
 }
 
 inline Real PiecewiseConstantHelper3::y2(const Time t) const {
-    return direct2(QL_PIECEWISE_FUNCTION(t_, y2_, t));
+    return direct2(QL_PIECEWISE_FUNCTION(t_, y2_.params(), t));
 }
 
 inline Real PiecewiseConstantHelper1::int_y_sqr(const Time t) const {
@@ -227,7 +224,7 @@ inline Real PiecewiseConstantHelper1::int_y_sqr(const Time t) const {
     Real res = 0.0;
     if (i >= 1)
         res += b_[std::min(i - 1, b_.size() - 1)];
-    Real a = direct(y_[std::min(i, y_.size() - 1)]);
+    Real a = direct(y_.params()[std::min(i, y_.size() - 1)]);
     res += a * a * (t - (i == 0 ? 0.0 : t_[i - 1]));
     return res;
 }
@@ -239,7 +236,7 @@ inline Real PiecewiseConstantHelper2::exp_m_int_y(const Time t) const {
     Real res = 0.0;
     if (i >= 1)
         res += b_[std::min(i - 1, b_.size() - 1)];
-    Real a = y_[std::min(i, y_.size() - 1)];
+    Real a = y_.params()[std::min(i, y_.size() - 1)];
     res += a * (t - (i == 0 ? 0.0 : t_[i - 1]));
     return std::exp(-res);
 }
@@ -251,7 +248,7 @@ inline Real PiecewiseConstantHelper2::int_exp_m_int_y(const Time t) const {
     Real res = 0.0;
     if (i >= 1)
         res += c_[std::min(i - 1, c_.size() - 1)];
-    Real a = direct(y_[std::min(i, y_.size() - 1)]);
+    Real a = direct(y_.params()[std::min(i, y_.size() - 1)]);
     Real t0 = (i == 0 ? 0.0 : t_[i - 1]);
     Real b2Tmp = (i == 0 ? 0.0 : b_[i - 1]);
     if (std::fabs(a) < zeroCutoff_) {
@@ -270,8 +267,8 @@ PiecewiseConstantHelper3::int_y1_sqr_exp_2_int_y2(const Time t) const {
     Real res = 0.0;
     if (i >= 1)
         res += c_[std::min(i - 1, c_.size() - 1)];
-    Real a = direct2(y2_[std::min(i, y2_.size() - 1)]);
-    Real b = direct1(y1_[std::min(i, y1_.size() - 1)]);
+    Real a = direct2(y2_.params()[std::min(i, y2_.size() - 1)]);
+    Real b = direct1(y1_.params()[std::min(i, y1_.size() - 1)]);
     Real t0 = (i == 0 ? 0.0 : t_[i - 1]);
     Real b2Tmp = (i == 0 ? 0.0 : b_[i - 1]);
     if (std::fabs(a) < zeroCutoff_) {

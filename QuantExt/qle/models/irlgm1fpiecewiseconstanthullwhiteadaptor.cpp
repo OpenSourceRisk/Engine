@@ -27,12 +27,25 @@ IrLgm1fPiecewiseConstantHullWhiteAdaptor::
         const Handle<YieldTermStructure> &termStructure, const Array &times,
         const Array &sigma, const Array &kappa)
     : IrLgm1fParametrization(currency, termStructure),
-      PiecewiseConstantHelper3(times, sigma, kappa),
-      PiecewiseConstantHelper2(times, kappa) {
+      PiecewiseConstantHelper3(times), PiecewiseConstantHelper2(times) {
+    QL_REQUIRE(times.size() + 1 == sigma.size(),
+               "sigma size (" << sigma.size()
+                              << ") inconsistent to times size ("
+                              << times.size() << ")");
+    QL_REQUIRE(times.size() + 1 == kappa.size(),
+               "kappa size (" << kappa.size()
+                              << ") inconsistent to times size ("
+                              << times.size() << ")");
+
     // store raw parameter values
     for (Size i = 0; i < PiecewiseConstantHelper3::y1_.size(); ++i) {
-        PiecewiseConstantHelper3::y1_[i] =
-            inverse(0, PiecewiseConstantHelper3::y1_[i]);
+        PiecewiseConstantHelper3::y1_.setParam(i, inverse(0, sigma[i]));
+    }
+    for (Size i = 0; i < PiecewiseConstantHelper3::y2_.size(); ++i) {
+        PiecewiseConstantHelper3::y2_.setParam(i, inverse(1, kappa[i]));
+    }
+    for (Size i = 0; i < PiecewiseConstantHelper2::y_.size(); ++i) {
+        PiecewiseConstantHelper2::y_.setParam(i, inverse(1, kappa[i]));
     }
     update();
 }

@@ -29,8 +29,11 @@
 #include <qle/models/fxbsparametrization.hpp>
 #include <ql/math/matrix.hpp>
 #include <ql/math/distributions/normaldistribution.hpp>
+#include <ql/math/integrals/integral.hpp>
 #include <ql/models/model.hpp>
 #include <ql/stochasticprocess.hpp>
+
+#include <boost/bind.hpp>
 
 using namespace QuantLib;
 
@@ -105,22 +108,22 @@ class XAssetModel : public CalibratedModel {
 
     /*! analytic moments rely on numerical integration, which can
         be customized here */
-    void setIngtegrationPolicy(const boost::shared_ptr<Integrator> integrator,
-                               const bool usePiecewiseIntegration = true);
+    void setIntegrationPolicy(const boost::shared_ptr<Integrator> integrator,
+                               const bool usePiecewiseIntegration = true) const;
 
     Real ir_expectation(const Size i, const Time t0, const Real zi_0,
-                        const Real z0_0, const Real dt);
+                        const Real z0_0, const Real dt) const;
     Real fx_expectation(const Size i, const Time t0, const Real xi_0,
-                        const Real z0_0, const Real dt);
+                        const Real z0_0, const Real dt) const;
     Real ir_ir_covariance(const Size i, const Size j, const Time t0,
                           const Real zi_0, const Real zj_0, const Real z0_0,
-                          Time dt);
+                          Time dt) const;
     Real ir_fx_covariance(const Size i, const Size j, const Time t0,
                           const Real zi_0, const Real xj_0, const Real z0_0,
-                          Time dt);
+                          Time dt) const;
     Real fx_fx_covariance(const Size i, const Size j, const Time t0,
-                          const Real xi_0, const Real xj_0, cosnt Real z0_0,
-                          Time dt);
+                          const Real xi_0, const Real xj_0, const Real z0_0,
+                          Time dt) const;
 
     /*! calibration procedures */
 
@@ -139,14 +142,25 @@ class XAssetModel : public CalibratedModel {
     /* ... */
 
   private:
+    /*! init methods */
     void initialize();
-    void initializeCorrelation();
     void initializeParametrizations();
+    void initializeCorrelation();
     void initializeArguments();
+
+    /*! integral helper functions */
+    Real integral(const Size hi, const Size hj, const Size alphai,
+                  const Size alphaj, const Size sigmai, const Size sigmaj,
+                  const Real a, const Real b) const;
+    Real integral_helper(const Size hi, const Size hj, const Size alphai,
+                         const Size alphaj, const Size sigmai,
+                         const Size sigmaj, const Real t) const;
+
+    /*! members */
     Size nIrLgm1f_, nFxBs_;
     const std::vector<boost::shared_ptr<Parametrization> > p_;
     const Matrix rho_;
-    boost::shared_ptr<Integrator> integrator_;
+    mutable boost::shared_ptr<Integrator> integrator_;
 };
 
 // inline
@@ -158,7 +172,7 @@ XAssetModel::irlgm1f(const Size ccy) const {
     return boost::dynamic_pointer_cast<IrLgm1fParametrization>(p_[ccy]);
 }
 
-inline const boost::shared_ptr<IrLgm1fParametrization>
+inline const boost::shared_ptr<FxBsParametrization>
 XAssetModel::fxbs(const Size ccy) const {
     QL_REQUIRE(ccy < nFxBs_, "fxbs index (" << ccy << ") must be in 0..."
                                             << (nFxBs_ - 1));
@@ -213,6 +227,51 @@ inline Real XAssetModel::discountBondOption(const Size ccy, Option::Type type,
     Real dm = dp - sigma;
     QuantExt::CumulativeNormalDistribution N;
     return w * (pT * N(w * dp) - pS * K * N(w * dm));
+}
+
+inline Real XAssetModel::integral(const Size hi, const Size hj,
+                                  const Size alphai, const Size alphaj,
+                                  const Size sigmai, const Size sigmaj,
+                                  const Real a, const Real b) const {
+    return integrator_->operator()(boost::bind(&XAssetModel::integral_helper,
+                                               this, hi, hj, alphai, alphaj,
+                                               sigmai, sigmaj, _1),
+                                   a, b);
+}
+
+inline Real XAssetModel::integral_helper(const Size hi, const Size hj,
+                                         const Size alphai, const Size alphaj,
+                                         const Size sigmai, const Size sigmaj,
+                                         const Real t) const {
+    const Size na = Null<Size>();
+    Real res = 1.0;
+    if (hi != na)
+        res *= irlgm1f(hi)->H(t);
+    if (hj != na)
+        res *= irlgm1f(hj)->H(t);
+    if (alphai != na)
+        res *= irlgm1f(alphai)->alpha(t);
+    if (alphaj != na)
+        res *= irlgm1f(alphaj)->alpha(t);
+    if (sigmai != na)
+        res *= fxbs(sigmai)->sigma(t);
+    if (sigmaj != na)
+        res *= fxbs(sigmai)->sigma(t);
+    return res;
+}
+
+inline Real XAssetModel::ir_expectation(const Size i, const Time t0,
+                                        const Real zi_0, const Real z0_0,
+                                        const Real dt) const {
+    const Size na = Null<Size>();
+    Real res = 0.0;
+    if (i > 0) {
+        res += -integral(i, na, i, i, na, na, t0, t0 + dt) -
+               integral(na, na, i, na, i - 1, na, t0, t0 + dt) +
+               integral(0, na, 0, i, na, na, t0, t0 + dt);
+    }
+    res += zi_0;
+    return res;
 }
 
 } // namespace QuantExt

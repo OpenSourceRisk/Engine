@@ -28,16 +28,22 @@ IrLgm1fPiecewiseConstantParametrization::
         const Array &alphaTimes, const Array &alpha, const Array &kappaTimes,
         const Array &kappa)
     : IrLgm1fParametrization(currency, termStructure),
-      PiecewiseConstantHelper1(alphaTimes, alpha),
-      PiecewiseConstantHelper2(kappaTimes, kappa) {
+      PiecewiseConstantHelper1(alphaTimes),
+      PiecewiseConstantHelper2(kappaTimes) {
+    QL_REQUIRE(alphaTimes.size() + 1 == alpha.size(),
+               "alpha size (" << alpha.size()
+                              << ") inconsistent to times size ("
+                              << alphaTimes.size() << ")");
+    QL_REQUIRE(kappaTimes.size() + 1 == kappa.size(),
+               "kappa size (" << kappa.size()
+                              << ") inconsistent to times size ("
+                              << kappaTimes.size() << ")");
     // store raw parameter values
     for (Size i = 0; i < PiecewiseConstantHelper1::y_.size(); ++i) {
-        PiecewiseConstantHelper1::y_[i] =
-            inverse(0, PiecewiseConstantHelper1::y_[i]);
+        PiecewiseConstantHelper1::y_.setParam(i, inverse(0, alpha[i]));
     }
     for (Size i = 0; i < PiecewiseConstantHelper2::y_.size(); ++i) {
-        PiecewiseConstantHelper2::y_[i] =
-            inverse(1, PiecewiseConstantHelper2::y_[i]);
+        PiecewiseConstantHelper2::y_.setParam(i, inverse(1, kappa[i]));
     }
     update();
 }

@@ -368,6 +368,7 @@ void AnalyticLgmSwaptionEngineTest::testAgainstOtherEngines() {
                 std::vector<boost::shared_ptr<Parametrization> > params;
                 params.push_back(irlgm1f);
                 Matrix rho(1, 1);
+                rho[0][0] = 1.0;
                 const boost::shared_ptr<XAssetModel> xasset =
                     boost::make_shared<XAssetModel>(params, rho);
 

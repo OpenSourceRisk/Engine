@@ -36,19 +36,18 @@ class IrLgm1fConstantParametrization : public IrLgm1fParametrization {
         const Real kappa);
     Real zeta(const Time t) const;
     Real H(const Time t) const;
-    /*! inspectors */
     Real alpha(const Time t) const;
     Real kappa(Time t) const;
     Real Hprime(const Time t) const;
     Real Hprime2(const Time t) const;
-    Array &rawValues(const Size) const;
+    Parameter &parameter(const Size) const;
 
   protected:
     Real direct(const Size i, const Real x) const;
     Real inverse(const Size j, const Real y) const;
 
   private:
-    mutable Array rawAlpha_, kappa_;
+    mutable PseudoParameter alpha_, kappa_;
     const Real zeroKappaCutoff_;
 };
 
@@ -65,37 +64,38 @@ inline Real IrLgm1fConstantParametrization::inverse(const Size i,
 }
 
 inline Real IrLgm1fConstantParametrization::zeta(const Time t) const {
-    return direct(0, rawAlpha_[0]) * direct(0, rawAlpha_[0]) * t;
+    return direct(0, alpha_.params()[0]) * direct(0, alpha_.params()[0]) * t;
 }
 
 inline Real IrLgm1fConstantParametrization::H(const Time t) const {
-    if (std::fabs(kappa_[0]) < zeroKappaCutoff_) {
+    if (std::fabs(kappa_.params()[0]) < zeroKappaCutoff_) {
         return t;
     } else {
-        return (1.0 - std::exp(-kappa_[0] * t)) / kappa_[0];
+        return (1.0 - std::exp(-kappa_.params()[0] * t)) / kappa_.params()[0];
     }
 }
 
 inline Real IrLgm1fConstantParametrization::alpha(const Time t) const {
-    return direct(0, rawAlpha_[0]);
+    return direct(0, alpha_.params()[0]);
 }
 
 inline Real IrLgm1fConstantParametrization::kappa(const Time t) const {
-    return kappa_[0];
+    return kappa_.params()[0];
 }
 
 inline Real IrLgm1fConstantParametrization::Hprime(const Time t) const {
-    return std::exp(-kappa_[0] * t);
+    return std::exp(-kappa_.params()[0] * t);
 }
 
 inline Real IrLgm1fConstantParametrization::Hprime2(const Time t) const {
-    return -kappa_[0] * std::exp(-kappa_[0] * t);
+    return -kappa_.params()[0] * std::exp(-kappa_.params()[0] * t);
 }
 
-inline Array &IrLgm1fConstantParametrization::rawValues(const Size i) const {
+inline Parameter &
+IrLgm1fConstantParametrization::parameter(const Size i) const {
     QL_REQUIRE(i < 2, "parameter " << i << " does not exist, only have 0..1");
     if (i == 0)
-        return rawAlpha_;
+        return alpha_;
     else
         return kappa_;
 }

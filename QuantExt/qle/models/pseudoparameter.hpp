@@ -26,6 +26,10 @@
 
 #include <ql/models/parameter.hpp>
 
+#include <boost/make_shared.hpp>
+
+using namespace QuantLib;
+
 namespace QuantExt {
 
 /*! lightweight parameter, that gives access to the
@@ -34,7 +38,7 @@ namespace QuantExt {
 
 class PseudoParameter : public Parameter {
   private:
-    class Impl : Public Parameter::Impl {
+    class Impl : public Parameter::Impl {
       public:
         Impl() {}
         Real value(const Array &params, Time t) const {
@@ -43,7 +47,10 @@ class PseudoParameter : public Parameter {
     };
 
   public:
-    PseudoParameter() : Parameter(0) {}
+    PseudoParameter(const Size size = 0,
+                    const Constraint &constraint = NoConstraint())
+        : Parameter(size, boost::make_shared<PseudoParameter::Impl>(),
+                    constraint) {}
 };
 
 } // namespace QuantExt

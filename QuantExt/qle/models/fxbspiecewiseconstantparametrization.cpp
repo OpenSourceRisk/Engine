@@ -26,11 +26,15 @@ FxBsPiecewiseConstantParametrization::FxBsPiecewiseConstantParametrization(
     const Handle<YieldTermStructure> &foreignTermStructure,
     const Handle<Quote> &fxSpotToday, const Array &times, const Array &sigma)
     : FxBsParametrization(currency, foreignTermStructure, fxSpotToday),
-      PiecewiseConstantHelper1(times, sigma) {
+      PiecewiseConstantHelper1(times) {
+    QL_REQUIRE(times.size() + 1 == sigma.size(),
+               "alpha size (" << sigma.size()
+                              << ") inconsistent to times size ("
+                              << times.size() << ")");
+
     // store raw parameter values
     for (Size i = 0; i < PiecewiseConstantHelper1::y_.size(); ++i) {
-        PiecewiseConstantHelper1::y_[i] =
-            inverse(0, PiecewiseConstantHelper1::y_[i]);
+        PiecewiseConstantHelper1::y_.setParam(i, inverse(0, sigma[i]));
     }
     update();
 }

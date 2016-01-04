@@ -26,6 +26,7 @@
 
 #include <ql/currency.hpp>
 #include <ql/math/array.hpp>
+#include <qle/models/pseudoparameter.hpp>
 
 using namespace QuantLib;
 
@@ -35,41 +36,43 @@ class Parametrization {
   public:
     Parametrization(const Currency &currency);
 
-    /*! interface */
     virtual const Currency currency() const;
-    virtual Size parameterSize(const Size) const;
+
     virtual const Array &parameterTimes(const Size) const;
+
+    /*! these are the actual (real) parameter values in contrast
+        to the raw values which are stored in Parameter::params_
+        and on which the optimization is done; there might be
+        a transformation between real and raw values in
+        order to implement a constraint (this is generally
+        preferable to using a hard constraint) */
     virtual Disposable<Array> parameterValues(const Size) const;
 
-    /*! these are the parameter values on which the actual
-      optimiazation is done - these might be identical to
-      the parameter values themselves, or transformed in
-      order to implement a constraint, the spirit being
-      to avoid hard constraints */
-    virtual Array &rawValues(const Size) const;
+    /*! the parameter storing the raw values */
+    virtual Parameter &parameter(const Size) const;
 
-    // this method should be called when input parameters
-    // linked via references or pointers change in order
-    // to ensure consistent results
+    /*! this method should be called when input parameters
+        linked via references or pointers change in order
+        to ensure consistent results */
     virtual void update() const;
 
   protected:
-    // step size for numerical differentiation
+    /*! step size for numerical differentiation */
     const Real h_, h2_;
-    // adjusted central difference scheme
+    /*! adjusted central difference scheme */
     Time tr(const Time t) const;
     Time tl(const Time t) const;
     Time tr2(const Time t) const;
     Time tm2(const Time t) const;
     Time tl2(const Time t) const;
-    // transformations between raw and real parameters
+    /*! transformations between raw and real parameters */
     virtual Real direct(const Size, const Real x) const;
     virtual Real inverse(const Size, const Real y) const;
 
   private:
     Currency currency_;
     const Array emptyTimes_;
-    mutable Array emptyValues_;
+    mutable NullParameter emptyParameter_;
 };
 
 // inline
@@ -106,22 +109,22 @@ inline Real Parametrization::inverse(const Size, const Real y) const {
 
 inline const Currency Parametrization::currency() const { return currency_; }
 
-inline Size Parametrization::parameterSize(const Size) const { return 0; }
-
 inline const Array &Parametrization::parameterTimes(const Size) const {
     return emptyTimes_;
 }
 
+inline Parameter &Parametrization::parameter(const Size) const {
+    return emptyParameter_;
+}
+
 inline Disposable<Array> Parametrization::parameterValues(const Size i) const {
-    Array &tmp = rawValues(i);
+    const Array &tmp = parameter(i).params();
     Array res(tmp.size());
     for (Size i = 0; i < res.size(); ++i) {
         res[i] = direct(i, tmp[i]);
     }
     return res;
 }
-
-inline Array &Parametrization::rawValues(const Size i) const { return emptyValues_; }
 
 } // namespace QuantExt
 

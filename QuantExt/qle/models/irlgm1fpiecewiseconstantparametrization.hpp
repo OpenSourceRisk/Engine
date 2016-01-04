@@ -41,14 +41,12 @@ class IrLgm1fPiecewiseConstantParametrization
         const Array &kappa);
     Real zeta(const Time t) const;
     Real H(const Time t) const;
-    /*! inspectors */
     Real alpha(const Time t) const;
     Real kappa(Time t) const;
     Real Hprime(const Time t) const;
     Real Hprime2(const Time t) const;
     const Array &parameterTimes(const Size) const;
-    Array &rawValues(const Size) const;
-    /*! additional methods */
+    Parameter &parameter(const Size) const;
     void update() const;
 
   protected:
@@ -112,8 +110,8 @@ IrLgm1fPiecewiseConstantParametrization::parameterTimes(const Size i) const {
         return PiecewiseConstantHelper2::t_;
 }
 
-inline Array &
-IrLgm1fPiecewiseConstantParametrization::rawValues(const Size i) const {
+inline Parameter &
+IrLgm1fPiecewiseConstantParametrization::parameter(const Size i) const {
     QL_REQUIRE(i < 2, "parameter " << i << " does not exist, only have 0..1");
     if (i == 0)
         return PiecewiseConstantHelper1::y_;
