@@ -179,6 +179,7 @@ esac
 # done, output the configured files
 AC_CONFIG_FILES([
     Makefile
+    doc/Makefile
     qle/Makefile
     qle/cashflows/Makefile
     qle/currencies/Makefile
