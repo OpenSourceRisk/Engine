@@ -1,5 +1,9 @@
-
 AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir}
+
+noinst_LTLIBRARIES = libCurrencies.la
+
+libCurrencies_la_SOURCES = \
+	africa.cpp
 
 this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \

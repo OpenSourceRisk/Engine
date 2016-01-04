@@ -35,7 +35,7 @@ namespace QuantExt {
     }
 
     // Moroccan dirham
-    MADCurrency() {
+    MADCurrency::MADCurrency() {
         static boost::shared_ptr<Data> madData(
                                      new Data("Moroccan dirham", "MAD", 504,
                                               "MAD", "", 100, Rounding(), "1$.2f %3%"));
