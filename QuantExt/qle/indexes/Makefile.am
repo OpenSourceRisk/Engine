@@ -3,7 +3,13 @@ SUBDIRS = ibor
 noinst_LTLIBRARIES = libIndexes.la
 
 libIndexes_la_SOURCES = \
-	all.hpp
+	all.hpp \
+	adjustedswapindex.hpp \
+	dummyindex.hpp \
+	fxindex.hpp \
+	commodityfuturespriceindex.hpp
+    cmci.hpp \
+    genericiborindex.hpp
 
 AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir}
 
