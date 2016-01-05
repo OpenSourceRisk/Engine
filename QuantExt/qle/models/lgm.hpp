@@ -28,13 +28,16 @@
 
 namespace QuantExt {
 
-class Lgm : public XAssetModel {
+/*! LGM 1f interest rate model
+    Basically the same remarks as for XAssetModel hold */
+
+class Lgm : public Observer, public Observable {
 
   public:
     Lgm(const boost::shared_ptr<IrLgm1fParametrization> &parametrization);
 
-    boost::shared_ptr<StochasticProcess1D> stateProcess() const;
-    boost::shared_ptr<IrLgm1fParametrization> parametrization() const;
+    const boost::shared_ptr<StochasticProcess1D> stateProcess() const;
+    const boost::shared_ptr<IrLgm1fParametrization> parametrization() const;
 
     Real numeraire(const Time t, const Real x) const;
     Real discountBond(const Time t, const Time T, const Real x) const;
@@ -44,37 +47,47 @@ class Lgm : public XAssetModel {
 
     void calibrateIrVolatilitiesIterative();
 
+    /*! observer interface */
+    void update();
+
   private:
+    boost::shared_ptr<XAssetModel> x_;
     boost::shared_ptr<StochasticProcess1D> stateProcess_;
 };
 
 // inline
 
-inline boost::shared_ptr<StochasticProcess1D> Lgm::stateProcess() const {
+inline void Lgm::update() {
+    x_->update();
+    notifyObservers();
+}
+
+inline const boost::shared_ptr<StochasticProcess1D> Lgm::stateProcess() const {
     return stateProcess_;
 }
 
-inline boost::shared_ptr<IrLgm1fParametrization> Lgm::parametrization() const {
-    return XAssetModel::irlgm1f(0);
+inline const boost::shared_ptr<IrLgm1fParametrization>
+Lgm::parametrization() const {
+    return x_->irlgm1f(0);
 }
 
 inline Real Lgm::numeraire(const Time t, const Real x) const {
-    return XAssetModel::numeraire(0, t, x);
+    return x_->numeraire(0, t, x);
 }
 
 inline Real Lgm::discountBond(const Time t, const Time T, const Real x) const {
-    return XAssetModel::discountBond(0, t, T, x);
+    return x_->discountBond(0, t, T, x);
 }
 
 inline Real Lgm::reducedDiscountBond(const Time t, const Time T,
                                      const Real x) const {
-    return XAssetModel::reducedDiscountBond(0, t, T, x);
+    return x_->reducedDiscountBond(0, t, T, x);
 }
 
 inline Real Lgm::discountBondOption(Option::Type type, const Real K,
                                     const Time t, const Time S,
                                     const Time T) const {
-    return XAssetModel::discountBondOption(0, type, K, t, S, T);
+    return x_->discountBondOption(0, type, K, t, S, T);
 }
 
 } // namespace QuantExt
