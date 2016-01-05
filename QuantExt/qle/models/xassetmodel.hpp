@@ -28,6 +28,7 @@
 #include <qle/models/irlgm1fparametrization.hpp>
 #include <qle/models/fxbsparametrization.hpp>
 #include <qle/models/linkablecalibratedmodel.hpp>
+#include <qle/processes/xassetstateprocess.hpp>
 #include <ql/math/matrix.hpp>
 #include <ql/math/distributions/normaldistribution.hpp>
 #include <ql/math/integrals/integral.hpp>
@@ -63,8 +64,9 @@ namespace QuantExt {
     evaluation date. The termstructures are required to be consistent with
     these times. The model does not observe anything, so it's update() method
     must be explicitly called to notify observers of changes in the constituting
-    parametrizations. The model ensures the necessary updates of
-    parametrizations during calibration though.
+    parametrizations, update these parametrizations and flushing the cache of
+    the state process. The model ensures these updates during calibration
+    though.
 */
 
 class XAssetModel : public LinkableCalibratedModel {
@@ -82,7 +84,17 @@ class XAssetModel : public LinkableCalibratedModel {
     /*! allow for time dependent correlation (2nd ctor) */
 
     /*! inspectors */
-    boost::shared_ptr<StochasticProcess> stateProcess() const;
+    const boost::shared_ptr<StochasticProcess>
+    stateProcess(XAssetStateProcess::discretization disc =
+                     XAssetStateProcess::exact) const;
+    /*! total dimension of model */
+    Size dimension() const;
+    /*! number of currencies including domestic */
+    Size currencies() const;
+
+    /*! observer and linked calibrated model interface */
+    void update();
+    void generateArguments();
 
     /*! LGM1F components */
     const boost::shared_ptr<IrLgm1fParametrization>
@@ -99,6 +111,10 @@ class XAssetModel : public LinkableCalibratedModel {
     const boost::shared_ptr<FxBsParametrization> fxbs(const Size ccy) const;
 
     /*! other components */
+    /* ... */
+
+    /*! correlation */
+    const Matrix &correlation() const;
 
     /*! expectations and covariances,
       notation follows Lichters, Stamm, Gallagher, 2015, i.e.
@@ -159,9 +175,34 @@ class XAssetModel : public LinkableCalibratedModel {
     const std::vector<boost::shared_ptr<Parametrization> > p_;
     const Matrix rho_;
     mutable boost::shared_ptr<Integrator> integrator_;
+    boost::shared_ptr<XAssetStateProcess> stateProcessExact_,
+        stateProcessEuler_;
 };
 
 // inline
+
+inline const boost::shared_ptr<StochasticProcess>
+XAssetModel::stateProcess(XAssetStateProcess::discretization disc) const {
+    return disc == XAssetStateProcess::exact ? stateProcessExact_
+                                             : stateProcessEuler_;
+}
+
+inline Size XAssetModel::dimension() const {
+    return nIrLgm1f_ * 1 + nFxBs_ * 1;
+}
+
+inline Size XAssetModel::currencies() const { return nIrLgm1f_; }
+
+inline void XAssetModel::update() {
+    for (Size i = 0; i < p_.size(); ++i) {
+        p_[i]->update();
+    }
+    stateProcessExact_->flushCache();
+    stateProcessEuler_->flushCache();
+    notifyObservers();
+}
+
+inline void XAssetModel::generateArguments() { update(); }
 
 inline const boost::shared_ptr<IrLgm1fParametrization>
 XAssetModel::irlgm1f(const Size ccy) const {
@@ -177,6 +218,8 @@ XAssetModel::fxbs(const Size ccy) const {
     return boost::dynamic_pointer_cast<FxBsParametrization>(
         p_[nIrLgm1f_ + ccy]);
 }
+
+inline const Matrix &XAssetModel::correlation() const { return rho_; }
 
 inline Real XAssetModel::numeraire(const Size ccy, const Time t,
                                    const Real x) const {

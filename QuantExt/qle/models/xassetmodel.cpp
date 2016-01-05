@@ -22,6 +22,7 @@
 #include <qle/models/pseudoparameter.hpp>
 #include <ql/math/integrals/simpsonintegral.hpp>
 #include <ql/math/matrixutilities/symmetricschurdecomposition.hpp>
+#include <ql/processes/eulerdiscretization.hpp>
 
 namespace QuantExt {
 
@@ -41,6 +42,12 @@ void XAssetModel::initialize() {
     // set default integrator
     setIntegrationPolicy(boost::make_shared<SimpsonIntegral>(1.0E-8, 100),
                          true);
+
+    // create state processes
+    stateProcessEuler_ =
+        boost::make_shared<XAssetStateProcess>(this, XAssetStateProcess::euler);
+    stateProcessExact_ =
+        boost::make_shared<XAssetStateProcess>(this, XAssetStateProcess::exact);
 }
 
 void XAssetModel::setIntegrationPolicy(
