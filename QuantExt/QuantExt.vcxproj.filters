@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="qle\config.hpp" />
+    <ClInclude Include="qle\quantext.hpp" />
+    <ClInclude Include="qle\quotes\logquote.hpp">
+      <Filter>quotes</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="cashflows">
+      <UniqueIdentifier>{ac57ee4f-9a17-4951-81ac-3e12860a9758}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="currencies">
+      <UniqueIdentifier>{79e30257-9bec-4d68-80fd-a59215cc688d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="indexes">
+      <UniqueIdentifier>{82767bdf-47a1-403a-9b50-1eae878635bf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="instruments">
+      <UniqueIdentifier>{60e1a5ca-8e4a-4485-b7a9-b649d652d75f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="math">
+      <UniqueIdentifier>{0596e69d-c306-44c7-a7af-5f511518e5d4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="models">
+      <UniqueIdentifier>{740551aa-03ff-4017-89bb-2a031ea2308c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="pricingengines">
+      <UniqueIdentifier>{ac2c272c-98ad-484a-ba8f-e3150a89e598}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="quotes">
+      <UniqueIdentifier>{1b1252f6-4c99-48e1-a82c-203520ed8d9f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="termstructures">
+      <UniqueIdentifier>{c9ba9e6b-491e-44f6-99c5-1b560aff60df}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="processes">
+      <UniqueIdentifier>{a1c64987-285d-4622-b1bf-432f5c274486}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="qle\quotes\logquote.cpp">
+      <Filter>quotes</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
