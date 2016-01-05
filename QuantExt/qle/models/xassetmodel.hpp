@@ -241,19 +241,38 @@ inline Real XAssetModel::integral_helper(const Size hi, const Size hj,
                                          const Size sigmai, const Size sigmaj,
                                          const Real t) const {
     const Size na = Null<Size>();
+    Size i1 = Null<Size>(), j1 = Null<Size>(), i2 = Null<Size>(),
+         j2 = Null<Size>();
     Real res = 1.0;
-    if (hi != na)
+    if (hi != na) {
         res *= irlgm1f(hi)->H(t);
-    if (hj != na)
+        i1 = hi;
+    }
+    if (hj != na) {
         res *= irlgm1f(hj)->H(t);
-    if (alphai != na)
+        j1 = hj;
+    }
+    if (alphai != na) {
         res *= irlgm1f(alphai)->alpha(t);
-    if (alphaj != na)
+        i1 = alphai;
+    }
+    if (alphaj != na) {
         res *= irlgm1f(alphaj)->alpha(t);
-    if (sigmai != na)
+        j1 = alphaj;
+    }
+    if (sigmai != na) {
         res *= fxbs(sigmai)->sigma(t);
-    if (sigmaj != na)
+        i2 = sigmai;
+    }
+    if (sigmaj != na) {
         res *= fxbs(sigmai)->sigma(t);
+        j2 = sigmaj;
+    }
+    // either i1 (j1) or i2 (j2) is not null
+    // but not both of them at the same time
+    Size i = i1 != Null<Size>() ? i1 : nIrLgm1f_ + i2;
+    Size j = j1 != Null<Size>() ? j1 : nIrLgm1f_ + j2;
+    res *= rho_[i][j];
     return res;
 }
 
