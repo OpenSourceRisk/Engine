@@ -3,7 +3,6 @@
 /*
  Copyright (C) 2001, 2002, 2003 Sadruddin Rejeb
  Copyright (C) 2013, 2015 Peter Caspers
- Copyright (C) 2016 Quaternion Risk Management
 
  This file is part of QuantLib, a free-software/open-source library
  for financial quantitative analysts and developers - http://quantlib.org/
@@ -17,6 +16,10 @@
  This program is distributed in the hope that it will be useful, but WITHOUT
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  FOR A PARTICULAR PURPOSE.  See the license for more details.
+*/
+
+/*
+ Copyright (C) 2016 Quaternion Risk Management Ltd.
 */
 
 #include <qle/models/linkablecalibratedmodel.hpp>
