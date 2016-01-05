@@ -1,6 +1,7 @@
 
 QLE_TESTS = \
-	testsuite.cpp
+	testsuite.cpp \
+    currency.hpp currency.cpp
 
 dist-hook:
 	mkdir -p $(distdir)/build
