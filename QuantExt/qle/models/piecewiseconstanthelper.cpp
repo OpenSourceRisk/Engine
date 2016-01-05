@@ -38,17 +38,20 @@ void checkTimes(const Array &t) {
 
 PiecewiseConstantHelper1::PiecewiseConstantHelper1(const Array &t)
 
-    : t_(t), y_(t.size() + 1) {
+    : t_(t), y_(boost::make_shared<PseudoParameter>(t.size() + 1)) {
     checkTimes(t);
 }
 
 PiecewiseConstantHelper2::PiecewiseConstantHelper2(const Array &t)
-    : zeroCutoff_(1.0E-6), t_(t), y_(t.size() + 1) {
+    : zeroCutoff_(1.0E-6), t_(t),
+      y_(boost::make_shared<PseudoParameter>(t.size() + 1)) {
     checkTimes(t);
 }
 
 PiecewiseConstantHelper3::PiecewiseConstantHelper3(const Array &t)
-    : zeroCutoff_(1.0E-6), t_(t), y1_(t.size() + 1), y2_(t.size() + 1) {
+    : zeroCutoff_(1.0E-6), t_(t),
+      y1_(boost::make_shared<PseudoParameter>(t.size() + 1)),
+      y2_(boost::make_shared<PseudoParameter>(t.size() + 1)) {
     checkTimes(t);
 }
 

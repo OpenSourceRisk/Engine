@@ -41,7 +41,7 @@ class FxBsPiecewiseConstantParametrization : public FxBsParametrization,
     Real variance(const Time t) const;
     Real sigma(const Time t) const;
     const Array &parameterTimes(const Size) const;
-    Parameter &parameter(const Size) const;
+    const boost::shared_ptr<Parameter> parameter(const Size) const;
     /*! additional methods */
     void update() const;
 
@@ -76,7 +76,7 @@ FxBsPiecewiseConstantParametrization::parameterTimes(const Size i) const {
     return PiecewiseConstantHelper1::t_;
 }
 
-inline Parameter &
+inline const boost::shared_ptr<Parameter>
 FxBsPiecewiseConstantParametrization::parameter(const Size i) const {
     QL_REQUIRE(i == 0, "parameter " << i << " does not exist, only have 0");
     return PiecewiseConstantHelper1::y_;

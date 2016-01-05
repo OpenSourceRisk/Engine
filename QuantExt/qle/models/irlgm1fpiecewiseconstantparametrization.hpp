@@ -46,7 +46,7 @@ class IrLgm1fPiecewiseConstantParametrization
     Real Hprime(const Time t) const;
     Real Hprime2(const Time t) const;
     const Array &parameterTimes(const Size) const;
-    Parameter &parameter(const Size) const;
+    const boost::shared_ptr<Parameter> parameter(const Size) const;
     void update() const;
 
   protected:
@@ -110,7 +110,7 @@ IrLgm1fPiecewiseConstantParametrization::parameterTimes(const Size i) const {
         return PiecewiseConstantHelper2::t_;
 }
 
-inline Parameter &
+inline const boost::shared_ptr<Parameter>
 IrLgm1fPiecewiseConstantParametrization::parameter(const Size i) const {
     QL_REQUIRE(i < 2, "parameter " << i << " does not exist, only have 0..1");
     if (i == 0)

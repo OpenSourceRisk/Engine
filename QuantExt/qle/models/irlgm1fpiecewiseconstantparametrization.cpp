@@ -39,11 +39,11 @@ IrLgm1fPiecewiseConstantParametrization::
                               << ") inconsistent to times size ("
                               << kappaTimes.size() << ")");
     // store raw parameter values
-    for (Size i = 0; i < PiecewiseConstantHelper1::y_.size(); ++i) {
-        PiecewiseConstantHelper1::y_.setParam(i, inverse(0, alpha[i]));
+    for (Size i = 0; i < PiecewiseConstantHelper1::y_->size(); ++i) {
+        PiecewiseConstantHelper1::y_->setParam(i, inverse(0, alpha[i]));
     }
-    for (Size i = 0; i < PiecewiseConstantHelper2::y_.size(); ++i) {
-        PiecewiseConstantHelper2::y_.setParam(i, inverse(1, kappa[i]));
+    for (Size i = 0; i < PiecewiseConstantHelper2::y_->size(); ++i) {
+        PiecewiseConstantHelper2::y_->setParam(i, inverse(1, kappa[i]));
     }
     update();
 }

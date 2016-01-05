@@ -33,8 +33,8 @@ FxBsPiecewiseConstantParametrization::FxBsPiecewiseConstantParametrization(
                               << times.size() << ")");
 
     // store raw parameter values
-    for (Size i = 0; i < PiecewiseConstantHelper1::y_.size(); ++i) {
-        PiecewiseConstantHelper1::y_.setParam(i, inverse(0, sigma[i]));
+    for (Size i = 0; i < PiecewiseConstantHelper1::y_->size(); ++i) {
+        PiecewiseConstantHelper1::y_->setParam(i, inverse(0, sigma[i]));
     }
     update();
 }

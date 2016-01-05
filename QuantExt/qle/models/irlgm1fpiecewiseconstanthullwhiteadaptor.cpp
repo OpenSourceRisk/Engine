@@ -38,14 +38,14 @@ IrLgm1fPiecewiseConstantHullWhiteAdaptor::
                               << times.size() << ")");
 
     // store raw parameter values
-    for (Size i = 0; i < PiecewiseConstantHelper3::y1_.size(); ++i) {
-        PiecewiseConstantHelper3::y1_.setParam(i, inverse(0, sigma[i]));
+    for (Size i = 0; i < PiecewiseConstantHelper3::y1_->size(); ++i) {
+        PiecewiseConstantHelper3::y1_->setParam(i, inverse(0, sigma[i]));
     }
-    for (Size i = 0; i < PiecewiseConstantHelper3::y2_.size(); ++i) {
-        PiecewiseConstantHelper3::y2_.setParam(i, inverse(1, kappa[i]));
+    for (Size i = 0; i < PiecewiseConstantHelper3::y2_->size(); ++i) {
+        PiecewiseConstantHelper3::y2_->setParam(i, inverse(1, kappa[i]));
     }
-    for (Size i = 0; i < PiecewiseConstantHelper2::y_.size(); ++i) {
-        PiecewiseConstantHelper2::y_.setParam(i, inverse(1, kappa[i]));
+    for (Size i = 0; i < PiecewiseConstantHelper2::y_->size(); ++i) {
+        PiecewiseConstantHelper2::y_->setParam(i, inverse(1, kappa[i]));
     }
     update();
 }

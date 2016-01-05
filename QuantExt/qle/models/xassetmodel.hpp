@@ -27,6 +27,7 @@
 #include <qle/math/cumulativenormaldistribution.hpp>
 #include <qle/models/irlgm1fparametrization.hpp>
 #include <qle/models/fxbsparametrization.hpp>
+#include <qle/models/linkablecalibratedmodel.hpp>
 #include <ql/math/matrix.hpp>
 #include <ql/math/distributions/normaldistribution.hpp>
 #include <ql/math/integrals/integral.hpp>
@@ -66,7 +67,7 @@ namespace QuantExt {
     parametrizations during calibration though.
 */
 
-class XAssetModel : public CalibratedModel {
+class XAssetModel : public LinkableCalibratedModel {
   public:
     /*! Parametrizations must be given in the following order
         - IR (first parametrization defines the domestic currency)

@@ -49,7 +49,7 @@ class Parametrization {
     virtual Disposable<Array> parameterValues(const Size) const;
 
     /*! the parameter storing the raw values */
-    virtual Parameter &parameter(const Size) const;
+    virtual const boost::shared_ptr<Parameter> parameter(const Size) const;
 
     /*! this method should be called when input parameters
         linked via references or pointers change in order
@@ -72,7 +72,7 @@ class Parametrization {
   private:
     Currency currency_;
     const Array emptyTimes_;
-    mutable NullParameter emptyParameter_;
+    const boost::shared_ptr<Parameter> emptyParameter_;
 };
 
 // inline
@@ -113,12 +113,13 @@ inline const Array &Parametrization::parameterTimes(const Size) const {
     return emptyTimes_;
 }
 
-inline Parameter &Parametrization::parameter(const Size) const {
+inline const boost::shared_ptr<Parameter>
+Parametrization::parameter(const Size) const {
     return emptyParameter_;
 }
 
 inline Disposable<Array> Parametrization::parameterValues(const Size i) const {
-    const Array &tmp = parameter(i).params();
+    const Array &tmp = parameter(i)->params();
     Array res(tmp.size());
     for (Size i = 0; i < res.size(); ++i) {
         res[i] = direct(i, tmp[i]);

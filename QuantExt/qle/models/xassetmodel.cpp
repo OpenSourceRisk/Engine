@@ -28,7 +28,7 @@ namespace QuantExt {
 XAssetModel::XAssetModel(
     const std::vector<boost::shared_ptr<Parametrization> > &parametrizations,
     const Matrix &correlation)
-    : CalibratedModel(0), p_(parametrizations), rho_(correlation) {
+    : LinkableCalibratedModel(), p_(parametrizations), rho_(correlation) {
     initialize();
 }
 
