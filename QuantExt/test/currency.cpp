@@ -14,62 +14,54 @@ using namespace QuantExt;
 using namespace boost::unit_test_framework;
 using namespace std;
 
-void dataCheck(Currency ccy, string name, string code, int numCode) {
-    BOOST_CHECK_EQUAL(ccy.name(),name);
-    BOOST_CHECK_EQUAL(ccy.code(),code);
-    BOOST_CHECK_EQUAL(ccy.numericCode(),numCode);
+namespace {
+    struct CcyTestData {
+        Currency ccy;
+        string name;
+        string code;
+        int numCode;
+    };
+}
+
+
+void dataCheck(struct CcyTestData data) {
+    BOOST_CHECK_EQUAL(data.ccy.name(),data.name);
+    BOOST_CHECK_EQUAL(data.ccy.code(),data.code);
+    BOOST_CHECK_EQUAL(data.ccy.numericCode(),data.numCode);
 
 }
+
 void CurrencyTest::testCurrency() {
 
     BOOST_MESSAGE("Testing QuantExt currencies");
 
-    Currency ccy;
 
-    //testing african currencies
-    ccy=TNDCurrency();
-    dataCheck(ccy,"Tunisian dinar", "TND", 788);    
+    CcyTestData data[]={
+        //African cuurencies
+        {TNDCurrency(),"Tunisian dinar", "TND", 788},
+        {EGPCurrency(),"Egyptian pound", "EGP", 818},
+        {NGNCurrency(),"Nigerian naira", "NGN", 566},
+        {MADCurrency(),"Moroccan dirham", "MAD", 504},
+        //American currencies
+        {MXVCurrency(),"Mexican Unidad de Inversion", "MXV", 979},
+        {CLFCurrency(),"Unidad de Fomento (funds code)", "CLF", 990},
+        //Asian currencies
+        {KZTCurrency(),"Kazakhstani tenge", "KZT", 398},
+        {QARCurrency(),"Qatari riyal", "QAR", 634},
+        {BHDCurrency(),"Bahraini dinar", "BHD", 48},
+        {OMRCurrency(),"Omani rial", "OMR", 512},
+        {AEDCurrency(),"United Arab Emirates dirham", "AED", 784},
+        {PHPCurrency(),"Philippine peso", "PHP", 608},
+        //European currencies
+        {UAHCurrency(),"Ukrainian hryvnia", "UAH", 980}
+    };
 
-    ccy=EGPCurrency();
-    dataCheck(ccy,"Egyptian pound", "EGP", 818); 
+    Size size=sizeof(data)/sizeof(data[0]);
 
-    ccy=NGNCurrency();
-    dataCheck(ccy,"Nigerian naira", "NGN", 566);
-
-    ccy=MADCurrency();
-    dataCheck(ccy,"Moroccan dirham", "MAD", 504);
-
-    //testing american currencies
-    ccy=MXVCurrency();
-    dataCheck(ccy,"Mexican Unidad de Inversion", "MXV", 979);
-
-    ccy=CLFCurrency();
-    dataCheck(ccy,"Unidad de Fomento (funds code)", "CLF", 990);
-
-    //testing asian currencies
-    ccy=KZTCurrency();
-    dataCheck(ccy,"Kazakhstani tenge", "KZT", 398);
-
-    ccy=QARCurrency();
-    dataCheck(ccy,"Qatari riyal", "QAR", 634);
-
-    ccy=BHDCurrency();
-    dataCheck(ccy,"Bahraini dinar", "BHD", 48);
-
-    ccy=OMRCurrency();
-    dataCheck(ccy,"Omani rial", "OMR", 512);
-
-    ccy=AEDCurrency();
-    dataCheck(ccy,"United Arab Emirates dirham", "AED", 784);
-
-    ccy=PHPCurrency();
-    dataCheck(ccy,"Philippine peso", "PHP", 608);
-
-    //testing european currencies
-    ccy=UAHCurrency();
-    dataCheck(ccy,"Ukrainian hryvnia", "UAH", 980);
- 
+    for( Size i=0; i<size;i++)
+        dataCheck(data[i]);
 }
+
 
 test_suite* CurrencyTest::suite() {
     test_suite* suite = BOOST_TEST_SUITE("CurrencyTests");
