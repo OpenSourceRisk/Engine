@@ -20,8 +20,8 @@
  FOR A PARTICULAR PURPOSE.  See the license for more details.
 */
 
-/*! \file model.hpp
-    \brief Abstract interest rate model class
+/*! \file linkablecalibratedmodel.hpp
+    \brief calibrated model class with linkable parameters
 */
 
 #ifndef quantext_calibrated_model_hpp
