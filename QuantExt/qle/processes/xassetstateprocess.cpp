@@ -11,6 +11,8 @@
 
 #include <boost/make_shared.hpp>
 
+#include <iostream> // only debug
+
 namespace QuantExt {
 
 XAssetStateProcess::XAssetStateProcess(const XAssetModel *const model,
@@ -41,6 +43,7 @@ Disposable<Array> XAssetStateProcess::initialValues() const {
         res[model_->currencies() + i] =
             std::log(model_->fxbs(i)->fxSpotToday()->value());
     }
+    // std::clog << "XAssetProcess::initialValues = " << res << std::endl;
     return res;
 }
 
@@ -119,7 +122,9 @@ Disposable<Array> XAssetStateProcess::ExactDiscretization::drift(
                                                     x0[i], x0[0], dt);
         }
     }
-    return res;
+    // std::clog << "XAssetProcess::ExactDrift(" << t0 << "," << x0 << "," << dt
+    // << " = " << res << std::endl;
+    return res - x0;
 }
 
 Disposable<Matrix> XAssetStateProcess::ExactDiscretization::diffusion(
@@ -146,6 +151,8 @@ Disposable<Matrix> XAssetStateProcess::ExactDiscretization::covariance(
             }
         }
     }
+    // std::clog << "XAssetProcess::ExactCovariance(" << t0 << "," << x0 << ","
+    // << dt << std::endl << res << std::endl;
     return res;
 }
 
