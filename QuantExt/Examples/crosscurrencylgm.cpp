@@ -69,22 +69,18 @@ int main() {
         parametrizations.push_back(fxP);
 
         Matrix c(3, 3);
-        //  FX             EUR         USD
-        c[0][0] = 1.0;
-        c[0][1] = 0.99;
-        c[0][2] = 0.99; // FX
-        c[1][0] = 0.99;
-        c[1][1] = 1.0;
-        c[1][2] = 0.99; // EUR
-        c[2][0] = 0.99;
-        c[2][1] = 0.99;
-        c[2][2] = 1.0; // USD
+        //  EUR             USD         FX
+        c[0][0] = 1.0;  c[0][1] = 0.80; c[0][2] = 0.30; // EUR
+        c[1][0] = 0.80; c[1][1] = 1.0;  c[1][2] = -0.20; // USD
+        c[2][0] = 0.30; c[2][1] = -0.20; c[2][2] = 1.0; // FX
 
         boost::shared_ptr<XAssetModel> model =
             boost::make_shared<XAssetModel>(parametrizations, c);
 
+        int exact = atoi(getenv("EXACT"));
+
         boost::shared_ptr<StochasticProcess> process =
-            model->stateProcess(XAssetStateProcess::exact);
+            model->stateProcess(exact == 1 ? XAssetStateProcess::exact : XAssetStateProcess::euler);
 
         // generate paths
 
