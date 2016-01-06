@@ -1,5 +1,6 @@
 SUBDIRS = \
-	currencies
+	currencies \
+	quotes
 
 #	cashflows \
 #	indexes \
@@ -8,7 +9,6 @@ SUBDIRS = \
 #	models \
 #	pricingengines \
 #	processes \
-#	quotes \
 #	termstructures
 
 AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir}
@@ -24,13 +24,13 @@ lib_LTLIBRARIES = libQuantExt.la
 libQuantExt_la_LDFLAGS = -release $(PACKAGE_VERSION)
 
 libQuantExt_la_LIBADD = \
-   currencies/libCurrencies.la
+	currencies/libCurrencies.la \
+	quotes/libQuotes.la
 
 #   cashflows/libCashflows.la \
 #	indexes/libIndexes.la \
 #	instruments/libInstruments.la \
 #	math/libMath.la \
-#	quotes/libQuotes.la \
 #	models/libModels.la \
 #	termstructures/libTermStructures.la \
 #	processes/libProcesses.la \
