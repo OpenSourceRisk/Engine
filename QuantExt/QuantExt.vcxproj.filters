@@ -6,6 +6,7 @@
     <ClInclude Include="qle\quotes\logquote.hpp">
       <Filter>quotes</Filter>
     </ClInclude>
+    <ClInclude Include="qle\auto_link.hpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">

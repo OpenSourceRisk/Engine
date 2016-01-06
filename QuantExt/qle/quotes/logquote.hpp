@@ -30,16 +30,16 @@ namespace QuantExt {
         }
         //! \name Inspectors
         //@{
-		Real quote() const;
+        Real quote() const;
         //@}
         //! \name Quote interface
         //@{
-		Real value() const;
-		bool isValid() const;
+        Real value() const;
+        bool isValid() const;
         //@}
         //! \name Observer interface
         //@{
-		void update();
+        void update();
         //@}
      protected:
         Handle<Quote> q_;

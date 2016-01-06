@@ -481,6 +481,7 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="qle\auto_link.hpp" />
     <ClInclude Include="qle\quotes\logquote.hpp" />
     <ClInclude Include="qle\config.hpp" />
     <ClInclude Include="qle\quantext.hpp" />

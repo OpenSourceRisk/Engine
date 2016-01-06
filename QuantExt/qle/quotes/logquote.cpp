@@ -13,21 +13,21 @@
 
 namespace QuantExt {
 
-	Real LogQuote::quote() const {
-		return q_->value();
-	}
+    Real LogQuote::quote() const {
+        return q_->value();
+    }
 
-	Real LogQuote::value() const {
-		return logValue_;
-	}
+    Real LogQuote::value() const {
+        return logValue_;
+    }
 
-	bool LogQuote::isValid() const {
-		return q_->isValid();
-	}
+    bool LogQuote::isValid() const {
+        return q_->isValid();
+    }
 
-	void LogQuote::update() {
-		Real v = q_->value();
-		QL_REQUIRE(v>0.0, "Invalid quote, cannot take log of non-postive number");
-		logValue_ = std::log(v);
-	}
+    void LogQuote::update() {
+        Real v = q_->value();
+        QL_REQUIRE(v>0.0, "Invalid quote, cannot take log of non-postive number");
+        logValue_ = std::log(v);
+    }
 }

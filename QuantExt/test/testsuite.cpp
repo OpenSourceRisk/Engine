@@ -24,7 +24,8 @@ using namespace boost;
 using boost::unit_test::test_suite;
 
 #ifdef BOOST_MSVC
-#  include <qle/auto_link.hpp>
+#include <qle/auto_link.hpp>
+#include <ql/auto_link.hpp>
 #endif
 
 // Lib test suites
