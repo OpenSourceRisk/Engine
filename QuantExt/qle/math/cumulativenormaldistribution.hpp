@@ -39,8 +39,8 @@ class CumulativeNormalDistribution {
 inline Real CumulativeNormalDistribution::operator()(Real z) const {
 #if !(defined(__GXX_EXPERIMENTAL_CXX0X__) || (__cplusplus >= 201103L) ||       \
       (_MSC_VER >= 1600))
-    // in case C++11 is not supported we fall back on boost::erf
-    return 0.5 * (1.0 + boost::erf((z - average_) / sigma_ * M_SQRT1_2));
+    // in case C++11 is not supported we fall back on boost::math::erf
+    return 0.5 * (1.0 + boost::math::erf((z - average_) / sigma_ * M_SQRT1_2));
 #else
     return 0.5 * (1.0 + std::erf((z - average_) / sigma_ * M_SQRT1_2));
 #endif
