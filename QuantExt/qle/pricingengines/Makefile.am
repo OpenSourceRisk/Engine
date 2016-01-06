@@ -9,11 +9,13 @@ dist_data_DATA =
 noinst_LTLIBRARIES = libPricingEngines.la
 
 libPricingEngines_la_SOURCES = \
+	analyticcclgmfxoptionengine.cpp \
 	analyticlgmswaptionengine.cpp
 
 this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \
 	all.hpp \
+	analyticcclgmfxoptionengine.hpp \
 	analyticlgmswaptionengine.hpp
 
 all.hpp: Makefile.am
