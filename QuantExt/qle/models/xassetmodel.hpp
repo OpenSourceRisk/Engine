@@ -24,6 +24,8 @@
 
 #include <boost/bind.hpp>
 
+#include <iostream> // only for debug
+
 using namespace QuantLib;
 
 namespace QuantExt {
@@ -83,7 +85,7 @@ class XAssetModel : public LinkableCalibratedModel {
     void update();
     void generateArguments();
 
-    /*! LGM1F components */
+    /*! LGM1F components, ccy=0 refers to the domestic currency */
     const boost::shared_ptr<IrLgm1fParametrization>
     irlgm1f(const Size ccy) const;
     Real numeraire(const Size ccy, const Time t, const Real x) const;
@@ -94,7 +96,9 @@ class XAssetModel : public LinkableCalibratedModel {
     Real discountBondOption(const Size ccy, Option::Type type, const Real K,
                             const Time t, const Time S, const Time T) const;
 
-    /*! FXBS components */
+    /*! FXBS components, ccy=0 referes to the first foreign currency,
+        so it corresponds to ccy+1 if you want to get the corresponding
+        irmgl1f component */
     const boost::shared_ptr<FxBsParametrization> fxbs(const Size ccy) const;
 
     /*! other components */
@@ -273,8 +277,22 @@ inline Real XAssetModel::integral_helper(const Size hi, const Size hj,
                                          const Size sigmai, const Size sigmaj,
                                          const Real t) const {
     const Size na = Null<Size>();
-    Size i1 = Null<Size>(), j1 = Null<Size>(), i2 = Null<Size>(),
-         j2 = Null<Size>();
+    // only debug
+    QL_REQUIRE(hi == na || hi < nIrLgm1f_, "hi (" << hi << ") out of range 0..."
+                                                  << nIrLgm1f_ - 1);
+    QL_REQUIRE(hj == na || hj < nIrLgm1f_, "hj (" << hj << ") out of range 0..."
+                                                  << nIrLgm1f_ - 1);
+    QL_REQUIRE(alphai == na || alphai < nIrLgm1f_,
+               "alphai (" << alphai << ") out of range 0..." << nIrLgm1f_ - 1);
+    QL_REQUIRE(alphaj == na || alphaj < nIrLgm1f_,
+               "alphaj (" << alphaj << ") out of range 0..." << nIrLgm1f_ - 1);
+    QL_REQUIRE(sigmai == na || sigmai < nFxBs_,
+               "alphai (" << sigmai << ") out of range 0..." << nFxBs_ - 1);
+    QL_REQUIRE(sigmaj == na || sigmaj < nFxBs_,
+               "alphaj (" << sigmaj << ") out of range 0..." << nFxBs_ - 1);
+    // end only debug
+    Size i1 = Null<Size>(), j1 = Null<Size>();
+    Size i2 = Null<Size>(), j2 = Null<Size>();
     Real res = 1.0;
     if (hi != na) {
         res *= irlgm1f(hi)->H(t);
@@ -297,24 +315,33 @@ inline Real XAssetModel::integral_helper(const Size hi, const Size hj,
         i2 = sigmai;
     }
     if (sigmaj != na) {
-        res *= fxbs(sigmai)->sigma(t);
+        res *= fxbs(sigmaj)->sigma(t);
         j2 = sigmaj;
     }
     // either i1 (j1) or i2 (j2) is not null
     // but not both of them at the same time
-    Size i = i1 != Null<Size>() ? i1 : nIrLgm1f_ + i2;
-    Size j = j1 != Null<Size>() ? j1 : nIrLgm1f_ + j2;
+    QL_REQUIRE(i1 != na || i2 != na,
+               "both i1 and i2 are null (hi,hj,ai,aj,si,sj)=("
+                   << hi << "," << hj << "," << alphai << "," << alphaj << ","
+                   << sigmai << "," << sigmaj << ")");
+    QL_REQUIRE(j1 != na || j2 != na,
+               "both j1 and j2 are null (hi,hj,ai,aj,si,sj)=("
+                   << hi << "," << hj << "," << alphai << "," << alphaj << ","
+                   << sigmai << "," << sigmaj << ")");
+    Size i = i1 != Null<Size>() ? i1 : i2 + nIrLgm1f_;
+    Size j = j1 != Null<Size>() ? j1 : j2 + nIrLgm1f_;
     res *= rho_[i][j];
     return res;
 }
 
 inline Real XAssetModel::ir_expectation(const Size i, const Time t0,
                                         const Real zi_0, const Real dt) const {
+    std::clog << "ir_expectation" << std::endl;
     const Size na = Null<Size>();
     Real res = 0.0;
     if (i > 0) {
         res += -integral(i, na, i, i, na, na, t0, t0 + dt) -
-               integral(na, na, i, na, i - 1, na, t0, t0 + dt) +
+               integral(na, na, i, na, na, i - 1, t0, t0 + dt) +
                integral(0, na, 0, i, na, na, t0, t0 + dt);
     }
     res += zi_0;
@@ -324,6 +351,7 @@ inline Real XAssetModel::ir_expectation(const Size i, const Time t0,
 inline Real XAssetModel::fx_expectation(const Size i, const Time t0,
                                         const Real xi_0, const Real zi_0,
                                         const Real z0_0, const Real dt) const {
+    std::clog << "fx_expectation" << std::endl;
     const Size na = Null<Size>();
     Real res = std::log(irlgm1f(i + 1)->termStructure()->discount(t0 + dt) /
                         irlgm1f(i + 1)->termStructure()->discount(t0) *
@@ -339,14 +367,14 @@ inline Real XAssetModel::fx_expectation(const Size i, const Time t0,
                   irlgm1f(i + 1)->H(t0) * irlgm1f(i + 1)->H(t0) *
                       irlgm1f(i + 1)->zeta(t0) -
                   integral(i + 1, i + 1, i + 1, i + 1, na, na, t0, t0 + dt));
-    res += integral(0, na, 0, na, i, na, t0, t0 + dt);
+    res += integral(0, na, 0, na, na, i, t0, t0 + dt);
     res -= irlgm1f(i + 1)->H(t0 + dt) *
            (-integral(i + 1, na, i + 1, i + 1, na, na, t0, t0 + dt) +
             integral(0, na, i + 1, i + 1, na, na, t0, t0 + dt) -
-            integral(na, na, i + 1, na, i, na, t0, t0 + dt));
+            integral(na, na, i + 1, na, na, i, t0, t0 + dt));
     res += -integral(i + 1, i + 1, i + 1, i + 1, na, na, t0, t0 + dt) +
            integral(0, 0, i + 1, i + 1, na, na, t0, t0 + dt) -
-           integral(i + 1, na, i + 1, na, i + 1, na, t0, t0 + dt);
+           integral(i + 1, na, i + 1, na, na, i, t0, t0 + dt);
     res += xi_0 + (irlgm1f(0)->H(t0 + dt) - irlgm1f(0)->H(t0)) * z0_0 -
            (irlgm1f(i + 1)->H(t0 + dt) - irlgm1f(i + 1)->H(t0)) * zi_0;
     return res;
@@ -354,7 +382,7 @@ inline Real XAssetModel::fx_expectation(const Size i, const Time t0,
 
 inline Real XAssetModel::ir_ir_covariance(const Size i, const Size j,
                                           const Time t0, Time dt) const {
-
+    std::clog << "ir_ir_covariance" << std::endl;
     const Size na = Null<Size>();
     Real res = integral(na, na, i, j, na, na, t0, t0 + dt);
     return res;
@@ -362,6 +390,7 @@ inline Real XAssetModel::ir_ir_covariance(const Size i, const Size j,
 
 inline Real XAssetModel::ir_fx_covariance(const Size i, const Size j,
                                           const Time t0, Time dt) const {
+    std::clog << "ir_fx_covariance" << std::endl;
     const Size na = Null<Size>();
     Real res =
         irlgm1f(0)->H(t0 + dt) * integral(na, na, 0, i, na, na, t0, t0 + dt) -
@@ -369,12 +398,13 @@ inline Real XAssetModel::ir_fx_covariance(const Size i, const Size j,
         irlgm1f(j + 1)->H(t0 + dt) *
             integral(na, na, j + 1, i, na, na, t0, t0 + dt) +
         integral(j + 1, na, j + 1, i, na, na, t0, t0 + dt) +
-        integral(na, na, i, na, j, na, t0, t0 + dt);
+        integral(na, na, i, na, na, j, t0, t0 + dt);
     return res;
 }
 
 inline Real XAssetModel::fx_fx_covariance(const Size i, const Size j,
                                           const Time t0, Time dt) const {
+    std::clog << "fx_fx_covariance" << std::endl;
     const Size na = Null<Size>();
     Real res =
         // row 1
@@ -400,19 +430,19 @@ inline Real XAssetModel::fx_fx_covariance(const Size i, const Size j,
             integral(i + 1, na, i + 1, 0, na, na, t0, t0 + dt) -
         integral(0, i + 1, 0, i + 1, na, na, t0, t0 + dt) +
         // row 4
-        irlgm1f(0)->H(t0 + dt) * integral(na, na, 0, na, j, na, t0, t0 + dt) -
-        integral(0, na, 0, na, j, na, t0, t0 + dt) +
+        irlgm1f(0)->H(t0 + dt) * integral(na, na, 0, na, na, j, t0, t0 + dt) -
+        integral(0, na, 0, na, na, j, t0, t0 + dt) +
         // row 5
-        irlgm1f(0)->H(t0 + dt) * integral(na, na, 0, na, i, na, t0, t0 + dt) -
-        integral(0, na, 0, na, i, na, t0, t0 + dt) -
+        irlgm1f(0)->H(t0 + dt) * integral(na, na, 0, na, na, i, t0, t0 + dt) -
+        integral(0, na, 0, na, na, i, t0, t0 + dt) -
         // row 6
         irlgm1f(i + 1)->H(t0 + dt) *
-            integral(na, na, i + 1, na, j, na, t0, t0 + dt) +
-        integral(i + 1, na, i + 1, na, j, na, t0, t0 + dt) -
+            integral(na, na, i + 1, na, na, j, t0, t0 + dt) +
+        integral(i + 1, na, i + 1, na, na, j, t0, t0 + dt) -
         // row 7
         irlgm1f(i + 1)->H(t0 + dt) *
-            integral(na, na, j + 1, na, i, na, t0, t0 + dt) +
-        integral(j + 1, na, j + 1, na, i, na, t0, t0 + dt) +
+            integral(na, na, j + 1, na, na, i, t0, t0 + dt) +
+        integral(j + 1, na, j + 1, na, na, i, t0, t0 + dt) +
         // row 8
         irlgm1f(i + 1)->H(t0 + dt) * irlgm1f(i + 1)->H(t0 + dt) *
             integral(na, na, i + 1, j + 1, na, na, t0, t0 + dt) -

@@ -47,6 +47,8 @@ void XAssetModel::setIntegrationPolicy(
     }
 
     // collect relevant times from parametrizations
+    // we don't have to sort them or make them unique,
+    // this is all done in PiecewiseIntegral for us
     std::vector<Time> allTimes;
     for (Size i = 0; i < nIrLgm1f_; ++i) {
         allTimes.insert(allTimes.end(), p_[i]->parameterTimes(0).begin(),
