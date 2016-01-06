@@ -9,10 +9,9 @@
 namespace QuantExt {
 
 FxBsPiecewiseConstantParametrization::FxBsPiecewiseConstantParametrization(
-    const Currency &currency,
-    const Handle<YieldTermStructure> &foreignTermStructure,
-    const Handle<Quote> &fxSpotToday, const Array &times, const Array &sigma)
-    : FxBsParametrization(currency, foreignTermStructure, fxSpotToday),
+    const Currency &currency, const Handle<Quote> &fxSpotToday,
+    const Array &times, const Array &sigma)
+    : FxBsParametrization(currency, fxSpotToday),
       PiecewiseConstantHelper1(times) {
     QL_REQUIRE(times.size() + 1 == sigma.size(),
                "alpha size (" << sigma.size()

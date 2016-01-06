@@ -22,19 +22,14 @@ namespace QuantExt {
 class FxBsParametrization : public Parametrization {
   public:
     FxBsParametrization(const Currency &foreignCurrency,
-                        const Handle<YieldTermStructure> &foreignTermStructure,
                         const Handle<Quote> &fxSpotToday);
-    /*! interface */
     /*! must satisfy variance(0) = 0.0, variance'(t) >= 0 */
     virtual Real variance(const Time t) const = 0;
-    /*! inspectors */
     virtual Real sigma(const Time t) const;
     virtual Real stdDeviation(const Time t) const;
-    const Handle<YieldTermStructure> foreignTermStructure() const;
     const Handle<Quote> fxSpotToday() const;
 
   private:
-    const Handle<YieldTermStructure> foreignTermStructure_;
     const Handle<Quote> fxSpotToday_;
 };
 
@@ -46,11 +41,6 @@ inline Real FxBsParametrization::sigma(const Time t) const {
 
 inline Real FxBsParametrization::stdDeviation(const Time t) const {
     return std::sqrt(variance(t));
-}
-
-inline const Handle<YieldTermStructure>
-FxBsParametrization::foreignTermStructure() const {
-    return foreignTermStructure_;
 }
 
 inline const Handle<Quote> FxBsParametrization::fxSpotToday() const {

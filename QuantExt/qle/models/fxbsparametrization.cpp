@@ -8,11 +8,8 @@
 
 namespace QuantExt {
 
-FxBsParametrization::FxBsParametrization(
-    const Currency &foreignCurrency,
-    const Handle<YieldTermStructure> &foreignTermStructure,
-    const Handle<Quote> &fxSpotToday)
-    : Parametrization(foreignCurrency),
-      foreignTermStructure_(foreignTermStructure), fxSpotToday_(fxSpotToday) {}
+FxBsParametrization::FxBsParametrization(const Currency &foreignCurrency,
+                                         const Handle<Quote> &fxSpotToday)
+    : Parametrization(foreignCurrency), fxSpotToday_(fxSpotToday) {}
 
 } // namespace QuantExt

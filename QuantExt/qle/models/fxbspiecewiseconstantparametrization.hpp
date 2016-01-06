@@ -19,17 +19,14 @@ namespace QuantExt {
 class FxBsPiecewiseConstantParametrization : public FxBsParametrization,
                                              private PiecewiseConstantHelper1 {
   public:
-    FxBsPiecewiseConstantParametrization(
-        const Currency &currency,
-        const Handle<YieldTermStructure> &foreignTermStructure,
-        const Handle<Quote> &fxSpotToday, const Array &times,
-        const Array &sigma);
-    /*! inspectors */
+    FxBsPiecewiseConstantParametrization(const Currency &currency,
+                                         const Handle<Quote> &fxSpotToday,
+                                         const Array &times,
+                                         const Array &sigma);
     Real variance(const Time t) const;
     Real sigma(const Time t) const;
     const Array &parameterTimes(const Size) const;
     const boost::shared_ptr<Parameter> parameter(const Size) const;
-    /*! additional methods */
     void update() const;
 
   protected:

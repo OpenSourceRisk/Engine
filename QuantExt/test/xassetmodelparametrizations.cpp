@@ -215,8 +215,8 @@ void XAssetModelParametrizationsTest::testParametrizationBaseClasses() {
     while (x0 < 5.0) {
         sum += h * helper23.exp_m_int_y(x0 + h / 2.0);
         x0 += h;
-        check2("helper23.int_exp_m_int_y2", x0, helper23.int_exp_m_int_y(x0), sum,
-               1.0E-10);
+        check2("helper23.int_exp_m_int_y2", x0, helper23.int_exp_m_int_y(x0),
+               sum, 1.0E-10);
     }
 
     // check update after value change
@@ -469,15 +469,9 @@ void XAssetModelParametrizationsTest::testFxBsParametrizations() {
     sigma[2] = 0.0;
     sigma[3] = 0.15;
 
-    Handle<YieldTermStructure> domYts(boost::make_shared<FlatForward>(
-        0, NullCalendar(), 0.02, Actual365Fixed()));
-
-    Handle<YieldTermStructure> forYts(boost::make_shared<FlatForward>(
-        0, NullCalendar(), 0.03, Actual365Fixed()));
-
     FxBsPiecewiseConstantParametrization fxbs_1(
-        USDCurrency(), forYts,
-        Handle<Quote>(boost::make_shared<SimpleQuote>(1.10)), times, sigma);
+        USDCurrency(), Handle<Quote>(boost::make_shared<SimpleQuote>(1.10)),
+        times, sigma);
 
     check("fxbs_1.variance", 0.0, fxbs_1.variance(0.0), 0.0);
     check("fxbs_1.variance", 0.5, fxbs_1.variance(0.5), 0.10 * 0.10 * 0.5);
