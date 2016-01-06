@@ -70,7 +70,7 @@ class XAssetModel : public LinkableCalibratedModel {
 
     /*! allow for time dependent correlation (2nd ctor) */
 
-    /*! inspectors */
+    /*! returns the state process with a given discretization */
     const boost::shared_ptr<StochasticProcess>
     stateProcess(XAssetStateProcess::discretization disc =
                      XAssetStateProcess::exact) const;
@@ -124,6 +124,10 @@ class XAssetModel : public LinkableCalibratedModel {
     Real fx_fx_covariance(const Size i, const Size j, const Time t0,
                           Time dt) const;
 
+    Real integral(const Size hi, const Size hj, const Size alphai,
+                  const Size alphaj, const Size sigmai, const Size sigmaj,
+                  const Real a, const Real b) const;
+
     /* ... */
 
     /*! calibration procedures */
@@ -149,10 +153,7 @@ class XAssetModel : public LinkableCalibratedModel {
     void initializeCorrelation();
     void initializeArguments();
 
-    /*! integral helper functions */
-    Real integral(const Size hi, const Size hj, const Size alphai,
-                  const Size alphaj, const Size sigmai, const Size sigmaj,
-                  const Real a, const Real b) const;
+    /*! integral helper function */
     Real integral_helper(const Size hi, const Size hj, const Size alphai,
                          const Size alphaj, const Size sigmai,
                          const Size sigmaj, const Real t) const;
