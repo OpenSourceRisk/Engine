@@ -30,6 +30,7 @@
 namespace QuantExt {
 
 class AnalyticCcLgmFxOptionEngine : public VanillaOption::engine {
+  public:
     AnalyticCcLgmFxOptionEngine(const boost::shared_ptr<XAssetModel> &model,
                                 const Size foreignCurrency);
     void calculate() const;
