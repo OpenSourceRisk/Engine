@@ -1,7 +1,8 @@
 /* -*- mode: c++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd.*/
+ Copyright (C) 2016 Quaternion Risk Management Ltd.
+*/
 
 #include "xassetmodelparametrizations.hpp"
 #include "utilities.hpp"
@@ -214,7 +215,7 @@ void XAssetModelParametrizationsTest::testParametrizationBaseClasses() {
     while (x0 < 5.0) {
         sum += h * helper23.exp_m_int_y(x0 + h / 2.0);
         x0 += h;
-        check2("helper23.exp_m_int_y2", x0, helper23.int_exp_m_int_y(x0), sum,
+        check2("helper23.int_exp_m_int_y2", x0, helper23.int_exp_m_int_y(x0), sum,
                1.0E-10);
     }
 

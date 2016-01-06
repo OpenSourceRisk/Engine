@@ -1,7 +1,8 @@
 /* -*- mode: c++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd.*/
+ Copyright (C) 2016 Quaternion Risk Management Ltd.
+*/
 
 #ifndef quantext_test_xassetmodelparametrizations_hpp
 #define quantext_test_xassetmodelparametrizations_hpp

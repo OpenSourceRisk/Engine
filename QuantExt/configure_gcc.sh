@@ -1,2 +1,2 @@
 # configure gcc, no open mp support
-./configure CXXFLAGS="-O3 -std=c++11 -g -Wall -Wno-unused-local-typedefs -Wno-unknown-pragmas -Wno-deprecated-declarations -L/home/peter/quaternion/dev/muparser-2.2.5/lib" --with-ql-include=/home/peter/openxva/QuantLib --with-ql-lib=/home/peter/openxva/QuantLib/ql/.libs --with-mu-include=/home/peter/quaternion/dev/muparser-2.2.5/include --with-mu-lib=/home/peter/quaternion/dev/muparser-2.2.5/lib
+./configure CXXFLAGS="-O3 -std=c++11 -g -Wall -Wno-unused-local-typedefs -Wno-unknown-pragmas -Wno-deprecated-declarations"

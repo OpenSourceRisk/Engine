@@ -155,7 +155,7 @@ namespace QuantExt {
             const std::vector<boost::shared_ptr<Parameter> >& arguments_;
         };
       public:
-        PrivateConstraint(const std::vector<boost::shared_ptr<Parameter>>& arguments)
+        PrivateConstraint(const std::vector<boost::shared_ptr<Parameter> >& arguments)
         : Constraint(boost::shared_ptr<Constraint::Impl>(
                                    new PrivateConstraint::Impl(arguments))) {}
     };
