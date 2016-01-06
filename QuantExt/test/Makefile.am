@@ -3,6 +3,7 @@ QLE_TESTS = \
 	testsuite.cpp \
 	utilities.hpp utilities.cpp \
 	analyticlgmswaptionengine.hpp analyticlgmswaptionengine.cpp \
+	xassetmodel.hpp xassetmodel.cpp \
 	xassetmodelparametrizations.hpp xassetmodelparametrizations.cpp
 
 dist-hook:
