@@ -27,7 +27,6 @@ class IrLgm1fPiecewiseConstantHullWhiteAdaptor
         const Array &sigma, const Array &kappa);
     Real zeta(const Time t) const;
     Real H(const Time t) const;
-    /*! inspectors */
     Real alpha(const Time t) const;
     Real kappa(Time t) const;
     Real Hprime(const Time t) const;
@@ -35,7 +34,6 @@ class IrLgm1fPiecewiseConstantHullWhiteAdaptor
     Real hullWhiteSigma(Time t) const;
     const Array &parameterTimes(const Size) const;
     const boost::shared_ptr<Parameter> parameter(const Size) const;
-    /*! additional methods */
     void update() const;
 
   protected:

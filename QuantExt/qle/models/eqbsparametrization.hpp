@@ -18,9 +18,7 @@ namespace QuantExt {
 class EquityBsParametrization : public Parametrization {
   public:
     virtual Handle<YieldTermStructure> dividendTermStructure() const = 0;
-    /*! interface */
     virtual Real variance(const Time t) const = 0;
-    /*! inspectors */
     virtual Real sigma(const Time t) const;
     virtual Real stdDeviation(const Time t) const;
 };
