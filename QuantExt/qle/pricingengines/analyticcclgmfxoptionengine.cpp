@@ -79,11 +79,11 @@ void AnalyticCcLgmFxOptionEngine::calculate() const {
                Hi * model_->integral(0, na, 0, i + 1, na, na, 0.0, t) +
                model_->integral(0, i + 1, 0, i + 1, na, na, 0.0, t)) +
         // forth term
-        2.0 * (H0 * model_->integral(na, na, 0, na, i, na, 0.0, t) -
-               model_->integral(0, na, 0, na, i, na, 0.0, t)) -
+        2.0 * (H0 * model_->integral(na, na, 0, na, na, i, 0.0, t) -
+               model_->integral(0, na, 0, na, na, i, 0.0, t)) -
         // fifth term
-        2.0 * (Hi * model_->integral(na, na, i + 1, na, i, na, 0.0, t) -
-               model_->integral(i + 1, na, i + 1, na, i, na, 0.0, t));
+        2.0 * (Hi * model_->integral(na, na, i + 1, na, na, i, 0.0, t) -
+               model_->integral(i + 1, na, i + 1, na, na, i, 0.0, t));
 
     BlackCalculator black(payoff, fxForward, std::sqrt(variance),
                           domesticDiscount);

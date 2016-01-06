@@ -24,8 +24,6 @@
 
 #include <boost/bind.hpp>
 
-#include <iostream> // only for debug
-
 using namespace QuantLib;
 
 namespace QuantExt {
@@ -278,18 +276,18 @@ inline Real XAssetModel::integral_helper(const Size hi, const Size hj,
                                          const Real t) const {
     const Size na = Null<Size>();
     // only debug
-    QL_REQUIRE(hi == na || hi < nIrLgm1f_, "hi (" << hi << ") out of range 0..."
-                                                  << nIrLgm1f_ - 1);
-    QL_REQUIRE(hj == na || hj < nIrLgm1f_, "hj (" << hj << ") out of range 0..."
-                                                  << nIrLgm1f_ - 1);
-    QL_REQUIRE(alphai == na || alphai < nIrLgm1f_,
-               "alphai (" << alphai << ") out of range 0..." << nIrLgm1f_ - 1);
-    QL_REQUIRE(alphaj == na || alphaj < nIrLgm1f_,
-               "alphaj (" << alphaj << ") out of range 0..." << nIrLgm1f_ - 1);
-    QL_REQUIRE(sigmai == na || sigmai < nFxBs_,
-               "alphai (" << sigmai << ") out of range 0..." << nFxBs_ - 1);
-    QL_REQUIRE(sigmaj == na || sigmaj < nFxBs_,
-               "alphaj (" << sigmaj << ") out of range 0..." << nFxBs_ - 1);
+    // QL_REQUIRE(hi == na || hi < nIrLgm1f_, "hi (" << hi << ") out of range 0..."
+    //                                               << nIrLgm1f_ - 1);
+    // QL_REQUIRE(hj == na || hj < nIrLgm1f_, "hj (" << hj << ") out of range 0..."
+    //                                               << nIrLgm1f_ - 1);
+    // QL_REQUIRE(alphai == na || alphai < nIrLgm1f_,
+    //            "alphai (" << alphai << ") out of range 0..." << nIrLgm1f_ - 1);
+    // QL_REQUIRE(alphaj == na || alphaj < nIrLgm1f_,
+    //            "alphaj (" << alphaj << ") out of range 0..." << nIrLgm1f_ - 1);
+    // QL_REQUIRE(sigmai == na || sigmai < nFxBs_,
+    //            "alphai (" << sigmai << ") out of range 0..." << nFxBs_ - 1);
+    // QL_REQUIRE(sigmaj == na || sigmaj < nFxBs_,
+    //            "alphaj (" << sigmaj << ") out of range 0..." << nFxBs_ - 1);
     // end only debug
     Size i1 = Null<Size>(), j1 = Null<Size>();
     Size i2 = Null<Size>(), j2 = Null<Size>();
@@ -320,14 +318,16 @@ inline Real XAssetModel::integral_helper(const Size hi, const Size hj,
     }
     // either i1 (j1) or i2 (j2) is not null
     // but not both of them at the same time
-    QL_REQUIRE(i1 != na || i2 != na,
-               "both i1 and i2 are null (hi,hj,ai,aj,si,sj)=("
-                   << hi << "," << hj << "," << alphai << "," << alphaj << ","
-                   << sigmai << "," << sigmaj << ")");
-    QL_REQUIRE(j1 != na || j2 != na,
-               "both j1 and j2 are null (hi,hj,ai,aj,si,sj)=("
-                   << hi << "," << hj << "," << alphai << "," << alphaj << ","
-                   << sigmai << "," << sigmaj << ")");
+    // only debug
+    // QL_REQUIRE(i1 != na || i2 != na,
+    //            "both i1 and i2 are null (hi,hj,ai,aj,si,sj)=("
+    //                << hi << "," << hj << "," << alphai << "," << alphaj << ","
+    //                << sigmai << "," << sigmaj << ")");
+    // QL_REQUIRE(j1 != na || j2 != na,
+    //            "both j1 and j2 are null (hi,hj,ai,aj,si,sj)=("
+    //                << hi << "," << hj << "," << alphai << "," << alphaj << ","
+    //                << sigmai << "," << sigmaj << ")");
+    // end only debug
     Size i = i1 != Null<Size>() ? i1 : i2 + nIrLgm1f_;
     Size j = j1 != Null<Size>() ? j1 : j2 + nIrLgm1f_;
     res *= rho_[i][j];
@@ -336,7 +336,6 @@ inline Real XAssetModel::integral_helper(const Size hi, const Size hj,
 
 inline Real XAssetModel::ir_expectation(const Size i, const Time t0,
                                         const Real zi_0, const Real dt) const {
-    std::clog << "ir_expectation" << std::endl;
     const Size na = Null<Size>();
     Real res = 0.0;
     if (i > 0) {
@@ -351,7 +350,6 @@ inline Real XAssetModel::ir_expectation(const Size i, const Time t0,
 inline Real XAssetModel::fx_expectation(const Size i, const Time t0,
                                         const Real xi_0, const Real zi_0,
                                         const Real z0_0, const Real dt) const {
-    std::clog << "fx_expectation" << std::endl;
     const Size na = Null<Size>();
     Real res = std::log(irlgm1f(i + 1)->termStructure()->discount(t0 + dt) /
                         irlgm1f(i + 1)->termStructure()->discount(t0) *
@@ -382,7 +380,6 @@ inline Real XAssetModel::fx_expectation(const Size i, const Time t0,
 
 inline Real XAssetModel::ir_ir_covariance(const Size i, const Size j,
                                           const Time t0, Time dt) const {
-    std::clog << "ir_ir_covariance" << std::endl;
     const Size na = Null<Size>();
     Real res = integral(na, na, i, j, na, na, t0, t0 + dt);
     return res;
@@ -390,7 +387,6 @@ inline Real XAssetModel::ir_ir_covariance(const Size i, const Size j,
 
 inline Real XAssetModel::ir_fx_covariance(const Size i, const Size j,
                                           const Time t0, Time dt) const {
-    std::clog << "ir_fx_covariance" << std::endl;
     const Size na = Null<Size>();
     Real res =
         irlgm1f(0)->H(t0 + dt) * integral(na, na, 0, i, na, na, t0, t0 + dt) -
@@ -404,7 +400,6 @@ inline Real XAssetModel::ir_fx_covariance(const Size i, const Size j,
 
 inline Real XAssetModel::fx_fx_covariance(const Size i, const Size j,
                                           const Time t0, Time dt) const {
-    std::clog << "fx_fx_covariance" << std::endl;
     const Size na = Null<Size>();
     Real res =
         // row 1

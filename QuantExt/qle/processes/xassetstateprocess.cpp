@@ -86,13 +86,13 @@ Disposable<Matrix> XAssetStateProcess::diffusion(Time t, const Array &) const {
             // ir-ir
             res[i][j] = res[j][i] = alphai * alphaj * rhozz;
             // ir-fx
-            if (j > 0) {
-                Real sigmaj = model_->fxbs(j - 1)->sigma(t);
-                Real rhozx = model_->correlation()[i][n + j - 1];
-                res[i][n + j - 1] = res[n + j - 1][i] = alphai * sigmaj * rhozx;
+            if (i > 0) {
+                Real sigmai = model_->fxbs(i - 1)->sigma(t);
+                Real rhozx = model_->correlation()[j][n + i - 1];
+                res[j][n + i - 1] = res[n + i - 1][j] = alphaj * sigmai * rhozx;
                 // fx-fx
-                if (i > 0) {
-                    Real sigmai = model_->fxbs(i - 1)->sigma(t);
+                if (j > 0) {
+                    Real sigmaj = model_->fxbs(j - 1)->sigma(t);
                     Real rhoxx = model_->correlation()[n + i - 1][n + j - 1];
                     res[n + i - 1][n + j - 1] = res[n + j - 1][n + i - 1] =
                         sigmai * sigmaj * rhoxx;
@@ -136,10 +136,10 @@ Disposable<Matrix> XAssetStateProcess::ExactDiscretization::covariance(
     for (Size i = 0; i < n; ++i) {
         for (Size j = 0; j <= i; ++j) {
             res[i][j] = res[j][i] = model_->ir_ir_covariance(i, j, t0, dt);
-            if (j > 0) {
-                res[i][n + j - 1] = res[n + j - 1][i] =
-                    model_->ir_fx_covariance(i, j - 1, t0, dt);
-                if (i > 0) {
+            if (i > 0) {
+                res[j][n + i - 1] = res[n + i - 1][j] =
+                    model_->ir_fx_covariance(j, i - 1, t0, dt);
+                if (j > 0) {
                     res[n + i - 1][n + j - 1] = res[n + j - 1][n + i - 1] =
                         model_->fx_fx_covariance(i - 1, j - 1, t0, dt);
                 }
