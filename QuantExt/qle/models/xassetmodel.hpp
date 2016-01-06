@@ -276,14 +276,18 @@ inline Real XAssetModel::integral_helper(const Size hi, const Size hj,
                                          const Real t) const {
     const Size na = Null<Size>();
     // only debug
-    // QL_REQUIRE(hi == na || hi < nIrLgm1f_, "hi (" << hi << ") out of range 0..."
+    // QL_REQUIRE(hi == na || hi < nIrLgm1f_, "hi (" << hi << ") out of range
+    // 0..."
     //                                               << nIrLgm1f_ - 1);
-    // QL_REQUIRE(hj == na || hj < nIrLgm1f_, "hj (" << hj << ") out of range 0..."
+    // QL_REQUIRE(hj == na || hj < nIrLgm1f_, "hj (" << hj << ") out of range
+    // 0..."
     //                                               << nIrLgm1f_ - 1);
     // QL_REQUIRE(alphai == na || alphai < nIrLgm1f_,
-    //            "alphai (" << alphai << ") out of range 0..." << nIrLgm1f_ - 1);
+    //            "alphai (" << alphai << ") out of range 0..." << nIrLgm1f_ -
+    //            1);
     // QL_REQUIRE(alphaj == na || alphaj < nIrLgm1f_,
-    //            "alphaj (" << alphaj << ") out of range 0..." << nIrLgm1f_ - 1);
+    //            "alphaj (" << alphaj << ") out of range 0..." << nIrLgm1f_ -
+    //            1);
     // QL_REQUIRE(sigmai == na || sigmai < nFxBs_,
     //            "alphai (" << sigmai << ") out of range 0..." << nFxBs_ - 1);
     // QL_REQUIRE(sigmaj == na || sigmaj < nFxBs_,
@@ -321,16 +325,24 @@ inline Real XAssetModel::integral_helper(const Size hi, const Size hj,
     // only debug
     // QL_REQUIRE(i1 != na || i2 != na,
     //            "both i1 and i2 are null (hi,hj,ai,aj,si,sj)=("
-    //                << hi << "," << hj << "," << alphai << "," << alphaj << ","
+    //                << hi << "," << hj << "," << alphai << "," << alphaj <<
+    //                ","
     //                << sigmai << "," << sigmaj << ")");
     // QL_REQUIRE(j1 != na || j2 != na,
     //            "both j1 and j2 are null (hi,hj,ai,aj,si,sj)=("
-    //                << hi << "," << hj << "," << alphai << "," << alphaj << ","
+    //                << hi << "," << hj << "," << alphai << "," << alphaj <<
+    //                ","
     //                << sigmai << "," << sigmaj << ")");
     // end only debug
     Size i = i1 != Null<Size>() ? i1 : i2 + nIrLgm1f_;
     Size j = j1 != Null<Size>() ? j1 : j2 + nIrLgm1f_;
     res *= rho_[i][j];
+    // std::clog << (hi == Null<Size>() ? 0 : 1) << (hj == Null<Size>() ? 0 : 1)
+    //           << (alphai == Null<Size>() ? 0 : 1)
+    //           << (alphaj == Null<Size>() ? 0 : 1)
+    //           << (sigmai == Null<Size>() ? 0 : 1)
+    //           << (sigmaj == Null<Size>() ? 0 : 1) << " => " << res
+    //           << std::endl;
     return res;
 }
 
@@ -401,50 +413,40 @@ inline Real XAssetModel::ir_fx_covariance(const Size i, const Size j,
 inline Real XAssetModel::fx_fx_covariance(const Size i, const Size j,
                                           const Time t0, Time dt) const {
     const Size na = Null<Size>();
+    Real H0 = irlgm1f(0)->H(t0 + dt);
+    Real Hi = irlgm1f(i + 1)->H(t0 + dt);
+    Real Hj = irlgm1f(j + 1)->H(t0 + dt);
     Real res =
         // row 1
-        irlgm1f(0)->H(t0 + dt) * irlgm1f(0)->H(t0 + dt) *
-            integral(na, na, 0, 0, na, na, t0, t0 + dt) -
-        2.0 * irlgm1f(0)->H(t0 + dt) *
-            integral(0, na, 0, 0, na, na, t0, t0 + dt) +
+        H0 * H0 * integral(na, na, 0, 0, na, na, t0, t0 + dt) -
+        2.0 * H0 * integral(0, na, 0, 0, na, na, t0, t0 + dt) +
         integral(0, 0, 0, 0, na, na, t0, t0 + dt) -
         // row 2
-        irlgm1f(0)->H(t0 + dt) * irlgm1f(j + 1)->H(t0 + dt) *
-            integral(na, na, 0, j + 1, na, na, t0, t0 + dt) +
-        irlgm1f(j + 1)->H(t0 + dt) *
-            integral(0, na, 0, j + 1, na, na, t0, t0 + dt) +
-        irlgm1f(0)->H(t0 + dt) *
-            integral(j + 1, 0, j + 1, 0, na, na, t0, t0 + dt) -
+        H0 * Hj * integral(na, na, 0, j + 1, na, na, t0, t0 + dt) +
+        Hj * integral(0, na, 0, j + 1, na, na, t0, t0 + dt) +
+        H0 * integral(j + 1, na, j + 1, 0, na, na, t0, t0 + dt) -
         integral(0, j + 1, 0, j + 1, na, na, t0, t0 + dt) -
         // row 3
-        irlgm1f(0)->H(t0 + dt) * irlgm1f(i + 1)->H(t0 + dt) *
-            integral(na, na, 0, i + 1, na, na, t0, t0 + dt) +
-        irlgm1f(i + 1)->H(t0 + dt) *
-            integral(0, na, i + 1, i + 1, na, na, t0, t0 + dt) +
-        irlgm1f(0)->H(t0 + dt) *
-            integral(i + 1, na, i + 1, 0, na, na, t0, t0 + dt) -
+        H0 * Hi * integral(na, na, 0, i + 1, na, na, t0, t0 + dt) +
+        Hi * integral(0, na, 0, i + 1, na, na, t0, t0 + dt) +
+        H0 * integral(i + 1, na, i + 1, 0, na, na, t0, t0 + dt) -
         integral(0, i + 1, 0, i + 1, na, na, t0, t0 + dt) +
         // row 4
-        irlgm1f(0)->H(t0 + dt) * integral(na, na, 0, na, na, j, t0, t0 + dt) -
+        H0 * integral(na, na, 0, na, na, j, t0, t0 + dt) -
         integral(0, na, 0, na, na, j, t0, t0 + dt) +
         // row 5
-        irlgm1f(0)->H(t0 + dt) * integral(na, na, 0, na, na, i, t0, t0 + dt) -
+        H0 * integral(na, na, 0, na, na, i, t0, t0 + dt) -
         integral(0, na, 0, na, na, i, t0, t0 + dt) -
         // row 6
-        irlgm1f(i + 1)->H(t0 + dt) *
-            integral(na, na, i + 1, na, na, j, t0, t0 + dt) +
+        Hi * integral(na, na, i + 1, na, na, j, t0, t0 + dt) +
         integral(i + 1, na, i + 1, na, na, j, t0, t0 + dt) -
         // row 7
-        irlgm1f(i + 1)->H(t0 + dt) *
-            integral(na, na, j + 1, na, na, i, t0, t0 + dt) +
+        Hj * integral(na, na, j + 1, na, na, i, t0, t0 + dt) +
         integral(j + 1, na, j + 1, na, na, i, t0, t0 + dt) +
         // row 8
-        irlgm1f(i + 1)->H(t0 + dt) * irlgm1f(i + 1)->H(t0 + dt) *
-            integral(na, na, i + 1, j + 1, na, na, t0, t0 + dt) -
-        irlgm1f(j + 1)->H(t0 + dt) *
-            integral(i + 1, na, i + 1, j + 1, na, na, t0, t0 + dt) -
-        irlgm1f(i + 1)->H(t0 + dt) *
-            integral(j + 1, na, j + 1, i + 1, na, na, t0, t0 + dt) +
+        Hi * Hj * integral(na, na, i + 1, j + 1, na, na, t0, t0 + dt) -
+        Hj * integral(i + 1, na, i + 1, j + 1, na, na, t0, t0 + dt) -
+        Hi * integral(j + 1, na, j + 1, i + 1, na, na, t0, t0 + dt) +
         integral(i + 1, j + 1, i + 1, j + 1, na, na, t0, t0 + dt) +
         // row 9
         integral(na, na, na, na, i, j, t0, t0 + dt);

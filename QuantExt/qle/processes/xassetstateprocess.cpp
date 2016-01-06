@@ -58,7 +58,7 @@ Disposable<Array> XAssetStateProcess::drift(Time t, const Array &x) const {
         Real Hi = model_->irlgm1f(i)->H(t);
         Real Hprimei = model_->irlgm1f(i)->Hprime(t);
         Real alphai = model_->irlgm1f(i)->alpha(t);
-        Real zetai = model_->irlgm1f(0)->zeta(t);
+        Real zetai = model_->irlgm1f(i)->zeta(t);
         Real sigmai = model_->fxbs(i - 1)->sigma(t);
         // ir-ir
         Real rho0i = model_->correlation()[0][i];
@@ -72,8 +72,8 @@ Disposable<Array> XAssetStateProcess::drift(Time t, const Array &x) const {
             H0 * alpha0 * sigmai * rho0i +
             model_->irlgm1f(0)->termStructure()->forwardRate(t, t, Continuous) +
             x[0] * Hprime0 + zeta0 * Hprime0 * H0 -
-            model_->irlgm1f(i)->termStructure()->forwardRate(t, t, Continuous) +
-            x[i] * Hprimei + zetai * Hprimei * Hi - -0.5 * sigmai * sigmai;
+            model_->irlgm1f(i)->termStructure()->forwardRate(t, t, Continuous) -
+            x[i] * Hprimei + zetai * Hprimei * Hi - 0.5 * sigmai * sigmai;
     }
     return res;
 }
@@ -103,6 +103,7 @@ Disposable<Matrix> XAssetStateProcess::diffusion(Time t, const Array &) const {
             }
         }
     }
+    // std::clog << "euler cov = " << std::endl << res << std::endl;
     Matrix tmp = pseudoSqrt(res, SalvagingAlgorithm::Spectral);
     return tmp;
 }
@@ -123,7 +124,8 @@ Disposable<Array> XAssetStateProcess::ExactDiscretization::drift(
         }
     }
     // std::clog << "XAssetProcess::ExactDrift(" << t0 << "," << x0 << "," << dt
-    // << " = " << res << std::endl;
+    //           << " = " << std::endl
+    //           << res << std::endl;
     return res - x0;
 }
 
@@ -152,7 +154,8 @@ Disposable<Matrix> XAssetStateProcess::ExactDiscretization::covariance(
         }
     }
     // std::clog << "XAssetProcess::ExactCovariance(" << t0 << "," << x0 << ","
-    // << dt << std::endl << res << std::endl;
+    //           << dt << std::endl
+    //           << res << std::endl;
     return res;
 }
 
