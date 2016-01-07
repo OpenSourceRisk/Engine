@@ -51,9 +51,8 @@ void AnalyticCcLgmFxOptionEngine::calculate() const {
     Real domesticDiscount =
         model_->irlgm1f(0)->termStructure()->discount(expiry);
 
-    Real fxForward =
-        std::exp(model_->fxbs(foreignCurrency_)->fxSpotToday()->value()) *
-        foreignDiscount / domesticDiscount;
+    Real fxForward = model_->fxbs(foreignCurrency_)->fxSpotToday()->value() *
+                     foreignDiscount / domesticDiscount;
 
     Real H0 = model_->irlgm1f(0)->H(t);
     Real Hi = model_->irlgm1f(foreignCurrency_ + 1)->H(t);
