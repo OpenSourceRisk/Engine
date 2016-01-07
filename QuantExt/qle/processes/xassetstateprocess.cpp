@@ -11,8 +11,6 @@
 
 #include <boost/make_shared.hpp>
 
-#include <iostream> // only debug
-
 namespace QuantExt {
 
 XAssetStateProcess::XAssetStateProcess(const XAssetModel *const model,
@@ -37,43 +35,44 @@ void XAssetStateProcess::flushCache() {}
 
 Disposable<Array> XAssetStateProcess::initialValues() const {
     Array res(model_->dimension(), 0.0);
-    /*! irlgm1f processes have initial value 0 */
+    /* irlgm1f processes have initial value 0 */
     for (Size i = 0; i < model_->currencies() - 1; ++i) {
-        /*! fxbs processes are in log spot */
+        /* fxbs processes are in log spot */
         res[model_->currencies() + i] =
             std::log(model_->fxbs(i)->fxSpotToday()->value());
     }
-    // std::clog << "XAssetProcess::initialValues = " << res << std::endl;
     return res;
 }
 
 Disposable<Array> XAssetStateProcess::drift(Time t, const Array &x) const {
     Array res(model_->dimension(), 0.0);
+    Size n = model_->currencies();
     Real H0 = model_->irlgm1f(0)->H(t);
     Real Hprime0 = model_->irlgm1f(0)->Hprime(t);
     Real alpha0 = model_->irlgm1f(0)->alpha(t);
     Real zeta0 = model_->irlgm1f(0)->zeta(t);
-    /*! z0 has drift 0 */
-    for (Size i = 1; i < model_->currencies(); ++i) {
+    /* z0 has drift 0 */
+    for (Size i = 1; i < n; ++i) {
         Real Hi = model_->irlgm1f(i)->H(t);
         Real Hprimei = model_->irlgm1f(i)->Hprime(t);
         Real alphai = model_->irlgm1f(i)->alpha(t);
         Real zetai = model_->irlgm1f(i)->zeta(t);
         Real sigmai = model_->fxbs(i - 1)->sigma(t);
         // ir-ir
-        Real rho0i = model_->correlation()[0][i];
+        Real rhozz0i = model_->correlation()[0][i];
         // ir-fx
-        Real rhoii = model_->correlation()[i][model_->currencies() + i - 1];
+        Real rhozx0i = model_->correlation()[0][n + i - 1];
+        Real rhozxii = model_->correlation()[i][n + i - 1];
         // ir drifts
-        res[i] = -Hi * alphai * alphai + H0 * alpha0 * alphai * rho0i -
-                 sigmai * alphai * rhoii;
+        res[i] = -Hi * alphai * alphai + H0 * alpha0 * alphai * rhozz0i -
+                 sigmai * alphai * rhozxii;
         // log spot fx drifts
-        res[model_->currencies() + i - 1] =
-            H0 * alpha0 * sigmai * rho0i +
+        res[n + i - 1] =
+            H0 * alpha0 * sigmai * rhozx0i +
             model_->irlgm1f(0)->termStructure()->forwardRate(t, t, Continuous) +
             x[0] * Hprime0 + zeta0 * Hprime0 * H0 -
             model_->irlgm1f(i)->termStructure()->forwardRate(t, t, Continuous) -
-            x[i] * Hprimei + zetai * Hprimei * Hi - 0.5 * sigmai * sigmai;
+            x[i] * Hprimei - zetai * Hprimei * Hi - 0.5 * sigmai * sigmai;
     }
     return res;
 }
@@ -103,7 +102,6 @@ Disposable<Matrix> XAssetStateProcess::diffusion(Time t, const Array &) const {
             }
         }
     }
-    // std::clog << "euler cov = " << std::endl << res << std::endl;
     Matrix tmp = pseudoSqrt(res, SalvagingAlgorithm::Spectral);
     return tmp;
 }
@@ -123,9 +121,6 @@ Disposable<Array> XAssetStateProcess::ExactDiscretization::drift(
                                                     x0[i], x0[0], dt);
         }
     }
-    // std::clog << "XAssetProcess::ExactDrift(" << t0 << "," << x0 << "," << dt
-    //           << " = " << std::endl
-    //           << res << std::endl;
     return res - x0;
 }
 
@@ -153,9 +148,6 @@ Disposable<Matrix> XAssetStateProcess::ExactDiscretization::covariance(
             }
         }
     }
-    // std::clog << "XAssetProcess::ExactCovariance(" << t0 << "," << x0 << ","
-    //           << dt << std::endl
-    //           << res << std::endl;
     return res;
 }
 
