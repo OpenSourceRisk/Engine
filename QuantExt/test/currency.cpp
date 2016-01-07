@@ -15,51 +15,54 @@ using namespace boost::unit_test_framework;
 using namespace std;
 
 namespace {
+
     struct CcyTestData {
         Currency ccy;
         string name;
         string code;
         int numCode;
     };
-}
-
-
-void dataCheck(struct CcyTestData data) {
-    BOOST_CHECK_EQUAL(data.ccy.name(),data.name);
-    BOOST_CHECK_EQUAL(data.ccy.code(),data.code);
-    BOOST_CHECK_EQUAL(data.ccy.numericCode(),data.numCode);
 
 }
+
+
+void dataCheck(struct CcyTestData& data) {
+
+    BOOST_CHECK_EQUAL(data.ccy.name(), data.name);
+    BOOST_CHECK_EQUAL(data.ccy.code(), data.code);
+    BOOST_CHECK_EQUAL(data.ccy.numericCode(), data.numCode);
+}
+
 
 void CurrencyTest::testCurrency() {
 
     BOOST_MESSAGE("Testing QuantExt currencies");
 
-
     CcyTestData data[]={
         //African cuurencies
-        {TNDCurrency(),"Tunisian dinar", "TND", 788},
-        {EGPCurrency(),"Egyptian pound", "EGP", 818},
-        {NGNCurrency(),"Nigerian naira", "NGN", 566},
-        {MADCurrency(),"Moroccan dirham", "MAD", 504},
+        { TNDCurrency(), "Tunisian dinar", "TND", 788},
+        { EGPCurrency(), "Egyptian pound", "EGP", 818},
+        { NGNCurrency(), "Nigerian naira", "NGN", 566},
+        { MADCurrency(), "Moroccan dirham", "MAD", 504},
         //American currencies
-        {MXVCurrency(),"Mexican Unidad de Inversion", "MXV", 979},
-        {CLFCurrency(),"Unidad de Fomento (funds code)", "CLF", 990},
+        { MXVCurrency(), "Mexican Unidad de Inversion", "MXV", 979},
+        { CLFCurrency(), "Unidad de Fomento (funds code)", "CLF", 990},
         //Asian currencies
-        {KZTCurrency(),"Kazakhstani tenge", "KZT", 398},
-        {QARCurrency(),"Qatari riyal", "QAR", 634},
-        {BHDCurrency(),"Bahraini dinar", "BHD", 48},
-        {OMRCurrency(),"Omani rial", "OMR", 512},
-        {AEDCurrency(),"United Arab Emirates dirham", "AED", 784},
-        {PHPCurrency(),"Philippine peso", "PHP", 608},
+        { KZTCurrency(), "Kazakhstani tenge", "KZT", 398},
+        { QARCurrency(), "Qatari riyal", "QAR", 634},
+        { BHDCurrency(), "Bahraini dinar", "BHD", 48},
+        { OMRCurrency(), "Omani rial", "OMR", 512},
+        { AEDCurrency(), "United Arab Emirates dirham", "AED", 784},
+        { PHPCurrency(), "Philippine peso", "PHP", 608},
         //European currencies
-        {UAHCurrency(),"Ukrainian hryvnia", "UAH", 980}
+        { UAHCurrency(), "Ukrainian hryvnia", "UAH", 980}
     };
 
     Size size=sizeof(data)/sizeof(data[0]);
 
-    for( Size i=0; i<size;i++)
+    for(Size i=0; i<size; i++)
         dataCheck(data[i]);
+
 }
 
 
