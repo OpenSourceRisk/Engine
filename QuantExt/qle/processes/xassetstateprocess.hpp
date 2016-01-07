@@ -31,7 +31,7 @@ class XAssetStateProcess : public StochasticProcess {
     Disposable<Array> drift(Time t, const Array &x) const;
     Disposable<Matrix> diffusion(Time t, const Array &x) const;
 
-    /* !specific members */
+    /*! specific members */
     void flushCache();
 
   private:
