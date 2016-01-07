@@ -275,24 +275,6 @@ inline Real XAssetModel::integral_helper(const Size hi, const Size hj,
                                          const Size sigmai, const Size sigmaj,
                                          const Real t) const {
     const Size na = Null<Size>();
-    // only debug
-    // QL_REQUIRE(hi == na || hi < nIrLgm1f_, "hi (" << hi << ") out of range
-    // 0..."
-    //                                               << nIrLgm1f_ - 1);
-    // QL_REQUIRE(hj == na || hj < nIrLgm1f_, "hj (" << hj << ") out of range
-    // 0..."
-    //                                               << nIrLgm1f_ - 1);
-    // QL_REQUIRE(alphai == na || alphai < nIrLgm1f_,
-    //            "alphai (" << alphai << ") out of range 0..." << nIrLgm1f_ -
-    //            1);
-    // QL_REQUIRE(alphaj == na || alphaj < nIrLgm1f_,
-    //            "alphaj (" << alphaj << ") out of range 0..." << nIrLgm1f_ -
-    //            1);
-    // QL_REQUIRE(sigmai == na || sigmai < nFxBs_,
-    //            "alphai (" << sigmai << ") out of range 0..." << nFxBs_ - 1);
-    // QL_REQUIRE(sigmaj == na || sigmaj < nFxBs_,
-    //            "alphaj (" << sigmaj << ") out of range 0..." << nFxBs_ - 1);
-    // end only debug
     Size i1 = Null<Size>(), j1 = Null<Size>();
     Size i2 = Null<Size>(), j2 = Null<Size>();
     Real res = 1.0;
@@ -320,29 +302,9 @@ inline Real XAssetModel::integral_helper(const Size hi, const Size hj,
         res *= fxbs(sigmaj)->sigma(t);
         j2 = sigmaj;
     }
-    // either i1 (j1) or i2 (j2) is not null
-    // but not both of them at the same time
-    // only debug
-    // QL_REQUIRE(i1 != na || i2 != na,
-    //            "both i1 and i2 are null (hi,hj,ai,aj,si,sj)=("
-    //                << hi << "," << hj << "," << alphai << "," << alphaj <<
-    //                ","
-    //                << sigmai << "," << sigmaj << ")");
-    // QL_REQUIRE(j1 != na || j2 != na,
-    //            "both j1 and j2 are null (hi,hj,ai,aj,si,sj)=("
-    //                << hi << "," << hj << "," << alphai << "," << alphaj <<
-    //                ","
-    //                << sigmai << "," << sigmaj << ")");
-    // end only debug
     Size i = i1 != Null<Size>() ? i1 : i2 + nIrLgm1f_;
     Size j = j1 != Null<Size>() ? j1 : j2 + nIrLgm1f_;
     res *= rho_[i][j];
-    // std::clog << (hi == Null<Size>() ? 0 : 1) << (hj == Null<Size>() ? 0 : 1)
-    //           << (alphai == Null<Size>() ? 0 : 1)
-    //           << (alphaj == Null<Size>() ? 0 : 1)
-    //           << (sigmai == Null<Size>() ? 0 : 1)
-    //           << (sigmaj == Null<Size>() ? 0 : 1) << " => " << res
-    //           << std::endl;
     return res;
 }
 
