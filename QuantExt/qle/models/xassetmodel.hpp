@@ -115,10 +115,14 @@ class XAssetModel : public LinkableCalibratedModel {
     void setIntegrationPolicy(const boost::shared_ptr<Integrator> integrator,
                               const bool usePiecewiseIntegration = true) const;
 
-    Real ir_expectation(const Size i, const Time t0, const Real zi_0,
-                        const Real dt) const;
-    Real fx_expectation(const Size i, const Time t0, const Real xi_0,
-                        const Real zi_0, const Real z0_0, const Real dt) const;
+    /*! moments, some expressions are splitted (their sum gives the result)
+        in order to allow for efficient caching of results in other classes */
+    Real ir_expectation_1(const Size i, const Time t0, const Real dt) const;
+    Real ir_expectation_2(const Size i, const Real zi_0) const;
+    Real fx_expectation_1(const Size i, const Time t0, const Real dt) const;
+    Real fx_expectation_2(const Size i, const Time t0, const Real xi_0,
+                          const Real zi_0, const Real z0_0,
+                          const Real dt) const;
     Real ir_ir_covariance(const Size i, const Size j, const Time t0,
                           Time dt) const;
     Real ir_fx_covariance(const Size i, const Size j, const Time t0,
@@ -308,8 +312,8 @@ inline Real XAssetModel::integral_helper(const Size hi, const Size hj,
     return res;
 }
 
-inline Real XAssetModel::ir_expectation(const Size i, const Time t0,
-                                        const Real zi_0, const Real dt) const {
+inline Real XAssetModel::ir_expectation_1(const Size i, const Time t0,
+                                          const Real dt) const {
     const Size na = Null<Size>();
     Real res = 0.0;
     if (i > 0) {
@@ -317,13 +321,15 @@ inline Real XAssetModel::ir_expectation(const Size i, const Time t0,
                integral(na, na, i, na, na, i - 1, t0, t0 + dt) +
                integral(0, na, 0, i, na, na, t0, t0 + dt);
     }
-    res += zi_0;
     return res;
 }
 
-inline Real XAssetModel::fx_expectation(const Size i, const Time t0,
-                                        const Real xi_0, const Real zi_0,
-                                        const Real z0_0, const Real dt) const {
+inline Real XAssetModel::ir_expectation_2(const Size i, const Real zi_0) const {
+    return zi_0;
+}
+
+inline Real XAssetModel::fx_expectation_1(const Size i, const Time t0,
+                                          const Real dt) const {
     const Size na = Null<Size>();
     Real res = std::log(irlgm1f(i + 1)->termStructure()->discount(t0 + dt) /
                         irlgm1f(i + 1)->termStructure()->discount(t0) *
@@ -347,8 +353,15 @@ inline Real XAssetModel::fx_expectation(const Size i, const Time t0,
     res += -integral(i + 1, i + 1, i + 1, i + 1, na, na, t0, t0 + dt) +
            integral(0, 0, i + 1, i + 1, na, na, t0, t0 + dt) -
            integral(i + 1, na, i + 1, na, na, i, t0, t0 + dt);
-    res += xi_0 + (irlgm1f(0)->H(t0 + dt) - irlgm1f(0)->H(t0)) * z0_0 -
-           (irlgm1f(i + 1)->H(t0 + dt) - irlgm1f(i + 1)->H(t0)) * zi_0;
+    return res;
+}
+
+inline Real XAssetModel::fx_expectation_2(const Size i, const Time t0,
+                                          const Real xi_0, const Real zi_0,
+                                          const Real z0_0,
+                                          const Real dt) const {
+    Real res = xi_0 + (irlgm1f(0)->H(t0 + dt) - irlgm1f(0)->H(t0)) * z0_0 -
+               (irlgm1f(i + 1)->H(t0 + dt) - irlgm1f(i + 1)->H(t0)) * zi_0;
     return res;
 }
 

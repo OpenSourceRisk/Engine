@@ -13,6 +13,8 @@
 
 #include <ql/stochasticprocess.hpp>
 
+#include <boost/unordered_map.hpp>
+
 using namespace QuantLib;
 
 namespace QuantExt {
@@ -32,7 +34,7 @@ class XAssetStateProcess : public StochasticProcess {
     Disposable<Matrix> diffusion(Time t, const Array &x) const;
 
     /*! specific members */
-    void flushCache();
+    void flushCache() const;
 
   private:
     const XAssetModel *const model_;
@@ -47,11 +49,44 @@ class XAssetStateProcess : public StochasticProcess {
         virtual Disposable<Matrix> covariance(const StochasticProcess &,
                                               Time t0, const Array &x0,
                                               Time dt) const;
+        void flushCache() const;
 
       private:
         const XAssetModel *const model_;
+
+        // cache for exact discretization
+        struct cache_key {
+            double t0, dt;
+            const bool operator==(const cache_key &o) const {
+                return (t0 == o.t0) && (dt == o.dt);
+            }
+        };
+
+        struct cache_hasher : std::unary_function<cache_key, std::size_t> {
+            std::size_t operator()(cache_key const &x) const {
+                std::size_t seed = 0;
+                boost::hash_combine(seed, x.t0);
+                boost::hash_combine(seed, x.dt);
+                return seed;
+            }
+        };
+        mutable boost::unordered_map<cache_key, Array, cache_hasher> cache_m_;
+        mutable boost::unordered_map<cache_key, Matrix, cache_hasher> cache_v_,
+            cache_d_;
     };
 
+    // cache for process drift and diffusion (e.g. used in Euler discretization)
+    struct cache_hasher : std::unary_function<double, std::size_t> {
+        std::size_t operator()(double const &x) const {
+            std::size_t seed = 0;
+            boost::hash_combine(seed, x);
+            return seed;
+        }
+    };
+
+    mutable boost::unordered_map<double, Array, cache_hasher> cache_m_;
+    mutable boost::unordered_map<double, Matrix, cache_hasher> cache_v_,
+        cache_d_;
 };
 
 } // namesapce QuantExt
