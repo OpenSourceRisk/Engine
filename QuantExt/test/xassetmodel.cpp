@@ -136,38 +136,16 @@ void XAssetModelTest::testCcyLgm3fForeignPayouts() {
         boost::make_shared<FxBsPiecewiseConstantParametrization>(
             USDCurrency(), usdEurSpotToday, fxTimes, fxSigmas);
 
-    // boost::shared_ptr<Lgm1::model_type> eurLgm =
-    //     boost::make_shared<Lgm1>(eurYts, volstepdatesEur, eurVols, 0.02);
-    // boost::shared_ptr<Lgm1::model_type> usdLgm =
-    //     boost::make_shared<Lgm1>(usdYts, volstepdatesUsd, usdVols, 0.04);
-
-    // std::vector<boost::shared_ptr<Lgm1::model_type> > singleModels;
-    // singleModels.push_back(eurLgm);
-    // singleModels.push_back(usdLgm);
-
-    // std::vector<Handle<YieldTermStructure> > curves;
-    // curves.push_back(eurYts);
-    // curves.push_back(usdYts);
-
     std::vector<boost::shared_ptr<Parametrization> > singleModels;
     singleModels.push_back(eurLgmParam);
     singleModels.push_back(usdLgmParam);
     singleModels.push_back(fxUsdEurBsParam);
 
     Matrix c(3, 3);
-    //  FX             EUR         USD
-    c[0][0] = 1.0;
-    c[0][1] = 0.8;
-    c[0][2] = -0.5; // FX
-    c[1][0] = 0.8;
-    c[1][1] = 1.0;
-    c[1][2] = -0.2; // EUR
-    c[2][0] = -0.5;
-    c[2][1] = -0.2;
-    c[2][2] = 1.0; // USD
-
-    // boost::shared_ptr<CcLgm1> ccLgm = boost::make_shared<CcLgm1>(
-    //     singleModels, fxSpots, volstepdatesFx, fxVolatilities, c, curves);
+    //  EUR            USD         FX
+    c[0][0] = 1.0; c[0][1] = -0.2; c[0][2] = 0.8;  // EUR
+    c[1][0] = -0.2; c[1][1] = 1.0; c[1][2] = -0.5; // USD
+    c[2][0] = 0.8; c[2][1] = -0.5; c[2][2] = 1.0;  // FX
 
     boost::shared_ptr<XAssetModel> ccLgm =
         boost::make_shared<XAssetModel>(singleModels, c);
@@ -181,7 +159,7 @@ void XAssetModelTest::testCcyLgm3fForeignPayouts() {
 
     // path generation
 
-    Size n = 25;     // 500000; // number of paths
+    Size n = 500000; // number of paths
     Size seed = 121; // seed
     // maturity of test payoffs
     Time T = 5.0;
@@ -209,9 +187,9 @@ void XAssetModelTest::testCcyLgm3fForeignPayouts() {
         Sample<MultiPath> path = pg.next();
         Sample<Path> path2 = pg2.next();
         Size l = path.value[0].length() - 1;
-        Real fx = std::exp(path.value[0][l]);
-        Real zeur = path.value[1][l];
-        Real zusd = path.value[2][l];
+        Real fx = std::exp(path.value[2][l]);
+        Real zeur = path.value[0][l];
+        Real zusd = path.value[1][l];
         Real zusd2 = path2.value[l];
 
         // 1 USD paid at T deflated with EUR numeraire
@@ -236,10 +214,6 @@ void XAssetModelTest::testCcyLgm3fForeignPayouts() {
             boost::make_shared<PlainVanillaPayoff>(Option::Call, 0.9),
             boost::make_shared<EuropeanExercise>(referenceDate + 5 * 365));
 
-    // boost::shared_ptr<PricingEngine> ccLgmFxOptionEngine =
-    //     boost::make_shared<CcLgmAnalyticFxOptionEngine<
-    //         CcLgm1::cclgm_model_type, CcLgm1::lgmfx_model_type,
-    //         CcLgm1::lgm_model_type> >(ccLgm, 0);
     boost::shared_ptr<PricingEngine> ccLgmFxOptionEngine =
         boost::make_shared<AnalyticCcLgmFxOptionEngine>(ccLgm, 0);
 
