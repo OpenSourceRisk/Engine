@@ -29,7 +29,8 @@ using boost::unit_test::test_suite;
 #endif
 
 // Lib test suites
-// #include ...
+#include "discountcurve.hpp"
+#include "logquote.hpp"
 
 namespace {
 
@@ -56,7 +57,8 @@ test_suite* init_unit_test_suite(int, char* []) {
 
   test->add(BOOST_TEST_CASE(startTimer));
 
-  // test->add(SomeTest::suite());
+  test->add(LogQuoteTest::suite());
+  test->add(DiscountCurveTest::suite());
 
   test->add(BOOST_TEST_CASE(stopTimer));
 

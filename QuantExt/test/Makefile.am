@@ -1,6 +1,8 @@
 
 QLE_TESTS = \
-	testsuite.cpp
+	testsuite.cpp \
+	discountcurve.hpp discountcurve.cpp \
+	logquote.hpp logquote.cpp
 
 dist-hook:
 	mkdir -p $(distdir)/build
