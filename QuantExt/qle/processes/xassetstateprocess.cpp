@@ -61,7 +61,7 @@ Disposable<Array> XAssetStateProcess::drift(Time t, const Array &x) const {
     Real Hprime0 = model_->irlgm1f(0)->Hprime(t);
     Real alpha0 = model_->irlgm1f(0)->alpha(t);
     Real zeta0 = model_->irlgm1f(0)->zeta(t);
-    typename boost::unordered_map<double, Array>::iterator i = cache_m_.find(t);
+    boost::unordered_map<double, Array>::iterator i = cache_m_.find(t);
     if (i == cache_m_.end()) {
         /* z0 has drift 0 */
         for (Size i = 1; i < n; ++i) {
@@ -100,8 +100,7 @@ Disposable<Array> XAssetStateProcess::drift(Time t, const Array &x) const {
 }
 
 Disposable<Matrix> XAssetStateProcess::diffusion(Time t, const Array &) const {
-    typename boost::unordered_map<double, Matrix>::iterator i =
-        cache_d_.find(t);
+    boost::unordered_map<double, Matrix>::iterator i = cache_d_.find(t);
     if (i == cache_d_.end()) {
         Matrix res(model_->dimension(), model_->dimension());
         Size n = model_->currencies();
@@ -145,12 +144,11 @@ XAssetStateProcess::ExactDiscretization::ExactDiscretization(
     : model_(model) {}
 
 Disposable<Array> XAssetStateProcess::ExactDiscretization::drift(
-    const StochasticProcess &p, Time t0, const Array &x0, Time dt) const {
+    const StochasticProcess &, Time t0, const Array &x0, Time dt) const {
     Size n = model_->currencies();
     Array res(model_->dimension(), 0.0);
     cache_key k = {t0, dt};
-    typename boost::unordered_map<cache_key, Array>::iterator i =
-        cache_m_.find(k);
+    boost::unordered_map<cache_key, Array>::iterator i = cache_m_.find(k);
     if (i == cache_m_.end()) {
         for (Size i = 0; i < model_->currencies(); ++i) {
             res[i] = model_->ir_expectation_1(i, t0, dt);
@@ -175,8 +173,7 @@ Disposable<Array> XAssetStateProcess::ExactDiscretization::drift(
 Disposable<Matrix> XAssetStateProcess::ExactDiscretization::diffusion(
     const StochasticProcess &p, Time t0, const Array &x0, Time dt) const {
     cache_key k = {t0, dt};
-    typename boost::unordered_map<cache_key, Matrix>::iterator i =
-        cache_d_.find(k);
+    boost::unordered_map<cache_key, Matrix>::iterator i = cache_d_.find(k);
     if (i == cache_d_.end()) {
         Matrix res =
             pseudoSqrt(covariance(p, t0, x0, dt), SalvagingAlgorithm::Spectral);
@@ -191,10 +188,9 @@ Disposable<Matrix> XAssetStateProcess::ExactDiscretization::diffusion(
 }
 
 Disposable<Matrix> XAssetStateProcess::ExactDiscretization::covariance(
-    const StochasticProcess &p, Time t0, const Array &x0, Time dt) const {
+    const StochasticProcess &, Time t0, const Array &, Time dt) const {
     cache_key k = {t0, dt};
-    typename boost::unordered_map<cache_key, Matrix>::iterator i =
-        cache_v_.find(k);
+    boost::unordered_map<cache_key, Matrix>::iterator i = cache_v_.find(k);
     if (i == cache_v_.end()) {
         Matrix res(model_->dimension(), model_->dimension());
         Size n = model_->currencies();

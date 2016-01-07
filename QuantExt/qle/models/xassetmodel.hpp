@@ -324,7 +324,7 @@ inline Real XAssetModel::ir_expectation_1(const Size i, const Time t0,
     return res;
 }
 
-inline Real XAssetModel::ir_expectation_2(const Size i, const Real zi_0) const {
+inline Real XAssetModel::ir_expectation_2(const Size, const Real zi_0) const {
     return zi_0;
 }
 

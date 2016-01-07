@@ -57,7 +57,7 @@ class XAssetStateProcess : public StochasticProcess {
         // cache for exact discretization
         struct cache_key {
             double t0, dt;
-            const bool operator==(const cache_key &o) const {
+            bool operator==(const cache_key &o) const {
                 return (t0 == o.t0) && (dt == o.dt);
             }
         };
