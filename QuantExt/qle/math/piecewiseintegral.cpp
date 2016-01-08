@@ -1,5 +1,8 @@
 /* -*- mode: c++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 
+/* This file is supposed to be part of the QuantLib library eventually,
+   in the meantime we provide is as part of the QuantExt library. */
+
 /*
  Copyright (C) 2015 Peter Caspers
 
