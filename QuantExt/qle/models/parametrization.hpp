@@ -108,8 +108,8 @@ Parametrization::parameter(const Size) const {
 inline Disposable<Array> Parametrization::parameterValues(const Size i) const {
     const Array &tmp = parameter(i)->params();
     Array res(tmp.size());
-    for (Size i = 0; i < res.size(); ++i) {
-        res[i] = direct(i, tmp[i]);
+    for (Size ii = 0; ii < res.size(); ++ii) {
+        res[ii] = direct(i, tmp[ii]);
     }
     return res;
 }
