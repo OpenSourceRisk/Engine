@@ -104,26 +104,26 @@ Disposable<Matrix> XAssetStateProcess::diffusion(Time t, const Array &) const {
     if (i == cache_d_.end()) {
         Matrix res(model_->dimension(), model_->dimension());
         Size n = model_->currencies();
-        for (Size i = 0; i < n; ++i) {
+        for (Size i = 0; i < 2 * n - 1; ++i) {
             for (Size j = 0; j <= i; ++j) {
-                Real alphai = model_->irlgm1f(i)->alpha(t);
-                Real alphaj = model_->irlgm1f(j)->alpha(t);
-                Real rhozz = model_->correlation()[i][j];
-                // ir-ir
-                res[i][j] = res[j][i] = alphai * alphaj * rhozz;
-                // ir-fx
-                if (i > 0) {
-                    Real sigmai = model_->fxbs(i - 1)->sigma(t);
-                    Real rhozx = model_->correlation()[j][n + i - 1];
-                    res[j][n + i - 1] = res[n + i - 1][j] =
-                        alphaj * sigmai * rhozx;
-                    // fx-fx
-                    if (j > 0) {
-                        Real sigmaj = model_->fxbs(j - 1)->sigma(t);
-                        Real rhoxx =
-                            model_->correlation()[n + i - 1][n + j - 1];
-                        res[n + i - 1][n + j - 1] = res[n + j - 1][n + i - 1] =
-                            sigmai * sigmaj * rhoxx;
+                if (i < n) {
+                    Real alphai = model_->irlgm1f(i)->alpha(t);
+                    Real alphaj = model_->irlgm1f(j)->alpha(t);
+                    Real rhozz = model_->correlation()[i][j];
+                    // ir-ir
+                    res[i][j] = res[j][i] = alphai * alphaj * rhozz;
+                } else {
+                    Real sigmai = model_->fxbs(i - n)->sigma(t);
+                    if (j < n) {
+                        // ir-fx
+                        Real alphaj = model_->irlgm1f(j)->alpha(t);
+                        Real rhozx = model_->correlation()[i][j];
+                        res[i][j] = res[j][i] = alphaj * sigmai * rhozx;
+                    } else {
+                        // fx-fx
+                        Real sigmaj = model_->fxbs(j - n)->sigma(t);
+                        Real rhoxx = model_->correlation()[i][j];
+                        res[i][j] = res[j][i] = sigmai * sigmaj * rhoxx;
                     }
                 }
             }
@@ -194,15 +194,18 @@ Disposable<Matrix> XAssetStateProcess::ExactDiscretization::covariance(
     if (i == cache_v_.end()) {
         Matrix res(model_->dimension(), model_->dimension());
         Size n = model_->currencies();
-        for (Size i = 0; i < n; ++i) {
+        for (Size i = 0; i < 2 * n - 1; ++i) {
             for (Size j = 0; j <= i; ++j) {
-                res[i][j] = res[j][i] = model_->ir_ir_covariance(i, j, t0, dt);
-                if (i > 0) {
-                    res[j][n + i - 1] = res[n + i - 1][j] =
-                        model_->ir_fx_covariance(j, i - 1, t0, dt);
-                    if (j > 0) {
-                        res[n + i - 1][n + j - 1] = res[n + j - 1][n + i - 1] =
-                            model_->fx_fx_covariance(i - 1, j - 1, t0, dt);
+                if (i < n) {
+                    res[i][j] = res[j][i] =
+                        model_->ir_ir_covariance(i, j, t0, dt);
+                } else {
+                    if (j < n) {
+                        res[i][j] = res[j][i] =
+                            model_->ir_fx_covariance(j, i - n, t0, dt);
+                    } else {
+                        res[j][i] = res[i][j] =
+                            model_->fx_fx_covariance(i - n, j - n, t0, dt);
                     }
                 }
             }
