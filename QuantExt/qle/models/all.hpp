@@ -5,6 +5,7 @@
 #include <qle/models/eqbsparametrization.hpp>
 #include <qle/models/fxbsparametrization.hpp>
 #include <qle/models/fxbspiecewiseconstantparametrization.hpp>
+#include <qle/models/fxoptionhelper.hpp>
 #include <qle/models/gaussian1dxassetadaptor.hpp>
 #include <qle/models/infjyparametrization.hpp>
 #include <qle/models/irlgm1fconstantparametrization.hpp>
