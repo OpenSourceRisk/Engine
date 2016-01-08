@@ -26,6 +26,9 @@ class Gaussian1dXAssetAdaptor : public Gaussian1dModel {
 
   private:
     /*! Gaussian1dModel interface */
+    /*! Note that we should enable preferDeflatedZerobond because this is
+        more efficient as soon as the Gaussian1dModel interface is
+        updated in the official QuantLib to the latest version */
     const Real numeraireImpl(const Time t, const Real y,
                              const Handle<YieldTermStructure> &yts) const;
     const Real zerobondImpl(const Time T, const Time t, const Real y,
