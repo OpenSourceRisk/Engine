@@ -12,6 +12,7 @@
 #define quantext_xasset_stateprocess_hpp
 
 #include <ql/stochasticprocess.hpp>
+#include <ql/math/matrixutilities/pseudosqrt.hpp>
 
 #include <boost/unordered_map.hpp>
 
@@ -25,7 +26,9 @@ class XAssetStateProcess : public StochasticProcess {
   public:
     enum discretization { exact, euler };
 
-    XAssetStateProcess(const XAssetModel *const model, discretization disc);
+    XAssetStateProcess(
+        const XAssetModel *const model, discretization disc,
+        SalvagingAlgorithm::Type salvaging = SalvagingAlgorithm::Spectral);
 
     /*! StochasticProcess interface */
     Size size() const;
@@ -38,10 +41,13 @@ class XAssetStateProcess : public StochasticProcess {
 
   private:
     const XAssetModel *const model_;
+    SalvagingAlgorithm::Type salvaging_;
 
     class ExactDiscretization : public StochasticProcess::discretization {
       public:
-        ExactDiscretization(const XAssetModel *const model);
+        ExactDiscretization(
+            const XAssetModel *const model,
+            SalvagingAlgorithm::Type salvaging = SalvagingAlgorithm::Spectral);
         virtual Disposable<Array> drift(const StochasticProcess &, Time t0,
                                         const Array &x0, Time dt) const;
         virtual Disposable<Matrix> diffusion(const StochasticProcess &, Time t0,
@@ -53,6 +59,7 @@ class XAssetStateProcess : public StochasticProcess {
 
       private:
         const XAssetModel *const model_;
+        SalvagingAlgorithm::Type salvaging_;
 
         // cache for exact discretization
         struct cache_key {

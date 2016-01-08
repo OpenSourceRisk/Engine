@@ -5,7 +5,6 @@
 */
 
 #include <qle/models/xassetmodel.hpp>
-#include <qle/processes/xassetstateprocess.hpp>
 #include <ql/math/matrixutilities/pseudosqrt.hpp>
 #include <ql/processes/eulerdiscretization.hpp>
 
@@ -14,14 +13,16 @@
 namespace QuantExt {
 
 XAssetStateProcess::XAssetStateProcess(const XAssetModel *const model,
-                                       discretization disc)
-    : StochasticProcess(), model_(model) {
+                                       discretization disc,
+                                       SalvagingAlgorithm::Type salvaging)
+    : StochasticProcess(), model_(model), salvaging_(salvaging) {
 
     if (disc == euler) {
         discretization_ = boost::make_shared<EulerDiscretization>();
     } else {
         discretization_ =
-            boost::make_shared<XAssetStateProcess::ExactDiscretization>(model);
+            boost::make_shared<XAssetStateProcess::ExactDiscretization>(
+                model, salvaging);
     }
 
     QL_REQUIRE(2 * model_->currencies() - 1 == model_->dimension(),
@@ -128,7 +129,7 @@ Disposable<Matrix> XAssetStateProcess::diffusion(Time t, const Array &) const {
                 }
             }
         }
-        Matrix tmp = pseudoSqrt(res, SalvagingAlgorithm::Spectral);
+        Matrix tmp = pseudoSqrt(res, salvaging_);
         cache_d_.insert(std::make_pair(t, tmp));
         return tmp;
     } else {
@@ -140,8 +141,8 @@ Disposable<Matrix> XAssetStateProcess::diffusion(Time t, const Array &) const {
 }
 
 XAssetStateProcess::ExactDiscretization::ExactDiscretization(
-    const XAssetModel *const model)
-    : model_(model) {}
+    const XAssetModel *const model, SalvagingAlgorithm::Type salvaging)
+    : model_(model), salvaging_(salvaging) {}
 
 Disposable<Array> XAssetStateProcess::ExactDiscretization::drift(
     const StochasticProcess &, Time t0, const Array &x0, Time dt) const {
@@ -175,8 +176,7 @@ Disposable<Matrix> XAssetStateProcess::ExactDiscretization::diffusion(
     cache_key k = {t0, dt};
     boost::unordered_map<cache_key, Matrix>::iterator i = cache_d_.find(k);
     if (i == cache_d_.end()) {
-        Matrix res =
-            pseudoSqrt(covariance(p, t0, x0, dt), SalvagingAlgorithm::Spectral);
+        Matrix res = pseudoSqrt(covariance(p, t0, x0, dt), salvaging_);
         // note that covariance actually does not depend on x0
         cache_d_.insert(std::make_pair(k, res));
         return res;

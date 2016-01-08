@@ -270,8 +270,8 @@ void XAssetModelTest::testLgm1fCalibration() {
     parametrizations.push_back(fx_p);
     Matrix rho(3, 3, 0.0);
     rho[0][0] = rho[1][1] = rho[2][2] = 1.0;
-    boost::shared_ptr<XAssetModel> xmodel =
-        boost::make_shared<XAssetModel>(parametrizations, rho);
+    boost::shared_ptr<XAssetModel> xmodel = boost::make_shared<XAssetModel>(
+        parametrizations, rho, SalvagingAlgorithm::None);
 
     // .. whose EUR component we calibrate as before and compare the
     // result against the 1d case and as well check that the USD
@@ -417,7 +417,7 @@ void XAssetModelTest::testCcyLgm3fForeignPayouts() {
     c[2][0] = 0.8;c [2][1] = -0.5;  c[2][2] = 1.0;  // FX
 
     boost::shared_ptr<XAssetModel> ccLgm =
-        boost::make_shared<XAssetModel>(singleModels, c);
+        boost::make_shared<XAssetModel>(singleModels, c, SalvagingAlgorithm::None);
 
     boost::shared_ptr<Lgm> eurLgm = boost::make_shared<Lgm>(eurLgmParam);
     boost::shared_ptr<Lgm> usdLgm = boost::make_shared<Lgm>(usdLgmParam);
@@ -684,9 +684,9 @@ void XAssetModelTest::testLgm4fAndFxCalibration() {
     }
 
     boost::shared_ptr<XAssetModel> ccLgm =
-        boost::make_shared<XAssetModel>(singleModels, c);
+        boost::make_shared<XAssetModel>(singleModels, c, SalvagingAlgorithm::None);
     boost::shared_ptr<XAssetModel> ccLgmProjected =
-        boost::make_shared<XAssetModel>(singleModelsProjected, cProjected);
+        boost::make_shared<XAssetModel>(singleModelsProjected, cProjected, SalvagingAlgorithm::None);
 
     boost::shared_ptr<PricingEngine> ccLgmFxOptionEngineUsd =
         boost::make_shared<AnalyticCcLgmFxOptionEngine>(ccLgm, 0);
@@ -835,7 +835,7 @@ void XAssetModelTest::testLgm4fAndFxCalibration() {
     // relative tolerance for error estimates
     Real errorTol = 0.2;
     // absolute error should be less than errFac * error estimate
-    Real errFac = 1.5;
+    Real errFac = 2.0;
     Real expected_eom[] = {0.00013, 0.00013, 0.00016, 0.0031, 0.0042};
 
     for (Size i = 0; i < 5; ++i) {

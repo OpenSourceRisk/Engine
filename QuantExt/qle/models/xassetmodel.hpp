@@ -66,7 +66,8 @@ class XAssetModel : public LinkableCalibratedModel {
         - COM (optionally) ccy must be a subset of the IR ccys) */
     XAssetModel(const std::vector<boost::shared_ptr<Parametrization> >
                     &parametrizations,
-                const Matrix &correlation);
+                const Matrix &correlation, SalvagingAlgorithm::Type salvaging =
+                                               SalvagingAlgorithm::Spectral);
 
     /*! allow for time dependent correlation (2nd ctor) */
 
@@ -194,6 +195,7 @@ class XAssetModel : public LinkableCalibratedModel {
     Size totalNumberOfParameters_;
     const std::vector<boost::shared_ptr<Parametrization> > p_;
     const Matrix rho_;
+    SalvagingAlgorithm::Type salvaging_;
     mutable boost::shared_ptr<Integrator> integrator_;
     boost::shared_ptr<XAssetStateProcess> stateProcessExact_,
         stateProcessEuler_;

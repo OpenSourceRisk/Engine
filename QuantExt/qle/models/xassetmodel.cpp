@@ -15,8 +15,9 @@ namespace QuantExt {
 
 XAssetModel::XAssetModel(
     const std::vector<boost::shared_ptr<Parametrization> > &parametrizations,
-    const Matrix &correlation)
-    : LinkableCalibratedModel(), p_(parametrizations), rho_(correlation) {
+    const Matrix &correlation, SalvagingAlgorithm::Type salvaging)
+    : LinkableCalibratedModel(), p_(parametrizations), rho_(correlation),
+      salvaging_(salvaging) {
     initialize();
 }
 
@@ -31,10 +32,10 @@ void XAssetModel::initialize() {
                          true);
 
     // create state processes
-    stateProcessEuler_ =
-        boost::make_shared<XAssetStateProcess>(this, XAssetStateProcess::euler);
-    stateProcessExact_ =
-        boost::make_shared<XAssetStateProcess>(this, XAssetStateProcess::exact);
+    stateProcessEuler_ = boost::make_shared<XAssetStateProcess>(
+        this, XAssetStateProcess::euler, salvaging_);
+    stateProcessExact_ = boost::make_shared<XAssetStateProcess>(
+        this, XAssetStateProcess::exact, salvaging_);
 }
 
 void XAssetModel::setIntegrationPolicy(
@@ -148,10 +149,10 @@ void XAssetModel::initializeCorrelation() {
                        "correlation matrix has invalid entry at (i,j)=("
                            << i << "," << j << ") equal to " << rho_[i][j]);
         }
-        QL_REQUIRE(
-            close_enough(rho_[i][i], 1.0),
-            "correlation matrix must have unit diagonal elements, but rho(i,i)="
-                << rho_[i][i] << " for i=" << i);
+        QL_REQUIRE(close_enough(rho_[i][i], 1.0),
+                   "correlation matrix must have unit diagonal elements, "
+                   "but rho(i,i)="
+                       << rho_[i][i] << " for i=" << i);
     }
 
     SymmetricSchurDecomposition ssd(rho_);
