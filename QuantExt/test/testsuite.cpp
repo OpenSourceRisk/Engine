@@ -34,33 +34,33 @@ using boost::unit_test::test_suite;
 
 namespace {
 
-  boost::timer t;
+    boost::timer t;
 
-  void startTimer() { t.restart(); }
-  void stopTimer() {
-    double seconds = t.elapsed();
-    int hours = int(seconds/3600);
-    seconds -= hours * 3600;
-    int minutes = int(seconds/60);
-    seconds -= minutes * 60;
-    std::cout << endl << " QuantExt tests completed in ";
-    if (hours > 0) cout << hours << " h ";
-    if (hours > 0 || minutes > 0) cout << minutes << " m ";
-    cout << fixed << setprecision(0) << seconds << " s" << endl << endl;
-  }
-  
+    void startTimer() { t.restart(); }
+    void stopTimer() {
+        double seconds = t.elapsed();
+        int hours = int(seconds/3600);
+        seconds -= hours * 3600;
+        int minutes = int(seconds/60);
+        seconds -= minutes * 60;
+        std::cout << endl << " QuantExt tests completed in ";
+        if (hours > 0) cout << hours << " h ";
+        if (hours > 0 || minutes > 0) cout << minutes << " m ";
+        cout << fixed << setprecision(0) << seconds << " s" << endl << endl;
+    }
+
 }
 
 test_suite* init_unit_test_suite(int, char* []) {
 
-  test_suite* test = BOOST_TEST_SUITE("QuantExtTestSuite");
+    test_suite* test = BOOST_TEST_SUITE("QuantExtTestSuite");
 
-  test->add(BOOST_TEST_CASE(startTimer));
+    test->add(BOOST_TEST_CASE(startTimer));
 
-  test->add(LogQuoteTest::suite());
-  test->add(DiscountCurveTest::suite());
+    test->add(LogQuoteTest::suite());
+    test->add(DiscountCurveTest::suite());
 
-  test->add(BOOST_TEST_CASE(stopTimer));
+    test->add(BOOST_TEST_CASE(stopTimer));
 
-  return test;
+    return test;
 }
