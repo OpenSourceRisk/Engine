@@ -22,6 +22,11 @@ class Lgm : public Observer, public Observable {
 
   public:
     Lgm(const boost::shared_ptr<IrLgm1fParametrization> &parametrization);
+    /*! the model shares the parametrization with the xasset model instance,
+        so a calibration changes the component of the xasset model as well,
+        however update() on the xAsset model must be called, because the
+        caches of its state processes need to be flushed  */
+    Lgm(const boost::shared_ptr<XAssetModel> &model, const Size ccy);
 
     const boost::shared_ptr<StochasticProcess1D> stateProcess() const;
     const boost::shared_ptr<IrLgm1fParametrization> parametrization() const;
@@ -32,7 +37,29 @@ class Lgm : public Observer, public Observable {
     Real discountBondOption(Option::Type type, const Real K, const Time t,
                             const Time S, const Time T) const;
 
-    void calibrateIrVolatilitiesIterative();
+    /*! calibrate volatilities to a sequence of ir options with
+        expiry times equal to step times in the parametrization */
+    void calibrateVolatilitiesIterative(
+        const std::vector<boost::shared_ptr<CalibrationHelper> > &helpers,
+        OptimizationMethod &method, const EndCriteria &endCriteria,
+        const Constraint &constraint = Constraint(),
+        const std::vector<Real> &weights = std::vector<Real>());
+
+    /*! calibrate reversion to a sequence of ir options with
+        maturities equal to step times in the parametrization */
+    void calibrateReversionsIterative(
+        const std::vector<boost::shared_ptr<CalibrationHelper> > &helpers,
+        OptimizationMethod &method, const EndCriteria &endCriteria,
+        const Constraint &constraint = Constraint(),
+        const std::vector<Real> &weights = std::vector<Real>());
+
+    /*! calibrate parameters for one ccy globally to a set
+        of ir options */
+    void calibrateGlobal(
+        const std::vector<boost::shared_ptr<CalibrationHelper> > &helpers,
+        OptimizationMethod &method, const EndCriteria &endCriteria,
+        const Constraint &constraint = Constraint(),
+        const std::vector<Real> &weights = std::vector<Real>());
 
     /*! observer interface */
     void update();
@@ -75,6 +102,30 @@ inline Real Lgm::discountBondOption(Option::Type type, const Real K,
                                     const Time t, const Time S,
                                     const Time T) const {
     return x_->discountBondOption(0, type, K, t, S, T);
+}
+
+inline void Lgm::calibrateVolatilitiesIterative(
+    const std::vector<boost::shared_ptr<CalibrationHelper> > &helpers,
+    OptimizationMethod &method, const EndCriteria &endCriteria,
+    const Constraint &constraint, const std::vector<Real> &weights) {
+    x_->calibrateIrLgm1fVolatilitiesIterative(0, helpers, method, endCriteria,
+                                              constraint, weights);
+}
+
+inline void Lgm::calibrateReversionsIterative(
+    const std::vector<boost::shared_ptr<CalibrationHelper> > &helpers,
+    OptimizationMethod &method, const EndCriteria &endCriteria,
+    const Constraint &constraint, const std::vector<Real> &weights) {
+    x_->calibrateIrLgm1fReversionsIterative(0, helpers, method, endCriteria,
+                                            constraint, weights);
+}
+
+inline void Lgm::calibrateGlobal(
+    const std::vector<boost::shared_ptr<CalibrationHelper> > &helpers,
+    OptimizationMethod &method, const EndCriteria &endCriteria,
+    const Constraint &constraint, const std::vector<Real> &weights) {
+    x_->calibrateIrLgm1fGlobal(0, helpers, method, endCriteria, constraint,
+                              weights);
 }
 
 } // namespace QuantExt

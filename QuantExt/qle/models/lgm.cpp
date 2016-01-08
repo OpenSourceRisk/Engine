@@ -13,7 +13,15 @@ Lgm::Lgm(const boost::shared_ptr<IrLgm1fParametrization> &parametrization) {
     x_ = boost::make_shared<XAssetModel>(
         std::vector<boost::shared_ptr<Parametrization> >(1, parametrization),
         Matrix(1, 1, 1.0));
-    stateProcess_ = boost::make_shared<IrLgm1fStateProcess>(parametrization);
+    stateProcess_ = boost::make_shared<IrLgm1fStateProcess>(x_->irlgm1f(0));
+}
+
+Lgm::Lgm(const boost::shared_ptr<XAssetModel> &model, const Size ccy) {
+    x_ = boost::make_shared<XAssetModel>(
+        std::vector<boost::shared_ptr<Parametrization> >(1,
+                                                         model->irlgm1f(ccy)),
+        Matrix(1, 1, 1.0));
+    stateProcess_ = boost::make_shared<IrLgm1fStateProcess>(x_->irlgm1f(0));
 }
 
 } // namespace QuantExt
