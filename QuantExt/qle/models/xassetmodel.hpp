@@ -50,10 +50,10 @@ namespace QuantExt {
     parametrizations are absolute and insensitive to shifts in the global
     evaluation date. The termstructures are required to be consistent with
     these times. The model does not observe anything, so it's update() method
-    must be explicitly called to notify observers of changes in the constituting
-    parametrizations, update these parametrizations and flushing the cache of
-    the state process. The model ensures these updates during calibration
-    though.
+    must be explicitly called to notify observers of changes in the
+    constituting parametrizations, update these parametrizations and flushing
+    the cache of the state process. The model ensures these updates during
+    calibration though.
 */
 
 class XAssetModel : public LinkableCalibratedModel {
@@ -78,6 +78,8 @@ class XAssetModel : public LinkableCalibratedModel {
     Size dimension() const;
     /*! number of currencies including domestic */
     Size currencies() const;
+    /*! total number of parameters that can be calibrated */
+    Size totalNumberOfParameters() const;
 
     /*! observer and linked calibrated model interface */
     void update();
@@ -99,16 +101,15 @@ class XAssetModel : public LinkableCalibratedModel {
         irmgl1f component */
     const boost::shared_ptr<FxBsParametrization> fxbs(const Size ccy) const;
 
-    /*! other components */
-    /* ... */
+    /* ... add more components here ...*/
 
     /*! correlation */
     const Matrix &correlation() const;
 
     /*! expectations and covariances,
-      notation follows Lichters, Stamm, Gallagher, 2015, i.e.
-      z is the ir lgm state variable,
-      x is the log spot fx */
+       notation follows Lichters, Stamm, Gallagher, 2015, i.e.
+       z is the ir lgm state variable,
+       x is the log spot fx */
 
     /*! analytic moments rely on numerical integration, which can
         be customized here */
@@ -140,17 +141,41 @@ class XAssetModel : public LinkableCalibratedModel {
 
     /*! calibrate irlgm1f volatilities to a sequence of ir options with
         expiry times equal to step times in the parametrization */
-    void calibrateIrVolatilitiesIterative();
+    void calibrateIrLgm1fVolatilitiesIterative(
+        const Size ccy,
+        const std::vector<boost::shared_ptr<CalibrationHelper> > &helpers,
+        OptimizationMethod &method, const EndCriteria &endCriteria,
+        const Constraint &constraint = Constraint(),
+        const std::vector<Real> &weights = std::vector<Real>());
+
     /*! calibrate irlgm1f reversion to a sequence of ir options with
         maturities equal to step times in the parametrization */
-    void calibrateIrReversionsIterative();
-    /*! calibrate irlgm1f parameters globally to a set of ir options */
-    void calibrateIrGlobally();
-    /*! calibrate fx volatilities to a sequence of fx options with
-        expiry times equal to step times in the parametrization */
-    void calibrateFxVolatilitiesIterative();
+    void calibrateIrLgm1fReversionsIterative(
+        const Size ccy,
+        const std::vector<boost::shared_ptr<CalibrationHelper> > &helpers,
+        OptimizationMethod &method, const EndCriteria &endCriteria,
+        const Constraint &constraint = Constraint(),
+        const std::vector<Real> &weights = std::vector<Real>());
 
-    /* ... */
+    /*! calibrate irlgm1f parameters for one ccy globally to a set
+        of ir options */
+    void calibrateIrLgm1fGlobal(
+        const Size ccy,
+        const std::vector<boost::shared_ptr<CalibrationHelper> > &helpers,
+        OptimizationMethod &method, const EndCriteria &endCriteria,
+        const Constraint &constraint = Constraint(),
+        const std::vector<Real> &weights = std::vector<Real>());
+
+    /*! calibrate fx volatilities to a sequence of fx options with
+            expiry times equal to step times in the parametrization */
+    void calibrateFxBsVolatilitiesIterative(
+        const Size ccy,
+        const std::vector<boost::shared_ptr<CalibrationHelper> > &helpers,
+        OptimizationMethod &method, const EndCriteria &endCriteria,
+        const Constraint &constraint = Constraint(),
+        const std::vector<Real> &weights = std::vector<Real>());
+
+    /* ... add more calibration procedures here ... */
 
   private:
     /*! init methods */
@@ -166,11 +191,103 @@ class XAssetModel : public LinkableCalibratedModel {
 
     /*! members */
     Size nIrLgm1f_, nFxBs_;
+    Size totalNumberOfParameters_;
     const std::vector<boost::shared_ptr<Parametrization> > p_;
     const Matrix rho_;
     mutable boost::shared_ptr<Integrator> integrator_;
     boost::shared_ptr<XAssetStateProcess> stateProcessExact_,
         stateProcessEuler_;
+
+    /*! calibration constraints */
+
+    Disposable<std::vector<bool> > MoveIrLgm1fVolatility(const Size ccy,
+                                                         const Size i) {
+        QL_REQUIRE(i < irlgm1f(ccy)->parameter(0)->size(),
+                   "irlgm1f volatility index ("
+                       << i << ") for ccy " << ccy << " out of bounds 0..."
+                       << irlgm1f(ccy)->parameter(0)->size() - 1);
+        std::vector<bool> res(0);
+        for (Size j = 0; j < nIrLgm1f_; ++j) {
+            std::vector<bool> tmp1(irlgm1f(j)->parameter(0)->size(), true);
+            if (ccy == j) {
+                tmp1[i] = false;
+            }
+            std::vector<bool> tmp2(irlgm1f(j)->parameter(1)->size(), true);
+            res.insert(res.end(), tmp1.begin(), tmp1.end());
+            res.insert(res.end(), tmp2.begin(), tmp2.end());
+        }
+        for (Size j = 0; j < nFxBs_; ++j) {
+            std::vector<bool> tmp(fxbs(j)->parameter(0)->size(), true);
+            res.insert(res.end(), tmp.begin(), tmp.end());
+        }
+        return res;
+    }
+
+    Disposable<std::vector<bool> > MoveIrLgm1fReversion(const Size ccy,
+                                                        const Size i) {
+        QL_REQUIRE(i < irlgm1f(ccy)->parameter(1)->size(),
+                   "irlgm1f reversion index ("
+                       << i << ") for ccy " << ccy << " out of bounds 0..."
+                       << irlgm1f(ccy)->parameter(1)->size() - 1);
+        std::vector<bool> res(0);
+        for (Size j = 0; j < nIrLgm1f_; ++j) {
+            std::vector<bool> tmp1(irlgm1f(j)->parameter(0)->size(), true);
+            std::vector<bool> tmp2(irlgm1f(j)->parameter(1)->size(), true);
+            if (ccy == j) {
+                tmp2[i] = false;
+            }
+            res.insert(res.end(), tmp1.begin(), tmp1.end());
+            res.insert(res.end(), tmp2.begin(), tmp2.end());
+        }
+        for (Size j = 0; j < nFxBs_; ++j) {
+            std::vector<bool> tmp(fxbs(j)->parameter(0)->size(), true);
+            res.insert(res.end(), tmp.begin(), tmp.end());
+        }
+        return res;
+    }
+
+    Disposable<std::vector<bool> > MoveFxBsVolatility(const Size ccy,
+                                                      const Size i) {
+        QL_REQUIRE(i < fxbs(ccy)->parameter(0)->size(),
+                   "fxbs volatility index ("
+                       << i << ") for ccy " << ccy << " out of bounds 0..."
+                       << fxbs(ccy)->parameter(0)->size() - 1);
+        std::vector<bool> res(0);
+        for (Size j = 0; j < nIrLgm1f_; ++j) {
+            std::vector<bool> tmp1(irlgm1f(j)->parameter(0)->size(), true);
+            std::vector<bool> tmp2(irlgm1f(j)->parameter(1)->size(), true);
+            res.insert(res.end(), tmp1.begin(), tmp1.end());
+            res.insert(res.end(), tmp2.begin(), tmp2.end());
+        }
+        for (Size j = 0; j < nFxBs_; ++j) {
+            std::vector<bool> tmp(fxbs(j)->parameter(0)->size(), true);
+            if (ccy == j) {
+                tmp[i] = false;
+            }
+            res.insert(res.end(), tmp.begin(), tmp.end());
+        }
+        return res;
+    }
+
+    Disposable<std::vector<bool> > IrLgm1fGlobal(const Size ccy) {
+        QL_REQUIRE(ccy < nIrLgm1f_, "irlgm1f ccy (" << ccy
+                                                    << ") out of range 0..."
+                                                    << (nIrLgm1f_ - 1));
+        std::vector<bool> res(0);
+        for (Size i = 0; i < nIrLgm1f_; ++i) {
+            std::vector<bool> tmp1(irlgm1f(i)->parameter(0)->size(),
+                                   ccy == i ? false : true);
+            std::vector<bool> tmp2(irlgm1f(i)->parameter(1)->size(),
+                                   ccy == i ? false : true);
+            res.insert(res.end(), tmp1.begin(), tmp1.end());
+            res.insert(res.end(), tmp2.begin(), tmp2.end());
+        }
+        for (Size i = 0; i < nFxBs_; ++i) {
+            std::vector<bool> tmp(fxbs(i)->parameter(0)->size(), true);
+            res.insert(res.end(), tmp.begin(), tmp.end());
+        }
+        return res;
+    }
 };
 
 // inline
@@ -186,6 +303,10 @@ inline Size XAssetModel::dimension() const {
 }
 
 inline Size XAssetModel::currencies() const { return nIrLgm1f_; }
+
+inline Size XAssetModel::totalNumberOfParameters() const {
+    return totalNumberOfParameters_;
+}
 
 inline void XAssetModel::update() {
     for (Size i = 0; i < p_.size(); ++i) {

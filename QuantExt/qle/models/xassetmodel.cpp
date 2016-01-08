@@ -98,7 +98,7 @@ void XAssetModel::initializeParametrizations() {
                "the parametrizations must be given in the following order: ir, "
                "fx (others not yet supported), found "
                    << nIrLgm1f_ << " ir and " << nFxBs_
-                   << " parametrizations, but there are " << p_.size()
+                   << " bs parametrizations, but there are " << p_.size()
                    << " parametrizations given in total");
 
     // check currencies
@@ -173,7 +173,58 @@ void XAssetModel::initializeArguments() {
     }
     for (Size i = 0; i < nFxBs_; ++i) {
         // volatility
-        arguments_[i] = fxbs(i)->parameter(0);
+        arguments_[nIrLgm1f_ * 2 + i] = fxbs(i)->parameter(0);
+    }
+    totalNumberOfParameters_ = 0;
+    for (Size i = 0; i < arguments_.size(); ++i) {
+        QL_REQUIRE(arguments_[i] != NULL, "unexpected error: argument "
+                                              << i << " is null");
+        totalNumberOfParameters_ += arguments_[i]->size();
+    }
+}
+
+void XAssetModel::calibrateIrLgm1fVolatilitiesIterative(
+    const Size ccy,
+    const std::vector<boost::shared_ptr<CalibrationHelper> > &helpers,
+    OptimizationMethod &method, const EndCriteria &endCriteria,
+    const Constraint &constraint, const std::vector<Real> &weights) {
+    for (Size i = 0; i < helpers.size(); ++i) {
+        std::vector<boost::shared_ptr<CalibrationHelper> > h(1, helpers[i]);
+        calibrate(h, method, endCriteria, constraint, weights,
+                  MoveIrLgm1fVolatility(ccy, i));
+    }
+}
+
+void XAssetModel::calibrateIrLgm1fReversionsIterative(
+    const Size ccy,
+    const std::vector<boost::shared_ptr<CalibrationHelper> > &helpers,
+    OptimizationMethod &method, const EndCriteria &endCriteria,
+    const Constraint &constraint, const std::vector<Real> &weights) {
+    for (Size i = 0; i < helpers.size(); ++i) {
+        std::vector<boost::shared_ptr<CalibrationHelper> > h(1, helpers[i]);
+        calibrate(h, method, endCriteria, constraint, weights,
+                  MoveIrLgm1fReversion(ccy, i));
+    }
+}
+
+void XAssetModel::calibrateIrLgm1fGlobal(
+    const Size ccy,
+    const std::vector<boost::shared_ptr<CalibrationHelper> > &helpers,
+    OptimizationMethod &method, const EndCriteria &endCriteria,
+    const Constraint &constraint, const std::vector<Real> &weights) {
+    calibrate(helpers, method, endCriteria, constraint, weights,
+              IrLgm1fGlobal(ccy));
+}
+
+void XAssetModel::calibrateFxBsVolatilitiesIterative(
+    const Size ccy,
+    const std::vector<boost::shared_ptr<CalibrationHelper> > &helpers,
+    OptimizationMethod &method, const EndCriteria &endCriteria,
+    const Constraint &constraint, const std::vector<Real> &weights) {
+    for (Size i = 0; i < helpers.size(); ++i) {
+        std::vector<boost::shared_ptr<CalibrationHelper> > h(1, helpers[i]);
+        calibrate(h, method, endCriteria, constraint, weights,
+                  MoveFxBsVolatility(ccy, i));
     }
 }
 
