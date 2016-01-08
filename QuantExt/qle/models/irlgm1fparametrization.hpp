@@ -23,7 +23,7 @@ class IrLgm1fParametrization : public Parametrization {
                            const Handle<YieldTermStructure> &termStructure);
     /*! zeta must satisfy zeta(0) = 0, zeta'(t) >= 0 */
     virtual Real zeta(const Time t) const = 0;
-    /*! H must satisfy H(0) = 0, H'(0) = 1, H'(t) > 0 */
+    /*! H must be such that H' does not change its sign */
     virtual Real H(const Time t) const = 0;
     virtual Real alpha(const Time t) const;
     virtual Real kappa(const Time t) const;

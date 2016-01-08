@@ -154,6 +154,10 @@ void AnalyticLgmSwaptionEngine::calculate() const {
 
     Real w = type == Option::Call ? -1.0 : 1.0;
 
+    // it is a requirement that H' does not change its sign,
+    // with u = -1.0 we handle the case H' < 0
+    Real u = p_->Hprime(0.0) > 0.0 ? 1.0 : -1.0;
+
     // do the actual pricing
 
     zetaex_ = p_->zeta(p_->termStructure()->timeFromReference(expiry));
@@ -177,13 +181,14 @@ void AnalyticLgmSwaptionEngine::calculate() const {
     Real sqrt_zetaex = std::sqrt(zetaex_);
     Real sum = 0.0;
     for (Size j = j1_; j < arguments_.fixedCoupons.size(); ++j) {
-        sum += w * (arguments_.fixedCoupons[j] - S_[j - j1_]) * Dj_[j - j1_] *
-               N(w * (yStar + (Hj_[j - j1_] - H0_) * zetaex_) / sqrt_zetaex);
+        sum +=
+            w * (arguments_.fixedCoupons[j] - S_[j - j1_]) * Dj_[j - j1_] *
+            N(u * w * (yStar + (Hj_[j - j1_] - H0_) * zetaex_) / sqrt_zetaex);
     }
-    sum += -w * S_m1 * D0_ * N(w * yStar / sqrt_zetaex);
-    sum += w * (Dj_.back() * N(w * (yStar + (Hj_.back() - H0_) * zetaex_) /
+    sum += -w * S_m1 * D0_ * N(u * w * yStar / sqrt_zetaex);
+    sum += w * (Dj_.back() * N(u * w * (yStar + (Hj_.back() - H0_) * zetaex_) /
                                sqrt_zetaex) -
-                D0_ * N(w * yStar / sqrt_zetaex));
+                D0_ * N(u * w * yStar / sqrt_zetaex));
     results_.value = sum;
 
     results_.additionalResults["fixedAmountCorrectionSettlement"] = S_m1;

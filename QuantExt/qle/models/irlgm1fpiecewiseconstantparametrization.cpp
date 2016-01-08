@@ -5,6 +5,7 @@
 */
 
 #include <qle/models/irlgm1fpiecewiseconstantparametrization.hpp>
+#include <ql/math/comparison.hpp>
 
 namespace QuantExt {
 
@@ -13,10 +14,12 @@ IrLgm1fPiecewiseConstantParametrization::
         const Currency &currency,
         const Handle<YieldTermStructure> &termStructure,
         const Array &alphaTimes, const Array &alpha, const Array &kappaTimes,
-        const Array &kappa)
+        const Array &kappa, const Real shift, const Real scaling)
     : IrLgm1fParametrization(currency, termStructure),
       PiecewiseConstantHelper1(alphaTimes),
-      PiecewiseConstantHelper2(kappaTimes) {
+      PiecewiseConstantHelper2(kappaTimes), shift_(shift), scaling_(scaling) {
+    QL_REQUIRE(!close_enough(scaling, 0.0),
+               "scaling (" << scaling << ") must be non-zero");
     QL_REQUIRE(alphaTimes.size() + 1 == alpha.size(),
                "alpha size (" << alpha.size()
                               << ") inconsistent to times size ("

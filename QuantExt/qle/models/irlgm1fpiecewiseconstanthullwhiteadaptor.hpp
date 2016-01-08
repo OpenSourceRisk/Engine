@@ -24,7 +24,8 @@ class IrLgm1fPiecewiseConstantHullWhiteAdaptor
     IrLgm1fPiecewiseConstantHullWhiteAdaptor(
         const Currency &currency,
         const Handle<YieldTermStructure> &termStructure, const Array &times,
-        const Array &sigma, const Array &kappa);
+        const Array &sigma, const Array &kappa, const Real shift = 0.0,
+        const Real scaling = 1.0);
     Real zeta(const Time t) const;
     Real H(const Time t) const;
     Real alpha(const Time t) const;
@@ -39,6 +40,9 @@ class IrLgm1fPiecewiseConstantHullWhiteAdaptor
   protected:
     Real direct(const Size i, const Real x) const;
     Real inverse(const Size j, const Real y) const;
+
+  private:
+    const Real shift_, scaling_;
 };
 
 // inline
@@ -58,16 +62,17 @@ IrLgm1fPiecewiseConstantHullWhiteAdaptor::inverse(const Size i,
 }
 
 inline Real IrLgm1fPiecewiseConstantHullWhiteAdaptor::zeta(const Time t) const {
-    return PiecewiseConstantHelper3::int_y1_sqr_exp_2_int_y2(t);
+    return PiecewiseConstantHelper3::int_y1_sqr_exp_2_int_y2(t) /
+           (scaling_ * scaling_);
 }
 
 inline Real
 IrLgm1fPiecewiseConstantHullWhiteAdaptor::alpha(const Time t) const {
-    return hullWhiteSigma(t) / Hprime(t);
+    return hullWhiteSigma(t) / Hprime(t) / scaling_;
 }
 
 inline Real IrLgm1fPiecewiseConstantHullWhiteAdaptor::H(const Time t) const {
-    return PiecewiseConstantHelper2::int_exp_m_int_y(t);
+    return scaling_ * PiecewiseConstantHelper2::int_exp_m_int_y(t) + shift_;
 }
 
 inline Real
@@ -77,12 +82,12 @@ IrLgm1fPiecewiseConstantHullWhiteAdaptor::kappa(const Time t) const {
 
 inline Real
 IrLgm1fPiecewiseConstantHullWhiteAdaptor::Hprime(const Time t) const {
-    return PiecewiseConstantHelper2::exp_m_int_y(t);
+    return scaling_ * PiecewiseConstantHelper2::exp_m_int_y(t);
 }
 
 inline Real
 IrLgm1fPiecewiseConstantHullWhiteAdaptor::Hprime2(const Time t) const {
-    return -PiecewiseConstantHelper2::exp_m_int_y(t) * kappa(t);
+    return -scaling_ * PiecewiseConstantHelper2::exp_m_int_y(t) * kappa(t);
 }
 
 inline Real

@@ -17,10 +17,13 @@ namespace QuantExt {
 
 class IrLgm1fConstantParametrization : public IrLgm1fParametrization {
   public:
+    /*! note that if a non unit scaling is provided, then
+        the parameterValues method returns the unscaled alpha,
+        while all other method return scaled (and shifted) values */
     IrLgm1fConstantParametrization(
         const Currency &currency,
         const Handle<YieldTermStructure> &termStructure, const Real alpha,
-        const Real kappa);
+        const Real kappa, const Real shift = 0.0, const Real scaling = 1.0);
     Real zeta(const Time t) const;
     Real H(const Time t) const;
     Real alpha(const Time t) const;
@@ -35,6 +38,7 @@ class IrLgm1fConstantParametrization : public IrLgm1fParametrization {
 
   private:
     const boost::shared_ptr<PseudoParameter> alpha_, kappa_;
+    const Real shift_, scaling_;
     const Real zeroKappaCutoff_;
 };
 
@@ -51,19 +55,22 @@ inline Real IrLgm1fConstantParametrization::inverse(const Size i,
 }
 
 inline Real IrLgm1fConstantParametrization::zeta(const Time t) const {
-    return direct(0, alpha_->params()[0]) * direct(0, alpha_->params()[0]) * t;
+    return direct(0, alpha_->params()[0]) * direct(0, alpha_->params()[0]) * t /
+           (scaling_ * scaling_);
 }
 
 inline Real IrLgm1fConstantParametrization::H(const Time t) const {
     if (std::fabs(kappa_->params()[0]) < zeroKappaCutoff_) {
-        return t;
+        return scaling_ * t + shift_;
     } else {
-        return (1.0 - std::exp(-kappa_->params()[0] * t)) / kappa_->params()[0];
+        return scaling_ * (1.0 - std::exp(-kappa_->params()[0] * t)) /
+                   kappa_->params()[0] +
+               shift_;
     }
 }
 
 inline Real IrLgm1fConstantParametrization::alpha(const Time) const {
-    return direct(0, alpha_->params()[0]);
+    return direct(0, alpha_->params()[0]) / scaling_;
 }
 
 inline Real IrLgm1fConstantParametrization::kappa(const Time) const {
@@ -71,11 +78,11 @@ inline Real IrLgm1fConstantParametrization::kappa(const Time) const {
 }
 
 inline Real IrLgm1fConstantParametrization::Hprime(const Time t) const {
-    return std::exp(-kappa_->params()[0] * t);
+    return scaling_ * std::exp(-kappa_->params()[0] * t);
 }
 
 inline Real IrLgm1fConstantParametrization::Hprime2(const Time t) const {
-    return -kappa_->params()[0] * std::exp(-kappa_->params()[0] * t);
+    return -scaling_ * kappa_->params()[0] * std::exp(-kappa_->params()[0] * t);
 }
 
 inline const boost::shared_ptr<Parameter>

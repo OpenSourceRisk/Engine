@@ -21,11 +21,14 @@ class IrLgm1fPiecewiseConstantParametrization
       private PiecewiseConstantHelper1,
       private PiecewiseConstantHelper2 {
   public:
+    /*! note that if a non unit scaling is provided, then
+        the parameterValues method returns the unscaled alpha,
+        while all other method return scaled (and shifted) values */
     IrLgm1fPiecewiseConstantParametrization(
         const Currency &currency,
         const Handle<YieldTermStructure> &termStructure,
         const Array &alphaTimes, const Array &alpha, const Array &kappaTimes,
-        const Array &kappa);
+        const Array &kappa, const Real shift = 0.0, const Real scaling = 1.0);
     Real zeta(const Time t) const;
     Real H(const Time t) const;
     Real alpha(const Time t) const;
@@ -39,6 +42,9 @@ class IrLgm1fPiecewiseConstantParametrization
   protected:
     Real direct(const Size i, const Real x) const;
     Real inverse(const Size j, const Real y) const;
+
+  private:
+    const Real shift_, scaling_;
 };
 
 // inline
@@ -58,15 +64,15 @@ IrLgm1fPiecewiseConstantParametrization::inverse(const Size i,
 }
 
 inline Real IrLgm1fPiecewiseConstantParametrization::zeta(const Time t) const {
-    return PiecewiseConstantHelper1::int_y_sqr(t);
+    return PiecewiseConstantHelper1::int_y_sqr(t) / (scaling_ * scaling_);
 }
 
 inline Real IrLgm1fPiecewiseConstantParametrization::H(const Time t) const {
-    return PiecewiseConstantHelper2::int_exp_m_int_y(t);
+    return scaling_ * PiecewiseConstantHelper2::int_exp_m_int_y(t) + shift_;
 }
 
 inline Real IrLgm1fPiecewiseConstantParametrization::alpha(const Time t) const {
-    return PiecewiseConstantHelper1::y(t);
+    return PiecewiseConstantHelper1::y(t) / scaling_;
 }
 
 inline Real IrLgm1fPiecewiseConstantParametrization::kappa(const Time t) const {
@@ -75,12 +81,12 @@ inline Real IrLgm1fPiecewiseConstantParametrization::kappa(const Time t) const {
 
 inline Real
 IrLgm1fPiecewiseConstantParametrization::Hprime(const Time t) const {
-    return PiecewiseConstantHelper2::exp_m_int_y(t);
+    return scaling_ * PiecewiseConstantHelper2::exp_m_int_y(t);
 }
 
 inline Real
 IrLgm1fPiecewiseConstantParametrization::Hprime2(const Time t) const {
-    return -PiecewiseConstantHelper2::exp_m_int_y(t) * kappa(t);
+    return -scaling_ * PiecewiseConstantHelper2::exp_m_int_y(t) * kappa(t);
 }
 
 inline void IrLgm1fPiecewiseConstantParametrization::update() const {
