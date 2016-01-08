@@ -14,10 +14,10 @@
 
 class XAssetModelTest {
   public:
-    //static void testBermudanLgm1fGsr();
-    //static void testLgm1fCalibration();
+    static void testBermudanLgm1fGsr();
+    static void testLgm1fCalibration();
     static void testCcyLgm3fForeignPayouts();
-    //static void testLgm4fAndFxCalibration();
+    static void testLgm4fAndFxCalibration();
     static boost::unit_test_framework::test_suite *suite();
 };
 
