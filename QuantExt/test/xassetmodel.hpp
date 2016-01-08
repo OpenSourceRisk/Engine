@@ -18,6 +18,7 @@ class XAssetModelTest {
     static void testLgm1fCalibration();
     static void testCcyLgm3fForeignPayouts();
     static void testLgm4fAndFxCalibration();
+    static void testLgmGsrEquivalence();
     static boost::unit_test_framework::test_suite *suite();
 };
 

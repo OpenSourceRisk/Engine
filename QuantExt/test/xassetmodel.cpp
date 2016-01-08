@@ -131,6 +131,32 @@ void XAssetModelTest::testBermudanLgm1fGsr() {
                     "in IrLgm1f ("
                     << npvLgm << ") and Gsr (" << npvGsr
                     << ") models, tolerance is " << tol);
+
+    // test model invariances
+
+    BOOST_TEST_MESSAGE("Testing LGM model invariances for Bermudan "
+                       "swaption pricing...");
+
+    boost::shared_ptr<IrLgm1fParametrization> lgm_p2 =
+        boost::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
+            EURCurrency(), yts, stepTimes_a, sigmas_a, kappas_a, -5.0, 3.0);
+
+    boost::shared_ptr<Lgm> lgm2 = boost::make_shared<Lgm>(lgm_p2);
+
+    boost::shared_ptr<Gaussian1dModel> lgm_g1d2 =
+        boost::make_shared<Gaussian1dXAssetAdaptor>(lgm2);
+
+    boost::shared_ptr<PricingEngine> swaptionEngineLgm2 =
+        boost::make_shared<Gaussian1dSwaptionEngine>(gsr, 64, 7.0, true, false);
+
+    swaption->setPricingEngine(swaptionEngineLgm2);
+    Real npvLgm2 = swaption->NPV();
+
+    if (std::fabs(npvLgm - npvLgm2) > tol)
+        BOOST_ERROR("Failed to verify consistency of Bermudan swaption price "
+                    "under LGM model invariances, difference is "
+                    << (npvLgm - npvLgm2));
+
 } // testBermudanLgm1fGsr
 
 void XAssetModelTest::testLgm1fCalibration() {
@@ -412,12 +438,16 @@ void XAssetModelTest::testCcyLgm3fForeignPayouts() {
 
     Matrix c(3, 3);
     //  EUR            USD              FX
-    c[0][0] = 1.0;  c[0][1] = -0.2; c[0][2] = 0.8;  // EUR
+    // c[0][0] = 1.0;  c[0][1] = -0.2; c[0][2] = 0.8; // EUR
+    // c[1][0] = -0.2; c[1][1] = 1.0;  c[1][2] = -0.5; // USD
+    // c[2][0] = 0.8;  c[2][1] = -0.5; c[2][2] = 1.0; // FX
+    //  EUR            USD              FX
+    c[0][0] = 1.0;  c[0][1] = -0.2; c[0][2] = 0.8; // EUR
     c[1][0] = -0.2; c[1][1] = 1.0;  c[1][2] = -0.5; // USD
-    c[2][0] = 0.8;c [2][1] = -0.5;  c[2][2] = 1.0;  // FX
+    c[2][0] = 0.8;  c[2][1] = -0.5; c[2][2] = 1.0; // FX
 
-    boost::shared_ptr<XAssetModel> ccLgm =
-        boost::make_shared<XAssetModel>(singleModels, c, SalvagingAlgorithm::None);
+    boost::shared_ptr<XAssetModel> ccLgm = boost::make_shared<XAssetModel>(
+        singleModels, c, SalvagingAlgorithm::None);
 
     boost::shared_ptr<Lgm> eurLgm = boost::make_shared<Lgm>(eurLgmParam);
     boost::shared_ptr<Lgm> usdLgm = boost::make_shared<Lgm>(usdLgmParam);
@@ -666,11 +696,17 @@ void XAssetModelTest::testLgm4fAndFxCalibration() {
 
     Matrix c(5, 5);
     //     EUR           USD           GBP         FX USD-EUR      FX GBP-EUR
-    c[0][0] = 1.0; c[0][1] = 0.6;  c[0][2] = 0.3; c[0][3] = 0.2;   c[0][4] = 0.3;  // EUR
-    c[1][0] = 0.6; c[1][1] = 1.0;  c[1][2] = 0.1; c[1][3] = -0.2;  c[1][4] = -0.1; // USD
-    c[2][0] = 0.3; c[2][1] = 0.1;  c[2][2] = 1.0; c[2][3] = 0.0;   c[2][4] = 0.1;  // GBP
-    c[3][0] = 0.2; c[3][1] = -0.2; c[3][2] = 0.0; c[3][3] = 1.0;   c[3][4] = 0.3;  // FX USD-EUR
-    c[4][0] = 0.3; c[4][1] = -0.1; c[4][2] = 0.1; c[4][3] = 0.3;   c[4][4] = 1.0;  // FX GBP-EUR
+    // c[0][0] = 1.0; c[0][1] = 0.6;  c[0][2] = 0.3;  c[0][3] = 0.2;  c[0][4] = 0.3; // EUR
+    // c[1][0] = 0.6; c[1][1] = 1.0;  c[1][2] = 0.1;  c[1][3] = -0.2; c[1][4] = -0.1; // USD
+    // c[2][0] = 0.3; c[2][1] = 0.1;  c[2][2] = 1.0;  c[2][3] = 0.0;  c[2][4] = 0.1; // GBP
+    // c[3][0] = 0.2; c[3][1] = -0.2; c[3][2] = 0.0;  c[3][3] = 1.0;  c[3][4] = 0.3; // FX USD-EUR
+    // c[4][0] = 0.3; c[4][1] = -0.1; c[4][2] = 0.1;  c[4][3] = 0.3;  c[4][4] = 1.0; // FX GBP-EUR
+    //     EUR           USD           GBP         FX USD-EUR      FX GBP-EUR
+    c[0][0] = 1.0; c[0][1] = 0.6;  c[0][2] = 0.3;  c[0][3] = 0.2;  c[0][4] = 0.3; // EUR
+    c[1][0] = 0.6; c[1][1] = 1.0;  c[1][2] = 0.1;  c[1][3] = -0.2; c[1][4] = -0.1; // USD
+    c[2][0] = 0.3; c[2][1] = 0.1;  c[2][2] = 1.0;  c[2][3] = 0.0;  c[2][4] = 0.1; // GBP
+    c[3][0] = 0.2; c[3][1] = -0.2; c[3][2] = 0.0;  c[3][3] = 1.0;  c[3][4] = 0.3; // FX USD-EUR
+    c[4][0] = 0.3; c[4][1] = -0.1; c[4][2] = 0.1;  c[4][3] = 0.3;  c[4][4] = 1.0; // FX GBP-EUR
 
     Matrix cProjected(3, 3);
     for (Size i = 0, ii = 0; i < 5; ++i) {
@@ -683,10 +719,11 @@ void XAssetModelTest::testLgm4fAndFxCalibration() {
         }
     }
 
-    boost::shared_ptr<XAssetModel> ccLgm =
-        boost::make_shared<XAssetModel>(singleModels, c, SalvagingAlgorithm::None);
+    boost::shared_ptr<XAssetModel> ccLgm = boost::make_shared<XAssetModel>(
+        singleModels, c, SalvagingAlgorithm::None);
     boost::shared_ptr<XAssetModel> ccLgmProjected =
-        boost::make_shared<XAssetModel>(singleModelsProjected, cProjected, SalvagingAlgorithm::None);
+        boost::make_shared<XAssetModel>(singleModelsProjected, cProjected,
+                                        SalvagingAlgorithm::None);
 
     boost::shared_ptr<PricingEngine> ccLgmFxOptionEngineUsd =
         boost::make_shared<AnalyticCcLgmFxOptionEngine>(ccLgm, 0);
@@ -890,6 +927,108 @@ void XAssetModelTest::testLgm4fAndFxCalibration() {
 
 } // testLgm4fAndFxCalibration
 
+void XAssetModelTest::testLgmGsrEquivalence() {
+
+    BOOST_TEST_MESSAGE("Testing equivalence of GSR and LGM models...");
+
+    SavedSettings backup;
+
+    Date evalDate(12, January, 2015);
+    Settings::instance().evaluationDate() = evalDate;
+    Handle<YieldTermStructure> yts(
+        boost::make_shared<FlatForward>(evalDate, 0.02, Actual365Fixed()));
+
+    Real T[] = {10.0, 20.0, 50.0, 100.0};
+    Real sigma[] = {0.0050, 0.01, 0.02};
+    Real kappa[] = {-0.02, -0.01, 0.0, 0.03, 0.07};
+
+    for (Size i = 0; i < LENGTH(T); ++i) {
+        for (Size j = 0; j < LENGTH(sigma); ++j) {
+            for (Size k = 0; k < LENGTH(kappa); ++k) {
+
+                std::vector<Date> stepDates;
+                std::vector<Real> sigmas(1, sigma[j]);
+
+                boost::shared_ptr<Gsr> gsr = boost::make_shared<Gsr>(
+                    yts, stepDates, sigmas, kappa[k], T[i]);
+
+                Array stepTimes_a(0);
+                Array sigmas_a(1, sigma[j]);
+                Array kappas_a(1, kappa[k]);
+
+                // for shift = -H(T) we change the LGM measure to the T forward
+                // measure effectively
+                Real shift =
+                    close_enough(kappa[k], 0.0)
+                        ? -T[i]
+                        : -(1.0 - std::exp(-kappa[k] * T[i])) / kappa[k];
+                boost::shared_ptr<IrLgm1fParametrization> lgm_p =
+                    boost::make_shared<
+                        IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
+                        EURCurrency(), yts, stepTimes_a, sigmas_a, kappas_a,
+                        shift, 1.0);
+
+                boost::shared_ptr<Lgm> lgm = boost::make_shared<Lgm>(lgm_p);
+
+                boost::shared_ptr<StochasticProcess1D> gsr_process =
+                    gsr->stateProcess();
+                boost::shared_ptr<StochasticProcess1D> lgm_process =
+                    lgm->stateProcess();
+
+                Size N = 10000; // number of paths
+                Size seed = 123456;
+                Size steps = 1;       // one large step
+                Real T2 = T[i] - 5.0; // we check a distribution at this time
+
+                TimeGrid grid(T2, steps);
+
+                PseudoRandom::rsg_type sg =
+                    PseudoRandom::make_sequence_generator(steps * 1, seed);
+                PathGenerator<PseudoRandom::rsg_type> pgen_gsr(gsr_process,
+                                                               grid, sg, false);
+                PathGenerator<PseudoRandom::rsg_type> pgen_lgm(lgm_process,
+                                                               grid, sg, false);
+
+                accumulator_set<double,
+                                stats<tag::mean, tag::error_of<tag::mean>,
+                                      tag::variance> > stat_lgm,
+                    stat_gsr;
+
+                for (Size i = 0; i < N; ++i) {
+                    Sample<Path> path_lgm = pgen_lgm.next();
+                    Sample<Path> path_gsr = pgen_gsr.next();
+                    Real yGsr = (path_gsr.value.back() -
+                                 gsr_process->expectation(0.0, 0.0, T2)) /
+                                gsr_process->stdDeviation(0.0, 0.0, T2);
+                    Real xLgm = path_lgm.value.back();
+                    Real gsrRate = -std::log(gsr->zerobond(T2 + 1.0, T2, yGsr));
+                    // it's nice to have uniform interfaces in all models ...
+                    Real lgmRate =
+                        -std::log(lgm->discountBond(T2, T2 + 1.0, xLgm));
+                    stat_gsr(gsrRate);
+                    stat_lgm(lgmRate);
+                }
+
+                // effectively we are checking a pathwise identity
+                // here, but the statistics seems to better summarize
+                // a possible problem ...
+                Real tol = 1.0E-12;
+                if (std::fabs(mean(stat_gsr) - mean(stat_lgm)) > tol ||
+                    std::fabs(variance(stat_gsr) - variance(stat_lgm)) > tol) {
+                    BOOST_ERROR("failed to verify LGM-GSR equivalence, "
+                                "(mean,variance) of zero rate is ("
+                                << mean(stat_gsr) << "," << variance(stat_gsr)
+                                << ") for GSR, (" << mean(stat_lgm) << ","
+                                << variance(stat_lgm) << ") for LGM, for T="
+                                << T[i] << ", sigma=" << sigma[j] << ", kappa="
+                                << kappa[k] << ", shift=" << shift);
+                }
+            }
+        }
+    }
+
+} // testLgmGsrEquivalence
+
 test_suite *XAssetModelTest::suite() {
     test_suite *suite = BOOST_TEST_SUITE("XAsset model tests");
     suite->add(QUANTEXT_TEST_CASE(&XAssetModelTest::testBermudanLgm1fGsr));
@@ -897,5 +1036,6 @@ test_suite *XAssetModelTest::suite() {
     suite->add(
         QUANTEXT_TEST_CASE(&XAssetModelTest::testCcyLgm3fForeignPayouts));
     suite->add(QUANTEXT_TEST_CASE(&XAssetModelTest::testLgm4fAndFxCalibration));
+    suite->add(QUANTEXT_TEST_CASE(&XAssetModelTest::testLgmGsrEquivalence));
     return suite;
 }

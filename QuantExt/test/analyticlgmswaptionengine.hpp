@@ -17,6 +17,7 @@ class AnalyticLgmSwaptionEngineTest {
     static void testMonoCurve();
     static void testDualCurve();
     static void testAgainstOtherEngines();
+    static void testLgmInvariances();
     static boost::unit_test_framework::test_suite *suite();
 };
 

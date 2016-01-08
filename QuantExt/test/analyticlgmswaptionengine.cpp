@@ -481,6 +481,111 @@ void AnalyticLgmSwaptionEngineTest::testAgainstOtherEngines() {
     }
 } // testAgainstOtherEngines
 
+void AnalyticLgmSwaptionEngineTest::testLgmInvariances() {
+
+    BOOST_TEST_MESSAGE("Testing LGM model invariances in the analytic LGM "
+                       "swaption engine...");
+
+    Real shift[] = {-2.0, -1.0, 0.0, 1.0, 2.0};
+    Real scaling[] = {5.0, 2.0, 1.0, 0.1, 0.01, -0.01, -0.1, -1.0, -2.0, -5.0};
+
+    Handle<YieldTermStructure> discountingCurve(boost::make_shared<FlatForward>(
+        0, NullCalendar(), 0.03, Actual365Fixed()));
+    Handle<YieldTermStructure> forwardingCurve(boost::make_shared<FlatForward>(
+        0, NullCalendar(), 0.05, Actual365Fixed()));
+
+    Array times(0);
+    Array sigma_a(1, 0.01);
+    Array alpha_a(1, 0.01);
+    Array kappa_a(1, 0.01);
+
+    boost::shared_ptr<SwapIndex> index =
+        boost::make_shared<EuriborSwapIsdaFixA>(10 * Years, forwardingCurve,
+                                                discountingCurve);
+    Swaption swaption = MakeSwaption(index, 5 * Years, 0.07); // otm
+
+    for (Size i = 0; i < LENGTH(shift); ++i) {
+        for (Size j = 0; j < LENGTH(scaling); ++j) {
+
+            const boost::shared_ptr<IrLgm1fParametrization> irlgm1f0 =
+                boost::make_shared<IrLgm1fConstantParametrization>(
+                    EURCurrency(), discountingCurve, 0.01, 0.01);
+
+            const boost::shared_ptr<IrLgm1fParametrization> irlgm1fa =
+                boost::make_shared<IrLgm1fConstantParametrization>(
+                    EURCurrency(), discountingCurve, 0.01, 0.01, shift[i],
+                    scaling[j]);
+
+            const boost::shared_ptr<IrLgm1fParametrization> irlgm1fb =
+                boost::make_shared<IrLgm1fPiecewiseConstantParametrization>(
+                    EURCurrency(), discountingCurve, times, alpha_a, times,
+                    kappa_a, shift[i], scaling[j]);
+
+            const boost::shared_ptr<IrLgm1fParametrization> irlgm1f0c =
+                boost::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
+                    EURCurrency(), discountingCurve, times, sigma_a, kappa_a);
+
+            const boost::shared_ptr<IrLgm1fParametrization> irlgm1fc =
+                boost::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
+                    EURCurrency(), discountingCurve, times, sigma_a, kappa_a,
+                    shift[i], scaling[j]);
+
+            const boost::shared_ptr<Lgm> lgm0 =
+                boost::make_shared<Lgm>(irlgm1f0);
+            const boost::shared_ptr<Lgm> lgma =
+                boost::make_shared<Lgm>(irlgm1fa);
+            const boost::shared_ptr<Lgm> lgmb =
+                boost::make_shared<Lgm>(irlgm1fb);
+            const boost::shared_ptr<Lgm> lgm0c =
+                boost::make_shared<Lgm>(irlgm1f0c);
+            const boost::shared_ptr<Lgm> lgmc =
+                boost::make_shared<Lgm>(irlgm1fc);
+
+            boost::shared_ptr<PricingEngine> engine0 =
+                boost::make_shared<AnalyticLgmSwaptionEngine>(irlgm1f0);
+            boost::shared_ptr<PricingEngine> enginea =
+                boost::make_shared<AnalyticLgmSwaptionEngine>(irlgm1fa);
+            boost::shared_ptr<PricingEngine> engineb =
+                boost::make_shared<AnalyticLgmSwaptionEngine>(irlgm1fb);
+            boost::shared_ptr<PricingEngine> engine0c =
+                boost::make_shared<AnalyticLgmSwaptionEngine>(irlgm1f0c);
+            boost::shared_ptr<PricingEngine> enginec =
+                boost::make_shared<AnalyticLgmSwaptionEngine>(irlgm1fc);
+
+            swaption.setPricingEngine(engine0);
+            Real npv0 = swaption.NPV();
+            swaption.setPricingEngine(enginea);
+            Real npva = swaption.NPV();
+            swaption.setPricingEngine(engineb);
+            Real npvb = swaption.NPV();
+            swaption.setPricingEngine(engine0c);
+            Real npv0c = swaption.NPV();
+            swaption.setPricingEngine(enginec);
+            Real npvc = swaption.NPV();
+
+            Real tol = 1.0E-10;
+            if (std::fabs(npva - npv0) > tol) {
+                BOOST_ERROR("price is not invariant under (shift,scaling)=("
+                            << shift[i] << "," << scaling[i]
+                            << "), difference is " << (npva - npv0)
+                            << " (constant parametrization)");
+            }
+            if (std::fabs(npvb - npv0) > tol) {
+                BOOST_ERROR("price is not invariant under (shift,scaling)=("
+                            << shift[i] << "," << scaling[i]
+                            << "), difference is " << (npvb - npv0)
+                            << " (piecewise constant parametrization)");
+            }
+            if (std::fabs(npvc - npv0c) > tol) {
+                BOOST_ERROR("price is not invariant under (shift,scaling)=("
+                            << shift[i] << "," << scaling[i]
+                            << "), difference is " << (npvc - npv0c)
+                            << " (hull white adaptor parametrization)");
+            }
+        }
+    }
+} // testInvariances
+
 test_suite *AnalyticLgmSwaptionEngineTest::suite() {
     test_suite *suite = BOOST_TEST_SUITE("Analytic LGM swaption engine tests");
     suite->add(
@@ -489,5 +594,7 @@ test_suite *AnalyticLgmSwaptionEngineTest::suite() {
         QUANTEXT_TEST_CASE(&AnalyticLgmSwaptionEngineTest::testDualCurve));
     suite->add(QUANTEXT_TEST_CASE(
         &AnalyticLgmSwaptionEngineTest::testAgainstOtherEngines));
+    suite->add(
+        QUANTEXT_TEST_CASE(&AnalyticLgmSwaptionEngineTest::testLgmInvariances));
     return suite;
 }
