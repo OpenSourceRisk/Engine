@@ -479,11 +479,7 @@ void AnalyticLgmSwaptionEngineTest::testAgainstOtherEngines() {
             }
         }
     }
-
-    BOOST_ERROR("Discuss tolerances for basis correction with Roland (pro "
-                "rata mapping), in "
-                "their book it seems to work much better...");
-}
+} // testAgainstOtherEngines
 
 test_suite *AnalyticLgmSwaptionEngineTest::suite() {
     test_suite *suite = BOOST_TEST_SUITE("Analytic LGM swaption engine tests");
