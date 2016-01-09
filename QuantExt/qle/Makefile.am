@@ -1,6 +1,7 @@
 SUBDIRS = \
-    currencies \
+	currencies \
 	math \
+	methods \
 	models \
 	pricingengines \
 	processes \
