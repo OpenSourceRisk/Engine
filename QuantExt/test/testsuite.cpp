@@ -29,6 +29,9 @@ using boost::unit_test::test_suite;
 #endif
 
 // Lib test suites
+#include "xassetmodelparametrizations.hpp"
+#include "analyticlgmswaptionengine.hpp"
+#include "xassetmodel.hpp"
 #include "discountcurve.hpp"
 #include "logquote.hpp"
 
@@ -57,8 +60,11 @@ test_suite* init_unit_test_suite(int, char* []) {
 
     test->add(BOOST_TEST_CASE(startTimer));
 
-    test->add(LogQuoteTest::suite());
+    test->add(AnalyticLgmSwaptionEngineTest::suite());
     test->add(DiscountCurveTest::suite());
+    test->add(LogQuoteTest::suite());
+    test->add(XAssetModelTest::suite());
+    test->add(XAssetModelParametrizationsTest::suite());
 
     test->add(BOOST_TEST_CASE(stopTimer));
 
