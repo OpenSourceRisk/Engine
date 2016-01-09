@@ -7,6 +7,7 @@
 #include "xassetmodel.hpp"
 #include "utilities.hpp"
 
+#include <qle/methods/multipathgenerator.hpp>
 #include <qle/models/all.hpp>
 #include <qle/pricingengines/all.hpp>
 
@@ -470,7 +471,7 @@ void XAssetModelTest::testCcyLgm3fForeignPayouts() {
     PseudoRandom::rsg_type sg2 =
         PseudoRandom::make_sequence_generator(steps, seed);
 
-    MultiPathGenerator<PseudoRandom::rsg_type> pg(process, grid, sg, false);
+    QuantExt::MultiPathGenerator<PseudoRandom::rsg_type> pg(process, grid, sg, false);
     PathGenerator<PseudoRandom::rsg_type> pg2(usdProcess, grid, sg2, false);
 
     // test
@@ -843,14 +844,14 @@ void XAssetModelTest::testLgm4fAndFxCalibration() {
     Size seed = 1847263;
     TimeGrid grid(T, steps);
 
-    // LowDiscrepancy::rsg_type sg =
-    //     LowDiscrepancy::make_sequence_generator(steps * 5, seed);
-    // MultiPathGenerator<LowDiscrepancy::rsg_type> pgen(p_euler, grid, sg,
-    // false);
+    LowDiscrepancy::rsg_type sg =
+        LowDiscrepancy::make_sequence_generator(steps * 5, seed);
+    QuantExt::MultiPathGenerator<LowDiscrepancy::rsg_type> pgen(p_euler, grid, sg,
+    true);
 
-    PseudoRandom::rsg_type sg =
-        PseudoRandom::make_sequence_generator(steps * 5, seed);
-    MultiPathGenerator<PseudoRandom::rsg_type> pgen(p_euler, grid, sg, false);
+    // PseudoRandom::rsg_type sg =
+    //     PseudoRandom::make_sequence_generator(steps * 5, seed);
+    // QuantExt::MultiPathGenerator<PseudoRandom::rsg_type> pgen(p_euler, grid, sg, false);
 
     accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > >
         e_eu[5];
@@ -870,38 +871,57 @@ void XAssetModelTest::testLgm4fAndFxCalibration() {
     }
 
     // relative tolerance for error estimates
+    /*
     Real errorTol = 0.2;
+    */
+
     // absolute error should be less than errFac * error estimate
-    Real errFac = 2.0;
-    Real expected_eom[] = {0.00013, 0.00013, 0.00016, 0.0031, 0.0042};
+    // for pseudorandom sequences
+    /* 
+       Real errFac = 2.0;
+       Real expected_eom[] = {0.00013, 0.00013, 0.00016, 0.0031, 0.0042};
+    */
+
+    // error tolerances for low discrepancy sequences
+    Real errTolLd[] = {0.5E-4, 0.5E-4, 0.5E-4, 50.0E-4, 50.0E-4};
 
     for (Size i = 0; i < 5; ++i) {
         // check error estimate
+        /*
         if (std::fabs((error_of<tag::mean>(e_eu[i]) - expected_eom[i]) /
                       expected_eom[i]) > errorTol) {
             BOOST_ERROR("error of mean for component #"
                         << i << " (" << error_of<tag::mean>(e_eu[i])
                         << ") exceeds relative tolerance (" << errorTol
                         << "), expected value is " << expected_eom[i]);
-        }
+        } 
+        */
         // check expectation against analytical calculation
-        if (std::fabs(mean(e_eu[i]) - e_an[i]) >
-            errFac * error_of<tag::mean>(e_eu[i])) {
+        if (std::fabs(mean(e_eu[i]) - e_an[i]) > errTolLd[i]
+            /*errFac * error_of<tag::mean>(e_eu[i])*/) {
             BOOST_ERROR("analytical expectation for component #"
                         << i << " (" << e_an[i]
                         << ") is inconsistent with numerical value (Euler "
                            "discretization, "
                         << mean(e_eu[i]) << "), tolerance is "
-                        << errFac * error_of<tag::mean>(e_eu[i]));
+                        << errTolLd[i]
+                        /*<< errFac * error_of<tag::mean>(e_eu[i])*/);
         }
     }
 
     // we have to deal with different natures of volatility
     // for ir (normal) and fx (ln) so different error
     // tolerances apply
-    Real tollNormal = 4.0E-4; // ir-ir
-    Real tolMixed = 12.0E-4;  // ir-fx
-    Real tolLn = 50.0E-4;     // fx-fx
+
+    // tolerances for pseudorandom sequences
+    // Real tollNormal = 0.5E-4; // ir-ir
+    // Real tolMixed = 2.0E-4;   // ir-fx
+    // Real tolLn = 40.0E-4;     // fx-fx
+
+    // tolerances for low discrepancy sequences
+    Real tollNormal = 0.5E-4; // ir-ir
+    Real tolMixed = 1.0E-4;   // ir-fx
+    Real tolLn = 20.0E-4;     // fx-fx
 
     for (Size i = 0; i < 5; ++i) {
         for (Size j = 0; j <= i; ++j) {
