@@ -3,10 +3,10 @@ QLE_TESTS = \
 	testsuite.cpp \
 	utilities.hpp utilities.cpp \
 	analyticlgmswaptionengine.hpp analyticlgmswaptionengine.cpp \
+	discountcurve.hpp discountcurve.cpp \
+	logquote.hpp logquote.cpp \
 	xassetmodel.hpp xassetmodel.cpp \
 	xassetmodelparametrizations.hpp xassetmodelparametrizations.cpp
-	discountcurve.hpp discountcurve.cpp \
-	logquote.hpp logquote.cpp
 
 dist-hook:
 	mkdir -p $(distdir)/build
