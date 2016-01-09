@@ -11,3 +11,4 @@
 #include <qle/models/all.hpp>
 #include <qle/pricingengines/all.hpp>
 #include <qle/processes/all.hpp>
+#include <qle/quotes/all.hpp>

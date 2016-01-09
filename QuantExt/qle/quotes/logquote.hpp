@@ -30,26 +30,16 @@ namespace QuantExt {
         }
         //! \name Inspectors
         //@{
-        Real quote() const {
-            return q_;
-        }
+        Real quote() const;
         //@}
         //! \name Quote interface
         //@{
-        Real value() const {
-            return logValue_;
-        }
-        bool isValid() const {
-            return q_->isValid();
-        }
+        Real value() const;
+        bool isValid() const;
         //@}
         //! \name Observer interface
         //@{
-        void update() {
-            Real v = q_->value();
-            QL_REQUIRE(v>0.0, "Invalid quote, cannot take log of non-postive number");
-            logValue_= std::log(v);
-        }
+        void update();
         //@}
      protected:
         Handle<Quote> q_;

@@ -6,7 +6,8 @@ this_include_HEADERS = \
     all.hpp \
     logquote.hpp
 
-libQuotes_la_SOURCES =
+libQuotes_la_SOURCES = \
+	logquote.cpp
 
 noinst_LTLIBRARIES = libQuotes.la
 

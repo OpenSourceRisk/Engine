@@ -5,6 +5,8 @@ QLE_TESTS = \
 	analyticlgmswaptionengine.hpp analyticlgmswaptionengine.cpp \
 	xassetmodel.hpp xassetmodel.cpp \
 	xassetmodelparametrizations.hpp xassetmodelparametrizations.cpp
+	discountcurve.hpp discountcurve.cpp \
+	logquote.hpp logquote.cpp
 
 dist-hook:
 	mkdir -p $(distdir)/build
