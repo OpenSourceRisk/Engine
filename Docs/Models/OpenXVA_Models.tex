@@ -25,11 +25,11 @@
 %-------------------------------------------------------------------------------
 \section*{Document History}
 
-\begin{center} 
+\begin{center}
 \begin{supertabular}{|l|l|l|p{7cm}|}
 \hline
-Version & Date & Author & Comment \\ 
-\hline 
+Version & Date & Author & Comment \\
+\hline
 0.1 & 8 January 2016 & Peter Caspers & initial version\\
 \hline
 \end{supertabular}
@@ -55,7 +55,7 @@ This document describes models and associated classes in QuantExt.
 A parametrization summarizes the parameters of a model and defines an interface to retrieve them. It is a generalization of QL's \verb+Parameter+ which is also used to link parametrizations to \verb+CalibratedModel+. The base class is \verb+Parametrization+ from which model specific parametrizations derive,
 
 \begin{enumerate}
-\item \verb+IrLgm1fParametrization+ for an IR LGM 1F model 
+\item \verb+IrLgm1fParametrization+ for an IR LGM 1F model
 \item \verb+FxBsParametrization+ for an FX Black Scholes model
 \item \verb+EquityBsParametrization+ for an Equity Black Scholes model (draft)
 \item \verb+InflationJYParametrization+ for an Inflation JY model (draft)
@@ -134,11 +134,11 @@ The full list of available parametrizations is as follows
 
 \subsection{Unconstrained Optimization}
 
-If parameters are constrained (e.g. by positivity) this can be specified by QL's \verb+Contraint+ and this constrain will be ensured during model calibration. However this is done by simply rejecting non-admissable points in an otherwise unconstrained optimizer (usually Levenberg Marquardt or Simplex). 
+If parameters are constrained (e.g. by positivity) this can be specified by QL's \verb+Contraint+ and this constrain will be ensured during model calibration. However this is done by simply rejecting non-admissable points in an otherwise unconstrained optimizer (usually Levenberg Marquardt or Simplex).
 
 A better way of doing the optimization under constraints with unconstrained optimizers is to perform the optimization in transformed variables with unconstrained domaain. For example, positivity can be ensured by optimizing $x\in(-\infty,\infty)$, but interpreting $x^2\in(0,\infty)$ as the actual parameter value.
 
-Other than in \verb+Parameter+ this is natively supported in parametrizations, which are equipped with \verb+direct+ and \verb+inverse+ methods that transform raw values (on which the optimization is done) into actual parameter values (with the direct method) and vice versa (with the inverse method). 
+Other than in \verb+Parameter+ this is natively supported in parametrizations, which are equipped with \verb+direct+ and \verb+inverse+ methods that transform raw values (on which the optimization is done) into actual parameter values (with the direct method) and vice versa (with the inverse method).
 
 \subsection{Observability (tbd)}
 
@@ -150,7 +150,7 @@ Other parametrizations that should be added in the future are
 
 \begin{enumerate}
 \item CIR++ for credit
-\item BK for credit 
+\item BK for credit
 \item 2F models...
 \item ...
 \end{enumerate}
@@ -170,7 +170,7 @@ The \verb+XAssetModel+ combines a set of single parametrizations to provide a cr
 \normalsize
 \medskip
 
-The matrix correlates the brownian motions implied by the parametrization vector (tbd, should we allow for a time dependent correlation ?). 
+The matrix correlates the brownian motions implied by the parametrization vector (tbd, should we allow for a time dependent correlation ?).
 
 \subsection{State variable process}
 
@@ -231,14 +231,14 @@ The xasset model is calibrated by using one of the calibration methods provided.
 \normalsize
 \medskip
 
-and allow 
+and allow
 
 \begin{enumerate}
 \item the calibration of the single LGM models to (in-currency) interest rate options
 \item the calibration of the fx processes to fx options
 \end{enumerate}
 
-The calibration methods have two tasks. First they select the appropriate subset of model parameters that are actually calibrated (by the standard functionality in QL's \verb+CalibratedModel+). 
+The calibration methods have two tasks. First they select the appropriate subset of model parameters that are actually calibrated (by the standard functionality in QL's \verb+CalibratedModel+).
 
 Secondly they may set up a more complicated calibration procedure calling single calibrations more than once. For example the iterative procedures calibrate each volatility (reversion) parameter of a LGM model separately to one corresponding option with the same expiry (or maturity) as the step date of the parameter. This may be more stable or faster than a global calibration to a whole set of options.
 
