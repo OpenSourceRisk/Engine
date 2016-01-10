@@ -883,7 +883,7 @@ void XAssetModelTest::testLgm4fAndFxCalibration() {
     */
 
     // error tolerances for low discrepancy sequences
-    Real errTolLd[] = {0.5E-4, 0.5E-4, 0.5E-4, 50.0E-4, 50.0E-4};
+    Real errTolLd[] = {0.2E-4, 0.2E-4, 0.2E-4, 50.0E-4, 50.0E-4};
 
     for (Size i = 0; i < 5; ++i) {
         // check error estimate
@@ -903,7 +903,8 @@ void XAssetModelTest::testLgm4fAndFxCalibration() {
                         << i << " (" << e_an[i]
                         << ") is inconsistent with numerical value (Euler "
                            "discretization, "
-                        << mean(e_eu[i]) << "), tolerance is "
+                        << mean(e_eu[i]) << "), error is "
+                        << e_an[i] - mean(e_eu[i]) << " tolerance is "
                         << errTolLd[i]
                         /*<< errFac * error_of<tag::mean>(e_eu[i])*/);
         }
@@ -919,9 +920,9 @@ void XAssetModelTest::testLgm4fAndFxCalibration() {
     // Real tolLn = 40.0E-4;     // fx-fx
 
     // tolerances for low discrepancy sequences
-    Real tollNormal = 0.5E-4; // ir-ir
-    Real tolMixed = 1.0E-4;   // ir-fx
-    Real tolLn = 20.0E-4;     // fx-fx
+    Real tollNormal = 0.1E-4; // ir-ir
+    Real tolMixed = 0.2E-4;   // ir-fx
+    Real tolLn = 8.0E-4;      // fx-fx
 
     for (Size i = 0; i < 5; ++i) {
         for (Size j = 0; j <= i; ++j) {
@@ -939,8 +940,9 @@ void XAssetModelTest::testLgm4fAndFxCalibration() {
                             << i << "," << j << ") (" << v_an[i][j]
                             << ") is inconsistent with numerical "
                                "value (Euler discretization, "
-                            << covariance(v_eu[i][j]) << "), tolerance is "
-                            << tol);
+                            << covariance(v_eu[i][j]) << "), error is "
+                            << v_an[i][j] - covariance(v_eu[i][j])
+                            << " tolerance is " << tol);
             }
         }
     }
