@@ -579,10 +579,9 @@ void XAssetModelTest::testCcyLgm3fForeignPayouts() {
 
 } // testCcyLgm3fForeignPayouts
 
-void XAssetModelTest::testLgm4fAndFxCalibration() {
-    BOOST_TEST_MESSAGE(
-        "Testing analytic moments vs. Euler discretization and fx calibration "
-        "in Ccy LGM 4F model...");
+void XAssetModelTest::testLgm5fAndFxCalibration() {
+
+    BOOST_TEST_MESSAGE("Testing fx calibration in Ccy LGM 5F model...");
 
     SavedSettings backup;
 
@@ -829,6 +828,9 @@ void XAssetModelTest::testLgm4fAndFxCalibration() {
 
     // test analytical vs Euler moments
 
+    BOOST_TEST_MESSAGE("Testing analytic moments vs. Euler discretization "
+                       "in Ccy LGM 5F model...");
+
     boost::shared_ptr<StochasticProcess> p_exact =
         ccLgm->stateProcess(XAssetStateProcess::exact);
     boost::shared_ptr<StochasticProcess> p_euler =
@@ -1057,7 +1059,7 @@ test_suite *XAssetModelTest::suite() {
     suite->add(QUANTEXT_TEST_CASE(&XAssetModelTest::testLgm1fCalibration));
     suite->add(
         QUANTEXT_TEST_CASE(&XAssetModelTest::testCcyLgm3fForeignPayouts));
-    suite->add(QUANTEXT_TEST_CASE(&XAssetModelTest::testLgm4fAndFxCalibration));
+    suite->add(QUANTEXT_TEST_CASE(&XAssetModelTest::testLgm5fAndFxCalibration));
     suite->add(QUANTEXT_TEST_CASE(&XAssetModelTest::testLgmGsrEquivalence));
     return suite;
 }
