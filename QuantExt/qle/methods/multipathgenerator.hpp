@@ -147,6 +147,11 @@ namespace QuantExt {
                               reorderedSeq_.begin() + (j + 1) * l,
                               transformedSeq_.begin() + j * l);
             }
+            for(Size i=0;i<l;++i) {
+                for(Size j=0;j<n;++j) {
+                    reorderedSeq_[j + i * n] = transformedSeq_[i + j * l];
+                }
+            }
         }
 
         for (Size i = 1; i <= l; i++) {
@@ -156,12 +161,12 @@ namespace QuantExt {
 
             if (brownianBridge_) {
                 if (antithetic)
-                    std::transform(transformedSeq_.begin() + offset,
-                                   transformedSeq_.begin() + offset + n,
+                    std::transform(reorderedSeq_.begin() + offset,
+                                   reorderedSeq_.begin() + offset + n,
                                    temp.begin(), std::negate<Real>());
                 else
-                    std::copy(transformedSeq_.begin() + offset,
-                              transformedSeq_.begin() + offset + n,
+                    std::copy(reorderedSeq_.begin() + offset,
+                              reorderedSeq_.begin() + offset + n,
                               temp.begin());
             } else {
                 if (antithetic)
