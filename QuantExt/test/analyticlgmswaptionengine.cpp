@@ -279,7 +279,7 @@ void AnalyticLgmSwaptionEngineTest::testAgainstOtherEngines() {
 
     BOOST_TEST_MESSAGE(
         "Testing analytic LGM swaption engine against "
-        "G1d adaptor / Gsr integral engines and Hull White fd engine...");
+        "G1d adaptor / Gsr integral and Hull White fd engines...");
 
     Real discountingRateLevel[] = {-0.0050, 0.01, 0.03, 0.10};
     Real forwardingRateLevel[] = {-0.0100, 0.01, 0.04, 0.12};
