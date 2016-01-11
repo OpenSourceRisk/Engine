@@ -6,6 +6,7 @@ QLE_TESTS = \
 	discountcurve.hpp discountcurve.cpp \
 	logquote.hpp logquote.cpp \
 	xassetmodel.hpp xassetmodel.cpp \
+	xassetmodel2.hpp xassetmodel2.cpp \
 	xassetmodelparametrizations.hpp xassetmodelparametrizations.cpp
 
 dist-hook:
