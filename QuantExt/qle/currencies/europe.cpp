@@ -18,6 +18,4 @@ namespace QuantExt {
                                          "UAH", "", 100, Rounding(), "1$.2f %3%"));
         data_ = uahData;
     }
-};
-
-
+}
