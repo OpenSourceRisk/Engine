@@ -29,6 +29,10 @@ PiecewiseConstantHelper1::PiecewiseConstantHelper1(const Array &t)
     checkTimes(t);
 }
 
+PiecewiseConstantHelper11::PiecewiseConstantHelper11(const Array &t1,
+                                                     const Array &t2)
+    : h1_(t1), h2_(t2) {}
+
 PiecewiseConstantHelper2::PiecewiseConstantHelper2(const Array &t)
     : zeroCutoff_(1.0E-6), t_(t),
       y_(boost::make_shared<PseudoParameter>(t.size() + 1)) {
