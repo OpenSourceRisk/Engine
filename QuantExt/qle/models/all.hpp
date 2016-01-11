@@ -11,6 +11,7 @@
 #include <qle/models/irlgm1fconstantparametrization.hpp>
 #include <qle/models/irlgm1fpiecewiseconstanthullwhiteadaptor.hpp>
 #include <qle/models/irlgm1fpiecewiseconstantparametrization.hpp>
+#include <qle/models/irlgm1fpiecewiselinearparametrization.hpp>
 #include <qle/models/irlgm1fparametrization.hpp>
 #include <qle/models/linkablecalibratedmodel.hpp>
 #include <qle/models/lgm.hpp>

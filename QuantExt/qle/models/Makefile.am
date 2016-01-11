@@ -15,6 +15,7 @@ libModels_la_SOURCES = \
 	irlgm1fparametrization.cpp \
 	irlgm1fpiecewiseconstanthullwhiteadaptor.cpp \
 	irlgm1fpiecewiseconstantparametrization.cpp \
+	irlgm1fpiecewiselinearparametrization.cpp \
 	linkablecalibratedmodel.cpp \
 	lgm.cpp \
 	parametrization.cpp \
@@ -34,6 +35,7 @@ this_include_HEADERS = \
 	irlgm1fconstantparametrization.hpp \
 	irlgm1fpiecewiseconstanthullwhiteadaptor.hpp \
 	irlgm1fpiecewiseconstantparametrization.hpp \
+	irlgm1fpiecewiselinearparametrization.hpp \
 	irlgm1fparametrization.hpp \
 	linkablecalibratedmodel.hpp \
 	lgm.hpp \

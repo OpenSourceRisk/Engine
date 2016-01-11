@@ -21,46 +21,61 @@ namespace QuantExt {
 
 class PiecewiseConstantHelper1 {
   public:
-    /*! y are the raw values in the sense of parameter transformation */
     PiecewiseConstantHelper1(const Array &t);
     const Array &t() const;
     const boost::shared_ptr<Parameter> p() const;
     void update() const;
+    /*! this returns the transformed value */
     Real y(const Time t) const;
     //! int_0^t y^2(s) ds
     Real int_y_sqr(const Time t) const;
 
-  protected:
     Real direct(const Real x) const;
     Real inverse(const Real y) const;
 
+  protected:
     const Array t_;
+    /*! y are the raw values in the sense of parameter transformation */
     const boost::shared_ptr<PseudoParameter> y_;
 
   private:
     mutable std::vector<Real> b_;
 };
 
-class PiecewiseConstantHelper2 {
+/*! this is PiecewiseConstantHelper1 with two sets of (t,y) */
+class PiecewiseConstantHelper11 {
   public:
     /*! y are the raw values in the sense of parameter transformation */
+    PiecewiseConstantHelper11(const Array &t1, const Array &t2);
+    const PiecewiseConstantHelper1 &helper1() const;
+    const PiecewiseConstantHelper1 &helper2() const;
+
+  private:
+    const PiecewiseConstantHelper1 h1_, h2_;
+};
+
+class PiecewiseConstantHelper2 {
+  public:
     PiecewiseConstantHelper2(const Array &t);
     const Array &t() const;
     const boost::shared_ptr<Parameter> p() const;
     void update() const;
+    /*! this returns the transformed value */
     Real y(const Time t) const;
     //! exp(int_0^t -y(s)) ds
     Real exp_m_int_y(const Time t) const;
     //! int_0^t exp(int_0^s -y(u) du) ds
     Real int_exp_m_int_y(const Time t) const;
 
+    Real direct(const Real x) const;
+    Real inverse(const Real y) const;
+
   private:
     const Real zeroCutoff_;
 
   protected:
-    Real direct(const Real x) const;
-    Real inverse(const Real y) const;
     const Array t_;
+    /*! y are the raw values in the sense of parameter transformation */
     const boost::shared_ptr<PseudoParameter> y_;
 
   private:
@@ -69,26 +84,29 @@ class PiecewiseConstantHelper2 {
 
 class PiecewiseConstantHelper3 {
   public:
-    /*! y1, y2 are the raw values in the sense of parameter transformation */
     PiecewiseConstantHelper3(const Array &t);
     const Array &t() const;
     const boost::shared_ptr<Parameter> p1() const;
     const boost::shared_ptr<Parameter> p2() const;
     void update() const;
+    /*! this returns the transformed value */
     Real y1(const Time t) const;
+    /*! this returns the transformed value */
     Real y2(const Time t) const;
     //! int_0^t y1^2(s) exp(2*int_0^s y2(u) du) ds
     Real int_y1_sqr_exp_2_int_y2(const Time t) const;
+
+    Real direct1(const Real x) const;
+    Real inverse1(const Real y) const;
+    Real direct2(const Real x) const;
+    Real inverse2(const Real y) const;
 
   private:
     const Real zeroCutoff_;
 
   protected:
-    Real direct1(const Real x) const;
-    Real inverse1(const Real y) const;
-    Real direct2(const Real x) const;
-    Real inverse2(const Real y) const;
     const Array t_;
+    /*! y1, y2 are the raw values in the sense of parameter transformation */
     const boost::shared_ptr<PseudoParameter> y1_, y2_;
 
   private:
@@ -119,6 +137,14 @@ inline void PiecewiseConstantHelper1::update() const {
                (t_[i] - (i == 0 ? 0.0 : t_[i - 1]));
         b_[i] = sum;
     }
+}
+
+inline const PiecewiseConstantHelper1 &PiecewiseConstantHelper11::helper1() const {
+    return h1_;
+}
+
+inline const PiecewiseConstantHelper1 &PiecewiseConstantHelper11::helper2() const {
+    return h2_;
 }
 
 inline const Array &PiecewiseConstantHelper2::t() const { return t_; }

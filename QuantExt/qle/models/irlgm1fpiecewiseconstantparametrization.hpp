@@ -4,7 +4,7 @@
  Copyright (C) 2016 Quaternion Risk Management Ltd.
 */
 
-/*! \file irlgm1fconstantparametrization.hpp
+/*! \file irlgm1fpiecewiseconstantparametrization.hpp
     \brief piecewise constant model parametrization
 */
 
@@ -23,7 +23,7 @@ class IrLgm1fPiecewiseConstantParametrization
   public:
     /*! note that if a non unit scaling is provided, then
         the parameterValues method returns the unscaled alpha,
-        while all other method return scaled (and shifted) values */
+        while all other methods return scaled (and shifted) values */
     IrLgm1fPiecewiseConstantParametrization(
         const Currency &currency,
         const Handle<YieldTermStructure> &termStructure,
