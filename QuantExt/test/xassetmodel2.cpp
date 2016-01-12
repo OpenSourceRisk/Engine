@@ -45,6 +45,8 @@ using namespace boost::accumulators;
 
 void XAssetModelTest2::testFMSCase() {
 
+    BOOST_TEST_MESSAGE("Testing Ccy LGM 31F model (MODIFY THE ORIGINAL FMS DATA IN THE OPEN VERSION !)...");
+
     SavedSettings backup;
 
     Settings::instance().evaluationDate() = Date(18, Dec, 2015);
@@ -652,6 +654,8 @@ void XAssetModelTest2::testFMSCase() {
     boost::shared_ptr<StochasticProcess> p_euler =
         xmodel->stateProcess(XAssetStateProcess::euler);
 
+    BOOST_TEST_MESSAGE("Testing for positive semidefinite covariance matrices in Ccy LGM 31F model...");
+
     // check that covariance matrices are positive semidefinite
 
     Array x0 = p_exact->initialValues();
@@ -670,6 +674,20 @@ void XAssetModelTest2::testFMSCase() {
         }
     }
 
+    // check positive semidefiniteness for one super-large step
+    Matrix cov = p_exact->covariance(0.0, x0, simTimes_.back());
+    SymmetricSchurDecomposition ssd2(cov);
+    for (Size i = 0; i < ssd2.eigenvalues().size(); ++i) {
+        if (ssd2.eigenvalues()[i] < 0.0) {
+            BOOST_ERROR("negative eigenvalue at "
+                        << i << " in covariance matrix at t=0.0 for dt=100.0"
+                        << " (" << ssd2.eigenvalues()[i] << ")");
+        }
+    }
+
+
+    BOOST_TEST_MESSAGE("Check analytical moments against Euler simulation in Ccy LGM 31F model...");
+
     // check the expectation and covariance over 0...T against euler
     Real T = 10.0;
     Size steps = T * 10.0;
@@ -680,10 +698,10 @@ void XAssetModelTest2::testFMSCase() {
     Array e_an = p_exact->expectation(0.0, x0, T);
     Matrix v_an = p_exact->covariance(0.0, x0, T);
 
-    const Size dim = 31;
+    const Size dim = 31, nIr = 13+3;
 
     LowDiscrepancy::rsg_type sg =
-        LowDiscrepancy::make_sequence_generator(steps * 31, seed);
+        LowDiscrepancy::make_sequence_generator(steps * dim, seed);
     QuantExt::MultiPathGenerator<LowDiscrepancy::rsg_type> pgen(p_euler, grid,
                                                                 sg, true);
 
@@ -786,16 +804,47 @@ void XAssetModelTest2::testFMSCase() {
     // std::clog << std::endl;
     // end debug output
 
-    // check positive semidefiniteness for one super-large step
-    Matrix cov = p_exact->covariance(0.0, x0, simTimes_.back());
-    SymmetricSchurDecomposition ssd2(cov);
-    for (Size i = 0; i < ssd2.eigenvalues().size(); ++i) {
-        if (ssd2.eigenvalues()[i] < 0.0) {
-            BOOST_ERROR("negative eigenvalue at "
-                        << i << " in covariance matrix at t=0.0 for dt=100.0"
-                        << " (" << ssd2.eigenvalues()[i] << ")");
+    BOOST_TEST_MESSAGE("Check martingale property in Ccy LGM 31F model...");
+
+    LowDiscrepancy::rsg_type sg2 =
+        LowDiscrepancy::make_sequence_generator(steps * dim, seed);
+    QuantExt::MultiPathGenerator<LowDiscrepancy::rsg_type> pgen2(p_euler, grid,
+                                                                sg2, true);
+
+    accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > >
+        e_eu2[dim];
+
+    for (Size i = 0; i < paths; ++i) {
+        Sample<MultiPath> path = pgen.next();
+        for (Size ii = 0; ii < nIr; ++ii) {
+            if(ii==0) {
+            // domestic currency
+                e_eu2[ii](1.0 / xmodel->numeraire(0, T, path.value[0].back()));
+            }
+            else {
+                // foreign currencies
+                e_eu2[ii](std::exp(path.value[nIr + (ii - 1)].back()) /
+                          xmodel->numeraire(0, T, path.value[0].back()));
+            }
         }
     }
+
+    // as before we have to exclude the inflation indices
+    tol = 0.5E-4;
+    for(Size ii=0;ii<nIr-3;++ii) {
+        if(std::fabs( -std::log(mean(e_eu2[ii]))/T + std::log(yts->discount(T))/T ) > tol) {
+            BOOST_ERROR("failed to verify martingale property for ccy "
+                        << ii << ", equivalent simulated zero yield is "
+                        << -std::log(mean(e_eu2[ii])) / T
+                        << " while theoretical value is "
+                        << -std::log(yts->discount(T)) / T << " difference is "
+                        << -std::log(mean(e_eu2[ii])) / T +
+                               std::log(yts->discount(T)) / T
+                        << ", tolerance is " << tol);
+        }
+    }
+
+
 
 } // testFMSCase
 
