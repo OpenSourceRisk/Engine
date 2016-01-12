@@ -1,9 +1,9 @@
 SUBDIRS = \
 	currencies \
+	indexes \
 	quotes
 
 #	cashflows \
-#	indexes \
 #	instruments \
 #	math \
 #	models \

@@ -7,4 +7,5 @@
 
 
 #include <qle/currencies/all.hpp>
+#include <qle/indexes/all.hpp>
 #include <qle/quotes/all.hpp>
