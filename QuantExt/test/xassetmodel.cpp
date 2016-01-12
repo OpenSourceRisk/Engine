@@ -837,7 +837,7 @@ void XAssetModelTest::testLgm5fAndFxCalibration() {
         ccLgm->stateProcess(XAssetStateProcess::euler);
 
     Real T = 10.0;         // horizon at which we compare the moments
-    Size steps = T * 10.0; // number of simulation steps
+    Size steps = T * 25.0; // number of simulation steps
     Size paths = 25000;    // number of paths
 
     Array e_an = p_exact->expectation(0.0, p_exact->initialValues(), T);
@@ -850,10 +850,6 @@ void XAssetModelTest::testLgm5fAndFxCalibration() {
         LowDiscrepancy::make_sequence_generator(steps * 5, seed);
     QuantExt::MultiPathGenerator<LowDiscrepancy::rsg_type> pgen(p_euler, grid, sg,
     true);
-
-    // PseudoRandom::rsg_type sg =
-    //     PseudoRandom::make_sequence_generator(steps * 5, seed);
-    // QuantExt::MultiPathGenerator<PseudoRandom::rsg_type> pgen(p_euler, grid, sg, false);
 
     accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > >
         e_eu[5];
@@ -872,56 +868,24 @@ void XAssetModelTest::testLgm5fAndFxCalibration() {
         }
     }
 
-    // relative tolerance for error estimates
-    /*
-    Real errorTol = 0.2;
-    */
-
-    // absolute error should be less than errFac * error estimate
-    // for pseudorandom sequences
-    /* 
-       Real errFac = 2.0;
-       Real expected_eom[] = {0.00013, 0.00013, 0.00016, 0.0031, 0.0042};
-    */
-
-    // error tolerances for low discrepancy sequences
-    Real errTolLd[] = {0.2E-4, 0.2E-4, 0.2E-4, 50.0E-4, 50.0E-4};
+    Real errTolLd[] = {0.2E-4, 0.2E-4, 0.2E-4, 10.0E-4, 10.0E-4};
 
     for (Size i = 0; i < 5; ++i) {
-        // check error estimate
-        /*
-        if (std::fabs((error_of<tag::mean>(e_eu[i]) - expected_eom[i]) /
-                      expected_eom[i]) > errorTol) {
-            BOOST_ERROR("error of mean for component #"
-                        << i << " (" << error_of<tag::mean>(e_eu[i])
-                        << ") exceeds relative tolerance (" << errorTol
-                        << "), expected value is " << expected_eom[i]);
-        } 
-        */
         // check expectation against analytical calculation
-        if (std::fabs(mean(e_eu[i]) - e_an[i]) > errTolLd[i]
-            /*errFac * error_of<tag::mean>(e_eu[i])*/) {
+        if (std::fabs(mean(e_eu[i]) - e_an[i]) > errTolLd[i]) {
             BOOST_ERROR("analytical expectation for component #"
                         << i << " (" << e_an[i]
                         << ") is inconsistent with numerical value (Euler "
                            "discretization, "
                         << mean(e_eu[i]) << "), error is "
                         << e_an[i] - mean(e_eu[i]) << " tolerance is "
-                        << errTolLd[i]
-                        /*<< errFac * error_of<tag::mean>(e_eu[i])*/);
+                        << errTolLd[i]);
         }
     }
 
     // we have to deal with different natures of volatility
     // for ir (normal) and fx (ln) so different error
     // tolerances apply
-
-    // tolerances for pseudorandom sequences
-    // Real tollNormal = 0.5E-4; // ir-ir
-    // Real tolMixed = 2.0E-4;   // ir-fx
-    // Real tolLn = 40.0E-4;     // fx-fx
-
-    // tolerances for low discrepancy sequences
     Real tollNormal = 0.1E-4; // ir-ir
     Real tolMixed = 0.2E-4;   // ir-fx
     Real tolLn = 8.0E-4;      // fx-fx
