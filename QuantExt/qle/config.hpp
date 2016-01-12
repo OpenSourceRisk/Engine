@@ -31,8 +31,7 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #define HAVE_UNISTD_H 1
 
-/* Define to the sub-directory in which libtool stores uninstalled libraries.
-   */
+/* Define to the sub-directory where libtool stores uninstalled libraries. */
 #define LT_OBJDIR ".libs/"
 
 /* Name of package */
@@ -57,13 +56,13 @@
 #define PACKAGE_VERSION "0.1"
 
 /* Define this if your compiler defines asinh in <cmath>. */
-/* #undef QL_HAVE_ASINH */
+#define QL_HAVE_ASINH /**/
 
 /* Define this if your compiler supports the long long type. */
-/* #undef QL_HAVE_LONG_LONG */
+#define QL_HAVE_LONG_LONG /**/
 
 /* Define this if your compiler does not support Boost::uBLAS. */
-#define QL_NO_UBLAS_SUPPORT /**/
+/* #undef QL_NO_UBLAS_SUPPORT */
 
 /* Define if running on a Mac OS X machine. */
 /* #undef QL_PATCH_DARWIN */
