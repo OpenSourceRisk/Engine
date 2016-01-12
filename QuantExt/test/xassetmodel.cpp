@@ -837,7 +837,7 @@ void XAssetModelTest::testLgm5fAndFxCalibration() {
         ccLgm->stateProcess(XAssetStateProcess::euler);
 
     Real T = 10.0;         // horizon at which we compare the moments
-    Size steps = T * 25.0; // number of simulation steps
+    Size steps = T * 10.0; // number of simulation steps
     Size paths = 25000;    // number of paths
 
     Array e_an = p_exact->expectation(0.0, p_exact->initialValues(), T);
