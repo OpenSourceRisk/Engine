@@ -2,4 +2,7 @@
 /* Add the files to be included into Makefile.am instead. */
 
 #include <qle/currencies/africa.hpp>
+#include <qle/currencies/america.hpp>
+#include <qle/currencies/asia.hpp>
+#include <qle/currencies/europe.hpp>
 

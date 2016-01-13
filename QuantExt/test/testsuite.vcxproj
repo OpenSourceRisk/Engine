@@ -628,9 +628,17 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="currency.cpp" />
+    <ClCompile Include="discountcurve.cpp" />
+    <ClCompile Include="index.cpp" />
+    <ClCompile Include="logquote.cpp" />
     <ClCompile Include="testsuite.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="currency.hpp" />
+    <ClInclude Include="discountcurve.hpp" />
+    <ClInclude Include="index.hpp" />
+    <ClInclude Include="logquote.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\QuantExt.vcxproj">

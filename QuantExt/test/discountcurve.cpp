@@ -64,9 +64,9 @@ void test(bool logLinear) {
 }
 
 void DiscountCurveTest::testDiscountCurve() {
-    BOOST_MESSAGE("Testing QuantExt::InteroplatedDiscountCurve (Linear) ...");
+    BOOST_TEST_MESSAGE("Testing QuantExt::InteroplatedDiscountCurve (Linear) ...");
     test(false); //test linear interpolation
-    BOOST_MESSAGE("Testing QuantExt::InteroplatedDiscountCurve (LogLinear) ...");
+    BOOST_TEST_MESSAGE("Testing QuantExt::InteroplatedDiscountCurve (LogLinear) ...");
     test(true);  //test log linear interpolation
 }
 
