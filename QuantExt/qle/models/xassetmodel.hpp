@@ -67,7 +67,7 @@ class XAssetModel : public LinkableCalibratedModel {
     XAssetModel(const std::vector<boost::shared_ptr<Parametrization> >
                     &parametrizations,
                 const Matrix &correlation, SalvagingAlgorithm::Type salvaging =
-                                               SalvagingAlgorithm::Spectral);
+                                               SalvagingAlgorithm::None);
 
     /*! allow for time dependent correlation (2nd ctor) */
 
