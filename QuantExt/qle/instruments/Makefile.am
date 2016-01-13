@@ -5,11 +5,22 @@ dist_data_DATA =
 SUBDIRS = 
 
 libInstruments_la_SOURCES = \
-	all.hpp
+    averageois.cpp \
+	crossccybasisswap.cpp \
+	crossccyswap.cpp \
+	fxforward.cpp \
+	makeaverageois.cpp \
+	tenorbasisswap.cpp
 
 this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \
-	all.hpp
+	all.hpp \
+	averageois.hpp \
+	crossccybasisswap.hpp \
+	crossccyswap.hpp \
+	fxforward.hpp \
+	makeaverageois.hpp \
+	tenorbasisswap.hpp
 
 noinst_LTLIBRARIES = libInstruments.la
 
