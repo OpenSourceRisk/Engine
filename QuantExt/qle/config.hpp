@@ -57,13 +57,13 @@
 #define PACKAGE_VERSION "0.1"
 
 /* Define this if your compiler defines asinh in <cmath>. */
-/* #undef QL_HAVE_ASINH */
+#define QL_HAVE_ASINH /**/
 
 /* Define this if your compiler supports the long long type. */
-/* #undef QL_HAVE_LONG_LONG */
+#define QL_HAVE_LONG_LONG /**/
 
 /* Define this if your compiler does not support Boost::uBLAS. */
-#define QL_NO_UBLAS_SUPPORT /**/
+/* #undef QL_NO_UBLAS_SUPPORT */
 
 /* Define if running on a Mac OS X machine. */
 /* #undef QL_PATCH_DARWIN */

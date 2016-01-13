@@ -3,7 +3,8 @@ QLE_TESTS = \
 	testsuite.cpp \
 	discountcurve.hpp discountcurve.cpp \
 	logquote.hpp logquote.cpp \
-	currency.hpp currency.cpp
+	currency.hpp currency.cpp \
+	index.hpp index.cpp
 
 dist-hook:
 	mkdir -p $(distdir)/build
