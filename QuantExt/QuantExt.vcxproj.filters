@@ -13,35 +13,153 @@
     <ClInclude Include="qle\currencies\all.hpp">
       <Filter>currencies</Filter>
     </ClInclude>
-    <ClInclude Include="qle\termstructures\tenorbasisswaphelper.hpp" />
-    <ClInclude Include="qle\termstructures\oisratehelper.hpp" />
-    <ClInclude Include="qle\termstructures\interpolateddiscountcurve.hpp" />
-    <ClInclude Include="qle\termstructures\fxforwardhelper.hpp" />
-    <ClInclude Include="qle\termstructures\crossccybasisswaphelper.hpp" />
-    <ClInclude Include="qle\termstructures\basistwoswaphelper.hpp" />
-    <ClInclude Include="qle\termstructures\averageoisratehelper.hpp" />
-    <ClInclude Include="qle\termstructures\all.hpp" />
-    <ClInclude Include="qle\pricingengines\discountingfxforwardengine.hpp" />
-    <ClInclude Include="qle\pricingengines\crossccyswapengine.hpp" />
-    <ClInclude Include="qle\pricingengines\all.hpp" />
-    <ClInclude Include="qle\instruments\all.hpp" />
-    <ClInclude Include="qle\instruments\averageois.hpp" />
-    <ClInclude Include="qle\instruments\crossccybasisswap.hpp" />
-    <ClInclude Include="qle\instruments\crossccyswap.hpp" />
-    <ClInclude Include="qle\instruments\fxforward.hpp" />
-    <ClInclude Include="qle\instruments\makeaverageois.hpp" />
-    <ClInclude Include="qle\instruments\tenorbasisswap.hpp" />
-    <ClInclude Include="qle\indexes\genericiborindex.hpp" />
-    <ClInclude Include="qle\indexes\all.hpp" />
-    <ClInclude Include="qle\currencies\europe.hpp" />
-    <ClInclude Include="qle\currencies\asia.hpp" />
-    <ClInclude Include="qle\currencies\america.hpp" />
-    <ClInclude Include="qle\cashflows\subperiodscouponpricer.hpp" />
-    <ClInclude Include="qle\cashflows\subperiodscoupon.hpp" />
-    <ClInclude Include="qle\cashflows\couponpricer.hpp" />
-    <ClInclude Include="qle\cashflows\averageonindexedcouponpricer.hpp" />
-    <ClInclude Include="qle\cashflows\averageonindexedcoupon.hpp" />
-    <ClInclude Include="qle\cashflows\all.hpp" />
+    <ClInclude Include="qle\currencies\america.hpp">
+      <Filter>currencies</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\currencies\asia.hpp">
+      <Filter>currencies</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\currencies\europe.hpp">
+      <Filter>currencies</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\genericiborindex.hpp">
+      <Filter>indexes</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\audbbsw.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\averagebma.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\chftois.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\czkpribor.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\dkkcibor.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\hkdhibor.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\hufbubor.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\idridrfix.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\inrmifor.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\mxntiie.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\noknibor.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\nzdbkbm.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\plnwibor.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\sekstibor.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\sgdsibor.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\sgdsor.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\skkbribor.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\tonar.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\interpolateddiscountcurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\cashflows\all.hpp">
+      <Filter>cashflows</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\cashflows\averageonindexedcoupon.hpp">
+      <Filter>cashflows</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\cashflows\averageonindexedcouponpricer.hpp">
+      <Filter>cashflows</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\cashflows\couponpricer.hpp">
+      <Filter>cashflows</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\cashflows\subperiodscoupon.hpp">
+      <Filter>cashflows</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\cashflows\subperiodscouponpricer.hpp">
+      <Filter>cashflows</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\all.hpp">
+      <Filter>indexes</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\all.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\instruments\all.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\instruments\averageois.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\instruments\crossccybasisswap.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\instruments\crossccyswap.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\instruments\fxforward.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\instruments\makeaverageois.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\instruments\tenorbasisswap.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\all.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\crossccyswapengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\discountingfxforwardengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\quotes\all.hpp">
+      <Filter>quotes</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\all.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\averageoisratehelper.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\basistwoswaphelper.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\crossccybasisswaphelper.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\fxforwardhelper.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\oisratehelper.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\tenorbasisswaphelper.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -85,27 +203,71 @@
     <ClCompile Include="qle\currencies\africa.cpp">
       <Filter>currencies</Filter>
     </ClCompile>
-    <ClCompile Include="qle\termstructures\tenorbasisswaphelper.cpp" />
-    <ClCompile Include="qle\termstructures\oisratehelper.cpp" />
-    <ClCompile Include="qle\termstructures\fxforwardhelper.cpp" />
-    <ClCompile Include="qle\termstructures\crossccybasisswaphelper.cpp" />
-    <ClCompile Include="qle\termstructures\basistwoswaphelper.cpp" />
-    <ClCompile Include="qle\termstructures\averageoisratehelper.cpp" />
-    <ClCompile Include="qle\pricingengines\discountingfxforwardengine.cpp" />
-    <ClCompile Include="qle\pricingengines\crossccyswapengine.cpp" />
-    <ClCompile Include="qle\instruments\averageois.cpp" />
-    <ClCompile Include="qle\instruments\crossccybasisswap.cpp" />
-    <ClCompile Include="qle\instruments\crossccyswap.cpp" />
-    <ClCompile Include="qle\instruments\fxforward.cpp" />
-    <ClCompile Include="qle\instruments\makeaverageois.cpp" />
-    <ClCompile Include="qle\instruments\tenorbasisswap.cpp" />
-    <ClCompile Include="qle\currencies\europe.cpp" />
-    <ClCompile Include="qle\currencies\asia.cpp" />
-    <ClCompile Include="qle\currencies\america.cpp" />
-    <ClCompile Include="qle\cashflows\subperiodscouponpricer.cpp" />
-    <ClCompile Include="qle\cashflows\subperiodscoupon.cpp" />
-    <ClCompile Include="qle\cashflows\couponpricer.cpp" />
-    <ClCompile Include="qle\cashflows\averageonindexedcouponpricer.cpp" />
-    <ClCompile Include="qle\cashflows\averageonindexedcoupon.cpp" />
+    <ClCompile Include="qle\currencies\america.cpp">
+      <Filter>currencies</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\currencies\asia.cpp">
+      <Filter>currencies</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\currencies\europe.cpp">
+      <Filter>currencies</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\cashflows\averageonindexedcoupon.cpp">
+      <Filter>cashflows</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\cashflows\averageonindexedcouponpricer.cpp">
+      <Filter>cashflows</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\cashflows\couponpricer.cpp">
+      <Filter>cashflows</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\cashflows\subperiodscoupon.cpp">
+      <Filter>cashflows</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\cashflows\subperiodscouponpricer.cpp">
+      <Filter>cashflows</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\averageois.cpp">
+      <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\crossccybasisswap.cpp">
+      <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\crossccyswap.cpp">
+      <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\fxforward.cpp">
+      <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\makeaverageois.cpp">
+      <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\tenorbasisswap.cpp">
+      <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\crossccyswapengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\discountingfxforwardengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\averageoisratehelper.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\basistwoswaphelper.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\crossccybasisswaphelper.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\fxforwardhelper.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\oisratehelper.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\tenorbasisswaphelper.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -14,7 +14,7 @@ using namespace boost::unit_test_framework;
 using QuantExt::LogQuote;
 
 void LogQuoteTest::testLogQuote() {
-    BOOST_MESSAGE("Testing QuantExt::LogQuote...");
+    BOOST_TEST_MESSAGE("Testing QuantExt::LogQuote...");
 
     boost::shared_ptr<SimpleQuote> quote (new QuantLib::SimpleQuote(1.0));
     Handle<Quote> qh(quote);

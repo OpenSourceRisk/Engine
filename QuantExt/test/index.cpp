@@ -38,7 +38,7 @@ void dataCheck(struct IndTestData& data) {
 
 void IndexTest::testIborIndex() {
 
-    BOOST_MESSAGE("Testing QuantExt indexes");
+    BOOST_TEST_MESSAGE("Testing QuantExt indexes");
 
     Period pd(3, Months);
 
