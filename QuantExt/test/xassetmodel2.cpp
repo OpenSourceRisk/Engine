@@ -45,6 +45,8 @@ using namespace boost::accumulators;
 
 void XAssetModelTest2::testFMSCase() {
 
+    BOOST_TEST_MESSAGE("Testing Ccy LGM 31F model (MODIFY THE ORIGINAL FMS DATA IN THE OPEN VERSION !)...");
+
     SavedSettings backup;
 
     Settings::instance().evaluationDate() = Date(18, Dec, 2015);
@@ -303,7 +305,7 @@ void XAssetModelTest2::testFMSCase() {
                        0.0049612987,  0.0052460193};
     for (Size i = 0; i < LENGTH(irTen); ++i) {
         alpha[i] = std::sqrt((zeta_DKK[i] - (i == 0 ? 0.0 : zeta_DKK[i - 1])) /
-                             (irTimes[i] - (i == 0 ? 0.0 : irTimes[i - 1])));
+                          (irTimes[i] - (i == 0 ? 0.0 : irTimes[i - 1])));
     }
     tmpIr = boost::make_shared<IrLgm1fPiecewiseLinearParametrization>(
         DKKCurrency(), yts, irTimes2, alpha, irTimes2, lambda);
@@ -652,6 +654,8 @@ void XAssetModelTest2::testFMSCase() {
     boost::shared_ptr<StochasticProcess> p_euler =
         xmodel->stateProcess(XAssetStateProcess::euler);
 
+    BOOST_TEST_MESSAGE("Testing for positive semidefinite covariance matrices in Ccy LGM 31F model...");
+
     // check that covariance matrices are positive semidefinite
 
     Array x0 = p_exact->initialValues();
@@ -660,35 +664,19 @@ void XAssetModelTest2::testFMSCase() {
         Matrix cov = p_exact->covariance(simTimes_[i - 1], x0,
                                          simTimes_[i] - simTimes_[i - 1]);
         SymmetricSchurDecomposition ssd(cov);
-        for (Size i = 0; i < ssd.eigenvalues().size(); ++i) {
-            if (ssd.eigenvalues()[i] < 0.0) {
+        for (Size j = 0; j < ssd.eigenvalues().size(); ++j) {
+            if (ssd.eigenvalues()[j] < 0.0) {
                 BOOST_ERROR("negative eigenvalue at "
-                            << i
+                            << j
                             << " in covariance matrix at t=" << simTimes_[i]
-                            << " (" << ssd.eigenvalues()[i] << ")");
+                            << " (" << ssd.eigenvalues()[j] << ")");
             }
         }
-        // if(simTimes_[i-1]>10.0 && simTimes_[i-1]<11.0) {
-        // std::clog << "covariance(" << simTimes_[i - 1] << "," << simTimes_[i]
-        //           << "): (eigenvalues=" << ssd.eigenvalues().front() << " ... "
-        //           << ssd.eigenvalues().back() << std::endl;
-        //     for(Size i=0;i<31;++i) {
-        //         std::clog << "| ";
-        //         for(Size j=0;j<31;++j) {
-        //             std::clog << cov[invMapping[i]][invMapping[j]] << " ";
-        //         }
-        //         std::clog << " |" << std::endl;
-        //     }
-        //     std::clog << std::endl;
-        // }
     }
 
-    // one super-large step
-    Matrix cov = p_exact->covariance(0.0, x0, 50.0/*simTimes_.back()*/);
+    // check positive semidefiniteness for one super-large step
+    Matrix cov = p_exact->covariance(0.0, x0, simTimes_.back());
     SymmetricSchurDecomposition ssd2(cov);
-    // std::clog << "covariance(" << 0.0 << "," << simTimes_.back()
-    //           << "): (eigenvalues=" << ssd2.eigenvalues().front() << " ... "
-    //           << ssd2.eigenvalues().back() << ")" << std::endl;
     for (Size i = 0; i < ssd2.eigenvalues().size(); ++i) {
         if (ssd2.eigenvalues()[i] < 0.0) {
             BOOST_ERROR("negative eigenvalue at "
@@ -696,6 +684,167 @@ void XAssetModelTest2::testFMSCase() {
                         << " (" << ssd2.eigenvalues()[i] << ")");
         }
     }
+
+
+    BOOST_TEST_MESSAGE("Check analytical moments against Euler simulation in Ccy LGM 31F model...");
+
+    // check the expectation and covariance over 0...T against euler
+    Real T = 10.0;
+    Size steps = T * 10.0;
+    Size paths = 25000;
+    Size seed = 42;
+    TimeGrid grid(T, steps);
+
+    Array e_an = p_exact->expectation(0.0, x0, T);
+    Matrix v_an = p_exact->covariance(0.0, x0, T);
+
+    const Size dim = 31, nIr = 13+3;
+
+    LowDiscrepancy::rsg_type sg =
+        LowDiscrepancy::make_sequence_generator(steps * dim, seed);
+    QuantExt::MultiPathGenerator<LowDiscrepancy::rsg_type> pgen(p_euler, grid,
+                                                                sg, true);
+
+    accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > >
+        e_eu[dim];
+    accumulator_set<double, stats<tag::covariance<double, tag::covariate1> > >
+        v_eu[dim][dim];
+
+    for (Size i = 0; i < paths; ++i) {
+        Sample<MultiPath> path = pgen.next();
+        for (Size ii = 0; ii < dim; ++ii) {
+            Real cii = path.value[ii].back();
+            e_eu[ii](cii);
+            for (Size jj = 0; jj <= ii; ++jj) {
+                Real cjj = path.value[jj].back();
+                v_eu[ii][jj](cii, covariate1 = cjj);
+            }
+        }
+    }
+
+    Real tol1 = 2.0E-4;  // ir
+    Real tol2 = 15.0E-4; // fx
+    Real tol3 = 2.0E-4;  // ir-ir
+    Real tol4 = 2.0E-4;  // ir-fx
+    Real tol5 = 15.0E-4;  // fx-fx
+
+    // error checks and output is in new indexes !
+    Real tol;
+    // the test cases involving the CPI indices are broken
+    // this is because of extreme values for H, which seem
+    // to cause problems in the Euler discretization
+    for (Size i = 0; i < 28 /*dim*/; ++i) {
+        if (i < 16) {
+            tol = tol1;
+        } else {
+            tol = tol2;
+        }
+        if (std::fabs(mean(e_eu[i]) - e_an[i]) > tol) {
+            BOOST_ERROR("analytical expectation at "
+                        << i << " (" << e_an[i]
+                        << ") is inconsistent with numerical value (Euler "
+                           "discretization, "
+                        << mean(e_eu[i]) << ") error is "
+                        << e_an[i] - mean(e_eu[i]) << " tolerance is " << tol);
+        }
+        for (Size j = 0; j <= i; ++j) {
+            if (i < 16) {
+                tol = tol3;
+            } else {
+                if (j < 16) {
+                    tol = tol4;
+                } else {
+                    tol = tol5;
+                }
+            }
+            if (std::fabs(covariance(v_eu[i][j]) - v_an[i][j]) > tol) {
+                BOOST_ERROR("analytical covariance at ("
+                            << i << "," << j << ") (" << v_an[i][j]
+                            << ") is inconsistent with numerical "
+                               "value (Euler discretization, "
+                            << covariance(v_eu[i][j]) << "), error is "
+                            << v_an[i][j] - covariance(v_eu[i][j])
+                            << " tolerance is " << tol);
+            }
+        }
+    }
+
+    // debug output
+    // std::clog << "EXACT and error expectation" << std::endl;
+    // for (Size ii = 0; ii < dim; ++ii) {
+    //     std::clog << "#" << ii << " " << e_an[mapping[ii]] << " "
+    //               << mean(e_eu[mapping[ii]]) << " "
+    //               << mean(e_eu[mapping[ii]]) - e_an[mapping[ii]] << " +- "
+    //               << error_of<tag::mean>(e_eu[mapping[ii]]) << " => mult "
+    //               << (mean(e_eu[mapping[ii]]) - e_an[mapping[ii]]) /
+    //                      error_of<tag::mean>(e_eu[mapping[ii]])
+    //               << std::endl;
+    // }
+
+    // std::clog << "EXACT covariance" << std::endl;
+    // for (Size ii = 0; ii < dim; ++ii) {
+    //     std::clog << "| ";
+    //     for (Size jj = 0; jj < ii; ++jj) {
+    //         std::clog << v_an[mapping[ii]][mapping[jj]] << " ";
+    //     }
+    //     std::clog << " |" << std::endl;
+    // }
+    // std::clog << std::endl;
+
+    // std::clog << "EULER covariance error" << std::endl;
+    // for (Size ii = 0; ii < dim; ++ii) {
+    //     std::clog << "| ";
+    //     for (Size jj = 0; jj <= ii; ++jj) {
+    //         std::clog << covariance(v_eu[mapping[ii]][mapping[jj]]) -
+    //                          v_an[mapping[ii]][mapping[jj]]
+    //                   << " ";
+    //     }
+    //     std::clog << " |" << std::endl;
+    // }
+    // std::clog << std::endl;
+    // end debug output
+
+    BOOST_TEST_MESSAGE("Check martingale property in Ccy LGM 31F model...");
+
+    LowDiscrepancy::rsg_type sg2 =
+        LowDiscrepancy::make_sequence_generator(steps * dim, seed);
+    QuantExt::MultiPathGenerator<LowDiscrepancy::rsg_type> pgen2(p_euler, grid,
+                                                                sg2, true);
+
+    accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > >
+        e_eu2[dim];
+
+    for (Size i = 0; i < paths; ++i) {
+        Sample<MultiPath> path = pgen.next();
+        for (Size ii = 0; ii < nIr; ++ii) {
+            if(ii==0) {
+            // domestic currency
+                e_eu2[ii](1.0 / xmodel->numeraire(0, T, path.value[0].back()));
+            }
+            else {
+                // foreign currencies
+                e_eu2[ii](std::exp(path.value[nIr + (ii - 1)].back()) /
+                          xmodel->numeraire(0, T, path.value[0].back()));
+            }
+        }
+    }
+
+    // as before we have to exclude the inflation indices
+    tol = 0.5E-4;
+    for(Size ii=0;ii<nIr-3;++ii) {
+        if(std::fabs( -std::log(mean(e_eu2[ii]))/T + std::log(yts->discount(T))/T ) > tol) {
+            BOOST_ERROR("failed to verify martingale property for ccy "
+                        << ii << ", equivalent simulated zero yield is "
+                        << -std::log(mean(e_eu2[ii])) / T
+                        << " while theoretical value is "
+                        << -std::log(yts->discount(T)) / T << " difference is "
+                        << -std::log(mean(e_eu2[ii])) / T +
+                               std::log(yts->discount(T)) / T
+                        << ", tolerance is " << tol);
+        }
+    }
+
+
 
 } // testFMSCase
 

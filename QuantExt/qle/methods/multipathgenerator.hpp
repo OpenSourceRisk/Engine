@@ -135,6 +135,9 @@ namespace QuantExt {
         const TimeGrid& timeGrid = path[0].timeGrid();
         Time t, dt;
 
+        /* brownian bridge implementation giving the first variates
+           to the end points of the factors, then to the middle
+           points and so forth */
         Size l = path.pathSize()-1;
         if(brownianBridge_) {
             for(Size i=0;i<l;++i) {

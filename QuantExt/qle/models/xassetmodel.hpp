@@ -67,7 +67,7 @@ class XAssetModel : public LinkableCalibratedModel {
     XAssetModel(const std::vector<boost::shared_ptr<Parametrization> >
                     &parametrizations,
                 const Matrix &correlation, SalvagingAlgorithm::Type salvaging =
-                                               SalvagingAlgorithm::Spectral);
+                                               SalvagingAlgorithm::None);
 
     /*! allow for time dependent correlation (2nd ctor) */
 
@@ -471,10 +471,10 @@ inline Real XAssetModel::fx_expectation_1(const Size i, const Time t0,
     res += integral(0, na, 0, na, na, i, t0, t0 + dt);
     res -= irlgm1f(i + 1)->H(t0 + dt) *
            (-integral(i + 1, na, i + 1, i + 1, na, na, t0, t0 + dt) +
-            integral(0, na, i + 1, i + 1, na, na, t0, t0 + dt) -
+            integral(0, na, 0, i + 1, na, na, t0, t0 + dt) -
             integral(na, na, i + 1, na, na, i, t0, t0 + dt));
     res += -integral(i + 1, i + 1, i + 1, i + 1, na, na, t0, t0 + dt) +
-           integral(0, 0, i + 1, i + 1, na, na, t0, t0 + dt) -
+           integral(0, i + 1, 0, i + 1, na, na, t0, t0 + dt) -
            integral(i + 1, na, i + 1, na, na, i, t0, t0 + dt);
     return res;
 }

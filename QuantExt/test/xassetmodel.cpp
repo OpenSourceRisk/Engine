@@ -9,6 +9,7 @@
 
 #include <qle/methods/multipathgenerator.hpp>
 #include <qle/models/all.hpp>
+#include <qle/processes/all.hpp>
 #include <qle/pricingengines/all.hpp>
 
 #include <ql/currencies/europe.hpp>
@@ -439,10 +440,6 @@ void XAssetModelTest::testCcyLgm3fForeignPayouts() {
 
     Matrix c(3, 3);
     //  EUR            USD              FX
-    // c[0][0] = 1.0;  c[0][1] = -0.2; c[0][2] = 0.8; // EUR
-    // c[1][0] = -0.2; c[1][1] = 1.0;  c[1][2] = -0.5; // USD
-    // c[2][0] = 0.8;  c[2][1] = -0.5; c[2][2] = 1.0; // FX
-    //  EUR            USD              FX
     c[0][0] = 1.0;  c[0][1] = -0.2; c[0][2] = 0.8; // EUR
     c[1][0] = -0.2; c[1][1] = 1.0;  c[1][2] = -0.5; // USD
     c[2][0] = 0.8;  c[2][1] = -0.5; c[2][2] = 1.0; // FX
@@ -471,7 +468,8 @@ void XAssetModelTest::testCcyLgm3fForeignPayouts() {
     PseudoRandom::rsg_type sg2 =
         PseudoRandom::make_sequence_generator(steps, seed);
 
-    QuantExt::MultiPathGenerator<PseudoRandom::rsg_type> pg(process, grid, sg, false);
+    QuantExt::MultiPathGenerator<PseudoRandom::rsg_type> pg(process, grid, sg,
+                                                            false);
     PathGenerator<PseudoRandom::rsg_type> pg2(usdProcess, grid, sg2, false);
 
     // test
@@ -696,14 +694,8 @@ void XAssetModelTest::testLgm5fAndFxCalibration() {
 
     Matrix c(5, 5);
     //     EUR           USD           GBP         FX USD-EUR      FX GBP-EUR
-    // c[0][0] = 1.0; c[0][1] = 0.6;  c[0][2] = 0.3;  c[0][3] = 0.2;  c[0][4] = 0.3; // EUR
-    // c[1][0] = 0.6; c[1][1] = 1.0;  c[1][2] = 0.1;  c[1][3] = -0.2; c[1][4] = -0.1; // USD
-    // c[2][0] = 0.3; c[2][1] = 0.1;  c[2][2] = 1.0;  c[2][3] = 0.0;  c[2][4] = 0.1; // GBP
-    // c[3][0] = 0.2; c[3][1] = -0.2; c[3][2] = 0.0;  c[3][3] = 1.0;  c[3][4] = 0.3; // FX USD-EUR
-    // c[4][0] = 0.3; c[4][1] = -0.1; c[4][2] = 0.1;  c[4][3] = 0.3;  c[4][4] = 1.0; // FX GBP-EUR
-    //     EUR           USD           GBP         FX USD-EUR      FX GBP-EUR
     c[0][0] = 1.0; c[0][1] = 0.6;  c[0][2] = 0.3;  c[0][3] = 0.2;  c[0][4] = 0.3; // EUR
-    c[1][0] = 0.6; c[1][1] = 1.0;  c[1][2] = 0.1;  c[1][3] = -0.2; c[1][4] = -0.1; // USD
+    c[1][0] = 0.6; c[1][1] = 1.0;  c[1][2] = 0.1;  c[1][3] = -0.2; c[1][4] =-0.1; // USD
     c[2][0] = 0.3; c[2][1] = 0.1;  c[2][2] = 1.0;  c[2][3] = 0.0;  c[2][4] = 0.1; // GBP
     c[3][0] = 0.2; c[3][1] = -0.2; c[3][2] = 0.0;  c[3][3] = 1.0;  c[3][4] = 0.3; // FX USD-EUR
     c[4][0] = 0.3; c[4][1] = -0.1; c[4][2] = 0.1;  c[4][3] = 0.3;  c[4][4] = 1.0; // FX GBP-EUR
@@ -848,12 +840,8 @@ void XAssetModelTest::testLgm5fAndFxCalibration() {
 
     LowDiscrepancy::rsg_type sg =
         LowDiscrepancy::make_sequence_generator(steps * 5, seed);
-    QuantExt::MultiPathGenerator<LowDiscrepancy::rsg_type> pgen(p_euler, grid, sg,
-    true);
-
-    // PseudoRandom::rsg_type sg =
-    //     PseudoRandom::make_sequence_generator(steps * 5, seed);
-    // QuantExt::MultiPathGenerator<PseudoRandom::rsg_type> pgen(p_euler, grid, sg, false);
+    QuantExt::MultiPathGenerator<LowDiscrepancy::rsg_type> pgen(p_euler, grid,
+                                                                sg, true);
 
     accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > >
         e_eu[5];
@@ -872,56 +860,24 @@ void XAssetModelTest::testLgm5fAndFxCalibration() {
         }
     }
 
-    // relative tolerance for error estimates
-    /*
-    Real errorTol = 0.2;
-    */
-
-    // absolute error should be less than errFac * error estimate
-    // for pseudorandom sequences
-    /* 
-       Real errFac = 2.0;
-       Real expected_eom[] = {0.00013, 0.00013, 0.00016, 0.0031, 0.0042};
-    */
-
-    // error tolerances for low discrepancy sequences
-    Real errTolLd[] = {0.2E-4, 0.2E-4, 0.2E-4, 50.0E-4, 50.0E-4};
+    Real errTolLd[] = {0.2E-4, 0.2E-4, 0.2E-4, 10.0E-4, 10.0E-4};
 
     for (Size i = 0; i < 5; ++i) {
-        // check error estimate
-        /*
-        if (std::fabs((error_of<tag::mean>(e_eu[i]) - expected_eom[i]) /
-                      expected_eom[i]) > errorTol) {
-            BOOST_ERROR("error of mean for component #"
-                        << i << " (" << error_of<tag::mean>(e_eu[i])
-                        << ") exceeds relative tolerance (" << errorTol
-                        << "), expected value is " << expected_eom[i]);
-        } 
-        */
         // check expectation against analytical calculation
-        if (std::fabs(mean(e_eu[i]) - e_an[i]) > errTolLd[i]
-            /*errFac * error_of<tag::mean>(e_eu[i])*/) {
+        if (std::fabs(mean(e_eu[i]) - e_an[i]) > errTolLd[i]) {
             BOOST_ERROR("analytical expectation for component #"
                         << i << " (" << e_an[i]
                         << ") is inconsistent with numerical value (Euler "
                            "discretization, "
                         << mean(e_eu[i]) << "), error is "
                         << e_an[i] - mean(e_eu[i]) << " tolerance is "
-                        << errTolLd[i]
-                        /*<< errFac * error_of<tag::mean>(e_eu[i])*/);
+                        << errTolLd[i]);
         }
     }
 
     // we have to deal with different natures of volatility
     // for ir (normal) and fx (ln) so different error
     // tolerances apply
-
-    // tolerances for pseudorandom sequences
-    // Real tollNormal = 0.5E-4; // ir-ir
-    // Real tolMixed = 2.0E-4;   // ir-fx
-    // Real tolLn = 40.0E-4;     // fx-fx
-
-    // tolerances for low discrepancy sequences
     Real tollNormal = 0.1E-4; // ir-ir
     Real tolMixed = 0.2E-4;   // ir-fx
     Real tolLn = 8.0E-4;      // fx-fx
@@ -1053,6 +1009,98 @@ void XAssetModelTest::testLgmGsrEquivalence() {
 
 } // testLgmGsrEquivalence
 
+void XAssetModelTest::testLgmMcWithShift() {
+    BOOST_TEST_MESSAGE(
+        "Testing LGM1F Monte Carlo simulation with shifted H...");
+
+    Real T = 70.0;
+
+    Handle<YieldTermStructure> yts(boost::make_shared<FlatForward>(
+        0, NullCalendar(), 0.02, Actual365Fixed()));
+
+    boost::shared_ptr<IrLgm1fParametrization> lgm =
+        boost::make_shared<IrLgm1fConstantParametrization>(EURCurrency(), yts,
+                                                           0.01, 0.01);
+    // apply a shift of -H(T)
+    boost::shared_ptr<IrLgm1fParametrization> lgm_shifted =
+        boost::make_shared<IrLgm1fConstantParametrization>(
+            EURCurrency(), yts, 0.01, 0.01, -(1.0 - exp(-0.01 * T)) / 0.01);
+
+    boost::shared_ptr<StochasticProcess> p =
+        boost::make_shared<IrLgm1fStateProcess>(lgm);
+    boost::shared_ptr<StochasticProcess> p_shifted =
+        boost::make_shared<IrLgm1fStateProcess>(lgm_shifted);
+
+    boost::shared_ptr<Lgm> model = boost::make_shared<Lgm>(lgm);
+    boost::shared_ptr<Lgm> model_shifted = boost::make_shared<Lgm>(lgm_shifted);
+
+    Size steps = 1;
+    Size paths = 10000;
+    Size seed = 42;
+    TimeGrid grid(T, steps);
+
+    PseudoRandom::rsg_type sg =
+        PseudoRandom::make_sequence_generator(steps * 1, seed);
+    PseudoRandom::rsg_type sg2 =
+        PseudoRandom::make_sequence_generator(steps * 1, seed);
+
+    QuantExt::MultiPathGenerator<PseudoRandom::rsg_type> pgen(p, grid, sg,
+                                                              true);
+    QuantExt::MultiPathGenerator<PseudoRandom::rsg_type> pgen2(p_shifted, grid,
+                                                               sg2, true);
+
+    accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > > e_eu,
+        e_eu_2;
+
+    for (Size i = 0; i < paths; ++i) {
+        Sample<MultiPath> path = pgen.next();
+        Sample<MultiPath> path_a = pgen.antithetic();
+        Sample<MultiPath> path2 = pgen2.next();
+        Sample<MultiPath> path2_a = pgen2.antithetic();
+        e_eu(1.0 / model->numeraire(T, path.value[0].back()));
+        e_eu(1.0 / model->numeraire(T, path_a.value[0].back()));
+        e_eu_2(1.0 / model_shifted->numeraire(T, path2.value[0].back()));
+        e_eu_2(1.0 / model_shifted->numeraire(T, path2_a.value[0].back()));
+    }
+
+    Real discount = yts->discount(T);
+
+    // the shift is exactly matching the maturity of the flow and we are
+    // using antithetic sampling, so expect to get an almost perfect
+    // result in this case
+
+    if (error_of<tag::mean>(e_eu_2) > 1E-8) {
+        BOOST_ERROR("estimated error of mean for shifted mc simulation can not "
+                    "be verified ("
+                    << error_of<tag::mean>(e_eu_2) / discount
+                    << "), tolerance is 1E-8");
+    }
+
+    if (std::fabs(mean(e_eu_2) - 1.0) > 1E-8) {
+        BOOST_ERROR(
+            "error of estimated mean for shifted mc can not be verified ("
+            << mean(e_eu_2) / discount - 1.0 << "), tolerance is 1E-8");
+    }
+
+    // negative tests
+
+    if (error_of<tag::mean>(e_eu) / discount < 0.40) {
+        BOOST_ERROR(
+            "estimated error of mean for unshifted mc simulation seems to low ("
+            << error_of<tag::mean>(e_eu) / discount
+            << "), expected a value >0.40");
+    }
+
+    // we can check this for a fixed seed in the sense of a cached result
+    if (std::fabs(mean(e_eu) / discount - 1.0) < 0.10) {
+        BOOST_ERROR("error of estimated mean for unshifted mc simulation seems "
+                    "to good  ("
+                    << mean(e_eu) / yts->discount(T) - 1.0
+                    << "), expected a (absolute) value >0.10");
+    }
+
+} // testLgmMcWithShift
+
 test_suite *XAssetModelTest::suite() {
     test_suite *suite = BOOST_TEST_SUITE("XAsset model tests");
     suite->add(QUANTEXT_TEST_CASE(&XAssetModelTest::testBermudanLgm1fGsr));
@@ -1061,5 +1109,6 @@ test_suite *XAssetModelTest::suite() {
         QUANTEXT_TEST_CASE(&XAssetModelTest::testCcyLgm3fForeignPayouts));
     suite->add(QUANTEXT_TEST_CASE(&XAssetModelTest::testLgm5fAndFxCalibration));
     suite->add(QUANTEXT_TEST_CASE(&XAssetModelTest::testLgmGsrEquivalence));
+    suite->add(QUANTEXT_TEST_CASE(&XAssetModelTest::testLgmMcWithShift));
     return suite;
 }
