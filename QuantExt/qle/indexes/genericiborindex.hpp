@@ -13,6 +13,8 @@
 #define _quantext_generic_index_hpp
 
 #include <ql/indexes/iborindex.hpp>
+#include <ql/time/calendars/target.hpp>
+#include <ql/time/daycounters/actual360.hpp>
 
 using namespace QuantLib;
 
