@@ -1069,14 +1069,14 @@ void XAssetModelTest::testLgmMcWithShift() {
     // using antithetic sampling, so expect to get an almost perfect
     // result in this case
 
-    if (error_of<tag::mean>(e_eu_2) > 1E-8) {
+    if (error_of<tag::mean>(e_eu_2) / discount > 1E-8) {
         BOOST_ERROR("estimated error of mean for shifted mc simulation can not "
                     "be verified ("
                     << error_of<tag::mean>(e_eu_2) / discount
                     << "), tolerance is 1E-8");
     }
 
-    if (std::fabs(mean(e_eu_2) - 1.0) > 1E-8) {
+    if (std::fabs(mean(e_eu_2) / discount - 1.0) > 1E-8) {
         BOOST_ERROR(
             "error of estimated mean for shifted mc can not be verified ("
             << mean(e_eu_2) / discount - 1.0 << "), tolerance is 1E-8");
