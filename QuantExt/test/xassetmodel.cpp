@@ -1220,8 +1220,8 @@ void XAssetModelTest::testCorrelationRecovery() {
                     BOOST_ERROR("failed to recover correlation matrix from "
                                 "exact state process (i,j)=("
                                 << i << "," << j << "), input correlation is "
-                                << c[i][j] << ", output is " << r1[i][j]
-                                << ", difference " << (c[i][j] - r1[i][j])
+                                << c[i][j] << ", output is " << r2[i][j]
+                                << ", difference " << (c[i][j] - r2[i][j])
                                 << ", tolerance " << tol);
                 }
             }
