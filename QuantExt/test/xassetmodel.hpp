@@ -20,6 +20,7 @@ class XAssetModelTest {
     static void testLgm5fAndFxCalibration();
     static void testLgmGsrEquivalence();
     static void testLgmMcWithShift();
+    static void testCorrelationRecovery();
     static boost::unit_test_framework::test_suite *suite();
 };
 

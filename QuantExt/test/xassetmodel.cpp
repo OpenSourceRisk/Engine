@@ -1101,6 +1101,136 @@ void XAssetModelTest::testLgmMcWithShift() {
 
 } // testLgmMcWithShift
 
+void XAssetModelTest::testCorrelationRecovery() {
+
+    BOOST_TEST_MESSAGE(
+        "Test if random correlation input is recovered for small dt...");
+
+    class PseudoCurrency : public Currency {
+      public:
+        PseudoCurrency(const Size id) {
+            std::ostringstream ln, sn;
+            ln << "Dummy " << id;
+            sn << "DUM " << id;
+            data_ = boost::make_shared<Data>(ln.str(), sn.str(), id, sn.str(),
+                                             "", 100, Rounding(), "%3% %1$.2f");
+        }
+    };
+
+    Real dt = 1.0E-6;
+    Real tol = 1.0E-7;
+
+    // for ir-fx this fully specifies the correlation matrix
+    // for new asset classes add other possible combinations as well
+    Size currencies[] = {1, 2, 3, 4, 5, 10, 20, 50, 100};
+
+    MersenneTwisterUniformRng mt(42);
+
+    Handle<YieldTermStructure> yts(boost::make_shared<FlatForward>(
+        0, NullCalendar(), 0.01, Actual365Fixed()));
+
+    Handle<Quote> fxspot(boost::make_shared<SimpleQuote>(1.00));
+
+    Array notimes(0);
+    Array fxsigma(1, 0.10);
+
+    for (Size ii = 0; ii < LENGTH(currencies); ++ii) {
+
+        std::vector<Currency> pseudoCcy;
+        for (Size i = 0; i < currencies[ii]; ++i) {
+            PseudoCurrency tmp(i);
+            pseudoCcy.push_back(tmp);
+        }
+
+        Size dim = 2 * currencies[ii] - 1;
+
+        // generate random correlation matrix
+        Matrix b(dim, dim);
+        Size maxTries = 100;
+        bool valid = true;
+        do {
+            Matrix a(dim, dim);
+            for (Size i = 0; i < dim; ++i) {
+                for (Size j = 0; j <= i; ++j) {
+                    a[i][j] = a[j][i] = mt.nextReal() - 0.5;
+                }
+            }
+            b = a * transpose(a);
+            for (Size i = 0; i < dim; ++i) {
+                if (b[i][i] < 1E-5)
+                    valid = false;
+            }
+        } while (!valid && --maxTries > 0);
+
+        if (maxTries == 0) {
+            BOOST_ERROR("could no generate random matrix");
+            return;
+        }
+
+        Matrix c(dim, dim);
+        for (Size i = 0; i < dim; ++i) {
+            for (Size j = 0; j <= i; ++j) {
+                c[i][j] = c[j][i] = b[i][j] / std::sqrt(b[i][i] * b[j][j]);
+            }
+        }
+
+        // set up model
+
+        std::vector<boost::shared_ptr<Parametrization> > parametrizations;
+
+        // IR
+        for (Size i = 0; i < currencies[ii]; ++i) {
+            parametrizations.push_back(
+                boost::make_shared<IrLgm1fConstantParametrization>(
+                    pseudoCcy[i], yts, 0.01, 0.01));
+        }
+        // FX
+        for (Size i = 0; i < currencies[ii] - 1; ++i) {
+            parametrizations.push_back(
+                boost::make_shared<FxBsPiecewiseConstantParametrization>(
+                    pseudoCcy[i + 1], fxspot, notimes, fxsigma));
+        }
+
+        boost::shared_ptr<XAssetModel> model = boost::make_shared<XAssetModel>(
+            parametrizations, c, SalvagingAlgorithm::None);
+
+        boost::shared_ptr<StochasticProcess> peuler =
+            model->stateProcess(XAssetStateProcess::euler);
+        boost::shared_ptr<StochasticProcess> pexact =
+            model->stateProcess(XAssetStateProcess::exact);
+
+        Matrix c1 = peuler->covariance(0.0, peuler->initialValues(), dt);
+        Matrix c2 = pexact->covariance(0.0, peuler->initialValues(), dt);
+
+        Matrix r1(dim, dim), r2(dim, dim);
+
+        for (Size i = 0; i < dim; ++i) {
+            for (Size j = 0; j <= i; ++j) {
+                r1[i][j] = r1[j][i] = c1[i][j] / std::sqrt(c1[i][i] * c1[j][j]);
+                r2[i][j] = r2[j][i] = c2[i][j] / std::sqrt(c2[i][i] * c2[j][j]);
+                if (std::fabs(r1[i][j] - c[i][j]) > tol) {
+                    BOOST_ERROR("failed to recover correlation matrix from "
+                                "Euler state process (i,j)=("
+                                << i << "," << j << "), input correlation is "
+                                << c[i][j] << ", output is " << r1[i][j]
+                                << ", difference " << (c[i][j] - r1[i][j])
+                                << ", tolerance " << tol);
+                }
+                if (std::fabs(r2[i][j] - c[i][j]) > tol) {
+                    BOOST_ERROR("failed to recover correlation matrix from "
+                                "exact state process (i,j)=("
+                                << i << "," << j << "), input correlation is "
+                                << c[i][j] << ", output is " << r1[i][j]
+                                << ", difference " << (c[i][j] - r1[i][j])
+                                << ", tolerance " << tol);
+                }
+            }
+        }
+
+    } // for currencies
+
+} // test correlation recovery
+
 test_suite *XAssetModelTest::suite() {
     test_suite *suite = BOOST_TEST_SUITE("XAsset model tests");
     suite->add(QUANTEXT_TEST_CASE(&XAssetModelTest::testBermudanLgm1fGsr));
@@ -1110,5 +1240,6 @@ test_suite *XAssetModelTest::suite() {
     suite->add(QUANTEXT_TEST_CASE(&XAssetModelTest::testLgm5fAndFxCalibration));
     suite->add(QUANTEXT_TEST_CASE(&XAssetModelTest::testLgmGsrEquivalence));
     suite->add(QUANTEXT_TEST_CASE(&XAssetModelTest::testLgmMcWithShift));
+    suite->add(QUANTEXT_TEST_CASE(&XAssetModelTest::testCorrelationRecovery));
     return suite;
 }
