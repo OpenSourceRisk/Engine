@@ -26,6 +26,7 @@
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actual360.hpp>
+#include <ql/time/daycounters/actualactual.hpp>
 #include <ql/time/daycounters/thirty360.hpp>
 #include <ql/quotes/simplequote.hpp>
 
@@ -169,7 +170,7 @@ void XAssetModelTest2::testFMSCase() {
 
     Array irTimes(LENGTH(irTen));
     for (Size i = 0; i < LENGTH(irTen); ++i) {
-        irTimes[i] = Actual365Fixed().yearFraction(
+        irTimes[i] = ActualActual().yearFraction(
             refDate, TARGET().advance(refDate, irTen[i]));
     }
     // for parametrization set up (without last time)
@@ -179,7 +180,7 @@ void XAssetModelTest2::testFMSCase() {
 
     // dummy yts (we check covariances here for which the yts does not matter)
     Handle<YieldTermStructure> yts(
-        boost::make_shared<FlatForward>(refDate, 0.02, Actual365Fixed()));
+        boost::make_shared<FlatForward>(refDate, 0.02, ActualActual()));
 
     Array alpha(LENGTH(irTen)), lambda(LENGTH(irTen));
 
@@ -222,12 +223,12 @@ void XAssetModelTest2::testFMSCase() {
     parametrizations.push_back(tmpIr);
 
     // IR #3 USD
-    Real zeta_USD[] = {2.3553293e-07, 4.7232546e-07, 1.6760723e-06,
-                       2.7562061e-05, 7.5069821e-05, 0.00016052372,
-                       0.00032273232, 0.00070327448, 0.00082690882,
-                       0.0014144869,  0.0019465284,  0.0019707646,
-                       0.00219778,    0.0026321698,  0.0030966507,
-                       0.0035997538,  0.0037455693};
+    Real zeta_USD[] = {2.0116489e-06, 9.869679e-06,  3.8294263e-05,
+                       0.00035235619, 0.00056544819, 0.00071428218,
+                       0.00086773977, 0.00096413044, 0.0010223302,
+                       0.0011499527,  0.0015443309,  0.0017400941,
+                       0.0019520896,  0.0024675239,  0.0030556253,
+                       0.0037297585,  0.0040647036};
     for (Size i = 0; i < LENGTH(irTen); ++i) {
         alpha[i] = std::sqrt((zeta_USD[i] - (i == 0 ? 0.0 : zeta_USD[i - 1])) /
                              (irTimes[i] - (i == 0 ? 0.0 : irTimes[i - 1])));
@@ -396,7 +397,7 @@ void XAssetModelTest2::testFMSCase() {
 
     Array inflTimes(LENGTH(inflTen));
     for (Size i = 0; i < LENGTH(inflTen); ++i) {
-        inflTimes[i] = Actual365Fixed().yearFraction(
+        inflTimes[i] = ActualActual().yearFraction(
             refDate, TARGET().advance(refDate, inflTen[i]));
     }
     // for parametrization set up (without last time)
@@ -457,7 +458,7 @@ void XAssetModelTest2::testFMSCase() {
 
     Array fxTimes(LENGTH(fxTen));
     for (Size i = 0; i < LENGTH(fxTen); ++i) {
-        fxTimes[i] = Actual365Fixed().yearFraction(
+        fxTimes[i] = ActualActual().yearFraction(
             refDate, TARGET().advance(refDate, fxTen[i]));
     }
     // for parametrization set up (without last time)
@@ -627,19 +628,19 @@ void XAssetModelTest2::testFMSCase() {
     simTimes_.push_back(0.0);
     for (Size i = 1; i <= 118; ++i) {
         Date tmp = TARGET().advance(refDate, i * Months);
-        simTimes_.push_back(Actual365Fixed().yearFraction(refDate, tmp));
+        simTimes_.push_back(ActualActual().yearFraction(refDate, tmp));
     }
     for (Size i = 1; i <= 40; ++i) {
         Date tmp = TARGET().advance(refDate, (117 + 3 * i) * Months);
-        simTimes_.push_back(Actual365Fixed().yearFraction(refDate, tmp));
+        simTimes_.push_back(ActualActual().yearFraction(refDate, tmp));
     }
     for (Size i = 1; i <= 31; ++i) {
         Date tmp = TARGET().advance(refDate, (19 + i) * Years);
-        simTimes_.push_back(Actual365Fixed().yearFraction(refDate, tmp));
+        simTimes_.push_back(ActualActual().yearFraction(refDate, tmp));
     }
     for (Size i = 1; i <= 10; ++i) {
         Date tmp = TARGET().advance(refDate, (50 + i * 5) * Years);
-        simTimes_.push_back(Actual365Fixed().yearFraction(refDate, tmp));
+        simTimes_.push_back(ActualActual().yearFraction(refDate, tmp));
     }
 
     // =========================================
