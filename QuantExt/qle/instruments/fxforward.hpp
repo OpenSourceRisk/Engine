@@ -23,70 +23,70 @@ using namespace QuantLib;
 namespace QuantExt {
 
     //! <strong> FX Forward </strong>
-    
+
     /*! This class holds the term sheet data for an FX Forward instrument.
-        
-        It is a defaultable FX Forward instrument, too, as it derives from 
-        Defaultable, so that it provides the interface for accessing CVA and 
-        default-free or risky NPV which need to be filled by an appropriate
-        defaultable engine.
-        
+
         \ingroup instruments
     */
     class FxForward : public Instrument {
-      public:	
+      public:
         class arguments;
         class results;
         class engine;
         //! \name Constructors
         //@{
-        /*! \param notional1, currency1
-                   There are notional1 units of currency1.
-            \param notional2, currency2
-                   There are notional2 units of currency2.
-            \param startDate
-                   Not used by the discounting FX forward engine.
+        /*! \param nominal1, currency1
+                   There are nominal1 units of currency1.
+            \param nominal2, currency2
+                   There are nominal2 units of currency2.
             \param maturityDate
                    Date on which currency amounts are exchanged.
             \param payCurrency1
-                   Pay notional1 if true, otherwise pay notional2.
+                   Pay nominal1 if true, otherwise pay nominal2.
         */
-        FxForward(const Real& notional1,
+        FxForward(const Real& nominal1,
             const Currency& currency1,
-            const Real& notional2,
+            const Real& nominal2,
             const Currency& currency2,
-            const Date& startDate, 
             const Date& maturityDate,
-			const bool& payCurrency1);
-        
-        /*! \param nominal
-                   FX forward nominal amount.
+            const bool& payCurrency1);
+
+        /*! \param nominal1
+                   FX forward nominal amount (domestic currency)
             \param forwardRate, forwardDate
                    FX forward rate and date for the exchange.
             \param sellingNominal
-                   Sell (pay) nominal if true, otherwise buy (receive) nominal.
+                   Sell (pay) nominal1 if true, otherwise buy (receive) nominal.
         */
-        FxForward(const Money& nominal,
+        FxForward(const Money& nominal1,
             const ExchangeRate& forwardRate,
             const Date& forwardDate,
             bool sellingNominal);
 
-        /*! \param nominal
-                   FX forward nominal amount.
+        /*! \param nominal1
+                   FX forward nominal amount 1 (domestic currency)
+            \param currency1
+                   currency for nominal1 (domestic currency)
             \param fxForwardQuote
-                   FX forward quote giving the rate and exchange date.
+                   FX forward quote giving the rate in domestic units
+                   per one foreign unit
+            \param currency2
+                   currency for nominal2 (foreign currency)
             \param sellingNominal
-                   Sell (pay) nominal if true, otherwise buy (receive) nominal.
+                   Sell (pay) nominal1 if true, otherwise buy (receive) nominal1.
         */
-        FxForward(const Money& nominal,
-            const Quote& fxForwardQuote, // TODO: Quote or shared_ptr?
-            bool sellingNominal);
+        FxForward(const Money &nomina1l,
+                         const Currency &currency1,
+                         const Handle<Quote> &fxForwardQuote,
+                         const Currency &currency2,
+                         const Date &maturityDate,
+                         bool sellingNominal);
         //@}
-        
+
         //! \name Results
         //@{
-        //! Return NPV in base currency.
-        const Money& npvPriceCcy() const {
+        //! Return NPV as money (the price currency is set in the pricing engine)
+        const Money& npvMoney() const {
             calculate();
             return npv_;
         }
@@ -105,29 +105,27 @@ namespace QuantExt {
 
         //! \name Additional interface
         //@{
-        Real currency1Notional() { return notional1_; }
-        Real currency2Notional() { return notional2_; }
+        Real currency1Nominal() { return nominal1_; }
+        Real currency2Nominal() { return nominal2_; }
         Currency currency1() { return currency1_; }
         Currency currency2() { return currency2_; }
-        Date startDate() const { return startDate_; }
         Date maturityDate() { return maturityDate_; }
         bool payCurrency1() { return payCurrency1_; }
         boost::shared_ptr<PricingEngine> engine() { return engine_; }
         //@}
-    
+
       private:
         //! \name Instrument interface
         //@{
         void setupExpired() const;
         //@}
 
-		Real notional1_;
-		Currency currency1_;
-		Real notional2_;
-		Currency currency2_;
-		Date startDate_;
-		Date maturityDate_;
-		bool payCurrency1_;
+        Real nominal1_;
+        Currency currency1_;
+        Real nominal2_;
+        Currency currency2_;
+        Date maturityDate_;
+        bool payCurrency1_;
 
         // results
         mutable Money npv_;
@@ -136,13 +134,12 @@ namespace QuantExt {
 
     class FxForward::arguments : public virtual PricingEngine::arguments {
       public:
-		Real notional1;
-		Currency currency1;
-		Real notional2;
-		Currency currency2;
-		Date startDate;
-		Date maturityDate;
-		bool payCurrency1;
+        Real nominal1;
+        Currency currency1;
+        Real nominal2;
+        Currency currency2;
+        Date maturityDate;
+        bool payCurrency1;
         void validate() const;
     };
 
@@ -153,7 +150,7 @@ namespace QuantExt {
         void reset();
     };
 
-    class FxForward::engine : public 
+    class FxForward::engine : public
         GenericEngine<FxForward::arguments, FxForward::results> {};
 }
 
