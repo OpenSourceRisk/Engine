@@ -66,6 +66,9 @@ namespace QuantExt {
             return currency2Discountcurve_;
         }
 
+        const Currency& currency1() const { return ccy1_; }
+        const Currency& currency2() const { return ccy2_; }
+
         const Handle<Quote>& spotFX() const {
             return spotFX_;
         }
