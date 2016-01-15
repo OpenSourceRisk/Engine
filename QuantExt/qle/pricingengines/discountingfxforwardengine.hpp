@@ -36,7 +36,7 @@ namespace QuantExt {
                    Currency 2 and its discount curve.
             \param spotFX
                    The market spot rate quote, given as units of ccy1
-                   for one unit of cc2. The spot rate must be given
+                   for one unit of ccy2. The spot rate must be given
                    w.r.t. a settlement equal to the npv date.
             \param includeSettlementDateFlows, settlementDate
                    If includeSettlementDateFlows is true (false), cashflows
