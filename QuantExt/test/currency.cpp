@@ -36,7 +36,7 @@ void dataCheck(struct CcyTestData& data) {
 
 void CurrencyTest::testCurrency() {
 
-    BOOST_MESSAGE("Testing QuantExt currencies");
+    BOOST_TEST_MESSAGE("Testing QuantExt currencies");
 
     CcyTestData data[]={
         //African cuurencies
