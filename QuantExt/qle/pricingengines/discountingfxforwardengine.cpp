@@ -82,13 +82,13 @@ namespace QuantExt {
 
         if (!detail::simple_event(arguments_.maturityDate).hasOccurred(
                 settlementDate_, includeSettlementDateFlows_)) {
-            results_.value =
+            results_.value = (arguments_.payCurrency1_ ? 1.0 : -1.0) * (
                 tmpNominal1 *
                 currency1Discountcurve_->discount(arguments_.maturityDate) /
                 currency1Discountcurve_->discount(npvDate_) -
                 tmpNominal2 *
                 currency2Discountcurve_->discount(arguments_.maturityDate) /
-                    currency2Discountcurve_->discount(npvDate_) * spotFX_->value();
+                currency2Discountcurve_->discount(npvDate_) * spotFX_->value());
         }
 
         results_.npv = Money(ccy1_, results_.value);
