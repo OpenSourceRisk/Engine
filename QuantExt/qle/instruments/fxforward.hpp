@@ -105,13 +105,13 @@ namespace QuantExt {
 
         //! \name Additional interface
         //@{
-        Real currency1Nominal() { return nominal1_; }
-        Real currency2Nominal() { return nominal2_; }
-        Currency currency1() { return currency1_; }
-        Currency currency2() { return currency2_; }
-        Date maturityDate() { return maturityDate_; }
-        bool payCurrency1() { return payCurrency1_; }
-        boost::shared_ptr<PricingEngine> engine() { return engine_; }
+        Real currency1Nominal() const { return nominal1_; }
+        Real currency2Nominal() const { return nominal2_; }
+        Currency currency1() const { return currency1_; }
+        Currency currency2() const { return currency2_; }
+        Date maturityDate() const { return maturityDate_; }
+        bool payCurrency1() const { return payCurrency1_; }
+        boost::shared_ptr<PricingEngine> engine() const { return engine_; }
         //@}
 
       private:
