@@ -188,8 +188,6 @@ namespace QuantExt {
     void AverageOIS::setONIndexedCouponPricer(const 
             boost::shared_ptr<AverageONIndexedCouponPricer>& onCouponPricer) {
         QuantExt::setCouponPricer(legs_[1], onCouponPricer);
-        
-        // \todo Check: I have changed the pricer, I should recalculate?
-        recalculate();
+        update();
     }
-}
+} // namespace QuantExt

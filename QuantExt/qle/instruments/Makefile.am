@@ -2,14 +2,16 @@ AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir}
 
 dist_data_DATA =
 
-SUBDIRS = 
+SUBDIRS =
 
 libInstruments_la_SOURCES = \
-    averageois.cpp \
+	averageois.cpp \
 	crossccybasisswap.cpp \
 	crossccyswap.cpp \
 	fxforward.cpp \
 	makeaverageois.cpp \
+	oibasisswap.cpp \
+	oiccbasisswap.cpp \
 	tenorbasisswap.cpp
 
 this_includedir=${includedir}/${subdir}
@@ -20,6 +22,8 @@ this_include_HEADERS = \
 	crossccyswap.hpp \
 	fxforward.hpp \
 	makeaverageois.hpp \
+	oibasisswap.hpp \
+	oiccbasisswap.hpp \
 	tenorbasisswap.hpp
 
 noinst_LTLIBRARIES = libInstruments.la

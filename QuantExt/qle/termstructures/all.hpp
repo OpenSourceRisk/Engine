@@ -5,7 +5,6 @@
 #include <qle/termstructures/averageoisratehelper.hpp>
 #include <qle/termstructures/basistwoswaphelper.hpp>
 #include <qle/termstructures/crossccybasisswaphelper.hpp>
-#include <qle/termstructures/fxforwardhelper.hpp>
 #include <qle/termstructures/oisratehelper.hpp>
 #include <qle/termstructures/tenorbasisswaphelper.hpp>
 

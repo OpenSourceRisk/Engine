@@ -5,22 +5,19 @@
  All rights reserved
 */
 
-#include <boost/assign/list_of.hpp>
-using boost::assign::list_of;
-
 #include <qle/instruments/crossccyswap.hpp>
 
 namespace QuantExt {
 
-    /* Need the call to convert_to_container because of a boost
-       bug - https://svn.boost.org/trac/boost/ticket/7364 */
     CrossCcySwap::CrossCcySwap(const Leg& firstLeg,
         const Currency& firstLegCcy,
         const Leg& secondLeg,
         const Currency& secondLegCcy)
-    : Swap(firstLeg, secondLeg),
-      currencies_(list_of(firstLegCcy)(secondLegCcy).
-        convert_to_container<std::vector<Currency> >()) {}
+    : Swap(firstLeg, secondLeg) {
+        currencies_.resize(2);
+        currencies_[0] = firstLegCcy;
+        currencies_[1] = secondLegCcy;
+    }
 
     CrossCcySwap::CrossCcySwap(const std::vector<Leg>& legs,
         const std::vector<bool>& payer,
