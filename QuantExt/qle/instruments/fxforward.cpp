@@ -45,7 +45,6 @@ namespace QuantExt {
     }
 
     FxForward::FxForward(const Money &nominal1,
-                         const Currency &currency1,
                          const Handle<Quote> &fxForwardQuote,
                          const Currency &currency2,
                          const Date &maturityDate,

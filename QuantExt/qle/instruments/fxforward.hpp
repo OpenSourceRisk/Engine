@@ -65,8 +65,6 @@ namespace QuantExt {
 
         /*! \param nominal1
                    FX forward nominal amount 1 (domestic currency)
-            \param currency1
-                   currency for nominal1 (domestic currency)
             \param fxForwardQuote
                    FX forward quote giving the rate in domestic units
                    per one foreign unit
@@ -76,7 +74,6 @@ namespace QuantExt {
                    Sell (pay) nominal1 if true, otherwise buy (receive) nominal1.
         */
         FxForward(const Money &nomina1l,
-                         const Currency &currency1,
                          const Handle<Quote> &fxForwardQuote,
                          const Currency &currency2,
                          const Date &maturityDate,
