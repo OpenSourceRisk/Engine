@@ -40,6 +40,8 @@
 
 #include <boost/make_shared.hpp>
 
+using namespace QuantLib;
+
 namespace QuantExt {
 
     // floating reference date, floating market data

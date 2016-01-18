@@ -29,9 +29,9 @@
   All rights reserved.
 */
 
-#include <qle/cashflowslognormalcmsspreadpricer.hpp>
+#include <qle/cashflows/lognormalcmsspreadpricer.hpp>
+#include <qle/cashflows/cmsspreadcoupon.hpp>
 
-#include <ql/experimental/coupons/cmsspreadcoupon.hpp>
 #include <ql/math/integrals/kronrodintegral.hpp>
 #include <ql/termstructures/volatility/swaption/swaptionvolcube.hpp>
 

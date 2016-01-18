@@ -39,11 +39,13 @@
 
 #include <vector>
 
-namesapce QuantLib {
+namespace QuantLib {
     class Date;
     class Calendar;
     class DayCounter;
 }
+
+using namespace QuantLib;
 
 namespace QuantExt {
 

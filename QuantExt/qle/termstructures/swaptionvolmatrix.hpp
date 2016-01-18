@@ -43,9 +43,11 @@
 #include <boost/noncopyable.hpp>
 #include <vector>
 
-namespace QuantExt {
+namespace QuantLib {
+class Quote;
+}
 
-    class Quote;
+namespace QuantExt {
 
     //! At-the-money swaption-volatility matrix
     /*! This class provides the at-the-money volatility for a given

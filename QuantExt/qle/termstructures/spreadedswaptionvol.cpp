@@ -31,7 +31,7 @@
 #include <ql/termstructures/volatility/spreadedsmilesection.hpp>
 #include <ql/quote.hpp>
 
-namespace QuantLib {
+namespace QuantExt {
 
     SpreadedSwaptionVolatility::SpreadedSwaptionVolatility(
                             const Handle<SwaptionVolatilityStructure>& baseVol,

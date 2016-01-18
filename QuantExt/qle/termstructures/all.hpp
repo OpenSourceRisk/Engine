@@ -4,8 +4,26 @@
 #include <qle/termstructures/interpolateddiscountcurve.hpp>
 #include <qle/termstructures/averageoisratehelper.hpp>
 #include <qle/termstructures/basistwoswaphelper.hpp>
+#include <qle/termstructures/constantoptionletvol.hpp>
 #include <qle/termstructures/crossccybasisswaphelper.hpp>
+#include <qle/termstructures/flatsmilesection.hpp>
+#include <qle/termstructures/interpolatedsmilesection.hpp>
 #include <qle/termstructures/oisratehelper.hpp>
+#include <qle/termstructures/optionletstripper.hpp>
+#include <qle/termstructures/optionletstripper1.hpp>
+#include <qle/termstructures/optionletvolatilitystructure.hpp>
+#include <qle/termstructures/strippedoptionlet.hpp>
+#include <qle/termstructures/spreadedoptionletvol.hpp>
+#include <qle/termstructures/spreadedswaptionvol.hpp>
+#include <qle/termstructures/strippedoptionletadapter.hpp>
+#include <qle/termstructures/strippedoptionletbase.hpp>
+#include <qle/termstructures/swaptionconstantvol.hpp>
+#include <qle/termstructures/swaptionvolcube.hpp>
+#include <qle/termstructures/swaptionvolcube1.hpp>
+#include <qle/termstructures/swaptionvolcube2.hpp>
 #include <qle/termstructures/swaptionvolcube3.hpp>
+#include <qle/termstructures/swaptionvoldiscrete.hpp>
+#include <qle/termstructures/swaptionvolmatrix.hpp>
+#include <qle/termstructures/swaptionvolstructure.hpp>
 #include <qle/termstructures/tenorbasisswaphelper.hpp>
 

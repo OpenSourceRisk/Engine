@@ -36,7 +36,7 @@
 
 #include <qle/termstructures/swaptionvolstructure.hpp>
 
-namesapce QuantLib {
+namespace QuantLib {
     class Quote;
 }
 

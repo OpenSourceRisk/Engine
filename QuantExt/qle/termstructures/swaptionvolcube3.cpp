@@ -25,11 +25,17 @@
 */
 
 #include <qle/termstructures/swaptionvolcube3.hpp>
+#include <qle/math/flatextrapolation.hpp>
 #include <qle/termstructures/interpolatedsmilesection.hpp>
 
 #include <ql/math/interpolations/bilinearinterpolation.hpp>
+#include <ql/math/interpolations/flatextrapolation2d.hpp>
 #include <ql/math/rounding.hpp>
 #include <ql/indexes/swapindex.hpp>
+
+#include <boost/make_shared.hpp>
+
+using namespace QuantLib;
 
 namespace QuantExt {
 
@@ -109,14 +115,9 @@ namespace QuantExt {
                 atmVol + volSpreadsInterpolator_[i](length, optionTime)));
         }
         Real shift = atmVol_->shift(optionTime,length);
-        return boost::shared_ptr<SmileSection>(new
-            InterpolatedSmileSection<FlatLinear>(optionTime,
-                                             strikes,
-                                             stdDevs,
-                                             atmForward,
-                                             Linear(),
-                                             Actual365Fixed(),
-                                             volatilityType(),
-                                             shift));
+        return boost::shared_ptr<SmileSection>(
+            new InterpolatedSmileSection<LinearFlat>(
+                optionTime, strikes, stdDevs, atmForward, LinearFlat(),
+                Actual365Fixed(), volatilityType(), shift));
     }
 }

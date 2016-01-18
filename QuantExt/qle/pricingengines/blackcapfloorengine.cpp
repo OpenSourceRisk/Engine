@@ -27,7 +27,7 @@
   All rights reserved.
 */
 
-#include <qle/pricingengines/capfloor/blackcapfloorengine.hpp>
+#include <qle/pricingengines/blackcapfloorengine.hpp>
 #include <qle/termstructures/constantoptionletvol.hpp>
 
 #include <ql/pricingengines/blackformula.hpp>

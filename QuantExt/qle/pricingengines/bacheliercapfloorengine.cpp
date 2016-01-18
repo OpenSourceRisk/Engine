@@ -26,7 +26,7 @@
 */
 
 #include <qle/pricingengines/bacheliercapfloorengine.hpp>
-#include <qle/termstructures/volatility/constantoptionletvol.hpp>
+#include <qle/termstructures/constantoptionletvol.hpp>
 
 #include <ql/pricingengines/blackformula.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>

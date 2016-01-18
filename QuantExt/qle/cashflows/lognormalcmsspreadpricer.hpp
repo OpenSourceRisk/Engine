@@ -34,18 +34,23 @@
 #ifndef quantlib_lognormal_cmsspread_pricer_hpp
 #define quantlib_lognormal_cmsspread_pricer_hpp
 
+#include <qle/cashflows/cmsspreadcoupon.hpp>
+
 #include <ql/cashflows/cmscoupon.hpp>
-#include <ql/experimental/coupons/cmsspreadcoupon.hpp>
 #include <ql/experimental/coupons/swapspreadindex.hpp>
 #include <ql/math/integrals/gaussianquadratures.hpp>
 #include <ql/math/distributions/normaldistribution.hpp>
+#include <ql/termstructures/volatility/volatilitytype.hpp>
 
 namespace QuantLib {
-    class CmsSpreadCoupon;
     class YieldTermStructure;
 }
 
+using namespace QuantLib;
+
 namespace QuantExt {
+
+    class CmsSpreadCoupon;
 
     //! CMS spread - coupon pricer
     /*! The swap rate adjustments are computed using the given

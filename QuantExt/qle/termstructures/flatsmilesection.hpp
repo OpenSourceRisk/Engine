@@ -37,6 +37,8 @@
 
 #include <ql/termstructures/volatility/smilesection.hpp>
 
+using namespace QuantLib;
+
 namespace QuantExt {
 
     class FlatSmileSection : public SmileSection {

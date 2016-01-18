@@ -48,8 +48,10 @@
 #include <ql/exercise.hpp>
 
 namespace QuantLib {
+class Quote;
+}
 
-    class Quote;
+namespace QuantExt {
 
     /*! Generic Black-style-formula swaption engine
         This is the base class for the Black and Bachelier swaption engines */

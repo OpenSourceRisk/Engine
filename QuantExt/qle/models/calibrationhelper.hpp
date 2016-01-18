@@ -45,6 +45,8 @@ namespace QuantLib {
     class PricingEngine;
 }
 
+using namespace QuantLib;
+
 namespace QuantExt {
 
     //! abstract base class for calibration helpers

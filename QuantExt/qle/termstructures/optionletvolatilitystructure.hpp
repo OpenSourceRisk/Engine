@@ -39,8 +39,9 @@
 
 namespace QuantLib {
     class SmileSection;
-
 }
+
+using namespace QuantLib;
 
 namespace QuantExt {
 

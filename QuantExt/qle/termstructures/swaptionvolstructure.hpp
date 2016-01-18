@@ -42,6 +42,8 @@ namespace QuantLib {
 class SmileSection;
 }
 
+using namespace QuantLib;
+
 namespace QuantExt {
 
     //! %Swaption-volatility structure
