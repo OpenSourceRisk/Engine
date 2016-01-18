@@ -1,14 +1,5 @@
 AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir}
 
-SUBDIRS =
-
-noinst_LTLIBRARIES = libMath.la
-
-libMath_la_LIBADD = 
-
-libMath_la_SOURCES = \
-	all.hpp
-
 this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \
 	all.hpp \
