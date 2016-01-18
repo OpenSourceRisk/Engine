@@ -9,12 +9,17 @@ dist_data_DATA =
 noinst_LTLIBRARIES = libPricingEngines.la
 
 libPricingEngines_la_SOURCES = \
+	bacheliercapfloorengine.cpp \
+	blackcapfloorengine.cpp \
 	discountingfxforwardengine.cpp \
 	crossccyswapengine.cpp
 
 this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \
 	all.hpp \
+	bacheliercapfloorengine.hpp \
+	blackcapfloorengine.hpp \
+	blackswaptionengine.hpp \
 	discountingfxforwardengine.hpp \
 	crossccyswapengine.hpp
 

@@ -6,5 +6,6 @@
 #include <qle/termstructures/basistwoswaphelper.hpp>
 #include <qle/termstructures/crossccybasisswaphelper.hpp>
 #include <qle/termstructures/oisratehelper.hpp>
+#include <qle/termstructures/swaptionvolcube3.hpp>
 #include <qle/termstructures/tenorbasisswaphelper.hpp>
 

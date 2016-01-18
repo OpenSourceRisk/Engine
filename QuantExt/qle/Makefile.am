@@ -4,11 +4,11 @@ SUBDIRS = \
 	indexes \
 	instruments \
 	math \
+	models \
 	pricingengines \
 	quotes \
 	termstructures
 
-#	models \
 #	processes 
 
 AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir}
@@ -27,12 +27,12 @@ libQuantExt_la_LIBADD = \
 	cashflows/libCashflows.la \
 	currencies/libCurrencies.la \
 	instruments/libInstruments.la \
+	models/libModels.la \
 	pricingengines/libPricingEngines.la \
 	quotes/libQuotes.la \
 	termstructures/libTermStructures.la
 
 #	math/libMath.la \
-#	models/libModels.la \
 #	processes/libProcesses.la
 
 quantext.hpp: Makefile.am

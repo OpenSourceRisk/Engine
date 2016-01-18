@@ -186,7 +186,7 @@ namespace QuantExt {
             cashflows.push_back(cashflow);
         }
 
-        boost::shared_ptr<SubPeriodsCouponPricer> 
+        boost::shared_ptr<QuantExt::SubPeriodsCouponPricer>
             pricer(new SubPeriodsCouponPricer);
         QuantExt::setCouponPricer(cashflows, pricer);
 
