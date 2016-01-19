@@ -31,7 +31,7 @@ libQuantExt_la_LIBADD = \
 	models/libModels.la \
 	pricingengines/libPricingEngines.la \
 	processes/libProcesses.la \
-	quotes/libQuotes.la
+	quotes/libQuotes.la \
 	termstructures/libTermStructures.la
 
 quantext.hpp: Makefile.am
