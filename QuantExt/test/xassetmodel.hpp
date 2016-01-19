@@ -15,9 +15,11 @@
 class XAssetModelTest {
   public:
     static void testBermudanLgm1fGsr();
+    static void testBermudanLgmInvariances();
     static void testLgm1fCalibration();
     static void testCcyLgm3fForeignPayouts();
-    static void testLgm5fAndFxCalibration();
+    static void testLgm5fFxCalibration();
+    static void testLgm5fMoments();
     static void testLgmGsrEquivalence();
     static void testLgmMcWithShift();
     static void testCorrelationRecovery();

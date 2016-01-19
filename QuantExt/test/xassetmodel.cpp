@@ -44,70 +44,81 @@ using namespace QuantExt;
 using boost::unit_test_framework::test_suite;
 using namespace boost::accumulators;
 
+namespace {
+
+struct BermudanTestData {
+    BermudanTestData()
+        : evalDate(12, January, 2015), yts(boost::make_shared<FlatForward>(
+                                           evalDate, 0.02, Actual365Fixed())),
+          euribor6m(boost::make_shared<Euribor>(6 * Months, yts)),
+          effectiveDate(TARGET().advance(evalDate, 2 * Days)),
+          startDate(TARGET().advance(effectiveDate, 1 * Years)),
+          maturityDate(TARGET().advance(startDate, 9 * Years)),
+          fixedSchedule(startDate, maturityDate, 1 * Years, TARGET(),
+                        ModifiedFollowing, ModifiedFollowing,
+                        DateGeneration::Forward, false),
+          floatingSchedule(startDate, maturityDate, 6 * Months, TARGET(),
+                           ModifiedFollowing, ModifiedFollowing,
+                           DateGeneration::Forward, false),
+          underlying(boost::make_shared<VanillaSwap>(VanillaSwap(
+              VanillaSwap::Payer, 1.0, fixedSchedule, 0.02, Thirty360(),
+              floatingSchedule, euribor6m, 0.0, Actual360()))),
+          reversion(0.03) {
+        Settings::instance().evaluationDate() = evalDate;
+        for (Size i = 0; i < 9; ++i) {
+            exerciseDates.push_back(
+                TARGET().advance(fixedSchedule[i], -2 * Days));
+        }
+        exercise = boost::make_shared<BermudanExercise>(exerciseDates, false);
+
+        swaption = boost::make_shared<Swaption>(underlying, exercise);
+        stepDates =
+            std::vector<Date>(exerciseDates.begin(), exerciseDates.end() - 1);
+        sigmas = std::vector<Real>(stepDates.size() + 1);
+        for (Size i = 0; i < sigmas.size(); ++i) {
+            sigmas[i] =
+                0.0050 +
+                (0.0080 - 0.0050) * std::exp(-0.2 * static_cast<double>(i));
+        }
+        stepTimes_a = Array(stepDates.size());
+        for (Size i = 0; i < stepDates.size(); ++i) {
+            stepTimes_a[i] = yts->timeFromReference(stepDates[i]);
+        }
+        sigmas_a = Array(sigmas.begin(), sigmas.end());
+        kappas_a = Array(sigmas_a.size(), reversion);
+    }
+    SavedSettings backup;
+    Date evalDate;
+    Handle<YieldTermStructure> yts;
+    boost::shared_ptr<IborIndex> euribor6m;
+    Date effectiveDate, startDate, maturityDate;
+    Schedule fixedSchedule, floatingSchedule;
+    boost::shared_ptr<VanillaSwap> underlying;
+    std::vector<Date> exerciseDates, stepDates;
+    std::vector<Real> sigmas;
+    boost::shared_ptr<Exercise> exercise;
+    boost::shared_ptr<Swaption> swaption;
+    Array stepTimes_a, sigmas_a, kappas_a;
+    Real reversion;
+}; // BermudanTestData
+
+} // anonymous namespace
+
 void XAssetModelTest::testBermudanLgm1fGsr() {
 
     BOOST_TEST_MESSAGE("Testing consistency of Bermudan swaption pricing in "
                        "LGM 1F and GSR models...");
 
+    BermudanTestData d;
+
     // we use the Hull White adaptor for the LGM parametrization
     // which should lead to equal Bermudan swaption prices
-
-    SavedSettings backup;
-
-    Date evalDate(12, January, 2015);
-    Settings::instance().evaluationDate() = evalDate;
-    Handle<YieldTermStructure> yts(
-        boost::make_shared<FlatForward>(evalDate, 0.02, Actual365Fixed()));
-    boost::shared_ptr<IborIndex> euribor6m =
-        boost::make_shared<Euribor>(6 * Months, yts);
-
-    Date effectiveDate = TARGET().advance(evalDate, 2 * Days);
-    Date startDate = TARGET().advance(effectiveDate, 1 * Years);
-    Date maturityDate = TARGET().advance(startDate, 9 * Years);
-
-    Schedule fixedSchedule(startDate, maturityDate, 1 * Years, TARGET(),
-                           ModifiedFollowing, ModifiedFollowing,
-                           DateGeneration::Forward, false);
-    Schedule floatingSchedule(startDate, maturityDate, 6 * Months, TARGET(),
-                              ModifiedFollowing, ModifiedFollowing,
-                              DateGeneration::Forward, false);
-    boost::shared_ptr<VanillaSwap> underlying = boost::make_shared<VanillaSwap>(
-        VanillaSwap(VanillaSwap::Payer, 1.0, fixedSchedule, 0.02, Thirty360(),
-                    floatingSchedule, euribor6m, 0.0, Actual360()));
-
-    std::vector<Date> exerciseDates;
-    for (Size i = 0; i < 9; ++i) {
-        exerciseDates.push_back(TARGET().advance(fixedSchedule[i], -2 * Days));
-    }
-    boost::shared_ptr<Exercise> exercise =
-        boost::make_shared<BermudanExercise>(exerciseDates, false);
-
-    boost::shared_ptr<Swaption> swaption =
-        boost::make_shared<Swaption>(underlying, exercise);
-
-    std::vector<Date> stepDates(exerciseDates.begin(), exerciseDates.end() - 1);
-    std::vector<Real> sigmas(stepDates.size() + 1);
-    for (Size i = 0; i < sigmas.size(); ++i) {
-        sigmas[i] = 0.0050 +
-                    (0.0080 - 0.0050) * std::exp(-0.2 * static_cast<double>(i));
-    }
-
-    Real reversion = 0.03;
-
-    Array stepTimes_a(stepDates.size());
-    for (Size i = 0; i < stepDates.size(); ++i) {
-        stepTimes_a[i] = yts->timeFromReference(stepDates[i]);
-    }
-    Array sigmas_a(sigmas.begin(), sigmas.end());
-    Array kappas_a(sigmas_a.size(), reversion);
-
-    boost::shared_ptr<IrLgm1fParametrization> lgm_p =
-        boost::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
-            EURCurrency(), yts, stepTimes_a, sigmas_a, kappas_a);
+    boost::shared_ptr<IrLgm1fParametrization> lgm_p = boost::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
+        EURCurrency(), d.yts, d.stepTimes_a, d.sigmas_a, d.kappas_a);
 
     // fix any T forward measure
-    boost::shared_ptr<Gsr> gsr =
-        boost::make_shared<Gsr>(yts, stepDates, sigmas, reversion, 50.0);
+    boost::shared_ptr<Gsr> gsr = boost::make_shared<Gsr>(
+        d.yts, d.stepDates, d.sigmas, d.reversion, 50.0);
 
     boost::shared_ptr<Lgm> lgm = boost::make_shared<Lgm>(lgm_p);
 
@@ -121,10 +132,10 @@ void XAssetModelTest::testBermudanLgm1fGsr() {
         boost::make_shared<Gaussian1dSwaptionEngine>(lgm_g1d, 64, 7.0, true,
                                                      false);
 
-    swaption->setPricingEngine(swaptionEngineGsr);
-    Real npvGsr = swaption->NPV();
-    swaption->setPricingEngine(swaptionEngineLgm);
-    Real npvLgm = swaption->NPV();
+    d.swaption->setPricingEngine(swaptionEngineGsr);
+    Real npvGsr = d.swaption->NPV();
+    d.swaption->setPricingEngine(swaptionEngineLgm);
+    Real npvLgm = d.swaption->NPV();
 
     Real tol = 0.2E-4; // basis point tolerance
 
@@ -133,17 +144,18 @@ void XAssetModelTest::testBermudanLgm1fGsr() {
                     "in IrLgm1f ("
                     << npvLgm << ") and Gsr (" << npvGsr
                     << ") models, tolerance is " << tol);
+}
 
-    // test model invariances
+void XAssetModelTest::testBermudanLgmInvariances() {
 
     BOOST_TEST_MESSAGE("Testing LGM model invariances for Bermudan "
                        "swaption pricing...");
 
+    BermudanTestData d;
+
     boost::shared_ptr<IrLgm1fParametrization> lgm_p2 =
         boost::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
-            EURCurrency(), yts, stepTimes_a, sigmas_a, kappas_a);
-    lgm_p2->shift() = -5.0;
-    lgm_p2->scaling() = 3.0;
+            EURCurrency(), d.yts, d.stepTimes_a, d.sigmas_a, d.kappas_a);
 
     boost::shared_ptr<Lgm> lgm2 = boost::make_shared<Lgm>(lgm_p2);
 
@@ -151,10 +163,20 @@ void XAssetModelTest::testBermudanLgm1fGsr() {
         boost::make_shared<Gaussian1dXAssetAdaptor>(lgm2);
 
     boost::shared_ptr<PricingEngine> swaptionEngineLgm2 =
-        boost::make_shared<Gaussian1dSwaptionEngine>(gsr, 64, 7.0, true, false);
+        boost::make_shared<Gaussian1dSwaptionEngine>(lgm_g1d2, 64, 7.0, true, false);
 
-    swaption->setPricingEngine(swaptionEngineLgm2);
-    Real npvLgm2 = swaption->NPV();
+    d.swaption->setPricingEngine(swaptionEngineLgm2);
+    Real npvLgm = d.swaption->NPV();
+
+    lgm_p2->shift() = -5.0;
+    lgm_p2->scaling() = 3.0;
+
+    // parametrizations are not observed, so we have to call update ourselves
+    lgm2->update();
+
+    Real npvLgm2 = d.swaption->NPV();
+
+    Real tol = 1.0E-5;
 
     if (std::fabs(npvLgm - npvLgm2) > tol)
         BOOST_ERROR("Failed to verify consistency of Bermudan swaption price "
@@ -579,151 +601,158 @@ void XAssetModelTest::testCcyLgm3fForeignPayouts() {
 
 } // testCcyLgm3fForeignPayouts
 
-void XAssetModelTest::testLgm5fAndFxCalibration() {
+namespace {
 
-    BOOST_TEST_MESSAGE("Testing fx calibration in Ccy LGM 5F model...");
+struct Lgm5fTestData {
+    Lgm5fTestData()
+        : referenceDate(30, July, 2015),
+          eurYts(boost::make_shared<FlatForward>(referenceDate, 0.02,
+                                                 Actual365Fixed())),
+          usdYts(boost::make_shared<FlatForward>(referenceDate, 0.05,
+                                                 Actual365Fixed())),
+          gbpYts(boost::make_shared<FlatForward>(referenceDate, 0.04,
+                                                 Actual365Fixed())),
+          fxEurUsd(boost::make_shared<SimpleQuote>(0.90)),
+          fxEurGbp(boost::make_shared<SimpleQuote>(1.35)), c(5, 5) {
 
-    SavedSettings backup;
+        Settings::instance().evaluationDate() = referenceDate;
+        volstepdates.push_back(Date(15, July, 2016));
+        volstepdates.push_back(Date(15, July, 2017));
+        volstepdates.push_back(Date(15, July, 2018));
+        volstepdates.push_back(Date(15, July, 2019));
+        volstepdates.push_back(Date(15, July, 2020));
 
-    Date referenceDate(30, July, 2015);
+        volstepdatesFx.push_back(Date(15, July, 2016));
+        volstepdatesFx.push_back(Date(15, October, 2016));
+        volstepdatesFx.push_back(Date(15, May, 2017));
+        volstepdatesFx.push_back(Date(13, September, 2017));
+        volstepdatesFx.push_back(Date(15, July, 2018));
 
-    Settings::instance().evaluationDate() = referenceDate;
+        volsteptimes_a = Array(volstepdates.size());
+        volsteptimesFx_a = Array(volstepdatesFx.size());
+        for (Size i = 0; i < volstepdates.size(); ++i) {
+            volsteptimes_a[i] = eurYts->timeFromReference(volstepdates[i]);
+        }
+        for (Size i = 0; i < volstepdatesFx.size(); ++i) {
+            volsteptimesFx_a[i] = eurYts->timeFromReference(volstepdatesFx[i]);
+        }
 
-    Handle<YieldTermStructure> eurYts(
-        boost::make_shared<FlatForward>(referenceDate, 0.02, Actual365Fixed()));
-    Handle<YieldTermStructure> usdYts(
-        boost::make_shared<FlatForward>(referenceDate, 0.05, Actual365Fixed()));
-    Handle<YieldTermStructure> gbpYts(
-        boost::make_shared<FlatForward>(referenceDate, 0.04, Actual365Fixed()));
+        for (Size i = 0; i < volstepdates.size() + 1; ++i) {
+            eurVols.push_back(0.0050 +
+                              (0.0080 - 0.0050) *
+                                  std::exp(-0.3 * static_cast<double>(i)));
+        }
+        for (Size i = 0; i < volstepdates.size() + 1; ++i) {
+            usdVols.push_back(0.0030 +
+                              (0.0110 - 0.0030) *
+                                  std::exp(-0.3 * static_cast<double>(i)));
+        }
+        for (Size i = 0; i < volstepdates.size() + 1; ++i) {
+            gbpVols.push_back(0.0070 +
+                              (0.0095 - 0.0070) *
+                                  std::exp(-0.3 * static_cast<double>(i)));
+        }
+        for (Size i = 0; i < volstepdatesFx.size() + 1; ++i) {
+            fxSigmasUsd.push_back(
+                0.15 + (0.20 - 0.15) * std::exp(-0.3 * static_cast<double>(i)));
+        }
+        for (Size i = 0; i < volstepdatesFx.size() + 1; ++i) {
+            fxSigmasGbp.push_back(
+                0.10 + (0.15 - 0.10) * std::exp(-0.3 * static_cast<double>(i)));
+        }
+        eurVols_a = Array(eurVols.begin(), eurVols.end());
+        usdVols_a = Array(usdVols.begin(), usdVols.end());
+        gbpVols_a = Array(gbpVols.begin(), gbpVols.end());
+        fxSigmasUsd_a = Array(fxSigmasUsd.begin(), fxSigmasUsd.end());
+        fxSigmasGbp_a = Array(fxSigmasGbp.begin(), fxSigmasGbp.end());
 
-    std::vector<Date> volstepdates, volstepdatesFx;
+        notimes_a = Array(0);
+        eurKappa_a = Array(1, 0.02);
+        usdKappa_a = Array(1, 0.03);
+        gbpKappa_a = Array(1, 0.04);
 
-    volstepdates.push_back(Date(15, July, 2016));
-    volstepdates.push_back(Date(15, July, 2017));
-    volstepdates.push_back(Date(15, July, 2018));
-    volstepdates.push_back(Date(15, July, 2019));
-    volstepdates.push_back(Date(15, July, 2020));
-
-    volstepdatesFx.push_back(Date(15, July, 2016));
-    volstepdatesFx.push_back(Date(15, October, 2016));
-    volstepdatesFx.push_back(Date(15, May, 2017));
-    volstepdatesFx.push_back(Date(13, September, 2017));
-    volstepdatesFx.push_back(Date(15, July, 2018));
-
-    Array volsteptimes_a(volstepdates.size()),
-        volsteptimesFx_a(volstepdatesFx.size());
-    for (Size i = 0; i < volstepdates.size(); ++i) {
-        volsteptimes_a[i] = eurYts->timeFromReference(volstepdates[i]);
-    }
-    for (Size i = 0; i < volstepdatesFx.size(); ++i) {
-        volsteptimesFx_a[i] = eurYts->timeFromReference(volstepdatesFx[i]);
-    }
-
-    std::vector<Real> eurVols, usdVols, gbpVols, fxSigmasUsd, fxSigmasGbp;
-
-    for (Size i = 0; i < volstepdates.size() + 1; ++i) {
-        eurVols.push_back(0.0050 +
-                          (0.0080 - 0.0050) *
-                              std::exp(-0.3 * static_cast<double>(i)));
-    }
-    for (Size i = 0; i < volstepdates.size() + 1; ++i) {
-        usdVols.push_back(0.0030 +
-                          (0.0110 - 0.0030) *
-                              std::exp(-0.3 * static_cast<double>(i)));
-    }
-    for (Size i = 0; i < volstepdates.size() + 1; ++i) {
-        gbpVols.push_back(0.0070 +
-                          (0.0095 - 0.0070) *
-                              std::exp(-0.3 * static_cast<double>(i)));
-    }
-    for (Size i = 0; i < volstepdatesFx.size() + 1; ++i) {
-        fxSigmasUsd.push_back(
-            0.15 + (0.20 - 0.15) * std::exp(-0.3 * static_cast<double>(i)));
-    }
-    for (Size i = 0; i < volstepdatesFx.size() + 1; ++i) {
-        fxSigmasGbp.push_back(
-            0.10 + (0.15 - 0.10) * std::exp(-0.3 * static_cast<double>(i)));
-    }
-
-    Handle<Quote> fxEurUsd(
-        boost::make_shared<SimpleQuote>(0.90)); // EUR per one unit of USD
-    Handle<Quote> fxEurGbp(
-        boost::make_shared<SimpleQuote>(1.35)); // EUR per one unit of GBP
-
-    Array eurVols_a(eurVols.begin(), eurVols.end());
-    Array usdVols_a(usdVols.begin(), usdVols.end());
-    Array gbpVols_a(gbpVols.begin(), gbpVols.end());
-    Array fxSigmasUsd_a(fxSigmasUsd.begin(), fxSigmasUsd.end());
-    Array fxSigmasGbp_a(fxSigmasGbp.begin(), fxSigmasGbp.end());
-
-    Array notimes_a(0);
-    Array eurKappa_a(1, 0.02);
-    Array usdKappa_a(1, 0.03);
-    Array gbpKappa_a(1, 0.04);
-
-    boost::shared_ptr<IrLgm1fParametrization> eurLgm_p =
-        boost::make_shared<IrLgm1fPiecewiseConstantParametrization>(
+        eurLgm_p = boost::make_shared<IrLgm1fPiecewiseConstantParametrization>(
             EURCurrency(), eurYts, volsteptimes_a, eurVols_a, notimes_a,
             eurKappa_a);
-    boost::shared_ptr<IrLgm1fParametrization> usdLgm_p =
-        boost::make_shared<IrLgm1fPiecewiseConstantParametrization>(
+        usdLgm_p = boost::make_shared<IrLgm1fPiecewiseConstantParametrization>(
             USDCurrency(), usdYts, volsteptimes_a, usdVols_a, notimes_a,
             usdKappa_a);
-    boost::shared_ptr<IrLgm1fParametrization> gbpLgm_p =
-        boost::make_shared<IrLgm1fPiecewiseConstantParametrization>(
+        gbpLgm_p = boost::make_shared<IrLgm1fPiecewiseConstantParametrization>(
             GBPCurrency(), gbpYts, volsteptimes_a, gbpVols_a, notimes_a,
             gbpKappa_a);
 
-    boost::shared_ptr<FxBsParametrization> fxUsd_p =
-        boost::make_shared<FxBsPiecewiseConstantParametrization>(
+        fxUsd_p = boost::make_shared<FxBsPiecewiseConstantParametrization>(
             USDCurrency(), fxEurUsd, volsteptimesFx_a, fxSigmasUsd_a);
-    boost::shared_ptr<FxBsParametrization> fxGbp_p =
-        boost::make_shared<FxBsPiecewiseConstantParametrization>(
+        fxGbp_p = boost::make_shared<FxBsPiecewiseConstantParametrization>(
             GBPCurrency(), fxEurGbp, volsteptimesFx_a, fxSigmasGbp_a);
 
+        singleModels.push_back(eurLgm_p);
+        singleModels.push_back(usdLgm_p);
+        singleModels.push_back(gbpLgm_p);
+        singleModels.push_back(fxUsd_p);
+        singleModels.push_back(fxGbp_p);
+
+        //     EUR           USD           GBP         FX USD-EUR      FX GBP-EUR
+        c[0][0] = 1.0; c[0][1] = 0.6;  c[0][2] = 0.3;  c[0][3] = 0.2;  c[0][4] = 0.3; // EUR
+        c[1][0] = 0.6; c[1][1] = 1.0;  c[1][2] = 0.1;  c[1][3] = -0.2; c[1][4] =-0.1; // USD
+        c[2][0] = 0.3; c[2][1] = 0.1;  c[2][2] = 1.0;  c[2][3] = 0.0;  c[2][4] = 0.1; // GBP
+        c[3][0] = 0.2; c[3][1] = -0.2; c[3][2] = 0.0;  c[3][3] = 1.0;  c[3][4] = 0.3; // FX USD-EUR
+        c[4][0] = 0.3; c[4][1] = -0.1; c[4][2] = 0.1;  c[4][3] = 0.3;  c[4][4] = 1.0; // FX GBP-EUR
+
+        ccLgm = boost::make_shared<XAssetModel>(singleModels, c,
+                                                SalvagingAlgorithm::None);
+    }
+
+    SavedSettings backup;
+    Date referenceDate;
+    Handle<YieldTermStructure> eurYts, usdYts, gbpYts;
+    std::vector<Date> volstepdates, volstepdatesFx;
+    Array volsteptimes_a, volsteptimesFx_a;
+    std::vector<Real> eurVols, usdVols, gbpVols, fxSigmasUsd, fxSigmasGbp;
+    Handle<Quote> fxEurUsd, fxEurGbp;
+    Array eurVols_a, usdVols_a, gbpVols_a, fxSigmasUsd_a, fxSigmasGbp_a;
+    Array notimes_a, eurKappa_a, usdKappa_a, gbpKappa_a;
+    boost::shared_ptr<IrLgm1fParametrization> eurLgm_p, usdLgm_p, gbpLgm_p;
+    boost::shared_ptr<FxBsParametrization> fxUsd_p, fxGbp_p;
     std::vector<boost::shared_ptr<Parametrization> > singleModels;
-    singleModels.push_back(eurLgm_p);
-    singleModels.push_back(usdLgm_p);
-    singleModels.push_back(gbpLgm_p);
-    singleModels.push_back(fxUsd_p);
-    singleModels.push_back(fxGbp_p);
+    Matrix c;
+    boost::shared_ptr<XAssetModel> ccLgm;
+};
 
-    // we test the 4f model against the 3f model eur-gbp
+} // anonymous namespace
+
+void XAssetModelTest::testLgm5fFxCalibration() {
+
+    BOOST_TEST_MESSAGE("Testing fx calibration in Ccy LGM 5F model...");
+
+    Lgm5fTestData d;
+
+    // we test the 5f model against the 3f model eur-gbp
     std::vector<boost::shared_ptr<Parametrization> > singleModelsProjected;
-    singleModelsProjected.push_back(eurLgm_p);
-    singleModelsProjected.push_back(gbpLgm_p);
-    singleModelsProjected.push_back(fxGbp_p);
-
-    Matrix c(5, 5);
-    //     EUR           USD           GBP         FX USD-EUR      FX GBP-EUR
-    c[0][0] = 1.0; c[0][1] = 0.6;  c[0][2] = 0.3;  c[0][3] = 0.2;  c[0][4] = 0.3; // EUR
-    c[1][0] = 0.6; c[1][1] = 1.0;  c[1][2] = 0.1;  c[1][3] = -0.2; c[1][4] =-0.1; // USD
-    c[2][0] = 0.3; c[2][1] = 0.1;  c[2][2] = 1.0;  c[2][3] = 0.0;  c[2][4] = 0.1; // GBP
-    c[3][0] = 0.2; c[3][1] = -0.2; c[3][2] = 0.0;  c[3][3] = 1.0;  c[3][4] = 0.3; // FX USD-EUR
-    c[4][0] = 0.3; c[4][1] = -0.1; c[4][2] = 0.1;  c[4][3] = 0.3;  c[4][4] = 1.0; // FX GBP-EUR
+    singleModelsProjected.push_back(d.eurLgm_p);
+    singleModelsProjected.push_back(d.gbpLgm_p);
+    singleModelsProjected.push_back(d.fxGbp_p);
 
     Matrix cProjected(3, 3);
     for (Size i = 0, ii = 0; i < 5; ++i) {
         if (i != 0 && i != 3) {
             for (Size j = 0, jj = 0; j < 5; ++j) {
                 if (j != 0 && j != 3)
-                    cProjected[ii][jj++] = c[i][j];
+                    cProjected[ii][jj++] = d.c[i][j];
             }
             ++ii;
         }
     }
 
-    boost::shared_ptr<XAssetModel> ccLgm = boost::make_shared<XAssetModel>(
-        singleModels, c, SalvagingAlgorithm::None);
     boost::shared_ptr<XAssetModel> ccLgmProjected =
         boost::make_shared<XAssetModel>(singleModelsProjected, cProjected,
                                         SalvagingAlgorithm::None);
 
     boost::shared_ptr<PricingEngine> ccLgmFxOptionEngineUsd =
-        boost::make_shared<AnalyticCcLgmFxOptionEngine>(ccLgm, 0);
+        boost::make_shared<AnalyticCcLgmFxOptionEngine>(d.ccLgm, 0);
 
     boost::shared_ptr<PricingEngine> ccLgmFxOptionEngineGbp =
-        boost::make_shared<AnalyticCcLgmFxOptionEngine>(ccLgm, 1);
+        boost::make_shared<AnalyticCcLgmFxOptionEngine>(d.ccLgm, 1);
 
     boost::shared_ptr<PricingEngine> ccLgmProjectedFxOptionEngineGbp =
         boost::make_shared<AnalyticCcLgmFxOptionEngine>(ccLgmProjected, 0);
@@ -731,23 +760,23 @@ void XAssetModelTest::testLgm5fAndFxCalibration() {
     // while the initial fx vol starts at 0.2 for usd and 0.15 for gbp
     // we calibrate to helpers with 0.15 and 0.2 target implied vol
     std::vector<boost::shared_ptr<CalibrationHelper> > helpersUsd, helpersGbp;
-    for (Size i = 0; i <= volstepdatesFx.size(); ++i) {
+    for (Size i = 0; i <= d.volstepdatesFx.size(); ++i) {
         boost::shared_ptr<CalibrationHelper> tmpUsd =
             boost::make_shared<FxOptionHelper>(
-                i < volstepdatesFx.size() ? volstepdatesFx[i]
-                                          : volstepdatesFx.back() + 365,
-                0.90, fxEurUsd,
+                i < d.volstepdatesFx.size() ? d.volstepdatesFx[i]
+                                          : d.volstepdatesFx.back() + 365,
+                0.90, d.fxEurUsd,
                 Handle<Quote>(boost::make_shared<SimpleQuote>(0.15)),
-                ccLgm->irlgm1f(0)->termStructure(),
-                ccLgm->irlgm1f(1)->termStructure());
+                d.ccLgm->irlgm1f(0)->termStructure(),
+                d.ccLgm->irlgm1f(1)->termStructure());
         boost::shared_ptr<CalibrationHelper> tmpGbp =
             boost::make_shared<FxOptionHelper>(
-                i < volstepdatesFx.size() ? volstepdatesFx[i]
-                                          : volstepdatesFx.back() + 365,
-                1.35, fxEurGbp,
+                i < d.volstepdatesFx.size() ? d.volstepdatesFx[i]
+                                          : d.volstepdatesFx.back() + 365,
+                1.35, d.fxEurGbp,
                 Handle<Quote>(boost::make_shared<SimpleQuote>(0.20)),
-                ccLgm->irlgm1f(0)->termStructure(),
-                ccLgm->irlgm1f(2)->termStructure());
+                d.ccLgm->irlgm1f(0)->termStructure(),
+                d.ccLgm->irlgm1f(2)->termStructure());
         tmpUsd->setPricingEngine(ccLgmFxOptionEngineUsd);
         tmpGbp->setPricingEngine(ccLgmFxOptionEngineGbp);
         helpersUsd.push_back(tmpUsd);
@@ -758,15 +787,15 @@ void XAssetModelTest::testLgm5fAndFxCalibration() {
     EndCriteria ec(1000, 500, 1E-8, 1E-8, 1E-8);
 
     // calibrate USD-EUR FX volatility
-    ccLgm->calibrateFxBsVolatilitiesIterative(0, helpersUsd, lm, ec);
+    d.ccLgm->calibrateFxBsVolatilitiesIterative(0, helpersUsd, lm, ec);
     // calibrate GBP-EUR FX volatility
-    ccLgm->calibrateFxBsVolatilitiesIterative(1, helpersGbp, lm, ec);
+    d.ccLgm->calibrateFxBsVolatilitiesIterative(1, helpersGbp, lm, ec);
 
     Real tol = 1E-6;
     for (Size i = 0; i < helpersUsd.size(); ++i) {
         Real market = helpersUsd[i]->marketValue();
         Real model = helpersUsd[i]->modelValue();
-        Real calibratedVol = ccLgm->fxbs(0)->parameterValues(0)[i];
+        Real calibratedVol = d.ccLgm->fxbs(0)->parameterValues(0)[i];
         if (std::fabs(market - model) > tol) {
             BOOST_ERROR("calibration for fx option helper #"
                         << i << " (USD) failed, market premium is " << market
@@ -787,7 +816,7 @@ void XAssetModelTest::testLgm5fAndFxCalibration() {
     for (Size i = 0; i < helpersGbp.size(); ++i) {
         Real market = helpersGbp[i]->marketValue();
         Real model = helpersGbp[i]->modelValue();
-        Real calibratedVol = ccLgm->fxbs(1)->parameterValues(0)[i];
+        Real calibratedVol = d.ccLgm->fxbs(1)->parameterValues(0)[i];
         if (std::fabs(market - model) > tol)
             BOOST_ERROR("calibration for fx option helper #"
                         << i << " (GBP) failed, market premium is " << market
@@ -810,7 +839,7 @@ void XAssetModelTest::testLgm5fAndFxCalibration() {
     ccLgmProjected->calibrateFxBsVolatilitiesIterative(0, helpersGbp, lm, ec);
 
     for (Size i = 0; i < helpersGbp.size(); ++i) {
-        Real fullModelVol = ccLgm->fxbs(1)->parameterValues(0)[i];
+        Real fullModelVol = d.ccLgm->fxbs(1)->parameterValues(0)[i];
         Real projectedModelVol = ccLgmProjected->fxbs(0)->parameterValues(0)[i];
         if (std::fabs(fullModelVol - projectedModelVol) > tol)
             BOOST_ERROR(
@@ -820,15 +849,19 @@ void XAssetModelTest::testLgm5fAndFxCalibration() {
                 << projectedModelVol << ")");
     }
 
-    // test analytical vs Euler moments
+} // testLgm5fFxCalibration
+
+void XAssetModelTest::testLgm5fMoments() {
 
     BOOST_TEST_MESSAGE("Testing analytic moments vs. Euler discretization "
                        "in Ccy LGM 5F model...");
 
+    Lgm5fTestData d;
+
     boost::shared_ptr<StochasticProcess> p_exact =
-        ccLgm->stateProcess(XAssetStateProcess::exact);
+        d.ccLgm->stateProcess(XAssetStateProcess::exact);
     boost::shared_ptr<StochasticProcess> p_euler =
-        ccLgm->stateProcess(XAssetStateProcess::euler);
+        d.ccLgm->stateProcess(XAssetStateProcess::euler);
 
     Real T = 10.0;         // horizon at which we compare the moments
     Size steps = T * 10.0; // number of simulation steps
@@ -881,8 +914,9 @@ void XAssetModelTest::testLgm5fAndFxCalibration() {
     // for ir (normal) and fx (ln) so different error
     // tolerances apply
     Real tollNormal = 0.1E-4; // ir-ir
-    Real tolMixed = 0.2E-4;   // ir-fx
+    Real tolMixed = 0.25E-4;  // ir-fx
     Real tolLn = 8.0E-4;      // fx-fx
+    Real tol; // set below
 
     for (Size i = 0; i < 5; ++i) {
         for (Size j = 0; j <= i; ++j) {
@@ -907,7 +941,7 @@ void XAssetModelTest::testLgm5fAndFxCalibration() {
         }
     }
 
-} // testLgm4fAndFxCalibration
+} // testLgm5fMoments
 
 void XAssetModelTest::testLgmGsrEquivalence() {
 
@@ -1213,10 +1247,12 @@ void XAssetModelTest::testCorrelationRecovery() {
 test_suite *XAssetModelTest::suite() {
     test_suite *suite = BOOST_TEST_SUITE("XAsset model tests");
     suite->add(QUANTEXT_TEST_CASE(&XAssetModelTest::testBermudanLgm1fGsr));
+    suite->add(QUANTEXT_TEST_CASE(&XAssetModelTest::testBermudanLgmInvariances));
     suite->add(QUANTEXT_TEST_CASE(&XAssetModelTest::testLgm1fCalibration));
     suite->add(
         QUANTEXT_TEST_CASE(&XAssetModelTest::testCcyLgm3fForeignPayouts));
-    suite->add(QUANTEXT_TEST_CASE(&XAssetModelTest::testLgm5fAndFxCalibration));
+    suite->add(QUANTEXT_TEST_CASE(&XAssetModelTest::testLgm5fFxCalibration));
+    suite->add(QUANTEXT_TEST_CASE(&XAssetModelTest::testLgm5fMoments));
     suite->add(QUANTEXT_TEST_CASE(&XAssetModelTest::testLgmGsrEquivalence));
     suite->add(QUANTEXT_TEST_CASE(&XAssetModelTest::testLgmMcWithShift));
     suite->add(QUANTEXT_TEST_CASE(&XAssetModelTest::testCorrelationRecovery));
