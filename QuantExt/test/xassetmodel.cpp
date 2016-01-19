@@ -853,8 +853,9 @@ void XAssetModelTest::testLgm5fFxCalibration() {
 
 void XAssetModelTest::testLgm5fMoments() {
 
-    BOOST_TEST_MESSAGE("Testing analytic moments vs. Euler discretization "
-                       "in Ccy LGM 5F model...");
+    BOOST_TEST_MESSAGE(
+        "Testing analytic moments vs. Euler and exact discreiztation "
+        "in Ccy LGM 5F model...");
 
     Lgm5fTestData d;
 
@@ -878,19 +879,29 @@ void XAssetModelTest::testLgm5fMoments() {
     QuantExt::MultiPathGenerator<LowDiscrepancy::rsg_type> pgen(p_euler, grid,
                                                                 sg, true);
 
+    LowDiscrepancy::rsg_type sg2 =
+        LowDiscrepancy::make_sequence_generator(steps * 5, seed);
+    QuantExt::MultiPathGenerator<LowDiscrepancy::rsg_type> pgen2(p_exact, grid,
+                                                                sg, true);
+
     accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > >
-        e_eu[5];
+        e_eu[5], e_eu2[5];
     accumulator_set<double, stats<tag::covariance<double, tag::covariate1> > >
-        v_eu[5][5];
+        v_eu[5][5], v_eu2[5][5];
 
     for (Size i = 0; i < paths; ++i) {
         Sample<MultiPath> path = pgen.next();
+        Sample<MultiPath> path2 = pgen2.next();
         for (Size ii = 0; ii < 5; ++ii) {
             Real cii = path.value[ii].back();
+            Real cii2 = path.value[ii].back();
             e_eu[ii](cii);
+            e_eu2[ii](cii2);
             for (Size jj = 0; jj <= ii; ++jj) {
                 Real cjj = path.value[jj].back();
                 v_eu[ii][jj](cii, covariate1 = cjj);
+                Real cjj2 = path.value[jj].back();
+                v_eu2[ii][jj](cii2, covariate1 = cjj2);
             }
         }
     }
@@ -898,7 +909,7 @@ void XAssetModelTest::testLgm5fMoments() {
     Real errTolLd[] = {0.2E-4, 0.2E-4, 0.2E-4, 10.0E-4, 10.0E-4};
 
     for (Size i = 0; i < 5; ++i) {
-        // check expectation against analytical calculation
+        // check expectation against analytical calculation (Euler)
         if (std::fabs(mean(e_eu[i]) - e_an[i]) > errTolLd[i]) {
             BOOST_ERROR("analytical expectation for component #"
                         << i << " (" << e_an[i]
@@ -906,6 +917,16 @@ void XAssetModelTest::testLgm5fMoments() {
                            "discretization, "
                         << mean(e_eu[i]) << "), error is "
                         << e_an[i] - mean(e_eu[i]) << " tolerance is "
+                        << errTolLd[i]);
+        }
+        // check expectation against analytical calculation (exact disc)
+        if (std::fabs(mean(e_eu2[i]) - e_an[i]) > errTolLd[i]) {
+            BOOST_ERROR("analytical expectation for component #"
+                        << i << " (" << e_an[i]
+                        << ") is inconsistent with numerical value (Euler "
+                           "discretization, "
+                        << mean(e_eu2[i]) << "), error is "
+                        << e_an[i] - mean(e_eu2[i]) << " tolerance is "
                         << errTolLd[i]);
         }
     }
@@ -936,6 +957,15 @@ void XAssetModelTest::testLgm5fMoments() {
                                "value (Euler discretization, "
                             << covariance(v_eu[i][j]) << "), error is "
                             << v_an[i][j] - covariance(v_eu[i][j])
+                            << " tolerance is " << tol);
+            }
+            if (std::fabs(covariance(v_eu2[i][j]) - v_an[i][j]) > tol) {
+                BOOST_ERROR("analytical covariance at ("
+                            << i << "," << j << ") (" << v_an[i][j]
+                            << ") is inconsistent with numerical "
+                               "value (Euler discretization, "
+                            << covariance(v_eu2[i][j]) << "), error is "
+                            << v_an[i][j] - covariance(v_eu2[i][j])
                             << " tolerance is " << tol);
             }
         }
