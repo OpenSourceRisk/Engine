@@ -12,6 +12,8 @@ libTermStructures_la_SOURCES = \
 	constantoptionletvol.cpp \
 	crossccybasisswaphelper.cpp \
 	flatsmilesection.cpp \
+	oibasisswaphelper.cpp \
+	oiccbasisswaphelper.cpp \
 	oisratehelper.cpp \
 	optionletstripper.cpp \
 	optionletstripper1.cpp \
@@ -39,6 +41,8 @@ this_include_HEADERS = \
 	crossccybasisswaphelper.hpp \
 	flatsmilesection.hpp \
 	interpolatedsmilesection.hpp \
+	oibasisswaphelper.hpp \
+	oiccbasisswaphelper.hpp \
 	oisratehelper.hpp \
 	optionletstripper.hpp \
 	optionletstripper1.hpp \

@@ -8,6 +8,8 @@
 #include <qle/termstructures/crossccybasisswaphelper.hpp>
 #include <qle/termstructures/flatsmilesection.hpp>
 #include <qle/termstructures/interpolatedsmilesection.hpp>
+#include <qle/termstructures/oibasisswaphelper.hpp>
+#include <qle/termstructures/oiccbasisswaphelper.hpp>
 #include <qle/termstructures/oisratehelper.hpp>
 #include <qle/termstructures/optionletstripper.hpp>
 #include <qle/termstructures/optionletstripper1.hpp>
