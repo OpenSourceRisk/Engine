@@ -25,6 +25,7 @@ Gaussian1dXAssetAdaptor::Gaussian1dXAssetAdaptor(
 }
 
 void Gaussian1dXAssetAdaptor::initialize() {
+    registerWith(x_);
     stateProcess_ = x_->stateProcess();
 }
 
