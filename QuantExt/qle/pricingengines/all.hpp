@@ -3,4 +3,6 @@
 
 #include <qle/pricingengines/discountingfxforwardengine.hpp>
 #include <qle/pricingengines/crossccyswapengine.hpp>
+#include <qle/pricingengines/analyticcclgmfxoptionengine.hpp>
+#include <qle/pricingengines/analyticlgmswaptionengine.hpp>
 
