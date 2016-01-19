@@ -146,7 +146,6 @@ namespace QuantExt {
                     spreadDiscountRLH_,
                     flatLegCurrency_,
                     flatDiscountRLH_,
-                    spreadLegCurrency_,
                     spotFX,
                     boost::none,
                     settlementDate));
@@ -156,7 +155,6 @@ namespace QuantExt {
                     flatDiscountRLH_,
                     spreadLegCurrency_,
                     spreadDiscountRLH_,
-                    flatLegCurrency_,
                     spotFX,
                     boost::none,
                     settlementDate));

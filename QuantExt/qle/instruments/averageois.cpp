@@ -1,7 +1,7 @@
 /* -*- mode: c++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 
 /*
-  Copyright (C) 2010 - 2015 Quaternion Risk Management Ltd.
+  Copyright (C) 2010 - 2016 Quaternion Risk Management Ltd.
   All rights reserved.
 */
 
@@ -188,8 +188,6 @@ namespace QuantExt {
     void AverageOIS::setONIndexedCouponPricer(const 
             boost::shared_ptr<AverageONIndexedCouponPricer>& onCouponPricer) {
         QuantExt::setCouponPricer(legs_[1], onCouponPricer);
-        
-        // \todo Check: I have changed the pricer, I should recalculate?
-        recalculate();
+        update();
     }
-}
+} // namespace QuantExt

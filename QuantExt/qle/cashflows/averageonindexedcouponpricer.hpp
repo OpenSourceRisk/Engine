@@ -12,24 +12,25 @@
 #ifndef quantext_average_on_indexed_coupon_pricer_hpp
 #define quantext_average_on_indexed_coupon_pricer_hpp
 
-#include <ql/cashflows/couponpricer.hpp>
-
 #include <qle/cashflows/averageonindexedcoupon.hpp>
+
+#include <ql/cashflows/couponpricer.hpp>
 
 using namespace QuantLib;
 
 namespace QuantExt {
+
     //! Pricer for average overnight indexed coupons
     class AverageONIndexedCouponPricer : public FloatingRateCouponPricer {
       public:
         enum Approximation {Takada, None};
-        
+
         AverageONIndexedCouponPricer(Approximation approxType = Takada)
         : approximationType_(approxType) {}
-        
+
         void initialize(const FloatingRateCoupon& coupon);
         Rate swapletRate() const;
-        
+
         Real swapletPrice() const {
             QL_FAIL("swapletPrice not available"); }
         Real capletPrice(Rate) const {
@@ -40,7 +41,7 @@ namespace QuantExt {
             QL_FAIL("floorletPrice not available"); }
         Rate floorletRate(Rate) const {
             QL_FAIL("floorletRate not available"); }
-      
+
       protected:
         Approximation approximationType_;
         Real gearing_;
@@ -50,6 +51,7 @@ namespace QuantExt {
 
         const AverageONIndexedCoupon* coupon_;
     };
-}
+
+} // namespace QuantExt
 
 #endif

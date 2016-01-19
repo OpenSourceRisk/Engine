@@ -10,7 +10,6 @@ libTermStructures_la_SOURCES = \
 	averageoisratehelper.cpp \
 	basistwoswaphelper.cpp \
 	crossccybasisswaphelper.cpp \
-	fxforwardhelper.cpp \
 	oisratehelper.cpp \
 	tenorbasisswaphelper.cpp
 
@@ -21,7 +20,6 @@ this_include_HEADERS = \
 	averageoisratehelper.hpp \
 	basistwoswaphelper.hpp \
 	crossccybasisswaphelper.hpp \
-	fxforwardhelper.hpp \
 	oisratehelper.hpp \
 	tenorbasisswaphelper.hpp \
     blackinvertedvoltermstructure.hpp

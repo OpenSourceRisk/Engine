@@ -5,13 +5,12 @@
   All rights reserved.
 */
 
+#include <qle/cashflows/averageonindexedcoupon.hpp>
+#include <qle/cashflows/averageonindexedcouponpricer.hpp>
+
 #include <ql/cashflows/couponpricer.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/utilities/vectors.hpp>
-#include <ql/termstructures/yieldtermstructure.hpp>
-
-#include <qle/cashflows/averageonindexedcoupon.hpp>
-#include <qle/cashflows/averageonindexedcouponpricer.hpp>
 
 using namespace QuantLib;
 
@@ -19,14 +18,14 @@ namespace QuantExt {
 
     AverageONIndexedCoupon::AverageONIndexedCoupon(
         const Date& paymentDate, Real nominal,const Date& startDate,
-        const Date& endDate, const boost::shared_ptr<OvernightIndex>& 
+        const Date& endDate, const boost::shared_ptr<OvernightIndex>&
         overnightIndex, Real gearing, Spread spread, Natural rateCutoff,
         const DayCounter& dayCounter)
     : FloatingRateCoupon(paymentDate, nominal, startDate, endDate,
         overnightIndex->fixingDays(), overnightIndex, gearing, spread,
         Date(), Date(), dayCounter, false), rateCutoff_(rateCutoff) {
-            
-        // Populate the value dates.     
+
+        // Populate the value dates.
         Schedule sch = MakeSchedule().from(startDate)
             .to(endDate)
             .withTenor(1*Days)
@@ -34,8 +33,7 @@ namespace QuantExt {
             .withConvention(overnightIndex->businessDayConvention())
             .backwards();
         valueDates_ = sch.dates();
-        QL_ENSURE(valueDates_.size() - rateCutoff_ >= 2,
-            "Degenerate schedule.");
+        QL_ENSURE(valueDates_.size() - rateCutoff_ >= 2, "degenerate schedule");
 
         // Populate the fixing dates.
         numPeriods_ = valueDates_.size() - 1;
@@ -54,12 +52,12 @@ namespace QuantExt {
             dt_[i] = dayCounter.yearFraction(valueDates_[i], valueDates_[i+1]);
     }
 
-    const std::vector<Rate>& 
+    const std::vector<Rate>&
         AverageONIndexedCoupon::indexFixings() const {
-        
+
         fixings_.resize(numPeriods_);
         Size i;
-        
+
         for (i = 0; i < numPeriods_ - rateCutoff_; ++i) {
             fixings_[i] = index_->fixing(fixingDates_[i]);
         }
@@ -141,7 +139,7 @@ namespace QuantExt {
         rateCutoff_ = rateCutoff;
         return *this;
     }
-    
+
     AverageONLeg& AverageONLeg::
         withPaymentCalendar(const Calendar& calendar) {
         paymentCalendar_ = calendar;
@@ -156,7 +154,7 @@ namespace QuantExt {
 
     AverageONLeg::operator Leg() const {
 
-        QL_REQUIRE(!notionals_.empty(), 
+        QL_REQUIRE(!notionals_.empty(),
             "No notional given for average overnight leg.");
 
         Leg cashflows;
@@ -177,13 +175,13 @@ namespace QuantExt {
             endDate = schedule_.date(i + 1);
             paymentDate = calendar.adjust(endDate, paymentAdjustment_);
 
-            boost::shared_ptr<AverageONIndexedCoupon> cashflow(new 
+            boost::shared_ptr<AverageONIndexedCoupon> cashflow(new
                 AverageONIndexedCoupon(paymentDate,
                     detail::get(notionals_, i, notionals_.back()), startDate,
                     endDate, overnightIndex_, detail::get(gearings_, i, 1.0),
                     detail::get(spreads_, i, 0.0), rateCutoff_,
                     paymentDayCounter_));
-            
+
             if (couponPricer_) {
                 cashflow->setPricer(couponPricer_);
             }
@@ -192,5 +190,5 @@ namespace QuantExt {
         }
         return cashflows;
     }
-}
 
+} // namespace QuantExt

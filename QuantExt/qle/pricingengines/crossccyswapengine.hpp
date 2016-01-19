@@ -20,8 +20,10 @@ namespace QuantExt {
 
     //! Cross currency swap engine
 
-    /*! This class implements an engine for pricing swaps comprising legs that 
-        invovlve two currencies.
+    /*! This class implements an engine for pricing swaps comprising legs that
+        invovlve two currencies. The npv is expressed in ccy1. The given currencies
+        ccy1 and ccy2 are matched to the correct swap legs. The evaluation date is the
+        reference date of either discounting curve (which must be equal).
 
         \ingroup engines
     */
@@ -29,36 +31,32 @@ namespace QuantExt {
       public:
         //! \name Constructors
         //@{
-        /*! \param sourceCcy, sourceDiscountCurve
-                   source currency and its discount curve.
-            \param targetCcy, targetDiscountCurve
-                   target currency and its discount curve.
-            \param npvCcy
-                   currency in which the NPV is calculated. Must be one of 
-                   source currency or target currency.
+        /*! \param ccy1, currency1Discountcurve
+                   Currency 1 and its discount curve.
+            \param ccy2, currency2Discountcurve
+                   Currency 2 and its discount curve.
             \param spotFX
-                   The market spot rate quote. If not an FxQuote, the quote 
-                   is interpreted as the number of units of target currency 
-                   per unit of source currency. If it is an FxQuote, then the 
-                   quote can have either of source or target as base.
-                   In order to have the correct conventions, a 
-                   properly formed FxQuote should be used.
+                   The market spot rate quote, given as units of ccy1
+                   for one unit of cc2. The spot rate must be given
+                   w.r.t. a settlement equal to the npv date.
             \param includeSettlementDateFlows, settlementDate
-                   If includeSettlementDateFlows is true (false), cashflows 
-				   on the settlementDate are (not) included in the NPV.
+                   If includeSettlementDateFlows is true (false), cashflows
+                   on the settlementDate are (not) included in the NPV.
+                   If not given the settlement date is set to the
+                   npv date.
             \param npvDate
-			       Discount to this date.
+                   Discount to this date. If not given the npv date
+                   is set to the evaluation date
         */
-        CrossCcySwapEngine(const Currency& sourceCcy,
-            const Handle<YieldTermStructure>& sourceDiscountCurve,
-			const Currency& targetCcy,
-			const Handle<YieldTermStructure>& targetDiscountCurve,
-            const Currency& npvCcy,
-			const Handle<Quote>& spotFX,
-            boost::optional<bool> includeSettlementDateFlows = boost::none, 
-            const Date& settlementDate = Date(), 
+        CrossCcySwapEngine(const Currency& ccy1,
+            const Handle<YieldTermStructure>& currency1DiscountCurve,
+            const Currency& ccy2,
+            const Handle<YieldTermStructure>& currency2DiscountCurve,
+            const Handle<Quote>& spotFX,
+            boost::optional<bool> includeSettlementDateFlows = boost::none,
+            const Date& settlementDate = Date(),
             const Date& npvDate = Date());
-		//@}
+        //@}
 
         //! \name PricingEngine interface
         //@{
@@ -67,25 +65,25 @@ namespace QuantExt {
 
         //! \name Inspectors
         //@{
-        const Handle<YieldTermStructure>& sourceDiscountCurve() const {
-            return sourceDiscountCurve_;
+        const Handle<YieldTermStructure>& currency1DiscountCurve() const {
+            return currency1Discountcurve_;
         }
-		const Handle<YieldTermStructure>& targetDiscountCurve() const {
-            return targetDiscountCurve_;
+        const Handle<YieldTermStructure>& currency2DiscountCurve() const {
+            return currency2Discountcurve_;
         }
-        const Currency& sourceCcy() const { return sourceCcy_; }
-        const Currency& targetCcy() const { return targetCcy_; }
-        const Currency& npvCcy() const { return npvCcy_; }
-		const Handle<Quote>& spotFX() const { return spotFX_; }
+
+        const Currency& currency1() const { return ccy1_; }
+        const Currency& currency2() const { return ccy2_; }
+
+        const Handle<Quote>& spotFX() const { return spotFX_; }
         //@}
-      
-	  private:
-		Currency sourceCcy_;
-        Handle<YieldTermStructure> sourceDiscountCurve_;
-		Currency targetCcy_;
-		Handle<YieldTermStructure> targetDiscountCurve_;
-		Currency npvCcy_;
-		Handle<Quote> spotFX_;
+
+      private:
+        Currency ccy1_;
+        Handle<YieldTermStructure> currency1Discountcurve_;
+        Currency ccy2_;
+        Handle<YieldTermStructure> currency2Discountcurve_;
+        Handle<Quote> spotFX_;
         boost::optional<bool> includeSettlementDateFlows_;
         Date settlementDate_;
         Date npvDate_;

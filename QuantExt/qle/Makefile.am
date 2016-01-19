@@ -3,11 +3,11 @@ SUBDIRS = \
 	currencies \
 	indexes \
 	instruments \
+	math \
 	pricingengines \
 	quotes \
 	termstructures
 
-#	math \
 #	models \
 #	processes 
 

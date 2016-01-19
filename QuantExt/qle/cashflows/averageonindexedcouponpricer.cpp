@@ -7,14 +7,14 @@
 
 #include <qle/cashflows/averageonindexedcouponpricer.hpp>
 
-namespace QuantExt {    
-    
+namespace QuantExt {
+
     void AverageONIndexedCouponPricer::
         initialize(const FloatingRateCoupon& coupon) {
 
         coupon_ = dynamic_cast<const AverageONIndexedCoupon*>(&coupon);
         QL_REQUIRE(coupon_, "AverageONIndexedCoupon required");
-        
+
         overnightIndex_ = boost::dynamic_pointer_cast
             <OvernightIndex>(coupon_->index());
         QL_REQUIRE(overnightIndex_, "OvernightIndex required");
@@ -25,7 +25,7 @@ namespace QuantExt {
     }
 
     Rate AverageONIndexedCouponPricer::swapletRate() const {
-        
+
         std::vector<Date> fixingDates = coupon_->fixingDates();
         std::vector<Time> accrualFractions = coupon_->dt();
         Size numPeriods = accrualFractions.size();
@@ -45,7 +45,7 @@ namespace QuantExt {
                 Rate valuationDateFixing = IndexManager::instance().getHistory(
                     overnightIndex_->name())[valuationDate];
                 if (valuationDateFixing != Null<Real>()) {
-                    accumulatedRate += valuationDateFixing * 
+                    accumulatedRate += valuationDateFixing *
                         accrualFractions[i];
                     ++i;
                 }
@@ -57,12 +57,12 @@ namespace QuantExt {
                 QL_REQUIRE(!projectionCurve.empty(),
                     "Null term structure set to this instance of "
                     << overnightIndex_->name());
-                
+
                 Date startForecast = coupon_->valueDates()[i];
                 Date endForecast = coupon_->valueDates()[numPeriods];
-                DiscountFactor startDiscount = 
+                DiscountFactor startDiscount =
                     projectionCurve->discount(startForecast);
-                DiscountFactor endDiscount = 
+                DiscountFactor endDiscount =
                     projectionCurve->discount(endForecast);
                 accumulatedRate += log(startDiscount / endDiscount);
             }
@@ -78,4 +78,5 @@ namespace QuantExt {
         Rate rate = gearing_ * accumulatedRate / accrualPeriod_ + spread_;
         return rate;
     }
-}
+
+} // namespace QuantExt

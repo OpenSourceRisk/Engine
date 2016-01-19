@@ -9,8 +9,8 @@
     \brief coupon paying the weighted average of the daily overnight rate
 */
 
-#ifndef quantlib_average_on_indexed_coupon_hpp
-#define quantlib_average_on_indexed_coupon_hpp
+#ifndef quantext_average_on_indexed_coupon_hpp
+#define quantext_average_on_indexed_coupon_hpp
 
 #include <ql/cashflows/floatingratecoupon.hpp>
 #include <ql/indexes/iborindex.hpp>
@@ -24,7 +24,10 @@ namespace QuantExt {
 
     //! average overnight coupon
     /*! %Coupon paying the interest due to the weighted average of daily 
-         overnight fixings. */
+         overnight fixings. The rateCutoff counts the number of fixing
+         dates starting at the end date whose fixings are not taken into
+         account, but rather replaced by the last known fixing before.
+    */
     class AverageONIndexedCoupon : public FloatingRateCoupon {
       public:
         AverageONIndexedCoupon(const Date& paymentDate,
@@ -93,6 +96,6 @@ namespace QuantExt {
         boost::shared_ptr<AverageONIndexedCouponPricer> couponPricer_;
     };
 
-}
+} // namespace QuantExt
 
 #endif
