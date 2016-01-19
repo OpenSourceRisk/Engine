@@ -8,4 +8,5 @@
 #include <qle/termstructures/fxforwardhelper.hpp>
 #include <qle/termstructures/oisratehelper.hpp>
 #include <qle/termstructures/tenorbasisswaphelper.hpp>
+#include <qle/termstructures/blackinvertedvoltermstructure.hpp>
 
