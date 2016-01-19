@@ -947,7 +947,7 @@ void XAssetModelTest::testLgmGsrEquivalence() {
                 boost::shared_ptr<IrLgm1fParametrization> lgm_p =
                     boost::make_shared<
                         IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
-                            EURCurrency(), yts, stepTimes_a, sigmas_a, kappas_a);
+                        EURCurrency(), yts, stepTimes_a, sigmas_a, kappas_a);
                 lgm_p->shift() = shift;
 
                 boost::shared_ptr<Lgm> lgm = boost::make_shared<Lgm>(lgm_p);
@@ -1015,7 +1015,14 @@ void XAssetModelTest::testLgmMcWithShift() {
     BOOST_TEST_MESSAGE(
         "Testing LGM1F Monte Carlo simulation with shifted H...");
 
-    Real T = 70.0;
+    // cashflow time
+    Real T = 50.0;
+
+    // shift horizons
+    Real T_shift[] = {0.0, 10.0, 20.0, 30.0, 40.0, 50.0};
+
+    // tolerances for error of mean
+    Real eom_tol[] = {0.17, 0.05, 0.02, 0.01, 0.005, 1.0E-12};
 
     Handle<YieldTermStructure> yts(boost::make_shared<FlatForward>(
         0, NullCalendar(), 0.02, Actual365Fixed()));
@@ -1023,19 +1030,10 @@ void XAssetModelTest::testLgmMcWithShift() {
     boost::shared_ptr<IrLgm1fParametrization> lgm =
         boost::make_shared<IrLgm1fConstantParametrization>(EURCurrency(), yts,
                                                            0.01, 0.01);
-    // apply a shift of -H(T)
-    boost::shared_ptr<IrLgm1fParametrization> lgm_shifted =
-        boost::make_shared<IrLgm1fConstantParametrization>(
-            EURCurrency(), yts, 0.01, 0.01);
-    lgm_shifted->shift() = -(1.0 - exp(-0.01 * T)) / 0.01;
-
     boost::shared_ptr<StochasticProcess> p =
         boost::make_shared<IrLgm1fStateProcess>(lgm);
-    boost::shared_ptr<StochasticProcess> p_shifted =
-        boost::make_shared<IrLgm1fStateProcess>(lgm_shifted);
 
     boost::shared_ptr<Lgm> model = boost::make_shared<Lgm>(lgm);
-    boost::shared_ptr<Lgm> model_shifted = boost::make_shared<Lgm>(lgm_shifted);
 
     Size steps = 1;
     Size paths = 10000;
@@ -1044,62 +1042,40 @@ void XAssetModelTest::testLgmMcWithShift() {
 
     PseudoRandom::rsg_type sg =
         PseudoRandom::make_sequence_generator(steps * 1, seed);
-    PseudoRandom::rsg_type sg2 =
-        PseudoRandom::make_sequence_generator(steps * 1, seed);
-
     QuantExt::MultiPathGenerator<PseudoRandom::rsg_type> pgen(p, grid, sg,
                                                               true);
-    QuantExt::MultiPathGenerator<PseudoRandom::rsg_type> pgen2(p_shifted, grid,
-                                                               sg2, true);
 
-    accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > > e_eu,
-        e_eu_2;
+    for (Size ii = 0; ii < LENGTH(T_shift); ++ii) {
 
-    for (Size i = 0; i < paths; ++i) {
-        Sample<MultiPath> path = pgen.next();
-        Sample<MultiPath> path_a = pgen.antithetic();
-        Sample<MultiPath> path2 = pgen2.next();
-        Sample<MultiPath> path2_a = pgen2.antithetic();
-        e_eu(1.0 / model->numeraire(T, path.value[0].back()));
-        e_eu(1.0 / model->numeraire(T, path_a.value[0].back()));
-        e_eu_2(1.0 / model_shifted->numeraire(T, path2.value[0].back()));
-        e_eu_2(1.0 / model_shifted->numeraire(T, path2_a.value[0].back()));
-    }
+        lgm->shift() = -(1.0 - exp(-0.01 * T_shift[ii])) / 0.01;
 
-    Real discount = yts->discount(T);
+        accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > >
+            e_eu;
 
-    // the shift is exactly matching the maturity of the flow and we are
-    // using antithetic sampling, so expect to get an almost perfect
-    // result in this case
+        for (Size i = 0; i < paths; ++i) {
+            Sample<MultiPath> path = pgen.next();
+            Sample<MultiPath> path_a = pgen.antithetic();
+            e_eu(1.0 / model->numeraire(T, path.value[0].back()));
+            e_eu(1.0 / model->numeraire(T, path_a.value[0].back()));
+        }
 
-    if (error_of<tag::mean>(e_eu_2) / discount > 1E-8) {
-        BOOST_ERROR("estimated error of mean for shifted mc simulation can not "
-                    "be verified ("
-                    << error_of<tag::mean>(e_eu_2) / discount
-                    << "), tolerance is 1E-8");
-    }
+        Real discount = yts->discount(T);
 
-    if (std::fabs(mean(e_eu_2) / discount - 1.0) > 1E-8) {
-        BOOST_ERROR(
-            "error of estimated mean for shifted mc can not be verified ("
-            << mean(e_eu_2) / discount - 1.0 << "), tolerance is 1E-8");
-    }
+        if (error_of<tag::mean>(e_eu) / discount > eom_tol[ii]) {
+            BOOST_ERROR(
+                "estimated error of mean for shifted mc simulation with shift "
+                << T_shift[ii] << " can not be verified ("
+                << error_of<tag::mean>(e_eu) / discount
+                << "), tolerance is 1E-8");
+        }
 
-    // negative tests
-
-    if (error_of<tag::mean>(e_eu) / discount < 0.40) {
-        BOOST_ERROR(
-            "estimated error of mean for unshifted mc simulation seems to low ("
-            << error_of<tag::mean>(e_eu) / discount
-            << "), expected a value >0.40");
-    }
-
-    // we can check this for a fixed seed in the sense of a cached result
-    if (std::fabs(mean(e_eu) / discount - 1.0) < 0.10) {
-        BOOST_ERROR("error of estimated mean for unshifted mc simulation seems "
-                    "to good  ("
-                    << mean(e_eu) / yts->discount(T) - 1.0
-                    << "), expected a (absolute) value >0.10");
+        if (std::fabs(mean(e_eu) / discount - 1.0) > eom_tol[ii]) {
+            BOOST_ERROR("estimated error for shifted mc simulation with shift "
+                        << T_shift[ii] << " can not "
+                                          "be verified ("
+                        << mean(e_eu) / discount - 1.0
+                        << "), tolerance is 1E-8");
+        }
     }
 
 } // testLgmMcWithShift
