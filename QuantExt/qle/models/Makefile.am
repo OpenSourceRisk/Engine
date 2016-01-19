@@ -20,6 +20,7 @@ libModels_la_SOURCES = \
 	lgm.cpp \
 	parametrization.cpp \
 	piecewiseconstanthelper.cpp \
+	xassetanalytics.cpp \
 	xassetmodel.cpp
 
 this_includedir=${includedir}/${subdir}
@@ -42,6 +43,7 @@ this_include_HEADERS = \
 	parametrization.hpp \
 	piecewiseconstanthelper.hpp \
 	pseudoparameter.hpp \
+	xassetanalytics.hpp \
 	xassetmodel.hpp
 
 all.hpp: Makefile.am

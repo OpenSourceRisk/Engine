@@ -18,5 +18,6 @@
 #include <qle/models/parametrization.hpp>
 #include <qle/models/piecewiseconstanthelper.hpp>
 #include <qle/models/pseudoparameter.hpp>
+#include <qle/models/xassetanalytics.hpp>
 #include <qle/models/xassetmodel.hpp>
 

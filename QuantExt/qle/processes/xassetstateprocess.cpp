@@ -5,12 +5,16 @@
 */
 
 #include <qle/models/xassetmodel.hpp>
+#include <qle/models/xassetanalytics.hpp>
+
 #include <ql/math/matrixutilities/pseudosqrt.hpp>
 #include <ql/processes/eulerdiscretization.hpp>
 
 #include <boost/make_shared.hpp>
 
 namespace QuantExt {
+
+using namespace XAssetAnalytics;
 
 XAssetStateProcess::XAssetStateProcess(const XAssetModel *const model,
                                        discretization disc,
@@ -70,10 +74,10 @@ Disposable<Array> XAssetStateProcess::drift(Time t, const Array &x) const {
             Real alphai = model_->irlgm1f(i)->alpha(t);
             Real sigmai = model_->fxbs(i - 1)->sigma(t);
             // ir-ir
-            Real rhozz0i = model_->correlation()[0][i];
+            Real rhozz0i = model_->ir_ir_correlation(0, i);
             // ir-fx
-            Real rhozx0i = model_->correlation()[0][n + i - 1];
-            Real rhozxii = model_->correlation()[i][n + i - 1];
+            Real rhozx0i = model_->ir_fx_correlation(0, i - 1);
+            Real rhozxii = model_->ir_fx_correlation(i, i - 1);
             // ir drifts
             res[i] = -Hi * alphai * alphai + H0 * alpha0 * alphai * rhozz0i -
                      sigmai * alphai * rhozxii;
@@ -110,7 +114,7 @@ Disposable<Matrix> XAssetStateProcess::diffusion(Time t, const Array &) const {
                 if (i < n) {
                     Real alphai = model_->irlgm1f(i)->alpha(t);
                     Real alphaj = model_->irlgm1f(j)->alpha(t);
-                    Real rhozz = model_->correlation()[i][j];
+                    Real rhozz = model_->ir_ir_correlation(i, j);
                     // ir-ir
                     res[i][j] = res[j][i] = alphai * alphaj * rhozz;
                 } else {
@@ -118,12 +122,12 @@ Disposable<Matrix> XAssetStateProcess::diffusion(Time t, const Array &) const {
                     if (j < n) {
                         // ir-fx
                         Real alphaj = model_->irlgm1f(j)->alpha(t);
-                        Real rhozx = model_->correlation()[i][j];
+                        Real rhozx = model_->ir_fx_correlation(j, i - n);
                         res[i][j] = res[j][i] = alphaj * sigmai * rhozx;
                     } else {
                         // fx-fx
                         Real sigmaj = model_->fxbs(j - n)->sigma(t);
-                        Real rhoxx = model_->correlation()[i][j];
+                        Real rhoxx = model_->fx_fx_correlation(i - n, j - n);
                         res[i][j] = res[j][i] = sigmai * sigmaj * rhoxx;
                     }
                 }
@@ -152,9 +156,9 @@ Disposable<Array> XAssetStateProcess::ExactDiscretization::drift(
     boost::unordered_map<cache_key, Array>::iterator i = cache_m_.find(k);
     if (i == cache_m_.end()) {
         for (Size i = 0; i < model_->currencies(); ++i) {
-            res[i] = model_->ir_expectation_1(i, t0, dt);
+            res[i] = ir_expectation_1(model_, i, t0, dt);
             if (i > 0) {
-                res[n + i - 1] = model_->fx_expectation_1(i - 1, t0, dt);
+                res[n + i - 1] = fx_expectation_1(model_, i - 1, t0, dt);
             }
         }
         cache_m_.insert(std::make_pair(k, res));
@@ -162,10 +166,10 @@ Disposable<Array> XAssetStateProcess::ExactDiscretization::drift(
         res = i->second;
     }
     for (Size i = 0; i < n; ++i) {
-        res[i] += model_->ir_expectation_2(i, x0[i]);
+        res[i] += ir_expectation_2(model_, i, x0[i]);
         if (i > 0) {
-            res[n + i - 1] += model_->fx_expectation_2(i - 1, t0, x0[n + i - 1],
-                                                       x0[i], x0[0], dt);
+            res[n + i - 1] += fx_expectation_2(model_, i - 1, t0, x0[n + i - 1],
+                                               x0[i], x0[0], dt);
         }
     }
     return res - x0;
@@ -198,14 +202,14 @@ Disposable<Matrix> XAssetStateProcess::ExactDiscretization::covariance(
             for (Size j = 0; j <= i; ++j) {
                 if (i < n) {
                     res[i][j] = res[j][i] =
-                        model_->ir_ir_covariance(i, j, t0, dt);
+                        ir_ir_covariance(model_, i, j, t0, dt);
                 } else {
                     if (j < n) {
                         res[i][j] = res[j][i] =
-                            model_->ir_fx_covariance(j, i - n, t0, dt);
+                            ir_fx_covariance(model_, j, i - n, t0, dt);
                     } else {
                         res[j][i] = res[i][j] =
-                            model_->fx_fx_covariance(i - n, j - n, t0, dt);
+                            fx_fx_covariance(model_, i - n, j - n, t0, dt);
                     }
                 }
             }
