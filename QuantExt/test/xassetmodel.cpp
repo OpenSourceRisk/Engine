@@ -1040,6 +1040,7 @@ void XAssetModelTest::testLgmGsrEquivalence() {
                                       tag::variance> > stat_lgm,
                     stat_gsr;
 
+                Real tol = 1.0E-12;
                 for (Size i = 0; i < N; ++i) {
                     Sample<Path> path_lgm = pgen_lgm.next();
                     Sample<Path> path_gsr = pgen_gsr.next();
@@ -1053,12 +1054,18 @@ void XAssetModelTest::testLgmGsrEquivalence() {
                         -std::log(lgm->discountBond(T2, T2 + 1.0, xLgm));
                     stat_gsr(gsrRate);
                     stat_lgm(lgmRate);
+                    // check pathwise identity
+                    if(std::fabs(gsrRate-lgmRate) >= tol) {
+                        BOOST_ERROR("lgm rate ("
+                                    << lgmRate << ") deviates from gsr rate ("
+                                    << gsrRate << ") on path #" << i);
+                    }
                 }
 
                 // effectively we are checking a pathwise identity
-                // here, but the statistics seems to better summarize
-                // a possible problem ...
-                Real tol = 1.0E-12;
+                // here as well, but the statistics seems to better
+                // summarize a possible problem, so we output differences
+                // in the mean as well
                 if (std::fabs(mean(stat_gsr) - mean(stat_lgm)) > tol ||
                     std::fabs(variance(stat_gsr) - variance(stat_lgm)) > tol) {
                     BOOST_ERROR("failed to verify LGM-GSR equivalence, "
