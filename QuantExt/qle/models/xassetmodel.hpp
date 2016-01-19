@@ -337,7 +337,7 @@ inline Real XAssetModel::ir_fx_correlation(const Size i, const Size j) const {
 }
 
 inline Real XAssetModel::fx_fx_correlation(const Size i, const Size j) const {
-    QL_REQUIRE(i < nFxBs_, "fxbs index (" << j << ") must be in 0..."
+    QL_REQUIRE(i < nFxBs_, "fxbs index (" << i << ") must be in 0..."
                                           << (nFxBs_ - 1));
     QL_REQUIRE(j < nFxBs_, "fxbs index (" << j << ") must be in 0..."
                                           << (nFxBs_ - 1));
