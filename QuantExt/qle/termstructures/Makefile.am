@@ -34,12 +34,13 @@ libTermStructures_la_SOURCES = \
 this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \
 	all.hpp \
-	interpolateddiscountcurve.hpp \
 	averageoisratehelper.hpp \
 	basistwoswaphelper.hpp \
+	blackinvertedvoltermstructure.hpp \
 	constantoptionletvol.hpp \
 	crossccybasisswaphelper.hpp \
 	flatsmilesection.hpp \
+	interpolateddiscountcurve.hpp \
 	interpolatedsmilesection.hpp \
 	oibasisswaphelper.hpp \
 	oiccbasisswaphelper.hpp \
