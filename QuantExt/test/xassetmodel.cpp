@@ -141,7 +141,9 @@ void XAssetModelTest::testBermudanLgm1fGsr() {
 
     boost::shared_ptr<IrLgm1fParametrization> lgm_p2 =
         boost::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
-            EURCurrency(), yts, stepTimes_a, sigmas_a, kappas_a, -5.0, 3.0);
+            EURCurrency(), yts, stepTimes_a, sigmas_a, kappas_a);
+    lgm_p2->shift() = -5.0;
+    lgm_p2->scaling() = 3.0;
 
     boost::shared_ptr<Lgm> lgm2 = boost::make_shared<Lgm>(lgm_p2);
 
@@ -945,8 +947,8 @@ void XAssetModelTest::testLgmGsrEquivalence() {
                 boost::shared_ptr<IrLgm1fParametrization> lgm_p =
                     boost::make_shared<
                         IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
-                        EURCurrency(), yts, stepTimes_a, sigmas_a, kappas_a,
-                        shift, 1.0);
+                            EURCurrency(), yts, stepTimes_a, sigmas_a, kappas_a);
+                lgm_p->shift() = shift;
 
                 boost::shared_ptr<Lgm> lgm = boost::make_shared<Lgm>(lgm_p);
 
@@ -1024,7 +1026,8 @@ void XAssetModelTest::testLgmMcWithShift() {
     // apply a shift of -H(T)
     boost::shared_ptr<IrLgm1fParametrization> lgm_shifted =
         boost::make_shared<IrLgm1fConstantParametrization>(
-            EURCurrency(), yts, 0.01, 0.01, -(1.0 - exp(-0.01 * T)) / 0.01);
+            EURCurrency(), yts, 0.01, 0.01);
+    lgm_shifted->shift() = -(1.0 - exp(-0.01 * T)) / 0.01;
 
     boost::shared_ptr<StochasticProcess> p =
         boost::make_shared<IrLgm1fStateProcess>(lgm);

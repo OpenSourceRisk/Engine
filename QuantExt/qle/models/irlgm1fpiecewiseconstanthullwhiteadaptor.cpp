@@ -13,13 +13,9 @@ IrLgm1fPiecewiseConstantHullWhiteAdaptor::
     IrLgm1fPiecewiseConstantHullWhiteAdaptor(
         const Currency &currency,
         const Handle<YieldTermStructure> &termStructure, const Array &times,
-        const Array &sigma, const Array &kappa, const Real shift,
-        const Real scaling)
+        const Array &sigma, const Array &kappa)
     : IrLgm1fParametrization(currency, termStructure),
-      PiecewiseConstantHelper3(times), PiecewiseConstantHelper2(times),
-      shift_(shift), scaling_(scaling) {
-    QL_REQUIRE(!close_enough(scaling, 0.0),
-               "scaling (" << scaling << ") must be non-zero");
+      PiecewiseConstantHelper3(times), PiecewiseConstantHelper2(times) {
     QL_REQUIRE(times.size() + 1 == sigma.size(),
                "sigma size (" << sigma.size()
                               << ") inconsistent to times size ("

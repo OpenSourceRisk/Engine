@@ -24,8 +24,7 @@ class IrLgm1fPiecewiseConstantHullWhiteAdaptor
     IrLgm1fPiecewiseConstantHullWhiteAdaptor(
         const Currency &currency,
         const Handle<YieldTermStructure> &termStructure, const Array &times,
-        const Array &sigma, const Array &kappa, const Real shift = 0.0,
-        const Real scaling = 1.0);
+        const Array &sigma, const Array &kappa);
     Real zeta(const Time t) const;
     Real H(const Time t) const;
     Real alpha(const Time t) const;
@@ -41,8 +40,6 @@ class IrLgm1fPiecewiseConstantHullWhiteAdaptor
     Real direct(const Size i, const Real x) const;
     Real inverse(const Size j, const Real y) const;
 
-  private:
-    const Real shift_, scaling_;
 };
 
 // inline

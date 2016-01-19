@@ -32,6 +32,14 @@ class IrLgm1fParametrization : public Parametrization {
     virtual Real hullWhiteSigma(const Time t) const;
     const Handle<YieldTermStructure> termStructure() const;
 
+    /*! allows to apply a shift to H (model invariance 1) */
+    Real &shift();
+    /*! allows to apply a scaling to H and zeta (model invariance 2) */
+    Real &scaling();
+
+  protected:
+    Real shift_, scaling_;
+
   private:
     const Handle<YieldTermStructure> termStructure_;
 };
@@ -39,15 +47,15 @@ class IrLgm1fParametrization : public Parametrization {
 // inline
 
 inline Real IrLgm1fParametrization::alpha(const Time t) const {
-    return std::sqrt((zeta(tr(t)) - zeta(tl(t))) / h_);
+    return std::sqrt((zeta(tr(t)) - zeta(tl(t))) / h_) / scaling_;
 }
 
 inline Real IrLgm1fParametrization::Hprime(const Time t) const {
-    return (H(tr(t)) - H(tl(t))) / h_;
+    return scaling_ * (H(tr(t)) - H(tl(t))) / h_;
 }
 
 inline Real IrLgm1fParametrization::Hprime2(const Time t) const {
-    return (H(tr2(t)) - 2.0 * H(tm2(t)) + H(tl2(t))) / (h2_ * h2_);
+    return scaling_ * (H(tr2(t)) - 2.0 * H(tm2(t)) + H(tl2(t))) / (h2_ * h2_);
 }
 
 inline Real IrLgm1fParametrization::hullWhiteSigma(const Time t) const {
@@ -62,6 +70,10 @@ inline const Handle<YieldTermStructure>
 IrLgm1fParametrization::termStructure() const {
     return termStructure_;
 }
+
+inline Real &IrLgm1fParametrization::shift() { return shift_; }
+
+inline Real &IrLgm1fParametrization::scaling() { return scaling_; }
 
 } // namespace QuantExt
 
