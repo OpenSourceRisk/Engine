@@ -20,4 +20,6 @@
 #include <qle/models/pseudoparameter.hpp>
 #include <qle/models/xassetanalytics.hpp>
 #include <qle/models/xassetmodel.hpp>
+#include <qle/models/calibrationhelper.hpp>
+#include <qle/models/swaptionhelper.hpp>
 

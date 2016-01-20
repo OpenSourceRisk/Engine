@@ -3,4 +3,5 @@
 
 #include <qle/math/piecewisefunction.hpp>
 #include <qle/math/piecewiseintegral.hpp>
+#include <qle/math/flatextrapolation.hpp>
 
