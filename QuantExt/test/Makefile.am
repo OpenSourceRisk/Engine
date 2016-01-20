@@ -2,6 +2,7 @@
 QLE_TESTS = \
 	testsuite.cpp \
 	discountcurve.hpp discountcurve.cpp \
+	dynamicblackvoltermstructure.hpp dynamicblackvoltermstructure.cpp \
 	logquote.hpp logquote.cpp \
 	currency.hpp currency.cpp \
 	index.hpp index.cpp

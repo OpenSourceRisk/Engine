@@ -29,6 +29,7 @@ using boost::unit_test::test_suite;
 #endif
 
 // Lib test suites
+#include "dynamicblackvoltermstructure.hpp"
 #include "discountcurve.hpp"
 #include "logquote.hpp"
 #include "currency.hpp"
@@ -63,6 +64,7 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(DiscountCurveTest::suite());
     test->add(CurrencyTest::suite());
     test->add(IndexTest::suite());
+    test->add(DynamicBlackVolTermStructureTest::suite());
 
     test->add(BOOST_TEST_CASE(stopTimer));
 

@@ -11,6 +11,7 @@ libTermStructures_la_SOURCES = \
 	basistwoswaphelper.cpp \
 	constantoptionletvol.cpp \
 	crossccybasisswaphelper.cpp \
+	dynamicblackvoltermstructure.cpp \
 	flatsmilesection.cpp \
 	oibasisswaphelper.cpp \
 	oiccbasisswaphelper.cpp \
@@ -39,6 +40,7 @@ this_include_HEADERS = \
 	blackinvertedvoltermstructure.hpp \
 	constantoptionletvol.hpp \
 	crossccybasisswaphelper.hpp \
+	dynamicblackvoltermstructure.hpp \
 	flatsmilesection.hpp \
 	interpolateddiscountcurve.hpp \
 	interpolatedsmilesection.hpp \
