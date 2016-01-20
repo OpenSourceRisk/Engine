@@ -11,13 +11,10 @@ namespace QuantExt {
 
 IrLgm1fConstantParametrization::IrLgm1fConstantParametrization(
     const Currency &currency, const Handle<YieldTermStructure> &termStructure,
-    const Real alpha, const Real kappa, const Real shift, const Real scaling)
+    const Real alpha, const Real kappa)
     : IrLgm1fParametrization(currency, termStructure),
       alpha_(boost::make_shared<PseudoParameter>(1)),
-      kappa_(boost::make_shared<PseudoParameter>(1)), shift_(shift),
-      scaling_(scaling), zeroKappaCutoff_(1.0E-6) {
-    QL_REQUIRE(!close_enough(scaling, 0.0),
-               "scaling (" << scaling << ") must be non-zero");
+      kappa_(boost::make_shared<PseudoParameter>(1)), zeroKappaCutoff_(1.0E-6) {
     alpha_->setParam(0, inverse(0, alpha));
     kappa_->setParam(0, inverse(1, kappa));
 }

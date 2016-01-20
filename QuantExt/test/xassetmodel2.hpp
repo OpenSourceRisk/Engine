@@ -14,7 +14,9 @@
 
 class XAssetModelTest2 {
   public:
-    static void testFMSCase();
+    static void testLgm31fPositiveCovariance();
+    static void testLgm31fMoments();
+    static void testLgm31fMartingaleProperty();
     static boost::unit_test_framework::test_suite *suite();
 };
 

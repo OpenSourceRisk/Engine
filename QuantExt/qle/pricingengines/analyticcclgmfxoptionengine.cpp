@@ -18,9 +18,13 @@
 */
 
 #include <qle/pricingengines/analyticcclgmfxoptionengine.hpp>
+#include <qle/models/xassetanalytics.hpp>
+
 #include <ql/pricingengines/blackcalculator.hpp>
 
 namespace QuantExt {
+
+using namespace XAssetAnalytics;
 
 AnalyticCcLgmFxOptionEngine::AnalyticCcLgmFxOptionEngine(
     const boost::shared_ptr<XAssetModel> &model, const Size foreignCurrency)
@@ -61,28 +65,30 @@ void AnalyticCcLgmFxOptionEngine::calculate() const {
     // just a shortcut
     const Size &i = foreignCurrency_;
 
+    const XAssetModel *x = model_.get();
+
     Real variance =
         // first term
-        H0 * H0 * model_->integral(na, na, 0, 0, na, na, 0.0, t) -
-        2.0 * H0 * model_->integral(0, na, 0, 0, na, na, 0.0, t) +
-        model_->integral(0, 0, 0, 0, na, na, 0.0, t) +
+        H0 * H0 * integral(x, na, na, 0, 0, na, na, 0.0, t) -
+        2.0 * H0 * integral(x, 0, na, 0, 0, na, na, 0.0, t) +
+        integral(x, 0, 0, 0, 0, na, na, 0.0, t) +
         // second term
-        Hi * Hi * model_->integral(na, na, i + 1, i + 1, na, na, 0.0, t) -
-        2.0 * Hi * model_->integral(i + 1, na, i + 1, i + 1, na, na, 0.0, t) +
-        model_->integral(i + 1, i + 1, i + 1, i + 1, na, na, 0.0, t) +
+        Hi * Hi * integral(x, na, na, i + 1, i + 1, na, na, 0.0, t) -
+        2.0 * Hi * integral(x, i + 1, na, i + 1, i + 1, na, na, 0.0, t) +
+        integral(x, i + 1, i + 1, i + 1, i + 1, na, na, 0.0, t) +
         // term two three/fourth
-        model_->integral(na, na, na, na, i, i, 0.0, t) -
+        integral(x, na, na, na, na, i, i, 0.0, t) -
         // third term
-        2.0 * (H0 * Hi * model_->integral(na, na, 0, i + 1, na, na, 0.0, t) -
-               H0 * model_->integral(i + 1, na, i + 1, 0, na, na, 0.0, t) -
-               Hi * model_->integral(0, na, 0, i + 1, na, na, 0.0, t) +
-               model_->integral(0, i + 1, 0, i + 1, na, na, 0.0, t)) +
+        2.0 * (H0 * Hi * integral(x, na, na, 0, i + 1, na, na, 0.0, t) -
+               H0 * integral(x, i + 1, na, i + 1, 0, na, na, 0.0, t) -
+               Hi * integral(x, 0, na, 0, i + 1, na, na, 0.0, t) +
+               integral(x, 0, i + 1, 0, i + 1, na, na, 0.0, t)) +
         // forth term
-        2.0 * (H0 * model_->integral(na, na, 0, na, na, i, 0.0, t) -
-               model_->integral(0, na, 0, na, na, i, 0.0, t)) -
+        2.0 * (H0 * integral(x, na, na, 0, na, na, i, 0.0, t) -
+               integral(x, 0, na, 0, na, na, i, 0.0, t)) -
         // fifth term
-        2.0 * (Hi * model_->integral(na, na, i + 1, na, na, i, 0.0, t) -
-               model_->integral(i + 1, na, i + 1, na, na, i, 0.0, t));
+        2.0 * (Hi * integral(x, na, na, i + 1, na, na, i, 0.0, t) -
+               integral(x, i + 1, na, i + 1, na, na, i, 0.0, t));
 
     BlackCalculator black(payoff, fxForward, std::sqrt(variance),
                           domesticDiscount);

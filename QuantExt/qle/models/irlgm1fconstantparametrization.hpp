@@ -23,7 +23,7 @@ class IrLgm1fConstantParametrization : public IrLgm1fParametrization {
     IrLgm1fConstantParametrization(
         const Currency &currency,
         const Handle<YieldTermStructure> &termStructure, const Real alpha,
-        const Real kappa, const Real shift = 0.0, const Real scaling = 1.0);
+        const Real kappa);
     Real zeta(const Time t) const;
     Real H(const Time t) const;
     Real alpha(const Time t) const;
@@ -38,7 +38,6 @@ class IrLgm1fConstantParametrization : public IrLgm1fParametrization {
 
   private:
     const boost::shared_ptr<PseudoParameter> alpha_, kappa_;
-    const Real shift_, scaling_;
     const Real zeroKappaCutoff_;
 };
 

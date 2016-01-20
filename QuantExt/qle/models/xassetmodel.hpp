@@ -66,19 +66,20 @@ class XAssetModel : public LinkableCalibratedModel {
         - COM (optionally) ccy must be a subset of the IR ccys) */
     XAssetModel(const std::vector<boost::shared_ptr<Parametrization> >
                     &parametrizations,
-                const Matrix &correlation, SalvagingAlgorithm::Type salvaging =
-                                               SalvagingAlgorithm::None);
-
-    /*! allow for time dependent correlation (2nd ctor) */
+                const Matrix &correlation,
+                SalvagingAlgorithm::Type salvaging = SalvagingAlgorithm::None);
 
     /*! returns the state process with a given discretization */
     const boost::shared_ptr<StochasticProcess>
     stateProcess(XAssetStateProcess::discretization disc =
                      XAssetStateProcess::exact) const;
+
     /*! total dimension of model */
     Size dimension() const;
+
     /*! number of currencies including domestic */
     Size currencies() const;
+
     /*! total number of parameters that can be calibrated */
     Size totalNumberOfParameters() const;
 
@@ -104,39 +105,23 @@ class XAssetModel : public LinkableCalibratedModel {
 
     /* ... add more components here ...*/
 
-    /*! correlation */
+    /*! correlation linking the different marginal models, note that
+        the use of asset class pairs specific inspectors is
+        recommended instead of the global matrix directly */
     const Matrix &correlation() const;
 
-    /*! expectations and covariances,
-       notation follows Lichters, Stamm, Gallagher, 2015, i.e.
-       z is the ir lgm state variable,
-       x is the log spot fx */
+    /*! correlation between two ir components */
+    Real ir_ir_correlation(const Size i, const Size j) const;
+    /*! correlation between an ir and a fx component */
+    Real ir_fx_correlation(const Size i, const Size j) const;
+    /*! correlation between two fx compoents */
+    Real fx_fx_correlation(const Size i, const Size j) const;
 
-    /*! analytic moments rely on numerical integration, which can
-        be customized here */
+    /*! analytical moments require numerical integration,
+      which can be customized here */
     void setIntegrationPolicy(const boost::shared_ptr<Integrator> integrator,
                               const bool usePiecewiseIntegration = true) const;
-
-    /*! moments, some expressions are splitted (their sum gives the result)
-        in order to allow for efficient caching of results in other classes */
-    Real ir_expectation_1(const Size i, const Time t0, const Real dt) const;
-    Real ir_expectation_2(const Size i, const Real zi_0) const;
-    Real fx_expectation_1(const Size i, const Time t0, const Real dt) const;
-    Real fx_expectation_2(const Size i, const Time t0, const Real xi_0,
-                          const Real zi_0, const Real z0_0,
-                          const Real dt) const;
-    Real ir_ir_covariance(const Size i, const Size j, const Time t0,
-                          Time dt) const;
-    Real ir_fx_covariance(const Size i, const Size j, const Time t0,
-                          Time dt) const;
-    Real fx_fx_covariance(const Size i, const Size j, const Time t0,
-                          Time dt) const;
-
-    Real integral(const Size hi, const Size hj, const Size alphai,
-                  const Size alphaj, const Size sigmai, const Size sigmaj,
-                  const Real a, const Real b) const;
-
-    /* ... */
+    const boost::shared_ptr<Integrator> integrator() const;
 
     /*! calibration procedures */
 
@@ -179,18 +164,15 @@ class XAssetModel : public LinkableCalibratedModel {
     /* ... add more calibration procedures here ... */
 
   private:
-    /*! init methods */
+    /* init methods */
+
     void initialize();
     void initializeParametrizations();
     void initializeCorrelation();
     void initializeArguments();
 
-    /*! integral helper function */
-    Real integral_helper(const Size hi, const Size hj, const Size alphai,
-                         const Size alphaj, const Size sigmai,
-                         const Size sigmaj, const Real t) const;
+    /* members */
 
-    /*! members */
     Size nIrLgm1f_, nFxBs_;
     Size totalNumberOfParameters_;
     const std::vector<boost::shared_ptr<Parametrization> > p_;
@@ -200,7 +182,7 @@ class XAssetModel : public LinkableCalibratedModel {
     boost::shared_ptr<XAssetStateProcess> stateProcessExact_,
         stateProcessEuler_;
 
-    /*! calibration constraints */
+    /* calibration constraints */
 
     Disposable<std::vector<bool> > MoveIrLgm1fVolatility(const Size ccy,
                                                          const Size i) {
@@ -338,217 +320,32 @@ XAssetModel::fxbs(const Size ccy) const {
 
 inline const Matrix &XAssetModel::correlation() const { return rho_; }
 
-inline Real XAssetModel::numeraire(const Size ccy, const Time t,
-                                   const Real x) const {
-    const boost::shared_ptr<IrLgm1fParametrization> p = irlgm1f(ccy);
-    Real Ht = p->H(t);
-    return std::exp(Ht * x + 0.5 * Ht * Ht * p->zeta(t)) /
-           p->termStructure()->discount(t);
+inline Real XAssetModel::ir_ir_correlation(const Size i, const Size j) const {
+    QL_REQUIRE(i < nIrLgm1f_, "irlgm1f index (" << i << ") must be in 0..."
+                                                << (nIrLgm1f_ - 1));
+    QL_REQUIRE(j < nIrLgm1f_, "irlgm1f index (" << i << ") must be in 0..."
+                                                << (nIrLgm1f_ - 1));
+    return rho_[i][j];
 }
 
-inline Real XAssetModel::discountBond(const Size ccy, const Time t,
-                                      const Time T, const Real x) const {
-    QL_REQUIRE(T >= t, "T(" << T << ") >= t(" << t
-                            << ") required in irlgm1f discountBond");
-    const boost::shared_ptr<IrLgm1fParametrization> p = irlgm1f(ccy);
-    Real Ht = p->H(t);
-    Real HT = p->H(T);
-    return p->termStructure()->discount(T) / p->termStructure()->discount(t) *
-           std::exp(-(HT - Ht) * x - 0.5 * (HT * HT - Ht * Ht) * p->zeta(t));
+inline Real XAssetModel::ir_fx_correlation(const Size i, const Size j) const {
+    QL_REQUIRE(i < nIrLgm1f_, "irlgm1f index (" << i << ") must be in 0..."
+                                                << (nIrLgm1f_ - 1));
+    QL_REQUIRE(j < nFxBs_, "fxbs index (" << j << ") must be in 0..."
+                                          << (nFxBs_ - 1));
+    return rho_[i][nIrLgm1f_ + j];
 }
 
-inline Real XAssetModel::reducedDiscountBond(const Size ccy, const Time t,
-                                             const Time T, const Real x) const {
-    QL_REQUIRE(T >= t, "T(" << T << ") >= t(" << t
-                            << ") required in irlgm1f reducedDiscountBond");
-    const boost::shared_ptr<IrLgm1fParametrization> p = irlgm1f(ccy);
-    Real HT = p->H(T);
-    return p->termStructure()->discount(T) *
-           std::exp(-HT * x - 0.5 * HT * HT * p->zeta(t));
+inline Real XAssetModel::fx_fx_correlation(const Size i, const Size j) const {
+    QL_REQUIRE(i < nFxBs_, "fxbs index (" << i << ") must be in 0..."
+                                          << (nFxBs_ - 1));
+    QL_REQUIRE(j < nFxBs_, "fxbs index (" << j << ") must be in 0..."
+                                          << (nFxBs_ - 1));
+    return rho_[nIrLgm1f_ + i][nIrLgm1f_ + j];
 }
 
-inline Real XAssetModel::discountBondOption(const Size ccy, Option::Type type,
-                                            const Real K, const Time t,
-                                            const Time S, const Time T) const {
-    QL_REQUIRE(T > S && S >= t,
-               "T(" << T << ") > S(" << S << ") >= t(" << t
-                    << ") required in irlgm1f discountBondOption");
-    const boost::shared_ptr<IrLgm1fParametrization> p = irlgm1f(ccy);
-    Real w = (type == Option::Call ? 1.0 : -1.0);
-    Real pS = p->termStructure()->discount(S);
-    Real pT = p->termStructure()->discount(T);
-    // slight generalization of Lichters, Stamm, Gallagher 11.2.1
-    // with t < S only resulting in a different time at which zeta
-    // has to be taken
-    Real sigma = sqrt(p->zeta(t)) * (p->H(T) - p->H(S));
-    Real dp = (std::log(pT / (K * pS)) / sigma + 0.5 * sigma);
-    Real dm = dp - sigma;
-    QuantExt::CumulativeNormalDistribution N;
-    return w * (pT * N(w * dp) - pS * K * N(w * dm));
-}
-
-inline Real XAssetModel::integral(const Size hi, const Size hj,
-                                  const Size alphai, const Size alphaj,
-                                  const Size sigmai, const Size sigmaj,
-                                  const Real a, const Real b) const {
-    return integrator_->operator()(boost::bind(&XAssetModel::integral_helper,
-                                               this, hi, hj, alphai, alphaj,
-                                               sigmai, sigmaj, _1),
-                                   a, b);
-}
-
-inline Real XAssetModel::integral_helper(const Size hi, const Size hj,
-                                         const Size alphai, const Size alphaj,
-                                         const Size sigmai, const Size sigmaj,
-                                         const Real t) const {
-    const Size na = Null<Size>();
-    Size i1 = Null<Size>(), j1 = Null<Size>();
-    Size i2 = Null<Size>(), j2 = Null<Size>();
-    Real res = 1.0;
-    if (hi != na) {
-        res *= irlgm1f(hi)->H(t);
-        i1 = hi;
-    }
-    if (hj != na) {
-        res *= irlgm1f(hj)->H(t);
-        j1 = hj;
-    }
-    if (alphai != na) {
-        res *= irlgm1f(alphai)->alpha(t);
-        i1 = alphai;
-    }
-    if (alphaj != na) {
-        res *= irlgm1f(alphaj)->alpha(t);
-        j1 = alphaj;
-    }
-    if (sigmai != na) {
-        res *= fxbs(sigmai)->sigma(t);
-        i2 = sigmai;
-    }
-    if (sigmaj != na) {
-        res *= fxbs(sigmaj)->sigma(t);
-        j2 = sigmaj;
-    }
-    Size i = i1 != Null<Size>() ? i1 : i2 + nIrLgm1f_;
-    Size j = j1 != Null<Size>() ? j1 : j2 + nIrLgm1f_;
-    res *= rho_[i][j];
-    return res;
-}
-
-inline Real XAssetModel::ir_expectation_1(const Size i, const Time t0,
-                                          const Real dt) const {
-    const Size na = Null<Size>();
-    Real res = 0.0;
-    if (i > 0) {
-        res += -integral(i, na, i, i, na, na, t0, t0 + dt) -
-               integral(na, na, i, na, na, i - 1, t0, t0 + dt) +
-               integral(0, na, 0, i, na, na, t0, t0 + dt);
-    }
-    return res;
-}
-
-inline Real XAssetModel::ir_expectation_2(const Size, const Real zi_0) const {
-    return zi_0;
-}
-
-inline Real XAssetModel::fx_expectation_1(const Size i, const Time t0,
-                                          const Real dt) const {
-    const Size na = Null<Size>();
-    Real res = std::log(irlgm1f(i + 1)->termStructure()->discount(t0 + dt) /
-                        irlgm1f(i + 1)->termStructure()->discount(t0) *
-                        irlgm1f(0)->termStructure()->discount(t0) /
-                        irlgm1f(0)->termStructure()->discount(t0 + dt));
-    res -= 0.5 * integral(na, na, na, na, i, i, t0, t0 + dt);
-    res += 0.5 * (irlgm1f(0)->H(t0 + dt) * irlgm1f(0)->H(t0 + dt) *
-                      irlgm1f(0)->zeta(t0 + dt) -
-                  irlgm1f(0)->H(t0) * irlgm1f(0)->H(t0) * irlgm1f(0)->zeta(t0) -
-                  integral(0, 0, 0, 0, na, na, t0, t0 + dt));
-    res -= 0.5 * (irlgm1f(i + 1)->H(t0 + dt) * irlgm1f(i + 1)->H(t0 + dt) *
-                      irlgm1f(i + 1)->zeta(t0 + dt) -
-                  irlgm1f(i + 1)->H(t0) * irlgm1f(i + 1)->H(t0) *
-                      irlgm1f(i + 1)->zeta(t0) -
-                  integral(i + 1, i + 1, i + 1, i + 1, na, na, t0, t0 + dt));
-    res += integral(0, na, 0, na, na, i, t0, t0 + dt);
-    res -= irlgm1f(i + 1)->H(t0 + dt) *
-           (-integral(i + 1, na, i + 1, i + 1, na, na, t0, t0 + dt) +
-            integral(0, na, 0, i + 1, na, na, t0, t0 + dt) -
-            integral(na, na, i + 1, na, na, i, t0, t0 + dt));
-    res += -integral(i + 1, i + 1, i + 1, i + 1, na, na, t0, t0 + dt) +
-           integral(0, i + 1, 0, i + 1, na, na, t0, t0 + dt) -
-           integral(i + 1, na, i + 1, na, na, i, t0, t0 + dt);
-    return res;
-}
-
-inline Real XAssetModel::fx_expectation_2(const Size i, const Time t0,
-                                          const Real xi_0, const Real zi_0,
-                                          const Real z0_0,
-                                          const Real dt) const {
-    Real res = xi_0 + (irlgm1f(0)->H(t0 + dt) - irlgm1f(0)->H(t0)) * z0_0 -
-               (irlgm1f(i + 1)->H(t0 + dt) - irlgm1f(i + 1)->H(t0)) * zi_0;
-    return res;
-}
-
-inline Real XAssetModel::ir_ir_covariance(const Size i, const Size j,
-                                          const Time t0, Time dt) const {
-    const Size na = Null<Size>();
-    Real res = integral(na, na, i, j, na, na, t0, t0 + dt);
-    return res;
-}
-
-inline Real XAssetModel::ir_fx_covariance(const Size i, const Size j,
-                                          const Time t0, Time dt) const {
-    const Size na = Null<Size>();
-    Real res =
-        irlgm1f(0)->H(t0 + dt) * integral(na, na, 0, i, na, na, t0, t0 + dt) -
-        integral(0, na, 0, i, na, na, t0, t0 + dt) -
-        irlgm1f(j + 1)->H(t0 + dt) *
-            integral(na, na, j + 1, i, na, na, t0, t0 + dt) +
-        integral(j + 1, na, j + 1, i, na, na, t0, t0 + dt) +
-        integral(na, na, i, na, na, j, t0, t0 + dt);
-    return res;
-}
-
-inline Real XAssetModel::fx_fx_covariance(const Size i, const Size j,
-                                          const Time t0, Time dt) const {
-    const Size na = Null<Size>();
-    Real H0 = irlgm1f(0)->H(t0 + dt);
-    Real Hi = irlgm1f(i + 1)->H(t0 + dt);
-    Real Hj = irlgm1f(j + 1)->H(t0 + dt);
-    Real res =
-        // row 1
-        H0 * H0 * integral(na, na, 0, 0, na, na, t0, t0 + dt) -
-        2.0 * H0 * integral(0, na, 0, 0, na, na, t0, t0 + dt) +
-        integral(0, 0, 0, 0, na, na, t0, t0 + dt) -
-        // row 2
-        H0 * Hj * integral(na, na, 0, j + 1, na, na, t0, t0 + dt) +
-        Hj * integral(0, na, 0, j + 1, na, na, t0, t0 + dt) +
-        H0 * integral(j + 1, na, j + 1, 0, na, na, t0, t0 + dt) -
-        integral(0, j + 1, 0, j + 1, na, na, t0, t0 + dt) -
-        // row 3
-        H0 * Hi * integral(na, na, 0, i + 1, na, na, t0, t0 + dt) +
-        Hi * integral(0, na, 0, i + 1, na, na, t0, t0 + dt) +
-        H0 * integral(i + 1, na, i + 1, 0, na, na, t0, t0 + dt) -
-        integral(0, i + 1, 0, i + 1, na, na, t0, t0 + dt) +
-        // row 4
-        H0 * integral(na, na, 0, na, na, j, t0, t0 + dt) -
-        integral(0, na, 0, na, na, j, t0, t0 + dt) +
-        // row 5
-        H0 * integral(na, na, 0, na, na, i, t0, t0 + dt) -
-        integral(0, na, 0, na, na, i, t0, t0 + dt) -
-        // row 6
-        Hi * integral(na, na, i + 1, na, na, j, t0, t0 + dt) +
-        integral(i + 1, na, i + 1, na, na, j, t0, t0 + dt) -
-        // row 7
-        Hj * integral(na, na, j + 1, na, na, i, t0, t0 + dt) +
-        integral(j + 1, na, j + 1, na, na, i, t0, t0 + dt) +
-        // row 8
-        Hi * Hj * integral(na, na, i + 1, j + 1, na, na, t0, t0 + dt) -
-        Hj * integral(i + 1, na, i + 1, j + 1, na, na, t0, t0 + dt) -
-        Hi * integral(j + 1, na, j + 1, i + 1, na, na, t0, t0 + dt) +
-        integral(i + 1, j + 1, i + 1, j + 1, na, na, t0, t0 + dt) +
-        // row 9
-        integral(na, na, na, na, i, j, t0, t0 + dt);
-    return res;
+inline const boost::shared_ptr<Integrator> XAssetModel::integrator() const {
+    return integrator_;
 }
 
 } // namespace QuantExt

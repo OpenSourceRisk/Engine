@@ -513,13 +513,16 @@ void AnalyticLgmSwaptionEngineTest::testLgmInvariances() {
 
             const boost::shared_ptr<IrLgm1fParametrization> irlgm1fa =
                 boost::make_shared<IrLgm1fConstantParametrization>(
-                    EURCurrency(), discountingCurve, 0.01, 0.01, shift[i],
-                    scaling[j]);
+                    EURCurrency(), discountingCurve, 0.01, 0.01);
+            irlgm1fa->shift() = shift[i];
+            irlgm1fa->scaling() = scaling[j];
 
             const boost::shared_ptr<IrLgm1fParametrization> irlgm1fb =
                 boost::make_shared<IrLgm1fPiecewiseConstantParametrization>(
                     EURCurrency(), discountingCurve, times, alpha_a, times,
-                    kappa_a, shift[i], scaling[j]);
+                    kappa_a);
+            irlgm1fb->shift() = shift[i];
+            irlgm1fb->scaling() = scaling[j];
 
             const boost::shared_ptr<IrLgm1fParametrization> irlgm1f0c =
                 boost::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
@@ -527,8 +530,9 @@ void AnalyticLgmSwaptionEngineTest::testLgmInvariances() {
 
             const boost::shared_ptr<IrLgm1fParametrization> irlgm1fc =
                 boost::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
-                    EURCurrency(), discountingCurve, times, sigma_a, kappa_a,
-                    shift[i], scaling[j]);
+                    EURCurrency(), discountingCurve, times, sigma_a, kappa_a);
+            irlgm1fc->shift() = shift[i];
+            irlgm1fc->scaling() = scaling[j];
 
             const boost::shared_ptr<Lgm> lgm0 =
                 boost::make_shared<Lgm>(irlgm1f0);
