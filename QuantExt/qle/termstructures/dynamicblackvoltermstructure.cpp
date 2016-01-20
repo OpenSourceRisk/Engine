@@ -81,6 +81,7 @@ DynamicBlackVolTermStructure::DynamicBlackVolTermStructure(
             boost::make_shared<LinearInterpolation>(
                 forwardCurveSampleGrid_.begin(), forwardCurveSampleGrid_.end(),
                 initialForwards_.begin()));
+        initialForwardCurve_->enableExtrapolation();
     }
 }
 
@@ -104,7 +105,7 @@ Real DynamicBlackVolTermStructure::minStrike() const {
         return source_->minStrike();
     }
     if (stickyness_ == StickyLogMoneyness) {
-        // we can not specify this, since it is maturity dependent
+        // we do not specify this, since it is maturity dependent
         // instead we allow for extrapolation when asking the
         // source for a volatility and are not in sticky strike mode
         return 0.0;
@@ -132,8 +133,8 @@ Volatility DynamicBlackVolTermStructure::blackVolImpl(Time t,
 Real DynamicBlackVolTermStructure::blackVarianceImpl(Time t,
                                                      Real strike) const {
     if (strike == Null<Real>()) {
-        QL_REQUIRE(atmKnown_,
-                   "can not calculate atm level (null strike is given)");
+        QL_REQUIRE(atmKnown_, "can not calculate atm level (null strike is "
+                              "given) because a curve or the spot is missing");
         strike =
             spot_->value() / riskfree_->discount(t) * dividend_->discount(t);
     }
@@ -151,8 +152,8 @@ Real DynamicBlackVolTermStructure::blackVarianceImpl(Time t,
         scenarioStrike0 = initialForwardCurve_->operator()(scenarioT0) /
                           spot_->value() * strike;
     }
-    return source_->blackVariance(scenarioT1, scenarioStrike1) -
-           source_->blackVariance(scenarioT0, scenarioStrike0);
+    return source_->blackVariance(scenarioT1, scenarioStrike1, true) -
+           source_->blackVariance(scenarioT0, scenarioStrike0, true);
 }
 
 } // namespace QuantExt
