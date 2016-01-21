@@ -2,5 +2,7 @@
 /* Add the files to be included into Makefile.am instead. */
 
 #include <qle/models/calibrationhelper.hpp>
+#include <qle/models/gaussian1dmodel.hpp>
+#include <qle/models/gsr.hpp>
 #include <qle/models/swaptionhelper.hpp>
 

@@ -8,12 +8,17 @@ noinst_LTLIBRARIES = libModels.la
 
 libModels_la_SOURCES = \
 	calibrationhelper.cpp \
+	gaussian1dmodel.cpp \
+	gsr.cpp \
+	model.cpp \
 	swaptionhelper.cpp 
 
 this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \
 	all.hpp \
 	calibrationhelper.hpp \
+	gaussian1dmodel.hpp \
+	gsr.hpp \
 	swaptionhelper.hpp
 
 all.hpp: Makefile.am

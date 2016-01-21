@@ -6,5 +6,6 @@
 #include <qle/pricingengines/blackswaptionengine.hpp>
 #include <qle/pricingengines/discountingfxforwardengine.hpp>
 #include <qle/pricingengines/crossccyswapengine.hpp>
+#include <qle/pricingengines/gaussian1dswaptionengine.hpp>
 #include <qle/pricingengines/oiccbasisswapengine.hpp>
 

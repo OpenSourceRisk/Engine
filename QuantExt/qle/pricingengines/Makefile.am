@@ -13,6 +13,7 @@ libPricingEngines_la_SOURCES = \
 	blackcapfloorengine.cpp \
 	discountingfxforwardengine.cpp \
 	crossccyswapengine.cpp \
+	gaussian1dswaptionengine.cpp \
 	oiccbasisswapengine.cpp
 
 this_includedir=${includedir}/${subdir}
@@ -23,6 +24,7 @@ this_include_HEADERS = \
 	blackswaptionengine.hpp \
 	discountingfxforwardengine.hpp \
 	crossccyswapengine.hpp \
+	gaussian1dswaptionengine.hpp \
 	oiccbasisswapengine.hpp
 
 all.hpp: Makefile.am
