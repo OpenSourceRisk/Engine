@@ -16,13 +16,19 @@
 
 namespace QuantExt {
 
-class CreditHwParametrization : public Parametrization {
+class CrdHwParametrization : public Parametrization {
   public:
-    virtual Handle<DefaultProbabilityTermStructure>
-    defaultTermStructure() const = 0;
-    /*! interface */
+    CrdHwParametrization(
+        const Currency &currency,
+        const Handle<DefaultProbabilityTermStructure> &defaultTermStructure);
+
     virtual Real sigma(const Time t) const = 0;
     virtual Real a(const Time t) const = 0;
+
+    const Handle<DefaultProbabilityTermStructure> defaultTermStructure() const;
+
+  private:
+    const Handle<DefaultProbabilityTermStructure> defaultTermStructure_;
 };
 
 } // namespace QuantExt
