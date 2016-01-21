@@ -4,6 +4,7 @@
 #include <qle/models/calibrationhelper.hpp>
 #include <qle/models/crdhwparametrization.hpp>
 #include <qle/models/eqbsparametrization.hpp>
+#include <qle/models/fxbsconstantparametrization.hpp>
 #include <qle/models/fxbsparametrization.hpp>
 #include <qle/models/fxbspiecewiseconstantparametrization.hpp>
 #include <qle/models/fxoptionhelper.hpp>

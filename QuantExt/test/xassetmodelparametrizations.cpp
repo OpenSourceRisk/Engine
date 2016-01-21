@@ -460,6 +460,21 @@ void XAssetModelParametrizationsTest::testFxBsParametrizations() {
 
     BOOST_TEST_MESSAGE("Testing XAssetModel parametrizations (fxbs)...");
 
+    FxBsConstantParametrization fxbs_0(USDCurrency(), Handle<Quote>(boost::make_shared<SimpleQuote>(1.10)), 0.10);
+
+    check("fxbs_0.variance", 0.0, fxbs_0.variance(0.0), 0.0);
+    check("fxbs_0.variance", 1.0, fxbs_0.variance(1.0), 0.01 * 1.0);
+    check("fxbs_0.variance", 2.0, fxbs_0.variance(2.0), 0.01 * 2.0);
+    check("fxbs_0.variance", 3.0, fxbs_0.variance(3.0), 0.01 * 3.0);
+    check("fxbs_0.stdDeviation", 0.0, fxbs_0.stdDeviation(0.0), 0.0);
+    check("fxbs_0.stdDeviation", 1.0, fxbs_0.stdDeviation(1.0), std::sqrt(0.01 * 1.0));
+    check("fxbs_0.stdDeviation", 2.0, fxbs_0.stdDeviation(2.0), std::sqrt(0.01 * 2.0));
+    check("fxbs_0.stdDeviation", 3.0, fxbs_0.stdDeviation(3.0), std::sqrt(0.01 * 3.0));
+    check("fxbs_0.sigma", 0.0, fxbs_0.sigma(0.0), 0.10);
+    check("fxbs_0.sigma", 1.0, fxbs_0.sigma(1.0), 0.10);
+    check("fxbs_0.sigma", 2.0, fxbs_0.sigma(2.0), 0.10);
+    check("fxbs_0.sigma", 3.0, fxbs_0.sigma(3.0), 0.10);
+
     Array times(3), sigma(4);
     times[0] = 1.0;
     times[1] = 2.0;
