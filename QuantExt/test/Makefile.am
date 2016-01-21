@@ -8,6 +8,10 @@ QLE_TESTS = \
 	xassetmodel.hpp xassetmodel.cpp \
 	xassetmodel2.hpp xassetmodel2.cpp \
 	xassetmodelparametrizations.hpp xassetmodelparametrizations.cpp
+	dynamicblackvoltermstructure.hpp dynamicblackvoltermstructure.cpp \
+	logquote.hpp logquote.cpp \
+	currency.hpp currency.cpp \
+	index.hpp index.cpp
 
 dist-hook:
 	mkdir -p $(distdir)/build

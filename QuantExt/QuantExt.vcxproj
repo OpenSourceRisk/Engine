@@ -482,11 +482,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="qle\auto_link.hpp" />
+    <ClInclude Include="qle\currencies\africa.hpp" />
+    <ClInclude Include="qle\currencies\all.hpp" />
     <ClInclude Include="qle\quotes\logquote.hpp" />
     <ClInclude Include="qle\config.hpp" />
     <ClInclude Include="qle\quantext.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="qle\currencies\africa.cpp" />
     <ClCompile Include="qle\quotes\logquote.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

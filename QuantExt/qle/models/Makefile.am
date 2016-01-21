@@ -7,10 +7,13 @@ SUBDIRS =
 noinst_LTLIBRARIES = libModels.la
 
 libModels_la_SOURCES = \
+	calibrationhelper.cpp \
 	fxbsparametrization.cpp \
 	fxbspiecewiseconstantparametrization.cpp \
 	fxoptionhelper.cpp \
+	gaussian1dmodel.cpp \
 	gaussian1dxassetadaptor.cpp \
+	gsr.cpp \
 	irlgm1fconstantparametrization.cpp \
 	irlgm1fparametrization.cpp \
 	irlgm1fpiecewiseconstanthullwhiteadaptor.cpp \
@@ -18,20 +21,25 @@ libModels_la_SOURCES = \
 	irlgm1fpiecewiselinearparametrization.cpp \
 	linkablecalibratedmodel.cpp \
 	lgm.cpp \
+	model.cpp \
 	parametrization.cpp \
 	piecewiseconstanthelper.cpp \
+	swaptionhelper.cpp \
 	xassetanalytics.cpp \
 	xassetmodel.cpp
 
 this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \
 	all.hpp \
+	calibrationhelper.hpp \
 	crdhwparametrization.hpp \
 	eqbsparametrization.hpp \
 	fxbsparametrization.hpp \
 	fxbspiecewiseconstantparametrization.hpp \
 	fxoptionhelper.hpp \
 	gaussian1dxassetadaptor.hpp \
+	gaussian1dmodel.hpp \
+	gsr.hpp \
 	infjyparametrization.hpp \
 	irlgm1fconstantparametrization.hpp \
 	irlgm1fpiecewiseconstanthullwhiteadaptor.hpp \
@@ -43,6 +51,7 @@ this_include_HEADERS = \
 	parametrization.hpp \
 	piecewiseconstanthelper.hpp \
 	pseudoparameter.hpp \
+	swaptionhelper.hpp \
 	xassetanalytics.hpp \
 	xassetmodel.hpp
 

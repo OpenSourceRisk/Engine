@@ -4,8 +4,6 @@ SUBDIRS =
 
 noinst_LTLIBRARIES = libMath.la
 
-libMath_la_LIBADD = 
-
 libMath_la_SOURCES = \
 	cumulativenormaldistribution.cpp \
 	piecewiseintegral.cpp
@@ -13,6 +11,7 @@ libMath_la_SOURCES = \
 this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \
 	all.hpp \
+	flatextrapolation.hpp \
 	piecewisefunction.hpp \
 	piecewiseintegral.hpp
 

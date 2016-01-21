@@ -7,6 +7,12 @@
       <Filter>quotes</Filter>
     </ClInclude>
     <ClInclude Include="qle\auto_link.hpp" />
+    <ClInclude Include="qle\currencies\africa.hpp">
+      <Filter>currencies</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\currencies\all.hpp">
+      <Filter>currencies</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -39,10 +45,16 @@
     <Filter Include="processes">
       <UniqueIdentifier>{a1c64987-285d-4622-b1bf-432f5c274486}</UniqueIdentifier>
     </Filter>
+    <Filter Include="indexes\ibor">
+      <UniqueIdentifier>{77001a78-e7fc-4940-b0db-d00314230010}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="qle\quotes\logquote.cpp">
       <Filter>quotes</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\currencies\africa.cpp">
+      <Filter>currencies</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
