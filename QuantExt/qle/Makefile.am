@@ -25,7 +25,7 @@ libQuantExt_la_LDFLAGS = -release $(PACKAGE_VERSION)
 
 libQuantExt_la_LIBADD = \
 	cashflows/libCashflows.la \
-    currencies/libCurrencies.la \
+	currencies/libCurrencies.la \
 	instruments/libInstruments.la \
 	math/libMath.la \
 	models/libModels.la \

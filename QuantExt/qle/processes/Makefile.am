@@ -7,12 +7,16 @@ SUBDIRS =
 noinst_LTLIBRARIES = libProcesses.la
 
 libProcesses_la_SOURCES = \
+	gsrprocess.cpp \
+	gsrprocesscore.cpp \
 	irlgm1fstateprocess.cpp \
 	xassetstateprocess.cpp
 
 this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \
 	all.hpp \
+	gsrprocess.hpp \
+	gsrprocesscore.hpp \
 	irlgm1fstateprocess.hpp \
 	xassetstateprocess.hpp
 

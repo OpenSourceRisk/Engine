@@ -10,23 +10,26 @@ noinst_LTLIBRARIES = libPricingEngines.la
 
 libPricingEngines_la_SOURCES = \
 	analyticcclgmfxoptionengine.cpp \
-	analyticlgmswaptionengine.cpp
+	analyticlgmswaptionengine.cpp \
 	bacheliercapfloorengine.cpp \
 	blackcapfloorengine.cpp \
+	blackswaptionengine.cpp \
 	discountingfxforwardengine.cpp \
 	crossccyswapengine.cpp \
+	gaussian1dswaptionengine.cpp \
 	oiccbasisswapengine.cpp
 
 this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \
 	all.hpp \
 	analyticcclgmfxoptionengine.hpp \
-	analyticlgmswaptionengine.hpp
+	analyticlgmswaptionengine.hpp \
 	bacheliercapfloorengine.hpp \
 	blackcapfloorengine.hpp \
 	blackswaptionengine.hpp \
 	discountingfxforwardengine.hpp \
 	crossccyswapengine.hpp \
+	gaussian1dswaptionengine.hpp \
 	oiccbasisswapengine.hpp
 
 all.hpp: Makefile.am
