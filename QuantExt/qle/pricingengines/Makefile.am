@@ -14,6 +14,7 @@ libPricingEngines_la_SOURCES = \
 	bacheliercapfloorengine.cpp \
 	blackcapfloorengine.cpp \
 	blackswaptionengine.cpp \
+	crossccyswapengine.cpp \
 	discountingfxforwardengine.cpp \
 	crossccyswapengine.cpp \
 	gaussian1dswaptionengine.cpp \
@@ -27,6 +28,7 @@ this_include_HEADERS = \
 	bacheliercapfloorengine.hpp \
 	blackcapfloorengine.hpp \
 	blackswaptionengine.hpp \
+	crossccyswapengine.hpp \
 	discountingfxforwardengine.hpp \
 	crossccyswapengine.hpp \
 	gaussian1dswaptionengine.hpp \

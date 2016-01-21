@@ -1,7 +1,7 @@
 /* -*- mode: c++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 
 /*
- Copyright (C) 2014 - 2015 Quaternion Risk Management Ltd.
+ Copyright (C) 2014 - 2016 Quaternion Risk Management Ltd.
  All rights reserved
 */
 
@@ -50,8 +50,20 @@ namespace QuantExt {
         //@}
         //! \name VolatilityTermStructure interface
         //@{
-        Real minStrike() const { return 1.0 / vol_->maxStrike(); }
-        Real maxStrike() const { return 1.0 / vol_->minStrike(); }
+        Real minStrike() const {
+            Real min = vol_->minStrike();
+            if (min == QL_MIN_REAL || min == 0)
+                return 0; // we allow ATM calls
+            else
+                return 1 / vol_->maxStrike();
+        }
+        Real maxStrike() const {
+            Real min = vol_->minStrike();
+            if (min == QL_MIN_REAL || min == 0)
+                return QL_MAX_REAL;
+            else
+                return 1 / min;
+        }
         //@}
         //! \name Visitability
         //@{
@@ -59,13 +71,11 @@ namespace QuantExt {
         //@}
       protected:
         virtual Real blackVarianceImpl(Time t, Real strike) const {
-            return vol_->blackVariance(
-                t, strike == Null<Real>() ? Null<Real>() : 1.0 / strike);
+            return vol_->blackVariance(t, strike == 0 ? 0 : 1/strike);
         }
 
         virtual Volatility blackVolImpl(Time t, Real strike) const {
-            return vol_->blackVol(t, strike == Null<Real>() ? Null<Real>()
-                                                            : 1.0 / strike);
+            return vol_->blackVol(t, strike == 0 ? 0 : 1/strike);
         }
       private:
         Handle<BlackVolTermStructure> vol_;

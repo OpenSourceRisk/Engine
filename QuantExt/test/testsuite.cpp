@@ -29,15 +29,14 @@ using boost::unit_test::test_suite;
 #endif
 
 // Lib test suites
+#include "xassetmodelparametrizations.hpp"
 #include "analyticlgmswaptionengine.hpp"
+#include "xassetmodel.hpp"
+#include "xassetmodel2.hpp"
 #include "discountcurve.hpp"
-#include "dynamicblackvoltermstructure.hpp"
 #include "logquote.hpp"
 #include "currency.hpp"
 #include "index.hpp"
-#include "xassetmodel.hpp"
-#include "xassetmodel2.hpp"
-#include "xassetmodelparametrizations.hpp"
 
 namespace {
 
@@ -65,9 +64,8 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(BOOST_TEST_CASE(startTimer));
 
     test->add(AnalyticLgmSwaptionEngineTest::suite());
-    test->add(CurrencyTest::suite());
     test->add(DiscountCurveTest::suite());
-    test->add(DynamicBlackVolTermStructureTest::suite());
+    test->add(CurrencyTest::suite());
     test->add(IndexTest::suite());
     test->add(LogQuoteTest::suite());
     test->add(XAssetModelTest::suite());
