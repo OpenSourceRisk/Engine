@@ -34,13 +34,6 @@ namespace QuantExt {
         registerWith(currency2Discountcurve_);
         registerWith(spotFX_);
 
-        if (npvDate_ == Null<Date>()) {
-            npvDate_ = currency1Discountcurve_->referenceDate();
-        }
-        if (settlementDate_ == Null<Date>()) {
-            settlementDate_ = npvDate_;
-        }
-
     }
 
     void CrossCcySwapEngine::calculate() const {
@@ -52,13 +45,30 @@ namespace QuantExt {
         QL_REQUIRE(!spotFX_.empty(), "FX spot quote handle is empty.");
 
         QL_REQUIRE(currency1Discountcurve_->referenceDate() ==
-                       currency2Discountcurve_->referenceDate(),
+                   currency2Discountcurve_->referenceDate(),
                    "Term structures should have the same reference date.");
+        Date referenceDate = currency1Discountcurve_->referenceDate();
+        Date settlementDate = settlementDate_;
+        if (settlementDate_ == Date()) {
+            settlementDate = referenceDate;
+        } else {
+            QL_REQUIRE(settlementDate >= referenceDate, "Settlement date (" <<
+                settlementDate << ") cannot be before discount curve "
+                "reference date (" << referenceDate << ")");
+        }
 
         Size numLegs = arguments_.legs.size();
-
+        // - Instrument::Results
+        if (npvDate_ == Date()) {
+            results_.valuationDate = referenceDate;
+        } else {
+            QL_REQUIRE(npvDate_ >= referenceDate,
+                "NPV date (" << npvDate_  << ") cannot be before "
+                "discount curve reference date (" << referenceDate << ")");
+            results_.valuationDate = npvDate_;
+        }
         results_.value = 0.0;
-
+        results_.errorEstimate = Null<Real>();
         // - Swap::Results
         results_.legNPV.resize(numLegs);
         results_.legBPS.resize(numLegs);
@@ -87,14 +97,14 @@ namespace QuantExt {
                     legDiscountCurve = currency2Discountcurve_;
                 }
                 results_.npvDateDiscounts[legNo] = legDiscountCurve->
-                    discount(npvDate_);
+                    discount(results_.valuationDate);
 
                 // Calculate the NPV and BPS of each leg in its currency.
                 CashFlows::npvbps(arguments_.legs[legNo],
                     **legDiscountCurve,
                     includeReferenceDateFlows,
-                    settlementDate_,
-                    npvDate_,
+                    settlementDate,
+                    results_.valuationDate,
                     results_.inCcyLegNPV[legNo],
                     results_.inCcyLegBPS[legNo]);
                 results_.inCcyLegNPV[legNo] *= arguments_.payer[legNo];

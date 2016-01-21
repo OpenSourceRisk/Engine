@@ -83,7 +83,7 @@ inline Real IrLgm1fPiecewiseLinearParametrization::alpha(const Time t) const {
     return helper1().y(t) / scaling_;
 }
 
-inline Real IrLgm1fPiecewiseLinearParametrization::kappa(const Time t) const {
+inline Real IrLgm1fPiecewiseLinearParametrization::kappa(const Time) const {
     return 0.0; // almost everywhere
 }
 
@@ -93,7 +93,7 @@ IrLgm1fPiecewiseLinearParametrization::Hprime(const Time t) const {
 }
 
 inline Real
-IrLgm1fPiecewiseLinearParametrization::Hprime2(const Time t) const {
+IrLgm1fPiecewiseLinearParametrization::Hprime2(const Time) const {
     return 0.0; // almost everywhere
 }
 
