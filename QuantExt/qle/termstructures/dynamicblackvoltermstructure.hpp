@@ -260,13 +260,14 @@ Real DynamicBlackVolTermStructure<mode>::blackVarianceImpl(Time t, Real strike,
 template <typename mode>
 Real DynamicBlackVolTermStructure<mode>::blackVarianceImpl(Time t, Real strike,
                                                            tag::curve) const {
-    Real scenarioT0 = 0.0, scenarioT1 = t;
     if (decayMode_ == ForwardForwardVariance) {
-        scenarioT0 = source_->timeFromReference(referenceDate());
-        scenarioT1 = scenarioT0 + t;
+        Real scenarioT0 = source_->timeFromReference(referenceDate());
+        Real scenarioT1 = scenarioT0 + t;
+        return source_->blackVariance(scenarioT1, strike, true) -
+               source_->blackVariance(scenarioT0, strike, true);
+    } else {
+        return source_->blackVariance(t, strike, true);
     }
-    return source_->blackVariance(scenarioT1, strike, true) -
-           source_->blackVariance(scenarioT0, strike, true);
 }
 
 } // namespace QuantExt
