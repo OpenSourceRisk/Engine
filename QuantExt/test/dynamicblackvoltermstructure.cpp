@@ -84,11 +84,11 @@ void DynamicBlackVolTermStructureTest::testConstantVarianceStickyStrike() {
 
     TestData d;
 
-    Handle<DynamicBlackVolTermStructure> dyn(
-        boost::make_shared<DynamicBlackVolTermStructure>(
+    Handle<DynamicBlackVolTermStructure<tag::surface> > dyn(
+        boost::make_shared<DynamicBlackVolTermStructure<tag::surface> >(
             d.refVol, 0, TARGET(),
-            DynamicBlackVolTermStructure::KeepVarianceConstant,
-            DynamicBlackVolTermStructure::StickyStrike, d.riskfreeTs,
+            DynamicBlackVolTermStructure<>::KeepVarianceConstant,
+            DynamicBlackVolTermStructure<>::StickyStrike, d.riskfreeTs,
             d.dividendTs, d.spot_q));
 
     dyn->enableExtrapolation();
@@ -182,11 +182,11 @@ void DynamicBlackVolTermStructureTest::
 
     TestData d;
 
-    Handle<DynamicBlackVolTermStructure> dyn(
-        boost::make_shared<DynamicBlackVolTermStructure>(
+    Handle<DynamicBlackVolTermStructure<tag::surface> > dyn(
+        boost::make_shared<DynamicBlackVolTermStructure<tag::surface> >(
             d.refVol, 0, TARGET(),
-            DynamicBlackVolTermStructure::KeepVarianceConstant,
-            DynamicBlackVolTermStructure::StickyLogMoneyness, d.riskfreeTs,
+            DynamicBlackVolTermStructure<>::KeepVarianceConstant,
+            DynamicBlackVolTermStructure<>::StickyLogMoneyness, d.riskfreeTs,
             d.dividendTs, d.spot_q));
 
     dyn->enableExtrapolation();
@@ -291,11 +291,11 @@ void DynamicBlackVolTermStructureTest::testForwardVarianceStickyStrike() {
 
     TestData d;
 
-    Handle<DynamicBlackVolTermStructure> dyn(
-        boost::make_shared<DynamicBlackVolTermStructure>(
+    Handle<DynamicBlackVolTermStructure<tag::surface> > dyn(
+        boost::make_shared<DynamicBlackVolTermStructure<tag::surface> >(
             d.refVol, 0, TARGET(),
-            DynamicBlackVolTermStructure::ForwardForwardVariance,
-            DynamicBlackVolTermStructure::StickyStrike, d.riskfreeTs,
+            DynamicBlackVolTermStructure<>::ForwardForwardVariance,
+            DynamicBlackVolTermStructure<>::StickyStrike, d.riskfreeTs,
             d.dividendTs, d.spot_q));
 
     dyn->enableExtrapolation();
@@ -384,13 +384,13 @@ void DynamicBlackVolTermStructureTest::testForwardVarianceStickyLogMoneyness() {
     BOOST_TEST_MESSAGE("Testing forward-forward variance, sticky log-moneyness "
                        "dynamics of DynamicBlackVolTermStructure...");
 
-        TestData d;
+    TestData d;
 
-    Handle<DynamicBlackVolTermStructure> dyn(
-        boost::make_shared<DynamicBlackVolTermStructure>(
+    Handle<DynamicBlackVolTermStructure<tag::surface> > dyn(
+        boost::make_shared<DynamicBlackVolTermStructure<tag::surface> >(
             d.refVol, 0, TARGET(),
-            DynamicBlackVolTermStructure::ForwardForwardVariance,
-            DynamicBlackVolTermStructure::StickyLogMoneyness, d.riskfreeTs,
+            DynamicBlackVolTermStructure<>::ForwardForwardVariance,
+            DynamicBlackVolTermStructure<>::StickyLogMoneyness, d.riskfreeTs,
             d.dividendTs, d.spot_q));
 
     dyn->enableExtrapolation();
@@ -438,14 +438,17 @@ void DynamicBlackVolTermStructureTest::testForwardVarianceStickyLogMoneyness() {
     Real atm = d.spot->value(); // new atm value
 
     BOOST_CHECK_CLOSE(dyn->blackVariance(1.5, atm * std::exp(-0.25)),
-                      d.refVol->blackVariance(t+1.5, atm0*std::exp(-0.25))-
-                      d.refVol->blackVariance(t, atm0*std::exp(-0.25)),tol);
+                      d.refVol->blackVariance(t + 1.5, atm0 * std::exp(-0.25)) -
+                          d.refVol->blackVariance(t, atm0 * std::exp(-0.25)),
+                      tol);
     BOOST_CHECK_CLOSE(dyn->blackVariance(1.5, atm * std::exp(0.0)),
-                      d.refVol->blackVariance(t+1.5, atm0*std::exp(0.0))-
-                      d.refVol->blackVariance(t, atm0*std::exp(0.0)),tol);
+                      d.refVol->blackVariance(t + 1.5, atm0 * std::exp(0.0)) -
+                          d.refVol->blackVariance(t, atm0 * std::exp(0.0)),
+                      tol);
     BOOST_CHECK_CLOSE(dyn->blackVariance(1.5, atm * std::exp(0.25)),
-                      d.refVol->blackVariance(t+1.5, atm0*std::exp(0.25))-
-                      d.refVol->blackVariance(t, atm0*std::exp(0.25)),tol);
+                      d.refVol->blackVariance(t + 1.5, atm0 * std::exp(0.25)) -
+                          d.refVol->blackVariance(t, atm0 * std::exp(0.25)),
+                      tol);
 
 } // testForwardVarianceStickyLogMoneyness
 
