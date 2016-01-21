@@ -14,7 +14,7 @@
 
 #include <qle/models/gaussian1dxassetadaptor.hpp>
 #include <qle/models/lgm.hpp>
-#include <ql/models/shortrate/onefactormodels/gaussian1dmodel.hpp>
+#include <qle/models/gaussian1dmodel.hpp>
 
 namespace QuantExt {
 
@@ -32,7 +32,8 @@ class Gaussian1dXAssetAdaptor : public Gaussian1dModel {
     const Real numeraireImpl(const Time t, const Real y,
                              const Handle<YieldTermStructure> &yts) const;
     const Real zerobondImpl(const Time T, const Time t, const Real y,
-                            const Handle<YieldTermStructure> &yts) const;
+                            const Handle<YieldTermStructure> &yts,
+                            const bool adjusted) const;
     /* helper functions */
     void initialize();
     /*! members */
@@ -50,9 +51,10 @@ inline const Real Gaussian1dXAssetAdaptor::numeraireImpl(
     return d * x_->numeraire(t, x);
 }
 
-inline const Real Gaussian1dXAssetAdaptor::zerobondImpl(
-    const Time T, const Time t, const Real y,
-    const Handle<YieldTermStructure> &yts) const {
+inline const Real
+Gaussian1dXAssetAdaptor::zerobondImpl(const Time T, const Time t, const Real y,
+                                      const Handle<YieldTermStructure> &yts,
+                                      const bool) const {
     Real d = yts.empty()
                  ? 1.0
                  : x_->parametrization()->termStructure()->discount(t) /

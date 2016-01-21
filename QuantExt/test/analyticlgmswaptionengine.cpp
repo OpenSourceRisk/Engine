@@ -17,7 +17,6 @@
 #include <ql/models/shortrate/onefactormodels/gsr.hpp>
 #include <ql/pricingengines/swaption/fdhullwhiteswaptionengine.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
-#include <ql/pricingengines/swaption/gaussian1dswaptionengine.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
@@ -351,10 +350,10 @@ void AnalyticLgmSwaptionEngineTest::testAgainstOtherEngines() {
                 const boost::shared_ptr<XAssetModel> xasset =
                     boost::make_shared<XAssetModel>(params, rho);
 
-                const boost::shared_ptr<Gaussian1dModel> g1d =
+                const boost::shared_ptr<QuantExt::Gaussian1dModel> g1d =
                     boost::make_shared<Gaussian1dXAssetAdaptor>(0, xasset);
 
-                const boost::shared_ptr<Gsr> gsr = boost::make_shared<Gsr>(
+                const boost::shared_ptr<QuantExt::Gsr> gsr = boost::make_shared<QuantExt::Gsr>(
                     discountingCurve, dates, sigma_v, kappa_v);
 
                 const boost::shared_ptr<HullWhite> hw =
@@ -371,11 +370,11 @@ void AnalyticLgmSwaptionEngineTest::testAgainstOtherEngines() {
                         AnalyticLgmSwaptionEngine::proRata);
 
                 boost::shared_ptr<PricingEngine> engine_g1d =
-                    boost::make_shared<Gaussian1dSwaptionEngine>(
+                    boost::make_shared<QuantExt::Gaussian1dSwaptionEngine>(
                         g1d, 128, 7.0, true, false, discountingCurve);
 
                 boost::shared_ptr<PricingEngine> engine_gsr =
-                    boost::make_shared<Gaussian1dSwaptionEngine>(
+                    boost::make_shared<QuantExt::Gaussian1dSwaptionEngine>(
                         gsr, 128, 7.0, true, false, discountingCurve);
 
                 boost::shared_ptr<PricingEngine> engine_fd =

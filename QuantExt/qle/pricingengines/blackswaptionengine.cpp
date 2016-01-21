@@ -1,5 +1,8 @@
 /* -*- mode: c++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 
+/* This file is supposed to be part of the QuantLib library eventually,
+   in the meantime we provide is as part of the QuantExt library. */
+
 /*
  Copyright (C) 2007, 2008 Ferdinando Ametrano
  Copyright (C) 2006 Cristina Duminuco
@@ -21,9 +24,9 @@
  FOR A PARTICULAR PURPOSE.  See the license for more details.
 */
 
-#include <ql/pricingengines/swaption/blackswaptionengine.hpp>
+#include <qle/pricingengines/blackswaptionengine.hpp>
 
-namespace QuantLib {
+namespace QuantExt {
 
     BlackSwaptionEngine::BlackSwaptionEngine(const Handle<YieldTermStructure> &discountCurve,
                         Volatility vol, const DayCounter &dc,
@@ -57,4 +60,4 @@ namespace QuantLib {
         const Handle<SwaptionVolatilityStructure> &vol)
         : BlackStyleSwaptionEngine<detail::BachelierSpec>(discountCurve, vol,
                                                           0.0) {}
-} // namespace QuantLib
+} // namespace QuantExt
