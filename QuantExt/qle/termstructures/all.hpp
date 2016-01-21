@@ -30,5 +30,4 @@
 #include <qle/termstructures/swaptionvolmatrix.hpp>
 #include <qle/termstructures/swaptionvolstructure.hpp>
 #include <qle/termstructures/tenorbasisswaphelper.hpp>
-#include <qle/termstructures/blackinvertedvoltermstructure.hpp>
 
