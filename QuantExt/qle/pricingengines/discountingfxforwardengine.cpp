@@ -91,6 +91,6 @@ namespace QuantExt {
         results_.npv = Money(ccy1_, results_.value);
         results_.fairForwardRate = ExchangeRate(ccy2_, ccy1_, tmpNominal1/tmpNominal2);
 
-    } // calculate
+    } //calculate
 
 } // namespace QuantExt
