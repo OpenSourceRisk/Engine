@@ -8,6 +8,7 @@ noinst_LTLIBRARIES = libModels.la
 
 libModels_la_SOURCES = \
 	calibrationhelper.cpp \
+	fxbsconstantparametrization.cpp \
 	fxbsparametrization.cpp \
 	fxbspiecewiseconstantparametrization.cpp \
 	fxoptionhelper.cpp \
@@ -32,6 +33,7 @@ this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \
 	all.hpp \
 	calibrationhelper.hpp \
+	fxbsconstantparametrization.hpp \
 	fxbsparametrization.hpp \
 	fxbspiecewiseconstantparametrization.hpp \
 	fxoptionhelper.hpp \
