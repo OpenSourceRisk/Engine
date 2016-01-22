@@ -8,13 +8,16 @@ noinst_LTLIBRARIES = libModels.la
 
 libModels_la_SOURCES = \
 	calibrationhelper.cpp \
+	comgabparametrization.cpp \
+	crdhwparametrization.cpp \
+	eqbsparametrization.cpp \
 	fxbsparametrization.cpp \
-	fxbsconstantparametrization.cpp \
 	fxbspiecewiseconstantparametrization.cpp \
 	fxoptionhelper.cpp \
 	gaussian1dmodel.cpp \
 	gaussian1dxassetadaptor.cpp \
 	gsr.cpp \
+	infjyparametrization.cpp \
 	irlgm1fconstantparametrization.cpp \
 	irlgm1fparametrization.cpp \
 	irlgm1fpiecewiseconstanthullwhiteadaptor.cpp \
@@ -33,9 +36,9 @@ this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \
 	all.hpp \
 	calibrationhelper.hpp \
+	comgabparametrization.hpp \
 	crdhwparametrization.hpp \
 	eqbsparametrization.hpp \
-	fxbsconstantparametrization.hpp \
 	fxbsparametrization.hpp \
 	fxbspiecewiseconstantparametrization.hpp \
 	fxoptionhelper.hpp \
