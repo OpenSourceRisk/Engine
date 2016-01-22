@@ -11,13 +11,13 @@ libModels_la_SOURCES = \
 	comgabparametrization.cpp \
 	crdhwparametrization.cpp \
 	eqbsparametrization.cpp \
+	fxbsconstantparametrization.cpp \
 	fxbsparametrization.cpp \
 	fxbspiecewiseconstantparametrization.cpp \
 	fxoptionhelper.cpp \
 	gaussian1dmodel.cpp \
 	gaussian1dxassetadaptor.cpp \
 	gsr.cpp \
-	infjyparametrization.cpp \
 	irlgm1fconstantparametrization.cpp \
 	irlgm1fparametrization.cpp \
 	irlgm1fpiecewiseconstanthullwhiteadaptor.cpp \
@@ -39,13 +39,13 @@ this_include_HEADERS = \
 	comgabparametrization.hpp \
 	crdhwparametrization.hpp \
 	eqbsparametrization.hpp \
+	fxbsconstantparametrization.hpp \
 	fxbsparametrization.hpp \
 	fxbspiecewiseconstantparametrization.hpp \
 	fxoptionhelper.hpp \
 	gaussian1dxassetadaptor.hpp \
 	gaussian1dmodel.hpp \
 	gsr.hpp \
-	infjyparametrization.hpp \
 	irlgm1fconstantparametrization.hpp \
 	irlgm1fpiecewiseconstanthullwhiteadaptor.hpp \
 	irlgm1fpiecewiseconstantparametrization.hpp \
