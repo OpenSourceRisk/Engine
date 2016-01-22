@@ -2,16 +2,12 @@
 /* Add the files to be included into Makefile.am instead. */
 
 #include <qle/models/calibrationhelper.hpp>
-#include <qle/models/comgabparametrization.hpp>
-#include <qle/models/crdhwparametrization.hpp>
-#include <qle/models/eqbsparametrization.hpp>
 #include <qle/models/fxbsparametrization.hpp>
 #include <qle/models/fxbspiecewiseconstantparametrization.hpp>
 #include <qle/models/fxoptionhelper.hpp>
 #include <qle/models/gaussian1dxassetadaptor.hpp>
 #include <qle/models/gaussian1dmodel.hpp>
 #include <qle/models/gsr.hpp>
-#include <qle/models/infjyparametrization.hpp>
 #include <qle/models/irlgm1fconstantparametrization.hpp>
 #include <qle/models/irlgm1fpiecewiseconstanthullwhiteadaptor.hpp>
 #include <qle/models/irlgm1fpiecewiseconstantparametrization.hpp>
