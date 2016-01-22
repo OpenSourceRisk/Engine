@@ -11,6 +11,7 @@ libModels_la_SOURCES = \
 	comgabparametrization.cpp \
 	crdhwparametrization.cpp \
 	eqbsparametrization.cpp \
+	fxbsconstantparametrization.cpp \
 	fxbsparametrization.cpp \
 	fxbspiecewiseconstantparametrization.cpp \
 	fxoptionhelper.cpp \
@@ -39,6 +40,7 @@ this_include_HEADERS = \
 	comgabparametrization.hpp \
 	crdhwparametrization.hpp \
 	eqbsparametrization.hpp \
+	fxbsconstantparametrization.hpp \
 	fxbsparametrization.hpp \
 	fxbspiecewiseconstantparametrization.hpp \
 	fxoptionhelper.hpp \
