@@ -10,6 +10,7 @@ libModels_la_SOURCES = \
 	calibrationhelper.cpp \
 	comgabparametrization.cpp \
 	crdhwparametrization.cpp \
+	eqbsparametrization.cpp \
 	fxbsparametrization.cpp \
 	fxbspiecewiseconstantparametrization.cpp \
 	fxoptionhelper.cpp \
