@@ -12,7 +12,9 @@ namespace QuantExt {
 
 MultiPathGeneratorPseudoRandom::MultiPathGeneratorPseudoRandom(
     const boost::shared_ptr<StochasticProcess> &process, const TimeGrid &grid,
-    Size dimension, BigNatural seed, bool brownianBridge) {
+    Size dimension, BigNatural seed, bool brownianBridge,
+    bool antitheticSampling)
+    : antitheticSampling_(antitheticSampling), antitheticVariate_(true) {
     PseudoRandom::rsg_type rsg =
         PseudoRandom::make_sequence_generator(dimension, seed);
     pg_ = boost::make_shared<MultiPathGenerator<PseudoRandom::rsg_type> >(
