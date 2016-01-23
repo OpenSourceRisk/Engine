@@ -24,5 +24,6 @@
 #include <qle/models/pseudoparameter.hpp>
 #include <qle/models/swaptionhelper.hpp>
 #include <qle/models/xassetanalytics.hpp>
+#include <qle/models/xassetanalyticsbase.hpp>
 #include <qle/models/xassetmodel.hpp>
 
