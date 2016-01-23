@@ -58,6 +58,7 @@ this_include_HEADERS = \
 	pseudoparameter.hpp \
 	swaptionhelper.hpp \
 	xassetanalytics.hpp \
+	xassetanalyticsbase.hpp \
 	xassetmodel.hpp
 
 all.hpp: Makefile.am
