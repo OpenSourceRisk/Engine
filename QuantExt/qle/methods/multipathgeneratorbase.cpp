@@ -12,7 +12,6 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-<<<<<<< HEAD
     MultiPathGeneratorPseudoRandom::MultiPathGeneratorPseudoRandom(
          const boost::shared_ptr<StochasticProcess> &process, const TimeGrid &grid,
          Size dimension, BigNatural seed, bool antitheticSampling)
