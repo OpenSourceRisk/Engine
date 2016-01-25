@@ -45,10 +45,9 @@ void AnalyticCcLgmFxOptionEngine::calculate() const {
     Real fxForward = model_->fxbs(foreignCurrency_)->fxSpotToday()->value() *
                      foreignDiscount / domesticDiscount;
 
-    Real H0 = model_->irlgm1f(0)->H(t);
-    Real Hi = model_->irlgm1f(foreignCurrency_ + 1)->H(t);
+    Real H0 = Hz(0).eval(model_.get(), t);
+    Real Hi = Hz(foreignCurrency_ + 1).eval(model_.get(), t);
 
-    const Size na = Null<Size>();
     // just a shortcut
     const Size &i = foreignCurrency_;
 
@@ -56,26 +55,31 @@ void AnalyticCcLgmFxOptionEngine::calculate() const {
 
     Real variance =
         // first term
-        H0 * H0 * integral(x, na, na, 0, 0, na, na, 0.0, t) -
-        2.0 * H0 * integral(x, 0, na, 0, 0, na, na, 0.0, t) +
-        integral(x, 0, 0, 0, 0, na, na, 0.0, t) +
+        H0 * H0 * integral(x, P(az(0), az(0)), 0.0, t) -
+        2.0 * H0 * integral(x, P(Hz(0), az(0), az(0)), 0.0, t) +
+        integral(x, P(Hz(0), Hz(0), az(0), az(0)), 0.0, t) +
         // second term
-        Hi * Hi * integral(x, na, na, i + 1, i + 1, na, na, 0.0, t) -
-        2.0 * Hi * integral(x, i + 1, na, i + 1, i + 1, na, na, 0.0, t) +
-        integral(x, i + 1, i + 1, i + 1, i + 1, na, na, 0.0, t) +
+        Hi * Hi * integral(x, P(az(i + 1), az(i + 1)), 0.0, t) -
+        2.0 * Hi * integral(x, P(Hz(i + 1), az(i + 1), az(i + 1)), 0.0, t) +
+        integral(x, P(Hz(i + 1), Hz(i + 1), az(i + 1), az(i + 1)), 0.0, t) +
         // term two three/fourth
-        integral(x, na, na, na, na, i, i, 0.0, t) -
+        integral(x, P(sx(i), sx(i)), 0.0, t) -
         // third term
-        2.0 * (H0 * Hi * integral(x, na, na, 0, i + 1, na, na, 0.0, t) -
-               H0 * integral(x, i + 1, na, i + 1, 0, na, na, 0.0, t) -
-               Hi * integral(x, 0, na, 0, i + 1, na, na, 0.0, t) +
-               integral(x, 0, i + 1, 0, i + 1, na, na, 0.0, t)) +
+        2.0 *
+            (H0 * Hi * integral(x, P(az(0), az(i + 1), rzz(0, i + 1)), 0.0, t) -
+             H0 * integral(x, P(Hz(i + 1), az(i + 1), az(0), rzz(i + 1, 0)),
+                           0.0, t) -
+             Hi * integral(x, P(Hz(0), az(0), az(i + 1), rzz(0, i + 1)), 0.0,
+                           t) +
+             integral(x, P(Hz(0), Hz(i + 1), az(0), az(i + 1), rzz(0, i + 1)),
+                      0.0, t)) +
         // forth term
-        2.0 * (H0 * integral(x, na, na, 0, na, na, i, 0.0, t) -
-               integral(x, 0, na, 0, na, na, i, 0.0, t)) -
+        2.0 * (H0 * integral(x, P(az(0), sx(i), rzx(0, i)), 0.0, t) -
+               integral(x, P(Hz(0), az(0), sx(i), rzx(0, i)), 0.0, t)) -
         // fifth term
-        2.0 * (Hi * integral(x, na, na, i + 1, na, na, i, 0.0, t) -
-               integral(x, i + 1, na, i + 1, na, na, i, 0.0, t));
+        2.0 * (Hi * integral(x, P(az(i + 1), sx(i), rzx(i + 1, i)), 0.0, t) -
+               integral(x, P(Hz(i + 1), az(i + 1), sx(i), rzx(i + 1, i)), 0.0,
+                        t));
 
     BlackCalculator black(payoff, fxForward, std::sqrt(variance),
                           domesticDiscount);
