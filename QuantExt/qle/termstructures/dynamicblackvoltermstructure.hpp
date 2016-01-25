@@ -25,7 +25,7 @@ namespace QuantExt {
     There are different ways of reacting to time decay that can be
     specified. As an additional feature, the class will return the
     ATM volatility if a null strike is given (currently, for this
-    extrapolation must be alloed, since there is a check in
+    extrapolation must be allowed, since there is a check in
     VolatilityTermStructure we can no extend or bypass). ATM is
     defined as the forward level here (which is of particular
     interest for FX term structures). */
