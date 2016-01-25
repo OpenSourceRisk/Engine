@@ -24,7 +24,6 @@ namespace QuantExt {
 class MultiPathGeneratorBase {
   public:
     virtual const Sample<MultiPath> &next() const = 0;
-    virtual const Sample<MultiPath> &antithetic() const = 0;
 };
 
 
