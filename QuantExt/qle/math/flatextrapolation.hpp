@@ -12,6 +12,7 @@
 #define quantext_flat_extrapolation_hpp
 
 #include <ql/math/interpolation.hpp>
+#include <ql/math/interpolations/linearinterpolation.hpp>
 
 #include <boost/make_shared.hpp>
 
@@ -76,6 +77,19 @@ class FlatExtrapolation : public Interpolation {
         impl_ = boost::make_shared<FlatExtrapolationImpl>(i);
         impl_->update();
     }
+};
+
+//! %Linear-interpolation and flat extrapolation factory and traits
+class LinearFlat {
+  public:
+    template <class I1, class I2>
+    Interpolation interpolate(const I1 &xBegin, const I1 &xEnd,
+                              const I2 &yBegin) const {
+        return FlatExtrapolation(
+            boost::make_shared<LinearInterpolation>(xBegin, xEnd, yBegin));
+    }
+    static const bool global = false;
+    static const Size requiredPoints = 2;
 };
 
 } // namespace QuantExt

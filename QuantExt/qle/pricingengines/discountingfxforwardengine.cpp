@@ -44,6 +44,7 @@ namespace QuantExt {
     void DiscountingFxForwardEngine::calculate() const {
 
         Real tmpNominal1, tmpNominal2;
+        bool tmpPayCurrency1;
         if(ccy1_ == arguments_.currency1) {
             QL_REQUIRE(ccy2_ == arguments_.currency2,
                        "mismatched currency pairs ("
@@ -52,6 +53,7 @@ namespace QuantExt {
                            << arguments_.currency2 << ") in the instrument");
             tmpNominal1 = arguments_.nominal1;
             tmpNominal2 = arguments_.nominal2;
+            tmpPayCurrency1 = arguments_.payCurrency1;
         }
         else {
             QL_REQUIRE(ccy1_ == arguments_.currency2 &&
@@ -62,6 +64,7 @@ namespace QuantExt {
                            << arguments_.currency2 << ") in the instrument");
             tmpNominal1 = arguments_.nominal2;
             tmpNominal2 = arguments_.nominal1;
+            tmpPayCurrency1 = !arguments_.payCurrency1;
         }
 
         QL_REQUIRE(!currency1Discountcurve_.empty() &&
@@ -80,7 +83,7 @@ namespace QuantExt {
         results_.value = 0.0;
         if (!detail::simple_event(arguments_.maturityDate).hasOccurred(
                 settlementDate_, includeSettlementDateFlows_)) {
-            results_.value = (arguments_.payCurrency1 ? 1.0 : -1.0) * (
+            results_.value = (tmpPayCurrency1 ? -1.0 : 1.0) * (
                 tmpNominal1 *
                 currency1Discountcurve_->discount(arguments_.maturityDate) /
                 currency1Discountcurve_->discount(npvDate_) -
