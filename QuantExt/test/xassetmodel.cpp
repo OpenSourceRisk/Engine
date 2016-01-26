@@ -1154,7 +1154,7 @@ void XAssetModelTest::testLgmMcWithShift() {
 void XAssetModelTest::testCorrelationRecovery() {
 
     BOOST_TEST_MESSAGE(
-        "Test if random correlation input is recovered for small dt...");
+        "Test if random correlation input is recovered for small dt in Ccy LGM model...");
 
     class PseudoCurrency : public Currency {
       public:
