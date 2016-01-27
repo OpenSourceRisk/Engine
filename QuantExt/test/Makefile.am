@@ -6,6 +6,7 @@ QLE_TESTS = \
 	currency.hpp currency.cpp \
 	discountcurve.hpp discountcurve.cpp \
 	dynamicblackvoltermstructure.hpp dynamicblackvoltermstructure.cpp \
+	dynamicswaptionvolmatrix.hpp dynamicswaptionvolmatrix.cpp \
 	index.hpp index.cpp \
 	logquote.hpp logquote.cpp \
 	xassetmodel.hpp xassetmodel.cpp \
