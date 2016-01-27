@@ -15,11 +15,11 @@
 #include <qle/models/irlgm1fparametrization.hpp>
 #include <qle/models/fxbsparametrization.hpp>
 #include <qle/models/linkablecalibratedmodel.hpp>
+#include <qle/models/model.hpp>
 #include <qle/processes/xassetstateprocess.hpp>
 #include <ql/math/matrix.hpp>
 #include <ql/math/distributions/normaldistribution.hpp>
 #include <ql/math/integrals/integral.hpp>
-#include <ql/models/model.hpp>
 #include <ql/stochasticprocess.hpp>
 
 #include <boost/bind.hpp>

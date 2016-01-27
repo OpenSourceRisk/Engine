@@ -1,4 +1,3 @@
-
 /* -*- mode: c++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 
 /* This file is supposed to be part of the QuantLib library eventually,
@@ -26,13 +25,15 @@
            the discounting curve for the option value is the domestic yield
 */
 
-#ifndef quantlib_calibrationhelper_fxoption_hpp
-#define quantlib_calibrationhelper_fxoption_hpp
+#ifndef quantext_calibrationhelper_fxoption_hpp
+#define quantext_calibrationhelper_fxoption_hpp
 
-#include <ql/models/calibrationhelper.hpp>
+#include <qle/models/calibrationhelper.hpp>
 #include <ql/instruments/vanillaoption.hpp>
 
-namespace QuantLib {
+using namespace QuantLib;
+
+namespace QuantExt {
 
 class FxOptionHelper : public CalibrationHelper {
   public:

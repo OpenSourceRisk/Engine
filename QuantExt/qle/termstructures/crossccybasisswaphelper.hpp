@@ -27,20 +27,23 @@ namespace QuantExt {
         The other leg is then solved for i.e. index curve (if no 
         YieldTermStructure is attached to its index) or discount curve (if 
         its Handle is empty) or both.
+
+        The currencies are deduced from the ibor indexes. The spotFx
+        be be quoted with either of these currencies, this is determined
+        by the flatIsDomestic flag. The settlement date of the spot is
+        assumed to be equal to the settlement date of the swap itself.
     */
     class CrossCcyBasisSwapHelper : public RelativeDateRateHelper {
       public:
-        CrossCcyBasisSwapHelper(const Handle<Quote>& spreadQuote,
-            const Handle<Quote>& spotFX,
-            Natural settlementDays,
-            const Calendar& settlementCalendar,
-            const Period& swapTenor,
-            BusinessDayConvention rollConvention,
-            const boost::shared_ptr<QuantLib::IborIndex>& flatIndex,
-            const boost::shared_ptr<QuantLib::IborIndex>& spreadIndex,
-            const Handle<YieldTermStructure>& flatDiscountCurve,
-            const Handle<YieldTermStructure>& spreadDiscountCurve,
-            bool eom = false);
+        CrossCcyBasisSwapHelper(
+            const Handle<Quote> &spreadQuote, const Handle<Quote> &spotFX,
+            Natural settlementDays, const Calendar &settlementCalendar,
+            const Period &swapTenor, BusinessDayConvention rollConvention,
+            const boost::shared_ptr<QuantLib::IborIndex> &flatIndex,
+            const boost::shared_ptr<QuantLib::IborIndex> &spreadIndex,
+            const Handle<YieldTermStructure> &flatDiscountCurve,
+            const Handle<YieldTermStructure> &spreadDiscountCurve,
+            bool eom = false, bool flatIsDomestic = true);
         //! \name RateHelper interface
         //@{
         Real impliedQuote() const;
@@ -67,7 +70,7 @@ namespace QuantExt {
         boost::shared_ptr<QuantLib::IborIndex> spreadIndex_;
         Handle<YieldTermStructure> flatDiscountCurve_;
         Handle<YieldTermStructure> spreadDiscountCurve_;
-        bool eom_;
+        bool eom_, flatIsDomestic_;
 
         Currency flatLegCurrency_;
         Currency spreadLegCurrency_;

@@ -3,4 +3,6 @@
 
 #include <qle/processes/irlgm1fstateprocess.hpp>
 #include <qle/processes/xassetstateprocess.hpp>
+#include <qle/processes/gsrprocess.hpp>
+#include <qle/processes/gsrprocesscore.hpp>
 

@@ -27,7 +27,7 @@
 
 #include <boost/make_shared.hpp>
 
-namespace QuantLib {
+namespace QuantExt {
 
 FxOptionHelper::FxOptionHelper(
     const Period &maturity, const Calendar &calendar, const Real strike,
@@ -87,4 +87,4 @@ Real FxOptionHelper::blackPrice(Real volatility) const {
     return blackFormula(type_, strike_, atm_, stdDev, termStructure_->discount(tau_));
 }
 
-} // namespace QuantLib
+} // namespace QuantExt

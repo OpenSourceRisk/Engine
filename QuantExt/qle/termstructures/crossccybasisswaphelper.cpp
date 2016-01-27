@@ -29,7 +29,7 @@ namespace QuantExt {
         const boost::shared_ptr<QuantLib::IborIndex>& spreadIndex,
         const Handle<YieldTermStructure>& flatDiscountCurve,
         const Handle<YieldTermStructure>& spreadDiscountCurve,
-        bool eom)
+        bool eom, bool flatIsDomestic)
     : RelativeDateRateHelper(spreadQuote),
       spotFX_(spotFX),
       settlementDays_(settlementDays),
@@ -40,7 +40,7 @@ namespace QuantExt {
       spreadIndex_(spreadIndex),
       flatDiscountCurve_(flatDiscountCurve), 
       spreadDiscountCurve_(spreadDiscountCurve),
-      eom_(eom) {
+      eom_(eom), flatIsDomestic_(flatIsDomestic) {
         
         flatLegCurrency_ = flatIndex_->currency();
         spreadLegCurrency_ = spreadIndex_->currency();
@@ -51,18 +51,6 @@ namespace QuantExt {
             forwardingTermStructure().empty();
         bool haveFlatDiscountCurve = !flatDiscountCurve_.empty();
         bool haveSpreadDiscountCurve = !spreadDiscountCurve_.empty();
-        
-        // Some initial checks.
-        // TODO: remove?
-        /*
-        QL_REQUIRE(flatLegCurrency_ == spotFX_->source() || flatLegCurrency_
-            == spotFX_->target(), "The flat leg currency must equal one of "
-            "the currencies in the FX spot quote");
-
-        QL_REQUIRE(spreadLegCurrency_ == spotFX_->source() || 
-            spreadLegCurrency_ == spotFX_->target(), "The spread leg currency "
-            "must equal one of the currencies in the FX spot quote");
-            */
 
         QL_REQUIRE(!(flatIndexHasCurve && spreadIndexHasCurve &&
             haveFlatDiscountCurve && haveSpreadDiscountCurve), "Have all curves, "
@@ -120,8 +108,7 @@ namespace QuantExt {
 
         Real flatLegNominal = 1.0;
         Real spreadLegNominal = 1.0;
-        bool spreadIsSource = true; // TODO:fix this! (spreadLegCurrency_ == spotFX_->source());
-        if (spreadIsSource) {
+        if (flatIsDomestic_) {
             flatLegNominal = spotFX_->value();
         } else {
             spreadLegNominal = spotFX_->value();
@@ -140,24 +127,16 @@ namespace QuantExt {
 
         Handle<Quote> spotFX(*spotFX_);
         boost::shared_ptr<PricingEngine> engine;
-        if (spreadIsSource) {
-            engine.reset(new 
-                CrossCcySwapEngine(spreadLegCurrency_,
-                    spreadDiscountRLH_,
-                    flatLegCurrency_,
-                    flatDiscountRLH_,
-                    spotFX,
-                    boost::none,
-                    settlementDate));
+        if (flatIsDomestic_) {
+            engine.reset(new CrossCcySwapEngine(
+                flatLegCurrency_, flatDiscountRLH_, spreadLegCurrency_,
+                spreadDiscountRLH_, spotFX, boost::none, settlementDate,
+                settlementDate));
         } else {
-            engine.reset(new 
-                CrossCcySwapEngine(flatLegCurrency_,
-                    flatDiscountRLH_,
-                    spreadLegCurrency_,
-                    spreadDiscountRLH_,
-                    spotFX,
-                    boost::none,
-                    settlementDate));
+            engine.reset(new CrossCcySwapEngine(
+                spreadLegCurrency_, spreadDiscountRLH_, flatLegCurrency_,
+                flatDiscountRLH_, spotFX, boost::none, settlementDate,
+                settlementDate));
         }
         swap_->setPricingEngine(engine);
 
