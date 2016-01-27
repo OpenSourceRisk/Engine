@@ -69,8 +69,8 @@ namespace QuantExt {
         Natural settlementDays() const { return atmVol_->settlementDays(); }
         //! \name VolatilityTermStructure interface
         //@{
-        Rate minStrike() const { return 0.0; }
-        Rate maxStrike() const { return 1.0; }
+        Rate minStrike() const { return -QL_MAX_REAL; }
+        Rate maxStrike() const { return QL_MAX_REAL; }
         //@}
         //! \name SwaptionVolatilityStructure interface
         //@{
