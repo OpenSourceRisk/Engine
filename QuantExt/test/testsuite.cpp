@@ -44,8 +44,12 @@ namespace {
 
     boost::timer t;
 
-    void startTimer() { t.restart(); }
+    void startTimer() {
+        BOOST_CHECK(true);
+        t.restart();
+    }
     void stopTimer() {
+        BOOST_CHECK(true);
         double seconds = t.elapsed();
         int hours = int(seconds/3600);
         seconds -= hours * 3600;
