@@ -26,17 +26,23 @@ class Gaussian1dXAssetAdaptor : public Gaussian1dModel {
 
   private:
     /*! Gaussian1dModel interface */
-    /*! Note that we should enable preferDeflatedZerobond because this is
-        more efficient as soon as the Gaussian1dModel interface is
-        updated in the official QuantLib to the latest version */
     const Real numeraireImpl(const Time t, const Real y,
                              const Handle<YieldTermStructure> &yts) const;
     const Real zerobondImpl(const Time T, const Time t, const Real y,
                             const Handle<YieldTermStructure> &yts,
                             const bool adjusted) const;
+    const Real
+    deflatedZerobondImpl(const Time T, const Time t, const Real y,
+                         const Handle<YieldTermStructure> &yts,
+                         const Handle<YieldTermStructure> &ytsNumeraire,
+                         const bool adjusted) const;
+
+    bool preferDeflatedZerobond() const { return true; }
+
     /* helper functions */
     void initialize();
-    /*! members */
+
+    /* members */
     const boost::shared_ptr<Lgm> x_;
 };
 
@@ -62,6 +68,20 @@ Gaussian1dXAssetAdaptor::zerobondImpl(const Time T, const Time t, const Real y,
                        yts->discount(T) / yts->discount(t);
     Real x = y * std::sqrt(x_->parametrization()->zeta(t));
     return d * x_->discountBond(t, T, x);
+}
+
+inline const Real
+Gaussian1dXAssetAdaptor::deflatedZerobondImpl(const Time T, const Time t, const Real y,
+                     const Handle<YieldTermStructure> &yts,
+                     const Handle<YieldTermStructure> &ytsNumeraire,
+                     const bool) const {
+    Real d = yts.empty()
+                 ? 1.0
+                 : x_->parametrization()->termStructure()->discount(t) /
+                       x_->parametrization()->termStructure()->discount(T) *
+                       yts->discount(T) / yts->discount(t);
+    Real x = y * std::sqrt(x_->parametrization()->zeta(t));
+    return d * x_->reducedDiscountBond(t, T, x);
 }
 
 } // QuantExt
