@@ -15,8 +15,6 @@
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/target.hpp>
 
-#include <iostream>
-
 using namespace QuantExt;
 using namespace QuantLib;
 using namespace boost::unit_test_framework;
@@ -86,9 +84,7 @@ void DynamicBlackVolTermStructureTest::testConstantVarianceStickyStrike() {
 
     Handle<DynamicBlackVolTermStructure<tag::surface> > dyn(
         boost::make_shared<DynamicBlackVolTermStructure<tag::surface> >(
-            d.refVol, 0, TARGET(),
-            DynamicBlackVolTermStructure<>::KeepVarianceConstant,
-            DynamicBlackVolTermStructure<>::StickyStrike, d.riskfreeTs,
+            d.refVol, 0, TARGET(), ConstantVariance, StickyStrike, d.riskfreeTs,
             d.dividendTs, d.spot_q));
 
     dyn->enableExtrapolation();
@@ -184,10 +180,8 @@ void DynamicBlackVolTermStructureTest::
 
     Handle<DynamicBlackVolTermStructure<tag::surface> > dyn(
         boost::make_shared<DynamicBlackVolTermStructure<tag::surface> >(
-            d.refVol, 0, TARGET(),
-            DynamicBlackVolTermStructure<>::KeepVarianceConstant,
-            DynamicBlackVolTermStructure<>::StickyLogMoneyness, d.riskfreeTs,
-            d.dividendTs, d.spot_q));
+            d.refVol, 0, TARGET(), ConstantVariance, StickyLogMoneyness,
+            d.riskfreeTs, d.dividendTs, d.spot_q));
 
     dyn->enableExtrapolation();
 
@@ -293,10 +287,8 @@ void DynamicBlackVolTermStructureTest::testForwardVarianceStickyStrike() {
 
     Handle<DynamicBlackVolTermStructure<tag::surface> > dyn(
         boost::make_shared<DynamicBlackVolTermStructure<tag::surface> >(
-            d.refVol, 0, TARGET(),
-            DynamicBlackVolTermStructure<>::ForwardForwardVariance,
-            DynamicBlackVolTermStructure<>::StickyStrike, d.riskfreeTs,
-            d.dividendTs, d.spot_q));
+            d.refVol, 0, TARGET(), ForwardForwardVariance, StickyStrike,
+            d.riskfreeTs, d.dividendTs, d.spot_q));
 
     dyn->enableExtrapolation();
 
@@ -388,10 +380,8 @@ void DynamicBlackVolTermStructureTest::testForwardVarianceStickyLogMoneyness() {
 
     Handle<DynamicBlackVolTermStructure<tag::surface> > dyn(
         boost::make_shared<DynamicBlackVolTermStructure<tag::surface> >(
-            d.refVol, 0, TARGET(),
-            DynamicBlackVolTermStructure<>::ForwardForwardVariance,
-            DynamicBlackVolTermStructure<>::StickyLogMoneyness, d.riskfreeTs,
-            d.dividendTs, d.spot_q));
+            d.refVol, 0, TARGET(), ForwardForwardVariance, StickyLogMoneyness,
+            d.riskfreeTs, d.dividendTs, d.spot_q));
 
     dyn->enableExtrapolation();
 
