@@ -13,7 +13,7 @@
 #define quantext_gaussian1d_xasset_adaptor_hpp
 
 #include <qle/models/gaussian1dxassetadaptor.hpp>
-#include <qle/models/lgm.hpp>
+#include <qle/models/xassetmodel.hpp>
 #include <qle/models/gaussian1dmodel.hpp>
 
 namespace QuantExt {

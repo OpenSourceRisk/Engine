@@ -21,6 +21,22 @@ XAssetModel::XAssetModel(
     initialize();
 }
 
+XAssetModel::XAssetModel(
+    const std::vector<boost::shared_ptr<Lgm> > &currencyModels,
+    const std::vector<boost::shared_ptr<FxBsParametrization> >
+        &fxParametrizations,
+    const Matrix &correlation, SalvagingAlgorithm::Type salvaging)
+    : LinkableCalibratedModel(), lgm_(currencyModels), rho_(correlation),
+      salvaging_(salvaging) {
+    for (Size i = 0; i < currencyModels.size(); ++i) {
+        p_.push_back(currencyModels[i]->parametrization());
+    }
+    for (Size i = 0; i < fxParametrizations.size(); ++i) {
+        p_.push_back(fxParametrizations[i]);
+    }
+    initialize();
+}
+
 void XAssetModel::initialize() {
 
     initializeParametrizations();
@@ -76,8 +92,15 @@ void XAssetModel::initializeParametrizations() {
 
     Size i = 0;
 
+    bool genericCtor = lgm_.empty();
     while (i < p_.size() &&
            boost::dynamic_pointer_cast<IrLgm1fParametrization>(p_[i]) != NULL) {
+        // initialize model, if generic constructor was used
+        if (genericCtor) {
+            lgm_.push_back(boost::make_shared<Lgm>(
+                boost::dynamic_pointer_cast<IrLgm1fParametrization>(p_[i])));
+        }
+        // count things
         ++nIrLgm1f_;
         ++i;
     }
@@ -184,64 +207,14 @@ void XAssetModel::initializeArguments() {
     }
 }
 
-Real XAssetModel::numeraire(const Size ccy, const Time t, const Real x) const {
-    const boost::shared_ptr<IrLgm1fParametrization> p = irlgm1f(ccy);
-    Real Ht = p->H(t);
-    return std::exp(Ht * x + 0.5 * Ht * Ht * p->zeta(t)) /
-           p->termStructure()->discount(t);
-}
-
-Real XAssetModel::discountBond(const Size ccy, const Time t, const Time T,
-                               const Real x) const {
-    QL_REQUIRE(T >= t, "T(" << T << ") >= t(" << t
-                            << ") required in irlgm1f discountBond");
-    const boost::shared_ptr<IrLgm1fParametrization> p = irlgm1f(ccy);
-    Real Ht = p->H(t);
-    Real HT = p->H(T);
-    return p->termStructure()->discount(T) / p->termStructure()->discount(t) *
-           std::exp(-(HT - Ht) * x - 0.5 * (HT * HT - Ht * Ht) * p->zeta(t));
-}
-
-Real XAssetModel::reducedDiscountBond(const Size ccy, const Time t,
-                                      const Time T, const Real x) const {
-    QL_REQUIRE(T >= t, "T(" << T << ") >= t(" << t
-                            << ") required in irlgm1f reducedDiscountBond");
-    const boost::shared_ptr<IrLgm1fParametrization> p = irlgm1f(ccy);
-    Real HT = p->H(T);
-    return p->termStructure()->discount(T) *
-           std::exp(-HT * x - 0.5 * HT * HT * p->zeta(t));
-}
-
-Real XAssetModel::discountBondOption(const Size ccy, Option::Type type,
-                                     const Real K, const Time t, const Time S,
-                                     const Time T) const {
-    QL_REQUIRE(T > S && S >= t,
-               "T(" << T << ") > S(" << S << ") >= t(" << t
-                    << ") required in irlgm1f discountBondOption");
-    const boost::shared_ptr<IrLgm1fParametrization> p = irlgm1f(ccy);
-    Real w = (type == Option::Call ? 1.0 : -1.0);
-    Real pS = p->termStructure()->discount(S);
-    Real pT = p->termStructure()->discount(T);
-    // slight generalization of Lichters, Stamm, Gallagher 11.2.1
-    // with t < S only resulting in a different time at which zeta
-    // has to be taken
-    Real sigma = sqrt(p->zeta(t)) * (p->H(T) - p->H(S));
-    Real dp = (std::log(pT / (K * pS)) / sigma + 0.5 * sigma);
-    Real dm = dp - sigma;
-    QuantExt::CumulativeNormalDistribution N;
-    return w * (pT * N(w * dp) - pS * K * N(w * dm));
-}
-
 void XAssetModel::calibrateIrLgm1fVolatilitiesIterative(
     const Size ccy,
     const std::vector<boost::shared_ptr<CalibrationHelper> > &helpers,
     OptimizationMethod &method, const EndCriteria &endCriteria,
     const Constraint &constraint, const std::vector<Real> &weights) {
-    for (Size i = 0; i < helpers.size(); ++i) {
-        std::vector<boost::shared_ptr<CalibrationHelper> > h(1, helpers[i]);
-        calibrate(h, method, endCriteria, constraint, weights,
-                  MoveIrLgm1fVolatility(ccy, i));
-    }
+    lgm(ccy)->calibrateVolatilitiesIterative(helpers, method, endCriteria, constraint,
+                                    weights);
+    update();
 }
 
 void XAssetModel::calibrateIrLgm1fReversionsIterative(
@@ -249,11 +222,9 @@ void XAssetModel::calibrateIrLgm1fReversionsIterative(
     const std::vector<boost::shared_ptr<CalibrationHelper> > &helpers,
     OptimizationMethod &method, const EndCriteria &endCriteria,
     const Constraint &constraint, const std::vector<Real> &weights) {
-    for (Size i = 0; i < helpers.size(); ++i) {
-        std::vector<boost::shared_ptr<CalibrationHelper> > h(1, helpers[i]);
-        calibrate(h, method, endCriteria, constraint, weights,
-                  MoveIrLgm1fReversion(ccy, i));
-    }
+    lgm(ccy)->calibrateReversionsIterative(helpers, method, endCriteria, constraint,
+                                  weights);
+    update();
 }
 
 void XAssetModel::calibrateIrLgm1fGlobal(
@@ -261,8 +232,8 @@ void XAssetModel::calibrateIrLgm1fGlobal(
     const std::vector<boost::shared_ptr<CalibrationHelper> > &helpers,
     OptimizationMethod &method, const EndCriteria &endCriteria,
     const Constraint &constraint, const std::vector<Real> &weights) {
-    calibrate(helpers, method, endCriteria, constraint, weights,
-              IrLgm1fGlobal(ccy));
+    lgm(ccy)->calibrate(helpers, method, endCriteria, constraint, weights);
+    update();
 }
 
 void XAssetModel::calibrateFxBsVolatilitiesIterative(
@@ -275,6 +246,7 @@ void XAssetModel::calibrateFxBsVolatilitiesIterative(
         calibrate(h, method, endCriteria, constraint, weights,
                   MoveFxBsVolatility(ccy, i));
     }
+    update();
 }
 
 } // namespace QuantExt

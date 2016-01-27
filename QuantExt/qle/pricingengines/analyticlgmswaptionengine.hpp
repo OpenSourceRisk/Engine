@@ -12,7 +12,7 @@
 #define quantext_analytic_lgm_swaption_engine_hpp
 
 #include <ql/instruments/swaption.hpp>
-#include <qle/models/lgm.hpp>
+#include <qle/models/xassetmodel.hpp>
 
 namespace QuantExt {
 

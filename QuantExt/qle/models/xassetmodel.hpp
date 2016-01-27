@@ -11,16 +11,13 @@
 #ifndef quantext_xasset_model_hpp
 #define quantext_xasset_model_hpp
 
-#include <qle/math/cumulativenormaldistribution.hpp>
-#include <qle/models/irlgm1fparametrization.hpp>
 #include <qle/models/fxbsparametrization.hpp>
-#include <qle/models/linkablecalibratedmodel.hpp>
+#include <qle/models/lgm.hpp>
 #include <qle/models/model.hpp>
 #include <qle/processes/xassetstateprocess.hpp>
 #include <ql/math/matrix.hpp>
 #include <ql/math/distributions/normaldistribution.hpp>
 #include <ql/math/integrals/integral.hpp>
-#include <ql/stochasticprocess.hpp>
 
 #include <boost/bind.hpp>
 
@@ -69,6 +66,13 @@ class XAssetModel : public LinkableCalibratedModel {
                 const Matrix &correlation,
                 SalvagingAlgorithm::Type salvaging = SalvagingAlgorithm::None);
 
+    /*! IR-FX model based constructor */
+    XAssetModel(const std::vector<boost::shared_ptr<Lgm> > &currencyModels,
+                const std::vector<boost::shared_ptr<FxBsParametrization> >
+                    &fxParametrizations,
+                const Matrix &correlation,
+                SalvagingAlgorithm::Type salvaging = SalvagingAlgorithm::None);
+
     /*! returns the state process with a given discretization */
     const boost::shared_ptr<StochasticProcess>
     stateProcess(XAssetStateProcess::discretization disc =
@@ -88,8 +92,11 @@ class XAssetModel : public LinkableCalibratedModel {
     void generateArguments();
 
     /*! LGM1F components, ccy=0 refers to the domestic currency */
+    const boost::shared_ptr<Lgm> lgm(const Size ccy) const;
+
     const boost::shared_ptr<IrLgm1fParametrization>
     irlgm1f(const Size ccy) const;
+
     Real numeraire(const Size ccy, const Time t, const Real x) const;
     Real discountBond(const Size ccy, const Time t, const Time T,
                       const Real x) const;
@@ -175,7 +182,8 @@ class XAssetModel : public LinkableCalibratedModel {
 
     Size nIrLgm1f_, nFxBs_;
     Size totalNumberOfParameters_;
-    const std::vector<boost::shared_ptr<Parametrization> > p_;
+    std::vector<boost::shared_ptr<Parametrization> > p_;
+    std::vector<boost::shared_ptr<Lgm> > lgm_;
     const Matrix rho_;
     SalvagingAlgorithm::Type salvaging_;
     mutable boost::shared_ptr<Integrator> integrator_;
@@ -183,52 +191,6 @@ class XAssetModel : public LinkableCalibratedModel {
         stateProcessEuler_;
 
     /* calibration constraints */
-
-    Disposable<std::vector<bool> > MoveIrLgm1fVolatility(const Size ccy,
-                                                         const Size i) {
-        QL_REQUIRE(i < irlgm1f(ccy)->parameter(0)->size(),
-                   "irlgm1f volatility index ("
-                       << i << ") for ccy " << ccy << " out of bounds 0..."
-                       << irlgm1f(ccy)->parameter(0)->size() - 1);
-        std::vector<bool> res(0);
-        for (Size j = 0; j < nIrLgm1f_; ++j) {
-            std::vector<bool> tmp1(irlgm1f(j)->parameter(0)->size(), true);
-            if (ccy == j) {
-                tmp1[i] = false;
-            }
-            std::vector<bool> tmp2(irlgm1f(j)->parameter(1)->size(), true);
-            res.insert(res.end(), tmp1.begin(), tmp1.end());
-            res.insert(res.end(), tmp2.begin(), tmp2.end());
-        }
-        for (Size j = 0; j < nFxBs_; ++j) {
-            std::vector<bool> tmp(fxbs(j)->parameter(0)->size(), true);
-            res.insert(res.end(), tmp.begin(), tmp.end());
-        }
-        return res;
-    }
-
-    Disposable<std::vector<bool> > MoveIrLgm1fReversion(const Size ccy,
-                                                        const Size i) {
-        QL_REQUIRE(i < irlgm1f(ccy)->parameter(1)->size(),
-                   "irlgm1f reversion index ("
-                       << i << ") for ccy " << ccy << " out of bounds 0..."
-                       << irlgm1f(ccy)->parameter(1)->size() - 1);
-        std::vector<bool> res(0);
-        for (Size j = 0; j < nIrLgm1f_; ++j) {
-            std::vector<bool> tmp1(irlgm1f(j)->parameter(0)->size(), true);
-            std::vector<bool> tmp2(irlgm1f(j)->parameter(1)->size(), true);
-            if (ccy == j) {
-                tmp2[i] = false;
-            }
-            res.insert(res.end(), tmp1.begin(), tmp1.end());
-            res.insert(res.end(), tmp2.begin(), tmp2.end());
-        }
-        for (Size j = 0; j < nFxBs_; ++j) {
-            std::vector<bool> tmp(fxbs(j)->parameter(0)->size(), true);
-            res.insert(res.end(), tmp.begin(), tmp.end());
-        }
-        return res;
-    }
 
     Disposable<std::vector<bool> > MoveFxBsVolatility(const Size ccy,
                                                       const Size i) {
@@ -248,26 +210,6 @@ class XAssetModel : public LinkableCalibratedModel {
             if (ccy == j) {
                 tmp[i] = false;
             }
-            res.insert(res.end(), tmp.begin(), tmp.end());
-        }
-        return res;
-    }
-
-    Disposable<std::vector<bool> > IrLgm1fGlobal(const Size ccy) {
-        QL_REQUIRE(ccy < nIrLgm1f_, "irlgm1f ccy (" << ccy
-                                                    << ") out of range 0..."
-                                                    << (nIrLgm1f_ - 1));
-        std::vector<bool> res(0);
-        for (Size i = 0; i < nIrLgm1f_; ++i) {
-            std::vector<bool> tmp1(irlgm1f(i)->parameter(0)->size(),
-                                   ccy == i ? false : true);
-            std::vector<bool> tmp2(irlgm1f(i)->parameter(1)->size(),
-                                   ccy == i ? false : true);
-            res.insert(res.end(), tmp1.begin(), tmp1.end());
-            res.insert(res.end(), tmp2.begin(), tmp2.end());
-        }
-        for (Size i = 0; i < nFxBs_; ++i) {
-            std::vector<bool> tmp(fxbs(i)->parameter(0)->size(), true);
             res.insert(res.end(), tmp.begin(), tmp.end());
         }
         return res;
@@ -303,11 +245,36 @@ inline void XAssetModel::update() {
 
 inline void XAssetModel::generateArguments() { update(); }
 
-inline const boost::shared_ptr<IrLgm1fParametrization>
-XAssetModel::irlgm1f(const Size ccy) const {
+inline const boost::shared_ptr<Lgm> XAssetModel::lgm(const Size ccy) const {
     QL_REQUIRE(ccy < nIrLgm1f_, "irlgm1f index (" << ccy << ") must be in 0..."
                                                   << (nIrLgm1f_ - 1));
-    return boost::dynamic_pointer_cast<IrLgm1fParametrization>(p_[ccy]);
+    return lgm_[ccy];
+}
+
+inline const boost::shared_ptr<IrLgm1fParametrization>
+XAssetModel::irlgm1f(const Size ccy) const {
+    return lgm(ccy)->parametrization();
+}
+
+inline Real XAssetModel::numeraire(const Size ccy, const Time t,
+                                   const Real x) const {
+    return lgm(ccy)->numeraire(t, x);
+}
+
+inline Real XAssetModel::discountBond(const Size ccy, const Time t,
+                                      const Time T, const Real x) const {
+    return lgm(ccy)->discountBond(t, T, x);
+}
+
+inline Real XAssetModel::reducedDiscountBond(const Size ccy, const Time t,
+                                      const Time T, const Real x) const {
+    return lgm(ccy)->reducedDiscountBond(t, T, x);
+}
+
+inline Real XAssetModel::discountBondOption(const Size ccy, Option::Type type,
+                                     const Real K, const Time t, const Time S,
+                                     const Time T) const {
+    return lgm(ccy)->discountBondOption(type, K, t, S, T);
 }
 
 inline const boost::shared_ptr<FxBsParametrization>

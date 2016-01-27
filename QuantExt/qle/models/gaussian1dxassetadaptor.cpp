@@ -20,7 +20,7 @@ Gaussian1dXAssetAdaptor::Gaussian1dXAssetAdaptor(
 Gaussian1dXAssetAdaptor::Gaussian1dXAssetAdaptor(
     Size ccy, const boost::shared_ptr<XAssetModel> &model)
     : Gaussian1dModel(model->irlgm1f(ccy)->termStructure()),
-      x_(boost::make_shared<Lgm>(model->irlgm1f(ccy))) {
+      x_(model->lgm(ccy)) {
     initialize();
 }
 
