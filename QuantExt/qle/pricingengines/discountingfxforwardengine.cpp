@@ -45,6 +45,7 @@ namespace QuantExt {
 
         Real tmpNominal1, tmpNominal2;
         if(ccy1_ == arguments_.currency1) {
+            std::cout<<"match"<<std::endl;
             QL_REQUIRE(ccy2_ == arguments_.currency2,
                        "mismatched currency pairs ("
                            << ccy1_ << "," << ccy2_ << ") in the egine and ("
@@ -54,6 +55,7 @@ namespace QuantExt {
             tmpNominal2 = arguments_.nominal2;
         }
         else {
+            std::cout<<"switch"<<std::endl;
             QL_REQUIRE(ccy1_ == arguments_.currency2 &&
                            ccy2_ == arguments_.currency1,
                        "mismatched currency pairs ("
@@ -78,6 +80,9 @@ namespace QuantExt {
             "discount curve reference date.");
 
         results_.value = 0.0;
+        int arg = arguments_.payCurrency1 ? 1.0 : -1.0;
+        std::cout<<"pc "<<arguments_.payCurrency1<<" arg "<<arg<<std::endl;
+        
         if (!detail::simple_event(arguments_.maturityDate).hasOccurred(
                 settlementDate_, includeSettlementDateFlows_)) {
             results_.value = (arguments_.payCurrency1 ? 1.0 : -1.0) * (
@@ -88,6 +93,7 @@ namespace QuantExt {
                 currency2Discountcurve_->discount(arguments_.maturityDate) /
                 currency2Discountcurve_->discount(npvDate_)*spotFX_->value());
         }
+        std::cout<<"value "<<results_.value<<std::endl;
         results_.npv = Money(ccy1_, results_.value);
         results_.fairForwardRate = ExchangeRate(ccy2_, ccy1_, tmpNominal1/tmpNominal2);
 
