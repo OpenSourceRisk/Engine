@@ -13,6 +13,8 @@
 #include <ql/time/calendars/target.hpp>
 #include <ql/quotes/simplequote.hpp>
 
+#include <test-suite/utilities.hpp>
+
 using namespace QuantExt;
 using namespace QuantLib;
 using namespace boost::unit_test_framework;
@@ -156,8 +158,8 @@ void DynamicSwaptionVolMatrixTest::testForwardForwardVariance() {
 test_suite *DynamicSwaptionVolMatrixTest::suite() {
     test_suite *suite = BOOST_TEST_SUITE("DynamicSwaptionVolMatrix tests");
     suite->add(
-        BOOST_TEST_CASE(&DynamicSwaptionVolMatrixTest::testConstantVariance));
-    suite->add(BOOST_TEST_CASE(
+        QUANTLIB_TEST_CASE(&DynamicSwaptionVolMatrixTest::testConstantVariance));
+    suite->add(QUANTLIB_TEST_CASE(
         &DynamicSwaptionVolMatrixTest::testForwardForwardVariance));
     return suite;
 }

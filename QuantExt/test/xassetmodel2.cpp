@@ -5,7 +5,6 @@
 */
 
 #include "xassetmodel2.hpp"
-#include "utilities.hpp"
 
 #include <qle/methods/multipathgenerator.hpp>
 #include <qle/models/all.hpp>
@@ -29,6 +28,8 @@
 #include <ql/time/daycounters/actualactual.hpp>
 #include <ql/time/daycounters/thirty360.hpp>
 #include <ql/quotes/simplequote.hpp>
+
+#include <test-suite/utilities.hpp>
 
 #include <boost/make_shared.hpp>
 #include <boost/accumulators/accumulators.hpp>
@@ -1134,9 +1135,9 @@ void XAssetModelTest2::testLgm31fMartingaleProperty() {
 test_suite *XAssetModelTest2::suite() {
     test_suite *suite = BOOST_TEST_SUITE("XAsset model tests 2");
     suite->add(
-        QUANTEXT_TEST_CASE(&XAssetModelTest2::testLgm31fPositiveCovariance));
-    suite->add(QUANTEXT_TEST_CASE(&XAssetModelTest2::testLgm31fMoments));
+        QUANTLIB_TEST_CASE(&XAssetModelTest2::testLgm31fPositiveCovariance));
+    suite->add(QUANTLIB_TEST_CASE(&XAssetModelTest2::testLgm31fMoments));
     suite->add(
-        QUANTEXT_TEST_CASE(&XAssetModelTest2::testLgm31fMartingaleProperty));
+        QUANTLIB_TEST_CASE(&XAssetModelTest2::testLgm31fMartingaleProperty));
     return suite;
 }

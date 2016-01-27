@@ -5,7 +5,6 @@
 */
 
 #include "xassetmodelparametrizations.hpp"
-#include "utilities.hpp"
 
 #include <qle/models/all.hpp>
 #include <ql/currencies/america.hpp>
@@ -15,6 +14,8 @@
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
+
+#include <test-suite/utilities.hpp>
 
 #include <boost/make_shared.hpp>
 
@@ -528,11 +529,11 @@ void XAssetModelParametrizationsTest::testFxBsParametrizations() {
 
 test_suite *XAssetModelParametrizationsTest::suite() {
     test_suite *suite = BOOST_TEST_SUITE("XAsset model parametrizations tests");
-    suite->add(QUANTEXT_TEST_CASE(
+    suite->add(QUANTLIB_TEST_CASE(
         &XAssetModelParametrizationsTest::testParametrizationBaseClasses));
-    suite->add(QUANTEXT_TEST_CASE(
+    suite->add(QUANTLIB_TEST_CASE(
         &XAssetModelParametrizationsTest::testIrLgm1fParametrizations));
-    suite->add(QUANTEXT_TEST_CASE(
+    suite->add(QUANTLIB_TEST_CASE(
         &XAssetModelParametrizationsTest::testFxBsParametrizations));
     return suite;
 }

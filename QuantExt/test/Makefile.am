@@ -1,7 +1,6 @@
 
 QLE_TESTS = \
 	testsuite.cpp \
-	utilities.hpp utilities.cpp \
 	analyticlgmswaptionengine.hpp analyticlgmswaptionengine.cpp \
 	currency.hpp currency.cpp \
 	discountcurve.hpp discountcurve.cpp \

@@ -5,7 +5,6 @@
 */
 
 #include "xassetmodel.hpp"
-#include "utilities.hpp"
 
 #include <qle/methods/multipathgenerator.hpp>
 #include <qle/models/all.hpp>
@@ -29,6 +28,8 @@
 #include <ql/time/daycounters/actual360.hpp>
 #include <ql/time/daycounters/thirty360.hpp>
 #include <ql/quotes/simplequote.hpp>
+
+#include <test-suite/utilities.hpp>
 
 #include <boost/make_shared.hpp>
 #include <boost/accumulators/accumulators.hpp>
@@ -1283,15 +1284,15 @@ void XAssetModelTest::testCorrelationRecovery() {
 
 test_suite *XAssetModelTest::suite() {
     test_suite *suite = BOOST_TEST_SUITE("XAsset model tests");
-    suite->add(QUANTEXT_TEST_CASE(&XAssetModelTest::testBermudanLgm1fGsr));
-    suite->add(QUANTEXT_TEST_CASE(&XAssetModelTest::testBermudanLgmInvariances));
-    suite->add(QUANTEXT_TEST_CASE(&XAssetModelTest::testLgm1fCalibration));
+    suite->add(QUANTLIB_TEST_CASE(&XAssetModelTest::testBermudanLgm1fGsr));
+    suite->add(QUANTLIB_TEST_CASE(&XAssetModelTest::testBermudanLgmInvariances));
+    suite->add(QUANTLIB_TEST_CASE(&XAssetModelTest::testLgm1fCalibration));
     suite->add(
-        QUANTEXT_TEST_CASE(&XAssetModelTest::testCcyLgm3fForeignPayouts));
-    suite->add(QUANTEXT_TEST_CASE(&XAssetModelTest::testLgm5fFxCalibration));
-    suite->add(QUANTEXT_TEST_CASE(&XAssetModelTest::testLgm5fMoments));
-    suite->add(QUANTEXT_TEST_CASE(&XAssetModelTest::testLgmGsrEquivalence));
-    suite->add(QUANTEXT_TEST_CASE(&XAssetModelTest::testLgmMcWithShift));
-    suite->add(QUANTEXT_TEST_CASE(&XAssetModelTest::testCorrelationRecovery));
+        QUANTLIB_TEST_CASE(&XAssetModelTest::testCcyLgm3fForeignPayouts));
+    suite->add(QUANTLIB_TEST_CASE(&XAssetModelTest::testLgm5fFxCalibration));
+    suite->add(QUANTLIB_TEST_CASE(&XAssetModelTest::testLgm5fMoments));
+    suite->add(QUANTLIB_TEST_CASE(&XAssetModelTest::testLgmGsrEquivalence));
+    suite->add(QUANTLIB_TEST_CASE(&XAssetModelTest::testLgmMcWithShift));
+    suite->add(QUANTLIB_TEST_CASE(&XAssetModelTest::testCorrelationRecovery));
     return suite;
 }
