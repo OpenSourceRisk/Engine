@@ -4,34 +4,34 @@
  Copyright (C) 2016 Quaternion Risk Management Ltd.
 */
 
-/*! \file gaussian1dxassetadaptor.hpp
+/*! \file gaussian1dcrossassetadaptor.hpp
     \brief adaptor class that extracts one irlgm1f component
-           from an xasset model as a gaussian 1d model
+           from an crossasset model as a gaussian 1d model
 */
 
-#ifndef quantext_gaussian1d_xasset_adaptor_hpp
-#define quantext_gaussian1d_xasset_adaptor_hpp
+#ifndef quantext_gaussian1d_crossasset_adaptor_hpp
+#define quantext_gaussian1d_crossasset_adaptor_hpp
 
-#include <qle/models/gaussian1dxassetadaptor.hpp>
-#include <qle/models/xassetmodel.hpp>
+#include <qle/models/gaussian1dcrossassetadaptor.hpp>
+#include <qle/models/crossassetmodel.hpp>
 #include <qle/models/gaussian1dmodel.hpp>
 
 namespace QuantExt {
 
-class Gaussian1dXAssetAdaptor : public Gaussian1dModel {
+class Gaussian1dCrossAssetAdaptor : public Gaussian1dModel {
   public:
-    Gaussian1dXAssetAdaptor(const boost::shared_ptr<Lgm> &model);
-    Gaussian1dXAssetAdaptor(const Size ccy,
-                            const boost::shared_ptr<XAssetModel> &model);
+    Gaussian1dCrossAssetAdaptor(const boost::shared_ptr<LinearGaussMarkovModel> &model);
+    Gaussian1dCrossAssetAdaptor(const Size ccy,
+                            const boost::shared_ptr<CrossAssetModel> &model);
 
   private:
     /*! Gaussian1dModel interface */
-    const Real numeraireImpl(const Time t, const Real y,
+    Real numeraireImpl(const Time t, const Real y,
                              const Handle<YieldTermStructure> &yts) const;
-    const Real zerobondImpl(const Time T, const Time t, const Real y,
+    Real zerobondImpl(const Time T, const Time t, const Real y,
                             const Handle<YieldTermStructure> &yts,
                             const bool adjusted) const;
-    const Real
+    Real
     deflatedZerobondImpl(const Time T, const Time t, const Real y,
                          const Handle<YieldTermStructure> &yts,
                          const Handle<YieldTermStructure> &ytsNumeraire,
@@ -43,12 +43,12 @@ class Gaussian1dXAssetAdaptor : public Gaussian1dModel {
     void initialize();
 
     /* members */
-    const boost::shared_ptr<Lgm> x_;
+    const boost::shared_ptr<LinearGaussMarkovModel> x_;
 };
 
 // inline
 
-inline const Real Gaussian1dXAssetAdaptor::numeraireImpl(
+inline Real Gaussian1dCrossAssetAdaptor::numeraireImpl(
     const Time t, const Real y, const Handle<YieldTermStructure> &yts) const {
     Real d = yts.empty() ? 1.0
                          : x_->parametrization()->termStructure()->discount(t) /
@@ -57,8 +57,8 @@ inline const Real Gaussian1dXAssetAdaptor::numeraireImpl(
     return d * x_->numeraire(t, x);
 }
 
-inline const Real
-Gaussian1dXAssetAdaptor::zerobondImpl(const Time T, const Time t, const Real y,
+inline Real
+Gaussian1dCrossAssetAdaptor::zerobondImpl(const Time T, const Time t, const Real y,
                                       const Handle<YieldTermStructure> &yts,
                                       const bool) const {
     Real d = yts.empty()
@@ -70,10 +70,10 @@ Gaussian1dXAssetAdaptor::zerobondImpl(const Time T, const Time t, const Real y,
     return d * x_->discountBond(t, T, x);
 }
 
-inline const Real
-Gaussian1dXAssetAdaptor::deflatedZerobondImpl(const Time T, const Time t, const Real y,
+inline Real
+Gaussian1dCrossAssetAdaptor::deflatedZerobondImpl(const Time T, const Time t, const Real y,
                      const Handle<YieldTermStructure> &yts,
-                     const Handle<YieldTermStructure> &ytsNumeraire,
+                     const Handle<YieldTermStructure> &,
                      const bool) const {
     Real d = yts.empty()
                  ? 1.0

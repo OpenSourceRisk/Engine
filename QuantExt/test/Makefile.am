@@ -8,9 +8,9 @@ QLE_TESTS = \
 	dynamicswaptionvolmatrix.hpp dynamicswaptionvolmatrix.cpp \
 	index.hpp index.cpp \
 	logquote.hpp logquote.cpp \
-	xassetmodel.hpp xassetmodel.cpp \
-	xassetmodel2.hpp xassetmodel2.cpp \
-	xassetmodelparametrizations.hpp xassetmodelparametrizations.cpp
+	crossassetmodel.hpp crossassetmodel.cpp \
+	crossassetmodel2.hpp crossassetmodel2.cpp \
+	crossassetmodelparametrizations.hpp crossassetmodelparametrizations.cpp
 
 dist-hook:
 	mkdir -p $(distdir)/build

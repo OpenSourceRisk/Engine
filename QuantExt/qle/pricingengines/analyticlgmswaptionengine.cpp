@@ -13,7 +13,7 @@
 namespace QuantExt {
 
 AnalyticLgmSwaptionEngine::AnalyticLgmSwaptionEngine(
-    const boost::shared_ptr<Lgm> &model,
+    const boost::shared_ptr<LinearGaussMarkovModel> &model,
     const Handle<YieldTermStructure> &discountCurve,
     const FloatSpreadMapping floatSpreadMapping)
     : GenericEngine<Swaption::arguments, Swaption::results>(),
@@ -25,7 +25,7 @@ AnalyticLgmSwaptionEngine::AnalyticLgmSwaptionEngine(
 }
 
 AnalyticLgmSwaptionEngine::AnalyticLgmSwaptionEngine(
-    const boost::shared_ptr<XAssetModel> &model, const Size ccy,
+    const boost::shared_ptr<CrossAssetModel> &model, const Size ccy,
     const Handle<YieldTermStructure> &discountCurve,
     const FloatSpreadMapping floatSpreadMapping)
     : GenericEngine<Swaption::arguments, Swaption::results>(),

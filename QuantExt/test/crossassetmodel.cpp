@@ -4,7 +4,7 @@
  Copyright (C) 2016 Quaternion Risk Management Ltd.
 */
 
-#include "xassetmodel.hpp"
+#include "crossassetmodel.hpp"
 
 #include <qle/methods/multipathgenerator.hpp>
 #include <qle/models/all.hpp>
@@ -15,14 +15,11 @@
 #include <ql/currencies/america.hpp>
 #include <ql/indexes/ibor/euribor.hpp>
 #include <ql/instruments/vanillaoption.hpp>
-#include <ql/models/shortrate/onefactormodels/gsr.hpp>
-#include <ql/models/shortrate/calibrationhelpers/swaptionhelper.hpp>
 #include <ql/math/statistics/incrementalstatistics.hpp>
 #include <ql/math/optimization/levenbergmarquardt.hpp>
 #include <ql/math/randomnumbers/rngtraits.hpp>
 #include <ql/methods/montecarlo/multipathgenerator.hpp>
 #include <ql/methods/montecarlo/pathgenerator.hpp>
-#include <ql/pricingengines/swaption/gaussian1dswaptionengine.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actual360.hpp>
@@ -105,7 +102,7 @@ struct BermudanTestData {
 
 } // anonymous namespace
 
-void XAssetModelTest::testBermudanLgm1fGsr() {
+void CrossAssetModelTest::testBermudanLgm1fGsr() {
 
     BOOST_TEST_MESSAGE("Testing consistency of Bermudan swaption pricing in "
                        "LGM 1F and GSR models...");
@@ -121,10 +118,10 @@ void XAssetModelTest::testBermudanLgm1fGsr() {
     boost::shared_ptr<QuantExt::Gsr> gsr = boost::make_shared<QuantExt::Gsr>(
         d.yts, d.stepDates, d.sigmas, d.reversion, 50.0);
 
-    boost::shared_ptr<Lgm> lgm = boost::make_shared<Lgm>(lgm_p);
+    boost::shared_ptr<LinearGaussMarkovModel> lgm = boost::make_shared<LinearGaussMarkovModel>(lgm_p);
 
     boost::shared_ptr<QuantExt::Gaussian1dModel> lgm_g1d =
-        boost::make_shared<Gaussian1dXAssetAdaptor>(lgm);
+        boost::make_shared<Gaussian1dCrossAssetAdaptor>(lgm);
 
     boost::shared_ptr<PricingEngine> swaptionEngineGsr =
         boost::make_shared<QuantExt::Gaussian1dSwaptionEngine>(gsr, 64, 7.0, true, false);
@@ -147,7 +144,7 @@ void XAssetModelTest::testBermudanLgm1fGsr() {
                     << ") models, tolerance is " << tol);
 }
 
-void XAssetModelTest::testBermudanLgmInvariances() {
+void CrossAssetModelTest::testBermudanLgmInvariances() {
 
     BOOST_TEST_MESSAGE("Testing LGM model invariances for Bermudan "
                        "swaption pricing...");
@@ -158,10 +155,10 @@ void XAssetModelTest::testBermudanLgmInvariances() {
         boost::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
             EURCurrency(), d.yts, d.stepTimes_a, d.sigmas_a, d.kappas_a);
 
-    boost::shared_ptr<Lgm> lgm2 = boost::make_shared<Lgm>(lgm_p2);
+    boost::shared_ptr<LinearGaussMarkovModel> lgm2 = boost::make_shared<LinearGaussMarkovModel>(lgm_p2);
 
     boost::shared_ptr<QuantExt::Gaussian1dModel> lgm_g1d2 =
-        boost::make_shared<Gaussian1dXAssetAdaptor>(lgm2);
+        boost::make_shared<Gaussian1dCrossAssetAdaptor>(lgm2);
 
     boost::shared_ptr<PricingEngine> swaptionEngineLgm2 =
         boost::make_shared<QuantExt::Gaussian1dSwaptionEngine>(lgm_g1d2, 64, 7.0, true, false);
@@ -186,7 +183,7 @@ void XAssetModelTest::testBermudanLgmInvariances() {
 
 } // testBermudanLgm1fGsr
 
-void XAssetModelTest::testLgm1fCalibration() {
+void CrossAssetModelTest::testLgm1fCalibration() {
 
     BOOST_TEST_MESSAGE("Testing calibration of LGM 1F model (analytic engine) "
                        "against GSR parameters...");
@@ -247,7 +244,7 @@ void XAssetModelTest::testLgm1fCalibration() {
     boost::shared_ptr<QuantExt::Gsr> gsr =
         boost::make_shared<QuantExt::Gsr>(yts, stepDates, gsrInitialSigmas, kappa, 50.0);
 
-    boost::shared_ptr<Lgm> lgm = boost::make_shared<Lgm>(lgm_p);
+    boost::shared_ptr<LinearGaussMarkovModel> lgm = boost::make_shared<LinearGaussMarkovModel>(lgm_p);
 
     boost::shared_ptr<PricingEngine> swaptionEngineGsr =
         boost::make_shared<QuantExt::Gaussian1dSwaptionEngine>(gsr, 64, 7.0, true, false);
@@ -298,7 +295,7 @@ void XAssetModelTest::testLgm1fCalibration() {
                 << " while GSR's sigma is " << gsrSigmas[i] << ")");
     }
 
-    // calibrate LGM as component of XAssetModel
+    // calibrate LGM as component of CrossAssetModel
 
     // create a second set of parametrization ...
     boost::shared_ptr<IrLgm1fParametrization> lgm_p21 =
@@ -316,14 +313,14 @@ void XAssetModelTest::testLgm1fCalibration() {
             EURCurrency(), Handle<Quote>(boost::make_shared<SimpleQuote>(1.00)),
             notimes_a, sigma_a);
 
-    // ... and set up an xasset model with USD as domestic currency ...
+    // ... and set up an crossasset model with USD as domestic currency ...
     std::vector<boost::shared_ptr<Parametrization> > parametrizations;
     parametrizations.push_back(lgm_p21);
     parametrizations.push_back(lgm_p22);
     parametrizations.push_back(fx_p);
     Matrix rho(3, 3, 0.0);
     rho[0][0] = rho[1][1] = rho[2][2] = 1.0;
-    boost::shared_ptr<XAssetModel> xmodel = boost::make_shared<XAssetModel>(
+    boost::shared_ptr<CrossAssetModel> xmodel = boost::make_shared<CrossAssetModel>(
         parametrizations, rho, SalvagingAlgorithm::None);
 
     // .. whose EUR component we calibrate as before and compare the
@@ -345,7 +342,7 @@ void XAssetModelTest::testLgm1fCalibration() {
     for (Size i = 0; i < gsrSigmas.size(); ++i) {
         // compare calibrated model parameters against 1d calibration before
         if (!close_enough(lgmSigmas2eur[i], lgmSigmas[i]))
-            BOOST_ERROR("Failed to verify xasset LGM1F component calibration "
+            BOOST_ERROR("Failed to verify crossasset LGM1F component calibration "
                         "at parameter #"
                         << i << " against 1d calibration, which is "
                         << lgmSigmas2eur[i] << " while 1d calibration was "
@@ -353,7 +350,7 @@ void XAssetModelTest::testLgm1fCalibration() {
         // compare usd component against start values (since it was not
         // calibrated, so should not have changed)
         if (!close_enough(lgmSigmas2usd[i], lgmInitialSigmas2[i]))
-            BOOST_ERROR("Non calibrated xasset LGM1F component was changed by "
+            BOOST_ERROR("Non calibrated crossasset LGM1F component was changed by "
                         "other's component calibration at #"
                         << i << ", the new value is " << lgmSigmas2usd[i]
                         << " while the initial value was "
@@ -362,7 +359,7 @@ void XAssetModelTest::testLgm1fCalibration() {
 
 } // testLgm1fCalibration
 
-void XAssetModelTest::testCcyLgm3fForeignPayouts() {
+void CrossAssetModelTest::testCcyLgm3fForeignPayouts() {
 
     BOOST_TEST_MESSAGE("Testing pricing of foreign payouts under domestic "
                        "measure in Ccy LGM 3F model...");
@@ -469,14 +466,14 @@ void XAssetModelTest::testCcyLgm3fForeignPayouts() {
     c[1][0] = -0.2; c[1][1] = 1.0;  c[1][2] = -0.5; // USD
     c[2][0] = 0.8;  c[2][1] = -0.5; c[2][2] = 1.0; // FX
 
-    boost::shared_ptr<XAssetModel> ccLgm = boost::make_shared<XAssetModel>(
+    boost::shared_ptr<CrossAssetModel> ccLgm = boost::make_shared<CrossAssetModel>(
         singleModels, c, SalvagingAlgorithm::None);
 
-    boost::shared_ptr<Lgm> eurLgm = boost::make_shared<Lgm>(eurLgmParam);
-    boost::shared_ptr<Lgm> usdLgm = boost::make_shared<Lgm>(usdLgmParam);
+    boost::shared_ptr<LinearGaussMarkovModel> eurLgm = boost::make_shared<LinearGaussMarkovModel>(eurLgmParam);
+    boost::shared_ptr<LinearGaussMarkovModel> usdLgm = boost::make_shared<LinearGaussMarkovModel>(usdLgmParam);
 
     boost::shared_ptr<StochasticProcess> process =
-        ccLgm->stateProcess(XAssetStateProcess::exact);
+        ccLgm->stateProcess(CrossAssetStateProcess::exact);
     boost::shared_ptr<StochasticProcess> usdProcess = usdLgm->stateProcess();
 
     // path generation
@@ -700,7 +697,7 @@ struct Lgm5fTestData {
         c[3][0] = 0.2; c[3][1] = -0.2; c[3][2] = 0.0;  c[3][3] = 1.0;  c[3][4] = 0.3; // FX USD-EUR
         c[4][0] = 0.3; c[4][1] = -0.1; c[4][2] = 0.1;  c[4][3] = 0.3;  c[4][4] = 1.0; // FX GBP-EUR
 
-        ccLgm = boost::make_shared<XAssetModel>(singleModels, c,
+        ccLgm = boost::make_shared<CrossAssetModel>(singleModels, c,
                                                 SalvagingAlgorithm::None);
     }
 
@@ -717,12 +714,12 @@ struct Lgm5fTestData {
     boost::shared_ptr<FxBsParametrization> fxUsd_p, fxGbp_p;
     std::vector<boost::shared_ptr<Parametrization> > singleModels;
     Matrix c;
-    boost::shared_ptr<XAssetModel> ccLgm;
+    boost::shared_ptr<CrossAssetModel> ccLgm;
 };
 
 } // anonymous namespace
 
-void XAssetModelTest::testLgm5fFxCalibration() {
+void CrossAssetModelTest::testLgm5fFxCalibration() {
 
     BOOST_TEST_MESSAGE("Testing fx calibration in Ccy LGM 5F model...");
 
@@ -745,8 +742,8 @@ void XAssetModelTest::testLgm5fFxCalibration() {
         }
     }
 
-    boost::shared_ptr<XAssetModel> ccLgmProjected =
-        boost::make_shared<XAssetModel>(singleModelsProjected, cProjected,
+    boost::shared_ptr<CrossAssetModel> ccLgmProjected =
+        boost::make_shared<CrossAssetModel>(singleModelsProjected, cProjected,
                                         SalvagingAlgorithm::None);
 
     boost::shared_ptr<PricingEngine> ccLgmFxOptionEngineUsd =
@@ -852,7 +849,7 @@ void XAssetModelTest::testLgm5fFxCalibration() {
 
 } // testLgm5fFxCalibration
 
-void XAssetModelTest::testLgm5fMoments() {
+void CrossAssetModelTest::testLgm5fMoments() {
 
     BOOST_TEST_MESSAGE(
         "Testing analytic moments vs. Euler and exact discretization "
@@ -861,9 +858,9 @@ void XAssetModelTest::testLgm5fMoments() {
     Lgm5fTestData d;
 
     boost::shared_ptr<StochasticProcess> p_exact =
-        d.ccLgm->stateProcess(XAssetStateProcess::exact);
+        d.ccLgm->stateProcess(CrossAssetStateProcess::exact);
     boost::shared_ptr<StochasticProcess> p_euler =
-        d.ccLgm->stateProcess(XAssetStateProcess::euler);
+        d.ccLgm->stateProcess(CrossAssetStateProcess::euler);
 
     Real T = 10.0;         // horizon at which we compare the moments
     Size steps = T * 10.0; // number of simulation steps
@@ -974,7 +971,7 @@ void XAssetModelTest::testLgm5fMoments() {
 
 } // testLgm5fMoments
 
-void XAssetModelTest::testLgmGsrEquivalence() {
+void CrossAssetModelTest::testLgmGsrEquivalence() {
 
     BOOST_TEST_MESSAGE("Testing equivalence of GSR and LGM models...");
 
@@ -1015,7 +1012,7 @@ void XAssetModelTest::testLgmGsrEquivalence() {
                         EURCurrency(), yts, stepTimes_a, sigmas_a, kappas_a);
                 lgm_p->shift() = shift;
 
-                boost::shared_ptr<Lgm> lgm = boost::make_shared<Lgm>(lgm_p);
+                boost::shared_ptr<LinearGaussMarkovModel> lgm = boost::make_shared<LinearGaussMarkovModel>(lgm_p);
 
                 boost::shared_ptr<StochasticProcess1D> gsr_process =
                     gsr->stateProcess();
@@ -1083,7 +1080,7 @@ void XAssetModelTest::testLgmGsrEquivalence() {
 
 } // testLgmGsrEquivalence
 
-void XAssetModelTest::testLgmMcWithShift() {
+void CrossAssetModelTest::testLgmMcWithShift() {
     BOOST_TEST_MESSAGE(
         "Testing LGM1F Monte Carlo simulation with shifted H...");
 
@@ -1105,7 +1102,7 @@ void XAssetModelTest::testLgmMcWithShift() {
     boost::shared_ptr<StochasticProcess> p =
         boost::make_shared<IrLgm1fStateProcess>(lgm);
 
-    boost::shared_ptr<Lgm> model = boost::make_shared<Lgm>(lgm);
+    boost::shared_ptr<LinearGaussMarkovModel> model = boost::make_shared<LinearGaussMarkovModel>(lgm);
 
     Size steps = 1;
     Size paths = 10000;
@@ -1152,7 +1149,7 @@ void XAssetModelTest::testLgmMcWithShift() {
 
 } // testLgmMcWithShift
 
-void XAssetModelTest::testCorrelationRecovery() {
+void CrossAssetModelTest::testCorrelationRecovery() {
 
     BOOST_TEST_MESSAGE(
         "Test if random correlation input is recovered for small dt in Ccy LGM model...");
@@ -1242,13 +1239,13 @@ void XAssetModelTest::testCorrelationRecovery() {
                     pseudoCcy[i + 1], fxspot, notimes, fxsigma));
         }
 
-        boost::shared_ptr<XAssetModel> model = boost::make_shared<XAssetModel>(
+        boost::shared_ptr<CrossAssetModel> model = boost::make_shared<CrossAssetModel>(
             parametrizations, c, SalvagingAlgorithm::None);
 
         boost::shared_ptr<StochasticProcess> peuler =
-            model->stateProcess(XAssetStateProcess::euler);
+            model->stateProcess(CrossAssetStateProcess::euler);
         boost::shared_ptr<StochasticProcess> pexact =
-            model->stateProcess(XAssetStateProcess::exact);
+            model->stateProcess(CrossAssetStateProcess::exact);
 
         Matrix c1 = peuler->covariance(0.0, peuler->initialValues(), dt);
         Matrix c2 = pexact->covariance(0.0, peuler->initialValues(), dt);
@@ -1282,17 +1279,17 @@ void XAssetModelTest::testCorrelationRecovery() {
 
 } // test correlation recovery
 
-test_suite *XAssetModelTest::suite() {
-    test_suite *suite = BOOST_TEST_SUITE("XAsset model tests");
-    suite->add(QUANTLIB_TEST_CASE(&XAssetModelTest::testBermudanLgm1fGsr));
-    suite->add(QUANTLIB_TEST_CASE(&XAssetModelTest::testBermudanLgmInvariances));
-    suite->add(QUANTLIB_TEST_CASE(&XAssetModelTest::testLgm1fCalibration));
+test_suite *CrossAssetModelTest::suite() {
+    test_suite *suite = BOOST_TEST_SUITE("CrossAsset model tests");
+    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testBermudanLgm1fGsr));
+    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testBermudanLgmInvariances));
+    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testLgm1fCalibration));
     suite->add(
-        QUANTLIB_TEST_CASE(&XAssetModelTest::testCcyLgm3fForeignPayouts));
-    suite->add(QUANTLIB_TEST_CASE(&XAssetModelTest::testLgm5fFxCalibration));
-    suite->add(QUANTLIB_TEST_CASE(&XAssetModelTest::testLgm5fMoments));
-    suite->add(QUANTLIB_TEST_CASE(&XAssetModelTest::testLgmGsrEquivalence));
-    suite->add(QUANTLIB_TEST_CASE(&XAssetModelTest::testLgmMcWithShift));
-    suite->add(QUANTLIB_TEST_CASE(&XAssetModelTest::testCorrelationRecovery));
+        QUANTLIB_TEST_CASE(&CrossAssetModelTest::testCcyLgm3fForeignPayouts));
+    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testLgm5fFxCalibration));
+    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testLgm5fMoments));
+    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testLgmGsrEquivalence));
+    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testLgmMcWithShift));
+    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testCorrelationRecovery));
     return suite;
 }

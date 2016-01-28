@@ -5,7 +5,7 @@
 */
 
 #include <qle/math/piecewiseintegral.hpp>
-#include <qle/models/xassetmodel.hpp>
+#include <qle/models/crossassetmodel.hpp>
 #include <qle/models/pseudoparameter.hpp>
 #include <ql/math/integrals/simpsonintegral.hpp>
 #include <ql/math/matrixutilities/symmetricschurdecomposition.hpp>
@@ -13,7 +13,7 @@
 
 namespace QuantExt {
 
-XAssetModel::XAssetModel(
+CrossAssetModel::CrossAssetModel(
     const std::vector<boost::shared_ptr<Parametrization> > &parametrizations,
     const Matrix &correlation, SalvagingAlgorithm::Type salvaging)
     : LinkableCalibratedModel(), p_(parametrizations), rho_(correlation),
@@ -21,8 +21,8 @@ XAssetModel::XAssetModel(
     initialize();
 }
 
-XAssetModel::XAssetModel(
-    const std::vector<boost::shared_ptr<Lgm> > &currencyModels,
+CrossAssetModel::CrossAssetModel(
+    const std::vector<boost::shared_ptr<LinearGaussMarkovModel> > &currencyModels,
     const std::vector<boost::shared_ptr<FxBsParametrization> >
         &fxParametrizations,
     const Matrix &correlation, SalvagingAlgorithm::Type salvaging)
@@ -37,7 +37,7 @@ XAssetModel::XAssetModel(
     initialize();
 }
 
-void XAssetModel::initialize() {
+void CrossAssetModel::initialize() {
 
     initializeParametrizations();
     initializeCorrelation();
@@ -48,13 +48,13 @@ void XAssetModel::initialize() {
                          true);
 
     // create state processes
-    stateProcessEuler_ = boost::make_shared<XAssetStateProcess>(
-        this, XAssetStateProcess::euler, salvaging_);
-    stateProcessExact_ = boost::make_shared<XAssetStateProcess>(
-        this, XAssetStateProcess::exact, salvaging_);
+    stateProcessEuler_ = boost::make_shared<CrossAssetStateProcess>(
+        this, CrossAssetStateProcess::euler, salvaging_);
+    stateProcessExact_ = boost::make_shared<CrossAssetStateProcess>(
+        this, CrossAssetStateProcess::exact, salvaging_);
 }
 
-void XAssetModel::setIntegrationPolicy(
+void CrossAssetModel::setIntegrationPolicy(
     const boost::shared_ptr<Integrator> integrator,
     const bool usePiecewiseIntegration) const {
 
@@ -83,7 +83,7 @@ void XAssetModel::setIntegrationPolicy(
         boost::make_shared<PiecewiseIntegral>(integrator, allTimes, true);
 }
 
-void XAssetModel::initializeParametrizations() {
+void CrossAssetModel::initializeParametrizations() {
 
     // count the parametrizations and check their order and their support
 
@@ -97,7 +97,7 @@ void XAssetModel::initializeParametrizations() {
            boost::dynamic_pointer_cast<IrLgm1fParametrization>(p_[i]) != NULL) {
         // initialize model, if generic constructor was used
         if (genericCtor) {
-            lgm_.push_back(boost::make_shared<Lgm>(
+            lgm_.push_back(boost::make_shared<LinearGaussMarkovModel>(
                 boost::dynamic_pointer_cast<IrLgm1fParametrization>(p_[i])));
         }
         // count things
@@ -153,7 +153,7 @@ void XAssetModel::initializeParametrizations() {
     }
 }
 
-void XAssetModel::initializeCorrelation() {
+void CrossAssetModel::initializeCorrelation() {
 
     QL_REQUIRE(rho_.rows() == nIrLgm1f_ + nFxBs_ &&
                    rho_.columns() == nIrLgm1f_ + nFxBs_,
@@ -186,7 +186,7 @@ void XAssetModel::initializeCorrelation() {
     }
 }
 
-void XAssetModel::initializeArguments() {
+void CrossAssetModel::initializeArguments() {
 
     arguments_.resize(2 * nIrLgm1f_ + nFxBs_);
     for (Size i = 0; i < nIrLgm1f_; ++i) {
@@ -207,7 +207,7 @@ void XAssetModel::initializeArguments() {
     }
 }
 
-void XAssetModel::calibrateIrLgm1fVolatilitiesIterative(
+void CrossAssetModel::calibrateIrLgm1fVolatilitiesIterative(
     const Size ccy,
     const std::vector<boost::shared_ptr<CalibrationHelper> > &helpers,
     OptimizationMethod &method, const EndCriteria &endCriteria,
@@ -217,7 +217,7 @@ void XAssetModel::calibrateIrLgm1fVolatilitiesIterative(
     update();
 }
 
-void XAssetModel::calibrateIrLgm1fReversionsIterative(
+void CrossAssetModel::calibrateIrLgm1fReversionsIterative(
     const Size ccy,
     const std::vector<boost::shared_ptr<CalibrationHelper> > &helpers,
     OptimizationMethod &method, const EndCriteria &endCriteria,
@@ -227,7 +227,7 @@ void XAssetModel::calibrateIrLgm1fReversionsIterative(
     update();
 }
 
-void XAssetModel::calibrateIrLgm1fGlobal(
+void CrossAssetModel::calibrateIrLgm1fGlobal(
     const Size ccy,
     const std::vector<boost::shared_ptr<CalibrationHelper> > &helpers,
     OptimizationMethod &method, const EndCriteria &endCriteria,
@@ -236,7 +236,7 @@ void XAssetModel::calibrateIrLgm1fGlobal(
     update();
 }
 
-void XAssetModel::calibrateFxBsVolatilitiesIterative(
+void CrossAssetModel::calibrateFxBsVolatilitiesIterative(
     const Size ccy,
     const std::vector<boost::shared_ptr<CalibrationHelper> > &helpers,
     OptimizationMethod &method, const EndCriteria &endCriteria,

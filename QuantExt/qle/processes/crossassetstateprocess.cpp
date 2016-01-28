@@ -4,8 +4,8 @@
  Copyright (C) 2016 Quaternion Risk Management Ltd.
 */
 
-#include <qle/models/xassetmodel.hpp>
-#include <qle/models/xassetanalytics.hpp>
+#include <qle/models/crossassetmodel.hpp>
+#include <qle/models/crossassetanalytics.hpp>
 
 #include <ql/math/matrixutilities/pseudosqrt.hpp>
 #include <ql/processes/eulerdiscretization.hpp>
@@ -14,9 +14,9 @@
 
 namespace QuantExt {
 
-using namespace XAssetAnalytics;
+using namespace CrossAssetAnalytics;
 
-XAssetStateProcess::XAssetStateProcess(const XAssetModel *const model,
+CrossAssetStateProcess::CrossAssetStateProcess(const CrossAssetModel *const model,
                                        discretization disc,
                                        SalvagingAlgorithm::Type salvaging)
     : StochasticProcess(), model_(model), salvaging_(salvaging) {
@@ -25,30 +25,30 @@ XAssetStateProcess::XAssetStateProcess(const XAssetModel *const model,
         discretization_ = boost::make_shared<EulerDiscretization>();
     } else {
         discretization_ =
-            boost::make_shared<XAssetStateProcess::ExactDiscretization>(
+            boost::make_shared<CrossAssetStateProcess::ExactDiscretization>(
                 model, salvaging);
     }
 
     QL_REQUIRE(2 * model_->currencies() - 1 == model_->dimension(),
-               "this version of XAssetStateProcess is not consistent with "
-               "XAssetModel, which should only be irlgm1f-fx");
+               "this version of CrossAssetStateProcess is not consistent with "
+               "CrossAssetModel, which should only be irlgm1f-fx");
 }
 
-Size XAssetStateProcess::size() const { return model_->dimension(); }
+Size CrossAssetStateProcess::size() const { return model_->dimension(); }
 
-void XAssetStateProcess::flushCache() const {
+void CrossAssetStateProcess::flushCache() const {
     cache_m_.clear();
     cache_v_.clear();
     cache_d_.clear();
-    boost::shared_ptr<XAssetStateProcess::ExactDiscretization> tmp =
-        boost::dynamic_pointer_cast<XAssetStateProcess::ExactDiscretization>(
+    boost::shared_ptr<CrossAssetStateProcess::ExactDiscretization> tmp =
+        boost::dynamic_pointer_cast<CrossAssetStateProcess::ExactDiscretization>(
             discretization_);
     if (tmp != NULL) {
         tmp->flushCache();
     }
 }
 
-Disposable<Array> XAssetStateProcess::initialValues() const {
+Disposable<Array> CrossAssetStateProcess::initialValues() const {
     Array res(model_->dimension(), 0.0);
     /* irlgm1f processes have initial value 0 */
     for (Size i = 0; i < model_->currencies() - 1; ++i) {
@@ -59,7 +59,7 @@ Disposable<Array> XAssetStateProcess::initialValues() const {
     return res;
 }
 
-Disposable<Array> XAssetStateProcess::drift(Time t, const Array &x) const {
+Disposable<Array> CrossAssetStateProcess::drift(Time t, const Array &x) const {
     Array res(model_->dimension(), 0.0);
     Size n = model_->currencies();
     Real H0 = model_->irlgm1f(0)->H(t);
@@ -104,7 +104,7 @@ Disposable<Array> XAssetStateProcess::drift(Time t, const Array &x) const {
     return res;
 }
 
-Disposable<Matrix> XAssetStateProcess::diffusion(Time t, const Array &) const {
+Disposable<Matrix> CrossAssetStateProcess::diffusion(Time t, const Array &) const {
     boost::unordered_map<double, Matrix>::iterator i = cache_d_.find(t);
     if (i == cache_d_.end()) {
         Matrix res(model_->dimension(), model_->dimension());
@@ -144,11 +144,11 @@ Disposable<Matrix> XAssetStateProcess::diffusion(Time t, const Array &) const {
     }
 }
 
-XAssetStateProcess::ExactDiscretization::ExactDiscretization(
-    const XAssetModel *const model, SalvagingAlgorithm::Type salvaging)
+CrossAssetStateProcess::ExactDiscretization::ExactDiscretization(
+    const CrossAssetModel *const model, SalvagingAlgorithm::Type salvaging)
     : model_(model), salvaging_(salvaging) {}
 
-Disposable<Array> XAssetStateProcess::ExactDiscretization::drift(
+Disposable<Array> CrossAssetStateProcess::ExactDiscretization::drift(
     const StochasticProcess &, Time t0, const Array &x0, Time dt) const {
     Size n = model_->currencies();
     Array res(model_->dimension(), 0.0);
@@ -175,7 +175,7 @@ Disposable<Array> XAssetStateProcess::ExactDiscretization::drift(
     return res - x0;
 }
 
-Disposable<Matrix> XAssetStateProcess::ExactDiscretization::diffusion(
+Disposable<Matrix> CrossAssetStateProcess::ExactDiscretization::diffusion(
     const StochasticProcess &p, Time t0, const Array &x0, Time dt) const {
     cache_key k = {t0, dt};
     boost::unordered_map<cache_key, Matrix>::iterator i = cache_d_.find(k);
@@ -191,7 +191,7 @@ Disposable<Matrix> XAssetStateProcess::ExactDiscretization::diffusion(
     }
 }
 
-Disposable<Matrix> XAssetStateProcess::ExactDiscretization::covariance(
+Disposable<Matrix> CrossAssetStateProcess::ExactDiscretization::covariance(
     const StochasticProcess &, Time t0, const Array &, Time dt) const {
     cache_key k = {t0, dt};
     boost::unordered_map<cache_key, Matrix>::iterator i = cache_v_.find(k);
@@ -223,7 +223,7 @@ Disposable<Matrix> XAssetStateProcess::ExactDiscretization::covariance(
     }
 }
 
-void XAssetStateProcess::ExactDiscretization::flushCache() const {
+void CrossAssetStateProcess::ExactDiscretization::flushCache() const {
     cache_m_.clear();
     cache_v_.clear();
     cache_d_.clear();

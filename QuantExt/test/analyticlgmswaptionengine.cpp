@@ -13,7 +13,6 @@
 #include <ql/indexes/swap/euriborswap.hpp>
 #include <ql/math/array.hpp>
 #include <ql/math/comparison.hpp>
-#include <ql/models/shortrate/onefactormodels/gsr.hpp>
 #include <ql/pricingengines/swaption/fdhullwhiteswaptionengine.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
 #include <ql/quotes/simplequote.hpp>
@@ -348,11 +347,11 @@ void AnalyticLgmSwaptionEngineTest::testAgainstOtherEngines() {
                 params.push_back(irlgm1f);
                 Matrix rho(1, 1);
                 rho[0][0] = 1.0;
-                const boost::shared_ptr<XAssetModel> xasset =
-                    boost::make_shared<XAssetModel>(params, rho);
+                const boost::shared_ptr<CrossAssetModel> crossasset =
+                    boost::make_shared<CrossAssetModel>(params, rho);
 
                 const boost::shared_ptr<QuantExt::Gaussian1dModel> g1d =
-                    boost::make_shared<Gaussian1dXAssetAdaptor>(0, xasset);
+                    boost::make_shared<Gaussian1dCrossAssetAdaptor>(0, crossasset);
 
                 const boost::shared_ptr<QuantExt::Gsr> gsr = boost::make_shared<QuantExt::Gsr>(
                     discountingCurve, dates, sigma_v, kappa_v);
@@ -534,16 +533,16 @@ void AnalyticLgmSwaptionEngineTest::testLgmInvariances() {
             irlgm1fc->shift() = shift[i];
             irlgm1fc->scaling() = scaling[j];
 
-            const boost::shared_ptr<Lgm> lgm0 =
-                boost::make_shared<Lgm>(irlgm1f0);
-            const boost::shared_ptr<Lgm> lgma =
-                boost::make_shared<Lgm>(irlgm1fa);
-            const boost::shared_ptr<Lgm> lgmb =
-                boost::make_shared<Lgm>(irlgm1fb);
-            const boost::shared_ptr<Lgm> lgm0c =
-                boost::make_shared<Lgm>(irlgm1f0c);
-            const boost::shared_ptr<Lgm> lgmc =
-                boost::make_shared<Lgm>(irlgm1fc);
+            const boost::shared_ptr<LinearGaussMarkovModel> lgm0 =
+                boost::make_shared<LinearGaussMarkovModel>(irlgm1f0);
+            const boost::shared_ptr<LinearGaussMarkovModel> lgma =
+                boost::make_shared<LinearGaussMarkovModel>(irlgm1fa);
+            const boost::shared_ptr<LinearGaussMarkovModel> lgmb =
+                boost::make_shared<LinearGaussMarkovModel>(irlgm1fb);
+            const boost::shared_ptr<LinearGaussMarkovModel> lgm0c =
+                boost::make_shared<LinearGaussMarkovModel>(irlgm1f0c);
+            const boost::shared_ptr<LinearGaussMarkovModel> lgmc =
+                boost::make_shared<LinearGaussMarkovModel>(irlgm1fc);
 
             boost::shared_ptr<PricingEngine> engine0 =
                 boost::make_shared<AnalyticLgmSwaptionEngine>(irlgm1f0);

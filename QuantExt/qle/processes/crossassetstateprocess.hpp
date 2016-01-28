@@ -4,12 +4,12 @@
  Copyright (C) 2016 Quaternion Risk Management Ltd.
 */
 
-/*! \file xassetstateprocess.hpp
-    \brief xasset model state process
+/*! \file crossassetstateprocess.hpp
+    \brief crossasset model state process
 */
 
-#ifndef quantext_xasset_stateprocess_hpp
-#define quantext_xasset_stateprocess_hpp
+#ifndef quantext_crossasset_stateprocess_hpp
+#define quantext_crossasset_stateprocess_hpp
 
 #include <ql/stochasticprocess.hpp>
 #include <ql/math/matrixutilities/pseudosqrt.hpp>
@@ -20,14 +20,14 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-class XAssetModel;
+class CrossAssetModel;
 
-class XAssetStateProcess : public StochasticProcess {
+class CrossAssetStateProcess : public StochasticProcess {
   public:
     enum discretization { exact, euler };
 
-    XAssetStateProcess(
-        const XAssetModel *const model, discretization disc,
+    CrossAssetStateProcess(
+        const CrossAssetModel *const model, discretization disc,
         SalvagingAlgorithm::Type salvaging = SalvagingAlgorithm::Spectral);
 
     /*! StochasticProcess interface */
@@ -40,13 +40,13 @@ class XAssetStateProcess : public StochasticProcess {
     void flushCache() const;
 
   private:
-    const XAssetModel *const model_;
+    const CrossAssetModel *const model_;
     SalvagingAlgorithm::Type salvaging_;
 
     class ExactDiscretization : public StochasticProcess::discretization {
       public:
         ExactDiscretization(
-            const XAssetModel *const model,
+            const CrossAssetModel *const model,
             SalvagingAlgorithm::Type salvaging = SalvagingAlgorithm::Spectral);
         virtual Disposable<Array> drift(const StochasticProcess &, Time t0,
                                         const Array &x0, Time dt) const;
@@ -58,7 +58,7 @@ class XAssetStateProcess : public StochasticProcess {
         void flushCache() const;
 
       private:
-        const XAssetModel *const model_;
+        const CrossAssetModel *const model_;
         SalvagingAlgorithm::Type salvaging_;
 
         // cache for exact discretization

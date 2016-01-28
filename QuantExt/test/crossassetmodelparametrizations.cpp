@@ -4,7 +4,7 @@
  Copyright (C) 2016 Quaternion Risk Management Ltd.
 */
 
-#include "xassetmodelparametrizations.hpp"
+#include "crossassetmodelparametrizations.hpp"
 
 #include <qle/models/all.hpp>
 #include <ql/currencies/america.hpp>
@@ -50,10 +50,10 @@ void check2(std::string s, const Real x, const Real y, const Real e,
 
 } // anonymous namespace
 
-void XAssetModelParametrizationsTest::testParametrizationBaseClasses() {
+void CrossAssetModelParametrizationsTest::testParametrizationBaseClasses() {
 
     BOOST_TEST_MESSAGE(
-        "Testing XAssetModel parametrizations (base classes)...");
+        "Testing CrossAssetModel parametrizations (base classes)...");
 
     // base class
 
@@ -236,9 +236,9 @@ void XAssetModelParametrizationsTest::testParametrizationBaseClasses() {
           std::exp(-0.5 - 1.0));
 }
 
-void XAssetModelParametrizationsTest::testIrLgm1fParametrizations() {
+void CrossAssetModelParametrizationsTest::testIrLgm1fParametrizations() {
 
-    BOOST_TEST_MESSAGE("Testing XAssetModel parametrizations (irlgm1f)...");
+    BOOST_TEST_MESSAGE("Testing CrossAssetModel parametrizations (irlgm1f)...");
 
     // test generic inspectors of irlgm1f parametrization
 
@@ -457,9 +457,9 @@ void XAssetModelParametrizationsTest::testIrLgm1fParametrizations() {
     }
 }
 
-void XAssetModelParametrizationsTest::testFxBsParametrizations() {
+void CrossAssetModelParametrizationsTest::testFxBsParametrizations() {
 
-    BOOST_TEST_MESSAGE("Testing XAssetModel parametrizations (fxbs)...");
+    BOOST_TEST_MESSAGE("Testing CrossAssetModel parametrizations (fxbs)...");
 
     FxBsConstantParametrization fxbs_0(USDCurrency(), Handle<Quote>(boost::make_shared<SimpleQuote>(1.10)), 0.10);
 
@@ -527,13 +527,13 @@ void XAssetModelParametrizationsTest::testFxBsParametrizations() {
     check("fxb2_1.sigma", 5.0, fxbs_1.sigma(5.0), 0.15);
 }
 
-test_suite *XAssetModelParametrizationsTest::suite() {
-    test_suite *suite = BOOST_TEST_SUITE("XAsset model parametrizations tests");
+test_suite *CrossAssetModelParametrizationsTest::suite() {
+    test_suite *suite = BOOST_TEST_SUITE("CrossAsset model parametrizations tests");
     suite->add(QUANTLIB_TEST_CASE(
-        &XAssetModelParametrizationsTest::testParametrizationBaseClasses));
+        &CrossAssetModelParametrizationsTest::testParametrizationBaseClasses));
     suite->add(QUANTLIB_TEST_CASE(
-        &XAssetModelParametrizationsTest::testIrLgm1fParametrizations));
+        &CrossAssetModelParametrizationsTest::testIrLgm1fParametrizations));
     suite->add(QUANTLIB_TEST_CASE(
-        &XAssetModelParametrizationsTest::testFxBsParametrizations));
+        &CrossAssetModelParametrizationsTest::testFxBsParametrizations));
     return suite;
 }

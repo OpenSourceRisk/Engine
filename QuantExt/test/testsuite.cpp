@@ -36,9 +36,9 @@ using boost::unit_test::test_suite;
 #include "dynamicswaptionvolmatrix.hpp"
 #include "index.hpp"
 #include "logquote.hpp"
-#include "xassetmodel.hpp"
-#include "xassetmodel2.hpp"
-#include "xassetmodelparametrizations.hpp"
+#include "crossassetmodel.hpp"
+#include "crossassetmodel2.hpp"
+#include "crossassetmodelparametrizations.hpp"
 
 namespace {
 
@@ -76,9 +76,9 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(CurrencyTest::suite());
     test->add(IndexTest::suite());
     test->add(LogQuoteTest::suite());
-    test->add(XAssetModelTest::suite());
-    test->add(XAssetModelTest2::suite());
-    test->add(XAssetModelParametrizationsTest::suite());
+    test->add(CrossAssetModelTest::suite());
+    test->add(CrossAssetModelTest2::suite());
+    test->add(CrossAssetModelParametrizationsTest::suite());
 
     test->add(BOOST_TEST_CASE(stopTimer));
 

@@ -22,12 +22,12 @@ using namespace QuantLib;
 namespace QuantExt {
 
 /*! LGM 1f interest rate model
-    Basically the same remarks as for XAssetModel hold */
+    Basically the same remarks as for CrossAssetModel hold */
 
-class Lgm : public LinkableCalibratedModel {
+class LinearGaussMarkovModel : public LinkableCalibratedModel {
 
   public:
-    Lgm(const boost::shared_ptr<IrLgm1fParametrization> &parametrization);
+    LinearGaussMarkovModel(const boost::shared_ptr<IrLgm1fParametrization> &parametrization);
 
     const boost::shared_ptr<StochasticProcess1D> stateProcess() const;
     const boost::shared_ptr<IrLgm1fParametrization> parametrization() const;
@@ -91,30 +91,30 @@ class Lgm : public LinkableCalibratedModel {
 
 // inline
 
-inline void Lgm::update() {
+inline void LinearGaussMarkovModel::update() {
     parametrization_->update();
     notifyObservers();
 }
 
-inline void Lgm::generateArguments() { update(); }
+inline void LinearGaussMarkovModel::generateArguments() { update(); }
 
-inline const boost::shared_ptr<StochasticProcess1D> Lgm::stateProcess() const {
+inline const boost::shared_ptr<StochasticProcess1D> LinearGaussMarkovModel::stateProcess() const {
     return stateProcess_;
 }
 
 inline const boost::shared_ptr<IrLgm1fParametrization>
-Lgm::parametrization() const {
+LinearGaussMarkovModel::parametrization() const {
     return parametrization_;
 }
 
-inline Real Lgm::numeraire(const Time t, const Real x) const {
+inline Real LinearGaussMarkovModel::numeraire(const Time t, const Real x) const {
     QL_REQUIRE(t >= 0.0, "t (" << t << ") >= 0 required in LGM::numeraire");
     Real Ht = parametrization_->H(t);
     return std::exp(Ht * x + 0.5 * Ht * Ht * parametrization_->zeta(t)) /
            parametrization_->termStructure()->discount(t);
 }
 
-inline Real Lgm::discountBond(const Time t, const Time T, const Real x) const {
+inline Real LinearGaussMarkovModel::discountBond(const Time t, const Time T, const Real x) const {
     QL_REQUIRE(T >= t && t >= 0.0,
                "T(" << T << ") >= t(" << t
                     << ") >= 0 required in LGM::discountBond");
@@ -126,7 +126,7 @@ inline Real Lgm::discountBond(const Time t, const Time T, const Real x) const {
                     0.5 * (HT * HT - Ht * Ht) * parametrization_->zeta(t));
 }
 
-inline Real Lgm::reducedDiscountBond(const Time t, const Time T,
+inline Real LinearGaussMarkovModel::reducedDiscountBond(const Time t, const Time T,
                                      const Real x) const {
     QL_REQUIRE(T >= t && t >= 0.0,
                "T(" << T << ") >= t(" << t
@@ -136,7 +136,7 @@ inline Real Lgm::reducedDiscountBond(const Time t, const Time T,
            std::exp(-HT * x - 0.5 * HT * HT * parametrization_->zeta(t));
 }
 
-inline Real Lgm::discountBondOption(Option::Type type, const Real K,
+inline Real LinearGaussMarkovModel::discountBondOption(Option::Type type, const Real K,
                                     const Time t, const Time S,
                                     const Time T) const {
     QL_REQUIRE(T > S && S >= t && t >= 0.0,
@@ -156,7 +156,7 @@ inline Real Lgm::discountBondOption(Option::Type type, const Real K,
     return w * (pT * N(w * dp) - pS * K * N(w * dm));
 }
 
-inline void Lgm::calibrateVolatilitiesIterative(
+inline void LinearGaussMarkovModel::calibrateVolatilitiesIterative(
     const std::vector<boost::shared_ptr<CalibrationHelper> > &helpers,
     OptimizationMethod &method, const EndCriteria &endCriteria,
     const Constraint &constraint, const std::vector<Real> &weights) {
@@ -167,7 +167,7 @@ inline void Lgm::calibrateVolatilitiesIterative(
     }
 }
 
-inline void Lgm::calibrateReversionsIterative(
+inline void LinearGaussMarkovModel::calibrateReversionsIterative(
     const std::vector<boost::shared_ptr<CalibrationHelper> > &helpers,
     OptimizationMethod &method, const EndCriteria &endCriteria,
     const Constraint &constraint, const std::vector<Real> &weights) {

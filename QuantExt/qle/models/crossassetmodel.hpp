@@ -4,17 +4,17 @@
  Copyright (C) 2016 Quaternion Risk Management Ltd.
 */
 
-/*! \file xassetmodel.hpp
+/*! \file crossassetmodel.hpp
     \brief cross asset model
 */
 
-#ifndef quantext_xasset_model_hpp
-#define quantext_xasset_model_hpp
+#ifndef quantext_crossasset_model_hpp
+#define quantext_crossasset_model_hpp
 
 #include <qle/models/fxbsparametrization.hpp>
 #include <qle/models/lgm.hpp>
 #include <qle/models/model.hpp>
-#include <qle/processes/xassetstateprocess.hpp>
+#include <qle/processes/crossassetstateprocess.hpp>
 #include <ql/math/matrix.hpp>
 #include <ql/math/distributions/normaldistribution.hpp>
 #include <ql/math/integrals/integral.hpp>
@@ -37,7 +37,7 @@ namespace QuantExt {
 
     - provide a calibrated parametrization for a component
       extracted from some external model
-    - do the calibration within the XAssetModel using one
+    - do the calibration within the CrossAssetModel using one
       of the calibration procedures
 
     The inter-parametrization correlation matrix specified here can not be
@@ -53,7 +53,7 @@ namespace QuantExt {
     calibration though.
 */
 
-class XAssetModel : public LinkableCalibratedModel {
+class CrossAssetModel : public LinkableCalibratedModel {
   public:
     /*! Parametrizations must be given in the following order
         - IR (first parametrization defines the domestic currency)
@@ -61,13 +61,13 @@ class XAssetModel : public LinkableCalibratedModel {
         - INF (optionally, ccy must be a subset of the IR ccys)
         - CRD (optionally, ccy must be a subset of the IR ccys)
         - COM (optionally) ccy must be a subset of the IR ccys) */
-    XAssetModel(const std::vector<boost::shared_ptr<Parametrization> >
+    CrossAssetModel(const std::vector<boost::shared_ptr<Parametrization> >
                     &parametrizations,
                 const Matrix &correlation,
                 SalvagingAlgorithm::Type salvaging = SalvagingAlgorithm::None);
 
     /*! IR-FX model based constructor */
-    XAssetModel(const std::vector<boost::shared_ptr<Lgm> > &currencyModels,
+    CrossAssetModel(const std::vector<boost::shared_ptr<LinearGaussMarkovModel> > &currencyModels,
                 const std::vector<boost::shared_ptr<FxBsParametrization> >
                     &fxParametrizations,
                 const Matrix &correlation,
@@ -75,8 +75,8 @@ class XAssetModel : public LinkableCalibratedModel {
 
     /*! returns the state process with a given discretization */
     const boost::shared_ptr<StochasticProcess>
-    stateProcess(XAssetStateProcess::discretization disc =
-                     XAssetStateProcess::exact) const;
+    stateProcess(CrossAssetStateProcess::discretization disc =
+                     CrossAssetStateProcess::exact) const;
 
     /*! total dimension of model */
     Size dimension() const;
@@ -92,7 +92,7 @@ class XAssetModel : public LinkableCalibratedModel {
     void generateArguments();
 
     /*! LGM1F components, ccy=0 refers to the domestic currency */
-    const boost::shared_ptr<Lgm> lgm(const Size ccy) const;
+    const boost::shared_ptr<LinearGaussMarkovModel> lgm(const Size ccy) const;
 
     const boost::shared_ptr<IrLgm1fParametrization>
     irlgm1f(const Size ccy) const;
@@ -183,11 +183,11 @@ class XAssetModel : public LinkableCalibratedModel {
     Size nIrLgm1f_, nFxBs_;
     Size totalNumberOfParameters_;
     std::vector<boost::shared_ptr<Parametrization> > p_;
-    std::vector<boost::shared_ptr<Lgm> > lgm_;
+    std::vector<boost::shared_ptr<LinearGaussMarkovModel> > lgm_;
     const Matrix rho_;
     SalvagingAlgorithm::Type salvaging_;
     mutable boost::shared_ptr<Integrator> integrator_;
-    boost::shared_ptr<XAssetStateProcess> stateProcessExact_,
+    boost::shared_ptr<CrossAssetStateProcess> stateProcessExact_,
         stateProcessEuler_;
 
     /* calibration constraints */
@@ -219,22 +219,22 @@ class XAssetModel : public LinkableCalibratedModel {
 // inline
 
 inline const boost::shared_ptr<StochasticProcess>
-XAssetModel::stateProcess(XAssetStateProcess::discretization disc) const {
-    return disc == XAssetStateProcess::exact ? stateProcessExact_
+CrossAssetModel::stateProcess(CrossAssetStateProcess::discretization disc) const {
+    return disc == CrossAssetStateProcess::exact ? stateProcessExact_
                                              : stateProcessEuler_;
 }
 
-inline Size XAssetModel::dimension() const {
+inline Size CrossAssetModel::dimension() const {
     return nIrLgm1f_ * 1 + nFxBs_ * 1;
 }
 
-inline Size XAssetModel::currencies() const { return nIrLgm1f_; }
+inline Size CrossAssetModel::currencies() const { return nIrLgm1f_; }
 
-inline Size XAssetModel::totalNumberOfParameters() const {
+inline Size CrossAssetModel::totalNumberOfParameters() const {
     return totalNumberOfParameters_;
 }
 
-inline void XAssetModel::update() {
+inline void CrossAssetModel::update() {
     for (Size i = 0; i < p_.size(); ++i) {
         p_[i]->update();
     }
@@ -243,51 +243,51 @@ inline void XAssetModel::update() {
     notifyObservers();
 }
 
-inline void XAssetModel::generateArguments() { update(); }
+inline void CrossAssetModel::generateArguments() { update(); }
 
-inline const boost::shared_ptr<Lgm> XAssetModel::lgm(const Size ccy) const {
+inline const boost::shared_ptr<LinearGaussMarkovModel> CrossAssetModel::lgm(const Size ccy) const {
     QL_REQUIRE(ccy < nIrLgm1f_, "irlgm1f index (" << ccy << ") must be in 0..."
                                                   << (nIrLgm1f_ - 1));
     return lgm_[ccy];
 }
 
 inline const boost::shared_ptr<IrLgm1fParametrization>
-XAssetModel::irlgm1f(const Size ccy) const {
+CrossAssetModel::irlgm1f(const Size ccy) const {
     return lgm(ccy)->parametrization();
 }
 
-inline Real XAssetModel::numeraire(const Size ccy, const Time t,
+inline Real CrossAssetModel::numeraire(const Size ccy, const Time t,
                                    const Real x) const {
     return lgm(ccy)->numeraire(t, x);
 }
 
-inline Real XAssetModel::discountBond(const Size ccy, const Time t,
+inline Real CrossAssetModel::discountBond(const Size ccy, const Time t,
                                       const Time T, const Real x) const {
     return lgm(ccy)->discountBond(t, T, x);
 }
 
-inline Real XAssetModel::reducedDiscountBond(const Size ccy, const Time t,
+inline Real CrossAssetModel::reducedDiscountBond(const Size ccy, const Time t,
                                       const Time T, const Real x) const {
     return lgm(ccy)->reducedDiscountBond(t, T, x);
 }
 
-inline Real XAssetModel::discountBondOption(const Size ccy, Option::Type type,
+inline Real CrossAssetModel::discountBondOption(const Size ccy, Option::Type type,
                                      const Real K, const Time t, const Time S,
                                      const Time T) const {
     return lgm(ccy)->discountBondOption(type, K, t, S, T);
 }
 
 inline const boost::shared_ptr<FxBsParametrization>
-XAssetModel::fxbs(const Size ccy) const {
+CrossAssetModel::fxbs(const Size ccy) const {
     QL_REQUIRE(ccy < nFxBs_, "fxbs index (" << ccy << ") must be in 0..."
                                             << (nFxBs_ - 1));
     return boost::dynamic_pointer_cast<FxBsParametrization>(
         p_[nIrLgm1f_ + ccy]);
 }
 
-inline const Matrix &XAssetModel::correlation() const { return rho_; }
+inline const Matrix &CrossAssetModel::correlation() const { return rho_; }
 
-inline Real XAssetModel::ir_ir_correlation(const Size i, const Size j) const {
+inline Real CrossAssetModel::ir_ir_correlation(const Size i, const Size j) const {
     QL_REQUIRE(i < nIrLgm1f_, "irlgm1f index (" << i << ") must be in 0..."
                                                 << (nIrLgm1f_ - 1));
     QL_REQUIRE(j < nIrLgm1f_, "irlgm1f index (" << i << ") must be in 0..."
@@ -295,7 +295,7 @@ inline Real XAssetModel::ir_ir_correlation(const Size i, const Size j) const {
     return rho_[i][j];
 }
 
-inline Real XAssetModel::ir_fx_correlation(const Size i, const Size j) const {
+inline Real CrossAssetModel::ir_fx_correlation(const Size i, const Size j) const {
     QL_REQUIRE(i < nIrLgm1f_, "irlgm1f index (" << i << ") must be in 0..."
                                                 << (nIrLgm1f_ - 1));
     QL_REQUIRE(j < nFxBs_, "fxbs index (" << j << ") must be in 0..."
@@ -303,7 +303,7 @@ inline Real XAssetModel::ir_fx_correlation(const Size i, const Size j) const {
     return rho_[i][nIrLgm1f_ + j];
 }
 
-inline Real XAssetModel::fx_fx_correlation(const Size i, const Size j) const {
+inline Real CrossAssetModel::fx_fx_correlation(const Size i, const Size j) const {
     QL_REQUIRE(i < nFxBs_, "fxbs index (" << i << ") must be in 0..."
                                           << (nFxBs_ - 1));
     QL_REQUIRE(j < nFxBs_, "fxbs index (" << j << ") must be in 0..."
@@ -311,7 +311,7 @@ inline Real XAssetModel::fx_fx_correlation(const Size i, const Size j) const {
     return rho_[nIrLgm1f_ + i][nIrLgm1f_ + j];
 }
 
-inline const boost::shared_ptr<Integrator> XAssetModel::integrator() const {
+inline const boost::shared_ptr<Integrator> CrossAssetModel::integrator() const {
     return integrator_;
 }
 

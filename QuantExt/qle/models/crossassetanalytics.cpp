@@ -4,13 +4,13 @@
  Copyright (C) 2016 Quaternion Risk Mangament
 */
 
-#include <qle/models/xassetanalytics.hpp>
+#include <qle/models/crossassetanalytics.hpp>
 
 namespace QuantExt {
 
-namespace XAssetAnalytics {
+namespace CrossAssetAnalytics {
 
-Real ir_expectation_1(const XAssetModel *x, const Size i, const Time t0,
+Real ir_expectation_1(const CrossAssetModel *x, const Size i, const Time t0,
                       const Real dt) {
     Real res = 0.0;
     if (i > 0) {
@@ -21,11 +21,11 @@ Real ir_expectation_1(const XAssetModel *x, const Size i, const Time t0,
     return res;
 }
 
-Real ir_expectation_2(const XAssetModel *, const Size, const Real zi_0) {
+Real ir_expectation_2(const CrossAssetModel *, const Size, const Real zi_0) {
     return zi_0;
 }
 
-Real fx_expectation_1(const XAssetModel *x, const Size i, const Time t0,
+Real fx_expectation_1(const CrossAssetModel *x, const Size i, const Time t0,
                       const Real dt) {
     Real H0_a = Hz(0).eval(x, t0);
     Real Hi_a = Hz(i + 1).eval(x, t0);
@@ -60,7 +60,7 @@ Real fx_expectation_1(const XAssetModel *x, const Size i, const Time t0,
     return res;
 }
 
-Real fx_expectation_2(const XAssetModel *x, const Size i, const Time t0,
+Real fx_expectation_2(const CrossAssetModel *x, const Size i, const Time t0,
                       const Real xi_0, const Real zi_0, const Real z0_0,
                       const Real dt) {
     Real res = xi_0 + (Hz(0).eval(x, t0 + dt) - Hz(0).eval(x, t0)) * z0_0 -
@@ -68,13 +68,13 @@ Real fx_expectation_2(const XAssetModel *x, const Size i, const Time t0,
     return res;
 }
 
-Real ir_ir_covariance(const XAssetModel *x, const Size i, const Size j,
+Real ir_ir_covariance(const CrossAssetModel *x, const Size i, const Size j,
                       const Time t0, Time dt) {
     Real res = integral(x, P(az(i), az(j), rzz(i, j)), t0, t0 + dt);
     return res;
 }
 
-Real ir_fx_covariance(const XAssetModel *x, const Size i, const Size j,
+Real ir_fx_covariance(const CrossAssetModel *x, const Size i, const Size j,
                       const Time t0, Time dt) {
     Real res =
         Hz(0).eval(x, t0 + dt) *
@@ -88,7 +88,7 @@ Real ir_fx_covariance(const XAssetModel *x, const Size i, const Size j,
     return res;
 }
 
-Real fx_fx_covariance(const XAssetModel *x, const Size i, const Size j,
+Real fx_fx_covariance(const CrossAssetModel *x, const Size i, const Size j,
                       const Time t0, Time dt) {
     Real H0 = Hz(0).eval(x, t0 + dt);
     Real Hi = Hz(i + 1).eval(x, t0 + dt);
@@ -143,5 +143,5 @@ Real fx_fx_covariance(const XAssetModel *x, const Size i, const Size j,
     return res;
 }
 
-} // namesapce xassetanalytics
+} // namesapce crossassetanalytics
 } // namespace QuantExt

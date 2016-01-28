@@ -4,7 +4,7 @@
  Copyright (C) 2016 Quaternion Risk Management Ltd.
 */
 
-#include "xassetmodel2.hpp"
+#include "crossassetmodel2.hpp"
 
 #include <qle/methods/multipathgenerator.hpp>
 #include <qle/models/all.hpp>
@@ -14,14 +14,11 @@
 #include <ql/indexes/ibor/euribor.hpp>
 #include <ql/instruments/vanillaoption.hpp>
 #include <ql/math/matrixutilities/symmetricschurdecomposition.hpp>
-#include <ql/models/shortrate/onefactormodels/gsr.hpp>
-#include <ql/models/shortrate/calibrationhelpers/swaptionhelper.hpp>
 #include <ql/math/statistics/incrementalstatistics.hpp>
 #include <ql/math/optimization/levenbergmarquardt.hpp>
 #include <ql/math/randomnumbers/rngtraits.hpp>
 #include <ql/methods/montecarlo/multipathgenerator.hpp>
 #include <ql/methods/montecarlo/pathgenerator.hpp>
-#include <ql/pricingengines/swaption/gaussian1dswaptionengine.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actual360.hpp>
@@ -838,10 +835,10 @@ struct Lgm31fTestData {
         parametrizations.push_back(tmpFx);
 
         // =========================================
-        // XAsset model
+        // CrossAsset model
         // =========================================
 
-        xmodel = boost::make_shared<XAssetModel>(parametrizations, rho,
+        xmodel = boost::make_shared<CrossAssetModel>(parametrizations, rho,
                                                  SalvagingAlgorithm::None);
     }
 
@@ -852,12 +849,12 @@ struct Lgm31fTestData {
     Matrix rho;
     Handle<YieldTermStructure> yts;
     std::vector<boost::shared_ptr<Parametrization> > parametrizations;
-    boost::shared_ptr<XAssetModel> xmodel;
+    boost::shared_ptr<CrossAssetModel> xmodel;
 };
 
 } // namespace detail
 
-void XAssetModelTest2::testLgm31fPositiveCovariance() {
+void CrossAssetModelTest2::testLgm31fPositiveCovariance() {
 
     BOOST_TEST_MESSAGE("Testing for positive semidefinite covariance matrices "
                        "in Ccy LGM 31F model...");
@@ -899,9 +896,9 @@ void XAssetModelTest2::testLgm31fPositiveCovariance() {
     }
 
     boost::shared_ptr<StochasticProcess> p_exact =
-        d.xmodel->stateProcess(XAssetStateProcess::exact);
+        d.xmodel->stateProcess(CrossAssetStateProcess::exact);
     boost::shared_ptr<StochasticProcess> p_euler =
-        d.xmodel->stateProcess(XAssetStateProcess::euler);
+        d.xmodel->stateProcess(CrossAssetStateProcess::euler);
 
     // check that covariance matrices are positive semidefinite
 
@@ -934,7 +931,7 @@ void XAssetModelTest2::testLgm31fPositiveCovariance() {
 
 } // testLgm31fPositiveCovariance
 
-void XAssetModelTest2::testLgm31fMoments() {
+void CrossAssetModelTest2::testLgm31fMoments() {
 
     BOOST_TEST_MESSAGE("Check analytical moments against Euler simulation in "
                        "Ccy LGM 31F model...");
@@ -942,9 +939,9 @@ void XAssetModelTest2::testLgm31fMoments() {
     Lgm31fTestData d;
 
     boost::shared_ptr<StochasticProcess> p_exact =
-        d.xmodel->stateProcess(XAssetStateProcess::exact);
+        d.xmodel->stateProcess(CrossAssetStateProcess::exact);
     boost::shared_ptr<StochasticProcess> p_euler =
-        d.xmodel->stateProcess(XAssetStateProcess::euler);
+        d.xmodel->stateProcess(CrossAssetStateProcess::euler);
 
     Array x0 = p_exact->initialValues();
 
@@ -1066,16 +1063,16 @@ void XAssetModelTest2::testLgm31fMoments() {
 
 } // testLgm31fMoments
 
-void XAssetModelTest2::testLgm31fMartingaleProperty() {
+void CrossAssetModelTest2::testLgm31fMartingaleProperty() {
 
     BOOST_TEST_MESSAGE("Check martingale property in Ccy LGM 31F model...");
 
     Lgm31fTestData d;
 
     boost::shared_ptr<StochasticProcess> p_exact =
-        d.xmodel->stateProcess(XAssetStateProcess::exact);
+        d.xmodel->stateProcess(CrossAssetStateProcess::exact);
     boost::shared_ptr<StochasticProcess> p_euler =
-        d.xmodel->stateProcess(XAssetStateProcess::euler);
+        d.xmodel->stateProcess(CrossAssetStateProcess::euler);
 
     Real T = 10.0;
     Size steps = T * 10.0;
@@ -1132,12 +1129,12 @@ void XAssetModelTest2::testLgm31fMartingaleProperty() {
 
 } // testLgm13fMartingaleProperty
 
-test_suite *XAssetModelTest2::suite() {
-    test_suite *suite = BOOST_TEST_SUITE("XAsset model tests 2");
+test_suite *CrossAssetModelTest2::suite() {
+    test_suite *suite = BOOST_TEST_SUITE("CrossAsset model tests 2");
     suite->add(
-        QUANTLIB_TEST_CASE(&XAssetModelTest2::testLgm31fPositiveCovariance));
-    suite->add(QUANTLIB_TEST_CASE(&XAssetModelTest2::testLgm31fMoments));
+        QUANTLIB_TEST_CASE(&CrossAssetModelTest2::testLgm31fPositiveCovariance));
+    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest2::testLgm31fMoments));
     suite->add(
-        QUANTLIB_TEST_CASE(&XAssetModelTest2::testLgm31fMartingaleProperty));
+        QUANTLIB_TEST_CASE(&CrossAssetModelTest2::testLgm31fMartingaleProperty));
     return suite;
 }
