@@ -1,0 +1,4 @@
+[submodule "QuantLib"]
+	path = QuantLib
+	url = git@codebasehq.com:qrm/openxva/quantlib.git
+	branch = v1.8.x.beta
