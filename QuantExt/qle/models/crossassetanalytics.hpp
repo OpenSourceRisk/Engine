@@ -48,7 +48,7 @@ Real ir_fx_covariance(const CrossAssetModel *model, const Size i, const Size j,
 Real fx_fx_covariance(const CrossAssetModel *model, const Size i, const Size j,
                       const Time t0, Time dt);
 
-/*! components to build the ingrand */
+/*! components to build the integrand */
 
 struct Hz {
     Hz(const Size i) : i_(i) {}
