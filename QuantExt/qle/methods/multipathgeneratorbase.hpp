@@ -61,7 +61,7 @@ namespace QuantExt {
     
     // inline
     
-    const Sample<MultiPath> &MultiPathGeneratorPseudoRandom::next() const {
+    inline const Sample<MultiPath> &MultiPathGeneratorPseudoRandom::next() const {
         if (antitheticSampling_) {
             antitheticVariate_ = !antitheticVariate_;
             return antitheticVariate_ ? pg_->antithetic() : pg_->next();
@@ -70,7 +70,7 @@ namespace QuantExt {
         }
     }
     
-    const Sample<MultiPath> &MultiPathGeneratorLowDiscrepancy::next() const {
+    inline const Sample<MultiPath> &MultiPathGeneratorLowDiscrepancy::next() const {
         return pg_->next();
     }
     
