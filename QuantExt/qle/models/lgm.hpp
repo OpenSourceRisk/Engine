@@ -89,6 +89,8 @@ class LinearGaussMarkovModel : public LinkableCalibratedModel {
     boost::shared_ptr<StochasticProcess1D> stateProcess_;
 };
 
+typedef LinearGaussMarkovModel LGM;
+
 // inline
 
 inline void LinearGaussMarkovModel::update() {

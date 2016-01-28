@@ -26,12 +26,12 @@ class Gaussian1dCrossAssetAdaptor : public Gaussian1dModel {
 
   private:
     /*! Gaussian1dModel interface */
-    Real numeraireImpl(const Time t, const Real y,
+    const Real numeraireImpl(const Time t, const Real y,
                              const Handle<YieldTermStructure> &yts) const;
-    Real zerobondImpl(const Time T, const Time t, const Real y,
+    const Real zerobondImpl(const Time T, const Time t, const Real y,
                             const Handle<YieldTermStructure> &yts,
                             const bool adjusted) const;
-    Real
+    const Real
     deflatedZerobondImpl(const Time T, const Time t, const Real y,
                          const Handle<YieldTermStructure> &yts,
                          const Handle<YieldTermStructure> &ytsNumeraire,
@@ -48,7 +48,7 @@ class Gaussian1dCrossAssetAdaptor : public Gaussian1dModel {
 
 // inline
 
-inline Real Gaussian1dCrossAssetAdaptor::numeraireImpl(
+inline const Real Gaussian1dCrossAssetAdaptor::numeraireImpl(
     const Time t, const Real y, const Handle<YieldTermStructure> &yts) const {
     Real d = yts.empty() ? 1.0
                          : x_->parametrization()->termStructure()->discount(t) /
@@ -57,7 +57,7 @@ inline Real Gaussian1dCrossAssetAdaptor::numeraireImpl(
     return d * x_->numeraire(t, x);
 }
 
-inline Real
+inline const Real
 Gaussian1dCrossAssetAdaptor::zerobondImpl(const Time T, const Time t, const Real y,
                                       const Handle<YieldTermStructure> &yts,
                                       const bool) const {
@@ -70,7 +70,7 @@ Gaussian1dCrossAssetAdaptor::zerobondImpl(const Time T, const Time t, const Real
     return d * x_->discountBond(t, T, x);
 }
 
-inline Real
+inline const Real
 Gaussian1dCrossAssetAdaptor::deflatedZerobondImpl(const Time T, const Time t, const Real y,
                      const Handle<YieldTermStructure> &yts,
                      const Handle<YieldTermStructure> &,

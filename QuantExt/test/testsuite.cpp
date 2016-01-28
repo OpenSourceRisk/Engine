@@ -30,15 +30,15 @@ using boost::unit_test::test_suite;
 
 // Lib test suites
 #include "analyticlgmswaptionengine.hpp"
+#include "crossassetmodel.hpp"
+#include "crossassetmodel2.hpp"
+#include "crossassetmodelparametrizations.hpp"
 #include "currency.hpp"
 #include "discountcurve.hpp"
 #include "dynamicblackvoltermstructure.hpp"
 #include "dynamicswaptionvolmatrix.hpp"
 #include "index.hpp"
 #include "logquote.hpp"
-#include "crossassetmodel.hpp"
-#include "crossassetmodel2.hpp"
-#include "crossassetmodelparametrizations.hpp"
 
 namespace {
 
@@ -70,15 +70,15 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(BOOST_TEST_CASE(startTimer));
 
     test->add(AnalyticLgmSwaptionEngineTest::suite());
+    test->add(CrossAssetModelTest::suite());
+    test->add(CrossAssetModelTest2::suite());
+    test->add(CrossAssetModelParametrizationsTest::suite());
     test->add(DiscountCurveTest::suite());
     test->add(DynamicBlackVolTermStructureTest::suite());
     test->add(DynamicSwaptionVolMatrixTest::suite());
     test->add(CurrencyTest::suite());
     test->add(IndexTest::suite());
     test->add(LogQuoteTest::suite());
-    test->add(CrossAssetModelTest::suite());
-    test->add(CrossAssetModelTest2::suite());
-    test->add(CrossAssetModelParametrizationsTest::suite());
 
     test->add(BOOST_TEST_CASE(stopTimer));
 

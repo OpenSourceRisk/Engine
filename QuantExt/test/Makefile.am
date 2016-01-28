@@ -2,15 +2,15 @@
 QLE_TESTS = \
 	testsuite.cpp \
 	analyticlgmswaptionengine.hpp analyticlgmswaptionengine.cpp \
+	crossassetmodel.hpp crossassetmodel.cpp \
+	crossassetmodel2.hpp crossassetmodel2.cpp \
+	crossassetmodelparametrizations.hpp crossassetmodelparametrizations.cpp \
 	currency.hpp currency.cpp \
 	discountcurve.hpp discountcurve.cpp \
 	dynamicblackvoltermstructure.hpp dynamicblackvoltermstructure.cpp \
 	dynamicswaptionvolmatrix.hpp dynamicswaptionvolmatrix.cpp \
 	index.hpp index.cpp \
-	logquote.hpp logquote.cpp \
-	crossassetmodel.hpp crossassetmodel.cpp \
-	crossassetmodel2.hpp crossassetmodel2.cpp \
-	crossassetmodelparametrizations.hpp crossassetmodelparametrizations.cpp
+	logquote.hpp logquote.cpp
 
 dist-hook:
 	mkdir -p $(distdir)/build
