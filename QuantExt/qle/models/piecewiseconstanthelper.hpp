@@ -11,8 +11,9 @@
 #ifndef quantext_piecewiseconstant_helper_hpp
 #define quantext_piecewiseconstant_helper_hpp
 
-#include <qle/math/piecewisefunction.hpp>
 #include <qle/models/pseudoparameter.hpp>
+
+#include <ql/experimental/math/piecewisefunction.hpp>
 #include <ql/math/array.hpp>
 
 using namespace QuantLib;
