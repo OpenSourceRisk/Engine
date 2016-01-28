@@ -5,7 +5,8 @@
 */
 
 #include <qle/termstructures/dynamicswaptionvolmatrix.hpp>
-#include <qle/termstructures/flatsmilesection.hpp>
+
+#include <ql/termstructures/volatility/flatsmilesection.hpp>
 
 namespace QuantExt {
 

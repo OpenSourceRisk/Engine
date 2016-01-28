@@ -20,6 +20,9 @@
 #include <ql/math/randomnumbers/rngtraits.hpp>
 #include <ql/methods/montecarlo/multipathgenerator.hpp>
 #include <ql/methods/montecarlo/pathgenerator.hpp>
+#include <ql/models/shortrate/onefactormodels/gsr.hpp>
+#include <ql/models/shortrate/calibrationhelpers/swaptionhelper.hpp>
+#include <ql/pricingengines/swaption/gaussian1dswaptionengine.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actual360.hpp>
@@ -115,19 +118,19 @@ void CrossAssetModelTest::testBermudanLgm1fGsr() {
         EURCurrency(), d.yts, d.stepTimes_a, d.sigmas_a, d.kappas_a);
 
     // fix any T forward measure
-    boost::shared_ptr<QuantExt::Gsr> gsr = boost::make_shared<QuantExt::Gsr>(
+    boost::shared_ptr<Gsr> gsr = boost::make_shared<Gsr>(
         d.yts, d.stepDates, d.sigmas, d.reversion, 50.0);
 
     boost::shared_ptr<LinearGaussMarkovModel> lgm = boost::make_shared<LinearGaussMarkovModel>(lgm_p);
 
-    boost::shared_ptr<QuantExt::Gaussian1dModel> lgm_g1d =
+    boost::shared_ptr<Gaussian1dModel> lgm_g1d =
         boost::make_shared<Gaussian1dCrossAssetAdaptor>(lgm);
 
     boost::shared_ptr<PricingEngine> swaptionEngineGsr =
-        boost::make_shared<QuantExt::Gaussian1dSwaptionEngine>(gsr, 64, 7.0, true, false);
+        boost::make_shared<Gaussian1dSwaptionEngine>(gsr, 64, 7.0, true, false);
 
     boost::shared_ptr<PricingEngine> swaptionEngineLgm =
-        boost::make_shared<QuantExt::Gaussian1dSwaptionEngine>(lgm_g1d, 64, 7.0, true,
+        boost::make_shared<Gaussian1dSwaptionEngine>(lgm_g1d, 64, 7.0, true,
                                                      false);
 
     d.swaption->setPricingEngine(swaptionEngineGsr);
@@ -157,11 +160,11 @@ void CrossAssetModelTest::testBermudanLgmInvariances() {
 
     boost::shared_ptr<LinearGaussMarkovModel> lgm2 = boost::make_shared<LinearGaussMarkovModel>(lgm_p2);
 
-    boost::shared_ptr<QuantExt::Gaussian1dModel> lgm_g1d2 =
+    boost::shared_ptr<Gaussian1dModel> lgm_g1d2 =
         boost::make_shared<Gaussian1dCrossAssetAdaptor>(lgm2);
 
     boost::shared_ptr<PricingEngine> swaptionEngineLgm2 =
-        boost::make_shared<QuantExt::Gaussian1dSwaptionEngine>(lgm_g1d2, 64, 7.0, true, false);
+        boost::make_shared<Gaussian1dSwaptionEngine>(lgm_g1d2, 64, 7.0, true, false);
 
     d.swaption->setPricingEngine(swaptionEngineLgm2);
     Real npvLgm = d.swaption->NPV();
@@ -202,18 +205,18 @@ void CrossAssetModelTest::testLgm1fCalibration() {
 
     // coterminal basket 1y-9y, 2y-8y, ... 9y-1y
 
-    std::vector<boost::shared_ptr<QuantExt::CalibrationHelper> > basket;
+    std::vector<boost::shared_ptr<CalibrationHelper> > basket;
     Real impliedVols[] = {0.4, 0.39, 0.38, 0.35, 0.35, 0.34, 0.33, 0.32, 0.31};
     std::vector<Date> expiryDates;
 
     for (Size i = 0; i < 9; ++i) {
-        boost::shared_ptr<QuantExt::CalibrationHelper> helper =
-            boost::make_shared<QuantExt::SwaptionHelper>(
+        boost::shared_ptr<CalibrationHelper> helper =
+            boost::make_shared<SwaptionHelper>(
                 (i + 1) * Years, (9 - i) * Years,
                 Handle<Quote>(boost::make_shared<SimpleQuote>(impliedVols[i])),
                 euribor6m, 1 * Years, Thirty360(), Actual360(), yts);
         basket.push_back(helper);
-        expiryDates.push_back(boost::static_pointer_cast<QuantExt::SwaptionHelper>(helper)
+        expiryDates.push_back(boost::static_pointer_cast<SwaptionHelper>(helper)
                                   ->swaption()
                                   ->exercise()
                                   ->dates()
@@ -241,13 +244,13 @@ void CrossAssetModelTest::testLgm1fCalibration() {
             EURCurrency(), yts, stepTimes_a, lgmInitialSigmas2_a, kappas_a);
 
     // fix any T forward measure
-    boost::shared_ptr<QuantExt::Gsr> gsr =
-        boost::make_shared<QuantExt::Gsr>(yts, stepDates, gsrInitialSigmas, kappa, 50.0);
+    boost::shared_ptr<Gsr> gsr =
+        boost::make_shared<Gsr>(yts, stepDates, gsrInitialSigmas, kappa, 50.0);
 
     boost::shared_ptr<LinearGaussMarkovModel> lgm = boost::make_shared<LinearGaussMarkovModel>(lgm_p);
 
     boost::shared_ptr<PricingEngine> swaptionEngineGsr =
-        boost::make_shared<QuantExt::Gaussian1dSwaptionEngine>(gsr, 64, 7.0, true, false);
+        boost::make_shared<Gaussian1dSwaptionEngine>(gsr, 64, 7.0, true, false);
 
     boost::shared_ptr<PricingEngine> swaptionEngineLgm =
         boost::make_shared<AnalyticLgmSwaptionEngine>(lgm);
@@ -757,9 +760,9 @@ void CrossAssetModelTest::testLgm5fFxCalibration() {
 
     // while the initial fx vol starts at 0.2 for usd and 0.15 for gbp
     // we calibrate to helpers with 0.15 and 0.2 target implied vol
-    std::vector<boost::shared_ptr<QuantExt::CalibrationHelper> > helpersUsd, helpersGbp;
+    std::vector<boost::shared_ptr<CalibrationHelper> > helpersUsd, helpersGbp;
     for (Size i = 0; i <= d.volstepdatesFx.size(); ++i) {
-        boost::shared_ptr<QuantExt::CalibrationHelper> tmpUsd =
+        boost::shared_ptr<CalibrationHelper> tmpUsd =
             boost::make_shared<FxOptionHelper>(
                 i < d.volstepdatesFx.size() ? d.volstepdatesFx[i]
                                           : d.volstepdatesFx.back() + 365,
@@ -767,7 +770,7 @@ void CrossAssetModelTest::testLgm5fFxCalibration() {
                 Handle<Quote>(boost::make_shared<SimpleQuote>(0.15)),
                 d.ccLgm->irlgm1f(0)->termStructure(),
                 d.ccLgm->irlgm1f(1)->termStructure());
-        boost::shared_ptr<QuantExt::CalibrationHelper> tmpGbp =
+        boost::shared_ptr<CalibrationHelper> tmpGbp =
             boost::make_shared<FxOptionHelper>(
                 i < d.volstepdatesFx.size() ? d.volstepdatesFx[i]
                                           : d.volstepdatesFx.back() + 365,
@@ -993,7 +996,7 @@ void CrossAssetModelTest::testLgmGsrEquivalence() {
                 std::vector<Date> stepDates;
                 std::vector<Real> sigmas(1, sigma[j]);
 
-                boost::shared_ptr<QuantExt::Gsr> gsr = boost::make_shared<QuantExt::Gsr>(
+                boost::shared_ptr<Gsr> gsr = boost::make_shared<Gsr>(
                     yts, stepDates, sigmas, kappa[k], T[i]);
 
                 Array stepTimes_a(0);

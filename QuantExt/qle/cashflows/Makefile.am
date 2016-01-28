@@ -10,9 +10,6 @@ libCashflows_la_SOURCES = \
 	averageonindexedcoupon.cpp \
 	averageonindexedcouponpricer.cpp \
 	couponpricer.cpp \
-	cmsspreadcoupon.cpp \
-	lineartsrpricer.cpp \
-	lognormalcmsspreadpricer.cpp \
 	subperiodscoupon.cpp \
 	subperiodscouponpricer.cpp
 
@@ -22,9 +19,6 @@ this_include_HEADERS =  \
 	averageonindexedcoupon.hpp \
 	averageonindexedcouponpricer.hpp \
 	couponpricer.hpp \
-	cmsspreadcoupon.hpp \
-	lineartsrpricer.hpp \
-	lognormalcmsspreadpricer.hpp \
 	subperiodscoupon.hpp \
 	subperiodscouponpricer.hpp
 

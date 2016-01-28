@@ -12,7 +12,8 @@
 #define quantext_dynamic_swaption_volatility_termstructure_hpp
 
 #include <qle/termstructures/dynamicstype.hpp>
-#include <qle/termstructures/swaptionvolmatrix.hpp>
+
+#include <ql/termstructures/volatility/swaption/swaptionvolmatrix.hpp>
 
 #include <boost/make_shared.hpp>
 

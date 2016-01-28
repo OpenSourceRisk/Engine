@@ -8,16 +8,12 @@ noinst_LTLIBRARIES = libProcesses.la
 
 libProcesses_la_SOURCES = \
 	crossassetstateprocess.cpp \
-	gsrprocess.cpp \
-	gsrprocesscore.cpp \
 	irlgm1fstateprocess.cpp
 
 this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \
 	all.hpp \
 	crossassetstateprocess.hpp \
-	gsrprocess.hpp \
-	gsrprocesscore.hpp \
 	irlgm1fstateprocess.hpp
 
 all.hpp: Makefile.am

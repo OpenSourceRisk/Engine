@@ -13,8 +13,9 @@
 
 #include <qle/models/fxbsparametrization.hpp>
 #include <qle/models/lgm.hpp>
-#include <qle/models/model.hpp>
 #include <qle/processes/crossassetstateprocess.hpp>
+
+#include <ql/models/model.hpp>
 #include <ql/math/matrix.hpp>
 #include <ql/math/distributions/normaldistribution.hpp>
 #include <ql/math/integrals/integral.hpp>

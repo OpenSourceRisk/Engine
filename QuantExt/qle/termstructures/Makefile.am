@@ -9,27 +9,11 @@ noinst_LTLIBRARIES = libTermStructures.la
 libTermStructures_la_SOURCES = \
 	averageoisratehelper.cpp \
 	basistwoswaphelper.cpp \
-	constantoptionletvol.cpp \
 	crossccybasisswaphelper.cpp \
 	dynamicswaptionvolmatrix.cpp \
-	flatsmilesection.cpp \
 	oibasisswaphelper.cpp \
 	oiccbasisswaphelper.cpp \
 	oisratehelper.cpp \
-	optionletstripper.cpp \
-	optionletstripper1.cpp \
-	optionletvolatilitystructure.cpp \
-	spreadedoptionletvol.cpp \
-	spreadedswaptionvol.cpp \
-	strippedoptionlet.cpp \
-	strippedoptionletadapter.cpp \
-	swaptionconstantvol.cpp \
-	swaptionvolcube.cpp \
-	swaptionvolcube2.cpp \
-	swaptionvolcube3.cpp \
-	swaptionvoldiscrete.cpp \
-	swaptionvolmatrix.cpp \
-	swaptionvolstructure.cpp \
 	tenorbasisswaphelper.cpp
 
 this_includedir=${includedir}/${subdir}
@@ -38,32 +22,13 @@ this_include_HEADERS = \
 	averageoisratehelper.hpp \
 	basistwoswaphelper.hpp \
 	blackinvertedvoltermstructure.hpp \
-	constantoptionletvol.hpp \
 	crossccybasisswaphelper.hpp \
 	dynamicblackvoltermstructure.hpp \
 	dynamicswaptionvolmatrix.hpp \
-	flatsmilesection.hpp \
 	interpolateddiscountcurve.hpp \
-	interpolatedsmilesection.hpp \
 	oibasisswaphelper.hpp \
 	oiccbasisswaphelper.hpp \
 	oisratehelper.hpp \
-	optionletstripper.hpp \
-	optionletstripper1.hpp \
-	optionletvolatilitystructure.hpp \
-	strippedoptionlet.hpp \
-	spreadedoptionletvol.hpp \
-	spreadedswaptionvol.hpp \
-	strippedoptionletadapter.hpp \
-	strippedoptionletbase.hpp \
-	swaptionconstantvol.hpp \
-	swaptionvolcube.hpp \
-	swaptionvolcube1.hpp \
-	swaptionvolcube2.hpp \
-	swaptionvolcube3.hpp \
-	swaptionvoldiscrete.hpp \
-	swaptionvolmatrix.hpp \
-	swaptionvolstructure.hpp \
 	tenorbasisswaphelper.hpp
 
 all.hpp: Makefile.am

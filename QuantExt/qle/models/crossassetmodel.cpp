@@ -4,9 +4,10 @@
  Copyright (C) 2016 Quaternion Risk Mangament
 */
 
-#include <qle/math/piecewiseintegral.hpp>
 #include <qle/models/crossassetmodel.hpp>
 #include <qle/models/pseudoparameter.hpp>
+
+#include <ql/experimental/math/piecewiseintegral.hpp>
 #include <ql/math/integrals/simpsonintegral.hpp>
 #include <ql/math/matrixutilities/symmetricschurdecomposition.hpp>
 #include <ql/processes/eulerdiscretization.hpp>

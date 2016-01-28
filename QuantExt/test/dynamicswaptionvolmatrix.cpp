@@ -9,7 +9,7 @@
 
 #include <qle/termstructures/dynamicswaptionvolmatrix.hpp>
 
-#include <qle/termstructures/swaptionvolmatrix.hpp>
+#include <ql/termstructures/volatility/swaption/swaptionvolmatrix.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/quotes/simplequote.hpp>
 
