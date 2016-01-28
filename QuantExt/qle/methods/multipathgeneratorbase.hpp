@@ -59,7 +59,7 @@ class MultiPathGeneratorLowDiscrepancy : public MultiPathGeneratorBase {
 
 // inline
 
-const Sample<MultiPath> &MultiPathGeneratorPseudoRandom::next() const {
+inline const Sample<MultiPath> &MultiPathGeneratorPseudoRandom::next() const {
     if (antitheticSampling_) {
         antitheticVariate_ = !antitheticVariate_;
         return antitheticVariate_ ? pg_->antithetic() : pg_->next();
@@ -68,7 +68,7 @@ const Sample<MultiPath> &MultiPathGeneratorPseudoRandom::next() const {
     }
 }
 
-const Sample<MultiPath> &MultiPathGeneratorLowDiscrepancy::next() const {
+inline const Sample<MultiPath> &MultiPathGeneratorLowDiscrepancy::next() const {
     return pg_->next();
 }
 
