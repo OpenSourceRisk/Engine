@@ -133,17 +133,28 @@ void CrossAssetModelTest::testBermudanLgm1fGsr() {
         boost::make_shared<Gaussian1dSwaptionEngine>(lgm_g1d, 64, 7.0, true,
                                                      false);
 
+    boost::shared_ptr<PricingEngine> swaptionEngineLgm2 =
+        boost::make_shared<NumericLgmSwaptionEngine>(lgm, 7.0, 16, 7.0, 32);
+
     d.swaption->setPricingEngine(swaptionEngineGsr);
     Real npvGsr = d.swaption->NPV();
     d.swaption->setPricingEngine(swaptionEngineLgm);
     Real npvLgm = d.swaption->NPV();
+    d.swaption->setPricingEngine(swaptionEngineLgm2);
+    Real npvLgm2 = d.swaption->NPV();
 
     Real tol = 0.2E-4; // basis point tolerance
 
     if (std::fabs(npvGsr - npvLgm) > tol)
         BOOST_ERROR("Failed to verify consistency of Bermudan swaption price "
-                    "in IrLgm1f ("
+                    "in IrLgm1f / Gaussian1d adaptor engine ("
                     << npvLgm << ") and Gsr (" << npvGsr
+                    << ") models, tolerance is " << tol);
+
+    if (std::fabs(npvGsr - npvLgm2) > tol)
+        BOOST_ERROR("Failed to verify consistency of Bermudan swaption price "
+                    "in IrLgm1f / Numeric LGM engine ("
+                    << npvLgm2 << ") and Gsr (" << npvGsr
                     << ") models, tolerance is " << tol);
 }
 
