@@ -49,12 +49,6 @@ class NumericLgmSwaptionEngine
         if (!discountCurve_.empty())
             registerWith(discountCurve_);
 
-        iborModelCurve_ = boost::make_shared<LgmImpliedYtsFwdFwdCorrected>(
-            model_, arguments_.swap->iborIndex()->forwardingTermStructure());
-
-        iborIndex_ = arguments_.swap->iborIndex()->clone(
-            Handle<YieldTermStructure>(iborModelCurve_));
-
         // precompute weights
 
         // number of x, y grid points > 0
@@ -96,9 +90,9 @@ class NumericLgmSwaptionEngine
   private:
     Real conditionalSwapValue(Real x, Real t, const Date expiry0) const;
     boost::shared_ptr<LinearGaussMarkovModel> model_;
-    boost::shared_ptr<IborIndex> iborIndex_;
-    boost::shared_ptr<LgmImpliedYieldTermStructure> iborModelCurve_;
-    Size mx_, my_, nx_;
+    mutable boost::shared_ptr<IborIndex> iborIndex_;
+    mutable boost::shared_ptr<LgmImpliedYieldTermStructure> iborModelCurve_;
+    int mx_, my_, nx_;
     const Handle<YieldTermStructure> discountCurve_;
     Real h_;
     std::vector<Real> y_, w_, wsum_;

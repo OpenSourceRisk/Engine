@@ -24,7 +24,7 @@ Real NumericLgmSwaptionEngine::conditionalSwapValue(Real x, Real t,
                                floatSchedule.dates().end(), expiry0 - 1) -
               floatSchedule.dates().begin();
 
-    iborModelCurve_->move(t, x);
+    iborModelCurve_->move(expiry0, x);
 
     Real floatingLegNpv = 0.0;
     for (Size l = k1; l < arguments_.floatingCoupons.size(); l++) {
@@ -34,7 +34,7 @@ Real NumericLgmSwaptionEngine::conditionalSwapValue(Real x, Real t,
             arguments_.nominal * arguments_.floatingAccrualTimes[l] *
             (arguments_.floatingSpreads[l] +
              iborIndex_->fixing(arguments_.floatingFixingDates[l])) *
-            model_->reducedDiscountBond(x, t, T, discountCurve_);
+            model_->reducedDiscountBond(t, T, x, discountCurve_);
     }
 
     Real fixedLegNpv = 0.0;
@@ -42,15 +42,14 @@ Real NumericLgmSwaptionEngine::conditionalSwapValue(Real x, Real t,
         Real T = model_->parametrization()->termStructure()->timeFromReference(
             arguments_.fixedPayDates[l]);
         fixedLegNpv += arguments_.fixedCoupons[l] *
-                       model_->reducedDiscountBond(x, t, T, discountCurve_);
+                       model_->reducedDiscountBond(t, T, x, discountCurve_);
     }
 
     Option::Type type =
         arguments_.type == VanillaSwap::Payer ? Option::Call : Option::Put;
 
-    Real exerciseValue = (type == Option::Call ? 1.0 : -1.0) *
-                         (floatingLegNpv - fixedLegNpv) /
-                         model_->numeraire(t, x, discountCurve_);
+    Real exerciseValue =
+        (type == Option::Call ? 1.0 : -1.0) * (floatingLegNpv - fixedLegNpv);
     return exerciseValue;
 }
 
@@ -58,6 +57,12 @@ void NumericLgmSwaptionEngine::calculate() const {
 
     QL_REQUIRE(arguments_.settlementType == Settlement::Physical,
                "cash-settled swaptions not yet implemented ...");
+
+    iborModelCurve_ = boost::make_shared<LgmImpliedYtsFwdFwdCorrected>(
+        model_, arguments_.swap->iborIndex()->forwardingTermStructure());
+
+    iborIndex_ = arguments_.swap->iborIndex()->clone(
+        Handle<YieldTermStructure>(iborModelCurve_));
 
     Date settlement =
         model_->parametrization()->termStructure()->referenceDate();
@@ -90,15 +95,14 @@ void NumericLgmSwaptionEngine::calculate() const {
              2 * mx_ + 1); // conditional continuation value in grid point i
     for (int j = 0; j < options; j++) {
         te[j] = model_->parametrization()->termStructure()->timeFromReference(
-            arguments_.exercise->dates()[idx - minIdxAlive + 1 + j]);
+            arguments_.exercise->dates()[minIdxAlive + j]);
         sigma[j] = sqrt(model_->parametrization()->zeta(te[j]));
         dx[j] = sigma[j] / nx_;
         for (int k = 0; k <= 2 * mx_; k++) {
             x[j][k] = dx[j] * (k - mx_);
             // Payoff goes here
             u[j][k] = conditionalSwapValue(
-                x[j][k], te[j],
-                arguments_.exercise->dates()[idx - minIdxAlive + 1 + j]);
+                x[j][k], te[j], arguments_.exercise->dates()[minIdxAlive + j]);
             // Continuation value is zero at final expiry.
             // This will be updated for j < jmax in the rollback loop
             v[j][k] = std::max(u[j][k], 0.0);
