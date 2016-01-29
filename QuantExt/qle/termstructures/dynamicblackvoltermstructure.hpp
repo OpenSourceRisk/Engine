@@ -12,6 +12,7 @@
 #define quantext_dynamic_black_volatility_termstructure_hpp
 
 #include <qle/math/flatextrapolation.hpp>
+#include <qle/termstructures/dynamicstype.hpp>
 
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
@@ -32,7 +33,8 @@ namespace QuantExt {
 
 /*! if curve is specified, a more efficient implementation for
     variance and volatility is used just passing through the
-    given strike to the source term structure */
+    given strike to the source term structure; note that in this
+    case a null strike will not be converted to atm though. */
 namespace tag {
 struct curve {};
 struct surface {};
@@ -41,9 +43,6 @@ struct surface {};
 template <typename mode = tag::surface>
 class DynamicBlackVolTermStructure : public BlackVolTermStructure {
   public:
-    enum ReactionToTimeDecay { KeepVarianceConstant, ForwardForwardVariance };
-    enum Stickyness { StickyStrike, StickyLogMoneyness };
-
     /* For a stickyness that involves ATM calculations, the yield term
        structures and the spot (as of today, i.e. without settlement lag)
        must be given. They are also required if an ATM volatility with null
@@ -57,8 +56,8 @@ class DynamicBlackVolTermStructure : public BlackVolTermStructure {
     DynamicBlackVolTermStructure(
         const Handle<BlackVolTermStructure> &source, Natural settlementDays,
         const Calendar &calendar,
-        ReactionToTimeDecay decayMode = ForwardForwardVariance,
-        Stickyness stickyness = StickyStrike,
+        ReactionToTimeDecay decayMode = ConstantVariance,
+        Stickyness stickyness = StickyLogMoneyness,
         const Handle<YieldTermStructure> &riskfree =
             Handle<YieldTermStructure>(),
         const Handle<YieldTermStructure> &dividend =
@@ -73,8 +72,8 @@ class DynamicBlackVolTermStructure : public BlackVolTermStructure {
     Real blackVarianceImpl(Time t, Real strike) const;
     Volatility blackVolImpl(Time t, Real strike) const;
     /* immplementations for curve and surface tags */
-    Real blackVarianceImpl(Time t, Real strike, tag::curve) const;
-    Real blackVarianceImpl(Time t, Real strike, tag::surface) const;
+    Real blackVarianceImplTag(Time t, Real strike, tag::curve) const;
+    Real blackVarianceImplTag(Time t, Real strike, tag::surface) const;
     /* VolatilityTermStructure interface */
     Real minStrike() const;
     Real maxStrike() const;
@@ -112,10 +111,10 @@ DynamicBlackVolTermStructure<mode>::DynamicBlackVolTermStructure(
       forwardCurveSampleGrid_(forwardCurveSampleGrid) {
 
     QL_REQUIRE(stickyness == StickyStrike || stickyness == StickyLogMoneyness,
-               "unknown stickyness (" << stickyness << ")");
-    QL_REQUIRE(decayMode == KeepVarianceConstant ||
+               "stickyness (" << stickyness << ") not supported");
+    QL_REQUIRE(decayMode == ConstantVariance ||
                    decayMode == ForwardForwardVariance,
-               "unknown reaction to time decay (" << stickyness << ")");
+               "reaction to time decay (" << decayMode << ") not supported");
 
     registerWith(source);
 
@@ -182,7 +181,7 @@ Date DynamicBlackVolTermStructure<mode>::maxDate() const {
     if (decayMode_ == ForwardForwardVariance) {
         return source_->maxDate();
     }
-    if (decayMode_ == KeepVarianceConstant) {
+    if (decayMode_ == ConstantVariance) {
         return Date(std::min(Date::maxDate().serialNumber(),
                              referenceDate().serialNumber() -
                                  originalReferenceDate_.serialNumber() +
@@ -227,11 +226,11 @@ Volatility DynamicBlackVolTermStructure<mode>::blackVolImpl(Time t,
 template <typename mode>
 Real DynamicBlackVolTermStructure<mode>::blackVarianceImpl(Time t,
                                                            Real strike) const {
-    return blackVarianceImpl(t, strike, mode());
+    return blackVarianceImplTag(t, strike, mode());
 }
 
 template <typename mode>
-Real DynamicBlackVolTermStructure<mode>::blackVarianceImpl(Time t, Real strike,
+Real DynamicBlackVolTermStructure<mode>::blackVarianceImplTag(Time t, Real strike,
                                                            tag::surface) const {
     if (strike == Null<Real>()) {
         QL_REQUIRE(atmKnown_, "can not calculate atm level (null strike is "
@@ -258,7 +257,7 @@ Real DynamicBlackVolTermStructure<mode>::blackVarianceImpl(Time t, Real strike,
 }
 
 template <typename mode>
-Real DynamicBlackVolTermStructure<mode>::blackVarianceImpl(Time t, Real strike,
+Real DynamicBlackVolTermStructure<mode>::blackVarianceImplTag(Time t, Real strike,
                                                            tag::curve) const {
     if (decayMode_ == ForwardForwardVariance) {
         Real scenarioT0 = source_->timeFromReference(referenceDate());

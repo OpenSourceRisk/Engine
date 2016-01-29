@@ -30,21 +30,26 @@ using boost::unit_test::test_suite;
 
 // Lib test suites
 #include "analyticlgmswaptionengine.hpp"
+#include "crossassetmodel.hpp"
+#include "crossassetmodel2.hpp"
+#include "crossassetmodelparametrizations.hpp"
 #include "currency.hpp"
 #include "discountcurve.hpp"
 #include "dynamicblackvoltermstructure.hpp"
+#include "dynamicswaptionvolmatrix.hpp"
 #include "index.hpp"
 #include "logquote.hpp"
-#include "xassetmodel.hpp"
-#include "xassetmodel2.hpp"
-#include "xassetmodelparametrizations.hpp"
 
 namespace {
 
     boost::timer t;
 
-    void startTimer() { t.restart(); }
+    void startTimer() {
+        BOOST_CHECK(true);
+        t.restart();
+    }
     void stopTimer() {
+        BOOST_CHECK(true);
         double seconds = t.elapsed();
         int hours = int(seconds/3600);
         seconds -= hours * 3600;
@@ -65,14 +70,15 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(BOOST_TEST_CASE(startTimer));
 
     test->add(AnalyticLgmSwaptionEngineTest::suite());
+    test->add(CrossAssetModelTest::suite());
+    test->add(CrossAssetModelTest2::suite());
+    test->add(CrossAssetModelParametrizationsTest::suite());
     test->add(DiscountCurveTest::suite());
     test->add(DynamicBlackVolTermStructureTest::suite());
+    test->add(DynamicSwaptionVolMatrixTest::suite());
     test->add(CurrencyTest::suite());
     test->add(IndexTest::suite());
     test->add(LogQuoteTest::suite());
-    test->add(XAssetModelTest::suite());
-    test->add(XAssetModelTest2::suite());
-    test->add(XAssetModelParametrizationsTest::suite());
 
     test->add(BOOST_TEST_CASE(stopTimer));
 

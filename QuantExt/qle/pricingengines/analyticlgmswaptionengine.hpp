@@ -12,7 +12,7 @@
 #define quantext_analytic_lgm_swaption_engine_hpp
 
 #include <ql/instruments/swaption.hpp>
-#include <qle/models/lgm.hpp>
+#include <qle/models/crossassetmodel.hpp>
 
 namespace QuantExt {
 
@@ -52,14 +52,14 @@ class AnalyticLgmSwaptionEngine
 
     /*! Lgm model based constructor */
     AnalyticLgmSwaptionEngine(
-        const boost::shared_ptr<Lgm> &model,
+        const boost::shared_ptr<LinearGaussMarkovModel> &model,
         const Handle<YieldTermStructure> &discountCurve =
             Handle<YieldTermStructure>(),
         const FloatSpreadMapping floatSpreadMapping = proRata);
 
-    /*! XAsset model based constructor */
+    /*! CrossAsset model based constructor */
     AnalyticLgmSwaptionEngine(
-        const boost::shared_ptr<XAssetModel> &model, const Size ccy,
+        const boost::shared_ptr<CrossAssetModel> &model, const Size ccy,
         const Handle<YieldTermStructure> &discountCurve =
             Handle<YieldTermStructure>(),
         const FloatSpreadMapping floatSpreadMapping = proRata);
