@@ -154,7 +154,7 @@ inline Real LinearGaussMarkovModel::reducedDiscountBond(
     const Handle<YieldTermStructure> discountCurve) const {
     QL_REQUIRE(T >= t && t >= 0.0,
                "T(" << T << ") >= t(" << t
-                    << ") >= 0 required in LGM::discountBond");
+                    << ") >= 0 required in LGM::reducedDxsiscountBond");
     Real HT = parametrization_->H(T);
     return (discountCurve.empty()
                 ? parametrization_->termStructure()->discount(T)
