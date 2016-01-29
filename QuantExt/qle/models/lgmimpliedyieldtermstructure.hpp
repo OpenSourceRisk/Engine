@@ -145,14 +145,12 @@ inline void LgmImpliedYieldTermStructure::update() {
 }
 
 inline Real LgmImpliedYieldTermStructure::discountImpl(Time t) const {
-    if (t < 0.0)
-        return 1.0;
+    QL_REQUIRE(t>=0.0,"negative time (" << t << ") given");
     return model_->discountBond(relativeTime_, relativeTime_ + t, state_);
 }
 
 inline Real LgmImpliedYtsFwdFwdCorrected::discountImpl(Time t) const {
-    if (t < 0.0)
-        return 1.0;
+    QL_REQUIRE(t>=0.0,"negative time (" << t << ") given");
     return LgmImpliedYieldTermStructure::discountImpl(t) *
            targetCurve_->discount(relativeTime_ + t) /
            targetCurve_->discount(relativeTime_) *
@@ -162,8 +160,7 @@ inline Real LgmImpliedYtsFwdFwdCorrected::discountImpl(Time t) const {
 }
 
 inline Real LgmImpliedYtsSpotCorrected::discountImpl(Time t) const {
-    if (t < 0.0)
-        return 1.0;
+    QL_REQUIRE(t>=0.0,"negative time (" << t << ") given");
     return LgmImpliedYieldTermStructure::discountImpl(t) *
            targetCurve_->discount(t) *
            model_->parametrization()->termStructure()->discount(relativeTime_) /
