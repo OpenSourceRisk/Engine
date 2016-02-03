@@ -11,10 +11,10 @@ namespace QuantExt {
 
 IrLgm1fPiecewiseLinearParametrization::IrLgm1fPiecewiseLinearParametrization(
     const Currency &currency, const Handle<YieldTermStructure> &termStructure,
-    const Array &alphaTimes, const Array &alpha, const Array &lambdaTimes,
-    const Array &lambda, const Real shift, const Real scaling)
+    const Array &alphaTimes, const Array &alpha, const Array &hTimes,
+    const Array &h, const Real shift, const Real scaling)
     : IrLgm1fParametrization(currency, termStructure),
-      PiecewiseConstantHelper11(alphaTimes, lambdaTimes), shift_(shift),
+      PiecewiseConstantHelper11(alphaTimes, hTimes), shift_(shift),
       scaling_(scaling) {
     QL_REQUIRE(!close_enough(scaling, 0.0),
                "scaling (" << scaling << ") must be non-zero");
@@ -22,16 +22,15 @@ IrLgm1fPiecewiseLinearParametrization::IrLgm1fPiecewiseLinearParametrization(
                "alpha size (" << alpha.size()
                               << ") inconsistent to times size ("
                               << alphaTimes.size() << ")");
-    QL_REQUIRE(lambdaTimes.size() + 1 == lambda.size(),
-               "kappa size (" << lambda.size()
-                              << ") inconsistent to times size ("
-                              << lambdaTimes.size() << ")");
+    QL_REQUIRE(hTimes.size() + 1 == h.size(),
+               "h size (" << h.size() << ") inconsistent to times size ("
+                          << hTimes.size() << ")");
     // store raw parameter values
     for (Size i = 0; i < helper1().p()->size(); ++i) {
         helper1().p()->setParam(i, inverse(0, alpha[i]));
     }
     for (Size i = 0; i < helper2().p()->size(); ++i) {
-        helper2().p()->setParam(i, inverse(1, lambda[i]));
+        helper2().p()->setParam(i, inverse(1, h[i]));
     }
     update();
 }

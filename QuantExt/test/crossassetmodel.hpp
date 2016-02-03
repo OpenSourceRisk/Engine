@@ -19,6 +19,7 @@ class CrossAssetModelTest {
     static void testLgm1fCalibration();
     static void testCcyLgm3fForeignPayouts();
     static void testLgm5fFxCalibration();
+    static void testLgm5fFullCalibration();
     static void testLgm5fMoments();
     static void testLgmGsrEquivalence();
     static void testLgmMcWithShift();

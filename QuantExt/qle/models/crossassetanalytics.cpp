@@ -39,7 +39,7 @@ Real fx_expectation_1(const CrossAssetModel *x, const Size i, const Time t0,
                         x->irlgm1f(i + 1)->termStructure()->discount(t0) *
                         x->irlgm1f(0)->termStructure()->discount(t0) /
                         x->irlgm1f(0)->termStructure()->discount(t0 + dt));
-    res -= 0.5 * integral(x, P(sx(i), sx(i)), t0, t0 + dt);
+    res -= 0.5 * (x->fxbs(i)->variance(t0+dt)-x->fxbs(i)->variance(t0));
     res += 0.5 * (H0_b * H0_b * zeta0_b - H0_a * H0_a * zeta0_a -
                   integral(x, P(Hz(0), Hz(0), az(0), az(0)), t0, t0 + dt));
     res -= 0.5 * (Hi_b * Hi_b * zetai_b - Hi_a * Hi_a * zetai_a -
@@ -95,7 +95,7 @@ Real fx_fx_covariance(const CrossAssetModel *x, const Size i, const Size j,
     Real Hj = Hz(j + 1).eval(x, t0 + dt);
     Real res =
         // row 1
-        H0 * H0 * integral(x, P(az(0), az(0)), t0, t0 + dt) -
+        H0 * H0 * (x->irlgm1f(0)->zeta(t0 + dt) - x->irlgm1f(0)->zeta(t0)) -
         2.0 * H0 * integral(x, P(Hz(0), az(0), az(0)), t0, t0 + dt) +
         integral(x, P(Hz(0), Hz(0), az(0), az(0)), t0, t0 + dt) -
         // row 2

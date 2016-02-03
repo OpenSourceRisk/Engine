@@ -25,6 +25,7 @@ libModels_la_SOURCES = \
 	irlgm1fpiecewiselinearparametrization.cpp \
 	linkablecalibratedmodel.cpp \
 	lgm.cpp \
+	lgmimpliedyieldtermstructure.cpp \
 	parametrization.cpp \
 	piecewiseconstanthelper.cpp
 
@@ -50,6 +51,7 @@ this_include_HEADERS = \
 	irlgm1fparametrization.hpp \
 	linkablecalibratedmodel.hpp \
 	lgm.hpp \
+	lgmimpliedyieldtermstructure.hpp \
 	parametrization.hpp \
 	piecewiseconstanthelper.hpp \
 	pseudoparameter.hpp

@@ -15,7 +15,8 @@ using namespace CrossAssetAnalytics;
 
 AnalyticCcLgmFxOptionEngine::AnalyticCcLgmFxOptionEngine(
     const boost::shared_ptr<CrossAssetModel> &model, const Size foreignCurrency)
-    : model_(model), foreignCurrency_(foreignCurrency) {}
+    : model_(model), foreignCurrency_(foreignCurrency), cacheEnabled_(false),
+      cacheDirty_(true) {}
 
 void AnalyticCcLgmFxOptionEngine::calculate() const {
 
@@ -53,26 +54,34 @@ void AnalyticCcLgmFxOptionEngine::calculate() const {
 
     const CrossAssetModel *x = model_.get();
 
+    if (cacheDirty_ || !cacheEnabled_) {
+        cachedIntegrals_ =
+            // first term
+            H0 * H0 * x->irlgm1f(0)->zeta(t) -
+            2.0 * H0 * integral(x, P(Hz(0), az(0), az(0)), 0.0, t) +
+            integral(x, P(Hz(0), Hz(0), az(0), az(0)), 0.0, t) +
+            // second term
+            Hi * Hi * x->irlgm1f(i+1)->zeta(t) -
+            2.0 * Hi * integral(x, P(Hz(i + 1), az(i + 1), az(i + 1)), 0.0, t) +
+            integral(x, P(Hz(i + 1), Hz(i + 1), az(i + 1), az(i + 1)), 0.0, t) -
+            // third term
+            2.0 *
+                (H0 * Hi *
+                     integral(x, P(az(0), az(i + 1), rzz(0, i + 1)), 0.0, t) -
+                 H0 * integral(x, P(Hz(i + 1), az(i + 1), az(0), rzz(i + 1, 0)),
+                               0.0, t) -
+                 Hi * integral(x, P(Hz(0), az(0), az(i + 1), rzz(0, i + 1)),
+                               0.0, t) +
+                 integral(x,
+                          P(Hz(0), Hz(i + 1), az(0), az(i + 1), rzz(0, i + 1)),
+                          0.0, t));
+        cacheDirty_ = false;
+    }
+
     Real variance =
-        // first term
-        H0 * H0 * integral(x, P(az(0), az(0)), 0.0, t) -
-        2.0 * H0 * integral(x, P(Hz(0), az(0), az(0)), 0.0, t) +
-        integral(x, P(Hz(0), Hz(0), az(0), az(0)), 0.0, t) +
-        // second term
-        Hi * Hi * integral(x, P(az(i + 1), az(i + 1)), 0.0, t) -
-        2.0 * Hi * integral(x, P(Hz(i + 1), az(i + 1), az(i + 1)), 0.0, t) +
-        integral(x, P(Hz(i + 1), Hz(i + 1), az(i + 1), az(i + 1)), 0.0, t) +
+        cachedIntegrals_+
         // term two three/fourth
-        integral(x, P(sx(i), sx(i)), 0.0, t) -
-        // third term
-        2.0 *
-            (H0 * Hi * integral(x, P(az(0), az(i + 1), rzz(0, i + 1)), 0.0, t) -
-             H0 * integral(x, P(Hz(i + 1), az(i + 1), az(0), rzz(i + 1, 0)),
-                           0.0, t) -
-             Hi * integral(x, P(Hz(0), az(0), az(i + 1), rzz(0, i + 1)), 0.0,
-                           t) +
-             integral(x, P(Hz(0), Hz(i + 1), az(0), az(i + 1), rzz(0, i + 1)),
-                      0.0, t)) +
+        x->fxbs(i)->variance(t) +
         // forth term
         2.0 * (H0 * integral(x, P(az(0), sx(i), rzx(0, i)), 0.0, t) -
                integral(x, P(Hz(0), az(0), sx(i), rzx(0, i)), 0.0, t)) -
