@@ -22,10 +22,26 @@ class AnalyticCcLgmFxOptionEngine : public VanillaOption::engine {
                                 const Size foreignCurrency);
     void calculate() const;
 
+    /*! if cache is enabled, the integrals independent of fx
+      volatility are cached, which can speed up calibtration;
+      remember to flush the cache when the ir parameters
+      change, this can be done by another call to cache */
+    void cache(bool enable = true);
+
   private:
     const boost::shared_ptr<CrossAssetModel> model_;
     const Size foreignCurrency_;
+    bool cacheEnabled_;
+    mutable bool cacheDirty_;
+    mutable Real cachedIntegrals_;
 };
+
+// inline
+
+inline void AnalyticCcLgmFxOptionEngine::cache(bool enable) {
+    cacheEnabled_ = enable;
+    cacheDirty_ = true;
+}
 
 } // namespace QuantExt
 
