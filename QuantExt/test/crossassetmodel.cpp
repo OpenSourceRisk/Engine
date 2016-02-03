@@ -556,8 +556,10 @@ void CrossAssetModelTest::testCcyLgm3fForeignPayouts() {
             boost::make_shared<PlainVanillaPayoff>(Option::Call, 0.9),
             boost::make_shared<EuropeanExercise>(referenceDate + 5 * 365));
 
-    boost::shared_ptr<PricingEngine> ccLgmFxOptionEngine =
+    boost::shared_ptr<AnalyticCcLgmFxOptionEngine> ccLgmFxOptionEngine =
         boost::make_shared<AnalyticCcLgmFxOptionEngine>(ccLgm, 0);
+
+    ccLgmFxOptionEngine->cache();
 
     fxOption->setPricingEngine(ccLgmFxOptionEngine);
 
@@ -768,14 +770,18 @@ void CrossAssetModelTest::testLgm5fFxCalibration() {
         boost::make_shared<CrossAssetModel>(singleModelsProjected, cProjected,
                                             SalvagingAlgorithm::None);
 
-    boost::shared_ptr<PricingEngine> ccLgmFxOptionEngineUsd =
+    boost::shared_ptr<AnalyticCcLgmFxOptionEngine> ccLgmFxOptionEngineUsd =
         boost::make_shared<AnalyticCcLgmFxOptionEngine>(d.ccLgm, 0);
 
-    boost::shared_ptr<PricingEngine> ccLgmFxOptionEngineGbp =
+    boost::shared_ptr<AnalyticCcLgmFxOptionEngine> ccLgmFxOptionEngineGbp =
         boost::make_shared<AnalyticCcLgmFxOptionEngine>(d.ccLgm, 1);
 
-    boost::shared_ptr<PricingEngine> ccLgmProjectedFxOptionEngineGbp =
+    boost::shared_ptr<AnalyticCcLgmFxOptionEngine> ccLgmProjectedFxOptionEngineGbp =
         boost::make_shared<AnalyticCcLgmFxOptionEngine>(ccLgmProjected, 0);
+
+    ccLgmFxOptionEngineUsd->cache();
+    ccLgmFxOptionEngineGbp->cache();
+    ccLgmProjectedFxOptionEngineGbp->cache();
 
     // while the initial fx vol starts at 0.2 for usd and 0.15 for gbp
     // we calibrate to helpers with 0.15 and 0.2 target implied vol
@@ -938,10 +944,13 @@ void CrossAssetModelTest::testLgm5fFullCalibration() {
     boost::shared_ptr<PricingEngine> gbpSwEng =
         boost::make_shared<AnalyticLgmSwaptionEngine>(d.ccLgm, 2);
 
-    boost::shared_ptr<PricingEngine> eurUsdFxoEng =
+    boost::shared_ptr<AnalyticCcLgmFxOptionEngine> eurUsdFxoEng =
         boost::make_shared<AnalyticCcLgmFxOptionEngine>(d.ccLgm, 0);
-    boost::shared_ptr<PricingEngine> eurGbpFxoEng =
+    boost::shared_ptr<AnalyticCcLgmFxOptionEngine> eurGbpFxoEng =
         boost::make_shared<AnalyticCcLgmFxOptionEngine>(d.ccLgm, 1);
+
+    eurUsdFxoEng->cache();
+    eurGbpFxoEng->cache();
 
     // assign engines to calibration instruments
     for (Size i = 0; i < basketEur.size(); ++i) {
