@@ -11,7 +11,7 @@
 #ifndef quantext_calibrated_model_hpp
 #define quantext_calibrated_model_hpp
 
-#include <qle/models/calibrationhelper.hpp>
+#include <ql/models/calibrationhelper.hpp>
 #include <ql/patterns/observable.hpp>
 #include <ql/option.hpp>
 #include <ql/math/optimization/method.hpp>

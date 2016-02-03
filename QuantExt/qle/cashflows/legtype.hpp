@@ -5,38 +5,39 @@
   All rights reserved.
 */
 
-/*! \file qle/cashflows/legtype.hpp
-    \brief Leg type enumeration
+/*! \file qle/instruments/legtype.hpp
+    \brief Leg Type
 */
 
-#ifndef quantext_legtype_hpp_
-#define quantext_legtype_hpp_
+#ifndef quantext_legtype_hpp
+#define quantext_legtype_hpp
 
 namespace QuantExt {
 
-    //! QuantLib Leg Type
-    /*! QuantLib Leg Type
+    //! Currency Leg
+    /*! QuantLib Leg with additional information: currency, payer, leg type
+      \warning leg BPS and NPV are in leg currency rather than base currency
      */
-    enum LegType {
+    enum LegType { 
         Nominal = 0,
-        Fixed = 1,
+        Fixed = 1, 
         Ibor = 2,
         OIS = 3,
         CMS = 4,
         Inflation = 5,
-        CappedFlooredIbor = 6,
+        CappedFlooredIbor = 6, 
         CappedFlooredCMS = 7,
-        CappedFlooredInflation = 8,
-        DigitalIbor = 9,
+        CappedFlooredInflation = 8, 
+        DigitalIbor = 9, 
         DigitalCMS = 10,
         FxOptionLeg = 11,
         SwaptionLeg = 12,
         RangeAccrual = 13,
         Structured = 14  // anything but Nominal, Fixed or Ibor
-    };
+    }; 
 
+    //TODO: LegType to string
     /*! \relates LegType */
-    // TODO:
     //std::ostream& operator<<(std::ostream&, LegType);
 }
 

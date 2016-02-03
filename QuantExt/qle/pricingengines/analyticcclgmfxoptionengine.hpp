@@ -11,19 +11,19 @@
 #ifndef quantext_cclgm_fxoptionengine_hpp
 #define quantext_cclgm_fxoptionengine_hpp
 
-#include <qle/models/xassetmodel.hpp>
+#include <qle/models/crossassetmodel.hpp>
 #include <ql/instruments/vanillaoption.hpp>
 
 namespace QuantExt {
 
 class AnalyticCcLgmFxOptionEngine : public VanillaOption::engine {
   public:
-    AnalyticCcLgmFxOptionEngine(const boost::shared_ptr<XAssetModel> &model,
+    AnalyticCcLgmFxOptionEngine(const boost::shared_ptr<CrossAssetModel> &model,
                                 const Size foreignCurrency);
     void calculate() const;
 
   private:
-    const boost::shared_ptr<XAssetModel> model_;
+    const boost::shared_ptr<CrossAssetModel> model_;
     const Size foreignCurrency_;
 };
 

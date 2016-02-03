@@ -2,7 +2,5 @@
 /* Add the files to be included into Makefile.am instead. */
 
 #include <qle/math/cumulativenormaldistribution.hpp>
-#include <qle/math/piecewisefunction.hpp>
-#include <qle/math/piecewiseintegral.hpp>
 #include <qle/math/flatextrapolation.hpp>
 

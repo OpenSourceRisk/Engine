@@ -29,7 +29,6 @@ namespace QuantExt {
       includeSettlementDateFlows_(includeSettlementDateFlows),
       settlementDate_(settlementDate),
       npvDate_(npvDate) {
-
         registerWith(currency1Discountcurve_);
         registerWith(currency2Discountcurve_);
         registerWith(spotFX_);
@@ -82,7 +81,6 @@ namespace QuantExt {
             "discount curve reference date.");
 
         results_.value = 0.0;
-
         if (!detail::simple_event(arguments_.maturityDate).hasOccurred(
                 settlementDate_, includeSettlementDateFlows_)) {
             results_.value = (tmpPayCurrency1 ? -1.0 : 1.0) * (
@@ -91,12 +89,11 @@ namespace QuantExt {
                 currency1Discountcurve_->discount(npvDate_) -
                 tmpNominal2 *
                 currency2Discountcurve_->discount(arguments_.maturityDate) /
-                currency2Discountcurve_->discount(npvDate_) * spotFX_->value());
+                currency2Discountcurve_->discount(npvDate_)*spotFX_->value());
         }
-
         results_.npv = Money(ccy1_, results_.value);
         results_.fairForwardRate = ExchangeRate(ccy2_, ccy1_, tmpNominal1/tmpNominal2);
 
-    } // calculate
+    } //calculate
 
 } // namespace QuantExt

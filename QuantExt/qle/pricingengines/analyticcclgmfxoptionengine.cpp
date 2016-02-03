@@ -5,16 +5,16 @@
 */
 
 #include <qle/pricingengines/analyticcclgmfxoptionengine.hpp>
-#include <qle/models/xassetanalytics.hpp>
+#include <qle/models/crossassetanalytics.hpp>
 
 #include <ql/pricingengines/blackcalculator.hpp>
 
 namespace QuantExt {
 
-using namespace XAssetAnalytics;
+using namespace CrossAssetAnalytics;
 
 AnalyticCcLgmFxOptionEngine::AnalyticCcLgmFxOptionEngine(
-    const boost::shared_ptr<XAssetModel> &model, const Size foreignCurrency)
+    const boost::shared_ptr<CrossAssetModel> &model, const Size foreignCurrency)
     : model_(model), foreignCurrency_(foreignCurrency) {}
 
 void AnalyticCcLgmFxOptionEngine::calculate() const {
@@ -51,7 +51,7 @@ void AnalyticCcLgmFxOptionEngine::calculate() const {
     // just a shortcut
     const Size &i = foreignCurrency_;
 
-    const XAssetModel *x = model_.get();
+    const CrossAssetModel *x = model_.get();
 
     Real variance =
         // first term
