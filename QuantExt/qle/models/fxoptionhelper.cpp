@@ -84,7 +84,7 @@ Real FxOptionHelper::modelValue() const {
 Real FxOptionHelper::blackPrice(Real volatility) const {
     calculate();
     const Real stdDev = volatility * std::sqrt(tau_);
-    return blackFormula(type_, strike_, atm_, stdDev, termStructure_->discount(tau_));
+    return blackFormula(type_, effStrike_, atm_, stdDev, termStructure_->discount(tau_));
 }
 
 } // namespace QuantExt
