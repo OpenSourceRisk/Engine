@@ -909,7 +909,7 @@ void CrossAssetModelTest2::testLgm31fPositiveCovariance() {
                                          simTimes_[i] - simTimes_[i - 1]);
         SymmetricSchurDecomposition ssd(cov);
         for (Size j = 0; j < ssd.eigenvalues().size(); ++j) {
-            if (ssd.eigenvalues()[j] < -1.0E-12) {
+            if (ssd.eigenvalues()[j] < 0.0) {
                 BOOST_ERROR("negative eigenvalue at "
                             << j
                             << " in covariance matrix at t=" << simTimes_[i]
@@ -922,7 +922,7 @@ void CrossAssetModelTest2::testLgm31fPositiveCovariance() {
     Matrix cov = p_exact->covariance(0.0, x0, simTimes_.back());
     SymmetricSchurDecomposition ssd2(cov);
     for (Size i = 0; i < ssd2.eigenvalues().size(); ++i) {
-        if (ssd2.eigenvalues()[i] < -1.0E-12) {
+        if (ssd2.eigenvalues()[i] < 0.0) {
             BOOST_ERROR("negative eigenvalue at "
                         << i << " in covariance matrix at t=0.0 for dt=100.0"
                         << " (" << ssd2.eigenvalues()[i] << ")");
