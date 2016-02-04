@@ -23,6 +23,10 @@ class FxBsPiecewiseConstantParametrization : public FxBsParametrization,
                                          const Handle<Quote> &fxSpotToday,
                                          const Array &times,
                                          const Array &sigma);
+    FxBsPiecewiseConstantParametrization(
+        const Currency &currency, const Handle<Quote> &fxSpotToday,
+        const std::vector<Date> &dates, const Array &sigma,
+        const Handle<YieldTermStructure> &domesticTermStructure);
     Real variance(const Time t) const;
     Real sigma(const Time t) const;
     const Array &parameterTimes(const Size) const;
@@ -32,6 +36,9 @@ class FxBsPiecewiseConstantParametrization : public FxBsParametrization,
   protected:
     Real direct(const Size i, const Real x) const;
     Real inverse(const Size i, const Real y) const;
+
+  private:
+    void initialize(const Array &sigma);
 };
 
 // inline

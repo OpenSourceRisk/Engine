@@ -23,7 +23,8 @@ CrossAssetModel::CrossAssetModel(
 }
 
 CrossAssetModel::CrossAssetModel(
-    const std::vector<boost::shared_ptr<LinearGaussMarkovModel> > &currencyModels,
+    const std::vector<boost::shared_ptr<LinearGaussMarkovModel> >
+        &currencyModels,
     const std::vector<boost::shared_ptr<FxBsParametrization> >
         &fxParametrizations,
     const Matrix &correlation, SalvagingAlgorithm::Type salvaging)
@@ -75,8 +76,9 @@ void CrossAssetModel::setIntegrationPolicy(
                         p_[i]->parameterTimes(1).end());
     }
     for (Size i = 0; i < nFxBs_; ++i) {
-        allTimes.insert(allTimes.end(), p_[i]->parameterTimes(0).begin(),
-                        p_[i]->parameterTimes(0).end());
+        allTimes.insert(allTimes.end(),
+                        p_[nIrLgm1f_ + i]->parameterTimes(0).begin(),
+                        p_[nIrLgm1f_ + i]->parameterTimes(0).end());
     }
 
     // use piecewise integrator avoiding the step points
@@ -213,8 +215,8 @@ void CrossAssetModel::calibrateIrLgm1fVolatilitiesIterative(
     const std::vector<boost::shared_ptr<CalibrationHelper> > &helpers,
     OptimizationMethod &method, const EndCriteria &endCriteria,
     const Constraint &constraint, const std::vector<Real> &weights) {
-    lgm(ccy)->calibrateVolatilitiesIterative(helpers, method, endCriteria, constraint,
-                                    weights);
+    lgm(ccy)->calibrateVolatilitiesIterative(helpers, method, endCriteria,
+                                             constraint, weights);
     update();
 }
 
@@ -223,8 +225,8 @@ void CrossAssetModel::calibrateIrLgm1fReversionsIterative(
     const std::vector<boost::shared_ptr<CalibrationHelper> > &helpers,
     OptimizationMethod &method, const EndCriteria &endCriteria,
     const Constraint &constraint, const std::vector<Real> &weights) {
-    lgm(ccy)->calibrateReversionsIterative(helpers, method, endCriteria, constraint,
-                                  weights);
+    lgm(ccy)->calibrateReversionsIterative(helpers, method, endCriteria,
+                                           constraint, weights);
     update();
 }
 

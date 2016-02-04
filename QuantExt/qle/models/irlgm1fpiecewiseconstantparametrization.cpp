@@ -18,14 +18,31 @@ IrLgm1fPiecewiseConstantParametrization::
     : IrLgm1fParametrization(currency, termStructure),
       PiecewiseConstantHelper1(alphaTimes),
       PiecewiseConstantHelper2(kappaTimes) {
-    QL_REQUIRE(alphaTimes.size() + 1 == alpha.size(),
+    initialize(alpha, kappa);
+}
+
+IrLgm1fPiecewiseConstantParametrization::
+    IrLgm1fPiecewiseConstantParametrization(
+        const Currency &currency,
+        const Handle<YieldTermStructure> &termStructure,
+        const std::vector<Date> &alphaDates, const Array &alpha,
+        const std::vector<Date> &kappaDates, const Array &kappa)
+    : IrLgm1fParametrization(currency, termStructure),
+      PiecewiseConstantHelper1(alphaDates, termStructure),
+      PiecewiseConstantHelper2(kappaDates, termStructure) {
+    initialize(alpha, kappa);
+}
+
+void IrLgm1fPiecewiseConstantParametrization::initialize(const Array &alpha,
+                                                         const Array &kappa) {
+    QL_REQUIRE(PiecewiseConstantHelper1::t().size() + 1 == alpha.size(),
                "alpha size (" << alpha.size()
                               << ") inconsistent to times size ("
-                              << alphaTimes.size() << ")");
-    QL_REQUIRE(kappaTimes.size() + 1 == kappa.size(),
+                              << PiecewiseConstantHelper1::t().size() << ")");
+    QL_REQUIRE(PiecewiseConstantHelper2::t().size() + 1 == kappa.size(),
                "kappa size (" << kappa.size()
                               << ") inconsistent to times size ("
-                              << kappaTimes.size() << ")");
+                              << PiecewiseConstantHelper2::t().size() << ")");
     // store raw parameter values
     for (Size i = 0; i < PiecewiseConstantHelper1::y_->size(); ++i) {
         PiecewiseConstantHelper1::y_->setParam(i, inverse(0, alpha[i]));

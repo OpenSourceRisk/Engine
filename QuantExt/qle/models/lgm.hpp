@@ -27,16 +27,28 @@ namespace QuantExt {
 class LinearGaussMarkovModel : public LinkableCalibratedModel {
 
   public:
-    LinearGaussMarkovModel(const boost::shared_ptr<IrLgm1fParametrization> &parametrization);
+    LinearGaussMarkovModel(
+        const boost::shared_ptr<IrLgm1fParametrization> &parametrization);
 
     const boost::shared_ptr<StochasticProcess1D> stateProcess() const;
     const boost::shared_ptr<IrLgm1fParametrization> parametrization() const;
 
-    Real numeraire(const Time t, const Real x) const;
-    Real discountBond(const Time t, const Time T, const Real x) const;
-    Real reducedDiscountBond(const Time t, const Time T, const Real x) const;
+    Real numeraire(const Time t, const Real x,
+                   const Handle<YieldTermStructure> discountCurve =
+                       Handle<YieldTermStructure>()) const;
+
+    Real discountBond(const Time t, const Time T, const Real x,
+                      Handle<YieldTermStructure> discountCurve =
+                          Handle<YieldTermStructure>()) const;
+
+    Real reducedDiscountBond(const Time t, const Time T, const Real x,
+                             const Handle<YieldTermStructure> discountCurve =
+                                 Handle<YieldTermStructure>()) const;
+
     Real discountBondOption(Option::Type type, const Real K, const Time t,
-                            const Time S, const Time T) const;
+                            const Time S, const Time T,
+                            Handle<YieldTermStructure> discountCurve =
+                                Handle<YieldTermStructure>()) const;
 
     /*! calibrate volatilities to a sequence of ir options with
         expiry times equal to step times in the parametrization */
@@ -100,7 +112,8 @@ inline void LinearGaussMarkovModel::update() {
 
 inline void LinearGaussMarkovModel::generateArguments() { update(); }
 
-inline const boost::shared_ptr<StochasticProcess1D> LinearGaussMarkovModel::stateProcess() const {
+inline const boost::shared_ptr<StochasticProcess1D>
+LinearGaussMarkovModel::stateProcess() const {
     return stateProcess_;
 }
 
@@ -109,44 +122,59 @@ LinearGaussMarkovModel::parametrization() const {
     return parametrization_;
 }
 
-inline Real LinearGaussMarkovModel::numeraire(const Time t, const Real x) const {
+inline Real LinearGaussMarkovModel::numeraire(
+    const Time t, const Real x,
+    const Handle<YieldTermStructure> discountCurve) const {
     QL_REQUIRE(t >= 0.0, "t (" << t << ") >= 0 required in LGM::numeraire");
     Real Ht = parametrization_->H(t);
     return std::exp(Ht * x + 0.5 * Ht * Ht * parametrization_->zeta(t)) /
-           parametrization_->termStructure()->discount(t);
+           (discountCurve.empty()
+                ? parametrization_->termStructure()->discount(t)
+                : discountCurve->discount(t));
 }
 
-inline Real LinearGaussMarkovModel::discountBond(const Time t, const Time T, const Real x) const {
+inline Real LinearGaussMarkovModel::discountBond(
+    const Time t, const Time T, const Real x,
+    const Handle<YieldTermStructure> discountCurve) const {
     QL_REQUIRE(T >= t && t >= 0.0,
                "T(" << T << ") >= t(" << t
                     << ") >= 0 required in LGM::discountBond");
     Real Ht = parametrization_->H(t);
     Real HT = parametrization_->H(T);
-    return parametrization_->termStructure()->discount(T) /
-           parametrization_->termStructure()->discount(t) *
+    return (discountCurve.empty()
+                ? parametrization_->termStructure()->discount(T) /
+                      parametrization_->termStructure()->discount(t)
+                : discountCurve->discount(T) / discountCurve->discount(t)) *
            std::exp(-(HT - Ht) * x -
                     0.5 * (HT * HT - Ht * Ht) * parametrization_->zeta(t));
 }
 
-inline Real LinearGaussMarkovModel::reducedDiscountBond(const Time t, const Time T,
-                                     const Real x) const {
+inline Real LinearGaussMarkovModel::reducedDiscountBond(
+    const Time t, const Time T, const Real x,
+    const Handle<YieldTermStructure> discountCurve) const {
     QL_REQUIRE(T >= t && t >= 0.0,
                "T(" << T << ") >= t(" << t
-                    << ") >= 0 required in LGM::discountBond");
+                    << ") >= 0 required in LGM::reducedDxsiscountBond");
     Real HT = parametrization_->H(T);
-    return parametrization_->termStructure()->discount(T) *
+    return (discountCurve.empty()
+                ? parametrization_->termStructure()->discount(T)
+                : discountCurve->discount(T)) *
            std::exp(-HT * x - 0.5 * HT * HT * parametrization_->zeta(t));
 }
 
-inline Real LinearGaussMarkovModel::discountBondOption(Option::Type type, const Real K,
-                                    const Time t, const Time S,
-                                    const Time T) const {
+inline Real LinearGaussMarkovModel::discountBondOption(
+    Option::Type type, const Real K, const Time t, const Time S, const Time T,
+    const Handle<YieldTermStructure> discountCurve) const {
     QL_REQUIRE(T > S && S >= t && t >= 0.0,
                "T(" << T << ") > S(" << S << ") >= t(" << t
                     << ") >= 0 required in LGM::discountBondOption");
     Real w = (type == Option::Call ? 1.0 : -1.0);
-    Real pS = parametrization_->termStructure()->discount(S);
-    Real pT = parametrization_->termStructure()->discount(T);
+    Real pS = discountCurve.empty()
+                  ? parametrization_->termStructure()->discount(S)
+                  : discountCurve->discount(S);
+    Real pT = discountCurve.empty()
+                  ? parametrization_->termStructure()->discount(T)
+                  : discountCurve->discount(T);
     // slight generalization of Lichters, Stamm, Gallagher 11.2.1
     // with t < S only resulting in a different time at which zeta
     // has to be taken

@@ -19,7 +19,7 @@ namespace QuantExt {
 /*! parametrization with piecewise linear H and zeta,
     w.r.t. zeta this is the same as piecewise constant alpha,
     w.r.t. H this is implemented with a new (helper) parameter
-    lambda such that H(t) = \int_0^t lambda(s)^2 ds
+    h > 0, such that H(t) = \int_0^t h(s) ds
 
     \warning this class is considered experimental, it is not
              tested well and might have conceptual issues
@@ -31,14 +31,16 @@ class IrLgm1fPiecewiseLinearParametrization
     : public IrLgm1fParametrization,
       private PiecewiseConstantHelper11 {
   public:
-    /*! note that if a non unit scaling is provided, 
-        then the parameterValues method returns the unscaled alpha,
-        while all other methods return scaled (and shifted) values */
     IrLgm1fPiecewiseLinearParametrization(
         const Currency &currency,
         const Handle<YieldTermStructure> &termStructure,
-        const Array &alphaTimes, const Array &alpha, const Array &lambdaTimes,
-        const Array &lambda, const Real shift = 0.0, const Real scaling = 1.0);
+        const Array &alphaTimes, const Array &alpha, const Array &hTimes,
+        const Array &h);
+    IrLgm1fPiecewiseLinearParametrization(
+        const Currency &currency,
+        const Handle<YieldTermStructure> &termStructure,
+        const std::vector<Date> &alphaDates, const Array &alpha,
+        const std::vector<Date> &hDates, const Array &h);
     Real zeta(const Time t) const;
     Real H(const Time t) const;
     Real alpha(const Time t) const;
@@ -54,20 +56,18 @@ class IrLgm1fPiecewiseLinearParametrization
     Real inverse(const Size j, const Real y) const;
 
   private:
-    const Real shift_, scaling_;
+    void initialize(const Array &alpha, const Array &h);
 };
 
 // inline
 
-inline Real
-IrLgm1fPiecewiseLinearParametrization::direct(const Size i,
-                                                const Real x) const {
+inline Real IrLgm1fPiecewiseLinearParametrization::direct(const Size i,
+                                                          const Real x) const {
     return i == 0 ? helper1().direct(x) : helper2().direct(x);
 }
 
-inline Real
-IrLgm1fPiecewiseLinearParametrization::inverse(const Size i,
-                                                 const Real y) const {
+inline Real IrLgm1fPiecewiseLinearParametrization::inverse(const Size i,
+                                                           const Real y) const {
     return i == 0 ? helper1().inverse(y) : helper2().inverse(y);
 }
 
@@ -87,13 +87,11 @@ inline Real IrLgm1fPiecewiseLinearParametrization::kappa(const Time) const {
     return 0.0; // almost everywhere
 }
 
-inline Real
-IrLgm1fPiecewiseLinearParametrization::Hprime(const Time t) const {
+inline Real IrLgm1fPiecewiseLinearParametrization::Hprime(const Time t) const {
     return scaling_ * helper2().y(t);
 }
 
-inline Real
-IrLgm1fPiecewiseLinearParametrization::Hprime2(const Time) const {
+inline Real IrLgm1fPiecewiseLinearParametrization::Hprime2(const Time) const {
     return 0.0; // almost everywhere
 }
 

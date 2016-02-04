@@ -62,17 +62,20 @@ class CrossAssetModel : public LinkableCalibratedModel {
         - INF (optionally, ccy must be a subset of the IR ccys)
         - CRD (optionally, ccy must be a subset of the IR ccys)
         - COM (optionally) ccy must be a subset of the IR ccys) */
-    CrossAssetModel(const std::vector<boost::shared_ptr<Parametrization> >
-                    &parametrizations,
-                const Matrix &correlation,
-                SalvagingAlgorithm::Type salvaging = SalvagingAlgorithm::None);
+    CrossAssetModel(
+        const std::vector<boost::shared_ptr<Parametrization> >
+            &parametrizations,
+        const Matrix &correlation,
+        SalvagingAlgorithm::Type salvaging = SalvagingAlgorithm::None);
 
     /*! IR-FX model based constructor */
-    CrossAssetModel(const std::vector<boost::shared_ptr<LinearGaussMarkovModel> > &currencyModels,
-                const std::vector<boost::shared_ptr<FxBsParametrization> >
-                    &fxParametrizations,
-                const Matrix &correlation,
-                SalvagingAlgorithm::Type salvaging = SalvagingAlgorithm::None);
+    CrossAssetModel(
+        const std::vector<boost::shared_ptr<LinearGaussMarkovModel> >
+            &currencyModels,
+        const std::vector<boost::shared_ptr<FxBsParametrization> >
+            &fxParametrizations,
+        const Matrix &correlation,
+        SalvagingAlgorithm::Type salvaging = SalvagingAlgorithm::None);
 
     /*! returns the state process with a given discretization */
     const boost::shared_ptr<StochasticProcess>
@@ -98,13 +101,23 @@ class CrossAssetModel : public LinkableCalibratedModel {
     const boost::shared_ptr<IrLgm1fParametrization>
     irlgm1f(const Size ccy) const;
 
-    Real numeraire(const Size ccy, const Time t, const Real x) const;
-    Real discountBond(const Size ccy, const Time t, const Time T,
-                      const Real x) const;
+    Real numeraire(const Size ccy, const Time t, const Real x,
+                   Handle<YieldTermStructure> discountCurve =
+                       Handle<YieldTermStructure>()) const;
+
+    Real discountBond(const Size ccy, const Time t, const Time T, const Real x,
+                      Handle<YieldTermStructure> discountCurve =
+                          Handle<YieldTermStructure>()) const;
+
     Real reducedDiscountBond(const Size ccy, const Time t, const Time T,
-                             const Real x) const;
+                             const Real x,
+                             Handle<YieldTermStructure> discountCurve =
+                                 Handle<YieldTermStructure>()) const;
+
     Real discountBondOption(const Size ccy, Option::Type type, const Real K,
-                            const Time t, const Time S, const Time T) const;
+                            const Time t, const Time S, const Time T,
+                            Handle<YieldTermStructure> discountCurve =
+                                Handle<YieldTermStructure>()) const;
 
     /*! FXBS components, ccy=0 referes to the first foreign currency,
         so it corresponds to ccy+1 if you want to get the corresponding
@@ -219,10 +232,10 @@ class CrossAssetModel : public LinkableCalibratedModel {
 
 // inline
 
-inline const boost::shared_ptr<StochasticProcess>
-CrossAssetModel::stateProcess(CrossAssetStateProcess::discretization disc) const {
+inline const boost::shared_ptr<StochasticProcess> CrossAssetModel::stateProcess(
+    CrossAssetStateProcess::discretization disc) const {
     return disc == CrossAssetStateProcess::exact ? stateProcessExact_
-                                             : stateProcessEuler_;
+                                                 : stateProcessEuler_;
 }
 
 inline Size CrossAssetModel::dimension() const {
@@ -246,7 +259,8 @@ inline void CrossAssetModel::update() {
 
 inline void CrossAssetModel::generateArguments() { update(); }
 
-inline const boost::shared_ptr<LinearGaussMarkovModel> CrossAssetModel::lgm(const Size ccy) const {
+inline const boost::shared_ptr<LinearGaussMarkovModel>
+CrossAssetModel::lgm(const Size ccy) const {
     QL_REQUIRE(ccy < nIrLgm1f_, "irlgm1f index (" << ccy << ") must be in 0..."
                                                   << (nIrLgm1f_ - 1));
     return lgm_[ccy];
@@ -257,25 +271,29 @@ CrossAssetModel::irlgm1f(const Size ccy) const {
     return lgm(ccy)->parametrization();
 }
 
-inline Real CrossAssetModel::numeraire(const Size ccy, const Time t,
-                                   const Real x) const {
-    return lgm(ccy)->numeraire(t, x);
+inline Real
+CrossAssetModel::numeraire(const Size ccy, const Time t, const Real x,
+                           Handle<YieldTermStructure> discountCurve) const {
+    return lgm(ccy)->numeraire(t, x, discountCurve);
 }
 
-inline Real CrossAssetModel::discountBond(const Size ccy, const Time t,
-                                      const Time T, const Real x) const {
-    return lgm(ccy)->discountBond(t, T, x);
+inline Real
+CrossAssetModel::discountBond(const Size ccy, const Time t, const Time T,
+                              const Real x,
+                              Handle<YieldTermStructure> discountCurve) const {
+    return lgm(ccy)->discountBond(t, T, x, discountCurve);
 }
 
-inline Real CrossAssetModel::reducedDiscountBond(const Size ccy, const Time t,
-                                      const Time T, const Real x) const {
-    return lgm(ccy)->reducedDiscountBond(t, T, x);
+inline Real CrossAssetModel::reducedDiscountBond(
+    const Size ccy, const Time t, const Time T, const Real x,
+    Handle<YieldTermStructure> discountCurve) const {
+    return lgm(ccy)->reducedDiscountBond(t, T, x, discountCurve);
 }
 
-inline Real CrossAssetModel::discountBondOption(const Size ccy, Option::Type type,
-                                     const Real K, const Time t, const Time S,
-                                     const Time T) const {
-    return lgm(ccy)->discountBondOption(type, K, t, S, T);
+inline Real CrossAssetModel::discountBondOption(
+    const Size ccy, Option::Type type, const Real K, const Time t, const Time S,
+    const Time T, Handle<YieldTermStructure> discountCurve) const {
+    return lgm(ccy)->discountBondOption(type, K, t, S, T, discountCurve);
 }
 
 inline const boost::shared_ptr<FxBsParametrization>
@@ -288,7 +306,8 @@ CrossAssetModel::fxbs(const Size ccy) const {
 
 inline const Matrix &CrossAssetModel::correlation() const { return rho_; }
 
-inline Real CrossAssetModel::ir_ir_correlation(const Size i, const Size j) const {
+inline Real CrossAssetModel::ir_ir_correlation(const Size i,
+                                               const Size j) const {
     QL_REQUIRE(i < nIrLgm1f_, "irlgm1f index (" << i << ") must be in 0..."
                                                 << (nIrLgm1f_ - 1));
     QL_REQUIRE(j < nIrLgm1f_, "irlgm1f index (" << i << ") must be in 0..."
@@ -296,7 +315,8 @@ inline Real CrossAssetModel::ir_ir_correlation(const Size i, const Size j) const
     return rho_[i][j];
 }
 
-inline Real CrossAssetModel::ir_fx_correlation(const Size i, const Size j) const {
+inline Real CrossAssetModel::ir_fx_correlation(const Size i,
+                                               const Size j) const {
     QL_REQUIRE(i < nIrLgm1f_, "irlgm1f index (" << i << ") must be in 0..."
                                                 << (nIrLgm1f_ - 1));
     QL_REQUIRE(j < nFxBs_, "fxbs index (" << j << ") must be in 0..."
@@ -304,7 +324,8 @@ inline Real CrossAssetModel::ir_fx_correlation(const Size i, const Size j) const
     return rho_[i][nIrLgm1f_ + j];
 }
 
-inline Real CrossAssetModel::fx_fx_correlation(const Size i, const Size j) const {
+inline Real CrossAssetModel::fx_fx_correlation(const Size i,
+                                               const Size j) const {
     QL_REQUIRE(i < nFxBs_, "fxbs index (" << i << ") must be in 0..."
                                           << (nFxBs_ - 1));
     QL_REQUIRE(j < nFxBs_, "fxbs index (" << j << ") must be in 0..."

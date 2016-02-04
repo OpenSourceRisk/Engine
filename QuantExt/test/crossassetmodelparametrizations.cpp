@@ -234,6 +234,22 @@ void CrossAssetModelParametrizationsTest::testParametrizationBaseClasses() {
     check("update helper23.y", 1.0, helper23.y(1.0), 1.0);
     check("update helper23.exp_m_int_y", 2.0, helper23.exp_m_int_y(2.0),
           std::exp(-0.5 - 1.0));
+
+    // check dates based constructor
+
+    Handle<YieldTermStructure> yts(boost::make_shared<FlatForward>(
+        0, NullCalendar(), 0.0, Actual365Fixed()));
+    std::vector<Date> dates;
+    dates.push_back(yts->referenceDate() + 100);
+    dates.push_back(yts->referenceDate() + 200);
+    dates.push_back(yts->referenceDate() + 250);
+    dates.push_back(yts->referenceDate() + 2385);
+    PiecewiseConstantHelper1 helper1x(dates, yts);
+
+    check("time from date helper1x", 0.0, helper1x.t()[0], yts->timeFromReference(dates[0]));
+    check("time from date helper1x", 0.0, helper1x.t()[1], yts->timeFromReference(dates[1]));
+    check("time from date helper1x", 0.0, helper1x.t()[2], yts->timeFromReference(dates[2]));
+    check("time from date helper1x", 0.0, helper1x.t()[3], yts->timeFromReference(dates[3]));
 }
 
 void CrossAssetModelParametrizationsTest::testIrLgm1fParametrizations() {
@@ -461,16 +477,21 @@ void CrossAssetModelParametrizationsTest::testFxBsParametrizations() {
 
     BOOST_TEST_MESSAGE("Testing CrossAssetModel parametrizations (fxbs)...");
 
-    FxBsConstantParametrization fxbs_0(USDCurrency(), Handle<Quote>(boost::make_shared<SimpleQuote>(1.10)), 0.10);
+    FxBsConstantParametrization fxbs_0(
+        USDCurrency(), Handle<Quote>(boost::make_shared<SimpleQuote>(1.10)),
+        0.10);
 
     check("fxbs_0.variance", 0.0, fxbs_0.variance(0.0), 0.0);
     check("fxbs_0.variance", 1.0, fxbs_0.variance(1.0), 0.01 * 1.0);
     check("fxbs_0.variance", 2.0, fxbs_0.variance(2.0), 0.01 * 2.0);
     check("fxbs_0.variance", 3.0, fxbs_0.variance(3.0), 0.01 * 3.0);
     check("fxbs_0.stdDeviation", 0.0, fxbs_0.stdDeviation(0.0), 0.0);
-    check("fxbs_0.stdDeviation", 1.0, fxbs_0.stdDeviation(1.0), std::sqrt(0.01 * 1.0));
-    check("fxbs_0.stdDeviation", 2.0, fxbs_0.stdDeviation(2.0), std::sqrt(0.01 * 2.0));
-    check("fxbs_0.stdDeviation", 3.0, fxbs_0.stdDeviation(3.0), std::sqrt(0.01 * 3.0));
+    check("fxbs_0.stdDeviation", 1.0, fxbs_0.stdDeviation(1.0),
+          std::sqrt(0.01 * 1.0));
+    check("fxbs_0.stdDeviation", 2.0, fxbs_0.stdDeviation(2.0),
+          std::sqrt(0.01 * 2.0));
+    check("fxbs_0.stdDeviation", 3.0, fxbs_0.stdDeviation(3.0),
+          std::sqrt(0.01 * 3.0));
     check("fxbs_0.sigma", 0.0, fxbs_0.sigma(0.0), 0.10);
     check("fxbs_0.sigma", 1.0, fxbs_0.sigma(1.0), 0.10);
     check("fxbs_0.sigma", 2.0, fxbs_0.sigma(2.0), 0.10);
@@ -528,7 +549,8 @@ void CrossAssetModelParametrizationsTest::testFxBsParametrizations() {
 }
 
 test_suite *CrossAssetModelParametrizationsTest::suite() {
-    test_suite *suite = BOOST_TEST_SUITE("CrossAsset model parametrizations tests");
+    test_suite *suite =
+        BOOST_TEST_SUITE("CrossAsset model parametrizations tests");
     suite->add(QUANTLIB_TEST_CASE(
         &CrossAssetModelParametrizationsTest::testParametrizationBaseClasses));
     suite->add(QUANTLIB_TEST_CASE(

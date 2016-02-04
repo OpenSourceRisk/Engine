@@ -15,6 +15,7 @@
 
 #include <ql/experimental/math/piecewisefunction.hpp>
 #include <ql/math/array.hpp>
+#include <ql/time/date.hpp>
 
 using namespace QuantLib;
 
@@ -23,6 +24,8 @@ namespace QuantExt {
 class PiecewiseConstantHelper1 {
   public:
     PiecewiseConstantHelper1(const Array &t);
+    PiecewiseConstantHelper1(const std::vector<Date> &dates,
+                             const Handle<YieldTermStructure> &yts);
     const Array &t() const;
     const boost::shared_ptr<Parameter> p() const;
     void update() const;
@@ -48,6 +51,8 @@ class PiecewiseConstantHelper11 {
   public:
     /*! y are the raw values in the sense of parameter transformation */
     PiecewiseConstantHelper11(const Array &t1, const Array &t2);
+    PiecewiseConstantHelper11(const std::vector<Date> &dates1, const std::vector<Date> &dates2,
+                             const Handle<YieldTermStructure> &yts);
     const PiecewiseConstantHelper1 &helper1() const;
     const PiecewiseConstantHelper1 &helper2() const;
 
@@ -58,6 +63,8 @@ class PiecewiseConstantHelper11 {
 class PiecewiseConstantHelper2 {
   public:
     PiecewiseConstantHelper2(const Array &t);
+    PiecewiseConstantHelper2(const std::vector<Date> &dates,
+                             const Handle<YieldTermStructure> &yts);
     const Array &t() const;
     const boost::shared_ptr<Parameter> p() const;
     void update() const;
@@ -86,6 +93,8 @@ class PiecewiseConstantHelper2 {
 class PiecewiseConstantHelper3 {
   public:
     PiecewiseConstantHelper3(const Array &t);
+    PiecewiseConstantHelper3(const std::vector<Date> &dates,
+                             const Handle<YieldTermStructure> &yts);
     const Array &t() const;
     const boost::shared_ptr<Parameter> p1() const;
     const boost::shared_ptr<Parameter> p2() const;

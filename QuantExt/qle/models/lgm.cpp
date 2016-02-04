@@ -9,12 +9,14 @@
 
 namespace QuantExt {
 
-LinearGaussMarkovModel::LinearGaussMarkovModel(const boost::shared_ptr<IrLgm1fParametrization> &parametrization)
+LinearGaussMarkovModel::LinearGaussMarkovModel(
+    const boost::shared_ptr<IrLgm1fParametrization> &parametrization)
     : parametrization_(parametrization) {
     stateProcess_ = boost::make_shared<IrLgm1fStateProcess>(parametrization_);
     arguments_.resize(2);
     arguments_[0] = parametrization_->parameter(0);
     arguments_[1] = parametrization_->parameter(1);
+    registerWith(parametrization_->termStructure());
 }
 
 } // namespace QuantExt
