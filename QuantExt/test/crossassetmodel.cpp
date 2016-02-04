@@ -899,25 +899,25 @@ void CrossAssetModelTest::testLgm5fFullCalibration() {
         Date tmp = i < d.volstepdates.size() ? d.volstepdates[i]
                                              : d.volstepdates.back() + 365;
         // EUR: atm+200bp, 150bp normal vol
-        basketEur.push_back(boost::make_shared<SwaptionHelper>(
+        basketEur.push_back(boost::shared_ptr<SwaptionHelper>(new SwaptionHelper(
             tmp, 10 * Years,
             Handle<Quote>(boost::make_shared<SimpleQuote>(0.015)), euribor6m,
             1 * Years, Thirty360(), Actual360(), d.eurYts,
-            CalibrationHelper::RelativePriceError, 0.04, 1.0, Normal));
+            CalibrationHelper::RelativePriceError, 0.04, 1.0, Normal)));
         // USD: atm, 20%, lognormal vol
-        basketUsd.push_back(boost::make_shared<SwaptionHelper>(
+        basketUsd.push_back(boost::shared_ptr<SwaptionHelper>(new SwaptionHelper(
             tmp, 10 * Years,
             Handle<Quote>(boost::make_shared<SimpleQuote>(0.30)), usdLibor3m,
             1 * Years, Thirty360(), Actual360(), d.usdYts,
             CalibrationHelper::RelativePriceError, Null<Real>(), 1.0,
-            ShiftedLognormal, 0.0));
+            ShiftedLognormal, 0.0)));
         // GBP: atm-200bp, 10%, shifted lognormal vol with shift = 2%
-        basketGbp.push_back(boost::make_shared<SwaptionHelper>(
+        basketGbp.push_back(boost::shared_ptr<SwaptionHelper>(new SwaptionHelper(
             tmp, 10 * Years,
             Handle<Quote>(boost::make_shared<SimpleQuote>(0.30)), gbpLibor3m,
             1 * Years, Thirty360(), Actual360(), d.usdYts,
             CalibrationHelper::RelativePriceError, 0.02, 1.0, ShiftedLognormal,
-            0.02));
+            0.02)));
     }
 
     for (Size i = 0; i < d.volstepdatesFx.size(); ++i) {
