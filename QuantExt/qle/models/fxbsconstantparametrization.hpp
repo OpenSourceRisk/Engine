@@ -15,8 +15,11 @@
 
 namespace QuantExt {
 
+/*! FX Black Scholes parametrization, with constant volatility */
 class FxBsConstantParametrization : public FxBsParametrization {
   public:
+    /*! The currency refers to the foreign currency, the
+        spot is as of today (i.e. the discounted spot) */
     FxBsConstantParametrization(const Currency &currency,
                                 const Handle<Quote> &fxSpotToday,
                                 const Real sigma);

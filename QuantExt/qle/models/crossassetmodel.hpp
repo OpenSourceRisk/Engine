@@ -36,7 +36,7 @@ namespace QuantExt {
     The model is operated under the domestic LGM measure. There are two ways of
     calibrating the model:
 
-    - provide a calibrated parametrization for a component
+    - provide an already calibrated parametrization for a component
       extracted from some external model
     - do the calibration within the CrossAssetModel using one
       of the calibration procedures
@@ -47,10 +47,11 @@ namespace QuantExt {
     The model does not own a reference date, the times given in the
     parametrizations are absolute and insensitive to shifts in the global
     evaluation date. The termstructures are required to be consistent with
-    these times. The model does not observe anything, so it's update() method
-    must be explicitly called to notify observers of changes in the
-    constituting parametrizations, update these parametrizations and flushing
-    the cache of the state process. The model ensures these updates during
+    these times, i.e. should all have the same reference date and day counter.
+    The model does not observe anything, so it's update() method must be
+    explicitly called to notify observers of changes in the constituting
+    parametrizations, update these parametrizations and flushing the cache
+    of the state process. The model ensures these updates during
     calibration though.
 */
 

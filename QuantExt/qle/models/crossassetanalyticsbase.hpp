@@ -19,16 +19,15 @@ namespace QuantExt {
 
 namespace CrossAssetAnalytics {
 
-/*! integral helper */
-
+/*! generic integrand */
 template <class E>
 Real integral_helper(const CrossAssetModel *x, const E &e, const Real t);
 
+/*! generic integral calculation */
 template <typename E>
 Real integral(const CrossAssetModel *model, const E &e, const Real a, const Real b);
 
-/*! product expressions */
-
+/*! product expression, 2 factors */
 template <typename E1, typename E2> struct P2_ {
     P2_(const E1 &e1, const E2 &e2) : e1_(e1), e2_(e2) {}
     Real eval(const CrossAssetModel *x, const Real t) const {
@@ -38,6 +37,7 @@ template <typename E1, typename E2> struct P2_ {
     const E2 &e2_;
 };
 
+/*! product expression, 3 factors */
 template <typename E1, typename E2, typename E3> struct P3_ {
     P3_(const E1 &e1, const E2 &e2, const E3 &e3) : e1_(e1), e2_(e2), e3_(e3) {}
     Real eval(const CrossAssetModel *x, const Real t) const {
@@ -48,6 +48,7 @@ template <typename E1, typename E2, typename E3> struct P3_ {
     const E3 &e3_;
 };
 
+/*! product expression, 4 factors */
 template <typename E1, typename E2, typename E3, typename E4> struct P4_ {
     P4_(const E1 &e1, const E2 &e2, const E3 &e3, const E4 &e4)
         : e1_(e1), e2_(e2), e3_(e3), e4_(e4) {}
@@ -61,6 +62,7 @@ template <typename E1, typename E2, typename E3, typename E4> struct P4_ {
     const E4 &e4_;
 };
 
+/*! product expression, 5 factors */
 template <typename E1, typename E2, typename E3, typename E4, typename E5>
 struct P5_ {
     P5_(const E1 &e1, const E2 &e2, const E3 &e3, const E4 &e4, const E5 &e5)
@@ -76,21 +78,25 @@ struct P5_ {
     const E5 &e5_;
 };
 
+/*! creator function for product expression, 2 factors */
 template <class E1, class E2> const P2_<E1, E2> P(const E1 &e1, const E2 &e2) {
     return P2_<E1, E2>(e1, e2);
 }
 
+/*! creator function for product expression, 3 factors */
 template <class E1, class E2, class E3>
 const P3_<E1, E2, E3> P(const E1 &e1, const E2 &e2, const E3 &e3) {
     return P3_<E1, E2, E3>(e1, e2, e3);
 }
 
+/*! creator function for product expression, 4 factors */
 template <class E1, class E2, class E3, class E4>
 const P4_<E1, E2, E3, E4> P(const E1 &e1, const E2 &e2, const E3 &e3,
                             const E4 &e4) {
     return P4_<E1, E2, E3, E4>(e1, e2, e3, e4);
 }
 
+/*! creator function for product expression, 5 factors */
 template <class E1, class E2, class E3, class E4, class E5>
 const P5_<E1, E2, E3, E4, E5> P(const E1 &e1, const E2 &e2, const E3 &e3,
                                 const E4 &e4, const E5 &e5) {

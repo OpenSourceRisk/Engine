@@ -21,14 +21,16 @@ class IrLgm1fPiecewiseConstantParametrization
       private PiecewiseConstantHelper1,
       private PiecewiseConstantHelper2 {
   public:
-    /*! note that if a non unit scaling is provided, then
-        the parameterValues method returns the unscaled alpha,
-        while all other methods return scaled (and shifted) values */
     IrLgm1fPiecewiseConstantParametrization(
         const Currency &currency,
         const Handle<YieldTermStructure> &termStructure,
         const Array &alphaTimes, const Array &alpha, const Array &kappaTimes,
         const Array &kappa);
+    IrLgm1fPiecewiseConstantParametrization(
+        const Currency &currency,
+        const Handle<YieldTermStructure> &termStructure,
+        const std::vector<Date> &alphaDates, const Array &alpha,
+        const std::vector<Date> &kappaDates, const Array &kappa);
     Real zeta(const Time t) const;
     Real H(const Time t) const;
     Real alpha(const Time t) const;
@@ -43,6 +45,8 @@ class IrLgm1fPiecewiseConstantParametrization
     Real direct(const Size i, const Real x) const;
     Real inverse(const Size j, const Real y) const;
 
+  private:
+    void initialize(const Array &alpha, const Array &kappa);
 };
 
 // inline

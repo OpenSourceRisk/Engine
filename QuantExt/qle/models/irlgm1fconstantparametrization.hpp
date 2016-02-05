@@ -17,9 +17,6 @@ namespace QuantExt {
 
 class IrLgm1fConstantParametrization : public IrLgm1fParametrization {
   public:
-    /*! note that if a non unit scaling is provided, then
-        the parameterValues method returns the unscaled alpha,
-        while all other methods return scaled (and shifted) values */
     IrLgm1fConstantParametrization(
         const Currency &currency,
         const Handle<YieldTermStructure> &termStructure, const Real alpha,

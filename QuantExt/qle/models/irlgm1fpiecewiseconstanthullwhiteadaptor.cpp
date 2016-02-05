@@ -16,14 +16,30 @@ IrLgm1fPiecewiseConstantHullWhiteAdaptor::
         const Array &sigma, const Array &kappa)
     : IrLgm1fParametrization(currency, termStructure),
       PiecewiseConstantHelper3(times), PiecewiseConstantHelper2(times) {
-    QL_REQUIRE(times.size() + 1 == sigma.size(),
+    initialize(sigma, kappa);
+}
+
+IrLgm1fPiecewiseConstantHullWhiteAdaptor::
+    IrLgm1fPiecewiseConstantHullWhiteAdaptor(
+        const Currency &currency,
+        const Handle<YieldTermStructure> &termStructure,
+        const std::vector<Date> &dates, const Array &sigma, const Array &kappa)
+    : IrLgm1fParametrization(currency, termStructure),
+      PiecewiseConstantHelper3(dates, termStructure),
+      PiecewiseConstantHelper2(dates, termStructure) {
+    initialize(sigma, kappa);
+}
+
+void IrLgm1fPiecewiseConstantHullWhiteAdaptor::initialize(const Array &sigma,
+                                                          const Array &kappa) {
+    QL_REQUIRE(PiecewiseConstantHelper3::t().size() + 1 == sigma.size(),
                "sigma size (" << sigma.size()
                               << ") inconsistent to times size ("
-                              << times.size() << ")");
-    QL_REQUIRE(times.size() + 1 == kappa.size(),
+                              << PiecewiseConstantHelper3::t().size() << ")");
+    QL_REQUIRE(PiecewiseConstantHelper2::t().size() + 1 == kappa.size(),
                "kappa size (" << kappa.size()
                               << ") inconsistent to times size ("
-                              << times.size() << ")");
+                              << PiecewiseConstantHelper2::t().size() << ")");
 
     // store raw parameter values
     for (Size i = 0; i < PiecewiseConstantHelper3::y1_->size(); ++i) {

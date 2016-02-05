@@ -25,6 +25,10 @@ class IrLgm1fPiecewiseConstantHullWhiteAdaptor
         const Currency &currency,
         const Handle<YieldTermStructure> &termStructure, const Array &times,
         const Array &sigma, const Array &kappa);
+    IrLgm1fPiecewiseConstantHullWhiteAdaptor(
+        const Currency &currency,
+        const Handle<YieldTermStructure> &termStructure,
+        const std::vector<Date> &dates, const Array &sigma, const Array &kappa);
     Real zeta(const Time t) const;
     Real H(const Time t) const;
     Real alpha(const Time t) const;
@@ -40,6 +44,8 @@ class IrLgm1fPiecewiseConstantHullWhiteAdaptor
     Real direct(const Size i, const Real x) const;
     Real inverse(const Size j, const Real y) const;
 
+  private:
+    void initialize(const Array &sigma, const Array &kappa);
 };
 
 // inline

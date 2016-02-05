@@ -25,6 +25,9 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
+/*! Cumulative normal distribution
+    This implementation relies on std::erf if c++11 is supported,
+    otherwise falls back on boost::math::erf. */
 class CumulativeNormalDistribution {
   public:
     CumulativeNormalDistribution(Real average = 0.0, Real sigma = 1.0);

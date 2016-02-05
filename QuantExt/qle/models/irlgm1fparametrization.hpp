@@ -34,7 +34,11 @@ class IrLgm1fParametrization : public Parametrization {
 
     /*! allows to apply a shift to H (model invariance 1) */
     Real &shift();
-    /*! allows to apply a scaling to H and zeta (model invariance 2) */
+
+    /*! allows to apply a scaling to H and zeta (model invariance 2),
+      note that if a non unit scaling is provided, then
+      the parameterValues method returns the unscaled alpha,
+      while all other methods return scaled (and shifted) values */
     Real &scaling();
 
   protected:

@@ -12,19 +12,30 @@ namespace QuantExt {
 IrLgm1fPiecewiseLinearParametrization::IrLgm1fPiecewiseLinearParametrization(
     const Currency &currency, const Handle<YieldTermStructure> &termStructure,
     const Array &alphaTimes, const Array &alpha, const Array &hTimes,
-    const Array &h, const Real shift, const Real scaling)
+    const Array &h)
     : IrLgm1fParametrization(currency, termStructure),
-      PiecewiseConstantHelper11(alphaTimes, hTimes), shift_(shift),
-      scaling_(scaling) {
-    QL_REQUIRE(!close_enough(scaling, 0.0),
-               "scaling (" << scaling << ") must be non-zero");
-    QL_REQUIRE(alphaTimes.size() + 1 == alpha.size(),
+      PiecewiseConstantHelper11(alphaTimes, hTimes) {
+    initialize(alpha, h);
+}
+
+IrLgm1fPiecewiseLinearParametrization::IrLgm1fPiecewiseLinearParametrization(
+    const Currency &currency, const Handle<YieldTermStructure> &termStructure,
+    const std::vector<Date> &alphaDates, const Array &alpha,
+    const std::vector<Date> &hDates, const Array &h)
+    : IrLgm1fParametrization(currency, termStructure),
+      PiecewiseConstantHelper11(alphaDates, hDates, termStructure) {
+    initialize(alpha, h);
+}
+
+void IrLgm1fPiecewiseLinearParametrization::initialize(const Array &alpha,
+                                                       const Array &h) {
+    QL_REQUIRE(helper1().t().size() + 1 == alpha.size(),
                "alpha size (" << alpha.size()
                               << ") inconsistent to times size ("
-                              << alphaTimes.size() << ")");
-    QL_REQUIRE(hTimes.size() + 1 == h.size(),
+                              << helper1().t().size() << ")");
+    QL_REQUIRE(helper2().t().size() + 1 == h.size(),
                "h size (" << h.size() << ") inconsistent to times size ("
-                          << hTimes.size() << ")");
+                          << helper1().t().size() << ")");
     // store raw parameter values
     for (Size i = 0; i < helper1().p()->size(); ++i) {
         helper1().p()->setParam(i, inverse(0, alpha[i]));

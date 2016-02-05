@@ -19,12 +19,16 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
+/*! Base class for FX Black Scholes parametrizations */
 class FxBsParametrization : public Parametrization {
   public:
+    /*! The currency refers to the foreign currency, the spot
+        is as of today (i.e. the discounted spot) */
     FxBsParametrization(const Currency &foreignCurrency,
                         const Handle<Quote> &fxSpotToday);
     /*! must satisfy variance(0) = 0.0, variance'(t) >= 0 */
     virtual Real variance(const Time t) const = 0;
+    /*! is supposed to be positive */
     virtual Real sigma(const Time t) const;
     virtual Real stdDeviation(const Time t) const;
     const Handle<Quote> fxSpotToday() const;
