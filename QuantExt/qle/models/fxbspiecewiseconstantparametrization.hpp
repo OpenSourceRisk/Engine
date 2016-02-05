@@ -16,13 +16,23 @@
 
 namespace QuantExt {
 
+/*! FX Black Scholes parametrization with piecewise
+  constant volatility */
 class FxBsPiecewiseConstantParametrization : public FxBsParametrization,
                                              private PiecewiseConstantHelper1 {
   public:
+    /*! The currency refers to the foreign currency, the spot
+        is as of today (i.e. the discounted spot) */
     FxBsPiecewiseConstantParametrization(const Currency &currency,
                                          const Handle<Quote> &fxSpotToday,
                                          const Array &times,
                                          const Array &sigma);
+    /*! The term structure is needed in addition because it
+        it's day counter and reference date is needed to
+        convert dates to times. It should be the term structure
+        of the domestic IR component in the cross asset model,
+        since this is defining the model's date-time conversion
+        in more general terms. */
     FxBsPiecewiseConstantParametrization(
         const Currency &currency, const Handle<Quote> &fxSpotToday,
         const std::vector<Date> &dates, const Array &sigma,

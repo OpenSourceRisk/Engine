@@ -48,8 +48,7 @@ Real ir_fx_covariance(const CrossAssetModel *model, const Size i, const Size j,
 Real fx_fx_covariance(const CrossAssetModel *model, const Size i, const Size j,
                       const Time t0, Time dt);
 
-/*! components to build the integrand */
-
+/*! IR H component */
 struct Hz {
     Hz(const Size i) : i_(i) {}
     Real eval(const CrossAssetModel *x, const Real t) const {
@@ -58,6 +57,7 @@ struct Hz {
     const Size i_;
 };
 
+/*! IR alpha component */
 struct az {
     az(const Size i) : i_(i) {}
     Real eval(const CrossAssetModel *x, const Real t) const {
@@ -66,6 +66,7 @@ struct az {
     const Size i_;
 };
 
+/*! IR zeta component */
 struct zeta {
     zeta(const Size i) : i_(i) {}
     Real eval(const CrossAssetModel *x, const Real t) const {
@@ -74,6 +75,7 @@ struct zeta {
     const Size i_;
 };
 
+/*! FX zeta component */
 struct sx {
     sx(const Size i) : i_(i) {}
     Real eval(const CrossAssetModel *x, const Real t) const {
@@ -82,6 +84,7 @@ struct sx {
     const Size i_;
 };
 
+/*! IR-IR correlation component */
 struct rzz {
     rzz(const Size i, const Size j) : i_(i), j_(j) {}
     Real eval(const CrossAssetModel *x, const Real) const {
@@ -90,6 +93,7 @@ struct rzz {
     const Size i_, j_;
 };
 
+/*! IR-FX correlation component */
 struct rzx {
     rzx(const Size i, const Size j) : i_(i), j_(j) {}
     Real eval(const CrossAssetModel *x, const Real) const {
@@ -98,6 +102,7 @@ struct rzx {
     const Size i_, j_;
 };
 
+/*! FX-FX correlation component */
 struct rxx {
     rxx(const Size i, const Size j) : i_(i), j_(j) {}
     Real eval(const CrossAssetModel *x, const Real) const {
