@@ -111,9 +111,11 @@ void CrossAssetModelParametrizationsTest::testParametrizationBaseClasses() {
     // the helper type 3 is close to type 2, so we only do the easiest
     // tests here, in the irlgm1f Hull White adaptor tests below the
     // other tests will be implicit though
-    PiecewiseConstantHelper3 helper31(noTimes);
+    PiecewiseConstantHelper3 helper31(noTimes, noTimes);
     helper31.p1()->setParam(0, std::sqrt(3.0));
     helper31.p2()->setParam(0, 2.0);
+    // helper 3 requires an update()
+    helper31.update();
     check("helper31.y1", 0.0, helper31.y1(0.0), 3.0);
     check("helper31.y1", 1.0, helper31.y1(1.0), 3.0);
     check("helper31.y1", 3.0, helper31.y1(3.0), 3.0);
@@ -128,6 +130,25 @@ void CrossAssetModelParametrizationsTest::testParametrizationBaseClasses() {
     check("helper31.int_y1_sqr_int_exp_2_int_y2", 3.0,
           helper31.int_y1_sqr_exp_2_int_y2(3.0),
           9.0 / 4.0 * (std::exp(2.0 * 2.0 * 3.0) - 1.0));
+
+    // test union set of times
+    Array times1(2);
+    Array times2(3);
+    times1[0] = 0.1;
+    times1[1] = 0.5;
+    times2[0] = 0.2;
+    times2[1] = 0.5;
+    times2[2] = 1.0;
+    PiecewiseConstantHelper3 helper32(times1, times2);
+    helper32.update();
+    Array exTu(4);
+    exTu[0] = 0.1;
+    exTu[1] = 0.2;
+    exTu[2] = 0.5;
+    exTu[3] = 1.0;
+    if (helper32.tUnion() != exTu)
+        BOOST_ERROR("helper32 expected tUnion array " << exTu << ", but is "
+                                                      << helper32.tUnion());
 
     PiecewiseConstantHelper2 helper22(noTimes);
     helper22.p()->setParam(0, 0.0);
@@ -246,10 +267,14 @@ void CrossAssetModelParametrizationsTest::testParametrizationBaseClasses() {
     dates.push_back(yts->referenceDate() + 2385);
     PiecewiseConstantHelper1 helper1x(dates, yts);
 
-    check("time from date helper1x", 0.0, helper1x.t()[0], yts->timeFromReference(dates[0]));
-    check("time from date helper1x", 0.0, helper1x.t()[1], yts->timeFromReference(dates[1]));
-    check("time from date helper1x", 0.0, helper1x.t()[2], yts->timeFromReference(dates[2]));
-    check("time from date helper1x", 0.0, helper1x.t()[3], yts->timeFromReference(dates[3]));
+    check("time from date helper1x", 0.0, helper1x.t()[0],
+          yts->timeFromReference(dates[0]));
+    check("time from date helper1x", 0.0, helper1x.t()[1],
+          yts->timeFromReference(dates[1]));
+    check("time from date helper1x", 0.0, helper1x.t()[2],
+          yts->timeFromReference(dates[2]));
+    check("time from date helper1x", 0.0, helper1x.t()[3],
+          yts->timeFromReference(dates[3]));
 }
 
 void CrossAssetModelParametrizationsTest::testIrLgm1fParametrizations() {
@@ -334,8 +359,9 @@ void CrossAssetModelParametrizationsTest::testIrLgm1fParametrizations() {
     IrLgm1fPiecewiseConstantParametrization irlgm1f_4(
         EURCurrency(), flatYts, alphaTimes, alpha, kappaTimes, kappa);
 
+    // alpha and kappa times are identical
     IrLgm1fPiecewiseConstantHullWhiteAdaptor irlgm1f_5(
-        EURCurrency(), flatYts, alphaTimes, sigma, kappa);
+        EURCurrency(), flatYts, alphaTimes, sigma, alphaTimes, kappa);
 
     Real t = 0.0, step = 1.0E-3;
     while (t < 100.0) {

@@ -118,7 +118,8 @@ void CrossAssetModelTest::testBermudanLgm1fGsr() {
     // which should lead to equal Bermudan swaption prices
     boost::shared_ptr<IrLgm1fParametrization> lgm_p =
         boost::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
-            EURCurrency(), d.yts, d.stepTimes_a, d.sigmas_a, d.kappas_a);
+            EURCurrency(), d.yts, d.stepTimes_a, d.sigmas_a, d.stepTimes_a,
+            d.kappas_a);
 
     // fix any T forward measure
     boost::shared_ptr<Gsr> gsr = boost::make_shared<Gsr>(
@@ -171,7 +172,8 @@ void CrossAssetModelTest::testBermudanLgmInvariances() {
 
     boost::shared_ptr<IrLgm1fParametrization> lgm_p2 =
         boost::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
-            EURCurrency(), d.yts, d.stepTimes_a, d.sigmas_a, d.kappas_a);
+            EURCurrency(), d.yts, d.stepTimes_a, d.sigmas_a, d.stepTimes_a,
+            d.kappas_a);
 
     boost::shared_ptr<LinearGaussMarkovModel> lgm2 =
         boost::make_shared<LinearGaussMarkovModel>(lgm_p2);
@@ -258,7 +260,8 @@ void CrossAssetModelTest::testLgm1fCalibration() {
 
     boost::shared_ptr<IrLgm1fParametrization> lgm_p =
         boost::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
-            EURCurrency(), yts, stepTimes_a, lgmInitialSigmas2_a, kappas_a);
+            EURCurrency(), yts, stepTimes_a, lgmInitialSigmas2_a, stepTimes_a,
+            kappas_a);
 
     // fix any T forward measure
     boost::shared_ptr<Gsr> gsr =
@@ -321,10 +324,12 @@ void CrossAssetModelTest::testLgm1fCalibration() {
     // create a second set of parametrization ...
     boost::shared_ptr<IrLgm1fParametrization> lgm_p21 =
         boost::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
-            USDCurrency(), yts, stepTimes_a, lgmInitialSigmas2_a, kappas_a);
+            USDCurrency(), yts, stepTimes_a, lgmInitialSigmas2_a, stepTimes_a,
+            kappas_a);
     boost::shared_ptr<IrLgm1fParametrization> lgm_p22 =
         boost::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
-            EURCurrency(), yts, stepTimes_a, lgmInitialSigmas2_a, kappas_a);
+            EURCurrency(), yts, stepTimes_a, lgmInitialSigmas2_a, stepTimes_a,
+            kappas_a);
 
     // ... and a fx parametrization ...
     Array notimes_a(0);
@@ -776,8 +781,9 @@ void CrossAssetModelTest::testLgm5fFxCalibration() {
     boost::shared_ptr<AnalyticCcLgmFxOptionEngine> ccLgmFxOptionEngineGbp =
         boost::make_shared<AnalyticCcLgmFxOptionEngine>(d.ccLgm, 1);
 
-    boost::shared_ptr<AnalyticCcLgmFxOptionEngine> ccLgmProjectedFxOptionEngineGbp =
-        boost::make_shared<AnalyticCcLgmFxOptionEngine>(ccLgmProjected, 0);
+    boost::shared_ptr<AnalyticCcLgmFxOptionEngine>
+        ccLgmProjectedFxOptionEngineGbp =
+            boost::make_shared<AnalyticCcLgmFxOptionEngine>(ccLgmProjected, 0);
 
     ccLgmFxOptionEngineUsd->cache();
     ccLgmFxOptionEngineGbp->cache();
@@ -899,25 +905,28 @@ void CrossAssetModelTest::testLgm5fFullCalibration() {
         Date tmp = i < d.volstepdates.size() ? d.volstepdates[i]
                                              : d.volstepdates.back() + 365;
         // EUR: atm+200bp, 150bp normal vol
-        basketEur.push_back(boost::shared_ptr<SwaptionHelper>(new SwaptionHelper(
-            tmp, 10 * Years,
-            Handle<Quote>(boost::make_shared<SimpleQuote>(0.015)), euribor6m,
-            1 * Years, Thirty360(), Actual360(), d.eurYts,
-            CalibrationHelper::RelativePriceError, 0.04, 1.0, Normal)));
+        basketEur.push_back(
+            boost::shared_ptr<SwaptionHelper>(new SwaptionHelper(
+                tmp, 10 * Years,
+                Handle<Quote>(boost::make_shared<SimpleQuote>(0.015)),
+                euribor6m, 1 * Years, Thirty360(), Actual360(), d.eurYts,
+                CalibrationHelper::RelativePriceError, 0.04, 1.0, Normal)));
         // USD: atm, 20%, lognormal vol
-        basketUsd.push_back(boost::shared_ptr<SwaptionHelper>(new SwaptionHelper(
-            tmp, 10 * Years,
-            Handle<Quote>(boost::make_shared<SimpleQuote>(0.30)), usdLibor3m,
-            1 * Years, Thirty360(), Actual360(), d.usdYts,
-            CalibrationHelper::RelativePriceError, Null<Real>(), 1.0,
-            ShiftedLognormal, 0.0)));
+        basketUsd.push_back(
+            boost::shared_ptr<SwaptionHelper>(new SwaptionHelper(
+                tmp, 10 * Years,
+                Handle<Quote>(boost::make_shared<SimpleQuote>(0.30)),
+                usdLibor3m, 1 * Years, Thirty360(), Actual360(), d.usdYts,
+                CalibrationHelper::RelativePriceError, Null<Real>(), 1.0,
+                ShiftedLognormal, 0.0)));
         // GBP: atm-200bp, 10%, shifted lognormal vol with shift = 2%
-        basketGbp.push_back(boost::shared_ptr<SwaptionHelper>(new SwaptionHelper(
-            tmp, 10 * Years,
-            Handle<Quote>(boost::make_shared<SimpleQuote>(0.30)), gbpLibor3m,
-            1 * Years, Thirty360(), Actual360(), d.usdYts,
-            CalibrationHelper::RelativePriceError, 0.02, 1.0, ShiftedLognormal,
-            0.02)));
+        basketGbp.push_back(
+            boost::shared_ptr<SwaptionHelper>(new SwaptionHelper(
+                tmp, 10 * Years,
+                Handle<Quote>(boost::make_shared<SimpleQuote>(0.30)),
+                gbpLibor3m, 1 * Years, Thirty360(), Actual360(), d.usdYts,
+                CalibrationHelper::RelativePriceError, 0.02, 1.0,
+                ShiftedLognormal, 0.02)));
     }
 
     for (Size i = 0; i < d.volstepdatesFx.size(); ++i) {
@@ -1197,7 +1206,8 @@ void CrossAssetModelTest::testLgmGsrEquivalence() {
                 boost::shared_ptr<IrLgm1fParametrization> lgm_p =
                     boost::make_shared<
                         IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
-                        EURCurrency(), yts, stepTimes_a, sigmas_a, kappas_a);
+                        EURCurrency(), yts, stepTimes_a, sigmas_a, stepTimes_a,
+                        kappas_a);
                 lgm_p->shift() = shift;
 
                 boost::shared_ptr<LinearGaussMarkovModel> lgm =

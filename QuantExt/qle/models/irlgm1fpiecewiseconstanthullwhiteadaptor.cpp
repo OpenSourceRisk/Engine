@@ -12,10 +12,12 @@ namespace QuantExt {
 IrLgm1fPiecewiseConstantHullWhiteAdaptor::
     IrLgm1fPiecewiseConstantHullWhiteAdaptor(
         const Currency &currency,
-        const Handle<YieldTermStructure> &termStructure, const Array &times,
-        const Array &sigma, const Array &kappa)
+        const Handle<YieldTermStructure> &termStructure,
+        const Array &sigmaTimes, const Array &sigma, const Array &kappaTimes,
+        const Array &kappa)
     : IrLgm1fParametrization(currency, termStructure),
-      PiecewiseConstantHelper3(times), PiecewiseConstantHelper2(times) {
+      PiecewiseConstantHelper3(sigmaTimes, kappaTimes),
+      PiecewiseConstantHelper2(kappaTimes) {
     initialize(sigma, kappa);
 }
 
@@ -23,19 +25,20 @@ IrLgm1fPiecewiseConstantHullWhiteAdaptor::
     IrLgm1fPiecewiseConstantHullWhiteAdaptor(
         const Currency &currency,
         const Handle<YieldTermStructure> &termStructure,
-        const std::vector<Date> &dates, const Array &sigma, const Array &kappa)
+        const std::vector<Date> &sigmaDates, const Array &sigma,
+        const std::vector<Date> &kappaDates, const Array &kappa)
     : IrLgm1fParametrization(currency, termStructure),
-      PiecewiseConstantHelper3(dates, termStructure),
-      PiecewiseConstantHelper2(dates, termStructure) {
+      PiecewiseConstantHelper3(sigmaDates, kappaDates, termStructure),
+      PiecewiseConstantHelper2(kappaDates, termStructure) {
     initialize(sigma, kappa);
 }
 
 void IrLgm1fPiecewiseConstantHullWhiteAdaptor::initialize(const Array &sigma,
                                                           const Array &kappa) {
-    QL_REQUIRE(PiecewiseConstantHelper3::t().size() + 1 == sigma.size(),
+    QL_REQUIRE(PiecewiseConstantHelper3::t1().size() + 1 == sigma.size(),
                "sigma size (" << sigma.size()
                               << ") inconsistent to times size ("
-                              << PiecewiseConstantHelper3::t().size() << ")");
+                              << PiecewiseConstantHelper3::t1().size() << ")");
     QL_REQUIRE(PiecewiseConstantHelper2::t().size() + 1 == kappa.size(),
                "kappa size (" << kappa.size()
                               << ") inconsistent to times size ("

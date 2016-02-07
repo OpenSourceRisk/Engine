@@ -343,7 +343,7 @@ void AnalyticLgmSwaptionEngineTest::testAgainstOtherEngines() {
                     IrLgm1fPiecewiseConstantHullWhiteAdaptor> irlgm1f =
                     boost::make_shared<
                         IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
-                        EURCurrency(), discountingCurve, times, sigma_a,
+                        EURCurrency(), discountingCurve, times, sigma_a, times,
                         kappa_a);
 
                 std::vector<boost::shared_ptr<Parametrization> > params;
@@ -354,7 +354,8 @@ void AnalyticLgmSwaptionEngineTest::testAgainstOtherEngines() {
                     boost::make_shared<CrossAssetModel>(params, rho);
 
                 const boost::shared_ptr<Gaussian1dModel> g1d =
-                    boost::make_shared<Gaussian1dCrossAssetAdaptor>(0, crossasset);
+                    boost::make_shared<Gaussian1dCrossAssetAdaptor>(0,
+                                                                    crossasset);
 
                 const boost::shared_ptr<Gsr> gsr = boost::make_shared<Gsr>(
                     discountingCurve, dates, sigma_v, kappa_v);
@@ -528,11 +529,13 @@ void AnalyticLgmSwaptionEngineTest::testLgmInvariances() {
 
             const boost::shared_ptr<IrLgm1fParametrization> irlgm1f0c =
                 boost::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
-                    EURCurrency(), discountingCurve, times, sigma_a, kappa_a);
+                    EURCurrency(), discountingCurve, times, sigma_a, times,
+                    kappa_a);
 
             const boost::shared_ptr<IrLgm1fParametrization> irlgm1fc =
                 boost::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
-                    EURCurrency(), discountingCurve, times, sigma_a, kappa_a);
+                    EURCurrency(), discountingCurve, times, sigma_a, times,
+                    kappa_a);
             irlgm1fc->shift() = shift[i];
             irlgm1fc->scaling() = scaling[j];
 

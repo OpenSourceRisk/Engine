@@ -23,12 +23,14 @@ class IrLgm1fPiecewiseConstantHullWhiteAdaptor
   public:
     IrLgm1fPiecewiseConstantHullWhiteAdaptor(
         const Currency &currency,
-        const Handle<YieldTermStructure> &termStructure, const Array &times,
-        const Array &sigma, const Array &kappa);
+        const Handle<YieldTermStructure> &termStructure,
+        const Array &sigmaTimes, const Array &sigma, const Array &kappaTimes,
+        const Array &kappa);
     IrLgm1fPiecewiseConstantHullWhiteAdaptor(
         const Currency &currency,
         const Handle<YieldTermStructure> &termStructure,
-        const std::vector<Date> &dates, const Array &sigma, const Array &kappa);
+        const std::vector<Date> &sigmaDates, const Array &sigma,
+        const std::vector<Date> &kappaDates, const Array &kappa);
     Real zeta(const Time t) const;
     Real H(const Time t) const;
     Real alpha(const Time t) const;
@@ -107,7 +109,7 @@ inline const Array &
 IrLgm1fPiecewiseConstantHullWhiteAdaptor::parameterTimes(const Size i) const {
     QL_REQUIRE(i < 2, "parameter " << i << " does not exist, only have 0..1");
     if (i == 0)
-        return PiecewiseConstantHelper3::t_;
+        return PiecewiseConstantHelper3::t1_;
     else
         return PiecewiseConstantHelper2::t_;
 }
