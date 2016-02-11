@@ -11,7 +11,7 @@
 #ifndef quantext_dynamics_type_hpp
 #define quantext_dynamics_type_hpp
 
-#include <iostream>
+#include <ostream>
 
 namespace QuantExt {
 
@@ -25,6 +25,8 @@ inline std::ostream &operator<<(std::ostream &out, const Stickyness &t) {
         return out << "StickyStrike";
     case StickyLogMoneyness:
         return out << "StickyLogMoneyness";
+    case StickyAbsoluteMoneyness:
+        return out << "StickyAbsoluteMoneyness";
     default:
         return out << "Unknown stickyness type (" << t << ")";
     }
