@@ -35,6 +35,7 @@ using boost::unit_test::test_suite;
 #include "crossassetmodelparametrizations.hpp"
 #include "currency.hpp"
 #include "discountcurve.hpp"
+#include "discountingswapengine.hpp"
 #include "dynamicblackvoltermstructure.hpp"
 #include "dynamicswaptionvolmatrix.hpp"
 #include "index.hpp"
@@ -74,6 +75,7 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(CrossAssetModelTest2::suite());
     test->add(CrossAssetModelParametrizationsTest::suite());
     test->add(DiscountCurveTest::suite());
+    test->add(DiscountingSwapEngineTest::suite());
     test->add(DynamicBlackVolTermStructureTest::suite());
     test->add(DynamicSwaptionVolMatrixTest::suite());
     test->add(CurrencyTest::suite());

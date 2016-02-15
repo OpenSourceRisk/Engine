@@ -51,7 +51,7 @@ inline Real FxBsConstantParametrization::variance(const Time t) const {
     return direct(0, sigma_->params()[0]) * direct(0, sigma_->params()[0]) * t;
 }
 
-inline Real FxBsConstantParametrization::sigma(const Time t) const {
+inline Real FxBsConstantParametrization::sigma(const Time) const {
     return direct(0, sigma_->params()[0]);
 }
 
