@@ -105,7 +105,18 @@ namespace QuantExt {
                 // amount below.
                 if ((cp != NULL || cpcf != NULL) && simulateFixings) {
                     Date fixingDate = cp->fixingDate();
-                    boost::shared_ptr<InterestRateIndex> index = cp->index();
+                    boost::shared_ptr<InterestRateIndex> index;
+                    if(cp!=NULL)
+                        index = cp->index();
+                    if(cpcf!=NULL)
+                        index = cpcf->index();
+                    // add backward fixing, since the index might change
+                    // from cashflow to cashflow, we do it for each
+                    // cashflow; this should always be a projected
+                    // fixing, not a real one, so we pass true as the
+                    // second parameter (forecastTodaysFixing)
+                    SimulatedFixingsManager::instance().addBackwardFixing(
+                        index->name(), today, index->fixing(today, true));
                     Real fixing = 0.0;
                     // is it a past fixing ?
                     if (fixingDate < today ||
@@ -144,7 +155,7 @@ namespace QuantExt {
                         if (SimulatedFixingsManager::instance()
                                 .simulateFixings()) {
                             SimulatedFixingsManager::instance()
-                                .addSimulatedFixing(index->name(), fixingDate,
+                                .addForwardFixing(index->name(), fixingDate,
                                                     fixing);
                         }
                         // finally, compute the amount in the usual way

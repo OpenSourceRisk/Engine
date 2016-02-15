@@ -64,16 +64,20 @@ void DiscountingSwapEngineTest::testVanillaSwap() {
 
     // enable simulated fixings
     SimulatedFixingsManager::instance().simulateFixings() = true;
+    // use forward mode
+    SimulatedFixingsManager::instance().estimationMethod() =
+        SimulatedFixingsManager::Forward;
     // only store the next 10 calendar days
     SimulatedFixingsManager::instance().horizon() = 10;
     // reset (required on each path, the global evaluation date has
     // to be the original reference date when doing this)
     SimulatedFixingsManager::instance().reset();
 
-    for (Size i = 0; i < 2 * 365; ++i) {
+    for (Size i = 0; i < 365; ++i) {
         Date d = TARGET().advance(refDate, i * Days);
         Settings::instance().evaluationDate() = d;
         rate->setValue(0.02 + static_cast<Real>(i / 10000.0));
+        std::cout << "1******* setting date to " << d << " and rate to " << rate->value() << std::endl;
         Real npv = swap->NPV();
         npvs_sim.push_back(npv);
     }
@@ -87,10 +91,11 @@ void DiscountingSwapEngineTest::testVanillaSwap() {
     Real tol = 1.0E-12;
 
     Real lastEstimatedFixing = 0.0;
-    for (Size i = 0; i < 2 * 365; ++i) {
+    for (Size i = 0; i < 365; ++i) {
         Date d = TARGET().advance(refDate, i * Days);
         Settings::instance().evaluationDate() = d;
         rate->setValue(0.02 + static_cast<Real>(i / 10000.0));
+        std::cout << "2******* setting date to " << d << " and rate to " << rate->value() << std::endl;
         Real npv = swap->NPV();
         if (std::fabs(npv - npvs_sim[i]) > tol) {
             BOOST_ERROR("swap npv on "
@@ -110,6 +115,8 @@ void DiscountingSwapEngineTest::testVanillaSwap() {
         lastEstimatedFixing =
             index->fixing(TARGET().advance(refDate, (i + 1) * Days));
     }
+
+    // TODO ... add tests for the other estimation methods ...
 
 } // test vanilla swap
 
