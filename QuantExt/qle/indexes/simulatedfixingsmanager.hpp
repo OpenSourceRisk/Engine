@@ -9,8 +9,8 @@
     \brief global respository for simulated fixings
 */
 
-#ifndef quantlib_simulated_fixings_manager_hpp
-#define quantlib_simulated_fixings_manager_hpp
+#ifndef quantext_simulated_fixings_manager_hpp
+#define quantext_simulated_fixings_manager_hpp
 
 #include <ql/settings.hpp>
 #include <ql/timeseries.hpp>
@@ -157,7 +157,7 @@ void SimulatedFixingsManager_t<T>::addForwardFixing(const std::string &name,
     QL_REQUIRE(referenceDate_ != Null<Date>(),
                "can not add estimation for simulated fixing for "
                    << name << " @ " << value << " on " << fixingDate
-                   << ", need a reset first");
+                   << ", need a newPath call first");
 
     QL_REQUIRE(referenceDate_ <= fixingDate,
                "can not add estimation for simulated fixing for "
@@ -182,7 +182,7 @@ void SimulatedFixingsManager_t<T>::addBackwardFixing(const std::string &name,
     QL_REQUIRE(referenceDate_ != Null<Date>(),
                "can not add estimation for simulated fixing for "
                    << name << " @ " << value << " on " << fixingDate
-                   << ", need a reset first");
+                   << ", need a newPath call first");
 
     QL_REQUIRE(referenceDate_ <= fixingDate,
                "can not add estimation for simulated fixing for "
