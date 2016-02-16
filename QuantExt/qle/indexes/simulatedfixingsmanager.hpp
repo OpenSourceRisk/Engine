@@ -157,7 +157,7 @@ void SimulatedFixingsManager_t<T>::addForwardFixing(const std::string &name,
     QL_REQUIRE(referenceDate_ != Null<Date>(),
                "can not add estimation for simulated fixing for "
                    << name << " @ " << value << " on " << fixingDate
-                   << ", need a reset first");
+                   << ", need a newPath call first");
 
     QL_REQUIRE(referenceDate_ <= fixingDate,
                "can not add estimation for simulated fixing for "
@@ -182,7 +182,7 @@ void SimulatedFixingsManager_t<T>::addBackwardFixing(const std::string &name,
     QL_REQUIRE(referenceDate_ != Null<Date>(),
                "can not add estimation for simulated fixing for "
                    << name << " @ " << value << " on " << fixingDate
-                   << ", need a reset first");
+                   << ", need a newPath call first");
 
     QL_REQUIRE(referenceDate_ <= fixingDate,
                "can not add estimation for simulated fixing for "
