@@ -112,17 +112,15 @@ namespace QuantExt {
                         index = cpcf->index();
                     // add backward fixing, since the index might change
                     // from cashflow to cashflow, we do it for each
-                    // cashflow; this should always be a projected
-                    // fixing, not a real one, so we pass true as the
-                    // second parameter (forecastTodaysFixing)
+                    // cashflow
                     SimulatedFixingsManager::instance().addBackwardFixing(
-                        index->name(), today, index->fixing(today, true));
+                        index->name(), index->fixing(today));
                     Real fixing = 0.0;
                     // is it a past fixing ?
                     if (fixingDate < today ||
                         (fixingDate == today && enforceTodaysHistoricFixings)) {
                         Real nativeFixing = index->timeSeries()[fixingDate];
-                        if (nativeFixing != Null<Real>() || !simulateFixings)
+                        if (nativeFixing != Null<Real>())
                             fixing = nativeFixing;
                         else
                             fixing =
@@ -149,14 +147,16 @@ namespace QuantExt {
                         }
                         tmp = effFixing * cp->accrualPeriod() * cp->nominal();
                     } else {
-                        // no past fixing, so forecast fixing
+                        // no past fixing, so forecast fixing (or in case
+                        // of todays fixing, read possibly the actual
+                        // fixing)
                         fixing = index->fixing(fixingDate);
                         // add the fixing to the simulated fixing data
                         if (SimulatedFixingsManager::instance()
                                 .simulateFixings()) {
                             SimulatedFixingsManager::instance()
                                 .addForwardFixing(index->name(), fixingDate,
-                                                    fixing);
+                                                  fixing);
                         }
                         // finally, compute the amount in the usual way
                         tmp = cf.amount();

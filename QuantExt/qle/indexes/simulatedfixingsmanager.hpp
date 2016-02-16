@@ -22,7 +22,11 @@ using boost::algorithm::to_upper_copy;
 
 namespace QuantLib {
 
-/*! global repository for simulated fixings */
+/*! global repository for simulated fixings, the assumption is
+ that after a reset the evaluation date moves forward and on
+ the way fixings are added as "backward-fixings" (estimation
+ as of the evaluation date) or "forward-fixings" (projections
+ as of a future date) */
 
 template <class T = Real>
 class SimulatedFixingsManager_t
@@ -30,10 +34,7 @@ class SimulatedFixingsManager_t
     friend class Singleton<SimulatedFixingsManager_t<T> >;
 
   private:
-    SimulatedFixingsManager_t()
-        : simulateFixings_(false),
-          estimationMethod_(InterpolatedForwardBackward), horizon_(0),
-          referenceDate_(Null<Date>()) {}
+    SimulatedFixingsManager_t() { reset(); }
 
   public:
     // note that it is in the pricing engine's
@@ -66,15 +67,20 @@ class SimulatedFixingsManager_t
     BigInteger &horizon();
     BigInteger horizon() const;
 
+    /*! resets the simulated fixings settings */
+    void reset();
+
     /*! clears recorded fixings and sets the reference
       date to the current evaluation date */
-    void reset() const;
+    void newPath() const;
+
     /*! adds a projected fixing (forward method) */
     void addForwardFixing(const std::string &name, const Date &fixingDate,
                           const T &value) const;
+
     /*! adds a fixing as of evaluation date (backward method) */
-    void addBackwardFixing(const std::string &name, const Date &fixingDate,
-                           const T &value) const;
+    void addBackwardFixing(const std::string &name, const T &value) const;
+
     /*! returns a simulated fixing, might be Null<T>, if data innsufficient */
     T simulatedFixing(const std::string &name, const Date &fixingDate) const;
 
@@ -133,7 +139,14 @@ inline BigInteger SimulatedFixingsManager_t<T>::horizon() const {
 
 // implementation
 
-template <class T> void SimulatedFixingsManager_t<T>::reset() const {
+template <class T> void SimulatedFixingsManager_t<T>::reset() {
+    simulateFixings_ = false;
+    estimationMethod_ = InterpolatedForwardBackward;
+    horizon_ = 0;
+    referenceDate_ = Null<Date>();
+}
+
+template <class T> void SimulatedFixingsManager_t<T>::newPath() const {
     forwardData_.clear();
     backwardData_.clear();
     referenceDate_ = Settings::instance().evaluationDate();
@@ -175,21 +188,20 @@ void SimulatedFixingsManager_t<T>::addForwardFixing(const std::string &name,
 
 template <class T>
 void SimulatedFixingsManager_t<T>::addBackwardFixing(const std::string &name,
-                                                     const Date &fixingDate,
                                                      const T &value) const {
+
+    Date fixingDate = Settings::instance().evaluationDate();
 
     QL_REQUIRE(referenceDate_ != Null<Date>(),
                "can not add estimation for simulated fixing for "
                    << name << " @ " << value << " on " << fixingDate
                    << ", need a reset first");
 
-    QL_REQUIRE(referenceDate_ <= fixingDate &&
-                   fixingDate == Settings::instance().evaluationDate(),
+    QL_REQUIRE(referenceDate_ <= fixingDate,
                "can not add estimation for simulated fixing for "
                    << name << " @ " << value << " on " << fixingDate
                    << ", since reference date (" << referenceDate_
-                   << ") <= fixing date = evaluationDate ("
-                   << Settings::instance().evaluationDate() << ") required.");
+                   << ") is past fixing date");
 
     std::string uname = boost::algorithm::to_upper_copy(name);
     backwardData_[uname][fixingDate] = value;
@@ -244,9 +256,10 @@ T SimulatedFixingsManager_t<T>::simulatedFixing(const std::string &name,
     }
     // debug
     std::clog << "retrieving forward fixing for " << name << " on "
-              << fixingDate << " @ " << fwdTmp << " (evalDate,refDate) = ("
+              << fixingDate << " @ " << fwdTmp
+              << " (evalDate,refDate,saveDate) = ("
               << Settings::instance().evaluationDate() << "," << referenceDate_
-              << ")\n";
+              << "," << fwdDate << ")\n";
     // end debug
 
     if (estimationMethod_ == Forward) {
@@ -256,7 +269,7 @@ T SimulatedFixingsManager_t<T>::simulatedFixing(const std::string &name,
 
     // remaining methods are requiring both fwd and bwd estimate
     // if only one is available, we fall back on the respective
-    // method
+    // forward or backward only method
     if (bwdTmp == Null<T>()) {
         // debug
         std::clog << "only fwd estimate available, returning " << fwdTmp
@@ -266,7 +279,7 @@ T SimulatedFixingsManager_t<T>::simulatedFixing(const std::string &name,
     }
     if (fwdTmp == Null<T>()) {
         // debug
-        std::clog << "only bwd estimate available, returning " << fwdTmp
+        std::clog << "only bwd estimate available, returning " << bwdTmp
                   << std::endl;
         // end debug
         return bwdTmp;
@@ -280,7 +293,7 @@ T SimulatedFixingsManager_t<T>::simulatedFixing(const std::string &name,
               << fwdDistance << ", backward distance = " << bwdDistance
               << " => ";
     // end debug
-    if (estimationMethod_ == BestOfForwardBackward) {
+    if (estimationMethod_ == BestOfForwardBackward || fwdDistance == 0) {
         if (fwdDistance <= bwdDistance) {
             // debug
             std::clog << fwdTmp << std::endl;
