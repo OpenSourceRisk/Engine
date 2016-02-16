@@ -21,6 +21,7 @@
 class DiscountingSwapEngineTest {
   public:
     static void testVanillaSwap();
+    static void testFixingEstimationMethods();
     static boost::unit_test_framework::test_suite* suite();
 };
 
