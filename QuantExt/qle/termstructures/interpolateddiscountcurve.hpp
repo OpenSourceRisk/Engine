@@ -56,7 +56,7 @@ namespace QuantExt {
 
             for (Size i = 0; i < quotes.size(); ++i)
                 quotes_.push_back(logLinear_ ? Handle<Quote>(boost::make_shared<LogQuote>(quotes[i])) : quotes[i]);
-
+            
             for (Size i = 0; i < times_.size() - 1; ++i)
                 timeDiffs_.push_back(times_[i+1] - times_[i]);
         }
@@ -69,8 +69,10 @@ namespace QuantExt {
   
     protected:
         DiscountFactor discountImpl(Time t) const {
-            QL_REQUIRE(t > 0, "Time " << t << " must be positive");
-            if (t >= times_.back()) {
+            QL_REQUIRE(t >= 0, "Time " << t << " must be non-negative");
+            if (t == 0.0)
+                return 1.0;
+            else if (t >= times_.back()) {
 
                 // extrapolate using flat zero rate from final discount
                 Real r = 0.0;

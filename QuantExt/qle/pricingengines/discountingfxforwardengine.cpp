@@ -31,16 +31,18 @@ namespace QuantExt {
         registerWith(currency1Discountcurve_);
         registerWith(currency2Discountcurve_);
         registerWith(spotFX_);
-
-        if(npvDate_ == Null<Date>()) {
-            npvDate_ = currency1Discountcurve_->referenceDate();
-        }
-        if(settlementDate_ == Null<Date>()) {
-            settlementDate_ = npvDate_;
-        }
     }
 
     void DiscountingFxForwardEngine::calculate() const {
+
+        Date npvDate = npvDate_;
+        if(npvDate == Null<Date>()) {
+            npvDate = currency1Discountcurve_->referenceDate();
+        }
+        Date settlementDate = settlementDate_;
+        if(settlementDate == Null<Date>()) {
+            settlementDate = npvDate;
+        }
 
         Real tmpNominal1, tmpNominal2;
         bool tmpPayCurrency1;
@@ -82,14 +84,14 @@ namespace QuantExt {
         results_.value = 0.0;
         
         if (!detail::simple_event(arguments_.maturityDate).hasOccurred(
-                settlementDate_, includeSettlementDateFlows_)) {
+                settlementDate, includeSettlementDateFlows_)) {
             results_.value = (tmpPayCurrency1 ? -1.0 : 1.0) * (
                 tmpNominal1 *
                 currency1Discountcurve_->discount(arguments_.maturityDate) /
-                currency1Discountcurve_->discount(npvDate_) -
+                currency1Discountcurve_->discount(npvDate) -
                 tmpNominal2 *
                 currency2Discountcurve_->discount(arguments_.maturityDate) /
-                currency2Discountcurve_->discount(npvDate_)*spotFX_->value());
+                currency2Discountcurve_->discount(npvDate)*spotFX_->value());
         }
         results_.npv = Money(ccy1_, results_.value);
         results_.fairForwardRate = ExchangeRate(ccy2_, ccy1_, tmpNominal1/tmpNominal2);
