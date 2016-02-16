@@ -21,10 +21,10 @@ using boost::algorithm::to_upper_copy;
 namespace QuantLib {
 
 /*! global repository for simulated fixings, the assumption is
- that after a reset the evaluation date moves forward and on
- the way fixings are added as "backward-fixings" (estimation
- as of the evaluation date) or "forward-fixings" (projections
- as of a future date) */
+ that after a newPath() call the evaluation date moves forward
+ and on the way fixings are added as "backward-fixings"
+ (estimation as of the evaluation date) or "forward-fixings"
+ (projections as of a future date) */
 
 template <class T = Real>
 class SimulatedFixingsManager_t
