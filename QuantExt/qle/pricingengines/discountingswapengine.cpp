@@ -29,7 +29,7 @@
 
 namespace QuantExt {
 
-    
+
     DiscountingSwapEngine::DiscountingSwapEngine(
                             const Handle<YieldTermStructure>& discountCurve,
                             boost::optional<bool> includeSettlementDateFlows,
@@ -37,7 +37,21 @@ namespace QuantExt {
                             Date npvDate)
     : discountCurve_(discountCurve),
       includeSettlementDateFlows_(includeSettlementDateFlows),
-      settlementDate_(settlementDate), npvDate_(npvDate) {
+      settlementDate_(settlementDate), npvDate_(npvDate),
+      floatingLags_(false) {
+        registerWith(discountCurve_);
+    }
+
+    DiscountingSwapEngine::DiscountingSwapEngine(
+                            const Handle<YieldTermStructure>& discountCurve,
+                            boost::optional<bool> includeSettlementDateFlows,
+                            Period settlementDateLag,
+                            Period npvDateLag,
+                            Calendar calendar)
+    : discountCurve_(discountCurve),
+      includeSettlementDateFlows_(includeSettlementDateFlows),
+      settlementDateLag_(settlementDateLag), npvDateLag_(npvDateLag),
+      calendar_(calendar), floatingLags_(true) {
         registerWith(discountCurve_);
     }
 
@@ -50,24 +64,42 @@ namespace QuantExt {
 
         Date refDate = discountCurve_->referenceDate();
 
-        Date settlementDate = settlementDate_;
-        if (settlementDate_==Date()) {
-            settlementDate = refDate;
-        } else {
-            QL_REQUIRE(settlementDate>=refDate,
-                       "settlement date (" << settlementDate << ") before "
-                       "discount curve reference date (" << refDate << ")");
+        Date settlementDate;
+        if(floatingLags_) {
+            QL_REQUIRE(settlementDateLag_.length() >= 0,
+                       "non negative period required");
+            settlementDate =  calendar_.advance(refDate, settlementDateLag_);
+        }
+        else {
+            if (settlementDate_ == Date()) {
+                settlementDate = refDate;
+            } else {
+                QL_REQUIRE(settlementDate >= refDate,
+                           "settlement date ("
+                               << settlementDate
+                               << ") before "
+                                  "discount curve reference date ("
+                               << refDate << ")");
+            }
         }
 
-        results_.valuationDate = npvDate_;
-        if (npvDate_==Date()) {
-            results_.valuationDate = refDate;
+        if (floatingLags_) {
+            QL_REQUIRE(npvDateLag_.length() >= 0,
+                       "non negative period required");
+            results_.valuationDate = calendar_.advance(refDate, npvDateLag_);
         } else {
-            QL_REQUIRE(npvDate_>=refDate,
-                       "npv date (" << npvDate_  << ") before "
-                       "discount curve reference date (" << refDate << ")");
+            if (npvDate_ == Date()) {
+                results_.valuationDate = refDate;
+            } else {
+                QL_REQUIRE(npvDate_ >= refDate,
+                           "npv date (" << npvDate_
+                                        << ") before "
+                                           "discount curve reference date ("
+                                        << refDate << ")");
+            }
         }
-        results_.npvDateDiscount = discountCurve_->discount(results_.valuationDate);
+        results_.npvDateDiscount =
+            discountCurve_->discount(results_.valuationDate);
 
         Size n = arguments_.legs.size();
         results_.legNPV.resize(n);
