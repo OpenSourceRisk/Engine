@@ -3,5 +3,4 @@
 
 #include <qle/indexes/genericiborindex.hpp>
 #include <qle/indexes/simulatedfixingsmanager.hpp>
-
 #include <qle/indexes/ibor/all.hpp>
