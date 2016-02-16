@@ -35,6 +35,7 @@
 #include <ql/cashflows/capflooredcoupon.hpp>
 #include <ql/instruments/swap.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
+#include <ql/time/calendars/nullcalendar.hpp>
 #include <ql/handle.hpp>
 
 using namespace QuantLib;
@@ -51,12 +52,20 @@ namespace QuantExt {
       cases in the standard QuantLib. */
     class DiscountingSwapEngine : public Swap::engine {
       public:
+        // ctor with fixed settlement and npv date
         DiscountingSwapEngine(
                const Handle<YieldTermStructure>& discountCurve =
                                                  Handle<YieldTermStructure>(),
                boost::optional<bool> includeSettlementDateFlows = boost::none,
                Date settlementDate = Date(),
                Date npvDate = Date());
+        // ctor with floating settlement and npv date lags
+        DiscountingSwapEngine(
+               const Handle<YieldTermStructure>& discountCurve,
+               boost::optional<bool> includeSettlementDateFlows,
+               Period settlementDateLag,
+               Period npvDateLag,
+               Calendar calendar);
         void calculate() const;
         Handle<YieldTermStructure> discountCurve() const {
             return discountCurve_;
@@ -68,6 +77,9 @@ namespace QuantExt {
         Handle<YieldTermStructure> discountCurve_;
         boost::optional<bool> includeSettlementDateFlows_;
         Date settlementDate_, npvDate_;
+        Period settlementDateLag_, npvDateLag_;
+        Calendar calendar_;
+        bool floatingLags_;
     };
 
     // inline
