@@ -105,8 +105,6 @@ void DiscountingSwapEngineTest::testVanillaSwap() {
             Settings::instance().evaluationDate() = d;
             rate->setValue(0.02 + static_cast<Real>(i / 10000.0));
             Real npv = swap->NPV();
-            std::cout << "1******* setting date to " << d << " and rate to "
-                      << rate->value() << " npv=" << npv << std::endl;
             npvs_sim.push_back(npv);
         }
 
@@ -122,8 +120,6 @@ void DiscountingSwapEngineTest::testVanillaSwap() {
             Date d = TARGET().advance(refDate, i * Days);
             Settings::instance().evaluationDate() = d;
             rate->setValue(0.02 + static_cast<Real>(i / 10000.0));
-            std::cout << "2******* setting date to " << d << " and rate to "
-                      << rate->value() << std::endl;
             Real npv = swap->NPV();
             if (std::fabs(npv - npvs_sim[i]) > tol ||
                 boost::math::isnan(npvs_sim[i])) {
@@ -136,6 +132,8 @@ void DiscountingSwapEngineTest::testVanillaSwap() {
             index->addFixing(d, index->fixing(d));
         }
     }
+
+    BOOST_CHECK(true);
 
 } // test vanilla swap
 
@@ -262,6 +260,8 @@ void DiscountingSwapEngineTest::testFixingEstimationMethods() {
     checkFixing(SimulatedFixingsManager::InterpolatedForwardBackward,
                 Date(15, Sep, 2018),
                 (bwddays * 0.08 + fwddays * 0.09) / (bwddays + fwddays));
+
+    BOOST_CHECK(true);
 
 } // testFixingsEstimationMethods
 

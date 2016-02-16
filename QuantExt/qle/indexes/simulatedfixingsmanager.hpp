@@ -16,8 +16,6 @@
 #include <ql/timeseries.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
 
-#include <iostream> // only for debug
-
 using boost::algorithm::to_upper_copy;
 
 namespace QuantLib {
@@ -150,10 +148,6 @@ template <class T> void SimulatedFixingsManager_t<T>::newPath() const {
     forwardData_.clear();
     backwardData_.clear();
     referenceDate_ = Settings::instance().evaluationDate();
-    // debug
-    std::clog << "reset simulated fixings reference date to " << referenceDate_
-              << "\n";
-    // end debug
 }
 
 template <class T>
@@ -176,13 +170,6 @@ void SimulatedFixingsManager_t<T>::addForwardFixing(const std::string &name,
         std::string uname = boost::algorithm::to_upper_copy(name);
         forwardData_[uname][fixingDate] =
             std::make_pair(value, Settings::instance().evaluationDate());
-
-        // debug
-        std::clog << "recording forward fixing for " << name << " on "
-                  << fixingDate << " @ " << value << " (evalDate,refDate) = ("
-                  << Settings::instance().evaluationDate() << ","
-                  << referenceDate_ << ")\n";
-        // end debug
     }
 }
 
@@ -206,12 +193,6 @@ void SimulatedFixingsManager_t<T>::addBackwardFixing(const std::string &name,
     std::string uname = boost::algorithm::to_upper_copy(name);
     backwardData_[uname][fixingDate] = value;
 
-    // debug
-    std::clog << "recording backward fixing for " << name << " on "
-              << fixingDate << " @ " << value << " (evalDate,refDate) = ("
-              << Settings::instance().evaluationDate() << "," << referenceDate_
-              << ")\n";
-    // end debug
 }
 
 template <class T>
@@ -232,13 +213,6 @@ T SimulatedFixingsManager_t<T>::simulatedFixing(const std::string &name,
         if (it != backwardData_[uname].end()) {
             bwdDate = it->first;
             bwdTmp = it->second;
-            // debug
-            std::clog << "retrieving bwd-fixing for " << name << " on "
-                      << bwdDate << " @ " << bwdTmp
-                      << " (evalDate,refDate,fixingDate) = ("
-                      << Settings::instance().evaluationDate() << ","
-                      << referenceDate_ << "," << fixingDate << ")\n";
-            // end debug
         }
         if (estimationMethod_ == Backward) {
             // might be Null<T>
@@ -254,13 +228,6 @@ T SimulatedFixingsManager_t<T>::simulatedFixing(const std::string &name,
         fwdTmp = it->second.first;
         fwdDate = it->second.second;
     }
-    // debug
-    std::clog << "retrieving forward fixing for " << name << " on "
-              << fixingDate << " @ " << fwdTmp
-              << " (evalDate,refDate,saveDate) = ("
-              << Settings::instance().evaluationDate() << "," << referenceDate_
-              << "," << fwdDate << ")\n";
-    // end debug
 
     if (estimationMethod_ == Forward) {
         // might be Null<T>
@@ -271,38 +238,19 @@ T SimulatedFixingsManager_t<T>::simulatedFixing(const std::string &name,
     // if only one is available, we fall back on the respective
     // forward or backward only method
     if (bwdTmp == Null<T>()) {
-        // debug
-        std::clog << "only fwd estimate available, returning " << fwdTmp
-                  << std::endl;
-        // end debug
         return fwdTmp;
     }
     if (fwdTmp == Null<T>()) {
-        // debug
-        std::clog << "only bwd estimate available, returning " << bwdTmp
-                  << std::endl;
-        // end debug
         return bwdTmp;
     }
 
     // we have both estimates
     BigInteger fwdDistance = fixingDate - fwdDate;
     BigInteger bwdDistance = bwdDate - fixingDate;
-    // debug
-    std::clog << "best of or interpolated method, forward distance = "
-              << fwdDistance << ", backward distance = " << bwdDistance
-              << " => ";
-    // end debug
     if (estimationMethod_ == BestOfForwardBackward || fwdDistance == 0) {
         if (fwdDistance <= bwdDistance) {
-            // debug
-            std::clog << fwdTmp << std::endl;
-            // end debug
             return fwdTmp;
         } else {
-            // debug
-            std::clog << bwdTmp << std::endl;
-            // end debug
             return bwdTmp;
         }
     }
@@ -311,9 +259,6 @@ T SimulatedFixingsManager_t<T>::simulatedFixing(const std::string &name,
         T tmp = (fwdTmp * static_cast<T>(bwdDistance) +
                  bwdTmp * static_cast<T>(fwdDistance)) /
                 (static_cast<T>(bwdDistance) + static_cast<T>(fwdDistance));
-        // debug
-        std::clog << tmp << std::endl;
-        // end debug
         return tmp;
     }
 
