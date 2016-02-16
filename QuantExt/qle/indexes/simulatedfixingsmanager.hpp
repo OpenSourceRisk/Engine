@@ -9,8 +9,8 @@
     \brief global respository for simulated fixings
 */
 
-#ifndef quantlib_simulated_fixings_manager_hpp
-#define quantlib_simulated_fixings_manager_hpp
+#ifndef quantext_simulated_fixings_manager_hpp
+#define quantext_simulated_fixings_manager_hpp
 
 #include <ql/settings.hpp>
 #include <ql/timeseries.hpp>
