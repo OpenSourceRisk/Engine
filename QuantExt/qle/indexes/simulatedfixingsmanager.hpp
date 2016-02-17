@@ -177,6 +177,8 @@ template <class T>
 void SimulatedFixingsManager_t<T>::addBackwardFixing(const std::string &name,
                                                      const T &value) const {
 
+    // this might in fact be a holiday, nevertheless we store
+    // the fixing on the evaluation date
     Date fixingDate = Settings::instance().evaluationDate();
 
     QL_REQUIRE(referenceDate_ != Null<Date>(),
