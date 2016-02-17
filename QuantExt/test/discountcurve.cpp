@@ -15,9 +15,11 @@
 using namespace boost::unit_test_framework;
 using std::vector;
 
-void test(bool logLinear) {
+void DiscountCurveTest::testDiscountCurve() {
 
-    Date today = Settings::instance().evaluationDate();
+    BOOST_TEST_MESSAGE("Testing QuantExt::InteroplatedDiscountCurve...");
+
+    SavedSettings backup;
     Settings::instance().evaluationDate() = Date(1, Dec, 2015);
 
     vector<Date> dates;
@@ -46,28 +48,18 @@ void test(bool logLinear) {
 
     // Test against the QL curve
     boost::shared_ptr<YieldTermStructure> ytsBase;
-    if(logLinear)
-        ytsBase = boost::shared_ptr<YieldTermStructure>(new
-            QuantLib::InterpolatedDiscountCurve<LogLinear>(dates, dfs, dc, cal));
-    else
-        ytsBase = boost::shared_ptr<YieldTermStructure>(new
-            QuantLib::InterpolatedDiscountCurve<Linear>(dates, dfs, dc, cal));
+    ytsBase = boost::shared_ptr<YieldTermStructure>(
+        new QuantLib::InterpolatedDiscountCurve<LogLinear>(dates, dfs, dc,
+                                                           cal));
+    ytsBase->enableExtrapolation();
 
     boost::shared_ptr<YieldTermStructure> ytsTest
-        (new QuantExt::InterpolatedDiscountCurve(dates, quotes, cal, dc, logLinear));
+        (new QuantExt::InterpolatedDiscountCurve(dates, quotes, 0, cal, dc));
 
-    // now check that they give the same discount factors (up to extrapolation)
-    for (Time t = 0.1; t < numYears - 1.0; t += 0.1)
+    // now check that they give the same discount factors (including extrapolation)
+    for (Time t = 0.1; t < numYears + 10.0; t += 0.1) {
         BOOST_CHECK_CLOSE(ytsBase->discount(t), ytsTest->discount(t), 1e-12);
-
-    Settings::instance().evaluationDate() = today;
-}
-
-void DiscountCurveTest::testDiscountCurve() {
-    BOOST_TEST_MESSAGE("Testing QuantExt::InteroplatedDiscountCurve (Linear) ...");
-    test(false); //test linear interpolation
-    BOOST_TEST_MESSAGE("Testing QuantExt::InteroplatedDiscountCurve (LogLinear) ...");
-    test(true);  //test log linear interpolation
+    }
 }
 
 test_suite* DiscountCurveTest::suite() {
