@@ -15,6 +15,7 @@
 #include <ql/time/calendars/target.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
 #include <ql/quotes/simplequote.hpp>
+#include <test-suite/utilities.hpp>
 
 #include <boost/make_shared.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
@@ -267,8 +268,8 @@ void DiscountingSwapEngineTest::testFixingEstimationMethods() {
 
 test_suite *DiscountingSwapEngineTest::suite() {
     test_suite *suite = BOOST_TEST_SUITE("DiscountingSwapEngineTests");
-    suite->add(BOOST_TEST_CASE(&DiscountingSwapEngineTest::testVanillaSwap));
-    suite->add(BOOST_TEST_CASE(
+    suite->add(QUANTLIB_TEST_CASE(&DiscountingSwapEngineTest::testVanillaSwap));
+    suite->add(QUANTLIB_TEST_CASE(
         &DiscountingSwapEngineTest::testFixingEstimationMethods));
     return suite;
 }
