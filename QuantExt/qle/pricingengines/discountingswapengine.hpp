@@ -126,7 +126,9 @@ namespace QuantExt {
                     // from cashflow to cashflow, we do it for each
                     // cashflow
                     SimulatedFixingsManager::instance().addBackwardFixing(
-                        index->name(), index->fixing(today));
+                        index->name(),
+                        index->fixing(
+                            index->fixingCalendar().adjust(today, Preceding)));
                     Real fixing = 0.0;
                     // is it a past fixing ?
                     if (fixingDate < today ||
