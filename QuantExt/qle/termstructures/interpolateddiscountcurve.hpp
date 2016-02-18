@@ -49,7 +49,7 @@ namespace QuantExt {
         //@}
         
     private:
-      void initalise(std::vector<Handle<Quote> > quotes) {
+        void initalise (std::vector<Handle<Quote> > quotes) {
             QL_REQUIRE(times_.size() > 1, "at least two times required");
             QL_REQUIRE(times_[0] == 0.0, "First time must be 0, got " << times_[0]); // or date=asof
             QL_REQUIRE(times_.size() == quotes.size(), "size of time and quote vectors do not match");
