@@ -11,5 +11,6 @@
 #include <qle/termstructures/oibasisswaphelper.hpp>
 #include <qle/termstructures/oiccbasisswaphelper.hpp>
 #include <qle/termstructures/oisratehelper.hpp>
+#include <qle/termstructures/staticallycorrectedyieldtermstructure.hpp>
 #include <qle/termstructures/tenorbasisswaphelper.hpp>
 
