@@ -29,6 +29,7 @@ this_include_HEADERS = \
 	oibasisswaphelper.hpp \
 	oiccbasisswaphelper.hpp \
 	oisratehelper.hpp \
+	staticallycorrectedyieldtermstructure.hpp \
 	tenorbasisswaphelper.hpp
 
 all.hpp: Makefile.am

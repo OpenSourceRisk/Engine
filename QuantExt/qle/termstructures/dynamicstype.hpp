@@ -19,6 +19,8 @@ enum Stickyness { StickyStrike, StickyLogMoneyness, StickyAbsoluteMoneyness };
 
 enum ReactionToTimeDecay { ConstantVariance, ForwardForwardVariance };
 
+enum YieldCurveRollDown { ConstantDiscounts, ForwardForward };
+
 inline std::ostream &operator<<(std::ostream &out, const Stickyness &t) {
     switch (t) {
     case StickyStrike:
@@ -40,7 +42,19 @@ inline std::ostream &operator<<(std::ostream &out,
     case ForwardForwardVariance:
         return out << "ForwardForwardVariance";
     default:
-        return out << "Unknown volatility type (" << t << ")";
+        return out << "Unknown reaction to time decay type (" << t << ")";
+    }
+};
+
+inline std::ostream &operator<<(std::ostream &out,
+                                const YieldCurveRollDown &t) {
+    switch (t) {
+    case ConstantDiscounts:
+        return out << "ConstantDiscounts";
+    case ForwardForwardVariance:
+        return out << "ForwardForward";
+    default:
+        return out << "Unknown yield curve roll down type (" << t << ")";
     }
 };
 

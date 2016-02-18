@@ -2,6 +2,7 @@
 QLE_TESTS = \
 	testsuite.cpp \
 	analyticlgmswaptionengine.hpp analyticlgmswaptionengine.cpp \
+	staticallycorrectedyieldtermstructure.hpp staticallycorrectedyieldtermstructure.cpp \
 	crossassetmodel.hpp crossassetmodel.cpp \
 	crossassetmodel2.hpp crossassetmodel2.cpp \
 	crossassetmodelparametrizations.hpp crossassetmodelparametrizations.cpp \

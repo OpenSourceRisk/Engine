@@ -40,6 +40,7 @@ using boost::unit_test::test_suite;
 #include "dynamicswaptionvolmatrix.hpp"
 #include "index.hpp"
 #include "logquote.hpp"
+#include "staticallycorrectedyieldtermstructure.hpp"
 
 namespace {
 
@@ -81,6 +82,7 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(CurrencyTest::suite());
     test->add(IndexTest::suite());
     test->add(LogQuoteTest::suite());
+    test->add(StaticallyCorrectedYieldTermStructureTest::suite());
 
     test->add(BOOST_TEST_CASE(stopTimer));
 
