@@ -38,8 +38,7 @@ class StaticallyCorrectedYieldTermStructure : public YieldTermStructure {
                              floatingTermStructure->calendar(),
                              floatingTermStructure->dayCounter()),
           x_(floatingTermStructure), source_(fixedSourceTermStructure),
-          target_(fixedTargetTermStructure), rollDown_(rollDown),
-          referenceDate_(fixedSourceTermStructure->referenceDate()) {
+          target_(fixedTargetTermStructure), rollDown_(rollDown) {
         registerWith(floatingTermStructure);
         registerWith(fixedSourceTermStructure);
         registerWith(fixedTargetTermStructure);
@@ -53,18 +52,16 @@ class StaticallyCorrectedYieldTermStructure : public YieldTermStructure {
   private:
     const Handle<YieldTermStructure> x_, source_, target_;
     const YieldCurveRollDown rollDown_;
-    const Date referenceDate_;
 };
 
 // inline
 
 inline Real StaticallyCorrectedYieldTermStructure::discountImpl(Time t) const {
-    Real t0 = source_->timeFromReference(referenceDate_);
+    Real t0 = timeFromReference(referenceDate());
     Real c = rollDown_ == ConstantDiscounts
                  ? target_->discount(t) / source_->discount(t)
                  : target_->discount(t0 + t) * source_->discount(t0) /
                        (target_->discount(t0) * source_->discount(t0 + t));
-
     return x_->discount(t) * c;
 }
 
