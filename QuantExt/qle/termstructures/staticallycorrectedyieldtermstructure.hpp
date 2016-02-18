@@ -39,7 +39,7 @@ class StaticallyCorrectedYieldTermStructure : public YieldTermStructure {
                              floatingTermStructure->dayCounter()),
           x_(floatingTermStructure), source_(fixedSourceTermStructure),
           target_(fixedTargetTermStructure), rollDown_(rollDown),
-          referenceDate_(Settings::instance().evaluationDate()) {
+          referenceDate_(fixedSourceTermStructure->referenceDate()) {
         registerWith(floatingTermStructure);
         registerWith(fixedSourceTermStructure);
         registerWith(fixedTargetTermStructure);
