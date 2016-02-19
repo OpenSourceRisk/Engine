@@ -18,6 +18,18 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
+    CurrencySwap::CurrencySwap(Size nLegs) {
+        legs_.resize(nLegs);
+        payer_.resize(nLegs);
+        currency_.resize(nLegs);
+        legNPV_.resize(nLegs);
+        inCcyLegNPV_.resize(nLegs);
+        legBPS_.resize(nLegs);
+        inCcyLegBPS_.resize(nLegs);
+        startDiscounts_.resize(nLegs);
+        endDiscounts_.resize(nLegs);
+    }
+
     CurrencySwap::CurrencySwap(const std::vector<Leg>& legs,
                                const std::vector<bool>& payer,
                                const std::vector<Currency>& currency)
