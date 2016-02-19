@@ -54,7 +54,7 @@ class DynamicSwaptionVolatilityMatrix : public SwaptionVolatilityStructure {
     void update();
 
   private:
-    boost::shared_ptr<SwaptionVolatilityMatrix> source_;
+    const boost::shared_ptr<SwaptionVolatilityStructure> source_;
     ReactionToTimeDecay decayMode_;
     const Date originalReferenceDate_;
 };
