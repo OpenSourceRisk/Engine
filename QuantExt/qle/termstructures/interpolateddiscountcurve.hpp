@@ -70,6 +70,7 @@ namespace QuantExt {
                 std::upper_bound(times_.begin(), times_.end(), t);
             Size i = std::min<Size>(it - times_.begin(), times_.size() - 1);
             Real weight = (times_[i] - t) / timeDiffs_[i - 1];
+            // this handles extrapolation (t > times.back()) as well
             Real value = (1.0 - weight) * quotes_[i]->value() +
                 weight * quotes_[i - 1]->value();
             return ::exp(value);
