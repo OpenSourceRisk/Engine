@@ -17,11 +17,8 @@ DynamicSwaptionVolatilityMatrix::DynamicSwaptionVolatilityMatrix(
     : SwaptionVolatilityStructure(settlementDays, calendar,
                                   source->businessDayConvention(),
                                   source->dayCounter()),
-      source_(boost::dynamic_pointer_cast<SwaptionVolatilityMatrix>(source)),
-      decayMode_(decayMode), originalReferenceDate_(source->referenceDate()) {
-
-    QL_REQUIRE(source_ != NULL, "matrix must be given");
-}
+      source_(source), decayMode_(decayMode),
+      originalReferenceDate_(source->referenceDate()) {}
 
 const Period &DynamicSwaptionVolatilityMatrix::maxSwapTenor() const {
     return source_->maxSwapTenor();
