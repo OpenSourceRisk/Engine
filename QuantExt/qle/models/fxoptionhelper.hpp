@@ -38,7 +38,10 @@ namespace QuantExt {
 class FxOptionHelper : public CalibrationHelper {
   public:
     /*! the fx spot is interpreted as of today (or discounted spot)
-        if strike is null, an (fwd-) atm option is constructed */
+        if strike is null, an (fwd-) atm option is constructed,
+        a slight approximation is introduced because there is no
+        settlement lag, however this applies consistently to
+        the black and the model pricing */
     FxOptionHelper(const Period &maturity, const Calendar &calendar,
                    const Real strike, const Handle<Quote> fxSpot,
                    const Handle<Quote> volatility,
