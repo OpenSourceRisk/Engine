@@ -32,7 +32,7 @@ inline std::ostream &operator<<(std::ostream &out, const Stickyness &t) {
     default:
         return out << "Unknown stickyness type (" << t << ")";
     }
-};
+}
 
 inline std::ostream &operator<<(std::ostream &out,
                                 const ReactionToTimeDecay &t) {
@@ -44,7 +44,7 @@ inline std::ostream &operator<<(std::ostream &out,
     default:
         return out << "Unknown reaction to time decay type (" << t << ")";
     }
-};
+}
 
 inline std::ostream &operator<<(std::ostream &out,
                                 const YieldCurveRollDown &t) {
@@ -56,7 +56,7 @@ inline std::ostream &operator<<(std::ostream &out,
     default:
         return out << "Unknown yield curve roll down type (" << t << ")";
     }
-};
+}
 
 } // namesapce QuantExt
 
