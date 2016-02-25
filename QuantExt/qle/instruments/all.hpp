@@ -4,6 +4,7 @@
 #include <qle/instruments/averageois.hpp>
 #include <qle/instruments/crossccybasisswap.hpp>
 #include <qle/instruments/crossccyswap.hpp>
+#include <qle/instruments/currencyswap.hpp>
 #include <qle/instruments/fxforward.hpp>
 #include <qle/instruments/makeaverageois.hpp>
 #include <qle/instruments/oibasisswap.hpp>

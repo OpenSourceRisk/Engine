@@ -49,7 +49,7 @@ namespace QuantExt {
         //@}
         
     private:
-        void initalise (std::vector<Handle<Quote> > quotes) {
+        void initalise (const std::vector<Handle<Quote> >& quotes) {
             QL_REQUIRE(times_.size() > 1, "at least two times required");
             QL_REQUIRE(times_[0] == 0.0, "First time must be 0, got " << times_[0]); // or date=asof
             QL_REQUIRE(times_.size() == quotes.size(), "size of time and quote vectors do not match");
@@ -69,9 +69,10 @@ namespace QuantExt {
             std::vector<Time>::const_iterator it =
                 std::upper_bound(times_.begin(), times_.end(), t);
             Size i = std::min<Size>(it - times_.begin(), times_.size() - 1);
-            Real w = (times_[i] - t) / timeDiffs_[i - 1];
-            Real value = (1.0 - w) * quotes_[i]->value() +
-                w * quotes_[i - 1]->value();
+            Real weight = (times_[i] - t) / timeDiffs_[i - 1];
+            // this handles extrapolation (t > times.back()) as well
+            Real value = (1.0 - weight) * quotes_[i]->value() +
+                weight * quotes_[i - 1]->value();
             return ::exp(value);
         }
 
