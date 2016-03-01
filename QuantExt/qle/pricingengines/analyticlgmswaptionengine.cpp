@@ -111,10 +111,6 @@ void AnalyticLgmSwaptionEngine::calculate() const {
                 lambda1 = 1.0 - lambda2;
             }
             if (amount != Null<Real>()) {
-                // if no amount is given, we do not need a spread correction
-                // due to different forward / discounting curves since then
-                // no curve is attached to the swap's ibor index and so we
-                // assume a one curve setup
                 Real flatAmount =
                     flatIbor->fixing(arguments_.floatingFixingDates[k]) *
                     arguments_.floatingAccrualTimes[k];
@@ -123,8 +119,12 @@ void AnalyticLgmSwaptionEngine::calculate() const {
                 sum1 += lambda1 * correction;
                 sum2 += lambda2 * correction;
             } else {
-                // if no amount is given we can still have a float spread
-                // that has to be converted into a fixed leg's payment
+                // if no amount is given, we do not need a spread correction
+                // due to different forward / discounting curves since then
+                // no curve is attached to the swap's ibor index and so we
+                // assume a one curve setup;
+                // but we can still have a float spread that has to be converted
+                // into a fixed leg's payment
                 Real correction = arguments_.nominal *
                                   arguments_.floatingSpreads[k] *
                                   arguments_.floatingAccrualTimes[k] *
