@@ -16,8 +16,9 @@
 #include <qle/models/lgmimpliedyieldtermstructure.hpp>
 
 #include <ql/indexes/iborindex.hpp>
-#include <ql/math/distributions/normaldistribution.hpp>
 #include <ql/instruments/swaption.hpp>
+#include <ql/instruments/nonstandardswaption.hpp>
+#include <ql/math/distributions/normaldistribution.hpp>
 #include <ql/pricingengines/genericmodelengine.hpp>
 
 namespace QuantExt {
@@ -35,19 +36,15 @@ namespace QuantExt {
                “exercise into” swaptions
 */
 
-class NumericLgmSwaptionEngine
-    : public GenericEngine<Swaption::arguments, Swaption::results> {
-  public:
-    NumericLgmSwaptionEngine(
+/*! Base class from which we derive the engines for both the Swaption
+  and NonstandardSwaption instrument */
+class NumericLgmSwaptionEngineBase {
+  protected:
+    NumericLgmSwaptionEngineBase(
         const boost::shared_ptr<LinearGaussMarkovModel> &model, const Real sy,
         const Size ny, const Real sx, const Size nx,
-        const Handle<YieldTermStructure> &discountCurve =
-            Handle<YieldTermStructure>())
-        : GenericEngine<Swaption::arguments, Swaption::results>(),
-          model_(model), nx_(nx), discountCurve_(discountCurve) {
-
-        if (!discountCurve_.empty())
-            registerWith(discountCurve_);
+        const Handle<YieldTermStructure> &discountCurve)
+        : model_(model), nx_(nx), discountCurve_(discountCurve) {
 
         // precompute weights
 
@@ -85,17 +82,65 @@ class NumericLgmSwaptionEngine
         }
     }
 
-    void calculate() const;
+    Real calculate() const;
 
-  private:
-    Real conditionalSwapValue(Real x, Real t, const Date expiry0) const;
+    virtual Real conditionalSwapValue(Real x, Real t,
+                                      const Date expiry0) const = 0;
+
+    mutable boost::shared_ptr<Exercise> exercise_;
+    mutable boost::shared_ptr<IborIndex> iborIndex_, iborIndexCorrected_;
     boost::shared_ptr<LinearGaussMarkovModel> model_;
-    mutable boost::shared_ptr<IborIndex> iborIndex_;
     mutable boost::shared_ptr<LgmImpliedYieldTermStructure> iborModelCurve_;
     int mx_, my_, nx_;
     const Handle<YieldTermStructure> discountCurve_;
     Real h_;
     std::vector<Real> y_, w_, wsum_;
+}; // NnumercLgmSwaptionEngineBase
+
+/*! Engine for Swaption instrument */
+class NumericLgmSwaptionEngine
+    : public GenericEngine<Swaption::arguments, Swaption::results>,
+      public NumericLgmSwaptionEngineBase {
+  public:
+    NumericLgmSwaptionEngine(
+        const boost::shared_ptr<LinearGaussMarkovModel> &model, const Real sy,
+        const Size ny, const Real sx, const Size nx,
+        const Handle<YieldTermStructure> &discountCurve =
+            Handle<YieldTermStructure>())
+        : GenericEngine<Swaption::arguments, Swaption::results>(),
+          NumericLgmSwaptionEngineBase(model, sy, ny, sx, nx, discountCurve) {
+        if (!discountCurve_.empty())
+            registerWith(discountCurve_);
+    }
+
+    void calculate() const;
+
+  protected:
+    Real conditionalSwapValue(Real x, Real t, const Date expiry0) const;
+};
+
+/*! Engine for NonstandardSwaption */
+class NumericLgmNonstandardSwaptionEngine
+    : public GenericEngine<NonstandardSwaption::arguments,
+                           NonstandardSwaption::results>,
+      public NumericLgmSwaptionEngineBase {
+  public:
+    NumericLgmNonstandardSwaptionEngine(
+        const boost::shared_ptr<LinearGaussMarkovModel> &model, const Real sy,
+        const Size ny, const Real sx, const Size nx,
+        const Handle<YieldTermStructure> &discountCurve =
+            Handle<YieldTermStructure>())
+        : GenericEngine<NonstandardSwaption::arguments,
+                        NonstandardSwaption::results>(),
+          NumericLgmSwaptionEngineBase(model, sy, ny, sx, nx, discountCurve) {
+        if (!discountCurve_.empty())
+            registerWith(discountCurve_);
+    }
+
+    void calculate() const;
+
+  protected:
+    Real conditionalSwapValue(Real x, Real t, const Date expiry0) const;
 };
 
 } // namespace QuantExt

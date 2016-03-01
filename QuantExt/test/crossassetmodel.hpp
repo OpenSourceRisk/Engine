@@ -16,6 +16,7 @@ class CrossAssetModelTest {
   public:
     static void testBermudanLgm1fGsr();
     static void testBermudanLgmInvariances();
+    static void testNonstandardBermudanSwaption();
     static void testLgm1fCalibration();
     static void testCcyLgm3fForeignPayouts();
     static void testLgm5fFxCalibration();
