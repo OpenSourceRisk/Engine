@@ -221,8 +221,9 @@ Real NumericLgmNonstandardSwaptionEngine::conditionalSwapValue(
                 arguments_.floatingNominal[l] *
                 arguments_.floatingAccrualTimes[l] *
                 (arguments_.floatingSpreads[l] +
-                 iborIndexCorrected_->fixing(
-                     arguments_.floatingFixingDates[l])) *
+                 arguments_.floatingGearings[l] *
+                     iborIndexCorrected_->fixing(
+                         arguments_.floatingFixingDates[l])) *
                 model_->reducedDiscountBond(t, T, x, discountCurve_);
         }
     }
