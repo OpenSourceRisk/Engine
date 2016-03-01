@@ -205,6 +205,44 @@ void CrossAssetModelTest::testBermudanLgmInvariances() {
 
 } // testBermudanLgm1fGsr
 
+void CrossAssetModelTest::testNonstandardBermudanSwaption() {
+
+    BOOST_TEST_MESSAGE(
+        "Testing numeric LGM swaption engine for non-standard swaption...");
+
+    BermudanTestData d;
+
+    boost::shared_ptr<NonstandardSwaption> ns_swaption =
+        boost::make_shared<NonstandardSwaption>(*d.swaption);
+
+    boost::shared_ptr<IrLgm1fParametrization> lgm_p =
+        boost::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
+            EURCurrency(), d.yts, d.stepTimes_a, d.sigmas_a, d.stepTimes_a,
+            d.kappas_a);
+
+    boost::shared_ptr<LinearGaussMarkovModel> lgm =
+        boost::make_shared<LinearGaussMarkovModel>(lgm_p);
+
+    boost::shared_ptr<PricingEngine> engine =
+        boost::make_shared<NumericLgmSwaptionEngine>(lgm, 7.0, 16, 7.0, 32);
+    boost::shared_ptr<PricingEngine> ns_engine =
+        boost::make_shared<NumericLgmNonstandardSwaptionEngine>(lgm, 7.0, 16,
+                                                                7.0, 32);
+
+    d.swaption->setPricingEngine(engine);
+    ns_swaption->setPricingEngine(ns_engine);
+
+    Real npv = d.swaption->NPV();
+    Real ns_npv = d.swaption->NPV();
+
+    Real tol = 1.0E-12;
+    if (std::fabs(npv - ns_npv) >= tol)
+        BOOST_ERROR("Failed to verify consistency of Bermudan swaption price ("
+                    << npv << ") and Bermudan nonstandard swaption price ("
+                    << ns_npv << "), difference is " << (npv - ns_npv)
+                    << ", tolerance is " << tol);
+} // testNonstandardBermudanSwaption
+
 void CrossAssetModelTest::testLgm1fCalibration() {
 
     BOOST_TEST_MESSAGE("Testing calibration of LGM 1F model (analytic engine) "
@@ -1485,6 +1523,8 @@ test_suite *CrossAssetModelTest::suite() {
     suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testBermudanLgm1fGsr));
     suite->add(
         QUANTLIB_TEST_CASE(&CrossAssetModelTest::testBermudanLgmInvariances));
+    suite->add(QUANTLIB_TEST_CASE(
+        &CrossAssetModelTest::testNonstandardBermudanSwaption));
     suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testLgm1fCalibration));
     suite->add(
         QUANTLIB_TEST_CASE(&CrossAssetModelTest::testCcyLgm3fForeignPayouts));
