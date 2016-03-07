@@ -45,6 +45,7 @@ void CrossAssetModel::initialize() {
     initializeCorrelation();
     initializeArguments();
     finalizeArguments();
+    checkModelConsistency();
 
     // set default integrator
     setIntegrationPolicy(boost::make_shared<SimpsonIntegral>(1.0E-8, 100),
@@ -122,13 +123,6 @@ void CrossAssetModel::initializeParametrizations() {
                                         "for n ir parametrizations, found "
                                             << nIrLgm1f_ << " ir and " << nFxBs_
                                             << " fx parametrizations");
-
-    QL_REQUIRE(nIrLgm1f_ + nFxBs_ == p_.size(),
-               "the parametrizations must be given in the following order: ir, "
-               "fx (others not yet supported), found "
-                   << nIrLgm1f_ << " ir and " << nFxBs_
-                   << " bs parametrizations, but there are " << p_.size()
-                   << " parametrizations given in total");
 
     // check currencies
 
@@ -214,6 +208,15 @@ void CrossAssetModel::finalizeArguments() {
                                               << i << " is null");
         totalNumberOfParameters_ += arguments_[i]->size();
     }
+}
+
+void CrossAssetModel::checkModelConsistency() const {
+    QL_REQUIRE(nIrLgm1f_ + nFxBs_ == p_.size(),
+               "the parametrizations must be given in the following order: ir, "
+               "fx (others not supported by this class), found "
+                   << nIrLgm1f_ << " ir and " << nFxBs_
+                   << " bs parametrizations, but there are " << p_.size()
+                   << " parametrizations given in total");
 }
 
 void CrossAssetModel::calibrateIrLgm1fVolatilitiesIterative(
