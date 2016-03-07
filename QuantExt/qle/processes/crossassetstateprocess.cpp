@@ -16,9 +16,9 @@ namespace QuantExt {
 
 using namespace CrossAssetAnalytics;
 
-CrossAssetStateProcess::CrossAssetStateProcess(const CrossAssetModel *const model,
-                                       discretization disc,
-                                       SalvagingAlgorithm::Type salvaging)
+CrossAssetStateProcess::CrossAssetStateProcess(
+    const CrossAssetModel *const model, discretization disc,
+    SalvagingAlgorithm::Type salvaging)
     : StochasticProcess(), model_(model), salvaging_(salvaging) {
 
     if (disc == euler) {
@@ -28,10 +28,6 @@ CrossAssetStateProcess::CrossAssetStateProcess(const CrossAssetModel *const mode
             boost::make_shared<CrossAssetStateProcess::ExactDiscretization>(
                 model, salvaging);
     }
-
-    QL_REQUIRE(2 * model_->currencies() - 1 == model_->dimension(),
-               "this version of CrossAssetStateProcess is not consistent with "
-               "CrossAssetModel, which should only be irlgm1f-fx");
 }
 
 Size CrossAssetStateProcess::size() const { return model_->dimension(); }
@@ -41,8 +37,8 @@ void CrossAssetStateProcess::flushCache() const {
     cache_v_.clear();
     cache_d_.clear();
     boost::shared_ptr<CrossAssetStateProcess::ExactDiscretization> tmp =
-        boost::dynamic_pointer_cast<CrossAssetStateProcess::ExactDiscretization>(
-            discretization_);
+        boost::dynamic_pointer_cast<
+            CrossAssetStateProcess::ExactDiscretization>(discretization_);
     if (tmp != NULL) {
         tmp->flushCache();
     }
@@ -104,36 +100,11 @@ Disposable<Array> CrossAssetStateProcess::drift(Time t, const Array &x) const {
     return res;
 }
 
-Disposable<Matrix> CrossAssetStateProcess::diffusion(Time t, const Array &) const {
+Disposable<Matrix> CrossAssetStateProcess::diffusion(Time t,
+                                                     const Array &x) const {
     boost::unordered_map<double, Matrix>::iterator i = cache_d_.find(t);
     if (i == cache_d_.end()) {
-        Matrix res(model_->dimension(), model_->dimension());
-        Size n = model_->currencies();
-        for (Size i = 0; i < 2 * n - 1; ++i) {
-            for (Size j = 0; j <= i; ++j) {
-                if (i < n) {
-                    Real alphai = model_->irlgm1f(i)->alpha(t);
-                    Real alphaj = model_->irlgm1f(j)->alpha(t);
-                    Real rhozz = model_->ir_ir_correlation(i, j);
-                    // ir-ir
-                    res[i][j] = res[j][i] = alphai * alphaj * rhozz;
-                } else {
-                    Real sigmai = model_->fxbs(i - n)->sigma(t);
-                    if (j < n) {
-                        // ir-fx
-                        Real alphaj = model_->irlgm1f(j)->alpha(t);
-                        Real rhozx = model_->ir_fx_correlation(j, i - n);
-                        res[i][j] = res[j][i] = alphaj * sigmai * rhozx;
-                    } else {
-                        // fx-fx
-                        Real sigmaj = model_->fxbs(j - n)->sigma(t);
-                        Real rhoxx = model_->fx_fx_correlation(i - n, j - n);
-                        res[i][j] = res[j][i] = sigmai * sigmaj * rhoxx;
-                    }
-                }
-            }
-        }
-        Matrix tmp = pseudoSqrt(res, salvaging_);
+        Matrix tmp = diffusionImpl(t, x);
         cache_d_.insert(std::make_pair(t, tmp));
         return tmp;
     } else {
@@ -144,33 +115,56 @@ Disposable<Matrix> CrossAssetStateProcess::diffusion(Time t, const Array &) cons
     }
 }
 
+Disposable<Matrix> CrossAssetStateProcess::diffusionImpl(Time t,
+                                                         const Array &) const {
+    Matrix res(model_->dimension(), model_->dimension());
+    Size n = model_->currencies();
+    for (Size i = 0; i < 2 * n - 1; ++i) {
+        for (Size j = 0; j <= i; ++j) {
+            if (i < n) {
+                Real alphai = model_->irlgm1f(i)->alpha(t);
+                Real alphaj = model_->irlgm1f(j)->alpha(t);
+                Real rhozz = model_->ir_ir_correlation(i, j);
+                // ir-ir
+                res[i][j] = res[j][i] = alphai * alphaj * rhozz;
+            } else {
+                Real sigmai = model_->fxbs(i - n)->sigma(t);
+                if (j < n) {
+                    // ir-fx
+                    Real alphaj = model_->irlgm1f(j)->alpha(t);
+                    Real rhozx = model_->ir_fx_correlation(j, i - n);
+                    res[i][j] = res[j][i] = alphaj * sigmai * rhozx;
+                } else {
+                    // fx-fx
+                    Real sigmaj = model_->fxbs(j - n)->sigma(t);
+                    Real rhoxx = model_->fx_fx_correlation(i - n, j - n);
+                    res[i][j] = res[j][i] = sigmai * sigmaj * rhoxx;
+                }
+            }
+        }
+    }
+    Matrix tmp = pseudoSqrt(res, salvaging_);
+    return tmp;
+}
+
 CrossAssetStateProcess::ExactDiscretization::ExactDiscretization(
     const CrossAssetModel *const model, SalvagingAlgorithm::Type salvaging)
     : model_(model), salvaging_(salvaging) {}
 
 Disposable<Array> CrossAssetStateProcess::ExactDiscretization::drift(
-    const StochasticProcess &, Time t0, const Array &x0, Time dt) const {
-    Size n = model_->currencies();
-    Array res(model_->dimension(), 0.0);
+    const StochasticProcess &p, Time t0, const Array &x0, Time dt) const {
+    Array res;
     cache_key k = {t0, dt};
     boost::unordered_map<cache_key, Array>::iterator i = cache_m_.find(k);
     if (i == cache_m_.end()) {
-        for (Size i = 0; i < model_->currencies(); ++i) {
-            res[i] = ir_expectation_1(model_, i, t0, dt);
-            if (i > 0) {
-                res[n + i - 1] = fx_expectation_1(model_, i - 1, t0, dt);
-            }
-        }
+        res = driftImpl1(p, t0, x0, dt);
         cache_m_.insert(std::make_pair(k, res));
     } else {
         res = i->second;
     }
-    for (Size i = 0; i < n; ++i) {
-        res[i] += ir_expectation_2(model_, i, x0[i]);
-        if (i > 0) {
-            res[n + i - 1] += fx_expectation_2(model_, i - 1, t0, x0[n + i - 1],
-                                               x0[i], x0[0], dt);
-        }
+    Array res2 = driftImpl2(p, t0, x0, dt);
+    for (Size i = 0; i < res.size(); ++i) {
+        res[i] += res2[i];
     }
     return res - x0;
 }
@@ -192,28 +186,11 @@ Disposable<Matrix> CrossAssetStateProcess::ExactDiscretization::diffusion(
 }
 
 Disposable<Matrix> CrossAssetStateProcess::ExactDiscretization::covariance(
-    const StochasticProcess &, Time t0, const Array &, Time dt) const {
+    const StochasticProcess &p, Time t0, const Array &x0, Time dt) const {
     cache_key k = {t0, dt};
     boost::unordered_map<cache_key, Matrix>::iterator i = cache_v_.find(k);
     if (i == cache_v_.end()) {
-        Matrix res(model_->dimension(), model_->dimension());
-        Size n = model_->currencies();
-        for (Size i = 0; i < 2 * n - 1; ++i) {
-            for (Size j = 0; j <= i; ++j) {
-                if (i < n) {
-                    res[i][j] = res[j][i] =
-                        ir_ir_covariance(model_, i, j, t0, dt);
-                } else {
-                    if (j < n) {
-                        res[i][j] = res[j][i] =
-                            ir_fx_covariance(model_, j, i - n, t0, dt);
-                    } else {
-                        res[j][i] = res[i][j] =
-                            fx_fx_covariance(model_, i - n, j - n, t0, dt);
-                    }
-                }
-            }
-        }
+        Matrix res = covarianceImpl(p, t0, x0, dt);
         cache_v_.insert(std::make_pair(k, res));
         return res;
     } else {
@@ -221,6 +198,55 @@ Disposable<Matrix> CrossAssetStateProcess::ExactDiscretization::covariance(
         Matrix tmp = i->second;
         return tmp;
     }
+}
+
+Disposable<Array> CrossAssetStateProcess::ExactDiscretization::driftImpl1(
+    const StochasticProcess &, Time t0, const Array &, Time dt) const {
+    Size n = model_->currencies();
+    Array res(model_->dimension(), 0.0);
+    for (Size i = 0; i < model_->currencies(); ++i) {
+        res[i] = ir_expectation_1(model_, i, t0, dt);
+        if (i > 0) {
+            res[n + i - 1] = fx_expectation_1(model_, i - 1, t0, dt);
+        }
+    }
+    return res;
+}
+
+Disposable<Array> CrossAssetStateProcess::ExactDiscretization::driftImpl2(
+    const StochasticProcess &, Time t0, const Array &x0, Time dt) const {
+    Size n = model_->currencies();
+    Array res(model_->dimension(), 0.0);
+    for (Size i = 0; i < n; ++i) {
+        res[i] += ir_expectation_2(model_, i, x0[i]);
+        if (i > 0) {
+            res[n + i - 1] += fx_expectation_2(model_, i - 1, t0, x0[n + i - 1],
+                                               x0[i], x0[0], dt);
+        }
+    }
+    return res;
+}
+
+Disposable<Matrix> CrossAssetStateProcess::ExactDiscretization::covarianceImpl(
+    const StochasticProcess &, Time t0, const Array &, Time dt) const {
+    Matrix res(model_->dimension(), model_->dimension());
+    Size n = model_->currencies();
+    for (Size i = 0; i < 2 * n - 1; ++i) {
+        for (Size j = 0; j <= i; ++j) {
+            if (i < n) {
+                res[i][j] = res[j][i] = ir_ir_covariance(model_, i, j, t0, dt);
+            } else {
+                if (j < n) {
+                    res[i][j] = res[j][i] =
+                        ir_fx_covariance(model_, j, i - n, t0, dt);
+                } else {
+                    res[j][i] = res[i][j] =
+                        fx_fx_covariance(model_, i - n, j - n, t0, dt);
+                }
+            }
+        }
+    }
+    return res;
 }
 
 void CrossAssetStateProcess::ExactDiscretization::flushCache() const {

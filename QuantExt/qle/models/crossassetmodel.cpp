@@ -44,6 +44,7 @@ void CrossAssetModel::initialize() {
     initializeParametrizations();
     initializeCorrelation();
     initializeArguments();
+    finalizeArguments();
 
     // set default integrator
     setIntegrationPolicy(boost::make_shared<SimpsonIntegral>(1.0E-8, 100),
@@ -92,6 +93,7 @@ void CrossAssetModel::initializeParametrizations() {
 
     nIrLgm1f_ = 0;
     nFxBs_ = 0;
+    nCrLgm1f_ = 0;
 
     Size i = 0;
 
@@ -158,12 +160,12 @@ void CrossAssetModel::initializeParametrizations() {
 
 void CrossAssetModel::initializeCorrelation() {
 
-    QL_REQUIRE(rho_.rows() == nIrLgm1f_ + nFxBs_ &&
-                   rho_.columns() == nIrLgm1f_ + nFxBs_,
-               "correlation matrix is " << rho_.rows() << " x "
-                                        << rho_.columns() << " but should be "
-                                        << nIrLgm1f_ + nFxBs_ << " x "
-                                        << nIrLgm1f_ + nFxBs_);
+    QL_REQUIRE(rho_.rows() == nIrLgm1f_ + nFxBs_ + nCrLgm1f_ &&
+                   rho_.columns() == nIrLgm1f_ + nFxBs_ + nCrLgm1f_,
+               "correlation matrix is "
+                   << rho_.rows() << " x " << rho_.columns()
+                   << " but should be " << nIrLgm1f_ + nFxBs_ + nCrLgm1f_
+                   << " x " << nIrLgm1f_ + nFxBs_ + nCrLgm1f_);
 
     for (Size i = 0; i < rho_.rows(); ++i) {
         for (Size j = 0; j < rho_.columns(); ++j) {
@@ -202,6 +204,10 @@ void CrossAssetModel::initializeArguments() {
         // volatility
         arguments_[nIrLgm1f_ * 2 + i] = fxbs(i)->parameter(0);
     }
+}
+
+void CrossAssetModel::finalizeArguments() {
+
     totalNumberOfParameters_ = 0;
     for (Size i = 0; i < arguments_.size(); ++i) {
         QL_REQUIRE(arguments_[i] != NULL, "unexpected error: argument "

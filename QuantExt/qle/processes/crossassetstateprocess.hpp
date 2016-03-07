@@ -39,7 +39,9 @@ class CrossAssetStateProcess : public StochasticProcess {
     /*! specific members */
     void flushCache() const;
 
-  private:
+  protected:
+    virtual Disposable<Matrix> diffusionImpl(Time t, const Array &x) const;
+
     const CrossAssetModel *const model_;
     SalvagingAlgorithm::Type salvaging_;
 
@@ -57,7 +59,14 @@ class CrossAssetStateProcess : public StochasticProcess {
                                               Time dt) const;
         void flushCache() const;
 
-      private:
+      protected:
+        virtual Disposable<Array> driftImpl1(const StochasticProcess &, Time t0,
+                                             const Array &x0, Time dt) const;
+        virtual Disposable<Array> driftImpl2(const StochasticProcess &, Time t0,
+                                             const Array &x0, Time dt) const;
+        virtual Disposable<Matrix> covarianceImpl(const StochasticProcess &, Time t0,
+                                                  const Array &x0, Time dt) const;
+
         const CrossAssetModel *const model_;
         SalvagingAlgorithm::Type salvaging_;
 
@@ -80,7 +89,7 @@ class CrossAssetStateProcess : public StochasticProcess {
         mutable boost::unordered_map<cache_key, Array, cache_hasher> cache_m_;
         mutable boost::unordered_map<cache_key, Matrix, cache_hasher> cache_v_,
             cache_d_;
-    };
+    }; // ExactDiscretization
 
     // cache for process drift and diffusion (e.g. used in Euler discretization)
     struct cache_hasher : std::unary_function<double, std::size_t> {
@@ -94,7 +103,7 @@ class CrossAssetStateProcess : public StochasticProcess {
     mutable boost::unordered_map<double, Array, cache_hasher> cache_m_;
     mutable boost::unordered_map<double, Matrix, cache_hasher> cache_v_,
         cache_d_;
-};
+}; // CrossAssetStateProcess
 
 } // namesapce QuantExt
 
