@@ -186,6 +186,13 @@ class CrossAssetModel : public LinkableCalibratedModel {
     /* ... add more calibration procedures here ... */
 
   protected:
+    /* ctor to be used in extensions, initialize is not called */
+    CrossAssetModel(const std::vector<boost::shared_ptr<Parametrization> >
+                        &parametrizations,
+                    const Matrix &correlation,
+                    SalvagingAlgorithm::Type salvaging, const bool)
+        : LinkableCalibratedModel(), p_(parametrizations), rho_(correlation),
+          salvaging_(salvaging) {}
     /* init methods */
     virtual void initialize();
     virtual void initializeParametrizations();
