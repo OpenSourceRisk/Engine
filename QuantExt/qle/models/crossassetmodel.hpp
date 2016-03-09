@@ -200,6 +200,8 @@ class CrossAssetModel : public LinkableCalibratedModel {
     virtual void initializeArguments();
     virtual void finalizeArguments();
     virtual void checkModelConsistency() const;
+    virtual void initDefaultIntegrator();
+    virtual void initStateProcess();
 
     /* members */
 

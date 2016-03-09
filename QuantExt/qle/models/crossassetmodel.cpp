@@ -40,18 +40,21 @@ CrossAssetModel::CrossAssetModel(
 }
 
 void CrossAssetModel::initialize() {
-
     initializeParametrizations();
     initializeCorrelation();
     initializeArguments();
     finalizeArguments();
     checkModelConsistency();
+    initDefaultIntegrator();
+    initStateProcess();
+}
 
-    // set default integrator
+void CrossAssetModel::initDefaultIntegrator() {
     setIntegrationPolicy(boost::make_shared<SimpsonIntegral>(1.0E-8, 100),
                          true);
+}
 
-    // create state processes
+void CrossAssetModel::initStateProcess() {
     stateProcessEuler_ = boost::make_shared<CrossAssetStateProcess>(
         this, CrossAssetStateProcess::euler, salvaging_);
     stateProcessExact_ = boost::make_shared<CrossAssetStateProcess>(

@@ -104,7 +104,7 @@ Disposable<Matrix> CrossAssetStateProcess::diffusion(Time t,
                                                      const Array &x) const {
     boost::unordered_map<double, Matrix>::iterator i = cache_d_.find(t);
     if (i == cache_d_.end()) {
-        Matrix tmp = diffusionImpl(t, x);
+        Matrix tmp = pseudoSqrt(diffusionImpl(t, x), salvaging_);
         cache_d_.insert(std::make_pair(t, tmp));
         return tmp;
     } else {
@@ -143,8 +143,7 @@ Disposable<Matrix> CrossAssetStateProcess::diffusionImpl(Time t,
             }
         }
     }
-    Matrix tmp = pseudoSqrt(res, salvaging_);
-    return tmp;
+    return res;
 }
 
 CrossAssetStateProcess::ExactDiscretization::ExactDiscretization(
