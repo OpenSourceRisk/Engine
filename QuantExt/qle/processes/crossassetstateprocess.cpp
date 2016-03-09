@@ -62,7 +62,7 @@ Disposable<Array> CrossAssetStateProcess::drift(Time t, const Array &x) const {
     Real Hprime0 = model_->irlgm1f(0)->Hprime(t);
     Real alpha0 = model_->irlgm1f(0)->alpha(t);
     Real zeta0 = model_->irlgm1f(0)->zeta(t);
-    boost::unordered_map<double, Array>::iterator i = cache_m_.find(t);
+    boost::unordered_map<double, Array>::const_iterator i = cache_m_.find(t);
     if (i == cache_m_.end()) {
         /* z0 has drift 0 */
         for (Size i = 1; i < n; ++i) {
@@ -102,7 +102,7 @@ Disposable<Array> CrossAssetStateProcess::drift(Time t, const Array &x) const {
 
 Disposable<Matrix> CrossAssetStateProcess::diffusion(Time t,
                                                      const Array &x) const {
-    boost::unordered_map<double, Matrix>::iterator i = cache_d_.find(t);
+    boost::unordered_map<double, Matrix>::const_iterator i = cache_d_.find(t);
     if (i == cache_d_.end()) {
         Matrix tmp = pseudoSqrt(diffusionImpl(t, x), salvaging_);
         cache_d_.insert(std::make_pair(t, tmp));
@@ -154,7 +154,7 @@ Disposable<Array> CrossAssetStateProcess::ExactDiscretization::drift(
     const StochasticProcess &p, Time t0, const Array &x0, Time dt) const {
     Array res;
     cache_key k = {t0, dt};
-    boost::unordered_map<cache_key, Array>::iterator i = cache_m_.find(k);
+    boost::unordered_map<cache_key, Array>::const_iterator i = cache_m_.find(k);
     if (i == cache_m_.end()) {
         res = driftImpl1(p, t0, x0, dt);
         cache_m_.insert(std::make_pair(k, res));
@@ -171,7 +171,7 @@ Disposable<Array> CrossAssetStateProcess::ExactDiscretization::drift(
 Disposable<Matrix> CrossAssetStateProcess::ExactDiscretization::diffusion(
     const StochasticProcess &p, Time t0, const Array &x0, Time dt) const {
     cache_key k = {t0, dt};
-    boost::unordered_map<cache_key, Matrix>::iterator i = cache_d_.find(k);
+    boost::unordered_map<cache_key, Matrix>::const_iterator i = cache_d_.find(k);
     if (i == cache_d_.end()) {
         Matrix res = pseudoSqrt(covariance(p, t0, x0, dt), salvaging_);
         // note that covariance actually does not depend on x0
@@ -187,7 +187,7 @@ Disposable<Matrix> CrossAssetStateProcess::ExactDiscretization::diffusion(
 Disposable<Matrix> CrossAssetStateProcess::ExactDiscretization::covariance(
     const StochasticProcess &p, Time t0, const Array &x0, Time dt) const {
     cache_key k = {t0, dt};
-    boost::unordered_map<cache_key, Matrix>::iterator i = cache_v_.find(k);
+    boost::unordered_map<cache_key, Matrix>::const_iterator i = cache_v_.find(k);
     if (i == cache_v_.end()) {
         Matrix res = covarianceImpl(p, t0, x0, dt);
         cache_v_.insert(std::make_pair(k, res));
