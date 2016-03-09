@@ -85,6 +85,14 @@ void CrossAssetModel::setIntegrationPolicy(
                         p_[nIrLgm1f_ + i]->parameterTimes(0).begin(),
                         p_[nIrLgm1f_ + i]->parameterTimes(0).end());
     }
+    for (Size i = 0; i < nCrLgm1f_; ++i) {
+        allTimes.insert(allTimes.end(),
+                        p_[nIrLgm1f_ + nFxBs_ + i]->parameterTimes(0).begin(),
+                        p_[nIrLgm1f_ + nFxBs_ + i]->parameterTimes(0).end());
+        allTimes.insert(allTimes.end(),
+                        p_[nIrLgm1f_ + nFxBs_ + i]->parameterTimes(1).begin(),
+                        p_[nIrLgm1f_ + nFxBs_ + i]->parameterTimes(1).end());
+    }
 
     // use piecewise integrator avoiding the step points
     integrator_ =
