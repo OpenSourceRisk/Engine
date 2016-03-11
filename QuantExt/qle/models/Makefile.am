@@ -14,11 +14,6 @@ libModels_la_SOURCES = \
 	fxbspiecewiseconstantparametrization.cpp \
 	fxoptionhelper.cpp \
 	gaussian1dcrossassetadaptor.cpp \
-	irlgm1fconstantparametrization.cpp \
-	irlgm1fparametrization.cpp \
-	irlgm1fpiecewiseconstanthullwhiteadaptor.cpp \
-	irlgm1fpiecewiseconstantparametrization.cpp \
-	irlgm1fpiecewiselinearparametrization.cpp \
 	linkablecalibratedmodel.cpp \
 	lgm.cpp \
 	lgmimpliedyieldtermstructure.cpp \

@@ -15,12 +15,12 @@
 
 namespace QuantExt {
 
-class IrLgm1fConstantParametrization : public IrLgm1fParametrization {
+template <class TS>
+class Lgm1fConstantParametrization : public Lgm1fParametrization<TS> {
   public:
-    IrLgm1fConstantParametrization(
-        const Currency &currency,
-        const Handle<YieldTermStructure> &termStructure, const Real alpha,
-        const Real kappa);
+    Lgm1fConstantParametrization(const Currency &currency,
+                                 const Handle<TS> &termStructure,
+                                 const Real alpha, const Real kappa);
     Real zeta(const Time t) const;
     Real H(const Time t) const;
     Real alpha(const Time t) const;
@@ -38,57 +38,85 @@ class IrLgm1fConstantParametrization : public IrLgm1fParametrization {
     const Real zeroKappaCutoff_;
 };
 
+// implementation
+
+template <class TS>
+Lgm1fConstantParametrization<TS>::Lgm1fConstantParametrization(
+    const Currency &currency, const Handle<TS> &termStructure, const Real alpha,
+    const Real kappa)
+    : Lgm1fParametrization<TS>(currency, termStructure),
+      alpha_(boost::make_shared<PseudoParameter>(1)),
+      kappa_(boost::make_shared<PseudoParameter>(1)), zeroKappaCutoff_(1.0E-6) {
+    alpha_->setParam(0, inverse(0, alpha));
+    kappa_->setParam(0, inverse(1, kappa));
+}
+
 // inline
 
-inline Real IrLgm1fConstantParametrization::direct(const Size i,
-                                                   const Real x) const {
+template <class TS>
+inline Real Lgm1fConstantParametrization<TS>::direct(const Size i,
+                                                     const Real x) const {
     return i == 0 ? x * x : x;
 }
 
-inline Real IrLgm1fConstantParametrization::inverse(const Size i,
-                                                    const Real y) const {
+template <class TS>
+inline Real Lgm1fConstantParametrization<TS>::inverse(const Size i,
+                                                      const Real y) const {
     return i == 0 ? std::sqrt(y) : y;
 }
 
-inline Real IrLgm1fConstantParametrization::zeta(const Time t) const {
+template <class TS>
+inline Real Lgm1fConstantParametrization<TS>::zeta(const Time t) const {
     return direct(0, alpha_->params()[0]) * direct(0, alpha_->params()[0]) * t /
-           (scaling_ * scaling_);
+           (this->scaling_ * this->scaling_);
 }
 
-inline Real IrLgm1fConstantParametrization::H(const Time t) const {
+template <class TS>
+inline Real Lgm1fConstantParametrization<TS>::H(const Time t) const {
     if (std::fabs(kappa_->params()[0]) < zeroKappaCutoff_) {
-        return scaling_ * t + shift_;
+        return this->scaling_ * t + this->shift_;
     } else {
-        return scaling_ * (1.0 - std::exp(-kappa_->params()[0] * t)) /
+        return this->scaling_ * (1.0 - std::exp(-kappa_->params()[0] * t)) /
                    kappa_->params()[0] +
-               shift_;
+               this->shift_;
     }
 }
 
-inline Real IrLgm1fConstantParametrization::alpha(const Time) const {
-    return direct(0, alpha_->params()[0]) / scaling_;
+template <class TS>
+inline Real Lgm1fConstantParametrization<TS>::alpha(const Time) const {
+    return direct(0, alpha_->params()[0]) / this->scaling_;
 }
 
-inline Real IrLgm1fConstantParametrization::kappa(const Time) const {
+template <class TS>
+inline Real Lgm1fConstantParametrization<TS>::kappa(const Time) const {
     return kappa_->params()[0];
 }
 
-inline Real IrLgm1fConstantParametrization::Hprime(const Time t) const {
-    return scaling_ * std::exp(-kappa_->params()[0] * t);
+template <class TS>
+inline Real Lgm1fConstantParametrization<TS>::Hprime(const Time t) const {
+    return this->scaling_ * std::exp(-kappa_->params()[0] * t);
 }
 
-inline Real IrLgm1fConstantParametrization::Hprime2(const Time t) const {
-    return -scaling_ * kappa_->params()[0] * std::exp(-kappa_->params()[0] * t);
+template <class TS>
+inline Real Lgm1fConstantParametrization<TS>::Hprime2(const Time t) const {
+    return -this->scaling_ * kappa_->params()[0] *
+           std::exp(-kappa_->params()[0] * t);
 }
 
+template <class TS>
 inline const boost::shared_ptr<Parameter>
-IrLgm1fConstantParametrization::parameter(const Size i) const {
+Lgm1fConstantParametrization<TS>::parameter(const Size i) const {
     QL_REQUIRE(i < 2, "parameter " << i << " does not exist, only have 0..1");
     if (i == 0)
         return alpha_;
     else
         return kappa_;
 }
+
+// typedef
+
+typedef Lgm1fConstantParametrization<YieldTermStructure>
+    IrLgm1fConstantParametrization;
 
 } // namespace QuantExt
 
