@@ -1,7 +1,7 @@
 # Process this file with autoconf to produce a configure script.
 AC_INIT([App], [0.1], [roland.lichters@quaternion.com], [App])
 AC_PREREQ(2.50)
-AC_CONFIG_SRCDIR([./xva.hpp])
+AC_CONFIG_SRCDIR([./ore.hpp])
 AC_CONFIG_AUX_DIR([config])
 AC_CONFIG_HEADERS([./config.hpp])
 AM_INIT_AUTOMAKE([foreign])
@@ -14,7 +14,8 @@ AC_PROG_INSTALL
 
 # Default compilation variables
 
-AC_SUBST([CXXFLAGS],[${CXXFLAGS='-g -O2 -Wall'}])
+#AC_SUBST([CXXFLAGS],[${CXXFLAGS='-g -O2 -Wall'}])
+AC_SUBST([CXXFLAGS],[${CXXFLAGS='-g -O2 -Wall -std=c++11'}])
 
 # Help the compiler find external software
 
@@ -35,22 +36,22 @@ if test [ -n "$ql_boost_lib_path" ] ; then
    AC_SUBST([LDFLAGS],["${LDFLAGS} -L${ql_boost_lib_path}"])
 fi
 
-AC_ARG_WITH([ql-include],
-            AC_HELP_STRING([--with-ql-include=INCLUDE_PATH],
-                           [Supply the location of QuantLib header directory ql/]),
-            [ql_include_path=${withval}],
-            [AC_MSG_ERROR([Specify the QuantLib include path: "--with-ql-include=path/to/ql])])
-if test [ -n "$ql_include_path" ] ; then
-   AC_SUBST([CPPFLAGS],["${CPPFLAGS} -I${ql_include_path}"])
-fi
-AC_ARG_WITH([ql-lib],
-            AC_HELP_STRING([--with-ql-lib=LIB_PATH],
-                           [Supply the location of the QuantLib library]),
-            [ql_lib_path=${withval}],
-            [AC_MSG_ERROR([Specify the QuantLib library path: "--with-ql-lib=path/to/lib])])
-if test [ -n "$ql_lib_path" ] ; then
-   AC_SUBST([LDFLAGS],["${LDFLAGS} -L${ql_lib_path}"])
-fi
+#AC_ARG_WITH([ql-include],
+#            AC_HELP_STRING([--with-ql-include=INCLUDE_PATH],
+#                           [Supply the location of QuantLib header directory ql/]),
+#            [ql_include_path=${withval}],
+#            [AC_MSG_ERROR([Specify the QuantLib include path: "--with-ql-include=path/to/ql])])
+#if test [ -n "$ql_include_path" ] ; then
+#   AC_SUBST([CPPFLAGS],["${CPPFLAGS} -I${ql_include_path}"])
+#fi
+#AC_ARG_WITH([ql-lib],
+#            AC_HELP_STRING([--with-ql-lib=LIB_PATH],
+#                           [Supply the location of the QuantLib library]),
+#            [ql_lib_path=${withval}],
+#            [AC_MSG_ERROR([Specify the QuantLib library path: "--with-ql-lib=path/to/lib])])
+#if test [ -n "$ql_lib_path" ] ; then
+#   AC_SUBST([LDFLAGS],["${LDFLAGS} -L${ql_lib_path}"])
+#fi
 
 # Checks for programs.
 AC_PROG_CC
