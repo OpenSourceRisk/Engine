@@ -44,17 +44,19 @@
       <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="storeScenarios">N</Parameter>
-      <Parameter name="outputFileName">ore_cube.csv</Parameter>
+      <Parameter name="outputFileName">cube.csv</Parameter>
     </Analytic>
 
     <Analytic type="xva">
-      <Parameter name="active">N</Parameter>
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="csaFile">netting.xml</Parameter>
+      <Parameter name="cubeFile">cube.csv</Parameter>
       <Parameter name="exposureProfiles">Y</Parameter>
       <Parameter name="cva">Y</Parameter>
-      <Parameter name="dva">Y</Parameter>
+      <Parameter name="dva">N</Parameter>
+      <Parameter name="dva">N</Parameter>
       <Parameter name="fva">N</Parameter>
       <Parameter name="colva">N</Parameter>
-      <Parameter name="csaFile">netting.xml</Parameter>    
       <Parameter name="cvaAllocation">Y</Parameter>    
     </Analytic>
 

@@ -6,12 +6,15 @@
 */
 
 #include <iostream>
-#include "ore.hpp"
+
 #include <qlw/utilities/log.hpp>
 #include <qlw/wrap.hpp>
 #include <qlw/engine/valuationengine.hpp>
 #include <ql/time/calendars/all.hpp>
 #include <boost/timer.hpp>
+
+#include "ore.hpp"
+#include "timebomb.hpp"
 
 using namespace std;
 using namespace openxva::model;
@@ -21,6 +24,7 @@ using namespace openxva::marketdata;
 using namespace openxva::utilities;
 using namespace openxva::engine;
 using namespace openxva::simulation;
+using namespace openxva::cube;
 
 void writeNpv(const Parameters& params,
               boost::shared_ptr<Market> market,
@@ -36,6 +40,8 @@ void writeCurves(const Parameters& params,
 
 int main(int argc, char** argv) {
 
+    ORE_CHECK_TIMEBOMB
+    
     boost::timer timer;
     
     try {
@@ -165,8 +171,8 @@ int main(int argc, char** argv) {
             LOG("skip cashflow generation");
             cout << "SKIP" << endl;
         }
-        
-        /************
+
+       /************
          * Simulation
          */
         if (params.hasGroup("simulation") &&
@@ -219,7 +225,9 @@ int main(int argc, char** argv) {
             boost::shared_ptr<Portfolio> simPortfolio = boost::make_shared<Portfolio>();
             simPortfolio->load(portfolioFile);
             simPortfolio->build(simFactory);
-
+            vector<string> tradeIDs;
+            for (Size i = 0; i < simPortfolio->size(); ++i)
+                tradeIDs.push_back(simPortfolio->trades()[i]->envelope().id());
             cout << "OK" << endl;
             
             Size samples = sb.samples();
@@ -231,9 +239,15 @@ int main(int argc, char** argv) {
             ostringstream o;
             o << "Cube " << xdim << " x " << ydim << " x " << zdim << "... ";
             cout << setw(30) << o.str(); fflush(stdout);
-            boost::shared_ptr<openxva::cube::Cube>
-                cube = boost::make_shared<openxva::cube::InMemoryCube<float>>(xdim,ydim,zdim);
+            boost::shared_ptr<SinglePrecisionInMemoryCube>
+                inMemoryCube = boost::make_shared<SinglePrecisionInMemoryCube>(xdim,ydim,zdim);
+            boost::shared_ptr<Cube> cube(inMemoryCube);
             engine.buildCube(simPortfolio, cube);
+            cout << "OK" << endl;
+
+            cout << setw(30) << left << "Write Cube... "; fflush(stdout);
+            string outputFileName = outputPath + "/" + params.get("simulation", "outputFileName");
+            inMemoryCube->save(outputFileName);
             cout << "OK" << endl;
         }
         else {
@@ -242,12 +256,22 @@ int main(int argc, char** argv) {
             cout << "SKIP" << endl;
         }
 
-        /****************
-         * XVA generation
+        /*************
+         * XVA Reports
          */
         cout << setw(30) << left << "XVA Reports... "; fflush(stdout);
         if (params.hasGroup("xva") &&
             params.get("xva", "active") == "Y") {
+
+            string csaFile = inputPath + "/" + params.get("xva", "csaFile");
+            boost::shared_ptr<NettingSetManager> netting = boost::make_shared<NettingSetManager>();
+            netting->fromFile(csaFile);
+
+            string cubeFile = outputPath + "/" + params.get("xva", "cubeFile");
+            boost::shared_ptr<SinglePrecisionInMemoryCube>
+                cube = boost::make_shared<SinglePrecisionInMemoryCube>();
+            cube->load(cubeFile);
+
             QL_FAIL("XVA reports not implemented yet");
             cout << "OK" << endl;
         }
@@ -451,7 +475,6 @@ void writeCurves(const Parameters& params,
     file.close();
 }
                 
-
 bool Parameters::hasGroup(const string& groupName) const {
     return (data_.find(groupName) != data_.end());
 }
