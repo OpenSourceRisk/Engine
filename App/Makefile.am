@@ -1,4 +1,4 @@
-bin_PROGRAMS = xva
+bin_PROGRAMS = ore
 
 AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir} \
 	-I${top_builddir}/../Wrap \
@@ -21,6 +21,6 @@ EXTRA_DIST = \
 	xva.sln \
 	xva.vcproj
 
-xva_SOURCES = xva.cpp
+ore_SOURCES = ore.cpp
 
-include_HEADERS = xva.hpp
+include_HEADERS = ore.hpp
