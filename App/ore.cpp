@@ -245,7 +245,7 @@ int main(int argc, char** argv) {
             cout << setw(30) << "Cube " << xdim << " x " << ydim << " x " << zdim << "... "; fflush(stdout);
             boost::shared_ptr<Cube>
                 inMemoryCube = boost::make_shared<SinglePrecisionInMemoryCube>(xdim,ydim,zdim);
-            engine.buildCube(simPortfolio, cube, inMemoryAdditionalScenarioData);
+            engine.buildCube(simPortfolio, inMemoryCube, inMemoryAdditionalScenarioData);
             cout << "OK" << endl;
 
             cout << setw(30) << left << "Write Cube... "; fflush(stdout);
@@ -255,7 +255,7 @@ int main(int argc, char** argv) {
 
             cout << setw(30) << left << "Write Additional Scenario Data... "; fflush(stdout);
             string outputFileNameAddScenData = outputPath + "/" + params.get("simulation", "additionalScenarioDataFileName");
-            inMemoryAddScenData->save(outputFileNameAddScenData);
+            inMemoryAdditionalScenarioData->save(outputFileNameAddScenData);
             cout << "OK" << endl;
         }
         else {
