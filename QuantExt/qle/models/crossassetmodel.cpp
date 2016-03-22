@@ -40,16 +40,21 @@ CrossAssetModel::CrossAssetModel(
 }
 
 void CrossAssetModel::initialize() {
-
     initializeParametrizations();
     initializeCorrelation();
     initializeArguments();
+    finalizeArguments();
+    checkModelConsistency();
+    initDefaultIntegrator();
+    initStateProcess();
+}
 
-    // set default integrator
+void CrossAssetModel::initDefaultIntegrator() {
     setIntegrationPolicy(boost::make_shared<SimpsonIntegral>(1.0E-8, 100),
                          true);
+}
 
-    // create state processes
+void CrossAssetModel::initStateProcess() {
     stateProcessEuler_ = boost::make_shared<CrossAssetStateProcess>(
         this, CrossAssetStateProcess::euler, salvaging_);
     stateProcessExact_ = boost::make_shared<CrossAssetStateProcess>(
@@ -80,6 +85,14 @@ void CrossAssetModel::setIntegrationPolicy(
                         p_[nIrLgm1f_ + i]->parameterTimes(0).begin(),
                         p_[nIrLgm1f_ + i]->parameterTimes(0).end());
     }
+    for (Size i = 0; i < nCrLgm1f_; ++i) {
+        allTimes.insert(allTimes.end(),
+                        p_[nIrLgm1f_ + nFxBs_ + i]->parameterTimes(0).begin(),
+                        p_[nIrLgm1f_ + nFxBs_ + i]->parameterTimes(0).end());
+        allTimes.insert(allTimes.end(),
+                        p_[nIrLgm1f_ + nFxBs_ + i]->parameterTimes(1).begin(),
+                        p_[nIrLgm1f_ + nFxBs_ + i]->parameterTimes(1).end());
+    }
 
     // use piecewise integrator avoiding the step points
     integrator_ =
@@ -92,6 +105,7 @@ void CrossAssetModel::initializeParametrizations() {
 
     nIrLgm1f_ = 0;
     nFxBs_ = 0;
+    nCrLgm1f_ = 0;
 
     Size i = 0;
 
@@ -120,13 +134,6 @@ void CrossAssetModel::initializeParametrizations() {
                                         "for n ir parametrizations, found "
                                             << nIrLgm1f_ << " ir and " << nFxBs_
                                             << " fx parametrizations");
-
-    QL_REQUIRE(nIrLgm1f_ + nFxBs_ == p_.size(),
-               "the parametrizations must be given in the following order: ir, "
-               "fx (others not yet supported), found "
-                   << nIrLgm1f_ << " ir and " << nFxBs_
-                   << " bs parametrizations, but there are " << p_.size()
-                   << " parametrizations given in total");
 
     // check currencies
 
@@ -158,12 +165,12 @@ void CrossAssetModel::initializeParametrizations() {
 
 void CrossAssetModel::initializeCorrelation() {
 
-    QL_REQUIRE(rho_.rows() == nIrLgm1f_ + nFxBs_ &&
-                   rho_.columns() == nIrLgm1f_ + nFxBs_,
-               "correlation matrix is " << rho_.rows() << " x "
-                                        << rho_.columns() << " but should be "
-                                        << nIrLgm1f_ + nFxBs_ << " x "
-                                        << nIrLgm1f_ + nFxBs_);
+    QL_REQUIRE(rho_.rows() == nIrLgm1f_ + nFxBs_ + nCrLgm1f_ &&
+                   rho_.columns() == nIrLgm1f_ + nFxBs_ + nCrLgm1f_,
+               "correlation matrix is "
+                   << rho_.rows() << " x " << rho_.columns()
+                   << " but should be " << nIrLgm1f_ + nFxBs_ + nCrLgm1f_
+                   << " x " << nIrLgm1f_ + nFxBs_ + nCrLgm1f_);
 
     for (Size i = 0; i < rho_.rows(); ++i) {
         for (Size j = 0; j < rho_.columns(); ++j) {
@@ -202,12 +209,25 @@ void CrossAssetModel::initializeArguments() {
         // volatility
         arguments_[nIrLgm1f_ * 2 + i] = fxbs(i)->parameter(0);
     }
+}
+
+void CrossAssetModel::finalizeArguments() {
+
     totalNumberOfParameters_ = 0;
     for (Size i = 0; i < arguments_.size(); ++i) {
         QL_REQUIRE(arguments_[i] != NULL, "unexpected error: argument "
                                               << i << " is null");
         totalNumberOfParameters_ += arguments_[i]->size();
     }
+}
+
+void CrossAssetModel::checkModelConsistency() const {
+    QL_REQUIRE(nIrLgm1f_ + nFxBs_ == p_.size(),
+               "the parametrizations must be given in the following order: ir, "
+               "fx (others not supported by this class), found "
+                   << nIrLgm1f_ << " ir and " << nFxBs_
+                   << " bs parametrizations, but there are " << p_.size()
+                   << " parametrizations given in total");
 }
 
 void CrossAssetModel::calibrateIrLgm1fVolatilitiesIterative(

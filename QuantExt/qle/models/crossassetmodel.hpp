@@ -185,17 +185,27 @@ class CrossAssetModel : public LinkableCalibratedModel {
 
     /* ... add more calibration procedures here ... */
 
-  private:
+  protected:
+    /* ctor to be used in extensions, initialize is not called */
+    CrossAssetModel(const std::vector<boost::shared_ptr<Parametrization> >
+                        &parametrizations,
+                    const Matrix &correlation,
+                    SalvagingAlgorithm::Type salvaging, const bool)
+        : LinkableCalibratedModel(), p_(parametrizations), rho_(correlation),
+          salvaging_(salvaging) {}
     /* init methods */
-
-    void initialize();
-    void initializeParametrizations();
-    void initializeCorrelation();
-    void initializeArguments();
+    virtual void initialize();
+    virtual void initializeParametrizations();
+    virtual void initializeCorrelation();
+    virtual void initializeArguments();
+    virtual void finalizeArguments();
+    virtual void checkModelConsistency() const;
+    virtual void initDefaultIntegrator();
+    virtual void initStateProcess();
 
     /* members */
 
-    Size nIrLgm1f_, nFxBs_;
+    Size nIrLgm1f_, nFxBs_, nCrLgm1f_;
     Size totalNumberOfParameters_;
     std::vector<boost::shared_ptr<Parametrization> > p_;
     std::vector<boost::shared_ptr<LinearGaussMarkovModel> > lgm_;
@@ -215,17 +225,26 @@ class CrossAssetModel : public LinkableCalibratedModel {
                        << fxbs(ccy)->parameter(0)->size() - 1);
         std::vector<bool> res(0);
         for (Size j = 0; j < nIrLgm1f_; ++j) {
-            std::vector<bool> tmp1(irlgm1f(j)->parameter(0)->size(), true);
-            std::vector<bool> tmp2(irlgm1f(j)->parameter(1)->size(), true);
+            std::vector<bool> tmp1(p_[j]->parameter(0)->size(), true);
+            std::vector<bool> tmp2(p_[j]->parameter(1)->size(), true);
             res.insert(res.end(), tmp1.begin(), tmp1.end());
             res.insert(res.end(), tmp2.begin(), tmp2.end());
         }
         for (Size j = 0; j < nFxBs_; ++j) {
-            std::vector<bool> tmp(fxbs(j)->parameter(0)->size(), true);
+            std::vector<bool> tmp(p_[nIrLgm1f_ + j]->parameter(0)->size(),
+                                  true);
             if (ccy == j) {
                 tmp[i] = false;
             }
             res.insert(res.end(), tmp.begin(), tmp.end());
+        }
+        for (Size j = 0; j < nCrLgm1f_; ++j) {
+            std::vector<bool> tmp1(
+                p_[nIrLgm1f_ + nFxBs_ + j]->parameter(0)->size(), true);
+            std::vector<bool> tmp2(
+                p_[nIrLgm1f_ + nFxBs_ + j]->parameter(1)->size(), true);
+            res.insert(res.end(), tmp1.begin(), tmp1.end());
+            res.insert(res.end(), tmp2.begin(), tmp2.end());
         }
         return res;
     }
@@ -240,7 +259,7 @@ inline const boost::shared_ptr<StochasticProcess> CrossAssetModel::stateProcess(
 }
 
 inline Size CrossAssetModel::dimension() const {
-    return nIrLgm1f_ * 1 + nFxBs_ * 1;
+    return nIrLgm1f_ * 1 + nFxBs_ * 1 + nCrLgm1f_ * 2;
 }
 
 inline Size CrossAssetModel::currencies() const { return nIrLgm1f_; }

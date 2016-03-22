@@ -1127,13 +1127,13 @@ void CrossAssetModelTest::testLgm5fMoments() {
         Sample<MultiPath> path2 = pgen2.next();
         for (Size ii = 0; ii < 5; ++ii) {
             Real cii = path.value[ii].back();
-            Real cii2 = path.value[ii].back();
+            Real cii2 = path2.value[ii].back();
             e_eu[ii](cii);
             e_eu2[ii](cii2);
             for (Size jj = 0; jj <= ii; ++jj) {
                 Real cjj = path.value[jj].back();
                 v_eu[ii][jj](cii, covariate1 = cjj);
-                Real cjj2 = path.value[jj].back();
+                Real cjj2 = path2.value[jj].back();
                 v_eu2[ii][jj](cii2, covariate1 = cjj2);
             }
         }
@@ -1156,7 +1156,7 @@ void CrossAssetModelTest::testLgm5fMoments() {
         if (std::fabs(mean(e_eu2[i]) - e_an[i]) > errTolLd[i]) {
             BOOST_ERROR("analytical expectation for component #"
                         << i << " (" << e_an[i]
-                        << ") is inconsistent with numerical value (Euler "
+                        << ") is inconsistent with numerical value (Exact "
                            "discretization, "
                         << mean(e_eu2[i]) << "), error is "
                         << e_an[i] - mean(e_eu2[i]) << " tolerance is "
@@ -1196,7 +1196,7 @@ void CrossAssetModelTest::testLgm5fMoments() {
                 BOOST_ERROR("analytical covariance at ("
                             << i << "," << j << ") (" << v_an[i][j]
                             << ") is inconsistent with numerical "
-                               "value (Euler discretization, "
+                               "value (Exact discretization, "
                             << covariance(v_eu2[i][j]) << "), error is "
                             << v_an[i][j] - covariance(v_eu2[i][j])
                             << " tolerance is " << tol);
