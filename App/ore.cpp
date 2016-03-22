@@ -175,9 +175,10 @@ int main(int argc, char** argv) {
        /************
          * Simulation
          */
+
         if (params.hasGroup("simulation") &&
             params.get("simulation", "active") == "Y") {
-
+            
             bool detail = false;
 
             if (!detail)
@@ -220,14 +221,11 @@ int main(int argc, char** argv) {
             if (detail) cout << "OK" << endl;
             
             if (detail) cout << setw(30) << left << "Sim. Portfolio... "; fflush(stdout);
-            // FIXME: Is it enough to call build again?
-            // FIMXE: Add a utility to just "relink" everything to sim market.
             boost::shared_ptr<Portfolio> simPortfolio = boost::make_shared<Portfolio>();
             simPortfolio->load(portfolioFile);
             simPortfolio->build(simFactory);
-            vector<string> tradeIDs;
-            for (Size i = 0; i < simPortfolio->size(); ++i)
-                tradeIDs.push_back(simPortfolio->trades()[i]->envelope().id());
+            QL_REQUIRE(simPortfolio->size() == portfolio->size(),
+                       "portfolio size mismatch, check simulation market setup");
             cout << "OK" << endl;
             
             Size samples = sb.samples();
@@ -272,7 +270,14 @@ int main(int argc, char** argv) {
                 cube = boost::make_shared<SinglePrecisionInMemoryCube>();
             cube->load(cubeFile);
 
-            QL_FAIL("XVA reports not implemented yet");
+            string gridString = params.get("xva", "grid"); 
+            boost::shared_ptr<DateGrid> grid = boost::make_shared<DateGrid>(gridString);
+
+            QL_REQUIRE(cube->dimX() == portfolio->size(),
+                       "cube x dimension does not match portfolio size");
+            QL_REQUIRE(cube->dimY() == grid->size(),
+                       "cube y dimension does not match date grid size");
+                       
             cout << "OK" << endl;
         }
         else {
