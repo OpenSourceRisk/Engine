@@ -17,10 +17,10 @@ xva_LDADD = -lz -lboost_iostreams
 
 LDADD = 
 
-EXTRA_DIST = \
-	xva.sln \
-	xva.vcproj
+EXTRA_DIST =
 
 ore_SOURCES = ore.cpp
+#cubereader.cpp
 
 include_HEADERS = ore.hpp
+#cubereader.hpp

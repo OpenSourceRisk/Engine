@@ -247,8 +247,8 @@ int main(int argc, char** argv) {
             cout << "OK" << endl;
 
             cout << setw(30) << left << "Write Cube... "; fflush(stdout);
-            string outputFileName = outputPath + "/" + params.get("simulation", "outputFileName");
-            inMemoryCube->save(outputFileName);
+            string cubeFileName = outputPath + "/" + params.get("simulation", "cubeFile");
+            inMemoryCube->save(cubeFileName);
             cout << "OK" << endl;
 
             cout << setw(30) << left << "Write Additional Scenario Data... "; fflush(stdout);

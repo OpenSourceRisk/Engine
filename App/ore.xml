@@ -44,7 +44,7 @@
       <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="storeScenarios">N</Parameter>
-      <Parameter name="outputFileName">cube.dat</Parameter>
+      <Parameter name="cubeFile">cube.dat</Parameter>
       <Parameter name="additionalScenarioDataFileName">additionalscenariodata.csv</Parameter>
     </Analytic>
 
