@@ -72,7 +72,7 @@ int main(int argc, char** argv) {
         /*******************************
          * Market and fixing data loader
          */
-        cout << setw(30) << left << "Market data loader... "; fflush(stdout); 
+        cout << setw(45) << left << "Market data loader... "; fflush(stdout); 
         string inputPath = params.get("setup", "inputPath"); 
         string marketFile = inputPath + "/" + params.get("setup", "marketDataFile");
         string fixingFile = inputPath + "/" + params.get("setup", "fixingDataFile");
@@ -82,7 +82,7 @@ int main(int argc, char** argv) {
         /*************
          * Conventions
          */
-        cout << setw(30) << left << "Conventions... "; fflush(stdout); 
+        cout << setw(45) << left << "Conventions... "; fflush(stdout); 
         Conventions conventions;
         string conventionsFile = inputPath + "/" + params.get("setup", "conventionsFile");
         conventions.fromFile(conventionsFile);
@@ -91,7 +91,7 @@ int main(int argc, char** argv) {
         /**********************
          * Curve configurations
          */
-        cout << setw(30) << left << "Curve configuration... "; fflush(stdout);
+        cout << setw(45) << left << "Curve configuration... "; fflush(stdout);
         CurveConfigurations curveConfigs;
         string curveConfigFile = inputPath + "/" + params.get("setup", "curveConfigFile");
         curveConfigs.fromFile(curveConfigFile);
@@ -100,7 +100,7 @@ int main(int argc, char** argv) {
         /********
          * Market
          */
-        cout << setw(30) << left << "Market... "; fflush(stdout);
+        cout << setw(45) << left << "Market... "; fflush(stdout);
         TodaysMarketParameters marketParameters;
         string marketConfigFile = inputPath + "/" + params.get("setup", "marketConfigFile");
         marketParameters.fromFile(marketConfigFile);
@@ -112,7 +112,7 @@ int main(int argc, char** argv) {
         /************************
          * Pricing Engine Factory
          */
-        cout << setw(30) << left << "Engine factory... "; fflush(stdout);
+        cout << setw(45) << left << "Engine factory... "; fflush(stdout);
         boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
         string pricingEnginesFile = inputPath + "/" + params.get("setup", "pricingEnginesFile");
         engineData->fromFile(pricingEnginesFile);
@@ -123,7 +123,7 @@ int main(int argc, char** argv) {
         /******************************
          * Load and Build the Portfolio
          */
-        cout << setw(30) << left << "Portfolio... "; fflush(stdout);
+        cout << setw(45) << left << "Portfolio... "; fflush(stdout);
         boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
         string portfolioFile = inputPath + "/" + params.get("setup", "portfolioFile");
         portfolio->load(portfolioFile);
@@ -133,7 +133,7 @@ int main(int argc, char** argv) {
         /************
          * Curve dump
          */
-        cout << setw(30) << left << "Curve Report... "; fflush(stdout);
+        cout << setw(45) << left << "Curve Report... "; fflush(stdout);
         if (params.hasGroup("curves") &&
             params.get("curves", "active") == "Y") {
             writeCurves(params, marketParameters, market);
@@ -147,7 +147,7 @@ int main(int argc, char** argv) {
         /*********************
          * Portfolio valuation
          */
-        cout << setw(30) << left << "NPV Report... "; fflush(stdout);
+        cout << setw(45) << left << "NPV Report... "; fflush(stdout);
         if (params.hasGroup("npv") &&
             params.get("npv", "active") == "Y") {
             writeNpv(params, market, portfolio);
@@ -161,7 +161,7 @@ int main(int argc, char** argv) {
         /**********************
          * Cash flow generation
          */
-        cout << setw(30) << left << "Cashflow Report... "; fflush(stdout);
+        cout << setw(45) << left << "Cashflow Report... "; fflush(stdout);
         if (params.hasGroup("cashflow") &&
             params.get("cashflow", "active") == "Y") {
             writeCashflow(params, market, portfolio);          
@@ -179,12 +179,12 @@ int main(int argc, char** argv) {
         if (params.hasGroup("simulation") &&
             params.get("simulation", "active") == "Y") {
             
-            bool detail = false;
+            bool detail = true;
 
             if (!detail)
-                cout << setw(30) << left << "Simulation Setup... "; 
+                cout << setw(45) << left << "Simulation Setup... "; 
             else
-                cout << setw(30) << left << "Simulation Model... ";
+                cout << setw(45) << left << "Simulation Model... ";
             fflush(stdout);
             string simulationModelFile = inputPath + "/" + params.get("simulation", "simulationModelFile");
             boost::shared_ptr<CrossAssetModelData> modelData = boost::make_shared<CrossAssetModelData>();
@@ -193,13 +193,13 @@ int main(int argc, char** argv) {
             boost::shared_ptr<QuantExt::CrossAssetModel> model = modelBuilder.build(modelData);
             if (detail) cout << "OK" << endl;
             
-            if (detail) cout << setw(30) << left << "Simulation Market Config... "; fflush(stdout);
+            if (detail) cout << setw(45) << left << "Simulation Market Config... "; fflush(stdout);
             string simulationMarketFile = inputPath + "/" + params.get("simulation", "simulationMarketFile");
             boost::shared_ptr<ScenarioSimMarketParameters> simMarketData(new ScenarioSimMarketParameters);
             simMarketData->fromFile(simulationMarketFile);
             if (detail) cout << "OK" << endl;
             
-            if (detail) cout << setw(30) << left << "Scenario Generator... "; fflush(stdout);
+            if (detail) cout << setw(45) << left << "Scenario Generator... "; fflush(stdout);
             string simulationParamFile = inputPath + "/" + params.get("simulation", "simulationParamFile");
             ScenarioGeneratorBuilder sb;
             sb.fromFile(simulationParamFile);
@@ -207,12 +207,12 @@ int main(int argc, char** argv) {
             boost::shared_ptr<openxva::simulation::DateGrid> grid = sb.dateGrid();
             if (detail) cout << "OK" << endl;
             
-            if (detail) cout << setw(30) << left << "Simulation Market... "; fflush(stdout);
+            if (detail) cout << setw(45) << left << "Simulation Market... "; fflush(stdout);
             boost::shared_ptr<openxva::simulation::SimMarket> simMarket
                 = boost::make_shared<ScenarioSimMarket>(sg, market, simMarketData);
             if (detail) cout << "OK" << endl;
             
-            if (detail) cout << setw(30) << left << "Sim. Engine Factory... "; fflush(stdout);
+            if (detail) cout << setw(45) << left << "Sim. Engine Factory... "; fflush(stdout);
             boost::shared_ptr<EngineData> simEngineData = boost::make_shared<EngineData>();
             string simPricingEnginesFile = inputPath + "/" + params.get("simulation", "pricingEnginesFile");
             simEngineData->fromFile(simPricingEnginesFile);
@@ -220,7 +220,7 @@ int main(int argc, char** argv) {
                 simFactory = boost::make_shared<EngineFactory>(simMarket, simEngineData);
             if (detail) cout << "OK" << endl;
             
-            if (detail) cout << setw(30) << left << "Sim. Portfolio... "; fflush(stdout);
+            if (detail) cout << setw(45) << left << "Sim. Portfolio... "; fflush(stdout);
             boost::shared_ptr<Portfolio> simPortfolio = boost::make_shared<Portfolio>();
             simPortfolio->load(portfolioFile);
             simPortfolio->build(simFactory);
@@ -235,37 +235,41 @@ int main(int argc, char** argv) {
             Size ydim = grid->dates().size();
             Size zdim = samples;
 
-            cout << setw(55) << "Additional Scenario Data " << ydim << " x " << zdim << "... "; fflush(stdout);
+            ostringstream o;
+            o << "Additional Scenario Data " << ydim << " x " << zdim << "... ";
+            cout << setw(45) << o.str(); fflush(stdout);
             boost::shared_ptr<AdditionalScenarioData>
                 inMemoryAdditionalScenarioData = boost::make_shared<InMemoryAdditionalScenarioData>(ydim,zdim);
             cout << "OK" << endl;
-
-            cout << setw(30) << "Cube " << xdim << " x " << ydim << " x " << zdim << "... "; fflush(stdout);
+            
+            o.str("");
+            o << "Build Cube " << xdim << " x " << ydim << " x " << zdim << "... ";
+            cout << setw(45) << o.str(); fflush(stdout);
             boost::shared_ptr<Cube>
                 inMemoryCube = boost::make_shared<SinglePrecisionInMemoryCube>(xdim,ydim,zdim);
             engine.buildCube(simPortfolio, inMemoryCube, inMemoryAdditionalScenarioData);
             cout << "OK" << endl;
 
-            cout << setw(30) << left << "Write Cube... "; fflush(stdout);
+            cout << setw(45) << left << "Write Cube... "; fflush(stdout);
             string cubeFileName = outputPath + "/" + params.get("simulation", "cubeFile");
             inMemoryCube->save(cubeFileName);
             cout << "OK" << endl;
 
-            cout << setw(30) << left << "Write Additional Scenario Data... "; fflush(stdout);
+            cout << setw(45) << left << "Write Additional Scenario Data... "; fflush(stdout);
             string outputFileNameAddScenData = outputPath + "/" + params.get("simulation", "additionalScenarioDataFileName");
             inMemoryAdditionalScenarioData->save(outputFileNameAddScenData);
             cout << "OK" << endl;
         }
         else {
             LOG("skip simulation");
-            cout << setw(30) << left << "Simulation... ";
+            cout << setw(45) << left << "Simulation... ";
             cout << "SKIP" << endl;
         }
 
         /*************
          * XVA Reports
          */
-        cout << setw(30) << left << "XVA Reports... "; fflush(stdout);
+        cout << setw(45) << left << "XVA Reports... "; fflush(stdout);
         if (params.hasGroup("xva") &&
             params.get("xva", "active") == "Y") {
 
@@ -296,7 +300,7 @@ int main(int argc, char** argv) {
         /****************
          * Initial Margin
          */
-        cout << setw(30) << left << "Initial Margin Report... "; fflush(stdout);
+        cout << setw(45) << left << "Initial Margin Report... "; fflush(stdout);
         if (params.hasGroup("initialMargin") &&
             params.get("initialMargin", "active") == "Y") {
             QL_FAIL("Initial Margin reports not implemented yet");
