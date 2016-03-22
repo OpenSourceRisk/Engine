@@ -25,6 +25,7 @@ using namespace openxva::utilities;
 using namespace openxva::engine;
 using namespace openxva::simulation;
 using namespace openxva::cube;
+using namespace openxva::aggregation;
 
 void writeNpv(const Parameters& params,
               boost::shared_ptr<Market> market,
@@ -290,6 +291,22 @@ int main(int argc, char** argv) {
             QL_REQUIRE(cube->dimY() == grid->size(),
                        "cube y dimension does not match date grid size");
                        
+            string scenarioFile = outputPath + "/" + params.get("xva", "scenarioFile");
+            boost::shared_ptr<AdditionalScenarioData>
+                scenarioData = boost::make_shared<InMemoryAdditionalScenarioData>();
+            scenarioData->load(scenarioFile);
+
+            map<string,bool> analytics;
+            analytics["exposureProfiles"] = parseBool(params.get("xva", "exposureProfiles"));
+            analytics["cva"] = parseBool(params.get("xva", "cva"));
+            analytics["dva"] = parseBool(params.get("xva", "dva"));
+            analytics["fva"] = parseBool(params.get("xva", "fva"));
+            analytics["colva"] = parseBool(params.get("xva", "colva"));
+            analytics["cvaAllocation"] = parseBool(params.get("xva", "cvaAllocation"));
+            
+            boost::shared_ptr<PostProcess> postProcess = boost::make_shared<PostProcess>
+                (portfolio, netting, market, grid, cube, scenarioData, analytics);
+            
             cout << "OK" << endl;
         }
         else {

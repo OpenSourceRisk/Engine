@@ -52,6 +52,7 @@
       <Parameter name="active">Y</Parameter>
       <Parameter name="csaFile">netting.xml</Parameter>
       <Parameter name="cubeFile">cube.dat</Parameter>
+      <Parameter name="scenarioFile">additionalscenariodata.csv</Parameter>
       <Parameter name="grid">121,1M</Parameter>
       <Parameter name="exposureProfiles">Y</Parameter>
       <Parameter name="cva">Y</Parameter>
