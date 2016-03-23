@@ -37,7 +37,7 @@
     </Analytic>      
 
     <Analytic type="simulation">
-      <Parameter name="active">Y</Parameter>
+      <Parameter name="active">N</Parameter>
       <Parameter name="simulationModelFile">simulationmodels.xml</Parameter>
       <Parameter name="simulationMarketFile">simulationmarket.xml</Parameter>
       <Parameter name="simulationParamFile">simulationparams.xml</Parameter>
@@ -53,7 +53,7 @@
       <Parameter name="csaFile">netting.xml</Parameter>
       <Parameter name="cubeFile">cube.dat</Parameter>
       <Parameter name="scenarioFile">additionalscenariodata.csv</Parameter>
-      <Parameter name="grid">80,3M</Parameter>
+      <Parameter name="grid">240,1M</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="exposureProfiles">Y</Parameter>
       <Parameter name="quantile">0.95</Parameter>

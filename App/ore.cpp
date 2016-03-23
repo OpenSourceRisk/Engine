@@ -290,6 +290,9 @@ int main(int argc, char** argv) {
         if (params.hasGroup("xva") &&
             params.get("xva", "active") == "Y") {
 
+            // We reset this here because the date grid building below depends on it.
+            Settings::instance().evaluationDate() = asof; 
+
             string csaFile = inputPath + "/" + params.get("xva", "csaFile");
             boost::shared_ptr<NettingSetManager> netting = boost::make_shared<NettingSetManager>();
             netting->fromFile(csaFile);
@@ -542,18 +545,23 @@ void writeTradeExposures(const Parameters& params,
     for (Size i = 0; i < postProcess->tradeIds().size(); ++i) {
         string tradeId = postProcess->tradeIds()[i];
         ostringstream o;
-        o << outputPath << "/exposure_trade_" << tradeId  << ".txt";
+        o << outputPath << "/exposure_trade_" << tradeId  << ".csv";
         string fileName = o.str();
         ofstream file(fileName.c_str());
         QL_REQUIRE(file.is_open(), "Error opening file " << fileName);
         const vector<Real>& epe = postProcess->tradeEPE(tradeId);
         const vector<Real>& ene = postProcess->tradeENE(tradeId);
+        const vector<Real>& aepe = postProcess->allocatedTradeEPE(tradeId);
+        const vector<Real>& aene = postProcess->allocatedTradeENE(tradeId);
+        file << "#TradeId,Period,Time,EPE,ENE,AllocatedEPE,AllocatedENE" << endl;
         for (Size j = 0; j < epe.size(); ++j)
             file << tradeId << ","
                  << j << ","
                  << times[j] << ","
                  << epe[j] << ","
-                 << ene[j] << endl;
+                 << ene[j] << ","
+                 << aepe[j] << ","
+                 << aene[j] << endl;
         file.close();
     }
 }
@@ -564,13 +572,14 @@ void writeNettingSetExposures(const Parameters& params,
     const vector<Time> times = postProcess->dateGrid()->times();
     for (auto n : postProcess->nettingSetIds()) {
         ostringstream o;
-        o << outputPath << "/exposure_nettingset_" << n << ".txt";
+        o << outputPath << "/exposure_nettingset_" << n << ".csv";
         string fileName = o.str();
         ofstream file(fileName.c_str());
         QL_REQUIRE(file.is_open(), "Error opening file " << fileName);
         const vector<Real>& epe = postProcess->netEPE(n);
         const vector<Real>& ene = postProcess->netENE(n);
         const vector<Real>& ecb = postProcess->expectedCollateral(n);
+        file << "#TradeId,Period,Time,EPE,ENE,ExpectedCollateral" << endl;
         for (Size j = 0; j < epe.size(); ++j)
             file << n << ","
                  << j << ","
