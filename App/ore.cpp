@@ -39,6 +39,12 @@ void writeCurves(const Parameters& params,
                  const TodaysMarketParameters& marketConfig,
                  const boost::shared_ptr<Market>& market);
 
+void writeTradeExposures(const Parameters& params,
+                         boost::shared_ptr<PostProcess> postProcess);
+
+void writeNettingSetExposures(const Parameters& params,
+                              boost::shared_ptr<PostProcess> postProcess);
+
 int main(int argc, char** argv) {
 
     ORE_CHECK_TIMEBOMB
@@ -172,21 +178,22 @@ int main(int argc, char** argv) {
             LOG("skip cashflow generation");
             cout << "SKIP" << endl;
         }
-
-       /************
-         * Simulation
+        
+        /******************************************
+         * Simulation: Scenario and Cube Generation
          */
 
         if (params.hasGroup("simulation") &&
             params.get("simulation", "active") == "Y") {
             
-            bool detail = true;
+            bool detail = false;
 
             if (!detail)
                 cout << setw(45) << left << "Simulation Setup... "; 
             else
                 cout << setw(45) << left << "Simulation Model... ";
             fflush(stdout);
+            LOG("Build Simulation Model");
             string simulationModelFile = inputPath + "/" + params.get("simulation", "simulationModelFile");
             boost::shared_ptr<CrossAssetModelData> modelData = boost::make_shared<CrossAssetModelData>();
             modelData->fromFile(simulationModelFile);
@@ -195,12 +202,14 @@ int main(int argc, char** argv) {
             if (detail) cout << "OK" << endl;
             
             if (detail) cout << setw(45) << left << "Simulation Market Config... "; fflush(stdout);
+            LOG("Load Simulation Market Parameters");
             string simulationMarketFile = inputPath + "/" + params.get("simulation", "simulationMarketFile");
             boost::shared_ptr<ScenarioSimMarketParameters> simMarketData(new ScenarioSimMarketParameters);
             simMarketData->fromFile(simulationMarketFile);
             if (detail) cout << "OK" << endl;
             
             if (detail) cout << setw(45) << left << "Scenario Generator... "; fflush(stdout);
+            LOG("Load Simulation Parameters");
             string simulationParamFile = inputPath + "/" + params.get("simulation", "simulationParamFile");
             ScenarioGeneratorBuilder sb;
             sb.fromFile(simulationParamFile);
@@ -209,11 +218,13 @@ int main(int argc, char** argv) {
             if (detail) cout << "OK" << endl;
             
             if (detail) cout << setw(45) << left << "Simulation Market... "; fflush(stdout);
+            LOG("Build Simulation Maret");
             boost::shared_ptr<openxva::simulation::SimMarket> simMarket
                 = boost::make_shared<ScenarioSimMarket>(sg, market, simMarketData);
             if (detail) cout << "OK" << endl;
             
             if (detail) cout << setw(45) << left << "Sim. Engine Factory... "; fflush(stdout);
+            LOG("Build engine factory for pricing under scenarios, linked to sim market");
             boost::shared_ptr<EngineData> simEngineData = boost::make_shared<EngineData>();
             string simPricingEnginesFile = inputPath + "/" + params.get("simulation", "pricingEnginesFile");
             simEngineData->fromFile(simPricingEnginesFile);
@@ -222,6 +233,7 @@ int main(int argc, char** argv) {
             if (detail) cout << "OK" << endl;
             
             if (detail) cout << setw(45) << left << "Sim. Portfolio... "; fflush(stdout);
+            LOG("Build portfolio linked to sim market");
             boost::shared_ptr<Portfolio> simPortfolio = boost::make_shared<Portfolio>();
             simPortfolio->load(portfolioFile);
             simPortfolio->build(simFactory);
@@ -229,6 +241,7 @@ int main(int argc, char** argv) {
                        "portfolio size mismatch, check simulation market setup");
             cout << "OK" << endl;
             
+            LOG("Build valuation cube engine");
             Size samples = sb.samples();
             string baseCurrency = params.get("simulation", "baseCurrency");
             ValuationEngine engine(asof, grid, samples, baseCurrency, simMarket);
@@ -246,17 +259,20 @@ int main(int argc, char** argv) {
             o.str("");
             o << "Build Cube " << xdim << " x " << ydim << " x " << zdim << "... ";
             cout << setw(45) << o.str(); fflush(stdout);
+            LOG("Build cube");
             boost::shared_ptr<Cube>
                 inMemoryCube = boost::make_shared<SinglePrecisionInMemoryCube>(xdim,ydim,zdim);
             engine.buildCube(simPortfolio, inMemoryCube, inMemoryAdditionalScenarioData);
             cout << "OK" << endl;
 
             cout << setw(45) << left << "Write Cube... "; fflush(stdout);
+            LOG("Write cube");
             string cubeFileName = outputPath + "/" + params.get("simulation", "cubeFile");
             inMemoryCube->save(cubeFileName);
             cout << "OK" << endl;
 
             cout << setw(45) << left << "Write Additional Scenario Data... "; fflush(stdout);
+            LOG("Write scenario data");
             string outputFileNameAddScenData = outputPath + "/" + params.get("simulation", "additionalScenarioDataFileName");
             inMemoryAdditionalScenarioData->save(outputFileNameAddScenData);
             cout << "OK" << endl;
@@ -267,10 +283,10 @@ int main(int argc, char** argv) {
             cout << "SKIP" << endl;
         }
 
-        /*************
-         * XVA Reports
+        /*****************************
+         * Aggregation and XVA Reports
          */
-        cout << setw(45) << left << "XVA Reports... "; fflush(stdout);
+        cout << setw(45) << left << "Aggregation and XVA Reports... "; fflush(stdout);
         if (params.hasGroup("xva") &&
             params.get("xva", "active") == "Y") {
 
@@ -296,6 +312,11 @@ int main(int argc, char** argv) {
                 scenarioData = boost::make_shared<InMemoryAdditionalScenarioData>();
             scenarioData->load(scenarioFile);
 
+            QL_REQUIRE(scenarioData->dimDates() == grid->size(),
+                       "scenario dates do not match grid size");
+            QL_REQUIRE(scenarioData->dimSamples() == cube->dimZ(),
+                       "scenario sample size does not match cube sample size");
+            
             map<string,bool> analytics;
             analytics["exposureProfiles"] = parseBool(params.get("xva", "exposureProfiles"));
             analytics["cva"] = parseBool(params.get("xva", "cva"));
@@ -303,9 +324,14 @@ int main(int argc, char** argv) {
             analytics["fva"] = parseBool(params.get("xva", "fva"));
             analytics["colva"] = parseBool(params.get("xva", "colva"));
             analytics["cvaAllocation"] = parseBool(params.get("xva", "cvaAllocation"));
-            
+
+            string baseCurrency = params.get("xva", "baseCurrency");
+
             boost::shared_ptr<PostProcess> postProcess = boost::make_shared<PostProcess>
-                (portfolio, netting, market, grid, cube, scenarioData, analytics);
+                (portfolio, netting, market, grid, cube, scenarioData, analytics, baseCurrency);
+
+            writeTradeExposures(params, postProcess);
+            writeNettingSetExposures(params, postProcess);
             
             cout << "OK" << endl;
         }
@@ -508,7 +534,54 @@ void writeCurves(const Parameters& params,
 
     file.close();
 }
-                
+
+void writeTradeExposures(const Parameters& params,
+                         boost::shared_ptr<PostProcess> postProcess) {
+    string outputPath = params.get("setup", "outputPath");
+    const vector<Time> times = postProcess->dateGrid()->times();
+    for (Size i = 0; i < postProcess->tradeIds().size(); ++i) {
+        string tradeId = postProcess->tradeIds()[i];
+        ostringstream o;
+        o << outputPath << "/exposure_trade_" << tradeId  << ".txt";
+        string fileName = o.str();
+        ofstream file(fileName.c_str());
+        QL_REQUIRE(file.is_open(), "Error opening file " << fileName);
+        const vector<Real>& epe = postProcess->tradeEPE(tradeId);
+        const vector<Real>& ene = postProcess->tradeENE(tradeId);
+        for (Size j = 0; j < epe.size(); ++j)
+            file << tradeId << ","
+                 << j << ","
+                 << times[j] << ","
+                 << epe[j] << ","
+                 << ene[j] << endl;
+        file.close();
+    }
+}
+                           
+void writeNettingSetExposures(const Parameters& params,
+                              boost::shared_ptr<PostProcess> postProcess) {
+    string outputPath = params.get("setup", "outputPath");
+    const vector<Time> times = postProcess->dateGrid()->times();
+    for (auto n : postProcess->nettingSetIds()) {
+        ostringstream o;
+        o << outputPath << "/exposure_nettingset_" << n << ".txt";
+        string fileName = o.str();
+        ofstream file(fileName.c_str());
+        QL_REQUIRE(file.is_open(), "Error opening file " << fileName);
+        const vector<Real>& epe = postProcess->netEPE(n);
+        const vector<Real>& ene = postProcess->netENE(n);
+        const vector<Real>& ecb = postProcess->expectedCollateral(n);
+        for (Size j = 0; j < epe.size(); ++j)
+            file << n << ","
+                 << j << ","
+                 << times[j] << ","
+                 << epe[j] << ","
+                 << ene[j] << ","
+                 << ecb[j] << endl;
+        file.close();
+    }
+}
+
 bool Parameters::hasGroup(const string& groupName) const {
     return (data_.find(groupName) != data_.end());
 }
