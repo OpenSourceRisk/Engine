@@ -326,12 +326,12 @@ int main(int argc, char** argv) {
             analytics["dva"] = parseBool(params.get("xva", "dva"));
             analytics["fva"] = parseBool(params.get("xva", "fva"));
             analytics["colva"] = parseBool(params.get("xva", "colva"));
-            analytics["cvaAllocation"] = parseBool(params.get("xva", "cvaAllocation"));
-
+            
             string baseCurrency = params.get("xva", "baseCurrency");
+            string cvaAllocation = params.get("xva", "cvaAllocation");
 
             boost::shared_ptr<PostProcess> postProcess = boost::make_shared<PostProcess>
-                (portfolio, netting, market, grid, cube, scenarioData, analytics, baseCurrency);
+                (portfolio, netting, market, grid, cube, scenarioData, analytics, baseCurrency, cvaAllocation);
 
             writeTradeExposures(params, postProcess);
             writeNettingSetExposures(params, postProcess);

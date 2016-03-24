@@ -58,11 +58,11 @@
       <Parameter name="exposureProfiles">Y</Parameter>
       <Parameter name="quantile">0.95</Parameter>
       <Parameter name="calculationType">Symmetric</Parameter>      
+      <Parameter name="cvaAllocation">Marginal</Parameter>    
       <Parameter name="cva">Y</Parameter>
       <Parameter name="dva">N</Parameter>
       <Parameter name="fva">N</Parameter>
       <Parameter name="colva">N</Parameter>
-      <Parameter name="cvaAllocation">Y</Parameter>    
     </Analytic>
 
     <Analytic type="initialMargin">
