@@ -220,15 +220,14 @@ namespace QuantExt {
             .withPaymentAdjustment(convention);
 
         // add initial and final notional exchange
-        // FIXME: adjust nominal flow dates
         currency_[1] = fixedCcy;
         payer_[1] = payer_[0];
-        legs_[1].push_back(boost::shared_ptr<CashFlow>(
-                           new SimpleCashFlow(-fixedNominal,
-						    fixedSchedule.dates().front())));
-        legs_[1].push_back(boost::shared_ptr<CashFlow>(
-                           new SimpleCashFlow(fixedNominal,
-						    fixedSchedule.dates().back())));
+        legs_[1].push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(
+            -fixedNominal, fixedSchedule.calendar().adjust(
+                               fixedSchedule.dates().front(), convention))));
+        legs_[1].push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(
+            fixedNominal, fixedSchedule.calendar().adjust(
+                              fixedSchedule.dates().back(), convention))));
 
         // floating leg
         currency_[2] = floatCcy;
@@ -242,15 +241,14 @@ namespace QuantExt {
             registerWith(*i);
 
         // add initial and final notional exchange
-        // FIXME: adjust nominal flow dates
         currency_[3] = floatCcy;
         payer_[3] = payer_[2];
-        legs_[3].push_back(boost::shared_ptr<CashFlow>(
-                           new SimpleCashFlow(-floatNominal,
-						    floatSchedule.dates().front())));
-        legs_[3].push_back(boost::shared_ptr<CashFlow>(
-                           new SimpleCashFlow(floatNominal,
-						    floatSchedule.dates().back())));
+        legs_[3].push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(
+            -floatNominal, floatSchedule.calendar().adjust(
+                               floatSchedule.dates().front(), convention))));
+        legs_[3].push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(
+            floatNominal, floatSchedule.calendar().adjust(
+                              floatSchedule.dates().back(), convention))));
     }
 
     //-------------------------------------------------------------------------
@@ -284,7 +282,6 @@ namespace QuantExt {
             .withPaymentAdjustment(convention);
 
         // add initial, interim and final notional flows
-        // FIXME: adjust nominal flow dates
         currency_[1] = fixedCcy;
         payer_[1] = payer_[0];
         legs_[1].push_back(boost::shared_ptr<CashFlow>(
@@ -295,12 +292,14 @@ namespace QuantExt {
         for (Size i = 1; i < fixedNominals.size(); i++) {
             Real flow = fixedNominals[i-1] - fixedNominals[i];
             legs_[1].push_back(boost::shared_ptr<CashFlow>(
-                   new SimpleCashFlow(flow, fixedSchedule[i])));
+                new SimpleCashFlow(flow, fixedSchedule.calendar().adjust(
+                                             fixedSchedule[i], convention))));
         }
         if (fixedNominals.back() > 0)
-            legs_[1].push_back(boost::shared_ptr<CashFlow>(
-                   new SimpleCashFlow(fixedNominals.back(),
-                                      fixedSchedule.dates().back())));
+            legs_[1].push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(
+                fixedNominals.back(),
+                fixedSchedule.calendar().adjust(fixedSchedule.dates().back(),
+                                                convention))));
 
         // floating leg
         currency_[2] = floatCcy;
@@ -314,7 +313,6 @@ namespace QuantExt {
             registerWith(*i);
 
         // add initial, interim and final notional flows
-        // FIXME: adjust nominal flow dates
         currency_[3] = floatCcy;
         payer_[3] = payer_[2];
         legs_[3].push_back(boost::shared_ptr<CashFlow>(
@@ -325,12 +323,14 @@ namespace QuantExt {
         for (Size i = 1; i < floatNominals.size(); i++) {
             Real flow = floatNominals[i-1] - floatNominals[i];
             legs_[3].push_back(boost::shared_ptr<CashFlow>(
-                   new SimpleCashFlow(flow, floatSchedule[i])));
+                new SimpleCashFlow(flow, floatSchedule.calendar().adjust(
+                                             floatSchedule[i], convention))));
         }
         if (floatNominals.back() > 0)
-            legs_[3].push_back(boost::shared_ptr<CashFlow>(
-                   new SimpleCashFlow(floatNominals.back(),
-                                      floatSchedule.dates().back())));
+            legs_[3].push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(
+                floatNominals.back(),
+                floatSchedule.calendar().adjust(floatSchedule.dates().back(),
+                                                convention))));
     }
 
 
@@ -365,23 +365,22 @@ namespace QuantExt {
             .withPaymentAdjustment(convention);
 
         // add initial, interim and final notional flows
-        // FIXME: adjust nominal flow dates
         currency_[1] = ccy1;
         payer_[1] = payer_[0];
-        legs_[1].push_back(boost::shared_ptr<CashFlow>(
-                           new SimpleCashFlow(-nominals1[0],
-                                              schedule1.dates().front())));
+        legs_[1].push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(
+            -nominals1[0], schedule1.calendar().adjust(
+                               schedule1.dates().front(), convention))));
         QL_REQUIRE(nominals1.size() < schedule1.size(),
                    "too many fixed nominals provided, leg 1");
         for (Size i = 1; i < nominals1.size(); i++) {
             Real flow = nominals1[i-1] - nominals1[i];
-            legs_[1].push_back(boost::shared_ptr<CashFlow>(
-                   new SimpleCashFlow(flow, schedule1[i])));
+            legs_[1].push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(
+                flow, schedule1.calendar().adjust(schedule1[i], convention))));
         }
         if (nominals1.back() > 0)
-            legs_[1].push_back(boost::shared_ptr<CashFlow>(
-                   new SimpleCashFlow(nominals1.back(),
-                                      schedule1.dates().back())));
+            legs_[1].push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(
+                nominals1.back(), schedule1.calendar().adjust(
+                                      schedule1.dates().back(), convention))));
 
         // fixed leg 2
         currency_[2] = ccy2;
@@ -392,23 +391,22 @@ namespace QuantExt {
             .withPaymentAdjustment(convention);
 
         // add initial, interim and final notional flows
-        // FIXME: adjust nominal flow dates
         currency_[3] = ccy2;
         payer_[3] = payer_[2];
-        legs_[3].push_back(boost::shared_ptr<CashFlow>(
-                           new SimpleCashFlow(-nominals2[0],
-                                              schedule2.dates().front())));
+        legs_[3].push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(
+            -nominals2[0], schedule2.calendar().adjust(
+                               schedule2.dates().front(), convention))));
         QL_REQUIRE(nominals2.size() < schedule2.size(),
                    "too many fixed nominals provided, leg 2");
         for (Size i = 1; i < nominals2.size(); i++) {
             Real flow = nominals2[i-1] - nominals2[i];
-            legs_[3].push_back(boost::shared_ptr<CashFlow>(
-                   new SimpleCashFlow(flow, schedule2[i])));
+            legs_[3].push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(
+                flow, schedule2.calendar().adjust(schedule2[i], convention))));
         }
         if (nominals2.back() > 0)
-            legs_[3].push_back(boost::shared_ptr<CashFlow>(
-                   new SimpleCashFlow(nominals2.back(),
-                                      schedule2.dates().back())));
+            legs_[3].push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(
+                nominals2.back(), schedule2.calendar().adjust(
+                                      schedule2.dates().back(), convention))));
     }
 
     //-------------------------------------------------------------------------
@@ -445,23 +443,22 @@ namespace QuantExt {
             registerWith(*i);
 
         // add initial, interim and final notional flows
-        // FIXME: adjust nominal flow dates
         currency_[1] = ccy1;
         payer_[1] = payer_[0];
-        legs_[1].push_back(boost::shared_ptr<CashFlow>(
-                 new SimpleCashFlow(-nominals1[0],
-                                    schedule1.dates().front())));
+        legs_[1].push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(
+            -nominals1[0], schedule1.calendar().adjust(
+                               schedule1.dates().front(), convention))));
         QL_REQUIRE(nominals1.size() < schedule1.size(),
                    "too many float nominals provided");
         for (Size i = 1; i < nominals1.size(); i++) {
             Real flow = nominals1[i-1] - nominals1[i];
-            legs_[1].push_back(boost::shared_ptr<CashFlow>(
-                   new SimpleCashFlow(flow, schedule1[i])));
+            legs_[1].push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(
+                flow, schedule1.calendar().adjust(schedule1[i], convention))));
         }
         if (nominals1.back() > 0)
-            legs_[1].push_back(boost::shared_ptr<CashFlow>(
-                   new SimpleCashFlow(nominals1.back(),
-                                      schedule1.dates().back())));
+            legs_[1].push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(
+                nominals1.back(), schedule1.calendar().adjust(
+                                      schedule1.dates().back(), convention))));
 
         // floating leg 2
         currency_[2] = ccy2;
@@ -475,23 +472,22 @@ namespace QuantExt {
             registerWith(*i);
 
         // add initial, interim and final notional flows
-        // FIXME: adjust nominal flow dates
         currency_[3] = ccy2;
         payer_[3] = payer_[2];
-        legs_[3].push_back(boost::shared_ptr<CashFlow>(
-                 new SimpleCashFlow(-nominals2[0],
-                                    schedule2.dates().front())));
+        legs_[3].push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(
+            -nominals2[0], schedule2.calendar().adjust(
+                               schedule2.dates().front(), convention))));
         QL_REQUIRE(nominals2.size() < schedule2.size(),
                    "too many float nominals provided");
         for (Size i = 1; i < nominals2.size(); i++) {
             Real flow = nominals2[i-1] - nominals2[i];
-            legs_[3].push_back(boost::shared_ptr<CashFlow>(
-                   new SimpleCashFlow(flow, schedule2[i])));
+            legs_[3].push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(
+                flow, schedule2.calendar().adjust(schedule2[i], convention))));
         }
         if (nominals2.back() > 0)
-            legs_[3].push_back(boost::shared_ptr<CashFlow>(
-                   new SimpleCashFlow(nominals2.back(),
-                                      schedule2.dates().back())));
+            legs_[3].push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(
+                nominals2.back(), schedule2.calendar().adjust(
+                                      schedule2.dates().back(), convention))));
     }
 
 
