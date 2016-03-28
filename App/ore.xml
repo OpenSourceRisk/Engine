@@ -16,6 +16,11 @@
     <Parameter name="portfolioFile">instruments_RL.xml</Parameter>
   </Setup>
 
+  <Markets>
+    <Parameter name="simulation">default</Parameter>
+    <Parameter name="calibration">default</Parameter>
+  </Markets>
+
   <Analytics>
     
     <Analytic type="npv">

@@ -104,16 +104,18 @@ int main(int argc, char** argv) {
         curveConfigs.fromFile(curveConfigFile);
         cout << "OK" << endl;
                 
-        /********
-         * Market
+        /*********
+         * Markets
          */
-        cout << setw(45) << left << "Market... "; fflush(stdout);
+        cout << setw(45) << left << "Markets... "; fflush(stdout);
         TodaysMarketParameters marketParameters;
         string marketConfigFile = inputPath + "/" + params.get("setup", "marketConfigFile");
         marketParameters.fromFile(marketConfigFile);
         
         boost::shared_ptr<Market> market = boost::make_shared<TodaysMarket>
-            (asof, marketParameters, loader, curveConfigs, conventions);
+            (asof, marketParameters, loader, curveConfigs, conventions, params.get("markets", "simulation"));
+        boost::shared_ptr<Market> calibrationMarket = boost::make_shared<TodaysMarket>
+            (asof, marketParameters, loader, curveConfigs, conventions, params.get("markets", "calibration"));
         cout << "OK" << endl;
 
         /************************
@@ -197,7 +199,7 @@ int main(int argc, char** argv) {
             string simulationModelFile = inputPath + "/" + params.get("simulation", "simulationModelFile");
             boost::shared_ptr<CrossAssetModelData> modelData = boost::make_shared<CrossAssetModelData>();
             modelData->fromFile(simulationModelFile);
-            CrossAssetModelBuilder modelBuilder(market);
+            CrossAssetModelBuilder modelBuilder(market, calibrationMarket);
             boost::shared_ptr<QuantExt::CrossAssetModel> model = modelBuilder.build(modelData);
             if (detail) cout << "OK" << endl;
             
