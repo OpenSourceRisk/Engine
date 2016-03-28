@@ -83,7 +83,7 @@ class DynamicBlackVolTermStructure : public BlackVolTermStructure {
     void update();
 
   private:
-    const Handle<BlackVolTermStructure> &source_;
+    const Handle<BlackVolTermStructure> source_;
     ReactionToTimeDecay decayMode_;
     Stickyness stickyness_;
     const Handle<YieldTermStructure> riskfree_, dividend_;
