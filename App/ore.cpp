@@ -232,22 +232,19 @@ int main(int argc, char** argv) {
             Size samples = sb.samples();
             string baseCurrency = params.get("simulation", "baseCurrency");
             ValuationEngine engine(asof, grid, samples, baseCurrency, simMarket);
-            Size xdim = simPortfolio->size();
-            Size ydim = grid->dates().size();
-            Size zdim = samples;
 
             ostringstream o;
-            o << "Additional Scenario Data " << ydim << " x " << zdim << "... ";
+            o << "Additional Scenario Data " << grid->size() << " x " << samples << "... ";
             cout << setw(45) << o.str(); fflush(stdout);
             boost::shared_ptr<AdditionalScenarioData>
-                inMemoryAdditionalScenarioData = boost::make_shared<InMemoryAdditionalScenarioData>(ydim,zdim);
+                inMemoryAdditionalScenarioData = boost::make_shared<InMemoryAdditionalScenarioData>(grid->size(),samples);
             cout << "OK" << endl;
             
             o.str("");
-            o << "Build Cube " << xdim << " x " << ydim << " x " << zdim << "... ";
+            o << "Build Cube " << simPortfolio->size() << " x " << grid->size() << " x " << samples << "... ";
             cout << setw(45) << o.str(); fflush(stdout);
-            boost::shared_ptr<Cube>
-                inMemoryCube = boost::make_shared<SinglePrecisionInMemoryCube>(xdim,ydim,zdim);
+            boost::shared_ptr<NPVCube>
+                inMemoryCube = boost::make_shared<SinglePrecisionInMemoryCube>(asof,simPortfolio->ids(),grid->dates(),samples);
             engine.buildCube(simPortfolio, inMemoryCube, inMemoryAdditionalScenarioData);
             cout << "OK" << endl;
 
@@ -286,9 +283,9 @@ int main(int argc, char** argv) {
             string gridString = params.get("xva", "grid"); 
             boost::shared_ptr<DateGrid> grid = boost::make_shared<DateGrid>(gridString);
 
-            QL_REQUIRE(cube->dimX() == portfolio->size(),
+            QL_REQUIRE(cube->numIds() == portfolio->size(),
                        "cube x dimension does not match portfolio size");
-            QL_REQUIRE(cube->dimY() == grid->size(),
+            QL_REQUIRE(cube->numDates() == grid->size(),
                        "cube y dimension does not match date grid size");
                        
             string scenarioFile = outputPath + "/" + params.get("xva", "scenarioFile");
