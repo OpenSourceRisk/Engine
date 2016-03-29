@@ -307,7 +307,7 @@ int main(int argc, char** argv) {
 
             QL_REQUIRE(scenarioData->dimDates() == grid->size(),
                        "scenario dates do not match grid size");
-            QL_REQUIRE(scenarioData->dimSamples() == cube->dimZ(),
+            QL_REQUIRE(scenarioData->dimSamples() == cube->samples(),
                        "scenario sample size does not match cube sample size");
             
             map<string,bool> analytics;
