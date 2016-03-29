@@ -58,7 +58,7 @@ int main(int argc, char** argv) {
     try {
         std::cout << "ORE starting" << std::endl;
 
-        Size tab = 35;
+        Size tab = 40;
         
         if (argc != 2) {
             std::cout << endl << "usage: ORE path/to/ore.xml" << endl << endl;
