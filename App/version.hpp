@@ -24,7 +24,7 @@ inline void printVersion() {
 // if present, it prints the version and exits with return code 0.
 // We do this here, so we can disply the version number even if ENV_FILE is not set
 inline void checkVersion(int argc, char** argv) {
-    for (unsigned int i = 1; i < argc; i++) {
+    for (int i = 1; i < argc; i++) {
         if (std::string(argv[i]) == "-version" ||
             std::string(argv[i]) == "--version") {
             printVersion();
