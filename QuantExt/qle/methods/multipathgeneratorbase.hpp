@@ -26,6 +26,7 @@ namespace QuantExt {
     class MultiPathGeneratorBase {
     public:
         virtual const Sample<MultiPath> &next() const = 0;
+        virtual void reset() = 0;
     };
 
     /*! Instantiation of MultiPathGenerator with standard PseudoRandom traits */
@@ -36,8 +37,14 @@ namespace QuantExt {
                                        BigNatural seed = 0,
                                        bool antitheticSampling = false);
         const Sample<MultiPath> &next() const;
-
+        void reset();
+        
     private:
+        const boost::shared_ptr<StochasticProcess> process_;
+        TimeGrid grid_;
+        Size dimension_;
+        BigNatural seed_;
+        
         boost::shared_ptr<MultiPathGenerator<PseudoRandom::rsg_type> > pg_;
         bool antitheticSampling_;
         mutable bool antitheticVariate_;
@@ -51,8 +58,15 @@ namespace QuantExt {
                       const boost::shared_ptr<StochasticProcess> &, const TimeGrid &,
                       Size dimension, BigNatural seed = 0, bool brownianBridge = false);
         const Sample<MultiPath> &next() const;
+        void reset();
 
     private:
+        const boost::shared_ptr<StochasticProcess> process_;
+        TimeGrid grid_;
+        Size dimension_;
+        BigNatural seed_;
+        bool brownianBridge_;
+
         boost::shared_ptr<MultiPathGenerator<LowDiscrepancy::rsg_type> > pg_;
     };
 

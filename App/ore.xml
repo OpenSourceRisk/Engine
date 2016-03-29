@@ -13,7 +13,7 @@
     <Parameter name="conventionsFile">conventions.xml</Parameter>
     <Parameter name="marketConfigFile">todaysmarket.xml</Parameter>
     <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
-    <Parameter name="portfolioFile">instruments.xml</Parameter>
+    <Parameter name="portfolioFile">instruments_RL.xml</Parameter>
   </Setup>
 
   <Analytics>
@@ -37,7 +37,7 @@
     </Analytic>      
 
     <Analytic type="simulation">
-      <Parameter name="active">Y</Parameter>
+      <Parameter name="active">N</Parameter>
       <Parameter name="simulationModelFile">simulationmodels.xml</Parameter>
       <Parameter name="simulationMarketFile">simulationmarket.xml</Parameter>
       <Parameter name="simulationParamFile">simulationparams.xml</Parameter>
@@ -53,21 +53,25 @@
       <Parameter name="csaFile">netting.xml</Parameter>
       <Parameter name="cubeFile">cube.dat</Parameter>
       <Parameter name="scenarioFile">additionalscenariodata.csv</Parameter>
-      <Parameter name="grid">121,1M</Parameter>
+      <Parameter name="grid">240,1M</Parameter>
+      <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="exposureProfiles">Y</Parameter>
+      <Parameter name="quantile">0.95</Parameter>
+      <Parameter name="calculationType">Symmetric</Parameter>      
+      <Parameter name="allocationMethod">RelativeXVA</Parameter>    
+      <Parameter name="marginalAllocationLimit">1.0</Parameter>    
       <Parameter name="cva">Y</Parameter>
       <Parameter name="dva">N</Parameter>
-      <Parameter name="dva">N</Parameter>
+      <Parameter name="dvaName">BANK</Parameter>
       <Parameter name="fva">N</Parameter>
       <Parameter name="colva">N</Parameter>
-      <Parameter name="cvaAllocation">Y</Parameter>    
     </Analytic>
 
     <Analytic type="initialMargin">
       <Parameter name="active">N</Parameter>
       <Parameter name="method">SIMM</Parameter>
     </Analytic>
-    
+[    
   </Analytics>
   
 </OpenRiskEngine>
