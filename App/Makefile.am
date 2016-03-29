@@ -11,16 +11,6 @@ AM_LDFLAGS = \
 	-L${top_builddir}/../QuantLib/ql -lQuantLib \
 	-lboost_serialization -lboost_filesystem -lboost_regex -lboost_system -lboost_date_time -lboost_iostreams
 
-xva_CPPFLAGS=${DB_INCLUDES}
-
-xva_LDADD = -lz -lboost_iostreams
-
-LDADD = 
-
-EXTRA_DIST =
-
 ore_SOURCES = ore.cpp
-#cubereader.cpp
 
 include_HEADERS = ore.hpp
-#cubereader.hpp
