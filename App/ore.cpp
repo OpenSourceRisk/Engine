@@ -85,7 +85,7 @@ int main(int argc, char** argv) {
         /*******************************
          * Market and fixing data loader
          */
-        cout << setw(tab) << left << "Market data loader... "; fflush(stdout); 
+        cout << setw(tab) << left << "Market data loader... " << flush;
         string inputPath = params.get("setup", "inputPath"); 
         string marketFile = inputPath + "/" + params.get("setup", "marketDataFile");
         string fixingFile = inputPath + "/" + params.get("setup", "fixingDataFile");
@@ -95,7 +95,7 @@ int main(int argc, char** argv) {
         /*************
          * Conventions
          */
-        cout << setw(tab) << left << "Conventions... "; fflush(stdout); 
+        cout << setw(tab) << left << "Conventions... " << flush; 
         Conventions conventions;
         string conventionsFile = inputPath + "/" + params.get("setup", "conventionsFile");
         conventions.fromFile(conventionsFile);
@@ -104,7 +104,7 @@ int main(int argc, char** argv) {
         /**********************
          * Curve configurations
          */
-        cout << setw(tab) << left << "Curve configuration... "; fflush(stdout);
+        cout << setw(tab) << left << "Curve configuration... " << flush;
         CurveConfigurations curveConfigs;
         string curveConfigFile = inputPath + "/" + params.get("setup", "curveConfigFile");
         curveConfigs.fromFile(curveConfigFile);
@@ -113,7 +113,7 @@ int main(int argc, char** argv) {
         /********
          * Market
          */
-        cout << setw(tab) << left << "Market... "; fflush(stdout);
+        cout << setw(tab) << left << "Market... " << flush;
         TodaysMarketParameters marketParameters;
         string marketConfigFile = inputPath + "/" + params.get("setup", "marketConfigFile");
         marketParameters.fromFile(marketConfigFile);
@@ -125,7 +125,7 @@ int main(int argc, char** argv) {
         /************************
          * Pricing Engine Factory
          */
-        cout << setw(tab) << left << "Engine factory... "; fflush(stdout);
+        cout << setw(tab) << left << "Engine factory... " << flush;
         boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
         string pricingEnginesFile = inputPath + "/" + params.get("setup", "pricingEnginesFile");
         engineData->fromFile(pricingEnginesFile);
@@ -136,7 +136,7 @@ int main(int argc, char** argv) {
         /******************************
          * Load and Build the Portfolio
          */
-        cout << setw(tab) << left << "Portfolio... "; fflush(stdout);
+        cout << setw(tab) << left << "Portfolio... " << flush;
         boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
         string portfolioFile = inputPath + "/" + params.get("setup", "portfolioFile");
         portfolio->load(portfolioFile);
@@ -146,7 +146,7 @@ int main(int argc, char** argv) {
         /************
          * Curve dump
          */
-        cout << setw(tab) << left << "Curve Report... "; fflush(stdout);
+        cout << setw(tab) << left << "Curve Report... " << flush;
         if (params.hasGroup("curves") &&
             params.get("curves", "active") == "Y") {
             writeCurves(params, marketParameters, market);
@@ -160,7 +160,7 @@ int main(int argc, char** argv) {
         /*********************
          * Portfolio valuation
          */
-        cout << setw(tab) << left << "NPV Report... "; fflush(stdout);
+        cout << setw(tab) << left << "NPV Report... " << flush;
         if (params.hasGroup("npv") &&
             params.get("npv", "active") == "Y") {
             writeNpv(params, market, portfolio);
@@ -174,7 +174,7 @@ int main(int argc, char** argv) {
         /**********************
          * Cash flow generation
          */
-        cout << setw(tab) << left << "Cashflow Report... "; fflush(stdout);
+        cout << setw(tab) << left << "Cashflow Report... " << flush;
         if (params.hasGroup("cashflow") &&
             params.get("cashflow", "active") == "Y") {
             writeCashflow(params, market, portfolio);          
@@ -238,30 +238,29 @@ int main(int argc, char** argv) {
             ValuationEngine engine(asof, grid, samples, baseCurrency, simMarket);
 
             ostringstream o;
-            cout << setw(45) << o.str(); fflush(stdout);
             o << "Additional Scenario Data " << grid->size() << " x " << samples << "... ";
-            cout << setw(tab) << o.str(); fflush(stdout);
+            cout << setw(tab) << o.str() << flush;
             boost::shared_ptr<AdditionalScenarioData>
                 inMemoryAdditionalScenarioData = boost::make_shared<InMemoryAdditionalScenarioData>(grid->size(),samples);
             cout << "OK" << endl;
             
             o.str("");
             o << "Build Cube " << simPortfolio->size() << " x " << grid->size() << " x " << samples << "... ";
-            cout << setw(tab) << o.str(); fflush(stdout);
+            cout << setw(tab) << o.str() << flush;
             LOG("Build cube");
             boost::shared_ptr<NPVCube>
-                inMemoryCube = boost::make_shared<SinglePrecisionInMemoryCube>(asof,simPortfolio->ids(),grid->dates(),samples);
-            cout << setw(tab) << o.str(); fflush(stdout);
+                inMemoryCube = boost::make_shared<SinglePrecisionInMemoryCube>
+                (asof, simPortfolio->ids(), grid->dates(), samples);
             engine.buildCube(simPortfolio, inMemoryCube, inMemoryAdditionalScenarioData);
             cout << "OK" << endl;
 
-            cout << setw(tab) << left << "Write Cube... "; fflush(stdout);
+            cout << setw(tab) << left << "Write Cube... " << flush;
             LOG("Write cube");
             string cubeFileName = outputPath + "/" + params.get("simulation", "cubeFile");
             inMemoryCube->save(cubeFileName);
             cout << "OK" << endl;
 
-            cout << setw(tab) << left << "Write Additional Scenario Data... "; fflush(stdout);
+            cout << setw(tab) << left << "Write Additional Scenario Data... " << flush;
             LOG("Write scenario data");
             string outputFileNameAddScenData = outputPath + "/" + params.get("simulation", "additionalScenarioDataFileName");
             inMemoryAdditionalScenarioData->save(outputFileNameAddScenData);
@@ -276,7 +275,7 @@ int main(int argc, char** argv) {
         /*****************************
          * Aggregation and XVA Reports
          */
-        cout << setw(tab) << left << "Aggregation and XVA Reports... "; fflush(stdout);
+        cout << setw(tab) << left << "Aggregation and XVA Reports... " << flush;
         if (params.hasGroup("xva") &&
             params.get("xva", "active") == "Y") {
 
@@ -288,15 +287,16 @@ int main(int argc, char** argv) {
             netting->fromFile(csaFile);
 
             string cubeFile = outputPath + "/" + params.get("xva", "cubeFile");
-            boost::shared_ptr<SinglePrecisionInMemoryCube>
+            boost::shared_ptr<NPVCube>
                 cube = boost::make_shared<SinglePrecisionInMemoryCube>();
             cube->load(cubeFile);
 
             string gridString = params.get("xva", "grid"); 
             boost::shared_ptr<DateGrid> grid = boost::make_shared<DateGrid>(gridString);
-
+            
             QL_REQUIRE(cube->numIds() == portfolio->size(),
-                       "cube x dimension does not match portfolio size");
+                       "cube x dimension (" << cube->numIds() << ") does not match portfolio size ("
+                       << portfolio->size() << ")");
             QL_REQUIRE(cube->numDates() == grid->size(),
                        "cube y dimension does not match date grid size");
                        
@@ -342,7 +342,7 @@ int main(int argc, char** argv) {
         /****************
          * Initial Margin
          */
-        cout << setw(tab) << left << "Initial Margin Report... "; fflush(stdout);
+        cout << setw(tab) << left << "Initial Margin Report... " << flush;
         if (params.hasGroup("initialMargin") &&
             params.get("initialMargin", "active") == "Y") {
             QL_FAIL("Initial Margin reports not implemented yet");

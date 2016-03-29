@@ -7,13 +7,13 @@
     <Parameter name="inputPath">/Users/roland/Development/openxva/Input</Parameter>
     <Parameter name="outputPath">/Users/roland/Development/openxva/Output</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
-    <Parameter name="marketDataFile">market.txt</Parameter>
+    <Parameter name="marketDataFile">flat_market.txt</Parameter>
     <Parameter name="fixingDataFile">fixings.txt</Parameter>
     <Parameter name="curveConfigFile">curveconfig.xml</Parameter>
     <Parameter name="conventionsFile">conventions.xml</Parameter>
-    <Parameter name="marketConfigFile">todaysmarket.xml</Parameter>
+    <Parameter name="marketConfigFile">flat_todaysmarket.xml</Parameter>
     <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
-    <Parameter name="portfolioFile">instruments_RL.xml</Parameter>
+    <Parameter name="portfolioFile">flat_instruments.xml</Parameter>
   </Setup>
 
   <Analytics>
@@ -37,7 +37,7 @@
     </Analytic>      
 
     <Analytic type="simulation">
-      <Parameter name="active">N</Parameter>
+      <Parameter name="active">Y</Parameter>
       <Parameter name="simulationModelFile">simulationmodels.xml</Parameter>
       <Parameter name="simulationMarketFile">simulationmarket.xml</Parameter>
       <Parameter name="simulationParamFile">simulationparams.xml</Parameter>
@@ -45,14 +45,14 @@
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="storeScenarios">N</Parameter>
       <Parameter name="cubeFile">cube.dat</Parameter>
-      <Parameter name="additionalScenarioDataFileName">additionalscenariodata.csv</Parameter>
+      <Parameter name="additionalScenarioDataFileName">scenariodata.dat</Parameter>
     </Analytic>
 
     <Analytic type="xva">
       <Parameter name="active">Y</Parameter>
       <Parameter name="csaFile">netting.xml</Parameter>
       <Parameter name="cubeFile">cube.dat</Parameter>
-      <Parameter name="scenarioFile">additionalscenariodata.csv</Parameter>
+      <Parameter name="scenarioFile">scenariodata.dat</Parameter>
       <Parameter name="grid">240,1M</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="exposureProfiles">Y</Parameter>
