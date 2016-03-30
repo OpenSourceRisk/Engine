@@ -555,15 +555,20 @@ void writeTradeExposures(const Parameters& params,
         const vector<Real>& aepe = postProcess->allocatedTradeEPE(tradeId);
         const vector<Real>& aene = postProcess->allocatedTradeENE(tradeId);
         file << "#TradeId,Period,Time,EPE,ENE,AllocatedEPE,AllocatedENE" << endl;
-        for (Size j = 0; j < epe.size(); ++j) {
+        file << tradeId << ","
+             << 0.0 << ","
+             << epe[0] << ","
+             << ene[0] << ","
+             << aepe[0] << ","
+             << aene[0] << endl;
+        for (Size j = 0; j < dates.size(); ++j) {
             Time time = dc.yearFraction(today, dates[j]);
             file << tradeId << ","
-                 << j << ","
                  << time << ","
-                 << epe[j] << ","
-                 << ene[j] << ","
-                 << aepe[j] << ","
-                 << aene[j] << endl;
+                 << epe[j+1] << ","
+                 << ene[j+1] << ","
+                 << aepe[j+1] << ","
+                 << aene[j+1] << endl;
         }
         file.close();
     }
@@ -585,14 +590,18 @@ void writeNettingSetExposures(const Parameters& params,
         const vector<Real>& ene = postProcess->netENE(n);
         const vector<Real>& ecb = postProcess->expectedCollateral(n);
         file << "#TradeId,Period,Time,EPE,ENE,ExpectedCollateral" << endl;
-        for (Size j = 0; j < epe.size(); ++j) {
+        file << n << ","
+             << 0.0 << ","
+             << epe[0] << ","
+             << ene[0] << ","
+             << ecb[0] << endl;
+        for (Size j = 0; j < dates.size(); ++j) {
             Real time = dc.yearFraction(today, dates[j]);
             file << n << ","
-                 << j << ","
                  << time << ","
-                 << epe[j] << ","
-                 << ene[j] << ","
-                 << ecb[j] << endl;
+                 << epe[j+1] << ","
+                 << ene[j+1] << ","
+                 << ecb[j+1] << endl;
         }
         file.close();
     }
