@@ -53,7 +53,6 @@
       <Parameter name="csaFile">netting.xml</Parameter>
       <Parameter name="cubeFile">cube.dat</Parameter>
       <Parameter name="scenarioFile">scenariodata.dat</Parameter>
-      <Parameter name="grid">240,1M</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="exposureProfiles">Y</Parameter>
       <Parameter name="quantile">0.95</Parameter>
@@ -65,6 +64,9 @@
       <Parameter name="dvaName">BANK</Parameter>
       <Parameter name="fva">N</Parameter>
       <Parameter name="colva">N</Parameter>
+      <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>
+      <Parameter name="netCubeOutputFile">netcube.csv</Parameter>
+      
     </Analytic>
 
     <Analytic type="initialMargin">

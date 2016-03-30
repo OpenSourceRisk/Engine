@@ -291,22 +291,17 @@ int main(int argc, char** argv) {
                 cube = boost::make_shared<SinglePrecisionInMemoryCube>();
             cube->load(cubeFile);
 
-            string gridString = params.get("xva", "grid"); 
-            boost::shared_ptr<DateGrid> grid = boost::make_shared<DateGrid>(gridString);
-            
             QL_REQUIRE(cube->numIds() == portfolio->size(),
                        "cube x dimension (" << cube->numIds() << ") does not match portfolio size ("
                        << portfolio->size() << ")");
-            QL_REQUIRE(cube->numDates() == grid->size(),
-                       "cube y dimension does not match date grid size");
                        
             string scenarioFile = outputPath + "/" + params.get("xva", "scenarioFile");
             boost::shared_ptr<AdditionalScenarioData>
                 scenarioData = boost::make_shared<InMemoryAdditionalScenarioData>();
             scenarioData->load(scenarioFile);
 
-            QL_REQUIRE(scenarioData->dimDates() == grid->size(),
-                       "scenario dates do not match grid size");
+            QL_REQUIRE(scenarioData->dimDates() == cube->dates().size(),
+                       "scenario dates do not match cube grid size");
             QL_REQUIRE(scenarioData->dimSamples() == cube->samples(),
                        "scenario sample size does not match cube sample size");
             
@@ -325,12 +320,20 @@ int main(int argc, char** argv) {
             string dvaName = params.get("xva", "dvaName");
             
             boost::shared_ptr<PostProcess> postProcess = boost::make_shared<PostProcess>
-                (portfolio, netting, market, grid, cube, scenarioData, analytics,
+                (portfolio, netting, market, cube, scenarioData, analytics,
                  baseCurrency, allocationMethod, marginalAllocationLimit, quantile, calculationType, dvaName);
 
             writeTradeExposures(params, postProcess);
             writeNettingSetExposures(params, postProcess);
             writeCva(params, portfolio, postProcess);
+
+            string rawCubeOutputFile = params.get("xva", "rawCubeOutputFile");
+            CubeWriter cw1(outputPath + "/" + rawCubeOutputFile);
+            cw1.write(*cube);
+
+            string netCubeOutputFile = params.get("xva", "netCubeOutputFile");
+            CubeWriter cw2(outputPath + "/" + netCubeOutputFile);
+            cw2.write(*(postProcess->netCube()));
             
             cout << "OK" << endl;
         }
@@ -537,7 +540,9 @@ void writeCurves(const Parameters& params,
 void writeTradeExposures(const Parameters& params,
                          boost::shared_ptr<PostProcess> postProcess) {
     string outputPath = params.get("setup", "outputPath");
-    const vector<Time> times = postProcess->dateGrid()->times();
+    const vector<Date> dates = postProcess->cube()->dates();
+    Date today = Settings::instance().evaluationDate();
+    DayCounter dc = ActualActual();
     for (Size i = 0; i < postProcess->tradeIds().size(); ++i) {
         string tradeId = postProcess->tradeIds()[i];
         ostringstream o;
@@ -550,14 +555,16 @@ void writeTradeExposures(const Parameters& params,
         const vector<Real>& aepe = postProcess->allocatedTradeEPE(tradeId);
         const vector<Real>& aene = postProcess->allocatedTradeENE(tradeId);
         file << "#TradeId,Period,Time,EPE,ENE,AllocatedEPE,AllocatedENE" << endl;
-        for (Size j = 0; j < epe.size(); ++j)
+        for (Size j = 0; j < epe.size(); ++j) {
+            Time time = dc.yearFraction(today, dates[j]);
             file << tradeId << ","
                  << j << ","
-                 << times[j] << ","
+                 << time << ","
                  << epe[j] << ","
                  << ene[j] << ","
                  << aepe[j] << ","
                  << aene[j] << endl;
+        }
         file.close();
     }
 }
@@ -565,7 +572,9 @@ void writeTradeExposures(const Parameters& params,
 void writeNettingSetExposures(const Parameters& params,
                               boost::shared_ptr<PostProcess> postProcess) {
     string outputPath = params.get("setup", "outputPath");
-    const vector<Time> times = postProcess->dateGrid()->times();
+    const vector<Date> dates = postProcess->cube()->dates();
+    Date today = Settings::instance().evaluationDate();
+    DayCounter dc = ActualActual();
     for (auto n : postProcess->nettingSetIds()) {
         ostringstream o;
         o << outputPath << "/exposure_nettingset_" << n << ".csv";
@@ -576,13 +585,15 @@ void writeNettingSetExposures(const Parameters& params,
         const vector<Real>& ene = postProcess->netENE(n);
         const vector<Real>& ecb = postProcess->expectedCollateral(n);
         file << "#TradeId,Period,Time,EPE,ENE,ExpectedCollateral" << endl;
-        for (Size j = 0; j < epe.size(); ++j)
+        for (Size j = 0; j < epe.size(); ++j) {
+            Real time = dc.yearFraction(today, dates[j]);
             file << n << ","
                  << j << ","
-                 << times[j] << ","
+                 << time << ","
                  << epe[j] << ","
                  << ene[j] << ","
                  << ecb[j] << endl;
+        }
         file.close();
     }
 }
@@ -592,7 +603,8 @@ void writeCva(const Parameters& params,
               boost::shared_ptr<PostProcess> postProcess) {
     string outputPath = params.get("setup", "outputPath");
     string allocationMethod = params.get("xva", "allocationMethod");
-    const vector<Time> times = postProcess->dateGrid()->times();
+    const vector<Date> dates = postProcess->cube()->dates();
+    DayCounter dc = ActualActual();
     string fileName = outputPath + "/xva.csv";
     ofstream file(fileName.c_str());
     QL_REQUIRE(file.is_open(), "Error opening file " << fileName);
