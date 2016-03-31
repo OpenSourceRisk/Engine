@@ -947,7 +947,7 @@ void CrossAssetModelTest2::testLgm31fMoments() {
 
     // check the expectation and covariance over 0...T against euler
     Real T = 10.0;
-    Size steps = T * 10.0;
+    Size steps = static_cast<Size>(T * 10.0);
     Size paths = 25000;
     Size seed = 42;
     TimeGrid grid(T, steps);
@@ -1075,7 +1075,7 @@ void CrossAssetModelTest2::testLgm31fMartingaleProperty() {
         d.xmodel->stateProcess(CrossAssetStateProcess::euler);
 
     Real T = 10.0;
-    Size steps = T * 10.0;
+    Size steps = static_cast<Size>(T * 10.0);
     Size paths = 25000;
     Size seed = 42;
     TimeGrid grid(T, steps);
