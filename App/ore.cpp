@@ -110,8 +110,8 @@ int main(int argc, char** argv) {
         curveConfigs.fromFile(curveConfigFile);
         cout << "OK" << endl;
                 
-        /********
-         * Market
+        /*********
+         * Markets
          */
         cout << setw(tab) << left << "Market... " << flush;
         TodaysMarketParameters marketParameters;
@@ -119,7 +119,9 @@ int main(int argc, char** argv) {
         marketParameters.fromFile(marketConfigFile);
         
         boost::shared_ptr<Market> market = boost::make_shared<TodaysMarket>
-            (asof, marketParameters, loader, curveConfigs, conventions);
+            (asof, marketParameters, loader, curveConfigs, conventions, params.get("markets", "simulation"));
+        boost::shared_ptr<Market> calibrationMarket = boost::make_shared<TodaysMarket>
+            (asof, marketParameters, loader, curveConfigs, conventions, params.get("markets", "calibration"));
         cout << "OK" << endl;
 
         /************************
@@ -198,7 +200,7 @@ int main(int argc, char** argv) {
             string simulationModelFile = inputPath + "/" + params.get("simulation", "simulationModelFile");
             boost::shared_ptr<CrossAssetModelData> modelData = boost::make_shared<CrossAssetModelData>();
             modelData->fromFile(simulationModelFile);
-            CrossAssetModelBuilder modelBuilder(market);
+            CrossAssetModelBuilder modelBuilder(market, calibrationMarket);
             boost::shared_ptr<QuantExt::CrossAssetModel> model = modelBuilder.build(modelData);
             
             LOG("Load Simulation Market Parameters");
@@ -554,8 +556,9 @@ void writeTradeExposures(const Parameters& params,
         const vector<Real>& ene = postProcess->tradeENE(tradeId);
         const vector<Real>& aepe = postProcess->allocatedTradeEPE(tradeId);
         const vector<Real>& aene = postProcess->allocatedTradeENE(tradeId);
-        file << "#TradeId,Period,Time,EPE,ENE,AllocatedEPE,AllocatedENE" << endl;
+        file << "#TradeId,Date,Time,EPE,ENE,AllocatedEPE,AllocatedENE" << endl;
         file << tradeId << ","
+             << QuantLib::io::iso_date(today) << ","
              << 0.0 << ","
              << epe[0] << ","
              << ene[0] << ","
@@ -564,6 +567,7 @@ void writeTradeExposures(const Parameters& params,
         for (Size j = 0; j < dates.size(); ++j) {
             Time time = dc.yearFraction(today, dates[j]);
             file << tradeId << ","
+                 << QuantLib::io::iso_date(dates[j]) << ","
                  << time << ","
                  << epe[j+1] << ","
                  << ene[j+1] << ","
@@ -589,8 +593,9 @@ void writeNettingSetExposures(const Parameters& params,
         const vector<Real>& epe = postProcess->netEPE(n);
         const vector<Real>& ene = postProcess->netENE(n);
         const vector<Real>& ecb = postProcess->expectedCollateral(n);
-        file << "#TradeId,Period,Time,EPE,ENE,ExpectedCollateral" << endl;
+        file << "#TradeId,Date,Time,EPE,ENE,ExpectedCollateral" << endl;
         file << n << ","
+             << QuantLib::io::iso_date(today) << ","
              << 0.0 << ","
              << epe[0] << ","
              << ene[0] << ","
@@ -598,6 +603,7 @@ void writeNettingSetExposures(const Parameters& params,
         for (Size j = 0; j < dates.size(); ++j) {
             Real time = dc.yearFraction(today, dates[j]);
             file << n << ","
+                 << QuantLib::io::iso_date(dates[j]) << ","
                  << time << ","
                  << epe[j+1] << ","
                  << ene[j+1] << ","
@@ -684,6 +690,16 @@ void Parameters::fromXML(XMLNode *node) {
     }
     data_["setup"] = setupMap; 
     
+    XMLNode* marketsNode = XMLUtils::getChildNode(node, "Markets");
+    map<string,string> marketsMap;
+    for (XMLNode* child = XMLUtils::getChildNode(marketsNode); child;
+         child = XMLUtils::getNextSibling(child)) {
+        string key = XMLUtils::getAttribute(child, "name"); 
+        string value = XMLUtils::getNodeValue(child);
+        marketsMap[key] = value;
+    }
+    data_["markets"] = marketsMap; 
+
     XMLNode* analyticsNode = XMLUtils::getChildNode(node, "Analytics");
     for (XMLNode* child = XMLUtils::getChildNode(analyticsNode); child;
          child = XMLUtils::getNextSibling(child)) {
