@@ -24,7 +24,7 @@ class Lgm1fConstantParametrization : public Lgm1fParametrization<TS> {
     Real zeta(const Time t) const;
     Real H(const Time t) const;
     Real alpha(const Time t) const;
-    Real kappa(Time t) const;
+    Real kappa(const Time t) const;
     Real Hprime(const Time t) const;
     Real Hprime2(const Time t) const;
     const boost::shared_ptr<Parameter> parameter(const Size) const;

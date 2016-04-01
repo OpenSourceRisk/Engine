@@ -628,17 +628,34 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="analyticlgmswaptionengine.cpp" />
+    <ClCompile Include="crossassetmodel.cpp" />
+    <ClCompile Include="crossassetmodel2.cpp" />
+    <ClCompile Include="crossassetmodelparametrizations.cpp" />
     <ClCompile Include="currency.cpp" />
     <ClCompile Include="discountcurve.cpp" />
+    <ClCompile Include="discountingswapengine.cpp" />
+    <ClCompile Include="dynamicblackvoltermstructure.cpp" />
+    <ClCompile Include="dynamicswaptionvolmatrix.cpp" />
     <ClCompile Include="index.cpp" />
     <ClCompile Include="logquote.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="staticallycorrectedyieldtermstructure.cpp" />
     <ClCompile Include="testsuite.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="analyticlgmswaptionengine.hpp" />
+    <ClInclude Include="crossassetmodel.hpp" />
+    <ClInclude Include="crossassetmodel2.hpp" />
+    <ClInclude Include="crossassetmodelparametrizations.hpp" />
     <ClInclude Include="currency.hpp" />
     <ClInclude Include="discountcurve.hpp" />
+    <ClInclude Include="discountingswapengine.hpp" />
+    <ClInclude Include="dynamicblackvoltermstructure.hpp" />
+    <ClInclude Include="dynamicswaptionvolmatrix.hpp" />
     <ClInclude Include="index.hpp" />
     <ClInclude Include="logquote.hpp" />
+    <ClInclude Include="staticallycorrectedyieldtermstructure.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\QuantExt.vcxproj">
