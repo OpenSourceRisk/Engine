@@ -128,7 +128,7 @@ namespace QuantExt {
                     SimulatedFixingsManager::instance().addBackwardFixing(
                         index->name(),
                         index->fixing(
-                            index->fixingCalendar().adjust(today, Preceding)));
+                            index->fixingCalendar().adjust(today, Following)));
                     Real fixing = 0.0;
                     // is it a past fixing ?
                     if (fixingDate < today ||
