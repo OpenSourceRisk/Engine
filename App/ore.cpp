@@ -11,6 +11,7 @@
 #include <qlw/wrap.hpp>
 #include <qlw/engine/valuationengine.hpp>
 #include <ql/time/calendars/all.hpp>
+#include <ql/time/daycounters/all.hpp>
 #include <boost/timer.hpp>
 
 #include "ore.hpp"
@@ -384,8 +385,10 @@ void writeNpv(const Parameters& params,
     file.setf (ios::fixed, ios::floatfield);
     file.setf (ios::showpoint);
     char sep = ',';
+    DayCounter dc = ActualActual();
+    Date today = Settings::instance().evaluationDate();
     QL_REQUIRE(file.is_open(), "error opening file " << npvFile);
-    file << "#TradeId,TradeType,Maturity,NPV,NpvCurrency,NPV(Base),BaseCurrency" << endl;  
+    file << "#TradeId,TradeType,Maturity,MaturityTime,NPV,NpvCurrency,NPV(Base),BaseCurrency" << endl;  
     for (auto trade : portfolio->trades()) {
         string npvCcy = trade->npvCurrency();
         Real fx = 1.0;
@@ -393,7 +396,8 @@ void writeNpv(const Parameters& params,
             fx = market->fxSpot(npvCcy + baseCurrency)->value();
         file << trade->envelope().id() << sep
              << trade->className() << sep
-             << io::iso_date(trade->maturity()) << sep;
+             << io::iso_date(trade->maturity()) << sep
+             << dc.yearFraction(today, trade->maturity()) << sep;
         try {
             Real npv = trade->instrument()->NPV();
             file << npv << sep
@@ -680,7 +684,7 @@ void Parameters::fromXML(XMLNode *node) {
     XMLUtils::checkNode(node, "OpenRiskEngine");
     
     XMLNode* setupNode = XMLUtils::getChildNode(node, "Setup");
-    
+    QL_REQUIRE(setupNode, "node Setup not found in parameter file");
     map<string,string> setupMap;
     for (XMLNode* child = XMLUtils::getChildNode(setupNode); child;
          child = XMLUtils::getNextSibling(child)) {
@@ -691,6 +695,7 @@ void Parameters::fromXML(XMLNode *node) {
     data_["setup"] = setupMap; 
     
     XMLNode* marketsNode = XMLUtils::getChildNode(node, "Markets");
+    QL_REQUIRE(marketsNode, "node Markets not found in parameter file");
     map<string,string> marketsMap;
     for (XMLNode* child = XMLUtils::getChildNode(marketsNode); child;
          child = XMLUtils::getNextSibling(child)) {
@@ -701,6 +706,7 @@ void Parameters::fromXML(XMLNode *node) {
     data_["markets"] = marketsMap; 
 
     XMLNode* analyticsNode = XMLUtils::getChildNode(node, "Analytics");
+    QL_REQUIRE(analyticsNode, "node Analytics not found in parameter file");
     for (XMLNode* child = XMLUtils::getChildNode(analyticsNode); child;
          child = XMLUtils::getNextSibling(child)) {
         string groupName = XMLUtils::getAttribute(child, "type");
