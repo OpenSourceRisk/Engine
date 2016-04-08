@@ -16,6 +16,16 @@
 #include "ore.hpp"
 #include "timebomb.hpp"
 
+#ifdef BOOST_MSVC
+#  include <ql/auto_link.hpp>
+#  include <qle/auto_link.hpp>
+// Find the name of the correct boost library with which to link.
+#  define BOOST_LIB_NAME boost_serialization
+#  include <boost/config/auto_link.hpp>
+#  define BOOST_LIB_NAME boost_date_time
+#  include <boost/config/auto_link.hpp>
+#endif
+
 using namespace std;
 using namespace openxva::model;
 using namespace openxva::scenario;
@@ -691,27 +701,31 @@ void Parameters::fromXML(XMLNode *node) {
     data_["setup"] = setupMap; 
     
     XMLNode* marketsNode = XMLUtils::getChildNode(node, "Markets");
-    map<string,string> marketsMap;
-    for (XMLNode* child = XMLUtils::getChildNode(marketsNode); child;
-         child = XMLUtils::getNextSibling(child)) {
-        string key = XMLUtils::getAttribute(child, "name"); 
-        string value = XMLUtils::getNodeValue(child);
-        marketsMap[key] = value;
+    if (marketsNode) {
+        map<string, string> marketsMap;
+        for (XMLNode* child = XMLUtils::getChildNode(marketsNode); child;
+            child = XMLUtils::getNextSibling(child)) {
+            string key = XMLUtils::getAttribute(child, "name");
+            string value = XMLUtils::getNodeValue(child);
+            marketsMap[key] = value;
+        }
+        data_["markets"] = marketsMap;
     }
-    data_["markets"] = marketsMap; 
 
     XMLNode* analyticsNode = XMLUtils::getChildNode(node, "Analytics");
-    for (XMLNode* child = XMLUtils::getChildNode(analyticsNode); child;
-         child = XMLUtils::getNextSibling(child)) {
-        string groupName = XMLUtils::getAttribute(child, "type");
-        map<string,string> analyticsMap;
-        for (XMLNode* paramNode = XMLUtils::getChildNode(child); paramNode;
-             paramNode = XMLUtils::getNextSibling(paramNode)) {
-            string key = XMLUtils::getAttribute(paramNode, "name");
-            string value = XMLUtils::getNodeValue(paramNode);
-            analyticsMap[key] = value;
+    if(analyticsNode) {
+        for (XMLNode* child = XMLUtils::getChildNode(analyticsNode); child;
+             child = XMLUtils::getNextSibling(child)) {
+            string groupName = XMLUtils::getAttribute(child, "type");
+            map<string,string> analyticsMap;
+            for (XMLNode* paramNode = XMLUtils::getChildNode(child); paramNode;
+                 paramNode = XMLUtils::getNextSibling(paramNode)) {
+                string key = XMLUtils::getAttribute(paramNode, "name");
+                string value = XMLUtils::getNodeValue(paramNode);
+                analyticsMap[key] = value;
+            }
+            data_[groupName] = analyticsMap; 
         }
-        data_[groupName] = analyticsMap; 
     }
 }
 
