@@ -331,11 +331,11 @@ int main(int argc, char** argv) {
 
             string rawCubeOutputFile = params.get("xva", "rawCubeOutputFile");
             CubeWriter cw1(outputPath + "/" + rawCubeOutputFile);
-            cw1.write(*cube);
+            cw1.write(cube);
 
             string netCubeOutputFile = params.get("xva", "netCubeOutputFile");
             CubeWriter cw2(outputPath + "/" + netCubeOutputFile);
-            cw2.write(*(postProcess->netCube()));
+            cw2.write(postProcess->netCube());
             
             cout << "OK" << endl;
         }
