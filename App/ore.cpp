@@ -238,7 +238,8 @@ int main(int argc, char** argv) {
             LOG("Build valuation cube engine");
             Size samples = sb.samples();
             string baseCurrency = params.get("simulation", "baseCurrency");
-            ValuationEngine engine(asof, grid, samples, baseCurrency, simMarket);
+            ValuationEngine engine(asof, grid, samples, baseCurrency, simMarket,
+                                   sb.simulateFixings(), sb.estimationMethod(), sb.forwardHorizonDays());
 
             ostringstream o;
             o << "Additional Scenario Data " << grid->size() << " x " << samples << "... ";
