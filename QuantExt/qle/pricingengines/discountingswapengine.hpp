@@ -99,6 +99,8 @@ namespace QuantExt {
         bool enforceTodaysHistoricFixings =
             Settings::instance().enforcesTodaysHistoricFixings();
 
+        std::string indexNameBefore = "";
+
         for (Size i = 0; i < leg.size(); ++i) {
             
             CashFlow &cf = *leg[i];
@@ -123,12 +125,15 @@ namespace QuantExt {
                     if(cpcf!=NULL)
                         index = cpcf->index();
                     // add backward fixing, since the index might change
-                    // from cashflow to cashflow, we do it for each
-                    // cashflow
-                    SimulatedFixingsManager::instance().addBackwardFixing(
-                        index->name(),
-                        index->fixing(
-                            index->fixingCalendar().adjust(today, Following)));
+                    // from cashflow to cashflow, we might have to do it
+                    // for each cashflow
+                    if (index->name() != indexNameBefore) {
+                        SimulatedFixingsManager::instance().addBackwardFixing(
+                            index->name(),
+                            index->fixing(index->fixingCalendar().adjust(
+                                today, Following)));
+                        indexNameBefore = index->name();
+                    }
                     Real fixing = 0.0;
                     // is it a past fixing ?
                     if (fixingDate < today ||
@@ -145,21 +150,6 @@ namespace QuantExt {
                                               << fixingDate
                                               << " (even when considering "
                                                  "simulated fixings)");
-                        // amount calculation
-                        Real effFixing = 0.0;
-                        if (cp != NULL) {
-                            effFixing =
-                                (cp->gearing() * fixing + cp->spread());
-                        }
-                        if (cpcf != NULL) {
-                            effFixing =
-                                (cpcf->gearing() * fixing + cpcf->spread());
-                            if (cpcf->isFloored())
-                                effFixing = std::max(cpcf->floor(), effFixing);
-                            if (cpcf->isCapped())
-                                effFixing = std::min(cpcf->cap(), effFixing);
-                        }
-                        tmp = effFixing * cp->accrualPeriod() * cp->nominal();
                     } else {
                         // no past fixing, so forecast fixing (or in case
                         // of todays fixing, read possibly the actual
@@ -172,9 +162,22 @@ namespace QuantExt {
                                 .addForwardFixing(index->name(), fixingDate,
                                                   fixing);
                         }
-                        // finally, compute the amount in the usual way
-                        tmp = cf.amount();
                     }
+                    // amount calculation
+                    Real effFixing = 0.0;
+                    if (cp != NULL) {
+                        effFixing =
+                            (cp->gearing() * fixing + cp->spread());
+                    }
+                    if (cpcf != NULL) {
+                        effFixing =
+                            (cpcf->gearing() * fixing + cpcf->spread());
+                        if (cpcf->isFloored())
+                            effFixing = std::max(cpcf->floor(), effFixing);
+                        if (cpcf->isCapped())
+                            effFixing = std::min(cpcf->cap(), effFixing);
+                    }
+                    tmp = effFixing * cp->accrualPeriod() * cp->nominal();
                 } else {
                     // no floating rate coupon or we do not simulate fixings
                     tmp = cf.amount();

@@ -1098,7 +1098,7 @@ void CrossAssetModelTest::testLgm5fMoments() {
         d.ccLgm->stateProcess(CrossAssetStateProcess::euler);
 
     Real T = 10.0;         // horizon at which we compare the moments
-    Size steps = T * 10.0; // number of simulation steps
+    Size steps = static_cast<Size>(T * 10.0); // number of simulation steps
     Size paths = 25000;    // number of paths
 
     Array e_an = p_exact->expectation(0.0, p_exact->initialValues(), T);
@@ -1276,7 +1276,7 @@ void CrossAssetModelTest::testLgmGsrEquivalence() {
                     stat_gsr;
 
                 Real tol = 1.0E-12;
-                for (Size i = 0; i < N; ++i) {
+                for (Size ii = 0; ii < N; ++ii) {
                     Sample<Path> path_lgm = pgen_lgm.next();
                     Sample<Path> path_gsr = pgen_gsr.next();
                     Real yGsr = (path_gsr.value.back() -

@@ -46,7 +46,7 @@ class Lgm1fPiecewiseLinearParametrization : public IrLgm1fParametrization,
     Real zeta(const Time t) const;
     Real H(const Time t) const;
     Real alpha(const Time t) const;
-    Real kappa(Time t) const;
+    Real kappa(const Time t) const;
     Real Hprime(const Time t) const;
     Real Hprime2(const Time t) const;
     const Array &parameterTimes(const Size) const;
