@@ -558,16 +558,18 @@ void writeTradeExposures(const Parameters& params,
         QL_REQUIRE(file.is_open(), "Error opening file " << fileName);
         const vector<Real>& epe = postProcess->tradeEPE(tradeId);
         const vector<Real>& ene = postProcess->tradeENE(tradeId);
+        const vector<Real>& pfe = postProcess->tradePFE(tradeId);
         const vector<Real>& aepe = postProcess->allocatedTradeEPE(tradeId);
         const vector<Real>& aene = postProcess->allocatedTradeENE(tradeId);
-        file << "#TradeId,Date,Time,EPE,ENE,AllocatedEPE,AllocatedENE" << endl;
+        file << "#TradeId,Date,Time,EPE,ENE,AllocatedEPE,AllocatedENE,PFE" << endl;
         file << tradeId << ","
              << QuantLib::io::iso_date(today) << ","
              << 0.0 << ","
              << epe[0] << ","
              << ene[0] << ","
              << aepe[0] << ","
-             << aene[0] << endl;
+             << aene[0] << ","
+             << pfe[0] << endl;
         for (Size j = 0; j < dates.size(); ++j) {
             Time time = dc.yearFraction(today, dates[j]);
             file << tradeId << ","
@@ -576,7 +578,8 @@ void writeTradeExposures(const Parameters& params,
                  << epe[j+1] << ","
                  << ene[j+1] << ","
                  << aepe[j+1] << ","
-                 << aene[j+1] << endl;
+                 << aene[j+1] << ","
+                 << pfe[j+1] << endl;
         }
         file.close();
     }
@@ -596,13 +599,15 @@ void writeNettingSetExposures(const Parameters& params,
         QL_REQUIRE(file.is_open(), "Error opening file " << fileName);
         const vector<Real>& epe = postProcess->netEPE(n);
         const vector<Real>& ene = postProcess->netENE(n);
+        const vector<Real>& pfe = postProcess->netPFE(n);
         const vector<Real>& ecb = postProcess->expectedCollateral(n);
-        file << "#TradeId,Date,Time,EPE,ENE,ExpectedCollateral" << endl;
+        file << "#TradeId,Date,Time,EPE,ENE,PFE,ExpectedCollateral" << endl;
         file << n << ","
              << QuantLib::io::iso_date(today) << ","
              << 0.0 << ","
              << epe[0] << ","
              << ene[0] << ","
+             << pfe[0] << ","
              << ecb[0] << endl;
         for (Size j = 0; j < dates.size(); ++j) {
             Real time = dc.yearFraction(today, dates[j]);
@@ -611,6 +616,7 @@ void writeNettingSetExposures(const Parameters& params,
                  << time << ","
                  << epe[j+1] << ","
                  << ene[j+1] << ","
+                 << pfe[j+1] << ","
                  << ecb[j+1] << endl;
         }
         file.close();
