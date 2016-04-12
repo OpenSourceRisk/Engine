@@ -14,6 +14,33 @@
     <ClCompile Include="logquote.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="analyticlgmswaptionengine.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="crossassetmodel.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="crossassetmodel2.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="crossassetmodelparametrizations.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="discountingswapengine.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="dynamicblackvoltermstructure.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="dynamicswaptionvolmatrix.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="staticallycorrectedyieldtermstructure.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="source">
@@ -34,6 +61,30 @@
       <Filter>headers</Filter>
     </ClInclude>
     <ClInclude Include="logquote.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="analyticlgmswaptionengine.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="crossassetmodel.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="crossassetmodel2.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="crossassetmodelparametrizations.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="discountingswapengine.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="dynamicblackvoltermstructure.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="dynamicswaptionvolmatrix.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="staticallycorrectedyieldtermstructure.hpp">
       <Filter>headers</Filter>
     </ClInclude>
   </ItemGroup>

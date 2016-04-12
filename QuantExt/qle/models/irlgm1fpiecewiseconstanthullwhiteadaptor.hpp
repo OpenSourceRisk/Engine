@@ -38,10 +38,10 @@ class Lgm1fPiecewiseConstantHullWhiteAdaptor
     Real zeta(const Time t) const;
     Real H(const Time t) const;
     Real alpha(const Time t) const;
-    Real kappa(Time t) const;
+    Real kappa(const Time t) const;
     Real Hprime(const Time t) const;
     Real Hprime2(const Time t) const;
-    Real hullWhiteSigma(Time t) const;
+    Real hullWhiteSigma(const Time t) const;
     const Array &parameterTimes(const Size) const;
     const boost::shared_ptr<Parameter> parameter(const Size) const;
     void update() const;

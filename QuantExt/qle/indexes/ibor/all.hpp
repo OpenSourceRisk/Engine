@@ -18,5 +18,4 @@
 #include <qle/indexes/ibor/sgdsor.hpp>
 #include <qle/indexes/ibor/skkbribor.hpp>
 #include <qle/indexes/ibor/tonar.hpp>
-#include <qle/indexes/ibor/averagebma.hpp>
 

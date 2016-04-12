@@ -16,6 +16,16 @@
 #include "ore.hpp"
 #include "timebomb.hpp"
 
+#ifdef BOOST_MSVC
+#  include <ql/auto_link.hpp>
+#  include <qle/auto_link.hpp>
+// Find the name of the correct boost library with which to link.
+#  define BOOST_LIB_NAME boost_serialization
+#  include <boost/config/auto_link.hpp>
+#  define BOOST_LIB_NAME boost_date_time
+#  include <boost/config/auto_link.hpp>
+#endif
+
 using namespace std;
 using namespace openxva::model;
 using namespace openxva::scenario;
@@ -110,8 +120,8 @@ int main(int argc, char** argv) {
         curveConfigs.fromFile(curveConfigFile);
         cout << "OK" << endl;
                 
-        /********
-         * Market
+        /*********
+         * Markets
          */
         cout << setw(tab) << left << "Market... " << flush;
         TodaysMarketParameters marketParameters;
@@ -119,7 +129,9 @@ int main(int argc, char** argv) {
         marketParameters.fromFile(marketConfigFile);
         
         boost::shared_ptr<Market> market = boost::make_shared<TodaysMarket>
-            (asof, marketParameters, loader, curveConfigs, conventions);
+            (asof, marketParameters, loader, curveConfigs, conventions, params.get("markets", "simulation"));
+        boost::shared_ptr<Market> calibrationMarket = boost::make_shared<TodaysMarket>
+            (asof, marketParameters, loader, curveConfigs, conventions, params.get("markets", "calibration"));
         cout << "OK" << endl;
 
         /************************
@@ -198,7 +210,7 @@ int main(int argc, char** argv) {
             string simulationModelFile = inputPath + "/" + params.get("simulation", "simulationModelFile");
             boost::shared_ptr<CrossAssetModelData> modelData = boost::make_shared<CrossAssetModelData>();
             modelData->fromFile(simulationModelFile);
-            CrossAssetModelBuilder modelBuilder(market);
+            CrossAssetModelBuilder modelBuilder(market, calibrationMarket);
             boost::shared_ptr<QuantExt::CrossAssetModel> model = modelBuilder.build(modelData);
             
             LOG("Load Simulation Market Parameters");
@@ -291,22 +303,17 @@ int main(int argc, char** argv) {
                 cube = boost::make_shared<SinglePrecisionInMemoryCube>();
             cube->load(cubeFile);
 
-            string gridString = params.get("xva", "grid"); 
-            boost::shared_ptr<DateGrid> grid = boost::make_shared<DateGrid>(gridString);
-            
             QL_REQUIRE(cube->numIds() == portfolio->size(),
                        "cube x dimension (" << cube->numIds() << ") does not match portfolio size ("
                        << portfolio->size() << ")");
-            QL_REQUIRE(cube->numDates() == grid->size(),
-                       "cube y dimension does not match date grid size");
                        
             string scenarioFile = outputPath + "/" + params.get("xva", "scenarioFile");
             boost::shared_ptr<AdditionalScenarioData>
                 scenarioData = boost::make_shared<InMemoryAdditionalScenarioData>();
             scenarioData->load(scenarioFile);
 
-            QL_REQUIRE(scenarioData->dimDates() == grid->size(),
-                       "scenario dates do not match grid size");
+            QL_REQUIRE(scenarioData->dimDates() == cube->dates().size(),
+                       "scenario dates do not match cube grid size");
             QL_REQUIRE(scenarioData->dimSamples() == cube->samples(),
                        "scenario sample size does not match cube sample size");
             
@@ -325,12 +332,20 @@ int main(int argc, char** argv) {
             string dvaName = params.get("xva", "dvaName");
             
             boost::shared_ptr<PostProcess> postProcess = boost::make_shared<PostProcess>
-                (portfolio, netting, market, grid, cube, scenarioData, analytics,
+                (portfolio, netting, market, cube, scenarioData, analytics,
                  baseCurrency, allocationMethod, marginalAllocationLimit, quantile, calculationType, dvaName);
 
             writeTradeExposures(params, postProcess);
             writeNettingSetExposures(params, postProcess);
             writeCva(params, portfolio, postProcess);
+
+            string rawCubeOutputFile = params.get("xva", "rawCubeOutputFile");
+            CubeWriter cw1(outputPath + "/" + rawCubeOutputFile);
+            cw1.write(cube);
+
+            string netCubeOutputFile = params.get("xva", "netCubeOutputFile");
+            CubeWriter cw2(outputPath + "/" + netCubeOutputFile);
+            cw2.write(postProcess->netCube());
             
             cout << "OK" << endl;
         }
@@ -537,7 +552,9 @@ void writeCurves(const Parameters& params,
 void writeTradeExposures(const Parameters& params,
                          boost::shared_ptr<PostProcess> postProcess) {
     string outputPath = params.get("setup", "outputPath");
-    const vector<Time> times = postProcess->dateGrid()->times();
+    const vector<Date> dates = postProcess->cube()->dates();
+    Date today = Settings::instance().evaluationDate();
+    DayCounter dc = ActualActual();
     for (Size i = 0; i < postProcess->tradeIds().size(); ++i) {
         string tradeId = postProcess->tradeIds()[i];
         ostringstream o;
@@ -549,15 +566,24 @@ void writeTradeExposures(const Parameters& params,
         const vector<Real>& ene = postProcess->tradeENE(tradeId);
         const vector<Real>& aepe = postProcess->allocatedTradeEPE(tradeId);
         const vector<Real>& aene = postProcess->allocatedTradeENE(tradeId);
-        file << "#TradeId,Period,Time,EPE,ENE,AllocatedEPE,AllocatedENE" << endl;
-        for (Size j = 0; j < epe.size(); ++j)
+        file << "#TradeId,Date,Time,EPE,ENE,AllocatedEPE,AllocatedENE" << endl;
+        file << tradeId << ","
+             << QuantLib::io::iso_date(today) << ","
+             << 0.0 << ","
+             << epe[0] << ","
+             << ene[0] << ","
+             << aepe[0] << ","
+             << aene[0] << endl;
+        for (Size j = 0; j < dates.size(); ++j) {
+            Time time = dc.yearFraction(today, dates[j]);
             file << tradeId << ","
-                 << j << ","
-                 << times[j] << ","
-                 << epe[j] << ","
-                 << ene[j] << ","
-                 << aepe[j] << ","
-                 << aene[j] << endl;
+                 << QuantLib::io::iso_date(dates[j]) << ","
+                 << time << ","
+                 << epe[j+1] << ","
+                 << ene[j+1] << ","
+                 << aepe[j+1] << ","
+                 << aene[j+1] << endl;
+        }
         file.close();
     }
 }
@@ -565,7 +591,9 @@ void writeTradeExposures(const Parameters& params,
 void writeNettingSetExposures(const Parameters& params,
                               boost::shared_ptr<PostProcess> postProcess) {
     string outputPath = params.get("setup", "outputPath");
-    const vector<Time> times = postProcess->dateGrid()->times();
+    const vector<Date> dates = postProcess->cube()->dates();
+    Date today = Settings::instance().evaluationDate();
+    DayCounter dc = ActualActual();
     for (auto n : postProcess->nettingSetIds()) {
         ostringstream o;
         o << outputPath << "/exposure_nettingset_" << n << ".csv";
@@ -575,14 +603,22 @@ void writeNettingSetExposures(const Parameters& params,
         const vector<Real>& epe = postProcess->netEPE(n);
         const vector<Real>& ene = postProcess->netENE(n);
         const vector<Real>& ecb = postProcess->expectedCollateral(n);
-        file << "#TradeId,Period,Time,EPE,ENE,ExpectedCollateral" << endl;
-        for (Size j = 0; j < epe.size(); ++j)
+        file << "#TradeId,Date,Time,EPE,ENE,ExpectedCollateral" << endl;
+        file << n << ","
+             << QuantLib::io::iso_date(today) << ","
+             << 0.0 << ","
+             << epe[0] << ","
+             << ene[0] << ","
+             << ecb[0] << endl;
+        for (Size j = 0; j < dates.size(); ++j) {
+            Real time = dc.yearFraction(today, dates[j]);
             file << n << ","
-                 << j << ","
-                 << times[j] << ","
-                 << epe[j] << ","
-                 << ene[j] << ","
-                 << ecb[j] << endl;
+                 << QuantLib::io::iso_date(dates[j]) << ","
+                 << time << ","
+                 << epe[j+1] << ","
+                 << ene[j+1] << ","
+                 << ecb[j+1] << endl;
+        }
         file.close();
     }
 }
@@ -592,7 +628,8 @@ void writeCva(const Parameters& params,
               boost::shared_ptr<PostProcess> postProcess) {
     string outputPath = params.get("setup", "outputPath");
     string allocationMethod = params.get("xva", "allocationMethod");
-    const vector<Time> times = postProcess->dateGrid()->times();
+    const vector<Date> dates = postProcess->cube()->dates();
+    DayCounter dc = ActualActual();
     string fileName = outputPath + "/xva.csv";
     ofstream file(fileName.c_str());
     QL_REQUIRE(file.is_open(), "Error opening file " << fileName);
@@ -663,18 +700,32 @@ void Parameters::fromXML(XMLNode *node) {
     }
     data_["setup"] = setupMap; 
     
-    XMLNode* analyticsNode = XMLUtils::getChildNode(node, "Analytics");
-    for (XMLNode* child = XMLUtils::getChildNode(analyticsNode); child;
-         child = XMLUtils::getNextSibling(child)) {
-        string groupName = XMLUtils::getAttribute(child, "type");
-        map<string,string> analyticsMap;
-        for (XMLNode* paramNode = XMLUtils::getChildNode(child); paramNode;
-             paramNode = XMLUtils::getNextSibling(paramNode)) {
-            string key = XMLUtils::getAttribute(paramNode, "name");
-            string value = XMLUtils::getNodeValue(paramNode);
-            analyticsMap[key] = value;
+    XMLNode* marketsNode = XMLUtils::getChildNode(node, "Markets");
+    if (marketsNode) {
+        map<string, string> marketsMap;
+        for (XMLNode* child = XMLUtils::getChildNode(marketsNode); child;
+            child = XMLUtils::getNextSibling(child)) {
+            string key = XMLUtils::getAttribute(child, "name");
+            string value = XMLUtils::getNodeValue(child);
+            marketsMap[key] = value;
         }
-        data_[groupName] = analyticsMap; 
+        data_["markets"] = marketsMap;
+    }
+
+    XMLNode* analyticsNode = XMLUtils::getChildNode(node, "Analytics");
+    if(analyticsNode) {
+        for (XMLNode* child = XMLUtils::getChildNode(analyticsNode); child;
+             child = XMLUtils::getNextSibling(child)) {
+            string groupName = XMLUtils::getAttribute(child, "type");
+            map<string,string> analyticsMap;
+            for (XMLNode* paramNode = XMLUtils::getChildNode(child); paramNode;
+                 paramNode = XMLUtils::getNextSibling(paramNode)) {
+                string key = XMLUtils::getAttribute(paramNode, "name");
+                string value = XMLUtils::getNodeValue(paramNode);
+                analyticsMap[key] = value;
+            }
+            data_[groupName] = analyticsMap; 
+        }
     }
 }
 
