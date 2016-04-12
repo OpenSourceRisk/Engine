@@ -18,7 +18,8 @@ DynamicSwaptionVolatilityMatrix::DynamicSwaptionVolatilityMatrix(
                                   source->businessDayConvention(),
                                   source->dayCounter()),
       source_(source), decayMode_(decayMode),
-      originalReferenceDate_(source->referenceDate()) {}
+      originalReferenceDate_(source->referenceDate()),
+      volatilityType_(source->volatilityType()) {}
 
 const Period &DynamicSwaptionVolatilityMatrix::maxSwapTenor() const {
     return source_->maxSwapTenor();

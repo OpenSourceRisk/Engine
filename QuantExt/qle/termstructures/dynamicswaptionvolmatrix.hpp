@@ -55,11 +55,18 @@ class DynamicSwaptionVolatilityMatrix : public SwaptionVolatilityStructure {
     /* Observer interface */
     void update();
 
+    VolatilityType volatilityType() const;
   private:
     const boost::shared_ptr<SwaptionVolatilityStructure> source_;
     ReactionToTimeDecay decayMode_;
     const Date originalReferenceDate_;
+    VolatilityType volatilityType_;
+
 };
+
+    inline VolatilityType DynamicSwaptionVolatilityMatrix::volatilityType() const {
+        return volatilityType_;
+    }
 
 } // namespace QuantExt
 
