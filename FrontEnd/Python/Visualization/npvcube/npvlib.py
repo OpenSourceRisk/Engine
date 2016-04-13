@@ -6,9 +6,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from matplotlib import cm
-from mpl_toolkits.mplot3d import Axes3D
 from numpy.linalg.linalg import LinAlgError
 from scipy.stats.kde import gaussian_kde
+from scipy.integrate import cumtrapz
 
 
 class NpvCube(object):
@@ -19,7 +19,6 @@ class NpvCube(object):
         self.nd = np.array([])
         self.datedict = {}
         self.tradedict = {}
-        self.fig = plt.figure()
         self.calc_nd()
 
     def calc_nd(self):
@@ -35,8 +34,7 @@ class NpvCube(object):
             k = row[3]
             self.nd[i][j][k] = row[4]
 
-    def plot_trade(self, trade):
-        ax = self.fig.gca(projection='3d')
+    def plot_trade(self, trade, ax):
         dates = np.arange(len(self.datedict))
         samples = np.arange(self.df.Sample.max() + 1)
         dates, samples = np.meshgrid(dates, samples)
@@ -48,14 +46,13 @@ class NpvCube(object):
         ax.set_yticklabels = self.df.Sample.unique()
         ax.set_zlabel('value')
 
-    def plot_density(self, trade):
+    def plot_density(self, trade, ax, percentile=None):
         """
         Plots the NPV surface for trade.
         X-axis: dates
         Y-axis: npv
         Z-axis: value of the estimated pdf
         """
-        ax = self.fig.gca(projection='3d')
         # remove last (erroneuous) date
         dates = self.df.Date.unique()[1:-1]
         # configure x-axis to be labeld with dates
@@ -81,23 +78,34 @@ class NpvCube(object):
             except LinAlgError:
                 values[k] = np.zeros(grid_size)
         # create X and Y data for plotting
-        dates, dist_space = np.meshgrid(np.arange(len(dates)), dist_space)
-        #ax.plot_surface(dates, dist_space, values.T, cmap=cm.jet)
-        ax.plot_trisurf(dates.flatten(),
-                        dist_space.flatten(),
+        X, Y = np.meshgrid(np.arange(len(dates)), dist_space)
+        # ax.plot_surface(X, Y, values.T, cmap=cm.jet)
+        ax.plot_trisurf(X.flatten(),
+                        Y.flatten(),
                         values.T.flatten(),
-                        #cmap=cm.jet,
-                        color='b',
+                        # cmap=cm.jet,
+                        color='r',
                         linewidth=0)
+        if percentile:
+            for k in range(len(dates)):
+                areas = cumtrapz(values[k], dist_space, initial=0)
+                values[k] = np.array([values[k][j]
+                                      if areas[j] <= percentile else 0
+                                      for j in range(len(values[k]))])
+            ax.plot_trisurf(X.flatten(),
+                            Y.flatten(),
+                            values.T.flatten(),
+                            cmap=cm.jet,
+                            #color='r',
+                            linewidth=0)
 
-    def plot_distribution(self, trade):
+    def plot_distribution(self, trade, ax):
         """
         Plots the NPV surface for trade.
         X-axis: dates
         Y-axis: npv
         Z-axis: histogram for each date
         """
-        ax = self.fig.gca(projection='3d')
         dates = self.df.Date.unique()[1:-1]
         data = np.array([self.nd[self.datedict[date], self.tradedict[trade], :] for date in dates])
         dist_space = np.linspace(np.min(data), np.max(data), 100)
