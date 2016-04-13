@@ -70,7 +70,7 @@ class NpvCube(object):
         # estimate the probability density for each date
         data = np.array([self.nd[self.datedict[date], self.tradedict[trade], :]
                          for date in dates])
-        grid_size = 100
+        grid_size = 50
         dist_space = np.linspace(np.min(data), np.max(data), grid_size)
         values = np.zeros((len(dates), grid_size))
         for k in range(len(data)):
@@ -82,7 +82,13 @@ class NpvCube(object):
                 values[k] = np.zeros(grid_size)
         # create X and Y data for plotting
         dates, dist_space = np.meshgrid(np.arange(len(dates)), dist_space)
-        ax.plot_surface(dates, dist_space, values.T, cmap=cm.jet)
+        #ax.plot_surface(dates, dist_space, values.T, cmap=cm.jet)
+        ax.plot_trisurf(dates.flatten(),
+                        dist_space.flatten(),
+                        values.T.flatten(),
+                        #cmap=cm.jet,
+                        color='b',
+                        linewidth=0)
 
     def plot_distribution(self, trade):
         """
@@ -92,7 +98,7 @@ class NpvCube(object):
         Z-axis: histogram for each date
         """
         ax = self.fig.gca(projection='3d')
-        dates = self.df.date.unique()[:-1]
+        dates = self.df.Date.unique()[1:-1]
         data = np.array([self.nd[self.datedict[date], self.tradedict[trade], :] for date in dates])
         dist_space = np.linspace(np.min(data), np.max(data), 100)
         d = data[0]
@@ -101,9 +107,3 @@ class NpvCube(object):
         print(dates.shape, dist_space.shape, values.T.shape)
         ax.plot_surface(dates, dist_space, values.T)
 
-
-csv_file = 'cube.csv'
-npv = NpvCube(csv_file)
-trade = '833397AI'
-npv.plot_distribution(trade)
-plt.show()
