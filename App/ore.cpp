@@ -712,15 +712,6 @@ void Parameters::fromXML(XMLNode *node) {
     data_["setup"] = setupMap; 
     
     XMLNode* marketsNode = XMLUtils::getChildNode(node, "Markets");
-<<<<<<< HEAD
-    QL_REQUIRE(marketsNode, "node Markets not found in parameter file");
-    map<string,string> marketsMap;
-    for (XMLNode* child = XMLUtils::getChildNode(marketsNode); child;
-         child = XMLUtils::getNextSibling(child)) {
-        string key = XMLUtils::getAttribute(child, "name"); 
-        string value = XMLUtils::getNodeValue(child);
-        marketsMap[key] = value;
-=======
     if (marketsNode) {
         map<string, string> marketsMap;
         for (XMLNode* child = XMLUtils::getChildNode(marketsNode); child;
@@ -730,22 +721,9 @@ void Parameters::fromXML(XMLNode *node) {
             marketsMap[key] = value;
         }
         data_["markets"] = marketsMap;
->>>>>>> niall_master
     }
 
     XMLNode* analyticsNode = XMLUtils::getChildNode(node, "Analytics");
-<<<<<<< HEAD
-    QL_REQUIRE(analyticsNode, "node Analytics not found in parameter file");
-    for (XMLNode* child = XMLUtils::getChildNode(analyticsNode); child;
-         child = XMLUtils::getNextSibling(child)) {
-        string groupName = XMLUtils::getAttribute(child, "type");
-        map<string,string> analyticsMap;
-        for (XMLNode* paramNode = XMLUtils::getChildNode(child); paramNode;
-             paramNode = XMLUtils::getNextSibling(paramNode)) {
-            string key = XMLUtils::getAttribute(paramNode, "name");
-            string value = XMLUtils::getNodeValue(paramNode);
-            analyticsMap[key] = value;
-=======
     if(analyticsNode) {
         for (XMLNode* child = XMLUtils::getChildNode(analyticsNode); child;
              child = XMLUtils::getNextSibling(child)) {
@@ -758,7 +736,6 @@ void Parameters::fromXML(XMLNode *node) {
                 analyticsMap[key] = value;
             }
             data_[groupName] = analyticsMap; 
->>>>>>> niall_master
         }
     }
 }
