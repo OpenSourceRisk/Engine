@@ -16,7 +16,6 @@ class NpvCube(object):
     def __init__(self, csv_file):
         self.df = pd.read_csv(csv_file)
         self.df.columns = ['TradeID', 'DateIndex', 'Date', 'Sample', 'Value']
-        #self.df.columns = ['date', 'trade', 'sample_id', 'value']
         self.nd = np.array([])
         self.datedict = {}
         self.tradedict = {}
@@ -24,6 +23,7 @@ class NpvCube(object):
         self.calc_nd()
 
     def calc_nd(self):
+        """ Converts DataFrame into 3D array. """
         dates = self.df.Date.unique()
         trades = self.df.TradeID.unique()
         self.datedict = {val: num for num, val in enumerate(dates)}
@@ -38,32 +38,38 @@ class NpvCube(object):
     def plot_trade(self, trade):
         ax = self.fig.gca(projection='3d')
         dates = np.arange(len(self.datedict))
-        samples = np.arange(self.df.sample_id.max() + 1)
+        samples = np.arange(self.df.Sample.max() + 1)
         dates, samples = np.meshgrid(dates, samples)
         ax.plot_surface(dates, samples, self.nd[:, self.tradedict[trade], :].T)
         ax.set_xlabel('dates')
-        ax.set_xlim3d(0, len(self.df.date.unique()))
-        ax.set_xticklabels = self.df.date.unique()
-        print(self.df.date.unique())
+        ax.set_xlim3d(0, len(self.df.Date.unique()))
+        ax.set_xticklabels = self.df.Date.unique()
         ax.set_ylabel('samples')
-        ax.set_yticklabels = self.df.sample_id.unique()
-        print(self.df.sample_id.unique())
+        ax.set_yticklabels = self.df.Sample.unique()
         ax.set_zlabel('value')
 
     def plot_density(self, trade):
+        """
+        Plots the NPV surface for trade.
+        X-axis: dates
+        Y-axis: npv
+        Z-axis: value of the estimated pdf
+        """
         ax = self.fig.gca(projection='3d')
         # remove last (erroneuous) date
         dates = self.df.Date.unique()[1:-1]
         # configure x-axis to be labeld with dates
         date_step = 5
-        ax.set_xticks(np.arange(0,len(dates), date_step))
+        ax.set_xticks(np.arange(0, len(dates), date_step))
         ax.set_xticklabels(dates[0::date_step])
         ax.set_xlabel('Dates')
         # set thousands separator for y-axis
-        ax.get_yaxis().set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
+        ax.get_yaxis().set_major_formatter(matplotlib.ticker.FuncFormatter(
+            lambda x, p: format(int(x), ',')))
         ax.set_ylabel('NPV')
         # estimate the probability density for each date
-        data = np.array([self.nd[self.datedict[date], self.tradedict[trade], :] for date in dates])
+        data = np.array([self.nd[self.datedict[date], self.tradedict[trade], :]
+                         for date in dates])
         grid_size = 100
         dist_space = np.linspace(np.min(data), np.max(data), grid_size)
         values = np.zeros((len(dates), grid_size))
@@ -79,6 +85,12 @@ class NpvCube(object):
         ax.plot_surface(dates, dist_space, values.T, cmap=cm.jet)
 
     def plot_distribution(self, trade):
+        """
+        Plots the NPV surface for trade.
+        X-axis: dates
+        Y-axis: npv
+        Z-axis: histogram for each date
+        """
         ax = self.fig.gca(projection='3d')
         dates = self.df.date.unique()[:-1]
         data = np.array([self.nd[self.datedict[date], self.tradedict[trade], :] for date in dates])
@@ -92,6 +104,6 @@ class NpvCube(object):
 
 csv_file = 'cube.csv'
 npv = NpvCube(csv_file)
-trade = '722963AI'
-npv.plot_density(trade)
+trade = '833397AI'
+npv.plot_distribution(trade)
 plt.show()
