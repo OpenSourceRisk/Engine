@@ -44,7 +44,6 @@ void IndexTest::testIborIndex() {
 
     struct IndTestData data[]= {
         { AUDbbsw(pd), "AUD-BBSW", Australia().name(), AUDCurrency().name()},
-        { AverageBMA(pd), "AverageBMA", UnitedStates(UnitedStates::NYSE).name(), USDCurrency().name()},
         { CHFTois(), "CHF-TOIS", Switzerland().name(), CHFCurrency().name()},
         { CZKPribor(pd), "CZK-PRIBOR", CzechRepublic().name(), CZKCurrency().name()},
         { DKKCibor(pd), "DKK-CIBOR", Denmark().name(), DKKCurrency().name()},
