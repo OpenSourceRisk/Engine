@@ -185,8 +185,7 @@ namespace QuantExt {
                 npv += tmp * df;
             }
         }
-        DiscountFactor d = discountCurve.discount(npvDate);
-        npv /= d;
+        npv /= results_.npvDateDiscount;
         return npv;
     }
 
