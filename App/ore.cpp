@@ -248,14 +248,17 @@ int main(int argc, char** argv) {
                        "portfolio size mismatch, check simulation market setup");
             cout << "OK" << endl;
 
-            //unregister(portfolio);
-            //unregister(simPortfolio);
+            string sportyString = params.get("simulation", "disableEvaluationDateObservation");
+            bool sporty = parseBool(sportyString);
+
+            unregister(portfolio);
+            unregister(simPortfolio);
             
             LOG("Build valuation cube engine");
             Size samples = sb.samples();
             string baseCurrency = params.get("simulation", "baseCurrency");
             ValuationEngine engine(asof, grid, samples, baseCurrency, simMarket,
-                sb.simulateFixings(), sb.estimationMethod(), sb.forwardHorizonDays());
+                                   sb.simulateFixings(), sb.estimationMethod(), sb.forwardHorizonDays(), sporty);
 
             ostringstream o;
             o << "Additional Scenario Data " << grid->size() << " x " << samples << "... ";
