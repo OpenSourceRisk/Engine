@@ -72,8 +72,7 @@ namespace QuantExt {
         }
       private:
         Real npv(const Leg &leg, const YieldTermStructure &discountCurve,
-                 bool includeSettlementDateFlows, Date settlementDate,
-                 Date npvDate) const;
+                 bool includeSettlementDateFlows, Date settlementDate) const;
         Handle<YieldTermStructure> discountCurve_;
         boost::optional<bool> includeSettlementDateFlows_;
         Date settlementDate_, npvDate_;
@@ -86,7 +85,7 @@ namespace QuantExt {
 
     inline Real DiscountingSwapEngine::npv(
         const Leg &leg, const YieldTermStructure &discountCurve,
-        bool includeSettlementDateFlows, Date settlementDate, Date npvDate) const {
+        bool includeSettlementDateFlows, Date settlementDate) const {
 
         Real npv = 0.0;
         if (leg.empty()) {
@@ -127,7 +126,9 @@ namespace QuantExt {
                     // add backward fixing, since the index might change
                     // from cashflow to cashflow, we might have to do it
                     // for each cashflow
-                    if (index->name() != indexNameBefore) {
+                    if (index->name() != indexNameBefore &&
+                        !SimulatedFixingsManager::instance().hasBackwardFixing(
+                            index->name())) {
                         SimulatedFixingsManager::instance().addBackwardFixing(
                             index->name(),
                             index->fixing(index->fixingCalendar().adjust(

@@ -115,7 +115,7 @@ namespace QuantExt {
                 results_.legNPV[i] =
                     DiscountingSwapEngine::npv(
                         arguments_.legs[i], discount_ref, includeRefDateFlows,
-                        settlementDate, results_.valuationDate) *
+                        settlementDate) *
                     arguments_.payer[i];
 
             } catch (std::exception &e) {
