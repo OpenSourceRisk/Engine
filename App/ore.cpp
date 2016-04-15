@@ -12,6 +12,7 @@
 #include <qlw/engine/valuationengine.hpp>
 #include <ql/time/calendars/all.hpp>
 #include <ql/time/daycounters/all.hpp>
+#include <ql/cashflows/floatingratecoupon.hpp>
 #include <boost/timer.hpp>
 
 #include "ore.hpp"
@@ -37,6 +38,8 @@ using namespace openxva::engine;
 using namespace openxva::simulation;
 using namespace openxva::cube;
 using namespace openxva::aggregation;
+
+void unregister(boost::shared_ptr<Portfolio> portfolio);
 
 void writeNpv(const Parameters& params,
               boost::shared_ptr<Market> market,
@@ -226,7 +229,7 @@ int main(int argc, char** argv) {
             boost::shared_ptr<ScenarioGenerator> sg = sb.build(model, simMarketData, asof);
             boost::shared_ptr<openxva::simulation::DateGrid> grid = sb.dateGrid();
             
-            LOG("Build Simulation Maret");
+            LOG("Build Simulation Market");
             boost::shared_ptr<openxva::simulation::SimMarket> simMarket
                 = boost::make_shared<ScenarioSimMarket>(sg, market, simMarketData);
             
@@ -244,12 +247,18 @@ int main(int argc, char** argv) {
             QL_REQUIRE(simPortfolio->size() == portfolio->size(),
                        "portfolio size mismatch, check simulation market setup");
             cout << "OK" << endl;
+
+            string sportyString = params.get("simulation", "disableEvaluationDateObservation");
+            bool sporty = parseBool(sportyString);
+
+            unregister(portfolio);
+            unregister(simPortfolio);
             
             LOG("Build valuation cube engine");
             Size samples = sb.samples();
             string baseCurrency = params.get("simulation", "baseCurrency");
             ValuationEngine engine(asof, grid, samples, baseCurrency, simMarket,
-                                   sb.simulateFixings(), sb.estimationMethod(), sb.forwardHorizonDays());
+                                   sb.simulateFixings(), sb.estimationMethod(), sb.forwardHorizonDays(), sporty);
 
             ostringstream o;
             o << "Additional Scenario Data " << grid->size() << " x " << samples << "... ";
@@ -266,6 +275,7 @@ int main(int argc, char** argv) {
                 inMemoryCube = boost::make_shared<SinglePrecisionInMemoryCube>
                 (asof, simPortfolio->ids(), grid->dates(), samples);
             engine.buildCube(simPortfolio, inMemoryCube, inMemoryAdditionalScenarioData);
+            //engine.buildCube(simPortfolio, inMemoryCube, boost::shared_ptr<AdditionalScenarioData>());
             cout << "OK" << endl;
 
             cout << setw(tab) << left << "Write Cube... " << flush;
@@ -291,7 +301,7 @@ int main(int argc, char** argv) {
          */
         cout << setw(tab) << left << "Aggregation and XVA Reports... " << flush;
         if (params.hasGroup("xva") &&
-            params.get("xva", "active") == "Y") {
+                params.get("xva", "active") == "Y") {
 
             // We reset this here because the date grid building below depends on it.
             Settings::instance().evaluationDate() = asof; 
@@ -306,8 +316,8 @@ int main(int argc, char** argv) {
             cube->load(cubeFile);
 
             QL_REQUIRE(cube->numIds() == portfolio->size(),
-                       "cube x dimension (" << cube->numIds() << ") does not match portfolio size ("
-                       << portfolio->size() << ")");
+                "cube x dimension (" << cube->numIds() << ") does not match portfolio size ("
+                                     << portfolio->size() << ")");
                        
             string scenarioFile = outputPath + "/" + params.get("xva", "scenarioFile");
             boost::shared_ptr<AdditionalScenarioData>
@@ -315,9 +325,9 @@ int main(int argc, char** argv) {
             scenarioData->load(scenarioFile);
 
             QL_REQUIRE(scenarioData->dimDates() == cube->dates().size(),
-                       "scenario dates do not match cube grid size");
+                "scenario dates do not match cube grid size");
             QL_REQUIRE(scenarioData->dimSamples() == cube->samples(),
-                       "scenario sample size does not match cube sample size");
+                "scenario sample size does not match cube sample size");
             
             map<string,bool> analytics;
             analytics["exposureProfiles"] = parseBool(params.get("xva", "exposureProfiles"));
@@ -335,7 +345,7 @@ int main(int argc, char** argv) {
             
             boost::shared_ptr<PostProcess> postProcess = boost::make_shared<PostProcess>
                 (portfolio, netting, market, cube, scenarioData, analytics,
-                 baseCurrency, allocationMethod, marginalAllocationLimit, quantile, calculationType, dvaName);
+                baseCurrency, allocationMethod, marginalAllocationLimit, quantile, calculationType, dvaName);
 
             writeTradeExposures(params, postProcess);
             writeNettingSetExposures(params, postProcess);
@@ -355,7 +365,7 @@ int main(int argc, char** argv) {
             LOG("skip XVA reports");
             cout << "SKIP" << endl;
         }
-
+        
         /****************
          * Initial Margin
          */
@@ -369,22 +379,53 @@ int main(int argc, char** argv) {
             LOG("skip initial margin reports");
             cout << "SKIP" << endl;
         }
-
+        
     } catch (std::exception& e) {
         ALOG("Error: " << e.what());
         cout << "Error: " << e.what() << endl;
     }
-
+    
     cout << "run time: " << setprecision(2) << timer.elapsed() << " sec" << endl;
     cout << "ORE done." << endl;
-        
+    
     LOG("ORE done.");
-
+    
     return 0;
 }
 
+void unregister(boost::shared_ptr<Portfolio> portfolio) {
+    
+    LOG("Unregister ... ");
+    int count = 0;
+    for (Size i = 0; i < portfolio->size(); ++i) {
+        // We need to unregister all FloatingRateCoupons with their Indices.
+        // Rather then inspecting each trade type, we just use boost dynamic casting
+        // to see if we have FloatingRateCoupons and then unregister.
+        vector<Leg> legs;
+        for (Size j = 0; j < portfolio->trades()[i]->legs().size(); j++)
+            legs.push_back(portfolio->trades()[i]->legs()[j]);            
+        // Now unregister any FloatingRateCoupons we have.
+        for (Size j = 0; j < legs.size(); ++j) {
+            for (Leg::iterator it = legs[j].begin(); it != legs[j].end(); ++it) {
+                boost::shared_ptr<FloatingRateCoupon> coupon = 
+                    boost::dynamic_pointer_cast<FloatingRateCoupon>(*it);
+                if (coupon.get()) {
+                    // we have a FloatingRateCoupon
+                    coupon->unregisterWith(coupon->index());
+                    coupon->unregisterWith(Settings::instance().evaluationDate());
+                    coupon->index()->unregisterWith(Settings::instance().evaluationDate());
+                    ++count;
+                }
+            }
+        }
+        boost::shared_ptr<Instrument> instrument = portfolio->trades()[i]->instrument()->qlInstrument();
+        instrument->unregisterWith(Settings::instance().evaluationDate());
+    }
+    LOG("Unregister " << count << " coupons done.");
+}
+
 void writeNpv(const Parameters& params,
-              boost::shared_ptr<Market> market,
+                boost::shared_ptr<Market> market,
               boost::shared_ptr<Portfolio> portfolio) {
     LOG("portfolio valuation");
     //Date asof = Settings::instance().evaluationDate();
