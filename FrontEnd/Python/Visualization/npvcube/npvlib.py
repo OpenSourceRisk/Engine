@@ -19,15 +19,17 @@ class NpvCube(object):
         self.nd = np.array([])
         self.datedict = {}
         self.tradedict = {}
+        self.dates = []
+        self.trades = []
         self.calc_nd()
 
     def calc_nd(self):
         """ Converts DataFrame into 3D array. """
-        dates = self.df.Date.unique()
-        trades = self.df.TradeID.unique()
-        self.datedict = {val: num for num, val in enumerate(dates)}
-        self.tradedict = {val: num for num, val in enumerate(trades)}
-        self.nd = np.zeros((len(dates), len(trades), self.df.Sample.max() + 1))
+        self.dates = self.df.Date.unique()
+        self.trades = self.df.TradeID.unique()
+        self.datedict = {val: num for num, val in enumerate(self.dates)}
+        self.tradedict = {val: num for num, val in enumerate(self.trades)}
+        self.nd = np.zeros((len(self.dates), len(self.trades), self.df.Sample.max() + 1))
         for row in self.df.values:
             i = self.datedict[row[2]]
             j = self.tradedict[row[0]]
@@ -35,6 +37,9 @@ class NpvCube(object):
             self.nd[i][j][k] = row[4]
 
     def plot_trade(self, trade, ax):
+        """ Plots the dates, samples and values.
+            Visualises the Monte Carlo Paths (maybe not too insightful).
+        """
         dates = np.arange(len(self.datedict))
         samples = np.arange(self.df.Sample.max() + 1)
         dates, samples = np.meshgrid(dates, samples)
@@ -46,9 +51,11 @@ class NpvCube(object):
         ax.set_yticklabels = self.df.Sample.unique()
         ax.set_zlabel('value')
 
-    def plot_density(self, trade, ax, percentile=None):
+    def plot_density(self, trade, ax, exposure='NPV'):
         """
-        Plots the NPV surface for trade.
+        Plots the NPV surface for the trade 'trade' on axis 'ax'.
+        The optional parameter 'exposure' can be 'NPV', 'NPV+', 'NPV-'.
+
         X-axis: dates
         Y-axis: npv
         Z-axis: value of the estimated pdf
@@ -63,10 +70,14 @@ class NpvCube(object):
         # set thousands separator for y-axis
         ax.get_yaxis().set_major_formatter(matplotlib.ticker.FuncFormatter(
             lambda x, p: format(int(x), ',')))
-        ax.set_ylabel('NPV')
+        ax.set_ylabel(exposure)
         # estimate the probability density for each date
         data = np.array([self.nd[self.datedict[date], self.tradedict[trade], :]
                          for date in dates])
+        if exposure == 'NPV+':
+            data = np.fmax(data, np.zeros(data.shape))
+        elif exposure == 'NPV-':
+            data = np.fmax(-data, np.zeros(data.shape))
         grid_size = 50
         dist_space = np.linspace(np.min(data), np.max(data), grid_size)
         values = np.zeros((len(dates), grid_size))
@@ -83,21 +94,9 @@ class NpvCube(object):
         ax.plot_trisurf(X.flatten(),
                         Y.flatten(),
                         values.T.flatten(),
-                        # cmap=cm.jet,
-                        color='r',
+                        cmap=cm.jet,
+                        # color='r',
                         linewidth=0)
-        if percentile:
-            for k in range(len(dates)):
-                areas = cumtrapz(values[k], dist_space, initial=0)
-                values[k] = np.array([values[k][j]
-                                      if areas[j] <= percentile else 0
-                                      for j in range(len(values[k]))])
-            ax.plot_trisurf(X.flatten(),
-                            Y.flatten(),
-                            values.T.flatten(),
-                            cmap=cm.jet,
-                            #color='r',
-                            linewidth=0)
 
     def plot_distribution(self, trade, ax):
         """
@@ -105,6 +104,8 @@ class NpvCube(object):
         X-axis: dates
         Y-axis: npv
         Z-axis: histogram for each date
+
+        depcrecated
         """
         dates = self.df.Date.unique()[1:-1]
         data = np.array([self.nd[self.datedict[date], self.tradedict[trade], :] for date in dates])
@@ -112,6 +113,5 @@ class NpvCube(object):
         d = data[0]
         values = np.array([np.histogram(d, 100, density=True)[0] for d in data])
         dates, dist_space = np.meshgrid(np.arange(len(dates)), dist_space)
-        print(dates.shape, dist_space.shape, values.T.shape)
         ax.plot_surface(dates, dist_space, values.T)
 
