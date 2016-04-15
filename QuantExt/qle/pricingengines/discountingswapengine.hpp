@@ -155,7 +155,25 @@ namespace QuantExt {
                         // no past fixing, so forecast fixing (or in case
                         // of todays fixing, read possibly the actual
                         // fixing)
-                        fixing = index->fixing(fixingDate);
+
+                        // ibor specific optimization
+                        // assuming ibor period is equal to accrual period
+                        if (boost::dynamic_pointer_cast<IborCoupon>(cp) != NULL &&
+                            cp->dayCounter() == index->dayCounter()) {
+                            boost::shared_ptr<IborIndex> ii =
+                                boost::static_pointer_cast<IborIndex>(index);
+                            Handle<YieldTermStructure> termStructure =
+                                ii->forwardingTermStructure();
+                            Date d1 = cp->accrualStartDate();
+                            Date d2 = cp->accrualEndDate();
+                            Time t = cp->accrualPeriod();
+                            DiscountFactor disc1 = termStructure->discount(d1);
+                            DiscountFactor disc2 = termStructure->discount(d2);
+                            fixing = (disc1/disc2 - 1.0) / t;
+                        }
+                        else {
+                            fixing = index->fixing(fixingDate);
+                        }
                         // add the fixing to the simulated fixing data
                         if (SimulatedFixingsManager::instance()
                                 .simulateFixings()) {
