@@ -14,9 +14,6 @@
 
 #include <ql/settings.hpp>
 #include <ql/timeseries.hpp>
-#include <boost/algorithm/string/case_conv.hpp>
-
-using boost::algorithm::to_upper_copy;
 
 namespace QuantLib {
 
@@ -78,6 +75,9 @@ class SimulatedFixingsManager_t
 
     /*! adds a fixing as of evaluation date (backward method) */
     void addBackwardFixing(const std::string &name, const T &value) const;
+
+    /*! returns true if backward fixing is present */
+    bool hasBackwardFixing(const std::string &name) const;
 
     /*! returns a simulated fixing, might be Null<T>, if data innsufficient */
     T simulatedFixing(const std::string &name, const Date &fixingDate) const;
@@ -167,8 +167,7 @@ void SimulatedFixingsManager_t<T>::addForwardFixing(const std::string &name,
 
     if (horizon_ == 0 ||
         fixingDate - Settings::instance().evaluationDate() <= horizon_) {
-        std::string uname = boost::algorithm::to_upper_copy(name);
-        forwardData_[uname][fixingDate] =
+        forwardData_[name][fixingDate] =
             std::make_pair(value, Settings::instance().evaluationDate());
     }
 }
@@ -192,16 +191,26 @@ void SimulatedFixingsManager_t<T>::addBackwardFixing(const std::string &name,
                    << ", since reference date (" << referenceDate_
                    << ") is past fixing date");
 
-    std::string uname = boost::algorithm::to_upper_copy(name);
-    backwardData_[uname][fixingDate] = value;
+    backwardData_[name][fixingDate] = value;
+}
 
+template <class T>
+bool SimulatedFixingsManager_t<T>::hasBackwardFixing(
+    const std::string &name) const {
+
+    // see above
+    Date fixingDate = Settings::instance().evaluationDate();
+    typename std::map<std::string, BackwardData>::const_iterator it =
+        backwardData_.find(name);
+    if (it == backwardData_.end())
+        return false;
+    typename BackwardData::const_iterator it2 = it->second.find(fixingDate);
+    return it2 != it->second.end();
 }
 
 template <class T>
 T SimulatedFixingsManager_t<T>::simulatedFixing(const std::string &name,
                                                 const Date &fixingDate) const {
-
-    std::string uname = boost::algorithm::to_upper_copy(name);
 
     T bwdTmp = Null<T>();
     Date bwdDate = Null<Date>();
@@ -209,10 +218,10 @@ T SimulatedFixingsManager_t<T>::simulatedFixing(const std::string &name,
         estimationMethod_ == BestOfForwardBackward ||
         estimationMethod_ == InterpolatedForwardBackward) {
         typename BackwardData::const_iterator it = std::lower_bound(
-            backwardData_[uname].begin(), backwardData_[uname].end(),
+            backwardData_[name].begin(), backwardData_[name].end(),
             std::make_pair(fixingDate, T(0.0)), CompHlp());
         // fixing date not > all backward data
-        if (it != backwardData_[uname].end()) {
+        if (it != backwardData_[name].end()) {
             bwdDate = it->first;
             bwdTmp = it->second;
         }
@@ -225,8 +234,8 @@ T SimulatedFixingsManager_t<T>::simulatedFixing(const std::string &name,
     T fwdTmp = Null<T>();
     Date fwdDate = Null<Date>();
     typename ForwardData::const_iterator it =
-        forwardData_[uname].find(fixingDate);
-    if (it != forwardData_[uname].end()) {
+        forwardData_[name].find(fixingDate);
+    if (it != forwardData_[name].end()) {
         fwdTmp = it->second.first;
         fwdDate = it->second.second;
     }
