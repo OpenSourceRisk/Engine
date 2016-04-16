@@ -68,7 +68,8 @@ class DiscountingSwapEngine : public Swap::engine {
 
   private:
     Real npv(const Leg &leg, const YieldTermStructure &discountCurve,
-             bool includeSettlementDateFlows, Date settlementDate) const;
+             const bool includeSettlementDateFlows, const Date &settlementDate,
+             const Date &today) const;
     Handle<YieldTermStructure> discountCurve_;
     boost::optional<bool> includeSettlementDateFlows_;
     Date settlementDate_, npvDate_;
@@ -88,13 +89,18 @@ class AmountGetter : public AcyclicVisitor,
                      public Visitor<CappedFlooredCoupon>,
                      public Visitor<IborCoupon> {
   private:
+    const Date &today_;
+    const bool enforcesTodaysHistoricFixings_;
     Real amount_;
     std::string indexNameBefore_;
     Real fixing(const Date &fixingDate, const InterestRateIndex &index);
-    void addBackwardFixing(const Date &today, const InterestRateIndex &index);
+    void addBackwardFixing(const InterestRateIndex &index);
 
   public:
-    AmountGetter() : amount_(0.0), indexNameBefore_("") {}
+    AmountGetter(const Date &today, const bool enforcesTodaysHistoricFixings)
+        : today_(today),
+          enforcesTodaysHistoricFixings_(enforcesTodaysHistoricFixings),
+          amount_(0.0), indexNameBefore_("") {}
     Real amount() const { return amount_; }
     void visit(CashFlow &c);
     void visit(Coupon &c);
@@ -124,13 +130,9 @@ inline void AmountGetter::visit(CappedFlooredCoupon &c) {
 
 inline void AmountGetter::visit(IborCoupon &c) {
     Real tmp = 0.0;
-    Date today = Settings::instance().evaluationDate();
-    bool enforceTodaysHistoricFixings =
-        Settings::instance().enforcesTodaysHistoricFixings();
-    addBackwardFixing(today, *c.index());
-    if (c.dayCounter() == c.index()->dayCounter() &&
-        !(c.fixingDate() < today ||
-          (c.fixingDate() == today && enforceTodaysHistoricFixings))) {
+    addBackwardFixing(*c.index());
+    if (!(c.fixingDate() < today_ ||
+          (c.fixingDate() == today_ && enforcesTodaysHistoricFixings_))) {
         // assumption: ibor period is equal to accrual period
         // this speeds up calculation by around 10 percent
         boost::shared_ptr<IborIndex> ii =
@@ -139,20 +141,23 @@ inline void AmountGetter::visit(IborCoupon &c) {
             ii->forwardingTermStructure();
         Date d1 = c.accrualStartDate();
         Date d2 = c.accrualEndDate();
-        Time t = c.accrualPeriod();
         DiscountFactor disc1 = termStructure->discount(d1);
         DiscountFactor disc2 = termStructure->discount(d2);
-        tmp = (disc1 / disc2 - 1.0) / t;
+        tmp = (disc1 / disc2 - 1.0);
+        Real ti = c.accrualPeriod();
+        if (c.dayCounter() != c.index()->dayCounter()) {
+            ti = c.index()->dayCounter().yearFraction(d1, d2);
+            tmp *= c.accrualPeriod() / ti;
+        }
         SimulatedFixingsManager::instance().addForwardFixing(
-            c.index()->name(), c.fixingDate(), tmp);
+            c.index()->name(), c.fixingDate(), tmp / ti);
     } else {
-        tmp = fixing(c.fixingDate(), *c.index());
+        tmp = fixing(c.fixingDate(), *c.index()) * c.accrualPeriod();
     }
-    amount_ = tmp * c.accrualPeriod() * c.nominal();
+    amount_ = tmp * c.nominal();
 }
 
-inline void AmountGetter::addBackwardFixing(const Date &today,
-                                            const InterestRateIndex &index) {
+inline void AmountGetter::addBackwardFixing(const InterestRateIndex &index) {
     // add backward fixing, since the index might change
     // from cashflow to cashflow, we might have to do it
     // for each cashflow
@@ -160,27 +165,24 @@ inline void AmountGetter::addBackwardFixing(const Date &today,
         !SimulatedFixingsManager::instance().hasBackwardFixing(index.name())) {
         SimulatedFixingsManager::instance().addBackwardFixing(
             index.name(),
-            index.fixing(index.fixingCalendar().adjust(today, Following)));
+            index.fixing(index.fixingCalendar().adjust(today_, Following)));
         indexNameBefore_ = index.name();
     }
 }
 
 inline Real AmountGetter::fixing(const Date &fixingDate,
                                  const InterestRateIndex &index) {
-    Date today = Settings::instance().evaluationDate();
-    bool enforceTodaysHistoricFixings =
-        Settings::instance().enforcesTodaysHistoricFixings();
     Real fixing = 0.0;
-    addBackwardFixing(today, index);
+    addBackwardFixing(index);
     // is it a past fixing ?
-    if (fixingDate < today ||
-        (fixingDate == today && enforceTodaysHistoricFixings)) {
+    if (fixingDate < today_ ||
+        (fixingDate == today_ && enforcesTodaysHistoricFixings_)) {
         Real nativeFixing = index.timeSeries()[fixingDate];
         if (nativeFixing != Null<Real>())
             fixing = nativeFixing;
         else
             fixing = SimulatedFixingsManager::instance().simulatedFixing(
-                index.name(), fixingDate);
+                           index.name(), fixingDate);
         QL_REQUIRE(fixing != Null<Real>(),
                    "Missing " << index.name() << " fixing for " << fixingDate
                               << " (even when considering "
@@ -203,15 +205,17 @@ inline Real AmountGetter::fixing(const Date &fixingDate,
 
 inline Real DiscountingSwapEngine::npv(const Leg &leg,
                                        const YieldTermStructure &discountCurve,
-                                       bool includeSettlementDateFlows,
-                                       Date settlementDate) const {
+                                       const bool includeSettlementDateFlows,
+                                       const Date &settlementDate,
+                                       const Date &today) const {
 
     Real npv = 0.0;
     if (leg.empty()) {
         return npv;
     }
 
-    AmountGetter amountGetter;
+    const bool enforcesTodaysHistoricFixings = Settings::instance().enforcesTodaysHistoricFixings();
+    AmountGetter amountGetter(today, enforcesTodaysHistoricFixings);
     for (Size i = 0; i < leg.size(); ++i) {
         CashFlow &cf = *leg[i];
         if (cf.hasOccurred(settlementDate, includeSettlementDateFlows) ||
@@ -228,7 +232,6 @@ inline Real DiscountingSwapEngine::npv(const Leg &leg,
         }
         npv += tmp * df;
     }
-    npv /= results_.npvDateDiscount;
     return npv;
 }
 
