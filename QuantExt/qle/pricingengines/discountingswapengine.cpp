@@ -62,40 +62,39 @@ namespace QuantExt {
         results_.value = 0.0;
         results_.errorEstimate = Null<Real>();
 
-        Date refDate = discountCurve_->referenceDate();
-
+        Date today = discountCurve_->referenceDate();
         Date settlementDate;
         if(floatingLags_) {
             QL_REQUIRE(settlementDateLag_.length() >= 0,
                        "non negative period required");
-            settlementDate =  calendar_.advance(refDate, settlementDateLag_);
+            settlementDate =  calendar_.advance(today, settlementDateLag_);
         }
         else {
             if (settlementDate_ == Date()) {
-                settlementDate = refDate;
+                settlementDate = today;
             } else {
-                QL_REQUIRE(settlementDate >= refDate,
+                QL_REQUIRE(settlementDate >= today,
                            "settlement date ("
                                << settlementDate
                                << ") before "
                                   "discount curve reference date ("
-                               << refDate << ")");
+                               << today << ")");
             }
         }
 
         if (floatingLags_) {
             QL_REQUIRE(npvDateLag_.length() >= 0,
                        "non negative period required");
-            results_.valuationDate = calendar_.advance(refDate, npvDateLag_);
+            results_.valuationDate = calendar_.advance(today, npvDateLag_);
         } else {
             if (npvDate_ == Date()) {
-                results_.valuationDate = refDate;
+                results_.valuationDate = today;
             } else {
-                QL_REQUIRE(npvDate_ >= refDate,
+                QL_REQUIRE(npvDate_ >= today,
                            "npv date (" << npvDate_
                                         << ") before "
                                            "discount curve reference date ("
-                                        << refDate << ")");
+                                        << today << ")");
             }
         }
         results_.npvDateDiscount =
@@ -113,10 +112,10 @@ namespace QuantExt {
             try {
                 const YieldTermStructure& discount_ref = **discountCurve_;
                 results_.legNPV[i] =
-                    DiscountingSwapEngine::npv(
-                        arguments_.legs[i], discount_ref, includeRefDateFlows,
-                        settlementDate) *
-                    arguments_.payer[i];
+                    DiscountingSwapEngine::npv(arguments_.legs[i], discount_ref,
+                                               includeRefDateFlows,
+                                               settlementDate, today) *
+                    arguments_.payer[i] / results_.npvDateDiscount;
 
             } catch (std::exception &e) {
                 QL_FAIL(io::ordinal(i+1) << " leg: " << e.what());
