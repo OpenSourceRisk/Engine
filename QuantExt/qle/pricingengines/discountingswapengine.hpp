@@ -211,7 +211,6 @@ inline Real DiscountingSwapEngine::npv(const Leg &leg,
         return npv;
     }
 
-    std::string indexNameBefore = "";
     AmountGetter amountGetter;
     for (Size i = 0; i < leg.size(); ++i) {
         CashFlow &cf = *leg[i];
