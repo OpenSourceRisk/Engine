@@ -42,171 +42,196 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-    /*! This version of the engine supports simulated fixings.
-      It computes only the NPV, no BPS or start-, end-discounts,
-      since during simulation we are in general not interested
-      in these additional results.
-      The assumption is that fixings are only relevant for
-      cashflows instances of type FloatingRateCoupon or 
-      CappedFlooredCoupon, which should cover all relevant
-      cases in the standard QuantLib. */
-    class DiscountingSwapEngine : public Swap::engine {
-      public:
-        // ctor with fixed settlement and npv date
-        DiscountingSwapEngine(
-               const Handle<YieldTermStructure>& discountCurve =
-                                                 Handle<YieldTermStructure>(),
-               boost::optional<bool> includeSettlementDateFlows = boost::none,
-               Date settlementDate = Date(),
-               Date npvDate = Date());
-        // ctor with floating settlement and npv date lags
-        DiscountingSwapEngine(
-               const Handle<YieldTermStructure>& discountCurve,
-               boost::optional<bool> includeSettlementDateFlows,
-               Period settlementDateLag,
-               Period npvDateLag,
-               Calendar calendar);
-        void calculate() const;
-        Handle<YieldTermStructure> discountCurve() const {
-            return discountCurve_;
-        }
-      private:
-        Real npv(const Leg &leg, const YieldTermStructure &discountCurve,
-                 bool includeSettlementDateFlows, Date settlementDate) const;
-        Handle<YieldTermStructure> discountCurve_;
-        boost::optional<bool> includeSettlementDateFlows_;
-        Date settlementDate_, npvDate_;
-        Period settlementDateLag_, npvDateLag_;
-        Calendar calendar_;
-        bool floatingLags_;
-    };
+/*! This version of the engine supports simulated fixings.
+  It computes only the NPV, no BPS or start-, end-discounts,
+  since during simulation we are in general not interested
+  in these additional results.
+  The assumption is that fixings are only relevant for
+  cashflows instances of type FloatingRateCoupon or
+  CappedFlooredCoupon, which should cover all relevant
+  cases in the standard QuantLib. */
+class DiscountingSwapEngine : public Swap::engine {
+  public:
+    // ctor with fixed settlement and npv date
+    DiscountingSwapEngine(
+        const Handle<YieldTermStructure> &discountCurve =
+            Handle<YieldTermStructure>(),
+        boost::optional<bool> includeSettlementDateFlows = boost::none,
+        Date settlementDate = Date(), Date npvDate = Date());
+    // ctor with floating settlement and npv date lags
+    DiscountingSwapEngine(const Handle<YieldTermStructure> &discountCurve,
+                          boost::optional<bool> includeSettlementDateFlows,
+                          Period settlementDateLag, Period npvDateLag,
+                          Calendar calendar);
+    void calculate() const;
+    Handle<YieldTermStructure> discountCurve() const { return discountCurve_; }
 
-    // inline
+  private:
+    Real npv(const Leg &leg, const YieldTermStructure &discountCurve,
+             bool includeSettlementDateFlows, Date settlementDate) const;
+    Handle<YieldTermStructure> discountCurve_;
+    boost::optional<bool> includeSettlementDateFlows_;
+    Date settlementDate_, npvDate_;
+    Period settlementDateLag_, npvDateLag_;
+    Calendar calendar_;
+    bool floatingLags_;
+};
 
-    inline Real DiscountingSwapEngine::npv(
-        const Leg &leg, const YieldTermStructure &discountCurve,
-        bool includeSettlementDateFlows, Date settlementDate) const {
+// coupon handling
 
-        Real npv = 0.0;
-        if (leg.empty()) {
-            return npv;
-        }
+namespace {
 
-        Date today = Settings::instance().evaluationDate();
-        bool simulateFixings =
-            SimulatedFixingsManager::instance().simulateFixings();
-        bool enforceTodaysHistoricFixings =
-            Settings::instance().enforcesTodaysHistoricFixings();
+class AmountGetter : public AcyclicVisitor,
+                     public Visitor<CashFlow>,
+                     public Visitor<Coupon>,
+                     public Visitor<FloatingRateCoupon>,
+                     public Visitor<CappedFlooredCoupon>,
+                     public Visitor<IborCoupon> {
+  private:
+    Real amount_;
+    std::string indexNameBefore_;
+    Real fixing(const Date &fixingDate, const InterestRateIndex &index);
+    void addBackwardFixing(const Date &today, const InterestRateIndex &index);
 
-        std::string indexNameBefore = "";
+  public:
+    AmountGetter() : amount_(0.0), indexNameBefore_("") {}
+    Real amount() const { return amount_; }
+    void visit(CashFlow &c);
+    void visit(Coupon &c);
+    void visit(FloatingRateCoupon &c);
+    void visit(CappedFlooredCoupon &c);
+    void visit(IborCoupon &c);
+};
 
-        for (Size i = 0; i < leg.size(); ++i) {
-            
-            CashFlow &cf = *leg[i];
-            if (!cf.hasOccurred(settlementDate, includeSettlementDateFlows) &&
-                !cf.tradingExCoupon(settlementDate)) {
-                
-                Real df = discountCurve.discount(cf.date());
-                Real tmp = 0.0;
-                boost::shared_ptr<FloatingRateCoupon> cp =
-                    boost::dynamic_pointer_cast<FloatingRateCoupon>(leg[i]);
-                boost::shared_ptr<CappedFlooredCoupon> cpcf =
-                    boost::dynamic_pointer_cast<CappedFlooredCoupon>(leg[i]);
+inline void AmountGetter::visit(CashFlow &c) { amount_ = c.amount(); }
 
-                // is the cashflow a floating rate coupon and do we
-                // simulate fixings ? Otherwise just take the cashflow
-                // amount below.
-                if ((cp != NULL || cpcf != NULL) && simulateFixings) {
-                    Date fixingDate = cp->fixingDate();
-                    boost::shared_ptr<InterestRateIndex> index;
-                    if(cp!=NULL)
-                        index = cp->index();
-                    if(cpcf!=NULL)
-                        index = cpcf->index();
-                    // add backward fixing, since the index might change
-                    // from cashflow to cashflow, we might have to do it
-                    // for each cashflow
-                    if (index->name() != indexNameBefore &&
-                        !SimulatedFixingsManager::instance().hasBackwardFixing(
-                            index->name())) {
-                        SimulatedFixingsManager::instance().addBackwardFixing(
-                            index->name(),
-                            index->fixing(index->fixingCalendar().adjust(
-                                today, Following)));
-                        indexNameBefore = index->name();
-                    }
-                    Real fixing = 0.0;
-                    // is it a past fixing ?
-                    if (fixingDate < today ||
-                        (fixingDate == today && enforceTodaysHistoricFixings)) {
-                        Real nativeFixing = index->timeSeries()[fixingDate];
-                        if (nativeFixing != Null<Real>())
-                            fixing = nativeFixing;
-                        else
-                            fixing =
-                                SimulatedFixingsManager::instance()
-                                    .simulatedFixing(index->name(), fixingDate);
-                        QL_REQUIRE(fixing != Null<Real>(),
-                                   "Missing " << index->name() << " fixing for "
-                                              << fixingDate
-                                              << " (even when considering "
-                                                 "simulated fixings)");
-                    } else {
-                        // no past fixing, so forecast fixing (or in case
-                        // of todays fixing, read possibly the actual
-                        // fixing)
+inline void AmountGetter::visit(Coupon &c) { amount_ = c.amount(); }
 
-                        // ibor specific optimization
-                        // assuming ibor period is equal to accrual period
-                        if (boost::dynamic_pointer_cast<IborCoupon>(cp) != NULL &&
-                            cp->dayCounter() == index->dayCounter()) {
-                            boost::shared_ptr<IborIndex> ii =
-                                boost::static_pointer_cast<IborIndex>(index);
-                            Handle<YieldTermStructure> termStructure =
-                                ii->forwardingTermStructure();
-                            Date d1 = cp->accrualStartDate();
-                            Date d2 = cp->accrualEndDate();
-                            Time t = cp->accrualPeriod();
-                            DiscountFactor disc1 = termStructure->discount(d1);
-                            DiscountFactor disc2 = termStructure->discount(d2);
-                            fixing = (disc1/disc2 - 1.0) / t;
-                        }
-                        else {
-                            fixing = index->fixing(fixingDate);
-                        }
-                        // add the fixing to the simulated fixing data
-                        if (SimulatedFixingsManager::instance()
-                                .simulateFixings()) {
-                            SimulatedFixingsManager::instance()
-                                .addForwardFixing(index->name(), fixingDate,
-                                                  fixing);
-                        }
-                    }
-                    // amount calculation
-                    Real effFixing = 0.0;
-                    if (cp != NULL) {
-                        effFixing =
-                            (cp->gearing() * fixing + cp->spread());
-                    }
-                    if (cpcf != NULL) {
-                        effFixing =
-                            (cpcf->gearing() * fixing + cpcf->spread());
-                        if (cpcf->isFloored())
-                            effFixing = std::max(cpcf->floor(), effFixing);
-                        if (cpcf->isCapped())
-                            effFixing = std::min(cpcf->cap(), effFixing);
-                    }
-                    tmp = effFixing * cp->accrualPeriod() * cp->nominal();
-                } else {
-                    // no floating rate coupon or we do not simulate fixings
-                    tmp = cf.amount();
-                }
-                npv += tmp * df;
-            }
-        }
-        npv /= results_.npvDateDiscount;
+inline void AmountGetter::visit(FloatingRateCoupon &c) {
+    amount_ = (c.gearing() * fixing(c.fixingDate(), *c.index()) + c.spread()) *
+              c.accrualPeriod() * c.nominal();
+}
+
+inline void AmountGetter::visit(CappedFlooredCoupon &c) {
+    Real effFixing =
+        (c.gearing() * fixing(c.fixingDate(), *c.index()) + c.spread());
+    if (c.isFloored())
+        effFixing = std::max(c.floor(), effFixing);
+    if (c.isCapped())
+        effFixing = std::min(c.cap(), effFixing);
+    amount_ = effFixing * c.accrualPeriod() * c.nominal();
+}
+
+inline void AmountGetter::visit(IborCoupon &c) {
+    Real tmp = 0.0;
+    Date today = Settings::instance().evaluationDate();
+    bool enforceTodaysHistoricFixings =
+        Settings::instance().enforcesTodaysHistoricFixings();
+    addBackwardFixing(today, *c.index());
+    if (c.dayCounter() == c.index()->dayCounter() &&
+        !(c.fixingDate() < today ||
+          (c.fixingDate() == today && enforceTodaysHistoricFixings))) {
+        // assumption: ibor period is equal to accrual period
+        // this speeds up calculation by around 10 percent
+        boost::shared_ptr<IborIndex> ii =
+            boost::static_pointer_cast<IborIndex>(c.index());
+        Handle<YieldTermStructure> termStructure =
+            ii->forwardingTermStructure();
+        Date d1 = c.accrualStartDate();
+        Date d2 = c.accrualEndDate();
+        Time t = c.accrualPeriod();
+        DiscountFactor disc1 = termStructure->discount(d1);
+        DiscountFactor disc2 = termStructure->discount(d2);
+        tmp = (disc1 / disc2 - 1.0) / t;
+        SimulatedFixingsManager::instance().addForwardFixing(
+            c.index()->name(), c.fixingDate(), tmp);
+    } else {
+        tmp = fixing(c.fixingDate(), *c.index());
+    }
+    amount_ = tmp * c.accrualPeriod() * c.nominal();
+}
+
+inline void AmountGetter::addBackwardFixing(const Date &today,
+                                            const InterestRateIndex &index) {
+    // add backward fixing, since the index might change
+    // from cashflow to cashflow, we might have to do it
+    // for each cashflow
+    if (index.name() != indexNameBefore_ &&
+        !SimulatedFixingsManager::instance().hasBackwardFixing(index.name())) {
+        SimulatedFixingsManager::instance().addBackwardFixing(
+            index.name(),
+            index.fixing(index.fixingCalendar().adjust(today, Following)));
+        indexNameBefore_ = index.name();
+    }
+}
+
+inline Real AmountGetter::fixing(const Date &fixingDate,
+                                 const InterestRateIndex &index) {
+    Date today = Settings::instance().evaluationDate();
+    bool enforceTodaysHistoricFixings =
+        Settings::instance().enforcesTodaysHistoricFixings();
+    Real fixing = 0.0;
+    addBackwardFixing(today, index);
+    // is it a past fixing ?
+    if (fixingDate < today ||
+        (fixingDate == today && enforceTodaysHistoricFixings)) {
+        Real nativeFixing = index.timeSeries()[fixingDate];
+        if (nativeFixing != Null<Real>())
+            fixing = nativeFixing;
+        else
+            fixing = SimulatedFixingsManager::instance().simulatedFixing(
+                index.name(), fixingDate);
+        QL_REQUIRE(fixing != Null<Real>(),
+                   "Missing " << index.name() << " fixing for " << fixingDate
+                              << " (even when considering "
+                                 "simulated fixings)");
+    } else {
+        // no past fixing, so forecast fixing (or in case
+        // of todays fixing, read possibly the actual
+        // fixing)
+        fixing = index.fixing(fixingDate);
+        // add the fixing to the simulated fixing data
+        SimulatedFixingsManager::instance().addForwardFixing(
+            index.name(), fixingDate, fixing);
+    }
+    return fixing;
+} // AmountGetter::fixing()
+
+} // anonymous namespace
+
+// inline
+
+inline Real DiscountingSwapEngine::npv(const Leg &leg,
+                                       const YieldTermStructure &discountCurve,
+                                       bool includeSettlementDateFlows,
+                                       Date settlementDate) const {
+
+    Real npv = 0.0;
+    if (leg.empty()) {
         return npv;
     }
+
+    std::string indexNameBefore = "";
+    AmountGetter amountGetter;
+    for (Size i = 0; i < leg.size(); ++i) {
+        CashFlow &cf = *leg[i];
+        if (cf.hasOccurred(settlementDate, includeSettlementDateFlows) ||
+            cf.tradingExCoupon(settlementDate)) {
+            continue;
+        }
+        Real tmp = 0.0;
+        Real df = discountCurve.discount(cf.date());
+        if (!SimulatedFixingsManager::instance().simulateFixings()) {
+            tmp = cf.amount();
+        } else {
+            cf.accept(amountGetter);
+            tmp = amountGetter.amount();
+        }
+        npv += tmp * df;
+    }
+    npv /= results_.npvDateDiscount;
+    return npv;
+}
 
 } // namespace QuantExt
 
