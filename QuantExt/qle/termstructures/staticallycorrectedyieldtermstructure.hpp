@@ -16,6 +16,8 @@
 
 #include <ql/termstructures/yieldtermstructure.hpp>
 
+#include <boost/unordered_map.hpp>
+
 using namespace QuantLib;
 
 namespace QuantExt {
@@ -34,9 +36,7 @@ class StaticallyCorrectedYieldTermStructure : public YieldTermStructure {
         const Handle<YieldTermStructure> &fixedSourceTermStructure,
         const Handle<YieldTermStructure> &fixedTargetTermStructure,
         const YieldCurveRollDown &rollDown = ForwardForward)
-        : YieldTermStructure(floatingTermStructure->settlementDays(),
-                             floatingTermStructure->calendar(),
-                             floatingTermStructure->dayCounter()),
+        : YieldTermStructure(floatingTermStructure->dayCounter()),
           x_(floatingTermStructure), source_(fixedSourceTermStructure),
           target_(fixedTargetTermStructure), rollDown_(rollDown) {
         registerWith(floatingTermStructure);
@@ -45,11 +45,35 @@ class StaticallyCorrectedYieldTermStructure : public YieldTermStructure {
     }
 
     Date maxDate() const { return x_->maxDate(); }
+    void update() {}
+    const Date &referenceDate() const { return x_->referenceDate(); }
+
+    Calendar calendar() const { return x_->calendar(); }
+    Natural settlementDays() const { return x_->settlementDays(); }
+
+    void flushCache() { cache_c_.clear(); }
 
   protected:
     Real discountImpl(Time t) const;
 
   private:
+    // cache for source and target forwards
+    struct cache_key {
+        double t0, t;
+        bool operator==(const cache_key &o) const {
+            return (t0 == o.t0) && (t == o.t);
+        }
+    };
+    struct cache_hasher : std::unary_function<cache_key, std::size_t> {
+        std::size_t operator()(cache_key const &x) const {
+            std::size_t seed = 0;
+            boost::hash_combine(seed, x.t0);
+            boost::hash_combine(seed, x.t);
+            return seed;
+        }
+    };
+    mutable boost::unordered_map<cache_key, Real, cache_hasher> cache_c_;
+    // end cache
     const Handle<YieldTermStructure> x_, source_, target_;
     const YieldCurveRollDown rollDown_;
 };
@@ -57,11 +81,34 @@ class StaticallyCorrectedYieldTermStructure : public YieldTermStructure {
 // inline
 
 inline Real StaticallyCorrectedYieldTermStructure::discountImpl(Time t) const {
-    Real t0 = timeFromReference(referenceDate());
-    Real c = rollDown_ == ConstantDiscounts
-                 ? target_->discount(t) / source_->discount(t)
-                 : target_->discount(t0 + t) * source_->discount(t0) /
-                       (target_->discount(t0) * source_->discount(t0 + t));
+    Real c = 1.0;
+    if (rollDown_ == ForwardForward) {
+        Real t0 = timeFromReference(referenceDate());
+        // roll down = ForwardForward
+        // cache lookup
+        cache_key k = {t0, t};
+        boost::unordered_map<cache_key, Real>::const_iterator i =
+            cache_c_.find(k);
+        if (i == cache_c_.end()) {
+            c = source_->discount(t0) / source_->discount(t0 + t) *
+                target_->discount(t0 + t) / target_->discount(t0);
+            cache_c_.insert(std::make_pair(k, c));
+        } else {
+            c = i->second;
+        }
+    } else {
+        // roll down = ConstantDiscount
+        // cache lookup
+        cache_key k = {0.0, t};
+        boost::unordered_map<cache_key, Real>::const_iterator i =
+            cache_c_.find(k);
+        if (i == cache_c_.end()) {
+            c = target_->discount(t) / source_->discount(t);
+            cache_c_.insert(std::make_pair(k, c));
+        } else {
+            c = i->second;
+        }
+    }
     return x_->discount(t) * c;
 }
 
