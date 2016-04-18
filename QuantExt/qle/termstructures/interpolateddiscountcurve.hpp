@@ -11,77 +11,88 @@
 #ifndef quantext_interpolated_discount_curve_hpp
 #define quantext_interpolated_discount_curve_hpp
 
+#include <ql/math/interpolations/loginterpolation.hpp>
+#include <ql/patterns/lazyobject.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
-#include <qle/quotes/logquote.hpp>
+#include <ql/time/calendars/nullcalendar.hpp>
+
 #include <boost/make_shared.hpp>
 
 using namespace QuantLib;
 
 namespace QuantExt {
 
-    /*! InterpolatedDiscountCurve based on loglinear interpolation of DiscountFactors,
-        flat fwd extrapolation is always enabled, the term structure has always a
-        floating reference date */
-    class InterpolatedDiscountCurve : public YieldTermStructure {
-    public:
-        //! \name Constructors
-        //@{
-        //! default constructor
-      InterpolatedDiscountCurve(const std::vector<Time> &times,
-                                const std::vector<Handle<Quote> > &quotes,
-                                const Natural settlementDays,
-                                const Calendar &cal, const DayCounter &dc)
-          : YieldTermStructure(settlementDays, cal, dc), times_(times) {
-            initalise(quotes);
-        }
-
-        //! constructor that takes a vector of dates
-        InterpolatedDiscountCurve(const std::vector<Date> &dates,
-                                  const std::vector<Handle<Quote> > &quotes,
-                                  const Natural settlementDays,
-                                  const Calendar &cal, const DayCounter &dc)
-            : YieldTermStructure(settlementDays, cal, dc),
-              times_(dates.size()) {
-            for (Size i = 0; i < dates.size(); ++i)
-                times_[i] = timeFromReference(dates[i]);
-            initalise(quotes);
-        }
-        //@}
-        
-    private:
-        void initalise (const std::vector<Handle<Quote> >& quotes) {
+/*! InterpolatedDiscountCurve as in QuantLib, but with
+  floating discount quotes and floating reference date,
+  reference date is always the global evaluation date,
+  i.e. settlement days are zero and calendar is NullCalendar() */
+class InterpolatedDiscountCurve : public YieldTermStructure, public LazyObject {
+  public:
+    //! \name Constructors
+    //@{
+    //! default constructor
+    InterpolatedDiscountCurve(const std::vector<Time> &times,
+                              const std::vector<Handle<Quote> > &quotes,
+                              const DayCounter &dc)
+        : YieldTermStructure(dc), times_(times), quotes_(quotes),
+          data_(times_.size(), 1.0), today_(Settings::instance().evaluationDate()) {
+        for (Size i = 0; i < quotes.size(); ++i) {
             QL_REQUIRE(times_.size() > 1, "at least two times required");
-            QL_REQUIRE(times_[0] == 0.0, "First time must be 0, got " << times_[0]); // or date=asof
-            QL_REQUIRE(times_.size() == quotes.size(), "size of time and quote vectors do not match");
-            for (Size i = 0; i < quotes.size(); ++i)
-                quotes_.push_back(boost::make_shared<LogQuote>(quotes[i]));
-            for (Size i = 0; i < times_.size() - 1; ++i)
-                timeDiffs_.push_back(times_[i+1] - times_[i]);
+            QL_REQUIRE(times_.size() == quotes.size(),
+                       "size of time and quote vectors do not match");
+            QL_REQUIRE(times_[0] == 0.0, "First time must be 0, got "
+                                             << times_[0]);
+            QL_REQUIRE(!quotes[i].empty(), "quote at index " << i
+                                                             << " is empty");
+            registerWith(quotes[i]);
         }
+        interpolation_ = boost::make_shared<LogLinearInterpolation>(
+            times_.begin(), times_.end(), data_.begin());
+        registerWith(Settings::instance().evaluationDate());
+    }
+    //@}
 
-        //! \name TermStructure interface
-        //@{
-        Date maxDate() const { return Date::maxDate(); } // flat fwd extrapolation
-        //@}
-  
-    protected:
-        DiscountFactor discountImpl(Time t) const {
-            std::vector<Time>::const_iterator it =
-                std::upper_bound(times_.begin(), times_.end(), t);
-            Size i = std::min<Size>(it - times_.begin(), times_.size() - 1);
-            Real weight = (times_[i] - t) / timeDiffs_[i - 1];
-            // this handles extrapolation (t > times.back()) as well
-            Real value = (1.0 - weight) * quotes_[i]->value() +
-                weight * quotes_[i - 1]->value();
-            return ::exp(value);
+    Date maxDate() const { return Date::maxDate(); }
+    void update() {
+        LazyObject::update();
+        updated_ = false;
+    }
+    const Date &referenceDate() const {
+        calculate();
+        return today_;
+    }
+
+    Calendar calendar() const { return NullCalendar(); }
+    Natural settlementDays() const { return 0; }
+
+  protected:
+    void performCalculations() const {
+        today_ = Settings::instance().evaluationDate();
+        for (Size i = 0; i < times_.size(); ++i) {
+            data_[i] = quotes_[i]->value();
         }
+        interpolation_->update();
+    }
 
-    private:
-        std::vector<Time> times_;
-        std::vector<Time> timeDiffs_;
-        std::vector<boost::shared_ptr<Quote> > quotes_;
-    };
+    DiscountFactor discountImpl(Time t) const {
+        calculate();
+        if (t <= this->times_.back())
+            return (*interpolation_)(t, true);
+        // flat fwd extrapolation
+        Time tMax = this->times_.back();
+        DiscountFactor dMax = this->data_.back();
+        Rate instFwdMax = -(*interpolation_).derivative(tMax) / dMax;
+        return dMax * std::exp(-instFwdMax * (t - tMax));
+    }
 
-}
+  private:
+    std::vector<Time> times_;
+    std::vector<Handle<Quote> > quotes_;
+    mutable std::vector<Real> data_;
+    mutable Date today_;
+    boost::shared_ptr<Interpolation> interpolation_;
+};
+
+} // namespace QuantExt
 
 #endif
