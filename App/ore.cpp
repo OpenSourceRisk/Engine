@@ -251,8 +251,8 @@ int main(int argc, char** argv) {
             string sportyString = params.get("simulation", "disableEvaluationDateObservation");
             bool sporty = parseBool(sportyString);
 
-            unregister(portfolio);
-            unregister(simPortfolio);
+            //unregister(portfolio);
+            //unregister(simPortfolio);
             
             LOG("Build valuation cube engine");
             Size samples = sb.samples();
@@ -392,6 +392,7 @@ int main(int argc, char** argv) {
     
     return 0;
 }
+
 
 void unregister(boost::shared_ptr<Portfolio> portfolio) {
     
