@@ -83,7 +83,7 @@ class StaticallyCorrectedYieldTermStructure : public YieldTermStructure {
 inline Real StaticallyCorrectedYieldTermStructure::discountImpl(Time t) const {
     Real c = 1.0;
     if (rollDown_ == ForwardForward) {
-        Real t0 = timeFromReference(referenceDate());
+        Real t0 = source_->timeFromReference(referenceDate());
         // roll down = ForwardForward
         // cache lookup
         cache_key k = {t0, t};
