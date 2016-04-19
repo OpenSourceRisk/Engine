@@ -114,11 +114,13 @@ inline void AmountGetter::visit(CashFlow &c) { amount_ = c.amount(); }
 inline void AmountGetter::visit(Coupon &c) { amount_ = c.amount(); }
 
 inline void AmountGetter::visit(FloatingRateCoupon &c) {
+    addBackwardFixing(*c.index());
     amount_ = (c.gearing() * fixing(c.fixingDate(), *c.index()) + c.spread()) *
               c.accrualPeriod() * c.nominal();
 }
 
 inline void AmountGetter::visit(CappedFlooredCoupon &c) {
+    addBackwardFixing(*c.index());
     Real effFixing =
         (c.gearing() * fixing(c.fixingDate(), *c.index()) + c.spread());
     if (c.isFloored())
@@ -129,16 +131,16 @@ inline void AmountGetter::visit(CappedFlooredCoupon &c) {
 }
 
 inline void AmountGetter::visit(IborCoupon &c) {
-    Real tmp = 0.0;
     addBackwardFixing(*c.index());
+    Real tmp = 0.0;
     if (!(c.fixingDate() < today_ ||
-          (c.fixingDate() == today_ && enforcesTodaysHistoricFixings_))) {
-        // assumption: ibor period is equal to accrual period
-        // this speeds up calculation by around 10 percent
+          (c.fixingDate() == today_ && enforcesTodaysHistoricFixings_) ||
+          c.isInArrears())) {
         boost::shared_ptr<IborIndex> ii =
             boost::static_pointer_cast<IborIndex>(c.index());
-        Handle<YieldTermStructure> termStructure =
-            ii->forwardingTermStructure();
+        Handle<YieldTermStructure> termStructure = ii->forwardingTermStructure();
+        // assumption: ibor period is equal to accrual period
+        // this speeds up calculation by around 10 percent
         Date d1 = c.accrualStartDate();
         Date d2 = c.accrualEndDate();
         DiscountFactor disc1 = termStructure->discount(d1);
@@ -158,14 +160,12 @@ inline void AmountGetter::visit(IborCoupon &c) {
 }
 
 inline void AmountGetter::addBackwardFixing(const InterestRateIndex &index) {
-    // add backward fixing, since the index might change
-    // from cashflow to cashflow, we might have to do it
-    // for each cashflow
     if (index.name() != indexNameBefore_ &&
         !SimulatedFixingsManager::instance().hasBackwardFixing(index.name())) {
-        SimulatedFixingsManager::instance().addBackwardFixing(
-            index.name(),
-            index.fixing(index.fixingCalendar().adjust(today_, Following)));
+        Real value =
+            index.fixing(index.fixingCalendar().adjust(today_, Following));
+        SimulatedFixingsManager::instance().addBackwardFixing(index.name(),
+                                                              value);
         indexNameBefore_ = index.name();
     }
 }
@@ -182,7 +182,7 @@ inline Real AmountGetter::fixing(const Date &fixingDate,
             fixing = nativeFixing;
         else
             fixing = SimulatedFixingsManager::instance().simulatedFixing(
-                           index.name(), fixingDate);
+                index.name(), fixingDate);
         QL_REQUIRE(fixing != Null<Real>(),
                    "Missing " << index.name() << " fixing for " << fixingDate
                               << " (even when considering "
@@ -214,7 +214,8 @@ inline Real DiscountingSwapEngine::npv(const Leg &leg,
         return npv;
     }
 
-    const bool enforcesTodaysHistoricFixings = Settings::instance().enforcesTodaysHistoricFixings();
+    const bool enforcesTodaysHistoricFixings =
+        Settings::instance().enforcesTodaysHistoricFixings();
     AmountGetter amountGetter(today, enforcesTodaysHistoricFixings);
     for (Size i = 0; i < leg.size(); ++i) {
         CashFlow &cf = *leg[i];
