@@ -139,7 +139,7 @@ inline BigInteger SimulatedFixingsManager_t<T>::horizon() const {
 
 template <class T> void SimulatedFixingsManager_t<T>::reset() {
     simulateFixings_ = false;
-    estimationMethod_ = InterpolatedForwardBackward;
+    estimationMethod_ = Backward;
     horizon_ = Null<BigInteger>();
     referenceDate_ = Null<Date>();
 }
@@ -154,6 +154,7 @@ template <class T>
 void SimulatedFixingsManager_t<T>::addForwardFixing(const std::string &name,
                                                     const Date &fixingDate,
                                                     const T &value) const {
+
     QL_REQUIRE(referenceDate_ != Null<Date>(),
                "can not add estimation for simulated fixing for "
                    << name << " @ " << value << " on " << fixingDate

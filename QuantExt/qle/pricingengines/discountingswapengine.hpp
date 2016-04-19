@@ -151,8 +151,11 @@ inline void AmountGetter::visit(IborCoupon &c) {
             ti = c.index()->dayCounter().yearFraction(d1, d2);
             tmp *= c.accrualPeriod() / ti;
         }
-        SimulatedFixingsManager::instance().addForwardFixing(
-            c.index()->name(), c.fixingDate(), tmp / ti);
+        if (SimulatedFixingsManager::instance().estimationMethod() !=
+            SimulatedFixingsManager::Backward) {
+            SimulatedFixingsManager::instance().addForwardFixing(
+                c.index()->name(), c.fixingDate(), tmp / ti);
+        }
     } else {
         tmp = fixing(c.fixingDate(), *c.index()) * c.accrualPeriod();
     }
@@ -193,8 +196,11 @@ inline Real AmountGetter::fixing(const Date &fixingDate,
         // fixing)
         fixing = index.fixing(fixingDate);
         // add the fixing to the simulated fixing data
-        SimulatedFixingsManager::instance().addForwardFixing(
-            index.name(), fixingDate, fixing);
+        if (SimulatedFixingsManager::instance().estimationMethod() !=
+            SimulatedFixingsManager::Backward) {
+            SimulatedFixingsManager::instance().addForwardFixing(
+                index.name(), fixingDate, fixing);
+        }
     }
     return fixing;
 } // AmountGetter::fixing()
