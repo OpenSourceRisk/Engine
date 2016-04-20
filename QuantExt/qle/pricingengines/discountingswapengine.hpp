@@ -84,9 +84,8 @@ class DiscountingSwapEngine : public Swap::engine {
     bool parApproximation_;
     Size gracePeriod_;
     bool floatingLags_;
-    typedef std::map<
-        void *, boost::tuple<bool, bool, bool, bool, IborCoupon const *> >
-        ArgumentsCache;
+    typedef std::map<void *, boost::tuple<bool, bool, bool, bool,
+                                          IborCoupon const *> > ArgumentsCache;
     mutable ArgumentsCache arguments_cache_;
 };
 
@@ -107,6 +106,7 @@ class AmountGetter : public AcyclicVisitor,
     Real amount_;
     std::string indexNameBefore_;
     Real fixing(const Date &fixingDate, const InterestRateIndex &index);
+    Real pastFixing(const Date &fixingDate, const InterestRateIndex &index);
     void addBackwardFixing(const InterestRateIndex &index);
 
   public:
@@ -158,9 +158,9 @@ inline void AmountGetter::visit(IborCoupon &c) {
         // backward fixing was added in calculate method once and for all
         if (parApproximation_) {
             Real tmp = 0.0;
-            if (c.fixingDate() < today_ ||
-                (c.fixingDate() == today_ && enforcesTodaysHistoricFixings_)) {
-                tmp = fixing(c.fixingDate(), *c.index());
+            if (c.fixingDate() < today_ /*||
+                                          (c.fixingDate() == today_ && enforcesTodaysHistoricFixings_)*/) {
+                tmp = pastFixing(c.fixingDate(), *c.index());
                 if (!nullSpread_) {
                     tmp += c.spread();
                 }
@@ -221,18 +221,9 @@ inline Real AmountGetter::fixing(const Date &fixingDate,
                                  const InterestRateIndex &index) {
     Real fixing = 0.0;
     // is it a past fixing ?
-    if (fixingDate < today_ ||
-        (fixingDate == today_ && enforcesTodaysHistoricFixings_)) {
-        Real nativeFixing = index.timeSeries()[fixingDate];
-        if (nativeFixing != Null<Real>())
-            fixing = nativeFixing;
-        else
-            fixing = SimulatedFixingsManager::instance().simulatedFixing(
-                           index.name(), fixingDate);
-        QL_REQUIRE(fixing != Null<Real>(),
-                   "Missing " << index.name() << " fixing for " << fixingDate
-                              << " (even when considering "
-                                 "simulated fixings)");
+    if (fixingDate < today_ /*||
+                              (fixingDate == today_ && enforcesTodaysHistoricFixings_)*/) {
+        return pastFixing(fixingDate, index);
     } else {
         // no past fixing, so forecast fixing (or in case
         // of todays fixing, read possibly the actual
@@ -247,6 +238,20 @@ inline Real AmountGetter::fixing(const Date &fixingDate,
     }
     return fixing;
 } // AmountGetter::fixing()
+
+inline Real AmountGetter::pastFixing(const Date &fixingDate,
+                                     const InterestRateIndex &index) {
+    Real nativeFixing = index.timeSeries()[fixingDate], fixing;
+    if (nativeFixing != Null<Real>())
+        fixing = nativeFixing;
+    else
+        fixing = SimulatedFixingsManager::instance().simulatedFixing(
+            index.name(), fixingDate);
+    QL_REQUIRE(fixing != Null<Real>(),
+               "Missing " << index.name() << " fixing for " << fixingDate
+                          << " (even when considering "
+                             "simulated fixings)");
+} // AmountGetter::pastFixing()
 
 } // anonymous namespace
 
@@ -265,6 +270,9 @@ inline Real DiscountingSwapEngine::npv(
 
     const bool enforcesTodaysHistoricFixings =
         Settings::instance().enforcesTodaysHistoricFixings();
+    QL_REQUIRE(!enforcesTodaysHistoricFixings,
+               "enforcesTodaysHistoricFixings not supported");
+
     AmountGetter amountGetter(today, enforcesTodaysHistoricFixings, vanilla,
                               nullSpread, equalDayCounters, parApproximation);
     for (Size i = 0; i < leg.size(); ++i) {
