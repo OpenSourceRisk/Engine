@@ -185,11 +185,11 @@ inline void AmountGetter::visit(IborCoupon &c) {
                 ti = c.index()->dayCounter().yearFraction(d1, d2);
                 tmp *= c.accrualPeriod() / ti;
             }
-            // if (SimulatedFixingsManager::instance().estimationMethod() !=
-            //     SimulatedFixingsManager::Backward) {
-            //     SimulatedFixingsManager::instance().addForwardFixing(
-            //         c.index()->name(), c.fixingDate(), tmp / ti);
-            // }
+            if (SimulatedFixingsManager::instance().estimationMethod() !=
+                SimulatedFixingsManager::Backward) {
+                SimulatedFixingsManager::instance().addForwardFixing(
+                    c.index()->name(), c.fixingDate(), tmp / ti);
+            }
             if (!nullSpread_) {
                 tmp += c.accrualPeriod() * c.spread();
             }
@@ -206,7 +206,6 @@ inline void AmountGetter::visit(IborCoupon &c) {
 }
 
 inline void AmountGetter::addBackwardFixing(const InterestRateIndex &index) {
-    return; // TEST !!!!!!!!!!!!!!!!!!
     if (index.name() != indexNameBefore_ &&
         !SimulatedFixingsManager::instance().hasBackwardFixing(index.name())) {
         Real value =
@@ -227,8 +226,8 @@ inline Real AmountGetter::fixing(const Date &fixingDate,
         if (nativeFixing != Null<Real>())
             fixing = nativeFixing;
         else
-            fixing = 0.0;/*SimulatedFixingsManager::instance().simulatedFixing(
-                           index.name(), fixingDate);*/
+            fixing = SimulatedFixingsManager::instance().simulatedFixing(
+                           index.name(), fixingDate);
         QL_REQUIRE(fixing != Null<Real>(),
                    "Missing " << index.name() << " fixing for " << fixingDate
                               << " (even when considering "
@@ -239,11 +238,11 @@ inline Real AmountGetter::fixing(const Date &fixingDate,
         // fixing)
         fixing = index.fixing(fixingDate);
         // add the fixing to the simulated fixing data
-        // if (SimulatedFixingsManager::instance().estimationMethod() !=
-        //     SimulatedFixingsManager::Backward) {
-        //     SimulatedFixingsManager::instance().addForwardFixing(
-        //         index.name(), fixingDate, fixing);
-        // }
+        if (SimulatedFixingsManager::instance().estimationMethod() !=
+            SimulatedFixingsManager::Backward) {
+            SimulatedFixingsManager::instance().addForwardFixing(
+                index.name(), fixingDate, fixing);
+        }
     }
     return fixing;
 } // AmountGetter::fixing()

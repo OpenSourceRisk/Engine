@@ -207,21 +207,16 @@ void DiscountingSwapEngine::calculate() const {
                               parApproximation, c0)));
     } // end of swap type detection
 
-    // debug
-    // std::clog << "vanilla " << vanilla << " nullSpread " << nullSpread
-    //           << " equalDayCounters " << equalDayCounters
-    //           << " parApproximation " << parApproximation << std::endl;
-
     // add backward fixing once for all coupons in case of a vanilla swap
 
-    // if (vanilla && SimulatedFixingsManager::instance().simulateFixings() &&
-    //     !SimulatedFixingsManager::instance().hasBackwardFixing(
-    //         c0->index()->name())) {
-    //     Real value = c0->index()->fixing(
-    //         c0->index()->fixingCalendar().adjust(today, Following));
-    //     SimulatedFixingsManager::instance().addBackwardFixing(
-    //         c0->index()->name(), value);
-    // }
+    if (vanilla && SimulatedFixingsManager::instance().simulateFixings() &&
+        !SimulatedFixingsManager::instance().hasBackwardFixing(
+            c0->index()->name())) {
+        Real value = c0->index()->fixing(
+            c0->index()->fixingCalendar().adjust(today, Following));
+        SimulatedFixingsManager::instance().addBackwardFixing(
+            c0->index()->name(), value);
+    }
 
     // compute leg npvs
 
