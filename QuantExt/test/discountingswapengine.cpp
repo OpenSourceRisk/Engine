@@ -115,7 +115,7 @@ void DiscountingSwapEngineTest::testVanillaSwap() {
         Settings::instance().evaluationDate() = refDate;
         swap->setPricingEngine(engine);
 
-        Real tol = 1.0E-12;
+        Real tol = 2.3E-5; // ibor forward optimization in QLE
 
         for (Size i = 0; i < 2 * 365; ++i) {
             Date d = TARGET().advance(refDate, i * Days);
