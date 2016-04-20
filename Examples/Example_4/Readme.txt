@@ -1,8 +1,3 @@
-
-===========================================================
-FIXME: Numerical results do not match analytical reference. 
-===========================================================
-
 1) Portfolio
 
    Vanilla Swap, EUR, 10k notional, 20Y maturity, rec. fixed 0.99851% (ATM), pay 6m Euribor
