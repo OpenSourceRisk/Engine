@@ -33,8 +33,6 @@
 
 #include <boost/tuple/tuple.hpp>
 
-#include <iostream> // only debug
-
 namespace QuantExt {
 
 DiscountingSwapEngine::DiscountingSwapEngine(
@@ -123,6 +121,7 @@ void DiscountingSwapEngine::calculate() const {
     // is equal the index day counter
     // ... parApproximation means that the coupon fixing days
     // are equal to the index fixing days (with a grace tol)
+    // and that the fixing is in advance
 
     bool vanilla = true, nullSpread = true, equalDayCounters = true,
          parApproximation = true;
@@ -170,6 +169,14 @@ void DiscountingSwapEngine::calculate() const {
                 }
                 // check for float coupons, same index, same fixing days
                 // also check for null spread and equal day counters
+                parApproximation &=
+                    std::abs<int>(static_cast<int>(c0->fixingDays()) -
+                                  static_cast<int>(c0->index()->fixingDays())) <
+                    static_cast<int>(gracePeriod_);
+                parApproximation &= !c0->isInArrears();
+                nullSpread &= close_enough(c0->spread(), 0.0);
+                equalDayCounters &=
+                    c0->dayCounter() == c0->index()->dayCounter();
                 if (vanilla) {
                     for (Size i = 1; i < arguments_.legs[floatIdx].size();
                          ++i) {
@@ -185,9 +192,11 @@ void DiscountingSwapEngine::calculate() const {
                             break;
                         }
                         parApproximation &=
-                            std::abs<Size>(c1->fixingDays() -
-                                           c0->index()->fixingDays()) <
-                            gracePeriod_;
+                            std::abs<int>(
+                                static_cast<int>(c1->fixingDays()) -
+                                static_cast<int>(c0->index()->fixingDays())) <
+                            static_cast<int>(gracePeriod_);
+                        parApproximation &= !c1->isInArrears();
                         nullSpread &= close_enough(c1->spread(), 0.0);
                         equalDayCounters &=
                             c1->dayCounter() == c0->index()->dayCounter();
