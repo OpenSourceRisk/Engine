@@ -25,7 +25,9 @@
 
 /*! \file discountingswapengine.hpp
     \brief discounting swap engine supporting simulated fixings,
-           includes a par coupon approximation for ibor coupons
+           includes a par coupon approximation for ibor coupons,
+           if used today's fixing will always be estimated on
+           the curve for ibor coupons
 */
 
 #ifndef quantext_discounting_swap_engine_hpp
