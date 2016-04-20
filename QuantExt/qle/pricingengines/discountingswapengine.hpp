@@ -81,7 +81,8 @@ class DiscountingSwapEngine : public Swap::engine {
     Date settlementDate_, npvDate_;
     Period settlementDateLag_, npvDateLag_;
     Calendar calendar_;
-    bool parApproximation_, gracePeriod_;
+    bool parApproximation_;
+    Size gracePeriod_;
     bool floatingLags_;
     typedef std::map<
         void *, boost::tuple<bool, bool, bool, bool, IborCoupon const *> >
