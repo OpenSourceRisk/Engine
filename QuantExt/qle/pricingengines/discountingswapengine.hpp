@@ -251,6 +251,7 @@ inline Real AmountGetter::pastFixing(const Date &fixingDate,
                "Missing " << index.name() << " fixing for " << fixingDate
                           << " (even when considering "
                              "simulated fixings)");
+    return fixing;
 } // AmountGetter::pastFixing()
 
 } // anonymous namespace
