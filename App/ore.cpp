@@ -226,7 +226,7 @@ int main(int argc, char** argv) {
             string simulationParamFile = inputPath + "/" + params.get("simulation", "simulationParamFile");
             ScenarioGeneratorBuilder sb;
             sb.fromFile(simulationParamFile);
-            boost::shared_ptr<ScenarioGenerator> sg = sb.build(model, simMarketData, asof);
+            boost::shared_ptr<ScenarioGenerator> sg = sb.build(model, simMarketData, asof, market);
             boost::shared_ptr<openxva::simulation::DateGrid> grid = sb.dateGrid();
             
             LOG("Build Simulation Market");

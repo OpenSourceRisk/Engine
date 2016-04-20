@@ -35,7 +35,8 @@ class InterpolatedDiscountCurve : public YieldTermStructure, public LazyObject {
                               const std::vector<Handle<Quote> > &quotes,
                               const DayCounter &dc)
         : YieldTermStructure(dc), times_(times), quotes_(quotes),
-          data_(times_.size(), 1.0), today_(Settings::instance().evaluationDate()) {
+          data_(times_.size(), 1.0),
+          today_(Settings::instance().evaluationDate()) {
         for (Size i = 0; i < quotes.size(); ++i) {
             QL_REQUIRE(times_.size() > 1, "at least two times required");
             QL_REQUIRE(times_.size() == quotes.size(),
@@ -49,13 +50,16 @@ class InterpolatedDiscountCurve : public YieldTermStructure, public LazyObject {
         interpolation_ = boost::make_shared<LogLinearInterpolation>(
             times_.begin(), times_.end(), data_.begin());
         registerWith(Settings::instance().evaluationDate());
+        for (Size i = 0; i < quotes.size(); ++i) {
+            registerWith(quotes[i]);
+        }
     }
     //@}
 
     Date maxDate() const { return Date::maxDate(); }
     void update() {
         LazyObject::update();
-        updated_ = false;
+        TermStructure::update();
     }
     const Date &referenceDate() const {
         calculate();

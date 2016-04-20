@@ -55,10 +55,10 @@ class SimulatedFixingsManager_t
     EstimationMethod estimationMethod() const;
 
     /*! If set to a non-zero value, only fixing are
-      stored that are not more than the given number
+      stored that are less than the given number
       of caledar days in the future. A value greater
       than the greatest simulation step should be
-      chosen. */
+      chosen. Null means no limit. */
     BigInteger &horizon();
     BigInteger horizon() const;
 
@@ -139,8 +139,8 @@ inline BigInteger SimulatedFixingsManager_t<T>::horizon() const {
 
 template <class T> void SimulatedFixingsManager_t<T>::reset() {
     simulateFixings_ = false;
-    estimationMethod_ = InterpolatedForwardBackward;
-    horizon_ = 0;
+    estimationMethod_ = Backward;
+    horizon_ = Null<BigInteger>();
     referenceDate_ = Null<Date>();
 }
 
@@ -154,6 +154,7 @@ template <class T>
 void SimulatedFixingsManager_t<T>::addForwardFixing(const std::string &name,
                                                     const Date &fixingDate,
                                                     const T &value) const {
+
     QL_REQUIRE(referenceDate_ != Null<Date>(),
                "can not add estimation for simulated fixing for "
                    << name << " @ " << value << " on " << fixingDate
@@ -165,8 +166,8 @@ void SimulatedFixingsManager_t<T>::addForwardFixing(const std::string &name,
                    << ", since reference date (" << referenceDate_
                    << ") is past fixing date");
 
-    if (horizon_ == 0 ||
-        fixingDate - Settings::instance().evaluationDate() <= horizon_) {
+    if (horizon_ == Null<BigInteger>() ||
+        fixingDate - Settings::instance().evaluationDate() < horizon_) {
         forwardData_[name][fixingDate] =
             std::make_pair(value, Settings::instance().evaluationDate());
     }
