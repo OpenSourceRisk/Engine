@@ -61,13 +61,14 @@ class DiscountingSwapEngine : public Swap::engine {
             Handle<YieldTermStructure>(),
         boost::optional<bool> includeSettlementDateFlows = boost::none,
         Date settlementDate = Date(), Date npvDate = Date(),
-        bool parApproximation = true, Size gracePeriod = 5);
+        bool optimized = true, bool parApproximation = true,
+        Size gracePeriod = 5);
     // ctor with floating settlement and npv date lags
     DiscountingSwapEngine(const Handle<YieldTermStructure> &discountCurve,
                           boost::optional<bool> includeSettlementDateFlows,
                           Period settlementDateLag, Period npvDateLag,
-                          Calendar calendar, bool parApproximation = true,
-                          Size gracePeriod = 5);
+                          Calendar calendar, bool optimized = true,
+                          bool parApproximation = true, Size gracePeriod = 5);
     void calculate() const;
     Handle<YieldTermStructure> discountCurve() const { return discountCurve_; }
 
@@ -83,7 +84,7 @@ class DiscountingSwapEngine : public Swap::engine {
     Date settlementDate_, npvDate_;
     Period settlementDateLag_, npvDateLag_;
     Calendar calendar_;
-    bool parApproximation_;
+    bool optimized_, parApproximation_;
     Size gracePeriod_;
     bool floatingLags_;
     typedef std::map<void *, boost::tuple<bool, bool, bool, bool,
@@ -103,7 +104,7 @@ class AmountGetter : public AcyclicVisitor,
                      public Visitor<IborCoupon> {
   private:
     const Date &today_;
-    const bool enforcesTodaysHistoricFixings_, vanilla_, nullSpread_,
+    const bool /*enforcesTodaysHistoricFixings_,*/ vanilla_, nullSpread_,
         equalDayCounters_, parApproximation_;
     Real amount_;
     std::string indexNameBefore_;
@@ -112,11 +113,12 @@ class AmountGetter : public AcyclicVisitor,
     void addBackwardFixing(const InterestRateIndex &index);
 
   public:
-    AmountGetter(const Date &today, const bool enforcesTodaysHistoricFixings,
-                 const bool vanilla, const bool nullSpread,
-                 const bool equalDayCounters, const bool parApproximation)
+    AmountGetter(
+        const Date &today /*, const bool enforcesTodaysHistoricFixings*/,
+        const bool vanilla, const bool nullSpread, const bool equalDayCounters,
+        const bool parApproximation)
         : today_(today),
-          enforcesTodaysHistoricFixings_(enforcesTodaysHistoricFixings),
+          /*enforcesTodaysHistoricFixings_(enforcesTodaysHistoricFixings),*/
           vanilla_(vanilla), nullSpread_(nullSpread),
           equalDayCounters_(equalDayCounters),
           parApproximation_(parApproximation), amount_(0.0),
@@ -276,7 +278,7 @@ inline Real DiscountingSwapEngine::npv(
     QL_REQUIRE(!enforcesTodaysHistoricFixings,
                "enforcesTodaysHistoricFixings not supported");
 
-    AmountGetter amountGetter(today, enforcesTodaysHistoricFixings, vanilla,
+    AmountGetter amountGetter(today, /*enforcesTodaysHistoricFixings,*/ vanilla,
                               nullSpread, equalDayCounters, parApproximation);
     for (Size i = 0; i < leg.size(); ++i) {
         CashFlow &cf = *leg[i];

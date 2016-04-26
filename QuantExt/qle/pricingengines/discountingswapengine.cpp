@@ -38,10 +38,10 @@ namespace QuantExt {
 DiscountingSwapEngine::DiscountingSwapEngine(
     const Handle<YieldTermStructure> &discountCurve,
     boost::optional<bool> includeSettlementDateFlows, Date settlementDate,
-    Date npvDate, bool parApproximation, Size gracePeriod)
+    Date npvDate, bool optimized, bool parApproximation, Size gracePeriod)
     : discountCurve_(discountCurve),
       includeSettlementDateFlows_(includeSettlementDateFlows),
-      settlementDate_(settlementDate), npvDate_(npvDate),
+      settlementDate_(settlementDate), npvDate_(npvDate), optimized_(optimized),
       parApproximation_(parApproximation), gracePeriod_(gracePeriod),
       floatingLags_(false) {
     registerWith(discountCurve_);
@@ -50,13 +50,14 @@ DiscountingSwapEngine::DiscountingSwapEngine(
 DiscountingSwapEngine::DiscountingSwapEngine(
     const Handle<YieldTermStructure> &discountCurve,
     boost::optional<bool> includeSettlementDateFlows, Period settlementDateLag,
-    Period npvDateLag, Calendar calendar, bool parApproximation,
+    Period npvDateLag, Calendar calendar, bool optimized, bool parApproximation,
     Size gracePeriod)
     : discountCurve_(discountCurve),
       includeSettlementDateFlows_(includeSettlementDateFlows),
       settlementDateLag_(settlementDateLag), npvDateLag_(npvDateLag),
-      calendar_(calendar), parApproximation_(parApproximation),
-      gracePeriod_(gracePeriod), floatingLags_(true) {
+      calendar_(calendar), optimized_(optimized),
+      parApproximation_(parApproximation), gracePeriod_(gracePeriod),
+      floatingLags_(true) {
     registerWith(discountCurve_);
 }
 
@@ -125,107 +126,115 @@ void DiscountingSwapEngine::calculate() const {
 
     bool vanilla = true, nullSpread = true, equalDayCounters = true,
          parApproximation = true;
-    IborCoupon const *c0;
-
-    ArgumentsCache::const_iterator it = arguments_cache_.find(&arguments_.legs);
-    if (it != arguments_cache_.end()) {
-        vanilla = it->second.get<0>();
-        nullSpread = it->second.get<1>();
-        equalDayCounters = it->second.get<2>();
-        parApproximation = it->second.get<3>();
-        c0 = it->second.get<4>();
+    if (!optimized_) {
+        vanilla = nullSpread = equalDayCounters = parApproximation = false;
     } else {
+        IborCoupon const *c0;
 
-        // determine swap type
+        ArgumentsCache::const_iterator it =
+            arguments_cache_.find(&arguments_.legs);
+        if (it != arguments_cache_.end()) {
+            vanilla = it->second.get<0>();
+            nullSpread = it->second.get<1>();
+            equalDayCounters = it->second.get<2>();
+            parApproximation = it->second.get<3>();
+            c0 = it->second.get<4>();
+        } else {
 
-        if (arguments_.legs.size() == 2) {
-            Size floatIdx = 2;
-            c0 = boost::dynamic_pointer_cast<IborCoupon>(
-                     arguments_.legs[0].front())
-                     .get();
-            if (c0 != NULL) {
-                floatIdx = 0;
-            } else {
+            // determine swap type
+
+            if (arguments_.legs.size() == 2) {
+                Size floatIdx = 2;
                 c0 = boost::dynamic_pointer_cast<IborCoupon>(
-                         arguments_.legs[1].front())
+                         arguments_.legs[0].front())
                          .get();
                 if (c0 != NULL) {
-                    floatIdx = 1;
+                    floatIdx = 0;
                 } else {
-                    vanilla = false;
-                }
-            }
-            if (vanilla) {
-                // check for fixed coupons
-                for (Size i = 0; i < arguments_.legs[1 - floatIdx].size();
-                     ++i) {
-                    boost::shared_ptr<FixedRateCoupon> c1 =
-                        boost::dynamic_pointer_cast<FixedRateCoupon>(
-                            arguments_.legs[1].front());
-                    if (c1 == NULL) {
+                    c0 = boost::dynamic_pointer_cast<IborCoupon>(
+                             arguments_.legs[1].front())
+                             .get();
+                    if (c0 != NULL) {
+                        floatIdx = 1;
+                    } else {
                         vanilla = false;
-                        break;
                     }
                 }
-                // check for float coupons, same index, same fixing days
-                // also check for null spread and equal day counters
-                parApproximation &=
-                    std::abs<int>(static_cast<int>(c0->fixingDays()) -
-                                  static_cast<int>(c0->index()->fixingDays())) <
-                    static_cast<int>(gracePeriod_);
-                parApproximation &= !c0->isInArrears();
-                nullSpread &= close_enough(c0->spread(), 0.0);
-                equalDayCounters &=
-                    c0->dayCounter() == c0->index()->dayCounter();
                 if (vanilla) {
-                    for (Size i = 1; i < arguments_.legs[floatIdx].size();
+                    // check for fixed coupons
+                    for (Size i = 0; i < arguments_.legs[1 - floatIdx].size();
                          ++i) {
-                        boost::shared_ptr<IborCoupon> c1 =
-                            boost::dynamic_pointer_cast<IborCoupon>(
-                                arguments_.legs[floatIdx][i]);
-                        vanilla &= (c1 != NULL);
-                        if (!vanilla) {
+                        boost::shared_ptr<FixedRateCoupon> c1 =
+                            boost::dynamic_pointer_cast<FixedRateCoupon>(
+                                arguments_.legs[1].front());
+                        if (c1 == NULL) {
+                            vanilla = false;
                             break;
                         }
-                        vanilla &= (c1->index()->name() == c0->index()->name());
-                        if (!vanilla) {
-                            break;
+                    }
+                    // check for float coupons, same index, same fixing days
+                    // also check for null spread and equal day counters
+                    parApproximation &=
+                        std::abs<int>(
+                            static_cast<int>(c0->fixingDays()) -
+                            static_cast<int>(c0->index()->fixingDays())) <
+                        static_cast<int>(gracePeriod_);
+                    parApproximation &= !c0->isInArrears();
+                    nullSpread &= close_enough(c0->spread(), 0.0);
+                    equalDayCounters &=
+                        c0->dayCounter() == c0->index()->dayCounter();
+                    if (vanilla) {
+                        for (Size i = 1; i < arguments_.legs[floatIdx].size();
+                             ++i) {
+                            boost::shared_ptr<IborCoupon> c1 =
+                                boost::dynamic_pointer_cast<IborCoupon>(
+                                    arguments_.legs[floatIdx][i]);
+                            vanilla &= (c1 != NULL);
+                            if (!vanilla) {
+                                break;
+                            }
+                            vanilla &=
+                                (c1->index()->name() == c0->index()->name());
+                            if (!vanilla) {
+                                break;
+                            }
+                            parApproximation &=
+                                std::abs<int>(
+                                    static_cast<int>(c1->fixingDays()) -
+                                    static_cast<int>(
+                                        c0->index()->fixingDays())) <
+                                static_cast<int>(gracePeriod_);
+                            parApproximation &= !c1->isInArrears();
+                            nullSpread &= close_enough(c1->spread(), 0.0);
+                            equalDayCounters &=
+                                c1->dayCounter() == c0->index()->dayCounter();
                         }
-                        parApproximation &=
-                            std::abs<int>(
-                                static_cast<int>(c1->fixingDays()) -
-                                static_cast<int>(c0->index()->fixingDays())) <
-                            static_cast<int>(gracePeriod_);
-                        parApproximation &= !c1->isInArrears();
-                        nullSpread &= close_enough(c1->spread(), 0.0);
-                        equalDayCounters &=
-                            c1->dayCounter() == c0->index()->dayCounter();
                     }
                 }
+            } // two legs
+            else {
+                vanilla = false;
             }
-        } // two legs
-        else {
-            vanilla = false;
-        }
-        if (!vanilla) {
-            nullSpread = equalDayCounters = false;
-        }
-        arguments_cache_.insert(std::make_pair(
-            &arguments_.legs,
-            boost::make_tuple(vanilla, nullSpread, equalDayCounters,
-                              parApproximation, c0)));
-    } // end of swap type detection
+            if (!vanilla) {
+                nullSpread = equalDayCounters = false;
+            }
+            arguments_cache_.insert(std::make_pair(
+                &arguments_.legs,
+                boost::make_tuple(vanilla, nullSpread, equalDayCounters,
+                                  parApproximation, c0)));
+        } // end of swap type detection
 
-    // add backward fixing once for all coupons in case of a vanilla swap
+        // add backward fixing once for all coupons in case of a vanilla swap
 
-    if (vanilla && SimulatedFixingsManager::instance().simulateFixings() &&
-        !SimulatedFixingsManager::instance().hasBackwardFixing(
-            c0->index()->name())) {
-        Real value = c0->index()->fixing(
-            c0->index()->fixingCalendar().adjust(today, Following));
-        SimulatedFixingsManager::instance().addBackwardFixing(
-            c0->index()->name(), value);
-    }
+        if (vanilla && SimulatedFixingsManager::instance().simulateFixings() &&
+            !SimulatedFixingsManager::instance().hasBackwardFixing(
+                c0->index()->name())) {
+            Real value = c0->index()->fixing(
+                c0->index()->fixingCalendar().adjust(today, Following));
+            SimulatedFixingsManager::instance().addBackwardFixing(
+                c0->index()->name(), value);
+        }
+    } // optimized = true
 
     // compute leg npvs
 
