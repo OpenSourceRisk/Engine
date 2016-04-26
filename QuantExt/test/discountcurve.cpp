@@ -9,7 +9,7 @@
 #include <qle/termstructures/interpolateddiscountcurve.hpp>
 #include <ql/termstructures/yield/discountcurve.hpp>
 #include <ql/quotes/simplequote.hpp>
-#include <ql/time/calendars/target.hpp>
+#include <ql/time/calendars/nullcalendar.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 
 using namespace boost::unit_test_framework;
@@ -21,20 +21,26 @@ void DiscountCurveTest::testDiscountCurve() {
 
     SavedSettings backup;
     Settings::instance().evaluationDate() = Date(1, Dec, 2015);
+    Date today = Settings::instance().evaluationDate();
 
     vector<Date> dates;
+    vector<Real> times;
     vector<DiscountFactor> dfs;
     vector<Handle<Quote> > quotes;
 
     Size numYears = 30;
     int startYear = 2015;
+    DayCounter dc = ActualActual();
+    Calendar cal = NullCalendar();
+
     for(Size i = 0; i < numYears; i++) {
 
         // rate
         Real rate = 0.01 + i*0.001;
         // 1 year apart
         dates.push_back(Date(1, Dec, startYear+i));
-        Time t = i*1.0;
+        Time t = dc.yearFraction(today,dates.back());
+        times.push_back(t);
 
         // set up Quote of DiscountFactors
         DiscountFactor df = ::exp(-rate*t);
@@ -42,9 +48,6 @@ void DiscountCurveTest::testDiscountCurve() {
         quotes.push_back(q);
         dfs.push_back(df);
     }
-
-    DayCounter dc = ActualActual();
-    Calendar cal = TARGET();
 
     // Test against the QL curve
     boost::shared_ptr<YieldTermStructure> ytsBase;
@@ -54,7 +57,7 @@ void DiscountCurveTest::testDiscountCurve() {
     ytsBase->enableExtrapolation();
 
     boost::shared_ptr<YieldTermStructure> ytsTest
-        (new QuantExt::InterpolatedDiscountCurve(dates, quotes, 0, cal, dc));
+        (new QuantExt::InterpolatedDiscountCurve(times, quotes, dc));
 
     // now check that they give the same discount factors (including extrapolation)
     for (Time t = 0.1; t < numYears + 10.0; t += 0.1) {

@@ -1,0 +1,17 @@
+<SimulationParameters>
+
+  <Discretization>Exact</Discretization>
+  <Grid>81,3M</Grid>
+  <Calendar>EUR,USD,GBP,CHF</Calendar>
+  <Sequence>SobolBrownianBridge</Sequence>
+  <Scenario>Simple</Scenario>
+  <Seed>42</Seed>
+  <Samples>10</Samples>
+
+  <Fixings>
+    <SimulateFixings>Y</SimulateFixings>
+    <EstimationMethod>Backward</EstimationMethod>
+    <ForwardHorizonDays>40</ForwardHorizonDays>
+  </Fixings>
+  
+</SimulationParameters>
