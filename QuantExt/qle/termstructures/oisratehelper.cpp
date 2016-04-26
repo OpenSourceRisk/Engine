@@ -45,7 +45,7 @@ namespace QuantExt {
         bool onIndexHasCurve = !overnightIndex_->
             forwardingTermStructure().empty();
         bool haveDiscountCurve = !discountHandle_.empty();
-        QL_REQUIRE(!(onIndexHasCurve && haveDiscountCurve), 
+        QL_REQUIRE(!(onIndexHasCurve && haveDiscountCurve),
             "Have both curves nothing to solve for.");
 
         if (!onIndexHasCurve) {
@@ -120,7 +120,7 @@ namespace QuantExt {
             RateHelper::accept(v);
     }
 
-    DatedOISRateHelper::DatedOISRateHelper(const Date& startDate, 
+    DatedOISRateHelper::DatedOISRateHelper(const Date& startDate,
         const Date& endDate,
         const Handle<Quote>& fixedRate,
         const boost::shared_ptr<OvernightIndex>& overnightIndex,
@@ -144,7 +144,7 @@ namespace QuantExt {
         bool onIndexHasCurve = !overnightIndex_->
             forwardingTermStructure().empty();
         bool haveDiscountCurve = !discountHandle_.empty();
-        QL_REQUIRE(!(onIndexHasCurve && haveDiscountCurve), 
+        QL_REQUIRE(!(onIndexHasCurve && haveDiscountCurve),
             "Have both curves nothing to solve for.");
 
         if (!onIndexHasCurve) {
@@ -157,7 +157,7 @@ namespace QuantExt {
 
         registerWith(overnightIndex_);
         registerWith(discountHandle_);
-        
+
        swap_ = MakeOIS(Period(), overnightIndex_, 0.0)
            .withEffectiveDate(startDate)
            .withTerminationDate(endDate)

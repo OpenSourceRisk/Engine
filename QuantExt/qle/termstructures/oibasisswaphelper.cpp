@@ -23,9 +23,9 @@ namespace QuantLib {
                    const boost::shared_ptr<OvernightIndex>& overnightIndex,
                    const boost::shared_ptr<IborIndex>& iborIndex)
         : RelativeDateRateHelper(oisSpread),
-          settlementDays_(settlementDays), 
+          settlementDays_(settlementDays),
           tenor_(tenor),
-          overnightIndex_(overnightIndex), 
+          overnightIndex_(overnightIndex),
           iborIndex_(iborIndex) {
         registerWith(overnightIndex_);
         registerWith(iborIndex_);
@@ -40,7 +40,7 @@ namespace QuantLib {
         iborIndex_->unregisterWith(termStructureHandle_);
 
         Date asof = Settings::instance().evaluationDate();
-        Date settlementDate = iborIndex_->fixingCalendar().advance(asof, settlementDays_, Days); 
+        Date settlementDate = iborIndex_->fixingCalendar().advance(asof, settlementDays_, Days);
         Schedule oisSchedule = MakeSchedule()
             .from(settlementDate)
             .to(settlementDate + tenor_)

@@ -23,7 +23,7 @@ namespace QuantExt {
             public Visitor<CashFlow>,
             public Visitor<Coupon>,
             public Visitor<IborCoupon> {
-          
+
           public:
             AmountGetter() {}
             virtual ~AmountGetter() {}
@@ -55,11 +55,11 @@ namespace QuantExt {
             } else {
                 Handle<YieldTermStructure> forwardingCurve = c.iborIndex()->forwardingTermStructure();
                 QL_REQUIRE(!forwardingCurve.empty(), "Forwarding curve is empty.");
-                
+
                 /* Assuming here that Libor value/maturity date = coupon accrual start/end date */
                 DiscountFactor discAccStart = forwardingCurve->discount(c.accrualStartDate());
                 DiscountFactor discAccEnd = forwardingCurve->discount(c.accrualEndDate());
-                
+
                 Real fixingTimesDcf;
                 DayCounter indexBasis = c.iborIndex()->dayCounter();
                 DayCounter couponBasis = c.dayCounter();
@@ -74,7 +74,7 @@ namespace QuantExt {
         }
 
         class AdditionalAmountGetter : public AmountGetter {
-          
+
           public:
             AdditionalAmountGetter() {}
             Real bpsFactor() const { return bpsFactor_; }
@@ -133,7 +133,7 @@ namespace QuantExt {
     void DiscountingSwapEngineMultiCurve::calculate() const {
         QL_REQUIRE(!discountCurve_.empty(), "Empty discounting "
             "term structure handle");
-        
+
         // Instrument settlement date
         Date referenceDate = discountCurve_->referenceDate();
         Date settlementDate = settlementDate_;
@@ -159,7 +159,7 @@ namespace QuantExt {
 
         // - Swap::results
         Size numLegs = arguments_.legs.size();
-        results_.legNPV.resize(numLegs); 
+        results_.legNPV.resize(numLegs);
         results_.legBPS.resize(numLegs);
         results_.startDiscounts.resize(numLegs);
         results_.endDiscounts.resize(numLegs);
@@ -170,7 +170,7 @@ namespace QuantExt {
             includeSettlementDateFlows_ ?
             *includeSettlementDateFlows_ :
             Settings::instance().includeReferenceDateEvents();
-        
+
         const Spread bp = 1.0e-4;
 
         for (Size i = 0; i < numLegs; i++) {
@@ -184,7 +184,7 @@ namespace QuantExt {
 
             for (Size j = 0; j < leg.size(); j++) {
 
-                /* Exclude cashflows that have occured taking into account the 
+                /* Exclude cashflows that have occured taking into account the
                 settlement date and includeSettlementDateFlows flag */
                 if (leg[j]->hasOccurred(settlementDate, includeRefDateFlows)) {
                     continue;

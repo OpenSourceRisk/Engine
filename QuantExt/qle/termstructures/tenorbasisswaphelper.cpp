@@ -54,7 +54,7 @@ namespace QuantExt {
             QL_FAIL("Need at least one of the indices to have a valid curve.");
         }
 
-        shortPayTenor_ = shortPayTenor == Period() ? 
+        shortPayTenor_ = shortPayTenor == Period() ?
             shortIndex_->tenor() : shortPayTenor;
 
         registerWith(longIndex_);
@@ -71,7 +71,7 @@ namespace QuantExt {
         Date effectiveDate = spotCalendar.
             advance(valuationDate, spotDays*Days);
 
-        swap_ = boost::shared_ptr<TenorBasisSwap>(new 
+        swap_ = boost::shared_ptr<TenorBasisSwap>(new
             TenorBasisSwap(effectiveDate, 1.0, swapTenor_, true,
                 longIndex_, 0.0, shortIndex_, 0.0, shortPayTenor_,
                 DateGeneration::Backward, includeSpread_, type_));
@@ -108,7 +108,7 @@ namespace QuantExt {
     }
 
     void TenorBasisSwapHelper::setTermStructure(YieldTermStructure* t) {
-        
+
         bool observer = false;
 
         boost::shared_ptr<YieldTermStructure> temp(t, no_deletion);
@@ -125,12 +125,12 @@ namespace QuantExt {
     Real TenorBasisSwapHelper::impliedQuote() const {
         QL_REQUIRE(termStructure_ != 0, "Termstructure not set");
         swap_->recalculate();
-        return (spreadOnShort_ ? 
+        return (spreadOnShort_ ?
             swap_->fairShortLegSpread() : swap_->fairLongLegSpread());
     }
 
     void TenorBasisSwapHelper::accept(AcyclicVisitor& v) {
-        Visitor<TenorBasisSwapHelper>* v1 = 
+        Visitor<TenorBasisSwapHelper>* v1 =
             dynamic_cast<Visitor<TenorBasisSwapHelper>*>(&v);
         if (v1 != 0)
             v1->visit(*this);

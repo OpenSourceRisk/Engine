@@ -50,7 +50,7 @@ namespace QuantExt {
 
         QL_REQUIRE(longIndex_->tenor() >= shortIndex_->tenor(),
             "Tenor of longIndex should be at least tenor of shortIndex.");
-        
+
         bool longIndexHasCurve = !longIndex_->
             forwardingTermStructure().empty();
         bool shortIndexHasCurve = !shortIndex_->
@@ -77,9 +77,9 @@ namespace QuantExt {
 
     void BasisTwoSwapHelper::initializeDates() {
 
-        /* Important to use a fixed rate of 0.0 here to avoid the calculation 
+        /* Important to use a fixed rate of 0.0 here to avoid the calculation
            of the atm swap rate in MakeVanillaSwap operator ...(). If it is
-           Null, you get an exception because the discountRelinkableHandle_ 
+           Null, you get an exception because the discountRelinkableHandle_
            is initially empty. */
         longSwap_ = MakeVanillaSwap(swapTenor_, longIndex_, 0.0)
             .withDiscountingTermStructure(discountRelinkableHandle_)
@@ -103,7 +103,7 @@ namespace QuantExt {
             shortSwap_->startDate());
         latestDate_ = std::max(longSwap_->maturityDate(),
             shortSwap_->maturityDate());
-        
+
         /* May need to adjust latestDate_ if you are projecting libor based
            on tenor length rather than from accrual date to accrual date. */
         #ifdef QL_USE_INDEXED_COUPON
@@ -154,7 +154,7 @@ namespace QuantExt {
     }
 
     void BasisTwoSwapHelper::accept(AcyclicVisitor& v) {
-        Visitor<BasisTwoSwapHelper>* v1 = 
+        Visitor<BasisTwoSwapHelper>* v1 =
             dynamic_cast<Visitor<BasisTwoSwapHelper>*>(&v);
         if (v1 != 0)
             v1->visit(*this);

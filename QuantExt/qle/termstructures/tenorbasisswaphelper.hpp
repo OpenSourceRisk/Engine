@@ -28,7 +28,7 @@ namespace QuantExt {
             const boost::shared_ptr<IborIndex> longIndex,
             const boost::shared_ptr<IborIndex> shortIndex,
             const Period& shortPayTenor = Period(),
-            const Handle<YieldTermStructure>& discountingCurve = 
+            const Handle<YieldTermStructure>& discountingCurve =
                 Handle<YieldTermStructure>(),
             bool spreadOnShort = true,
             bool includeSpread = false,
@@ -47,7 +47,7 @@ namespace QuantExt {
         //@{
         void accept(AcyclicVisitor&);
         //@}
-      
+
       protected:
         void initializeDates();
 

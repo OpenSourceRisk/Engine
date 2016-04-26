@@ -23,7 +23,7 @@ namespace QuantLib {
                    Natural settlementDays,
                    const Period& term, // swap maturity
                    const boost::shared_ptr<OvernightIndex>& payIndex,
-                   const Period& payTenor, 
+                   const Period& payTenor,
                    const boost::shared_ptr<OvernightIndex>& recIndex,
                    const Period& recTenor, // swap maturity
                    const Handle<Quote>& spreadQuote,
@@ -32,16 +32,16 @@ namespace QuantLib {
                    bool fixedDiscountOnPayLeg
                                )
         : RelativeDateRateHelper(spreadQuote),
-          settlementDays_(settlementDays), 
+          settlementDays_(settlementDays),
           term_(term),
-          payIndex_(payIndex), 
+          payIndex_(payIndex),
           payTenor_(payTenor),
-          recIndex_(recIndex), 
+          recIndex_(recIndex),
           recTenor_(recTenor),
           fixedDiscountCurve_(fixedDiscountCurve),
           spreadQuoteOnPayLeg_(spreadQuoteOnPayLeg),
           fixedDiscountOnPayLeg_(fixedDiscountOnPayLeg) {
-        
+
         registerWith(payIndex_);
         registerWith(recIndex_);
         registerWith(fixedDiscountCurve_);
@@ -50,7 +50,7 @@ namespace QuantLib {
 
     void OICCBSHelper::initializeDates() {
         Date asof = Settings::instance().evaluationDate();
-        Date settlementDate = payIndex_->fixingCalendar().advance(asof, settlementDays_, Days); 
+        Date settlementDate = payIndex_->fixingCalendar().advance(asof, settlementDays_, Days);
         Schedule paySchedule = MakeSchedule()
             .from(settlementDate)
             .to(settlementDate + term_)
@@ -77,16 +77,16 @@ namespace QuantLib {
         if (fixedDiscountOnPayLeg_) {
             boost::shared_ptr<PricingEngine> engine
                 (new OvernightIndexedCrossCcyBasisSwapEngine(
-                           fixedDiscountCurve_, payCurrency, 
-                           termStructureHandle_, recCurrency, 
+                           fixedDiscountCurve_, payCurrency,
+                           termStructureHandle_, recCurrency,
                            Handle<Quote>(fx)));
             swap_->setPricingEngine(engine);
         }
         else {
             boost::shared_ptr<PricingEngine> engine
                 (new OvernightIndexedCrossCcyBasisSwapEngine(
-                           termStructureHandle_, payCurrency, 
-                           fixedDiscountCurve_, recCurrency, 
+                           termStructureHandle_, payCurrency,
+                           fixedDiscountCurve_, recCurrency,
                            Handle<Quote>(fx)));
             swap_->setPricingEngine(engine);
         }

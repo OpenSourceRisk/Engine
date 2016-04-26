@@ -26,7 +26,7 @@ namespace QuantExt {
         pg_ = boost::make_shared<MultiPathGenerator<PseudoRandom::rsg_type> >(
               process_, grid_, rsg, false);
     }
-    
+
     MultiPathGeneratorLowDiscrepancy::MultiPathGeneratorLowDiscrepancy(
           const boost::shared_ptr<StochasticProcess> &process, const TimeGrid &grid,
           Size dimension, BigNatural seed, bool brownianBridge)

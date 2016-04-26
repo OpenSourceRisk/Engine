@@ -25,7 +25,7 @@ namespace QuantExt {
     //! Ukrainian hryvnia
     /*! The ISO three-letter code is UAH; the numeric code is 980.
      It is divided into 100 kopiyok.
-     
+
      \ingroup currencies
     */
     class UAHCurrency : public Currency {

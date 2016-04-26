@@ -98,7 +98,7 @@ namespace QuantExt {
         void reset();
     };
 
-    class CrossCcySwap::engine : public 
+    class CrossCcySwap::engine : public
         GenericEngine<CrossCcySwap::arguments, CrossCcySwap::results> {};
 
 }

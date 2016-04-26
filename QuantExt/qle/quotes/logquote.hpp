@@ -6,7 +6,7 @@
 */
 
 /*! \file logquote.hpp
-    \brief stores log of quote for log-linear interpolation 
+    \brief stores log of quote for log-linear interpolation
 */
 
 #ifndef quantext_logquote_hpp

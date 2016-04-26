@@ -27,8 +27,8 @@ namespace QuantExt {
         Spread onLegSpread,
         Real onLegGearing,
         const DayCounter& onLegDCB,
-        const boost::shared_ptr<AverageONIndexedCouponPricer>& 
-            onLegCouponPricer) 
+        const boost::shared_ptr<AverageONIndexedCouponPricer>&
+            onLegCouponPricer)
     : Swap(2),
       type_(type),
       nominals_(std::vector<Real>(1, nominal)),
@@ -54,15 +54,15 @@ namespace QuantExt {
         const DayCounter& fixedDCB,
         BusinessDayConvention fixedLegPaymentAdjustment,
         const Calendar& fixedLegPaymentCalendar,
-        const Schedule& onLegSchedule, 
+        const Schedule& onLegSchedule,
         const boost::shared_ptr <OvernightIndex>& overnightIndex,
         BusinessDayConvention onLegPaymentAdjustment,
         const Calendar& onLegPaymentCalendar,
         Natural rateCutoff,
-        std::vector<Spread> onLegSpreads, 
+        std::vector<Spread> onLegSpreads,
         std::vector<Real> onLegGearings,
-        const DayCounter& onLegDCB, 
-        const boost::shared_ptr<AverageONIndexedCouponPricer>& 
+        const DayCounter& onLegDCB,
+        const boost::shared_ptr<AverageONIndexedCouponPricer>&
             onLegCouponPricer)
     : Swap(2),
       type_(type),
@@ -75,14 +75,14 @@ namespace QuantExt {
       onPaymentAdjustment_(onLegPaymentAdjustment),
       onPaymentCalendar_(onLegPaymentCalendar),
       rateCutoff_(rateCutoff),
-      onSpreads_(onLegSpreads), 
+      onSpreads_(onLegSpreads),
       onGearings_(onLegGearings),
-      onDayCounter_(onLegDCB), 
+      onDayCounter_(onLegDCB),
       onCouponPricer_(onLegCouponPricer) {
         initialize(fixedLegSchedule, onLegSchedule);
     }
 
-    void AverageOIS::initialize(const Schedule& fixedLegSchedule, 
+    void AverageOIS::initialize(const Schedule& fixedLegSchedule,
             const Schedule& onLegSchedule) {
         // Fixed leg.
         legs_[0] = FixedRateLeg(fixedLegSchedule)
@@ -90,9 +90,9 @@ namespace QuantExt {
             .withCouponRates(fixedRates_, fixedDayCounter_)
             .withPaymentAdjustment(fixedPaymentAdjustment_)
             .withPaymentCalendar(fixedPaymentCalendar_);
-        
+
         // Average ON leg.
-        AverageONLeg tempAverageONLeg = 
+        AverageONLeg tempAverageONLeg =
             AverageONLeg(onLegSchedule, overnightIndex_)
             .withNotionals(nominals_)
             .withPaymentAdjustment(onPaymentAdjustment_)
@@ -101,7 +101,7 @@ namespace QuantExt {
             .withSpreads(onSpreads_)
             .withGearings(onGearings_)
             .withPaymentDayCounter(onDayCounter_);
-        
+
         if (onCouponPricer_) {
             tempAverageONLeg = tempAverageONLeg.
                 withAverageONIndexedCouponPricer(onCouponPricer_);
@@ -109,7 +109,7 @@ namespace QuantExt {
 
         legs_[1] = tempAverageONLeg;
 
-        // Set the fixed and ON leg to pay (receive) and receive (pay) resp. 
+        // Set the fixed and ON leg to pay (receive) and receive (pay) resp.
         switch (type_) {
           case Payer:
             payer_[0] = -1.0;
@@ -165,14 +165,14 @@ namespace QuantExt {
 
     Real AverageOIS::overnightLegBPS() const {
         calculate();
-        QL_REQUIRE(legBPS_[1] != Null<Real>(), 
+        QL_REQUIRE(legBPS_[1] != Null<Real>(),
             "overnightLegBPS not available");
         return legBPS_[1];
     }
 
     Real AverageOIS::overnightLegNPV() const {
         calculate();
-        QL_REQUIRE(legNPV_[1] != Null<Real>(), 
+        QL_REQUIRE(legNPV_[1] != Null<Real>(),
             "overnightLegNPV not available");
         return legNPV_[1];
     }
@@ -185,7 +185,7 @@ namespace QuantExt {
         return onSpreads_[0] - NPV_ / (overnightLegBPS() / basisPoint);
     }
 
-    void AverageOIS::setONIndexedCouponPricer(const 
+    void AverageOIS::setONIndexedCouponPricer(const
             boost::shared_ptr<AverageONIndexedCouponPricer>& onCouponPricer) {
         QuantExt::setCouponPricer(legs_[1], onCouponPricer);
         update();

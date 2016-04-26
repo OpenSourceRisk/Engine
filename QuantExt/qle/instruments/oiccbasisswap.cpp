@@ -22,7 +22,7 @@ namespace QuantLib {
                              const Schedule& recSchedule,
                              const boost::shared_ptr<OvernightIndex>& recIndex,
                              Real recSpread)
-        : Swap(2), 
+        : Swap(2),
           payNominal_(payNominal),
           recNominal_(recNominal),
           payCurrency_(payCurrency),
@@ -34,7 +34,7 @@ namespace QuantLib {
           paySpread_(paySpread),
           recSpread_(recSpread),
           currency_(2) {
-        
+
         registerWith(payIndex);
         registerWith(recIndex);
         initialize();
@@ -44,14 +44,14 @@ namespace QuantLib {
         legs_[0] = OvernightLeg(paySchedule_, payIndex_)
             .withNotionals(payNominal_)
             .withSpreads(paySpread_);
-        legs_[0].insert(legs_[0].begin(), 
+        legs_[0].insert(legs_[0].begin(),
                         boost::shared_ptr<CashFlow>(new SimpleCashFlow(-payNominal_, paySchedule_.dates().front())));
         legs_[0].push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(payNominal_, paySchedule_.dates().back())));
 
         legs_[1] = OvernightLeg(recSchedule_, recIndex_)
             .withNotionals(recNominal_)
             .withSpreads(recSpread_);
-        legs_[1].insert(legs_[1].begin(), 
+        legs_[1].insert(legs_[1].begin(),
                         boost::shared_ptr<CashFlow>(new SimpleCashFlow(-recNominal_, recSchedule_.dates().front())));
         legs_[1].push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(recNominal_, recSchedule_.dates().back())));
 
@@ -106,7 +106,7 @@ namespace QuantLib {
     void OvernightIndexedCrossCcyBasisSwap::setupArguments(PricingEngine::arguments* args) const {
         Swap::setupArguments(args);
 
-        OvernightIndexedCrossCcyBasisSwap::arguments* arguments = 
+        OvernightIndexedCrossCcyBasisSwap::arguments* arguments =
             dynamic_cast<OvernightIndexedCrossCcyBasisSwap::arguments*>(args);
         QL_REQUIRE(arguments != 0, "wrong argument type");
 
@@ -118,7 +118,7 @@ namespace QuantLib {
     void OvernightIndexedCrossCcyBasisSwap::fetchResults(const PricingEngine::results* r) const {
         Swap::fetchResults(r);
 
-        const OvernightIndexedCrossCcyBasisSwap::results* results 
+        const OvernightIndexedCrossCcyBasisSwap::results* results
             = dynamic_cast<const OvernightIndexedCrossCcyBasisSwap::results*>(r);
         QL_REQUIRE(results != 0, "wrong result type");
 

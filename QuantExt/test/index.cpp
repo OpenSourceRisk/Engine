@@ -16,7 +16,7 @@ using namespace boost::unit_test_framework;
 using namespace std;
 
 namespace {
-    
+
     struct IndTestData {
         IborIndex ind;
         string name;
@@ -66,7 +66,7 @@ void IndexTest::testIborIndex() {
 
     for(Size i=0; i<size; i++)
         dataCheck(data[i]);
- 
+
 }
 
 test_suite* IndexTest::suite() {

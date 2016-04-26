@@ -21,13 +21,13 @@ namespace QuantLib {
      const Currency& ccy1,
      const Handle<YieldTermStructure>& ts2,
      const Currency& ccy2,
-     const Handle<Quote>& fx) 
+     const Handle<Quote>& fx)
         : ts1_(ts1), ccy1_(ccy1), ts2_(ts2), ccy2_(ccy2), fx_(fx) {
         registerWith(ts1_);
         registerWith(ts2_);
         registerWith(fx_);
     }
-    
+
     void OvernightIndexedCrossCcyBasisSwapEngine::calculate() const {
         results_.value = 0.0;
         results_.errorEstimate = Null<Real>();
@@ -40,7 +40,7 @@ namespace QuantLib {
                    "reference dates do not match");
 
         Date npvDate = Settings::instance().evaluationDate();
-        
+
         results_.valuationDate = npvDate;
 
         results_.legNPV.resize(arguments_.legs.size());
@@ -80,9 +80,9 @@ namespace QuantLib {
         }
 
         static Spread basisPoint = 1.0e-4;
-        results_.fairPayLegSpread = arguments_.paySpread 
+        results_.fairPayLegSpread = arguments_.paySpread
             - results_.value/(results_.legBPS[0]/basisPoint);
-        results_.fairRecLegSpread = arguments_.recSpread 
+        results_.fairRecLegSpread = arguments_.recSpread
             - results_.value/(results_.legBPS[1]/basisPoint);
     }
 

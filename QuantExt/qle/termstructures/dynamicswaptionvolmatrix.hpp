@@ -46,7 +46,7 @@ class DynamicSwaptionVolatilityMatrix : public SwaptionVolatilityStructure {
                               Rate strike) const;
 
     Real shiftImpl(Time optionTime, Time swapLength) const;
-    
+
     /* VolatilityTermStructure interface */
     Real minStrike() const;
     Real maxStrike() const;

@@ -22,7 +22,7 @@ using namespace QuantLib;
 namespace QuantExt {
 
     //! HUF-BUBOR index
-    /*! HUF-BUBOR rate overseen by MFT in association with the National 
+    /*! HUF-BUBOR rate overseen by MFT in association with the National
         Bank of Hungary.
 
         See <http://www.acihungary.hu/en/index.php?id=bubor>.
