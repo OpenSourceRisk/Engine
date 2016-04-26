@@ -8,7 +8,7 @@ echo "1) Run ORE to produce NPV cube and exposures, without collateral"
 echo ""
 $exe Input/ore.xml
 
-mkdir Output/collateral_nome
+mkdir Output/collateral_none
 cp Output/exposure* Output/collateral_none
 cp Output/xva.csv Output/collateral_none
 
