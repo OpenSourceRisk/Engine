@@ -4,12 +4,12 @@
  Copyright (C) 2015 - 2016 Quaternion Risk Management Ltd.
  */
 
-/*! \file interpolateddiscountcurve.hpp
+/*! \file interpolateddiscountcurve2.hpp
     \brief interpolated discount term structure
 */
 
-#ifndef quantext_interpolated_discount_curve_hpp
-#define quantext_interpolated_discount_curve_hpp
+#ifndef quantext_interpolated_discount_curve_2_hpp
+#define quantext_interpolated_discount_curve_2_hpp
 
 #include <ql/math/interpolations/loginterpolation.hpp>
 #include <ql/patterns/lazyobject.hpp>
@@ -22,16 +22,16 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-/*! InterpolatedDiscountCurve as in QuantLib, but with
+/*! InterpolatedDiscountCurve2 as in QuantLib, but with
   floating discount quotes and floating reference date,
   reference date is always the global evaluation date,
   i.e. settlement days are zero and calendar is NullCalendar() */
-class InterpolatedDiscountCurve : public YieldTermStructure, public LazyObject {
+class InterpolatedDiscountCurve2 : public YieldTermStructure, public LazyObject {
   public:
     //! \name Constructors
     //@{
     //! default constructor
-    InterpolatedDiscountCurve(const std::vector<Time> &times,
+    InterpolatedDiscountCurve2(const std::vector<Time> &times,
                               const std::vector<Handle<Quote> > &quotes,
                               const DayCounter &dc)
         : YieldTermStructure(dc), times_(times), quotes_(quotes),
