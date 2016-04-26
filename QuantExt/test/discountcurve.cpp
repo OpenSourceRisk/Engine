@@ -17,6 +17,7 @@ using std::vector;
 
 void DiscountCurveTest::testDiscountCurve() {
 
+    //FIXME: test curve1 or 2 or both
     BOOST_TEST_MESSAGE("Testing QuantExt::InteroplatedDiscountCurve2...");
 
     SavedSettings backup;

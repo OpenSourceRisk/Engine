@@ -57,6 +57,7 @@ class StaticallyCorrectedYieldTermStructure : public YieldTermStructure {
     Real discountImpl(Time t) const;
 
   private:
+    //FIXME: remove cache
     // cache for source and target forwards
     struct cache_key {
         double t0, t;

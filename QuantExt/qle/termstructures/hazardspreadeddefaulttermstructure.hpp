@@ -19,6 +19,7 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
+//FIXME: why do we need this?
 class HazardSpreadedDefaultTermStructure : public HazardRateStructure {
   public:
     //! \name Constructors

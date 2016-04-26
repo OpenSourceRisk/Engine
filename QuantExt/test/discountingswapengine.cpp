@@ -115,6 +115,7 @@ void DiscountingSwapEngineTest::testVanillaSwap() {
         Settings::instance().evaluationDate() = refDate;
         swap->setPricingEngine(engine);
 
+        // FIXME: put tolerance back to what it was (if the test fails, it fails).
         Real tol = 2.3E-5; // ibor forward optimization in QLE
 
         for (Size i = 0; i < 2 * 365; ++i) {
