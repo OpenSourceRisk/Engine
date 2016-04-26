@@ -2,6 +2,7 @@ set datafile sep ","
 set decimal locale
 set format y "%'.0f"
 
+set title "Example 3"
 set xlabel "Time / Years"
 set ylabel "Exposure"
 
