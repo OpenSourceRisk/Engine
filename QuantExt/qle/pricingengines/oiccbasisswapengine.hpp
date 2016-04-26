@@ -25,27 +25,27 @@ namespace QuantLib {
         : public OvernightIndexedCrossCcyBasisSwap::engine {
     public:
         OvernightIndexedCrossCcyBasisSwapEngine(
-				const Handle<YieldTermStructure>& ts1,
-				const Currency& ccy1,
-				const Handle<YieldTermStructure>& ts2,
-				const Currency& ccy2,
-				// Spot FX rate quoted as 1 ccy2 = fx ccy1,
+                const Handle<YieldTermStructure>& ts1,
+                const Currency& ccy1,
+                const Handle<YieldTermStructure>& ts2,
+                const Currency& ccy2,
+                // Spot FX rate quoted as 1 ccy2 = fx ccy1,
                 // ccy1 is price currency, ccy 2 amounts to be multiplied by fx
-				const Handle<Quote>& fx);
-				
+                const Handle<Quote>& fx);
+                
         void calculate() const;
         Handle<YieldTermStructure> ts1() { return ts1_; }
-		Handle<YieldTermStructure> ts2() { return ts2_; }
+        Handle<YieldTermStructure> ts2() { return ts2_; }
         Currency ccy1() { return ccy1_; }
         Currency ccy2() { return ccy2_; }
-		Handle<Quote> fx() {return fx_;}
+        Handle<Quote> fx() {return fx_;}
 
-	  private:
+      private:
         Handle<YieldTermStructure> ts1_;
-		Currency ccy1_;
-		Handle<YieldTermStructure> ts2_;
-		Currency ccy2_;
-		Handle<Quote> fx_;
+        Currency ccy1_;
+        Handle<YieldTermStructure> ts2_;
+        Currency ccy2_;
+        Handle<Quote> fx_;
     };
 }
 

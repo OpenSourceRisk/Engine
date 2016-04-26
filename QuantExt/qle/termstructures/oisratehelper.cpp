@@ -78,15 +78,15 @@ namespace QuantExt {
         earliestDate_ = swap_->startDate();
         latestDate_ = swap_->maturityDate();
 
-		// Latest Date may need to be updated due to payment lag.
-		Date date;
-		if (paymentLag_ > 0) {
-			date = CashFlows::nextCashFlowDate(swap_->leg(0),
-				false, latestDate_);
-			date = std::max(date, CashFlows::nextCashFlowDate(
-				swap_->leg(1), false, latestDate_));
-			latestDate_ = std::max(date, latestDate_);
-		}
+        // Latest Date may need to be updated due to payment lag.
+        Date date;
+        if (paymentLag_ > 0) {
+            date = CashFlows::nextCashFlowDate(swap_->leg(0),
+                false, latestDate_);
+            date = std::max(date, CashFlows::nextCashFlowDate(
+                swap_->leg(1), false, latestDate_));
+            latestDate_ = std::max(date, latestDate_);
+        }
     }
 
     void OISRateHelper::setTermStructure(YieldTermStructure* t) {

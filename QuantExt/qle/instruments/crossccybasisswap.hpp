@@ -30,7 +30,7 @@ namespace QuantExt {
         class arguments;
         class results;
         //! \name Constructors
-		//@{
+        //@{
         /*! First leg holds the pay currency cashflows and the second leg
             holds the receive currency cashflows.
         */

@@ -286,7 +286,7 @@ namespace QuantExt {
         payer_[1] = payer_[0];
         legs_[1].push_back(boost::shared_ptr<CashFlow>(
                            new SimpleCashFlow(-fixedNominals[0],
-						    fixedSchedule.dates().front())));
+                                              fixedSchedule.dates().front())));
         QL_REQUIRE(fixedNominals.size() < fixedSchedule.size(),
                    "too many fixed nominals provided");
         for (Size i = 1; i < fixedNominals.size(); i++) {
