@@ -2,14 +2,12 @@
 <Portfolio>
 
   <Trade id="204128">
-    <ClassName>Swap</ClassName>
+    <TradeType>Swap</TradeType>
     <Envelope>
-      <Id>204128</Id>
       <Type>Swap</Type>
       <Company>BANK</Company>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
-      <Rating/>
       <AdditionalFields/>
     </Envelope>
     <SwapData>
@@ -79,14 +77,12 @@
   </Trade>
 
   <Trade id="204128-swaption">
-    <ClassName>Swaption</ClassName>
+    <TradeType>Swaption</TradeType>
     <Envelope>
-      <Id>204128-swaption</Id>
       <Type>Swaption</Type>
       <Company>BANK</Company>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
-      <Rating/>
       <AdditionalFields/>
     </Envelope>
     <SwaptionData>
@@ -169,14 +165,12 @@
   </Trade>
 
   <Trade id="204128-short">
-    <ClassName>Swap</ClassName>
+    <TradeType>Swap</TradeType>
     <Envelope>
-      <Id>204128-short</Id>
       <Type>Swap</Type>
       <Company>BANK</Company>
       <CounterParty>CUST_B</CounterParty>
       <NettingSetId>CUST_B</NettingSetId>
-      <Rating/>
       <AdditionalFields/>
     </Envelope>
     <SwapData>
