@@ -447,8 +447,8 @@ void writeNpv(const Parameters& params,
         Real fx = 1.0;
         if (npvCcy != baseCurrency)
             fx = market->fxSpot(npvCcy + baseCurrency)->value();
-        file << trade->envelope().id() << sep
-             << trade->className() << sep
+        file << trade->id() << sep
+             << trade->tradeType() << sep
              << io::iso_date(trade->maturity()) << sep
              << dc.yearFraction(today, trade->maturity()) << sep;
         try {
@@ -493,10 +493,10 @@ void writeCashflow(const Parameters& params,
     const vector<boost::shared_ptr<Trade> >& trades = portfolio->trades();
     
     for (Size k = 0; k < trades.size(); k++) {
-        if (trades[k]->className() == "Swaption" ||
-            trades[k]->className() == "CapFloor") {
-            WLOG("cashflow for " << trades[k]->className() << " "
-                 << trades[k]->envelope().id() << " skipped");
+        if (trades[k]->tradeType() == "Swaption" ||
+            trades[k]->tradeType() == "CapFloor") {
+            WLOG("cashflow for " << trades[k]->tradeType() << " "
+                 << trades[k]->id() << " skipped");
             continue;
         }
         try {
@@ -509,8 +509,8 @@ void writeCashflow(const Parameters& params,
                     boost::shared_ptr<QuantLib::CashFlow> ptrFlow = leg[j];       
                     Date payDate = ptrFlow->date();
                     if (payDate >= asof) {
-                        file << setprecision(0) << trades[k]->envelope().id() << sep
-                             << trades[k]->envelope().type() << sep << i << sep
+                        file << setprecision(0) << trades[k]->id() << sep
+                             << trades[k]->tradeType() << sep << i << sep
                              << QuantLib::io::iso_date(payDate) << sep;
                         Real amount = ptrFlow->amount();
                         if (payer)
@@ -695,7 +695,7 @@ void writeCva(const Parameters& params,
              << postProcess->nettingSetDVA(n) << ","
              << postProcess->nettingSetDVA(n) << "," << endl;
         for (Size k = 0; k < portfolio->trades().size(); ++k) {
-            string tid = portfolio->trades()[k]->envelope().id();
+            string tid = portfolio->trades()[k]->id();
             string nid = portfolio->trades()[k]->envelope().nettingSetId();
             if (nid != n) continue;
             file << tid << ","
