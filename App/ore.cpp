@@ -16,7 +16,6 @@
 #include <boost/timer.hpp>
 
 #include "ore.hpp"
-#include "timebomb.hpp"
 
 #ifdef BOOST_MSVC
 #  include <ql/auto_link.hpp>
@@ -65,8 +64,6 @@ void writeCva(const Parameters& params,
 
 int main(int argc, char** argv) {
 
-    ORE_CHECK_TIMEBOMB
-    
     boost::timer timer;
     
     try {
@@ -211,21 +208,20 @@ int main(int argc, char** argv) {
             cout << setw(tab) << left << "Simulation Setup... "; 
             fflush(stdout);
             LOG("Build Simulation Model");
-            string simulationModelFile = inputPath + "/" + params.get("simulation", "simulationModelFile");
+            string simulationConfigFile = inputPath + "/" + params.get("simulation", "simulationConfigFile");
+            LOG("Load simulation model data from file: " << simulationConfigFile);
             boost::shared_ptr<CrossAssetModelData> modelData = boost::make_shared<CrossAssetModelData>();
-            modelData->fromFile(simulationModelFile);
+            modelData->fromFile(simulationConfigFile);
             CrossAssetModelBuilder modelBuilder(market, calibrationMarket);
             boost::shared_ptr<QuantExt::CrossAssetModel> model = modelBuilder.build(modelData);
             
             LOG("Load Simulation Market Parameters");
-            string simulationMarketFile = inputPath + "/" + params.get("simulation", "simulationMarketFile");
             boost::shared_ptr<ScenarioSimMarketParameters> simMarketData(new ScenarioSimMarketParameters);
-            simMarketData->fromFile(simulationMarketFile);
+            simMarketData->fromFile(simulationConfigFile);
             
             LOG("Load Simulation Parameters");
-            string simulationParamFile = inputPath + "/" + params.get("simulation", "simulationParamFile");
             ScenarioGeneratorBuilder sb;
-            sb.fromFile(simulationParamFile);
+            sb.fromFile(simulationConfigFile);
             boost::shared_ptr<ScenarioGenerator> sg = sb.build(model, simMarketData, asof, market);
             boost::shared_ptr<openxva::simulation::DateGrid> grid = sb.dateGrid();
             
