@@ -1,6 +1,6 @@
 1) Portfolio
 
-Vanilla Swap, EUR, 10k notional, 20Y maturity, receive
+Vanilla Swap, EUR, 10m notional, 20Y maturity, receive
 fixed 2% anually, pay 6m Euribor semi-annually
 
 2) Market

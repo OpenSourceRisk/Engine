@@ -41,9 +41,7 @@
 
     <Analytic type="simulation">
       <Parameter name="active">N</Parameter>
-      <Parameter name="simulationModelFile">simulationmodels.xml</Parameter>
-      <Parameter name="simulationMarketFile">../../Input/simulationmarket.xml</Parameter>
-      <Parameter name="simulationParamFile">simulationparams.xml</Parameter>
+      <Parameter name="simulationConfigFile">simulation.xml</Parameter>
       <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="storeScenarios">N</Parameter>
@@ -77,7 +75,7 @@
       <Parameter name="active">N</Parameter>
       <Parameter name="method">SIMM</Parameter>
     </Analytic>
-[    
+    
   </Analytics>
   
 </OpenRiskEngine>
