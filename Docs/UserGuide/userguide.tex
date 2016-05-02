@@ -1,0 +1,689 @@
+\documentclass[12pt, a4paper]{article}
+
+\usepackage{supertabular}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{minted}
+\usepackage{graphicx}
+\usepackage{mathrsfs}
+\usepackage{amsmath, amssymb, mathtools, empheq}
+
+% Turn off indentation but allow \indent command to still work.
+\newlength\tindent
+\setlength{\tindent}{\parindent}
+\setlength{\parindent}{0pt}
+\renewcommand{\indent}{\hspace*{\tindent}}
+
+\addtolength{\textwidth}{0.8in}
+\addtolength{\oddsidemargin}{-.4in}
+\addtolength{\evensidemargin}{-.4in}
+\addtolength{\textheight}{1.6in}
+\addtolength{\topmargin}{-.8in}
+
+\usepackage{longtable,supertabular}
+\usepackage{listings}
+\lstset{
+  frame=top,frame=bottom,
+  basicstyle=\ttfamily,
+  language=XML,
+  tabsize=2,
+  belowskip=2\medskipamount
+}
+
+\usepackage{float}
+\usepackage{tabu}
+\tabulinesep=1.0mm
+\restylefloat{table}
+
+\usepackage{siunitx}
+
+%\usepackage[colorlinks=true]{hyperref}
+
+
+\usepackage{xcolor}
+\definecolor{gray}{rgb}{0.4,0.4,0.4}
+\definecolor{darkblue}{rgb}{0.0,0.0,0.6}
+\definecolor{cyan}{rgb}{0.0,0.6,0.6}
+
+\lstset{
+  basicstyle=\ttfamily,
+  columns=fullflexible,
+  showstringspaces=false,
+  commentstyle=\color{gray}\upshape
+}
+
+\lstdefinelanguage{XML}
+{
+  morestring=[b]",
+  morestring=[s]{>}{<},
+  morecomment=[s]{<?}{?>},
+  stringstyle=\color{black},
+  identifierstyle=\color{darkblue},
+  keywordstyle=\color{cyan},
+  morekeywords={xmlns,version,type}% list your attributes here
+}
+
+
+\usemintedstyle{manni}
+\definecolor{mintedBg}{rgb}{0.98,0.98,0.70}
+
+\renewcommand\P{\ensuremath{\mathbb{P}}}
+\newcommand\E{\ensuremath{\mathbb{E}}}
+\newcommand\Q{\ensuremath{\mathbb{Q}}}
+\newcommand\I{\mathds{1}}
+\newcommand\F{\ensuremath{\mathcal F}}
+\newcommand\G{\ensuremath{\mathcal G}}
+\newcommand\V{\mathds{V}}
+\newcommand\YOY{{\rm YOY}}
+\newcommand\Prob{\ensuremath{\mathbb{P}}}
+\newcommand{\D}[1]{\mbox{d}#1}
+\newcommand{\NPV}{\mathit{NPV}}
+\newcommand{\CVA}{\mathit{CVA}}
+\newcommand{\DVA}{\mathit{DVA}}
+\newcommand{\FVA}{\mathit{FVA}}
+\newcommand{\FCA}{\mathit{FCA}}
+\newcommand{\KVA}{\mathit{KVA}}
+\newcommand{\MVA}{\mathit{MVA}}
+\newcommand{\PFE}{\mathit{PFE}}
+\newcommand{\EPE}{\mathit{EPE}}
+\newcommand{\ENE}{\mathit{ENE}}
+
+
+
+\begin{document}
+
+\title{Open Risk Engine \\ User Guide}
+\date{\today}
+\maketitle
+
+\newpage
+
+%-------------------------------------------------------------------------------
+\section*{Document History}
+
+\begin{center}
+\begin{supertabular}{|l|l|l|p{7cm}|}
+\hline
+Version & Date & Author & Comment \\
+\hline
+0.1 & 26 April & Roland Lichters & initial version\\
+\hline
+\end{supertabular}
+\end{center}
+
+\vspace{3cm}
+
+\newpage
+
+\tableofcontents
+\newpage
+
+\section{Introduction}
+
+Open Risk Engine (ORE) \cite{ORE} is a free/open software project sponsored by Quaternion Risk Management \cite{QRM} and based on QuantLib, the free/open source library for quantitative finance \cite{QL}. 
+
+ORE currently provides portfolio pricing and cash flow generation, and in particular a range of contemporary derivative portfolio analytics. The latter are based on a Monte Carlo simulation framework which yields the evolution of various {\bf credit exposure} and {\bf market risk measures}, a range of {\bf derivative value adjustments}, as well as {\bf regulatory capital charges} for counterparty credit risk under both Internal Model Method (IMM) and the new standardized approach (SA-CCR). Supported credit exposure and market risk measures include
+\begin{itemize}
+\item EE aka EPE (Expected Exposure or Expected Positive Exposure), 
+\item ENE (Expected Negative Exposure, i.e. the counterparty's perspective), 
+\item PFE (Potential Future Exposure at some use defined quantile), 
+\item VaR (Value at Risk),
+\item ES (Expected Shortfall).
+\end{itemize}
+Value adjustments include 
+\begin{itemize}
+\item CVA (Credit Value Adjustment)
+\item DVA (Debit Value Adjustment)
+\item FVA (Funding Value Adjustment)
+\item COLVA (Collateral Value Adjustment).
+\end{itemize}
+
+\medskip
+The first release of ORE covers the simulation of interest rate and FX risk factors and covers portfolios of Interest Rate Swaps, FX Forwards, Cross Currency Swaps, FX Options and European Swaptions. Subsequent releases will extend the product and the risk factor range to Inflation, Credit, Equity and Commodity.     
+
+\medskip
+Ultimately - after going through a series of releases, community feedback and contributions - the project aims at establishing a framework and platform for {\bf transparent pricing and risk analysis} that can be adapted for production purposes in financial institutions and used as a benchmarking and validation tool to test in-house and black box vendor solutions applied in the industry. 
+
+\medskip
+For details on the models applied in ORE's risk factor evolution we refer the reader to {\em Modern Derivatives Pricing and Credit Exposure Analysis} \cite{Lichters}: The IR/FX risk factor evolution is based on a cross currency model consisting of an arbitrage free combination of Linear Gauss Markov models for all interest rates and lognormal processes for the FX rates, calibrated to cross currency discounting and forward curves, Swaptions and FX Options.%, also summarised in \cite{XCCYLGM}.
+ 
+\vspace{1em}
+
+This document focuses on instructions how to use ORE to cover basic workflows from individual deal analysis to portfolio processing. Starting with a series of examples the guide addresses
+\begin{itemize}
+\setlength{\itemsep}{0pt}
+\item Running the ORE command line application 
+\item Output, analytics results
+\item Launching ORE and analysing results using Jupyter notebooks 
+\item Market and trade data input
+\item Static configuration data
+\end{itemize}
+
+\newpage
+
+%========================================================
+\section{Installation}
+%========================================================
+
+%========================================================
+\section{Examples}\label{sec:examples}
+%========================================================
+
+The example results presented in this section were produced with ORE's command line application which is called with a single input XML file as follows
+
+\medskip
+\centerline{\tt ore[.exe] input.xml}
+\medskip
+
+The structure of the input file and of the portfolio, market and other configuration files referred to therein will be explained in section \ref{sec:configuration}. 
+
+\medskip
+The examples shown in the following are intended to help getting started with ORE, and to serve as plausibility checks for the simulation results generated with ORE.
+
+%--------------------------------------------------------
+\subsection{Interest Swap Exposure}
+%--------------------------------------------------------
+
+We start with a vanilla single currency swap (currency EUR, maturity 20y, notional 10m, receive fixed 2\% annual, pay 6M-Euribor flat). The market yield curves (for both discounting and forward projection are manipulated to be flat at 2\% for all maturities, i.e. the Swap is at the money initially and remains at the money on average throughout its life. Running ORE yields the exposure evolution shown in figure \ref{fig_1}. 
+\begin{figure}[hbt]
+\begin{center}
+\includegraphics[scale=1.0]{example_swap_1.pdf}
+\end{center}
+\caption{Vanilla ATM swap expected exposure in a flat market environment from both parties' perspectives. The black symbols are European Swaption prices.}
+\label{fig_1}
+\end{figure}
+The black symbols are prices of European Swaptions with expiry at the symbol's time and otherwise same underlying as the Swap considered here. Both Swap simulation and Swaption pricing are run with calls to the ORE executable, essentially 
+
+\medskip
+\centerline{\tt App/ore[.exe] Examples/Example\_1/Input/ore.xml } 
+\medskip
+and
+
+\medskip
+\centerline{\tt App/ore[.exe] Examples/Example\_1/Input/ore\_swaption.xml }
+\medskip
+which are wrapped into the script {\tt Examples/Example\_1/run.sh}
+provided with the ORE release.
+It is instructive to look into the input folder in Examples/Example\_1, the content of the main input file {\tt ore.xml}, together with the explanations in section \ref{sec:configuration}.
+
+\medskip
+Moving to a realistic (non-flat) market environment as of 26/02/2016 (see folder {\tt Examples/Example\_4}, the resulting picture changes to the exposure evolution 
+shown in figure \ref{fig_2}.
+\begin{figure}[hbt]
+\begin{center}
+\includegraphics[scale=1.0]{example_swap_3.pdf}
+\end{center}
+\caption{Vanilla ATM swap expected exposure in a realistic market environment as of 26/02/2016 from both parties' perspectives. The Swap is the same as in figure \ref{fig_1} but receiving fixed 1\%, at the money on 26/02/2016. The symbols are the prices of European payer and receiver Swaptions.}
+\label{fig_2}
+\end{figure}
+In this case, where the curves (discount and forward) are upward sloping, the receiver swap is at the money at inception only and moves (on average) out of the money during its life. Similarly, the swap moves into the money from the counterparty's perspective. Hence the expected exposure evolutions from our perspective (EPE) and the counterparty's perspective (ENE) 'detach' here, while both can still be be reconciled with payer and receiver Swaption prices.
+
+%--------------------------------------------------------
+\subsection{European Swaption Exposure}
+%--------------------------------------------------------
+
+This demo case in folder {\tt Examples/Example\_7} shows the exposure evolution of a European Swaptions with cash and physical delivery, respectively, see figure \ref{fig_3}.
+\begin{figure}[hbt]
+\begin{center}
+\includegraphics[scale=1.0]{example_swaption.pdf}
+\end{center}
+\caption{European Swaption exposure evolution, expiry in 10 years, final maturity in 20 years, for cash and physical delivery.}
+\label{fig_3}
+\end{figure}
+The delivery type (cash vs physical) yields significantly different valuations as of today due to the steepness of the relevant yield curves (EUR). The cash settled Swaption's exposure graph is truncated at the exercise date, whereas the physically settled Swaption exposure turns into a Swap-like exposure after expiry. For comparison, the example also provides the exposure evolution of the underlying forward starting Swap which yields a somewhat higher exposure after the foreard start date than the physically settled Swaption. This is due to scenarios with negative swap NPV at expiry and positive NPVs thereafter.
+
+
+%--------------------------------------------------------
+\subsection{Callable Swap Exposure}
+%--------------------------------------------------------
+
+This demo case in folder {\tt Examples/Example\_6} shows the exposure evolution of a European callable Swap, represented as two trades - the non-callable Swap and a Swaption with physical delivery. We have sold the call option, i.e. the Swaption is a right for the counterparty to enter into an offsetting Swap which economically terminates all future flows if exercised. The resulting exposure evolutions for the individual components (Swap, Swaption), as well as the callable Swap are shown in figure \ref{fig_4}. 
+\begin{figure}[hbt]
+\begin{center}
+\includegraphics[scale=1.0]{example_callable_swap.pdf}
+\end{center}
+\caption{European callable Swap represented as a package consisiting of non-callable Swap and Swaption. The Swaption has physical delivery and offsets all future Swap cash flows if exercised. The exposure evolution of the package is shown here as 'EPE NettingSet' (green line). This is covered by the pink line, the exposure evolution of the same Swap but with maturity on the exercise date. The graphs match perfectly here, because the example Swap is deep in the money and exercise probability is close to one. }
+\label{fig_4}
+\end{figure}
+The example is an extreme case where the underlying Swap is deep in the money (receiving fixed 5\%), and hence the call exercise probability is close to one. Modify the Swap and Swaption fixed rates closer to the money ($\approx$ 1\%) to see the deviation between net exposure of the callable Swap and the exposure of a 'short' Swap with maturity on exercise.  
+
+%--------------------------------------------------------
+\subsection{FX Forward Exposure}\label{sec:fxfwd}
+%--------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_2} generates the exposure evolution for a EUR/USD FX Forward transaction with value date in 10Y. This is a particularly simple show case because of the single cash flow in 10Y. On the other hand it checks the cross currency model implementation by means of comparison to analytic limits - EPE and ENE at the trade's value date must match corresponding Vanilla FX Option prices, as shown in figure \ref{fig_5}.  
+\begin{figure}[hbt]
+\begin{center}
+\includegraphics[scale=1.0]{example_fxforward.pdf}
+\end{center}
+\caption{EUR/USD FX Forward expected exposure in a realistic market environment as of 26/02/2016 from both parties' perspectives. Value date is obviously in 10Y. The flat lines are FX Option prices which coincide with EPE and ENE, respectively, on the value date.}
+\label{fig_5}
+\end{figure}
+
+%--------------------------------------------------------
+\subsection{Cross Currency Swap Exposure}
+%--------------------------------------------------------
+
+FIXME: Add Cross Currency Swap exposure example, once the engine has been added.
+
+\begin{figure}[hbt]
+\begin{center}
+\includegraphics[scale=1.0]{example_fxoption_fwdvariance.pdf}
+\end{center}
+\caption{Cross Currency Swap placeholder.}
+\label{fig_6}
+\end{figure}
+
+%--------------------------------------------------------
+\subsection{FX Option}
+%--------------------------------------------------------
+
+This example (in folder {\tt Examples/Example\_2}, as the FX Forward example) illustrates the exposure evolution for an FX Option, see figure \ref{fig_7}. 
+\begin{figure}[hbt]
+\begin{center}
+\includegraphics[scale=1.0]{example_fxoption_fwdvariance.pdf}
+\end{center}
+\caption{EUR/USD FX Call Option exposure evolution, same underlying and market data as in section \ref{sec:fxfwd}, compared to the call option price as of today (flat line).}
+\label{fig_7}
+\end{figure}
+
+{\color{red}FIXME: Check why the FX Option EPE is not flat}. Recall that the FX Option value $NPV(t)$ as of time $0 < \leq t \leq T$ satisfies
+\begin{align*}
+\frac{NPV(t)}{N(t)} &= \mbox{Nominal}\times\E_t\left[\frac{X(T) - K)^+}{N(T)}\right]\\
+NPV(0) &= \E\left[\frac{NPV(t)}{N(t)}\right] = \E\left[\frac{NPV^+(t)}{N(t)} \right]= \EPE(t) 
+\end{align*}
+
+%--------------------------------------------------------
+\subsection{Netting and Collateral}
+%--------------------------------------------------------
+
+In this example (see folder {\tt Examples/Example\_5}) we showcase a small netting set consisting of three swaps in different currencies, with different collateral choices
+\begin{itemize}
+\item no collateral - figure \ref{fig_8},
+\item collateral with threshold (THR) 1m EUR, minimum transfer amount (MTA) 100k EUR, margin period of risk (MPoR) 2w - figure \ref{fig_9}
+\item collateral with zero THR and MTA, and MPoR 2w - figure \ref{fig_10}
+\end{itemize}
+ 
+\begin{figure}[hbt]
+\begin{center}
+\includegraphics[scale=1.0]{example_nocollateral_epe.pdf}
+\end{center}
+\caption{Three swaps netting set, no collateral.}
+\label{fig_8}
+\end{figure}
+
+\begin{figure}[hbt]
+\begin{center}
+\includegraphics[scale=1.0]{example_threshold_epe.pdf}
+\end{center}
+\caption{Three swaps netting set, THR=1m EUR, MTA=100k EUR, MPoR=2w.}
+\label{fig_9}
+\end{figure}
+
+%\begin{figure}[hbt]
+%\begin{center}
+%\includegraphics[scale=1.0]{example_mta_epe.pdf}
+%\end{center}
+%\caption{Three swaps, threshold = 0, mta > 0.}
+%\label{fig_7}
+%\end{figure}
+
+\begin{figure}[hbt]
+\begin{center}
+\includegraphics[scale=1.0]{example_mpor_epe.pdf}
+\end{center}
+\caption{Three swaps, THR=MTA=0, MPoR=2w.}
+\label{fig_10}
+\end{figure}
+
+%--------------------------------------------------------
+\subsection{Exposure \& XVA Allocation to Trades}
+%--------------------------------------------------------
+
+The same example considered in the previous section (see folder {\tt Examples/Example\_5}) also features the allocation of netting set exposure and XVA to the trade level as frequently required by finance functions.  We start again with the uncollateralised case in figure \ref{fig_8}, followed by the case with threshold 1m EUR in figure \ref{fig_11}.
+\begin{figure}[hbt]
+\begin{center}
+\includegraphics[scale=1.0]{example_nocollateral_allocated_epe.pdf}
+\end{center}
+\caption{Exposure allocation without collateral.}
+\label{fig_12}
+\end{figure}
+In both cases we apply the {\em marginal} (Euler) allocation method as published by Pykhtin and Rosen in 2010, hence we see the typical negative EPE for one of the trades at times when it reduces the netting set exposure. The case with collateral moreover shows the typical spikes in the allocated exposures.
+\begin{figure}[hbt]
+\begin{center}
+\includegraphics[scale=1.0]{example_threshold_allocated_epe.pdf}
+\end{center}
+\caption{Exposure allocation with collateral and threshold 1m EUR.}
+\label{fig_13}
+\end{figure}
+The analytics results also feature allocated XVAs which are derived from the allocated exposure profiles. Note that ORE also offers alternative allocation methods to the marginal method by Pykhtin/Rosen, which can be explored with {\tt Examples/Example\_5}.
+
+%========================================================
+\section{Jupyter Notebooks}
+%========================================================
+
+FIXME: Add Jupyter section
+
+%========================================================
+\section{Parametrisation}\label{sec:configuration}
+%========================================================
+
+As we have seen in section \ref{sec:examples}, ORE is kicked off
+in the command line with a single command line parameter 
+
+\medskip
+\centerline{\tt ore[.exe] ore.xml}
+\medskip
+
+which points to the 'master input file' which we will refer to 
+as {\tt ore.xml} subsequently. 
+This file is the starting point of the engine's configuration explained in the following sub section.
+
+\subsection{Master Input File: {\tt ore.xml}}
+
+The master input file contains general setup information (paths to configuration, trade data and market data), as well as the selection and configuration of  analytics to produce. The file has an opening and closing root element {\tt <OpenRiskEngine>}, {\tt </OpenRiskEngine>}, and within these three sections 
+\begin{itemize}
+\item Setup
+\item Markets
+\item Analytics
+\end{itemize}
+which which we will explain in the following.
+
+\subsubsection*{Setup}
+
+This subset of data is easiest explained using an example
+
+\begin{lstlisting}[caption={ORE setup example},
+ 	label=lst:ore_setup]
+<Setup>    
+	<Parameter name="asofDate">2016-02-26</Parameter>
+	<Parameter name="inputPath">Input</Parameter>
+	<Parameter name="outputPath">Output</Parameter>
+	<Parameter name="logFile">log.txt</Parameter>
+	<Parameter name="marketDataFile">../../Input/market_20160226.txt</Parameter>
+	<Parameter name="fixingDataFile">../../Input/fixings_20160226.txt</Parameter>
+	<Parameter name="curveConfigFile">../../Input/curveconfig.xml</Parameter>
+	<Parameter name="conventionsFile">../../Input/conventions.xml</Parameter>
+	<Parameter name="marketConfigFile">../../Input/todaysmarket.xml</Parameter>
+	<Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
+	<Parameter name="portfolioFile">portfolio.xml</Parameter>
+</Setup>
+\end{lstlisting}
+
+Parameter names are self explanatory: Input and output path are interpreted relative from the directory where the ORE executable is started, but can also be specified using absolute paths. All file names are then interpreted relative to the 'inputPath' or 'outputPath'. 
+
+When ORE starts, it will initialise today's market, i.e. load market data and fixings, and build all term structures as specified in {\tt todaysmarket.xml}. 
+Moreover, ORE will load the trades in {\tt portfolio.xml} and link them with pricing engines as specified in {\tt pricingengine.xml}.    
+
+\subsubsection*{Markets}
+
+The {\tt Markets} section is used to choose the two market configurations for simulation model calibration and the subsequent market simulation phase, respectively. These configurations have to defined in {\tt todaysmarket.xml} (see section \ref{sec:market} below). For example, the calibration of the simulation model's interest rate components requires local OIS discounting whereas the simulation phase requires cross currency adjusted discount curves to get FX product pricing right. So far, the market configurations are used only to distinguish discount curve sets, but the market configuration concept in ORE applies to all term structure types.
+
+\begin{lstlisting}[caption={ORE markets},
+ 	label=lst:ore_markets]
+<Markets>
+	<Parameter name="simulation">simulation</Parameter>
+	<Parameter name="calibration">calibration</Parameter>
+</Markets>
+\end{lstlisting}
+
+\subsubsection*{Analytics}
+
+The {\tt Analytics} section lists all permissible analytics using tags {\tt <Analytic type="..."> ... </Analytic>} where type can be (so far) in
+\begin{itemize}
+\item npv
+\item cashflow
+\item curves
+\item simulation
+\item xva
+\item initialMargin
+\end{itemize}
+
+Each {\tt Analytic} section contains a list of key/value pairs to parameterise the analysis of the form {\tt <Parameter name="key">value</Parameter>}. Each analysis
+must have one key {\tt active} set to Y or N to activate/deactivate this analysis. 
+The following listing shows the parametrisation of the first three basic analytics in the list above.
+
+\begin{lstlisting}[caption={ORE analytics: npv, cashflow and curves},
+ 	label=lst:ore_analytics]
+<Analytics>
+    
+	<Analytic type="npv">
+		<Parameter name="active">Y</Parameter>
+		<Parameter name="baseCurrency">EUR</Parameter>
+		<Parameter name="outputFileName">npv.csv</Parameter>
+	</Analytic>      
+
+	<Analytic type="cashflow">
+		<Parameter name="active">Y</Parameter>
+		<Parameter name="outputFileName">flows.csv</Parameter>
+	</Analytic>      
+
+	<Analytic type="curves">
+		<Parameter name="active">Y</Parameter>
+		<Parameter name="configuration">default</Parameter>
+		<Parameter name="grid">240,1M</Parameter>
+		<Parameter name="outputFileName">curves.csv</Parameter>
+	</Analytic>      
+
+	<Analytic type="...">
+		<!-- ... -->
+	</Analytic>      
+
+</Analytics>      
+\end{lstlisting}
+
+The curves analytic exports all yield curves that have been built according to the specification in {\tt todaysmarket.xml}. Key {\tt configuration} selects the curve set to be used (see explanation in the previous Markets section).  Key {\tt grid} defines the time grid on which the yield curves are evaluated, in the example above a grid of 240 monthly time steps from today. The discount factors for all curves with configuration default will be exported on this monthly grid into the csv file specified by key {\tt outputFileName}.
+
+\medskip
+The purpose of the {\tt simulation} 'analytics' is to run a Monte Carlo simulation which evolves the market as specified in the simulation config file. The primary result is an NPV cube file, i.e. valuations of all trades in the portfolio file (see section Setup), for all future points in time on the simulation grid and for all paths. Apart from the NPV cube, additional scenario data (such as simulated overnight rates etc) are stored in this process which are needed for subsequent XVA analytics.  
+
+\begin{lstlisting}[caption={ORE analytic: simulation},
+ 	label=lst:ore_simulation]
+<Analytics>
+	<Analytic type="simulation">
+		<Parameter name="active">Y</Parameter>
+		<Parameter name="simulationConfigFile">simulation.xml</Parameter>
+		<Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
+		<Parameter name="baseCurrency">EUR</Parameter>
+		<Parameter name="storeScenarios">N</Parameter>
+		<Parameter name="cubeFile">cube.dat</Parameter>
+		<Parameter name="additionalScenarioDataFileName">scenariodata.dat</Parameter>
+		<Parameter name="disableEvaluationDateObservation">N</Parameter>
+	</Analytic>
+</Analytics>      
+\end{lstlisting}
+
+The pricing engines file specifies how trades are priced under future scenarios which can differ from pricing as of today (specified in section Setup).
+Key base currency determines into which currency all NPVs will be converted. Key store scenarios (Y or N) determines whether the market scenarios are written to a file for later reuse.
+
+{\color{red}FIXME: Implement the store scenarios option and add a file name for scenario data}). 
+
+{\color{red}FIXME: Expose all performance options here (fixing approach, disable eval date observation, unregister coupons)}. 
+
+\medskip
+The xva analytic section offers CVA, DVA, FVA and COLVA calculations whch can be selected individually. All XVA calculations depend on a previously generated NPV cube (see above). To be continued... 
+
+\begin{lstlisting}[caption={ORE analytic: xva},
+ 	label=lst:ore_xva]
+<Analytics>
+	<Analytic type="xva">
+		<Parameter name="active">Y</Parameter>
+		<Parameter name="csaFile">netting.xml</Parameter>
+		<Parameter name="cubeFile">cube.dat</Parameter>
+		<Parameter name="scenarioFile">scenariodata.dat</Parameter>
+		<Parameter name="baseCurrency">EUR</Parameter>
+		<Parameter name="exposureProfiles">Y</Parameter>
+		<Parameter name="quantile">0.95</Parameter>
+		<Parameter name="calculationType">Symmetric</Parameter>      
+		<Parameter name="allocationMethod">None</Parameter>    
+		<Parameter name="marginalAllocationLimit">1.0</Parameter>    
+		<Parameter name="cva">Y</Parameter>
+		<Parameter name="dva">N</Parameter>
+		<Parameter name="dvaName">BANK</Parameter>
+		<Parameter name="fva">N</Parameter>
+		<Parameter name="colva">N</Parameter>
+		<Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>
+		<Parameter name="netCubeOutputFile">netcube.csv</Parameter>     
+	</Analytic>
+</Analytics>
+\end{lstlisting}
+
+%--------------------------------------------------------
+\subsection{Market: {\tt todaysmarket.xml}}\label{sec:market}
+%--------------------------------------------------------
+
+%--------------------------------------------------------
+\subsection{Pricing Engines: {\tt pricingengine.xml}}
+%--------------------------------------------------------
+
+%--------------------------------------------------------
+\subsection{Simulation: {\tt simulation.xml}}
+%--------------------------------------------------------
+\subsubsection{Model}
+\subsubsection{Market}
+\subsubsection{Parameters}
+
+%--------------------------------------------------------
+\subsection{Curves: {\tt curveconfig.xml}}
+%--------------------------------------------------------
+
+The configuration of various term structures required to price a portfolio is covered in a single configuration file which we will label {\tt curveconfig.xml} in the following though the file name can be chosen by the user. This configuration determines the composition of yield curves, default curves, Swaption and FX Option volatility structures.
+ 
+\include{yieldcurves}
+
+\subsubsection{Default Curves}
+
+\begin{lstlisting}[caption={Default curve configuration}, 	label=lst:defaultcurve_configuration]
+<DefaultCurves>
+	<DefaultCurve>
+		<CurveId>BANK_SR_USD</CurveId>
+		<CurveDescription>BANK SR CDS USD</CurveDescription>
+		<Currency>USD</Currency>
+		<Type>SpreadCDS</Type>
+		<DiscountCurve>Yield/USD/USD3M</DiscountCurve>
+		<DayCounter>A365</DayCounter>
+		<RecoveryRate>RECOVERY_RATE/RATE/BANK/SR/USD</RecoveryRate>
+		<Quotes>
+			<Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/1Y</Quote>
+			<Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/2Y</Quote>
+			<Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/3Y</Quote>
+			<Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/4Y</Quote>
+			<Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/5Y</Quote>
+			<Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/7Y</Quote>
+			<Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/10Y</Quote>
+		</Quotes>
+		<Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
+	</DefaultCurve>
+	<DefaultCurve>
+		<!-- ... -->
+	</DefaultCurve>
+</DefaultCurves>
+
+\end{lstlisting}
+
+\subsubsection{Swaption Volatility Structures}
+
+\begin{lstlisting}[caption={Swaption volatility configuration}, 	label=lst:swaptionvol_configuration]
+<SwaptionVolatilities>    
+	<SwaptionVolatility>
+		<CurveId>EUR_SW_N</CurveId>
+		<CurveDescription>EUR normal swaption volatilities</CurveDescription>
+		<!-- ATM (Smile not yet supported) -->
+		<Dimension>ATM</Dimension>
+		<!-- Normal or Lognormal or ShiftedLognormal -->
+		<VolatilityType>Normal</VolatilityType>
+		<!-- Flat or Linear -->
+		<Extrapolation>Flat</Extrapolation>
+		<!-- Day counter for date to time conversion -->
+		<DayCounter>Actual/365 (Fixed)</DayCounter>
+		<!--Calendar and Business day convention for option tenor to date conversion -->
+		<Calendar>TARGET</Calendar>
+		<BusinessDayConvention>Following</BusinessDayConvention>
+		<OptionTenors>
+			1M,3M,6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y
+		</OptionTenors>
+		<SwapTenors>
+			1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y
+		</SwapTenors>
+		<ShortSwapIndexBase>EUR-CMS-1Y</ShortSwapIndexBase>
+		<SwapIndexBase>EUR-CMS-30Y</SwapIndexBase>
+	</SwaptionVolatility>
+    <SwaptionVolatility>
+    	<!-- ... -->
+    </SwaptionVolatility>
+</SwaptionVolatilities>
+\end{lstlisting}
+
+\subsubsection{FX Volatility Structures}
+
+\begin{lstlisting}[caption={FX option volatility configuration}, 	label=lst:fxoptionvol_configuration]
+<FXVolatilities>
+	<FXVolatility>
+		<CurveId>EURUSD</CurveId>
+		<CurveDescription />
+		<Dimension>ATM</Dimension>
+		<Expiries>
+			1M,3M,6M,1Y,2Y,3Y,10Y
+		</Expiries>
+	</FXVolatility>
+	<FXVolatility>
+		<!-- ... -->
+	</FXVolatility>
+</FXVolatilities>
+
+\end{lstlisting}
+
+%--------------------------------------------------------
+\subsection{Conventions: {\tt conventions.xml}}
+%--------------------------------------------------------
+
+\include{conventions}
+
+
+%========================================================
+\section{Trade Data}\label{sec:portfolio_data}
+%========================================================
+
+\include{portfoliodata}
+
+%========================================================
+\section{Netting Set Definitions}\label{sec:nettingsetinput}
+%========================================================
+
+\include{nettingdata}
+
+%========================================================
+\section{Market Data}\label{sec:market_data}
+%========================================================
+
+\include{marketdata}
+
+%========================================================
+\section{Fixing History}
+%========================================================
+
+\include{fixingdata}
+
+%========================================================
+%\section{References}
+%========================================================
+
+\begin{thebibliography}{*}
+
+\bibitem{ORE} http://www.openrisk.org
+
+\bibitem{QRM} http://www.quaternion.com
+
+\bibitem{QL} http://www.quantlib.org
+ 
+\bibitem{Lichters} 
+Roland Lichters, Roland Stamm, Donal Gallagher, 
+{\em Modern Derivatives Pricing and Credit Exposure Analysis, Theory and Practice of CSA and XVA Pricing, Exposure Simulation and Backtesting}, 
+Palgrave Macmillan, 2015.
+
+%\bibitem{XCCYLGM} 
+%Sarp Kaya Acar and Roland Lichters, {\em Cross Currency Linear Gauss Markov Model}, SSRN ..., 2016.
+
+\end{thebibliography}
+
+\end{document}
