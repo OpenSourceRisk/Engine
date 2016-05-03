@@ -13,6 +13,8 @@ HazardSpreadedDefaultTermStructure::HazardSpreadedDefaultTermStructure(
     const Handle<DefaultProbabilityTermStructure> &source,
     const Handle<Quote> &spread)
     : source_(source), spread_(spread) {
+    if (!source_.empty())
+        enableExtrapolation(source_->allowsExtrapolation());
     registerWith(source_);
     registerWith(spread_);
 }
