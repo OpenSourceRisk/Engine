@@ -127,7 +127,7 @@ namespace QuantExt {
 
                 if(SimulatedFixingsManager::instance().simulateFixings()) {
                     // do not try any optimizations
-                    QuantExt::simulatedFixingsNpv(
+                    results_.inCcyLegNPV[i] = QuantExt::simulatedFixingsNpv(
                         arguments_.legs[i], **yts, includeRefDateFlows,
                         settlementDate, yts->referenceDate(), false, false,
                         false, false);
