@@ -47,7 +47,7 @@
       <Parameter name="storeScenarios">N</Parameter>
       <Parameter name="cubeFile">cube.dat</Parameter>
       <Parameter name="additionalScenarioDataFileName">scenariodata.dat</Parameter>
-      <Parameter name="disableEvaluationDateObservation">N</Parameter>
+      <Parameter name="disableEvaluationDateObservation">Y</Parameter>
     </Analytic>
 
     <Analytic type="xva">

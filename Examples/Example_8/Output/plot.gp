@@ -14,6 +14,8 @@ set autoscale
 
 set term pdfcairo 
 set out "tmp.pdf"
+set key left
+set xrange [0:21]
 plot "exposure_trade_CCSwap.csv" us 3:4 title "EPE CCSwap" w l ls 1
 replot "exposure_trade_CCSwap.csv" us 3:5 title "ENE CCSwap" w l ls 2
 set out "example_ccswap.pdf"
