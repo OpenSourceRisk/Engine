@@ -87,6 +87,8 @@
 \newcommand{\PFE}{\mathit{PFE}}
 \newcommand{\EPE}{\mathit{EPE}}
 \newcommand{\ENE}{\mathit{ENE}}
+\newcommand{\PD}{\mathit{PD}}
+\newcommand{\LGD}{\mathit{LGD}}
 
 
 
@@ -169,7 +171,8 @@ This document focuses on instructions how to use ORE to cover basic workflows fr
 \section{Examples}\label{sec:examples}
 %========================================================
 
-The example results presented in this section were produced with ORE's command line application which is called with a single input XML file as follows
+The examples shown in the following are intended to help getting started with ORE, and to serve as plausibility checks for the simulation results generated with ORE.
+All results can be produced with the {\tt run.sh} scripts in the ORE release's {\tt Examples} folder. In a nutshell, all scripts call ORE's command line application with a single input XML file
 
 \medskip
 \centerline{\tt ore[.exe] input.xml}
@@ -178,7 +181,18 @@ The example results presented in this section were produced with ORE's command l
 The structure of the input file and of the portfolio, market and other configuration files referred to therein will be explained in section \ref{sec:configuration}. 
 
 \medskip
-The examples shown in the following are intended to help getting started with ORE, and to serve as plausibility checks for the simulation results generated with ORE.
+We will use the following exposure definitions in the examples below
+\begin{align*}
+\EPE(t) &= \E\left[ \frac{NPV^+(t)}{N(t)} \right] \\
+\ENE(t) &= \E\left[ \frac{(-NPV(t))^+}{N(t)} \right]
+\end{align*}
+i.e. the exposures are discounted with numeraire $N$ (in ORE the Linear Gauss Markov model's numeraire) to today. These are the exposures which enter into unilateral CVA and DVA calculation, respectively \cite{Lichters}:
+\begin{align*}
+\CVA &= \sum_{i} \PD(t_{i-1},t_i)\times\LGD\times \EPE(t) \\
+\DVA &= \sum_{i} \PD_{Bank}(t_{i-1},t_i)\times\LGD_{Bank}\times \ENE(t)
+\end{align*}
+
+
 
 %--------------------------------------------------------
 \subsection{Interest Swap Exposure}
@@ -264,15 +278,16 @@ The example in folder {\tt Examples/Example\_2} generates the exposure evolution
 \subsection{Cross Currency Swap Exposure}
 %--------------------------------------------------------
 
-FIXME: Add Cross Currency Swap exposure example, once the engine has been added.
-
+The case in {\tt Examples/Example\_8} is a vanilla cross currency swap. It shows the typical blend of and interest rate swap's saw tooth exposure evolution with an FX forward's exposure which increases monotonically to final maturity, see figure \ref{fig_6}.
 \begin{figure}[hbt]
 \begin{center}
-\includegraphics[scale=1.0]{example_fxoption_fwdvariance.pdf}
+\includegraphics[scale=1.0]{example_ccswap.pdf}
 \end{center}
-\caption{Cross Currency Swap placeholder.}
+\caption{Cross Currency Swap exposure evolution with and without mark-to-market notional reset on each coupin date.}
 \label{fig_6}
 \end{figure}
+
+{\color{red}FIXME: Add notional resetting feature, add a resetting swap and plot its exposure evolution for comparison}
 
 %--------------------------------------------------------
 \subsection{FX Option}
@@ -281,17 +296,19 @@ FIXME: Add Cross Currency Swap exposure example, once the engine has been added.
 This example (in folder {\tt Examples/Example\_2}, as the FX Forward example) illustrates the exposure evolution for an FX Option, see figure \ref{fig_7}. 
 \begin{figure}[hbt]
 \begin{center}
-\includegraphics[scale=1.0]{example_fxoption_fwdvariance.pdf}
+\includegraphics[scale=1.0]{example_fxoption_fwdvariance_corrected.pdf}
 \end{center}
 \caption{EUR/USD FX Call Option exposure evolution, same underlying and market data as in section \ref{sec:fxfwd}, compared to the call option price as of today (flat line).}
 \label{fig_7}
 \end{figure}
-
-{\color{red}FIXME: Check why the FX Option EPE is not flat}. Recall that the FX Option value $NPV(t)$ as of time $0 < \leq t \leq T$ satisfies
+Recall that the FX Option value $NPV(t)$ as of time $0 \leq t \leq T$ satisfies
 \begin{align*}
-\frac{NPV(t)}{N(t)} &= \mbox{Nominal}\times\E_t\left[\frac{X(T) - K)^+}{N(T)}\right]\\
+\frac{NPV(t)}{N(t)} &= \mbox{Nominal}\times\E_t\left[\frac{(X(T) - K)^+}{N(T)}\right]\\
 NPV(0) &= \E\left[\frac{NPV(t)}{N(t)}\right] = \E\left[\frac{NPV^+(t)}{N(t)} \right]= \EPE(t) 
 \end{align*}
+One would therefore expect a flat exposure evolution up to option expiry. The deviation from this in ORE's simulation is due to the pricing approach chosen here under scenarios. A Black FX option pricer is used with simulated interest rate curves input and {\em deterministic} Black volatility derived from today's volatility structure (see section \ref{sec:sim_market}). The deviation would be removed by extending the volatility modelling, e.g. implying model consistent Black volatilities in each simulation step on each path.
+ 
+{\color{red}FIXME: Update this when the composite instrument is fixed.}
 
 %--------------------------------------------------------
 \subsection{Netting and Collateral}
@@ -368,14 +385,13 @@ FIXME: Add Jupyter section
 \section{Parametrisation}\label{sec:configuration}
 %========================================================
 
-As we have seen in section \ref{sec:examples}, ORE is kicked off
-in the command line with a single command line parameter 
+ORE's batch version is kicked off with a single command line parameter 
 
 \medskip
 \centerline{\tt ore[.exe] ore.xml}
 \medskip
 
-which points to the 'master input file' which we will refer to 
+which points to the 'master input file' referred to  
 as {\tt ore.xml} subsequently. 
 This file is the starting point of the engine's configuration explained in the following sub section.
 
@@ -501,7 +517,7 @@ Key base currency determines into which currency all NPVs will be converted. Key
 {\color{red}FIXME: Expose all performance options here (fixing approach, disable eval date observation, unregister coupons)}. 
 
 \medskip
-The xva analytic section offers CVA, DVA, FVA and COLVA calculations whch can be selected individually. All XVA calculations depend on a previously generated NPV cube (see above). To be continued... 
+The xva analytic section offers CVA, DVA, FVA and COLVA calculations which can be selected/deselected individually. All XVA calculations depend on a previously generated NPV cube (see above). To be continued... 
 
 \begin{lstlisting}[caption={ORE analytic: xva},
  	label=lst:ore_xva]
@@ -539,9 +555,9 @@ The xva analytic section offers CVA, DVA, FVA and COLVA calculations whch can be
 %--------------------------------------------------------
 \subsection{Simulation: {\tt simulation.xml}}
 %--------------------------------------------------------
-\subsubsection{Model}
-\subsubsection{Market}
-\subsubsection{Parameters}
+\subsubsection{Model}\label{sec:sim_model}
+\subsubsection{Market}\label{sec:sim_market}
+\subsubsection{Parameters}\label{sec:sim_params}
 
 %--------------------------------------------------------
 \subsection{Curves: {\tt curveconfig.xml}}
