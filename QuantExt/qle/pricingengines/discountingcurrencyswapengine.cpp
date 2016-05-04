@@ -131,6 +131,7 @@ namespace QuantExt {
                         arguments_.legs[i], **yts, includeRefDateFlows,
                         settlementDate, yts->referenceDate(), false, false,
                         false, false);
+ 
                     results_.inCcyLegBPS[i] = Null<Real>();
                 }
                 else {
