@@ -4,6 +4,7 @@
 #include <qle/models/crossassetanalytics.hpp>
 #include <qle/models/crossassetanalyticsbase.hpp>
 #include <qle/models/crossassetmodel.hpp>
+#include <qle/models/crossassetmodelimpliedfxvoltermstructure.hpp>
 #include <qle/models/fxbsconstantparametrization.hpp>
 #include <qle/models/fxbsparametrization.hpp>
 #include <qle/models/fxbspiecewiseconstantparametrization.hpp>
