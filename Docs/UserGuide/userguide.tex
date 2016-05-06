@@ -141,7 +141,7 @@ Value adjustments include
 \end{itemize}
 
 \medskip
-The first release of ORE covers the simulation of interest rate and FX risk factors and covers portfolios of Interest Rate Swaps, FX Forwards, Cross Currency Swaps, FX Options and European Swaptions. Subsequent releases will extend the product and the risk factor range to Inflation, Credit, Equity and Commodity.     
+The first release of ORE covers the simulation of interest rate and FX risk factors and portfolios of Interest Rate Swaps, FX Forwards, Cross Currency Swaps, FX Options and European Swaptions. Subsequent releases will extend the product and the risk factor range to Inflation, Credit, Equity and Commodity.     
 
 \medskip
 Ultimately - after going through a series of releases, community feedback and contributions - the project aims at establishing a framework and platform for {\bf transparent pricing and risk analysis} that can be adapted for production purposes in financial institutions and used as a benchmarking and validation tool to test in-house and black box vendor solutions applied in the industry. 
@@ -154,11 +154,11 @@ For details on the models applied in ORE's risk factor evolution we refer the re
 This document focuses on instructions how to use ORE to cover basic workflows from individual deal analysis to portfolio processing. Starting with a series of examples the guide addresses
 \begin{itemize}
 \setlength{\itemsep}{0pt}
-\item Running the ORE command line application 
-\item Output, analytics results
-\item Launching ORE and analysing results using Jupyter notebooks 
+\item Launching ORE using its command line application
+\item Analytics results and standard reports
+\item Interactive analysis using Jupyter notebooks 
 \item Market and trade data input
-\item Static configuration data
+\item ORE parametrisation
 \end{itemize}
 
 \newpage
@@ -166,6 +166,8 @@ This document focuses on instructions how to use ORE to cover basic workflows fr
 %========================================================
 \section{Installation}
 %========================================================
+
+TODO: Add installation instructions
 
 %========================================================
 \section{Examples}\label{sec:examples}
@@ -191,8 +193,6 @@ i.e. the exposures are discounted with numeraire $N$ (in ORE the Linear Gauss Ma
 \CVA &= \sum_{i} \PD(t_{i-1},t_i)\times\LGD\times \EPE(t) \\
 \DVA &= \sum_{i} \PD_{Bank}(t_{i-1},t_i)\times\LGD_{Bank}\times \ENE(t)
 \end{align*}
-
-
 
 %--------------------------------------------------------
 \subsection{Interest Swap Exposure}
@@ -298,7 +298,7 @@ This example (in folder {\tt Examples/Example\_2}, as the FX Forward example) il
 \begin{center}
 \includegraphics[scale=1.0]{example_fxoption_fwdvariance_corrected.pdf}
 \end{center}
-\caption{EUR/USD FX Call Option exposure evolution, same underlying and market data as in section \ref{sec:fxfwd}, compared to the call option price as of today (flat line).}
+\caption{EUR/USD FX Call and Put Option exposure evolution, same underlying and market data as in section \ref{sec:fxfwd}, compared to the call and put option price as of today (flat line).}
 \label{fig_7}
 \end{figure}
 Recall that the FX Option value $NPV(t)$ as of time $0 \leq t \leq T$ satisfies
@@ -306,10 +306,8 @@ Recall that the FX Option value $NPV(t)$ as of time $0 \leq t \leq T$ satisfies
 \frac{NPV(t)}{N(t)} &= \mbox{Nominal}\times\E_t\left[\frac{(X(T) - K)^+}{N(T)}\right]\\
 NPV(0) &= \E\left[\frac{NPV(t)}{N(t)}\right] = \E\left[\frac{NPV^+(t)}{N(t)} \right]= \EPE(t) 
 \end{align*}
-One would therefore expect a flat exposure evolution up to option expiry. The deviation from this in ORE's simulation is due to the pricing approach chosen here under scenarios. A Black FX option pricer is used with simulated interest rate curves input and {\em deterministic} Black volatility derived from today's volatility structure (see section \ref{sec:sim_market}). The deviation would be removed by extending the volatility modelling, e.g. implying model consistent Black volatilities in each simulation step on each path.
+One would therefore expect a flat exposure evolution up to option expiry. The deviation from this in ORE's simulation is due to the pricing approach chosen here under scenarios. A Black FX option pricer is used with simulated interest rate curves input and {\em deterministic} Black volatility derived from today's volatility structure (pushed or rolled forward, see section \ref{sec:sim_market}). The deviation would be removed by extending the volatility modelling, e.g. implying model consistent Black volatilities in each simulation step on each path.
  
-{\color{red}FIXME: Update this when the composite instrument is fixed.}
-
 %--------------------------------------------------------
 \subsection{Netting and Collateral}
 %--------------------------------------------------------
@@ -408,7 +406,7 @@ which which we will explain in the following.
 \subsubsection*{Setup}
 
 This subset of data is easiest explained using an example
-
+{\footnotesize
 \begin{lstlisting}[caption={ORE setup example},
  	label=lst:ore_setup]
 <Setup>    
@@ -425,8 +423,9 @@ This subset of data is easiest explained using an example
 	<Parameter name="portfolioFile">portfolio.xml</Parameter>
 </Setup>
 \end{lstlisting}
+}
 
-Parameter names are self explanatory: Input and output path are interpreted relative from the directory where the ORE executable is started, but can also be specified using absolute paths. All file names are then interpreted relative to the 'inputPath' or 'outputPath'. 
+Parameter names are self explanatory: Input and output path are interpreted relative from the directory where the ORE executable is started, but can also be specified using absolute paths. All file names are then interpreted relative to the 'inputPath' and'outputPath', respectively. 
 
 When ORE starts, it will initialise today's market, i.e. load market data and fixings, and build all term structures as specified in {\tt todaysmarket.xml}. 
 Moreover, ORE will load the trades in {\tt portfolio.xml} and link them with pricing engines as specified in {\tt pricingengine.xml}.    
@@ -435,6 +434,7 @@ Moreover, ORE will load the trades in {\tt portfolio.xml} and link them with pri
 
 The {\tt Markets} section is used to choose the two market configurations for simulation model calibration and the subsequent market simulation phase, respectively. These configurations have to defined in {\tt todaysmarket.xml} (see section \ref{sec:market} below). For example, the calibration of the simulation model's interest rate components requires local OIS discounting whereas the simulation phase requires cross currency adjusted discount curves to get FX product pricing right. So far, the market configurations are used only to distinguish discount curve sets, but the market configuration concept in ORE applies to all term structure types.
 
+{\footnotesize
 \begin{lstlisting}[caption={ORE markets},
  	label=lst:ore_markets]
 <Markets>
@@ -442,6 +442,7 @@ The {\tt Markets} section is used to choose the two market configurations for si
 	<Parameter name="calibration">calibration</Parameter>
 </Markets>
 \end{lstlisting}
+}
 
 \subsubsection*{Analytics}
 
@@ -459,6 +460,7 @@ Each {\tt Analytic} section contains a list of key/value pairs to parameterise t
 must have one key {\tt active} set to Y or N to activate/deactivate this analysis. 
 The following listing shows the parametrisation of the first three basic analytics in the list above.
 
+{\footnotesize
 \begin{lstlisting}[caption={ORE analytics: npv, cashflow and curves},
  	label=lst:ore_analytics]
 <Analytics>
@@ -487,12 +489,14 @@ The following listing shows the parametrisation of the first three basic analyti
 
 </Analytics>      
 \end{lstlisting}
+}
 
 The curves analytic exports all yield curves that have been built according to the specification in {\tt todaysmarket.xml}. Key {\tt configuration} selects the curve set to be used (see explanation in the previous Markets section).  Key {\tt grid} defines the time grid on which the yield curves are evaluated, in the example above a grid of 240 monthly time steps from today. The discount factors for all curves with configuration default will be exported on this monthly grid into the csv file specified by key {\tt outputFileName}.
 
 \medskip
 The purpose of the {\tt simulation} 'analytics' is to run a Monte Carlo simulation which evolves the market as specified in the simulation config file. The primary result is an NPV cube file, i.e. valuations of all trades in the portfolio file (see section Setup), for all future points in time on the simulation grid and for all paths. Apart from the NPV cube, additional scenario data (such as simulated overnight rates etc) are stored in this process which are needed for subsequent XVA analytics.  
 
+{\footnotesize
 \begin{lstlisting}[caption={ORE analytic: simulation},
  	label=lst:ore_simulation]
 <Analytics>
@@ -508,6 +512,7 @@ The purpose of the {\tt simulation} 'analytics' is to run a Monte Carlo simulati
 	</Analytic>
 </Analytics>      
 \end{lstlisting}
+}
 
 The pricing engines file specifies how trades are priced under future scenarios which can differ from pricing as of today (specified in section Setup).
 Key base currency determines into which currency all NPVs will be converted. Key store scenarios (Y or N) determines whether the market scenarios are written to a file for later reuse.
@@ -519,6 +524,7 @@ Key base currency determines into which currency all NPVs will be converted. Key
 \medskip
 The xva analytic section offers CVA, DVA, FVA and COLVA calculations which can be selected/deselected individually. All XVA calculations depend on a previously generated NPV cube (see above). To be continued... 
 
+{\footnotesize
 \begin{lstlisting}[caption={ORE analytic: xva},
  	label=lst:ore_xva]
 <Analytics>
@@ -543,6 +549,7 @@ The xva analytic section offers CVA, DVA, FVA and COLVA calculations which can b
 	</Analytic>
 </Analytics>
 \end{lstlisting}
+}
 
 %--------------------------------------------------------
 \subsection{Market: {\tt todaysmarket.xml}}\label{sec:market}

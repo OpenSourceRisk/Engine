@@ -67,8 +67,7 @@
       <Parameter name="fva">N</Parameter>
       <Parameter name="colva">N</Parameter>
       <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>
-      <Parameter name="netCubeOutputFile">netcube.csv</Parameter>
-      
+      <Parameter name="netCubeOutputFile">netcube.csv</Parameter>     
     </Analytic>
 
     <Analytic type="initialMargin">

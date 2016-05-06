@@ -18,12 +18,13 @@ plot "exposure_trade_FXFWD_EURUSD_10Y.csv" us 3:4 title "EPE" w l ls 1
 replot "exposure_trade_FXFWD_EURUSD_10Y.csv" us 3:5 title "ENE" w l ls 2
 replot "call.csv" us 1:2 title "Call Price" w l ls 3
 replot "put.csv" us 1:2 title "Put Price" w l ls 4
-set out "plot.pdf"
+set out "plot1.pdf"
 replot
 
+set out "tmp.pdf"
 set key left
 set key bottom
-set out "tmp.pdf"
+set yrange [0:260000]
 plot "exposure_trade_FX_CALL_OPTION_EURUSD_10Y.csv" us 3:4 title "Call Option EPE" w l ls 1
 replot "call.csv" us 1:2 title "Call Price" w l ls 2
 replot "exposure_trade_FX_PUT_OPTION_EURUSD_10Y.csv" us 3:4 title "Put Option EPE" w l ls 3

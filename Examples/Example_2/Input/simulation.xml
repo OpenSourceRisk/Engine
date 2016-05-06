@@ -220,6 +220,7 @@
     <Market>
 
       <BaseCurrency>EUR</BaseCurrency>
+
       <Currencies>
 	<Currency>EUR</Currency>
 	<Currency>USD</Currency>
@@ -319,7 +320,7 @@
       -->
       
       <FxVolatilities>
-	<!--	<ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>-->
+	<!--<ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>-->
 	<ReactionToTimeDecay>ConstantVariance</ReactionToTimeDecay>
 	<CurrencyPairs>
 	  <CurrencyPair>EURUSD</CurrencyPair>
