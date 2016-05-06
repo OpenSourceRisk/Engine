@@ -131,6 +131,9 @@ void DiscountingSwapEngine::calculate() const {
     } else {
         IborCoupon const *c0;
 
+        // TODO this kind of caching may be unsafe, although virtual
+        // memory management should ensure that the adress does not
+        // change during execution
         ArgumentsCache::const_iterator it =
             arguments_cache_.find(&arguments_.legs);
         if (it != arguments_cache_.end()) {
