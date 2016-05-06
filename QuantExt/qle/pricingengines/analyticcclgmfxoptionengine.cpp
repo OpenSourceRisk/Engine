@@ -30,7 +30,8 @@ Real AnalyticCcLgmFxOptionEngine::value(
 
     const CrossAssetModel *x = model_.get();
 
-    if (cacheDirty_ || !cacheEnabled_) {
+    if (cacheDirty_ || !cacheEnabled_ ||
+        !(close_enough(cachedT0_, t0) && close_enough(cachedT_, t))) {
         cachedIntegrals_ =
             // first term
             H0 * H0 * (x->irlgm1f(0)->zeta(t) - x->irlgm1f(0)->zeta(t0)) -
@@ -53,6 +54,8 @@ Real AnalyticCcLgmFxOptionEngine::value(
                           P(Hz(0), Hz(i + 1), az(0), az(i + 1), rzz(0, i + 1)),
                           t0, t));
         cacheDirty_ = false;
+        cachedT0_ = t0;
+        cachedT_ = t;
     }
 
     Real variance =
