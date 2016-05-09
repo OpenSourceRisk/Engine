@@ -58,6 +58,9 @@ void writeTradeExposures(const Parameters& params,
 void writeNettingSetExposures(const Parameters& params,
                               boost::shared_ptr<PostProcess> postProcess);
 
+void writeNettingSetColva(const Parameters& params,
+                          boost::shared_ptr<PostProcess> postProcess);
+
 void writeCva(const Parameters& params,
               boost::shared_ptr<Portfolio> portfolio,
               boost::shared_ptr<PostProcess> postProcess);
@@ -100,7 +103,9 @@ int main(int argc, char** argv) {
         string inputPath = params.get("setup", "inputPath"); 
         string marketFile = inputPath + "/" + params.get("setup", "marketDataFile");
         string fixingFile = inputPath + "/" + params.get("setup", "fixingDataFile");
-        CSVLoader loader(marketFile, fixingFile);
+        string implyTodaysFixingsString = params.get("setup", "implyTodaysFixings");
+        bool implyTodaysFixings = parseBool(implyTodaysFixingsString);
+        CSVLoader loader(marketFile, fixingFile, implyTodaysFixings);
         cout << "OK" << endl;
         
         /*************
@@ -271,7 +276,6 @@ int main(int argc, char** argv) {
                 inMemoryCube = boost::make_shared<SinglePrecisionInMemoryCube>
                 (asof, simPortfolio->ids(), grid->dates(), samples);
             engine.buildCube(simPortfolio, inMemoryCube, inMemoryAdditionalScenarioData);
-            //engine.buildCube(simPortfolio, inMemoryCube, boost::shared_ptr<AdditionalScenarioData>());
             cout << "OK" << endl;
 
             cout << setw(tab) << left << "Write Cube... " << flush;
@@ -346,6 +350,7 @@ int main(int argc, char** argv) {
             writeTradeExposures(params, postProcess);
             writeNettingSetExposures(params, postProcess);
             writeCva(params, portfolio, postProcess);
+            writeNettingSetColva(params, postProcess);
 
             string rawCubeOutputFile = params.get("xva", "rawCubeOutputFile");
             CubeWriter cw1(outputPath + "/" + rawCubeOutputFile);
@@ -650,7 +655,7 @@ void writeNettingSetExposures(const Parameters& params,
         const vector<Real>& ene = postProcess->netENE(n);
         const vector<Real>& pfe = postProcess->netPFE(n);
         const vector<Real>& ecb = postProcess->expectedCollateral(n);
-        file << "#TradeId,Date,Time,EPE,ENE,PFE,ExpectedCollateral" << endl;
+        file << "#NettingSet,Date,Time,EPE,ENE,PFE,ExpectedCollateral" << endl;
         file << n << ","
              << QuantLib::io::iso_date(today) << ","
              << 0.0 << ","
@@ -704,6 +709,33 @@ void writeCva(const Parameters& params,
         }
     }
     file.close();
+}
+
+void writeNettingSetColva(const Parameters& params,
+                          boost::shared_ptr<PostProcess> postProcess) {
+    string outputPath = params.get("setup", "outputPath");
+    const vector<Date> dates = postProcess->cube()->dates();
+    Date today = Settings::instance().evaluationDate();
+    DayCounter dc = ActualActual();
+    for (auto n : postProcess->nettingSetIds()) {
+        ostringstream o;
+        o << outputPath << "/colva_nettingset_" << n << ".csv";
+        string fileName = o.str();
+        ofstream file(fileName.c_str());
+        QL_REQUIRE(file.is_open(), "Error opening file " << fileName);
+        const vector<Real>& colvaInc = postProcess->colvaIncrements(n);
+        Real colva = postProcess->nettingSetCOLVA(n);
+        file << "#NettingSet,Date,Time,COLVA" << endl;
+        file << n << ",,," << colva << endl;
+        for (Size j = 0; j < dates.size(); ++j) {
+            Real time = dc.yearFraction(today, dates[j]);
+            file << n << ","
+                 << QuantLib::io::iso_date(dates[j]) << ","
+                 << time << ","
+                 << colvaInc[j+1] << endl;
+        }
+        file.close();
+    }
 }
 
 bool Parameters::hasGroup(const string& groupName) const {

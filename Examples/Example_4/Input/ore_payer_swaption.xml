@@ -7,6 +7,7 @@
     <Parameter name="logFile">log.txt</Parameter>
     <Parameter name="marketDataFile">../../Input/market_20160226.txt</Parameter>
     <Parameter name="fixingDataFile">../../Input/fixings_20160226.txt</Parameter>
+    <Parameter name="implyTodaysFixings">M</Parameter>
     <Parameter name="curveConfigFile">../../Input/curveconfig.xml</Parameter>
     <Parameter name="conventionsFile">../../Input/conventions.xml</Parameter>
     <Parameter name="marketConfigFile">../../Input/todaysmarket.xml</Parameter>
