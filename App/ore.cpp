@@ -353,11 +353,12 @@ int main(int argc, char** argv) {
 
             string rawCubeOutputFile = params.get("xva", "rawCubeOutputFile");
             CubeWriter cw1(outputPath + "/" + rawCubeOutputFile);
-            cw1.write(cube);
+            map<string, string> nettingSetMap = portfolio->nettingSetMap();
+            cw1.write(cube, nettingSetMap);
 
             string netCubeOutputFile = params.get("xva", "netCubeOutputFile");
             CubeWriter cw2(outputPath + "/" + netCubeOutputFile);
-            cw2.write(postProcess->netCube());
+            cw2.write(postProcess->netCube(), nettingSetMap);
             
             cout << "OK" << endl;
         }
