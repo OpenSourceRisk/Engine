@@ -62,6 +62,7 @@
       <Parameter name="calculationType">Symmetric</Parameter>      
       <Parameter name="allocationMethod">Marginal</Parameter>    
       <Parameter name="marginalAllocationLimit">1.0</Parameter>    
+      <Parameter name="exerciseNextBreak">N</Parameter>
       <Parameter name="cva">Y</Parameter>
       <Parameter name="dva">N</Parameter>
       <Parameter name="dvaName">BANK</Parameter>
