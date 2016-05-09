@@ -14,6 +14,7 @@
 #include <ql/time/daycounters/all.hpp>
 #include <ql/cashflows/floatingratecoupon.hpp>
 #include <boost/timer.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include "ore.hpp"
 #include "timebomb.hpp"
@@ -26,6 +27,7 @@
 #  include <boost/config/auto_link.hpp>
 #  define BOOST_LIB_NAME boost_date_time
 #  include <boost/config/auto_link.hpp>
+#  define putenv _putenv
 #endif
 
 using namespace std;
@@ -38,8 +40,6 @@ using namespace openxva::engine;
 using namespace openxva::simulation;
 using namespace openxva::cube;
 using namespace openxva::aggregation;
-
-void unregister(boost::shared_ptr<Portfolio> portfolio);
 
 void writeNpv(const Parameters& params,
               boost::shared_ptr<Market> market,
@@ -82,7 +82,7 @@ int main(int argc, char** argv) {
         string inputFile(argv[1]);
         Parameters params;
         params.fromFile(inputFile);
-        
+
         string outputPath = params.get("setup", "outputPath"); 
         string logFile =  outputPath + "/" + params.get("setup", "logFile");
         
@@ -91,6 +91,50 @@ int main(int argc, char** argv) {
         
         LOG("ORE starting");
         params.log();
+
+        // Set envoirnment variables from params file for:
+        // - Fixing Model (Simulated or Manual)
+        // - Observation Model (None, unregister, disable)
+        //
+        // This is temporary while in Beta, so we use env variables for now, rather than a proper Setting
+        //
+        // If the env variable is arlready set, we use that, it overrides ore.xml
+        if (getenv("FIXING") == NULL) {
+            if (params.has("setup", "fixingModel")) {
+                string fm = params.get("setup", "fixingModel");
+                boost::algorithm::to_lower(fm);
+                if (fm == "simulated")
+                    putenv((char *)"FIXING=SIM");
+                else if (fm == "manual")
+                    putenv((char *)"FIXING=MAN");
+                else {
+                    QL_FAIL("Invalid setup::fixingModel setting " << fm);
+                }
+            } else {
+                // default to manual (?)
+                putenv((char *)"FIXING=MAN");
+            }
+        }
+        if (getenv("OBS") == NULL) {
+            if (params.has("setup", "observationModel")) {
+                string om = params.get("setup", "observationModel");
+                boost::algorithm::to_lower(om);
+                if (om == "unregister")
+                    putenv((char *)"OBS=UNREG");
+                else if (om == "disable")
+                    putenv((char *)"OBS=DISABLE");
+                else {
+                    QL_FAIL("Invalid setup::observationModel setting " << om);
+                }
+
+            } else {
+                // default to none
+                putenv((char *)"OBS=NONE");
+            }
+        }
+        LOG("Fixing Model is " << getenv("FIXING"));
+        LOG("Observation Model is " << getenv("OBS"));
+
 
         string asofString = params.get("setup", "asofDate");
         Date asof = parseDate(asofString);
@@ -251,9 +295,6 @@ int main(int argc, char** argv) {
             string sportyString = params.get("simulation", "disableEvaluationDateObservation");
             bool sporty = parseBool(sportyString);
 
-            //unregister(portfolio);
-            //unregister(simPortfolio);
-            
             LOG("Build valuation cube engine");
             Size samples = sb.samples();
             string baseCurrency = params.get("simulation", "baseCurrency");
@@ -392,38 +433,6 @@ int main(int argc, char** argv) {
     LOG("ORE done.");
     
     return 0;
-}
-
-
-void unregister(boost::shared_ptr<Portfolio> portfolio) {
-    
-    LOG("Unregister ... ");
-    int count = 0;
-    for (Size i = 0; i < portfolio->size(); ++i) {
-        // We need to unregister all FloatingRateCoupons with their Indices.
-        // Rather then inspecting each trade type, we just use boost dynamic casting
-        // to see if we have FloatingRateCoupons and then unregister.
-        vector<Leg> legs;
-        for (Size j = 0; j < portfolio->trades()[i]->legs().size(); j++)
-            legs.push_back(portfolio->trades()[i]->legs()[j]);            
-        // Now unregister any FloatingRateCoupons we have.
-        for (Size j = 0; j < legs.size(); ++j) {
-            for (Leg::iterator it = legs[j].begin(); it != legs[j].end(); ++it) {
-                boost::shared_ptr<FloatingRateCoupon> coupon = 
-                    boost::dynamic_pointer_cast<FloatingRateCoupon>(*it);
-                if (coupon.get()) {
-                    // we have a FloatingRateCoupon
-                    coupon->unregisterWith(coupon->index());
-                    coupon->unregisterWith(Settings::instance().evaluationDate());
-                    coupon->index()->unregisterWith(Settings::instance().evaluationDate());
-                    ++count;
-                }
-            }
-        }
-        boost::shared_ptr<Instrument> instrument = portfolio->trades()[i]->instrument()->qlInstrument();
-        instrument->unregisterWith(Settings::instance().evaluationDate());
-    }
-    LOG("Unregister " << count << " coupons done.");
 }
 
 void writeNpv(const Parameters& params,
