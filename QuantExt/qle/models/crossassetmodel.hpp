@@ -48,7 +48,7 @@ namespace QuantExt {
     parametrizations are absolute and insensitive to shifts in the global
     evaluation date. The termstructures are required to be consistent with
     these times, i.e. should all have the same reference date and day counter.
-    The model does not observe anything, so it's update() method must be
+    The model does not observe anything, so its update() method must be
     explicitly called to notify observers of changes in the constituting
     parametrizations, update these parametrizations and flushing the cache
     of the state process. The model ensures these updates during
