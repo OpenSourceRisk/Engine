@@ -41,13 +41,13 @@ namespace QuantExt {
       overnightIndex_(overnightIndex),
       onTenor_(onTenor),
       onSpread_(onSpread),
-      rateCutoff_(rateCutoff), 
+      rateCutoff_(rateCutoff),
       discountHandle_(discountCurve) {
 
         bool onIndexHasCurve = !overnightIndex_->
             forwardingTermStructure().empty();
         bool haveDiscountCurve = !discountHandle_.empty();
-        QL_REQUIRE(!(onIndexHasCurve && haveDiscountCurve), 
+        QL_REQUIRE(!(onIndexHasCurve && haveDiscountCurve),
             "Have both curves nothing to solve for.");
 
         if (!onIndexHasCurve) {
@@ -65,7 +65,7 @@ namespace QuantExt {
     }
 
     void AverageOISRateHelper::initializeDates() {
-        
+
         averageOIS_ = MakeAverageOIS(swapTenor_, overnightIndex_, onTenor_,
             0.0, fixedTenor_, fixedDayCounter_, spotLagTenor_)
             .withFixedCalendar(fixedCalendar_)
@@ -80,26 +80,26 @@ namespace QuantExt {
     }
 
     Real AverageOISRateHelper::impliedQuote() const {
-        
+
         QL_REQUIRE(termStructure_ != 0, "term structure not set");
         averageOIS_->recalculate();
 
-        // Calculate the fair fixed rate after accounting for the 
+        // Calculate the fair fixed rate after accounting for the
         // spread in the spread quote. Recall, the spread quote was
         // intentionally not added to instrument averageOIS_.
         static const Spread basisPoint = 1.0e-4;
         Real onLegNPV = averageOIS_->overnightLegNPV();
         Spread onSpread = onSpread_.empty() ? 0.0 : onSpread_->value();
-        Real spreadNPV = averageOIS_->overnightLegBPS() * 
+        Real spreadNPV = averageOIS_->overnightLegBPS() *
             onSpread / basisPoint;
         Real onLegNPVwithSpread = onLegNPV + spreadNPV;
-        Real result = - onLegNPVwithSpread / 
+        Real result = - onLegNPVwithSpread /
             (averageOIS_->fixedLegBPS() / basisPoint);
         return result;
     }
 
     void AverageOISRateHelper::setTermStructure(YieldTermStructure* t) {
-        
+
         bool observer = false;
         boost::shared_ptr<YieldTermStructure> temp(t, no_deletion);
         termStructureHandle_.linkTo(temp, observer);
@@ -121,7 +121,7 @@ namespace QuantExt {
     }
 
     void AverageOISRateHelper::accept(AcyclicVisitor& v) {
-        
+
         Visitor<AverageOISRateHelper>* v1 =
             dynamic_cast<Visitor<AverageOISRateHelper>*>(&v);
         if (v1 != 0)

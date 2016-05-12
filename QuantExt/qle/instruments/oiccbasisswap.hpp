@@ -45,7 +45,7 @@ namespace QuantLib {
         Real payNominal() const;
         Currency payCurrency() const;
         const Schedule& paySchedule() { return paySchedule_; }
-        const boost::shared_ptr<OvernightIndex>& payIndex() { return payIndex_; } 
+        const boost::shared_ptr<OvernightIndex>& payIndex() { return payIndex_; }
         Real paySpread() const;
 
         Real recNominal() const;
@@ -64,7 +64,7 @@ namespace QuantLib {
         Real payLegBPS() const;
         Real payLegNPV() const;
         Real fairPayLegSpread() const;
-        
+
         Real recLegBPS() const;
         Real recLegNPV() const;
         Spread fairRecLegSpread() const;
@@ -126,7 +126,7 @@ namespace QuantLib {
         void reset();
     };
 
-    class OvernightIndexedCrossCcyBasisSwap::engine 
+    class OvernightIndexedCrossCcyBasisSwap::engine
         : public GenericEngine<OvernightIndexedCrossCcyBasisSwap::arguments,
                                OvernightIndexedCrossCcyBasisSwap::results> {};
 

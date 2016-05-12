@@ -18,9 +18,9 @@
 #include <qle/instruments/crossccyswap.hpp>
 
 namespace QuantExt {
-    
+
     //! Cross currency basis swap
-    /*! The first leg holds the pay currency cashflows and second leg holds 
+    /*! The first leg holds the pay currency cashflows and second leg holds
         the receive currency cashflows.
 
         \ingroup instruments
@@ -30,8 +30,8 @@ namespace QuantExt {
         class arguments;
         class results;
         //! \name Constructors
-		//@{
-        /*! First leg holds the pay currency cashflows and the second leg 
+        //@{
+        /*! First leg holds the pay currency cashflows and the second leg
             holds the receive currency cashflows.
         */
         CrossCcyBasisSwap(Real payNominal,
@@ -57,7 +57,7 @@ namespace QuantExt {
         const Schedule& paySchedule() const { return paySchedule_; }
         const boost::shared_ptr<IborIndex>& payIndex() const {
             return payIndex_;
-        } 
+        }
         Spread paySpread() const { return paySpread_; }
 
         Real recNominal() const { return recNominal_; }
@@ -84,7 +84,7 @@ namespace QuantExt {
             return fairRecSpread_;
         }
         //@}
-      
+
       protected:
         //! \name Instrument interface
         //@{
@@ -99,13 +99,13 @@ namespace QuantExt {
         Schedule paySchedule_;
         boost::shared_ptr<IborIndex> payIndex_;
         Spread paySpread_;
-        
+
         Real recNominal_;
         Currency recCurrency_;
         Schedule recSchedule_;
         boost::shared_ptr<IborIndex> recIndex_;
         Spread recSpread_;
-        
+
         mutable Spread fairPaySpread_;
         mutable Spread fairRecSpread_;
     };

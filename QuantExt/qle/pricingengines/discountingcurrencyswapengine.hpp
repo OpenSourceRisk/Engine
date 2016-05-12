@@ -19,17 +19,17 @@
 #include <qle/instruments/currencyswap.hpp>
 
 namespace QuantExt {
-    
+
     //! %Discounting %CurrencySwap Engine
 
-    /*! This class generalizes QuantLib's DiscountingSwapEngine. It takes 
+    /*! This class generalizes QuantLib's DiscountingSwapEngine. It takes
         leg currencies into account and converts into the provided "npv
         currency", which must be one of the leg currencies. The evaluation
         date is the reference date of either of the discounting curves (which
         must be equal).
- 
+
         \ingroup engines
-    */ 
+    */
     class DiscountingCurrencySwapEngine : public CurrencySwap::engine {
       public:
         /*! The FX spots must be given as units of npvCurrency per respective

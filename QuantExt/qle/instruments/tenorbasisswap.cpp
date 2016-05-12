@@ -20,9 +20,9 @@ namespace QuantExt {
           public:
             FairShortSpreadHelper(const TenorBasisSwap& swap,
                 const Handle<YieldTermStructure>& discountCurve,
-                Real longLegNPV) 
+                Real longLegNPV)
             : longLegNPV_(longLegNPV) {
-                
+
                 engine_ = boost::shared_ptr<PricingEngine>(
                     new DiscountingSwapEngine(discountCurve));
                 arguments_ = dynamic_cast<Swap::arguments*>(
@@ -33,7 +33,7 @@ namespace QuantExt {
                 results_ = dynamic_cast<const Swap::results*>(
                     engine_->getResults());
             }
-            
+
             Real operator()(Spread shortSpread) const {
                 // Change the spread on the leg and recalculate
                 Leg::const_iterator it;
@@ -87,7 +87,7 @@ namespace QuantExt {
 
         // Create the default long and short schedules
         Date terminationDate = effectiveDate + swapTenor;
-        
+
         longSchedule_ = MakeSchedule().from(effectiveDate)
             .to(terminationDate)
             .withTenor(longTenor)
@@ -110,7 +110,7 @@ namespace QuantExt {
                 .endOfMonth(shortIndex_->endOfMonth());
         } else {
             /* Where the payment tenor is longer, the SubPeriodsLeg
-               will handle the adjustments. We just need to give the 
+               will handle the adjustments. We just need to give the
                anchor dates. */
             shortSchedule_ = MakeSchedule().from(effectiveDate)
                 .to(terminationDate)
@@ -147,7 +147,7 @@ namespace QuantExt {
       shortSpread_(shortSpread),
       includeSpread_(includeSpread),
       type_(type) {
-          
+
         // Checks
         Period longTenor = longSchedule_.tenor();
         QL_REQUIRE(longTenor == longIndex_->tenor(),
@@ -163,9 +163,9 @@ namespace QuantExt {
     }
 
     void TenorBasisSwap::initializeLegs() {
-        
+
         // Long leg
-        BusinessDayConvention longPmtConvention = 
+        BusinessDayConvention longPmtConvention =
             longIndex_->businessDayConvention();
         DayCounter longDayCounter = longIndex_->dayCounter();
         Leg longLeg = IborLeg(longSchedule_, longIndex_)
@@ -176,7 +176,7 @@ namespace QuantExt {
 
         // Short leg
         Leg shortLeg;
-        BusinessDayConvention shortPmtConvention = 
+        BusinessDayConvention shortPmtConvention =
             shortIndex_->businessDayConvention();
         DayCounter shortDayCounter = shortIndex_->dayCounter();
         Calendar shortPmtCalendar = shortIndex_->fixingCalendar();
@@ -196,7 +196,7 @@ namespace QuantExt {
                 .includeSpread(includeSpread_)
                 .withType(type_);
         }
-          
+
         // Pay (Rec) leg is legs_[0] (legs_[1])
         payer_[0] = -1.0;
         payer_[1] = +1.0;
@@ -263,13 +263,13 @@ namespace QuantExt {
     }
 
     void TenorBasisSwap::fetchResults(const PricingEngine::results* r) const {
-        
+
         static const Spread basisPoint = 1.0e-4;
         Swap::fetchResults(r);
 
         const TenorBasisSwap::results* results =
             dynamic_cast<const TenorBasisSwap::results*>(r);
-        
+
         if (results) {
             fairLongSpread_ = results->fairLongSpread;
             fairShortSpread_ = results->fairShortSpread;
@@ -281,7 +281,7 @@ namespace QuantExt {
         // Long fair spread should be fine - no averaging or compounding
         if (fairLongSpread_ == Null<Spread>()) {
             if (legBPS_[longNo_] != Null<Real>()) {
-                fairLongSpread_ = 
+                fairLongSpread_ =
                     longSpread_ - NPV_ / (legBPS_[longNo_] / basisPoint);
             }
         }
@@ -297,7 +297,7 @@ namespace QuantExt {
             } else {
                 // Need the discount curve
                 Handle<YieldTermStructure> discountCurve;
-                boost::shared_ptr<DiscountingSwapEngine> engine = 
+                boost::shared_ptr<DiscountingSwapEngine> engine =
                     boost::dynamic_pointer_cast<DiscountingSwapEngine>(engine_);
                 if (engine) {
                     discountCurve = engine->discountCurve();

@@ -18,18 +18,18 @@
 using namespace QuantLib;
 
 namespace QuantExt {
-    
-    /*! This class prices a swap with numerous simplifications in the case of 
+
+    /*! This class prices a swap with numerous simplifications in the case of
         an ibor coupon leg to speed up the calculations:
-        - the index of an IborCoupon is assumed to be fixing in 
-          advance and to have a tenor from accrual start date to accrual end 
+        - the index of an IborCoupon is assumed to be fixing in
+          advance and to have a tenor from accrual start date to accrual end
           date.
         - start and end discounts of Swap::results not populated.
     */
     class DiscountingSwapEngineMultiCurve : public Swap::engine {
       public:
         DiscountingSwapEngineMultiCurve(
-            const Handle<YieldTermStructure>& discountCurve = 
+            const Handle<YieldTermStructure>& discountCurve =
                 Handle<YieldTermStructure>(),
             bool minimalResults = true,
             boost::optional<bool> includeSettlementDateFlows = boost::none,
@@ -45,7 +45,7 @@ namespace QuantExt {
         boost::optional<bool> includeSettlementDateFlows_;
         Date settlementDate_;
         Date npvDate_;
-        
+
         class AmountImpl;
         boost::shared_ptr<AmountImpl> impl_;
     };

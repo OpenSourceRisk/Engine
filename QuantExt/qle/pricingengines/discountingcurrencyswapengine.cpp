@@ -34,7 +34,7 @@ namespace QuantExt {
       includeSettlementDateFlows_(includeSettlementDateFlows),
       settlementDate_(settlementDate),
       npvDate_(npvDate) {
-        
+
         QL_REQUIRE(discountCurves_.size() == currencies_.size(), "Number of "
             "currencies does not match number of discount curves.");
         QL_REQUIRE(fxQuotes_.size() == currencies_.size(), "Number of "
@@ -131,7 +131,7 @@ namespace QuantExt {
                         arguments_.legs[i], **yts, includeRefDateFlows,
                         settlementDate, yts->referenceDate(), false, false,
                         false, false);
- 
+
                     results_.inCcyLegBPS[i] = Null<Real>();
                 }
                 else {
@@ -175,7 +175,7 @@ namespace QuantExt {
                     results_.endDiscounts[i] = Null<DiscountFactor>();
                 }
 
-                   
+
             } catch (std::exception &e) {
                 QL_FAIL("leg " << i << ": " << e.what());
             }

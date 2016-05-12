@@ -19,13 +19,13 @@
 namespace QuantExt {
 
     /*! Rate helper for bootstrapping over cross currency basis swap spreads
-        
+
         Assumes that you have, at a minimum, either:
         - flatIndex with attached YieldTermStructure and flatDiscountCurve
         - spreadIndex with attached YieldTermStructure and spreadDiscountCurve
 
-        The other leg is then solved for i.e. index curve (if no 
-        YieldTermStructure is attached to its index) or discount curve (if 
+        The other leg is then solved for i.e. index curve (if no
+        YieldTermStructure is attached to its index) or discount curve (if
         its Handle is empty) or both.
 
         The currencies are deduced from the ibor indexes. The spotFx
@@ -57,7 +57,7 @@ namespace QuantExt {
         //@{
         void accept(AcyclicVisitor&);
         //@}
-    
+
       protected:
         void initializeDates();
 

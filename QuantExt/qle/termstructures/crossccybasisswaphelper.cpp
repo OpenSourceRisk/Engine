@@ -36,12 +36,12 @@ namespace QuantExt {
       settlementCalendar_(settlementCalendar),
       swapTenor_(swapTenor),
       rollConvention_(rollConvention),
-      flatIndex_(flatIndex), 
+      flatIndex_(flatIndex),
       spreadIndex_(spreadIndex),
-      flatDiscountCurve_(flatDiscountCurve), 
+      flatDiscountCurve_(flatDiscountCurve),
       spreadDiscountCurve_(spreadDiscountCurve),
       eom_(eom), flatIsDomestic_(flatIsDomestic) {
-        
+
         flatLegCurrency_ = flatIndex_->currency();
         spreadLegCurrency_ = spreadIndex_->currency();
 
@@ -87,7 +87,7 @@ namespace QuantExt {
         Date settlementDate = settlementCalendar_.advance(evaluationDate_,
             settlementDays_, Days);
         Date maturityDate = settlementDate + swapTenor_;
-        
+
         Period flatLegTenor = flatIndex_->tenor();
         Schedule flatLegSchedule = MakeSchedule()
             .from(settlementDate)
@@ -118,7 +118,7 @@ namespace QuantExt {
         swap_ = boost::shared_ptr<CrossCcyBasisSwap>(
             new CrossCcyBasisSwap(spreadLegNominal,
                 spreadLegCurrency_,
-                spreadLegSchedule,                  
+                spreadLegSchedule,
                 spreadIndex_, 0.0,
                 flatLegNominal,
                 flatLegCurrency_,
@@ -175,7 +175,7 @@ namespace QuantExt {
     }
 
     void CrossCcyBasisSwapHelper::setTermStructure(YieldTermStructure* t) {
-        
+
         bool observer = false;
         boost::shared_ptr<YieldTermStructure> temp(t, no_deletion);
 

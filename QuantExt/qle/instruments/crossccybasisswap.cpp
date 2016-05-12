@@ -78,7 +78,7 @@ namespace QuantExt {
 
         // Register the instrument with all cashflows on each leg.
         for (Size legNo = 0; legNo < 2; legNo++) {
-            Leg::iterator it; 
+            Leg::iterator it;
             for (it = legs_[legNo].begin(); it != legs_[legNo].end(); it++) {
                 registerWith(*it);
             }
@@ -87,29 +87,29 @@ namespace QuantExt {
 
     void CrossCcyBasisSwap::setupArguments(
         PricingEngine::arguments* args) const {
-        
+
         CrossCcySwap::setupArguments(args);
 
-        CrossCcyBasisSwap::arguments* arguments = 
+        CrossCcyBasisSwap::arguments* arguments =
             dynamic_cast<CrossCcyBasisSwap::arguments*>(args);
-        
-        /* Returns here if e.g. args is CrossCcySwap::arguments which 
+
+        /* Returns here if e.g. args is CrossCcySwap::arguments which
            is the case if PricingEngine is a CrossCcySwap::engine. */
         if (!arguments) return;
- 
+
         arguments->paySpread = paySpread_;
         arguments->recSpread = recSpread_;
     }
 
     void CrossCcyBasisSwap::fetchResults(
         const PricingEngine::results* r) const {
-        
+
         CrossCcySwap::fetchResults(r);
 
-        const CrossCcyBasisSwap::results* results 
+        const CrossCcyBasisSwap::results* results
             = dynamic_cast<const CrossCcyBasisSwap::results*>(r);
         if (results) {
-            /* If PricingEngine::results are of type 
+            /* If PricingEngine::results are of type
                CrossCcyBasisSwap::results */
             fairPaySpread_ = results->fairPaySpread;
             fairRecSpread_ = results->fairRecSpread;

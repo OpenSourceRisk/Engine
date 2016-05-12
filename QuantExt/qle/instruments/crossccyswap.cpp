@@ -21,10 +21,10 @@ namespace QuantExt {
 
     CrossCcySwap::CrossCcySwap(const std::vector<Leg>& legs,
         const std::vector<bool>& payer,
-        const std::vector<Currency>& currencies) 
+        const std::vector<Currency>& currencies)
     : Swap(legs, payer), currencies_(currencies) {
         QL_REQUIRE(payer.size() == currencies_.size(), "Size mismatch "
-            "between payer (" << payer.size() << ") and currencies (" << 
+            "between payer (" << payer.size() << ") and currencies (" <<
             currencies_.size() << ")");
     }
 
@@ -36,7 +36,7 @@ namespace QuantExt {
       npvDateDiscounts_(legs, 0.0) {}
 
     void CrossCcySwap::setupArguments(PricingEngine::arguments* args) const {
-        
+
         Swap::setupArguments(args);
 
         CrossCcySwap::arguments* arguments = dynamic_cast
@@ -48,7 +48,7 @@ namespace QuantExt {
     }
 
     void CrossCcySwap::fetchResults(const PricingEngine::results* r) const {
-        
+
         Swap::fetchResults(r);
 
         const CrossCcySwap::results* results = dynamic_cast

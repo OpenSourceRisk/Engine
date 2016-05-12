@@ -19,7 +19,7 @@ namespace QuantExt {
           private:
             const boost::shared_ptr<FloatingRateCouponPricer> pricer_;
           public:
-            PricerSetter(const 
+            PricerSetter(const
                 boost::shared_ptr<FloatingRateCouponPricer>& pricer)
             : pricer_(pricer) {}
 
@@ -38,7 +38,7 @@ namespace QuantExt {
         }
 
         void PricerSetter::visit(AverageONIndexedCoupon& c) {
-            const boost::shared_ptr<AverageONIndexedCouponPricer> 
+            const boost::shared_ptr<AverageONIndexedCouponPricer>
                 averageONIndexedCouponPricer =
                 boost::dynamic_pointer_cast<AverageONIndexedCouponPricer>(
                     pricer_);
@@ -48,7 +48,7 @@ namespace QuantExt {
         }
 
         void PricerSetter::visit(SubPeriodsCoupon& c) {
-            const boost::shared_ptr<SubPeriodsCouponPricer> 
+            const boost::shared_ptr<SubPeriodsCouponPricer>
                 subPeriodsCouponPricer =
                 boost::dynamic_pointer_cast<SubPeriodsCouponPricer>(
                     pricer_);
@@ -67,9 +67,9 @@ namespace QuantExt {
     }
 
     void setCouponPricers(const Leg& leg,
-        const std::vector<boost::shared_ptr<FloatingRateCouponPricer> >& 
+        const std::vector<boost::shared_ptr<FloatingRateCouponPricer> >&
         pricers) {
-        
+
         Size nCashFlows = leg.size();
         QL_REQUIRE(nCashFlows > 0, "No cashflows");
 
@@ -79,7 +79,7 @@ namespace QuantExt {
             ") and number of pricers (" << nPricers << ")");
 
         for (Size i = 0; i < nCashFlows; ++i) {
-            PricerSetter setter(i < nPricers ? 
+            PricerSetter setter(i < nPricers ?
                 pricers[i] : pricers[nPricers-1]);
             leg[i]->accept(setter);
         }

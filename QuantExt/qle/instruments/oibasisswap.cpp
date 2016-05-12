@@ -23,10 +23,10 @@ namespace QuantLib {
                     Spread iborSpread)
     : Swap(2), type_(type),
       nominals_(std::vector<Real>(1, nominal)),
-      oisSchedule_(oisSchedule), overnightIndex_(overnightIndex), 
-      iborSchedule_(iborSchedule), iborIndex_(iborIndex), 
+      oisSchedule_(oisSchedule), overnightIndex_(overnightIndex),
+      iborSchedule_(iborSchedule), iborIndex_(iborIndex),
       oisSpread_(oisSpread), iborSpread_(iborSpread) {
-        
+
         initialize();
     }
 
@@ -40,10 +40,10 @@ namespace QuantLib {
                     Spread oisSpread,
                     Spread iborSpread)
     : Swap(2), type_(type), nominals_(nominals),
-      oisSchedule_(oisSchedule), overnightIndex_(overnightIndex), 
-      iborSchedule_(iborSchedule), iborIndex_(iborIndex), 
+      oisSchedule_(oisSchedule), overnightIndex_(overnightIndex),
+      iborSchedule_(iborSchedule), iborIndex_(iborIndex),
       oisSpread_(oisSpread), iborSpread_(iborSpread) {
-        
+
         initialize();
     }
 

@@ -23,10 +23,10 @@ namespace QuantExt {
     class SubPeriodsCouponPricer : public FloatingRateCouponPricer {
       public:
         SubPeriodsCouponPricer() {}
-        
+
         void initialize(const FloatingRateCoupon& coupon);
         Rate swapletRate() const;
-        
+
         Real swapletPrice() const {
             QL_FAIL("swapletPrice not available"); }
         Real capletPrice(Rate) const {
@@ -37,7 +37,7 @@ namespace QuantExt {
             QL_FAIL("floorletPrice not available"); }
         Rate floorletRate(Rate) const {
             QL_FAIL("floorletRate not available"); }
-      
+
       protected:
         Real gearing_;
         Spread spread_;

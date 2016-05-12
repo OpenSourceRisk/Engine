@@ -20,9 +20,9 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-    /*! Rate helper to facilitate the usage of an AverageOIS instrument in 
-        bootstrapping. This instrument pays a fixed leg vs. a leg that 
-        pays the arithmetic average of an ON index plus a spread. 
+    /*! Rate helper to facilitate the usage of an AverageOIS instrument in
+        bootstrapping. This instrument pays a fixed leg vs. a leg that
+        pays the arithmetic average of an ON index plus a spread.
     */
     class AverageOISRateHelper : public RelativeDateRateHelper {
       public:
@@ -41,7 +41,7 @@ namespace QuantExt {
             const Handle<Quote>& onSpread,
             Natural rateCutoff,
             // Exogenous discount curve
-            const Handle<YieldTermStructure>& discountCurve 
+            const Handle<YieldTermStructure>& discountCurve
                 = Handle<YieldTermStructure>());
 
         //! \name RateHelper interface

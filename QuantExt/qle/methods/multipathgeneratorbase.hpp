@@ -38,13 +38,13 @@ namespace QuantExt {
                                        bool antitheticSampling = false);
         const Sample<MultiPath> &next() const;
         void reset();
-        
+
     private:
         const boost::shared_ptr<StochasticProcess> process_;
         TimeGrid grid_;
         Size dimension_;
         BigNatural seed_;
-        
+
         boost::shared_ptr<MultiPathGenerator<PseudoRandom::rsg_type> > pg_;
         bool antitheticSampling_;
         mutable bool antitheticVariate_;
