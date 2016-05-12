@@ -69,13 +69,13 @@ Real fx_expectation_2(const CrossAssetModel *x, const Size i, const Time t0,
 }
 
 Real ir_ir_covariance(const CrossAssetModel *x, const Size i, const Size j,
-                      const Time t0, Time dt) {
+                      const Time t0, const Time dt) {
     Real res = integral(x, P(az(i), az(j), rzz(i, j)), t0, t0 + dt);
     return res;
 }
 
 Real ir_fx_covariance(const CrossAssetModel *x, const Size i, const Size j,
-                      const Time t0, Time dt) {
+                      const Time t0, const Time dt) {
     Real res =
         Hz(0).eval(x, t0 + dt) *
             integral(x, P(az(0), az(i), rzz(0, i)), t0, t0 + dt) -
@@ -89,7 +89,7 @@ Real ir_fx_covariance(const CrossAssetModel *x, const Size i, const Size j,
 }
 
 Real fx_fx_covariance(const CrossAssetModel *x, const Size i, const Size j,
-                      const Time t0, Time dt) {
+                      const Time t0, const Time dt) {
     Real H0 = Hz(0).eval(x, t0 + dt);
     Real Hi = Hz(i + 1).eval(x, t0 + dt);
     Real Hj = Hz(j + 1).eval(x, t0 + dt);
