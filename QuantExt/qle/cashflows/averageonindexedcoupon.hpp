@@ -19,11 +19,11 @@
 using namespace QuantLib;
 
 namespace QuantExt {
-    
+
     class AverageONIndexedCouponPricer;
 
     //! average overnight coupon
-    /*! %Coupon paying the interest due to the weighted average of daily 
+    /*! %Coupon paying the interest due to the weighted average of daily
          overnight fixings. The rateCutoff counts the number of fixing
          dates starting at the end date whose fixings are not taken into
          account, but rather replaced by the last known fixing before.
@@ -33,7 +33,7 @@ namespace QuantExt {
         AverageONIndexedCoupon(const Date& paymentDate,
             Real nominal, const Date& startDate, const Date& endDate,
             const boost::shared_ptr<OvernightIndex>& overnightIndex,
-            Real gearing = 1.0, Spread spread = 0.0, Natural rateCutoff = 0, 
+            Real gearing = 1.0, Spread spread = 0.0, Natural rateCutoff = 0,
             const DayCounter& dayCounter = DayCounter());
         //! \name Inspectors
         //@{
