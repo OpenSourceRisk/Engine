@@ -50,6 +50,8 @@
     <DiscountingCurve Currency="GBP">Yield/GBP/GBP6M</DiscountingCurve>
     <DiscountingCurve Currency="CHF">Yield/CHF/CHF6M</DiscountingCurve>
     <DiscountingCurve Currency="JPY">Yield/JPY/JPY6M</DiscountingCurve>
+    <DiscountingCurve Currency="BANK_EUR_LEND">Yield/EUR/BANK_EUR_LEND</DiscountingCurve>
+    <DiscountingCurve Currency="BANK_EUR_BORROW">Yield/EUR/BANK_EUR_BORROW</DiscountingCurve>
   </DiscountingCurves>
 
   <DiscountingCurves Id="ois">
@@ -58,6 +60,8 @@
     <DiscountingCurve Currency="GBP">Yield/GBP/GBP1D</DiscountingCurve>
     <DiscountingCurve Currency="CHF">Yield/CHF/CHF6M</DiscountingCurve>
     <DiscountingCurve Currency="JPY">Yield/JPY/JPY6M</DiscountingCurve>
+    <DiscountingCurve Currency="BANK_EUR_LEND">Yield/EUR/BANK_EUR_LEND</DiscountingCurve>
+    <DiscountingCurve Currency="BANK_EUR_BORROW">Yield/EUR/BANK_EUR_BORROW</DiscountingCurve>
   </DiscountingCurves>
 
   <!-- discounting curve definition (in ccy swap discounting) -->
@@ -67,6 +71,8 @@
     <DiscountingCurve Currency="GBP">Yield/GBP/GBP-IN-EUR</DiscountingCurve>
     <DiscountingCurve Currency="CHF">Yield/CHF/CHF6M</DiscountingCurve>
     <DiscountingCurve Currency="JPY">Yield/JPY/JPY6M</DiscountingCurve>
+    <DiscountingCurve Currency="BANK_EUR_LEND">Yield/EUR/BANK_EUR_LEND</DiscountingCurve>
+    <DiscountingCurve Currency="BANK_EUR_BORROW">Yield/EUR/BANK_EUR_BORROW</DiscountingCurve>
   </DiscountingCurves>
 
   <!-- index forwarding curve definition -->

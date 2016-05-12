@@ -66,11 +66,14 @@
       <Parameter name="cva">Y</Parameter>
       <Parameter name="dva">N</Parameter>
       <Parameter name="dvaName">BANK</Parameter>
-      <Parameter name="fva">N</Parameter>
-      <Parameter name="colva">N</Parameter>
+      <Parameter name="fva">Y</Parameter>
+      <Parameter name="fvaBorrowingCurve">BANK_EUR_BORROW</Parameter>
+      <Parameter name="fvaLendingCurve">BANK_EUR_LEND</Parameter>
+      <Parameter name="colva">Y</Parameter>
+      <Parameter name="collateralSpread">0.0010</Parameter>
+      <Parameter name="collateralFloor">Y</Parameter>
       <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>
-      <Parameter name="netCubeOutputFile">netcube.csv</Parameter>
-      
+      <Parameter name="netCubeOutputFile">netcube.csv</Parameter>      
     </Analytic>
 
     <Analytic type="initialMargin">

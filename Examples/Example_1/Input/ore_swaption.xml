@@ -68,7 +68,11 @@
       <Parameter name="dva">N</Parameter>
       <Parameter name="dvaName">BANK</Parameter>
       <Parameter name="fva">N</Parameter>
+      <Parameter name="fvaFundingCurve">BANK_EUR_FUNDING</Parameter>
+      <Parameter name="fvaInvestmentCurve">BANK_EUR_INVESTMENT</Parameter>
       <Parameter name="colva">N</Parameter>
+      <Parameter name="colvaSpread">0.0000</Parameter>
+      <Parameter name="eoniaFloor">Y</Parameter>
       <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>
       <Parameter name="netCubeOutputFile">netcube.csv</Parameter>
       
