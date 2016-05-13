@@ -25,7 +25,8 @@ Real ir_expectation_1(const CrossAssetModel *model, const Size i, const Time t0,
                       const Real dt);
 
 /*! ir state expecation, part that is dependent on current state */
-Real ir_expectation_2(const CrossAssetModel *model, const Size, const Real zi_0);
+Real ir_expectation_2(const CrossAssetModel *model, const Size,
+                      const Real zi_0);
 
 /*! fx state expectation, part that is independent of current state */
 Real fx_expectation_1(const CrossAssetModel *model, const Size i, const Time t0,
@@ -88,7 +89,7 @@ struct sx {
 struct rzz {
     rzz(const Size i, const Size j) : i_(i), j_(j) {}
     Real eval(const CrossAssetModel *x, const Real) const {
-        return x->ir_ir_correlation(i_, j_);
+        return x->correlation(IR, i_, IR, j_, 0, 0);
     }
     const Size i_, j_;
 };
@@ -97,7 +98,7 @@ struct rzz {
 struct rzx {
     rzx(const Size i, const Size j) : i_(i), j_(j) {}
     Real eval(const CrossAssetModel *x, const Real) const {
-        return x->ir_fx_correlation(i_, j_);
+        return x->correlation(IR, i_, FX, j_, 0, 0);
     }
     const Size i_, j_;
 };
@@ -106,11 +107,10 @@ struct rzx {
 struct rxx {
     rxx(const Size i, const Size j) : i_(i), j_(j) {}
     Real eval(const CrossAssetModel *x, const Real) const {
-        return x->fx_fx_correlation(i_, j_);
+        return x->correlation(FX, i_, FX, j_, 0, 0);
     }
     const Size i_, j_;
 };
-
 
 } // namespace CrossAssetAnalytics
 

@@ -55,14 +55,20 @@ namespace QuantExt {
     calibration though.
 */
 
+namespace CrossAssetModelTypes {
+enum AssetType { IR, FX, INF, CR, EQ, COM };
+}
+
+using namespace CrossAssetModelTypes;
+
 class CrossAssetModel : public LinkableCalibratedModel {
   public:
     /*! Parametrizations must be given in the following order
         - IR  (first parametrization defines the domestic currency)
-        - FX  (optionally, for all pairs domestic-ccy defined by the IR models)
+        - FX  (for all pairs domestic-ccy defined by the IR models)
         - INF (optionally, ccy must be a subset of the IR ccys)
-        - CRD (optionally, ccy must be a subset of the IR ccys)
-        - EQ  (optionally, ccy must be a subset of the IR ccys)
+        - CR  (optionally, ccy must be a subset of the IR ccys)
+        - EQ  (optionally) ccy must be a subset of the IR ccys)
         - COM (optionally) ccy must be a subset of the IR ccys) */
     CrossAssetModel(
         const std::vector<boost::shared_ptr<Parametrization> >
@@ -84,14 +90,20 @@ class CrossAssetModel : public LinkableCalibratedModel {
     stateProcess(CrossAssetStateProcess::discretization disc =
                      CrossAssetStateProcess::exact) const;
 
-    /*! total dimension of model (i.e. the number of components in its stochastic process) */
+    /*! total dimension of model (sum of number of state variables) */
     Size dimension() const;
-
-    /*! number of currencies including domestic */
-    Size currencies() const;
 
     /*! total number of parameters that can be calibrated */
     Size totalNumberOfParameters() const;
+
+    /*! number of components for an asset class */
+    Size components(const AssetType t) const;
+
+    /*! number of brownian motions for a component */
+    Size brownians(const AssetType t, const Size i) const;
+
+    /*! number of state variables for a component */
+    Size stateVariables(const AssetType t, const Size i) const;
 
     /*! observer and linked calibrated model interface */
     void update();
@@ -133,14 +145,19 @@ class CrossAssetModel : public LinkableCalibratedModel {
         recommended instead of the global matrix directly */
     const Matrix &correlation() const;
 
-    
+    /*! index of component in the parametrization vector */
+    Size idx(const AssetType t, const Size i) const;
 
-    /*! correlation between two ir components */
-    Real ir_ir_correlation(const Size i, const Size j) const;
-    /*! correlation between an ir and a fx component */
-    Real ir_fx_correlation(const Size i, const Size j) const;
-    /*! correlation between two fx compoents */
-    Real fx_fx_correlation(const Size i, const Size j) const;
+    /*! index of component in the correlation matrix, by offset */
+    Size cIdx(const AssetType t, const Size i, const Size offset = 0) const;
+
+    /*! index of component in the stochastic process array, by offset */
+    Size pIdx(const AssetType t, const Size i, const Size offset = 0) const;
+
+    /*! correlation between two components */
+    Real correlation(const AssetType s, const Size i, const AssetType t,
+                     const Size j, const Size iOffset = 0,
+                     const Size jOffset = 0) const;
 
     /*! analytical moments require numerical integration,
       which can be customized here */
@@ -196,6 +213,13 @@ class CrossAssetModel : public LinkableCalibratedModel {
                     SalvagingAlgorithm::Type salvaging, const bool)
         : LinkableCalibratedModel(), p_(parametrizations), rho_(correlation),
           salvaging_(salvaging) {}
+
+    /*! number of arguments for a component */
+    Size arguments(const AssetType t, const Size i) const;
+
+    /*! index of component in the arguments vector, by offset */
+    Size aIdx(const AssetType t, const Size i, const Size offset = 0) const;
+
     /* init methods */
     virtual void initialize();
     virtual void initializeParametrizations();
@@ -208,7 +232,7 @@ class CrossAssetModel : public LinkableCalibratedModel {
 
     /* members */
 
-    Size nIrLgm1f_, nFxBs_, nInfDk_, nCrLgm1f_;
+    Size nIrLgm1f_, nFxBs_, nInfDk_, nCrLgm1f_, nEq_, nCom_;
     Size totalNumberOfParameters_;
     std::vector<boost::shared_ptr<Parametrization> > p_;
     std::vector<boost::shared_ptr<LinearGaussMarkovModel> > lgm_;
@@ -262,31 +286,18 @@ inline const boost::shared_ptr<StochasticProcess> CrossAssetModel::stateProcess(
 }
 
 inline Size CrossAssetModel::dimension() const {
-    return nIrLgm1f_ * 1 + nFxBs_ * 1 + nInfDk_*2 + nCrLgm1f_ * 2;
+    // this assumes specific models, as soon as other model types are added
+    // this formula has to be generalized as well
+    return nIrLgm1f_ * 1 + nFxBs_ * 1 + nInfDk_ * 2 + nCrLgm1f_ * 2;
 }
-
-inline Size CrossAssetModel::currencies() const { return nIrLgm1f_; }
 
 inline Size CrossAssetModel::totalNumberOfParameters() const {
     return totalNumberOfParameters_;
 }
 
-inline void CrossAssetModel::update() {
-    for (Size i = 0; i < p_.size(); ++i) {
-        p_[i]->update();
-    }
-    stateProcessExact_->flushCache();
-    stateProcessEuler_->flushCache();
-    notifyObservers();
-}
-
-inline void CrossAssetModel::generateArguments() { update(); }
-
 inline const boost::shared_ptr<LinearGaussMarkovModel>
 CrossAssetModel::lgm(const Size ccy) const {
-    QL_REQUIRE(ccy < nIrLgm1f_, "irlgm1f index (" << ccy << ") must be in 0..."
-                                                  << (nIrLgm1f_ - 1));
-    return lgm_[ccy];
+    return lgm_[idx(IR, ccy)];
 }
 
 inline const boost::shared_ptr<IrLgm1fParametrization>
@@ -321,40 +332,10 @@ inline Real CrossAssetModel::discountBondOption(
 
 inline const boost::shared_ptr<FxBsParametrization>
 CrossAssetModel::fxbs(const Size ccy) const {
-    QL_REQUIRE(ccy < nFxBs_, "fxbs index (" << ccy << ") must be in 0..."
-                                            << (nFxBs_ - 1));
-    return boost::dynamic_pointer_cast<FxBsParametrization>(
-        p_[nIrLgm1f_ + ccy]);
+    return boost::dynamic_pointer_cast<FxBsParametrization>(p_[idx(FX, ccy)]);
 }
 
 inline const Matrix &CrossAssetModel::correlation() const { return rho_; }
-
-inline Real CrossAssetModel::ir_ir_correlation(const Size i,
-                                               const Size j) const {
-    QL_REQUIRE(i < nIrLgm1f_, "irlgm1f index (" << i << ") must be in 0..."
-                                                << (nIrLgm1f_ - 1));
-    QL_REQUIRE(j < nIrLgm1f_, "irlgm1f index (" << i << ") must be in 0..."
-                                                << (nIrLgm1f_ - 1));
-    return rho_[i][j];
-}
-
-inline Real CrossAssetModel::ir_fx_correlation(const Size i,
-                                               const Size j) const {
-    QL_REQUIRE(i < nIrLgm1f_, "irlgm1f index (" << i << ") must be in 0..."
-                                                << (nIrLgm1f_ - 1));
-    QL_REQUIRE(j < nFxBs_, "fxbs index (" << j << ") must be in 0..."
-                                          << (nFxBs_ - 1));
-    return rho_[i][nIrLgm1f_ + j];
-}
-
-inline Real CrossAssetModel::fx_fx_correlation(const Size i,
-                                               const Size j) const {
-    QL_REQUIRE(i < nFxBs_, "fxbs index (" << i << ") must be in 0..."
-                                          << (nFxBs_ - 1));
-    QL_REQUIRE(j < nFxBs_, "fxbs index (" << j << ") must be in 0..."
-                                          << (nFxBs_ - 1));
-    return rho_[nIrLgm1f_ + i][nIrLgm1f_ + j];
-}
 
 inline const boost::shared_ptr<Integrator> CrossAssetModel::integrator() const {
     return integrator_;
