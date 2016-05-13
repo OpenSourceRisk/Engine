@@ -15,8 +15,9 @@
   </Setup>
 
   <Markets>
-    <Parameter name="simulation">libor</Parameter>
-    <Parameter name="calibration">libor</Parameter>
+    <Parameter name="lgmcalibration">libor</Parameter>
+    <Parameter name="fxcalibration">libor</Parameter>
+    <Parameter name="pricing">libor</Parameter>
   </Markets>
 
   <Analytics>
@@ -41,9 +42,7 @@
 
     <Analytic type="simulation">
       <Parameter name="active">N</Parameter>
-      <Parameter name="simulationModelFile">simulationmodels.xml</Parameter>
-      <Parameter name="simulationMarketFile">../../Input/simulationmarket.xml</Parameter>
-      <Parameter name="simulationParamFile">simulationparams.xml</Parameter>
+      <Parameter name="simulationConfigFile">simulation.xml</Parameter>
       <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="storeScenarios">N</Parameter>
@@ -69,15 +68,14 @@
       <Parameter name="fva">N</Parameter>
       <Parameter name="colva">N</Parameter>
       <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>
-      <Parameter name="netCubeOutputFile">netcube.csv</Parameter>
-      
+      <Parameter name="netCubeOutputFile">netcube.csv</Parameter>     
     </Analytic>
 
     <Analytic type="initialMargin">
       <Parameter name="active">N</Parameter>
       <Parameter name="method">SIMM</Parameter>
     </Analytic>
-[    
+    
   </Analytics>
   
 </OpenRiskEngine>

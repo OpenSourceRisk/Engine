@@ -15,8 +15,9 @@
   </Setup>
 
   <Markets>
-    <Parameter name="simulation">libor</Parameter>
-    <Parameter name="calibration">libor</Parameter>
+    <Parameter name="lgmcalibration">libor</Parameter>
+    <Parameter name="fxcalibration">libor</Parameter>
+    <Parameter name="pricing">libor</Parameter>
   </Markets>
 
   <Analytics>
@@ -41,9 +42,7 @@
 
     <Analytic type="simulation">
       <Parameter name="active">N</Parameter>
-      <Parameter name="simulationModelFile">simulationmodels.xml</Parameter>
-      <Parameter name="simulationMarketFile">../../Input/simulationmarket.xml</Parameter>
-      <Parameter name="simulationParamFile">simulationparams.xml</Parameter>
+      <Parameter name="simulationconfigFile">simulation.xml</Parameter>
       <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="storeScenarios">N</Parameter>
@@ -77,7 +76,7 @@
       <Parameter name="active">N</Parameter>
       <Parameter name="method">SIMM</Parameter>
     </Analytic>
-[    
+    
   </Analytics>
   
 </OpenRiskEngine>

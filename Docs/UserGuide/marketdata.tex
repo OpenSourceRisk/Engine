@@ -1,0 +1,811 @@
+Market data in the {\tt market.txt} file is given in three columns;  Date,  Quote and  Quote value. 
+
+\begin{itemize}
+\item {\bf Date}: The as of date of the market quote value.  \\ Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+
+\item {\bf Quote}: A generic description that contains Instrument Type and Quote Type, followed by instrument specific descriptions (See \S \ref{ss:zero_rate} to \S \ref{ss:yoy_inflation_vol}). The base of a quote consists of InstType/QuoteType followed by instrument specific information separated by slashes "/".  \\Allowable values for Instrument Types and Quote Types are given in Table \ref{tab:allow_market_data}.
+
+\item {\bf Quote Value}: The market quote value in decimal form for the given quote on the given as of date. Quote values are assumed to be mid-market. \\Allowable values: Any real number.
+\end{itemize}
+
+\begin{table}[H]
+\centering
+  \begin{tabu} to 0.9\linewidth {| X[-1.5,l,m] | X[-5,l,m] |}
+    \hline
+    \bfseries{Market Data Parameter} & \bfseries{Allowable Values} \\
+    \hline
+Instrument Type & \emph{ZERO, DISCOUNT, MM, FRA, MM\_FUTURE, COM\_FUTURE, IR\_SWAP, BMA\_SWAP, BASIS\_SWAP, CC\_BASIS\_SWAP, BOND, ZEROBOND, EQUITY, EQUITY\_DIVIDEND, EQUITY\_FUTURE, EQUITY\_FORWARD, EQUITY\_OPTION, NAME, CDS, ASW, FXSPOT, FXFWD, YY\_INFLATIONSWAP, ZC\_INFLATIONSWAP, YY\_INFLATIONRATE, YY\_INFLATION\_CAPFLOOR, ZC\_INFLATION\_CAPFLOOR, SWAPTION, CAPFLOOR, CDS\_OPTION, FX\_OPTION, COM\_FUTURE\_OPTION, MM\_INDEX, IR\_SWAP\_INDEX, CP\_INDEX, CP\_RATIO\_INDEX }     \\ \hline
+    Quote Type & \emph{BLANK, RATE, ZERO\_SPREAD, CREDIT\_SPREAD, BASIS\_SPREAD, PRICE, RATIO, RATE\_GVOL, SPREAD\_GVOL, SPREAD\_AVOL, PRICE\_GVOL, RATIO\_GVOL, RATING, RECOVERY\_RATE, HAZARD\_RATE, PD, LGD, DEFAULT\_EVENT, CORRELATION}    \\ \hline
+  \end{tabu}
+  \caption{Allowable values for Instrument and Quote type market data.}
+  \label{tab:allow_market_data}
+\end{table}
+
+An excerpt from a typical {\tt market.txt} file is shown in Listing \ref{lst:market_txt}.
+
+\begin{lstlisting}[label=lst:market_txt,caption=Market File (market.txt)]
+
+2011-01-31 MM/RATE/EUR/0D/1D 0.013750
+2011-01-31 MM/RATE/EUR/1D/1D 0.010500
+2011-01-31 MM/RATE/EUR/2D/1D 0.010500
+2011-01-31 MM/RATE/EUR/2D/1W 0.009500
+2011-01-31 MM/RATE/EUR/2D/1M 0.008700
+2011-01-31 MM/RATE/EUR/2D/2M 0.009100
+2011-01-31 MM/RATE/EUR/2D/3M 0.010200
+2011-01-31 MM/RATE/EUR/2D/4M 0.011000
+
+
+2011-01-31 FRA/RATE/EUR/3M/3M 0.013080
+2011-01-31 FRA/RATE/EUR/4M/3M 0.013890
+2011-01-31 FRA/RATE/EUR/5M/3M 0.014630
+2011-01-31 FRA/RATE/EUR/6M/3M 0.015230
+
+2011-01-31 IR_SWAP/RATE/EUR/2D/3M/1Y 0.014400
+2011-01-31 IR_SWAP/RATE/EUR/2D/3M/1Y3M 0.015400
+2011-01-31 IR_SWAP/RATE/EUR/2D/3M/1Y6M 0.016500
+2011-01-31 IR_SWAP/RATE/EUR/2D/3M/2Y 0.018675
+2011-01-31 IR_SWAP/RATE/EUR/2D/3M/3Y 0.022030
+2011-01-31 IR_SWAP/RATE/EUR/2D/3M/4Y 0.024670
+2011-01-31 IR_SWAP/RATE/EUR/2D/3M/5Y 0.026870
+2011-01-31 IR_SWAP/RATE/EUR/2D/3M/6Y 0.028700
+2011-01-31 IR_SWAP/RATE/EUR/2D/3M/7Y 0.030125
+2011-01-31 IR_SWAP/RATE/EUR/2D/3M/8Y 0.031340
+2011-01-31 IR_SWAP/RATE/EUR/2D/3M/9Y 0.032450
+
+   
+\end{lstlisting}
+
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Zero Rate}\label{ss:zero_rate}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+The instrument specific information to be captured for quotes representing Zero Rates is shown in Table \ref{tab:zero_quote}.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{3.3cm}|p{5cm}|p{7cm}|}
+\hline
+{\bf Property} & {\bf Allowable values} & {\bf Description} \\
+\hline
+Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Currency of the Zero rate\\ \hline
+CurveId& A CCY concatenated with a Tenor. Should match CurveIds in the {\tt yield-curves.xml} file & Unique identifier for the yield curve associated with the zero quote\\ \hline
+DayCounter & See \lstinline!DayCount Convention! in Table \ref{tab:daycount} & The day count basis associated with the zero quote \\ \hline
+Tenor or ZeroDate & Tenor: An integer followed by D, W, M or Y, ZeroDate: See \lstinline!Date! in Table \ref{tab:allow_stand_data} & Either a Tenor for tenor based zero quotes, or an explicit maturity date (ZeroDate)\\
+\hline
+\end{tabular}
+  \caption{Zero Rate}
+  \label{tab:zero_quote}
+\end{table}
+
+
+
+\medskip
+Examples with a Tenor and with a ZeroDate: 
+\begin{itemize}
+\item {ZERO/RATE/USD/USD6M/A365F/6M}
+\item {ZERO/RATE/USD/USD6M/A365F/12-05-2018}
+\end{itemize}
+
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Discount Factor}\label{ss:discount_rate}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+The instrument specific information to be captured for quotes representing Discount Factors is shown in Table \ref{tab:discount_quote}.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{3.3cm}|p{5cm}|p{7cm}|}
+\hline
+{\bf Property} & {\bf Allowable values} & {\bf Description} \\
+\hline
+Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Currency of the Discount rate\\ \hline
+CurveId& A CCY concatenated with a Tenor. Should match CurveIds in the {\tt yield-curves.xml} file & Unique identifier for the yield curve associated with the discount quote\\ \hline
+Term or DiscountDate & Term: An integer followed by D, W, M or Y, DiscountDate: See \lstinline!Date! in Table \ref{tab:allow_stand_data} & Either a Term is used to determine the maturity date, or an explicit maturity date (Discount Date) is given.\\
+\hline
+\end{tabular}
+  \caption{Discount Rate}
+  \label{tab:discount_quote}
+\end{table}
+
+If a Term is given in the last element of the quote, it is converted to a maturity date using a weekend only calendar.
+
+\medskip
+Examples with a Term and with a DiscountDate: 
+\begin{itemize}
+\item {DISCOUNT/RATE/EUR/EUR3M/3Y}
+\item {DISCOUNT/RATE/EUR/EUR3M/A365F/12-05-2018}
+\end{itemize}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{FX Spot Rate}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\label{ss:fx_spot_rate}
+
+
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+\hline
+{\bf Property} & {\bf Allowable values} & {\bf Description}\\
+\hline
+Unit currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Unit/Source currency\\ \hline
+Target currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Target currency\\ \hline
+\end{tabular}
+  \caption{FX Spot Rate}
+  \label{tab:fxspot_quote}
+\end{table}
+
+Example:
+\begin{itemize}
+\item {FX/RATE/EUR/USD}
+\end{itemize}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Deposit Rate}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+\hline
+{\bf Property} & {\bf Allowable values} & {\bf Description} \\
+\hline
+Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Currency of the Deposit rate\\ \hline
+Forward start & An integer followed by D, W, M or Y.  & Period from today to start \\ \hline
+Term & An integer followed by D, W, M or Y. & Period from start to maturity\\ \hline
+\end{tabular}
+  \caption{Deposit Rate}
+  \label{tab:deposit_quote}
+\end{table}
+
+
+Deposits are usually quoted as ON (Overnight), TN (Tomorrow Next), SN (Spot Next), SW (Spot Week), 3W (3 Weeks), 6M (6 Months), etc.
+ 
+Forward start for ON is today (i.e. forward start = 0D), for TN tomorrow (forward start = 1D), for SN two days from today (forward start = 2D). For longer term Deposits, forward start is derived from conventions, see \S \ref{sec:conventions_file}, and is between 0D and 2D, i.e. "spot days" are between 0 and 2. 
+
+\medskip
+Example: 
+\begin{itemize}
+\item {MM/RATE/EUR/2D/3M}
+\end{itemize}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{FRA Rate}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+\hline
+{\bf Property} & {\bf Allowable values} & {\bf Description} \\
+\hline
+Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Currency of the FRA rate\\ \hline
+Forward start & An integer followed by D, W, M or Y  & Period from today to start \\ \hline
+Term & An integer followed by D, W, M or Y & Period from start to maturity\\ \hline
+\end{tabular}
+  \caption{FRA Rate}
+  \label{tab:fra_quote}
+\end{table}
+
+
+FRAs are typically quoted as e.g. 6x9 which means forward start 6M from today, maturity 9M from today, with appropriate adjustment of dates.
+
+\medskip
+Example: 
+\begin{itemize}
+\item {FRA/RATE/EUR/9M/3M}
+\end{itemize}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Money Market Futures Price}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{3cm}|p{4.5cm}|p{7cm}|}
+\hline
+{\bf Property} & {\bf Allowable values} & {\bf Description} \\
+\hline
+Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}& Currency of the MM Future price\\ \hline
+Expiry & Alphanumeric string on the form MMMYY & Expiry month\\ \hline
+Contract & String & Contract name\\
+% date rule & {\tt string} &  \\
+\hline
+\end{tabular}
+  \caption{Money Market Futures Price}
+  \label{tab:mmfp_quote}
+\end{table}
+
+Expiry month is typically quoted as JUN08, SEP09, DEC10, etc. The exact expiry date follows from a date rule such as 3rd Wednesday of the specified month, adjusted to the following business day. The date rule is not quoted directly, but defined in the futures contract.
+
+\medskip
+Example: 
+\begin{itemize}
+\item {MM\_FUTURE/PRICE/EUR/JUN18/LIF3ME}
+\end{itemize}
+
+%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+%\subsection{Equity Futures Price}
+%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+%
+%\begin{table}[H]
+%\centering
+%\begin{tabular}{|p{3cm}|p{4.5cm}|p{7cm}|}
+%\hline
+%{\bf Property} & {\bf Allowable values} & {\bf Description} \\
+%\hline
+%Name & String & Name of the underlying equity \\ \hline
+%Expiry & Alphanumeric string on the form MMMYY & Expiry month\\ \hline
+%Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}& Currency of the Equity Future price\\ \hline
+%Contract & String & Contract name\\
+%\hline
+%\end{tabular}
+%  \caption{Equity Futures Price}
+%  \label{tab:equityfp_quote}
+%\end{table}
+%
+%Expiry month is typically quoted as JUN08, SEP09, DEC10, etc. The exact expiry date follows from a date rule such as 3rd Wednesday of the specified month, adjusted to the following business day. The date rule is not quoted directly, but defined in the futures contract.
+%
+%\medskip
+%Example: 
+%\begin{itemize}
+%\item {EQUITY\_FUTURE/PRICE/GE/JUN17/USD/LIF3ME}
+%\end{itemize}
+
+%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+%\subsection{Equity Price}
+%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+%
+%\begin{table}[H]
+%\centering
+%\begin{tabular}{|p{3cm}|p{4.5cm}|p{7cm}|}
+%\hline
+%{\bf Property} & {\bf Allowable values} & {\bf Description} \\
+%\hline
+%Name & String & Name of the equity \\ \hline
+%Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}& Currency of the Equity price\\
+%\hline
+%\end{tabular}
+%  \caption{Equity  Price}
+%  \label{tab:equity_quote}
+%\end{table}
+%
+%
+%\medskip
+%Example: 
+%\begin{itemize}
+%\item {EQUITY/PRICE/GE/USD}
+%\end{itemize}
+
+%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+%\subsection{Equity Forward Price}
+%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+%
+%\begin{table}[H]
+%\centering
+%\begin{tabular}{|p{3cm}|p{4.5cm}|p{7cm}|}
+%\hline
+%{\bf Property} & {\bf Allowable values} & {\bf Description} \\
+%\hline
+%Name & String & Name of the equity \\ \hline
+%Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}& Currency of the Equity price\\ \hline
+%Term or ExpiryDate & Term: An integer followed by D, W, M or Y, ExpiryDate: See \lstinline!Date! in Table \ref{tab:allow_stand_data} & Either a Term is used to determine the maturity date, or an explicit maturity date (Expiry Date) is given.\\
+%\hline
+%\end{tabular}
+%  \caption{Equity Forward Price}
+%  \label{tab:equityf_quote}
+%\end{table}
+%
+%If a Term is given in the last element of the quote, it is converted to a maturity date using a weekend only calendar.
+%
+%\medskip
+%Example: 
+%\begin{itemize}
+%\item {EQUITY\_FORWARD/PRICE/GE/USD/05-01-2019}
+%\end{itemize}
+%
+%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+%\subsection{Equity Dividend Rate}
+%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+%
+%\begin{table}[H]
+%\centering
+%\begin{tabular}{|p{3cm}|p{5cm}|p{7cm}|}
+%\hline
+%{\bf Property} & {\bf Allowable values} & {\bf Description} \\
+%\hline
+%Name & String & Name of the equity \\ \hline
+%Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}& Currency of the Equity price\\ \hline
+%Term & An integer followed by D, W, M or Y & The frequency of dividend payments\\ \hline
+%DayCounter & See \lstinline!DayCount Convention! in Table \ref{tab:daycount} & The day count basis used to determine dividend period length  \\ 
+%\hline
+%\end{tabular}
+%  \caption{Equity Forward Price}
+%  \label{tab:equityf_quote}
+%\end{table}
+%
+%
+%\medskip
+%Example: 
+%\begin{itemize}
+%\item {EQUITY\_DIVIDEND/RATE/GE/USD/3M/A360}
+%\end{itemize}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+%\subsection{Equity Option Price}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+%\begin{table}[H]
+%\centering
+%\begin{tabular}{|p{3cm}|p{4.5cm}|p{7cm}|}
+%\hline
+%{\bf Property} & {\bf Allowable values} & {\bf Description} \\
+%\hline
+%Name & String & Name of the equity \\
+%Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}& Currency of the Equity price\\
+%Term or ExpiryDate & Term: An integer followed by D, W, M or Y, ExpiryDate: See \lstinline!Date! in Table \ref{tab:allow_stand_data} & Either a Term is used to determine the maturity date, or an explicit maturity date (Expiry Date) is given.\\
+%Strike & A real number & The equity option strike price  \\ 
+%\hline
+%\end{tabular}
+%  \caption{Equity Forward Price}
+%  \label{tab:equityf_quote}
+%\end{table}
+
+%If a Term is given in the last element of the quote, it is converted to a maturity date using a weekend only calendar.
+
+
+%\medskip
+%Example: 
+%\begin{itemize}
+%\item {EQUITY\_OPTION/PRICE/GE/USD/10Y/300}
+%\end{itemize}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Swap Rate}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+\hline
+{\bf Property} & {\bf Allowable values} & {\bf Description} \\
+\hline
+Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Currency of the Swap rate\\ \hline
+Forward start & An integer followed by D, W, M or Y & Generic period from today to start\\ \hline
+Tenor & An integer followed by D, W, M or Y & Underlying index period \\ \hline
+Term & An integer followed by D, W, M or Y & Swap length from start to maturity\\
+\hline
+\end{tabular}
+  \caption{Swap Rate}
+  \label{tab:swaprate_quote}
+\end{table}
+
+
+Forward start is usually not quoted, but needs to be derived from conventions. 
+
+\medskip
+Example:
+\begin{itemize}
+\item {IR\_SWAP/RATE/EUR/2D/6M/10Y}
+\end{itemize}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{BMA Swap Ratio}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+The BMA index is a reference index for US municipal tax-exempt bonds (floaters). BMA is fixed weekly. A BMA Swap exchanges quarterly BMA index-linked payments (the coupon rate is the average of weekly BMA index fixings) for quarterly payments of a fraction of USD Libor. The BMA Swap quote is the fraction of Libor and for a given Swap term. 
+
+\begin{table}[H]
+\centering
+\begin{supertabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+\hline
+{\bf Property} & {\bf Allowable values} & {\bf Description} \\
+\hline
+Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}& Currency underlying the BMA Swap ratio \\ \hline
+Forward start & An integer followed by D, W, M or Y  & Generic period from today to start\\ \hline
+Term & An integer followed by D, W, M or Y  & Swap length from start to maturity\\
+\hline
+\end{supertabular}
+  \caption{BMA Swap Ratio}
+  \label{tab:bmasratio_quote}
+\end{table}
+Forward start is usually not quoted, but needs to be derived from conventions. 
+
+\medskip
+Example: 
+\begin{itemize}
+\item {BMA/RATIO/USD/2D/10Y}
+\end{itemize}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Basis Swap Spread}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+\hline
+{\bf Property} & {\bf Allowable values} & {\bf Description} \\
+\hline
+Flat tenor & An integer followed by D, W, M or Y & Zero spread leg's index tenor\\ \hline
+Tenor & An integer followed by D, W, M or Y & Non-zero spread leg's index tenor\\ \hline
+Term & An integer followed by D, W, M or Y & Swap length from start to maturity\\ 
+\hline
+\end{tabular}
+  \caption{Basis Swap Spread}
+  \label{tab:basisspread_quote}
+\end{table}
+
+
+\medskip
+Example: 
+\begin{itemize}
+\item {BASIS\_SWAP/BASIS\_SPREAD/6M/3M/10Y}
+\end{itemize}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Cross Currency Basis Swap Spread}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+\hline
+{\bf Property} & {\bf Allowable values} & {\bf Description} \\
+\hline
+Flat currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Currency for zero spread leg\\  \hline
+Flat tenor & An integer followed by D, W, M or Y & Zero spread leg's index tenor\\ \hline
+Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}& Currency for non-zero spread leg\\ \hline
+Tenor & An integer followed by D, W, M or Y & Non-zero spread leg's index tenor\\ \hline
+Term & An integer followed by D, W, M or Y & Swap length from start to maturity\\
+\hline
+\end{tabular}
+  \caption{Cross Currency Basis Swap Spread}
+  \label{tab:ccbasisspread_quote}
+\end{table}
+
+
+\medskip
+Example: 
+\begin{itemize}
+\item {CC\_BASIS\_SWAP/BASIS\_SPREAD/USD/3M/JPY/6M/10Y}
+\end{itemize}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{CDS Spread}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+\hline
+{\bf Property} & {\bf Allowable values} & {\bf Description} \\
+\hline
+Issuer & String &  Issuer name \\ \hline
+Seniority & String &  Seniority status \\ \hline
+Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & CDS Spread currency\\ \hline
+Term & An integer followed by D, W, M or Y & Generic period from start to maturity\\
+\hline
+\end{tabular}
+  \caption{CDS Spread}
+  \label{tab:cdsspread_quote}
+\end{table}
+ 
+Example: 
+\begin{itemize}
+\item {CDS/CREDIT\_SPREAD/GE/SeniorUnsec/EUR/5Y}
+\end{itemize}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{CDS Recovery Rate}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+\hline
+{\bf Property} & {\bf Allowable values} & {\bf Description} \\
+\hline
+Issuer & String &  Issuer name \\ \hline
+Seniority & String &  Seniority status \\ \hline
+Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & CDS Spread currency\\
+\hline
+\end{tabular}
+  \caption{CDS Recovery Rate}
+  \label{tab:cdsrecovery_quote}
+\end{table}
+ 
+Example: 
+\begin{itemize}
+\item {CDS/RECOVERY\_RATE/GE/SeniorUnsec/EUR}
+\end{itemize}
+
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Asset Swap Spread}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Credit spread information expressed on an asset swap basis for a  given issuer/seniority and term rather than for a specific asset.
+ 
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+\hline
+{\bf Property} & {\bf Allowable values} & {\bf Description} \\
+\hline
+Issuer & String &  Issuer name \\ \hline
+Seniority & String &  Seniority status \\ \hline
+Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Asset Swap Spread currency\\ \hline
+Term & An integer followed by D, W, M or Y & Generic period from start to maturity\\ \hline
+\end{tabular}
+  \caption{Asset Swap Spread}
+  \label{tab:aswapspread_quote}
+\end{table}
+
+Example: 
+\begin{itemize}
+\item {ASW/CREDIT\_SPREAD/GE/SeniorUnsec/EUR/10Y}
+\end{itemize}
+
+
+%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+%\subsection{Zero Spread}
+%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+%
+%
+%\begin{table}[H]
+%\centering
+%\begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+%\hline
+%{\bf Property} & {\bf Allowable values} & {\bf Description} \\
+%\hline
+%Issuer & String &  Issuer name \\ \hline
+%Seniority & String &  Seniority status \\ \hline
+%Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Asset Swap Spread currency\\ \hline
+%Term & An integer followed by D, W, M or Y & Generic period from start to maturity\\ \hline
+%\end{tabular}
+%  \caption{Zero Spread}
+%  \label{tab:zspread_quote}
+%\end{table}
+%
+%The effect of Zero spread $s$ is increasing the zero rates of a given reference curve, i.e. modifying the discount factor $P(t)$ at time $t$ by factor $\exp(-s\cdot t)$. We assume Actual365Fixed day count for date/time conversion. 
+%
+%
+%\medskip
+%Example: 
+%\begin{itemize}
+%\item {ZERO/CREDIT\_SPREAD/GE/SeniorUnsec/EUR/5Y}
+%\end{itemize}
+%
+%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+%\subsection{Par/Swap Spread}
+%%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+%
+%
+%\begin{table}[H]
+%\centering
+%\begin{supertabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+%\hline
+%{\bf Property} & {\bf Allowable values} & {\bf Description} \\
+%\hline
+%Issuer & String &  Issuer name \\ \hline
+%Seniority & String &  Seniority status \\ \hline
+%Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Par/Swap Spread currency\\ \hline
+%Term & An integer followed by D, W, M or Y & Generic period from start to maturity\\ \hline
+%\end{supertabular}
+%  \caption{Par/Swap Spread}
+%  \label{tab:parspread_quote}
+%\end{table}
+%
+%The effect of a Par/Swap spread $s$ is increasing the input Swap rates of a given reference curve by $s$ and then bootstrapping a modified discount curve $P(t)$.
+%
+%
+%\medskip
+%Example: 
+%\begin{itemize}
+%\item {IR\_SWAP/CREDIT\_SPREAD/Issuer/SeniorUnsec/10Y}
+%\end{itemize}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Probability of Default}\label{ss:prob_default_quote}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+This quote can represent a cumulative PD for the given rating and maturity, or a Loss Given Default for the given rating.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+\hline
+{\bf Property} & {\bf Allowable values} & {\bf Description} \\
+\hline
+Rating & String & Internal or external rating code \\ \hline
+Term & An integer followed by D, W, M or Y & Generic period from start to maturity\\ 
+\hline
+\end{tabular}
+  \caption{Probability of Default}
+  \label{tab:pd_quote}
+\end{table}
+
+Example:
+\begin{itemize}
+\item {NAME/PD/15/3Y}
+\item{NAME/LGD/Baa3}
+\end{itemize}
+
+
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Year-on-Year Inflation Swap Rate} \label{ss:yoy_inflation_swap_rate}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+\begin{table}[H]
+\centering
+\begin{supertabular}{|p{3cm}|p{5cm}|p{7cm}|}
+\hline
+{\bf Property} & {\bf Allowable values} & {\bf Description} \\
+\hline
+Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Currency of inflation swap rate\\ \hline
+Region & A string that matches inflation Region codes in the {\tt config-scenario.xml} file & Region code for the inflation index \\ \hline
+Term & An integer followed by D, W, M or Y & Generic period from start to maturity\\
+\hline
+\end{supertabular}
+  \caption{Year-on-Year Inflation Swap Rate}
+  \label{tab:yoyinflation_quote}
+\end{table}
+
+Example:
+\begin{itemize}
+\item {YY\_INFLATIONSWAP/RATE/EUR/FRANCE/10Y}
+\end{itemize}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Zero-Coupon Inflation Swap Rate}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{3cm}|p{5cm}|p{7cm}|}
+\hline
+{\bf Property} & {\bf Allowable values} & {\bf Description} \\
+\hline
+Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Currency of inflation swap rate\\ \hline
+Region & A string that matches inflation Region codes in the {\tt config-scenario.xml} file & Region code for the inflation index \\ \hline
+Term & An integer followed by D, W, M or Y & Generic period from start to maturity\\
+\hline
+\end{tabular}
+  \caption{Zero Coupon Inflation Swap Rate}
+  \label{tab:zinflation_quote}
+\end{table}
+
+Example: 
+\begin{itemize}
+\item {ZC\_INFLATIONSWAP/RATE/GBP/UK/10Y}
+\end{itemize}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{FX Option Implied Volatility}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+\hline
+{\bf Property} & {\bf Allowable values} & {\bf Description} \\
+\hline
+Unit currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}& Unit/Source currency\\ \hline
+Target currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Target currency\\ \hline
+Expiry & An integer followed by D, W, M or Y & Period from today to expiry \\ \hline
+Strike & \emph{ATM, RR, BF} & ATM (Straddle), RR (Risk Reversal), BF (Butterfly) \\
+%strike & {\tt Real} & strike forward exchange rate \\ 
+\hline
+\end{tabular}
+  \caption{FX Option Implied Volatility}
+  \label{tab:fximplvol_quote}
+\end{table}
+
+Volatilities are quoted in terms of strategies - at-the-money straddle, risk reversal and butterfly. 
+
+\medskip
+Example: 
+\begin{itemize}
+\item {FX\_OPTION/RATE\_GVOL/EUR/USD/3M/ATM}
+\end{itemize}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Cap/Floor Implied Volatility}\label{ss:capfloor_impl_vol_quote}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+\hline
+{\bf Property} & {\bf Allowable values} & {\bf Description} \\
+\hline
+Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}&  Currency of the Cap/Floor volatility\\ \hline
+Term & An integer followed by D, W, M or Y & Period from start to expiry \\ \hline
+IndexTenor & An integer followed by D, W, M or Y & Underlying index tenor \\ \hline
+Atm & \emph{1, 0} & ATM volatility quote if true (1), otherwise (0) smile quote\\ \hline
+Relative & \emph{1, 0} & Relative quote (to be added to atm vol) if true (1), otherwise (0) absolute quote\\ \hline
+Strike & Real number & Strike rate\\ 
+\hline
+\end{tabular}
+  \caption{FX Option Implied Volatility}
+  \label{tab:fximplvol_quote}
+\end{table}
+
+
+\medskip
+Examples: 
+\begin{itemize}
+\item {CAPFLOOR/RATE\_GVOL/EUR/10Y/6M/0/0/0.0350} (smile, absolute, strike 3.5\%)
+\item {CAPFLOOR/RATE\_GVOL/EUR/10Y/6M/1/0/0.0000} (atm, absolute, irrelevant strike)
+\end{itemize}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Swaption Implied Volatility}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+\hline
+{\bf Property} & {\bf Allowable values} & {\bf Description} \\
+\hline
+Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}&  Currency of the Swaption volatility\\ \hline
+Term & An integer followed by D, W, M or Y & Period from start to expiry \\ \hline
+%IndexTenor & An integer followed by D, W, M or Y & Underlying index tenor \\
+Dimension & \emph{Smile, ATM}  & Whether volatility quote is a Smile or ATM \\ \hline
+Strike & Real number & Strike rate - (not required for ATM), as deviation from the ATM strike\\ 
+\hline
+\end{tabular}
+  \caption{Swaption Implied Volatility}
+  \label{tab:swaptimplvol_quote}
+\end{table}
+
+
+\medskip
+Note: The volatility quote is expected to be an absolute volatility, and not the deviation from the at-the-money volatility (the latter is e.g. the quotation convention used by BGC partners).
+
+\medskip
+Examples:
+\begin{itemize}
+\item { SWAPTION/RATE\_GVOL/EUR/5Y/10Y/ATM} (absolute ATM vol quote) 
+\item { SWAPTION/RATE\_GVOL/EUR/5Y/10Y/SMILE/0.0050} (absolute vol quote for ATM strike plus 50bp)
+\end{itemize}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Year-on-Year Inflation Cap/Floor Volatility} \label{ss:yoy_inflation_vol}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{3cm}|p{5cm}|p{7cm}|}
+\hline
+{\bf Property} & {\bf Allowable values} & {\bf Description} \\
+\hline
+Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}&  Currency of the Inflation Cap/Floor volatility\\ \hline
+Region & A string that matches inflation Region codes in the {\tt config-scenario.xml} file & Region code for the inflation index\\  \hline
+Expiry & An integer followed by D, W, M or Y & Period from today to expiry \\ \hline
+Strike & Real number & Absolute Strike rate\\ 
+\hline
+\end{tabular}
+  \caption{Year-on-Year Inflation Cap/Floor Volatility}
+  \label{tab:yoyinflvol_quote}
+\end{table}
+
+Examples: 
+\begin{itemize}
+\item YY\_INFLATION\_CAP/PRICE/GBP/UK/5Y/0.0450
+\item YY\_INFLATION\_FLOOR/PRICE/GBP/UK/5Y/0.0450
+\end{itemize}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Zero Coupon Inflation Cap/Floor Volatility} \label{ss:zc_inflation_vol}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+TODO

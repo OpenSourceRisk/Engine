@@ -17,7 +17,6 @@
 #include <boost/algorithm/string.hpp>
 
 #include "ore.hpp"
-#include "timebomb.hpp"
 
 #ifdef BOOST_MSVC
 #  include <ql/auto_link.hpp>
@@ -43,10 +42,12 @@ using namespace openxva::aggregation;
 
 void writeNpv(const Parameters& params,
               boost::shared_ptr<Market> market,
+              const std::string &configuration,
               boost::shared_ptr<Portfolio> portfolio);
 
 void writeCashflow(const Parameters& params,
                    boost::shared_ptr<Market> market,
+                   const std::string &configuration,
                    boost::shared_ptr<Portfolio> portfolio);
 
 void writeCurves(const Parameters& params,
@@ -65,8 +66,6 @@ void writeCva(const Parameters& params,
 
 int main(int argc, char** argv) {
 
-    ORE_CHECK_TIMEBOMB
-    
     boost::timer timer;
     
     try {
@@ -175,11 +174,9 @@ int main(int argc, char** argv) {
         TodaysMarketParameters marketParameters;
         string marketConfigFile = inputPath + "/" + params.get("setup", "marketConfigFile");
         marketParameters.fromFile(marketConfigFile);
-        
+
         boost::shared_ptr<Market> market = boost::make_shared<TodaysMarket>
-            (asof, marketParameters, loader, curveConfigs, conventions, params.get("markets", "simulation"));
-        boost::shared_ptr<Market> calibrationMarket = boost::make_shared<TodaysMarket>
-            (asof, marketParameters, loader, curveConfigs, conventions, params.get("markets", "calibration"));
+            (asof, marketParameters, loader, curveConfigs, conventions);
         cout << "OK" << endl;
 
         /************************
@@ -189,8 +186,11 @@ int main(int argc, char** argv) {
         boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
         string pricingEnginesFile = inputPath + "/" + params.get("setup", "pricingEnginesFile");
         engineData->fromFile(pricingEnginesFile);
-        
-        boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(market, engineData);
+
+        boost::shared_ptr<EngineFactory> factory =
+            boost::make_shared<EngineFactory>(
+                market, engineData, params.get("markets", "lgmcalibration"), params.get("markets", "fxcalibration"),
+                params.get("markets", "pricing"));
         cout << "OK" << endl;
         
         /******************************
@@ -223,7 +223,7 @@ int main(int argc, char** argv) {
         cout << setw(tab) << left << "NPV Report... " << flush;
         if (params.hasGroup("npv") &&
             params.get("npv", "active") == "Y") {
-            writeNpv(params, market, portfolio);
+            writeNpv(params, market, params.get("markets", "pricing"), portfolio);
             cout << "OK" << endl;
         }
         else {
@@ -237,7 +237,7 @@ int main(int argc, char** argv) {
         cout << setw(tab) << left << "Cashflow Report... " << flush;
         if (params.hasGroup("cashflow") &&
             params.get("cashflow", "active") == "Y") {
-            writeCashflow(params, market, portfolio);          
+            writeCashflow(params, market, params.get("markets", "pricing"), portfolio);
             cout << "OK" << endl;
         }
         else {
@@ -255,34 +255,39 @@ int main(int argc, char** argv) {
             cout << setw(tab) << left << "Simulation Setup... "; 
             fflush(stdout);
             LOG("Build Simulation Model");
-            string simulationModelFile = inputPath + "/" + params.get("simulation", "simulationModelFile");
+            string simulationConfigFile = inputPath + "/" + params.get("simulation", "simulationConfigFile");
+            LOG("Load simulation model data from file: " << simulationConfigFile);
             boost::shared_ptr<CrossAssetModelData> modelData = boost::make_shared<CrossAssetModelData>();
-            modelData->fromFile(simulationModelFile);
-            CrossAssetModelBuilder modelBuilder(market, calibrationMarket);
+            modelData->fromFile(simulationConfigFile);
+            CrossAssetModelBuilder modelBuilder(market, params.get("markets", "lgmcalibration"),
+                                                params.get("markets", "fxcalibration"), params.get("markets", "pricing"));
             boost::shared_ptr<QuantExt::CrossAssetModel> model = modelBuilder.build(modelData);
             
             LOG("Load Simulation Market Parameters");
-            string simulationMarketFile = inputPath + "/" + params.get("simulation", "simulationMarketFile");
             boost::shared_ptr<ScenarioSimMarketParameters> simMarketData(new ScenarioSimMarketParameters);
-            simMarketData->fromFile(simulationMarketFile);
+            simMarketData->fromFile(simulationConfigFile);
             
             LOG("Load Simulation Parameters");
-            string simulationParamFile = inputPath + "/" + params.get("simulation", "simulationParamFile");
             ScenarioGeneratorBuilder sb;
-            sb.fromFile(simulationParamFile);
-            boost::shared_ptr<ScenarioGenerator> sg = sb.build(model, simMarketData, asof, market);
+            sb.fromFile(simulationConfigFile);
+            boost::shared_ptr<ScenarioGenerator> sg = sb.build(model, simMarketData, asof, market,
+                                                               params.get("markets", "pricing"));
             boost::shared_ptr<openxva::simulation::DateGrid> grid = sb.dateGrid();
             
             LOG("Build Simulation Market");
             boost::shared_ptr<openxva::simulation::SimMarket> simMarket
-                = boost::make_shared<ScenarioSimMarket>(sg, market, simMarketData);
+                = boost::make_shared<ScenarioSimMarket>(sg, market, simMarketData, params.get("markets", "pricing"));
             
             LOG("Build engine factory for pricing under scenarios, linked to sim market");
             boost::shared_ptr<EngineData> simEngineData = boost::make_shared<EngineData>();
             string simPricingEnginesFile = inputPath + "/" + params.get("simulation", "pricingEnginesFile");
             simEngineData->fromFile(simPricingEnginesFile);
             boost::shared_ptr<EngineFactory>
-                simFactory = boost::make_shared<EngineFactory>(simMarket, simEngineData);
+                simFactory = boost::make_shared<EngineFactory>(simMarket, simEngineData,
+                                                               params.get("markets", "lgmcalibration"),
+                                                               params.get("markets", "fxcalibration"),
+                                                               params.get("markets", "pricing"),
+                                                               true);
             
             LOG("Build portfolio linked to sim market");
             boost::shared_ptr<Portfolio> simPortfolio = boost::make_shared<Portfolio>();
@@ -385,7 +390,7 @@ int main(int argc, char** argv) {
             string dvaName = params.get("xva", "dvaName");
             
             boost::shared_ptr<PostProcess> postProcess = boost::make_shared<PostProcess>
-                (portfolio, netting, market, cube, scenarioData, analytics,
+                (portfolio, netting, market, params.get("markets", "pricing"), cube, scenarioData, analytics,
                 baseCurrency, allocationMethod, marginalAllocationLimit, quantile, calculationType, dvaName);
 
             writeTradeExposures(params, postProcess);
@@ -436,7 +441,8 @@ int main(int argc, char** argv) {
 }
 
 void writeNpv(const Parameters& params,
-                boost::shared_ptr<Market> market,
+              boost::shared_ptr<Market> market,
+              const std::string &configuration,
               boost::shared_ptr<Portfolio> portfolio) {
     LOG("portfolio valuation");
     //Date asof = Settings::instance().evaluationDate();
@@ -456,7 +462,7 @@ void writeNpv(const Parameters& params,
         string npvCcy = trade->npvCurrency();
         Real fx = 1.0;
         if (npvCcy != baseCurrency)
-            fx = market->fxSpot(npvCcy + baseCurrency)->value();
+            fx = market->fxSpot(npvCcy + baseCurrency, configuration)->value();
         file << trade->id() << sep
              << trade->tradeType() << sep
              << io::iso_date(trade->maturity()) << sep
@@ -477,6 +483,7 @@ void writeNpv(const Parameters& params,
 
 void writeCashflow(const Parameters& params,
                    boost::shared_ptr<Market> market,
+                   const std::string &configuration,
                    boost::shared_ptr<Portfolio> portfolio) {
     Date asof = Settings::instance().evaluationDate();
     string outputPath = params.get("setup", "outputPath"); 

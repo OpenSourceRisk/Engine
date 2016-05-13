@@ -492,12 +492,10 @@
     <ClInclude Include="qle\currencies\all.hpp" />
     <ClInclude Include="qle\currencies\america.hpp" />
     <ClInclude Include="qle\currencies\asia.hpp" />
-    <ClInclude Include="qle\currencies\europe.hpp" />
     <ClInclude Include="qle\indexes\all.hpp" />
     <ClInclude Include="qle\indexes\genericiborindex.hpp" />
     <ClInclude Include="qle\indexes\ibor\all.hpp" />
     <ClInclude Include="qle\indexes\ibor\audbbsw.hpp" />
-    <ClInclude Include="qle\indexes\ibor\averagebma.hpp" />
     <ClInclude Include="qle\indexes\ibor\chftois.hpp" />
     <ClInclude Include="qle\indexes\ibor\czkpribor.hpp" />
     <ClInclude Include="qle\indexes\ibor\dkkcibor.hpp" />
@@ -576,6 +574,7 @@
     <ClInclude Include="qle\termstructures\dynamicblackvoltermstructure.hpp" />
     <ClInclude Include="qle\termstructures\dynamicstype.hpp" />
     <ClInclude Include="qle\termstructures\dynamicswaptionvolmatrix.hpp" />
+    <ClInclude Include="qle\termstructures\hazardspreadeddefaulttermstructure.hpp" />
     <ClInclude Include="qle\termstructures\interpolateddiscountcurve.hpp" />
     <ClInclude Include="qle\termstructures\oibasisswaphelper.hpp" />
     <ClInclude Include="qle\termstructures\oiccbasisswaphelper.hpp" />
@@ -592,7 +591,6 @@
     <ClCompile Include="qle\currencies\africa.cpp" />
     <ClCompile Include="qle\currencies\america.cpp" />
     <ClCompile Include="qle\currencies\asia.cpp" />
-    <ClCompile Include="qle\currencies\europe.cpp" />
     <ClCompile Include="qle\instruments\averageois.cpp" />
     <ClCompile Include="qle\instruments\crossccybasisswap.cpp" />
     <ClCompile Include="qle\instruments\crossccyswap.cpp" />
@@ -631,6 +629,7 @@
     <ClCompile Include="qle\termstructures\basistwoswaphelper.cpp" />
     <ClCompile Include="qle\termstructures\crossccybasisswaphelper.cpp" />
     <ClCompile Include="qle\termstructures\dynamicswaptionvolmatrix.cpp" />
+    <ClCompile Include="qle\termstructures\hazardspreadeddefaulttermstructure.cpp" />
     <ClCompile Include="qle\termstructures\oibasisswaphelper.cpp" />
     <ClCompile Include="qle\termstructures\oiccbasisswaphelper.cpp" />
     <ClCompile Include="qle\termstructures\oisratehelper.cpp" />

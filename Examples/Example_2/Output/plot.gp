@@ -6,14 +6,29 @@ set title "Example 2"
 set xlabel "Time / Years"
 set ylabel "Exposure"
 
+set style line 1 linecolor rgb '#0060ad' linetype 1 linewidth 3
+set style line 2 linecolor rgb '#dd181f' linetype 1 linewidth 3
+set style line 3 linecolor rgb '#008000' linetype 1 linewidth 3
+set style line 4 linecolor rgb '#990099' linetype 1 linewidth 3
+
 set autoscale
-
-plot "exposure_trade_FXFWD_EURUSD_10Y.csv" us 3:4 title "EPE" w l lw 3
-replot "exposure_trade_FXFWD_EURUSD_10Y.csv" us 3:5 title "ENE" w l lw 3
-replot "call.csv" us 1:2 title "Call Price" w l lw 3
-replot "put.csv" us 1:2 title "Put Price" w l lw 3
-
 set term pdfcairo 
+
+set out "tmp.pdf"
+plot "exposure_trade_FXFWD_EURUSD_10Y.csv" us 3:4 title "EPE" w l ls 1
+replot "exposure_trade_FXFWD_EURUSD_10Y.csv" us 3:5 title "ENE" w l ls 2
+replot "call.csv" us 1:2 title "Call Price" w l ls 3
+replot "put.csv" us 1:2 title "Put Price" w l ls 4
 set out "plot.pdf"
 replot
-set term aqua
+
+set key left
+set key bottom
+set out "tmp.pdf"
+plot "exposure_trade_FX_CALL_OPTION_EURUSD_10Y.csv" us 3:4 title "Call Option EPE" w l ls 1
+replot "call.csv" us 1:2 title "Call Price" w l ls 2
+replot "exposure_trade_FX_PUT_OPTION_EURUSD_10Y.csv" us 3:4 title "Put Option EPE" w l ls 3
+replot "put.csv" us 1:2 title "Put Price" w l ls 4
+set out "plot2.pdf"
+replot
+

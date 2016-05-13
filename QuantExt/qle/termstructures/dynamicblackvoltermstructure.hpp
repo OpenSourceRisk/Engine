@@ -67,13 +67,6 @@ class DynamicBlackVolTermStructure : public BlackVolTermStructure {
 
     Real atm() const;
 
-  protected:
-    /* BlackVolTermStructure interface */
-    Real blackVarianceImpl(Time t, Real strike) const;
-    Volatility blackVolImpl(Time t, Real strike) const;
-    /* immplementations for curve and surface tags */
-    Real blackVarianceImplTag(Time t, Real strike, tag::curve) const;
-    Real blackVarianceImplTag(Time t, Real strike, tag::surface) const;
     /* VolatilityTermStructure interface */
     Real minStrike() const;
     Real maxStrike() const;
@@ -81,6 +74,14 @@ class DynamicBlackVolTermStructure : public BlackVolTermStructure {
     Date maxDate() const;
     /* Observer interface */
     void update();
+
+  protected:
+    /* BlackVolTermStructure interface */
+    Real blackVarianceImpl(Time t, Real strike) const;
+    Volatility blackVolImpl(Time t, Real strike) const;
+    /* immplementations for curve and surface tags */
+    Real blackVarianceImplTag(Time t, Real strike, tag::curve) const;
+    Real blackVarianceImplTag(Time t, Real strike, tag::surface) const;
 
   private:
     const Handle<BlackVolTermStructure> source_;

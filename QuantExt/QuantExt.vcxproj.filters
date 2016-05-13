@@ -19,16 +19,10 @@
     <ClInclude Include="qle\currencies\asia.hpp">
       <Filter>currencies</Filter>
     </ClInclude>
-    <ClInclude Include="qle\currencies\europe.hpp">
-      <Filter>currencies</Filter>
-    </ClInclude>
     <ClInclude Include="qle\indexes\genericiborindex.hpp">
       <Filter>indexes</Filter>
     </ClInclude>
     <ClInclude Include="qle\indexes\ibor\audbbsw.hpp">
-      <Filter>indexes\ibor</Filter>
-    </ClInclude>
-    <ClInclude Include="qle\indexes\ibor\averagebma.hpp">
       <Filter>indexes\ibor</Filter>
     </ClInclude>
     <ClInclude Include="qle\indexes\ibor\chftois.hpp">
@@ -298,6 +292,9 @@
     <ClInclude Include="qle\termstructures\staticallycorrectedyieldtermstructure.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\hazardspreadeddefaulttermstructure.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -348,9 +345,6 @@
       <Filter>currencies</Filter>
     </ClCompile>
     <ClCompile Include="qle\currencies\asia.cpp">
-      <Filter>currencies</Filter>
-    </ClCompile>
-    <ClCompile Include="qle\currencies\europe.cpp">
       <Filter>currencies</Filter>
     </ClCompile>
     <ClCompile Include="qle\cashflows\averageonindexedcoupon.cpp">
@@ -489,6 +483,9 @@
       <Filter>termstructures</Filter>
     </ClCompile>
     <ClCompile Include="qle\termstructures\oiccbasisswaphelper.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\hazardspreadeddefaulttermstructure.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
   </ItemGroup>

@@ -28,12 +28,19 @@ class AnalyticCcLgmFxOptionEngine : public VanillaOption::engine {
       change, this can be done by another call to cache */
     void cache(bool enable = true);
 
+    /*! the actual option price calculation, exposed to public,
+      since it is useful to directly use the core computation
+      sometimes */
+    Real value(const Time t0, const Time t,
+               const boost::shared_ptr<StrikedTypePayoff> payoff,
+               const Real domesticDiscount, const Real fxForward) const;
+
   private:
     const boost::shared_ptr<CrossAssetModel> model_;
     const Size foreignCurrency_;
     bool cacheEnabled_;
     mutable bool cacheDirty_;
-    mutable Real cachedIntegrals_;
+    mutable Real cachedIntegrals_, cachedT0_, cachedT_;
 };
 
 // inline

@@ -15,6 +15,7 @@
 #include <qle/models/irlgm1fparametrization.hpp>
 #include <qle/models/linkablecalibratedmodel.hpp>
 
+#include <ql/math/comparison.hpp>
 #include <ql/stochasticprocess.hpp>
 
 using namespace QuantLib;
@@ -136,6 +137,8 @@ inline Real LinearGaussMarkovModel::numeraire(
 inline Real LinearGaussMarkovModel::discountBond(
     const Time t, const Time T, const Real x,
     const Handle<YieldTermStructure> discountCurve) const {
+    if (close_enough(t, T))
+        return 1.0;
     QL_REQUIRE(T >= t && t >= 0.0,
                "T(" << T << ") >= t(" << t
                     << ") >= 0 required in LGM::discountBond");
@@ -152,6 +155,8 @@ inline Real LinearGaussMarkovModel::discountBond(
 inline Real LinearGaussMarkovModel::reducedDiscountBond(
     const Time t, const Time T, const Real x,
     const Handle<YieldTermStructure> discountCurve) const {
+    if (close_enough(t, T))
+        return 1.0 / numeraire(t, x, discountCurve);
     QL_REQUIRE(T >= t && t >= 0.0,
                "T(" << T << ") >= t(" << t
                     << ") >= 0 required in LGM::reducedDxsiscountBond");

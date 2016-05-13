@@ -54,8 +54,6 @@ void CurrencyTest::testCurrency() {
         { OMRCurrency(), "Omani rial", "OMR", 512},
         { AEDCurrency(), "United Arab Emirates dirham", "AED", 784},
         { PHPCurrency(), "Philippine peso", "PHP", 608},
-        //European currencies
-        { UAHCurrency(), "Ukrainian hryvnia", "UAH", 980}
     };
 
     Size size=sizeof(data)/sizeof(data[0]);
