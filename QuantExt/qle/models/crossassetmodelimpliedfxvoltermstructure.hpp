@@ -26,7 +26,7 @@ class AnalyticCcLgmFxOptionEngine;
   move() methods. */
 
 /* TODO probably slow, we need to introduce a cache */
-    
+
 class CrossAssetModelImpliedFxVolTermStructure : public BlackVolTermStructure {
   public:
     CrossAssetModelImpliedFxVolTermStructure(

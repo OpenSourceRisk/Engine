@@ -20,8 +20,9 @@
   </Setup>
 
   <Markets>
-    <Parameter name="simulation">default</Parameter>
-    <Parameter name="calibration">default</Parameter>
+    <Parameter name="lgmcalibration">collateral_inccy</Parameter>
+    <Parameter name="fxcalibration">collateral_eur</Parameter>
+    <Parameter name="pricing">collateral_eur</Parameter>
   </Markets>
 
   <Analytics>

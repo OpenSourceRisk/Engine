@@ -98,7 +98,7 @@ void DiscountingSwapEngineTest::testVanillaSwap() {
             SimulatedFixingsManager::instance().estimationMethod() =
                 SimulatedFixingsManager::InterpolatedForwardBackward;
 
-        // start new path 
+        // start new path
         SimulatedFixingsManager::instance().newPath();
 
         for (Size i = 0; i < 2 * 365; ++i) {

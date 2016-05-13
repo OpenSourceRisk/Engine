@@ -1,47 +1,20 @@
 <TodaysMarket>
 
-  <!-- configuration for model calibration -->
   <Configuration Id="default">
-    <DiscountingCurvesId>xois</DiscountingCurvesId>
-    <IndexForwardingCurvesId>default</IndexForwardingCurvesId>
-    <SwapIndexCurvesId>default</SwapIndexCurvesId>
-    <FxSpotsId>default</FxSpotsId>
-    <FxVolatilitiesId>default</FxVolatilitiesId>
-    <SwaptionVolatilitiesId>default</SwaptionVolatilitiesId>
-    <DefaultCurvesId>default</DefaultCurvesId>
+    <DiscountingCurvesId>xois_eur</DiscountingCurvesId>
   </Configuration>
 
-  <Configuration Id="calibration">
+  <Configuration Id="collateral_inccy">
     <DiscountingCurvesId>ois</DiscountingCurvesId>
-    <IndexForwardingCurvesId>default</IndexForwardingCurvesId>
-    <SwapIndexCurvesId>default</SwapIndexCurvesId>
-    <FxSpotsId>default</FxSpotsId>
-    <FxVolatilitiesId>default</FxVolatilitiesId>
-    <SwaptionVolatilitiesId>default</SwaptionVolatilitiesId>
-    <DefaultCurvesId>default</DefaultCurvesId>
   </Configuration>
 
-  <Configuration Id="simulation">
-    <DiscountingCurvesId>xois</DiscountingCurvesId>
-    <IndexForwardingCurvesId>default</IndexForwardingCurvesId>
-    <SwapIndexCurvesId>default</SwapIndexCurvesId>
-    <FxSpotsId>default</FxSpotsId>
-    <FxVolatilitiesId>default</FxVolatilitiesId>
-    <SwaptionVolatilitiesId>default</SwaptionVolatilitiesId>
-    <DefaultCurvesId>default</DefaultCurvesId>
+  <Configuration Id="collateral_eur">
+    <DiscountingCurvesId>xois_eur</DiscountingCurvesId>
   </Configuration>
 
   <Configuration Id="libor">
     <DiscountingCurvesId>inccy_swap</DiscountingCurvesId>
-    <IndexForwardingCurvesId>default</IndexForwardingCurvesId>
-    <SwapIndexCurvesId>default</SwapIndexCurvesId>
-    <FxSpotsId>default</FxSpotsId>
-    <FxVolatilitiesId>default</FxVolatilitiesId>
-    <SwaptionVolatilitiesId>default</SwaptionVolatilitiesId>
-    <DefaultCurvesId>default</DefaultCurvesId>
   </Configuration>
-
-  <!-- todo: configuration for simulation ... -->
 
   <!-- discounting curve definition (in ccy swap discounting) -->
   <DiscountingCurves Id="inccy_swap">
@@ -54,6 +27,7 @@
     <DiscountingCurve Currency="BANK_EUR_BORROW">Yield/EUR/BANK_EUR_BORROW</DiscountingCurve>
   </DiscountingCurves>
 
+  <!-- discounting curve definition (in ccy ois discounting) -->
   <DiscountingCurves Id="ois">
     <DiscountingCurve Currency="EUR">Yield/EUR/EUR1D</DiscountingCurve>
     <DiscountingCurve Currency="USD">Yield/USD/USD1D</DiscountingCurve>
@@ -64,8 +38,8 @@
     <DiscountingCurve Currency="BANK_EUR_BORROW">Yield/EUR/BANK_EUR_BORROW</DiscountingCurve>
   </DiscountingCurves>
 
-  <!-- discounting curve definition (in ccy swap discounting) -->
-  <DiscountingCurves Id="xois">
+  <!-- discounting curve definition (xois discounting w.r.t. EUR collateral) -->
+  <DiscountingCurves Id="xois_eur">
     <DiscountingCurve Currency="EUR">Yield/EUR/EUR1D</DiscountingCurve>
     <DiscountingCurve Currency="USD">Yield/USD/USD-IN-EUR</DiscountingCurve>
     <DiscountingCurve Currency="GBP">Yield/GBP/GBP-IN-EUR</DiscountingCurve>

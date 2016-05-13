@@ -38,15 +38,15 @@ Real fx_expectation_2(const CrossAssetModel *model, const Size i, const Time t0,
 
 /*! ir-ir covariance */
 Real ir_ir_covariance(const CrossAssetModel *model, const Size i, const Size j,
-                      const Time t0, Time dt);
+                      const Time t0, const Time dt);
 
 /*! ir-fx covariance */
 Real ir_fx_covariance(const CrossAssetModel *model, const Size i, const Size j,
-                      const Time t0, Time dt);
+                      const Time t0, const Time dt);
 
 /*! fx-fx covariance */
 Real fx_fx_covariance(const CrossAssetModel *model, const Size i, const Size j,
-                      const Time t0, Time dt);
+                      const Time t0, const Time dt);
 
 /*! IR H component */
 struct Hz {

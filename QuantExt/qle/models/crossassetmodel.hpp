@@ -48,7 +48,7 @@ namespace QuantExt {
     parametrizations are absolute and insensitive to shifts in the global
     evaluation date. The termstructures are required to be consistent with
     these times, i.e. should all have the same reference date and day counter.
-    The model does not observe anything, so it's update() method must be
+    The model does not observe anything, so its update() method must be
     explicitly called to notify observers of changes in the constituting
     parametrizations, update these parametrizations and flushing the cache
     of the state process. The model ensures these updates during
@@ -58,10 +58,11 @@ namespace QuantExt {
 class CrossAssetModel : public LinkableCalibratedModel {
   public:
     /*! Parametrizations must be given in the following order
-        - IR (first parametrization defines the domestic currency)
-        - FX (for all pairs domestic-ccy defined by the IR models)
+        - IR  (first parametrization defines the domestic currency)
+        - FX  (optionally, for all pairs domestic-ccy defined by the IR models)
         - INF (optionally, ccy must be a subset of the IR ccys)
         - CRD (optionally, ccy must be a subset of the IR ccys)
+        - EQ  (optionally, ccy must be a subset of the IR ccys)
         - COM (optionally) ccy must be a subset of the IR ccys) */
     CrossAssetModel(
         const std::vector<boost::shared_ptr<Parametrization> >
@@ -83,7 +84,7 @@ class CrossAssetModel : public LinkableCalibratedModel {
     stateProcess(CrossAssetStateProcess::discretization disc =
                      CrossAssetStateProcess::exact) const;
 
-    /*! total dimension of model */
+    /*! total dimension of model (i.e. the number of components in its stochastic process) */
     Size dimension() const;
 
     /*! number of currencies including domestic */
@@ -131,6 +132,8 @@ class CrossAssetModel : public LinkableCalibratedModel {
         the use of asset class pairs specific inspectors is
         recommended instead of the global matrix directly */
     const Matrix &correlation() const;
+
+    
 
     /*! correlation between two ir components */
     Real ir_ir_correlation(const Size i, const Size j) const;
@@ -205,7 +208,7 @@ class CrossAssetModel : public LinkableCalibratedModel {
 
     /* members */
 
-    Size nIrLgm1f_, nFxBs_, nCrLgm1f_;
+    Size nIrLgm1f_, nFxBs_, nInfDk_, nCrLgm1f_;
     Size totalNumberOfParameters_;
     std::vector<boost::shared_ptr<Parametrization> > p_;
     std::vector<boost::shared_ptr<LinearGaussMarkovModel> > lgm_;
@@ -259,7 +262,7 @@ inline const boost::shared_ptr<StochasticProcess> CrossAssetModel::stateProcess(
 }
 
 inline Size CrossAssetModel::dimension() const {
-    return nIrLgm1f_ * 1 + nFxBs_ * 1 + nCrLgm1f_ * 2;
+    return nIrLgm1f_ * 1 + nFxBs_ * 1 + nInfDk_*2 + nCrLgm1f_ * 2;
 }
 
 inline Size CrossAssetModel::currencies() const { return nIrLgm1f_; }

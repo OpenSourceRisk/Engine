@@ -65,23 +65,23 @@ HazardSpreadedDefaultTermStructure::survivalProbabilityImpl(Time t) const {
 inline DayCounter HazardSpreadedDefaultTermStructure::dayCounter() const {
     return source_->dayCounter();
 }
-    
+
 inline Date HazardSpreadedDefaultTermStructure::maxDate() const {
     return source_->maxDate();
 }
-    
+
 inline Time HazardSpreadedDefaultTermStructure::maxTime() const {
     return source_->maxTime();
 }
-    
+
 inline const Date &HazardSpreadedDefaultTermStructure::referenceDate() const {
     return source_->referenceDate();
 }
-    
+
 inline Calendar HazardSpreadedDefaultTermStructure::calendar() const {
     return source_->calendar();
 }
-    
+
 inline Natural HazardSpreadedDefaultTermStructure::settlementDays() const {
     return source_->settlementDays();
 }

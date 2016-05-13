@@ -74,7 +74,7 @@ namespace QuantExt {
 
         boost::shared_ptr<VanillaSwap> longSwap_;
         boost::shared_ptr<VanillaSwap> shortSwap_;
-        
+
         RelinkableHandle<YieldTermStructure> termStructureHandle_;
         Handle<YieldTermStructure> discountHandle_;
         RelinkableHandle<YieldTermStructure> discountRelinkableHandle_;

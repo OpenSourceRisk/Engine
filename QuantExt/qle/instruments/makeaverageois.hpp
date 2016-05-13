@@ -19,7 +19,7 @@ using namespace QuantLib;
 namespace QuantExt {
 
     //! helper class
-    /*! This class provides a more comfortable way to instantiate standard 
+    /*! This class provides a more comfortable way to instantiate standard
         average ON indexed swaps.
     */
     class MakeAverageOIS {
@@ -80,7 +80,7 @@ namespace QuantExt {
             const Calendar& onPaymentCalendar);
 
         // Pricing.
-        MakeAverageOIS& withONCouponPricer(const 
+        MakeAverageOIS& withONCouponPricer(const
             boost::shared_ptr<AverageONIndexedCouponPricer>& onCouponPricer);
         MakeAverageOIS& withDiscountingTermStructure(
             const Handle<YieldTermStructure>& discountCurve);

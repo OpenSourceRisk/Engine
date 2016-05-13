@@ -23,7 +23,7 @@ namespace QuantExt {
 
     //! %JPY %TONAR rate
     /*! Toyko Overnight Average Rate published by BOJ.
-        
+
         See <http://www.boj.or.jp/en/statistics/market/short/mutan/>.
 
         \remark There is a publication lag of 1 business day.

@@ -95,58 +95,58 @@ namespace QuantExt {
             AverageOIS(type_, nominal_, fixedSchedule,
                 fixedRate_, fixedDayCounter_, fixedPaymentAdjustment_,
                 fixedPaymentCalendar_, onSchedule, overnightIndex_,
-                onPaymentAdjustment_, onPaymentCalendar_, rateCutoff_, 
+                onPaymentAdjustment_, onPaymentCalendar_, rateCutoff_,
                 onSpread_, onGearing_, onDayCounter_, onCouponPricer_));
-        
+
         swap->setPricingEngine(engine_);
         return swap;
     }
 
     MakeAverageOIS& MakeAverageOIS::
         receiveFixed(bool receiveFixed) {
-        type_ = receiveFixed ? AverageOIS::Receiver : 
+        type_ = receiveFixed ? AverageOIS::Receiver :
             AverageOIS::Payer;
         return *this;
     }
-    
+
     MakeAverageOIS& MakeAverageOIS::
         withType(AverageOIS::Type type) {
         type_ = type;
         return *this;
     }
-    
+
     MakeAverageOIS& MakeAverageOIS::
         withNominal(Real nominal) {
         nominal_ = nominal;
         return *this;
     }
-    
+
     MakeAverageOIS& MakeAverageOIS::
         withEffectiveDate(const Date& effectiveDate) {
         effectiveDate_ = effectiveDate;
         return *this;
     }
-    
+
     MakeAverageOIS& MakeAverageOIS::
         withTerminationDate(const Date& terminationDate) {
         terminationDate_ = terminationDate;
         swapTenor_ = Period();
         return *this;
     }
-    
+
     MakeAverageOIS& MakeAverageOIS::
         withRule(DateGeneration::Rule rule) {
         fixedRule_ = rule;
         onRule_ = rule;
         return *this;
     }
-    
+
     MakeAverageOIS& MakeAverageOIS::
         withSpotLagCalendar(const Calendar& spotLagCalendar) {
         spotLagCalendar_ = spotLagCalendar;
         return *this;
     }
-    
+
     MakeAverageOIS& MakeAverageOIS::
         withFixedCalendar(const Calendar& fixedCalendar) {
         fixedCalendar_ = fixedCalendar;
@@ -160,7 +160,7 @@ namespace QuantExt {
     }
 
     MakeAverageOIS& MakeAverageOIS::
-        withFixedTerminationDateConvention(BusinessDayConvention 
+        withFixedTerminationDateConvention(BusinessDayConvention
             fixedTerminationDateConvention) {
         fixedTerminationDateConvention_ = fixedTerminationDateConvention;
         return *this;
@@ -191,7 +191,7 @@ namespace QuantExt {
     }
 
     MakeAverageOIS& MakeAverageOIS::
-        withFixedPaymentAdjustment(BusinessDayConvention 
+        withFixedPaymentAdjustment(BusinessDayConvention
             fixedPaymentAdjustment) {
         fixedPaymentAdjustment_ = fixedPaymentAdjustment;
         return *this;
@@ -216,7 +216,7 @@ namespace QuantExt {
     }
 
     MakeAverageOIS& MakeAverageOIS::
-        withONTerminationDateConvention(BusinessDayConvention 
+        withONTerminationDateConvention(BusinessDayConvention
             onTerminationDateConvention) {
         onTerminationDateConvention_ = onTerminationDateConvention;
         return *this;
@@ -283,14 +283,14 @@ namespace QuantExt {
     }
 
     MakeAverageOIS& MakeAverageOIS::
-        withONCouponPricer(const 
+        withONCouponPricer(const
             boost::shared_ptr<AverageONIndexedCouponPricer>& onCouponPricer) {
         onCouponPricer_ = onCouponPricer;
         return *this;
     }
 
     MakeAverageOIS& MakeAverageOIS::
-        withDiscountingTermStructure(const 
+        withDiscountingTermStructure(const
             Handle<YieldTermStructure>& discountCurve) {
         bool includeSettlementDateFlows = false;
         engine_ = boost::shared_ptr<PricingEngine>(new

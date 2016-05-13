@@ -22,7 +22,7 @@ namespace QuantExt {
 
     //! Generic Ibor Index
     /*! This Ibor Index allows you to wrap any arbitary currency in a generic index.
-        
+
         We assume 2 settlement days, Target Calendar, ACT/360.
 
         The name is always CCY-GENERIC so there is no risk of collision with real ibor names
