@@ -1,10 +1,6 @@
-The configuration for a yield curve is given in the XML file {\tt yield-curves.xml} under the \lstinline!YieldCurve! node.
-
-%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\subsubsection{Yield Curves}
-%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 The top level XML elements for each \lstinline!YieldCurve! node are shown in Listing \ref{lst:top_level_yc}.
 
+{\footnotesize
 \begin{lstlisting}[caption=Top level yield curve node, label=lst:top_level_yc]
 <YieldCurve>
 	<CurveId> </CurveId>
@@ -19,6 +15,7 @@ The top level XML elements for each \lstinline!YieldCurve! node are shown in Lis
 	<Extrapolation> </Extrapolation>
 </YieldCurve>
 \end{lstlisting}
+}
 
 The meaning of each of the top level elements in Listing \ref{lst:top_level_yc} is given below. If an element is labelled 
 as ``Optional'', then it may be excluded or included and left blank.
@@ -89,6 +86,7 @@ pointing to a line in the {\tt market.txt} file, i.e.\ in this case, pointing to
 factor. The \lstinline!Conventions! node contains the ID of a node in the {\tt ir\_conventions.xml} file described in \S 
 \ref{s:ir_conventions}. The \lstinline!Conventions! node associates conventions with the quotes.
 
+{\footnotesize
 \begin{lstlisting}[caption=Direct yield curve segment, label=lst:direct_segment]
 <Direct>
 	<Type> </Type>
@@ -100,6 +98,7 @@ factor. The \lstinline!Conventions! node contains the ID of a node in the {\tt i
 	<Conventions> </Conventions>
 </Direct>
 \end{lstlisting}
+}
 
 \subsubsection*{Simple Segment}
 When the node name is \lstinline!Simple!, the \lstinline!Type! node has the value \emph{Deposit}, \emph{FRA}, 
@@ -112,6 +111,7 @@ the instruments underlying the quotes listed in the \lstinline!Quote! nodes duri
 optional node. If it is left blank or omitted, then the projection curve is assumed to equal the curve being bootstrapped 
 i.e.\ the current CurveId.
 
+{\footnotesize
 \begin{lstlisting}[caption=Simple yield curve segment, label=lst:simple_segment]
 <Simple>
 	<Type> </Type>
@@ -124,6 +124,7 @@ i.e.\ the current CurveId.
 	<ProjectionCurve> </ProjectionCurve>
 </Simple>
 \end{lstlisting}
+}
 
 \subsubsection*{Average OIS Segment}
 When the node name is \lstinline!AverageOIS!, the \lstinline!Type! node has the value \emph{Average OIS} and the node has 
@@ -133,6 +134,7 @@ an Average OIS instrument consists of two quotes, a vanilla IRS quote and an OIS
 these two quotes are stored in the \lstinline!CompositeQuote! node. The \lstinline!RateQuote! node holds the ID of the  
 vanilla IRS quote and the \lstinline!SpreadQuote! node holds the ID of the OIS-LIBOR basis swap spread quote.
 
+{\footnotesize
 \begin{lstlisting}[caption=Average OIS yield curve segment, label=lst:average_ois_segment]
 <AverageOIS>
 	<Type> </Type>
@@ -145,7 +147,9 @@ vanilla IRS quote and the \lstinline!SpreadQuote! node holds the ID of the OIS-L
 	<ProjectionCurve> </ProjectionCurve>
 </AverageOIS>
 \end{lstlisting}
+}
 
+{\footnotesize
 \begin{lstlisting}[caption=Average OIS segment's quotes section, label=lst:average_ois_quotes]
 <Quotes>
 	<CompositeQuote>
@@ -155,6 +159,7 @@ vanilla IRS quote and the \lstinline!SpreadQuote! node holds the ID of the OIS-L
 	...
 </Quotes>
 \end{lstlisting}
+}
 
 \subsubsection*{Tenor Basis Segment}
 When the node name is \lstinline!TenorBasis!, the \lstinline!Type! node has the value \emph{Tenor Basis Swap} or 
@@ -171,6 +176,7 @@ node holds the CurveId of a curve for projecting the floating rates on the long 
 they are left blank or omitted, then the projection curve is assumed to equal the curve being bootstrapped i.e.\ the 
 current CurveId. However, at least one of the nodes needs to be populated to allow the bootstrap to proceed.
 
+{\footnotesize
 \begin{lstlisting}[caption=Tenor basis yield curve segment, label=lst:tenor_basis_segment]
 <TenorBasis>
 	<Type> </Type>
@@ -184,6 +190,7 @@ current CurveId. However, at least one of the nodes needs to be populated to all
 	<ProjectionCurveShort> </ProjectionCurveShort>
 </TenorBasis>
 \end{lstlisting}
+}
 
 \subsubsection*{Cross Currency Segment}
 When the node name is \lstinline!CrossCurrency!, the \lstinline!Type! node has the value \emph{FX Forward} or \emph{Cross 
@@ -194,6 +201,7 @@ currency in the currency pair that is not equal to the currency in Listing \ref{
 \lstinline!SpotRate! node holds the ID of a spot FX quote for the currency pair that is looked up in the {\tt market.txt} 
 file.
 
+{\footnotesize
 \begin{lstlisting}[caption=FX forward yield curve segment, label=lst:fx_forward_segment]
 <CrossCurrency>
 	<Type> </Type>
@@ -207,6 +215,7 @@ file.
 	<SpotRate> </SpotRate>
 </CrossCurrency>
 \end{lstlisting}
+}
 
 When the \lstinline!Type! node has the value \emph{Cross Currency Basis Swap} then the node has the structure shown in 
 Listing \ref{lst:xccy_basis_segment}. This segment is used to hold quotes for cross currency basis swap instruments. The 
@@ -220,6 +229,7 @@ equal the curve being bootstrapped i.e.\ the current CurveId. Similarly, the \ls
 the CurveId of a curve for projecting the floating rates on the index in the other currency. If it is left blank or 
 omitted, then it is assumed to equal the CurveId provided in the \lstinline!DiscountCurve! node in this segment.
 
+{\footnotesize
 \begin{lstlisting}[caption=Cross currency basis yield curve segment, label=lst:xccy_basis_segment]
 <CrossCurrency>
 	<Type> </Type>
@@ -235,3 +245,4 @@ omitted, then it is assumed to equal the CurveId provided in the \lstinline!Disc
 	<ProjectionCurveForeign> </ProjectionCurveForeign>
 </CrossCurrency>
 \end{lstlisting}
+}
