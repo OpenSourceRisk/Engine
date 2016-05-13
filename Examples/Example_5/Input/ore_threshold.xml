@@ -19,6 +19,7 @@
     <Parameter name="lgmcalibration">collateral_inccy</Parameter>
     <Parameter name="fxcalibration">collateral_eur</Parameter>
     <Parameter name="pricing">collateral_eur</Parameter>
+    <Parameter name="simulation">collateral_eur</Parameter>
   </Markets>
 
   <Analytics>

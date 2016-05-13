@@ -46,8 +46,6 @@ void writeNpv(const Parameters& params,
               boost::shared_ptr<Portfolio> portfolio);
 
 void writeCashflow(const Parameters& params,
-                   boost::shared_ptr<Market> market,
-                   const std::string &configuration,
                    boost::shared_ptr<Portfolio> portfolio);
 
 void writeCurves(const Parameters& params,
@@ -198,7 +196,7 @@ int main(int argc, char** argv) {
         cout << setw(tab) << left << "Cashflow Report... " << flush;
         if (params.hasGroup("cashflow") &&
             params.get("cashflow", "active") == "Y") {
-            writeCashflow(params, market, params.get("markets", "pricing"), portfolio);
+            writeCashflow(params, portfolio);
             cout << "OK" << endl;
         }
         else {
@@ -237,7 +235,7 @@ int main(int argc, char** argv) {
             
             LOG("Build Simulation Market");
             boost::shared_ptr<openxva::simulation::SimMarket> simMarket
-                = boost::make_shared<ScenarioSimMarket>(sg, market, simMarketData, params.get("markets", "pricing"));
+                = boost::make_shared<ScenarioSimMarket>(sg, market, simMarketData, params.get("markets", "simulation"));
             
             LOG("Build engine factory for pricing under scenarios, linked to sim market");
             boost::shared_ptr<EngineData> simEngineData = boost::make_shared<EngineData>();
@@ -356,9 +354,10 @@ int main(int argc, char** argv) {
             string fvaLendingCurve =  params.get("xva", "fvaLendingCurve");
             string fvaBorrowingCurve = params.get("xva", "fvaBorrowingCurve");
             Real collateralSpread = parseReal(params.get("xva", "collateralSpread"));
+            string marketConfiguration = params.get("markets", "simulation");
             
             boost::shared_ptr<PostProcess> postProcess = boost::make_shared<PostProcess>
-                (portfolio, netting, market, cube, scenarioData, analytics,
+                (portfolio, netting, market, marketConfiguration, cube, scenarioData, analytics,
                  baseCurrency, allocationMethod, marginalAllocationLimit, quantile, calculationType, dvaName,
                  fvaBorrowingCurve, fvaLendingCurve, collateralSpread);
 
@@ -483,8 +482,6 @@ void writeNpv(const Parameters& params,
 }
 
 void writeCashflow(const Parameters& params,
-                   boost::shared_ptr<Market> market,
-                   const std::string &configuration,
                    boost::shared_ptr<Portfolio> portfolio) {
     Date asof = Settings::instance().evaluationDate();
     string outputPath = params.get("setup", "outputPath"); 
