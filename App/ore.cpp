@@ -473,7 +473,8 @@ void writeNpv(const Parameters& params,
                  << npvCcy << sep
                  << npv * fx << sep
                  << baseCurrency << endl;
-        } catch (...) {
+        } catch (std::exception &e) {
+            ALOG("Exception during pricing trade " << trade->envelope().id() << ": " << e.what());
             file << "#NA" << sep << "#NA" << sep << "#NA" << sep << "#NA" << endl;
         }
     }
