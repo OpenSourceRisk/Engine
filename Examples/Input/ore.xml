@@ -23,6 +23,7 @@
     <Parameter name="lgmcalibration">collateral_inccy</Parameter>
     <Parameter name="fxcalibration">collateral_eur</Parameter>
     <Parameter name="pricing">collateral_eur</Parameter>
+    <Parameter name="simulation">collateral_eur</Parameter>
   </Markets>
 
   <Analytics>
@@ -68,14 +69,18 @@
       <Parameter name="calculationType">Symmetric</Parameter>      
       <Parameter name="allocationMethod">None</Parameter>    
       <Parameter name="marginalAllocationLimit">1.0</Parameter>    
+      <Parameter name="exerciseNextBreak">N</Parameter>
       <Parameter name="cva">Y</Parameter>
       <Parameter name="dva">N</Parameter>
       <Parameter name="dvaName">BANK</Parameter>
       <Parameter name="fva">N</Parameter>
+      <Parameter name="fvaFundingCurve">BANK_EUR_FUNDING</Parameter>
+      <Parameter name="fvaInvestmentCurve">BANK_EUR_INVESTMENT</Parameter>
       <Parameter name="colva">N</Parameter>
+      <Parameter name="colvaSpread">0.0000</Parameter>
+      <Parameter name="eoniaFloor">N</Parameter>
       <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>
-      <Parameter name="netCubeOutputFile">netcube.csv</Parameter>
-      
+      <Parameter name="netCubeOutputFile">netcube.csv</Parameter>      
     </Analytic>
 
     <Analytic type="initialMargin">

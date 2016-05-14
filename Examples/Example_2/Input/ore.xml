@@ -6,6 +6,7 @@
     <Parameter name="asofDate">2016-02-26</Parameter>
     <Parameter name="marketDataFile">../../Input/market_20160226.txt</Parameter>
     <Parameter name="fixingDataFile">../../Input/fixings_20160226.txt</Parameter>    
+    <Parameter name="implyTodaysFixings">N</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
     <Parameter name="curveConfigFile">../../Input/curveconfig.xml</Parameter>
     <Parameter name="conventionsFile">../../Input/conventions.xml</Parameter>
@@ -18,6 +19,7 @@
     <Parameter name="lgmcalibration">collateral_inccy</Parameter>
     <Parameter name="fxcalibration">collateral_eur</Parameter>
     <Parameter name="pricing">collateral_eur</Parameter>
+    <Parameter name="simulation">collateral_eur</Parameter>
   </Markets>
 
   <Analytics>
@@ -62,14 +64,18 @@
       <Parameter name="calculationType">Symmetric</Parameter>      
       <Parameter name="allocationMethod">None</Parameter>    
       <Parameter name="marginalAllocationLimit">1.0</Parameter>    
+      <Parameter name="exerciseNextBreak">N</Parameter>
       <Parameter name="cva">Y</Parameter>
       <Parameter name="dva">N</Parameter>
       <Parameter name="dvaName">BANK</Parameter>
       <Parameter name="fva">N</Parameter>
+      <Parameter name="fvaBorrowingCurve">BANK_EUR_BORROW</Parameter>
+      <Parameter name="fvaLendingCurve">BANK_EUR_LEND</Parameter>
       <Parameter name="colva">N</Parameter>
+      <Parameter name="collateralSpread">0.0000</Parameter>
+      <Parameter name="collateralFloor">N</Parameter>
       <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>
-      <Parameter name="netCubeOutputFile">netcube.csv</Parameter>
-      
+      <Parameter name="netCubeOutputFile">netcube.csv</Parameter>     
     </Analytic>
 
     <Analytic type="initialMargin">

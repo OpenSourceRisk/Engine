@@ -46,8 +46,6 @@ void writeNpv(const Parameters& params,
               boost::shared_ptr<Portfolio> portfolio);
 
 void writeCashflow(const Parameters& params,
-                   boost::shared_ptr<Market> market,
-                   const std::string &configuration,
                    boost::shared_ptr<Portfolio> portfolio);
 
 void writeCurves(const Parameters& params,
@@ -60,7 +58,10 @@ void writeTradeExposures(const Parameters& params,
 void writeNettingSetExposures(const Parameters& params,
                               boost::shared_ptr<PostProcess> postProcess);
 
-void writeCva(const Parameters& params,
+void writeNettingSetColva(const Parameters& params,
+                          boost::shared_ptr<PostProcess> postProcess);
+
+void writeXVA(const Parameters& params,
               boost::shared_ptr<Portfolio> portfolio,
               boost::shared_ptr<PostProcess> postProcess);
 
@@ -102,7 +103,9 @@ int main(int argc, char** argv) {
         string inputPath = params.get("setup", "inputPath"); 
         string marketFile = inputPath + "/" + params.get("setup", "marketDataFile");
         string fixingFile = inputPath + "/" + params.get("setup", "fixingDataFile");
-        CSVLoader loader(marketFile, fixingFile);
+        string implyTodaysFixingsString = params.get("setup", "implyTodaysFixings");
+        bool implyTodaysFixings = parseBool(implyTodaysFixingsString);
+        CSVLoader loader(marketFile, fixingFile, implyTodaysFixings);
         cout << "OK" << endl;
         
         /*************
@@ -193,7 +196,7 @@ int main(int argc, char** argv) {
         cout << setw(tab) << left << "Cashflow Report... " << flush;
         if (params.hasGroup("cashflow") &&
             params.get("cashflow", "active") == "Y") {
-            writeCashflow(params, market, params.get("markets", "pricing"), portfolio);
+            writeCashflow(params, portfolio);
             cout << "OK" << endl;
         }
         else {
@@ -232,7 +235,7 @@ int main(int argc, char** argv) {
             
             LOG("Build Simulation Market");
             boost::shared_ptr<openxva::simulation::SimMarket> simMarket
-                = boost::make_shared<ScenarioSimMarket>(sg, market, simMarketData, params.get("markets", "pricing"));
+                = boost::make_shared<ScenarioSimMarket>(sg, market, simMarketData, params.get("markets", "simulation"));
             
             LOG("Build engine factory for pricing under scenarios, linked to sim market");
             boost::shared_ptr<EngineData> simEngineData = boost::make_shared<EngineData>();
@@ -280,7 +283,6 @@ int main(int argc, char** argv) {
                 inMemoryCube = boost::make_shared<SinglePrecisionInMemoryCube>
                 (asof, simPortfolio->ids(), grid->dates(), samples);
             engine.buildCube(simPortfolio, inMemoryCube, inMemoryAdditionalScenarioData);
-            //engine.buildCube(simPortfolio, inMemoryCube, boost::shared_ptr<AdditionalScenarioData>());
             cout << "OK" << endl;
 
             cout << setw(tab) << left << "Write Cube... " << flush;
@@ -335,11 +337,13 @@ int main(int argc, char** argv) {
                 "scenario sample size does not match cube sample size");
             
             map<string,bool> analytics;
+            analytics["exerciseNextBreak"] = parseBool(params.get("xva", "exerciseNextBreak"));
             analytics["exposureProfiles"] = parseBool(params.get("xva", "exposureProfiles"));
             analytics["cva"] = parseBool(params.get("xva", "cva"));
             analytics["dva"] = parseBool(params.get("xva", "dva"));
             analytics["fva"] = parseBool(params.get("xva", "fva"));
             analytics["colva"] = parseBool(params.get("xva", "colva"));
+            analytics["collateralFloor"] = parseBool(params.get("xva", "collateralFloor"));
             
             string baseCurrency = params.get("xva", "baseCurrency");
             string calculationType = params.get("xva", "calculationType");
@@ -347,14 +351,20 @@ int main(int argc, char** argv) {
             Real marginalAllocationLimit = parseReal(params.get("xva", "marginalAllocationLimit"));
             Real quantile = parseReal(params.get("xva", "quantile"));
             string dvaName = params.get("xva", "dvaName");
+            string fvaLendingCurve =  params.get("xva", "fvaLendingCurve");
+            string fvaBorrowingCurve = params.get("xva", "fvaBorrowingCurve");
+            Real collateralSpread = parseReal(params.get("xva", "collateralSpread"));
+            string marketConfiguration = params.get("markets", "simulation");
             
             boost::shared_ptr<PostProcess> postProcess = boost::make_shared<PostProcess>
-                (portfolio, netting, market, params.get("markets", "pricing"), cube, scenarioData, analytics,
-                baseCurrency, allocationMethod, marginalAllocationLimit, quantile, calculationType, dvaName);
+                (portfolio, netting, market, marketConfiguration, cube, scenarioData, analytics,
+                 baseCurrency, allocationMethod, marginalAllocationLimit, quantile, calculationType, dvaName,
+                 fvaBorrowingCurve, fvaLendingCurve, collateralSpread);
 
             writeTradeExposures(params, postProcess);
             writeNettingSetExposures(params, postProcess);
-            writeCva(params, portfolio, postProcess);
+            writeXVA(params, portfolio, postProcess);
+            writeNettingSetColva(params, postProcess);
 
             string rawCubeOutputFile = params.get("xva", "rawCubeOutputFile");
             CubeWriter cw1(outputPath + "/" + rawCubeOutputFile);
@@ -472,8 +482,6 @@ void writeNpv(const Parameters& params,
 }
 
 void writeCashflow(const Parameters& params,
-                   boost::shared_ptr<Market> market,
-                   const std::string &configuration,
                    boost::shared_ptr<Portfolio> portfolio) {
     Date asof = Settings::instance().evaluationDate();
     string outputPath = params.get("setup", "outputPath"); 
@@ -661,7 +669,7 @@ void writeNettingSetExposures(const Parameters& params,
         const vector<Real>& ene = postProcess->netENE(n);
         const vector<Real>& pfe = postProcess->netPFE(n);
         const vector<Real>& ecb = postProcess->expectedCollateral(n);
-        file << "#TradeId,Date,Time,EPE,ENE,PFE,ExpectedCollateral" << endl;
+        file << "#NettingSet,Date,Time,EPE,ENE,PFE,ExpectedCollateral" << endl;
         file << n << ","
              << QuantLib::io::iso_date(today) << ","
              << 0.0 << ","
@@ -683,7 +691,7 @@ void writeNettingSetExposures(const Parameters& params,
     }
 }
 
-void writeCva(const Parameters& params,
+void writeXVA(const Parameters& params,
               boost::shared_ptr<Portfolio> portfolio,
               boost::shared_ptr<PostProcess> postProcess) {
     string outputPath = params.get("setup", "outputPath");
@@ -693,14 +701,20 @@ void writeCva(const Parameters& params,
     string fileName = outputPath + "/xva.csv";
     ofstream file(fileName.c_str());
     QL_REQUIRE(file.is_open(), "Error opening file " << fileName);
-    file << "#TradeId,NettingSetId,CVA,AllocatedCVA,DVA,AllocatedDVA,AllocationMethod" << endl; 
+    file << "#TradeId,NettingSetId,CVA,DVA,FBA,FCA,COLVA,CollateralFloor,AllocatedCVA,AllocatedDVA,AllocationMethod" << endl; 
     for (auto n : postProcess->nettingSetIds()) {
         file << ","
              << n << ","
              << postProcess->nettingSetCVA(n) << ","
+             << postProcess->nettingSetDVA(n) << ","
+             << postProcess->nettingSetFBA(n) << ","
+             << postProcess->nettingSetFCA(n) << ","
+             << postProcess->nettingSetCOLVA(n) << ","
+             << postProcess->nettingSetCollateralFloor(n) << ","
              << postProcess->nettingSetCVA(n) << ","
              << postProcess->nettingSetDVA(n) << ","
-             << postProcess->nettingSetDVA(n) << "," << endl;
+             << allocationMethod
+             << endl;
         for (Size k = 0; k < portfolio->trades().size(); ++k) {
             string tid = portfolio->trades()[k]->envelope().id();
             string nid = portfolio->trades()[k]->envelope().nettingSetId();
@@ -708,13 +722,56 @@ void writeCva(const Parameters& params,
             file << tid << ","
                  << nid << ","
                  << postProcess->tradeCVA(tid) << ","
-                 << postProcess->allocatedTradeCVA(tid) << ","
                  << postProcess->tradeDVA(tid) << ","
+                 << postProcess->tradeFBA(tid) << ","
+                 << postProcess->tradeFCA(tid) << "," 
+                 << "n/a," // no trade COLVA
+                 << "n/a," // no trade collateral floor
+                 << postProcess->allocatedTradeCVA(tid) << ","
                  << postProcess->allocatedTradeDVA(tid) << ","
-                 << allocationMethod << endl;
+                 << allocationMethod
+                 << endl;
         }
     }
     file.close();
+}
+
+void writeNettingSetColva(const Parameters& params,
+                          boost::shared_ptr<PostProcess> postProcess) {
+    string outputPath = params.get("setup", "outputPath");
+    const vector<Date> dates = postProcess->cube()->dates();
+    Date today = Settings::instance().evaluationDate();
+    DayCounter dc = ActualActual();
+    for (auto n : postProcess->nettingSetIds()) {
+        ostringstream o;
+        o << outputPath << "/colva_nettingset_" << n << ".csv";
+        string fileName = o.str();
+        ofstream file(fileName.c_str());
+        QL_REQUIRE(file.is_open(), "Error opening file " << fileName);
+        const vector<Real>& collateral = postProcess->expectedCollateral(n);
+        const vector<Real>& colvaInc = postProcess->colvaIncrements(n);
+        const vector<Real>& floorInc = postProcess->collateralFloorIncrements(n);
+        Real colva = postProcess->nettingSetCOLVA(n);
+        Real floorValue = postProcess->nettingSetCollateralFloor(n);
+        file << "#NettingSet,Date,Time,CollateralBalance,COLVA Increment,COLVA,CollateralFloor Increment,CollateralFloor" << endl;
+        file << n << ",,,," << colva << "," << floorValue << endl;
+        Real colvaSum = 0.0;
+        Real floorSum = 0.0;
+        for (Size j = 0; j < dates.size(); ++j) {
+            Real time = dc.yearFraction(today, dates[j]);
+            colvaSum += colvaInc[j+1];
+            floorSum += floorInc[j+1];
+            file << n << ","
+                 << QuantLib::io::iso_date(dates[j]) << ","
+                 << time << ","
+                 << collateral[j+1] << ","
+                 << colvaInc[j+1] << ","
+                 << colvaSum << ","
+                 << floorInc[j+1] << ","
+                 << floorSum << endl;
+        }
+        file.close();
+    }
 }
 
 bool Parameters::hasGroup(const string& groupName) const {

@@ -25,6 +25,7 @@ If an ISDA agreement does not contain a Credit Support Annex the
 portfolio exposures are not eligible for collateralisation. In such a
 case the netting set can be defined within the following XML template:
 
+{\footnotesize
 \begin{lstlisting}[caption={uncollateralised netting set definition}, label=lst:nettingSetUncollat]
     <NettingSet>
         <NettingSetId> </NettingSetId>
@@ -33,6 +34,7 @@ case the netting set can be defined within the following XML template:
         <CSADetails></CSADetails>
     </NettingSet>
 \end{lstlisting}
+}
 
 The meanings of the various elements are as follows:
 \begin{itemize}
@@ -52,6 +54,7 @@ If an ISDA agreement contains a Credit Support Annex the
 portfolio exposures are eligible for collateralisation. In such a
 case the netting set can be defined within the following XML template:
 
+{\footnotesize
 \begin{lstlisting}[caption={collateralised netting set definition}, label=lst:nettingSetCollat]
     <NettingSet>
         <NettingSetId> </NettingSetId>
@@ -89,6 +92,7 @@ case the netting set can be defined within the following XML template:
         </CSADetails>
     </NettingSet>
 \end{lstlisting}
+}
 
 The first few nodes are shared with the template for uncollateralised
 netting sets:

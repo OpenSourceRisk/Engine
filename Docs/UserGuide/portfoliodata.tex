@@ -6,49 +6,44 @@ The top level portfolio node is delimited by an opening {\tt <Portfolio>} and a 
 ¤Additional fields¤ node, and after that, a node containing trade specific data.
 
 \vspace{1em}
-An example of a {\tt portfolio.xml} file with one loan trade including the full envelope node is shown in Listing \ref{lst:port_folio}.
+An example of a {\tt portfolio.xml} file with one Swap trade including the full envelope node is shown in Listing \ref{lst:port_folio}.
 
 
+{\footnotesize
 \begin{lstlisting}[caption=Portfolio, label=lst:port_folio]
 <Portfolio>
-  <Trade id="1">
-    <ClassName>Loan</ClassName>
+  <Trade id="Swap#1">
+    <TradeType> Swap </TradeType>
     <Envelope>
-      <Id>1</Id>
-      <Type>Loan</Type>
-      <CounterParty>Archer Daniels Midland</CounterParty>
-      <Rating>A1</Rating>
-      <NettingSetId>12</NettingSetId>
+      <CounterParty> Counterparty#1 </CounterParty>
+      <NettingSetId> NettingSet#2 </NettingSetId>
       <AdditionalFields>
-        <Sector>Commercial</Sector>
-        <Book>CLoans</Book>
+        <Sector> SectorA </Sector>
+        <Book> BookB </Book>
+        <Rating> A1 </Rating>
       </AdditionalFields>
     </Envelope>
-    <LoanData>
+    <SwapData>
         ...
-        [Trade specific data for a Loan]
+        [Trade specific data for a Swap]
         ...
-    </LoanData>
+    </SwapData>
   </Trade>
 </Portfolio>
 \end{lstlisting}
+}
 
 A description of all portfolio data, i.e. of each node and XML element in the portfolio file, with examples and allowable values follows below. There are two XML elements directly under the top level {\tt Portfolio} node:
 
 \begin{itemize}
 \item {\tt Trade id}: The first element of each trade is the {\tt Trade id} and it is used to identify trades within a portfolio. Trade ids should be unique within a portfolio.  The {\tt Trade id} element is entered twice in the instrument file, firstly with an attribute to the XML element {\tt <Trade>}, such as {\tt <Trade id="ExampleTrade">}  in the beginning closed by {\tt </Trade>}  at the end of the trade data, and secondly with a {\tt Id} element  in the envelope node.   Both Trade id entries should be identical.
 
-
-
 Allowable values:  Any alphanumeric string. The underscore (\_) sign may be used as well. 
 
 
-\item {\tt ClassName}: The Trade type is set with the {\tt ClassName} element, as well as with the {\tt Type} element in the envelope. The two Trade type entries should be identical. ORE currently supports 7 trade types.  
+\item {\tt TradeType}: The Trade type is set with the {\tt TradeType} element, as well as with the {\tt Type} element in the envelope. The two Trade type entries should be identical. ORE currently supports 7 trade types.  
 
-
-
-%Allowable values:  \emph{Swap, CapFloor, Swaption, FxForward, FxOption, FxLinkedCouponSwap, LPISwap, GenericLeg, FRA, CreditDefaultSwap, EquityForward, VarSwap, Loan}
-Allowable values:  \emph{Swap, Swaption, CapFloor, FRA, FxForward, FxOption, Loan}
+Allowable values:  \emph{Swap, Swaption, FxForward, FxOption}
 
 
 \end{itemize}
@@ -87,8 +82,7 @@ Allowable values: Any alphanumeric string. The underscore (\_) sign may be used 
 
 
 
-%Allowable values: \emph{Swap, CapFloor, Swaption, FxForward, FxOption, FxLinkedCouponSwap, LPISwap, GenericLeg, FRA, CreditDefaultSwap, EquityForward, VarSwap, Loan}
-Allowable values: \emph{Swap, Swaption, CapFloor, FRA, FxForward, FxOption, Loan}
+Allowable values: \emph{Swap, Swaption, FxForward, FxOption }
 
 \item {\tt Counterparty}: Specifies the name of the counterparty of the trade.  It is used to show exposure analytics by counterparty. 
 
@@ -136,6 +130,7 @@ Details of  trade-specific data for all 14 trade types follow below.
 
 The \lstinline!SwapData! node is the trade data container for the Swap trade type. A Swap must have at least one leg, and can have an unlimited number of legs. Each leg is represented by a \lstinline!LegData! trade component sub-node, described in \S \ref{ss:leg_data} Leg Data and Notionals. An example structure of a two-legged \lstinline!SwapData! node  is shown in Listing \ref{lst:swap_data}.
 
+{\footnotesize
 \begin{lstlisting}[caption=SwapData, label=lst:swap_data]
 			 <SwapData>
             <LegData>
@@ -146,217 +141,7 @@ The \lstinline!SwapData! node is the trade data container for the Swap trade typ
             </LegData>
         </SwapData>
 \end{lstlisting}
-
-\subsubsection{Loan/Bond}
-
-The \lstinline!LoanData! node is the trade data container for the Loan trade type. A Loan must have one or maximum two \lstinline!LegData! trade component sub-nodes, described in \S \ref{ss:leg_data} Leg Data and Notionals. In the case of two \lstinline!LegData! sub-nodes, the nodes will combined form one leg.  Both \lstinline!LegData! nodes must have the same \lstinline!Payer! value (i.e. both be Payer or both be Receiver) and Currency. Two \lstinline!LegData!  nodes can be used for example in the case of a Loan that initially has fixed coupons, and then switches to floating coupons. 
-%A Loan will have a single initial exchange of notional and a single final exchange of notional regardless of the number of \lstinline!LegData! sub-nodes. 
-An example structure of a  \lstinline!LoanData! node with two \lstinline!LegData! sub-nodes is shown in Listing \ref{lst:loan_data}.
-
-\begin{lstlisting}[caption=LoanData, label=lst:loan_data]
-	<LoanData>
-		<LegData>
-			<Payer>true</Payer>
-			<Currency>EUR</Currency>
-				...
-		</LegData>
-		<LegData>
-			<Payer>true</Payer>
-			<Currency>EUR</Currency>
-				...
-		</LegData>
-	</LoanData>
-\end{lstlisting}
-
-\subsubsection{Forward Rate Agreement}
-
-The \lstinline!FRAData! node, which is the trade data container for the Forward Rate Agreement trade type, has the structure shown in Listing \ref{lst:fra_data}.  Example values for a long FRA are included. The \lstinline!FRAData!  node contains no sub-nodes.
-
-\begin{lstlisting}[caption=FRAData, label=lst:fra_data]
-        <FRAData>
-            <StartDate>2014-04-16</StartDate>
-            <EndDate>2015-06-18</EndDate>
-            <Currency>EUR</Currency>
-            <Index>EUR-EURIBOR-3M</Index>
-            <LongShort>Long</LongShort>
-            <Strike>0.05</Strike>
-            <Notional>1000000</Notional>
-        </FRAData>
-\end{lstlisting}
-
-The meanings and allowable values of the various elements in the \lstinline!FRAData!  node follow below.  All elements are required.
-
-\begin{itemize}
-\item ¤StartDate¤: The start date of the FRA. \\ Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
-\item ¤EndDate¤: The end date of the FRA.  \\ Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
-\item ¤Currency¤: The currency of the FRA.  \\ Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.
-\item ¤Index¤: The combination of currency, index and tenor used by the FRA. \\ Allowable values:  A string on the form CCY-INDEX-TERM, and matching available Ibor indices in the {\tt config-scenario.xml} file. CCY, INDEX and TERM must be separated by dashes (-). TERM must be an integer followed by D, W, M or Y. See Table \ref{tab:indices}.
-\item ¤LongShort¤: Specifies whether the FRA position is long or short.  \\ Allowable values:  \emph{Long, LONG, long, L}, or \emph{Short, SHORT, short, S}
-\item ¤Strike¤: The  strike rate of the FRA, expressed in decimal form, eg 0.05 indicates a strike rate of 5\%.  \\ Allowable values:  Any real number.
-\item ¤Notional¤: The notional of the FRA. It is a single value, constant notional.  \\ Allowable values:  Any real number.
-
-\end{itemize}
-
-% \subsubsection{CDS Data}
-
-% The \lstinline!CDSData!  node is the trade data container for the CreditDefaultSwap trade type. The structure of the \lstinline!CDSData!   node is shown in Listing \ref{lst:cds_data}. It contains one \lstinline{ScheduleData} trade component sub-node.
-
-% \begin{lstlisting}[caption=CDSData, label=lst:cds_data]
-
-%         <CDSData>
-%             <Side>Buyer</Side>
-%             <ReferenceName>CDXNAIG</ReferenceName>
-%             <Currency>EUR</Currency>
-%             <PaymentConvention>Following</PaymentConvention>
-%             <DayCounter>30/360</DayCounter>
-%             <Notional>1000000</Notional>
-%             <Spread>0.05</Spread>
-%             <ScheduleData>
-%             	...
-%             </ScheduleData>
-%         </CDSData>
-
-
-% \end{lstlisting}
-
-% The meanings and allowable values of the elements in the \lstinline!CDSData!  node follow below.
-
-% \begin{itemize}
-% \item ¤Side¤:  Specifies whether CDS protection has been bought or sold. \\ Allowable values:  \emph{Buyer, Seller}
-% \item ¤ReferenceName¤:  A reference entity name that identifies the relevant credit spread curve  of the CDS.  \\ Allowable values:  A string that matches reference entity names for credit spread curves in the {\tt config-scenario.xml} file.
-% \item ¤Currency¤: The currency of the CDS. \\ Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.
-% \item ¤PaymentConvention¤: The payment convention of the CDS. \\Allowable values: See \lstinline!Roll Convention! in Table \ref{tab:allow_stand_data}.
-% \item ¤DayCounter¤: The day count convention of the CDS. \\Allowable values: See \lstinline!DayCount Convention! in Table \ref{tab:daycount}.
-% \item ¤Notional¤: The notional of the CDS. A CDS requires one single notional value. Multiple notional values cannot be entered. \\Allowable values: Any positive real number 
-% \item ¤Spread¤: The CDS spread. The CDS spread is expressed in decimal form, eg 0.005 is a spread of 50bp or 0.5\%. Multiple spread values cannot be entered. \\Allowable values: Any real number.
-% \item ¤ScheduleData¤: This is a trade component sub-node outlined in \S \ref{ss:schedule_data} Schedule Data and Dates.  
-
-% \end{itemize}
-
-
-% \subsubsection{Equity Forward Data}
-
-% The \lstinline!EquityForwardData!  node is the trade data container for the Equity Forward trade type.  The structure of the \lstinline!EquityForwardData!   node is shown in Listing \ref{lst:equityforward_data}. It contains no sub-nodes.
-
-% \begin{lstlisting}[caption=EquityForwardData, label=lst:equityforward_data]
-%         <EquityForwardData>
-%             <LongShort>Long</LongShort>
-%             <Name>STE</Name>
-%             <Currency>EUR</Currency>
-%             <NumberOfStocks>5000</NumberOfStocks>
-%             <Maturity>2023-04-09</Maturity>
-%             <Strike>75</Strike>
-%         </EquityForwardData>
-% \end{lstlisting}
-
-% The meanings and allowable values of the various elements in the \lstinline!EquityForwardData!  node follow below.  All elements are required.
-
-% \begin{itemize}
-% \item ¤LongShort¤: Long means the underlying equity is bought at maturity, Short that the equity is sold at maturity. \\ Allowable values:  \emph{Long, LONG, long, L}, or \emph{Short, SHORT, short, S}
-% \item ¤Name¤: The underlying equity. It can be a single equity or an equity index. \\ Allowable values:  Names of the underlying equity available in the {\tt config-scenario.xml} file.
-% \item ¤Currency¤: The currency of the Equity Forward. \\ Allowable values:   See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.
-% \item ¤NumberOfStocks¤: The number of stocks of the underlying equity to be bought or sold at maturity.  \\ Allowable values:  Any positive integer.
-% \item ¤Maturity¤: The maturity date of the Equity Forward. \\ Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
-% \item ¤Strike¤: The strike stock price. \\ Allowable values:  Any positive real number.
-
-% \end{itemize}
-
-%\subsubsection{FX Swap Data}
-
-%The \lstinline!FXSwapData!  node is the trade data container for the FX Swap trade type.  The structure of the \lstinline!FXSwapData!   node is shown in Listing \ref{lst:fxswap_data}. It contains no sub-nodes. TBC: the build function is empty for FXSwap::build()
-
-%\begin{lstlisting}[caption=FXSwapData, label=lst:fxswap_data]
-%        <FXSwapData>
-%            <NearDate>2014-04-16</NearDate>
-%            <FarDate>2023-04-09</FarDate>
-%            <BoughtCurrency>EUR</BoughtCurrency>
-%            <BoughtAmount>1000000</BoughtAmount>
-%            <SoldCurrency>USD</SoldCurrency>
-%            <SoldAmount>1500000</SoldAmount>
-%        </FXSwapData>
-%\end{lstlisting}
-
-%The meanings and allowable values of the various elements in the \lstinline!FXSwapData!  node follow below.  All elements are required.
-
-%\begin{itemize}
-%\item ¤NearDate¤: TBC \\ Allowable values:  See Date in Table \ref{tab:allow_stand_data}.
-%\item ¤FarDate¤: TBC \\ Allowable values:  See Date in Table \ref{tab:allow_stand_data}.
-%\item ¤BoughtCurrency¤: The bought currency of the FXSwap.  \\ Allowable values:  See Currency in Table \ref{tab:allow_stand_data}.
-%\item ¤BoughtAmount¤: The amount in the BoughtCurrency.  \\ Allowable values:  Any positive real number.
-%\item ¤SoldCurrency¤: The sold currency of the FXSwap.  \\ Allowable values:  See Currency in Table \ref{tab:allow_stand_data}.
-%\item ¤SoldAmount¤: The amount in the SoldCurrency.  \\ Allowable values:  Any positive real number.
-
-%\end{itemize}
-
-
-% \subsubsection{LPI Swap Data}
-
-% Limited price inflation (LPI) swaps are inflation swaps which are capped and$/$or floored, commonly floored at 0\% and capped at 5\%.
-
-% The \lstinline!LPISwapData! node, which is the trade data container for the LPI Swap trade type, has the structure shown in Listing \ref{lst:lpi_swap_data}.
-%  The \lstinline!LPISwapData! node contains no individual elements, but two trade component sub-nodes corresponding to two legs, an LPI leg and a fixed leg. The fixed leg is represented by one and exactly one \lstinline!LegData! node and the LPI leg by one and exactly one \lstinline!LPILegData!  node. The \lstinline!Payer! element in the \lstinline!LPILegData!  node must have the opposite value of the \lstinline!Payer! element in the \lstinline!LegData!  node, i.e. if the LPI leg is a payer leg, the fixed leg must be a receiver leg and vice-versa.   The \lstinline!LegData!  node \lstinline!LegType! element must be \emph{Fixed}. 
-
-% \begin{lstlisting}[caption=LPISwapData, label=lst:lpi_swap_data]
-%         <LPISwapData>
-%             <LPILegData>
-%                 <Payer>false</Payer>
-%                 ...
-%             </LPILegData>
-%             <LegData>
-%                 <LegType>Fixed</LegType>
-%                 <Payer>true</Payer>
-%                 ...
-%             </LegData>    
-%         </LPISwapData>
-% \end{lstlisting}
-
-% \subsubsection{FX Linked Swap Data}
-
-% The \lstinline!FXLinkedSwapData! node is the trade data container for the FX Linked Swap trade type, and has the structure shown in Listing \ref{lst:fxlinked_swap_data}. The node contains no individual elements, but two trade component sub-nodes corresponding to two legs, an FX linked leg and a fixed leg. The fixed leg is represented by one and exactly one \lstinline!LegData! node and the FX linked leg by one and exactly one \lstinline!FXLinkedLegData!  node. The \lstinline!Payer! element in the \lstinline!FXLinkedLegData!  node must have the opposite value of the \lstinline!Payer! element in the \lstinline!LegData!  node, i.e. if the fx-linked leg is a payer leg, the fixed leg must be a receiver leg and vice-versa.  In the \lstinline!LegData!  node, the  \lstinline!LegType! element must be \emph{Fixed}, and there can only be one fixed \lstinline!Rate! element. 
-
-% \begin{lstlisting}[caption=FxLinkedSwapData, label=lst:fxlinked_swap_data]
-%         <FxLinkedSwapData>
-%             <FxLinkedLegData>
-%                 <Payer>false</Payer>
-%                 ...
-%             </FxLinkedLegData>
-%             <LegData>
-%                 <LegType>Fixed</LegType>
-%                 <Payer>true</Payer>
-%                 ...
-%             </LegData>    
-%         </FxLinkedSwapData>
-% \end{lstlisting}
-
-
-\subsubsection{Cap Floor}
-
-The \lstinline!CapFloorData! node is the trade data container for trade type CapFloors.  It's a single floating leg that's either capped, floored or both capped and floored. The \lstinline!CapFloorData! node contains a \lstinline!LPILegData!  sub-node where the LegType element must be set to  \emph{Floating}, plus elements for the Cap and Floor rates. An example structure with Cap rates is shown in  in Listing \ref{lst:capfloor_data}. A \lstinline!CapFloorData! node must have either \lstinline!CapRates! or \lstinline!FloorRates! elements, or both. 
-
-
-
-\begin{lstlisting}[caption=CapFloorData, label=lst:capfloor_data]
-        <CapFloorData>
-            <LegData>
-                <Payer>false</Payer>
-                <LegType>Floating</LegType>
-                		...
-            </LegData>
-            <CapRates>
-                <Rate>0.05</Rate>
-            </CapRates>
-        </CapFloorData>
-\end{lstlisting}
-
-The meanings and allowable values of the elements in the \lstinline!CapFloorData!  node follow below.
-
-\begin{itemize}
-\item ¤LegData¤: This is a trade component sub-node outlined in \S \ref{ss:leg_data} Leg Data and Notionals. Exactly one \lstinline!LegData! node is allowed and the LegType element must be set to \emph{floating}.  
-\item ¤CapRates¤: This node has child elements of type \lstinline!Rate! capping the floating leg. The first rate value corresponds to the first coupon, the second rate value corresponds to the second coupon, etc. If the number of coupons exceeds the number of rate values, the rate will be kept flat at the value of last entered rate for the remaining coupons. For a fixed cap rate over all coupons, one single rate value is sufficient. The number of entered rate values cannot exceed the number of coupons. \\ Allowable values for each \lstinline!Rate! element:  Any real number. The rate is expressed in decimal form, eg 0.05 is a rate of  0.5\%
-\item ¤FloorRates¤: This node has child elements of type \lstinline!Rate! flooring the floating leg.  The first rate value corresponds to the first coupon, the second rate value corresponds to the second coupon, etc. If the number of coupons exceeds the number of rate values, the rate will be kept flat at the value of last entered rate for the remaining coupons. For a fixed floor rate over all coupons, one single rate value is sufficient. The number of entered rate values cannot exceed the number of coupons.\\ Allowable values for each \lstinline!Rate! element:  Any real number. The rate is expressed in decimal form, eg 0.05 is a rate of  0.5\%
-
-
-\end{itemize}
+}
 
 \subsubsection{Swaption}
 
@@ -366,6 +151,7 @@ Supported swaption exercise styles are European and Bermudan. European swaptions
 
 The structure of an example \lstinline!SwaptionData!  node of a two-legged European swaption is shown in Listing \ref{lst:swaption_data}.  
 
+{\footnotesize
 \begin{lstlisting}[caption=SwaptionData, label=lst:swaption_data]
 	<SwaptionData>
 		<OptionData>
@@ -382,6 +168,7 @@ The structure of an example \lstinline!SwaptionData!  node of a two-legged Europ
 		</LegData>
 	</SwaptionData>
 \end{lstlisting}
+}
 
 \begin{table}[H]
 \centering
@@ -404,92 +191,11 @@ The structure of an example \lstinline!SwaptionData!  node of a two-legged Europ
   \label{tab:bermudan_requirements}
 \end{table}
 
-
-
-% \subsubsection{VarSwap Data}
-
-% The \lstinline!VarSwapData!  node is the trade data container for the Variance Swap trade type, a swap where the payout depends of the difference between a strike variance rate and the realised variance of an underlying equity instrument.  The structure of the \lstinline!VarSwapData!  node is shown in Listing \ref{lst:varswap_data} including example values. It contains no sub-nodes.
-
-% \begin{lstlisting}[caption=VarSwapData, label=lst:varswap_data]
-%         <VarSwapData>
-%             <StartDate>2014-04-16</StartDate>
-%             <EndDate>2015-06-18</EndDate>
-%             <Currency>EUR</Currency>
-%             <Name>STE</Name>
-%             <LongShort>Long</LongShort>
-%             <Strike>0.40</Strike>
-%             <Notional>1000000</Notional>
-%         </VarSwapData>
-% \end{lstlisting}
-
-% The meanings and allowable values of the various elements in the \lstinline!VarSwapData!  node follow below.  All elements are required.
-
-% \begin{itemize}
-% \item ¤StartDate¤: The start date of the VarSwap. \\ Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
-% \item ¤EndDate¤: The end date of the VarSwap.  \\ Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
-% \item ¤Currency¤: The currency of the VarSwap.  \\ Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.
-% \item ¤Name¤: The name of the underlying equity or equity index referencing volatility curves in the {\tt config-scenario.xml} file.  \\ Allowable values:  Equity names available in the {\tt config-scenario.xml} file.
-% \item ¤LongShort¤: Specifies whether the VarSwap position is long or short. If long the payout is calculated using realised variance - strike, if short the swap payout uses strike - realised variance. \\ Allowable values:  \emph{Long, LONG, long, L}, or \emph{Short, SHORT, short, S}
-% \item ¤Strike¤: Expressed in  annualised variance.  \\ Allowable values:  Any positive real number.
-% \item ¤Notional¤: The notional of the VarSwap in currency determined by the \lstinline!Currency! element. The notional is constant and requires one single value.  \\ Allowable values:  Any positive real number.
-
-% \end{itemize}
-
-
-% \subsubsection{Generic Leg}
-
-% The \lstinline!GenericLeg! node is the trade data container for the Generic Leg trade type.  A Generic Leg is a series of customisable European style payoffs based on user-defined indices such as a CMS index. The \lstinline!GenericLeg! node contains a \lstinline!ScheduleData!  sub-node, plus three nodes with child elements (¤Notionals¤, ¤Payoffs¤ and ¤Factors¤). The payoff formula(s) are entered in the ¤Payoff¤ child elements, and the indices used are specified in the ¤Factor¤ child elements.  An example structure of an amortising \lstinline!GenericLeg! node with payoffs based on two CMS indices is shown in Listing \ref{lst:generic_leg}. 
-
-
-% \begin{lstlisting}[caption=GenericLeg, label=lst:generic_leg]
-%         <GenericLeg>
-%             <Payer>false</Payer>
-%             <Currency>EUR</Currency>
-%             <DayCounter>A365F</DayCounter>
-%             <Notionals>
-%                 <Notional>1000000</Notional>
-%                 <Notional>900000</Notional>
-%                 <Notional>800000</Notional>
-%                 <Notional>700000</Notional>
-%             </Notionals>
-%             <ScheduleData>
-%             	...
-%             </ScheduleData>
-%             <Payoffs>
-%                 <Payoff>max(EURCMS10Y-0.003,2*EURCMS10Y-12*max(0,EURCMS20Y
-%                 -EURCMS10Y+0.0004))</Payoff>
-%                 <Payoff>max(EURCMS10Y-0.003,2*EURCMS10Y-12*max(0,EURCMS20Y
-%                 -EURCMS10Y+0.0006))</Payoff>
-%                 <Payoff>max(EURCMS10Y-0.003,2*EURCMS10Y-12*max(0,EURCMS20Y
-%                 -EURCMS10Y+0.0008))</Payoff>
-%                 <Payoff>max(EURCMS10Y-0.003,2*EURCMS10Y-12*max(0,EURCMS20Y
-%                 -EURCMS10Y+0.0010))</Payoff>	
-%             </Payoffs>    
-%             <Factors>
-%                 <Factor>EURCMS10Y</Factor>
-%                 <Factor>EURCMS20Y</Factor>  
-%             </Factors>                     
-%         </GenericLeg>
-% \end{lstlisting}
-
-% The meanings and allowable values of the elements in the \lstinline!GenericLeg!  node follow below.
-
-% \begin{itemize}
-% \item ¤Payer¤:  True if the Generic leg is a pay leg, and False if it is a receive leg. \\ Allowable values:  \emph{true, false}
-% \item ¤Currency¤: The currency of the Generic Leg. \\ Allowable values:  \emph{EUR, USD, CHF, GBP, JPY}
-% \item ¤DayCounter¤: The day count convention of the Generic Leg. \\Allowable values: See DayCount Convention in Table \ref{tab:daycount}.
-% \item ¤Notionals¤: This node contains child elements and is described in \S \ref{ss:leg_data} Leg Data and Notionals.
-% \item ¤ScheduleData¤: This is a trade component sub-node outlined in \S \ref{ss:schedule_data} Schedule Data and Dates.  
-% \item ¤Payoffs¤: This node contains child elements of type \lstinline!Payoff!. A formula for the payoff is specified in each \lstinline!Payoff! child element. If the Generic Leg formula is the same for each coupon only one \lstinline!Payoff! child element should be entered. If the Generic Leg formula is not the same, this is represented by multiple \lstinline!Payoff! child elements, each using the ¤<Payoff>¤ tag. The first \lstinline!Payoff! element corresponds to the first coupon, the second \lstinline!Payoff! element corresponds to the second coupon, etc. If the number of coupons exceeds the number of \lstinline!Payoff! elements, the payoff formula of the last entered \lstinline!Payoff! element will be used for the remaining coupons.  The number of entered \lstinline!Payoff! elements cannot exceed the number of coupons.\\Allowable values: The payoff formula is expressed as a string combing indices with basic operators and built-in functions. Specifically, among the allowed operators are the max(arg1,arg2,..argn) and min(arg1,arg2,..argn) functions, numbers,  mathematical operators ¤(+, -, /, *, pow(), sqrt(), abs() )¤ and the indices specified in the Factors element.
-% \item ¤Factors¤: This node contains child elements of type \lstinline!Factor!. The \lstinline!Factor! child elements contain the indices used in the \lstinline!Payoff! formula(s).  All indices used in the \lstinline!Payoff! formula(s) must be specified as \lstinline!Factor! child elements. \\Allowable values: A three capital letter currency code, concatenated with a three letter index type, concatenated with a tenor.  \\ \indent The currency code must be of one of the following currencies: \emph{EUR, USD, CHF, GBP, JPY}\\ \indent Currently only index type \emph{CMS} is supported. \\ \indent The tenor must be an integer followed by \emph{D, W, M} or \emph{Y}.
-
-
-% \end{itemize}
-
 \subsubsection{FX Forward}
 
 The \lstinline!FXForwardData!  node is the trade data container for the FX Forward trade type.  The structure - including example values - of the \lstinline!FXForwardData!   node is shown in Listing \ref{lst:fxforward_data}. It contains no sub-nodes.
 
+{\footnotesize
 \begin{lstlisting}[caption=FXForwardData, label=lst:fxforward_data]
         <FxForwardData>
             <ValueDate>2023-04-09</ValueDate>
@@ -499,6 +205,7 @@ The \lstinline!FXForwardData!  node is the trade data container for the FX Forwa
             <SoldAmount>1500000</SoldAmount>
         </FxForwardData>
 \end{lstlisting}
+}
 
 The meanings and allowable values of the various elements in the \lstinline!FXForwardData!  node follow below.  All elements are required.
 
@@ -516,7 +223,7 @@ The meanings and allowable values of the various elements in the \lstinline!FXFo
 
 The \lstinline!FXOptionData!  node is the trade data container for the FX Option trade type.  Vanilla FX options as well as various barrier types as specified in the SubType element are supported. FX Options can be of exercise style \emph{European} or \emph{American}. The strike rate of an FX option is: ¤SoldAmount¤ / ¤BoughtAmount¤.The \lstinline!FXOptionData!  node includes one and only one  \lstinline!OptionData! trade component sub-node plus elements specific to the FX Option. The structure of an example \lstinline!FXOptionData!  node of a single barrier FX Option is shown in Listing \ref{lst:fxoption_data}.  
 
-
+{\footnotesize
 \begin{lstlisting}[caption=FXOptionData, label=lst:fxoption_data]
         <FxOptionData>
             <OptionData>
@@ -533,6 +240,7 @@ The \lstinline!FXOptionData!  node is the trade data container for the FX Option
             <BarrierRebateFactor>0.1</BarrierRebateFactor>
         </FxOptionData>
 \end{lstlisting}
+}
 
 The meanings and allowable values of the elements in the \lstinline!FXOptionData!  node follow below.
 
@@ -596,6 +304,7 @@ Trade components are XML sub-nodes used within the trade data containers to defi
 
 An example of a \lstinline!SwapData! trade data container, including two \lstinline!LegData! trade components which in turn include further trade components such as \lstinline!FixedLegData!, \lstinline!ScheduleData! and \lstinline!FloatingLegData! is shown in Listing \ref{lst:trade_component}.
 
+{\footnotesize
 \begin{lstlisting}[caption=Trade Components Example, label=lst:trade_component]
         <SwapData>
             <LegData>
@@ -627,6 +336,7 @@ An example of a \lstinline!SwapData! trade data container, including two \lstinl
             </LegData>
         </SwapData>
  \end{lstlisting}
+}
 
 Descriptions of all trade components supported in QRE follow below:
 
@@ -634,6 +344,7 @@ Descriptions of all trade components supported in QRE follow below:
 \label{ss:option_data} 
 This trade component node is used within the \lstinline!SwaptionData! and \lstinline!FXOptionData! trade data containers. It contains the \lstinline!ExerciseDates! sub-node which includes  \lstinline!ExerciseDate! child elements. An example structure of the \lstinline!OptionData! trade component node is shown in Listing \ref{lst:option_data}.
 
+{\footnotesize
 \begin{lstlisting}[caption=OptionData, label=lst:option_data]
             <OptionData>
                 <LongShort>Long</LongShort>
@@ -646,6 +357,7 @@ This trade component node is used within the \lstinline!SwaptionData! and \lstin
                 </ExerciseDates>
             </OptionData>
 \end{lstlisting}
+}
 
 The meanings and allowable values of the elements in the \lstinline!OptionData! node follow below.
 
@@ -667,7 +379,7 @@ The meanings and allowable values of the elements in the \lstinline!OptionData! 
 
 The \lstinline!LegData! trade component node is used within the \lstinline!LPISwapData!, \lstinline!FXLinkedSwapData!, \lstinline!CapFloorData!,  \lstinline!SwapData!, \lstinline!LoanData!, and \lstinline!SwaptionData! trade data containers. It contains a \lstinline!ScheduleData! trade component sub-node, and depending on the value of the \lstinline!LegType! element, one out of the following sub-nodes:  \lstinline!FixedLegData!, \lstinline!FloatingLegData! or \lstinline!CPILegData!. The \lstinline!LegData! node also includes a \lstinline!Notionals! sub-node  with \lstinline!Notional! child elements described below. An example structure of a \lstinline!LegData! node of \lstinline!LegType! floating is shown in Listing \ref{lst:leg_data}.
 
-
+{\footnotesize
 \begin{lstlisting}[caption=LegData, label=lst:leg_data]
             <LegData>
                 <Payer>false</Payer>
@@ -686,6 +398,7 @@ The \lstinline!LegData! trade component node is used within the \lstinline!LPISw
                 </FloatingLegData>
             </LegData>
 \end{lstlisting}
+}
 
 The meanings and allowable values of the elements in the \lstinline!LegData! node follow below.
 
@@ -702,6 +415,7 @@ The meanings and allowable values of the elements in the \lstinline!LegData! nod
 
 An example of a \lstinline!Notionals! element for an amortising leg with four coupons is shown in Listing \ref{lst:notionals}.
 
+{\footnotesize
 \begin{lstlisting}[caption=Notionals, label=lst:notionals]
 
                 <Notionals>
@@ -712,7 +426,7 @@ An example of a \lstinline!Notionals! element for an amortising leg with four co
                 </Notionals>
 
 \end{lstlisting}
-
+}
 
 
 \item ¤ScheduleData¤: This is a trade component sub-node outlined in \S \ref{ss:schedule_data} Schedule Data and Dates.  
@@ -732,6 +446,7 @@ An example of a \lstinline!Notionals! element for an amortising leg with four co
 The \lstinline!ScheduleData! trade component node is used within the \lstinline!GenericLeg! and \lstinline!CDSData! trade data containers, as well as in the \lstinline!LegData! trade component. When \lstinline!IsRulesBased! is set to \emph{false}, the \lstinline!ScheduleData! node includes a \lstinline!Dates! sub-node  where the schedule is determined directly by  \lstinline!Date! child elements. When \lstinline!IsRulesBased! is set to \emph{true}, the schedule is generated based on the entries of the ¤StartDate¤, ¤EndDate¤, ¤Tenor¤, ¤Calendar¤,  ¤Convention¤, ¤TermConvention¤, and  ¤Rule¤ elements.
 Example structures of  \lstinline!ScheduleData! nodes with \lstinline!IsRulesBased! set to \emph{true} and \emph{false} are shown in Listing \ref{lst:schedule_data_true} and Listing \ref{lst:schedule_data_false}, respectively.
 
+{\footnotesize
 \begin{lstlisting}[caption=ScheduleData with IsRulesBased:  true, label=lst:schedule_data_true]
 
               <ScheduleData>
@@ -748,7 +463,9 @@ Example structures of  \lstinline!ScheduleData! nodes with \lstinline!IsRulesBas
                 </ScheduleData>
 
 \end{lstlisting}
+}
 
+{\footnotesize
 \begin{lstlisting}[caption=ScheduleData with IsRulesBased: false, label=lst:schedule_data_false]
 
       		<ScheduleData>
@@ -764,6 +481,7 @@ Example structures of  \lstinline!ScheduleData! nodes with \lstinline!IsRulesBas
                 </ScheduleData>
 
 \end{lstlisting}
+}
 
 The meanings and allowable values of the elements in the \lstinline!ScheduleData! node follow below.
 
@@ -813,7 +531,7 @@ The \lstinline!FixedLegData! trade component node is used within the \lstinline!
 
 An example of a \lstinline!FixedLegData! node for a fixed leg with constant notional is shown in Listing \ref{lst:fixedleg_data}.
 
-
+{\footnotesize
 \begin{lstlisting}[caption=FixedLegData, label=lst:fixedleg_data]
               <FixedLegData>
                     <Rates>
@@ -821,6 +539,7 @@ An example of a \lstinline!FixedLegData! node for a fixed leg with constant noti
                     </Rates>
                 </FixedLegData>
 \end{lstlisting}
+}
 
 The meanings and allowable values of the elements in the \lstinline!FixedLegData! node follow below.
 
@@ -840,6 +559,7 @@ The \lstinline!FloatingLegData! node includes elements specific to a floating le
 
 An example of a \lstinline!FloatingLegData! node is shown in Listing \ref{lst:floatingleg_data}.
 
+{\footnotesize
 \begin{lstlisting}[caption=FloatingLegData, label=lst:floatingleg_data]
                 <FloatingLegData>
                     <Index>USD-LIBOR-3M</Index>
@@ -850,6 +570,7 @@ An example of a \lstinline!FloatingLegData! node is shown in Listing \ref{lst:fl
                     </Spreads>
                 </FloatingLegData>
 \end{lstlisting}
+}
 
 The meanings and allowable values of the elements in the \lstinline!FloatingLegData! node follow below.
 
@@ -859,93 +580,6 @@ The meanings and allowable values of the elements in the \lstinline!FloatingLegD
 \item ¤FixingDays¤: This is the fixing gap, i.e. the number of days before the period end date an index fixing is taken.   \\ Allowable values:  Positive integers.  
 \item ¤Spreads¤: This node contains child elements of type \lstinline!Spread!. If the spread is constant over the life of the floating leg only one spread value should be entered. If two or more coupons have different spreads, multiple spread values are required, each represented by a \lstinline!Spread! child element. The first spread value corresponds to the first coupon, the second spread value corresponds to the second coupon, etc. If the number of coupons exceeds the number of spread values, the spread will be kept flat at the value of last entered spread for the remaining coupons.  The number of entered spread values cannot exceed the number of coupons. \\Allowable values: Each child element can take any  real number. The spread is expressed in decimal form, e.g. 0.005 is a spread of 0.5\% or 50 bp.
 \end{itemize}
-
-
-
-
-% \subsubsection{CPI Leg Data}
-% \label{ss:cpileg_data}
-
-% The \lstinline!CPILegData! trade component node is used within the \lstinline!LegData! trade component when the \lstinline!LegType! element is set to \emph{CPI}. It represents an inflation leg linked to a Consumer Price Index.
-
-% An example of a \lstinline!CPILegData! node is shown in Listing \ref{lst:cpileg_data}.
-
-% \begin{lstlisting}[caption=CPILegData, label=lst:cpileg_data]
-%                 <CPILegData>
-%                     <Index>UK</Index>
-%                     <BaseCPI>204.7333</BaseCPI>
-%                     <ObservationLag>3M</ObservationLag>
-%                     <Rate>0.018225</Rate>
-%                     <Interpolated>false</Interpolated>
-%                 </CPILegData>
-% \end{lstlisting}
-
-% The meanings and allowable values of the elements in the \lstinline!CPILegData! node follow below.
-
-% \begin{itemize}
-% \item ¤Index¤: A geographical region code that identifies the relevant inflation curve and inflation fixings of the CPI leg.  \\ Allowable values:  A string that matches geographical region codes for inflation indices in the {\tt config-scenario.xml} file.
-% \item ¤BaseCPI¤:  The reference base CPI figure used to calculate inflation coupons.   \\ Allowable values:  Any real number.
-% \item ¤ObservationLag¤: The time before the period end date an inflation index fixing is taken.   \\ Allowable values:  An integer followed by D, W, M or Y 
-% \item ¤Rate¤: The  fixed rate used as base to calculate inflation coupons.  \\Allowable values: One single rate value which can take any real number.  The rate is expressed in decimal form. 
-% \item ¤Interpolated¤: \emph{true} indicates that interpolation method linear is used,     \emph{false}  that flat interpolation is used  \\ Allowable values:  \emph{true, false}
-% \end{itemize}
-
-
-
-% \subsubsection{LPI Leg Data}
-
-% The \lstinline!LPILegData! trade component node is used solely within the \lstinline!LPISwapData! trade data container, and details the inflation leg of an LPI (Limited Price Index) swap. The \lstinline!LPILegData! node has the structure shown in Listing \ref{lst:lpi_leg_data} and includes one  \lstinline!ScheduleData! sub-node and one \lstinline!Notionals! node with child elements. The \lstinline!LPILegData! node is required to include one \lstinline!LPICap! element or one \lstinline!LPIFloor! element or both elements.
-
-% \begin{lstlisting}[caption=LPILegData, label=lst:lpi_leg_data]
-%             <LPILegData>
-%                 <Payer>false</Payer>
-%                 <Notionals>
-%                 		...
-%                 </Notionals>
-%                 <ScheduleData>
-%                 		...
-%                 </ScheduleData>
-%                 <CPIIndex>UK</CPIIndex>
-%                 <BaseCPIDate>2014-04-16</BaseCPIDate>
-%                 <LPICap>0.05</LPICap>
-%                 <LPIFloor>0</LPIFloor>
-%             </LPILegData>
-% \end{lstlisting}
-
-% The meanings and allowable values of the various elements in the \lstinline!LPILegData!  node follow below. 
-
-% \begin{itemize}
-% \item ¤Payer¤: \emph{true} if the LPI leg is a pay leg, and \emph{false} if it is a receive leg. \\ Allowable values:  \emph{true, false}
-% \item ¤Notionals¤: This node contains child elements and is described in \S \ref{ss:leg_data} Leg Data and Notionals. 
-% \item ¤ScheduleData¤: This is a trade component node and is described in \S \ref{ss:schedule_data} Schedule Data and Dates.   
-% \item ¤CPIIndex¤: A geographical region code that identifies the relevant inflation curve and inflation fixings of the LPI leg.  \\ Allowable values:  A string that matches geographical region codes for inflation indices in the {\tt config-scenario.xml} file.
-% \item ¤BaseCPIDate¤: The date for the reference base CPI level used to calculate CPI coupons.  \\ Allowable values:  See Date in Table \ref{tab:allow_stand_data}.
-% \item ¤LPICap¤ [semi-optional]: Cap of the CPI. Can be left blank or omitted, meaning no LPI cap, but then there must be an  LPIFloor. An LPI leg requires at least one cap or floor.  \\ Allowable values:  Any real number.
-% \item ¤LPIFloor¤ [semi-optional]: Floor of the CPI. Can be left blank or omitted, meaning no LPI floor, but then there must be an  LPICap.   \\ Allowable values:  Any real number.
-
-% \end{itemize}
-
-% \subsubsection{FX-Linked Leg Data}
-
-% The \lstinline!FxLinkedLegData! trade component node is used solely within the \lstinline!FxLinkedSwapData! trade data container, and details the FX-linked leg of an FX-linked swap. It includes one  \lstinline!ScheduleData! sub-node and two nodes with child elements: \lstinline!Notionals! and \lstinline!Strikes!.The \lstinline!FxLinkedLegData! node has the structure shown in Listing \ref{lst:fxlinked_leg_data}. The example shown is for an FX-linked leg with one strike and a knock-out strike. 
-
-% \begin{lstlisting}[caption=FxLinkedLegData, label=lst:fxlinked_leg_data]
-%             <FxLinkedLegData>
-%                 <Payer>false</Payer>
-%                 <Notionals>
-%                 		<Notional>1000000</Notional>
-%                 </Notionals>
-%                  <Strikes>
-%                 		<Rate>103</Rate>
-%                 </Strikes>
-%                 <ScheduleData>
-%                 		...
-%                 </ScheduleData>
-%                 <FxPair>USDJPY</FxPair>
-%                 <HasKnockOut>true</HasKnockOut>
-%                 <KnockOutStrike>107</KnockOutStrike>
-%             </FxLinkedLegData>
-% \end{lstlisting}
 
 The meanings and allowable values of the various elements in the \lstinline!FxLinkedLegData!  node follow below. 
 
