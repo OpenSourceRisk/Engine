@@ -8,6 +8,7 @@
 #include <iostream>
 
 #include <qlw/utilities/log.hpp>
+#include <qlw/utilities/progressbar.hpp>
 #include <qlw/wrap.hpp>
 #include <qlw/engine/valuationengine.hpp>
 #include <ql/time/calendars/all.hpp>
@@ -277,12 +278,13 @@ int main(int argc, char** argv) {
             
             o.str("");
             o << "Build Cube " << simPortfolio->size() << " x " << grid->size() << " x " << samples << "... ";
-            cout << setw(tab) << o.str() << flush;
             LOG("Build cube");
+            ProgressBar::instance().start(o.str(), tab);
             boost::shared_ptr<NPVCube>
                 inMemoryCube = boost::make_shared<SinglePrecisionInMemoryCube>
                 (asof, simPortfolio->ids(), grid->dates(), samples);
             engine.buildCube(simPortfolio, inMemoryCube, inMemoryAdditionalScenarioData);
+            ProgressBar::instance().stop();
             cout << "OK" << endl;
 
             cout << setw(tab) << left << "Write Cube... " << flush;
