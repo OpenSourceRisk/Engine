@@ -51,7 +51,25 @@ namespace QuantExt {
 
         void AmountGetter::visit(IborCoupon& c) {
             if (callAmount_) {
-                amount_ = c.amount();
+                Handle<YieldTermStructure> forwardingCurve = c.iborIndex()->forwardingTermStructure();
+                QL_REQUIRE(!forwardingCurve.empty(), "Forwarding curve is empty.");
+
+                /* Assuming here that Libor value/maturity date = coupon accrual start/end date */
+                DiscountFactor discAccStart = forwardingCurve->discount(
+                    std::max<Date>(c.accrualStartDate(),
+                             Settings::instance().evaluationDate()));
+                DiscountFactor discAccEnd = forwardingCurve->discount(c.accrualEndDate());
+
+                Real fixingTimesDcf;
+                DayCounter indexBasis = c.iborIndex()->dayCounter();
+                DayCounter couponBasis = c.dayCounter();
+                if (indexBasis == couponBasis) {
+                    fixingTimesDcf = (discAccStart / discAccEnd - 1);
+                } else {
+                    Time indexDcf = indexBasis.yearFraction(c.accrualStartDate(), c.accrualEndDate());
+                    fixingTimesDcf = (discAccStart / discAccEnd - 1) / indexDcf * c.accrualPeriod();
+                }
+                amount_ = (c.gearing() * fixingTimesDcf + c.spread() * c.accrualPeriod()) * c.nominal();
             } else {
                 Handle<YieldTermStructure> forwardingCurve = c.iborIndex()->forwardingTermStructure();
                 QL_REQUIRE(!forwardingCurve.empty(), "Forwarding curve is empty.");

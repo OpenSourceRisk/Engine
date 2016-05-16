@@ -32,7 +32,6 @@ namespace QuantLib {
                 // Spot FX rate quoted as 1 ccy2 = fx ccy1,
                 // ccy1 is price currency, ccy 2 amounts to be multiplied by fx
                 const Handle<Quote>& fx);
-                
         void calculate() const;
         Handle<YieldTermStructure> ts1() { return ts1_; }
         Handle<YieldTermStructure> ts2() { return ts2_; }

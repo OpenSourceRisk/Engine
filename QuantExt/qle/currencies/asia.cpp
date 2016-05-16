@@ -59,6 +59,3 @@ namespace QuantExt {
         data_ = phpData;
     }
 }
-
-
-
