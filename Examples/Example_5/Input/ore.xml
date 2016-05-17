@@ -83,7 +83,6 @@
       <Parameter name="active">N</Parameter>
       <Parameter name="method">SIMM</Parameter>
     </Analytic>
-   
   </Analytics>
   
 </OpenRiskEngine>

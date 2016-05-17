@@ -2,13 +2,11 @@
 <Portfolio>
   
   <Trade id="Swaption_1_19">
-    <ClassName>Swaption</ClassName>
+    <TradeType>Swaption</TradeType>
     <Envelope>
-      <Id>Swaption_1_19</Id>
       <Type>Swaption</Type>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
-      <Rating/>
       <AdditionalFields/>
     </Envelope>
     <SwaptionData>
@@ -92,13 +90,11 @@
   </Trade>
 
   <Trade id="Swaption_2_18">
-    <ClassName>Swaption</ClassName>
+    <TradeType>Swaption</TradeType>
     <Envelope>
-      <Id>Swaption_2_18</Id>
       <Type>Swaption</Type>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
-      <Rating/>
       <AdditionalFields/>
     </Envelope>
     <SwaptionData>
@@ -182,13 +178,11 @@
   </Trade>
 
   <Trade id="Swaption_3_17">
-    <ClassName>Swaption</ClassName>
+    <TradeType>Swaption</TradeType>
     <Envelope>
-      <Id>Swaption_3_17</Id>
       <Type>Swaption</Type>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
-      <Rating/>
       <AdditionalFields/>
     </Envelope>
     <SwaptionData>
@@ -272,13 +266,11 @@
   </Trade>
 
   <Trade id="Swaption_4_16">
-    <ClassName>Swaption</ClassName>
+    <TradeType>Swaption</TradeType>
     <Envelope>
-      <Id>Swaption_4_16</Id>
       <Type>Swaption</Type>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
-      <Rating/>
       <AdditionalFields/>
     </Envelope>
     <SwaptionData>
@@ -362,13 +354,11 @@
   </Trade>
 
   <Trade id="Swaption_5_15">
-    <ClassName>Swaption</ClassName>
+    <TradeType>Swaption</TradeType>
     <Envelope>
-      <Id>Swaption_5_15</Id>
       <Type>Swaption</Type>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
-      <Rating/>
       <AdditionalFields/>
     </Envelope>
     <SwaptionData>
@@ -452,13 +442,11 @@
   </Trade>
 
   <Trade id="Swaption_6_14">
-    <ClassName>Swaption</ClassName>
+    <TradeType>Swaption</TradeType>
     <Envelope>
-      <Id>Swaption_6_14</Id>
       <Type>Swaption</Type>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
-      <Rating/>
       <AdditionalFields/>
     </Envelope>
     <SwaptionData>
@@ -542,13 +530,11 @@
   </Trade>
 
   <Trade id="Swaption_7_13">
-    <ClassName>Swaption</ClassName>
+    <TradeType>Swaption</TradeType>
     <Envelope>
-      <Id>Swaption_7_13</Id>
       <Type>Swaption</Type>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
-      <Rating/>
       <AdditionalFields/>
     </Envelope>
     <SwaptionData>
@@ -632,13 +618,11 @@
   </Trade>
 
   <Trade id="Swaption_8_12">
-    <ClassName>Swaption</ClassName>
+    <TradeType>Swaption</TradeType>
     <Envelope>
-      <Id>Swaption_8_12</Id>
       <Type>Swaption</Type>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
-      <Rating/>
       <AdditionalFields/>
     </Envelope>
     <SwaptionData>
@@ -722,13 +706,11 @@
   </Trade>
 
   <Trade id="Swaption_9_11">
-    <ClassName>Swaption</ClassName>
+    <TradeType>Swaption</TradeType>
     <Envelope>
-      <Id>Swaption_9_11</Id>
       <Type>Swaption</Type>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
-      <Rating/>
       <AdditionalFields/>
     </Envelope>
     <SwaptionData>
@@ -812,13 +794,11 @@
   </Trade>
 
   <Trade id="Swaption_10_10">
-    <ClassName>Swaption</ClassName>
+    <TradeType>Swaption</TradeType>
     <Envelope>
-      <Id>Swaption_10_10</Id>
       <Type>Swaption</Type>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
-      <Rating/>
       <AdditionalFields/>
     </Envelope>
     <SwaptionData>
@@ -902,13 +882,11 @@
   </Trade>
 
   <Trade id="Swaption_11_9">
-    <ClassName>Swaption</ClassName>
+    <TradeType>Swaption</TradeType>
     <Envelope>
-      <Id>Swaption_11_9</Id>
       <Type>Swaption</Type>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
-      <Rating/>
       <AdditionalFields/>
     </Envelope>
     <SwaptionData>
@@ -992,13 +970,11 @@
   </Trade>
 
   <Trade id="Swaption_12_8">
-    <ClassName>Swaption</ClassName>
+    <TradeType>Swaption</TradeType>
     <Envelope>
-      <Id>Swaption_12_8</Id>
       <Type>Swaption</Type>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
-      <Rating/>
       <AdditionalFields/>
     </Envelope>
     <SwaptionData>
@@ -1082,13 +1058,11 @@
   </Trade>
 
   <Trade id="Swaption_13_7">
-    <ClassName>Swaption</ClassName>
+    <TradeType>Swaption</TradeType>
     <Envelope>
-      <Id>Swaption_13_7</Id>
       <Type>Swaption</Type>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
-      <Rating/>
       <AdditionalFields/>
     </Envelope>
     <SwaptionData>
@@ -1172,13 +1146,11 @@
   </Trade>
 
   <Trade id="Swaption_14_6">
-    <ClassName>Swaption</ClassName>
+    <TradeType>Swaption</TradeType>
     <Envelope>
-      <Id>Swaption_14_6</Id>
       <Type>Swaption</Type>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
-      <Rating/>
       <AdditionalFields/>
     </Envelope>
     <SwaptionData>
@@ -1262,13 +1234,11 @@
   </Trade>
 
   <Trade id="Swaption_15_5">
-    <ClassName>Swaption</ClassName>
+    <TradeType>Swaption</TradeType>
     <Envelope>
-      <Id>Swaption_15_5</Id>
       <Type>Swaption</Type>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
-      <Rating/>
       <AdditionalFields/>
     </Envelope>
     <SwaptionData>
@@ -1352,13 +1322,11 @@
   </Trade>
 
   <Trade id="Swaption_16_4">
-    <ClassName>Swaption</ClassName>
+    <TradeType>Swaption</TradeType>
     <Envelope>
-      <Id>Swaption_16_4</Id>
       <Type>Swaption</Type>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
-      <Rating/>
       <AdditionalFields/>
     </Envelope>
     <SwaptionData>
@@ -1442,13 +1410,11 @@
   </Trade>
 
   <Trade id="Swaption_17_3">
-    <ClassName>Swaption</ClassName>
+    <TradeType>Swaption</TradeType>
     <Envelope>
-      <Id>Swaption_17_3</Id>
       <Type>Swaption</Type>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
-      <Rating/>
       <AdditionalFields/>
     </Envelope>
     <SwaptionData>
@@ -1532,13 +1498,11 @@
   </Trade>
 
   <Trade id="Swaption_18_2">
-    <ClassName>Swaption</ClassName>
+    <TradeType>Swaption</TradeType>
     <Envelope>
-      <Id>Swaption_18_2</Id>
       <Type>Swaption</Type>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
-      <Rating/>
       <AdditionalFields/>
     </Envelope>
     <SwaptionData>
@@ -1622,13 +1586,11 @@
   </Trade>
 
   <Trade id="Swaption_19_1">
-    <ClassName>Swaption</ClassName>
+    <TradeType>Swaption</TradeType>
     <Envelope>
-      <Id>Swaption_19_1</Id>
       <Type>Swaption</Type>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
-      <Rating/>
       <AdditionalFields/>
     </Envelope>
     <SwaptionData>

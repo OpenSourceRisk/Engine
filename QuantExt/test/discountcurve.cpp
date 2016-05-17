@@ -6,7 +6,7 @@
 */
 
 #include "discountcurve.hpp"
-#include <qle/termstructures/interpolateddiscountcurve.hpp>
+#include <qle/termstructures/interpolateddiscountcurve2.hpp>
 #include <ql/termstructures/yield/discountcurve.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
@@ -17,7 +17,8 @@ using std::vector;
 
 void DiscountCurveTest::testDiscountCurve() {
 
-    BOOST_TEST_MESSAGE("Testing QuantExt::InteroplatedDiscountCurve...");
+    //FIXME: test curve1 or 2 or both
+    BOOST_TEST_MESSAGE("Testing QuantExt::InteroplatedDiscountCurve2...");
 
     SavedSettings backup;
     Settings::instance().evaluationDate() = Date(1, Dec, 2015);
@@ -57,7 +58,7 @@ void DiscountCurveTest::testDiscountCurve() {
     ytsBase->enableExtrapolation();
 
     boost::shared_ptr<YieldTermStructure> ytsTest
-        (new QuantExt::InterpolatedDiscountCurve(times, quotes, dc));
+        (new QuantExt::InterpolatedDiscountCurve2(times, quotes, dc));
 
     // now check that they give the same discount factors (including extrapolation)
     for (Time t = 0.1; t < numYears + 10.0; t += 0.1) {

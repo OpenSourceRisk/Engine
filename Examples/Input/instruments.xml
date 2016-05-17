@@ -1,13 +1,11 @@
 <?xml version="1.0"?>
 <Portfolio>
   <Trade id="722961AI">
-    <ClassName>Swap</ClassName>
+    <TradeType>Swap</TradeType>
     <Envelope>
-      <Id>722961AI</Id>
       <Type>Swap</Type>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
-      <Rating/>
       <AdditionalFields>
         <QRENPV>-2502173</QRENPV>
         <SummitNPV>-2514647</SummitNPV>
@@ -83,13 +81,11 @@
   </Trade>
   
   <Trade id="833397AI">
-    <ClassName>Swap</ClassName>
+    <TradeType>Swap</TradeType>
     <Envelope>
-      <Id>833397AI</Id>
       <Type>Swap</Type>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
-      <Rating/>
       <AdditionalFields>
         <QRENPV>-1957067</QRENPV>
         <SummitNPV>-1953313</SummitNPV>
@@ -165,13 +161,11 @@
   </Trade>
   
   <Trade id="722963AI">
-    <ClassName>Swap</ClassName>
+    <TradeType>Swap</TradeType>
     <Envelope>
-      <Id>722963AI</Id>
       <Type>Swap</Type>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
-      <Rating/>
       <AdditionalFields>
         <QRENPV>2222432</QRENPV>
         <SummitNPV>2234668</SummitNPV>
@@ -248,13 +242,11 @@
 
   <!--
   <Trade id="746848AI">
-    <ClassName>Swap</ClassName>
+    <TradeType>Swap</TradeType>
     <Envelope>
-      <Id>746848AI</Id>
       <Type>Swap</Type>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
-      <Rating/>
       <AdditionalFields>
         <QRENPV>-28431398</QRENPV>
         <SummitNPV>-23242637</SummitNPV>
@@ -334,13 +326,11 @@
   -->
   
   <Trade id="627244AI">
-    <ClassName>Swap</ClassName>
+    <TradeType>Swap</TradeType>
     <Envelope>
-      <Id>627244AI</Id>
       <Type>Swap</Type>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
-      <Rating/>
       <AdditionalFields>
         <QRENPV>-698628</QRENPV>
         <SummitNPV>-702249</SummitNPV>
@@ -417,13 +407,11 @@
 
   <!--
   <Trade id="USDJPYSwap724563AI">
-    <ClassName>Swap</ClassName>
+    <TradeType>Swap</TradeType>
     <Envelope>
-      <Id>USDJPYSwap724563AI</Id>
       <Type>Swap</Type>
       <CounterParty>CUST_F1</CounterParty>
       <NettingSetId>CUST_F</NettingSetId>
-      <Rating/>
       <AdditionalFields>
         <BreakStart>20130902</BreakStart>
         <BreakEnd>20130902</BreakEnd>
@@ -500,13 +488,11 @@
 
   <!--
   <Trade id="USDJPYSwap836622AI">
-    <ClassName>Swap</ClassName>
+    <TradeType>Swap</TradeType>
     <Envelope>
-      <Id>USDJPYSwap836622AI</Id>
       <Type>Swap</Type>
       <CounterParty>CUST_F1</CounterParty>
       <NettingSetId>CUST_F</NettingSetId>
-      <Rating/>
       <AdditionalFields>
         <BreakStart/>
         <BreakEnd/>
@@ -583,13 +569,11 @@
   
   <!--
   <Trade id="USDBasis836615AI">
-    <ClassName>Swap</ClassName>
+    <TradeType>Swap</TradeType>
     <Envelope>
-      <Id>USDBasis836615AI</Id>
       <Type>Swap</Type>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
-      <Rating/>
       <AdditionalFields>
         <BreakStart>20180403</BreakStart>
         <BreakEnd>20380407</BreakEnd>
@@ -668,13 +652,11 @@
   -->
  
   <Trade id="EURGBPFxForward42174">
-    <ClassName>FxForward</ClassName>
+    <TradeType>FxForward</TradeType>
     <Envelope>
-      <Id>EURGBPFxForward42174</Id>
       <Type>FxForward</Type>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
-      <Rating/>
       <AdditionalFields>
         <BreakStart/>
         <BreakEnd/>
@@ -692,13 +674,11 @@
   </Trade>
   
   <Trade id="USDGBPFxForward42196">
-    <ClassName>FxForward</ClassName>
+    <TradeType>FxForward</TradeType>
     <Envelope>
-      <Id>USDGBPFxForward42196</Id>
       <Type>FxForward</Type>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
-      <Rating/>
       <AdditionalFields>
         <BreakStart/>
         <BreakEnd/>
@@ -716,13 +696,11 @@
   </Trade>
   
   <Trade id="USDEURFxForward41360">
-    <ClassName>FxForward</ClassName>
+    <TradeType>FxForward</TradeType>
     <Envelope>
-      <Id>USDEURFxForward41360</Id>
       <Type>FxForward</Type>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
-      <Rating/>
       <AdditionalFields>
         <BreakStart/>
         <BreakEnd/>
@@ -740,13 +718,11 @@
   </Trade>
   
   <Trade id="0000041202">
-    <ClassName>FxForward</ClassName>
+    <TradeType>FxForward</TradeType>
     <Envelope>
-      <Id>0000041202</Id>
       <Type>FxForward</Type>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
-      <Rating/>
       <AdditionalFields>
         <BreakStart/>
         <BreakEnd/>
@@ -765,14 +741,12 @@
 
   <!--
   <Trade id="Bermudan_bullet">
-    <ClassName>Swaption</ClassName>
+    <TradeType>Swaption</TradeType>
     <Envelope>
-      <Id>Bermudan_bullet</Id>
       <Type>Swaption</Type>
       <Company>HSH</Company>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
-      <Rating/>
       <AdditionalFields>
         <BreakStart>20140106</BreakStart>
         <BreakEnd>20440105</BreakEnd>
@@ -917,14 +891,12 @@
   </Trade>
 
   <Trade id="Bermudan_amortizing">
-    <ClassName>Swaption</ClassName>
+    <TradeType>Swaption</TradeType>
     <Envelope>
-      <Id>Bermudan_amortizing</Id>
       <Type>Swaption</Type>
       <Company>HSH</Company>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
-      <Rating/>
       <AdditionalFields>
         <BreakStart>20140106</BreakStart>
         <BreakEnd>20440105</BreakEnd>
@@ -1126,14 +1098,12 @@
   -->
   <!--
   <Trade id="Bermudan_accreting">
-    <ClassName>Swaption</ClassName>
+    <TradeType>Swaption</TradeType>
     <Envelope>
-      <Id>Bermudan_accreting</Id>
       <Type>Swaption</Type>
       <Company>HSH</Company>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
-      <Rating/>
       <AdditionalFields>
         <BreakStart>20140106</BreakStart>
         <BreakEnd>20440105</BreakEnd>
@@ -1343,14 +1313,12 @@
   -->
   
   <Trade id="European_physical">
-    <ClassName>Swaption</ClassName>
+    <TradeType>Swaption</TradeType>
     <Envelope>
-      <Id>European_physical</Id>
       <Type>Swaption</Type>
       <Company>HSH</Company>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
-      <Rating/>
       <AdditionalFields>
         <BreakStart>20200106</BreakStart>
         <BreakEnd>20440105</BreakEnd>
@@ -1439,14 +1407,12 @@
   </Trade>
 
   <Trade id="European_cash">
-    <ClassName>Swaption</ClassName>
+    <TradeType>Swaption</TradeType>
     <Envelope>
-      <Id>European_cash</Id>
       <Type>Swaption</Type>
       <Company>HSH</Company>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
-      <Rating/>
       <AdditionalFields>
         <BreakStart>20200106</BreakStart>
         <BreakEnd>20440105</BreakEnd>

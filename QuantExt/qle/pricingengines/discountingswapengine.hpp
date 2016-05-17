@@ -83,6 +83,7 @@ class DiscountingSwapEngine : public Swap::engine {
     bool optimized_, parApproximation_;
     Size gracePeriod_;
     bool floatingLags_;
+    // FIXME: remove cache
     typedef std::map<void *, boost::tuple<bool, bool, bool, bool,
                                           IborCoupon const *> > ArgumentsCache;
     mutable ArgumentsCache arguments_cache_;

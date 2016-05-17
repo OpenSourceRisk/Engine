@@ -2,14 +2,12 @@
 <Portfolio>
 
   <Trade id="FXFWD_EURUSD_10Y">
-    <ClassName>FxForward</ClassName>
+    <TradeType>FxForward</TradeType>
     <Envelope>
-      <Id>FXFWD_EURUSD_10Y</Id>
       <Type>FxForward</Type>
       <Company>HSH</Company>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
-      <Rating/>
       <AdditionalFields/>
     </Envelope>
     <FxForwardData>
@@ -22,14 +20,12 @@
   </Trade>
   
   <Trade id="FX_CALL_OPTION_EURUSD_10Y">
-    <ClassName>FxOption</ClassName>
+    <TradeType>FxOption</TradeType>
     <Envelope>
-      <Id>FX_CALL_OPTION_EURUSD_10Y</Id>
       <Type>FxOption</Type>
       <Company>HSH</Company>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
-      <Rating/>
       <AdditionalFields/>
     </Envelope>
     <FxOptionData>
@@ -56,14 +52,12 @@
   </Trade>
 
   <Trade id="FX_PUT_OPTION_EURUSD_10Y">
-    <ClassName>FxOption</ClassName>
+    <TradeType>FxOption</TradeType>
     <Envelope>
-      <Id>FX_PUT_OPTION_EURUSD_10Y</Id>
       <Type>FxOption</Type>
       <Company>HSH</Company>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
-      <Rating/>
       <AdditionalFields/>
     </Envelope>
     <FxOptionData>

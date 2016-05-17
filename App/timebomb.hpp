@@ -18,13 +18,13 @@
 //#define QRE_CHECK_TIMEBOMB 
 
 
-/* Timebomb date hardcoded to 1 May 2016
+/* Timebomb date hardcoded to 1 Oct 2016
  * Use __DATE__ macro to enable "Release date + 90 days" type eval periods.
  */
 
 #define ORE_CHECK_TIMEBOMB \
   { \
-    QuantLib::Date timebombDate = QuantLib::Date(1, QuantLib::May, 2016); \
+    QuantLib::Date timebombDate = QuantLib::Date(1, QuantLib::October, 2016); \
     QuantLib::Date today = QuantLib::Date::todaysDate(); \
     if (today >= timebombDate) { \
         printVersion(); \

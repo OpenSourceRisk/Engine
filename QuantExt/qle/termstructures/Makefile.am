@@ -28,6 +28,7 @@ this_include_HEADERS = \
 	dynamicswaptionvolmatrix.hpp \
 	hazardspreadeddefaulttermstructure.hpp \
 	interpolateddiscountcurve.hpp \
+	interpolateddiscountcurve2.hpp \
 	oibasisswaphelper.hpp \
 	oiccbasisswaphelper.hpp \
 	oisratehelper.hpp \

@@ -1,14 +1,12 @@
 <?xml version="1.0"?>
 <Portfolio>
   <Trade id="70309">
-    <ClassName>Swap</ClassName>
+    <TradeType>Swap</TradeType>
     <Envelope>
-      <Id>70309</Id>
       <Type>Swap</Type>
       <Company>HSH</Company>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
-      <Rating/>
       <AdditionalFields/>
     </Envelope>
     <SwapData>
@@ -78,14 +76,12 @@
   </Trade>
   
   <Trade id="938498">
-    <ClassName>Swap</ClassName>
+    <TradeType>Swap</TradeType>
     <Envelope>
-      <Id>938498</Id>
       <Type>Swap</Type>
       <Company>HSH</Company>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
-      <Rating/>
       <AdditionalFields/>
     </Envelope>
     <SwapData>
@@ -222,14 +218,12 @@
 </SwapData>
 </Trade>
 <Trade id="919020">
-  <ClassName>Swap</ClassName>
+  <TradeType>Swap</TradeType>
   <Envelope>
-    <Id>919020</Id>
     <Type>Swap</Type>
     <Company>HSH</Company>
     <CounterParty>CUST_A</CounterParty>
     <NettingSetId>CUST_A</NettingSetId>
-    <Rating/>
     <AdditionalFields/>
   </Envelope>
   <SwapData>

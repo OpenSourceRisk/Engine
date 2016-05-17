@@ -2,13 +2,11 @@
 <Portfolio>
   
   <Trade id="Swap_20">
-    <ClassName>Swap</ClassName>
+    <TradeType>Swap</TradeType>
     <Envelope>
-      <Id>Swap_20</Id>
       <Type>Swap</Type>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
-      <Rating/>
       <AdditionalFields/>
     </Envelope>
     <SwapData>
