@@ -33,7 +33,7 @@ CrossAssetModelImpliedFxVolTermStructure::
 
     registerWith(model_);
     engine_->cache(false);
-    state(0.0, 0.0, std::log(model_->fxbs(fxIndex_ + 1)->fxSpotToday()->value()));
+    state(0.0, 0.0, std::log(model_->fxbs(fxIndex_)->fxSpotToday()->value()));
     update();
 }
 
