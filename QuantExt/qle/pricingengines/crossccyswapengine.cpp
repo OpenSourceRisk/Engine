@@ -39,7 +39,7 @@ namespace QuantExt {
     void CrossCcySwapEngine::calculate() const {
 
         QL_REQUIRE(!currency1Discountcurve_.empty() &&
-            !currency1Discountcurve_.empty(),
+            !currency2Discountcurve_.empty(),
             "Discounting term structure handle is empty.");
 
         QL_REQUIRE(!spotFX_.empty(), "FX spot quote handle is empty.");
