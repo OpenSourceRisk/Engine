@@ -279,12 +279,14 @@ int main(int argc, char** argv) {
             o.str("");
             o << "Build Cube " << simPortfolio->size() << " x " << grid->size() << " x " << samples << "... ";
             LOG("Build cube");
-            ProgressBar::instance().start(o.str(), tab);
+            auto progressBar = boost::make_shared<SimpleProgressBar>(o.str(), tab);
+            auto progressLog = boost::make_shared<ProgressLog>("Building cube...");
+            engine.registerProgressIndicator(progressBar);
+            engine.registerProgressIndicator(progressLog);
             boost::shared_ptr<NPVCube>
                 inMemoryCube = boost::make_shared<SinglePrecisionInMemoryCube>
                 (asof, simPortfolio->ids(), grid->dates(), samples);
             engine.buildCube(simPortfolio, inMemoryCube, inMemoryAdditionalScenarioData);
-            ProgressBar::instance().stop();
             cout << "OK" << endl;
 
             cout << setw(tab) << left << "Write Cube... " << flush;
