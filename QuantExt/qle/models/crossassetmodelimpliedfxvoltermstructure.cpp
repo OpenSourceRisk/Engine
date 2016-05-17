@@ -47,7 +47,7 @@ Real CrossAssetModelImpliedFxVolTermStructure::blackVarianceImpl(
     Real fxSpot = std::exp(fx_);
     Real domDisc =
         model_->discountBond(0, relativeTime_, relativeTime_ + t, irDom_);
-    Real forDisc = model_->discountBond(fxIndex_, relativeTime_,
+    Real forDisc = model_->discountBond(fxIndex_ + 1,relativeTime_,
                                         relativeTime_ + t, irFor_);
     Real atm = fxSpot * forDisc / domDisc;
 
