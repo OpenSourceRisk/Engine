@@ -79,7 +79,7 @@ namespace QuantExt {
         // Register the instrument with all cashflows on each leg.
         for (Size legNo = 0; legNo < 2; legNo++) {
             Leg::iterator it;
-            for (it = legs_[legNo].begin(); it != legs_[legNo].end(); it++) {
+            for (it = legs_[legNo].begin(); it != legs_[legNo].end(); ++it) {
                 registerWith(*it);
             }
         }

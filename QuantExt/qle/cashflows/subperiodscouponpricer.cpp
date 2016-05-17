@@ -28,7 +28,6 @@ namespace QuantExt {
 
     Rate SubPeriodsCouponPricer::swapletRate() const {
 
-        std::vector<Date> fixingDates = coupon_->fixingDates();
         std::vector<Time> accrualFractions = coupon_->accrualFractions();
         Size numPeriods = accrualFractions.size();
         Spread incSpread = includeSpread_ ? spread_ : 0.0;

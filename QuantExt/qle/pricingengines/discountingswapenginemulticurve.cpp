@@ -25,7 +25,7 @@ namespace QuantExt {
             public Visitor<IborCoupon> {
 
           public:
-            AmountGetter() {}
+            AmountGetter() : amount_(0), callAmount_(true) {}
             virtual ~AmountGetter() {}
 
             Real amount() const { return amount_; }

@@ -123,6 +123,8 @@ int main(int argc, char** argv) {
                     putenv((char *)"OBS=UNREG");
                 else if (om == "disable")
                     putenv((char *)"OBS=DISABLE");
+                else if (om == "none")
+                    putenv((char *)"OBS=NONE");
                 else {
                     QL_FAIL("Invalid setup::observationModel setting " << om);
                 }
