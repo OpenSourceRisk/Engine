@@ -53,6 +53,8 @@ class CrossAssetModelImpliedFxVolTermStructure : public BlackVolTermStructure {
     /* Observer interface */
     void update();
 
+    Size fxIndex() const { return fxIndex_; }
+
   protected:
     /* BlackVolTermStructure interface */
     Real blackVarianceImpl(Time t, Real strike) const;

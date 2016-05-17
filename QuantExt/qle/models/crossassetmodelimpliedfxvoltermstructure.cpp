@@ -33,7 +33,9 @@ CrossAssetModelImpliedFxVolTermStructure::
 
     registerWith(model_);
     engine_->cache(false);
-    state(0.0, 0.0, model_->fxbs(fxIndex_ + 1)->fxSpotToday()->value());
+    Real fxSpot = model_->fxbs(fxIndex_)->fxSpotToday()->value();
+    QL_REQUIRE(fxSpot>0, "FX Spot for index " << fxIndex_ << " must be positive");
+    state(0.0, 0.0, std::log(fxSpot));
     update();
 }
 
@@ -45,7 +47,7 @@ Real CrossAssetModelImpliedFxVolTermStructure::blackVarianceImpl(
     Real fxSpot = std::exp(fx_);
     Real domDisc =
         model_->discountBond(0, relativeTime_, relativeTime_ + t, irDom_);
-    Real forDisc = model_->discountBond(fxIndex_ + 1, relativeTime_,
+    Real forDisc = model_->discountBond(fxIndex_, relativeTime_,
                                         relativeTime_ + t, irFor_);
     Real atm = fxSpot * forDisc / domDisc;
 
