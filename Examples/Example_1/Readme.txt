@@ -28,12 +28,6 @@ EPE and ENE, compared to European swaption prices
 
    a) Install LibreOffice 5.0.6.3 (latest stable)
 
-   b) Make sure the soffice executable is in your search path
-      (on Mac it is in /Applications/LibreOffice.app/Contents/MacOS).
-      
-   c) In this Example_1 directory launch:
-      soffice \
-      --calc \
-      --accept="socket,host=localhost,port=2002;urp;StarOffice.ServiceManager" \
-      run.ods
+   b) In this Example_1 directory launch Calc on sheet run.ods with
+      ./launchCalc.sh
          

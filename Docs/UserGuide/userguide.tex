@@ -7,6 +7,8 @@
 \usepackage{graphicx}
 \usepackage{mathrsfs}
 \usepackage{amsmath, amssymb, mathtools, empheq}
+\usepackage[disable]{todonotes}
+%\usepackage{todonotes}
 
 % Turn off indentation but allow \indent command to still work.
 \newlength\tindent
@@ -125,25 +127,26 @@ Version & Date & Author & Comment \\
 
 Open Risk Engine (ORE) \cite{ORE} is a free/open software project sponsored by Quaternion Risk Management \cite{QRM} and based on QuantLib, the free/open source library for quantitative finance \cite{QL}. 
 
-ORE currently provides portfolio pricing and cash flow generation, and in particular a range of contemporary derivative portfolio analytics. The latter are based on a Monte Carlo simulation framework which yields the evolution of various {\bf credit exposure} and {\bf market risk measures}, a range of {\bf derivative value adjustments}, as well as {\bf regulatory capital charges} for counterparty credit risk under both Internal Model Method (IMM) and the new standardized approach (SA-CCR). Supported credit exposure and market risk measures include
+ORE currently provides portfolio pricing, cash flow generation, sensitivity analysis and a range of contemporary derivative portfolio analytics. The latter are based on a Monte Carlo simulation framework which yields the evolution of various {\bf credit exposure} and {\bf market risk measures} 
 \begin{itemize}
 \item EE aka EPE (Expected Exposure or Expected Positive Exposure), 
 \item ENE (Expected Negative Exposure, i.e. the counterparty's perspective), 
+\item 'Basel' exposure measures relevant for regulatory capital charges under internal model methods 
 \item PFE (Potential Future Exposure at some use defined quantile), 
 \item VaR (Value at Risk),
 \item ES (Expected Shortfall),
-\item SIMM (ISDA's Standard Initial Margin) 
 \end{itemize}
-Value adjustments include 
+and {\bf derivative value adjustments}
 \begin{itemize}
 \item CVA (Credit Value Adjustment)
 \item DVA (Debit Value Adjustment)
 \item FVA (Funding Value Adjustment)
 \item COLVA (Collateral Value Adjustment).
 \end{itemize}
+Moreover, ORE computes {\bf regulatory capital charges} for counterparty credit risk under the new standardized approach (SA-CCR). The Monte Carlo based market risk measures are complemented by parametric VaR, as well as {\bf ISDA's Standard Initial Margin}.
 
 \medskip
-The first release of ORE covers the simulation of interest rate and FX risk factors and portfolios of Interest Rate Swaps, FX Forwards, Cross Currency Swaps, FX Options and European Swaptions. Subsequent releases will extend the product and the risk factor range to Inflation, Credit, Equity and Commodity.     
+The first release of ORE covers the simulation of interest rate and FX risk factors and portfolios of Interest Rate Swaps, FX Forwards, Cross Currency Swaps, FX Options and Swaptions. Subsequent releases will extend the derivative product and the risk factor range to Inflation, Credit, Equity and Commodity. With the introduction of credit risk factors, the scope will also be extended to cover cash products (loans and bonds) and related portfolio analytics.    
 
 \medskip
 Ultimately - after going through a series of releases, community feedback and contributions - the project aims at establishing a framework and platform for {\bf transparent pricing and risk analysis} that can be adapted for production purposes in financial institutions and used as a benchmarking and validation tool to test in-house and black box vendor solutions applied in the industry. 
@@ -158,9 +161,9 @@ This document focuses on instructions how to use ORE to cover basic workflows fr
 \setlength{\itemsep}{0pt}
 \item Launching ORE using its command line application
 \item Analytics results and standard reports
-\item Interactive analysis using Jupyter notebooks 
-\item Market and trade data input
+\item Interactive analysis using Jupyter, Calc and Excel 
 \item ORE parametrisation
+\item Market and trade data input
 \end{itemize}
 
 \newpage
@@ -169,7 +172,7 @@ This document focuses on instructions how to use ORE to cover basic workflows fr
 \section{Installation}
 %========================================================
 
-TODO: Add installation instructions
+\todo[inline]{Add installation instructions}
 
 %========================================================
 \section{Examples}\label{sec:examples}
@@ -185,7 +188,7 @@ All results can be produced with the {\tt run.sh} scripts in the ORE release's {
 The structure of the input file and of the portfolio, market and other configuration files referred to therein will be explained in section \ref{sec:configuration}. 
 
 %--------------------------------------------------------
-\subsection{Interest Swap Exposure}
+\subsection{Interest Swap Exposure}\label{sec:example1}
 %--------------------------------------------------------
 
 We start with a vanilla single currency swap (currency EUR, maturity 20y, notional 10m, receive fixed 2\% annual, pay 6M-Euribor flat). The market yield curves (for both discounting and forward projection are manipulated to be flat at 2\% for all maturities, i.e. the Swap is at the money initially and remains at the money on average throughout its life. Running ORE in directory {\tt Examples/Example\_1} with
@@ -256,7 +259,6 @@ This demo case in folder {\tt Examples/Example\_7} shows the exposure evolution 
 \end{figure}
 The delivery type (cash vs physical) yields significantly different valuations as of today due to the steepness of the relevant yield curves (EUR). The cash settled Swaption's exposure graph is truncated at the exercise date, whereas the physically settled Swaption exposure turns into a Swap-like exposure after expiry. For comparison, the example also provides the exposure evolution of the underlying forward starting Swap which yields a somewhat higher exposure after the foreard start date than the physically settled Swaption. This is due to scenarios with negative swap NPV at expiry and positive NPVs thereafter.
 
-
 %--------------------------------------------------------
 \subsection{Callable Swap Exposure}
 %--------------------------------------------------------
@@ -288,16 +290,14 @@ The example in folder {\tt Examples/Example\_2} generates the exposure evolution
 \subsection{Cross Currency Swap Exposure}
 %--------------------------------------------------------
 
-The case in {\tt Examples/Example\_8} is a vanilla cross currency swap. It shows the typical blend of and interest rate swap's saw tooth exposure evolution with an FX forward's exposure which increases monotonically to final maturity, see figure \ref{fig_6}.
+The case in {\tt Examples/Example\_8} is a vanilla cross currency swap. It shows the typical blend of and interest rate swap's saw tooth exposure evolution with an FX forward's exposure which increases monotonically to final maturity, see figure \ref{fig_6}. \todo[inline]{Add notional resetting feature and example}
 \begin{figure}[hbt]
 \begin{center}
 \includegraphics[scale=1.0]{example_ccswap.pdf}
 \end{center}
-\caption{Cross Currency Swap exposure evolution with and without mark-to-market notional reset on each coupin date.}
+\caption{Cross Currency Swap exposure evolution without mark-to-market notional reset.}
 \label{fig_6}
 \end{figure}
-
-{\color{red}FIXME: Add notional resetting feature, add a resetting swap and plot its exposure evolution for comparison}
 
 %--------------------------------------------------------
 \subsection{FX Option Exposure}
@@ -362,21 +362,44 @@ In this example (see folder {\tt Examples/Example\_5}) we showcase a small netti
 \end{figure}
 
 %--------------------------------------------------------
-\subsection{CVA and DVA}
+\subsection{CVA, DVA, FVA, COLVA and Collateral Floor}
 %--------------------------------------------------------
 
-TODO
+We use one of the cases in {\tt Examples/Example\_5} to demonstrate the
+XVA outputs, see folder {\tt Examples/Example\_5/Output/collateral\_threshold}.
 
-%--------------------------------------------------------
-\subsection{FVA, COLVA and Collateral Floor}
-%--------------------------------------------------------
+\medskip
+The summary of CVA, DVA, FVA, COLVA and Collateral Floor is provided in file {\tt xva.csv}. 
+The file includes the allocated CVA and DVA introduced in the next section. The following table illustrates the file's layout,
+omitting the three right-most columns containing allocated data. 
+
+\begin{center}
+\footnotesize
+\begin{tabular}{|l|l|r|r|r|r|r|r|}
+\hline
+TradeId & NettingSetId & CVA & DVA & FBA & FCA & COLVA & CollateralFloor \\ %& AllocatedCVA & AllocatedDVA & AllocationMethod \\
+\hline
+ & CUST\_A & 32464 & 43083 & 40016 & 73582 & 3524 & 200651 \\ %& 32464.4 & 43082.6 & Marginal \\
+70309 & CUST\_A & 110673 & 211303 & 134234 & 396001 & n/a & n/a \\ %& 20934 & 25703.8 & Marginal \\
+938498 & CUST\_A & 73000 & 81002 & 133391 & 154382 & n/a & n/a \\ %& 6569.42 & 7063.29 & Marginal \\
+919020 & CUST\_A & 74031 & 86618 & 119285 & 147321 & n/a & n/a \\%& 4961 & 10315.5 & Marginal \\
+\hline
+\end{tabular}
+\end{center}
+
+The line(s) with empty TradeId column contain values at netting set level, the others contain uncollateralised single-trade VAs.
+Note that COLVA and Collateral Floor are only available at netting set level at which collateral is posted.
+
+\medskip
+Detailed output is written for COLVA and Collateral Floor to file {\tt colva\_nettingset\_*.csv} which shows the 
+incremental contributions to these two VAs through time.
 
 
 %--------------------------------------------------------
 \subsection{Exposure \& XVA Allocation to Trades}
 %--------------------------------------------------------
 
-The same example considered in the previous section (see folder {\tt Examples/Example\_5}) also features the allocation of netting set exposure and XVA to the trade level as frequently required by finance functions.  We start again with the uncollateralised case in figure \ref{fig_8}, followed by the case with threshold 1m EUR in figure \ref{fig_11}.
+The same example considered in the previous section (see folder {\tt Examples/Example\_5}) also features the allocation of netting set exposure and XVA to the trade level as frequently required by finance functions.  We start again with the uncollateralised case in figure \ref{fig_8}, followed by the case with threshold 1m EUR in figure \ref{fig_9}.
 \begin{figure}[hbt]
 \begin{center}
 \includegraphics[scale=1.0]{example_nocollateral_allocated_epe.pdf}
@@ -392,23 +415,49 @@ In both cases we apply the {\em marginal} (Euler) allocation method as published
 \caption{Exposure allocation with collateral and threshold 1m EUR.}
 \label{fig_13}
 \end{figure}
-The analytics results also feature allocated XVAs which are derived from the allocated exposure profiles. Note that ORE also offers alternative allocation methods to the marginal method by Pykhtin/Rosen, which can be explored with {\tt Examples/Example\_5}.
+The analytics results also feature allocated XVAs in file {\tt xva.csv} which are derived from the allocated exposure profiles. Note that ORE also offers alternative allocation methods to the marginal method by Pykhtin/Rosen, which can be explored with {\tt Examples/Example\_5}.
 
 %========================================================
-\section{Visualisation}
+\section{Visualisation}\label{sec:visualisation}
 %========================================================
 
-\subsection{Jupyter Notebooks}
+\subsection{Jupyter}\label{sec:jupyter}
 
-TODO
+\todo[inline]{Add Jupyter section}
+
+\subsection{Calc}\label{sec:calc}
+
+ORE comes with a simple LibreOffice Calc \cite{LO} sheet as an ORE launcher and basic result viewer. This is demonstrated on the example in section \ref{sec:example1}. It is currently based on the stable LibreOffice version 5.0.6 and tested on Mac OSX only. Launch Calc following the instructions in Example\_1's Readme: Open a terminal, change to directory {\tt Examples/Example\_1}, and run
+
+\medskip
+{\centerline{\tt ./launchCalc.sh} }
+
+\medskip
+This will show the blank sheet in figure \ref{fig_14}.
+\begin{figure}[hbt]
+\begin{center}
+\includegraphics[scale=0.5]{demo_calc_1}
+\end{center}
+\caption{Calc sheet after launching.}
+\label{fig_14}
+\end{figure}
+The user can choose a configuration (one of the ore*.xml files in Example\_1's subfolder Input) by hitting the 'Select' button. Initially Input/ore.xml is pre-selected. The ORE process is then kicked off by hitting 'Run'. Once completed, pre-selected results can be viewed by hitting 'View' which should show the result in figure \ref{fig_15}.
+\begin{figure}[hbt]
+\begin{center}
+\includegraphics[scale=0.5]{demo_calc_2}
+\end{center}
+\caption{Calc sheet after launching.}
+\label{fig_15}
+\end{figure}
+
+\todo[inline]{Make Calc work on Windows and Linux} 
+\todo[inline]{Support both OpenOffice and LibreOffice Calc.}
+\todo[inline]{Generalise the 'View' functionality (select what to view etc)} 
 
 \subsection{Excel}
 
-TODO
+\todo[inline]{Add Excel section}
 
-\subsection{Open Office Calc}
-
-TODO
 
 %========================================================
 \section{Parametrisation}\label{sec:configuration}
@@ -420,8 +469,7 @@ ORE's batch version is kicked off with a single command line parameter
 \centerline{\tt ore[.exe] ore.xml}
 \medskip
 
-which points to the 'master input file' referred to  
-as {\tt ore.xml} subsequently. 
+which points to the 'master input file' referred to  as {\tt ore.xml} subsequently. 
 This file is the starting point of the engine's configuration explained in the following sub section.
 
 \subsection{Master Input File: {\tt ore.xml}}\label{sec:master_input}
@@ -551,10 +599,8 @@ The purpose of the {\tt simulation} 'analytics' is to run a Monte Carlo simulati
 
 The pricing engines file specifies how trades are priced under future scenarios which can differ from pricing as of today (specified in section Setup).
 Key base currency determines into which currency all NPVs will be converted. Key store scenarios (Y or N) determines whether the market scenarios are written to a file for later reuse.
-
-{\color{red}FIXME: Implement the store scenarios option and add a file name for scenario data}). 
-
-{\color{red}FIXME: Expose all performance options here (fixing approach, disable eval date observation, unregister coupons)}. 
+\todo[inline]{Implement the store scenarios option, add file name to parametrisation}
+\todo[inline]{Expose all performance options (fixing and observer model)} 
 
 \medskip
 The xva analytic section offers CVA, DVA, FVA and COLVA calculations which can be selected/deselected here individually. All XVA calculations depend on a previously generated NPV cube (see above) which is referenced here via the {\tt cubeFile} parameter. This means one can re-run the xva analytics without regenerating the cube each time. The xva reports depend in particular on the settings in the {\tt csaFile} which determines CSA details such as margining frequency, collateral thresholds, minimum transfer amounts, margin period of risk. By splitting the processing in to pre-processing (cube generation) and post-processing (aggregation and XVA analysis) it is possible to vary these CSA details and analyse their impact on XVAs quickly without re-generating the NPV cube.  
@@ -600,20 +646,20 @@ Further parameters:
 \item {\tt eposureProfiles:} Flag to enable/disable exposure output  
 \item {\tt quantile} Confidence level for Potential Future Exposure (PFE) 
 reporting
-\item {\tt calculationType} Determines the settlement of margin calls: Symmetric - margin for both counterparties settled after the margin period of risk; AsymmetricCVA - margin requested from the counterparty settles with delay, margin requested from us settles immediately; AsymmetricDVA - vice versa). {\color{red} FIXME: Move this into the {\tt csaFile} ?}   
+\item {\tt calculationType} Determines the settlement of margin calls: Symmetric - margin for both counterparties settled after the margin period of risk; AsymmetricCVA - margin requested from the counterparty settles with delay, margin requested from us settles immediately; AsymmetricDVA - vice versa). \todo[inline]{Move calculationType into the {\tt csaFile}?}   
 \item {\tt allocationMethod:} XVA allocation method, choices are {\em None, Marginal, RelativeXVA} 
 \item {\tt marginalAllocationLimit:} The marginal allocation method ala Pykhtin/Rosen breaks down when the netting set value vanishes while the exposure does not. This parameter acts as a cutoff for the marginal allocation when the absolute netting set value falls below this limit and switches to equal distribution of the exposure in this case.  
 \item {\tt exerciseNextBreak:} Flag to terminate all trades at their next break date before aggregation and the subsequent analytics
-\item {\tt cva, dva, fva, colva, collateralFloor:} Flags to enable/disable these analytics
+\item {\tt cva, dva, fva, colva, collateralFloor:} Flags to enable/disable these analytics. \todo[inline]{Add collateral rates floor to the collateral model file (netting.xml)}
 \item {\tt dvaName:} Credit name to look up the own default probability curve and recovery rate for DVA calculation
 \item {\tt fvaBorrowingCurve:} Identifier of the borrowing yield curve 
 \item {\tt fvaLendingCurve:} Identifier of the lending yield curve
-\item {\tt colvaSpread:} Deviation between collateral rate and overnight rate, expressed in absolute terms (one basis point is 0.0001) assuming the day count convention of the collateral rate 
+\item {\tt collateralSpread:} Deviation between collateral rate and overnight rate, expressed in absolute terms (one basis point is 0.0001) assuming the day count convention of the collateral rate. \todo[inline]{Move collateralSpread to the collateral model file (netting.xml)}
 \item {\tt rawCubeOutputFile:} File name for the trade NPV cube in human readable csv file format (per trade, date, sample)
-\item {\tt netCubeOutputFile:} File name for the aggregated NPV cube in human readable csv file format (per netting set, date, sample)
+\item {\tt netCubeOutputFile:} File name for the aggregated NPV cube in human readable csv file format (per netting set, date, sample) {\em after} taking collateral into account
 \end{itemize}
 
-{\color{red}FIXME: Move colvaSpread and collateralFloor to the nettingset.xml?}). 
+The latter two cube file outputs are provided for interactive analysis and visualisation purposes, see section \ref{sec:visualisation}.
 
 %--------------------------------------------------------
 \subsection{Market: {\tt todaysmarket.xml}}\label{sec:market}
@@ -905,7 +951,7 @@ Let us discuss this section using the following example
 \item {\tt Discretization:} Chooses between time discretization schemes for the risk factor evolution. {\em Exact} means exploiting the analytcal tractability of the model to avoid any time discretization error. {\em Euler} uses a naive time discretization scheme which has numerical error and requires small time steps fro accurate results (useful for testing purposes)
 \item {\tt Grid: } Specifies the simulation time grid, here 80 quarterly steps.
 \item {\tt Calendar:} Calendar or combination of calendars used to adjust the dates of the grid. Date adjustment is required because the simulation must step over 'good' dates on which index fixings can be stored.
-\item {\tt Scenario: } Choose between {\em Simple } and {\em Complex } implementations, the latter optimized for more efficient memory usage. {\color{red}FIXME: To be removed}
+\item {\tt Scenario: } Choose between {\em Simple } and {\em Complex } implementations, the latter optimized for more efficient memory usage. \todo[inline]{Remove Scenario choice}
 \item {\tt Sequence:} Choose random sequence generator ({\em PseudoRandom, PseudoRandomAntithetic, Sobol, SobolBrownianBridge}).
 \item {\tt Seed:} Random number generator seed
 \item {\tt Samples:} Number of Monte Carlo paths to be produced
@@ -1166,7 +1212,7 @@ Moreover we need to specify how volatility structures evolve even if we do not e
 \end{lstlisting}
 } 
 
-{\color{red} FIXME: Remove DefaultCurves from the ScenarioSimMarket constructor and the Market configuration section}.
+\todo[inline]{Remove DefaultCurves from SimMarket constructor and configuration section}
 
 %--------------------------------------------------------
 \subsection{Curves: {\tt curveconfig.xml}}\label{sec:curveconfig}
@@ -1513,11 +1559,11 @@ This yields allocated exposures proportional to the netting set exposure, avoids
 
 \subsection{Monte Carlo VaR and Expected Shortfall}
 
-TODO
+\todo[inline]{Add MC VaR}
 
 \subsection{ISDA Standard Initial Margin}
 
-TODO
+\todo[inline]{Add ISDA SIMM}
 
 %========================================================
 \section{Design Overview}
@@ -1552,6 +1598,14 @@ Damiano Brigo and Fabio Mercurio, {\em Interest Rate Models: Theory and Practice
 Michael Pykhtin and Dan Rosen, {\em Pricing Counterparty Risk at the Trade Level and CVA Allocations}, Finance and Economics Discussion Series, Divisions of Research \& Statistics and Monetary Affairs,
 Federal Reserve Board, Washington, D.C., 2010
 
+\bibitem{LO} http://www.libreoffice.org
+
+\bibitem{OO} http://www.openoffice.org
+
 \end{thebibliography}
+
+\newpage
+\addcontentsline{toc}{section}{Todo}
+\listoftodos[Todo]%\todos
 
 \end{document}

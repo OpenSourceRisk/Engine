@@ -43,7 +43,7 @@ Allowable values:  Any alphanumeric string. The underscore (\_) sign may be used
 
 \item {\tt TradeType}: The Trade type is set with the {\tt TradeType} element, as well as with the {\tt Type} element in the envelope. The two Trade type entries should be identical. ORE currently supports 7 trade types.  
 
-Allowable values:  \emph{Swap, Swaption, FxForward, FxOption}
+Allowable values:  \emph{Swap, CapFloor, Swaption, FxForward, FxOption}
 
 
 \end{itemize}
@@ -82,7 +82,7 @@ Allowable values: Any alphanumeric string. The underscore (\_) sign may be used 
 
 
 
-Allowable values: \emph{Swap, Swaption, FxForward, FxOption }
+Allowable values: \emph{Swap, CapFloor, Swaption, FxForward, FxOption }
 
 \item {\tt Counterparty}: Specifies the name of the counterparty of the trade.  It is used to show exposure analytics by counterparty. 
 
@@ -120,7 +120,7 @@ Allowable values: Any custom element.
 \subsection{Trade Specific Data}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-After the envelope node, the {\tt instruments.xml} file includes trade-specific data for each of the 14 trade types supported by QRE. Each trade type has a its own trade data container which is defined by an xml node containing a trade-specific configuration of individual xml tags - called elements - and trade components. The  trade components are defined by XML sub-nodes that can be used within multiple trade data containers, i.e.  by multiple trade types.
+After the envelope node, the {\tt instruments.xml} file includes trade-specific data for each of the 14 trade types supported by ORE. Each trade type has a its own trade data container which is defined by an xml node containing a trade-specific configuration of individual xml tags - called elements - and trade components. The  trade components are defined by XML sub-nodes that can be used within multiple trade data containers, i.e.  by multiple trade types.
 
 \vspace{1em}
 
@@ -142,6 +142,35 @@ The \lstinline!SwapData! node is the trade data container for the Swap trade typ
         </SwapData>
 \end{lstlisting}
 }
+
+\subsubsection{Cap/Floor}
+
+The \lstinline!CapFloorData! node is the trade data container for trade type CapFloors.  It's a single floating leg that's either capped, floored or both capped and floored. The \lstinline!CapFloorData! node contains a \lstinline!LPILegData!  sub-node where the LegType element must be set to  \emph{Floating}, plus elements for the Cap and Floor rates. An example structure with Cap rates is shown in  in Listing \ref{lst:capfloor_data}. A \lstinline!CapFloorData! node must have either \lstinline!CapRates! or \lstinline!FloorRates! elements, or both. 
+
+{\footnotesize
+\begin{lstlisting}[caption=CapFloorData, label=lst:capfloor_data]
+        <CapFloorData>
+            <LegData>
+                <Payer>false</Payer>
+                <LegType>Floating</LegType>
+                		...
+            </LegData>
+            <CapRates>
+                <Rate>0.05</Rate>
+            </CapRates>
+        </CapFloorData>
+\end{lstlisting}
+}
+
+The meanings and allowable values of the elements in the \lstinline!CapFloorData!  node follow below.
+
+\begin{itemize}
+\item ¤LegData¤: This is a trade component sub-node outlined in \S \ref{ss:leg_data} Leg Data and Notionals. Exactly one \lstinline!LegData! node is allowed and the LegType element must be set to \emph{floating}.  
+\item ¤CapRates¤: This node has child elements of type \lstinline!Rate! capping the floating leg. The first rate value corresponds to the first coupon, the second rate value corresponds to the second coupon, etc. If the number of coupons exceeds the number of rate values, the rate will be kept flat at the value of last entered rate for the remaining coupons. For a fixed cap rate over all coupons, one single rate value is sufficient. The number of entered rate values cannot exceed the number of coupons. \\ Allowable values for each \lstinline!Rate! element:  Any real number. The rate is expressed in decimal form, eg 0.05 is a rate of  0.5\%
+\item ¤FloorRates¤: This node has child elements of type \lstinline!Rate! flooring the floating leg.  The first rate value corresponds to the first coupon, the second rate value corresponds to the second coupon, etc. If the number of coupons exceeds the number of rate values, the rate will be kept flat at the value of last entered rate for the remaining coupons. For a fixed floor rate over all coupons, one single rate value is sufficient. The number of entered rate values cannot exceed the number of coupons.\\ Allowable values for each \lstinline!Rate! element:  Any real number. The rate is expressed in decimal form, eg 0.05 is a rate of  0.5\%
+
+
+\end{itemize}
 
 \subsubsection{Swaption}
 
@@ -338,7 +367,7 @@ An example of a \lstinline!SwapData! trade data container, including two \lstinl
  \end{lstlisting}
 }
 
-Descriptions of all trade components supported in QRE follow below:
+Descriptions of all trade components supported in ORE follow below:
 
 \subsubsection{Option Data}
 \label{ss:option_data} 
