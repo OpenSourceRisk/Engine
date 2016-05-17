@@ -13,6 +13,8 @@
     <Parameter name="marketConfigFile">../../Input/todaysmarket.xml</Parameter>
     <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
     <Parameter name="portfolioFile">portfolio_swap.xml</Parameter>
+    <Parameter name="fixingModel">Simulated</Parameter>  <!-- Simulated or Manual -->
+    <Parameter name="observationModel">Disable</Parameter> <!-- Unregister, None or Disable -->
   </Setup>
 
   <Markets>
