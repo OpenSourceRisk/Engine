@@ -29,7 +29,7 @@ model = desktop.getCurrentComponent()
 active_sheet = model.CurrentController.ActiveSheet
 
 ###############################################
-# Run ORE batche                              #
+# Run ORE batch                               #
 ###############################################
 
 # run first batch
