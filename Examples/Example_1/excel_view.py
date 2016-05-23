@@ -1,6 +1,5 @@
 import xlwings as xw
 from xlwings import Workbook, Sheet, Range, Chart
-import sys
 import time
 import datetime
 from subprocess import call
@@ -13,8 +12,7 @@ wb = Workbook.active()
 # log status
 Range('B8').value = 'running upload ...'
 
-path='/Users/roland/Development/openxva/Examples/Example_1/'
-file = path + 'Output/exposure_trade_Swap_20y.csv'
+file = 'Output/exposure_trade_Swap_20y.csv'
 # load data into arrays and cells
 x = []
 y = []

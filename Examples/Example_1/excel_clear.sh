@@ -1,3 +1,4 @@
 #!/bin/bash
 
-python /Users/roland/Development/openxva/Examples/Example_1/excel_clear.py 
+cd /Users/roland/Development/openxva/Examples/Example_1
+python excel_clear.py 

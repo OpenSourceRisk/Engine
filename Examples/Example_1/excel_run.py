@@ -1,6 +1,5 @@
 import xlwings as xw
 from xlwings import Workbook, Sheet, Range, Chart
-import sys
 import time
 import datetime
 from subprocess import call
@@ -19,8 +18,7 @@ Range('B5').value = 'ORE running ...'
 
 # read input file
 fileName = Range('B2').value
-#cmd = "../../App/ore " + fileName
-cmd = "/Users/roland/Development/openxva/App/ore /Users/roland/Development/openxva/Examples/Example_1/" + fileName
+cmd = "../../App/ore " + fileName
 
 # log status and run
 Range('B5').value = 'running ORE with ' + fileName + ' ...'
