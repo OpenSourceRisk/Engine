@@ -105,6 +105,10 @@ class CrossAssetModel : public LinkableCalibratedModel {
     /*! number of state variables for a component */
     Size stateVariables(const AssetType t, const Size i) const;
 
+    /*! return index for currency (0 = domestic, 1 = first
+      foreign currency and so on) */
+    Size ccyIndex(const Currency &ccy) const;
+
     /*! observer and linked calibrated model interface */
     void update();
     void generateArguments();

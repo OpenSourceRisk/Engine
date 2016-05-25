@@ -64,6 +64,18 @@ Size CrossAssetModel::components(const AssetType t) const {
     }
 }
 
+Size CrossAssetModel::ccyIndex(const Currency &ccy) const {
+    Size i = 0;
+    try {
+        while (irlgm1f(i)->currency() != ccy)
+            ++i;
+        return i;
+    } catch (...) {
+        QL_FAIL("currency " << ccy.code()
+                            << " not present in cross asset model");
+    }
+}
+
 void CrossAssetModel::update() {
     for (Size i = 0; i < p_.size(); ++i) {
         p_[i]->update();
@@ -416,12 +428,13 @@ void CrossAssetModel::initializeParametrizations() {
 
 void CrossAssetModel::initializeCorrelation() {
 
-    QL_REQUIRE(rho_.rows() == nIrLgm1f_ + nFxBs_ + nCrLgm1f_ &&
-                   rho_.columns() == nIrLgm1f_ + nFxBs_ + nCrLgm1f_,
+    QL_REQUIRE(rho_.rows() == nIrLgm1f_ + nFxBs_ + nInfDk_ + nCrLgm1f_ &&
+                   rho_.columns() == nIrLgm1f_ + nFxBs_ + nInfDk_ + nCrLgm1f_,
                "correlation matrix is "
                    << rho_.rows() << " x " << rho_.columns()
-                   << " but should be " << nIrLgm1f_ + nFxBs_ + nCrLgm1f_
-                   << " x " << nIrLgm1f_ + nFxBs_ + nCrLgm1f_);
+                   << " but should be "
+                   << nIrLgm1f_ + nFxBs_ + nInfDk_ + nCrLgm1f_ << " x "
+                   << nIrLgm1f_ + nFxBs_ + nInfDk_ + nCrLgm1f_);
 
     for (Size i = 0; i < rho_.rows(); ++i) {
         for (Size j = 0; j < rho_.columns(); ++j) {
