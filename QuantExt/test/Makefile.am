@@ -12,6 +12,7 @@ QLE_TESTS = \
 	dynamicblackvoltermstructure.hpp dynamicblackvoltermstructure.cpp \
 	dynamicswaptionvolmatrix.hpp dynamicswaptionvolmatrix.cpp \
 	index.hpp index.cpp \
+    blackvariancecurve.hpp blackvariancecurve.cpp \
 	logquote.hpp logquote.cpp
 
 dist-hook:
