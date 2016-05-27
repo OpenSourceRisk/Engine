@@ -1,6 +1,5 @@
 <?xml version="1.0"?>
 <Portfolio>
-
   <Trade id="SwaptionCash">
     <ClassName>Swaption</ClassName>
     <Envelope>
@@ -18,7 +17,7 @@
         <OptionType>Call</OptionType>
         <!--<Style>Bermudan</Style>-->
         <Style>European</Style>
-	<Settlement>Cash</Settlement>
+        <Settlement>Cash</Settlement>
         <!--<Settlement>Physical</Settlement>-->
         <PayOffAtExpiry>false</PayOffAtExpiry>
         <PremiumAmount>0</PremiumAmount>
@@ -26,7 +25,7 @@
         <PremiumPayDate/>
         <ExerciseDates>
           <ExerciseDate>2026-03-01</ExerciseDate>
-	</ExerciseDates>
+        </ExerciseDates>
       </OptionData>
       <LegData>
         <LegType>Floating</LegType>
@@ -34,7 +33,7 @@
         <Currency>EUR</Currency>
         <Notionals>
           <Notional>10000000</Notional>
-	</Notionals>
+        </Notionals>
         <DayCounter>A360</DayCounter>
         <PaymentConvention>ModifiedFollowing</PaymentConvention>
         <FloatingLegData>
@@ -46,7 +45,7 @@
         <ScheduleData>
           <IsRulesBased>true</IsRulesBased>
           <Rules>
-	    <StartDate>2026-03-01</StartDate>
+            <StartDate>2026-03-01</StartDate>
             <EndDate>2036-03-01</EndDate>
             <Tenor>3M</Tenor>
             <Calendar>TARGET</Calendar>
@@ -56,7 +55,7 @@
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
-	  </Rules>
+          </Rules>
         </ScheduleData>
       </LegData>
       <LegData>
@@ -65,7 +64,7 @@
         <Currency>EUR</Currency>
         <Notionals>
           <Notional>10000000</Notional>
-	</Notionals>
+        </Notionals>
         <DayCounter>ACT/ACT</DayCounter>
         <PaymentConvention>Following</PaymentConvention>
         <FixedLegData>
@@ -76,7 +75,7 @@
         <ScheduleData>
           <IsRulesBased>true</IsRulesBased>
           <Rules>
-	    <StartDate>2026-03-01</StartDate>
+            <StartDate>2026-03-01</StartDate>
             <EndDate>2036-03-01</EndDate>
             <Tenor>1Y</Tenor>
             <Calendar>TARGET</Calendar>
@@ -86,12 +85,11 @@
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
-	  </Rules>
+          </Rules>
         </ScheduleData>
       </LegData>
     </SwaptionData>
   </Trade>
-
   <Trade id="SwaptionPhysical">
     <ClassName>Swaption</ClassName>
     <Envelope>
@@ -109,7 +107,7 @@
         <OptionType>Call</OptionType>
         <!--<Style>Bermudan</Style>-->
         <Style>European</Style>
-	<!--<Settlement>Cash</Settlement>-->
+        <!--<Settlement>Cash</Settlement>-->
         <Settlement>Physical</Settlement>
         <PayOffAtExpiry>false</PayOffAtExpiry>
         <PremiumAmount>0</PremiumAmount>
@@ -117,7 +115,7 @@
         <PremiumPayDate/>
         <ExerciseDates>
           <ExerciseDate>2026-03-01</ExerciseDate>
-	</ExerciseDates>
+        </ExerciseDates>
       </OptionData>
       <LegData>
         <LegType>Floating</LegType>
@@ -125,7 +123,7 @@
         <Currency>EUR</Currency>
         <Notionals>
           <Notional>10000000</Notional>
-	</Notionals>
+        </Notionals>
         <DayCounter>A360</DayCounter>
         <PaymentConvention>ModifiedFollowing</PaymentConvention>
         <FloatingLegData>
@@ -137,7 +135,7 @@
         <ScheduleData>
           <IsRulesBased>true</IsRulesBased>
           <Rules>
-	    <StartDate>2026-03-01</StartDate>
+            <StartDate>2026-03-01</StartDate>
             <EndDate>2036-03-01</EndDate>
             <Tenor>3M</Tenor>
             <Calendar>TARGET</Calendar>
@@ -147,7 +145,7 @@
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
-	  </Rules>
+          </Rules>
         </ScheduleData>
       </LegData>
       <LegData>
@@ -156,7 +154,7 @@
         <Currency>EUR</Currency>
         <Notionals>
           <Notional>10000000</Notional>
-	</Notionals>
+        </Notionals>
         <DayCounter>ACT/ACT</DayCounter>
         <PaymentConvention>Following</PaymentConvention>
         <FixedLegData>
@@ -167,7 +165,7 @@
         <ScheduleData>
           <IsRulesBased>true</IsRulesBased>
           <Rules>
-	    <StartDate>2026-03-01</StartDate>
+            <StartDate>2026-03-01</StartDate>
             <EndDate>2036-03-01</EndDate>
             <Tenor>1Y</Tenor>
             <Calendar>TARGET</Calendar>
@@ -177,12 +175,11 @@
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
-	  </Rules>
+          </Rules>
         </ScheduleData>
       </LegData>
     </SwaptionData>
   </Trade>
-
   <Trade id="Swap">
     <ClassName>Swap</ClassName>
     <Envelope>
@@ -196,24 +193,24 @@
     </Envelope>
     <SwapData>
       <LegData>
-	<LegType>Floating</LegType>
-	<Payer>true</Payer>
-	<Currency>EUR</Currency>
-	<Notionals>
+        <LegType>Floating</LegType>
+        <Payer>true</Payer>
+        <Currency>EUR</Currency>
+        <Notionals>
           <Notional>10000000</Notional>
-	</Notionals>
-	<DayCounter>A360</DayCounter>
-	<PaymentConvention>ModifiedFollowing</PaymentConvention>
-	<FloatingLegData>
+        </Notionals>
+        <DayCounter>A360</DayCounter>
+        <PaymentConvention>ModifiedFollowing</PaymentConvention>
+        <FloatingLegData>
           <Index>EUR-EURIBOR-3M</Index>
           <Spreads>
             <Spread>0.0</Spread>
           </Spreads>
-	</FloatingLegData>
-	<ScheduleData>
+        </FloatingLegData>
+        <ScheduleData>
           <IsRulesBased>true</IsRulesBased>
           <Rules>
-	    <StartDate>2026-03-01</StartDate>
+            <StartDate>2026-03-01</StartDate>
             <EndDate>2036-03-01</EndDate>
             <Tenor>3M</Tenor>
             <Calendar>TARGET</Calendar>
@@ -223,27 +220,27 @@
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
-	  </Rules>
-	</ScheduleData>
+          </Rules>
+        </ScheduleData>
       </LegData>
       <LegData>
-	<LegType>Fixed</LegType>
-	<Payer>false</Payer>
-	<Currency>EUR</Currency>
-	<Notionals>
+        <LegType>Fixed</LegType>
+        <Payer>false</Payer>
+        <Currency>EUR</Currency>
+        <Notionals>
           <Notional>10000000</Notional>
-	</Notionals>
-	<DayCounter>ACT/ACT</DayCounter>
-	<PaymentConvention>Following</PaymentConvention>
-	<FixedLegData>
+        </Notionals>
+        <DayCounter>ACT/ACT</DayCounter>
+        <PaymentConvention>Following</PaymentConvention>
+        <FixedLegData>
           <Rates>
             <Rate>0.02</Rate>
           </Rates>
-	</FixedLegData>
-	<ScheduleData>
+        </FixedLegData>
+        <ScheduleData>
           <IsRulesBased>true</IsRulesBased>
           <Rules>
-	    <StartDate>2026-03-01</StartDate>
+            <StartDate>2026-03-01</StartDate>
             <EndDate>2036-03-01</EndDate>
             <Tenor>1Y</Tenor>
             <Calendar>TARGET</Calendar>
@@ -253,10 +250,9 @@
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
-	  </Rules>
-	</ScheduleData>
+          </Rules>
+        </ScheduleData>
       </LegData>
     </SwapData>
   </Trade>
-    
 </Portfolio>

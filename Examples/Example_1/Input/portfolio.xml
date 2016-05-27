@@ -1,6 +1,5 @@
 <?xml version="1.0"?>
 <Portfolio>
-  
   <Trade id="Swap_20">
     <TradeType>Swap</TradeType>
     <Envelope>
@@ -24,10 +23,10 @@
             <Rate>0.02</Rate>
           </Rates>
         </FixedLegData>
-        <ScheduleData>	  
+        <ScheduleData>
           <IsRulesBased>true</IsRulesBased>
           <Rules>
-	    <StartDate>20151028</StartDate>
+            <StartDate>20151028</StartDate>
             <EndDate>20351028</EndDate>
             <Tenor>1Y</Tenor>
             <Calendar>TARGET</Calendar>
@@ -37,7 +36,7 @@
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
-	  </Rules>
+          </Rules>
         </ScheduleData>
       </LegData>
       <LegData>
@@ -59,7 +58,7 @@
         </FloatingLegData>
         <ScheduleData>
           <IsRulesBased>true</IsRulesBased>
-	  <Rules>
+          <Rules>
             <StartDate>20151028</StartDate>
             <EndDate>20351028</EndDate>
             <Tenor>6M</Tenor>
@@ -70,12 +69,11 @@
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
-	  </Rules>
+          </Rules>
         </ScheduleData>
       </LegData>
     </SwapData>
   </Trade>
-  
   <Trade id="Swaption_1_19">
     <TradeType>Swaption</TradeType>
     <Envelope>
@@ -112,10 +110,10 @@
             <Rate>0.02</Rate>
           </Rates>
         </FixedLegData>
-        <ScheduleData>	  
+        <ScheduleData>
           <IsRulesBased>true</IsRulesBased>
           <Rules>
-	    <StartDate>20161028</StartDate>
+            <StartDate>20161028</StartDate>
             <EndDate>20351028</EndDate>
             <Tenor>1Y</Tenor>
             <Calendar>TARGET</Calendar>
@@ -125,7 +123,7 @@
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
-	  </Rules>
+          </Rules>
         </ScheduleData>
       </LegData>
       <LegData>
@@ -147,7 +145,7 @@
         </FloatingLegData>
         <ScheduleData>
           <IsRulesBased>true</IsRulesBased>
-	  <Rules>
+          <Rules>
             <StartDate>20161028</StartDate>
             <EndDate>20351028</EndDate>
             <Tenor>6M</Tenor>
@@ -158,13 +156,12 @@
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
-	  </Rules>
+          </Rules>
         </ScheduleData>
       </LegData>
     </SwaptionData>
   </Trade>
-  
-    <Trade id="Swaption_2_18">
+  <Trade id="Swaption_2_18">
     <TradeType>Swaption</TradeType>
     <Envelope>
       <Type>Swaption</Type>
@@ -200,10 +197,10 @@
             <Rate>0.02</Rate>
           </Rates>
         </FixedLegData>
-        <ScheduleData>	  
+        <ScheduleData>
           <IsRulesBased>true</IsRulesBased>
           <Rules>
-	    <StartDate>20171028</StartDate>
+            <StartDate>20171028</StartDate>
             <EndDate>20351028</EndDate>
             <Tenor>1Y</Tenor>
             <Calendar>TARGET</Calendar>
@@ -213,7 +210,7 @@
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
-	  </Rules>
+          </Rules>
         </ScheduleData>
       </LegData>
       <LegData>
@@ -235,7 +232,7 @@
         </FloatingLegData>
         <ScheduleData>
           <IsRulesBased>true</IsRulesBased>
-	  <Rules>
+          <Rules>
             <StartDate>20171028</StartDate>
             <EndDate>20351028</EndDate>
             <Tenor>6M</Tenor>
@@ -246,12 +243,11 @@
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
-	  </Rules>
+          </Rules>
         </ScheduleData>
       </LegData>
     </SwaptionData>
   </Trade>
-
   <Trade id="Swaption_4_16">
     <TradeType>Swaption</TradeType>
     <Envelope>
@@ -288,10 +284,10 @@
             <Rate>0.02</Rate>
           </Rates>
         </FixedLegData>
-        <ScheduleData>	  
+        <ScheduleData>
           <IsRulesBased>true</IsRulesBased>
           <Rules>
-	    <StartDate>20191028</StartDate>
+            <StartDate>20191028</StartDate>
             <EndDate>20351028</EndDate>
             <Tenor>1Y</Tenor>
             <Calendar>TARGET</Calendar>
@@ -301,7 +297,7 @@
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
-	  </Rules>
+          </Rules>
         </ScheduleData>
       </LegData>
       <LegData>
@@ -323,7 +319,7 @@
         </FloatingLegData>
         <ScheduleData>
           <IsRulesBased>true</IsRulesBased>
-	  <Rules>
+          <Rules>
             <StartDate>20191028</StartDate>
             <EndDate>20351028</EndDate>
             <Tenor>6M</Tenor>
@@ -334,12 +330,11 @@
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
-	  </Rules>
+          </Rules>
         </ScheduleData>
       </LegData>
     </SwaptionData>
   </Trade>
-
   <Trade id="Swaption_6_14">
     <TradeType>Swaption</TradeType>
     <Envelope>
@@ -376,10 +371,10 @@
             <Rate>0.02</Rate>
           </Rates>
         </FixedLegData>
-        <ScheduleData>	  
+        <ScheduleData>
           <IsRulesBased>true</IsRulesBased>
           <Rules>
-	    <StartDate>20211028</StartDate>
+            <StartDate>20211028</StartDate>
             <EndDate>20351028</EndDate>
             <Tenor>1Y</Tenor>
             <Calendar>TARGET</Calendar>
@@ -389,7 +384,7 @@
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
-	  </Rules>
+          </Rules>
         </ScheduleData>
       </LegData>
       <LegData>
@@ -411,7 +406,7 @@
         </FloatingLegData>
         <ScheduleData>
           <IsRulesBased>true</IsRulesBased>
-	  <Rules>
+          <Rules>
             <StartDate>20211028</StartDate>
             <EndDate>20351028</EndDate>
             <Tenor>6M</Tenor>
@@ -422,12 +417,11 @@
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
-	  </Rules>
+          </Rules>
         </ScheduleData>
       </LegData>
     </SwaptionData>
   </Trade>
-
   <Trade id="Swaption_8_12">
     <TradeType>Swaption</TradeType>
     <Envelope>
@@ -464,10 +458,10 @@
             <Rate>0.02</Rate>
           </Rates>
         </FixedLegData>
-        <ScheduleData>	  
+        <ScheduleData>
           <IsRulesBased>true</IsRulesBased>
           <Rules>
-	    <StartDate>20231028</StartDate>
+            <StartDate>20231028</StartDate>
             <EndDate>20351028</EndDate>
             <Tenor>1Y</Tenor>
             <Calendar>TARGET</Calendar>
@@ -477,7 +471,7 @@
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
-	  </Rules>
+          </Rules>
         </ScheduleData>
       </LegData>
       <LegData>
@@ -499,7 +493,7 @@
         </FloatingLegData>
         <ScheduleData>
           <IsRulesBased>true</IsRulesBased>
-	  <Rules>
+          <Rules>
             <StartDate>20231028</StartDate>
             <EndDate>20351028</EndDate>
             <Tenor>6M</Tenor>
@@ -510,12 +504,11 @@
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
-	  </Rules>
+          </Rules>
         </ScheduleData>
       </LegData>
     </SwaptionData>
   </Trade>
-
   <Trade id="Swaption_10_10">
     <TradeType>Swaption</TradeType>
     <Envelope>
@@ -552,10 +545,10 @@
             <Rate>0.02</Rate>
           </Rates>
         </FixedLegData>
-        <ScheduleData>	  
+        <ScheduleData>
           <IsRulesBased>true</IsRulesBased>
           <Rules>
-	    <StartDate>20251028</StartDate>
+            <StartDate>20251028</StartDate>
             <EndDate>20351028</EndDate>
             <Tenor>1Y</Tenor>
             <Calendar>TARGET</Calendar>
@@ -565,7 +558,7 @@
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
-	  </Rules>
+          </Rules>
         </ScheduleData>
       </LegData>
       <LegData>
@@ -587,7 +580,7 @@
         </FloatingLegData>
         <ScheduleData>
           <IsRulesBased>true</IsRulesBased>
-	  <Rules>
+          <Rules>
             <StartDate>20251028</StartDate>
             <EndDate>20351028</EndDate>
             <Tenor>6M</Tenor>
@@ -598,12 +591,11 @@
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
-	  </Rules>
+          </Rules>
         </ScheduleData>
       </LegData>
     </SwaptionData>
   </Trade>
-
   <Trade id="Swaption_12_8">
     <TradeType>Swaption</TradeType>
     <Envelope>
@@ -640,10 +632,10 @@
             <Rate>0.02</Rate>
           </Rates>
         </FixedLegData>
-        <ScheduleData>	  
+        <ScheduleData>
           <IsRulesBased>true</IsRulesBased>
           <Rules>
-	    <StartDate>20271028</StartDate>
+            <StartDate>20271028</StartDate>
             <EndDate>20351028</EndDate>
             <Tenor>1Y</Tenor>
             <Calendar>TARGET</Calendar>
@@ -653,7 +645,7 @@
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
-	  </Rules>
+          </Rules>
         </ScheduleData>
       </LegData>
       <LegData>
@@ -675,7 +667,7 @@
         </FloatingLegData>
         <ScheduleData>
           <IsRulesBased>true</IsRulesBased>
-	  <Rules>
+          <Rules>
             <StartDate>20271028</StartDate>
             <EndDate>20351028</EndDate>
             <Tenor>6M</Tenor>
@@ -686,12 +678,11 @@
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
-	  </Rules>
+          </Rules>
         </ScheduleData>
       </LegData>
     </SwaptionData>
   </Trade>
-
   <Trade id="Swaption_14_6">
     <TradeType>Swaption</TradeType>
     <Envelope>
@@ -728,10 +719,10 @@
             <Rate>0.02</Rate>
           </Rates>
         </FixedLegData>
-        <ScheduleData>	  
+        <ScheduleData>
           <IsRulesBased>true</IsRulesBased>
           <Rules>
-	    <StartDate>20291028</StartDate>
+            <StartDate>20291028</StartDate>
             <EndDate>20351028</EndDate>
             <Tenor>1Y</Tenor>
             <Calendar>TARGET</Calendar>
@@ -741,7 +732,7 @@
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
-	  </Rules>
+          </Rules>
         </ScheduleData>
       </LegData>
       <LegData>
@@ -763,7 +754,7 @@
         </FloatingLegData>
         <ScheduleData>
           <IsRulesBased>true</IsRulesBased>
-	  <Rules>
+          <Rules>
             <StartDate>20291028</StartDate>
             <EndDate>20351028</EndDate>
             <Tenor>6M</Tenor>
@@ -774,12 +765,11 @@
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
-	  </Rules>
+          </Rules>
         </ScheduleData>
       </LegData>
     </SwaptionData>
   </Trade>
-
   <Trade id="Swaption_16_4">
     <TradeType>Swaption</TradeType>
     <Envelope>
@@ -816,10 +806,10 @@
             <Rate>0.02</Rate>
           </Rates>
         </FixedLegData>
-        <ScheduleData>	  
+        <ScheduleData>
           <IsRulesBased>true</IsRulesBased>
           <Rules>
-	    <StartDate>20311028</StartDate>
+            <StartDate>20311028</StartDate>
             <EndDate>20351028</EndDate>
             <Tenor>1Y</Tenor>
             <Calendar>TARGET</Calendar>
@@ -829,7 +819,7 @@
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
-	  </Rules>
+          </Rules>
         </ScheduleData>
       </LegData>
       <LegData>
@@ -851,7 +841,7 @@
         </FloatingLegData>
         <ScheduleData>
           <IsRulesBased>true</IsRulesBased>
-	  <Rules>
+          <Rules>
             <StartDate>20311028</StartDate>
             <EndDate>20351028</EndDate>
             <Tenor>6M</Tenor>
@@ -862,12 +852,11 @@
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
-	  </Rules>
+          </Rules>
         </ScheduleData>
       </LegData>
     </SwaptionData>
   </Trade>
-
   <Trade id="Swaption_18_2">
     <TradeType>Swaption</TradeType>
     <Envelope>
@@ -904,10 +893,10 @@
             <Rate>0.02</Rate>
           </Rates>
         </FixedLegData>
-        <ScheduleData>	  
+        <ScheduleData>
           <IsRulesBased>true</IsRulesBased>
           <Rules>
-	    <StartDate>20331028</StartDate>
+            <StartDate>20331028</StartDate>
             <EndDate>20351028</EndDate>
             <Tenor>1Y</Tenor>
             <Calendar>TARGET</Calendar>
@@ -917,7 +906,7 @@
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
-	  </Rules>
+          </Rules>
         </ScheduleData>
       </LegData>
       <LegData>
@@ -939,7 +928,7 @@
         </FloatingLegData>
         <ScheduleData>
           <IsRulesBased>true</IsRulesBased>
-	  <Rules>
+          <Rules>
             <StartDate>20331028</StartDate>
             <EndDate>20351028</EndDate>
             <Tenor>6M</Tenor>
@@ -950,12 +939,11 @@
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
-	  </Rules>
+          </Rules>
         </ScheduleData>
       </LegData>
     </SwaptionData>
   </Trade>
-
   <Trade id="Swaption_19_1">
     <TradeType>Swaption</TradeType>
     <Envelope>
@@ -992,10 +980,10 @@
             <Rate>0.02</Rate>
           </Rates>
         </FixedLegData>
-        <ScheduleData>	  
+        <ScheduleData>
           <IsRulesBased>true</IsRulesBased>
           <Rules>
-	    <StartDate>20341028</StartDate>
+            <StartDate>20341028</StartDate>
             <EndDate>20351028</EndDate>
             <Tenor>1Y</Tenor>
             <Calendar>TARGET</Calendar>
@@ -1005,7 +993,7 @@
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
-	  </Rules>
+          </Rules>
         </ScheduleData>
       </LegData>
       <LegData>
@@ -1027,7 +1015,7 @@
         </FloatingLegData>
         <ScheduleData>
           <IsRulesBased>true</IsRulesBased>
-	  <Rules>
+          <Rules>
             <StartDate>20341028</StartDate>
             <EndDate>20351028</EndDate>
             <Tenor>6M</Tenor>
@@ -1038,10 +1026,9 @@
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
-	  </Rules>
+          </Rules>
         </ScheduleData>
       </LegData>
     </SwaptionData>
   </Trade>
-
 </Portfolio>

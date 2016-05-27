@@ -1,6 +1,5 @@
 <?xml version="1.0"?>
 <Portfolio>
-
   <Trade id="CCSwap">
     <ClassName>Swap</ClassName>
     <Envelope>
@@ -14,24 +13,24 @@
     </Envelope>
     <SwapData>
       <LegData>
-	<LegType>Floating</LegType>
-	<Payer>true</Payer>
-	<Currency>EUR</Currency>
-	<Notionals>
+        <LegType>Floating</LegType>
+        <Payer>true</Payer>
+        <Currency>EUR</Currency>
+        <Notionals>
           <Notional>10000000</Notional>
-	</Notionals>
-	<DayCounter>A360</DayCounter>
-	<PaymentConvention>ModifiedFollowing</PaymentConvention>
-	<FloatingLegData>
+        </Notionals>
+        <DayCounter>A360</DayCounter>
+        <PaymentConvention>ModifiedFollowing</PaymentConvention>
+        <FloatingLegData>
           <Index>EUR-EURIBOR-3M</Index>
           <Spreads>
             <Spread>0.0</Spread>
           </Spreads>
-	</FloatingLegData>
-	<ScheduleData>
+        </FloatingLegData>
+        <ScheduleData>
           <IsRulesBased>true</IsRulesBased>
           <Rules>
-	    <StartDate>2015-03-01</StartDate>
+            <StartDate>2015-03-01</StartDate>
             <EndDate>2036-03-01</EndDate>
             <Tenor>3M</Tenor>
             <Calendar>TARGET</Calendar>
@@ -41,27 +40,27 @@
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
-	  </Rules>
-	</ScheduleData>
+          </Rules>
+        </ScheduleData>
       </LegData>
       <LegData>
-	<LegType>Fixed</LegType>
-	<Payer>false</Payer>
-	<Currency>USD</Currency>
-	<Notionals>
+        <LegType>Fixed</LegType>
+        <Payer>false</Payer>
+        <Currency>USD</Currency>
+        <Notionals>
           <Notional>11000000</Notional>
-	</Notionals>
-	<DayCounter>ACT/ACT</DayCounter>
-	<PaymentConvention>Following</PaymentConvention>
-	<FixedLegData>
+        </Notionals>
+        <DayCounter>ACT/ACT</DayCounter>
+        <PaymentConvention>Following</PaymentConvention>
+        <FixedLegData>
           <Rates>
             <Rate>0.02</Rate>
           </Rates>
-	</FixedLegData>
-	<ScheduleData>
+        </FixedLegData>
+        <ScheduleData>
           <IsRulesBased>true</IsRulesBased>
           <Rules>
-	    <StartDate>2015-03-01</StartDate>
+            <StartDate>2015-03-01</StartDate>
             <EndDate>2036-03-01</EndDate>
             <Tenor>1Y</Tenor>
             <Calendar>TARGET</Calendar>
@@ -71,10 +70,9 @@
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
-	  </Rules>
-	</ScheduleData>
+          </Rules>
+        </ScheduleData>
       </LegData>
     </SwapData>
   </Trade>
-    
 </Portfolio>

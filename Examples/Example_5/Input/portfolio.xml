@@ -27,7 +27,7 @@
         </FixedLegData>
         <ScheduleData>
           <IsRulesBased>true</IsRulesBased>
-	  <Rules>
+          <Rules>
             <StartDate>2005-03-03</StartDate>
             <EndDate>2027-03-03</EndDate>
             <Tenor>6M</Tenor>
@@ -38,7 +38,7 @@
             <EndOfMonth/>
             <FirstDate>2005-09-05</FirstDate>
             <LastDate/>
-	  </Rules>
+          </Rules>
         </ScheduleData>
       </LegData>
       <LegData>
@@ -58,7 +58,7 @@
         </FloatingLegData>
         <ScheduleData>
           <IsRulesBased>true</IsRulesBased>
-	  <Rules>
+          <Rules>
             <StartDate>2005-03-03</StartDate>
             <EndDate>2027-03-03</EndDate>
             <Tenor>6M</Tenor>
@@ -69,12 +69,11 @@
             <EndOfMonth/>
             <FirstDate>2005-09-05</FirstDate>
             <LastDate/>
-	  </Rules>
+          </Rules>
         </ScheduleData>
       </LegData>
     </SwapData>
   </Trade>
-  
   <Trade id="938498">
     <TradeType>Swap</TradeType>
     <Envelope>
@@ -92,7 +91,7 @@
         <Currency>USD</Currency>
         <Notionals>
           <Notional>50000000</Notional>
-	  <!--
+          <!--
               <Notional>49409966.82</Notional>
               <Notional>48801239.92</Notional>
               <Notional>48157013.42</Notional>
@@ -136,7 +135,7 @@
         </FixedLegData>
         <ScheduleData>
           <IsRulesBased>true</IsRulesBased>
-	  <Rules>
+          <Rules>
             <StartDate>2015-04-22</StartDate>
             <EndDate>2024-11-01</EndDate>
             <Tenor>3M</Tenor>
@@ -147,7 +146,7 @@
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
-	  </Rules>
+          </Rules>
         </ScheduleData>
       </LegData>
       <LegData>
@@ -156,7 +155,7 @@
         <Currency>USD</Currency>
         <Notionals>
           <Notional>50000000</Notional>
-	  <!--
+          <!--
               <Notional>49409966.82</Notional>
               <Notional>48801239.92</Notional>
               <Notional>48157013.42</Notional>
@@ -201,7 +200,7 @@
         </FloatingLegData>
         <ScheduleData>
           <IsRulesBased>true</IsRulesBased>
-	  <Rules>
+          <Rules>
             <StartDate>2015-04-22</StartDate>
             <EndDate>2024-11-01</EndDate>
             <Tenor>3M</Tenor>
@@ -212,83 +211,83 @@
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
-	  </Rules>
+          </Rules>
         </ScheduleData>
       </LegData>
-</SwapData>
-</Trade>
-<Trade id="919020">
-  <TradeType>Swap</TradeType>
-  <Envelope>
-    <Type>Swap</Type>
-    <Company>HSH</Company>
-    <CounterParty>CUST_A</CounterParty>
-    <NettingSetId>CUST_A</NettingSetId>
-    <AdditionalFields/>
-  </Envelope>
-  <SwapData>
-    <FxReset/>
-    <LegData>
-      <LegType>Floating</LegType>
-      <Payer>true</Payer>
-      <Currency>EUR</Currency>
-      <Notionals>
-        <Notional>30000000</Notional>
-      </Notionals>
-      <DayCounter>A360</DayCounter>
-      <PaymentConvention>ModifiedFollowing</PaymentConvention>
-      <FloatingLegData>
-        <Index>EUR-EURIBOR-3M</Index>
-        <Spreads>
-          <Spread>0.0</Spread>
-        </Spreads>
-      </FloatingLegData>
-      <ScheduleData>
-        <IsRulesBased>true</IsRulesBased>
-	<Rules>
-          <StartDate>2012-09-05</StartDate>
-          <EndDate>2026-09-05</EndDate>
-          <Tenor>3M</Tenor>
-          <Calendar>TARGET</Calendar>
-          <Convention>ModifiedFollowing</Convention>
-          <TermConvention>ModifiedFollowing</TermConvention>
-          <Rule>Forward</Rule>
-          <EndOfMonth/>
-          <FirstDate/>
-          <LastDate/>
-	</Rules>
-      </ScheduleData>
-    </LegData>
-    <LegData>
-      <LegType>Fixed</LegType>
-      <Payer>false</Payer>
-      <Currency>EUR</Currency>
-      <Notionals>
-        <Notional>30000000</Notional>
-      </Notionals>
-      <DayCounter>T360</DayCounter>
-      <PaymentConvention>ModifiedFollowing</PaymentConvention>
-      <FixedLegData>
-        <Rates>
-          <Rate>0.01</Rate>
-        </Rates>
-      </FixedLegData>
-      <ScheduleData>
-        <IsRulesBased>true</IsRulesBased>
-	<Rules>
-          <StartDate>2012-09-05</StartDate>
-          <EndDate>2026-09-05</EndDate>
-          <Tenor>1Y</Tenor>
-          <Calendar>TARGET</Calendar>
-          <Convention>ModifiedFollowing</Convention>
-          <TermConvention>ModifiedFollowing</TermConvention>
-          <Rule>Forward</Rule>
-          <EndOfMonth/>
-          <FirstDate/>
-          <LastDate/>
-	</Rules>
-      </ScheduleData>
-    </LegData>
-  </SwapData>
-</Trade>
+    </SwapData>
+  </Trade>
+  <Trade id="919020">
+    <TradeType>Swap</TradeType>
+    <Envelope>
+      <Type>Swap</Type>
+      <Company>HSH</Company>
+      <CounterParty>CUST_A</CounterParty>
+      <NettingSetId>CUST_A</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <SwapData>
+      <FxReset/>
+      <LegData>
+        <LegType>Floating</LegType>
+        <Payer>true</Payer>
+        <Currency>EUR</Currency>
+        <Notionals>
+          <Notional>30000000</Notional>
+        </Notionals>
+        <DayCounter>A360</DayCounter>
+        <PaymentConvention>ModifiedFollowing</PaymentConvention>
+        <FloatingLegData>
+          <Index>EUR-EURIBOR-3M</Index>
+          <Spreads>
+            <Spread>0.0</Spread>
+          </Spreads>
+        </FloatingLegData>
+        <ScheduleData>
+          <IsRulesBased>true</IsRulesBased>
+          <Rules>
+            <StartDate>2012-09-05</StartDate>
+            <EndDate>2026-09-05</EndDate>
+            <Tenor>3M</Tenor>
+            <Calendar>TARGET</Calendar>
+            <Convention>ModifiedFollowing</Convention>
+            <TermConvention>ModifiedFollowing</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+      </LegData>
+      <LegData>
+        <LegType>Fixed</LegType>
+        <Payer>false</Payer>
+        <Currency>EUR</Currency>
+        <Notionals>
+          <Notional>30000000</Notional>
+        </Notionals>
+        <DayCounter>T360</DayCounter>
+        <PaymentConvention>ModifiedFollowing</PaymentConvention>
+        <FixedLegData>
+          <Rates>
+            <Rate>0.01</Rate>
+          </Rates>
+        </FixedLegData>
+        <ScheduleData>
+          <IsRulesBased>true</IsRulesBased>
+          <Rules>
+            <StartDate>2012-09-05</StartDate>
+            <EndDate>2026-09-05</EndDate>
+            <Tenor>1Y</Tenor>
+            <Calendar>TARGET</Calendar>
+            <Convention>ModifiedFollowing</Convention>
+            <TermConvention>ModifiedFollowing</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+      </LegData>
+    </SwapData>
+  </Trade>
 </Portfolio>
