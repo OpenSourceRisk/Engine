@@ -55,6 +55,25 @@ namespace QuantExt {
     calibration though.
 */
 
+/*
+The joint model is specified by the following SDE
+
+\begin{align}
+\intertext{Interest rates}
+dz_0 &= \alpha^z_0\,dW^z_0 \label{cross_asset_sde_1}\\
+dz_i &= \gamma_i\,dt + \alpha^z_i\,dW^z_i \label{cross_asset_sde_2}\\
+\intertext{Foreign exchange}
+dx_i / x_i &= \mu^x_i\, dt +\sigma_i^x\,dW^x_i \label{cross_asset_sde_3}\\
+\end{align}
+where we have dropped time-dependencies to lighten notation, and indices run from $i = 0,\dots,n-1$, $j = 1,\dots,m$, $k=1,\dots,o$. The no-arbitrage drift terms are 
+\begin{align*}
+\gamma_i&=-H^z_i\,(\alpha^z_i)^2  + H^z_0\,\alpha^z_0\,\alpha^z_i\,\rho^{zz}_{0i} - \sigma_i^x\,\alpha^z_i\, \rho^{zx}_{ii}\\
+\mu^x_i&=n_0-n_i +H^z_0\,\alpha^z_0\,\sigma^x_i\,\rho^{zx}_{0i}\\
+\epsilon_i &= \begin{cases} 0 &\mbox{if } i=0 \mbox{ (domestic)} \\ 1&\mbox{if } i\neq0 \mbox{ (foreign)} \end{cases}
+\end{align*}
+
+*/
+
 class CrossAssetModel : public LinkableCalibratedModel {
   public:
     /*! Parametrizations must be given in the following order
