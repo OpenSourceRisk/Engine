@@ -69,11 +69,15 @@ class CrossAssetModel : public LinkableCalibratedModel {
         - INF (optionally, ccy must be a subset of the IR ccys)
         - CR  (optionally, ccy must be a subset of the IR ccys)
         - EQ  (optionally) ccy must be a subset of the IR ccys)
-        - COM (optionally) ccy must be a subset of the IR ccys) */
+        - COM (optionally) ccy must be a subset of the IR ccys)
+        If the correlation matrix is not given, it is initialized
+        as the unit matrix (and can be customized after
+        construction of the model).
+    */
     CrossAssetModel(
         const std::vector<boost::shared_ptr<Parametrization> >
             &parametrizations,
-        const Matrix &correlation,
+        const Matrix &correlation = Matrix(),
         SalvagingAlgorithm::Type salvaging = SalvagingAlgorithm::None);
 
     /*! IR-FX model based constructor */
@@ -82,7 +86,7 @@ class CrossAssetModel : public LinkableCalibratedModel {
             &currencyModels,
         const std::vector<boost::shared_ptr<FxBsParametrization> >
             &fxParametrizations,
-        const Matrix &correlation,
+        const Matrix &correlation = Matrix(),
         SalvagingAlgorithm::Type salvaging = SalvagingAlgorithm::None);
 
     /*! returns the state process with a given discretization */
@@ -159,9 +163,13 @@ class CrossAssetModel : public LinkableCalibratedModel {
     Size pIdx(const AssetType t, const Size i, const Size offset = 0) const;
 
     /*! correlation between two components */
-    Real correlation(const AssetType s, const Size i, const AssetType t,
+    const Real& correlation(const AssetType s, const Size i, const AssetType t,
                      const Size j, const Size iOffset = 0,
                      const Size jOffset = 0) const;
+    /*! set correlation */
+    void correlation(const AssetType s, const Size i, const AssetType t,
+                     const Size j, const Real value, const Size iOffset = 0,
+                     const Size jOffset = 0);
 
     /*! analytical moments require numerical integration,
       which can be customized here */
@@ -240,7 +248,7 @@ class CrossAssetModel : public LinkableCalibratedModel {
     Size totalNumberOfParameters_;
     std::vector<boost::shared_ptr<Parametrization> > p_;
     std::vector<boost::shared_ptr<LinearGaussMarkovModel> > lgm_;
-    const Matrix rho_;
+    Matrix rho_;
     SalvagingAlgorithm::Type salvaging_;
     mutable boost::shared_ptr<Integrator> integrator_;
     boost::shared_ptr<CrossAssetStateProcess> stateProcessExact_,

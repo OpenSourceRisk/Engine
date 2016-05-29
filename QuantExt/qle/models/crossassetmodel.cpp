@@ -283,11 +283,29 @@ Size CrossAssetModel::aIdx(const AssetType t, const Size i,
     }
 }
 
-Real CrossAssetModel::correlation(const AssetType s, const Size i,
+const Real &CrossAssetModel::correlation(const AssetType s, const Size i,
+                                         const AssetType t, const Size j,
+                                         const Size iOffset,
+                                         const Size jOffset) const {
+    return rho_(cIdx(s, i, iOffset), cIdx(t, j, jOffset));
+}
+
+void CrossAssetModel::correlation(const AssetType s, const Size i,
                                   const AssetType t, const Size j,
-                                  const Size iOffset,
-                                  const Size jOffset) const {
-    return rho_[cIdx(s, i, iOffset)][cIdx(t, j, jOffset)];
+                                  const Real value, const Size iOffset,
+                                  const Size jOffset) {
+    Size row = cIdx(s, i, iOffset);
+    Size column = cIdx(t, j, jOffset);
+    QL_REQUIRE(row != column || close_enough(value, 1.0),
+               "correlation must be 1 at (" << row << "," << column << ")");
+    QL_REQUIRE(value >= -1.0 && value <= 1.0,
+               "correlation must be in [-1,1] at (" << row << "," << column
+                                                    << ")");
+    // we can not check for non-negative eigenvalues, since we do not
+    // know when the correlation matrix setup is finished, but this
+    // is effectively one in the state process later on anyway
+    rho_(row, column) = rho_(column, row) = value;
+    update();
 }
 
 void CrossAssetModel::initialize() {
@@ -428,16 +446,22 @@ void CrossAssetModel::initializeParametrizations() {
 
 void CrossAssetModel::initializeCorrelation() {
 
-    QL_REQUIRE(rho_.rows() == nIrLgm1f_ + nFxBs_ + nInfDk_ + nCrLgm1f_ &&
-                   rho_.columns() == nIrLgm1f_ + nFxBs_ + nInfDk_ + nCrLgm1f_,
-               "correlation matrix is "
-                   << rho_.rows() << " x " << rho_.columns()
-                   << " but should be "
-                   << nIrLgm1f_ + nFxBs_ + nInfDk_ + nCrLgm1f_ << " x "
-                   << nIrLgm1f_ + nFxBs_ + nInfDk_ + nCrLgm1f_);
+    Size n = nIrLgm1f_ + nFxBs_ + nInfDk_ + nCrLgm1f_;
 
-    for (Size i = 0; i < rho_.rows(); ++i) {
-        for (Size j = 0; j < rho_.columns(); ++j) {
+    if (rho_.empty()) {
+        rho_ = Matrix(n, n, 0.0);
+        for (Size i = 0; i < n; ++i)
+            rho_(i, i) = 1.0;
+        return;
+    }
+
+    QL_REQUIRE(rho_.rows() == n && rho_.columns() == n,
+               "correlation matrix is " << rho_.rows() << " x "
+                                        << rho_.columns() << " but should be "
+                                        << n << " x " << n);
+
+    for (Size i = 0; i < n; ++i) {
+        for (Size j = 0; j < n; ++j) {
             QL_REQUIRE(close_enough(rho_[i][j], rho_[j][i]),
                        "correlation matrix is no symmetric, for (i,j)=("
                            << i << "," << j << ") rho(i,j)=" << rho_[i][j]
