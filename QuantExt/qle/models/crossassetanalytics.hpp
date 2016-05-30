@@ -68,19 +68,28 @@ struct az {
 };
 
 /*! IR zeta component */
-struct zeta {
-    zeta(const Size i) : i_(i) {}
+struct zetaz {
+    zetaz(const Size i) : i_(i) {}
     Real eval(const CrossAssetModel *x, const Real t) const {
         return x->irlgm1f(i_)->zeta(t);
     }
     const Size i_;
 };
 
-/*! FX zeta component */
+/*! FX sigma component */
 struct sx {
     sx(const Size i) : i_(i) {}
     Real eval(const CrossAssetModel *x, const Real t) const {
         return x->fxbs(i_)->sigma(t);
+    }
+    const Size i_;
+};
+
+/*! FX variance component */
+struct vx {
+    vx(const Size i) : i_(i) {}
+    Real eval(const CrossAssetModel *x, const Real t) const {
+        return x->fxbs(i_)->variance(t);
     }
     const Size i_;
 };
