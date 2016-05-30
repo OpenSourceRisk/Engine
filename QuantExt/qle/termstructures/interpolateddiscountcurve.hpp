@@ -47,7 +47,7 @@ namespace QuantExt {
             initalise(quotes);
         }
         //@}
-        
+
     private:
         void initalise (const std::vector<Handle<Quote> >& quotes) {
             QL_REQUIRE(times_.size() > 1, "at least two times required");
@@ -63,7 +63,7 @@ namespace QuantExt {
         //@{
         Date maxDate() const { return Date::maxDate(); } // flat fwd extrapolation
         //@}
-  
+
     protected:
         DiscountFactor discountImpl(Time t) const {
             std::vector<Time>::const_iterator it =

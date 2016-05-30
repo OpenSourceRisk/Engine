@@ -33,11 +33,11 @@ namespace QuantExt {
     CurrencySwap::CurrencySwap(const std::vector<Leg>& legs,
                                const std::vector<bool>& payer,
                                const std::vector<Currency>& currency)
-        : legs_(legs), 
+        : legs_(legs),
           payer_(legs.size(), 1.0),
           currency_(currency),
-          legNPV_(legs.size(), 0.0), 
-          inCcyLegNPV_(legs.size(), 0.0), 
+          legNPV_(legs.size(), 0.0),
+          inCcyLegNPV_(legs.size(), 0.0),
           legBPS_(legs.size(), 0.0),
           inCcyLegBPS_(legs.size(), 0.0),
           startDiscounts_(legs.size(), 0.0),
@@ -58,7 +58,7 @@ namespace QuantExt {
 
     bool CurrencySwap::isExpired() const {
         for (Size j=0; j<legs_.size(); ++j) {
-            Leg::const_iterator i; 
+            Leg::const_iterator i;
             for (i = legs_[j].begin(); i!= legs_[j].end(); ++i)
                 if (!(*i)->hasOccurred())
                     return false;
@@ -78,7 +78,7 @@ namespace QuantExt {
     }
 
     void CurrencySwap::setupArguments(PricingEngine::arguments* args) const {
-        CurrencySwap::arguments* arguments 
+        CurrencySwap::arguments* arguments
             = dynamic_cast<CurrencySwap::arguments*>(args);
         QL_REQUIRE(arguments != 0, "wrong argument type");
 
@@ -90,7 +90,7 @@ namespace QuantExt {
     void CurrencySwap::fetchResults(const PricingEngine::results* r) const {
         Instrument::fetchResults(r);
 
-        const CurrencySwap::results* 
+        const CurrencySwap::results*
             results = dynamic_cast<const CurrencySwap::results*>(r);
         QL_REQUIRE(results != 0, "wrong result type");
 
@@ -109,7 +109,7 @@ namespace QuantExt {
         } else {
             std::fill(legBPS_.begin(), legBPS_.end(), Null<Real>());
         }
-        
+
         if (!results->inCcyLegNPV.empty()) {
             QL_REQUIRE(results->inCcyLegNPV.size() == inCcyLegNPV_.size(),
                        "wrong number of leg NPV returned");
@@ -201,10 +201,10 @@ namespace QuantExt {
                            const Schedule& floatSchedule,
                            const boost::shared_ptr<IborIndex>& iborIndex,
                            Rate floatSpread,
-                           boost::optional<BusinessDayConvention> 
-                           paymentConvention) 
+                           boost::optional<BusinessDayConvention>
+                           paymentConvention)
         : CurrencySwap(4) {
-       
+
         BusinessDayConvention convention;
         if (paymentConvention)
             convention = *paymentConvention;
@@ -263,10 +263,10 @@ namespace QuantExt {
                            const Schedule& floatSchedule,
                            const boost::shared_ptr<IborIndex>& iborIndex,
                            std::vector<Rate> floatSpreads,
-                           boost::optional<BusinessDayConvention> 
-                           paymentConvention) 
+                           boost::optional<BusinessDayConvention>
+                           paymentConvention)
         : CurrencySwap(4) {
-        
+
         BusinessDayConvention convention;
         if (paymentConvention)
             convention = *paymentConvention;
@@ -286,7 +286,7 @@ namespace QuantExt {
         payer_[1] = payer_[0];
         legs_[1].push_back(boost::shared_ptr<CashFlow>(
                            new SimpleCashFlow(-fixedNominals[0],
-						    fixedSchedule.dates().front())));
+                                              fixedSchedule.dates().front())));
         QL_REQUIRE(fixedNominals.size() < fixedSchedule.size(),
                    "too many fixed nominals provided");
         for (Size i = 1; i < fixedNominals.size(); i++) {
@@ -346,8 +346,8 @@ namespace QuantExt {
                            const Schedule& schedule2,
                            std::vector<Rate> rates2,
                            const DayCounter& dayCount2,
-                           boost::optional<BusinessDayConvention> 
-                           paymentConvention) 
+                           boost::optional<BusinessDayConvention>
+                           paymentConvention)
         : CurrencySwap(4) {
 
         BusinessDayConvention convention;
@@ -421,8 +421,8 @@ namespace QuantExt {
                            const Schedule& schedule2,
                            const boost::shared_ptr<IborIndex>& iborIndex2,
                            std::vector<Rate> spreads2,
-                           boost::optional<BusinessDayConvention> 
-                           paymentConvention) 
+                           boost::optional<BusinessDayConvention>
+                           paymentConvention)
         : CurrencySwap(4) {
 
         BusinessDayConvention convention;

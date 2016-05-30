@@ -82,7 +82,7 @@ namespace QuantExt {
             "discount curve reference date.");
 
         results_.value = 0.0;
-        
+
         if (!detail::simple_event(arguments_.maturityDate).hasOccurred(
                 settlementDate, includeSettlementDateFlows_)) {
             results_.value = (tmpPayCurrency1 ? -1.0 : 1.0) * (

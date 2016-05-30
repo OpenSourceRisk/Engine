@@ -49,7 +49,7 @@ namespace QuantLib {
         Type type() const { return type_; }
         Real nominal() const;
         std::vector<Real> nominals() const { return nominals_; }
-        
+
         const Schedule& oisSchedule() { return oisSchedule_; }
         const boost::shared_ptr<OvernightIndex>& overnightIndex();
 

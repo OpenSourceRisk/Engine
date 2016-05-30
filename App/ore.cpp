@@ -11,10 +11,12 @@
 #include <qlw/wrap.hpp>
 #include <qlw/engine/valuationengine.hpp>
 #include <ql/time/calendars/all.hpp>
+#include <ql/time/daycounters/all.hpp>
+#include <ql/cashflows/floatingratecoupon.hpp>
 #include <boost/timer.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include "ore.hpp"
-#include "timebomb.hpp"
 
 #ifdef BOOST_MSVC
 #  include <ql/auto_link.hpp>
@@ -24,6 +26,7 @@
 #  include <boost/config/auto_link.hpp>
 #  define BOOST_LIB_NAME boost_date_time
 #  include <boost/config/auto_link.hpp>
+#  define putenv _putenv
 #endif
 
 using namespace std;
@@ -39,10 +42,12 @@ using namespace openxva::aggregation;
 
 void writeNpv(const Parameters& params,
               boost::shared_ptr<Market> market,
+              const std::string &configuration,
               boost::shared_ptr<Portfolio> portfolio);
 
 void writeCashflow(const Parameters& params,
                    boost::shared_ptr<Market> market,
+                   const std::string &configuration,
                    boost::shared_ptr<Portfolio> portfolio);
 
 void writeCurves(const Parameters& params,
@@ -61,8 +66,6 @@ void writeCva(const Parameters& params,
 
 int main(int argc, char** argv) {
 
-    ORE_CHECK_TIMEBOMB
-    
     boost::timer timer;
     
     try {
@@ -78,7 +81,7 @@ int main(int argc, char** argv) {
         string inputFile(argv[1]);
         Parameters params;
         params.fromFile(inputFile);
-        
+
         string outputPath = params.get("setup", "outputPath"); 
         string logFile =  outputPath + "/" + params.get("setup", "logFile");
         
@@ -87,6 +90,52 @@ int main(int argc, char** argv) {
         
         LOG("ORE starting");
         params.log();
+
+        // Set envoirnment variables from params file for:
+        // - Fixing Model (Simulated or Manual)
+        // - Observation Model (None, unregister, disable)
+        //
+        // This is temporary while in Beta, so we use env variables for now, rather than a proper Setting
+        //
+        // If the env variable is arlready set, we use that, it overrides ore.xml
+        if (getenv("FIXING") == NULL) {
+            if (params.has("setup", "fixingModel")) {
+                string fm = params.get("setup", "fixingModel");
+                boost::algorithm::to_lower(fm);
+                if (fm == "simulated")
+                    putenv((char *)"FIXING=SIM");
+                else if (fm == "manual")
+                    putenv((char *)"FIXING=MAN");
+                else {
+                    QL_FAIL("Invalid setup::fixingModel setting " << fm);
+                }
+            } else {
+                // default to manual (?)
+                putenv((char *)"FIXING=MAN");
+            }
+        }
+        if (getenv("OBS") == NULL) {
+            if (params.has("setup", "observationModel")) {
+                string om = params.get("setup", "observationModel");
+                boost::algorithm::to_lower(om);
+                if (om == "unregister")
+                    putenv((char *)"OBS=UNREG");
+                else if (om == "disable")
+                    putenv((char *)"OBS=DISABLE");
+                else if (om == "none")
+                    putenv((char *)"OBS=NONE");
+                else {
+                    QL_FAIL("Invalid setup::observationModel setting " << om);
+                }
+
+            } else {
+                // default to none
+                putenv((char *)"OBS=NONE");
+            }
+        }
+        LOG("Fixing Model is " << getenv("FIXING"));
+        LOG("Observation Model is " << getenv("OBS"));
+
 
         string asofString = params.get("setup", "asofDate");
         Date asof = parseDate(asofString);
@@ -127,11 +176,9 @@ int main(int argc, char** argv) {
         TodaysMarketParameters marketParameters;
         string marketConfigFile = inputPath + "/" + params.get("setup", "marketConfigFile");
         marketParameters.fromFile(marketConfigFile);
-        
+
         boost::shared_ptr<Market> market = boost::make_shared<TodaysMarket>
-            (asof, marketParameters, loader, curveConfigs, conventions, params.get("markets", "simulation"));
-        boost::shared_ptr<Market> calibrationMarket = boost::make_shared<TodaysMarket>
-            (asof, marketParameters, loader, curveConfigs, conventions, params.get("markets", "calibration"));
+            (asof, marketParameters, loader, curveConfigs, conventions);
         cout << "OK" << endl;
 
         /************************
@@ -141,8 +188,11 @@ int main(int argc, char** argv) {
         boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
         string pricingEnginesFile = inputPath + "/" + params.get("setup", "pricingEnginesFile");
         engineData->fromFile(pricingEnginesFile);
-        
-        boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(market, engineData);
+
+        boost::shared_ptr<EngineFactory> factory =
+            boost::make_shared<EngineFactory>(
+                market, engineData, params.get("markets", "lgmcalibration"), params.get("markets", "fxcalibration"),
+                params.get("markets", "pricing"));
         cout << "OK" << endl;
         
         /******************************
@@ -175,7 +225,7 @@ int main(int argc, char** argv) {
         cout << setw(tab) << left << "NPV Report... " << flush;
         if (params.hasGroup("npv") &&
             params.get("npv", "active") == "Y") {
-            writeNpv(params, market, portfolio);
+            writeNpv(params, market, params.get("markets", "pricing"), portfolio);
             cout << "OK" << endl;
         }
         else {
@@ -189,7 +239,7 @@ int main(int argc, char** argv) {
         cout << setw(tab) << left << "Cashflow Report... " << flush;
         if (params.hasGroup("cashflow") &&
             params.get("cashflow", "active") == "Y") {
-            writeCashflow(params, market, portfolio);          
+            writeCashflow(params, market, params.get("markets", "pricing"), portfolio);
             cout << "OK" << endl;
         }
         else {
@@ -207,34 +257,39 @@ int main(int argc, char** argv) {
             cout << setw(tab) << left << "Simulation Setup... "; 
             fflush(stdout);
             LOG("Build Simulation Model");
-            string simulationModelFile = inputPath + "/" + params.get("simulation", "simulationModelFile");
+            string simulationConfigFile = inputPath + "/" + params.get("simulation", "simulationConfigFile");
+            LOG("Load simulation model data from file: " << simulationConfigFile);
             boost::shared_ptr<CrossAssetModelData> modelData = boost::make_shared<CrossAssetModelData>();
-            modelData->fromFile(simulationModelFile);
-            CrossAssetModelBuilder modelBuilder(market, calibrationMarket);
+            modelData->fromFile(simulationConfigFile);
+            CrossAssetModelBuilder modelBuilder(market, params.get("markets", "lgmcalibration"),
+                                                params.get("markets", "fxcalibration"), params.get("markets", "pricing"));
             boost::shared_ptr<QuantExt::CrossAssetModel> model = modelBuilder.build(modelData);
             
             LOG("Load Simulation Market Parameters");
-            string simulationMarketFile = inputPath + "/" + params.get("simulation", "simulationMarketFile");
             boost::shared_ptr<ScenarioSimMarketParameters> simMarketData(new ScenarioSimMarketParameters);
-            simMarketData->fromFile(simulationMarketFile);
+            simMarketData->fromFile(simulationConfigFile);
             
             LOG("Load Simulation Parameters");
-            string simulationParamFile = inputPath + "/" + params.get("simulation", "simulationParamFile");
             ScenarioGeneratorBuilder sb;
-            sb.fromFile(simulationParamFile);
-            boost::shared_ptr<ScenarioGenerator> sg = sb.build(model, simMarketData, asof);
+            sb.fromFile(simulationConfigFile);
+            boost::shared_ptr<ScenarioGenerator> sg = sb.build(model, simMarketData, asof, market,
+                                                               params.get("markets", "pricing"));
             boost::shared_ptr<openxva::simulation::DateGrid> grid = sb.dateGrid();
             
-            LOG("Build Simulation Maret");
+            LOG("Build Simulation Market");
             boost::shared_ptr<openxva::simulation::SimMarket> simMarket
-                = boost::make_shared<ScenarioSimMarket>(sg, market, simMarketData);
+                = boost::make_shared<ScenarioSimMarket>(sg, market, simMarketData, params.get("markets", "pricing"));
             
             LOG("Build engine factory for pricing under scenarios, linked to sim market");
             boost::shared_ptr<EngineData> simEngineData = boost::make_shared<EngineData>();
             string simPricingEnginesFile = inputPath + "/" + params.get("simulation", "pricingEnginesFile");
             simEngineData->fromFile(simPricingEnginesFile);
             boost::shared_ptr<EngineFactory>
-                simFactory = boost::make_shared<EngineFactory>(simMarket, simEngineData);
+                simFactory = boost::make_shared<EngineFactory>(simMarket, simEngineData,
+                                                               params.get("markets", "lgmcalibration"),
+                                                               params.get("markets", "fxcalibration"),
+                                                               params.get("markets", "pricing"),
+                                                               true);
             
             LOG("Build portfolio linked to sim market");
             boost::shared_ptr<Portfolio> simPortfolio = boost::make_shared<Portfolio>();
@@ -243,11 +298,15 @@ int main(int argc, char** argv) {
             QL_REQUIRE(simPortfolio->size() == portfolio->size(),
                        "portfolio size mismatch, check simulation market setup");
             cout << "OK" << endl;
-            
+
+            string sportyString = params.get("simulation", "disableEvaluationDateObservation");
+            bool sporty = parseBool(sportyString);
+
             LOG("Build valuation cube engine");
             Size samples = sb.samples();
             string baseCurrency = params.get("simulation", "baseCurrency");
-            ValuationEngine engine(asof, grid, samples, baseCurrency, simMarket);
+            ValuationEngine engine(asof, grid, samples, baseCurrency, simMarket,
+                                   sb.simulateFixings(), sb.estimationMethod(), sb.forwardHorizonDays(), sporty);
 
             ostringstream o;
             o << "Additional Scenario Data " << grid->size() << " x " << samples << "... ";
@@ -264,6 +323,7 @@ int main(int argc, char** argv) {
                 inMemoryCube = boost::make_shared<SinglePrecisionInMemoryCube>
                 (asof, simPortfolio->ids(), grid->dates(), samples);
             engine.buildCube(simPortfolio, inMemoryCube, inMemoryAdditionalScenarioData);
+            //engine.buildCube(simPortfolio, inMemoryCube, boost::shared_ptr<AdditionalScenarioData>());
             cout << "OK" << endl;
 
             cout << setw(tab) << left << "Write Cube... " << flush;
@@ -289,7 +349,7 @@ int main(int argc, char** argv) {
          */
         cout << setw(tab) << left << "Aggregation and XVA Reports... " << flush;
         if (params.hasGroup("xva") &&
-            params.get("xva", "active") == "Y") {
+                params.get("xva", "active") == "Y") {
 
             // We reset this here because the date grid building below depends on it.
             Settings::instance().evaluationDate() = asof; 
@@ -304,8 +364,8 @@ int main(int argc, char** argv) {
             cube->load(cubeFile);
 
             QL_REQUIRE(cube->numIds() == portfolio->size(),
-                       "cube x dimension (" << cube->numIds() << ") does not match portfolio size ("
-                       << portfolio->size() << ")");
+                "cube x dimension (" << cube->numIds() << ") does not match portfolio size ("
+                                     << portfolio->size() << ")");
                        
             string scenarioFile = outputPath + "/" + params.get("xva", "scenarioFile");
             boost::shared_ptr<AdditionalScenarioData>
@@ -313,9 +373,9 @@ int main(int argc, char** argv) {
             scenarioData->load(scenarioFile);
 
             QL_REQUIRE(scenarioData->dimDates() == cube->dates().size(),
-                       "scenario dates do not match cube grid size");
+                "scenario dates do not match cube grid size");
             QL_REQUIRE(scenarioData->dimSamples() == cube->samples(),
-                       "scenario sample size does not match cube sample size");
+                "scenario sample size does not match cube sample size");
             
             map<string,bool> analytics;
             analytics["exposureProfiles"] = parseBool(params.get("xva", "exposureProfiles"));
@@ -332,8 +392,8 @@ int main(int argc, char** argv) {
             string dvaName = params.get("xva", "dvaName");
             
             boost::shared_ptr<PostProcess> postProcess = boost::make_shared<PostProcess>
-                (portfolio, netting, market, cube, scenarioData, analytics,
-                 baseCurrency, allocationMethod, marginalAllocationLimit, quantile, calculationType, dvaName);
+                (portfolio, netting, market, params.get("markets", "pricing"), cube, scenarioData, analytics,
+                baseCurrency, allocationMethod, marginalAllocationLimit, quantile, calculationType, dvaName);
 
             writeTradeExposures(params, postProcess);
             writeNettingSetExposures(params, postProcess);
@@ -341,11 +401,12 @@ int main(int argc, char** argv) {
 
             string rawCubeOutputFile = params.get("xva", "rawCubeOutputFile");
             CubeWriter cw1(outputPath + "/" + rawCubeOutputFile);
-            cw1.write(cube);
+            map<string, string> nettingSetMap = portfolio->nettingSetMap();
+            cw1.write(cube, nettingSetMap);
 
             string netCubeOutputFile = params.get("xva", "netCubeOutputFile");
             CubeWriter cw2(outputPath + "/" + netCubeOutputFile);
-            cw2.write(postProcess->netCube());
+            cw2.write(postProcess->netCube(), nettingSetMap);
             
             cout << "OK" << endl;
         }
@@ -353,7 +414,7 @@ int main(int argc, char** argv) {
             LOG("skip XVA reports");
             cout << "SKIP" << endl;
         }
-
+        
         /****************
          * Initial Margin
          */
@@ -367,22 +428,23 @@ int main(int argc, char** argv) {
             LOG("skip initial margin reports");
             cout << "SKIP" << endl;
         }
-
+        
     } catch (std::exception& e) {
         ALOG("Error: " << e.what());
         cout << "Error: " << e.what() << endl;
     }
-
+    
     cout << "run time: " << setprecision(2) << timer.elapsed() << " sec" << endl;
     cout << "ORE done." << endl;
-        
+    
     LOG("ORE done.");
-
+    
     return 0;
 }
 
 void writeNpv(const Parameters& params,
               boost::shared_ptr<Market> market,
+              const std::string &configuration,
               boost::shared_ptr<Portfolio> portfolio) {
     LOG("portfolio valuation");
     //Date asof = Settings::instance().evaluationDate();
@@ -394,16 +456,19 @@ void writeNpv(const Parameters& params,
     file.setf (ios::fixed, ios::floatfield);
     file.setf (ios::showpoint);
     char sep = ',';
+    DayCounter dc = ActualActual();
+    Date today = Settings::instance().evaluationDate();
     QL_REQUIRE(file.is_open(), "error opening file " << npvFile);
-    file << "#TradeId,TradeType,Maturity,NPV,NpvCurrency,NPV(Base),BaseCurrency" << endl;  
+    file << "#TradeId,TradeType,Maturity,MaturityTime,NPV,NpvCurrency,NPV(Base),BaseCurrency" << endl;  
     for (auto trade : portfolio->trades()) {
         string npvCcy = trade->npvCurrency();
         Real fx = 1.0;
         if (npvCcy != baseCurrency)
-            fx = market->fxSpot(npvCcy + baseCurrency)->value();
-        file << trade->envelope().id() << sep
-             << trade->className() << sep
-             << io::iso_date(trade->maturity()) << sep;
+            fx = market->fxSpot(npvCcy + baseCurrency, configuration)->value();
+        file << trade->id() << sep
+             << trade->tradeType() << sep
+             << io::iso_date(trade->maturity()) << sep
+             << dc.yearFraction(today, trade->maturity()) << sep;
         try {
             Real npv = trade->instrument()->NPV();
             file << npv << sep
@@ -420,6 +485,7 @@ void writeNpv(const Parameters& params,
 
 void writeCashflow(const Parameters& params,
                    boost::shared_ptr<Market> market,
+                   const std::string &configuration,
                    boost::shared_ptr<Portfolio> portfolio) {
     Date asof = Settings::instance().evaluationDate();
     string outputPath = params.get("setup", "outputPath"); 
@@ -446,10 +512,10 @@ void writeCashflow(const Parameters& params,
     const vector<boost::shared_ptr<Trade> >& trades = portfolio->trades();
     
     for (Size k = 0; k < trades.size(); k++) {
-        if (trades[k]->className() == "Swaption" ||
-            trades[k]->className() == "CapFloor") {
-            WLOG("cashflow for " << trades[k]->className() << " "
-                 << trades[k]->envelope().id() << " skipped");
+        if (trades[k]->tradeType() == "Swaption" ||
+            trades[k]->tradeType() == "CapFloor") {
+            WLOG("cashflow for " << trades[k]->tradeType() << " "
+                 << trades[k]->id() << " skipped");
             continue;
         }
         try {
@@ -462,8 +528,8 @@ void writeCashflow(const Parameters& params,
                     boost::shared_ptr<QuantLib::CashFlow> ptrFlow = leg[j];       
                     Date payDate = ptrFlow->date();
                     if (payDate >= asof) {
-                        file << setprecision(0) << trades[k]->envelope().id() << sep
-                             << trades[k]->envelope().type() << sep << i << sep
+                        file << setprecision(0) << trades[k]->id() << sep
+                             << trades[k]->tradeType() << sep << i << sep
                              << QuantLib::io::iso_date(payDate) << sep;
                         Real amount = ptrFlow->amount();
                         if (payer)
@@ -564,16 +630,18 @@ void writeTradeExposures(const Parameters& params,
         QL_REQUIRE(file.is_open(), "Error opening file " << fileName);
         const vector<Real>& epe = postProcess->tradeEPE(tradeId);
         const vector<Real>& ene = postProcess->tradeENE(tradeId);
+        const vector<Real>& pfe = postProcess->tradePFE(tradeId);
         const vector<Real>& aepe = postProcess->allocatedTradeEPE(tradeId);
         const vector<Real>& aene = postProcess->allocatedTradeENE(tradeId);
-        file << "#TradeId,Date,Time,EPE,ENE,AllocatedEPE,AllocatedENE" << endl;
+        file << "#TradeId,Date,Time,EPE,ENE,AllocatedEPE,AllocatedENE,PFE" << endl;
         file << tradeId << ","
              << QuantLib::io::iso_date(today) << ","
              << 0.0 << ","
              << epe[0] << ","
              << ene[0] << ","
              << aepe[0] << ","
-             << aene[0] << endl;
+             << aene[0] << ","
+             << pfe[0] << endl;
         for (Size j = 0; j < dates.size(); ++j) {
             Time time = dc.yearFraction(today, dates[j]);
             file << tradeId << ","
@@ -582,7 +650,8 @@ void writeTradeExposures(const Parameters& params,
                  << epe[j+1] << ","
                  << ene[j+1] << ","
                  << aepe[j+1] << ","
-                 << aene[j+1] << endl;
+                 << aene[j+1] << ","
+                 << pfe[j+1] << endl;
         }
         file.close();
     }
@@ -602,13 +671,15 @@ void writeNettingSetExposures(const Parameters& params,
         QL_REQUIRE(file.is_open(), "Error opening file " << fileName);
         const vector<Real>& epe = postProcess->netEPE(n);
         const vector<Real>& ene = postProcess->netENE(n);
+        const vector<Real>& pfe = postProcess->netPFE(n);
         const vector<Real>& ecb = postProcess->expectedCollateral(n);
-        file << "#TradeId,Date,Time,EPE,ENE,ExpectedCollateral" << endl;
+        file << "#TradeId,Date,Time,EPE,ENE,PFE,ExpectedCollateral" << endl;
         file << n << ","
              << QuantLib::io::iso_date(today) << ","
              << 0.0 << ","
              << epe[0] << ","
              << ene[0] << ","
+             << pfe[0] << ","
              << ecb[0] << endl;
         for (Size j = 0; j < dates.size(); ++j) {
             Real time = dc.yearFraction(today, dates[j]);
@@ -617,6 +688,7 @@ void writeNettingSetExposures(const Parameters& params,
                  << time << ","
                  << epe[j+1] << ","
                  << ene[j+1] << ","
+                 << pfe[j+1] << ","
                  << ecb[j+1] << endl;
         }
         file.close();
@@ -642,7 +714,7 @@ void writeCva(const Parameters& params,
              << postProcess->nettingSetDVA(n) << ","
              << postProcess->nettingSetDVA(n) << "," << endl;
         for (Size k = 0; k < portfolio->trades().size(); ++k) {
-            string tid = portfolio->trades()[k]->envelope().id();
+            string tid = portfolio->trades()[k]->id();
             string nid = portfolio->trades()[k]->envelope().nettingSetId();
             if (nid != n) continue;
             file << tid << ","
@@ -690,7 +762,7 @@ void Parameters::fromXML(XMLNode *node) {
     XMLUtils::checkNode(node, "OpenRiskEngine");
     
     XMLNode* setupNode = XMLUtils::getChildNode(node, "Setup");
-    
+    QL_REQUIRE(setupNode, "node Setup not found in parameter file");
     map<string,string> setupMap;
     for (XMLNode* child = XMLUtils::getChildNode(setupNode); child;
          child = XMLUtils::getNextSibling(child)) {

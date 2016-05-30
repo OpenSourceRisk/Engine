@@ -26,7 +26,7 @@ using namespace QuantLib;
 namespace QuantExt {
 
     //! %Currency Interest Rate Swap
-    /*! 
+    /*!
       This instrument generalizes the QuantLib Swap instrument in that
       it allows multiple legs with different currencies (one per leg)
 
@@ -142,7 +142,7 @@ namespace QuantExt {
                                                       CurrencySwap::results> {};
 
     //! Vanilla cross currency interest rate swap
-    /*! Specialised CurrencySwap: Two currencies, fixed vs. floating, 
+    /*! Specialised CurrencySwap: Two currencies, fixed vs. floating,
       constant notionals, rate and spread.
 
       \ingroup instruments
@@ -160,14 +160,14 @@ namespace QuantExt {
                            const Schedule& floatSchedule,
                            const boost::shared_ptr<IborIndex>& iborIndex,
                            Rate floatSpread,
-                           boost::optional<BusinessDayConvention> 
+                           boost::optional<BusinessDayConvention>
                            paymentConvention = boost::none);
     };
 
     //! Cross currency swap
-    /*! Specialised CurrencySwap: Two currencies, variable notionals, 
-      rates and spreads; flavours fix/float, fix/fix, float/float 
-      
+    /*! Specialised CurrencySwap: Two currencies, variable notionals,
+      rates and spreads; flavours fix/float, fix/fix, float/float
+
       \ingroup instruments
     */
     class CrossCurrencySwap : public CurrencySwap {
@@ -184,7 +184,7 @@ namespace QuantExt {
                            const Schedule& floatSchedule,
                            const boost::shared_ptr<IborIndex>& iborIndex,
                            std::vector<Rate> floatSpreads,
-                           boost::optional<BusinessDayConvention> 
+                           boost::optional<BusinessDayConvention>
                            paymentConvention = boost::none);
 
         // fixed/fixed
@@ -199,7 +199,7 @@ namespace QuantExt {
                            const Schedule& schedule2,
                            std::vector<Rate> fixedRates2,
                            const DayCounter& fixedDayCount2,
-                           boost::optional<BusinessDayConvention> 
+                           boost::optional<BusinessDayConvention>
                            paymentConvention = boost::none);
 
         // floating/floating
@@ -214,7 +214,7 @@ namespace QuantExt {
                            const Schedule& schedule2,
                            const boost::shared_ptr<IborIndex>& iborIndex2,
                            std::vector<Rate> spreads2,
-                           boost::optional<BusinessDayConvention> 
+                           boost::optional<BusinessDayConvention>
                            paymentConvention = boost::none);
     };
 

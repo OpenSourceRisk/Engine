@@ -42,7 +42,7 @@ namespace QuantExt {
                                               "OMR", "", 1000, Rounding(), "1$.2f %3%"));
         data_ = omrData;
     }
-    
+
     //United Arab Emirates dirham
     AEDCurrency::AEDCurrency() {
         static boost::shared_ptr<Data> aedData(
@@ -59,6 +59,3 @@ namespace QuantExt {
         data_ = phpData;
     }
 }
-
-    
-

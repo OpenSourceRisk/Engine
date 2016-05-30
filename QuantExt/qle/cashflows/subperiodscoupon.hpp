@@ -24,7 +24,7 @@ namespace QuantExt {
     //! Sub-periods coupon
     /*! The coupon period tenor is a multiple of the tenor associated with
     *   the index. The index tenor divides the coupon period into sub-periods.
-    *   The index fixing for each sub-period is compounded or averaged over 
+    *   The index fixing for each sub-period is compounded or averaged over
     *   the full coupon period.
     */
     class SubPeriodsCoupon : public FloatingRateCoupon {

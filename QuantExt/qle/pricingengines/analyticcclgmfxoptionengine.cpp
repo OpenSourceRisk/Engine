@@ -18,6 +18,64 @@ AnalyticCcLgmFxOptionEngine::AnalyticCcLgmFxOptionEngine(
     : model_(model), foreignCurrency_(foreignCurrency), cacheEnabled_(false),
       cacheDirty_(true) {}
 
+Real AnalyticCcLgmFxOptionEngine::value(
+    const Time t0, const Time t,
+    const boost::shared_ptr<StrikedTypePayoff> payoff,
+    const Real domesticDiscount, const Real fxForward) const {
+    Real H0 = Hz(0).eval(model_.get(), t);
+    Real Hi = Hz(foreignCurrency_ + 1).eval(model_.get(), t);
+
+    // just a shortcut
+    const Size &i = foreignCurrency_;
+
+    const CrossAssetModel *x = model_.get();
+
+    if (cacheDirty_ || !cacheEnabled_ ||
+        !(close_enough(cachedT0_, t0) && close_enough(cachedT_, t))) {
+        cachedIntegrals_ =
+            // first term
+            H0 * H0 * (x->irlgm1f(0)->zeta(t) - x->irlgm1f(0)->zeta(t0)) -
+            2.0 * H0 * integral(x, P(Hz(0), az(0), az(0)), t0, t) +
+            integral(x, P(Hz(0), Hz(0), az(0), az(0)), t0, t) +
+            // second term
+            Hi * Hi *
+                (x->irlgm1f(i + 1)->zeta(t) - x->irlgm1f(i + 1)->zeta(t0)) -
+            2.0 * Hi * integral(x, P(Hz(i + 1), az(i + 1), az(i + 1)), t0, t) +
+            integral(x, P(Hz(i + 1), Hz(i + 1), az(i + 1), az(i + 1)), t0, t) -
+            // third term
+            2.0 *
+                (H0 * Hi *
+                     integral(x, P(az(0), az(i + 1), rzz(0, i + 1)), t0, t) -
+                 H0 * integral(x, P(Hz(i + 1), az(i + 1), az(0), rzz(i + 1, 0)),
+                               t0, t) -
+                 Hi * integral(x, P(Hz(0), az(0), az(i + 1), rzz(0, i + 1)), t0,
+                               t) +
+                 integral(x,
+                          P(Hz(0), Hz(i + 1), az(0), az(i + 1), rzz(0, i + 1)),
+                          t0, t));
+        cacheDirty_ = false;
+        cachedT0_ = t0;
+        cachedT_ = t;
+    }
+
+    Real variance =
+        cachedIntegrals_ +
+        // term two three/fourth
+        (x->fxbs(i)->variance(t) - x->fxbs(i)->variance(t0)) +
+        // forth term
+        2.0 * (H0 * integral(x, P(az(0), sx(i), rzx(0, i)), t0, t) -
+               integral(x, P(Hz(0), az(0), sx(i), rzx(0, i)), t0, t)) -
+        // fifth term
+        2.0 *
+            (Hi * integral(x, P(az(i + 1), sx(i), rzx(i + 1, i)), t0, t) -
+             integral(x, P(Hz(i + 1), az(i + 1), sx(i), rzx(i + 1, i)), t0, t));
+
+    BlackCalculator black(payoff, fxForward, std::sqrt(variance),
+                          domesticDiscount);
+
+    return black.value();
+}
+
 void AnalyticCcLgmFxOptionEngine::calculate() const {
 
     QL_REQUIRE(arguments_.exercise->type() == Exercise::European,
@@ -46,54 +104,7 @@ void AnalyticCcLgmFxOptionEngine::calculate() const {
     Real fxForward = model_->fxbs(foreignCurrency_)->fxSpotToday()->value() *
                      foreignDiscount / domesticDiscount;
 
-    Real H0 = Hz(0).eval(model_.get(), t);
-    Real Hi = Hz(foreignCurrency_ + 1).eval(model_.get(), t);
-
-    // just a shortcut
-    const Size &i = foreignCurrency_;
-
-    const CrossAssetModel *x = model_.get();
-
-    if (cacheDirty_ || !cacheEnabled_) {
-        cachedIntegrals_ =
-            // first term
-            H0 * H0 * x->irlgm1f(0)->zeta(t) -
-            2.0 * H0 * integral(x, P(Hz(0), az(0), az(0)), 0.0, t) +
-            integral(x, P(Hz(0), Hz(0), az(0), az(0)), 0.0, t) +
-            // second term
-            Hi * Hi * x->irlgm1f(i+1)->zeta(t) -
-            2.0 * Hi * integral(x, P(Hz(i + 1), az(i + 1), az(i + 1)), 0.0, t) +
-            integral(x, P(Hz(i + 1), Hz(i + 1), az(i + 1), az(i + 1)), 0.0, t) -
-            // third term
-            2.0 *
-                (H0 * Hi *
-                     integral(x, P(az(0), az(i + 1), rzz(0, i + 1)), 0.0, t) -
-                 H0 * integral(x, P(Hz(i + 1), az(i + 1), az(0), rzz(i + 1, 0)),
-                               0.0, t) -
-                 Hi * integral(x, P(Hz(0), az(0), az(i + 1), rzz(0, i + 1)),
-                               0.0, t) +
-                 integral(x,
-                          P(Hz(0), Hz(i + 1), az(0), az(i + 1), rzz(0, i + 1)),
-                          0.0, t));
-        cacheDirty_ = false;
-    }
-
-    Real variance =
-        cachedIntegrals_+
-        // term two three/fourth
-        x->fxbs(i)->variance(t) +
-        // forth term
-        2.0 * (H0 * integral(x, P(az(0), sx(i), rzx(0, i)), 0.0, t) -
-               integral(x, P(Hz(0), az(0), sx(i), rzx(0, i)), 0.0, t)) -
-        // fifth term
-        2.0 * (Hi * integral(x, P(az(i + 1), sx(i), rzx(i + 1, i)), 0.0, t) -
-               integral(x, P(Hz(i + 1), az(i + 1), sx(i), rzx(i + 1, i)), 0.0,
-                        t));
-
-    BlackCalculator black(payoff, fxForward, std::sqrt(variance),
-                          domesticDiscount);
-
-    results_.value = black.value();
+    results_.value = value(0.0, t, payoff, domesticDiscount, fxForward);
 
 } // calculate()
 

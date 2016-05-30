@@ -81,11 +81,11 @@ namespace QuantExt {
         Spread fairShortLegSpread() const;
         //@}
         void fetchResults(const PricingEngine::results*) const;
-      
+
       private:
         void initializeLegs();
         void setupExpired() const;
-        
+
         Real nominal_;
         bool payLongIndex_;
 
@@ -113,7 +113,7 @@ namespace QuantExt {
         void reset();
     };
 
-    class TenorBasisSwap::engine : 
+    class TenorBasisSwap::engine :
         public GenericEngine<Swap::arguments, TenorBasisSwap::results> {};
 
     // Inline definitions
@@ -129,7 +129,7 @@ namespace QuantExt {
         return longSchedule_;
     }
 
-    inline const boost::shared_ptr<IborIndex>& 
+    inline const boost::shared_ptr<IborIndex>&
         TenorBasisSwap::longIndex() const {
         return longIndex_;
     }
@@ -146,7 +146,7 @@ namespace QuantExt {
         return shortSchedule_;
     }
 
-    inline const boost::shared_ptr<IborIndex>& 
+    inline const boost::shared_ptr<IborIndex>&
         TenorBasisSwap::shortIndex() const {
         return shortIndex_;
     }

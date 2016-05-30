@@ -25,7 +25,7 @@ namespace QuantExt {
     //! Mexican Unidad de Inversion
     /*! The ISO three-letter code is MXV; the numeric code is 979.
      A unit of account used in Mexico.
-     
+
      \ingroup currencies
     */
     class MXVCurrency : public Currency {
@@ -36,7 +36,7 @@ namespace QuantExt {
     //! Unidad de Fomento (funds code)
     /*! The ISO three-letter code is CLF; the numeric code is 990.
      A unit of account used in Chile.
-     
+
      \ingroup currencies
      */
     class CLFCurrency : public Currency {
@@ -45,4 +45,3 @@ namespace QuantExt {
     };
 }
 #endif
-

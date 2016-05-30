@@ -18,7 +18,8 @@ DynamicSwaptionVolatilityMatrix::DynamicSwaptionVolatilityMatrix(
                                   source->businessDayConvention(),
                                   source->dayCounter()),
       source_(source), decayMode_(decayMode),
-      originalReferenceDate_(source->referenceDate()) {}
+      originalReferenceDate_(source->referenceDate()),
+      volatilityType_(source->volatilityType()) {}
 
 const Period &DynamicSwaptionVolatilityMatrix::maxSwapTenor() const {
     return source_->maxSwapTenor();
@@ -31,7 +32,7 @@ DynamicSwaptionVolatilityMatrix::smileSectionImpl(Time optionTime,
     return boost::make_shared<FlatSmileSection>(
         optionTime, volatilityImpl(optionTime, swapLength, 0.05),
         source_->dayCounter(), Null<Real>(), source_->volatilityType(),
-        source_->shift(optionTime, swapLength));
+        shiftImpl(optionTime, swapLength));
 }
 
 Volatility DynamicSwaptionVolatilityMatrix::volatilityImpl(Time optionTime,
@@ -39,13 +40,34 @@ Volatility DynamicSwaptionVolatilityMatrix::volatilityImpl(Time optionTime,
                                                            Rate strike) const {
     if (decayMode_ == ForwardForwardVariance) {
         Real tf = source_->timeFromReference(referenceDate());
+        Real shift1 = 0.0, shift2 = 0.0;
+        if (source_->volatilityType() == ShiftedLognormal) {
+            shift2 = source_->shift(tf + optionTime, swapLength);
+            shift1 = source_->shift(tf, swapLength);
+        }
         return std::sqrt(
-            (source_->blackVariance(tf + optionTime, swapLength, strike) -
-             source_->blackVariance(tf, swapLength, strike)) /
-            optionTime);
+            (source_->blackVariance(tf + optionTime, swapLength, strike) *
+                 (1.0 + shift2) -
+             source_->blackVariance(tf, swapLength, strike) * (1.0 + shift1)) /
+            ((1.0 + this->shift(optionTime, swapLength)) * optionTime));
     }
     if (decayMode_ == ConstantVariance) {
         return source_->volatility(optionTime, swapLength, strike);
+    }
+    QL_FAIL("unexpected decay mode (" << decayMode_ << ")");
+}
+
+Real DynamicSwaptionVolatilityMatrix::shiftImpl(Time optionTime,
+                                                Time swapLength) const {
+    if (source_->volatilityType() == Normal) {
+        return 0.0;
+    }
+    if (decayMode_ == ForwardForwardVariance) {
+        Real tf = source_->timeFromReference(referenceDate());
+        return source_->shift(tf + optionTime, swapLength);
+    }
+    if (decayMode_ == ConstantVariance) {
+        return source_->shift(optionTime, swapLength);
     }
     QL_FAIL("unexpected decay mode (" << decayMode_ << ")");
 }

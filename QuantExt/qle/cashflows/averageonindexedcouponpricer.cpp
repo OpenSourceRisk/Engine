@@ -35,13 +35,13 @@ namespace QuantExt {
             Size i = 0;
             Date valuationDate = Settings::instance().evaluationDate();
             // Deal with past fixings.
-            while (fixingDates[i] < valuationDate && i < numPeriods) {
+            while (i < numPeriods && fixingDates[i] < valuationDate) {
                 Rate pastFixing = overnightIndex_->fixing(fixingDates[i]);
                 accumulatedRate += pastFixing * accrualFractions[i];
                 ++i;
             }
             // Use valuation date's fixing also if available.
-            if (fixingDates[i] == valuationDate && i < numPeriods) {
+            if (i < numPeriods && fixingDates[i] == valuationDate) {
                 Rate valuationDateFixing = IndexManager::instance().getHistory(
                     overnightIndex_->name())[valuationDate];
                 if (valuationDateFixing != Null<Real>()) {

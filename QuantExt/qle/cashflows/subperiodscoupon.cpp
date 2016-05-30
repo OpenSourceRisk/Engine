@@ -28,11 +28,11 @@ namespace QuantExt {
         const DayCounter& dayCounter,
         bool includeSpread,
         Real gearing)
-    : FloatingRateCoupon(paymentDate, nominal, startDate, endDate, 
+    : FloatingRateCoupon(paymentDate, nominal, startDate, endDate,
       index->fixingDays(), index, gearing, spread, Date(), Date(),
       dayCounter, false), type_(type), includeSpread_(includeSpread) {
-            
-        // Populate the value dates.     
+
+        // Populate the value dates.
         Schedule sch = MakeSchedule().from(startDate)
             .to(endDate)
             .withTenor(index->tenor())
@@ -62,11 +62,11 @@ namespace QuantExt {
         }
     }
 
-    const std::vector<Rate>& 
+    const std::vector<Rate>&
         SubPeriodsCoupon::indexFixings() const {
-        
+
         fixings_.resize(numPeriods_);
-        
+
         for (Size i = 0; i < numPeriods_; ++i) {
             fixings_[i] = index_->fixing(fixingDates_[i]);
         }
@@ -136,7 +136,7 @@ namespace QuantExt {
         spreads_ = spreads;
         return *this;
     }
-    
+
     SubPeriodsLeg& SubPeriodsLeg::
         withPaymentCalendar(const Calendar& calendar) {
         paymentCalendar_ = calendar;
@@ -148,7 +148,7 @@ namespace QuantExt {
         type_ = type;
         return *this;
     }
-    
+
     SubPeriodsLeg& SubPeriodsLeg::
         includeSpread(bool includeSpread) {
         includeSpread_ = includeSpread;
@@ -175,7 +175,7 @@ namespace QuantExt {
             endDate = schedule_.date(i + 1);
             paymentDate = calendar.adjust(endDate, paymentAdjustment_);
 
-            boost::shared_ptr<SubPeriodsCoupon> cashflow(new 
+            boost::shared_ptr<SubPeriodsCoupon> cashflow(new
                 SubPeriodsCoupon(paymentDate,
                     detail::get(notionals_, i, notionals_.back()), startDate,
                     endDate, index_, type_, paymentAdjustment_,

@@ -44,7 +44,9 @@ class DynamicSwaptionVolatilityMatrix : public SwaptionVolatilityStructure {
 
     Volatility volatilityImpl(Time optionTime, Time swapLength,
                               Rate strike) const;
-    
+
+    Real shiftImpl(Time optionTime, Time swapLength) const;
+
     /* VolatilityTermStructure interface */
     Real minStrike() const;
     Real maxStrike() const;
@@ -53,11 +55,18 @@ class DynamicSwaptionVolatilityMatrix : public SwaptionVolatilityStructure {
     /* Observer interface */
     void update();
 
+    VolatilityType volatilityType() const;
   private:
     const boost::shared_ptr<SwaptionVolatilityStructure> source_;
     ReactionToTimeDecay decayMode_;
     const Date originalReferenceDate_;
+    VolatilityType volatilityType_;
+
 };
+
+    inline VolatilityType DynamicSwaptionVolatilityMatrix::volatilityType() const {
+        return volatilityType_;
+    }
 
 } // namespace QuantExt
 

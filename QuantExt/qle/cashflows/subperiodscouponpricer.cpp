@@ -7,14 +7,14 @@
 
 #include <qle/cashflows/subperiodscouponpricer.hpp>
 
-namespace QuantExt {    
-    
+namespace QuantExt {
+
     void SubPeriodsCouponPricer::
         initialize(const FloatingRateCoupon& coupon) {
 
         coupon_ = dynamic_cast<const SubPeriodsCoupon*>(&coupon);
         QL_REQUIRE(coupon_, "SubPeriodsCoupon required");
-        
+
         index_ = boost::dynamic_pointer_cast
             <InterestRateIndex>(coupon_->index());
         QL_REQUIRE(index_, "InterestRateIndex required");
@@ -27,8 +27,7 @@ namespace QuantExt {
     }
 
     Rate SubPeriodsCouponPricer::swapletRate() const {
-        
-        std::vector<Date> fixingDates = coupon_->fixingDates();
+
         std::vector<Time> accrualFractions = coupon_->accrualFractions();
         Size numPeriods = accrualFractions.size();
         Spread incSpread = includeSpread_ ? spread_ : 0.0;
