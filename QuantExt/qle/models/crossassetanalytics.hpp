@@ -18,77 +18,104 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-namespace CrossAssetAnalytics {
+    /*! CrossAssetAnalytics 
+      
+      This namesace provides a number of functions which compute analytical moments
+      (expectations and covariances) of cross asset model factors.
+      These are used in the exact propagation of cross asset model paths (i.e. without 
+      time discretisation error).
 
-/*
-Section 16.1 in Lichters, Stamm, Gallagher lists the analytical expectations and covariances 
-implemented in this namespace:
+      Reference:
+      Lichters, Stamm, Gallagher: Modern Derivatives Pricing and Credit Exposure
+      Analysis, Palgrave Macmillan, 2015
 
-Since $z_i$ obeys
-\begin{align*}
-dz_i &= \epsilon_i\,\gamma_i\,dt + \alpha^z_i\,dW^z_i, \\
-\intertext{we have}
-\Delta z_i &= -\int_s^t H^z_i\,(\alpha^z_i)^2\,du + \rho^{zz}_{0i} \int_s^t H^z_0\,\alpha^z_0\,\alpha^z_i\,du\\
-&\qquad {}- \epsilon_i  \rho^{zx}_{ii}\int_s^t \sigma_i^x\,\alpha^z_i\,du + \int_s^t \alpha^z_i\,dW^z_i. \\
-\intertext{Thus,}
-\E[\Delta z_i] =& -\int_s^t H^z_i\,(\alpha^z_i)^2\,du + \rho^{zz}_{0i} \int_s^t H^z_0\,\alpha^z_0\,\alpha^z_i\,du\\
-&\qquad {} - \epsilon_i  \rho^{zx}_{ii}\int_s^t \sigma_i^x\,\alpha^z_i\,du \\%\label{eq:meanZ}\\
-%& \nonumber\\
-\mathrm{Cov}[\Delta z_a, \Delta z_b] =& \rho^{zz}_{ab} \int_s^t \alpha^z_a\,\alpha^z_b\,du\\%\label{eq:covZZ}
-\end{align*}
+      See also the documentation in class CrossAssetModel.
 
-Since $x_i$ obeys
-\[
-dx_i / x_i = \mu^x_i \, dt +\sigma_i^x\,dW^x_i,
-\]
-we have
+      Section 16.1 in the reference above lists the analytical expectations and covariances 
+      implemented in this namespace. 
+      In the following we consider time intervals \f$(s,t)\f$. We aim at computing conditional 
+      expectations of factors at time \f$t\f$ given their state at time \f$s\f$, likewise covariances of 
+      factor moves \f$\Delta z\f$ and \f$\Delta x\f$ over time interval \f$(s,t)\f$. 
 
-\begin{align}
-\Delta \ln x_i =& \ln \left( \frac{P^n_0(0,s)}{P^n_0(0,t)} \frac{P^n_i(0,t)}{P^n_i(0,s)}\right) - \frac12 \int_s^t (\sigma^x_i)^2\,du + \rho^{zx}_{0i}\int_s^t H^z_0\, \alpha^z_0\, \sigma^x_i \,du\nonumber\\
-&+\int_s^t \zeta^z_0\,H^z_0\, (H^z_0)^{\prime}\,du-\int_s^t \zeta^z_i\,H^z_i\, (H^z_i)^{\prime}\,du\nonumber\\
-%&+\underbrace{ \int_s^t \zeta^z_0\,H^z_0\, (H^z_0)^{\prime}\,du-\int_s^t \zeta^z_i\,H^z_i\, (H^z_i)^{\prime}\,du}_{
-%\begin{subarray}{l} =\frac12 \left((H^z_0)^2(t) \zeta^z_0(t) -  (H^z_0)^2(s) \zeta^z_0(s)- \int_s^t (H^z_0)^2 (\alpha^z_0)^2\,du\right)\nonumber\\
-%\qquad- \frac12 \left((H^z_i)^2(t) \zeta^z_i(t) -  (H^z_i)^2(s) \zeta^z_i(s)-\int_s^t (H^z_i)^2 (\alpha^z_i)^2\,du \right)
-%\end{subarray}}\\
-&+ \int_s^t \left(H^z_0(t)-H^z_0\right)\alpha_0^z\,dW^z_0+ \left(H^z_0(t)-H^z_0(s)\right) z_0(s) \nonumber\\
-&- \int_s^t \left(H^z_i(t)-H^z_i\right)\alpha_i^z\,dW^z_i  -\left(H^z_i(t)-H^z_i(s)\right)z_i(s) \nonumber\\
-&- \int_s^t \left(H^z_i(t)-H^z_i\right)\gamma_i\,du + \int_s^t\sigma^x_i dW^x_i \nonumber
-\end{align}
-Integration by parts yields
-\begin{align*}
-& \int_s^t \zeta^z_0\,H^z_0\, (H^z_0)^{\prime}\,du-\int_s^t \zeta^z_i\,H^z_i\, (H^z_i)^{\prime}\,du\\
-& = \frac12 \left((H^z_0(t))^2 \zeta^z_0(t) -  (H^z_0(s))^2 \zeta^z_0(s)- \int_s^t (H^z_0)^2 (\alpha^z_0)^2\,du\right)\nonumber\\
-&\qquad {}- \frac12 \left((H^z_i(t))^2 \zeta^z_i(t) -  (H^z_i(s))^2 \zeta^z_i(s)-\int_s^t (H^z_i)^2 (\alpha^z_i)^2\,du \right)
-\end{align*}
-so that the expectation is
-\begin{align}
-\E[\Delta \ln x_i] =& \ln \left( \frac{P^n_0(0,s)}{P^n_0(0,t)} \frac{P^n_i(0,t)}{P^n_i(0,s)}\right) - \frac12 \int_s^t (\sigma^x_i)^2\,du + \rho^{zx}_{0i} \int_s^t H^z_0\, \alpha^z_0\, \sigma^x_i\,du\nonumber\\
-&+\frac12 \left((H^z_0(t))^2 \zeta^z_0(t) -  (H^z_0(s))^2 \zeta^z_0(s)- \int_s^t (H^z_0)^2 (\alpha^z_0)^2\,du\right)\nonumber\\
-&-\frac12 \left((H^z_i(t))^2 \zeta^z_i(t) -  (H^z_i(s))^2 \zeta^z_i(s)-\int_s^t (H^z_i)^2 (\alpha^z_i)^2\,du \right)\nonumber\\
-&+ \left(H^z_0(t)-H^z_0(s)\right) z_0(s) -\left(H^z_i(t)-H^z_i(s)\right)z_i(s)\nonumber\\
-&  - \int_s^t \left(H^z_i(t)-H^z_i\right)\gamma_i \,du, \label{eq:meanX} 
-\end{align}
-and IR-FX and FX-FX covariances are
-\begin{align}
-\mathrm{Cov}[\Delta \ln x_a, \Delta \ln x_b] =&  \int_s^t \left(H^z_0(t)-H^z_0\right)^2 (\alpha_0^z)^2\,du \nonumber\\
-&- \rho^{zz}_{0b}\int_s^t \left(H^z_0(t)-H^z_0\right)\alpha_0^z \left(H^z_b(t)-H^z_b\right)\alpha_b^z\,du \nonumber\\
-&+ \rho^{zx}_{0b}\int_s^t \left(H^z_0(t)-H^z_0\right)\alpha_0^z \sigma^x_b\,du \nonumber\\
-& -\rho^{zz}_{0a} \int_s^t \left(H^z_a(t)-H^z_a\right) \alpha_a^z\left(H^z_0(t)-H^z_0\right) \alpha_0^z\,du \nonumber\\
-&+ \rho^{zz}_{ab}\int_s^t \left(H^z_a(t)-H^z_a\right)\alpha_a^z \left(H^z_b(t)-H^z_b\right)\alpha_b^z\,du \nonumber\\
-&- \rho^{zx}_{ab}\int_s^t \left(H^z_a(t)-H^z_a\right)\alpha_a^z \sigma^x_b,du\nonumber\\
-&+ \rho^{zx}_{0a}\int_s^t \left(H^z_0(t)-H^z_0\right)\alpha_0^z\,\sigma^x_a\,du \nonumber\\
-&- \rho^{zx}_{ba}\int_s^t \left(H^z_b(t)-H^z_b\right)\alpha_b^z\,\sigma^x_a\, du \nonumber\\
-&+ \rho^{xx}_{ab}\int_s^t\sigma^x_a\,\sigma^x_b \,du \label{eq:covXX}\\
-&\nonumber\\
-\mathrm{Cov} [\Delta z_a, \Delta \ln x_b]) =& \rho^{zz}_{0a}\int_s^t \left(H^z_0(t)-H^z_0\right)  \alpha^z_0\,\alpha^z_a\,du \nonumber\\
-&- \rho^{zz}_{ab}\int_s^t \alpha^z_a \left(H^z_b(t)-H^z_b\right) \alpha^z_b \,du \nonumber\\
-&+\rho^{zx}_{ab}\int_s^t \alpha^z_a \, \sigma^x_b \,du. \label{eq:covZX}
-\end{align}
+      Starting with the interest rate processes 
+      \f{eqnarray*}{
+      dz_i &=& \epsilon_i\,\gamma_i\,dt + \alpha^z_i\,dW^z_i, \qquad \epsilon_i = \left\{ \begin{array}{ll} 0 & i = 0  \\ 1 & i > 0 \end{array}\right.
+      \f}
+      we get the factor move by integration
+      \f{eqnarray*}{
+      \Delta z_i &=& -\int_s^t H^z_i\,(\alpha^z_i)^2\,du + \rho^{zz}_{0i} \int_s^t H^z_0\,\alpha^z_0\,\alpha^z_i\,du\\
+      && - \epsilon_i  \rho^{zx}_{ii}\int_s^t \sigma_i^x\,\alpha^z_i\,du + \int_s^t \alpha^z_i\,dW^z_i. \\
+      \f}
+      Thus, conditional expectation and covariances are
+      \f{eqnarray*}{
+      \mathbb{E}[\Delta z_i] &=& -\int_s^t H^z_i\,(\alpha^z_i)^2\,du + \rho^{zz}_{0i} \int_s^t H^z_0\,\alpha^z_0\,\alpha^z_i\,du
+      - \epsilon_i  \rho^{zx}_{ii}\int_s^t \sigma_i^x\,\alpha^z_i\,du \\
+      \mathrm{Cov}[\Delta z_a, \Delta z_b] &=& \rho^{zz}_{ab} \int_s^t \alpha^z_a\,\alpha^z_b\,du
+      \f}
 
-The function definitions below split expectations into state-dependent and state-independent 
-parts.
+      Proceeding similarly with the foreign exchange rate processes
+      \f[
+      dx_i / x_i = \mu^x_i \, dt +\sigma_i^x\,dW^x_i,
+      \f]
+      we get the following log-moves by integration
 
-*/
+      \f{eqnarray*}{
+      \Delta \ln x_i &=& \ln \left( \frac{P^n_0(0,s)}{P^n_0(0,t)} \frac{P^n_i(0,t)}{P^n_i(0,s)}\right) - \frac12 \int_s^t (\sigma^x_i)^2\,du + \rho^{zx}_{0i}\int_s^t H^z_0\, \alpha^z_0\, \sigma^x_i \,du\nonumber\\
+      &&+\int_s^t \zeta^z_0\,H^z_0\, (H^z_0)^{\prime}\,du-\int_s^t \zeta^z_i\,H^z_i\, (H^z_i)^{\prime}\,du\nonumber\\
+      &&+ \int_s^t \left(H^z_0(t)-H^z_0\right)\alpha_0^z\,dW^z_0+ \left(H^z_0(t)-H^z_0(s)\right) z_0(s) \nonumber\\
+      &&- \int_s^t \left(H^z_i(t)-H^z_i\right)\alpha_i^z\,dW^z_i  -\left(H^z_i(t)-H^z_i(s)\right)z_i(s) \nonumber\\
+      &&- \int_s^t \left(H^z_i(t)-H^z_i\right)\gamma_i\,du + \int_s^t\sigma^x_i dW^x_i \nonumber
+      \f}
+
+      Integration by parts yields
+
+      \f{eqnarray*}{
+      && \int_s^t \zeta^z_0\,H^z_0\, (H^z_0)^{\prime}\,du-\int_s^t \zeta^z_i\,H^z_i\, (H^z_i)^{\prime}\,du\\
+      && = \frac12 \left((H^z_0(t))^2 \zeta^z_0(t) -  (H^z_0(s))^2 \zeta^z_0(s)- \int_s^t (H^z_0)^2 (\alpha^z_0)^2\,du\right)\nonumber\\
+      &&\qquad {}- \frac12 \left((H^z_i(t))^2 \zeta^z_i(t) -  (H^z_i(s))^2 \zeta^z_i(s)-\int_s^t (H^z_i)^2 (\alpha^z_i)^2\,du \right)
+      \f}
+
+      so that the expectation is
+      \f{eqnarray}{
+      \mathbb{E}[\Delta \ln x_i] &=& \ln \left( \frac{P^n_0(0,s)}{P^n_0(0,t)} \frac{P^n_i(0,t)}{P^n_i(0,s)}\right) - \frac12 \int_s^t (\sigma^x_i)^2\,du + \rho^{zx}_{0i} \int_s^t H^z_0\, \alpha^z_0\, \sigma^x_i\,du\nonumber\\
+      &&+\frac12 \left((H^z_0(t))^2 \zeta^z_0(t) -  (H^z_0(s))^2 \zeta^z_0(s)- \int_s^t (H^z_0)^2 (\alpha^z_0)^2\,du\right)\nonumber\\
+      &&-\frac12 \left((H^z_i(t))^2 \zeta^z_i(t) -  (H^z_i(s))^2 \zeta^z_i(s)-\int_s^t (H^z_i)^2 (\alpha^z_i)^2\,du \right)\nonumber\\
+      &&+ \left(H^z_0(t)-H^z_0(s)\right) z_0(s) -\left(H^z_i(t)-H^z_i(s)\right)z_i(s)\nonumber\\
+      &&  - \int_s^t \left(H^z_i(t)-H^z_i\right)\gamma_i \,du, \label{eq:meanX} 
+      \f}
+
+      and IR-FX and FX-FX covariances are
+      
+      \f{eqnarray}{
+      \mathrm{Cov}[\Delta \ln x_a, \Delta \ln x_b] &=&  \int_s^t \left(H^z_0(t)-H^z_0\right)^2 (\alpha_0^z)^2\,du \nonumber\\
+      &&- \rho^{zz}_{0b}\int_s^t \left(H^z_0(t)-H^z_0\right)\alpha_0^z \left(H^z_b(t)-H^z_b\right)\alpha_b^z\,du \nonumber\\
+      &&+ \rho^{zx}_{0b}\int_s^t \left(H^z_0(t)-H^z_0\right)\alpha_0^z \sigma^x_b\,du \nonumber\\
+      && -\rho^{zz}_{0a} \int_s^t \left(H^z_a(t)-H^z_a\right) \alpha_a^z\left(H^z_0(t)-H^z_0\right) \alpha_0^z\,du \nonumber\\
+      &&+ \rho^{zz}_{ab}\int_s^t \left(H^z_a(t)-H^z_a\right)\alpha_a^z \left(H^z_b(t)-H^z_b\right)\alpha_b^z\,du \nonumber\\
+      &&- \rho^{zx}_{ab}\int_s^t \left(H^z_a(t)-H^z_a\right)\alpha_a^z \sigma^x_b,du\nonumber\\
+      &&+ \rho^{zx}_{0a}\int_s^t \left(H^z_0(t)-H^z_0\right)\alpha_0^z\,\sigma^x_a\,du \nonumber\\
+      &&- \rho^{zx}_{ba}\int_s^t \left(H^z_b(t)-H^z_b\right)\alpha_b^z\,\sigma^x_a\, du \nonumber\\
+      &&+ \rho^{xx}_{ab}\int_s^t\sigma^x_a\,\sigma^x_b \,du \label{eq:covXX}\\
+      &&\nonumber\\
+      \mathrm{Cov} [\Delta z_a, \Delta \ln x_b]) &=& \rho^{zz}_{0a}\int_s^t \left(H^z_0(t)-H^z_0\right)  \alpha^z_0\,\alpha^z_a\,du \nonumber\\
+      &&- \rho^{zz}_{ab}\int_s^t \alpha^z_a \left(H^z_b(t)-H^z_b\right) \alpha^z_b \,du \nonumber\\
+      &&+\rho^{zx}_{ab}\int_s^t \alpha^z_a \, \sigma^x_b \,du. \label{eq:covZX}
+      \f}
+
+      Based on these expectations of factor moves and log-moves, respectively, we can work out the 
+      conditonal expectations of the factor levels at time \f$t\f$. These expectations have state-dependent
+      parts (levels at time \f$s\f$) and state-independent parts which we separate in the implementation, 
+      see functions ending with "_1" and "_2", respectively.
+      Moreover, the implementation splits up the integrals further in order to separate simple and more 
+      complex integrations and to allow for tailored efficient numerical integration schemes. 
+
+      In the following we rearrange the expectations and covariances above such that the expressions 
+      correspond 1:1 to their implementations below.
+
+      \todo Rearrange integrals to achieve 1:1 correspondence with code
+     */
+
+    namespace CrossAssetAnalytics {
     
 /*! ir state expectation, part that is independent of current state */
 Real ir_expectation_1(const CrossAssetModel *model, const Size i, const Time t0,

@@ -4,7 +4,7 @@
  Copyright (C) 2010 - 2016 Quaternion Risk Management Ltd.
 */
 
-/*! \file nnumericlgmswaptionengine.hpp
+/*! \file numericlgmswaptionengine.hpp
     \brief numeric engine for bermudan swaptions in the LGM model
 */
 
