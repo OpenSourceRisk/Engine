@@ -8,7 +8,6 @@
       <AdditionalFields/>
     </Envelope>
     <SwapData>
-      <FxReset/>
       <LegData>
         <LegType>Floating</LegType>
         <Payer>true</Payer>
@@ -157,7 +156,6 @@
       <AdditionalFields/>
     </Envelope>
     <SwapData>
-      <FxReset/>
       <LegData>
         <LegType>Floating</LegType>
         <Payer>true</Payer>
