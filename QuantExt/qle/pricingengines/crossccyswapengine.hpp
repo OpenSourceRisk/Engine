@@ -31,10 +31,14 @@ namespace QuantExt {
       public:
         //! \name Constructors
         //@{
-        /*! \param ccy1, currency1Discountcurve
-                   Currency 1 and its discount curve.
-            \param ccy2, currency2Discountcurve
-                   Currency 2 and its discount curve.
+        /*! \param ccy1 
+                   Currency 1
+            \param currency1DiscountCurve
+                   Discount curve for cash flows in currency 1
+            \param ccy2
+                   Currency 2
+            \param currency2DiscountCurve
+                   Discount curve for cash flows in currency 2
             \param spotFX
                    The market spot rate quote, given as units of ccy1
                    for one unit of cc2. The spot rate must be given

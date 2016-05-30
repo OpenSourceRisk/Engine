@@ -68,3 +68,22 @@ plot "collateral_none/exposure_nettingset_CUST_A.csv" us 3:4 title "EPE NettingS
 replot "collateral_mpor/exposure_nettingset_CUST_A.csv" us 3:4 title "EPE NettingSet, MPOR 2W" w l ls 2
 set out "plot_mpor_epe.pdf"
 replot
+
+set out "tmp.pdf"
+set ylabel "Collateral Balance"
+plot "collateral_threshold/colva_nettingset_CUST_A.csv" us 3:4 title "Collateral Balance" w l ls 1
+set out "plot_collateral.pdf"
+replot
+
+set out "tmp.pdf"
+set ylabel "COLVA"
+plot "collateral_threshold/colva_nettingset_CUST_A.csv" us 3:5 title "COLVA Increments" w l ls 1
+set out "plot_colva.pdf"
+replot
+
+set out "tmp.pdf"
+set ylabel "Collateral Floor Value"
+plot "collateral_threshold/colva_nettingset_CUST_A.csv" us 3:7 title "Collateral Floor Increments" w l ls 1
+#replot "collateral_threshold/colva_nettingset_CUST_A.csv" us 3:8 title "Collateral Floor, Cumulative" w l ls 2
+set out "plot_collateral_floor.pdf"
+replot

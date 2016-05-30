@@ -27,6 +27,7 @@ $exe Input/ore_threshold.xml
 mkdir Output/collateral_threshold
 cp Output/exposure* Output/collateral_threshold
 cp Output/xva.csv Output/collateral_threshold
+cp Output/colva* Output/collateral_threshold
 
 # run collateral postprocessor
 echo ""
@@ -37,6 +38,7 @@ $exe Input/ore_mta.xml
 mkdir Output/collateral_mta
 cp Output/exposure* Output/collateral_mta
 cp Output/xva.csv Output/collateral_mta
+cp Output/colva* Output/collateral_mta
 
 # run collateral postprocessor
 echo ""
@@ -47,6 +49,7 @@ $exe Input/ore_mpor.xml
 mkdir Output/collateral_mpor
 cp Output/exposure* Output/collateral_mpor
 cp Output/xva.csv Output/collateral_mpor
+cp Output/colva* Output/collateral_mpor
 
 # plot
 echo ""

@@ -1,4 +1,4 @@
-SUBDIRS = qle test m4
+SUBDIRS = qle test m4 doc
 
 ACLOCAL_AMFLAGS = -I m4 
 

@@ -1666,5 +1666,83 @@
       <Tolerance>0.000000000001</Tolerance>
     </YieldCurve>
 
+    <YieldCurve>
+      <CurveId>BANK_EUR_BORROW</CurveId>
+      <CurveDescription>BANK's average funding yield for EUR</CurveDescription>
+      <Currency>EUR</Currency>
+      <DiscountCurve></DiscountCurve>
+      <Segments>
+	<Direct>
+	  <Type>Zero</Type>
+	  <Quotes>
+	    <Quote>ZERO/RATE/EUR/BANK_EUR_BORROW/A365/2Y</Quote>
+	    <Quote>ZERO/RATE/EUR/BANK_EUR_BORROW/A365/5Y</Quote>
+	    <Quote>ZERO/RATE/EUR/BANK_EUR_BORROW/A365/10Y</Quote>
+	    <Quote>ZERO/RATE/EUR/BANK_EUR_BORROW/A365/20Y</Quote>
+	  </Quotes>
+	  <Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+	</Direct>
+      </Segments>
+    </YieldCurve>
+    
+    <YieldCurve>
+      <CurveId>BANK_EUR_LEND</CurveId>
+      <CurveDescription>BANK's average investment yield for EUR</CurveDescription>
+      <Currency>EUR</Currency>
+      <DiscountCurve></DiscountCurve>
+      <Segments>
+	<Direct>
+	  <Type>Zero</Type>
+	  <Quotes>
+	    <Quote>ZERO/RATE/EUR/BANK_EUR_LEND/A365/2Y</Quote>
+	    <Quote>ZERO/RATE/EUR/BANK_EUR_LEND/A365/5Y</Quote>
+	    <Quote>ZERO/RATE/EUR/BANK_EUR_LEND/A365/10Y</Quote>
+	    <Quote>ZERO/RATE/EUR/BANK_EUR_LEND/A365/20Y</Quote>
+	  </Quotes>
+	  <Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+	</Direct>
+      </Segments>
+    </YieldCurve>
+
+    <YieldCurve>
+      <CurveId>BANK_EUR_BORROW</CurveId>
+      <CurveDescription>BANK's average borrowing spread in EUR</CurveDescription>
+      <Currency>EUR</Currency>
+      <DiscountCurve />
+      <Segments>
+	<ZeroSpread>
+          <Type>Zero Spread</Type>
+          <Quotes>
+            <Quote>ZERO/YIELD_SPREAD/EUR/BANK_EUR_BORROW/A365/2Y</Quote>
+            <Quote>ZERO/YIELD_SPREAD/EUR/BANK_EUR_BORROW/A365/5Y</Quote>
+            <Quote>ZERO/YIELD_SPREAD/EUR/BANK_EUR_BORROW/A365/10Y</Quote>
+            <Quote>ZERO/YIELD_SPREAD/EUR/BANK_EUR_BORROW/A365/20Y</Quote>
+          </Quotes>
+          <Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+          <ReferenceCurve>EUR1D</ReferenceCurve>
+	</ZeroSpread>
+      </Segments>
+    </YieldCurve>
+
+    <YieldCurve>
+      <CurveId>BANK_EUR_LEND</CurveId>
+      <CurveDescription>BANK's average lending spread in EUR</CurveDescription>
+      <Currency>EUR</Currency>
+      <DiscountCurve />
+      <Segments>
+	<ZeroSpread>
+          <Type>Zero Spread</Type>
+          <Quotes>
+            <Quote>ZERO/YIELD_SPREAD/EUR/BANK_EUR_LEND/A365/2Y</Quote>
+            <Quote>ZERO/YIELD_SPREAD/EUR/BANK_EUR_LEND/A365/5Y</Quote>
+            <Quote>ZERO/YIELD_SPREAD/EUR/BANK_EUR_LEND/A365/10Y</Quote>
+            <Quote>ZERO/YIELD_SPREAD/EUR/BANK_EUR_LEND/A365/20Y</Quote>
+          </Quotes>
+          <Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+          <ReferenceCurve>EUR1D</ReferenceCurve>
+	</ZeroSpread>
+      </Segments>
+    </YieldCurve>
+
   </YieldCurves>
 </CurveConfiguration>

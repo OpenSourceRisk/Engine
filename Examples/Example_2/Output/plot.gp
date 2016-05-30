@@ -18,6 +18,7 @@ plot "exposure_trade_FXFWD_EURUSD_10Y.csv" us 3:4 title "EPE" w l ls 1
 replot "exposure_trade_FXFWD_EURUSD_10Y.csv" us 3:5 title "ENE" w l ls 2
 replot "call.csv" us 1:2 title "Call Price" w l ls 3
 replot "put.csv" us 1:2 title "Put Price" w l ls 4
+<<<<<<< HEAD
 replot
 
 set key left
@@ -28,5 +29,6 @@ plot "exposure_trade_FX_CALL_OPTION_EURUSD_10Y.csv" us 3:4 title "Call Option EP
 replot "call.csv" us 1:2 title "Call Price" w l ls 2
 replot "exposure_trade_FX_PUT_OPTION_EURUSD_10Y.csv" us 3:4 title "Put Option EPE" w l ls 3
 replot "put.csv" us 1:2 title "Put Price" w l ls 4
+set out "plot2.pdf"
 replot
 

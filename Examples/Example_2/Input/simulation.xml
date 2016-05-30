@@ -220,6 +220,7 @@
     <Market>
 
       <BaseCurrency>EUR</BaseCurrency>
+
       <Currencies>
 	<Currency>EUR</Currency>
 	<Currency>USD</Currency>

@@ -9,10 +9,9 @@ echo ""
 $exe Input/ore.xml
 
 # check times
+times=`cat Output/log.txt | grep "ValuationEngine completed" | cut -d":" -f6-`
 echo ""
-echo "Get times from the log file"
-echo ""
-cat Output/log.txt | grep "ValuationEngine completed" | cut -d":" -f6-
+echo "Times: $times"
 
 # plot
 echo ""
@@ -22,5 +21,5 @@ cd Output
 gnuplot plot.gp
 
 echo ""
-echo "View Output/plot*.pdf"
+echo "View Output/*.pdf"
 echo ""
