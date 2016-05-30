@@ -7,7 +7,7 @@
   <xs:complexType name="conventionsType">
     <xs:choice minOccurs="0" maxOccurs="unbounded">
       <xs:element type="zeroType" name="Zero"/>
-      <xs:element type="cdsType" name="CDS"/>
+      <xs:element type="cdsConventionsType" name="CDS"/>
       <xs:element type="depositType" name="Deposit"/>
       <xs:element type="futureType" name="Future"/>
       <xs:element type="fraType" name="FRA"/>
@@ -36,7 +36,7 @@
     </xs:sequence>
   </xs:complexType>
 
-  <xs:complexType name="cdsType">
+  <xs:complexType name="cdsConventionsType">
     <xs:sequence>
       <xs:element type="xs:string" name="Id" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:integer" name="SettlementDays" minOccurs="1" maxOccurs="1"/>
