@@ -219,7 +219,7 @@
       <xs:enumeration value="1/1"/>
     </xs:restriction>
   </xs:simpleType>
- 
+
   <xs:simpleType name="frequencyType">
     <xs:restriction base="xs:string">
       <xs:enumeration value="Z"/>
@@ -271,6 +271,52 @@
       <xs:enumeration value="SimpleThenCompounded"/>
     </xs:restriction>
   </xs:simpleType>
+
+   <xs:simpleType name="interpolationVariableType">
+     <xs:restriction base="xs:string">
+       <xs:enumeration value="Zero"/>
+       <xs:enumeration value="Discount"/>
+     </xs:restriction>
+   </xs:simpleType>
+
+   <xs:simpleType name="interpolationMethodType">
+     <xs:restriction base="xs:string">
+       <xs:enumeration value="Linear"/>
+       <xs:enumeration value="LogLinear"/>
+       <xs:enumeration value="NaturalCubic"/>
+       <xs:enumeration value="FinancialCubic"/>
+     </xs:restriction>
+   </xs:simpleType>
+
+   <xs:simpleType name="cdsType">
+     <xs:restriction base="xs:string">
+       <xs:enumeration value="SpreadCDS"/>
+       <xs:enumeration value="HazardRate"/>
+       <xs:enumeration value="Yield"/>
+     </xs:restriction>
+   </xs:simpleType>
+
+   <xs:simpleType name="dimensionType">
+     <xs:restriction base="xs:string">
+       <xs:enumeration value="ATM"/>
+     </xs:restriction>
+   </xs:simpleType>
+
+   <xs:simpleType name="volatilityType">
+     <xs:restriction base="xs:string">
+       <xs:enumeration value="Normal"/>
+       <xs:enumeration value="Lognormal"/>
+       <xs:enumeration value="ShiftedLognormal"/>
+     </xs:restriction>
+   </xs:simpleType>
+
+   <xs:simpleType name="extrapolationType">
+     <xs:restriction base="xs:string">
+       <xs:enumeration value="Linear"/>
+       <xs:enumeration value="Flat"/>
+       <xs:enumeration value="None"/>
+     </xs:restriction>
+   </xs:simpleType>
 
 </xs:schema>
 
