@@ -29,9 +29,6 @@
         <Style>European</Style>
         <Settlement>Cash</Settlement>
         <PayOffAtExpiry>false</PayOffAtExpiry>
-        <PremiumAmount>0</PremiumAmount>
-        <PremiumCurrency/>
-        <PremiumPayDate/>
         <ExerciseDates>
           <ExerciseDate>2026-03-01</ExerciseDate>
         </ExerciseDates>
@@ -58,9 +55,6 @@
         <Style>European</Style>
         <Settlement>Cash</Settlement>
         <PayOffAtExpiry>false</PayOffAtExpiry>
-        <PremiumAmount>0</PremiumAmount>
-        <PremiumCurrency/>
-        <PremiumPayDate/>
         <ExerciseDates>
           <ExerciseDate>2026-03-01</ExerciseDate>
         </ExerciseDates>

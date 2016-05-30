@@ -14,9 +14,6 @@
         <Style>European</Style>
         <Settlement>Cash</Settlement>
         <PayOffAtExpiry>false</PayOffAtExpiry>
-        <PremiumAmount>0</PremiumAmount>
-        <PremiumCurrency/>
-        <PremiumPayDate/>
         <ExerciseDates>
           <ExerciseDate>20161028</ExerciseDate>
         </ExerciseDates>
@@ -98,9 +95,6 @@
         <Style>European</Style>
         <Settlement>Cash</Settlement>
         <PayOffAtExpiry>false</PayOffAtExpiry>
-        <PremiumAmount>0</PremiumAmount>
-        <PremiumCurrency/>
-        <PremiumPayDate/>
         <ExerciseDates>
           <ExerciseDate>20171028</ExerciseDate>
         </ExerciseDates>
@@ -182,9 +176,6 @@
         <Style>European</Style>
         <Settlement>Cash</Settlement>
         <PayOffAtExpiry>false</PayOffAtExpiry>
-        <PremiumAmount>0</PremiumAmount>
-        <PremiumCurrency/>
-        <PremiumPayDate/>
         <ExerciseDates>
           <ExerciseDate>20191028</ExerciseDate>
         </ExerciseDates>
@@ -266,9 +257,6 @@
         <Style>European</Style>
         <Settlement>Cash</Settlement>
         <PayOffAtExpiry>false</PayOffAtExpiry>
-        <PremiumAmount>0</PremiumAmount>
-        <PremiumCurrency/>
-        <PremiumPayDate/>
         <ExerciseDates>
           <ExerciseDate>20211028</ExerciseDate>
         </ExerciseDates>
@@ -350,9 +338,6 @@
         <Style>European</Style>
         <Settlement>Cash</Settlement>
         <PayOffAtExpiry>false</PayOffAtExpiry>
-        <PremiumAmount>0</PremiumAmount>
-        <PremiumCurrency/>
-        <PremiumPayDate/>
         <ExerciseDates>
           <ExerciseDate>20231028</ExerciseDate>
         </ExerciseDates>
@@ -434,9 +419,6 @@
         <Style>European</Style>
         <Settlement>Cash</Settlement>
         <PayOffAtExpiry>false</PayOffAtExpiry>
-        <PremiumAmount>0</PremiumAmount>
-        <PremiumCurrency/>
-        <PremiumPayDate/>
         <ExerciseDates>
           <ExerciseDate>20251028</ExerciseDate>
         </ExerciseDates>
@@ -518,9 +500,6 @@
         <Style>European</Style>
         <Settlement>Cash</Settlement>
         <PayOffAtExpiry>false</PayOffAtExpiry>
-        <PremiumAmount>0</PremiumAmount>
-        <PremiumCurrency/>
-        <PremiumPayDate/>
         <ExerciseDates>
           <ExerciseDate>20271028</ExerciseDate>
         </ExerciseDates>
@@ -602,9 +581,6 @@
         <Style>European</Style>
         <Settlement>Cash</Settlement>
         <PayOffAtExpiry>false</PayOffAtExpiry>
-        <PremiumAmount>0</PremiumAmount>
-        <PremiumCurrency/>
-        <PremiumPayDate/>
         <ExerciseDates>
           <ExerciseDate>20291028</ExerciseDate>
         </ExerciseDates>
@@ -686,9 +662,6 @@
         <Style>European</Style>
         <Settlement>Cash</Settlement>
         <PayOffAtExpiry>false</PayOffAtExpiry>
-        <PremiumAmount>0</PremiumAmount>
-        <PremiumCurrency/>
-        <PremiumPayDate/>
         <ExerciseDates>
           <ExerciseDate>20311028</ExerciseDate>
         </ExerciseDates>
@@ -770,9 +743,6 @@
         <Style>European</Style>
         <Settlement>Cash</Settlement>
         <PayOffAtExpiry>false</PayOffAtExpiry>
-        <PremiumAmount>0</PremiumAmount>
-        <PremiumCurrency/>
-        <PremiumPayDate/>
         <ExerciseDates>
           <ExerciseDate>20331028</ExerciseDate>
         </ExerciseDates>
@@ -854,9 +824,6 @@
         <Style>European</Style>
         <Settlement>Cash</Settlement>
         <PayOffAtExpiry>false</PayOffAtExpiry>
-        <PremiumAmount>0</PremiumAmount>
-        <PremiumCurrency/>
-        <PremiumPayDate/>
         <ExerciseDates>
           <ExerciseDate>20341028</ExerciseDate>
         </ExerciseDates>

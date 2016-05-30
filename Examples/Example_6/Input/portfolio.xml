@@ -81,13 +81,9 @@
       <OptionData>
         <LongShort>Short</LongShort>
         <OptionType>Call</OptionType>
-        <!--<Style>Bermudan</Style>-->
         <Style>European</Style>
         <Settlement>Physical</Settlement>
         <PayOffAtExpiry>false</PayOffAtExpiry>
-        <PremiumAmount>0</PremiumAmount>
-        <PremiumCurrency/>
-        <PremiumPayDate/>
         <ExerciseDates>
           <ExerciseDate>2017-10-01</ExerciseDate>
         </ExerciseDates>

@@ -11,14 +11,9 @@
       <OptionData>
         <LongShort>Long</LongShort>
         <OptionType>Call</OptionType>
-        <!--<Style>Bermudan</Style>-->
         <Style>European</Style>
         <Settlement>Cash</Settlement>
-        <!--<Settlement>Physical</Settlement>-->
         <PayOffAtExpiry>false</PayOffAtExpiry>
-        <PremiumAmount>0</PremiumAmount>
-        <PremiumCurrency/>
-        <PremiumPayDate/>
         <ExerciseDates>
           <ExerciseDate>2026-03-01</ExerciseDate>
         </ExerciseDates>
@@ -95,14 +90,9 @@
       <OptionData>
         <LongShort>Long</LongShort>
         <OptionType>Call</OptionType>
-        <!--<Style>Bermudan</Style>-->
         <Style>European</Style>
-        <!--<Settlement>Cash</Settlement>-->
         <Settlement>Physical</Settlement>
         <PayOffAtExpiry>false</PayOffAtExpiry>
-        <PremiumAmount>0</PremiumAmount>
-        <PremiumCurrency/>
-        <PremiumPayDate/>
         <ExerciseDates>
           <ExerciseDate>2026-03-01</ExerciseDate>
         </ExerciseDates>

@@ -85,40 +85,6 @@
         <Currency>USD</Currency>
         <Notionals>
           <Notional>50000000</Notional>
-          <!--
-              <Notional>49409966.82</Notional>
-              <Notional>48801239.92</Notional>
-              <Notional>48157013.42</Notional>
-              <Notional>47492376.21</Notional>
-              <Notional>46680570.69</Notional>
-              <Notional>45843045.11</Notional>
-              <Notional>44969930.86</Notional>
-              <Notional>44068608.45</Notional>
-              <Notional>43097854.43</Notional>
-              <Notional>42095737.78</Notional>
-              <Notional>41020171.39</Notional>
-              <Notional>39909856.14</Notional>
-              <Notional>38747503.97</Notional>
-              <Notional>37546872.65</Notional>
-              <Notional>36263145.37</Notional>
-              <Notional>34937141.72</Notional>
-              <Notional>33522972.07</Notional>
-              <Notional>32062230.32</Notional>
-              <Notional>30529842.38</Notional>
-              <Notional>28946031.33</Notional>
-              <Notional>27262943.06</Notional>
-              <Notional>25523374.55</Notional>
-              <Notional>23678491.79</Notional>
-              <Notional>21771699.37</Notional>
-              <Notional>19746634.24</Notional>
-              <Notional>17652347.33</Notional>
-              <Notional>15437250.03</Notional>
-              <Notional>13146435.16</Notional>
-              <Notional>10727162.82</Notional>
-              <Notional>8225193.7</Notional>
-              <Notional>5593507.77</Notional>
-              <Notional>2870219.44</Notional>
-	  -->
         </Notionals>
         <DayCounter>A360</DayCounter>
         <PaymentConvention>ModifiedFollowing</PaymentConvention>
@@ -148,40 +114,6 @@
         <Currency>USD</Currency>
         <Notionals>
           <Notional>50000000</Notional>
-          <!--
-              <Notional>49409966.82</Notional>
-              <Notional>48801239.92</Notional>
-              <Notional>48157013.42</Notional>
-              <Notional>47492376.21</Notional>
-              <Notional>46680570.69</Notional>
-              <Notional>45843045.11</Notional>
-              <Notional>44969930.86</Notional>
-              <Notional>44068608.45</Notional>
-              <Notional>43097854.43</Notional>
-              <Notional>42095737.78</Notional>
-              <Notional>41020171.39</Notional>
-              <Notional>39909856.14</Notional>
-              <Notional>38747503.97</Notional>
-              <Notional>37546872.65</Notional>
-              <Notional>36263145.37</Notional>
-              <Notional>34937141.72</Notional>
-              <Notional>33522972.07</Notional>
-              <Notional>32062230.32</Notional>
-              <Notional>30529842.38</Notional>
-              <Notional>28946031.33</Notional>
-              <Notional>27262943.06</Notional>
-              <Notional>25523374.55</Notional>
-              <Notional>23678491.79</Notional>
-              <Notional>21771699.37</Notional>
-              <Notional>19746634.24</Notional>
-              <Notional>17652347.33</Notional>
-              <Notional>15437250.03</Notional>
-              <Notional>13146435.16</Notional>
-              <Notional>10727162.82</Notional>
-              <Notional>8225193.7</Notional>
-              <Notional>5593507.77</Notional>
-              <Notional>2870219.44</Notional>
-	  -->
         </Notionals>
         <DayCounter>A360</DayCounter>
         <PaymentConvention>ModifiedFollowing</PaymentConvention>
