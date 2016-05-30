@@ -3,7 +3,6 @@
   <Trade id="Swap_20">
     <TradeType>Swap</TradeType>
     <Envelope>
-      <Type>Swap</Type>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
       <AdditionalFields/>
@@ -24,7 +23,6 @@
           </Rates>
         </FixedLegData>
         <ScheduleData>
-          <IsRulesBased>true</IsRulesBased>
           <Rules>
             <StartDate>20160301</StartDate>
             <EndDate>20360301</EndDate>
@@ -57,7 +55,6 @@
           <FixingDays>2</FixingDays>
         </FloatingLegData>
         <ScheduleData>
-          <IsRulesBased>true</IsRulesBased>
           <Rules>
             <StartDate>20160301</StartDate>
             <EndDate>20360301</EndDate>

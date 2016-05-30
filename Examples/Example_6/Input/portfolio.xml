@@ -3,7 +3,6 @@
   <Trade id="204128">
     <TradeType>Swap</TradeType>
     <Envelope>
-      <Type>Swap</Type>
       <Company>BANK</Company>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
@@ -27,7 +26,6 @@
           </Spreads>
         </FloatingLegData>
         <ScheduleData>
-          <IsRulesBased>true</IsRulesBased>
           <Rules>
             <StartDate>2010-10-01</StartDate>
             <EndDate>2038-10-01</EndDate>
@@ -57,7 +55,6 @@
           </Rates>
         </FixedLegData>
         <ScheduleData>
-          <IsRulesBased>true</IsRulesBased>
           <Rules>
             <StartDate>2010-10-01</StartDate>
             <EndDate>2038-10-01</EndDate>
@@ -77,7 +74,6 @@
   <Trade id="204128-swaption">
     <TradeType>Swaption</TradeType>
     <Envelope>
-      <Type>Swaption</Type>
       <Company>BANK</Company>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
@@ -114,7 +110,6 @@
           </Spreads>
         </FloatingLegData>
         <ScheduleData>
-          <IsRulesBased>true</IsRulesBased>
           <Rules>
             <StartDate>2017-10-01</StartDate>
             <EndDate>2038-10-01</EndDate>
@@ -144,7 +139,6 @@
           </Rates>
         </FixedLegData>
         <ScheduleData>
-          <IsRulesBased>true</IsRulesBased>
           <Rules>
             <StartDate>2017-10-01</StartDate>
             <EndDate>2038-10-01</EndDate>
@@ -164,7 +158,6 @@
   <Trade id="204128-short">
     <TradeType>Swap</TradeType>
     <Envelope>
-      <Type>Swap</Type>
       <Company>BANK</Company>
       <CounterParty>CUST_B</CounterParty>
       <NettingSetId>CUST_B</NettingSetId>
@@ -188,7 +181,6 @@
           </Spreads>
         </FloatingLegData>
         <ScheduleData>
-          <IsRulesBased>true</IsRulesBased>
           <Rules>
             <StartDate>2010-10-01</StartDate>
             <EndDate>2017-10-01</EndDate>
@@ -218,7 +210,6 @@
           </Rates>
         </FixedLegData>
         <ScheduleData>
-          <IsRulesBased>true</IsRulesBased>
           <Rules>
             <StartDate>2010-10-01</StartDate>
             <EndDate>2017-10-01</EndDate>

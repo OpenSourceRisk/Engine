@@ -3,7 +3,6 @@
   <Trade id="FXFWD_EURUSD_10Y">
     <TradeType>FxForward</TradeType>
     <Envelope>
-      <Type>FxForward</Type>
       <Company>HSH</Company>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
@@ -20,7 +19,6 @@
   <Trade id="FX_CALL_OPTION_EURUSD_10Y">
     <TradeType>FxOption</TradeType>
     <Envelope>
-      <Type>FxOption</Type>
       <Company>HSH</Company>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
@@ -51,7 +49,6 @@
   <Trade id="FX_PUT_OPTION_EURUSD_10Y">
     <TradeType>FxOption</TradeType>
     <Envelope>
-      <Type>FxOption</Type>
       <Company>HSH</Company>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>

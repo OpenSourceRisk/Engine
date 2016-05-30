@@ -1,14 +1,10 @@
 <?xml version="1.0"?>
 <Portfolio>
   <Trade id="CCSwap">
-    <ClassName>Swap</ClassName>
+    <TradeType>Swap</TradeType>
     <Envelope>
-      <Id>CCSwap</Id>
-      <Type>Swap</Type>
-      <Company>BANK</Company>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
-      <Rating/>
       <AdditionalFields/>
     </Envelope>
     <SwapData>
@@ -28,7 +24,6 @@
           </Spreads>
         </FloatingLegData>
         <ScheduleData>
-          <IsRulesBased>true</IsRulesBased>
           <Rules>
             <StartDate>2015-03-01</StartDate>
             <EndDate>2036-03-01</EndDate>
@@ -58,7 +53,6 @@
           </Rates>
         </FixedLegData>
         <ScheduleData>
-          <IsRulesBased>true</IsRulesBased>
           <Rules>
             <StartDate>2015-03-01</StartDate>
             <EndDate>2036-03-01</EndDate>

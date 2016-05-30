@@ -3,7 +3,6 @@
   <Trade id="Swap_20">
     <TradeType>Swap</TradeType>
     <Envelope>
-      <Type>Swap</Type>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
       <AdditionalFields/>
@@ -24,7 +23,6 @@
           </Rates>
         </FixedLegData>
         <ScheduleData>
-          <IsRulesBased>true</IsRulesBased>
           <Rules>
             <StartDate>20151028</StartDate>
             <EndDate>20351028</EndDate>
@@ -57,7 +55,6 @@
           <FixingDays>2</FixingDays>
         </FloatingLegData>
         <ScheduleData>
-          <IsRulesBased>true</IsRulesBased>
           <Rules>
             <StartDate>20151028</StartDate>
             <EndDate>20351028</EndDate>
@@ -77,7 +74,6 @@
   <Trade id="Swaption_1_19">
     <TradeType>Swaption</TradeType>
     <Envelope>
-      <Type>Swaption</Type>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
       <AdditionalFields/>
@@ -111,7 +107,6 @@
           </Rates>
         </FixedLegData>
         <ScheduleData>
-          <IsRulesBased>true</IsRulesBased>
           <Rules>
             <StartDate>20161028</StartDate>
             <EndDate>20351028</EndDate>
@@ -144,7 +139,6 @@
           <FixingDays>2</FixingDays>
         </FloatingLegData>
         <ScheduleData>
-          <IsRulesBased>true</IsRulesBased>
           <Rules>
             <StartDate>20161028</StartDate>
             <EndDate>20351028</EndDate>
@@ -164,7 +158,6 @@
   <Trade id="Swaption_2_18">
     <TradeType>Swaption</TradeType>
     <Envelope>
-      <Type>Swaption</Type>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
       <AdditionalFields/>
@@ -198,7 +191,6 @@
           </Rates>
         </FixedLegData>
         <ScheduleData>
-          <IsRulesBased>true</IsRulesBased>
           <Rules>
             <StartDate>20171028</StartDate>
             <EndDate>20351028</EndDate>
@@ -231,7 +223,6 @@
           <FixingDays>2</FixingDays>
         </FloatingLegData>
         <ScheduleData>
-          <IsRulesBased>true</IsRulesBased>
           <Rules>
             <StartDate>20171028</StartDate>
             <EndDate>20351028</EndDate>
@@ -251,7 +242,6 @@
   <Trade id="Swaption_4_16">
     <TradeType>Swaption</TradeType>
     <Envelope>
-      <Type>Swaption</Type>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
       <AdditionalFields/>
@@ -285,7 +275,6 @@
           </Rates>
         </FixedLegData>
         <ScheduleData>
-          <IsRulesBased>true</IsRulesBased>
           <Rules>
             <StartDate>20191028</StartDate>
             <EndDate>20351028</EndDate>
@@ -318,7 +307,6 @@
           <FixingDays>2</FixingDays>
         </FloatingLegData>
         <ScheduleData>
-          <IsRulesBased>true</IsRulesBased>
           <Rules>
             <StartDate>20191028</StartDate>
             <EndDate>20351028</EndDate>
@@ -338,7 +326,6 @@
   <Trade id="Swaption_6_14">
     <TradeType>Swaption</TradeType>
     <Envelope>
-      <Type>Swaption</Type>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
       <AdditionalFields/>
@@ -372,7 +359,6 @@
           </Rates>
         </FixedLegData>
         <ScheduleData>
-          <IsRulesBased>true</IsRulesBased>
           <Rules>
             <StartDate>20211028</StartDate>
             <EndDate>20351028</EndDate>
@@ -405,7 +391,6 @@
           <FixingDays>2</FixingDays>
         </FloatingLegData>
         <ScheduleData>
-          <IsRulesBased>true</IsRulesBased>
           <Rules>
             <StartDate>20211028</StartDate>
             <EndDate>20351028</EndDate>
@@ -425,7 +410,6 @@
   <Trade id="Swaption_8_12">
     <TradeType>Swaption</TradeType>
     <Envelope>
-      <Type>Swaption</Type>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
       <AdditionalFields/>
@@ -459,7 +443,6 @@
           </Rates>
         </FixedLegData>
         <ScheduleData>
-          <IsRulesBased>true</IsRulesBased>
           <Rules>
             <StartDate>20231028</StartDate>
             <EndDate>20351028</EndDate>
@@ -492,7 +475,6 @@
           <FixingDays>2</FixingDays>
         </FloatingLegData>
         <ScheduleData>
-          <IsRulesBased>true</IsRulesBased>
           <Rules>
             <StartDate>20231028</StartDate>
             <EndDate>20351028</EndDate>
@@ -512,7 +494,6 @@
   <Trade id="Swaption_10_10">
     <TradeType>Swaption</TradeType>
     <Envelope>
-      <Type>Swaption</Type>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
       <AdditionalFields/>
@@ -546,7 +527,6 @@
           </Rates>
         </FixedLegData>
         <ScheduleData>
-          <IsRulesBased>true</IsRulesBased>
           <Rules>
             <StartDate>20251028</StartDate>
             <EndDate>20351028</EndDate>
@@ -579,7 +559,6 @@
           <FixingDays>2</FixingDays>
         </FloatingLegData>
         <ScheduleData>
-          <IsRulesBased>true</IsRulesBased>
           <Rules>
             <StartDate>20251028</StartDate>
             <EndDate>20351028</EndDate>
@@ -599,7 +578,6 @@
   <Trade id="Swaption_12_8">
     <TradeType>Swaption</TradeType>
     <Envelope>
-      <Type>Swaption</Type>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
       <AdditionalFields/>
@@ -633,7 +611,6 @@
           </Rates>
         </FixedLegData>
         <ScheduleData>
-          <IsRulesBased>true</IsRulesBased>
           <Rules>
             <StartDate>20271028</StartDate>
             <EndDate>20351028</EndDate>
@@ -666,7 +643,6 @@
           <FixingDays>2</FixingDays>
         </FloatingLegData>
         <ScheduleData>
-          <IsRulesBased>true</IsRulesBased>
           <Rules>
             <StartDate>20271028</StartDate>
             <EndDate>20351028</EndDate>
@@ -686,7 +662,6 @@
   <Trade id="Swaption_14_6">
     <TradeType>Swaption</TradeType>
     <Envelope>
-      <Type>Swaption</Type>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
       <AdditionalFields/>
@@ -720,7 +695,6 @@
           </Rates>
         </FixedLegData>
         <ScheduleData>
-          <IsRulesBased>true</IsRulesBased>
           <Rules>
             <StartDate>20291028</StartDate>
             <EndDate>20351028</EndDate>
@@ -753,7 +727,6 @@
           <FixingDays>2</FixingDays>
         </FloatingLegData>
         <ScheduleData>
-          <IsRulesBased>true</IsRulesBased>
           <Rules>
             <StartDate>20291028</StartDate>
             <EndDate>20351028</EndDate>
@@ -773,7 +746,6 @@
   <Trade id="Swaption_16_4">
     <TradeType>Swaption</TradeType>
     <Envelope>
-      <Type>Swaption</Type>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
       <AdditionalFields/>
@@ -807,7 +779,6 @@
           </Rates>
         </FixedLegData>
         <ScheduleData>
-          <IsRulesBased>true</IsRulesBased>
           <Rules>
             <StartDate>20311028</StartDate>
             <EndDate>20351028</EndDate>
@@ -840,7 +811,6 @@
           <FixingDays>2</FixingDays>
         </FloatingLegData>
         <ScheduleData>
-          <IsRulesBased>true</IsRulesBased>
           <Rules>
             <StartDate>20311028</StartDate>
             <EndDate>20351028</EndDate>
@@ -860,7 +830,6 @@
   <Trade id="Swaption_18_2">
     <TradeType>Swaption</TradeType>
     <Envelope>
-      <Type>Swaption</Type>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
       <AdditionalFields/>
@@ -894,7 +863,6 @@
           </Rates>
         </FixedLegData>
         <ScheduleData>
-          <IsRulesBased>true</IsRulesBased>
           <Rules>
             <StartDate>20331028</StartDate>
             <EndDate>20351028</EndDate>
@@ -927,7 +895,6 @@
           <FixingDays>2</FixingDays>
         </FloatingLegData>
         <ScheduleData>
-          <IsRulesBased>true</IsRulesBased>
           <Rules>
             <StartDate>20331028</StartDate>
             <EndDate>20351028</EndDate>
@@ -947,7 +914,6 @@
   <Trade id="Swaption_19_1">
     <TradeType>Swaption</TradeType>
     <Envelope>
-      <Type>Swaption</Type>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
       <AdditionalFields/>
@@ -981,7 +947,6 @@
           </Rates>
         </FixedLegData>
         <ScheduleData>
-          <IsRulesBased>true</IsRulesBased>
           <Rules>
             <StartDate>20341028</StartDate>
             <EndDate>20351028</EndDate>
@@ -1014,7 +979,6 @@
           <FixingDays>2</FixingDays>
         </FloatingLegData>
         <ScheduleData>
-          <IsRulesBased>true</IsRulesBased>
           <Rules>
             <StartDate>20341028</StartDate>
             <EndDate>20351028</EndDate>

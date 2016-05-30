@@ -3,7 +3,6 @@
   <Trade id="70309">
     <TradeType>Swap</TradeType>
     <Envelope>
-      <Type>Swap</Type>
       <Company>HSH</Company>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
@@ -26,7 +25,6 @@
           </Rates>
         </FixedLegData>
         <ScheduleData>
-          <IsRulesBased>true</IsRulesBased>
           <Rules>
             <StartDate>2005-03-03</StartDate>
             <EndDate>2027-03-03</EndDate>
@@ -57,7 +55,6 @@
           </Spreads>
         </FloatingLegData>
         <ScheduleData>
-          <IsRulesBased>true</IsRulesBased>
           <Rules>
             <StartDate>2005-03-03</StartDate>
             <EndDate>2027-03-03</EndDate>
@@ -77,7 +74,6 @@
   <Trade id="938498">
     <TradeType>Swap</TradeType>
     <Envelope>
-      <Type>Swap</Type>
       <Company>HSH</Company>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
@@ -134,7 +130,6 @@
           </Rates>
         </FixedLegData>
         <ScheduleData>
-          <IsRulesBased>true</IsRulesBased>
           <Rules>
             <StartDate>2015-04-22</StartDate>
             <EndDate>2024-11-01</EndDate>
@@ -199,7 +194,6 @@
           </Spreads>
         </FloatingLegData>
         <ScheduleData>
-          <IsRulesBased>true</IsRulesBased>
           <Rules>
             <StartDate>2015-04-22</StartDate>
             <EndDate>2024-11-01</EndDate>
@@ -219,7 +213,6 @@
   <Trade id="919020">
     <TradeType>Swap</TradeType>
     <Envelope>
-      <Type>Swap</Type>
       <Company>HSH</Company>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
@@ -243,7 +236,6 @@
           </Spreads>
         </FloatingLegData>
         <ScheduleData>
-          <IsRulesBased>true</IsRulesBased>
           <Rules>
             <StartDate>2012-09-05</StartDate>
             <EndDate>2026-09-05</EndDate>
@@ -273,7 +265,6 @@
           </Rates>
         </FixedLegData>
         <ScheduleData>
-          <IsRulesBased>true</IsRulesBased>
           <Rules>
             <StartDate>2012-09-05</StartDate>
             <EndDate>2026-09-05</EndDate>
