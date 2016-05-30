@@ -3,7 +3,6 @@
   <Trade id="70309">
     <TradeType>Swap</TradeType>
     <Envelope>
-      <Company>HSH</Company>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
       <AdditionalFields/>
@@ -74,7 +73,6 @@
   <Trade id="938498">
     <TradeType>Swap</TradeType>
     <Envelope>
-      <Company>HSH</Company>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
       <AdditionalFields/>
@@ -213,7 +211,6 @@
   <Trade id="919020">
     <TradeType>Swap</TradeType>
     <Envelope>
-      <Company>HSH</Company>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
       <AdditionalFields/>

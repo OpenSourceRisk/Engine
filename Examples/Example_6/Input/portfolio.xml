@@ -3,7 +3,6 @@
   <Trade id="204128">
     <TradeType>Swap</TradeType>
     <Envelope>
-      <Company>BANK</Company>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
       <AdditionalFields/>
@@ -74,7 +73,6 @@
   <Trade id="204128-swaption">
     <TradeType>Swaption</TradeType>
     <Envelope>
-      <Company>BANK</Company>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
       <AdditionalFields/>
@@ -158,7 +156,6 @@
   <Trade id="204128-short">
     <TradeType>Swap</TradeType>
     <Envelope>
-      <Company>BANK</Company>
       <CounterParty>CUST_B</CounterParty>
       <NettingSetId>CUST_B</NettingSetId>
       <AdditionalFields/>
