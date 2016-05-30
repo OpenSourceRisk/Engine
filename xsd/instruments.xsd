@@ -13,6 +13,8 @@
               <xs:choice>
                 <xs:element type="swapData" name="SwapData"/>
                 <xs:element type="swaptionData" name="SwaptionData"/>
+                <xs:element type="fxForwardData" name="FxForwardData"/>
+                <xs:element type="fxOptionData" name="FxOptionData"/>
               </xs:choice>
             </xs:sequence>
             <xs:attribute type="xs:string" name="id" use="required"/>
@@ -158,6 +160,8 @@
     <xs:restriction base="xs:string">
       <xs:enumeration value="Swap"/>
       <xs:enumeration value="Swaption"/>
+      <xs:enumeration value="FxForward"/>
+      <xs:enumeration value="FxOption"/>
     </xs:restriction>
   </xs:simpleType>
 
@@ -167,6 +171,26 @@
       <xs:enumeration value="Floating"/>
     </xs:restriction>
   </xs:simpleType>
+
+  <xs:complexType name="fxForwardData">
+    <xs:sequence>
+      <xs:element type="date" name="ValueDate"/>
+      <xs:element type="currencyCode" name="BoughtCurrency"/>
+      <xs:element type="xs:float" name="BoughtAmount"/>
+      <xs:element type="currencyCode" name="SoldCurrency"/>
+      <xs:element type="xs:float" name="SoldAmount"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="fxOptionData">
+    <xs:sequence>
+      <xs:element type="optionData" name="OptionData"/>
+      <xs:element type="currencyCode" name="BoughtCurrency"/>
+      <xs:element type="xs:float" name="BoughtAmount"/>
+      <xs:element type="currencyCode" name="SoldCurrency"/>
+      <xs:element type="xs:float" name="SoldAmount"/>
+    </xs:sequence>
+  </xs:complexType>
 
 </xs:schema>
 

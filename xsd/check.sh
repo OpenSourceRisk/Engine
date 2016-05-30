@@ -2,14 +2,10 @@
 
 echo Conventions:
 /bin/echo -n "Checking ... "
-xmllint --schema conventions.xsd --path xsd --noout Input/conventions.xml
-/bin/echo -n "Checking ... "
 xmllint --schema conventions.xsd --path xsd --noout Examples/Input/conventions.xml
 echo -------
 
 echo CurveConfig:
-/bin/echo -n "Checking ... "
-xmllint --schema curveconfig.xsd --path xsd --noout Input/curveconfig.xml
 /bin/echo -n "Checking ... "
 xmllint --schema curveconfig.xsd --path xsd --noout Examples/Input/curveconfig.xml
 echo -------
