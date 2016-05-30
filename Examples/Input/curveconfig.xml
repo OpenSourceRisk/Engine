@@ -196,9 +196,9 @@
       <CurveId>CUST_A_SR_USD</CurveId>
       <CurveDescription>CUST_A SR HR USD</CurveDescription>
       <Currency>USD</Currency>
+      <Type>HazardRate</Type>
       <DiscountCurve />
       <DayCounter>A365</DayCounter>
-      <Type>HazardRate</Type>
       <RecoveryRate>RECOVERY_RATE/RATE/CUST_A/SR/USD</RecoveryRate>
       <Quotes>
 	<Quote>HAZARD_RATE/RATE/CUST_A/SR/USD/0Y</Quote>
@@ -220,33 +220,6 @@
   
   <YieldCurves>
 
-    <YieldCurve>
-      <CurveId>BMA3M</CurveId>
-      <CurveDescription />
-      <Currency>USD</Currency>
-      <DiscountCurve />
-      <Segments>
-	<Simple>
-          <Type>BMA</Type>
-          <Quotes>
-            <Quote>BMA_SWAP/RATIO/USD/2D/3M/1Y</Quote>
-            <Quote>BMA_SWAP/RATIO/USD/2D/3M/2Y</Quote>
-            <Quote>BMA_SWAP/RATIO/USD/2D/3M/3Y</Quote>
-            <Quote>BMA_SWAP/RATIO/USD/2D/3M/4Y</Quote>
-            <Quote>BMA_SWAP/RATIO/USD/2D/3M/5Y</Quote>
-            <Quote>BMA_SWAP/RATIO/USD/2D/3M/7Y</Quote>
-            <Quote>BMA_SWAP/RATIO/USD/2D/3M/10Y</Quote>
-            <Quote>BMA_SWAP/RATIO/USD/2D/3M/12Y</Quote>
-            <Quote>BMA_SWAP/RATIO/USD/2D/3M/15Y</Quote>
-            <Quote>BMA_SWAP/RATIO/USD/2D/3M/20Y</Quote>
-            <Quote>BMA_SWAP/RATIO/USD/2D/3M/30Y</Quote>
-          </Quotes>
-          <Conventions>todo</Conventions>
-          <ProjectionCurve>USD3M</ProjectionCurve>
-	</Simple>
-      </Segments>
-    </YieldCurve>
-    
     <YieldCurve>
       <CurveId>CHF6M</CurveId>
       <CurveDescription />
@@ -1263,8 +1236,6 @@
       <Segments>
 	<Simple>
           <Type>Deposit</Type>
-          <Conventions>JPY-LIBOR-CONVENTIONS</Conventions>
-          <ProjectionCurve>JPY6M</ProjectionCurve>
           <Quotes>
             <!--<Quote>MM/RATE/JPY/0D/1D</Quote>-->
             <Quote>MM/RATE/JPY/2D/1W</Quote>
@@ -1274,6 +1245,8 @@
             <!--<Quote>MM/RATE/JPY/2D/6M</Quote>-->
             <!--<Quote>MM/RATE/JPY/2D/1Y</Quote>-->
           </Quotes>
+          <Conventions>JPY-LIBOR-CONVENTIONS</Conventions>
+          <ProjectionCurve>JPY6M</ProjectionCurve>
 	</Simple>
 	<Simple>
           <Type>Swap</Type>

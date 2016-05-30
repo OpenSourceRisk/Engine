@@ -330,6 +330,7 @@
       -->
       
       <FxVolatilities>
+	<Simulate>false</Simulate>
 	<!-- Alternative: ConstantVariance -->
 	<ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
 	<CurrencyPairs>

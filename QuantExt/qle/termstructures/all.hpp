@@ -15,4 +15,5 @@
 #include <qle/termstructures/oisratehelper.hpp>
 #include <qle/termstructures/staticallycorrectedyieldtermstructure.hpp>
 #include <qle/termstructures/tenorbasisswaphelper.hpp>
+#include <qle/termstructures/blackvariancecurve3.hpp>
 

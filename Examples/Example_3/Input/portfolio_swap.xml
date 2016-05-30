@@ -1,10 +1,8 @@
 <?xml version="1.0"?>
 <Portfolio>
-  
   <Trade id="Swap_20">
     <TradeType>Swap</TradeType>
     <Envelope>
-      <Type>Swap</Type>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
       <AdditionalFields/>
@@ -24,10 +22,9 @@
             <Rate>0.009851</Rate>
           </Rates>
         </FixedLegData>
-        <ScheduleData>	  
-          <IsRulesBased>true</IsRulesBased>
+        <ScheduleData>
           <Rules>
-	    <StartDate>20160301</StartDate>
+            <StartDate>20160301</StartDate>
             <EndDate>20360301</EndDate>
             <Tenor>1Y</Tenor>
             <Calendar>TARGET</Calendar>
@@ -37,7 +34,7 @@
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
-	  </Rules>
+          </Rules>
         </ScheduleData>
       </LegData>
       <LegData>
@@ -58,8 +55,7 @@
           <FixingDays>2</FixingDays>
         </FloatingLegData>
         <ScheduleData>
-          <IsRulesBased>true</IsRulesBased>
-	  <Rules>
+          <Rules>
             <StartDate>20160301</StartDate>
             <EndDate>20360301</EndDate>
             <Tenor>6M</Tenor>
@@ -70,10 +66,9 @@
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
-	  </Rules>
+          </Rules>
         </ScheduleData>
       </LegData>
     </SwapData>
   </Trade>
-  
 </Portfolio>

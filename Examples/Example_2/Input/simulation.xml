@@ -320,7 +320,8 @@
       -->
       
       <FxVolatilities>
-	<!--<ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>-->
+	<!--	<ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>-->
+    <Simulate>false</Simulate>
 	<ReactionToTimeDecay>ConstantVariance</ReactionToTimeDecay>
 	<CurrencyPairs>
 	  <CurrencyPair>EURUSD</CurrencyPair>

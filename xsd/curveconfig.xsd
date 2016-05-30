@@ -1,0 +1,205 @@
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+<xs:include schemaLocation="ore_types.xsd"/>
+
+  <xs:element name="CurveConfiguration">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element type="fxVolatilities" name="FXVolatilities"/>
+        <xs:element type="swaptionVolatilities" name="SwaptionVolatilities"/>
+        <xs:element type="defaultCurves" name="DefaultCurves"/>
+        <xs:element type="yieldCurves" name="YieldCurves"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="fxVolatilities">
+    <xs:sequence>
+      <xs:element type="fxVolatility" name="FXVolatility" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="fxVolatility">
+    <xs:sequence>
+      <xs:element type="xs:string" name="CurveId"/>
+      <xs:element type="xs:string" name="CurveDescription"/>
+      <xs:element type="dimensionType" name="Dimension"/>
+      <xs:element type="xs:string" name="Expiries"/>
+    </xs:sequence>
+  </xs:complexType>
+
+
+  <xs:complexType name="swaptionVolatilities">
+    <xs:sequence>
+      <xs:element type="swaptionVolatility" name="SwaptionVolatility" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="swaptionVolatility">
+    <xs:sequence>
+      <xs:element type="xs:string" name="CurveId"/>
+      <xs:element type="xs:string" name="CurveDescription"/>
+      <xs:element type="dimensionType" name="Dimension"/>
+      <xs:element type="volatilityType" name="VolatilityType"/>
+      <xs:element type="extrapolationType" name="Extrapolation"/>
+      <xs:element type="dayCounter" name="DayCounter"/>
+      <xs:element type="calendar" name="Calendar"/>
+      <xs:element type="businessDayConvention" name="BusinessDayConvention"/>
+      <xs:element type="xs:string" name="OptionTenors"/>
+      <xs:element type="xs:string" name="SwapTenors"/>
+      <xs:element type="xs:string" name="ShortSwapIndexBase"/>
+      <xs:element type="xs:string" name="SwapIndexBase"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="defaultCurves">
+    <xs:sequence>
+      <xs:element type="defaultCurve" name="DefaultCurve" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="defaultCurve">
+    <xs:sequence>
+      <xs:element type="xs:string" name="CurveId"/>
+      <xs:element type="xs:string" name="CurveDescription"/>
+      <xs:element type="currencyCode" name="Currency"/>
+      <xs:element type="cdsType" name="Type"/>
+      <xs:element type="xs:string" name="DiscountCurve"/>
+      <xs:element type="dayCounter" name="DayCounter" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="RecoveryRate"/>
+      <xs:element type="quoteType" name="Quotes"/>
+      <xs:element type="xs:string" name="Conventions"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="yieldCurves">
+    <xs:sequence>
+      <xs:element type="yieldCurve" name="YieldCurve" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="yieldCurve">
+    <xs:sequence>
+      <xs:element type="xs:string" name="CurveId"/>
+      <xs:element type="xs:string" name="CurveDescription"/>
+      <xs:element type="currencyCode" name="Currency"/>
+      <xs:element type="xs:string" name="DiscountCurve"/>
+      <xs:element type="segmentsType" name="Segments"/>
+      <xs:element type="interpolationVariableType" name="InterpolationVariable" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="interpolationMethodType" name="InterpolationMethod" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="dayCounter" name="YieldCurveDayCounter" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:decimal" name="Tolerance" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="Extrapolation" minOccurs="0" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="segmentsType">
+    <xs:choice minOccurs="1" maxOccurs="unbounded">
+      <xs:element type="directSegmentType" name="Direct"/>
+      <xs:element type="simpleSegmentType" name="Simple"/>
+      <xs:element type="aoisSegmentType" name="AverageOIS"/>
+      <xs:element type="tenorBasisSegmentType" name="TenorBasis"/>
+      <xs:element type="crossCurrencySegmentType" name="CrossCurrency"/>
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="directSegmentType">
+    <xs:sequence>
+      <xs:element type="directSegmentTypeType" name="Type"/>
+      <xs:element type="quoteType" name="Quotes"/>
+      <xs:element type="xs:string" name="Conventions" minOccurs="0" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:simpleType name="directSegmentTypeType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Zero"/>
+      <xs:enumeration value="Discount"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="simpleSegmentType">
+    <xs:sequence>
+      <xs:element type="simpleSegmentTypeType" name="Type"/>
+      <xs:element type="quoteType" name="Quotes"/>
+      <xs:element type="xs:string" name="Conventions"/>
+      <xs:element type="xs:string" name="ProjectionCurve" minOccurs="0" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:simpleType name="simpleSegmentTypeType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Deposit"/>
+      <xs:enumeration value="FRA"/>
+      <xs:enumeration value="Future"/>
+      <xs:enumeration value="OIS"/>
+      <xs:enumeration value="Swap"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="aoisSegmentType">
+    <xs:sequence>
+      <xs:element type="xs:string" name="Type" fixed="Average OIS"/>
+      <xs:element type="compositeQuoteType" name="Quotes"/>
+      <xs:element type="xs:string" name="Conventions"/>
+      <xs:element type="xs:string" name="ProjectionCurve" minOccurs="0" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="tenorBasisSegmentType">
+    <xs:sequence>
+      <xs:element type="tenorBasisSegmentTypeType" name="Type"/>
+      <xs:element type="quoteType" name="Quotes"/>
+      <xs:element type="xs:string" name="Conventions"/>
+      <xs:element type="xs:string" name="ProjectionCurveLong" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="ProjectionCurveShort" minOccurs="0" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:simpleType name="tenorBasisSegmentTypeType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Tenor Basis Swap"/>
+      <xs:enumeration value="Tenor Basis Two Swaps"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="crossCurrencySegmentType">
+    <xs:sequence>
+      <xs:element type="crossCurrencySegmentTypeType" name="Type"/>
+      <xs:element type="quoteType" name="Quotes"/>
+      <xs:element type="xs:string" name="Conventions"/>
+      <xs:element type="xs:string" name="DiscountCurve"/>
+      <xs:element type="xs:string" name="SpotRate"/>
+      <xs:element type="xs:string" name="ProjectionCurveDomestic" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="ProjectionCurveForeign" minOccurs="0" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+  
+  <xs:simpleType name="crossCurrencySegmentTypeType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Cross Currency Basis Swap"/>
+      <xs:enumeration value="FX Forward"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="quoteType">
+    <xs:sequence>
+      <xs:element type="xs:string" name="Quote" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="compositeQuoteType">
+    <xs:sequence>
+      <xs:element name="CompositeQuote" minOccurs="1" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="xs:string" name="SpreadQuote"/>
+            <xs:element type="xs:string" name="RateQuote"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element> 
+    </xs:sequence>
+  </xs:complexType>
+
+</xs:schema>
+

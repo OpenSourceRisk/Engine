@@ -1,17 +1,13 @@
 <?xml version="1.0"?>
 <Portfolio>
-
   <Trade id="204128">
     <TradeType>Swap</TradeType>
     <Envelope>
-      <Type>Swap</Type>
-      <Company>BANK</Company>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <SwapData>
-      <FxReset/>
       <LegData>
         <LegType>Floating</LegType>
         <Payer>true</Payer>
@@ -25,12 +21,11 @@
           <Index>EUR-EURIBOR-3M</Index>
           <Spreads>
             <Spread>0.0</Spread>
-	  </Spreads>
+          </Spreads>
         </FloatingLegData>
         <ScheduleData>
-          <IsRulesBased>true</IsRulesBased>
           <Rules>
-	    <StartDate>2010-10-01</StartDate>
+            <StartDate>2010-10-01</StartDate>
             <EndDate>2038-10-01</EndDate>
             <Tenor>3M</Tenor>
             <Calendar>TARGET</Calendar>
@@ -40,7 +35,7 @@
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
-	  </Rules>
+          </Rules>
         </ScheduleData>
       </LegData>
       <LegData>
@@ -49,7 +44,7 @@
         <Currency>EUR</Currency>
         <Notionals>
           <Notional>10000000</Notional>
-	</Notionals>
+        </Notionals>
         <DayCounter>ACT/ACT</DayCounter>
         <PaymentConvention>Following</PaymentConvention>
         <FixedLegData>
@@ -58,9 +53,8 @@
           </Rates>
         </FixedLegData>
         <ScheduleData>
-          <IsRulesBased>true</IsRulesBased>
           <Rules>
-	    <StartDate>2010-10-01</StartDate>
+            <StartDate>2010-10-01</StartDate>
             <EndDate>2038-10-01</EndDate>
             <Tenor>1Y</Tenor>
             <Calendar>TARGET</Calendar>
@@ -70,17 +64,14 @@
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
-	  </Rules>
+          </Rules>
         </ScheduleData>
       </LegData>
     </SwapData>
   </Trade>
-
   <Trade id="204128-swaption">
     <TradeType>Swaption</TradeType>
     <Envelope>
-      <Type>Swaption</Type>
-      <Company>BANK</Company>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
       <AdditionalFields/>
@@ -89,16 +80,12 @@
       <OptionData>
         <LongShort>Short</LongShort>
         <OptionType>Call</OptionType>
-        <!--<Style>Bermudan</Style>-->
         <Style>European</Style>
-	<Settlement>Physical</Settlement>
+        <Settlement>Physical</Settlement>
         <PayOffAtExpiry>false</PayOffAtExpiry>
-        <PremiumAmount>0</PremiumAmount>
-        <PremiumCurrency/>
-        <PremiumPayDate/>
         <ExerciseDates>
           <ExerciseDate>2017-10-01</ExerciseDate>
-	</ExerciseDates>
+        </ExerciseDates>
       </OptionData>
       <LegData>
         <LegType>Floating</LegType>
@@ -106,7 +93,7 @@
         <Currency>EUR</Currency>
         <Notionals>
           <Notional>10000000</Notional>
-	</Notionals>
+        </Notionals>
         <DayCounter>A360</DayCounter>
         <PaymentConvention>ModifiedFollowing</PaymentConvention>
         <FloatingLegData>
@@ -116,9 +103,8 @@
           </Spreads>
         </FloatingLegData>
         <ScheduleData>
-          <IsRulesBased>true</IsRulesBased>
           <Rules>
-	    <StartDate>2017-10-01</StartDate>
+            <StartDate>2017-10-01</StartDate>
             <EndDate>2038-10-01</EndDate>
             <Tenor>3M</Tenor>
             <Calendar>TARGET</Calendar>
@@ -128,7 +114,7 @@
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
-	  </Rules>
+          </Rules>
         </ScheduleData>
       </LegData>
       <LegData>
@@ -137,7 +123,7 @@
         <Currency>EUR</Currency>
         <Notionals>
           <Notional>10000000</Notional>
-	</Notionals>
+        </Notionals>
         <DayCounter>ACT/ACT</DayCounter>
         <PaymentConvention>Following</PaymentConvention>
         <FixedLegData>
@@ -146,9 +132,8 @@
           </Rates>
         </FixedLegData>
         <ScheduleData>
-          <IsRulesBased>true</IsRulesBased>
           <Rules>
-	    <StartDate>2017-10-01</StartDate>
+            <StartDate>2017-10-01</StartDate>
             <EndDate>2038-10-01</EndDate>
             <Tenor>1Y</Tenor>
             <Calendar>TARGET</Calendar>
@@ -158,23 +143,19 @@
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
-	  </Rules>
+          </Rules>
         </ScheduleData>
       </LegData>
     </SwaptionData>
   </Trade>
-
   <Trade id="204128-short">
     <TradeType>Swap</TradeType>
     <Envelope>
-      <Type>Swap</Type>
-      <Company>BANK</Company>
       <CounterParty>CUST_B</CounterParty>
       <NettingSetId>CUST_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <SwapData>
-      <FxReset/>
       <LegData>
         <LegType>Floating</LegType>
         <Payer>true</Payer>
@@ -191,8 +172,7 @@
           </Spreads>
         </FloatingLegData>
         <ScheduleData>
-          <IsRulesBased>true</IsRulesBased>
-	  <Rules>
+          <Rules>
             <StartDate>2010-10-01</StartDate>
             <EndDate>2017-10-01</EndDate>
             <Tenor>3M</Tenor>
@@ -203,7 +183,7 @@
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
-	  </Rules>
+          </Rules>
         </ScheduleData>
       </LegData>
       <LegData>
@@ -221,8 +201,7 @@
           </Rates>
         </FixedLegData>
         <ScheduleData>
-          <IsRulesBased>true</IsRulesBased>
-	  <Rules>
+          <Rules>
             <StartDate>2010-10-01</StartDate>
             <EndDate>2017-10-01</EndDate>
             <Tenor>1Y</Tenor>
@@ -233,10 +212,9 @@
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
-	  </Rules>
+          </Rules>
         </ScheduleData>
       </LegData>
     </SwapData>
   </Trade>
-
 </Portfolio>
