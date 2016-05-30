@@ -50,15 +50,21 @@
   </xs:complexType>
 
   <xs:complexType name="optionData">
-    <xs:sequence>
+    <xs:all>
       <xs:element type="xs:string" name="LongShort"/>
       <xs:element type="xs:string" name="OptionType"/>
       <xs:element type="xs:string" name="Style"/>
       <xs:element type="xs:string" name="Settlement"/>
       <xs:element type="xs:string" name="PayOffAtExpiry"/>
-      <xs:element type="xs:string" name="PremiumAmount"/>
-      <xs:element type="xs:string" name="PremiumCurrency"/>
-      <xs:element type="xs:string" name="PremiumPayDate"/>
+      <xs:element name="Premium" minOccurs="0">
+        <xs:complexType>
+          <xs:all>
+            <xs:element type="xs:string" name="Amount"/>
+            <xs:element type="xs:string" name="Currency"/>
+            <xs:element type="xs:string" name="Date"/>
+          </xs:all>
+        </xs:complexType>
+      </xs:element>
       <xs:element name="ExerciseDates">
         <xs:complexType>
           <xs:sequence>
@@ -66,7 +72,7 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
-    </xs:sequence>
+    </xs:all>
   </xs:complexType>
 
   <xs:element name="legDataType" abstract="true"/>
@@ -105,7 +111,7 @@
       <xs:element type="xs:boolean" name="Payer"/>
       <xs:element type="legType" name="LegType"/>
       <xs:element type="currencyCode" name="Currency"/>
-      <xs:element type="buisnessDayConvention" name="PaymentConvention"/>
+      <xs:element type="businessDayConvention" name="PaymentConvention"/>
       <xs:element type="dayCounter" name="DayCounter"/>
       <xs:element name="Notionals">
         <xs:complexType>
@@ -129,8 +135,8 @@
             <xs:element type="date" name="EndDate"/>
             <xs:element type="xs:string" name="Tenor"/>
             <xs:element type="calendar" name="Calendar"/>
-            <xs:element type="buisnessDayConvention" name="Convention"/>
-            <xs:element type="buisnessDayConvention" name="TermConvention"/>
+            <xs:element type="businessDayConvention" name="Convention"/>
+            <xs:element type="businessDayConvention" name="TermConvention"/>
             <xs:element type="dateRule" name="Rule" minOccurs="0"/>
             <xs:element type="bool" name="EndOfMonth" minOccurs="0"/>
             <xs:element type="date" name="FirstDate" minOccurs="0"/>

@@ -1,0 +1,174 @@
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+<xs:include schemaLocation="ore_types.xsd"/>
+
+  <xs:element type="conventionsType" name="Conventions"/>
+  
+  <xs:complexType name="conventionsType">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element type="zeroType" name="Zero"/>
+      <xs:element type="cdsType" name="CDS"/>
+      <xs:element type="depositType" name="Deposit"/>
+      <xs:element type="futureType" name="Future"/>
+      <xs:element type="fraType" name="FRA"/>
+      <xs:element type="oisType" name="OIS"/>
+      <xs:element type="swapType" name="Swap"/>
+      <xs:element type="averageOISType" name="AverageOIS"/>
+      <xs:element type="tenorBasisSwapType" name="TenorBasisSwap"/>
+      <xs:element type="tenorBasisTwoSwapType" name="TenorBasisTwoSwap"/>
+      <xs:element type="fxType" name="FX"/>
+      <xs:element type="crossCurrencyBasisType" name="CrossCurrencyBasis"/>
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="zeroType">
+    <xs:sequence>
+      <xs:element type="xs:string" name="Id" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="bool" name="TenorBased" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="dayCounter" name="DayCounter" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="compounding" name="Compounding" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="frequencyType" name="CompoundingFrequency" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="TenorCalendar" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:integer" name="SpotLag" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="SpotCalendar" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="businessDayConvention" name="RollConvention" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="EOM" minOccurs="0" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="cdsType">
+    <xs:sequence>
+      <xs:element type="xs:string" name="Id" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:integer" name="SettlementDays" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="Calendar" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="frequencyType" name="Frequency" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="businessDayConvention" name="PaymentConvention" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="dateRule" name="Rule" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="dayCounter" name="DayCounter" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="bool" name="SettlesAccrual" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="bool" name="PaysAtDefaultTime" minOccurs="1" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="depositType">
+    <xs:sequence>
+      <xs:element type="xs:string" name="Id" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="bool" name="IndexBased" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="Index" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="Calendar" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="businessDayConvention" name="Convention" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="EOM" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="dayCounter" name="DayCounter" minOccurs="0" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+  
+  <xs:complexType name="futureType">
+    <xs:sequence>
+      <xs:element type="xs:string" name="Id" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="Index" minOccurs="1" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="fraType">
+    <xs:sequence>
+      <xs:element type="xs:string" name="Id" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="Index" minOccurs="1" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+  
+  <xs:complexType name="oisType">
+    <xs:sequence>
+      <xs:element type="xs:string" name="Id" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:integer" name="SpotLag" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="Index" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="dayCounter" name="FixedDayCounter" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:integer" name="PaymentLag" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="EOM" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="frequencyType" name="FixedFrequency" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="businessDayConvention" name="FixedConvention" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="businessDayConvention" name="FixedPaymentConvention" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="dateRule" name="Rule" minOccurs="0" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="swapType">
+    <xs:sequence>
+      <xs:element type="xs:string" name="Id" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="FixedCalendar" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="frequencyType" name="FixedFrequency" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="businessDayConvention" name="FixedConvention" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="dayCounter" name="FixedDayCounter" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="Index" minOccurs="1" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="averageOISType">
+    <xs:sequence>
+      <xs:element type="xs:string" name="Id" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:integer" name="SpotLag" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="FixedTenor" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="dayCounter" name="FixedDayCounter" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="FixedCalendar" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="businessDayConvention" name="FixedConvention" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="businessDayConvention" name="FixedPaymentConvention" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="Index" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="OnTenor" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="RateCutoff" minOccurs="1" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="tenorBasisSwapType">
+    <xs:sequence>
+      <xs:element type="xs:string" name="Id" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="LongIndex" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="ShortIndex" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="ShortPayTenor" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="SpreadOnShort" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="IncludeSpread" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="subPeriodsCouponType" name="SubPeriodsCouponType" minOccurs="0" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="tenorBasisTwoSwapType">
+    <xs:sequence>
+      <xs:element type="xs:string" name="Id" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="Calendar" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="frequencyType" name="LongFixedFrequency" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="businessDayConvention" name="LongFixedConvention" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="dayCounter" name="LongFixedDayCounter" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="LongIndex" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="frequencyType" name="ShortFixedFrequency" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="businessDayConvention" name="ShortFixedConvention" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="dayCounter" name="ShortFixedDayCounter" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="ShortIndex" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="bool" name="LongMinusShort" minOccurs="0" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="fxType">
+    <xs:sequence>
+      <xs:element type="xs:string" name="Id" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:integer" name="SpotDays" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="currencyCode" name="SourceCurrency" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="currencyCode" name="TargetCurrency" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:decimal" name="PointsFactor" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="AdvanceCalendar" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="SpotRelative" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="AdditionalSettleCalendar" minOccurs="0" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="crossCurrencyBasisType">
+    <xs:sequence>
+      <xs:element type="xs:string" name="Id" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:integer" name="SettlementDays" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="SettlementCalendar" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="businessDayConvention" name="RollConvention" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="FlatIndex" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="SpreadIndex" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="bool" name="EOM" minOccurs="0" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+
+</xs:schema>
+

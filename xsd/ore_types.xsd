@@ -89,7 +89,7 @@
     </xs:restriction>
   </xs:simpleType>
 
-  <xs:simpleType name="buisnessDayConvention">
+  <xs:simpleType name="businessDayConvention">
     <xs:restriction base="xs:string">
       <xs:enumeration value="F"/>
       <xs:enumeration value="Following"/>
@@ -220,20 +220,7 @@
     </xs:restriction>
   </xs:simpleType>
  
-  <xs:simpleType name="dateRule">
-    <xs:restriction base="xs:string">
-      <xs:enumeration value="Backward"/>
-      <xs:enumeration value="Forward"/>
-      <xs:enumeration value="Zero"/>
-      <xs:enumeration value="ThirdWednesday"/>
-      <xs:enumeration value="Twentieth"/>
-      <xs:enumeration value="TwentiethIMM"/>
-      <xs:enumeration value="OldCDS"/>
-      <xs:enumeration value="CDS"/>
-    </xs:restriction>
-  </xs:simpleType>
-
-  <xs:simpleType name="frequency">
+  <xs:simpleType name="frequencyType">
     <xs:restriction base="xs:string">
       <xs:enumeration value="Z"/>
       <xs:enumeration value="Once"/>
@@ -253,6 +240,35 @@
       <xs:enumeration value="Weekly"/>
       <xs:enumeration value="D"/>
       <xs:enumeration value="Daily"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="dateRule">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Backward"/>
+      <xs:enumeration value="Forward"/>
+      <xs:enumeration value="Zero"/>
+      <xs:enumeration value="ThirdWednesday"/>
+      <xs:enumeration value="Twentieth"/>
+      <xs:enumeration value="TwentiethIMM"/>
+      <xs:enumeration value="OldCDS"/>
+      <xs:enumeration value="CDS"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="subPeriodsCouponType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Compounding"/>
+      <xs:enumeration value="Averaging"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="compounding">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Simple"/>
+      <xs:enumeration value="Compounded"/>
+      <xs:enumeration value="Continuous"/>
+      <xs:enumeration value="SimpleThenCompounded"/>
     </xs:restriction>
   </xs:simpleType>
 
