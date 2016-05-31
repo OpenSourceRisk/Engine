@@ -47,20 +47,8 @@ Size CrossAssetModel::components(const AssetType t) const {
     case FX:
         return nFxBs_;
         break;
-    case INF:
-        return nInfDk_;
-        break;
-    case CR:
-        return nCrLgm1f_;
-        break;
-    case EQ:
-        return nEq_;
-        break;
-    case COM:
-        return nCom_;
-        break;
     default:
-        QL_FAIL("asset class " << t << " not known");
+        QL_FAIL("asset class " << t << " not known.");
     }
 }
 
@@ -93,12 +81,6 @@ Size CrossAssetModel::brownians(const AssetType t, const Size) const {
         return 1;
     case FX:
         return 1;
-    case INF:
-        return 1;
-    case CR:
-        return 1;
-    case EQ:
-    case COM:
     default:
         QL_FAIL("EQ, COM not yet supported or type (" << t << ") unknown");
     }
@@ -110,12 +92,6 @@ Size CrossAssetModel::stateVariables(const AssetType t, const Size) const {
         return 1;
     case FX:
         return 1;
-    case INF:
-        return 2;
-    case CR:
-        return 2;
-    case EQ:
-    case COM:
     default:
         QL_FAIL("EQ, COM not yet supported or type (" << t << ") unknown");
     }
@@ -127,12 +103,6 @@ Size CrossAssetModel::arguments(const AssetType t, const Size) const {
         return 2;
     case FX:
         return 1;
-    case INF:
-        return 2;
-    case CR:
-        return 2;
-    case EQ:
-    case COM:
     default:
         QL_FAIL("EQ, COM not yet supported or type (" << t << ") unknown");
     }
@@ -150,20 +120,6 @@ Size CrossAssetModel::idx(const AssetType t, const Size i) const {
         QL_REQUIRE(i < nFxBs_, "fx index (" << i << ") must be in 0..."
                                             << (nFxBs_ - 1));
         return nIrLgm1f_ + i;
-    case INF:
-        QL_REQUIRE(nInfDk_ > 0, "inf index ("
-                                    << i << ") invalid, no inf components");
-        QL_REQUIRE(i < nInfDk_, "inf index (" << i << ") must be in 0..."
-                                              << (nInfDk_ - 1));
-        return nIrLgm1f_ + nFxBs_ + i;
-    case CR:
-        QL_REQUIRE(nCrLgm1f_ > 0, "cr index ("
-                                      << i << ") invalid, no cr components");
-        QL_REQUIRE(i < nCrLgm1f_, "crlgm1f idnex (" << i << ") must be in 0..."
-                                                    << (nCrLgm1f_ - 1));
-        return nIrLgm1f_ + nFxBs_ + nInfDk_ + i;
-    case EQ:
-    case COM:
     default:
         QL_FAIL("EQ, COM not yet supported or type (" << t << ") unknown");
     }
@@ -188,20 +144,6 @@ Size CrossAssetModel::cIdx(const AssetType t, const Size i,
         QL_REQUIRE(i < nFxBs_, "fxbs index (" << i << ") must be in 0..."
                                               << (nFxBs_ - 1));
         return nIrLgm1f_ + i;
-    case INF:
-        QL_REQUIRE(nInfDk_ > 0, "inf index ("
-                                    << i << ") invalid, no inf components");
-        QL_REQUIRE(i < nInfDk_, "infdk index (" << i << ") must be in 0..."
-                                                << (nInfDk_ - 1));
-        return nIrLgm1f_ + nFxBs_ + i;
-    case CR:
-        QL_REQUIRE(nCrLgm1f_ > 0, "cr index ("
-                                      << i << ") invalid, no cr components");
-        QL_REQUIRE(i < nCrLgm1f_, "crlgm1f idnex (" << i << ") must be in 0..."
-                                                    << (nCrLgm1f_ - 1));
-        return nIrLgm1f_ + nFxBs_ + nInfDk_ + i;
-    case EQ:
-    case COM:
     default:
         QL_FAIL("EQ, COM not yet supported or type (" << t << ") unknown");
     }
@@ -226,20 +168,6 @@ Size CrossAssetModel::pIdx(const AssetType t, const Size i,
         QL_REQUIRE(i < nFxBs_, "fxbs index (" << i << ") must be in 0..."
                                               << (nFxBs_ - 1));
         return nIrLgm1f_ + i;
-    case INF:
-        QL_REQUIRE(nInfDk_ > 0, "inf index ("
-                                    << i << ") invalid, no inf components");
-        QL_REQUIRE(i < nInfDk_, "infdk index (" << i << ") must be in 0..."
-                                                << (nInfDk_ - 1));
-        return nIrLgm1f_ + nFxBs_ + 2 * i + offset;
-    case CR:
-        QL_REQUIRE(nCrLgm1f_ > 0, "cr index ("
-                                      << i << ") invalid, no cr components");
-        QL_REQUIRE(i < nCrLgm1f_, "crlgm1f idnex (" << i << ") must be in 0...1"
-                                                    << (nCrLgm1f_ - 1));
-        return nIrLgm1f_ + nFxBs_ + 2 * nInfDk_ + 2 * i + offset;
-    case EQ:
-    case COM:
     default:
         QL_FAIL("EQ, COM not yet supported or type (" << t << ") unknown");
     }
@@ -264,20 +192,6 @@ Size CrossAssetModel::aIdx(const AssetType t, const Size i,
         QL_REQUIRE(i < nFxBs_, "fxbs index (" << i << ") must be in 0..."
                                               << (nFxBs_ - 1));
         return 2 * nIrLgm1f_ + i;
-    case INF:
-        QL_REQUIRE(nInfDk_ > 0, "inf index ("
-                                    << i << ") invalid, no inf components");
-        QL_REQUIRE(i < nInfDk_, "infdk index (" << i << ") must be in 0..."
-                                                << (nInfDk_ - 1));
-        return 2 * nIrLgm1f_ + nFxBs_ + 2 * i + offset;
-    case CR:
-        QL_REQUIRE(nCrLgm1f_ > 0, "cr index ("
-                                      << i << ") invalid, no cr components");
-        QL_REQUIRE(i < nCrLgm1f_, "crlgm1f idnex (" << i << ") must be in 0...1"
-                                                    << (nCrLgm1f_ - 1));
-        return 2 * nIrLgm1f_ + nFxBs_ + 2 * nInfDk_ + 2 * i + offset;
-    case EQ:
-    case COM:
     default:
         QL_FAIL("EQ, COM not yet supported or type (" << t << ") unknown");
     }
@@ -357,22 +271,6 @@ void CrossAssetModel::setIntegrationPolicy(
                         p_[idx(FX, i)]->parameterTimes(0).begin(),
                         p_[idx(FX, i)]->parameterTimes(0).end());
     }
-    for (Size i = 0; i < nInfDk_; ++i) {
-        allTimes.insert(allTimes.end(),
-                        p_[idx(INF, i)]->parameterTimes(0).begin(),
-                        p_[idx(INF, i)]->parameterTimes(0).end());
-        allTimes.insert(allTimes.end(),
-                        p_[idx(INF, i)]->parameterTimes(1).begin(),
-                        p_[idx(INF, i)]->parameterTimes(1).end());
-    }
-    for (Size i = 0; i < nCrLgm1f_; ++i) {
-        allTimes.insert(allTimes.end(),
-                        p_[idx(CR, i)]->parameterTimes(0).begin(),
-                        p_[idx(CR, i)]->parameterTimes(0).end());
-        allTimes.insert(allTimes.end(),
-                        p_[idx(CR, i)]->parameterTimes(1).begin(),
-                        p_[idx(CR, i)]->parameterTimes(1).end());
-    }
 
     // use piecewise integrator avoiding the step points
     integrator_ =
@@ -385,8 +283,6 @@ void CrossAssetModel::initializeParametrizations() {
 
     nIrLgm1f_ = 0;
     nFxBs_ = 0;
-    nInfDk_ = 0;
-    nCrLgm1f_ = 0;
 
     Size i = 0;
 
@@ -446,7 +342,7 @@ void CrossAssetModel::initializeParametrizations() {
 
 void CrossAssetModel::initializeCorrelation() {
 
-    Size n = nIrLgm1f_ + nFxBs_ + nInfDk_ + nCrLgm1f_;
+    Size n = nIrLgm1f_ + nFxBs_;
 
     if (rho_.empty()) {
         rho_ = Matrix(n, n, 0.0);

@@ -56,7 +56,7 @@ namespace QuantExt {
 */
 
 namespace CrossAssetModelTypes {
-enum AssetType { IR, FX, INF, CR, EQ, COM };
+enum AssetType { IR, FX };
 }
 
 using namespace CrossAssetModelTypes;
@@ -66,10 +66,6 @@ class CrossAssetModel : public LinkableCalibratedModel {
     /*! Parametrizations must be given in the following order
         - IR  (first parametrization defines the domestic currency)
         - FX  (for all pairs domestic-ccy defined by the IR models)
-        - INF (optionally, ccy must be a subset of the IR ccys)
-        - CR  (optionally, ccy must be a subset of the IR ccys)
-        - EQ  (optionally) ccy must be a subset of the IR ccys)
-        - COM (optionally) ccy must be a subset of the IR ccys)
         If the correlation matrix is not given, it is initialized
         as the unit matrix (and can be customized after
         construction of the model).
@@ -96,6 +92,9 @@ class CrossAssetModel : public LinkableCalibratedModel {
 
     /*! total dimension of model (sum of number of state variables) */
     Size dimension() const;
+
+    /*! total number of Brownian motions (this is less or equal to dimension) */
+    Size brownians() const;
 
     /*! total number of parameters that can be calibrated */
     Size totalNumberOfParameters() const;
@@ -244,7 +243,7 @@ class CrossAssetModel : public LinkableCalibratedModel {
 
     /* members */
 
-    Size nIrLgm1f_, nFxBs_, nInfDk_, nCrLgm1f_, nEq_, nCom_;
+    Size nIrLgm1f_, nFxBs_;
     Size totalNumberOfParameters_;
     std::vector<boost::shared_ptr<Parametrization> > p_;
     std::vector<boost::shared_ptr<LinearGaussMarkovModel> > lgm_;
@@ -277,14 +276,6 @@ class CrossAssetModel : public LinkableCalibratedModel {
             }
             res.insert(res.end(), tmp.begin(), tmp.end());
         }
-        for (Size j = 0; j < nCrLgm1f_; ++j) {
-            std::vector<bool> tmp1(
-                p_[nIrLgm1f_ + nFxBs_ + j]->parameter(0)->size(), true);
-            std::vector<bool> tmp2(
-                p_[nIrLgm1f_ + nFxBs_ + j]->parameter(1)->size(), true);
-            res.insert(res.end(), tmp1.begin(), tmp1.end());
-            res.insert(res.end(), tmp2.begin(), tmp2.end());
-        }
         return res;
     }
 };
@@ -298,9 +289,11 @@ inline const boost::shared_ptr<StochasticProcess> CrossAssetModel::stateProcess(
 }
 
 inline Size CrossAssetModel::dimension() const {
-    // this assumes specific models, as soon as other model types are added
-    // this formula has to be generalized as well
-    return nIrLgm1f_ * 1 + nFxBs_ * 1 + nInfDk_ * 2 + nCrLgm1f_ * 2;
+    return nIrLgm1f_ * 1 + nFxBs_ * 1;
+}
+
+inline Size CrossAssetModel::brownians() const {
+    return nIrLgm1f_ * 1 + nFxBs_ * 1;
 }
 
 inline Size CrossAssetModel::totalNumberOfParameters() const {
