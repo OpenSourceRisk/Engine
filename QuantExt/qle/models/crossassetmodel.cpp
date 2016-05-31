@@ -217,7 +217,8 @@ void CrossAssetModel::correlation(const AssetType s, const Size i,
                                                     << ")");
     // we can not check for non-negative eigenvalues, since we do not
     // know when the correlation matrix setup is finished, but this
-    // is effectively one in the state process later on anyway
+    // is effectively one in the state process later on anyway and
+    // the user can also use checkCorrelationMatrix() to verify this
     rho_(row, column) = rho_(column, row) = value;
     update();
 }
@@ -341,23 +342,27 @@ void CrossAssetModel::initializeParametrizations() {
 }
 
 void CrossAssetModel::initializeCorrelation() {
-
     Size n = nIrLgm1f_ + nFxBs_;
-
     if (rho_.empty()) {
         rho_ = Matrix(n, n, 0.0);
         for (Size i = 0; i < n; ++i)
             rho_(i, i) = 1.0;
         return;
     }
-
     QL_REQUIRE(rho_.rows() == n && rho_.columns() == n,
                "correlation matrix is " << rho_.rows() << " x "
                                         << rho_.columns() << " but should be "
                                         << n << " x " << n);
+    checkCorrelationMatrix();
+}
 
+void CrossAssetModel::checkCorrelationMatrix() const {
+    Size n = rho_.rows();
+    Size m = rho_.columns();
+    QL_REQUIRE(rho_.columns() == n,
+               "correlation matrix (" << n << " x " << m << " must be square");
     for (Size i = 0; i < n; ++i) {
-        for (Size j = 0; j < n; ++j) {
+        for (Size j = 0; j < m; ++j) {
             QL_REQUIRE(close_enough(rho_[i][j], rho_[j][i]),
                        "correlation matrix is no symmetric, for (i,j)=("
                            << i << "," << j << ") rho(i,j)=" << rho_[i][j]

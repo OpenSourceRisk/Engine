@@ -152,6 +152,9 @@ class CrossAssetModel : public LinkableCalibratedModel {
         recommended instead of the global matrix directly */
     const Matrix &correlation() const;
 
+    /*! check if correlation matrix is valid */
+    void checkCorrelationMatrix() const;
+
     /*! index of component in the parametrization vector */
     Size idx(const AssetType t, const Size i) const;
 
