@@ -263,13 +263,13 @@ class CrossAssetModel : public LinkableCalibratedModel {
                        << fxbs(ccy)->parameter(0)->size() - 1);
         std::vector<bool> res(0);
         for (Size j = 0; j < nIrLgm1f_; ++j) {
-            std::vector<bool> tmp1(p_[j]->parameter(0)->size(), true);
-            std::vector<bool> tmp2(p_[j]->parameter(1)->size(), true);
+            std::vector<bool> tmp1(p_[idx(IR,j)]->parameter(0)->size(), true);
+            std::vector<bool> tmp2(p_[idx(IR,j)]->parameter(1)->size(), true);
             res.insert(res.end(), tmp1.begin(), tmp1.end());
             res.insert(res.end(), tmp2.begin(), tmp2.end());
         }
         for (Size j = 0; j < nFxBs_; ++j) {
-            std::vector<bool> tmp(p_[nIrLgm1f_ + j]->parameter(0)->size(),
+            std::vector<bool> tmp(p_[idx(FX,j)]->parameter(0)->size(),
                                   true);
             if (ccy == j) {
                 tmp[i] = false;
