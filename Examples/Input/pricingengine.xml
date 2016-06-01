@@ -11,7 +11,7 @@
   <Product type="BermudanSwaption">
     <Model>LGM</Model>
     <ModelParameters>
-      <Parameter name="Calibration">Bootstrap</Parameter>
+      <Parameter name="Calibration">BestFit</Parameter><!--Bootstrap-->
       <Parameter name="BermudanStrategy">CoterminalATM</Parameter>
       <Parameter name="Reversion">0.03</Parameter>
       <Parameter name="ReversionType">HullWhite</Parameter>
