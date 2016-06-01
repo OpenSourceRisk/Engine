@@ -1,8 +1,17 @@
 <xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
 
   <xs:simpleType name="date">
-    <!-- date can be YYYYMMDD or DD-MM-YYYY or DD/MM/YYYY -->
-    <xs:restriction base="xs:string"/>
+    <!-- TODO: date can be YYYYMMDD or DD-MM-YYYY or DD/MM/YYYY or an empty string in some cases -->
+    <xs:restriction base="xs:string">
+      <xs:maxLength value="10"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="indexNameType">
+    <!-- TODO: Index name is of form CCY-NAME or CCY-NAME-TENOR max length is EUR-EURIBOR-12M -->
+    <xs:restriction base="xs:string">
+      <xs:maxLength value="14"/>
+    </xs:restriction>
   </xs:simpleType>
 
   <xs:simpleType name="bool">
@@ -86,6 +95,12 @@
         <xs:enumeration value="PHP"/>
         <xs:enumeration value="NGN"/>
         <xs:enumeration value="MAD"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="currencyPair">
+    <xs:restriction base="xs:string">
+      <xs:length value="6"/> <!-- FIXME: can we reference above list?-->
     </xs:restriction>
   </xs:simpleType>
 

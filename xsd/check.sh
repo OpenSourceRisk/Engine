@@ -11,18 +11,25 @@ xmllint --schema curveconfig.xsd --path xsd --noout Examples/Input/curveconfig.x
 echo -------
 
 echo Portfolio Files Examples:
-find . -name 'portfolio*.xml' -print0 | while read -d $'\0' file
+find Examples -name 'portfolio*.xml' -print0 | while read -d $'\0' file
 do
   /bin/echo -n "Checking ... "
   xmllint --schema instruments.xsd --path xsd --noout $file
 done
 echo -------
 
-
 echo Netting Set Files Examples:
-find . -name 'netting*.xml' -print0 | while read -d $'\0' file
+find Examples -name 'netting*.xml' -print0 | while read -d $'\0' file
 do
   /bin/echo -n "Checking ... "
   xmllint --schema nettingsetdefinitions.xsd --path xsd --noout $file
+done
+echo -------
+
+echo Simulation Files Examples:
+find Examples -name 'simulation*.xml' -print0 | while read -d $'\0' file
+do
+  /bin/echo -n "Checking ... "
+  xmllint --schema simulation.xsd --path xsd --noout $file
 done
 echo -------

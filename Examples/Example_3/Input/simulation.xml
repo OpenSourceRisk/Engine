@@ -120,8 +120,8 @@
 	  
 	  <Reversion>
 	    <Calibrate>N</Calibrate>
-      	    <ParamType>Constant</ParamType>
 	    <ReversionType>HullWhite</ReversionType>
+      	    <ParamType>Constant</ParamType>
 	    <TimeGrid/>
 	    <InitialValue>0.03</InitialValue>
 	  </Reversion>
