@@ -33,3 +33,19 @@ do
   xmllint --schema simulation.xsd --path xsd --noout $file
 done
 echo -------
+
+echo Pricing Engine Files Examples:
+find Examples -name 'pricingeng*.xml' -print0 | while read -d $'\0' file
+do
+  /bin/echo -n "Checking ... "
+  xmllint --schema pricingengines.xsd --path xsd --noout $file
+done
+echo -------
+
+echo Todays Market Files Examples:
+find Examples -name 'todaysmarket*.xml' -print0 | while read -d $'\0' file
+do
+  /bin/echo -n "Checking ... "
+  xmllint --schema todaysmarket.xsd --path xsd --noout $file
+done
+echo -------

@@ -266,6 +266,13 @@
       <xs:element name="DefaultCurves">
         <xs:complexType>
           <xs:sequence>
+            <xs:element name="Names">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element type="xs:string" name="Name" maxOccurs="unbounded" minOccurs="0"/>
+                </xs:sequence>
+              </xs:complexType>
+            </xs:element>
             <xs:element type="xs:string" name="Tenors"/>
           </xs:sequence>
         </xs:complexType>
