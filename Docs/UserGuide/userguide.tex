@@ -246,7 +246,7 @@ shown in figure \ref{fig_2}.
 In this case, where the curves (discount and forward) are upward sloping, the receiver swap is at the money at inception only and moves (on average) out of the money during its life. Similarly, the swap moves into the money from the counterparty's perspective. Hence the expected exposure evolutions from our perspective (EPE) and the counterparty's perspective (ENE) 'detach' here, while both can still be be reconciled with payer and receiver Swaption prices.
 
 %--------------------------------------------------------
-\subsection{European Swaption Exposure}
+\subsection{European Swaption Exposure}\label{sec:european_swaption}
 %--------------------------------------------------------
 
 This demo case in folder {\tt Examples/Example\_7} shows the exposure evolution of European Swaptions with cash and physical delivery, respectively, see figure \ref{fig_3}.
@@ -257,7 +257,21 @@ This demo case in folder {\tt Examples/Example\_7} shows the exposure evolution 
 \caption{European Swaption exposure evolution, expiry in 10 years, final maturity in 20 years, for cash and physical delivery.}
 \label{fig_3}
 \end{figure}
-The delivery type (cash vs physical) yields significantly different valuations as of today due to the steepness of the relevant yield curves (EUR). The cash settled Swaption's exposure graph is truncated at the exercise date, whereas the physically settled Swaption exposure turns into a Swap-like exposure after expiry. For comparison, the example also provides the exposure evolution of the underlying forward starting Swap which yields a somewhat higher exposure after the foreard start date than the physically settled Swaption. This is due to scenarios with negative swap NPV at expiry and positive NPVs thereafter.
+The delivery type (cash vs physical) yields significantly different valuations as of today due to the steepness of the relevant yield curves (EUR). The cash settled Swaption's exposure graph is truncated at the exercise date, whereas the physically settled Swaption exposure turns into a Swap-like exposure after expiry. For comparison, the example also provides the exposure evolution of the underlying forward starting Swap which yields a somewhat higher exposure after the forward start date than the physically settled Swaption. This is due to scenarios with negative swap NPV at expiry and positive NPVs thereafter.
+
+%--------------------------------------------------------
+\subsection{Bermudan Swaption Exposure}
+%--------------------------------------------------------
+
+This demo case in folder {\tt Examples/Example\_10} shows the exposure evolution of Bermudan rather than European Swaptions with cash and physical delivery, respectively, see figure \ref{fig_3b}.
+\begin{figure}[hbt]
+\begin{center}
+\includegraphics[scale=1.0]{example_bermudan_swaption.pdf}
+\end{center}
+\caption{Bermudan Swaption exposure evolution, 5 annual exercise dates starting in 10 years, final maturity in 20 years, for cash and physical delivery.}
+\label{fig_3b}
+\end{figure}
+The underlying Swap is the same as in the European Swaption example in section \ref{sec:european_swaption}. Note in particular the difference between the Bermudan and European Swaption exposures with cash settlement: The Bermudan shows the typical step-wise decrease due to the series of exercise dates. When running this example, you will notice the significant difference in computation time compared to the European case (ballpark 30 minutes here for 2 Swaptions, 1000 samples, 90 time steps). The Bermudan example is way slower because we use an LGM grid engine for pricing under scenarios in this case. In a realistic context one would more likely resort to American Monte Carlo simulation, feasible in ORE, but not provided in the first release. However, this implementation can be used to benchmark any faster / more sophisticated approach to Bermudan Swaption exposure simulation.
 
 %--------------------------------------------------------
 \subsection{Callable Swap Exposure}
