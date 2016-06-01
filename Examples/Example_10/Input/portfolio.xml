@@ -15,11 +15,11 @@
         <Settlement>Cash</Settlement>
         <PayOffAtExpiry>false</PayOffAtExpiry>
         <ExerciseDates>
-          <ExerciseDate>2026-03-01</ExerciseDate>
-          <ExerciseDate>2027-03-01</ExerciseDate>
-          <ExerciseDate>2028-03-01</ExerciseDate>
-          <ExerciseDate>2029-03-01</ExerciseDate>
-          <ExerciseDate>2030-03-01</ExerciseDate>
+          <ExerciseDate>2026-02-25</ExerciseDate>
+          <ExerciseDate>2027-02-25</ExerciseDate>
+          <ExerciseDate>2028-02-25</ExerciseDate>
+          <ExerciseDate>2029-02-25</ExerciseDate>
+          <ExerciseDate>2030-02-25</ExerciseDate>
         </ExerciseDates>
       </OptionData>
       <LegData>
@@ -43,8 +43,8 @@
             <EndDate>2036-03-01</EndDate>
             <Tenor>3M</Tenor>
             <Calendar>TARGET</Calendar>
-            <Convention>ModifiedFollowing</Convention>
-            <TermConvention>ModifiedFollowing</TermConvention>
+            <Convention>Following</Convention>
+            <TermConvention>Following</TermConvention>
             <Rule>Forward</Rule>
             <EndOfMonth/>
             <FirstDate/>
@@ -98,11 +98,11 @@
         <Settlement>Physical</Settlement>
         <PayOffAtExpiry>false</PayOffAtExpiry>
         <ExerciseDates>
-          <ExerciseDate>2026-03-01</ExerciseDate>
-          <ExerciseDate>2027-03-01</ExerciseDate>
-          <ExerciseDate>2028-03-01</ExerciseDate>
-          <ExerciseDate>2029-03-01</ExerciseDate>
-          <ExerciseDate>2030-03-01</ExerciseDate>
+          <ExerciseDate>2026-02-25</ExerciseDate>
+          <ExerciseDate>2027-02-25</ExerciseDate>
+          <ExerciseDate>2028-02-25</ExerciseDate>
+          <ExerciseDate>2029-02-25</ExerciseDate>
+          <ExerciseDate>2030-02-25</ExerciseDate>
         </ExerciseDates>
       </OptionData>
       <LegData>
@@ -126,8 +126,8 @@
             <EndDate>2036-03-01</EndDate>
             <Tenor>3M</Tenor>
             <Calendar>TARGET</Calendar>
-            <Convention>ModifiedFollowing</Convention>
-            <TermConvention>ModifiedFollowing</TermConvention>
+            <Convention>Following</Convention>
+            <TermConvention>Following</TermConvention>
             <Rule>Forward</Rule>
             <EndOfMonth/>
             <FirstDate/>
