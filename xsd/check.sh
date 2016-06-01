@@ -49,3 +49,11 @@ do
   xmllint --schema todaysmarket.xsd --path xsd --noout $file
 done
 echo -------
+
+echo ORE Examples:
+find Examples -name 'ore*.xml' -print0 | while read -d $'\0' file
+do
+  /bin/echo -n "Checking ... "
+  xmllint --schema ore.xsd --path xsd --noout $file
+done
+echo -------
