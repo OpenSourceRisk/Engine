@@ -100,6 +100,7 @@
       <xs:element type="aoisSegmentType" name="AverageOIS"/>
       <xs:element type="tenorBasisSegmentType" name="TenorBasis"/>
       <xs:element type="crossCurrencySegmentType" name="CrossCurrency"/>
+      <xs:element type="zeroSpreadType" name="ZeroSpread"/>
     </xs:choice>
   </xs:complexType>
 
@@ -179,6 +180,21 @@
     <xs:restriction base="xs:string">
       <xs:enumeration value="Cross Currency Basis Swap"/>
       <xs:enumeration value="FX Forward"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="zeroSpreadType">
+    <xs:sequence>
+      <xs:element type="zeroSpreadSegmentTypeType" name="Type"/>
+      <xs:element type="quoteType" name="Quotes"/>
+      <xs:element type="xs:string" name="Conventions"/>
+      <xs:element type="xs:string" name="ReferenceCurve"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:simpleType name="zeroSpreadSegmentTypeType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Zero Spread"/>
     </xs:restriction>
   </xs:simpleType>
 
