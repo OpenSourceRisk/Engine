@@ -262,6 +262,7 @@
       </SwapIndices>
 
       <DefaultCurves>
+        <Names/>
 	<Tenors>6M,1Y,2Y</Tenors>
       </DefaultCurves>
       
