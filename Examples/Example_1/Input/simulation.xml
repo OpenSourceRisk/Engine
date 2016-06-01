@@ -269,35 +269,9 @@
 	</SwapIndex>
       </SwapIndices>
       
-      <!-- Not in scope yet -->
       <DefaultCurves>
-	<Names>
-	  <!--
-	  <Name>Name1</Name>
-	  <Name>Name2</Name>
-	  -->
-	</Names>
 	<Tenors>6M,1Y,2Y</Tenors>
       </DefaultCurves>
-      
-      <!--
-	  <Inflation>
-	  <Regions>
-	  <Region>EU</Region>
-	  <Region>UK</Region>
-	  <Region>FR</Region>
-	  </Regions>
-	  <Tenors>1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y,25Y,30Y</Tenors>
-	  </Inflation>
-      -->
-      
-      <!--
-	  <Equity>
-	  <Name>Equity_A</Name>
-	  <Name>Equity_B</Name>
-	  <Name>Equity_C</Name>
-	  </Equity>
-      -->
       
       <!-- Even if we do not simulate them - option pricing needs vol
 	   surfaces, so we need to specify here how we propagate the
@@ -316,18 +290,6 @@
 	<Terms>1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,30Y</Terms>
 	<Strikes/>
       </SwaptionVolatilities>
-      
-      <!-- Not in scope yet -->
-      <!--
-	  <CapVolatilities>
-	  <Mode>Roll</Mode>
-	  <Currencies>
-	  <Currency>EUR</Currency>
-	  </Currencies>
-	  <Expiries>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</Expiries>
-	  <Strikes/>
-	  </CapVolatilities>
-      -->
       
       <FxVolatilities>
 	<Simulate>false</Simulate>
