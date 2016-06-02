@@ -14,8 +14,8 @@
     <Id>EUR-ZERO-CONVENTIONS-TENOR-BASED</Id>
     <TenorBased>true</TenorBased>
     <DayCounter>A365</DayCounter>
-    <CompoundingFrequency>Daily</CompoundingFrequency>
     <Compounding>Continuous</Compounding>
+    <CompoundingFrequency>Daily</CompoundingFrequency>
     <TenorCalendar>TARGET</TenorCalendar>
     <SpotLag>2</SpotLag>
     <SpotCalendar>TARGET</SpotCalendar>

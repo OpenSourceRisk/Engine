@@ -94,7 +94,7 @@
   <xs:element name="FloatingLegData" substitutionGroup="legDataType">
     <xs:complexType>
       <xs:choice maxOccurs="unbounded" minOccurs="0">
-        <xs:element type="xs:string" name="Index"/>
+        <xs:element type="indexNameType" name="Index"/>
         <xs:element type="xs:boolean" name="IsInArrears"/>
         <xs:element type="xs:integer" name="FixingDays"/>
         <xs:element name="Spreads">
