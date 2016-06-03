@@ -53,8 +53,10 @@ namespace QuantExt {
 
         /*! \param nominal1
                    FX forward nominal amount (domestic currency)
-            \param forwardRate, forwardDate
-                   FX forward rate and date for the exchange.
+            \param forwardRate
+                   FX rate of the exchange 
+            \param forwardDate
+                   Date of the exchange.
             \param sellingNominal
                    Sell (pay) nominal1 if true, otherwise buy (receive) nominal.
         */
@@ -70,10 +72,12 @@ namespace QuantExt {
                    per one foreign unit
             \param currency2
                    currency for nominal2 (foreign currency)
+            \param maturityDate
+                   FX Forward maturity date
             \param sellingNominal
                    Sell (pay) nominal1 if true, otherwise buy (receive) nominal1.
         */
-        FxForward(const Money &nomina1l,
+        FxForward(const Money &nominal1,
                          const Handle<Quote> &fxForwardQuote,
                          const Currency &currency2,
                          const Date &maturityDate,

@@ -1,86 +1,66 @@
 <?xml version="1.0"?>
 <Portfolio>
-
   <Trade id="FXFWD_EURUSD_10Y">
     <TradeType>FxForward</TradeType>
     <Envelope>
-      <Type>FxForward</Type>
-      <Company>HSH</Company>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <FxForwardData>
       <ValueDate>2026-03-01</ValueDate>
-	<BoughtCurrency>EUR</BoughtCurrency>
-	<BoughtAmount>1000000</BoughtAmount>
-	<SoldCurrency>USD</SoldCurrency>
-	<SoldAmount>1100000</SoldAmount>
+      <BoughtCurrency>EUR</BoughtCurrency>
+      <BoughtAmount>1000000</BoughtAmount>
+      <SoldCurrency>USD</SoldCurrency>
+      <SoldAmount>1100000</SoldAmount>
     </FxForwardData>
   </Trade>
-  
   <Trade id="FX_CALL_OPTION_EURUSD_10Y">
     <TradeType>FxOption</TradeType>
     <Envelope>
-      <Type>FxOption</Type>
-      <Company>HSH</Company>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <FxOptionData>
       <OptionData>
-	<LongShort>Long</LongShort>
-	<OptionType>Call</OptionType>
-	<Style>European</Style>
+        <LongShort>Long</LongShort>
+        <OptionType>Call</OptionType>
+        <Style>European</Style>
         <Settlement>Cash</Settlement>
         <PayOffAtExpiry>false</PayOffAtExpiry>
-        <PremiumAmount>0</PremiumAmount>
-        <PremiumCurrency/>
-        <PremiumPayDate/>
         <ExerciseDates>
           <ExerciseDate>2026-03-01</ExerciseDate>
         </ExerciseDates>
       </OptionData>
-      <SubType>Vanilla</SubType>
-      <ValueDate>2026-03-01</ValueDate>
       <BoughtCurrency>EUR</BoughtCurrency>
       <BoughtAmount>1000000</BoughtAmount>
       <SoldCurrency>USD</SoldCurrency>
       <SoldAmount>1100000</SoldAmount>
     </FxOptionData>
   </Trade>
-
   <Trade id="FX_PUT_OPTION_EURUSD_10Y">
     <TradeType>FxOption</TradeType>
     <Envelope>
-      <Type>FxOption</Type>
-      <Company>HSH</Company>
       <CounterParty>CUST_A</CounterParty>
       <NettingSetId>CUST_A</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <FxOptionData>
       <OptionData>
-	<LongShort>Long</LongShort>
-	<OptionType>Put</OptionType>
-	<Style>European</Style>
+        <LongShort>Long</LongShort>
+        <OptionType>Put</OptionType>
+        <Style>European</Style>
         <Settlement>Cash</Settlement>
         <PayOffAtExpiry>false</PayOffAtExpiry>
-        <PremiumAmount>0</PremiumAmount>
-        <PremiumCurrency/>
-        <PremiumPayDate/>
         <ExerciseDates>
           <ExerciseDate>2026-03-01</ExerciseDate>
         </ExerciseDates>
       </OptionData>
-      <SubType>Vanilla</SubType>
-      <ValueDate>2026-03-01</ValueDate>
       <BoughtCurrency>EUR</BoughtCurrency>
       <BoughtAmount>1000000</BoughtAmount>
       <SoldCurrency>USD</SoldCurrency>
       <SoldAmount>1100000</SoldAmount>
     </FxOptionData>
   </Trade>
-
 </Portfolio>

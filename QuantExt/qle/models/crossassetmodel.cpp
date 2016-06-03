@@ -105,6 +105,7 @@ void CrossAssetModel::initializeParametrizations() {
 
     nIrLgm1f_ = 0;
     nFxBs_ = 0;
+    nInfDk_ = 0;
     nCrLgm1f_ = 0;
 
     Size i = 0;

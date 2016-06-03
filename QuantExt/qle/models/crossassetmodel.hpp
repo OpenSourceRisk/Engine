@@ -53,15 +53,49 @@ namespace QuantExt {
     parametrizations, update these parametrizations and flushing the cache
     of the state process. The model ensures these updates during
     calibration though.
+
+    The cross asset model for \f$n\f$ currencies is specified by the following SDE
+
+    \f{eqnarray*}{
+    dz_0(t) &=& \alpha^z_0(t)\,dW^z_0(t) \\
+    dz_i(t) &=& \gamma_i(t)\,dt + \alpha^z_i(t)\,dW^z_i(t), \qquad i = 1,\dots, n-1 \\
+    dx_i(t) / x_i(t) &=& \mu^x_i(t)\, dt +\sigma_i^x(t)\,dW^x_i(t), \qquad i=1, \dots, n-1 \\
+    dW^a_i\,dW^b_j &=& \rho^{ab}_{ij}\,dt, \qquad a, b \in \{z, x\} 
+    \f}
+    Factors \f$z_i\f$ drive the LGM interest rate processes (index \f$i=0\f$ denotes the domestic currency),
+    and factors \f$x_i\f$ the foreign exchange rate processes. 
+
+    The no-arbitrage drift terms are 
+    \f{eqnarray*}
+    \gamma_i &=& -H^z_i\,(\alpha^z_i)^2  + H^z_0\,\alpha^z_0\,\alpha^z_i\,\rho^{zz}_{0i} - \sigma_i^x\,\alpha^z_i\, \rho^{zx}_{ii}\\
+    \mu^x_i &=& r_0-r_i +H^z_0\,\alpha^z_0\,\sigma^x_i\,\rho^{zx}_{0i}
+    \f}
+    where we have dropped time-dependencies to lighten notation.  
+
+    The short rate \f$r_i(t)\f$ in currency \f$i\f$ is connected with the instantaneous forward curve \f$f_i(0,t)\f$ 
+    and model parameters \f$H_i(t)\f$ and \f$\alpha_i(t)\f$ via
+    \f{eqnarray*}{
+    r_i(t) &=& f_i(0,t) + z_i(t)\,H'_i(t) + \zeta_i(t)\,H_i(t)\,H'_i(t), \quad \zeta_i(t) = \int_0^t \alpha_i^2(s)\,ds  \\ \\ 
+    \f}
+
+    Parameters \f$H_i(t)\f$ and \f$\alpha_i(t)\f$ (or alternatively \f$\zeta_i(t)\f$) are LGM model parameters 
+    which determine, together with the stochastic factor \f$z_i(t)\f$, the evolution of numeraire and 
+    zero bond prices in the LGM model:
+    \f{eqnarray*}{
+    N(t) &=& \frac{1}{P(0,t)}\exp\left\{H_t\, z_t + \frac{1}{2}H^2_t\,\zeta_t \right\} \\
+    P(t,T,z_t) &=& \frac{P(0,T)}{P(0,t)}\:\exp\left\{ -(H_T-H_t)\,z_t - \frac{1}{2} \left(H^2_T-H^2_t\right)\,\zeta_t\right\}. 
+    \f}
+
 */
 
 class CrossAssetModel : public LinkableCalibratedModel {
   public:
     /*! Parametrizations must be given in the following order
-        - IR (first parametrization defines the domestic currency)
-        - FX (for all pairs domestic-ccy defined by the IR models)
+        - IR  (first parametrization defines the domestic currency)
+        - FX  (optionally, for all pairs domestic-ccy defined by the IR models)
         - INF (optionally, ccy must be a subset of the IR ccys)
         - CRD (optionally, ccy must be a subset of the IR ccys)
+        - EQ  (optionally, ccy must be a subset of the IR ccys)
         - COM (optionally) ccy must be a subset of the IR ccys) */
     CrossAssetModel(
         const std::vector<boost::shared_ptr<Parametrization> >
@@ -83,7 +117,7 @@ class CrossAssetModel : public LinkableCalibratedModel {
     stateProcess(CrossAssetStateProcess::discretization disc =
                      CrossAssetStateProcess::exact) const;
 
-    /*! total dimension of model */
+    /*! total dimension of model (i.e. the number of components in its stochastic process) */
     Size dimension() const;
 
     /*! number of currencies including domestic */
@@ -131,6 +165,8 @@ class CrossAssetModel : public LinkableCalibratedModel {
         the use of asset class pairs specific inspectors is
         recommended instead of the global matrix directly */
     const Matrix &correlation() const;
+
+    
 
     /*! correlation between two ir components */
     Real ir_ir_correlation(const Size i, const Size j) const;
@@ -205,7 +241,7 @@ class CrossAssetModel : public LinkableCalibratedModel {
 
     /* members */
 
-    Size nIrLgm1f_, nFxBs_, nCrLgm1f_;
+    Size nIrLgm1f_, nFxBs_, nInfDk_, nCrLgm1f_;
     Size totalNumberOfParameters_;
     std::vector<boost::shared_ptr<Parametrization> > p_;
     std::vector<boost::shared_ptr<LinearGaussMarkovModel> > lgm_;
@@ -259,7 +295,7 @@ inline const boost::shared_ptr<StochasticProcess> CrossAssetModel::stateProcess(
 }
 
 inline Size CrossAssetModel::dimension() const {
-    return nIrLgm1f_ * 1 + nFxBs_ * 1 + nCrLgm1f_ * 2;
+    return nIrLgm1f_ * 1 + nFxBs_ * 1 + nInfDk_*2 + nCrLgm1f_ * 2;
 }
 
 inline Size CrossAssetModel::currencies() const { return nIrLgm1f_; }

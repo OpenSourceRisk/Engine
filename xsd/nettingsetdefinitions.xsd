@@ -1,0 +1,129 @@
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="NettingSetDefinitions">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="NettingSet" maxOccurs="unbounded" minOccurs="0">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:string" name="NettingSetId" minOccurs="1"/>
+              <xs:element type="xs:string" name="Counterparty" minOccurs="1"/>
+              <xs:element type="xs:boolean" name="ActiveCSAFlag" minOccurs="1"/>
+              <xs:element name="CSADetails">
+                <xs:complexType mixed="true">
+                  <xs:sequence>
+                    <xs:element type="csaType" name="Bilateral" minOccurs="0"/>
+                    <xs:element type="currencyCode" name="CSACurrency" minOccurs="0"/>
+                    <xs:element type="xs:string" name="Index" minOccurs="0"/>
+                    <xs:element type="non-negative-decimal" name="ThresholdPay" minOccurs="0"/>
+                    <xs:element type="non-negative-decimal" name="ThresholdReceive" minOccurs="0"/>
+                    <xs:element type="non-negative-decimal" name="MinimumTransferAmountPay" minOccurs="0"/>
+                    <xs:element type="non-negative-decimal" name="MinimumTransferAmountReceive" minOccurs="0"/>
+                    <xs:element name="IndependentAmount" minOccurs="0">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element type="xs:decimal" name="IndependentAmountHeld"/>
+                          <xs:element type="independentAmountType" name="IndependentAmountType"/>
+                        </xs:sequence>
+                      </xs:complexType>
+                    </xs:element>
+                    <xs:element name="MarginingFrequency" minOccurs="0">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element type="xs:string" name="CallFrequency"/>
+                          <xs:element type="xs:string" name="PostFrequency"/>
+                        </xs:sequence>
+                      </xs:complexType>
+                    </xs:element>
+                    <xs:element type="xs:string" name="MarginPeriodOfRisk" minOccurs="0"/>
+                    <xs:element type="xs:decimal" name="CollateralCompoundingSpreadReceive" minOccurs="0"/>
+                    <xs:element type="xs:decimal" name="CollateralCompoundingSpreadPay" minOccurs="0"/>
+                    <xs:element name="EligibleCollaterals" minOccurs="0">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="Currencies">
+                            <xs:complexType>
+                              <xs:sequence>
+                                <xs:element type="currencyCode" name="Currency" maxOccurs="unbounded" minOccurs="0"/>
+                              </xs:sequence>
+                            </xs:complexType>
+                          </xs:element>
+                        </xs:sequence>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:simpleType name="currencyCode">
+    <xs:restriction base="xs:string">
+        <xs:enumeration value="ATS"/>
+        <xs:enumeration value="AUD"/>
+        <xs:enumeration value="BEF"/>
+        <xs:enumeration value="BRL"/>
+        <xs:enumeration value="CAD"/>
+        <xs:enumeration value="CHF"/>
+        <xs:enumeration value="CNY"/>
+        <xs:enumeration value="CZK"/>
+        <xs:enumeration value="DEM"/>
+        <xs:enumeration value="DKK"/>
+        <xs:enumeration value="EUR"/>
+        <xs:enumeration value="ESP"/>
+        <xs:enumeration value="FIM"/>
+        <xs:enumeration value="FRF"/>
+        <xs:enumeration value="GBP"/>
+        <xs:enumeration value="GRD"/>
+        <xs:enumeration value="HKD"/>
+        <xs:enumeration value="HUF"/>
+        <xs:enumeration value="IEP"/>
+        <xs:enumeration value="ITL"/>
+        <xs:enumeration value="INR"/>
+        <xs:enumeration value="ISK"/>
+        <xs:enumeration value="JPY"/>
+        <xs:enumeration value="KRW"/>
+        <xs:enumeration value="LUF"/>
+        <xs:enumeration value="NLG"/>
+        <xs:enumeration value="NOK"/>
+        <xs:enumeration value="NZD"/>
+        <xs:enumeration value="PLN"/>
+        <xs:enumeration value="PTE"/>
+        <xs:enumeration value="RON"/>
+        <xs:enumeration value="SEK"/>
+        <xs:enumeration value="SGD"/>
+        <xs:enumeration value="THB"/>
+        <xs:enumeration value="TRY"/>
+        <xs:enumeration value="TWD"/>
+        <xs:enumeration value="USD"/>
+        <xs:enumeration value="ZAR"/>
+    </xs:restriction>
+  </xs:simpleType>
+  
+  <xs:simpleType name="csaType">
+    <xs:restriction base="xs:string">
+        <xs:enumeration value="Bilateral"/>
+        <xs:enumeration value="CallOnly"/>
+        <xs:enumeration value="PostOnly"/>
+    </xs:restriction>
+  </xs:simpleType>
+  
+  <xs:simpleType name="independentAmountType">
+    <xs:restriction base="xs:string">
+        <xs:enumeration value="FIXED"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+<xs:simpleType name="non-negative-decimal">
+  <xs:annotation>
+    <xs:documentation>The non-negative-decimal type specifies a non-negative decimal value.</xs:documentation>
+  </xs:annotation>
+  <xs:restriction base="xs:decimal">
+    <xs:minInclusive value="0"/>
+  </xs:restriction>
+</xs:simpleType>
+
+</xs:schema>
