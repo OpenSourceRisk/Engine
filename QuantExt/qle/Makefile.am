@@ -8,6 +8,7 @@ SUBDIRS = \
 	models \
 	pricingengines \
 	processes \
+	risk \
 	quotes \
 	termstructures
 

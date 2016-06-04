@@ -118,6 +118,7 @@ AC_CONFIG_FILES([
     qle/models/Makefile
     qle/pricingengines/Makefile
     qle/processes/Makefile
+    qle/risk/Makefile
     qle/termstructures/Makefile
     qle/quotes/Makefile
     m4/Makefile
