@@ -25,7 +25,7 @@ namespace QuantExt {
 
     private:
         const std::string name_;
-        std::map<RiskType, std::vector<string> > qualifiers_, buckets_, labels1_, labels2_;
+        std::map<RiskType, std::vector<string> > buckets_, labels1_, labels2_;
     };
 
 } // namespace QuantExt
