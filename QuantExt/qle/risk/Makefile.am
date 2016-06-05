@@ -7,7 +7,8 @@ SUBDIRS =
 noinst_LTLIBRARIES = libRisk.la
 
 libRisk_la_SOURCES = \
-	simmconfigurationisdav120.cpp
+	simmconfigurationisdav120.cpp \
+	simmdata.cpp
 
 this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \

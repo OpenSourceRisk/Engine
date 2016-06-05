@@ -9,6 +9,9 @@
     \brief Configuration of simm
 */
 
+#ifndef quantext_simm_configuration_hpp
+#define quantext_simm_configuration_hpp
+
 #include <ql/errors.hpp>
 #include <ql/types.hpp>
 
@@ -39,7 +42,10 @@ namespace QuantExt {
             Risk_IRVol = 11
         };
 
-        enum ProductClass { All, RatesFX, Credit, Equity, Commodity };
+        enum ProductClass { RatesFX = 0, Credit = 1, Equity = 2, Commodity = 3 };
+
+        static const Size numberOfRiskTypes = 12;
+        static const Size numberOfProductClasses = 4;
 
         virtual const string& name() const = 0;
         virtual const std::vector<string>& buckets(RiskType t) const = 0;
@@ -48,3 +54,5 @@ namespace QuantExt {
     };
 
 } // namespace QuantExt
+
+#endif

@@ -8,6 +8,8 @@
 /*! \file simmconfigurationisdav120.hpp
     \brief Configuration of simm according to the ISDA spec v1.20 (7 April 2016)
 */
+#ifndef quantext_simm_configuration_isdav120_hpp
+#define quantext_simm_configuration_isdav120_hpp
 
 #include <qle/risk/simmconfiguration.hpp>
 
@@ -29,3 +31,5 @@ namespace QuantExt {
     };
 
 } // namespace QuantExt
+
+#endif
