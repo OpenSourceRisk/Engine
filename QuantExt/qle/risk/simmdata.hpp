@@ -12,7 +12,7 @@
 #ifndef quantext_simm_data_hpp
 #define quantext_simm_data_hpp
 
-#include <qle/risk/simmconfigurationisdav120.hpp>
+#include <qle/risk/simmconfigurationisdav315.hpp>
 #include <qle/risk/simmkey.hpp>
 
 #include <boost/make_shared.hpp>
@@ -23,7 +23,7 @@ namespace QuantExt {
 
     class SimmData {
     public:
-        SimmData(const boost::shared_ptr<SimmConfiguration>& config = boost::make_shared<SimmConfiguration_ISDA_V120>(),
+        SimmData(const boost::shared_ptr<SimmConfiguration>& config = boost::make_shared<SimmConfiguration_ISDA_V315>(),
                  const bool useProductClasses = false);
 
         Size numberOfQualifiers(const SimmConfiguration::RiskType t) const { return numberOfQualifiers_.at(t); }
@@ -59,7 +59,7 @@ namespace QuantExt {
     class SimmDataByKey : public SimmData {
     public:
         SimmDataByKey(
-            const boost::shared_ptr<SimmConfiguration>& config = boost::make_shared<SimmConfiguration_ISDA_V120>(),
+            const boost::shared_ptr<SimmConfiguration>& config = boost::make_shared<SimmConfiguration_ISDA_V315>(),
             bool useProductClasses = false);
 
         void addKey(const SimmKey& key);

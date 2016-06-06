@@ -8,7 +8,7 @@ noinst_LTLIBRARIES = libRisk.la
 
 libRisk_la_SOURCES = \
 	simm.cpp \
-	simmconfigurationisdav120.cpp \
+	simmconfigurationisdav315.cpp \
 	simmdata.cpp
 
 this_includedir=${includedir}/${subdir}
@@ -16,7 +16,7 @@ this_include_HEADERS = \
 	all.hpp \
 	simm.hpp \
 	simmconfiguration.hpp \
-	simmconfigurationisdav120.hpp \
+	simmconfigurationisdav315.hpp \
 	simmdata.hpp \
 	simmkey.hpp
 
