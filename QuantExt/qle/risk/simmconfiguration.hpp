@@ -48,7 +48,8 @@ namespace QuantExt {
         static const Size numberOfProductClasses = 4;
 
         virtual const string& name() const = 0;
-        virtual const std::vector<string>& buckets(RiskType t) const = 0;
+        virtual const cstd::vector<string>& buckets(RiskType t) const = 0;
+        virtual bool hasResidualBucket(RiskType t) const = 0;
         virtual const std::vector<string>& labels1(RiskType t) const = 0;
         virtual const std::vector<string>& labels2(RiskType t) const = 0;
     };
