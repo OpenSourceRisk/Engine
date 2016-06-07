@@ -26,6 +26,7 @@ namespace QuantExt {
                         tmp[i][k].reserve(100);
                     }
                 }
+                data_[std::make_pair(key,ProductClass(p))] = tmp;
             }
         }
     }
@@ -76,27 +77,20 @@ namespace QuantExt {
     }
 
     SimmDataByKey::SimmDataByKey(const boost::shared_ptr<SimmConfiguration>& config, bool useProductClasses)
-        : SimmData(config, useProductClasses), reportingCurrency_("") {
-        for (Size t = 0; t < config_->numberOfRiskTypes; ++t) {
-            RiskType key = RiskType(t);
-            buckets_[key] = config_->buckets(key);
-            labels1_[key] = config_->labels1(key);
-            labels2_[key] = config_->labels2(key);
-        }
-    }
+        : SimmData(config, useProductClasses), reportingCurrency_("") {}
 
     void SimmDataByKey::addKey(const SimmKey& key) {
         std::vector<string>::const_iterator it;
         RiskType t = key.riskType();
         it = std::find(config_->buckets(t).begin(), config_->buckets(t).end(), key.bucket());
-        QL_REQUIRE(it != buckets_[t].end(), "bucket " << key.bucket() << " not found, key can not be added");
-        Size bucket = it - buckets_[t].begin();
+        QL_REQUIRE(it != config_->buckets(t).end(), "bucket " << key.bucket() << " not found, key can not be added");
+        Size bucket = it - config_->buckets(t).begin();
         it = std::find(config_->labels1(t).begin(), config_->labels2(t).end(), key.label1());
-        QL_REQUIRE(it != buckets_[t].end(), "label1 " << key.label1() << " not found, key can not be added");
-        Size label1 = it - labels1_[t].begin();
+        QL_REQUIRE(it != config_->labels1(t).end(), "label1 " << key.label1() << " not found, key can not be added");
+        Size label1 = it - config_->labels1(t).begin();
         it = std::find(config_->labels2(t).begin(), config_->labels2(t).end(), key.label2());
-        QL_REQUIRE(it != labels2_[t].end(), "label2 " << key.label2() << " not found, key can not be added");
-        Size label2 = it - labels2_[t].begin();
+        QL_REQUIRE(it != config_->labels2(t).end(), "label2 " << key.label2() << " not found, key can not be added");
+        Size label2 = it - config_->labels2(t).begin();
         it = std::find(qualifiers_[t].begin(), qualifiers_[t].end(), key.qualifier());
         Size qualifier = it - qualifiers_[t].begin();
         if (it == qualifiers_[t].end()) {
@@ -109,7 +103,7 @@ namespace QuantExt {
             QL_REQUIRE(reportingCurrency_ == key.amountCurrency(),
                        "key has reporting currency " << key.amountCurrency() << ", but deduced " << reportingCurrency_
                                                      << " from first key added, this key is not added ");
-        amount(t, p, qualifier, bucket, label1, label2) = key.amount();
+        amount(t, p, bucket, qualifier, label1, label2) = key.amount();
     }
 
 } // namespace QuantExt

@@ -436,9 +436,10 @@ int main(int argc, char** argv) {
         if (params.hasGroup("initialMargin") &&
             params.get("initialMargin", "active") == "Y") {
             if(params.get("initialMargin", "method") == "SIMM") {
-                SimmDataFileLoader loader(params.get("initialMargin", "inputFileName"),
+                SimmDataFileLoader loader(inputPath + "/" + params.get("initialMargin", "inputFileName"),
                                           params.get("initialMargin", "simmVersion"),
-                                          parseBool(params.get("initialMargin", "simmUseProductClasses")));
+                                          parseBool(params.get("initialMargin", "simmUseProductClasses")),
+                                          parseBool(params.get("initialMargin", "inputDelimiterCR")) ? '\r' : '\n');
                 QuantExt::Simm simm(loader.data());
                 writeSimmResults(simm);
             } else {

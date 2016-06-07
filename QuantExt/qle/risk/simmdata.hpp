@@ -73,7 +73,7 @@ namespace QuantExt {
 
     private:
         // translate index to string
-        std::map<RiskType, std::vector<string> > qualifiers_, buckets_, labels1_, labels2_;
+        std::map<RiskType, std::vector<string> > qualifiers_;
         std::string reportingCurrency_;
     };
 
