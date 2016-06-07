@@ -14,38 +14,34 @@
 
 #include <qle/risk/simmdata.hpp>
 
-#incldue < boost / tuple / tuple.hpp >
+#include <boost/tuple/tuple.hpp>
+#include <boost/tuple/tuple_comparison.hpp>
+
+#include <map>
 
 namespace QuantExt {
 
     class Simm {
     public:
-        enum RiskClass {
-            InterestRate = 0,
-            CreditQualifying = 1,
-            CreditNonQualifying = 2,
-            Equity = 3,
-            Commodity = 4,
-            FX = 5
-        };
-        enum MarginType {
-            Delta = 0,
-            Vega = 1,
-            Curvature = 2
+        typedef SimmConfiguration::RiskClass RiskClass;
+        typedef SimmConfiguration::RiskType RiskType;
+        typedef SimmConfiguration::MarginType MarginType;
+        typedef SimmConfiguration::ProductClass ProductClass;
+
+        Simm(const boost::shared_ptr<SimmData>& data) : data_(data) { calculate(); }
+
+        Real initialMargin(const RiskClass c, const MarginType m, const ProductClass p) {
+            boost::tuple<RiskClass, MarginType, ProductClass> key = boost::make_tuple(c, m, p);
+            return initialMargin_.at(key);
         }
 
-        Simm(const boost::shared_ptr<SimmData>& data) : data_(data) {
-            calculate();
-        }
-
-        Real initialMargin() { return totalInitialMargin_; }
-        Real initialMargin(const RiskClass c, const MarginType m) { return initialMargin_.at(std::make_pair(c, m)); }
+        //! refresh results after data has changed
+        void calculate();
 
     private:
-        void calculate();
+        Real deltaMarginIR(ProductClass p);
         const boost::shared_ptr<SimmData> data_;
-        std::map<boost::tuple<RiskClass, SimmConfiguration::ProductClass, MarginType>, Real> initialMargin_;
-        Real totalInitialMargin_;
+        std::map<boost::tuple<RiskClass, MarginType, ProductClass>, Real> initialMargin_;
     };
 
 } // namespace QuantExt

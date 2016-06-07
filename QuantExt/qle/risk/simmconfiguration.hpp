@@ -27,31 +27,58 @@ namespace QuantExt {
 
     class SimmConfiguration {
     public:
+        enum RiskClass {
+            RiskClass_InterestRate = 0,
+            RiskClass_CreditQualifying = 1,
+            RiskClass_CreditNonQualifying = 2,
+            RiskClass_Equity = 3,
+            RiskClass_Commodity = 4,
+            RiskClass_FX = 5
+        };
         enum RiskType {
             Risk_Commodity = 0,
             Risk_CommodityVol = 1,
             Risk_CreditNonQ = 2,
             Risk_CreditQ = 3,
             Risk_CreditVol = 4,
-            Risk_Equity = 5,
-            Risk_EquityVol = 6,
-            Risk_FX = 7,
-            Risk_FXVol = 8,
-            Risk_Inflation = 9,
-            Risk_IRCurve = 10,
-            Risk_IRVol = 11
+            Risk_CreditVolNonQ = 5,
+            Risk_Equity = 6,
+            Risk_EquityVol = 7,
+            Risk_FX = 8,
+            Risk_FXVol = 9,
+            Risk_Inflation = 10,
+            Risk_IRCurve = 11,
+            Risk_IRVol = 12
+        };
+        enum MarginType { Delta = 0, Vega = 1, Curvature = 2 };
+        enum ProductClass {
+            ProductClass_RatesFX = 0,
+            ProductClass_Credit = 1,
+            ProductClass_Equity = 2,
+            ProductClass_Commodity = 3
         };
 
-        enum ProductClass { RatesFX = 0, Credit = 1, Equity = 2, Commodity = 3 };
-
-        static const Size numberOfRiskTypes = 12;
+        static const Size numberOfRiskClasses = 6;
+        static const Size numberOfRiskTypes = 13;
         static const Size numberOfProductClasses = 4;
 
         virtual const string& name() const = 0;
-        virtual const cstd::vector<string>& buckets(RiskType t) const = 0;
-        virtual bool hasResidualBucket(RiskType t) const = 0;
-        virtual const std::vector<string>& labels1(RiskType t) const = 0;
-        virtual const std::vector<string>& labels2(RiskType t) const = 0;
+        virtual const std::vector<string>& buckets(const RiskType t) const = 0;
+        virtual Size residualBucket(const RiskType t) const = 0;
+        virtual const std::vector<string>& labels1(const RiskType t) const = 0;
+        virtual const std::vector<string>& labels2(const RiskType t) const = 0;
+
+        virtual Real weight(const RiskType t, const Size bucketIdx, const Size label1Idx) const = 0;
+        virtual Real correlationLabels1(const RiskType t, const Size i, const Size j) const = 0;
+        virtual Real correlationLabels2(const RiskType t, const Size i, const Size j) const = 0;
+        virtual Real correlationBuckets(const RiskType t, const Size i, const Size j) const = 0;
+        virtual Real correlationQualifiers(const RiskType t) const = 0;
+        virtual Real correllationWithinBucket(const RiskType t, const Size i) const = 0;
+        virtual Real correlationRiskClasses(const RiskClass c, const RiskClass d) const = 0;
+
+        // TODO, revisit later, but as of V315 there are no threasholds defined anyway,
+        // so we keep the interface general for the moment
+        virtual Real concentrationThreshold() const { return QL_MAX_REAL; }
     };
 
 } // namespace QuantExt

@@ -14,47 +14,42 @@ namespace QuantExt {
           numberOfProductClasses_(useProductClasses ? config->numberOfProductClasses : 1) {
 
         for (Size t = 0; t < config_->numberOfRiskTypes; ++t) {
-            buckets_[t] = std::vector<Size>(0);
+            RiskType key = RiskType(t);
+            buckets_[key] = std::vector<Size>(0);
             for (Size p = 0; p < numberOfProductClasses_; ++p) {
-                SimmConfiguration::RiskType key = SimmConfiguration::RiskType(t);
                 RiskTypeData tmp;
-                numberOfLabels1_[key] = config_->labels1(key).size();
-                tmp[i].resize(numberOfLabels1_[key]);
-                for (Size j = 0; j < tmp[i].size(); ++j) {
-                    numberOfLabels2_[key] = config_->labels2(key).size();
-                    tmp[i][j].resize(numberOfLabels2_[key]);
-                    for (Size k = 0; k < tmp[i][j].size(); ++k) {
+                tmp.resize(config_->labels1(key).size());
+                for (Size i = 0; i < tmp.size(); ++i) {
+                    tmp[i].resize(config_->labels2(key).size());
+                    for (Size k = 0; k < tmp[i].size(); ++k) {
                         // TODO revisit this, hardcoded for the moment ...
-                        tmp[i][j][k].reserve(100);
+                        tmp[i][k].reserve(100);
                     }
                 }
             }
         }
     }
 
-    void SimmData::check(const SimmConfiguration::RiskType t, const SimmConfiguration::ProductClass productClass,
-                         const Size bucket, const Size label1, const Size label2) const {
+    void SimmData::check(const RiskType t, const ProductClass productClass, const Size label1,
+                         const Size label2) const {
         QL_REQUIRE(productClass < numberOfProductClasses(), "ProductClass << " << productClass << " out of range 0..."
                                                                                << numberOfProductClasses());
-        QL_REQUIRE(bucket < numberOfBuckets(t), "RiskType " << t << ", bucket (" << bucket << ") out of range 0..."
-                                                            << numberOfBuckets(t));
-        QL_REQUIRE(label1 < numberOfLabels1(t), "RiskType " << t << ", label1 (" << label1 << ") out of range 0..."
-                                                            << numberOfLabels1(t));
-        QL_REQUIRE(label2 < numberOfLabels2(t), "RiskType " << t << ", label2 (" << label1 << ") out of range 0..."
-                                                            << numberOfLabels2(t));
+        QL_REQUIRE(label1 < config_->labels1(t).size(),
+                   "RiskType " << t << ", label1 (" << label1 << ") out of range 0..." << config_->labels1(t).size());
+        QL_REQUIRE(label2 < config_->labels2(t).size(),
+                   "RiskType " << t << ", label2 (" << label1 << ") out of range 0..." << config_->labels2(t).size());
     }
 
-    const Real& SimmData::amount(const SimmConfiguration::RiskType t,
-                                 const SimmConfiguration::ProductClass productClass, const Size qualifier,
+    const Real& SimmData::amount(const RiskType t, const ProductClass productClass, const Size qualifier,
                                  const Size label1, const Size label2) const {
         check(t, productClass, label1, label2);
         QL_REQUIRE(qualifier < numberOfQualifiers(t), "RiskType " << t << ", qualifier (" << qualifier
                                                                   << ") out of range 0..." << numberOfQualifiers(t));
-        return data_.at(std::make_pair(t, productClass))[bucket][label1][label2][qualifier];
+        return data_.at(std::make_pair(t, productClass))[label1][label2][qualifier];
     }
 
-    Real& SimmData::amount(const SimmConfiguration::RiskType t, const SimmConfiguration::ProductClass productClass,
-                           const Size bucket, const Size qualifier, const Size label1, const Size label2) {
+    Real& SimmData::amount(const RiskType t, const ProductClass productClass, const Size bucket, const Size qualifier,
+                           const Size label1, const Size label2) {
         check(t, productClass, label1, label2);
         std::vector<Real>& v = data_.at(std::make_pair(t, productClass))[label1][label2];
         Size s = v.size();
@@ -64,16 +59,18 @@ namespace QuantExt {
                 v[i] = 0.0;
             }
         }
-        QL_REQUIRE(bucket < config_->buckets().size(), "bucket with index " << bucket << " out of range 0..."
-                                                                            << config_->buckets().size());
+        QL_REQUIRE(bucket < config_->buckets(t).size(), "bucket with index " << bucket << " out of range 0..."
+                                                                             << config_->buckets(t).size());
         std::vector<Size>& b = buckets_.at(t);
         s = b.size();
         if (qualifier >= s) {
             b.resize(qualifier + 1);
             for (Size i = s; i < b.size(); ++i) {
-                b[i] = 0.0;
+                b[i] = Null<Size>();
             }
         }
+        QL_REQUIRE(b[qualifier] == Null<Size>() || b[qualifier] == bucket,
+                   "two different buckets (" << b[qualifier] << ", " << bucket << ") for qualifier " << qualifier);
         b[qualifier] = bucket;
         return v[qualifier];
     }
@@ -81,7 +78,7 @@ namespace QuantExt {
     SimmDataByKey::SimmDataByKey(const boost::shared_ptr<SimmConfiguration>& config, bool useProductClasses)
         : SimmData(config, useProductClasses), reportingCurrency_("") {
         for (Size t = 0; t < config_->numberOfRiskTypes; ++t) {
-            SimmConfiguration::RiskType key = SimmConfiguration::RiskType(t);
+            RiskType key = RiskType(t);
             buckets_[key] = config_->buckets(key);
             labels1_[key] = config_->labels1(key);
             labels2_[key] = config_->labels2(key);
@@ -90,7 +87,7 @@ namespace QuantExt {
 
     void SimmDataByKey::addKey(const SimmKey& key) {
         std::vector<string>::const_iterator it;
-        SimmConfiguration::RiskType t = key.riskType();
+        RiskType t = key.riskType();
         it = std::find(config_->buckets(t).begin(), config_->buckets(t).end(), key.bucket());
         QL_REQUIRE(it != buckets_[t].end(), "bucket " << key.bucket() << " not found, key can not be added");
         Size bucket = it - buckets_[t].begin();
@@ -105,8 +102,7 @@ namespace QuantExt {
         if (it == qualifiers_[t].end()) {
             qualifiers_[t].push_back(key.qualifier());
         }
-        SimmConfiguration::ProductClass p =
-            useProductClasses() ? key.productClass() : SimmConfiguration::ProductClass(0);
+        ProductClass p = useProductClasses() ? key.productClass() : ProductClass(0);
         if (reportingCurrency_ == "")
             reportingCurrency_ = key.amountCurrency();
         else
