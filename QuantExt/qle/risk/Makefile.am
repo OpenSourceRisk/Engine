@@ -8,6 +8,7 @@ noinst_LTLIBRARIES = libRisk.la
 
 libRisk_la_SOURCES = \
 	simm.cpp \
+	simmconfiguration.cpp \
 	simmconfigurationisdav315.cpp \
 	simmdata.cpp
 

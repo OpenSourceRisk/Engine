@@ -38,6 +38,8 @@ namespace QuantExt {
         //! refresh results after data has changed
         void calculate();
 
+        const boost::shared_ptr<SimmData> data() const { return data_; }
+
     private:
         Real deltaMarginIR(ProductClass p);
         const boost::shared_ptr<SimmData> data_;

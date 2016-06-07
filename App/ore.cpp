@@ -8,8 +8,10 @@
 #include <iostream>
 
 #include <qlw/utilities/log.hpp>
+#include <qlw/utilities/simmdatafileloader.hpp>
 #include <qlw/wrap.hpp>
 #include <qlw/engine/valuationengine.hpp>
+#include <qle/risk/simm.hpp>
 #include <ql/time/calendars/all.hpp>
 #include <ql/time/daycounters/all.hpp>
 #include <ql/cashflows/floatingratecoupon.hpp>
@@ -64,6 +66,8 @@ void writeNettingSetColva(const Parameters& params,
 void writeXVA(const Parameters& params,
               boost::shared_ptr<Portfolio> portfolio,
               boost::shared_ptr<PostProcess> postProcess);
+
+void writeSimmResults(const QuantExt::Simm& simm);
 
 int main(int argc, char** argv) {
 
@@ -431,7 +435,15 @@ int main(int argc, char** argv) {
         cout << setw(tab) << left << "Initial Margin Report... " << flush;
         if (params.hasGroup("initialMargin") &&
             params.get("initialMargin", "active") == "Y") {
-            QL_FAIL("Initial Margin reports not implemented yet");
+            if(params.get("initialMargin", "method") == "SIMM") {
+                SimmDataFileLoader loader(params.get("initialMargin", "inputFileName"),
+                                          params.get("initialMargin", "simmVersion"),
+                                          parseBool(params.get("initialMargin", "simmUseProductClasses")));
+                QuantExt::Simm simm(loader.data());
+                writeSimmResults(simm);
+            } else {
+                QL_FAIL("initial margin method " << params.get("initialMargin", "method") << " not recognised.");
+            }
             cout << "OK" << endl;
         }
         else {
@@ -784,6 +796,11 @@ void writeNettingSetColva(const Parameters& params,
         }
         file.close();
     }
+}
+
+void writeSimmResults(const QuantExt::Simm& simm) {
+    
+
 }
 
 bool Parameters::hasGroup(const string& groupName) const {

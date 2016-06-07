@@ -41,7 +41,6 @@ namespace QuantExt {
         Real correlationWithinBucket(const RiskType t, const Size i) const;
         Real correlationRiskClasses(const RiskClass c, const RiskClass d) const;
 
-
     private:
         const std::string name_;
         std::map<RiskType, std::vector<string> > buckets_, labels1_, labels2_;

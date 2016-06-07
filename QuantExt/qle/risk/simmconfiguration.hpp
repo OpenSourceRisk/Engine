@@ -60,6 +60,7 @@ namespace QuantExt {
 
         static const Size numberOfRiskClasses = 6;
         static const Size numberOfRiskTypes = 13;
+        static const Size numberOfMarginTypes = 3;
         static const Size numberOfProductClasses = 4;
 
         virtual const string& name() const = 0;
@@ -73,13 +74,18 @@ namespace QuantExt {
         virtual Real correlationLabels2(const RiskType t, const Size i, const Size j) const = 0;
         virtual Real correlationBuckets(const RiskType t, const Size i, const Size j) const = 0;
         virtual Real correlationQualifiers(const RiskType t) const = 0;
-        virtual Real correllationWithinBucket(const RiskType t, const Size i) const = 0;
+        virtual Real correlationWithinBucket(const RiskType t, const Size i) const = 0;
         virtual Real correlationRiskClasses(const RiskClass c, const RiskClass d) const = 0;
 
         // TODO, revisit later, but as of V315 there are no threasholds defined anyway,
         // so we keep the interface general for the moment
         virtual Real concentrationThreshold() const { return QL_MAX_REAL; }
     };
+
+    std::ostream& operator<<(std::ostream& out, const SimmConfiguration::RiskClass x);
+    std::ostream& operator<<(std::ostream& out, const SimmConfiguration::RiskType x);
+    std::ostream& operator<<(std::ostream& out, const SimmConfiguration::MarginType x);
+    std::ostream& operator<<(std::ostream& out, const SimmConfiguration::ProductClass x);
 
 } // namespace QuantExt
 

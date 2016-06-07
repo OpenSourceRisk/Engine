@@ -78,7 +78,7 @@ namespace QuantExt {
         const static Real equity_inbucket_corr[12] = {0.14, 0.24, 0.25, 0.2,  0.26, 0.34,
                                                       0.33, 0.34, 0.21, 0.24, 0.63, 0.0};
         const static Real com_inbucket_corr[16] = {0.71, 0.92, 0.97, 0.97, 0.99, 0.98, 1.0,  0.69,
-                                                    0.47, 0.01, 0.67, 0.70, 0.68, 0.22, 0.50, 0.0};
+                                                   0.47, 0.01, 0.67, 0.70, 0.68, 0.22, 0.50, 0.0};
         const static Real riskclass_corr[6][6] = {
             {1.0, 0.09, 0.1, 0.18, 0.32, 0.27},  {0.09, 1.0, 0.24, 0.58, 0.34, 0.29},
             {0.1, 0.24, 1.0, 0.23, 0.24, 0.12},  {0.18, 0.58, 0.23, 0.0, 0.26, 0.31},
@@ -87,6 +87,7 @@ namespace QuantExt {
     } // anonymous namespace
 
     SimmConfiguration_ISDA_V315::SimmConfiguration_ISDA_V315() : name_("SIMM ISDA V315 (7 April 2016)") {
+        std::vector<string> empty(1,"");
         // buckets
         std::vector<string> bucketsIRCurve, bucketsCreditQ, bucketsCreditNonQ, bucketsEquity, bucketsCommodity;
         bucketsIRCurve += "1", "2", "3";
@@ -104,10 +105,10 @@ namespace QuantExt {
         buckets_[Risk_EquityVol] = bucketsEquity;
         buckets_[Risk_Commodity] = bucketsCommodity;
         buckets_[Risk_CommodityVol] = bucketsCommodity;
-        buckets_[Risk_IRVol] = std::vector<string>();
-        buckets_[Risk_Inflation] = std::vector<string>();
-        buckets_[Risk_FX] = std::vector<string>();
-        buckets_[Risk_FXVol] = std::vector<string>();
+        buckets_[Risk_IRVol] = empty;
+        buckets_[Risk_Inflation] = empty;
+        buckets_[Risk_FX] = empty;
+        buckets_[Risk_FXVol] = empty;
 
         // label1
         std::vector<string> irTenor, crTenor, volTenor;
@@ -120,12 +121,12 @@ namespace QuantExt {
         labels1_[Risk_CreditVol] = crTenor;
         labels1_[Risk_CreditNonQ] = crTenor;
         labels1_[Risk_CreditVolNonQ] = crTenor;
-        labels1_[Risk_Equity] = std::vector<string>();
+        labels1_[Risk_Equity] = empty;
         labels1_[Risk_EquityVol] = volTenor;
-        labels1_[Risk_Commodity] = std::vector<string>();
+        labels1_[Risk_Commodity] = empty;
         labels1_[Risk_CommodityVol] = volTenor;
-        labels1_[Risk_Inflation] = std::vector<string>();
-        labels1_[Risk_FX] = std::vector<string>();
+        labels1_[Risk_Inflation] = empty;
+        labels1_[Risk_FX] = empty;
         labels1_[Risk_FXVol] = volTenor;
 
         // label2
@@ -133,18 +134,18 @@ namespace QuantExt {
         subcurve += "OIS", "Libor1m", "Libor3m", "Libor6m", "Libor12m", "Prime";
         sec += "Sec";
         labels2_[Risk_IRCurve] = subcurve;
-        labels2_[Risk_IRVol] = std::vector<string>();
+        labels2_[Risk_IRVol] = empty;
         labels2_[Risk_CreditQ] = sec;
-        labels2_[Risk_CreditVol] = std::vector<string>();
-        labels2_[Risk_CreditNonQ] = std::vector<string>();
-        labels2_[Risk_CreditVolNonQ] = std::vector<string>();
-        labels2_[Risk_Equity] = std::vector<string>();
-        labels2_[Risk_EquityVol] = std::vector<string>();
-        labels2_[Risk_Commodity] = std::vector<string>();
-        labels2_[Risk_CommodityVol] = std::vector<string>();
-        labels2_[Risk_Inflation] = std::vector<string>();
-        labels2_[Risk_FX] = std::vector<string>();
-        labels2_[Risk_FXVol] = std::vector<string>();
+        labels2_[Risk_CreditVol] = empty;
+        labels2_[Risk_CreditNonQ] = empty;
+        labels2_[Risk_CreditVolNonQ] = empty;
+        labels2_[Risk_Equity] = empty;
+        labels2_[Risk_EquityVol] = empty;
+        labels2_[Risk_Commodity] = empty;
+        labels2_[Risk_CommodityVol] = empty;
+        labels2_[Risk_Inflation] = empty;
+        labels2_[Risk_FX] = empty;
+        labels2_[Risk_FXVol] = empty;
     }
 
     Real SimmConfiguration_ISDA_V315::weight(const RiskType t, const Size bucketIdx, const Size label1Idx) const {
