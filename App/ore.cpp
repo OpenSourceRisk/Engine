@@ -256,6 +256,9 @@ int main(int argc, char** argv) {
          * Simulation: Scenario and Cube Generation
          */
 
+        boost::shared_ptr<AdditionalScenarioData> inMemoryScenarioData;
+        boost::shared_ptr<NPVCube> inMemoryCube;
+        
         if (params.hasGroup("simulation") &&
             params.get("simulation", "active") == "Y") {
             
@@ -318,18 +321,16 @@ int main(int argc, char** argv) {
             ostringstream o;
             o << "Additional Scenario Data " << grid->size() << " x " << samples << "... ";
             cout << setw(tab) << o.str() << flush;
-            boost::shared_ptr<AdditionalScenarioData>
-                inMemoryAdditionalScenarioData = boost::make_shared<InMemoryAdditionalScenarioData>(grid->size(),samples);
+            inMemoryScenarioData = boost::make_shared<InMemoryAdditionalScenarioData>(grid->size(),samples);
             cout << "OK" << endl;
             
             o.str("");
             o << "Build Cube " << simPortfolio->size() << " x " << grid->size() << " x " << samples << "... ";
             cout << setw(tab) << o.str() << flush;
             LOG("Build cube");
-            boost::shared_ptr<NPVCube>
-                inMemoryCube = boost::make_shared<SinglePrecisionInMemoryCube>
+            inMemoryCube = boost::make_shared<SinglePrecisionInMemoryCube>
                 (asof, simPortfolio->ids(), grid->dates(), samples);
-            engine.buildCube(simPortfolio, inMemoryCube, inMemoryAdditionalScenarioData);
+            engine.buildCube(simPortfolio, inMemoryCube, inMemoryScenarioData);
             cout << "OK" << endl;
 
             cout << setw(tab) << left << "Write Cube... " << flush;
@@ -341,7 +342,7 @@ int main(int argc, char** argv) {
             cout << setw(tab) << left << "Write Additional Scenario Data... " << flush;
             LOG("Write scenario data");
             string outputFileNameAddScenData = outputPath + "/" + params.get("simulation", "additionalScenarioDataFileName");
-            inMemoryAdditionalScenarioData->save(outputFileNameAddScenData);
+            inMemoryScenarioData->save(outputFileNameAddScenData);
             cout << "OK" << endl;
         }
         else {
@@ -364,20 +365,28 @@ int main(int argc, char** argv) {
             boost::shared_ptr<NettingSetManager> netting = boost::make_shared<NettingSetManager>();
             netting->fromFile(csaFile);
 
-            string cubeFile = outputPath + "/" + params.get("xva", "cubeFile");
-            boost::shared_ptr<NPVCube>
+            boost::shared_ptr<NPVCube> cube;
+            if (inMemoryCube)
+                cube = inMemoryCube;
+            else {
                 cube = boost::make_shared<SinglePrecisionInMemoryCube>();
-            cube->load(cubeFile);
-
+                string cubeFile = outputPath + "/" + params.get("xva", "cubeFile");
+                cube->load(cubeFile);
+            }
+            
             QL_REQUIRE(cube->numIds() == portfolio->size(),
                 "cube x dimension (" << cube->numIds() << ") does not match portfolio size ("
                                      << portfolio->size() << ")");
                        
-            string scenarioFile = outputPath + "/" + params.get("xva", "scenarioFile");
-            boost::shared_ptr<AdditionalScenarioData>
+            boost::shared_ptr<AdditionalScenarioData> scenarioData;
+            if (inMemoryScenarioData)
+                scenarioData = inMemoryScenarioData;
+            else {
                 scenarioData = boost::make_shared<InMemoryAdditionalScenarioData>();
-            scenarioData->load(scenarioFile);
-
+                string scenarioFile = outputPath + "/" + params.get("xva", "scenarioFile");
+                scenarioData->load(scenarioFile);
+            }
+            
             QL_REQUIRE(scenarioData->dimDates() == cube->dates().size(),
                 "scenario dates do not match cube grid size");
             QL_REQUIRE(scenarioData->dimSamples() == cube->samples(),
