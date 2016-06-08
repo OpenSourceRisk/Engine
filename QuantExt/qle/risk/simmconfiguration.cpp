@@ -7,7 +7,71 @@
 
 #include <qle/risk/simmconfiguration.hpp>
 
+#include <ql/math/comparison.hpp>
+#include <ql/math/matrixutilities/symmetricschurdecomposition.hpp>
+
 namespace QuantExt {
+
+    void SimmConfiguration::checkCorrelationMatrices() const {
+        for (Size t = 0; t < numberOfRiskTypes; ++t) {
+            RiskType rt = RiskType(t);
+            Size lab1 = labels1(rt).size();
+            Size lab2 = labels2(rt).size();
+            Size resBucket = residualBucket(rt) == Null<Size>() ? 0 : 1;
+            Size buck = buckets(rt).size() - resBucket;
+            Matrix l1(lab1, lab1), l2(lab2, lab2), b(buck, buck);
+            for (Size i = 0; i < lab1; ++i) {
+                for (Size j = 0; j < lab1; ++j) {
+                    l1[i][j] = correlationLabels1(rt, i, j);
+                }
+            }
+            for (Size i = 0; i < lab2; ++i) {
+                for (Size j = 0; j < lab2; ++j) {
+                    l2[i][j] = correlationLabels2(rt, i, j);
+                }
+            }
+            for (Size i = 0; i < buck; ++i) {
+                for (Size j = 0; j < buck; ++j) {
+                    b[i][j] = correlationBuckets(rt, i, j);
+                }
+            }
+            checkMatrix(l1, rt, "labels1");
+            checkMatrix(l2, rt, "labels2");
+            checkMatrix(b, rt, "buckets");
+        }
+        Matrix rc(numberOfRiskClasses, numberOfRiskClasses);
+        for (Size i = 0; i < numberOfRiskClasses; ++i) {
+            for (Size j = 0; j < numberOfRiskClasses; ++j) {
+                rc[i][j] = correlationRiskClasses(RiskClass(i), RiskClass(j));
+            }
+        }
+        // risk type doesn't matter here, ...
+        checkMatrix(rc, Risk_Commodity, "risk classes");
+    }
+
+    void SimmConfiguration::checkMatrix(const Matrix& m, const RiskType t, const string& label) const {
+        Size n = m.rows();
+        QL_REQUIRE(n > 0, "matrix is null, risk type " << t << ", label " << label);
+        for (Size i = 0; i < n; ++i) {
+            QL_REQUIRE(close_enough(m[i][i], 1.0), "correlation matrix has non unit diagonal element at ("
+                                                       << i << "," << i << "), risk type " << t << ", label " << label);
+            for (Size j = 0; j < n; ++j) {
+                QL_REQUIRE(close_enough(m[i][j], m[j][i]), "correlation matrix is not symmetric, for (i,j)=("
+                                                               << i << "," << j << "), values are " << m[i][j]
+                                                               << " and " << m[j][i] << ", risk type " << t
+                                                               << ", label " << label);
+                QL_REQUIRE(m[i][j] >= -1.0 && m[i][j] <= 1.0, "correlation matrix entry out of bounds at ("
+                                                                  << i << "," << j << "), value is " << m[i][j]
+                                                                  << ", risk type " << t << ", label " << label);
+            }
+        }
+        SymmetricSchurDecomposition ssd(m);
+        for (Size i = 0; i < ssd.eigenvalues().size(); ++i) {
+            QL_REQUIRE(ssd.eigenvalues()[i] >= 0.0, "correlation matrix has negative eigenvalue at "
+                                                        << i << " (" << ssd.eigenvalues()[i] << "), risk type " << t
+                                                        << ", label " << label);
+        }
+    }
 
     std::ostream& operator<<(std::ostream& out, const SimmConfiguration::RiskClass x) {
         switch (x) {

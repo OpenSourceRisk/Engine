@@ -14,6 +14,7 @@
 
 #include <ql/errors.hpp>
 #include <ql/types.hpp>
+#include <ql/math/matrix.hpp>
 
 #include <algorithm>
 #include <string>
@@ -70,6 +71,8 @@ namespace QuantExt {
         virtual const std::vector<string>& labels2(const RiskType t) const = 0;
 
         virtual Real weight(const RiskType t, const Size bucketIdx, const Size label1Idx) const = 0;
+        virtual Real curvatureWeight(const Size label1Idx) const = 0;
+        
         virtual Real correlationLabels1(const RiskType t, const Size i, const Size j) const = 0;
         virtual Real correlationLabels2(const RiskType t, const Size i, const Size j) const = 0;
         virtual Real correlationBuckets(const RiskType t, const Size i, const Size j) const = 0;
@@ -77,9 +80,15 @@ namespace QuantExt {
         virtual Real correlationWithinBucket(const RiskType t, const Size i) const = 0;
         virtual Real correlationRiskClasses(const RiskClass c, const RiskClass d) const = 0;
 
-        // TODO, revisit later, but as of V315 there are no threasholds defined anyway,
+        // TODO, revisit later, but as of V315 there are no thresholds defined anyway,
         // so we keep the interface general for the moment
         virtual Real concentrationThreshold() const { return QL_MAX_REAL; }
+
+        // check labels1, labels2, buckets and risk classes correlation matrices
+        void checkCorrelationMatrices() const;
+
+    private:
+        void checkMatrix(const Matrix& m, const RiskType t, const string& label) const;
     };
 
     std::ostream& operator<<(std::ostream& out, const SimmConfiguration::RiskClass x);

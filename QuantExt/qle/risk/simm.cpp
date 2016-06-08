@@ -13,9 +13,7 @@
 
 namespace QuantExt {
 
-    Real Simm::deltaMarginIR(ProductClass p) {
-
-        RiskType t = SimmConfiguration::Risk_IRCurve;
+    Real Simm::marginIR(RiskType t, ProductClass p) {
         Size qualifiers = data_->numberOfQualifiers(t, p);
         std::vector<Real> s(qualifiers, 0.0), ws(qualifiers, 0.0), cr(qualifiers, 0.0), K(qualifiers, 0.0);
 
@@ -24,11 +22,11 @@ namespace QuantExt {
         Size labels2 = conf->labels2(t).size();
 
         for (Size q = 0; q < qualifiers; ++q) {
-
+            Size b = data_->bucket(t, p, q);
             for (Size k = 0; k < labels1; ++k) {
-                for (Size i = 0; k < labels2; ++i) {
+                for (Size i = 0; i < labels2; ++i) {
                     Real amount = data_->amount(t, p, q, k, i);
-                    Real weight = conf->weight(t, q, k);
+                    Real weight = conf->weight(t, b, k);
                     s[q] += amount;
                     ws[q] += weight * amount;
                 } // for i
@@ -37,116 +35,85 @@ namespace QuantExt {
 
             // TODO exploit symmetry
             for (Size k = 0; k < labels1; ++k) {
-                for (Size i = 0; k < labels2; ++i) {
+                for (Size i = 0; i < labels2; ++i) {
                     for (Size l = 0; l < labels1; ++l) {
                         for (Size j = 0; j < labels2; ++j) {
                             K[q] += conf->correlationLabels1(t, k, l) * conf->correlationLabels2(t, i, j) *
-                                    data_->amount(t, p, q, k, i) * conf->weight(t, q, k) * cr[q] *
-                                    data_->amount(t, p, q, l, j) * conf->weight(t, q, l) * cr[q];
+                                    data_->amount(t, p, q, k, i) * conf->weight(t, b, k) * cr[q] *
+                                    data_->amount(t, p, q, l, j) * conf->weight(t, b, l) * cr[q];
                         } // for j
                     }     // for l
                 }         // for i
             }             // for k
-            K[q] = std::sqrt(K[q]);
+            K[q] = std::sqrt(std::max(K[q], 0.0));
         } // for q
 
         Real margin = 0.0;
         for (Size q1 = 0; q1 < qualifiers; ++q1) {
             margin += K[q1] * K[q1];
-            Real s1 = std::max(std::min(ws[q1], -K[q1]), K[q1]);
+            Real s1 = std::max(std::min(ws[q1], K[q1]), -K[q1]);
             for (Size q2 = 0; q2 < q1; q2++) {
-                Real s2 = std::max(std::min(ws[q2], -K[q2]), K[q2]);
+                Real s2 = std::max(std::min(ws[q2], K[q2]), -K[q2]);
                 Real g = std::min(cr[q1], cr[q2]) / std::max(cr[q1], cr[q2]);
                 margin += s1 * s2 * conf->correlationQualifiers(t) * g;
             } // for q1
         }     // for q2
 
-        margin = std::sqrt(margin);
-
+        margin = std::sqrt(std::max(margin, 0.0));
         return margin;
-    } // Simm::deltaMarginIR()
+    } // Simm::marginIR()
 
-    // Real Simm::vegaMarginIR(ProductClass p) {
+    Real Simm::curvatureMarginIR(ProductClass p) {
+        RiskType t = SimmConfiguration::Risk_IRVol;
+        Size qualifiers = data_->numberOfQualifiers(t, p);
+        std::vector<Real> ws(qualifiers, 0.0), K(qualifiers);
+        Real wssum = 0.0, wsabs = 0.0;
 
-    //     RiskType t = Risk_IRVol;
-    //     Size qualifiers = data_->numberOfQualifiers(t);
-    //     std::vector<Real> s(qualifiers, 0.0), ws(qualifiers, 0.0), cr(qualifiers, 0.0), K(qualifiers);
+        const boost::shared_ptr<SimmConfiguration> conf = data_->configuration();
+        Size labels1 = conf->labels1(t).size();
+        Size labels2 = conf->labels2(t).size();
+        QL_REQUIRE(labels2 == 1, "curvatureMarginIR: labels2 should be 1, but is " << labels2);
 
-    //     for (Size q = 0; q < qualifiers; ++q) {
-    //         for (Size k = 0; k < data_->numberOfLabels1(t); ++k) {
-    //             Real amount = data_->amount(t, p, k, 0);
-    //             Real weight = conf->weight(t, q, k);
-    //             s[q] += amount;
-    //             ws(q) += weight * amount;
-    //         } // for k
-    //         cr[q] = std::max(1.0, std::sqrt(std::abs(s) / data_->concentrationThreshold(t, q)));
+        for (Size q = 0; q < qualifiers; ++q) {
+            Size b = data_->bucket(t, p, q);
+            for (Size k = 0; k < labels1; ++k) {
+                Real amount = data_->amount(t, p, q, k, 0);
+                Real weight = conf->weight(t, b, k) * conf->curvatureWeight(k);
+                wssum += weight * amount;
+                wsabs += std::abs(weight * amount);
+            } // for k
 
-    //         for (Size k = 0; k < data_->numberOfLabels1(t); ++k) {
-    //             for (Size l = 0; k < data_->numberOfLabels1(t); ++k) {
-    //                 K[q] += conf->correlationLabels1(t, k, l) * data_->amount(t, p, k, 0) * conf->weight(t, q, k) *
-    //                         cr[q] * data_->amount(t, p, l, 0) * conf->weight(t, q, l) * cr[q]
-    //             } // for l
-    //         }     // for k
-    //         K[q] = std::sqrt(K[q]);
-    //     } // for q
+            // TODO exploit symmetry
+            for (Size k = 0; k < labels1; ++k) {
+                for (Size l = 0; l < labels1; ++l) {
+                    K[q] += conf->correlationLabels1(t, k, l) * conf->correlationLabels1(t, k, l) *
+                            data_->amount(t, p, q, k, 0) * conf->weight(t, b, k) * conf->curvatureWeight(k) *
+                            data_->amount(t, p, q, l, 0) * conf->weight(t, b, l) * conf->curvatureWeight(l);
+                } // for l
+            }     // for k
+            K[q] = std::sqrt(std::max(K[q], 0.0));
+        } // for q
 
-    //     Real margin = 0.0;
-    //     for (Size q1 = 0; q1 < qualifiers; ++q1) {
-    //         margin += K[q1] * K[q1];
-    //         Real s1 = std::max(std::min(ws[q1], -K[q1], K[q1]));
-    //         for (Size q2 = 0; q2 < q1; q2++) {
-    //             Real s2 = std::max(std::min(ws[q2], -K[q2], K[q2]));
-    //             Real g = std::min(cr[q1], cr[q2]) / std::max(cr[q1], cr[q2]);
-    //             margin += s1 * s2 * conf->correlationQualifiers(q1, q2) * g;
-    //         } // for q1
-    //     }     // for q2
+        if (close_enough(wsabs, 0.0))
+            return 0.0;
 
-    //     margin = std::sqrt(margin);
+        Real theta = std::min(wssum / wsabs, 0.0);
 
-    //     return margin;
-    // } // Simm::vegaMarginIR()
+        Real lambda = (6.634896601021214 - 1.0) * (1.0 + theta) - theta;
 
-    // Real Simm::curvatureMarginIR(ProductClass p) {
+        Real margin = 0.0;
+        for (Size q1 = 0; q1 < qualifiers; ++q1) {
+            margin += K[q1] * K[q1];
+            Real s1 = std::max(std::min(ws[q1], K[q1]), -K[q1]);
+            for (Size q2 = 0; q2 < q1; q2++) {
+                Real s2 = std::max(std::min(ws[q2], K[q2]), -K[q2]);
+                margin += s1 * s2 * conf->correlationQualifiers(t);
+            } // for q1
+        }     // for q2
 
-    //     RiskType t = Risk_IRVol;
-    //     Size qualifiers = data_->numberOfQualifiers(t);
-    //     std::vector<Real> ws(qualifiers, 0.0), cr(qualifiers, 0.0), K(qualifiers);
-    //     Real wssum = 0.0, wsabs = 0.0;
-
-    //     for (Size q = 0; q < qualifiers; ++q) {
-    //         for (Size k = 0; k < data_->numberOfLabels1(t); ++k) {
-    //             Real amount = data_->amount(t, p, k, 0);
-    //             Real weight = conf->weight(t, q, k) * conf->curvatureWeight(t, k);
-    //             wssum += weight * amount;
-    //             wsabs += std::abs(weight * amount);
-    //         } // for k
-
-    //         for (Size k = 0; k < data_->numberOfLabels1(t); ++k) {
-    //             for (Size l = 0; k < data_->numberOfLabels1(t); ++k) {
-    //                 K[q] += conf->correlationLabels1(t, k, l) * conf->correlationLabels1(t, k, l) *
-    //                         data_->amount(t, p, k, 0) * conf->weight(t, q, k) * conf->curvatureWeight(t, k) * cr[q] *
-    //                         data_->amount(t, p, l, 0) * conf->weight(t, q, l) * cr[q] * conf->curvatureWeight(t, k);
-    //             } // for l
-    //         }     // for k
-    //         K[q] = std::sqrt(K[q]);
-    //     } // for q
-
-    //     Real theta = std::min(wssum / wsabs, 0.0);
-    //     Real lambda = (6.634896601021214 - 1.0) * (1.0 + theta) - theta;
-
-    //     Real margin = 0.0;
-    //     for (Size q1 = 0; q1 < qualifiers; ++q1) {
-    //         margin += K[q1] * K[q1];
-    //         Real s1 = std::max(std::min(ws[q1], -K[q1], K[q1]));
-    //         for (Size q2 = 0; q2 < q1; q2++) {
-    //             Real s2 = std::max(std::min(ws[q2], -K[q2], K[q2]));
-    //             margin += s1 * s2 * conf->correlationQualifiers(q1, q2) * g;
-    //         } // for q1
-    //     }     // for q2
-
-    //     margin = std::max(lambda * std::sqrt(margin) + wssum, 0.0);
-    //     return margin;
-    // } // Simm::curvatureMarginIR()
+        margin = std::max(lambda * std::sqrt(std::max(margin, 0.0)) + wssum, 0.0);
+        return margin;
+    } // Simm::curvatureMarginIR()
 
     // Real Simm::deltaMarginGeneric(RiskType t, ProductClass p) {
 
@@ -182,15 +149,15 @@ namespace QuantExt {
     //     for (Size b1 = 0; b1 < buckets; ++b1) {
     //         if (b1 != data_->configuration()->residualBucket(t)) {
     //             margin += K[b1] * K[b1];
-    //             Real s1 = std::max(std::min(ws[b1], -K[b1], K[b1]));
+    //             Real s1 = std::max(std::min(ws[b1], K[b1], -K[b1]));
     //             for (Size b2 = 0; b2 < buckets - resBuck; b2++) {
-    //                 Real s2 = std::max(std::min(ws[b2], -K[b2], K[b2]));
+    //                 Real s2 = std::max(std::min(ws[b2], K[b2], -K[b2]));
     //                 margin += s1 * s2 * conf->correlationBuckets(t, b1, b2);
     //             }
     //         } // for b1
     //     }     // for b2
 
-    //     margin = std::sqrt(margin);
+    //     margin = std::sqrt(std::max(margin,0.0));
 
     //     if (data_->configuration()->residualBucket(t) != Null<Size>()) {
     //         margin += K[data_->configuration()->residualBucket(t);
@@ -230,14 +197,14 @@ namespace QuantExt {
     //     for (Size b1 = 0; b1 < buckets; ++b1) {
     //         if(data_->configuration->residualBucket() != b1) {
     //         margin += K[b1] * K[b1];
-    //         Real s1 = std::max(std::min(ws[b1], -K[b1], K[b1]));
+    //         Real s1 = std::max(std::min(ws[b1], K[b1], -K[b1]));
     //         for (Size b2 = 0; b2 < buckets - resBuck; b2++) {
-    //             Real s2 = std::max(std::min(ws[b2], -K[b2], K[b2]));
+    //             Real s2 = std::max(std::min(ws[b2], K[b2], -K[b2]));
     //             margin += s1 * s2 * conf->correlationBuckets(t, b1, b2) * g;
     //         } // for b1
     //     }     // for b2
 
-    //     margin = std::sqrt(margin);
+    //     margin = std::sqrt(std::max(margin,0.0));
 
     //     if (data_->configuration()->hasResidualBucket(t)) {
     //         margin += K.back();
@@ -285,14 +252,14 @@ namespace QuantExt {
     //     for (Size b1 = 0; b1 < buckets; ++b1) {
     //         if(
     //         margin += K[b1] * K[b1];
-    //         Real s1 = std::max(std::min(ws[b1], -K[b1], K[b1]));
+    //         Real s1 = std::max(std::min(ws[b1], K[b1], -K[b1]));
     //         for (Size b2 = 0; b2 < buckets - resBuck; b2++) {
-    //             Real s2 = std::max(std::min(ws[b2], -K[b2], K[b2]));
+    //             Real s2 = std::max(std::min(ws[b2], K[b2], -K[b2]));
     //             margin += s1 * s2 * conf->correlationBuckets(t, b1, b2) * g;
     //         } // for b1
     //     }     // for b2
 
-    //     margin = std::max(lambda * std::sqrt(margin) + wssum, 0.0);
+    //     margin = std::max(lambda * std::sqrt(std::max(margin,0.0)) + wssum, 0.0);
 
     //     if (data_->configuration()->residualBucket(t) != Null<Size>()) {
     //         Real thetares = std::min(wssumres / wsabsres, 0.0);
@@ -305,43 +272,62 @@ namespace QuantExt {
 
     void Simm::calculate() {
 
-        std::clog << "Simm::calculate() started" << std::endl;
-
         boost::shared_ptr<SimmConfiguration> conf = data_->configuration();
 
-        // debug, output aggregated data
+        // debug
 
         boost::shared_ptr<SimmDataByKey> dataKey = boost::static_pointer_cast<SimmDataByKey>(data_);
-        if (dataKey != NULL) {
-            for (Size t = 0; t < conf->numberOfRiskTypes; ++t) {
-                RiskType rt = SimmConfiguration::RiskType(t);
-                for (Size p = 0; p < dataKey->numberOfProductClasses(); ++p) {
-                    ProductClass pc = SimmConfiguration::ProductClass(p);
-                    for (Size q = 0; q < dataKey->numberOfQualifiers(rt, pc); ++q) {
-                        for (Size l1 = 0; l1 < conf->labels1(rt).size(); ++l1) {
-                            for (Size l2 = 0; l2 < conf->labels2(rt).size(); ++l2) {
-                                Real amount = dataKey->amount(rt, pc, q, l1, l2);
-                                if(!QuantLib::close_enough(amount,0.0)) {
-                                std::clog << rt << "\t" << pc << "\t" << dataKey->qualifiers(rt, pc)[q] << "\t"
-                                          << "\t" << conf->labels1(rt)[l1] << "\t" << conf->labels2(rt)[l2] << "\t"
-                                          << conf->buckets(rt)[dataKey->bucket(rt, pc, q)] << "\t"
-                                          << dataKey->amount(rt, pc, q, l1, l2) << std::endl;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return;
+
+        // output aggregated data
+        // if (dataKey != NULL) {
+        //     for (Size t = 0; t < conf->numberOfRiskTypes; ++t) {
+        //         RiskType rt = SimmConfiguration::RiskType(t);
+        //         for (Size p = 0; p < dataKey->numberOfProductClasses(); ++p) {
+        //             ProductClass pc = SimmConfiguration::ProductClass(p);
+        //             for (Size q = 0; q < dataKey->numberOfQualifiers(rt, pc); ++q) {
+        //                 for (Size l1 = 0; l1 < conf->labels1(rt).size(); ++l1) {
+        //                     for (Size l2 = 0; l2 < conf->labels2(rt).size(); ++l2) {
+        //                         Real amount = dataKey->amount(rt, pc, q, l1, l2);
+        //                         if(!QuantLib::close_enough(amount,0.0)) {
+        //                         std::clog << rt << "\t" << pc << "\t" << dataKey->qualifiers(rt, pc)[q] << "\t"
+        //                                   << "\t" << conf->labels1(rt)[l1] << "\t" << conf->labels2(rt)[l2] << "\t"
+        //                                   << conf->buckets(rt)[dataKey->bucket(rt, pc, q)] << "\t"
+        //                                   << dataKey->amount(rt, pc, q, l1, l2) << std::endl;
+        //                         }
+        //                     }
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
+
+        // output qualifiers, text, bucket
+        // if (dataKey != NULL) {
+        //     for (Size t = 0; t < conf->numberOfRiskTypes; ++t) {
+        //         RiskType rt = SimmConfiguration::RiskType(t);
+        //         for (Size p = 0; p < dataKey->numberOfProductClasses(); ++p) {
+        //             ProductClass pc = SimmConfiguration::ProductClass(p);
+        //             for (Size q = 0; q < dataKey->numberOfQualifiers(rt, pc); ++q) {
+        //                 std::clog << rt << "\t" << pc << "\t" << q << "\t" << dataKey->qualifiers(rt, pc)[q] << "\t"
+        //                           << conf->buckets(rt)[dataKey->bucket(rt, pc, q)] << std::endl;
+        //             }
+        //         }
+        //     }
+        // }
         // end debug
 
         for (Size p = 0; p < data_->numberOfProductClasses(); ++p) {
 
+            ProductClass pc = ProductClass(p);
+
+            // TODO put the single calls below into a loop once it is clear how many different
+            // methods we need.
+
             // delta
 
-            initialMargin_[boost::make_tuple(SimmConfiguration::RiskClass_InterestRate, SimmConfiguration::Delta,
-                                             SimmConfiguration::ProductClass(p))] = deltaMarginIR(ProductClass(p));
+            std::clog << pc << " IRDeltaMargin" << std::endl;
+            initialMargin_[boost::make_tuple(pc, SimmConfiguration::RiskClass_InterestRate, SimmConfiguration::Delta)] =
+                marginIR(SimmConfiguration::Risk_IRCurve, pc);
 
             // initialMargin_[boost::make_tuple(CreditQualifying, ProductClass(p), Delta)] =
             //     deltaMarginGeneric(RiskCreditQ, ProductClass(p));
@@ -360,8 +346,9 @@ namespace QuantExt {
 
             // vega
 
-            // initialMargin_[boost::make_tuple(InterestRate, ProductClass(p), Vega)] =
-            //     vegaMarginIR(ProductClass(p));
+            std::clog << pc << " IRVegaMargin" << std::endl;
+            initialMargin_[boost::make_tuple(pc, SimmConfiguration::RiskClass_InterestRate, SimmConfiguration::Vega)] =
+                marginIR(SimmConfiguration::Risk_IRVol, pc);
 
             // initialMargin_[boost::make_tuple(CreditQualifying, ProductClass(p), Vega)] =
             //     vegaMarginGeneric(RiskCreditVol, ProductClass(p));
@@ -380,8 +367,9 @@ namespace QuantExt {
 
             // curvature
 
-            // initialMargin_[boost::make_tuple(InterestRate, ProductClass(p), Curvature)] =
-            //     curvatureMarginIR(ProductClass(p));
+            std::clog << pc << " IRCurvatureMargin" << std::endl;
+            initialMargin_[boost::make_tuple(pc, SimmConfiguration::RiskClass_InterestRate,
+                                             SimmConfiguration::Curvature)] = curvatureMarginIR(ProductClass(p));
 
             // initialMargin_[boost::make_tuple(CreditQualifying, ProductClass(p), Curvature)] =
             //     curvatureMarginGeneric(RiskCreditVol, ProductClass(p));
@@ -390,7 +378,7 @@ namespace QuantExt {
             //     curvatureMarginGeneric(RiskCreditVolNonQ, ProductClass(p));
 
             // initialMargin_[boost::make_tuple(Equity, ProductClass(p), Curvature)] =
-            //     curvatureMarginGeneric(RiskEquityVol, ProductClass(p));
+            //     curvatureMarginGeneric(RiskEquipctyVol, ProductClass(p));
 
             // initialMargin_[boost::make_tuple(Commodity, ProductClass(p), Curvature)] =
             //     curvatureMarginGeneric(CommodityVol, ProductClass(p));

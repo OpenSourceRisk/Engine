@@ -67,7 +67,7 @@ void writeXVA(const Parameters& params,
               boost::shared_ptr<Portfolio> portfolio,
               boost::shared_ptr<PostProcess> postProcess);
 
-void writeSimmResults(const std::vector<boost::shared_ptr<QuantExt::Simm>>& simm,
+void writeSimmResults(const Parameters& params, const std::vector<boost::shared_ptr<QuantExt::Simm>>& simm,
                       const std::vector<string>& portfolios);
 
 int main(int argc, char** argv) {
@@ -447,7 +447,7 @@ int main(int argc, char** argv) {
                     LOG("Set up SIMM calculator for portfolio " << loader.portfolios()[i]);
                     simm.push_back(boost::make_shared<QuantExt::Simm>(loader.data()[i]));
                 }
-                writeSimmResults(simm, loader.portfolios());
+                writeSimmResults(params, simm, loader.portfolios());
                 LOG("SIMM results file written.");
             } else {
                 QL_FAIL("initial margin method " << params.get("initialMargin", "method") << " not recognised.");
@@ -806,9 +806,31 @@ void writeNettingSetColva(const Parameters& params,
     }
 }
 
-void writeSimmResults(const std::vector<boost::shared_ptr<QuantExt::Simm>>& simm,
+void writeSimmResults(const Parameters& params, const std::vector<boost::shared_ptr<QuantExt::Simm>>& simm,
                       const std::vector<string>& portfolios) {
 
+    string outputPath = params.get("setup", "outputPath");
+    string fileName = outputPath + "/" + params.get("initialMargin", "outputFileName");
+    ofstream file(fileName);
+    QL_REQUIRE(file.is_open(), "Error opening file " << fileName);
+    file.precision(15);
+    char sep = ',';
+    file << "Portfolio" << sep << "ProductClass" << sep << "RiskClass" << sep << "MarginType" << sep << "InitialMargin"
+         << endl;
+    for (Size i = 0; i < portfolios.size(); ++i) {
+        for (Size p = 0; p < QuantExt::SimmConfiguration::numberOfProductClasses; ++p) {
+            for (Size r = 0; r < QuantExt::SimmConfiguration::numberOfRiskClasses; ++r) {
+                for (Size m = 0; m < QuantExt::SimmConfiguration::numberOfMarginTypes; ++m) {
+                    QuantExt::SimmConfiguration::ProductClass pc = QuantExt::SimmConfiguration::ProductClass(p);
+                    QuantExt::SimmConfiguration::RiskClass rc = QuantExt::SimmConfiguration::RiskClass(r);
+                    QuantExt::SimmConfiguration::MarginType mar = QuantExt::SimmConfiguration::MarginType(m);
+                    file << portfolios[i] << sep << pc << sep << rc << sep << mar << sep
+                         << simm[i]->initialMargin(pc, rc, mar) << endl;
+                }
+            }
+        }
+    }
+    file.close();
 }
 
 bool Parameters::hasGroup(const string& groupName) const {
