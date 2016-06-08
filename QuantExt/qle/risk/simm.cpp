@@ -9,12 +9,47 @@
 
 #include <ql/math/comparison.hpp>
 
-#include <iostream>
-
 namespace QuantExt {
 
+    Real Simm::initialMargin(const ProductClass p, const RiskClass c, const MarginType m) {
+        boost::tuple<ProductClass, RiskClass, MarginType> key = boost::make_tuple(p, c, m);
+        return initialMargin_.at(key);
+    }
+
+    Real Simm::initialMargin(const ProductClass p, const RiskClass c) {
+        Real sum = 0.0;
+        for (Size m = 0; m < data_->configuration()->numberOfMarginTypes; ++m) {
+            boost::tuple<ProductClass, RiskClass, MarginType> key =
+                boost::make_tuple(p, c, SimmConfiguration::MarginType(m));
+            sum += initialMargin_.at(key);
+        }
+        return sum;
+    }
+
+    Real Simm::initialMargin(const ProductClass p) {
+        Real sum = 0.0;
+        for (Size c = 0; c < data_->configuration()->numberOfRiskClasses; ++c) {
+            sum +=
+                initialMargin(p, SimmConfiguration::RiskClass(c)) * initialMargin(p, SimmConfiguration::RiskClass(c));
+            for (Size d = 0; d < c; ++d) {
+                sum += 2.0 * initialMargin(p, SimmConfiguration::RiskClass(c)) *
+                       initialMargin(p, SimmConfiguration::RiskClass(d)) *
+                       data_->configuration()->correlationRiskClasses(SimmConfiguration::RiskClass(c),
+                                                                      SimmConfiguration::RiskClass(d));
+            }
+        }
+        return std::sqrt(std::max(sum, 0.0));
+    }
+
+    Real Simm::initialMargin() {
+        Real sum = 0.0;
+        for (Size p = 0; p < data_->numberOfProductClasses(); ++p) {
+            sum += initialMargin(SimmConfiguration::ProductClass(p));
+        }
+        return sum;
+    }
+
     Real Simm::marginIR(RiskType t, ProductClass p) {
-        std::clog << "marginIR, " << t << ", " << p << std::endl;
         Size qualifiers = data_->numberOfQualifiers(t, p);
         std::vector<Real> s(qualifiers, 0.0), ws(qualifiers, 0.0), cr(qualifiers, 0.0), K(qualifiers, 0.0);
 
@@ -65,7 +100,6 @@ namespace QuantExt {
     } // Simm::marginIR()
 
     Real Simm::curvatureMarginIR(ProductClass p) {
-        std::clog << "curvatureMarginIR, " << p << std::endl;
         RiskType t = SimmConfiguration::Risk_IRVol;
         Size qualifiers = data_->numberOfQualifiers(t, p);
         std::vector<Real> ws(qualifiers, 0.0), K(qualifiers);
@@ -100,7 +134,7 @@ namespace QuantExt {
             return 0.0;
 
         Real theta = std::min(wssum / wssumabs, 0.0);
-        Real lambda = (6.634896601021214 - 1.0) * (1.0 + theta) - theta;
+        Real lambda = (phiInv995Sq_ - 1.0) * (1.0 + theta) - theta;
 
         Real margin = 0.0;
         for (Size q1 = 0; q1 < qualifiers; ++q1) {
@@ -117,7 +151,6 @@ namespace QuantExt {
     } // Simm::curvatureMarginIR()
 
     Real Simm::marginGeneric(RiskType t, ProductClass p) {
-        std::clog << "marginGeneric, " << t << ", " << p << std::endl;
         Size qualifier = data_->numberOfQualifiers(t, p);
         const boost::shared_ptr<SimmConfiguration> conf = data_->configuration();
         Size buckets = conf->buckets(t).size();
@@ -181,7 +214,6 @@ namespace QuantExt {
     } // Simm::marginGeneric()
 
     Real Simm::curvatureMarginGeneric(RiskType t, ProductClass p) {
-        std::clog << "curvatureMarginGeneric, " << t << ", " << p << std::endl;
         Size qualifier = data_->numberOfQualifiers(t, p);
         const boost::shared_ptr<SimmConfiguration> conf = data_->configuration();
         Size buckets = conf->buckets(t).size();
@@ -231,7 +263,7 @@ namespace QuantExt {
 
         if (!close_enough(wssumabs, 0.0)) {
             Real theta = std::min(wssum / wssumabs, 0.0);
-            Real lambda = (6.634896601021214 - 1.0) * (1.0 + theta) - theta;
+            Real lambda = (phiInv995Sq_ - 1.0) * (1.0 + theta) - theta;
             for (Size b1 = 0; b1 < buckets; ++b1) {
                 if (b1 != data_->configuration()->residualBucket(t)) {
                     margin += K[b1] * K[b1];
@@ -250,7 +282,7 @@ namespace QuantExt {
 
         if (conf->residualBucket(t) != Null<Size>() && !close_enough(wssumabsres, 0.0)) {
             Real theta = std::min(wssumres / wssumabsres, 0.0);
-            Real lambda = (6.634896601021214 - 1.0) * (1.0 + theta) - theta;
+            Real lambda = (phiInv995Sq_ - 1.0) * (1.0 + theta) - theta;
             margin += std::max(wssum + lambda * K[conf->residualBucket(t)], 0.0);
         }
 

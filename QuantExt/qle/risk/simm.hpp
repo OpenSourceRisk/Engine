@@ -28,12 +28,12 @@ namespace QuantExt {
         typedef SimmConfiguration::MarginType MarginType;
         typedef SimmConfiguration::RiskType RiskType;
 
-        Simm(const boost::shared_ptr<SimmData>& data) : data_(data) { calculate(); }
+        Simm(const boost::shared_ptr<SimmData>& data) : data_(data), phiInv995Sq_(6.634896601021214) { calculate(); }
 
-        Real initialMargin(const ProductClass p, const RiskClass c, const MarginType m) {
-                boost::tuple<ProductClass, RiskClass, MarginType> key = boost::make_tuple(p, c, m);
-                return initialMargin_.at(key);
-        }
+        Real initialMargin(const ProductClass p, const RiskClass c, const MarginType m);
+        Real initialMargin(const ProductClass p, const RiskClass c);
+        Real initialMargin(const ProductClass p);
+        Real initialMargin();
 
         //! refresh results after data has changed
         void calculate();
@@ -46,6 +46,7 @@ namespace QuantExt {
         Real marginGeneric(RiskType t, ProductClass p);
         Real curvatureMarginGeneric(RiskType t, ProductClass p);
         const boost::shared_ptr<SimmData> data_;
+        const Real phiInv995Sq_;
         std::map<boost::tuple<ProductClass, RiskClass, MarginType>, Real> initialMargin_;
     };
 

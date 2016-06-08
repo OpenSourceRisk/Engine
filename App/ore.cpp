@@ -817,18 +817,23 @@ void writeSimmResults(const Parameters& params, const std::vector<boost::shared_
     char sep = ',';
     file << "Portfolio" << sep << "ProductClass" << sep << "RiskClass" << sep << "MarginType" << sep << "InitialMargin"
          << endl;
+    const string all = "All";
     for (Size i = 0; i < portfolios.size(); ++i) {
         for (Size p = 0; p < QuantExt::SimmConfiguration::numberOfProductClasses; ++p) {
+            QuantExt::SimmConfiguration::ProductClass pc = QuantExt::SimmConfiguration::ProductClass(p);
             for (Size r = 0; r < QuantExt::SimmConfiguration::numberOfRiskClasses; ++r) {
+                QuantExt::SimmConfiguration::RiskClass rc = QuantExt::SimmConfiguration::RiskClass(r);
                 for (Size m = 0; m < QuantExt::SimmConfiguration::numberOfMarginTypes; ++m) {
-                    QuantExt::SimmConfiguration::ProductClass pc = QuantExt::SimmConfiguration::ProductClass(p);
-                    QuantExt::SimmConfiguration::RiskClass rc = QuantExt::SimmConfiguration::RiskClass(r);
                     QuantExt::SimmConfiguration::MarginType mar = QuantExt::SimmConfiguration::MarginType(m);
                     file << portfolios[i] << sep << pc << sep << rc << sep << mar << sep
                          << simm[i]->initialMargin(pc, rc, mar) << endl;
                 }
+                file << portfolios[i] << sep << pc << sep << rc << sep << all << sep << simm[i]->initialMargin(pc, rc)
+                     << endl;
             }
+            file << portfolios[i] << sep << pc << sep << all << sep << all << sep << simm[i]->initialMargin(pc) << endl;
         }
+        file << portfolios[i] << sep << all << sep << all << sep << all << sep << simm[i]->initialMargin() << endl;
     }
     file.close();
 }
