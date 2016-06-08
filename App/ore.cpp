@@ -336,14 +336,20 @@ int main(int argc, char** argv) {
             cout << setw(tab) << left << "Write Cube... " << flush;
             LOG("Write cube");
             string cubeFileName = outputPath + "/" + params.get("simulation", "cubeFile");
-            inMemoryCube->save(cubeFileName);
-            cout << "OK" << endl;
+            if (cubeFileName != "") {
+                inMemoryCube->save(cubeFileName);
+                cout << "OK" << endl;
+            } else
+                cout << "SKIP" << endl;
 
             cout << setw(tab) << left << "Write Additional Scenario Data... " << flush;
             LOG("Write scenario data");
             string outputFileNameAddScenData = outputPath + "/" + params.get("simulation", "additionalScenarioDataFileName");
-            inMemoryScenarioData->save(outputFileNameAddScenData);
-            cout << "OK" << endl;
+            if (outputFileNameAddScenData != "") {
+                inMemoryScenarioData->save(outputFileNameAddScenData);
+                cout << "OK" << endl;
+            } else
+                cout << "SKIP" << endl;
         }
         else {
             LOG("skip simulation");
