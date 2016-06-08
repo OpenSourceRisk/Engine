@@ -41,15 +41,15 @@ namespace QuantExt {
         QL_REQUIRE(p < numberOfProductClasses(), "ProductClass << " << p << " out of range 0..."
                                                                     << numberOfProductClasses());
         QL_REQUIRE(label1 < config_->labels1(t).size(),
-                   "RiskType " << t << ", label1 (" << label1 << ") out of range 0..." << config_->labels1(t).size()-1);
+                   "SimmData, RiskType " << t << ", label1 (" << label1 << ") out of range 0..." << config_->labels1(t).size()-1);
         QL_REQUIRE(label2 < config_->labels2(t).size(),
-                   "RiskType " << t << ", label2 (" << label2 << ") out of range 0..." << config_->labels2(t).size()-1);
+                   "SimmData, RiskType " << t << ", label2 (" << label2 << ") out of range 0..." << config_->labels2(t).size()-1);
     }
 
     Real SimmData::amount(const RiskType t, const ProductClass p, const Size qualifier, const Size label1,
                           const Size label2) const {
         check(t, p, label1, label2);
-        QL_REQUIRE(qualifier < numberOfQualifiers(t, p), "RiskType " << t << ", ProductClass " << p << ", qualifier ("
+        QL_REQUIRE(qualifier < numberOfQualifiers(t, p), "SimmData, RiskType " << t << ", ProductClass " << p << ", qualifier ("
                                                                      << qualifier << ") out of range 0..."
                                                                      << numberOfQualifiers(t, p));
         const std::vector<Real>& v = data_.at(std::make_pair(t, p))[label1][label2];
