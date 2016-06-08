@@ -67,7 +67,8 @@ void writeXVA(const Parameters& params,
               boost::shared_ptr<Portfolio> portfolio,
               boost::shared_ptr<PostProcess> postProcess);
 
-void writeSimmResults(const QuantExt::Simm& simm);
+void writeSimmResults(const std::vector<boost::shared_ptr<QuantExt::Simm>>& simm,
+                      const std::vector<string>& portfolios);
 
 int main(int argc, char** argv) {
 
@@ -436,12 +437,18 @@ int main(int argc, char** argv) {
         if (params.hasGroup("initialMargin") &&
             params.get("initialMargin", "active") == "Y") {
             if(params.get("initialMargin", "method") == "SIMM") {
+                LOG("Loading SIMM data from file...");
                 SimmDataFileLoader loader(inputPath + "/" + params.get("initialMargin", "inputFileName"),
                                           params.get("initialMargin", "simmVersion"),
                                           parseBool(params.get("initialMargin", "simmUseProductClasses")),
                                           parseBool(params.get("initialMargin", "inputDelimiterCR")) ? '\r' : '\n');
-                QuantExt::Simm simm(loader.data());
-                writeSimmResults(simm);
+                vector<boost::shared_ptr<QuantExt::Simm>> simm;
+                for(Size i=0;i<loader.portfolios().size();++i) {
+                    LOG("Set up SIMM calculator for portfolio " << loader.portfolios()[i]);
+                    simm.push_back(boost::make_shared<QuantExt::Simm>(loader.data()[i]));
+                }
+                writeSimmResults(simm, loader.portfolios());
+                LOG("SIMM results file written.");
             } else {
                 QL_FAIL("initial margin method " << params.get("initialMargin", "method") << " not recognised.");
             }
@@ -799,8 +806,8 @@ void writeNettingSetColva(const Parameters& params,
     }
 }
 
-void writeSimmResults(const QuantExt::Simm& simm) {
-    
+void writeSimmResults(const std::vector<boost::shared_ptr<QuantExt::Simm>>& simm,
+                      const std::vector<string>& portfolios) {
 
 }
 

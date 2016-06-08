@@ -132,7 +132,7 @@ namespace QuantExt {
         // label2
         std::vector<string> subcurve, sec;
         subcurve += "OIS", "Libor1m", "Libor3m", "Libor6m", "Libor12m", "Prime";
-        sec += "Sec";
+        sec += "", "Sec";
         labels2_[Risk_IRCurve] = subcurve;
         labels2_[Risk_IRVol] = empty;
         labels2_[Risk_CreditQ] = sec;

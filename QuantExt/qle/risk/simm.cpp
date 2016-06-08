@@ -7,12 +7,16 @@
 
 #include <qle/risk/simm.hpp>
 
+#include <ql/math/comparison.hpp>
+
+#include <iostream>
+
 namespace QuantExt {
 
     Real Simm::deltaMarginIR(ProductClass p) {
 
         RiskType t = SimmConfiguration::Risk_IRCurve;
-        Size qualifiers = data_->numberOfQualifiers(t);
+        Size qualifiers = data_->numberOfQualifiers(t, p);
         std::vector<Real> s(qualifiers, 0.0), ws(qualifiers, 0.0), cr(qualifiers, 0.0), K(qualifiers, 0.0);
 
         const boost::shared_ptr<SimmConfiguration> conf = data_->configuration();
@@ -301,7 +305,36 @@ namespace QuantExt {
 
     void Simm::calculate() {
 
+        std::clog << "Simm::calculate() started" << std::endl;
+
         boost::shared_ptr<SimmConfiguration> conf = data_->configuration();
+
+        // debug, output aggregated data
+
+        boost::shared_ptr<SimmDataByKey> dataKey = boost::static_pointer_cast<SimmDataByKey>(data_);
+        if (dataKey != NULL) {
+            for (Size t = 0; t < conf->numberOfRiskTypes; ++t) {
+                RiskType rt = SimmConfiguration::RiskType(t);
+                for (Size p = 0; p < dataKey->numberOfProductClasses(); ++p) {
+                    ProductClass pc = SimmConfiguration::ProductClass(p);
+                    for (Size q = 0; q < dataKey->numberOfQualifiers(rt, pc); ++q) {
+                        for (Size l1 = 0; l1 < conf->labels1(rt).size(); ++l1) {
+                            for (Size l2 = 0; l2 < conf->labels2(rt).size(); ++l2) {
+                                Real amount = dataKey->amount(rt, pc, q, l1, l2);
+                                if(!QuantLib::close_enough(amount,0.0)) {
+                                std::clog << rt << "\t" << pc << "\t" << dataKey->qualifiers(rt, pc)[q] << "\t"
+                                          << "\t" << conf->labels1(rt)[l1] << "\t" << conf->labels2(rt)[l2] << "\t"
+                                          << conf->buckets(rt)[dataKey->bucket(rt, pc, q)] << "\t"
+                                          << dataKey->amount(rt, pc, q, l1, l2) << std::endl;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return;
+        // end debug
 
         for (Size p = 0; p < data_->numberOfProductClasses(); ++p) {
 

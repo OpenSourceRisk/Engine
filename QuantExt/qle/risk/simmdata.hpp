@@ -31,24 +31,26 @@ namespace QuantExt {
         SimmData(const boost::shared_ptr<SimmConfiguration>& config = boost::make_shared<SimmConfiguration_ISDA_V315>(),
                  const bool useProductClasses = false);
 
-        Size numberOfQualifiers(const RiskType t) const { return numberOfQualifiers_.at(t); }
-        Size bucket(const RiskType t, const Size qualifier) {
-            const std::vector<Size>& b = buckets_.at(t);
+        Size numberOfQualifiers(const RiskType t, const ProductClass p) const {
+            return numberOfQualifiers_.at(std::make_pair(t, p));
+        }
+        Size bucket(const RiskType t, const ProductClass p, const Size qualifier) {
+            const std::vector<Size>& b = buckets_.at(std::make_pair(t, p));
             QL_REQUIRE(qualifier < b.size(), "qualifier with index " << qualifier << " out of range 0..."
                                                                      << b.size() - 1);
             return b[qualifier];
         }
         bool useProductClasses() const { return useProductClasses_; }
         Size numberOfProductClasses() const { return numberOfProductClasses_; }
-        const Real& amount(const RiskType t, const ProductClass productClass, const Size qualifier, const Size label1,
+        Real amount(const RiskType t, const ProductClass p, const Size qualifier, const Size label1,
                            const Size label2) const;
-        Real& amount(const RiskType t, const ProductClass productClass, const Size bucket, const Size qualifier,
+        Real& amount(const RiskType t, const ProductClass p, const Size bucket, const Size qualifier,
                      const Size label1, const Size label2);
 
         const boost::shared_ptr<SimmConfiguration> configuration() { return config_; }
 
     protected:
-        void check(const RiskType t, const ProductClass productClass, const Size label1, const Size label2) const;
+        void check(const RiskType t, const ProductClass p, const Size label1, const Size label2) const;
         // label1, label2, qualifer => amount
         typedef std::vector<std::vector<std::vector<Real> > > RiskTypeData;
         // productClass, riskType => riskTypeData
@@ -57,9 +59,9 @@ namespace QuantExt {
         const boost::shared_ptr<SimmConfiguration> config_;
         const bool useProductClasses_;
         const Size numberOfProductClasses_;
-        std::map<RiskType, Size> numberOfQualifiers_;
+        std::map<std::pair<RiskType, ProductClass>, Size> numberOfQualifiers_;
         // qualifier => buckets
-        std::map<RiskType, std::vector<Size> > buckets_;
+        std::map<std::pair<RiskType, ProductClass>, std::vector<Size> > buckets_;
         ProductClassData data_;
     };
 
@@ -70,10 +72,13 @@ namespace QuantExt {
             bool useProductClasses = false);
 
         void addKey(const SimmKey& key);
+        const std::vector<string>& qualifiers(const RiskType t, const ProductClass p) const {
+            return qualifiers_.at(std::make_pair(t, p));
+        }
 
     private:
         // translate index to string
-        std::map<RiskType, std::vector<string> > qualifiers_;
+        std::map<std::pair<RiskType, ProductClass>, std::vector<string> > qualifiers_;
         std::string reportingCurrency_;
     };
 
