@@ -166,7 +166,7 @@ class CrossAssetModel : public LinkableCalibratedModel {
         recommended instead of the global matrix directly */
     const Matrix &correlation() const;
 
-    
+    const Matrix &correlation2() const;
 
     /*! correlation between two ir components */
     Real ir_ir_correlation(const Size i, const Size j) const;
