@@ -26,6 +26,7 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
+
     class SimmConfiguration {
     public:
         enum RiskClass {
@@ -36,6 +37,8 @@ namespace QuantExt {
             RiskClass_Commodity = 4,
             RiskClass_FX = 5
         };
+        /*! Note that the risk type inflation has to be treated as an additional, single
+          tenor bucket in Risk_IRCUrve */
         enum RiskType {
             Risk_Commodity = 0,
             Risk_CommodityVol = 1,
@@ -72,7 +75,7 @@ namespace QuantExt {
 
         virtual Real weight(const RiskType t, const Size bucketIdx, const Size label1Idx) const = 0;
         virtual Real curvatureWeight(const Size label1Idx) const = 0;
-        
+
         virtual Real correlationLabels1(const RiskType t, const Size i, const Size j) const = 0;
         virtual Real correlationLabels2(const RiskType t, const Size i, const Size j) const = 0;
         virtual Real correlationBuckets(const RiskType t, const Size i, const Size j) const = 0;
