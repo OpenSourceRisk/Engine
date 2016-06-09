@@ -1,5 +1,3 @@
-<Root>
-
   <Simulation>
 
     <Parameters>
@@ -312,5 +310,3 @@
     </Market>
     
   </Simulation>
-  
-</Root>

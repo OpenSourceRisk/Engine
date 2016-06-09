@@ -1,5 +1,3 @@
-<Root>
-
   <Simulation>
 
     <Parameters>
@@ -11,7 +9,7 @@
       <Sequence>SobolBrownianBridge</Sequence>
       <Scenario>Simple</Scenario>
       <Seed>42</Seed>
-      <Samples>1000</Samples>
+      <Samples>100</Samples>
       
       <Fixings>
 	<SimulateFixings>Y</SimulateFixings>
@@ -349,5 +347,3 @@
     </Market>
     
   </Simulation>
-  
-</Root>

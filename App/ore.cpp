@@ -278,11 +278,12 @@ int main(int argc, char** argv) {
             simMarketData->fromFile(simulationConfigFile);
             
             LOG("Load Simulation Parameters");
-            ScenarioGeneratorBuilder sb;
-            sb.fromFile(simulationConfigFile);
-            boost::shared_ptr<ScenarioGenerator> sg = sb.build(model, simMarketData, asof, market,
-                                                               params.get("markets", "pricing"));
-            boost::shared_ptr<openxva::simulation::DateGrid> grid = sb.dateGrid();
+            boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
+            sgd->fromFile(simulationConfigFile);
+            ScenarioGeneratorBuilder sgb(sgd);
+            boost::shared_ptr<ScenarioGenerator> sg = sgb.build(model, simMarketData, asof, market,
+                                                                params.get("markets", "pricing"));
+            boost::shared_ptr<openxva::simulation::DateGrid> grid = sgd->grid();
             
             LOG("Build Simulation Market");
             boost::shared_ptr<openxva::simulation::SimMarket> simMarket
@@ -313,10 +314,10 @@ int main(int argc, char** argv) {
             bool sporty = parseBool(sportyString);
 
             LOG("Build valuation cube engine");
-            Size samples = sb.samples();
+            Size samples = sgd->samples();
             string baseCurrency = params.get("simulation", "baseCurrency");
             ValuationEngine engine(asof, grid, samples, baseCurrency, simMarket,
-                                   sb.simulateFixings(), sb.estimationMethod(), sb.forwardHorizonDays(), sporty);
+                                   sgd->simulateFixings(), sgd->estimationMethod(), sgd->forwardHorizonDays(), sporty);
 
             ostringstream o;
             o << "Additional Scenario Data " << grid->size() << " x " << samples << "... ";
