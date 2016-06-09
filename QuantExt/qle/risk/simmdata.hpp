@@ -22,7 +22,10 @@
 namespace QuantExt {
 
     /*! Base data class for SIMM, not that no FX risk in reporting currency should be added here,
-      although it is present in the data file usually. SimmDataByKey handles this automatically. */
+      although it is present in the data file usually. SimmDataByKey handles this automatically.
+      Note that the risk type Risk_Inflation is considered to be part of Risk_IRCurve throughout
+      this class, i.e. the parameter RiskType in the methods of this class should always be Risk_IRCurve
+      for inflation. */
     class SimmData {
     public:
         typedef SimmConfiguration::RiskClass RiskClass;
@@ -40,7 +43,8 @@ namespace QuantExt {
             const std::vector<Size>& b = buckets_.at(std::make_pair(t, p));
             QL_REQUIRE(qualifier < b.size(), "qualifier with index " << qualifier << " out of range 0..."
                                                                      << b.size() - 1);
-            return b[qualifier];
+            // if only inflation is present, bucket mght be still null
+            return b[qualifier] == Null<Size>() ? 0 : b[qualifier];
         }
         bool useProductClasses() const { return useProductClasses_; }
         Size numberOfProductClasses() const { return numberOfProductClasses_; }
@@ -70,8 +74,8 @@ namespace QuantExt {
     };
 
     /*! Data class for SIMM based on keys. FX risk in reporting currency is filtered out (i.e. not added)
-      automatically. Note that the qualifer mapping is shared between Risk_IRCurve and Risk_Inflation, since
-      they are treated the same in the computation. */
+      automatically.  Note that the risk type Risk_Inflation is considered to be part of Risk_IRCUrve
+      as above */
     class SimmDataByKey : public SimmData {
     public:
         SimmDataByKey(

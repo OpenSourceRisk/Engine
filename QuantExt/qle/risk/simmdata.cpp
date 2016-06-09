@@ -54,11 +54,12 @@ namespace QuantExt {
         QL_REQUIRE(qualifier < numberOfQualifiers(t, p),
                    "SimmData, RiskType " << t << ", ProductClass " << p << ", qualifier (" << qualifier
                                          << ") out of range 0..." << numberOfQualifiers(t, p));
-        const std::vector<Real>& v = data_.at(std::make_pair(t, p))[label1][label2];
+        std::pair<RiskType, ProductClass> key(t,p);
+        const std::vector<Real>& v = data_.at(key)[label1][label2];
         if (qualifier >= v.size())
             return 0.0;
         else
-            return data_.at(std::make_pair(t, p))[label1][label2][qualifier];
+            return data_.at(key)[label1][label2][qualifier];
     }
 
     Real& SimmData::amount(const RiskType t, const ProductClass p, const Size bucket, const Size qualifier,
@@ -71,7 +72,8 @@ namespace QuantExt {
             for (Size i = s; i < v.size(); ++i) {
                 v[i] = 0.0;
             }
-            numberOfQualifiers_[std::make_pair(t, p)] = qualifier + 1;
+            numberOfQualifiers_[std::make_pair(t, p)] =
+                std::max(qualifier + 1, numberOfQualifiers_[std::make_pair(t, p)]);
         }
         QL_REQUIRE(bucket < config_->buckets(t).size(), "bucket with index " << bucket << " out of range 0..."
                                                                              << config_->buckets(t).size());
@@ -85,7 +87,7 @@ namespace QuantExt {
         }
         // inflation bucket is special ...
         if (t != SimmConfiguration::Risk_IRCurve ||
-            bucket != configuration()->buckets(SimmConfiguration::Risk_IRCurve).size() - 1) {
+            label1 != configuration()->labels1(SimmConfiguration::Risk_IRCurve).size() - 1) {
             QL_REQUIRE(b[qualifier] == Null<Size>() || b[qualifier] == bucket,
                        "two different buckets (" << b[qualifier] << ", " << bucket << ") for qualifier " << qualifier);
             b[qualifier] = bucket;
@@ -98,9 +100,11 @@ namespace QuantExt {
 
     void SimmDataByKey::addKey(const SimmKey& key) {
         std::vector<string>::const_iterator it;
+
         RiskType t = key.riskType();
         ProductClass p = useProductClasses() ? key.productClass() : ProductClass(0);
         std::pair<RiskType, ProductClass> tp(t, p);
+
         it = std::find(config_->buckets(t).begin(), config_->buckets(t).end(), key.bucket());
         QL_REQUIRE(it != config_->buckets(t).end(), "bucket \"" << key.bucket()
                                                                 << "\" not found, key can not be added");
@@ -113,23 +117,30 @@ namespace QuantExt {
         QL_REQUIRE(it != config_->labels2(t).end(), "label2 \"" << key.label2()
                                                                 << "\" not found, key can not be added");
         Size label2 = it - config_->labels2(t).begin();
-        it = std::find(qualifiers_[tp].begin(), qualifiers_[tp].end(), key.qualifier());
-        Size qualifier = it - qualifiers_[tp].begin();
-        if (it == qualifiers_[tp].end()) {
-            qualifiers_[tp].push_back(key.qualifier());
+
+        // handle inflation as a special (last) tenor in IRCurve
+        bool inflation = false;
+        if (t == SimmConfiguration::Risk_Inflation) {
+            t = SimmConfiguration::Risk_IRCurve;
+            label1 = configuration()->labels1(SimmConfiguration::Risk_IRCurve).size() - 1;
+            bucket = label2 = 0;
+            tp = std::make_pair(t,p);
+            inflation = true;
         }
+
         if (reportingCurrency_ == "")
             reportingCurrency_ = key.amountCurrency();
         else
             QL_REQUIRE(reportingCurrency_ == key.amountCurrency(),
                        "key has reporting currency " << key.amountCurrency() << ", but deduced " << reportingCurrency_
                                                      << " from first key added, this key is not added ");
-        // handle inflation as a special bucket in IRCurve
-        if (t == SimmConfiguration::Risk_Inflation) {
-            t = SimmConfiguration::Risk_IRCurve;
-            bucket = configuration()->buckets(SimmConfiguration::Risk_IRCurve).size() - 1;
-            label1 = label2 = 0;
+
+        it = std::find(qualifiers_[tp].begin(), qualifiers_[tp].end(), key.qualifier());
+        Size qualifier = it - qualifiers_[tp].begin();
+        if (it == qualifiers_[tp].end()) {
+            qualifiers_[tp].push_back(key.qualifier());
         }
+
         // filter out FX risk in reporting currency
         Real am = (t == SimmConfiguration::Risk_FX && reportingCurrency_ == key.qualifier()) ? 0.0 : key.amount();
         amount(t, p, bucket, qualifier, label1, label2) += am;

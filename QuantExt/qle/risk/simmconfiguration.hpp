@@ -88,7 +88,12 @@ namespace QuantExt {
         virtual Real concentrationThreshold() const { return QL_MAX_REAL; }
 
         // check labels1, labels2, buckets and risk classes correlation matrices
-        void checkCorrelationMatrices() const;
+        // and a few other things
+        void check() const;
+
+        // return reference bucket for currency (volatility group), this is used
+        // for validation of the bucket given in the actual data
+        virtual string referenceBucket(const string& qualifier) const = 0;
 
     private:
         void checkMatrix(const Matrix& m, const RiskType t, const string& label) const;

@@ -14,9 +14,10 @@ using namespace boost::assign;
 namespace QuantExt {
 
     namespace {
-        const static Real ir_curve_rw[3][11] = {{77.0, 64.0, 58.0, 49.0, 47.0, 47.0, 45.0, 45.0, 48.0, 56.0, 32.0},
-                                                {10.0, 10.0, 13.0, 16.0, 18.0, 20.0, 25.0, 22.0, 22.0, 23.0, 32.0},
-                                                {89.0, 94.0, 104.0, 99.0, 96.0, 99.0, 87.0, 97.0, 97.0, 98.0, 32.0}};
+        const static Real ir_curve_rw[3][13] = {
+            {77.0, 77.0, 77.0, 64.0, 58.0, 49.0, 47.0, 47.0, 45.0, 45.0, 48.0, 56.0, 32.0},
+            {10.0, 10.0, 10.0, 10.0, 13.0, 16.0, 18.0, 20.0, 25.0, 22.0, 22.0, 23.0, 32.0},
+            {89.0, 89.0, 89.0, 94.0, 104.0, 99.0, 96.0, 99.0, 87.0, 97.0, 97.0, 98.0, 32.0}};
         const static Real creditq_rw[13] = {97.0,  110.0, 73.0,  65.0,  52.0,  39.0, 198.0,
                                             638.0, 210.0, 375.0, 240.0, 152.0, 638.0};
         const static Real creditnq_rw[3] = {169.0, 1646.0, 1646.0};
@@ -155,7 +156,7 @@ namespace QuantExt {
         labels2_[Risk_FX] = empty;
         labels2_[Risk_FXVol] = empty;
 
-        checkCorrelationMatrices();
+        check();
     }
 
     Real SimmConfiguration_ISDA_V315::weight(const RiskType t, const Size bucketIdx, const Size label1Idx) const {
@@ -292,6 +293,18 @@ namespace QuantExt {
         QL_REQUIRE(c < numberOfRiskClasses, "correlation risk classes: invalid risk class " << c);
         QL_REQUIRE(d < numberOfRiskClasses, "correlation risk classes: invalid risk class " << d);
         return riskclass_corr[c][d];
+    }
+
+    string SimmConfiguration_ISDA_V315::referenceBucket(const string& qualifier) const {
+        string br = "3";
+        if (qualifier == "JPY")
+            br = "2";
+        if (qualifier == "USD" || qualifier == "EUR" || qualifier == "GBP" || qualifier == "CHF" ||
+            qualifier == "AUD" || qualifier == "NZD" || qualifier == "CAD" || qualifier == "SEK" ||
+            qualifier == "NOK" || qualifier == "DKK" || qualifier == "HKD" || qualifier == "KRW" ||
+            qualifier == "SGD" || qualifier == "TWD")
+            br = "1";
+        return br;
     }
 
 } // namespace QuantExt

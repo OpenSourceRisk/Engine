@@ -35,13 +35,15 @@ namespace QuantExt {
 
         Real weight(const RiskType t, const Size bucketIdx, const Size label1Idx) const;
         Real curvatureWeight(const Size label1Idx) const;
-        
+
         Real correlationLabels1(const RiskType t, const Size i, const Size j) const;
         Real correlationLabels2(const RiskType t, const Size i, const Size j) const;
         Real correlationBuckets(const RiskType t, const Size i, const Size j) const;
         Real correlationQualifiers(const RiskType t) const;
         Real correlationWithinBucket(const RiskType t, const Size i) const;
         Real correlationRiskClasses(const RiskClass c, const RiskClass d) const;
+
+        string referenceBucket(const string& qualifier) const;
 
     private:
         const std::string name_;

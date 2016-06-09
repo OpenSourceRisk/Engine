@@ -12,7 +12,15 @@
 
 namespace QuantExt {
 
-    void SimmConfiguration::checkCorrelationMatrices() const {
+    void SimmConfiguration::check() const {
+        // check inflation setup (since this has to be incorporated as a tenor into IRCurve)
+        QL_REQUIRE(buckets(Risk_Inflation).size() == 1, "Risk_Inflation must have one bucket, but has "
+                                                            << buckets(Risk_Inflation).size());
+        QL_REQUIRE(labels1(Risk_Inflation).size() == 1, "Risk_Inflation must have one labels1, but has "
+                                                            << labels1(Risk_Inflation).size());
+        QL_REQUIRE(labels2(Risk_Inflation).size() == 1, "Risk_Inflation must have one labels2, but has "
+                                                            << labels2(Risk_Inflation).size());
+        // check correlation matrices
         for (Size t = 0; t < numberOfRiskTypes; ++t) {
             RiskType rt = RiskType(t);
             Size lab1 = labels1(rt).size();
