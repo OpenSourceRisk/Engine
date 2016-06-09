@@ -21,5 +21,5 @@ cd Output
 gnuplot plot.gp
 
 echo ""
-echo "View Output/*.pdf"
+echo "View Output/plot.pdf"
 echo ""
