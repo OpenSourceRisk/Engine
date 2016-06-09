@@ -21,6 +21,8 @@
 
 namespace QuantExt {
 
+    /*! Base data class for SIMM, not that no FX risk in reporting currency should be added here,
+      although it is present in the data file usually. SimmDataByKey handles this automatically. */
     class SimmData {
     public:
         typedef SimmConfiguration::RiskClass RiskClass;
@@ -42,8 +44,10 @@ namespace QuantExt {
         }
         bool useProductClasses() const { return useProductClasses_; }
         Size numberOfProductClasses() const { return numberOfProductClasses_; }
+        // retrieve amount
         Real amount(const RiskType t, const ProductClass p, const Size qualifier, const Size label1,
                            const Size label2) const;
+        // write amount
         Real& amount(const RiskType t, const ProductClass p, const Size bucket, const Size qualifier,
                      const Size label1, const Size label2);
 
@@ -65,6 +69,9 @@ namespace QuantExt {
         ProductClassData data_;
     };
 
+    /*! Data class for SIMM based on keys. FX risk in reporting currency is filtered out (i.e. not added)
+      automatically. Note that the qualifer mapping is shared between Risk_IRCurve and Risk_Inflation, since
+      they are treated the same in the computation. */
     class SimmDataByKey : public SimmData {
     public:
         SimmDataByKey(

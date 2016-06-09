@@ -118,7 +118,9 @@ namespace QuantExt {
             QL_REQUIRE(reportingCurrency_ == key.amountCurrency(),
                        "key has reporting currency " << key.amountCurrency() << ", but deduced " << reportingCurrency_
                                                      << " from first key added, this key is not added ");
-        amount(t, p, bucket, qualifier, label1, label2) += key.amount();
+        // filter out FX risk in reporting currency
+        if (!(t == SimmConfiguration::Risk_FX && reportingCurrency_ == key.qualifier()))
+            amount(t, p, bucket, qualifier, label1, label2) += key.amount();
     }
 
 } // namespace QuantExt
