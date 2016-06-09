@@ -172,6 +172,39 @@ This document focuses on instructions how to use ORE to cover basic workflows fr
 \section{Installation}
 %========================================================
 
+\subsection{ORE for End Users}
+
+\subsection{ORE for Developers}
+
+\subsection{Dependencies}
+
+\subsubsection{Gnuplot}
+
+Gnuplot is required for running the examples in section \ref{sec:examples} under OS X and Linux.
+
+\subsubsection*{Windows}
+
+\subsubsection*{OSX}
+
+Installation on OS X is easiest using Homebrew, the package manager for OS X:
+
+\medskip
+\centerline{\tt brew install gnuplot --with-aquaterm --with-cairo --with-pdflib-lite } 
+\medskip
+
+AquaTerm support will only be built into Gnuplot if the standard AquaTerm
+package has already been installed onto your system.
+If you subsequently remove AquaTerm, you will need to uninstall and then
+reinstall Gnuplot.
+
+\subsubsection*{Linux}
+
+\subsubsection{Jupyter}
+
+Jupyter is part of the Anaconda Open Data Science Analytics Platform \cite{Anaconda}.
+Anaconda installation instructions for Windows, OS X and Linux are available on the anaconda site, with graphical installers for Windows and OS X.
+
+
 \todo[inline]{Add installation instructions}
 
 %========================================================
@@ -271,7 +304,7 @@ This demo case in folder {\tt Examples/Example\_10} shows the exposure evolution
 \caption{Bermudan Swaption exposure evolution, 5 annual exercise dates starting in 10 years, final maturity in 20 years, for cash and physical delivery.}
 \label{fig_3b}
 \end{figure}
-The underlying Swap is the same as in the European Swaption example in section \ref{sec:european_swaption}. Note in particular the difference between the Bermudan and European Swaption exposures with cash settlement: The Bermudan shows the typical step-wise decrease due to the series of exercise dates. When running this example, you will notice the significant difference in computation time compared to the European case (ballpark 30 minutes here for 2 Swaptions, 1000 samples, 90 time steps). The Bermudan example is way slower because we use an LGM grid engine for pricing under scenarios in this case. In a realistic context one would more likely resort to American Monte Carlo simulation, feasible in ORE, but not provided in the first release. However, this implementation can be used to benchmark any faster / more sophisticated approach to Bermudan Swaption exposure simulation.
+The underlying Swap is the same as in the European Swaption example in section \ref{sec:european_swaption}. Note in particular the difference between the Bermudan and European Swaption exposures with cash settlement: The Bermudan shows the typical step-wise decrease due to the series of exercise dates. Also note that we are using the same Bermudan option pricing engines for both settlement types, in contrast to the European case, so that the Bermudan option cash and physical exposures are identical up to the first exercise date. identical . When running this example, you will notice the significant difference in computation time compared to the European case (ballpark 30 minutes here for 2 Swaptions, 1000 samples, 90 time steps). The Bermudan example is way slower because we use an LGM grid engine for pricing under scenarios in this case. In a realistic context one would more likely resort to American Monte Carlo simulation, feasible in ORE, but not provided in the first release. However, this implementation can be used to benchmark any faster / more sophisticated approach to Bermudan Swaption exposure simulation.
 
 %--------------------------------------------------------
 \subsection{Callable Swap Exposure}
@@ -330,7 +363,8 @@ Recall that the FX Option value $NPV(t)$ as of time $0 \leq t \leq T$ satisfies
 \frac{NPV(t)}{N(t)} &= \mbox{Nominal}\times\E_t\left[\frac{(X(T) - K)^+}{N(T)}\right]\\
 NPV(0) &= \E\left[\frac{NPV(t)}{N(t)}\right] = \E\left[\frac{NPV^+(t)}{N(t)} \right]= \EPE(t) 
 \end{align*}
-One would therefore expect a flat exposure evolution up to option expiry. The deviation from this in ORE's simulation is due to the pricing approach chosen here under scenarios. A Black FX option pricer is used with simulated interest rate curves input and {\em deterministic} Black volatility derived from today's volatility structure (pushed or rolled forward, see section \ref{sec:sim_market}). The deviation would be removed by extending the volatility modelling, e.g. implying model consistent Black volatilities in each simulation step on each path.
+One would therefore expect a flat exposure evolution up to option expiry. The deviation from this in ORE's simulation is due to the pricing approach chosen here under scenarios. A Black FX option pricer is used with simulated interest rate curves input and {\em deterministic} Black volatility derived from today's volatility structure (pushed or rolled forward, see section \ref{sec:sim_market}). The deviation is  removed by extending the volatility modelling, e.g. implying model consistent Black volatilities in each simulation step on each path.
+\todo[inline]{Add exposure evolution graph with 'simulated' FX vol}
  
 %--------------------------------------------------------
 \subsection{Netting and Collateral}
@@ -464,15 +498,16 @@ The user can choose a configuration (one of the ore*.xml files in Example\_1's s
 \label{fig_15}
 \end{figure}
 
-\todo[inline]{Make Calc work on Windows and Linux} 
-\todo[inline]{Support both OpenOffice and LibreOffice Calc.}
-\todo[inline]{Generalise the 'View' functionality (select what to view etc)} 
+\todo[inline]{Remove hard-coded file names from Python scripts}
+\todo[inline]{Calc example on Windows and Linux} 
+%\todo[inline]{Support both OpenOffice and LibreOffice Calc.}
+\todo[inline]{Harmonise layout with Excel launcher} 
 
 \subsection{Excel}
 
 The Python module {\tt xlwings} \cite{xlwings} provides similar interaction between Python and Excel on both Windows and Mac OSX, as does the Python uno module for LibreOffice.
 
-\todo[inline]{Add Excel section}
+\todo[inline]{Add Excel section, using VBA macros only}
 
 
 %========================================================
@@ -1619,6 +1654,8 @@ Federal Reserve Board, Washington, D.C., 2010
 \bibitem{xlwings} http://www.xlwings.org
 
 %\bibitem{OO} http://www.openoffice.org
+
+\bibitem{Anaconda} https://docs.continuum.io/anaconda
 
 \end{thebibliography}
 
