@@ -88,7 +88,7 @@ namespace QuantExt {
         // the last three numbers are not explicitly given in the methodology paper, 12a
         // the tenor structure is that of irTenor / volTenor below
         const static Real curvature_weight[12] = {0.5,   0.23,  0.077, 0.038,  0.019,  0.01,
-                                                 0.006, 0.004, 0.002, 0.0013, 0.0010, 0.0006};
+                                                  0.006, 0.004, 0.002, 0.0013, 0.0010, 0.0006};
 
     } // anonymous namespace
 
@@ -159,9 +159,11 @@ namespace QuantExt {
 
     Real SimmConfiguration_ISDA_V315::weight(const RiskType t, const Size bucketIdx, const Size label1Idx) const {
         QL_REQUIRE(buckets(t).size() == 0 || bucketIdx < buckets(t).size(),
-                   "weight bucketIdx (" << bucketIdx << ") out of range 0.." << (buckets(t).size() - 1));
+                   "weight: bucketIdx (" << bucketIdx << ") out of range 0.." << (buckets(t).size() - 1)
+                                         << " for risk type " << t);
         QL_REQUIRE(labels1(t).size() == 0 || label1Idx < labels1(t).size(),
-                   "weight label1Idx (" << label1Idx << ") out of range 0..." << (labels1(t).size() - 1));
+                   "weight: label1Idx (" << label1Idx << ") out of range 0..." << (labels1(t).size() - 1)
+                                         << " for risk type " << t);
         switch (t) {
         case Risk_IRCurve:
             return ir_curve_rw[bucketIdx][label1Idx];
@@ -195,13 +197,15 @@ namespace QuantExt {
     }
 
     Real SimmConfiguration_ISDA_V315::curvatureWeight(const Size label1Idx) const {
-        QL_REQUIRE(label1Idx < 12, "curvatureWeight, label1Idx " << label1Idx << " must be in 0...11");
+        QL_REQUIRE(label1Idx < 12, "curvatureWeight: label1Idx " << label1Idx << " must be in 0...11");
         return curvature_weight[label1Idx];
     }
 
     Real SimmConfiguration_ISDA_V315::correlationLabels1(const RiskType t, const Size i, const Size j) const {
-        QL_REQUIRE(i < labels1(t).size(), "correlation labels1 label1Idx (" << i << ") out of range 0..." << (labels1(t).size() - 1));
-        QL_REQUIRE(j < labels1(t).size(), "correlation labels2 label1Idx (" << j << ") out of range 0..." << (labels1(t).size() - 1));
+        QL_REQUIRE(i < labels1(t).size(), "correlation labels1: label1Idx (" << i << ") out of range 0..."
+                                                                             << (labels1(t).size() - 1));
+        QL_REQUIRE(j < labels1(t).size(), "correlation labels2: label1Idx (" << j << ") out of range 0..."
+                                                                             << (labels1(t).size() - 1));
         switch (t) {
         case Risk_IRCurve:
         case Risk_IRVol:
@@ -222,10 +226,11 @@ namespace QuantExt {
 
     Real SimmConfiguration_ISDA_V315::correlationBuckets(const RiskType t, const Size i, const Size j) const {
         Size resBuck = residualBucket(t) != Null<Size>() ? 1 : 0;
-        QL_REQUIRE(i < buckets(t).size() - resBuck, "correlation buckets bucketIdx " << i << " out of range 0..."
-                                                                 << (buckets(t).size() - resBuck - -1));
-        QL_REQUIRE(j < buckets(t).size() - resBuck, "correlation buckets bucketIdx " << j << " out of range 0..."
-                                                                 << (buckets(t).size() - resBuck - 1));
+        QL_REQUIRE(i < buckets(t).size() - resBuck, "correlation buckets: bucketIdx "
+                                                        << i << " out of range 0..."
+                                                        << (buckets(t).size() - resBuck - -1));
+        QL_REQUIRE(j < buckets(t).size() - resBuck,
+                   "correlation buckets: bucketIdx " << j << " out of range 0..." << (buckets(t).size() - resBuck - 1));
         switch (t) {
         case Risk_CreditQ:
         case Risk_CreditVol:
@@ -258,7 +263,8 @@ namespace QuantExt {
     }
 
     Real SimmConfiguration_ISDA_V315::correlationWithinBucket(const RiskType t, const Size i) const {
-        QL_REQUIRE(i < buckets(t).size(), "correlation within bucket bucketIdx " << i << " out of range 0..." << (buckets(t).size() - 1));
+        QL_REQUIRE(i < buckets(t).size(), "correlation within bucket: bucketIdx " << i << " out of range 0..."
+                                                                                  << (buckets(t).size() - 1));
         switch (t) {
         case Risk_CreditQ:
         case Risk_CreditVol:
@@ -284,8 +290,8 @@ namespace QuantExt {
     }
 
     Real SimmConfiguration_ISDA_V315::correlationRiskClasses(const RiskClass c, const RiskClass d) const {
-        QL_REQUIRE(c < numberOfRiskClasses, "invalid risk class " << c);
-        QL_REQUIRE(d < numberOfRiskClasses, "invalid risk class " << d);
+        QL_REQUIRE(c < numberOfRiskClasses, "correlation risk classes: invalid risk class " << c);
+        QL_REQUIRE(d < numberOfRiskClasses, "correlation risk classes: invalid risk class " << d);
         return riskclass_corr[c][d];
     }
 
