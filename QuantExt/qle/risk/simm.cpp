@@ -237,6 +237,7 @@ namespace QuantExt {
                 for (Size i = 0; i < labels2; ++i) {
                     Real amount = data_->amount(t, p, q, k, i);
                     Real weight = conf->curvatureWeight(k);
+                    // std::clog << "amount=" << amount << " weight=" << weight << "k=" << k << std::endl;
                     s[b] += amount;
                     sq[q] += amount;
                     ws[b] += weight * amount;
@@ -264,6 +265,10 @@ namespace QuantExt {
                                           : conf->correlationWithinBucket(t, b) * conf->correlationWithinBucket(t, b));
                 }
             }
+        }
+
+        for (Size b = 0; b < buckets; ++b) {
+            K[b] = std::sqrt(std::max(K[b], 0.0));
         }
 
         Real margin = 0.0;
@@ -318,15 +323,18 @@ namespace QuantExt {
         //                         // FILTER goes here
         //                         if (!QuantLib::close_enough(amount, 0.0) && rt == SimmConfiguration::Risk_IRCurve &&
         //                             pc == SimmConfiguration::ProductClass_RatesFX) {
-        //                             std::clog << rt << "\t" << pc << "\t" << dataKey->qualifiers(rt, pc)[q] << " (" << q
+        //                             std::clog << rt << "\t" << pc << "\t" << dataKey->qualifiers(rt, pc)[q] << " ("
+        //                             << q
         //                                       << ") \t"
-        //                                       << "\t" << conf->labels1(rt)[l1] << "\t" << conf->labels2(rt)[l2] << "\t"
+        //                                       << "\t" << conf->labels1(rt)[l1] << "\t" << conf->labels2(rt)[l2] <<
+        //                                       "\t"
         //                                       << (dataKey->bucket(rt, pc, q) == Null<Size>()
         //                                               ? "na"
         //                                               : conf->buckets(rt)[dataKey->bucket(rt, pc, q)])
         //                                       << "\t" << amount << "\t"
         //                                       << conf->weight(rt, dataKey->bucket(rt, pc, q), l1) << "\t"
-        //                                       << conf->weight(rt, dataKey->bucket(rt, pc, q), l1) * amount << std::endl;
+        //                                       << conf->weight(rt, dataKey->bucket(rt, pc, q), l1) * amount <<
+        //                                       std::endl;
         //                         }
         //                     }
         //                 }
