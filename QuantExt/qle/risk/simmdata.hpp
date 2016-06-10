@@ -47,7 +47,7 @@ namespace QuantExt {
             // if only inflation is present, bucket mght be still null
             return b[qualifier] == Null<Size>() ? 0 : b[qualifier];
         }
-        // TODO returning a reference produces a segmentation fault on OSX in Simm::marginGeneric etc., why ?
+        // TODO, how to return a reference to the set (produces a segfault on OSX)
         const std::set<Size> qualifierPerBucket(const RiskType t, const ProductClass p, const Size bucket) const {
             const std::map<Size, std::set<Size> > v = qualifierPerBucket_.at(std::make_pair(t, p));
             const std::map<Size, std::set<Size> >::const_iterator it = v.find(bucket);
