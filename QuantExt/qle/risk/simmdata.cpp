@@ -13,13 +13,15 @@ namespace QuantExt {
 
     SimmData::SimmData(const boost::shared_ptr<SimmConfiguration>& config, const bool useProductClasses)
         : config_(config), useProductClasses_(useProductClasses),
-          numberOfProductClasses_(useProductClasses ? config->numberOfProductClasses : 1) {
+          numberOfProductClasses_(useProductClasses ? config->numberOfProductClasses : 1), emptySet_() {
 
         for (Size t = 0; t < config_->numberOfRiskTypes; ++t) {
             RiskType rt = RiskType(t);
             for (Size p = 0; p < numberOfProductClasses_; ++p) {
                 ProductClass pc = ProductClass(p);
-                buckets_[std::make_pair(rt, pc)] = std::vector<Size>(0);
+                std::pair<RiskType, ProductClass> key = std::make_pair(rt, pc);
+                buckets_[key] = std::vector<Size>(0);
+                qualifierPerBucket_[key] = std::map<Size, std::set<Size> >();
                 numberOfQualifiers_[std::make_pair(rt, pc)] = 0;
                 RiskTypeData tmp;
                 tmp.resize(config_->labels1(rt).size());
@@ -54,7 +56,7 @@ namespace QuantExt {
         QL_REQUIRE(qualifier < numberOfQualifiers(t, p),
                    "SimmData, RiskType " << t << ", ProductClass " << p << ", qualifier (" << qualifier
                                          << ") out of range 0..." << numberOfQualifiers(t, p));
-        std::pair<RiskType, ProductClass> key(t,p);
+        std::pair<RiskType, ProductClass> key(t, p);
         const std::vector<Real>& v = data_.at(key)[label1][label2];
         if (qualifier >= v.size())
             return 0.0;
@@ -65,19 +67,20 @@ namespace QuantExt {
     Real& SimmData::amount(const RiskType t, const ProductClass p, const Size bucket, const Size qualifier,
                            const Size label1, const Size label2) {
         check(t, p, label1, label2);
-        std::vector<Real>& v = data_.at(std::make_pair(t, p))[label1][label2];
+        std::pair<RiskType, ProductClass> key = std::make_pair(t, p);
+        std::vector<Real>& v = data_.at(key)[label1][label2];
         Size s = v.size();
         if (qualifier >= s) {
             v.resize(qualifier + 1);
             for (Size i = s; i < v.size(); ++i) {
                 v[i] = 0.0;
             }
-            numberOfQualifiers_[std::make_pair(t, p)] =
-                std::max(qualifier + 1, numberOfQualifiers_[std::make_pair(t, p)]);
+            numberOfQualifiers_[key] =
+                std::max(qualifier + 1, numberOfQualifiers_[key]);
         }
         QL_REQUIRE(bucket < config_->buckets(t).size(), "bucket with index " << bucket << " out of range 0..."
                                                                              << config_->buckets(t).size());
-        std::vector<Size>& b = buckets_.at(std::make_pair(t, p));
+        std::vector<Size>& b = buckets_.at(key);
         s = b.size();
         if (qualifier >= s) {
             b.resize(qualifier + 1);
@@ -91,6 +94,7 @@ namespace QuantExt {
             QL_REQUIRE(b[qualifier] == Null<Size>() || b[qualifier] == bucket,
                        "two different buckets (" << b[qualifier] << ", " << bucket << ") for qualifier " << qualifier);
             b[qualifier] = bucket;
+            qualifierPerBucket_.at(key)[bucket].insert(qualifier);
         }
         return v[qualifier];
     }
@@ -124,7 +128,7 @@ namespace QuantExt {
             t = SimmConfiguration::Risk_IRCurve;
             label1 = configuration()->labels1(SimmConfiguration::Risk_IRCurve).size() - 1;
             bucket = label2 = 0;
-            tp = std::make_pair(t,p);
+            tp = std::make_pair(t, p);
             inflation = true;
         }
 

@@ -13,12 +13,12 @@
 
 namespace QuantExt {
 
-    Real Simm::initialMargin(const ProductClass p, const RiskClass c, const MarginType m) {
+    Real Simm::initialMargin(const ProductClass p, const RiskClass c, const MarginType m) const {
         boost::tuple<ProductClass, RiskClass, MarginType> key = boost::make_tuple(p, c, m);
         return initialMargin_.at(key);
     }
 
-    Real Simm::initialMargin(const ProductClass p, const RiskClass c) {
+    Real Simm::initialMargin(const ProductClass p, const RiskClass c) const {
         Real sum = 0.0;
         for (Size m = 0; m < data_->configuration()->numberOfMarginTypes; ++m) {
             boost::tuple<ProductClass, RiskClass, MarginType> key =
@@ -28,7 +28,7 @@ namespace QuantExt {
         return sum;
     }
 
-    Real Simm::initialMargin(const ProductClass p) {
+    Real Simm::initialMargin(const ProductClass p) const {
         Real sum = 0.0;
         for (Size c = 0; c < data_->configuration()->numberOfRiskClasses; ++c) {
             sum +=
@@ -43,7 +43,7 @@ namespace QuantExt {
         return std::sqrt(std::max(sum, 0.0));
     }
 
-    Real Simm::initialMargin() {
+    Real Simm::initialMargin() const {
         Real sum = 0.0;
         for (Size p = 0; p < data_->numberOfProductClasses(); ++p) {
             sum += initialMargin(SimmConfiguration::ProductClass(p));
@@ -51,9 +51,10 @@ namespace QuantExt {
         return sum;
     }
 
-    Real Simm::marginIR(RiskType t, ProductClass p) {
+    Real Simm::marginIR(RiskType t, ProductClass p) const {
         // if (t != SimmConfiguration::Risk_IRCurve || p != SimmConfiguration::ProductClass_RatesFX)
         //     return 0.0;
+        std::clog << "===== margin IR ========== " << p << std::endl;
         Size qualifiers = data_->numberOfQualifiers(t, p);
         std::vector<Real> s(qualifiers, 0.0), ws(qualifiers, 0.0), cr(qualifiers, 0.0), K(qualifiers, 0.0);
 
@@ -79,7 +80,11 @@ namespace QuantExt {
                             data_->amount(t, p, q, k, i) * conf->weight(t, b, k) * cr[q];
                     for (Size l = 0; l <= k; ++l) {
                         for (Size j = 0; (l < k && j < labels2) || (l == k && j < i); ++j) {
-                            K[q] += 2.0 * conf->correlationLabels1(t, k, l) * conf->correlationLabels2(t, i, j) *
+                            // for the special inflation tenor the subcurve correlation must
+                            // be set to 1 !
+                            Real corrLabel2 =
+                                (k == labels1 - 1 || l == labels1 - 1 ? 1.0 : conf->correlationLabels2(t, i, j));
+                            K[q] += 2.0 * conf->correlationLabels1(t, k, l) * corrLabel2 *
                                     data_->amount(t, p, q, k, i) * conf->weight(t, b, k) * cr[q] *
                                     data_->amount(t, p, q, l, j) * conf->weight(t, b, l) * cr[q];
                         } // for j
@@ -106,7 +111,8 @@ namespace QuantExt {
         return margin;
     } // Simm::marginIR()
 
-    Real Simm::curvatureMarginIR(ProductClass p) {
+    Real Simm::curvatureMarginIR(ProductClass p) const {
+        std::clog << "===== curvature margin IR  ========== " << p << std::endl;
         RiskType t = SimmConfiguration::Risk_IRVol;
         Size qualifiers = data_->numberOfQualifiers(t, p);
         std::vector<Real> ws(qualifiers, 0.0), K(qualifiers);
@@ -158,7 +164,8 @@ namespace QuantExt {
         return margin;
     } // Simm::curvatureMarginIR()
 
-    Real Simm::marginGeneric(RiskType t, ProductClass p) {
+    Real Simm::marginGeneric(RiskType t, ProductClass p) const {
+        std::clog << "===== margin " << t << " ========== " << p << std::endl;
         Size qualifier = data_->numberOfQualifiers(t, p);
         const boost::shared_ptr<SimmConfiguration> conf = data_->configuration();
         Size buckets = conf->buckets(t).size();
@@ -182,18 +189,31 @@ namespace QuantExt {
             cr[q] = std::max(1.0, std::sqrt(std::abs(sq[q]) / conf->concentrationThreshold()));
         }
 
-        for (Size q1 = 0; q1 < qualifier; ++q1) {
-            Size b1 = data_->bucket(t, p, q1);
-            for (Size q2 = 0; q2 < qualifier; ++q2) {
-                Size b2 = data_->bucket(t, p, q2);
-                Real f = std::min(cr[q1], cr[q2]) / std::max(cr[q1], cr[q2]);
-                // TODO optimize this with a map bucket => qualifier in data
-                if (b1 == b2) {
-                    K[b1] += wsq[q1] * wsq[q2] * cr[q1] * cr[q2] *
-                             (q1 == q2 ? 1.0 : conf->correlationWithinBucket(t, b1)) * f;
+        // new
+        for (Size b = 0; b < buckets; ++b) {
+            const std::set<Size>& qual = data_->qualifierPerBucket(t, p, b);
+            for (std::set<Size>::const_iterator it1 = qual.cbegin(); it1 != qual.cend(); it1++) {
+                for (std::set<Size>::const_iterator it2 = qual.cbegin(); it2 != qual.cend(); ++it2) {
+                    Real f = std::min(cr[*it1], cr[*it2]) / std::max(cr[*it1], cr[*it2]);
+                    K[b] += wsq[*it1] * wsq[*it2] * cr[*it1] * cr[*it2] *
+                            (*it1 == *it2 ? 1.0 : conf->correlationWithinBucket(t, b)) * f;
                 }
             }
         }
+
+        // old
+        // for (Size q1 = 0; q1 < qualifier; ++q1) {
+        //     Size b1 = data_->bucket(t, p, q1);
+        //     for (Size q2 = 0; q2 < qualifier; ++q2) {
+        //         Size b2 = data_->bucket(t, p, q2);
+        //         Real f = std::min(cr[q1], cr[q2]) / std::max(cr[q1], cr[q2]);
+        //         // TODO optimize this with a map bucket => qualifier in data
+        //         if (b1 == b2) {
+        //             K[b1] += wsq[q1] * wsq[q2] * cr[q1] * cr[q2] *
+        //                      (q1 == q2 ? 1.0 : conf->correlationWithinBucket(t, b1)) * f;
+        //         }
+        //     }
+        // }
 
         for (Size b = 0; b < buckets; ++b) {
             K[b] = std::sqrt(std::max(K[b], 0.0));
@@ -222,7 +242,8 @@ namespace QuantExt {
         return margin;
     } // Simm::marginGeneric()
 
-    Real Simm::curvatureMarginGeneric(RiskType t, ProductClass p) {
+    Real Simm::curvatureMarginGeneric(RiskType t, ProductClass p) const {
+        std::clog << "===== curvature margin " << t << " ========== " << p << std::endl;
         Size qualifier = data_->numberOfQualifiers(t, p);
         const boost::shared_ptr<SimmConfiguration> conf = data_->configuration();
         Size buckets = conf->buckets(t).size();
@@ -252,18 +273,31 @@ namespace QuantExt {
             }     // for k
         }
 
-        for (Size q1 = 0; q1 < qualifier; ++q1) {
-            Size b1 = data_->bucket(t, p, q1);
-            for (Size q2 = 0; q2 < qualifier; ++q2) {
-                Size b2 = data_->bucket(t, p, q2);
-                // TODO optimize this with a map bucket => qualifier in data
-                if (b1 == b2) {
-                    K[b1] +=
-                        wsq[q1] * wsq[q2] *
-                        (q1 == q2 ? 1.0 : conf->correlationWithinBucket(t, b1) * conf->correlationWithinBucket(t, b1));
+        // new
+        for (Size b = 0; b < buckets; ++b) {
+            const std::set<Size>& qual = data_->qualifierPerBucket(t, p, b);
+            for (std::set<Size>::const_iterator it1 = qual.cbegin(); it1 != qual.cend(); it1++) {
+                for (std::set<Size>::const_iterator it2 = qual.cbegin(); it2 != qual.cend(); ++it2) {
+                    K[b] += wsq[*it1] * wsq[*it2] *
+                            (*it1 == *it2 ? 1.0
+                                          : conf->correlationWithinBucket(t, b) * conf->correlationWithinBucket(t, b));
                 }
             }
         }
+
+        // old
+        // for (Size q1 = 0; q1 < qualifier; ++q1) {
+        //     Size b1 = data_->bucket(t, p, q1);
+        //     for (Size q2 = 0; q2 < qualifier; ++q2) {
+        //         Size b2 = data_->bucket(t, p, q2);
+        //         // TODO optimize this with a map bucket => qualifier in data
+        //         if (b1 == b2) {
+        //             K[b1] +=
+        //                 wsq[q1] * wsq[q2] *
+        //                 (q1 == q2 ? 1.0 : conf->correlationWithinBucket(t, b1) * conf->correlationWithinBucket(t, b1));
+        //         }
+        //     }
+        // }
 
         for (Size b = 0; b < buckets; ++b) {
             K[b] = std::sqrt(std::max(K[b], 0.0));

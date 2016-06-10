@@ -18,6 +18,7 @@
 #include <boost/make_shared.hpp>
 
 #include <map>
+#include <set>
 
 namespace QuantExt {
 
@@ -46,14 +47,23 @@ namespace QuantExt {
             // if only inflation is present, bucket mght be still null
             return b[qualifier] == Null<Size>() ? 0 : b[qualifier];
         }
+        // TODO returning a reference produces a segmentation fault on OSX in Simm::marginGeneric etc., why ?
+        const std::set<Size> qualifierPerBucket(const RiskType t, const ProductClass p, const Size bucket) const {
+            const std::map<Size, std::set<Size> > v = qualifierPerBucket_.at(std::make_pair(t, p));
+            const std::map<Size, std::set<Size> >::const_iterator it = v.find(bucket);
+            if (it != v.end()) {
+                return it->second;
+            } else
+                return emptySet_;
+        }
         bool useProductClasses() const { return useProductClasses_; }
         Size numberOfProductClasses() const { return numberOfProductClasses_; }
         // retrieve amount
         Real amount(const RiskType t, const ProductClass p, const Size qualifier, const Size label1,
-                           const Size label2) const;
+                    const Size label2) const;
         // write amount
-        Real& amount(const RiskType t, const ProductClass p, const Size bucket, const Size qualifier,
-                     const Size label1, const Size label2);
+        Real& amount(const RiskType t, const ProductClass p, const Size bucket, const Size qualifier, const Size label1,
+                     const Size label2);
 
         const boost::shared_ptr<SimmConfiguration> configuration() { return config_; }
 
@@ -68,8 +78,11 @@ namespace QuantExt {
         const bool useProductClasses_;
         const Size numberOfProductClasses_;
         std::map<std::pair<RiskType, ProductClass>, Size> numberOfQualifiers_;
-        // qualifier => buckets
+        // qualifier (as index in vector) => buckets
         std::map<std::pair<RiskType, ProductClass>, std::vector<Size> > buckets_;
+        // sets of qualifiers per bucket
+        std::map<std::pair<RiskType, ProductClass>, std::map<Size, std::set<Size> > > qualifierPerBucket_;
+        const std::set<Size> emptySet_;
         ProductClassData data_;
     };
 
