@@ -117,18 +117,80 @@ namespace QuantExt {
 
     namespace CrossAssetAnalytics {
     
-/*! ir state expectation, part that is independent of current state */
+/*! IR state expectation
+
+  This function evaluates part of the expectation \f$ \mathbb{E}_{t_0}[z_i(t_0+dt)]\f$.
+
+  Using the results above for factor moves \f$\Delta z\f$ over time interval \f$(s,t)\f$, 
+  we have
+
+  \f{eqnarray}{
+  \mathbb{E}_{t_0}[z_i(t_0+\Delta t)] &=& z_i(t_0) + \mathbb{E}_{t_0}[\Delta z_i], 
+  \qquad\mbox{with}\quad \Delta z_i = z_i(t_0+\Delta t) - z_i(t_0) \\
+  &=& z_i(t_0) -\int_{t_0}^{t_0+\Delta t} H^z_i\,(\alpha^z_i)^2\,du + \rho^{zz}_{0i} \int_{t_0}^{t_0+\Delta t} H^z_0\,\alpha^z_0\,\alpha^z_i\,du
+      - \epsilon_i  \rho^{zx}_{ii}\int_{t_0}^{t_0+\Delta t} \sigma_i^x\,\alpha^z_i\,du
+  \f}
+
+  This function covers the latter three integrals, the state-independent part.
+
+*/
 Real ir_expectation_1(const CrossAssetModel *model, const Size i, const Time t0,
                       const Real dt);
 
-/*! ir state expecation, part that is dependent on current state */
-Real ir_expectation_2(const CrossAssetModel *model, const Size, const Real zi_0);
+/*! IR state expecation
 
-/*! fx state expectation, part that is independent of current state */
+  This function evaluates the state-dependent part of the expectation 
+
+  \f{eqnarray}{
+  \mathbb{E}_{t_0}[z_i(t_0+\Delta t)] 
+  &=& z_i(t_0) -\int_{t_0}^{t_0+\Delta t} H^z_i\,(\alpha^z_i)^2\,du + \rho^{zz}_{0i} \int_{t_0}^{t_0+\Delta t} H^z_0\,\alpha^z_0\,\alpha^z_i\,du
+      - \epsilon_i  \rho^{zx}_{ii}\int_{t_0}^{t_0+\Delta t} \sigma_i^x\,\alpha^z_i\,du
+  \f}
+  
+  i.e. simply the first contribution \f$ z_i(t_0) \f$. 
+
+*/
+Real ir_expectation_2(const CrossAssetModel *model, const Size i, const Real zi_0);
+
+/*! FX state expectation
+
+  This function evaluates part of the expectation \f$ \mathbb{E}_{t_0}[\ln x_i(t_0+dt)]\f$.
+
+  Using the results above for factor moves \f$\Delta \ln x\f$ over time interval \f$(s,t)\f$, 
+  we have
+
+    \f{eqnarray}{
+  \mathbb{E}_{t_0}[\ln x_i(t_0+\Delta t)] &=& \ln x_i(t_0) +  \mathbb{E}_{t_0}[\Delta \ln x_i],
+  \qquad\mbox{with}\quad \Delta \ln x_i = \ln x_i(t_0+\Delta t) - \ln x_i(t_0) \\
+  &=& \ln x_i(t_0) + \left(H^z_0(t)-H^z_0(s)\right) z_0(s) -\left(H^z_i(t)-H^z_i(s)\right)z_i(s)\\
+  &&+ \ln \left( \frac{P^n_0(0,s)}{P^n_0(0,t)} \frac{P^n_i(0,t)}{P^n_i(0,s)}\right) \\
+  && - \frac12 \int_s^t (\sigma^x_i)^2\,du \\
+  &&+\frac12 \left((H^z_0(t))^2 \zeta^z_0(t) -  (H^z_0(s))^2 \zeta^z_0(s)- \int_s^t (H^z_0)^2 (\alpha^z_0)^2\,du\right)\\
+  &&-\frac12 \left((H^z_i(t))^2 \zeta^z_i(t) -  (H^z_i(s))^2 \zeta^z_i(s)-\int_s^t (H^z_i)^2 (\alpha^z_i)^2\,du \right)\\
+  && + \rho^{zx}_{0i} \int_s^t H^z_0\, \alpha^z_0\, \sigma^x_i\,du \\
+  &&  - \int_s^t \left(H^z_i(t)-H^z_i\right)\gamma_i \,du, \qquad\mbox{with}\quad s = t_0, \quad t = t_0+\Delta t
+  \f}
+
+  where we rearranged terms so that the state-dependent terms are listed on the first line 
+  (containing \f$\ln x_i(t_0), z_i(t_0), z_0(t_0) \f$)
+  and all following terms are state-independent (deterministic, just dependent on initial market data and model parameters).
+
+  The last integral above contains \f$\gamma_i\f$ which is (see documentation of the CrossAssetModel)
+  \f[
+  \gamma_i = -H^z_i\,(\alpha^z_i)^2  + H^z_0\,\alpha^z_0\,\alpha^z_i\,\rho^{zz}_{0i} - \sigma_i^x\,\alpha^z_i\, \rho^{zx}_{ii}.
+  \f]
+  The very last last integral above is therefore broken up into six terms which we do not list
+  here, but which show up in this function's imlementation.
+
+  This function covers the latter state-independent part of the FX expectation.
+*/
 Real fx_expectation_1(const CrossAssetModel *model, const Size i, const Time t0,
                       const Real dt);
 
-/*! fx state expectation, part that is dependent on current state */
+/*! FX state expectation.
+  
+  This function covers the state-dependent part of the FX expectation. 
+*/
 Real fx_expectation_2(const CrossAssetModel *model, const Size i, const Time t0,
                       const Real xi_0, const Real zi_0, const Real z0_0,
                       const Real dt);
