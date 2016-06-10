@@ -195,15 +195,103 @@ Real fx_expectation_2(const CrossAssetModel *model, const Size i, const Time t0,
                       const Real xi_0, const Real zi_0, const Real z0_0,
                       const Real dt);
 
-/*! ir-ir covariance */
+/*! IR-IR Covariance 
+
+  This function evaluates the covariance term
+
+      \f{eqnarray*}{
+      \mathrm{Cov}[\Delta z_a, \Delta z_b] &=& \rho^{zz}_{ab} \int_s^t \alpha^z_a\,\alpha^z_b\,du
+      \f}
+
+      on the time interval from \f$ s= t_0\f$ to \f$ t=t_0+\Delta t\f$.
+*/
 Real ir_ir_covariance(const CrossAssetModel *model, const Size i, const Size j,
                       const Time t0, const Time dt);
 
-/*! ir-fx covariance */
+/*! IR-FX Covariance 
+
+  This function evaluates the covariance term
+
+  \f{eqnarray}{
+      \mathrm{Cov} [\Delta z_a, \Delta \ln x_b]) &=& \rho^{zz}_{0a}\int_s^t \left(H^z_0(t)-H^z_0\right)  \alpha^z_0\,\alpha^z_a\,du \nonumber\\
+      &&- \rho^{zz}_{ab}\int_s^t \alpha^z_a \left(H^z_b(t)-H^z_b\right) \alpha^z_b \,du \nonumber\\
+      &&+\rho^{zx}_{ab}\int_s^t \alpha^z_a \, \sigma^x_b \,du.
+      \f}
+
+      on the time interval from \f$ s= t_0\f$ to \f$ t=t_0+\Delta t\f$.
+
+*/
 Real ir_fx_covariance(const CrossAssetModel *model, const Size i, const Size j,
                       const Time t0, const Time dt);
 
-/*! fx-fx covariance */
+/*! FX-FX covariance 
+
+  This function evaluates the covariance term
+
+  \f{eqnarray}{
+      \mathrm{Cov}[\Delta \ln x_a, \Delta \ln x_b] &=&  
+      \int_s^t \left(H^z_0(t)-H^z_0\right)^2 (\alpha_0^z)^2\,du \nonumber\\
+      && -\rho^{zz}_{0a} \int_s^t \left(H^z_a(t)-H^z_a\right) \alpha_a^z\left(H^z_0(t)-H^z_0\right) \alpha_0^z\,du \nonumber\\
+      &&- \rho^{zz}_{0b}\int_s^t \left(H^z_0(t)-H^z_0\right)\alpha_0^z \left(H^z_b(t)-H^z_b\right)\alpha_b^z\,du \nonumber\\
+      &&+ \rho^{zx}_{0b}\int_s^t \left(H^z_0(t)-H^z_0\right)\alpha_0^z \sigma^x_b\,du \nonumber\\
+      &&+ \rho^{zx}_{0a}\int_s^t \left(H^z_0(t)-H^z_0\right)\alpha_0^z\,\sigma^x_a\,du \nonumber\\
+      &&- \rho^{zx}_{ab}\int_s^t \left(H^z_a(t)-H^z_a\right)\alpha_a^z \sigma^x_b,du\nonumber\\
+      &&- \rho^{zx}_{ba}\int_s^t \left(H^z_b(t)-H^z_b\right)\alpha_b^z\,\sigma^x_a\, du \nonumber\\
+      &&+ \rho^{zz}_{ab}\int_s^t \left(H^z_a(t)-H^z_a\right)\alpha_a^z \left(H^z_b(t)-H^z_b\right)\alpha_b^z\,du \nonumber\\
+      &&+ \rho^{xx}_{ab}\int_s^t\sigma^x_a\,\sigma^x_b \,du
+      \f}
+
+      on the time interval from \f$ s= t_0\f$ to \f$ t=t_0+\Delta t\f$. 
+
+      The implementation of this FX-FX covariance in this function further decomposes all terms 
+      in order to separate simple and more complex integrations and to allow for tailored 
+      efficient numerical integration schemes. Line by line, the covariance above can be written:
+
+      \f{eqnarray}{
+      \mathrm{Cov}[\Delta \ln x_a, \Delta \ln x_b] 
+      &=&  
+      (H^z_0)^2(t)\int_s^t (\alpha_0^z)^2\,du 
+      - 2 \,H^z_0(t)\int_s^t H^z_0 (\alpha_0^z)^2\,du 
+      + \int_s^t (H^z_0\,\alpha_0^z)^2\,du \\
+      && 
+      - \rho^{zz}_{0a} H^z_0(t) \,H^z_a(t)\int_s^t \alpha_0^z\,\alpha_a^z\,du 
+      + \rho^{zz}_{0a} H^z_a(t) \int_s^t H^z_0\,\alpha_0^z\,\alpha_a^z\,du
+      + \rho^{zz}_{0a} H^z_0(t) \int_s^t H^z_a\,\alpha_0^z\,\alpha_a^z\,du
+      - \rho^{zz}_{0a}\int_s^t H^z_0\,H^z_a\,\alpha_0^z\,\alpha_a^z\,du \\
+      &&
+      - \rho^{zz}_{0b} H^z_0(t) \,H^z_b(t)\int_s^t \alpha_0^z\,\alpha_b^z\,du 
+      + \rho^{zz}_{0b} H^z_b(t) \int_s^t H^z_0\,\alpha_0^z\,\alpha_b^z\,du
+      + \rho^{zz}_{0b} H^z_0(t) \int_s^t H^z_b\,\alpha_0^z\,\alpha_b^z\,du
+      - \rho^{zz}_{0b}\int_s^t H^z_0\,H^z_b\,\alpha_0^z\,\alpha_b^z\,du \\
+      &&
+      + \rho^{zx}_{0b} H^z_0(t) \int_s^t \alpha_0^z \,\sigma^x_b\,du
+      - \rho^{zx}_{0b} \int_s^t  H^z_0 \,\alpha_0^z \,\sigma^x_b\,du \\
+      &&
+      + \rho^{zx}_{0a} H^z_0(t) \int_s^t \alpha_0^z \,\sigma^x_a\,du
+      - \rho^{zx}_{0a} \int_s^t  H^z_0 \,\alpha_0^z \,\sigma^x_a\,du \\
+      &&
+      - \rho^{zx}_{ab} H^z_a(t) \int_s^t \alpha_a^z \sigma^x_b,du
+      + \rho^{zx}_{ab} \int_s^t H^z_a\,\alpha_a^z \sigma^x_b,du \\
+      &&
+      - \rho^{zx}_{ba} H^z_b(t) \int_s^t \alpha_b^z \sigma^x_a,du
+      + \rho^{zx}_{ba} \int_s^t H^z_b\,\alpha_b^z \sigma^x_a,du \\
+      &&
+      + \rho^{zz}_{ab} H^z_a(t) H^z_b(t) \int_s^t \alpha_a^z \alpha_b^z \,du
+      - \rho^{zz}_{ab} H^z_b(t) \int_s^t H^z_a \alpha_a^z \alpha_b^z \,du
+      - \rho^{zz}_{ab} H^z_a(t) \int_s^t H^z_b \alpha_a^z \alpha_b^z \,du
+      + \rho^{zz}_{ab} \int_s^t H^z_a H^z_b \alpha_a^z \alpha_b^z \,du \\
+      &&
+      + \rho^{xx}_{ab} \int_s^t\sigma^x_a\,\sigma^x_b \,du
+      \f}      
+
+      When comparing with the code, also note that the integral on line one can be
+      simplified to 
+      \f[
+      \int_s^t (\alpha_0^z)^2\,du = \zeta_0(t) - \zeta_0(s)
+      \f]
+
+*/
+
 Real fx_fx_covariance(const CrossAssetModel *model, const Size i, const Size j,
                       const Time t0, const Time dt);
 
