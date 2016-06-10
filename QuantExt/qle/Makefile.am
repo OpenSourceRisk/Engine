@@ -8,7 +8,6 @@ SUBDIRS = \
 	models \
 	pricingengines \
 	processes \
-	risk \
 	quotes \
 	termstructures
 
@@ -33,7 +32,6 @@ libQuantExt_la_LIBADD = \
 	models/libModels.la \
 	pricingengines/libPricingEngines.la \
 	processes/libProcesses.la \
-	risk/libRisk.la \
 	quotes/libQuotes.la \
 	termstructures/libTermStructures.la
 
