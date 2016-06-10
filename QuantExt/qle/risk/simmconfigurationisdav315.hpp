@@ -25,7 +25,8 @@ namespace QuantExt {
         const std::string& name() const { return name_; }
         const std::vector<string>& buckets(RiskType t) const { return buckets_.at(t); }
         Size residualBucket(RiskType t) const {
-            if (t == Risk_FX || t == Risk_FXVol || t == Risk_Inflation || t == Risk_IRCurve || t == Risk_IRVol)
+            if (t == Risk_FX || t == Risk_FXVol || t == Risk_Inflation || t == Risk_IRCurve || t == Risk_IRVol ||
+                t == Risk_Commodity || t == Risk_CommodityVol)
                 return Null<Size>();
             else
                 return buckets(t).size() - 1;

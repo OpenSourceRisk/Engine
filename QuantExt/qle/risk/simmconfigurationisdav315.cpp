@@ -103,8 +103,7 @@ namespace QuantExt {
         bucketsCreditQ += "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "Residual";
         bucketsCreditNonQ += "1", "2", "Residual";
         bucketsEquity += "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "Residual";
-        bucketsCommodity += "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16",
-            "Residual";
+        bucketsCommodity += "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16";
         buckets_[Risk_IRCurve] = bucketsIRCurve;
         buckets_[Risk_CreditQ] = bucketsCreditQ;
         buckets_[Risk_CreditVol] = bucketsCreditQ;
@@ -127,9 +126,9 @@ namespace QuantExt {
         labels1_[Risk_IRCurve] = irTenor;
         labels1_[Risk_IRVol] = volTenor;
         labels1_[Risk_CreditQ] = crTenor;
-        labels1_[Risk_CreditVol] = crTenor;
+        labels1_[Risk_CreditVol] = volTenor;
         labels1_[Risk_CreditNonQ] = crTenor;
-        labels1_[Risk_CreditVolNonQ] = crTenor;
+        labels1_[Risk_CreditVolNonQ] = volTenor;
         labels1_[Risk_Equity] = empty;
         labels1_[Risk_EquityVol] = volTenor;
         labels1_[Risk_Commodity] = empty;
