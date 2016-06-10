@@ -52,8 +52,8 @@ namespace QuantExt {
     }
 
     Real Simm::marginIR(RiskType t, ProductClass p) {
-        if (t != SimmConfiguration::Risk_IRCurve || p != SimmConfiguration::ProductClass_RatesFX)
-            return 0.0;
+        // if (t != SimmConfiguration::Risk_IRCurve || p != SimmConfiguration::ProductClass_RatesFX)
+        //     return 0.0;
         Size qualifiers = data_->numberOfQualifiers(t, p);
         std::vector<Real> s(qualifiers, 0.0), ws(qualifiers, 0.0), cr(qualifiers, 0.0), K(qualifiers, 0.0);
 
@@ -316,7 +316,8 @@ namespace QuantExt {
                         for (Size l1 = 0; l1 < conf->labels1(rt).size(); ++l1) {
                             for (Size l2 = 0; l2 < conf->labels2(rt).size(); ++l2) {
                                 Real amount = dataKey->amount(rt, pc, q, l1, l2);
-                                if (/*!QuantLib::close_enough(amount,0.0) &&*/ rt == SimmConfiguration::Risk_IRCurve &&
+                                // FILTER goes here
+                                if (!QuantLib::close_enough(amount,0.0) && rt == SimmConfiguration::Risk_IRCurve &&
                                     pc == SimmConfiguration::ProductClass_RatesFX) {
                                     std::clog << rt << "\t" << pc << "\t" << dataKey->qualifiers(rt, pc)[q] << " (" << q
                                               << ") \t"
@@ -348,6 +349,7 @@ namespace QuantExt {
         //         }
         //     }
         // }
+
         // end debug
 
         for (Size p = 0; p < data_->numberOfProductClasses(); ++p) {
