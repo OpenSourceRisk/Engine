@@ -629,6 +629,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="analyticlgmswaptionengine.cpp" />
+    <ClCompile Include="blackvariancecurve.cpp" />
     <ClCompile Include="crossassetmodel.cpp" />
     <ClCompile Include="crossassetmodel2.cpp" />
     <ClCompile Include="crossassetmodelparametrizations.cpp" />
@@ -645,6 +646,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="analyticlgmswaptionengine.hpp" />
+    <ClInclude Include="blackvariancecurve.hpp" />
     <ClInclude Include="crossassetmodel.hpp" />
     <ClInclude Include="crossassetmodel2.hpp" />
     <ClInclude Include="crossassetmodelparametrizations.hpp" />

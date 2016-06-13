@@ -298,6 +298,12 @@
     <ClInclude Include="qle\models\crossassetmodelimpliedfxvoltermstructure.hpp">
       <Filter>models</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\blackvariancecurve3.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\discountingswapenginemulticurve.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -493,6 +499,12 @@
     </ClCompile>
     <ClCompile Include="qle\models\crossassetmodelimpliedfxvoltermstructure.cpp">
       <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\blackvariancecurve3.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\discountingswapenginemulticurve.cpp">
+      <Filter>pricingengines</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
