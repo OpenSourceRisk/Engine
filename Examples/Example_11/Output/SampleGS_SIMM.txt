@@ -1,8 +1,8 @@
 Portfolio,ProductClass,RiskClass,MarginType,InitialMargin
 9534,RateFX,InterestRate,Delta,27305996.3736536
 9534,RateFX,InterestRate,Vega,1302144.47397031
-9534,RateFX,InterestRate,Curvature,49465.789098335
-9534,RateFX,InterestRate,All,28657606.6367222
+9534,RateFX,InterestRate,Curvature,230318.916319911
+9534,RateFX,InterestRate,All,28838459.7639438
 9534,RateFX,CreditQualifying,Delta,0
 9534,RateFX,CreditQualifying,Vega,0
 9534,RateFX,CreditQualifying,Curvature,0
@@ -23,7 +23,7 @@ Portfolio,ProductClass,RiskClass,MarginType,InitialMargin
 9534,RateFX,FX,Vega,587268.531192921
 9534,RateFX,FX,Curvature,1034709.44432752
 9534,RateFX,FX,All,64944055.9171521
-9534,RateFX,All,All,77743199.505574
+9534,RateFX,All,All,77850792.5072237
 9534,Credit,InterestRate,Delta,254528.194187051
 9534,Credit,InterestRate,Vega,0
 9534,Credit,InterestRate,Curvature,0
@@ -99,4 +99,4 @@ Portfolio,ProductClass,RiskClass,MarginType,InitialMargin
 9534,Commodity,FX,Curvature,0
 9534,Commodity,FX,All,0
 9534,Commodity,All,All,36468.2122294073
-9534,All,All,All,321201935.195694
+9534,All,All,All,321309528.197344
