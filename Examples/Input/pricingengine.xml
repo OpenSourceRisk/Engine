@@ -12,7 +12,7 @@
     <Model>LGM</Model>
     <ModelParameters>
       <Parameter name="Calibration">Bootstrap</Parameter>
-      <Parameter name="BermudanStrategy">CoterminalATM</Parameter>
+      <Parameter name="CalibrationStrategy">CoterminalATM</Parameter>
       <Parameter name="Reversion">0.03</Parameter>
       <Parameter name="ReversionType">HullWhite</Parameter>
       <Parameter name="Volatility">0.01</Parameter>
