@@ -39,6 +39,192 @@ CrossAssetModel::CrossAssetModel(
     initialize();
 }
 
+Size CrossAssetModel::components(const AssetType t) const {
+    switch (t) {
+    case IR:
+        return nIrLgm1f_;
+        break;
+    case FX:
+        return nFxBs_;
+        break;
+    default:
+        QL_FAIL("asset class " << t << " not known.");
+    }
+}
+
+Size CrossAssetModel::ccyIndex(const Currency &ccy) const {
+    Size i = 0;
+    // FIXME: remove try/catch
+    try {
+        // irlgm1f() will throw if out of bounds
+        while (irlgm1f(i)->currency() != ccy)
+            ++i;
+        return i;
+    } catch (...) {
+        QL_FAIL("currency " << ccy.code()
+                            << " not present in cross asset model");
+    }
+}
+
+void CrossAssetModel::update() {
+    for (Size i = 0; i < p_.size(); ++i) {
+        p_[i]->update();
+    }
+    stateProcessExact_->flushCache();
+    stateProcessEuler_->flushCache();
+    notifyObservers();
+}
+
+void CrossAssetModel::generateArguments() { update(); }
+
+Size CrossAssetModel::brownians(const AssetType t, const Size) const {
+    switch (t) {
+    case IR:
+        return 1;
+    case FX:
+        return 1;
+    default:
+        QL_FAIL("EQ, COM not yet supported or type (" << t << ") unknown");
+    }
+}
+
+Size CrossAssetModel::stateVariables(const AssetType t, const Size) const {
+    switch (t) {
+    case IR:
+        return 1;
+    case FX:
+        return 1;
+    default:
+        QL_FAIL("EQ, COM not yet supported or type (" << t << ") unknown");
+    }
+}
+
+Size CrossAssetModel::arguments(const AssetType t, const Size) const {
+    switch (t) {
+    case IR:
+        return 2;
+    case FX:
+        return 1;
+    default:
+        QL_FAIL("EQ, COM not yet supported or type (" << t << ") unknown");
+    }
+}
+
+Size CrossAssetModel::idx(const AssetType t, const Size i) const {
+    switch (t) {
+    case IR:
+        QL_REQUIRE(i < nIrLgm1f_, "ir index (" << i << ") must be in 0..."
+                                               << (nIrLgm1f_ - 1));
+        return i;
+    case FX:
+        QL_REQUIRE(nFxBs_ > 0, "fx index (" << i
+                                            << ") invalid, no fx components");
+        QL_REQUIRE(i < nFxBs_, "fx index (" << i << ") must be in 0..."
+                                            << (nFxBs_ - 1));
+        return nIrLgm1f_ + i;
+    default:
+        QL_FAIL("EQ, COM not yet supported or type (" << t << ") unknown");
+    }
+}
+
+Size CrossAssetModel::cIdx(const AssetType t, const Size i,
+                           const Size offset) const {
+    QL_REQUIRE(offset < brownians(t, i),
+               "c-offset (" << offset << ") for asset class " << t
+                            << " and index " << i << " must be in 0..."
+                            << brownians(t, i) - 1);
+    // the return values below assume specific models and have to be
+    // generalized when other model types are added
+    switch (t) {
+    case IR:
+        QL_REQUIRE(i < nIrLgm1f_, "irlgm1f index (" << i << ") must be in 0..."
+                                                    << (nIrLgm1f_ - 1));
+        return i;
+    case FX:
+        QL_REQUIRE(nFxBs_ > 0, "fx index (" << i
+                                            << ") invalid, no fx components");
+        QL_REQUIRE(i < nFxBs_, "fxbs index (" << i << ") must be in 0..."
+                                              << (nFxBs_ - 1));
+        return nIrLgm1f_ + i;
+    default:
+        QL_FAIL("EQ, COM not yet supported or type (" << t << ") unknown");
+    }
+}
+
+Size CrossAssetModel::pIdx(const AssetType t, const Size i,
+                           const Size offset) const {
+    QL_REQUIRE(offset < stateVariables(t, i),
+               "p-offset (" << offset << ") for asset class " << t
+                            << " and index " << i << " must be in 0..."
+                            << stateVariables(t, i) - 1);
+    // the return values below assume specific models and have to be
+    // generalized when other model types are added
+    switch (t) {
+    case IR:
+        QL_REQUIRE(i < nIrLgm1f_, "irlgm1f index (" << i << ") must be in 0..."
+                                                    << (nIrLgm1f_ - 1));
+        return i;
+    case FX:
+        QL_REQUIRE(nFxBs_ > 0, "fx index (" << i
+                                            << ") invalid, no fx components");
+        QL_REQUIRE(i < nFxBs_, "fxbs index (" << i << ") must be in 0..."
+                                              << (nFxBs_ - 1));
+        return nIrLgm1f_ + i;
+    default:
+        QL_FAIL("EQ, COM not yet supported or type (" << t << ") unknown");
+    }
+}
+
+Size CrossAssetModel::aIdx(const AssetType t, const Size i,
+                           const Size offset) const {
+    QL_REQUIRE(offset < arguments(t, i),
+               "a-offset (" << offset << ") for asset class " << t
+                            << " and index " << i << " must be in 0..."
+                            << arguments(t, i) - 1);
+    // the return values below assume specific models and have to be
+    // generalized when other model types are added
+    switch (t) {
+    case IR:
+        QL_REQUIRE(i < nIrLgm1f_, "irlgm1f index (" << i << ") must be in 0..."
+                                                    << (nIrLgm1f_ - 1));
+        return 2 * i + offset;
+    case FX:
+        QL_REQUIRE(nFxBs_ > 0, "fx index (" << i
+                                            << ") invalid, no fx components");
+        QL_REQUIRE(i < nFxBs_, "fxbs index (" << i << ") must be in 0..."
+                                              << (nFxBs_ - 1));
+        return 2 * nIrLgm1f_ + i;
+    default:
+        QL_FAIL("EQ, COM not yet supported or type (" << t << ") unknown");
+    }
+}
+
+const Real &CrossAssetModel::correlation(const AssetType s, const Size i,
+                                         const AssetType t, const Size j,
+                                         const Size iOffset,
+                                         const Size jOffset) const {
+    return rho_(cIdx(s, i, iOffset), cIdx(t, j, jOffset));
+}
+
+void CrossAssetModel::correlation(const AssetType s, const Size i,
+                                  const AssetType t, const Size j,
+                                  const Real value, const Size iOffset,
+                                  const Size jOffset) {
+    Size row = cIdx(s, i, iOffset);
+    Size column = cIdx(t, j, jOffset);
+    QL_REQUIRE(row != column || close_enough(value, 1.0),
+               "correlation must be 1 at (" << row << "," << column << ")");
+    QL_REQUIRE(value >= -1.0 && value <= 1.0,
+               "correlation must be in [-1,1] at (" << row << "," << column
+                                                    << ")");
+    // we can not check for non-negative eigenvalues, since we do not
+    // know when the correlation matrix setup is finished, but this
+    // is effectively one in the state process later on anyway and
+    // the user can also use checkCorrelationMatrix() to verify this
+    rho_(row, column) = rho_(column, row) = value;
+    update();
+}
+
 void CrossAssetModel::initialize() {
     initializeParametrizations();
     initializeCorrelation();
@@ -73,25 +259,20 @@ void CrossAssetModel::setIntegrationPolicy(
     // collect relevant times from parametrizations
     // we don't have to sort them or make them unique,
     // this is all done in PiecewiseIntegral for us
+
     std::vector<Time> allTimes;
     for (Size i = 0; i < nIrLgm1f_; ++i) {
-        allTimes.insert(allTimes.end(), p_[i]->parameterTimes(0).begin(),
-                        p_[i]->parameterTimes(0).end());
-        allTimes.insert(allTimes.end(), p_[i]->parameterTimes(1).begin(),
-                        p_[i]->parameterTimes(1).end());
+        allTimes.insert(allTimes.end(),
+                        p_[idx(IR, i)]->parameterTimes(0).begin(),
+                        p_[idx(IR, i)]->parameterTimes(0).end());
+        allTimes.insert(allTimes.end(),
+                        p_[idx(IR, i)]->parameterTimes(1).begin(),
+                        p_[idx(IR, i)]->parameterTimes(1).end());
     }
     for (Size i = 0; i < nFxBs_; ++i) {
         allTimes.insert(allTimes.end(),
-                        p_[nIrLgm1f_ + i]->parameterTimes(0).begin(),
-                        p_[nIrLgm1f_ + i]->parameterTimes(0).end());
-    }
-    for (Size i = 0; i < nCrLgm1f_; ++i) {
-        allTimes.insert(allTimes.end(),
-                        p_[nIrLgm1f_ + nFxBs_ + i]->parameterTimes(0).begin(),
-                        p_[nIrLgm1f_ + nFxBs_ + i]->parameterTimes(0).end());
-        allTimes.insert(allTimes.end(),
-                        p_[nIrLgm1f_ + nFxBs_ + i]->parameterTimes(1).begin(),
-                        p_[nIrLgm1f_ + nFxBs_ + i]->parameterTimes(1).end());
+                        p_[idx(FX, i)]->parameterTimes(0).begin(),
+                        p_[idx(FX, i)]->parameterTimes(0).end());
     }
 
     // use piecewise integrator avoiding the step points
@@ -105,8 +286,6 @@ void CrossAssetModel::initializeParametrizations() {
 
     nIrLgm1f_ = 0;
     nFxBs_ = 0;
-    nInfDk_ = 0;
-    nCrLgm1f_ = 0;
 
     Size i = 0;
 
@@ -165,16 +344,27 @@ void CrossAssetModel::initializeParametrizations() {
 }
 
 void CrossAssetModel::initializeCorrelation() {
+    Size n = nIrLgm1f_ + nFxBs_;
+    if (rho_.empty()) {
+        rho_ = Matrix(n, n, 0.0);
+        for (Size i = 0; i < n; ++i)
+            rho_(i, i) = 1.0;
+        return;
+    }
+    QL_REQUIRE(rho_.rows() == n && rho_.columns() == n,
+               "correlation matrix is " << rho_.rows() << " x "
+                                        << rho_.columns() << " but should be "
+                                        << n << " x " << n);
+    checkCorrelationMatrix();
+}
 
-    QL_REQUIRE(rho_.rows() == nIrLgm1f_ + nFxBs_ + nCrLgm1f_ &&
-                   rho_.columns() == nIrLgm1f_ + nFxBs_ + nCrLgm1f_,
-               "correlation matrix is "
-                   << rho_.rows() << " x " << rho_.columns()
-                   << " but should be " << nIrLgm1f_ + nFxBs_ + nCrLgm1f_
-                   << " x " << nIrLgm1f_ + nFxBs_ + nCrLgm1f_);
-
-    for (Size i = 0; i < rho_.rows(); ++i) {
-        for (Size j = 0; j < rho_.columns(); ++j) {
+void CrossAssetModel::checkCorrelationMatrix() const {
+    Size n = rho_.rows();
+    Size m = rho_.columns();
+    QL_REQUIRE(rho_.columns() == n,
+               "correlation matrix (" << n << " x " << m << " must be square");
+    for (Size i = 0; i < n; ++i) {
+        for (Size j = 0; j < m; ++j) {
             QL_REQUIRE(close_enough(rho_[i][j], rho_[j][i]),
                        "correlation matrix is no symmetric, for (i,j)=("
                            << i << "," << j << ") rho(i,j)=" << rho_[i][j]
@@ -202,13 +392,13 @@ void CrossAssetModel::initializeArguments() {
     arguments_.resize(2 * nIrLgm1f_ + nFxBs_);
     for (Size i = 0; i < nIrLgm1f_; ++i) {
         // volatility
-        arguments_[2 * i] = irlgm1f(i)->parameter(0);
+        arguments_[aIdx(IR, i, 0)] = irlgm1f(i)->parameter(0);
         // reversion
-        arguments_[2 * i + 1] = irlgm1f(i)->parameter(1);
+        arguments_[aIdx(IR, i, 1)] = irlgm1f(i)->parameter(1);
     }
     for (Size i = 0; i < nFxBs_; ++i) {
         // volatility
-        arguments_[nIrLgm1f_ * 2 + i] = fxbs(i)->parameter(0);
+        arguments_[aIdx(FX, i, 0)] = fxbs(i)->parameter(0);
     }
 }
 
@@ -223,6 +413,7 @@ void CrossAssetModel::finalizeArguments() {
 }
 
 void CrossAssetModel::checkModelConsistency() const {
+    QL_REQUIRE(nIrLgm1f_ > 0, "at least one IR component must be given");
     QL_REQUIRE(nIrLgm1f_ + nFxBs_ == p_.size(),
                "the parametrizations must be given in the following order: ir, "
                "fx (others not supported by this class), found "

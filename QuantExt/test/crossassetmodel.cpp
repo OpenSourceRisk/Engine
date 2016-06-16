@@ -525,17 +525,21 @@ void CrossAssetModelTest::testCcyLgm3fForeignPayouts() {
     singleModels.push_back(usdLgmParam);
     singleModels.push_back(fxUsdEurBsParam);
 
-    Matrix c(3, 3);
-    //  EUR            USD              FX
-    c[0][0] = 1.0;  c[0][1] = -0.2; c[0][2] = 0.8; // EUR
-    c[1][0] = -0.2; c[1][1] = 1.0;  c[1][2] = -0.5; // USD
-    c[2][0] = 0.8;  c[2][1] = -0.5; c[2][2] = 1.0; // FX
+    boost::shared_ptr<CrossAssetModel> ccLgm =
+        boost::make_shared<CrossAssetModel>(singleModels);
 
-    boost::shared_ptr<CrossAssetModel> ccLgm = boost::make_shared<CrossAssetModel>(
-        singleModels, c, SalvagingAlgorithm::None);
+    Size eurIdx = ccLgm->ccyIndex(EURCurrency());
+    Size usdIdx = ccLgm->ccyIndex(USDCurrency());
+    Size eurUsdIdx = usdIdx-1;
 
-    boost::shared_ptr<LinearGaussMarkovModel> eurLgm = boost::make_shared<LinearGaussMarkovModel>(eurLgmParam);
-    boost::shared_ptr<LinearGaussMarkovModel> usdLgm = boost::make_shared<LinearGaussMarkovModel>(usdLgmParam);
+    ccLgm->correlation(IR, eurIdx, IR, usdIdx, -0.2);
+    ccLgm->correlation(IR, eurIdx, FX, eurUsdIdx, 0.8);
+    ccLgm->correlation(IR, usdIdx, FX, eurUsdIdx, -0.5);
+
+    boost::shared_ptr<LinearGaussMarkovModel> eurLgm =
+        boost::make_shared<LinearGaussMarkovModel>(eurLgmParam);
+    boost::shared_ptr<LinearGaussMarkovModel> usdLgm =
+        boost::make_shared<LinearGaussMarkovModel>(usdLgmParam);
 
     boost::shared_ptr<StochasticProcess> process =
         ccLgm->stateProcess(CrossAssetStateProcess::exact);
