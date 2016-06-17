@@ -13,7 +13,8 @@ QLE_TESTS = \
 	dynamicswaptionvolmatrix.hpp dynamicswaptionvolmatrix.cpp \
 	index.hpp index.cpp \
     blackvariancecurve.hpp blackvariancecurve.cpp \
-	logquote.hpp logquote.cpp
+	logquote.hpp logquote.cpp \
+    cashflow.hpp cashflow.cpp
 
 dist-hook:
 	mkdir -p $(distdir)/build
