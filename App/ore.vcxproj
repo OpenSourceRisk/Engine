@@ -123,57 +123,57 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(IncludePath)</IncludePath>
-    <LibraryPath>$(LibraryPath)</LibraryPath>
+    <IncludePath>..\Wrap;..\QuantExt;..\QuantLib;$(BOOST);$(IncludePath)</IncludePath>
+    <LibraryPath>$(BOOST)\stage\lib\$(Platform);$(LibraryPath)</LibraryPath>
     <OutDir>.\bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>.\build\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(IncludePath)</IncludePath>
-    <LibraryPath>$(LibraryPath)</LibraryPath>
+    <IncludePath>..\Wrap;..\QuantExt;..\QuantLib;$(BOOST);$(IncludePath)</IncludePath>
+    <LibraryPath>$(BOOST)\stage\lib\$(Platform);$(LibraryPath)</LibraryPath>
     <OutDir>.\bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>.\build\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(IncludePath)</IncludePath>
-    <LibraryPath>$(LibraryPath)</LibraryPath>
+    <IncludePath>..\Wrap;..\QuantExt;..\QuantLib;$(BOOST);$(IncludePath)</IncludePath>
+    <LibraryPath>$(BOOST)\stage\lib\$(Platform);$(LibraryPath)</LibraryPath>
     <OutDir>.\bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>.\build\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(IncludePath)</IncludePath>
-    <LibraryPath>$(LibraryPath)</LibraryPath>
+    <IncludePath>..\Wrap;..\QuantExt;..\QuantLib;$(BOOST);$(IncludePath)</IncludePath>
+    <LibraryPath>$(BOOST)\stage\lib\$(Platform);$(LibraryPath)</LibraryPath>
     <OutDir>.\bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>.\build\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(IncludePath)</IncludePath>
-    <LibraryPath>$(LibraryPath)</LibraryPath>
+    <IncludePath>..\Wrap;..\QuantExt;..\QuantLib;$(BOOST);$(IncludePath)</IncludePath>
+    <LibraryPath>$(BOOST)\stage\lib\$(Platform);$(LibraryPath)</LibraryPath>
     <OutDir>.\bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>.\build\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release (static runtime)|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(IncludePath)</IncludePath>
-    <LibraryPath>$(LibraryPath)</LibraryPath>
+    <IncludePath>..\Wrap;..\QuantExt;..\QuantLib;$(BOOST);$(IncludePath)</IncludePath>
+    <LibraryPath>$(BOOST)\stage\lib\$(Platform);$(LibraryPath)</LibraryPath>
     <OutDir>.\bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>.\build\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(IncludePath)</IncludePath>
-    <LibraryPath>$(LibraryPath)</LibraryPath>
+    <IncludePath>..\Wrap;..\QuantExt;..\QuantLib;$(BOOST);$(IncludePath)</IncludePath>
+    <LibraryPath>$(BOOST)\stage\lib\$(Platform);$(LibraryPath)</LibraryPath>
     <OutDir>.\bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>.\build\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release (static runtime)|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(IncludePath)</IncludePath>
-    <LibraryPath>$(LibraryPath)</LibraryPath>
+    <IncludePath>..\Wrap;..\QuantExt;..\QuantLib;$(BOOST);$(IncludePath)</IncludePath>
+    <LibraryPath>$(BOOST)\stage\lib\$(Platform);$(LibraryPath)</LibraryPath>
     <OutDir>.\bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>.\build\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>

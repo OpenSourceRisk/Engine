@@ -169,6 +169,38 @@
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|Win32'">QuantExt-test-suite-$(qlCompilerTag)-mt-sgd</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|x64'">QuantExt-test-suite-$(qlCompilerTag)-x64-mt-sgd</TargetName>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(BOOST);..\QuantLib</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86;$(BOOST)\stage\lib\$(Platform)\</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(BOOST);..\QuantLib</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64;$(BOOST)\stage\lib\$(Platform)\</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(BOOST);..\QuantLib</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86;$(BOOST)\stage\lib\$(Platform)\</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release (static runtime)|Win32'">
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(BOOST);..\QuantLib</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86;$(BOOST)\stage\lib\$(Platform)\</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|Win32'">
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(BOOST);..\QuantLib</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86;$(BOOST)\stage\lib\$(Platform)\</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(BOOST);..\QuantLib</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64;$(BOOST)\stage\lib\$(Platform)\</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release (static runtime)|x64'">
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(BOOST);..\QuantLib</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64;$(BOOST)\stage\lib\$(Platform)\</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|x64'">
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(BOOST);..\QuantLib</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64;$(BOOST)\stage\lib\$(Platform)\</LibraryPath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|Win32'">
     <Midl>
       <TypeLibraryName>.\build\$(qlCompilerTag)\$(Platform)\$(Configuration)\testsuite.tlb</TypeLibraryName>
@@ -580,7 +612,7 @@
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <IntrinsicFunctions>false</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <AdditionalIncludeDirectories>..;..\..\QuantLib;$(BOOST);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(BOOST)\stage\lib\$(Platform)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NDEBUG;WIN32;_CONSOLE;_SCL_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -629,6 +661,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="analyticlgmswaptionengine.cpp" />
+    <ClCompile Include="blackvariancecurve.cpp" />
     <ClCompile Include="crossassetmodel.cpp" />
     <ClCompile Include="crossassetmodel2.cpp" />
     <ClCompile Include="crossassetmodelparametrizations.cpp" />
@@ -645,6 +678,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="analyticlgmswaptionengine.hpp" />
+    <ClInclude Include="blackvariancecurve.hpp" />
     <ClInclude Include="crossassetmodel.hpp" />
     <ClInclude Include="crossassetmodel2.hpp" />
     <ClInclude Include="crossassetmodelparametrizations.hpp" />

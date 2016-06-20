@@ -41,6 +41,7 @@
     <ClCompile Include="staticallycorrectedyieldtermstructure.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="blackvariancecurve.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="source">
@@ -87,5 +88,6 @@
     <ClInclude Include="staticallycorrectedyieldtermstructure.hpp">
       <Filter>headers</Filter>
     </ClInclude>
+    <ClInclude Include="blackvariancecurve.hpp" />
   </ItemGroup>
 </Project>

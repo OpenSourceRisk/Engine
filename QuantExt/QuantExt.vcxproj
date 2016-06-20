@@ -136,6 +136,38 @@
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">QuantExt-$(qlCompilerTag)-mt</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">QuantExt-$(qlCompilerTag)-x64-mt</TargetName>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(BOOST);..\QuantLib</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86;$(BOOST)\stage\lib\$(Platform)\</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <IncludePath>$(BOOST);..\QuantLib</IncludePath>
+    <LibraryPath>$(BOOST)\stage\lib\$(Platform)\</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(BOOST);..\QuantLib</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64;$(BOOST)\stage\lib\$(Platform)\</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release (static runtime)|Win32'">
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(BOOST);..\QuantLib</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86;$(BOOST)\stage\lib\$(Platform)\</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|Win32'">
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(BOOST);..\QuantLib</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86;$(BOOST)\stage\lib\$(Platform)\</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IncludePath>$(BOOST);..\QuantLib</IncludePath>
+    <LibraryPath>$(BOOST)\stage\lib\$(Platform)\</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release (static runtime)|x64'">
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(BOOST);..\QuantLib</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64;$(BOOST)\stage\lib\$(Platform)\</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|x64'">
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(BOOST);..\QuantLib</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64;$(BOOST)\stage\lib\$(Platform)\</LibraryPath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
@@ -186,7 +218,7 @@
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <IntrinsicFunctions>false</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <AdditionalIncludeDirectories>.;$(BOOST);..\QuantLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(BOOST)\stage\lib\$(Platform)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NDEBUG;WIN32;_LIB;_SCL_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -228,7 +260,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <IntrinsicFunctions>false</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>.;$(BOOST);..\QuantLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\apps\Dev\quantlib\quantlib\QuantLib\lib;.;$(BOOST);..\QuantLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_DEBUG;WIN32;_LIB;_SCL_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -558,6 +590,7 @@
     <ClInclude Include="qle\pricingengines\discountingcurrencyswapengine.hpp" />
     <ClInclude Include="qle\pricingengines\discountingfxforwardengine.hpp" />
     <ClInclude Include="qle\pricingengines\discountingswapengine.hpp" />
+    <ClInclude Include="qle\pricingengines\discountingswapenginemulticurve.hpp" />
     <ClInclude Include="qle\pricingengines\numericlgmswaptionengine.hpp" />
     <ClInclude Include="qle\pricingengines\oiccbasisswapengine.hpp" />
     <ClInclude Include="qle\processes\all.hpp" />
@@ -571,6 +604,7 @@
     <ClInclude Include="qle\termstructures\averageoisratehelper.hpp" />
     <ClInclude Include="qle\termstructures\basistwoswaphelper.hpp" />
     <ClInclude Include="qle\termstructures\blackinvertedvoltermstructure.hpp" />
+    <ClInclude Include="qle\termstructures\blackvariancecurve3.hpp" />
     <ClInclude Include="qle\termstructures\crossccybasisswaphelper.hpp" />
     <ClInclude Include="qle\termstructures\dynamicblackvoltermstructure.hpp" />
     <ClInclude Include="qle\termstructures\dynamicstype.hpp" />
@@ -622,6 +656,7 @@
     <ClCompile Include="qle\pricingengines\discountingcurrencyswapengine.cpp" />
     <ClCompile Include="qle\pricingengines\discountingfxforwardengine.cpp" />
     <ClCompile Include="qle\pricingengines\discountingswapengine.cpp" />
+    <ClCompile Include="qle\pricingengines\discountingswapenginemulticurve.cpp" />
     <ClCompile Include="qle\pricingengines\numericlgmswaptionengine.cpp" />
     <ClCompile Include="qle\pricingengines\oiccbasisswapengine.cpp" />
     <ClCompile Include="qle\processes\crossassetstateprocess.cpp" />
@@ -629,6 +664,7 @@
     <ClCompile Include="qle\quotes\logquote.cpp" />
     <ClCompile Include="qle\termstructures\averageoisratehelper.cpp" />
     <ClCompile Include="qle\termstructures\basistwoswaphelper.cpp" />
+    <ClCompile Include="qle\termstructures\blackvariancecurve3.cpp" />
     <ClCompile Include="qle\termstructures\crossccybasisswaphelper.cpp" />
     <ClCompile Include="qle\termstructures\dynamicswaptionvolmatrix.cpp" />
     <ClCompile Include="qle\termstructures\hazardspreadeddefaulttermstructure.cpp" />
