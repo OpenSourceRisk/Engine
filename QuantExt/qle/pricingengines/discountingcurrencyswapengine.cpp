@@ -20,10 +20,10 @@
 namespace QuantExt {
 
     DiscountingCurrencySwapEngine::DiscountingCurrencySwapEngine(
-        std::vector<Handle<YieldTermStructure> > & discountCurves,
-        std::vector<Handle<Quote> >& fxQuotes,
-        std::vector<Currency> & currencies,
-        Currency npvCurrency,
+        const std::vector<Handle<YieldTermStructure> >& discountCurves,
+        const std::vector<Handle<Quote> >& fxQuotes,
+        const std::vector<Currency>& currencies,
+        const Currency& npvCurrency,
         boost::optional<bool> includeSettlementDateFlows,
         Date settlementDate,
         Date npvDate)

@@ -36,10 +36,10 @@ namespace QuantExt {
           currency. The spots must be given w.r.t. a settlement date equal
           to the npv date. */
         DiscountingCurrencySwapEngine(
-            std::vector<Handle<YieldTermStructure> > & discountCurves,
-            std::vector<Handle<Quote> >& fxQuotes,
-            std::vector<Currency> & currencies,
-            Currency npvCurrency,
+            const std::vector<Handle<YieldTermStructure> >& discountCurves,
+            const std::vector<Handle<Quote> >& fxQuotes,
+            const std::vector<Currency>& currencies,
+            const Currency& npvCurrency,
             boost::optional<bool> includeSettlementDateFlows = boost::none,
             Date settlementDate = Date(),
             Date npvDate = Date());
