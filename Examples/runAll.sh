@@ -1,6 +1,6 @@
 #!/bin/sh
 
-max=8
+max=9
 i=1
 
 until [ $i -gt  $max ]
