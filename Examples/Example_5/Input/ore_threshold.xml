@@ -7,17 +7,21 @@
     <Parameter name="logFile">log.txt</Parameter>
     <Parameter name="marketDataFile">../../Input/market_20160226.txt</Parameter>
     <Parameter name="fixingDataFile">../../Input/fixings_20160226.txt</Parameter>
+    <Parameter name="implyTodaysFixings">N</Parameter>
     <Parameter name="curveConfigFile">../../Input/curveconfig.xml</Parameter>
     <Parameter name="conventionsFile">../../Input/conventions.xml</Parameter>
     <Parameter name="marketConfigFile">../../Input/todaysmarket.xml</Parameter>
     <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
     <Parameter name="portfolioFile">portfolio.xml</Parameter>
+    <Parameter name="fixingModel">Simulated</Parameter>  <!-- Simulated or Manual -->
+    <Parameter name="observationModel">Disable</Parameter> <!-- Unregister, None or Disable -->
   </Setup>
 
   <Markets>
     <Parameter name="lgmcalibration">collateral_inccy</Parameter>
     <Parameter name="fxcalibration">collateral_eur</Parameter>
     <Parameter name="pricing">collateral_eur</Parameter>
+    <Parameter name="simulation">collateral_eur</Parameter>
   </Markets>
 
   <Analytics>
@@ -62,14 +66,18 @@
       <Parameter name="calculationType">Symmetric</Parameter>      
       <Parameter name="allocationMethod">Marginal</Parameter>    
       <Parameter name="marginalAllocationLimit">1.0</Parameter>    
+      <Parameter name="exerciseNextBreak">N</Parameter>
       <Parameter name="cva">Y</Parameter>
       <Parameter name="dva">N</Parameter>
       <Parameter name="dvaName">BANK</Parameter>
-      <Parameter name="fva">N</Parameter>
-      <Parameter name="colva">N</Parameter>
+      <Parameter name="fva">Y</Parameter>
+      <Parameter name="fvaBorrowingCurve">BANK_EUR_BORROW</Parameter>
+      <Parameter name="fvaLendingCurve">BANK_EUR_LEND</Parameter>
+      <Parameter name="colva">Y</Parameter>
+      <Parameter name="collateralSpread">0.0010</Parameter>
+      <Parameter name="collateralFloor">Y</Parameter>
       <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>
-      <Parameter name="netCubeOutputFile">netcube.csv</Parameter>
-      
+      <Parameter name="netCubeOutputFile">netcube.csv</Parameter>      
     </Analytic>
 
     <Analytic type="initialMargin">

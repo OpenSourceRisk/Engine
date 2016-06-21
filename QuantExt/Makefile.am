@@ -1,4 +1,4 @@
-SUBDIRS = qle test m4
+SUBDIRS = qle test m4 doc
 
 ACLOCAL_AMFLAGS = -I m4 
 
@@ -17,16 +17,10 @@ EXTRA_DIST = \
 BASEPATH = @abs_top_srcdir@
 docs:
 	BASEPATH=$(BASEPATH) $(MAKE) -C doc docs-all
-html-local:
+docs-html:
 	BASEPATH=$(BASEPATH) $(MAKE) -C doc docs-html
-pdf-local:
-	BASEPATH=$(BASEPATH) $(MAKE) -C doc docs-pdf
-ps-local:
-	BASEPATH=$(BASEPATH) $(MAKE) -C doc docs-ps
 docs-man:
 	BASEPATH=$(BASEPATH) $(MAKE) -C doc docs-man
-docs-online:
-	BASEPATH=$(BASEPATH) $(MAKE) -C doc docs-online
 docs-dist:
 	BASEPATH=$(BASEPATH) $(MAKE) -C doc docs-dist
 docs-clean:

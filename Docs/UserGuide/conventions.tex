@@ -12,6 +12,7 @@ given with an explicit maturity date or with a tenor and a set of conventions fr
 node for a zero rate quote with an explicit maturity date is shown in Listing \ref{lst:zero_conventions_date}. The node 
 for a tenor based zero rate is shown in Listing \ref{lst:zero_conventions_tenor}.
 
+{\footnotesize
 \begin{lstlisting}[caption={Zero conventions, explicit maturity date}, label=lst:zero_conventions_date]
 <Zero>
 	<Id> </Id>
@@ -21,7 +22,9 @@ for a tenor based zero rate is shown in Listing \ref{lst:zero_conventions_tenor}
 	<Compounding> </Compounding>
 </Zero>
 \end{lstlisting}
+}
 
+{\footnotesize
 \begin{lstlisting}[caption={Zero conventions, tenor based}, label=lst:zero_conventions_tenor]
 <Zero>
 	<Id> </Id>
@@ -36,6 +39,7 @@ for a tenor based zero rate is shown in Listing \ref{lst:zero_conventions_tenor}
 	<EOM> </EOM>
 </Zero>
 \end{lstlisting}
+}
 
 The meanings of the various elements in this node are as follows:
 \begin{itemize}
@@ -65,6 +69,7 @@ based node is shown in Listing \ref{lst:deposit_conventions_index}. Alternativel
 given explicitly without reference to an index family. The structure of this node is shown in Listing 
 \ref{lst:deposit_conventions_explicit}.
 
+{\footnotesize
 \begin{lstlisting}[caption={Deposit conventions, index based}, label=lst:deposit_conventions_index]
 <Deposit>
 	<Id> </Id>
@@ -72,7 +77,9 @@ given explicitly without reference to an index family. The structure of this nod
 	<Index> </Index>
 </Deposit>
 \end{lstlisting}
+}
 
+{\footnotesize
 \begin{lstlisting}[caption={Deposit conventions, explicit}, label=lst:deposit_conventions_explicit]
 <Deposit>
 	<Id> </Id>
@@ -83,6 +90,7 @@ given explicitly without reference to an index family. The structure of this nod
 	<DayCounter> </DayCounter>
 </Deposit>
 \end{lstlisting}
+}
 
 The meanings of the various elements in this node are as follows:
 \begin{itemize}
@@ -103,12 +111,14 @@ A node with name \emph{Future} is used to store conventions for IMM Future quote
 Listing \ref{lst:future_conventions}. The only piece of information needed is the underlying money market index name and 
 this is given in the \lstinline!Index! node. For example, this could be EUR-EURIBOR-3M, USD-LIBOR-3M etc.
 
+{\footnotesize
 \begin{lstlisting}[caption={Future conventions}, label=lst:future_conventions]
 <Future>
 	<Id> </Id>
 	<Index> </Index>
 </Future>
 \end{lstlisting}
+}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsubsection{FRA Conventions}
@@ -117,12 +127,14 @@ A node with name \emph{FRA} is used to store conventions for FRA quotes. The str
 \ref{lst:fra_conventions}. The only piece of information needed is the underlying index name and this is given in the 
 \lstinline!Index! node. For example, this could be EUR-EURIBOR-6M, CHF-LIBOR-6M etc.
 
+{\footnotesize
 \begin{lstlisting}[caption={FRA conventions}, label=lst:fra_conventions]
 <FRA>
 	<Id> </Id>
 	<Index> </Index>
 </FRA>
 \end{lstlisting}
+}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsubsection{OIS Conventions}
@@ -131,6 +143,7 @@ A node with name \emph{FRA} is used to store conventions for FRA quotes. The str
 A node with name \emph{OIS} is used to store conventions for Overnight Indexed Swap (OIS) quotes. The structure of this 
 node is shown in Listing \ref{lst:ois_conventions}.
 
+{\footnotesize
 \begin{lstlisting}[caption={OIS conventions}, label=lst:ois_conventions]
 <OIS>
 	<Id> </Id>
@@ -145,6 +158,7 @@ node is shown in Listing \ref{lst:ois_conventions}.
 	<Rule> </Rule>
 </OIS>
 \end{lstlisting}
+}
 
 The meanings of the various elements in this node are as follows:
 \begin{itemize}
@@ -171,6 +185,7 @@ provided, this defaults to \emph{Backward}.
 A node with name \emph{Swap} is used to store conventions for vanilla interest rate swap (IRS) quotes. The structure of 
 this node is shown in Listing \ref{lst:swap_conventions}.
 
+{\footnotesize
 \begin{lstlisting}[caption={Swap conventions}, label=lst:swap_conventions]
 <Swap>
 	<Id> </Id>
@@ -181,6 +196,7 @@ this node is shown in Listing \ref{lst:swap_conventions}.
 	<Index> </Index>
 </Swap>
 \end{lstlisting}
+}
 
 The meanings of the various elements in this node are as follows:
 \begin{itemize}
@@ -198,6 +214,7 @@ A node with name \emph{AverageOIS} is used to store conventions for average OIS 
 fixed rate is swapped against a daily averaged overnight index plus a spread. The structure of this node is shown in 
 Listing \ref{lst:average_ois_conventions}.
 
+{\footnotesize
 \begin{lstlisting}[caption={Average OIS conventions}, label=lst:average_ois_conventions]
 <AverageOIS>
 	<Id> </Id>
@@ -212,6 +229,7 @@ Listing \ref{lst:average_ois_conventions}.
 	<RateCutoff> </RateCutoff>
 </AverageOIS>
 \end{lstlisting}
+}
 
 The meanings of the various elements in this node are as follows:
 \begin{itemize}
@@ -235,6 +253,7 @@ rate cut-off gives the number of days e.g.\ 2 for Fed Funds average OIS.
 A node with name \emph{TenorBasisSwap} is used to store conventions for tenor basis swap quotes. The structure of this 
 node is shown in Listing \ref{lst:tenor_basis_conventions}.
 
+{\footnotesize
 \begin{lstlisting}[caption={Tenor basis swap conventions}, label=lst:tenor_basis_conventions]
 <TenorBasisSwap>
 	<Id> </Id>
@@ -246,6 +265,7 @@ node is shown in Listing \ref{lst:tenor_basis_conventions}.
 	<SubPeriodsCouponType> </SubPeriodsCouponType>
 </TenorBasisSwap>
 \end{lstlisting}
+}
 
 The meanings of the various elements in this node are as follows:
 \begin{itemize}
@@ -274,6 +294,7 @@ spread between the fair fixed rate on two swaps against Ibor indices of differen
 Ibor index of longer tenor the long swap and the remaining swap the short swap. The structure of the tenor basis two swap 
 conventions node is shown in Listing \ref{lst:tenor_basis_two_conventions}.
 
+{\footnotesize
 \begin{lstlisting}[caption={Tenor basis two swap conventions}, label=lst:tenor_basis_two_conventions]
 <TenorBasisTwoSwap>
 	<Id> </Id>
@@ -289,6 +310,7 @@ conventions node is shown in Listing \ref{lst:tenor_basis_two_conventions}.
 	<LongMinusShort> </LongMinusShort>
 </TenorBasisTwoSwap>
 \end{lstlisting}
+}
 
 The meanings of the various elements in this node are as follows:
 \begin{itemize}
@@ -312,6 +334,7 @@ on the short swap minus the fair rate on the long swap. If not provided, it defa
 A node with name \emph{FX} is used to store conventions for FX spot and forward quotes for a given currency pair. The 
 structure of this node is shown in Listing \ref{lst:fx_conventions}.
 
+{\footnotesize
 \begin{lstlisting}[caption={FX conventions}, label=lst:fx_conventions]
 <FX>
 	<Id> </Id>
@@ -324,6 +347,7 @@ structure of this node is shown in Listing \ref{lst:fx_conventions}.
 	<AdditionalSettleCalendar> </AdditionalSettleCalendar>
 </FX>
 \end{lstlisting}
+}
 
 The meanings of the various elements in this node are as follows:
 \begin{itemize}
@@ -351,6 +375,7 @@ provided, it defaults to a calendar with no holidays.
 A node with name \emph{CrossCurrencyBasis} is used to store conventions for cross currency basis swap quotes. The 
 structure of this node is shown in Listing \ref{lst:xccy_basis_conventions}.
 
+{\footnotesize
 \begin{lstlisting}[caption={Cross currency basis swap conventions}, label=lst:xccy_basis_conventions]
 <CrossCurrencyBasis>
 	<Id> </Id>
@@ -362,6 +387,7 @@ structure of this node is shown in Listing \ref{lst:xccy_basis_conventions}.
 	<EOM> </EOM>
 </CrossCurrencyBasis>
 \end{lstlisting}
+}
 
 The meanings of the various elements in this node are as follows:
 \begin{itemize}

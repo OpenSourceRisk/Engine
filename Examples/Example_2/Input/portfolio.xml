@@ -33,8 +33,6 @@
           <ExerciseDate>2026-03-01</ExerciseDate>
         </ExerciseDates>
       </OptionData>
-      <SubType>Vanilla</SubType>
-      <ValueDate>2026-03-01</ValueDate>
       <BoughtCurrency>EUR</BoughtCurrency>
       <BoughtAmount>1000000</BoughtAmount>
       <SoldCurrency>USD</SoldCurrency>
@@ -59,8 +57,6 @@
           <ExerciseDate>2026-03-01</ExerciseDate>
         </ExerciseDates>
       </OptionData>
-      <SubType>Vanilla</SubType>
-      <ValueDate>2026-03-01</ValueDate>
       <BoughtCurrency>EUR</BoughtCurrency>
       <BoughtAmount>1000000</BoughtAmount>
       <SoldCurrency>USD</SoldCurrency>

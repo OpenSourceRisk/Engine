@@ -7,8 +7,27 @@
       <NettingSetId>CUST_A</NettingSetId>
       <AdditionalFields/>
     </Envelope>
+    <TradeActions>
+      <TradeAction>
+	<Type>BREAK</Type>
+	<Owner>MUTUAL</Owner>
+	<Schedule>
+          <Rules>
+            <StartDate>2005-03-03</StartDate>
+            <EndDate>2027-03-03</EndDate>
+            <Tenor>5Y</Tenor>
+            <Calendar>UK</Calendar>
+            <Convention>ModifiedFollowing</Convention>
+            <TermConvention>ModifiedFollowing</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+	</Schedule>
+      </TradeAction>
+    </TradeActions>
     <SwapData>
-      <FxReset/>
       <LegData>
         <LegType>Fixed</LegType>
         <Payer>true</Payer>
@@ -77,8 +96,27 @@
       <NettingSetId>CUST_A</NettingSetId>
       <AdditionalFields/>
     </Envelope>
+    <TradeActions>
+      <TradeAction>
+	<Type>BREAK</Type>
+	<Owner>MUTUAL</Owner>
+	<Schedule>
+          <Rules>
+            <StartDate>2015-04-22</StartDate>
+            <EndDate>2024-11-01</EndDate>
+            <Tenor>5Y</Tenor>
+            <Calendar>UK</Calendar>
+            <Convention>ModifiedFollowing</Convention>
+            <TermConvention>ModifiedFollowing</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+	</Schedule>
+      </TradeAction>
+    </TradeActions>
     <SwapData>
-      <FxReset/>
       <LegData>
         <LegType>Fixed</LegType>
         <Payer>false</Payer>
@@ -147,8 +185,27 @@
       <NettingSetId>CUST_A</NettingSetId>
       <AdditionalFields/>
     </Envelope>
+    <TradeActions>
+      <TradeAction>
+	<Type>BREAK</Type>
+	<Owner>MUTUAL</Owner>
+	<Schedule>
+          <Rules>
+            <StartDate>2012-09-05</StartDate>
+            <EndDate>2026-09-05</EndDate>
+            <Tenor>5Y</Tenor>
+            <Calendar>UK</Calendar>
+            <Convention>ModifiedFollowing</Convention>
+            <TermConvention>ModifiedFollowing</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+	</Schedule>
+      </TradeAction>
+    </TradeActions>
     <SwapData>
-      <FxReset/>
       <LegData>
         <LegType>Floating</LegType>
         <Payer>true</Payer>

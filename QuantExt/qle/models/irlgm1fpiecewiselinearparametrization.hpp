@@ -19,7 +19,7 @@ namespace QuantExt {
 /*! parametrization with piecewise linear H and zeta,
     w.r.t. zeta this is the same as piecewise constant alpha,
     w.r.t. H this is implemented with a new (helper) parameter
-    h > 0, such that H(t) = \int_0^t h(s) ds
+    h > 0, such that \f$H(t) = \int_0^t h(s) ds\f$
 
     \warning this class is considered experimental, it is not
              tested well and might have conceptual issues

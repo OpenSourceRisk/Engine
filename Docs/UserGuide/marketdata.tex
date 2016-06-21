@@ -23,8 +23,8 @@ Instrument Type & \emph{ZERO, DISCOUNT, MM, FRA, MM\_FUTURE, COM\_FUTURE, IR\_SW
 
 An excerpt from a typical {\tt market.txt} file is shown in Listing \ref{lst:market_txt}.
 
+{\footnotesize
 \begin{lstlisting}[label=lst:market_txt,caption=Market File (market.txt)]
-
 2011-01-31 MM/RATE/EUR/0D/1D 0.013750
 2011-01-31 MM/RATE/EUR/1D/1D 0.010500
 2011-01-31 MM/RATE/EUR/2D/1D 0.010500
@@ -33,7 +33,6 @@ An excerpt from a typical {\tt market.txt} file is shown in Listing \ref{lst:mar
 2011-01-31 MM/RATE/EUR/2D/2M 0.009100
 2011-01-31 MM/RATE/EUR/2D/3M 0.010200
 2011-01-31 MM/RATE/EUR/2D/4M 0.011000
-
 
 2011-01-31 FRA/RATE/EUR/3M/3M 0.013080
 2011-01-31 FRA/RATE/EUR/4M/3M 0.013890
@@ -51,10 +50,8 @@ An excerpt from a typical {\tt market.txt} file is shown in Listing \ref{lst:mar
 2011-01-31 IR_SWAP/RATE/EUR/2D/3M/7Y 0.030125
 2011-01-31 IR_SWAP/RATE/EUR/2D/3M/8Y 0.031340
 2011-01-31 IR_SWAP/RATE/EUR/2D/3M/9Y 0.032450
-
-   
 \end{lstlisting}
-
+}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Zero Rate}\label{ss:zero_rate}
@@ -392,33 +389,33 @@ Example:
 \item {IR\_SWAP/RATE/EUR/2D/6M/10Y}
 \end{itemize}
 
-%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\subsection{BMA Swap Ratio}
-%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+% %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+% \subsection{BMA Swap Ratio}
+% %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-The BMA index is a reference index for US municipal tax-exempt bonds (floaters). BMA is fixed weekly. A BMA Swap exchanges quarterly BMA index-linked payments (the coupon rate is the average of weekly BMA index fixings) for quarterly payments of a fraction of USD Libor. The BMA Swap quote is the fraction of Libor and for a given Swap term. 
+% The BMA index is a reference index for US municipal tax-exempt bonds (floaters). BMA is fixed weekly. A BMA Swap exchanges quarterly BMA index-linked payments (the coupon rate is the average of weekly BMA index fixings) for quarterly payments of a fraction of USD Libor. The BMA Swap quote is the fraction of Libor and for a given Swap term. 
 
-\begin{table}[H]
-\centering
-\begin{supertabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
-\hline
-{\bf Property} & {\bf Allowable values} & {\bf Description} \\
-\hline
-Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}& Currency underlying the BMA Swap ratio \\ \hline
-Forward start & An integer followed by D, W, M or Y  & Generic period from today to start\\ \hline
-Term & An integer followed by D, W, M or Y  & Swap length from start to maturity\\
-\hline
-\end{supertabular}
-  \caption{BMA Swap Ratio}
-  \label{tab:bmasratio_quote}
-\end{table}
-Forward start is usually not quoted, but needs to be derived from conventions. 
+% \begin{table}[H]
+% \centering
+% \begin{supertabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+% \hline
+% {\bf Property} & {\bf Allowable values} & {\bf Description} \\
+% \hline
+% Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}& Currency underlying the BMA Swap ratio \\ \hline
+% Forward start & An integer followed by D, W, M or Y  & Generic period from today to start\\ \hline
+% Term & An integer followed by D, W, M or Y  & Swap length from start to maturity\\
+% \hline
+% \end{supertabular}
+%   \caption{BMA Swap Ratio}
+%   \label{tab:bmasratio_quote}
+% \end{table}
+% Forward start is usually not quoted, but needs to be derived from conventions. 
 
-\medskip
-Example: 
-\begin{itemize}
-\item {BMA/RATIO/USD/2D/10Y}
-\end{itemize}
+% \medskip
+% Example: 
+% \begin{itemize}
+% \item {BMA/RATIO/USD/2D/10Y}
+% \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Basis Swap Spread}
@@ -524,31 +521,31 @@ Example:
 \end{itemize}
 
 
-%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\subsection{Asset Swap Spread}
-%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+% %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+% \subsection{Asset Swap Spread}
+% %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-Credit spread information expressed on an asset swap basis for a  given issuer/seniority and term rather than for a specific asset.
+% Credit spread information expressed on an asset swap basis for a  given issuer/seniority and term rather than for a specific asset.
  
-\begin{table}[H]
-\centering
-\begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
-\hline
-{\bf Property} & {\bf Allowable values} & {\bf Description} \\
-\hline
-Issuer & String &  Issuer name \\ \hline
-Seniority & String &  Seniority status \\ \hline
-Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Asset Swap Spread currency\\ \hline
-Term & An integer followed by D, W, M or Y & Generic period from start to maturity\\ \hline
-\end{tabular}
-  \caption{Asset Swap Spread}
-  \label{tab:aswapspread_quote}
-\end{table}
+% \begin{table}[H]
+% \centering
+% \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+% \hline
+% {\bf Property} & {\bf Allowable values} & {\bf Description} \\
+% \hline
+% Issuer & String &  Issuer name \\ \hline
+% Seniority & String &  Seniority status \\ \hline
+% Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Asset Swap Spread currency\\ \hline
+% Term & An integer followed by D, W, M or Y & Generic period from start to maturity\\ \hline
+% \end{tabular}
+%   \caption{Asset Swap Spread}
+%   \label{tab:aswapspread_quote}
+% \end{table}
 
-Example: 
-\begin{itemize}
-\item {ASW/CREDIT\_SPREAD/GE/SeniorUnsec/EUR/10Y}
-\end{itemize}
+% Example: 
+% \begin{itemize}
+% \item {ASW/CREDIT\_SPREAD/GE/SeniorUnsec/EUR/10Y}
+% \end{itemize}
 
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -637,55 +634,55 @@ Example:
 
 
 
-%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\subsection{Year-on-Year Inflation Swap Rate} \label{ss:yoy_inflation_swap_rate}
-%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+% %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+% \subsection{Year-on-Year Inflation Swap Rate} \label{ss:yoy_inflation_swap_rate}
+% %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
-\begin{table}[H]
-\centering
-\begin{supertabular}{|p{3cm}|p{5cm}|p{7cm}|}
-\hline
-{\bf Property} & {\bf Allowable values} & {\bf Description} \\
-\hline
-Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Currency of inflation swap rate\\ \hline
-Region & A string that matches inflation Region codes in the {\tt config-scenario.xml} file & Region code for the inflation index \\ \hline
-Term & An integer followed by D, W, M or Y & Generic period from start to maturity\\
-\hline
-\end{supertabular}
-  \caption{Year-on-Year Inflation Swap Rate}
-  \label{tab:yoyinflation_quote}
-\end{table}
+% \begin{table}[H]
+% \centering
+% \begin{supertabular}{|p{3cm}|p{5cm}|p{7cm}|}
+% \hline
+% {\bf Property} & {\bf Allowable values} & {\bf Description} \\
+% \hline
+% Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Currency of inflation swap rate\\ \hline
+% Region & A string that matches inflation Region codes in the {\tt config-scenario.xml} file & Region code for the inflation index \\ \hline
+% Term & An integer followed by D, W, M or Y & Generic period from start to maturity\\
+% \hline
+% \end{supertabular}
+%   \caption{Year-on-Year Inflation Swap Rate}
+%   \label{tab:yoyinflation_quote}
+% \end{table}
 
-Example:
-\begin{itemize}
-\item {YY\_INFLATIONSWAP/RATE/EUR/FRANCE/10Y}
-\end{itemize}
+% Example:
+% \begin{itemize}
+% \item {YY\_INFLATIONSWAP/RATE/EUR/FRANCE/10Y}
+% \end{itemize}
 
-%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\subsection{Zero-Coupon Inflation Swap Rate}
-%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+% %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+% \subsection{Zero-Coupon Inflation Swap Rate}
+% %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
-\begin{table}[H]
-\centering
-\begin{tabular}{|p{3cm}|p{5cm}|p{7cm}|}
-\hline
-{\bf Property} & {\bf Allowable values} & {\bf Description} \\
-\hline
-Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Currency of inflation swap rate\\ \hline
-Region & A string that matches inflation Region codes in the {\tt config-scenario.xml} file & Region code for the inflation index \\ \hline
-Term & An integer followed by D, W, M or Y & Generic period from start to maturity\\
-\hline
-\end{tabular}
-  \caption{Zero Coupon Inflation Swap Rate}
-  \label{tab:zinflation_quote}
-\end{table}
+% \begin{table}[H]
+% \centering
+% \begin{tabular}{|p{3cm}|p{5cm}|p{7cm}|}
+% \hline
+% {\bf Property} & {\bf Allowable values} & {\bf Description} \\
+% \hline
+% Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Currency of inflation swap rate\\ \hline
+% Region & A string that matches inflation Region codes in the {\tt config-scenario.xml} file & Region code for the inflation index \\ \hline
+% Term & An integer followed by D, W, M or Y & Generic period from start to maturity\\
+% \hline
+% \end{tabular}
+%   \caption{Zero Coupon Inflation Swap Rate}
+%   \label{tab:zinflation_quote}
+% \end{table}
 
-Example: 
-\begin{itemize}
-\item {ZC\_INFLATIONSWAP/RATE/GBP/UK/10Y}
-\end{itemize}
+% Example: 
+% \begin{itemize}
+% \item {ZC\_INFLATIONSWAP/RATE/GBP/UK/10Y}
+% \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{FX Option Implied Volatility}
@@ -778,34 +775,34 @@ Examples:
 \item { SWAPTION/RATE\_GVOL/EUR/5Y/10Y/SMILE/0.0050} (absolute vol quote for ATM strike plus 50bp)
 \end{itemize}
 
-%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\subsection{Year-on-Year Inflation Cap/Floor Volatility} \label{ss:yoy_inflation_vol}
-%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+% %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+% \subsection{Year-on-Year Inflation Cap/Floor Volatility} \label{ss:yoy_inflation_vol}
+% %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-\begin{table}[H]
-\centering
-\begin{tabular}{|p{3cm}|p{5cm}|p{7cm}|}
-\hline
-{\bf Property} & {\bf Allowable values} & {\bf Description} \\
-\hline
-Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}&  Currency of the Inflation Cap/Floor volatility\\ \hline
-Region & A string that matches inflation Region codes in the {\tt config-scenario.xml} file & Region code for the inflation index\\  \hline
-Expiry & An integer followed by D, W, M or Y & Period from today to expiry \\ \hline
-Strike & Real number & Absolute Strike rate\\ 
-\hline
-\end{tabular}
-  \caption{Year-on-Year Inflation Cap/Floor Volatility}
-  \label{tab:yoyinflvol_quote}
-\end{table}
+% \begin{table}[H]
+% \centering
+% \begin{tabular}{|p{3cm}|p{5cm}|p{7cm}|}
+% \hline
+% {\bf Property} & {\bf Allowable values} & {\bf Description} \\
+% \hline
+% Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}&  Currency of the Inflation Cap/Floor volatility\\ \hline
+% Region & A string that matches inflation Region codes in the {\tt config-scenario.xml} file & Region code for the inflation index\\  \hline
+% Expiry & An integer followed by D, W, M or Y & Period from today to expiry \\ \hline
+% Strike & Real number & Absolute Strike rate\\ 
+% \hline
+% \end{tabular}
+%   \caption{Year-on-Year Inflation Cap/Floor Volatility}
+%   \label{tab:yoyinflvol_quote}
+% \end{table}
 
-Examples: 
-\begin{itemize}
-\item YY\_INFLATION\_CAP/PRICE/GBP/UK/5Y/0.0450
-\item YY\_INFLATION\_FLOOR/PRICE/GBP/UK/5Y/0.0450
-\end{itemize}
+% Examples: 
+% \begin{itemize}
+% \item YY\_INFLATION\_CAP/PRICE/GBP/UK/5Y/0.0450
+% \item YY\_INFLATION\_FLOOR/PRICE/GBP/UK/5Y/0.0450
+% \end{itemize}
 
-%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\subsection{Zero Coupon Inflation Cap/Floor Volatility} \label{ss:zc_inflation_vol}
-%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+% %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+% \subsection{Zero Coupon Inflation Cap/Floor Volatility} \label{ss:zc_inflation_vol}
+% %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-TODO
+% TODO

@@ -53,20 +53,60 @@ namespace QuantExt {
     parametrizations, update these parametrizations and flushing the cache
     of the state process. The model ensures these updates during
     calibration though.
+
+    The cross asset model for \f$n\f$ currencies is specified by the following SDE
+
+    \f{eqnarray*}{
+    dz_0(t) &=& \alpha^z_0(t)\,dW^z_0(t) \\
+    dz_i(t) &=& \gamma_i(t)\,dt + \alpha^z_i(t)\,dW^z_i(t), \qquad i = 1,\dots, n-1 \\
+    dx_i(t) / x_i(t) &=& \mu^x_i(t)\, dt +\sigma_i^x(t)\,dW^x_i(t), \qquad i=1, \dots, n-1 \\
+    dW^a_i\,dW^b_j &=& \rho^{ab}_{ij}\,dt, \qquad a, b \in \{z, x\} 
+    \f}
+    Factors \f$z_i\f$ drive the LGM interest rate processes (index \f$i=0\f$ denotes the domestic currency),
+    and factors \f$x_i\f$ the foreign exchange rate processes. 
+
+    The no-arbitrage drift terms are 
+    \f{eqnarray*}
+    \gamma_i &=& -H^z_i\,(\alpha^z_i)^2  + H^z_0\,\alpha^z_0\,\alpha^z_i\,\rho^{zz}_{0i} - \sigma_i^x\,\alpha^z_i\, \rho^{zx}_{ii}\\
+    \mu^x_i &=& r_0-r_i +H^z_0\,\alpha^z_0\,\sigma^x_i\,\rho^{zx}_{0i}
+    \f}
+    where we have dropped time-dependencies to lighten notation.  
+
+    The short rate \f$r_i(t)\f$ in currency \f$i\f$ is connected with the instantaneous forward curve \f$f_i(0,t)\f$ 
+    and model parameters \f$H_i(t)\f$ and \f$\alpha_i(t)\f$ via
+    \f{eqnarray*}{
+    r_i(t) &=& f_i(0,t) + z_i(t)\,H'_i(t) + \zeta_i(t)\,H_i(t)\,H'_i(t), \quad \zeta_i(t) = \int_0^t \alpha_i^2(s)\,ds  \\ \\ 
+    \f}
+
+    Parameters \f$H_i(t)\f$ and \f$\alpha_i(t)\f$ (or alternatively \f$\zeta_i(t)\f$) are LGM model parameters 
+    which determine, together with the stochastic factor \f$z_i(t)\f$, the evolution of numeraire and 
+    zero bond prices in the LGM model:
+    \f{eqnarray*}{
+    N(t) &=& \frac{1}{P(0,t)}\exp\left\{H_t\, z_t + \frac{1}{2}H^2_t\,\zeta_t \right\} \\
+    P(t,T,z_t) &=& \frac{P(0,T)}{P(0,t)}\:\exp\left\{ -(H_T-H_t)\,z_t - \frac{1}{2} \left(H^2_T-H^2_t\right)\,\zeta_t\right\}. 
+    \f}
+
 */
+
+namespace CrossAssetModelTypes {
+enum AssetType { IR, FX };
+}
+
+using namespace CrossAssetModelTypes;
 
 class CrossAssetModel : public LinkableCalibratedModel {
   public:
     /*! Parametrizations must be given in the following order
-        - IR (first parametrization defines the domestic currency)
-        - FX (for all pairs domestic-ccy defined by the IR models)
-        - INF (optionally, ccy must be a subset of the IR ccys)
-        - CRD (optionally, ccy must be a subset of the IR ccys)
-        - COM (optionally) ccy must be a subset of the IR ccys) */
+        - IR  (first parametrization defines the domestic currency)
+        - FX  (for all pairs domestic-ccy defined by the IR models)
+        If the correlation matrix is not given, it is initialized
+        as the unit matrix (and can be customized after
+        construction of the model).
+    */
     CrossAssetModel(
         const std::vector<boost::shared_ptr<Parametrization> >
             &parametrizations,
-        const Matrix &correlation,
+        const Matrix &correlation = Matrix(),
         SalvagingAlgorithm::Type salvaging = SalvagingAlgorithm::None);
 
     /*! IR-FX model based constructor */
@@ -75,7 +115,7 @@ class CrossAssetModel : public LinkableCalibratedModel {
             &currencyModels,
         const std::vector<boost::shared_ptr<FxBsParametrization> >
             &fxParametrizations,
-        const Matrix &correlation,
+        const Matrix &correlation = Matrix(),
         SalvagingAlgorithm::Type salvaging = SalvagingAlgorithm::None);
 
     /*! returns the state process with a given discretization */
@@ -83,14 +123,27 @@ class CrossAssetModel : public LinkableCalibratedModel {
     stateProcess(CrossAssetStateProcess::discretization disc =
                      CrossAssetStateProcess::exact) const;
 
-    /*! total dimension of model */
+    /*! total dimension of model (sum of number of state variables) */
     Size dimension() const;
 
-    /*! number of currencies including domestic */
-    Size currencies() const;
+    /*! total number of Brownian motions (this is less or equal to dimension) */
+    Size brownians() const;
 
     /*! total number of parameters that can be calibrated */
     Size totalNumberOfParameters() const;
+
+    /*! number of components for an asset class */
+    Size components(const AssetType t) const;
+
+    /*! number of brownian motions for a component */
+    Size brownians(const AssetType t, const Size i) const;
+
+    /*! number of state variables for a component */
+    Size stateVariables(const AssetType t, const Size i) const;
+
+    /*! return index for currency (0 = domestic, 1 = first
+      foreign currency and so on) */
+    Size ccyIndex(const Currency &ccy) const;
 
     /*! observer and linked calibrated model interface */
     void update();
@@ -132,12 +185,26 @@ class CrossAssetModel : public LinkableCalibratedModel {
         recommended instead of the global matrix directly */
     const Matrix &correlation() const;
 
-    /*! correlation between two ir components */
-    Real ir_ir_correlation(const Size i, const Size j) const;
-    /*! correlation between an ir and a fx component */
-    Real ir_fx_correlation(const Size i, const Size j) const;
-    /*! correlation between two fx compoents */
-    Real fx_fx_correlation(const Size i, const Size j) const;
+    /*! check if correlation matrix is valid */
+    void checkCorrelationMatrix() const;
+
+    /*! index of component in the parametrization vector */
+    Size idx(const AssetType t, const Size i) const;
+
+    /*! index of component in the correlation matrix, by offset */
+    Size cIdx(const AssetType t, const Size i, const Size offset = 0) const;
+
+    /*! index of component in the stochastic process array, by offset */
+    Size pIdx(const AssetType t, const Size i, const Size offset = 0) const;
+
+    /*! correlation between two components */
+    const Real& correlation(const AssetType s, const Size i, const AssetType t,
+                     const Size j, const Size iOffset = 0,
+                     const Size jOffset = 0) const;
+    /*! set correlation */
+    void correlation(const AssetType s, const Size i, const AssetType t,
+                     const Size j, const Real value, const Size iOffset = 0,
+                     const Size jOffset = 0);
 
     /*! analytical moments require numerical integration,
       which can be customized here */
@@ -193,6 +260,13 @@ class CrossAssetModel : public LinkableCalibratedModel {
                     SalvagingAlgorithm::Type salvaging, const bool)
         : LinkableCalibratedModel(), p_(parametrizations), rho_(correlation),
           salvaging_(salvaging) {}
+
+    /*! number of arguments for a component */
+    Size arguments(const AssetType t, const Size i) const;
+
+    /*! index of component in the arguments vector, by offset */
+    Size aIdx(const AssetType t, const Size i, const Size offset = 0) const;
+
     /* init methods */
     virtual void initialize();
     virtual void initializeParametrizations();
@@ -205,11 +279,11 @@ class CrossAssetModel : public LinkableCalibratedModel {
 
     /* members */
 
-    Size nIrLgm1f_, nFxBs_, nCrLgm1f_;
+    Size nIrLgm1f_, nFxBs_;
     Size totalNumberOfParameters_;
     std::vector<boost::shared_ptr<Parametrization> > p_;
     std::vector<boost::shared_ptr<LinearGaussMarkovModel> > lgm_;
-    const Matrix rho_;
+    Matrix rho_;
     SalvagingAlgorithm::Type salvaging_;
     mutable boost::shared_ptr<Integrator> integrator_;
     boost::shared_ptr<CrossAssetStateProcess> stateProcessExact_,
@@ -225,26 +299,18 @@ class CrossAssetModel : public LinkableCalibratedModel {
                        << fxbs(ccy)->parameter(0)->size() - 1);
         std::vector<bool> res(0);
         for (Size j = 0; j < nIrLgm1f_; ++j) {
-            std::vector<bool> tmp1(p_[j]->parameter(0)->size(), true);
-            std::vector<bool> tmp2(p_[j]->parameter(1)->size(), true);
+            std::vector<bool> tmp1(p_[idx(IR,j)]->parameter(0)->size(), true);
+            std::vector<bool> tmp2(p_[idx(IR,j)]->parameter(1)->size(), true);
             res.insert(res.end(), tmp1.begin(), tmp1.end());
             res.insert(res.end(), tmp2.begin(), tmp2.end());
         }
         for (Size j = 0; j < nFxBs_; ++j) {
-            std::vector<bool> tmp(p_[nIrLgm1f_ + j]->parameter(0)->size(),
+            std::vector<bool> tmp(p_[idx(FX,j)]->parameter(0)->size(),
                                   true);
             if (ccy == j) {
                 tmp[i] = false;
             }
             res.insert(res.end(), tmp.begin(), tmp.end());
-        }
-        for (Size j = 0; j < nCrLgm1f_; ++j) {
-            std::vector<bool> tmp1(
-                p_[nIrLgm1f_ + nFxBs_ + j]->parameter(0)->size(), true);
-            std::vector<bool> tmp2(
-                p_[nIrLgm1f_ + nFxBs_ + j]->parameter(1)->size(), true);
-            res.insert(res.end(), tmp1.begin(), tmp1.end());
-            res.insert(res.end(), tmp2.begin(), tmp2.end());
         }
         return res;
     }
@@ -259,31 +325,20 @@ inline const boost::shared_ptr<StochasticProcess> CrossAssetModel::stateProcess(
 }
 
 inline Size CrossAssetModel::dimension() const {
-    return nIrLgm1f_ * 1 + nFxBs_ * 1 + nCrLgm1f_ * 2;
+    return nIrLgm1f_ * 1 + nFxBs_ * 1;
 }
 
-inline Size CrossAssetModel::currencies() const { return nIrLgm1f_; }
+inline Size CrossAssetModel::brownians() const {
+    return nIrLgm1f_ * 1 + nFxBs_ * 1;
+}
 
 inline Size CrossAssetModel::totalNumberOfParameters() const {
     return totalNumberOfParameters_;
 }
 
-inline void CrossAssetModel::update() {
-    for (Size i = 0; i < p_.size(); ++i) {
-        p_[i]->update();
-    }
-    stateProcessExact_->flushCache();
-    stateProcessEuler_->flushCache();
-    notifyObservers();
-}
-
-inline void CrossAssetModel::generateArguments() { update(); }
-
 inline const boost::shared_ptr<LinearGaussMarkovModel>
 CrossAssetModel::lgm(const Size ccy) const {
-    QL_REQUIRE(ccy < nIrLgm1f_, "irlgm1f index (" << ccy << ") must be in 0..."
-                                                  << (nIrLgm1f_ - 1));
-    return lgm_[ccy];
+    return lgm_[idx(IR, ccy)];
 }
 
 inline const boost::shared_ptr<IrLgm1fParametrization>
@@ -318,40 +373,10 @@ inline Real CrossAssetModel::discountBondOption(
 
 inline const boost::shared_ptr<FxBsParametrization>
 CrossAssetModel::fxbs(const Size ccy) const {
-    QL_REQUIRE(ccy < nFxBs_, "fxbs index (" << ccy << ") must be in 0..."
-                                            << (nFxBs_ - 1));
-    return boost::dynamic_pointer_cast<FxBsParametrization>(
-        p_[nIrLgm1f_ + ccy]);
+    return boost::dynamic_pointer_cast<FxBsParametrization>(p_[idx(FX, ccy)]);
 }
 
 inline const Matrix &CrossAssetModel::correlation() const { return rho_; }
-
-inline Real CrossAssetModel::ir_ir_correlation(const Size i,
-                                               const Size j) const {
-    QL_REQUIRE(i < nIrLgm1f_, "irlgm1f index (" << i << ") must be in 0..."
-                                                << (nIrLgm1f_ - 1));
-    QL_REQUIRE(j < nIrLgm1f_, "irlgm1f index (" << i << ") must be in 0..."
-                                                << (nIrLgm1f_ - 1));
-    return rho_[i][j];
-}
-
-inline Real CrossAssetModel::ir_fx_correlation(const Size i,
-                                               const Size j) const {
-    QL_REQUIRE(i < nIrLgm1f_, "irlgm1f index (" << i << ") must be in 0..."
-                                                << (nIrLgm1f_ - 1));
-    QL_REQUIRE(j < nFxBs_, "fxbs index (" << j << ") must be in 0..."
-                                          << (nFxBs_ - 1));
-    return rho_[i][nIrLgm1f_ + j];
-}
-
-inline Real CrossAssetModel::fx_fx_correlation(const Size i,
-                                               const Size j) const {
-    QL_REQUIRE(i < nFxBs_, "fxbs index (" << i << ") must be in 0..."
-                                          << (nFxBs_ - 1));
-    QL_REQUIRE(j < nFxBs_, "fxbs index (" << j << ") must be in 0..."
-                                          << (nFxBs_ - 1));
-    return rho_[nIrLgm1f_ + i][nIrLgm1f_ + j];
-}
 
 inline const boost::shared_ptr<Integrator> CrossAssetModel::integrator() const {
     return integrator_;

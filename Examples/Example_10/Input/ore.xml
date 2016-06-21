@@ -1,28 +1,27 @@
 <OpenRiskEngine>
 
   <Setup>    
-    <Parameter name="inputPath">/Users/roland/Development/openxva/Input</Parameter>
-    <Parameter name="outputPath">/Users/roland/Development/openxva/Output</Parameter>    
-    <!--
     <Parameter name="asofDate">2016-02-26</Parameter>
-    <Parameter name="marketDataFile">market_20160226.txt</Parameter>
-    <Parameter name="fixingDataFile">fixings_20160226.txt</Parameter>    
-    -->    
-    <Parameter name="asofDate">2015-10-23</Parameter>
-    <Parameter name="marketDataFile">flat_market.txt</Parameter>
-    <Parameter name="fixingDataFile">fixings.txt</Parameter>
+    <Parameter name="inputPath">Input</Parameter>
+    <Parameter name="outputPath">Output</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
-    <Parameter name="curveConfigFile">curveconfig.xml</Parameter>
-    <Parameter name="conventionsFile">conventions.xml</Parameter>
-    <Parameter name="marketConfigFile">flat_todaysmarket.xml</Parameter>
-    <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
-    <Parameter name="portfolioFile">instruments_swap.xml</Parameter>
+    <Parameter name="marketDataFile">../../Input/market_20160226.txt</Parameter>
+    <Parameter name="fixingDataFile">../../Input/fixings_20160226.txt</Parameter>
+    <Parameter name="implyTodaysFixings">N</Parameter>
+    <Parameter name="curveConfigFile">../../Input/curveconfig.xml</Parameter>
+    <Parameter name="conventionsFile">../../Input/conventions.xml</Parameter>
+    <Parameter name="marketConfigFile">../../Input/todaysmarket.xml</Parameter>
+    <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
+    <Parameter name="portfolioFile">portfolio.xml</Parameter>
+    <Parameter name="fixingModel">Simulated</Parameter>  <!-- Simulated or Manual -->
+    <Parameter name="observationModel">Disable</Parameter> <!-- Unregister, None or Disable -->
   </Setup>
 
   <Markets>
     <Parameter name="lgmcalibration">collateral_inccy</Parameter>
     <Parameter name="fxcalibration">collateral_eur</Parameter>
     <Parameter name="pricing">collateral_eur</Parameter>
+    <Parameter name="simulation">collateral_eur</Parameter>
   </Markets>
 
   <Analytics>
@@ -47,14 +46,13 @@
 
     <Analytic type="simulation">
       <Parameter name="active">Y</Parameter>
-      <Parameter name="simulationModelFile">simulationmodels.xml</Parameter>
-      <Parameter name="simulationMarketFile">simulationmarket.xml</Parameter>
-      <Parameter name="simulationParamFile">simulationparams.xml</Parameter>
-      <Parameter name="pricingEnginesFile">pricingengine.xml</Parameter>
+      <Parameter name="simulationConfigFile">simulation.xml</Parameter>
+      <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="storeScenarios">N</Parameter>
       <Parameter name="cubeFile">cube.dat</Parameter>
       <Parameter name="additionalScenarioDataFileName">scenariodata.dat</Parameter>
+      <Parameter name="disableEvaluationDateObservation">Y</Parameter>
     </Analytic>
 
     <Analytic type="xva">
@@ -67,12 +65,17 @@
       <Parameter name="quantile">0.95</Parameter>
       <Parameter name="calculationType">Symmetric</Parameter>      
       <Parameter name="allocationMethod">None</Parameter>    
-      <Parameter name="marginalAllocationLimit">1.0</Parameter>    
+      <Parameter name="marginalAllocationLimit">1.0</Parameter>
+      <Parameter name="exerciseNextBreak">N</Parameter>
       <Parameter name="cva">Y</Parameter>
       <Parameter name="dva">N</Parameter>
       <Parameter name="dvaName">BANK</Parameter>
       <Parameter name="fva">N</Parameter>
+      <Parameter name="fvaBorrowingCurve">BANK_EUR_BORROW</Parameter>
+      <Parameter name="fvaLendingCurve">BANK_EUR_LEND</Parameter>
       <Parameter name="colva">N</Parameter>
+      <Parameter name="collateralSpread">0.0000</Parameter>
+      <Parameter name="collateralFloor">N</Parameter>
       <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>
       <Parameter name="netCubeOutputFile">netcube.csv</Parameter>
       
@@ -82,7 +85,7 @@
       <Parameter name="active">N</Parameter>
       <Parameter name="method">SIMM</Parameter>
     </Analytic>
-[    
+    
   </Analytics>
   
 </OpenRiskEngine>
