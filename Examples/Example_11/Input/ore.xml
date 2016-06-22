@@ -88,9 +88,9 @@
       <!-- as of ISDA_V315 the usage of product classes is mandatory -->
       <!-- while e.g. in V308 this was still an option -->
       <Parameter name="simmUseProductClasses">true</Parameter>
-      <Parameter name="inputFileName">SampleGS.txt</Parameter>
+      <Parameter name="inputFileName">SIMM_Sample_Input.txt</Parameter>
       <Parameter name="inputDelimiterCR">true</Parameter>
-      <Parameter name="outputFileName">SampleGS_SIMM.txt</Parameter>
+      <Parameter name="outputFileName">SIMM_Report.csv</Parameter>
     </Analytic>
 
   </Analytics>
