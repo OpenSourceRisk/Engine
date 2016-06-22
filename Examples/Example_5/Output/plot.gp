@@ -87,3 +87,16 @@ plot "collateral_threshold/colva_nettingset_CUST_A.csv" us 3:7 title "Collateral
 #replot "collateral_threshold/colva_nettingset_CUST_A.csv" us 3:8 title "Collateral Floor, Cumulative" w l ls 2
 set out "plot_collateral_floor.pdf"
 replot
+
+set out "tmp.pdf"
+plot "collateral_threshold/exposure_nettingset_CUST_A.csv" us 3:4 title "EPE NettingSet, Threshold 1m" w l ls 1
+replot "collateral_threshold_break/exposure_nettingset_CUST_A.csv" us 3:4 title "EPE NettingSet, Threshold 1m, Breaks" w l ls 2
+set out "plot_threshold_break_epe.pdf"
+replot
+
+set out "tmp.pdf"
+set ylabel "Collateral Floor Value"
+plot "collateral_threshold/colva_nettingset_CUST_A.csv" us 3:7 title "Collateral Floor Increments" w l ls 1
+replot "collateral_threshold_break/colva_nettingset_CUST_A.csv" us 3:7 title "Collateral Floor Increments, Breaks" w l ls 2
+set out "plot_collateral_floor_break.pdf"
+replot

@@ -17,7 +17,7 @@ AC_PROG_AWK
 AC_PROG_INSTALL
 
 # Default compilation variables
-AC_SUBST([CXXFLAGS],[${CXXFLAGS='-g -O2 -Wall -Wextra -pedantic'}])
+AC_SUBST([CXXFLAGS],[${CXXFLAGS='-g -O2 -Wall -Wextra'}])
 
 # Help the compiler find external software
 

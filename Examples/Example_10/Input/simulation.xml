@@ -3,19 +3,20 @@
     <Parameters>
 
       <Discretization>Exact</Discretization>
-      <Grid>241,1M</Grid>
+      <Grid>92,3M</Grid>
+      <!--<Grid>580,1W</Grid>-->
       <Calendar>EUR,USD,GBP,CHF</Calendar>
       <Sequence>SobolBrownianBridge</Sequence>
       <Scenario>Simple</Scenario>
       <Seed>42</Seed>
-      <Samples>1000</Samples>
-
+      <Samples>100</Samples>
+      
       <Fixings>
 	<SimulateFixings>Y</SimulateFixings>
 	<EstimationMethod>Backward</EstimationMethod>
-	<ForwardHorizonDays>40</ForwardHorizonDays>
+	<ForwardHorizonDays>1</ForwardHorizonDays>
       </Fixings>
-
+      
     </Parameters>
 
     <CrossAssetModel>
@@ -54,9 +55,9 @@
 	  </Reversion>
 	  
 	  <CalibrationSwaptions>
-	    <Expiries> 1Y,  2Y,  4Y,  6Y,  8Y, 10Y, 12Y, 14Y, 16Y, 18Y, 19Y</Expiries>
-	    <Terms>   19Y, 18Y, 16Y, 14Y, 12Y, 10Y,  8Y,  6Y,  4Y,  2Y,  1Y</Terms>
-	    <Strikes> 0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01</Strikes>
+	    <Expiries> 1Y,2Y,3Y,4Y,5Y,7Y,10Y,12Y,15Y,20Y,25Y</Expiries>
+	    <Terms>   29Y,28Y,27Y,26Y,25Y,23Y,20Y,18Y,15Y,10Y,5Y</Terms>
+	    <Strikes/>
 	  </CalibrationSwaptions>
 
 	  <ParameterTransformation>
@@ -87,9 +88,9 @@
 	  </Reversion>
 	  
 	  <CalibrationSwaptions>
-	    <Expiries> 1Y,  2Y,  4Y,  6Y,  8Y, 10Y, 12Y, 14Y, 16Y, 18Y, 19Y</Expiries>
-	    <Terms>   19Y, 18Y, 16Y, 14Y, 12Y, 10Y,  8Y,  6Y,  4Y,  2Y,  1Y</Terms>
-	    <Strikes> 0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01</Strikes>
+	    <Expiries> 1Y,2Y,3Y,4Y,5Y,7Y,10Y,12Y,15Y,20Y,25Y</Expiries>
+	    <Terms>   29Y,28Y,27Y,26Y,25Y,23Y,20Y,18Y,15Y,10Y,5Y</Terms>
+	    <Strikes/>
 	  </CalibrationSwaptions>
 
 	  <ParameterTransformation>
@@ -98,7 +99,7 @@
 	  </ParameterTransformation>
 	  
 	</LGM>
-	
+        
 	<LGM ccy="CHF">
 
 	  <CalibrationType>Bootstrap</CalibrationType> 
@@ -113,16 +114,16 @@
 	  
 	  <Reversion>
 	    <Calibrate>N</Calibrate>
-	    <ReversionType>HullWhite</ReversionType>
       	    <ParamType>Constant</ParamType>
+	    <ReversionType>HullWhite</ReversionType>
 	    <TimeGrid/>
 	    <InitialValue>0.03</InitialValue>
 	  </Reversion>
 	  
 	  <CalibrationSwaptions>
-	    <Expiries> 1Y,  2Y,  4Y,  6Y,  8Y, 10Y, 12Y, 14Y, 16Y, 18Y, 19Y</Expiries>
-	    <Terms>   19Y, 18Y, 16Y, 14Y, 12Y, 10Y,  8Y,  6Y,  4Y,  2Y,  1Y</Terms>
-	    <Strikes> 0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01</Strikes>
+	    <Expiries> 1Y,2Y,3Y,4Y,5Y,7Y,10Y,12Y,15Y,20Y,25Y</Expiries>
+	    <Terms>   29Y,28Y,27Y,26Y,25Y,23Y,20Y,18Y,15Y,10Y,5Y</Terms>
+	    <Strikes/>
 	  </CalibrationSwaptions>
 
 	  <ParameterTransformation>
@@ -169,7 +170,7 @@
 	  </CalibrationOptions>
 	  
 	</CrossCcyLGM>
-
+	
 	<CrossCcyLGM foreignCcy="GBP">
 
 	  <DomesticCcy>EUR</DomesticCcy>
@@ -186,7 +187,7 @@
 	  </CalibrationOptions>
 
 	</CrossCcyLGM>
-
+	
       </ForeignExchangeModels>
       
       <InstantaneousCorrelations>
@@ -260,9 +261,32 @@
       </SwapIndices>
 
       <DefaultCurves>
-        <Names/>
+	<Names>
+	  <!--
+              <Name>dc</Name>
+              <Name>dc2</Name>
+	  -->
+	</Names>
 	<Tenors>6M,1Y,2Y</Tenors>
       </DefaultCurves>
+      
+      <!-- Not in scope yet -->
+      <!--
+	  <Inflation>
+	  <Regions>
+	  <Region>EU</Region>
+	  <Region>UK</Region>
+	  <Region>FR</Region>
+	  </Regions>
+	  <Tenors>1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y,25Y,30Y</Tenors>
+	  </Inflation>
+	  
+	  <Equity>
+	  <Name>A</Name>
+	  <Name>B</Name>
+	  <Name>C</Name>
+	  </Equity>
+      -->
       
       <!-- Even if we do not simulate them - option pricing needs vol
 	   surfaces, so we need to specify here how we propagate the
@@ -281,6 +305,19 @@
 	<Strikes/>
       </SwaptionVolatilities>
 
+
+      <!-- Not in scope yet -->
+      <!--
+	  <CapVolatilities>
+	  <Mode>Roll</Mode>
+	  <Currencies>
+	  <Currency>EUR</Currency>
+	  </Currencies>
+	  <Expiries>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</Expiries>
+	  <Strikes/>
+	  </CapVolatilities>
+      -->
+      
       <FxVolatilities>
 	<Simulate>false</Simulate>
 	<ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay><!-- Alternative: ConstantVariance -->

@@ -93,7 +93,7 @@ Real NumericLgmSwaptionEngineBase::calculate() const {
         else {
             Real std = sqrt(model_->parametrization()->zeta(te[j]) -
                             model_->parametrization()->zeta(te[j - 1]));
-            Real previousValue = 0;
+//            Real previousValue = 0;
             for (int k = 0; k <= 2 * mx_; k++) {
                 int imin = 0;
                 int imax = 2 * my_;
@@ -130,7 +130,7 @@ Real NumericLgmSwaptionEngineBase::calculate() const {
                 }
                 // choose: continue (value) or exercise (u[j-1][k])
                 v[j - 1][k] = std::max(value, u[j - 1][k]);
-                previousValue = value;
+                // previousValue = value;
             }
         }
     } // for options

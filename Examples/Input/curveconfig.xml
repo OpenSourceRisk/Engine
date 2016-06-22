@@ -1666,6 +1666,7 @@
       <Tolerance>0.000000000001</Tolerance>
     </YieldCurve>
 
+    <!--
     <YieldCurve>
       <CurveId>BANK_EUR_BORROW</CurveId>
       <CurveDescription>BANK's average funding yield for EUR</CurveDescription>
@@ -1703,7 +1704,8 @@
 	</Direct>
       </Segments>
     </YieldCurve>
-
+    -->
+    
     <YieldCurve>
       <CurveId>BANK_EUR_BORROW</CurveId>
       <CurveDescription>BANK's average borrowing spread in EUR</CurveDescription>
