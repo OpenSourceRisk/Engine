@@ -16,7 +16,7 @@
 #include <ql/handle.hpp>
 #include <ql/quote.hpp>
 #include <ql/time/date.hpp>
-#include <ql/termstructures/yieldtermstructure.hpp>
+#include <qle/indexes/fxindex.hpp>
 
 using namespace QuantLib;
 
@@ -49,10 +49,8 @@ namespace QuantExt {
         FXLinkedCashFlow(const Date& cashFlowDate,
                          const Date& fixingDate,
                          Real foreignAmount,
-                         const Handle<Quote>& fxSpot, //! FX Spot in FORDOM
-                         const Handle<YieldTermStructure>& forTS, //! Foreign
-                         const Handle<YieldTermStructure>& domTS, //! Domestic
-                         const std::string& indexName = ""); //! Index name for Historical fixings
+                         boost::shared_ptr<FxIndex> fxIndex)
+        : cashFlowDate_(cashFlowDate), fxFixingDate_(fixingDate), foreignAmount_(foreignAmount), fxIndex_(fxIndex) {}
 
         //! \name CashFlow interface
         //@{
@@ -65,18 +63,14 @@ namespace QuantExt {
         //@}
 
         Date fxFixingDate() const { return fxFixingDate_; }
-        const std::string& fxIndexName() const { return indexName_; }
 
       private:
         Date cashFlowDate_;
         Date fxFixingDate_;
         Real foreignAmount_;
-        Handle<Quote> fxSpot_;
-        Handle<YieldTermStructure> forTS_;
-        Handle<YieldTermStructure> domTS_;
-        std::string indexName_;
+        boost::shared_ptr<FxIndex> fxIndex_;
 
-        Real fxRate() const;
+        Real fxRate() const {return fxIndex_->fixing(fxFixingDate_); }
     };
 }
 

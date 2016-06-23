@@ -11,8 +11,7 @@ libCashflows_la_SOURCES = \
 	averageonindexedcouponpricer.cpp \
 	couponpricer.cpp \
 	subperiodscoupon.cpp \
-	subperiodscouponpricer.cpp \
-    fxlinkedcashflow.cpp
+	subperiodscouponpricer.cpp
 
 this_includedir=${includedir}/${subdir}
 this_include_HEADERS =  \

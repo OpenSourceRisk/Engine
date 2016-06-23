@@ -25,10 +25,7 @@ namespace QuantExt {
         FloatingRateFXLinkedNotionalCoupon(
                               Real foreignAmount,
                               const Date& fxFixingDate,
-                              const Handle<Quote>& fxSpot, //! FX Spot in FORDOM
-                              const Handle<YieldTermStructure>& forTS, //! Foreign
-                              const Handle<YieldTermStructure>& domTS, //! Domestic
-                              const std::string& fxIndexName,
+                              boost::shared_ptr<FxIndex> fxIndex,
                               const Date& paymentDate,
                               const Date& startDate,
                               const Date& endDate,
@@ -42,13 +39,11 @@ namespace QuantExt {
                               bool isInArrears = false)
         : FloatingRateCoupon(paymentDate, 0.0, startDate, endDate, fixingDays, index,
                              gearing, spread, refPeriodStart, refPeriodEnd, dayCounter, isInArrears),
-          notional_(paymentDate, fxFixingDate, foreignAmount, fxSpot, forTS, domTS, fxIndexName) {}
+          notional_(paymentDate, fxFixingDate, foreignAmount, fxIndex) {}
 
         Real nominal() const {
             return notional_.amount();
         }
-
-        const std::string& fxIndexName() const { return notional_.fxIndexName(); }
 
         //! \name Visitability
         //@{
