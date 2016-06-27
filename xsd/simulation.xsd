@@ -2,12 +2,7 @@
 
 <xs:include schemaLocation="ore_types.xsd"/>
 
-  <xs:element name="Root"> <!-- FIXME: poor name -->
-    <xs:complexType>
-      <xs:sequence>
-        <xs:element type="simulation" name="Simulation"/>
-      </xs:sequence>
-    </xs:complexType>
+  <xs:element type="simulation" name="Simulation">
   </xs:element>
 
   <xs:complexType name="simulation">

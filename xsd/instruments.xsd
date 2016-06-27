@@ -85,7 +85,7 @@
       <xs:element name="ExerciseDates">
         <xs:complexType>
           <xs:sequence>
-            <xs:element type="date" name="ExerciseDate"/>
+            <xs:element type="date" name="ExerciseDate" maxOccurs="unbounded"/>
           </xs:sequence>
         </xs:complexType>
       </xs:element>
