@@ -9,8 +9,8 @@
     </Envelope>
     <TradeActions>
       <TradeAction>
-	<Type>BREAK</Type>
-	<Owner>MUTUAL</Owner>
+	<Type>Break</Type>
+	<Owner>Mutual</Owner>
 	<Schedule>
           <Rules>
             <StartDate>2005-03-03</StartDate>
@@ -98,8 +98,8 @@
     </Envelope>
     <TradeActions>
       <TradeAction>
-	<Type>BREAK</Type>
-	<Owner>MUTUAL</Owner>
+	<Type>Break</Type>
+	<Owner>Mutual</Owner>
 	<Schedule>
           <Rules>
             <StartDate>2015-04-22</StartDate>
@@ -187,8 +187,8 @@
     </Envelope>
     <TradeActions>
       <TradeAction>
-	<Type>BREAK</Type>
-	<Owner>MUTUAL</Owner>
+	<Type>Break</Type>
+	<Owner>Mutual</Owner>
 	<Schedule>
           <Rules>
             <StartDate>2012-09-05</StartDate>

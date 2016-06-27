@@ -10,6 +10,7 @@
             <xs:sequence>
               <xs:element type="tradeType" name="TradeType"/>
               <xs:element type="envelope" name="Envelope"/>
+              <xs:element type="tradeActions" name="TradeActions" minOccurs="0"/>
               <xs:choice>
                 <xs:element type="swapData" name="SwapData"/>
                 <xs:element type="swaptionData" name="SwaptionData"/>
@@ -36,6 +37,20 @@
         </xs:complexType>
       </xs:element>
     </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="tradeActions">
+    <xs:sequence>
+      <xs:element type="tradeAction" name="TradeAction" maxOccurs="unbounded" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="tradeAction">
+    <xs:sequence>
+      <xs:element type="tradeActionType" name="Type"/>
+      <xs:element type="tradeActionOwner" name="Owner"/>
+      <xs:element type="scheduleData" name="Schedule"/>
+    </xs:sequence>
   </xs:complexType>
 
   <xs:complexType name="swapData">
@@ -191,6 +206,24 @@
       <xs:element type="xs:float" name="SoldAmount"/>
     </xs:sequence>
   </xs:complexType>
+
+  <xs:simpleType name="tradeActionType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Break"/>
+      <xs:enumeration value="Termination"/>
+      <xs:enumeration value="Conversion"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="tradeActionOwner">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Mutual"/>
+      <xs:enumeration value="Sold"/>
+      <xs:enumeration value="Bought"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+
 
 </xs:schema>
 
