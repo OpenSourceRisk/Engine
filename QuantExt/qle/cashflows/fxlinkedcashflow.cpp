@@ -7,7 +7,6 @@
 
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <ql/indexes/indexmanager.hpp>
-#include <iostream>
 
 namespace QuantExt {
 
