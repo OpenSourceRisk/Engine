@@ -27,7 +27,7 @@
   <Analytics>
 
     <Analytic type="npv">
-      <Parameter name="active">N</Parameter>simm
+      <Parameter name="active">N</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="outputFileName">npv.csv</Parameter>
     </Analytic>

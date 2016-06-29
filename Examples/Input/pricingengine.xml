@@ -3,8 +3,35 @@
   <Product type="Swap">
     <Model>DiscountedCashflows</Model>
     <ModelParameters/>
-    <!--<Engine>QUANTLIB</Engine>-->
-    <Engine>QuantExtDcf</Engine>
+    <Engine>DiscountingSwapEngine</Engine>
+    <EngineParameters/>
+  </Product>
+
+  <Product type="CrossCurrencySwap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingCrossCurrencySwapEngine</Engine>
+    <EngineParameters/>
+  </Product>
+
+  <Product type="FxForward">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingFxForwardEngine</Engine>
+    <EngineParameters/>
+  </Product>
+
+  <Product type="FxOption">
+    <Model>GarmanKohlhagen</Model>
+    <ModelParameters/>
+    <Engine>AnalyticEuropeanEngine</Engine>
+    <EngineParameters/>
+  </Product>
+
+  <Product type="EuropeanSwaption">
+    <Model>BlackBachelier</Model> <!-- depends on input vol -->
+    <ModelParameters/>
+    <Engine>BlackBachelierSwaptionEngine</Engine>
     <EngineParameters/>
   </Product>
 

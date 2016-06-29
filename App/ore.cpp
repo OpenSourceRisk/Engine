@@ -204,9 +204,7 @@ int main(int argc, char** argv) {
         engineData->fromFile(pricingEnginesFile);
 
         boost::shared_ptr<EngineFactory> factory =
-            boost::make_shared<EngineFactory>(
-                market, engineData, params.get("markets", "lgmcalibration"), params.get("markets", "fxcalibration"),
-                params.get("markets", "pricing"));
+            boost::make_shared<EngineFactory>(engineData, market, params.get("markets", "pricing"));
         cout << "OK" << endl;
         
         /******************************
@@ -305,11 +303,8 @@ int main(int argc, char** argv) {
             //bool simulationEnabledEnginesOnly = true;
             bool simulationEnabledEnginesOnly = false;
             boost::shared_ptr<EngineFactory>
-                simFactory = boost::make_shared<EngineFactory>(simMarket, simEngineData,
-                                                               params.get("markets", "lgmcalibration"),
-                                                               params.get("markets", "fxcalibration"),
-                                                               params.get("markets", "pricing"),
-                                                               simulationEnabledEnginesOnly);
+                simFactory = boost::make_shared<EngineFactory>(simEngineData, simMarket,
+                                                               params.get("markets", "pricing"));
             
             LOG("Build portfolio linked to sim market");
             boost::shared_ptr<Portfolio> simPortfolio = boost::make_shared<Portfolio>();
