@@ -1,9 +1,13 @@
 <xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
 
   <xs:simpleType name="date">
-    <!-- TODO: date can be YYYYMMDD or DD-MM-YYYY or DD/MM/YYYY or an empty string in some cases -->
+    <!-- date can be YYYYMMDD, DD-MM-YYYY, DD/MM/YYYY,
+         YYYY/MM/DD, YYYY-MM-DD or an empty string in some cases -->
     <xs:restriction base="xs:string">
       <xs:maxLength value="10"/>
+      <!-- This is not super strict, e.g. 2016-17-39 would pass, but it catches
+           most errors-->
+      <xs:pattern value="(2\d{3}[0-1]\d[0-3]\d|2\d{3}[-./][0-1]\d[-./][0-3]\d|[0-3]\d[-./][0-1]\d[-./]2\d{3})?"/>
     </xs:restriction>
   </xs:simpleType>
 
