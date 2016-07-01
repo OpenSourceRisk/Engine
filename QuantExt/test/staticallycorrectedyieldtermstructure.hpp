@@ -5,7 +5,7 @@
   All rights reserved.
 */
 
-/*! \file staticallycorrectedyieldtermstructure.hpp
+/*! \file test/staticallycorrectedyieldtermstructure.hpp
     \brief tests for StaticallyCorrectedYieldTermStructure
 */
 
@@ -14,11 +14,15 @@
 
 #include <boost/test/unit_test.hpp>
 
+namespace testsuite {
+    
 //! DynamicBlackVolTermStructure tests
 class StaticallyCorrectedYieldTermStructureTest {
   public:
     static void testCorrectedYts();
     static boost::unit_test_framework::test_suite* suite();
 };
+
+}
 
 #endif

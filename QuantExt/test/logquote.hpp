@@ -14,6 +14,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+namespace testsuite {
+    
 //! LogQuotes tests
 /*!
   Tests the LogQuote class by Comparing LogQuote values with the logs of Quote values
@@ -25,5 +27,7 @@ class LogQuoteTest {
     static void testLogQuote();
     static boost::unit_test_framework::test_suite* suite();
 };
+
+}
 
 #endif

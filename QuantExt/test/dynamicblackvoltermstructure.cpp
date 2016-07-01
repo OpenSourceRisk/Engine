@@ -77,6 +77,8 @@ struct TestData {
 
 } // anonymous namespace
 
+namespace testsuite {
+    
 void DynamicBlackVolTermStructureTest::testConstantVarianceStickyStrike() {
 
     BOOST_TEST_MESSAGE("Testing constant variance, sticky strike dynamics of "
@@ -455,4 +457,6 @@ test_suite *DynamicBlackVolTermStructureTest::suite() {
     suite->add(QUANTLIB_TEST_CASE(&DynamicBlackVolTermStructureTest::
                                    testForwardVarianceStickyLogMoneyness));
     return suite;
+}
+
 }

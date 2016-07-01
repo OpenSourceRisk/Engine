@@ -50,6 +50,8 @@ struct TestData {
 
 } // anonymous namespace
 
+namespace testsuite {
+    
 void DynamicSwaptionVolMatrixTest::testConstantVariance() {
 
     BOOST_TEST_MESSAGE("Testing constant variance dynamics of "
@@ -162,4 +164,6 @@ test_suite *DynamicSwaptionVolMatrixTest::suite() {
     suite->add(QUANTLIB_TEST_CASE(
         &DynamicSwaptionVolMatrixTest::testForwardForwardVariance));
     return suite;
+}
+
 }

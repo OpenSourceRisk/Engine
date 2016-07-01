@@ -4,7 +4,7 @@
  Copyright (C) 2016 Quaternion Risk Management Ltd.
 */
 
-/*! \file analyticlgmswaptionengine.hpp
+/*! \file qle/pricingengines/analyticlgmswaptionengine.hpp
     \brief analytic engine for european swaptions in the LGM model
 */
 

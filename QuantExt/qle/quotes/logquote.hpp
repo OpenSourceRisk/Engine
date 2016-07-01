@@ -5,7 +5,7 @@
  All rights reserved
 */
 
-/*! \file logquote.hpp
+/*! \file qle/quotes/logquote.hpp
     \brief stores log of quote for log-linear interpolation
 */
 

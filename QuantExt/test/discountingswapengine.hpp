@@ -14,6 +14,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+namespace testsuite {
+    
 //! DiscountingSwapEngine tests
 /*!
   \ingroup tests
@@ -24,5 +26,7 @@ class DiscountingSwapEngineTest {
     static void testFixingEstimationMethods();
     static boost::unit_test_framework::test_suite* suite();
 };
+
+}
 
 #endif

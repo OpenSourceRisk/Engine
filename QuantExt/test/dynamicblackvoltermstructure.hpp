@@ -5,7 +5,7 @@
   All rights reserved.
 */
 
-/*! \file dynamicblackvoltermstructure.hpp
+/*! \file test/dynamicblackvoltermstructure.hpp
     \brief tests for DynamicBlackVolTermStructure
 */
 
@@ -14,6 +14,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+namespace testsuite {
+    
 //! DynamicBlackVolTermStructure tests
 class DynamicBlackVolTermStructureTest {
   public:
@@ -23,5 +25,7 @@ class DynamicBlackVolTermStructureTest {
     static void testForwardVarianceStickyLogMoneyness();
     static boost::unit_test_framework::test_suite* suite();
 };
+
+}
 
 #endif

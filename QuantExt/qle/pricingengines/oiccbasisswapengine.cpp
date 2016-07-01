@@ -14,7 +14,9 @@
 #include <ql/utilities/dataformatters.hpp>
 #include <iostream>
 
-namespace QuantLib {
+using namespace QuantLib;
+
+namespace QuantExt {
 
     OvernightIndexedCrossCcyBasisSwapEngine::OvernightIndexedCrossCcyBasisSwapEngine(
      const Handle<YieldTermStructure>& ts1,

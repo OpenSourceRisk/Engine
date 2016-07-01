@@ -22,7 +22,7 @@ using namespace QuantLib;
 namespace QuantExt {
 
     //! NOK-NIBOR index
-    /*! NOK-NIBOR rate published by Oslo Børs.
+    /*! NOK-NIBOR rate published by Oslo Boers.
 
         See <http://www.oslobors.no/ob_eng>.
 

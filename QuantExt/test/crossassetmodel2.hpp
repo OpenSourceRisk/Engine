@@ -12,6 +12,8 @@
 /* remember to document new and/or updated tests in the Doxygen
    comment block of the corresponding class */
 
+namespace testsuite {
+    
 class CrossAssetModelTest2 {
   public:
     static void testLgm31fPositiveCovariance();
@@ -19,5 +21,7 @@ class CrossAssetModelTest2 {
     static void testLgm31fMartingaleProperty();
     static boost::unit_test_framework::test_suite *suite();
 };
+
+}
 
 #endif

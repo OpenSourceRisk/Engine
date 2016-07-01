@@ -15,7 +15,7 @@
 #include <qle/instruments/oiccbasisswap.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
 
-namespace QuantLib {
+namespace QuantExt {
 
     //! Overnight Indexed Cross Currency Basis Swap Engine
     /*!

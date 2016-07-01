@@ -12,8 +12,12 @@
 /* remember to document new and/or updated tests in the Doxygen
    comment block of the corresponding class */
 
+namespace testsuite {
+
+    //! Cross Asset Model Test Suite
 class CrossAssetModelTest {
   public:
+    //! Test consistency of Bermudan pricing in Lgm1f and Gsr models
     static void testBermudanLgm1fGsr();
     static void testBermudanLgmInvariances();
     static void testNonstandardBermudanSwaption();
@@ -27,5 +31,7 @@ class CrossAssetModelTest {
     static void testCorrelationRecovery();
     static boost::unit_test_framework::test_suite *suite();
 };
+
+}
 
 #endif

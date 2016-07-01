@@ -5,7 +5,7 @@
   All rights reserved.
 */
 
-/*! \file test/iborindex.hpp
+/*! \file test/index.hpp
   \brief ibor index tests
 */
 
@@ -14,6 +14,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+namespace testsuite {
+    
 //! Ibor index tests
 /*!
   \ingroup tests
@@ -23,5 +25,7 @@ class IndexTest {
     static void testIborIndex();
     static boost::unit_test_framework::test_suite* suite();
 };
+
+}
 
 #endif

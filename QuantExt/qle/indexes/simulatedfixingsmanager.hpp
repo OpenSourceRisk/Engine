@@ -15,7 +15,9 @@
 #include <ql/settings.hpp>
 #include <ql/timeseries.hpp>
 
-namespace QuantLib {
+using namespace QuantLib;
+
+namespace QuantExt {
 
 /*! global repository for simulated fixings, the assumption is
  that after a newPath() call the evaluation date moves forward

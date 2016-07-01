@@ -14,6 +14,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+namespace testsuite {
+    
 //! InterpolatedDiscountCurve tests
 /*!
   \ingroup tests
@@ -23,5 +25,7 @@ class DiscountCurveTest {
     static void testDiscountCurve();
     static boost::unit_test_framework::test_suite* suite();
 };
+
+}
 
 #endif

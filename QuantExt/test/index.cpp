@@ -26,7 +26,8 @@ namespace {
 
 }
 
-
+namespace testsuite {
+    
 void dataCheck(struct IndTestData& data) {
 
     BOOST_CHECK_EQUAL(data.ind.familyName(), data.name);
@@ -73,4 +74,6 @@ test_suite* IndexTest::suite() {
     test_suite* suite = BOOST_TEST_SUITE("IborIndexTests");
     suite->add(BOOST_TEST_CASE(&IndexTest::testIborIndex));
     return suite;
+}
+
 }

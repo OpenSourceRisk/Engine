@@ -16,7 +16,7 @@
 #include <ql/instruments/overnightindexedswap.hpp>
 #include <qle/instruments/oiccbasisswap.hpp>
 
-namespace QuantLib {
+namespace QuantExt {
 
     //! Rate helper for bootstrapping over Overnight Indexed CC Basis Swap Spreads
     /*
