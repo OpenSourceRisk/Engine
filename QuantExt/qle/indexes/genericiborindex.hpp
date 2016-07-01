@@ -5,8 +5,8 @@
   All rights reserved.
 */
 
-/* \file genericiborindex.hpp
-   \brief Generic Ibor Index
+/*! \file genericiborindex.hpp
+    \brief Generic Ibor Index
 */
 
 #ifndef _quantext_generic_index_hpp
