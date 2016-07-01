@@ -15,13 +15,16 @@
 #include <ql/instruments/swap.hpp>
 #include <ql/time/daycounter.hpp>
 #include <ql/time/schedule.hpp>
+#include <ql/indexes/iborindex.hpp>
 
-namespace QuantLib {
+using namespace QuantLib;
 
-    class Schedule;
-    class OvernightIndex;
-    class IborIndex;
+namespace QuantExt {
 
+    //class Schedule;
+    //class OvernightIndex;
+    //class IborIndex;
+    
     //! Overnight indexed basis swap: floating vs compounded overnight rate
     class OvernightIndexedBasisSwap : public Swap {
       public:

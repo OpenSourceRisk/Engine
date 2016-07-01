@@ -18,6 +18,8 @@ using namespace QuantLib;
 using namespace QuantExt;
 using namespace std;
 
+namespace testsuite {
+    
 void BlackVarianceCurveTest::testBlackVarianceCurve() {
 
     BOOST_TEST_MESSAGE("Testing QuantExt::BlackVarianceCurve3...");
@@ -86,4 +88,6 @@ test_suite* BlackVarianceCurveTest::suite() {
     test_suite* suite = BOOST_TEST_SUITE("BlackVarianceCurveTest");
     suite->add(BOOST_TEST_CASE(&BlackVarianceCurveTest::testBlackVarianceCurve));
     return suite;
+}
+
 }

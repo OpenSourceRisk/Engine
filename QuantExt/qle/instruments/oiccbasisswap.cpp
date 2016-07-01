@@ -9,7 +9,7 @@
 #include <ql/cashflows/overnightindexedcoupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
 
-namespace QuantLib {
+namespace QuantExt {
 
     OvernightIndexedCrossCcyBasisSwap::OvernightIndexedCrossCcyBasisSwap(
                              Real payNominal,

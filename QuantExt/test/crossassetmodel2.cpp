@@ -854,6 +854,8 @@ struct Lgm31fTestData {
 
 } // namespace detail
 
+namespace testsuite {
+    
 void CrossAssetModelTest2::testLgm31fPositiveCovariance() {
 
     BOOST_TEST_MESSAGE("Testing for positive semidefinite covariance matrices "
@@ -1137,4 +1139,6 @@ test_suite *CrossAssetModelTest2::suite() {
     suite->add(
         QUANTLIB_TEST_CASE(&CrossAssetModelTest2::testLgm31fMartingaleProperty));
     return suite;
+}
+
 }

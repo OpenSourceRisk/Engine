@@ -22,7 +22,7 @@ using namespace QuantLib;
 namespace QuantExt {
 
     //! MXN-TIIE index
-    /*! MXN-TIIE rate published by Banco de México.
+    /*! MXN-TIIE rate published by Banco de Mexico.
 
         See <http://www.banxico.org.mx/indexEn.html>.
 

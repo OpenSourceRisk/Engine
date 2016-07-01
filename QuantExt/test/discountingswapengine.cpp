@@ -23,7 +23,10 @@
 using namespace boost::unit_test_framework;
 
 using namespace QuantLib;
+using namespace QuantExt;
 
+namespace testsuite {
+    
 void DiscountingSwapEngineTest::testVanillaSwap() {
 
     BOOST_TEST_MESSAGE("Testing discounting swap engine with simulated "
@@ -273,4 +276,6 @@ test_suite *DiscountingSwapEngineTest::suite() {
     suite->add(QUANTLIB_TEST_CASE(
         &DiscountingSwapEngineTest::testFixingEstimationMethods));
     return suite;
+}
+
 }

@@ -4,7 +4,7 @@
  Copyright (C) 2016 Quaternion Risk Management Ltd.
 */
 
-/*! \file crossassetmodel.hpp
+/*! \file qle/models/crossassetmodel.hpp
     \brief cross asset model
 */
 

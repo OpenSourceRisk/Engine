@@ -10,7 +10,9 @@
 #include <ql/cashflows/fixedratecoupon.hpp>
 #include <ql/cashflows/iborcoupon.hpp>
 
-namespace QuantLib {
+using namespace QuantLib;
+
+namespace QuantExt {
 
     OvernightIndexedBasisSwap::OvernightIndexedBasisSwap(
                     Type type,
@@ -36,7 +38,7 @@ namespace QuantLib {
                     const Schedule& oisSchedule,
                     const boost::shared_ptr<OvernightIndex>& overnightIndex,
                     const Schedule& iborSchedule,
-                    const boost::shared_ptr<IborIndex>& iborIndex,
+                    const boost::shared_ptr<QuantLib::IborIndex>& iborIndex,
                     Spread oisSpread,
                     Spread iborSpread)
     : Swap(2), type_(type), nominals_(nominals),

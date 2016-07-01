@@ -16,12 +16,15 @@
 #include <ql/time/daycounter.hpp>
 #include <ql/time/schedule.hpp>
 #include <ql/currency.hpp>
+#include <ql/indexes/iborindex.hpp>
 
-namespace QuantLib {
+using namespace QuantLib;
 
-    class Schedule;
-    class OvernightIndex;
-    class IborIndex;
+namespace QuantExt {
+
+    // class Schedule;
+    // class OvernightIndex;
+    // class IborIndex;
 
     //! Basis swap: compounded overnight rate in ccy 1 vs. compounded overnight rate in ccy 2
     class OvernightIndexedCrossCcyBasisSwap : public Swap {

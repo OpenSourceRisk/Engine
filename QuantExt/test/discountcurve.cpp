@@ -15,6 +15,8 @@
 using namespace boost::unit_test_framework;
 using std::vector;
 
+namespace testsuite {
+    
 void DiscountCurveTest::testDiscountCurve() {
 
     //FIXME: test curve1 or 2 or both
@@ -70,4 +72,6 @@ test_suite* DiscountCurveTest::suite() {
     test_suite* suite = BOOST_TEST_SUITE("DiscountCurveTests");
     suite->add(BOOST_TEST_CASE(&DiscountCurveTest::testDiscountCurve));
     return suite;
+}
+
 }

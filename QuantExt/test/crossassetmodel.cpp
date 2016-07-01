@@ -107,6 +107,9 @@ struct BermudanTestData {
 
 } // anonymous namespace
 
+
+namespace testsuite {
+    
 void CrossAssetModelTest::testBermudanLgm1fGsr() {
 
     BOOST_TEST_MESSAGE("Testing consistency of Bermudan swaption pricing in "
@@ -1542,4 +1545,6 @@ test_suite *CrossAssetModelTest::suite() {
     suite->add(
         QUANTLIB_TEST_CASE(&CrossAssetModelTest::testCorrelationRecovery));
     return suite;
+}
+
 }

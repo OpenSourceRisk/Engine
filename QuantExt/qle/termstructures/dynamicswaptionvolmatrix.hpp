@@ -4,7 +4,7 @@
  Copyright (C) 2016 Quaternion Risk Management Ltd.
 */
 
-/*! \file dynamicswaptionvolmatrix.hpp
+/*! \file qle/termstructures/dynamicswaptionvolmatrix.hpp
     \brief dynamic swaption volatility matrix
 */
 

@@ -5,7 +5,7 @@
   All rights reserved.
 */
 
-/*! \file dynamicswaptionvolmatrix.hpp
+/*! \file test/dynamicswaptionvolmatrix.hpp
     \brief tests for DynamicSwaptionVolStructure
 */
 
@@ -14,6 +14,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+namespace testsuite {
+    
 //! DynamicSwaptionVolMatrix tests
 class DynamicSwaptionVolMatrixTest {
   public:
@@ -21,5 +23,7 @@ class DynamicSwaptionVolMatrixTest {
     static void testForwardForwardVariance();
     static boost::unit_test_framework::test_suite* suite();
 };
+
+}
 
 #endif

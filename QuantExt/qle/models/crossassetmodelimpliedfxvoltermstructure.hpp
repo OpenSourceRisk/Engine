@@ -4,7 +4,7 @@
  Copyright (C) 2016 Quaternion Risk Management Ltd.
 */
 
-/*! \file dynamicblackvoltermstructure.hpp
+/*! \file qle/models/crossassetmodelimpliedfxvoltermstructure.hpp
     \brief dynamic black volatility term structure
 */
 

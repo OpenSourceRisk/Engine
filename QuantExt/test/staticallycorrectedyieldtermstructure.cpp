@@ -21,6 +21,8 @@ using namespace QuantExt;
 using namespace QuantLib;
 using namespace boost::unit_test_framework;
 
+namespace testsuite {
+    
 void StaticallyCorrectedYieldTermStructureTest::testCorrectedYts() {
 
     SavedSettings backup;
@@ -143,4 +145,6 @@ test_suite *StaticallyCorrectedYieldTermStructureTest::suite() {
     suite->add(QUANTLIB_TEST_CASE(
         &StaticallyCorrectedYieldTermStructureTest::testCorrectedYts));
     return suite;
+}
+
 }

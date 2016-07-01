@@ -10,7 +10,9 @@
 
 using boost::shared_ptr;
 
-namespace QuantLib {
+using namespace QuantLib;
+
+namespace QuantExt {
 
     namespace {
         void no_deletion(YieldTermStructure*) {}

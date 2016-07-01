@@ -16,7 +16,7 @@
 #include <ql/instruments/overnightindexedswap.hpp>
 #include <qle/instruments/oibasisswap.hpp>
 
-namespace QuantLib {
+namespace QuantExt {
 
     //! Rate helper for bootstrapping over Overnight Indexed Basis Swap Spreads
     class OIBSHelper : public RelativeDateRateHelper {

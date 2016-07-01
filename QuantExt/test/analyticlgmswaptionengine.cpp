@@ -32,6 +32,8 @@ using namespace QuantExt;
 
 using boost::unit_test_framework::test_suite;
 
+namespace testsuite {
+    
 void AnalyticLgmSwaptionEngineTest::testMonoCurve() {
 
     BOOST_TEST_MESSAGE("Testing analytic LGM swaption engine coupon "
@@ -606,4 +608,6 @@ test_suite *AnalyticLgmSwaptionEngineTest::suite() {
     suite->add(
         QUANTLIB_TEST_CASE(&AnalyticLgmSwaptionEngineTest::testLgmInvariances));
     return suite;
+}
+
 }

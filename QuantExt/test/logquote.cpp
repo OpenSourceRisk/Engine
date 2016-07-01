@@ -13,6 +13,8 @@ using namespace QuantLib;
 using namespace boost::unit_test_framework;
 using QuantExt::LogQuote;
 
+namespace testsuite {
+    
 void LogQuoteTest::testLogQuote() {
     BOOST_TEST_MESSAGE("Testing QuantExt::LogQuote...");
 
@@ -39,4 +41,6 @@ test_suite* LogQuoteTest::suite() {
     test_suite* suite = BOOST_TEST_SUITE("LogQuoteTests");
     suite->add(BOOST_TEST_CASE(&LogQuoteTest::testLogQuote));
     return suite;
+}
+
 }

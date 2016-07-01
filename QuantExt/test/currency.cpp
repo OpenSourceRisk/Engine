@@ -25,7 +25,8 @@ namespace {
 
 }
 
-
+namespace testsuite {
+    
 void dataCheck(struct CcyTestData& data) {
 
     BOOST_CHECK_EQUAL(data.ccy.name(), data.name);
@@ -68,4 +69,6 @@ test_suite* CurrencyTest::suite() {
     test_suite* suite = BOOST_TEST_SUITE("CurrencyTests");
     suite->add(BOOST_TEST_CASE(&CurrencyTest::testCurrency));
     return suite;
+}
+
 }

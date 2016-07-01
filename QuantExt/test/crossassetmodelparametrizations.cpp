@@ -50,6 +50,8 @@ void check2(std::string s, const Real x, const Real y, const Real e,
 
 } // anonymous namespace
 
+namespace testsuite {
+    
 void CrossAssetModelParametrizationsTest::testParametrizationBaseClasses() {
 
     BOOST_TEST_MESSAGE(
@@ -584,4 +586,6 @@ test_suite *CrossAssetModelParametrizationsTest::suite() {
     suite->add(QUANTLIB_TEST_CASE(
         &CrossAssetModelParametrizationsTest::testFxBsParametrizations));
     return suite;
+}
+
 }

@@ -72,19 +72,19 @@ test_suite* init_unit_test_suite(int, char* []) {
 
     test->add(BOOST_TEST_CASE(startTimer));
 
-    test->add(AnalyticLgmSwaptionEngineTest::suite());
-    test->add(CrossAssetModelTest::suite());
-    test->add(CrossAssetModelTest2::suite());
-    test->add(CrossAssetModelParametrizationsTest::suite());
-    test->add(DiscountCurveTest::suite());
-    test->add(DiscountingSwapEngineTest::suite());
-    test->add(DynamicBlackVolTermStructureTest::suite());
-    test->add(DynamicSwaptionVolMatrixTest::suite());
-    test->add(CurrencyTest::suite());
-    test->add(IndexTest::suite());
-    test->add(LogQuoteTest::suite());
-    test->add(StaticallyCorrectedYieldTermStructureTest::suite());
-    test->add(BlackVarianceCurveTest::suite());
+    test->add(testsuite::AnalyticLgmSwaptionEngineTest::suite());
+    test->add(testsuite::CrossAssetModelTest::suite());
+    test->add(testsuite::CrossAssetModelTest2::suite());
+    test->add(testsuite::CrossAssetModelParametrizationsTest::suite());
+    test->add(testsuite::DiscountCurveTest::suite());
+    test->add(testsuite::DiscountingSwapEngineTest::suite());
+    test->add(testsuite::DynamicBlackVolTermStructureTest::suite());
+    test->add(testsuite::DynamicSwaptionVolMatrixTest::suite());
+    test->add(testsuite::CurrencyTest::suite());
+    test->add(testsuite::IndexTest::suite());
+    test->add(testsuite::LogQuoteTest::suite());
+    test->add(testsuite::StaticallyCorrectedYieldTermStructureTest::suite());
+    test->add(testsuite::BlackVarianceCurveTest::suite());
 
     test->add(BOOST_TEST_CASE(stopTimer));
 

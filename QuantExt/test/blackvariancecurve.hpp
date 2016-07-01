@@ -14,6 +14,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+namespace testsuite {
+    
 //! BlackVarianceCurve tests
 /*!
   \ingroup tests
@@ -23,5 +25,7 @@ class BlackVarianceCurveTest {
     static void testBlackVarianceCurve();
     static boost::unit_test_framework::test_suite* suite();
 };
+
+}
 
 #endif
