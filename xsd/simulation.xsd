@@ -21,7 +21,7 @@
       <xs:element type="sequenceType" name="Sequence"/>
       <xs:element type="xs:string" name="Scenario"/> <!-- FIXME: remove this -->
       <xs:element type="xs:integer" name="Seed"/>
-      <xs:element type="xs:positiveInteger" name="Samples"/> <!-- can be multiple so we don't use calendar type -->
+      <xs:element type="xs:positiveInteger" name="Samples"/>
       <xs:element type="fixingToBeRemoved" name="Fixings"/> <!-- FIXME: remove this -->
     </xs:sequence>
   </xs:complexType>

@@ -12,9 +12,15 @@
   </xs:simpleType>
 
   <xs:simpleType name="indexNameType">
-    <!-- TODO: Index name is of form CCY-NAME or CCY-NAME-TENOR max length is EUR-EURIBOR-12M -->
+    <!-- Index name is of form CCY-NAME or CCY-NAME-TENOR max length is EUR-EURIBOR-12M -->
     <xs:restriction base="xs:string">
       <xs:maxLength value="15"/>
+      <!-- This is not strict.
+           - CCY is any 3 uppercase character string (can we use the below currencyCode list?)
+           - NAME is any 3 to 8 character string ("CMS" up to "FedFunds")
+           - TENOR is any 1 to 3 digit followed by one of YMWD (99M would pass)
+        -->
+      <xs:pattern value="\p{Lu}{3}-\c{3,8}|\p{Lu}{3}-\c{3,8}-\d{1,3}[YMWD]"/>
     </xs:restriction>
   </xs:simpleType>
 
