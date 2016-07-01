@@ -20,7 +20,6 @@
 
 /*! \file test/staticallycorrectedyieldtermstructure.hpp
     \brief tests for StaticallyCorrectedYieldTermStructure
-    \ingroup 
 */
 
 #ifndef quantext_test_staticallycorrectedyieldtermstructure_hpp
@@ -29,11 +28,13 @@
 #include <boost/test/unit_test.hpp>
 
 namespace testsuite {
-    
-//! DynamicBlackVolTermStructure tests
+
+//! StaticallyCorrectedYieldTermStructure tests
 class StaticallyCorrectedYieldTermStructureTest {
   public:
+    /*! Test if the statically corrected yield term structure produces correct discount factors for rolling down modes constant discounts and forward-forward. */
     static void testCorrectedYts();
+
     static boost::unit_test_framework::test_suite* suite();
 };
 

@@ -20,7 +20,6 @@
 
 /*! \file test/discountingswapengine.hpp
     \brief discounting swap engine with simulated fixings test
-    \ingroup 
 */
 
 #ifndef quantext_test_discountingswapengine_hpp
@@ -29,15 +28,16 @@
 #include <boost/test/unit_test.hpp>
 
 namespace testsuite {
-    
+
 //! DiscountingSwapEngine tests
-/*!
-  \ingroup tests
-*/
 class DiscountingSwapEngineTest {
   public:
+    /*! Test the discounting swap engine supporting simulated fixings against the standard QuantLib engine with native fixings. */
     static void testVanillaSwap();
+
+    /*! Test the different estimation methods for simulated fixings. */
     static void testFixingEstimationMethods();
+
     static boost::unit_test_framework::test_suite* suite();
 };
 

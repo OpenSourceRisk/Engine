@@ -20,7 +20,6 @@
 
 /*! \file test/blackvariancecurve.hpp
     \brief interpolated black variance curve test
-    \ingroup 
 */
 
 #ifndef quantext_test_blackvariancecurve_hpp
@@ -29,14 +28,13 @@
 #include <boost/test/unit_test.hpp>
 
 namespace testsuite {
-    
+
 //! BlackVarianceCurve tests
-/*!
-  \ingroup tests
-*/
 class BlackVarianceCurveTest {
   public:
+    /*! Test whether the black variance curve produces the expected values, test against the corresponding class in QuantLib. */
     static void testBlackVarianceCurve();
+
     static boost::unit_test_framework::test_suite* suite();
 };
 
