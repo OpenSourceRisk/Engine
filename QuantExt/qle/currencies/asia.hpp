@@ -20,6 +20,8 @@
 
 /*! \file qle/currencies/asia.hpp
     \brief Extend QuantLib Asian currencies
+           ISO number from http://fx.sauder.ubc.ca/currency_table.html
+           We assume all currencies have a format of "%1$.2f %3%" (2 decimal places)
     \ingroup 
 */
 
