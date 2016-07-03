@@ -19,8 +19,6 @@
 
 
 #include <qle/pricingengines/discountingcurrencyswapengine.hpp>
-#include <qle/pricingengines/discountingswapengine.hpp>
-#include <qle/indexes/simulatedfixingsmanager.hpp>
 
 #include <ql/cashflows/cashflows.hpp>
 #include <ql/cashflows/floatingratecoupon.hpp>
@@ -138,21 +136,10 @@ namespace QuantExt {
                 Currency ccy = arguments_.currency[i];
                 Handle<YieldTermStructure> yts = fetchTS(ccy);
 
-                if(SimulatedFixingsManager::instance().simulateFixings()) {
-                    // do not try any optimizations
-                    results_.inCcyLegNPV[i] = QuantExt::simulatedFixingsNpv(
-                        arguments_.legs[i], **yts, includeRefDateFlows,
-                        settlementDate, yts->referenceDate(), false, false,
-                        false, false);
-
-                    results_.inCcyLegBPS[i] = Null<Real>();
-                }
-                else {
-                    QuantLib::CashFlows::npvbps(
-                        arguments_.legs[i], **yts, includeRefDateFlows,
-                        settlementDate, results_.valuationDate,
-                        results_.inCcyLegNPV[i], results_.inCcyLegBPS[i]);
-                }
+                QuantLib::CashFlows::npvbps(
+                    arguments_.legs[i], **yts, includeRefDateFlows,
+                    settlementDate, results_.valuationDate,
+                    results_.inCcyLegNPV[i], results_.inCcyLegBPS[i]);
 
                 results_.inCcyLegNPV[i] *= arguments_.payer[i];
                 if (results_.inCcyLegBPS[i] != Null<Real>()) {

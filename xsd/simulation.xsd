@@ -22,7 +22,6 @@
       <xs:element type="xs:string" name="Scenario"/> <!-- FIXME: remove this -->
       <xs:element type="xs:integer" name="Seed"/>
       <xs:element type="xs:positiveInteger" name="Samples"/>
-      <xs:element type="fixingToBeRemoved" name="Fixings"/> <!-- FIXME: remove this -->
     </xs:sequence>
   </xs:complexType>
 
@@ -40,14 +39,6 @@
       <xs:enumeration value="SobolBrownianBridge"/>
     </xs:restriction>
   </xs:simpleType>
-
-  <xs:complexType name="fixingToBeRemoved">
-    <xs:sequence>
-      <xs:element type="xs:string" name="SimulateFixings"/>
-      <xs:element type="xs:string" name="EstimationMethod"/>
-      <xs:element type="xs:string" name="ForwardHorizonDays"/>
-    </xs:sequence>
-  </xs:complexType>
 
   <xs:complexType name="crossAssetModel">
     <xs:sequence>
