@@ -20,7 +20,6 @@
 
 /*! \file test/index.hpp
     \brief ibor index tests
-    \ingroup 
 */
 
 #ifndef quantext_test_index_hpp
@@ -29,14 +28,13 @@
 #include <boost/test/unit_test.hpp>
 
 namespace testsuite {
-    
+
 //! Ibor index tests
-/*!
-  \ingroup tests
-*/
 class IndexTest {
   public:
+    /*! Test if indexes are set up with correct data. */
     static void testIborIndex();
+
     static boost::unit_test_framework::test_suite* suite();
 };
 

@@ -20,7 +20,6 @@
 
 /*! \file test/discountcurve.hpp
     \brief interpolated discount curve test
-    \ingroup 
 */
 
 #ifndef quantext_test_discountcurve_hpp
@@ -29,14 +28,13 @@
 #include <boost/test/unit_test.hpp>
 
 namespace testsuite {
-    
+
 //! InterpolatedDiscountCurve tests
-/*!
-  \ingroup tests
-*/
 class DiscountCurveTest {
   public:
+    /*! Test the discount curve against a corresponding QuantLib discount curve. */
     static void testDiscountCurve();
+
     static boost::unit_test_framework::test_suite* suite();
 };
 

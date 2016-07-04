@@ -20,7 +20,7 @@
 
 /*! \file test/dynamicswaptionvolmatrix.hpp
     \brief tests for DynamicSwaptionVolStructure
-    \ingroup 
+    \ingroup
 */
 
 #ifndef quantext_test_dynamicswaptionvolmatrix_hpp
@@ -29,12 +29,16 @@
 #include <boost/test/unit_test.hpp>
 
 namespace testsuite {
-    
+
 //! DynamicSwaptionVolMatrix tests
 class DynamicSwaptionVolMatrixTest {
   public:
+    /*! Test the dynamic swaption volatility matrix w.r.t. constant variance time decay mode. */
     static void testConstantVariance();
+
+    /*! Test the dynamic swaption volatility matrix w.r.t. forward-forward variance time decay mode. */
     static void testForwardForwardVariance();
+
     static boost::unit_test_framework::test_suite* suite();
 };
 
