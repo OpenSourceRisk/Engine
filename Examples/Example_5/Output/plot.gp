@@ -15,45 +15,45 @@ set autoscale
 set term pdfcairo
 
 set out "tmp.pdf"
-plot "collateral_none/exposure_trade_Swap_1.csv" us 3:4 title "EPE Swap_1" w l ls 1
-replot "collateral_none/exposure_trade_Swap_2.csv" us 3:4 title "EPE Swap_2" w l ls 2
-replot "collateral_none/exposure_trade_Swap_3.csv" us 3:4 title "EPE Swap_3" w l ls 3
-replot "collateral_none/exposure_nettingset_CUST_A.csv" us 3:4 title "EPE NettingSet" w l ls 4
+plot "collateral_none/exposure_trade_Swap_1.csv" us 3:4 title "EPE Swap 1" w l ls 1
+replot "collateral_none/exposure_trade_Swap_2.csv" us 3:4 title "EPE Swap 2" w l ls 2
+replot "collateral_none/exposure_trade_Swap_3.csv" us 3:4 title "EPE Swap 3" w l ls 3
+replot "collateral_none/exposure_nettingset_CPTY_A.csv" us 3:4 title "EPE NettingSet" w l ls 4
 set out "plot_nocollateral_epe.pdf"
 replot
 
 set out "tmp.pdf"
-plot "collateral_none/exposure_trade_Swap_1.csv" us 3:5 title "ENE Swap_1" w l ls 1
-replot "collateral_none/exposure_trade_Swap_2.csv" us 3:5 title "ENE Swap_2" w l ls 2
-replot "collateral_none/exposure_trade_Swap_3.csv" us 3:5 title "ENE Swap_3" w l ls 3
-replot "collateral_none/exposure_nettingset_CUST_A.csv" us 3:5 title "ENE NettingSet" w l ls 4
+plot "collateral_none/exposure_trade_Swap_1.csv" us 3:5 title "ENE Swap 1" w l ls 1
+replot "collateral_none/exposure_trade_Swap_2.csv" us 3:5 title "ENE Swap 2" w l ls 2
+replot "collateral_none/exposure_trade_Swap_3.csv" us 3:5 title "ENE Swap 3" w l ls 3
+replot "collateral_none/exposure_nettingset_CPTY_A.csv" us 3:5 title "ENE NettingSet" w l ls 4
 set out "plot_nocollateral_ene.pdf"
 replot
 
 set out "tmp.pdf"
-plot "collateral_none/exposure_trade_Swap_1.csv" us 3:6 title "Allocated EPE Swap_1" w l ls 1
-replot "collateral_none/exposure_trade_Swap_2.csv" us 3:6 title "Allocated EPE Swap_2" w l ls 2
-replot "collateral_none/exposure_trade_Swap_3.csv" us 3:6 title "Allocated EPE Swap_3" w l ls 3
+plot "collateral_none/exposure_trade_Swap_1.csv" us 3:6 title "Allocated EPE Swap 1" w l ls 1
+replot "collateral_none/exposure_trade_Swap_2.csv" us 3:6 title "Allocated EPE Swap 2" w l ls 2
+replot "collateral_none/exposure_trade_Swap_3.csv" us 3:6 title "Allocated EPE Swap 3" w l ls 3
 set out "plot_nocollateral_allocated_epe.pdf"
 replot
 
 set out "tmp.pdf"
-plot "collateral_none/exposure_trade_Swap_1.csv" us 3:7 title "Allocated ENE Swap_1" w l ls 1
-replot "collateral_none/exposure_trade_Swap_2.csv" us 3:7 title "Allocated ENE Swap_2" w l ls 2
-replot "collateral_none/exposure_trade_Swap_3.csv" us 3:7 title "Allocated ENE Swap_3" w l ls 3
+plot "collateral_none/exposure_trade_Swap_1.csv" us 3:7 title "Allocated ENE Swap 1" w l ls 1
+replot "collateral_none/exposure_trade_Swap_2.csv" us 3:7 title "Allocated ENE Swap 2" w l ls 2
+replot "collateral_none/exposure_trade_Swap_3.csv" us 3:7 title "Allocated ENE Swap 3" w l ls 3
 set out "plot_nocollateral_allocated_ene.pdf"
 replot
 
 set out "tmp.pdf"
-plot "collateral_none/exposure_nettingset_CUST_A.csv" us 3:4 title "EPE NettingSet" w l ls 1
-replot "collateral_threshold/exposure_nettingset_CUST_A.csv" us 3:4 title "EPE NettingSet, Threshold 1m" w l ls 2
+plot "collateral_none/exposure_nettingset_CPTY_A.csv" us 3:4 title "EPE NettingSet" w l ls 1
+replot "collateral_threshold/exposure_nettingset_CPTY_A.csv" us 3:4 title "EPE NettingSet, Threshold 1m" w l ls 2
 set out "plot_threshold_epe.pdf"
 replot
 
 set out "tmp.pdf"
-plot "collateral_threshold/exposure_trade_Swap_1.csv" us 3:6 title "Allocated EPE Swap_1" w l ls 1
-replot "collateral_threshold/exposure_trade_Swap_2.csv" us 3:6 title "Allocated EPE Swap_2" w l ls 2
-replot "collateral_threshold/exposure_trade_Swap_3.csv" us 3:6 title "Allocated EPE Swap_3" w l ls 3
+plot "collateral_threshold/exposure_trade_Swap_1.csv" us 3:6 title "Allocated EPE Swap 1" w l ls 1
+replot "collateral_threshold/exposure_trade_Swap_2.csv" us 3:6 title "Allocated EPE Swap 2" w l ls 2
+replot "collateral_threshold/exposure_trade_Swap_3.csv" us 3:6 title "Allocated EPE Swap 3" w l ls 3
 set out "plot_threshold_allocated_epe.pdf"
 replot
 
