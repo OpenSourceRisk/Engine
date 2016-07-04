@@ -30,7 +30,7 @@
 namespace testsuite {
 
 //! Currency tests
-cclass CurrencyTest {
+class CurrencyTest {
   public:
     /*! Test whether currencies were set up with correct data. */
     static void testCurrency();
