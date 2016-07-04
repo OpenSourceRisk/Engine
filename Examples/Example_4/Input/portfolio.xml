@@ -3,8 +3,8 @@
   <Trade id="Swap_20">
     <TradeType>Swap</TradeType>
     <Envelope>
-      <CounterParty>CUST_A</CounterParty>
-      <NettingSetId>CUST_A</NettingSetId>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <SwapData>
@@ -74,8 +74,8 @@
   <Trade id="Swaption_1_19">
     <TradeType>Swaption</TradeType>
     <Envelope>
-      <CounterParty>CUST_A</CounterParty>
-      <NettingSetId>CUST_A</NettingSetId>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <SwaptionData>
@@ -155,8 +155,8 @@
   <Trade id="Swaption_2_18">
     <TradeType>Swaption</TradeType>
     <Envelope>
-      <CounterParty>CUST_A</CounterParty>
-      <NettingSetId>CUST_A</NettingSetId>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <SwaptionData>
@@ -236,8 +236,8 @@
   <Trade id="Swaption_4_16">
     <TradeType>Swaption</TradeType>
     <Envelope>
-      <CounterParty>CUST_A</CounterParty>
-      <NettingSetId>CUST_A</NettingSetId>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <SwaptionData>
@@ -317,8 +317,8 @@
   <Trade id="Swaption_6_14">
     <TradeType>Swaption</TradeType>
     <Envelope>
-      <CounterParty>CUST_A</CounterParty>
-      <NettingSetId>CUST_A</NettingSetId>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <SwaptionData>
@@ -398,8 +398,8 @@
   <Trade id="Swaption_8_12">
     <TradeType>Swaption</TradeType>
     <Envelope>
-      <CounterParty>CUST_A</CounterParty>
-      <NettingSetId>CUST_A</NettingSetId>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <SwaptionData>
@@ -479,8 +479,8 @@
   <Trade id="Swaption_10_10">
     <TradeType>Swaption</TradeType>
     <Envelope>
-      <CounterParty>CUST_A</CounterParty>
-      <NettingSetId>CUST_A</NettingSetId>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <SwaptionData>
@@ -560,8 +560,8 @@
   <Trade id="Swaption_12_8">
     <TradeType>Swaption</TradeType>
     <Envelope>
-      <CounterParty>CUST_A</CounterParty>
-      <NettingSetId>CUST_A</NettingSetId>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <SwaptionData>
@@ -641,8 +641,8 @@
   <Trade id="Swaption_14_6">
     <TradeType>Swaption</TradeType>
     <Envelope>
-      <CounterParty>CUST_A</CounterParty>
-      <NettingSetId>CUST_A</NettingSetId>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <SwaptionData>
@@ -722,8 +722,8 @@
   <Trade id="Swaption_16_4">
     <TradeType>Swaption</TradeType>
     <Envelope>
-      <CounterParty>CUST_A</CounterParty>
-      <NettingSetId>CUST_A</NettingSetId>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <SwaptionData>
@@ -803,8 +803,8 @@
   <Trade id="Swaption_18_2">
     <TradeType>Swaption</TradeType>
     <Envelope>
-      <CounterParty>CUST_A</CounterParty>
-      <NettingSetId>CUST_A</NettingSetId>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <SwaptionData>
@@ -884,8 +884,8 @@
   <Trade id="Swaption_19_1">
     <TradeType>Swaption</TradeType>
     <Envelope>
-      <CounterParty>CUST_A</CounterParty>
-      <NettingSetId>CUST_A</NettingSetId>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <SwaptionData>

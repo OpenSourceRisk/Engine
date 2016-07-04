@@ -139,8 +139,8 @@
   <!-- default curves definition -->
   <DefaultCurves id="default">
     <DefaultCurve name="BANK">Default/USD/BANK_SR_USD</DefaultCurve>
-    <DefaultCurve name="CUST_A">Default/USD/CUST_A_SR_USD</DefaultCurve>
-    <DefaultCurve name="CUST_B">Default/USD/CUST_A_SR_USD</DefaultCurve>
+    <DefaultCurve name="CPTY_A">Default/USD/CPTY_A_SR_USD</DefaultCurve>
+    <DefaultCurve name="CPTY_B">Default/USD/CPTY_A_SR_USD</DefaultCurve>
   </DefaultCurves>
 
 </TodaysMarket>

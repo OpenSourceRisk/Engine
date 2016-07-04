@@ -3,8 +3,8 @@
   <Trade id="204128">
     <TradeType>Swap</TradeType>
     <Envelope>
-      <CounterParty>CUST_A</CounterParty>
-      <NettingSetId>CUST_A</NettingSetId>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <SwapData>
@@ -72,8 +72,8 @@
   <Trade id="204128-swaption">
     <TradeType>Swaption</TradeType>
     <Envelope>
-      <CounterParty>CUST_A</CounterParty>
-      <NettingSetId>CUST_A</NettingSetId>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <SwaptionData>
@@ -151,8 +151,8 @@
   <Trade id="204128-short">
     <TradeType>Swap</TradeType>
     <Envelope>
-      <CounterParty>CUST_B</CounterParty>
-      <NettingSetId>CUST_B</NettingSetId>
+      <CounterParty>CPTY_B</CounterParty>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <SwapData>
