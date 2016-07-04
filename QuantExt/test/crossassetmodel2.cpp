@@ -76,7 +76,6 @@ struct Lgm31fTestData {
         // correlation matrix (13 ccy, 12 fx, 3 inf pairs (CPI,RR))
         // ========================================================
 
-        // the model structure is taken from a production example;
         // we map the CPI index and RR to pseudo-FX components here,
         // therefore non EUR inflation components (i.e. the UK region)
         // will produce deviating results, since implicitly we assume

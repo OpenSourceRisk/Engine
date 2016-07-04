@@ -31,7 +31,7 @@ namespace testsuite {
 //! CrossAssetModel tests, part 2
 class CrossAssetModelTest2 {
   public:
-    /*! Test if a 31 factor IR-FX CrossAssetModel (whose structure is taken from an actual production case) has positive semidefinite analytical and Euler covariance matrices on a typical simulation grid. */
+    /*! Test if a 31 factor IR-FX CrossAssetModel has positive semidefinite analytical and Euler covariance matrices on a typical simulation grid. */
     static void testLgm31fPositiveCovariance();
 
     /*! Compare the analytical (unconditional) expectation and covariance matrix of the stochastic process of a 31 factor IR-FX CrossAssetModel at t=10 against Monte Carlo estimates using both an exact and an Euler discretisation. */
