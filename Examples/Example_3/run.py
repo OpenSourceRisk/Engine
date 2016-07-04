@@ -10,14 +10,14 @@ OreExample = ore_helpers['OreExample']
 oreex = OreExample()
 
 oreex.print_headline("Run ORE to produce NPV cube and exposures")
-#oreex.run("Input/ore.xml")
+oreex.run("Input/ore.xml")
 oreex.get_times("Output/log.txt")
 
 oreex.print_headline("Run ORE to price European Payer Swaptions")
-#oreex.run("Input/ore_payer_swaption.xml")
+oreex.run("Input/ore_payer_swaption.xml")
 
 oreex.print_headline("Run ORE to price European Receiver Swaptions")
-#oreex.run("Input/ore_receiver_swaption.xml")
+oreex.run("Input/ore_receiver_swaption.xml")
 
 fig = plt.figure()
 ax = fig.add_subplot(111)
