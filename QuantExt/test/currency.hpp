@@ -20,7 +20,6 @@
 
 /*! \file test/currency.hpp
     \brief Currency tests
-    \ingroup 
 */
 
 #ifndef quantext_test_currency_hpp
@@ -29,14 +28,13 @@
 #include <boost/test/unit_test.hpp>
 
 namespace testsuite {
-    
+
 //! Currency tests
-/*!
-  \ingroup tests
-*/
-class CurrencyTest {
+cclass CurrencyTest {
   public:
+    /*! Test whether currencies were set up with correct data. */
     static void testCurrency();
+
     static boost::unit_test_framework::test_suite* suite();
 };
 

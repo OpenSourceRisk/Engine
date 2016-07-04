@@ -20,7 +20,6 @@
 
 /*! \file test/dynamicblackvoltermstructure.hpp
     \brief tests for DynamicBlackVolTermStructure
-    \ingroup 
 */
 
 #ifndef quantext_test_dynamicblackvoltermstructure_hpp
@@ -29,14 +28,22 @@
 #include <boost/test/unit_test.hpp>
 
 namespace testsuite {
-    
+
 //! DynamicBlackVolTermStructure tests
 class DynamicBlackVolTermStructureTest {
   public:
+    /*! Test the dynamic black vol term structure w.r.t. constant variance time decay mode and sticky strike dynamics. */
     static void testConstantVarianceStickyStrike();
+
+    /*! Test the dynamic black vol term structure w.r.t. forward-forward variance time decay mode and sticky log moneyness dynamics. */
     static void testConstantVarianceStickyLogMoneyness();
+
+    /*! Test the dynamic black vol term structure w.r.t. constant variance time decay mode and sticky strike dynamics. */
     static void testForwardVarianceStickyStrike();
+
+    /*! Test the dynamic black vol term structure w.r.t. forward-forward time decay mode and sticky log moneyness dynamics. */
     static void testForwardVarianceStickyLogMoneyness();
+
     static boost::unit_test_framework::test_suite* suite();
 };
 
