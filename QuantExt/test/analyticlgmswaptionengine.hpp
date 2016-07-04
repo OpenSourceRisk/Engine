@@ -17,23 +17,32 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+/*! \file test/analyticlgmswaptionengine.hpp
+    \brief analytic LGM swaption engine test
+*/
 
 #ifndef quantext_test_analyticlgmswaptionengine_hpp
 #define quantext_test_analyticlgmswaptionengine_hpp
 
 #include <boost/test/unit_test.hpp>
 
-/* remember to document new and/or updated tests in the Doxygen
-   comment block of the corresponding class */
-
 namespace testsuite {
-    
+
+//! AnalyticLgmSwaptionEngine tests
 class AnalyticLgmSwaptionEngineTest {
   public:
+    /*! Test if the fixed coupon adjustment in the analytic LGM swaption engine accounting for a dual curve setup is zero in a mono curve setup. */
     static void testMonoCurve();
+
+    /*! Test if the fixed coupon adjustment in the analytic LGM swaption engine accounting for a dual curve setup is within a range of expected values for a given spread in a dual curve setup. */
     static void testDualCurve();
+
+    /*! Test the result of the analytic LGM swaption engine against those of the Gaussian1dSwaptionEngine and FdHullWhiteSwaptionEngine. */
     static void testAgainstOtherEngines();
+
+    /*! Test whether the price of an european swaption in the analytic LGM swaption engine is invariant under the LGM model invariances (scaling and shifting). */
     static void testLgmInvariances();
+
     static boost::unit_test_framework::test_suite *suite();
 };
 

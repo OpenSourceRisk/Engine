@@ -18,21 +18,27 @@
 */
 
 
+/*! \file test/crossassetmodelparametrizations.hpp
+    \brief cross asset model parametrizations test
+*/
+
 #ifndef quantext_test_crossassetmodelparametrizations_hpp
 #define quantext_test_crossassetmodelparametrizations_hpp
 
 #include <boost/test/unit_test.hpp>
 
-/* remember to document new and/or updated tests in the Doxygen
-   comment block of the corresponding class */
-
 namespace testsuite {
-    
+
+//! CrossAssetModelParametrization tests
 class CrossAssetModelParametrizationsTest {
   public:
+    /*! Test the computations in the base classes of the parametrization classes for the CrossAssetModel. */
     static void testParametrizationBaseClasses();
+    /*! Test the IR LGM parametrization classes of the CrossAssetModel. */
     static void testIrLgm1fParametrizations();
+    /*! Test the FX Black Scholes parametrization classes of the CrossAssetModel. */
     static void testFxBsParametrizations();
+
     static boost::unit_test_framework::test_suite *suite();
 };
 
