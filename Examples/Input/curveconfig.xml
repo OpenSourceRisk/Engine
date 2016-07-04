@@ -166,10 +166,10 @@
 
   <CapFloorVolatilities>
     <CapFloorVolatility>
-      <CurveId>EUR_CF_LN</CurveId>
-      <CurveDescription>EUR lognormal cap floor volatilities</CurveDescription>
+      <CurveId>EUR_CF_SLN</CurveId>
+      <CurveDescription>EUR shifted lognormal cap floor volatilities</CurveDescription>
       <!-- Normal, Lognormal or ShiftedLognormal -->
-      <VolatilityType>Lognormal</VolatilityType>
+      <VolatilityType>ShiftedLognormal</VolatilityType>
       <!-- Flat or Linear or None -->
       <Extrapolation>Flat</Extrapolation>
       <!-- Include ATM vol quotes also: True or False -->
@@ -188,10 +188,10 @@
       <DiscountCurve>Yield/EUR/EUR1D</DiscountCurve>
     </CapFloorVolatility>
     <CapFloorVolatility>
-      <CurveId>GBP_CF_LN</CurveId>
-      <CurveDescription>GBP lognormal cap floor volatilities</CurveDescription>
+      <CurveId>GBP_CF_SLN</CurveId>
+      <CurveDescription>GBP shifted lognormal cap floor volatilities</CurveDescription>
       <!-- Normal, Lognormal or ShiftedLognormal -->
-      <VolatilityType>Lognormal</VolatilityType>
+      <VolatilityType>ShiftedLognormal</VolatilityType>
       <!-- Flat or Linear or None -->
       <Extrapolation>Flat</Extrapolation>
       <!-- Include ATM vol quotes also: True or False -->
@@ -208,10 +208,10 @@
       <DiscountCurve>Yield/GBP/GBP1D</DiscountCurve>
     </CapFloorVolatility>
     <CapFloorVolatility>
-      <CurveId>USD_CF_LN</CurveId>
-      <CurveDescription>USD lognormal cap floor volatilities</CurveDescription>
+      <CurveId>USD_CF_SLN</CurveId>
+      <CurveDescription>USD shifted lognormal cap floor volatilities</CurveDescription>
       <!-- Normal, Lognormal or ShiftedLognormal -->
-      <VolatilityType>Lognormal</VolatilityType>
+      <VolatilityType>ShiftedLognormal</VolatilityType>
       <!-- Flat or Linear or None -->
       <Extrapolation>Flat</Extrapolation>
       <!-- Include ATM vol quotes also: True or False -->
