@@ -1,13 +1,15 @@
 import os
 import sys
 import subprocess
+import shutil
 
 
 class OreExample(object):
 
-    def __init__(self):
+    def __init__(self, dry=False):
         self.ore_exe = ""
         self.headlinecounter = 0
+        self.dry = dry
         self._locate_ore_exe()
 
     def _locate_ore_exe(self):
@@ -35,14 +37,24 @@ class OreExample(object):
                 for time in times:
                     print("\t" + time.split()[0] + ": " + time.split()[1])
 
-    def get_output_data_from_column(self, csv_name, colidx):
+    def get_output_data_from_column(self, csv_name, colidx, offset=1):
         f = open(os.path.join(os.path.join(os.getcwd(), "Output"), csv_name))
         data = []
         for line in f:
-            data.append(line.split(',')[colidx])
-        return data[1:]
+            if colidx < len(line.split(',')):
+                data.append(line.split(',')[colidx])
+            else:
+                data.append("Error")
+        return data[offset:]
+
+    def save_output_to_subdir(self, subdir, files):
+        if not os.path.exists(os.path.join("Output", subdir)):
+            os.makedirs(os.path.join("Output", subdir))
+        for file in files:
+            shutil.copy(os.path.join("Output", file), os.path.join("Output", subdir))
 
     def run(self, xml):
-        subprocess.call([self.ore_exe, xml])
+        if not self.dry:
+            subprocess.call([self.ore_exe, xml])
 
 
