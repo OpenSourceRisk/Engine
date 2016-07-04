@@ -3,9 +3,9 @@
   <Setup>    
     <Parameter name="inputPath">Input</Parameter>
     <Parameter name="outputPath">Output</Parameter>    
-    <Parameter name="asofDate">2016-02-26</Parameter>
-    <Parameter name="marketDataFile">../../Input/market_20160226.txt</Parameter>
-    <Parameter name="fixingDataFile">../../Input/fixings_20160226.txt</Parameter>    
+    <Parameter name="asofDate">2016-02-05</Parameter>
+    <Parameter name="marketDataFile">../../Input/market_20160205.txt</Parameter>
+    <Parameter name="fixingDataFile">../../Input/fixings_20160205.txt</Parameter>    
     <Parameter name="implyTodaysFixings">N</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
     <Parameter name="curveConfigFile">../../Input/curveconfig.xml</Parameter>
