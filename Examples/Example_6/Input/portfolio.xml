@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <Portfolio>
-  <Trade id="204128">
+  <Trade id="Swap">
     <TradeType>Swap</TradeType>
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
@@ -69,7 +69,7 @@
       </LegData>
     </SwapData>
   </Trade>
-  <Trade id="204128-swaption">
+  <Trade id="Swaption">
     <TradeType>Swaption</TradeType>
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
@@ -148,7 +148,7 @@
       </LegData>
     </SwaptionData>
   </Trade>
-  <Trade id="204128-short">
+  <Trade id="ShortSwap">
     <TradeType>Swap</TradeType>
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>

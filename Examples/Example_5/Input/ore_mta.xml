@@ -83,7 +83,7 @@
 
     <Analytic type="initialMargin">
       <Parameter name="active">N</Parameter>
-      <Parameter name="method">SIMM</Parameter>
+      <Parameter name="method"></Parameter>
     </Analytic>
   
   </Analytics>
