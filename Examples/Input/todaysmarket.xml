@@ -142,8 +142,6 @@
     <CapFloorVolatility currency="EUR">CapFloorVolatility/EUR/EUR_CF_LN</CapFloorVolatility>
     <CapFloorVolatility currency="USD">CapFloorVolatility/USD/USD_CF_LN</CapFloorVolatility>
     <CapFloorVolatility currency="GBP">CapFloorVolatility/GBP/GBP_CF_LN</CapFloorVolatility>
-    <CapFloorVolatility currency="CHF">CapFloorVolatility/CHF/CHF_CF_LN</CapFloorVolatility>
-    <CapFloorVolatility currency="JPY">CapFloorVolatility/JPY/JPY_CF_LN</CapFloorVolatility>
   </CapFloorVolatilities>
 
   <!-- default curves definition -->
