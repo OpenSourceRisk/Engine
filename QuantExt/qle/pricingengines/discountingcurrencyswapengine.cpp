@@ -1,13 +1,24 @@
-/* -*- mode: c++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-
 /*
-  Copyright (C) 2010 - 2015 Quaternion Risk Management Ltd.
-  All rights reserved.
+ Copyright (C) 2016 Quaternion Risk Management Ltd
+ All rights reserved.
+
+ This file is part of OpenRiskEngine, a free-software/open-source library
+ for transparent pricing and risk analysis - http://openriskengine.org
+
+ OpenRiskEngine is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program; if not, please email
+ <users@openriskengine.org>. The license is also available online at
+ <http://openriskengine.org/license.shtml>.
+
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+
 #include <qle/pricingengines/discountingcurrencyswapengine.hpp>
-#include <qle/pricingengines/discountingswapengine.hpp>
-#include <qle/indexes/simulatedfixingsmanager.hpp>
 
 #include <ql/cashflows/cashflows.hpp>
 #include <ql/cashflows/floatingratecoupon.hpp>
@@ -20,10 +31,10 @@
 namespace QuantExt {
 
     DiscountingCurrencySwapEngine::DiscountingCurrencySwapEngine(
-        std::vector<Handle<YieldTermStructure> > & discountCurves,
-        std::vector<Handle<Quote> >& fxQuotes,
-        std::vector<Currency> & currencies,
-        Currency npvCurrency,
+        const std::vector<Handle<YieldTermStructure> >& discountCurves,
+        const std::vector<Handle<Quote> >& fxQuotes,
+        const std::vector<Currency>& currencies,
+        const Currency& npvCurrency,
         boost::optional<bool> includeSettlementDateFlows,
         Date settlementDate,
         Date npvDate)
@@ -125,21 +136,10 @@ namespace QuantExt {
                 Currency ccy = arguments_.currency[i];
                 Handle<YieldTermStructure> yts = fetchTS(ccy);
 
-                if(SimulatedFixingsManager::instance().simulateFixings()) {
-                    // do not try any optimizations
-                    results_.inCcyLegNPV[i] = QuantExt::simulatedFixingsNpv(
-                        arguments_.legs[i], **yts, includeRefDateFlows,
-                        settlementDate, yts->referenceDate(), false, false,
-                        false, false);
-
-                    results_.inCcyLegBPS[i] = Null<Real>();
-                }
-                else {
-                    QuantLib::CashFlows::npvbps(
-                        arguments_.legs[i], **yts, includeRefDateFlows,
-                        settlementDate, results_.valuationDate,
-                        results_.inCcyLegNPV[i], results_.inCcyLegBPS[i]);
-                }
+                QuantLib::CashFlows::npvbps(
+                    arguments_.legs[i], **yts, includeRefDateFlows,
+                    settlementDate, results_.valuationDate,
+                    results_.inCcyLegNPV[i], results_.inCcyLegBPS[i]);
 
                 results_.inCcyLegNPV[i] *= arguments_.payer[i];
                 if (results_.inCcyLegBPS[i] != Null<Real>()) {

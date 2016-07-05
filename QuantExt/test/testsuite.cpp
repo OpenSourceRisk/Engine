@@ -1,11 +1,26 @@
-/* -*- mode: c++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-
 /*
-  Copyright (C) 2016 Quaternion Risk Management Ltd.
+ Copyright (C) 2016 Quaternion Risk Management Ltd
+ All rights reserved.
+
+ This file is part of OpenRiskEngine, a free-software/open-source library
+ for transparent pricing and risk analysis - http://openriskengine.org
+
+ OpenRiskEngine is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program; if not, please email
+ <users@openriskengine.org>. The license is also available online at
+ <http://openriskengine.org/license.shtml>.
+
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
+
 
 /*! \file testsuite.cpp
     \brief wrapper calling all individual test cases
+    \ingroup 
 */
 
 #include <iostream>
@@ -35,7 +50,6 @@ using boost::unit_test::test_suite;
 #include "crossassetmodelparametrizations.hpp"
 #include "currency.hpp"
 #include "discountcurve.hpp"
-#include "discountingswapengine.hpp"
 #include "dynamicblackvoltermstructure.hpp"
 #include "dynamicswaptionvolmatrix.hpp"
 #include "index.hpp"
@@ -74,19 +88,18 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(BOOST_TEST_CASE(startTimer));
 
     test->add(CashFlowTest::suite());
-    test->add(AnalyticLgmSwaptionEngineTest::suite());
-    test->add(CrossAssetModelTest::suite());
-    test->add(CrossAssetModelTest2::suite());
-    test->add(CrossAssetModelParametrizationsTest::suite());
-    test->add(DiscountCurveTest::suite());
-    test->add(DiscountingSwapEngineTest::suite());
-    test->add(DynamicBlackVolTermStructureTest::suite());
-    test->add(DynamicSwaptionVolMatrixTest::suite());
-    test->add(CurrencyTest::suite());
-    test->add(IndexTest::suite());
-    test->add(LogQuoteTest::suite());
-    test->add(StaticallyCorrectedYieldTermStructureTest::suite());
-    test->add(BlackVarianceCurveTest::suite());
+    test->add(testsuite::AnalyticLgmSwaptionEngineTest::suite());
+    test->add(testsuite::CrossAssetModelTest::suite());
+    test->add(testsuite::CrossAssetModelTest2::suite());
+    test->add(testsuite::CrossAssetModelParametrizationsTest::suite());
+    test->add(testsuite::DiscountCurveTest::suite());
+    test->add(testsuite::DynamicBlackVolTermStructureTest::suite());
+    test->add(testsuite::DynamicSwaptionVolMatrixTest::suite());
+    test->add(testsuite::CurrencyTest::suite());
+    test->add(testsuite::IndexTest::suite());
+    test->add(testsuite::LogQuoteTest::suite());
+    test->add(testsuite::StaticallyCorrectedYieldTermStructureTest::suite());
+    test->add(testsuite::BlackVarianceCurveTest::suite());
 
     test->add(BOOST_TEST_CASE(stopTimer));
 

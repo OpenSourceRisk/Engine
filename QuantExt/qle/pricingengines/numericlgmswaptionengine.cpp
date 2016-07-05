@@ -1,8 +1,22 @@
-/* -*- mode: c++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd.
+ Copyright (C) 2016 Quaternion Risk Management Ltd
+ All rights reserved.
+
+ This file is part of OpenRiskEngine, a free-software/open-source library
+ for transparent pricing and risk analysis - http://openriskengine.org
+
+ OpenRiskEngine is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program; if not, please email
+ <users@openriskengine.org>. The license is also available online at
+ <http://openriskengine.org/license.shtml>.
+
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
+
 
 #include <qle/pricingengines/numericlgmswaptionengine.hpp>
 
@@ -93,7 +107,7 @@ Real NumericLgmSwaptionEngineBase::calculate() const {
         else {
             Real std = sqrt(model_->parametrization()->zeta(te[j]) -
                             model_->parametrization()->zeta(te[j - 1]));
-            Real previousValue = 0;
+//            Real previousValue = 0;
             for (int k = 0; k <= 2 * mx_; k++) {
                 int imin = 0;
                 int imax = 2 * my_;
@@ -130,7 +144,7 @@ Real NumericLgmSwaptionEngineBase::calculate() const {
                 }
                 // choose: continue (value) or exercise (u[j-1][k])
                 v[j - 1][k] = std::max(value, u[j - 1][k]);
-                previousValue = value;
+                // previousValue = value;
             }
         }
     } // for options

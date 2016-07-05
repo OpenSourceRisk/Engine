@@ -30,21 +30,58 @@ active_sheet = model.CurrentController.ActiveSheet
 ###############################################
 
 # backup
-cell = active_sheet.getCellRangeByName("B2")
-fileName = cell.String
+cellB2 = active_sheet.getCellRangeByName("B2")
+backupB2 = cellB2.String
+
+cellB14 = active_sheet.getCellRangeByName("B14")
+backupB14 = cellB14.String
+
+cellB22 = active_sheet.getCellRangeByName("B22")
+backupB22 = cellB22.String
 
 # remove charts
 charts = active_sheet.getCharts()
 charts.removeByName('chart')
 
 # clear all cells content
-cr = active_sheet.getCellRangeByName("A1:Z100")
+cr = active_sheet.getCellRangeByName("B1:Z100")
 cr.clearContents(1) # simple values
 cr.clearContents(4) # strings
 # clear all objects including charts, but also macro buttons
 #cr.clearContents(128) 
 
 #restore
-cell = active_sheet.getCellRangeByName("B2")
-cell.String = fileName
+cellB2.String = backupB2
+cellB14.String = backupB14
+cellB22.String = backupB22
 
+sheets = model.getSheets()
+try:
+    sheets.removeByName('NPV')
+except :
+    pass
+
+try:
+    sheets.removeByName('Cashflow')
+except :
+    pass
+
+try:
+    sheets.removeByName('XVA')
+except :
+    pass
+
+try:
+    sheets.removeByName('ORE')
+except :
+    pass
+
+try:
+    sheets.removeByName('Portfolio')
+except :
+    pass
+
+try:
+    sheets.removeByName('Market')
+except :
+    pass

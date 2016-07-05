@@ -7,9 +7,12 @@
 
 #include <iostream>
 
+#include <qlw/simm/simmdatafileloader.hpp>
 #include <qlw/utilities/log.hpp>
+#include <qlw/utilities/progressbar.hpp>
 #include <qlw/wrap.hpp>
 #include <qlw/engine/valuationengine.hpp>
+#include <qlw/simm/simm.hpp>
 #include <ql/time/calendars/all.hpp>
 #include <ql/time/daycounters/all.hpp>
 #include <ql/cashflows/floatingratecoupon.hpp>
@@ -22,9 +25,13 @@
 #  include <ql/auto_link.hpp>
 #  include <qle/auto_link.hpp>
 // Find the name of the correct boost library with which to link.
+#  define BOOST_LIB_NAME boost_regex
+#  include <boost/config/auto_link.hpp>
 #  define BOOST_LIB_NAME boost_serialization
 #  include <boost/config/auto_link.hpp>
 #  define BOOST_LIB_NAME boost_date_time
+#  include <boost/config/auto_link.hpp>
+#  define BOOST_LIB_NAME boost_regex
 #  include <boost/config/auto_link.hpp>
 #  define putenv _putenv
 #endif
@@ -36,6 +43,7 @@ using namespace openxva::portfolio;
 using namespace openxva::marketdata;
 using namespace openxva::utilities;
 using namespace openxva::engine;
+using namespace openxva::simm;
 using namespace openxva::simulation;
 using namespace openxva::cube;
 using namespace openxva::aggregation;
@@ -64,6 +72,9 @@ void writeNettingSetColva(const Parameters& params,
 void writeXVA(const Parameters& params,
               boost::shared_ptr<Portfolio> portfolio,
               boost::shared_ptr<PostProcess> postProcess);
+
+void writeSimmResults(const Parameters& params, const std::vector<boost::shared_ptr<Simm>>& simm,
+                      const std::vector<string>& portfolios);
 
 int main(int argc, char** argv) {
 
@@ -193,9 +204,7 @@ int main(int argc, char** argv) {
         engineData->fromFile(pricingEnginesFile);
 
         boost::shared_ptr<EngineFactory> factory =
-            boost::make_shared<EngineFactory>(
-                market, engineData, params.get("markets", "lgmcalibration"), params.get("markets", "fxcalibration"),
-                params.get("markets", "pricing"));
+            boost::make_shared<EngineFactory>(engineData, market, params.get("markets", "pricing"));
         cout << "OK" << endl;
         
         /******************************
@@ -254,6 +263,9 @@ int main(int argc, char** argv) {
          * Simulation: Scenario and Cube Generation
          */
 
+        boost::shared_ptr<AdditionalScenarioData> inMemoryScenarioData;
+        boost::shared_ptr<NPVCube> inMemoryCube;
+        
         if (params.hasGroup("simulation") &&
             params.get("simulation", "active") == "Y") {
             
@@ -273,11 +285,12 @@ int main(int argc, char** argv) {
             simMarketData->fromFile(simulationConfigFile);
             
             LOG("Load Simulation Parameters");
-            ScenarioGeneratorBuilder sb;
-            sb.fromFile(simulationConfigFile);
-            boost::shared_ptr<ScenarioGenerator> sg = sb.build(model, simMarketData, asof, market,
-                                                               params.get("markets", "pricing"));
-            boost::shared_ptr<openxva::simulation::DateGrid> grid = sb.dateGrid();
+            boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
+            sgd->fromFile(simulationConfigFile);
+            ScenarioGeneratorBuilder sgb(sgd);
+            boost::shared_ptr<ScenarioGenerator> sg = sgb.build(model, simMarketData, asof, market,
+                                                                params.get("markets", "pricing"));
+            boost::shared_ptr<openxva::simulation::DateGrid> grid = sgd->grid();
             
             LOG("Build Simulation Market");
             boost::shared_ptr<openxva::simulation::SimMarket> simMarket
@@ -288,11 +301,8 @@ int main(int argc, char** argv) {
             string simPricingEnginesFile = inputPath + "/" + params.get("simulation", "pricingEnginesFile");
             simEngineData->fromFile(simPricingEnginesFile);
             boost::shared_ptr<EngineFactory>
-                simFactory = boost::make_shared<EngineFactory>(simMarket, simEngineData,
-                                                               params.get("markets", "lgmcalibration"),
-                                                               params.get("markets", "fxcalibration"),
-                                                               params.get("markets", "pricing"),
-                                                               true);
+                simFactory = boost::make_shared<EngineFactory>(simEngineData, simMarket,
+                                                               params.get("markets", "pricing"));
             
             LOG("Build portfolio linked to sim market");
             boost::shared_ptr<Portfolio> simPortfolio = boost::make_shared<Portfolio>();
@@ -306,39 +316,45 @@ int main(int argc, char** argv) {
             bool sporty = parseBool(sportyString);
 
             LOG("Build valuation cube engine");
-            Size samples = sb.samples();
+            Size samples = sgd->samples();
             string baseCurrency = params.get("simulation", "baseCurrency");
-            ValuationEngine engine(asof, grid, samples, baseCurrency, simMarket,
-                                   sb.simulateFixings(), sb.estimationMethod(), sb.forwardHorizonDays(), sporty);
+            ValuationEngine engine(asof, grid, samples, baseCurrency, simMarket, sporty);
 
             ostringstream o;
             o << "Additional Scenario Data " << grid->size() << " x " << samples << "... ";
             cout << setw(tab) << o.str() << flush;
-            boost::shared_ptr<AdditionalScenarioData>
-                inMemoryAdditionalScenarioData = boost::make_shared<InMemoryAdditionalScenarioData>(grid->size(),samples);
+            inMemoryScenarioData = boost::make_shared<InMemoryAdditionalScenarioData>(grid->size(),samples);
             cout << "OK" << endl;
             
             o.str("");
             o << "Build Cube " << simPortfolio->size() << " x " << grid->size() << " x " << samples << "... ";
-            cout << setw(tab) << o.str() << flush;
             LOG("Build cube");
-            boost::shared_ptr<NPVCube>
-                inMemoryCube = boost::make_shared<SinglePrecisionInMemoryCube>
+            auto progressBar = boost::make_shared<SimpleProgressBar>(o.str(), tab);
+            auto progressLog = boost::make_shared<ProgressLog>("Building cube...");
+            engine.registerProgressIndicator(progressBar);
+            engine.registerProgressIndicator(progressLog);
+            inMemoryCube = boost::make_shared<SinglePrecisionInMemoryCube>
                 (asof, simPortfolio->ids(), grid->dates(), samples);
-            engine.buildCube(simPortfolio, inMemoryCube, inMemoryAdditionalScenarioData);
+            engine.buildCube(simPortfolio, inMemoryCube, inMemoryScenarioData);
             cout << "OK" << endl;
 
             cout << setw(tab) << left << "Write Cube... " << flush;
             LOG("Write cube");
             string cubeFileName = outputPath + "/" + params.get("simulation", "cubeFile");
-            inMemoryCube->save(cubeFileName);
-            cout << "OK" << endl;
+            if (cubeFileName != "") {
+                inMemoryCube->save(cubeFileName);
+                cout << "OK" << endl;
+            } else
+                cout << "SKIP" << endl;
 
             cout << setw(tab) << left << "Write Additional Scenario Data... " << flush;
             LOG("Write scenario data");
             string outputFileNameAddScenData = outputPath + "/" + params.get("simulation", "additionalScenarioDataFileName");
-            inMemoryAdditionalScenarioData->save(outputFileNameAddScenData);
-            cout << "OK" << endl;
+            if (outputFileNameAddScenData != "") {
+                inMemoryScenarioData->save(outputFileNameAddScenData);
+                cout << "OK" << endl;
+            } else
+                cout << "SKIP" << endl;
         }
         else {
             LOG("skip simulation");
@@ -360,20 +376,28 @@ int main(int argc, char** argv) {
             boost::shared_ptr<NettingSetManager> netting = boost::make_shared<NettingSetManager>();
             netting->fromFile(csaFile);
 
-            string cubeFile = outputPath + "/" + params.get("xva", "cubeFile");
-            boost::shared_ptr<NPVCube>
+            boost::shared_ptr<NPVCube> cube;
+            if (inMemoryCube)
+                cube = inMemoryCube;
+            else {
                 cube = boost::make_shared<SinglePrecisionInMemoryCube>();
-            cube->load(cubeFile);
-
+                string cubeFile = outputPath + "/" + params.get("xva", "cubeFile");
+                cube->load(cubeFile);
+            }
+            
             QL_REQUIRE(cube->numIds() == portfolio->size(),
                 "cube x dimension (" << cube->numIds() << ") does not match portfolio size ("
                                      << portfolio->size() << ")");
                        
-            string scenarioFile = outputPath + "/" + params.get("xva", "scenarioFile");
-            boost::shared_ptr<AdditionalScenarioData>
+            boost::shared_ptr<AdditionalScenarioData> scenarioData;
+            if (inMemoryScenarioData)
+                scenarioData = inMemoryScenarioData;
+            else {
                 scenarioData = boost::make_shared<InMemoryAdditionalScenarioData>();
-            scenarioData->load(scenarioFile);
-
+                string scenarioFile = outputPath + "/" + params.get("xva", "scenarioFile");
+                scenarioData->load(scenarioFile);
+            }
+            
             QL_REQUIRE(scenarioData->dimDates() == cube->dates().size(),
                 "scenario dates do not match cube grid size");
             QL_REQUIRE(scenarioData->dimSamples() == cube->samples(),
@@ -431,7 +455,22 @@ int main(int argc, char** argv) {
         cout << setw(tab) << left << "Initial Margin Report... " << flush;
         if (params.hasGroup("initialMargin") &&
             params.get("initialMargin", "active") == "Y") {
-            QL_FAIL("Initial Margin reports not implemented yet");
+            if(params.get("initialMargin", "method") == "SIMM") {
+                LOG("Loading SIMM data from file...");
+                SimmDataFileLoader loader(inputPath + "/" + params.get("initialMargin", "inputFileName"),
+                                          params.get("initialMargin", "simmVersion"),
+                                          parseBool(params.get("initialMargin", "simmUseProductClasses")),
+                                          parseBool(params.get("initialMargin", "inputDelimiterCR")) ? '\r' : '\n');
+                vector<boost::shared_ptr<Simm>> simm;
+                for(Size i=0;i<loader.portfolios().size();++i) {
+                    LOG("Set up SIMM calculator for portfolio " << loader.portfolios()[i]);
+                    simm.push_back(boost::make_shared<Simm>(loader.data()[i]));
+                }
+                writeSimmResults(params, simm, loader.portfolios());
+                LOG("SIMM results file written.");
+            } else {
+                QL_FAIL("initial margin method " << params.get("initialMargin", "method") << " not recognised.");
+            }
             cout << "OK" << endl;
         }
         else {
@@ -485,7 +524,8 @@ void writeNpv(const Parameters& params,
                  << npvCcy << sep
                  << npv * fx << sep
                  << baseCurrency << endl;
-        } catch (...) {
+        } catch (std::exception &e) {
+            ALOG("Exception during pricing trade " << trade->id() << ": " << e.what());
             file << "#NA" << sep << "#NA" << sep << "#NA" << sep << "#NA" << endl;
         }
     }
@@ -784,6 +824,38 @@ void writeNettingSetColva(const Parameters& params,
         }
         file.close();
     }
+}
+
+void writeSimmResults(const Parameters& params, const std::vector<boost::shared_ptr<Simm>>& simm,
+                      const std::vector<string>& portfolios) {
+
+    string outputPath = params.get("setup", "outputPath");
+    string fileName = outputPath + "/" + params.get("initialMargin", "outputFileName");
+    ofstream file(fileName);
+    QL_REQUIRE(file.is_open(), "Error opening file " << fileName);
+    file.precision(15);
+    char sep = ',';
+    file << "Portfolio" << sep << "ProductClass" << sep << "RiskClass" << sep << "MarginType" << sep << "InitialMargin"
+         << endl;
+    const string all = "All";
+    for (Size i = 0; i < portfolios.size(); ++i) {
+        for (Size p = 0; p < SimmConfiguration::numberOfProductClasses; ++p) {
+            SimmConfiguration::ProductClass pc = SimmConfiguration::ProductClass(p);
+            for (Size r = 0; r < SimmConfiguration::numberOfRiskClasses; ++r) {
+                SimmConfiguration::RiskClass rc = SimmConfiguration::RiskClass(r);
+                for (Size m = 0; m < SimmConfiguration::numberOfMarginTypes; ++m) {
+                    SimmConfiguration::MarginType mar = SimmConfiguration::MarginType(m);
+                    file << portfolios[i] << sep << pc << sep << rc << sep << mar << sep
+                         << simm[i]->initialMargin(pc, rc, mar) << endl;
+                }
+                file << portfolios[i] << sep << pc << sep << rc << sep << all << sep << simm[i]->initialMargin(pc, rc)
+                     << endl;
+            }
+            file << portfolios[i] << sep << pc << sep << all << sep << all << sep << simm[i]->initialMargin(pc) << endl;
+        }
+        file << portfolios[i] << sep << all << sep << all << sep << all << sep << simm[i]->initialMargin() << endl;
+    }
+    file.close();
 }
 
 bool Parameters::hasGroup(const string& groupName) const {

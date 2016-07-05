@@ -14,7 +14,6 @@ libPricingEngines_la_SOURCES = \
 	crossccyswapengine.cpp \
 	discountingcurrencyswapengine.cpp \
 	discountingfxforwardengine.cpp \
-	discountingswapengine.cpp \
 	discountingswapenginemulticurve.cpp \
 	oiccbasisswapengine.cpp \
 	numericlgmswaptionengine.cpp
@@ -27,7 +26,6 @@ this_include_HEADERS = \
 	crossccyswapengine.hpp \
 	discountingcurrencyswapengine.hpp \
 	discountingfxforwardengine.hpp \
-	discountingswapengine.hpp \
 	discountingswapenginemulticurve.hpp \
 	oiccbasisswapengine.hpp \
 	numericlgmswaptionengine.hpp

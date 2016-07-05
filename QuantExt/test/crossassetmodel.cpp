@@ -1,8 +1,22 @@
-/* -*- mode: c++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd.
+ Copyright (C) 2016 Quaternion Risk Management Ltd
+ All rights reserved.
+
+ This file is part of OpenRiskEngine, a free-software/open-source library
+ for transparent pricing and risk analysis - http://openriskengine.org
+
+ OpenRiskEngine is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program; if not, please email
+ <users@openriskengine.org>. The license is also available online at
+ <http://openriskengine.org/license.shtml>.
+
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
+
 
 #include "crossassetmodel.hpp"
 
@@ -107,6 +121,9 @@ struct BermudanTestData {
 
 } // anonymous namespace
 
+
+namespace testsuite {
+    
 void CrossAssetModelTest::testBermudanLgm1fGsr() {
 
     BOOST_TEST_MESSAGE("Testing consistency of Bermudan swaption pricing in "
@@ -525,17 +542,21 @@ void CrossAssetModelTest::testCcyLgm3fForeignPayouts() {
     singleModels.push_back(usdLgmParam);
     singleModels.push_back(fxUsdEurBsParam);
 
-    Matrix c(3, 3);
-    //  EUR            USD              FX
-    c[0][0] = 1.0;  c[0][1] = -0.2; c[0][2] = 0.8; // EUR
-    c[1][0] = -0.2; c[1][1] = 1.0;  c[1][2] = -0.5; // USD
-    c[2][0] = 0.8;  c[2][1] = -0.5; c[2][2] = 1.0; // FX
+    boost::shared_ptr<CrossAssetModel> ccLgm =
+        boost::make_shared<CrossAssetModel>(singleModels);
 
-    boost::shared_ptr<CrossAssetModel> ccLgm = boost::make_shared<CrossAssetModel>(
-        singleModels, c, SalvagingAlgorithm::None);
+    Size eurIdx = ccLgm->ccyIndex(EURCurrency());
+    Size usdIdx = ccLgm->ccyIndex(USDCurrency());
+    Size eurUsdIdx = usdIdx-1;
 
-    boost::shared_ptr<LinearGaussMarkovModel> eurLgm = boost::make_shared<LinearGaussMarkovModel>(eurLgmParam);
-    boost::shared_ptr<LinearGaussMarkovModel> usdLgm = boost::make_shared<LinearGaussMarkovModel>(usdLgmParam);
+    ccLgm->correlation(IR, eurIdx, IR, usdIdx, -0.2);
+    ccLgm->correlation(IR, eurIdx, FX, eurUsdIdx, 0.8);
+    ccLgm->correlation(IR, usdIdx, FX, eurUsdIdx, -0.5);
+
+    boost::shared_ptr<LinearGaussMarkovModel> eurLgm =
+        boost::make_shared<LinearGaussMarkovModel>(eurLgmParam);
+    boost::shared_ptr<LinearGaussMarkovModel> usdLgm =
+        boost::make_shared<LinearGaussMarkovModel>(usdLgmParam);
 
     boost::shared_ptr<StochasticProcess> process =
         ccLgm->stateProcess(CrossAssetStateProcess::exact);
@@ -1538,4 +1559,6 @@ test_suite *CrossAssetModelTest::suite() {
     suite->add(
         QUANTLIB_TEST_CASE(&CrossAssetModelTest::testCorrelationRecovery));
     return suite;
+}
+
 }

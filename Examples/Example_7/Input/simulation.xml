@@ -1,5 +1,3 @@
-<Root>
-
   <Simulation>
 
     <Parameters>
@@ -12,12 +10,6 @@
       <Scenario>Simple</Scenario>
       <Seed>42</Seed>
       <Samples>1000</Samples>
-      
-      <Fixings>
-	<SimulateFixings>Y</SimulateFixings>
-	<EstimationMethod>Backward</EstimationMethod>
-	<ForwardHorizonDays>1</ForwardHorizonDays>
-      </Fixings>
       
     </Parameters>
 
@@ -313,5 +305,3 @@
     </Market>
     
   </Simulation>
-  
-</Root>

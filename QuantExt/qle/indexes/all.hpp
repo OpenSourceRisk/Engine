@@ -5,5 +5,4 @@
 #include <qle/indexes/simulatedfixingsmanager.hpp>
 #include <qle/indexes/fxindex.hpp>
 #include <qle/indexes/fxindex.cpp>
-
 #include <qle/indexes/ibor/all.hpp>

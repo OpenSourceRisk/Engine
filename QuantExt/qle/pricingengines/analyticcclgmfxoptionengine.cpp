@@ -1,8 +1,22 @@
-/* -*- mode: c++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd.
+ Copyright (C) 2016 Quaternion Risk Management Ltd
+ All rights reserved.
+
+ This file is part of OpenRiskEngine, a free-software/open-source library
+ for transparent pricing and risk analysis - http://openriskengine.org
+
+ OpenRiskEngine is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program; if not, please email
+ <users@openriskengine.org>. The license is also available online at
+ <http://openriskengine.org/license.shtml>.
+
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
+
 
 #include <qle/pricingengines/analyticcclgmfxoptionengine.hpp>
 #include <qle/models/crossassetanalytics.hpp>
@@ -34,12 +48,11 @@ Real AnalyticCcLgmFxOptionEngine::value(
         !(close_enough(cachedT0_, t0) && close_enough(cachedT_, t))) {
         cachedIntegrals_ =
             // first term
-            H0 * H0 * (x->irlgm1f(0)->zeta(t) - x->irlgm1f(0)->zeta(t0)) -
+            H0 * H0 * (zetaz(0).eval(x, t) - zetaz(0).eval(x, t0)) -
             2.0 * H0 * integral(x, P(Hz(0), az(0), az(0)), t0, t) +
             integral(x, P(Hz(0), Hz(0), az(0), az(0)), t0, t) +
             // second term
-            Hi * Hi *
-                (x->irlgm1f(i + 1)->zeta(t) - x->irlgm1f(i + 1)->zeta(t0)) -
+            Hi * Hi * (zetaz(i + 1).eval(x, t) - zetaz(i + 1).eval(x, t0)) -
             2.0 * Hi * integral(x, P(Hz(i + 1), az(i + 1), az(i + 1)), t0, t) +
             integral(x, P(Hz(i + 1), Hz(i + 1), az(i + 1), az(i + 1)), t0, t) -
             // third term
@@ -61,7 +74,7 @@ Real AnalyticCcLgmFxOptionEngine::value(
     Real variance =
         cachedIntegrals_ +
         // term two three/fourth
-        (x->fxbs(i)->variance(t) - x->fxbs(i)->variance(t0)) +
+        (vx(i).eval(x, t) - vx(i).eval(x, t0)) +
         // forth term
         2.0 * (H0 * integral(x, P(az(0), sx(i), rzx(0, i)), t0, t) -
                integral(x, P(Hz(0), az(0), sx(i), rzx(0, i)), t0, t)) -

@@ -6,7 +6,6 @@ this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \
 	all.hpp \
 	genericiborindex.hpp \
-	simulatedfixingsmanager.hpp \
     fxindex.hpp fxindex.cpp
 
 all.hpp: Makefile.am

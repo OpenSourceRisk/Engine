@@ -1,7 +1,24 @@
-/* -*- mode: c++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd.
+ Copyright (C) 2016 Quaternion Risk Management Ltd
+ All rights reserved.
+
+ This file is part of OpenRiskEngine, a free-software/open-source library
+ for transparent pricing and risk analysis - http://openriskengine.org
+
+ OpenRiskEngine is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program; if not, please email
+ <users@openriskengine.org>. The license is also available online at
+ <http://openriskengine.org/license.shtml>.
+
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
+*/
+
+/*! \file test/crossassetmodel2.hpp
+    \brief cross asset model test
 */
 
 #ifndef quantext_test_crossassetmodel2_hpp
@@ -9,15 +26,23 @@
 
 #include <boost/test/unit_test.hpp>
 
-/* remember to document new and/or updated tests in the Doxygen
-   comment block of the corresponding class */
+namespace testsuite {
 
+//! CrossAssetModel tests, part 2
 class CrossAssetModelTest2 {
   public:
+    /*! Test if a 31 factor IR-FX CrossAssetModel (whose structure is taken from an actual production case) has positive semidefinite analytical and Euler covariance matrices on a typical simulation grid. */
     static void testLgm31fPositiveCovariance();
+
+    /*! Compare the analytical (unconditional) expectation and covariance matrix of the stochastic process of a 31 factor IR-FX CrossAssetModel at t=10 against Monte Carlo estimates using both an exact and an Euler discretisation. */
     static void testLgm31fMoments();
+
+    /*! Test whether the price process of a constant cashflow in all possible currencies under the domestic numeraire in a 31 factor IR-FX CrossAssetModel is a martingale. */
     static void testLgm31fMartingaleProperty();
+
     static boost::unit_test_framework::test_suite *suite();
 };
+
+}
 
 #endif

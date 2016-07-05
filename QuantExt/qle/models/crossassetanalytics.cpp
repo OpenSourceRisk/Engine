@@ -1,8 +1,22 @@
-/* -*- mode: c++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-
 /*
- Copyright (C) 2016 Quaternion Risk Mangament
+ Copyright (C) 2016 Quaternion Risk Management Ltd
+ All rights reserved.
+
+ This file is part of OpenRiskEngine, a free-software/open-source library
+ for transparent pricing and risk analysis - http://openriskengine.org
+
+ OpenRiskEngine is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program; if not, please email
+ <users@openriskengine.org>. The license is also available online at
+ <http://openriskengine.org/license.shtml>.
+
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
+
 
 #include <qle/models/crossassetanalytics.hpp>
 
@@ -31,15 +45,15 @@ Real fx_expectation_1(const CrossAssetModel *x, const Size i, const Time t0,
     Real Hi_a = Hz(i + 1).eval(x, t0);
     Real H0_b = Hz(0).eval(x, t0 + dt);
     Real Hi_b = Hz(i + 1).eval(x, t0 + dt);
-    Real zeta0_a = zeta(0).eval(x, t0);
-    Real zetai_a = zeta(i + 1).eval(x, t0);
-    Real zeta0_b = zeta(0).eval(x, t0 + dt);
-    Real zetai_b = zeta(i + 1).eval(x, t0 + dt);
+    Real zeta0_a = zetaz(0).eval(x, t0);
+    Real zetai_a = zetaz(i + 1).eval(x, t0);
+    Real zeta0_b = zetaz(0).eval(x, t0 + dt);
+    Real zetai_b = zetaz(i + 1).eval(x, t0 + dt);
     Real res = std::log(x->irlgm1f(i + 1)->termStructure()->discount(t0 + dt) /
                         x->irlgm1f(i + 1)->termStructure()->discount(t0) *
                         x->irlgm1f(0)->termStructure()->discount(t0) /
                         x->irlgm1f(0)->termStructure()->discount(t0 + dt));
-    res -= 0.5 * (x->fxbs(i)->variance(t0+dt)-x->fxbs(i)->variance(t0));
+    res -= 0.5 * (vx(i).eval(x, t0 + dt) - vx(i).eval(x, t0));
     res += 0.5 * (H0_b * H0_b * zeta0_b - H0_a * H0_a * zeta0_a -
                   integral(x, P(Hz(0), Hz(0), az(0), az(0)), t0, t0 + dt));
     res -= 0.5 * (Hi_b * Hi_b * zetai_b - Hi_a * Hi_a * zetai_a -
@@ -95,7 +109,7 @@ Real fx_fx_covariance(const CrossAssetModel *x, const Size i, const Size j,
     Real Hj = Hz(j + 1).eval(x, t0 + dt);
     Real res =
         // row 1
-        H0 * H0 * (x->irlgm1f(0)->zeta(t0 + dt) - x->irlgm1f(0)->zeta(t0)) -
+        H0 * H0 * (zetaz(0).eval(x, t0 + dt) - zetaz(0).eval(x, t0)) -
         2.0 * H0 * integral(x, P(Hz(0), az(0), az(0)), t0, t0 + dt) +
         integral(x, P(Hz(0), Hz(0), az(0), az(0)), t0, t0 + dt) -
         // row 2

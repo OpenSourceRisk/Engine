@@ -99,7 +99,7 @@ cellrange = str("H1:J") + str(line)
 dx = 14000
 dy = 10000
 x = 0
-y = 6000
+y = 14000
 oChart = generateChart(active_sheet, 1, 'Exposure', dx, dy, x, y, cellrange, True, True)
 oChartDoc = oChart.getEmbeddedObject()  
 oDiagram = oChartDoc.createInstance( "com.sun.star.chart.XYDiagram" ) 
@@ -127,3 +127,4 @@ cell = active_sheet.getCellRangeByName("B8")
 ts = time.time()
 st = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
 cell.String = st + " Upload completed"
+
