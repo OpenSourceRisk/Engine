@@ -53,6 +53,18 @@ class OreExample(object):
         for file in files:
             shutil.copy(os.path.join("Output", file), os.path.join("Output", subdir))
 
+    def plot(self, ax, filename, colIdxTime, colIdxVal, color, label):
+        ax.plot(self.get_output_data_from_column(filename, colIdxTime),
+                self.get_output_data_from_column(filename, colIdxVal),
+                color=color,
+                label=label)
+
+    def decorate_plot(self, ax, title, ylabel="Exposure", xlabel="Time / Years"):
+        ax.set_title(title)
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
+        ax.legend(loc='upper right', shadow=True)
+
     def run(self, xml):
         if not self.dry:
             subprocess.call([self.ore_exe, xml])
