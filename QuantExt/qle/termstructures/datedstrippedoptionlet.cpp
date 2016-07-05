@@ -44,8 +44,8 @@ namespace QuantExt {
     }
 
     DatedStrippedOptionlet::DatedStrippedOptionlet(const Date& referenceDate, const Calendar& calendar, 
-        BusinessDayConvention bdc, const vector<Date>& optionletDates, const vector<vector<Rate>>& strikes, 
-        const vector<vector<Volatility>>& volatilities, const vector<Rate>& optionletAtmRates, 
+        BusinessDayConvention bdc, const vector<Date>& optionletDates, const vector<vector<Rate> >& strikes, 
+        const vector<vector<Volatility> >& volatilities, const vector<Rate>& optionletAtmRates, 
         const DayCounter& dayCounter, VolatilityType type, Real displacement) 
         : referenceDate_(referenceDate), calendar_(calendar), businessDayConvention_(bdc), 
           optionletDates_(optionletDates), nOptionletDates_(optionletDates.size()), optionletTimes_(nOptionletDates_), 

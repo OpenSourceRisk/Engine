@@ -51,7 +51,7 @@ namespace QuantExt {
 
         // Use a linear interpolated smile section.
         // TODO: possibly make this configurable?
-        return boost::make_shared<InterpolatedSmileSection<Linear>>(t, optionletStrikes, stdDevs, Null<Real>(), 
+        return boost::make_shared<InterpolatedSmileSection<Linear> >(t, optionletStrikes, stdDevs, Null<Real>(), 
             Linear(), Actual365Fixed(), volatilityType(), displacement());
     }
 

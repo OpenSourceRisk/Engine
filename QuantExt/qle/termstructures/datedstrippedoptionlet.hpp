@@ -24,8 +24,8 @@ namespace QuantExt {
         DatedStrippedOptionlet(const Date& referenceDate, const boost::shared_ptr<StrippedOptionletBase>& s);
         //! Construct from an explicitly provided optionlet surface
         DatedStrippedOptionlet(const Date& referenceDate, const Calendar &calendar, BusinessDayConvention bdc,
-            const vector<Date> &optionletDates, const vector<vector<Rate>>& strikes, 
-            const vector<vector<Volatility>>& volatilities, const vector<Rate>& optionletAtmRates,
+            const vector<Date> &optionletDates, const vector<vector<Rate> >& strikes, 
+            const vector<vector<Volatility> >& volatilities, const vector<Rate>& optionletAtmRates,
             const DayCounter& dayCounter, VolatilityType type = ShiftedLognormal, Real displacement = 0.0);
         
         //! \name DatedStrippedOptionletBase interface
@@ -63,8 +63,8 @@ namespace QuantExt {
         vector<Date> optionletDates_;
         Size nOptionletDates_;
         vector<Time> optionletTimes_;
-        vector<vector<Rate>> optionletStrikes_;
-        vector<vector<Volatility>> optionletVolatilities_;
+        vector<vector<Rate> > optionletStrikes_;
+        vector<vector<Volatility> > optionletVolatilities_;
         vector<Rate> optionletAtmRates_;
         DayCounter dayCounter_;
         VolatilityType type_;

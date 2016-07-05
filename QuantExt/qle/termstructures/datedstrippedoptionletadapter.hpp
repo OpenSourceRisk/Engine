@@ -71,7 +71,7 @@ namespace QuantExt {
       private:
         const boost::shared_ptr<DatedStrippedOptionletBase> optionletStripper_;
         Size nInterpolations_;
-        mutable vector<boost::shared_ptr<Interpolation>> strikeInterpolations_;
+        mutable vector<boost::shared_ptr<Interpolation> > strikeInterpolations_;
     };
 
     inline void DatedStrippedOptionletAdapter::update() {
