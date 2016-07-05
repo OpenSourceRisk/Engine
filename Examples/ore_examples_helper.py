@@ -59,6 +59,13 @@ class OreExample(object):
                 color=color,
                 label=label)
 
+    def plot_npv(self, ax, filename, colIdx, color, label):
+        data = self.get_output_data_from_column(filename, colIdx)
+        ax.plot(range(1, len(data) + 1),
+                data,
+                color=color,
+                label=label)
+
     def decorate_plot(self, ax, title, ylabel="Exposure", xlabel="Time / Years"):
         ax.set_title(title)
         ax.set_xlabel(xlabel)

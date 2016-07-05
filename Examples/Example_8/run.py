@@ -16,15 +16,10 @@ oreex.get_times("Output/log.txt")
 # plot: example_ccswap.pdf
 fig = plt.figure()
 ax = fig.add_subplot(111)
-ax.set_title("Example 8")
-ax.set_xlabel("Time / Years")
-ax.set_ylabel("Exposure")
-swap_time_epe = oreex.get_output_data_from_column("exposure_trade_CCSwap.csv", 2)
-swap_epe = oreex.get_output_data_from_column("exposure_trade_CCSwap.csv", 3)
-swap_time_ene = oreex.get_output_data_from_column("exposure_trade_CCSwap.csv", 2)
-swap_ene = oreex.get_output_data_from_column("exposure_trade_CCSwap.csv", 4)
-ax.plot(swap_time_epe, swap_epe, color='b', label="EPE CCSwap")
-ax.plot(swap_time_ene, swap_ene, color='r', label="ENE CCSwap")
-ax.legend(loc='upper right', shadow=True)
+oreex.plot(ax, "exposure_trade_CCSwap.csv", 2, 3, 'b', "EPE CCSwap")
+oreex.plot(ax, "exposure_trade_CCSwap.csv", 2, 4, 'r', "ENE CCSwap")
+oreex.decorate_plot(ax, title="Example 8")
 
 plt.show()
+
+
