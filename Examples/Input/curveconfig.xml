@@ -170,14 +170,13 @@
       <CurveDescription>EUR shifted lognormal cap floor volatilities</CurveDescription>
       <!-- Normal, Lognormal or ShiftedLognormal -->
       <VolatilityType>ShiftedLognormal</VolatilityType>
-      <!-- Flat or Linear or None -->
-      <Extrapolation>Flat</Extrapolation>
+      <!-- True or False -->
+      <Extrapolation>TRUE</Extrapolation>
       <!-- Include ATM vol quotes also: True or False -->
       <IncludeAtm>FALSE</IncludeAtm>
       <!-- Day counter for date to time conversion -->
       <DayCounter>Actual/365 (Fixed)</DayCounter>
       <!--Calendar and Business day convention for cap/floor term to date conversion -->
-      <SettleDays>0</SettleDays>
       <Calendar>TARGET</Calendar>
       <BusinessDayConvention>Following</BusinessDayConvention>
       <!-- <Tenors>1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y,25Y,30Y</Tenors> -->
@@ -192,14 +191,13 @@
       <CurveDescription>GBP shifted lognormal cap floor volatilities</CurveDescription>
       <!-- Normal, Lognormal or ShiftedLognormal -->
       <VolatilityType>ShiftedLognormal</VolatilityType>
-      <!-- Flat or Linear or None -->
-      <Extrapolation>Flat</Extrapolation>
+      <!-- True or False -->
+      <Extrapolation>TRUE</Extrapolation>
       <!-- Include ATM vol quotes also: True or False -->
       <IncludeAtm>FALSE</IncludeAtm>
       <!-- Day counter for date to time conversion -->
       <DayCounter>Actual/365 (Fixed)</DayCounter>
       <!--Calendar and Business day convention for cap/floor term to date conversion -->
-      <SettleDays>0</SettleDays>
       <Calendar>UK</Calendar>
       <BusinessDayConvention>Following</BusinessDayConvention>
       <Tenors>1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,15Y,20Y</Tenors>
@@ -212,14 +210,13 @@
       <CurveDescription>USD shifted lognormal cap floor volatilities</CurveDescription>
       <!-- Normal, Lognormal or ShiftedLognormal -->
       <VolatilityType>ShiftedLognormal</VolatilityType>
-      <!-- Flat or Linear or None -->
-      <Extrapolation>Flat</Extrapolation>
+      <!-- True or False -->
+      <Extrapolation>TRUE</Extrapolation>
       <!-- Include ATM vol quotes also: True or False -->
       <IncludeAtm>FALSE</IncludeAtm>
       <!-- Day counter for date to time conversion -->
       <DayCounter>Actual/365 (Fixed)</DayCounter>
       <!--Calendar and Business day convention for cap/floor term to date conversion -->
-      <SettleDays>0</SettleDays>
       <Calendar>UK</Calendar>
       <BusinessDayConvention>Following</BusinessDayConvention>
       <Tenors>1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y</Tenors>
