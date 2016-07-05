@@ -3,8 +3,8 @@
   <Trade id="SwaptionCash">
     <TradeType>Swaption</TradeType>
     <Envelope>
-      <CounterParty>CUST_A</CounterParty>
-      <NettingSetId>CUST_A</NettingSetId>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <SwaptionData>
@@ -86,8 +86,8 @@
   <Trade id="SwaptionPhysical">
     <TradeType>Swaption</TradeType>
     <Envelope>
-      <CounterParty>CUST_A</CounterParty>
-      <NettingSetId>CUST_A</NettingSetId>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <SwaptionData>
@@ -169,8 +169,8 @@
   <Trade id="Swap">
     <TradeType>Swap</TradeType>
     <Envelope>
-      <CounterParty>CUST_A</CounterParty>
-      <NettingSetId>CUST_A</NettingSetId>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <SwapData>

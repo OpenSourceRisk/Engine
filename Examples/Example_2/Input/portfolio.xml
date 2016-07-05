@@ -3,8 +3,8 @@
   <Trade id="FXFWD_EURUSD_10Y">
     <TradeType>FxForward</TradeType>
     <Envelope>
-      <CounterParty>CUST_A</CounterParty>
-      <NettingSetId>CUST_A</NettingSetId>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <FxForwardData>
@@ -18,8 +18,8 @@
   <Trade id="FX_CALL_OPTION_EURUSD_10Y">
     <TradeType>FxOption</TradeType>
     <Envelope>
-      <CounterParty>CUST_A</CounterParty>
-      <NettingSetId>CUST_A</NettingSetId>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <FxOptionData>
@@ -42,8 +42,8 @@
   <Trade id="FX_PUT_OPTION_EURUSD_10Y">
     <TradeType>FxOption</TradeType>
     <Envelope>
-      <CounterParty>CUST_A</CounterParty>
-      <NettingSetId>CUST_A</NettingSetId>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <FxOptionData>

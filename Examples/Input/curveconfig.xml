@@ -193,25 +193,25 @@
     </DefaultCurve>
     
     <DefaultCurve>
-      <CurveId>CUST_A_SR_USD</CurveId>
-      <CurveDescription>CUST_A SR HR USD</CurveDescription>
+      <CurveId>CPTY_A_SR_USD</CurveId>
+      <CurveDescription>CPTY_A SR HR USD</CurveDescription>
       <Currency>USD</Currency>
       <Type>HazardRate</Type>
       <DiscountCurve />
       <DayCounter>A365</DayCounter>
-      <RecoveryRate>RECOVERY_RATE/RATE/CUST_A/SR/USD</RecoveryRate>
+      <RecoveryRate>RECOVERY_RATE/RATE/CPTY_A/SR/USD</RecoveryRate>
       <Quotes>
-	<Quote>HAZARD_RATE/RATE/CUST_A/SR/USD/0Y</Quote>
-	<Quote>HAZARD_RATE/RATE/CUST_A/SR/USD/1Y</Quote>
-	<Quote>HAZARD_RATE/RATE/CUST_A/SR/USD/2Y</Quote>
-	<Quote>HAZARD_RATE/RATE/CUST_A/SR/USD/3Y</Quote>
-	<Quote>HAZARD_RATE/RATE/CUST_A/SR/USD/4Y</Quote>
-	<Quote>HAZARD_RATE/RATE/CUST_A/SR/USD/5Y</Quote>
-	<Quote>HAZARD_RATE/RATE/CUST_A/SR/USD/7Y</Quote>
-	<Quote>HAZARD_RATE/RATE/CUST_A/SR/USD/10Y</Quote>
-	<Quote>HAZARD_RATE/RATE/CUST_A/SR/USD/15Y</Quote>
-	<Quote>HAZARD_RATE/RATE/CUST_A/SR/USD/20Y</Quote>
-	<Quote>HAZARD_RATE/RATE/CUST_A/SR/USD/30Y</Quote>
+	<Quote>HAZARD_RATE/RATE/CPTY_A/SR/USD/0Y</Quote>
+	<Quote>HAZARD_RATE/RATE/CPTY_A/SR/USD/1Y</Quote>
+	<Quote>HAZARD_RATE/RATE/CPTY_A/SR/USD/2Y</Quote>
+	<Quote>HAZARD_RATE/RATE/CPTY_A/SR/USD/3Y</Quote>
+	<Quote>HAZARD_RATE/RATE/CPTY_A/SR/USD/4Y</Quote>
+	<Quote>HAZARD_RATE/RATE/CPTY_A/SR/USD/5Y</Quote>
+	<Quote>HAZARD_RATE/RATE/CPTY_A/SR/USD/7Y</Quote>
+	<Quote>HAZARD_RATE/RATE/CPTY_A/SR/USD/10Y</Quote>
+	<Quote>HAZARD_RATE/RATE/CPTY_A/SR/USD/15Y</Quote>
+	<Quote>HAZARD_RATE/RATE/CPTY_A/SR/USD/20Y</Quote>
+	<Quote>HAZARD_RATE/RATE/CPTY_A/SR/USD/30Y</Quote>
       </Quotes>
       <Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
     </DefaultCurve>

@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <Portfolio>
-  <Trade id="204128">
+  <Trade id="Swap">
     <TradeType>Swap</TradeType>
     <Envelope>
-      <CounterParty>CUST_A</CounterParty>
-      <NettingSetId>CUST_A</NettingSetId>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <SwapData>
@@ -69,11 +69,11 @@
       </LegData>
     </SwapData>
   </Trade>
-  <Trade id="204128-swaption">
+  <Trade id="Swaption">
     <TradeType>Swaption</TradeType>
     <Envelope>
-      <CounterParty>CUST_A</CounterParty>
-      <NettingSetId>CUST_A</NettingSetId>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <SwaptionData>
@@ -148,11 +148,11 @@
       </LegData>
     </SwaptionData>
   </Trade>
-  <Trade id="204128-short">
+  <Trade id="ShortSwap">
     <TradeType>Swap</TradeType>
     <Envelope>
-      <CounterParty>CUST_B</CounterParty>
-      <NettingSetId>CUST_B</NettingSetId>
+      <CounterParty>CPTY_B</CounterParty>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <SwapData>
