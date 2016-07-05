@@ -7,6 +7,7 @@ Copyright (C) 2016 Quaternion Risk Management Ltd.
 #include <qle/termstructures/datedstrippedoptionletadapter.hpp>
 
 #include <ql/math/interpolations/linearinterpolation.hpp>
+#include <ql/termstructures/volatility/interpolatedsmilesection.hpp>
 
 #include <algorithm>
 
@@ -24,24 +25,20 @@ namespace QuantExt {
 
     boost::shared_ptr<SmileSection> DatedStrippedOptionletAdapter::smileSectionImpl(Time t) const {
         QL_FAIL("Smile section not yet implemented for DatedStrippedOptionletAdapter");
-        //vector< Rate > optionletStrikes =
-        //    optionletStripper_->optionletStrikes(
-        //        0); // strikes are the same for all times ?!
-        //vector< Real > stddevs;
-        //for (Size i = 0; i < optionletStrikes.size(); i++) {
-        //    stddevs.push_back(volatilityImpl(t, optionletStrikes[i]) *
-        //                      sqrt(t));
-        //}
-        //// Extrapolation may be a problem with splines, but since minStrike()
-        //// and maxStrike() are set, we assume that no one will use stddevs for
-        //// strikes outside these strikes
-        //CubicInterpolation::BoundaryCondition bc =
-        //    optionletStrikes.size() >= 4 ? CubicInterpolation::Lagrange
-        //                                 : CubicInterpolation::SecondDerivative;
-        //return boost::make_shared< InterpolatedSmileSection< Cubic > >(
-        //    t, optionletStrikes, stddevs, Null< Real >(),
-        //    Cubic(CubicInterpolation::Spline, false, bc, 0.0, bc, 0.0),
-        //    Actual365Fixed(), volatilityType(), displacement());
+        // Arbitrarily choose the first row of strikes for the smile section independent variable
+        // Generally a reasonable choice since:
+        // 1) OptionletStripper1: all strike rows are the same
+        // 2) OptionletStripper2: optionletStrikes(i) is a decreasing sequence
+        // Still possibility of arbitrary externally provided strike rows where (0) does not include all
+        vector<Rate> optionletStrikes = optionletStripper_->optionletStrikes(0);
+        vector<Real> stdDevs(optionletStrikes.size());
+        for (Size i = 0; i < optionletStrikes.size(); ++i)
+            stdDevs[i] = volatilityImpl(t, optionletStrikes[i]) * sqrt(t);
+
+        // Use a linear interpolated smile section.
+        // TODO: possibly make this configurable?
+        return boost::make_shared<InterpolatedSmileSection<Linear>>(t, optionletStrikes, stdDevs, Null<Real>(), 
+            Linear(), Actual365Fixed(), volatilityType(), displacement());
     }
 
     Volatility DatedStrippedOptionletAdapter::volatilityImpl(Time length, Rate strike) const {
