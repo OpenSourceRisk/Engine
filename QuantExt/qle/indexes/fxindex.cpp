@@ -47,7 +47,7 @@ FxIndex::FxIndex(const std::string &familyName, Natural fixingDays,
                  const Handle<YieldTermStructure> &targetYts)
     : familyName_(familyName), fixingDays_(fixingDays), sourceCurrency_(source),
       targetCurrency_(target), sourceYts_(sourceYts), targetYts_(targetYts),
-      fixingCalendar_(fixingCalendar), fxQuote_(fxQuote), useQuote_(true) {
+      fxQuote_(fxQuote), useQuote_(true), fixingCalendar_(fixingCalendar) {
 
     std::ostringstream tmp;
     tmp << familyName_ << " " << sourceCurrency_.name() << "/"
@@ -81,7 +81,7 @@ Real FxIndex::fixing(const Date &fixingDate, bool forecastTodaysFixing) const {
         QL_REQUIRE(result != Null<Real>(),
                    "Missing " << name() << " fixing for " << fixingDate);
     } else {
-        try {return forecastFixing(fixingDate);
+        try {
             // might have been fixed
             result = pastFixing(fixingDate);
         } catch (Error &) {

@@ -12,6 +12,8 @@
 #include <boost/make_shared.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
+#include <ql/currencies/all.hpp>
+#include <ql/time/calendars/target.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -24,14 +26,13 @@ void CashFlowTest::testFXLinkedCashFlow() {
 
     Date today = Settings::instance().evaluationDate();
 
-    // Test today = 1 Jan 2016
-    Settings::instance().evaluationDate() = Date(1,Jan,2016);
+    // Test today = 5 Jan 2016
+    Settings::instance().evaluationDate() = Date(5,Jan,2016);
 
-    Date cfDate1 (1,Jan,2015); // historical
-    Date cfDate2 (1,Jan,2016); // today
-    Date cfDate3 (1,Jan,2017); // future
+    Date cfDate1 (5,Jan,2015); // historical
+    Date cfDate2 (5,Jan,2016); // today
+    Date cfDate3 (5,Jan,2017); // future
 
-    string index = "FX_USDJPY";
     Real foreignAmount = 1000000; // 1M
     boost::shared_ptr<SimpleQuote> sq = boost::make_shared<SimpleQuote>(123.45);
     Handle<Quote> spot(sq);
@@ -41,14 +42,16 @@ void CashFlowTest::testFXLinkedCashFlow() {
     Handle<YieldTermStructure> forYTS(boost::shared_ptr<YieldTermStructure> (
         new FlatForward (today, 0.03, dc))); // USD
 
-    FXLinkedCashFlow fxlcf1(cfDate1, cfDate1, foreignAmount, spot, forYTS, domYTS, index);
-    FXLinkedCashFlow fxlcf2(cfDate2, cfDate2, foreignAmount, spot, forYTS, domYTS, index);
-    FXLinkedCashFlow fxlcf3(cfDate3, cfDate3, foreignAmount, spot, forYTS, domYTS, index);
+    boost::shared_ptr<FxIndex> fxIndex = boost::make_shared<FxIndex>
+        ("FX::USDJPY", 0, USDCurrency(), JPYCurrency(), TARGET(), spot, domYTS, forYTS);
 
-    // Add historical fixing
-    TimeSeries<Real> history = IndexManager::instance().getHistory(index);
-    history[cfDate1] = 112.0;
-    IndexManager::instance().setHistory(index, history);
+    FXLinkedCashFlow fxlcf1(cfDate1, cfDate1, foreignAmount, fxIndex);
+    FXLinkedCashFlow fxlcf2(cfDate2, cfDate2, foreignAmount, fxIndex);
+    FXLinkedCashFlow fxlcf3(cfDate3, cfDate3, foreignAmount, fxIndex);
+
+    // Add historical and todays fixing
+    fxIndex->addFixing(cfDate1, 112.0);
+    fxIndex->addFixing(cfDate2, sq->value());
 
     BOOST_TEST_MESSAGE("Check historical flow is correct");
     BOOST_CHECK_CLOSE(fxlcf1.amount(), 112000000.0, 1e-10);
@@ -61,7 +64,7 @@ void CashFlowTest::testFXLinkedCashFlow() {
     BOOST_CHECK_CLOSE(fxlcf3.amount(), foreignAmount * fwd, 1e-10);
 
     // Now move forward in time, check historical value is still correct
-    Settings::instance().evaluationDate() = Date(1,Feb,2016);
+    Settings::instance().evaluationDate() = Date(5,Feb,2016);
     sq->setValue(150.0);
     BOOST_CHECK_CLOSE(fxlcf1.amount(), 112000000.0, 1e-10);
 
