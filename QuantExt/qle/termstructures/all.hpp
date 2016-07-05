@@ -16,4 +16,7 @@
 #include <qle/termstructures/staticallycorrectedyieldtermstructure.hpp>
 #include <qle/termstructures/tenorbasisswaphelper.hpp>
 #include <qle/termstructures/blackvariancecurve3.hpp>
+#include <qle/termstructures/datedstrippedoptionlet.hpp>
+#include <qle/termstructures/datedstrippedoptionletadapter.hpp>
+#include <qle/termstructures/datedstrippedoptionletbase.hpp>
 
