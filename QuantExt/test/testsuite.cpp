@@ -56,6 +56,7 @@ using boost::unit_test::test_suite;
 #include "logquote.hpp"
 #include "staticallycorrectedyieldtermstructure.hpp"
 #include "blackvariancecurve.hpp"
+#include "cashflow.hpp"
 
 namespace {
 
@@ -86,6 +87,7 @@ test_suite* init_unit_test_suite(int, char* []) {
 
     test->add(BOOST_TEST_CASE(startTimer));
 
+    test->add(CashFlowTest::suite());
     test->add(testsuite::AnalyticLgmSwaptionEngineTest::suite());
     test->add(testsuite::CrossAssetModelTest::suite());
     test->add(testsuite::CrossAssetModelTest2::suite());

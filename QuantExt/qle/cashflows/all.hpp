@@ -6,4 +6,6 @@
 #include <qle/cashflows/couponpricer.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp>
 #include <qle/cashflows/subperiodscouponpricer.hpp>
+#include <qle/cashflows/fxlinkedcashflow.hpp>
+#include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 
