@@ -1,35 +1,91 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="analyticlgmswaptionengine.cpp" />
-    <ClCompile Include="blackvariancecurve.cpp" />
-    <ClCompile Include="crossassetmodel.cpp" />
-    <ClCompile Include="crossassetmodel2.cpp" />
-    <ClCompile Include="crossassetmodelparametrizations.cpp" />
-    <ClCompile Include="currency.cpp" />
-    <ClCompile Include="discountcurve.cpp" />
-    <ClCompile Include="discountingswapengine.cpp" />
-    <ClCompile Include="dynamicblackvoltermstructure.cpp" />
-    <ClCompile Include="dynamicswaptionvolmatrix.cpp" />
-    <ClCompile Include="index.cpp" />
-    <ClCompile Include="logquote.cpp" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="staticallycorrectedyieldtermstructure.cpp" />
     <ClCompile Include="testsuite.cpp" />
+    <ClCompile Include="currency.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="discountcurve.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="index.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="logquote.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="analyticlgmswaptionengine.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="crossassetmodel.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="crossassetmodel2.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="crossassetmodelparametrizations.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="dynamicblackvoltermstructure.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="dynamicswaptionvolmatrix.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="staticallycorrectedyieldtermstructure.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="blackvariancecurve.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="analyticlgmswaptionengine.hpp" />
-    <ClInclude Include="blackvariancecurve.hpp" />
-    <ClInclude Include="crossassetmodel.hpp" />
-    <ClInclude Include="crossassetmodel2.hpp" />
-    <ClInclude Include="crossassetmodelparametrizations.hpp" />
-    <ClInclude Include="currency.hpp" />
-    <ClInclude Include="discountcurve.hpp" />
-    <ClInclude Include="discountingswapengine.hpp" />
-    <ClInclude Include="dynamicblackvoltermstructure.hpp" />
-    <ClInclude Include="dynamicswaptionvolmatrix.hpp" />
-    <ClInclude Include="index.hpp" />
-    <ClInclude Include="logquote.hpp" />
-    <ClInclude Include="staticallycorrectedyieldtermstructure.hpp" />
+    <Filter Include="source">
+      <UniqueIdentifier>{8bf6c172-3cec-4354-a7ae-d1634454ff15}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="headers">
+      <UniqueIdentifier>{f43de631-e8f3-49f7-be00-bbe4d2cc9863}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="currency.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="discountcurve.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="index.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="logquote.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="analyticlgmswaptionengine.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="crossassetmodel.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="crossassetmodel2.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="crossassetmodelparametrizations.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="dynamicblackvoltermstructure.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="dynamicswaptionvolmatrix.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="staticallycorrectedyieldtermstructure.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="blackvariancecurve.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
