@@ -13,7 +13,6 @@ this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \
 	all.hpp \
 	mctraits.hpp \
-	multipathgenerator.hpp \
 	multipathgeneratorbase.hpp
 
 all.hpp: Makefile.am
