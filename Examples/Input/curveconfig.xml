@@ -166,10 +166,10 @@
 
   <CapFloorVolatilities>
     <CapFloorVolatility>
-      <CurveId>EUR_CF_SLN</CurveId>
-      <CurveDescription>EUR shifted lognormal cap floor volatilities</CurveDescription>
+      <CurveId>EUR_CF_N</CurveId>
+      <CurveDescription>EUR normal cap floor volatilities</CurveDescription>
       <!-- Normal, Lognormal or ShiftedLognormal -->
-      <VolatilityType>ShiftedLognormal</VolatilityType>
+      <VolatilityType>Normal</VolatilityType>
       <!-- True or False -->
       <Extrapolation>TRUE</Extrapolation>
       <!-- Include ATM vol quotes also: True or False -->
@@ -180,17 +180,17 @@
       <Calendar>TARGET</Calendar>
       <BusinessDayConvention>Following</BusinessDayConvention>
       <!-- <Tenors>1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y,25Y,30Y</Tenors> -->
-      <Tenors>1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y,25Y</Tenors>
+      <Tenors>1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,15Y,20Y</Tenors>
       <!-- <Strikes>0.01,0.015,0.02,0.025,0.03,0.04,0.05</Strikes> -->
-      <Strikes>0.01,0.015,0.02,0.025,0.04</Strikes>
+      <Strikes>-0.01,0.0,0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1</Strikes>
       <IborIndex>EUR-EURIBOR-6M</IborIndex>
       <DiscountCurve>Yield/EUR/EUR1D</DiscountCurve>
     </CapFloorVolatility>
     <CapFloorVolatility>
-      <CurveId>GBP_CF_SLN</CurveId>
-      <CurveDescription>GBP shifted lognormal cap floor volatilities</CurveDescription>
+      <CurveId>GBP_CF_N</CurveId>
+      <CurveDescription>GBP normal cap floor volatilities</CurveDescription>
       <!-- Normal, Lognormal or ShiftedLognormal -->
-      <VolatilityType>ShiftedLognormal</VolatilityType>
+      <VolatilityType>Normal</VolatilityType>
       <!-- True or False -->
       <Extrapolation>TRUE</Extrapolation>
       <!-- Include ATM vol quotes also: True or False -->
@@ -201,15 +201,15 @@
       <Calendar>UK</Calendar>
       <BusinessDayConvention>Following</BusinessDayConvention>
       <Tenors>1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,15Y,20Y</Tenors>
-      <Strikes>0.005,0.01,0.015,0.02,0.025,0.03,0.035,0.04,0.045,0.05</Strikes>
+      <Strikes>0.005,0.015,0.02,0.025,0.03,0.035,0.04,0.045,0.05,0.055,0.06,0.065,0.07,0.075,0.08,0.085,0.09,0.095,0.1</Strikes>
       <IborIndex>GBP-LIBOR-6M</IborIndex>
       <DiscountCurve>Yield/GBP/GBP1D</DiscountCurve>
     </CapFloorVolatility>
     <CapFloorVolatility>
-      <CurveId>USD_CF_SLN</CurveId>
-      <CurveDescription>USD shifted lognormal cap floor volatilities</CurveDescription>
+      <CurveId>USD_CF_N</CurveId>
+      <CurveDescription>USD normal cap floor volatilities</CurveDescription>
       <!-- Normal, Lognormal or ShiftedLognormal -->
-      <VolatilityType>ShiftedLognormal</VolatilityType>
+      <VolatilityType>Normal</VolatilityType>
       <!-- True or False -->
       <Extrapolation>TRUE</Extrapolation>
       <!-- Include ATM vol quotes also: True or False -->
@@ -219,8 +219,8 @@
       <!--Calendar and Business day convention for cap/floor term to date conversion -->
       <Calendar>UK</Calendar>
       <BusinessDayConvention>Following</BusinessDayConvention>
-      <Tenors>1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y</Tenors>
-      <Strikes>0.01,0.015,0.02,0.025,0.03,0.04,0.05,0.06</Strikes>
+      <Tenors>1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,15Y,20Y</Tenors>
+      <Strikes>0.005,0.015,0.02,0.025,0.03,0.035,0.04,0.045,0.05,0.055,0.06,0.065,0.07,0.075,0.08,0.085,0.09,0.095,0.1</Strikes>
       <IborIndex>USD-LIBOR-3M</IborIndex>
       <DiscountCurve>Yield/USD/USD1D</DiscountCurve>
     </CapFloorVolatility>

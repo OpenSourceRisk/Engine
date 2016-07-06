@@ -635,7 +635,6 @@
     <ClCompile Include="crossassetmodelparametrizations.cpp" />
     <ClCompile Include="currency.cpp" />
     <ClCompile Include="discountcurve.cpp" />
-    <ClCompile Include="discountingswapengine.cpp" />
     <ClCompile Include="dynamicblackvoltermstructure.cpp" />
     <ClCompile Include="dynamicswaptionvolmatrix.cpp" />
     <ClCompile Include="index.cpp" />
@@ -652,7 +651,6 @@
     <ClInclude Include="crossassetmodelparametrizations.hpp" />
     <ClInclude Include="currency.hpp" />
     <ClInclude Include="discountcurve.hpp" />
-    <ClInclude Include="discountingswapengine.hpp" />
     <ClInclude Include="dynamicblackvoltermstructure.hpp" />
     <ClInclude Include="dynamicswaptionvolmatrix.hpp" />
     <ClInclude Include="index.hpp" />

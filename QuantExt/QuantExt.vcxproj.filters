@@ -253,9 +253,6 @@
     <ClInclude Include="qle\pricingengines\discountingcurrencyswapengine.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
-    <ClInclude Include="qle\pricingengines\discountingswapengine.hpp">
-      <Filter>pricingengines</Filter>
-    </ClInclude>
     <ClInclude Include="qle\pricingengines\numericlgmswaptionengine.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
@@ -311,6 +308,9 @@
       <Filter>termstructures</Filter>
     </ClInclude>
     <ClInclude Include="qle\termstructures\datedstrippedoptionlet.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\dynamicoptionletvolatilitystructure.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
   </ItemGroup>
@@ -479,9 +479,6 @@
     <ClCompile Include="qle\pricingengines\discountingcurrencyswapengine.cpp">
       <Filter>pricingengines</Filter>
     </ClCompile>
-    <ClCompile Include="qle\pricingengines\discountingswapengine.cpp">
-      <Filter>pricingengines</Filter>
-    </ClCompile>
     <ClCompile Include="qle\pricingengines\numericlgmswaptionengine.cpp">
       <Filter>pricingengines</Filter>
     </ClCompile>
@@ -519,6 +516,9 @@
       <Filter>termstructures</Filter>
     </ClCompile>
     <ClCompile Include="qle\termstructures\datedstrippedoptionlet.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\dynamicoptionletvolatilitystructure.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
   </ItemGroup>
