@@ -22,9 +22,9 @@
 
 #include <ql/utilities/dataformatters.hpp>
 
-#include <algorithm>
+#include <boost/algorithm/cxx11/is_sorted.hpp>
 
-using std::is_sorted;
+using boost::algorithm::is_sorted;
 
 namespace QuantExt {
 
