@@ -1,12 +1,12 @@
 <OpenRiskEngine>
 
   <Setup>    
-    <Parameter name="asofDate">2016-02-26</Parameter>
+    <Parameter name="asofDate">2016-02-05</Parameter>
     <Parameter name="inputPath">Input</Parameter>
     <Parameter name="outputPath">Output</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
-    <Parameter name="marketDataFile">../../Input/market_20160226_flat.txt</Parameter>
-    <Parameter name="fixingDataFile">../../Input/fixings_20160226.txt</Parameter>
+    <Parameter name="marketDataFile">../../Input/market_20160205_flat.txt</Parameter>
+    <Parameter name="fixingDataFile">../../Input/fixings_20160205.txt</Parameter>
     <Parameter name="implyTodaysFixings">Y</Parameter>
     <Parameter name="curveConfigFile">../../Input/curveconfig.xml</Parameter>
     <Parameter name="conventionsFile">../../Input/conventions.xml</Parameter>
@@ -83,7 +83,7 @@
 
     <Analytic type="initialMargin">
       <Parameter name="active">N</Parameter>
-      <Parameter name="method">SIMM</Parameter>
+      <Parameter name="method"></Parameter>
     </Analytic>
 
   </Analytics>

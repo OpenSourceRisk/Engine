@@ -5,7 +5,7 @@ FX EUR/USD Call and Put Option with expiry 10Y
 
 2) Market
 
-2016-02-26
+Pseudo market as of 2016-02-05
 
 3) Pricing
 
