@@ -27,20 +27,20 @@
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/currencies/all.hpp>
 #include <ql/time/calendars/target.hpp>
-
 using namespace QuantLib;
 using namespace QuantExt;
 using namespace boost::unit_test_framework;
 using namespace std;
 
+namespace testsuite {
 void CashFlowTest::testFXLinkedCashFlow() {
 
     BOOST_TEST_MESSAGE("Testing FX Linked CashFlow");
 
-    Date today = Settings::instance().evaluationDate();
 
     // Test today = 5 Jan 2016
     Settings::instance().evaluationDate() = Date(5,Jan,2016);
+    Date today = Settings::instance().evaluationDate();
 
     Date cfDate1 (5,Jan,2015); // historical
     Date cfDate2 (5,Jan,2016); // today
@@ -54,7 +54,7 @@ void CashFlowTest::testFXLinkedCashFlow() {
         new FlatForward (today, 0.005, dc))); // JPY
     Handle<YieldTermStructure> forYTS(boost::shared_ptr<YieldTermStructure> (
         new FlatForward (today, 0.03, dc))); // USD
-
+    //TODO foreign/domestic vs source/target
     boost::shared_ptr<FxIndex> fxIndex = boost::make_shared<FxIndex>
         ("FX::USDJPY", 0, USDCurrency(), JPYCurrency(), TARGET(), spot, domYTS, forYTS);
 
@@ -73,16 +73,18 @@ void CashFlowTest::testFXLinkedCashFlow() {
     BOOST_CHECK_CLOSE(fxlcf2.amount(), 123450000.0, 1e-10);
 
     BOOST_TEST_MESSAGE("Check future (expected) flow is correct");
-    Real fwd = sq->value() * forYTS->discount(cfDate3) / domYTS->discount(cfDate3);
+    Real fwd = sq->value() *  domYTS->discount(cfDate3) / forYTS->discount(cfDate3);
     BOOST_CHECK_CLOSE(fxlcf3.amount(), foreignAmount * fwd, 1e-10);
 
     // Now move forward in time, check historical value is still correct
-    Settings::instance().evaluationDate() = Date(5,Feb,2016);
+    Settings::instance().evaluationDate() = Date(1,Feb,2016);
     sq->setValue(150.0);
+    domYTS->update();
+    forYTS->update();
     BOOST_CHECK_CLOSE(fxlcf1.amount(), 112000000.0, 1e-10);
 
     // check foward quote is still valid
-    fwd = sq->value() * forYTS->discount(cfDate3) / domYTS->discount(cfDate3);
+    fwd = sq->value() *  domYTS->discount(cfDate3) / forYTS->discount(cfDate3);
     BOOST_CHECK_CLOSE(fxlcf3.amount(), foreignAmount * fwd, 1e-10);
 
     // reset
@@ -94,4 +96,5 @@ test_suite* CashFlowTest::suite() {
     test_suite* suite = BOOST_TEST_SUITE("CashFlowTests");
     suite->add(BOOST_TEST_CASE(&CashFlowTest::testFXLinkedCashFlow));
     return suite;
+}
 }
