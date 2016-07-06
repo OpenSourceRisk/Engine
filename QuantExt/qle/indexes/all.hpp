@@ -2,5 +2,6 @@
 /* Add the files to be included into Makefile.am instead. */
 
 #include <qle/indexes/genericiborindex.hpp>
+#include <qle/indexes/fxindex.hpp>
 
 #include <qle/indexes/ibor/all.hpp>
