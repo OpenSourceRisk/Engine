@@ -137,14 +137,12 @@
     <SwaptionVolatility currency="JPY">SwaptionVolatility/CHF/JPY_SW_N</SwaptionVolatility>
   </SwaptionVolatilities>
 
-  <!-- cap/floor volatility definition -->
-  <!--
+  <!-- cap volatility definition -->
   <CapFloorVolatilities id="default">
-    <CapFloorVolatility currency="EUR">CapFloorVolatility/EUR/EUR_CF_SLN</CapFloorVolatility>
-    <CapFloorVolatility currency="USD">CapFloorVolatility/USD/USD_CF_SLN</CapFloorVolatility>
-    <CapFloorVolatility currency="GBP">CapFloorVolatility/GBP/GBP_CF_SLN</CapFloorVolatility>
+    <CapFloorVolatility currency="EUR">CapFloorVolatility/EUR/EUR_CF_N</CapFloorVolatility>
+    <CapFloorVolatility currency="USD">CapFloorVolatility/USD/USD_CF_N</CapFloorVolatility>
+    <CapFloorVolatility currency="GBP">CapFloorVolatility/GBP/GBP_CF_N</CapFloorVolatility>
   </CapFloorVolatilities>
-  -->
 
   <!-- default curves definition -->
   <DefaultCurves id="default">

@@ -577,6 +577,7 @@
     <ClInclude Include="qle\termstructures\datedstrippedoptionletadapter.hpp" />
     <ClInclude Include="qle\termstructures\datedstrippedoptionletbase.hpp" />
     <ClInclude Include="qle\termstructures\dynamicblackvoltermstructure.hpp" />
+    <ClInclude Include="qle\termstructures\dynamicoptionletvolatilitystructure.hpp" />
     <ClInclude Include="qle\termstructures\dynamicstype.hpp" />
     <ClInclude Include="qle\termstructures\dynamicswaptionvolmatrix.hpp" />
     <ClInclude Include="qle\termstructures\hazardspreadeddefaulttermstructure.hpp" />
@@ -637,6 +638,7 @@
     <ClCompile Include="qle\termstructures\crossccybasisswaphelper.cpp" />
     <ClCompile Include="qle\termstructures\datedstrippedoptionlet.cpp" />
     <ClCompile Include="qle\termstructures\datedstrippedoptionletadapter.cpp" />
+    <ClCompile Include="qle\termstructures\dynamicoptionletvolatilitystructure.cpp" />
     <ClCompile Include="qle\termstructures\dynamicswaptionvolmatrix.cpp" />
     <ClCompile Include="qle\termstructures\hazardspreadeddefaulttermstructure.cpp" />
     <ClCompile Include="qle\termstructures\oibasisswaphelper.cpp" />
