@@ -294,7 +294,7 @@ int main(int argc, char** argv) {
             
             LOG("Build Simulation Market");
             boost::shared_ptr<openxva::simulation::SimMarket> simMarket
-                = boost::make_shared<ScenarioSimMarket>(sg, market, simMarketData, params.get("markets", "simulation"));
+                = boost::make_shared<ScenarioSimMarket>(sg, market, simMarketData, conventions, params.get("markets", "simulation"));
             
             LOG("Build engine factory for pricing under scenarios, linked to sim market");
             boost::shared_ptr<EngineData> simEngineData = boost::make_shared<EngineData>();
