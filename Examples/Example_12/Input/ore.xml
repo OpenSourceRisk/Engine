@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
 <OpenRiskEngine>
   <Setup>
-    <Parameter name="asofDate">2016-02-26</Parameter>
+    <Parameter name="asofDate">2016-02-05</Parameter>
     <Parameter name="inputPath">Input</Parameter>
     <Parameter name="outputPath">Output</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
-    <Parameter name="marketDataFile">../../Input/market_20160226.txt</Parameter>
-    <Parameter name="fixingDataFile">../../Input/fixings_20160226.txt</Parameter>
+    <Parameter name="marketDataFile">../../Input/market_20160205.txt</Parameter>
+    <Parameter name="fixingDataFile">../../Input/fixings_20160205.txt</Parameter>
     <Parameter name="implyTodaysFixings">N</Parameter>
     <Parameter name="curveConfigFile">../../Input/curveconfig.xml</Parameter>
     <Parameter name="conventionsFile">../../Input/conventions.xml</Parameter>
@@ -41,7 +41,7 @@
       <Parameter name="outputFileName">curves.csv</Parameter>
     </Analytic>
     <Analytic type="simulation">
-      <Parameter name="active">N</Parameter>
+      <Parameter name="active">Y</Parameter>
       <Parameter name="simulationConfigFile">simulation.xml</Parameter>
       <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
@@ -51,7 +51,7 @@
       <Parameter name="disableEvaluationDateObservation">Y</Parameter>
     </Analytic>
     <Analytic type="xva">
-      <Parameter name="active">N</Parameter>
+      <Parameter name="active">Y</Parameter>
       <Parameter name="csaFile">netting.xml</Parameter>
       <Parameter name="cubeFile">cube.dat</Parameter>
       <Parameter name="scenarioFile">scenariodata.dat</Parameter>
@@ -75,7 +75,7 @@
       <Parameter name="netCubeOutputFile">netcube.csv</Parameter>
     </Analytic>
     <Analytic type="initialMargin">
-      <Parameter name="active">Y</Parameter>
+      <Parameter name="active">N</Parameter>
       <Parameter name="method">SIMM</Parameter>
     </Analytic>
   </Analytics>

@@ -3,8 +3,8 @@
   <Trade id="swap_01">
     <TradeType>Swap</TradeType>
     <Envelope>
-      <CounterParty>CUST_A</CounterParty>
-      <NettingSetId>CUST_A</NettingSetId>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <SwapData>
@@ -13,23 +13,23 @@
         <Payer>false</Payer>
         <Currency>EUR</Currency>
         <Notionals>
-          <Notional>10000000.00</Notional>
+          <Notional>1000000.00</Notional>
         </Notionals>
-        <DayCounter>30/360</DayCounter>
-        <PaymentConvention>F</PaymentConvention>
+        <DayCounter>A360</DayCounter>
+        <PaymentConvention>MF</PaymentConvention>
         <FixedLegData>
           <Rates>
-            <Rate>0.02</Rate>
+            <Rate>0.03</Rate>
           </Rates>
         </FixedLegData>
         <ScheduleData>
           <Rules>
             <StartDate>20151028</StartDate>
             <EndDate>20351028</EndDate>
-            <Tenor>1Y</Tenor>
+            <Tenor>6M</Tenor>
             <Calendar>TARGET</Calendar>
-            <Convention>F</Convention>
-            <TermConvention>F</TermConvention>
+            <Convention>MF</Convention>
+            <TermConvention>MF</TermConvention>
             <Rule>Forward</Rule>
             <EndOfMonth/>
             <FirstDate/>
@@ -42,7 +42,7 @@
         <Payer>true</Payer>
         <Currency>EUR</Currency>
         <Notionals>
-          <Notional>10000000.00</Notional>
+          <Notional>1000000.00</Notional>
         </Notionals>
         <DayCounter>A360</DayCounter>
         <PaymentConvention>MF</PaymentConvention>
@@ -71,11 +71,11 @@
       </LegData>
     </SwapData>
   </Trade>
-  <Trade id="cap_01">
+  <Trade id="collar_01">
     <TradeType>CapFloor</TradeType>
     <Envelope>
-      <CounterParty>CUST_A</CounterParty>
-      <NettingSetId>CUST_A</NettingSetId>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <CapFloorData>
@@ -83,10 +83,10 @@
       <LegData>
         <LegType>Floating</LegType>
         <Currency>EUR</Currency>
-        <DayCounter>ACT/360</DayCounter>
+        <DayCounter>A360</DayCounter>
         <PaymentConvention>MF</PaymentConvention>
         <Notionals>
-          <Notional>10000000.00</Notional>
+          <Notional>1000000.00</Notional>
         </Notionals>
         <ScheduleData>
           <Rules>
@@ -105,23 +105,25 @@
         <FloatingLegData>
           <Index>EUR-EURIBOR-6M</Index>
           <Spreads>
-            <Spread>0</Spread>
+            <Spread>0.00</Spread>
           </Spreads>
           <IsInArrears>false</IsInArrears>
           <FixingDays>2</FixingDays>
         </FloatingLegData>
       </LegData>
       <CapRates>
-        <Rate>0.03</Rate>
+        <Rate>0.025</Rate>
       </CapRates>
-      <FloorRates/>
+      <FloorRates>
+        <Rate>0.025</Rate>
+      </FloorRates>
     </CapFloorData>
   </Trade>
-  <Trade id="floor_01">
+  <Trade id="cap_01">
     <TradeType>CapFloor</TradeType>
     <Envelope>
-      <CounterParty>CUST_A</CounterParty>
-      <NettingSetId>CUST_A</NettingSetId>
+      <CounterParty>CPTY_B</CounterParty>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <CapFloorData>
@@ -151,7 +153,53 @@
         <FloatingLegData>
           <Index>USD-LIBOR-3M</Index>
           <Spreads>
-            <Spread>0.01</Spread>
+            <Spread>0</Spread>
+          </Spreads>
+          <IsInArrears>false</IsInArrears>
+          <FixingDays>2</FixingDays>
+        </FloatingLegData>
+      </LegData>
+      <CapRates>
+        <Rate>0.03</Rate>
+      </CapRates>
+      <FloorRates/>
+    </CapFloorData>
+  </Trade>
+  <Trade id="floor_01">
+    <TradeType>CapFloor</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_B</CounterParty>
+      <NettingSetId>CPTY_B</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <CapFloorData>
+      <LongShort>Long</LongShort>
+      <LegData>
+        <LegType>Floating</LegType>
+        <Currency>USD</Currency>
+        <DayCounter>ACT/360</DayCounter>
+        <PaymentConvention>MF</PaymentConvention>
+        <Notionals>
+          <Notional>1000000.00</Notional>
+        </Notionals>
+        <ScheduleData>
+          <Rules>
+            <StartDate>20140923</StartDate>
+            <EndDate>20260923</EndDate>
+            <Tenor>3M</Tenor>
+            <Calendar>US</Calendar>
+            <Convention>MF</Convention>
+            <TermConvention>MF</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+        <FloatingLegData>
+          <Index>USD-LIBOR-3M</Index>
+          <Spreads>
+            <Spread>0</Spread>
           </Spreads>
           <IsInArrears>false</IsInArrears>
           <FixingDays>2</FixingDays>
@@ -163,11 +211,59 @@
       </FloorRates>
     </CapFloorData>
   </Trade>
-  <Trade id="collar_01">
+  <Trade id="collar_02">
     <TradeType>CapFloor</TradeType>
     <Envelope>
-      <CounterParty>CUST_A</CounterParty>
-      <NettingSetId>CUST_A</NettingSetId>
+      <CounterParty>CPTY_B</CounterParty>
+      <NettingSetId>CPTY_B</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <CapFloorData>
+      <LongShort>Long</LongShort>
+      <LegData>
+        <LegType>Floating</LegType>
+        <Currency>USD</Currency>
+        <DayCounter>ACT/360</DayCounter>
+        <PaymentConvention>MF</PaymentConvention>
+        <Notionals>
+          <Notional>1000000.00</Notional>
+        </Notionals>
+        <ScheduleData>
+          <Rules>
+            <StartDate>20140923</StartDate>
+            <EndDate>20260923</EndDate>
+            <Tenor>3M</Tenor>
+            <Calendar>US</Calendar>
+            <Convention>MF</Convention>
+            <TermConvention>MF</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+        <FloatingLegData>
+          <Index>USD-LIBOR-3M</Index>
+          <Spreads>
+            <Spread>0.00</Spread>
+          </Spreads>
+          <IsInArrears>false</IsInArrears>
+          <FixingDays>2</FixingDays>
+        </FloatingLegData>
+      </LegData>
+      <CapRates>
+        <Rate>0.03</Rate>
+      </CapRates>
+      <FloorRates>
+        <Rate>0.005</Rate>
+      </FloorRates>
+    </CapFloorData>
+  </Trade>
+  <Trade id="cap_02">
+    <TradeType>CapFloor</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_B</CounterParty>
+      <NettingSetId>CPTY_B</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <CapFloorData>
@@ -178,7 +274,7 @@
         <DayCounter>ACT/365</DayCounter>
         <PaymentConvention>MF</PaymentConvention>
         <Notionals>
-          <Notional>500000.00</Notional>
+          <Notional>3000000.00</Notional>
         </Notionals>
         <ScheduleData>
           <Rules>
@@ -204,11 +300,82 @@
         </FloatingLegData>
       </LegData>
       <CapRates>
-        <Rate>0.03</Rate>
+        <Rate>0.025</Rate>
       </CapRates>
-      <FloorRates>
-        <Rate>0.005</Rate>
-      </FloorRates>
+    </CapFloorData>
+  </Trade>
+  <Trade id="cap_03">
+    <TradeType>CapFloor</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_B</CounterParty>
+      <NettingSetId>CPTY_B</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <CapFloorData>
+      <LongShort>Long</LongShort>
+      <LegData>
+        <LegType>Floating</LegType>
+        <Currency>GBP</Currency>
+        <DayCounter>ACT/365</DayCounter>
+        <PaymentConvention>MF</PaymentConvention>
+        <Notionals>
+          <Notional>3000000</Notional>
+          <Notional>2900000</Notional>
+          <Notional>2800000</Notional>
+          <Notional>2700000</Notional>
+          <Notional>2600000</Notional>
+          <Notional>2500000</Notional>
+          <Notional>2400000</Notional>
+          <Notional>2300000</Notional>
+          <Notional>2200000</Notional>
+          <Notional>2100000</Notional>
+          <Notional>2000000</Notional>
+          <Notional>1900000</Notional>
+          <Notional>1800000</Notional>
+          <Notional>1700000</Notional>
+          <Notional>1600000</Notional>
+          <Notional>1500000</Notional>
+          <Notional>1400000</Notional>
+          <Notional>1300000</Notional>
+          <Notional>1200000</Notional>
+          <Notional>1100000</Notional>
+          <Notional>1000000</Notional>
+          <Notional>900000</Notional>
+          <Notional>800000</Notional>
+          <Notional>700000</Notional>
+          <Notional>600000</Notional>
+          <Notional>500000</Notional>
+          <Notional>400000</Notional>
+          <Notional>300000</Notional>
+          <Notional>200000</Notional>
+          <Notional>100000</Notional>
+        </Notionals>
+        <ScheduleData>
+          <Rules>
+            <StartDate>20161019</StartDate>
+            <EndDate>20311019</EndDate>
+            <Tenor>6M</Tenor>
+            <Calendar>UK</Calendar>
+            <Convention>MF</Convention>
+            <TermConvention>MF</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+        <FloatingLegData>
+          <Index>GBP-LIBOR-6M</Index>
+          <Spreads>
+            <Spread>0.00</Spread>
+          </Spreads>
+          <IsInArrears>false</IsInArrears>
+          <FixingDays>0</FixingDays>
+        </FloatingLegData>
+      </LegData>
+      <CapRates>
+        <Rate>0.025</Rate>
+      </CapRates>
     </CapFloorData>
   </Trade>
 </Portfolio>

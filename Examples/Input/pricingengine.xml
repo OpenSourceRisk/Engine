@@ -54,5 +54,12 @@
       <Parameter name="nx">10</Parameter>
     </EngineParameters>
   </Product>
+
+  <Product type="CapFloor">
+    <Model>IborCapModel</Model>
+    <ModelParameters/>
+    <Engine>IborCapEngine</Engine>
+    <EngineParameters/>
+  </Product>
   
 </PricingEngines>

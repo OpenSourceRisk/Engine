@@ -239,17 +239,13 @@
       <Strikes/>
     </SwaptionVolatilities>
     <CapFloorVolatilities>
-      <!-- Alternative: ConstantVariance -->
-      <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
+      <!-- Alternative: ForwardVariance or ConstantVariance -->
+      <ReactionToTimeDecay>ConstantVariance</ReactionToTimeDecay>
       <Currencies>
         <Currency>EUR</Currency>
         <Currency>USD</Currency>
         <Currency>GBP</Currency>
-        <Currency>CHF</Currency>
-        <Currency>JPY</Currency>
       </Currencies>
-      <Tenors>1Y,2Y,3Y,5Y,10Y,12Y,15Y,20Y</Tenors>
-      <Strikes>0.005,0.01,0.02,0.03,0.04,0.05</Strikes>
     </CapFloorVolatilities>
     <FxVolatilities>
       <Simulate>false</Simulate>
