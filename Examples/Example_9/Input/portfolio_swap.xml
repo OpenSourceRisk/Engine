@@ -4,8 +4,8 @@
     <TradeType>Swap</TradeType>
     <Envelope>
       <Type>Swap</Type>
-      <CounterParty>CUST_A</CounterParty>
-      <NettingSetId>CUST_A</NettingSetId>
+      <CounterParty>CTPY_A</CounterParty>
+      <NettingSetId>CTPY_A</NettingSetId>
     </Envelope>
     <SwapData>
       <LegData>
@@ -78,8 +78,8 @@
     <TradeType>Swap</TradeType>
     <Envelope>
       <Type>Swap</Type>
-      <CounterParty>CUST_A</CounterParty>
-      <NettingSetId>CUST_A</NettingSetId>
+      <CounterParty>CTPY_A</CounterParty>
+      <NettingSetId>CTPY_A</NettingSetId>
     </Envelope>
     <SwapData>
       <LegData>
