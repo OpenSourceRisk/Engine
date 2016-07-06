@@ -65,9 +65,9 @@
   </Deposit>
 
   <Deposit>
-    <Id>CHF-SARON-CONVENTIONS</Id>
+    <Id>CHF-TOIS-CONVENTIONS</Id>
     <IndexBased>true</IndexBased>
-    <Index>CHF-SARON</Index>
+    <Index>CHF-TOIS</Index>
   </Deposit>
 
   <Deposit>
@@ -626,7 +626,7 @@
   <OIS><!-- FIXME -->
     <Id>CHF-OIS-CONVENTIONS</Id>
     <SpotLag>2</SpotLag>
-    <Index>CHF-SARON-1D</Index>
+    <Index>CHF-TOIS-1D</Index>
     <FixedDayCounter>A360</FixedDayCounter>
     <PaymentLag>1</PaymentLag>
     <EOM>false</EOM>
