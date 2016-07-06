@@ -26,6 +26,9 @@
     <ClCompile Include="crossassetmodelparametrizations.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="discountingswapengine.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
     <ClCompile Include="dynamicblackvoltermstructure.cpp">
       <Filter>source</Filter>
     </ClCompile>
@@ -73,6 +76,9 @@
       <Filter>headers</Filter>
     </ClInclude>
     <ClInclude Include="crossassetmodelparametrizations.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="discountingswapengine.hpp">
       <Filter>headers</Filter>
     </ClInclude>
     <ClInclude Include="dynamicblackvoltermstructure.hpp">
