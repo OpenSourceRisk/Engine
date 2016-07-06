@@ -2,6 +2,7 @@ import os
 import sys
 import subprocess
 import shutil
+import matplotlib.pyplot as plt
 
 
 class OreExample(object):
@@ -10,6 +11,8 @@ class OreExample(object):
         self.ore_exe = ""
         self.headlinecounter = 0
         self.dry = dry
+        self.ax = None
+        self.plot_name=""
         self._locate_ore_exe()
 
     def _locate_ore_exe(self):
@@ -53,24 +56,35 @@ class OreExample(object):
         for file in files:
             shutil.copy(os.path.join("Output", file), os.path.join("Output", subdir))
 
-    def plot(self, ax, filename, colIdxTime, colIdxVal, color, label):
-        ax.plot(self.get_output_data_from_column(filename, colIdxTime),
-                self.get_output_data_from_column(filename, colIdxVal),
+    def plot(self, filename, colIdxTime, colIdxVal, color, label, offset=1):
+        self.ax.plot(self.get_output_data_from_column(filename, colIdxTime, offset),
+                self.get_output_data_from_column(filename, colIdxVal, offset),
                 color=color,
                 label=label)
 
-    def plot_npv(self, ax, filename, colIdx, color, label):
+    def plot_npv(self, filename, colIdx, color, label):
         data = self.get_output_data_from_column(filename, colIdx)
-        ax.plot(range(1, len(data) + 1),
+        self.ax.plot(range(1, len(data) + 1),
                 data,
                 color=color,
                 label=label)
 
-    def decorate_plot(self, ax, title, ylabel="Exposure", xlabel="Time / Years"):
-        ax.set_title(title)
-        ax.set_xlabel(xlabel)
-        ax.set_ylabel(ylabel)
-        ax.legend(loc='upper right', shadow=True)
+    def decorate_plot(self, title, ylabel="Exposure", xlabel="Time / Years"):
+        self.ax.set_title(title)
+        self.ax.set_xlabel(xlabel)
+        self.ax.set_ylabel(ylabel)
+        self.ax.legend(loc='upper right', shadow=True)
+
+    def plot_line(self, xvals, yvals, color, label):
+        self.ax.plot(xvals, yvals, color=color, label=label)
+
+    def setup_plot(self, filename):
+        self.fig = plt.figure()
+        self.ax = self.fig.add_subplot(111)
+        self.plot_name = "mpl_" + filename
+
+    def save_plot_to_file(self, subdir="Output"):
+        plt.savefig(os.path.join(subdir,self.plot_name+".pdf"))
 
     def run(self, xml):
         if not self.dry:
