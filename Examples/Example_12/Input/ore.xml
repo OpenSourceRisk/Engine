@@ -41,7 +41,7 @@
       <Parameter name="outputFileName">curves.csv</Parameter>
     </Analytic>
     <Analytic type="simulation">
-      <Parameter name="active">N</Parameter>
+      <Parameter name="active">Y</Parameter>
       <Parameter name="simulationConfigFile">simulation.xml</Parameter>
       <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
@@ -51,7 +51,7 @@
       <Parameter name="disableEvaluationDateObservation">Y</Parameter>
     </Analytic>
     <Analytic type="xva">
-      <Parameter name="active">N</Parameter>
+      <Parameter name="active">Y</Parameter>
       <Parameter name="csaFile">netting.xml</Parameter>
       <Parameter name="cubeFile">cube.dat</Parameter>
       <Parameter name="scenarioFile">scenariodata.dat</Parameter>

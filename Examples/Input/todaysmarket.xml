@@ -139,9 +139,9 @@
 
   <!-- cap/floor volatility definition -->
   <CapFloorVolatilities id="default">
-    <CapFloorVolatility currency="EUR">CapFloorVolatility/EUR/EUR_CF_SLN</CapFloorVolatility>
-    <CapFloorVolatility currency="USD">CapFloorVolatility/USD/USD_CF_SLN</CapFloorVolatility>
-    <CapFloorVolatility currency="GBP">CapFloorVolatility/GBP/GBP_CF_SLN</CapFloorVolatility>
+    <CapFloorVolatility currency="EUR">CapFloorVolatility/EUR/EUR_CF_N</CapFloorVolatility>
+    <CapFloorVolatility currency="USD">CapFloorVolatility/USD/USD_CF_N</CapFloorVolatility>
+    <CapFloorVolatility currency="GBP">CapFloorVolatility/GBP/GBP_CF_N</CapFloorVolatility>
   </CapFloorVolatilities>
 
   <!-- default curves definition -->
