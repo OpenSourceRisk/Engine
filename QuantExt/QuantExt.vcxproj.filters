@@ -253,9 +253,6 @@
     <ClInclude Include="qle\pricingengines\discountingcurrencyswapengine.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
-    <ClInclude Include="qle\pricingengines\discountingswapengine.hpp">
-      <Filter>pricingengines</Filter>
-    </ClInclude>
     <ClInclude Include="qle\pricingengines\numericlgmswaptionengine.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
@@ -477,9 +474,6 @@
       <Filter>pricingengines</Filter>
     </ClCompile>
     <ClCompile Include="qle\pricingengines\discountingcurrencyswapengine.cpp">
-      <Filter>pricingengines</Filter>
-    </ClCompile>
-    <ClCompile Include="qle\pricingengines\discountingswapengine.cpp">
       <Filter>pricingengines</Filter>
     </ClCompile>
     <ClCompile Include="qle\pricingengines\numericlgmswaptionengine.cpp">
