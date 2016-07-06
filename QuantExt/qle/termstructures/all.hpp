@@ -19,4 +19,5 @@
 #include <qle/termstructures/datedstrippedoptionletadapter.hpp>
 #include <qle/termstructures/datedstrippedoptionletbase.hpp>
 #include <qle/termstructures/datedstrippedoptionlet.hpp>
+#include <qle/termstructures/dynamicoptionletvolatilitystructure.hpp>
 

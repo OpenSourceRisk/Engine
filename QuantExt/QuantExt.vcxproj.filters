@@ -313,6 +313,9 @@
     <ClInclude Include="qle\termstructures\datedstrippedoptionlet.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\dynamicoptionletvolatilitystructure.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -519,6 +522,9 @@
       <Filter>termstructures</Filter>
     </ClCompile>
     <ClCompile Include="qle\termstructures\datedstrippedoptionlet.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\dynamicoptionletvolatilitystructure.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
   </ItemGroup>
