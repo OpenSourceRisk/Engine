@@ -33,8 +33,8 @@
 
   <xs:simpleType name="sequenceType">
     <xs:restriction base="xs:string">
-      <xs:enumeration value="PseudoRandom"/>
-      <xs:enumeration value="PseudoRandomAntithetic"/>
+      <xs:enumeration value="MersenneTwister"/>
+      <xs:enumeration value="MersenneTwisterAntithetic"/>
       <xs:enumeration value="Sobol"/>
       <xs:enumeration value="SobolBrownianBridge"/>
     </xs:restriction>
