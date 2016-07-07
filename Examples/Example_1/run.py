@@ -18,9 +18,9 @@ oreex.run("Input/ore_swaption.xml")
 oreex.print_headline("Plot results: Simulated exposures vs analytical swaption prices")
 
 oreex.setup_plot("swaptions")
-oreex.plot("exposure_trade_Swap_20y.csv", 2, 3, 'b', "EPE")
-oreex.plot("exposure_trade_Swap_20y.csv", 2, 4, 'r', "ENE")
-oreex.plot("swaption_npv.csv", 3, 4, 'r', "NPV")
+oreex.plot("exposure_trade_Swap_20y.csv", 2, 3, 'b', "EPE Swap")
+oreex.plot("exposure_trade_Swap_20y.csv", 2, 4, 'r', "ENE Swap")
+oreex.plot("swaption_npv.csv", 3, 4, 'g', "NPV Swaptions", marker='s')
 oreex.decorate_plot(title="Example 1 - Simulated exposures vs analytical swaption prices")
 oreex.save_plot_to_file()
 

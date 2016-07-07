@@ -3,6 +3,7 @@ import sys
 import subprocess
 import shutil
 import matplotlib.pyplot as plt
+import matplotlib.ticker
 
 
 class OreExample(object):
@@ -56,30 +57,37 @@ class OreExample(object):
         for file in files:
             shutil.copy(os.path.join("Output", file), os.path.join("Output", subdir))
 
-    def plot(self, filename, colIdxTime, colIdxVal, color, label, offset=1):
+    def plot(self, filename, colIdxTime, colIdxVal, color, label, offset=1, marker='', linestyle='-'):
         self.ax.plot(self.get_output_data_from_column(filename, colIdxTime, offset),
                 self.get_output_data_from_column(filename, colIdxVal, offset),
+                linewidth=2,
+                linestyle=linestyle,
                 color=color,
-                label=label)
+                label=label,
+                marker=marker)
 
-    def plot_npv(self, filename, colIdx, color, label):
+    def plot_npv(self, filename, colIdx, color, label, marker=''):
         data = self.get_output_data_from_column(filename, colIdx)
         self.ax.plot(range(1, len(data) + 1),
                 data,
                 color=color,
-                label=label)
+                label=label,
+                linewidth=2,
+                marker=marker)
 
     def decorate_plot(self, title, ylabel="Exposure", xlabel="Time / Years"):
         self.ax.set_title(title)
         self.ax.set_xlabel(xlabel)
         self.ax.set_ylabel(ylabel)
         self.ax.legend(loc='upper right', shadow=True)
+        self.ax.get_yaxis().set_major_formatter(
+            matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
 
     def plot_line(self, xvals, yvals, color, label):
-        self.ax.plot(xvals, yvals, color=color, label=label)
+        self.ax.plot(xvals, yvals, color=color, label=label, linewidth=2)
 
     def setup_plot(self, filename):
-        self.fig = plt.figure()
+        self.fig = plt.figure(figsize=plt.figaspect(0.4))
         self.ax = self.fig.add_subplot(111)
         self.plot_name = "mpl_" + filename
 
@@ -102,6 +110,7 @@ if __name__ == "__main__":
         "Example_5",
         "Example_6",
         "Example_7",
+        "Example_8",
         "Example_10",
         "Example_11",
     ]
@@ -110,6 +119,6 @@ if __name__ == "__main__":
         print("Running: " + example)
         os.chdir(os.path.join(os.getcwd(), example))
         filename = os.path.join("run.py")
-        sys.argv = ["run.py", 1]
+        sys.argv = ["run.py", 0]
         exec(compile(open(filename, "rb").read(), filename, 'exec'))
         os.chdir(os.path.dirname(os.getcwd()))
