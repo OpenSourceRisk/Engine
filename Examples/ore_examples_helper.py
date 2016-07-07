@@ -17,6 +17,8 @@ class OreExample(object):
         self._locate_ore_exe()
 
     def _locate_ore_exe(self):
+        # This works only under Windows and is equivalent to
+        # ore_exe = "..\\..\\App\\bin\\Win32\\Release\\ore.exe"
         ore_exe = os.getcwd()
         ore_exe = os.path.dirname(ore_exe)  # one level up
         ore_exe = os.path.dirname(ore_exe)  # one level up
