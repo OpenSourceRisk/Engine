@@ -527,7 +527,6 @@
     <ClInclude Include="qle\instruments\oiccbasisswap.hpp" />
     <ClInclude Include="qle\instruments\tenorbasisswap.hpp" />
     <ClInclude Include="qle\math\all.hpp" />
-    <ClInclude Include="qle\math\cumulativenormaldistribution.hpp" />
     <ClInclude Include="qle\math\flatextrapolation.hpp" />
     <ClInclude Include="qle\methods\all.hpp" />
     <ClInclude Include="qle\methods\mctraits.hpp" />
@@ -611,7 +610,6 @@
     <ClCompile Include="qle\instruments\oibasisswap.cpp" />
     <ClCompile Include="qle\instruments\oiccbasisswap.cpp" />
     <ClCompile Include="qle\instruments\tenorbasisswap.cpp" />
-    <ClCompile Include="qle\math\cumulativenormaldistribution.cpp" />
     <ClCompile Include="qle\methods\multipathgeneratorbase.cpp" />
     <ClCompile Include="qle\models\crossassetanalytics.cpp" />
     <ClCompile Include="qle\models\crossassetmodel.cpp" />
