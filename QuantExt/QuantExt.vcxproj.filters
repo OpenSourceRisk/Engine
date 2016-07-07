@@ -235,9 +235,6 @@
     <ClInclude Include="qle\methods\all.hpp">
       <Filter>methods</Filter>
     </ClInclude>
-    <ClInclude Include="qle\methods\mctraits.hpp">
-      <Filter>methods</Filter>
-    </ClInclude>
     <ClInclude Include="qle\methods\multipathgenerator.hpp">
       <Filter>methods</Filter>
     </ClInclude>
