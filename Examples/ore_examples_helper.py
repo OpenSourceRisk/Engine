@@ -111,14 +111,19 @@ if __name__ == "__main__":
         "Example_6",
         "Example_7",
         "Example_8",
+        "Example_9",
         "Example_10",
         "Example_11",
+        "Example_12",
     ]
 
     for example in examples:
-        print("Running: " + example)
-        os.chdir(os.path.join(os.getcwd(), example))
-        filename = os.path.join("run.py")
-        sys.argv = ["run.py", 0]
-        exec(compile(open(filename, "rb").read(), filename, 'exec'))
-        os.chdir(os.path.dirname(os.getcwd()))
+        try:
+            print("Running: " + example)
+            os.chdir(os.path.join(os.getcwd(), example))
+            filename = os.path.join("run.py")
+            sys.argv = ["run.py", 0]
+            exec(compile(open(filename, "rb").read(), filename, 'exec'))
+            os.chdir(os.path.dirname(os.getcwd()))
+        except:
+            print("Error running " + example)
