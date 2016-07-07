@@ -7,12 +7,10 @@
 
 #include <iostream>
 
-#include <qlw/simm/simmdatafileloader.hpp>
 #include <qlw/utilities/log.hpp>
 #include <qlw/utilities/progressbar.hpp>
 #include <qlw/wrap.hpp>
 #include <qlw/engine/valuationengine.hpp>
-#include <qlw/simm/simm.hpp>
 #include <ql/time/calendars/all.hpp>
 #include <ql/time/daycounters/all.hpp>
 #include <ql/cashflows/floatingratecoupon.hpp>
@@ -43,7 +41,6 @@ using namespace openxva::portfolio;
 using namespace openxva::marketdata;
 using namespace openxva::utilities;
 using namespace openxva::engine;
-using namespace openxva::simm;
 using namespace openxva::simulation;
 using namespace openxva::cube;
 using namespace openxva::aggregation;
@@ -72,9 +69,6 @@ void writeNettingSetColva(const Parameters& params,
 void writeXVA(const Parameters& params,
               boost::shared_ptr<Portfolio> portfolio,
               boost::shared_ptr<PostProcess> postProcess);
-
-void writeSimmResults(const Parameters& params, const std::vector<boost::shared_ptr<Simm>>& simm,
-                      const std::vector<string>& portfolios);
 
 int main(int argc, char** argv) {
 
@@ -449,35 +443,6 @@ int main(int argc, char** argv) {
             cout << "SKIP" << endl;
         }
         
-        /****************
-         * Initial Margin
-         */
-        cout << setw(tab) << left << "Initial Margin Report... " << flush;
-        if (params.hasGroup("initialMargin") &&
-            params.get("initialMargin", "active") == "Y") {
-            if(params.get("initialMargin", "method") == "SIMM") {
-                LOG("Loading SIMM data from file...");
-                SimmDataFileLoader loader(inputPath + "/" + params.get("initialMargin", "inputFileName"),
-                                          params.get("initialMargin", "simmVersion"),
-                                          parseBool(params.get("initialMargin", "simmUseProductClasses")),
-                                          parseBool(params.get("initialMargin", "inputDelimiterCR")) ? '\r' : '\n');
-                vector<boost::shared_ptr<Simm>> simm;
-                for(Size i=0;i<loader.portfolios().size();++i) {
-                    LOG("Set up SIMM calculator for portfolio " << loader.portfolios()[i]);
-                    simm.push_back(boost::make_shared<Simm>(loader.data()[i]));
-                }
-                writeSimmResults(params, simm, loader.portfolios());
-                LOG("SIMM results file written.");
-            } else {
-                QL_FAIL("initial margin method " << params.get("initialMargin", "method") << " not recognised.");
-            }
-            cout << "OK" << endl;
-        }
-        else {
-            LOG("skip initial margin reports");
-            cout << "SKIP" << endl;
-        }
-        
     } catch (std::exception& e) {
         ALOG("Error: " << e.what());
         cout << "Error: " << e.what() << endl;
@@ -824,38 +789,6 @@ void writeNettingSetColva(const Parameters& params,
         }
         file.close();
     }
-}
-
-void writeSimmResults(const Parameters& params, const std::vector<boost::shared_ptr<Simm>>& simm,
-                      const std::vector<string>& portfolios) {
-
-    string outputPath = params.get("setup", "outputPath");
-    string fileName = outputPath + "/" + params.get("initialMargin", "outputFileName");
-    ofstream file(fileName);
-    QL_REQUIRE(file.is_open(), "Error opening file " << fileName);
-    file.precision(15);
-    char sep = ',';
-    file << "Portfolio" << sep << "ProductClass" << sep << "RiskClass" << sep << "MarginType" << sep << "InitialMargin"
-         << endl;
-    const string all = "All";
-    for (Size i = 0; i < portfolios.size(); ++i) {
-        for (Size p = 0; p < SimmConfiguration::numberOfProductClasses; ++p) {
-            SimmConfiguration::ProductClass pc = SimmConfiguration::ProductClass(p);
-            for (Size r = 0; r < SimmConfiguration::numberOfRiskClasses; ++r) {
-                SimmConfiguration::RiskClass rc = SimmConfiguration::RiskClass(r);
-                for (Size m = 0; m < SimmConfiguration::numberOfMarginTypes; ++m) {
-                    SimmConfiguration::MarginType mar = SimmConfiguration::MarginType(m);
-                    file << portfolios[i] << sep << pc << sep << rc << sep << mar << sep
-                         << simm[i]->initialMargin(pc, rc, mar) << endl;
-                }
-                file << portfolios[i] << sep << pc << sep << rc << sep << all << sep << simm[i]->initialMargin(pc, rc)
-                     << endl;
-            }
-            file << portfolios[i] << sep << pc << sep << all << sep << all << sep << simm[i]->initialMargin(pc) << endl;
-        }
-        file << portfolios[i] << sep << all << sep << all << sep << all << sep << simm[i]->initialMargin() << endl;
-    }
-    file.close();
 }
 
 bool Parameters::hasGroup(const string& groupName) const {
