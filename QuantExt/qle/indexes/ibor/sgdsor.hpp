@@ -20,7 +20,7 @@
 
 /*! \file sgdsor.hpp
     \brief SGD-SOR index
-    \ingroup 
+    \ingroup indexes 
 */
 
 #ifndef quantext_sgdsor_hpp
@@ -41,6 +41,8 @@ namespace QuantExt {
         See <http://www.abs.org.sg/index.php>.
 
         \warning Check roll convention and EOM.
+
+		\ingroup indexes
     */
     class SGDSor : public IborIndex {
       public:

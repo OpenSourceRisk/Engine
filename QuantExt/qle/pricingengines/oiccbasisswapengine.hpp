@@ -19,8 +19,9 @@
 
 
 /*! \file qle/pricingengines/oiccbasisswapengine.hpp
-    \brief Cross Currency Overnight Indexed Basis Swap Engine
-    \ingroup 
+    \brief Cross Currency Overnight Indexed Basis Swap Engine 
+
+	\ingroup engines
 */
 
 #ifndef quantext_oiccbs_engine_hpp
@@ -32,9 +33,6 @@
 namespace QuantExt {
 
     //! Overnight Indexed Cross Currency Basis Swap Engine
-    /*!
-      \ingroup engines
-    */
     class OvernightIndexedCrossCcyBasisSwapEngine
         : public OvernightIndexedCrossCcyBasisSwap::engine {
     public:

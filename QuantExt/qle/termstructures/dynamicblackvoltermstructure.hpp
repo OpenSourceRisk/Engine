@@ -20,7 +20,7 @@
 
 /*! \file qle/termstructures/dynamicblackvoltermstructure.hpp
     \brief dynamic black volatility term structure
-    \ingroup 
+    \ingroup termstructures
 */
 
 #ifndef quantext_dynamic_black_volatility_termstructure_hpp
@@ -35,7 +35,14 @@
 using namespace QuantLib;
 
 namespace QuantExt {
+ 
 
+namespace tag {
+struct curve {};
+struct surface {};
+}
+
+//! Takes a BlackVolTermStructure with fixed reference date and turns it into a floating reference date term structure.
 /*! This class takes a BlackVolTermStructure with fixed reference date
     and turns it into a floating reference date term structure.
     There are different ways of reacting to time decay that can be
@@ -44,17 +51,15 @@ namespace QuantExt {
     extrapolation must be allowed, since there is a check in
     VolatilityTermStructure we can no extend or bypass). ATM is
     defined as the forward level here (which is of particular
-    interest for FX term structures). */
+    interest for FX term structures).
 
-/*! if curve is specified, a more efficient implementation for
+    if curve is specified, a more efficient implementation for
     variance and volatility is used just passing through the
     given strike to the source term structure; note that in this
-    case a null strike will not be converted to atm though. */
-namespace tag {
-struct curve {};
-struct surface {};
-}
+    case a null strike will not be converted to atm though.
 
+	\ingroup termstructures
+*/
 template <typename mode = tag::surface>
 class DynamicBlackVolTermStructure : public BlackVolTermStructure {
   public:

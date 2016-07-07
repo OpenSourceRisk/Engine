@@ -20,7 +20,7 @@
 
 /*! \file qle/termstructures/oibasisswaphelper.hpp
     \brief Overnight Indexed Basis Swap rate helpers
-    \ingroup 
+    \ingroup termstructures
 */
 
 #ifndef quantlib_oisbasisswaphelper_hpp
@@ -33,6 +33,8 @@
 namespace QuantExt {
 
     //! Rate helper for bootstrapping over Overnight Indexed Basis Swap Spreads
+	/*! \ingroup termstructures
+	*/
     class OIBSHelper : public RelativeDateRateHelper {
       public:
         OIBSHelper(Natural settlementDays,

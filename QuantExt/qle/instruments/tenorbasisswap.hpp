@@ -18,9 +18,10 @@
 */
 
 
-/*! \file tenorbasisswap.hpp
+/*! \\file tenorbasisswap.hpp
     \brief Single currency tenor basis swap instrument
-    \ingroup 
+	
+    \ingroup instruments
 */
 
 #ifndef quantext_tenor_basis_swap_hpp
@@ -35,6 +36,8 @@ using namespace QuantLib;
 
 namespace QuantExt {
     //! Single currency tenor basis swap
+	/*! \ingroup instruments
+	*/
     class TenorBasisSwap : public Swap {
       public:
         class results;

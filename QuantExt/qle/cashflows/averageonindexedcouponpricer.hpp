@@ -20,7 +20,8 @@
 
 /*! \file averageonindexedcouponpricer.hpp
     \brief Pricer for average overnight indexed coupons
-    \ingroup 
+
+	\ingroup cashflows
 */
 
 #ifndef quantext_average_on_indexed_coupon_pricer_hpp
@@ -35,6 +36,8 @@ using namespace QuantLib;
 namespace QuantExt {
 
     //! Pricer for average overnight indexed coupons
+	/*! \ingroup cashflows
+	*/
     class AverageONIndexedCouponPricer : public FloatingRateCouponPricer {
       public:
         enum Approximation {Takada, None};
@@ -65,7 +68,6 @@ namespace QuantExt {
 
         const AverageONIndexedCoupon* coupon_;
     };
-
 } // namespace QuantExt
 
 #endif

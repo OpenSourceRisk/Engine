@@ -20,7 +20,8 @@
 
 /*! \file subperiodscouponpricer.hpp
     \brief Pricer for sub-period coupons
-    \ingroup 
+
+	\ingroup cashflows
 */
 
 #ifndef quantext_sub_periods_coupon_pricer_hpp
@@ -34,6 +35,8 @@ using namespace QuantLib;
 
 namespace QuantExt {
     //! Pricer for sub-period coupons
+	/*! \ingroup cashflows
+	*/
     class SubPeriodsCouponPricer : public FloatingRateCouponPricer {
       public:
         SubPeriodsCouponPricer() {}
@@ -62,6 +65,7 @@ namespace QuantExt {
 
         const SubPeriodsCoupon* coupon_;
     };
+
 }
 
 #endif

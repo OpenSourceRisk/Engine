@@ -20,7 +20,8 @@
 
 /*! \file qle/pricingengines/analyticlgmswaptionengine.hpp
     \brief analytic engine for european swaptions in the LGM model
-    \ingroup 
+
+	\ingroup engines
 */
 
 #ifndef quantext_analytic_lgm_swaption_engine_hpp
@@ -55,6 +56,8 @@ namespace QuantExt {
 
     Note that we assume H'>0, but this is a general requirement of the
     LGM parametrization anyway (see the base parametrization class).
+
+	\ingroup engines
 */
 
 class AnalyticLgmSwaptionEngine

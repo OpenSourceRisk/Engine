@@ -20,7 +20,7 @@
 
 /*! \file parametrization.hpp
     \brief base class for model parametrizations
-    \ingroup 
+    \ingroup models
 */
 
 #ifndef quantext_model_parametrization_hpp
@@ -34,6 +34,9 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
+//! Parametrization
+/*! \ingroup models
+*/
 class Parametrization {
   public:
     Parametrization(const Currency &currency);

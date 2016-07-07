@@ -20,7 +20,8 @@
 
 /*! \file qle/cashflows/fxlinkedcashflow.hpp
     \brief An FX linked cashflow
-    \ingroup 
+
+	\ingroup cashflows
 */
 
 #ifndef quantext_fx_linked_cashflow_hpp
@@ -57,6 +58,8 @@ namespace QuantExt {
      * converted at. The name of the index is a parameter to the constructor.
      *
      * This is not a lazy object.
+
+	 \ingroup cashflows
      */
     class FXLinkedCashFlow : public CashFlow {
       public:
@@ -83,6 +86,7 @@ namespace QuantExt {
 
         Real fxRate() const;
     };
+
 }
 
 #endif

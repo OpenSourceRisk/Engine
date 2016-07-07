@@ -20,7 +20,8 @@
 
 /*! \file makeaverageois.hpp
     \brief Helper class to instantiate standard average ON indexed swaps.
-    \ingroup 
+
+	\ingroup instruments
 */
 
 #ifndef quantext_make_average_ois_hpp
@@ -35,6 +36,8 @@ namespace QuantExt {
     //! helper class
     /*! This class provides a more comfortable way to instantiate standard
         average ON indexed swaps.
+
+		\ingroup instruments
     */
     class MakeAverageOIS {
       public:

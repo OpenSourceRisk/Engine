@@ -38,7 +38,7 @@
 
 /*! \file mctraits.hpp
     \brief Monte Carlo policies
-    \ingroup 
+    \ingroup methods
 */
 
 #ifndef quantext_mc_traits_hpp
@@ -57,6 +57,8 @@ namespace QuantExt {
     // path generation and pricing traits
 
     //! default Monte Carlo traits for single-variate models
+	/*! \ingroup methods
+	*/
     template <class RNG = PseudoRandom>
     struct SingleVariate {
         typedef RNG rng_traits;
@@ -68,6 +70,8 @@ namespace QuantExt {
     };
 
     //! default Monte Carlo traits for multi-variate models
+	/*! \ingroup methods
+	*/
     template <class RNG = PseudoRandom>
     struct MultiVariate {
         typedef RNG rng_traits;

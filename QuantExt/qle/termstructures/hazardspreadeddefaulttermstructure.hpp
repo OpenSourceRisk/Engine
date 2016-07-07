@@ -20,7 +20,7 @@
 
 /*! \file qle/termstructures/hazardspreadeddefaulttermstructure.hpp
     \brief adds a constant hazard rate spread to a default term structure
-    \ingroup 
+    \ingroup termstructures
 */
 
 #ifndef quantext_hazard_spreaded__defaulttermstructure_hpp
@@ -34,6 +34,9 @@ using namespace QuantLib;
 namespace QuantExt {
 
 //FIXME: why do we need this?
+//! HazardS preaded Default Term Structure
+/*! \ingroup termstructues
+*/
 class HazardSpreadedDefaultTermStructure : public HazardRateStructure {
   public:
     //! \name Constructors

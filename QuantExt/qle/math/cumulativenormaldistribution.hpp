@@ -20,7 +20,7 @@
 
 /*! \file cumulativenormaldistribution.hpp
     \brief cumulative normal distribution based on std::erf (since C++11),
-    \ingroup 
+    \ingroup math
 */
 
 #ifndef quantext_cumulative_normal_hpp

@@ -20,7 +20,8 @@
 
 /*! \file pseudoparameter.hpp
     \brief parameter giving access to calibration machinery
-    \ingroup 
+
+	\ingroup models
 */
 
 #ifndef quantext_pseudoparameter_hpp
@@ -34,10 +35,13 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
+//! Parameter that accesses CalibratedModel
 /*! lightweight parameter, that gives access to the
     CalibratedModel calibration machinery, but without
-    any own logic (if this is not needed anyway) */
+    any own logic (if this is not needed anyway) 
 
+	\ingroup models
+*/
 class PseudoParameter : public Parameter {
   private:
     class Impl : public Parameter::Impl {

@@ -19,8 +19,9 @@
 
 
 /*! \file crossccybasisswap.hpp
-    \brief Cross currency basis swap instrument
-    \ingroup 
+    \brief Cross currency basis swap instrument 
+
+	\ingroup instruments
 */
 
 #ifndef quantext_cross_ccy_basis_swap_hpp
@@ -37,7 +38,7 @@ namespace QuantExt {
     /*! The first leg holds the pay currency cashflows and second leg holds
         the receive currency cashflows.
 
-        \ingroup instruments
+		\ingroup instruments
     */
     class CrossCcyBasisSwap : public CrossCcySwap {
       public:
@@ -137,7 +138,6 @@ namespace QuantExt {
         Spread fairRecSpread;
         void reset();
     };
-
 }
 
 #endif

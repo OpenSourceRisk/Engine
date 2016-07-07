@@ -19,8 +19,9 @@
 
 
 /*! \file subperiodscoupon.hpp
-    \brief Coupon with a number of sub-periods
-    \ingroup 
+    \brief Coupon with a number of sub-periods 
+
+	\ingroup cashflows
 */
 
 #ifndef quantext_sub_periods_coupon_hpp
@@ -32,7 +33,7 @@
 using namespace QuantLib;
 
 namespace QuantExt {
-
+	//! Sub-periods pricer
     class SubPeriodsCouponPricer;
 
     //! Sub-periods coupon
@@ -40,6 +41,8 @@ namespace QuantExt {
     *   the index. The index tenor divides the coupon period into sub-periods.
     *   The index fixing for each sub-period is compounded or averaged over
     *   the full coupon period.
+
+	    \ingroup cashflows
     */
     class SubPeriodsCoupon : public FloatingRateCoupon {
       public:
@@ -93,6 +96,8 @@ namespace QuantExt {
     };
 
     //! helper class building a sequence of sub-period coupons
+	/*! \ingroup cashflows
+	*/
     class SubPeriodsLeg {
       public:
         SubPeriodsLeg(const Schedule& schedule,
@@ -121,6 +126,7 @@ namespace QuantExt {
         SubPeriodsCoupon::Type type_;
         bool includeSpread_;
     };
+
 }
 
 #endif

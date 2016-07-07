@@ -20,7 +20,7 @@
 
 /*! \file qle/termstructures/dynamicswaptionvolmatrix.hpp
     \brief dynamic swaption volatility matrix
-    \ingroup 
+    \ingroup termstructures
 */
 
 #ifndef quantext_dynamic_swaption_volatility_termstructure_hpp
@@ -35,12 +35,14 @@
 using namespace QuantLib;
 
 namespace QuantExt {
-
+//! Takes a SwaptionVolatilityMatrix with fixed reference date and turns it into a floating reference date term structure.
 /*! This class takes a SwaptionVolatilityMatrix with fixed
     reference date and turns it into a floating reference date
     term structure.
     There are different ways of reacting to time decay that can be
     specified.
+
+	\ingroup termstructures
 */
 
 class DynamicSwaptionVolatilityMatrix : public SwaptionVolatilityStructure {

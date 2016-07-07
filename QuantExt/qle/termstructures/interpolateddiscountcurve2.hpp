@@ -20,7 +20,7 @@
 
 /*! \file interpolateddiscountcurve2.hpp
     \brief interpolated discount term structure
-    \ingroup 
+    \ingroup termstructures
 */
 
 #ifndef quantext_interpolated_discount_curve_2_hpp
@@ -36,11 +36,14 @@
 using namespace QuantLib;
 
 namespace QuantExt {
-
+//! InterpolatedDiscountCurve2 as in QuantLib, but with floating discount quotes and floating reference date
 /*! InterpolatedDiscountCurve2 as in QuantLib, but with
-  floating discount quotes and floating reference date,
-  reference date is always the global evaluation date,
-  i.e. settlement days are zero and calendar is NullCalendar() */
+    floating discount quotes and floating reference date,
+    reference date is always the global evaluation date,
+    i.e. settlement days are zero and calendar is NullCalendar() 
+
+	\ingroup termstructures
+*/
 class InterpolatedDiscountCurve2 : public YieldTermStructure, public LazyObject {
   public:
     //! \name Constructors

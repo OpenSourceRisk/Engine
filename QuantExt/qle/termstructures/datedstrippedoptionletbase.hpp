@@ -20,7 +20,7 @@
 
 /*! \file qle/termstructures/datedstrippedoptionletbase.hpp
     \brief abstract class for optionlet surface with fixed reference date
-    \ingroup 
+    \ingroup termstructures
 */
 
 #pragma once
@@ -39,8 +39,11 @@ using namespace QuantLib;
 using std::vector;
 
 namespace QuantExt {
+	//! Stripped Optionlet base class interface
     /*! Abstract base class interface for a (time indexed) vector of (strike indexed) optionlet 
         (i.e. caplet/floorlet) volatilities with a fixed reference date.
+
+		\ingroup termstructues
     */
     class DatedStrippedOptionletBase : public LazyObject {
       public:

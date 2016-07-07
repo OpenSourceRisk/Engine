@@ -34,7 +34,7 @@
 
 /*! \file fxindex.hpp
     \brief FX index class
-    \ingroup 
+	\ingroup indexes
 */
 
 #ifndef quantext_fxindex_hpp
@@ -49,6 +49,8 @@
 using namespace QuantLib;
 namespace QuantExt {
 
+//! FX Index
+/*! \ingroup indexes */
 class FxIndex : public Index, public Observer {
   public:
     /*! familyName may be e.g. ECB

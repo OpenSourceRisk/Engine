@@ -19,8 +19,9 @@
 
 
 /*! \file averageois.hpp
-    \brief Swap of arithmetic average overnight index against fixed
-    \ingroup 
+    \brief Swap of arithmetic average overnight index against fixed 
+
+    \ingroup instruments
 */
 
 #ifndef quantext_average_ois_hpp
@@ -39,8 +40,11 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-    /*! Average overnight index swap: swap with first leg fixed and the second
+	//! Average overnight index swap
+    /*! Swap with first leg fixed and the second
         leg being an arithmetic average overnight index.
+
+		\ingroup instruments
     */
     class AverageOIS : public Swap {
       public:

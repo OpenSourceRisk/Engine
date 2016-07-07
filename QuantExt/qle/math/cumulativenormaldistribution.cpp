@@ -17,11 +17,19 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+/*! \file cumulativenormaldistribution.hpp
+    \brief cumulative normal distribution
+
+    \ingroup math
+*/
 
 #include <qle/math/cumulativenormaldistribution.hpp>
 
 namespace QuantExt {
 
+//! cumulative normal distribution
+/*! \ingroup math
+*/
 CumulativeNormalDistribution::CumulativeNormalDistribution(Real average,
                                                            Real sigma)
     : average_(average), sigma_(sigma) {}

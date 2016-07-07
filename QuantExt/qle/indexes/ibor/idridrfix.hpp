@@ -20,7 +20,7 @@
 
 /*! \file idridrfix.hpp
     \brief IDR-IDRFIX index
-    \ingroup 
+    \ingroup indexes 
 */
 
 #ifndef quantext_idridrfix_hpp
@@ -43,6 +43,8 @@ namespace QuantExt {
         \remark Using Indonesia calendar, should be Jakarta.
 
         \warning Check roll convention and EOM.
+
+		\ingroup indexes
     */
     class IDRIdrfix : public IborIndex {
       public:

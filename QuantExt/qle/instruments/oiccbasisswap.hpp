@@ -20,7 +20,8 @@
 
 /*! \file oiccbasisswap.hpp
     \brief Cross currency overnight index swap paying compounded overnight vs. float
-    \ingroup 
+
+	\ingroup instruments
 */
 
 #ifndef quantlib_cc_ois_basis_swap_hpp
@@ -41,6 +42,8 @@ namespace QuantExt {
     // class IborIndex;
 
     //! Basis swap: compounded overnight rate in ccy 1 vs. compounded overnight rate in ccy 2
+	/*! \ingroup instruments
+	*/
     class OvernightIndexedCrossCcyBasisSwap : public Swap {
       public:
         class arguments;
@@ -101,8 +104,8 @@ namespace QuantExt {
         mutable Real fairPayLegSpread_;
         mutable Real fairRecLegSpread_;
     };
-
-    // inline
+    
+	// inline
 
     inline Real OvernightIndexedCrossCcyBasisSwap::payNominal() const {
         return payNominal_;

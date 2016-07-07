@@ -20,7 +20,7 @@
 
 /*! \file crossassetanalytics.hpp
     \brief basis functions for analytics in the cross asset model
-    \ingroup 
+    \ingroup crossassetmodel 
 */
 
 #ifndef quantext_crossasset_analytics_base_hpp
@@ -33,6 +33,10 @@ using namespace QuantLib;
 namespace QuantExt {
 
 namespace CrossAssetAnalytics {
+
+/*! \addtogroup crossassetmodel
+    @{
+*/
 
 /*! generic integrand */
 template <class E>
@@ -131,6 +135,8 @@ inline Real integral(const CrossAssetModel *x, const E &e, const Real a,
     return x->integrator()->operator()(
         boost::bind(&integral_helper<E>, x, e, _1), a, b);
 }
+
+/*! @} */
 
 } // namespace CrossAssetAnalytics
 } // namespace QuantExt

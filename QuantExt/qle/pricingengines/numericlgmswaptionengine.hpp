@@ -20,7 +20,8 @@
 
 /*! \file numericlgmswaptionengine.hpp
     \brief numeric engine for bermudan swaptions in the LGM model
-    \ingroup 
+
+	\ingroup engines
 */
 
 #ifndef quantext_numeric_lgm_swaption_engine_hpp
@@ -39,8 +40,7 @@
 namespace QuantExt {
 
 //! Numerical engine for bermudan swaptions in the LGM model
-/*! \ingroup swaptionengines
-
+/*! 
     All fixed coupons with start date greater or equal to the respective
     option expiry are considered to be
     part of the exercise into right.
@@ -52,7 +52,10 @@ namespace QuantExt {
 */
 
 /*! Base class from which we derive the engines for both the Swaption
-  and NonstandardSwaption instrument */
+  and NonstandardSwaption instrument
+  
+  \ingroup engines
+*/
 class NumericLgmSwaptionEngineBase {
   protected:
     NumericLgmSwaptionEngineBase(
@@ -112,7 +115,9 @@ class NumericLgmSwaptionEngineBase {
     std::vector<Real> y_, w_, wsum_;
 }; // NnumercLgmSwaptionEngineBase
 
-/*! Engine for Swaption instrument */
+//! Engine for Swaption instrument 
+/*! \ingroup engines
+*/
 class NumericLgmSwaptionEngine
     : public GenericEngine<Swaption::arguments, Swaption::results>,
       public NumericLgmSwaptionEngineBase {
@@ -134,7 +139,8 @@ class NumericLgmSwaptionEngine
     Real conditionalSwapValue(Real x, Real t, const Date expiry0) const;
 };
 
-/*! Engine for NonstandardSwaption */
+//! Engine for NonstandardSwaption
+/*! \ingroup engines */
 class NumericLgmNonstandardSwaptionEngine
     : public GenericEngine<NonstandardSwaption::arguments,
                            NonstandardSwaption::results>,

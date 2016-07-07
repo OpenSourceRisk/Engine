@@ -40,7 +40,7 @@
 
 /*! \file multipathgenerator.hpp
     \brief Generates a multi path from a random-array generator
-    \ingroup 
+    \ingroup methods
 */
 
 #ifndef quantext_multi_path_generator_hpp
@@ -67,6 +67,8 @@ namespace QuantExt {
         \ingroup mcarlo
 
         \test the generated paths are checked against cached results
+
+		\ingroup methods
     */
     template <class GSG>
     class MultiPathGenerator {

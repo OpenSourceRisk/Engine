@@ -20,7 +20,8 @@
 
 /*! \file floatingratefxlinkednotionalcoupon.hpp
     \brief Coupon paying a Libor-type index but with an FX linked notional
-    \ingroup 
+
+    \ingroup cashflows
 */
 
 #ifndef quantext_floating_rate_fx_linked_notional_coupon_hpp
@@ -34,6 +35,7 @@ using namespace QuantLib;
 namespace QuantExt {
 
     //! %Coupon paying a Libor-type index on an fx-linked nominal
+	//! \ingroup cashflows
     class FloatingRateFXLinkedNotionalCoupon : public FloatingRateCoupon {
       public:
         FloatingRateFXLinkedNotionalCoupon(

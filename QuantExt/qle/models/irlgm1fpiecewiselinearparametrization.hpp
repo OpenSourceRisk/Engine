@@ -20,7 +20,7 @@
 
 /*! \file irlgm1fpiecewiselinearparametrization.hpp
     \brief piecewise linear model parametrization
-    \ingroup 
+    \ingroup models
 */
 
 #ifndef quantext_piecewiselinear_irlgm1f_parametrization_hpp
@@ -30,7 +30,7 @@
 #include <qle/models/piecewiseconstanthelper.hpp>
 
 namespace QuantExt {
-
+//! Lgm 1f Piecewise Linear Parametrization
 /*! parametrization with piecewise linear H and zeta,
     w.r.t. zeta this is the same as piecewise constant alpha,
     w.r.t. H this is implemented with a new (helper) parameter
@@ -41,6 +41,8 @@ namespace QuantExt {
              (e.g. kappa is zero almost everywhere); you
              might rather want to rely on the piecewise
              constant parametrization
+
+    \ingroup models
 */
 
 template <class TS>

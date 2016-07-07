@@ -20,7 +20,7 @@
 
 /*! \file sgdsibor.hpp
     \brief SGD-SIBOR index
-    \ingroup 
+    \ingroup indexes 
 */
 
 #ifndef quantext_sgdsibor_hpp
@@ -41,6 +41,8 @@ namespace QuantExt {
         See <http://www.abs.org.sg/index.php>.
 
         \warning Check roll convention and EOM.
+
+		\ingroup indexes
     */
     class SGDSibor : public IborIndex {
       public:

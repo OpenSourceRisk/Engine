@@ -20,7 +20,8 @@
 
 /*! \file averageonindexedcoupon.hpp
     \brief coupon paying the weighted average of the daily overnight rate
-    \ingroup 
+
+	\ingroup cashflows
 */
 
 #ifndef quantext_average_on_indexed_coupon_hpp
@@ -34,6 +35,8 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
+	//! average overnight coupon pricer
+	//! \ingroup cashflows
     class AverageONIndexedCouponPricer;
 
     //! average overnight coupon
@@ -41,6 +44,8 @@ namespace QuantExt {
          overnight fixings. The rateCutoff counts the number of fixing
          dates starting at the end date whose fixings are not taken into
          account, but rather replaced by the last known fixing before.
+
+		 \ingroup cashflows
     */
     class AverageONIndexedCoupon : public FloatingRateCoupon {
       public:
@@ -80,6 +85,8 @@ namespace QuantExt {
     };
 
     //! helper class building a sequence of overnight coupons
+	/*! \ingroup cashflows
+	*/
     class AverageONLeg {
       public:
         AverageONLeg(const Schedule& schedule,

@@ -20,7 +20,7 @@
 
 /*! \file lgm.hpp
     \brief lgm model class
-    \ingroup 
+    \ingroup models
 */
 
 #ifndef quantext_lgm_model_hpp
@@ -36,9 +36,11 @@
 using namespace QuantLib;
 
 namespace QuantExt {
-
+//! Linear Gauss Morkov Model
 /*! LGM 1f interest rate model
-    Basically the same remarks as for CrossAssetModel hold */
+    Basically the same remarks as for CrossAssetModel hold 
+    aingroup models	
+*/
 
 class LinearGaussMarkovModel : public LinkableCalibratedModel {
 

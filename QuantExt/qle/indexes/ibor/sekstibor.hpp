@@ -20,7 +20,7 @@
 
 /*! \file sekstibor.hpp
     \brief SEK-STIBOR index
-    \ingroup 
+    \ingroup indexes 
 */
 
 #ifndef quantext_sekstibor_hpp
@@ -43,6 +43,8 @@ namespace QuantExt {
         \remark Using Sweden calendar, should be Stockholm.
 
         \warning Check roll convention and EOM.
+
+		\ingroup indexes
     */
     class SEKStibor : public IborIndex {
       public:

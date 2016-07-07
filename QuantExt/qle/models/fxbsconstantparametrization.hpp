@@ -20,7 +20,7 @@
 
 /*! \file fxbspiecewiseconstantparametrization.hpp
     \brief piecewise constant model parametrization
-    \ingroup 
+    \ingroup models
 */
 
 #ifndef quantext_constant_fxbs_parametrization_hpp
@@ -29,8 +29,10 @@
 #include <qle/models/fxbsparametrization.hpp>
 
 namespace QuantExt {
-
-/*! FX Black Scholes parametrization, with constant volatility */
+//! FX Black Scholes parametrization
+/*! FX Black Scholes parametrization, with constant volatility 
+    \ingroup models
+*/
 class FxBsConstantParametrization : public FxBsParametrization {
   public:
     /*! The currency refers to the foreign currency, the

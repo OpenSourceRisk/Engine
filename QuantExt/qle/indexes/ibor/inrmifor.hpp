@@ -20,7 +20,7 @@
 
 /*! \file inrmifor.hpp
     \brief INR-MIFOR index
-    \ingroup 
+    \ingroup indexes
 */
 
 #ifndef quantext_inrmifor_hpp
@@ -43,6 +43,8 @@ namespace QuantExt {
         \remark Using India calendar, should be Mumbai (excluding Saturday).
 
         \warning Check roll convention and EOM.
+
+		\ingroup indexes
     */
     class INRMifor : public IborIndex {
       public:

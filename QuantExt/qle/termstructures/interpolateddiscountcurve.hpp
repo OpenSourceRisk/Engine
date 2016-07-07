@@ -20,7 +20,7 @@
 
 /*! \file interpolateddiscountcurve.hpp
     \brief interpolated discount term structure
-    \ingroup 
+    \ingroup termstructures
 */
 
 #ifndef quantext_interpolated_discount_curve_hpp
@@ -34,9 +34,13 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
+	//! InterpolatedDiscountCurve based on loglinear interpolation of DiscountFactors
     /*! InterpolatedDiscountCurve based on loglinear interpolation of DiscountFactors,
         flat fwd extrapolation is always enabled, the term structure has always a
-        floating reference date */
+        floating reference date 
+	
+	    \ingroup termstructures
+	*/
     class InterpolatedDiscountCurve : public YieldTermStructure {
     public:
         //! \name Constructors

@@ -20,7 +20,7 @@
 
 /*! \file fxbsparametrization.hpp
     \brief FX Black Scholes parametrization
-    \ingroup 
+    \ingroup models
 */
 
 #ifndef quantext_fxbs_parametrization_hpp
@@ -34,7 +34,10 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-/*! Base class for FX Black Scholes parametrizations */
+//! FX Black Scholes parametrizations
+/*! Base class for FX Black Scholes parametrizations 
+    \ingroup models
+*/
 class FxBsParametrization : public Parametrization {
   public:
     /*! The currency refers to the foreign currency, the spot

@@ -20,7 +20,7 @@
 
 /*! \file irlgm1fpiecewiseconstantparametrization.hpp
     \brief piecewise constant model parametrization
-    \ingroup 
+    \ingroup models
 */
 
 #ifndef quantext_piecewiseconstant_irlgm1f_parametrization_hpp
@@ -31,6 +31,9 @@
 
 namespace QuantExt {
 
+//! LGM 1F Piecewise Constant Parametrization
+/*! \ingroup models
+*/
 template <class TS>
 class Lgm1fPiecewiseConstantParametrization : public Lgm1fParametrization<TS>,
                                               private PiecewiseConstantHelper1,

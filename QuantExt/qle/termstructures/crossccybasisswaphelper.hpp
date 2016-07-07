@@ -20,7 +20,7 @@
 
 /*! \file crossccybasisswaphelper.hpp
     \brief Cross currency basis swap helper
-    \ingroup 
+    \ingroup termstructures
 */
 
 #ifndef quantext_cross_ccy_basis_swap_helper_hpp
@@ -32,6 +32,7 @@
 
 namespace QuantExt {
 
+    //! Cross Ccy Basis Swap Rate Helper
     /*! Rate helper for bootstrapping over cross currency basis swap spreads
 
         Assumes that you have, at a minimum, either:
@@ -46,6 +47,8 @@ namespace QuantExt {
         be be quoted with either of these currencies, this is determined
         by the flatIsDomestic flag. The settlement date of the spot is
         assumed to be equal to the settlement date of the swap itself.
+
+		\ingroup termstructures
     */
     class CrossCcyBasisSwapHelper : public RelativeDateRateHelper {
       public:

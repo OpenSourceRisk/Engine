@@ -20,7 +20,7 @@
 
 /*! \file averageoisratehelper.hpp
     \brief Rate helpers to facilitate usage of AverageOIS in bootstrapping
-    \ingroup 
+    \ingroup termstructures
 */
 
 #ifndef quantext_average_ois_rate_helper_hpp
@@ -34,9 +34,12 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
+	//! Average OIS Rate Helper
     /*! Rate helper to facilitate the usage of an AverageOIS instrument in
         bootstrapping. This instrument pays a fixed leg vs. a leg that
         pays the arithmetic average of an ON index plus a spread.
+
+		\ingroup termstructures
     */
     class AverageOISRateHelper : public RelativeDateRateHelper {
       public:

@@ -20,7 +20,7 @@
 
 /*! \file irlgm1fparametrization.hpp
     \brief Interest Rate Linear Gaussian Markov 1 factor parametrization
-    \ingroup 
+    \ingroup models
 */
 
 #ifndef quantext_irlgm1f_parametrization_hpp
@@ -32,6 +32,9 @@
 
 namespace QuantExt {
 
+//! LGM 1F Parametrization
+/*! \ingroup models
+*/
 template <class TS> class Lgm1fParametrization : public Parametrization {
   public:
     Lgm1fParametrization(const Currency &currency,

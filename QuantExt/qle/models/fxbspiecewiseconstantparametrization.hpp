@@ -20,7 +20,7 @@
 
 /*! \file fxbspiecewiseconstantparametrization.hpp
     \brief piecewise constant model parametrization
-    \ingroup 
+    \ingroup models
 */
 
 #ifndef quantext_piecewiseconstant_fxbs_parametrization_hpp
@@ -30,9 +30,11 @@
 #include <qle/models/piecewiseconstanthelper.hpp>
 
 namespace QuantExt {
-
+//! FX Black Scholes constant parametrization
 /*! FX Black Scholes parametrization with piecewise
-  constant volatility */
+    constant volatility 
+    \ingroup models
+*/
 class FxBsPiecewiseConstantParametrization : public FxBsParametrization,
                                              private PiecewiseConstantHelper1 {
   public:

@@ -20,7 +20,7 @@
 
 /*! \file dynamicstype.hpp
     \brief dynamics type definitions
-    \ingroup 
+    \ingroup termstructures
 */
 
 #ifndef quantext_dynamics_type_hpp
@@ -30,11 +30,20 @@
 
 namespace QuantExt {
 
+/*! \addtogroup termstructues
+    @{
+*/
+
+//! Stickyness
 enum Stickyness { StickyStrike, StickyLogMoneyness, StickyAbsoluteMoneyness };
 
+//! Reaction to Time Decay
 enum ReactionToTimeDecay { ConstantVariance, ForwardForwardVariance };
 
+//! Yield Curve Roll Down
 enum YieldCurveRollDown { ConstantDiscounts, ForwardForward };
+
+/*! @} */
 
 inline std::ostream &operator<<(std::ostream &out, const Stickyness &t) {
     switch (t) {

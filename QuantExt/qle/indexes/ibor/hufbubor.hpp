@@ -20,7 +20,7 @@
 
 /*! \file hufbubor.hpp
     \brief HUF-BUBOR index
-    \ingroup 
+    \ingroup indexes
 */
 
 #ifndef quantext_hufbubor_hpp
@@ -44,6 +44,8 @@ namespace QuantExt {
         \remark Using Hungary calendar, should be Budapest.
 
         \warning Check roll convention and EOM.
+
+		\ingroup indexes
     */
     class HUFBubor : public IborIndex {
       public:

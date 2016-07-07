@@ -20,7 +20,7 @@
 
 /*! \file qle/termstructures/oisratehelper.hpp
     \brief Overnight Indexed Swap (aka OIS) rate helpers
-    \ingroup 
+    \ingroup termstructures
 */
 
 #ifndef quantext_oisratehelper_hpp
@@ -34,6 +34,8 @@ using namespace QuantLib;
 namespace QuantExt {
 
     //! Rate helper for bootstrapping using Overnight Indexed Swaps
+	/*! \ingroup termstructures
+	*/
     class OISRateHelper : public RelativeDateRateHelper {
       public:
         OISRateHelper(Natural settlementDays,
@@ -83,6 +85,8 @@ namespace QuantExt {
     };
 
     //! Rate helper for bootstrapping using Overnight Indexed Swaps
+	/*! \ingroup termstructures
+	*/
     class DatedOISRateHelper : public RateHelper {
       public:
         DatedOISRateHelper(const Date& startDate,

@@ -20,7 +20,7 @@
 
 /*! \file irlgm1fpiecewiseconstanthullwhiteadaptor.hpp
     \brief adaptor to emulate piecewise constant Hull White parameters
-    \ingroup 
+    \ingroup models
 */
 
 #ifndef quantext_piecewiseconstant_irlgm1f_hwadaptor_hpp
@@ -32,6 +32,9 @@
 
 namespace QuantExt {
 
+//! LGM 1f Piecewise Constant Hull White Adaptor
+/*! \ingroup models
+*/
 template <class TS>
 class Lgm1fPiecewiseConstantHullWhiteAdaptor
     : public Lgm1fParametrization<TS>,

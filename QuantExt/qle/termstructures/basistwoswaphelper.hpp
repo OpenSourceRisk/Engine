@@ -20,7 +20,7 @@
 
 /*! \file basistwoswaphelper.hpp
     \brief Libor basis swap helper as two swaps
-    \ingroup 
+    \ingroup termstructures
 */
 
 #ifndef quantext_basis_two_swap_helper_hpp
@@ -32,8 +32,11 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
+	//! Basis Two Swap Helper
     /*! Rate helper for bootstrapping using Libor tenor basis as the
      *  difference between the fixed rate on two swaps
+
+	    \ingroup termstructures
      */
     class BasisTwoSwapHelper : public RelativeDateRateHelper {
       public:

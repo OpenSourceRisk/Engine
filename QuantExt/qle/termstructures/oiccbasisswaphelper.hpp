@@ -20,7 +20,7 @@
 
 /*! \file oiccbasisswaphelper.hpp
     \brief Overnight Indexed Cross Currency Basis Swap helpers
-    \ingroup 
+    \ingroup termstructures
 */
 
 #ifndef quantlib_oiccbasisswap_helper_hpp
@@ -35,6 +35,8 @@ namespace QuantExt {
     //! Rate helper for bootstrapping over Overnight Indexed CC Basis Swap Spreads
     /*
       The bootstrap affects the receive leg's discount curve only.
+
+	  \ingroup termstructures
     */
     class OICCBSHelper : public RelativeDateRateHelper {
       public:

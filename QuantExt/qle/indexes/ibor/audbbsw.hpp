@@ -20,7 +20,7 @@
 
 /*! \file audbbsw.hpp
     \brief AUD-BBSW index
-    \ingroup 
+    \ingroup indexes
 */
 
 #ifndef quantext_audbbsw_hpp
@@ -44,6 +44,8 @@ namespace QuantExt {
 
         \warning Convention should be Modified Following Bimonthly.
         \warning Check EOM.
+
+		\ingroup indexes
     */
     class AUDbbsw : public IborIndex {
       public:
