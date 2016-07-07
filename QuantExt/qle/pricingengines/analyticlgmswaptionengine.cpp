@@ -191,7 +191,7 @@ void AnalyticLgmSwaptionEngine::calculate() const {
         b.solve(boost::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, _1),
                 1.0E-6, 0.0, 0.01);
 
-    QuantExt::CumulativeNormalDistribution N;
+    CumulativeNormalDistribution N;
     Real sqrt_zetaex = std::sqrt(zetaex_);
     Real sum = 0.0;
     for (Size j = j1_; j < arguments_.fixedCoupons.size(); ++j) {
