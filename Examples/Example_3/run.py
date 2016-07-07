@@ -23,8 +23,8 @@ oreex.print_headline("Plot results: Simulated exposures vs analytical Swaption p
 oreex.setup_plot("swaps_swaptions")
 oreex.plot("exposure_trade_Swap_20.csv", 2, 3, 'b', "EPE")
 oreex.plot("exposure_trade_Swap_20.csv", 2, 4, 'r', "ENE")
-oreex.plot_npv("npv_payer.csv", 6, 'g', 'Payer Swaption')
-oreex.plot_npv("npv_receiver.csv", 6, 'm', 'Receiver Swaption')
+oreex.plot_npv("npv_payer.csv", 6, 'g', 'Payer Swaption', marker='s')
+oreex.plot_npv("npv_receiver.csv", 6, 'm', 'Receiver Swaption', marker='s')
 oreex.decorate_plot(title="Example 3")
 oreex.save_plot_to_file()
 
