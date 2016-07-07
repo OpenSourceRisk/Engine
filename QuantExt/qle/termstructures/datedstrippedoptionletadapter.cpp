@@ -23,6 +23,7 @@
 #include <ql/math/interpolations/linearinterpolation.hpp>
 #include <ql/termstructures/volatility/interpolatedsmilesection.hpp>
 
+#include <boost/make_shared.hpp>
 #include <algorithm>
 
 using std::min;

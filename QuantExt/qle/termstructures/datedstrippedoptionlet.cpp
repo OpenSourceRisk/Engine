@@ -24,7 +24,7 @@
 
 #include <boost/algorithm/cxx11/is_sorted.hpp>
 
-using boost::algorithm::is_sorted;
+using boost::algorithm::is_strictly_increasing;
 
 namespace QuantExt {
 
@@ -69,15 +69,15 @@ namespace QuantExt {
             nOptionletDates_ << ") and number of ATM rates (" << optionletAtmRates_.size() << ")");
         QL_REQUIRE(optionletDates_[0] > referenceDate_, "First option date (" << optionletDates_[0] <<
             ") must be greater than the reference date");
-        QL_REQUIRE(is_sorted(optionletDates_.begin(), optionletDates_.end()), 
+        QL_REQUIRE(is_strictly_increasing(optionletDates_.begin(), optionletDates_.end()), 
             "Optionlet dates must be sorted in ascending order");
 
         for (Size i = 0; i < nOptionletDates_; ++i) {
             QL_REQUIRE(!optionletStrikes_[i].empty(), "The " << io::ordinal(i) << " row of strikes is empty");
             QL_REQUIRE(optionletStrikes_[i].size() == optionletVolatilities_[i].size(), "Size of " << io::ordinal(i) 
                 << " row of strikes and volatilities are not equal");
-            QL_REQUIRE(is_sorted(optionletStrikes_[i].begin(), optionletStrikes_[i].end()), "The " << io::ordinal(i)
-                << " row of strikes is not sorted in ascending order");
+            QL_REQUIRE(is_strictly_increasing(optionletStrikes_[i].begin(), optionletStrikes_[i].end()), 
+                "The " << io::ordinal(i) << " row of strikes is not sorted in ascending order");
         }
     }
 

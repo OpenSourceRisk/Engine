@@ -29,7 +29,6 @@
 
 #include <ql/termstructures/volatility/optionlet/optionletvolatilitystructure.hpp>
 #include <ql/math/interpolation.hpp>
-#include <ql/math/interpolations/sabrinterpolation.hpp>
 
 using namespace QuantLib;
 

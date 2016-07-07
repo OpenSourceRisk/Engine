@@ -60,11 +60,8 @@ namespace QuantExt {
      */
     class FXLinkedCashFlow : public CashFlow {
       public:
-        FXLinkedCashFlow(const Date& cashFlowDate,
-                         const Date& fixingDate,
-                         Real foreignAmount,
-                         boost::shared_ptr<FxIndex> fxIndex)
-        : cashFlowDate_(cashFlowDate), fxFixingDate_(fixingDate), foreignAmount_(foreignAmount), fxIndex_(fxIndex) {}
+          FXLinkedCashFlow(const Date& cashFlowDate, const Date& fixingDate, 
+              Real foreignAmount, boost::shared_ptr<FxIndex> fxIndex);
 
         //! \name CashFlow interface
         //@{
@@ -84,7 +81,7 @@ namespace QuantExt {
         Real foreignAmount_;
         boost::shared_ptr<FxIndex> fxIndex_;
 
-        Real fxRate() const {return fxIndex_->fixing(fxFixingDate_); }
+        Real fxRate() const;
     };
 }
 

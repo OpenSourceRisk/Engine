@@ -2,17 +2,11 @@ AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir}
 
 SUBDIRS =
 
-noinst_LTLIBRARIES = libMath.la
-
 libMath_la_LIBADD = 
-
-libMath_la_SOURCES = \
-	cumulativenormaldistribution.cpp
 
 this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \
 	all.hpp \
-	cumulativenormaldistribution.hpp \
 	flatextrapolation.hpp
 
 all.hpp: Makefile.am
