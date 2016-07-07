@@ -28,7 +28,6 @@ libQuantExt_la_LIBADD = \
 	currencies/libCurrencies.la \
 	instruments/libInstruments.la \
 	indexes/libIndexes.la \
-	math/libMath.la \
 	methods/libMethods.la \
 	models/libModels.la \
 	pricingengines/libPricingEngines.la \
