@@ -18,7 +18,7 @@
 */
 
 
-/*! \\file tenorbasisswap.hpp
+/*! \file tenorbasisswap.hpp
     \brief Single currency tenor basis swap instrument
 	
     \ingroup instruments

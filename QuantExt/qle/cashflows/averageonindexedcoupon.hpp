@@ -36,7 +36,8 @@ using namespace QuantLib;
 namespace QuantExt {
 
 	//! average overnight coupon pricer
-	//! \ingroup cashflows
+	/*! \ingroup cashflows
+	*/
     class AverageONIndexedCouponPricer;
 
     //! average overnight coupon
