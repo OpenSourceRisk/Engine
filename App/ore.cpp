@@ -33,6 +33,7 @@
 #  include <ql/auto_link.hpp>
 #  include <qle/auto_link.hpp>
 #  include <orea/auto_link.hpp>
+#  include <ored/auto_link.hpp>
 // Find the name of the correct boost library with which to link.
 #  define BOOST_LIB_NAME boost_regex
 #  include <boost/config/auto_link.hpp>
