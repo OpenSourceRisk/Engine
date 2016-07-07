@@ -20,7 +20,7 @@
 
 #include "crossassetmodel2.hpp"
 
-#include <qle/methods/multipathgenerator.hpp>
+#include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/models/all.hpp>
 #include <qle/pricingengines/all.hpp>
 
@@ -33,6 +33,7 @@
 #include <ql/math/randomnumbers/rngtraits.hpp>
 #include <ql/methods/montecarlo/multipathgenerator.hpp>
 #include <ql/methods/montecarlo/pathgenerator.hpp>
+#include <ql/methods/montecarlo/multipathgenerator.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actual360.hpp>
@@ -972,10 +973,7 @@ void CrossAssetModelTest2::testLgm31fMoments() {
 
     const Size dim = 31;
 
-    LowDiscrepancy::rsg_type sg =
-        LowDiscrepancy::make_sequence_generator(steps * dim, seed);
-    QuantExt::MultiPathGenerator<LowDiscrepancy::rsg_type> pgen(p_euler, grid,
-                                                                sg, true);
+    MultiPathGeneratorSobolBrownianBridge pgen(p_euler, grid, SobolBrownianGenerator::Steps, seed);
 
     accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > >
         e_eu[dim];
@@ -1097,15 +1095,8 @@ void CrossAssetModelTest2::testLgm31fMartingaleProperty() {
 
     const Size dim = 31, nIr = 13 + 3;
 
-    LowDiscrepancy::rsg_type sg =
-        LowDiscrepancy::make_sequence_generator(steps * dim, seed);
-    QuantExt::MultiPathGenerator<LowDiscrepancy::rsg_type> pgen(p_euler, grid,
-                                                                sg, true);
-
-    LowDiscrepancy::rsg_type sg2 =
-        LowDiscrepancy::make_sequence_generator(steps * dim, seed);
-    QuantExt::MultiPathGenerator<LowDiscrepancy::rsg_type> pgen2(p_euler, grid,
-                                                                 sg2, true);
+    MultiPathGeneratorSobolBrownianBridge pgen(p_euler, grid, SobolBrownianGenerator::Steps, seed);
+    MultiPathGeneratorSobolBrownianBridge pgen2(p_exact, grid, SobolBrownianGenerator::Steps, seed);
 
     accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > >
         e_eu2[dim];

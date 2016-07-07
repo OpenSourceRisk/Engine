@@ -20,7 +20,7 @@
 
 #include "crossassetmodel.hpp"
 
-#include <qle/methods/multipathgenerator.hpp>
+#include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/models/all.hpp>
 #include <qle/processes/all.hpp>
 #include <qle/pricingengines/all.hpp>
@@ -571,13 +571,10 @@ void CrossAssetModelTest::testCcyLgm3fForeignPayouts() {
     // take large steps, but not only one (since we are testing)
     Size steps = static_cast<Size>(T * 2.0);
     TimeGrid grid(T, steps);
-    PseudoRandom::rsg_type sg =
-        PseudoRandom::make_sequence_generator(3 * steps, seed);
     PseudoRandom::rsg_type sg2 =
         PseudoRandom::make_sequence_generator(steps, seed);
 
-    QuantExt::MultiPathGenerator<PseudoRandom::rsg_type> pg(process, grid, sg,
-                                                            false);
+    MultiPathGeneratorMersenneTwister pg(process, grid, seed, false);
     PathGenerator<PseudoRandom::rsg_type> pg2(usdProcess, grid, sg2, false);
 
     // test
@@ -1125,18 +1122,10 @@ void CrossAssetModelTest::testLgm5fMoments() {
     Array e_an = p_exact->expectation(0.0, p_exact->initialValues(), T);
     Matrix v_an = p_exact->covariance(0.0, p_exact->initialValues(), T);
 
-    Size seed = 1847263;
     TimeGrid grid(T, steps);
 
-    LowDiscrepancy::rsg_type sg =
-        LowDiscrepancy::make_sequence_generator(steps * 5, seed);
-    QuantExt::MultiPathGenerator<LowDiscrepancy::rsg_type> pgen(p_euler, grid,
-                                                                sg, true);
-
-    LowDiscrepancy::rsg_type sg2 =
-        LowDiscrepancy::make_sequence_generator(steps * 5, seed);
-    QuantExt::MultiPathGenerator<LowDiscrepancy::rsg_type> pgen2(p_exact, grid,
-                                                                 sg, true);
+    MultiPathGeneratorSobolBrownianBridge pgen(p_euler, grid);
+    MultiPathGeneratorSobolBrownianBridge pgen2(p_exact, grid);
 
     accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > >
         e_eu[5], e_eu2[5];
@@ -1368,10 +1357,7 @@ void CrossAssetModelTest::testLgmMcWithShift() {
     Size seed = 42;
     TimeGrid grid(T, steps);
 
-    PseudoRandom::rsg_type sg =
-        PseudoRandom::make_sequence_generator(steps * 1, seed);
-    QuantExt::MultiPathGenerator<PseudoRandom::rsg_type> pgen(p, grid, sg,
-                                                              true);
+    MultiPathGeneratorMersenneTwister pgen(p, grid, seed, true);
 
     for (Size ii = 0; ii < LENGTH(T_shift); ++ii) {
 
@@ -1382,7 +1368,7 @@ void CrossAssetModelTest::testLgmMcWithShift() {
 
         for (Size i = 0; i < paths; ++i) {
             Sample<MultiPath> path = pgen.next();
-            Sample<MultiPath> path_a = pgen.antithetic();
+            Sample<MultiPath> path_a = pgen.next();
             e_eu(1.0 / model->numeraire(T, path.value[0].back()));
             e_eu(1.0 / model->numeraire(T, path_a.value[0].back()));
         }

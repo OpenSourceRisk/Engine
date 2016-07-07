@@ -112,6 +112,7 @@
         <xs:element type="indexNameType" name="Index"/>
         <xs:element type="xs:boolean" name="IsInArrears"/>
         <xs:element type="xs:integer" name="FixingDays"/>
+        <xs:element type="xs:boolean" name="IsNotResettingXCCY"/>
         <xs:element name="Spreads">
           <xs:complexType>
             <xs:sequence>
