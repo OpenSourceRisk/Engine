@@ -11,12 +11,6 @@
       <Seed>42</Seed>
       <Samples>100</Samples>
       
-      <Fixings>
-	<SimulateFixings>Y</SimulateFixings>
-	<EstimationMethod>Backward</EstimationMethod>
-	<ForwardHorizonDays>1</ForwardHorizonDays>
-      </Fixings>
-      
     </Parameters>
 
     <CrossAssetModel>

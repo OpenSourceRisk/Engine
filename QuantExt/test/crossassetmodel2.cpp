@@ -1,12 +1,26 @@
-/* -*- mode: c++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd.
+ Copyright (C) 2016 Quaternion Risk Management Ltd
+ All rights reserved.
+
+ This file is part of OpenRiskEngine, a free-software/open-source library
+ for transparent pricing and risk analysis - http://openriskengine.org
+
+ OpenRiskEngine is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program; if not, please email
+ <users@openriskengine.org>. The license is also available online at
+ <http://openriskengine.org/license.shtml>.
+
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
+
 
 #include "crossassetmodel2.hpp"
 
-#include <qle/methods/multipathgenerator.hpp>
+#include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/models/all.hpp>
 #include <qle/pricingengines/all.hpp>
 
@@ -19,6 +33,7 @@
 #include <ql/math/randomnumbers/rngtraits.hpp>
 #include <ql/methods/montecarlo/multipathgenerator.hpp>
 #include <ql/methods/montecarlo/pathgenerator.hpp>
+#include <ql/methods/montecarlo/multipathgenerator.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actual360.hpp>
@@ -62,7 +77,6 @@ struct Lgm31fTestData {
         // correlation matrix (13 ccy, 12 fx, 3 inf pairs (CPI,RR))
         // ========================================================
 
-        // the model structure is taken from a production example;
         // we map the CPI index and RR to pseudo-FX components here,
         // therefore non EUR inflation components (i.e. the UK region)
         // will produce deviating results, since implicitly we assume
@@ -854,6 +868,8 @@ struct Lgm31fTestData {
 
 } // namespace detail
 
+namespace testsuite {
+    
 void CrossAssetModelTest2::testLgm31fPositiveCovariance() {
 
     BOOST_TEST_MESSAGE("Testing for positive semidefinite covariance matrices "
@@ -957,10 +973,7 @@ void CrossAssetModelTest2::testLgm31fMoments() {
 
     const Size dim = 31;
 
-    LowDiscrepancy::rsg_type sg =
-        LowDiscrepancy::make_sequence_generator(steps * dim, seed);
-    QuantExt::MultiPathGenerator<LowDiscrepancy::rsg_type> pgen(p_euler, grid,
-                                                                sg, true);
+    MultiPathGeneratorSobolBrownianBridge pgen(p_euler, grid, SobolBrownianGenerator::Steps, seed);
 
     accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > >
         e_eu[dim];
@@ -1082,15 +1095,8 @@ void CrossAssetModelTest2::testLgm31fMartingaleProperty() {
 
     const Size dim = 31, nIr = 13 + 3;
 
-    LowDiscrepancy::rsg_type sg =
-        LowDiscrepancy::make_sequence_generator(steps * dim, seed);
-    QuantExt::MultiPathGenerator<LowDiscrepancy::rsg_type> pgen(p_euler, grid,
-                                                                sg, true);
-
-    LowDiscrepancy::rsg_type sg2 =
-        LowDiscrepancy::make_sequence_generator(steps * dim, seed);
-    QuantExt::MultiPathGenerator<LowDiscrepancy::rsg_type> pgen2(p_euler, grid,
-                                                                 sg2, true);
+    MultiPathGeneratorSobolBrownianBridge pgen(p_euler, grid, SobolBrownianGenerator::Steps, seed);
+    MultiPathGeneratorSobolBrownianBridge pgen2(p_exact, grid, SobolBrownianGenerator::Steps, seed);
 
     accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > >
         e_eu2[dim];
@@ -1137,4 +1143,6 @@ test_suite *CrossAssetModelTest2::suite() {
     suite->add(
         QUANTLIB_TEST_CASE(&CrossAssetModelTest2::testLgm31fMartingaleProperty));
     return suite;
+}
+
 }

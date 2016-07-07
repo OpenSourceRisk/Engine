@@ -163,7 +163,69 @@
     </SwaptionVolatility>
 
   </SwaptionVolatilities>
-  
+
+  <CapFloorVolatilities>
+    <CapFloorVolatility>
+      <CurveId>EUR_CF_N</CurveId>
+      <CurveDescription>EUR normal cap floor volatilities</CurveDescription>
+      <!-- Normal, Lognormal or ShiftedLognormal -->
+      <VolatilityType>Normal</VolatilityType>
+      <!-- True or False -->
+      <Extrapolation>TRUE</Extrapolation>
+      <!-- Include ATM vol quotes also: True or False -->
+      <IncludeAtm>FALSE</IncludeAtm>
+      <!-- Day counter for date to time conversion -->
+      <DayCounter>Actual/365 (Fixed)</DayCounter>
+      <!--Calendar and Business day convention for cap/floor term to date conversion -->
+      <Calendar>TARGET</Calendar>
+      <BusinessDayConvention>Following</BusinessDayConvention>
+      <!-- <Tenors>1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y,25Y,30Y</Tenors> -->
+      <Tenors>1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,15Y,20Y</Tenors>
+      <!-- <Strikes>0.01,0.015,0.02,0.025,0.03,0.04,0.05</Strikes> -->
+      <Strikes>-0.01,0.0,0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1</Strikes>
+      <IborIndex>EUR-EURIBOR-6M</IborIndex>
+      <DiscountCurve>Yield/EUR/EUR1D</DiscountCurve>
+    </CapFloorVolatility>
+    <CapFloorVolatility>
+      <CurveId>GBP_CF_N</CurveId>
+      <CurveDescription>GBP normal cap floor volatilities</CurveDescription>
+      <!-- Normal, Lognormal or ShiftedLognormal -->
+      <VolatilityType>Normal</VolatilityType>
+      <!-- True or False -->
+      <Extrapolation>TRUE</Extrapolation>
+      <!-- Include ATM vol quotes also: True or False -->
+      <IncludeAtm>FALSE</IncludeAtm>
+      <!-- Day counter for date to time conversion -->
+      <DayCounter>Actual/365 (Fixed)</DayCounter>
+      <!--Calendar and Business day convention for cap/floor term to date conversion -->
+      <Calendar>UK</Calendar>
+      <BusinessDayConvention>Following</BusinessDayConvention>
+      <Tenors>1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,15Y,20Y</Tenors>
+      <Strikes>0.005,0.015,0.02,0.025,0.03,0.035,0.04,0.045,0.05,0.055,0.06,0.065,0.07,0.075,0.08,0.085,0.09,0.095,0.1</Strikes>
+      <IborIndex>GBP-LIBOR-6M</IborIndex>
+      <DiscountCurve>Yield/GBP/GBP1D</DiscountCurve>
+    </CapFloorVolatility>
+    <CapFloorVolatility>
+      <CurveId>USD_CF_N</CurveId>
+      <CurveDescription>USD normal cap floor volatilities</CurveDescription>
+      <!-- Normal, Lognormal or ShiftedLognormal -->
+      <VolatilityType>Normal</VolatilityType>
+      <!-- True or False -->
+      <Extrapolation>TRUE</Extrapolation>
+      <!-- Include ATM vol quotes also: True or False -->
+      <IncludeAtm>FALSE</IncludeAtm>
+      <!-- Day counter for date to time conversion -->
+      <DayCounter>Actual/365 (Fixed)</DayCounter>
+      <!--Calendar and Business day convention for cap/floor term to date conversion -->
+      <Calendar>UK</Calendar>
+      <BusinessDayConvention>Following</BusinessDayConvention>
+      <Tenors>1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,15Y,20Y</Tenors>
+      <Strikes>0.005,0.015,0.02,0.025,0.03,0.035,0.04,0.045,0.05,0.055,0.06,0.065,0.07,0.075,0.08,0.085,0.09,0.095,0.1</Strikes>
+      <IborIndex>USD-LIBOR-3M</IborIndex>
+      <DiscountCurve>Yield/USD/USD1D</DiscountCurve>
+    </CapFloorVolatility>
+  </CapFloorVolatilities>
+
   <DefaultCurves>
 
     <DefaultCurve>
@@ -193,25 +255,25 @@
     </DefaultCurve>
     
     <DefaultCurve>
-      <CurveId>CUST_A_SR_USD</CurveId>
-      <CurveDescription>CUST_A SR HR USD</CurveDescription>
+      <CurveId>CPTY_A_SR_USD</CurveId>
+      <CurveDescription>CPTY_A SR HR USD</CurveDescription>
       <Currency>USD</Currency>
       <Type>HazardRate</Type>
       <DiscountCurve />
       <DayCounter>A365</DayCounter>
-      <RecoveryRate>RECOVERY_RATE/RATE/CUST_A/SR/USD</RecoveryRate>
+      <RecoveryRate>RECOVERY_RATE/RATE/CPTY_A/SR/USD</RecoveryRate>
       <Quotes>
-	<Quote>HAZARD_RATE/RATE/CUST_A/SR/USD/0Y</Quote>
-	<Quote>HAZARD_RATE/RATE/CUST_A/SR/USD/1Y</Quote>
-	<Quote>HAZARD_RATE/RATE/CUST_A/SR/USD/2Y</Quote>
-	<Quote>HAZARD_RATE/RATE/CUST_A/SR/USD/3Y</Quote>
-	<Quote>HAZARD_RATE/RATE/CUST_A/SR/USD/4Y</Quote>
-	<Quote>HAZARD_RATE/RATE/CUST_A/SR/USD/5Y</Quote>
-	<Quote>HAZARD_RATE/RATE/CUST_A/SR/USD/7Y</Quote>
-	<Quote>HAZARD_RATE/RATE/CUST_A/SR/USD/10Y</Quote>
-	<Quote>HAZARD_RATE/RATE/CUST_A/SR/USD/15Y</Quote>
-	<Quote>HAZARD_RATE/RATE/CUST_A/SR/USD/20Y</Quote>
-	<Quote>HAZARD_RATE/RATE/CUST_A/SR/USD/30Y</Quote>
+	<Quote>HAZARD_RATE/RATE/CPTY_A/SR/USD/0Y</Quote>
+	<Quote>HAZARD_RATE/RATE/CPTY_A/SR/USD/1Y</Quote>
+	<Quote>HAZARD_RATE/RATE/CPTY_A/SR/USD/2Y</Quote>
+	<Quote>HAZARD_RATE/RATE/CPTY_A/SR/USD/3Y</Quote>
+	<Quote>HAZARD_RATE/RATE/CPTY_A/SR/USD/4Y</Quote>
+	<Quote>HAZARD_RATE/RATE/CPTY_A/SR/USD/5Y</Quote>
+	<Quote>HAZARD_RATE/RATE/CPTY_A/SR/USD/7Y</Quote>
+	<Quote>HAZARD_RATE/RATE/CPTY_A/SR/USD/10Y</Quote>
+	<Quote>HAZARD_RATE/RATE/CPTY_A/SR/USD/15Y</Quote>
+	<Quote>HAZARD_RATE/RATE/CPTY_A/SR/USD/20Y</Quote>
+	<Quote>HAZARD_RATE/RATE/CPTY_A/SR/USD/30Y</Quote>
       </Quotes>
       <Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
     </DefaultCurve>
@@ -387,7 +449,7 @@
     
     <YieldCurve>
       <CurveId>CHF1D</CurveId>
-      <CurveDescription>CHF discount curve bootstrapped from SARON swap rates</CurveDescription>
+      <CurveDescription>CHF discount curve bootstrapped from TOIS swap rates</CurveDescription>
       <Currency>CHF</Currency>
       <DiscountCurve></DiscountCurve>
       <Segments>
@@ -396,7 +458,7 @@
           <Quotes>
             <Quote>MM/RATE/CHF/0D/1D</Quote>
           </Quotes>
-          <Conventions>CHF-SARON-CONVENTIONS</Conventions>
+          <Conventions>CHF-TOIS-CONVENTIONS</Conventions>
 	</Simple>
 	<Simple>
           <Type>OIS</Type>

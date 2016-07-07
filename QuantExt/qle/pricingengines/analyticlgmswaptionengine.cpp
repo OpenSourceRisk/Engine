@@ -1,8 +1,22 @@
-/* -*- mode: c++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd.
+ Copyright (C) 2016 Quaternion Risk Management Ltd
+ All rights reserved.
+
+ This file is part of OpenRiskEngine, a free-software/open-source library
+ for transparent pricing and risk analysis - http://openriskengine.org
+
+ OpenRiskEngine is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program; if not, please email
+ <users@openriskengine.org>. The license is also available online at
+ <http://openriskengine.org/license.shtml>.
+
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
+
 
 #include <qle/pricingengines/analyticlgmswaptionengine.hpp>
 #include <ql/indexes/iborindex.hpp>
@@ -177,7 +191,7 @@ void AnalyticLgmSwaptionEngine::calculate() const {
         b.solve(boost::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, _1),
                 1.0E-6, 0.0, 0.01);
 
-    QuantExt::CumulativeNormalDistribution N;
+    CumulativeNormalDistribution N;
     Real sqrt_zetaex = std::sqrt(zetaex_);
     Real sum = 0.0;
     for (Size j = j1_; j < arguments_.fixedCoupons.size(); ++j) {

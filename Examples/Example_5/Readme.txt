@@ -6,7 +6,7 @@
 
 2) Market
 
-   2016-02-26
+   Pseudo market data as of 2016-02-05
 
 3) Pricing
 

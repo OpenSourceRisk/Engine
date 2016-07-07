@@ -8,12 +8,12 @@ QLE_TESTS = \
 	crossassetmodelparametrizations.hpp crossassetmodelparametrizations.cpp \
 	currency.hpp currency.cpp \
 	discountcurve.hpp discountcurve.cpp \
-	discountingswapengine.hpp discountingswapengine.cpp \
 	dynamicblackvoltermstructure.hpp dynamicblackvoltermstructure.cpp \
 	dynamicswaptionvolmatrix.hpp dynamicswaptionvolmatrix.cpp \
 	index.hpp index.cpp \
     blackvariancecurve.hpp blackvariancecurve.cpp \
-	logquote.hpp logquote.cpp
+	logquote.hpp logquote.cpp \
+    cashflow.hpp cashflow.cpp
 
 dist-hook:
 	mkdir -p $(distdir)/build

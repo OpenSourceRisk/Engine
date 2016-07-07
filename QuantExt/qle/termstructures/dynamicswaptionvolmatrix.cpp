@@ -1,8 +1,22 @@
-/* -*- mode: c++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd.
+ Copyright (C) 2016 Quaternion Risk Management Ltd
+ All rights reserved.
+
+ This file is part of OpenRiskEngine, a free-software/open-source library
+ for transparent pricing and risk analysis - http://openriskengine.org
+
+ OpenRiskEngine is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program; if not, please email
+ <users@openriskengine.org>. The license is also available online at
+ <http://openriskengine.org/license.shtml>.
+
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
+
 
 #include <qle/termstructures/dynamicswaptionvolmatrix.hpp>
 
@@ -40,16 +54,14 @@ Volatility DynamicSwaptionVolatilityMatrix::volatilityImpl(Time optionTime,
                                                            Rate strike) const {
     if (decayMode_ == ForwardForwardVariance) {
         Real tf = source_->timeFromReference(referenceDate());
-        Real shift1 = 0.0, shift2 = 0.0;
         if (source_->volatilityType() == ShiftedLognormal) {
-            shift2 = source_->shift(tf + optionTime, swapLength);
-            shift1 = source_->shift(tf, swapLength);
+            QL_REQUIRE(
+                close_enough(source_->shift(tf + optionTime, swapLength), source_->shift(tf, swapLength)),
+                "DynamicSwaptionVolatilityMatrix: Shift must be constant in option time direction");
         }
-        return std::sqrt(
-            (source_->blackVariance(tf + optionTime, swapLength, strike) *
-                 (1.0 + shift2) -
-             source_->blackVariance(tf, swapLength, strike) * (1.0 + shift1)) /
-            ((1.0 + this->shift(optionTime, swapLength)) * optionTime));
+        return std::sqrt((source_->blackVariance(tf + optionTime, swapLength, strike) -
+                          source_->blackVariance(tf, swapLength, strike)) /
+                         optionTime);
     }
     if (decayMode_ == ConstantVariance) {
         return source_->volatility(optionTime, swapLength, strike);

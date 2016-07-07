@@ -62,10 +62,11 @@
     <Index name="USD-LIBOR-6M">Yield/USD/USD3M</Index>
     <Index name="GBP-SONIA">Yield/GBP/GBP1D</Index>
     <Index name="GBP-LIBOR-3M">Yield/GBP/GBP3M</Index>
-    <!--<Index name="CHF-TOIS">Yield/CHF/CHF1D</Index>-->
+    <!-- <Index name="CHF-TOIS">Yield/CHF/CHF1D</Index> -->
     <Index name="GBP-LIBOR-6M">Yield/GBP/GBP6M</Index>
     <Index name="CHF-LIBOR-6M">Yield/CHF/CHF6M</Index>
     <Index name="JPY-LIBOR-6M">Yield/JPY/JPY6M</Index>
+    <Index name="JPY-TONAR">Yield/JPY/JPY6M</Index>
   </IndexForwardingCurves>
 
   <SwapIndexCurves id="default">
@@ -136,11 +137,18 @@
     <SwaptionVolatility currency="JPY">SwaptionVolatility/CHF/JPY_SW_N</SwaptionVolatility>
   </SwaptionVolatilities>
 
+  <!-- cap volatility definition -->
+  <CapFloorVolatilities id="default">
+    <CapFloorVolatility currency="EUR">CapFloorVolatility/EUR/EUR_CF_N</CapFloorVolatility>
+    <CapFloorVolatility currency="USD">CapFloorVolatility/USD/USD_CF_N</CapFloorVolatility>
+    <CapFloorVolatility currency="GBP">CapFloorVolatility/GBP/GBP_CF_N</CapFloorVolatility>
+  </CapFloorVolatilities>
+
   <!-- default curves definition -->
   <DefaultCurves id="default">
     <DefaultCurve name="BANK">Default/USD/BANK_SR_USD</DefaultCurve>
-    <DefaultCurve name="CUST_A">Default/USD/CUST_A_SR_USD</DefaultCurve>
-    <DefaultCurve name="CUST_B">Default/USD/CUST_A_SR_USD</DefaultCurve>
+    <DefaultCurve name="CPTY_A">Default/USD/CPTY_A_SR_USD</DefaultCurve>
+    <DefaultCurve name="CPTY_B">Default/USD/CPTY_A_SR_USD</DefaultCurve>
   </DefaultCurves>
 
 </TodaysMarket>

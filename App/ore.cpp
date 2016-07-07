@@ -294,14 +294,12 @@ int main(int argc, char** argv) {
             
             LOG("Build Simulation Market");
             boost::shared_ptr<openxva::simulation::SimMarket> simMarket
-                = boost::make_shared<ScenarioSimMarket>(sg, market, simMarketData, params.get("markets", "simulation"));
+                = boost::make_shared<ScenarioSimMarket>(sg, market, simMarketData, conventions, params.get("markets", "simulation"));
             
             LOG("Build engine factory for pricing under scenarios, linked to sim market");
             boost::shared_ptr<EngineData> simEngineData = boost::make_shared<EngineData>();
             string simPricingEnginesFile = inputPath + "/" + params.get("simulation", "pricingEnginesFile");
             simEngineData->fromFile(simPricingEnginesFile);
-            //bool simulationEnabledEnginesOnly = true;
-            bool simulationEnabledEnginesOnly = false;
             boost::shared_ptr<EngineFactory>
                 simFactory = boost::make_shared<EngineFactory>(simEngineData, simMarket,
                                                                params.get("markets", "pricing"));
@@ -320,8 +318,7 @@ int main(int argc, char** argv) {
             LOG("Build valuation cube engine");
             Size samples = sgd->samples();
             string baseCurrency = params.get("simulation", "baseCurrency");
-            ValuationEngine engine(asof, grid, samples, baseCurrency, simMarket,
-                                   sgd->simulateFixings(), sgd->estimationMethod(), sgd->forwardHorizonDays(), sporty);
+            ValuationEngine engine(asof, grid, samples, baseCurrency, simMarket, sporty);
 
             ostringstream o;
             o << "Additional Scenario Data " << grid->size() << " x " << samples << "... ";

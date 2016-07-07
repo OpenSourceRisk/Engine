@@ -26,9 +26,6 @@
     <ClCompile Include="crossassetmodelparametrizations.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="discountingswapengine.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="dynamicblackvoltermstructure.cpp">
       <Filter>source</Filter>
     </ClCompile>
@@ -42,6 +39,9 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="blackvariancecurve.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="cashflow.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
@@ -78,9 +78,6 @@
     <ClInclude Include="crossassetmodelparametrizations.hpp">
       <Filter>headers</Filter>
     </ClInclude>
-    <ClInclude Include="discountingswapengine.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
     <ClInclude Include="dynamicblackvoltermstructure.hpp">
       <Filter>headers</Filter>
     </ClInclude>
@@ -91,6 +88,9 @@
       <Filter>headers</Filter>
     </ClInclude>
     <ClInclude Include="blackvariancecurve.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cashflow.hpp">
       <Filter>headers</Filter>
     </ClInclude>
   </ItemGroup>

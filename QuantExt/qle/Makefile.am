@@ -27,7 +27,7 @@ libQuantExt_la_LIBADD = \
 	cashflows/libCashflows.la \
 	currencies/libCurrencies.la \
 	instruments/libInstruments.la \
-	math/libMath.la \
+	indexes/libIndexes.la \
 	methods/libMethods.la \
 	models/libModels.la \
 	pricingengines/libPricingEngines.la \

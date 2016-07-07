@@ -4,7 +4,7 @@ Vanilla Swap, EUR, 10k notional, 20Y maturity, rec. fixed 0.99851% (ATM), pay 6m
 
 2) Market
 
-Real data as of 2016-02-26
+Pseudo market data as of 2016-02-05
 
 3) Pricing
 

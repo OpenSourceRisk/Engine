@@ -65,9 +65,9 @@
   </Deposit>
 
   <Deposit>
-    <Id>CHF-SARON-CONVENTIONS</Id>
+    <Id>CHF-TOIS-CONVENTIONS</Id>
     <IndexBased>true</IndexBased>
-    <Index>CHF-SARON</Index>
+    <Index>CHF-TOIS</Index>
   </Deposit>
 
   <Deposit>
@@ -297,6 +297,55 @@
   </FRA>
 
   <!-- Interest Rate Swaps -->
+  <SwapIndex>
+     <Id>EUR-CMS-1Y</Id>
+    <Conventions>EUR-6M-SWAP-CONVENTIONS</Conventions>
+  </SwapIndex>
+
+  <SwapIndex>
+     <Id>EUR-CMS-30Y</Id>
+    <Conventions>EUR-6M-SWAP-CONVENTIONS</Conventions>
+  </SwapIndex>
+
+  <SwapIndex>
+     <Id>USD-CMS-1Y</Id>
+    <Conventions>USD-3M-SWAP-CONVENTIONS</Conventions>
+  </SwapIndex>
+
+  <SwapIndex>
+     <Id>USD-CMS-30Y</Id>
+    <Conventions>USD-3M-SWAP-CONVENTIONS</Conventions>
+  </SwapIndex>
+
+  <SwapIndex>
+     <Id>GBP-CMS-1Y</Id>
+    <Conventions>GBP-3M-SWAP-CONVENTIONS</Conventions>
+  </SwapIndex>
+
+  <SwapIndex>
+     <Id>GBP-CMS-30Y</Id>
+    <Conventions>GBP-6M-SWAP-CONVENTIONS</Conventions>
+  </SwapIndex>
+
+  <SwapIndex>
+     <Id>CHF-CMS-1Y</Id>
+    <Conventions>CHF-3M-SWAP-CONVENTIONS</Conventions>
+  </SwapIndex>
+
+  <SwapIndex>
+     <Id>CHF-CMS-30Y</Id>
+    <Conventions>CHF-6M-SWAP-CONVENTIONS</Conventions>
+  </SwapIndex>
+
+  <SwapIndex>
+     <Id>JPY-CMS-1Y</Id>
+    <Conventions>JPY-LIBOR-6M-SWAP-CONVENTIONS</Conventions>
+  </SwapIndex>
+
+  <SwapIndex>
+     <Id>JPY-CMS-30Y</Id>
+    <Conventions>JPY-LIBOR-6M-SWAP-CONVENTIONS</Conventions>
+  </SwapIndex>
 
   <Swap>
     <Id>EUR-6M-SWAP-CONVENTIONS</Id>
@@ -577,7 +626,7 @@
   <OIS><!-- FIXME -->
     <Id>CHF-OIS-CONVENTIONS</Id>
     <SpotLag>2</SpotLag>
-    <Index>CHF-SARON-1D</Index>
+    <Index>CHF-TOIS-1D</Index>
     <FixedDayCounter>A360</FixedDayCounter>
     <PaymentLag>1</PaymentLag>
     <EOM>false</EOM>

@@ -1,17 +1,31 @@
-/* -*- mode: c++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-
 /*
- Copyright (C) 2010 - 2016 Quaternion Risk Management Ltd.
+ Copyright (C) 2016 Quaternion Risk Management Ltd
+ All rights reserved.
+
+ This file is part of OpenRiskEngine, a free-software/open-source library
+ for transparent pricing and risk analysis - http://openriskengine.org
+
+ OpenRiskEngine is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program; if not, please email
+ <users@openriskengine.org>. The license is also available online at
+ <http://openriskengine.org/license.shtml>.
+
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
+
 
 /*! \file numericlgmswaptionengine.hpp
     \brief numeric engine for bermudan swaptions in the LGM model
+    \ingroup 
 */
 
 #ifndef quantext_numeric_lgm_swaption_engine_hpp
 #define quantext_numeric_lgm_swaption_engine_hpp
 
-#include <qle/math/cumulativenormaldistribution.hpp>
 #include <qle/models/lgm.hpp>
 #include <qle/models/lgmimpliedyieldtermstructure.hpp>
 
@@ -56,7 +70,7 @@ class NumericLgmSwaptionEngineBase {
         h_ = 1.0 / ny;
 
         // weights for convolution in the rollback step
-        QuantExt::CumulativeNormalDistribution N;
+        CumulativeNormalDistribution N;
         NormalDistribution G;
 
         y_.resize(2 * my_ + 1); // x-coordinate / standard deviation of x

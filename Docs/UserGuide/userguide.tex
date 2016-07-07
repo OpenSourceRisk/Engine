@@ -1613,6 +1613,31 @@ This yields allocated exposures proportional to the netting set exposure, avoids
 \todo[inline]{Add MC VaR}
 
 \subsection{ISDA Standard Initial Margin}
+The ISDA Standard Initial Margin Model (SIMM\texttrademark) is a methodology for computing initial margin that is based solely on the sensitivities of trades. It is work in progress; the current documentation \cite{SIMM} is for version 3.15. It is accompanied by a document describing the standard which the risk data has to follow, \cite{SIMM_Data_Standards}, which currently has the version 1.22.
+
+The SIMM has four {\em product classes}: IR/FX, Credit, Equity and Commodity, which are seen as more or less independent of each other; their initial margins are just added up. Furthermore, there are six {\em risk classes}: IR, FX, Credit qualifying, Credit non-qualifying, Equity and Commodity. The trades in each product class may have risk contributions from one or several risk classes. For example, a credit trade like a cross-currency total return swap has IR, FX and Credit risk. The risk in each risk class is a combination of three risk types: Delta (based on sensitivities to standard risk factors), Vega (based on volatility sensitivities) and Curvature (also based on volatility sensitivities). These three types are again seen as independent in that their initial margins are just summed up.
+
+All sensitivities are multiplied by standard risk weights (specified in \cite{SIMM}) and further scaled by a {\em concentration risk factor}. The method for computing this factor is not yet published, we therefore take them to be 1 at the moment. Most risk classes come with buckets which then imply different risk weights. For IR, those are the tenors of the interest curve; for Credit and Equity, they are the sector of the underlying name; for commodities, they are the type of commodity. The weighted sensitivities are summed up using intra- and inter-bucket correlations which are defined in the methodology \cite{SIMM}.
+
+\vspace{0.5cm}
+
+{\bf Assumptions and Interpretations.} In our implementation, we use the following assumptions and interpretations.
+\begin{itemize}
+\item The Concentration Risk Factors are all set to 1;
+\item It is not clear in E.2 of \cite{SIMM} what a `different source' for a given issuer/seniority combination is, so this is currently ignored;
+\item In the formula for Curvature margin
+$$CVR_{ik} = \sum_j SF(t_{kj})\,\sigma_{kj}\,\frac{dV_i}{d\sigma}$$
+in  Section 12 (a) of \cite{SIMM}, we assume that the sum is taken over tenors/vertices and not over expiries, just as in 11 (c), the corresponding formula for Vega margin. This means that the scaling factors $SF(t_{kj})$ can be applied outside of the sum.
+\item Qualifiers (such as bonds or equities) can only show up in a uniques bucket. If this is not the case, the report stops with an error message;
+\item The Amount Currency as defined in the risk data standard \cite{SIMM_Data_Standards} is assumed to be the collateral currency. The reporting currency is removed from the FX sensitivities;
+\item The USD Amount column defined in the risk data standard \cite{SIMM_Data_Standards} is not used (Why is it there at all?);
+\item A portfolio is the same as a netting set, i.e. a set of trades under one ISDA CSA;
+\item Qualifiers generally have to follow the risk data standard \cite{SIMM_Data_Standards}, e.g. 1W $\neq$ 1w, and 1W will cause an error. Some are overwritten with an interpreted correct version, e.g. Libor1y $\rightarrow$ Libor12m, Libor28d $\rightarrow$ Libor1m;
+\item Wrong volatility buckets for currencies (standard, low, high) are overwritten with what is listed in \cite{SIMM};
+\item Missing tenors for IR sensis from product classes other than IR/FX are set automatically to OIS (overnight).
+\end{itemize}
+
+\vspace{0.5cm}
 
 \todo[inline]{Add ISDA SIMM}
 
@@ -1652,6 +1677,10 @@ Federal Reserve Board, Washington, D.C., 2010
 \bibitem{LO} http://www.libreoffice.org
 
 \bibitem{xlwings} http://www.xlwings.org
+
+\bibitem{SIMM}{SIMM Methodology\\ \tiny http://www2.isda.org/attachment/ODM1Mw==/ISDA\%20SIMM\%20Methodology\_7\%20April\%202016\_v3.15\%20(PUBLIC).pdf}
+
+\bibitem{SIMM_Data_Standards}{SIMM Risk Data Standards\\ \tiny https://www2.isda.org/attachment/ODQzMg==/Risk\%20Data\%20Standards\_24\%20May\%202016\_v1.22\%20(PUBLIC).pdf}
 
 %\bibitem{OO} http://www.openoffice.org
 
