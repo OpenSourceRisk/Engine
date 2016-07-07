@@ -84,10 +84,32 @@ class OreExample(object):
         self.plot_name = "mpl_" + filename
 
     def save_plot_to_file(self, subdir="Output"):
-        plt.savefig(os.path.join(subdir,self.plot_name+".pdf"))
+        file = os.path.join(subdir,self.plot_name+".pdf")
+        plt.savefig(file)
+        print("Saving plot...." + file)
 
     def run(self, xml):
         if not self.dry:
             subprocess.call([self.ore_exe, xml])
 
 
+if __name__ == "__main__":
+    examples = [
+        "Example_1",
+        "Example_2",
+        "Example_3",
+        "Example_4",
+        "Example_5",
+        "Example_6",
+        "Example_7",
+        "Example_10",
+        "Example_11",
+    ]
+
+    for example in examples:
+        print("Running: " + example)
+        os.chdir(os.path.join(os.getcwd(), example))
+        filename = os.path.join("run.py")
+        sys.argv = ["run.py", 1]
+        exec(compile(open(filename, "rb").read(), filename, 'exec'))
+        os.chdir(os.path.dirname(os.getcwd()))

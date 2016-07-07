@@ -5,7 +5,8 @@ import runpy
 ore_helpers = runpy.run_path(os.path.join(os.path.dirname(os.getcwd()), "ore_examples_helper.py"))
 OreExample = ore_helpers['OreExample']
 
-oreex = OreExample()
+import sys
+oreex = OreExample(sys.argv[1] if len(sys.argv)>1 else False)
 
 oreex.print_headline("Run ORE to produce NPV cube and exposures")
 oreex.run("Input/ore.xml")
@@ -21,6 +22,8 @@ for line in npv.readlines():
     if "PUT" in line:
         line_list = line.split(',')
         put=([[0, line_list[6]],[line_list[3],line_list[6]]])
+
+oreex.print_headline("Plot results: Simulated exposures vs analytical option prices")
 
 oreex.setup_plot("forward")
 oreex.plot("exposure_trade_FXFWD_EURUSD_10Y.csv", 2, 3, 'b', "EPE")
