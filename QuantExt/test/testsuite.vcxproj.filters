@@ -41,6 +41,9 @@
     <ClCompile Include="blackvariancecurve.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="cashflow.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="source">
@@ -85,6 +88,9 @@
       <Filter>headers</Filter>
     </ClInclude>
     <ClInclude Include="blackvariancecurve.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cashflow.hpp">
       <Filter>headers</Filter>
     </ClInclude>
   </ItemGroup>
