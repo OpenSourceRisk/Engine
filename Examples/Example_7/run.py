@@ -18,4 +18,3 @@ oreex.plot("exposure_trade_SwaptionCash.csv", 2, 4, 'r', "EPE Swaption Cash")
 oreex.plot("exposure_trade_SwaptionPhysical.csv", 2, 4, 'g', "EPE Swaption Physical")
 oreex.decorate_plot(title="Example 7")
 oreex.save_plot_to_file()
-
