@@ -166,9 +166,6 @@
     <ClInclude Include="qle\math\all.hpp">
       <Filter>math</Filter>
     </ClInclude>
-    <ClInclude Include="qle\math\cumulativenormaldistribution.hpp">
-      <Filter>math</Filter>
-    </ClInclude>
     <ClInclude Include="qle\math\flatextrapolation.hpp">
       <Filter>math</Filter>
     </ClInclude>
@@ -436,9 +433,6 @@
     </ClCompile>
     <ClCompile Include="qle\instruments\oiccbasisswap.cpp">
       <Filter>instruments</Filter>
-    </ClCompile>
-    <ClCompile Include="qle\math\cumulativenormaldistribution.cpp">
-      <Filter>math</Filter>
     </ClCompile>
     <ClCompile Include="qle\models\crossassetanalytics.cpp">
       <Filter>models</Filter>
