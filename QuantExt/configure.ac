@@ -1,6 +1,6 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT([QuantExt], [0.1],
-        [dev@quaternion.com],
+AC_INIT([QuantExt], [1.8],
+        [info@openriskengine.org],
         [QuantExt])
 AC_PREREQ(2.62)
 AC_CONFIG_SRCDIR([qle/quantext.hpp])
@@ -10,14 +10,14 @@ AM_INIT_AUTOMAKE([foreign])
 AC_CONFIG_MACRO_DIR([m4])
 
 AC_COPYRIGHT([
-Copyright (C) 2010 - 2016 Quaternion Risk Management Ltd.
+Copyright (C) 2016 Quaternion Risk Management Ltd.
 All Rights Reserved.])
 
 AC_PROG_AWK
 AC_PROG_INSTALL
 
 # Default compilation variables
-AC_SUBST([CXXFLAGS],[${CXXFLAGS='-g -O2 -Wall -Wextra'}])
+AC_SUBST([CXXFLAGS],[${CXXFLAGS='-g -O2 -Wall'}])
 
 # Help the compiler find external software
 
