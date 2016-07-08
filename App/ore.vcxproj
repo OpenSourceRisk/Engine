@@ -177,7 +177,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>.\;..\OpenRiskEngineAnalytics;..\OpenRiskEngineData;..\Wrap;..\QuantExt;..\QuantLib</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\;..\OpenRiskEngineAnalytics;..\OpenRiskEngineData;..\QuantExt;..\QuantLib</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile />
       <PrecompiledHeaderOutputFile />
       <ProgramDataBaseFileName>$(IntDir)\%(RelativeDir)</ProgramDataBaseFileName>
@@ -201,7 +201,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>.\;..\OpenRiskEngineAnalytics;..\OpenRiskEngineData;..\Wrap;..\QuantExt;..\QuantLib</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\;..\OpenRiskEngineAnalytics;..\OpenRiskEngineData;..\QuantExt;..\QuantLib</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <PrecompiledHeaderOutputFile>
@@ -228,7 +228,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>.\;..\OpenRiskEngineAnalytics;..\OpenRiskEngineData;..\Wrap;..\QuantExt;..\QuantLib</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\;..\OpenRiskEngineAnalytics;..\OpenRiskEngineData;..\QuantExt;..\QuantLib</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile />
       <PrecompiledHeaderOutputFile />
       <ProgramDataBaseFileName>$(IntDir)\%(RelativeDir)</ProgramDataBaseFileName>
@@ -252,7 +252,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>.\;..\OpenRiskEngineAnalytics;..\OpenRiskEngineData;..\Wrap;..\QuantExt;..\QuantLib</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\;..\OpenRiskEngineAnalytics;..\OpenRiskEngineData;..\QuantExt;..\QuantLib</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <PrecompiledHeaderOutputFile>
@@ -281,7 +281,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>.\;..\OpenRiskEngineAnalytics;..\OpenRiskEngineData;..\Wrap;..\QuantExt;..\QuantLib</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\;..\OpenRiskEngineAnalytics;..\OpenRiskEngineData;..\QuantExt;..\QuantLib</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile />
       <PrecompiledHeaderOutputFile />
       <ProgramDataBaseFileName>$(IntDir)\%(RelativeDir)</ProgramDataBaseFileName>
@@ -313,7 +313,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>.\;..\OpenRiskEngineAnalytics;..\OpenRiskEngineData;..\Wrap;..\QuantExt;..\QuantLib</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\;..\OpenRiskEngineAnalytics;..\OpenRiskEngineData;..\QuantExt;..\QuantLib</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <PrecompiledHeaderOutputFile>
@@ -347,7 +347,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>.\;..\OpenRiskEngineAnalytics;..\OpenRiskEngineData;..\Wrap;..\QuantExt;..\QuantLib</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\;..\OpenRiskEngineAnalytics;..\OpenRiskEngineData;..\QuantExt;..\QuantLib</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile />
       <PrecompiledHeaderOutputFile />
       <ProgramDataBaseFileName>$(IntDir)\%(RelativeDir)</ProgramDataBaseFileName>
@@ -379,7 +379,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>.\;..\OpenRiskEngineAnalytics;..\OpenRiskEngineData;..\Wrap;..\QuantExt;..\QuantLib</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\;..\OpenRiskEngineAnalytics;..\OpenRiskEngineData;..\QuantExt;..\QuantLib</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <PrecompiledHeaderOutputFile>
