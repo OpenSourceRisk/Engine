@@ -97,6 +97,7 @@ class OreExample(object):
         file = os.path.join(subdir,self.plot_name+".pdf")
         plt.savefig(file)
         print("Saving plot...." + file)
+        plt.close()
 
     def run(self, xml):
         if not self.dry:
