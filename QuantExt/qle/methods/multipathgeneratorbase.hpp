@@ -20,7 +20,7 @@
 
 /*! \file multipathgeneratorbase.hpp
     \brief base class for multi path generators
-    \ingroup 
+    \ingroup methods
 */
 
 #ifndef quantext_multi_path_generator_base_hpp
@@ -39,13 +39,18 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
+	//! Multi Path Generator Base
+	/*! \group methods
+	*/
     class MultiPathGeneratorBase {
     public:
         virtual const Sample<MultiPath> &next() const = 0;
         virtual void reset() = 0;
     };
 
-    /*! Instantiation of MultiPathGenerator with standard PseudoRandom traits */
+    //! Instantiation of MultiPathGenerator with standard PseudoRandom traits
+	/*! \ingroup methods
+	*/
     class MultiPathGeneratorMersenneTwister : public MultiPathGeneratorBase {
     public:
         MultiPathGeneratorMersenneTwister(const boost::shared_ptr<StochasticProcess> &,
@@ -65,9 +70,12 @@ namespace QuantExt {
         mutable bool antitheticVariate_;
     };
 
-    /*! Instantiation of MultiPathGenerator with standard LowDiscrepancy traits,
-      no Brownian bridge provided, use MultiPathGeneratorSobolBrownianBridge for this,
-      for the use of the seed, see ql/math/randomnumbers/sobolrsg.cpp */
+    //! Instantiation of MultiPathGenerator with standard LowDiscrepancy traits
+	/*! no Brownian bridge provided, use MultiPathGeneratorSobolBrownianBridge for this,
+        for the use of the seed, see ql/math/randomnumbers/sobolrsg.cpp 
+	
+	    \ingroup methods
+	*/
     class MultiPathGeneratorSobol : public MultiPathGeneratorBase {
     public:
         MultiPathGeneratorSobol(const boost::shared_ptr<StochasticProcess>&, const TimeGrid&,
@@ -83,7 +91,9 @@ namespace QuantExt {
         boost::shared_ptr<MultiPathGenerator<LowDiscrepancy::rsg_type> > pg_;
     };
 
-    /*! Instantiation using SobolBrownianGenerator from  models/marketmodels/browniangenerators */
+    //! Instantiation using SobolBrownianGenerator from  models/marketmodels/browniangenerators 
+	/*! \ingroup methods
+	*/
     class MultiPathGeneratorSobolBrownianBridge : public MultiPathGeneratorBase {
     public:
         MultiPathGeneratorSobolBrownianBridge(

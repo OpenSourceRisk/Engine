@@ -20,7 +20,7 @@
 
 /*! \file dkkcibor.hpp
     \brief DKK-CIBOR index
-    \ingroup 
+    \ingroup indexes
 */
 
 #ifndef quantext_dkkcibor_hpp
@@ -44,6 +44,8 @@ namespace QuantExt {
                 There is another index, DKK-CIBOR2, that has a spot lag of 2D.
 
         \warning Check roll convention and EOM.
+
+		\ingroup indexes
     */
     class DKKCibor : public IborIndex {
       public:

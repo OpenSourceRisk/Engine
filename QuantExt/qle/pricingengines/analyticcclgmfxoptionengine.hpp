@@ -20,7 +20,8 @@
 
 /*! \file analyticcclgmfxoptionengine.hpp
     \brief analytic cc lgm fx option engine
-    \ingroup 
+
+	\ingroup engines
 */
 
 #ifndef quantext_cclgm_fxoptionengine_hpp
@@ -31,6 +32,9 @@
 
 namespace QuantExt {
 
+//! Analytic cc lgm fx option engine
+/*! \ingroup engines
+*/
 class AnalyticCcLgmFxOptionEngine : public VanillaOption::engine {
   public:
     AnalyticCcLgmFxOptionEngine(const boost::shared_ptr<CrossAssetModel> &model,

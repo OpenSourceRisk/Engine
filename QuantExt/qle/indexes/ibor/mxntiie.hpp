@@ -20,7 +20,7 @@
 
 /*! \file mxntiie.hpp
     \brief MXN-TIIE index
-    \ingroup 
+    \ingroup indexes 
 */
 
 #ifndef quantext_mxntiie_hpp
@@ -43,6 +43,8 @@ namespace QuantExt {
         \remark Using Mexico calendar, should be Meixco City.
 
         \warning Check roll convention and EOM.
+
+		\ingroup indexes
     */
     class MXNTiie : public IborIndex {
       public:

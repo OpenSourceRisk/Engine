@@ -20,7 +20,7 @@
 
 /*! \file qle/models/crossassetmodelimpliedfxvoltermstructure.hpp
     \brief dynamic black volatility term structure
-    \ingroup 
+    \ingroup crossassetmodel
 */
 
 #ifndef quantext_crossassetmodel_implied_fx_volatility_termstructure_hpp
@@ -34,11 +34,18 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
+//! Analytic Cross Currency CC LGM FX Option Enfine
+/*! \ingroup crossassetmodel
+*/
 class AnalyticCcLgmFxOptionEngine;
 
+//! Cross Asset Model Implied FX Term Structure
 /*! The termstructure as the reference date of the model at construction,
   you can vary this and the relevant state variables using the state() and
-  move() methods. */
+  move() methods. 
+  
+  \ingroup crossassetmodel
+*/
 
 /* TODO probably slow, we need to introduce a cache */
 

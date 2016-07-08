@@ -20,7 +20,7 @@
 
 /*! \file blackvariancecurve3.hpp
     \brief Black volatility curve modelled as variance curve
-    \ingroup 
+    \ingroup termstructures
 */
 
 #ifndef quantext_black_variance_curve_3_hpp
@@ -44,6 +44,8 @@ namespace QuantExt {
         Linear interpolation is used.
 
         \todo check time extrapolation
+
+		\ingroup termstructures
     */
     class BlackVarianceCurve3: public LazyObject,
                                public BlackVarianceTermStructure {

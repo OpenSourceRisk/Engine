@@ -20,7 +20,7 @@
 
 /*! \file test/cashflow.hpp
     \brief Cashflow tests
-    \ingroup 
+    \ingroup tests
 */
 
 #ifndef quantext_test_cashflow_hpp
@@ -28,11 +28,11 @@
 
 #include <boost/test/unit_test.hpp>
 
-//! CashFlow test
-/*!
-  \ingroup tests
-*/
 namespace testsuite {
+
+//! CashFlow test
+/*! \ingroup tests
+*/
 class CashFlowTest {
   public:
     static void testFXLinkedCashFlow();

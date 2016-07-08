@@ -20,7 +20,8 @@
 
 /*! \file qle/pricingengines/discountingcurrencyswapengine.hpp
     \brief discounting currency swap engine
-    \ingroup 
+    
+	\ingroup engines
 */
 
 #ifndef quantext_discounting_currencyswap_engine_hpp
@@ -42,7 +43,7 @@ namespace QuantExt {
         date is the reference date of either of the discounting curves (which
         must be equal).
 
-        \ingroup engines
+		\ingroup engines
     */
     class DiscountingCurrencySwapEngine : public CurrencySwap::engine {
       public:
@@ -79,7 +80,6 @@ namespace QuantExt {
         Date settlementDate_;
         Date npvDate_;
     };
-
 }
 
 #endif

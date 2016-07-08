@@ -20,7 +20,7 @@
 
 /*! \file gaussian1dcrossassetadaptor.hpp
     \brief adaptor class that extracts one irlgm1f component
-    \ingroup 
+    \ingroup models
 */
 
 #ifndef quantext_gaussian1d_crossasset_adaptor_hpp
@@ -32,6 +32,9 @@
 
 namespace QuantExt {
 
+//! Gaussian 1d Cross Asset adaptor
+/*! \ingroup models
+*/
 class Gaussian1dCrossAssetAdaptor : public Gaussian1dModel {
   public:
     Gaussian1dCrossAssetAdaptor(

@@ -20,7 +20,8 @@
 
 /*! \file qle/pricingengines/discountingfxforwardengine.hpp
     \brief Engine to value an FX Forward off two yield curves
-    \ingroup 
+
+    \ingroup engines
 */
 
 #ifndef quantext_discounting_fxforward_engine_hpp
@@ -40,7 +41,7 @@ namespace QuantExt {
         to the correct fx forward legs. The evaluation date is the
         reference date of either discounting curve (which must be equal).
 
-        \ingroup engines
+		\ingroup engines
     */
     class DiscountingFxForwardEngine : public FxForward::engine {
       public:
@@ -97,7 +98,6 @@ namespace QuantExt {
         Date settlementDate_;
         Date npvDate_;
     };
-
 }
 
 #endif

@@ -20,7 +20,7 @@
 
 /*! \file piecewiseconstanthelper.hpp
     \brief helper classes for piecewise constant parametrizations
-    \ingroup 
+    \ingroup models
 */
 
 #ifndef quantext_piecewiseconstant_helper_hpp
@@ -37,6 +37,9 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
+//! Piecewise Constant Helper 1
+/*! \ingroup models 
+*/
 class PiecewiseConstantHelper1 {
   public:
     PiecewiseConstantHelper1(const Array &t);
@@ -62,7 +65,10 @@ class PiecewiseConstantHelper1 {
     mutable std::vector<Real> b_;
 };
 
-/*! this is PiecewiseConstantHelper1 with two sets of (t,y) */
+//! Piecewise Constant Helper 11
+/*! this is PiecewiseConstantHelper1 with two sets of (t,y) 
+    \ingroup models
+*/
 class PiecewiseConstantHelper11 {
   public:
     /*! y are the raw values in the sense of parameter transformation */
@@ -77,6 +83,9 @@ class PiecewiseConstantHelper11 {
     const PiecewiseConstantHelper1 h1_, h2_;
 };
 
+//! Piecewise Constant Helper2
+/*! \ingroup models
+*/
 class PiecewiseConstantHelper2 {
   public:
     PiecewiseConstantHelper2(const Array &t);
@@ -107,6 +116,9 @@ class PiecewiseConstantHelper2 {
     mutable std::vector<Real> b_, c_;
 };
 
+//! Piecewise Constant Helper 3
+/*! \ingroup models
+*/
 class PiecewiseConstantHelper3 {
   public:
     PiecewiseConstantHelper3(const Array &t1, const Array &t2);

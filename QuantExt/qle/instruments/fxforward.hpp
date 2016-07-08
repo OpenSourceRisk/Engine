@@ -20,7 +20,8 @@
 
 /*! \file qle/instruments/fxforward.hpp
     \brief defaultable fxforward instrument
-    \ingroup 
+
+	\ingroup instruments
 */
 
 #ifndef quantext_fxforward_hpp
@@ -40,7 +41,7 @@ namespace QuantExt {
 
     /*! This class holds the term sheet data for an FX Forward instrument.
 
-        \ingroup instruments
+	    \ingroup instruments
     */
     class FxForward : public Instrument {
       public:

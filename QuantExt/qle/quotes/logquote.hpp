@@ -20,7 +20,7 @@
 
 /*! \file qle/quotes/logquote.hpp
     \brief stores log of quote for log-linear interpolation
-    \ingroup 
+    \ingroup quotes
 */
 
 #ifndef quantext_logquote_hpp
@@ -35,6 +35,8 @@ namespace QuantExt {
     //! Class for storing logs of quotes for log-linear interpolation.
     /*! \test the correctness of the returned values is tested by
             checking them against the log of the returned values of q_
+
+		\quotes
     */
     class LogQuote : public Quote, public Observer {
       public:

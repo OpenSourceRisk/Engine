@@ -20,7 +20,7 @@
 
 /*! \file irlgm1fstateprocess.hpp
     \brief ir LGM 1f model state process
-    \ingroup 
+    \ingroup processes
 */
 
 #ifndef quantext_irlgm1f_stateprocess_hpp
@@ -33,6 +33,9 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
+//! Ir Lgm 1f State Process
+/*! \ingroup processes 
+*/
 class IrLgm1fStateProcess : public StochasticProcess1D {
   public:
     IrLgm1fStateProcess(

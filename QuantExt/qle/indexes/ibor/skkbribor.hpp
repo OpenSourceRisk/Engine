@@ -20,7 +20,7 @@
 
 /*! \file skkbribor.hpp
     \brief SKK-BRIBOR index
-    \ingroup 
+    \ingroup indexes 
 */
 
 #ifndef quantext_skkbribor_hpp
@@ -43,6 +43,8 @@ namespace QuantExt {
         \remark Using Slovakia calendar, should be Bratislava.
 
         \warning Check roll convention and EOM.
+
+		\ingroup indexes
     */
     class SKKBribor : public IborIndex {
       public:

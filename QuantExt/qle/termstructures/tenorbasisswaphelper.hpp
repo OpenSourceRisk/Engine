@@ -20,7 +20,7 @@
 
 /*! \file tenorbasisswap.hpp
     \brief Single currency tenor basis swap helper
-    \ingroup 
+    \ingroup termstructures
 */
 
 #ifndef quantext_tenor_basis_swap_helper_hpp
@@ -35,6 +35,8 @@ using namespace QuantLib;
 namespace QuantExt {
 
     //! Rate helper for bootstrapping using Libor tenor basis swaps
+	/*! \ingroup termstructures
+	*/
     class TenorBasisSwapHelper : public RelativeDateRateHelper {
     public:
         TenorBasisSwapHelper(Handle<Quote> spread,

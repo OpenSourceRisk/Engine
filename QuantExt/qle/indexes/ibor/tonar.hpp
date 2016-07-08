@@ -20,7 +20,7 @@
 
 /*! \file tonar.hpp
     \brief Toyko Overnight Average Rate (TONAR)
-    \ingroup 
+    \ingroup indexes
 */
 
 #ifndef quantext_tonar_hpp
@@ -42,6 +42,8 @@ namespace QuantExt {
 
         \remark There is a publication lag of 1 business day.
                 Using Japan calendar, should be Tokyo.
+
+		\ingroup indexes
     */
     class Tonar : public OvernightIndex {
       public:

@@ -20,7 +20,7 @@
 
 /*! \file lgmimpliedyieldtermstructure.hpp
     \brief yield term structure implied by a LGM model
-    \ingroup 
+    \ingroup models
 */
 
 #ifndef quantext_lgm_implied_yts_hpp
@@ -34,6 +34,7 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
+//! Lgm Implied Yield Term Structure
 /*! The termstructure has the reference date of the model's
     termstructure at construction, but you can vary this
     as well as the state.
@@ -41,6 +42,8 @@ namespace QuantExt {
     perfomance reasons, note that it does not provide the
     full term structure interface and does not send
     notifications on reference time updates.
+
+	\ingroup models
  */
 
 class LgmImpliedYieldTermStructure : public YieldTermStructure {
@@ -72,8 +75,12 @@ class LgmImpliedYieldTermStructure : public YieldTermStructure {
     Real relativeTime_, state_;
 };
 
+//! Lgm Implied Yts Fwd Corrected
 /*! the target curve should have a reference date consistent with
-  the model's term structure */
+  the model's term structure 
+
+  \ingroup models
+*/
 class LgmImpliedYtsFwdFwdCorrected : public LgmImpliedYieldTermStructure {
   public:
     LgmImpliedYtsFwdFwdCorrected(
@@ -89,8 +96,12 @@ class LgmImpliedYtsFwdFwdCorrected : public LgmImpliedYieldTermStructure {
     const Handle<YieldTermStructure> targetCurve_;
 };
 
+//! Lgm Implied Yts Spot Corrected
 /*! the target curve should have a reference date consistent with
-  the model's term structure */
+  the model's term structure 
+ 
+  \ingroup models
+*/
 class LgmImpliedYtsSpotCorrected : public LgmImpliedYieldTermStructure {
   public:
     LgmImpliedYtsSpotCorrected(

@@ -20,7 +20,7 @@
 
 /*! \file qle/models/crossassetmodel.hpp
     \brief cross asset model
-    \ingroup 
+    \ingroup crossassetmodel
 */
 
 #ifndef quantext_crossasset_model_hpp
@@ -41,74 +41,17 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-/*! Cross asset model
-
-    Reference:
-
-    Lichters, Stamm, Gallagher: Modern Derivatives Pricing and Credit Exposure
-    Analysis, Palgrave Macmillan, 2015
-
-    The model is operated under the domestic LGM measure. There are two ways of
-    calibrating the model:
-
-    - provide an already calibrated parametrization for a component
-      extracted from some external model
-    - do the calibration within the CrossAssetModel using one
-      of the calibration procedures
-
-    The inter-parametrization correlation matrix specified here can not be
-    calibrated currently, but is a fixed, external input.
-
-    The model does not own a reference date, the times given in the
-    parametrizations are absolute and insensitive to shifts in the global
-    evaluation date. The termstructures are required to be consistent with
-    these times, i.e. should all have the same reference date and day counter.
-    The model does not observe anything, so its update() method must be
-    explicitly called to notify observers of changes in the constituting
-    parametrizations, update these parametrizations and flushing the cache
-    of the state process. The model ensures these updates during
-    calibration though.
-
-    The cross asset model for \f$n\f$ currencies is specified by the following SDE
-
-    \f{eqnarray*}{
-    dz_0(t) &=& \alpha^z_0(t)\,dW^z_0(t) \\
-    dz_i(t) &=& \gamma_i(t)\,dt + \alpha^z_i(t)\,dW^z_i(t), \qquad i = 1,\dots, n-1 \\
-    dx_i(t) / x_i(t) &=& \mu^x_i(t)\, dt +\sigma_i^x(t)\,dW^x_i(t), \qquad i=1, \dots, n-1 \\
-    dW^a_i\,dW^b_j &=& \rho^{ab}_{ij}\,dt, \qquad a, b \in \{z, x\} 
-    \f}
-    Factors \f$z_i\f$ drive the LGM interest rate processes (index \f$i=0\f$ denotes the domestic currency),
-    and factors \f$x_i\f$ the foreign exchange rate processes. 
-
-    The no-arbitrage drift terms are 
-    \f{eqnarray*}
-    \gamma_i &=& -H^z_i\,(\alpha^z_i)^2  + H^z_0\,\alpha^z_0\,\alpha^z_i\,\rho^{zz}_{0i} - \sigma_i^x\,\alpha^z_i\, \rho^{zx}_{ii}\\
-    \mu^x_i &=& r_0-r_i +H^z_0\,\alpha^z_0\,\sigma^x_i\,\rho^{zx}_{0i}
-    \f}
-    where we have dropped time-dependencies to lighten notation.  
-
-    The short rate \f$r_i(t)\f$ in currency \f$i\f$ is connected with the instantaneous forward curve \f$f_i(0,t)\f$ 
-    and model parameters \f$H_i(t)\f$ and \f$\alpha_i(t)\f$ via
-    \f{eqnarray*}{
-    r_i(t) &=& f_i(0,t) + z_i(t)\,H'_i(t) + \zeta_i(t)\,H_i(t)\,H'_i(t), \quad \zeta_i(t) = \int_0^t \alpha_i^2(s)\,ds  \\ \\ 
-    \f}
-
-    Parameters \f$H_i(t)\f$ and \f$\alpha_i(t)\f$ (or alternatively \f$\zeta_i(t)\f$) are LGM model parameters 
-    which determine, together with the stochastic factor \f$z_i(t)\f$, the evolution of numeraire and 
-    zero bond prices in the LGM model:
-    \f{eqnarray*}{
-    N(t) &=& \frac{1}{P(0,t)}\exp\left\{H_t\, z_t + \frac{1}{2}H^2_t\,\zeta_t \right\} \\
-    P(t,T,z_t) &=& \frac{P(0,T)}{P(0,t)}\:\exp\left\{ -(H_T-H_t)\,z_t - \frac{1}{2} \left(H^2_T-H^2_t\right)\,\zeta_t\right\}. 
-    \f}
-
-*/
-
 namespace CrossAssetModelTypes {
+//! Cross Asset Type
+//! \ingroup crossassetmodel
 enum AssetType { IR, FX };
 }
 
 using namespace CrossAssetModelTypes;
 
+//! Cross Asset Model
+/*! \ingroup crossassetmodel
+*/
 class CrossAssetModel : public LinkableCalibratedModel {
   public:
     /*! Parametrizations must be given in the following order

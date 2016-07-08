@@ -20,7 +20,7 @@
 
 /*! \file hkdhibor.hpp
     \brief HKD-HIBOR index
-    \ingroup 
+    \ingroup indexes 
 */
 
 #ifndef quantext_hkd_hibor_hpp
@@ -41,6 +41,8 @@ namespace QuantExt {
         See <http://www.hkab.org.hk>.
 
         \warning Check roll convention and EOM.
+
+		\ingroup indexes
     */
     class HKDHibor : public IborIndex {
       public:

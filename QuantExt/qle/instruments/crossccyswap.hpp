@@ -20,7 +20,8 @@
 
 /*! \file crossccyswap.hpp
     \brief Swap instrument with legs involving two currencies
-    \ingroup 
+
+	\ingroup instruments
 */
 
 #ifndef quantext_cross_ccy_swap_hpp
@@ -32,7 +33,13 @@
 using namespace QuantLib;
 
 namespace QuantExt {
+    
+	//! Cross currency swap
+    /*! The first leg holds the pay currency cashflows and second leg holds
+        the receive currency cashflows.
 
+		\ingroup instruments
+    */
     class CrossCcySwap : public Swap {
       public:
         class arguments;

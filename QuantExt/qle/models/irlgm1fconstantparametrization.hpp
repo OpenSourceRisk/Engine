@@ -20,7 +20,7 @@
 
 /*! \file irlgm1fconstantparametrization.hpp
     \brief constant model parametrization
-    \ingroup 
+    \ingroup models
 */
 
 #ifndef quantext_constant_irlgm1f_parametrizations_hpp
@@ -30,6 +30,9 @@
 
 namespace QuantExt {
 
+//! LGM 1F Constant Parametrization
+/*! \ingroup models
+*/
 template <class TS>
 class Lgm1fConstantParametrization : public Lgm1fParametrization<TS> {
   public:

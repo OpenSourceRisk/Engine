@@ -20,7 +20,7 @@
 
 /*! \file linkablecalibratedmodel.hpp
     \brief calibrated model class with linkable parameters
-    \ingroup 
+    \ingroup models
 */
 
 #ifndef quantext_calibrated_model_hpp
@@ -38,6 +38,8 @@ using namespace QuantLib;
 namespace QuantExt {
 
     //! Calibrated model class with linkable parameters
+	/*! \ingroup models
+	*/
     class LinkableCalibratedModel : public virtual Observer, public virtual Observable {
       public:
         LinkableCalibratedModel();
@@ -90,7 +92,9 @@ namespace QuantExt {
         friend class CalibrationFunction;
     };
 
-
+	//! Linkable Calibrated Model
+	/*! \ingroup models
+	*/
     class LinkableCalibratedModel::PrivateConstraint : public Constraint {
       private:
         class Impl :  public Constraint::Impl {

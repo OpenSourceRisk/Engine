@@ -20,7 +20,7 @@
 
 /*! \file qle/termstructures/dynamicoptionletvolatilitystructure.hpp
     \brief dynamic optionlet volatility structure
-    \ingroup 
+    \ingroup termstructues
 */
 
 #pragma once
@@ -35,10 +35,12 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-/*! Converts OptionletVolatilityStructure with fixed reference date into a floating reference date term structure.
-    Different ways of reacting to time decay can be specified.
+//! Converts OptionletVolatilityStructure with fixed reference date into a floating reference date term structure.
+/*! Different ways of reacting to time decay can be specified.
     
     \warning No checks are performed that the supplied OptionletVolatilityStructure has a fixed reference date
+
+	\ingroup termstructures
 */
 
 class DynamicOptionletVolatilityStructure : public OptionletVolatilityStructure {

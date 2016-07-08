@@ -20,7 +20,7 @@
 
 /*! \file genericiborindex.hpp
     \brief Generic Ibor Index
-    \ingroup 
+    \ingroup indexes
 */
 
 #ifndef _quantext_generic_index_hpp
@@ -40,6 +40,7 @@ namespace QuantExt {
         We assume 2 settlement days, Target Calendar, ACT/360.
 
         The name is always CCY-GENERIC so there is no risk of collision with real ibor names
+		\ingroup indexes
      */
     class GenericIborIndex : public IborIndex {
     public:

@@ -1,0 +1,68 @@
+
+/*
+ Copyright (C) 2016 Quaternion Risk Management 
+
+ This file is part of OpenRiskEngine, a free-software/open-source library
+ for transparent pricing and and risk analysis - http://openriskengine.org/
+
+ OpenRiskEngine is free software: you can redistribute it and/or modify it
+ under the terms of the QuantLib license.  You should have received a
+ copy of the license along with this program; if not, please email
+ <ore-dev@lists.sf.net>. The license is also available online at
+ <http://openriskengine.org/license.shtml>.
+
+ This program is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ FOR A PARTICULAR PURPOSE.  See the license for more details.
+*/
+
+/*! \defgroup currencies Currencies
+    Grouping of all currency related classes, functions and files
+*/
+
+/*! \defgroup indexes Indexes
+    Grouping of all index related classes, functions and files
+*/
+
+/*! \defgroup engines Engines
+    Grouping of all engine related classes, functions and files
+*/
+
+/*! \defgroup cashflows Cashflows
+    Grouping of all cashflow related classes, functions and files
+*/
+
+/*! \defgroup instruments Instruments
+    Grouping of all instrument related classes, functions and files
+*/
+
+/*! \defgroup termstructures Term Structures
+    Grouping of all term structure related classes, functions and files
+*/
+
+/*! \defgroup methods Methods
+    Grouping of all method related classes, functions and files
+    */
+
+/*! \defgroup processes Processes
+    Grouping of all process related classes, functions and files
+*/
+
+/*! \defgroup quotes Quotes
+    Grouping of all quotes related classes, functions and files
+*/
+
+/*! \defgroup math Math
+    Grouping of all math related classes, functions and files
+*/
+
+/*! \defgroup models Models
+    Grouping of all model related classes, functions and files
+    @{
+*/
+
+/*! \defgroup crossassetmodel Cross Asset Model
+    Grouping of all cross asset models
+*/
+
+/*! @} */

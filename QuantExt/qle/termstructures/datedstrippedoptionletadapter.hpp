@@ -20,7 +20,7 @@
 
 /*! \file qle/termstructures/datedstrippedoptionletadapter.hpp
     \brief StrippedOptionlet Adapter
-    \ingroup 
+    \ingroup termstructures
 */
 
 #pragma once
@@ -37,6 +37,8 @@ namespace QuantExt {
     //! Adapter class for turning a DatedStrippedOptionletBase object into an OptionletVolatilityStructure
     /*! Takes a DatedStrippedOptionletBase and converts it into an OptionletVolatilityStructure with a fixed 
         reference date
+
+		\ingroup termstructures
     */
     class DatedStrippedOptionletAdapter : public OptionletVolatilityStructure, public LazyObject {
       public:

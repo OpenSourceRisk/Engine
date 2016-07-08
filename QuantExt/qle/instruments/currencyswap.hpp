@@ -20,7 +20,8 @@
 
 /*! \file qle/instruments/currencyswap.hpp
     \brief Interest rate swap with extended interface
-    \ingroup 
+
+	\ingroup instruments
 */
 
 #ifndef quantext_currencyswap_hpp
@@ -44,7 +45,7 @@ namespace QuantExt {
       This instrument generalizes the QuantLib Swap instrument in that
       it allows multiple legs with different currencies (one per leg)
 
-      \ingroup instruments
+	  \ingroup instruments
     */
     class CurrencySwap : public Instrument {
     public:
@@ -158,8 +159,8 @@ namespace QuantExt {
     //! Vanilla cross currency interest rate swap
     /*! Specialised CurrencySwap: Two currencies, fixed vs. floating,
       constant notionals, rate and spread.
-
-      \ingroup instruments
+	  
+	  \ingroup instruments{
     */
     class VanillaCrossCurrencySwap : public CurrencySwap {
     public:
@@ -180,9 +181,9 @@ namespace QuantExt {
 
     //! Cross currency swap
     /*! Specialised CurrencySwap: Two currencies, variable notionals,
-      rates and spreads; flavours fix/float, fix/fix, float/float
+        rates and spreads; flavours fix/float, fix/fix, float/float
 
-      \ingroup instruments
+	    \ingroup instruments
     */
     class CrossCurrencySwap : public CurrencySwap {
     public:
@@ -231,7 +232,7 @@ namespace QuantExt {
                            boost::optional<BusinessDayConvention>
                            paymentConvention = boost::none);
     };
-
+ 
 }
 
 #endif

@@ -20,7 +20,7 @@
 
 /*! \file czkpribor.hpp
     \brief CZK-PRIBOR index
-    \ingroup 
+    \ingroup indexes 
 */
 
 #ifndef quantext_czkpribor_hpp
@@ -43,6 +43,8 @@ namespace QuantExt {
         \remark Using CzechRepublic calendar, should be Prague.
 
         \warning Check roll convention and EOM.
+
+		\ingroup indexes
     */
     class CZKPribor : public IborIndex {
       public:

@@ -20,7 +20,7 @@
 
 /*! \file flatextrapolation.hpp
     \brief flat interpolation decorator
-    \ingroup 
+    \ingroup math
 */
 
 #ifndef quantext_flat_extrapolation_hpp

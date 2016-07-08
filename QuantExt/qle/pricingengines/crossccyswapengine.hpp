@@ -19,8 +19,9 @@
 
 
 /*! \file qle/pricingengines/crossccyswapengine.hpp
-    \brief Cross currency swap engine
-    \ingroup 
+    \brief Cross currency swap engine	
+
+	\ingroup engines
 */
 
 #ifndef quantext_cross_ccy_swap_engine_hpp
@@ -39,7 +40,7 @@ namespace QuantExt {
         ccy1 and ccy2 are matched to the correct swap legs. The evaluation date is the
         reference date of either discounting curve (which must be equal).
 
-        \ingroup engines
+		\ingroup engines
     */
     class CrossCcySwapEngine : public CrossCcySwap::engine {
       public:
@@ -106,6 +107,7 @@ namespace QuantExt {
         Date settlementDate_;
         Date npvDate_;
     };
+
 }
 
 #endif

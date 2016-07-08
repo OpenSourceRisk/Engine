@@ -6,6 +6,7 @@ Copyright (C) 2016 Quaternion Risk Management Ltd.
 
 /*! \file qle/termstructures/datedstrippedoptionlet.hpp
     \brief Stripped optionlet surface with fixed reference date
+	\ingroup termstructures
 */
 
 #pragma once
@@ -17,7 +18,11 @@ Copyright (C) 2016 Quaternion Risk Management Ltd.
 #include <ql/quote.hpp>
 
 namespace QuantExt {
-    //! Class to hold a stripped optionlet surface with a fixed reference date and fixed volatilities
+    //! Stripped Optionlet Surface
+	/*! Class to hold a stripped optionlet surface with a fixed reference date and fixed volatilities
+
+	    \ingroup termstructures
+    */
     class DatedStrippedOptionlet : public DatedStrippedOptionletBase {
       public:
         //! Construct from a StrippedOptionletBase object

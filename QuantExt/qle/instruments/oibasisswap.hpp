@@ -20,7 +20,8 @@
 
 /*! \file qle/instruments/oibasisswap.hpp
     \brief Overnight index swap paying compounded overnight vs. float
-    \ingroup 
+
+	\ingroup instruments
 */
 
 #ifndef quantlib_overnight_indexed_basis_swap_hpp
@@ -40,6 +41,8 @@ namespace QuantExt {
     //class IborIndex;
     
     //! Overnight indexed basis swap: floating vs compounded overnight rate
+	/*! \ingroup instruments
+	*/
     class OvernightIndexedBasisSwap : public Swap {
       public:
         enum Type { Receiver = -1, Payer = 1 };

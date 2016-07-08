@@ -20,7 +20,7 @@
 
 /*! \file chftois.hpp
     \brief Swiss Franc T/N rate on Reuters page CHFTOIS
-    \ingroup 
+    \ingroup indexes
 */
 
 #ifndef quantext_chftois_hpp
@@ -40,6 +40,8 @@ namespace QuantExt {
         a division of Tullet Prebon.
 
         \remark Using Switzerland calendar, should be Zurich.
+
+		\ingroup indexes
     */
     class CHFTois : public OvernightIndex {
       public:

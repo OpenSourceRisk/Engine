@@ -20,7 +20,7 @@
 
 /*! \file crossassetstateprocess.hpp
     \brief crossasset model state process
-    \ingroup 
+    \ingroup crossassetmodel
 */
 
 #ifndef quantext_crossasset_stateprocess_hpp
@@ -37,6 +37,9 @@ namespace QuantExt {
 
 class CrossAssetModel;
 
+//! Cross Asset Model State Process
+/*! \ingroup crossassetmodel
+*/
 class CrossAssetStateProcess : public StochasticProcess {
   public:
     enum discretization { exact, euler };

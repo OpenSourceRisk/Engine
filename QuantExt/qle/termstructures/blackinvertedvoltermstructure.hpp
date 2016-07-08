@@ -20,7 +20,7 @@
 
 /*! \file blackinvertedvoltermstructure.hpp
     \brief Black volatility surface that inverts an existing surface.
-    \ingroup 
+    \ingroup termstructures
 */
 
 #ifndef quantext_black_inverted_vol_termstructure_hpp
@@ -35,6 +35,8 @@ namespace QuantExt {
     //! Black volatility surface that inverts an existing surface.
     /*! This class is used when one wants a USD/EUR volatility, at a given USD/EUR strike
         when only a EUR/USD volatility surface is present.
+
+		\ingroup termstructures
     */
     class BlackInvertedVolTermStructure : public BlackVolTermStructure {
       public:

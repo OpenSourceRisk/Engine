@@ -20,7 +20,7 @@
 
 /*! \file lgmimpliedyieldtermstructure.hpp
     \brief yield term structure implied by a LGM model
-    \ingroup 
+    \ingroup termstructures
 */
 
 #ifndef quantext_statically_corrected_yts_hpp
@@ -36,13 +36,14 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
+//! Statically Corrected Yield Term Structure
 /*! This termstructure takes a floating reference date term structure
-  and two fixed reference date term structures, applying a static
-  correction to the floating ts implied by the two fixed ones.
-  Usually the floating term structure will coincide with
-  the first fixed at construction time. Also, the two fixed
-  termstructures should have the same reference date and all three
-  termstructures should have the same day counter. */
+    and two fixed reference date term structures, applying a static
+    correction to the floating ts implied by the two fixed ones.
+    Usually the floating term structure will coincide with
+    the first fixed at construction time. Also, the two fixed
+    termstructures should have the same reference date and all three
+    termstructures should have the same day counter. */
 class StaticallyCorrectedYieldTermStructure : public YieldTermStructure {
   public:
     StaticallyCorrectedYieldTermStructure(

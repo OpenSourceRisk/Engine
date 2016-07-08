@@ -20,7 +20,7 @@
 
 /*! \file plnwibor.hpp
     \brief PLN-WIBOR index
-    \ingroup 
+    \ingroup indexes 
 */
 
 #ifndef quantext_plnwibor_hpp
@@ -43,6 +43,8 @@ namespace QuantExt {
         \remark Using Poland calendar, should be Warsaw.
 
         \warning Check roll convention and EOM.
+
+		\ingroup indexes
     */
     class PLNWibor : public IborIndex {
       public:

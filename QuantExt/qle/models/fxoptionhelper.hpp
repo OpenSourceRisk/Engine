@@ -37,7 +37,7 @@
 
 /*! \file fxoptionhelper.hpp
     \brief calibration helper for fx options
-    \ingroup 
+    \ingroup models
 */
 
 #ifndef quantext_calibrationhelper_fxoption_hpp
@@ -50,6 +50,9 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
+//! FX Option Helper
+/*! \ingroup models
+*/
 class FxOptionHelper : public CalibrationHelper {
   public:
     /*! the fx spot is interpreted as of today (or discounted spot)

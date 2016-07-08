@@ -20,7 +20,7 @@
 
 /*! \file nzdbkbm.hpp
     \brief NZD-BKBM index
-    \ingroup 
+    \ingroup indexes 
 */
 
 #ifndef quantext_nzdbkbm_hpp
@@ -41,6 +41,8 @@ namespace QuantExt {
         See <http://www.nzfma.org>.
 
         \warning Check roll convention and EOM.
+
+		\ingroup indexes
     */
     class NZDBKBM : public IborIndex {
       public:
