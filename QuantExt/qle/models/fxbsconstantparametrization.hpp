@@ -17,10 +17,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file fxbspiecewiseconstantparametrization.hpp
     \brief piecewise constant model parametrization
-    \ingroup 
+    \ingroup models
 */
 
 #ifndef quantext_constant_fxbs_parametrization_hpp
@@ -29,49 +28,40 @@
 #include <qle/models/fxbsparametrization.hpp>
 
 namespace QuantExt {
-
-/*! FX Black Scholes parametrization, with constant volatility */
+//! FX Black Scholes parametrization
+/*! FX Black Scholes parametrization, with constant volatility
+    \ingroup models
+*/
 class FxBsConstantParametrization : public FxBsParametrization {
-  public:
+public:
     /*! The currency refers to the foreign currency, the
         spot is as of today (i.e. the discounted spot) */
-    FxBsConstantParametrization(const Currency &currency,
-                                const Handle<Quote> &fxSpotToday,
-                                const Real sigma);
+    FxBsConstantParametrization(const Currency& currency, const Handle<Quote>& fxSpotToday, const Real sigma);
     Real variance(const Time t) const;
     Real sigma(const Time t) const;
     const boost::shared_ptr<Parameter> parameter(const Size) const;
 
-  protected:
+protected:
     Real direct(const Size i, const Real x) const;
     Real inverse(const Size i, const Real y) const;
 
-  private:
+private:
     const boost::shared_ptr<PseudoParameter> sigma_;
 };
 
 // inline
 
-inline Real FxBsConstantParametrization::direct(const Size,
-                                                const Real x) const {
-    return x * x;
-}
+inline Real FxBsConstantParametrization::direct(const Size, const Real x) const { return x * x; }
 
-inline Real FxBsConstantParametrization::inverse(const Size,
-                                                 const Real y) const {
-    return std::sqrt(y);
-}
+inline Real FxBsConstantParametrization::inverse(const Size, const Real y) const { return std::sqrt(y); }
 
 inline Real FxBsConstantParametrization::variance(const Time t) const {
     return direct(0, sigma_->params()[0]) * direct(0, sigma_->params()[0]) * t;
 }
 
-inline Real FxBsConstantParametrization::sigma(const Time) const {
-    return direct(0, sigma_->params()[0]);
-}
+inline Real FxBsConstantParametrization::sigma(const Time) const { return direct(0, sigma_->params()[0]); }
 
-inline const boost::shared_ptr<Parameter>
-FxBsConstantParametrization::parameter(const Size i) const {
+inline const boost::shared_ptr<Parameter> FxBsConstantParametrization::parameter(const Size i) const {
     QL_REQUIRE(i == 0, "parameter " << i << " does not exist, only have 0");
     return sigma_;
 }

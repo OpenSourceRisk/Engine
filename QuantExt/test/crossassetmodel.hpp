@@ -30,43 +30,57 @@ namespace testsuite {
 
 //! CrossAssetModel tests
 class CrossAssetModelTest {
-  public:
-    /*! Test whether the prices of a bermudan swaption are consistent in the LGM model with the NumericLgmSwaptionEngine, in the LGM model with the Gaussian1dSwaptionEngine and in the GSR model with the Gaussian1dSwaptionEngine. */
+public:
+    /*! Test whether the prices of a bermudan swaption are consistent in the LGM model with the
+     * NumericLgmSwaptionEngine, in the LGM model with the Gaussian1dSwaptionEngine and in the GSR model with the
+     * Gaussian1dSwaptionEngine. */
     static void testBermudanLgm1fGsr();
 
-    /*! Test if the price of a bermudan swaption is invariant under the LGM model invariances (scaling and shifting) in the LGM model with the NumericLgmSwaptionEngine and in the LGM model with the Gaussian1dSwaptionEngine. */
+    /*! Test if the price of a bermudan swaption is invariant under the LGM model invariances (scaling and shifting) in
+     * the LGM model with the NumericLgmSwaptionEngine and in the LGM model with the Gaussian1dSwaptionEngine. */
     static void testBermudanLgmInvariances();
 
     /*! Test the non-standard Bermudan swaption engine against the standard engine */
     static void testNonstandardBermudanSwaption();
 
-    /*! Calibrate the LGM and the GSR model to a coterminal swaption basket and compare the calibrated model parameters. Perform the same calibration in the LGM model as a component of the CrossAssetModel and check whether the results are the same and if other components are not affected by this calibration. */
+    /*! Calibrate the LGM and the GSR model to a coterminal swaption basket and compare the calibrated model parameters.
+     * Perform the same calibration in the LGM model as a component of the CrossAssetModel and check whether the results
+     * are the same and if other components are not affected by this calibration. */
     static void testLgm1fCalibration();
 
-    /*! In a EUR-USD CrossAssetModel, test a Monte Carlo pricing of an USD cashflow under the EUR numeraire against the analytical expectation. Perform similar checks for an USD zero bond under the EUR numeraire and an USD-EUR FX option. */
+    /*! In a EUR-USD CrossAssetModel, test a Monte Carlo pricing of an USD cashflow under the EUR numeraire against the
+     * analytical expectation. Perform similar checks for an USD zero bond under the EUR numeraire and an USD-EUR FX
+     * option. */
     static void testCcyLgm3fForeignPayouts();
 
-    /*! Compare the calibration of FX components in a EUR-USD model to those in a EUR-USD-GBP model, i.e. if the calibration results in the smaller model stay the same when embed this model into a model with more components. */
+    /*! Compare the calibration of FX components in a EUR-USD model to those in a EUR-USD-GBP model, i.e. if the
+     * calibration results in the smaller model stay the same when embed this model into a model with more components.
+     */
     static void testLgm5fFxCalibration();
 
-    /*! Test the calibration of all components of a EUR-USD-GBP CrossAssetModel (3 IR LGM models and 2 FX Black Scholes models) by comparing the model prices and market prices of the calibration instruments. */
+    /*! Test the calibration of all components of a EUR-USD-GBP CrossAssetModel (3 IR LGM models and 2 FX Black Scholes
+     * models) by comparing the model prices and market prices of the calibration instruments. */
     static void testLgm5fFullCalibration();
 
-    /*! Compare the analytical (unconditional) expectation and covariance matrix of the 5 dimensional stochastic process of a EUR-USD-GBP CrossAssetModel at t=10 against Monte Carlo estimates using both an exact and an Euler discretisation. */
+    /*! Compare the analytical (unconditional) expectation and covariance matrix of the 5 dimensional stochastic process
+     * of a EUR-USD-GBP CrossAssetModel at t=10 against Monte Carlo estimates using both an exact and an Euler
+     * discretisation. */
     static void testLgm5fMoments();
 
-    /*! Test whether the GSR model (i.e. the Hull White model under the T forward measure) is equivalent to the LGM model with shift T in the sense that they generate identical paths up to numerical accuracy. */
+    /*! Test whether the GSR model (i.e. the Hull White model under the T forward measure) is equivalent to the LGM
+     * model with shift T in the sense that they generate identical paths up to numerical accuracy. */
     static void testLgmGsrEquivalence();
 
-    /*! Test the pricing of a single cashflow at T=50 in a LGM model with Monte Carlo using different LGM shifts and check whether the error estimates go to zero when the shift approaches T=50. */
+    /*! Test the pricing of a single cashflow at T=50 in a LGM model with Monte Carlo using different LGM shifts and
+     * check whether the error estimates go to zero when the shift approaches T=50. */
     static void testLgmMcWithShift();
 
-    /*! Test whether the input correlation matrix for a CrossAssetModel with 1 up to 100 currencies is recovered as the analytical and Euler correlation matrix estimated over a small time step dt. */
+    /*! Test whether the input correlation matrix for a CrossAssetModel with 1 up to 100 currencies is recovered as the
+     * analytical and Euler correlation matrix estimated over a small time step dt. */
     static void testCorrelationRecovery();
 
-    static boost::unit_test_framework::test_suite *suite();
+    static boost::unit_test_framework::test_suite* suite();
 };
-
 }
 
 #endif

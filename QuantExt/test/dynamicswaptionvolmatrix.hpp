@@ -17,7 +17,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file test/dynamicswaptionvolmatrix.hpp
     \brief tests for DynamicSwaptionVolStructure
     \ingroup
@@ -32,7 +31,7 @@ namespace testsuite {
 
 //! DynamicSwaptionVolMatrix tests
 class DynamicSwaptionVolMatrixTest {
-  public:
+public:
     /*! Test the dynamic swaption volatility matrix w.r.t. constant variance time decay mode. */
     static void testConstantVariance();
 
@@ -41,7 +40,6 @@ class DynamicSwaptionVolMatrixTest {
 
     static boost::unit_test_framework::test_suite* suite();
 };
-
 }
 
 #endif

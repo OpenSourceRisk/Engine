@@ -17,10 +17,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file flatextrapolation.hpp
     \brief flat interpolation decorator
-    \ingroup 
+    \ingroup math
 */
 
 #ifndef quantext_flat_extrapolation_hpp
@@ -38,12 +37,11 @@ namespace QuantExt {
 //! Flat extrapolation given a base interpolation
 /*! \ingroup interpolations */
 class FlatExtrapolation : public Interpolation {
-  private:
+private:
     class FlatExtrapolationImpl : public Interpolation::Impl {
 
-      public:
-        FlatExtrapolationImpl(const boost::shared_ptr<Interpolation> &i)
-            : i_(i) {}
+    public:
+        FlatExtrapolationImpl(const boost::shared_ptr<Interpolation>& i) : i_(i) {}
         void update() { i_->update(); }
         Real xMin() const { return i_->xMin(); }
         Real xMax() const { return i_->xMax(); }
@@ -83,12 +81,12 @@ class FlatExtrapolation : public Interpolation {
             }
         }
 
-      private:
+    private:
         const boost::shared_ptr<Interpolation> i_;
     };
 
-  public:
-    FlatExtrapolation(const boost::shared_ptr<Interpolation> &i) {
+public:
+    FlatExtrapolation(const boost::shared_ptr<Interpolation>& i) {
         impl_ = boost::make_shared<FlatExtrapolationImpl>(i);
         impl_->update();
     }
@@ -96,12 +94,9 @@ class FlatExtrapolation : public Interpolation {
 
 //! %Linear-interpolation and flat extrapolation factory and traits
 class LinearFlat {
-  public:
-    template <class I1, class I2>
-    Interpolation interpolate(const I1 &xBegin, const I1 &xEnd,
-                              const I2 &yBegin) const {
-        return FlatExtrapolation(
-            boost::make_shared<LinearInterpolation>(xBegin, xEnd, yBegin));
+public:
+    template <class I1, class I2> Interpolation interpolate(const I1& xBegin, const I1& xEnd, const I2& yBegin) const {
+        return FlatExtrapolation(boost::make_shared<LinearInterpolation>(xBegin, xEnd, yBegin));
     }
     static const bool global = false;
     static const Size requiredPoints = 2;

@@ -17,10 +17,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file qle/quotes/logquote.hpp
     \brief stores log of quote for log-linear interpolation
-    \ingroup 
+    \ingroup quotes
 */
 
 #ifndef quantext_logquote_hpp
@@ -32,34 +31,35 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-    //! Class for storing logs of quotes for log-linear interpolation.
-    /*! \test the correctness of the returned values is tested by
-            checking them against the log of the returned values of q_
-    */
-    class LogQuote : public Quote, public Observer {
-      public:
-        LogQuote(Handle<Quote> q) : q_(q) {
-            registerWith(q);
-            update();
-        }
-        //! \name Inspectors
-        //@{
-        Real quote() const;
-        //@}
-        //! \name Quote interface
-        //@{
-        Real value() const;
-        bool isValid() const;
-        //@}
-        //! \name Observer interface
-        //@{
-        void update();
-        //@}
-     protected:
-        Handle<Quote> q_;
-        Real logValue_;
-    };
+//! Class for storing logs of quotes for log-linear interpolation.
+/*! \test the correctness of the returned values is tested by
+        checking them against the log of the returned values of q_
 
+            \quotes
+*/
+class LogQuote : public Quote, public Observer {
+public:
+    LogQuote(Handle<Quote> q) : q_(q) {
+        registerWith(q);
+        update();
+    }
+    //! \name Inspectors
+    //@{
+    Real quote() const;
+    //@}
+    //! \name Quote interface
+    //@{
+    Real value() const;
+    bool isValid() const;
+    //@}
+    //! \name Observer interface
+    //@{
+    void update();
+    //@}
+protected:
+    Handle<Quote> q_;
+    Real logValue_;
+};
 }
 
 #endif

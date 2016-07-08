@@ -3,4 +3,3 @@
 
 #include <qle/processes/crossassetstateprocess.hpp>
 #include <qle/processes/irlgm1fstateprocess.hpp>
-

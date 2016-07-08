@@ -17,7 +17,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file test/dynamicblackvoltermstructure.hpp
     \brief tests for DynamicBlackVolTermStructure
 */
@@ -31,22 +30,25 @@ namespace testsuite {
 
 //! DynamicBlackVolTermStructure tests
 class DynamicBlackVolTermStructureTest {
-  public:
-    /*! Test the dynamic black vol term structure w.r.t. constant variance time decay mode and sticky strike dynamics. */
+public:
+    /*! Test the dynamic black vol term structure w.r.t. constant variance time decay mode and sticky strike dynamics.
+     */
     static void testConstantVarianceStickyStrike();
 
-    /*! Test the dynamic black vol term structure w.r.t. forward-forward variance time decay mode and sticky log moneyness dynamics. */
+    /*! Test the dynamic black vol term structure w.r.t. forward-forward variance time decay mode and sticky log
+     * moneyness dynamics. */
     static void testConstantVarianceStickyLogMoneyness();
 
-    /*! Test the dynamic black vol term structure w.r.t. constant variance time decay mode and sticky strike dynamics. */
+    /*! Test the dynamic black vol term structure w.r.t. constant variance time decay mode and sticky strike dynamics.
+     */
     static void testForwardVarianceStickyStrike();
 
-    /*! Test the dynamic black vol term structure w.r.t. forward-forward time decay mode and sticky log moneyness dynamics. */
+    /*! Test the dynamic black vol term structure w.r.t. forward-forward time decay mode and sticky log moneyness
+     * dynamics. */
     static void testForwardVarianceStickyLogMoneyness();
 
     static boost::unit_test_framework::test_suite* suite();
 };
-
 }
 
 #endif

@@ -17,14 +17,12 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 #include <qle/models/lgm.hpp>
 #include <qle/processes/irlgm1fstateprocess.hpp>
 
 namespace QuantExt {
 
-LinearGaussMarkovModel::LinearGaussMarkovModel(
-    const boost::shared_ptr<IrLgm1fParametrization> &parametrization)
+LinearGaussMarkovModel::LinearGaussMarkovModel(const boost::shared_ptr<IrLgm1fParametrization>& parametrization)
     : parametrization_(parametrization) {
     stateProcess_ = boost::make_shared<IrLgm1fStateProcess>(parametrization_);
     arguments_.resize(2);

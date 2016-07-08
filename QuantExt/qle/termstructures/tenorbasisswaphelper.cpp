@@ -17,138 +17,114 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
 #ifdef QL_USE_INDEXED_COUPON
-    #include <ql/cashflows/floatingratecoupon.hpp>
+#include <ql/cashflows/floatingratecoupon.hpp>
 #endif
 
 #include <qle/termstructures/tenorbasisswaphelper.hpp>
 
 namespace QuantExt {
 
-    namespace {
-        void no_deletion(YieldTermStructure*) {}
+namespace {
+void no_deletion(YieldTermStructure*) {}
+}
+
+TenorBasisSwapHelper::TenorBasisSwapHelper(Handle<Quote> spread, const Period& swapTenor,
+                                           const boost::shared_ptr<IborIndex> longIndex,
+                                           const boost::shared_ptr<IborIndex> shortIndex, const Period& shortPayTenor,
+                                           const Handle<YieldTermStructure>& discountingCurve, bool spreadOnShort,
+                                           bool includeSpread, SubPeriodsCoupon::Type type)
+    : RelativeDateRateHelper(spread), swapTenor_(swapTenor), longIndex_(longIndex), shortIndex_(shortIndex),
+      spreadOnShort_(spreadOnShort), includeSpread_(includeSpread), type_(type), discountHandle_(discountingCurve) {
+
+    bool longIndexHasCurve = !longIndex_->forwardingTermStructure().empty();
+    bool shortIndexHasCurve = !shortIndex_->forwardingTermStructure().empty();
+    bool haveDiscountCurve = !discountHandle_.empty();
+    QL_REQUIRE(!(longIndexHasCurve && shortIndexHasCurve && haveDiscountCurve),
+               "Have all curves nothing to solve for.");
+
+    if (longIndexHasCurve && !shortIndexHasCurve) {
+        shortIndex_ = shortIndex_->clone(termStructureHandle_);
+        shortIndex_->unregisterWith(termStructureHandle_);
+    } else if (!longIndexHasCurve && shortIndexHasCurve) {
+        longIndex_ = longIndex_->clone(termStructureHandle_);
+        longIndex_->unregisterWith(termStructureHandle_);
+    } else if (!longIndexHasCurve && !shortIndexHasCurve) {
+        QL_FAIL("Need at least one of the indices to have a valid curve.");
     }
 
-    TenorBasisSwapHelper::TenorBasisSwapHelper(Handle<Quote> spread,
-        const Period& swapTenor,
-        const boost::shared_ptr<IborIndex> longIndex,
-        const boost::shared_ptr<IborIndex> shortIndex,
-        const Period& shortPayTenor,
-        const Handle<YieldTermStructure>& discountingCurve,
-        bool spreadOnShort,
-        bool includeSpread,
-        SubPeriodsCoupon::Type type)
-    : RelativeDateRateHelper(spread),
-      swapTenor_(swapTenor),
-      longIndex_(longIndex),
-      shortIndex_(shortIndex),
-      spreadOnShort_(spreadOnShort),
-      includeSpread_(includeSpread),
-      type_(type),
-      discountHandle_(discountingCurve) {
+    shortPayTenor_ = shortPayTenor == Period() ? shortIndex_->tenor() : shortPayTenor;
 
-        bool longIndexHasCurve = !longIndex_->
-            forwardingTermStructure().empty();
-        bool shortIndexHasCurve = !shortIndex_->
-            forwardingTermStructure().empty();
-        bool haveDiscountCurve = !discountHandle_.empty();
-        QL_REQUIRE(!(longIndexHasCurve && shortIndexHasCurve &&
-            haveDiscountCurve), "Have all curves nothing to solve for.");
+    registerWith(longIndex_);
+    registerWith(shortIndex_);
+    registerWith(discountHandle_);
+    initializeDates();
+}
 
-        if (longIndexHasCurve && !shortIndexHasCurve) {
-            shortIndex_ = shortIndex_->clone(termStructureHandle_);
-            shortIndex_->unregisterWith(termStructureHandle_);
-        } else if (!longIndexHasCurve && shortIndexHasCurve) {
-            longIndex_ = longIndex_->clone(termStructureHandle_);
-            longIndex_->unregisterWith(termStructureHandle_);
-        } else if (!longIndexHasCurve && !shortIndexHasCurve) {
-            QL_FAIL("Need at least one of the indices to have a valid curve.");
-        }
+void TenorBasisSwapHelper::initializeDates() {
 
-        shortPayTenor_ = shortPayTenor == Period() ?
-            shortIndex_->tenor() : shortPayTenor;
+    Date valuationDate = Settings::instance().evaluationDate();
+    Calendar spotCalendar = longIndex_->fixingCalendar();
+    Natural spotDays = longIndex_->fixingDays();
+    Date effectiveDate = spotCalendar.advance(valuationDate, spotDays * Days);
 
-        registerWith(longIndex_);
-        registerWith(shortIndex_);
-        registerWith(discountHandle_);
-        initializeDates();
+    swap_ = boost::shared_ptr<TenorBasisSwap>(new TenorBasisSwap(effectiveDate, 1.0, swapTenor_, true, longIndex_, 0.0,
+                                                                 shortIndex_, 0.0, shortPayTenor_,
+                                                                 DateGeneration::Backward, includeSpread_, type_));
+
+    boost::shared_ptr<PricingEngine> engine(new DiscountingSwapEngine(discountRelinkableHandle_));
+    swap_->setPricingEngine(engine);
+
+    earliestDate_ = swap_->startDate();
+    latestDate_ = swap_->maturityDate();
+
+/* May need to adjust latestDate_ if you are projecting libor based
+   on tenor length rather than from accrual date to accrual date. */
+#ifdef QL_USE_INDEXED_COUPON
+    if (termStructureHandle_ == shortIndex_->forwardingTermStructure()) {
+        boost::shared_ptr<FloatingRateCoupon> lastFloating =
+            boost::dynamic_pointer_cast<FloatingRateCoupon>(swap_->shortLeg().back());
+        Date fixingValueDate = shortIndex_->valueDate(lastFloating->fixingDate());
+        Date endValueDate = shortIndex_->maturityDate(fixingValueDate);
+        latestDate_ = std::max(latestDate_, endValueDate);
     }
-
-    void TenorBasisSwapHelper::initializeDates() {
-
-        Date valuationDate = Settings::instance().evaluationDate();
-        Calendar spotCalendar = longIndex_->fixingCalendar();
-        Natural spotDays = longIndex_->fixingDays();
-        Date effectiveDate = spotCalendar.
-            advance(valuationDate, spotDays*Days);
-
-        swap_ = boost::shared_ptr<TenorBasisSwap>(new
-            TenorBasisSwap(effectiveDate, 1.0, swapTenor_, true,
-                longIndex_, 0.0, shortIndex_, 0.0, shortPayTenor_,
-                DateGeneration::Backward, includeSpread_, type_));
-
-        boost::shared_ptr<PricingEngine> engine(new
-            DiscountingSwapEngine(discountRelinkableHandle_));
-        swap_->setPricingEngine(engine);
-
-        earliestDate_ = swap_->startDate();
-        latestDate_ = swap_->maturityDate();
-
-        /* May need to adjust latestDate_ if you are projecting libor based
-           on tenor length rather than from accrual date to accrual date. */
-        #ifdef QL_USE_INDEXED_COUPON
-        if (termStructureHandle_ == shortIndex_->forwardingTermStructure()) {
-            boost::shared_ptr<FloatingRateCoupon> lastFloating =
-                boost::dynamic_pointer_cast<FloatingRateCoupon>(
-                    swap_->shortLeg().back());
-            Date fixingValueDate =
-                shortIndex_->valueDate(lastFloating->fixingDate());
-            Date endValueDate = shortIndex_->maturityDate(fixingValueDate);
-            latestDate_ = std::max(latestDate_, endValueDate);
-        }
-        if (termStructureHandle_ == longIndex_->forwardingTermStructure()) {
-            boost::shared_ptr<FloatingRateCoupon> lastFloating =
-                boost::dynamic_pointer_cast<FloatingRateCoupon>(
-                    swap_->longLeg().back());
-            Date fixingValueDate =
-                longIndex_->valueDate(lastFloating->fixingDate());
-            Date endValueDate = longIndex_->maturityDate(fixingValueDate);
-            latestDate_ = std::max(latestDate_, endValueDate);
-        }
-        #endif
+    if (termStructureHandle_ == longIndex_->forwardingTermStructure()) {
+        boost::shared_ptr<FloatingRateCoupon> lastFloating =
+            boost::dynamic_pointer_cast<FloatingRateCoupon>(swap_->longLeg().back());
+        Date fixingValueDate = longIndex_->valueDate(lastFloating->fixingDate());
+        Date endValueDate = longIndex_->maturityDate(fixingValueDate);
+        latestDate_ = std::max(latestDate_, endValueDate);
     }
+#endif
+}
 
-    void TenorBasisSwapHelper::setTermStructure(YieldTermStructure* t) {
+void TenorBasisSwapHelper::setTermStructure(YieldTermStructure* t) {
 
-        bool observer = false;
+    bool observer = false;
 
-        boost::shared_ptr<YieldTermStructure> temp(t, no_deletion);
-        termStructureHandle_.linkTo(temp, observer);
+    boost::shared_ptr<YieldTermStructure> temp(t, no_deletion);
+    termStructureHandle_.linkTo(temp, observer);
 
-        if (discountHandle_.empty())
-            discountRelinkableHandle_.linkTo(temp, observer);
-        else
-            discountRelinkableHandle_.linkTo(*discountHandle_, observer);
+    if (discountHandle_.empty())
+        discountRelinkableHandle_.linkTo(temp, observer);
+    else
+        discountRelinkableHandle_.linkTo(*discountHandle_, observer);
 
-        RelativeDateRateHelper::setTermStructure(t);
-    }
+    RelativeDateRateHelper::setTermStructure(t);
+}
 
-    Real TenorBasisSwapHelper::impliedQuote() const {
-        QL_REQUIRE(termStructure_ != 0, "Termstructure not set");
-        swap_->recalculate();
-        return (spreadOnShort_ ?
-            swap_->fairShortLegSpread() : swap_->fairLongLegSpread());
-    }
+Real TenorBasisSwapHelper::impliedQuote() const {
+    QL_REQUIRE(termStructure_ != 0, "Termstructure not set");
+    swap_->recalculate();
+    return (spreadOnShort_ ? swap_->fairShortLegSpread() : swap_->fairLongLegSpread());
+}
 
-    void TenorBasisSwapHelper::accept(AcyclicVisitor& v) {
-        Visitor<TenorBasisSwapHelper>* v1 =
-            dynamic_cast<Visitor<TenorBasisSwapHelper>*>(&v);
-        if (v1 != 0)
-            v1->visit(*this);
-        else
-            RateHelper::accept(v);
-    }
-
+void TenorBasisSwapHelper::accept(AcyclicVisitor& v) {
+    Visitor<TenorBasisSwapHelper>* v1 = dynamic_cast<Visitor<TenorBasisSwapHelper>*>(&v);
+    if (v1 != 0)
+        v1->visit(*this);
+    else
+        RateHelper::accept(v);
+}
 }

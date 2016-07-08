@@ -17,7 +17,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 #include <qle/models/crossassetmodel.hpp>
 #include <qle/models/crossassetanalytics.hpp>
 
@@ -30,17 +29,14 @@ namespace QuantExt {
 
 using namespace CrossAssetAnalytics;
 
-CrossAssetStateProcess::CrossAssetStateProcess(
-    const CrossAssetModel *const model, discretization disc,
-    SalvagingAlgorithm::Type salvaging)
+CrossAssetStateProcess::CrossAssetStateProcess(const CrossAssetModel* const model, discretization disc,
+                                               SalvagingAlgorithm::Type salvaging)
     : StochasticProcess(), model_(model), salvaging_(salvaging) {
 
     if (disc == euler) {
         discretization_ = boost::make_shared<EulerDiscretization>();
     } else {
-        discretization_ =
-            boost::make_shared<CrossAssetStateProcess::ExactDiscretization>(
-                model, salvaging);
+        discretization_ = boost::make_shared<CrossAssetStateProcess::ExactDiscretization>(model, salvaging);
     }
 }
 
@@ -51,8 +47,7 @@ void CrossAssetStateProcess::flushCache() const {
     cache_v_.clear();
     cache_d_.clear();
     boost::shared_ptr<CrossAssetStateProcess::ExactDiscretization> tmp =
-        boost::dynamic_pointer_cast<
-            CrossAssetStateProcess::ExactDiscretization>(discretization_);
+        boost::dynamic_pointer_cast<CrossAssetStateProcess::ExactDiscretization>(discretization_);
     if (tmp != NULL) {
         tmp->flushCache();
     }
@@ -63,13 +58,12 @@ Disposable<Array> CrossAssetStateProcess::initialValues() const {
     /* irlgm1f processes have initial value 0 */
     for (Size i = 0; i < model_->components(FX); ++i) {
         /* fxbs processes are in log spot */
-        res[model_->pIdx(FX, i, 0)] =
-            std::log(model_->fxbs(i)->fxSpotToday()->value());
+        res[model_->pIdx(FX, i, 0)] = std::log(model_->fxbs(i)->fxSpotToday()->value());
     }
     return res;
 }
 
-Disposable<Array> CrossAssetStateProcess::drift(Time t, const Array &x) const {
+Disposable<Array> CrossAssetStateProcess::drift(Time t, const Array& x) const {
     Array res(model_->dimension(), 0.0);
     Size n = model_->components(IR);
     Real H0 = model_->irlgm1f(0)->H(t);
@@ -89,17 +83,12 @@ Disposable<Array> CrossAssetStateProcess::drift(Time t, const Array &x) const {
             Real rhozx0i = model_->correlation(IR, 0, FX, i - 1);
             Real rhozxii = model_->correlation(IR, i, FX, i - 1);
             // ir drifts
-            res[model_->pIdx(IR, i, 0)] = -Hi * alphai * alphai +
-                                          H0 * alpha0 * alphai * rhozz0i -
-                                          sigmai * alphai * rhozxii;
+            res[model_->pIdx(IR, i, 0)] =
+                -Hi * alphai * alphai + H0 * alpha0 * alphai * rhozz0i - sigmai * alphai * rhozxii;
             // log spot fx drifts (z0, zi independent parts)
             res[model_->pIdx(FX, i - 1, 0)] =
-                H0 * alpha0 * sigmai * rhozx0i +
-                model_->irlgm1f(0)->termStructure()->forwardRate(t, t,
-                                                                 Continuous) -
-                model_->irlgm1f(i)->termStructure()->forwardRate(t, t,
-                                                                 Continuous) -
-                0.5 * sigmai * sigmai;
+                H0 * alpha0 * sigmai * rhozx0i + model_->irlgm1f(0)->termStructure()->forwardRate(t, t, Continuous) -
+                model_->irlgm1f(i)->termStructure()->forwardRate(t, t, Continuous) - 0.5 * sigmai * sigmai;
         }
         cache_m_.insert(std::make_pair(t, res));
     } else {
@@ -110,15 +99,13 @@ Disposable<Array> CrossAssetStateProcess::drift(Time t, const Array &x) const {
         Real Hi = model_->irlgm1f(i)->H(t);
         Real Hprimei = model_->irlgm1f(i)->Hprime(t);
         Real zetai = model_->irlgm1f(i)->zeta(t);
-        res[model_->pIdx(FX, i - 1, 0)] +=
-            x[model_->pIdx(IR, 0, 0)] * Hprime0 + zeta0 * Hprime0 * H0 -
-            x[model_->pIdx(IR, i, 0)] * Hprimei - zetai * Hprimei * Hi;
+        res[model_->pIdx(FX, i - 1, 0)] += x[model_->pIdx(IR, 0, 0)] * Hprime0 + zeta0 * Hprime0 * H0 -
+                                           x[model_->pIdx(IR, i, 0)] * Hprimei - zetai * Hprimei * Hi;
     }
     return res;
 }
 
-Disposable<Matrix> CrossAssetStateProcess::diffusion(Time t,
-                                                     const Array &x) const {
+Disposable<Matrix> CrossAssetStateProcess::diffusion(Time t, const Array& x) const {
     boost::unordered_map<double, Matrix>::const_iterator i = cache_d_.find(t);
     if (i == cache_d_.end()) {
         Matrix tmp = pseudoSqrt(diffusionImpl(t, x), salvaging_);
@@ -132,8 +119,7 @@ Disposable<Matrix> CrossAssetStateProcess::diffusion(Time t,
     }
 }
 
-Disposable<Matrix> CrossAssetStateProcess::diffusionImpl(Time t,
-                                                         const Array &) const {
+Disposable<Matrix> CrossAssetStateProcess::diffusionImpl(Time t, const Array&) const {
     Matrix res(model_->dimension(), model_->dimension());
     Size n = model_->components(IR);
     Size m = model_->components(FX);
@@ -143,9 +129,8 @@ Disposable<Matrix> CrossAssetStateProcess::diffusionImpl(Time t,
             Real alphai = model_->irlgm1f(i)->alpha(t);
             Real alphaj = model_->irlgm1f(j)->alpha(t);
             Real rhozz = model_->correlation(IR, i, IR, j, 0, 0);
-            res[model_->pIdx(IR, i, 0)][model_->pIdx(IR, j, 0)] =
-                res[model_->pIdx(IR, j, 0)][model_->pIdx(IR, i, 0)] =
-                    alphai * alphaj * rhozz;
+            res[model_->pIdx(IR, i, 0)][model_->pIdx(IR, j, 0)] = res[model_->pIdx(IR, j, 0)][model_->pIdx(IR, i, 0)] =
+                alphai * alphaj * rhozz;
         }
     }
     // ir-fx
@@ -154,9 +139,8 @@ Disposable<Matrix> CrossAssetStateProcess::diffusionImpl(Time t,
             Real alphai = model_->irlgm1f(i)->alpha(t);
             Real sigmaj = model_->fxbs(j)->sigma(t);
             Real rhozx = model_->correlation(IR, i, FX, j, 0, 0);
-            res[model_->pIdx(IR, i, 0)][model_->pIdx(FX, j, 0)] =
-                res[model_->pIdx(FX, j, 0)][model_->pIdx(IR, i, 0)] =
-                    alphai * sigmaj * rhozx;
+            res[model_->pIdx(IR, i, 0)][model_->pIdx(FX, j, 0)] = res[model_->pIdx(FX, j, 0)][model_->pIdx(IR, i, 0)] =
+                alphai * sigmaj * rhozx;
         }
     }
     // fx-fx
@@ -165,22 +149,21 @@ Disposable<Matrix> CrossAssetStateProcess::diffusionImpl(Time t,
             Real sigmai = model_->fxbs(i)->sigma(t);
             Real sigmaj = model_->fxbs(j)->sigma(t);
             Real rhoxx = model_->correlation(FX, i, FX, j, 0, 0);
-            res[model_->pIdx(FX, i, 0)][model_->pIdx(FX, j, 0)] =
-                res[model_->pIdx(FX, j, 0)][model_->pIdx(FX, i, 0)] =
-                    sigmai * sigmaj * rhoxx;
+            res[model_->pIdx(FX, i, 0)][model_->pIdx(FX, j, 0)] = res[model_->pIdx(FX, j, 0)][model_->pIdx(FX, i, 0)] =
+                sigmai * sigmaj * rhoxx;
         }
     }
     return res;
 }
 
-CrossAssetStateProcess::ExactDiscretization::ExactDiscretization(
-    const CrossAssetModel *const model, SalvagingAlgorithm::Type salvaging)
+CrossAssetStateProcess::ExactDiscretization::ExactDiscretization(const CrossAssetModel* const model,
+                                                                 SalvagingAlgorithm::Type salvaging)
     : model_(model), salvaging_(salvaging) {}
 
-Disposable<Array> CrossAssetStateProcess::ExactDiscretization::drift(
-    const StochasticProcess &p, Time t0, const Array &x0, Time dt) const {
+Disposable<Array> CrossAssetStateProcess::ExactDiscretization::drift(const StochasticProcess& p, Time t0,
+                                                                     const Array& x0, Time dt) const {
     Array res;
-    cache_key k = {t0, dt};
+    cache_key k = { t0, dt };
     boost::unordered_map<cache_key, Array>::const_iterator i = cache_m_.find(k);
     if (i == cache_m_.end()) {
         res = driftImpl1(p, t0, x0, dt);
@@ -195,11 +178,10 @@ Disposable<Array> CrossAssetStateProcess::ExactDiscretization::drift(
     return res - x0;
 }
 
-Disposable<Matrix> CrossAssetStateProcess::ExactDiscretization::diffusion(
-    const StochasticProcess &p, Time t0, const Array &x0, Time dt) const {
-    cache_key k = {t0, dt};
-    boost::unordered_map<cache_key, Matrix>::const_iterator i =
-        cache_d_.find(k);
+Disposable<Matrix> CrossAssetStateProcess::ExactDiscretization::diffusion(const StochasticProcess& p, Time t0,
+                                                                          const Array& x0, Time dt) const {
+    cache_key k = { t0, dt };
+    boost::unordered_map<cache_key, Matrix>::const_iterator i = cache_d_.find(k);
     if (i == cache_d_.end()) {
         Matrix res = pseudoSqrt(covariance(p, t0, x0, dt), salvaging_);
         // note that covariance actually does not depend on x0
@@ -212,11 +194,10 @@ Disposable<Matrix> CrossAssetStateProcess::ExactDiscretization::diffusion(
     }
 }
 
-Disposable<Matrix> CrossAssetStateProcess::ExactDiscretization::covariance(
-    const StochasticProcess &p, Time t0, const Array &x0, Time dt) const {
-    cache_key k = {t0, dt};
-    boost::unordered_map<cache_key, Matrix>::const_iterator i =
-        cache_v_.find(k);
+Disposable<Matrix> CrossAssetStateProcess::ExactDiscretization::covariance(const StochasticProcess& p, Time t0,
+                                                                           const Array& x0, Time dt) const {
+    cache_key k = { t0, dt };
+    boost::unordered_map<cache_key, Matrix>::const_iterator i = cache_v_.find(k);
     if (i == cache_v_.end()) {
         Matrix res = covarianceImpl(p, t0, x0, dt);
         cache_v_.insert(std::make_pair(k, res));
@@ -228,8 +209,8 @@ Disposable<Matrix> CrossAssetStateProcess::ExactDiscretization::covariance(
     }
 }
 
-Disposable<Array> CrossAssetStateProcess::ExactDiscretization::driftImpl1(
-    const StochasticProcess &, Time t0, const Array &, Time dt) const {
+Disposable<Array> CrossAssetStateProcess::ExactDiscretization::driftImpl1(const StochasticProcess&, Time t0,
+                                                                          const Array&, Time dt) const {
     Size n = model_->components(IR);
     Size m = model_->components(FX);
     Array res(model_->dimension(), 0.0);
@@ -242,50 +223,45 @@ Disposable<Array> CrossAssetStateProcess::ExactDiscretization::driftImpl1(
     return res;
 }
 
-Disposable<Array> CrossAssetStateProcess::ExactDiscretization::driftImpl2(
-    const StochasticProcess &, Time t0, const Array &x0, Time dt) const {
+Disposable<Array> CrossAssetStateProcess::ExactDiscretization::driftImpl2(const StochasticProcess&, Time t0,
+                                                                          const Array& x0, Time dt) const {
     Size n = model_->components(IR);
     Size m = model_->components(FX);
     Array res(model_->dimension(), 0.0);
     for (Size i = 0; i < n; ++i) {
-        res[model_->pIdx(IR, i, 0)] +=
-            ir_expectation_2(model_, i, x0[model_->pIdx(IR, i, 0)]);
+        res[model_->pIdx(IR, i, 0)] += ir_expectation_2(model_, i, x0[model_->pIdx(IR, i, 0)]);
     }
     for (Size j = 0; j < m; ++j) {
-        res[model_->pIdx(FX, j, 0)] += fx_expectation_2(
-            model_, j, t0, x0[model_->pIdx(FX, j, 0)],
-            x0[model_->pIdx(IR, j + 1, 0)], x0[model_->pIdx(IR, 0, 0)], dt);
+        res[model_->pIdx(FX, j, 0)] += fx_expectation_2(model_, j, t0, x0[model_->pIdx(FX, j, 0)],
+                                                        x0[model_->pIdx(IR, j + 1, 0)], x0[model_->pIdx(IR, 0, 0)], dt);
     }
     return res;
 }
 
-Disposable<Matrix> CrossAssetStateProcess::ExactDiscretization::covarianceImpl(
-    const StochasticProcess &, Time t0, const Array &, Time dt) const {
+Disposable<Matrix> CrossAssetStateProcess::ExactDiscretization::covarianceImpl(const StochasticProcess&, Time t0,
+                                                                               const Array&, Time dt) const {
     Matrix res(model_->dimension(), model_->dimension());
     Size n = model_->components(IR);
     Size m = model_->components(FX);
     // ir-ir
     for (Size i = 0; i < n; ++i) {
         for (Size j = 0; j <= i; ++j) {
-            res[model_->pIdx(IR, i, 0)][model_->pIdx(IR, j, 0)] =
-                res[model_->pIdx(IR, j, 0)][model_->pIdx(IR, i, 0)] =
-                    ir_ir_covariance(model_, i, j, t0, dt);
+            res[model_->pIdx(IR, i, 0)][model_->pIdx(IR, j, 0)] = res[model_->pIdx(IR, j, 0)][model_->pIdx(IR, i, 0)] =
+                ir_ir_covariance(model_, i, j, t0, dt);
         }
     }
     // ir-fx
     for (Size i = 0; i < n; ++i) {
         for (Size j = 0; j < m; ++j) {
-            res[model_->pIdx(IR, i, 0)][model_->pIdx(FX, j, 0)] =
-                res[model_->pIdx(FX, j, 0)][model_->pIdx(IR, i, 0)] =
-                    ir_fx_covariance(model_, i, j, t0, dt);
+            res[model_->pIdx(IR, i, 0)][model_->pIdx(FX, j, 0)] = res[model_->pIdx(FX, j, 0)][model_->pIdx(IR, i, 0)] =
+                ir_fx_covariance(model_, i, j, t0, dt);
         }
     }
     // fx-fx
     for (Size i = 0; i < m; ++i) {
         for (Size j = 0; j <= i; ++j) {
-            res[model_->pIdx(FX, i, 0)][model_->pIdx(FX, j, 0)] =
-                res[model_->pIdx(FX, j, 0)][model_->pIdx(FX, i, 0)] =
-                    fx_fx_covariance(model_, i, j, t0, dt);
+            res[model_->pIdx(FX, i, 0)][model_->pIdx(FX, j, 0)] = res[model_->pIdx(FX, j, 0)][model_->pIdx(FX, i, 0)] =
+                fx_fx_covariance(model_, i, j, t0, dt);
         }
     }
     return res;

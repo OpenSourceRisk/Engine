@@ -17,20 +17,14 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <ql/indexes/indexmanager.hpp>
 
 namespace QuantExt {
 
-    FXLinkedCashFlow::FXLinkedCashFlow
-    (const Date& cashFlowDate, const Date& fxFixingDate, Real foreignAmount,
-     boost::shared_ptr<FxIndex> fxIndex)
-    : cashFlowDate_(cashFlowDate), fxFixingDate_(fxFixingDate), foreignAmount_(foreignAmount), fxIndex_(fxIndex)
-    {}
+FXLinkedCashFlow::FXLinkedCashFlow(const Date& cashFlowDate, const Date& fxFixingDate, Real foreignAmount,
+                                   boost::shared_ptr<FxIndex> fxIndex)
+    : cashFlowDate_(cashFlowDate), fxFixingDate_(fxFixingDate), foreignAmount_(foreignAmount), fxIndex_(fxIndex) {}
 
-    Real FXLinkedCashFlow::fxRate() const {
-        return fxIndex_->fixing(fxFixingDate_);
-    }
-
+Real FXLinkedCashFlow::fxRate() const { return fxIndex_->fixing(fxFixingDate_); }
 }

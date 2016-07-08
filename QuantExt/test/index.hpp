@@ -17,7 +17,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file test/index.hpp
     \brief ibor index tests
 */
@@ -31,13 +30,12 @@ namespace testsuite {
 
 //! Ibor index tests
 class IndexTest {
-  public:
+public:
     /*! Test if indexes are set up with correct data. */
     static void testIborIndex();
 
     static boost::unit_test_framework::test_suite* suite();
 };
-
 }
 
 #endif

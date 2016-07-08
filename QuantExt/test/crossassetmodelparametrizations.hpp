@@ -17,7 +17,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file test/crossassetmodelparametrizations.hpp
     \brief cross asset model parametrizations test
 */
@@ -31,7 +30,7 @@ namespace testsuite {
 
 //! CrossAssetModelParametrization tests
 class CrossAssetModelParametrizationsTest {
-  public:
+public:
     /*! Test the computations in the base classes of the parametrization classes for the CrossAssetModel. */
     static void testParametrizationBaseClasses();
     /*! Test the IR LGM parametrization classes of the CrossAssetModel. */
@@ -39,9 +38,8 @@ class CrossAssetModelParametrizationsTest {
     /*! Test the FX Black Scholes parametrization classes of the CrossAssetModel. */
     static void testFxBsParametrizations();
 
-    static boost::unit_test_framework::test_suite *suite();
+    static boost::unit_test_framework::test_suite* suite();
 };
-
 }
 
 #endif

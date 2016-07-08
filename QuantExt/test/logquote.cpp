@@ -17,7 +17,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 #include "logquote.hpp"
 #include <qle/quotes/logquote.hpp>
 #include <ql/quotes/simplequote.hpp>
@@ -27,11 +26,11 @@ using namespace boost::unit_test_framework;
 using QuantExt::LogQuote;
 
 namespace testsuite {
-    
+
 void LogQuoteTest::testLogQuote() {
     BOOST_TEST_MESSAGE("Testing QuantExt::LogQuote...");
 
-    boost::shared_ptr<SimpleQuote> quote (new QuantLib::SimpleQuote(1.0));
+    boost::shared_ptr<SimpleQuote> quote(new QuantLib::SimpleQuote(1.0));
     Handle<Quote> qh(quote);
     Handle<Quote> logQuote(boost::shared_ptr<Quote>(new LogQuote(qh)));
 
@@ -55,5 +54,4 @@ test_suite* LogQuoteTest::suite() {
     suite->add(BOOST_TEST_CASE(&LogQuoteTest::testLogQuote));
     return suite;
 }
-
 }

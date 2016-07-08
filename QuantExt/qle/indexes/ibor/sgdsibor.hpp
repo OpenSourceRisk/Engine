@@ -17,10 +17,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file sgdsibor.hpp
     \brief SGD-SIBOR index
-    \ingroup 
+    \ingroup indexes
 */
 
 #ifndef quantext_sgdsibor_hpp
@@ -35,21 +34,20 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-    //! SGD-SIBOR index
-    /*! SGD-SIBOR rate published by ABS.
+//! SGD-SIBOR index
+/*! SGD-SIBOR rate published by ABS.
 
-        See <http://www.abs.org.sg/index.php>.
+    See <http://www.abs.org.sg/index.php>.
 
-        \warning Check roll convention and EOM.
-    */
-    class SGDSibor : public IborIndex {
-      public:
-        SGDSibor(const Period& tenor, const Handle<YieldTermStructure>& h =
-            Handle<YieldTermStructure>())
-            : IborIndex("SGD-SIBOR", tenor, 2, SGDCurrency(), Singapore(),
-                  ModifiedFollowing, false, Actual365Fixed(), h) {}
-    };
+    \warning Check roll convention and EOM.
 
+            \ingroup indexes
+*/
+class SGDSibor : public IborIndex {
+public:
+    SGDSibor(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
+        : IborIndex("SGD-SIBOR", tenor, 2, SGDCurrency(), Singapore(), ModifiedFollowing, false, Actual365Fixed(), h) {}
+};
 }
 
 #endif

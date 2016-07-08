@@ -17,7 +17,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file test/discountcurve.hpp
     \brief interpolated discount curve test
 */
@@ -31,13 +30,12 @@ namespace testsuite {
 
 //! InterpolatedDiscountCurve tests
 class DiscountCurveTest {
-  public:
+public:
     /*! Test the discount curve against a corresponding QuantLib discount curve. */
     static void testDiscountCurve();
 
     static boost::unit_test_framework::test_suite* suite();
 };
-
 }
 
 #endif

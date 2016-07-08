@@ -30,22 +30,25 @@ namespace testsuite {
 
 //! AnalyticLgmSwaptionEngine tests
 class AnalyticLgmSwaptionEngineTest {
-  public:
-    /*! Test if the fixed coupon adjustment in the analytic LGM swaption engine accounting for a dual curve setup is zero in a mono curve setup. */
+public:
+    /*! Test if the fixed coupon adjustment in the analytic LGM swaption engine accounting for a dual curve setup is
+     * zero in a mono curve setup. */
     static void testMonoCurve();
 
-    /*! Test if the fixed coupon adjustment in the analytic LGM swaption engine accounting for a dual curve setup is within a range of expected values for a given spread in a dual curve setup. */
+    /*! Test if the fixed coupon adjustment in the analytic LGM swaption engine accounting for a dual curve setup is
+     * within a range of expected values for a given spread in a dual curve setup. */
     static void testDualCurve();
 
-    /*! Test the result of the analytic LGM swaption engine against those of the Gaussian1dSwaptionEngine and FdHullWhiteSwaptionEngine. */
+    /*! Test the result of the analytic LGM swaption engine against those of the Gaussian1dSwaptionEngine and
+     * FdHullWhiteSwaptionEngine. */
     static void testAgainstOtherEngines();
 
-    /*! Test whether the price of an european swaption in the analytic LGM swaption engine is invariant under the LGM model invariances (scaling and shifting). */
+    /*! Test whether the price of an european swaption in the analytic LGM swaption engine is invariant under the LGM
+     * model invariances (scaling and shifting). */
     static void testLgmInvariances();
 
-    static boost::unit_test_framework::test_suite *suite();
+    static boost::unit_test_framework::test_suite* suite();
 };
-
 }
 
 #endif

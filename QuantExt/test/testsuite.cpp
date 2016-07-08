@@ -17,10 +17,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file testsuite.cpp
     \brief wrapper calling all individual test cases
-    \ingroup 
+    \ingroup
 */
 
 #include <iostream>
@@ -60,25 +59,26 @@ using boost::unit_test::test_suite;
 
 namespace {
 
-    boost::timer t;
+boost::timer t;
 
-    void startTimer() {
-        BOOST_CHECK(true);
-        t.restart();
-    }
-    void stopTimer() {
-        BOOST_CHECK(true);
-        double seconds = t.elapsed();
-        int hours = int(seconds/3600);
-        seconds -= hours * 3600;
-        int minutes = int(seconds/60);
-        seconds -= minutes * 60;
-        std::cout << endl << " QuantExt tests completed in ";
-        if (hours > 0) cout << hours << " h ";
-        if (hours > 0 || minutes > 0) cout << minutes << " m ";
-        cout << fixed << setprecision(0) << seconds << " s" << endl << endl;
-    }
-
+void startTimer() {
+    BOOST_CHECK(true);
+    t.restart();
+}
+void stopTimer() {
+    BOOST_CHECK(true);
+    double seconds = t.elapsed();
+    int hours = int(seconds / 3600);
+    seconds -= hours * 3600;
+    int minutes = int(seconds / 60);
+    seconds -= minutes * 60;
+    std::cout << endl << " QuantExt tests completed in ";
+    if (hours > 0)
+        cout << hours << " h ";
+    if (hours > 0 || minutes > 0)
+        cout << minutes << " m ";
+    cout << fixed << setprecision(0) << seconds << " s" << endl << endl;
+}
 }
 
 test_suite* init_unit_test_suite(int, char* []) {

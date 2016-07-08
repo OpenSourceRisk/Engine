@@ -17,7 +17,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 #include <qle/models/gaussian1dcrossassetadaptor.hpp>
 #include <qle/processes/irlgm1fstateprocess.hpp>
 
@@ -25,16 +24,13 @@
 
 namespace QuantExt {
 
-Gaussian1dCrossAssetAdaptor::Gaussian1dCrossAssetAdaptor(
-    const boost::shared_ptr<LinearGaussMarkovModel> &model)
+Gaussian1dCrossAssetAdaptor::Gaussian1dCrossAssetAdaptor(const boost::shared_ptr<LinearGaussMarkovModel>& model)
     : Gaussian1dModel(model->parametrization()->termStructure()), x_(model) {
     initialize();
 }
 
-Gaussian1dCrossAssetAdaptor::Gaussian1dCrossAssetAdaptor(
-    Size ccy, const boost::shared_ptr<CrossAssetModel> &model)
-    : Gaussian1dModel(model->irlgm1f(ccy)->termStructure()),
-      x_(model->lgm(ccy)) {
+Gaussian1dCrossAssetAdaptor::Gaussian1dCrossAssetAdaptor(Size ccy, const boost::shared_ptr<CrossAssetModel>& model)
+    : Gaussian1dModel(model->irlgm1f(ccy)->termStructure()), x_(model->lgm(ccy)) {
     initialize();
 }
 

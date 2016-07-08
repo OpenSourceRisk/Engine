@@ -17,10 +17,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file gaussian1dcrossassetadaptor.hpp
     \brief adaptor class that extracts one irlgm1f component
-    \ingroup 
+    \ingroup models
 */
 
 #ifndef quantext_gaussian1d_crossasset_adaptor_hpp
@@ -32,19 +31,18 @@
 
 namespace QuantExt {
 
+//! Gaussian 1d Cross Asset adaptor
+/*! \ingroup models
+*/
 class Gaussian1dCrossAssetAdaptor : public Gaussian1dModel {
-  public:
-    Gaussian1dCrossAssetAdaptor(
-        const boost::shared_ptr<LinearGaussMarkovModel> &model);
-    Gaussian1dCrossAssetAdaptor(
-        const Size ccy, const boost::shared_ptr<CrossAssetModel> &model);
+public:
+    Gaussian1dCrossAssetAdaptor(const boost::shared_ptr<LinearGaussMarkovModel>& model);
+    Gaussian1dCrossAssetAdaptor(const Size ccy, const boost::shared_ptr<CrossAssetModel>& model);
 
-  private:
+private:
     /*! Gaussian1dModel interface */
-    Real numeraireImpl(const Time t, const Real y,
-                       const Handle<YieldTermStructure> &yts) const;
-    Real zerobondImpl(const Time T, const Time t, const Real y,
-                      const Handle<YieldTermStructure> &yts) const;
+    Real numeraireImpl(const Time t, const Real y, const Handle<YieldTermStructure>& yts) const;
+    Real zerobondImpl(const Time T, const Time t, const Real y, const Handle<YieldTermStructure>& yts) const;
 
     // add this when the preferdDeflatedZerobond is available in QuantLib
 
@@ -67,23 +65,18 @@ class Gaussian1dCrossAssetAdaptor : public Gaussian1dModel {
 
 // inline
 
-inline Real Gaussian1dCrossAssetAdaptor::numeraireImpl(
-    const Time t, const Real y, const Handle<YieldTermStructure> &yts) const {
-    Real d = yts.empty() ? 1.0
-                         : x_->parametrization()->termStructure()->discount(t) /
-                               yts->discount(t);
+inline Real Gaussian1dCrossAssetAdaptor::numeraireImpl(const Time t, const Real y,
+                                                       const Handle<YieldTermStructure>& yts) const {
+    Real d = yts.empty() ? 1.0 : x_->parametrization()->termStructure()->discount(t) / yts->discount(t);
     Real x = y * std::sqrt(x_->parametrization()->zeta(t));
     return d * x_->numeraire(t, x);
 }
 
-inline Real Gaussian1dCrossAssetAdaptor::zerobondImpl(
-    const Time T, const Time t, const Real y,
-    const Handle<YieldTermStructure> &yts) const {
-    Real d = yts.empty()
-                 ? 1.0
-                 : x_->parametrization()->termStructure()->discount(t) /
-                       x_->parametrization()->termStructure()->discount(T) *
-                       yts->discount(T) / yts->discount(t);
+inline Real Gaussian1dCrossAssetAdaptor::zerobondImpl(const Time T, const Time t, const Real y,
+                                                      const Handle<YieldTermStructure>& yts) const {
+    Real d = yts.empty() ? 1.0 : x_->parametrization()->termStructure()->discount(t) /
+                                     x_->parametrization()->termStructure()->discount(T) * yts->discount(T) /
+                                     yts->discount(t);
     Real x = y * std::sqrt(x_->parametrization()->zeta(t));
     return d * x_->discountBond(t, T, x);
 }

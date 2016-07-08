@@ -17,32 +17,27 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 #include <qle/models/fxbspiecewiseconstantparametrization.hpp>
 
 namespace QuantExt {
 
-FxBsPiecewiseConstantParametrization::FxBsPiecewiseConstantParametrization(
-    const Currency &currency, const Handle<Quote> &fxSpotToday,
-    const Array &times, const Array &sigma)
-    : FxBsParametrization(currency, fxSpotToday),
-      PiecewiseConstantHelper1(times) {
+FxBsPiecewiseConstantParametrization::FxBsPiecewiseConstantParametrization(const Currency& currency,
+                                                                           const Handle<Quote>& fxSpotToday,
+                                                                           const Array& times, const Array& sigma)
+    : FxBsParametrization(currency, fxSpotToday), PiecewiseConstantHelper1(times) {
     initialize(sigma);
 }
 
 FxBsPiecewiseConstantParametrization::FxBsPiecewiseConstantParametrization(
-    const Currency &currency, const Handle<Quote> &fxSpotToday,
-    const std::vector<Date> &dates, const Array &sigma,
-    const Handle<YieldTermStructure> &domesticTermStructure)
-    : FxBsParametrization(currency, fxSpotToday),
-      PiecewiseConstantHelper1(dates, domesticTermStructure) {
+    const Currency& currency, const Handle<Quote>& fxSpotToday, const std::vector<Date>& dates, const Array& sigma,
+    const Handle<YieldTermStructure>& domesticTermStructure)
+    : FxBsParametrization(currency, fxSpotToday), PiecewiseConstantHelper1(dates, domesticTermStructure) {
     initialize(sigma);
 }
 
-void FxBsPiecewiseConstantParametrization::initialize(const Array &sigma) {
+void FxBsPiecewiseConstantParametrization::initialize(const Array& sigma) {
     QL_REQUIRE(PiecewiseConstantHelper1::t().size() + 1 == sigma.size(),
-               "alpha size (" << sigma.size()
-                              << ") inconsistent to times size ("
+               "alpha size (" << sigma.size() << ") inconsistent to times size ("
                               << PiecewiseConstantHelper1::t().size() << ")");
 
     // store raw parameter values

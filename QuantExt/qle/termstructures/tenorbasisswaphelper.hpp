@@ -17,10 +17,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file tenorbasisswap.hpp
     \brief Single currency tenor basis swap helper
-    \ingroup 
+    \ingroup termstructures
 */
 
 #ifndef quantext_tenor_basis_swap_helper_hpp
@@ -34,51 +33,47 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-    //! Rate helper for bootstrapping using Libor tenor basis swaps
-    class TenorBasisSwapHelper : public RelativeDateRateHelper {
-    public:
-        TenorBasisSwapHelper(Handle<Quote> spread,
-            const Period& swapTenor,
-            const boost::shared_ptr<IborIndex> longIndex,
-            const boost::shared_ptr<IborIndex> shortIndex,
-            const Period& shortPayTenor = Period(),
-            const Handle<YieldTermStructure>& discountingCurve =
-                Handle<YieldTermStructure>(),
-            bool spreadOnShort = true,
-            bool includeSpread = false,
-            SubPeriodsCoupon::Type type = SubPeriodsCoupon::Compounding);
+//! Rate helper for bootstrapping using Libor tenor basis swaps
+/*! \ingroup termstructures
+*/
+class TenorBasisSwapHelper : public RelativeDateRateHelper {
+public:
+    TenorBasisSwapHelper(Handle<Quote> spread, const Period& swapTenor, const boost::shared_ptr<IborIndex> longIndex,
+                         const boost::shared_ptr<IborIndex> shortIndex, const Period& shortPayTenor = Period(),
+                         const Handle<YieldTermStructure>& discountingCurve = Handle<YieldTermStructure>(),
+                         bool spreadOnShort = true, bool includeSpread = false,
+                         SubPeriodsCoupon::Type type = SubPeriodsCoupon::Compounding);
 
-        //! \name RateHelper interface
-        //@{
-        Real impliedQuote() const;
-        void setTermStructure(YieldTermStructure*);
-        //@}
-        //! \name TenorBasisSwapHelper inspectors
-        //@{
-        boost::shared_ptr<TenorBasisSwap> swap() const { return swap_; }
-        //@}
-        //! \name Visitability
-        //@{
-        void accept(AcyclicVisitor&);
-        //@}
+    //! \name RateHelper interface
+    //@{
+    Real impliedQuote() const;
+    void setTermStructure(YieldTermStructure*);
+    //@}
+    //! \name TenorBasisSwapHelper inspectors
+    //@{
+    boost::shared_ptr<TenorBasisSwap> swap() const { return swap_; }
+    //@}
+    //! \name Visitability
+    //@{
+    void accept(AcyclicVisitor&);
+    //@}
 
-      protected:
-        void initializeDates();
+protected:
+    void initializeDates();
 
-        Period swapTenor_;
-        boost::shared_ptr<IborIndex> longIndex_;
-        boost::shared_ptr<IborIndex> shortIndex_;
-        Period shortPayTenor_;
-        bool spreadOnShort_;
-        bool includeSpread_;
-        SubPeriodsCoupon::Type type_;
+    Period swapTenor_;
+    boost::shared_ptr<IborIndex> longIndex_;
+    boost::shared_ptr<IborIndex> shortIndex_;
+    Period shortPayTenor_;
+    bool spreadOnShort_;
+    bool includeSpread_;
+    SubPeriodsCoupon::Type type_;
 
-        boost::shared_ptr<TenorBasisSwap> swap_;
-        RelinkableHandle<YieldTermStructure> termStructureHandle_;
-        Handle<YieldTermStructure> discountHandle_;
-        RelinkableHandle<YieldTermStructure> discountRelinkableHandle_;
-    };
-
+    boost::shared_ptr<TenorBasisSwap> swap_;
+    RelinkableHandle<YieldTermStructure> termStructureHandle_;
+    Handle<YieldTermStructure> discountHandle_;
+    RelinkableHandle<YieldTermStructure> discountRelinkableHandle_;
+};
 }
 
 #endif

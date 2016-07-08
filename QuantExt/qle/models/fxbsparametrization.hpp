@@ -17,10 +17,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file fxbsparametrization.hpp
     \brief FX Black Scholes parametrization
-    \ingroup 
+    \ingroup models
 */
 
 #ifndef quantext_fxbs_parametrization_hpp
@@ -34,13 +33,15 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-/*! Base class for FX Black Scholes parametrizations */
+//! FX Black Scholes parametrizations
+/*! Base class for FX Black Scholes parametrizations
+    \ingroup models
+*/
 class FxBsParametrization : public Parametrization {
-  public:
+public:
     /*! The currency refers to the foreign currency, the spot
         is as of today (i.e. the discounted spot) */
-    FxBsParametrization(const Currency &foreignCurrency,
-                        const Handle<Quote> &fxSpotToday);
+    FxBsParametrization(const Currency& foreignCurrency, const Handle<Quote>& fxSpotToday);
     /*! must satisfy variance(0) = 0.0, variance'(t) >= 0 */
     virtual Real variance(const Time t) const = 0;
     /*! is supposed to be positive */
@@ -48,7 +49,7 @@ class FxBsParametrization : public Parametrization {
     virtual Real stdDeviation(const Time t) const;
     const Handle<Quote> fxSpotToday() const;
 
-  private:
+private:
     const Handle<Quote> fxSpotToday_;
 };
 
@@ -58,13 +59,9 @@ inline Real FxBsParametrization::sigma(const Time t) const {
     return std::sqrt((variance(tr(t)) - variance(tl(t))) / h_);
 }
 
-inline Real FxBsParametrization::stdDeviation(const Time t) const {
-    return std::sqrt(variance(t));
-}
+inline Real FxBsParametrization::stdDeviation(const Time t) const { return std::sqrt(variance(t)); }
 
-inline const Handle<Quote> FxBsParametrization::fxSpotToday() const {
-    return fxSpotToday_;
-}
+inline const Handle<Quote> FxBsParametrization::fxSpotToday() const { return fxSpotToday_; }
 
 } // namespace QuantExt
 
