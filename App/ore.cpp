@@ -17,6 +17,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+// disable warning C4503: '__LINE__Var': decorated name length exceeded, name was truncated
+#pragma warning(disable:4503)
+
 #include <iostream>
 
 #include <orea/orea.hpp>
