@@ -27,7 +27,6 @@
 #ifndef quantext_numeric_lgm_swaption_engine_hpp
 #define quantext_numeric_lgm_swaption_engine_hpp
 
-#include <qle/math/cumulativenormaldistribution.hpp>
 #include <qle/models/lgm.hpp>
 #include <qle/models/lgmimpliedyieldtermstructure.hpp>
 
@@ -74,7 +73,7 @@ class NumericLgmSwaptionEngineBase {
         h_ = 1.0 / ny;
 
         // weights for convolution in the rollback step
-        QuantExt::CumulativeNormalDistribution N;
+        CumulativeNormalDistribution N;
         NormalDistribution G;
 
         y_.resize(2 * my_ + 1); // x-coordinate / standard deviation of x

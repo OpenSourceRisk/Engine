@@ -131,21 +131,9 @@
   </Deposit>
 
   <Deposit>
-    <Id>TRY-DEPOSIT</Id>
-    <IndexBased>true</IndexBased>
-    <Index>TRY-LIBOR</Index>
-  </Deposit>
-
-  <Deposit>
     <Id>NZD-DEPOSIT</Id>
     <IndexBased>true</IndexBased>
     <Index>NZD-BKBM</Index>
-  </Deposit>
-
-  <Deposit>
-    <Id>ZAR-DEPOSIT</Id>
-    <IndexBased>true</IndexBased>
-    <Index>ZAR-JIBAR</Index>
   </Deposit>
 
   <Deposit>
@@ -279,21 +267,6 @@
   <FRA>
     <Id>SEK-3M-FRA</Id>
     <Index>SEK-STIBOR-3M</Index>
-  </FRA>
-
-  <FRA>
-    <Id>TRY-3M-FRA</Id>
-    <Index>TRY-LIBOR-3M</Index>
-  </FRA>
-
-  <FRA>
-    <Id>TRY-6M-FRA</Id>
-    <Index>TRY-LIBOR-6M</Index>
-  </FRA>
-
-  <FRA>
-    <Id>ZAR-3M-FRA</Id>
-    <Index>ZAR-JIBAR-3M</Index>
   </FRA>
 
   <!-- Interest Rate Swaps -->
@@ -555,24 +528,6 @@
   </Swap>
 
   <Swap><!-- FIXME -->
-    <Id>TRY-3M-SWAP</Id>
-    <FixedCalendar>TARGET</FixedCalendar>
-    <FixedFrequency>Annual</FixedFrequency>
-    <FixedConvention>MF</FixedConvention>
-    <FixedDayCounter>30/360</FixedDayCounter>
-    <Index>TRY-LIBOR-3M</Index>
-  </Swap>
-
-  <Swap><!-- FIXME -->
-    <Id>TRY-6M-SWAP</Id>
-    <FixedCalendar>TARGET</FixedCalendar>
-    <FixedFrequency>Annual</FixedFrequency>
-    <FixedConvention>MF</FixedConvention>
-    <FixedDayCounter>30/360</FixedDayCounter>
-    <Index>TRY-LIBOR-6M</Index>
-  </Swap>
-
-  <Swap><!-- FIXME -->
     <Id>NZD-6M-SWAP</Id>
     <FixedCalendar>TARGET</FixedCalendar>
     <FixedFrequency>Annual</FixedFrequency>
@@ -590,24 +545,6 @@
     <Index>NZD-BKBM-3M</Index>
   </Swap>
 
-  <Swap><!-- FIXME -->
-    <Id>ZAR-6M-SWAP</Id>
-    <FixedCalendar>TARGET</FixedCalendar>
-    <FixedFrequency>Annual</FixedFrequency>
-    <FixedConvention>MF</FixedConvention>
-    <FixedDayCounter>30/360</FixedDayCounter>
-    <Index>ZAR-JIBAR-6M</Index>
-  </Swap>
-
-  <Swap><!-- FIXME -->
-    <Id>ZAR-3M-SWAP</Id>
-    <FixedCalendar>TARGET</FixedCalendar>
-    <FixedFrequency>Annual</FixedFrequency>
-    <FixedConvention>MF</FixedConvention>
-    <FixedDayCounter>30/360</FixedDayCounter>
-    <Index>ZAR-JIBAR-3M</Index>
-  </Swap>
-  
   <!-- Overnight Index linked Swap Legs -->
 
   <OIS>

@@ -235,9 +235,6 @@
     <ClInclude Include="qle\methods\all.hpp">
       <Filter>methods</Filter>
     </ClInclude>
-    <ClInclude Include="qle\methods\mctraits.hpp">
-      <Filter>methods</Filter>
-    </ClInclude>
     <ClInclude Include="qle\methods\multipathgenerator.hpp">
       <Filter>methods</Filter>
     </ClInclude>
@@ -251,6 +248,9 @@
       <Filter>pricingengines</Filter>
     </ClInclude>
     <ClInclude Include="qle\pricingengines\discountingcurrencyswapengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\discountingswapengine.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
     <ClInclude Include="qle\pricingengines\numericlgmswaptionengine.hpp">
@@ -300,27 +300,6 @@
     </ClInclude>
     <ClInclude Include="qle\pricingengines\discountingswapenginemulticurve.hpp">
       <Filter>pricingengines</Filter>
-    </ClInclude>
-    <ClInclude Include="qle\termstructures\datedstrippedoptionletbase.hpp">
-      <Filter>termstructures</Filter>
-    </ClInclude>
-    <ClInclude Include="qle\termstructures\datedstrippedoptionletadapter.hpp">
-      <Filter>termstructures</Filter>
-    </ClInclude>
-    <ClInclude Include="qle\termstructures\datedstrippedoptionlet.hpp">
-      <Filter>termstructures</Filter>
-    </ClInclude>
-    <ClInclude Include="qle\termstructures\dynamicoptionletvolatilitystructure.hpp">
-      <Filter>termstructures</Filter>
-    </ClInclude>
-    <ClInclude Include="qle\cashflows\floatingratefxlinkednotionalcoupon.hpp">
-      <Filter>cashflows</Filter>
-    </ClInclude>
-    <ClInclude Include="qle\cashflows\fxlinkedcashflow.hpp">
-      <Filter>cashflows</Filter>
-    </ClInclude>
-    <ClInclude Include="qle\indexes\fxindex.hpp">
-      <Filter>indexes</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -488,6 +467,9 @@
     <ClCompile Include="qle\pricingengines\discountingcurrencyswapengine.cpp">
       <Filter>pricingengines</Filter>
     </ClCompile>
+    <ClCompile Include="qle\pricingengines\discountingswapengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
     <ClCompile Include="qle\pricingengines\numericlgmswaptionengine.cpp">
       <Filter>pricingengines</Filter>
     </ClCompile>
@@ -520,21 +502,6 @@
     </ClCompile>
     <ClCompile Include="qle\pricingengines\discountingswapenginemulticurve.cpp">
       <Filter>pricingengines</Filter>
-    </ClCompile>
-    <ClCompile Include="qle\termstructures\datedstrippedoptionletadapter.cpp">
-      <Filter>termstructures</Filter>
-    </ClCompile>
-    <ClCompile Include="qle\termstructures\datedstrippedoptionlet.cpp">
-      <Filter>termstructures</Filter>
-    </ClCompile>
-    <ClCompile Include="qle\termstructures\dynamicoptionletvolatilitystructure.cpp">
-      <Filter>termstructures</Filter>
-    </ClCompile>
-    <ClCompile Include="qle\cashflows\fxlinkedcashflow.cpp">
-      <Filter>cashflows</Filter>
-    </ClCompile>
-    <ClCompile Include="qle\indexes\fxindex.cpp">
-      <Filter>indexes</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

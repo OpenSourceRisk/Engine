@@ -26,11 +26,11 @@
 #ifndef quantext_lgm_model_hpp
 #define quantext_lgm_model_hpp
 
-#include <qle/math/cumulativenormaldistribution.hpp>
 #include <qle/models/irlgm1fparametrization.hpp>
 #include <qle/models/linkablecalibratedmodel.hpp>
 
 #include <ql/math/comparison.hpp>
+#include <ql/math/distributions/normaldistribution.hpp>
 #include <ql/stochasticprocess.hpp>
 
 using namespace QuantLib;
@@ -204,7 +204,7 @@ inline Real LinearGaussMarkovModel::discountBondOption(
                  (parametrization_->H(T) - parametrization_->H(S));
     Real dp = (std::log(pT / (K * pS)) / sigma + 0.5 * sigma);
     Real dm = dp - sigma;
-    QuantExt::CumulativeNormalDistribution N;
+    CumulativeNormalDistribution N;
     return w * (pT * N(w * dp) - pS * K * N(w * dm));
 }
 

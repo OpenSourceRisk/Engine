@@ -44,7 +44,7 @@ namespace QuantExt {
 
 		\ingroup engines
     */
-    class DiscountingSwapEngineMultiCurve : public Swap::engine {
+    class DiscountingSwapEngineMultiCurve : public QuantLib::Swap::engine {
       public:
         DiscountingSwapEngineMultiCurve(
             const Handle<YieldTermStructure>& discountCurve =
