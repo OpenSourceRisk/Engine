@@ -3,7 +3,6 @@
    <Trade id="10_Swap_EUR_USD">
     <TradeType>Swap</TradeType>
     <Envelope>
-      <Type>Swap</Type>
       <CounterParty>CTPY_A</CounterParty>
       <NettingSetId>CTPY_A</NettingSetId>
     </Envelope>
@@ -77,7 +76,6 @@
   <Trade id="10_Swap_EUR_USD_RESET">
     <TradeType>Swap</TradeType>
     <Envelope>
-      <Type>Swap</Type>
       <CounterParty>CTPY_A</CounterParty>
       <NettingSetId>CTPY_A</NettingSetId>
     </Envelope>
