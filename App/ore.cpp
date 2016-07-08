@@ -17,9 +17,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-// disable warning C4503: '__LINE__Var': decorated name length exceeded, name was truncated
-#pragma warning(disable:4503)
-
 #include <iostream>
 
 #include <orea/orea.hpp>
@@ -46,7 +43,8 @@
 #  include <boost/config/auto_link.hpp>
 #  define BOOST_LIB_NAME boost_regex
 #  include <boost/config/auto_link.hpp>
-#  define putenv _putenv
+// disable warning C4503: '__LINE__Var': decorated name length exceeded, name was truncated
+#  pragma warning(disable:4503)
 #endif
 
 using namespace std;
