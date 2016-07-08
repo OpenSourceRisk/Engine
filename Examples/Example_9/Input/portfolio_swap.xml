@@ -3,6 +3,7 @@
    <Trade id="10_Swap_EUR_USD">
     <TradeType>Swap</TradeType>
     <Envelope>
+      <Type>Swap</Type>
       <CounterParty>CTPY_A</CounterParty>
       <NettingSetId>CTPY_A</NettingSetId>
     </Envelope>
@@ -13,6 +14,11 @@
         <Currency>USD</Currency>
         <Notionals>
           <Notional>200000000.000000</Notional>
+          <Exchanges>
+            <NotionalInitialExchange>true</NotionalInitialExchange>
+            <NotionalFinalExchange>true</NotionalFinalExchange>
+            <NotionalAmortizingExchange>true</NotionalAmortizingExchange>
+          </Exchanges>
         </Notionals>
         <DayCounter>A360</DayCounter>
         <PaymentConvention>MF</PaymentConvention>
@@ -45,6 +51,11 @@
         <Currency>EUR</Currency>
         <Notionals>
           <Notional>181535941.0</Notional>
+          <Exchanges>
+            <NotionalInitialExchange>true</NotionalInitialExchange>
+            <NotionalFinalExchange>true</NotionalFinalExchange>
+            <NotionalAmortizingExchange>true</NotionalAmortizingExchange>
+          </Exchanges>
         </Notionals>
         <DayCounter>A360</DayCounter>
         <PaymentConvention>MF</PaymentConvention>
@@ -76,6 +87,7 @@
   <Trade id="10_Swap_EUR_USD_RESET">
     <TradeType>Swap</TradeType>
     <Envelope>
+      <Type>Swap</Type>
       <CounterParty>CTPY_A</CounterParty>
       <NettingSetId>CTPY_A</NettingSetId>
     </Envelope>
@@ -86,6 +98,17 @@
         <Currency>USD</Currency>
         <Notionals>
           <Notional>200000000.000000</Notional>
+          <FXReset>
+            <ForeignCurrency>EUR</ForeignCurrency>
+            <ForeignAmount>0</ForeignAmount>
+            <FXIndex>FX-TAG-USD-EUR</FXIndex>
+            <FixingDays>2</FixingDays>
+          </FXReset>
+          <Exchanges>
+            <NotionalInitialExchange>false</NotionalInitialExchange>
+            <NotionalFinalExchange>false</NotionalFinalExchange>
+            <NotionalAmortizingExchange>false</NotionalAmortizingExchange>
+          </Exchanges>
         </Notionals>
         <DayCounter>A360</DayCounter>
         <PaymentConvention>MF</PaymentConvention>
@@ -96,7 +119,6 @@
           </Spreads>
           <IsInArrears>false</IsInArrears>
           <FixingDays>2</FixingDays>
-          <IsNotResettingXCCY>false</IsNotResettingXCCY>
         </FloatingLegData>
         <ScheduleData>
           <Rules>
@@ -119,6 +141,17 @@
         <Currency>EUR</Currency>
         <Notionals>
           <Notional>0</Notional>
+          <FXReset>
+            <ForeignCurrency>USD</ForeignCurrency>
+            <ForeignAmount>200000000.000000</ForeignAmount>
+            <FXIndex>FX-TAG-EUR-USD</FXIndex>
+            <FixingDays>2</FixingDays>
+          </FXReset>
+          <Exchanges>
+            <NotionalInitialExchange>false</NotionalInitialExchange>
+            <NotionalFinalExchange>false</NotionalFinalExchange>
+            <NotionalAmortizingExchange>false</NotionalAmortizingExchange>
+          </Exchanges>
         </Notionals>
         <DayCounter>A360</DayCounter>
         <PaymentConvention>MF</PaymentConvention>
