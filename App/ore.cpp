@@ -47,13 +47,6 @@
 using namespace std;
 using namespace openriskengine::data;
 using namespace openriskengine::analytics;
-using namespace openriskengine::data;
-using namespace openriskengine::data;
-using namespace openriskengine::data;
-using namespace openriskengine::analytics;
-using namespace openriskengine::analytics;
-using namespace openriskengine::analytics;
-using namespace openriskengine::analytics;
 
 void writeNpv(const Parameters& params,
               boost::shared_ptr<Market> market,
@@ -107,51 +100,11 @@ int main(int argc, char** argv) {
         LOG("ORE starting");
         params.log();
 
-        // Set envoirnment variables from params file for:
-        // - Fixing Model (Simulated or Manual)
-        // - Observation Model (None, unregister, disable)
-        //
-        // This is temporary while in Beta, so we use env variables for now, rather than a proper Setting
-        //
-        // If the env variable is arlready set, we use that, it overrides ore.xml
-        if (getenv("FIXING") == NULL) {
-            if (params.has("setup", "fixingModel")) {
-                string fm = params.get("setup", "fixingModel");
-                boost::algorithm::to_lower(fm);
-                if (fm == "simulated")
-                    putenv((char *)"FIXING=SIM");
-                else if (fm == "manual")
-                    putenv((char *)"FIXING=MAN");
-                else {
-                    QL_FAIL("Invalid setup::fixingModel setting " << fm);
-                }
-            } else {
-                // default to manual (?)
-                putenv((char *)"FIXING=MAN");
-            }
+        if (params.has("setup", "observationModel")) {
+            string om = params.get("setup", "observationModel");
+            ObservationMode::instance().setMode(om);
+            LOG("Observation Mode is " << om);
         }
-        if (getenv("OBS") == NULL) {
-            if (params.has("setup", "observationModel")) {
-                string om = params.get("setup", "observationModel");
-                boost::algorithm::to_lower(om);
-                if (om == "unregister")
-                    putenv((char *)"OBS=UNREG");
-                else if (om == "disable")
-                    putenv((char *)"OBS=DISABLE");
-                else if (om == "none")
-                    putenv((char *)"OBS=NONE");
-                else {
-                    QL_FAIL("Invalid setup::observationModel setting " << om);
-                }
-
-            } else {
-                // default to none
-                putenv((char *)"OBS=NONE");
-            }
-        }
-        LOG("Fixing Model is " << getenv("FIXING"));
-        LOG("Observation Model is " << getenv("OBS"));
-
 
         string asofString = params.get("setup", "asofDate");
         Date asof = parseDate(asofString);
@@ -316,13 +269,10 @@ int main(int argc, char** argv) {
                        "portfolio size mismatch, check simulation market setup");
             cout << "OK" << endl;
 
-            string sportyString = params.get("simulation", "disableEvaluationDateObservation");
-            bool sporty = parseBool(sportyString);
-
             LOG("Build valuation cube engine");
             Size samples = sgd->samples();
             string baseCurrency = params.get("simulation", "baseCurrency");
-            ValuationEngine engine(asof, grid, samples, baseCurrency, simMarket, sporty);
+            ValuationEngine engine(asof, grid, samples, baseCurrency, simMarket);
 
             ostringstream o;
             o << "Additional Scenario Data " << grid->size() << " x " << samples << "... ";
