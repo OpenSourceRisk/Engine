@@ -17,7 +17,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file cumulativenormaldistribution.hpp
     \brief cumulative normal distribution based on std::erf (since C++11),
     \ingroup math
@@ -29,8 +28,7 @@
 #include <ql/mathconstants.hpp>
 #include <ql/types.hpp>
 
-#if !(defined(__GXX_EXPERIMENTAL_CXX0X__) || (__cplusplus >= 201103L) ||       \
-      (_MSC_VER >= 1600))
+#if !(defined(__GXX_EXPERIMENTAL_CXX0X__) || (__cplusplus >= 201103L) || (_MSC_VER >= 1600))
 #include <boost/math/special_functions/erf.hpp>
 #endif
 
@@ -42,19 +40,18 @@ namespace QuantExt {
     This implementation relies on std::erf if c++11 is supported,
     otherwise falls back on boost::math::erf. */
 class CumulativeNormalDistribution {
-  public:
+public:
     CumulativeNormalDistribution(Real average = 0.0, Real sigma = 1.0);
     Real operator()(Real x) const;
 
-  private:
+private:
     Real average_, sigma_;
 };
 
 // inline
 
 inline Real CumulativeNormalDistribution::operator()(Real z) const {
-#if !(defined(__GXX_EXPERIMENTAL_CXX0X__) || (__cplusplus >= 201103L) ||       \
-      (_MSC_VER >= 1600))
+#if !(defined(__GXX_EXPERIMENTAL_CXX0X__) || (__cplusplus >= 201103L) || (_MSC_VER >= 1600))
     // in case C++11 is not supported we fall back on boost::math::erf
     return 0.5 * (1.0 + boost::math::erf((z - average_) / sigma_ * M_SQRT1_2));
 #else

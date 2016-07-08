@@ -17,7 +17,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 #include <qle/pricingengines/analyticlgmswaptionengine.hpp>
 #include <ql/indexes/iborindex.hpp>
 #include <ql/math/solvers1d/brent.hpp>
@@ -26,44 +25,35 @@
 
 namespace QuantExt {
 
-AnalyticLgmSwaptionEngine::AnalyticLgmSwaptionEngine(
-    const boost::shared_ptr<LinearGaussMarkovModel> &model,
-    const Handle<YieldTermStructure> &discountCurve,
-    const FloatSpreadMapping floatSpreadMapping)
-    : GenericEngine<Swaption::arguments, Swaption::results>(),
-      p_(model->parametrization()),
-      c_(discountCurve.empty() ? p_->termStructure() : discountCurve),
-      floatSpreadMapping_(floatSpreadMapping) {
+AnalyticLgmSwaptionEngine::AnalyticLgmSwaptionEngine(const boost::shared_ptr<LinearGaussMarkovModel>& model,
+                                                     const Handle<YieldTermStructure>& discountCurve,
+                                                     const FloatSpreadMapping floatSpreadMapping)
+    : GenericEngine<Swaption::arguments, Swaption::results>(), p_(model->parametrization()),
+      c_(discountCurve.empty() ? p_->termStructure() : discountCurve), floatSpreadMapping_(floatSpreadMapping) {
     registerWith(model);
     registerWith(c_);
 }
 
-AnalyticLgmSwaptionEngine::AnalyticLgmSwaptionEngine(
-    const boost::shared_ptr<CrossAssetModel> &model, const Size ccy,
-    const Handle<YieldTermStructure> &discountCurve,
-    const FloatSpreadMapping floatSpreadMapping)
-    : GenericEngine<Swaption::arguments, Swaption::results>(),
-      p_(model->irlgm1f(ccy)),
-      c_(discountCurve.empty() ? p_->termStructure() : discountCurve),
-      floatSpreadMapping_(floatSpreadMapping) {
+AnalyticLgmSwaptionEngine::AnalyticLgmSwaptionEngine(const boost::shared_ptr<CrossAssetModel>& model, const Size ccy,
+                                                     const Handle<YieldTermStructure>& discountCurve,
+                                                     const FloatSpreadMapping floatSpreadMapping)
+    : GenericEngine<Swaption::arguments, Swaption::results>(), p_(model->irlgm1f(ccy)),
+      c_(discountCurve.empty() ? p_->termStructure() : discountCurve), floatSpreadMapping_(floatSpreadMapping) {
     registerWith(model);
     registerWith(c_);
 }
 
-AnalyticLgmSwaptionEngine::AnalyticLgmSwaptionEngine(
-    const boost::shared_ptr<IrLgm1fParametrization> irlgm1f,
-    const Handle<YieldTermStructure> &discountCurve,
-    const FloatSpreadMapping floatSpreadMapping)
+AnalyticLgmSwaptionEngine::AnalyticLgmSwaptionEngine(const boost::shared_ptr<IrLgm1fParametrization> irlgm1f,
+                                                     const Handle<YieldTermStructure>& discountCurve,
+                                                     const FloatSpreadMapping floatSpreadMapping)
     : GenericEngine<Swaption::arguments, Swaption::results>(), p_(irlgm1f),
-      c_(discountCurve.empty() ? p_->termStructure() : discountCurve),
-      floatSpreadMapping_(floatSpreadMapping) {
+      c_(discountCurve.empty() ? p_->termStructure() : discountCurve), floatSpreadMapping_(floatSpreadMapping) {
     registerWith(c_);
 }
 
 void AnalyticLgmSwaptionEngine::calculate() const {
 
-    QL_REQUIRE(arguments_.settlementType == Settlement::Physical,
-               "cash-settled swaptions are not supported ...");
+    QL_REQUIRE(arguments_.settlementType == Settlement::Physical, "cash-settled swaptions are not supported ...");
 
     Date reference = p_->termStructure()->referenceDate();
 
@@ -77,16 +67,13 @@ void AnalyticLgmSwaptionEngine::calculate() const {
     }
 
     VanillaSwap swap = *arguments_.swap;
-    Option::Type type =
-        arguments_.type == VanillaSwap::Payer ? Option::Call : Option::Put;
+    Option::Type type = arguments_.type == VanillaSwap::Payer ? Option::Call : Option::Put;
     Schedule fixedSchedule = swap.fixedSchedule();
     Schedule floatSchedule = swap.floatingSchedule();
 
-    j1_ = std::lower_bound(fixedSchedule.dates().begin(),
-                           fixedSchedule.dates().end(), expiry) -
+    j1_ = std::lower_bound(fixedSchedule.dates().begin(), fixedSchedule.dates().end(), expiry) -
           fixedSchedule.dates().begin();
-    k1_ = std::lower_bound(floatSchedule.dates().begin(),
-                           floatSchedule.dates().end(), expiry) -
+    k1_ = std::lower_bound(floatSchedule.dates().begin(), floatSchedule.dates().end(), expiry) -
           floatSchedule.dates().begin();
 
     // compute S_i, i.e. equivalent fixed rate spreads compensating for
@@ -103,9 +90,7 @@ void AnalyticLgmSwaptionEngine::calculate() const {
     }
     S_m1 = 0.0;
     Size ratio = static_cast<Size>(
-        static_cast<Real>(arguments_.floatingCoupons.size()) /
-            static_cast<Real>(arguments_.fixedCoupons.size()) +
-        0.5);
+        static_cast<Real>(arguments_.floatingCoupons.size()) / static_cast<Real>(arguments_.fixedCoupons.size()) + 0.5);
     QL_REQUIRE(ratio >= 1, "floating leg's payment frequency must be equal or "
                            "higher than fixed leg's payment frequency in "
                            "analytic lgm swaption engine");
@@ -114,8 +99,7 @@ void AnalyticLgmSwaptionEngine::calculate() const {
     boost::shared_ptr<IborIndex> flatIbor = swap.iborIndex()->clone(c_);
     for (Size j = j1_; j < arguments_.fixedCoupons.size(); ++j) {
         Real sum1 = 0.0, sum2 = 0.0;
-        for (Size rr = 0; rr < ratio && k < arguments_.floatingCoupons.size();
-             ++rr, ++k) {
+        for (Size rr = 0; rr < ratio && k < arguments_.floatingCoupons.size(); ++rr, ++k) {
             Real amount = arguments_.floatingCoupons[k];
             Real lambda1 = 0.0, lambda2 = 1.0;
             if (floatSpreadMapping_ == proRata) {
@@ -126,10 +110,8 @@ void AnalyticLgmSwaptionEngine::calculate() const {
             }
             if (amount != Null<Real>()) {
                 Real flatAmount =
-                    flatIbor->fixing(arguments_.floatingFixingDates[k]) *
-                    arguments_.floatingAccrualTimes[k];
-                Real correction = (amount - flatAmount) *
-                                  c_->discount(arguments_.floatingPayDates[k]);
+                    flatIbor->fixing(arguments_.floatingFixingDates[k]) * arguments_.floatingAccrualTimes[k];
+                Real correction = (amount - flatAmount) * c_->discount(arguments_.floatingPayDates[k]);
                 sum1 += lambda1 * correction;
                 sum2 += lambda2 * correction;
             } else {
@@ -139,17 +121,14 @@ void AnalyticLgmSwaptionEngine::calculate() const {
                 // assume a one curve setup;
                 // but we can still have a float spread that has to be converted
                 // into a fixed leg's payment
-                Real correction = arguments_.nominal *
-                                  arguments_.floatingSpreads[k] *
-                                  arguments_.floatingAccrualTimes[k] *
-                                  c_->discount(arguments_.floatingPayDates[k]);
+                Real correction = arguments_.nominal * arguments_.floatingSpreads[k] *
+                                  arguments_.floatingAccrualTimes[k] * c_->discount(arguments_.floatingPayDates[k]);
                 sum1 += lambda1 * correction;
                 sum2 += lambda2 * correction;
             }
         }
         if (j > j1_) {
-            S_[j - j1_ - 1] +=
-                sum1 / c_->discount(arguments_.fixedPayDates[j - 1]);
+            S_[j - j1_ - 1] += sum1 / c_->discount(arguments_.fixedPayDates[j - 1]);
         } else {
             S_m1 += sum1 / c_->discount(arguments_.floatingResetDates[k1_]);
         }
@@ -161,8 +140,7 @@ void AnalyticLgmSwaptionEngine::calculate() const {
         QL_REQUIRE(arguments_.fixedCoupons[j] - S_[j - j1_] >= 0.0,
                    "the (corrected) fixed leg flows must all be non negative, "
                    "but the flow on "
-                       << arguments_.fixedPayDates[j] << " is "
-                       << arguments_.fixedCoupons[j] << " - " << S_[j - j1_]
+                       << arguments_.fixedPayDates[j] << " is " << arguments_.fixedCoupons[j] << " - " << S_[j - j1_]
                        << " = " << (arguments_.fixedCoupons[j] - S_[j - j1_]));
     }
 
@@ -175,33 +153,27 @@ void AnalyticLgmSwaptionEngine::calculate() const {
     // do the actual pricing
 
     zetaex_ = p_->zeta(p_->termStructure()->timeFromReference(expiry));
-    H0_ = p_->H(p_->termStructure()->timeFromReference(
-        arguments_.floatingResetDates[k1_]));
+    H0_ = p_->H(p_->termStructure()->timeFromReference(arguments_.floatingResetDates[k1_]));
     D0_ = c_->discount(arguments_.floatingResetDates[k1_]);
     Hj_.resize(arguments_.fixedCoupons.size() - j1_);
     Dj_.resize(arguments_.fixedCoupons.size() - j1_);
     for (Size j = j1_; j < arguments_.fixedCoupons.size(); ++j) {
-        Hj_[j - j1_] = p_->H(p_->termStructure()->timeFromReference(
-            arguments_.fixedPayDates[j]));
+        Hj_[j - j1_] = p_->H(p_->termStructure()->timeFromReference(arguments_.fixedPayDates[j]));
         Dj_[j - j1_] = c_->discount(arguments_.fixedPayDates[j - j1_]);
     }
 
     Brent b;
-    Real yStar =
-        b.solve(boost::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, _1),
-                1.0E-6, 0.0, 0.01);
+    Real yStar = b.solve(boost::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, _1), 1.0E-6, 0.0, 0.01);
 
     CumulativeNormalDistribution N;
     Real sqrt_zetaex = std::sqrt(zetaex_);
     Real sum = 0.0;
     for (Size j = j1_; j < arguments_.fixedCoupons.size(); ++j) {
-        sum +=
-            w * (arguments_.fixedCoupons[j] - S_[j - j1_]) * Dj_[j - j1_] *
-            N(u * w * (yStar + (Hj_[j - j1_] - H0_) * zetaex_) / sqrt_zetaex);
+        sum += w * (arguments_.fixedCoupons[j] - S_[j - j1_]) * Dj_[j - j1_] *
+               N(u * w * (yStar + (Hj_[j - j1_] - H0_) * zetaex_) / sqrt_zetaex);
     }
     sum += -w * S_m1 * D0_ * N(u * w * yStar / sqrt_zetaex);
-    sum += w * (Dj_.back() * N(u * w * (yStar + (Hj_.back() - H0_) * zetaex_) /
-                               sqrt_zetaex) -
+    sum += w * (Dj_.back() * N(u * w * (yStar + (Hj_.back() - H0_) * zetaex_) / sqrt_zetaex) -
                 D0_ * N(u * w * yStar / sqrt_zetaex));
     results_.value = sum;
 
@@ -214,14 +186,10 @@ Real AnalyticLgmSwaptionEngine::yStarHelper(const Real y) const {
     Real sum = 0.0;
     for (Size j = j1_; j < arguments_.fixedCoupons.size(); ++j) {
         sum += (arguments_.fixedCoupons[j] - S_[j - j1_]) * Dj_[j - j1_] *
-               std::exp(-(Hj_[j - j1_] - H0_) * y -
-                        0.5 * (Hj_[j - j1_] - H0_) * (Hj_[j - j1_] - H0_) *
-                            zetaex_);
+               std::exp(-(Hj_[j - j1_] - H0_) * y - 0.5 * (Hj_[j - j1_] - H0_) * (Hj_[j - j1_] - H0_) * zetaex_);
     }
     sum += -S_m1 * D0_;
-    sum += Dj_.back() *
-           std::exp(-(Hj_.back() - H0_) * y -
-                    0.5 * (Hj_.back() - H0_) * (Hj_.back() - H0_) * zetaex_);
+    sum += Dj_.back() * std::exp(-(Hj_.back() - H0_) * y - 0.5 * (Hj_.back() - H0_) * (Hj_.back() - H0_) * zetaex_);
     sum -= D0_;
     return sum;
 }

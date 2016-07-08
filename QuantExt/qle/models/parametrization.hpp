@@ -17,7 +17,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file parametrization.hpp
     \brief base class for model parametrizations
     \ingroup models
@@ -38,12 +37,12 @@ namespace QuantExt {
 /*! \ingroup models
 */
 class Parametrization {
-  public:
-    Parametrization(const Currency &currency);
+public:
+    Parametrization(const Currency& currency);
 
     virtual const Currency currency() const;
 
-    virtual const Array &parameterTimes(const Size) const;
+    virtual const Array& parameterTimes(const Size) const;
 
     /*! these are the actual (real) parameter values in contrast
         to the raw values which are stored in Parameter::params_
@@ -61,7 +60,7 @@ class Parametrization {
         to ensure consistent results */
     virtual void update() const;
 
-  protected:
+protected:
     /*! step size for numerical differentiation */
     const Real h_, h2_;
     /*! adjusted central difference scheme */
@@ -74,7 +73,7 @@ class Parametrization {
     virtual Real direct(const Size, const Real x) const;
     virtual Real inverse(const Size, const Real y) const;
 
-  private:
+private:
     Currency currency_;
     const Array emptyTimes_;
     const boost::shared_ptr<Parameter> emptyParameter_;
@@ -84,47 +83,28 @@ class Parametrization {
 
 inline void Parametrization::update() const {}
 
-inline Time Parametrization::tr(const Time t) const {
-    return t > 0.5 * h_ ? t + 0.5 * h_ : h_;
-}
+inline Time Parametrization::tr(const Time t) const { return t > 0.5 * h_ ? t + 0.5 * h_ : h_; }
 
-inline Time Parametrization::tl(const Time t) const {
-    return std::max(t - 0.5 * h_, 0.0);
-}
+inline Time Parametrization::tl(const Time t) const { return std::max(t - 0.5 * h_, 0.0); }
 
-inline Time Parametrization::tr2(const Time t) const {
-    return t > h2_ ? t + h2_ : 2.0 * h2_;
-}
+inline Time Parametrization::tr2(const Time t) const { return t > h2_ ? t + h2_ : 2.0 * h2_; }
 
-inline Time Parametrization::tm2(const Time t) const {
-    return t > h2_ ? t : h2_;
-}
+inline Time Parametrization::tm2(const Time t) const { return t > h2_ ? t : h2_; }
 
-inline Time Parametrization::tl2(const Time t) const {
-    return std::max(t - h2_, 0.0);
-}
+inline Time Parametrization::tl2(const Time t) const { return std::max(t - h2_, 0.0); }
 
-inline Real Parametrization::direct(const Size, const Real x) const {
-    return x;
-}
+inline Real Parametrization::direct(const Size, const Real x) const { return x; }
 
-inline Real Parametrization::inverse(const Size, const Real y) const {
-    return y;
-}
+inline Real Parametrization::inverse(const Size, const Real y) const { return y; }
 
 inline const Currency Parametrization::currency() const { return currency_; }
 
-inline const Array &Parametrization::parameterTimes(const Size) const {
-    return emptyTimes_;
-}
+inline const Array& Parametrization::parameterTimes(const Size) const { return emptyTimes_; }
 
-inline const boost::shared_ptr<Parameter>
-Parametrization::parameter(const Size) const {
-    return emptyParameter_;
-}
+inline const boost::shared_ptr<Parameter> Parametrization::parameter(const Size) const { return emptyParameter_; }
 
 inline Disposable<Array> Parametrization::parameterValues(const Size i) const {
-    const Array &tmp = parameter(i)->params();
+    const Array& tmp = parameter(i)->params();
     Array res(tmp.size());
     for (Size ii = 0; ii < res.size(); ++ii) {
         res[ii] = direct(i, tmp[ii]);

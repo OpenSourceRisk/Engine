@@ -17,10 +17,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file mxntiie.hpp
     \brief MXN-TIIE index
-    \ingroup indexes 
+    \ingroup indexes
 */
 
 #ifndef quantext_mxntiie_hpp
@@ -35,25 +34,22 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-    //! MXN-TIIE index
-    /*! MXN-TIIE rate published by Banco de Mexico.
+//! MXN-TIIE index
+/*! MXN-TIIE rate published by Banco de Mexico.
 
-        See <http://www.banxico.org.mx/indexEn.html>.
+    See <http://www.banxico.org.mx/indexEn.html>.
 
-        \remark Using Mexico calendar, should be Meixco City.
+    \remark Using Mexico calendar, should be Meixco City.
 
-        \warning Check roll convention and EOM.
+    \warning Check roll convention and EOM.
 
-		\ingroup indexes
-    */
-    class MXNTiie : public IborIndex {
-      public:
-        MXNTiie(const Period& tenor, const Handle<YieldTermStructure>& h =
-            Handle<YieldTermStructure>())
-            : IborIndex("MXN-TIIE", tenor, 1, MXNCurrency(), Mexico(),
-                  Following, false, Actual360(), h) {}
-    };
-
+            \ingroup indexes
+*/
+class MXNTiie : public IborIndex {
+public:
+    MXNTiie(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
+        : IborIndex("MXN-TIIE", tenor, 1, MXNCurrency(), Mexico(), Following, false, Actual360(), h) {}
+};
 }
 
 #endif

@@ -34,7 +34,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 #include <qle/models/fxoptionhelper.hpp>
 #include <ql/exercise.hpp>
 #include <ql/pricingengines/blackformula.hpp>
@@ -44,49 +43,39 @@
 
 namespace QuantExt {
 
-FxOptionHelper::FxOptionHelper(
-    const Period &maturity, const Calendar &calendar, const Real strike,
-    const Handle<Quote> fxSpot, const Handle<Quote> volatility,
-    const Handle<YieldTermStructure> &domesticYield,
-    const Handle<YieldTermStructure> &foreignYield,
-    CalibrationHelper::CalibrationErrorType errorType)
-    : CalibrationHelper(volatility, domesticYield, errorType),
-      hasMaturity_(true), maturity_(maturity), calendar_(calendar),
-      strike_(strike), fxSpot_(fxSpot), foreignYield_(foreignYield) {
+FxOptionHelper::FxOptionHelper(const Period& maturity, const Calendar& calendar, const Real strike,
+                               const Handle<Quote> fxSpot, const Handle<Quote> volatility,
+                               const Handle<YieldTermStructure>& domesticYield,
+                               const Handle<YieldTermStructure>& foreignYield,
+                               CalibrationHelper::CalibrationErrorType errorType)
+    : CalibrationHelper(volatility, domesticYield, errorType), hasMaturity_(true), maturity_(maturity),
+      calendar_(calendar), strike_(strike), fxSpot_(fxSpot), foreignYield_(foreignYield) {
     registerWith(fxSpot_);
     registerWith(foreignYield_);
 }
 
-FxOptionHelper::FxOptionHelper(
-    const Date &exerciseDate, const Real strike, const Handle<Quote> fxSpot,
-    const Handle<Quote> volatility,
-    const Handle<YieldTermStructure> &domesticYield,
-    const Handle<YieldTermStructure> &foreignYield,
-    CalibrationHelper::CalibrationErrorType errorType)
-    : CalibrationHelper(volatility, domesticYield, errorType),
-      hasMaturity_(false), exerciseDate_(exerciseDate), strike_(strike),
-      fxSpot_(fxSpot), foreignYield_(foreignYield) {
+FxOptionHelper::FxOptionHelper(const Date& exerciseDate, const Real strike, const Handle<Quote> fxSpot,
+                               const Handle<Quote> volatility, const Handle<YieldTermStructure>& domesticYield,
+                               const Handle<YieldTermStructure>& foreignYield,
+                               CalibrationHelper::CalibrationErrorType errorType)
+    : CalibrationHelper(volatility, domesticYield, errorType), hasMaturity_(false), exerciseDate_(exerciseDate),
+      strike_(strike), fxSpot_(fxSpot), foreignYield_(foreignYield) {
     registerWith(fxSpot_);
     registerWith(foreignYield_);
 }
 
 void FxOptionHelper::performCalculations() const {
     if (hasMaturity_)
-        exerciseDate_ =
-            calendar_.advance(termStructure_->referenceDate(), maturity_);
+        exerciseDate_ = calendar_.advance(termStructure_->referenceDate(), maturity_);
     tau_ = termStructure_->timeFromReference(exerciseDate_);
-    atm_ = fxSpot_->value() * foreignYield_->discount(tau_) /
-           termStructure_->discount(tau_);
+    atm_ = fxSpot_->value() * foreignYield_->discount(tau_) / termStructure_->discount(tau_);
     effStrike_ = strike_;
-    if(effStrike_ == Null<Real>())
+    if (effStrike_ == Null<Real>())
         effStrike_ = atm_;
     type_ = effStrike_ >= atm_ ? Option::Call : Option::Put;
-    boost::shared_ptr<StrikedTypePayoff> payoff(
-        new PlainVanillaPayoff(type_, effStrike_));
-    boost::shared_ptr<Exercise> exercise =
-        boost::make_shared<EuropeanExercise>(exerciseDate_);
-    option_ =
-        boost::shared_ptr<VanillaOption>(new VanillaOption(payoff, exercise));
+    boost::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(type_, effStrike_));
+    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(exerciseDate_);
+    option_ = boost::shared_ptr<VanillaOption>(new VanillaOption(payoff, exercise));
     CalibrationHelper::performCalculations();
 }
 

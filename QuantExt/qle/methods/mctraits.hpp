@@ -35,7 +35,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file mctraits.hpp
     \brief Monte Carlo policies
     \ingroup methods
@@ -54,35 +53,31 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-    // path generation and pricing traits
+// path generation and pricing traits
 
-    //! default Monte Carlo traits for single-variate models
-	/*! \ingroup methods
-	*/
-    template <class RNG = PseudoRandom>
-    struct SingleVariate {
-        typedef RNG rng_traits;
-        typedef Path path_type;
-        typedef PathPricer<path_type> path_pricer_type;
-        typedef typename RNG::rsg_type rsg_type;
-        typedef PathGenerator<rsg_type> path_generator_type;
-        enum { allowsErrorEstimate = RNG::allowsErrorEstimate };
-    };
+//! default Monte Carlo traits for single-variate models
+/*! \ingroup methods
+*/
+template <class RNG = PseudoRandom> struct SingleVariate {
+    typedef RNG rng_traits;
+    typedef Path path_type;
+    typedef PathPricer<path_type> path_pricer_type;
+    typedef typename RNG::rsg_type rsg_type;
+    typedef PathGenerator<rsg_type> path_generator_type;
+    enum { allowsErrorEstimate = RNG::allowsErrorEstimate };
+};
 
-    //! default Monte Carlo traits for multi-variate models
-	/*! \ingroup methods
-	*/
-    template <class RNG = PseudoRandom>
-    struct MultiVariate {
-        typedef RNG rng_traits;
-        typedef MultiPath path_type;
-        typedef PathPricer<path_type> path_pricer_type;
-        typedef typename RNG::rsg_type rsg_type;
-        typedef QuantExt::MultiPathGenerator<rsg_type> path_generator_type;
-        enum { allowsErrorEstimate = RNG::allowsErrorEstimate };
-    };
-
+//! default Monte Carlo traits for multi-variate models
+/*! \ingroup methods
+*/
+template <class RNG = PseudoRandom> struct MultiVariate {
+    typedef RNG rng_traits;
+    typedef MultiPath path_type;
+    typedef PathPricer<path_type> path_pricer_type;
+    typedef typename RNG::rsg_type rsg_type;
+    typedef QuantExt::MultiPathGenerator<rsg_type> path_generator_type;
+    enum { allowsErrorEstimate = RNG::allowsErrorEstimate };
+};
 }
-
 
 #endif

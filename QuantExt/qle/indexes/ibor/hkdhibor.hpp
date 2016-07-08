@@ -17,10 +17,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file hkdhibor.hpp
     \brief HKD-HIBOR index
-    \ingroup indexes 
+    \ingroup indexes
 */
 
 #ifndef quantext_hkd_hibor_hpp
@@ -35,24 +34,20 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-    //! HKD-HIBOR index
-    /*! HKD-HIBOR rate overseen by The Hong Kong Association of Banks.
+//! HKD-HIBOR index
+/*! HKD-HIBOR rate overseen by The Hong Kong Association of Banks.
 
-        See <http://www.hkab.org.hk>.
+    See <http://www.hkab.org.hk>.
 
-        \warning Check roll convention and EOM.
+    \warning Check roll convention and EOM.
 
-		\ingroup indexes
-    */
-    class HKDHibor : public IborIndex {
-      public:
-        HKDHibor(const Period& tenor, const Handle<YieldTermStructure>& h =
-            Handle<YieldTermStructure>())
-        : IborIndex("HKD-HIBOR", tenor, 0, HKDCurrency(), HongKong(),
-              ModifiedFollowing, false, Actual365Fixed(), h) {}
-    };
-
+            \ingroup indexes
+*/
+class HKDHibor : public IborIndex {
+public:
+    HKDHibor(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
+        : IborIndex("HKD-HIBOR", tenor, 0, HKDCurrency(), HongKong(), ModifiedFollowing, false, Actual365Fixed(), h) {}
+};
 }
 
 #endif
-

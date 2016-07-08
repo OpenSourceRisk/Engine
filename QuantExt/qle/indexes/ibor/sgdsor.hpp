@@ -17,10 +17,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file sgdsor.hpp
     \brief SGD-SOR index
-    \ingroup indexes 
+    \ingroup indexes
 */
 
 #ifndef quantext_sgdsor_hpp
@@ -35,23 +34,20 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-    //! SGD-SOR index
-    /*! SGD-SOR rate published by ABS.
+//! SGD-SOR index
+/*! SGD-SOR rate published by ABS.
 
-        See <http://www.abs.org.sg/index.php>.
+    See <http://www.abs.org.sg/index.php>.
 
-        \warning Check roll convention and EOM.
+    \warning Check roll convention and EOM.
 
-		\ingroup indexes
-    */
-    class SGDSor : public IborIndex {
-      public:
-        SGDSor(const Period& tenor, const Handle<YieldTermStructure>& h =
-            Handle<YieldTermStructure>())
-            : IborIndex("SGD-SOR", tenor, 2, SGDCurrency(), Singapore(),
-                  ModifiedFollowing, false, Actual365Fixed(), h) {}
-    };
-
+            \ingroup indexes
+*/
+class SGDSor : public IborIndex {
+public:
+    SGDSor(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
+        : IborIndex("SGD-SOR", tenor, 2, SGDCurrency(), Singapore(), ModifiedFollowing, false, Actual365Fixed(), h) {}
+};
 }
 
 #endif

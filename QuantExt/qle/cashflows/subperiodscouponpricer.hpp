@@ -17,11 +17,10 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file subperiodscouponpricer.hpp
     \brief Pricer for sub-period coupons
 
-	\ingroup cashflows
+        \ingroup cashflows
 */
 
 #ifndef quantext_sub_periods_coupon_pricer_hpp
@@ -34,38 +33,32 @@
 using namespace QuantLib;
 
 namespace QuantExt {
-    //! Pricer for sub-period coupons
-	/*! \ingroup cashflows
-	*/
-    class SubPeriodsCouponPricer : public FloatingRateCouponPricer {
-      public:
-        SubPeriodsCouponPricer() {}
+//! Pricer for sub-period coupons
+/*! \ingroup cashflows
+*/
+class SubPeriodsCouponPricer : public FloatingRateCouponPricer {
+public:
+    SubPeriodsCouponPricer() {}
 
-        void initialize(const FloatingRateCoupon& coupon);
-        Rate swapletRate() const;
+    void initialize(const FloatingRateCoupon& coupon);
+    Rate swapletRate() const;
 
-        Real swapletPrice() const {
-            QL_FAIL("swapletPrice not available"); }
-        Real capletPrice(Rate) const {
-            QL_FAIL("capletPrice not available"); }
-        Rate capletRate(Rate) const {
-            QL_FAIL("capletRate not available"); }
-        Real floorletPrice(Rate) const {
-            QL_FAIL("floorletPrice not available"); }
-        Rate floorletRate(Rate) const {
-            QL_FAIL("floorletRate not available"); }
+    Real swapletPrice() const { QL_FAIL("swapletPrice not available"); }
+    Real capletPrice(Rate) const { QL_FAIL("capletPrice not available"); }
+    Rate capletRate(Rate) const { QL_FAIL("capletRate not available"); }
+    Real floorletPrice(Rate) const { QL_FAIL("floorletPrice not available"); }
+    Rate floorletRate(Rate) const { QL_FAIL("floorletRate not available"); }
 
-      protected:
-        Real gearing_;
-        Spread spread_;
-        Time accrualPeriod_;
-        boost::shared_ptr<InterestRateIndex> index_;
-        SubPeriodsCoupon::Type type_;
-        bool includeSpread_;
+protected:
+    Real gearing_;
+    Spread spread_;
+    Time accrualPeriod_;
+    boost::shared_ptr<InterestRateIndex> index_;
+    SubPeriodsCoupon::Type type_;
+    bool includeSpread_;
 
-        const SubPeriodsCoupon* coupon_;
-    };
-
+    const SubPeriodsCoupon* coupon_;
+};
 }
 
 #endif

@@ -17,7 +17,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file qle/termstructures/datedstrippedoptionletbase.hpp
     \brief abstract class for optionlet surface with fixed reference date
     \ingroup termstructures
@@ -39,29 +38,28 @@ using namespace QuantLib;
 using std::vector;
 
 namespace QuantExt {
-	//! Stripped Optionlet base class interface
-    /*! Abstract base class interface for a (time indexed) vector of (strike indexed) optionlet 
-        (i.e. caplet/floorlet) volatilities with a fixed reference date.
+//! Stripped Optionlet base class interface
+/*! Abstract base class interface for a (time indexed) vector of (strike indexed) optionlet
+    (i.e. caplet/floorlet) volatilities with a fixed reference date.
 
-		\ingroup termstructues
-    */
-    class DatedStrippedOptionletBase : public LazyObject {
-      public:
-        virtual const vector<Rate>& optionletStrikes(Size i) const = 0;
-        virtual const vector<Volatility>& optionletVolatilities(Size i) const = 0;
+            \ingroup termstructues
+*/
+class DatedStrippedOptionletBase : public LazyObject {
+public:
+    virtual const vector<Rate>& optionletStrikes(Size i) const = 0;
+    virtual const vector<Volatility>& optionletVolatilities(Size i) const = 0;
 
-        virtual const vector<Date>& optionletFixingDates() const = 0;
-        virtual const vector<Time>& optionletFixingTimes() const = 0;
-        virtual Size optionletMaturities() const = 0;
+    virtual const vector<Date>& optionletFixingDates() const = 0;
+    virtual const vector<Time>& optionletFixingTimes() const = 0;
+    virtual Size optionletMaturities() const = 0;
 
-        virtual const vector<Rate>& atmOptionletRates() const = 0;
+    virtual const vector<Rate>& atmOptionletRates() const = 0;
 
-        virtual const Date& referenceDate() const = 0;
-        virtual const DayCounter& dayCounter() const = 0;
-        virtual const Calendar& calendar() const = 0;
-        virtual BusinessDayConvention businessDayConvention() const = 0;
-        virtual VolatilityType volatilityType() const = 0;
-        virtual Real displacement() const = 0;
-    };
-
+    virtual const Date& referenceDate() const = 0;
+    virtual const DayCounter& dayCounter() const = 0;
+    virtual const Calendar& calendar() const = 0;
+    virtual BusinessDayConvention businessDayConvention() const = 0;
+    virtual VolatilityType volatilityType() const = 0;
+    virtual Real displacement() const = 0;
+};
 }

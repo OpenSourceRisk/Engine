@@ -17,7 +17,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 #include "crossassetmodel.hpp"
 
 #include <qle/methods/multipathgeneratorbase.hpp>
@@ -65,37 +64,28 @@ namespace {
 
 struct BermudanTestData {
     BermudanTestData()
-        : evalDate(12, January, 2015), yts(boost::make_shared<FlatForward>(
-                                           evalDate, 0.02, Actual365Fixed())),
-          euribor6m(boost::make_shared<Euribor>(6 * Months, yts)),
-          effectiveDate(TARGET().advance(evalDate, 2 * Days)),
-          startDate(TARGET().advance(effectiveDate, 1 * Years)),
-          maturityDate(TARGET().advance(startDate, 9 * Years)),
-          fixedSchedule(startDate, maturityDate, 1 * Years, TARGET(),
-                        ModifiedFollowing, ModifiedFollowing,
+        : evalDate(12, January, 2015), yts(boost::make_shared<FlatForward>(evalDate, 0.02, Actual365Fixed())),
+          euribor6m(boost::make_shared<Euribor>(6 * Months, yts)), effectiveDate(TARGET().advance(evalDate, 2 * Days)),
+          startDate(TARGET().advance(effectiveDate, 1 * Years)), maturityDate(TARGET().advance(startDate, 9 * Years)),
+          fixedSchedule(startDate, maturityDate, 1 * Years, TARGET(), ModifiedFollowing, ModifiedFollowing,
                         DateGeneration::Forward, false),
-          floatingSchedule(startDate, maturityDate, 6 * Months, TARGET(),
-                           ModifiedFollowing, ModifiedFollowing,
+          floatingSchedule(startDate, maturityDate, 6 * Months, TARGET(), ModifiedFollowing, ModifiedFollowing,
                            DateGeneration::Forward, false),
-          underlying(boost::make_shared<VanillaSwap>(VanillaSwap(
-              VanillaSwap::Payer, 1.0, fixedSchedule, 0.02, Thirty360(),
-              floatingSchedule, euribor6m, 0.0, Actual360()))),
+          underlying(
+              boost::make_shared<VanillaSwap>(VanillaSwap(VanillaSwap::Payer, 1.0, fixedSchedule, 0.02, Thirty360(),
+                                                          floatingSchedule, euribor6m, 0.0, Actual360()))),
           reversion(0.03) {
         Settings::instance().evaluationDate() = evalDate;
         for (Size i = 0; i < 9; ++i) {
-            exerciseDates.push_back(
-                TARGET().advance(fixedSchedule[i], -2 * Days));
+            exerciseDates.push_back(TARGET().advance(fixedSchedule[i], -2 * Days));
         }
         exercise = boost::make_shared<BermudanExercise>(exerciseDates, false);
 
         swaption = boost::make_shared<Swaption>(underlying, exercise);
-        stepDates =
-            std::vector<Date>(exerciseDates.begin(), exerciseDates.end() - 1);
+        stepDates = std::vector<Date>(exerciseDates.begin(), exerciseDates.end() - 1);
         sigmas = std::vector<Real>(stepDates.size() + 1);
         for (Size i = 0; i < sigmas.size(); ++i) {
-            sigmas[i] =
-                0.0050 +
-                (0.0080 - 0.0050) * std::exp(-0.2 * static_cast<double>(i));
+            sigmas[i] = 0.0050 + (0.0080 - 0.0050) * std::exp(-0.2 * static_cast<double>(i));
         }
         stepTimes_a = Array(stepDates.size());
         for (Size i = 0; i < stepDates.size(); ++i) {
@@ -121,9 +111,8 @@ struct BermudanTestData {
 
 } // anonymous namespace
 
-
 namespace testsuite {
-    
+
 void CrossAssetModelTest::testBermudanLgm1fGsr() {
 
     BOOST_TEST_MESSAGE("Testing consistency of Bermudan swaption pricing in "
@@ -133,27 +122,21 @@ void CrossAssetModelTest::testBermudanLgm1fGsr() {
 
     // we use the Hull White adaptor for the LGM parametrization
     // which should lead to equal Bermudan swaption prices
-    boost::shared_ptr<IrLgm1fParametrization> lgm_p =
-        boost::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
-            EURCurrency(), d.yts, d.stepTimes_a, d.sigmas_a, d.stepTimes_a,
-            d.kappas_a);
+    boost::shared_ptr<IrLgm1fParametrization> lgm_p = boost::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
+        EURCurrency(), d.yts, d.stepTimes_a, d.sigmas_a, d.stepTimes_a, d.kappas_a);
 
     // fix any T forward measure
-    boost::shared_ptr<Gsr> gsr = boost::make_shared<Gsr>(
-        d.yts, d.stepDates, d.sigmas, d.reversion, 50.0);
+    boost::shared_ptr<Gsr> gsr = boost::make_shared<Gsr>(d.yts, d.stepDates, d.sigmas, d.reversion, 50.0);
 
-    boost::shared_ptr<LinearGaussMarkovModel> lgm =
-        boost::make_shared<LinearGaussMarkovModel>(lgm_p);
+    boost::shared_ptr<LinearGaussMarkovModel> lgm = boost::make_shared<LinearGaussMarkovModel>(lgm_p);
 
-    boost::shared_ptr<Gaussian1dModel> lgm_g1d =
-        boost::make_shared<Gaussian1dCrossAssetAdaptor>(lgm);
+    boost::shared_ptr<Gaussian1dModel> lgm_g1d = boost::make_shared<Gaussian1dCrossAssetAdaptor>(lgm);
 
     boost::shared_ptr<PricingEngine> swaptionEngineGsr =
         boost::make_shared<Gaussian1dSwaptionEngine>(gsr, 64, 7.0, true, false);
 
     boost::shared_ptr<PricingEngine> swaptionEngineLgm =
-        boost::make_shared<Gaussian1dSwaptionEngine>(lgm_g1d, 64, 7.0, true,
-                                                     false);
+        boost::make_shared<Gaussian1dSwaptionEngine>(lgm_g1d, 64, 7.0, true, false);
 
     boost::shared_ptr<PricingEngine> swaptionEngineLgm2 =
         boost::make_shared<NumericLgmSwaptionEngine>(lgm, 7.0, 16, 7.0, 32);
@@ -170,14 +153,12 @@ void CrossAssetModelTest::testBermudanLgm1fGsr() {
     if (std::fabs(npvGsr - npvLgm) > tol)
         BOOST_ERROR("Failed to verify consistency of Bermudan swaption price "
                     "in IrLgm1f / Gaussian1d adaptor engine ("
-                    << npvLgm << ") and Gsr (" << npvGsr
-                    << ") models, tolerance is " << tol);
+                    << npvLgm << ") and Gsr (" << npvGsr << ") models, tolerance is " << tol);
 
     if (std::fabs(npvGsr - npvLgm2) > tol)
         BOOST_ERROR("Failed to verify consistency of Bermudan swaption price "
                     "in IrLgm1f / Numeric LGM engine ("
-                    << npvLgm2 << ") and Gsr (" << npvGsr
-                    << ") models, tolerance is " << tol);
+                    << npvLgm2 << ") and Gsr (" << npvGsr << ") models, tolerance is " << tol);
 }
 
 void CrossAssetModelTest::testBermudanLgmInvariances() {
@@ -187,20 +168,15 @@ void CrossAssetModelTest::testBermudanLgmInvariances() {
 
     BermudanTestData d;
 
-    boost::shared_ptr<IrLgm1fParametrization> lgm_p2 =
-        boost::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
-            EURCurrency(), d.yts, d.stepTimes_a, d.sigmas_a, d.stepTimes_a,
-            d.kappas_a);
+    boost::shared_ptr<IrLgm1fParametrization> lgm_p2 = boost::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
+        EURCurrency(), d.yts, d.stepTimes_a, d.sigmas_a, d.stepTimes_a, d.kappas_a);
 
-    boost::shared_ptr<LinearGaussMarkovModel> lgm2 =
-        boost::make_shared<LinearGaussMarkovModel>(lgm_p2);
+    boost::shared_ptr<LinearGaussMarkovModel> lgm2 = boost::make_shared<LinearGaussMarkovModel>(lgm_p2);
 
-    boost::shared_ptr<Gaussian1dModel> lgm_g1d2 =
-        boost::make_shared<Gaussian1dCrossAssetAdaptor>(lgm2);
+    boost::shared_ptr<Gaussian1dModel> lgm_g1d2 = boost::make_shared<Gaussian1dCrossAssetAdaptor>(lgm2);
 
     boost::shared_ptr<PricingEngine> swaptionEngineLgm2 =
-        boost::make_shared<Gaussian1dSwaptionEngine>(lgm_g1d2, 64, 7.0, true,
-                                                     false);
+        boost::make_shared<Gaussian1dSwaptionEngine>(lgm_g1d2, 64, 7.0, true, false);
 
     d.swaption->setPricingEngine(swaptionEngineLgm2);
     Real npvLgm = d.swaption->NPV();
@@ -224,27 +200,20 @@ void CrossAssetModelTest::testBermudanLgmInvariances() {
 
 void CrossAssetModelTest::testNonstandardBermudanSwaption() {
 
-    BOOST_TEST_MESSAGE(
-        "Testing numeric LGM swaption engine for non-standard swaption...");
+    BOOST_TEST_MESSAGE("Testing numeric LGM swaption engine for non-standard swaption...");
 
     BermudanTestData d;
 
-    boost::shared_ptr<NonstandardSwaption> ns_swaption =
-        boost::make_shared<NonstandardSwaption>(*d.swaption);
+    boost::shared_ptr<NonstandardSwaption> ns_swaption = boost::make_shared<NonstandardSwaption>(*d.swaption);
 
-    boost::shared_ptr<IrLgm1fParametrization> lgm_p =
-        boost::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
-            EURCurrency(), d.yts, d.stepTimes_a, d.sigmas_a, d.stepTimes_a,
-            d.kappas_a);
+    boost::shared_ptr<IrLgm1fParametrization> lgm_p = boost::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
+        EURCurrency(), d.yts, d.stepTimes_a, d.sigmas_a, d.stepTimes_a, d.kappas_a);
 
-    boost::shared_ptr<LinearGaussMarkovModel> lgm =
-        boost::make_shared<LinearGaussMarkovModel>(lgm_p);
+    boost::shared_ptr<LinearGaussMarkovModel> lgm = boost::make_shared<LinearGaussMarkovModel>(lgm_p);
 
-    boost::shared_ptr<PricingEngine> engine =
-        boost::make_shared<NumericLgmSwaptionEngine>(lgm, 7.0, 16, 7.0, 32);
+    boost::shared_ptr<PricingEngine> engine = boost::make_shared<NumericLgmSwaptionEngine>(lgm, 7.0, 16, 7.0, 32);
     boost::shared_ptr<PricingEngine> ns_engine =
-        boost::make_shared<NumericLgmNonstandardSwaptionEngine>(lgm, 7.0, 16,
-                                                                7.0, 32);
+        boost::make_shared<NumericLgmNonstandardSwaptionEngine>(lgm, 7.0, 16, 7.0, 32);
 
     d.swaption->setPricingEngine(engine);
     ns_swaption->setPricingEngine(ns_engine);
@@ -255,9 +224,8 @@ void CrossAssetModelTest::testNonstandardBermudanSwaption() {
     Real tol = 1.0E-12;
     if (std::fabs(npv - ns_npv) >= tol)
         BOOST_ERROR("Failed to verify consistency of Bermudan swaption price ("
-                    << npv << ") and Bermudan nonstandard swaption price ("
-                    << ns_npv << "), difference is " << (npv - ns_npv)
-                    << ", tolerance is " << tol);
+                    << npv << ") and Bermudan nonstandard swaption price (" << ns_npv << "), difference is "
+                    << (npv - ns_npv) << ", tolerance is " << tol);
 } // testNonstandardBermudanSwaption
 
 void CrossAssetModelTest::testLgm1fCalibration() {
@@ -272,29 +240,22 @@ void CrossAssetModelTest::testLgm1fCalibration() {
 
     Date evalDate(12, January, 2015);
     Settings::instance().evaluationDate() = evalDate;
-    Handle<YieldTermStructure> yts(
-        boost::make_shared<FlatForward>(evalDate, 0.02, Actual365Fixed()));
-    boost::shared_ptr<IborIndex> euribor6m =
-        boost::make_shared<Euribor>(6 * Months, yts);
+    Handle<YieldTermStructure> yts(boost::make_shared<FlatForward>(evalDate, 0.02, Actual365Fixed()));
+    boost::shared_ptr<IborIndex> euribor6m = boost::make_shared<Euribor>(6 * Months, yts);
 
     // coterminal basket 1y-9y, 2y-8y, ... 9y-1y
 
     std::vector<boost::shared_ptr<CalibrationHelper> > basket;
-    Real impliedVols[] = {0.4, 0.39, 0.38, 0.35, 0.35, 0.34, 0.33, 0.32, 0.31};
+    Real impliedVols[] = { 0.4, 0.39, 0.38, 0.35, 0.35, 0.34, 0.33, 0.32, 0.31 };
     std::vector<Date> expiryDates;
 
     for (Size i = 0; i < 9; ++i) {
-        boost::shared_ptr<CalibrationHelper> helper =
-            boost::make_shared<SwaptionHelper>(
-                (i + 1) * Years, (9 - i) * Years,
-                Handle<Quote>(boost::make_shared<SimpleQuote>(impliedVols[i])),
-                euribor6m, 1 * Years, Thirty360(), Actual360(), yts);
+        boost::shared_ptr<CalibrationHelper> helper = boost::make_shared<SwaptionHelper>(
+            (i + 1) * Years, (9 - i) * Years, Handle<Quote>(boost::make_shared<SimpleQuote>(impliedVols[i])), euribor6m,
+            1 * Years, Thirty360(), Actual360(), yts);
         basket.push_back(helper);
-        expiryDates.push_back(boost::static_pointer_cast<SwaptionHelper>(helper)
-                                  ->swaption()
-                                  ->exercise()
-                                  ->dates()
-                                  .back());
+        expiryDates.push_back(
+            boost::static_pointer_cast<SwaptionHelper>(helper)->swaption()->exercise()->dates().back());
     }
 
     std::vector<Date> stepDates(expiryDates.begin(), expiryDates.end() - 1);
@@ -309,27 +270,21 @@ void CrossAssetModelTest::testLgm1fCalibration() {
     std::vector<Real> gsrInitialSigmas(stepDates.size() + 1, 0.0050);
     std::vector<Real> lgmInitialSigmas2(stepDates.size() + 1, 0.0050);
 
-    Array lgmInitialSigmas2_a(lgmInitialSigmas2.begin(),
-                              lgmInitialSigmas2.end());
+    Array lgmInitialSigmas2_a(lgmInitialSigmas2.begin(), lgmInitialSigmas2.end());
     Array kappas_a(lgmInitialSigmas2_a.size(), kappa);
 
-    boost::shared_ptr<IrLgm1fParametrization> lgm_p =
-        boost::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
-            EURCurrency(), yts, stepTimes_a, lgmInitialSigmas2_a, stepTimes_a,
-            kappas_a);
+    boost::shared_ptr<IrLgm1fParametrization> lgm_p = boost::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
+        EURCurrency(), yts, stepTimes_a, lgmInitialSigmas2_a, stepTimes_a, kappas_a);
 
     // fix any T forward measure
-    boost::shared_ptr<Gsr> gsr =
-        boost::make_shared<Gsr>(yts, stepDates, gsrInitialSigmas, kappa, 50.0);
+    boost::shared_ptr<Gsr> gsr = boost::make_shared<Gsr>(yts, stepDates, gsrInitialSigmas, kappa, 50.0);
 
-    boost::shared_ptr<LinearGaussMarkovModel> lgm =
-        boost::make_shared<LinearGaussMarkovModel>(lgm_p);
+    boost::shared_ptr<LinearGaussMarkovModel> lgm = boost::make_shared<LinearGaussMarkovModel>(lgm_p);
 
     boost::shared_ptr<PricingEngine> swaptionEngineGsr =
         boost::make_shared<Gaussian1dSwaptionEngine>(gsr, 64, 7.0, true, false);
 
-    boost::shared_ptr<PricingEngine> swaptionEngineLgm =
-        boost::make_shared<AnalyticLgmSwaptionEngine>(lgm);
+    boost::shared_ptr<PricingEngine> swaptionEngineLgm = boost::make_shared<AnalyticLgmSwaptionEngine>(lgm);
 
     // calibrate GSR
 
@@ -361,38 +316,29 @@ void CrossAssetModelTest::testLgm1fCalibration() {
         // check calibration itself, we should match the market prices
         // rather exactly (note that this tests the lgm calibration,
         // not the gsr calibration)
-        if (std::fabs(basket[i]->modelValue() - basket[i]->marketValue()) >
-            tol0)
+        if (std::fabs(basket[i]->modelValue() - basket[i]->marketValue()) > tol0)
             BOOST_ERROR("Failed to calibrate to market swaption #"
-                        << i << ", market price is " << basket[i]->marketValue()
-                        << " while model price is " << basket[i]->modelValue());
+                        << i << ", market price is " << basket[i]->marketValue() << " while model price is "
+                        << basket[i]->modelValue());
         // compare calibrated model parameters
         if (std::fabs(gsrSigmas[i] - lgmSigmas[i]) > tol)
-            BOOST_ERROR(
-                "Failed to verify LGM's sigma from Hull White adaptor (#"
-                << i << "), which is " << lgmSigmas[i]
-                << " while GSR's sigma is " << gsrSigmas[i] << ")");
+            BOOST_ERROR("Failed to verify LGM's sigma from Hull White adaptor (#"
+                        << i << "), which is " << lgmSigmas[i] << " while GSR's sigma is " << gsrSigmas[i] << ")");
     }
 
     // calibrate LGM as component of CrossAssetModel
 
     // create a second set of parametrization ...
-    boost::shared_ptr<IrLgm1fParametrization> lgm_p21 =
-        boost::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
-            USDCurrency(), yts, stepTimes_a, lgmInitialSigmas2_a, stepTimes_a,
-            kappas_a);
-    boost::shared_ptr<IrLgm1fParametrization> lgm_p22 =
-        boost::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
-            EURCurrency(), yts, stepTimes_a, lgmInitialSigmas2_a, stepTimes_a,
-            kappas_a);
+    boost::shared_ptr<IrLgm1fParametrization> lgm_p21 = boost::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
+        USDCurrency(), yts, stepTimes_a, lgmInitialSigmas2_a, stepTimes_a, kappas_a);
+    boost::shared_ptr<IrLgm1fParametrization> lgm_p22 = boost::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
+        EURCurrency(), yts, stepTimes_a, lgmInitialSigmas2_a, stepTimes_a, kappas_a);
 
     // ... and a fx parametrization ...
     Array notimes_a(0);
     Array sigma_a(1, 0.10);
-    boost::shared_ptr<FxBsParametrization> fx_p =
-        boost::make_shared<FxBsPiecewiseConstantParametrization>(
-            EURCurrency(), Handle<Quote>(boost::make_shared<SimpleQuote>(1.00)),
-            notimes_a, sigma_a);
+    boost::shared_ptr<FxBsParametrization> fx_p = boost::make_shared<FxBsPiecewiseConstantParametrization>(
+        EURCurrency(), Handle<Quote>(boost::make_shared<SimpleQuote>(1.00)), notimes_a, sigma_a);
 
     // ... and set up an crossasset model with USD as domestic currency ...
     std::vector<boost::shared_ptr<Parametrization> > parametrizations;
@@ -402,15 +348,13 @@ void CrossAssetModelTest::testLgm1fCalibration() {
     Matrix rho(3, 3, 0.0);
     rho[0][0] = rho[1][1] = rho[2][2] = 1.0;
     boost::shared_ptr<CrossAssetModel> xmodel =
-        boost::make_shared<CrossAssetModel>(parametrizations, rho,
-                                            SalvagingAlgorithm::None);
+        boost::make_shared<CrossAssetModel>(parametrizations, rho, SalvagingAlgorithm::None);
 
     // .. whose EUR component we calibrate as before and compare the
     // result against the 1d case and as well check that the USD
     // component was not touched by the calibration.
 
-    boost::shared_ptr<PricingEngine> swaptionEngineLgm2 =
-        boost::make_shared<AnalyticLgmSwaptionEngine>(xmodel, 1);
+    boost::shared_ptr<PricingEngine> swaptionEngineLgm2 = boost::make_shared<AnalyticLgmSwaptionEngine>(xmodel, 1);
 
     for (Size i = 0; i < basket.size(); ++i) {
         basket[i]->setPricingEngine(swaptionEngineLgm2);
@@ -424,19 +368,17 @@ void CrossAssetModelTest::testLgm1fCalibration() {
     for (Size i = 0; i < gsrSigmas.size(); ++i) {
         // compare calibrated model parameters against 1d calibration before
         if (!close_enough(lgmSigmas2eur[i], lgmSigmas[i]))
-            BOOST_ERROR(
-                "Failed to verify crossasset LGM1F component calibration "
-                "at parameter #"
-                << i << " against 1d calibration, which is " << lgmSigmas2eur[i]
-                << " while 1d calibration was " << lgmSigmas[i] << ")");
+            BOOST_ERROR("Failed to verify crossasset LGM1F component calibration "
+                        "at parameter #"
+                        << i << " against 1d calibration, which is " << lgmSigmas2eur[i] << " while 1d calibration was "
+                        << lgmSigmas[i] << ")");
         // compare usd component against start values (since it was not
         // calibrated, so should not have changed)
         if (!close_enough(lgmSigmas2usd[i], lgmInitialSigmas2[i]))
-            BOOST_ERROR(
-                "Non calibrated crossasset LGM1F component was changed by "
-                "other's component calibration at #"
-                << i << ", the new value is " << lgmSigmas2usd[i]
-                << " while the initial value was " << lgmInitialSigmas2[i]);
+            BOOST_ERROR("Non calibrated crossasset LGM1F component was changed by "
+                        "other's component calibration at #"
+                        << i << ", the new value is " << lgmSigmas2usd[i] << " while the initial value was "
+                        << lgmInitialSigmas2[i]);
     }
 
 } // testLgm1fCalibration
@@ -452,11 +394,9 @@ void CrossAssetModelTest::testCcyLgm3fForeignPayouts() {
 
     Settings::instance().evaluationDate() = referenceDate;
 
-    Handle<YieldTermStructure> eurYts(
-        boost::make_shared<FlatForward>(referenceDate, 0.02, Actual365Fixed()));
+    Handle<YieldTermStructure> eurYts(boost::make_shared<FlatForward>(referenceDate, 0.02, Actual365Fixed()));
 
-    Handle<YieldTermStructure> usdYts(
-        boost::make_shared<FlatForward>(referenceDate, 0.05, Actual365Fixed()));
+    Handle<YieldTermStructure> usdYts(boost::make_shared<FlatForward>(referenceDate, 0.05, Actual365Fixed()));
 
     // use different grids for the EUR and USD  models and the FX volatility
     // process to test the piecewise numerical integration ...
@@ -482,33 +422,25 @@ void CrossAssetModelTest::testCcyLgm3fForeignPayouts() {
     volstepdatesFx.push_back(Date(15, October, 2016));
     volstepdatesFx.push_back(Date(15, May, 2017));
     volstepdatesFx.push_back(Date(13, September, 2017)); // shared with USD
-    volstepdatesFx.push_back(Date(15, July, 2018)); //  shared with EUR and USD
+    volstepdatesFx.push_back(Date(15, July, 2018));      //  shared with EUR and USD
 
     std::vector<Real> eurVols, usdVols, fxVols;
 
     for (Size i = 0; i < volstepdatesEur.size() + 1; ++i) {
-        eurVols.push_back(0.0050 +
-                          (0.0080 - 0.0050) *
-                              std::exp(-0.3 * static_cast<double>(i)));
+        eurVols.push_back(0.0050 + (0.0080 - 0.0050) * std::exp(-0.3 * static_cast<double>(i)));
     }
     for (Size i = 0; i < volstepdatesUsd.size() + 1; ++i) {
-        usdVols.push_back(0.0030 +
-                          (0.0110 - 0.0030) *
-                              std::exp(-0.3 * static_cast<double>(i)));
+        usdVols.push_back(0.0030 + (0.0110 - 0.0030) * std::exp(-0.3 * static_cast<double>(i)));
     }
     for (Size i = 0; i < volstepdatesFx.size() + 1; ++i) {
-        fxVols.push_back(
-            0.15 + (0.20 - 0.15) * std::exp(-0.3 * static_cast<double>(i)));
+        fxVols.push_back(0.15 + (0.20 - 0.15) * std::exp(-0.3 * static_cast<double>(i)));
     }
 
-    Array alphaTimesEur(volstepdatesEur.size()),
-        alphaEur(eurVols.begin(), eurVols.end()), kappaTimesEur(0),
+    Array alphaTimesEur(volstepdatesEur.size()), alphaEur(eurVols.begin(), eurVols.end()), kappaTimesEur(0),
         kappaEur(1, 0.02);
-    Array alphaTimesUsd(volstepdatesUsd.size()),
-        alphaUsd(usdVols.begin(), usdVols.end()), kappaTimesUsd(0),
+    Array alphaTimesUsd(volstepdatesUsd.size()), alphaUsd(usdVols.begin(), usdVols.end()), kappaTimesUsd(0),
         kappaUsd(1, 0.04);
-    Array fxTimes(volstepdatesFx.size()),
-        fxSigmas(fxVols.begin(), fxVols.end());
+    Array fxTimes(volstepdatesFx.size()), fxSigmas(fxVols.begin(), fxVols.end());
 
     for (Size i = 0; i < alphaTimesEur.size(); ++i) {
         alphaTimesEur[i] = eurYts->timeFromReference(volstepdatesEur[i]);
@@ -520,46 +452,37 @@ void CrossAssetModelTest::testCcyLgm3fForeignPayouts() {
         fxTimes[i] = eurYts->timeFromReference(volstepdatesFx[i]);
     }
 
-    boost::shared_ptr<IrLgm1fParametrization> eurLgmParam =
-        boost::make_shared<IrLgm1fPiecewiseConstantParametrization>(
-            EURCurrency(), eurYts, alphaTimesEur, alphaEur, kappaTimesEur,
-            kappaEur);
+    boost::shared_ptr<IrLgm1fParametrization> eurLgmParam = boost::make_shared<IrLgm1fPiecewiseConstantParametrization>(
+        EURCurrency(), eurYts, alphaTimesEur, alphaEur, kappaTimesEur, kappaEur);
 
-    boost::shared_ptr<IrLgm1fParametrization> usdLgmParam =
-        boost::make_shared<IrLgm1fPiecewiseConstantParametrization>(
-            USDCurrency(), usdYts, alphaTimesUsd, alphaUsd, kappaTimesUsd,
-            kappaUsd);
+    boost::shared_ptr<IrLgm1fParametrization> usdLgmParam = boost::make_shared<IrLgm1fPiecewiseConstantParametrization>(
+        USDCurrency(), usdYts, alphaTimesUsd, alphaUsd, kappaTimesUsd, kappaUsd);
 
     // USD per EUR (foreign per domestic)
     Handle<Quote> usdEurSpotToday(boost::make_shared<SimpleQuote>(0.90));
 
     boost::shared_ptr<FxBsParametrization> fxUsdEurBsParam =
-        boost::make_shared<FxBsPiecewiseConstantParametrization>(
-            USDCurrency(), usdEurSpotToday, fxTimes, fxSigmas);
+        boost::make_shared<FxBsPiecewiseConstantParametrization>(USDCurrency(), usdEurSpotToday, fxTimes, fxSigmas);
 
     std::vector<boost::shared_ptr<Parametrization> > singleModels;
     singleModels.push_back(eurLgmParam);
     singleModels.push_back(usdLgmParam);
     singleModels.push_back(fxUsdEurBsParam);
 
-    boost::shared_ptr<CrossAssetModel> ccLgm =
-        boost::make_shared<CrossAssetModel>(singleModels);
+    boost::shared_ptr<CrossAssetModel> ccLgm = boost::make_shared<CrossAssetModel>(singleModels);
 
     Size eurIdx = ccLgm->ccyIndex(EURCurrency());
     Size usdIdx = ccLgm->ccyIndex(USDCurrency());
-    Size eurUsdIdx = usdIdx-1;
+    Size eurUsdIdx = usdIdx - 1;
 
     ccLgm->correlation(IR, eurIdx, IR, usdIdx, -0.2);
     ccLgm->correlation(IR, eurIdx, FX, eurUsdIdx, 0.8);
     ccLgm->correlation(IR, usdIdx, FX, eurUsdIdx, -0.5);
 
-    boost::shared_ptr<LinearGaussMarkovModel> eurLgm =
-        boost::make_shared<LinearGaussMarkovModel>(eurLgmParam);
-    boost::shared_ptr<LinearGaussMarkovModel> usdLgm =
-        boost::make_shared<LinearGaussMarkovModel>(usdLgmParam);
+    boost::shared_ptr<LinearGaussMarkovModel> eurLgm = boost::make_shared<LinearGaussMarkovModel>(eurLgmParam);
+    boost::shared_ptr<LinearGaussMarkovModel> usdLgm = boost::make_shared<LinearGaussMarkovModel>(usdLgmParam);
 
-    boost::shared_ptr<StochasticProcess> process =
-        ccLgm->stateProcess(CrossAssetStateProcess::exact);
+    boost::shared_ptr<StochasticProcess> process = ccLgm->stateProcess(CrossAssetStateProcess::exact);
     boost::shared_ptr<StochasticProcess> usdProcess = usdLgm->stateProcess();
 
     // path generation
@@ -571,8 +494,7 @@ void CrossAssetModelTest::testCcyLgm3fForeignPayouts() {
     // take large steps, but not only one (since we are testing)
     Size steps = static_cast<Size>(T * 2.0);
     TimeGrid grid(T, steps);
-    PseudoRandom::rsg_type sg2 =
-        PseudoRandom::make_sequence_generator(steps, seed);
+    PseudoRandom::rsg_type sg2 = PseudoRandom::make_sequence_generator(steps, seed);
 
     MultiPathGeneratorMersenneTwister pg(process, grid, seed, false);
     PathGenerator<PseudoRandom::rsg_type> pg2(usdProcess, grid, sg2, false);
@@ -582,8 +504,7 @@ void CrossAssetModelTest::testCcyLgm3fForeignPayouts() {
     // 2 zero bond option USD under EUR numeraire vs. USD numeraire
     // 3 fx option USD-EUR under EUR numeraire vs. analytical price
 
-    accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > > stat1,
-        stat2a, stat2b, stat3;
+    accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > > stat1, stat2a, stat2b, stat3;
 
     // same for paths2 since shared time grid
     for (Size j = 0; j < n; ++j) {
@@ -600,12 +521,10 @@ void CrossAssetModelTest::testCcyLgm3fForeignPayouts() {
 
         // 2 USD zero bond option at T on P(T,T+10) strike 0.5 ...
         // ... under EUR numeraire ...
-        Real zbOpt =
-            std::max(usdLgm->discountBond(T, T + 10.0, zusd) - 0.5, 0.0);
+        Real zbOpt = std::max(usdLgm->discountBond(T, T + 10.0, zusd) - 0.5, 0.0);
         stat2a(zbOpt * fx / eurLgm->numeraire(T, zeur));
         // ... and under USD numeraire ...
-        Real zbOpt2 =
-            std::max(usdLgm->discountBond(T, T + 10.0, zusd2) - 0.5, 0.0);
+        Real zbOpt2 = std::max(usdLgm->discountBond(T, T + 10.0, zusd2) - 0.5, 0.0);
         stat2b(zbOpt2 / usdLgm->numeraire(T, zusd2));
 
         // 3 USD-EUR fx option @0.9
@@ -613,9 +532,8 @@ void CrossAssetModelTest::testCcyLgm3fForeignPayouts() {
     }
 
     boost::shared_ptr<VanillaOption> fxOption =
-        boost::make_shared<VanillaOption>(
-            boost::make_shared<PlainVanillaPayoff>(Option::Call, 0.9),
-            boost::make_shared<EuropeanExercise>(referenceDate + 5 * 365));
+        boost::make_shared<VanillaOption>(boost::make_shared<PlainVanillaPayoff>(Option::Call, 0.9),
+                                          boost::make_shared<EuropeanExercise>(referenceDate + 5 * 365));
 
     boost::shared_ptr<AnalyticCcLgmFxOptionEngine> ccLgmFxOptionEngine =
         boost::make_shared<AnalyticCcLgmFxOptionEngine>(ccLgm, 0);
@@ -644,43 +562,35 @@ void CrossAssetModelTest::testCcyLgm3fForeignPayouts() {
         BOOST_ERROR("error estimate deterministic "
                     "cashflow pricing can not be "
                     "reproduced, is "
-                    << error1 << ", expected 4E-4, relative tolerance "
-                    << tolError);
+                    << error1 << ", expected 4E-4, relative tolerance " << tolError);
     if (std::fabs((error2a - 1E-4) / 1E-4) > tolError)
         BOOST_ERROR("error estimate zero bond "
                     "option pricing (foreign measure) can "
                     "not be reproduced, is "
-                    << error2a << ", expected 1E-4, relative tolerance "
-                    << tolError);
+                    << error2a << ", expected 1E-4, relative tolerance " << tolError);
     if (std::fabs((error2b - 7E-5) / 7E-5) > tolError)
         BOOST_ERROR("error estimate zero bond "
                     "option pricing (domestic measure) can "
                     "not be reproduced, is "
-                    << error2b << ", expected 7E-5, relative tolerance "
-                    << tolError);
+                    << error2b << ", expected 7E-5, relative tolerance " << tolError);
     if (std::fabs((error3 - 2.7E-4) / 2.7E-4) > tolError)
-        BOOST_ERROR(
-            "error estimate fx option pricing can not be reproduced, is "
-            << error3 << ", expected 2.7E-4, relative tolerance " << tolError);
+        BOOST_ERROR("error estimate fx option pricing can not be reproduced, is "
+                    << error3 << ", expected 2.7E-4, relative tolerance " << tolError);
 
     if (std::fabs(npv1 - expected1) > tolErrEst * error1)
         BOOST_ERROR("can no reproduce deterministic cashflow pricing, is "
-                    << npv1 << ", expected " << expected1 << ", tolerance "
-                    << tolErrEst << "*" << error1);
+                    << npv1 << ", expected " << expected1 << ", tolerance " << tolErrEst << "*" << error1);
 
-    if (std::fabs(npv2a - npv2b) >
-        tolErrEst * std::sqrt(error2a * error2a + error2b * error2b))
+    if (std::fabs(npv2a - npv2b) > tolErrEst * std::sqrt(error2a * error2a + error2b * error2b))
         BOOST_ERROR("can no reproduce zero bond option pricing, domestic "
                     "measure result is "
-                    << npv2a << ", foreign measure result is " << npv2b
-                    << ", tolerance " << tolErrEst << "*"
+                    << npv2a << ", foreign measure result is " << npv2b << ", tolerance " << tolErrEst << "*"
                     << std::sqrt(error2a * error2a + error2b * error2b));
 
     if (std::fabs(npv3 - fxOption->NPV()) > tolErrEst * std::sqrt(error3))
         BOOST_ERROR("can no reproduce fx option pricing, monte carlo result is "
-                    << npv3 << ", analytical pricing result is "
-                    << fxOption->NPV() << ", tolerance is " << tolErrEst << "*"
-                    << error3);
+                    << npv3 << ", analytical pricing result is " << fxOption->NPV() << ", tolerance is " << tolErrEst
+                    << "*" << error3);
 
 } // testCcyLgm3fForeignPayouts
 
@@ -688,15 +598,10 @@ namespace {
 
 struct Lgm5fTestData {
     Lgm5fTestData()
-        : referenceDate(30, July, 2015),
-          eurYts(boost::make_shared<FlatForward>(referenceDate, 0.02,
-                                                 Actual365Fixed())),
-          usdYts(boost::make_shared<FlatForward>(referenceDate, 0.05,
-                                                 Actual365Fixed())),
-          gbpYts(boost::make_shared<FlatForward>(referenceDate, 0.04,
-                                                 Actual365Fixed())),
-          fxEurUsd(boost::make_shared<SimpleQuote>(0.90)),
-          fxEurGbp(boost::make_shared<SimpleQuote>(1.35)), c(5, 5) {
+        : referenceDate(30, July, 2015), eurYts(boost::make_shared<FlatForward>(referenceDate, 0.02, Actual365Fixed())),
+          usdYts(boost::make_shared<FlatForward>(referenceDate, 0.05, Actual365Fixed())),
+          gbpYts(boost::make_shared<FlatForward>(referenceDate, 0.04, Actual365Fixed())),
+          fxEurUsd(boost::make_shared<SimpleQuote>(0.90)), fxEurGbp(boost::make_shared<SimpleQuote>(1.35)), c(5, 5) {
 
         Settings::instance().evaluationDate() = referenceDate;
         volstepdates.push_back(Date(15, July, 2016));
@@ -721,27 +626,19 @@ struct Lgm5fTestData {
         }
 
         for (Size i = 0; i < volstepdates.size() + 1; ++i) {
-            eurVols.push_back(0.0050 +
-                              (0.0080 - 0.0050) *
-                                  std::exp(-0.3 * static_cast<double>(i)));
+            eurVols.push_back(0.0050 + (0.0080 - 0.0050) * std::exp(-0.3 * static_cast<double>(i)));
         }
         for (Size i = 0; i < volstepdates.size() + 1; ++i) {
-            usdVols.push_back(0.0030 +
-                              (0.0110 - 0.0030) *
-                                  std::exp(-0.3 * static_cast<double>(i)));
+            usdVols.push_back(0.0030 + (0.0110 - 0.0030) * std::exp(-0.3 * static_cast<double>(i)));
         }
         for (Size i = 0; i < volstepdates.size() + 1; ++i) {
-            gbpVols.push_back(0.0070 +
-                              (0.0095 - 0.0070) *
-                                  std::exp(-0.3 * static_cast<double>(i)));
+            gbpVols.push_back(0.0070 + (0.0095 - 0.0070) * std::exp(-0.3 * static_cast<double>(i)));
         }
         for (Size i = 0; i < volstepdatesFx.size() + 1; ++i) {
-            fxSigmasUsd.push_back(
-                0.15 + (0.20 - 0.15) * std::exp(-0.3 * static_cast<double>(i)));
+            fxSigmasUsd.push_back(0.15 + (0.20 - 0.15) * std::exp(-0.3 * static_cast<double>(i)));
         }
         for (Size i = 0; i < volstepdatesFx.size() + 1; ++i) {
-            fxSigmasGbp.push_back(
-                0.10 + (0.15 - 0.10) * std::exp(-0.3 * static_cast<double>(i)));
+            fxSigmasGbp.push_back(0.10 + (0.15 - 0.10) * std::exp(-0.3 * static_cast<double>(i)));
         }
         eurVols_a = Array(eurVols.begin(), eurVols.end());
         usdVols_a = Array(usdVols.begin(), usdVols.end());
@@ -754,20 +651,17 @@ struct Lgm5fTestData {
         usdKappa_a = Array(1, 0.03);
         gbpKappa_a = Array(1, 0.04);
 
-        eurLgm_p = boost::make_shared<IrLgm1fPiecewiseConstantParametrization>(
-            EURCurrency(), eurYts, volsteptimes_a, eurVols_a, notimes_a,
-            eurKappa_a);
-        usdLgm_p = boost::make_shared<IrLgm1fPiecewiseConstantParametrization>(
-            USDCurrency(), usdYts, volsteptimes_a, usdVols_a, notimes_a,
-            usdKappa_a);
-        gbpLgm_p = boost::make_shared<IrLgm1fPiecewiseConstantParametrization>(
-            GBPCurrency(), gbpYts, volsteptimes_a, gbpVols_a, notimes_a,
-            gbpKappa_a);
+        eurLgm_p = boost::make_shared<IrLgm1fPiecewiseConstantParametrization>(EURCurrency(), eurYts, volsteptimes_a,
+                                                                               eurVols_a, notimes_a, eurKappa_a);
+        usdLgm_p = boost::make_shared<IrLgm1fPiecewiseConstantParametrization>(USDCurrency(), usdYts, volsteptimes_a,
+                                                                               usdVols_a, notimes_a, usdKappa_a);
+        gbpLgm_p = boost::make_shared<IrLgm1fPiecewiseConstantParametrization>(GBPCurrency(), gbpYts, volsteptimes_a,
+                                                                               gbpVols_a, notimes_a, gbpKappa_a);
 
-        fxUsd_p = boost::make_shared<FxBsPiecewiseConstantParametrization>(
-            USDCurrency(), fxEurUsd, volsteptimesFx_a, fxSigmasUsd_a);
-        fxGbp_p = boost::make_shared<FxBsPiecewiseConstantParametrization>(
-            GBPCurrency(), fxEurGbp, volsteptimesFx_a, fxSigmasGbp_a);
+        fxUsd_p = boost::make_shared<FxBsPiecewiseConstantParametrization>(USDCurrency(), fxEurUsd, volsteptimesFx_a,
+                                                                           fxSigmasUsd_a);
+        fxGbp_p = boost::make_shared<FxBsPiecewiseConstantParametrization>(GBPCurrency(), fxEurGbp, volsteptimesFx_a,
+                                                                           fxSigmasGbp_a);
 
         singleModels.push_back(eurLgm_p);
         singleModels.push_back(usdLgm_p);
@@ -776,14 +670,33 @@ struct Lgm5fTestData {
         singleModels.push_back(fxGbp_p);
 
         //     EUR           USD           GBP         FX USD-EUR      FX GBP-EUR
-        c[0][0] = 1.0; c[0][1] = 0.6;  c[0][2] = 0.3;  c[0][3] = 0.2;  c[0][4] = 0.3; // EUR
-        c[1][0] = 0.6; c[1][1] = 1.0;  c[1][2] = 0.1;  c[1][3] = -0.2; c[1][4] =-0.1; // USD
-        c[2][0] = 0.3; c[2][1] = 0.1;  c[2][2] = 1.0;  c[2][3] = 0.0;  c[2][4] = 0.1; // GBP
-        c[3][0] = 0.2; c[3][1] = -0.2; c[3][2] = 0.0;  c[3][3] = 1.0;  c[3][4] = 0.3; // FX USD-EUR
-        c[4][0] = 0.3; c[4][1] = -0.1; c[4][2] = 0.1;  c[4][3] = 0.3;  c[4][4] = 1.0; // FX GBP-EUR
+        c[0][0] = 1.0;
+        c[0][1] = 0.6;
+        c[0][2] = 0.3;
+        c[0][3] = 0.2;
+        c[0][4] = 0.3; // EUR
+        c[1][0] = 0.6;
+        c[1][1] = 1.0;
+        c[1][2] = 0.1;
+        c[1][3] = -0.2;
+        c[1][4] = -0.1; // USD
+        c[2][0] = 0.3;
+        c[2][1] = 0.1;
+        c[2][2] = 1.0;
+        c[2][3] = 0.0;
+        c[2][4] = 0.1; // GBP
+        c[3][0] = 0.2;
+        c[3][1] = -0.2;
+        c[3][2] = 0.0;
+        c[3][3] = 1.0;
+        c[3][4] = 0.3; // FX USD-EUR
+        c[4][0] = 0.3;
+        c[4][1] = -0.1;
+        c[4][2] = 0.1;
+        c[4][3] = 0.3;
+        c[4][4] = 1.0; // FX GBP-EUR
 
-        ccLgm = boost::make_shared<CrossAssetModel>(singleModels, c,
-                                                SalvagingAlgorithm::None);
+        ccLgm = boost::make_shared<CrossAssetModel>(singleModels, c, SalvagingAlgorithm::None);
     }
 
     SavedSettings backup;
@@ -828,8 +741,7 @@ void CrossAssetModelTest::testLgm5fFxCalibration() {
     }
 
     boost::shared_ptr<CrossAssetModel> ccLgmProjected =
-        boost::make_shared<CrossAssetModel>(singleModelsProjected, cProjected,
-                                            SalvagingAlgorithm::None);
+        boost::make_shared<CrossAssetModel>(singleModelsProjected, cProjected, SalvagingAlgorithm::None);
 
     boost::shared_ptr<AnalyticCcLgmFxOptionEngine> ccLgmFxOptionEngineUsd =
         boost::make_shared<AnalyticCcLgmFxOptionEngine>(d.ccLgm, 0);
@@ -837,9 +749,8 @@ void CrossAssetModelTest::testLgm5fFxCalibration() {
     boost::shared_ptr<AnalyticCcLgmFxOptionEngine> ccLgmFxOptionEngineGbp =
         boost::make_shared<AnalyticCcLgmFxOptionEngine>(d.ccLgm, 1);
 
-    boost::shared_ptr<AnalyticCcLgmFxOptionEngine>
-        ccLgmProjectedFxOptionEngineGbp =
-            boost::make_shared<AnalyticCcLgmFxOptionEngine>(ccLgmProjected, 0);
+    boost::shared_ptr<AnalyticCcLgmFxOptionEngine> ccLgmProjectedFxOptionEngineGbp =
+        boost::make_shared<AnalyticCcLgmFxOptionEngine>(ccLgmProjected, 0);
 
     ccLgmFxOptionEngineUsd->cache();
     ccLgmFxOptionEngineGbp->cache();
@@ -849,22 +760,14 @@ void CrossAssetModelTest::testLgm5fFxCalibration() {
     // we calibrate to helpers with 0.15 and 0.2 target implied vol
     std::vector<boost::shared_ptr<CalibrationHelper> > helpersUsd, helpersGbp;
     for (Size i = 0; i <= d.volstepdatesFx.size(); ++i) {
-        boost::shared_ptr<CalibrationHelper> tmpUsd =
-            boost::make_shared<FxOptionHelper>(
-                i < d.volstepdatesFx.size() ? d.volstepdatesFx[i]
-                                            : d.volstepdatesFx.back() + 365,
-                0.90, d.fxEurUsd,
-                Handle<Quote>(boost::make_shared<SimpleQuote>(0.15)),
-                d.ccLgm->irlgm1f(0)->termStructure(),
-                d.ccLgm->irlgm1f(1)->termStructure());
-        boost::shared_ptr<CalibrationHelper> tmpGbp =
-            boost::make_shared<FxOptionHelper>(
-                i < d.volstepdatesFx.size() ? d.volstepdatesFx[i]
-                                            : d.volstepdatesFx.back() + 365,
-                1.35, d.fxEurGbp,
-                Handle<Quote>(boost::make_shared<SimpleQuote>(0.20)),
-                d.ccLgm->irlgm1f(0)->termStructure(),
-                d.ccLgm->irlgm1f(2)->termStructure());
+        boost::shared_ptr<CalibrationHelper> tmpUsd = boost::make_shared<FxOptionHelper>(
+            i < d.volstepdatesFx.size() ? d.volstepdatesFx[i] : d.volstepdatesFx.back() + 365, 0.90, d.fxEurUsd,
+            Handle<Quote>(boost::make_shared<SimpleQuote>(0.15)), d.ccLgm->irlgm1f(0)->termStructure(),
+            d.ccLgm->irlgm1f(1)->termStructure());
+        boost::shared_ptr<CalibrationHelper> tmpGbp = boost::make_shared<FxOptionHelper>(
+            i < d.volstepdatesFx.size() ? d.volstepdatesFx[i] : d.volstepdatesFx.back() + 365, 1.35, d.fxEurGbp,
+            Handle<Quote>(boost::make_shared<SimpleQuote>(0.20)), d.ccLgm->irlgm1f(0)->termStructure(),
+            d.ccLgm->irlgm1f(2)->termStructure());
         tmpUsd->setPricingEngine(ccLgmFxOptionEngineUsd);
         tmpGbp->setPricingEngine(ccLgmFxOptionEngineGbp);
         helpersUsd.push_back(tmpUsd);
@@ -885,20 +788,16 @@ void CrossAssetModelTest::testLgm5fFxCalibration() {
         Real model = helpersUsd[i]->modelValue();
         Real calibratedVol = d.ccLgm->fxbs(0)->parameterValues(0)[i];
         if (std::fabs(market - model) > tol) {
-            BOOST_ERROR("calibration for fx option helper #"
-                        << i << " (USD) failed, market premium is " << market
-                        << " while model premium is " << model);
+            BOOST_ERROR("calibration for fx option helper #" << i << " (USD) failed, market premium is " << market
+                                                             << " while model premium is " << model);
         }
         // the stochastic rates produce some noise, but do not have a huge
         // impact on the effective volatility, so we check that they are
         // in line with a cached example (note that the analytic fx option
         // pricing engine was checked against MC in another test case)
         if (std::fabs(calibratedVol - 0.143) > 0.01) {
-            BOOST_ERROR(
-                "calibrated fx volatility #"
-                << i
-                << " (USD) seems off, expected to be 0.143 +- 0.01, but is "
-                << calibratedVol);
+            BOOST_ERROR("calibrated fx volatility #" << i << " (USD) seems off, expected to be 0.143 +- 0.01, but is "
+                                                     << calibratedVol);
         }
     }
     for (Size i = 0; i < helpersGbp.size(); ++i) {
@@ -906,16 +805,12 @@ void CrossAssetModelTest::testLgm5fFxCalibration() {
         Real model = helpersGbp[i]->modelValue();
         Real calibratedVol = d.ccLgm->fxbs(1)->parameterValues(0)[i];
         if (std::fabs(market - model) > tol)
-            BOOST_ERROR("calibration for fx option helper #"
-                        << i << " (GBP) failed, market premium is " << market
-                        << " while model premium is " << model);
+            BOOST_ERROR("calibration for fx option helper #" << i << " (GBP) failed, market premium is " << market
+                                                             << " while model premium is " << model);
         // see above
         if (std::fabs(calibratedVol - 0.193) > 0.01)
-            BOOST_ERROR(
-                "calibrated fx volatility #"
-                << i
-                << " (USD) seems off, expected to be 0.193 +- 0.01, but is "
-                << calibratedVol);
+            BOOST_ERROR("calibrated fx volatility #" << i << " (USD) seems off, expected to be 0.193 +- 0.01, but is "
+                                                     << calibratedVol);
     }
 
     // calibrate the projected model
@@ -930,11 +825,9 @@ void CrossAssetModelTest::testLgm5fFxCalibration() {
         Real fullModelVol = d.ccLgm->fxbs(1)->parameterValues(0)[i];
         Real projectedModelVol = ccLgmProjected->fxbs(0)->parameterValues(0)[i];
         if (std::fabs(fullModelVol - projectedModelVol) > tol)
-            BOOST_ERROR(
-                "calibrated fx volatility of full model @"
-                << i << " (" << fullModelVol
-                << ") is inconsistent with that of the projected model ("
-                << projectedModelVol << ")");
+            BOOST_ERROR("calibrated fx volatility of full model @"
+                        << i << " (" << fullModelVol << ") is inconsistent with that of the projected model ("
+                        << projectedModelVol << ")");
     }
 
 } // testLgm5fFxCalibration
@@ -947,67 +840,45 @@ void CrossAssetModelTest::testLgm5fFullCalibration() {
 
     // calibration baskets
 
-    std::vector<boost::shared_ptr<CalibrationHelper> > basketEur, basketUsd,
-        basketGbp, basketEurUsd, basketEurGbp;
+    std::vector<boost::shared_ptr<CalibrationHelper> > basketEur, basketUsd, basketGbp, basketEurUsd, basketEurGbp;
 
-    boost::shared_ptr<IborIndex> euribor6m =
-        boost::make_shared<Euribor>(6 * Months, d.eurYts);
-    boost::shared_ptr<IborIndex> usdLibor3m =
-        boost::make_shared<USDLibor>(3 * Months, d.usdYts);
-    boost::shared_ptr<IborIndex> gbpLibor3m =
-        boost::make_shared<GBPLibor>(3 * Months, d.gbpYts);
+    boost::shared_ptr<IborIndex> euribor6m = boost::make_shared<Euribor>(6 * Months, d.eurYts);
+    boost::shared_ptr<IborIndex> usdLibor3m = boost::make_shared<USDLibor>(3 * Months, d.usdYts);
+    boost::shared_ptr<IborIndex> gbpLibor3m = boost::make_shared<GBPLibor>(3 * Months, d.gbpYts);
 
     for (Size i = 0; i <= d.volstepdates.size(); ++i) {
-        Date tmp = i < d.volstepdates.size() ? d.volstepdates[i]
-                                             : d.volstepdates.back() + 365;
+        Date tmp = i < d.volstepdates.size() ? d.volstepdates[i] : d.volstepdates.back() + 365;
         // EUR: atm+200bp, 150bp normal vol
-        basketEur.push_back(
-            boost::shared_ptr<SwaptionHelper>(new SwaptionHelper(
-                tmp, 10 * Years,
-                Handle<Quote>(boost::make_shared<SimpleQuote>(0.015)),
-                euribor6m, 1 * Years, Thirty360(), Actual360(), d.eurYts,
-                CalibrationHelper::RelativePriceError, 0.04, 1.0, Normal)));
+        basketEur.push_back(boost::shared_ptr<SwaptionHelper>(new SwaptionHelper(
+            tmp, 10 * Years, Handle<Quote>(boost::make_shared<SimpleQuote>(0.015)), euribor6m, 1 * Years, Thirty360(),
+            Actual360(), d.eurYts, CalibrationHelper::RelativePriceError, 0.04, 1.0, Normal)));
         // USD: atm, 20%, lognormal vol
-        basketUsd.push_back(
-            boost::shared_ptr<SwaptionHelper>(new SwaptionHelper(
-                tmp, 10 * Years,
-                Handle<Quote>(boost::make_shared<SimpleQuote>(0.30)),
-                usdLibor3m, 1 * Years, Thirty360(), Actual360(), d.usdYts,
-                CalibrationHelper::RelativePriceError, Null<Real>(), 1.0,
-                ShiftedLognormal, 0.0)));
+        basketUsd.push_back(boost::shared_ptr<SwaptionHelper>(new SwaptionHelper(
+            tmp, 10 * Years, Handle<Quote>(boost::make_shared<SimpleQuote>(0.30)), usdLibor3m, 1 * Years, Thirty360(),
+            Actual360(), d.usdYts, CalibrationHelper::RelativePriceError, Null<Real>(), 1.0, ShiftedLognormal, 0.0)));
         // GBP: atm-200bp, 10%, shifted lognormal vol with shift = 2%
-        basketGbp.push_back(
-            boost::shared_ptr<SwaptionHelper>(new SwaptionHelper(
-                tmp, 10 * Years,
-                Handle<Quote>(boost::make_shared<SimpleQuote>(0.30)),
-                gbpLibor3m, 1 * Years, Thirty360(), Actual360(), d.usdYts,
-                CalibrationHelper::RelativePriceError, 0.02, 1.0,
-                ShiftedLognormal, 0.02)));
+        basketGbp.push_back(boost::shared_ptr<SwaptionHelper>(new SwaptionHelper(
+            tmp, 10 * Years, Handle<Quote>(boost::make_shared<SimpleQuote>(0.30)), gbpLibor3m, 1 * Years, Thirty360(),
+            Actual360(), d.usdYts, CalibrationHelper::RelativePriceError, 0.02, 1.0, ShiftedLognormal, 0.02)));
     }
 
     for (Size i = 0; i < d.volstepdatesFx.size(); ++i) {
-        Date tmp = i < d.volstepdatesFx.size() ? d.volstepdatesFx[i]
-                                               : d.volstepdatesFx.back() + 365;
+        Date tmp = i < d.volstepdatesFx.size() ? d.volstepdatesFx[i] : d.volstepdatesFx.back() + 365;
         // EUR-USD: atm, 30% (lognormal) vol
         basketEurUsd.push_back(boost::make_shared<FxOptionHelper>(
-            tmp, Null<Real>(), d.fxEurUsd,
-            Handle<Quote>(boost::make_shared<SimpleQuote>(0.20)), d.eurYts,
-            d.usdYts, CalibrationHelper::RelativePriceError));
+            tmp, Null<Real>(), d.fxEurUsd, Handle<Quote>(boost::make_shared<SimpleQuote>(0.20)), d.eurYts, d.usdYts,
+            CalibrationHelper::RelativePriceError));
         // EUR-GBP: atm, 10% (lognormal) vol
         basketEurGbp.push_back(boost::make_shared<FxOptionHelper>(
-            tmp, Null<Real>(), d.fxEurGbp,
-            Handle<Quote>(boost::make_shared<SimpleQuote>(0.20)), d.eurYts,
-            d.gbpYts, CalibrationHelper::RelativePriceError));
+            tmp, Null<Real>(), d.fxEurGbp, Handle<Quote>(boost::make_shared<SimpleQuote>(0.20)), d.eurYts, d.gbpYts,
+            CalibrationHelper::RelativePriceError));
     }
 
     // pricing engines
 
-    boost::shared_ptr<PricingEngine> eurSwEng =
-        boost::make_shared<AnalyticLgmSwaptionEngine>(d.ccLgm, 0);
-    boost::shared_ptr<PricingEngine> usdSwEng =
-        boost::make_shared<AnalyticLgmSwaptionEngine>(d.ccLgm, 1);
-    boost::shared_ptr<PricingEngine> gbpSwEng =
-        boost::make_shared<AnalyticLgmSwaptionEngine>(d.ccLgm, 2);
+    boost::shared_ptr<PricingEngine> eurSwEng = boost::make_shared<AnalyticLgmSwaptionEngine>(d.ccLgm, 0);
+    boost::shared_ptr<PricingEngine> usdSwEng = boost::make_shared<AnalyticLgmSwaptionEngine>(d.ccLgm, 1);
+    boost::shared_ptr<PricingEngine> gbpSwEng = boost::make_shared<AnalyticLgmSwaptionEngine>(d.ccLgm, 2);
 
     boost::shared_ptr<AnalyticCcLgmFxOptionEngine> eurUsdFxoEng =
         boost::make_shared<AnalyticCcLgmFxOptionEngine>(d.ccLgm, 0);
@@ -1055,69 +926,56 @@ void CrossAssetModelTest::testLgm5fFullCalibration() {
         Real market = basketEur[i]->marketValue();
         if (std::abs((model - market) / market) > tol)
             BOOST_ERROR("calibration failed for instrument #"
-                        << i << " in EUR basket, model value is " << model
-                        << " market value is " << market << " relative error "
-                        << std::abs((model - market) / market) << " tolerance "
-                        << tol);
+                        << i << " in EUR basket, model value is " << model << " market value is " << market
+                        << " relative error " << std::abs((model - market) / market) << " tolerance " << tol);
     }
     for (Size i = 0; i < basketUsd.size(); ++i) {
         Real model = basketUsd[i]->modelValue();
         Real market = basketUsd[i]->marketValue();
         if (std::abs((model - market) / market) > tol)
             BOOST_ERROR("calibration failed for instrument #"
-                        << i << " in USD basket, model value is " << model
-                        << " market value is " << market << " relative error "
-                        << std::abs((model - market) / market) << " tolerance "
-                        << tol);
+                        << i << " in USD basket, model value is " << model << " market value is " << market
+                        << " relative error " << std::abs((model - market) / market) << " tolerance " << tol);
     }
     for (Size i = 0; i < basketGbp.size(); ++i) {
         Real model = basketGbp[i]->modelValue();
         Real market = basketGbp[i]->marketValue();
         if (std::abs((model - market) / market) > tol)
             BOOST_ERROR("calibration failed for instrument #"
-                        << i << " in GBP basket, model value is " << model
-                        << " market value is " << market << " relative error "
-                        << std::abs((model - market) / market) << " tolerance "
-                        << tol);
+                        << i << " in GBP basket, model value is " << model << " market value is " << market
+                        << " relative error " << std::abs((model - market) / market) << " tolerance " << tol);
     }
     for (Size i = 0; i < basketEurUsd.size(); ++i) {
         Real model = basketEurUsd[i]->modelValue();
         Real market = basketEurUsd[i]->marketValue();
         if (std::abs((model - market) / market) > tol)
             BOOST_ERROR("calibration failed for instrument #"
-                        << i << " in EUR-USD basket, model value is " << model
-                        << " market value is " << market << " relative error "
-                        << std::abs((model - market) / market) << " tolerance "
-                        << tol);
+                        << i << " in EUR-USD basket, model value is " << model << " market value is " << market
+                        << " relative error " << std::abs((model - market) / market) << " tolerance " << tol);
     }
     for (Size i = 0; i < basketEurUsd.size(); ++i) {
         Real model = basketEurGbp[i]->modelValue();
         Real market = basketEurGbp[i]->marketValue();
         if (std::abs((model - market) / market) > tol)
             BOOST_ERROR("calibration failed for instrument #"
-                        << i << " in EUR-GBP basket, model value is " << model
-                        << " market value is " << market << " relative error "
-                        << std::abs((model - market) / market) << " tolerance "
-                        << tol);
+                        << i << " in EUR-GBP basket, model value is " << model << " market value is " << market
+                        << " relative error " << std::abs((model - market) / market) << " tolerance " << tol);
     }
 }
 
 void CrossAssetModelTest::testLgm5fMoments() {
 
-    BOOST_TEST_MESSAGE(
-        "Testing analytic moments vs. Euler and exact discretization "
-        "in Ccy LGM 5F model...");
+    BOOST_TEST_MESSAGE("Testing analytic moments vs. Euler and exact discretization "
+                       "in Ccy LGM 5F model...");
 
     Lgm5fTestData d;
 
-    boost::shared_ptr<StochasticProcess> p_exact =
-        d.ccLgm->stateProcess(CrossAssetStateProcess::exact);
-    boost::shared_ptr<StochasticProcess> p_euler =
-        d.ccLgm->stateProcess(CrossAssetStateProcess::euler);
+    boost::shared_ptr<StochasticProcess> p_exact = d.ccLgm->stateProcess(CrossAssetStateProcess::exact);
+    boost::shared_ptr<StochasticProcess> p_euler = d.ccLgm->stateProcess(CrossAssetStateProcess::euler);
 
-    Real T = 10.0;         // horizon at which we compare the moments
+    Real T = 10.0;                            // horizon at which we compare the moments
     Size steps = static_cast<Size>(T * 10.0); // number of simulation steps
-    Size paths = 25000;    // number of paths
+    Size paths = 25000;                       // number of paths
 
     Array e_an = p_exact->expectation(0.0, p_exact->initialValues(), T);
     Matrix v_an = p_exact->covariance(0.0, p_exact->initialValues(), T);
@@ -1127,10 +985,8 @@ void CrossAssetModelTest::testLgm5fMoments() {
     MultiPathGeneratorSobolBrownianBridge pgen(p_euler, grid);
     MultiPathGeneratorSobolBrownianBridge pgen2(p_exact, grid);
 
-    accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > >
-        e_eu[5], e_eu2[5];
-    accumulator_set<double, stats<tag::covariance<double, tag::covariate1> > >
-        v_eu[5][5], v_eu2[5][5];
+    accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > > e_eu[5], e_eu2[5];
+    accumulator_set<double, stats<tag::covariance<double, tag::covariate1> > > v_eu[5][5], v_eu2[5][5];
 
     for (Size i = 0; i < paths; ++i) {
         Sample<MultiPath> path = pgen.next();
@@ -1149,28 +1005,22 @@ void CrossAssetModelTest::testLgm5fMoments() {
         }
     }
 
-    Real errTolLd[] = {0.2E-4, 0.2E-4, 0.2E-4, 10.0E-4, 10.0E-4};
+    Real errTolLd[] = { 0.2E-4, 0.2E-4, 0.2E-4, 10.0E-4, 10.0E-4 };
 
     for (Size i = 0; i < 5; ++i) {
         // check expectation against analytical calculation (Euler)
         if (std::fabs(mean(e_eu[i]) - e_an[i]) > errTolLd[i]) {
             BOOST_ERROR("analytical expectation for component #"
-                        << i << " (" << e_an[i]
-                        << ") is inconsistent with numerical value (Euler "
-                           "discretization, "
-                        << mean(e_eu[i]) << "), error is "
-                        << e_an[i] - mean(e_eu[i]) << " tolerance is "
-                        << errTolLd[i]);
+                        << i << " (" << e_an[i] << ") is inconsistent with numerical value (Euler "
+                                                   "discretization, " << mean(e_eu[i]) << "), error is "
+                        << e_an[i] - mean(e_eu[i]) << " tolerance is " << errTolLd[i]);
         }
         // check expectation against analytical calculation (exact disc)
         if (std::fabs(mean(e_eu2[i]) - e_an[i]) > errTolLd[i]) {
             BOOST_ERROR("analytical expectation for component #"
-                        << i << " (" << e_an[i]
-                        << ") is inconsistent with numerical value (Exact "
-                           "discretization, "
-                        << mean(e_eu2[i]) << "), error is "
-                        << e_an[i] - mean(e_eu2[i]) << " tolerance is "
-                        << errTolLd[i]);
+                        << i << " (" << e_an[i] << ") is inconsistent with numerical value (Exact "
+                                                   "discretization, " << mean(e_eu2[i]) << "), error is "
+                        << e_an[i] - mean(e_eu2[i]) << " tolerance is " << errTolLd[i]);
         }
     }
 
@@ -1194,22 +1044,18 @@ void CrossAssetModelTest::testLgm5fMoments() {
                 }
             }
             if (std::fabs(covariance(v_eu[i][j]) - v_an[i][j]) > tol) {
-                BOOST_ERROR("analytical covariance at ("
-                            << i << "," << j << ") (" << v_an[i][j]
-                            << ") is inconsistent with numerical "
-                               "value (Euler discretization, "
-                            << covariance(v_eu[i][j]) << "), error is "
-                            << v_an[i][j] - covariance(v_eu[i][j])
-                            << " tolerance is " << tol);
+                BOOST_ERROR("analytical covariance at (" << i << "," << j << ") (" << v_an[i][j]
+                                                         << ") is inconsistent with numerical "
+                                                            "value (Euler discretization, " << covariance(v_eu[i][j])
+                                                         << "), error is " << v_an[i][j] - covariance(v_eu[i][j])
+                                                         << " tolerance is " << tol);
             }
             if (std::fabs(covariance(v_eu2[i][j]) - v_an[i][j]) > tol) {
-                BOOST_ERROR("analytical covariance at ("
-                            << i << "," << j << ") (" << v_an[i][j]
-                            << ") is inconsistent with numerical "
-                               "value (Exact discretization, "
-                            << covariance(v_eu2[i][j]) << "), error is "
-                            << v_an[i][j] - covariance(v_eu2[i][j])
-                            << " tolerance is " << tol);
+                BOOST_ERROR("analytical covariance at (" << i << "," << j << ") (" << v_an[i][j]
+                                                         << ") is inconsistent with numerical "
+                                                            "value (Exact discretization, " << covariance(v_eu2[i][j])
+                                                         << "), error is " << v_an[i][j] - covariance(v_eu2[i][j])
+                                                         << " tolerance is " << tol);
             }
         }
     }
@@ -1224,12 +1070,11 @@ void CrossAssetModelTest::testLgmGsrEquivalence() {
 
     Date evalDate(12, January, 2015);
     Settings::instance().evaluationDate() = evalDate;
-    Handle<YieldTermStructure> yts(
-        boost::make_shared<FlatForward>(evalDate, 0.02, Actual365Fixed()));
+    Handle<YieldTermStructure> yts(boost::make_shared<FlatForward>(evalDate, 0.02, Actual365Fixed()));
 
-    Real T[] = {10.0, 20.0, 50.0, 100.0};
-    Real sigma[] = {0.0050, 0.01, 0.02};
-    Real kappa[] = {-0.02, -0.01, 0.0, 0.03, 0.07};
+    Real T[] = { 10.0, 20.0, 50.0, 100.0 };
+    Real sigma[] = { 0.0050, 0.01, 0.02 };
+    Real kappa[] = { -0.02, -0.01, 0.0, 0.03, 0.07 };
 
     for (Size i = 0; i < LENGTH(T); ++i) {
         for (Size j = 0; j < LENGTH(sigma); ++j) {
@@ -1238,8 +1083,7 @@ void CrossAssetModelTest::testLgmGsrEquivalence() {
                 std::vector<Date> stepDates;
                 std::vector<Real> sigmas(1, sigma[j]);
 
-                boost::shared_ptr<Gsr> gsr = boost::make_shared<Gsr>(
-                    yts, stepDates, sigmas, kappa[k], T[i]);
+                boost::shared_ptr<Gsr> gsr = boost::make_shared<Gsr>(yts, stepDates, sigmas, kappa[k], T[i]);
 
                 Array stepTimes_a(0);
                 Array sigmas_a(1, sigma[j]);
@@ -1247,24 +1091,16 @@ void CrossAssetModelTest::testLgmGsrEquivalence() {
 
                 // for shift = -H(T) we change the LGM measure to the T forward
                 // measure effectively
-                Real shift =
-                    close_enough(kappa[k], 0.0)
-                        ? -T[i]
-                        : -(1.0 - std::exp(-kappa[k] * T[i])) / kappa[k];
+                Real shift = close_enough(kappa[k], 0.0) ? -T[i] : -(1.0 - std::exp(-kappa[k] * T[i])) / kappa[k];
                 boost::shared_ptr<IrLgm1fParametrization> lgm_p =
-                    boost::make_shared<
-                        IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
-                        EURCurrency(), yts, stepTimes_a, sigmas_a, stepTimes_a,
-                        kappas_a);
+                    boost::make_shared<IrLgm1fPiecewiseConstantHullWhiteAdaptor>(EURCurrency(), yts, stepTimes_a,
+                                                                                 sigmas_a, stepTimes_a, kappas_a);
                 lgm_p->shift() = shift;
 
-                boost::shared_ptr<LinearGaussMarkovModel> lgm =
-                    boost::make_shared<LinearGaussMarkovModel>(lgm_p);
+                boost::shared_ptr<LinearGaussMarkovModel> lgm = boost::make_shared<LinearGaussMarkovModel>(lgm_p);
 
-                boost::shared_ptr<StochasticProcess1D> gsr_process =
-                    gsr->stateProcess();
-                boost::shared_ptr<StochasticProcess1D> lgm_process =
-                    lgm->stateProcess();
+                boost::shared_ptr<StochasticProcess1D> gsr_process = gsr->stateProcess();
+                boost::shared_ptr<StochasticProcess1D> lgm_process = lgm->stateProcess();
 
                 Size N = 10000; // number of paths
                 Size seed = 123456;
@@ -1273,37 +1109,28 @@ void CrossAssetModelTest::testLgmGsrEquivalence() {
 
                 TimeGrid grid(T2, steps);
 
-                PseudoRandom::rsg_type sg =
-                    PseudoRandom::make_sequence_generator(steps * 1, seed);
-                PathGenerator<PseudoRandom::rsg_type> pgen_gsr(gsr_process,
-                                                               grid, sg, false);
-                PathGenerator<PseudoRandom::rsg_type> pgen_lgm(lgm_process,
-                                                               grid, sg, false);
+                PseudoRandom::rsg_type sg = PseudoRandom::make_sequence_generator(steps * 1, seed);
+                PathGenerator<PseudoRandom::rsg_type> pgen_gsr(gsr_process, grid, sg, false);
+                PathGenerator<PseudoRandom::rsg_type> pgen_lgm(lgm_process, grid, sg, false);
 
-                accumulator_set<double,
-                                stats<tag::mean, tag::error_of<tag::mean>,
-                                      tag::variance> > stat_lgm,
-                    stat_gsr;
+                accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean>, tag::variance> > stat_lgm, stat_gsr;
 
                 Real tol = 1.0E-12;
                 for (Size ii = 0; ii < N; ++ii) {
                     Sample<Path> path_lgm = pgen_lgm.next();
                     Sample<Path> path_gsr = pgen_gsr.next();
-                    Real yGsr = (path_gsr.value.back() -
-                                 gsr_process->expectation(0.0, 0.0, T2)) /
+                    Real yGsr = (path_gsr.value.back() - gsr_process->expectation(0.0, 0.0, T2)) /
                                 gsr_process->stdDeviation(0.0, 0.0, T2);
                     Real xLgm = path_lgm.value.back();
                     Real gsrRate = -std::log(gsr->zerobond(T2 + 1.0, T2, yGsr));
                     // it's nice to have uniform interfaces in all models ...
-                    Real lgmRate =
-                        -std::log(lgm->discountBond(T2, T2 + 1.0, xLgm));
+                    Real lgmRate = -std::log(lgm->discountBond(T2, T2 + 1.0, xLgm));
                     stat_gsr(gsrRate);
                     stat_lgm(lgmRate);
                     // check pathwise identity
                     if (std::fabs(gsrRate - lgmRate) >= tol) {
-                        BOOST_ERROR("lgm rate ("
-                                    << lgmRate << ") deviates from gsr rate ("
-                                    << gsrRate << ") on path #" << i);
+                        BOOST_ERROR("lgm rate (" << lgmRate << ") deviates from gsr rate (" << gsrRate << ") on path #"
+                                                 << i);
                     }
                 }
 
@@ -1315,11 +1142,9 @@ void CrossAssetModelTest::testLgmGsrEquivalence() {
                     std::fabs(variance(stat_gsr) - variance(stat_lgm)) > tol) {
                     BOOST_ERROR("failed to verify LGM-GSR equivalence, "
                                 "(mean,variance) of zero rate is ("
-                                << mean(stat_gsr) << "," << variance(stat_gsr)
-                                << ") for GSR, (" << mean(stat_lgm) << ","
-                                << variance(stat_lgm) << ") for LGM, for T="
-                                << T[i] << ", sigma=" << sigma[j] << ", kappa="
-                                << kappa[k] << ", shift=" << shift);
+                                << mean(stat_gsr) << "," << variance(stat_gsr) << ") for GSR, (" << mean(stat_lgm)
+                                << "," << variance(stat_lgm) << ") for LGM, for T=" << T[i] << ", sigma=" << sigma[j]
+                                << ", kappa=" << kappa[k] << ", shift=" << shift);
                 }
             }
         }
@@ -1328,29 +1153,24 @@ void CrossAssetModelTest::testLgmGsrEquivalence() {
 } // testLgmGsrEquivalence
 
 void CrossAssetModelTest::testLgmMcWithShift() {
-    BOOST_TEST_MESSAGE(
-        "Testing LGM1F Monte Carlo simulation with shifted H...");
+    BOOST_TEST_MESSAGE("Testing LGM1F Monte Carlo simulation with shifted H...");
 
     // cashflow time
     Real T = 50.0;
 
     // shift horizons
-    Real T_shift[] = {0.0, 10.0, 20.0, 30.0, 40.0, 50.0};
+    Real T_shift[] = { 0.0, 10.0, 20.0, 30.0, 40.0, 50.0 };
 
     // tolerances for error of mean
-    Real eom_tol[] = {0.17, 0.05, 0.02, 0.01, 0.005, 1.0E-12};
+    Real eom_tol[] = { 0.17, 0.05, 0.02, 0.01, 0.005, 1.0E-12 };
 
-    Handle<YieldTermStructure> yts(boost::make_shared<FlatForward>(
-        0, NullCalendar(), 0.02, Actual365Fixed()));
+    Handle<YieldTermStructure> yts(boost::make_shared<FlatForward>(0, NullCalendar(), 0.02, Actual365Fixed()));
 
     boost::shared_ptr<IrLgm1fParametrization> lgm =
-        boost::make_shared<IrLgm1fConstantParametrization>(EURCurrency(), yts,
-                                                           0.01, 0.01);
-    boost::shared_ptr<StochasticProcess> p =
-        boost::make_shared<IrLgm1fStateProcess>(lgm);
+        boost::make_shared<IrLgm1fConstantParametrization>(EURCurrency(), yts, 0.01, 0.01);
+    boost::shared_ptr<StochasticProcess> p = boost::make_shared<IrLgm1fStateProcess>(lgm);
 
-    boost::shared_ptr<LinearGaussMarkovModel> model =
-        boost::make_shared<LinearGaussMarkovModel>(lgm);
+    boost::shared_ptr<LinearGaussMarkovModel> model = boost::make_shared<LinearGaussMarkovModel>(lgm);
 
     Size steps = 1;
     Size paths = 10000;
@@ -1363,8 +1183,7 @@ void CrossAssetModelTest::testLgmMcWithShift() {
 
         lgm->shift() = -(1.0 - exp(-0.01 * T_shift[ii])) / 0.01;
 
-        accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > >
-            e_eu;
+        accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > > e_eu;
 
         for (Size i = 0; i < paths; ++i) {
             Sample<MultiPath> path = pgen.next();
@@ -1376,19 +1195,15 @@ void CrossAssetModelTest::testLgmMcWithShift() {
         Real discount = yts->discount(T);
 
         if (error_of<tag::mean>(e_eu) / discount > eom_tol[ii]) {
-            BOOST_ERROR(
-                "estimated error of mean for shifted mc simulation with shift "
-                << T_shift[ii] << " can not be verified ("
-                << error_of<tag::mean>(e_eu) / discount
-                << "), tolerance is 1E-8");
+            BOOST_ERROR("estimated error of mean for shifted mc simulation with shift "
+                        << T_shift[ii] << " can not be verified (" << error_of<tag::mean>(e_eu) / discount
+                        << "), tolerance is 1E-8");
         }
 
         if (std::fabs(mean(e_eu) / discount - 1.0) > eom_tol[ii]) {
             BOOST_ERROR("estimated error for shifted mc simulation with shift "
                         << T_shift[ii] << " can not "
-                                          "be verified ("
-                        << mean(e_eu) / discount - 1.0
-                        << "), tolerance is 1E-8");
+                                          "be verified (" << mean(e_eu) / discount - 1.0 << "), tolerance is 1E-8");
         }
     }
 
@@ -1400,13 +1215,12 @@ void CrossAssetModelTest::testCorrelationRecovery() {
                        "small dt in Ccy LGM model...");
 
     class PseudoCurrency : public Currency {
-      public:
+    public:
         PseudoCurrency(const Size id) {
             std::ostringstream ln, sn;
             ln << "Dummy " << id;
             sn << "DUM " << id;
-            data_ = boost::make_shared<Data>(ln.str(), sn.str(), id, sn.str(),
-                                             "", 100, Rounding(), "%3% %1$.2f");
+            data_ = boost::make_shared<Data>(ln.str(), sn.str(), id, sn.str(), "", 100, Rounding(), "%3% %1$.2f");
         }
     };
 
@@ -1415,12 +1229,11 @@ void CrossAssetModelTest::testCorrelationRecovery() {
 
     // for ir-fx this fully specifies the correlation matrix
     // for new asset classes add other possible combinations as well
-    Size currencies[] = {1, 2, 3, 4, 5, 10, 20, 50, 100};
+    Size currencies[] = { 1, 2, 3, 4, 5, 10, 20, 50, 100 };
 
     MersenneTwisterUniformRng mt(42);
 
-    Handle<YieldTermStructure> yts(boost::make_shared<FlatForward>(
-        0, NullCalendar(), 0.01, Actual365Fixed()));
+    Handle<YieldTermStructure> yts(boost::make_shared<FlatForward>(0, NullCalendar(), 0.01, Actual365Fixed()));
 
     Handle<Quote> fxspot(boost::make_shared<SimpleQuote>(1.00));
 
@@ -1474,24 +1287,19 @@ void CrossAssetModelTest::testCorrelationRecovery() {
         // IR
         for (Size i = 0; i < currencies[ii]; ++i) {
             parametrizations.push_back(
-                boost::make_shared<IrLgm1fConstantParametrization>(
-                    pseudoCcy[i], yts, 0.01, 0.01));
+                boost::make_shared<IrLgm1fConstantParametrization>(pseudoCcy[i], yts, 0.01, 0.01));
         }
         // FX
         for (Size i = 0; i < currencies[ii] - 1; ++i) {
             parametrizations.push_back(
-                boost::make_shared<FxBsPiecewiseConstantParametrization>(
-                    pseudoCcy[i + 1], fxspot, notimes, fxsigma));
+                boost::make_shared<FxBsPiecewiseConstantParametrization>(pseudoCcy[i + 1], fxspot, notimes, fxsigma));
         }
 
         boost::shared_ptr<CrossAssetModel> model =
-            boost::make_shared<CrossAssetModel>(parametrizations, c,
-                                                SalvagingAlgorithm::None);
+            boost::make_shared<CrossAssetModel>(parametrizations, c, SalvagingAlgorithm::None);
 
-        boost::shared_ptr<StochasticProcess> peuler =
-            model->stateProcess(CrossAssetStateProcess::euler);
-        boost::shared_ptr<StochasticProcess> pexact =
-            model->stateProcess(CrossAssetStateProcess::exact);
+        boost::shared_ptr<StochasticProcess> peuler = model->stateProcess(CrossAssetStateProcess::euler);
+        boost::shared_ptr<StochasticProcess> pexact = model->stateProcess(CrossAssetStateProcess::exact);
 
         Matrix c1 = peuler->covariance(0.0, peuler->initialValues(), dt);
         Matrix c2 = pexact->covariance(0.0, peuler->initialValues(), dt);
@@ -1505,18 +1313,14 @@ void CrossAssetModelTest::testCorrelationRecovery() {
                 if (std::fabs(r1[i][j] - c[i][j]) > tol) {
                     BOOST_ERROR("failed to recover correlation matrix from "
                                 "Euler state process (i,j)=("
-                                << i << "," << j << "), input correlation is "
-                                << c[i][j] << ", output is " << r1[i][j]
-                                << ", difference " << (c[i][j] - r1[i][j])
-                                << ", tolerance " << tol);
+                                << i << "," << j << "), input correlation is " << c[i][j] << ", output is " << r1[i][j]
+                                << ", difference " << (c[i][j] - r1[i][j]) << ", tolerance " << tol);
                 }
                 if (std::fabs(r2[i][j] - c[i][j]) > tol) {
                     BOOST_ERROR("failed to recover correlation matrix from "
                                 "exact state process (i,j)=("
-                                << i << "," << j << "), input correlation is "
-                                << c[i][j] << ", output is " << r2[i][j]
-                                << ", difference " << (c[i][j] - r2[i][j])
-                                << ", tolerance " << tol);
+                                << i << "," << j << "), input correlation is " << c[i][j] << ", output is " << r2[i][j]
+                                << ", difference " << (c[i][j] - r2[i][j]) << ", tolerance " << tol);
                 }
             }
         }
@@ -1525,26 +1329,19 @@ void CrossAssetModelTest::testCorrelationRecovery() {
 
 } // test correlation recovery
 
-test_suite *CrossAssetModelTest::suite() {
-    test_suite *suite = BOOST_TEST_SUITE("CrossAsset model tests");
+test_suite* CrossAssetModelTest::suite() {
+    test_suite* suite = BOOST_TEST_SUITE("CrossAsset model tests");
     suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testBermudanLgm1fGsr));
-    suite->add(
-        QUANTLIB_TEST_CASE(&CrossAssetModelTest::testBermudanLgmInvariances));
-    suite->add(QUANTLIB_TEST_CASE(
-        &CrossAssetModelTest::testNonstandardBermudanSwaption));
+    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testBermudanLgmInvariances));
+    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testNonstandardBermudanSwaption));
     suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testLgm1fCalibration));
-    suite->add(
-        QUANTLIB_TEST_CASE(&CrossAssetModelTest::testCcyLgm3fForeignPayouts));
-    suite->add(
-        QUANTLIB_TEST_CASE(&CrossAssetModelTest::testLgm5fFxCalibration));
-    suite->add(
-        QUANTLIB_TEST_CASE(&CrossAssetModelTest::testLgm5fFullCalibration));
+    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testCcyLgm3fForeignPayouts));
+    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testLgm5fFxCalibration));
+    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testLgm5fFullCalibration));
     suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testLgm5fMoments));
     suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testLgmGsrEquivalence));
     suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testLgmMcWithShift));
-    suite->add(
-        QUANTLIB_TEST_CASE(&CrossAssetModelTest::testCorrelationRecovery));
+    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testCorrelationRecovery));
     return suite;
 }
-
 }

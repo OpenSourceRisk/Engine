@@ -17,7 +17,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file qle/termstructures/datedstrippedoptionletadapter.hpp
     \brief StrippedOptionlet Adapter
     \ingroup termstructures
@@ -34,49 +33,49 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-    //! Adapter class for turning a DatedStrippedOptionletBase object into an OptionletVolatilityStructure
-    /*! Takes a DatedStrippedOptionletBase and converts it into an OptionletVolatilityStructure with a fixed 
-        reference date
+//! Adapter class for turning a DatedStrippedOptionletBase object into an OptionletVolatilityStructure
+/*! Takes a DatedStrippedOptionletBase and converts it into an OptionletVolatilityStructure with a fixed
+    reference date
 
-		\ingroup termstructures
-    */
-    class DatedStrippedOptionletAdapter : public OptionletVolatilityStructure, public LazyObject {
-      public:
-        DatedStrippedOptionletAdapter(const boost::shared_ptr<DatedStrippedOptionletBase>& s);
+            \ingroup termstructures
+*/
+class DatedStrippedOptionletAdapter : public OptionletVolatilityStructure, public LazyObject {
+public:
+    DatedStrippedOptionletAdapter(const boost::shared_ptr<DatedStrippedOptionletBase>& s);
 
-        //! \name TermStructure interface
-        //@{
-        Date maxDate() const;
-        //@}
-        //! \name VolatilityTermStructure interface
-        //@{
-        Rate minStrike() const;
-        Rate maxStrike() const;
-        //@}
-        //! \name LazyObject interface
-        //@{
-        void update();
-        void performCalculations() const;
-        //@}
+    //! \name TermStructure interface
+    //@{
+    Date maxDate() const;
+    //@}
+    //! \name VolatilityTermStructure interface
+    //@{
+    Rate minStrike() const;
+    Rate maxStrike() const;
+    //@}
+    //! \name LazyObject interface
+    //@{
+    void update();
+    void performCalculations() const;
+    //@}
 
-        VolatilityType volatilityType() const;
-        Real displacement() const;
+    VolatilityType volatilityType() const;
+    Real displacement() const;
 
-      protected:
-        //! \name OptionletVolatilityStructure interface
-        //@{
-        boost::shared_ptr<SmileSection> smileSectionImpl(Time optionTime) const;
-        Volatility volatilityImpl(Time length, Rate strike) const;
-        //@}
+protected:
+    //! \name OptionletVolatilityStructure interface
+    //@{
+    boost::shared_ptr<SmileSection> smileSectionImpl(Time optionTime) const;
+    Volatility volatilityImpl(Time length, Rate strike) const;
+    //@}
 
-      private:
-        const boost::shared_ptr<DatedStrippedOptionletBase> optionletStripper_;
-        Size nInterpolations_;
-        mutable vector<boost::shared_ptr<Interpolation> > strikeInterpolations_;
-    };
+private:
+    const boost::shared_ptr<DatedStrippedOptionletBase> optionletStripper_;
+    Size nInterpolations_;
+    mutable vector<boost::shared_ptr<Interpolation> > strikeInterpolations_;
+};
 
-    inline void DatedStrippedOptionletAdapter::update() {
-        TermStructure::update();
-        LazyObject::update();
-    }
+inline void DatedStrippedOptionletAdapter::update() {
+    TermStructure::update();
+    LazyObject::update();
+}
 }

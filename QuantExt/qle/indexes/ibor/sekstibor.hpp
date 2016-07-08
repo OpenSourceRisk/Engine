@@ -17,10 +17,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file sekstibor.hpp
     \brief SEK-STIBOR index
-    \ingroup indexes 
+    \ingroup indexes
 */
 
 #ifndef quantext_sekstibor_hpp
@@ -35,25 +34,22 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-    //! SEK-STIBOR index
-    /*! SEK-STIBOR rate published by Swedish Bankers' Association.
+//! SEK-STIBOR index
+/*! SEK-STIBOR rate published by Swedish Bankers' Association.
 
-        See <http://www.swedishbankers.se/web/bf.nsf/pages/startpage_eng.html>.
+    See <http://www.swedishbankers.se/web/bf.nsf/pages/startpage_eng.html>.
 
-        \remark Using Sweden calendar, should be Stockholm.
+    \remark Using Sweden calendar, should be Stockholm.
 
-        \warning Check roll convention and EOM.
+    \warning Check roll convention and EOM.
 
-		\ingroup indexes
-    */
-    class SEKStibor : public IborIndex {
-      public:
-        SEKStibor(const Period& tenor, const Handle<YieldTermStructure>& h =
-            Handle<YieldTermStructure>())
-            : IborIndex("SEK-STIBOR", tenor, 2, SEKCurrency(), Sweden(),
-                  ModifiedFollowing, false, Actual360(), h) {}
-    };
-
+            \ingroup indexes
+*/
+class SEKStibor : public IborIndex {
+public:
+    SEKStibor(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
+        : IborIndex("SEK-STIBOR", tenor, 2, SEKCurrency(), Sweden(), ModifiedFollowing, false, Actual360(), h) {}
+};
 }
 
 #endif

@@ -17,7 +17,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file inrmifor.hpp
     \brief INR-MIFOR index
     \ingroup indexes
@@ -35,25 +34,22 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-    //! INR-MIFOR index
-    /*! INR-MIFOR rate overseen by FIMMDA.
+//! INR-MIFOR index
+/*! INR-MIFOR rate overseen by FIMMDA.
 
-        See <http://www.fimmda.org>.
+    See <http://www.fimmda.org>.
 
-        \remark Using India calendar, should be Mumbai (excluding Saturday).
+    \remark Using India calendar, should be Mumbai (excluding Saturday).
 
-        \warning Check roll convention and EOM.
+    \warning Check roll convention and EOM.
 
-		\ingroup indexes
-    */
-    class INRMifor : public IborIndex {
-      public:
-        INRMifor(const Period& tenor, const Handle<YieldTermStructure>& h =
-            Handle<YieldTermStructure>())
-            : IborIndex("INR-MIFOR", tenor, 2, INRCurrency(), India(),
-                  ModifiedFollowing, false, Actual365Fixed(), h) {}
-    };
-
+            \ingroup indexes
+*/
+class INRMifor : public IborIndex {
+public:
+    INRMifor(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
+        : IborIndex("INR-MIFOR", tenor, 2, INRCurrency(), India(), ModifiedFollowing, false, Actual365Fixed(), h) {}
+};
 }
 
 #endif

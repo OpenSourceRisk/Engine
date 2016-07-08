@@ -17,132 +17,110 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 #include <qle/instruments/oiccbasisswap.hpp>
 #include <ql/cashflows/overnightindexedcoupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
 
 namespace QuantExt {
 
-    OvernightIndexedCrossCcyBasisSwap::OvernightIndexedCrossCcyBasisSwap(
-                             Real payNominal,
-                             Currency payCurrency,
-                             const Schedule& paySchedule,
-                             const boost::shared_ptr<OvernightIndex>& payIndex,
-                             Real paySpread,
-                             Real recNominal,
-                             Currency recCurrency,
-                             const Schedule& recSchedule,
-                             const boost::shared_ptr<OvernightIndex>& recIndex,
-                             Real recSpread)
-        : Swap(2),
-          payNominal_(payNominal),
-          recNominal_(recNominal),
-          payCurrency_(payCurrency),
-          recCurrency_(recCurrency),
-          paySchedule_(paySchedule),
-          recSchedule_(recSchedule),
-          payIndex_(payIndex),
-          recIndex_(recIndex),
-          paySpread_(paySpread),
-          recSpread_(recSpread),
-          currency_(2) {
+OvernightIndexedCrossCcyBasisSwap::OvernightIndexedCrossCcyBasisSwap(
+    Real payNominal, Currency payCurrency, const Schedule& paySchedule,
+    const boost::shared_ptr<OvernightIndex>& payIndex, Real paySpread, Real recNominal, Currency recCurrency,
+    const Schedule& recSchedule, const boost::shared_ptr<OvernightIndex>& recIndex, Real recSpread)
+    : Swap(2), payNominal_(payNominal), recNominal_(recNominal), payCurrency_(payCurrency), recCurrency_(recCurrency),
+      paySchedule_(paySchedule), recSchedule_(recSchedule), payIndex_(payIndex), recIndex_(recIndex),
+      paySpread_(paySpread), recSpread_(recSpread), currency_(2) {
 
-        registerWith(payIndex);
-        registerWith(recIndex);
-        initialize();
+    registerWith(payIndex);
+    registerWith(recIndex);
+    initialize();
+}
+
+void OvernightIndexedCrossCcyBasisSwap::initialize() {
+    legs_[0] = OvernightLeg(paySchedule_, payIndex_).withNotionals(payNominal_).withSpreads(paySpread_);
+    legs_[0].insert(legs_[0].begin(),
+                    boost::shared_ptr<CashFlow>(new SimpleCashFlow(-payNominal_, paySchedule_.dates().front())));
+    legs_[0].push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(payNominal_, paySchedule_.dates().back())));
+
+    legs_[1] = OvernightLeg(recSchedule_, recIndex_).withNotionals(recNominal_).withSpreads(recSpread_);
+    legs_[1].insert(legs_[1].begin(),
+                    boost::shared_ptr<CashFlow>(new SimpleCashFlow(-recNominal_, recSchedule_.dates().front())));
+    legs_[1].push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(recNominal_, recSchedule_.dates().back())));
+
+    for (Size j = 0; j < 2; ++j) {
+        for (Leg::iterator i = legs_[j].begin(); i != legs_[j].end(); ++i)
+            registerWith(*i);
     }
 
-    void OvernightIndexedCrossCcyBasisSwap::initialize() {
-        legs_[0] = OvernightLeg(paySchedule_, payIndex_)
-            .withNotionals(payNominal_)
-            .withSpreads(paySpread_);
-        legs_[0].insert(legs_[0].begin(),
-                        boost::shared_ptr<CashFlow>(new SimpleCashFlow(-payNominal_, paySchedule_.dates().front())));
-        legs_[0].push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(payNominal_, paySchedule_.dates().back())));
+    payer_[0] = -1.0;
+    payer_[1] = +1.0;
 
-        legs_[1] = OvernightLeg(recSchedule_, recIndex_)
-            .withNotionals(recNominal_)
-            .withSpreads(recSpread_);
-        legs_[1].insert(legs_[1].begin(),
-                        boost::shared_ptr<CashFlow>(new SimpleCashFlow(-recNominal_, recSchedule_.dates().front())));
-        legs_[1].push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(recNominal_, recSchedule_.dates().back())));
+    currency_[0] = payCurrency_;
+    currency_[1] = recCurrency_;
+}
 
-        for (Size j=0; j<2; ++j) {
-            for (Leg::iterator i = legs_[j].begin(); i!= legs_[j].end(); ++i)
-                registerWith(*i);
-        }
+Spread OvernightIndexedCrossCcyBasisSwap::fairPayLegSpread() const {
+    calculate();
+    QL_REQUIRE(fairPayLegSpread_ != Null<Real>(), "result not available");
+    return fairPayLegSpread_;
+}
 
-        payer_[0] = -1.0;
-        payer_[1] = +1.0;
+Spread OvernightIndexedCrossCcyBasisSwap::fairRecLegSpread() const {
+    calculate();
+    QL_REQUIRE(fairRecLegSpread_ != Null<Real>(), "result not available");
+    return fairRecLegSpread_;
+}
 
-        currency_[0] = payCurrency_;
-        currency_[1] = recCurrency_;
-    }
+Real OvernightIndexedCrossCcyBasisSwap::payLegBPS() const {
+    calculate();
+    QL_REQUIRE(legBPS_[0] != Null<Real>(), "result not available");
+    return legBPS_[0];
+}
 
-    Spread OvernightIndexedCrossCcyBasisSwap::fairPayLegSpread() const {
-        calculate();
-        QL_REQUIRE(fairPayLegSpread_ != Null<Real>(), "result not available");
-        return fairPayLegSpread_;
-    }
+Real OvernightIndexedCrossCcyBasisSwap::recLegBPS() const {
+    calculate();
+    QL_REQUIRE(legBPS_[1] != Null<Real>(), "result not available");
+    return legBPS_[1];
+}
 
-    Spread OvernightIndexedCrossCcyBasisSwap::fairRecLegSpread() const {
-        calculate();
-        QL_REQUIRE(fairRecLegSpread_ != Null<Real>(), "result not available");
-        return fairRecLegSpread_;
-    }
+Real OvernightIndexedCrossCcyBasisSwap::payLegNPV() const {
+    calculate();
+    QL_REQUIRE(legNPV_[0] != Null<Real>(), "result not available");
+    return legNPV_[0];
+}
 
-    Real OvernightIndexedCrossCcyBasisSwap::payLegBPS() const {
-        calculate();
-        QL_REQUIRE(legBPS_[0] != Null<Real>(), "result not available");
-        return legBPS_[0];
-    }
+Real OvernightIndexedCrossCcyBasisSwap::recLegNPV() const {
+    calculate();
+    QL_REQUIRE(legNPV_[1] != Null<Real>(), "result not available");
+    return legNPV_[1];
+}
 
-    Real OvernightIndexedCrossCcyBasisSwap::recLegBPS() const {
-        calculate();
-        QL_REQUIRE(legBPS_[1] != Null<Real>(), "result not available");
-        return legBPS_[1];
-    }
+void OvernightIndexedCrossCcyBasisSwap::setupArguments(PricingEngine::arguments* args) const {
+    Swap::setupArguments(args);
 
-    Real OvernightIndexedCrossCcyBasisSwap::payLegNPV() const {
-        calculate();
-        QL_REQUIRE(legNPV_[0] != Null<Real>(), "result not available");
-        return legNPV_[0];
-    }
+    OvernightIndexedCrossCcyBasisSwap::arguments* arguments =
+        dynamic_cast<OvernightIndexedCrossCcyBasisSwap::arguments*>(args);
+    QL_REQUIRE(arguments != 0, "wrong argument type");
 
-    Real OvernightIndexedCrossCcyBasisSwap::recLegNPV() const {
-        calculate();
-        QL_REQUIRE(legNPV_[1] != Null<Real>(), "result not available");
-        return legNPV_[1];
-    }
+    arguments->currency = currency_;
+    arguments->paySpread = paySpread_;
+    arguments->recSpread = recSpread_;
+}
 
-    void OvernightIndexedCrossCcyBasisSwap::setupArguments(PricingEngine::arguments* args) const {
-        Swap::setupArguments(args);
+void OvernightIndexedCrossCcyBasisSwap::fetchResults(const PricingEngine::results* r) const {
+    Swap::fetchResults(r);
 
-        OvernightIndexedCrossCcyBasisSwap::arguments* arguments =
-            dynamic_cast<OvernightIndexedCrossCcyBasisSwap::arguments*>(args);
-        QL_REQUIRE(arguments != 0, "wrong argument type");
+    const OvernightIndexedCrossCcyBasisSwap::results* results =
+        dynamic_cast<const OvernightIndexedCrossCcyBasisSwap::results*>(r);
+    QL_REQUIRE(results != 0, "wrong result type");
 
-        arguments->currency = currency_;
-        arguments->paySpread = paySpread_;
-        arguments->recSpread = recSpread_;
-    }
+    fairRecLegSpread_ = results->fairRecLegSpread;
+    fairPayLegSpread_ = results->fairPayLegSpread;
+}
 
-    void OvernightIndexedCrossCcyBasisSwap::fetchResults(const PricingEngine::results* r) const {
-        Swap::fetchResults(r);
-
-        const OvernightIndexedCrossCcyBasisSwap::results* results
-            = dynamic_cast<const OvernightIndexedCrossCcyBasisSwap::results*>(r);
-        QL_REQUIRE(results != 0, "wrong result type");
-
-        fairRecLegSpread_ = results->fairRecLegSpread;
-        fairPayLegSpread_ = results->fairPayLegSpread;
-    }
-
-    void OvernightIndexedCrossCcyBasisSwap::results::reset() {
-        Swap::results::reset();
-        fairPayLegSpread = Null<Real>();
-        fairRecLegSpread = Null<Real>();
-    }
-
+void OvernightIndexedCrossCcyBasisSwap::results::reset() {
+    Swap::results::reset();
+    fairPayLegSpread = Null<Real>();
+    fairRecLegSpread = Null<Real>();
+}
 }

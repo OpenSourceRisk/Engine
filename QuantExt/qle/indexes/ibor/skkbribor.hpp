@@ -17,10 +17,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file skkbribor.hpp
     \brief SKK-BRIBOR index
-    \ingroup indexes 
+    \ingroup indexes
 */
 
 #ifndef quantext_skkbribor_hpp
@@ -35,25 +34,22 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-    //! SKK-BRIBOR index
-    /*! SKK-BRIBOR rate overseen by the central bank of the Slovak Republic.
+//! SKK-BRIBOR index
+/*! SKK-BRIBOR rate overseen by the central bank of the Slovak Republic.
 
-        See <http://www.nbs.sk/en/home>.
+    See <http://www.nbs.sk/en/home>.
 
-        \remark Using Slovakia calendar, should be Bratislava.
+    \remark Using Slovakia calendar, should be Bratislava.
 
-        \warning Check roll convention and EOM.
+    \warning Check roll convention and EOM.
 
-		\ingroup indexes
-    */
-    class SKKBribor : public IborIndex {
-      public:
-        SKKBribor(const Period& tenor, const Handle<YieldTermStructure>& h =
-            Handle<YieldTermStructure>())
-            : IborIndex("SKK-BRIBOR", tenor, 2, SKKCurrency(), Slovakia(),
-                  ModifiedFollowing, false, Actual360(), h) {}
-    };
-
+            \ingroup indexes
+*/
+class SKKBribor : public IborIndex {
+public:
+    SKKBribor(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
+        : IborIndex("SKK-BRIBOR", tenor, 2, SKKCurrency(), Slovakia(), ModifiedFollowing, false, Actual360(), h) {}
+};
 }
 
 #endif

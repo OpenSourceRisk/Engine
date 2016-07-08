@@ -21,4 +21,3 @@
 #include <qle/models/parametrization.hpp>
 #include <qle/models/piecewiseconstanthelper.hpp>
 #include <qle/models/pseudoparameter.hpp>
-

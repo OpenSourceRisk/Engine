@@ -17,98 +17,77 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 #include <ql/event.hpp>
 
 #include <qle/pricingengines/discountingfxforwardengine.hpp>
 
 namespace QuantExt {
 
-    DiscountingFxForwardEngine::DiscountingFxForwardEngine(
-        const Currency& ccy1,
-        const Handle<YieldTermStructure>& currency1Discountcurve,
-        const Currency& ccy2,
-        const Handle<YieldTermStructure>& currency2Discountcurve,
-        const Handle<Quote>& spotFX,
-        boost::optional<bool> includeSettlementDateFlows,
-        const Date& settlementDate,
-        const Date& npvDate)
-    : ccy1_(ccy1),
-      currency1Discountcurve_(currency1Discountcurve),
-      ccy2_(ccy2),
-      currency2Discountcurve_(currency2Discountcurve),
-      spotFX_(spotFX),
-      includeSettlementDateFlows_(includeSettlementDateFlows),
-      settlementDate_(settlementDate),
-      npvDate_(npvDate) {
-        registerWith(currency1Discountcurve_);
-        registerWith(currency2Discountcurve_);
-        registerWith(spotFX_);
+DiscountingFxForwardEngine::DiscountingFxForwardEngine(
+    const Currency& ccy1, const Handle<YieldTermStructure>& currency1Discountcurve, const Currency& ccy2,
+    const Handle<YieldTermStructure>& currency2Discountcurve, const Handle<Quote>& spotFX,
+    boost::optional<bool> includeSettlementDateFlows, const Date& settlementDate, const Date& npvDate)
+    : ccy1_(ccy1), currency1Discountcurve_(currency1Discountcurve), ccy2_(ccy2),
+      currency2Discountcurve_(currency2Discountcurve), spotFX_(spotFX),
+      includeSettlementDateFlows_(includeSettlementDateFlows), settlementDate_(settlementDate), npvDate_(npvDate) {
+    registerWith(currency1Discountcurve_);
+    registerWith(currency2Discountcurve_);
+    registerWith(spotFX_);
+}
+
+void DiscountingFxForwardEngine::calculate() const {
+
+    Date npvDate = npvDate_;
+    if (npvDate == Null<Date>()) {
+        npvDate = currency1Discountcurve_->referenceDate();
+    }
+    Date settlementDate = settlementDate_;
+    if (settlementDate == Null<Date>()) {
+        settlementDate = npvDate;
     }
 
-    void DiscountingFxForwardEngine::calculate() const {
+    Real tmpNominal1, tmpNominal2;
+    bool tmpPayCurrency1;
+    if (ccy1_ == arguments_.currency1) {
+        QL_REQUIRE(ccy2_ == arguments_.currency2, "mismatched currency pairs ("
+                                                      << ccy1_ << "," << ccy2_ << ") in the egine and ("
+                                                      << arguments_.currency1 << "," << arguments_.currency2
+                                                      << ") in the instrument");
+        tmpNominal1 = arguments_.nominal1;
+        tmpNominal2 = arguments_.nominal2;
+        tmpPayCurrency1 = arguments_.payCurrency1;
+    } else {
+        QL_REQUIRE(ccy1_ == arguments_.currency2 && ccy2_ == arguments_.currency1,
+                   "mismatched currency pairs (" << ccy1_ << "," << ccy2_ << ") in the egine and ("
+                                                 << arguments_.currency1 << "," << arguments_.currency2
+                                                 << ") in the instrument");
+        tmpNominal1 = arguments_.nominal2;
+        tmpNominal2 = arguments_.nominal1;
+        tmpPayCurrency1 = !arguments_.payCurrency1;
+    }
 
-        Date npvDate = npvDate_;
-        if(npvDate == Null<Date>()) {
-            npvDate = currency1Discountcurve_->referenceDate();
-        }
-        Date settlementDate = settlementDate_;
-        if(settlementDate == Null<Date>()) {
-            settlementDate = npvDate;
-        }
+    QL_REQUIRE(!currency1Discountcurve_.empty() && !currency2Discountcurve_.empty(),
+               "Discounting term structure handle is empty.");
 
-        Real tmpNominal1, tmpNominal2;
-        bool tmpPayCurrency1;
-        if(ccy1_ == arguments_.currency1) {
-            QL_REQUIRE(ccy2_ == arguments_.currency2,
-                       "mismatched currency pairs ("
-                           << ccy1_ << "," << ccy2_ << ") in the egine and ("
-                           << arguments_.currency1 << ","
-                           << arguments_.currency2 << ") in the instrument");
-            tmpNominal1 = arguments_.nominal1;
-            tmpNominal2 = arguments_.nominal2;
-            tmpPayCurrency1 = arguments_.payCurrency1;
-        }
-        else {
-            QL_REQUIRE(ccy1_ == arguments_.currency2 &&
-                           ccy2_ == arguments_.currency1,
-                       "mismatched currency pairs ("
-                           << ccy1_ << "," << ccy2_ << ") in the egine and ("
-                           << arguments_.currency1 << ","
-                           << arguments_.currency2 << ") in the instrument");
-            tmpNominal1 = arguments_.nominal2;
-            tmpNominal2 = arguments_.nominal1;
-            tmpPayCurrency1 = !arguments_.payCurrency1;
-        }
+    QL_REQUIRE(currency1Discountcurve_->referenceDate() == currency2Discountcurve_->referenceDate(),
+               "Term structures should have the same reference date.");
 
-        QL_REQUIRE(!currency1Discountcurve_.empty() &&
-            !currency2Discountcurve_.empty(),
-            "Discounting term structure handle is empty.");
+    QL_REQUIRE(arguments_.maturityDate >= currency1Discountcurve_->referenceDate(),
+               "FX forward maturity should exceed or equal the "
+               "discount curve reference date.");
 
-        QL_REQUIRE(currency1Discountcurve_->referenceDate() ==
-            currency2Discountcurve_->referenceDate(),
-            "Term structures should have the same reference date.");
+    results_.value = 0.0;
 
-        QL_REQUIRE(arguments_.maturityDate >=
-            currency1Discountcurve_->referenceDate(),
-            "FX forward maturity should exceed or equal the "
-            "discount curve reference date.");
+    if (!detail::simple_event(arguments_.maturityDate).hasOccurred(settlementDate, includeSettlementDateFlows_)) {
+        results_.value =
+            (tmpPayCurrency1 ? -1.0 : 1.0) * (tmpNominal1 * currency1Discountcurve_->discount(arguments_.maturityDate) /
+                                                  currency1Discountcurve_->discount(npvDate) -
+                                              tmpNominal2 * currency2Discountcurve_->discount(arguments_.maturityDate) /
+                                                  currency2Discountcurve_->discount(npvDate) * spotFX_->value());
+    }
+    results_.npv = Money(ccy1_, results_.value);
+    results_.fairForwardRate = ExchangeRate(ccy2_, ccy1_, tmpNominal1 / tmpNominal2);
 
-        results_.value = 0.0;
-
-        if (!detail::simple_event(arguments_.maturityDate).hasOccurred(
-                settlementDate, includeSettlementDateFlows_)) {
-            results_.value = (tmpPayCurrency1 ? -1.0 : 1.0) * (
-                tmpNominal1 *
-                currency1Discountcurve_->discount(arguments_.maturityDate) /
-                currency1Discountcurve_->discount(npvDate) -
-                tmpNominal2 *
-                currency2Discountcurve_->discount(arguments_.maturityDate) /
-                currency2Discountcurve_->discount(npvDate)*spotFX_->value());
-        }
-        results_.npv = Money(ccy1_, results_.value);
-        results_.fairForwardRate = ExchangeRate(ccy2_, ccy1_, tmpNominal1/tmpNominal2);
-
-    } //calculate
+} // calculate
 
 } // namespace QuantExt

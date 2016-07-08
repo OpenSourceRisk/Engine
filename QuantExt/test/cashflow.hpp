@@ -17,7 +17,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file test/cashflow.hpp
     \brief Cashflow tests
     \ingroup tests
@@ -34,7 +33,7 @@ namespace testsuite {
 /*! \ingroup tests
 */
 class CashFlowTest {
-  public:
+public:
     static void testFXLinkedCashFlow();
     static boost::unit_test_framework::test_suite* suite();
 };

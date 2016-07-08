@@ -17,7 +17,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file irlgm1fstateprocess.hpp
     \brief ir LGM 1f model state process
     \ingroup processes
@@ -34,12 +33,11 @@ using namespace QuantLib;
 namespace QuantExt {
 
 //! Ir Lgm 1f State Process
-/*! \ingroup processes 
+/*! \ingroup processes
 */
 class IrLgm1fStateProcess : public StochasticProcess1D {
-  public:
-    IrLgm1fStateProcess(
-        const boost::shared_ptr<IrLgm1fParametrization> &parametrization);
+public:
+    IrLgm1fStateProcess(const boost::shared_ptr<IrLgm1fParametrization>& parametrization);
     //! \name StochasticProcess interface
     //@{
     Real x0() const;
@@ -49,7 +47,7 @@ class IrLgm1fStateProcess : public StochasticProcess1D {
     Real stdDeviation(Time t0, Real x0, Time dt) const;
     Real variance(Time t0, Real x0, Time dt) const;
     //@}
-  private:
+private:
     const boost::shared_ptr<IrLgm1fParametrization> p_;
 };
 
@@ -59,17 +57,11 @@ inline Real IrLgm1fStateProcess::x0() const { return 0.0; }
 
 inline Real IrLgm1fStateProcess::drift(Time, Real) const { return 0.0; }
 
-inline Real IrLgm1fStateProcess::diffusion(Time t, Real) const {
-    return p_->alpha(t);
-}
+inline Real IrLgm1fStateProcess::diffusion(Time t, Real) const { return p_->alpha(t); }
 
-inline Real IrLgm1fStateProcess::expectation(Time, Real x0, Time) const {
-    return x0;
-}
+inline Real IrLgm1fStateProcess::expectation(Time, Real x0, Time) const { return x0; }
 
-inline Real IrLgm1fStateProcess::variance(Time t0, Real, Time dt) const {
-    return p_->zeta(t0 + dt) - p_->zeta(t0);
-}
+inline Real IrLgm1fStateProcess::variance(Time t0, Real, Time dt) const { return p_->zeta(t0 + dt) - p_->zeta(t0); }
 
 inline Real IrLgm1fStateProcess::stdDeviation(Time t0, Real x0, Time dt) const {
     return std::sqrt(variance(t0, x0, dt));

@@ -17,7 +17,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file hufbubor.hpp
     \brief HUF-BUBOR index
     \ingroup indexes
@@ -35,26 +34,23 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-    //! HUF-BUBOR index
-    /*! HUF-BUBOR rate overseen by MFT in association with the National
-        Bank of Hungary.
+//! HUF-BUBOR index
+/*! HUF-BUBOR rate overseen by MFT in association with the National
+    Bank of Hungary.
 
-        See <http://www.acihungary.hu/en/index.php?id=bubor>.
+    See <http://www.acihungary.hu/en/index.php?id=bubor>.
 
-        \remark Using Hungary calendar, should be Budapest.
+    \remark Using Hungary calendar, should be Budapest.
 
-        \warning Check roll convention and EOM.
+    \warning Check roll convention and EOM.
 
-		\ingroup indexes
-    */
-    class HUFBubor : public IborIndex {
-      public:
-        HUFBubor(const Period& tenor, const Handle<YieldTermStructure>& h =
-            Handle<YieldTermStructure>())
-            : IborIndex("HUF-BUBOR", tenor, 2, HUFCurrency(), Hungary(),
-                  ModifiedFollowing, false, Actual360(), h) {}
-    };
-
+            \ingroup indexes
+*/
+class HUFBubor : public IborIndex {
+public:
+    HUFBubor(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
+        : IborIndex("HUF-BUBOR", tenor, 2, HUFCurrency(), Hungary(), ModifiedFollowing, false, Actual360(), h) {}
+};
 }
 
 #endif

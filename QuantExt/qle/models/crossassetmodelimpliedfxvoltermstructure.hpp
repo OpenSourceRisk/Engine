@@ -17,7 +17,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file qle/models/crossassetmodelimpliedfxvoltermstructure.hpp
     \brief dynamic black volatility term structure
     \ingroup crossassetmodel
@@ -42,28 +41,24 @@ class AnalyticCcLgmFxOptionEngine;
 //! Cross Asset Model Implied FX Term Structure
 /*! The termstructure as the reference date of the model at construction,
   you can vary this and the relevant state variables using the state() and
-  move() methods. 
-  
+  move() methods.
+
   \ingroup crossassetmodel
 */
 
 /* TODO probably slow, we need to introduce a cache */
 
 class CrossAssetModelImpliedFxVolTermStructure : public BlackVolTermStructure {
-  public:
-    CrossAssetModelImpliedFxVolTermStructure(
-        const boost::shared_ptr<CrossAssetModel> &model,
-        const Size foreignCurrencyIndex, BusinessDayConvention bdc = Following,
-        const DayCounter &dc = DayCounter(),
-        const bool purelyTimeBased = false);
+public:
+    CrossAssetModelImpliedFxVolTermStructure(const boost::shared_ptr<CrossAssetModel>& model,
+                                             const Size foreignCurrencyIndex, BusinessDayConvention bdc = Following,
+                                             const DayCounter& dc = DayCounter(), const bool purelyTimeBased = false);
 
-    void referenceDate(const Date &d);
+    void referenceDate(const Date& d);
     void referenceTime(const Time t);
     void state(const Real domesticIr, const Real foreignIr, const Real logFx);
-    void move(const Date &d, const Real domesticIr, const Real foreignIr,
-              const Real logFx);
-    void move(const Time t, const Real domesticIr, const Real foreignIr,
-              const Real logFx);
+    void move(const Date& d, const Real domesticIr, const Real foreignIr, const Real logFx);
+    void move(const Time t, const Real domesticIr, const Real foreignIr, const Real logFx);
 
     /* VolatilityTermStructure interface */
     Real minStrike() const;
@@ -71,18 +66,18 @@ class CrossAssetModelImpliedFxVolTermStructure : public BlackVolTermStructure {
     /* TermStructure interface */
     Date maxDate() const;
     Time maxTime() const;
-    const Date &referenceDate() const;
+    const Date& referenceDate() const;
     /* Observer interface */
     void update();
 
     Size fxIndex() const { return fxIndex_; }
 
-  protected:
+protected:
     /* BlackVolTermStructure interface */
     Real blackVarianceImpl(Time t, Real strike) const;
     Volatility blackVolImpl(Time t, Real strike) const;
 
-  private:
+private:
     const boost::shared_ptr<CrossAssetModel> model_;
     const Size fxIndex_;
     const bool purelyTimeBased_;

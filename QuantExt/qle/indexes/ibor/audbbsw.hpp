@@ -17,7 +17,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file audbbsw.hpp
     \brief AUD-BBSW index
     \ingroup indexes
@@ -35,26 +34,23 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-    //! AUD-BBSW index
-    /*! AUD-BBSW rate fixed by the AFMA.
+//! AUD-BBSW index
+/*! AUD-BBSW rate fixed by the AFMA.
 
-        See <http://www.afma.com.au/data/bbsw.html>.
+    See <http://www.afma.com.au/data/bbsw.html>.
 
-        \remark Using Australia calendar, should be Sydney.
+    \remark Using Australia calendar, should be Sydney.
 
-        \warning Convention should be Modified Following Bimonthly.
-        \warning Check EOM.
+    \warning Convention should be Modified Following Bimonthly.
+    \warning Check EOM.
 
-		\ingroup indexes
-    */
-    class AUDbbsw : public IborIndex {
-      public:
-        AUDbbsw(const Period& tenor, const Handle<YieldTermStructure>& h =
-            Handle<YieldTermStructure>())
-            : IborIndex("AUD-BBSW", tenor, 0, AUDCurrency(), Australia(),
-                  ModifiedFollowing, false, Actual365Fixed(), h) {}
-    };
-
+            \ingroup indexes
+*/
+class AUDbbsw : public IborIndex {
+public:
+    AUDbbsw(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
+        : IborIndex("AUD-BBSW", tenor, 0, AUDCurrency(), Australia(), ModifiedFollowing, false, Actual365Fixed(), h) {}
+};
 }
 
 #endif

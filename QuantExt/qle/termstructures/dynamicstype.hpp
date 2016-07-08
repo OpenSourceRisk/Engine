@@ -17,7 +17,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file dynamicstype.hpp
     \brief dynamics type definitions
     \ingroup termstructures
@@ -45,7 +44,7 @@ enum YieldCurveRollDown { ConstantDiscounts, ForwardForward };
 
 /*! @} */
 
-inline std::ostream &operator<<(std::ostream &out, const Stickyness &t) {
+inline std::ostream& operator<<(std::ostream& out, const Stickyness& t) {
     switch (t) {
     case StickyStrike:
         return out << "StickyStrike";
@@ -58,8 +57,7 @@ inline std::ostream &operator<<(std::ostream &out, const Stickyness &t) {
     }
 }
 
-inline std::ostream &operator<<(std::ostream &out,
-                                const ReactionToTimeDecay &t) {
+inline std::ostream& operator<<(std::ostream& out, const ReactionToTimeDecay& t) {
     switch (t) {
     case ConstantVariance:
         return out << "ConstantVariance";
@@ -70,8 +68,7 @@ inline std::ostream &operator<<(std::ostream &out,
     }
 }
 
-inline std::ostream &operator<<(std::ostream &out,
-                                const YieldCurveRollDown &t) {
+inline std::ostream& operator<<(std::ostream& out, const YieldCurveRollDown& t) {
     switch (t) {
     case ConstantDiscounts:
         return out << "ConstantDiscounts";

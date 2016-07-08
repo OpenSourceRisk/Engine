@@ -17,7 +17,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 #include "dynamicswaptionvolmatrix.hpp"
 
 #include <qle/termstructures/dynamicswaptionvolmatrix.hpp>
@@ -45,13 +44,14 @@ struct TestData {
         swapTenors.push_back(1 * Years);
         swapTenors.push_back(2 * Years);
         //    sw 1Y                   sw 2Y
-        atmVols[0][0] = 0.0050; atmVols[0][1] = 0.0060; // opt 3m
-        atmVols[1][0] = 0.0100; atmVols[1][1] = 0.0160; // opt 2y
+        atmVols[0][0] = 0.0050;
+        atmVols[0][1] = 0.0060; // opt 3m
+        atmVols[1][0] = 0.0100;
+        atmVols[1][1] = 0.0160; // opt 2y
 
         // atm surface
-        atmSurface = boost::make_shared<SwaptionVolatilityMatrix>(
-            origRefDate, TARGET(), Following, optionTenors, swapTenors, atmVols,
-            Actual365Fixed(), false, Normal);
+        atmSurface = boost::make_shared<SwaptionVolatilityMatrix>(origRefDate, TARGET(), Following, optionTenors,
+                                                                  swapTenors, atmVols, Actual365Fixed(), false, Normal);
     }
 
     SavedSettings backup;
@@ -64,7 +64,7 @@ struct TestData {
 } // anonymous namespace
 
 namespace testsuite {
-    
+
 void DynamicSwaptionVolMatrixTest::testConstantVariance() {
 
     BOOST_TEST_MESSAGE("Testing constant variance dynamics of "
@@ -73,8 +73,7 @@ void DynamicSwaptionVolMatrixTest::testConstantVariance() {
     TestData d;
 
     boost::shared_ptr<SwaptionVolatilityStructure> dyn =
-        boost::make_shared<DynamicSwaptionVolatilityMatrix>(
-            d.atmSurface, 0, TARGET(), ConstantVariance);
+        boost::make_shared<DynamicSwaptionVolatilityMatrix>(d.atmSurface, 0, TARGET(), ConstantVariance);
 
     dyn->enableExtrapolation();
 
@@ -85,31 +84,22 @@ void DynamicSwaptionVolMatrixTest::testConstantVariance() {
     // initially we should get the same volatilities
 
     BOOST_CHECK_CLOSE(dyn->volatility(1 * Months, 1 * Years, strike),
-                      d.atmSurface->volatility(1 * Months, 1 * Years, strike),
-                      tol);
+                      d.atmSurface->volatility(1 * Months, 1 * Years, strike), tol);
     BOOST_CHECK_CLOSE(dyn->volatility(1 * Months, 2 * Years, strike),
-                      d.atmSurface->volatility(1 * Months, 2 * Years, strike),
-                      tol);
+                      d.atmSurface->volatility(1 * Months, 2 * Years, strike), tol);
     BOOST_CHECK_CLOSE(dyn->volatility(1 * Years, 1 * Years, strike),
-                      d.atmSurface->volatility(1 * Years, 1 * Years, strike),
-                      tol);
+                      d.atmSurface->volatility(1 * Years, 1 * Years, strike), tol);
     BOOST_CHECK_CLOSE(dyn->volatility(1 * Years, 2 * Years, strike),
-                      d.atmSurface->volatility(1 * Years, 2 * Years, strike),
-                      tol);
+                      d.atmSurface->volatility(1 * Years, 2 * Years, strike), tol);
 
     // move forward in time, we expect a constant surface
 
-    Settings::instance().evaluationDate() =
-        TARGET().advance(d.origRefDate, 5 * Months);
+    Settings::instance().evaluationDate() = TARGET().advance(d.origRefDate, 5 * Months);
 
-    BOOST_CHECK_CLOSE(dyn->volatility(0.1, 1.0, strike),
-                      d.atmSurface->volatility(0.1, 1.0, strike), tol);
-    BOOST_CHECK_CLOSE(dyn->volatility(0.1, 2.0, strike),
-                      d.atmSurface->volatility(0.1, 2.0, strike), tol);
-    BOOST_CHECK_CLOSE(dyn->volatility(1.0, 1.0, strike),
-                      d.atmSurface->volatility(1.0, 1.0, strike), tol);
-    BOOST_CHECK_CLOSE(dyn->volatility(1.0, 2.0, strike),
-                      d.atmSurface->volatility(1.0, 2.0, strike), tol);
+    BOOST_CHECK_CLOSE(dyn->volatility(0.1, 1.0, strike), d.atmSurface->volatility(0.1, 1.0, strike), tol);
+    BOOST_CHECK_CLOSE(dyn->volatility(0.1, 2.0, strike), d.atmSurface->volatility(0.1, 2.0, strike), tol);
+    BOOST_CHECK_CLOSE(dyn->volatility(1.0, 1.0, strike), d.atmSurface->volatility(1.0, 1.0, strike), tol);
+    BOOST_CHECK_CLOSE(dyn->volatility(1.0, 2.0, strike), d.atmSurface->volatility(1.0, 2.0, strike), tol);
 
 } // testConstantVariance
 
@@ -120,8 +110,7 @@ void DynamicSwaptionVolMatrixTest::testForwardForwardVariance() {
     TestData d;
 
     boost::shared_ptr<SwaptionVolatilityStructure> dyn =
-        boost::make_shared<DynamicSwaptionVolatilityMatrix>(
-            d.atmSurface, 0, TARGET(), ForwardForwardVariance);
+        boost::make_shared<DynamicSwaptionVolatilityMatrix>(d.atmSurface, 0, TARGET(), ForwardForwardVariance);
 
     dyn->enableExtrapolation();
 
@@ -132,51 +121,38 @@ void DynamicSwaptionVolMatrixTest::testForwardForwardVariance() {
     // initially we should get the same volatilities again
 
     BOOST_CHECK_CLOSE(dyn->volatility(1 * Months, 1 * Years, strike),
-                      d.atmSurface->volatility(1 * Months, 1 * Years, strike),
-                      tol);
+                      d.atmSurface->volatility(1 * Months, 1 * Years, strike), tol);
     BOOST_CHECK_CLOSE(dyn->volatility(1 * Months, 2 * Years, strike),
-                      d.atmSurface->volatility(1 * Months, 2 * Years, strike),
-                      tol);
+                      d.atmSurface->volatility(1 * Months, 2 * Years, strike), tol);
     BOOST_CHECK_CLOSE(dyn->volatility(1 * Years, 1 * Years, strike),
-                      d.atmSurface->volatility(1 * Years, 1 * Years, strike),
-                      tol);
+                      d.atmSurface->volatility(1 * Years, 1 * Years, strike), tol);
     BOOST_CHECK_CLOSE(dyn->volatility(1 * Years, 2 * Years, strike),
-                      d.atmSurface->volatility(1 * Years, 2 * Years, strike),
-                      tol);
+                      d.atmSurface->volatility(1 * Years, 2 * Years, strike), tol);
 
     // move forward in time, we expect the forward forward variance
 
-    Settings::instance().evaluationDate() =
-        TARGET().advance(d.origRefDate, 5 * Months);
-    Real tf =
-        d.atmSurface->timeFromReference(Settings::instance().evaluationDate());
+    Settings::instance().evaluationDate() = TARGET().advance(d.origRefDate, 5 * Months);
+    Real tf = d.atmSurface->timeFromReference(Settings::instance().evaluationDate());
 
     BOOST_CHECK_CLOSE(dyn->blackVariance(0.1, 1.0, strike),
-                      d.atmSurface->blackVariance(tf + 0.1, 1.0, strike) -
-                          d.atmSurface->blackVariance(tf, 1.0, strike),
+                      d.atmSurface->blackVariance(tf + 0.1, 1.0, strike) - d.atmSurface->blackVariance(tf, 1.0, strike),
                       tol);
     BOOST_CHECK_CLOSE(dyn->blackVariance(0.1, 2.0, strike),
-                      d.atmSurface->blackVariance(tf + 0.1, 2.0, strike) -
-                          d.atmSurface->blackVariance(tf, 2.0, strike),
+                      d.atmSurface->blackVariance(tf + 0.1, 2.0, strike) - d.atmSurface->blackVariance(tf, 2.0, strike),
                       tol);
     BOOST_CHECK_CLOSE(dyn->blackVariance(1.0, 1.0, strike),
-                      d.atmSurface->blackVariance(tf + 1.0, 1.0, strike) -
-                          d.atmSurface->blackVariance(tf, 1.0, strike),
+                      d.atmSurface->blackVariance(tf + 1.0, 1.0, strike) - d.atmSurface->blackVariance(tf, 1.0, strike),
                       tol);
     BOOST_CHECK_CLOSE(dyn->blackVariance(1.0, 2.0, strike),
-                      d.atmSurface->blackVariance(tf + 1.0, 2.0, strike) -
-                          d.atmSurface->blackVariance(tf, 2.0, strike),
+                      d.atmSurface->blackVariance(tf + 1.0, 2.0, strike) - d.atmSurface->blackVariance(tf, 2.0, strike),
                       tol);
 
 } // testForwardForwardVariance
 
-test_suite *DynamicSwaptionVolMatrixTest::suite() {
-    test_suite *suite = BOOST_TEST_SUITE("DynamicSwaptionVolMatrix tests");
-    suite->add(
-        QUANTLIB_TEST_CASE(&DynamicSwaptionVolMatrixTest::testConstantVariance));
-    suite->add(QUANTLIB_TEST_CASE(
-        &DynamicSwaptionVolMatrixTest::testForwardForwardVariance));
+test_suite* DynamicSwaptionVolMatrixTest::suite() {
+    test_suite* suite = BOOST_TEST_SUITE("DynamicSwaptionVolMatrix tests");
+    suite->add(QUANTLIB_TEST_CASE(&DynamicSwaptionVolMatrixTest::testConstantVariance));
+    suite->add(QUANTLIB_TEST_CASE(&DynamicSwaptionVolMatrixTest::testForwardForwardVariance));
     return suite;
 }
-
 }

@@ -17,7 +17,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file qle/termstructures/dynamicoptionletvolatilitystructure.hpp
     \brief dynamic optionlet volatility structure
     \ingroup termstructues
@@ -37,16 +36,17 @@ namespace QuantExt {
 
 //! Converts OptionletVolatilityStructure with fixed reference date into a floating reference date term structure.
 /*! Different ways of reacting to time decay can be specified.
-    
+
     \warning No checks are performed that the supplied OptionletVolatilityStructure has a fixed reference date
 
-	\ingroup termstructures
+        \ingroup termstructures
 */
 
 class DynamicOptionletVolatilityStructure : public OptionletVolatilityStructure {
 public:
-    DynamicOptionletVolatilityStructure(const boost::shared_ptr<OptionletVolatilityStructure> &source,
-        Natural settlementDays, const Calendar &calendar, ReactionToTimeDecay decayMode = ConstantVariance);
+    DynamicOptionletVolatilityStructure(const boost::shared_ptr<OptionletVolatilityStructure>& source,
+                                        Natural settlementDays, const Calendar& calendar,
+                                        ReactionToTimeDecay decayMode = ConstantVariance);
 
 protected:
     //! \name OptionletVolatilityStructure interface
@@ -83,11 +83,7 @@ private:
     const Real displacement_;
 };
 
-inline VolatilityType DynamicOptionletVolatilityStructure::volatilityType() const {
-    return volatilityType_;
-}
+inline VolatilityType DynamicOptionletVolatilityStructure::volatilityType() const { return volatilityType_; }
 
-inline Real DynamicOptionletVolatilityStructure::displacement() const {
-    return displacement_;
-}
+inline Real DynamicOptionletVolatilityStructure::displacement() const { return displacement_; }
 }

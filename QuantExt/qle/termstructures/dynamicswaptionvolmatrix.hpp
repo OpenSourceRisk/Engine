@@ -17,7 +17,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file qle/termstructures/dynamicswaptionvolmatrix.hpp
     \brief dynamic swaption volatility matrix
     \ingroup termstructures
@@ -35,32 +34,30 @@
 using namespace QuantLib;
 
 namespace QuantExt {
-//! Takes a SwaptionVolatilityMatrix with fixed reference date and turns it into a floating reference date term structure.
+//! Takes a SwaptionVolatilityMatrix with fixed reference date and turns it into a floating reference date term
+//structure.
 /*! This class takes a SwaptionVolatilityMatrix with fixed
     reference date and turns it into a floating reference date
     term structure.
     There are different ways of reacting to time decay that can be
     specified.
 
-	\ingroup termstructures
+        \ingroup termstructures
 */
 
 class DynamicSwaptionVolatilityMatrix : public SwaptionVolatilityStructure {
-  public:
-    DynamicSwaptionVolatilityMatrix(
-        const boost::shared_ptr<SwaptionVolatilityStructure> &source,
-        Natural settlementDays, const Calendar &calendar,
-        ReactionToTimeDecay decayMode = ConstantVariance);
+public:
+    DynamicSwaptionVolatilityMatrix(const boost::shared_ptr<SwaptionVolatilityStructure>& source,
+                                    Natural settlementDays, const Calendar& calendar,
+                                    ReactionToTimeDecay decayMode = ConstantVariance);
 
-  protected:
+protected:
     /* SwaptionVolatilityStructure interface */
-    const Period &maxSwapTenor() const;
+    const Period& maxSwapTenor() const;
 
-    boost::shared_ptr<SmileSection> smileSectionImpl(Time optionTime,
-                                                     Time swapLength) const;
+    boost::shared_ptr<SmileSection> smileSectionImpl(Time optionTime, Time swapLength) const;
 
-    Volatility volatilityImpl(Time optionTime, Time swapLength,
-                              Rate strike) const;
+    Volatility volatilityImpl(Time optionTime, Time swapLength, Rate strike) const;
 
     Real shiftImpl(Time optionTime, Time swapLength) const;
 
@@ -73,17 +70,15 @@ class DynamicSwaptionVolatilityMatrix : public SwaptionVolatilityStructure {
     void update();
 
     VolatilityType volatilityType() const;
-  private:
+
+private:
     const boost::shared_ptr<SwaptionVolatilityStructure> source_;
     ReactionToTimeDecay decayMode_;
     const Date originalReferenceDate_;
     VolatilityType volatilityType_;
-
 };
 
-    inline VolatilityType DynamicSwaptionVolatilityMatrix::volatilityType() const {
-        return volatilityType_;
-    }
+inline VolatilityType DynamicSwaptionVolatilityMatrix::volatilityType() const { return volatilityType_; }
 
 } // namespace QuantExt
 

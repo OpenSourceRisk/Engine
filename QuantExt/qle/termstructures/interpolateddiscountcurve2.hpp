@@ -17,7 +17,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file interpolateddiscountcurve2.hpp
     \brief interpolated discount term structure
     \ingroup termstructures
@@ -40,33 +39,27 @@ namespace QuantExt {
 /*! InterpolatedDiscountCurve2 as in QuantLib, but with
     floating discount quotes and floating reference date,
     reference date is always the global evaluation date,
-    i.e. settlement days are zero and calendar is NullCalendar() 
+    i.e. settlement days are zero and calendar is NullCalendar()
 
-	\ingroup termstructures
+        \ingroup termstructures
 */
 class InterpolatedDiscountCurve2 : public YieldTermStructure, public LazyObject {
-  public:
+public:
     //! \name Constructors
     //@{
     //! default constructor
-    InterpolatedDiscountCurve2(const std::vector<Time> &times,
-                              const std::vector<Handle<Quote> > &quotes,
-                              const DayCounter &dc)
-        : YieldTermStructure(dc), times_(times), quotes_(quotes),
-          data_(times_.size(), 1.0),
+    InterpolatedDiscountCurve2(const std::vector<Time>& times, const std::vector<Handle<Quote> >& quotes,
+                               const DayCounter& dc)
+        : YieldTermStructure(dc), times_(times), quotes_(quotes), data_(times_.size(), 1.0),
           today_(Settings::instance().evaluationDate()) {
         for (Size i = 0; i < quotes.size(); ++i) {
             QL_REQUIRE(times_.size() > 1, "at least two times required");
-            QL_REQUIRE(times_.size() == quotes.size(),
-                       "size of time and quote vectors do not match");
-            QL_REQUIRE(times_[0] == 0.0, "First time must be 0, got "
-                                             << times_[0]);
-            QL_REQUIRE(!quotes[i].empty(), "quote at index " << i
-                                                             << " is empty");
+            QL_REQUIRE(times_.size() == quotes.size(), "size of time and quote vectors do not match");
+            QL_REQUIRE(times_[0] == 0.0, "First time must be 0, got " << times_[0]);
+            QL_REQUIRE(!quotes[i].empty(), "quote at index " << i << " is empty");
             registerWith(quotes[i]);
         }
-        interpolation_ = boost::make_shared<LogLinearInterpolation>(
-            times_.begin(), times_.end(), data_.begin());
+        interpolation_ = boost::make_shared<LogLinearInterpolation>(times_.begin(), times_.end(), data_.begin());
         registerWith(Settings::instance().evaluationDate());
         for (Size i = 0; i < quotes.size(); ++i) {
             registerWith(quotes[i]);
@@ -79,7 +72,7 @@ class InterpolatedDiscountCurve2 : public YieldTermStructure, public LazyObject 
         LazyObject::update();
         TermStructure::update();
     }
-    const Date &referenceDate() const {
+    const Date& referenceDate() const {
         calculate();
         return today_;
     }
@@ -87,7 +80,7 @@ class InterpolatedDiscountCurve2 : public YieldTermStructure, public LazyObject 
     Calendar calendar() const { return NullCalendar(); }
     Natural settlementDays() const { return 0; }
 
-  protected:
+protected:
     void performCalculations() const {
         today_ = Settings::instance().evaluationDate();
         for (Size i = 0; i < times_.size(); ++i) {
@@ -107,7 +100,7 @@ class InterpolatedDiscountCurve2 : public YieldTermStructure, public LazyObject 
         return dMax * std::exp(-instFwdMax * (t - tMax));
     }
 
-  private:
+private:
     std::vector<Time> times_;
     std::vector<Handle<Quote> > quotes_;
     mutable std::vector<Real> data_;

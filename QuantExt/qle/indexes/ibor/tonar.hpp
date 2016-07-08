@@ -17,7 +17,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file tonar.hpp
     \brief Toyko Overnight Average Rate (TONAR)
     \ingroup indexes
@@ -35,23 +34,21 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-    //! %JPY %TONAR rate
-    /*! Toyko Overnight Average Rate published by BOJ.
+//! %JPY %TONAR rate
+/*! Toyko Overnight Average Rate published by BOJ.
 
-        See <http://www.boj.or.jp/en/statistics/market/short/mutan/>.
+    See <http://www.boj.or.jp/en/statistics/market/short/mutan/>.
 
-        \remark There is a publication lag of 1 business day.
-                Using Japan calendar, should be Tokyo.
+    \remark There is a publication lag of 1 business day.
+            Using Japan calendar, should be Tokyo.
 
-		\ingroup indexes
-    */
-    class Tonar : public OvernightIndex {
-      public:
-        Tonar (const Handle<YieldTermStructure>& h =
-            Handle<YieldTermStructure>())
-        : OvernightIndex("TONAR", 0, JPYCurrency(), Japan(),
-              Actual365Fixed(), h) {}
-    };
+            \ingroup indexes
+*/
+class Tonar : public OvernightIndex {
+public:
+    Tonar(const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
+        : OvernightIndex("TONAR", 0, JPYCurrency(), Japan(), Actual365Fixed(), h) {}
+};
 }
 
 #endif

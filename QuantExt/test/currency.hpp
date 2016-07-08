@@ -17,7 +17,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file test/currency.hpp
     \brief Currency tests
 */
@@ -31,13 +30,12 @@ namespace testsuite {
 
 //! Currency tests
 class CurrencyTest {
-  public:
+public:
     /*! Test whether currencies were set up with correct data. */
     static void testCurrency();
 
     static boost::unit_test_framework::test_suite* suite();
 };
-
 }
 
 #endif

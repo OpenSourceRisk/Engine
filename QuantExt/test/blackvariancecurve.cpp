@@ -17,7 +17,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 #include "blackvariancecurve.hpp"
 #include <qle/termstructures/blackvariancecurve3.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
@@ -32,7 +31,7 @@ using namespace QuantExt;
 using namespace std;
 
 namespace testsuite {
-    
+
 void BlackVarianceCurveTest::testBlackVarianceCurve() {
 
     BOOST_TEST_MESSAGE("Testing QuantExt::BlackVarianceCurve3...");
@@ -53,18 +52,17 @@ void BlackVarianceCurveTest::testBlackVarianceCurve() {
     vector<Handle<Quote> > quotes;
 
     Size numYears = 10;
-    for(Size i = 1; i < numYears; i++) {
+    for (Size i = 1; i < numYears; i++) {
 
-        Volatility vol = 0.1 + (0.01*i); // 11% at 1Y, 12% at 2Y
+        Volatility vol = 0.1 + (0.01 * i); // 11% at 1Y, 12% at 2Y
         vols.push_back(vol);
 
         simpleQuotes.push_back(boost::make_shared<SimpleQuote>(vol));
         quotes.push_back(Handle<Quote>(simpleQuotes.back()));
 
-        dates.push_back(Date(1, Dec, today.year()+i));
+        dates.push_back(Date(1, Dec, today.year() + i));
         times.push_back(dc.yearFraction(today, dates.back()));
     }
-
 
     // Build a QuantLib::BlackVarianceCurve
     BlackVarianceCurve bvcBase(today, dates, vols, dc);
@@ -102,5 +100,4 @@ test_suite* BlackVarianceCurveTest::suite() {
     suite->add(BOOST_TEST_CASE(&BlackVarianceCurveTest::testBlackVarianceCurve));
     return suite;
 }
-
 }

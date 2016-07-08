@@ -17,11 +17,10 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file qle/pricingengines/analyticlgmswaptionengine.hpp
     \brief analytic engine for european swaptions in the LGM model
 
-	\ingroup engines
+        \ingroup engines
 */
 
 #ifndef quantext_analytic_lgm_swaption_engine_hpp
@@ -57,43 +56,36 @@ namespace QuantExt {
     Note that we assume H'>0, but this is a general requirement of the
     LGM parametrization anyway (see the base parametrization class).
 
-	\ingroup engines
+        \ingroup engines
 */
 
-class AnalyticLgmSwaptionEngine
-    : public GenericEngine<Swaption::arguments, Swaption::results> {
+class AnalyticLgmSwaptionEngine : public GenericEngine<Swaption::arguments, Swaption::results> {
 
-  public:
+public:
     /*! nextCoupon is Mapping A, proRata is Mapping B
         in Lichters, Stamm, Gallagher (2015), 11.2.2 */
     enum FloatSpreadMapping { nextCoupon, proRata };
 
     /*! Lgm model based constructor */
-    AnalyticLgmSwaptionEngine(
-        const boost::shared_ptr<LinearGaussMarkovModel> &model,
-        const Handle<YieldTermStructure> &discountCurve =
-            Handle<YieldTermStructure>(),
-        const FloatSpreadMapping floatSpreadMapping = proRata);
+    AnalyticLgmSwaptionEngine(const boost::shared_ptr<LinearGaussMarkovModel>& model,
+                              const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
+                              const FloatSpreadMapping floatSpreadMapping = proRata);
 
     /*! CrossAsset model based constructor */
-    AnalyticLgmSwaptionEngine(
-        const boost::shared_ptr<CrossAssetModel> &model, const Size ccy,
-        const Handle<YieldTermStructure> &discountCurve =
-            Handle<YieldTermStructure>(),
-        const FloatSpreadMapping floatSpreadMapping = proRata);
+    AnalyticLgmSwaptionEngine(const boost::shared_ptr<CrossAssetModel>& model, const Size ccy,
+                              const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
+                              const FloatSpreadMapping floatSpreadMapping = proRata);
 
     /*! parametrization based constructor, note that updates in the
         parametrization are not observed by the engine, you would
         have to call update() on the engine explicitly */
-    AnalyticLgmSwaptionEngine(
-        const boost::shared_ptr<IrLgm1fParametrization> irlgm1f,
-        const Handle<YieldTermStructure> &discountCurve =
-            Handle<YieldTermStructure>(),
-        const FloatSpreadMapping floatSpreadMapping = proRata);
+    AnalyticLgmSwaptionEngine(const boost::shared_ptr<IrLgm1fParametrization> irlgm1f,
+                              const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
+                              const FloatSpreadMapping floatSpreadMapping = proRata);
 
     void calculate() const;
 
-  private:
+private:
     Real yStarHelper(const Real y) const;
     const boost::shared_ptr<IrLgm1fParametrization> p_;
     const Handle<YieldTermStructure> c_;

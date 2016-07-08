@@ -17,10 +17,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file czkpribor.hpp
     \brief CZK-PRIBOR index
-    \ingroup indexes 
+    \ingroup indexes
 */
 
 #ifndef quantext_czkpribor_hpp
@@ -35,25 +34,22 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-    //! CZK-PRIBOR index
-    /*! CZK-PRIBOR rate overseen by the Czech National Bank.
+//! CZK-PRIBOR index
+/*! CZK-PRIBOR rate overseen by the Czech National Bank.
 
-        See <http://www.cnb.cz/en/financial_markets/money_market/pribor/>.
+    See <http://www.cnb.cz/en/financial_markets/money_market/pribor/>.
 
-        \remark Using CzechRepublic calendar, should be Prague.
+    \remark Using CzechRepublic calendar, should be Prague.
 
-        \warning Check roll convention and EOM.
+    \warning Check roll convention and EOM.
 
-		\ingroup indexes
-    */
-    class CZKPribor : public IborIndex {
-      public:
-        CZKPribor(const Period& tenor, const Handle<YieldTermStructure>& h =
-            Handle<YieldTermStructure>())
-            : IborIndex("CZK-PRIBOR", tenor, 2, CZKCurrency(), CzechRepublic(),
-                  ModifiedFollowing, false, Actual360(), h) {}
-    };
-
+            \ingroup indexes
+*/
+class CZKPribor : public IborIndex {
+public:
+    CZKPribor(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
+        : IborIndex("CZK-PRIBOR", tenor, 2, CZKCurrency(), CzechRepublic(), ModifiedFollowing, false, Actual360(), h) {}
+};
 }
 
 #endif

@@ -17,7 +17,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file chftois.hpp
     \brief Swiss Franc T/N rate on Reuters page CHFTOIS
     \ingroup indexes
@@ -35,21 +34,19 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-    //! %CHF TOIS rate
-    /*! %CHF T/N rate appearing on page CHFTOIS and calculated by Cosmorex AG,
-        a division of Tullet Prebon.
+//! %CHF TOIS rate
+/*! %CHF T/N rate appearing on page CHFTOIS and calculated by Cosmorex AG,
+    a division of Tullet Prebon.
 
-        \remark Using Switzerland calendar, should be Zurich.
+    \remark Using Switzerland calendar, should be Zurich.
 
-		\ingroup indexes
-    */
-    class CHFTois : public OvernightIndex {
-      public:
-        CHFTois (const Handle<YieldTermStructure>& h =
-            Handle<YieldTermStructure>())
-        : OvernightIndex("CHF-TOIS", 1, CHFCurrency(), Switzerland(),
-              Actual360(), h) {}
-    };
+            \ingroup indexes
+*/
+class CHFTois : public OvernightIndex {
+public:
+    CHFTois(const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
+        : OvernightIndex("CHF-TOIS", 1, CHFCurrency(), Switzerland(), Actual360(), h) {}
+};
 }
 
 #endif

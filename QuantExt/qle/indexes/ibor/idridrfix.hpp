@@ -17,10 +17,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file idridrfix.hpp
     \brief IDR-IDRFIX index
-    \ingroup indexes 
+    \ingroup indexes
 */
 
 #ifndef quantext_idridrfix_hpp
@@ -35,25 +34,22 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-    //! IDR-IDRFIX index
-    /*! IDR-IDRFIX rate.
+//! IDR-IDRFIX index
+/*! IDR-IDRFIX rate.
 
-        See <http://www.fimmda.org>.
+    See <http://www.fimmda.org>.
 
-        \remark Using Indonesia calendar, should be Jakarta.
+    \remark Using Indonesia calendar, should be Jakarta.
 
-        \warning Check roll convention and EOM.
+    \warning Check roll convention and EOM.
 
-		\ingroup indexes
-    */
-    class IDRIdrfix : public IborIndex {
-      public:
-        IDRIdrfix(const Period& tenor, const Handle<YieldTermStructure>& h =
-            Handle<YieldTermStructure>())
-            : IborIndex("IDR-IDRFIX", tenor, 2, IDRCurrency(), Indonesia(),
-                  ModifiedFollowing, false, Actual360(), h) {}
-    };
-
+            \ingroup indexes
+*/
+class IDRIdrfix : public IborIndex {
+public:
+    IDRIdrfix(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
+        : IborIndex("IDR-IDRFIX", tenor, 2, IDRCurrency(), Indonesia(), ModifiedFollowing, false, Actual360(), h) {}
+};
 }
 
 #endif
