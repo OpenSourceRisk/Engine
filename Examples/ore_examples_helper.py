@@ -17,21 +17,13 @@ class OreExample(object):
         self._locate_ore_exe()
 
     def _locate_ore_exe(self):
-        # This works only under Windows and is equivalent to
-        # ore_exe = "..\\..\\App\\bin\\Win32\\Release\\ore.exe"
-        ore_exe = os.getcwd()
-        ore_exe = os.path.dirname(ore_exe)  # one level up
-        ore_exe = os.path.dirname(ore_exe)  # one level up
-        ore_exe = os.path.join(ore_exe, "App")
-
-        if platform.system() == "Darwin":
-            ore_exe = os.path.join(ore_exe, "ore")
-        else:    
-            ore_exe = os.path.join(ore_exe, "bin")
-            ore_exe = os.path.join(ore_exe, "Win32" if sys.platform == "win32" else "x64")
-            ore_exe = os.path.join(ore_exe, "Release")
-            ore_exe = os.path.join(ore_exe, "ore.exe")
-        self.ore_exe = ore_exe
+        if os.name == 'nt':
+            if sys.platform == "win32":
+                self.ore_exe = "..\\..\\App\\bin\\Win32\\Release\\ore.exe"
+            else:
+                self.ore_exe = "..\\..\\App\\bin\\x64\\Release\\ore.exe"
+        else:
+            self.ore_exe = "../../App/ore"
 
     def print_headline(self, headline):
         self.headlinecounter += 1
