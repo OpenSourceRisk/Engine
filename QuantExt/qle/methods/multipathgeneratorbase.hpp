@@ -51,7 +51,7 @@ public:
 */
 class MultiPathGeneratorMersenneTwister : public MultiPathGeneratorBase {
 public:
-    MultiPathGeneratorMersenneTwister(const boost::shared_ptr<StochasticProcess>&, const TimeGrid&, BigNatural seed = 0,
+    MultiPathGeneratorMersenneTwister(const boost::shared_ptr<StochasticProcess>&, const TimeGrid&, BigNatural seed = 42,
                                       bool antitheticSampling = false);
     const Sample<MultiPath>& next() const;
     void reset();
@@ -74,7 +74,7 @@ for the use of the seed, see ql/math/randomnumbers/sobolrsg.cpp
 */
 class MultiPathGeneratorSobol : public MultiPathGeneratorBase {
 public:
-    MultiPathGeneratorSobol(const boost::shared_ptr<StochasticProcess>&, const TimeGrid&, BigNatural seed = 0);
+    MultiPathGeneratorSobol(const boost::shared_ptr<StochasticProcess>&, const TimeGrid&, BigNatural seed = 42);
     const Sample<MultiPath>& next() const;
     void reset();
 
@@ -92,9 +92,9 @@ private:
 class MultiPathGeneratorSobolBrownianBridge : public MultiPathGeneratorBase {
 public:
     MultiPathGeneratorSobolBrownianBridge(const boost::shared_ptr<StochasticProcess>&, const TimeGrid&,
-                                          SobolBrownianGenerator::Ordering ordering = SobolBrownianGenerator::Diagonal,
-                                          BigNatural seed = 0,
-                                          SobolRsg::DirectionIntegers directionIntegers = SobolRsg::Jaeckel);
+                                          SobolBrownianGenerator::Ordering ordering = SobolBrownianGenerator::Steps,
+                                          BigNatural seed = 42,
+                                          SobolRsg::DirectionIntegers directionIntegers = SobolRsg::JoeKuoD7);
     const Sample<MultiPath>& next() const;
     void reset();
 
