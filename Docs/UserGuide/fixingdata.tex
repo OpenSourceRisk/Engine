@@ -1,57 +1,60 @@
-Historical fixings data in the {\tt fixings.txt} file is given in three columns;  Index Name,  Fixing Date and  Index value. Columns are separated by semicolons ";". Fixings are used in cases where the current coupon of a trade has fixed in the past, or other path dependent features.
+Historical fixings data in the {\tt fixings.txt} file is given in
+three columns;  Index Name,  Fixing Date and  Index value. Columns are
+separated by semicolons ";" or blanks. Fixings are used in cases where the current coupon of a trade has fixed in the past, or other path dependent features.
 
 \begin{itemize}
 
-\item Index Name: The name of the Index. \\Allowable values are given in Tables \ref{tab:non-IR_indices} and \ref{tab:IR_indices}.
-
 \item Fixing Date: The date of the fixing.  \\ Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+
+\item Index Name: The name of the Index. \\Allowable values are given
+  in Table \ref{tab:IR_indices}. %Tables \ref{tab:non-IR_indices} and.
 
 \item Index Value: The index value for the given fixing date. \\Allowable values: Any real number.
 \end{itemize}
 
 An excerpt of a fixings file is shown in Listing \ref{lst:fixings_file}. Note that alternative index name formats are used (Table \ref{tab:IR_indices}).
 
-\begin{lstlisting}[label=lst:fixings_file,caption=Fixings File (fixings.txt)]
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+20150202 EUR-EONIA -0.00024
+20150202 EUR-EURIBOR-1M 0.00003
+20150202 EUR-EURIBOR-1W -0.00022
+20150202 EUR-EURIBOR-2W -0.00017
+20150202 EUR-EURIBOR-3M 0.00055
+20150202 EUR-EURIBOR-3M 0.00055
+20150202 EUR-EURIBOR-6M 0.00134
+20150202 EUR-EURIBOR-6M 0.00271
+20150202 GBP-LIBOR-12M 0.009565
+20150202 GBP-LIBOR-1M 0.0050381
+20150202 GBP-LIBOR-1W 0.0047938
+20150202 GBP-LIBOR-3M 0.0056338
+20150202 GBP-LIBOR-6M 0.006825
+20150202 JPY-LIBOR-12M 0.0026471
+20150202 JPY-LIBOR-1M 0.0007143
+20150202 JPY-LIBOR-1W 0.0004357
+20150202 JPY-LIBOR-3M 0.0010429
+20150202 JPY-LIBOR-6M 0.0014357
+20150202 USD-LIBOR-12M 0.006194
+20150202 USD-LIBOR-1M 0.001695
+20150202 USD-LIBOR-1W 0.00136
+\end{minted}
+\caption{Excerpt of a fixings file}
+\label{lst:fixings_file}  
+\end{listing}
 
-UK RPI;2011-10-02;238
-UK RPI;2011-11-02;238.5
-UK RPI;2012-10-02;245.6
-UK RPI;2012-11-02;245.6
-
-EU HICP;2012-10-02;113.91
-EU HICP;2012-11-02;113.91
-EU HICP;2012-12-02;113.91
-EU HICP;2011-10-02;113.44
-EU HICP;2011-11-02;113.53
-
-EONIAON;2011-11-25;0.003240
-EONIAON;2011-11-28;0.003180
-EONIAON;2011-11-29;0.003320
-EONIAON;2011-11-30;0.003340
-
-EURLIBOR3M ACTUAL/360;2012-12-21;0.015000
-EURLIBOR3M ACTUAL/360;2012-12-24;0.015000
-EURLIBOR3M ACTUAL/360;2012-12-27;0.015100
-EURLIBOR3M ACTUAL/360;2012-12-28;0.015200
-
-   
-\end{lstlisting}
-
-\begin{table}[H]
-\centering
-  \begin{tabu} to 0.9\linewidth {| X[-1.5,l,m] | X[-5,l,m] |}
-    \hline
-    \bfseries{Index Type} & \bfseries{Allowable Values} \\
-    \hline
-    Inflation & \begin{tabular}[l]{@{}l@{}}  \\  \emph{UK RPI} \\ \emph{UK YYR\_RPI} \\ \emph{UK YY\_RPI} \\ \emph{EU HICP} \\ \emph{EU YY\_HICP} \\  \emph{EU YYR\_HICP} \\  \emph{EU HICPXT} \\  \emph{EU YY\_HICPXT} \\  \emph{EU YYR\_HICPXT} \\  \emph{FR HICPXT} \\  \emph{FR YY\_HICPXT} \\  \emph{FR YYR\_HICPXT} \\  \emph{US CPI} \\  \emph{US YY\_CPI} \\ \emph{US YYR\_CPI} \end{tabular}  \\ \hline
-   Commodity & \begin{tabular}[l]{@{}l@{}}  \\  \emph{CMCI3M} \\ \emph{CMCI6M} \\ \emph{CMCI1Y} \\ \emph{CMCI2Y} \\ \emph{CMCI3Y} \end{tabular} \\ \hline
-  \end{tabu}
-  \caption{Allowable values for non-IR indices.}
-  \label{tab:non-IR_indices}
-\end{table}
-
-
-
+% \begin{table}[H]
+% \centering
+%   \begin{tabu} to 0.9\linewidth {| X[-1.5,l,m] | X[-5,l,m] |}
+%     \hline
+%     \bfseries{Index Type} & \bfseries{Allowable Values} \\
+%     \hline
+%     Inflation & \begin{tabular}[l]{@{}l@{}}  \\  \emph{UK RPI} \\ \emph{UK YYR\_RPI} \\ \emph{UK YY\_RPI} \\ \emph{EU HICP} \\ \emph{EU YY\_HICP} \\  \emph{EU YYR\_HICP} \\  \emph{EU HICPXT} \\  \emph{EU YY\_HICPXT} \\  \emph{EU YYR\_HICPXT} \\  \emph{FR HICPXT} \\  \emph{FR YY\_HICPXT} \\  \emph{FR YYR\_HICPXT} \\  \emph{US CPI} \\  \emph{US YY\_CPI} \\ \emph{US YYR\_CPI} \end{tabular}  \\ \hline
+%    Commodity & \begin{tabular}[l]{@{}l@{}}  \\  \emph{CMCI3M} \\ \emph{CMCI6M} \\ \emph{CMCI1Y} \\ \emph{CMCI2Y} \\ \emph{CMCI3Y} \end{tabular} \\ \hline
+%   \end{tabu}
+%   \caption{Allowable values for non-IR indices.}
+%   \label{tab:non-IR_indices}
+% \end{table}
 
 \begin{table}[H]
 \centering
@@ -61,30 +64,28 @@ EURLIBOR3M ACTUAL/360;2012-12-28;0.015200
 \textbf{Index Component} & \textbf{Allowable Values}                                                                                                                                                                                                                                                           \\ \hline
 CCY-INDEX                & \textit{\begin{tabular}[c]{@{}l@{}}EUR-EONIA\\ EUR-EURIBOR\\ EUR-LIBOR\\ USD-FedFunds\\ USD-LIBOR\\ GBP-SONIA\\ GBP-LIBOR\\ JPY-TONAR\\ JPY-LIBOR\\ CHF-LIBOR\\ AUD-LIBOR\\ AUD-BBSW\\ CAD-CDOR\\ CAD-BA\\ SEK-STIBOR\\ SEK-LIBOR\\ DKK-LIBOR\\ SGD-SIBOR\\ HKD-HIBOR\end{tabular}} \\ \hline
 TENOR                    & An integer followed by \emph{D, W, M or Y}                                                                                                                                                                                                                                                 \\ \hline
-\multicolumn{2}{|l|}{\textbf{IR Index on alternative IndexTenor form:}}                                                                                                                                                                                                                                        \\ \hline
-\textbf{Index Component} & \textbf{Allowable Values}                                                                                                                                                                                                                                                           \\ \hline
-Index                    & \textit{\begin{tabular}[c]{@{}l@{}}Eonia\\ Euribor\\ EURLibor\\ FedFunds\\ USDLibor\\ Sonia\\ GBPLibor\\ TONAR\\ JPYLibor\\ CHFLibor\\ AUDLibor\\ AUD-BBSW \\ CDOR\\ SEK-STIBOR\\ SEKLibor\\ DKKLibor\\ SGD-SIBOR\\ HKD-HIBOR\end{tabular}}                                                     \\ \hline
-Tenor                    & \emph{ON, TN, SN} or an integer followed by \emph{D, W, M or Y}.                                                                                                                                                                                       \\ \hline
+% \multicolumn{2}{|l|}{\textbf{IR Index on alternative IndexTenor form:}}                                                                                                                                                                                                                                        \\ \hline
+% \textbf{Index Component} & \textbf{Allowable Values}                                                                                                                                                                                                                                                           \\ \hline
+% Index                    & \textit{\begin{tabular}[c]{@{}l@{}}Eonia\\ Euribor\\ EURLibor\\ FedFunds\\ USDLibor\\ Sonia\\ GBPLibor\\ TONAR\\ JPYLibor\\ CHFLibor\\ AUDLibor\\ AUD-BBSW \\ CDOR\\ SEK-STIBOR\\ SEKLibor\\ DKKLibor\\ SGD-SIBOR\\ HKD-HIBOR\end{tabular}}                                                     \\ \hline
+% Tenor                    & \emph{ON, TN, SN} or an integer followed by \emph{D, W, M or Y}.                                                                                                                                                                                       \\ \hline
 \end{tabular}
   \caption{Allowable values for IR indices.}
   \label{tab:IR_indices}
 \end{table}
 
-
-
-\begin{table}[H]
-\centering
-  \begin{tabu} to 0.9\linewidth {| X[-5,l,m] | X[-5,l,m] |}
-    \hline
-    \bfseries{Example IR indices on CCY-INDEX-TENOR form} & \bfseries{Corresponding indices on IndexTenor form} \\
-    \hline
-    EUR-EONIA-1D & EoniaON \\ \hline
-    EUR-EURIBOR-3M & Euribor3M \\ \hline
-    JPY-TONAR-1D & TONARON \\ \hline    
-    HKD-HIBOR-6M & HKD-HIBOR6M \\ \hline    
-  \end{tabu}
-  \caption{Example IR indices.}
-  \label{tab:example_IR_indices}
-\end{table}
+% \begin{table}[H]
+% \centering
+%   \begin{tabu} to 0.9\linewidth {| X[-5,l,m] | X[-5,l,m] |}
+%     \hline
+%     \bfseries{Example IR indices on CCY-INDEX-TENOR form} & \bfseries{Corresponding indices on IndexTenor form} \\
+%     \hline
+%     EUR-EONIA-1D & EoniaON \\ \hline
+%     EUR-EURIBOR-3M & Euribor3M \\ \hline
+%     JPY-TONAR-1D & TONARON \\ \hline    
+%     HKD-HIBOR-6M & HKD-HIBOR6M \\ \hline    
+%   \end{tabu}
+%   \caption{Example IR indices.}
+%   \label{tab:example_IR_indices}
+% \end{table}
 
 

@@ -1,14 +1,30 @@
 \documentclass[12pt, a4paper]{article}
 
-\usepackage{supertabular}
 \usepackage{hyperref}
-\usepackage{xcolor}
-\usepackage{minted}
-\usepackage{graphicx}
-\usepackage{mathrsfs}
-\usepackage{amsmath, amssymb, mathtools, empheq}
+%\usepackage{xcolor}
 %\usepackage[disable]{todonotes}
+
 \usepackage{todonotes}
+%\usepackage{supertabular}
+%\usepackage{minted}    
+%\usemintedstyle{manni}
+%\usepackage{graphicx}
+%\usepackage{mathrsfs}
+%\usepackage{amsmath, amssymb, mathtools, empheq}
+
+\usepackage{amsmath}%
+\usepackage{amsfonts}%
+\usepackage{amssymb}%
+\usepackage{graphicx}
+\usepackage[miktex]{gnuplottex}
+\ShellEscapetrue
+\usepackage{epstopdf}
+\usepackage{longtable}
+\usepackage{floatrow}
+\usepackage{minted}
+\usepackage{textcomp}
+\usepackage{color,soul}
+\floatsetup[listing]{style=Plaintop}    
 
 % Turn off indentation but allow \indent command to still work.
 \newlength\tindent
@@ -32,7 +48,7 @@
   belowskip=2\medskipamount
 }
 
-\usepackage{float}
+%\usepackage{float}
 \usepackage{tabu}
 \tabulinesep=1.0mm
 \restylefloat{table}
@@ -42,39 +58,38 @@
 %\usepackage[colorlinks=true]{hyperref}
 
 
-\usepackage{xcolor}
-\definecolor{gray}{rgb}{0.4,0.4,0.4}
-\definecolor{darkblue}{rgb}{0.0,0.0,0.6}
-\definecolor{cyan}{rgb}{0.0,0.6,0.6}
+%\usepackage{xcolor}
+%\definecolor{gray}{rgb}{0.4,0.4,0.4}
+%\definecolor{darkblue}{rgb}{0.0,0.0,0.6}
+%\definecolor{cyan}{rgb}{0.0,0.6,0.6}
 
-\lstset{
-  basicstyle=\ttfamily,
-  columns=fullflexible,
-  showstringspaces=false,
-  commentstyle=\color{gray}\upshape
-}
+%\lstset{
+%  basicstyle=\ttfamily,
+%  columns=fullflexible,
+%  showstringspaces=false,
+%  commentstyle=\color{gray}\upshape
+%}
 
-\lstdefinelanguage{XML}
-{
-  morestring=[b]",
-  morestring=[s]{>}{<},
-  morecomment=[s]{<?}{?>},
-  stringstyle=\color{black},
-  identifierstyle=\color{darkblue},
-  keywordstyle=\color{cyan},
-  morekeywords={xmlns,version,type}% list your attributes here
-}
+%\lstdefinelanguage{XML}
+%{
+%  morestring=[b]",
+%  morestring=[s]{>}{<},
+%  morecomment=[s]{<?}{?>},
+%  stringstyle=\color{black},
+%  identifierstyle=\color{darkblue},
+%  keywordstyle=\color{cyan},
+%  morekeywords={xmlns,version,type}% list your attributes here
+%}
 
-
-\usemintedstyle{manni}
-\definecolor{mintedBg}{rgb}{0.98,0.98,0.70}
+%\usemintedstyle{manni}
+%\definecolor{mintedBg}{rgb}{0.98,0.98,0.70}
 
 \renewcommand\P{\ensuremath{\mathbb{P}}}
 \newcommand\E{\ensuremath{\mathbb{E}}}
 \newcommand\Q{\ensuremath{\mathbb{Q}}}
 \newcommand\I{\mathds{1}}
 \newcommand\F{\ensuremath{\mathcal F}}
-\newcommand\G{\ensuremath{\mathcal G}}
+%\newcommand\G{\ensuremath{\mathcal G}}
 \newcommand\V{\mathds{V}}
 \newcommand\YOY{{\rm YOY}}
 \newcommand\Prob{\ensuremath{\mathbb{P}}}
@@ -94,10 +109,12 @@
 \newcommand{\ENE}{\mathit{ENE}}
 \newcommand{\PD}{\mathit{PD}}
 \newcommand{\LGD}{\mathit{LGD}}
-
+\newcommand{\bs}{\textbackslash}
+ 
 \begin{document}
 
 \title{Open Risk Engine \\ User Guide}
+\author{Quaternion Risk Management}
 \date{\today}
 \maketitle
 
@@ -111,7 +128,9 @@
 \hline
 Version & Date & Author & Comment \\
 \hline
-0.2 & 12 May & Roland Lichters & initial version\\
+0.1 & 12 May & Roland Lichters & initial version\\
+0.5 & 7 July & Roland Lichters & first revision \\
+0.9 & 11 July & Roland Lichters & beta release \\
 \hline
 \end{supertabular}
 \end{center}
@@ -143,13 +162,13 @@ and {\bf derivative value adjustments}
 \item FVA (Funding Value Adjustment)
 \item COLVA (Collateral Value Adjustment).
 \end{itemize}
-Moreover, ORE computes {\bf regulatory capital charges} for counterparty credit risk under the new standardized approach (SA-CCR). The Monte Carlo based market risk measures are complemented by parametric VaR, as well as {\bf ISDA's Standard Initial Margin}.
+Moreover, ORE computes {\bf regulatory capital charges} for counterparty credit risk under the new standardised approach (SA-CCR). The Monte Carlo based market risk measures are complemented by parametric methods, e.g. for benchmarking various initial margin calculation models applied in cleared and non-cleared derivatives business.
 
 \medskip
-The first release of ORE covers the simulation of interest rate and FX risk factors and portfolios of Interest Rate Swaps, FX Forwards, Cross Currency Swaps, FX Options and Swaptions. Subsequent releases will extend the derivative product and the risk factor range to Inflation, Credit, Equity and Commodity. With the introduction of credit risk factors, the scope will also be extended to cover cash products (loans and bonds) and related portfolio analytics.    
+The first release of ORE covers the simulation of interest rate and FX risk factors and portfolios of Interest Rate Swaps, Caps/Floors, Swaptions, FX Forwards, Cross Currency Swaps and FX Options. Subsequent releases will extend the derivative product and the risk factor range to Inflation, Credit, Equity and Commodity. With the introduction of credit risk factors, the scope will also be extended to cover cash products (loans and bonds) and related portfolio analytics.    
 
 \medskip
-Ultimately - after going through a series of releases, community feedback and contributions - the project aims at establishing a framework and platform for {\bf transparent pricing and risk analysis} that can be adapted for production purposes in financial institutions and used as a benchmarking and validation tool to test in-house and black box vendor solutions applied in the industry. 
+With the scheduled releases, incorporating community feedback and contributions, the project aims at establishing a platform for {\bf transparent pricing and risk analysis} that can be adapted for production purposes in financial institutions and used as a benchmarking and validation tool to test opaque 3rd party solutions applied in the industry. 
 
 \medskip
 For details on the models applied in ORE's risk factor evolution we refer the reader to {\em Modern Derivatives Pricing and Credit Exposure Analysis} \cite{Lichters}: The IR/FX risk factor evolution is based on a cross currency model consisting of an arbitrage free combination of Linear Gauss Markov models for all interest rates and lognormal processes for the FX rates, calibrated to cross currency discounting and forward curves, Swaptions and FX Options.%, also summarised in \cite{XCCYLGM}.
@@ -172,40 +191,193 @@ This document focuses on instructions how to use ORE to cover basic workflows fr
 \section{Installation}
 %========================================================
 
-\subsection{ORE for End Users}
+\subsection{ORE Executable}
 
-\subsection{ORE for Developers}
+\todo[inline]{Add instructions for extracting executable}
 
-\subsection{Dependencies}
+\subsection{Git Setup}
 
-\subsubsection{Gnuplot}
+\begin{enumerate}
+\item Install and setup Git on your machine following instructions at \cite{confluence} 
 
-Gnuplot is required for running the examples in section \ref{sec:examples} under OS X and Linux.
+\item Fetch ORE from github by running the following: 
 
-\subsubsection*{Windows}
+{\tt         
+\% git clone https://github.com/openriskengine/ore.git ore
+}
+        
+This will create a folder 'ore' in your current directory that contains the codebase.
 
-\subsubsection*{OSX}
+\item Initially, the QuantLib directory is empty as it is a submodule pointing to the official QuantLib repository. To pull down locally, use the following commands:
 
-Installation on OS X is easiest using Homebrew, the package manager for OS X:
+{\tt
+\% cd ore \\
+\% git submodule init \\
+\% git submodule update
+}
 
-\medskip
-\centerline{\tt brew install gnuplot --with-aquaterm --with-cairo --with-pdflib-lite } 
-\medskip
+\end{enumerate}
+
+\subsection{Boost Setup}
+
+\subsubsection{Windows}
+
+\begin{enumerate}
+\item Download the pre-compiled binaries for MSVC-14 (MSVC2015) from \cite{boost-binaries}, any recent version should work
+\begin{itemize}
+\item 32-bit: \cite{boost-binaries}/VERSION/boost\_VERSION-msvc-14.0-32.exe/download 
+\item 64-bit: \cite{boost-binaries}/VERSION/boost\_VERSION-msvc-14.0-64.exe/download
+\end{itemize}
+\item  Start the installation file and choose an installation folder. Take a note of that folder as it will be needed later on.
+\item Finish the installation by clicking Next a couple of times.
+\end{enumerate}
+    
+Alternatively, compile all Boost libraries directly from the source code:
+
+\begin{enumerate}
+\item Open a Visual Studio Tools Command Prompt
+\begin{itemize}
+\item 32-bit: VS2015/VS2013 x86 Native Tools Command Prompt
+\item 64-bit: VS2015/VS2013 x86 x64 Cross Tools Command Prompt
+\end{itemize}
+\item Navigate to the boost root directory
+\item Run bootstrap.bat
+\item Build the libraries from the source code
+\begin{itemize}
+\item 32-bit: .{\bs}b2 --stagedir=.{\bs}lib{\bs}Win32{\bs}lib --build-type=complete toolset=msvc-14.0 --address-model=32 --with-test --with-system --with-filesystem --with-serialization stage --with-date\_time
+\item 64-bit: .{\bs}b2 --	stagedir=.{\bs}lib{\bs}x64{\bs}lib   --build-type=complete toolset=msvc-14.0 --address-model=64 --with-test --with-system --with-filesystem --with-serialization stage --with-date\_time
+\end{itemize}
+\end{enumerate}
+
+\subsubsection{Unix}
+
+\begin{enumerate}
+\item Download and build Boost, any recent version should work
+\item Define the environment variable BOOST that points to the boost directory
+(so includes should be in BOOST and libs should be in BOOST/stage/lib)
+\end{enumerate}
+
+\subsection{Build Libraries and Application}
+
+\subsubsection{Windows}
+
+\begin{enumerate}
+
+\item Download and install Visual Studio Community Edition. During the installation, make sure you install the Visual C++ support under the Programming Languages features (disabled by default).
+%Optionally, install the Boost Unit Test Adapter to ease the running of unit tests directly within Visual Studio. It can be downloaded from: https://visualstudiogallery.msdn.microsoft.com/5f4ae1bd-b769-410e-8238-fb30beda987f?SRC=VSIDE  
+
+\item Open any solution file and update path to Boost as described in sections 5 \& 6 in \cite{quantlib-install}. You only need to do this for a single project as this will update the path to boost across all projects and solutions on your machine. The paths should be set as follow (in case you compiled Boost on your own, use the path specified using the --stagedir cmd argument):
+
+\begin{itemize}
+\item Include Directories: [Boost Installation Folder]
+\item Library Directories: [Boost Installation Folder]{\bs}libs
+\end{itemize}
+
+\item Add the additional path to the Boost pre-compiled libraries to the linker setting:
+
+\begin{itemize}
+\item 32-bit: [Boost Installation Folder]{\bs}lib32-msvc-14.0
+\item 64-bit: [Boost Installation Folder]{\bs}lib64-msvc-14.0
+\end{itemize}
+
+\item Open each of the sub-project and compile them in the following order: QuantLib, QuantExt, OpenRiskEngineData, OpenRiskEngineAnalytics and App. For each project, do the following:
+
+\begin{itemize}
+\item Switch to the correct platform (i.e. Win32 or x64) from the Configuration Manager. The selection should match the pre-compiled version of Boost. Trying to compile using a mixed configuration (e.g. Boost 64-bit and 32-bit QuantLib) will fail.
+\item Compile the project: Build $\rightarrow$ Build Solution
+\item Once the compilation complete, run the test suite.
+\end{itemize}
+
+\end{enumerate}
+
+\subsubsection{Unix}
+
+\begin{enumerate}
+
+\item Build QuantLib as normal. \\
+
+{\tt\footnotesize
+\% cd QuantLib \\
+\% ./autogen.sh \\
+\% ./configure --with-boost-include=\$BOOST --with-boost-lib=\$BOOST/stage/lib \\
+\% make -j4 
+}
+
+\item Build QuantExt
+
+On Unix: \\
+{\tt
+\% cd QuantExt \\
+\% ./autogen.sh \\
+\% ./configure \\
+\% make -j4
+}
+
+This will build both the QuantExt library and test suite.
+%There is no need to add lots of --with-blah-include=.... flags
+
+%On Windows: \\
+%Open QuantExt.sln and build all.
+%This will build both the QuantExt library and test suite.
+
+%\todo[inline]{The test suite links to
+%{\tt ../../QuantLib/lib;\$(BOOST)/lib/\$(Platform)/lib}
+%How does this work with 32/64 bit builds? how does it work with Release/Debug??}
+
+\item Run the test suite
+
+{\tt
+\% ./test/quantext-test-suite \\
+}
+
+\item  Build OpenRiskEngineData, OpenRiskEngineAnalytics and their test suites. \\
+
+Follow the same steps as for QuantExt.
+To run the unit test suites, do 
+
+{\tt
+\% ./test/ored-test-suite 
+}
+
+and 
+{\tt
+\% ./test/orea-test-suite 
+}
+
+\item Build App/ore
+
+{\tt
+\% cd App \\
+\% ./autogen.sh \\
+\% ./configure \\
+\% make -j4
+}
+
+\item Run Examples (see section \ref{sec:examples})
+
+{\tt
+\% cd Examples \\
+\% cd Example\_1 \\
+\% ./run.sh 
+}
+
+Note that the graphing depends on gnuplot and some gnuplot addins to work.
+Their installation on OS X is easiest using Homebrew, the package manager for OS X:
+
+{\tt brew install gnuplot --with-aquaterm --with-cairo --with-pdflib-lite } 
 
 AquaTerm support will only be built into Gnuplot if the standard AquaTerm
 package has already been installed onto your system.
 If you subsequently remove AquaTerm, you will need to uninstall and then
 reinstall Gnuplot.
 
-\subsubsection*{Linux}
+\end{enumerate}
 
-\subsubsection{Jupyter}
+\subsection{Jupyter}\label{sec:jupyter}
 
+The visualisation examples in section \ref{sec:visualisation} use Jupyter notebooks. 
 Jupyter is part of the Anaconda Open Data Science Analytics Platform \cite{Anaconda}.
-Anaconda installation instructions for Windows, OS X and Linux are available on the anaconda site, with graphical installers for Windows and OS X.
-
-
-\todo[inline]{Add installation instructions}
+Anaconda installation instructions for Windows, OS X and Linux are available on the anaconda site, with graphical installers for Windows and OS X. 
 
 %========================================================
 \section{Examples}\label{sec:examples}
@@ -237,11 +409,11 @@ yields the exposure evolution in
 \medskip
 
 and shown in figure \ref{fig_1}. 
-\begin{figure}[hbt]
+\begin{figure}[tb]
 \begin{center}
 \includegraphics[scale=1.0]{example_swap_1.pdf}
 \end{center}
-\caption{Vanilla ATM swap expected exposure in a flat market environment from both parties' perspectives. The black symbols are European Swaption prices.}
+\caption{Vanilla ATM swap expected exposure in a flat market environment from both parties' perspectives (monthly time grid with 5000 samples). The black line and symbols are European Swaption prices.}
 \label{fig_1}
 \end{figure}
 The black symbols are prices of European Swaptions with expiry at the symbol's time and otherwise same underlying as the Swap considered here. Both Swap simulation and Swaption pricing are run with calls to the ORE executable, essentially 
@@ -269,7 +441,7 @@ yields the exposure evolution in
 \medskip
 
 shown in figure \ref{fig_2}.
-\begin{figure}[hbt]
+\begin{figure}[tb]
 \begin{center}
 \includegraphics[scale=1.0]{example_swap_3.pdf}
 \end{center}
@@ -283,7 +455,7 @@ In this case, where the curves (discount and forward) are upward sloping, the re
 %--------------------------------------------------------
 
 This demo case in folder {\tt Examples/Example\_7} shows the exposure evolution of European Swaptions with cash and physical delivery, respectively, see figure \ref{fig_3}.
-\begin{figure}[hbt]
+\begin{figure}[tb]
 \begin{center}
 \includegraphics[scale=1.0]{example_swaption.pdf}
 \end{center}
@@ -297,7 +469,7 @@ The delivery type (cash vs physical) yields significantly different valuations a
 %--------------------------------------------------------
 
 This demo case in folder {\tt Examples/Example\_10} shows the exposure evolution of Bermudan rather than European Swaptions with cash and physical delivery, respectively, see figure \ref{fig_3b}.
-\begin{figure}[hbt]
+\begin{figure}[tb]
 \begin{center}
 \includegraphics[scale=1.0]{example_bermudan_swaption.pdf}
 \end{center}
@@ -311,7 +483,7 @@ The underlying Swap is the same as in the European Swaption example in section \
 %--------------------------------------------------------
 
 This demo case in folder {\tt Examples/Example\_6} shows the exposure evolution of a European callable Swap, represented as two trades - the non-callable Swap and a Swaption with physical delivery. We have sold the call option, i.e. the Swaption is a right for the counterparty to enter into an offsetting Swap which economically terminates all future flows if exercised. The resulting exposure evolutions for the individual components (Swap, Swaption), as well as the callable Swap are shown in figure \ref{fig_4}. 
-\begin{figure}[hbt]
+\begin{figure}[tb]
 \begin{center}
 \includegraphics[scale=1.0]{example_callable_swap.pdf}
 \end{center}
@@ -321,11 +493,17 @@ This demo case in folder {\tt Examples/Example\_6} shows the exposure evolution 
 The example is an extreme case where the underlying Swap is deep in the money (receiving fixed 5\%), and hence the call exercise probability is close to one. Modify the Swap and Swaption fixed rates closer to the money ($\approx$ 1\%) to see the deviation between net exposure of the callable Swap and the exposure of a 'short' Swap with maturity on exercise.  
 
 %--------------------------------------------------------
+\subsection{Capped/Floored Swap Exposures}\label{sec:capfloor}
+%--------------------------------------------------------
+
+\todo[inline]{Add Cap/Floor exposures}
+
+%--------------------------------------------------------
 \subsection{FX Forward Exposure}\label{sec:fxfwd}
 %--------------------------------------------------------
 
 The example in folder {\tt Examples/Example\_2} generates the exposure evolution for a EUR/USD FX Forward transaction with value date in 10Y. This is a particularly simple show case because of the single cash flow in 10Y. On the other hand it checks the cross currency model implementation by means of comparison to analytic limits - EPE and ENE at the trade's value date must match corresponding Vanilla FX Option prices, as shown in figure \ref{fig_5}.  
-\begin{figure}[hbt]
+\begin{figure}[tb]
 \begin{center}
 \includegraphics[scale=1.0]{example_fxforward.pdf}
 \end{center}
@@ -338,7 +516,7 @@ The example in folder {\tt Examples/Example\_2} generates the exposure evolution
 %--------------------------------------------------------
 
 The case in {\tt Examples/Example\_8} is a vanilla cross currency swap. It shows the typical blend of and interest rate swap's saw tooth exposure evolution with an FX forward's exposure which increases monotonically to final maturity, see figure \ref{fig_6}. \todo[inline]{Add notional resetting feature and example}
-\begin{figure}[hbt]
+\begin{figure}[tb]
 \begin{center}
 \includegraphics[scale=1.0]{example_ccswap.pdf}
 \end{center}
@@ -351,9 +529,9 @@ The case in {\tt Examples/Example\_8} is a vanilla cross currency swap. It shows
 %--------------------------------------------------------
 
 This example (in folder {\tt Examples/Example\_2}, as the FX Forward example) illustrates the exposure evolution for an FX Option, see figure \ref{fig_7}. 
-\begin{figure}[hbt]
+\begin{figure}[tb]
 \begin{center}
-\includegraphics[scale=1.0]{example_fxoption_fwdvariance_corrected.pdf}
+\includegraphics[scale=1.0]{example_fxoption_fwdvariance.pdf}
 \end{center}
 \caption{EUR/USD FX Call and Put Option exposure evolution, same underlying and market data as in section \ref{sec:fxfwd}, compared to the call and put option price as of today (flat line).}
 \label{fig_7}
@@ -377,7 +555,7 @@ In this example (see folder {\tt Examples/Example\_5}) we showcase a small netti
 \item collateral with zero THR and MTA, and MPoR 2w - figure \ref{fig_10}
 \end{itemize}
  
-\begin{figure}[hbt]
+\begin{figure}[tb]
 \begin{center}
 \includegraphics[scale=1.0]{example_nocollateral_epe.pdf}
 \end{center}
@@ -385,11 +563,11 @@ In this example (see folder {\tt Examples/Example\_5}) we showcase a small netti
 \label{fig_8}
 \end{figure}
 
-\begin{figure}[hbt]
+\begin{figure}[tb]
 \begin{center}
-\includegraphics[scale=1.0]{example_threshold_epe.pdf}
+\includegraphics[scale=1.0]{example_threshold_break_epe.pdf}
 \end{center}
-\caption{Three swaps netting set, THR=1m EUR, MTA=100k EUR, MPoR=2w.}
+\caption{Three swaps netting set, THR=1m EUR, MTA=100k EUR, MPoR=2w. The red evolution assumes that the each trade is terminated at the next break date. The blue evolution ignores break dates. }
 \label{fig_9}
 \end{figure}
 
@@ -401,7 +579,7 @@ In this example (see folder {\tt Examples/Example\_5}) we showcase a small netti
 %\label{fig_7}
 %\end{figure}
 
-\begin{figure}[hbt]
+\begin{figure}[tb]
 \begin{center}
 \includegraphics[scale=1.0]{example_mpor_epe.pdf}
 \end{center}
@@ -427,10 +605,10 @@ omitting the three right-most columns containing allocated data.
 \hline
 TradeId & NettingSetId & CVA & DVA & FBA & FCA & COLVA & CollateralFloor \\ %& AllocatedCVA & AllocatedDVA & AllocationMethod \\
 \hline
- & CUST\_A & 32464 & 43083 & 40016 & 73582 & 3524 & 200651 \\ %& 32464.4 & 43082.6 & Marginal \\
-70309 & CUST\_A & 110673 & 211303 & 134234 & 396001 & n/a & n/a \\ %& 20934 & 25703.8 & Marginal \\
-938498 & CUST\_A & 73000 & 81002 & 133391 & 154382 & n/a & n/a \\ %& 6569.42 & 7063.29 & Marginal \\
-919020 & CUST\_A & 74031 & 86618 & 119285 & 147321 & n/a & n/a \\%& 4961 & 10315.5 & Marginal \\
+ & CPTY\_A & 31,163 & 44,950 & -4,815 & 21,208 & 1,965 &  179,961 \\
+Swap\_1 & CPTY\_A & 116,263 & 211,990 & -17,916 & 100,632 & n/a & n/a \\
+Swap\_2 & CPTY\_A & 67,608 & 96,233 & -10,576 & 45,402 & n/a & n/a \\
+Swap\_3 & CPTY\_A & 71,364 & 85,041 & -11,280 & 40,467 & n/a & n/a \\
 \hline
 \end{tabular}
 \end{center}
@@ -448,7 +626,7 @@ incremental contributions to these two VAs through time.
 %--------------------------------------------------------
 
 The same example considered in the previous section (see folder {\tt Examples/Example\_5}) also features the allocation of netting set exposure and XVA to the trade level as frequently required by finance functions.  We start again with the uncollateralised case in figure \ref{fig_8}, followed by the case with threshold 1m EUR in figure \ref{fig_9}.
-\begin{figure}[hbt]
+\begin{figure}[tb]
 \begin{center}
 \includegraphics[scale=1.0]{example_nocollateral_allocated_epe.pdf}
 \end{center}
@@ -456,7 +634,7 @@ The same example considered in the previous section (see folder {\tt Examples/Ex
 \label{fig_12}
 \end{figure}
 In both cases we apply the {\em marginal} (Euler) allocation method as published by Pykhtin and Rosen in 2010, hence we see the typical negative EPE for one of the trades at times when it reduces the netting set exposure. The case with collateral moreover shows the typical spikes in the allocated exposures.
-\begin{figure}[hbt]
+\begin{figure}[tb]
 \begin{center}
 \includegraphics[scale=1.0]{example_threshold_allocated_epe.pdf}
 \end{center}
@@ -466,7 +644,7 @@ In both cases we apply the {\em marginal} (Euler) allocation method as published
 The analytics results also feature allocated XVAs in file {\tt xva.csv} which are derived from the allocated exposure profiles. Note that ORE also offers alternative allocation methods to the marginal method by Pykhtin/Rosen, which can be explored with {\tt Examples/Example\_5}.
 
 %========================================================
-\section{Visualisation}\label{sec:visualisation}
+\section{Launchers}\label{sec:visualisation}
 %========================================================
 
 \subsection{Jupyter}\label{sec:jupyter}
@@ -535,26 +713,30 @@ which we will explain in the following.
 
 \subsubsection{Setup}
 
-This subset of data is easiest explained using an example
-{\footnotesize
-\begin{lstlisting}[caption={ORE setup example},
- 	label=lst:ore_setup]
-<Setup>    
-	<Parameter name="asofDate">2016-02-26</Parameter>
-	<Parameter name="inputPath">Input</Parameter>
-	<Parameter name="outputPath">Output</Parameter>
-	<Parameter name="logFile">log.txt</Parameter>
-	<Parameter name="marketDataFile">../../Input/market_20160226.txt</Parameter>
-	<Parameter name="fixingDataFile">../../Input/fixings_20160226.txt</Parameter>
-	<Parameter name="implyTodaysFixings">Y</Parameter>
-	<Parameter name="curveConfigFile">../../Input/curveconfig.xml</Parameter>
-	<Parameter name="conventionsFile">../../Input/conventions.xml</Parameter>
-	<Parameter name="marketConfigFile">../../Input/todaysmarket.xml</Parameter>
-	<Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
-	<Parameter name="portfolioFile">portfolio.xml</Parameter>
+This subset of data is easiest explained using an example, see listing \ref{lst:ore_setup}.
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Setup>
+  <Parameter name="asofDate">2016-02-05</Parameter>
+  <Parameter name="inputPath">Input</Parameter>
+  <Parameter name="outputPath">Output</Parameter>
+  <Parameter name="logFile">log.txt</Parameter>
+  <Parameter name="marketDataFile">../../Input/market_20160205.txt</Parameter>
+  <Parameter name="fixingDataFile">../../Input/fixings_20160205.txt</Parameter>
+  <Parameter name="implyTodaysFixings">Y</Parameter>
+  <Parameter name="curveConfigFile">../../Input/curveconfig.xml</Parameter>
+  <Parameter name="conventionsFile">../../Input/conventions.xml</Parameter>
+  <Parameter name="marketConfigFile">../../Input/todaysmarket.xml</Parameter>
+  <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
+  <Parameter name="portfolioFile">portfolio.xml</Parameter>
+  <Parameter name="observationModel">Disable</Parameter> <!-- None, Unregister, or Disable -->
 </Setup>
-\end{lstlisting}
-}
+\end{minted}
+%\hrule
+\caption{ORE setup example}
+\label{lst:ore_setup}
+\end{listing}
 
 Parameter names are self explanatory: Input and output path are interpreted relative from the directory where the ORE executable is started, but can also be specified using absolute paths. All file names are then interpreted relative to the 'inputPath' and'outputPath', respectively. 
 
@@ -562,21 +744,28 @@ When ORE starts, it will initialise today's market, i.e. load market data and fi
 Moreover, ORE will load the trades in {\tt portfolio.xml} and link them with pricing engines as specified in {\tt pricingengine.xml}. When parameter {\tt    
 implyTodaysFixings} is set to Y, today's fixings would not be loaded but implied, relevant when pricing/bootstrapping off hypothetical market data as e.g. in scenario analysis and stress testing.
 
+The last parameter {\tt observationModel} is used to decide whether and how observer notifications are limited to improve performance during simulation. The 'unregister' option limits the amount of notifications by unregistering floating rate coupons from indices. The 'disable' option goes one step further and disables all notifications during market updates and triggers instrument recalculations explicitly. 
+
 \subsubsection{Markets}\label{sec:master_input_markets}
 
-The {\tt Markets} section is used to choose the two market configurations for simulation model calibration and the subsequent market simulation phase, respectively. These configurations have to defined in {\tt todaysmarket.xml} (see section \ref{sec:market} below). For example, the calibration of the simulation model's interest rate components requires local OIS discounting whereas the simulation phase requires cross currency adjusted discount curves to get FX product pricing right. So far, the market configurations are used only to distinguish discount curve sets, but the market configuration concept in ORE applies to all term structure types.
+The {\tt Markets} section (see listing \ref{lst:ore_markets}) is used to choose the two market configurations for simulation model calibration and the subsequent market simulation phase, respectively. These configurations have to defined in {\tt todaysmarket.xml} (see section \ref{sec:market}). 
 
-{\footnotesize
-\begin{lstlisting}[caption={ORE markets},
- 	label=lst:ore_markets]
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
 <Markets>
-	<Parameter name="lgmcalibration">collateral_inccy</Parameter>
-	<Parameter name="fxcalibration">collateral_eur</Parameter>
-	<Parameter name="pricing">collateral_eur</Parameter>
-	<Parameter name="simulation">collateral_eur</Parameter>
+  <Parameter name="lgmcalibration">collateral_inccy</Parameter>
+  <Parameter name="fxcalibration">collateral_eur</Parameter>
+  <Parameter name="pricing">collateral_eur</Parameter>
+  <Parameter name="simulation">collateral_eur</Parameter>
 </Markets>
-\end{lstlisting}
-}
+\end{minted}
+%\hrule
+\caption{ORE markets}
+\label{lst:ore_markets}
+\end{listing}
+
+For example, the calibration of the simulation model's interest rate components requires local OIS discounting whereas the simulation phase requires cross currency adjusted discount curves to get FX product pricing right. So far, the market configurations are used only to distinguish discount curve sets, but the market configuration concept in ORE applies to all term structure types.
 
 \subsubsection{Analytics}
 
@@ -592,61 +781,58 @@ The {\tt Analytics} section lists all permissible analytics using tags {\tt <Ana
 
 Each {\tt Analytic} section contains a list of key/value pairs to parameterise the analysis of the form {\tt <Parameter name="key">value</Parameter>}. Each analysis
 must have one key {\tt active} set to Y or N to activate/deactivate this analysis. 
-The following listing shows the parametrisation of the first three basic analytics in the list above.
+The following listing \ref{lst:ore_analytics} shows the parametrisation of the first three basic analytics in the list above.
 
-{\footnotesize
-\begin{lstlisting}[caption={ORE analytics: npv, cashflow and curves},
- 	label=lst:ore_analytics]
-<Analytics>
-    
-	<Analytic type="npv">
-		<Parameter name="active">Y</Parameter>
-		<Parameter name="baseCurrency">EUR</Parameter>
-		<Parameter name="outputFileName">npv.csv</Parameter>
-	</Analytic>      
-
-	<Analytic type="cashflow">
-		<Parameter name="active">Y</Parameter>
-		<Parameter name="outputFileName">flows.csv</Parameter>
-	</Analytic>      
-
-	<Analytic type="curves">
-		<Parameter name="active">Y</Parameter>
-		<Parameter name="configuration">default</Parameter>
-		<Parameter name="grid">240,1M</Parameter>
-		<Parameter name="outputFileName">curves.csv</Parameter>
-	</Analytic>      
-
-	<Analytic type="...">
-		<!-- ... -->
-	</Analytic>      
-
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Analytics>    
+  <Analytic type="npv">
+    <Parameter name="active">Y</Parameter>
+    <Parameter name="baseCurrency">EUR</Parameter>
+    <Parameter name="outputFileName">npv.csv</Parameter>
+  </Analytic>      
+  <Analytic type="cashflow">
+    <Parameter name="active">Y</Parameter>
+    <Parameter name="outputFileName">flows.csv</Parameter>
+  </Analytic>      
+  <Analytic type="curves">
+    <Parameter name="active">Y</Parameter>
+    <Parameter name="configuration">default</Parameter>
+    <Parameter name="grid">240,1M</Parameter>
+    <Parameter name="outputFileName">curves.csv</Parameter>
+  </Analytic>
+  <Analytic type="...">
+    <!-- ... -->
+  </Analytic>      
 </Analytics>      
-\end{lstlisting}
-}
+\end{minted}
+\caption{ORE analytics: npv, cashflow and curves}
+\label{lst:ore_analytics}
+\end{listing}
 
 The curves analytic exports all yield curves that have been built according to the specification in {\tt todaysmarket.xml}. Key {\tt configuration} selects the curve set to be used (see explanation in the previous Markets section).  Key {\tt grid} defines the time grid on which the yield curves are evaluated, in the example above a grid of 240 monthly time steps from today. The discount factors for all curves with configuration default will be exported on this monthly grid into the csv file specified by key {\tt outputFileName}.
 
 \medskip
 The purpose of the {\tt simulation} 'analytics' is to run a Monte Carlo simulation which evolves the market as specified in the simulation config file. The primary result is an NPV cube file, i.e. valuations of all trades in the portfolio file (see section Setup), for all future points in time on the simulation grid and for all paths. Apart from the NPV cube, additional scenario data (such as simulated overnight rates etc) are stored in this process which are needed for subsequent XVA analytics.  
 
-{\footnotesize
-\begin{lstlisting}[caption={ORE analytic: simulation},
- 	label=lst:ore_simulation]
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
 <Analytics>
-	<Analytic type="simulation">
-		<Parameter name="active">Y</Parameter>
-		<Parameter name="simulationConfigFile">simulation.xml</Parameter>
-		<Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
-		<Parameter name="baseCurrency">EUR</Parameter>
-		<Parameter name="storeScenarios">N</Parameter>
-		<Parameter name="cubeFile">cube.dat</Parameter>
-		<Parameter name="additionalScenarioDataFileName">scenariodata.dat</Parameter>
-		<Parameter name="disableEvaluationDateObservation">N</Parameter>
-	</Analytic>
+  <Analytic type="simulation">
+    <Parameter name="active">Y</Parameter>
+    <Parameter name="simulationConfigFile">simulation.xml</Parameter>
+    <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
+    <Parameter name="baseCurrency">EUR</Parameter>
+    <Parameter name="cubeFile">cube.dat</Parameter>
+    <Parameter name="additionalScenarioDataFileName">scenariodata.dat</Parameter>
+  </Analytic>
 </Analytics>      
-\end{lstlisting}
-}
+\end{minted}
+\caption{ORE analytic: simulation}
+\label{lst:ore_simulation}
+\end{listing}
 
 The pricing engines file specifies how trades are priced under future scenarios which can differ from pricing as of today (specified in section Setup).
 Key base currency determines into which currency all NPVs will be converted. Key store scenarios (Y or N) determines whether the market scenarios are written to a file for later reuse.
@@ -656,37 +842,40 @@ Key base currency determines into which currency all NPVs will be converted. Key
 \medskip
 The xva analytic section offers CVA, DVA, FVA and COLVA calculations which can be selected/deselected here individually. All XVA calculations depend on a previously generated NPV cube (see above) which is referenced here via the {\tt cubeFile} parameter. This means one can re-run the xva analytics without regenerating the cube each time. The xva reports depend in particular on the settings in the {\tt csaFile} which determines CSA details such as margining frequency, collateral thresholds, minimum transfer amounts, margin period of risk. By splitting the processing in to pre-processing (cube generation) and post-processing (aggregation and XVA analysis) it is possible to vary these CSA details and analyse their impact on XVAs quickly without re-generating the NPV cube.  
 
-{\footnotesize
-\begin{lstlisting}[caption={ORE analytic: xva},
- 	label=lst:ore_xva]
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
 <Analytics>
-	<Analytic type="xva">
-		<Parameter name="active">Y</Parameter>
-		<Parameter name="csaFile">netting.xml</Parameter>
-		<Parameter name="cubeFile">cube.dat</Parameter>
-		<Parameter name="scenarioFile">scenariodata.dat</Parameter>
-		<Parameter name="baseCurrency">EUR</Parameter>
-		<Parameter name="exposureProfiles">Y</Parameter>
-		<Parameter name="quantile">0.95</Parameter>
-		<Parameter name="calculationType">Symmetric</Parameter>      
-		<Parameter name="allocationMethod">None</Parameter>    
-		<Parameter name="marginalAllocationLimit">1.0</Parameter>
-		<Parameter name="exerciseNextBreak">N</Parameter>
-		<Parameter name="cva">Y</Parameter>
-		<Parameter name="dva">N</Parameter>
-		<Parameter name="dvaName">BANK</Parameter>
-		<Parameter name="fva">N</Parameter>
-		<Parameter name="fvaBorrowingCurve">BANK_EUR_BORROW</Parameter>
-		<Parameter name="fvaLendingCurve">BANK_EUR_LEND</Parameter>
-		<Parameter name="colva">Y</Parameter>
-		<Parameter name="collateralSpread">0.0010</Parameter>
-		<Parameter name="collateralFloor">Y</Parameter>
-		<Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>
-		<Parameter name="netCubeOutputFile">netcube.csv</Parameter>     
-	</Analytic>
+  <Analytic type="xva">
+    <Parameter name="active">Y</Parameter>
+    <Parameter name="csaFile">netting.xml</Parameter>
+    <Parameter name="cubeFile">cube.dat</Parameter>
+    <Parameter name="scenarioFile">scenariodata.dat</Parameter>
+    <Parameter name="baseCurrency">EUR</Parameter>
+    <Parameter name="exposureProfiles">Y</Parameter>
+    <Parameter name="quantile">0.95</Parameter>
+    <Parameter name="calculationType">Symmetric</Parameter>      
+    <Parameter name="allocationMethod">None</Parameter>    
+    <Parameter name="marginalAllocationLimit">1.0</Parameter>
+    <Parameter name="exerciseNextBreak">N</Parameter>
+    <Parameter name="cva">Y</Parameter>
+    <Parameter name="dva">N</Parameter>
+    <Parameter name="dvaName">BANK</Parameter>
+    <Parameter name="fva">N</Parameter>
+    <Parameter name="fvaBorrowingCurve">BANK_EUR_BORROW</Parameter>
+    <Parameter name="fvaLendingCurve">BANK_EUR_LEND</Parameter>
+    <Parameter name="colva">Y</Parameter>
+    <Parameter name="collateralSpread">0.0010</Parameter>
+    <Parameter name="collateralFloor">Y</Parameter>
+    <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>
+    <Parameter name="netCubeOutputFile">netcube.csv</Parameter>     
+  </Analytic>
 </Analytics>
-\end{lstlisting}
-}
+\end{minted}
+\caption{ORE analytic: xva}
+\label{lst:ore_xva}
+\end{listing}
+
 
 Further parameters:
 \begin{itemize}
@@ -694,7 +883,7 @@ Further parameters:
 \item {\tt cubeFile:} NPV cube file previously generated and to be post-processed here
 \item {\tt scenarioFile:} Scenario data previously generated and used in the post-processor (simulated index fixings and FX rates) 
 \item {\tt baseCurrency:} Expression currency for all NPVs, value adjustments, exposures 
-\item {\tt eposureProfiles:} Flag to enable/disable exposure output  
+\item {\tt exposureProfiles:} Flag to enable/disable exposure output  
 \item {\tt quantile} Confidence level for Potential Future Exposure (PFE) 
 reporting
 \item {\tt calculationType} Determines the settlement of margin calls: Symmetric - margin for both counterparties settled after the margin period of risk; AsymmetricCVA - margin requested from the counterparty settles with delay, margin requested from us settles immediately; AsymmetricDVA - vice versa). \todo[inline]{Move calculationType into the {\tt csaFile}?}   
@@ -739,18 +928,21 @@ There can be alternative versions of each block each labeled with a unique ident
 
 We pick one discounting curve block as an example here (see {\tt Examples/Input/todaysmarket.xml}), the one with ID 'ois' 
 
-{\footnotesize
-\begin{lstlisting}[caption={Discount curve block with ID 'ois'}, 	label=lst:discountcurve_spec]
-	<DiscountingCurves Id="ois">
-		<DiscountingCurve Currency="EUR"> Yield/EUR/EUR1D </DiscountingCurve>
-		<DiscountingCurve Currency="USD"> Yield/USD/USD1D </DiscountingCurve>
-		<DiscountingCurve Currency="GBP"> Yield/GBP/GBP1D </DiscountingCurve>
-		<DiscountingCurve Currency="CHF"> Yield/CHF/CHF6M </DiscountingCurve>
-		<DiscountingCurve Currency="JPY"> Yield/JPY/JPY6M </DiscountingCurve>
-		...
-	</DiscountingCurves>
-\end{lstlisting}
-}
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <DiscountingCurves Id="ois">
+    <DiscountingCurve Currency="EUR">Yield/EUR/EUR1D</DiscountingCurve>
+    <DiscountingCurve Currency="USD">Yield/USD/USD1D</DiscountingCurve>
+    <DiscountingCurve Currency="GBP">Yield/GBP/GBP1D</DiscountingCurve>
+    <DiscountingCurve Currency="CHF">Yield/CHF/CHF6M</DiscountingCurve>
+    <DiscountingCurve Currency="JPY">Yield/JPY/JPY6M</DiscountingCurve>
+    <!-- ... -->
+  </DiscountingCurves>
+\end{minted}
+\caption{Discount curve block with ID 'ois'}
+\label{lst:discountcurve_spec}
+\end{listing}
 
 This block instructs ORE to build five discount curves for the indicated currencies. The string within the tags, e.g. Yield/EUR/EUR1D, uniquely identifies the curve to be built.  Curve Yield/EUR/EUR1D is defined in the curve configuration file explained in section \ref{sec:curveconfig} below. In this case ORE is instructed to build an Eonia Swap curve made of Overnight Deposit and Eonia Swap quotes. The right most token of the string Yield/EUR/EUR1D (EUR1D) is user defined, the first two tokens Yield/EUR have to be used to point to a yield curve in currency EUR.
  
@@ -758,19 +950,21 @@ This block instructs ORE to build five discount curves for the indicated currenc
 
 See an excerpt of the index curve block with ID 'default' from the same example file:
 
-{\footnotesize
-\begin{lstlisting}[caption={Index curve block with ID 'default'}, 	label=lst:indexcurve_spec]
-	<IndexForwardingCurves Id="default">
-		..
-		<Index Name="EUR-EURIBOR-3M"> Yield/EUR/EUR3M </Index>
-		<Index Name="EUR-EURIBOR-6M"> Yield/EUR/EUR6M </Index>
-		<Index Name="EUR-EURIBOR-12M"> Yield/EUR/EUR6M </Index>
-		<Index Name="EUR-EONIA"> Yield/EUR/EUR1D </Index>
-		<Index Name="USD-LIBOR-3M"> Yield/USD/USD3M </Index>
-		...
-	</IndexForwardingCurves>
-\end{lstlisting}
-}
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<IndexForwardingCurves Id="default">
+  <Index Name="EUR-EURIBOR-3M">Yield/EUR/EUR3M</Index>
+  <Index Name="EUR-EURIBOR-6M">Yield/EUR/EUR6M</Index>
+  <Index Name="EUR-EURIBOR-12M">Yield/EUR/EUR6M</Index>
+  <Index Name="EUR-EONIA">Yield/EUR/EUR1D</Index>
+  <Index Name="USD-LIBOR-3M">Yield/USD/USD3M</Index>
+  <!-- ... -->
+</IndexForwardingCurves>
+\end{minted}
+\caption{Index curve block with ID 'default'}
+\label{lst:indexcurve_spec}
+\end{listing}
 
 This block of curve specifications instructs ORE to build another set of yield curves, unique strings (e.g. Yield/EUR/EUR6M etc.) point to the {\tt curveconfig.xml} file where these curves are defined. Each curve is then associated with an index name (of format Ccy-IndexName-Tenor, e.g. EUR-EURIBOR-6M) so that ORE will project the respective index using the selected curve (e.g. Yield/EUR/EUR6M).
 
@@ -778,21 +972,24 @@ This block of curve specifications instructs ORE to build another set of yield c
 
 The following is an excerpt of the swap index curve block with ID 'default' from the same example file:
 
-{\footnotesize
-\begin{lstlisting}[caption={Swap index curve block with ID 'default'}, 	label=lst:swapindexcurve_spec]
-	<SwapIndexCurves Id="default">
-		<SwapIndex Name="EUR-CMS-1Y">
-			<Index>EUR-EURIBOR-6M</Index>
-			<Discounting>EUR-EONIA</Discounting>
-		</SwapIndex>
-		<SwapIndex Name="EUR-CMS-30Y">
-			<Index>EUR-EURIBOR-6M</Index>
-			<Discounting>EUR-EONIA</Discounting>
-		</SwapIndex>
-		...
-	</SwapIndexCurves>
-\end{lstlisting}
-}
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<SwapIndexCurves Id="default">
+  <SwapIndex Name="EUR-CMS-1Y">
+    <Index>EUR-EURIBOR-6M</Index>
+    <Discounting>EUR-EONIA</Discounting>
+  </SwapIndex>
+  <SwapIndex Name="EUR-CMS-30Y">
+    <Index>EUR-EURIBOR-6M</Index>
+    <Discounting>EUR-EONIA</Discounting>
+  </SwapIndex>
+  <!-- ... -->
+</SwapIndexCurves>
+\end{minted}
+\caption{Swap index curve block with ID 'default'}
+\label{lst:swapindexcurve_spec}
+\end{listing}
 
 These instructions do not build any additional curves. They only build the respective swap index objects and associate them with the required index forwarding and discounting curves already built above. This enables a swap index to project the fair rate of forward starting Swaps. Swap indices are also containers for conventions. Swaption volatility surfaces require two swap indices each available in the market object, a long term and a short term swap index. The curve configuration file below will show that in particular the required short term index has term 1Y, and the required long term index has 30Y term. This is why we build these two indices at this point.
 
@@ -800,16 +997,20 @@ These instructions do not build any additional curves. They only build the respe
 
 The following is an excerpt of the FX spot block with ID 'default' from the same example file:
 
-{\footnotesize
-\begin{lstlisting}[caption={FX spot block with ID 'default'}, label=lst:fxspot_spec]
-	<FxSpots Id="default">
-		<FxSpot Pair="EURUSD">FX/EUR/USD</FxSpot>
-		<FxSpot Pair="EURGBP">FX/EUR/GBP</FxSpot>
-		<FxSpot Pair="EURCHF">FX/EUR/CHF</FxSpot>
-		<FxSpot Pair="EURJPY">FX/EUR/JPY</FxSpot>
-	</FxSpots>
-\end{lstlisting}
-}
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<FxSpots Id="default">
+  <FxSpot Pair="EURUSD">FX/EUR/USD</FxSpot>
+  <FxSpot Pair="EURGBP">FX/EUR/GBP</FxSpot>
+  <FxSpot Pair="EURCHF">FX/EUR/CHF</FxSpot>
+  <FxSpot Pair="EURJPY">FX/EUR/JPY</FxSpot>
+  <!-- ... -->
+</FxSpots>
+\end{minted}
+\caption{FX spot block with ID 'default'}
+\label{lst:fxspot_spec}
+\end{listing}
 
 This block instructs ORE to provide four FX quote objects in the market object, all quoted with target currency EUR so that foreign currency amounts can be converted into EUR via multiplication with that rate.
  
@@ -817,16 +1018,20 @@ This block instructs ORE to provide four FX quote objects in the market object, 
 
 The following is an excerpt of the FX Volatilities block with ID 'default' from the same example file:
 
-{\footnotesize
-\begin{lstlisting}[caption={FX volatility block with ID 'default'}, label=lst:fxvol_spec]	
-	<FxVolatilities Id="default">
-		<FxVolatility Pair="EURUSD"> FXVolatility/EUR/USD/EURUSD </FxVolatility>
-		<FxVolatility Pair="EURGBP"> FXVolatility/EUR/GBP/EURGBP </FxVolatility>
-		<FxVolatility Pair="EURCHF"> FXVolatility/EUR/CHF/EURCHF </FxVolatility>
-		<FxVolatility Pair="EURJPY"> FXVolatility/EUR/JPY/EURJPY </FxVolatility>
-	</FxVolatilities>
-\end{lstlisting}
-}
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<FxVolatilities Id="default">
+  <FxVolatility Pair="EURUSD">FXVolatility/EUR/USD/EURUSD</FxVolatility>
+  <FxVolatility Pair="EURGBP">FXVolatility/EUR/GBP/EURGBP</FxVolatility>
+  <FxVolatility Pair="EURCHF">FXVolatility/EUR/CHF/EURCHF</FxVolatility>
+  <FxVolatility Pair="EURJPY">FXVolatility/EUR/JPY/EURJPY</FxVolatility>
+  <!-- ... -->
+</FxVolatilities>
+\end{minted}
+\caption{FX volatility block with ID 'default'}
+\label{lst:fxvol_spec}
+\end{listing}
 
 This instructs ORE to build four FX volatility structures for all FX pairs with target currency EUR, see curve configuration file for the definition of the volatility structure.
 
@@ -834,17 +1039,20 @@ This instructs ORE to build four FX volatility structures for all FX pairs with 
 
 The following is an excerpt of the Swaption Volatilities block with ID 'default' from the same example file:
 
-{\footnotesize
-\begin{lstlisting}[caption={Swaption volatility block with ID 'default'}, label=lst:swaptionvol_spec]	
-	<SwaptionVolatilities Id="default">
-		<SwaptionVolatility Currency="EUR"> SwaptionVolatility/EUR/EUR_SW_N </SwaptionVolatility>
-		<SwaptionVolatility Currency="USD"> SwaptionVolatility/USD/USD_SW_N </SwaptionVolatility>
-		<SwaptionVolatility Currency="GBP"> SwaptionVolatility/GBP/GBP_SW_N </SwaptionVolatility>
-		<SwaptionVolatility Currency="CHF"> SwaptionVolatility/CHF/CHF_SW_N </SwaptionVolatility>
-		<SwaptionVolatility Currency="JPY"> SwaptionVolatility/CHF/JPY_SW_N </SwaptionVolatility>
-	</SwaptionVolatilities>
-\end{lstlisting}
-}
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<SwaptionVolatilities Id="default">
+  <SwaptionVolatility Currency="EUR">SwaptionVolatility/EUR/EUR_SW_N</SwaptionVolatility>
+  <SwaptionVolatility Currency="USD">SwaptionVolatility/USD/USD_SW_N</SwaptionVolatility>
+  <SwaptionVolatility Currency="GBP">SwaptionVolatility/GBP/GBP_SW_N</SwaptionVolatility>
+  <SwaptionVolatility Currency="CHF">SwaptionVolatility/CHF/CHF_SW_N</SwaptionVolatility>
+  <SwaptionVolatility Currency="JPY">SwaptionVolatility/CHF/JPY_SW_N</SwaptionVolatility>
+</SwaptionVolatilities>
+\end{minted}
+\caption{Swaption volatility block with ID 'default'}
+\label{lst:swaptionvol_spec}
+\end{listing}
 
 This instructs ORE to build five Swaption volatility structures, see the curve configuration file for the definition of the volatility structure. The latter token (e.g. EUR\_SW\_N) is user defined and will be found in the curve configuration's CurveId tag.
 
@@ -852,15 +1060,20 @@ This instructs ORE to build five Swaption volatility structures, see the curve c
 
 The following is an excerpt of the Default Curves block with ID 'default' from the same example file:
 
-{\footnotesize
-\begin{lstlisting}[caption={Default curves block with ID 'default'}, label=lst:defaultcurve_spec]	
-	<DefaultCurves Id="default">
-		<DefaultCurve Name="BANK"> Default/USD/BANK_SR_USD </DefaultCurve>
-		<DefaultCurve Name="CUST_A"> Default/USD/CUST_A_SR_USD </DefaultCurve>
-		...
-	</DefaultCurves>
-\end{lstlisting}
-}
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<DefaultCurves Id="default">
+  <DefaultCurve Name="BANK">Default/USD/BANK_SR_USD</DefaultCurve>
+  <DefaultCurve Name="CPTY_A">Default/USD/CUST_A_SR_USD</DefaultCurve>
+  <DefaultCurve Name="CPTY_B">Default/USD/CUST_A_SR_USD</DefaultCurve>
+  <!-- ... -->
+</DefaultCurves>
+\end{minted}
+\caption{Default curves block with ID 'default'}
+\label{lst:defaultcurve_spec}
+\end{listing}
+
 
 This instructs ORE to build a set of default probability curves, again defined in the curve configuration file. Each curve is then associated with a name (BANK, CUST\_A) for subsequent lookup.
 As before, the last token (e.g. BANK\_SR\_USD) is user defined and will be found in the curve configuration's CurveId tag.  
@@ -869,34 +1082,25 @@ As before, the last token (e.g. BANK\_SR\_USD) is user defined and will be found
 
 Finally, representatives of each type of block (Discount Curves, Index Curves etc) can be bundled into a market configuration. This is done by adding the following to the {\tt todaysmarket.xml} file:
 
-{\footnotesize
-\begin{lstlisting}[caption={Configuration block with ID 'default'}, label=lst:config_spec]	
-	<Configuration Id="default">
-		<DiscountingCurvesId> xois_eur </DiscountingCurvesId>
-		<IndexForwardingCurvesId> default </IndexForwardingCurvesId>
-		<SwapIndexCurvesId> default </SwapIndexCurvesId>
-		<FxSpotsId> default </FxSpotsId>
-		<FxVolatilitiesId> default </FxVolatilitiesId>
-		<SwaptionVolatilitiesId> default </SwaptionVolatilitiesId>
-		<DefaultCurvesId> default </DefaultCurvesId>
-	</Configuration>
-
-	<Configuration Id="collateral_inccy">
-		<DiscountingCurvesId>ois</DiscountingCurvesId>
-		...
-	</Configuration>
-
-	<Configuration Id="collateral_eur">
-		<DiscountingCurvesId>xois_eur</DiscountingCurvesId>
-		...
-	</Configuration>
-
-	<Configuration Id="libor">
-		<DiscountingCurvesId>inccy_swap</DiscountingCurvesId>
-		...
-	</Configuration>
-\end{lstlisting}
-}
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Configuration Id="default">
+  <DiscountingCurvesId> xois_eur </DiscountingCurvesId>
+</Configuration>
+<Configuration Id="collateral_inccy">
+  <DiscountingCurvesId>ois</DiscountingCurvesId>
+</Configuration>
+<Configuration Id="collateral_eur">
+  <DiscountingCurvesId>xois_eur</DiscountingCurvesId>
+</Configuration>
+<Configuration Id="libor">
+  <DiscountingCurvesId>inccy_swap</DiscountingCurvesId>
+</Configuration>
+\end{minted}
+\caption{Market configurations}
+\label{lst:config_spec}
+\end{listing}
 
 When ORE constructs the market object, all configurations will be provided side by side it passes the desired configuration ID (e.g. 'default') which causes the library to build the series of curves and volatility structures that are 'bundled' into that configuration ID.  This allows configuring a market setup for different alternative purposes side by side in the same {\tt todaysmarket.xml} file. Typical use cases are
 \begin{itemize}
@@ -915,31 +1119,64 @@ The configuration ID concept extends across all curve and volatility objects tho
 The pricing engine configuration file is provided to select pricing models and pricing engines by  
 product type. The following excerpt of the Example section's {\tt pricingengine.xml} shows the selection for Bermudan Swaption pricing:
 
-{\footnotesize
-\begin{lstlisting}[caption={Pricing engine configuration}, label=lst:pricingengine_config]	
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
 <PricingEngines>
-	<Product type="BermudanSwaption">
-		<Model>LGM</Model>
-		<ModelParameters>
-			<Parameter name="Calibration">Bootstrap</Parameter>
-			<Parameter name="BermudanStrategy">CoterminalATM</Parameter>
-			<Parameter name="Reversion">0.03</Parameter>
-			<Parameter name="ReversionType">HullWhite</Parameter>
-			<Parameter name="Volatility">0.01</Parameter>
-			<Parameter name="VolatilityType">Hagan</Parameter>
-			<Parameter name="Tolerance">0.0001</Parameter>
-		</ModelParameters>
-		<Engine>Grid</Engine>
-		<EngineParameters>
-			<Parameter name="sy">3.0</Parameter>
-			<Parameter name="ny">10</Parameter>
-			<Parameter name="sx">3.0</Parameter>
-			<Parameter name="nx">10</Parameter>
-		</EngineParameters>
-	</Product>
+  <Product type="Swap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingSwapEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="CrossCurrencySwap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingCrossCurrencySwapEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="FxForward">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingFxForwardEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="FxOption">
+    <Model>GarmanKohlhagen</Model>
+    <ModelParameters/>
+    <Engine>AnalyticEuropeanEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="EuropeanSwaption">
+    <Model>BlackBachelier</Model> <!-- depends on input vol -->
+    <ModelParameters/>
+    <Engine>BlackBachelierSwaptionEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="BermudanSwaption">
+    <Model>LGM</Model>
+    <ModelParameters>
+      <Parameter name="Calibration">Bootstrap</Parameter>
+      <Parameter name="BermudanStrategy">CoterminalATM</Parameter>
+      <Parameter name="Reversion">0.03</Parameter>
+      <Parameter name="ReversionType">HullWhite</Parameter>
+      <Parameter name="Volatility">0.01</Parameter>
+      <Parameter name="VolatilityType">Hagan</Parameter>
+      <Parameter name="Tolerance">0.0001</Parameter>
+    </ModelParameters>
+    <Engine>Grid</Engine>
+    <EngineParameters>
+      <Parameter name="sy">3.0</Parameter>
+      <Parameter name="ny">10</Parameter>
+      <Parameter name="sx">3.0</Parameter>
+      <Parameter name="nx">10</Parameter>
+    </EngineParameters>
+  </Product>
 </PricingEngines>
-\end{lstlisting}
-}
+\end{minted}
+\caption{Pricing engine configuration}
+\label{lst:pricingengine_config}
+\end{listing}
 
 These settings will be taken into account when the engine factory is asked to build a Bermudan Swaption
 pricing model, calibrate it and construct the pricing engine for it:
@@ -961,17 +1198,18 @@ This file is relevant in particular for structured products which are in scope o
 This file determines the behaviour of the risk factor simulation (scenario generation) module.
 It is structured in three blocks of data.
 
-{\footnotesize
-\begin{lstlisting}[caption={Simulation configuration}, label=lst:simulation_configuration]
-<Root>
-	<Simulation>
-		<Parameters> ... </Parameters>
-		<CrossAssetModel> ... </CrossAssetModel>
-		<Market> ... </Market>
-	</Simulation>
-</Root>
-\end{lstlisting}
-}
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Simulation>
+  <Parameters> ... </Parameters>
+  <CrossAssetModel> ... </CrossAssetModel>
+  <Market> ... </Market>
+</Simulation>
+\end{minted}
+\caption{Simulation configuration}
+\label{lst:simulation_configuration}
+\end{listing}
 
 Each of the three blocks is sketched in the following.
 
@@ -979,34 +1217,31 @@ Each of the three blocks is sketched in the following.
 
 Let us discuss this section using the following example
 
-{\footnotesize
-\begin{lstlisting}[caption={Simulation configuration}, label=lst:simulation_params_configuration]
-	<Parameters>
-		<Discretization>Exact</Discretization>
-		<Grid>80,3M</Grid>
-		<Calendar>EUR,USD,GBP,CHF</Calendar>
-		<Sequence>SobolBrownianBridge</Sequence>
-		<Scenario>Simple</Scenario>
-		<Seed>42</Seed>
-		<Samples>1000</Samples>
-		<Fixings>
-			<SimulateFixings>Y</SimulateFixings>
-			<EstimationMethod>Backward</EstimationMethod>
-			<ForwardHorizonDays>1</ForwardHorizonDays>
-		</Fixings>
-	</Parameters>
-\end{lstlisting}
-}
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Parameters>
+  <Discretization>Exact</Discretization>
+  <Grid>80,3M</Grid>
+  <Calendar>EUR,USD,GBP,CHF</Calendar>
+  <Sequence>SobolBrownianBridge</Sequence>
+  <Seed>42</Seed>
+  <Samples>1000</Samples>
+</Parameters>
+\end{minted}
+\caption{Simulation configuration}
+\label{lst:simulation_params_configuration}
+\end{listing}
 
 \begin{itemize}
 \item {\tt Discretization:} Chooses between time discretization schemes for the risk factor evolution. {\em Exact} means exploiting the analytcal tractability of the model to avoid any time discretization error. {\em Euler} uses a naive time discretization scheme which has numerical error and requires small time steps fro accurate results (useful for testing purposes)
 \item {\tt Grid: } Specifies the simulation time grid, here 80 quarterly steps.
 \item {\tt Calendar:} Calendar or combination of calendars used to adjust the dates of the grid. Date adjustment is required because the simulation must step over 'good' dates on which index fixings can be stored.
-\item {\tt Scenario: } Choose between {\em Simple } and {\em Complex } implementations, the latter optimized for more efficient memory usage. \todo[inline]{Remove Scenario choice}
+%\item {\tt Scenario: } Choose between {\em Simple } and {\em Complex } implementations, the latter optimized for more efficient memory usage. \todo[inline]{Remove Scenario choice}
 \item {\tt Sequence:} Choose random sequence generator ({\em MersenneTwister, MersenneTwisterAntithetic, Sobol, SobolBrownianBridge}).
 \item {\tt Seed:} Random number generator seed
 \item {\tt Samples:} Number of Monte Carlo paths to be produced
-\item {\tt Fixings: } Choose whether fixings should be simulated or not, and if so which fixing simulation method to use ({\em Backward, Forward, BestOfForwardBackward, InterpolatedForwardBackward}), which number of forward horizon days to use if one of the {\em Forward } related methods is chosen.
+%\item {\tt Fixings: } Choose whether fixings should be simulated or not, and if so which fixing simulation method to use ({\em Backward, Forward, BestOfForwardBackward, InterpolatedForwardBackward}), which number of forward horizon days to use if one of the {\em Forward } related methods is chosen.
 \end{itemize}
 
 \subsubsection{Model}\label{sec:sim_model}
@@ -1016,74 +1251,77 @@ The {\tt CrossAssetModel} section determines the cross asset model's number of c
 \medskip
 The simulated currencies are specified as follows, with clearly identifying the domestic currency which is also the target currency for all FX models listed subsequently. If the portfolio requires more currencies to be simulated, this will lead to an exception at run time, so that it is the user's responsibility to make sure that the list of currencies here is sufficient. The list can be larger than actually required by the portfolio. This will not lead to any exceptions, but add to the run time of ORE.
 
-{\footnotesize
-\begin{lstlisting}[caption={Simulation model currencies configuration}, label=lst:simulation_model_currencies_configuration]
-	<CrossAssetModel>
-		<DomesticCcy>EUR</DomesticCcy>
-		<Currencies>
-			<Currency>EUR</Currency>
-			<Currency>USD</Currency>
-			<Currency>GBP</Currency>
-			<Currency>CHF</Currency>
-			<Currency>JPY</Currency>
-		</Currencies>
-
-		<BootstrapTolerance>0.0001</BootstrapTolerance>
-      
-		...
-	</CrossAssetModel>
-\end{lstlisting}
-} 
-
-Bootstrap tolerance is a global paramater that applies to the calibration of all model components. If the calibration error of any component exceeds this tolerance, this will trigger an exception at runtime, early in the ORE process.	
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CrossAssetModel>
+  <DomesticCcy>EUR</DomesticCcy>
+  <Currencies>
+    <Currency>EUR</Currency>
+    <Currency>USD</Currency>
+    <Currency>GBP</Currency>
+    <Currency>CHF</Currency>
+    <Currency>JPY</Currency>
+  </Currencies>
+  <BootstrapTolerance>0.0001</BootstrapTolerance>
+  <!-- ... -->
+</CrossAssetModel>
+\end{minted}
+\caption{Simulation model currencies configuration}
+\label{lst:simulation_model_currencies_configuration}
+\end{listing}
+ 
+Bootstrap tolerance is a global parameter that applies to the calibration of all model components. If the calibration error of any component exceeds this tolerance, this will trigger an exception at runtime, early in the ORE process.	
 
 \medskip
 
 Each interest rate model is specified by a block as follows
 
-{\footnotesize
-\begin{lstlisting}[caption={Simulation model IR configuration}, label=lst:simulation_model_ir_configuration]
-
-	<CrossAssetModel>	
-		...
-		<InterestRateModels>
-			<LGM ccy="default">
-				<CalibrationType>Bootstrap</CalibrationType>
-				<Volatility>
-					<Calibrate>Y</Calibrate>
-					<VolatilityType>Hagan</VolatilityType>
-					<ParamType>Piecewise</ParamType>
-					<TimeGrid>1.0,2.0,3.0,4.0,5.0,7.0,10.0</TimeGrid>
-					<InitialValue>0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01<InitialValue>
-				</Volatility>
-				<Reversion>
-					<Calibrate>N</Calibrate>
-					<ReversionType>HullWhite</ReversionType>
-					<ParamType>Constant</ParamType>
-					<TimeGrid/>
-					<InitialValue>0.03</InitialValue>
-				</Reversion>
-	  			<CalibrationSwaptions>
-					<Expiries>1Y,2Y,4Y,6Y,8Y,10Y,12Y,14Y,16Y,18Y,19Y</Expiries>
-					<Terms>19Y,18Y,16Y,14Y,12Y,10Y,8Y,6Y,4Y,2Y,1Y</Terms>
-					<Strikes/>
-				</CalibrationSwaptions>
-				<ParameterTransformation>
-					<ShiftHorizon>0.0</ShiftHorizon>
-					<Scaling>1.0</Scaling>
-				</ParameterTransformation>
-			</LGM>
-			<LGM ccy="EUR">
-				...
-			</LGM>
-			<LGM ccy="USD">
-				...
-			</LGM>
-		</InterestRateModels>	
-		...		
-	</CrossAssetModel>
-\end{lstlisting}
-} 
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CrossAssetModel>	
+  <!-- ... -->
+  <InterestRateModels>
+    <LGM ccy="default">
+      <CalibrationType>Bootstrap</CalibrationType>
+      <Volatility>
+        <Calibrate>Y</Calibrate>
+        <VolatilityType>Hagan</VolatilityType>
+        <ParamType>Piecewise</ParamType>
+        <TimeGrid>1.0,2.0,3.0,4.0,5.0,7.0,10.0</TimeGrid>
+        <InitialValue>0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01<InitialValue>
+      </Volatility>
+      <Reversion>
+        <Calibrate>N</Calibrate>
+        <ReversionType>HullWhite</ReversionType>
+        <ParamType>Constant</ParamType>
+        <TimeGrid/>
+        <InitialValue>0.03</InitialValue>
+      </Reversion>
+      <CalibrationSwaptions>
+        <Expiries>1Y,2Y,4Y,6Y,8Y,10Y,12Y,14Y,16Y,18Y,19Y</Expiries>
+        <Terms>19Y,18Y,16Y,14Y,12Y,10Y,8Y,6Y,4Y,2Y,1Y</Terms>
+        <Strikes/>
+      </CalibrationSwaptions>
+      <ParameterTransformation>
+        <ShiftHorizon>0.0</ShiftHorizon>
+        <Scaling>1.0</Scaling>
+      </ParameterTransformation>
+    </LGM>
+    <LGM ccy="EUR">
+      <!-- ... -->
+    </LGM>
+    <LGM ccy="USD">
+      <!-- ... -->
+    </LGM>
+  </InterestRateModels>	
+  <!-- ... -->		
+</CrossAssetModel>
+\end{minted}
+\caption{Simulation model IR configuration}
+\label{lst:simulation_model_ir_configuration}
+\end{listing}
 
 We have LGM sections by currency, but starting with a section for currency 'default'. As the name implies, this is used as default configuration for any currency in the currency list for which we do not provide an explicit parametrisation. Within each LGM section, the interpretation of elements is as follows:
 
@@ -1107,37 +1345,40 @@ We have LGM sections by currency, but starting with a section for currency 'defa
 
 Each interest rate model is specified by a block as follows
 
-{\footnotesize
-\begin{lstlisting}[caption={Simulation model FX configuration}, label=lst:simulation_model_fx_configuration]
-	<CrossAssetModel>	
-		...
-		<ForeignExchangeModels>
-			<CrossCcyLGM foreignCcy="default">
-				<DomesticCcy>EUR</DomesticCcy>
-				<CalibrationType>Bootstrap</CalibrationType>
-				<Sigma>
-					<Calibrate>Y</Calibrate>
-					<ParamType>Piecewise</ParamType>
-					<TimeGrid>1.0,2.0,3.0,4.0,5.0,7.0,10.0</TimeGrid>
-					<InitialValue>0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1</InitialValue>
-				</Sigma>
-				<CalibrationOptions>
-					<Expiries>1Y,2Y,3Y,4Y,5Y,10Y</Expiries>
-					<Strikes/>
-				</CalibrationOptions>
-			</CrossCcyLGM>
-			<CrossCcyLGM foreignCcy="USD">
-	  			...
-			</CrossCcyLGM>
-			<CrossCcyLGM foreignCcy="GBP">
-				...
-			</CrossCcyLGM>
-			...
-		</ForeignExchangeModels>
-		...
-	<CrossAssetModel>	
-\end{lstlisting}
-} 
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CrossAssetModel>	
+  <!-- ... -->
+  <ForeignExchangeModels>
+    <CrossCcyLGM foreignCcy="default">
+      <DomesticCcy>EUR</DomesticCcy>
+      <CalibrationType>Bootstrap</CalibrationType>
+      <Sigma>
+        <Calibrate>Y</Calibrate>
+        <ParamType>Piecewise</ParamType>
+        <TimeGrid>1.0,2.0,3.0,4.0,5.0,7.0,10.0</TimeGrid>
+        <InitialValue>0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1</InitialValue>
+      </Sigma>
+      <CalibrationOptions>
+        <Expiries>1Y,2Y,3Y,4Y,5Y,10Y</Expiries>
+        <Strikes/>
+      </CalibrationOptions>
+    </CrossCcyLGM>
+    <CrossCcyLGM foreignCcy="USD">
+      <!-- ... -->
+    </CrossCcyLGM>
+    <CrossCcyLGM foreignCcy="GBP">
+      <!-- ... -->
+    </CrossCcyLGM>
+    <!-- ... -->
+  </ForeignExchangeModels>
+  <!-- ... -->
+<CrossAssetModel>	
+\end{minted}
+\caption{Simulation model FX configuration}
+\label{lst:simulation_model_fx_configuration}
+\end{listing}
 
 CrossCcyLGM sections are defined by foreign currency, but we also support a default configuration as above for the IR model parametrisations.
 Within each CrossCcyLGM section, the interpretation of elements is as follows:
@@ -1155,26 +1396,29 @@ Within each CrossCcyLGM section, the interpretation of elements is as follows:
 \medskip
 Finally, the instantaneous correlation structure is specified as follows.
 
-{\footnotesize
-\begin{lstlisting}[caption={Simulation model FX configuration}, label=lst:simulation_model_fx_configuration]
-	<CrossAssetModel>	
-		...
-		<InstantaneousCorrelations>
-			<Correlation factor1="IR:EUR" factor2="IR:USD">0.3</Correlation>
-			<Correlation factor1="IR:EUR" factor2="IR:GBP">0.3</Correlation>
-			<Correlation factor1="IR:USD" factor2="IR:GBP">0.3</Correlation>
-			<Correlation factor1="IR:EUR" factor2="FX:USDEUR">0</Correlation>
-			<Correlation factor1="IR:EUR" factor2="FX:GBPEUR">0</Correlation>
-			<Correlation factor1="IR:GBP" factor2="FX:USDEUR">0</Correlation>
-			<Correlation factor1="IR:GBP" factor2="FX:GBPEUR">0</Correlation>
-			<Correlation factor1="IR:USD" factor2="FX:USDEUR">0</Correlation>
-			<Correlation factor1="IR:USD" factor2="FX:GBPEUR">0</Correlation>
-			<Correlation factor1="FX:USDEUR" factor2="FX:GBPEUR">0</Correlation>
-			<!-- ... -->	
-		</InstantaneousCorrelations>
-	</CrossAssetModel>
-\end{lstlisting}
-} 
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CrossAssetModel>	
+  <!-- ... -->
+  <InstantaneousCorrelations>
+    <Correlation factor1="IR:EUR" factor2="IR:USD">0.3</Correlation>
+    <Correlation factor1="IR:EUR" factor2="IR:GBP">0.3</Correlation>
+    <Correlation factor1="IR:USD" factor2="IR:GBP">0.3</Correlation>
+    <Correlation factor1="IR:EUR" factor2="FX:USDEUR">0</Correlation>
+    <Correlation factor1="IR:EUR" factor2="FX:GBPEUR">0</Correlation>
+    <Correlation factor1="IR:GBP" factor2="FX:USDEUR">0</Correlation>
+    <Correlation factor1="IR:GBP" factor2="FX:GBPEUR">0</Correlation>
+    <Correlation factor1="IR:USD" factor2="FX:USDEUR">0</Correlation>
+    <Correlation factor1="IR:USD" factor2="FX:GBPEUR">0</Correlation>
+    <Correlation factor1="FX:USDEUR" factor2="FX:GBPEUR">0</Correlation>
+    <!-- ... --> 
+  </InstantaneousCorrelations>
+</CrossAssetModel>
+\end{minted}
+\caption{Simulation model correlation configuration}
+\label{lst:simulation_model_correlation_configuration}
+\end{listing}
 
 Any risk factor pair not specified explicitly here will be assumed to have zero correlation.
 
@@ -1184,84 +1428,71 @@ The last part of the simulation configuration file covers the specification of t
 Note that the simulation model will yield the evolution of risk factors such as short rates which need to be translated into entire yield curves which can be 'understood' by the instruments which we want to price under scenarios.
 Moreover we need to specify how volatility structures evolve even if we do not explicitly simulate volatility. This translation is the role of the {\em simulation market} object, which is configured in the section within the enclosing tags {\tt <Market>} and {\tt </Market}, as follows.
 
-{\footnotesize
-\begin{lstlisting}[caption={Simulation model FX configuration}, label=lst:simulation_model_fx_configuration]
-	<Market>
-		<BaseCurrency>EUR</BaseCurrency>
-			<Currencies>
-				<Currency>EUR</Currency>
-				<Currency>USD</Currency>
-				...
-			</Currencies>
-      
-		<YieldCurves>
-			<Configuration>
-				<Tenors>3M,6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,12Y,15Y,20Y</Tenors>
-				<Interpolation>LogLinear</Interpolation>
-				<Extrapolation>Y</Extrapolation>
-			</Configuration>
-		</YieldCurves>
-      
-      	<Indices>
-			<Index>EUR-EURIBOR-6M</Index>
-			<Index>EUR-EURIBOR-3M</Index>
-			<Index>EUR-EONIA</Index>
-			<Index>USD-LIBOR-3M</Index>
-			...
-		</Indices>
-      
-		<SwapIndices>
-			<SwapIndex>
-				<Name>EUR-CMS-1Y</Name>
-				<ForwardingIndex>EUR-EURIBOR-6M</ForwardingIndex>
-				<DiscountingIndex>EUR-EONIA</DiscountingIndex>
-			</SwapIndex>
-			<SwapIndex>...</SwapIndex>
-			...
-		</SwapIndices>
-		
-		<SwaptionVolatilities>
-			<ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
-			<Currencies>
-	  			<Currency>EUR</Currency>
-	  			<Currency>USD</Currency>
-	  			...
-			</Currencies>
-			<Expiries>6M,1Y,2Y,3Y,5Y,10Y,12Y,15Y,20Y</Expiries>
-			<Terms>1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,30Y</Terms>
-			<Strikes/>
-		</SwaptionVolatilities>
-      
-		<FxVolatilities>
-			<ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
-			<CurrencyPairs>
-				<CurrencyPair>EURUSD</CurrencyPair>
-				<CurrencyPair>EURGBP</CurrencyPair>
-				...
-			</CurrencyPairs>
-			<Expiries>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</Expiries>
-			<Strikes/>
-		</FxVolatilities>
-      
-		<AdditionalScenarioDataCurrencies>
-			<Currency>EUR</Currency>
-			<Currency>USD</Currency>
-			...
-		</AdditionalScenarioDataCurrencies>
-      
-		<AdditionalScenarioDataIndices>
-			<Index>EUR-EURIBOR-3M</Index>
-			<Index>EUR-EONIA</Index>
-			<Index>USD-LIBOR-3M</Index>
-			...
-		</AdditionalScenarioDataIndices>
-      
-    </Market>
-    
-  </Simulation>
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Market>
+  <BaseCurrency>EUR</BaseCurrency>
+  <Currencies>
+    <Currency>EUR</Currency>
+    <Currency>USD</Currency>
+    <!-- ... -->
+  </Currencies>
+  <YieldCurves>
+    <Configuration>
+      <Tenors>3M,6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,12Y,15Y,20Y</Tenors>
+      <Interpolation>LogLinear</Interpolation>
+      <Extrapolation>Y</Extrapolation>
+    </Configuration>
+  </YieldCurves>
+  <Indices>
+    <Index>EUR-EURIBOR-6M</Index>
+    <Index>EUR-EURIBOR-3M</Index>
+    <Index>EUR-EONIA</Index>
+    <Index>USD-LIBOR-3M</Index>
+  </Indices>
+  <SwapIndices>
+    <SwapIndex>
+      <Name>EUR-CMS-1Y</Name>
+      <ForwardingIndex>EUR-EURIBOR-6M</ForwardingIndex>
+      <DiscountingIndex>EUR-EONIA</DiscountingIndex>
+    </SwapIndex>
+    <!-- ... -->
+  </SwapIndices>
+  <SwaptionVolatilities>
+    <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
+    <Currencies>
+      <Currency>EUR</Currency>
+      <Currency>USD</Currency>
+    </Currencies>
+    <Expiries>6M,1Y,2Y,3Y,5Y,10Y,12Y,15Y,20Y</Expiries>
+    <Terms>1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,30Y</Terms>
+    <Strikes/>
+  </SwaptionVolatilities> 
+  <FxVolatilities>
+    <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
+    <CurrencyPairs>
+      <CurrencyPair>EURUSD</CurrencyPair>
+      <CurrencyPair>EURGBP</CurrencyPair>
+    </CurrencyPairs>
+    <Expiries>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</Expiries>
+    <Strikes/>
+  </FxVolatilities>
+  <AdditionalScenarioDataCurrencies>
+    <Currency>EUR</Currency>
+    <Currency>USD</Currency>
+  </AdditionalScenarioDataCurrencies>
+  <AdditionalScenarioDataIndices>
+    <Index>EUR-EURIBOR-3M</Index>
+    <Index>EUR-EONIA</Index>
+    <Index>USD-LIBOR-3M</Index>
+  </AdditionalScenarioDataIndices>
+</Market>
+\end{minted}
+\caption{Simulation market configuration}
+\label{lst:simulation_market_configuration}
+\end{listing}
 
-\end{lstlisting}
-} 
 
 \todo[inline]{Remove DefaultCurves from SimMarket constructor and configuration section}
 
@@ -1277,90 +1508,99 @@ The configuration of various term structures required to price a portfolio is co
 
 \subsubsection{Default Curves}
 
-{\footnotesize
-\begin{lstlisting}[caption={Default curve configuration}, 	label=lst:defaultcurve_configuration]
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
 <DefaultCurves>
-	<DefaultCurve>
-		<CurveId>BANK_SR_USD</CurveId>
-		<CurveDescription>BANK SR CDS USD</CurveDescription>
-		<Currency>USD</Currency>
-		<Type>SpreadCDS</Type>
-		<DiscountCurve>Yield/USD/USD3M</DiscountCurve>
-		<DayCounter>A365</DayCounter>
-		<RecoveryRate>RECOVERY_RATE/RATE/BANK/SR/USD</RecoveryRate>
-		<Quotes>
-			<Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/1Y</Quote>
-			<Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/2Y</Quote>
-			<Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/3Y</Quote>
-			<Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/4Y</Quote>
-			<Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/5Y</Quote>
-			<Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/7Y</Quote>
-			<Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/10Y</Quote>
-		</Quotes>
-		<Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
-	</DefaultCurve>
-	<DefaultCurve>
-		<!-- ... -->
-	</DefaultCurve>
+  <DefaultCurve>
+    <CurveId>BANK_SR_USD</CurveId>
+    <CurveDescription>BANK SR CDS USD</CurveDescription>
+    <Currency>USD</Currency> 
+    <Type>SpreadCDS</Type>
+    <DiscountCurve>Yield/USD/USD3M</DiscountCurve>
+    <DayCounter>A365</DayCounter>
+    <RecoveryRate>RECOVERY_RATE/RATE/BANK/SR/USD</RecoveryRate>
+    <Quotes>
+      <Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/1Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/2Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/3Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/4Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/5Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/7Y</Quote>
+      <Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/10Y</Quote>
+    </Quotes>
+    <Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
+  </DefaultCurve>
+  <DefaultCurve>
+    <!-- ... -->
+  </DefaultCurve>
 </DefaultCurves>
-
-\end{lstlisting}
-}
+\end{minted}
+\caption{Default curve configuration}
+\label{lst:defaultcurve_configuration}
+\end{listing}
 
 \subsubsection{Swaption Volatility Structures}
 
-{\footnotesize
-\begin{lstlisting}[caption={Swaption volatility configuration}, 	label=lst:swaptionvol_configuration]
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
 <SwaptionVolatilities>    
-	<SwaptionVolatility>
-		<CurveId>EUR_SW_N</CurveId>
-		<CurveDescription>EUR normal swaption volatilities</CurveDescription>
-		<!-- ATM (Smile not yet supported) -->
-		<Dimension>ATM</Dimension>
-		<!-- Normal or Lognormal or ShiftedLognormal -->
-		<VolatilityType>Normal</VolatilityType>
-		<!-- Flat or Linear -->
-		<Extrapolation>Flat</Extrapolation>
-		<!-- Day counter for date to time conversion -->
-		<DayCounter>Actual/365 (Fixed)</DayCounter>
-		<!--Calendar and Business day convention for option tenor to date conversion -->
-		<Calendar>TARGET</Calendar>
-		<BusinessDayConvention>Following</BusinessDayConvention>
-		<OptionTenors>
-			1M,3M,6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y
-		</OptionTenors>
-		<SwapTenors>
-			1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y
-		</SwapTenors>
-		<ShortSwapIndexBase>EUR-CMS-1Y</ShortSwapIndexBase>
-		<SwapIndexBase>EUR-CMS-30Y</SwapIndexBase>
-	</SwaptionVolatility>
+  <SwaptionVolatility>
+    <CurveId>EUR_SW_N</CurveId>
+    <CurveDescription>EUR normal swaption volatilities</CurveDescription>
+    <!-- ATM (Smile not yet supported) -->
+    <Dimension>ATM</Dimension>
+    <!-- Normal or Lognormal or ShiftedLognormal -->
+    <VolatilityType>Normal</VolatilityType>
+    <!-- Flat or Linear -->
+    <Extrapolation>Flat</Extrapolation>
+    <!-- Day counter for date to time conversion -->
+    <DayCounter>Actual/365 (Fixed)</DayCounter>
+    <!--Calendar and Business day convention for option tenor to date conversion -->
+    <Calendar>TARGET</Calendar>
+    <BusinessDayConvention>Following</BusinessDayConvention>
+    <OptionTenors>
+      1M,3M,6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y
+    </OptionTenors>
+    <SwapTenors>
+      1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y
+    </SwapTenors>
+    <ShortSwapIndexBase>EUR-CMS-1Y</ShortSwapIndexBase>
+    <SwapIndexBase>EUR-CMS-30Y</SwapIndexBase>
+  </SwaptionVolatility>
     <SwaptionVolatility>
-    	<!-- ... -->
+      <!-- ... -->
     </SwaptionVolatility>
 </SwaptionVolatilities>
-\end{lstlisting}
-}
+\end{minted}
+\caption{Swaption volatility configuration}
+\label{lst:swaptionvol_configuration}
+\end{listing}
 
 \subsubsection{FX Volatility Structures}
 
-{\footnotesize
-\begin{lstlisting}[caption={FX option volatility configuration}, 	label=lst:fxoptionvol_configuration]
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
 <FXVolatilities>
-	<FXVolatility>
-		<CurveId>EURUSD</CurveId>
-		<CurveDescription />
-		<Dimension>ATM</Dimension>
-		<Expiries>
-			1M,3M,6M,1Y,2Y,3Y,10Y
-		</Expiries>
-	</FXVolatility>
-	<FXVolatility>
-		<!-- ... -->
-	</FXVolatility>
+  <FXVolatility>
+    <CurveId>EURUSD</CurveId>
+    <CurveDescription />
+    <Dimension>ATM</Dimension>
+    <Expiries>
+      1M,3M,6M,1Y,2Y,3Y,10Y
+    </Expiries>
+  </FXVolatility>
+  <FXVolatility>
+    <!-- ... -->
+  </FXVolatility>
 </FXVolatilities>
-\end{lstlisting}
-}
+\end{minted}
+\caption{FX option volatility configuration}
+\label{lst:fxoptionvol_configuration}
+\end{listing}
+
 
 %--------------------------------------------------------
 \subsection{Conventions: {\tt conventions.xml}}
@@ -1581,7 +1821,7 @@ XVAs and exposures are typically computed at netting set level. For accounting p
 \begin{itemize}
 \item Consider the netting set's discounted $\NPV$ after taking collateral into account, on a given path at time $t$:
 $$
-	E(t)=D(0,t)\,(\NPV(t)-C(t))
+E(t)=D(0,t)\,(\NPV(t)-C(t))
 $$ 
 \item On each path, compute contributions $A_i$ of the latter to trade $i$ as
 $$
@@ -1608,41 +1848,14 @@ w_i = \CVA_i / \sum_i \CVA_i.
 $$
 This yields allocated exposures proportional to the netting set exposure, avoids spikes and negative $\EPE$, but does not distinguish the 'direction' of each trade's contribution to $\EPE$ and $\CVA$.
 
-\subsection{Monte Carlo VaR and Expected Shortfall}
+%\subsection{Monte Carlo VaR and Expected Shortfall}
+%\todo[inline]{Add MC VaR}
 
-\todo[inline]{Add MC VaR}
+%\include{simm.tex}
 
-\subsection{ISDA Standard Initial Margin}
-The ISDA Standard Initial Margin Model (SIMM\texttrademark) is a methodology for computing initial margin that is based solely on the sensitivities of trades. It is work in progress; the current documentation \cite{SIMM} is for version 3.15. It is accompanied by a document describing the standard which the risk data has to follow, \cite{SIMM_Data_Standards}, which currently has the version 1.22.
-
-The SIMM has four {\em product classes}: IR/FX, Credit, Equity and Commodity, which are seen as more or less independent of each other; their initial margins are just added up. Furthermore, there are six {\em risk classes}: IR, FX, Credit qualifying, Credit non-qualifying, Equity and Commodity. The trades in each product class may have risk contributions from one or several risk classes. For example, a credit trade like a cross-currency total return swap has IR, FX and Credit risk. The risk in each risk class is a combination of three risk types: Delta (based on sensitivities to standard risk factors), Vega (based on volatility sensitivities) and Curvature (also based on volatility sensitivities). These three types are again seen as independent in that their initial margins are just summed up.
-
-All sensitivities are multiplied by standard risk weights (specified in \cite{SIMM}) and further scaled by a {\em concentration risk factor}. The method for computing this factor is not yet published, we therefore take them to be 1 at the moment. Most risk classes come with buckets which then imply different risk weights. For IR, those are the tenors of the interest curve; for Credit and Equity, they are the sector of the underlying name; for commodities, they are the type of commodity. The weighted sensitivities are summed up using intra- and inter-bucket correlations which are defined in the methodology \cite{SIMM}.
-
-\vspace{0.5cm}
-
-{\bf Assumptions and Interpretations.} In our implementation, we use the following assumptions and interpretations.
-\begin{itemize}
-\item The Concentration Risk Factors are all set to 1;
-\item It is not clear in E.2 of \cite{SIMM} what a `different source' for a given issuer/seniority combination is, so this is currently ignored;
-\item In the formula for Curvature margin
-$$CVR_{ik} = \sum_j SF(t_{kj})\,\sigma_{kj}\,\frac{dV_i}{d\sigma}$$
-in  Section 12 (a) of \cite{SIMM}, we assume that the sum is taken over tenors/vertices and not over expiries, just as in 11 (c), the corresponding formula for Vega margin. This means that the scaling factors $SF(t_{kj})$ can be applied outside of the sum.
-\item Qualifiers (such as bonds or equities) can only show up in a uniques bucket. If this is not the case, the report stops with an error message;
-\item The Amount Currency as defined in the risk data standard \cite{SIMM_Data_Standards} is assumed to be the collateral currency. The reporting currency is removed from the FX sensitivities;
-\item The USD Amount column defined in the risk data standard \cite{SIMM_Data_Standards} is not used (Why is it there at all?);
-\item A portfolio is the same as a netting set, i.e. a set of trades under one ISDA CSA;
-\item Qualifiers generally have to follow the risk data standard \cite{SIMM_Data_Standards}, e.g. 1W $\neq$ 1w, and 1W will cause an error. Some are overwritten with an interpreted correct version, e.g. Libor1y $\rightarrow$ Libor12m, Libor28d $\rightarrow$ Libor1m;
-\item Wrong volatility buckets for currencies (standard, low, high) are overwritten with what is listed in \cite{SIMM};
-\item Missing tenors for IR sensis from product classes other than IR/FX are set automatically to OIS (overnight).
-\end{itemize}
-
-\vspace{0.5cm}
-
-\todo[inline]{Add ISDA SIMM}
 
 %========================================================
-\section{Design Overview}
+%\section{Design Overview}
 %========================================================
 
 \end{appendix}
@@ -1653,7 +1866,7 @@ in  Section 12 (a) of \cite{SIMM}, we assume that the sum is taken over tenors/v
 
 \begin{thebibliography}{*}
 
-\bibitem{ORE} http://www.openrisk.org
+\bibitem{ORE} http://www.openriskengine.org
 
 \bibitem{QRM} http://www.quaternion.com
 
@@ -1678,13 +1891,19 @@ Federal Reserve Board, Washington, D.C., 2010
 
 \bibitem{xlwings} http://www.xlwings.org
 
-\bibitem{SIMM}{SIMM Methodology\\ \tiny http://www2.isda.org/attachment/ODM1Mw==/ISDA\%20SIMM\%20Methodology\_7\%20April\%202016\_v3.15\%20(PUBLIC).pdf}
+%\bibitem{SIMM}{SIMM Methodology\\ \tiny http://www2.isda.org/attachment/ODM1Mw==/ISDA\%20SIMM\%20Methodology\_7\%20April\%202016\_v3.15\%20(PUBLIC).pdf}
 
-\bibitem{SIMM_Data_Standards}{SIMM Risk Data Standards\\ \tiny https://www2.isda.org/attachment/ODQzMg==/Risk\%20Data\%20Standards\_24\%20May\%202016\_v1.22\%20(PUBLIC).pdf}
+%\bibitem{SIMM_Data_Standards}{SIMM Risk Data Standards\\ \tiny https://www2.isda.org/attachment/ODQzMg==/Risk\%20Data\%20Standards\_24\%20May\%202016\_v1.22\%20(PUBLIC).pdf}
 
 %\bibitem{OO} http://www.openoffice.org
 
 \bibitem{Anaconda} https://docs.continuum.io/anaconda
+
+\bibitem{confluence} https://confluence.atlassian.com/bitbucket/set-up-git-744723531.html
+
+\bibitem{boost-binaries} https://sourceforge.net/projects/boost/files/boost-binaries
+
+\bibitem{quantlib-install} http://quantlib.org/install/vc10.shtml
 
 \end{thebibliography}
 
