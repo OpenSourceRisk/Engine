@@ -1,16 +1,9 @@
 \documentclass[12pt, a4paper]{article}
 
 \usepackage{hyperref}
-%\usepackage{xcolor}
-%\usepackage[disable]{todonotes}
 
-\usepackage{todonotes}
-%\usepackage{supertabular}
-%\usepackage{minted}    
-%\usemintedstyle{manni}
-%\usepackage{graphicx}
-%\usepackage{mathrsfs}
-%\usepackage{amsmath, amssymb, mathtools, empheq}
+\usepackage[disable]{todonotes}
+%\usepackage{todonotes}
 
 \usepackage{amsmath}%
 \usepackage{amsfonts}%
@@ -113,7 +106,7 @@
  
 \begin{document}
 
-\title{Open Risk Engine \\ User Guide}
+\title{Open Risk Engine \\ User Guide (beta)}
 \author{Quaternion Risk Management}
 \date{\today}
 \maketitle
@@ -121,23 +114,23 @@
 \newpage
 
 %-------------------------------------------------------------------------------
-\section*{Document History}
-
-\begin{center}
-\begin{supertabular}{|l|l|l|p{7cm}|}
-\hline
-Version & Date & Author & Comment \\
-\hline
-0.1 & 12 May & Roland Lichters & initial version\\
-0.5 & 7 July & Roland Lichters & first revision \\
-0.9 & 11 July & Roland Lichters & beta release \\
-\hline
-\end{supertabular}
-\end{center}
-
-\vspace{3cm}
-
-\newpage
+%\section*{Document History}
+%
+%\begin{center}
+%\begin{supertabular}{|l|l|l|p{7cm}|}
+%\hline
+%Version & Date & Author & Comment \\
+%\hline
+%0.1 & 12 May & Roland Lichters & initial version\\
+%0.5 & 7 July & Roland Lichters & first revision \\
+%0.9 & 11 July & Roland Lichters & beta release \\
+%\hline
+%\end{supertabular}
+%\end{center}
+%
+%\vspace{3cm}
+%
+%\newpage
 
 \tableofcontents
 \newpage
@@ -171,7 +164,7 @@ The first release of ORE covers the simulation of interest rate and FX risk fact
 With the scheduled releases, incorporating community feedback and contributions, the project aims at establishing a platform for {\bf transparent pricing and risk analysis} that can be adapted for production purposes in financial institutions and used as a benchmarking and validation tool to test opaque 3rd party solutions applied in the industry. 
 
 \medskip
-For details on the models applied in ORE's risk factor evolution we refer the reader to {\em Modern Derivatives Pricing and Credit Exposure Analysis} \cite{Lichters}: The IR/FX risk factor evolution is based on a cross currency model consisting of an arbitrage free combination of Linear Gauss Markov models for all interest rates and lognormal processes for the FX rates, calibrated to cross currency discounting and forward curves, Swaptions and FX Options.%, also summarised in \cite{XCCYLGM}.
+For details on the models applied in ORE's risk factor evolution we refer the reader to {\em Modern Derivatives Pricing and Credit Exposure Analysis} \cite{Lichters}: The IR/FX risk factor evolution is based on a cross currency model consisting of an arbitrage free combination of Linear Gauss Markov models for all interest rates and lognormal processes for the FX rates, calibrated to cross currency discounting and forward curves, Swaptions and FX Options.
  
 \vspace{1em}
 
@@ -314,15 +307,6 @@ On Unix: \\
 }
 
 This will build both the QuantExt library and test suite.
-%There is no need to add lots of --with-blah-include=.... flags
-
-%On Windows: \\
-%Open QuantExt.sln and build all.
-%This will build both the QuantExt library and test suite.
-
-%\todo[inline]{The test suite links to
-%{\tt ../../QuantLib/lib;\$(BOOST)/lib/\$(Platform)/lib}
-%How does this work with 32/64 bit builds? how does it work with Release/Debug??}
 
 \item Run the test suite
 
@@ -373,11 +357,6 @@ reinstall Gnuplot.
 
 \end{enumerate}
 
-\subsection{Jupyter}\label{sec:jupyter}
-
-The visualisation examples in section \ref{sec:visualisation} use Jupyter notebooks. 
-Jupyter is part of the Anaconda Open Data Science Analytics Platform \cite{Anaconda}.
-Anaconda installation instructions for Windows, OS X and Linux are available on the anaconda site, with graphical installers for Windows and OS X. 
 
 %========================================================
 \section{Examples}\label{sec:examples}
@@ -678,11 +657,23 @@ The analytics results also feature allocated XVAs in file {\tt xva.csv} which ar
 
 \subsection{Jupyter}\label{sec:jupyter}
 
+In this section we show how to use Jypyter notebooks to 
+\begin{itemize}
+\item run the examples listed in the previous section, 
+\item further analyse the NPV cube data
+\end{itemize}
+
+Jupyter is part of the Anaconda Open Data Science Analytics Platform \cite{Anaconda}.
+Anaconda installation instructions for Windows, OS X and Linux are available on the anaconda site, with graphical installers for Windows and OS X. 
+
+\medskip
+To be continued.
+
 \todo[inline]{Add Jupyter section}
 
 \subsection{Calc}\label{sec:calc}
 
-ORE comes with a simple LibreOffice Calc \cite{LO} sheet as an ORE launcher and basic result viewer. This is demonstrated on the example in section \ref{sec:example1}. It is currently based on the stable LibreOffice version 5.0.6 and tested on Mac OSX only. Launch Calc following the instructions in Example\_1's Readme: Open a terminal, change to directory {\tt Examples/Example\_1}, and run
+ORE comes with a simple LibreOffice Calc \cite{LO} sheet as an ORE launcher and basic result viewer, so far tested on OS X only. This is demonstrated on the example in section \ref{sec:example1}. It is currently based on the stable LibreOffice version 5.0.6 and tested on Mac OSX only. Launch Calc following the instructions in Example\_1's Readme: Open a terminal, change to directory {\tt Examples/Example\_1}, and run
 
 \medskip
 {\centerline{\tt ./launchCalc.sh} }
@@ -712,10 +703,8 @@ The user can choose a configuration (one of the ore*.xml files in Example\_1's s
 
 \subsection{Excel}
 
-The Python module {\tt xlwings} \cite{xlwings} provides similar interaction between Python and Excel on both Windows and Mac OSX, as does the Python uno module for LibreOffice.
-
-\todo[inline]{Add Excel section, using VBA macros only}
-
+For Microsoft Excel, similar interaction between Python and the spread sheet can be achieved with the  Python module {\tt xlwings} \cite{xlwings} on both Windows and Mac OSX.
+However, unlike Libre Office where the uno Python module is part of the distribution, xlwings needs to be installed separately. We therefore demonstrate just a simple Excel sheet here which uses VBA only to call the ORE application and load resulting data into the spreadsheet. This demo is available in Example\_1. Launch {\tt Example\_1.xlsm}, modify the paths on the first sheet, and then run the ORE process.
 
 %========================================================
 \section{Parametrisation}\label{sec:configuration}
