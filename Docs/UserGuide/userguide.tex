@@ -957,6 +957,7 @@ The file starts and ends with the opening and closing tags {\tt <TodaysMarket>} 
 \item FX spot rates
 \item FX Volatility structures
 \item Swaption volatility structures
+\item Cap/Floor volatility structures
 \item Default curves
 \end{itemize}
 
@@ -1093,6 +1094,25 @@ The following is an excerpt of the Swaption Volatilities block with ID 'default'
 \end{listing}
 
 This instructs ORE to build five Swaption volatility structures, see the curve configuration file for the definition of the volatility structure. The latter token (e.g. EUR\_SW\_N) is user defined and will be found in the curve configuration's CurveId tag.
+
+\subsubsection{CapF/Floor Volatilities}
+
+The following is an excerpt of the Cap/Floor Volatilities block with ID 'default' from the same example file:
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CapFloorVolatilities id="default">
+  <CapFloorVolatility currency="EUR">CapFloorVolatility/EUR/EUR_CF_N</CapFloorVolatility>
+  <CapFloorVolatility currency="USD">CapFloorVolatility/USD/USD_CF_N</CapFloorVolatility>
+  <CapFloorVolatility currency="GBP">CapFloorVolatility/GBP/GBP_CF_N</CapFloorVolatility>
+</CapFloorVolatilities>
+\end{minted}
+\caption{Cap/Floor volatility block with ID 'default'}
+\label{lst:capfloorvol_spec}
+\end{listing}
+
+This instructs ORE to build three Cap/Floor volatility structures, see the curve configuration file for the definition of the volatility structure. The latter token (e.g. EUR\_CF\_N) is user defined and will be found in the curve configuration's CurveId tag.
 
 \subsubsection{Default Curves}
 
@@ -1464,7 +1484,7 @@ Any risk factor pair not specified explicitly here will be assumed to have zero 
 
 The last part of the simulation configuration file covers the specification of the simulated market.
 Note that the simulation model will yield the evolution of risk factors such as short rates which need to be translated into entire yield curves which can be 'understood' by the instruments which we want to price under scenarios.
-Moreover we need to specify how volatility structures evolve even if we do not explicitly simulate volatility. This translation is the role of the {\em simulation market} object, which is configured in the section within the enclosing tags {\tt <Market>} and {\tt </Market}, as follows.
+Moreover we need to specify how volatility structures evolve even if we do not explicitly simulate volatility. This translation is the role of the {\em simulation market} object, which is configured in the section within the enclosing tags {\tt <Market>} and {\tt </Market}, as shown in the following small two-currency example.
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -1474,7 +1494,6 @@ Moreover we need to specify how volatility structures evolve even if we do not e
   <Currencies>
     <Currency>EUR</Currency>
     <Currency>USD</Currency>
-    <!-- ... -->
   </Currencies>
   <YieldCurves>
     <Configuration>
@@ -1495,7 +1514,6 @@ Moreover we need to specify how volatility structures evolve even if we do not e
       <ForwardingIndex>EUR-EURIBOR-6M</ForwardingIndex>
       <DiscountingIndex>EUR-EONIA</DiscountingIndex>
     </SwapIndex>
-    <!-- ... -->
   </SwapIndices>
   <SwaptionVolatilities>
     <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
@@ -1507,11 +1525,17 @@ Moreover we need to specify how volatility structures evolve even if we do not e
     <Terms>1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,30Y</Terms>
     <Strikes/>
   </SwaptionVolatilities> 
+  <CapFloorVolatilities>
+    <ReactionToTimeDecay>ConstantVariance</ReactionToTimeDecay>
+    <Currencies>
+      <Currency>EUR</Currency>
+      <Currency>USD</Currency>
+    </Currencies>
+  </CapFloorVolatilities>
   <FxVolatilities>
     <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
     <CurrencyPairs>
       <CurrencyPair>EURUSD</CurrencyPair>
-      <CurrencyPair>EURGBP</CurrencyPair>
     </CurrencyPairs>
     <Expiries>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</Expiries>
     <Strikes/>
@@ -1531,7 +1555,7 @@ Moreover we need to specify how volatility structures evolve even if we do not e
 \label{lst:simulation_market_configuration}
 \end{listing}
 
-
+\todo[inline]{Comment on cap/floor surface structure and reaction to time decay}
 \todo[inline]{Remove DefaultCurves from SimMarket constructor and configuration section}
 
 %--------------------------------------------------------
