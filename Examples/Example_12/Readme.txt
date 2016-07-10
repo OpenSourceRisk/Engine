@@ -8,9 +8,9 @@
 
    portfolio_2:
    -----------
-   1) Short 12Y USD cap on USD Libor 3M @ 3%. Netting set = CPTY_B.
-   2) Long 12Y USD floor on USD Libor 3M @ 0.5%. Netting set = CPTY_B.
-   2) Long 12Y USD collar on USD Libor 3M @ [0.5%, 3%]. Netting set = CPTY_A.
+   1) Short 15Y USD cap on USD Libor 3M @ 3%. Netting set = CPTY_B.
+   2) Long 15Y USD floor on USD Libor 3M @ 0.5%. Netting set = CPTY_B.
+   2) Long 15Y USD collar on USD Libor 3M @ [0.5%, 3%]. Netting set = CPTY_A.
    Show exposure of cap, floor and collar separately.
    Netted exposure of cap & floor = exposure of collar.
 

@@ -498,6 +498,28 @@ This demo case in folder {\tt Examples/Example\_6} shows the exposure evolution 
 The example is an extreme case where the underlying Swap is deep in the money (receiving fixed 5\%), and hence the call exercise probability is close to one. Modify the Swap and Swaption fixed rates closer to the money ($\approx$ 1\%) to see the deviation between net exposure of the callable Swap and the exposure of a 'short' Swap with maturity on exercise.  
 
 %--------------------------------------------------------
+\subsection{Cap/Floor Exposure}\label{sec:capfloor}
+%--------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_12} generates exposure evolutions of several swaps, caps and floors. The example shown in the following figure ('portfolio 1') consists of a 20y Swap receiving 1\% fixed and a 20y Collar with both cap and floor at 2.5\% so that the net exposure corresponds to a Swap receiving 0.5\% fixed.
+
+\begin{figure}[hbt]
+\begin{center}
+\includegraphics[scale=0.45]{mpl_capfloor_1.pdf}
+\end{center}
+\caption{Swap+Collar, portfolio 1. The Collar has identical cap and floor rates at 2.5\% so that it corresponds to a fixed leg which reduces the exposure of the Swap, which receives 3\% fixed. Simulation with 1000 paths and quarterly time steps.}
+\end{figure}
+
+The second example in this folder ('portfolio 2') consists of a short Cap, long Floor and a Collar that corresponds to the netted Cap and Floor.
+
+\begin{figure}[hbt]
+\begin{center}
+\includegraphics[scale=0.45]{mpl_capfloor_2.pdf}
+\end{center}
+\caption{Short Cap and long Floor vs Collar, portfolio 2. Simulation with 1000 paths and quarterly time steps.}
+\end{figure}
+ 
+%--------------------------------------------------------
 \subsection{FX Forward Exposure}\label{sec:fxfwd}
 %--------------------------------------------------------
 
@@ -610,7 +632,10 @@ omitting the three right-most columns containing allocated data.
 \hline
 TradeId & NettingSetId & CVA & DVA & FBA & FCA & COLVA & CollateralFloor \\ %& AllocatedCVA & AllocatedDVA & AllocationMethod \\
 \hline
-	& CPTY\_A & 31,084 	& 45,003 &	-4,803 &	 21,233 & 	 2,089 &	 182,351 \\Swap\_1 & CPTY\_A &	 115,944 &	 210,630 &	-17,864 &	 99,984 &	 n/a &	 n/a \\Swap\_2 & CPTY\_A &	 67,683 &	 96,412 &	-10,588 &	 45,488 &	 n/a &	 n/a \\Swap\_3 & CPTY\_A &	 71,299 & 	 84,752 & 	-11,268 & 	 40,327 & 	 n/a &	 n/a \\
+	& CPTY\_A & 31,084 	& 45,003 &	-4,803 &	 21,233 & 	 2,089 &	 182,351 \\
+Swap\_1 & CPTY\_A &	 115,944 &	 210,630 &	-17,864 &	 99,984 &	 n/a &	 n/a \\
+Swap\_2 & CPTY\_A &	 67,683 &	 96,412 &	-10,588 &	 45,488 &	 n/a &	 n/a \\
+Swap\_3 & CPTY\_A &	 71,299 & 	 84,752 & 	-11,268 & 	 40,327 & 	 n/a &	 n/a \\
 \hline
 \end{tabular}
 \end{center}
