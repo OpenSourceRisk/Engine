@@ -390,7 +390,7 @@ All results can be produced with the {\tt run.sh} scripts in the ORE release's {
 \centerline{\tt ore[.exe] input.xml}
 \medskip
 
-The structure of the input file and of the portfolio, market and other configuration files referred to therein will be explained in section \ref{sec:configuration}. 
+The structure of the input file and of the portfolio, market and other configuration files referred to therein will be explained in section \ref{sec:configuration}. All examples require that Python is installed which we use on both Windows and Unix platforms to run the examples and graph results.
 
 %--------------------------------------------------------
 \subsection{Interest Swap Exposure}\label{sec:example1}
@@ -399,24 +399,25 @@ The structure of the input file and of the portfolio, market and other configura
 We start with a vanilla single currency swap (currency EUR, maturity 20y, notional 10m, receive fixed 2\% annual, pay 6M-Euribor flat). The market yield curves (for both discounting and forward projection are manipulated to be flat at 2\% for all maturities, i.e. the Swap is at the money initially and remains at the money on average throughout its life. Running ORE in directory {\tt Examples/Example\_1} with
 
 \medskip
-\centerline{\tt ./run.sh } 
+\centerline{\tt ./run.py } 
 \medskip
 
 yields the exposure evolution in 
 
 \medskip
-\centerline{\tt Examples/Example\_1/Output/plot.pdf } 
+\centerline{\tt Examples/Example\_1/Output/*.pdf } 
 \medskip
 
 and shown in figure \ref{fig_1}. 
 \begin{figure}[tb]
 \begin{center}
-\includegraphics[scale=1.0]{example_swap_1.pdf}
+%\includegraphics[scale=1.0]{example_swap_1.pdf}
+\includegraphics[scale=0.45]{mpl_swap_1.pdf}
 \end{center}
-\caption{Vanilla ATM swap expected exposure in a flat market environment from both parties' perspectives (monthly time grid with 5000 samples). The black line and symbols are European Swaption prices.}
+\caption{Vanilla ATM swap expected exposure in a flat market environment from both parties' perspectives. The symbols are European Swaption prices. Simulation with 5000 paths and monthly time steps.}
 \label{fig_1}
 \end{figure}
-The black symbols are prices of European Swaptions with expiry at the symbol's time and otherwise same underlying as the Swap considered here. Both Swap simulation and Swaption pricing are run with calls to the ORE executable, essentially 
+The symbols are prices of European Swaptions with expiry at the symbol's time and otherwise same underlying as the Swap considered here. Both Swap simulation and Swaption pricing are run with calls to the ORE executable, essentially 
 
 \medskip
 \centerline{\tt ore[.exe] ore.xml} 
@@ -431,21 +432,22 @@ It is instructive to look into the input folder in Examples/Example\_1, the cont
 Moving to {\tt Examples/Example\_4}, we see what changes when using a realistic (non-flat) market environment as of 26/02/2016. Running the example with
 
 \medskip
-\centerline{\tt ./run.sh } 
+\centerline{\tt ./run.py } 
 \medskip
 
 yields the exposure evolution in 
 
 \medskip
-\centerline{\tt Examples/Example\_4/Output/plot.pdf } 
+\centerline{\tt Examples/Example\_4/Output/*.pdf } 
 \medskip
 
 shown in figure \ref{fig_2}.
 \begin{figure}[tb]
 \begin{center}
-\includegraphics[scale=1.0]{example_swap_3.pdf}
+\includegraphics[scale=0.45]{mpl_swap_3.pdf}
+%\includegraphics[scale=1.0]{example_swap_3.pdf}
 \end{center}
-\caption{Vanilla ATM swap expected exposure in a realistic market environment as of 26/02/2016 from both parties' perspectives. The Swap is the same as in figure \ref{fig_1} but receiving fixed 1\%, at the money on 26/02/2016. The symbols are the prices of European payer and receiver Swaptions.}
+\caption{Vanilla ATM swap expected exposure in a realistic market environment as of 26/02/2016 from both parties' perspectives. The Swap is the same as in figure \ref{fig_1} but receiving fixed 1\%, at the money on 26/02/2016. The symbols are the prices of European payer and receiver Swaptions. Simulation with 5000 paths and monthly time steps.}
 \label{fig_2}
 \end{figure}
 In this case, where the curves (discount and forward) are upward sloping, the receiver swap is at the money at inception only and moves (on average) out of the money during its life. Similarly, the swap moves into the money from the counterparty's perspective. Hence the expected exposure evolutions from our perspective (EPE) and the counterparty's perspective (ENE) 'detach' here, while both can still be be reconciled with payer and receiver Swaption prices.
@@ -455,11 +457,12 @@ In this case, where the curves (discount and forward) are upward sloping, the re
 %--------------------------------------------------------
 
 This demo case in folder {\tt Examples/Example\_7} shows the exposure evolution of European Swaptions with cash and physical delivery, respectively, see figure \ref{fig_3}.
-\begin{figure}[tb]
+\begin{figure}[hbt]
 \begin{center}
-\includegraphics[scale=1.0]{example_swaption.pdf}
+\includegraphics[scale=0.45]{mpl_swaption.pdf}
+%\includegraphics[scale=1.0]{example_swaption.pdf}
 \end{center}
-\caption{European Swaption exposure evolution, expiry in 10 years, final maturity in 20 years, for cash and physical delivery.}
+\caption{European Swaption exposure evolution, expiry in 10 years, final maturity in 20 years, for cash and physical delivery. Simulation with 1000 paths and quarterly time steps.}
 \label{fig_3}
 \end{figure}
 The delivery type (cash vs physical) yields significantly different valuations as of today due to the steepness of the relevant yield curves (EUR). The cash settled Swaption's exposure graph is truncated at the exercise date, whereas the physically settled Swaption exposure turns into a Swap-like exposure after expiry. For comparison, the example also provides the exposure evolution of the underlying forward starting Swap which yields a somewhat higher exposure after the forward start date than the physically settled Swaption. This is due to scenarios with negative swap NPV at expiry and positive NPVs thereafter.
@@ -469,11 +472,12 @@ The delivery type (cash vs physical) yields significantly different valuations a
 %--------------------------------------------------------
 
 This demo case in folder {\tt Examples/Example\_10} shows the exposure evolution of Bermudan rather than European Swaptions with cash and physical delivery, respectively, see figure \ref{fig_3b}.
-\begin{figure}[tb]
+\begin{figure}[hbt]
 \begin{center}
-\includegraphics[scale=1.0]{example_bermudan_swaption.pdf}
+%\includegraphics[scale=1.0]{example_bermudan_swaption.pdf}
+\includegraphics[scale=0.45]{mpl_bermudan_swaption.pdf}
 \end{center}
-\caption{Bermudan Swaption exposure evolution, 5 annual exercise dates starting in 10 years, final maturity in 20 years, for cash and physical delivery.}
+\caption{Bermudan Swaption exposure evolution, 5 annual exercise dates starting in 10 years, final maturity in 20 years, for cash and physical delivery. Simulation with 1000 paths and quarterly time steps.}
 \label{fig_3b}
 \end{figure}
 The underlying Swap is the same as in the European Swaption example in section \ref{sec:european_swaption}. Note in particular the difference between the Bermudan and European Swaption exposures with cash settlement: The Bermudan shows the typical step-wise decrease due to the series of exercise dates. Also note that we are using the same Bermudan option pricing engines for both settlement types, in contrast to the European case, so that the Bermudan option cash and physical exposures are identical up to the first exercise date. identical . When running this example, you will notice the significant difference in computation time compared to the European case (ballpark 30 minutes here for 2 Swaptions, 1000 samples, 90 time steps). The Bermudan example is way slower because we use an LGM grid engine for pricing under scenarios in this case. In a realistic context one would more likely resort to American Monte Carlo simulation, feasible in ORE, but not provided in the first release. However, this implementation can be used to benchmark any faster / more sophisticated approach to Bermudan Swaption exposure simulation.
@@ -483,31 +487,27 @@ The underlying Swap is the same as in the European Swaption example in section \
 %--------------------------------------------------------
 
 This demo case in folder {\tt Examples/Example\_6} shows the exposure evolution of a European callable Swap, represented as two trades - the non-callable Swap and a Swaption with physical delivery. We have sold the call option, i.e. the Swaption is a right for the counterparty to enter into an offsetting Swap which economically terminates all future flows if exercised. The resulting exposure evolutions for the individual components (Swap, Swaption), as well as the callable Swap are shown in figure \ref{fig_4}. 
-\begin{figure}[tb]
+\begin{figure}[hbt]
 \begin{center}
-\includegraphics[scale=1.0]{example_callable_swap.pdf}
+%\includegraphics[scale=1.0]{example_callable_swap.pdf}
+\includegraphics[scale=0.45]{mpl_callable_swap.pdf}
 \end{center}
-\caption{European callable Swap represented as a package consisiting of non-callable Swap and Swaption. The Swaption has physical delivery and offsets all future Swap cash flows if exercised. The exposure evolution of the package is shown here as 'EPE NettingSet' (green line). This is covered by the pink line, the exposure evolution of the same Swap but with maturity on the exercise date. The graphs match perfectly here, because the example Swap is deep in the money and exercise probability is close to one. }
+\caption{European callable Swap represented as a package consisiting of non-callable Swap and Swaption. The Swaption has physical delivery and offsets all future Swap cash flows if exercised. The exposure evolution of the package is shown here as 'EPE NettingSet' (green line). This is covered by the pink line, the exposure evolution of the same Swap but with maturity on the exercise date. The graphs match perfectly here, because the example Swap is deep in the money and exercise probability is close to one. Simulation with 5000 paths and quarterly time steps.}
 \label{fig_4}
 \end{figure}
 The example is an extreme case where the underlying Swap is deep in the money (receiving fixed 5\%), and hence the call exercise probability is close to one. Modify the Swap and Swaption fixed rates closer to the money ($\approx$ 1\%) to see the deviation between net exposure of the callable Swap and the exposure of a 'short' Swap with maturity on exercise.  
-
-%--------------------------------------------------------
-\subsection{Capped/Floored Swap Exposures}\label{sec:capfloor}
-%--------------------------------------------------------
-
-\todo[inline]{Add Cap/Floor exposures}
 
 %--------------------------------------------------------
 \subsection{FX Forward Exposure}\label{sec:fxfwd}
 %--------------------------------------------------------
 
 The example in folder {\tt Examples/Example\_2} generates the exposure evolution for a EUR/USD FX Forward transaction with value date in 10Y. This is a particularly simple show case because of the single cash flow in 10Y. On the other hand it checks the cross currency model implementation by means of comparison to analytic limits - EPE and ENE at the trade's value date must match corresponding Vanilla FX Option prices, as shown in figure \ref{fig_5}.  
-\begin{figure}[tb]
+\begin{figure}[hbt]
 \begin{center}
-\includegraphics[scale=1.0]{example_fxforward.pdf}
+%\includegraphics[scale=1.0]{example_fxforward.pdf}
+\includegraphics[scale=0.45]{mpl_fxforward.pdf}
 \end{center}
-\caption{EUR/USD FX Forward expected exposure in a realistic market environment as of 26/02/2016 from both parties' perspectives. Value date is obviously in 10Y. The flat lines are FX Option prices which coincide with EPE and ENE, respectively, on the value date.}
+\caption{EUR/USD FX Forward expected exposure in a realistic market environment as of 26/02/2016 from both parties' perspectives. Value date is obviously in 10Y. The flat lines are FX Option prices which coincide with EPE and ENE, respectively, on the value date. Simulation with 5000 paths and quarterly time steps.}
 \label{fig_5}
 \end{figure}
 
@@ -516,11 +516,12 @@ The example in folder {\tt Examples/Example\_2} generates the exposure evolution
 %--------------------------------------------------------
 
 The case in {\tt Examples/Example\_8} is a vanilla cross currency swap. It shows the typical blend of and interest rate swap's saw tooth exposure evolution with an FX forward's exposure which increases monotonically to final maturity, see figure \ref{fig_6}. \todo[inline]{Add notional resetting feature and example}
-\begin{figure}[tb]
+\begin{figure}[hbt]
 \begin{center}
-\includegraphics[scale=1.0]{example_ccswap.pdf}
+%\includegraphics[scale=1.0]{example_ccswap.pdf}
+\includegraphics[scale=0.45]{mpl_ccswap.pdf}
 \end{center}
-\caption{Cross Currency Swap exposure evolution without mark-to-market notional reset.}
+\caption{Cross Currency Swap exposure evolution without mark-to-market notional reset. Simulation with 1000 paths and quarterly time steps.}
 \label{fig_6}
 \end{figure}
 
@@ -529,11 +530,12 @@ The case in {\tt Examples/Example\_8} is a vanilla cross currency swap. It shows
 %--------------------------------------------------------
 
 This example (in folder {\tt Examples/Example\_2}, as the FX Forward example) illustrates the exposure evolution for an FX Option, see figure \ref{fig_7}. 
-\begin{figure}[tb]
+\begin{figure}[hbt]
 \begin{center}
-\includegraphics[scale=1.0]{example_fxoption_fwdvariance.pdf}
+\includegraphics[scale=0.45]{mpl_fxoption.pdf}
+%\includegraphics[scale=1.0]{example_fxoption_fwdvariance_corrected.pdf}
 \end{center}
-\caption{EUR/USD FX Call and Put Option exposure evolution, same underlying and market data as in section \ref{sec:fxfwd}, compared to the call and put option price as of today (flat line).}
+\caption{EUR/USD FX Call and Put Option exposure evolution, same underlying and market data as in section \ref{sec:fxfwd}, compared to the call and put option price as of today (flat line). Simulation with 5000 paths and quarterly time steps.}
 \label{fig_7}
 \end{figure}
 Recall that the FX Option value $NPV(t)$ as of time $0 \leq t \leq T$ satisfies
@@ -543,7 +545,7 @@ NPV(0) &= \E\left[\frac{NPV(t)}{N(t)}\right] = \E\left[\frac{NPV^+(t)}{N(t)} \ri
 \end{align*}
 One would therefore expect a flat exposure evolution up to option expiry. The deviation from this in ORE's simulation is due to the pricing approach chosen here under scenarios. A Black FX option pricer is used with simulated interest rate curves input and {\em deterministic} Black volatility derived from today's volatility structure (pushed or rolled forward, see section \ref{sec:sim_market}). The deviation is  removed by extending the volatility modelling, e.g. implying model consistent Black volatilities in each simulation step on each path.
 \todo[inline]{Add exposure evolution graph with 'simulated' FX vol}
- 
+
 %--------------------------------------------------------
 \subsection{Netting and Collateral}
 %--------------------------------------------------------
@@ -557,17 +559,19 @@ In this example (see folder {\tt Examples/Example\_5}) we showcase a small netti
  
 \begin{figure}[tb]
 \begin{center}
-\includegraphics[scale=1.0]{example_nocollateral_epe.pdf}
+%\includegraphics[scale=1.0]{example_nocollateral_epe.pdf}
+\includegraphics[scale=0.45]{mpl_nocollateral_epe.pdf}
 \end{center}
-\caption{Three swaps netting set, no collateral.}
+\caption{Three swaps netting set, no collateral. Simulation with 5000 paths and bi-weekly time steps.}
 \label{fig_8}
 \end{figure}
 
-\begin{figure}[tb]
+\begin{figure}[htb]
 \begin{center}
-\includegraphics[scale=1.0]{example_threshold_break_epe.pdf}
+%\includegraphics[scale=1.0]{example_threshold_break_epe.pdf}
+\includegraphics[scale=0.45]{mpl_threshold_break_epe.pdf}
 \end{center}
-\caption{Three swaps netting set, THR=1m EUR, MTA=100k EUR, MPoR=2w. The red evolution assumes that the each trade is terminated at the next break date. The blue evolution ignores break dates. }
+\caption{Three swaps netting set, THR=1m EUR, MTA=100k EUR, MPoR=2w. The red evolution assumes that the each trade is terminated at the next break date. The blue evolution ignores break dates. Simulation with 5000 paths and bi-weekly time steps.}
 \label{fig_9}
 \end{figure}
 
@@ -579,11 +583,12 @@ In this example (see folder {\tt Examples/Example\_5}) we showcase a small netti
 %\label{fig_7}
 %\end{figure}
 
-\begin{figure}[tb]
+\begin{figure}[htb]
 \begin{center}
-\includegraphics[scale=1.0]{example_mpor_epe.pdf}
+%\includegraphics[scale=1.0]{example_mpor_epe.pdf}
+\includegraphics[scale=0.45]{mpl_mpor_epe.pdf}
 \end{center}
-\caption{Three swaps, THR=MTA=0, MPoR=2w.}
+\caption{Three swaps, THR=MTA=0, MPoR=2w. Simulation with 5000 paths and bi-weekly time steps.}
 \label{fig_10}
 \end{figure}
 
@@ -605,10 +610,7 @@ omitting the three right-most columns containing allocated data.
 \hline
 TradeId & NettingSetId & CVA & DVA & FBA & FCA & COLVA & CollateralFloor \\ %& AllocatedCVA & AllocatedDVA & AllocationMethod \\
 \hline
- & CPTY\_A & 31,163 & 44,950 & -4,815 & 21,208 & 1,965 &  179,961 \\
-Swap\_1 & CPTY\_A & 116,263 & 211,990 & -17,916 & 100,632 & n/a & n/a \\
-Swap\_2 & CPTY\_A & 67,608 & 96,233 & -10,576 & 45,402 & n/a & n/a \\
-Swap\_3 & CPTY\_A & 71,364 & 85,041 & -11,280 & 40,467 & n/a & n/a \\
+	& CPTY\_A & 31,084 	& 45,003 &	-4,803 &	 21,233 & 	 2,089 &	 182,351 \\Swap\_1 & CPTY\_A &	 115,944 &	 210,630 &	-17,864 &	 99,984 &	 n/a &	 n/a \\Swap\_2 & CPTY\_A &	 67,683 &	 96,412 &	-10,588 &	 45,488 &	 n/a &	 n/a \\Swap\_3 & CPTY\_A &	 71,299 & 	 84,752 & 	-11,268 & 	 40,327 & 	 n/a &	 n/a \\
 \hline
 \end{tabular}
 \end{center}
@@ -628,17 +630,19 @@ incremental contributions to these two VAs through time.
 The same example considered in the previous section (see folder {\tt Examples/Example\_5}) also features the allocation of netting set exposure and XVA to the trade level as frequently required by finance functions.  We start again with the uncollateralised case in figure \ref{fig_8}, followed by the case with threshold 1m EUR in figure \ref{fig_9}.
 \begin{figure}[tb]
 \begin{center}
-\includegraphics[scale=1.0]{example_nocollateral_allocated_epe.pdf}
+%\includegraphics[scale=1.0]{example_nocollateral_allocated_epe.pdf}
+\includegraphics[scale=0.45]{mpl_nocollateral_allocated_epe.pdf}
 \end{center}
-\caption{Exposure allocation without collateral.}
+\caption{Exposure allocation without collateral. Simulation with 5000 paths and bi-weekly time steps.}
 \label{fig_12}
 \end{figure}
 In both cases we apply the {\em marginal} (Euler) allocation method as published by Pykhtin and Rosen in 2010, hence we see the typical negative EPE for one of the trades at times when it reduces the netting set exposure. The case with collateral moreover shows the typical spikes in the allocated exposures.
 \begin{figure}[tb]
 \begin{center}
-\includegraphics[scale=1.0]{example_threshold_allocated_epe.pdf}
+%\includegraphics[scale=1.0]{example_threshold_allocated_epe.pdf}
+\includegraphics[scale=0.45]{mpl_threshold_allocated_epe.pdf}
 \end{center}
-\caption{Exposure allocation with collateral and threshold 1m EUR.}
+\caption{Exposure allocation with collateral and threshold 1m EUR. Simulation with 5000 paths and bi-weekly time steps.}
 \label{fig_13}
 \end{figure}
 The analytics results also feature allocated XVAs in file {\tt xva.csv} which are derived from the allocated exposure profiles. Note that ORE also offers alternative allocation methods to the marginal method by Pykhtin/Rosen, which can be explored with {\tt Examples/Example\_5}.
@@ -730,7 +734,8 @@ This subset of data is easiest explained using an example, see listing \ref{lst:
   <Parameter name="marketConfigFile">../../Input/todaysmarket.xml</Parameter>
   <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
   <Parameter name="portfolioFile">portfolio.xml</Parameter>
-  <Parameter name="observationModel">Disable</Parameter> <!-- None, Unregister, or Disable -->
+  <!-- None, Unregister, Defer or Disable -->
+  <Parameter name="observationModel">Disable</Parameter>
 </Setup>
 \end{minted}
 %\hrule
@@ -744,7 +749,16 @@ When ORE starts, it will initialise today's market, i.e. load market data and fi
 Moreover, ORE will load the trades in {\tt portfolio.xml} and link them with pricing engines as specified in {\tt pricingengine.xml}. When parameter {\tt    
 implyTodaysFixings} is set to Y, today's fixings would not be loaded but implied, relevant when pricing/bootstrapping off hypothetical market data as e.g. in scenario analysis and stress testing.
 
-The last parameter {\tt observationModel} is used to decide whether and how observer notifications are limited to improve performance during simulation. The 'unregister' option limits the amount of notifications by unregistering floating rate coupons from indices. The 'disable' option goes one step further and disables all notifications during market updates and triggers instrument recalculations explicitly. 
+The last parameter {\tt observationModel} is used to decide whether and how observer notifications are limited to improve performance during simulation. 
+\begin{itemize}
+\item The 'Unregister' option limits the amount of notifications by unregistering floating rate coupons from indices;
+\item Option 'Defer' disables all notifications during market data and fixing updates with
+{\tt ObservableSettings::instance().disableUpdates(true)}
+and kicks off updates afterwards when enabled again
+\item The 'Disable' option goes one step further and disables all notifications during market data and fixing updates with \\
+{\tt ObservableSettings::instance().disableUpdates(false)}, \\
+does  not defer them, but triggers required term structure and instrument recalculations explicitly. 
+\end{itemize}
 
 \subsubsection{Markets}\label{sec:master_input_markets}
 
@@ -837,7 +851,6 @@ The purpose of the {\tt simulation} 'analytics' is to run a Monte Carlo simulati
 The pricing engines file specifies how trades are priced under future scenarios which can differ from pricing as of today (specified in section Setup).
 Key base currency determines into which currency all NPVs will be converted. Key store scenarios (Y or N) determines whether the market scenarios are written to a file for later reuse.
 \todo[inline]{Implement the store scenarios option, add file name to parametrisation}
-\todo[inline]{Expose all performance options (fixing and observer model)} 
 
 \medskip
 The xva analytic section offers CVA, DVA, FVA and COLVA calculations which can be selected/deselected here individually. All XVA calculations depend on a previously generated NPV cube (see above) which is referenced here via the {\tt cubeFile} parameter. This means one can re-run the xva analytics without regenerating the cube each time. The xva reports depend in particular on the settings in the {\tt csaFile} which determines CSA details such as margining frequency, collateral thresholds, minimum transfer amounts, margin period of risk. By splitting the processing in to pre-processing (cube generation) and post-processing (aggregation and XVA analysis) it is possible to vary these CSA details and analyse their impact on XVAs quickly without re-generating the NPV cube.  
