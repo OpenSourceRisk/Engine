@@ -13,9 +13,6 @@
     <Parameter name="marketConfigFile">../../Input/todaysmarket.xml</Parameter>
     <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
     <Parameter name="portfolioFile">portfolio_3.xml</Parameter>
-    <!-- Simulated or Manual -->
-    <Parameter name="fixingModel">Manual</Parameter>
-    <!-- Unregister, None or Disable -->
     <Parameter name="observationModel">None</Parameter>
   </Setup>
   <Markets>
