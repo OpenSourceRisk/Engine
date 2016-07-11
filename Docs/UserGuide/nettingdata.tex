@@ -130,7 +130,7 @@ meanings of the various elements are as follows:
   on the underlying portfolio
 \item CallOnly: Only we are entitled to hold collateral; the
   counterparty has no such entitlement
-\item PostOnly: One the counterparty is entitled to hold collateral;
+\item PostOnly: Only the counterparty is entitled to hold collateral;
   we have no such entitlement
 \end{itemize}
 
@@ -168,6 +168,10 @@ entitled to request margin.
   defined within the Credit Support Annex. The only supported value
   here is \emph{FIXED}. 
 \end{itemize}
+This covers only the case where only one party has to post an
+independent amount. In a future release this will be extended to the
+situation prescribed by the Basel/IOSCO regulation (initial margin to
+be posted by both parties without netting).
 
 \paragraph{MarginingFrequency} This element contains two child nodes:
 \begin{itemize}

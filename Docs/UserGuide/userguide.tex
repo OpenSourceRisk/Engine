@@ -659,6 +659,7 @@ In both cases we apply the {\em marginal} (Euler) allocation method as published
 \end{figure}
 The analytics results also feature allocated XVAs in file {\tt xva.csv} which are derived from the allocated exposure profiles. Note that ORE also offers alternative allocation methods to the marginal method by Pykhtin/Rosen, which can be explored with {\tt Examples/Example\_5}.
 
+\clearpage
 %========================================================
 \section{Launchers}\label{sec:visualisation}
 %========================================================
@@ -1697,7 +1698,7 @@ The configuration of various term structures required to price a portfolio is co
 
 ORE applies the cross asset model described in detail in \cite{Lichters} to evolve  the market through time. So far the evolution model in ORE is limited to IR and FX risk factors for any number of currencies, extensions to further risk factor classes (Inflation, Credit, Equity, Commodity) will follow.
   
-The Cross Asset Model is based on the Linear Gauss Markov model (LGM) for interest rates and lognormal FX processes. We identify a single {\em domestic} currency and its LGM process labelled $z_0$, and a set of $n$ foreign currencies with associated LGM processes labelled $z_i$, $i=1,\dots,n$.  If we consider $n$ foreign exchange rates for converting foreign currency amounts into the single domestic currency by multiplication, $x_i$, $i=1,\dots,n$, then the cross asset  model is given by the system of SDEs  
+The Cross Asset Model is based on the Linear Gauss Markov model (LGM) for interest rates and lognormal FX processes. We identify a single {\em domestic} currency; its LGM process, which is labelled $z_0$; and a set of $n$ foreign currencies with associated LGM processes that are labelled $z_i$, $i=1,\dots,n$.  If we consider $n$ foreign exchange rates for converting foreign currency amounts into the single domestic currency by multiplication, $x_i$, $i=1,\dots,n$, then the cross asset  model is given by the system of SDEs  
 \begin{eqnarray*}
 dz_0 &=& \alpha_0\,dW_0^z \\
 dz_i &=& \gamma_i\,dt + \alpha_i\,dW_i^z,  \qquad i>0 \\
