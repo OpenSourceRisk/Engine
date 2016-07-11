@@ -11,6 +11,8 @@
       <LongShort>Long</LongShort>
       <LegData>
         <LegType>Floating</LegType>
+        <!-- Not used but needs to be here for validation as LegData -->
+        <Payer>true</Payer>
         <Currency>GBP</Currency>
         <DayCounter>ACT/365</DayCounter>
         <PaymentConvention>MF</PaymentConvention>
@@ -56,6 +58,8 @@
       <LongShort>Short</LongShort>
       <LegData>
         <LegType>Floating</LegType>
+        <!-- Not used but needs to be here for validation as LegData -->
+        <Payer>true</Payer>
         <Currency>GBP</Currency>
         <DayCounter>ACT/365</DayCounter>
         <PaymentConvention>MF</PaymentConvention>
