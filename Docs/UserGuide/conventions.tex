@@ -2,7 +2,7 @@ The conventions to associate with a set market quotes in the construction of ter
 {\tt conventions.xml} in the following though the file name can be chosen by the user. 
 Each separate set of conventions is stored in an XML node. The type of conventions 
 that a node holds is determined by the node name. Every node has an \lstinline!Id! node that gives a unique identifier for 
-the convention set. The following sections describe the type of conventions that can be created and the allowable values.
+the convention set. The following sections describe the type of conventions that can be created and the allowed values.
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsubsection{Zero Conventions}
@@ -51,16 +51,21 @@ The meanings of the various elements in this node are as follows:
 \begin{itemize}
 \item €TenorBased€: True if the conventions are for a tenor based zero quote and False if they are for a zero quote with an 
 explicit maturity date.
-\item DayCounter: The day count basis associated with the zero rate quote.
-\item CompoundingFrequency: The frequency of compounding.
-\item Compounding: The type of compounding for the zero rate.
-\item TenorCalendar: The calendar used to advance from the spot date to the maturity date by the zero rate tenor.
+\item DayCounter: The day count basis associated with the zero rate
+  quote (for choices see section \ref{sec:allowable_values})
+\item CompoundingFrequency: The frequency of compounding (Choices are {\em Once,
+    Annual, Semiannual, Quarterly, Bimonthly, Monthly, Weekly, Daily}).
+\item Compounding: The type of compounding for the zero rate (Choices
+  are {\em Simple,  Compounded, Continuous, SimpleThenCompounded}).
+\item TenorCalendar: The calendar used to advance from the spot date
+  to the maturity date by the zero rate tenor (for choices see section \ref{sec:allowable_values}).
 \item SpotLag [Optional]: The number of business days to advance from the valuation date before applying the zero rate 
 tenor. If not provided, this defaults to 0.
 \item SpotCalendar [Optional]: The calendar to use for business days when applying the \lstinline!SpotLag!. If not 
 provided, it defaults to a calendar with no holidays.
 \item RollConvention [Optional]: The roll convention to use when applying the zero rate tenor. If not provided, it 
-defaults to Following.
+defaults to Following (Choices are {\em Backward, Forward, Zero,
+  ThirdWednesday, Twentieth, TwnetiethIMM, CDS}).
 \item EOM [Optional]: Whether or not to use the end of month convention when applying the zero rate tenor. If not 
 provided, it defaults to false.
 \end{itemize}
@@ -85,7 +90,7 @@ given explicitly without reference to an index family. The structure of this nod
 </Deposit>
 \end{minted}
 \caption{Deposit conventions}
-\label{lst:deposit_conventions_index]}
+\label{lst:deposit_conventions_index}
 \end{listing}
 
 \begin{listing}[H]
@@ -220,7 +225,7 @@ this node is shown in Listing \ref{lst:swap_conventions}.
 </Swap>
 \end{minted}
 \caption{Swap conventions}
-\label{lst:swap_conventions]}
+\label{lst:swap_conventions}
 \end{listing}
 
 The meanings of the various elements in this node are as follows:

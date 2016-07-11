@@ -29,7 +29,7 @@ as ``Optional'', then it may be excluded or included and left blank.
 \item DiscountCurve: If the yield curve is being bootstrapped from market instruments, this gives the CurveId of the yield 
 curve used to discount cash flows during the bootstrap procedure. If this field is left blank or set equal to the current 
 CurveId, then this yield curve itself is used to discount cash flows during the bootstrap procedure.
-\item Segments: This element contains child elements and is described is \S \ref{ss:segments_node} below.
+\item Segments: This element contains child elements and is described in \S \ref{ss:segments_node} below.
 \item InterpolationVariable [Optional]: The variable on which the interpolation is performed. The allowable values are 
 given in Table \ref{tab:allow_interp_variables}. If the element is omitted or left blank, then it defaults to 
 \emph{Discount}.
@@ -86,8 +86,8 @@ node has the structure shown in Listing \ref{lst:direct_segment}. We refer to th
 because the discount factors, or equivalently the zero rates, are given explicitly and do not need to be bootstrapped. The 
 \lstinline!Quotes! node contains a list of \lstinline!Quote! elements. Each \lstinline!Quote! element contains an ID 
 pointing to a line in the {\tt market.txt} file, i.e.\ in this case, pointing to a particular zero rate or discount 
-factor. The \lstinline!Conventions! node contains the ID of a node in the {\tt ir\_conventions.xml} file described in \S 
-\ref{s:ir_conventions}. The \lstinline!Conventions! node associates conventions with the quotes.
+factor. The \lstinline!Conventions! node contains the ID of a node in the {\tt conventions.xml} file described in \S 
+\ref{sec:conventions}. The \lstinline!Conventions! node associates conventions with the quotes.
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -103,7 +103,7 @@ factor. The \lstinline!Conventions! node contains the ID of a node in the {\tt i
 </Direct>
 \end{minted}
 \caption{Direct yield curve segment}
-\label{lst:direct_segment]}
+\label{lst:direct_segment}
 \end{listing}
 
 
@@ -133,14 +133,16 @@ i.e.\ the current CurveId.
 </Simple>
 \end{minted}
 \caption{Simple yield curve segment}
-\label{lst:simple_segment]}
+\label{lst:simple_segment}
 \end{listing}
 
 \subsubsection*{Average OIS Segment}
 When the node name is \lstinline!AverageOIS!, the \lstinline!Type! node has the value \emph{Average OIS} and the node has 
 the structure shown in Listing \ref{lst:average_ois_segment}. This segment is used to hold quotes for Average OIS swap 
 instruments. The \lstinline!Quotes! node has the structure shown in Listing \ref{lst:average_ois_quotes}. Each quote for 
-an Average OIS instrument consists of two quotes, a vanilla IRS quote and an OIS-LIBOR basis swap spread quote. The IDs of 
+an Average OIS instrument (a typical example in a USD Overnight Index
+Swap) consists of two quotes, a vanilla IRS quote and an OIS-LIBOR
+basis swap spread quote.  The IDs of 
 these two quotes are stored in the \lstinline!CompositeQuote! node. The \lstinline!RateQuote! node holds the ID of the  
 vanilla IRS quote and the \lstinline!SpreadQuote! node holds the ID of the OIS-LIBOR basis swap spread quote.
 
@@ -182,7 +184,7 @@ When the node name is \lstinline!TenorBasis!, the \lstinline!Type! node has the 
 \emph{Tenor Basis Two Swaps} and the node has the structure shown in Listing \ref{lst:tenor_basis_segment}. This segment 
 is used to hold quotes for tenor basis swap instruments. The quotes may be for a conventional tenor basis swap where Ibor 
 of one tenor is swapped for Ibor of another tenor plus a spread. In this case, the \lstinline!Type! node has the value 
-\emph{Tenor Basis Swap}. The quotes may be for the difference in fixed rates on two fair swaps where one swap is against 
+\emph{Tenor Basis Swap}. The quotes may also  be for the difference in fixed rates on two fair swaps where one swap is against 
 Ibor of one tenor and the other swap is against Ibor of another tenor. In this case, the \lstinline!Type! node has the 
 value \emph{Tenor Basis Two Swaps}. Again, the structure is similar to the simple segment in Listing 
 \ref{lst:simple_segment} except that there are two projection curve nodes. There is a \lstinline!ProjectionCurveShort! 

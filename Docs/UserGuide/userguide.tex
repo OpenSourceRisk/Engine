@@ -201,7 +201,7 @@ This document focuses on instructions how to use ORE to cover basic workflows fr
         
 This will create a folder 'ore' in your current directory that contains the codebase.
 
-\item Initially, the QuantLib directory is empty as it is a submodule pointing to the official QuantLib repository. To pull down locally, use the following commands:
+\item Initially, the QuantLib subdirectory under {\tt ore} is empty as it is a submodule pointing to the official QuantLib repository. To pull down locally, use the following commands:
 
 {\tt
 \% cd ore \\
@@ -429,7 +429,7 @@ shown in figure \ref{fig_2}.
 \caption{Vanilla ATM swap expected exposure in a realistic market environment as of 26/02/2016 from both parties' perspectives. The Swap is the same as in figure \ref{fig_1} but receiving fixed 1\%, at the money on 26/02/2016. The symbols are the prices of European payer and receiver Swaptions. Simulation with 5000 paths and monthly time steps.}
 \label{fig_2}
 \end{figure}
-In this case, where the curves (discount and forward) are upward sloping, the receiver swap is at the money at inception only and moves (on average) out of the money during its life. Similarly, the swap moves into the money from the counterparty's perspective. Hence the expected exposure evolutions from our perspective (EPE) and the counterparty's perspective (ENE) 'detach' here, while both can still be be reconciled with payer and receiver Swaption prices.
+In this case, where the curves (discount and forward) are upward sloping, the receiver swap is at the money at inception only and moves (on average) out of the money during its life. Similarly, the swap moves into the money from the counterparty's perspective. Hence the expected exposure evolutions from our perspective (EPE) and the counterparty's perspective (ENE) 'detach' here, while both can still be be reconciled with payer respectively receiver Swaption prices.
 
 %--------------------------------------------------------
 \subsection{European Swaption Exposure}\label{sec:european_swaption}
@@ -459,7 +459,7 @@ This demo case in folder {\tt Examples/Example\_10} shows the exposure evolution
 \caption{Bermudan Swaption exposure evolution, 5 annual exercise dates starting in 10 years, final maturity in 20 years, for cash and physical delivery. Simulation with 1000 paths and quarterly time steps.}
 \label{fig_3b}
 \end{figure}
-The underlying Swap is the same as in the European Swaption example in section \ref{sec:european_swaption}. Note in particular the difference between the Bermudan and European Swaption exposures with cash settlement: The Bermudan shows the typical step-wise decrease due to the series of exercise dates. Also note that we are using the same Bermudan option pricing engines for both settlement types, in contrast to the European case, so that the Bermudan option cash and physical exposures are identical up to the first exercise date. identical . When running this example, you will notice the significant difference in computation time compared to the European case (ballpark 30 minutes here for 2 Swaptions, 1000 samples, 90 time steps). The Bermudan example is way slower because we use an LGM grid engine for pricing under scenarios in this case. In a realistic context one would more likely resort to American Monte Carlo simulation, feasible in ORE, but not provided in the first release. However, this implementation can be used to benchmark any faster / more sophisticated approach to Bermudan Swaption exposure simulation.
+The underlying Swap is the same as in the European Swaption example in section \ref{sec:european_swaption}. Note in particular the difference between the Bermudan and European Swaption exposures with cash settlement: The Bermudan shows the typical step-wise decrease due to the series of exercise dates. Also note that we are using the same Bermudan option pricing engines for both settlement types, in contrast to the European case, so that the Bermudan option cash and physical exposures are identical up to the first exercise date. When running this example, you will notice the significant difference in computation time compared to the European case (ballpark 30 minutes here for 2 Swaptions, 1000 samples, 90 time steps). The Bermudan example is way slower because we use an LGM grid engine for pricing under scenarios in this case. In a realistic context one would more likely resort to American Monte Carlo simulation, feasible in ORE, but not provided in the first release. However, this implementation can be used to benchmark any faster / more sophisticated approach to Bermudan Swaption exposure simulation.
 
 %--------------------------------------------------------
 \subsection{Callable Swap Exposure}
@@ -474,35 +474,37 @@ This demo case in folder {\tt Examples/Example\_6} shows the exposure evolution 
 \caption{European callable Swap represented as a package consisiting of non-callable Swap and Swaption. The Swaption has physical delivery and offsets all future Swap cash flows if exercised. The exposure evolution of the package is shown here as 'EPE NettingSet' (green line). This is covered by the pink line, the exposure evolution of the same Swap but with maturity on the exercise date. The graphs match perfectly here, because the example Swap is deep in the money and exercise probability is close to one. Simulation with 5000 paths and quarterly time steps.}
 \label{fig_4}
 \end{figure}
-The example is an extreme case where the underlying Swap is deep in the money (receiving fixed 5\%), and hence the call exercise probability is close to one. Modify the Swap and Swaption fixed rates closer to the money ($\approx$ 1\%) to see the deviation between net exposure of the callable Swap and the exposure of a 'short' Swap with maturity on exercise.  
+The example is an extreme case where the underlying Swap is deeply in the money (receiving fixed 5\%), and hence the call exercise probability is close to one. Modify the Swap and Swaption fixed rates closer to the money ($\approx$ 1\%) to see the deviation between net exposure of the callable Swap and the exposure of a 'short' Swap with maturity on exercise.  
 
 %--------------------------------------------------------
 \subsection{Cap/Floor Exposure}\label{sec:capfloor}
 %--------------------------------------------------------
 
-The example in folder {\tt Examples/Example\_12} generates exposure evolutions of several swaps, caps and floors. The example shown in the following figure ('portfolio 1') consists of a 20y Swap receiving 1\% fixed and a 20y Collar with both cap and floor at 2.5\% so that the net exposure corresponds to a Swap receiving 0.5\% fixed.
+The example in folder {\tt Examples/Example\_12} generates exposure evolutions of several swaps, caps and floors. The example shown in figure \ref{fig_capfloor_1} ('portfolio 1') consists of a 20y Swap receiving 1\% fixed and a 20y Collar with both cap and floor at 2.5\% so that the net exposure corresponds to a Swap receiving 0.5\% fixed.
 
 \begin{figure}[hbt]
 \begin{center}
 \includegraphics[scale=0.45]{mpl_capfloor_1.pdf}
 \end{center}
 \caption{Swap+Collar, portfolio 1. The Collar has identical cap and floor rates at 2.5\% so that it corresponds to a fixed leg which reduces the exposure of the Swap, which receives 3\% fixed. Simulation with 1000 paths and quarterly time steps.}
+\label{fig_capfloor_1}
 \end{figure}
 
-The second example in this folder ('portfolio 2') consists of a short Cap, long Floor and a Collar that corresponds to the netted Cap and Floor.
+The second example in this folder shown in figure \ref{fig_capfloor_2} ('portfolio 2') consists of a short Cap, long Floor and a Collar that corresponds to the netted Cap and Floor.
 
 \begin{figure}[hbt]
 \begin{center}
 \includegraphics[scale=0.45]{mpl_capfloor_2.pdf}
 \end{center}
 \caption{Short Cap and long Floor vs Collar, portfolio 2. Simulation with 1000 paths and quarterly time steps.}
+\label{fig_capfloor_2}
 \end{figure}
  
 %--------------------------------------------------------
 \subsection{FX Forward Exposure}\label{sec:fxfwd}
 %--------------------------------------------------------
 
-The example in folder {\tt Examples/Example\_2} generates the exposure evolution for a EUR/USD FX Forward transaction with value date in 10Y. This is a particularly simple show case because of the single cash flow in 10Y. On the other hand it checks the cross currency model implementation by means of comparison to analytic limits - EPE and ENE at the trade's value date must match corresponding Vanilla FX Option prices, as shown in figure \ref{fig_5}.  
+The example in folder {\tt Examples/Example\_2} generates the exposure evolution for a EUR / USD FX Forward transaction with value date in 10Y. This is a particularly simple show case because of the single cash flow in 10Y. On the other hand it checks the cross currency model implementation by means of comparison to analytic limits - EPE and ENE at the trade's value date must match corresponding Vanilla FX Option prices, as shown in figure \ref{fig_5}.  
 \begin{figure}[hbt]
 \begin{center}
 %\includegraphics[scale=1.0]{example_fxforward.pdf}
@@ -544,7 +546,7 @@ Recall that the FX Option value $NPV(t)$ as of time $0 \leq t \leq T$ satisfies
 \frac{NPV(t)}{N(t)} &= \mbox{Nominal}\times\E_t\left[\frac{(X(T) - K)^+}{N(T)}\right]\\
 NPV(0) &= \E\left[\frac{NPV(t)}{N(t)}\right] = \E\left[\frac{NPV^+(t)}{N(t)} \right]= \EPE(t) 
 \end{align*}
-One would therefore expect a flat exposure evolution up to option expiry. The deviation from this in ORE's simulation is due to the pricing approach chosen here under scenarios. A Black FX option pricer is used with simulated interest rate curves input and {\em deterministic} Black volatility derived from today's volatility structure (pushed or rolled forward, see section \ref{sec:sim_market}). The deviation is  removed by extending the volatility modelling, e.g. implying model consistent Black volatilities in each simulation step on each path.
+One would therefore expect a flat exposure evolution up to option expiry. The deviation from this in ORE's simulation is due to the pricing approach chosen here under scenarios. A Black FX option pricer is used with simulated interest rate curves input and {\em deterministic} Black volatility derived from today's volatility structure (pushed or rolled forward, see section \ref{sec:sim_market}). The deviation can be removed by extending the volatility modelling, e.g. implying model consistent Black volatilities in each simulation step on each path.
 \todo[inline]{Add exposure evolution graph with 'simulated' FX vol}
 
 %--------------------------------------------------------
@@ -554,7 +556,7 @@ One would therefore expect a flat exposure evolution up to option expiry. The de
 In this example (see folder {\tt Examples/Example\_5}) we showcase a small netting set consisting of three swaps in different currencies, with different collateral choices
 \begin{itemize}
 \item no collateral - figure \ref{fig_8},
-\item collateral with threshold (THR) 1m EUR, minimum transfer amount (MTA) 100k EUR, margin period of risk (MPoR) 2w - figure \ref{fig_9}
+\item collateral with threshold (THR) 1m EUR, minimum transfer amount (MTA) 100k EUR, margin period of risk (MPoR) 2 weeks - figure \ref{fig_9}
 \item collateral with zero THR and MTA, and MPoR 2w - figure \ref{fig_10}
 \end{itemize}
  
@@ -602,7 +604,7 @@ XVA outputs, see folder {\tt Examples/Example\_5/Output/collateral\_threshold}.
 
 \medskip
 The summary of CVA, DVA, FVA, COLVA and Collateral Floor is provided in file {\tt xva.csv}. 
-The file includes the allocated CVA and DVA introduced in the next section. The following table illustrates the file's layout,
+The file includes the allocated CVA and DVA numbers to individual trades as introduced in the next section. The following table illustrates the file's layout,
 omitting the three right-most columns containing allocated data. 
 
 \begin{center}
@@ -631,7 +633,7 @@ incremental contributions to these two VAs through time.
 \subsection{Exposure \& XVA Allocation to Trades}
 %--------------------------------------------------------
 
-The same example considered in the previous section (see folder {\tt Examples/Example\_5}) also features the allocation of netting set exposure and XVA to the trade level as frequently required by finance functions.  We start again with the uncollateralised case in figure \ref{fig_8}, followed by the case with threshold 1m EUR in figure \ref{fig_9}.
+The same example considered in the previous section (see folder {\tt Examples/Example\_5}) also features the allocation of netting set exposure and XVA to the trade level as frequently required by finance departments. We start again with the uncollateralised case in figure \ref{fig_8}, followed by the case with threshold 1m EUR in figure \ref{fig_9}.
 \begin{figure}[tb]
 \begin{center}
 %\includegraphics[scale=1.0]{example_nocollateral_allocated_epe.pdf}
@@ -686,7 +688,7 @@ To launch Calc, open a terminal, change to directory {\tt Examples/Example\_1}, 
 %\caption{Calc sheet after launching.}
 %\label{fig_14}
 %\end{figure}
-The user can choose a configuration (one of the ore*.xml files in Example\_1's subfolder Input) by hitting the 'Select' button. Initially Input/ore.xml is pre-selected. The ORE process is then kicked off by hitting 'Run'. Once completed, standard ORE reports (NPV, Cashflow, XVA) are loaded into several sheets. Moreover, exposure evolutions can then be viewed by hitting 'View' which shows the result in figure \ref{fig_15}.  
+The user can choose a configuration (one of the {\tt ore*.xml} files in Example\_1's subfolder Input) by hitting the 'Select' button. Initially Input/ore.xml is pre-selected. The ORE process is then kicked off by hitting 'Run'. Once completed, standard ORE reports (NPV, Cashflow, XVA) are loaded into several sheets. Moreover, exposure evolutions can then be viewed by hitting 'View' which shows the result in figure \ref{fig_15}.  
 \begin{figure}[hbt]
 \begin{center}
 \includegraphics[scale=0.4]{demo_calc_2}
@@ -758,26 +760,28 @@ This subset of data is easiest explained using an example, see listing \ref{lst:
 \label{lst:ore_setup}
 \end{listing}
 
-Parameter names are self explanatory: Input and output path are interpreted relative from the directory where the ORE executable is started, but can also be specified using absolute paths. All file names are then interpreted relative to the 'inputPath' and'outputPath', respectively. 
+Parameter names are self explanatory: Input and output path are interpreted relative from the directory where the ORE script is started, but can also be specified using absolute paths. All file names are then interpreted relative to the 'inputPath' and 'outputPath', respectively. The files starting with {\tt ../../Input/} then point to files in the global Example input directory {\tt Example/Input/*}, whereas files such as {\tt portfolio.xml} are local inputs in {\tt Example/Example\_\#/Input/}.
 
 When ORE starts, it will initialise today's market, i.e. load market data and fixings, and build all term structures as specified in {\tt todaysmarket.xml}. 
 Moreover, ORE will load the trades in {\tt portfolio.xml} and link them with pricing engines as specified in {\tt pricingengine.xml}. When parameter {\tt    
 implyTodaysFixings} is set to Y, today's fixings would not be loaded but implied, relevant when pricing/bootstrapping off hypothetical market data as e.g. in scenario analysis and stress testing.
 
-The last parameter {\tt observationModel} is used to decide whether and how observer notifications are limited to improve performance during simulation. 
+\medskip
+The last parameter {\tt observationModel} can be used to control ORE performance during simulation. The choices {\em Disable } and {\em Unregister } yield similarly improved performance relative to choice {\em None}. For users familiar with the QuantLib design - the parameter controls to which extent {\em QuantLib observer notifications} are used when market and fixing data is updated and the evaluation date is shifted: 
 \begin{itemize}
 \item The 'Unregister' option limits the amount of notifications by unregistering floating rate coupons from indices;
 \item Option 'Defer' disables all notifications during market data and fixing updates with
 {\tt ObservableSettings::instance().disableUpdates(true)}
 and kicks off updates afterwards when enabled again
-\item The 'Disable' option goes one step further and disables all notifications during market data and fixing updates with \\
-{\tt ObservableSettings::instance().disableUpdates(false)}, \\
-does  not defer them, but triggers required term structure and instrument recalculations explicitly. 
+\item The 'Disable' option goes one step further and disables all notifications during market data and fixing updates, and in particular when the evaluation date is changed along a path, with \\
+{\tt ObservableSettings::instance().disableUpdates(false)} \\
+Updates are not deferred here. Required term structure and instrument recalculations are triggered explicitly. 
 \end{itemize}
+\todo[inline]{Expand the technical description of observationModel}
 
 \subsubsection{Markets}\label{sec:master_input_markets}
 
-The {\tt Markets} section (see listing \ref{lst:ore_markets}) is used to choose the two market configurations for simulation model calibration and the subsequent market simulation phase, respectively. These configurations have to defined in {\tt todaysmarket.xml} (see section \ref{sec:market}). 
+The {\tt Markets} section (see listing \ref{lst:ore_markets}) is used to choose the two market configurations for simulation model calibration and the subsequent market simulation phase, respectively. These configurations have to be defined in {\tt todaysmarket.xml} (see section \ref{sec:market}). 
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -840,7 +844,7 @@ The following listing \ref{lst:ore_analytics} shows the parametrisation of the f
 \label{lst:ore_analytics}
 \end{listing}
 
-The curves analytic exports all yield curves that have been built according to the specification in {\tt todaysmarket.xml}. Key {\tt configuration} selects the curve set to be used (see explanation in the previous Markets section).  Key {\tt grid} defines the time grid on which the yield curves are evaluated, in the example above a grid of 240 monthly time steps from today. The discount factors for all curves with configuration default will be exported on this monthly grid into the csv file specified by key {\tt outputFileName}.
+The curves analytic exports all yield curves that have been built according to the specification in {\tt todaysmarket.xml}. Key {\tt configuration} selects the curve set to be used (see explanation in the previous Markets section).  Key {\tt grid} defines the time grid on which the yield curves are evaluated, in the example above a grid of 240 monthly time steps from today. The discount factors for all curves with configuration default will be exported on this monthly grid into the csv file specified by key {\tt outputFileName}. The grid can also be specified explicitly by a comma separated list of tenor points such as {\tt 1W, 1M, 2M, 3M, \dots}.
 
 \medskip
 The purpose of the {\tt simulation} 'analytics' is to run a Monte Carlo simulation which evolves the market as specified in the simulation config file. The primary result is an NPV cube file, i.e. valuations of all trades in the portfolio file (see section Setup), for all future points in time on the simulation grid and for all paths. Apart from the NPV cube, additional scenario data (such as simulated overnight rates etc) are stored in this process which are needed for subsequent XVA analytics.  
@@ -868,7 +872,7 @@ Key base currency determines into which currency all NPVs will be converted. Key
 \todo[inline]{Implement the store scenarios option, add file name to parametrisation}
 
 \medskip
-The xva analytic section offers CVA, DVA, FVA and COLVA calculations which can be selected/deselected here individually. All XVA calculations depend on a previously generated NPV cube (see above) which is referenced here via the {\tt cubeFile} parameter. This means one can re-run the xva analytics without regenerating the cube each time. The xva reports depend in particular on the settings in the {\tt csaFile} which determines CSA details such as margining frequency, collateral thresholds, minimum transfer amounts, margin period of risk. By splitting the processing in to pre-processing (cube generation) and post-processing (aggregation and XVA analysis) it is possible to vary these CSA details and analyse their impact on XVAs quickly without re-generating the NPV cube.  
+The xva analytic section offers CVA, DVA, FVA and COLVA calculations which can be selected/deselected here individually. All XVA calculations depend on a previously generated NPV cube (see above) which is referenced here via the {\tt cubeFile} parameter. This means one can re-run the xva analytics without regenerating the cube each time. The xva reports depend in particular on the settings in the {\tt csaFile} which determines CSA details such as margining frequency, collateral thresholds, minimum transfer amounts, margin period of risk. By splitting the processing into pre-processing (cube generation) and post-processing (aggregation and XVA analysis) it is possible to vary these CSA details and analyse their impact on XVAs quickly without re-generating the NPV cube.  
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -904,8 +908,7 @@ The xva analytic section offers CVA, DVA, FVA and COLVA calculations which can b
 \label{lst:ore_xva}
 \end{listing}
 
-
-Further parameters:
+Parameters:
 \begin{itemize}
 \item {\tt csaFile:} Netting set definitions file covering CSA details such as margining frequency, thresholds, minimum transfer amounts, margin period of risk 
 \item {\tt cubeFile:} NPV cube file previously generated and to be post-processed here
@@ -1282,7 +1285,7 @@ Let us discuss this section using the following example
 \end{listing}
 
 \begin{itemize}
-\item {\tt Discretization:} Chooses between time discretization schemes for the risk factor evolution. {\em Exact} means exploiting the analytcal tractability of the model to avoid any time discretization error. {\em Euler} uses a naive time discretization scheme which has numerical error and requires small time steps fro accurate results (useful for testing purposes)
+\item {\tt Discretization:} Chooses between time discretization schemes for the risk factor evolution. {\em Exact} means exploiting the analytcal tractability of the model to avoid any time discretization error. {\em Euler} uses a naive time discretization scheme which has numerical error and requires small time steps for accurate results (useful for testing purposes)
 \item {\tt Grid: } Specifies the simulation time grid, here 80 quarterly steps.
 \item {\tt Calendar:} Calendar or combination of calendars used to adjust the dates of the grid. Date adjustment is required because the simulation must step over 'good' dates on which index fixings can be stored.
 %\item {\tt Scenario: } Choose between {\em Simple } and {\em Complex } implementations, the latter optimized for more efficient memory usage. \todo[inline]{Remove Scenario choice}
@@ -1386,12 +1389,12 @@ We have LGM sections by currency, but starting with a section for currency 'defa
 \item {\tt Reversion/TimeGrid: } Initial time grid for this parameter, can be left empty if ParamType is Constant
 \item {\tt Reversion/InitialValue: } Vector of initial values, matching number of entries in time, or single value if the time grid is empty
 \item {\tt CalibrationSwaptions: } Choice of calibration instruments by expiry, underlying Swap term and strike
-\item {\tt ParameterTransformation: } LGM model prices are invariant under scaling and shift transformations \cite{Lichters} with advantages for numerical convergence of results in long term simulations. These transformations can be chosen here. Default settings are shiftHorizon 0 and scaling 1.
+\item {\tt ParameterTransformation: } LGM model prices are invariant under scaling and shift transformations \cite{Lichters} with advantages for numerical convergence of results in long term simulations. These transformations can be chosen here. Default settings are shiftHorizon 0 (time in years) and scaling factor 1.
 \end{itemize}
 
 \medskip
 
-Each interest rate model is specified by a block as follows
+Each FX model is specified by a block as follows
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -1473,8 +1476,8 @@ Any risk factor pair not specified explicitly here will be assumed to have zero 
 \subsubsection{Market}\label{sec:sim_market}
 
 The last part of the simulation configuration file covers the specification of the simulated market.
-Note that the simulation model will yield the evolution of risk factors such as short rates which need to be translated into entire yield curves which can be 'understood' by the instruments which we want to price under scenarios.
-Moreover we need to specify how volatility structures evolve even if we do not explicitly simulate volatility. This translation is the role of the {\em simulation market} object, which is configured in the section within the enclosing tags {\tt <Market>} and {\tt </Market}, as shown in the following small two-currency example.
+Note that the simulation model will yield the evolution of risk factors such as short rates which need to be translated into entire yield curves that can be 'understood' by the instruments which we want to price under scenarios.
+Moreover we need to specify how volatility structures evolve even if we do not explicitly simulate volatility. This translation happens based on the information in the {\em simulation market} object, which is configured in the section within the enclosing tags {\tt <Market>} and {\tt </Market}, as shown in the following small two-currency example.
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -1656,6 +1659,7 @@ The configuration of various term structures required to price a portfolio is co
 
 %--------------------------------------------------------
 \subsection{Conventions: {\tt conventions.xml}}
+\label{sec:conventions}
 %--------------------------------------------------------
 
 \include{conventions}
