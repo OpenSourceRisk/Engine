@@ -188,8 +188,11 @@ This document focuses on instructions how to use ORE to cover basic workflows fr
 
 \todo[inline]{Add instructions for extracting executable}
 
-\subsection{Git Setup}
+\subsection{Git}
 
+Open Risk Engine's source code is hosted on github.com using {\tt git}, a free and open source distributed version control system. 
+\todo[inline]{Mention that source code archives can be downloaded, no need for git}
+   
 \begin{enumerate}
 \item Install and setup Git on your machine following instructions at \cite{confluence} 
 
@@ -211,9 +214,9 @@ This will create a folder 'ore' in your current directory that contains the code
 
 \end{enumerate}
 
-\subsection{Boost Setup}
+\subsection{Boost}
 
-\subsubsection{Windows}
+\subsubsection*{Windows}
 
 \begin{enumerate}
 \item Download the pre-compiled binaries for MSVC-14 (MSVC2015) from \cite{boost-binaries}, any recent version should work
@@ -242,7 +245,7 @@ Alternatively, compile all Boost libraries directly from the source code:
 \end{itemize}
 \end{enumerate}
 
-\subsubsection{Unix}
+\subsubsection*{Unix}
 
 \begin{enumerate}
 \item Download and build Boost, any recent version should work
@@ -250,9 +253,9 @@ Alternatively, compile all Boost libraries directly from the source code:
 (so includes should be in BOOST and libs should be in BOOST/stage/lib)
 \end{enumerate}
 
-\subsection{Build Libraries and Application}
+\subsection{ORE Libraries and Application}
 
-\subsubsection{Windows}
+\subsubsection*{Windows}
 
 \begin{enumerate}
 
@@ -283,7 +286,7 @@ Alternatively, compile all Boost libraries directly from the source code:
 
 \end{enumerate}
 
-\subsubsection{Unix}
+\subsubsection*{Unix}
 
 \begin{enumerate}
 
@@ -357,6 +360,9 @@ and
 
 \end{enumerate}
 
+\subsection{Python and Jupyter}
+
+Python is required to run the examples in section \ref{sec:examples}. And we use Jupyter \cite{jupyter} in section \label{sec:jupyter} to visualise simulation results. Both are part of the 'Anaconda Open Data Science Analytics Platform' \cite{Anaconda}. Anaconda installation instructions for Windows, OS X and Linux are available on the anaconda site, with graphical installers for Windows and OS X. 
 
 %========================================================
 \section{Examples}\label{sec:examples}
@@ -659,14 +665,11 @@ The analytics results also feature allocated XVAs in file {\tt xva.csv} which ar
 
 \subsection{Jupyter}\label{sec:jupyter}
 
-In this section we show how to use Jypyter notebooks to 
+In this section we are going to show how to use Jypyter notebooks to 
 \begin{itemize}
 \item run the examples listed in the previous section, 
 \item further analyse the NPV cube data
 \end{itemize}
-
-Jupyter is part of the Anaconda Open Data Science Analytics Platform \cite{Anaconda}.
-Anaconda installation instructions for Windows, OS X and Linux are available on the anaconda site, with graphical installers for Windows and OS X. 
 
 \todo[inline]{Add Jupyter section}
 
@@ -1658,35 +1661,30 @@ The configuration of various term structures required to price a portfolio is co
 
 
 %--------------------------------------------------------
-\subsection{Conventions: {\tt conventions.xml}}
-\label{sec:conventions}
+%\subsection{Conventions: {\tt conventions.xml}}
+%\label{sec:conventions}
 %--------------------------------------------------------
-
 \include{conventions}
 
 
 %========================================================
-\section{Trade Data}\label{sec:portfolio_data}
+%\section{Trade Data}\label{sec:portfolio_data}
 %========================================================
-
 \include{portfoliodata}
 
 %========================================================
-\section{Netting Set Definitions}\label{sec:nettingsetinput}
+%\section{Netting Set Definitions}\label{sec:nettingsetinput}
 %========================================================
-
 \include{nettingdata}
 
 %========================================================
-\section{Market Data}\label{sec:market_data}
+%\section{Market Data}\label{sec:market_data}
 %========================================================
-
 \include{marketdata}
 
 %========================================================
-\section{Fixing History}
+%\section{Fixing History}
 %========================================================
-
 \include{fixingdata}
 
 \begin{appendix}
@@ -1928,6 +1926,20 @@ This yields allocated exposures proportional to the netting set exposure, avoids
 
 \bibitem{QL} http://www.quantlib.org
  
+\bibitem{quantlib-install} http://quantlib.org/install/vc10.shtml
+
+\bibitem{confluence} https://confluence.atlassian.com/bitbucket/set-up-git-744723531.html
+
+\bibitem{boost-binaries} https://sourceforge.net/projects/boost/files/boost-binaries
+
+\bibitem{jupyter} http://jupyter.org
+
+\bibitem{Anaconda} https://docs.continuum.io/anaconda
+
+\bibitem{LO} http://www.libreoffice.org
+
+\bibitem{xlwings} http://www.xlwings.org
+
 \bibitem{Lichters} 
 Roland Lichters, Roland Stamm, Donal Gallagher, 
 {\em Modern Derivatives Pricing and Credit Exposure Analysis, Theory and Practice of CSA and XVA Pricing, Exposure Simulation and Backtesting}, 
@@ -1943,23 +1955,11 @@ Damiano Brigo and Fabio Mercurio, {\em Interest Rate Models: Theory and Practice
 Michael Pykhtin and Dan Rosen, {\em Pricing Counterparty Risk at the Trade Level and CVA Allocations}, Finance and Economics Discussion Series, Divisions of Research \& Statistics and Monetary Affairs,
 Federal Reserve Board, Washington, D.C., 2010
 
-\bibitem{LO} http://www.libreoffice.org
-
-\bibitem{xlwings} http://www.xlwings.org
-
 %\bibitem{SIMM}{SIMM Methodology\\ \tiny http://www2.isda.org/attachment/ODM1Mw==/ISDA\%20SIMM\%20Methodology\_7\%20April\%202016\_v3.15\%20(PUBLIC).pdf}
 
 %\bibitem{SIMM_Data_Standards}{SIMM Risk Data Standards\\ \tiny https://www2.isda.org/attachment/ODQzMg==/Risk\%20Data\%20Standards\_24\%20May\%202016\_v1.22\%20(PUBLIC).pdf}
 
 %\bibitem{OO} http://www.openoffice.org
-
-\bibitem{Anaconda} https://docs.continuum.io/anaconda
-
-\bibitem{confluence} https://confluence.atlassian.com/bitbucket/set-up-git-744723531.html
-
-\bibitem{boost-binaries} https://sourceforge.net/projects/boost/files/boost-binaries
-
-\bibitem{quantlib-install} http://quantlib.org/install/vc10.shtml
 
 \end{thebibliography}
 
