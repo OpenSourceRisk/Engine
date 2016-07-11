@@ -50,10 +50,11 @@ void CashFlowTest::testFXLinkedCashFlow() {
     boost::shared_ptr<SimpleQuote> sq = boost::make_shared<SimpleQuote>(123.45);
     Handle<Quote> spot(sq);
     DayCounter dc = ActualActual();
+    Calendar cal = TARGET();
     Handle<YieldTermStructure> domYTS(boost::shared_ptr<YieldTermStructure> (
-        new FlatForward (today, 0.005, dc))); // JPY
+        new FlatForward (0, cal, 0.005, dc))); // JPY
     Handle<YieldTermStructure> forYTS(boost::shared_ptr<YieldTermStructure> (
-        new FlatForward (today, 0.03, dc))); // USD
+        new FlatForward (0, cal, 0.03, dc))); // USD
     //TODO foreign/domestic vs source/target
     boost::shared_ptr<FxIndex> fxIndex = boost::make_shared<FxIndex>
         ("FX::USDJPY", 0, USDCurrency(), JPYCurrency(), TARGET(), spot, domYTS, forYTS);
