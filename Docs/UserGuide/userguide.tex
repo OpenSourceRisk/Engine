@@ -342,18 +342,18 @@ and
 {\tt
 \% cd Examples \\
 \% cd Example\_1 \\
-\% ./run.sh 
+\% ./run.py 
 }
 
-Note that the graphing depends on gnuplot and some gnuplot addins to work.
-Their installation on OS X is easiest using Homebrew, the package manager for OS X:
-
-{\tt brew install gnuplot --with-aquaterm --with-cairo --with-pdflib-lite } 
-
-AquaTerm support will only be built into Gnuplot if the standard AquaTerm
-package has already been installed onto your system.
-If you subsequently remove AquaTerm, you will need to uninstall and then
-reinstall Gnuplot.
+%Note that the graphing depends on gnuplot and some gnuplot addins to work.
+%Their installation on OS X is easiest using Homebrew, the package manager for OS X:
+%
+%{\tt brew install gnuplot --with-aquaterm --with-cairo --with-pdflib-lite } 
+%
+%AquaTerm support will only be built into Gnuplot if the standard AquaTerm
+%package has already been installed onto your system.
+%If you subsequently remove AquaTerm, you will need to uninstall and then
+%reinstall Gnuplot.
 
 \end{enumerate}
 
@@ -363,13 +363,13 @@ reinstall Gnuplot.
 %========================================================
 
 The examples shown in the following are intended to help getting started with ORE, and to serve as plausibility checks for the simulation results generated with ORE.
-All results can be produced with the {\tt run.sh} scripts in the ORE release's {\tt Examples} folder. In a nutshell, all scripts call ORE's command line application with a single input XML file
+All results can be produced with the Python scripts {\tt run.py} scripts in the ORE release's {\tt Examples} folder which work on both Windows and Unix platforms\footnote{Hence the Example section requires a recent Python installation, 3.5 or higher.}. In a nutshell, all scripts call ORE's command line application with a single input XML file
 
 \medskip
 \centerline{\tt ore[.exe] input.xml}
 \medskip
 
-The structure of the input file and of the portfolio, market and other configuration files referred to therein will be explained in section \ref{sec:configuration}. All examples require that Python is installed which we use on both Windows and Unix platforms to run the examples and graph results.
+They produce a number of standard reports and exposure graphs in PDF format. The structure of the input file and of the portfolio, market and other configuration files referred to therein will be explained in section \ref{sec:configuration}. 
 
 %--------------------------------------------------------
 \subsection{Interest Swap Exposure}\label{sec:example1}
@@ -670,28 +670,32 @@ Anaconda installation instructions for Windows, OS X and Linux are available on 
 
 \subsection{Calc}\label{sec:calc}
 
-ORE comes with a simple LibreOffice Calc \cite{LO} sheet as an ORE launcher and basic result viewer, so far tested on OS X only. This is demonstrated on the example in section \ref{sec:example1}. It is currently based on the stable LibreOffice version 5.0.6 and tested on Mac OSX only. Launch Calc following the instructions in Example\_1's Readme: Open a terminal, change to directory {\tt Examples/Example\_1}, and run
+ORE comes with a simple LibreOffice Calc \cite{LO} sheet as an ORE launcher and basic result viewer. This is demonstrated on the example in section \ref{sec:example1}. It is currently based on the stable LibreOffice version 5.0.6 and tested on OS X. 
+
+To launch Calc, open a terminal, change to directory {\tt Examples/Example\_1}, and run
 
 \medskip
 {\centerline{\tt ./launchCalc.sh} }
-
 \medskip
-This will show the blank sheet in figure \ref{fig_14}.
+
+%This will show the blank sheet in figure \ref{fig_14}.
+%\begin{figure}[hbt]
+%\begin{center}
+%\includegraphics[scale=0.4]{demo_calc_1}
+%\end{center}
+%\caption{Calc sheet after launching.}
+%\label{fig_14}
+%\end{figure}
+The user can choose a configuration (one of the ore*.xml files in Example\_1's subfolder Input) by hitting the 'Select' button. Initially Input/ore.xml is pre-selected. The ORE process is then kicked off by hitting 'Run'. Once completed, standard ORE reports (NPV, Cashflow, XVA) are loaded into several sheets. Moreover, exposure evolutions can then be viewed by hitting 'View' which shows the result in figure \ref{fig_15}.  
 \begin{figure}[hbt]
 \begin{center}
-\includegraphics[scale=0.5]{demo_calc_1}
+\includegraphics[scale=0.4]{demo_calc_2}
 \end{center}
-\caption{Calc sheet after launching.}
-\label{fig_14}
-\end{figure}
-The user can choose a configuration (one of the ore*.xml files in Example\_1's subfolder Input) by hitting the 'Select' button. Initially Input/ore.xml is pre-selected. The ORE process is then kicked off by hitting 'Run'. Once completed, pre-selected results can be viewed by hitting 'View' which should show the result in figure \ref{fig_15}.
-\begin{figure}[hbt]
-\begin{center}
-\includegraphics[scale=0.5]{demo_calc_2}
-\end{center}
-\caption{Calc sheet after hitting 'Run' and 'View'.}
+\caption{Calc sheet after hitting 'Run'.}
 \label{fig_15}
 \end{figure}
+
+This demo uses simple Libre Office Basic macros which call Python scripts to execute ORE. The Libre Office Python uno module (which comes with Libre Office) is used to communicate between Python and Calc to upload results into the sheets. 
 
 \todo[inline]{Remove hard-coded file names from Python scripts}
 \todo[inline]{Calc example on Windows and Linux} 
@@ -701,7 +705,7 @@ The user can choose a configuration (one of the ore*.xml files in Example\_1's s
 \subsection{Excel}
 
 For Microsoft Excel, similar interaction between Python and the spread sheet can be achieved with the  Python module {\tt xlwings} \cite{xlwings} on both Windows and Mac OSX.
-However, unlike Libre Office where the uno Python module is part of the distribution, xlwings needs to be installed separately. We therefore demonstrate just a simple Excel sheet here which uses VBA only to call the ORE application and load resulting data into the spreadsheet. This demo is available in Example\_1. Launch {\tt Example\_1.xlsm}, modify the paths on the first sheet, and then run the ORE process.
+However, unlike Libre Office where the uno Python module is part of the distribution, xlwings needs to be installed separately. We therefore rather demonstrate an Excel sheet here which uses VBA only to call the ORE application and load resulting data into the spreadsheet. This demo is available in Example\_1. Launch {\tt Example\_1.xlsm}. After launching the sheet, modify the paths on the first sheet, and then run the ORE process.
 
 %========================================================
 \section{Parametrisation}\label{sec:configuration}
