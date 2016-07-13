@@ -17,7 +17,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 #include "discountcurve.hpp"
 #include <qle/termstructures/interpolateddiscountcurve2.hpp>
 #include <ql/termstructures/yield/discountcurve.hpp>
@@ -29,10 +28,10 @@ using namespace boost::unit_test_framework;
 using std::vector;
 
 namespace testsuite {
-    
+
 void DiscountCurveTest::testDiscountCurve() {
 
-    //FIXME: test curve1 or 2 or both
+    // FIXME: test curve1 or 2 or both
     BOOST_TEST_MESSAGE("Testing QuantExt::InteroplatedDiscountCurve2...");
 
     SavedSettings backup;
@@ -49,31 +48,29 @@ void DiscountCurveTest::testDiscountCurve() {
     DayCounter dc = ActualActual();
     Calendar cal = NullCalendar();
 
-    for(Size i = 0; i < numYears; i++) {
+    for (Size i = 0; i < numYears; i++) {
 
         // rate
-        Real rate = 0.01 + i*0.001;
+        Real rate = 0.01 + i * 0.001;
         // 1 year apart
-        dates.push_back(Date(1, Dec, startYear+i));
-        Time t = dc.yearFraction(today,dates.back());
+        dates.push_back(Date(1, Dec, startYear + i));
+        Time t = dc.yearFraction(today, dates.back());
         times.push_back(t);
 
         // set up Quote of DiscountFactors
-        DiscountFactor df = ::exp(-rate*t);
-        Handle<Quote> q (boost::make_shared<SimpleQuote>(df));
+        DiscountFactor df = ::exp(-rate * t);
+        Handle<Quote> q(boost::make_shared<SimpleQuote>(df));
         quotes.push_back(q);
         dfs.push_back(df);
     }
 
     // Test against the QL curve
     boost::shared_ptr<YieldTermStructure> ytsBase;
-    ytsBase = boost::shared_ptr<YieldTermStructure>(
-        new QuantLib::InterpolatedDiscountCurve<LogLinear>(dates, dfs, dc,
-                                                           cal));
+    ytsBase =
+        boost::shared_ptr<YieldTermStructure>(new QuantLib::InterpolatedDiscountCurve<LogLinear>(dates, dfs, dc, cal));
     ytsBase->enableExtrapolation();
 
-    boost::shared_ptr<YieldTermStructure> ytsTest
-        (new QuantExt::InterpolatedDiscountCurve2(times, quotes, dc));
+    boost::shared_ptr<YieldTermStructure> ytsTest(new QuantExt::InterpolatedDiscountCurve2(times, quotes, dc));
 
     // now check that they give the same discount factors (including extrapolation)
     for (Time t = 0.1; t < numYears + 10.0; t += 0.1) {
@@ -86,5 +83,4 @@ test_suite* DiscountCurveTest::suite() {
     suite->add(BOOST_TEST_CASE(&DiscountCurveTest::testDiscountCurve));
     return suite;
 }
-
 }

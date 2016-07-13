@@ -17,10 +17,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file noknibor.hpp
     \brief NOK-NIBOR index
-    \ingroup 
+    \ingroup indexes
 */
 
 #ifndef quantext_noknibor_hpp
@@ -35,23 +34,22 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-    //! NOK-NIBOR index
-    /*! NOK-NIBOR rate published by Oslo Boers.
+//! NOK-NIBOR index
+/*! NOK-NIBOR rate published by Oslo Boers.
 
-        See <http://www.oslobors.no/ob_eng>.
+    See <http://www.oslobors.no/ob_eng>.
 
-        \remark Using Norway calendar, should be Oslo.
+    \remark Using Norway calendar, should be Oslo.
 
-        \warning Check roll convention and EOM.
-    */
-    class NOKNibor : public IborIndex {
-      public:
-        NOKNibor(const Period& tenor, const Handle<YieldTermStructure>& h =
-            Handle<YieldTermStructure>())
-            : IborIndex("NOK-NIBOR", tenor, 2, NOKCurrency(), Norway(),
-                  ModifiedFollowing, false, Actual360(), h) {}
-    };
+    \warning Check roll convention and EOM.
 
+            \ingroup indexes
+*/
+class NOKNibor : public IborIndex {
+public:
+    NOKNibor(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
+        : IborIndex("NOK-NIBOR", tenor, 2, NOKCurrency(), Norway(), ModifiedFollowing, false, Actual360(), h) {}
+};
 }
 
 #endif

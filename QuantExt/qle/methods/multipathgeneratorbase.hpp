@@ -17,15 +17,13 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file multipathgeneratorbase.hpp
     \brief base class for multi path generators
-    \ingroup 
+    \ingroup methods
 */
 
 #ifndef quantext_multi_path_generator_base_hpp
 #define quantext_multi_path_generator_base_hpp
-
 
 #include <ql/math/randomnumbers/rngtraits.hpp>
 #include <ql/methods/montecarlo/brownianbridge.hpp>
@@ -39,83 +37,89 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-    class MultiPathGeneratorBase {
-    public:
-        virtual const Sample<MultiPath> &next() const = 0;
-        virtual void reset() = 0;
-    };
+//! Multi Path Generator Base
+/*! \group methods
+*/
+class MultiPathGeneratorBase {
+public:
+    virtual const Sample<MultiPath>& next() const = 0;
+    virtual void reset() = 0;
+};
 
-    /*! Instantiation of MultiPathGenerator with standard PseudoRandom traits */
-    class MultiPathGeneratorMersenneTwister : public MultiPathGeneratorBase {
-    public:
-        MultiPathGeneratorMersenneTwister(const boost::shared_ptr<StochasticProcess> &,
-                                       const TimeGrid &,
-                                       BigNatural seed = 0,
-                                       bool antitheticSampling = false);
-        const Sample<MultiPath> &next() const;
-        void reset();
+//! Instantiation of MultiPathGenerator with standard PseudoRandom traits
+/*! \ingroup methods
+*/
+class MultiPathGeneratorMersenneTwister : public MultiPathGeneratorBase {
+public:
+    MultiPathGeneratorMersenneTwister(const boost::shared_ptr<StochasticProcess>&, const TimeGrid&, BigNatural seed = 0,
+                                      bool antitheticSampling = false);
+    const Sample<MultiPath>& next() const;
+    void reset();
 
-    private:
-        const boost::shared_ptr<StochasticProcess> process_;
-        TimeGrid grid_;
-        BigNatural seed_;
+private:
+    const boost::shared_ptr<StochasticProcess> process_;
+    TimeGrid grid_;
+    BigNatural seed_;
 
-        boost::shared_ptr<MultiPathGenerator<PseudoRandom::rsg_type> > pg_;
-        bool antitheticSampling_;
-        mutable bool antitheticVariate_;
-    };
+    boost::shared_ptr<MultiPathGenerator<PseudoRandom::rsg_type> > pg_;
+    bool antitheticSampling_;
+    mutable bool antitheticVariate_;
+};
 
-    /*! Instantiation of MultiPathGenerator with standard LowDiscrepancy traits,
-      no Brownian bridge provided, use MultiPathGeneratorSobolBrownianBridge for this,
-      for the use of the seed, see ql/math/randomnumbers/sobolrsg.cpp */
-    class MultiPathGeneratorSobol : public MultiPathGeneratorBase {
-    public:
-        MultiPathGeneratorSobol(const boost::shared_ptr<StochasticProcess>&, const TimeGrid&,
-                                         BigNatural seed = 0);
-        const Sample<MultiPath> &next() const;
-        void reset();
+//! Instantiation of MultiPathGenerator with standard LowDiscrepancy traits
+/*! no Brownian bridge provided, use MultiPathGeneratorSobolBrownianBridge for this,
+for the use of the seed, see ql/math/randomnumbers/sobolrsg.cpp
 
-    private:
-        const boost::shared_ptr<StochasticProcess> process_;
-        TimeGrid grid_;
-        BigNatural seed_;
+    \ingroup methods
+*/
+class MultiPathGeneratorSobol : public MultiPathGeneratorBase {
+public:
+    MultiPathGeneratorSobol(const boost::shared_ptr<StochasticProcess>&, const TimeGrid&, BigNatural seed = 0);
+    const Sample<MultiPath>& next() const;
+    void reset();
 
-        boost::shared_ptr<MultiPathGenerator<LowDiscrepancy::rsg_type> > pg_;
-    };
+private:
+    const boost::shared_ptr<StochasticProcess> process_;
+    TimeGrid grid_;
+    BigNatural seed_;
 
-    /*! Instantiation using SobolBrownianGenerator from  models/marketmodels/browniangenerators */
-    class MultiPathGeneratorSobolBrownianBridge : public MultiPathGeneratorBase {
-    public:
-        MultiPathGeneratorSobolBrownianBridge(
-            const boost::shared_ptr<StochasticProcess>&, const TimeGrid&,
-            SobolBrownianGenerator::Ordering ordering = SobolBrownianGenerator::Diagonal, BigNatural seed = 0,
-            SobolRsg::DirectionIntegers directionIntegers = SobolRsg::Jaeckel);
-        const Sample<MultiPath> &next() const;
-        void reset();
-    private:
-        const boost::shared_ptr<StochasticProcess> process_;
-        TimeGrid grid_;
-        SobolBrownianGenerator::Ordering ordering_;
-        BigNatural seed_;
-        SobolRsg::DirectionIntegers directionIntegers_;
-        boost::shared_ptr<SobolBrownianGenerator> gen_;
-        mutable Sample<MultiPath> next_;
-    };
+    boost::shared_ptr<MultiPathGenerator<LowDiscrepancy::rsg_type> > pg_;
+};
 
-    // inline
+//! Instantiation using SobolBrownianGenerator from  models/marketmodels/browniangenerators
+/*! \ingroup methods
+*/
+class MultiPathGeneratorSobolBrownianBridge : public MultiPathGeneratorBase {
+public:
+    MultiPathGeneratorSobolBrownianBridge(const boost::shared_ptr<StochasticProcess>&, const TimeGrid&,
+                                          SobolBrownianGenerator::Ordering ordering = SobolBrownianGenerator::Diagonal,
+                                          BigNatural seed = 0,
+                                          SobolRsg::DirectionIntegers directionIntegers = SobolRsg::Jaeckel);
+    const Sample<MultiPath>& next() const;
+    void reset();
 
-    inline const Sample<MultiPath> &MultiPathGeneratorMersenneTwister::next() const {
-        if (antitheticSampling_) {
-            antitheticVariate_ = !antitheticVariate_;
-            return antitheticVariate_ ? pg_->antithetic() : pg_->next();
-        } else {
-            return pg_->next();
-        }
-    }
+private:
+    const boost::shared_ptr<StochasticProcess> process_;
+    TimeGrid grid_;
+    SobolBrownianGenerator::Ordering ordering_;
+    BigNatural seed_;
+    SobolRsg::DirectionIntegers directionIntegers_;
+    boost::shared_ptr<SobolBrownianGenerator> gen_;
+    mutable Sample<MultiPath> next_;
+};
 
-    inline const Sample<MultiPath> &MultiPathGeneratorSobol::next() const {
+// inline
+
+inline const Sample<MultiPath>& MultiPathGeneratorMersenneTwister::next() const {
+    if (antitheticSampling_) {
+        antitheticVariate_ = !antitheticVariate_;
+        return antitheticVariate_ ? pg_->antithetic() : pg_->next();
+    } else {
         return pg_->next();
     }
+}
+
+inline const Sample<MultiPath>& MultiPathGeneratorSobol::next() const { return pg_->next(); }
 
 } // namesapce QuantExt
 

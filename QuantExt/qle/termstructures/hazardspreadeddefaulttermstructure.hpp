@@ -17,10 +17,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file qle/termstructures/hazardspreadeddefaulttermstructure.hpp
     \brief adds a constant hazard rate spread to a default term structure
-    \ingroup 
+    \ingroup termstructures
 */
 
 #ifndef quantext_hazard_spreaded__defaulttermstructure_hpp
@@ -33,25 +32,27 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-//FIXME: why do we need this?
+// FIXME: why do we need this?
+//! HazardS preaded Default Term Structure
+/*! \ingroup termstructues
+*/
 class HazardSpreadedDefaultTermStructure : public HazardRateStructure {
-  public:
+public:
     //! \name Constructors
     //@{
-    HazardSpreadedDefaultTermStructure(
-        const Handle<DefaultProbabilityTermStructure> &source,
-        const Handle<Quote> &spread);
+    HazardSpreadedDefaultTermStructure(const Handle<DefaultProbabilityTermStructure>& source,
+                                       const Handle<Quote>& spread);
     //@}
     //! \name TermStructure interface
     //@{
     virtual DayCounter dayCounter() const;
     virtual Date maxDate() const;
     virtual Time maxTime() const;
-    virtual const Date &referenceDate() const;
+    virtual const Date& referenceDate() const;
     virtual Calendar calendar() const;
     virtual Natural settlementDays() const;
     //@}
-  private:
+private:
     //! \name HazardRateStructure interface
     //@{
     Rate hazardRateImpl(Time) const;
@@ -72,34 +73,21 @@ inline Rate HazardSpreadedDefaultTermStructure::hazardRateImpl(Time t) const {
     return source_->hazardRate(t) + spread_->value();
 }
 
-inline Probability
-HazardSpreadedDefaultTermStructure::survivalProbabilityImpl(Time t) const {
+inline Probability HazardSpreadedDefaultTermStructure::survivalProbabilityImpl(Time t) const {
     return source_->survivalProbability(t) * std::exp(-spread_->value() * t);
 }
 
-inline DayCounter HazardSpreadedDefaultTermStructure::dayCounter() const {
-    return source_->dayCounter();
-}
+inline DayCounter HazardSpreadedDefaultTermStructure::dayCounter() const { return source_->dayCounter(); }
 
-inline Date HazardSpreadedDefaultTermStructure::maxDate() const {
-    return source_->maxDate();
-}
+inline Date HazardSpreadedDefaultTermStructure::maxDate() const { return source_->maxDate(); }
 
-inline Time HazardSpreadedDefaultTermStructure::maxTime() const {
-    return source_->maxTime();
-}
+inline Time HazardSpreadedDefaultTermStructure::maxTime() const { return source_->maxTime(); }
 
-inline const Date &HazardSpreadedDefaultTermStructure::referenceDate() const {
-    return source_->referenceDate();
-}
+inline const Date& HazardSpreadedDefaultTermStructure::referenceDate() const { return source_->referenceDate(); }
 
-inline Calendar HazardSpreadedDefaultTermStructure::calendar() const {
-    return source_->calendar();
-}
+inline Calendar HazardSpreadedDefaultTermStructure::calendar() const { return source_->calendar(); }
 
-inline Natural HazardSpreadedDefaultTermStructure::settlementDays() const {
-    return source_->settlementDays();
-}
+inline Natural HazardSpreadedDefaultTermStructure::settlementDays() const { return source_->settlementDays(); }
 
 } // namespace QuantExt
 

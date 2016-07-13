@@ -17,10 +17,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file interpolateddiscountcurve.hpp
     \brief interpolated discount term structure
-    \ingroup 
+    \ingroup termstructures
 */
 
 #ifndef quantext_interpolated_discount_curve_hpp
@@ -34,69 +33,65 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-    /*! InterpolatedDiscountCurve based on loglinear interpolation of DiscountFactors,
-        flat fwd extrapolation is always enabled, the term structure has always a
-        floating reference date */
-    class InterpolatedDiscountCurve : public YieldTermStructure {
-    public:
-        //! \name Constructors
-        //@{
-        //! default constructor
-      InterpolatedDiscountCurve(const std::vector<Time> &times,
-                                const std::vector<Handle<Quote> > &quotes,
-                                const Natural settlementDays,
-                                const Calendar &cal, const DayCounter &dc)
-          : YieldTermStructure(settlementDays, cal, dc), times_(times) {
-            initalise(quotes);
-        }
+//! InterpolatedDiscountCurve based on loglinear interpolation of DiscountFactors
+/*! InterpolatedDiscountCurve based on loglinear interpolation of DiscountFactors,
+    flat fwd extrapolation is always enabled, the term structure has always a
+    floating reference date
 
-        //! constructor that takes a vector of dates
-        InterpolatedDiscountCurve(const std::vector<Date> &dates,
-                                  const std::vector<Handle<Quote> > &quotes,
-                                  const Natural settlementDays,
-                                  const Calendar &cal, const DayCounter &dc)
-            : YieldTermStructure(settlementDays, cal, dc),
-              times_(dates.size()) {
-            for (Size i = 0; i < dates.size(); ++i)
-                times_[i] = timeFromReference(dates[i]);
-            initalise(quotes);
-        }
-        //@}
+        \ingroup termstructures
+    */
+class InterpolatedDiscountCurve : public YieldTermStructure {
+public:
+    //! \name Constructors
+    //@{
+    //! default constructor
+    InterpolatedDiscountCurve(const std::vector<Time>& times, const std::vector<Handle<Quote> >& quotes,
+                              const Natural settlementDays, const Calendar& cal, const DayCounter& dc)
+        : YieldTermStructure(settlementDays, cal, dc), times_(times) {
+        initalise(quotes);
+    }
 
-    private:
-        void initalise (const std::vector<Handle<Quote> >& quotes) {
-            QL_REQUIRE(times_.size() > 1, "at least two times required");
-            QL_REQUIRE(times_[0] == 0.0, "First time must be 0, got " << times_[0]); // or date=asof
-            QL_REQUIRE(times_.size() == quotes.size(), "size of time and quote vectors do not match");
-            for (Size i = 0; i < quotes.size(); ++i)
-                quotes_.push_back(boost::make_shared<LogQuote>(quotes[i]));
-            for (Size i = 0; i < times_.size() - 1; ++i)
-                timeDiffs_.push_back(times_[i+1] - times_[i]);
-        }
+    //! constructor that takes a vector of dates
+    InterpolatedDiscountCurve(const std::vector<Date>& dates, const std::vector<Handle<Quote> >& quotes,
+                              const Natural settlementDays, const Calendar& cal, const DayCounter& dc)
+        : YieldTermStructure(settlementDays, cal, dc), times_(dates.size()) {
+        for (Size i = 0; i < dates.size(); ++i)
+            times_[i] = timeFromReference(dates[i]);
+        initalise(quotes);
+    }
+    //@}
 
-        //! \name TermStructure interface
-        //@{
-        Date maxDate() const { return Date::maxDate(); } // flat fwd extrapolation
-        //@}
+private:
+    void initalise(const std::vector<Handle<Quote> >& quotes) {
+        QL_REQUIRE(times_.size() > 1, "at least two times required");
+        QL_REQUIRE(times_[0] == 0.0, "First time must be 0, got " << times_[0]); // or date=asof
+        QL_REQUIRE(times_.size() == quotes.size(), "size of time and quote vectors do not match");
+        for (Size i = 0; i < quotes.size(); ++i)
+            quotes_.push_back(boost::make_shared<LogQuote>(quotes[i]));
+        for (Size i = 0; i < times_.size() - 1; ++i)
+            timeDiffs_.push_back(times_[i + 1] - times_[i]);
+    }
 
-    protected:
-        DiscountFactor discountImpl(Time t) const {
-            std::vector<Time>::const_iterator it =
-                std::upper_bound(times_.begin(), times_.end(), t);
-            Size i = std::min<Size>(it - times_.begin(), times_.size() - 1);
-            Real weight = (times_[i] - t) / timeDiffs_[i - 1];
-            // this handles extrapolation (t > times.back()) as well
-            Real value = (1.0 - weight) * quotes_[i]->value() +
-                weight * quotes_[i - 1]->value();
-            return ::exp(value);
-        }
+    //! \name TermStructure interface
+    //@{
+    Date maxDate() const { return Date::maxDate(); } // flat fwd extrapolation
+    //@}
 
-    private:
-        std::vector<Time> times_;
-        std::vector<Time> timeDiffs_;
-        std::vector<boost::shared_ptr<Quote> > quotes_;
-    };
+protected:
+    DiscountFactor discountImpl(Time t) const {
+        std::vector<Time>::const_iterator it = std::upper_bound(times_.begin(), times_.end(), t);
+        Size i = std::min<Size>(it - times_.begin(), times_.size() - 1);
+        Real weight = (times_[i] - t) / timeDiffs_[i - 1];
+        // this handles extrapolation (t > times.back()) as well
+        Real value = (1.0 - weight) * quotes_[i]->value() + weight * quotes_[i - 1]->value();
+        return ::exp(value);
+    }
 
+private:
+    std::vector<Time> times_;
+    std::vector<Time> timeDiffs_;
+    std::vector<boost::shared_ptr<Quote> > quotes_;
+};
 }
 
 #endif

@@ -17,10 +17,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file piecewiseconstanthelper.hpp
     \brief helper classes for piecewise constant parametrizations
-    \ingroup 
+    \ingroup models
 */
 
 #ifndef quantext_piecewiseconstant_helper_hpp
@@ -37,12 +36,14 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
+//! Piecewise Constant Helper 1
+/*! \ingroup models
+*/
 class PiecewiseConstantHelper1 {
-  public:
-    PiecewiseConstantHelper1(const Array &t);
-    PiecewiseConstantHelper1(const std::vector<Date> &dates,
-                             const Handle<YieldTermStructure> &yts);
-    const Array &t() const;
+public:
+    PiecewiseConstantHelper1(const Array& t);
+    PiecewiseConstantHelper1(const std::vector<Date>& dates, const Handle<YieldTermStructure>& yts);
+    const Array& t() const;
     const boost::shared_ptr<Parameter> p() const;
     void update() const;
     /*! this returns the transformed value */
@@ -53,36 +54,40 @@ class PiecewiseConstantHelper1 {
     Real direct(const Real x) const;
     Real inverse(const Real y) const;
 
-  protected:
+protected:
     const Array t_;
     /*! y are the raw values in the sense of parameter transformation */
     const boost::shared_ptr<PseudoParameter> y_;
 
-  private:
+private:
     mutable std::vector<Real> b_;
 };
 
-/*! this is PiecewiseConstantHelper1 with two sets of (t,y) */
+//! Piecewise Constant Helper 11
+/*! this is PiecewiseConstantHelper1 with two sets of (t,y)
+    \ingroup models
+*/
 class PiecewiseConstantHelper11 {
-  public:
+public:
     /*! y are the raw values in the sense of parameter transformation */
-    PiecewiseConstantHelper11(const Array &t1, const Array &t2);
-    PiecewiseConstantHelper11(const std::vector<Date> &dates1,
-                              const std::vector<Date> &dates2,
-                              const Handle<YieldTermStructure> &yts);
-    const PiecewiseConstantHelper1 &helper1() const;
-    const PiecewiseConstantHelper1 &helper2() const;
+    PiecewiseConstantHelper11(const Array& t1, const Array& t2);
+    PiecewiseConstantHelper11(const std::vector<Date>& dates1, const std::vector<Date>& dates2,
+                              const Handle<YieldTermStructure>& yts);
+    const PiecewiseConstantHelper1& helper1() const;
+    const PiecewiseConstantHelper1& helper2() const;
 
-  private:
+private:
     const PiecewiseConstantHelper1 h1_, h2_;
 };
 
+//! Piecewise Constant Helper2
+/*! \ingroup models
+*/
 class PiecewiseConstantHelper2 {
-  public:
-    PiecewiseConstantHelper2(const Array &t);
-    PiecewiseConstantHelper2(const std::vector<Date> &dates,
-                             const Handle<YieldTermStructure> &yts);
-    const Array &t() const;
+public:
+    PiecewiseConstantHelper2(const Array& t);
+    PiecewiseConstantHelper2(const std::vector<Date>& dates, const Handle<YieldTermStructure>& yts);
+    const Array& t() const;
     const boost::shared_ptr<Parameter> p() const;
     void update() const;
     /*! this returns the transformed value */
@@ -95,27 +100,29 @@ class PiecewiseConstantHelper2 {
     Real direct(const Real x) const;
     Real inverse(const Real y) const;
 
-  private:
+private:
     const Real zeroCutoff_;
 
-  protected:
+protected:
     const Array t_;
     /*! y are the raw values in the sense of parameter transformation */
     const boost::shared_ptr<PseudoParameter> y_;
 
-  private:
+private:
     mutable std::vector<Real> b_, c_;
 };
 
+//! Piecewise Constant Helper 3
+/*! \ingroup models
+*/
 class PiecewiseConstantHelper3 {
-  public:
-    PiecewiseConstantHelper3(const Array &t1, const Array &t2);
-    PiecewiseConstantHelper3(const std::vector<Date> &dates1,
-                             const std::vector<Date> &dates2,
-                             const Handle<YieldTermStructure> &yts);
-    const Array &t1() const;
-    const Array &t2() const;
-    const Array &tUnion() const;
+public:
+    PiecewiseConstantHelper3(const Array& t1, const Array& t2);
+    PiecewiseConstantHelper3(const std::vector<Date>& dates1, const std::vector<Date>& dates2,
+                             const Handle<YieldTermStructure>& yts);
+    const Array& t1() const;
+    const Array& t2() const;
+    const Array& tUnion() const;
     const boost::shared_ptr<Parameter> p1() const;
     const boost::shared_ptr<Parameter> p2() const;
     /* update is required after construction for helper 3 ! */
@@ -132,61 +139,46 @@ class PiecewiseConstantHelper3 {
     Real direct2(const Real x) const;
     Real inverse2(const Real y) const;
 
-  private:
+private:
     const Real zeroCutoff_;
 
-  protected:
+protected:
     const Array t1_, t2_;
     mutable Array tUnion_;
     /*! y1, y2 are the raw values in the sense of parameter transformation */
     const boost::shared_ptr<PseudoParameter> y1_, y2_;
     mutable Array y1Union_, y2Union_;
 
-  private:
+private:
     mutable std::vector<Real> b_, c_;
 };
 
 // inline
 
-inline const Array &PiecewiseConstantHelper1::t() const { return t_; }
+inline const Array& PiecewiseConstantHelper1::t() const { return t_; }
 
-inline const boost::shared_ptr<Parameter> PiecewiseConstantHelper1::p() const {
-    return y_;
-}
+inline const boost::shared_ptr<Parameter> PiecewiseConstantHelper1::p() const { return y_; }
 
-inline Real PiecewiseConstantHelper1::direct(const Real x) const {
-    return x * x;
-}
+inline Real PiecewiseConstantHelper1::direct(const Real x) const { return x * x; }
 
-inline Real PiecewiseConstantHelper1::inverse(const Real y) const {
-    return std::sqrt(y);
-}
+inline Real PiecewiseConstantHelper1::inverse(const Real y) const { return std::sqrt(y); }
 
 inline void PiecewiseConstantHelper1::update() const {
     Real sum = 0.0;
     b_.resize(t_.size());
     for (Size i = 0; i < t_.size(); ++i) {
-        sum += direct(y_->params()[i]) * direct(y_->params()[i]) *
-               (t_[i] - (i == 0 ? 0.0 : t_[i - 1]));
+        sum += direct(y_->params()[i]) * direct(y_->params()[i]) * (t_[i] - (i == 0 ? 0.0 : t_[i - 1]));
         b_[i] = sum;
     }
 }
 
-inline const PiecewiseConstantHelper1 &
-PiecewiseConstantHelper11::helper1() const {
-    return h1_;
-}
+inline const PiecewiseConstantHelper1& PiecewiseConstantHelper11::helper1() const { return h1_; }
 
-inline const PiecewiseConstantHelper1 &
-PiecewiseConstantHelper11::helper2() const {
-    return h2_;
-}
+inline const PiecewiseConstantHelper1& PiecewiseConstantHelper11::helper2() const { return h2_; }
 
-inline const Array &PiecewiseConstantHelper2::t() const { return t_; }
+inline const Array& PiecewiseConstantHelper2::t() const { return t_; }
 
-inline const boost::shared_ptr<Parameter> PiecewiseConstantHelper2::p() const {
-    return y_;
-}
+inline const boost::shared_ptr<Parameter> PiecewiseConstantHelper2::p() const { return y_; }
 
 inline Real PiecewiseConstantHelper2::direct(const Real x) const { return x; }
 
@@ -204,34 +196,24 @@ inline void PiecewiseConstantHelper2::update() const {
         if (std::fabs(direct(y_->params()[i])) < zeroCutoff_) {
             sum2 += (t_[i] - t0) * std::exp(-b2Tmp);
         } else {
-            sum2 +=
-                (std::exp(-b2Tmp) -
-                 std::exp(-b2Tmp - direct(y_->params()[i]) * (t_[i] - t0))) /
-                direct(y_->params()[i]);
+            sum2 += (std::exp(-b2Tmp) - std::exp(-b2Tmp - direct(y_->params()[i]) * (t_[i] - t0))) /
+                    direct(y_->params()[i]);
         }
         c_[i] = sum2;
     }
 }
 
-inline const Array &PiecewiseConstantHelper3::t1() const { return t1_; }
-inline const Array &PiecewiseConstantHelper3::t2() const { return t2_; }
-inline const Array &PiecewiseConstantHelper3::tUnion() const { return tUnion_; }
+inline const Array& PiecewiseConstantHelper3::t1() const { return t1_; }
+inline const Array& PiecewiseConstantHelper3::t2() const { return t2_; }
+inline const Array& PiecewiseConstantHelper3::tUnion() const { return tUnion_; }
 
-inline const boost::shared_ptr<Parameter> PiecewiseConstantHelper3::p1() const {
-    return y1_;
-}
+inline const boost::shared_ptr<Parameter> PiecewiseConstantHelper3::p1() const { return y1_; }
 
-inline const boost::shared_ptr<Parameter> PiecewiseConstantHelper3::p2() const {
-    return y2_;
-}
+inline const boost::shared_ptr<Parameter> PiecewiseConstantHelper3::p2() const { return y2_; }
 
-inline Real PiecewiseConstantHelper3::direct1(const Real x) const {
-    return x * x;
-}
+inline Real PiecewiseConstantHelper3::direct1(const Real x) const { return x * x; }
 
-inline Real PiecewiseConstantHelper3::inverse1(const Real y) const {
-    return std::sqrt(y);
-}
+inline Real PiecewiseConstantHelper3::inverse1(const Real y) const { return std::sqrt(y); }
 
 inline Real PiecewiseConstantHelper3::direct2(const Real x) const { return x; }
 
@@ -241,17 +223,15 @@ inline void PiecewiseConstantHelper3::update() const {
     std::vector<Real> tTmp(t1_.begin(), t1_.end());
     tTmp.insert(tTmp.end(), t2_.begin(), t2_.end());
     std::sort(tTmp.begin(), tTmp.end());
-    std::vector<Real>::const_iterator end =
-        std::unique(tTmp.begin(), tTmp.end(), std::ptr_fun(close_enough));
+    std::vector<Real>::const_iterator end = std::unique(tTmp.begin(), tTmp.end(), std::ptr_fun(close_enough));
     tTmp.resize(end - tTmp.begin());
     tUnion_ = Array(tTmp.begin(), tTmp.end());
     y1Union_ = Array(tUnion_.size() + 1);
     y2Union_ = Array(tUnion_.size() + 1);
     for (Size i = 0; i < tUnion_.size() + 1; ++i) {
         // choose a safe t for y1 and y2 evaluation
-        Real t = (i == tUnion_.size()
-                      ? (tUnion_.size() == 0 ? 1.0 : tUnion_.size() + 1.0)
-                      : (0.5 * (tUnion_[i] + (i > 0 ? tUnion_[i - 1] : 0.0))));
+        Real t = (i == tUnion_.size() ? (tUnion_.size() == 0 ? 1.0 : tUnion_.size() + 1.0)
+                                      : (0.5 * (tUnion_[i] + (i > 0 ? tUnion_[i - 1] : 0.0))));
         y1Union_[i] = QL_PIECEWISE_FUNCTION(t1_, y1_->params(), t);
         y2Union_[i] = QL_PIECEWISE_FUNCTION(t2_, y2_->params(), t);
     }
@@ -264,13 +244,10 @@ inline void PiecewiseConstantHelper3::update() const {
         b_[i] = sum;
         Real b2Tmp = (i == 0 ? 0.0 : b_[i - 1]);
         if (std::fabs(direct2(y2Union_[i])) < zeroCutoff_) {
-            sum2 += direct1(y1Union_[i]) * direct1(y1Union_[i]) *
-                    (tUnion_[i] - t0) * std::exp(2.0 * b2Tmp);
+            sum2 += direct1(y1Union_[i]) * direct1(y1Union_[i]) * (tUnion_[i] - t0) * std::exp(2.0 * b2Tmp);
         } else {
             sum2 += direct1(y1Union_[i]) * direct1(y1Union_[i]) *
-                    (std::exp(2.0 * b2Tmp +
-                              2.0 * direct2(y2Union_[i]) * (tUnion_[i] - t0)) -
-                     std::exp(2.0 * b2Tmp)) /
+                    (std::exp(2.0 * b2Tmp + 2.0 * direct2(y2Union_[i]) * (tUnion_[i] - t0)) - std::exp(2.0 * b2Tmp)) /
                     (2.0 * direct2(y2Union_[i]));
         }
         c_[i] = sum2;
@@ -335,12 +312,10 @@ inline Real PiecewiseConstantHelper2::int_exp_m_int_y(const Time t) const {
     return res;
 }
 
-inline Real
-PiecewiseConstantHelper3::int_y1_sqr_exp_2_int_y2(const Time t) const {
+inline Real PiecewiseConstantHelper3::int_y1_sqr_exp_2_int_y2(const Time t) const {
     if (t < 0.0)
         return 0.0;
-    Size i =
-        std::upper_bound(tUnion_.begin(), tUnion_.end(), t) - tUnion_.begin();
+    Size i = std::upper_bound(tUnion_.begin(), tUnion_.end(), t) - tUnion_.begin();
     Real res = 0.0;
     if (i >= 1)
         res += c_[std::min(i - 1, c_.size() - 1)];
@@ -351,9 +326,7 @@ PiecewiseConstantHelper3::int_y1_sqr_exp_2_int_y2(const Time t) const {
     if (std::fabs(a) < zeroCutoff_) {
         res += b * b * std::exp(2.0 * b2Tmp) * (t - t0);
     } else {
-        res += b * b * (std::exp(2.0 * b2Tmp + 2.0 * a * (t - t0)) -
-                        std::exp(2.0 * b2Tmp)) /
-               (2.0 * a);
+        res += b * b * (std::exp(2.0 * b2Tmp + 2.0 * a * (t - t0)) - std::exp(2.0 * b2Tmp)) / (2.0 * a);
     }
     return res;
 }

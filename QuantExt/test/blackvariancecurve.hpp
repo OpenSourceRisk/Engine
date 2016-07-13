@@ -17,7 +17,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file test/blackvariancecurve.hpp
     \brief interpolated black variance curve test
 */
@@ -31,13 +30,13 @@ namespace testsuite {
 
 //! BlackVarianceCurve tests
 class BlackVarianceCurveTest {
-  public:
-    /*! Test whether the black variance curve produces the expected values, test against the corresponding class in QuantLib. */
+public:
+    /*! Test whether the black variance curve produces the expected values, test against the corresponding class in
+     * QuantLib. */
     static void testBlackVarianceCurve();
 
     static boost::unit_test_framework::test_suite* suite();
 };
-
 }
 
 #endif

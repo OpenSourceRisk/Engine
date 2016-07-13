@@ -2,4 +2,3 @@
 /* Add the files to be included into Makefile.am instead. */
 
 #include <qle/quotes/logquote.hpp>
-

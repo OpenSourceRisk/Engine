@@ -2,9 +2,8 @@
 /* Add the files to be included into Makefile.am instead. */
 
 #ifdef BOOST_MSVC
-#  include <qle/auto_link.hpp>
+#include <qle/auto_link.hpp>
 #endif
-
 
 #include <qle/cashflows/all.hpp>
 #include <qle/currencies/all.hpp>

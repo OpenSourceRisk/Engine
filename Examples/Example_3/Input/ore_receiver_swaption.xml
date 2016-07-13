@@ -13,8 +13,7 @@
     <Parameter name="marketConfigFile">../../Input/todaysmarket.xml</Parameter>
     <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
     <Parameter name="portfolioFile">portfolio_swaption_receiver.xml</Parameter>
-    <Parameter name="fixingModel">Simulated</Parameter>  <!-- Simulated or Manual -->
-    <Parameter name="observationModel">Disable</Parameter> <!-- Unregister, None or Disable -->
+    <Parameter name="observationModel">Disable</Parameter>
   </Setup>
 
   <Markets>
@@ -52,7 +51,6 @@
       <Parameter name="storeScenarios">N</Parameter>
       <Parameter name="cubeFile">cube.dat</Parameter>
       <Parameter name="additionalScenarioDataFileName">scenariodata.dat</Parameter>
-      <Parameter name="disableEvaluationDateObservation">N</Parameter>
     </Analytic>
 
     <Analytic type="xva">

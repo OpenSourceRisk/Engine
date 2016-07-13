@@ -17,10 +17,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file dkkcibor.hpp
     \brief DKK-CIBOR index
-    \ingroup 
+    \ingroup indexes
 */
 
 #ifndef quantext_dkkcibor_hpp
@@ -35,24 +34,23 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-    //! DKK-CIBOR index
-    /*! DKK-CIBOR rate overseen by Danish Bankers Association.
+//! DKK-CIBOR index
+/*! DKK-CIBOR rate overseen by Danish Bankers Association.
 
-        See <http://www.finansraadet.dk/Pages/forside.aspx>.
+    See <http://www.finansraadet.dk/Pages/forside.aspx>.
 
-        \remark Using Denmark calendar, should be Copenhagen.
-                There is another index, DKK-CIBOR2, that has a spot lag of 2D.
+    \remark Using Denmark calendar, should be Copenhagen.
+            There is another index, DKK-CIBOR2, that has a spot lag of 2D.
 
-        \warning Check roll convention and EOM.
-    */
-    class DKKCibor : public IborIndex {
-      public:
-        DKKCibor(const Period& tenor, const Handle<YieldTermStructure>& h =
-            Handle<YieldTermStructure>())
-            : IborIndex("DKK-CIBOR", tenor, 0, DKKCurrency(), Denmark(),
-                  ModifiedFollowing, false, Actual360(), h) {}
-    };
+    \warning Check roll convention and EOM.
 
+            \ingroup indexes
+*/
+class DKKCibor : public IborIndex {
+public:
+    DKKCibor(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
+        : IborIndex("DKK-CIBOR", tenor, 0, DKKCurrency(), Denmark(), ModifiedFollowing, false, Actual360(), h) {}
+};
 }
 
 #endif

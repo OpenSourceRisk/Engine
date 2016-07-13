@@ -17,13 +17,11 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 #include <qle/models/fxbsparametrization.hpp>
 
 namespace QuantExt {
 
-FxBsParametrization::FxBsParametrization(const Currency &foreignCurrency,
-                                         const Handle<Quote> &fxSpotToday)
+FxBsParametrization::FxBsParametrization(const Currency& foreignCurrency, const Handle<Quote>& fxSpotToday)
     : Parametrization(foreignCurrency), fxSpotToday_(fxSpotToday) {}
 
 } // namespace QuantExt

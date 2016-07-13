@@ -34,10 +34,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file fxoptionhelper.hpp
     \brief calibration helper for fx options
-    \ingroup 
+    \ingroup models
 */
 
 #ifndef quantext_calibrationhelper_fxoption_hpp
@@ -50,33 +49,31 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
+//! FX Option Helper
+/*! \ingroup models
+*/
 class FxOptionHelper : public CalibrationHelper {
-  public:
+public:
     /*! the fx spot is interpreted as of today (or discounted spot)
         if strike is null, an (fwd-) atm option is constructed,
         a slight approximation is introduced because there is no
         settlement lag, however this applies consistently to
         the black and the model pricing */
-    FxOptionHelper(const Period &maturity, const Calendar &calendar,
-                   const Real strike, const Handle<Quote> fxSpot,
-                   const Handle<Quote> volatility,
-                   const Handle<YieldTermStructure> &domesticYield,
-                   const Handle<YieldTermStructure> &foreignYield,
-                   CalibrationHelper::CalibrationErrorType errorType =
-                       CalibrationHelper::RelativePriceError);
-    FxOptionHelper(const Date &exerciseDate, const Real strike,
-                   const Handle<Quote> fxSpot, const Handle<Quote> volatility,
-                   const Handle<YieldTermStructure> &domesticYield,
-                   const Handle<YieldTermStructure> &foreignYield,
-                   CalibrationHelper::CalibrationErrorType errorType =
-                       CalibrationHelper::RelativePriceError);
-    void addTimesTo(std::list<Time> &) const {}
+    FxOptionHelper(const Period& maturity, const Calendar& calendar, const Real strike, const Handle<Quote> fxSpot,
+                   const Handle<Quote> volatility, const Handle<YieldTermStructure>& domesticYield,
+                   const Handle<YieldTermStructure>& foreignYield,
+                   CalibrationHelper::CalibrationErrorType errorType = CalibrationHelper::RelativePriceError);
+    FxOptionHelper(const Date& exerciseDate, const Real strike, const Handle<Quote> fxSpot,
+                   const Handle<Quote> volatility, const Handle<YieldTermStructure>& domesticYield,
+                   const Handle<YieldTermStructure>& foreignYield,
+                   CalibrationHelper::CalibrationErrorType errorType = CalibrationHelper::RelativePriceError);
+    void addTimesTo(std::list<Time>&) const {}
     void performCalculations() const;
     Real modelValue() const;
     Real blackPrice(Real volatility) const;
     boost::shared_ptr<VanillaOption> option() const { return option_; }
 
-  private:
+private:
     const bool hasMaturity_;
     Period maturity_;
     mutable Date exerciseDate_;

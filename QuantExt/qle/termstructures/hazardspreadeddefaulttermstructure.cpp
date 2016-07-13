@@ -17,14 +17,12 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 #include <qle/termstructures/hazardspreadeddefaulttermstructure.hpp>
 
 namespace QuantExt {
 
 HazardSpreadedDefaultTermStructure::HazardSpreadedDefaultTermStructure(
-    const Handle<DefaultProbabilityTermStructure> &source,
-    const Handle<Quote> &spread)
+    const Handle<DefaultProbabilityTermStructure>& source, const Handle<Quote>& spread)
     : source_(source), spread_(spread) {
     if (!source_.empty())
         enableExtrapolation(source_->allowsExtrapolation());

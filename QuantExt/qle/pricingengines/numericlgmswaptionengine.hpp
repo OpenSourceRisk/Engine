@@ -17,10 +17,10 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file numericlgmswaptionengine.hpp
     \brief numeric engine for bermudan swaptions in the LGM model
-    \ingroup 
+
+        \ingroup engines
 */
 
 #ifndef quantext_numeric_lgm_swaption_engine_hpp
@@ -38,8 +38,7 @@
 namespace QuantExt {
 
 //! Numerical engine for bermudan swaptions in the LGM model
-/*! \ingroup swaptionengines
-
+/*!
     All fixed coupons with start date greater or equal to the respective
     option expiry are considered to be
     part of the exercise into right.
@@ -51,13 +50,14 @@ namespace QuantExt {
 */
 
 /*! Base class from which we derive the engines for both the Swaption
-  and NonstandardSwaption instrument */
+  and NonstandardSwaption instrument
+
+  \ingroup engines
+*/
 class NumericLgmSwaptionEngineBase {
-  protected:
-    NumericLgmSwaptionEngineBase(
-        const boost::shared_ptr<LinearGaussMarkovModel> &model, const Real sy,
-        const Size ny, const Real sx, const Size nx,
-        const Handle<YieldTermStructure> &discountCurve)
+protected:
+    NumericLgmSwaptionEngineBase(const boost::shared_ptr<LinearGaussMarkovModel>& model, const Real sy, const Size ny,
+                                 const Real sx, const Size nx, const Handle<YieldTermStructure>& discountCurve)
         : model_(model), nx_(nx), discountCurve_(discountCurve) {
 
         // precompute weights
@@ -73,20 +73,17 @@ class NumericLgmSwaptionEngineBase {
         CumulativeNormalDistribution N;
         NormalDistribution G;
 
-        y_.resize(2 * my_ + 1); // x-coordinate / standard deviation of x
-        w_.resize(2 * my_ + 1); // probability weight around y-grid point i
+        y_.resize(2 * my_ + 1);         // x-coordinate / standard deviation of x
+        w_.resize(2 * my_ + 1);         // probability weight around y-grid point i
         wsum_.resize(2 * my_ + 1, 0.0); // partial sum of the weights
         Real M0 = 0.0, M2 = 0.0, M4 = 0.0;
         for (int i = 0; i <= 2 * my_; i++) {
             y_[i] = h_ * (i - my_);
             if (i == 0 || i == 2 * my_)
-                w_[i] = (1. + y_[0] / h_) * N(y_[0] + h_) -
-                        y_[0] / h_ * N(y_[0]) + (G(y_[0] + h_) - G(y_[0])) / h_;
+                w_[i] = (1. + y_[0] / h_) * N(y_[0] + h_) - y_[0] / h_ * N(y_[0]) + (G(y_[0] + h_) - G(y_[0])) / h_;
             else
-                w_[i] = (1. + y_[i] / h_) * N(y_[i] + h_) -
-                        2. * y_[i] / h_ * N(y_[i]) -
-                        (1. - y_[i] / h_) *
-                            N(y_[i] - h_) // opposite sign in the paper
+                w_[i] = (1. + y_[i] / h_) * N(y_[i] + h_) - 2. * y_[i] / h_ * N(y_[i]) -
+                        (1. - y_[i] / h_) * N(y_[i] - h_) // opposite sign in the paper
                         + (G(y_[i] + h_) - 2. * G(y_[i]) + G(y_[i] - h_)) / h_;
 
             M0 += w_[i];
@@ -98,8 +95,7 @@ class NumericLgmSwaptionEngineBase {
 
     Real calculate() const;
 
-    virtual Real conditionalSwapValue(Real x, Real t,
-                                      const Date expiry0) const = 0;
+    virtual Real conditionalSwapValue(Real x, Real t, const Date expiry0) const = 0;
 
     mutable boost::shared_ptr<Exercise> exercise_;
     mutable boost::shared_ptr<IborIndex> iborIndex_, iborIndexCorrected_;
@@ -111,16 +107,15 @@ class NumericLgmSwaptionEngineBase {
     std::vector<Real> y_, w_, wsum_;
 }; // NnumercLgmSwaptionEngineBase
 
-/*! Engine for Swaption instrument */
-class NumericLgmSwaptionEngine
-    : public GenericEngine<Swaption::arguments, Swaption::results>,
-      public NumericLgmSwaptionEngineBase {
-  public:
-    NumericLgmSwaptionEngine(
-        const boost::shared_ptr<LinearGaussMarkovModel> &model, const Real sy,
-        const Size ny, const Real sx, const Size nx,
-        const Handle<YieldTermStructure> &discountCurve =
-            Handle<YieldTermStructure>())
+//! Engine for Swaption instrument
+/*! \ingroup engines
+*/
+class NumericLgmSwaptionEngine : public GenericEngine<Swaption::arguments, Swaption::results>,
+                                 public NumericLgmSwaptionEngineBase {
+public:
+    NumericLgmSwaptionEngine(const boost::shared_ptr<LinearGaussMarkovModel>& model, const Real sy, const Size ny,
+                             const Real sx, const Size nx,
+                             const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>())
         : GenericEngine<Swaption::arguments, Swaption::results>(),
           NumericLgmSwaptionEngineBase(model, sy, ny, sx, nx, discountCurve) {
         if (!discountCurve_.empty())
@@ -129,23 +124,20 @@ class NumericLgmSwaptionEngine
 
     void calculate() const;
 
-  protected:
+protected:
     Real conditionalSwapValue(Real x, Real t, const Date expiry0) const;
 };
 
-/*! Engine for NonstandardSwaption */
+//! Engine for NonstandardSwaption
+/*! \ingroup engines */
 class NumericLgmNonstandardSwaptionEngine
-    : public GenericEngine<NonstandardSwaption::arguments,
-                           NonstandardSwaption::results>,
+    : public GenericEngine<NonstandardSwaption::arguments, NonstandardSwaption::results>,
       public NumericLgmSwaptionEngineBase {
-  public:
-    NumericLgmNonstandardSwaptionEngine(
-        const boost::shared_ptr<LinearGaussMarkovModel> &model, const Real sy,
-        const Size ny, const Real sx, const Size nx,
-        const Handle<YieldTermStructure> &discountCurve =
-            Handle<YieldTermStructure>())
-        : GenericEngine<NonstandardSwaption::arguments,
-                        NonstandardSwaption::results>(),
+public:
+    NumericLgmNonstandardSwaptionEngine(const boost::shared_ptr<LinearGaussMarkovModel>& model, const Real sy,
+                                        const Size ny, const Real sx, const Size nx,
+                                        const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>())
+        : GenericEngine<NonstandardSwaption::arguments, NonstandardSwaption::results>(),
           NumericLgmSwaptionEngineBase(model, sy, ny, sx, nx, discountCurve) {
         if (!discountCurve_.empty())
             registerWith(discountCurve_);
@@ -153,7 +145,7 @@ class NumericLgmNonstandardSwaptionEngine
 
     void calculate() const;
 
-  protected:
+protected:
     Real conditionalSwapValue(Real x, Real t, const Date expiry0) const;
 };
 

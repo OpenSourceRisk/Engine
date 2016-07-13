@@ -31,18 +31,32 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 #include <qle/indexes/fxindex.hpp>
 #include <ql/currencies/exchangeratemanager.hpp>
 namespace QuantExt {
 
-FxIndex::FxIndex(const std::string &familyName, Natural fixingDays,
-                 const Currency &source, const Currency &target,
-                 const Calendar &fixingCalendar,
-                 const Handle<YieldTermStructure> &sourceYts,
-                 const Handle<YieldTermStructure> &targetYts)
-    : familyName_(familyName), fixingDays_(fixingDays), sourceCurrency_(source),
-      targetCurrency_(target), sourceYts_(sourceYts), targetYts_(targetYts),
+FxIndex::FxIndex(const std::string& familyName, Natural fixingDays, const Currency& source, const Currency& target,
+                 const Calendar& fixingCalendar, const Handle<YieldTermStructure>& sourceYts,
+                 const Handle<YieldTermStructure>& targetYts)
+    : familyName_(familyName), fixingDays_(fixingDays), sourceCurrency_(source), targetCurrency_(target),
+      sourceYts_(sourceYts), targetYts_(targetYts), fixingCalendar_(fixingCalendar) {
+
+    std::ostringstream tmp;
+    tmp << familyName_;
+    name_ = tmp.str();
+    registerWith(Settings::instance().evaluationDate());
+    registerWith(IndexManager::instance().notifier(name()));
+
+    // we should register with the exchange rate manager
+    // to be notified of changes in the spot exchange rate
+    // however currently exchange rates are not quotes anyway
+    // so this is to be revisited later
+}
+FxIndex::FxIndex(const std::string& familyName, Natural fixingDays, const Currency& source, const Currency& target,
+                 const Calendar& fixingCalendar, const Handle<Quote> fxQuote,
+                 const Handle<YieldTermStructure>& sourceYts, const Handle<YieldTermStructure>& targetYts)
+    : familyName_(familyName), fixingDays_(fixingDays), sourceCurrency_(source), targetCurrency_(target),
+      sourceYts_(sourceYts), targetYts_(targetYts), fxQuote_(fxQuote), useQuote_(true),
       fixingCalendar_(fixingCalendar) {
 
     std::ostringstream tmp;
@@ -50,37 +64,15 @@ FxIndex::FxIndex(const std::string &familyName, Natural fixingDays,
     name_ = tmp.str();
     registerWith(Settings::instance().evaluationDate());
     registerWith(IndexManager::instance().notifier(name()));
-
-    // we should register with the exchange rate manager
-    // to be notified of changes in the spot exchange rate
-    // however currently exchange rates are not quotes anyway
-    // so this is to be revisited later
-}
-FxIndex::FxIndex(const std::string &familyName, Natural fixingDays,
-                 const Currency &source, const Currency &target,
-                 const Calendar &fixingCalendar,
-                 const Handle<Quote> fxQuote,
-                 const Handle<YieldTermStructure> &sourceYts,
-                 const Handle<YieldTermStructure> &targetYts)
-    : familyName_(familyName), fixingDays_(fixingDays), sourceCurrency_(source),
-      targetCurrency_(target), sourceYts_(sourceYts), targetYts_(targetYts),
-      fxQuote_(fxQuote), useQuote_(true), fixingCalendar_(fixingCalendar) {
-
-    std::ostringstream tmp;
-    tmp << familyName_;
-    name_ = tmp.str();
-    registerWith(Settings::instance().evaluationDate());
-    registerWith(IndexManager::instance().notifier(name()));
     // we should register with the exchange rate manager
     // to be notified of changes in the spot exchange rate
     // however currently exchange rates are not quotes anyway
     // so this is to be revisited later
 }
 
-Real FxIndex::fixing(const Date &fixingDate, bool forecastTodaysFixing) const {
+Real FxIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) const {
 
-    QL_REQUIRE(isValidFixingDate(fixingDate),
-               "Fixing date " << fixingDate << " is not valid");
+    QL_REQUIRE(isValidFixingDate(fixingDate), "Fixing date " << fixingDate << " is not valid");
 
     Date today = Settings::instance().evaluationDate();
 
@@ -89,18 +81,16 @@ Real FxIndex::fixing(const Date &fixingDate, bool forecastTodaysFixing) const {
 
     Real result = Null<Decimal>();
 
-    if (fixingDate < today ||
-        Settings::instance().enforcesTodaysHistoricFixings()) {
+    if (fixingDate < today || Settings::instance().enforcesTodaysHistoricFixings()) {
         // must have been fixed
         // do not catch exceptions
         result = pastFixing(fixingDate);
-        QL_REQUIRE(result != Null<Real>(),
-                   "Missing " << name() << " fixing for " << fixingDate);
+        QL_REQUIRE(result != Null<Real>(), "Missing " << name() << " fixing for " << fixingDate);
     } else {
         try {
             // might have been fixed
             result = pastFixing(fixingDate);
-        } catch (Error &) {
+        } catch (Error&) {
             ; // fall through and forecast
         }
         if (result == Null<Real>())
@@ -110,17 +100,14 @@ Real FxIndex::fixing(const Date &fixingDate, bool forecastTodaysFixing) const {
     return result;
 }
 
-Real FxIndex::forecastFixing(const Date &fixingDate) const {
-    QL_REQUIRE(!sourceYts_.empty() && !targetYts_.empty(),
-               "null term structure set to this instance of " << name());
+Real FxIndex::forecastFixing(const Date& fixingDate) const {
+    QL_REQUIRE(!sourceYts_.empty() && !targetYts_.empty(), "null term structure set to this instance of " << name());
 
     // we base the forecast always on the exchange rate (and not on today's
     // fixing)
     Real rate;
-    if(!useQuote_) {
-        rate = ExchangeRateManager::instance()
-                   .lookup(sourceCurrency_, targetCurrency_)
-                   .rate();
+    if (!useQuote_) {
+        rate = ExchangeRateManager::instance().lookup(sourceCurrency_, targetCurrency_).rate();
     } else {
         rate = fxQuote_->value();
     }
@@ -133,18 +120,14 @@ Real FxIndex::forecastFixing(const Date &fixingDate) const {
     Date fixingValueDate = valueDate(fixingDate);
 
     // we can assume fixingValueDate >= valueDate
-    QL_REQUIRE(
-        fixingValueDate >= refValueDate,
-        "value date for requested fixing as of "
-            << fixingDate << " (" << fixingValueDate
-            << ") must be greater or equal to today's fixing value date ("
-            << refValueDate << ")");
+    QL_REQUIRE(fixingValueDate >= refValueDate, "value date for requested fixing as of "
+                                                    << fixingDate << " (" << fixingValueDate
+                                                    << ") must be greater or equal to today's fixing value date ("
+                                                    << refValueDate << ")");
 
     // compute the forecast applying the usual no arbitrage principle
-    Real forward = rate * sourceYts_->discount(fixingValueDate) *
-                   targetYts_->discount(refValueDate) /
-                   (sourceYts_->discount(refValueDate) *
-                    targetYts_->discount(fixingValueDate));
+    Real forward = rate * sourceYts_->discount(fixingValueDate) * targetYts_->discount(refValueDate) /
+                   (sourceYts_->discount(refValueDate) * targetYts_->discount(fixingValueDate));
 
     return forward;
 }

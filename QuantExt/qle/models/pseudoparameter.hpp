@@ -17,10 +17,10 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file pseudoparameter.hpp
     \brief parameter giving access to calibration machinery
-    \ingroup 
+
+        \ingroup models
 */
 
 #ifndef quantext_pseudoparameter_hpp
@@ -34,25 +34,24 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
+//! Parameter that accesses CalibratedModel
 /*! lightweight parameter, that gives access to the
     CalibratedModel calibration machinery, but without
-    any own logic (if this is not needed anyway) */
+    any own logic (if this is not needed anyway)
 
+        \ingroup models
+*/
 class PseudoParameter : public Parameter {
-  private:
+private:
     class Impl : public Parameter::Impl {
-      public:
+    public:
         Impl() {}
-        Real value(const Array &, Time ) const {
-            QL_FAIL("pseudo-parameter can not be asked to values");
-        }
+        Real value(const Array&, Time) const { QL_FAIL("pseudo-parameter can not be asked to values"); }
     };
 
-  public:
-    PseudoParameter(const Size size = 0,
-                    const Constraint &constraint = NoConstraint())
-        : Parameter(size, boost::make_shared<PseudoParameter::Impl>(),
-                    constraint) {}
+public:
+    PseudoParameter(const Size size = 0, const Constraint& constraint = NoConstraint())
+        : Parameter(size, boost::make_shared<PseudoParameter::Impl>(), constraint) {}
 };
 
 } // namespace QuantExt

@@ -17,7 +17,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file test/staticallycorrectedyieldtermstructure.hpp
     \brief tests for StaticallyCorrectedYieldTermStructure
 */
@@ -31,13 +30,13 @@ namespace testsuite {
 
 //! StaticallyCorrectedYieldTermStructure tests
 class StaticallyCorrectedYieldTermStructureTest {
-  public:
-    /*! Test if the statically corrected yield term structure produces correct discount factors for rolling down modes constant discounts and forward-forward. */
+public:
+    /*! Test if the statically corrected yield term structure produces correct discount factors for rolling down modes
+     * constant discounts and forward-forward. */
     static void testCorrectedYts();
 
     static boost::unit_test_framework::test_suite* suite();
 };
-
 }
 
 #endif

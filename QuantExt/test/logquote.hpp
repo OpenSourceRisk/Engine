@@ -17,7 +17,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file test/logquote.hpp
     \brief LogQuote test
 */
@@ -31,13 +30,12 @@ namespace testsuite {
 
 //! LogQuotes tests
 class LogQuoteTest {
-  public:
+public:
     /*! Tests the LogQuote class by Comparing LogQuote values with the logs of Quote values. */
     static void testLogQuote();
 
     static boost::unit_test_framework::test_suite* suite();
 };
-
 }
 
 #endif

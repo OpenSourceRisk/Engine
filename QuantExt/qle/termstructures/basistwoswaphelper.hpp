@@ -17,10 +17,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file basistwoswaphelper.hpp
     \brief Libor basis swap helper as two swaps
-    \ingroup 
+    \ingroup termstructures
 */
 
 #ifndef quantext_basis_two_swap_helper_hpp
@@ -32,77 +31,67 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-    /*! Rate helper for bootstrapping using Libor tenor basis as the
-     *  difference between the fixed rate on two swaps
-     */
-    class BasisTwoSwapHelper : public RelativeDateRateHelper {
-      public:
-        BasisTwoSwapHelper(const Handle<Quote>& spread,
-            const Period& swapTenor,
-            const Calendar& calendar,
-            // Long tenor swap
-            Frequency longFixedFrequency,
-            BusinessDayConvention longFixedConvention,
-            const DayCounter& longFixedDayCount,
-            const boost::shared_ptr<IborIndex>& longIndex,
-            // Short tenor swap
-            Frequency shortFixedFrequency,
-            BusinessDayConvention shortFixedConvention,
-            const DayCounter& shortFixedDayCount,
-            const boost::shared_ptr<IborIndex>& shortIndex,
-            bool longMinusShort = true,
-            // Discount curve
-            const Handle<YieldTermStructure>& discountingCurve
-                = Handle<YieldTermStructure>());
+//! Basis Two Swap Helper
+/*! Rate helper for bootstrapping using Libor tenor basis as the
+ *  difference between the fixed rate on two swaps
 
-        //! \name RateHelper interface
-        //@{
-        Real impliedQuote() const;
-        void setTermStructure(YieldTermStructure*);
-        //@}
-        //! \name BasisTwoSwapHelper inspectors
-        //@{
-        boost::shared_ptr<VanillaSwap> longSwap() const;
-        boost::shared_ptr<VanillaSwap> shortSwap() const;
-        //@}
-        //! \name Visitability
-        //@{
-        void accept(AcyclicVisitor&);
-        //@}
+        \ingroup termstructures
+ */
+class BasisTwoSwapHelper : public RelativeDateRateHelper {
+public:
+    BasisTwoSwapHelper(const Handle<Quote>& spread, const Period& swapTenor, const Calendar& calendar,
+                       // Long tenor swap
+                       Frequency longFixedFrequency, BusinessDayConvention longFixedConvention,
+                       const DayCounter& longFixedDayCount, const boost::shared_ptr<IborIndex>& longIndex,
+                       // Short tenor swap
+                       Frequency shortFixedFrequency, BusinessDayConvention shortFixedConvention,
+                       const DayCounter& shortFixedDayCount, const boost::shared_ptr<IborIndex>& shortIndex,
+                       bool longMinusShort = true,
+                       // Discount curve
+                       const Handle<YieldTermStructure>& discountingCurve = Handle<YieldTermStructure>());
 
-      protected:
-        void initializeDates();
-        Period swapTenor_;
-        Calendar calendar_;
-        // Long tenor swap
-        Frequency longFixedFrequency_;
-        BusinessDayConvention longFixedConvention_;
-        DayCounter longFixedDayCount_;
-        boost::shared_ptr<IborIndex> longIndex_;
-        // Short tenor swap
-        Frequency shortFixedFrequency_;
-        BusinessDayConvention shortFixedConvention_;
-        DayCounter shortFixedDayCount_;
-        boost::shared_ptr<IborIndex> shortIndex_;
-        bool longMinusShort_;
+    //! \name RateHelper interface
+    //@{
+    Real impliedQuote() const;
+    void setTermStructure(YieldTermStructure*);
+    //@}
+    //! \name BasisTwoSwapHelper inspectors
+    //@{
+    boost::shared_ptr<VanillaSwap> longSwap() const;
+    boost::shared_ptr<VanillaSwap> shortSwap() const;
+    //@}
+    //! \name Visitability
+    //@{
+    void accept(AcyclicVisitor&);
+    //@}
 
-        boost::shared_ptr<VanillaSwap> longSwap_;
-        boost::shared_ptr<VanillaSwap> shortSwap_;
+protected:
+    void initializeDates();
+    Period swapTenor_;
+    Calendar calendar_;
+    // Long tenor swap
+    Frequency longFixedFrequency_;
+    BusinessDayConvention longFixedConvention_;
+    DayCounter longFixedDayCount_;
+    boost::shared_ptr<IborIndex> longIndex_;
+    // Short tenor swap
+    Frequency shortFixedFrequency_;
+    BusinessDayConvention shortFixedConvention_;
+    DayCounter shortFixedDayCount_;
+    boost::shared_ptr<IborIndex> shortIndex_;
+    bool longMinusShort_;
 
-        RelinkableHandle<YieldTermStructure> termStructureHandle_;
-        Handle<YieldTermStructure> discountHandle_;
-        RelinkableHandle<YieldTermStructure> discountRelinkableHandle_;
-    };
+    boost::shared_ptr<VanillaSwap> longSwap_;
+    boost::shared_ptr<VanillaSwap> shortSwap_;
 
-    inline boost::shared_ptr<VanillaSwap> BasisTwoSwapHelper::
-        shortSwap() const {
-        return shortSwap_;
-    }
+    RelinkableHandle<YieldTermStructure> termStructureHandle_;
+    Handle<YieldTermStructure> discountHandle_;
+    RelinkableHandle<YieldTermStructure> discountRelinkableHandle_;
+};
 
-    inline boost::shared_ptr<VanillaSwap> BasisTwoSwapHelper::
-        longSwap() const {
-        return longSwap_;
-    }
+inline boost::shared_ptr<VanillaSwap> BasisTwoSwapHelper::shortSwap() const { return shortSwap_; }
+
+inline boost::shared_ptr<VanillaSwap> BasisTwoSwapHelper::longSwap() const { return longSwap_; }
 }
 
 #endif

@@ -17,7 +17,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 #include "cashflow.hpp"
 #include <ql/quotes/simplequote.hpp>
 #include <ql/indexes/indexmanager.hpp>
@@ -37,14 +36,13 @@ void CashFlowTest::testFXLinkedCashFlow() {
 
     BOOST_TEST_MESSAGE("Testing FX Linked CashFlow");
 
-
     // Test today = 5 Jan 2016
-    Settings::instance().evaluationDate() = Date(5,Jan,2016);
+    Settings::instance().evaluationDate() = Date(5, Jan, 2016);
     Date today = Settings::instance().evaluationDate();
 
-    Date cfDate1 (5,Jan,2015); // historical
-    Date cfDate2 (5,Jan,2016); // today
-    Date cfDate3 (5,Jan,2017); // future
+    Date cfDate1(5, Jan, 2015); // historical
+    Date cfDate2(5, Jan, 2016); // today
+    Date cfDate3(5, Jan, 2017); // future
 
     Real foreignAmount = 1000000; // 1M
     boost::shared_ptr<SimpleQuote> sq = boost::make_shared<SimpleQuote>(123.45);
@@ -74,24 +72,23 @@ void CashFlowTest::testFXLinkedCashFlow() {
     BOOST_CHECK_CLOSE(fxlcf2.amount(), 123450000.0, 1e-10);
 
     BOOST_TEST_MESSAGE("Check future (expected) flow is correct");
-    Real fwd = sq->value() *  domYTS->discount(cfDate3) / forYTS->discount(cfDate3);
+    Real fwd = sq->value() * domYTS->discount(cfDate3) / forYTS->discount(cfDate3);
     BOOST_CHECK_CLOSE(fxlcf3.amount(), foreignAmount * fwd, 1e-10);
 
     // Now move forward in time, check historical value is still correct
-    Settings::instance().evaluationDate() = Date(1,Feb,2016);
+    Settings::instance().evaluationDate() = Date(1, Feb, 2016);
     sq->setValue(150.0);
     domYTS->update();
     forYTS->update();
     BOOST_CHECK_CLOSE(fxlcf1.amount(), 112000000.0, 1e-10);
 
     // check foward quote is still valid
-    fwd = sq->value() *  domYTS->discount(cfDate3) / forYTS->discount(cfDate3);
+    fwd = sq->value() * domYTS->discount(cfDate3) / forYTS->discount(cfDate3);
     BOOST_CHECK_CLOSE(fxlcf3.amount(), foreignAmount * fwd, 1e-10);
 
     // reset
     Settings::instance().evaluationDate() = today;
 }
-
 
 test_suite* CashFlowTest::suite() {
     test_suite* suite = BOOST_TEST_SUITE("CashFlowTests");

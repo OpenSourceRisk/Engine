@@ -18,8 +18,8 @@ ABBREVIATE_BRIEF       =
 ALWAYS_DETAILED_SEC    = NO
 INLINE_INHERITED_MEMB  = NO
 FULL_PATH_NAMES        = YES
-STRIP_FROM_PATH        = qle_basepath
-STRIP_FROM_INC_PATH    = qle_basepath
+STRIP_FROM_PATH        = ..\qle
+STRIP_FROM_INC_PATH    = ..\qle
 SHORT_NAMES            = NO
 JAVADOC_AUTOBRIEF      = NO
 QT_AUTOBRIEF           = NO
@@ -84,8 +84,8 @@ GENERATE_DEPRECATEDLIST= YES
 ENABLED_SECTIONS       =
 MAX_INITIALIZER_LINES  = 30
 SHOW_USED_FILES        = NO
-SHOW_FILES             = NO
-SHOW_NAMESPACES        = NO
+SHOW_FILES             = YES
+SHOW_NAMESPACES        = YES
 FILE_VERSION_FILTER    =
 LAYOUT_FILE            =
 CITE_BIB_FILES         =
@@ -282,8 +282,8 @@ SKIP_FUNCTION_MACROS   = YES
 TAGFILES               = ../../QuantLib/Docs/quantlib.tag=../ql
 GENERATE_TAGFILE       = quantext.tag
 ALLEXTERNALS           = NO
-EXTERNAL_GROUPS        = YES
-EXTERNAL_PAGES         = YES
+EXTERNAL_GROUPS        = NO
+EXTERNAL_PAGES         = NO 
 PERL_PATH              = /usr/bin/perl
 #---------------------------------------------------------------------------
 # Configuration options related to the dot tool

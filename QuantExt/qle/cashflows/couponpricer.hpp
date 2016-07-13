@@ -17,10 +17,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file qle/cashflows/couponpricer.hpp
     \brief Utility functions for setting coupon pricers on legs
-    \ingroup 
+        \ingroup cashflows
 */
 
 #ifndef quantext_coupon_pricer_hpp
@@ -36,12 +35,15 @@
 using namespace QuantLib;
 
 namespace QuantExt {
+/*!	\addtogroup cashflows
+    @{
+*/
+//! Set Coupon Pricer
+void setCouponPricer(const Leg& leg, const boost::shared_ptr<FloatingRateCouponPricer>&);
+//! Set Coupon Pricers
+void setCouponPricers(const Leg& leg, const std::vector<boost::shared_ptr<FloatingRateCouponPricer> >&);
 
-void setCouponPricer(const Leg &leg,
-                     const boost::shared_ptr<FloatingRateCouponPricer> &);
-void setCouponPricers(
-    const Leg &leg,
-    const std::vector<boost::shared_ptr<FloatingRateCouponPricer> > &);
+// @}
 }
 
 #endif
