@@ -82,7 +82,6 @@
       <LongShort>Long</LongShort>
       <LegData>
         <LegType>Floating</LegType>
-        <!-- Not used but needs to be here for validation as LegData -->
         <Payer>true</Payer>
         <Currency>EUR</Currency>
         <DayCounter>A360</DayCounter>

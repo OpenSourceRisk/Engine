@@ -11,7 +11,6 @@
       <LongShort>Short</LongShort>
       <LegData>
         <LegType>Floating</LegType>
-        <!-- Not used but needs to be here for validation as LegData -->
         <Payer>true</Payer>
         <Currency>USD</Currency>
         <DayCounter>ACT/360</DayCounter>
@@ -59,7 +58,6 @@
       <LongShort>Long</LongShort>
       <LegData>
         <LegType>Floating</LegType>
-        <!-- Not used but needs to be here for validation as LegData -->
         <Payer>true</Payer>
         <Currency>USD</Currency>
         <DayCounter>ACT/360</DayCounter>
@@ -107,7 +105,6 @@
       <LongShort>Long</LongShort>
       <LegData>
         <LegType>Floating</LegType>
-        <!-- Not used but needs to be here for validation as LegData -->
         <Payer>true</Payer>
         <Currency>USD</Currency>
         <DayCounter>ACT/360</DayCounter>
