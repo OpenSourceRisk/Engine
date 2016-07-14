@@ -1,3 +1,7 @@
+%========================================================
+\section{Netting Set Definitions}\label{sec:nettingsetinput}
+%========================================================
+
 The netting set definitions file - {\tt NettingSetDefinitions.xml} - 
 contains a list of
 definitions for various ISDA netting agreements. The file is written
@@ -25,25 +29,28 @@ If an ISDA agreement does not contain a Credit Support Annex the
 portfolio exposures are not eligible for collateralisation. In such a
 case the netting set can be defined within the following XML template:
 
-{\footnotesize
-\begin{lstlisting}[caption={uncollateralised netting set definition}, label=lst:nettingSetUncollat]
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
     <NettingSet>
         <NettingSetId> </NettingSetId>
         <Counterparty> </Counterparty>
         <ActiveCSAFlag> </ActiveCSAFlag>
         <CSADetails></CSADetails>
     </NettingSet>
-\end{lstlisting}
-}
+\end{minted}
+\caption{Uncollateralised netting set definition}
+\label{lst:nettingSetUncollat}
+\end{listing}
 
 The meanings of the various elements are as follows:
 \begin{itemize}
-\item €NettingSetId€: The unique identifier for the ISDA netting set.
-\item €Counterparty€: The identifier for the counterparty to the ISDA agreement.
-\item €ActiveCSAFlag€: Boolean indicating whether the netting set is
+\item NettingSetId: The unique identifier for the ISDA netting set.
+\item Counterparty: The identifier for the counterparty to the ISDA agreement.
+\item ActiveCSAFlag: Boolean indicating whether the netting set is
   covered by a Credit Support Annex. For uncollateralised netting sets
   this flag should be \emph{False}.
-\item €CSADetails€: Node containing as children details of the governing
+\item CSADetails: Node containing as children details of the governing
   Credit Support Annex. For uncollateralised netting sets there is no
   need to store any information within this node.
 \end{itemize}
@@ -54,8 +61,9 @@ If an ISDA agreement contains a Credit Support Annex the
 portfolio exposures are eligible for collateralisation. In such a
 case the netting set can be defined within the following XML template:
 
-{\footnotesize
-\begin{lstlisting}[caption={collateralised netting set definition}, label=lst:nettingSetCollat]
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
     <NettingSet>
         <NettingSetId> </NettingSetId>
         <Counterparty> </Counterparty>
@@ -63,6 +71,7 @@ case the netting set can be defined within the following XML template:
         <CSADetails>
             <Bilateral> </Bilateral>
             <CSACurrency> </CSACurrency>
+            <Index> </Index>
             <ThresholdPay> </ThresholdPay>
             <ThresholdReceive> </ThresholdReceive>
             <MinimumTransferAmountPay> </MinimumTransferAmountPay>
@@ -91,22 +100,24 @@ case the netting set can be defined within the following XML template:
             </EligibleCollaterals>
         </CSADetails>
     </NettingSet>
-\end{lstlisting}
-}
+\end{minted}
+\caption{Collateralised netting set definition}
+\label{lst:nettingSetCollat}
+\end{listing}
 
 The first few nodes are shared with the template for uncollateralised
 netting sets:
 \begin{itemize}
-\item €NettingSetId€: The unique identifier for the ISDA netting set.
-\item €Counterparty€: The identifier for the counterparty to the ISDA agreement.
-\item €ActiveCSAFlag€: Boolean indicating whether the netting set is
+\item NettingSetId: The unique identifier for the ISDA netting set.
+\item Counterparty: The identifier for the counterparty to the ISDA agreement.
+\item ActiveCSAFlag: Boolean indicating whether the netting set is
   covered by a Credit Support Annex. For collateralised netting sets
   this flag should be \emph{True}.
-\item €CSADetails€: Node containing as children details of the governing
+\item CSADetails: Node containing as children details of the governing
   Credit Support Annex. 
 \end{itemize}
 
-\subsubsection{CSADetails}
+\subsubsection*{CSADetails}
 
 The \lstinline!CSADetails! node contains details of the Credit Support
 Annex which are relevant for the purposes of exposure calculation. The
@@ -114,18 +125,21 @@ meanings of the various elements are as follows:
 
 \paragraph{Bilateral} There are three possible values here:
 \begin{itemize}
-\item €Bilateral€: Both parties to the CSA are legally entitled to
+\item Bilateral: Both parties to the CSA are legally entitled to
   request collateral to cover their counterparty credit risk exposure
   on the underlying portfolio
-\item €CallOnly€: Only we are entitled to hold collateral; the
+\item CallOnly: Only we are entitled to hold collateral; the
   counterparty has no such entitlement
-\item €PostOnly€: One the counterparty is entitled to hold collateral;
+\item PostOnly: Only the counterparty is entitled to hold collateral;
   we have no such entitlement
 \end{itemize}
 
 \paragraph{CSACurrency} A three-letter ISO code specifying the master
 currency of the CSA. All monetary values specified within the CSA are
 assumed to be denominated in this currency.
+
+\paragraph{Index} The index is used to derive the fixing which is used
+for compounding cash collateral in the master currency of the CSA.
 
 \paragraph{ThresholdPay} A threshold amount above which the
 counterparty is entitled to request collateral to cover excess
@@ -147,20 +161,24 @@ entitled to request margin.
 
 \paragraph{IndependentAmount} This element contains two child nodes:
 \begin{itemize}
-\item €IndependentAmountHeld€: The netted sum of all independent amounts
+\item IndependentAmountHeld: The netted sum of all independent amounts
   covered by this ISDA agreement/CSA. A negative number implies that
   the counterparty holds the independent amount.
-\item €IndependentAmountType€: The nature of the independent amount as
+\item IndependentAmountType: The nature of the independent amount as
   defined within the Credit Support Annex. The only supported value
   here is \emph{FIXED}. 
 \end{itemize}
+This covers only the case where only one party has to post an
+independent amount. In a future release this will be extended to the
+situation prescribed by the Basel/IOSCO regulation (initial margin to
+be posted by both parties without netting).
 
 \paragraph{MarginingFrequency} This element contains two child nodes:
 \begin{itemize}
-\item €CallFrequency€: The frequency with which we are entitled to
+\item CallFrequency: The frequency with which we are entitled to
   request additional margin from the counterparty (e.g. \emph{1D},
   \emph{2W}, \emph{1M}).
-\item €PostFrequency€: The frequency with which the counterparty is entitled to
+\item PostFrequency: The frequency with which the counterparty is entitled to
   request additional margin from us (e.g. \emph{1D},
   \emph{2W}, \emph{1M}).
 \end{itemize}
