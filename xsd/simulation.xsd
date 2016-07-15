@@ -280,7 +280,7 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
-      <xs:element name="CapFloorVolatilities">
+      <xs:element name="CapFloorVolatilities" minOccurs="0">
         <xs:complexType>
           <xs:sequence>
             <xs:element type="timeDecayType" name="ReactionToTimeDecay"/>
