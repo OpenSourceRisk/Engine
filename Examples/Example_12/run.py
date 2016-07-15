@@ -65,3 +65,18 @@ oreex.plot(os.path.join("portfolio_4", "exposure_nettingset_CPTY_B.csv"), 2, 3, 
 oreex.plot(os.path.join("portfolio_4", "exposure_nettingset_CPTY_B.csv"), 2, 4, 'r', "ENE CapFloored Swap", offset=1, marker='o', linestyle='')
 oreex.decorate_plot(title="Example 12, Portfolio 4")
 oreex.save_plot_to_file(os.path.join("Output", "portfolio_4"))
+
+# Portfolio 5 run
+oreex.print_headline("Run ORE to produce NPV cube and exposures for portfolio 5")
+oreex.run("Input/ore_portfolio_5.xml")
+oreex.get_times("Output/portfolio_5/log.txt")
+
+oreex.print_headline("Plot results for portfolio 5")
+
+oreex.setup_plot("portfolio_5")
+oreex.plot(os.path.join("portfolio_5", "exposure_nettingset_CPTY_A.csv"), 2, 3, 'b', "EPE Capped swap")
+oreex.plot(os.path.join("portfolio_5", "exposure_nettingset_CPTY_A.csv"), 2, 4, 'r', "ENE Capped swap")
+oreex.plot(os.path.join("portfolio_5", "exposure_nettingset_CPTY_B.csv"), 2, 3, 'b', "EPE Swap + Cap", offset=1, marker='o', linestyle='')
+oreex.plot(os.path.join("portfolio_5", "exposure_nettingset_CPTY_B.csv"), 2, 4, 'r', "ENE Swap + Cap", offset=1, marker='o', linestyle='')
+oreex.decorate_plot(title="Example 12, Portfolio 5")
+oreex.save_plot_to_file(os.path.join("Output", "portfolio_5"))
