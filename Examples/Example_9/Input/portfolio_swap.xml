@@ -17,7 +17,6 @@
           <Exchanges>
             <NotionalInitialExchange>true</NotionalInitialExchange>
             <NotionalFinalExchange>true</NotionalFinalExchange>
-            <NotionalAmortizingExchange>true</NotionalAmortizingExchange>
           </Exchanges>
         </Notionals>
         <DayCounter>A360</DayCounter>
@@ -54,7 +53,6 @@
           <Exchanges>
             <NotionalInitialExchange>true</NotionalInitialExchange>
             <NotionalFinalExchange>true</NotionalFinalExchange>
-            <NotionalAmortizingExchange>true</NotionalAmortizingExchange>
           </Exchanges>
         </Notionals>
         <DayCounter>A360</DayCounter>
@@ -98,16 +96,9 @@
         <Currency>USD</Currency>
         <Notionals>
           <Notional>200000000.000000</Notional>
-          <FXReset>
-            <ForeignCurrency>EUR</ForeignCurrency>
-            <ForeignAmount>0</ForeignAmount>
-            <FXIndex>FX-TAG-USD-EUR</FXIndex>
-            <FixingDays>2</FixingDays>
-          </FXReset>
           <Exchanges>
-            <NotionalInitialExchange>false</NotionalInitialExchange>
-            <NotionalFinalExchange>false</NotionalFinalExchange>
-            <NotionalAmortizingExchange>false</NotionalAmortizingExchange>
+            <NotionalInitialExchange>true</NotionalInitialExchange>
+            <NotionalFinalExchange>true</NotionalFinalExchange>
           </Exchanges>
         </Notionals>
         <DayCounter>A360</DayCounter>
@@ -140,17 +131,16 @@
         <Payer>true</Payer>
         <Currency>EUR</Currency>
         <Notionals>
-          <Notional>0</Notional>
+          <Notional>181535941.0</Notional>
           <FXReset>
             <ForeignCurrency>USD</ForeignCurrency>
-            <ForeignAmount>200000000.000000</ForeignAmount>
-            <FXIndex>FX-TAG-EUR-USD</FXIndex>
+            <ForeignAmount>200000000.0</ForeignAmount>
+            <FXIndex>FX-ECB-EUR-USD</FXIndex>
             <FixingDays>2</FixingDays>
           </FXReset>
           <Exchanges>
-            <NotionalInitialExchange>false</NotionalInitialExchange>
-            <NotionalFinalExchange>false</NotionalFinalExchange>
-            <NotionalAmortizingExchange>false</NotionalAmortizingExchange>
+            <NotionalInitialExchange>true</NotionalInitialExchange>
+            <NotionalFinalExchange>true</NotionalFinalExchange>
           </Exchanges>
         </Notionals>
         <DayCounter>A360</DayCounter>
