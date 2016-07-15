@@ -49,7 +49,6 @@ public:
 
     Real nominal() const { return notional_.amount(); }
     FXLinkedCashFlow fxLinkedCashFlow() { return notional_; }
-    
 
     //! \name Visitability
     //@{
