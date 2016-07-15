@@ -48,6 +48,8 @@ public:
           notional_(paymentDate, fxFixingDate, foreignAmount, fxIndex) {}
 
     Real nominal() const { return notional_.amount(); }
+    FXLinkedCashFlow fxLinkedCashFlow() { return notional_; }
+    
 
     //! \name Visitability
     //@{
