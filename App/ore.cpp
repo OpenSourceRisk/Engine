@@ -17,6 +17,17 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/timer.hpp>
+#include <boost/algorithm/string.hpp>
+
+#ifdef BOOST_MSVC
+// disable warning C4503: '__LINE__Var': decorated name length exceeded, name was truncated
+// This pragma statement needs to be at the top of the file - lower and it will not work:
+// http://stackoverflow.com/questions/9673504/is-it-possible-to-disable-compiler-warning-c4503
+// http://boost.2283326.n4.nabble.com/General-Warnings-and-pragmas-in-MSVC-td2587449.html
+#pragma warning(disable: 4503)
+#endif
+
 #include <iostream>
 
 #include <orea/orea.hpp>
@@ -24,8 +35,6 @@
 #include <ql/time/calendars/all.hpp>
 #include <ql/time/daycounters/all.hpp>
 #include <ql/cashflows/floatingratecoupon.hpp>
-#include <boost/timer.hpp>
-#include <boost/algorithm/string.hpp>
 
 #include "ore.hpp"
 
@@ -43,8 +52,6 @@
 #  include <boost/config/auto_link.hpp>
 #  define BOOST_LIB_NAME boost_regex
 #  include <boost/config/auto_link.hpp>
-// disable warning C4503: '__LINE__Var': decorated name length exceeded, name was truncated
-#  pragma warning(disable:4503)
 #endif
 
 using namespace std;

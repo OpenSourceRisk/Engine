@@ -11,6 +11,7 @@
       <LongShort>Long</LongShort>
       <LegData>
         <LegType>Floating</LegType>
+        <Payer>true</Payer>
         <Currency>GBP</Currency>
         <DayCounter>ACT/365</DayCounter>
         <PaymentConvention>MF</PaymentConvention>
@@ -56,6 +57,7 @@
       <LongShort>Short</LongShort>
       <LegData>
         <LegType>Floating</LegType>
+        <Payer>true</Payer>
         <Currency>GBP</Currency>
         <DayCounter>ACT/365</DayCounter>
         <PaymentConvention>MF</PaymentConvention>

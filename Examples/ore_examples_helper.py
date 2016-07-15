@@ -1,10 +1,10 @@
 import os
+import platform
 import sys
 import subprocess
 import shutil
 import matplotlib.pyplot as plt
 import matplotlib.ticker
-
 
 class OreExample(object):
 
@@ -18,7 +18,10 @@ class OreExample(object):
 
     def _locate_ore_exe(self):
         if os.name == 'nt':
-            self.ore_exe = "..\\..\\App\\bin\\Win32\\Release\\ore.exe"
+            if sys.platform == "win32":
+                self.ore_exe = "..\\..\\App\\bin\\Win32\\Release\\ore.exe"
+            else:
+                self.ore_exe = "..\\..\\App\\bin\\x64\\Release\\ore.exe"
         else:
             self.ore_exe = "../../App/ore"
 

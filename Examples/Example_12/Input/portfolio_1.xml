@@ -82,6 +82,7 @@
       <LongShort>Long</LongShort>
       <LegData>
         <LegType>Floating</LegType>
+        <Payer>true</Payer>
         <Currency>EUR</Currency>
         <DayCounter>A360</DayCounter>
         <PaymentConvention>MF</PaymentConvention>
