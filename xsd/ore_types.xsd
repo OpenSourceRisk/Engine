@@ -343,5 +343,12 @@
      </xs:restriction>
    </xs:simpleType>
 
+   <xs:simpleType name="longShort">
+     <xs:restriction base="xs:string">
+       <xs:enumeration value="Long"/>
+       <xs:enumeration value="Short"/>
+     </xs:restriction>
+   </xs:simpleType>
+
 </xs:schema>
 
