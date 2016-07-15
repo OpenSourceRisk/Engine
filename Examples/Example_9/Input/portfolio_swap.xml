@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <Portfolio>
-   <Trade id="10_Swap_EUR_USD">
+   <Trade id="XCCY_Swap_EUR_USD">
     <TradeType>Swap</TradeType>
     <Envelope>
       <Type>Swap</Type>
@@ -82,7 +82,7 @@
       </LegData>
     </SwapData>
   </Trade>
-  <Trade id="10_Swap_EUR_USD_RESET">
+  <Trade id="XCCY_Swap_EUR_USD_RESET">
     <TradeType>Swap</TradeType>
     <Envelope>
       <Type>Swap</Type>
