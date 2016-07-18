@@ -17,7 +17,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file qle/pricingengines/analyticlgmswaptionengine.hpp
+/*! \file pricingengines/analyticlgmswaptionengine.hpp
     \brief analytic engine for european swaptions in the LGM model
 
         \ingroup engines

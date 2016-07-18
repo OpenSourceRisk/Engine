@@ -38,7 +38,7 @@ using namespace QuantLib;
 namespace QuantExt {
 
 //! Multi Path Generator Base
-/*! \group methods
+/*! \ingroup methods
 */
 class MultiPathGeneratorBase {
 public:
