@@ -4,8 +4,8 @@
     <TradeType>Swap</TradeType>
     <Envelope>
       <Type>Swap</Type>
-      <CounterParty>CTPY_A</CounterParty>
-      <NettingSetId>CTPY_A</NettingSetId>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
     </Envelope>
     <SwapData>
       <LegData>
@@ -13,7 +13,7 @@
         <Payer>false</Payer>
         <Currency>USD</Currency>
         <Notionals>
-          <Notional>200000000.000000</Notional>
+          <Notional>100000000</Notional> <!-- 100M USD -->
           <Exchanges>
             <NotionalInitialExchange>true</NotionalInitialExchange>
             <NotionalFinalExchange>true</NotionalFinalExchange>
@@ -31,8 +31,8 @@
         </FloatingLegData>
         <ScheduleData>
           <Rules>
-           <StartDate>20160226</StartDate>
-           <EndDate>20270401</EndDate>
+           <StartDate>20160205</StartDate>
+           <EndDate>20260205</EndDate>
            <Tenor>3M</Tenor>
            <Calendar>TARGET</Calendar>
            <Convention>MF</Convention>
@@ -49,7 +49,7 @@
         <Payer>true</Payer>
         <Currency>EUR</Currency>
         <Notionals>
-          <Notional>181535941.0</Notional>
+          <Notional>88312931.57</Notional> <!-- FX/RATE/EUR/USD 1.132337 => 100M USD = 88,312,931.57 -->
           <Exchanges>
             <NotionalInitialExchange>true</NotionalInitialExchange>
             <NotionalFinalExchange>true</NotionalFinalExchange>
@@ -60,15 +60,15 @@
         <FloatingLegData>
           <Index>EUR-EURIBOR-3M</Index>
           <Spreads>
-            <Spread>0.000000</Spread>
+            <Spread>0.015</Spread>
           </Spreads>
           <IsInArrears>false</IsInArrears>
           <FixingDays>2</FixingDays>
         </FloatingLegData>
         <ScheduleData>
           <Rules>
-           <StartDate>20160201</StartDate>
-           <EndDate>20270401</EndDate>
+           <StartDate>20160205</StartDate>
+           <EndDate>20260205</EndDate>
            <Tenor>3M</Tenor>
            <Calendar>TARGET</Calendar>
            <Convention>MF</Convention>
@@ -86,8 +86,8 @@
     <TradeType>Swap</TradeType>
     <Envelope>
       <Type>Swap</Type>
-      <CounterParty>CTPY_A</CounterParty>
-      <NettingSetId>CTPY_A</NettingSetId>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
     </Envelope>
     <SwapData>
       <LegData>
@@ -95,7 +95,7 @@
         <Payer>false</Payer>
         <Currency>USD</Currency>
         <Notionals>
-          <Notional>200000000.000000</Notional>
+          <Notional>100000000</Notional>
           <Exchanges>
             <NotionalInitialExchange>true</NotionalInitialExchange>
             <NotionalFinalExchange>true</NotionalFinalExchange>
@@ -113,8 +113,8 @@
         </FloatingLegData>
         <ScheduleData>
           <Rules>
-           <StartDate>20160226</StartDate>
-           <EndDate>20270401</EndDate>
+           <StartDate>20160205</StartDate>
+           <EndDate>20260205</EndDate>
            <Tenor>3M</Tenor>
            <Calendar>TARGET</Calendar>
            <Convention>MF</Convention>
@@ -131,16 +131,16 @@
         <Payer>true</Payer>
         <Currency>EUR</Currency>
         <Notionals>
-          <Notional>181535941.0</Notional>
+          <Notional>88312931.57</Notional>
           <FXReset>
             <ForeignCurrency>USD</ForeignCurrency>
-            <ForeignAmount>200000000.0</ForeignAmount>
+            <ForeignAmount>100000000</ForeignAmount>
             <FXIndex>FX-ECB-EUR-USD</FXIndex>
             <FixingDays>2</FixingDays>
           </FXReset>
           <Exchanges>
             <NotionalInitialExchange>true</NotionalInitialExchange>
-            <NotionalFinalExchange>true</NotionalFinalExchange>
+            <NotionalFinalExchange>false</NotionalFinalExchange> <!-- already covered -->
           </Exchanges>
         </Notionals>
         <DayCounter>A360</DayCounter>
@@ -148,15 +148,15 @@
         <FloatingLegData>
           <Index>EUR-EURIBOR-3M</Index>
           <Spreads>
-            <Spread>0.000000</Spread>
+            <Spread>0.015</Spread>
           </Spreads>
           <IsInArrears>false</IsInArrears>
           <FixingDays>2</FixingDays>
         </FloatingLegData>
         <ScheduleData>
           <Rules>
-           <StartDate>20160226</StartDate>
-           <EndDate>20270401</EndDate>
+           <StartDate>20160205</StartDate>
+           <EndDate>20260205</EndDate>
            <Tenor>3M</Tenor>
            <Calendar>TARGET</Calendar>
            <Convention>MF</Convention>

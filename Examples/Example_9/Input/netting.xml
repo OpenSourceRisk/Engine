@@ -1,8 +1,8 @@
 <NettingSetDefinitions>
     
     <NettingSet>
-        <NettingSetId>CTPY_A</NettingSetId>
-        <Counterparty>CTPY_A</Counterparty>
+        <NettingSetId>CPTY_A</NettingSetId>
+        <Counterparty>CPTY_A</Counterparty>
         <ActiveCSAFlag>false</ActiveCSAFlag>
         <CSADetails>
             <Bilateral>Bilateral</Bilateral>
@@ -32,8 +32,8 @@
     </NettingSet>
 
     <NettingSet>
-        <NettingSetId>CTPY_B</NettingSetId>
-        <Counterparty>CTPY_B</Counterparty>
+        <NettingSetId>CPTY_B</NettingSetId>
+        <Counterparty>CPTY_B</Counterparty>
         <ActiveCSAFlag>true</ActiveCSAFlag>
         <CSADetails>
             <Bilateral>Bilateral</Bilateral>

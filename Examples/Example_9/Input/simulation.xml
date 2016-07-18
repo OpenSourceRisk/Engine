@@ -10,7 +10,7 @@
     <Parameters>
 
       <Discretization>Exact</Discretization>
-      <Grid>12,1M</Grid>
+      <Grid>126,1M</Grid>
       <Calendar>EUR,USD,GBP,CHF</Calendar>
       <Sequence>SobolBrownianBridge</Sequence>
       <Scenario>Simple</Scenario>
