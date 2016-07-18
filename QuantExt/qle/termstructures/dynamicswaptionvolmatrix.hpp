@@ -35,7 +35,7 @@ using namespace QuantLib;
 
 namespace QuantExt {
 //! Takes a SwaptionVolatilityMatrix with fixed reference date and turns it into a floating reference date term
-//structure.
+// structure.
 /*! This class takes a SwaptionVolatilityMatrix with fixed
     reference date and turns it into a floating reference date
     term structure.

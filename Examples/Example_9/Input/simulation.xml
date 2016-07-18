@@ -10,7 +10,7 @@
     <Parameters>
 
       <Discretization>Exact</Discretization>
-      <Grid>12,1M</Grid>
+      <Grid>121,1M</Grid>
       <Calendar>EUR,USD,GBP,CHF</Calendar>
       <Sequence>SobolBrownianBridge</Sequence>
       <Scenario>Simple</Scenario>
@@ -244,6 +244,7 @@
 	<Index>EUR-EURIBOR-3M</Index>
 	<Index>EUR-EONIA</Index>
 	<Index>USD-LIBOR-3M</Index>
+	<Index>USD-LIBOR-6M</Index>
 	<Index>GBP-LIBOR-6M</Index>
 	<Index>GBP-LIBOR-3M</Index>
 	<Index>CHF-LIBOR-6M</Index>

@@ -51,7 +51,6 @@
       <Parameter name="storeScenarios">N</Parameter>
       <Parameter name="cubeFile">cube.dat</Parameter>
       <Parameter name="additionalScenarioDataFileName">scenariodata.dat</Parameter>
-      <Parameter name="disableEvaluationDateObservation">Y</Parameter>
     </Analytic>
 
     <Analytic type="xva">
@@ -77,12 +76,6 @@
       <Parameter name="collateralFloor">N</Parameter>
       <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>
       <Parameter name="netCubeOutputFile">netcube.csv</Parameter>
-      
-    </Analytic>
-
-    <Analytic type="initialMargin">
-      <Parameter name="active">N</Parameter>
-      <Parameter name="method">SIMM</Parameter>
     </Analytic>
 
   </Analytics>
