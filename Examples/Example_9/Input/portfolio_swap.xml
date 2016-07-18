@@ -22,7 +22,7 @@
         <DayCounter>A360</DayCounter>
         <PaymentConvention>MF</PaymentConvention>
         <FloatingLegData>
-          <Index>USD-LIBOR-3M</Index>
+          <Index>USD-LIBOR-6M</Index>
           <Spreads>
             <Spread>0.000000</Spread>
           </Spreads>
@@ -33,7 +33,7 @@
           <Rules>
            <StartDate>20160205</StartDate>
            <EndDate>20260205</EndDate>
-           <Tenor>3M</Tenor>
+           <Tenor>6M</Tenor>
            <Calendar>TARGET</Calendar>
            <Convention>MF</Convention>
            <TermConvention>MF</TermConvention>
@@ -58,7 +58,7 @@
         <DayCounter>A360</DayCounter>
         <PaymentConvention>MF</PaymentConvention>
         <FloatingLegData>
-          <Index>EUR-EURIBOR-3M</Index>
+          <Index>EUR-EURIBOR-6M</Index>
           <Spreads>
             <Spread>0.015</Spread>
           </Spreads>
@@ -69,7 +69,7 @@
           <Rules>
            <StartDate>20160205</StartDate>
            <EndDate>20260205</EndDate>
-           <Tenor>3M</Tenor>
+           <Tenor>6M</Tenor>
            <Calendar>TARGET</Calendar>
            <Convention>MF</Convention>
            <TermConvention>MF</TermConvention>
@@ -104,7 +104,7 @@
         <DayCounter>A360</DayCounter>
         <PaymentConvention>MF</PaymentConvention>
         <FloatingLegData>
-          <Index>USD-LIBOR-3M</Index>
+          <Index>USD-LIBOR-6M</Index>
           <Spreads>
             <Spread>0.000000</Spread>
           </Spreads>
@@ -115,7 +115,7 @@
           <Rules>
            <StartDate>20160205</StartDate>
            <EndDate>20260205</EndDate>
-           <Tenor>3M</Tenor>
+           <Tenor>6M</Tenor>
            <Calendar>TARGET</Calendar>
            <Convention>MF</Convention>
            <TermConvention>MF</TermConvention>
@@ -146,7 +146,7 @@
         <DayCounter>A360</DayCounter>
         <PaymentConvention>MF</PaymentConvention>
         <FloatingLegData>
-          <Index>EUR-EURIBOR-3M</Index>
+          <Index>EUR-EURIBOR-6M</Index>
           <Spreads>
             <Spread>0.015</Spread>
           </Spreads>
@@ -157,7 +157,7 @@
           <Rules>
            <StartDate>20160205</StartDate>
            <EndDate>20260205</EndDate>
-           <Tenor>3M</Tenor>
+           <Tenor>6M</Tenor>
            <Calendar>TARGET</Calendar>
            <Convention>MF</Convention>
            <TermConvention>MF</TermConvention>
