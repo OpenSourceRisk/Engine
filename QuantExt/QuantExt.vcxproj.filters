@@ -316,6 +316,9 @@
     <ClInclude Include="qle\cashflows\fxlinkedcashflow.hpp">
       <Filter>cashflows</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\optionletstripper1.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -526,6 +529,9 @@
     </ClCompile>
     <ClCompile Include="qle\cashflows\fxlinkedcashflow.cpp">
       <Filter>cashflows</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\optionletstripper1.cpp">
+      <Filter>termstructures</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

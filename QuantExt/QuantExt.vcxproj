@@ -586,6 +586,7 @@
     <ClInclude Include="qle\termstructures\oibasisswaphelper.hpp" />
     <ClInclude Include="qle\termstructures\oiccbasisswaphelper.hpp" />
     <ClInclude Include="qle\termstructures\oisratehelper.hpp" />
+    <ClInclude Include="qle\termstructures\optionletstripper1.hpp" />
     <ClInclude Include="qle\termstructures\staticallycorrectedyieldtermstructure.hpp" />
     <ClInclude Include="qle\termstructures\tenorbasisswaphelper.hpp" />
   </ItemGroup>
@@ -646,6 +647,7 @@
     <ClCompile Include="qle\termstructures\oibasisswaphelper.cpp" />
     <ClCompile Include="qle\termstructures\oiccbasisswaphelper.cpp" />
     <ClCompile Include="qle\termstructures\oisratehelper.cpp" />
+    <ClCompile Include="qle\termstructures\optionletstripper1.cpp" />
     <ClCompile Include="qle\termstructures\tenorbasisswaphelper.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
