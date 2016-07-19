@@ -21,3 +21,4 @@
 #include <qle/termstructures/datedstrippedoptionletbase.hpp>
 #include <qle/termstructures/dynamicoptionletvolatilitystructure.hpp>
 #include <qle/termstructures/optionletstripper1.hpp>
+#include <qle/termstructures/optionletstripper2.hpp>
