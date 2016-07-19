@@ -17,13 +17,13 @@ Call QRE from App directory with
      ./qreAnalytics -envFile ../CS/FMS/Input/env_20160301.txt \
            -asof 20160301 -dir ../CS/FMS/Output -profiles
 
-     QRE result 20160301_qre_exposure_trade627291AI.csv copied to this directory
+     QRE result 20160301_qre_exposure_trade627291AI.csv copied to Output
 
-     QRE input qre_input.tar.gz copied to Input
+     QRE input for reference copied to Input.QRE
 
 Call ORE with
 
-     ./run.sh
+     ./run.py
 
-Manual comparison in ore_qre_exposure.xlsx
+Result in Output/mpl_ore_qre_comparison.pdf
 
