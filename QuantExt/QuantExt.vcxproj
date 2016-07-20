@@ -515,7 +515,6 @@
     <ClInclude Include="qle\indexes\ibor\sgdsor.hpp" />
     <ClInclude Include="qle\indexes\ibor\skkbribor.hpp" />
     <ClInclude Include="qle\indexes\ibor\tonar.hpp" />
-    <ClInclude Include="qle\indexes\simulatedfixingsmanager.hpp" />
     <ClInclude Include="qle\instruments\all.hpp" />
     <ClInclude Include="qle\instruments\averageois.hpp" />
     <ClInclude Include="qle\instruments\crossccybasisswap.hpp" />
@@ -566,7 +565,6 @@
     <ClInclude Include="qle\processes\irlgm1fstateprocess.hpp" />
     <ClInclude Include="qle\quotes\all.hpp" />
     <ClInclude Include="qle\quotes\logquote.hpp" />
-    <ClInclude Include="qle\config.hpp" />
     <ClInclude Include="qle\quantext.hpp" />
     <ClInclude Include="qle\termstructures\all.hpp" />
     <ClInclude Include="qle\termstructures\averageoisratehelper.hpp" />
@@ -589,6 +587,7 @@
     <ClInclude Include="qle\termstructures\optionletstripper1.hpp" />
     <ClInclude Include="qle\termstructures\optionletstripper2.hpp" />
     <ClInclude Include="qle\termstructures\staticallycorrectedyieldtermstructure.hpp" />
+    <ClInclude Include="qle\termstructures\swaptionvolatilityconverter.hpp" />
     <ClInclude Include="qle\termstructures\tenorbasisswaphelper.hpp" />
   </ItemGroup>
   <ItemGroup>
@@ -650,6 +649,7 @@
     <ClCompile Include="qle\termstructures\oisratehelper.cpp" />
     <ClCompile Include="qle\termstructures\optionletstripper1.cpp" />
     <ClCompile Include="qle\termstructures\optionletstripper2.cpp" />
+    <ClCompile Include="qle\termstructures\swaptionvolatilityconverter.cpp" />
     <ClCompile Include="qle\termstructures\tenorbasisswaphelper.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -1,7 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClInclude Include="qle\config.hpp" />
     <ClInclude Include="qle\quantext.hpp" />
     <ClInclude Include="qle\quotes\logquote.hpp">
       <Filter>quotes</Filter>
@@ -150,9 +149,6 @@
     </ClInclude>
     <ClInclude Include="qle\termstructures\tenorbasisswaphelper.hpp">
       <Filter>termstructures</Filter>
-    </ClInclude>
-    <ClInclude Include="qle\indexes\simulatedfixingsmanager.hpp">
-      <Filter>indexes</Filter>
     </ClInclude>
     <ClInclude Include="qle\instruments\currencyswap.hpp">
       <Filter>instruments</Filter>
@@ -320,6 +316,9 @@
       <Filter>termstructures</Filter>
     </ClInclude>
     <ClInclude Include="qle\termstructures\optionletstripper2.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\swaptionvolatilityconverter.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
   </ItemGroup>
@@ -537,6 +536,9 @@
       <Filter>termstructures</Filter>
     </ClCompile>
     <ClCompile Include="qle\termstructures\optionletstripper2.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\swaptionvolatilityconverter.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
   </ItemGroup>
