@@ -640,8 +640,8 @@
     <ClCompile Include="dynamicswaptionvolmatrix.cpp" />
     <ClCompile Include="index.cpp" />
     <ClCompile Include="logquote.cpp" />
-    <ClCompile Include="main.cpp" />
     <ClCompile Include="staticallycorrectedyieldtermstructure.cpp" />
+    <ClCompile Include="swaptionvolatilityconverter.cpp" />
     <ClCompile Include="testsuite.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -658,6 +658,9 @@
     <ClInclude Include="index.hpp" />
     <ClInclude Include="logquote.hpp" />
     <ClInclude Include="staticallycorrectedyieldtermstructure.hpp" />
+    <ClInclude Include="swaptionmarketdata.hpp" />
+    <ClInclude Include="swaptionvolatilityconverter.hpp" />
+    <ClInclude Include="yieldcurvemarketdata.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\QuantExt.vcxproj">

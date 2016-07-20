@@ -32,9 +32,6 @@
     <ClCompile Include="dynamicswaptionvolmatrix.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="main.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="staticallycorrectedyieldtermstructure.cpp">
       <Filter>source</Filter>
     </ClCompile>
@@ -42,6 +39,9 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="cashflow.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="swaptionvolatilityconverter.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
@@ -91,6 +91,15 @@
       <Filter>headers</Filter>
     </ClInclude>
     <ClInclude Include="cashflow.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="swaptionvolatilityconverter.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="swaptionmarketdata.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="yieldcurvemarketdata.hpp">
       <Filter>headers</Filter>
     </ClInclude>
   </ItemGroup>
