@@ -16,6 +16,7 @@
                 <xs:element type="swaptionData" name="SwaptionData"/>
                 <xs:element type="fxForwardData" name="FxForwardData"/>
                 <xs:element type="fxOptionData" name="FxOptionData"/>
+                <xs:element type="capFloorData" name="CapFloorData"/>
               </xs:choice>
             </xs:sequence>
             <xs:attribute type="xs:string" name="id" use="required"/>
@@ -178,6 +179,7 @@
       <xs:enumeration value="Swaption"/>
       <xs:enumeration value="FxForward"/>
       <xs:enumeration value="FxOption"/>
+      <xs:enumeration value="CapFloor"/>
     </xs:restriction>
   </xs:simpleType>
 
@@ -205,6 +207,27 @@
       <xs:element type="xs:float" name="BoughtAmount"/>
       <xs:element type="currencyCode" name="SoldCurrency"/>
       <xs:element type="xs:float" name="SoldAmount"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="capFloorData">
+    <xs:sequence>
+      <xs:element type="longShort" name="LongShort"/>
+      <xs:element type="legData" name="LegData" maxOccurs="unbounded" minOccurs="1"/>
+      <xs:element name="CapRates" minOccurs="0" maxOccurs="1">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="xs:float" name="Rate" minOccurs="0" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="FloorRates" minOccurs="0" maxOccurs="1">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="xs:float" name="Rate" minOccurs="0" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
     </xs:sequence>
   </xs:complexType>
 

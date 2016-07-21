@@ -141,6 +141,13 @@ void CrossAssetModelParametrizationsTest::testParametrizationBaseClasses() {
     times2[1] = 0.5;
     times2[2] = 1.0;
     PiecewiseConstantHelper3 helper32(times1, times2);
+    helper32.p1()->setParam(0,0.0);
+    helper32.p1()->setParam(1,0.0);
+    helper32.p1()->setParam(2,0.0);
+    helper32.p2()->setParam(0,0.0);
+    helper32.p2()->setParam(1,0.0);
+    helper32.p2()->setParam(2,0.0);
+    helper32.p2()->setParam(3,0.0);
     helper32.update();
     Array exTu(4);
     exTu[0] = 0.1;

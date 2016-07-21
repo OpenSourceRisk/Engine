@@ -42,7 +42,7 @@ FxIndex::FxIndex(const std::string& familyName, Natural fixingDays, const Curren
       sourceYts_(sourceYts), targetYts_(targetYts), fixingCalendar_(fixingCalendar) {
 
     std::ostringstream tmp;
-    tmp << familyName_ << " " << sourceCurrency_.name() << "/" << targetCurrency_.name();
+    tmp << familyName_ << " " << sourceCurrency_.code() << "/" << targetCurrency_.code();
     name_ = tmp.str();
     registerWith(Settings::instance().evaluationDate());
     registerWith(IndexManager::instance().notifier(name()));
@@ -60,7 +60,7 @@ FxIndex::FxIndex(const std::string& familyName, Natural fixingDays, const Curren
       fixingCalendar_(fixingCalendar) {
 
     std::ostringstream tmp;
-    tmp << familyName_ << " " << sourceCurrency_.name() << "/" << targetCurrency_.name();
+    tmp << familyName_ << " " << sourceCurrency_.code() << "/" << targetCurrency_.code();
     name_ = tmp.str();
     registerWith(Settings::instance().evaluationDate());
     registerWith(IndexManager::instance().notifier(name()));

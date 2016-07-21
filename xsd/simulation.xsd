@@ -280,6 +280,20 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
+      <xs:element name="CapFloorVolatilities" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="timeDecayType" name="ReactionToTimeDecay"/>
+            <xs:element name="Currencies">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element type="currencyCode" name="Currency" maxOccurs="unbounded" minOccurs="0"/>
+                </xs:sequence>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
       <xs:element name="FxVolatilities">
         <xs:complexType>
           <xs:sequence>

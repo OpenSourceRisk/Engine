@@ -19,7 +19,7 @@
 
 /*! \file test/dynamicswaptionvolmatrix.hpp
     \brief tests for DynamicSwaptionVolStructure
-    \ingroup
+    \ingroup test
 */
 
 #ifndef quantext_test_dynamicswaptionvolmatrix_hpp

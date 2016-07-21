@@ -7,6 +7,7 @@
       <xs:sequence>
         <xs:element type="fxVolatilities" name="FXVolatilities"/>
         <xs:element type="swaptionVolatilities" name="SwaptionVolatilities"/>
+        <xs:element type="capFloorVolatilities" name="CapFloorVolatilities"/>
         <xs:element type="defaultCurves" name="DefaultCurves"/>
         <xs:element type="yieldCurves" name="YieldCurves"/>
       </xs:sequence>
@@ -49,6 +50,29 @@
       <xs:element type="xs:string" name="SwapTenors"/>
       <xs:element type="xs:string" name="ShortSwapIndexBase"/>
       <xs:element type="xs:string" name="SwapIndexBase"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="capFloorVolatilities">
+    <xs:sequence>
+      <xs:element type="capFloorVolatility" name="CapFloorVolatility" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="capFloorVolatility">
+    <xs:sequence>
+      <xs:element type="xs:string" name="CurveId"/>
+      <xs:element type="xs:string" name="CurveDescription"/>
+      <xs:element type="volatilityType" name="VolatilityType"/>
+      <xs:element type="bool" name="Extrapolation"/>
+      <xs:element type="bool" name="IncludeAtm"/>
+      <xs:element type="dayCounter" name="DayCounter"/>
+      <xs:element type="calendar" name="Calendar"/>
+      <xs:element type="businessDayConvention" name="BusinessDayConvention"/>
+      <xs:element type="xs:string" name="Tenors"/>
+      <xs:element type="xs:string" name="Strikes"/>
+      <xs:element type="indexNameType" name="IborIndex"/>
+      <xs:element type="xs:string" name="DiscountCurve"/>
     </xs:sequence>
   </xs:complexType>
 

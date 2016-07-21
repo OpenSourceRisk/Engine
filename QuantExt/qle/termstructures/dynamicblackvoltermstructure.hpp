@@ -17,7 +17,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file qle/termstructures/dynamicblackvoltermstructure.hpp
+/*! \file termstructures/dynamicblackvoltermstructure.hpp
     \brief dynamic black volatility term structure
     \ingroup termstructures
 */

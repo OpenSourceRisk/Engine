@@ -11,6 +11,7 @@
       <LongShort>Short</LongShort>
       <LegData>
         <LegType>Floating</LegType>
+        <Payer>true</Payer>
         <Currency>USD</Currency>
         <DayCounter>ACT/360</DayCounter>
         <PaymentConvention>MF</PaymentConvention>
@@ -57,6 +58,7 @@
       <LongShort>Long</LongShort>
       <LegData>
         <LegType>Floating</LegType>
+        <Payer>true</Payer>
         <Currency>USD</Currency>
         <DayCounter>ACT/360</DayCounter>
         <PaymentConvention>MF</PaymentConvention>
@@ -103,6 +105,7 @@
       <LongShort>Long</LongShort>
       <LegData>
         <LegType>Floating</LegType>
+        <Payer>true</Payer>
         <Currency>USD</Currency>
         <DayCounter>ACT/360</DayCounter>
         <PaymentConvention>MF</PaymentConvention>
