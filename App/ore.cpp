@@ -613,17 +613,19 @@ void writeTradeExposures(const Parameters& params,
         QL_REQUIRE(file.is_open(), "Error opening file " << fileName);
         const vector<Real>& epe = postProcess->tradeEPE(tradeId);
         const vector<Real>& ene = postProcess->tradeENE(tradeId);
-        const vector<Real>& eee = postProcess->tradeEEE(tradeId);
+        const vector<Real>& ee_bb = postProcess->tradeEE_BB(tradeId);
+        const vector<Real>& eee_bb = postProcess->tradeEEE_BB(tradeId);
         const vector<Real>& pfe = postProcess->tradePFE(tradeId);
         const vector<Real>& aepe = postProcess->allocatedTradeEPE(tradeId);
         const vector<Real>& aene = postProcess->allocatedTradeENE(tradeId);
-        file << "#TradeId,Date,Time,EPE,ENE,EEE,AllocatedEPE,AllocatedENE,PFE" << endl;
+        file << "#TradeId,Date,Time,EPE,ENE,EE_B,EEE_B,AllocatedEPE,AllocatedENE,PFE" << endl;
         file << tradeId << ","
              << QuantLib::io::iso_date(today) << ","
              << 0.0 << ","
              << epe[0] << ","
              << ene[0] << ","
-             << eee[0] << ","
+             << ee_bb[0] << ","
+             << eee_bb[0] << ","
              << aepe[0] << ","
              << aene[0] << ","
              << pfe[0] << endl;
@@ -634,7 +636,8 @@ void writeTradeExposures(const Parameters& params,
                  << time << ","
                  << epe[j+1] << ","
                  << ene[j+1] << ","
-                 << eee[j+1] << ","
+                 << ee_bb[j+1] << ","
+                 << eee_bb[j+1] << ","
                  << aepe[j+1] << ","
                  << aene[j+1] << ","
                  << pfe[j+1] << endl;
@@ -657,16 +660,18 @@ void writeNettingSetExposures(const Parameters& params,
         QL_REQUIRE(file.is_open(), "Error opening file " << fileName);
         const vector<Real>& epe = postProcess->netEPE(n);
         const vector<Real>& ene = postProcess->netENE(n);
-        const vector<Real>& eee = postProcess->netEEE(n);
+        const vector<Real>& ee_bb = postProcess->netEE_BB(n);
+        const vector<Real>& eee_bb = postProcess->netEEE_BB(n);
         const vector<Real>& pfe = postProcess->netPFE(n);
         const vector<Real>& ecb = postProcess->expectedCollateral(n);
-        file << "#NettingSet,Date,Time,EPE,ENE,EEE,PFE,ExpectedCollateral" << endl;
+        file << "#NettingSet,Date,Time,EPE,ENE,EE_B,EEE_B,PFE,ExpectedCollateral" << endl;
         file << n << ","
              << QuantLib::io::iso_date(today) << ","
              << 0.0 << ","
              << epe[0] << ","
              << ene[0] << ","
-             << eee[0] << ","
+             << ee_bb[0] << ","
+             << eee_bb[0] << ","
              << pfe[0] << ","
              << ecb[0] << endl;
         for (Size j = 0; j < dates.size(); ++j) {
@@ -676,7 +681,8 @@ void writeNettingSetExposures(const Parameters& params,
                  << time << ","
                  << epe[j+1] << ","
                  << ene[j+1] << ","
-                 << eee[j+1] << ","
+                 << ee_bb[j+1] << ","
+                 << eee_bb[j+1] << ","
                  << pfe[j+1] << ","
                  << ecb[j+1] << endl;
         }
@@ -694,7 +700,7 @@ void writeXVA(const Parameters& params,
     string fileName = outputPath + "/xva.csv";
     ofstream file(fileName.c_str());
     QL_REQUIRE(file.is_open(), "Error opening file " << fileName);
-    file << "#TradeId,NettingSetId,CVA,DVA,FBA,FCA,COLVA,CollateralFloor,AllocatedCVA,AllocatedDVA,AllocationMethod,EPE_BB,EEPE" << endl;
+    file << "#TradeId,NettingSetId,CVA,DVA,FBA,FCA,COLVA,CollateralFloor,AllocatedCVA,AllocatedDVA,AllocationMethod,EPE_B,EEPE_B" << endl;
     for (auto n : postProcess->nettingSetIds()) {
         file << ","
              << n << ","
@@ -708,7 +714,7 @@ void writeXVA(const Parameters& params,
              << postProcess->nettingSetDVA(n) << ","
              << allocationMethod << ","
              << postProcess->netEPE_BB(n) << ","
-             << postProcess->netEEPE(n)
+             << postProcess->netEEPE_BB(n)
              << endl;
         for (Size k = 0; k < portfolio->trades().size(); ++k) {
             string tid = portfolio->trades()[k]->id();
@@ -726,7 +732,7 @@ void writeXVA(const Parameters& params,
                  << postProcess->allocatedTradeDVA(tid) << ","
                  << allocationMethod << ","
                  << postProcess->tradeEPE_BB(tid) << ","
-                 << postProcess->tradeEEPE(tid)
+                 << postProcess->tradeEEPE_BB(tid)
                  << endl;
         }
     }
