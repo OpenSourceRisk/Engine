@@ -636,10 +636,10 @@ void writeTradeExposures(const Parameters& params,
                  << time << ","
                  << epe[j+1] << ","
                  << ene[j+1] << ","
-                 << ee_b[j+1] << ","
-                 << eee_b[j+1] << ","
                  << aepe[j+1] << ","
                  << aene[j+1] << ","
+                 << ee_b[j+1] << ","
+                 << eee_b[j+1] << ","
                  << pfe[j+1] << endl;
         }
         file.close();
