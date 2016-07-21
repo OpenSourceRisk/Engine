@@ -83,6 +83,9 @@ class OreExample(object):
 
     def plot_line(self, xvals, yvals, color, label):
         self.ax.plot(xvals, yvals, color=color, label=label, linewidth=2)
+    
+    def plot_hline(self, yval, color, label):
+        plt.axhline(yval, xmin=0, xmax=1, color=color, label=label, linewidth=2 )
 
     def setup_plot(self, filename):
         self.fig = plt.figure(figsize=plt.figaspect(0.4))
