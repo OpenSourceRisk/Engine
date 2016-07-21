@@ -184,14 +184,69 @@ This document focuses on instructions how to use ORE to cover basic workflows fr
 \section{Installation}
 %========================================================
 
-\subsection{ORE Executable}
+\subsection{Open Risk Engine Releases}
 
-\todo[inline]{Add instructions for extracting executable}
+ORE releases are regularly provided in the form of source code archives, Windows executable {\tt ore.exe} and documentation. During the soft launch phase (from July to September 2016), we will provide these to a limited audience via Quaternion's download server. Please contact info@quaternion.com for access details.  
 
-\subsection{Git}
+\medskip
+The following files are provided (as zip and tar.gz archives), all components of ORE:
+\begin{enumerate}
+\item {\tt ore.exe}
+\item {\tt userguide.pdf}
+\item {\tt Examples-1.8.zip}
+%\item QuantLib-1.8.tar.gz, QuantLib-1.8.zip (unchanged QuantLib release 1.8)
+\item {\tt QuantExt-1.8.zip}
+\item {\tt ThirdPartyLibs.zip} (RapidXml)
+\item {\tt OpenRiskEngineData-1.8.zip}
+\item {\tt OpenRiskEngineAnalytics-1.8.zip}
+\item {\tt App-1.8.zip}
+\end{enumerate} 
+
+The first three items are sufficient to run the compiled ORE application on the list of examples described in the user guide (this works on Windows only):
+
+\begin{itemize}
+\item Unpack the Examples archive and place the executable in the top 'Examples' directory which also contains the script  {\tt ore\_examples\_helper.py}.
+\item Edit the latter script, change the lines
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{python3}
+            self.ore_exe = "..\\..\\App\\bin\\Win32\\Release\\ore.exe"
+            self.ore_exe = "..\\..\\App\\bin\\x64\\Release\\ore.exe"
+\end{minted}
+\vspace{-0.5cm}
+\end{listing}
+to a single line
+\begin{listing}[H]
+\begin{minted}[fontsize=\footnotesize]{python3}
+            self.ore_exe = "ore.exe"
+\end{minted} 
+\vspace{-0.5cm}
+\end{listing}
+\item Ensure that the scripting language Python is installed on your computer, see also section \ref{sec:python}  below.
+\item Move on to the examples in section \ref{sec:examples}
+\end{itemize}
+
+\medskip
+To build ORE from sources, the subsequent archives are required and need to be installed in the order of their appearance in the list:
+
+\begin{itemize}
+\item Choose a project directory, e.g. {\tt ORE}
+\item Move the archives 3-8 above to directory {\tt ORE} and unpack each of them
+\item Remove the release suffix (-1.8) form all directory names
+\item Set up Boost as described in section \ref{sec:boost}, unless already installed
+\item Set up QuantLib 1.8 \cite{QL,quantlib-install} from its github or sourceforge download page, unless already installed; QuantLib needs to be located in this project directory {\tt ORE}, or a link pointing to the actual QuantLib directory
+\item Build QuantExt, OpenRiskEngineData, OpenRiskEngineAnalytics, App (in this order) as described in section \ref{sec:build}
+\item Move on to section \ref{sec:python} and the examples in \ref{sec:examples}.
+\end{itemize}
+
+
+\subsection{Open Risk Engine on GitHub}
 
 Open Risk Engine's source code is hosted on github.com using {\tt git}, a free and open source distributed version control system. 
-\todo[inline]{Mention that source code archives can be downloaded, no need for git}
+
+\subsubsection{Git}
+
+To access the current code base on GitHub, one needs to get {\tt git} installed first.
    
 \begin{enumerate}
 \item Install and setup Git on your machine following instructions at \cite{confluence} 
@@ -214,7 +269,7 @@ This will create a folder 'ore' in your current directory that contains the code
 
 \end{enumerate}
 
-\subsection{Boost}
+\subsubsection{Boost}\label{sec:boost}
 
 \subsubsection*{Windows}
 
@@ -253,7 +308,7 @@ Alternatively, compile all Boost libraries directly from the source code:
 (so includes should be in BOOST and libs should be in BOOST/stage/lib)
 \end{enumerate}
 
-\subsection{ORE Libraries and Application}
+\subsubsection{Open Risk Engine}\label{sec:build}
 
 \subsubsection*{Windows}
 
@@ -360,7 +415,7 @@ and
 
 \end{enumerate}
 
-\subsection{Python and Jupyter}
+\subsection{Python and Jupyter}\label{sec:python}
 
 Python is required to run the examples in section \ref{sec:examples}. And we use Jupyter \cite{jupyter} in section \label{sec:jupyter} to visualise simulation results. Both are part of the 'Anaconda Open Data Science Analytics Platform' \cite{Anaconda}. Anaconda installation instructions for Windows, OS X and Linux are available on the anaconda site, with graphical installers for Windows and OS X. 
 
