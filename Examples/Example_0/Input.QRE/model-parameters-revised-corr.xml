@@ -1,0 +1,372 @@
+<ModelParameters>
+
+    <InterestRateModels>
+        <LinearGaussMarkov>
+            <Lambda>0.01</Lambda>
+            <!--<Lambda>0.0001</Lambda>-->
+            <CalibrateH>false</CalibrateH>
+            <Sigma>0.01</Sigma>
+            <CalibrateZeta>true</CalibrateZeta>
+            <!--<CalibrateZeta>false</CalibrateZeta>-->
+            <InterpolationH>PiecewiseLinear</InterpolationH>
+            <InterpolationZeta>PiecewiseLinear</InterpolationZeta>
+
+            <CalibrationSwaptions>
+                <!-- specifiy a <Strike> element, otherwise it's ATM -->
+		
+		<!-- J1: Coterminal -->
+		<!--
+                <Swaption>
+                    <Expiry>2Y</Expiry>
+                    <Term>18Y</Term>
+                </Swaption>
+                <Swaption>
+                    <Expiry>4Y</Expiry>
+                    <Term>16Y</Term>
+                </Swaption>
+                <Swaption>
+                    <Expiry>6Y</Expiry>
+                    <Term>14Y</Term>
+                </Swaption>
+                <Swaption>
+                    <Expiry>8Y</Expiry>
+                    <Term>12Y</Term>
+                </Swaption>
+                <Swaption>
+                    <Expiry>10Y</Expiry>
+                    <Term>10Y</Term>
+                </Swaption>
+                <Swaption>
+                    <Expiry>12Y</Expiry>
+                    <Term>8Y</Term>
+                </Swaption>
+                <Swaption>
+                    <Expiry>14Y</Expiry>
+                    <Term>6Y</Term>
+                </Swaption>
+                <Swaption>
+                    <Expiry>16Y</Expiry>
+                    <Term>4Y</Term>
+                </Swaption>
+                <Swaption>
+                    <Expiry>18Y</Expiry>
+                    <Term>2Y</Term>
+                </Swaption>
+		-->
+		
+		<!-- J1: 10Y tail -->
+                <!--
+		<Swaption>
+                    <Expiry>2Y</Expiry>
+                    <Term>10Y</Term>
+                </Swaption>
+                <Swaption>
+                    <Expiry>4Y</Expiry>
+                    <Term>10Y</Term>
+                </Swaption>
+                <Swaption>
+                    <Expiry>6Y</Expiry>
+                    <Term>10Y</Term>
+                </Swaption>
+                <Swaption>
+                    <Expiry>8Y</Expiry>
+                    <Term>10Y</Term>
+                </Swaption>
+                <Swaption>
+                    <Expiry>10Y</Expiry>
+                    <Term>10Y</Term>
+                </Swaption>
+                <Swaption>
+                    <Expiry>12Y</Expiry>
+                    <Term>10Y</Term>
+                </Swaption>
+                <Swaption>
+                    <Expiry>14Y</Expiry>
+                    <Term>10Y</Term>
+                </Swaption>
+		<Swaption>
+                    <Expiry>18Y</Expiry>
+                    <Term>10Y</Term>
+                </Swaption>
+		-->
+		
+		<!-- J1: 1Y tail -->
+		<!--
+	 	<Swaption>
+                    <Expiry>3M</Expiry>
+                    <Term>1Y</Term>
+                </Swaption>
+                <Swaption>
+                    <Expiry>6M</Expiry>
+                    <Term>1Y</Term>
+                </Swaption>
+		-->
+		<Swaption>
+                    <Expiry>1Y</Expiry>
+                    <Term>1Y</Term>
+                </Swaption>
+		<Swaption>
+                    <Expiry>2Y</Expiry>
+                    <Term>1Y</Term>
+                </Swaption>
+		<Swaption>
+                    <Expiry>3Y</Expiry>
+                    <Term>1Y</Term>
+                </Swaption>
+		<Swaption>
+                    <Expiry>4Y</Expiry>
+                    <Term>1Y</Term>
+                </Swaption>
+                <Swaption>
+                    <Expiry>5Y</Expiry>
+                    <Term>1Y</Term>
+                </Swaption>
+                <Swaption>
+                    <Expiry>6Y</Expiry>
+                    <Term>1Y</Term>
+                </Swaption>
+                <Swaption>
+                    <Expiry>8Y</Expiry>
+                    <Term>1Y</Term>
+                </Swaption>
+                <Swaption>
+                    <Expiry>10Y</Expiry>
+                    <Term>1Y</Term>
+                </Swaption>
+                <Swaption>
+                    <Expiry>12Y</Expiry>
+                    <Term>1Y</Term>
+                </Swaption>
+                <Swaption>
+                    <Expiry>14Y</Expiry>
+                    <Term>1Y</Term>
+                </Swaption>
+		<Swaption>
+                    <Expiry>16Y</Expiry>
+                    <Term>1Y</Term>
+                </Swaption>
+		<Swaption>
+                    <Expiry>18Y</Expiry>
+                    <Term>1Y</Term>
+                </Swaption>
+		<Swaption>
+                    <Expiry>20Y</Expiry>
+                    <Term>1Y</Term>
+                </Swaption>
+		<Swaption>
+                    <Expiry>22Y</Expiry>
+                    <Term>1Y</Term>
+                </Swaption>
+ 		<Swaption>
+                    <Expiry>24Y</Expiry>
+                    <Term>1Y</Term>
+                </Swaption>
+		<Swaption>
+                    <Expiry>26Y</Expiry>
+                    <Term>1Y</Term>
+                </Swaption>
+		<Swaption>
+                    <Expiry>28Y</Expiry>
+                    <Term>1Y</Term>
+                </Swaption>
+		<Swaption>
+                    <Expiry>30Y</Expiry>
+                    <Term>1Y</Term>
+                </Swaption>
+		<Swaption>
+                    <Expiry>35Y</Expiry>
+                    <Term>1Y</Term>
+                </Swaption>
+		<Swaption>
+                    <Expiry>40Y</Expiry>
+                    <Term>1Y</Term>
+                </Swaption>
+		<Swaption>
+                    <Expiry>45Y</Expiry>
+                    <Term>1Y</Term>
+                </Swaption>
+		<Swaption>
+                    <Expiry>50Y</Expiry>
+                    <Term>1Y</Term>
+                </Swaption>
+            </CalibrationSwaptions>
+        </LinearGaussMarkov>
+    </InterestRateModels>
+    
+    <FXModels>
+        <GeometricBrownianMotion>
+            <Sigma>0.1</Sigma>
+            <CalibrateSigma>true</CalibrateSigma>
+            <CalibrationOptions>
+                <Option>
+                    <Expiry>3M</Expiry>
+                </Option>
+                <Option>
+                    <Expiry>6M</Expiry>
+                </Option>
+                <Option>
+                    <Expiry>9M</Expiry>
+                </Option>
+                <Option>
+                    <Expiry>12M</Expiry>
+                </Option>
+                <Option>
+                    <Expiry>15M</Expiry>
+                </Option>
+                <Option>
+                    <Expiry>18M</Expiry>
+                </Option>
+                <Option>
+                    <Expiry>2Y</Expiry>
+                </Option>
+                <Option>
+                    <Expiry>3Y</Expiry>
+                </Option>
+            </CalibrationOptions>
+        </GeometricBrownianMotion>
+    </FXModels>
+
+<InflationModels>
+        <LinearGaussMarkovJarrowYildirim>
+          <LambdaRR>0.000001</LambdaRR>
+          <CalibrateHRR>true</CalibrateHRR>
+          <!--<CalibrateHRR>false</CalibrateHRR>-->
+            <InterpolationHRR>PiecewiseLinear</InterpolationHRR>
+            <SigmaRR>0.0050</SigmaRR>
+            <!--<SigmaRR>0.01</SigmaRR>-->
+            <CalibrateAlphaRR>false</CalibrateAlphaRR>
+            <InterpolationAlphaRR>Constant</InterpolationAlphaRR>
+            <SigmaCPI>0.0075</SigmaCPI>
+            <CalibrateAlphaCPI>false</CalibrateAlphaCPI>
+            <InterpolationAlphaCPI>Constant</InterpolationAlphaCPI>
+            <CalibrationZeroCapFloors>
+                <Option>
+                    <Expiry>1Y</Expiry>
+                </Option>
+                <Option>
+                    <Expiry>2Y</Expiry>
+                </Option>
+                <Option>
+                    <Expiry>3Y</Expiry>
+                </Option>
+                <Option>
+                    <Expiry>5Y</Expiry>
+                </Option>
+                <Option>
+                    <Expiry>7Y</Expiry>
+                </Option>
+                <Option>
+                    <Expiry>12Y</Expiry>
+                </Option>
+                <Option>
+                    <Expiry>15Y</Expiry>
+                </Option>
+                <Option>
+                    <Expiry>20Y</Expiry>
+                </Option>
+                <Option>
+                    <Expiry>30Y</Expiry>
+                </Option>
+            </CalibrationZeroCapFloors>
+            <CalibrationYoYCapFloors>
+                <Option>
+                    <Expiry>2Y</Expiry>
+                </Option>
+                <Option>
+                    <Expiry>3Y</Expiry>
+                </Option>
+            </CalibrationYoYCapFloors>
+        </LinearGaussMarkovJarrowYildirim>
+    </InflationModels>
+
+    <CreditModels>
+        <CoxIngersollRossPlusPlus>
+            <Speed>1</Speed>
+            <CalibrateSpeed>true</CalibrateSpeed>
+            <Sigma>1</Sigma>
+            <CalibrateSigma>true</CalibrateSigma>
+            <Lambda>1</Lambda>
+            <CalibrateLambda>true</CalibrateLambda>
+            <Theta>1</Theta>
+            <CalibrateTheta>true</CalibrateTheta>
+            <FlatCurve>false</FlatCurve>
+            <Epsilon>1</Epsilon>
+            <CalibrationOptions>
+                <Option>
+                    <Expiry>2Y</Expiry>
+                </Option>
+                <Option>
+                    <Expiry>3Y</Expiry>
+                </Option>
+            </CalibrationOptions>
+        </CoxIngersollRossPlusPlus>
+        <LinearGaussMarkovCredit>
+            <Lambda>0.025</Lambda>
+            <CalibrateH>true</CalibrateH>
+            <Sigma>0.008</Sigma>
+            <CalibrateZeta>true</CalibrateZeta>
+            <InterpolationH>PiecewiseLinear</InterpolationH>
+            <InterpolationZeta>PiecewiseLinear</InterpolationZeta>
+            <CalibrationOptions>
+                <Option>
+                    <Expiry>2Y</Expiry>
+                </Option>
+                <Option>
+                    <Expiry>3Y</Expiry>
+                </Option>
+            </CalibrationOptions>
+        </LinearGaussMarkovCredit>
+    </CreditModels>
+    
+    <InstantaneousCorrelations>
+      <Correlation factor1="IR:EUR" factor2="IR:USD">0.3</Correlation>
+      <Correlation factor1="IR:EUR" factor2="IR:GBP">0.3</Correlation>
+      <Correlation factor1="IR:USD" factor2="IR:GBP">0.3</Correlation>
+      <!--
+      <Correlation factor1="IR:EUR" factor2="IR:USD">0.0</Correlation>
+      <Correlation factor1="IR:EUR" factor2="IR:GBP">0.0</Correlation>
+      <Correlation factor1="IR:USD" factor2="IR:GBP">0.0</Correlation>
+      -->
+      <Correlation factor1="IR:EUR" factor2="FX:USDEUR">0</Correlation>
+      <Correlation factor1="IR:EUR" factor2="FX:GBPEUR">0</Correlation>
+      <Correlation factor1="IR:GBP" factor2="FX:USDEUR">0</Correlation>
+      <Correlation factor1="IR:GBP" factor2="FX:GBPEUR">0</Correlation>
+      <Correlation factor1="IR:USD" factor2="FX:USDEUR">0</Correlation>
+      <Correlation factor1="IR:USD" factor2="FX:GBPEUR">0</Correlation>
+      <Correlation factor1="FX:USDEUR" factor2="FX:GBPEUR">0</Correlation>
+
+      <Correlation factor1="IR:EUR" factor2="INF:EU/Index/RR">0.95</Correlation>
+      <Correlation factor1="IR:EUR" factor2="INF:EU/Index/CPI">0.5</Correlation>
+      <Correlation factor1="INF:EU/Index/RR" factor2="INF:EU/Index/CPI">0.475</Correlation>
+
+      <Correlation factor1="IR:GBP" factor2="INF:UK/Index/RR">0.95</Correlation>
+      <Correlation factor1="IR:GBP" factor2="INF:UK/Index/CPI">0.5</Correlation>
+      <Correlation factor1="INF:UK/Index/RR" factor2="INF:UK/Index/CPI">0.475</Correlation>
+
+      <!-- NEW -->
+      <Correlation factor1="IR:USD" factor2="INF:EU/Index/RR">0.285</Correlation>
+      <Correlation factor1="IR:USD" factor2="INF:EU/Index/CPI">0.15</Correlation>
+      <Correlation factor1="IR:USD" factor2="INF:UK/Index/RR">0.285</Correlation>
+      <Correlation factor1="IR:USD" factor2="INF:UK/Index/CPI">0.15</Correlation>
+
+      <Correlation factor1="IR:GBP" factor2="INF:EU/Index/RR">0.285</Correlation>
+      <Correlation factor1="IR:GBP" factor2="INF:EU/Index/CPI">0.15</Correlation>
+
+      <Correlation factor1="IR:EUR" factor2="INF:UK/Index/RR">0.285</Correlation>
+      <Correlation factor1="IR:EUR" factor2="INF:UK/Index/CPI">0.15</Correlation>
+
+      <Correlation factor1="INF:EU/Index/RR" factor2="INF:UK/Index/RR">0.27075</Correlation>
+      <Correlation factor1="INF:EU/Index/RR" factor2="INF:UK/Index/CPI">0.1425</Correlation>
+      <Correlation factor1="INF:UK/Index/RR" factor2="INF:EU/Index/CPI">0.1425</Correlation>
+      <Correlation factor1="INF:UK/Index/CPI" factor2="INF:EU/Index/CPI">0.075</Correlation>
+      <!--
+	  <Correlation factor1="IR:EUR" factor2="INF:FR/Index/RR">0.95</Correlation>
+	  <Correlation factor1="IR:EUR" factor2="INF:FR/Index/CPI">0.5</Correlation>
+	  <Correlation factor1="INF:FR/Index/RR" factor2="INF:FR/Index/CPI">0.25</Correlation>
+	  <Correlation factor1="IR:USD" factor2="INF:FR/Index/RR">0.5</Correlation>
+	  <Correlation factor1="IR:GBP" factor2="INF:FR/Index/RR">0.5</Correlation>
+      -->
+    </InstantaneousCorrelations>
+    
+  </ModelParameters>
+  

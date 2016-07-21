@@ -135,15 +135,6 @@ void AnalyticLgmSwaptionEngine::calculate() const {
         S_[j - j1_] += sum2 / c_->discount(arguments_.fixedPayDates[j]);
     }
 
-    // check the sign of the cash flows
-    for (Size j = j1_; j < arguments_.fixedCoupons.size(); ++j) {
-        QL_REQUIRE(arguments_.fixedCoupons[j] - S_[j - j1_] >= 0.0,
-                   "the (corrected) fixed leg flows must all be non negative, "
-                   "but the flow on "
-                       << arguments_.fixedPayDates[j] << " is " << arguments_.fixedCoupons[j] << " - " << S_[j - j1_]
-                       << " = " << (arguments_.fixedCoupons[j] - S_[j - j1_]));
-    }
-
     Real w = type == Option::Call ? -1.0 : 1.0;
 
     // it is a requirement that H' does not change its sign,
