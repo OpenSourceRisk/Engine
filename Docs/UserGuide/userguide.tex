@@ -521,10 +521,11 @@ The example in folder {\tt Examples/Example\_2} generates the exposure evolution
 \end{figure}
 
 %--------------------------------------------------------
-\subsection{Cross Currency Swap Exposure}
+\subsection{Cross Currency Swap Exposure and FX Reset}
 %--------------------------------------------------------
 
-The case in {\tt Examples/Example\_8} is a vanilla cross currency swap. It shows the typical blend of and interest rate swap's saw tooth exposure evolution with an FX forward's exposure which increases monotonically to final maturity, see figure \ref{fig_6}. \todo[inline]{Add notional resetting feature and example}
+The case in {\tt Examples/Example\_8} is a vanilla cross currency swap. It shows the typical blend of and interest rate swap's saw tooth exposure evolution with an FX forward's exposure which increases monotonically to final maturity, see figure \ref{fig_6}. 
+%\todo[inline]{Done - Add notional resetting feature and example}
 \begin{figure}[hbt]
 \begin{center}
 %\includegraphics[scale=1.0]{example_ccswap.pdf}
@@ -533,7 +534,16 @@ The case in {\tt Examples/Example\_8} is a vanilla cross currency swap. It shows
 \caption{Cross Currency Swap exposure evolution without mark-to-market notional reset. Simulation with 1000 paths and quarterly time steps.}
 \label{fig_6}
 \end{figure}
-
+The case in {\tt Examples/Example\_9} then shows the effect of FX resets in a EUR/USD cross currency basis swap, see figure \ref{fig_6b}. As expected, the notional reset causes an exposure collapse at each period start when the EUR leg's notional is reset to match the USD notional.
+\begin{figure}[hbt]
+\begin{center}
+%\includegraphics[scale=1.0]{example_ccswap.pdf}
+\includegraphics[scale=0.45]{mpl_xccy_reset.pdf}
+\end{center}
+\caption{Cross Currency Basis Swap exposure evolution with and without mark-to-market notional reset. Simulation with 1000 paths and quarterly time steps.}
+\label{fig_6b}
+\end{figure}
+  
 %--------------------------------------------------------
 \subsection{FX Option Exposure}
 %--------------------------------------------------------
