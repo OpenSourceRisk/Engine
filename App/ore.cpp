@@ -85,6 +85,11 @@ void writeXVA(const Parameters& params,
 
 int main(int argc, char** argv) {
 
+    if (argc == 2 && (string(argv[1]) == "-v" || string(argv[1]) == "--version")) {
+        cout << "OpenRiskEngine version " << OPEN_RISK_ENGINE_VERSION << endl;
+        exit(0);
+    }
+
     boost::timer timer;
 
     try {
