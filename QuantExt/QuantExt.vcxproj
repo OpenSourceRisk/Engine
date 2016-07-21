@@ -528,7 +528,6 @@
     <ClInclude Include="qle\math\all.hpp" />
     <ClInclude Include="qle\math\flatextrapolation.hpp" />
     <ClInclude Include="qle\methods\all.hpp" />
-    <ClInclude Include="qle\methods\multipathgenerator.hpp" />
     <ClInclude Include="qle\methods\multipathgeneratorbase.hpp" />
     <ClInclude Include="qle\models\all.hpp" />
     <ClInclude Include="qle\models\crossassetanalytics.hpp" />
@@ -577,10 +576,10 @@
     <ClInclude Include="qle\termstructures\datedstrippedoptionletbase.hpp" />
     <ClInclude Include="qle\termstructures\dynamicblackvoltermstructure.hpp" />
     <ClInclude Include="qle\termstructures\dynamicoptionletvolatilitystructure.hpp" />
-    <ClInclude Include="qle\termstructures\dynamicstype.hpp" />
     <ClInclude Include="qle\termstructures\dynamicswaptionvolmatrix.hpp" />
     <ClInclude Include="qle\termstructures\hazardspreadeddefaulttermstructure.hpp" />
     <ClInclude Include="qle\termstructures\interpolateddiscountcurve.hpp" />
+    <ClInclude Include="qle\termstructures\interpolateddiscountcurve2.hpp" />
     <ClInclude Include="qle\termstructures\oibasisswaphelper.hpp" />
     <ClInclude Include="qle\termstructures\oiccbasisswaphelper.hpp" />
     <ClInclude Include="qle\termstructures\oisratehelper.hpp" />

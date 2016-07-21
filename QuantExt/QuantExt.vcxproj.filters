@@ -228,9 +228,6 @@
     <ClInclude Include="qle\methods\all.hpp">
       <Filter>methods</Filter>
     </ClInclude>
-    <ClInclude Include="qle\methods\multipathgenerator.hpp">
-      <Filter>methods</Filter>
-    </ClInclude>
     <ClInclude Include="qle\methods\multipathgeneratorbase.hpp">
       <Filter>methods</Filter>
     </ClInclude>
@@ -262,9 +259,6 @@
       <Filter>termstructures</Filter>
     </ClInclude>
     <ClInclude Include="qle\termstructures\dynamicblackvoltermstructure.hpp">
-      <Filter>termstructures</Filter>
-    </ClInclude>
-    <ClInclude Include="qle\termstructures\dynamicstype.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
     <ClInclude Include="qle\termstructures\dynamicswaptionvolmatrix.hpp">
@@ -319,6 +313,9 @@
       <Filter>termstructures</Filter>
     </ClInclude>
     <ClInclude Include="qle\termstructures\swaptionvolatilityconverter.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\interpolateddiscountcurve2.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
   </ItemGroup>
