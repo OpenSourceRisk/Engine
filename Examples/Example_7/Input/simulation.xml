@@ -3,8 +3,8 @@
     <Parameters>
 
       <Discretization>Exact</Discretization>
-      <!--<Grid>83,3M</Grid>-->
-      <Grid>250,1M</Grid>
+      <Grid>83,3M</Grid>
+      <!--<Grid>250,1M</Grid>-->
       <!--<Grid>580,1W</Grid>-->
       <Calendar>EUR,USD,GBP,CHF</Calendar>
       <Sequence>SobolBrownianBridge</Sequence>
