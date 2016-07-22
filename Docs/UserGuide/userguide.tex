@@ -186,18 +186,19 @@ This document focuses on instructions how to use ORE to cover basic workflows fr
 
 \subsection{Open Risk Engine Releases}
 
-ORE releases are regularly provided in the form of source code archives, Windows executable {\tt ore.exe} and documentation. During the soft launch phase (from July to September 2016), we will provide these to a limited audience via Quaternion's download server. Please contact info@quaternion.com for access details.  
+ORE releases are regularly provided in the form of source code archives, Windows exe\-cutables {\tt ore.exe}, example cases and documentation. During the soft launch phase (from July to September 2016), we will provide these to a limited audience via Quaternion's download server. Please contact info@quaternion.com for access details.  
 
 \medskip
-The release consists of a single archive in zip or tar.gz format
+The release consists of a single archive in zip format
 \begin{itemize}
 \item {\tt OpenRiskEngine-1.8.zip}
-\item {\tt OpenRiskEngine-1.8.tar.gz}
+%\item {\tt OpenRiskEngine-1.8.tar.gz}
 \end{itemize}
 
 When unpacked, it creates a directory {\tt OpenRiskEngine-1.8} with the following files respectively subdirectories
 \begin{enumerate}
-\item {\tt ore.exe}
+\item {\tt bin/win32/ore.exe}
+\item {\tt bin/win64/ore.exe}
 \item {\tt userguide.pdf}
 \item {\tt Examples/}
 \item {\tt App/}
@@ -207,26 +208,25 @@ When unpacked, it creates a directory {\tt OpenRiskEngine-1.8} with the followin
 \item {\tt ThirdPartyLibs/}
 \end{enumerate} 
 
-The first three items are sufficient to run the compiled ORE application on the list of examples described in the user guide (this works on Windows only):
-
+The first four items (executables, userguide.pdf and examples folder) are sufficient to run the compiled ORE application on the list of examples described in the user guide (this works on Windows only). To continue with the compiled executables:
 \begin{itemize}
-\item Edit {\tt Examples/ore\_examples\_helper.py}, change the lines
-\begin{listing}[H]
+%\item Edit {\tt Examples/ore\_examples\_helper.py}, change the lines
+%\begin{listing}[H]
 %\hrule\medskip
-\begin{minted}[fontsize=\footnotesize]{python3}
-            self.ore_exe = "..\\..\\App\\bin\\Win32\\Release\\ore.exe"
-            self.ore_exe = "..\\..\\App\\bin\\x64\\Release\\ore.exe"
-\end{minted}
-\vspace{-0.5cm}
-\end{listing}
-to a single line
-\begin{listing}[H]
-\begin{minted}[fontsize=\footnotesize]{python3}
-            self.ore_exe = "..\\ore.exe"
-\end{minted} 
-\vspace{-0.5cm}
-\end{listing}
-\item Ensure that the scripting language Python is installed on your computer, see also section \ref{sec:python}  below.
+%\begin{minted}[fontsize=\footnotesize]{python3}
+%            self.ore_exe = "..\\..\\App\\bin\\Win32\\Release\\ore.exe"
+%            self.ore_exe = "..\\..\\App\\bin\\x64\\Release\\ore.exe"
+%\end{minted}
+%\vspace{-0.5cm}
+%\end{listing}
+%to a single line
+%\begin{listing}[H]
+%\begin{minted}[fontsize=\footnotesize]{python3}
+%            self.ore_exe = "..\\ore.exe"
+%\end{minted} 
+%\vspace{-0.5cm}
+%\end{listing}
+\item Ensure that the scripting language Python is installed on your computer, see also section \ref{sec:python}  below;
 \item Move on to the examples in section \ref{sec:examples}
 \end{itemize}
 
@@ -235,10 +235,10 @@ To build ORE from sources:
 
 \begin{itemize}
 \item Set up Boost as described in section \ref{sec:boost}, unless already installed
-\item Set up QuantLib 1.8 \cite{QL,quantlib-install} from its github or sourceforge download page, unless already installed; QuantLib needs to be located in this project directory {\tt OpenRiskEngine-1.8}, or a link pointing to the actual QuantLib directory
+\item Set up QuantLib 1.8 \cite{QL,quantlib-install} from its github or sourceforge download page, unless already installed; QuantLib needs to be located in this project directory {\tt OpenRiskEngine-1.8}. Alternatively, you can create a symbolic link named QuantLib here that points to the actual QuantLib directory
 \item Build QuantExt, OpenRiskEngineData, OpenRiskEngineAnalytics, App (in this order) as described in section \ref{sec:build}
 \item Note that ThirdPartyLibs does not need to be built, it contains RapdidXml, header only code for reading and writing XML files
-\item Move on to section \ref{sec:python} and the examples in \ref{sec:examples}.
+\item Move on to section \ref{sec:python} and the examples in section \ref{sec:examples}.
 \end{itemize}
 
 
@@ -251,7 +251,7 @@ Open Risk Engine's source code is hosted on github.com using {\tt git}, a free a
 To access the current code base on GitHub, one needs to get {\tt git} installed first.
    
 \begin{enumerate}
-\item Install and setup Git on your machine following instructions at \cite{confluence} 
+\item Install and setup Git on your machine following instructions at \cite{git-download} 
 
 \item Fetch ORE from github by running the following: 
 
@@ -426,13 +426,24 @@ Python is required to run the examples in section \ref{sec:examples}. And we use
 %========================================================
 
 The examples shown in the following are intended to help getting started with ORE, and to serve as plausibility checks for the simulation results generated with ORE.
-All results can be produced with the Python scripts {\tt run.py} scripts in the ORE release's {\tt Examples} folder which work on both Windows and Unix platforms\footnote{Hence the Example section requires a recent Python installation, 3.5 or higher.}. In a nutshell, all scripts call ORE's command line application with a single input XML file
+All results can be produced with the Python scripts {\tt run.py} scripts in the ORE release's {\tt Examples} folder which work on both Windows and Unix platforms\footnote{Hence the Example section requires a recent Python installation, 3.5 or higher, see also section \ref{sec:python}.}. In a nutshell, all scripts call ORE's command line application with a single input XML file
 
 \medskip
 \centerline{\tt ore[.exe] input.xml}
 \medskip
 
 They produce a number of standard reports and exposure graphs in PDF format. The structure of the input file and of the portfolio, market and other configuration files referred to therein will be explained in section \ref{sec:configuration}. 
+
+\medskip
+Note: When building ORE from sources on Windows platforms, make sure that you copy your {\tt ore.exe} to the binary directory {\tt bin/win32} respectively {\tt bin/win64}. Otherwise the examples may be run using the pre-compiled executables which come with the ORE release. By default, the examples will point to the 64 bit executable. To change this to the 32 bit version, edit the file {\tt Examples/ore\_examples\_helper.py} and change line 
+\begin{listing}[H]
+\vspace{-0.5cm}
+\begin{minted}[fontsize=\small]{python3}
+            self.ore_exe = "..\\..\\bin\\win64\\ore.exe"
+\end{minted}
+\vspace{-0.5cm}
+\end{listing}
+accordingly.
 
 %--------------------------------------------------------
 \subsection{Interest Swap Exposure}\label{sec:example1}
@@ -2057,7 +2068,9 @@ This yields allocated exposures proportional to the netting set exposure, avoids
  
 \bibitem{quantlib-install} http://quantlib.org/install/vc10.shtml
 
-\bibitem{confluence} https://confluence.atlassian.com/bitbucket/set-up-git-744723531.html
+%\bibitem{confluence} https://confluence.atlassian.com/bitbucket/set-up-git-744723531.html
+
+\bibitem{git-download} https://git-scm.com/downloads
 
 \bibitem{boost-binaries} https://sourceforge.net/projects/boost/files/boost-binaries
 
