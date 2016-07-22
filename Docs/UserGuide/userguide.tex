@@ -189,24 +189,28 @@ This document focuses on instructions how to use ORE to cover basic workflows fr
 ORE releases are regularly provided in the form of source code archives, Windows executable {\tt ore.exe} and documentation. During the soft launch phase (from July to September 2016), we will provide these to a limited audience via Quaternion's download server. Please contact info@quaternion.com for access details.  
 
 \medskip
-The following files are provided (as zip and tar.gz archives), all components of ORE:
+The release consists of a single archive in zip or tar.gz format
+\begin{itemize}
+\item {\tt OpenRiskEngine-1.8.zip}
+\item {\tt OpenRiskEngine-1.8.tar.gz}
+\end{itemize}
+
+When unpacked, it creates a directory {\tt OpenRiskEngine-1.8} with the following files respectively subdirectories
 \begin{enumerate}
 \item {\tt ore.exe}
 \item {\tt userguide.pdf}
-\item {\tt Examples-1.8.zip}
-%\item QuantLib-1.8.tar.gz, QuantLib-1.8.zip (unchanged QuantLib release 1.8)
-\item {\tt QuantExt-1.8.zip}
-\item {\tt ThirdPartyLibs.zip} (RapidXml)
-\item {\tt OpenRiskEngineData-1.8.zip}
-\item {\tt OpenRiskEngineAnalytics-1.8.zip}
-\item {\tt App-1.8.zip}
+\item {\tt Examples/}
+\item {\tt App/}
+\item {\tt OpenRiskEngineAnalytics/}
+\item {\tt OpenRiskEngineData/}
+\item {\tt QuantExt/}
+\item {\tt ThirdPartyLibs/}
 \end{enumerate} 
 
 The first three items are sufficient to run the compiled ORE application on the list of examples described in the user guide (this works on Windows only):
 
 \begin{itemize}
-\item Unpack the Examples archive and place the executable in the top 'Examples' directory which also contains the script  {\tt ore\_examples\_helper.py}.
-\item Edit the latter script, change the lines
+\item Edit {\tt Examples/ore\_examples\_helper.py}, change the lines
 \begin{listing}[H]
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{python3}
@@ -218,7 +222,7 @@ The first three items are sufficient to run the compiled ORE application on the 
 to a single line
 \begin{listing}[H]
 \begin{minted}[fontsize=\footnotesize]{python3}
-            self.ore_exe = "ore.exe"
+            self.ore_exe = "..\\ore.exe"
 \end{minted} 
 \vspace{-0.5cm}
 \end{listing}
@@ -227,15 +231,13 @@ to a single line
 \end{itemize}
 
 \medskip
-To build ORE from sources, the subsequent archives are required and need to be installed in the order of their appearance in the list:
+To build ORE from sources:
 
 \begin{itemize}
-\item Choose a project directory, e.g. {\tt ORE}
-\item Move the archives 3-8 above to directory {\tt ORE} and unpack each of them
-\item Remove the release suffix (-1.8) form all directory names
 \item Set up Boost as described in section \ref{sec:boost}, unless already installed
 \item Set up QuantLib 1.8 \cite{QL,quantlib-install} from its github or sourceforge download page, unless already installed; QuantLib needs to be located in this project directory {\tt ORE}, or a link pointing to the actual QuantLib directory
 \item Build QuantExt, OpenRiskEngineData, OpenRiskEngineAnalytics, App (in this order) as described in section \ref{sec:build}
+\item Note that ThirdPartyLibs does not need to be built, it contains RapdidXml, header only code for reading and writing XML files
 \item Move on to section \ref{sec:python} and the examples in \ref{sec:examples}.
 \end{itemize}
 
