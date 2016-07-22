@@ -198,7 +198,7 @@ The release consists of a single archive in zip format
 When unpacked, it creates a directory {\tt OpenRiskEngine-1.8} with the following files respectively subdirectories
 \begin{enumerate}
 \item {\tt bin/win32/ore.exe}
-\item {\tt bin/win64/ore.exe}
+\item {\tt bin/x64/ore.exe}
 \item {\tt userguide.pdf}
 \item {\tt Examples/}
 \item {\tt App/}
@@ -210,24 +210,8 @@ When unpacked, it creates a directory {\tt OpenRiskEngine-1.8} with the followin
 
 The first four items (executables, userguide.pdf and examples folder) are sufficient to run the compiled ORE application on the list of examples described in the user guide (this works on Windows only). To continue with the compiled executables:
 \begin{itemize}
-%\item Edit {\tt Examples/ore\_examples\_helper.py}, change the lines
-%\begin{listing}[H]
-%\hrule\medskip
-%\begin{minted}[fontsize=\footnotesize]{python3}
-%            self.ore_exe = "..\\..\\App\\bin\\Win32\\Release\\ore.exe"
-%            self.ore_exe = "..\\..\\App\\bin\\x64\\Release\\ore.exe"
-%\end{minted}
-%\vspace{-0.5cm}
-%\end{listing}
-%to a single line
-%\begin{listing}[H]
-%\begin{minted}[fontsize=\footnotesize]{python3}
-%            self.ore_exe = "..\\ore.exe"
-%\end{minted} 
-%\vspace{-0.5cm}
-%\end{listing}
 \item Ensure that the scripting language Python is installed on your computer, see also section \ref{sec:python}  below;
-\item Move on to the examples in section \ref{sec:examples}
+\item Move on to the examples in section \ref{sec:examples}.
 \end{itemize}
 
 \medskip
@@ -419,7 +403,7 @@ and
 
 \subsection{Python and Jupyter}\label{sec:python}
 
-Python is required to run the examples in section \ref{sec:examples}. And we use Jupyter \cite{jupyter} in section \label{sec:jupyter} to visualise simulation results. Both are part of the 'Anaconda Open Data Science Analytics Platform' \cite{Anaconda}. Anaconda installation instructions for Windows, OS X and Linux are available on the anaconda site, with graphical installers for Windows and OS X. 
+Python is required to run the examples in section \ref{sec:examples}. And we use Jupyter \cite{jupyter} in section \ref{sec:visualisation} to visualise simulation results. Both are part of the 'Anaconda Open Data Science Analytics Platform' \cite{Anaconda}. Anaconda installation instructions for Windows, OS X and Linux are available on the anaconda site, with graphical installers for Windows and OS X\footnote{On OS X, the pyton scripts used in the examples section may require the  environment variables {\tt LANG} and {\tt LC\_ALL } to be set to {\tt en\_US.UTF-8} or {\tt en\_GB.UTF-8}.}. 
 
 %========================================================
 \section{Examples}\label{sec:examples}
@@ -435,15 +419,16 @@ All results can be produced with the Python scripts {\tt run.py} scripts in the 
 They produce a number of standard reports and exposure graphs in PDF format. The structure of the input file and of the portfolio, market and other configuration files referred to therein will be explained in section \ref{sec:configuration}. 
 
 \medskip
-Note: When building ORE from sources on Windows platforms, make sure that you copy your {\tt ore.exe} to the binary directory {\tt bin/win32} respectively {\tt bin/win64}. Otherwise the examples may be run using the pre-compiled executables which come with the ORE release. By default, the examples will point to the 64 bit executable. To change this to the 32 bit version, edit the file {\tt Examples/ore\_examples\_helper.py} and change line 
-\begin{listing}[H]
-\vspace{-0.5cm}
-\begin{minted}[fontsize=\small]{python3}
-            self.ore_exe = "..\\..\\bin\\win64\\ore.exe"
-\end{minted}
-\vspace{-0.5cm}
-\end{listing}
-accordingly.
+Note: When building ORE from sources on Windows platforms, make sure that you copy your {\tt ore.exe} to the binary directory {\tt bin/win32/} respectively {\tt bin/x64/}. Otherwise the examples may be run using the pre-compiled executables which come with the ORE release. 
+%By default, the examples will point to the 64 bit executable. To change this to the 32 bit version, edit the file {\tt Examples/ore\_examples\_helper.py} and change line 
+%\begin{listing}[H]
+%\vspace{-0.5cm}
+%\begin{minted}[fontsize=\small]{python3}
+%            self.ore_exe = "..\\..\\bin\\win64\\ore.exe"
+%\end{minted}
+%\vspace{-0.5cm}
+%\end{listing}
+%accordingly.
 
 %--------------------------------------------------------
 \subsection{Interest Swap Exposure}\label{sec:example1}
@@ -2009,7 +1994,7 @@ where $MTA$ is the minimum transfer amount.
 \medskip
 Finally, the {\em Delivery Amount } is settled with a delay specified by the {\em Margin Period of Risk} (MPoR) which leads to residual exposure and XVA even for daily margining, zero thresholds and minimum transfer amounts.
 
-\subsection{Exposure Allocation}{\label{sec:app_allocation}
+\subsection{Exposure Allocation}\label{sec:app_allocation}
 
 XVAs and exposures are typically computed at netting set level. For accounting purposes it is typically required to {\em allocate} XVAs from netting set to individual trade level such that the allocated XVAs add up to the netting set XVA. This distribution is not trivial, since due to netting and imperfect correlation single trade (stand-alone) XVAs hardly ever add up to the netting set XVA: XVA is sub-additive similar to VaR. ORE provides an allocation method (labeled {\em marginal allocation } in the following) which slightly generalises the one proposed in \cite{PykhtinRosen}. Allocation is done pathwise which first leads to allocated expected exposures and then to allocated CVA/DVA by inserting these exposures into equations (\ref{CVA},\ref{DVA}). The allocation algorithm in ORE is as follows:
 \begin{itemize}
@@ -2041,16 +2026,6 @@ $$
 w_i = \CVA_i / \sum_i \CVA_i.
 $$
 This yields allocated exposures proportional to the netting set exposure, avoids spikes and negative $\EPE$, but does not distinguish the 'direction' of each trade's contribution to $\EPE$ and $\CVA$.
-
-%\subsection{Monte Carlo VaR and Expected Shortfall}
-%\todo[inline]{Add MC VaR}
-
-%\include{simm.tex}
-
-
-%========================================================
-%\section{Design Overview}
-%========================================================
 
 \end{appendix}
 
