@@ -41,7 +41,7 @@ namespace QuantExt {
 struct AtmVolatilityEUR {
     // Constructor
     AtmVolatilityEUR() : optionTenors(4), swapTenors(4), nVols(optionTenors.size(), swapTenors.size(), 0.0), 
-        lnVols(nVols), slnVols(nVols) {
+        lnVols(nVols), slnVols_1(nVols), slnVols_2(nVols), shifts_1(nVols), shifts_2(nVols) {
 
         // Populate option tenors
         optionTenors[0] = Period(1, Years);
@@ -60,6 +60,35 @@ struct AtmVolatilityEUR {
         nVols[1][0] = 0.007013; nVols[1][1] = 0.007443; nVols[1][2] = 0.007820; nVols[1][3] = 0.007363;
         nVols[2][0] = 0.007519; nVols[2][1] = 0.007807; nVols[2][2] = 0.007698; nVols[2][3] = 0.007117;
         nVols[3][0] = 0.007668; nVols[3][1] = 0.007705; nVols[3][2] = 0.007611; nVols[3][3] = 0.006848;
+
+        // Populate the lognormal volatility matrix
+        lnVols[0][0] = 2.187660; lnVols[0][1] = 1.748360; lnVols[0][2] = 0.834972; lnVols[0][3] = 0.663957;
+        lnVols[1][0] = 0.891725; lnVols[1][1] = 0.642449; lnVols[1][2] = 0.585798; lnVols[1][3] = 0.512169;
+        lnVols[2][0] = 0.549946; lnVols[2][1] = 0.552918; lnVols[2][2] = 0.528572; lnVols[2][3] = 0.476202;
+        lnVols[3][0] = 0.531597; lnVols[3][1] = 0.534495; lnVols[3][2] = 0.526216; lnVols[3][3] = 0.462007;
+
+        // Populate the first and second set of shifted lognormal volatilities
+        slnVols_1[0][0] = 0.929848; slnVols_1[0][1] = 0.924660; slnVols_1[0][2] = 0.610868; slnVols_1[0][3] = 0.495445;
+        slnVols_1[1][0] = 0.689737; slnVols_1[1][1] = 0.521342; slnVols_1[1][2] = 0.472902; slnVols_1[1][3] = 0.396814;
+        slnVols_1[2][0] = 0.474667; slnVols_1[2][1] = 0.463982; slnVols_1[2][2] = 0.432899; slnVols_1[2][3] = 0.371330;
+        slnVols_1[3][0] = 0.460333; slnVols_1[3][1] = 0.447973; slnVols_1[3][2] = 0.428017; slnVols_1[3][3] = 0.358081;
+
+        slnVols_2[0][0] = 0.732040; slnVols_2[0][1] = 0.754222; slnVols_2[0][2] = 0.539085; slnVols_2[0][3] = 0.439887;
+        slnVols_2[1][0] = 0.622370; slnVols_2[1][1] = 0.477238; slnVols_2[1][2] = 0.431955; slnVols_2[1][3] = 0.357137;
+        slnVols_2[2][0] = 0.444718; slnVols_2[2][1] = 0.430028; slnVols_2[2][2] = 0.397564; slnVols_2[2][3] = 0.335037;
+        slnVols_2[3][0] = 0.432003; slnVols_2[3][1] = 0.415209; slnVols_2[3][2] = 0.392379; slnVols_2[3][3] = 0.322612;
+
+
+        // Populate first and second set of shifts
+        shifts_1[0][0] = 0.002000; shifts_1[0][1] = 0.002500; shifts_1[0][2] = 0.003000; shifts_1[0][3] = 0.004000;
+        shifts_1[1][0] = 0.002000; shifts_1[1][1] = 0.002500; shifts_1[1][2] = 0.003000; shifts_1[1][3] = 0.004000;
+        shifts_1[2][0] = 0.002000; shifts_1[2][1] = 0.002500; shifts_1[2][2] = 0.003000; shifts_1[2][3] = 0.004000;
+        shifts_1[3][0] = 0.002000; shifts_1[3][1] = 0.002500; shifts_1[3][2] = 0.003000; shifts_1[3][3] = 0.004000;
+
+        shifts_2[0][0] = 0.003000; shifts_2[0][1] = 0.003750; shifts_2[0][2] = 0.004500; shifts_2[0][3] = 0.006000;
+        shifts_2[1][0] = 0.003000; shifts_2[1][1] = 0.003750; shifts_2[1][2] = 0.004500; shifts_2[1][3] = 0.006000;
+        shifts_2[2][0] = 0.003000; shifts_2[2][1] = 0.003750; shifts_2[2][2] = 0.004500; shifts_2[2][3] = 0.006000;
+        shifts_2[3][0] = 0.003000; shifts_2[3][1] = 0.003750; shifts_2[3][2] = 0.004500; shifts_2[3][3] = 0.006000;
     }
 
     // Members
@@ -67,7 +96,10 @@ struct AtmVolatilityEUR {
     vector<Period> swapTenors;
     Matrix nVols;
     Matrix lnVols;
-    Matrix slnVols;
+    Matrix slnVols_1;
+    Matrix slnVols_2;
+    Matrix shifts_1;
+    Matrix shifts_2;
 };
 
 struct conventionsEUR {

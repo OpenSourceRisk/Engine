@@ -34,6 +34,12 @@ class SwaptionVolatilityConverterTest {
 public:
     //! Test the conversion against known values
     static void testNormalToLognormal();
+    static void testLognormalToNormal();
+    static void testNormalToShiftedLognormal();
+    static void testShiftedLognormalToShiftedLognormal();
+    static void testShiftedLognormalToNormal();
+    static void testFailureImplyingVol();
+    static void testNormalShiftsIgnored();
 
     static boost::unit_test_framework::test_suite* suite();
 };
