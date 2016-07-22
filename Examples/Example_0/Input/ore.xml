@@ -12,8 +12,8 @@
     <Parameter name="conventionsFile">conventions.xml</Parameter>
     <Parameter name="marketConfigFile">todaysmarket.xml</Parameter>
     <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
-    <Parameter name="portfolioFile">instruments_A_627291AI.xml</Parameter>
-    <Parameter name="fixingModel">Simulated</Parameter>  <!-- Simulated or Manual -->
+    <!--<Parameter name="portfolioFile">instruments_A_627291AI.xml</Parameter>-->
+    <Parameter name="portfolioFile">instruments_A.xml</Parameter>
     <Parameter name="observationModel">Disable</Parameter> <!-- Unregister, None or Disable -->
   </Setup>
 

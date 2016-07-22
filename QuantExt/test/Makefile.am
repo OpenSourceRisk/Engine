@@ -17,9 +17,9 @@ QLE_TESTS = \
 
 dist-hook:
 	mkdir -p $(distdir)/build
-	mkdir -p $(distdir)/bin
-	cp -p $(srcdir)/bin/runtest.bat $(distdir)/bin
-	rm -f $(distdir)/main.cpp
+#	mkdir -p $(distdir)/bin
+#	cp -p $(srcdir)/bin/runtest.bat $(distdir)/bin
+#	rm -f $(distdir)/main.cpp
 
 if BOOST_UNIT_TEST_FOUND
 

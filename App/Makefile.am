@@ -1,3 +1,7 @@
+SUBDIRS = m4
+
+ACLOCAL_AMFLAGS = -I m4 
+
 bin_PROGRAMS = ore
 
 AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir} \
@@ -15,7 +19,7 @@ AM_LDFLAGS = \
 
 LDADD = 
 
-EXTRA_DIST =
+EXTRA_DIST = autogen.sh
 
 ore_SOURCES = ore.cpp
 
