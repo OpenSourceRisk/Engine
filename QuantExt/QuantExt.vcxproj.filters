@@ -318,6 +318,15 @@
     <ClInclude Include="qle\termstructures\interpolateddiscountcurve2.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\spreadedoptionletvolatility.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\spreadedsmilesection.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\spreadedswaptionvolatility.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -536,6 +545,15 @@
       <Filter>termstructures</Filter>
     </ClCompile>
     <ClCompile Include="qle\termstructures\swaptionvolatilityconverter.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\spreadedoptionletvolatility.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\spreadedsmilesection.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\spreadedswaptionvolatility.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
   </ItemGroup>

@@ -17,12 +17,13 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <qle/termstructures/optionletstripper2.hpp>
+#include <qle/termstructures/spreadedoptionletvolatility.hpp>
+
 #include <ql/instruments/makecapfloor.hpp>
 #include <ql/math/solvers1d/brent.hpp>
 #include <ql/pricingengines/capfloor/bacheliercapfloorengine.hpp>
 #include <ql/pricingengines/capfloor/blackcapfloorengine.hpp>
-#include <qle/termstructures/optionletstripper2.hpp>
-#include <ql/termstructures/volatility/optionlet/spreadedoptionletvol.hpp>
 #include <ql/termstructures/volatility/optionlet/strippedoptionletadapter.hpp>
 
 #include <boost/make_shared.hpp>
@@ -80,10 +81,16 @@ void OptionletStripper2::performCalculations() const {
         } else {
             QL_FAIL("unknown volatility type: " << volatilityType_);
         }
-        caps_[j] = MakeCapFloor(CapFloor::Cap, optionExpiriesTenors[j], iborIndex_, Null<Rate>(), 0 * Days)
-            .withPricingEngine(engine);
 
-        // Get the ATM rate and the price
+        // Using Null<Rate>() as strike => strike will be set to ATM rate. However, to calculate ATM rate, QL requires 
+        // a BlackCapFloorEngine to be set (not a BachelierCapFloorEngine)! So, need a temp BlackCapFloorEngine with a 
+        // dummy vol to calculate ATM rate. Needs to be fixed in QL.
+        boost::shared_ptr<PricingEngine> tempEngine = boost::make_shared<BlackCapFloorEngine>(discountCurve, 0.01);
+        caps_[j] = MakeCapFloor(CapFloor::Cap, optionExpiriesTenors[j], iborIndex_, Null<Rate>(), 0 * Days)
+            .withPricingEngine(tempEngine);
+
+        // Now set correct engine and get the ATM rate and the price
+        caps_[j]->setPricingEngine(engine);
         atmCapFloorStrikes_[j] = caps_[j]->atmRate(**discountCurve);
         atmCapFloorPrices_[j] = caps_[j]->NPV();
     }

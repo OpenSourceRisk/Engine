@@ -44,6 +44,9 @@
     <ClCompile Include="swaptionvolatilityconverter.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="optionletstripper.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="source">
@@ -100,6 +103,12 @@
       <Filter>headers</Filter>
     </ClInclude>
     <ClInclude Include="yieldcurvemarketdata.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="capfloormarketdata.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="optionletstripper.hpp">
       <Filter>headers</Filter>
     </ClInclude>
   </ItemGroup>

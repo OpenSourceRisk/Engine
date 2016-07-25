@@ -13,7 +13,9 @@ QLE_TESTS = \
 	index.hpp index.cpp \
     blackvariancecurve.hpp blackvariancecurve.cpp \
 	logquote.hpp logquote.cpp \
-    cashflow.hpp cashflow.cpp
+    cashflow.hpp cashflow.cpp \
+	swaptionvolatilityconverter.hpp swaptionvolatilityconverter.cpp \
+	optionletstripper.hpp optionletstripper.cpp
 
 dist-hook:
 	mkdir -p $(distdir)/build
