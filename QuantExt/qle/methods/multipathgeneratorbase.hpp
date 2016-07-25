@@ -38,7 +38,7 @@ using namespace QuantLib;
 namespace QuantExt {
 
 //! Multi Path Generator Base
-/*! \group methods
+/*! \ingroup methods
 */
 class MultiPathGeneratorBase {
 public:
@@ -92,9 +92,9 @@ private:
 class MultiPathGeneratorSobolBrownianBridge : public MultiPathGeneratorBase {
 public:
     MultiPathGeneratorSobolBrownianBridge(const boost::shared_ptr<StochasticProcess>&, const TimeGrid&,
-                                          SobolBrownianGenerator::Ordering ordering = SobolBrownianGenerator::Diagonal,
+                                          SobolBrownianGenerator::Ordering ordering = SobolBrownianGenerator::Steps,
                                           BigNatural seed = 0,
-                                          SobolRsg::DirectionIntegers directionIntegers = SobolRsg::Jaeckel);
+                                          SobolRsg::DirectionIntegers directionIntegers = SobolRsg::JoeKuoD7);
     const Sample<MultiPath>& next() const;
     void reset();
 

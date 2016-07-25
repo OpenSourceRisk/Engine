@@ -16,7 +16,7 @@
  FOR A PARTICULAR PURPOSE.  See the license for more details.
 */
 
-/*! \defgroup currencies Currencies
+/*! \defgroup currencies Currencies and FX rates
     Grouping of all currency related classes, functions and files
 */
 
@@ -24,7 +24,7 @@
     Grouping of all index related classes, functions and files
 */
 
-/*! \defgroup engines Engines
+/*! \defgroup engines Pricing engines
     Grouping of all engine related classes, functions and files
 */
 
@@ -32,7 +32,7 @@
     Grouping of all cashflow related classes, functions and files
 */
 
-/*! \defgroup instruments Instruments
+/*! \defgroup instruments Financial instruments
     Grouping of all instrument related classes, functions and files
 */
 
@@ -44,7 +44,7 @@
     Grouping of all method related classes, functions and files
     */
 
-/*! \defgroup processes Processes
+/*! \defgroup processes Stochastic processes
     Grouping of all process related classes, functions and files
 */
 
@@ -52,7 +52,7 @@
     Grouping of all quotes related classes, functions and files
 */
 
-/*! \defgroup math Math
+/*! \defgroup math Math tools
     Grouping of all math related classes, functions and files
 */
 

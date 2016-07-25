@@ -17,7 +17,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file qle/quotes/logquote.hpp
+/*! \file quotes/logquote.hpp
     \brief stores log of quote for log-linear interpolation
     \ingroup quotes
 */
@@ -35,7 +35,7 @@ namespace QuantExt {
 /*! \test the correctness of the returned values is tested by
         checking them against the log of the returned values of q_
 
-            \quotes
+    \ingroup quotes
 */
 class LogQuote : public Quote, public Observer {
 public:

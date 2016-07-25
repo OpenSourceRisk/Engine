@@ -38,7 +38,7 @@ public:
 
     void clear();
     void fromFile(const string&);
-    virtual void fromXML(XMLNode *node);
+    virtual void fromXML(XMLNode* node);
     virtual XMLNode* toXML(XMLDocument& doc);
 
     bool hasGroup(const string& groupName) const;
@@ -48,5 +48,5 @@ public:
     void log();
 
 private:
-    map<string, map<string,string>> data_;
+    map<string, map<string, string>> data_;
 };

@@ -17,7 +17,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file qle/termstructures/dynamicswaptionvolmatrix.hpp
+/*! \file termstructures/dynamicswaptionvolmatrix.hpp
     \brief dynamic swaption volatility matrix
     \ingroup termstructures
 */
@@ -35,7 +35,7 @@ using namespace QuantLib;
 
 namespace QuantExt {
 //! Takes a SwaptionVolatilityMatrix with fixed reference date and turns it into a floating reference date term
-//structure.
+// structure.
 /*! This class takes a SwaptionVolatilityMatrix with fixed
     reference date and turns it into a floating reference date
     term structure.

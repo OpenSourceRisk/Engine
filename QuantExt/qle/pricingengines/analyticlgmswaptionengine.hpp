@@ -17,7 +17,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file qle/pricingengines/analyticlgmswaptionengine.hpp
+/*! \file pricingengines/analyticlgmswaptionengine.hpp
     \brief analytic engine for european swaptions in the LGM model
 
         \ingroup engines
@@ -53,10 +53,11 @@ namespace QuantExt {
     the underlying's fixed leg. Likewise a spread on the floating leg is
     taken into account.
 
-    Note that we assume H'>0, but this is a general requirement of the
-    LGM parametrization anyway (see the base parametrization class).
+    Note that we assume H' does not change its sign, but this is a general
+    requirement of the LGM parametrization anyway (see the base parametrization
+    class).
 
-        \ingroup engines
+    \ingroup engines
 */
 
 class AnalyticLgmSwaptionEngine : public GenericEngine<Swaption::arguments, Swaption::results> {

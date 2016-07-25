@@ -3,8 +3,7 @@ EXTRA_DIST = \
              quantext.doxy \
              quantextextra.css \
              quantextfooter.html \
-             quantextheader.html \
-             README.txt
+             quantextheader.html
 
 DOXYGEN_CONFIG := quantext.doxy
 DOXYGEN_CUSTOM := quantextextra.css quantextheader.html quantextfooter.html
@@ -25,12 +24,12 @@ BASEPATH = @abs_top_srcdir@
 
 dist-hook:
 #	mkdir -p $(distdir)/pages $(distdir)/Examples $(distdir)/images
-	mkdir -p $(distdir)/pages $(distdir)/images
-	cp -p $(srcdir)/pages/*.docs $(distdir)/pages
+#	mkdir -p $(distdir)/pages $(distdir)/images
+#	cp -p $(srcdir)/pages/*.docs $(distdir)/pages
 #	cp -p $(srcdir)/Examples/*.cpp $(distdir)/Examples
-	cp -p $(srcdir)/images/*.jpg \
-	      $(srcdir)/images/*.ico \
-	      $(distdir)/images
+#	cp -p $(srcdir)/images/*.jpg \
+#	      $(srcdir)/images/*.ico \
+#	      $(distdir)/images
 
 docs-all: docs-html docs-man
 docs-dist: docs-html-dist docs-man-dist
