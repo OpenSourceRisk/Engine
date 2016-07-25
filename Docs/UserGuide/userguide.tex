@@ -638,6 +638,32 @@ incremental contributions to these two VAs through time.
 %--------------------------------------------------------
 \subsection{Exposure \& XVA Allocation to Trades}
 %--------------------------------------------------------
+The summaries of EPE, ENE, Allocated EPE,Allocated ENE, PFE, and the Basel measures $EE_B$, $EPE_B$, and $EEE_B$, are provided in the files {\tt exposure\_trade\_*.csv} and {\tt exposure\_nettingset\_*.csv}. The following tables illustrate the file layouts.
+\begin{center}
+\scriptsize
+\begin{tabular}{|l|l|r|r|r|r|r|r|r|r|}
+\hline
+TradeId & Date & Time & EPE & ENE & AllocEPE & AllocENE & BaselEE & BaselEEE & PFE \\
+\hline
+Swap\_1 & 2016-02-05 &	 0 &	 356.341 &	0 & 0 & 0 &	 356.341 & 356.341 & 356.341 \\
+Swap\_1 & 2016-05-06 &	 0.248 &	 253161 & 256101 & 0 & 0 & 253060 & 253060 & 1.09007e+06 \\
+Swap\_1 & 2016-08-05 &	 0.497 & 	 349438 & 352050 & 0 & 0 &	349048 & 349048 & 1.50891e+06 \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\scriptsize
+\begin{tabular}{|l|l|r|r|r|r|r|r|r|}
+\hline
+NettingSet & Date & Time & EPE & ENE & BaselEE & BaselEEE & PFE & ExpectedCollateral\\ 
+\hline
+CPTY\_A & 2016-02-05 &	 0 &	 356.341 &	0 &	 356.341 & 356.341 & 356.341 & -356.341\\
+CPTY\_A & 2016-05-06 &	 0.248 &	 253161 &	256101 & 253060 & 253060 & 1.09007e+06 & 0\\
+CPTY\_A & 2016-08-05 &	 0.497 & 	 349438 & 	352050 & 349048 & 349048 & 1.50891e+06 & 0\\
+\hline
+\end{tabular}
+\end{center}
 
 The same example considered in the previous section (see folder {\tt Examples/Example\_5}) also features the allocation of netting set exposure and XVA to the trade level as frequently required by finance departments. We start again with the uncollateralised case in figure \ref{fig_8}, followed by the case with threshold 1m EUR in figure \ref{fig_9}.
 \begin{figure}[tb]
