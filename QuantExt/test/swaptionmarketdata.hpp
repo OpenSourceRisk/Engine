@@ -38,9 +38,9 @@ using namespace QuantLib;
 using std::vector;
 
 namespace QuantExt {
-struct AtmVolatilityEUR {
+struct SwaptionVolatilityEUR {
     // Constructor
-    AtmVolatilityEUR() : optionTenors(4), swapTenors(4), nVols(optionTenors.size(), swapTenors.size(), 0.0), 
+    SwaptionVolatilityEUR() : optionTenors(4), swapTenors(4), nVols(optionTenors.size(), swapTenors.size(), 0.0),
         lnVols(nVols), slnVols_1(nVols), slnVols_2(nVols), shifts_1(nVols), shifts_2(nVols) {
 
         // Populate option tenors
@@ -102,9 +102,9 @@ struct AtmVolatilityEUR {
     Matrix shifts_2;
 };
 
-struct conventionsEUR {
+struct SwaptionConventionsEUR {
     // Constructor
-    conventionsEUR() : settlementDays(2), fixedTenor(Period(1, Years)), fixedCalendar(TARGET()), 
+    SwaptionConventionsEUR() : settlementDays(2), fixedTenor(Period(1, Years)), fixedCalendar(TARGET()),
         fixedConvention(ModifiedFollowing), fixedDayCounter(Thirty360(Thirty360::BondBasis)), 
         floatIndex(boost::make_shared<Euribor6M>()) {}
     

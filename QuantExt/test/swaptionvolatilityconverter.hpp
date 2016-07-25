@@ -32,7 +32,6 @@ namespace testsuite {
 //! SwaptionVolatilityConverter tests
 class SwaptionVolatilityConverterTest {
 public:
-    //! Test the conversion against known values
     static void testNormalToLognormal();
     static void testLognormalToNormal();
     static void testNormalToShiftedLognormal();

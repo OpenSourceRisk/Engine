@@ -65,8 +65,8 @@ struct CommonVars {
 
     // Members
     Date referenceDate;
-    conventionsEUR conventions;
-    AtmVolatilityEUR atmVols;
+    SwaptionConventionsEUR conventions;
+    SwaptionVolatilityEUR atmVols;
     YieldCurveEUR yieldCurves;
     boost::shared_ptr<SwapConventions> swapConventions;
     boost::shared_ptr<SwaptionVolatilityStructure> atmNormalVolMatrix;
