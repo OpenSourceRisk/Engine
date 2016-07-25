@@ -17,7 +17,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file qle/termstructures/dynamicswaptionvolmatrix.hpp
+/*! \file termstructures/dynamicswaptionvolmatrix.hpp
     \brief dynamic swaption volatility matrix
     \ingroup termstructures
 */
