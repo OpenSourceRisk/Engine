@@ -675,18 +675,18 @@ XVA outputs, see folder {\tt Examples/Example\_5/Output/collateral\_threshold}.
 \medskip
 The summary of CVA, DVA, FVA, COLVA and Collateral Floor is provided in file {\tt xva.csv}. 
 The file includes the allocated CVA and DVA numbers to individual trades as introduced in the next section. The following table illustrates the file's layout,
-omitting the three right-most columns containing allocated data. 
+omitting the three columns containing allocated data. 
 
 \begin{center}
-\footnotesize
-\begin{tabular}{|l|l|r|r|r|r|r|r|}
+\scriptsize
+\begin{tabular}{|l|l|r|r|r|r|r|r|r|r|}
 \hline
-TradeId & NettingSetId & CVA & DVA & FBA & FCA & COLVA & CollateralFloor \\ %& AllocatedCVA & AllocatedDVA & AllocationMethod \\
+TradeId & NettingSetId & CVA & DVA & FBA & FCA & COLVA & CollateralFloor  & BaselEPE & BaselEEPE\\ %& AllocatedCVA & AllocatedDVA & AllocationMethod \\
 \hline
-	& CPTY\_A & 31,084 	& 45,003 &	-4,803 &	 21,233 & 	 2,089 &	 182,351 \\
-Swap\_1 & CPTY\_A &	 115,944 &	 210,630 &	-17,864 &	 99,984 &	 n/a &	 n/a \\
-Swap\_2 & CPTY\_A &	 67,683 &	 96,412 &	-10,588 &	 45,488 &	 n/a &	 n/a \\
-Swap\_3 & CPTY\_A &	 71,299 & 	 84,752 & 	-11,268 & 	 40,327 & 	 n/a &	 n/a \\
+	& CPTY\_A & 31,084 	& 45,003 &	-4,803 &	 21,233 & 	 2,089 &	 182,351  & 2,313,620 & 3,398,110\\
+Swap\_1 & CPTY\_A &	 115,944 &	 210,630 &	-17,864 &	 99,984 &	 n/a &	 n/a & 2,021,730 & 2,725,800\\
+Swap\_2 & CPTY\_A &	 67,683 &	 96,412 &	-10,588 &	 45,488 &	 n/a &	 n/a & 1,403,660 & 2,184,730\\
+Swap\_3 & CPTY\_A &	 71,299 & 	 84,752 & 	-11,268 & 	 40,327 & 	 n/a &	 n/a & 1,126,520 & 1,839,590\\
 \hline
 \end{tabular}
 \end{center}
@@ -702,79 +702,52 @@ incremental contributions to these two VAs through time.
 %--------------------------------------------------------
 \subsection{Exposure Reports \& XVA Allocation to Trades}
 %--------------------------------------------------------
-The summaries of EPE, ENE, Allocated EPE,Allocated ENE, PFE, and the Basel measures $EE_B$, $EPE_B$, and $EEE_B$, are provided in the files {\tt exposure\_trade\_*.csv} and {\tt exposure\_nettingset\_*.csv}. The following tables illustrate the file layouts.
+Using the example in folder {\tt Examples/Example\_5} we illustrate here the layout of an exposure report produced by ORE. The report shows the exposure evolution of Swap\_1 without collateral which - after running Example\_5 - is found in folder \\
+{\tt Examples/Example\_5/Output/collateral\_none/exposure\_trade\_Swap\_1.csv}:
+
 \begin{center}
 \scriptsize
 \begin{tabular}{|l|l|r|r|r|r|r|r|r|r|}
 \hline
-TradeId & Date & Time & EPE & ENE & AllocEPE & AllocENE & BaselEE & BaselEEE & PFE \\
+\#TradeId & Date & Time & EPE & ENE & AllocEPE & AllocENE & BaselEE & BaselEEE & PFE \\
 \hline
-Swap\_1 & 2016-02-05 &	 0 &	 356.341 &	0 & 0 & 0 &	 356.341 & 356.341 & 356.341 \\
-Swap\_1 & 2016-05-06 &	 0.248 &	 253161 & 256101 & 0 & 0 & 253060 & 253060 & 1.09007e+06 \\
-Swap\_1 & 2016-08-05 &	 0.497 & 	 349438 & 352050 & 0 & 0 &	349048 & 349048 & 1.50891e+06 \\
+Swap\_1&05/02/16& 0.0000 & 0 & 1,711,850 & 0 & 0 & 0  & 0  & 0 \\
+Swap\_1&19/02/16& 0.0383 & 40,177 & 1,744,040 &-1,190,880 & 512,983 & 40,175.2 & 40,175.2 &263,485 \\
+Swap\_1&04/03/16& 0.0765 & 137,451 & 1,840,660 &-915,192 & 788,016 & 137,434 & 137,434 &1,053,240 \\
+Swap\_1&18/03/16& 0.1148 & 298,993 & 1,742,290 &-651,132 & 792,160 & 298,928 & 298,928 &1,913,310 \\
+Swap\_1&01/04/16& 0.1530 & 389,983 & 1,834,620 &-552,148 & 892,485 & 389,863 & 389,863 &2,372,650 \\
+Swap\_1&15/04/16& 0.1913 & 471,627 & 1,918,380 &-466,365 & 980,387 & 471,437 & 471,437 &2,764,670 \\
+Swap\_1&29/04/16& 0.2295 & 550,054 & 2,000,390 &-331,155 & 1,119,180 & 549,770 & 549,770 &3,105,720 \\
+Swap\_1&13/05/16& 0.2678 & 620,006 & 2,074,610 &-266,147 & 1,188,450 & 619,616 & 619,616 &3,425,930 \\
+Swap\_1&27/05/16& 0.3060 & 689,726 & 2,140,030 &-191,144 & 1,259,160 & 689,217 & 689,217 &3,777,310 \\
+Swap\_1&10/06/16& 0.3443 & 762,894 & 2,205,710 &-137,876 & 1,304,940 & 762,247 & 762,247 &4,051,510 \\
+Swap\_1 & ... & ...& ... & ... & ... & ... & ... & ... & ... \\
 \hline
 \end{tabular}
 \end{center}
+
+The exposure measures EPE, ENE and PFE, and the Basel exposure measures $EE_B$ and $EEE_B$, are defined in appendix \ref{sec:app_exposure}. Allocated exposures are defined in appendix \ref{sec:app_allocation}. The PFE quantile and allocation method are chosen as described in section \ref{sec:analytics}.
+
+In addition to single trade exposure files, ORE produces an exposure file per netting set. The example from the same folder as above is:
 
 \begin{center}
 \scriptsize
 \begin{tabular}{|l|l|r|r|r|r|r|r|r|}
 \hline
-NettingSet & Date & Time & EPE & ENE & BaselEE & BaselEEE & PFE & ExpectedCollateral\\ 
-\hline
-CPTY\_A & 2016-02-05 &	 0 &	 356.341 &	0 &	 356.341 & 356.341 & 356.341 & -356.341\\
-CPTY\_A & 2016-05-06 &	 0.248 &	 253161 &	256101 & 253060 & 253060 & 1.09007e+06 & 0\\
-CPTY\_A & 2016-08-05 &	 0.497 & 	 349438 & 	352050 & 349048 & 349048 & 1.50891e+06 & 0\\
-\hline
-\end{tabular}
-\end{center}
-
-Using the example in folder {\tt Examples/Example\_5} we illustrate here the layout of an exposure report produced by ORE. The report shows the exposure evolution of Swap\_1 without collateral which - after running Example\_5 - is found in folder \\
-{\tt Examples/Example\_5/Output/collateral\_none/exposure\_trade\_Swap\_1.csv}:
-
-\begin{center}
-\footnotesize
-\begin{tabular}{|l|l|l|r|r|r|r|r|}
-\hline
-\#TradeId&Date& Time & EPE & ENE & AllocatedEPE & AllocatedENE & PFE \\
-\hline
-Swap\_1&05/02/16& 0.0000 & 0 & 1,711,850 & 0  & 0  & 0 \\
-Swap\_1&19/02/16& 0.0383 & 40,177 & 1,744,040 &-1,190,880 & 512,983 & 263,485 \\
-Swap\_1&04/03/16& 0.0765 & 137,451 & 1,840,660 &-915,192 & 788,016 & 1,053,240 \\
-Swap\_1&18/03/16& 0.1148 & 298,993 & 1,742,290 &-651,132 & 792,160 & 1,913,310 \\
-Swap\_1&01/04/16& 0.1530 & 389,983 & 1,834,620 &-552,148 & 892,485 & 2,372,650 \\
-Swap\_1&15/04/16& 0.1913 & 471,627 & 1,918,380 &-466,365 & 980,387 & 2,764,670 \\
-Swap\_1&29/04/16& 0.2295 & 550,054 & 2,000,390 &-331,155 & 1,119,180 & 3,105,720 \\
-Swap\_1&13/05/16& 0.2678 & 620,006 & 2,074,610 &-266,147 & 1,188,450 & 3,425,930 \\
-Swap\_1&27/05/16& 0.3060 & 689,726 & 2,140,030 &-191,144 & 1,259,160 & 3,777,310 \\
-Swap\_1&10/06/16& 0.3443 & 762,894 & 2,205,710 &-137,876 & 1,304,940 & 4,051,510 \\
-Swap\_1 & ... & ...& ... & ... & ... & ... & ... \\
-\hline
-\end{tabular}
-\end{center}
-
-The exposure measures EPE, ENE and PFE are defined in appendix \ref{sec:app_exposure}. Allocated exposures are defined in appendix \ref{sec:app_allocation}. The PFE quantile and allocation method are chosen as described in section \ref{sec:analytics}.
-
-In addition to single trade exposure files, ORE produces an exposure file per netting set. The example from the same folder as above is:
-
-\begin{center}
-\footnotesize
-\begin{tabular}{|l|l|l|r|r|r|r|r|}
-\hline
-\#NettingSet&Date& Time & EPE & ENE & PFE & ExpectedCollateral \\ 
+\#NettingSet & Date & Time & EPE & ENE & BaselEE & BaselEEE & PFE & ExpectedCollateral\\ 
 \hline
 %CPTY\_A&05/02/16& 0.0000 & 1,211,770 & 0  & 1,211,770 &-1,211,770 \\
-CPTY\_A&05/02/16& 0.0000 & 1,211,770 & 0  & 1,211,770 & 0 \\
-CPTY\_A&19/02/16& 0.0383 & 1,344,230 & 137,779 & 3,414,420 & 0   \\
-CPTY\_A&04/03/16& 0.0765 & 1,518,610 & 308,388 & 4,353,770 & 0   \\
-CPTY\_A&18/03/16& 0.1148 & 1,846,910 & 382,078 & 5,201,760 & 0   \\
-CPTY\_A&01/04/16& 0.1530 & 1,961,310 & 494,438 & 5,868,340 & 0   \\
-CPTY\_A&15/04/16& 0.1913 & 2,067,270 & 598,315 & 6,385,360 & 0   \\
-CPTY\_A&29/04/16& 0.2295 & 2,053,700 & 745,986 & 6,738,990 & 0   \\
-CPTY\_A&13/05/16& 0.2678 & 2,149,220 & 845,534 & 6,926,730 & 0   \\
-CPTY\_A&27/05/16& 0.3060 & 2,235,660 & 930,251 & 7,293,950 & 0   \\
-CPTY\_A&10/06/16& 0.3443 & 2,314,510 & 1,014,740 & 7,752,770 & 0   \\
-CPTY\_A & ... & ...& ... & ... & ... & ... \\
+CPTY\_A&05/02/16& 0.0000 & 1,211,770 & 0  & 1,211,770 & 1,211,770 &1,211,770 & 0 \\
+CPTY\_A&19/02/16& 0.0383 & 1,344,230 & 137,779 & 1,344,160 & 1,344,160 & 3,414,420 & 0   \\
+CPTY\_A&04/03/16& 0.0765 & 1,518,610 & 308,388 & 1,518,420 & 1,518,420 & 4,353,770 & 0   \\
+CPTY\_A&18/03/16& 0.1148 & 1,846,910 & 382,078 & 1,846,510 & 1,846,510 & 5,201,760 & 0   \\
+CPTY\_A&01/04/16& 0.1530 & 1,961,310 & 494,438 & 1,960,710 & 1,960,710 & 5,868,340 & 0   \\
+CPTY\_A&15/04/16& 0.1913 & 2,067,270 & 598,315 & 2,066,430 & 2,066,430 & 6,385,360 & 0   \\
+CPTY\_A&29/04/16& 0.2295 & 2,053,700 & 745,986 & 2,052,640 & 2,052,640 & 6,738,990 & 0   \\
+CPTY\_A&13/05/16& 0.2678 & 2,149,220 & 845,534 & 2,147,870 & 2,147,870 & 6,926,730 & 0   \\
+CPTY\_A&27/05/16& 0.3060 & 2,235,660 & 930,251 & 2,234,010 & 2,234,010 & 7,293,950 & 0   \\
+CPTY\_A&10/06/16& 0.3443 & 2,314,510 & 1,014,740 & 2,234,010 & 2,312,550 & 7,752,770 & 0   \\
+CPTY\_A & ... & ...& ... & ... & ... & ... & ... & ...\\
 \hline
 \end{tabular}
 \end{center}
