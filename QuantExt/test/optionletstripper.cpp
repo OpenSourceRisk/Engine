@@ -108,14 +108,14 @@ void OptionletStripperTest::testUsualNormalStripping() {
             Real flatPrice = cap->NPV();
 
             Real error = std::fabs(strippedPrice - flatPrice);
-            if (error > vars.accuracy) {
-                BOOST_ERROR("\noption tenor:       " << vars.vols.tenors[i] <<
-                            "\nstrike:             " << io::rate(vars.vols.strikes[j]) <<
-                            "\nstripped vol price: " << io::rate(strippedPrice) <<
-                            "\nconstant vol price: " << io::rate(flatPrice) <<
-                            "\nerror:              " << io::rate(error) <<
-                            "\ntolerance:          " << io::rate(vars.accuracy));
-            }
+            BOOST_CHECK_MESSAGE(error < vars.accuracy, 
+                "\noption tenor:       " << vars.vols.tenors[i] <<
+                "\nstrike:             " << io::rate(vars.vols.strikes[j]) <<
+                "\nstripped vol price: " << io::rate(strippedPrice) <<
+                "\nconstant vol price: " << io::rate(flatPrice) <<
+                "\nerror:              " << io::rate(error) <<
+                "\ntolerance:          " << io::rate(vars.accuracy)
+            );
         }
     }
 }
@@ -171,14 +171,14 @@ void OptionletStripperTest::testUsualNormalStrippingWithAtm() {
             Real flatPrice = cap->NPV();
 
             Real error = std::fabs(strippedPrice - flatPrice);
-            if (error > vars.accuracy) {
-                BOOST_ERROR("\noption tenor:       " << vars.vols.tenors[i] <<
-                            "\nstrike:             " << io::rate(vars.vols.strikes[j]) <<
-                            "\nstripped vol price: " << io::rate(strippedPrice) <<
-                            "\nconstant vol price: " << io::rate(flatPrice) <<
-                            "\nerror:              " << io::rate(error) <<
-                            "\ntolerance:          " << io::rate(vars.accuracy));
-            }
+            BOOST_CHECK_MESSAGE(error < vars.accuracy, 
+                "\noption tenor:       " << vars.vols.tenors[i] <<
+                "\nstrike:             " << io::rate(vars.vols.strikes[j]) <<
+                "\nstripped vol price: " << io::rate(strippedPrice) <<
+                "\nconstant vol price: " << io::rate(flatPrice) <<
+                "\nerror:              " << io::rate(error) <<
+                "\ntolerance:          " << io::rate(vars.accuracy)
+            );
         }
     }
 
@@ -201,14 +201,14 @@ void OptionletStripperTest::testUsualNormalStrippingWithAtm() {
         Real flatPrice = cap->NPV();
 
         Real error = std::fabs(strippedPrice - flatPrice);
-        if (error > vars.accuracy) {
-            BOOST_ERROR("\noption tenor:       " << vars.vols.atmTenors[i] <<
-                        "\natm strike:         " << io::rate(cap->atmRate(**vars.yieldCurves.discountEonia)) <<
-                        "\nstripped vol price: " << io::rate(strippedPrice) <<
-                        "\nconstant vol price: " << io::rate(flatPrice) <<
-                        "\nerror:              " << io::rate(error) <<
-                        "\ntolerance:          " << io::rate(vars.accuracy));
-        }
+        BOOST_CHECK_MESSAGE(error < vars.accuracy, 
+            "\noption tenor:       " << vars.vols.atmTenors[i] <<
+            "\natm strike:         " << io::rate(cap->atmRate(**vars.yieldCurves.discountEonia)) <<
+            "\nstripped vol price: " << io::rate(strippedPrice) <<
+            "\nconstant vol price: " << io::rate(flatPrice) <<
+            "\nerror:              " << io::rate(error) <<
+            "\ntolerance:          " << io::rate(vars.accuracy)
+        );
     }
 }
 
