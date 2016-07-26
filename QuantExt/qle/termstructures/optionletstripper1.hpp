@@ -58,6 +58,7 @@ public:
     Rate switchStrike() const;
     Real targetDisplacement() const { return targetDisplacement_; }
     VolatilityType targetVolatilityType() const { return targetVolatilityType_; }
+    const Handle<YieldTermStructure>& discountCurve() const { return discount_; }
 
     //! \name LazyObject interface
     //@{
