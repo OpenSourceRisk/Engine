@@ -25,6 +25,8 @@
 #include <qle/termstructures/optionletstripper1.hpp>
 #include <ql/utilities/dataformatters.hpp>
 
+#include <boost/make_shared.hpp>
+
 using boost::shared_ptr;
 
 namespace QuantExt {
@@ -35,12 +37,12 @@ OptionletStripper1::OptionletStripper1(const shared_ptr<CapFloorTermVolSurface>&
                                        const VolatilityType type, const Real displacement, bool dontThrow, 
                                        const optional<VolatilityType> targetVolatilityType,
                                        const optional<Real> targetDisplacement)
-    : OptionletStripper(termVolSurface, index, discount, type, displacement),
+    : OptionletStripper(termVolSurface, index, discount, targetVolatilityType ? *targetVolatilityType : type, 
+      targetDisplacement ? *targetDisplacement : displacement), 
       volQuotes_(nOptionletTenors_, std::vector<shared_ptr<SimpleQuote>>(nStrikes_)),
       floatingSwitchStrike_(switchStrike == Null<Rate>() ? true : false), capFlooMatrixNotInitialized_(true),
       switchStrike_(switchStrike), accuracy_(accuracy), maxIter_(maxIter), dontThrow_(dontThrow), 
-      targetVolatilityType_(targetVolatilityType ? *targetVolatilityType : type),
-      targetDisplacement_(targetDisplacement ? *targetDisplacement : displacement) {
+      inputVolatilityType_(type), inputDisplacement_(displacement) {
 
     capFloorPrices_ = Matrix(nOptionletTenors_, nStrikes_);
     optionletPrices_ = Matrix(nOptionletTenors_, nStrikes_);
@@ -96,12 +98,12 @@ void OptionletStripper1::performCalculations() const {
         for (Size j = 0; j < nStrikes_; ++j) {
             for (Size i = 0; i < nOptionletTenors_; ++i) {
                 volQuotes_[i][j] = shared_ptr<SimpleQuote>(new SimpleQuote());
-                if (volatilityType_ == ShiftedLognormal) {
-                    capFloorEngines_[i][j] = boost::shared_ptr<BlackCapFloorEngine>(
-                        new BlackCapFloorEngine(discountCurve, Handle<Quote>(volQuotes_[i][j]), dc, displacement_));
-                } else if (volatilityType_ == Normal) {
-                    capFloorEngines_[i][j] = boost::shared_ptr<BachelierCapFloorEngine>(
-                        new BachelierCapFloorEngine(discountCurve, Handle<Quote>(volQuotes_[i][j]), dc));
+                if (inputVolatilityType_ == ShiftedLognormal) {
+                    capFloorEngines_[i][j] = boost::make_shared<BlackCapFloorEngine>(
+                        discountCurve, Handle<Quote>(volQuotes_[i][j]), dc, inputDisplacement_);
+                } else if (inputVolatilityType_ == Normal) {
+                    capFloorEngines_[i][j] = boost::make_shared<BachelierCapFloorEngine>(
+                        discountCurve, Handle<Quote>(volQuotes_[i][j]), dc);
                 } else {
                     QL_FAIL("unknown volatility type: " << volatilityType_);
                 }
@@ -128,17 +130,17 @@ void OptionletStripper1::performCalculations() const {
             DiscountFactor d = discountCurve->discount(optionletPaymentDates_[i]);
             DiscountFactor optionletAnnuity = optionletAccrualPeriods_[i] * d;
             try {
-                if (targetVolatilityType_ == ShiftedLognormal) {
+                if (volatilityType_ == ShiftedLognormal) {
                     optionletStDevs_[i][j] = blackFormulaImpliedStdDev(
                         optionletType, strikes[j], atmOptionletRate_[i], optionletPrices_[i][j], optionletAnnuity,
-                        targetDisplacement_, optionletStDevs_[i][j], accuracy_, maxIter_);
-                } else if (targetVolatilityType_ == Normal) {
+                        displacement_, optionletStDevs_[i][j], accuracy_, maxIter_);
+                } else if (volatilityType_ == Normal) {
                     optionletStDevs_[i][j] =
                         std::sqrt(optionletTimes_[i]) *
                         bachelierBlackFormulaImpliedVol(optionletType, strikes[j], atmOptionletRate_[i],
                                                         optionletTimes_[i], optionletPrices_[i][j], optionletAnnuity);
                 } else {
-                    QL_FAIL("Unknown target volatility type: " << targetVolatilityType_);
+                    QL_FAIL("Unknown target volatility type: " << volatilityType_);
                 }
             } catch (std::exception& e) {
                 if (dontThrow_)

@@ -29,11 +29,24 @@
 
 namespace testsuite {
 
-//! SwaptionVolatilityConverter tests
+//! OptionletStripper tests
 class OptionletStripperTest {
 public:
     static void testUsualNormalStripping();
+    static void testUsualShiftedLognormalStripping();
+    static void testNormalToShiftedLognormalStripping();
+    static void testShiftedLognormalToNormalStripping();
+    static void testShiftedLognormalToShiftedLognormalStripping();
+    
     static void testUsualNormalStrippingWithAtm();
+    static void testUsualShiftedLognormalStrippingWithAtm();
+    static void testNormalToShiftedLognormalStrippingWithAtm();
+    static void testShiftedLognormalToNormalStrippingWithAtm();
+    static void testShiftedLognormalToShiftedLognormalStrippingWithAtm();
+
+    static void testNormalToLognormalGivesError();
+    static void testNormalToLognormalModifiedGivesError();
+    static void testNormalToLognormalWithPositiveForwards();
 
     static boost::unit_test_framework::test_suite* suite();
 };

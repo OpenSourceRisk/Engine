@@ -81,6 +81,8 @@ private:
     mutable vector<boost::shared_ptr<CapFloor>> caps_;
     Size maxEvaluations_;
     Real accuracy_;
+    const VolatilityType inputVolatilityType_;
+    const Real inputDisplacement_;
 };
 }
 

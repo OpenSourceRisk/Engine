@@ -33,12 +33,12 @@ namespace QuantExt {
 OptionletStripper2::OptionletStripper2(const boost::shared_ptr<OptionletStripper1>& optionletStripper1, 
     const Handle<CapFloorTermVolCurve>& atmCapFloorTermVolCurve, const VolatilityType type, const Real displacement)
     : OptionletStripper(optionletStripper1->termVolSurface(), optionletStripper1->iborIndex(), 
-        optionletStripper1->discountCurve(), type, displacement),
+      optionletStripper1->discountCurve(), optionletStripper1->volatilityType(), optionletStripper1->displacement()),
       stripper1_(optionletStripper1), atmCapFloorTermVolCurve_(atmCapFloorTermVolCurve),
       dc_(stripper1_->termVolSurface()->dayCounter()), 
       nOptionExpiries_(atmCapFloorTermVolCurve->optionTenors().size()), atmCapFloorStrikes_(nOptionExpiries_), 
       atmCapFloorPrices_(nOptionExpiries_), spreadsVolImplied_(nOptionExpiries_), caps_(nOptionExpiries_), 
-      maxEvaluations_(10000), accuracy_(1.e-6) {
+      maxEvaluations_(10000), accuracy_(1.e-6), inputVolatilityType_(type), inputDisplacement_(displacement) {
     
     registerWith(stripper1_);
     registerWith(atmCapFloorTermVolCurve_);
@@ -74,9 +74,9 @@ void OptionletStripper2::performCalculations() const {
         // Create a cap for each pillar point on ATM curve and attach relevant pricing engine i.e. Black if 
         // quotes are shifted lognormal and Bachelier if quotes are normal
         boost::shared_ptr<PricingEngine> engine;
-        if (volatilityType_ == ShiftedLognormal) {
-            engine = boost::make_shared<BlackCapFloorEngine>(discountCurve, atmOptionVol, dc_, displacement_);
-        } else if (volatilityType_ == Normal) {
+        if (inputVolatilityType_ == ShiftedLognormal) {
+            engine = boost::make_shared<BlackCapFloorEngine>(discountCurve, atmOptionVol, dc_, inputDisplacement_);
+        } else if (inputVolatilityType_ == Normal) {
             engine = boost::make_shared<BachelierCapFloorEngine>(discountCurve, atmOptionVol, dc_);
         } else {
             QL_FAIL("unknown volatility type: " << volatilityType_);
@@ -161,17 +161,17 @@ OptionletStripper2::ObjectiveFunction::ObjectiveFunction(
     boost::shared_ptr<OptionletVolatilityStructure> spreadedAdapter(
         new SpreadedOptionletVolatility(Handle<OptionletVolatilityStructure>(adapter), Handle<Quote>(spreadQuote_)));
 
-    // Use the same target volatility type as optionletStripper1
+    // Use the same volatility type as optionletStripper1
     // Anything else would not make sense
     boost::shared_ptr<PricingEngine> engine;
-    if (optionletStripper1->targetVolatilityType() == ShiftedLognormal) {
+    if (optionletStripper1->volatilityType() == ShiftedLognormal) {
         engine = boost::make_shared<BlackCapFloorEngine>(discount_, 
-            Handle<OptionletVolatilityStructure>(spreadedAdapter), optionletStripper1->targetDisplacement());
-    } else if (optionletStripper1->targetVolatilityType() == Normal) {
+            Handle<OptionletVolatilityStructure>(spreadedAdapter), optionletStripper1->displacement());
+    } else if (optionletStripper1->volatilityType() == Normal) {
         engine = boost::make_shared<BachelierCapFloorEngine>(discount_, 
             Handle<OptionletVolatilityStructure>(spreadedAdapter));
     } else {
-        QL_FAIL("Unknown volatility type: " << optionletStripper1->targetVolatilityType());
+        QL_FAIL("Unknown volatility type: " << optionletStripper1->volatilityType());
     }
 
     cap_->setPricingEngine(engine);

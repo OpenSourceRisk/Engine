@@ -41,7 +41,8 @@ namespace QuantExt {
 struct CapFloorVolatilityEUR {
     // Constructor
     CapFloorVolatilityEUR() : tenors(5), strikes(6), nVols(tenors.size(), strikes.size(), 0.0), 
-        atmTenors(6), nAtmVols(6) {
+        slnVols_1(nVols), slnVols_2(nVols), shift_1(0.01), shift_2(0.015), atmTenors(6), nAtmVols(6), 
+        slnAtmVols_1(6), slnAtmVols_2(6) {
 
         // Populate capfloor tenors
         tenors[0] = Period(1, Years);
@@ -70,55 +71,51 @@ struct CapFloorVolatilityEUR {
         nVols[4][0] = 0.005873; nVols[4][1] = 0.005988; nVols[4][2] = 0.006102; nVols[4][3] = 0.006220;
         nVols[4][4] = 0.006609; nVols[4][5] = 0.006973;
 
-        // Normal ATM volatility curve
-        atmTenors[0] = Period(1, Years);  nAtmVols[0] = 0.002610;
-        atmTenors[1] = Period(2, Years);  nAtmVols[1] = 0.002972;
-        atmTenors[2] = Period(5, Years);  nAtmVols[2] = 0.005200;
-        atmTenors[3] = Period(7, Years);  nAtmVols[3] = 0.005800;
-        atmTenors[4] = Period(10, Years); nAtmVols[4] = 0.006300;
-        atmTenors[5] = Period(20, Years); nAtmVols[5] = 0.006400;
+        // Populate the shifted lognormal volatility matrix, shift = 1%
+        slnVols_1[0][0] = 0.354048; slnVols_1[0][1] = 0.275908; slnVols_1[0][2] = 0.331131; slnVols_1[0][3] = 0.367941;
+        slnVols_1[0][4] = 0.431984; slnVols_1[0][5] = 0.473055;
+        slnVols_1[1][0] = 0.629394; slnVols_1[1][1] = 0.429765; slnVols_1[1][2] = 0.408771; slnVols_1[1][3] = 0.397830;
+        slnVols_1[1][4] = 0.387533; slnVols_1[1][5] = 0.387566;
+        slnVols_1[2][0] = 0.660362; slnVols_1[2][1] = 0.459424; slnVols_1[2][2] = 0.402383; slnVols_1[2][3] = 0.371339;
+        slnVols_1[2][4] = 0.334462; slnVols_1[2][5] = 0.317835;
+        slnVols_1[3][0] = 0.646952; slnVols_1[3][1] = 0.457781; slnVols_1[3][2] = 0.381007; slnVols_1[3][3] = 0.332858;
+        slnVols_1[3][4] = 0.285027; slnVols_1[3][5] = 0.261010;
+        slnVols_1[4][0] = 0.581476; slnVols_1[4][1] = 0.420004; slnVols_1[4][2] = 0.344897; slnVols_1[4][3] = 0.298501;
+        slnVols_1[4][4] = 0.250767; slnVols_1[4][5] = 0.223903;
 
-        //// Populate the lognormal volatility matrix
-        //lnVols[0][0] = 2.187660; lnVols[0][1] = 1.748360; lnVols[0][2] = 0.834972; lnVols[0][3] = 0.663957;
-        //lnVols[1][0] = 0.891725; lnVols[1][1] = 0.642449; lnVols[1][2] = 0.585798; lnVols[1][3] = 0.512169;
-        //lnVols[2][0] = 0.549946; lnVols[2][1] = 0.552918; lnVols[2][2] = 0.528572; lnVols[2][3] = 0.476202;
-        //lnVols[3][0] = 0.531597; lnVols[3][1] = 0.534495; lnVols[3][2] = 0.526216; lnVols[3][3] = 0.462007;
+        // Populate the shifted lognormal volatility matrix, shift = 1.5%
+        slnVols_2[0][0] = 0.204022; slnVols_2[0][1] = 0.181767; slnVols_2[0][2] = 0.232378; slnVols_2[0][3] = 0.268359;
+        slnVols_2[0][4] = 0.329940; slnVols_2[0][5] = 0.371421;
+        slnVols_2[1][0] = 0.368526; slnVols_2[1][1] = 0.290783; slnVols_2[1][2] = 0.294452; slnVols_2[1][3] = 0.297475;
+        slnVols_2[1][4] = 0.302807; slnVols_2[1][5] = 0.310822;
+        slnVols_2[2][0] = 0.395097; slnVols_2[2][1] = 0.317747; slnVols_2[2][2] = 0.297146; slnVols_2[2][3] = 0.285691;
+        slnVols_2[2][4] = 0.270621; slnVols_2[2][5] = 0.264740;
+        slnVols_2[3][0] = 0.396368; slnVols_2[3][1] = 0.324204; slnVols_2[3][2] = 0.288276; slnVols_2[3][3] = 0.262625;
+        slnVols_2[3][4] = 0.236265; slnVols_2[3][5] = 0.222242;
+        slnVols_2[4][0] = 0.357254; slnVols_2[4][1] = 0.301862; slnVols_2[4][2] = 0.265140; slnVols_2[4][3] = 0.238823;
+        slnVols_2[4][4] = 0.209753; slnVols_2[4][5] = 0.191882;
 
-        //// Populate the first and second set of shifted lognormal volatilities
-        //slnVols_1[0][0] = 0.929848; slnVols_1[0][1] = 0.924660; slnVols_1[0][2] = 0.610868; slnVols_1[0][3] = 0.495445;
-        //slnVols_1[1][0] = 0.689737; slnVols_1[1][1] = 0.521342; slnVols_1[1][2] = 0.472902; slnVols_1[1][3] = 0.396814;
-        //slnVols_1[2][0] = 0.474667; slnVols_1[2][1] = 0.463982; slnVols_1[2][2] = 0.432899; slnVols_1[2][3] = 0.371330;
-        //slnVols_1[3][0] = 0.460333; slnVols_1[3][1] = 0.447973; slnVols_1[3][2] = 0.428017; slnVols_1[3][3] = 0.358081;
-
-        //slnVols_2[0][0] = 0.732040; slnVols_2[0][1] = 0.754222; slnVols_2[0][2] = 0.539085; slnVols_2[0][3] = 0.439887;
-        //slnVols_2[1][0] = 0.622370; slnVols_2[1][1] = 0.477238; slnVols_2[1][2] = 0.431955; slnVols_2[1][3] = 0.357137;
-        //slnVols_2[2][0] = 0.444718; slnVols_2[2][1] = 0.430028; slnVols_2[2][2] = 0.397564; slnVols_2[2][3] = 0.335037;
-        //slnVols_2[3][0] = 0.432003; slnVols_2[3][1] = 0.415209; slnVols_2[3][2] = 0.392379; slnVols_2[3][3] = 0.322612;
-
-
-        //// Populate first and second set of shifts
-        //shifts_1[0][0] = 0.002000; shifts_1[0][1] = 0.002500; shifts_1[0][2] = 0.003000; shifts_1[0][3] = 0.004000;
-        //shifts_1[1][0] = 0.002000; shifts_1[1][1] = 0.002500; shifts_1[1][2] = 0.003000; shifts_1[1][3] = 0.004000;
-        //shifts_1[2][0] = 0.002000; shifts_1[2][1] = 0.002500; shifts_1[2][2] = 0.003000; shifts_1[2][3] = 0.004000;
-        //shifts_1[3][0] = 0.002000; shifts_1[3][1] = 0.002500; shifts_1[3][2] = 0.003000; shifts_1[3][3] = 0.004000;
-
-        //shifts_2[0][0] = 0.003000; shifts_2[0][1] = 0.003750; shifts_2[0][2] = 0.004500; shifts_2[0][3] = 0.006000;
-        //shifts_2[1][0] = 0.003000; shifts_2[1][1] = 0.003750; shifts_2[1][2] = 0.004500; shifts_2[1][3] = 0.006000;
-        //shifts_2[2][0] = 0.003000; shifts_2[2][1] = 0.003750; shifts_2[2][2] = 0.004500; shifts_2[2][3] = 0.006000;
-        //shifts_2[3][0] = 0.003000; shifts_2[3][1] = 0.003750; shifts_2[3][2] = 0.004500; shifts_2[3][3] = 0.006000;
+        // ATM volatility curves (Normal, Shifted Lognormal (1%), Shifted Lognormal (1.5%))
+        atmTenors[0]=Period(1, Years);  nAtmVols[0]=0.002610; slnAtmVols_1[0]=0.279001; slnAtmVols_2[0]=0.181754;
+        atmTenors[1]=Period(2, Years);  nAtmVols[1]=0.002972; slnAtmVols_1[1]=0.265115; slnAtmVols_2[1]=0.183202;
+        atmTenors[2]=Period(5, Years);  nAtmVols[2]=0.005200; slnAtmVols_1[2]=0.453827; slnAtmVols_2[2]=0.314258;
+        atmTenors[3]=Period(7, Years);  nAtmVols[3]=0.005800; slnAtmVols_1[3]=0.418210; slnAtmVols_2[3]=0.305215;
+        atmTenors[4]=Period(10, Years); nAtmVols[4]=0.006300; slnAtmVols_1[4]=0.359696; slnAtmVols_2[4]=0.277812;
+        atmTenors[5]=Period(20, Years); nAtmVols[5]=0.006400; slnAtmVols_1[5]=0.295877; slnAtmVols_2[5]=0.238554;
     }
 
     // Members
     vector<Period> tenors;
     vector<Rate> strikes;
     Matrix nVols;
-    vector<Period> atmTenors;
-    vector<Volatility> nAtmVols;
-    /*Matrix lnVols;
     Matrix slnVols_1;
     Matrix slnVols_2;
-    Matrix shifts_1;
-    Matrix shifts_2;*/
+    Real shift_1;
+    Real shift_2;
+    vector<Period> atmTenors;
+    vector<Volatility> nAtmVols;
+    vector<Volatility> slnAtmVols_1;
+    vector<Volatility> slnAtmVols_2;
 };
 
 }

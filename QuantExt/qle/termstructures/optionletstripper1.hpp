@@ -56,8 +56,6 @@ public:
     const Matrix& capFloorVolatilities() const;
     const Matrix& optionletPrices() const;
     Rate switchStrike() const;
-    Real targetDisplacement() const { return targetDisplacement_; }
-    VolatilityType targetVolatilityType() const { return targetVolatilityType_; }
     const Handle<YieldTermStructure>& discountCurve() const { return discount_; }
 
     //! \name LazyObject interface
@@ -78,8 +76,8 @@ private:
     Real accuracy_;
     Natural maxIter_;
     bool dontThrow_;
-    const VolatilityType targetVolatilityType_;
-    const Real targetDisplacement_;
+    const VolatilityType inputVolatilityType_;
+    const Real inputDisplacement_;
 };
 }
 
