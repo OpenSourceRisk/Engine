@@ -242,6 +242,12 @@
       <xs:enumeration value="ActActAFB"/>
       <xs:enumeration value="Actual/Actual (AFB)"/>
       <xs:enumeration value="1/1"/>
+      <xs:enumeration value="BUS/252"/>
+      <xs:enumeration value="Business/252"/>
+      <xs:enumeration value="Actual/365 (No Leap)"/>
+      <xs:enumeration value="Act/365 (NL)"/>
+      <xs:enumeration value="NL/365"/>
+      <xs:enumeration value="Actual/365 (JGB)"/>
     </xs:restriction>
   </xs:simpleType>
 
