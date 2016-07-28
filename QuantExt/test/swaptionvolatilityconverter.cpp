@@ -23,6 +23,8 @@
 
 #include <qle/termstructures/swaptionvolatilityconverter.hpp>
 
+#include <ql/indexes/swap/euriborswap.hpp>
+
 #include <boost/assign/list_of.hpp>
 
 using namespace QuantExt;
@@ -272,6 +274,56 @@ void SwaptionVolatilityConverterTest::testNormalShiftsIgnored() {
     }
 }
 
+void SwaptionVolatilityConverterTest::testConstructionFromSwapIndex() {
+    BOOST_TEST_MESSAGE("Testing construction of SwaptionVolatilityConverter from SwapIndex...");
+
+    CommonVars vars;
+
+    // Tolerance used in boost check
+    Real tolerance = 0.00001;
+
+    // Set up a SwapIndex
+    boost::shared_ptr<SwapIndex> swapIndex = boost::make_shared<EuriborSwapIsdaFixA>(2*Years, 
+        vars.yieldCurves.forward6M, vars.yieldCurves.discountEonia);
+
+    // Set up the converter using swap index (Shifted Lognormal with shift set 2 -> Normal)
+    SwaptionVolatilityConverter converter(vars.referenceDate, vars.atmShiftedLogNormalVolMatrix_2, swapIndex, Normal);
+
+    // Test that the results are still ok
+    boost::shared_ptr<SwaptionVolatilityStructure> convertedsvs = converter.convert();
+    Volatility targetVol = 0.0;
+    Volatility outVol = 0.0;
+    Real dummyStrike = 0.0;
+    for (Size i = 0; i < vars.atmVols.optionTenors.size(); ++i) {
+        for (Size j = 0; j < vars.atmVols.swapTenors.size(); ++j) {
+            Period optionTenor = vars.atmVols.optionTenors[i];
+            Period swapTenor = vars.atmVols.swapTenors[j];
+            targetVol = vars.atmVols.nVols[i][j];
+            outVol = convertedsvs->volatility(optionTenor, swapTenor, dummyStrike);
+            BOOST_CHECK_SMALL(outVol - targetVol, tolerance);
+        }
+    }
+}
+
+void SwaptionVolatilityConverterTest::testConstructionFromSwapIndexNoDiscount() {
+    BOOST_TEST_MESSAGE("Testing construction from SwapIndex with no exogenous discount curve...");
+
+    CommonVars vars;
+
+    // Tolerance used in boost check
+    Real tolerance = 0.00001;
+
+    // Set up a SwapIndex
+    boost::shared_ptr<SwapIndex> swapIndex = boost::make_shared<EuriborSwapIsdaFixA>(2 * Years, 
+        vars.yieldCurves.forward6M);
+
+    // Set up the converter using swap index (Shifted Lognormal with shift set 2 -> Normal)
+    SwaptionVolatilityConverter converter(vars.referenceDate, vars.atmShiftedLogNormalVolMatrix_2, swapIndex, Normal);
+
+    // Test that calling convert() still works
+    BOOST_CHECK_NO_THROW(converter.convert());
+}
+
 test_suite* SwaptionVolatilityConverterTest::suite() {
     test_suite* suite = BOOST_TEST_SUITE("SwaptionVolatilityConverterTests");
 
@@ -282,6 +334,8 @@ test_suite* SwaptionVolatilityConverterTest::suite() {
     suite->add(BOOST_TEST_CASE(&SwaptionVolatilityConverterTest::testShiftedLognormalToNormal));
     suite->add(BOOST_TEST_CASE(&SwaptionVolatilityConverterTest::testFailureImplyingVol));
     suite->add(BOOST_TEST_CASE(&SwaptionVolatilityConverterTest::testNormalShiftsIgnored));
+    suite->add(BOOST_TEST_CASE(&SwaptionVolatilityConverterTest::testConstructionFromSwapIndex));
+    suite->add(BOOST_TEST_CASE(&SwaptionVolatilityConverterTest::testConstructionFromSwapIndexNoDiscount));
 
     return suite;
 }
