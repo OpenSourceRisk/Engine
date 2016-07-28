@@ -26,6 +26,7 @@
 #define quantext_swaptionvolatilityconverter_hpp
 
 #include <ql/indexes/iborindex.hpp>
+#include <ql/indexes/swapindex.hpp>
 #include <ql/termstructures/volatility/swaption/swaptionvolmatrix.hpp>
 
 #include <boost/shared_ptr.hpp>
@@ -73,10 +74,14 @@ private:
 */
 class SwaptionVolatilityConverter {
 public:
-    //! Constructor
+    //! Construct from SwapConventions
     SwaptionVolatilityConverter(const Date& asof, const boost::shared_ptr<SwaptionVolatilityStructure>& svsIn, 
         const Handle<YieldTermStructure>& discount, const boost::shared_ptr<SwapConventions>& conventions, 
         const VolatilityType targetType, const Matrix& targetShifts = Matrix());
+    //! Construct from SwapIndex
+    SwaptionVolatilityConverter(const Date& asof, const boost::shared_ptr<SwaptionVolatilityStructure>& svsIn,
+        const boost::shared_ptr<SwapIndex>& swapIndex, const VolatilityType targetType, 
+        const Matrix& targetShifts = Matrix());
 
     //! Method that returns the converted <tt>SwaptionVolatilityStructure</tt>
     boost::shared_ptr<SwaptionVolatilityStructure> convert() const;
@@ -87,6 +92,9 @@ public:
     Natural& maxEvaluations() { return maxEvaluations_; }
 
 private:
+    // Check inputs
+    void checkInputs() const;
+
     // Method that is called depending on the type of svsIn
     boost::shared_ptr<SwaptionVolatilityStructure> convert(
         const boost::shared_ptr<SwaptionVolatilityMatrix>& svMatrix) const;
@@ -97,7 +105,7 @@ private:
 
     const Date asof_;
     const boost::shared_ptr<SwaptionVolatilityStructure> svsIn_;
-    const Handle<YieldTermStructure> discount_;
+    Handle<YieldTermStructure> discount_;
     const boost::shared_ptr<SwapConventions> conventions_;
     const VolatilityType targetType_;
     const Matrix targetShifts_;

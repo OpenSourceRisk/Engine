@@ -39,9 +39,27 @@ SwaptionVolatilityConverter::SwaptionVolatilityConverter(const Date& asof,
       targetShifts_(targetShifts), accuracy_(1.0e-5), maxEvaluations_(100) {
     
     // Some checks
-    QL_REQUIRE(svsIn_->referenceDate() == asof_, 
+    checkInputs();
+}
+
+SwaptionVolatilityConverter::SwaptionVolatilityConverter(const Date& asof,
+    const boost::shared_ptr<SwaptionVolatilityStructure>& svsIn, const boost::shared_ptr<SwapIndex>& swapIndex, 
+    const VolatilityType targetType, const Matrix& targetShifts)
+    : asof_(asof), svsIn_(svsIn), discount_(swapIndex->discountingTermStructure()), 
+      conventions_(boost::make_shared<SwapConventions>(swapIndex->fixingDays(), swapIndex->fixedLegTenor(), 
+      swapIndex->fixingCalendar(), swapIndex->fixedLegConvention(), swapIndex->dayCounter(), swapIndex->iborIndex())), 
+      targetType_(targetType), targetShifts_(targetShifts), accuracy_(1.0e-5), maxEvaluations_(100) {
+
+    // Some checks
+    if (discount_.empty())
+        discount_ = swapIndex->iborIndex()->forwardingTermStructure();
+    checkInputs();
+}
+
+void SwaptionVolatilityConverter::checkInputs() const{
+    QL_REQUIRE(svsIn_->referenceDate() == asof_,
         "SwaptionVolatilityConverter requires the asof date and reference date to align");
-    QL_REQUIRE(!discount.empty() && discount->referenceDate() == asof_, 
+    QL_REQUIRE(!discount_.empty() && discount_->referenceDate() == asof_,
         "SwaptionVolatilityConverter requires a valid discount curve with reference date equal to asof date");
     Handle<YieldTermStructure> forwardCurve = conventions_->floatIndex()->forwardingTermStructure();
     QL_REQUIRE(!forwardCurve.empty() && forwardCurve->referenceDate() == asof_,
