@@ -58,7 +58,7 @@ TESTS = quantext-test-suite$(EXEEXT)
 TESTS_ENVIRONMENT = BOOST_TEST_LOG_LEVEL=message
 
 EXTRA_DIST = \
-	testsuite.vcproj
+	testsuite.vcxproj
 
 else
 
