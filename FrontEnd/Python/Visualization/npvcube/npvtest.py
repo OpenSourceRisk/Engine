@@ -5,16 +5,21 @@ from npvlib import NpvCube
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 # import seaborn # slightly improves look of the plots
+import numpy as np
 
-csv_file = 'cube_full.csv'
+csv_file = 'cube.csv'
 npv = NpvCube(csv_file)
 trade = '833397AI'
 
 fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
+#ax = fig.add_subplot(111, projection='3d')
 #npv.plot_density(trade, ax, 'NPV-')
-npv.plot_trade(trade, ax)
+#npv.plot_trade(trade, ax)
+ax = fig.add_subplot(111)
+npv.plot_density_date(trade, ax, npv.dates[2])
 plt.show()
+
+
 
 # if percentile:
 #     for k in range(len(dates)):
