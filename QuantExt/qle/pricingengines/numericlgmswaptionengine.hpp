@@ -118,6 +118,7 @@ public:
                              const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>())
         : GenericEngine<Swaption::arguments, Swaption::results>(),
           NumericLgmSwaptionEngineBase(model, sy, ny, sx, nx, discountCurve) {
+        registerWith(model_);
         if (!discountCurve_.empty())
             registerWith(discountCurve_);
     }
@@ -139,6 +140,7 @@ public:
                                         const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>())
         : GenericEngine<NonstandardSwaption::arguments, NonstandardSwaption::results>(),
           NumericLgmSwaptionEngineBase(model, sy, ny, sx, nx, discountCurve) {
+        registerWith(model_);
         if (!discountCurve_.empty())
             registerWith(discountCurve_);
     }
