@@ -113,10 +113,10 @@
         </FloatingLegData>
       </LegData>
       <CapRates>
-        <Rate>0.025</Rate>
+        <Rate>0.04</Rate>
       </CapRates>
       <FloorRates>
-        <Rate>0.025</Rate>
+        <Rate>0.04</Rate>
       </FloorRates>
     </CapFloorData>
   </Trade>
