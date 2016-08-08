@@ -51,7 +51,7 @@
 	  <CalibrationSwaptions>
 	    <Expiries> 1Y,  2Y,  4Y,  6Y,  8Y, 10Y, 12Y, 14Y, 16Y, 18Y, 19Y</Expiries>
 	    <Terms>   19Y, 18Y, 16Y, 14Y, 12Y, 10Y,  8Y,  6Y,  4Y,  2Y,  1Y</Terms>
-	    <Strikes> 0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01</Strikes>
+      <Strikes/>
 	  </CalibrationSwaptions>
 
 	  <ParameterTransformation>
@@ -84,7 +84,7 @@
 	  <CalibrationSwaptions>
 	    <Expiries> 1Y,  2Y,  4Y,  6Y,  8Y, 10Y, 12Y, 14Y, 16Y, 18Y, 19Y</Expiries>
 	    <Terms>   19Y, 18Y, 16Y, 14Y, 12Y, 10Y,  8Y,  6Y,  4Y,  2Y,  1Y</Terms>
-	    <Strikes> 0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01</Strikes>
+      <Strikes/>
 	  </CalibrationSwaptions>
 
 	  <ParameterTransformation>
@@ -117,7 +117,7 @@
 	  <CalibrationSwaptions>
 	    <Expiries> 1Y,  2Y,  4Y,  6Y,  8Y, 10Y, 12Y, 14Y, 16Y, 18Y, 19Y</Expiries>
 	    <Terms>   19Y, 18Y, 16Y, 14Y, 12Y, 10Y,  8Y,  6Y,  4Y,  2Y,  1Y</Terms>
-	    <Strikes> 0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01</Strikes>
+      <Strikes/>
 	  </CalibrationSwaptions>
 
 	  <ParameterTransformation>
