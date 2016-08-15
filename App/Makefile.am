@@ -19,7 +19,11 @@ AM_LDFLAGS = \
 
 LDADD = 
 
-EXTRA_DIST = autogen.sh
+EXTRA_DIST = \
+	autogen.sh \
+	ore_vc14.sln \
+	ore.vcxproj \
+	ore.props
 
 ore_SOURCES = ore.cpp
 

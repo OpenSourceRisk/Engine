@@ -11,7 +11,8 @@ EXTRA_DIST = \
 	QuantExt_vc12.sln \
 	QuantExt_vc14.sln \
 	QuantExt.vcxproj \
-	QuantExt.vcxproj.filters
+	QuantExt.vcxproj.filters \
+	QuantExt.props
 
 .PHONY: docs docs-man docs-online docs-dist docs-clean
 BASEPATH = @abs_top_srcdir@
