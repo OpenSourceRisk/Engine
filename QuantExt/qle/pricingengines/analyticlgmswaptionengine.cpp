@@ -109,8 +109,8 @@ void AnalyticLgmSwaptionEngine::calculate() const {
                 lambda1 = 1.0 - lambda2;
             }
             if (amount != Null<Real>()) {
-                Real flatAmount =
-                    flatIbor->fixing(arguments_.floatingFixingDates[k]) * arguments_.floatingAccrualTimes[k];
+                Real flatAmount = flatIbor->fixing(arguments_.floatingFixingDates[k]) *
+                                  arguments_.floatingAccrualTimes[k] * arguments_.nominal;
                 Real correction = (amount - flatAmount) * c_->discount(arguments_.floatingPayDates[k]);
                 sum1 += lambda1 * correction;
                 sum2 += lambda2 * correction;
@@ -154,7 +154,12 @@ void AnalyticLgmSwaptionEngine::calculate() const {
     }
 
     Brent b;
-    Real yStar = b.solve(boost::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, _1), 1.0E-6, 0.0, 0.01);
+    Real yStar;
+    try {
+        yStar = b.solve(boost::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, _1), 1.0E-6, 0.0, 0.01);
+    } catch(const std::exception &e) {
+        QL_FAIL("AnalyticLgmSwaptionEngine, failed to compute yStar, " << e.what());
+    }
 
     CumulativeNormalDistribution N;
     Real sqrt_zetaex = std::sqrt(zetaex_);
@@ -164,8 +169,8 @@ void AnalyticLgmSwaptionEngine::calculate() const {
                N(u * w * (yStar + (Hj_[j - j1_] - H0_) * zetaex_) / sqrt_zetaex);
     }
     sum += -w * S_m1 * D0_ * N(u * w * yStar / sqrt_zetaex);
-    sum += w * (Dj_.back() * N(u * w * (yStar + (Hj_.back() - H0_) * zetaex_) / sqrt_zetaex) -
-                D0_ * N(u * w * yStar / sqrt_zetaex));
+    sum += w * (arguments_.nominal * Dj_.back() * N(u * w * (yStar + (Hj_.back() - H0_) * zetaex_) / sqrt_zetaex) -
+                arguments_.nominal * D0_ * N(u * w * yStar / sqrt_zetaex));
     results_.value = sum;
 
     results_.additionalResults["fixedAmountCorrectionSettlement"] = S_m1;
@@ -180,8 +185,9 @@ Real AnalyticLgmSwaptionEngine::yStarHelper(const Real y) const {
                std::exp(-(Hj_[j - j1_] - H0_) * y - 0.5 * (Hj_[j - j1_] - H0_) * (Hj_[j - j1_] - H0_) * zetaex_);
     }
     sum += -S_m1 * D0_;
-    sum += Dj_.back() * std::exp(-(Hj_.back() - H0_) * y - 0.5 * (Hj_.back() - H0_) * (Hj_.back() - H0_) * zetaex_);
-    sum -= D0_;
+    sum += Dj_.back() * arguments_.nominal *
+           std::exp(-(Hj_.back() - H0_) * y - 0.5 * (Hj_.back() - H0_) * (Hj_.back() - H0_) * zetaex_);
+    sum -= D0_ * arguments_.nominal;
     return sum;
 }
 
