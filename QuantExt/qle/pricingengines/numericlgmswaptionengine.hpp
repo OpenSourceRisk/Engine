@@ -120,6 +120,7 @@ public:
           NumericLgmSwaptionEngineBase(model, sy, ny, sx, nx, discountCurve) {
         if (!discountCurve_.empty())
             registerWith(discountCurve_);
+        registerWith(model_);
     }
 
     void calculate() const;
@@ -141,6 +142,7 @@ public:
           NumericLgmSwaptionEngineBase(model, sy, ny, sx, nx, discountCurve) {
         if (!discountCurve_.empty())
             registerWith(discountCurve_);
+        registerWith(model_);
     }
 
     void calculate() const;
