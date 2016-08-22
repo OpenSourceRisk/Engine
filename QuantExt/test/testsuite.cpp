@@ -56,6 +56,8 @@ using boost::unit_test::test_suite;
 #include "staticallycorrectedyieldtermstructure.hpp"
 #include "blackvariancecurve.hpp"
 #include "cashflow.hpp"
+#include "swaptionvolatilityconverter.hpp"
+#include "optionletstripper.hpp"
 
 namespace {
 
@@ -100,6 +102,8 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(testsuite::LogQuoteTest::suite());
     test->add(testsuite::StaticallyCorrectedYieldTermStructureTest::suite());
     test->add(testsuite::BlackVarianceCurveTest::suite());
+    test->add(testsuite::SwaptionVolatilityConverterTest::suite());
+    test->add(testsuite::OptionletStripperTest::suite());
 
     test->add(BOOST_TEST_CASE(stopTimer));
 
