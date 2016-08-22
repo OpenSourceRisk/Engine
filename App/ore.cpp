@@ -583,14 +583,14 @@ void writeTradeExposures(const Parameters& params, boost::shared_ptr<PostProcess
         const vector<Real>& pfe = postProcess->tradePFE(tradeId);
         const vector<Real>& aepe = postProcess->allocatedTradeEPE(tradeId);
         const vector<Real>& aene = postProcess->allocatedTradeENE(tradeId);
-        file << "#TradeId,Date,Time,EPE,ENE,AllocatedEPE,AllocatedENE,BaselEE,BaselEEE,PFE" << endl;
+        file << "#TradeId,Date,Time,EPE,ENE,AllocatedEPE,AllocatedENE,PFE,BaselEE,BaselEEE" << endl;
         file << tradeId << "," << QuantLib::io::iso_date(today) << "," << 0.0 << "," << epe[0] << "," << ene[0] << ","
-             << aepe[0] << "," << aene[0] << "," << ee_b[0] << "," << eee_b[0] << "," << pfe[0] << endl;
+             << aepe[0] << "," << aene[0] << "," << pfe[0] << "," << ee_b[0] << "," << eee_b[0] << endl;
         for (Size j = 0; j < dates.size(); ++j) {
             Time time = dc.yearFraction(today, dates[j]);
             file << tradeId << "," << QuantLib::io::iso_date(dates[j]) << "," << time << "," << epe[j + 1] << ","
-                 << ene[j + 1] << "," << aepe[j + 1] << "," << aene[j + 1] << "," << ee_b[j + 1] << "," << eee_b[j + 1]
-                 << "," << pfe[j + 1] << endl;
+                 << ene[j + 1] << "," << aepe[j + 1] << "," << aene[j + 1] << "," << pfe[j + 1] << "," << ee_b[j + 1]
+                 << "," << eee_b[j + 1] << endl;
         }
         file.close();
     }
