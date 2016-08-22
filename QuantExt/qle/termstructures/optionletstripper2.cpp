@@ -1,16 +1,16 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
  All rights reserved.
- 
+
  This file is part of OpenRiskEngine, a free-software/open-source library
  for transparent pricing and risk analysis - http://openriskengine.org
- 
+
  OpenRiskEngine is free software: you can redistribute it and/or modify it
  under the terms of the Modified BSD License.  You should have received a
  copy of the license along with this program; if not, please email
  <users@openriskengine.org>. The license is also available online at
  <http://openriskengine.org/license.shtml>.
- 
+
  This program is distributed on the basis that it will form a useful
  contribution to risk analytics and model standardisation, but WITHOUT
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -30,16 +30,18 @@
 
 namespace QuantExt {
 
-OptionletStripper2::OptionletStripper2(const boost::shared_ptr<OptionletStripper1>& optionletStripper1, 
-    const Handle<CapFloorTermVolCurve>& atmCapFloorTermVolCurve, const VolatilityType type, const Real displacement)
-    : OptionletStripper(optionletStripper1->termVolSurface(), optionletStripper1->iborIndex(), 
-      optionletStripper1->discountCurve(), optionletStripper1->volatilityType(), optionletStripper1->displacement()),
+OptionletStripper2::OptionletStripper2(const boost::shared_ptr<OptionletStripper1>& optionletStripper1,
+                                       const Handle<CapFloorTermVolCurve>& atmCapFloorTermVolCurve,
+                                       const VolatilityType type, const Real displacement)
+    : OptionletStripper(optionletStripper1->termVolSurface(), optionletStripper1->iborIndex(),
+                        optionletStripper1->discountCurve(), optionletStripper1->volatilityType(),
+                        optionletStripper1->displacement()),
       stripper1_(optionletStripper1), atmCapFloorTermVolCurve_(atmCapFloorTermVolCurve),
-      dc_(stripper1_->termVolSurface()->dayCounter()), 
-      nOptionExpiries_(atmCapFloorTermVolCurve->optionTenors().size()), atmCapFloorStrikes_(nOptionExpiries_), 
-      atmCapFloorPrices_(nOptionExpiries_), spreadsVolImplied_(nOptionExpiries_), caps_(nOptionExpiries_), 
-      maxEvaluations_(10000), accuracy_(1.e-6), inputVolatilityType_(type), inputDisplacement_(displacement) {
-    
+      dc_(stripper1_->termVolSurface()->dayCounter()), nOptionExpiries_(atmCapFloorTermVolCurve->optionTenors().size()),
+      atmCapFloorStrikes_(nOptionExpiries_), atmCapFloorPrices_(nOptionExpiries_), spreadsVolImplied_(nOptionExpiries_),
+      caps_(nOptionExpiries_), maxEvaluations_(10000), accuracy_(1.e-6), inputVolatilityType_(type),
+      inputDisplacement_(displacement) {
+
     registerWith(stripper1_);
     registerWith(atmCapFloorTermVolCurve_);
 
@@ -71,7 +73,7 @@ void OptionletStripper2::performCalculations() const {
         // Dummy strike, doesn't get used for ATM curve
         Volatility atmOptionVol = atmCapFloorTermVolCurve_->volatility(optionExpiriesTimes[j], 33.3333);
 
-        // Create a cap for each pillar point on ATM curve and attach relevant pricing engine i.e. Black if 
+        // Create a cap for each pillar point on ATM curve and attach relevant pricing engine i.e. Black if
         // quotes are shifted lognormal and Bachelier if quotes are normal
         boost::shared_ptr<PricingEngine> engine;
         if (inputVolatilityType_ == ShiftedLognormal) {
@@ -82,12 +84,12 @@ void OptionletStripper2::performCalculations() const {
             QL_FAIL("unknown volatility type: " << volatilityType_);
         }
 
-        // Using Null<Rate>() as strike => strike will be set to ATM rate. However, to calculate ATM rate, QL requires 
-        // a BlackCapFloorEngine to be set (not a BachelierCapFloorEngine)! So, need a temp BlackCapFloorEngine with a 
+        // Using Null<Rate>() as strike => strike will be set to ATM rate. However, to calculate ATM rate, QL requires
+        // a BlackCapFloorEngine to be set (not a BachelierCapFloorEngine)! So, need a temp BlackCapFloorEngine with a
         // dummy vol to calculate ATM rate. Needs to be fixed in QL.
         boost::shared_ptr<PricingEngine> tempEngine = boost::make_shared<BlackCapFloorEngine>(discountCurve, 0.01);
         caps_[j] = MakeCapFloor(CapFloor::Cap, optionExpiriesTenors[j], iborIndex_, Null<Rate>(), 0 * Days)
-            .withPricingEngine(tempEngine);
+                       .withPricingEngine(tempEngine);
 
         // Now set correct engine and get the ATM rate and the price
         caps_[j]->setPricingEngine(engine);
@@ -165,11 +167,11 @@ OptionletStripper2::ObjectiveFunction::ObjectiveFunction(
     // Anything else would not make sense
     boost::shared_ptr<PricingEngine> engine;
     if (optionletStripper1->volatilityType() == ShiftedLognormal) {
-        engine = boost::make_shared<BlackCapFloorEngine>(discount_, 
-            Handle<OptionletVolatilityStructure>(spreadedAdapter), optionletStripper1->displacement());
+        engine = boost::make_shared<BlackCapFloorEngine>(
+            discount_, Handle<OptionletVolatilityStructure>(spreadedAdapter), optionletStripper1->displacement());
     } else if (optionletStripper1->volatilityType() == Normal) {
-        engine = boost::make_shared<BachelierCapFloorEngine>(discount_, 
-            Handle<OptionletVolatilityStructure>(spreadedAdapter));
+        engine = boost::make_shared<BachelierCapFloorEngine>(discount_,
+                                                             Handle<OptionletVolatilityStructure>(spreadedAdapter));
     } else {
         QL_FAIL("Unknown volatility type: " << optionletStripper1->volatilityType());
     }

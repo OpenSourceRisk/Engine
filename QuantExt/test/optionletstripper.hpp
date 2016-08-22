@@ -37,7 +37,7 @@ public:
     static void testNormalToShiftedLognormalStripping();
     static void testShiftedLognormalToNormalStripping();
     static void testShiftedLognormalToShiftedLognormalStripping();
-    
+
     static void testUsualNormalStrippingWithAtm();
     static void testUsualShiftedLognormalStrippingWithAtm();
     static void testNormalToShiftedLognormalStrippingWithAtm();

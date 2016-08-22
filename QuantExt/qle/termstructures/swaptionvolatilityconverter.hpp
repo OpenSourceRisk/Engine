@@ -1,16 +1,16 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
  All rights reserved.
- 
+
  This file is part of OpenRiskEngine, a free-software/open-source library
  for transparent pricing and risk analysis - http://openriskengine.org
- 
+
  OpenRiskEngine is free software: you can redistribute it and/or modify it
  under the terms of the Modified BSD License.  You should have received a
  copy of the license along with this program; if not, please email
  <users@openriskengine.org>. The license is also available online at
  <http://openriskengine.org/license.shtml>.
- 
+
  This program is distributed on the basis that it will form a useful
  contribution to risk analytics and model standardisation, but WITHOUT
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -41,8 +41,8 @@ class SwapConventions {
 public:
     //! Constructor
     SwapConventions(Natural settlementDays, const Period& fixedTenor, const Calendar& fixedCalendar,
-        BusinessDayConvention fixedConvention, const DayCounter& fixedDayCounter, 
-        const boost::shared_ptr<IborIndex>& floatIndex)
+                    BusinessDayConvention fixedConvention, const DayCounter& fixedDayCounter,
+                    const boost::shared_ptr<IborIndex>& floatIndex)
         : settlementDays_(settlementDays), fixedTenor_(fixedTenor), fixedCalendar_(fixedCalendar),
           fixedConvention_(fixedConvention), fixedDayCounter_(fixedDayCounter), floatIndex_(floatIndex) {}
 
@@ -67,21 +67,22 @@ private:
 
 //! Class that converts a supplied SwaptionVolatilityStructure to one of another type with possibly different shifts
 /*! \ingroup termstructures
-    
-    \warning the converted <tt>SwaptionVolatilityStructure</tt> object has a fixed reference date eqaul to 
-             <tt>asof</tt> and fixed market data regardless of the type of reference date and market data of the 
+
+    \warning the converted <tt>SwaptionVolatilityStructure</tt> object has a fixed reference date eqaul to
+             <tt>asof</tt> and fixed market data regardless of the type of reference date and market data of the
              original <tt>SwaptionVolatilityStructure</tt> that is passed in
 */
 class SwaptionVolatilityConverter {
 public:
     //! Construct from SwapConventions
-    SwaptionVolatilityConverter(const Date& asof, const boost::shared_ptr<SwaptionVolatilityStructure>& svsIn, 
-        const Handle<YieldTermStructure>& discount, const boost::shared_ptr<SwapConventions>& conventions, 
-        const VolatilityType targetType, const Matrix& targetShifts = Matrix());
+    SwaptionVolatilityConverter(const Date& asof, const boost::shared_ptr<SwaptionVolatilityStructure>& svsIn,
+                                const Handle<YieldTermStructure>& discount,
+                                const boost::shared_ptr<SwapConventions>& conventions, const VolatilityType targetType,
+                                const Matrix& targetShifts = Matrix());
     //! Construct from SwapIndex
     SwaptionVolatilityConverter(const Date& asof, const boost::shared_ptr<SwaptionVolatilityStructure>& svsIn,
-        const boost::shared_ptr<SwapIndex>& swapIndex, const VolatilityType targetType, 
-        const Matrix& targetShifts = Matrix());
+                                const boost::shared_ptr<SwapIndex>& swapIndex, const VolatilityType targetType,
+                                const Matrix& targetShifts = Matrix());
 
     //! Method that returns the converted <tt>SwaptionVolatilityStructure</tt>
     boost::shared_ptr<SwaptionVolatilityStructure> convert() const;
@@ -96,12 +97,12 @@ private:
     void checkInputs() const;
 
     // Method that is called depending on the type of svsIn
-    boost::shared_ptr<SwaptionVolatilityStructure> convert(
-        const boost::shared_ptr<SwaptionVolatilityMatrix>& svMatrix) const;
+    boost::shared_ptr<SwaptionVolatilityStructure>
+    convert(const boost::shared_ptr<SwaptionVolatilityMatrix>& svMatrix) const;
 
     // Convert a single vol associated with a given swaption
-    Real convert(const Date& expiry, const Period& swapTenor, const DayCounter& volDayCounter, Real inVol, 
-        VolatilityType inType, VolatilityType outType, Real inShift = 0.0, Real outShift = 0.0) const;
+    Real convert(const Date& expiry, const Period& swapTenor, const DayCounter& volDayCounter, Real inVol,
+                 VolatilityType inType, VolatilityType outType, Real inShift = 0.0, Real outShift = 0.0) const;
 
     const Date asof_;
     const boost::shared_ptr<SwaptionVolatilityStructure> svsIn_;

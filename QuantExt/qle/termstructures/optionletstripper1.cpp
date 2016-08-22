@@ -1,16 +1,16 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
  All rights reserved.
- 
+
  This file is part of OpenRiskEngine, a free-software/open-source library
  for transparent pricing and risk analysis - http://openriskengine.org
- 
+
  OpenRiskEngine is free software: you can redistribute it and/or modify it
  under the terms of the Modified BSD License.  You should have received a
  copy of the license along with this program; if not, please email
  <users@openriskengine.org>. The license is also available online at
  <http://openriskengine.org/license.shtml>.
- 
+
  This program is distributed on the basis that it will form a useful
  contribution to risk analytics and model standardisation, but WITHOUT
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -34,14 +34,14 @@ namespace QuantExt {
 OptionletStripper1::OptionletStripper1(const shared_ptr<CapFloorTermVolSurface>& termVolSurface,
                                        const shared_ptr<IborIndex>& index, Rate switchStrike, Real accuracy,
                                        Natural maxIter, const Handle<YieldTermStructure>& discount,
-                                       const VolatilityType type, const Real displacement, bool dontThrow, 
+                                       const VolatilityType type, const Real displacement, bool dontThrow,
                                        const optional<VolatilityType> targetVolatilityType,
                                        const optional<Real> targetDisplacement)
-    : OptionletStripper(termVolSurface, index, discount, targetVolatilityType ? *targetVolatilityType : type, 
-      targetDisplacement ? *targetDisplacement : displacement), 
-      volQuotes_(nOptionletTenors_, std::vector<shared_ptr<SimpleQuote>>(nStrikes_)),
+    : OptionletStripper(termVolSurface, index, discount, targetVolatilityType ? *targetVolatilityType : type,
+                        targetDisplacement ? *targetDisplacement : displacement),
+      volQuotes_(nOptionletTenors_, std::vector<shared_ptr<SimpleQuote> >(nStrikes_)),
       floatingSwitchStrike_(switchStrike == Null<Rate>() ? true : false), capFlooMatrixNotInitialized_(true),
-      switchStrike_(switchStrike), accuracy_(accuracy), maxIter_(maxIter), dontThrow_(dontThrow), 
+      switchStrike_(switchStrike), accuracy_(accuracy), maxIter_(maxIter), dontThrow_(dontThrow),
       inputVolatilityType_(type), inputDisplacement_(displacement) {
 
     capFloorPrices_ = Matrix(nOptionletTenors_, nStrikes_);
@@ -53,7 +53,7 @@ OptionletStripper1::OptionletStripper1(const shared_ptr<CapFloorTermVolSurface>&
     optionletStDevs_ = Matrix(nOptionletTenors_, nStrikes_, firstGuess);
 
     capFloors_ = CapFloorMatrix(nOptionletTenors_);
-    capFloorEngines_ = std::vector<std::vector<boost::shared_ptr<PricingEngine>>>(nOptionletTenors_);
+    capFloorEngines_ = std::vector<std::vector<boost::shared_ptr<PricingEngine> > >(nOptionletTenors_);
 }
 
 void OptionletStripper1::performCalculations() const {
@@ -102,8 +102,8 @@ void OptionletStripper1::performCalculations() const {
                     capFloorEngines_[i][j] = boost::make_shared<BlackCapFloorEngine>(
                         discountCurve, Handle<Quote>(volQuotes_[i][j]), dc, inputDisplacement_);
                 } else if (inputVolatilityType_ == Normal) {
-                    capFloorEngines_[i][j] = boost::make_shared<BachelierCapFloorEngine>(
-                        discountCurve, Handle<Quote>(volQuotes_[i][j]), dc);
+                    capFloorEngines_[i][j] =
+                        boost::make_shared<BachelierCapFloorEngine>(discountCurve, Handle<Quote>(volQuotes_[i][j]), dc);
                 } else {
                     QL_FAIL("unknown volatility type: " << volatilityType_);
                 }

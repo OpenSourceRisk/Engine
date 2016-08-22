@@ -1,16 +1,16 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
  All rights reserved.
- 
+
  This file is part of OpenRiskEngine, a free-software/open-source library
  for transparent pricing and risk analysis - http://openriskengine.org
- 
+
  OpenRiskEngine is free software: you can redistribute it and/or modify it
  under the terms of the Modified BSD License.  You should have received a
  copy of the license along with this program; if not, please email
  <users@openriskengine.org>. The license is also available online at
  <http://openriskengine.org/license.shtml>.
- 
+
  This program is distributed on the basis that it will form a useful
  contribution to risk analytics and model standardisation, but WITHOUT
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -40,11 +40,11 @@ namespace QuantExt {
 */
 class OptionletStripper2 : public OptionletStripper {
 public:
-    //! Optionlet stripper that modifies the stripped optionlets from \p optionletStripper1 by adding optionlet 
+    //! Optionlet stripper that modifies the stripped optionlets from \p optionletStripper1 by adding optionlet
     //! volatilities stripped from an ATM volatility curve \p atmCapFloorTermVolCurve
-    OptionletStripper2(const boost::shared_ptr<OptionletStripper1>& optionletStripper1, 
-        const Handle<CapFloorTermVolCurve>& atmCapFloorTermVolCurve, const VolatilityType type = ShiftedLognormal, 
-        const Real displacement = 0.0);
+    OptionletStripper2(const boost::shared_ptr<OptionletStripper1>& optionletStripper1,
+                       const Handle<CapFloorTermVolCurve>& atmCapFloorTermVolCurve,
+                       const VolatilityType type = ShiftedLognormal, const Real displacement = 0.0);
 
     vector<Rate> atmCapFloorStrikes() const;
     vector<Real> atmCapFloorPrices() const;
@@ -78,7 +78,7 @@ private:
     mutable vector<Rate> atmCapFloorStrikes_;
     mutable vector<Real> atmCapFloorPrices_;
     mutable vector<Volatility> spreadsVolImplied_;
-    mutable vector<boost::shared_ptr<CapFloor>> caps_;
+    mutable vector<boost::shared_ptr<CapFloor> > caps_;
     Size maxEvaluations_;
     Real accuracy_;
     const VolatilityType inputVolatilityType_;

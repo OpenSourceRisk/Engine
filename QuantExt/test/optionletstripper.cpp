@@ -39,8 +39,9 @@ namespace {
 // Variables to be used in the test
 struct CommonVars {
     // Constructor
-    CommonVars() : referenceDate(5, Feb, 2016), settlementDays(0), calendar(TARGET()), bdc(Following), 
-        dayCounter(Actual365Fixed()), accuracy(1.0e-6), maxIter(100) {
+    CommonVars()
+        : referenceDate(5, Feb, 2016), settlementDays(0), calendar(TARGET()), bdc(Following),
+          dayCounter(Actual365Fixed()), accuracy(1.0e-6), maxIter(100) {
         // Reference date
         Settings::instance().evaluationDate() = referenceDate;
         // Cap floor ibor index
@@ -49,13 +50,13 @@ struct CommonVars {
 
     // Members
     Date referenceDate;
-    
+
     // Some common conventions for our cap floor curve and surface construction
     Natural settlementDays;
     Calendar calendar;
     BusinessDayConvention bdc;
     DayCounter dayCounter;
-    
+
     // Accuracy and max iterations for optionlet stripping
     Real accuracy;
     Natural maxIter;
@@ -76,30 +77,30 @@ void OptionletStripperTest::testUsualNormalStripping() {
     CommonVars vars;
 
     // EUR cap floor normal volatility surface
-    boost::shared_ptr<CapFloorTermVolSurface> volSurface = boost::make_shared<CapFloorTermVolSurface>(
-        vars.settlementDays, vars.calendar, vars.bdc, vars.vols.tenors, vars.vols.strikes, 
-        vars.vols.nVols, vars.dayCounter);
+    boost::shared_ptr<CapFloorTermVolSurface> volSurface =
+        boost::make_shared<CapFloorTermVolSurface>(vars.settlementDays, vars.calendar, vars.bdc, vars.vols.tenors,
+                                                   vars.vols.strikes, vars.vols.nVols, vars.dayCounter);
 
     // Create Normal stripped optionlet surface and Normal engine
-    boost::shared_ptr<OptionletStripper> stripper = boost::make_shared<OptionletStripper1>(volSurface, vars.iborIndex, 
-        Null<Rate>(), vars.accuracy, vars.maxIter, vars.yieldCurves.discountEonia, Normal);
+    boost::shared_ptr<OptionletStripper> stripper = boost::make_shared<OptionletStripper1>(
+        volSurface, vars.iborIndex, Null<Rate>(), vars.accuracy, vars.maxIter, vars.yieldCurves.discountEonia, Normal);
     boost::shared_ptr<StrippedOptionletAdapter> adapter = boost::make_shared<StrippedOptionletAdapter>(stripper);
     Handle<OptionletVolatilityStructure> ovs(adapter);
     ovs->enableExtrapolation();
-    boost::shared_ptr<BachelierCapFloorEngine> engine = 
+    boost::shared_ptr<BachelierCapFloorEngine> engine =
         boost::make_shared<BachelierCapFloorEngine>(vars.yieldCurves.discountEonia, ovs);
 
     // Price a cap at each pillar point with flat cap/foor surface and stripped optionlet surface and compare price
     boost::shared_ptr<CapFloor> cap;
-    
+
     RelinkableHandle<Quote> quote(boost::make_shared<SimpleQuote>(0.0));
     boost::shared_ptr<BachelierCapFloorEngine> flatEngine =
         boost::make_shared<BachelierCapFloorEngine>(vars.yieldCurves.discountEonia, quote, vars.dayCounter);
-    
+
     for (Size i = 0; i < vars.vols.tenors.size(); ++i) {
         for (Size j = 0; j < vars.vols.strikes.size(); ++j) {
-            cap = MakeCapFloor(CapFloor::Cap, vars.vols.tenors[i], vars.iborIndex, 
-                vars.vols.strikes[j], vars.settlementDays * Days);
+            cap = MakeCapFloor(CapFloor::Cap, vars.vols.tenors[i], vars.iborIndex, vars.vols.strikes[j],
+                               vars.settlementDays * Days);
 
             cap->setPricingEngine(engine);
             Real strippedPrice = cap->NPV();
@@ -109,14 +110,13 @@ void OptionletStripperTest::testUsualNormalStripping() {
             Real flatPrice = cap->NPV();
 
             Real error = std::fabs(strippedPrice - flatPrice);
-            BOOST_CHECK_MESSAGE(error < vars.accuracy, 
-                "\noption tenor:       " << vars.vols.tenors[i] <<
-                "\nstrike:             " << io::rate(vars.vols.strikes[j]) <<
-                "\nstripped vol price: " << io::rate(strippedPrice) <<
-                "\nconstant vol price: " << io::rate(flatPrice) <<
-                "\nerror:              " << io::rate(error) <<
-                "\ntolerance:          " << io::rate(vars.accuracy)
-            );
+            BOOST_CHECK_MESSAGE(error < vars.accuracy,
+                                "\noption tenor:       " << vars.vols.tenors[i]
+                                                         << "\nstrike:             " << io::rate(vars.vols.strikes[j])
+                                                         << "\nstripped vol price: " << io::rate(strippedPrice)
+                                                         << "\nconstant vol price: " << io::rate(flatPrice)
+                                                         << "\nerror:              " << io::rate(error)
+                                                         << "\ntolerance:          " << io::rate(vars.accuracy));
         }
     }
 }
@@ -127,14 +127,14 @@ void OptionletStripperTest::testUsualShiftedLognormalStripping() {
     CommonVars vars;
 
     // EUR cap floor shifted lognormal volatility surface
-    boost::shared_ptr<CapFloorTermVolSurface> volSurface = boost::make_shared<CapFloorTermVolSurface>(
-        vars.settlementDays, vars.calendar, vars.bdc, vars.vols.tenors, vars.vols.strikes,
-        vars.vols.slnVols_1, vars.dayCounter);
+    boost::shared_ptr<CapFloorTermVolSurface> volSurface =
+        boost::make_shared<CapFloorTermVolSurface>(vars.settlementDays, vars.calendar, vars.bdc, vars.vols.tenors,
+                                                   vars.vols.strikes, vars.vols.slnVols_1, vars.dayCounter);
 
     // Create shifted lognormal stripped optionlet surface and shifted lognormal engine
-    boost::shared_ptr<OptionletStripper> stripper = boost::make_shared<OptionletStripper1>(volSurface, vars.iborIndex,
-        Null<Rate>(), vars.accuracy, vars.maxIter, vars.yieldCurves.discountEonia, 
-        ShiftedLognormal, vars.vols.shift_1);
+    boost::shared_ptr<OptionletStripper> stripper =
+        boost::make_shared<OptionletStripper1>(volSurface, vars.iborIndex, Null<Rate>(), vars.accuracy, vars.maxIter,
+                                               vars.yieldCurves.discountEonia, ShiftedLognormal, vars.vols.shift_1);
     boost::shared_ptr<StrippedOptionletAdapter> adapter = boost::make_shared<StrippedOptionletAdapter>(stripper);
     Handle<OptionletVolatilityStructure> ovs(adapter);
     ovs->enableExtrapolation();
@@ -150,8 +150,8 @@ void OptionletStripperTest::testUsualShiftedLognormalStripping() {
 
     for (Size i = 0; i < vars.vols.tenors.size(); ++i) {
         for (Size j = 0; j < vars.vols.strikes.size(); ++j) {
-            cap = MakeCapFloor(CapFloor::Cap, vars.vols.tenors[i], vars.iborIndex,
-                vars.vols.strikes[j], vars.settlementDays * Days);
+            cap = MakeCapFloor(CapFloor::Cap, vars.vols.tenors[i], vars.iborIndex, vars.vols.strikes[j],
+                               vars.settlementDays * Days);
 
             cap->setPricingEngine(engine);
             Real strippedPrice = cap->NPV();
@@ -162,13 +162,12 @@ void OptionletStripperTest::testUsualShiftedLognormalStripping() {
 
             Real error = std::fabs(strippedPrice - flatPrice);
             BOOST_CHECK_MESSAGE(error < vars.accuracy,
-                "\noption tenor:       " << vars.vols.tenors[i] <<
-                "\nstrike:             " << io::rate(vars.vols.strikes[j]) <<
-                "\nstripped vol price: " << io::rate(strippedPrice) <<
-                "\nconstant vol price: " << io::rate(flatPrice) <<
-                "\nerror:              " << io::rate(error) <<
-                "\ntolerance:          " << io::rate(vars.accuracy)
-            );
+                                "\noption tenor:       " << vars.vols.tenors[i]
+                                                         << "\nstrike:             " << io::rate(vars.vols.strikes[j])
+                                                         << "\nstripped vol price: " << io::rate(strippedPrice)
+                                                         << "\nconstant vol price: " << io::rate(flatPrice)
+                                                         << "\nerror:              " << io::rate(error)
+                                                         << "\ntolerance:          " << io::rate(vars.accuracy));
         }
     }
 }
@@ -179,31 +178,31 @@ void OptionletStripperTest::testNormalToShiftedLognormalStripping() {
     CommonVars vars;
 
     // EUR cap floor normal volatility surface
-    boost::shared_ptr<CapFloorTermVolSurface> volSurface = boost::make_shared<CapFloorTermVolSurface>(
-        vars.settlementDays, vars.calendar, vars.bdc, vars.vols.tenors, vars.vols.strikes,
-        vars.vols.nVols, vars.dayCounter);
+    boost::shared_ptr<CapFloorTermVolSurface> volSurface =
+        boost::make_shared<CapFloorTermVolSurface>(vars.settlementDays, vars.calendar, vars.bdc, vars.vols.tenors,
+                                                   vars.vols.strikes, vars.vols.nVols, vars.dayCounter);
 
     // Create shifted lognormal stripped optionlet surface and Black engine
-    boost::shared_ptr<OptionletStripper> stripper = boost::make_shared<OptionletStripper1>(volSurface, vars.iborIndex,
-        Null<Rate>(), vars.accuracy, vars.maxIter, vars.yieldCurves.discountEonia, 
-        Normal, 0.0, false, ShiftedLognormal, vars.vols.shift_1);
+    boost::shared_ptr<OptionletStripper> stripper = boost::make_shared<OptionletStripper1>(
+        volSurface, vars.iborIndex, Null<Rate>(), vars.accuracy, vars.maxIter, vars.yieldCurves.discountEonia, Normal,
+        0.0, false, ShiftedLognormal, vars.vols.shift_1);
     boost::shared_ptr<StrippedOptionletAdapter> adapter = boost::make_shared<StrippedOptionletAdapter>(stripper);
     Handle<OptionletVolatilityStructure> ovs(adapter);
     ovs->enableExtrapolation();
-    boost::shared_ptr<BlackCapFloorEngine> engine = 
+    boost::shared_ptr<BlackCapFloorEngine> engine =
         boost::make_shared<BlackCapFloorEngine>(vars.yieldCurves.discountEonia, ovs);
 
     // Price a cap at each pillar point with flat cap/foor surface and stripped optionlet surface and compare price
     boost::shared_ptr<CapFloor> cap;
 
     RelinkableHandle<Quote> quote(boost::make_shared<SimpleQuote>(0.0));
-    boost::shared_ptr<BachelierCapFloorEngine> flatEngine = boost::make_shared<BachelierCapFloorEngine>(
-        vars.yieldCurves.discountEonia, quote, vars.dayCounter);
+    boost::shared_ptr<BachelierCapFloorEngine> flatEngine =
+        boost::make_shared<BachelierCapFloorEngine>(vars.yieldCurves.discountEonia, quote, vars.dayCounter);
 
     for (Size i = 0; i < vars.vols.tenors.size(); ++i) {
         for (Size j = 0; j < vars.vols.strikes.size(); ++j) {
-            cap = MakeCapFloor(CapFloor::Cap, vars.vols.tenors[i], vars.iborIndex,
-                vars.vols.strikes[j], vars.settlementDays * Days);
+            cap = MakeCapFloor(CapFloor::Cap, vars.vols.tenors[i], vars.iborIndex, vars.vols.strikes[j],
+                               vars.settlementDays * Days);
 
             cap->setPricingEngine(engine);
             Real strippedPrice = cap->NPV();
@@ -214,13 +213,12 @@ void OptionletStripperTest::testNormalToShiftedLognormalStripping() {
 
             Real error = std::fabs(strippedPrice - flatPrice);
             BOOST_CHECK_MESSAGE(error < vars.accuracy,
-                "\noption tenor:       " << vars.vols.tenors[i] <<
-                "\nstrike:             " << io::rate(vars.vols.strikes[j]) <<
-                "\nstripped vol price: " << io::rate(strippedPrice) <<
-                "\nconstant vol price: " << io::rate(flatPrice) <<
-                "\nerror:              " << io::rate(error) <<
-                "\ntolerance:          " << io::rate(vars.accuracy)
-            );
+                                "\noption tenor:       " << vars.vols.tenors[i]
+                                                         << "\nstrike:             " << io::rate(vars.vols.strikes[j])
+                                                         << "\nstripped vol price: " << io::rate(strippedPrice)
+                                                         << "\nconstant vol price: " << io::rate(flatPrice)
+                                                         << "\nerror:              " << io::rate(error)
+                                                         << "\ntolerance:          " << io::rate(vars.accuracy));
         }
     }
 }
@@ -231,13 +229,13 @@ void OptionletStripperTest::testShiftedLognormalToNormalStripping() {
     CommonVars vars;
 
     // EUR cap floor shifted lognormal volatility surface
-    boost::shared_ptr<CapFloorTermVolSurface> volSurface = boost::make_shared<CapFloorTermVolSurface>(
-        vars.settlementDays, vars.calendar, vars.bdc, vars.vols.tenors, vars.vols.strikes,
-        vars.vols.slnVols_2, vars.dayCounter);
+    boost::shared_ptr<CapFloorTermVolSurface> volSurface =
+        boost::make_shared<CapFloorTermVolSurface>(vars.settlementDays, vars.calendar, vars.bdc, vars.vols.tenors,
+                                                   vars.vols.strikes, vars.vols.slnVols_2, vars.dayCounter);
 
     // Create normal stripped optionlet surface and Bachelier engine
-    boost::shared_ptr<OptionletStripper> stripper = boost::make_shared<OptionletStripper1>(volSurface, vars.iborIndex,
-        Null<Rate>(), vars.accuracy, vars.maxIter, vars.yieldCurves.discountEonia,
+    boost::shared_ptr<OptionletStripper> stripper = boost::make_shared<OptionletStripper1>(
+        volSurface, vars.iborIndex, Null<Rate>(), vars.accuracy, vars.maxIter, vars.yieldCurves.discountEonia,
         ShiftedLognormal, vars.vols.shift_2, false, Normal, 0.0);
     boost::shared_ptr<StrippedOptionletAdapter> adapter = boost::make_shared<StrippedOptionletAdapter>(stripper);
     Handle<OptionletVolatilityStructure> ovs(adapter);
@@ -254,8 +252,8 @@ void OptionletStripperTest::testShiftedLognormalToNormalStripping() {
 
     for (Size i = 0; i < vars.vols.tenors.size(); ++i) {
         for (Size j = 0; j < vars.vols.strikes.size(); ++j) {
-            cap = MakeCapFloor(CapFloor::Cap, vars.vols.tenors[i], vars.iborIndex,
-                vars.vols.strikes[j], vars.settlementDays * Days);
+            cap = MakeCapFloor(CapFloor::Cap, vars.vols.tenors[i], vars.iborIndex, vars.vols.strikes[j],
+                               vars.settlementDays * Days);
 
             cap->setPricingEngine(engine);
             Real strippedPrice = cap->NPV();
@@ -266,13 +264,12 @@ void OptionletStripperTest::testShiftedLognormalToNormalStripping() {
 
             Real error = std::fabs(strippedPrice - flatPrice);
             BOOST_CHECK_MESSAGE(error < vars.accuracy,
-                "\noption tenor:       " << vars.vols.tenors[i] <<
-                "\nstrike:             " << io::rate(vars.vols.strikes[j]) <<
-                "\nstripped vol price: " << io::rate(strippedPrice) <<
-                "\nconstant vol price: " << io::rate(flatPrice) <<
-                "\nerror:              " << io::rate(error) <<
-                "\ntolerance:          " << io::rate(vars.accuracy)
-            );
+                                "\noption tenor:       " << vars.vols.tenors[i]
+                                                         << "\nstrike:             " << io::rate(vars.vols.strikes[j])
+                                                         << "\nstripped vol price: " << io::rate(strippedPrice)
+                                                         << "\nconstant vol price: " << io::rate(flatPrice)
+                                                         << "\nerror:              " << io::rate(error)
+                                                         << "\ntolerance:          " << io::rate(vars.accuracy));
         }
     }
 }
@@ -283,13 +280,13 @@ void OptionletStripperTest::testShiftedLognormalToShiftedLognormalStripping() {
     CommonVars vars;
 
     // EUR cap floor shifted lognormal volatility surface
-    boost::shared_ptr<CapFloorTermVolSurface> volSurface = boost::make_shared<CapFloorTermVolSurface>(
-        vars.settlementDays, vars.calendar, vars.bdc, vars.vols.tenors, vars.vols.strikes,
-        vars.vols.slnVols_2, vars.dayCounter);
+    boost::shared_ptr<CapFloorTermVolSurface> volSurface =
+        boost::make_shared<CapFloorTermVolSurface>(vars.settlementDays, vars.calendar, vars.bdc, vars.vols.tenors,
+                                                   vars.vols.strikes, vars.vols.slnVols_2, vars.dayCounter);
 
     // Create shifted lognormal stripped optionlet surface and shifted lognormal engine with different shift
-    boost::shared_ptr<OptionletStripper> stripper = boost::make_shared<OptionletStripper1>(volSurface, vars.iborIndex,
-        Null<Rate>(), vars.accuracy, vars.maxIter, vars.yieldCurves.discountEonia,
+    boost::shared_ptr<OptionletStripper> stripper = boost::make_shared<OptionletStripper1>(
+        volSurface, vars.iborIndex, Null<Rate>(), vars.accuracy, vars.maxIter, vars.yieldCurves.discountEonia,
         ShiftedLognormal, vars.vols.shift_2, false, ShiftedLognormal, vars.vols.shift_1);
     boost::shared_ptr<StrippedOptionletAdapter> adapter = boost::make_shared<StrippedOptionletAdapter>(stripper);
     Handle<OptionletVolatilityStructure> ovs(adapter);
@@ -306,8 +303,8 @@ void OptionletStripperTest::testShiftedLognormalToShiftedLognormalStripping() {
 
     for (Size i = 0; i < vars.vols.tenors.size(); ++i) {
         for (Size j = 0; j < vars.vols.strikes.size(); ++j) {
-            cap = MakeCapFloor(CapFloor::Cap, vars.vols.tenors[i], vars.iborIndex,
-                vars.vols.strikes[j], vars.settlementDays * Days);
+            cap = MakeCapFloor(CapFloor::Cap, vars.vols.tenors[i], vars.iborIndex, vars.vols.strikes[j],
+                               vars.settlementDays * Days);
 
             cap->setPricingEngine(engine);
             Real strippedPrice = cap->NPV();
@@ -318,13 +315,12 @@ void OptionletStripperTest::testShiftedLognormalToShiftedLognormalStripping() {
 
             Real error = std::fabs(strippedPrice - flatPrice);
             BOOST_CHECK_MESSAGE(error < vars.accuracy,
-                "\noption tenor:       " << vars.vols.tenors[i] <<
-                "\nstrike:             " << io::rate(vars.vols.strikes[j]) <<
-                "\nstripped vol price: " << io::rate(strippedPrice) <<
-                "\nconstant vol price: " << io::rate(flatPrice) <<
-                "\nerror:              " << io::rate(error) <<
-                "\ntolerance:          " << io::rate(vars.accuracy)
-            );
+                                "\noption tenor:       " << vars.vols.tenors[i]
+                                                         << "\nstrike:             " << io::rate(vars.vols.strikes[j])
+                                                         << "\nstripped vol price: " << io::rate(strippedPrice)
+                                                         << "\nconstant vol price: " << io::rate(flatPrice)
+                                                         << "\nerror:              " << io::rate(error)
+                                                         << "\ntolerance:          " << io::rate(vars.accuracy));
         }
     }
 }
@@ -335,21 +331,21 @@ void OptionletStripperTest::testUsualNormalStrippingWithAtm() {
     CommonVars vars;
 
     // EUR cap floor normal volatility surface
-    boost::shared_ptr<CapFloorTermVolSurface> volSurface = boost::make_shared<CapFloorTermVolSurface>(
-        vars.settlementDays, vars.calendar, vars.bdc, vars.vols.tenors, vars.vols.strikes,
-        vars.vols.nVols, vars.dayCounter);
-    
+    boost::shared_ptr<CapFloorTermVolSurface> volSurface =
+        boost::make_shared<CapFloorTermVolSurface>(vars.settlementDays, vars.calendar, vars.bdc, vars.vols.tenors,
+                                                   vars.vols.strikes, vars.vols.nVols, vars.dayCounter);
+
     // EUR cap floor normal ATM curve
-    Handle<CapFloorTermVolCurve> atmVolCurve(boost::make_shared<CapFloorTermVolCurve>(vars.settlementDays, 
-        vars.calendar, vars.bdc, vars.vols.atmTenors, vars.vols.nAtmVols, vars.dayCounter));
+    Handle<CapFloorTermVolCurve> atmVolCurve(boost::make_shared<CapFloorTermVolCurve>(
+        vars.settlementDays, vars.calendar, vars.bdc, vars.vols.atmTenors, vars.vols.nAtmVols, vars.dayCounter));
 
     // Create Normal stripped optionlet surface
-    boost::shared_ptr<OptionletStripper1> tempStripper = boost::make_shared<OptionletStripper1>(volSurface, 
-        vars.iborIndex, Null<Rate>(), vars.accuracy, vars.maxIter, vars.yieldCurves.discountEonia, Normal);
+    boost::shared_ptr<OptionletStripper1> tempStripper = boost::make_shared<OptionletStripper1>(
+        volSurface, vars.iborIndex, Null<Rate>(), vars.accuracy, vars.maxIter, vars.yieldCurves.discountEonia, Normal);
 
     // Overlay normal ATM curve
-    boost::shared_ptr<OptionletStripper> stripper = boost::make_shared<OptionletStripper2>(
-        tempStripper, atmVolCurve, Normal);
+    boost::shared_ptr<OptionletStripper> stripper =
+        boost::make_shared<OptionletStripper2>(tempStripper, atmVolCurve, Normal);
 
     boost::shared_ptr<StrippedOptionletAdapter> adapter = boost::make_shared<StrippedOptionletAdapter>(stripper);
     Handle<OptionletVolatilityStructure> ovs(adapter);
@@ -369,8 +365,8 @@ void OptionletStripperTest::testUsualNormalStrippingWithAtm() {
     // Non-ATM pillar points: check flat cap/foor surface price = stripped optionlet surface price
     for (Size i = 0; i < vars.vols.tenors.size(); ++i) {
         for (Size j = 0; j < vars.vols.strikes.size(); ++j) {
-            cap = MakeCapFloor(CapFloor::Cap, vars.vols.tenors[i], vars.iborIndex, 
-                vars.vols.strikes[j], vars.settlementDays * Days);
+            cap = MakeCapFloor(CapFloor::Cap, vars.vols.tenors[i], vars.iborIndex, vars.vols.strikes[j],
+                               vars.settlementDays * Days);
 
             cap->setPricingEngine(engine);
             Real strippedPrice = cap->NPV();
@@ -380,14 +376,13 @@ void OptionletStripperTest::testUsualNormalStrippingWithAtm() {
             Real flatPrice = cap->NPV();
 
             Real error = std::fabs(strippedPrice - flatPrice);
-            BOOST_CHECK_MESSAGE(error < vars.accuracy, 
-                "\noption tenor:       " << vars.vols.tenors[i] <<
-                "\nstrike:             " << io::rate(vars.vols.strikes[j]) <<
-                "\nstripped vol price: " << io::rate(strippedPrice) <<
-                "\nconstant vol price: " << io::rate(flatPrice) <<
-                "\nerror:              " << io::rate(error) <<
-                "\ntolerance:          " << io::rate(vars.accuracy)
-            );
+            BOOST_CHECK_MESSAGE(error < vars.accuracy,
+                                "\noption tenor:       " << vars.vols.tenors[i]
+                                                         << "\nstrike:             " << io::rate(vars.vols.strikes[j])
+                                                         << "\nstripped vol price: " << io::rate(strippedPrice)
+                                                         << "\nconstant vol price: " << io::rate(flatPrice)
+                                                         << "\nerror:              " << io::rate(error)
+                                                         << "\ntolerance:          " << io::rate(vars.accuracy));
         }
     }
 
@@ -395,12 +390,13 @@ void OptionletStripperTest::testUsualNormalStrippingWithAtm() {
     Volatility dummyVol = 0.10;
     boost::shared_ptr<BlackCapFloorEngine> tempEngine =
         boost::make_shared<BlackCapFloorEngine>(vars.yieldCurves.discountEonia, dummyVol);
-    
+
     for (Size i = 0; i < vars.vols.atmTenors.size(); ++i) {
         // Null strike => cap is set up with ATM strike
         // Need a temp BlackCapFloorEngine for ATM strike to be calculated (bad - should be fixed in QL)
-        cap = MakeCapFloor(CapFloor::Cap, vars.vols.atmTenors[i], vars.iborIndex, 
-            Null<Rate>(), vars.settlementDays * Days).withPricingEngine(tempEngine);
+        cap = MakeCapFloor(CapFloor::Cap, vars.vols.atmTenors[i], vars.iborIndex, Null<Rate>(),
+                           vars.settlementDays * Days)
+                  .withPricingEngine(tempEngine);
 
         cap->setPricingEngine(engine);
         Real strippedPrice = cap->NPV();
@@ -410,14 +406,13 @@ void OptionletStripperTest::testUsualNormalStrippingWithAtm() {
         Real flatPrice = cap->NPV();
 
         Real error = std::fabs(strippedPrice - flatPrice);
-        BOOST_CHECK_MESSAGE(error < vars.accuracy, 
-            "\noption tenor:       " << vars.vols.atmTenors[i] <<
-            "\natm strike:         " << io::rate(cap->atmRate(**vars.yieldCurves.discountEonia)) <<
-            "\nstripped vol price: " << io::rate(strippedPrice) <<
-            "\nconstant vol price: " << io::rate(flatPrice) <<
-            "\nerror:              " << io::rate(error) <<
-            "\ntolerance:          " << io::rate(vars.accuracy)
-        );
+        BOOST_CHECK_MESSAGE(error < vars.accuracy,
+                            "\noption tenor:       " << vars.vols.atmTenors[i] << "\natm strike:         "
+                                                     << io::rate(cap->atmRate(**vars.yieldCurves.discountEonia))
+                                                     << "\nstripped vol price: " << io::rate(strippedPrice)
+                                                     << "\nconstant vol price: " << io::rate(flatPrice)
+                                                     << "\nerror:              " << io::rate(error)
+                                                     << "\ntolerance:          " << io::rate(vars.accuracy));
     }
 }
 
@@ -427,22 +422,22 @@ void OptionletStripperTest::testUsualShiftedLognormalStrippingWithAtm() {
     CommonVars vars;
 
     // EUR cap floor shifted lognormal volatility surface
-    boost::shared_ptr<CapFloorTermVolSurface> volSurface = boost::make_shared<CapFloorTermVolSurface>(
-        vars.settlementDays, vars.calendar, vars.bdc, vars.vols.tenors, vars.vols.strikes,
-        vars.vols.slnVols_2, vars.dayCounter);
+    boost::shared_ptr<CapFloorTermVolSurface> volSurface =
+        boost::make_shared<CapFloorTermVolSurface>(vars.settlementDays, vars.calendar, vars.bdc, vars.vols.tenors,
+                                                   vars.vols.strikes, vars.vols.slnVols_2, vars.dayCounter);
 
     // EUR cap floor shifted lognormal ATM curve
-    Handle<CapFloorTermVolCurve> atmVolCurve(boost::make_shared<CapFloorTermVolCurve>(vars.settlementDays,
-        vars.calendar, vars.bdc, vars.vols.atmTenors, vars.vols.slnAtmVols_2, vars.dayCounter));
+    Handle<CapFloorTermVolCurve> atmVolCurve(boost::make_shared<CapFloorTermVolCurve>(
+        vars.settlementDays, vars.calendar, vars.bdc, vars.vols.atmTenors, vars.vols.slnAtmVols_2, vars.dayCounter));
 
     // Create shifted lognormal stripped optionlet surface
-    boost::shared_ptr<OptionletStripper1> tempStripper = boost::make_shared<OptionletStripper1>(volSurface,
-        vars.iborIndex, Null<Rate>(), vars.accuracy, vars.maxIter, vars.yieldCurves.discountEonia, 
-        ShiftedLognormal, vars.vols.shift_2);
+    boost::shared_ptr<OptionletStripper1> tempStripper =
+        boost::make_shared<OptionletStripper1>(volSurface, vars.iborIndex, Null<Rate>(), vars.accuracy, vars.maxIter,
+                                               vars.yieldCurves.discountEonia, ShiftedLognormal, vars.vols.shift_2);
 
     // Overlay shifted lognormal ATM curve
-    boost::shared_ptr<OptionletStripper> stripper = boost::make_shared<OptionletStripper2>(
-        tempStripper, atmVolCurve, ShiftedLognormal, vars.vols.shift_2);
+    boost::shared_ptr<OptionletStripper> stripper =
+        boost::make_shared<OptionletStripper2>(tempStripper, atmVolCurve, ShiftedLognormal, vars.vols.shift_2);
 
     boost::shared_ptr<StrippedOptionletAdapter> adapter = boost::make_shared<StrippedOptionletAdapter>(stripper);
     Handle<OptionletVolatilityStructure> ovs(adapter);
@@ -462,8 +457,8 @@ void OptionletStripperTest::testUsualShiftedLognormalStrippingWithAtm() {
     // Non-ATM pillar points: check flat cap/foor surface price = stripped optionlet surface price
     for (Size i = 0; i < vars.vols.tenors.size(); ++i) {
         for (Size j = 0; j < vars.vols.strikes.size(); ++j) {
-            cap = MakeCapFloor(CapFloor::Cap, vars.vols.tenors[i], vars.iborIndex,
-                vars.vols.strikes[j], vars.settlementDays * Days);
+            cap = MakeCapFloor(CapFloor::Cap, vars.vols.tenors[i], vars.iborIndex, vars.vols.strikes[j],
+                               vars.settlementDays * Days);
 
             cap->setPricingEngine(engine);
             Real strippedPrice = cap->NPV();
@@ -474,21 +469,21 @@ void OptionletStripperTest::testUsualShiftedLognormalStrippingWithAtm() {
 
             Real error = std::fabs(strippedPrice - flatPrice);
             BOOST_CHECK_MESSAGE(error < vars.accuracy,
-                "\noption tenor:       " << vars.vols.tenors[i] <<
-                "\nstrike:             " << io::rate(vars.vols.strikes[j]) <<
-                "\nstripped vol price: " << io::rate(strippedPrice) <<
-                "\nconstant vol price: " << io::rate(flatPrice) <<
-                "\nerror:              " << io::rate(error) <<
-                "\ntolerance:          " << io::rate(vars.accuracy)
-            );
+                                "\noption tenor:       " << vars.vols.tenors[i]
+                                                         << "\nstrike:             " << io::rate(vars.vols.strikes[j])
+                                                         << "\nstripped vol price: " << io::rate(strippedPrice)
+                                                         << "\nconstant vol price: " << io::rate(flatPrice)
+                                                         << "\nerror:              " << io::rate(error)
+                                                         << "\ntolerance:          " << io::rate(vars.accuracy));
         }
     }
 
     // ATM pillar points: check flat cap/foor surface price = stripped optionlet surface price
     for (Size i = 0; i < vars.vols.atmTenors.size(); ++i) {
         // Null strike => cap is set up with ATM strike
-        cap = MakeCapFloor(CapFloor::Cap, vars.vols.atmTenors[i], vars.iborIndex,
-            Null<Rate>(), vars.settlementDays * Days).withPricingEngine(engine);
+        cap = MakeCapFloor(CapFloor::Cap, vars.vols.atmTenors[i], vars.iborIndex, Null<Rate>(),
+                           vars.settlementDays * Days)
+                  .withPricingEngine(engine);
         Real strippedPrice = cap->NPV();
 
         quote.linkTo(boost::make_shared<SimpleQuote>(vars.vols.slnAtmVols_2[i]));
@@ -497,13 +492,12 @@ void OptionletStripperTest::testUsualShiftedLognormalStrippingWithAtm() {
 
         Real error = std::fabs(strippedPrice - flatPrice);
         BOOST_CHECK_MESSAGE(error < vars.accuracy,
-            "\noption tenor:       " << vars.vols.atmTenors[i] <<
-            "\natm strike:         " << io::rate(cap->atmRate(**vars.yieldCurves.discountEonia)) <<
-            "\nstripped vol price: " << io::rate(strippedPrice) <<
-            "\nconstant vol price: " << io::rate(flatPrice) <<
-            "\nerror:              " << io::rate(error) <<
-            "\ntolerance:          " << io::rate(vars.accuracy)
-        );
+                            "\noption tenor:       " << vars.vols.atmTenors[i] << "\natm strike:         "
+                                                     << io::rate(cap->atmRate(**vars.yieldCurves.discountEonia))
+                                                     << "\nstripped vol price: " << io::rate(strippedPrice)
+                                                     << "\nconstant vol price: " << io::rate(flatPrice)
+                                                     << "\nerror:              " << io::rate(error)
+                                                     << "\ntolerance:          " << io::rate(vars.accuracy));
     }
 }
 
@@ -513,22 +507,22 @@ void OptionletStripperTest::testNormalToShiftedLognormalStrippingWithAtm() {
     CommonVars vars;
 
     // EUR cap floor normal volatility surface
-    boost::shared_ptr<CapFloorTermVolSurface> volSurface = boost::make_shared<CapFloorTermVolSurface>(
-        vars.settlementDays, vars.calendar, vars.bdc, vars.vols.tenors, vars.vols.strikes,
-        vars.vols.nVols, vars.dayCounter);
+    boost::shared_ptr<CapFloorTermVolSurface> volSurface =
+        boost::make_shared<CapFloorTermVolSurface>(vars.settlementDays, vars.calendar, vars.bdc, vars.vols.tenors,
+                                                   vars.vols.strikes, vars.vols.nVols, vars.dayCounter);
 
     // EUR cap floor normal ATM curve
-    Handle<CapFloorTermVolCurve> atmVolCurve(boost::make_shared<CapFloorTermVolCurve>(vars.settlementDays,
-        vars.calendar, vars.bdc, vars.vols.atmTenors, vars.vols.nAtmVols, vars.dayCounter));
+    Handle<CapFloorTermVolCurve> atmVolCurve(boost::make_shared<CapFloorTermVolCurve>(
+        vars.settlementDays, vars.calendar, vars.bdc, vars.vols.atmTenors, vars.vols.nAtmVols, vars.dayCounter));
 
     // Create shifted lognormal stripped optionlet surface
-    boost::shared_ptr<OptionletStripper1> tempStripper = boost::make_shared<OptionletStripper1>(volSurface,
-        vars.iborIndex, Null<Rate>(), vars.accuracy, vars.maxIter, vars.yieldCurves.discountEonia,
-        Normal, 0.0, false, ShiftedLognormal, vars.vols.shift_1);
+    boost::shared_ptr<OptionletStripper1> tempStripper = boost::make_shared<OptionletStripper1>(
+        volSurface, vars.iborIndex, Null<Rate>(), vars.accuracy, vars.maxIter, vars.yieldCurves.discountEonia, Normal,
+        0.0, false, ShiftedLognormal, vars.vols.shift_1);
 
     // Overlay shifted lognormal ATM curve
-    boost::shared_ptr<OptionletStripper> stripper = boost::make_shared<OptionletStripper2>(
-        tempStripper, atmVolCurve, Normal);
+    boost::shared_ptr<OptionletStripper> stripper =
+        boost::make_shared<OptionletStripper2>(tempStripper, atmVolCurve, Normal);
 
     boost::shared_ptr<StrippedOptionletAdapter> adapter = boost::make_shared<StrippedOptionletAdapter>(stripper);
     Handle<OptionletVolatilityStructure> ovs(adapter);
@@ -542,14 +536,14 @@ void OptionletStripperTest::testNormalToShiftedLognormalStrippingWithAtm() {
     boost::shared_ptr<CapFloor> cap;
 
     RelinkableHandle<Quote> quote(boost::make_shared<SimpleQuote>(0.0));
-    boost::shared_ptr<BachelierCapFloorEngine> flatEngine = boost::make_shared<BachelierCapFloorEngine>(
-        vars.yieldCurves.discountEonia, quote, vars.dayCounter);
+    boost::shared_ptr<BachelierCapFloorEngine> flatEngine =
+        boost::make_shared<BachelierCapFloorEngine>(vars.yieldCurves.discountEonia, quote, vars.dayCounter);
 
     // Non-ATM pillar points: check flat cap/foor surface price = stripped optionlet surface price
     for (Size i = 0; i < vars.vols.tenors.size(); ++i) {
         for (Size j = 0; j < vars.vols.strikes.size(); ++j) {
-            cap = MakeCapFloor(CapFloor::Cap, vars.vols.tenors[i], vars.iborIndex,
-                vars.vols.strikes[j], vars.settlementDays * Days);
+            cap = MakeCapFloor(CapFloor::Cap, vars.vols.tenors[i], vars.iborIndex, vars.vols.strikes[j],
+                               vars.settlementDays * Days);
 
             cap->setPricingEngine(engine);
             Real strippedPrice = cap->NPV();
@@ -560,21 +554,21 @@ void OptionletStripperTest::testNormalToShiftedLognormalStrippingWithAtm() {
 
             Real error = std::fabs(strippedPrice - flatPrice);
             BOOST_CHECK_MESSAGE(error < vars.accuracy,
-                "\noption tenor:       " << vars.vols.tenors[i] <<
-                "\nstrike:             " << io::rate(vars.vols.strikes[j]) <<
-                "\nstripped vol price: " << io::rate(strippedPrice) <<
-                "\nconstant vol price: " << io::rate(flatPrice) <<
-                "\nerror:              " << io::rate(error) <<
-                "\ntolerance:          " << io::rate(vars.accuracy)
-            );
+                                "\noption tenor:       " << vars.vols.tenors[i]
+                                                         << "\nstrike:             " << io::rate(vars.vols.strikes[j])
+                                                         << "\nstripped vol price: " << io::rate(strippedPrice)
+                                                         << "\nconstant vol price: " << io::rate(flatPrice)
+                                                         << "\nerror:              " << io::rate(error)
+                                                         << "\ntolerance:          " << io::rate(vars.accuracy));
         }
     }
 
     // ATM pillar points: check flat cap/foor surface price = stripped optionlet surface price
     for (Size i = 0; i < vars.vols.atmTenors.size(); ++i) {
         // Null strike => cap is set up with ATM strike
-        cap = MakeCapFloor(CapFloor::Cap, vars.vols.atmTenors[i], vars.iborIndex,
-            Null<Rate>(), vars.settlementDays * Days).withPricingEngine(engine);
+        cap = MakeCapFloor(CapFloor::Cap, vars.vols.atmTenors[i], vars.iborIndex, Null<Rate>(),
+                           vars.settlementDays * Days)
+                  .withPricingEngine(engine);
         Real strippedPrice = cap->NPV();
 
         quote.linkTo(boost::make_shared<SimpleQuote>(vars.vols.nAtmVols[i]));
@@ -583,13 +577,12 @@ void OptionletStripperTest::testNormalToShiftedLognormalStrippingWithAtm() {
 
         Real error = std::fabs(strippedPrice - flatPrice);
         BOOST_CHECK_MESSAGE(error < vars.accuracy,
-            "\noption tenor:       " << vars.vols.atmTenors[i] <<
-            "\natm strike:         " << io::rate(cap->atmRate(**vars.yieldCurves.discountEonia)) <<
-            "\nstripped vol price: " << io::rate(strippedPrice) <<
-            "\nconstant vol price: " << io::rate(flatPrice) <<
-            "\nerror:              " << io::rate(error) <<
-            "\ntolerance:          " << io::rate(vars.accuracy)
-        );
+                            "\noption tenor:       " << vars.vols.atmTenors[i] << "\natm strike:         "
+                                                     << io::rate(cap->atmRate(**vars.yieldCurves.discountEonia))
+                                                     << "\nstripped vol price: " << io::rate(strippedPrice)
+                                                     << "\nconstant vol price: " << io::rate(flatPrice)
+                                                     << "\nerror:              " << io::rate(error)
+                                                     << "\ntolerance:          " << io::rate(vars.accuracy));
     }
 }
 
@@ -599,22 +592,22 @@ void OptionletStripperTest::testShiftedLognormalToNormalStrippingWithAtm() {
     CommonVars vars;
 
     // EUR cap floor shifted lognormal volatility surface
-    boost::shared_ptr<CapFloorTermVolSurface> volSurface = boost::make_shared<CapFloorTermVolSurface>(
-        vars.settlementDays, vars.calendar, vars.bdc, vars.vols.tenors, vars.vols.strikes,
-        vars.vols.slnVols_1, vars.dayCounter);
+    boost::shared_ptr<CapFloorTermVolSurface> volSurface =
+        boost::make_shared<CapFloorTermVolSurface>(vars.settlementDays, vars.calendar, vars.bdc, vars.vols.tenors,
+                                                   vars.vols.strikes, vars.vols.slnVols_1, vars.dayCounter);
 
     // EUR cap floor shifted lognormal ATM curve
-    Handle<CapFloorTermVolCurve> atmVolCurve(boost::make_shared<CapFloorTermVolCurve>(vars.settlementDays,
-        vars.calendar, vars.bdc, vars.vols.atmTenors, vars.vols.slnAtmVols_1, vars.dayCounter));
+    Handle<CapFloorTermVolCurve> atmVolCurve(boost::make_shared<CapFloorTermVolCurve>(
+        vars.settlementDays, vars.calendar, vars.bdc, vars.vols.atmTenors, vars.vols.slnAtmVols_1, vars.dayCounter));
 
     // Create normal stripped optionlet surface
-    boost::shared_ptr<OptionletStripper1> tempStripper = boost::make_shared<OptionletStripper1>(volSurface,
-        vars.iborIndex, Null<Rate>(), vars.accuracy, vars.maxIter, vars.yieldCurves.discountEonia,
+    boost::shared_ptr<OptionletStripper1> tempStripper = boost::make_shared<OptionletStripper1>(
+        volSurface, vars.iborIndex, Null<Rate>(), vars.accuracy, vars.maxIter, vars.yieldCurves.discountEonia,
         ShiftedLognormal, vars.vols.shift_1, false, Normal, 0.0);
 
     // Overlay shifted lognormal ATM curve
-    boost::shared_ptr<OptionletStripper> stripper = boost::make_shared<OptionletStripper2>(
-        tempStripper, atmVolCurve, ShiftedLognormal, vars.vols.shift_1);
+    boost::shared_ptr<OptionletStripper> stripper =
+        boost::make_shared<OptionletStripper2>(tempStripper, atmVolCurve, ShiftedLognormal, vars.vols.shift_1);
 
     boost::shared_ptr<StrippedOptionletAdapter> adapter = boost::make_shared<StrippedOptionletAdapter>(stripper);
     Handle<OptionletVolatilityStructure> ovs(adapter);
@@ -634,8 +627,8 @@ void OptionletStripperTest::testShiftedLognormalToNormalStrippingWithAtm() {
     // Non-ATM pillar points: check flat cap/foor surface price = stripped optionlet surface price
     for (Size i = 0; i < vars.vols.tenors.size(); ++i) {
         for (Size j = 0; j < vars.vols.strikes.size(); ++j) {
-            cap = MakeCapFloor(CapFloor::Cap, vars.vols.tenors[i], vars.iborIndex,
-                vars.vols.strikes[j], vars.settlementDays * Days);
+            cap = MakeCapFloor(CapFloor::Cap, vars.vols.tenors[i], vars.iborIndex, vars.vols.strikes[j],
+                               vars.settlementDays * Days);
 
             cap->setPricingEngine(engine);
             Real strippedPrice = cap->NPV();
@@ -646,13 +639,12 @@ void OptionletStripperTest::testShiftedLognormalToNormalStrippingWithAtm() {
 
             Real error = std::fabs(strippedPrice - flatPrice);
             BOOST_CHECK_MESSAGE(error < vars.accuracy,
-                "\noption tenor:       " << vars.vols.tenors[i] <<
-                "\nstrike:             " << io::rate(vars.vols.strikes[j]) <<
-                "\nstripped vol price: " << io::rate(strippedPrice) <<
-                "\nconstant vol price: " << io::rate(flatPrice) <<
-                "\nerror:              " << io::rate(error) <<
-                "\ntolerance:          " << io::rate(vars.accuracy)
-            );
+                                "\noption tenor:       " << vars.vols.tenors[i]
+                                                         << "\nstrike:             " << io::rate(vars.vols.strikes[j])
+                                                         << "\nstripped vol price: " << io::rate(strippedPrice)
+                                                         << "\nconstant vol price: " << io::rate(flatPrice)
+                                                         << "\nerror:              " << io::rate(error)
+                                                         << "\ntolerance:          " << io::rate(vars.accuracy));
         }
     }
 
@@ -660,8 +652,9 @@ void OptionletStripperTest::testShiftedLognormalToNormalStrippingWithAtm() {
     for (Size i = 0; i < vars.vols.atmTenors.size(); ++i) {
         quote.linkTo(boost::make_shared<SimpleQuote>(vars.vols.slnAtmVols_1[i]));
         // Null strike => cap is set up with ATM strike
-        cap = MakeCapFloor(CapFloor::Cap, vars.vols.atmTenors[i], vars.iborIndex,
-            Null<Rate>(), vars.settlementDays * Days).withPricingEngine(flatEngine);
+        cap = MakeCapFloor(CapFloor::Cap, vars.vols.atmTenors[i], vars.iborIndex, Null<Rate>(),
+                           vars.settlementDays * Days)
+                  .withPricingEngine(flatEngine);
         Real flatPrice = cap->NPV();
 
         cap->setPricingEngine(engine);
@@ -669,13 +662,12 @@ void OptionletStripperTest::testShiftedLognormalToNormalStrippingWithAtm() {
 
         Real error = std::fabs(strippedPrice - flatPrice);
         BOOST_CHECK_MESSAGE(error < vars.accuracy,
-            "\noption tenor:       " << vars.vols.atmTenors[i] <<
-            "\natm strike:         " << io::rate(cap->atmRate(**vars.yieldCurves.discountEonia)) <<
-            "\nstripped vol price: " << io::rate(strippedPrice) <<
-            "\nconstant vol price: " << io::rate(flatPrice) <<
-            "\nerror:              " << io::rate(error) <<
-            "\ntolerance:          " << io::rate(vars.accuracy)
-        );
+                            "\noption tenor:       " << vars.vols.atmTenors[i] << "\natm strike:         "
+                                                     << io::rate(cap->atmRate(**vars.yieldCurves.discountEonia))
+                                                     << "\nstripped vol price: " << io::rate(strippedPrice)
+                                                     << "\nconstant vol price: " << io::rate(flatPrice)
+                                                     << "\nerror:              " << io::rate(error)
+                                                     << "\ntolerance:          " << io::rate(vars.accuracy));
     }
 }
 
@@ -685,22 +677,22 @@ void OptionletStripperTest::testShiftedLognormalToShiftedLognormalStrippingWithA
     CommonVars vars;
 
     // EUR cap floor shifted lognormal volatility surface
-    boost::shared_ptr<CapFloorTermVolSurface> volSurface = boost::make_shared<CapFloorTermVolSurface>(
-        vars.settlementDays, vars.calendar, vars.bdc, vars.vols.tenors, vars.vols.strikes,
-        vars.vols.slnVols_1, vars.dayCounter);
+    boost::shared_ptr<CapFloorTermVolSurface> volSurface =
+        boost::make_shared<CapFloorTermVolSurface>(vars.settlementDays, vars.calendar, vars.bdc, vars.vols.tenors,
+                                                   vars.vols.strikes, vars.vols.slnVols_1, vars.dayCounter);
 
     // EUR cap floor shifted lognormal ATM curve
-    Handle<CapFloorTermVolCurve> atmVolCurve(boost::make_shared<CapFloorTermVolCurve>(vars.settlementDays,
-        vars.calendar, vars.bdc, vars.vols.atmTenors, vars.vols.slnAtmVols_1, vars.dayCounter));
+    Handle<CapFloorTermVolCurve> atmVolCurve(boost::make_shared<CapFloorTermVolCurve>(
+        vars.settlementDays, vars.calendar, vars.bdc, vars.vols.atmTenors, vars.vols.slnAtmVols_1, vars.dayCounter));
 
     // Create shifted lognormal stripped optionlet surface
-    boost::shared_ptr<OptionletStripper1> tempStripper = boost::make_shared<OptionletStripper1>(volSurface,
-        vars.iborIndex, Null<Rate>(), vars.accuracy, vars.maxIter, vars.yieldCurves.discountEonia,
+    boost::shared_ptr<OptionletStripper1> tempStripper = boost::make_shared<OptionletStripper1>(
+        volSurface, vars.iborIndex, Null<Rate>(), vars.accuracy, vars.maxIter, vars.yieldCurves.discountEonia,
         ShiftedLognormal, vars.vols.shift_1, false, ShiftedLognormal, vars.vols.shift_2);
 
     // Overlay shifted lognormal ATM curve
-    boost::shared_ptr<OptionletStripper> stripper = boost::make_shared<OptionletStripper2>(
-        tempStripper, atmVolCurve, ShiftedLognormal, vars.vols.shift_1);
+    boost::shared_ptr<OptionletStripper> stripper =
+        boost::make_shared<OptionletStripper2>(tempStripper, atmVolCurve, ShiftedLognormal, vars.vols.shift_1);
 
     boost::shared_ptr<StrippedOptionletAdapter> adapter = boost::make_shared<StrippedOptionletAdapter>(stripper);
     Handle<OptionletVolatilityStructure> ovs(adapter);
@@ -720,8 +712,8 @@ void OptionletStripperTest::testShiftedLognormalToShiftedLognormalStrippingWithA
     // Non-ATM pillar points: check flat cap/foor surface price = stripped optionlet surface price
     for (Size i = 0; i < vars.vols.tenors.size(); ++i) {
         for (Size j = 0; j < vars.vols.strikes.size(); ++j) {
-            cap = MakeCapFloor(CapFloor::Cap, vars.vols.tenors[i], vars.iborIndex,
-                vars.vols.strikes[j], vars.settlementDays * Days);
+            cap = MakeCapFloor(CapFloor::Cap, vars.vols.tenors[i], vars.iborIndex, vars.vols.strikes[j],
+                               vars.settlementDays * Days);
 
             cap->setPricingEngine(engine);
             Real strippedPrice = cap->NPV();
@@ -732,13 +724,12 @@ void OptionletStripperTest::testShiftedLognormalToShiftedLognormalStrippingWithA
 
             Real error = std::fabs(strippedPrice - flatPrice);
             BOOST_CHECK_MESSAGE(error < vars.accuracy,
-                "\noption tenor:       " << vars.vols.tenors[i] <<
-                "\nstrike:             " << io::rate(vars.vols.strikes[j]) <<
-                "\nstripped vol price: " << io::rate(strippedPrice) <<
-                "\nconstant vol price: " << io::rate(flatPrice) <<
-                "\nerror:              " << io::rate(error) <<
-                "\ntolerance:          " << io::rate(vars.accuracy)
-            );
+                                "\noption tenor:       " << vars.vols.tenors[i]
+                                                         << "\nstrike:             " << io::rate(vars.vols.strikes[j])
+                                                         << "\nstripped vol price: " << io::rate(strippedPrice)
+                                                         << "\nconstant vol price: " << io::rate(flatPrice)
+                                                         << "\nerror:              " << io::rate(error)
+                                                         << "\ntolerance:          " << io::rate(vars.accuracy));
         }
     }
 
@@ -746,8 +737,9 @@ void OptionletStripperTest::testShiftedLognormalToShiftedLognormalStrippingWithA
     for (Size i = 0; i < vars.vols.atmTenors.size(); ++i) {
         quote.linkTo(boost::make_shared<SimpleQuote>(vars.vols.slnAtmVols_1[i]));
         // Null strike => cap is set up with ATM strike
-        cap = MakeCapFloor(CapFloor::Cap, vars.vols.atmTenors[i], vars.iborIndex,
-            Null<Rate>(), vars.settlementDays * Days).withPricingEngine(flatEngine);
+        cap = MakeCapFloor(CapFloor::Cap, vars.vols.atmTenors[i], vars.iborIndex, Null<Rate>(),
+                           vars.settlementDays * Days)
+                  .withPricingEngine(flatEngine);
         Real flatPrice = cap->NPV();
 
         cap->setPricingEngine(engine);
@@ -755,13 +747,12 @@ void OptionletStripperTest::testShiftedLognormalToShiftedLognormalStrippingWithA
 
         Real error = std::fabs(strippedPrice - flatPrice);
         BOOST_CHECK_MESSAGE(error < vars.accuracy,
-            "\noption tenor:       " << vars.vols.atmTenors[i] <<
-            "\natm strike:         " << io::rate(cap->atmRate(**vars.yieldCurves.discountEonia)) <<
-            "\nstripped vol price: " << io::rate(strippedPrice) <<
-            "\nconstant vol price: " << io::rate(flatPrice) <<
-            "\nerror:              " << io::rate(error) <<
-            "\ntolerance:          " << io::rate(vars.accuracy)
-        );
+                            "\noption tenor:       " << vars.vols.atmTenors[i] << "\natm strike:         "
+                                                     << io::rate(cap->atmRate(**vars.yieldCurves.discountEonia))
+                                                     << "\nstripped vol price: " << io::rate(strippedPrice)
+                                                     << "\nconstant vol price: " << io::rate(flatPrice)
+                                                     << "\nerror:              " << io::rate(error)
+                                                     << "\ntolerance:          " << io::rate(vars.accuracy));
     }
 }
 
@@ -771,15 +762,15 @@ void OptionletStripperTest::testNormalToLognormalGivesError() {
     CommonVars vars;
 
     // EUR cap floor normal volatility surface
-    boost::shared_ptr<CapFloorTermVolSurface> volSurface = boost::make_shared<CapFloorTermVolSurface>(
-        vars.settlementDays, vars.calendar, vars.bdc, vars.vols.tenors, vars.vols.strikes,
-        vars.vols.nVols, vars.dayCounter);
+    boost::shared_ptr<CapFloorTermVolSurface> volSurface =
+        boost::make_shared<CapFloorTermVolSurface>(vars.settlementDays, vars.calendar, vars.bdc, vars.vols.tenors,
+                                                   vars.vols.strikes, vars.vols.nVols, vars.dayCounter);
 
     // Create shifted lognormal stripped optionlet surface and Black engine
-    boost::shared_ptr<OptionletStripper> stripper = boost::make_shared<OptionletStripper1>(volSurface, vars.iborIndex,
-        Null<Rate>(), vars.accuracy, vars.maxIter, vars.yieldCurves.discountEonia,
-        Normal, 0.0, false, ShiftedLognormal, 0.0);
-    
+    boost::shared_ptr<OptionletStripper> stripper = boost::make_shared<OptionletStripper1>(
+        volSurface, vars.iborIndex, Null<Rate>(), vars.accuracy, vars.maxIter, vars.yieldCurves.discountEonia, Normal,
+        0.0, false, ShiftedLognormal, 0.0);
+
     // Error due to negative strike in input matrix
     BOOST_CHECK_THROW(stripper->recalculate(), QuantLib::Error);
 }
@@ -794,16 +785,16 @@ void OptionletStripperTest::testNormalToLognormalModifiedGivesError() {
     Matrix vols(vars.vols.tenors.size(), strikes.size());
     for (Size i = 0; i < vols.rows(); ++i)
         for (Size j = 0; j < vols.columns(); ++j)
-            vols[i][j] = vars.vols.nVols[i][j+2];
+            vols[i][j] = vars.vols.nVols[i][j + 2];
 
     // EUR cap floor normal volatility surface
     boost::shared_ptr<CapFloorTermVolSurface> volSurface = boost::make_shared<CapFloorTermVolSurface>(
         vars.settlementDays, vars.calendar, vars.bdc, vars.vols.tenors, strikes, vols, vars.dayCounter);
 
     // Create shifted lognormal stripped optionlet surface and Black engine
-    boost::shared_ptr<OptionletStripper> stripper = boost::make_shared<OptionletStripper1>(volSurface, vars.iborIndex,
-        Null<Rate>(), vars.accuracy, vars.maxIter, vars.yieldCurves.discountEonia,
-        Normal, 0.0, false, ShiftedLognormal, 0.0);
+    boost::shared_ptr<OptionletStripper> stripper = boost::make_shared<OptionletStripper1>(
+        volSurface, vars.iborIndex, Null<Rate>(), vars.accuracy, vars.maxIter, vars.yieldCurves.discountEonia, Normal,
+        0.0, false, ShiftedLognormal, 0.0);
 
     // Error due to forward rates being negative
     BOOST_CHECK_THROW(stripper->recalculate(), QuantLib::Error);
@@ -823,8 +814,8 @@ void OptionletStripperTest::testNormalToLognormalWithPositiveForwards() {
 
     // Link ibor index to shifted forward curve
     Handle<Quote> spread(boost::make_shared<SimpleQuote>(0.015));
-    Handle<YieldTermStructure> shiftedForward(boost::make_shared<ZeroSpreadedTermStructure>(
-        vars.yieldCurves.forward6M, spread));
+    Handle<YieldTermStructure> shiftedForward(
+        boost::make_shared<ZeroSpreadedTermStructure>(vars.yieldCurves.forward6M, spread));
     boost::shared_ptr<IborIndex> iborIndex = vars.iborIndex->clone(shiftedForward);
 
     // EUR cap floor normal volatility surface
@@ -832,9 +823,9 @@ void OptionletStripperTest::testNormalToLognormalWithPositiveForwards() {
         vars.settlementDays, vars.calendar, vars.bdc, vars.vols.tenors, strikes, vols, vars.dayCounter);
 
     // Create shifted lognormal stripped optionlet surface and Black engine
-    boost::shared_ptr<OptionletStripper> stripper = boost::make_shared<OptionletStripper1>(volSurface, iborIndex,
-        Null<Rate>(), vars.accuracy, vars.maxIter, vars.yieldCurves.discountEonia,
-        Normal, 0.0, false, ShiftedLognormal, 0.0);
+    boost::shared_ptr<OptionletStripper> stripper = boost::make_shared<OptionletStripper1>(
+        volSurface, iborIndex, Null<Rate>(), vars.accuracy, vars.maxIter, vars.yieldCurves.discountEonia, Normal, 0.0,
+        false, ShiftedLognormal, 0.0);
     boost::shared_ptr<StrippedOptionletAdapter> adapter = boost::make_shared<StrippedOptionletAdapter>(stripper);
     Handle<OptionletVolatilityStructure> ovs(adapter);
     ovs->enableExtrapolation();
@@ -845,8 +836,8 @@ void OptionletStripperTest::testNormalToLognormalWithPositiveForwards() {
     boost::shared_ptr<CapFloor> cap;
 
     RelinkableHandle<Quote> quote(boost::make_shared<SimpleQuote>(0.0));
-    boost::shared_ptr<BachelierCapFloorEngine> flatEngine = boost::make_shared<BachelierCapFloorEngine>(
-        vars.yieldCurves.discountEonia, quote, vars.dayCounter);
+    boost::shared_ptr<BachelierCapFloorEngine> flatEngine =
+        boost::make_shared<BachelierCapFloorEngine>(vars.yieldCurves.discountEonia, quote, vars.dayCounter);
 
     for (Size i = 0; i < vars.vols.tenors.size(); ++i) {
         for (Size j = 0; j < strikes.size(); ++j) {
@@ -861,13 +852,12 @@ void OptionletStripperTest::testNormalToLognormalWithPositiveForwards() {
 
             Real error = std::fabs(strippedPrice - flatPrice);
             BOOST_CHECK_MESSAGE(error < vars.accuracy,
-                "\noption tenor:       " << vars.vols.tenors[i] <<
-                "\nstrike:             " << io::rate(strikes[j]) <<
-                "\nstripped vol price: " << io::rate(strippedPrice) <<
-                "\nconstant vol price: " << io::rate(flatPrice) <<
-                "\nerror:              " << io::rate(error) <<
-                "\ntolerance:          " << io::rate(vars.accuracy)
-            );
+                                "\noption tenor:       " << vars.vols.tenors[i]
+                                                         << "\nstrike:             " << io::rate(strikes[j])
+                                                         << "\nstripped vol price: " << io::rate(strippedPrice)
+                                                         << "\nconstant vol price: " << io::rate(flatPrice)
+                                                         << "\nerror:              " << io::rate(error)
+                                                         << "\ntolerance:          " << io::rate(vars.accuracy));
         }
     }
 }
@@ -880,7 +870,7 @@ test_suite* OptionletStripperTest::suite() {
     suite->add(BOOST_TEST_CASE(&OptionletStripperTest::testNormalToShiftedLognormalStripping));
     suite->add(BOOST_TEST_CASE(&OptionletStripperTest::testShiftedLognormalToNormalStripping));
     suite->add(BOOST_TEST_CASE(&OptionletStripperTest::testShiftedLognormalToShiftedLognormalStripping));
-    
+
     suite->add(BOOST_TEST_CASE(&OptionletStripperTest::testUsualNormalStrippingWithAtm));
     suite->add(BOOST_TEST_CASE(&OptionletStripperTest::testUsualShiftedLognormalStrippingWithAtm));
     suite->add(BOOST_TEST_CASE(&OptionletStripperTest::testNormalToShiftedLognormalStrippingWithAtm));

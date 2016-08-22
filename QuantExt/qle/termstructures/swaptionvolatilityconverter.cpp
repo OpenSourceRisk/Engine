@@ -1,16 +1,16 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
  All rights reserved.
- 
+
  This file is part of OpenRiskEngine, a free-software/open-source library
  for transparent pricing and risk analysis - http://openriskengine.org
- 
+
  OpenRiskEngine is free software: you can redistribute it and/or modify it
  under the terms of the Modified BSD License.  You should have received a
  copy of the license along with this program; if not, please email
  <users@openriskengine.org>. The license is also available online at
  <http://openriskengine.org/license.shtml>.
- 
+
  This program is distributed on the basis that it will form a useful
  contribution to risk analytics and model standardisation, but WITHOUT
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -32,22 +32,26 @@ namespace QuantExt {
 const Volatility SwaptionVolatilityConverter::minVol_ = 1.0e-7;
 const Volatility SwaptionVolatilityConverter::maxVol_ = 10.0;
 
-SwaptionVolatilityConverter::SwaptionVolatilityConverter(const Date& asof, 
-    const boost::shared_ptr<SwaptionVolatilityStructure>& svsIn, const Handle<YieldTermStructure>& discount, 
-    const boost::shared_ptr<SwapConventions>& conventions, const VolatilityType targetType, const Matrix& targetShifts)
-    : asof_(asof), svsIn_(svsIn), discount_(discount), conventions_(conventions), targetType_(targetType), 
+SwaptionVolatilityConverter::SwaptionVolatilityConverter(const Date& asof,
+                                                         const boost::shared_ptr<SwaptionVolatilityStructure>& svsIn,
+                                                         const Handle<YieldTermStructure>& discount,
+                                                         const boost::shared_ptr<SwapConventions>& conventions,
+                                                         const VolatilityType targetType, const Matrix& targetShifts)
+    : asof_(asof), svsIn_(svsIn), discount_(discount), conventions_(conventions), targetType_(targetType),
       targetShifts_(targetShifts), accuracy_(1.0e-5), maxEvaluations_(100) {
-    
+
     // Some checks
     checkInputs();
 }
 
 SwaptionVolatilityConverter::SwaptionVolatilityConverter(const Date& asof,
-    const boost::shared_ptr<SwaptionVolatilityStructure>& svsIn, const boost::shared_ptr<SwapIndex>& swapIndex, 
-    const VolatilityType targetType, const Matrix& targetShifts)
-    : asof_(asof), svsIn_(svsIn), discount_(swapIndex->discountingTermStructure()), 
-      conventions_(boost::make_shared<SwapConventions>(swapIndex->fixingDays(), swapIndex->fixedLegTenor(), 
-      swapIndex->fixingCalendar(), swapIndex->fixedLegConvention(), swapIndex->dayCounter(), swapIndex->iborIndex())), 
+                                                         const boost::shared_ptr<SwaptionVolatilityStructure>& svsIn,
+                                                         const boost::shared_ptr<SwapIndex>& swapIndex,
+                                                         const VolatilityType targetType, const Matrix& targetShifts)
+    : asof_(asof), svsIn_(svsIn), discount_(swapIndex->discountingTermStructure()),
+      conventions_(boost::make_shared<SwapConventions>(swapIndex->fixingDays(), swapIndex->fixedLegTenor(),
+                                                       swapIndex->fixingCalendar(), swapIndex->fixedLegConvention(),
+                                                       swapIndex->dayCounter(), swapIndex->iborIndex())),
       targetType_(targetType), targetShifts_(targetShifts), accuracy_(1.0e-5), maxEvaluations_(100) {
 
     // Some checks
@@ -56,14 +60,14 @@ SwaptionVolatilityConverter::SwaptionVolatilityConverter(const Date& asof,
     checkInputs();
 }
 
-void SwaptionVolatilityConverter::checkInputs() const{
+void SwaptionVolatilityConverter::checkInputs() const {
     QL_REQUIRE(svsIn_->referenceDate() == asof_,
-        "SwaptionVolatilityConverter requires the asof date and reference date to align");
+               "SwaptionVolatilityConverter requires the asof date and reference date to align");
     QL_REQUIRE(!discount_.empty() && discount_->referenceDate() == asof_,
-        "SwaptionVolatilityConverter requires a valid discount curve with reference date equal to asof date");
+               "SwaptionVolatilityConverter requires a valid discount curve with reference date equal to asof date");
     Handle<YieldTermStructure> forwardCurve = conventions_->floatIndex()->forwardingTermStructure();
     QL_REQUIRE(!forwardCurve.empty() && forwardCurve->referenceDate() == asof_,
-        "SwaptionVolatilityConverter requires a valid forward curve with reference date equal to asof date");
+               "SwaptionVolatilityConverter requires a valid forward curve with reference date equal to asof date");
 }
 
 boost::shared_ptr<SwaptionVolatilityStructure> SwaptionVolatilityConverter::convert() const {
@@ -77,8 +81,8 @@ boost::shared_ptr<SwaptionVolatilityStructure> SwaptionVolatilityConverter::conv
     QL_FAIL("SwaptionVolatilityConverter requires a SwaptionVolatilityMatrix as input");
 }
 
-boost::shared_ptr<SwaptionVolatilityStructure> SwaptionVolatilityConverter::convert(
-    const boost::shared_ptr<SwaptionVolatilityMatrix>& svMatrix) const {
+boost::shared_ptr<SwaptionVolatilityStructure>
+SwaptionVolatilityConverter::convert(const boost::shared_ptr<SwaptionVolatilityMatrix>& svMatrix) const {
 
     // Some aspects of original volatility structure that we will need
     DayCounter dayCounter = svMatrix->dayCounter();
@@ -93,7 +97,7 @@ boost::shared_ptr<SwaptionVolatilityStructure> SwaptionVolatilityConverter::conv
     const vector<Time>& swapLengths = svMatrix->swapLengths();
     Size nOptionTimes = optionTimes.size();
     Size nSwapLengths = swapLengths.size();
-    
+
     Rate dummyStrike = 0.0;
     Volatility inVolatility = 0.0;
     VolatilityType inType = svMatrix->volatilityType();
@@ -102,10 +106,10 @@ boost::shared_ptr<SwaptionVolatilityStructure> SwaptionVolatilityConverter::conv
 
     // If target type is ShiftedLognormal and shifts are provided, check size
     if (targetType_ == ShiftedLognormal && !targetShifts_.empty()) {
-        QL_REQUIRE(targetShifts_.rows() == nOptionTimes, 
-            "SwaptionVolatilityConverter: number of shift rows does not equal the number of option tenors");
+        QL_REQUIRE(targetShifts_.rows() == nOptionTimes,
+                   "SwaptionVolatilityConverter: number of shift rows does not equal the number of option tenors");
         QL_REQUIRE(targetShifts_.columns() == nSwapLengths,
-            "SwaptionVolatilityConverter: number of shift columns does not equal the number of swap tenors");
+                   "SwaptionVolatilityConverter: number of shift columns does not equal the number of swap tenors");
     }
 
     // Calculate the converted volatilities
@@ -114,36 +118,39 @@ boost::shared_ptr<SwaptionVolatilityStructure> SwaptionVolatilityConverter::conv
         for (Size j = 0; j < nSwapLengths; ++j) {
             inVolatility = svMatrix->volatility(optionTimes[i], swapLengths[j], dummyStrike);
             inShift = svMatrix->shift(optionTimes[i], swapLengths[j]);
-            if (!targetShifts_.empty()) targetShift = targetShifts_[i][j];
-            volatilities[i][j] = convert(optionDates[i], swapTenors[j], dayCounter, inVolatility, 
-                inType, targetType_, inShift, targetShift);
+            if (!targetShifts_.empty())
+                targetShift = targetShifts_[i][j];
+            volatilities[i][j] = convert(optionDates[i], swapTenors[j], dayCounter, inVolatility, inType, targetType_,
+                                         inShift, targetShift);
         }
     }
 
     // Return the new swaption volatility matrix
     if (calendar.empty() || optionTenors.empty()) {
         // Original matrix was created with fixed option dates
-        return boost::make_shared<SwaptionVolatilityMatrix>(asof_, optionDates, swapTenors, volatilities,
-            Actual365Fixed(), extrapolation, targetType_, targetShifts_);
+        return boost::make_shared<SwaptionVolatilityMatrix>(
+            asof_, optionDates, swapTenors, volatilities, Actual365Fixed(), extrapolation, targetType_, targetShifts_);
     } else {
-        return boost::make_shared<SwaptionVolatilityMatrix>(asof_, calendar, bdc, optionTenors, swapTenors, 
-            volatilities, Actual365Fixed(), extrapolation, targetType_, targetShifts_);
+        return boost::make_shared<SwaptionVolatilityMatrix>(asof_, calendar, bdc, optionTenors, swapTenors,
+                                                            volatilities, Actual365Fixed(), extrapolation, targetType_,
+                                                            targetShifts_);
     }
 }
 
-Real SwaptionVolatilityConverter::convert(const Date& expiry, const Period& swapTenor, const DayCounter& volDayCounter, 
-    Real inVol, VolatilityType inType, VolatilityType outType, Real inShift, Real outShift) const {
-    
+Real SwaptionVolatilityConverter::convert(const Date& expiry, const Period& swapTenor, const DayCounter& volDayCounter,
+                                          Real inVol, VolatilityType inType, VolatilityType outType, Real inShift,
+                                          Real outShift) const {
+
     // Create the underlying swap with fixed rate = fair rate
     // We rely on the fact that MakeVanillaSwap sets the fixed rate to the fair rate if it is left null in the ctor
     Date effectiveDate = conventions_->fixedCalendar().advance(expiry, conventions_->settlementDays(), Days);
     boost::shared_ptr<PricingEngine> engine = boost::make_shared<DiscountingSwapEngine>(discount_);
     boost::shared_ptr<VanillaSwap> swap = MakeVanillaSwap(swapTenor, conventions_->floatIndex())
-        .withEffectiveDate(effectiveDate)
-        .withFixedLegTenor(conventions_->fixedTenor())
-        .withFixedLegDayCount(conventions_->fixedDayCounter())
-        .withFloatingLegSpread(0.0)
-        .withPricingEngine(engine);
+                                              .withEffectiveDate(effectiveDate)
+                                              .withFixedLegTenor(conventions_->fixedTenor())
+                                              .withFixedLegDayCount(conventions_->fixedDayCounter())
+                                              .withFloatingLegSpread(0.0)
+                                              .withPricingEngine(engine);
     Rate atmRate = swap->fairRate();
 
     // Create the swaption
@@ -179,16 +186,16 @@ Real SwaptionVolatilityConverter::convert(const Date& expiry, const Period& swap
     Volatility impliedVol = 0.0;
     try {
         // Note: In implying the volatility the volatility day counter is hardcoded to Actual365Fixed
-        impliedVol = swaption->impliedVolatility(npv, discount_, guess, accuracy_, 
-            maxEvaluations_, minVol_, maxVol_, outShift, outType);
+        impliedVol = swaption->impliedVolatility(npv, discount_, guess, accuracy_, maxEvaluations_, minVol_, maxVol_,
+                                                 outShift, outType);
     } catch (std::exception& e) {
         // couldn't find implied volatility
         QL_FAIL("SwaptionVolatilityConverter: volatility conversion failed while trying to find implied volatility"
-            " for expiry " << expiry << " and swap tenor " << swapTenor << "\n"
-            << "Error: " << e.what());
+                " for expiry "
+                << expiry << " and swap tenor " << swapTenor << "\n"
+                << "Error: " << e.what());
     }
 
     return impliedVol;
 }
-
 }
