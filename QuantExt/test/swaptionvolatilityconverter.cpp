@@ -57,13 +57,14 @@ struct CommonVars {
             referenceDate, conventions.fixedCalendar, conventions.fixedConvention, atmVols.optionTenors,
             atmVols.swapTenors, atmVols.lnVols, Actual365Fixed(), true, ShiftedLognormal);
 
-        atmShiftedLogNormalVolMatrix_1 = boost::make_shared<SwaptionVolatilityMatrix>(
+        // boost::make_shared can only handle 9 parameters
+        atmShiftedLogNormalVolMatrix_1 = boost::shared_ptr<SwaptionVolatilityMatrix>(new SwaptionVolatilityMatrix(
             referenceDate, conventions.fixedCalendar, conventions.fixedConvention, atmVols.optionTenors,
-            atmVols.swapTenors, atmVols.slnVols_1, Actual365Fixed(), true, ShiftedLognormal, atmVols.shifts_1);
+            atmVols.swapTenors, atmVols.slnVols_1, Actual365Fixed(), true, ShiftedLognormal, atmVols.shifts_1));
 
-        atmShiftedLogNormalVolMatrix_2 = boost::make_shared<SwaptionVolatilityMatrix>(
+        atmShiftedLogNormalVolMatrix_2 = boost::shared_ptr<SwaptionVolatilityMatrix>(new SwaptionVolatilityMatrix(
             referenceDate, conventions.fixedCalendar, conventions.fixedConvention, atmVols.optionTenors,
-            atmVols.swapTenors, atmVols.slnVols_2, Actual365Fixed(), true, ShiftedLognormal, atmVols.shifts_2);
+            atmVols.swapTenors, atmVols.slnVols_2, Actual365Fixed(), true, ShiftedLognormal, atmVols.shifts_2));
     }
 
     // Members
@@ -314,9 +315,6 @@ void SwaptionVolatilityConverterTest::testConstructionFromSwapIndexNoDiscount() 
     BOOST_TEST_MESSAGE("Testing construction from SwapIndex with no exogenous discount curve...");
 
     CommonVars vars;
-
-    // Tolerance used in boost check
-    Real tolerance = 0.00001;
 
     // Set up a SwapIndex
     boost::shared_ptr<SwapIndex> swapIndex =

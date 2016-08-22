@@ -131,9 +131,9 @@ SwaptionVolatilityConverter::convert(const boost::shared_ptr<SwaptionVolatilityM
         return boost::make_shared<SwaptionVolatilityMatrix>(
             asof_, optionDates, swapTenors, volatilities, Actual365Fixed(), extrapolation, targetType_, targetShifts_);
     } else {
-        return boost::make_shared<SwaptionVolatilityMatrix>(asof_, calendar, bdc, optionTenors, swapTenors,
-                                                            volatilities, Actual365Fixed(), extrapolation, targetType_,
-                                                            targetShifts_);
+        return boost::shared_ptr<SwaptionVolatilityMatrix>(
+            new SwaptionVolatilityMatrix(asof_, calendar, bdc, optionTenors, swapTenors, volatilities, Actual365Fixed(),
+                                         extrapolation, targetType_, targetShifts_));
     }
 }
 
