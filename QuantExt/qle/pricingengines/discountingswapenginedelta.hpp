@@ -30,22 +30,31 @@
 
 #include <ql/handle.hpp>
 #include <ql/instruments/swap.hpp>
+#include <ql/math/matrix.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 
 using namespace QuantLib;
 
 namespace QuantExt {
 
+/*! The provided deltas are zero yield deltas assuming linear in zero interpolation on the discounting
+  and forwarding curves with flat extrapolation before the first and last delta bucket time.
+
+  \warning Deltas are produced only for fixed and Ibor coupons without caps or floors, the deltas
+  for Ibor coupons are ignoring convexity adjustments (like in arrears adjustments).
+*/
+
 class DiscountingSwapEngineDelta : public Swap::engine {
 public:
     DiscountingSwapEngineDelta(const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),
-                          const std::vector<Time>& deltaTimes = std::vector<Time>());
+                               const std::vector<Time>& deltaTimes = std::vector<Time>());
     void calculate() const;
     Handle<YieldTermStructure> discountCurve() const { return discountCurve_; }
 
 private:
+    void dzds(Matrix& result, const std::map<Date, Real>& delta) const;
     Handle<YieldTermStructure> discountCurve_;
-    const std::vector<Real>& deltaTimes_;
+    const std::vector<Real> deltaTimes_;
 };
 
 } // namespace QuantExt

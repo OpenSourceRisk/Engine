@@ -66,19 +66,36 @@ void NpvDeltaCalculator::visit(FixedRateCoupon& c) {
 }
 
 void NpvDeltaCalculator::visit(IborCoupon& c) {
-    Real a = payer_ * c.amount() * discountCurve_->discount(c.date());
+    Real dsc = discountCurve_->discount(c.date());
+    Real a = payer_ * c.amount() * dsc;
     npv_ += a;
     Date d3 = c.date();
     Real t3 = discountCurve_->timeFromReference(d3);
-    deltaDiscount_[d3] = -t3 * a;
+    deltaDiscount_[d3] += -t3 * a;
     Date fixing = c.fixingDate();
-    if (fixing > discountCurve_->referenceDate()) {
+    if (fixing > discountCurve_->referenceDate() ||
+        (fixing == discountCurve_->referenceDate() && c.index()->pastFixing(fixing) == Null<Real>())) {
         Date d1 = c.index()->valueDate(fixing);
+#ifdef QL_USE_INDEXED_COUPON
         Date d2 = c.index()->maturityDate(d1);
+#else
+        Date d2;
+        // in arrears?
+        if (fixing > c.accrualStartDate()) {
+            d2 = c.index()->maturityDate(d1);
+        } else {
+            // par coupon approximation
+            Date nextFixingDate =
+                c.index()->fixingCalendar().advance(c.accrualEndDate(), -static_cast<Integer>(c.fixingDays()), Days);
+            d2 = c.index()->fixingCalendar().advance(nextFixingDate, c.fixingDays(), Days);
+        }
+#endif
         Real t1 = discountCurve_->timeFromReference(d1);
         Real t2 = discountCurve_->timeFromReference(d2);
-        deltaForward_[d1] += -t1 * a;
-        deltaForward_[d2] += -t2 * a;
+        Real r =
+            payer_ * dsc * c.nominal() * c.accrualPeriod() * c.gearing() / c.index()->dayCounter().yearFraction(d1, d2);
+        deltaForward_[d1] += -t1 * (a + r);
+        deltaForward_[d2] += t2 * (a + r);
     }
 }
 
@@ -86,6 +103,8 @@ void NpvDeltaCalculator::visit(IborCoupon& c) {
 
 void DiscountingSwapEngineDelta::calculate() const {
     QL_REQUIRE(!discountCurve_.empty(), "discounting term structure handle is empty");
+
+    // compute npv and raw deltas
 
     results_.value = 0.0;
     results_.errorEstimate = Null<Real>();
@@ -110,6 +129,56 @@ void DiscountingSwapEngineDelta::calculate() const {
 
     results_.additionalResults["deltaDiscountRaw"] = deltaDiscountRaw;
     results_.additionalResults["deltaForwardRaw"] = deltaForwardRaw;
+
+    // convert raw deltas to given bucketing structure
+
+    if (deltaTimes_.empty())
+        return;
+
+    Size m = deltaTimes_.size();
+    Size nd = deltaDiscountRaw.size();
+    Size nf = deltaForwardRaw.size();
+
+    Matrix dzds_d(nd, m, 0.0), dzds_f(nf, m, 0.0);
+
+    dzds(dzds_d, deltaDiscountRaw);
+    dzds(dzds_f, deltaForwardRaw);
+
+    std::vector<Real> deltaDiscount(deltaTimes_.size(), 0.0), deltaForward(deltaTimes_.size(), 0.0);
+    for (Size j = 0; j < deltaTimes_.size(); ++j) {
+        Size i = 0;
+        for (std::map<Date, Real>::const_iterator it = deltaDiscountRaw.begin(); it != deltaDiscountRaw.end();
+             ++it, ++i) {
+            deltaDiscount[j] += it->second * dzds_d[i][j];
+        }
+        i = 0;
+        for (std::map<Date, Real>::const_iterator it = deltaForwardRaw.begin(); it != deltaForwardRaw.end();
+             ++it, ++i) {
+            deltaForward[j] += it->second * dzds_f[i][j];
+        }
+    }
+
+    results_.additionalResults["deltaTimes"] = deltaTimes_;
+    results_.additionalResults["deltaDiscount"] = deltaDiscount;
+    results_.additionalResults["deltaForward"] = deltaForward;
+}
+
+void DiscountingSwapEngineDelta::dzds(Matrix& result, const std::map<Date, Real>& delta) const {
+    Size row = 0;
+    for (std::map<Date, Real>::const_iterator i = delta.begin(); i != delta.end(); ++i, ++row) {
+        Real t = discountCurve_->timeFromReference(i->first);
+        Size b = std::upper_bound(deltaTimes_.begin(), deltaTimes_.end(), t) - deltaTimes_.begin();
+        if (b == 0) {
+            result[row][0] = 1.0;
+            continue;
+        }
+        if (b == deltaTimes_.size()) {
+            result[row][result.columns() - 1] = 1.0;
+            continue;
+        }
+        result[row][b - 1] = (deltaTimes_[b] - t) / (deltaTimes_[b] - deltaTimes_[b - 1]);
+        result[row][b] = 1.0 - result[row][b - 1];
+    }
 }
 
 } // namespace QuantExt
