@@ -1,6 +1,6 @@
 \documentclass[12pt, a4paper]{article}
 
-\usepackage{hyperref}
+\usepackage[urlcolor=blue]{hyperref}
 
 \usepackage[disable]{todonotes}
 %\usepackage{todonotes}
@@ -106,9 +106,10 @@
  
 \begin{document}
 
-\title{Open Risk Engine \\ User Guide \\ v1 beta }
+\title{Open Risk Engine \\ User Guide \\ v1.0.8.6  }
 \author{Quaternion Risk Management}
 \date{\today}
+%\date{July 22, 2016}
 \maketitle
 
 \newpage
@@ -137,56 +138,135 @@
 
 \section{Introduction}
 
-Open Risk Engine (ORE) \cite{ORE} is a free/open software project sponsored by Quaternion Risk Management \cite{QRM} and based on QuantLib, the free/open source library for quantitative finance \cite{QL}. 
+%Open Risk Engine (ORE) \cite{ORE} is a free/open software project sponsored by Quaternion Risk Management \cite{QRM} and based on QuantLib, the free/open source library for quantitative finance \cite{QL}. 
 
-ORE currently provides portfolio pricing, cash flow generation, sensitivity analysis and a range of contemporary derivative portfolio analytics. The latter are based on a Monte Carlo simulation framework which yields the evolution of various {\bf credit exposure} and {\bf market risk measures} 
+The Open Risk Engine (ORE) project \cite{ORE} aims at providing a transparent platform for pricing and risk analysis that serves as
+%\medskip
+\begin{itemize}
+\item benchmarking, validation, training, and teaching reference,
+\item extensible foundation for tailored risk solutions.
+\end{itemize}
+
+ORE is an application that provides
+\begin{itemize}
+\item a Monte Carlo simulation framework for contemporary risk analytics and value adjustments
+\item simple interfaces for trade data, market data and system configuration
+\item simple launchers and result visualisation in Jupyter, Excel, LibreOffice
+\item unit tests and various examples.  
+\end{itemize}
+ORE is free/open source software, provided under the Modified BSD License. It is based 
+on QuantLib, the free/open source library for quantitative finance \cite{QL}.
+
+%\medskip
+\subsubsection*{Audience}
+The project hopes to reach quantitative risk ma\-nage\-ment practitioners (be it in financial institutions, audit firms, consulting companies or regulatory bodies) who are looking for accessible software solutions, quant developers charged with the implementation of the kind of simulation methods and models provided by ORE, but likewise academics and students who would like to teach or learn quantitative risk management with the help of a freely available risk application.  
+
+\subsubsection*{Contributions}
+Quaternion Risk Management \cite{QRM} is committed to sponsoring the Open Risk Engine project through ongoing project administration, through providing this initial release and a series of subsequent releases in order to achieve a wide analytics, product and risk factor class coverage. The community is invited to contribute to ORE, for example through feedback, discussions and suggested enhancement in the forum on the ORE site \cite{ORE}, as well as contributions of ORE enhancements in the form of source code. See the FAQ section on the ORE site \cite{ORE} on how to get involved.
+
+\subsubsection*{Scope and Roadmap}
+%ORE currently provides portfolio pricing, cash flow generation, sensitivity analysis and a range of contemporary derivative portfolio analytics. The latter are based on a Monte Carlo simulation framework which yields the evolution of various {\bf credit exposure} and {\bf market risk measures} 
+ORE currently provides portfolio pricing, cash flow generation, and a range of contemporary derivative portfolio analytics. The latter are based on a Monte Carlo simulation framework which yields the evolution of various {\bf credit exposure} and {\bf market risk measures} 
 \begin{itemize}
 \item EE aka EPE (Expected Exposure or Expected Positive Exposure), 
 \item ENE (Expected Negative Exposure, i.e. the counterparty's perspective), 
 \item 'Basel' exposure measures relevant for regulatory capital charges under internal model methods 
 \item PFE (Potential Future Exposure at some use defined quantile), 
-\item VaR (Value at Risk),
-\item ES (Expected Shortfall),
+\item Value at Risk and Expected Shortfall,
 \end{itemize}
 and {\bf derivative value adjustments}
 \begin{itemize}
 \item CVA (Credit Value Adjustment)
 \item DVA (Debit Value Adjustment)
 \item FVA (Funding Value Adjustment)
-\item COLVA (Collateral Value Adjustment).
+\item COLVA (Collateral Value Adjustment)
 \end{itemize}
-Moreover, ORE computes {\bf regulatory capital charges} for counterparty credit risk under the new standardised approach (SA-CCR). The Monte Carlo based market risk measures are complemented by parametric methods, e.g. for benchmarking various initial margin calculation models applied in cleared and non-cleared derivatives business.
+for portfolios with netting and collateral.
+Subsequent ORE releases will also compute {\bf regulatory capital charges} for counterparty credit risk under the new standardised approach (SA-CCR), and the Monte Carlo based market risk measures will be complemented by parametric methods, e.g. for benchmarking various initial margin calculation models applied in cleared and non-cleared derivatives business.
 
 \medskip
 The first release of ORE covers the simulation of interest rate and FX risk factors and portfolios of Interest Rate Swaps, Caps/Floors, Swaptions, FX Forwards, Cross Currency Swaps and FX Options. Subsequent releases will extend the derivative product and the risk factor range to Inflation, Credit, Equity and Commodity. With the introduction of credit risk factors, the scope will also be extended to cover cash products (loans and bonds) and related portfolio analytics.    
 
-\medskip
-With the scheduled releases, incorporating community feedback and contributions, the project aims at establishing a platform for {\bf transparent pricing and risk analysis} that can be adapted for production purposes in financial institutions and used as a benchmarking and validation tool to test opaque 3rd party solutions applied in the industry. 
+%\medskip
+%With the scheduled releases, incorporating community feedback and contributions, the project aims at establishing a platform for {\bf transparent pricing and risk analysis} that can be adapted for production purposes in financial institutions and used as a benchmarking and validation tool to test opaque 3rd party solutions applied in the industry. 
 
 \medskip
-For details on the models applied in ORE's risk factor evolution we refer the reader to {\em Modern Derivatives Pricing and Credit Exposure Analysis} \cite{Lichters}: The IR/FX risk factor evolution is based on a cross currency model consisting of an arbitrage free combination of Linear Gauss Markov models for all interest rates and lognormal processes for the FX rates, calibrated to cross currency discounting and forward curves, Swaptions and FX Options.
- 
-\vspace{1em}
+The simulation models applied in ORE's risk factor evolution implement the models discussed in detail in {\em Modern Derivatives Pricing and Credit Exposure Analysis} \cite{Lichters}: The IR/FX risk factor evolution is based on a cross currency model consisting of an arbitrage free combination of Linear Gauss Markov models for all interest rates and lognormal processes for the FX rates, calibrated to cross currency discounting and forward curves, Swaptions and FX Options.
 
-This document focuses on instructions how to use ORE to cover basic workflows from individual deal analysis to portfolio processing. Starting with a series of examples the guide addresses
+\subsubsection*{Further Resources}
+More information about ORE is available
 \begin{itemize}
-\setlength{\itemsep}{0pt}
-\item Launching ORE using its command line application
-\item Analytics results and standard reports
-\item Interactive analysis using Jupyter, Calc and Excel 
-\item ORE parametrisation
-\item Market and trade data input
+\item on the Open Risk Engine project pages \url{http://www.openriskengine.org}
+\item {\color{red}in the FAQ section at \url{http://www.openriskengine.org/FAQ}}
+\item {\color{red}in the ORE forum at ...}
+\item following Open Risk Engine on Twitter {\tt @OpenRiskEngine}
 \end{itemize}
+Moreover, an Open Risk Engine Book will follow in 2017 that will elaborate on the engine's design and make the connection between methodology and implementation. Like ORE, the book will be available for free. It will be announced in due course on the channels mentioned above.
+ 
+\subsubsection*{Organisation of this document}
 
-\newpage
+This document focuses on instructions how to use ORE to cover basic workflows from individual deal analysis to portfolio processing. After an overview over the core ORE data flow in section \ref{sec:process} and installation instructions in section \ref{sec:installation} we start in section \ref{sec:examples} with a series of examples that illustrate how to launch ORE using its command line application, and we discuss typical results and reports. We then illustrate in section \ref{sec:visualisation} interactive analysis of resulting 'NPV cube' data. The final sections of this text document ORE parametrisation and the structure of trade and market data input.
+%\begin{itemize}
+%\setlength{\itemsep}{0pt}
+%\item Launching ORE using its command line application
+%\item Analytics results and standard reports
+%\item Interactive analysis using Jupyter%, Calc and Excel 
+%\item ORE parametrisation
+%\item Market and trade data input
+%\end{itemize}
+
+%\newpage
 
 %========================================================
-\section{Installation}
+\section{Open Risk Engine Data Flow}\label{sec:process}
+%========================================================
+
+The core processing steps followed in ORE to produce risk analytics results are sketched in Figure \ref{fig_process}. 
+%The processing can be grouped into three essential steps indicated in the three boxes in the upper part of the figure, each associated with inputs and outputs. 
+All ORE calculations and output are generated in three fundamental process steps as indicated in the three boxes in the upper part of the figure. In each of these steps appropriate data (described below) is loaded and results are generated, either in form of a human readable report, or in an intermediate step as pure data files (e.g. NPV data, exposure data).
+\begin{figure}[hbt]
+\begin{center}
+\includegraphics[scale=0.6]{process.pdf}
+\end{center}
+\caption{Sketch of the ORE process, inputs and outputs. }
+\label{fig_process}
+\end{figure}
+
+The overall ORE process needs to be parametrised using a set of configuration xml files which is the subject of section \ref{sec:configuration}. The first processing step (upper left box) then comprises 
+\begin{itemize}
+\item loading the portfolio to be analysed, 
+\item building any yield curves or other "term structures" needed for pricing, 
+\item calibration of pricing and simulation models.
+\end{itemize}
+The portfolio is provided in XML format which is explained in detail in sections \ref{sec:portfolio_data} and \ref{sec:nettingsetinput}. Note that ORE comes with 'Schema' files for all supported products so that any portfolio xml file can be validated before running through ORE. Market data is provided in a simple three-column text file with unique human-readable labelling of market data points, as explained in section \ref{sec:market_data}.  \\
+
+The second processing step (upper middle box) is then 
+\begin{itemize}
+\item portfolio valuation, cash flow generation,
+\item going forward - conventional risk analysis such as sensitivity analysis and stress testing, standard-rule capital calculations such as SA-CCR, etc,
+\item and in particular, more time-consuming, the market simulation and portfolio valuation through time under Monte Carlo scenarios.
+\end{itemize}
+This process step produces several reports (NPV, cashflows etc) and in particular an {\bf NPV cube}, i.e. NPVs per trade, scenario and future evaluation date. The cube is written to a file in both condensed binary and human-readable text format.  \\
+
+The third processing step (upper right box) performs any more 'sophisticated' risk ana\-ly\-sis by post-processing the NPV cube data:
+\begin{itemize}
+\item aggregating over trades per netting set, 
+\item applying collateral rules to compute simulated variation margin (going forward also simulated initial margin),
+\item computing various XVAs including CVA, DVA, FVA for all netting sets, with and without taking collateral into account, on demand with allocation to the trade level.
+\end{itemize}
+The output of this process step are XVA reports and the 'net' NPV cube, i.e. after aggregation, netting and collateral. \\
+
+The example section \ref{sec:examples} demonstrates for representative product types how the described processing steps can be combined in a simple batch process which produces the mentioned reports, output files and exposure evolution graphs in one 'go'.  
+
+Moreover, both NPV cubes can be further analysed interactively using a visualisation tool introduced in section \ref{sec:jupyter}. And finally, sections \ref{sec:calc} and \ref{sec:excel} demonstrate how ORE processes can be launched in spreadsheets and key results presented automatically within the same sheet. 
+
+%========================================================
+\section{Getting and Building ORE}\label{sec:installation}
 %========================================================
 
 \subsection{Open Risk Engine Releases}
 
-ORE releases are regularly provided in the form of source code archives, Windows exe\-cutables {\tt ore.exe}, example cases and documentation. During the soft launch phase (from July to September 2016), we will provide these to a limited audience via Quaternion's download server. Please contact info@quaternion.com for access details.  
+ORE releases are regularly provided in the form of source code archives, Windows exe\-cutables {\tt ore.exe}, example cases and documentation. During the soft launch phase (from July to September 2016), we will provide these to a limited audience via Quaternion's download server. Please contact info@quaternion.com for access details. Starting with the official release such archives will be provided at \url{https://github.com/openriskengine/OpenRiskEngine/releases}.
 
 \medskip
 The release consists of a single archive in zip format
@@ -227,9 +307,9 @@ To build ORE from sources:
 
 Open {\tt Docs/html/index.html} to see the API documentation for QuantExt, OpenRiskEngineData and OpenRiskEngineAnalytics, generated by doxygen.
 
-\subsection{Open Risk Engine on GitHub}
+\subsection{Building Open Risk Engine}
 
-Open Risk Engine's source code is hosted on github.com using {\tt git}, a free and open source distributed version control system. 
+Open Risk Engine's source code is hosted on github.com at \url{https://github.com/openriskengine/OpenRiskEngine} using {\tt git}, a free and open source distributed version control system. 
 
 \subsubsection{Git}
 
@@ -240,10 +320,8 @@ To access the current code base on GitHub, one needs to get {\tt git} installed 
 
 \item Fetch ORE from github by running the following: 
 
-{\tt         
-\% git clone https://github.com/openriskengine/ore.git ore
-}
-        
+{\tt\% git clone https://github.com/openriskengine/OpenRiskEngine.git ore}      
+
 This will create a folder 'ore' in your current directory that contains the codebase.
 
 \item Initially, the QuantLib subdirectory under {\tt ore} is empty as it is a submodule pointing to the official QuantLib repository. To pull down locally, use the following commands:
@@ -257,6 +335,8 @@ This will create a folder 'ore' in your current directory that contains the code
 \end{enumerate}
 
 \subsubsection{Boost}\label{sec:boost}
+
+QuantLib and ORE depend on the boost C++ libraries. Hence these need to be installed before building QuantLib.
 
 \subsubsection*{Windows}
 
@@ -290,7 +370,7 @@ Alternatively, compile all Boost libraries directly from the source code:
 \subsubsection*{Unix}
 
 \begin{enumerate}
-\item Download and build Boost, any recent version should work
+\item Download Boost from \cite{boost} and build following the instructions on the site, any recent version should work
 \item Define the environment variable BOOST that points to the boost directory
 (so includes should be in BOOST and libs should be in BOOST/stage/lib)
 \end{enumerate}
@@ -332,7 +412,7 @@ Alternatively, compile all Boost libraries directly from the source code:
 
 \begin{enumerate}
 
-\item Build QuantLib as normal. \\
+\item Build QuantLib as usual.
 
 {\tt\footnotesize
 \% cd QuantLib \\
@@ -343,8 +423,7 @@ Alternatively, compile all Boost libraries directly from the source code:
 
 \item Build QuantExt
 
-On Unix: \\
-{\tt
+{\tt\footnotesize
 \% cd QuantExt \\
 \% ./autogen.sh \\
 \% ./configure \\
@@ -382,6 +461,14 @@ and
 \% make -j4
 }
 
+Note: On Linux systems, the 'locale' settings can negatively affect the ORE process and output. To avoid this, we recommend setting the environment variable {\tt LC\_NUMERIC} to {\tt C}, e.g. in a bash shell, do
+
+{\tt
+\% export LC\_NUMERIC=C
+}
+
+before running ORE or any of the examples below. This will suppress thousand separators in numbers when converted to strings.
+
 \item Run Examples (see section \ref{sec:examples})
 
 {\tt
@@ -404,14 +491,14 @@ and
 
 \subsection{Python and Jupyter}\label{sec:python}
 
-Python is required to run the examples in section \ref{sec:examples}. And we use Jupyter \cite{jupyter} in section \ref{sec:visualisation} to visualise simulation results. Both are part of the 'Anaconda Open Data Science Analytics Platform' \cite{Anaconda}. Anaconda installation instructions for Windows, OS X and Linux are available on the anaconda site, with graphical installers for Windows and OS X\footnote{On OS X, the pyton scripts used in the examples section may require the  environment variables {\tt LANG} and {\tt LC\_ALL } to be set to {\tt en\_US.UTF-8} or {\tt en\_GB.UTF-8}.}. 
+Python (version 3.5 or higher) is required to run the examples in section \ref{sec:examples} and plot exposure evolutions. Moreover, we use Jupyter \cite{jupyter} in section \ref{sec:visualisation} to visualise simulation results. Both are part of the 'Anaconda Open Data Science Analytics Platform' \cite{Anaconda}. Anaconda installation instructions for Windows, OS X and Linux are available on the anaconda site, with graphical installers for Windows\footnote{On Windows, after a fresh installation of Python the user may have to run the {\tt python} command once in a command shell so that the Python executable will be found subsequently when running the example scripts in section \ref{sec:examples}.}, Linux and OS X\footnote{On OS X, the Python scripts used in the examples section may require the  environment variables {\tt LANG} and {\tt LC\_ALL } to be set to {\tt en\_US.UTF-8} or {\tt en\_GB.UTF-8}. On Linux it is moreover recommended to set {\tt LC\_NUMERIC} to {\tt C}. }. 
 
 %========================================================
 \section{Examples}\label{sec:examples}
 %========================================================
 
 The examples shown in the following are intended to help getting started with ORE, and to serve as plausibility checks for the simulation results generated with ORE.
-All results can be produced with the Python scripts {\tt run.py} scripts in the ORE release's {\tt Examples} folder which work on both Windows and Unix platforms\footnote{Hence the Example section requires a recent Python installation, 3.5 or higher, see also section \ref{sec:python}.}. In a nutshell, all scripts call ORE's command line application with a single input XML file
+All results can be produced with the Python scripts {\tt run.py} in the ORE release's {\tt Examples} folder which work on both Windows and Unix platforms. In a nutshell, all scripts call ORE's command line application with a single input XML file
 
 \medskip
 \centerline{\tt ore[.exe] input.xml}
@@ -435,7 +522,7 @@ Note: When building ORE from sources on Windows platforms, make sure that you co
 \subsection{Interest Rate Swap Exposure}\label{sec:example1}
 %--------------------------------------------------------
 
-We start with a vanilla single currency swap (currency EUR, maturity 20y, notional 10m, receive fixed 2\% annual, pay 6M-Euribor flat). The market yield curves (for both discounting and forward projection are manipulated to be flat at 2\% for all maturities, i.e. the Swap is at the money initially and remains at the money on average throughout its life. Running ORE in directory {\tt Examples/Example\_1} with
+We start with a vanilla single currency swap (currency EUR, maturity 20y, notional 10m, receive fixed 2\% annual, pay 6M-Euribor flat). The market yield curves (for both discounting and forward projection) are set to be flat at 2\% for all maturities, i.e. the Swap is at the money initially and remains at the money on average throughout its life. Running ORE in directory {\tt Examples/Example\_1} with
 
 \medskip
 \centerline{\tt ./run.py } 
@@ -451,9 +538,10 @@ and shown in figure \ref{fig_1}.
 \begin{figure}[tb]
 \begin{center}
 %\includegraphics[scale=1.0]{example_swap_1.pdf}
-\includegraphics[scale=0.45]{mpl_swap_1.pdf}
+%\includegraphics[scale=0.45]{mpl_swap_1.pdf}
+\includegraphics[scale=0.45]{mpl_swap_1_1m_sbb_100k.pdf}
 \end{center}
-\caption{Vanilla ATM swap expected exposure in a flat market environment from both parties' perspectives. The symbols are European Swaption prices. Simulation with 5000 paths and monthly time steps.}
+\caption{Vanilla ATM swap expected exposure in a flat market environment from both parties' perspectives. The symbols are European Swaption prices. The simulation was run with monthly time steps. To demonstrate the convergence of EPE and ENE profiles we have used an exceptionally large number of samples (100,000) to produce this graph. A similar outcome can be obtained more quickly with 5,000 samples on a quarterly time grid which is the default setting of Example\_1. }
 \label{fig_1}
 \end{figure}
 The symbols are prices of European Swaptions with expiry at the symbol's time and otherwise same underlying as the Swap considered here. Both Swap simulation and Swaption pricing are run with calls to the ORE executable, essentially 
@@ -464,11 +552,13 @@ The symbols are prices of European Swaptions with expiry at the symbol's time an
 \centerline{\tt ore[.exe] ore\_swaption.xml} 
 \medskip
 
-which are wrapped into the script {\tt Examples/Example\_1/run.sh} provided with the ORE release.
+which are wrapped into the script {\tt Examples/Example\_1/run.py} provided with the ORE release.
 It is instructive to look into the input folder in Examples/Example\_1, the content of the main input file {\tt ore.xml}, together with the explanations in section \ref{sec:configuration}.
 
+This simple example is an important test case which is also run similarly in one of the unit test suites of ORE. The expected exposure can be seen as a European option on the underlying netting se, see also appendix \ref{sec:app_exposure}. And when the netting set is simple, like a single swap in this case, then there are simple closed-form expressions for computing those European option prices: The expected exposure at some future point in time, say 10 years, is then equal to the European Swaption price for an option with expiry in 10 years, underlying Swap start in 10 years and underlying Swap maturity in 20 years. In this example we can easily compute such standard European Swaption prices for all future points in time where both Swap legs reset, i.e. annually in this case. And if the simulation model has been calibrated to the points on the Swaption surface which are used for European Swaption pricing, then we can expect to see that the simulated exposure matches Swaption prices at these annual points. In Example\_1 we used co-terminal ATM Swaptions for both model calibration and Swaption pricing. Moreover, as the the yield curve is flat in this example, the exposures from both parties' perspectives (EPE and ENE) match not only at the annual resets, but also for the period between annual reset of both legs to the point in time when the floating leg resets. Thereafter, between floating leg (only) reset and next joint fixed/floating leg reset, we see and expect a deviation of the two exposure profiles.
+
 \medskip
-Moving to {\tt Examples/Example\_4}, we see what changes when using a realistic (non-flat) market environment as of 26/02/2016. Running the example with
+Moving to {\tt Examples/Example\_4}, we see what changes when using a realistic (non-flat) market environment. Running the example with
 
 \medskip
 \centerline{\tt ./run.py } 
@@ -626,10 +716,11 @@ One would therefore expect a flat exposure evolution up to option expiry. The de
 In this example (see folder {\tt Examples/Example\_5}) we showcase a small netting set consisting of three swaps in different currencies, with different collateral choices
 \begin{itemize}
 \item no collateral - figure \ref{fig_8},
-\item collateral with threshold (THR) 1m EUR, minimum transfer amount (MTA) 100k EUR, margin period of risk (MPoR) 2 weeks - figure \ref{fig_9}
-\item collateral with zero THR and MTA, and MPoR 2w - figure \ref{fig_10}
+\item collateral with threshold (THR) 1m EUR, minimum transfer amount (MTA) 100k EUR, margin period of risk (MPR) 2 weeks - figure \ref{fig_9}
+\item collateral with zero THR and MTA, and MPR 2w - figure \ref{fig_10}
 \end{itemize}
- 
+The exposure graphs with collateral and positive margin period of risk show typical spikes. What is causing these? As sketched in appendix \ref{sec:app_collateral}, ORE uses a {\em classical collateral model} that applies collateral amounts to offset exposure with a time delay that corresponds to the margin period of risk. The spikes are then caused by instrument cash flows falling between exposure measurement dates $d_1$ and $d_2$ (an MPR apart), so that a collateral delivery amount determined at $d_1$ but settled at $d_2$ differs significantly from the closeout amount at $d_2$ causing a significant residual exposure for a short period of time. See for example \cite{Andersen2016} for a recent detailed discussion of collateral modelling. The approach currently implemented in ORE corresponds to {\em Classical+} in \cite{Andersen2016}, the more conservative approach of the classical methods. The less conservative alternative, {\em Classical-}, would assume that both parties stop paying trade flows at the beginning of the MPR, so that the P\&L over the MPR does not contain the cash flow effect, and exposure spikes are avoided. 
+  
 \begin{figure}[tb]
 \begin{center}
 %\includegraphics[scale=1.0]{example_nocollateral_epe.pdf}
@@ -644,7 +735,7 @@ In this example (see folder {\tt Examples/Example\_5}) we showcase a small netti
 %\includegraphics[scale=1.0]{example_threshold_break_epe.pdf}
 \includegraphics[scale=0.45]{mpl_threshold_break_epe.pdf}
 \end{center}
-\caption{Three swaps netting set, THR=1m EUR, MTA=100k EUR, MPoR=2w. The red evolution assumes that the each trade is terminated at the next break date. The blue evolution ignores break dates. Simulation with 5000 paths and bi-weekly time steps.}
+\caption{Three swaps netting set, THR=1m EUR, MTA=100k EUR, MPR=2w. The red evolution assumes that the each trade is terminated at the next break date. The blue evolution ignores break dates. Simulation with 5000 paths and bi-weekly time steps.}
 \label{fig_9}
 \end{figure}
 
@@ -661,7 +752,7 @@ In this example (see folder {\tt Examples/Example\_5}) we showcase a small netti
 %\includegraphics[scale=1.0]{example_mpor_epe.pdf}
 \includegraphics[scale=0.45]{mpl_mpor_epe.pdf}
 \end{center}
-\caption{Three swaps, THR=MTA=0, MPoR=2w. Simulation with 5000 paths and bi-weekly time steps.}
+\caption{Three swaps, THR=MTA=0, MPR=2w. Simulation with 5000 paths and bi-weekly time steps.}
 \label{fig_10}
 \end{figure}
 
@@ -778,16 +869,18 @@ The analytics results also feature allocated XVAs in file {\tt xva.csv} which ar
 
 \clearpage
 %========================================================
-\section{Launchers}\label{sec:visualisation}
+\section{Launchers and Visualisation}\label{sec:visualisation}
 %========================================================
 
 \subsection{Jupyter}\label{sec:jupyter}
 
+{\color{red}
 In this section we are going to show how to use Jypyter notebooks to 
 \begin{itemize}
 \item run the examples listed in the previous section, 
 \item further analyse the NPV cube data
 \end{itemize}
+}
 
 \todo[inline]{Add Jupyter section}
 
@@ -825,10 +918,13 @@ This demo uses simple Libre Office Basic macros which call Python scripts to exe
 %\todo[inline]{Support both OpenOffice and LibreOffice Calc.}
 \todo[inline]{Harmonise layout with Excel launcher} 
 
-\subsection{Excel}
+\subsection{Excel}\label{sec:excel}
 
-For Microsoft Excel, similar interaction between Python and the spread sheet can be achieved with the  Python module {\tt xlwings} \cite{xlwings} on both Windows and Mac OSX.
-However, unlike Libre Office where the uno Python module is part of the distribution, xlwings needs to be installed separately. We therefore rather demonstrate an Excel sheet here which uses VBA only to call the ORE application and load resulting data into the spreadsheet. This demo is available in Example\_1. Launch {\tt Example\_1.xlsm}. After launching the sheet, modify the paths on the first sheet, and then run the ORE process.
+{\color{red} Revise this, remove xlwings, add screenshot.
+
+%For Microsoft Excel, similar interaction between Python and the spread sheet can be achieved with the  Python module {\tt xlwings} \cite{xlwings} on both Windows and Mac OSX.
+%However, unlike Libre Office where the uno Python module is part of the distribution, xlwings needs to be installed separately. 
+ORE also comes with a basic Excel sheet to demonstrate launching ORE and presenting results in Excel. This demo is more self-contained than the Calc demo in the previous section, as it uses VBA only rather than calls to external Python scripts. The Excel demo is available in Example\_1. Launch {\tt Example\_1.xlsm}. Then modify the paths on the first sheet, and kick off the ORE process.}
 
 %========================================================
 \section{Parametrisation}\label{sec:configuration}
@@ -845,7 +941,7 @@ This file is the starting point of the engine's configuration explained in the f
 
 \subsection{Master Input File: {\tt ore.xml}}\label{sec:master_input}
 
-The master input file contains general setup information (paths to configuration, trade data and market data), as well as the selection and configuration of  analytics to produce. The file has an opening and closing root element {\tt <OpenRiskEngine>}, {\tt </OpenRiskEngine>}, and within these three sections 
+The master input file contains general setup information (paths to configuration, trade data and market data), as well as the selection and configuration of analytics. The file has an opening and closing root element {\tt <OpenRiskEngine>}, {\tt </OpenRiskEngine>} with three sections 
 \begin{itemize}
 \item Setup
 \item Markets
@@ -902,7 +998,7 @@ Updates are not deferred here. Required term structure and instrument recalculat
 
 \subsubsection{Markets}\label{sec:master_input_markets}
 
-The {\tt Markets} section (see listing \ref{lst:ore_markets}) is used to choose the two market configurations for simulation model calibration and the subsequent market simulation phase, respectively. These configurations have to be defined in {\tt todaysmarket.xml} (see section \ref{sec:market}). 
+The {\tt Markets} section (see listing \ref{lst:ore_markets}) is used to choose market configurations for calibrating the IR and FX simulation model components, pricing and simulation, respectively. These configurations have to be defined in {\tt todaysmarket.xml} (see section \ref{sec:market}). 
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -1948,7 +2044,7 @@ Taking both collateral spread and floor into account, the value adjustment is
 \end{align}
 
 
-\subsection{Collateral Model}
+\subsection{Collateral Model}\label{sec:app_collateral}
 
 The collateral model implemented in ORE is based on the evolution of collateral account balances along each Monte Carlo path taking in to account
 thresholds, minimum transfer amounts and independent amounts
@@ -1993,7 +2089,7 @@ D(t_m) &=
 where $MTA$ is the minimum transfer amount.
 
 \medskip
-Finally, the {\em Delivery Amount } is settled with a delay specified by the {\em Margin Period of Risk} (MPoR) which leads to residual exposure and XVA even for daily margining, zero thresholds and minimum transfer amounts.
+Finally, the {\em Delivery Amount } is settled with a delay specified by the {\em Margin Period of Risk} (MPoR) which leads to residual exposure and XVA even for daily margining, zero thresholds and minimum transfer amounts, see for example \ref{Pykhtin2010}. A more detailed framework for collateralised exposure modelling is introduced in the 2016 article \ref{Andersen2016}, indicating a potential route for extending ORE.
 
 \subsection{Exposure Allocation}\label{sec:app_allocation}
 
@@ -2036,32 +2132,34 @@ This yields allocated exposures proportional to the netting set exposure, avoids
 
 \begin{thebibliography}{*}
 
-\bibitem{ORE} http://www.openriskengine.org
+\bibitem{ORE} \url{http://www.openriskengine.org}
 
-\bibitem{QRM} http://www.quaternion.com
-
-\bibitem{QL} http://www.quantlib.org
+\bibitem{QL} \url{http://www.quantlib.org}
  
-\bibitem{quantlib-install} http://quantlib.org/install/vc10.shtml
-
-%\bibitem{confluence} https://confluence.atlassian.com/bitbucket/set-up-git-744723531.html
-
-\bibitem{git-download} https://git-scm.com/downloads
-
-\bibitem{boost-binaries} https://sourceforge.net/projects/boost/files/boost-binaries
-
-\bibitem{jupyter} http://jupyter.org
-
-\bibitem{Anaconda} https://docs.continuum.io/anaconda
-
-\bibitem{LO} http://www.libreoffice.org
-
-\bibitem{xlwings} http://www.xlwings.org
+\bibitem{QRM} \url{http://www.quaternion.com}
 
 \bibitem{Lichters} 
 Roland Lichters, Roland Stamm, Donal Gallagher, 
 {\em Modern Derivatives Pricing and Credit Exposure Analysis, Theory and Practice of CSA and XVA Pricing, Exposure Simulation and Backtesting}, 
 Palgrave Macmillan, 2015.
+
+\bibitem{quantlib-install} \url{http://quantlib.org/install/vc10.shtml}
+
+%\bibitem{confluence} https://confluence.atlassian.com/bitbucket/set-up-git-744723531.html
+
+\bibitem{git-download} \url{https://git-scm.com/downloads}
+
+\bibitem{boost-binaries} \url{https://sourceforge.net/projects/boost/files/boost-binaries}
+
+\bibitem{boost} \url{http://www.boost.org}
+
+\bibitem{jupyter} \url{http://jupyter.org}
+
+\bibitem{Anaconda} \url{https://docs.continuum.io/anaconda}
+
+\bibitem{LO} \url{http://www.libreoffice.org}
+
+%\bibitem{xlwings} \url{http://www.xlwings.org}
 
 \bibitem{Gregory12}
 Jon Gregory, {\em Counterparty Credit Risk and Credit Value Adjustment, 2nd Ed.}, Wiley Finance, 2013.
@@ -2069,9 +2167,13 @@ Jon Gregory, {\em Counterparty Credit Risk and Credit Value Adjustment, 2nd Ed.}
 \bibitem{BrigoMercurio}
 Damiano Brigo and Fabio Mercurio, {\em Interest Rate Models: Theory and Practice, 2nd Edition}, Springer, 2006.
 
+\bibitem{Pykhtin2010} Michael Pykhtin, {\em Collateralized Credit Exposure}, in Counterparty Credit Risk, (E. Canabarro, ed.), Risk Books, 2010
+
 \bibitem{PykhtinRosen}
 Michael Pykhtin and Dan Rosen, {\em Pricing Counterparty Risk at the Trade Level and CVA Allocations}, Finance and Economics Discussion Series, Divisions of Research \& Statistics and Monetary Affairs,
 Federal Reserve Board, Washington, D.C., 2010
+
+\bibitem{Andersen2016} Leif B. G. Andersen, Michael Pykhtin, ALexander Sokol, {\em Rethinking Margin Period of Risk}, http://papers.ssrn.com/sol3/papers.cfm?abstract\_id=2719964, 2016
 
 %\bibitem{SIMM}{SIMM Methodology\\ \tiny http://www2.isda.org/attachment/ODM1Mw==/ISDA\%20SIMM\%20Methodology\_7\%20April\%202016\_v3.15\%20(PUBLIC).pdf}
 
