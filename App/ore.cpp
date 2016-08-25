@@ -223,6 +223,7 @@ int main(int argc, char** argv) {
 
         boost::shared_ptr<AdditionalScenarioData> inMemoryScenarioData;
         boost::shared_ptr<NPVCube> inMemoryCube;
+        boost::shared_ptr<NPVCube> inMemoryFlowCube;
 
         if (params.hasGroup("simulation") && params.get("simulation", "active") == "Y") {
 
@@ -289,7 +290,9 @@ int main(int argc, char** argv) {
             engine.registerProgressIndicator(progressLog);
             inMemoryCube =
                 boost::make_shared<SinglePrecisionInMemoryCube>(asof, simPortfolio->ids(), grid->dates(), samples);
-            engine.buildCube(simPortfolio, inMemoryCube, inMemoryScenarioData);
+            inMemoryFlowCube =
+                boost::make_shared<SinglePrecisionInMemoryCube>(asof, simPortfolio->ids(), grid->dates(), samples);
+            engine.buildCube(simPortfolio, inMemoryCube, inMemoryScenarioData, inMemoryFlowCube);
             cout << "OK" << endl;
 
             cout << setw(tab) << left << "Write Cube... " << flush;
@@ -329,9 +332,11 @@ int main(int argc, char** argv) {
             boost::shared_ptr<NettingSetManager> netting = boost::make_shared<NettingSetManager>();
             netting->fromFile(csaFile);
 
-            boost::shared_ptr<NPVCube> cube;
-            if (inMemoryCube)
+            boost::shared_ptr<NPVCube> cube, flowCube;
+            if (inMemoryCube) {
                 cube = inMemoryCube;
+                flowCube = inMemoryFlowCube;
+	    }
             else {
                 cube = boost::make_shared<SinglePrecisionInMemoryCube>();
                 string cubeFile = outputPath + "/" + params.get("xva", "cubeFile");
@@ -376,7 +381,7 @@ int main(int argc, char** argv) {
             string marketConfiguration = params.get("markets", "simulation");
 
             boost::shared_ptr<PostProcess> postProcess = boost::make_shared<PostProcess>(
-                portfolio, netting, market, marketConfiguration, cube, scenarioData, analytics, baseCurrency,
+                portfolio, netting, market, marketConfiguration, cube, flowCube, scenarioData, analytics, baseCurrency,
                 allocationMethod, marginalAllocationLimit, quantile, calculationType, dvaName, fvaBorrowingCurve,
                 fvaLendingCurve, collateralSpread);
 
