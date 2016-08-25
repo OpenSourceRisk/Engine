@@ -306,7 +306,25 @@
     <ClInclude Include="qle\cashflows\fxlinkedcashflow.hpp">
       <Filter>cashflows</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\optionletstripper1.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\optionletstripper2.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\swaptionvolatilityconverter.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
     <ClInclude Include="qle\termstructures\interpolateddiscountcurve2.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\spreadedoptionletvolatility.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\spreadedsmilesection.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\spreadedswaptionvolatility.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
   </ItemGroup>
@@ -519,6 +537,24 @@
     </ClCompile>
     <ClCompile Include="qle\cashflows\fxlinkedcashflow.cpp">
       <Filter>cashflows</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\optionletstripper1.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\optionletstripper2.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\swaptionvolatilityconverter.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\spreadedoptionletvolatility.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\spreadedsmilesection.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\spreadedswaptionvolatility.cpp">
+      <Filter>termstructures</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
