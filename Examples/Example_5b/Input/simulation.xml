@@ -68,9 +68,9 @@
 
 	  <Volatility>
 	    <Calibrate>N</Calibrate>
-	    <VolatilityType>Hagan</VolatilityType>
-      	    <ParamType>Piecewise</ParamType>
-	    <TimeGrid></TimeGrid>
+	    <VolatilityType>HullWhite</VolatilityType>
+      	    <ParamType>Constant</ParamType>
+	    <TimeGrid/>
 	    <InitialValue>0.01</InitialValue>
 	  </Volatility>
 	  
