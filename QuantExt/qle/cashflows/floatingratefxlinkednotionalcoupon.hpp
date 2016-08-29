@@ -37,18 +37,31 @@ namespace QuantExt {
 //! \ingroup cashflows
 class FloatingRateFXLinkedNotionalCoupon : public FloatingRateCoupon {
 public:
+    //! FloatingRateFXLinkedNotionalCoupon
+    /*! Note that if you ask this coupon for it's nominal, you will get 0 back as the nominal is
+     *  variable (and Coupon::nominal() is not virtual). To get the actual nominal call fxLinkedCashFlow().amount()
+     */
     FloatingRateFXLinkedNotionalCoupon(Real foreignAmount, const Date& fxFixingDate, boost::shared_ptr<FxIndex> fxIndex,
-                                       const Date& paymentDate, const Date& startDate, const Date& endDate,
-                                       Natural fixingDays, const boost::shared_ptr<InterestRateIndex>& index,
-                                       Real gearing = 1.0, Spread spread = 0.0, const Date& refPeriodStart = Date(),
+                                       bool invertFxIndex, const Date& paymentDate, const Date& startDate,
+                                       const Date& endDate, Natural fixingDays,
+                                       const boost::shared_ptr<InterestRateIndex>& index, Real gearing = 1.0,
+                                       Spread spread = 0.0, const Date& refPeriodStart = Date(),
                                        const Date& refPeriodEnd = Date(), const DayCounter& dayCounter = DayCounter(),
                                        bool isInArrears = false)
         : FloatingRateCoupon(paymentDate, 0.0, startDate, endDate, fixingDays, index, gearing, spread, refPeriodStart,
                              refPeriodEnd, dayCounter, isInArrears),
-          notional_(paymentDate, fxFixingDate, foreignAmount, fxIndex) {}
+          notional_(paymentDate, fxFixingDate, foreignAmount, fxIndex, invertFxIndex) {}
 
-    Real nominal() const { return notional_.amount(); }
-    FXLinkedCashFlow fxLinkedCashFlow() { return notional_; }
+    //! \name CashFlow interface
+    //@{
+    /*! We override FloatingRateCoupon::amount() here as we need to use the variable notional from
+        the fxLinkedCashflow.
+     */
+    Real amount() const { return rate() * accrualPeriod() * notional_.amount(); }
+    //@}
+
+    //! Return the underlying FX linked notional
+    const FXLinkedCashFlow& fxLinkedCashFlow() { return notional_; }
 
     //! \name Visitability
     //@{
