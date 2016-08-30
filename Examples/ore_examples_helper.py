@@ -9,6 +9,7 @@ import matplotlib.ticker
 class OreExample(object):
 
     def __init__(self, dry=False):
+        check_version()
         self.ore_exe = ""
         self.headlinecounter = 0
         self.dry = dry
@@ -99,8 +100,11 @@ class OreExample(object):
         if not self.dry:
             subprocess.call([self.ore_exe, xml])
 
+def check_version():
+    if not sys.version_info >= (3,3): raise Exception("Python 3.3 or higher required.")
 
 if __name__ == "__main__":
+    check_version()
     examples = [
         "Example_1",
         "Example_2",
