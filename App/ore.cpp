@@ -368,7 +368,9 @@ int main(int argc, char** argv) {
             analytics["fva"] = parseBool(params.get("xva", "fva"));
             analytics["colva"] = parseBool(params.get("xva", "colva"));
             analytics["collateralFloor"] = parseBool(params.get("xva", "collateralFloor"));
-
+	    analytics["mva"] = parseBool(params.get("xva", "mva"));
+            analytics["dim"] = parseBool(params.get("xva", "dim"));
+	
             string baseCurrency = params.get("xva", "baseCurrency");
             string calculationType = params.get("xva", "calculationType");
             string allocationMethod = params.get("xva", "allocationMethod");
@@ -378,12 +380,16 @@ int main(int argc, char** argv) {
             string fvaLendingCurve = params.get("xva", "fvaLendingCurve");
             string fvaBorrowingCurve = params.get("xva", "fvaBorrowingCurve");
             Real collateralSpread = parseReal(params.get("xva", "collateralSpread"));
-            string marketConfiguration = params.get("markets", "simulation");
+	    Real dimQuantile = parseReal(params.get("xva", "dimQuantile"));
+	    Size dimHorizonCalendarDays = parseInteger(params.get("xva", "dimHorizonCalendarDays"));
+	    Size dimRegressionOrder = parseInteger(params.get("xva", "dimRegressionOrder"));
+
+	    string marketConfiguration = params.get("markets", "simulation");
 
             boost::shared_ptr<PostProcess> postProcess = boost::make_shared<PostProcess>(
                 portfolio, netting, market, marketConfiguration, cube, flowCube, scenarioData, analytics, baseCurrency,
                 allocationMethod, marginalAllocationLimit, quantile, calculationType, dvaName, fvaBorrowingCurve,
-                fvaLendingCurve, collateralSpread);
+                fvaLendingCurve, collateralSpread, dimQuantile, dimHorizonCalendarDays, dimRegressionOrder);
 
             writeTradeExposures(params, postProcess);
             writeNettingSetExposures(params, postProcess);
@@ -399,7 +405,15 @@ int main(int argc, char** argv) {
             CubeWriter cw2(outputPath + "/" + netCubeOutputFile);
             cw2.write(postProcess->netCube(), nettingSetMap);
 
-            cout << "OK" << endl;
+	    string dimFile1 = outputPath + "/" + params.get("xva", "dimEvolutionFile");
+	    string dimFile2 = outputPath + "/" + params.get("xva", "dimRegressionFile");
+	    string nettingSet = params.get("xva", "dimOutputNettingSet");
+	    int dimOutputGridPoint = parseInteger(params.get("xva", "dimOutputGridPoint"));
+
+	    postProcess->exportDimEvolution(dimFile1, nettingSet);
+	    postProcess->exportDimRegression(dimFile2, nettingSet, dimOutputGridPoint);
+
+	    cout << "OK" << endl;
         } else {
             LOG("skip XVA reports");
             cout << "SKIP" << endl;

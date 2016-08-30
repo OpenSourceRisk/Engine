@@ -74,8 +74,9 @@
       <Parameter name="colva">N</Parameter>
       <Parameter name="collateralSpread">0.0000</Parameter>
       <Parameter name="collateralFloor">N</Parameter>
-      <Parameter name="MVA">N</Parameter>
       <!-- NEW -->
+      <Parameter name="dim">N</Parameter>
+      <Parameter name="mva">N</Parameter>
       <Parameter name="dimCollateral">N</Parameter>      
       <Parameter name="dimQuantile">0.99</Parameter>
       <Parameter name="dimHorizonCalendarDays">14</Parameter>
