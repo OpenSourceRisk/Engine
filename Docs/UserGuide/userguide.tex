@@ -159,20 +159,20 @@ on QuantLib, the free/open source library for quantitative finance \cite{QL}.
 
 %\medskip
 \subsubsection*{Audience}
-The project hopes to reach quantitative risk ma\-nage\-ment practitioners (be it in financial institutions, audit firms, consulting companies or regulatory bodies) who are looking for accessible software solutions, quant developers charged with the implementation of the kind of simulation methods and models provided by ORE, but likewise academics and students who would like to teach or learn quantitative risk management with the help of a freely available risk application.  
+The project aims at reaching quantitative risk ma\-nage\-ment practitioners (be it in financial institutions, audit firms, consulting companies or regulatory bodies) who are looking for accessible software solutions, and quant developers in charge of the implementation of the kind of simulation methods and models provided by ORE. Moreover, the project aims at reaching academics and students who would like to teach or learn quantitative risk management using a freely available, contemporary risk application.  
 
 \subsubsection*{Contributions}
 Quaternion Risk Management \cite{QRM} is committed to sponsoring the Open Risk Engine project through ongoing project administration, through providing this initial release and a series of subsequent releases in order to achieve a wide analytics, product and risk factor class coverage. The community is invited to contribute to ORE, for example through feedback, discussions and suggested enhancement in the forum on the ORE site \cite{ORE}, as well as contributions of ORE enhancements in the form of source code. See the FAQ section on the ORE site \cite{ORE} on how to get involved.
 
 \subsubsection*{Scope and Roadmap}
 %ORE currently provides portfolio pricing, cash flow generation, sensitivity analysis and a range of contemporary derivative portfolio analytics. The latter are based on a Monte Carlo simulation framework which yields the evolution of various {\bf credit exposure} and {\bf market risk measures} 
-ORE currently provides portfolio pricing, cash flow generation, and a range of contemporary derivative portfolio analytics. The latter are based on a Monte Carlo simulation framework which yields the evolution of various {\bf credit exposure} and {\bf market risk measures} 
+ORE currently provides portfolio pricing, cash flow generation, and a range of contemporary derivative portfolio analytics. The latter are based on a Monte Carlo simulation framework which yields the evolution of various {\bf credit exposure} and {\bf market risk measures}: 
 \begin{itemize}
-\item EE aka EPE (Expected Exposure or Expected Positive Exposure), 
-\item ENE (Expected Negative Exposure, i.e. the counterparty's perspective), 
+\item EE aka EPE (Expected Exposure or Expected Positive Exposure)
+\item ENE (Expected Negative Exposure, i.e. the counterparty's perspective)
 \item 'Basel' exposure measures relevant for regulatory capital charges under internal model methods 
-\item PFE (Potential Future Exposure at some use defined quantile), 
-\item Value at Risk and Expected Shortfall,
+\item PFE (Potential Future Exposure at some user defined quantile)
+\item Value at Risk and Expected Shortfall
 \end{itemize}
 and {\bf derivative value adjustments}
 \begin{itemize}
@@ -185,23 +185,23 @@ for portfolios with netting and collateral.
 Subsequent ORE releases will also compute {\bf regulatory capital charges} for counterparty credit risk under the new standardised approach (SA-CCR), and the Monte Carlo based market risk measures will be complemented by parametric methods, e.g. for benchmarking various initial margin calculation models applied in cleared and non-cleared derivatives business.
 
 \medskip
-The first release of ORE covers the simulation of interest rate and FX risk factors and portfolios of Interest Rate Swaps, Caps/Floors, Swaptions, FX Forwards, Cross Currency Swaps and FX Options. Subsequent releases will extend the derivative product and the risk factor range to Inflation, Credit, Equity and Commodity. With the introduction of credit risk factors, the scope will also be extended to cover cash products (loans and bonds) and related portfolio analytics.    
+The first release of ORE  in September 2016 covers the simulation of interest rate and FX risk factors and portfolios of Interest Rate Swaps, Caps/Floors, Swaptions, FX Forwards, Cross Currency Swaps and FX Options. Subsequent releases from Q1 2017 will extend the derivative product and the risk factor range to Inflation, Credit, Equity and Commodity. With the introduction of credit risk factors, the scope will also be extended to cover cash products (loans and bonds) and related portfolio analytics.    
 
 %\medskip
 %With the scheduled releases, incorporating community feedback and contributions, the project aims at establishing a platform for {\bf transparent pricing and risk analysis} that can be adapted for production purposes in financial institutions and used as a benchmarking and validation tool to test opaque 3rd party solutions applied in the industry. 
 
 \medskip
-The simulation models applied in ORE's risk factor evolution implement the models discussed in detail in {\em Modern Derivatives Pricing and Credit Exposure Analysis} \cite{Lichters}: The IR/FX risk factor evolution is based on a cross currency model consisting of an arbitrage free combination of Linear Gauss Markov models for all interest rates and lognormal processes for the FX rates, calibrated to cross currency discounting and forward curves, Swaptions and FX Options.
+The simulation models applied in ORE's risk factor evolution implement the models discussed in detail in {\em Modern Derivatives Pricing and Credit Exposure Analysis} \cite{Lichters}: The IR/FX risk factor evolution is based on a cross currency model consisting of an arbitrage free combination of Linear Gauss Markov models for all interest rates and lognormal processes for the FX rates. The model components are calibrated to cross currency discounting and forward curves, Swaptions and FX Options.
 
 \subsubsection*{Further Resources}
-More information about ORE is available
 \begin{itemize}
-\item on the Open Risk Engine project pages \url{http://www.openriskengine.org}
-\item {\color{red}in the FAQ section at \url{http://www.openriskengine.org/FAQ}}
-\item {\color{red}in the ORE forum at ...}
-\item following Open Risk Engine on Twitter {\tt @OpenRiskEngine}
+\item Open Risk Engine project site: \url{http://www.openriskengine.org}
+\item Frequently Asked Questions: {\color{red}\url{http://www.openriskengine.org/faq}}
+\item Forum: {\color{red}\url{http://www.openriskengine.org/forum}}
+\item Source code and releases: \url{https://github.com/openriskengine/OpenRiskEngine}
+\item Follow Open Risk Engine on Twitter {\tt @OpenRiskEngine}
 \end{itemize}
-Moreover, an Open Risk Engine Book will follow in 2017 that will elaborate on the engine's design and make the connection between methodology and implementation. Like ORE, the book will be available for free. It will be announced in due course on the channels mentioned above.
+An Open Risk Engine Book will follow in 2017 that will elaborate on the engine's design and make the connection between methodology and implementation. Like ORE, the book will be available for free. It will be announced in due course on the channels mentioned above.
  
 \subsubsection*{Organisation of this document}
 
@@ -501,12 +501,63 @@ The examples shown in the following are intended to help getting started with OR
 All results can be produced with the Python scripts {\tt run.py} in the ORE release's {\tt Examples} folder which work on both Windows and Unix platforms. In a nutshell, all scripts call ORE's command line application with a single input XML file
 
 \medskip
-\centerline{\tt ore[.exe] input.xml}
+\centerline{\tt ore[.exe] ore.xml}
 \medskip
 
 They produce a number of standard reports and exposure graphs in PDF format. The structure of the input file and of the portfolio, market and other configuration files referred to therein will be explained in section \ref{sec:configuration}. 
 
 \medskip
+ORE is driven by a number of input files, listed in table \ref{tab_1} and explained in detail in sections \ref{sec:configuration} to \ref{sec:fixings}. In all examples, these input files are either located in the example's sub directory {\tt Examples/Example\_\#/Input} or the main input directory {\tt Examples/Input} if used across several examples. The particular selection of input files is determined by the 'master' input file {\tt ore.xml}. 
+
+\begin{table}[hbt]
+\begin{center}
+\begin{tabular}{|l|p{11cm}|}
+\hline
+File Name & Description \\
+\hline
+{\tt ore.xml} &   Master input file, selection of further inputs below and selection of analytics \\
+{\tt portfolio.xml} & Trade data \\
+{\tt netting.xml} &  Collateral (CSA) data \\
+{\tt simulation.xml} & Configuration of simulation model and market\\
+{\tt market.txt} &  Market data snapshot \\
+{\tt fixings.txt} &  Index fixing history \\
+{\tt curveconfig.xml} & Curve and term structure composition from individual market instruments\\
+{\tt conventions.xml} & Market conventions for all market data points\\
+{\tt todaysmarket.xml} &  Configuration of the market composition for pricing as of today \\
+{\tt pricingengines.xml} &  Configuration of pricing methods by product\\
+\hline
+\end{tabular}
+\end{center}
+\caption{ORE input files}
+\label{tab_1}
+\end{table}
+
+The typical list of output files and reports is shown in table \ref{tab_2}. The names of output files can be configured through the master input file {\tt ore.xml}. And whether these reports are generated also depends on the setting in {\tt ore.xml}. For the examples, all output will be written to directory {\tt Examples/Example\_\#/Output}.
+
+\begin{table}[hbt]
+\begin{center}
+\begin{tabular}{|l|p{9cm}|}
+\hline
+File Name & Description \\
+\hline
+{\tt npv.csv} &   NPV report \\
+{\tt flows.csv} & Cashflow report \\
+{\tt curves.csv} & Generated yield (discount) curves report \\
+{\tt xva.csv} & XVA report, value adjustments at netting set and trade level \\
+{\tt exposure\_trade\_*.csv} & Trade exposure evolution reports\\
+{\tt exposure\_nettingset\_*.csv} &  Netting set exposure evolution reports\\
+{\tt rawcube.csv} & NPV cube in readable text format \\
+{\tt netcube.csv} & NPV cube after netting and colateral, in readable text format \\
+{\tt *.dat} & Intermediate storage of NPV cube and scenario data in binary format \\
+{\tt *.pdf} &  Exposure graphics produced by the python script {\tt run.py} after ORE completed\\
+\hline
+\end{tabular}
+\end{center}
+\caption{ORE output files}
+\label{tab_2}
+\end{table}
+
+
 Note: When building ORE from sources on Windows platforms, make sure that you copy your {\tt ore.exe} to the binary directory {\tt bin/win32/} respectively {\tt bin/x64/}. Otherwise the examples may be run using the pre-compiled executables which come with the ORE release. 
 %By default, the examples will point to the 64 bit executable. To change this to the 32 bit version, edit the file {\tt Examples/ore\_examples\_helper.py} and change line 
 %\begin{listing}[H]
@@ -522,7 +573,7 @@ Note: When building ORE from sources on Windows platforms, make sure that you co
 \subsection{Interest Rate Swap Exposure}\label{sec:example1}
 %--------------------------------------------------------
 
-We start with a vanilla single currency swap (currency EUR, maturity 20y, notional 10m, receive fixed 2\% annual, pay 6M-Euribor flat). The market yield curves (for both discounting and forward projection) are set to be flat at 2\% for all maturities, i.e. the Swap is at the money initially and remains at the money on average throughout its life. Running ORE in directory {\tt Examples/Example\_1} with
+We start with a vanilla single currency Swap (currency EUR, maturity 20y, notional 10m, receive fixed 2\% annual, pay 6M-Euribor flat). The market yield curves (for both discounting and forward projection) are set to be flat at 2\% for all maturities, i.e. the Swap is at the money initially and remains at the money on average throughout its life. Running ORE in directory {\tt Examples/Example\_1} with
 
 \medskip
 \centerline{\tt ./run.py } 
@@ -541,10 +592,10 @@ and shown in figure \ref{fig_1}.
 %\includegraphics[scale=0.45]{mpl_swap_1.pdf}
 \includegraphics[scale=0.45]{mpl_swap_1_1m_sbb_100k.pdf}
 \end{center}
-\caption{Vanilla ATM swap expected exposure in a flat market environment from both parties' perspectives. The symbols are European Swaption prices. The simulation was run with monthly time steps. To demonstrate the convergence of EPE and ENE profiles we have used an exceptionally large number of samples (100,000) to produce this graph. A similar outcome can be obtained more quickly with 5,000 samples on a quarterly time grid which is the default setting of Example\_1. }
+\caption{Vanilla ATM Swap expected exposure in a flat market environment from both parties' perspectives. The symbols are European Swaption prices. The simulation was run with monthly time steps. To demonstrate the convergence of EPE and ENE profiles we have used an exceptionally large number of samples (100,000) to produce this graph. A similar outcome can be obtained more quickly with 5,000 samples on a quarterly time grid which is the default setting of Example\_1. }
 \label{fig_1}
 \end{figure}
-The symbols are prices of European Swaptions with expiry at the symbol's time and otherwise same underlying as the Swap considered here. Both Swap simulation and Swaption pricing are run with calls to the ORE executable, essentially 
+Both Swap simulation and Swaption pricing are run with calls to the ORE executable, essentially 
 
 \medskip
 \centerline{\tt ore[.exe] ore.xml} 
@@ -555,7 +606,7 @@ The symbols are prices of European Swaptions with expiry at the symbol's time an
 which are wrapped into the script {\tt Examples/Example\_1/run.py} provided with the ORE release.
 It is instructive to look into the input folder in Examples/Example\_1, the content of the main input file {\tt ore.xml}, together with the explanations in section \ref{sec:configuration}.
 
-This simple example is an important test case which is also run similarly in one of the unit test suites of ORE. The expected exposure can be seen as a European option on the underlying netting se, see also appendix \ref{sec:app_exposure}. And when the netting set is simple, like a single swap in this case, then there are simple closed-form expressions for computing those European option prices: The expected exposure at some future point in time, say 10 years, is then equal to the European Swaption price for an option with expiry in 10 years, underlying Swap start in 10 years and underlying Swap maturity in 20 years. In this example we can easily compute such standard European Swaption prices for all future points in time where both Swap legs reset, i.e. annually in this case. And if the simulation model has been calibrated to the points on the Swaption surface which are used for European Swaption pricing, then we can expect to see that the simulated exposure matches Swaption prices at these annual points. In Example\_1 we used co-terminal ATM Swaptions for both model calibration and Swaption pricing. Moreover, as the the yield curve is flat in this example, the exposures from both parties' perspectives (EPE and ENE) match not only at the annual resets, but also for the period between annual reset of both legs to the point in time when the floating leg resets. Thereafter, between floating leg (only) reset and next joint fixed/floating leg reset, we see and expect a deviation of the two exposure profiles.
+This simple example is an important test case which is also run similarly in one of the unit test suites of ORE. The expected exposure can be seen as a European option on the underlying netting set, see also appendix \ref{sec:app_exposure}. And when the netting set is simple, like a single Swap in this case, then there are simple closed-form expressions for computing those European option prices: The expected exposure at some future point in time, say 10 years, is then equal to the European Swaption price for an option with expiry in 10 years, underlying Swap start in 10 years and underlying Swap maturity in 20 years. In this example we can easily compute such standard European Swaption prices for all future points in time where both Swap legs reset, i.e. annually in this case. And if the simulation model has been calibrated to the points on the Swaption surface which are used for European Swaption pricing, then we can expect to see that the simulated exposure matches Swaption prices at these annual points, as in figure \ref{fig_1}. The symbols denote prices of European Swaptions with expiry at the symbol's time and same underlying as the Swap that is simulated here. In Example\_1 we used co-terminal ATM Swaptions for both model calibration and Swaption pricing. Moreover, as the the yield curve is flat in this example, the exposures from both parties' perspectives (EPE and ENE) match not only at the annual resets, but also for the period between annual reset of both legs to the point in time when the floating leg resets. Thereafter, between floating leg (only) reset and next joint fixed/floating leg reset, we see and expect a deviation of the two exposure profiles.
 
 \medskip
 Moving to {\tt Examples/Example\_4}, we see what changes when using a realistic (non-flat) market environment. Running the example with
@@ -576,10 +627,10 @@ shown in figure \ref{fig_2}.
 \includegraphics[scale=0.45]{mpl_swap_3.pdf}
 %\includegraphics[scale=1.0]{example_swap_3.pdf}
 \end{center}
-\caption{Vanilla ATM swap expected exposure in a realistic market environment as of 26/02/2016 from both parties' perspectives. The Swap is the same as in figure \ref{fig_1} but receiving fixed 1\%, at the money on 26/02/2016. The symbols are the prices of European payer and receiver Swaptions. Simulation with 5000 paths and monthly time steps.}
+\caption{Vanilla ATM Swap expected exposure in a realistic market environment as of 26/02/2016 from both parties' perspectives. The Swap is the same as in figure \ref{fig_1} but receiving fixed 1\%, at the money on 26/02/2016. The symbols are the prices of European payer and receiver Swaptions. Simulation with 5000 paths and monthly time steps.}
 \label{fig_2}
 \end{figure}
-In this case, where the curves (discount and forward) are upward sloping, the receiver swap is at the money at inception only and moves (on average) out of the money during its life. Similarly, the swap moves into the money from the counterparty's perspective. Hence the expected exposure evolutions from our perspective (EPE) and the counterparty's perspective (ENE) 'detach' here, while both can still be be reconciled with payer respectively receiver Swaption prices.
+In this case, where the curves (discount and forward) are upward sloping, the receiver Swap is at the money at inception only and moves (on average) out of the money during its life. Similarly, the Swap moves into the money from the counterparty's perspective. Hence the expected exposure evolutions from our perspective (EPE) and the counterparty's perspective (ENE) 'detach' here, while both can still be be reconciled with payer respectively receiver Swaption prices.
 
 %--------------------------------------------------------
 \subsection{European Swaption Exposure}\label{sec:european_swaption}
@@ -594,7 +645,7 @@ This demo case in folder {\tt Examples/Example\_7} shows the exposure evolution 
 \caption{European Swaption exposure evolution, expiry in 10 years, final maturity in 20 years, for cash and physical delivery. Simulation with 1000 paths and quarterly time steps.}
 \label{fig_3}
 \end{figure}
-The delivery type (cash vs physical) yields significantly different valuations as of today due to the steepness of the relevant yield curves (EUR). The cash settled Swaption's exposure graph is truncated at the exercise date, whereas the physically settled Swaption exposure turns into a Swap-like exposure after expiry. For comparison, the example also provides the exposure evolution of the underlying forward starting Swap which yields a somewhat higher exposure after the forward start date than the physically settled Swaption. This is due to scenarios with negative swap NPV at expiry and positive NPVs thereafter.
+The delivery type (cash vs physical) yields significantly different valuations as of today due to the steepness of the relevant yield curves (EUR). The cash settled Swaption's exposure graph is truncated at the exercise date, whereas the physically settled Swaption exposure turns into a Swap-like exposure after expiry. For comparison, the example also provides the exposure evolution of the underlying forward starting Swap which yields a somewhat higher exposure after the forward start date than the physically settled Swaption. This is due to scenarios with negative Swap NPV at expiry and positive NPVs thereafter.
 
 %--------------------------------------------------------
 \subsection{Bermudan Swaption Exposure}
@@ -630,7 +681,7 @@ The example is an extreme case where the underlying Swap is deeply in the money 
 \subsection{Cap/Floor Exposure}\label{sec:capfloor}
 %--------------------------------------------------------
 
-The example in folder {\tt Examples/Example\_12} generates exposure evolutions of several swaps, caps and floors. The example shown in figure \ref{fig_capfloor_1} ('portfolio 1') consists of a 20y Swap receiving 1\% fixed and a 20y Collar with both cap and floor at 2.5\% so that the net exposure corresponds to a Swap receiving 0.5\% fixed.
+The example in folder {\tt Examples/Example\_12} generates exposure evolutions of several Swaps, caps and floors. The example shown in figure \ref{fig_capfloor_1} ('portfolio 1') consists of a 20y Swap receiving 1\% fixed and a 20y Collar with both cap and floor at 2.5\% so that the net exposure corresponds to a Swap receiving 0.5\% fixed.
 
 \begin{figure}[hbt]
 \begin{center}
@@ -668,7 +719,7 @@ The example in folder {\tt Examples/Example\_2} generates the exposure evolution
 \subsection{Cross Currency Swap Exposure and FX Reset}
 %--------------------------------------------------------
 
-The case in {\tt Examples/Example\_8} is a vanilla cross currency swap. It shows the typical blend of and interest rate swap's saw tooth exposure evolution with an FX forward's exposure which increases monotonically to final maturity, see figure \ref{fig_6}. 
+The case in {\tt Examples/Example\_8} is a vanilla cross currency Swap. It shows the typical blend of and interest rate Swap's saw tooth exposure evolution with an FX forward's exposure which increases monotonically to final maturity, see figure \ref{fig_6}. 
 %\todo[inline]{Done - Add notional resetting feature and example}
 \begin{figure}[hbt]
 \begin{center}
@@ -678,7 +729,7 @@ The case in {\tt Examples/Example\_8} is a vanilla cross currency swap. It shows
 \caption{Cross Currency Swap exposure evolution without mark-to-market notional reset. Simulation with 1000 paths and quarterly time steps.}
 \label{fig_6}
 \end{figure}
-The case in {\tt Examples/Example\_9} then shows the effect of FX resets in a EUR/USD cross currency basis swap, see figure \ref{fig_6b}. As expected, the notional reset causes an exposure collapse at each period start when the EUR leg's notional is reset to match the USD notional.
+The case in {\tt Examples/Example\_9} then shows the effect of FX resets in a EUR/USD cross currency basis Swap, see figure \ref{fig_6b}. As expected, the notional reset causes an exposure collapse at each period start when the EUR leg's notional is reset to match the USD notional.
 \begin{figure}[hbt]
 \begin{center}
 %\includegraphics[scale=1.0]{example_ccswap.pdf}
@@ -713,7 +764,7 @@ One would therefore expect a flat exposure evolution up to option expiry. The de
 \subsection{Netting and Collateral}
 %--------------------------------------------------------
 
-In this example (see folder {\tt Examples/Example\_5}) we showcase a small netting set consisting of three swaps in different currencies, with different collateral choices
+In this example (see folder {\tt Examples/Example\_5}) we showcase a small netting set consisting of three Swaps in different currencies, with different collateral choices
 \begin{itemize}
 \item no collateral - figure \ref{fig_8},
 \item collateral with threshold (THR) 1m EUR, minimum transfer amount (MTA) 100k EUR, margin period of risk (MPR) 2 weeks - figure \ref{fig_9}
@@ -726,7 +777,7 @@ The exposure graphs with collateral and positive margin period of risk show typi
 %\includegraphics[scale=1.0]{example_nocollateral_epe.pdf}
 \includegraphics[scale=0.45]{mpl_nocollateral_epe.pdf}
 \end{center}
-\caption{Three swaps netting set, no collateral. Simulation with 5000 paths and bi-weekly time steps.}
+\caption{Three Swaps netting set, no collateral. Simulation with 5000 paths and bi-weekly time steps.}
 \label{fig_8}
 \end{figure}
 
@@ -735,7 +786,7 @@ The exposure graphs with collateral and positive margin period of risk show typi
 %\includegraphics[scale=1.0]{example_threshold_break_epe.pdf}
 \includegraphics[scale=0.45]{mpl_threshold_break_epe.pdf}
 \end{center}
-\caption{Three swaps netting set, THR=1m EUR, MTA=100k EUR, MPR=2w. The red evolution assumes that the each trade is terminated at the next break date. The blue evolution ignores break dates. Simulation with 5000 paths and bi-weekly time steps.}
+\caption{Three Swaps netting set, THR=1m EUR, MTA=100k EUR, MPR=2w. The red evolution assumes that the each trade is terminated at the next break date. The blue evolution ignores break dates. Simulation with 5000 paths and bi-weekly time steps.}
 \label{fig_9}
 \end{figure}
 
@@ -752,7 +803,7 @@ The exposure graphs with collateral and positive margin period of risk show typi
 %\includegraphics[scale=1.0]{example_mpor_epe.pdf}
 \includegraphics[scale=0.45]{mpl_mpor_epe.pdf}
 \end{center}
-\caption{Three swaps, THR=MTA=0, MPR=2w. Simulation with 5000 paths and bi-weekly time steps.}
+\caption{Three Swaps, THR=MTA=0, MPR=2w. Simulation with 5000 paths and bi-weekly time steps.}
 \label{fig_10}
 \end{figure}
 
@@ -1163,7 +1214,7 @@ The file starts and ends with the opening and closing tags {\tt <TodaysMarket>} 
 \begin{itemize}
 \item Discounting curves
 \item Index curves (to project index fixings)
-\item Swap index curves (to project swap rates)
+\item Swap index curves (to project Swap rates)
 \item FX spot rates
 \item FX Volatility structures
 \item Swaption volatility structures
