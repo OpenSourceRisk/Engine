@@ -1,6 +1,6 @@
 1) Portfolio
 
-Vanilla Swap, EUR, 10m notional, 20Y maturity, receive
+Vanilla Swap, EUR, 10m notional, 50Y maturity, receive
 fixed 2% anually, pay 6m Euribor semi-annually
 
 2) Market
@@ -18,7 +18,10 @@ Single curve
 
 4) Analytics
 
-EPE and ENE, compared to European swaption prices 
+EPE and ENE, compared to European swaption prices, one simulation is
+run in the original LGM measure, the other in the T-forward measure
+(T=50), i.e. a horizon shift of 50 is set in the simulation
+configuration.
 
 5) Run Example
 
