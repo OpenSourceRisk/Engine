@@ -9,7 +9,6 @@ import matplotlib.ticker
 class OreExample(object):
 
     def __init__(self, dry=False):
-        check_version()
         self.ore_exe = ""
         self.headlinecounter = 0
         self.dry = dry
@@ -20,15 +19,15 @@ class OreExample(object):
     def _locate_ore_exe(self):
         if os.name == 'nt':
             if sys.platform == "win32":
-                self.ore_exe = "..\\..\\bin\\win32\\ore.exe"
+                self.ore_exe = "..\\..\\App\\bin\\Win32\\Release\\ore.exe"
             else:
-                self.ore_exe = "..\\..\\bin\\x64\\ore.exe"
+                self.ore_exe = "..\\..\\App\\bin\\x64\\Release\\ore.exe"
         else:
             self.ore_exe = "../../App/ore"
 
     def print_headline(self, headline):
         self.headlinecounter += 1
-        print()
+        print('')
         print(str(self.headlinecounter) + ") " + headline)
 
     def get_times(self, output):
@@ -100,11 +99,7 @@ class OreExample(object):
         if not self.dry:
             subprocess.call([self.ore_exe, xml])
 
-def check_version():
-    if not sys.version_info >= (3,3): raise Exception("Python 3.3 or higher required.")
-
 if __name__ == "__main__":
-    check_version()
     examples = [
         "Example_1",
         "Example_2",
