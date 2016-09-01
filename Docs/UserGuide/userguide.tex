@@ -79,11 +79,13 @@
 
 \renewcommand\P{\ensuremath{\mathbb{P}}}
 \newcommand\E{\ensuremath{\mathbb{E}}}
+%\newcommand\V{\mathds{V}}
 \newcommand\Q{\ensuremath{\mathbb{Q}}}
 \newcommand\I{\mathds{1}}
 \newcommand\F{\ensuremath{\mathcal F}}
 %\newcommand\G{\ensuremath{\mathcal G}}
-\newcommand\V{\mathds{V}}
+\newcommand\V{\ensuremath{\mathbb{V}}}
+%\newcommand\V{\mathds{V}}
 \newcommand\YOY{{\rm YOY}}
 \newcommand\Prob{\ensuremath{\mathbb{P}}}
 \newcommand{\D}[1]{\mbox{d}#1}
@@ -102,6 +104,7 @@
 \newcommand{\ENE}{\mathit{ENE}}
 \newcommand{\PD}{\mathit{PD}}
 \newcommand{\LGD}{\mathit{LGD}}
+\newcommand{\DIM}{\mathit{DIM}}
 \newcommand{\bs}{\textbackslash}
  
 \begin{document}
@@ -2050,7 +2053,7 @@ Note that the choice $t_i$ in the arguments of $\EPE(t_i)$ and $\ENE(t_i)$ means
 
 Moreover, formulas (\ref{CVA}, \ref{DVA}) assume independence of credit and other market risk factors, so that $\PD$ and $\LGD$ factors are outside the expectations. With the extension of ORE to credit asset classes and in particular for wrong-way-risk analysis, CVA/DVA formulas will be generalised. 
 
-\subsection{FVA}
+\subsection{FVA}\label{sec:fva}
 
 Any exposure (uncollateralised or residual after taking collateral into account) gives rise to funding cost or benefits depending on the sign of the residual position. This can be expressed as a Funding Value Adjustment (FVA). A simple definition of FVA can be given in a very similar fashion as the sum of unilateral CVA and DVA which we defined by (\ref{CVA},\ref{DVA}), namely as an expectation of exposures times funding spreads:
 \begin{align}
@@ -2078,7 +2081,7 @@ When the CSA defines a collateral compounding rate that deviates from the overni
 where $C(t)$ is the collateral posted and $D(t)$ is the stochastic discount factor $1/N(t)$ in LGM. Both $C(t)$ and $N(t)$ are computed in ORE's Monte Carlo framework, and the expectation yields the desired adjustment.
  
 Replacing the constant spread by a time-dependent deterministic function in ORE is straight forward. 
- 
+  
 \subsection{Collateral Floor Value}
 
 A less trivial extension of the simple COLVA calculation above, also covered in ORE, is the case where the deviation between overnight rate and collateral rate is stochastic itself. A popular example is a CSA under which the collateral rate is   the overnight rate {\em floored at zero}. To work out the value of this CSA feature one can take the difference of discounted margin cash flows with and without the floor feature. It is shown in \cite{Lichters} that the following formula is a good approximation to the collateral floor value
@@ -2094,6 +2097,40 @@ Taking both collateral spread and floor into account, the value adjustment is
 \label{CSA_floor_value_approx_2}
 \end{align}
 
+\subsection{Dynamic Initial Margin and MVA}
+
+The introduction of Initial Margin posting in non-cleared OTC derivatives business reduces residual credit exposures and the associated value adjustments, {\bf CVA} and {\bf DVA}. 
+
+On the other hand, it gives rise to additional funding cost. The value of the latter is referred to as Margin Value Adjustment ({\bf MVA}).
+
+To quantify these two effects one needs to model Initial Margin under future market scenarios, i.e. Dynamic Initial Margin ({\bf DIM}). Potential approaches comprise 
+\begin{itemize}
+\item Monte Carlo VaR embedded into the Monte Carlo simulation
+\item Regression-based methods
+\item Delta VaR under scenarios
+\item ISDA's Standard Initial Margin (SIMM) under scenarios
+\end{itemize} 
+
+We skip the first option as too computationally expensive for ORE. In the first ORE release we focus on a relatively simple regression approach as in \cite{Anfuso2016}. Consider the netting set values $\NPV(t)$ and $\NPV(t+\Delta)$ that are spaced one margin period of risk $\Delta$ apart. Moreover, let $F(t,t+\Delta)$ denote cumulative netting set cash flows between time $t$ and $t+\Delta$, converted into the NPV currency. Let $X(t)$ then denote the netting set value change during the margin period of risk excluding cash flows in that period:
+$$
+X(t) = \NPV(t+\Delta) + F(t, t+\Delta) - \NPV(t) 
+$$  
+ignoring discounting/compounding over the margin period of risk. We would actually want to determine the distribution of $X(t)$ and pick its 99\% quantile to determine the Initial Margin amount for each time $t$ and conditional on the `state of the world' at time $t$. Instead of working out the distribution, we 
+content ourselves with estimating the conditional variance $\V(t)$ or standard deviation $S(t)$ of $X(t)$, assuming a normal distribution and scaling $S(t)$ to the desired 99\% quantile by multiplying with the usual factor $\alpha=2.33$ to get an estimate of the Dynamic Initial Margin $\DIM$:
+$$
+\V(t) = \E_t[X^2] - \E_t^2[X], \qquad S(t)=\sqrt{\V(t)}, \qquad \DIM(t) = \alpha \,S(t)
+$$ 
+We will further assume that $\E_t[X]$ is small enough to set it to the expected value of $X(t)$ across all Monte Carlo samples $X$ at time $t$ (rather than estimating a scenario dependent mean). The remaining task is then to estimate the conditional expectation $\E_t[X^2]$. We do this in the spirit of the Longstaff Schwartz method using regression of $X^2$ across all Monte Carlo samples at a given time, here versus the netting set $\NPV$ as regression variable\footnote{Extension to multi-variate regression versus model state variables would be a logical next step, in order to capture more complex multi-currency portfolios.}. As regression basis functions we use polynomials, i.e. regression functions of the form $c_0 + c_1\,x + c_2\,x^2 + ...+ c_n\,x^n$ where the order $n$ of the polynomial can be selected by the user. Choosing the lowest order $n=0$, we obtain the simplest possible estimate, the variance of $X$ across all samples at time $t$, so that we apply a single $\DIM(t)$ irrespective of the 'state of the world' at time $t$ in that case.    
+
+\medskip
+Given the DIM estimate along all paths, we can next work out the Margin Value Adjustment \cite{Lichters} in discrete form
+%{\color{red}
+\begin{align}
+\MVA &= \sum_{i=1}^n (f_b - s_I)\, \delta_i\: S_C(t_i)\: S_B(t_i) \times \E^N\left[
+\DIM(t_i)\,D(t_i)\right]. \label{MVA} 
+\end{align}
+%}
+with borrowing spread $f_b$ as in the FVA section \ref{sec:fva} and spread $s_I$ received on initial margin, both spreads relative to the cash collateral rate.
 
 \subsection{Collateral Model}\label{sec:app_collateral}
 
@@ -2140,7 +2177,7 @@ D(t_m) &=
 where $MTA$ is the minimum transfer amount.
 
 \medskip
-Finally, the {\em Delivery Amount } is settled with a delay specified by the {\em Margin Period of Risk} (MPoR) which leads to residual exposure and XVA even for daily margining, zero thresholds and minimum transfer amounts, see for example \ref{Pykhtin2010}. A more detailed framework for collateralised exposure modelling is introduced in the 2016 article \ref{Andersen2016}, indicating a potential route for extending ORE.
+Finally, the {\em Delivery Amount } is settled with a delay specified by the {\em Margin Period of Risk} (MPoR) which leads to residual exposure and XVA even for daily margining, zero thresholds and minimum transfer amounts, see for example \cite{Pykhtin2010}. A more detailed framework for collateralised exposure modelling is introduced in the 2016 article \cite{Andersen2016}, indicating a potential route for extending ORE.
 
 \subsection{Exposure Allocation}\label{sec:app_allocation}
 
@@ -2218,13 +2255,16 @@ Jon Gregory, {\em Counterparty Credit Risk and Credit Value Adjustment, 2nd Ed.}
 \bibitem{BrigoMercurio}
 Damiano Brigo and Fabio Mercurio, {\em Interest Rate Models: Theory and Practice, 2nd Edition}, Springer, 2006.
 
+\bibitem{Anfuso2016} Fabrizio Anfuso, Daniel Aziz, Paul Giltinan, Klearchos Loukopoulos, {\em A Sound Modelling and Backtesting Framework for Forecasting Initial Margin Requirements},   
+\url{http://papers.ssrn.com/sol3/papers.cfm?abstract_id=2716279}, 2016
+
 \bibitem{Pykhtin2010} Michael Pykhtin, {\em Collateralized Credit Exposure}, in Counterparty Credit Risk, (E. Canabarro, ed.), Risk Books, 2010
 
 \bibitem{PykhtinRosen}
 Michael Pykhtin and Dan Rosen, {\em Pricing Counterparty Risk at the Trade Level and CVA Allocations}, Finance and Economics Discussion Series, Divisions of Research \& Statistics and Monetary Affairs,
 Federal Reserve Board, Washington, D.C., 2010
 
-\bibitem{Andersen2016} Leif B. G. Andersen, Michael Pykhtin, ALexander Sokol, {\em Rethinking Margin Period of Risk}, http://papers.ssrn.com/sol3/papers.cfm?abstract\_id=2719964, 2016
+\bibitem{Andersen2016} Leif B. G. Andersen, Michael Pykhtin, Alexander Sokol, {\em Rethinking Margin Period of Risk}, http://papers.ssrn.com/sol3/papers.cfm?abstract\_id=2719964, 2016
 
 %\bibitem{SIMM}{SIMM Methodology\\ \tiny http://www2.isda.org/attachment/ODM1Mw==/ISDA\%20SIMM\%20Methodology\_7\%20April\%202016\_v3.15\%20(PUBLIC).pdf}
 
