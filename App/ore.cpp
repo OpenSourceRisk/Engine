@@ -167,8 +167,11 @@ int main(int argc, char** argv) {
         string pricingEnginesFile = inputPath + "/" + params.get("setup", "pricingEnginesFile");
         engineData->fromFile(pricingEnginesFile);
 
+        map<string,string> configurations;
+        configurations["pricing"] = params.get("markets", "pricing");
+        configurations["lgmcalibration"] = params.get("markets", "lgmcalibration");
         boost::shared_ptr<EngineFactory> factory =
-            boost::make_shared<EngineFactory>(engineData, market, params.get("markets", "pricing"));
+            boost::make_shared<EngineFactory>(engineData, market, configurations);
         cout << "OK" << endl;
 
         /******************************
@@ -259,7 +262,7 @@ int main(int argc, char** argv) {
             string simPricingEnginesFile = inputPath + "/" + params.get("simulation", "pricingEnginesFile");
             simEngineData->fromFile(simPricingEnginesFile);
             boost::shared_ptr<EngineFactory> simFactory =
-                boost::make_shared<EngineFactory>(simEngineData, simMarket, params.get("markets", "pricing"));
+                boost::make_shared<EngineFactory>(simEngineData, simMarket, configurations);
 
             LOG("Build portfolio linked to sim market");
             boost::shared_ptr<Portfolio> simPortfolio = boost::make_shared<Portfolio>();
