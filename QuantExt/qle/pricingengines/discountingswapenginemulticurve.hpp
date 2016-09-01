@@ -41,7 +41,10 @@ namespace QuantExt {
       date.
     - start and end discounts of Swap::results not populated.
 
-            \ingroup engines
+    \warning if an IborCoupon with non-natural fixing and/or accrual
+             period is present, the NPV will be false
+
+    \ingroup engines
 */
 class DiscountingSwapEngineMultiCurve : public QuantLib::Swap::engine {
 public:
