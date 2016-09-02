@@ -142,8 +142,7 @@
           </FXReset>
           <Exchanges>
             <NotionalInitialExchange>true</NotionalInitialExchange>
-            <NotionalFinalExchange>false</NotionalFinalExchange>
-            <!-- already covered -->
+            <NotionalFinalExchange>true</NotionalFinalExchange>
           </Exchanges>
         </Notionals>
         <DayCounter>A360</DayCounter>

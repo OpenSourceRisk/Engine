@@ -73,11 +73,11 @@ class OreExample(object):
                 linewidth=2,
                 marker=marker)
 
-    def decorate_plot(self, title, ylabel="Exposure", xlabel="Time / Years"):
+    def decorate_plot(self, title, ylabel="Exposure", xlabel="Time / Years", legend_loc="upper right"):
         self.ax.set_title(title)
         self.ax.set_xlabel(xlabel)
         self.ax.set_ylabel(ylabel)
-        self.ax.legend(loc='upper right', shadow=True)
+        self.ax.legend(loc=legend_loc, shadow=True)
         self.ax.get_yaxis().set_major_formatter(
             matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
 
