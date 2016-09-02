@@ -45,7 +45,7 @@ namespace QuantExt {
 */
 
 template <class TS>
-class Lgm1fPiecewiseLinearParametrization : public IrLgm1fParametrization, private PiecewiseConstantHelper11 {
+class Lgm1fPiecewiseLinearParametrization : public Lgm1fParametrization<TS>, private PiecewiseConstantHelper11 {
 public:
     Lgm1fPiecewiseLinearParametrization(const Currency& currency, const Handle<TS>& termStructure,
                                         const Array& alphaTimes, const Array& alpha, const Array& hTimes,
@@ -79,7 +79,7 @@ Lgm1fPiecewiseLinearParametrization<TS>::Lgm1fPiecewiseLinearParametrization(con
                                                                              const Array& alphaTimes,
                                                                              const Array& alpha, const Array& hTimes,
                                                                              const Array& h)
-    : IrLgm1fParametrization(currency, termStructure), PiecewiseConstantHelper11(alphaTimes, hTimes) {
+    : Lgm1fParametrization<TS>(currency, termStructure), PiecewiseConstantHelper11(alphaTimes, hTimes) {
     initialize(alpha, h);
 }
 
@@ -117,15 +117,15 @@ template <class TS> inline Real Lgm1fPiecewiseLinearParametrization<TS>::inverse
 }
 
 template <class TS> inline Real Lgm1fPiecewiseLinearParametrization<TS>::zeta(const Time t) const {
-    return helper1().int_y_sqr(t) / (scaling_ * scaling_);
+    return helper1().int_y_sqr(t) / (this->scaling_ * this->scaling_);
 }
 
 template <class TS> inline Real Lgm1fPiecewiseLinearParametrization<TS>::H(const Time t) const {
-    return scaling_ * helper2().int_y_sqr(t) + shift_;
+    return this->scaling_ * helper2().int_y_sqr(t) + this->shift_;
 }
 
 template <class TS> inline Real Lgm1fPiecewiseLinearParametrization<TS>::alpha(const Time t) const {
-    return helper1().y(t) / scaling_;
+    return helper1().y(t) / this->scaling_;
 }
 
 template <class TS> inline Real Lgm1fPiecewiseLinearParametrization<TS>::kappa(const Time) const {
@@ -133,7 +133,7 @@ template <class TS> inline Real Lgm1fPiecewiseLinearParametrization<TS>::kappa(c
 }
 
 template <class TS> inline Real Lgm1fPiecewiseLinearParametrization<TS>::Hprime(const Time t) const {
-    return scaling_ * helper2().y(t);
+    return this->scaling_ * helper2().y(t);
 }
 
 template <class TS> inline Real Lgm1fPiecewiseLinearParametrization<TS>::Hprime2(const Time) const {
