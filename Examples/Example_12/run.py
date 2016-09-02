@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import sys
+import os
 sys.path.append('../')
 from ore_examples_helper import OreExample
 
