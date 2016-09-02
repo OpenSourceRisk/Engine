@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <Portfolio>
-   <Trade id="XCCY_Swap_EUR_USD">
+  <Trade id="XCCY_Swap_EUR_USD">
     <TradeType>Swap</TradeType>
     <Envelope>
       <Type>Swap</Type>
@@ -13,7 +13,8 @@
         <Payer>false</Payer>
         <Currency>USD</Currency>
         <Notionals>
-          <Notional>100000000</Notional> <!-- 100M USD -->
+          <Notional>100000000</Notional>
+          <!-- 100M USD -->
           <Exchanges>
             <NotionalInitialExchange>true</NotionalInitialExchange>
             <NotionalFinalExchange>true</NotionalFinalExchange>
@@ -31,16 +32,16 @@
         </FloatingLegData>
         <ScheduleData>
           <Rules>
-           <StartDate>20160205</StartDate>
-           <EndDate>20260205</EndDate>
-           <Tenor>6M</Tenor>
-           <Calendar>TARGET</Calendar>
-           <Convention>MF</Convention>
-           <TermConvention>MF</TermConvention>
-           <Rule>Forward</Rule>
-           <EndOfMonth/>
-           <FirstDate/>
-           <LastDate/>
+            <StartDate>20160205</StartDate>
+            <EndDate>20260205</EndDate>
+            <Tenor>6M</Tenor>
+            <Calendar>TARGET</Calendar>
+            <Convention>MF</Convention>
+            <TermConvention>MF</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
           </Rules>
         </ScheduleData>
       </LegData>
@@ -49,7 +50,8 @@
         <Payer>true</Payer>
         <Currency>EUR</Currency>
         <Notionals>
-          <Notional>88312931.57</Notional> <!-- FX/RATE/EUR/USD 1.132337 => 100M USD = 88,312,931.57 -->
+          <Notional>88312931.57</Notional>
+          <!-- FX/RATE/EUR/USD 1.132337 => 100M USD = 88,312,931.57 -->
           <Exchanges>
             <NotionalInitialExchange>true</NotionalInitialExchange>
             <NotionalFinalExchange>true</NotionalFinalExchange>
@@ -67,16 +69,16 @@
         </FloatingLegData>
         <ScheduleData>
           <Rules>
-           <StartDate>20160205</StartDate>
-           <EndDate>20260205</EndDate>
-           <Tenor>6M</Tenor>
-           <Calendar>TARGET</Calendar>
-           <Convention>MF</Convention>
-           <TermConvention>MF</TermConvention>
-           <Rule>Forward</Rule>
-           <EndOfMonth/>
-           <FirstDate/>
-           <LastDate/>
+            <StartDate>20160205</StartDate>
+            <EndDate>20260205</EndDate>
+            <Tenor>6M</Tenor>
+            <Calendar>TARGET</Calendar>
+            <Convention>MF</Convention>
+            <TermConvention>MF</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
           </Rules>
         </ScheduleData>
       </LegData>
@@ -113,16 +115,16 @@
         </FloatingLegData>
         <ScheduleData>
           <Rules>
-           <StartDate>20160205</StartDate>
-           <EndDate>20260205</EndDate>
-           <Tenor>6M</Tenor>
-           <Calendar>TARGET</Calendar>
-           <Convention>MF</Convention>
-           <TermConvention>MF</TermConvention>
-           <Rule>Forward</Rule>
-           <EndOfMonth/>
-           <FirstDate/>
-           <LastDate/>
+            <StartDate>20160205</StartDate>
+            <EndDate>20260205</EndDate>
+            <Tenor>6M</Tenor>
+            <Calendar>TARGET</Calendar>
+            <Convention>MF</Convention>
+            <TermConvention>MF</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
           </Rules>
         </ScheduleData>
       </LegData>
@@ -140,7 +142,8 @@
           </FXReset>
           <Exchanges>
             <NotionalInitialExchange>true</NotionalInitialExchange>
-            <NotionalFinalExchange>false</NotionalFinalExchange> <!-- already covered -->
+            <NotionalFinalExchange>false</NotionalFinalExchange>
+            <!-- already covered -->
           </Exchanges>
         </Notionals>
         <DayCounter>A360</DayCounter>
@@ -155,16 +158,16 @@
         </FloatingLegData>
         <ScheduleData>
           <Rules>
-           <StartDate>20160205</StartDate>
-           <EndDate>20260205</EndDate>
-           <Tenor>6M</Tenor>
-           <Calendar>TARGET</Calendar>
-           <Convention>MF</Convention>
-           <TermConvention>MF</TermConvention>
-           <Rule>Forward</Rule>
-           <EndOfMonth/>
-           <FirstDate/>
-           <LastDate/>
+            <StartDate>20160205</StartDate>
+            <EndDate>20260205</EndDate>
+            <Tenor>6M</Tenor>
+            <Calendar>TARGET</Calendar>
+            <Convention>MF</Convention>
+            <TermConvention>MF</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
           </Rules>
         </ScheduleData>
       </LegData>
