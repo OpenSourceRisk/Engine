@@ -3,7 +3,7 @@
   <Product type="Swap">
     <Model>DiscountedCashflows</Model>
     <ModelParameters/>
-    <Engine>DiscountingSwapEngine</Engine>
+    <Engine>DiscountingSwapEngineOptimised</Engine>
     <EngineParameters/>
   </Product>
   <Product type="CrossCurrencySwap">
