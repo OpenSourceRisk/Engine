@@ -34,3 +34,13 @@ On Windows:
 		launcher_dashboard.ipynb
 	
 	5) The notebook should open and you can run it by clicking on Cell/Run Cells.
+	
+	6) Some of the cells have additional dependencies as mentioned in their description. For an optimal experience, we recommend installing
+		jupyter_dashboads: https://github.com/jupyter-incubator/dashboards
+		bqplot: https://github.com/bloomberg/bqplot
+		pythreejs: https://github.com/jovyan/pythreejs
+	Complete installation instructions can be found under the links mentioned above. Short version:
+		pip install jupyter_dashboards
+		jupyter dashboards quick-setup --sys-prefix
+		conda install -c conda-forge bqplot
+		conda install -c conda-forge pythreejs
