@@ -304,6 +304,15 @@ int main(int argc, char** argv) {
             } else
                 cout << "SKIP" << endl;
 
+	    cout << setw(tab) << left << "Write Flow Cube... " << flush;
+            LOG("Write flow cube");
+            string flowCubeFileName = outputPath + "/" + params.get("simulation", "flowCubeFile");
+            if (flowCubeFileName != "") {
+                inMemoryFlowCube->save(flowCubeFileName);
+                cout << "OK" << endl;
+            } else
+                cout << "SKIP" << endl;
+
             cout << setw(tab) << left << "Write Additional Scenario Data... " << flush;
             LOG("Write scenario data");
             string outputFileNameAddScenData =
@@ -333,16 +342,22 @@ int main(int argc, char** argv) {
             netting->fromFile(csaFile);
 
             boost::shared_ptr<NPVCube> cube, flowCube;
-            if (inMemoryCube) {
+            if (inMemoryCube)
                 cube = inMemoryCube;
-                flowCube = inMemoryFlowCube;
-	    }
-            else {
+	    else {
                 cube = boost::make_shared<SinglePrecisionInMemoryCube>();
                 string cubeFile = outputPath + "/" + params.get("xva", "cubeFile");
                 cube->load(cubeFile);
             }
 
+            if (inMemoryFlowCube)
+                flowCube = inMemoryFlowCube;
+            else {
+	        flowCube = boost::make_shared<SinglePrecisionInMemoryCube>();
+                string flowCubeFile = outputPath + "/" + params.get("xva", "flowCubeFile");
+                flowCube->load(flowCubeFile);
+            }
+	    
             QL_REQUIRE(cube->numIds() == portfolio->size(), "cube x dimension (" << cube->numIds()
                                                                                  << ") does not match portfolio size ("
                                                                                  << portfolio->size() << ")");
