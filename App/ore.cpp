@@ -272,7 +272,10 @@ int main(int argc, char** argv) {
             LOG("Build valuation cube engine");
             Size samples = sgd->samples();
             string baseCurrency = params.get("simulation", "baseCurrency");
-            ValuationEngine engine(asof, grid, samples, baseCurrency, simMarket);
+            // Valuation calculators
+            vector<boost::shared_ptr<ValuationCalculator>> calculators;
+            calculators.push_back(boost::make_shared<NPVCalculator>(baseCurrency));
+            ValuationEngine engine(asof, grid, samples, simMarket);
 
             ostringstream o;
             o << "Additional Scenario Data " << grid->size() << " x " << samples << "... ";
@@ -289,7 +292,7 @@ int main(int argc, char** argv) {
             engine.registerProgressIndicator(progressLog);
             inMemoryCube =
                 boost::make_shared<SinglePrecisionInMemoryCube>(asof, simPortfolio->ids(), grid->dates(), samples);
-            engine.buildCube(simPortfolio, inMemoryCube, inMemoryScenarioData);
+            engine.buildCube(simPortfolio, inMemoryCube, calculators, inMemoryScenarioData);
             cout << "OK" << endl;
 
             cout << setw(tab) << left << "Write Cube... " << flush;
