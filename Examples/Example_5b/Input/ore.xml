@@ -50,7 +50,6 @@
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="storeScenarios">N</Parameter>
       <Parameter name="cubeFile">cube.dat</Parameter>
-      <Parameter name="flowCubeFile">flowcube.dat</Parameter><!-- NEW -->
       <Parameter name="additionalScenarioDataFileName">scenariodata.dat</Parameter>
     </Analytic>
 
@@ -58,7 +57,6 @@
       <Parameter name="active">Y</Parameter>
       <Parameter name="csaFile">netting.xml</Parameter>
       <Parameter name="cubeFile">cube.dat</Parameter>
-      <Parameter name="flowCubeFile">flowcube.dat</Parameter><!-- NEW -->
       <Parameter name="scenarioFile">scenariodata.dat</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="exposureProfiles">Y</Parameter>
