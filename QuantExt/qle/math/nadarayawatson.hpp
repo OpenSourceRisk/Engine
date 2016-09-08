@@ -68,9 +68,9 @@ public:
     }
 
 private:
-    Kernel kernel_;
     I1 xBegin_, xEnd_;
     I2 yBegin_;
+    Kernel kernel_;
 };
 } // namespace detail
 
