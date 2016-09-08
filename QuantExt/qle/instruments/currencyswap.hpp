@@ -44,7 +44,7 @@ namespace QuantExt {
   This instrument generalizes the QuantLib Swap instrument in that
   it allows multiple legs with different currencies (one per leg)
 
-      \ingroup instruments
+  \ingroup instruments
 */
 class CurrencySwap : public Instrument {
 public:

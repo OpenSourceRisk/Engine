@@ -48,19 +48,19 @@ DiscountingCurrencySwapEngine::DiscountingCurrencySwapEngine(
 }
 
 Handle<YieldTermStructure> DiscountingCurrencySwapEngine::fetchTS(Currency ccy) const {
-    for (Size i = 0; i < currencies_.size(); i++) {
-        if (ccy == currencies_[i])
-            return discountCurves_[i];
-    }
-    return Handle<YieldTermStructure>();
+    std::vector<Currency>::const_iterator i = std::find(currencies_.begin(), currencies_.end(), ccy);
+    if (i == currencies_.end())
+        return Handle<YieldTermStructure>();
+    else
+        return discountCurves_[i - currencies_.begin()];
 }
 
 Handle<Quote> DiscountingCurrencySwapEngine::fetchFX(Currency ccy) const {
-    for (Size i = 0; i < currencies_.size(); i++) {
-        if (ccy == currencies_[i])
-            return fxQuotes_[i];
-    }
-    return Handle<Quote>();
+    std::vector<Currency>::const_iterator i = std::find(currencies_.begin(), currencies_.end(), ccy);
+    if (i == currencies_.end())
+        return Handle<Quote>();
+    else
+        return fxQuotes_[i - currencies_.begin()];
 }
 
 void DiscountingCurrencySwapEngine::calculate() const {
