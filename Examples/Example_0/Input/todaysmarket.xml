@@ -1,21 +1,17 @@
+<?xml version="1.0"?>
 <TodaysMarket>
-
   <Configuration id="default">
     <DiscountingCurvesId>xois_eur</DiscountingCurvesId>
   </Configuration>
-
   <Configuration id="collateral_inccy">
     <DiscountingCurvesId>ois</DiscountingCurvesId>
   </Configuration>
-
   <Configuration id="collateral_eur">
     <DiscountingCurvesId>xois_eur</DiscountingCurvesId>
   </Configuration>
-
   <Configuration id="libor">
     <DiscountingCurvesId>inccy_swap</DiscountingCurvesId>
   </Configuration>
-
   <!-- discounting curve definition (in ccy swap discounting) -->
   <DiscountingCurves id="inccy_swap">
     <DiscountingCurve currency="EUR">Yield/EUR/EUR6M</DiscountingCurve>
@@ -28,7 +24,6 @@
     <DiscountingCurve currency="BANK_EUR_LEND">Yield/EUR/BANK_EUR_LEND</DiscountingCurve>
     <DiscountingCurve currency="BANK_EUR_BORROW">Yield/EUR/BANK_EUR_BORROW</DiscountingCurve>
   </DiscountingCurves>
-
   <!-- discounting curve definition (in ccy ois discounting) -->
   <DiscountingCurves id="ois">
     <DiscountingCurve currency="EUR">Yield/EUR/EUR1D</DiscountingCurve>
@@ -41,7 +36,6 @@
     <DiscountingCurve currency="BANK_EUR_LEND">Yield/EUR/BANK_EUR_LEND</DiscountingCurve>
     <DiscountingCurve currency="BANK_EUR_BORROW">Yield/EUR/BANK_EUR_BORROW</DiscountingCurve>
   </DiscountingCurves>
-
   <!-- discounting curve definition (xois discounting w.r.t. EUR collateral) -->
   <DiscountingCurves id="xois_eur">
     <DiscountingCurve currency="EUR">Yield/EUR/EUR1D</DiscountingCurve>
@@ -54,7 +48,6 @@
     <DiscountingCurve currency="BANK_EUR_LEND">Yield/EUR/BANK_EUR_LEND</DiscountingCurve>
     <DiscountingCurve currency="BANK_EUR_BORROW">Yield/EUR/BANK_EUR_BORROW</DiscountingCurve>
   </DiscountingCurves>
-
   <!-- index forwarding curve definition -->
   <IndexForwardingCurves id="default">
     <Index name="EUR-EURIBOR-1M">Yield/EUR/EUR1M</Index>
@@ -77,7 +70,6 @@
     <Index name="AUD-BBSW-3M">Yield/AUD/AUD6M</Index>
     <Index name="SEK-LIBOR-6M">Yield/SEK/SEK6M</Index>
   </IndexForwardingCurves>
-
   <SwapIndexCurves id="default">
     <SwapIndex name="EUR-CMS-1Y">
       <Index>EUR-EURIBOR-6M</Index>
@@ -105,11 +97,13 @@
     </SwapIndex>
     <SwapIndex name="CHF-CMS-1Y">
       <Index>CHF-LIBOR-6M</Index>
-      <Discounting>CHF-LIBOR-6M</Discounting><!-- CHF-TOIS and CHF1D do not work--> 
+      <Discounting>CHF-LIBOR-6M</Discounting>
+      <!-- CHF-TOIS and CHF1D do not work-->
     </SwapIndex>
     <SwapIndex name="CHF-CMS-30Y">
       <Index>CHF-LIBOR-6M</Index>
-      <Discounting>CHF-LIBOR-6M</Discounting><!-- CHF-TOIS and CHF1D do not work--> 
+      <Discounting>CHF-LIBOR-6M</Discounting>
+      <!-- CHF-TOIS and CHF1D do not work-->
     </SwapIndex>
     <SwapIndex name="JPY-CMS-1Y">
       <Index>JPY-LIBOR-6M</Index>
@@ -136,7 +130,6 @@
       <Discounting>SEK-LIBOR-6M</Discounting>
     </SwapIndex>
   </SwapIndexCurves>
-
   <!-- fx spot definition -->
   <FxSpots id="default">
     <FxSpot pair="EURUSD">FX/EUR/USD</FxSpot>
@@ -148,7 +141,6 @@
     <FxSpot pair="EURSEK">FX/EUR/SEK</FxSpot>
     <FxSpot pair="EURAUD">FX/EUR/AUD</FxSpot>
   </FxSpots>
-
   <!-- fx volatility definition -->
   <FxVolatilities id="default">
     <FxVolatility pair="EURUSD">FXVolatility/EUR/USD/EURUSD</FxVolatility>
@@ -158,7 +150,6 @@
     <FxVolatility pair="EURAUD">FXVolatility/EUR/AUD/EURAUD</FxVolatility>
     <FxVolatility pair="EURSEK">FXVolatility/EUR/SEK/EURSEK</FxVolatility>
   </FxVolatilities>
-
   <!-- swaption volatility definition -->
   <SwaptionVolatilities id="default">
     <SwaptionVolatility currency="EUR">SwaptionVolatility/EUR/EUR_SW_N</SwaptionVolatility>
@@ -169,12 +160,10 @@
     <SwaptionVolatility currency="AUD">SwaptionVolatility/AUD/AUD_SW_L</SwaptionVolatility>
     <SwaptionVolatility currency="SEK">SwaptionVolatility/AUD/AUD_SW_L</SwaptionVolatility>
   </SwaptionVolatilities>
-
   <!-- default curves definition -->
   <DefaultCurves id="default">
     <DefaultCurve name="BANK">Default/USD/BANK_SR_USD</DefaultCurve>
     <DefaultCurve name="CUST_A">Default/USD/CUST_A_SR_USD</DefaultCurve>
     <DefaultCurve name="CUST_B">Default/USD/CUST_A_SR_USD</DefaultCurve>
   </DefaultCurves>
-
 </TodaysMarket>

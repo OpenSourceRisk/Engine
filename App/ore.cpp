@@ -223,7 +223,6 @@ int main(int argc, char** argv) {
 
         boost::shared_ptr<AdditionalScenarioData> inMemoryScenarioData;
         boost::shared_ptr<NPVCube> inMemoryCube;
-        boost::shared_ptr<NPVCube> inMemoryFlowCube;
 
         if (params.hasGroup("simulation") && params.get("simulation", "active") == "Y") {
 
@@ -273,7 +272,11 @@ int main(int argc, char** argv) {
             LOG("Build valuation cube engine");
             Size samples = sgd->samples();
             string baseCurrency = params.get("simulation", "baseCurrency");
-            ValuationEngine engine(asof, grid, samples, baseCurrency, simMarket);
+            // Valuation calculators
+            vector<boost::shared_ptr<ValuationCalculator>> calculators;
+            calculators.push_back(boost::make_shared<NPVCalculator>(baseCurrency));
+	    calculators.push_back(boost::make_shared<CashflowCalculator>(baseCurrency, asof, grid, 1));
+            ValuationEngine engine(asof, grid, samples, simMarket);
 
             ostringstream o;
             o << "Additional Scenario Data " << grid->size() << " x " << samples << "... ";
@@ -288,11 +291,11 @@ int main(int argc, char** argv) {
             auto progressLog = boost::make_shared<ProgressLog>("Building cube...");
             engine.registerProgressIndicator(progressBar);
             engine.registerProgressIndicator(progressLog);
+	    Size depth = 2; // NPV and FLOW
             inMemoryCube =
-                boost::make_shared<SinglePrecisionInMemoryCube>(asof, simPortfolio->ids(), grid->dates(), samples);
-            inMemoryFlowCube =
-                boost::make_shared<SinglePrecisionInMemoryCube>(asof, simPortfolio->ids(), grid->dates(), samples);
-            engine.buildCube(simPortfolio, inMemoryCube, inMemoryScenarioData, inMemoryFlowCube);
+	      //boost::make_shared<SinglePrecisionInMemoryCube>(asof, simPortfolio->ids(), grid->dates(), samples);
+	      boost::make_shared<SinglePrecisionInMemoryCubeN>(asof, simPortfolio->ids(), grid->dates(), samples, depth);
+            engine.buildCube(simPortfolio, inMemoryCube, calculators, inMemoryScenarioData);
             cout << "OK" << endl;
 
             cout << setw(tab) << left << "Write Cube... " << flush;
@@ -300,15 +303,6 @@ int main(int argc, char** argv) {
             string cubeFileName = outputPath + "/" + params.get("simulation", "cubeFile");
             if (cubeFileName != "") {
                 inMemoryCube->save(cubeFileName);
-                cout << "OK" << endl;
-            } else
-                cout << "SKIP" << endl;
-
-	    cout << setw(tab) << left << "Write Flow Cube... " << flush;
-            LOG("Write flow cube");
-            string flowCubeFileName = outputPath + "/" + params.get("simulation", "flowCubeFile");
-            if (flowCubeFileName != "") {
-                inMemoryFlowCube->save(flowCubeFileName);
                 cout << "OK" << endl;
             } else
                 cout << "SKIP" << endl;
@@ -348,14 +342,6 @@ int main(int argc, char** argv) {
                 cube = boost::make_shared<SinglePrecisionInMemoryCube>();
                 string cubeFile = outputPath + "/" + params.get("xva", "cubeFile");
                 cube->load(cubeFile);
-            }
-
-            if (inMemoryFlowCube)
-                flowCube = inMemoryFlowCube;
-            else {
-	        flowCube = boost::make_shared<SinglePrecisionInMemoryCube>();
-                string flowCubeFile = outputPath + "/" + params.get("xva", "flowCubeFile");
-                flowCube->load(flowCubeFile);
             }
 	    
             QL_REQUIRE(cube->numIds() == portfolio->size(), "cube x dimension (" << cube->numIds()
@@ -401,8 +387,9 @@ int main(int argc, char** argv) {
 
 	    string marketConfiguration = params.get("markets", "simulation");
 
+	    Size flowIndex = 1;
             boost::shared_ptr<PostProcess> postProcess = boost::make_shared<PostProcess>(
-                portfolio, netting, market, marketConfiguration, cube, flowCube, scenarioData, analytics, baseCurrency,
+                portfolio, netting, market, marketConfiguration, cube, flowIndex, scenarioData, analytics, baseCurrency,
                 allocationMethod, marginalAllocationLimit, quantile, calculationType, dvaName, fvaBorrowingCurve,
                 fvaLendingCurve, collateralSpread, dimQuantile, dimHorizonCalendarDays, dimRegressionOrder);
 
