@@ -616,13 +616,13 @@ void writeNettingSetExposures(const Parameters& params, boost::shared_ptr<PostPr
         const vector<Real>& eee_b = postProcess->netEEE_B(n);
         const vector<Real>& pfe = postProcess->netPFE(n);
         const vector<Real>& ecb = postProcess->expectedCollateral(n);
-        file << "#NettingSet,Date,Time,EPE,ENE,BaselEE,BaselEEE,PFE,ExpectedCollateral" << endl;
+        file << "#NettingSet,Date,Time,EPE,ENE,PFE,ExpectedCollateral,BaselEE,BaselEEE" << endl;
         file << n << "," << QuantLib::io::iso_date(today) << "," << 0.0 << "," << epe[0] << "," << ene[0] << ","
              << ee_b[0] << "," << eee_b[0] << "," << pfe[0] << "," << ecb[0] << endl;
         for (Size j = 0; j < dates.size(); ++j) {
             Real time = dc.yearFraction(today, dates[j]);
             file << n << "," << QuantLib::io::iso_date(dates[j]) << "," << time << "," << epe[j + 1] << ","
-                 << ene[j + 1] << "," << ee_b[j + 1] << "," << eee_b[j + 1] << "," << pfe[j + 1] << "," << ecb[j + 1]
+                 << ene[j + 1] << "," << pfe[j + 1] << "," << ecb[j + 1] << ee_b[j + 1] << "," << eee_b[j + 1]
                  << endl;
         }
         file.close();
