@@ -44,11 +44,12 @@
     </Analytic>      
 
     <Analytic type="simulation">
-      <Parameter name="active">Y</Parameter>
+      <Parameter name="active">N</Parameter>
       <Parameter name="simulationConfigFile">simulation.xml</Parameter>
       <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="storeScenarios">N</Parameter>
+      <Parameter name="storeFlows">Y</Parameter>
       <Parameter name="cubeFile">cube.dat</Parameter>
       <Parameter name="additionalScenarioDataFileName">scenariodata.dat</Parameter>
     </Analytic>
@@ -75,12 +76,14 @@
       <Parameter name="collateralSpread">0.0000</Parameter>
       <Parameter name="collateralFloor">N</Parameter>
       <!-- NEW -->
-      <Parameter name="dim">N</Parameter>
-      <Parameter name="mva">N</Parameter>
-      <Parameter name="dimCollateral">N</Parameter>      
+      <Parameter name="dim">Y</Parameter>
+      <Parameter name="mva">Y</Parameter>
       <Parameter name="dimQuantile">0.99</Parameter>
       <Parameter name="dimHorizonCalendarDays">14</Parameter>
       <Parameter name="dimRegressionOrder">1</Parameter>
+      <Parameter name="dimLocalRegressionEvaluations">100</Parameter>
+      <Parameter name="dimLocalRegressionBandwidth">0.25</Parameter>
+      <Parameter name="dimScaling">1.0</Parameter>
       <Parameter name="dimEvolutionFile">dim_evolution.txt</Parameter>      
       <Parameter name="dimRegressionFile">dim_regression.txt</Parameter>      
       <Parameter name="dimOutputNettingSet">CPTY_A</Parameter>      
