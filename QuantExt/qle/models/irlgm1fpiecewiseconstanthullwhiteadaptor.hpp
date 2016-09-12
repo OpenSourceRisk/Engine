@@ -70,7 +70,7 @@ template <class TS>
 Lgm1fPiecewiseConstantHullWhiteAdaptor<TS>::Lgm1fPiecewiseConstantHullWhiteAdaptor(
     const Currency& currency, const Handle<TS>& termStructure, const Array& sigmaTimes, const Array& sigma,
     const Array& kappaTimes, const Array& kappa)
-    : IrLgm1fParametrization(currency, termStructure), PiecewiseConstantHelper3(sigmaTimes, kappaTimes),
+    : Lgm1fParametrization<TS>(currency, termStructure), PiecewiseConstantHelper3(sigmaTimes, kappaTimes),
       PiecewiseConstantHelper2(kappaTimes) {
     initialize(sigma, kappa);
 }

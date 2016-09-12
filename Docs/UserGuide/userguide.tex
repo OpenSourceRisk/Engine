@@ -109,7 +109,7 @@
  
 \begin{document}
 
-\title{Open Risk Engine \\ User Guide \\ v1.0.8.6  }
+\title{Open Risk Engine v0.1 \\ User Guide  }
 \author{Quaternion Risk Management}
 \date{\today}
 %\date{July 22, 2016}
@@ -157,12 +157,12 @@ ORE is an application that provides
 \item simple launchers and result visualisation in Jupyter, Excel, LibreOffice
 \item unit tests and various examples.  
 \end{itemize}
-ORE is free/open source software, provided under the Modified BSD License. It is based 
-on QuantLib, the free/open source library for quantitative finance \cite{QL}.
+ORE is open source software, provided under the Modified BSD License. It is based 
+on QuantLib, the open source library for quantitative finance \cite{QL}.
 
 %\medskip
 \subsubsection*{Audience}
-The project aims at reaching quantitative risk ma\-nage\-ment practitioners (be it in financial institutions, audit firms, consulting companies or regulatory bodies) who are looking for accessible software solutions, and quant developers in charge of the implementation of the kind of simulation methods and models provided by ORE. Moreover, the project aims at reaching academics and students who would like to teach or learn quantitative risk management using a freely available, contemporary risk application.  
+The project sponsored by Quaternion aims at reaching quantitative risk ma\-nage\-ment practitioners (be it in financial institutions, audit firms, consulting companies or regulatory bodies) who are looking for accessible software solutions, and quant developers in charge of the implementation pricing and risk methods similar to those in ORE. Moreover, the project aims at reaching academics and students who would like to teach or learn quantitative risk management using a freely available, contemporary risk application.  
 
 \subsubsection*{Contributions}
 Quaternion Risk Management \cite{QRM} is committed to sponsoring the Open Risk Engine project through ongoing project administration, through providing this initial release and a series of subsequent releases in order to achieve a wide analytics, product and risk factor class coverage. The community is invited to contribute to ORE, for example through feedback, discussions and suggested enhancement in the forum on the ORE site \cite{ORE}, as well as contributions of ORE enhancements in the form of source code. See the FAQ section on the ORE site \cite{ORE} on how to get involved.
@@ -188,10 +188,7 @@ for portfolios with netting and collateral.
 Subsequent ORE releases will also compute {\bf regulatory capital charges} for counterparty credit risk under the new standardised approach (SA-CCR), and the Monte Carlo based market risk measures will be complemented by parametric methods, e.g. for benchmarking various initial margin calculation models applied in cleared and non-cleared derivatives business.
 
 \medskip
-The first release of ORE  in September 2016 covers the simulation of interest rate and FX risk factors and portfolios of Interest Rate Swaps, Caps/Floors, Swaptions, FX Forwards, Cross Currency Swaps and FX Options. Subsequent releases from Q1 2017 will extend the derivative product and the risk factor range to Inflation, Credit, Equity and Commodity. With the introduction of credit risk factors, the scope will also be extended to cover cash products (loans and bonds) and related portfolio analytics.    
-
-%\medskip
-%With the scheduled releases, incorporating community feedback and contributions, the project aims at establishing a platform for {\bf transparent pricing and risk analysis} that can be adapted for production purposes in financial institutions and used as a benchmarking and validation tool to test opaque 3rd party solutions applied in the industry. 
+The first release of ORE in September 2016 covers the simulation of interest rate and FX risk factors and portfolios of Interest Rate Swaps, Caps/Floors, Swaptions, FX Forwards, Cross Currency Swaps and FX Options. Subsequent releases from Q1 2017 onwards will extend the derivative product and the risk factor range to Inflation, Credit, Equity and Commodity. With the introduction of credit risk factors, the scope will also be extended to cover cash products (loans and bonds) and related portfolio analytics.    
 
 \medskip
 The simulation models applied in ORE's risk factor evolution implement the models discussed in detail in {\em Modern Derivatives Pricing and Credit Exposure Analysis} \cite{Lichters}: The IR/FX risk factor evolution is based on a cross currency model consisting of an arbitrage free combination of Linear Gauss Markov models for all interest rates and lognormal processes for the FX rates. The model components are calibrated to cross currency discounting and forward curves, Swaptions and FX Options.
@@ -202,9 +199,9 @@ The simulation models applied in ORE's risk factor evolution implement the model
 \item Frequently Asked Questions: {\color{red}\url{http://www.openriskengine.org/faq}}
 \item Forum: {\color{red}\url{http://www.openriskengine.org/forum}}
 \item Source code and releases: \url{https://github.com/openriskengine/OpenRiskEngine}
-\item Follow Open Risk Engine on Twitter {\tt @OpenRiskEngine}
+\item Follow Open Risk Engine on Twitter {\tt @OpenRiskEngine} for updates on releases and events
 \end{itemize}
-An Open Risk Engine Book will follow in 2017 that will elaborate on the engine's design and make the connection between methodology and implementation. Like ORE, the book will be available for free. It will be announced in due course on the channels mentioned above.
+An Open Risk Engine Book will follow in 2017 that will elaborate on the engine's design and make the connection between methodology and implementation. It will be announced in due course on the channels mentioned above.
  
 \subsubsection*{Organisation of this document}
 
@@ -251,11 +248,11 @@ The second processing step (upper middle box) is then
 \end{itemize}
 This process step produces several reports (NPV, cashflows etc) and in particular an {\bf NPV cube}, i.e. NPVs per trade, scenario and future evaluation date. The cube is written to a file in both condensed binary and human-readable text format.  \\
 
-The third processing step (upper right box) performs any more 'sophisticated' risk ana\-ly\-sis by post-processing the NPV cube data:
+The third processing step (upper right box) performs more 'sophisticated' risk ana\-ly\-sis by post-processing the NPV cube data:
 \begin{itemize}
 \item aggregating over trades per netting set, 
-\item applying collateral rules to compute simulated variation margin (going forward also simulated initial margin),
-\item computing various XVAs including CVA, DVA, FVA for all netting sets, with and without taking collateral into account, on demand with allocation to the trade level.
+\item applying collateral rules to compute simulated variation margin as well as simulated (dynamic) initial margin posting,
+\item computing various XVAs including CVA, DVA, FVA, MVA for all netting sets, with and without taking collateral (variation and initial margin) into account, on demand with allocation to the trade level.
 \end{itemize}
 The output of this process step are XVA reports and the 'net' NPV cube, i.e. after aggregation, netting and collateral. \\
 
@@ -269,7 +266,7 @@ Moreover, both NPV cubes can be further analysed interactively using a visualisa
 
 \subsection{Open Risk Engine Releases}
 
-ORE releases are regularly provided in the form of source code archives, Windows exe\-cutables {\tt ore.exe}, example cases and documentation. During the soft launch phase (from July to September 2016), we will provide these to a limited audience via Quaternion's download server. Please contact info@quaternion.com for access details. Starting with the official release such archives will be provided at \url{https://github.com/openriskengine/OpenRiskEngine/releases}.
+ORE releases are regularly provided in the form of source code archives, Windows exe\-cutables {\tt ore.exe}, example cases and documentation. Starting with the official release these archives will be provided at \url{https://github.com/openriskengine/OpenRiskEngine/releases}.
 
 \medskip
 The release consists of a single archive in zip format
@@ -384,8 +381,7 @@ Alternatively, compile all Boost libraries directly from the source code:
 
 \begin{enumerate}
 
-\item Download and install Visual Studio Community Edition. During the installation, make sure you install the Visual C++ support under the Programming Languages features (disabled by default).
-%Optionally, install the Boost Unit Test Adapter to ease the running of unit tests directly within Visual Studio. It can be downloaded from: https://visualstudiogallery.msdn.microsoft.com/5f4ae1bd-b769-410e-8238-fb30beda987f?SRC=VSIDE  
+\item Download and install Visual Studio Community Edition. During the installation, make sure you install the Visual C++ support under the Programming Languages features (disabled by default). 
 
 \item Open any solution file and update path to Boost as described in sections 5 \& 6 in \cite{quantlib-install}. You only need to do this for a single project as this will update the path to boost across all projects and solutions on your machine. The paths should be set as follow (in case you compiled Boost on your own, use the path specified using the --stagedir cmd argument):
 
@@ -480,16 +476,6 @@ before running ORE or any of the examples below. This will suppress thousand sep
 \% ./run.py 
 }
 
-%Note that the graphing depends on gnuplot and some gnuplot addins to work.
-%Their installation on OS X is easiest using Homebrew, the package manager for OS X:
-%
-%{\tt brew install gnuplot --with-aquaterm --with-cairo --with-pdflib-lite } 
-%
-%AquaTerm support will only be built into Gnuplot if the standard AquaTerm
-%package has already been installed onto your system.
-%If you subsequently remove AquaTerm, you will need to uninstall and then
-%reinstall Gnuplot.
-
 \end{enumerate}
 
 \subsection{Python and Jupyter}\label{sec:python}
@@ -526,7 +512,7 @@ File Name & Description \\
 {\tt fixings.txt} &  Index fixing history \\
 {\tt curveconfig.xml} & Curve and term structure composition from individual market instruments\\
 {\tt conventions.xml} & Market conventions for all market data points\\
-{\tt todaysmarket.xml} &  Configuration of the market composition for pricing as of today \\
+{\tt todaysmarket.xml} &  Configuration of the market composition, relevant for the pricing of the given portfolio as of today (yield curves, FX rates, volatility surfaces etc) \\
 {\tt pricingengines.xml} &  Configuration of pricing methods by product\\
 \hline
 \end{tabular}
@@ -607,9 +593,10 @@ Both Swap simulation and Swaption pricing are run with calls to the ORE executab
 \medskip
 
 which are wrapped into the script {\tt Examples/Example\_1/run.py} provided with the ORE release.
-It is instructive to look into the input folder in Examples/Example\_1, the content of the main input file {\tt ore.xml}, together with the explanations in section \ref{sec:configuration}.
+It is instructive to look into the input folder in Examples/Example\_1, the content of the main input file {\tt ore.xml}, together with the explanations in section \ref{sec:configuration}. \\
 
-This simple example is an important test case which is also run similarly in one of the unit test suites of ORE. The expected exposure can be seen as a European option on the underlying netting set, see also appendix \ref{sec:app_exposure}. And when the netting set is simple, like a single Swap in this case, then there are simple closed-form expressions for computing those European option prices: The expected exposure at some future point in time, say 10 years, is then equal to the European Swaption price for an option with expiry in 10 years, underlying Swap start in 10 years and underlying Swap maturity in 20 years. In this example we can easily compute such standard European Swaption prices for all future points in time where both Swap legs reset, i.e. annually in this case. And if the simulation model has been calibrated to the points on the Swaption surface which are used for European Swaption pricing, then we can expect to see that the simulated exposure matches Swaption prices at these annual points, as in figure \ref{fig_1}. The symbols denote prices of European Swaptions with expiry at the symbol's time and same underlying as the Swap that is simulated here. In Example\_1 we used co-terminal ATM Swaptions for both model calibration and Swaption pricing. Moreover, as the the yield curve is flat in this example, the exposures from both parties' perspectives (EPE and ENE) match not only at the annual resets, but also for the period between annual reset of both legs to the point in time when the floating leg resets. Thereafter, between floating leg (only) reset and next joint fixed/floating leg reset, we see and expect a deviation of the two exposure profiles.
+This simple example is an important test case which is also run similarly in one of the unit test suites of ORE. The expected exposure can be seen as a European option on the underlying netting set, see also appendix \ref{sec:app_exposure}. In this example, the expected exposure at some future point in time, say 10 years, is equal to the European Swaption price for an option with expiry in 10 years, underlying Swap start in 10 years and underlying Swap maturity in 20 years. We can easily compute such standard European Swaption prices for all future points in time where both Swap legs reset, i.e. annually in this case\footnote{Using closed form expressions for standard European Swaption prices.}. And if the simulation model has been calibrated to the points on the Swaption surface which are used for European Swaption pricing, then we can expect to see that the simulated exposure matches Swaption prices at these annual points, as in figure \ref{fig_1}. %The symbols denote prices of European Swaptions with expiry at the symbol's time and same underlying as the Swap that is simulated here. 
+In Example\_1 we used co-terminal ATM Swaptions for both model calibration and Swaption pricing. Moreover, as the the yield curve is flat in this example, the exposures from both parties' perspectives (EPE and ENE) match not only at the annual resets, but also for the period between annual reset of both legs to the point in time when the floating leg resets. Thereafter, between floating leg (only) reset and next joint fixed/floating leg reset, we see and expect a deviation of the two exposure profiles.
 
 \medskip
 Moving to {\tt Examples/Example\_4}, we see what changes when using a realistic (non-flat) market environment. Running the example with
@@ -648,7 +635,7 @@ This demo case in folder {\tt Examples/Example\_7} shows the exposure evolution 
 \caption{European Swaption exposure evolution, expiry in 10 years, final maturity in 20 years, for cash and physical delivery. Simulation with 1000 paths and quarterly time steps.}
 \label{fig_3}
 \end{figure}
-The delivery type (cash vs physical) yields significantly different valuations as of today due to the steepness of the relevant yield curves (EUR). The cash settled Swaption's exposure graph is truncated at the exercise date, whereas the physically settled Swaption exposure turns into a Swap-like exposure after expiry. For comparison, the example also provides the exposure evolution of the underlying forward starting Swap which yields a somewhat higher exposure after the forward start date than the physically settled Swaption. This is due to scenarios with negative Swap NPV at expiry and positive NPVs thereafter.
+The delivery type (cash vs physical) yields significantly different valuations as of today due to the steepness of the relevant yield curves (EUR). The cash settled Swaption's exposure graph is truncated at the exercise date, whereas the physically settled Swaption exposure turns into a Swap-like exposure after expiry. For comparison, the example also provides the exposure evolution of the underlying forward starting Swap which yields a somewhat higher exposure after the forward start date than the physically settled Swaption. This is due to scenarios with negative Swap NPV at expiry (hence not exercised) and positive NPVs thereafter.
 
 %--------------------------------------------------------
 \subsection{Bermudan Swaption Exposure}
@@ -722,7 +709,7 @@ The example in folder {\tt Examples/Example\_2} generates the exposure evolution
 \subsection{Cross Currency Swap Exposure and FX Reset}
 %--------------------------------------------------------
 
-The case in {\tt Examples/Example\_8} is a vanilla cross currency Swap. It shows the typical blend of and interest rate Swap's saw tooth exposure evolution with an FX forward's exposure which increases monotonically to final maturity, see figure \ref{fig_6}. 
+The case in {\tt Examples/Example\_8} is a vanilla cross currency Swap. It shows the typical blend of an Interest Rate Swap's saw tooth exposure evolution with an FX Forward's exposure which increases monotonically to final maturity, see figure \ref{fig_6}. 
 %\todo[inline]{Done - Add notional resetting feature and example}
 \begin{figure}[hbt]
 \begin{center}
@@ -732,7 +719,8 @@ The case in {\tt Examples/Example\_8} is a vanilla cross currency Swap. It shows
 \caption{Cross Currency Swap exposure evolution without mark-to-market notional reset. Simulation with 1000 paths and quarterly time steps.}
 \label{fig_6}
 \end{figure}
-The case in {\tt Examples/Example\_9} then shows the effect of FX resets in a EUR/USD cross currency basis Swap, see figure \ref{fig_6b}. As expected, the notional reset causes an exposure collapse at each period start when the EUR leg's notional is reset to match the USD notional.
+
+The effect of the FX resetting feature, common in Cross Currency Swaps nowadays, is shown in {\tt Examples/Example\_9}.  The example shows the exposure evolution of a EUR/USD cross currency basis Swap with FX reset at each interest period start, see figure \ref{fig_6b}. As expected, the notional reset causes an exposure collapse at each period start when the EUR leg's notional is reset to match the USD notional.
 \begin{figure}[hbt]
 \begin{center}
 %\includegraphics[scale=1.0]{example_ccswap.pdf}
@@ -760,7 +748,7 @@ Recall that the FX Option value $NPV(t)$ as of time $0 \leq t \leq T$ satisfies
 \frac{NPV(t)}{N(t)} &= \mbox{Nominal}\times\E_t\left[\frac{(X(T) - K)^+}{N(T)}\right]\\
 NPV(0) &= \E\left[\frac{NPV(t)}{N(t)}\right] = \E\left[\frac{NPV^+(t)}{N(t)} \right]= \EPE(t) 
 \end{align*}
-One would therefore expect a flat exposure evolution up to option expiry. The deviation from this in ORE's simulation is due to the pricing approach chosen here under scenarios. A Black FX option pricer is used with simulated interest rate curves input and {\em deterministic} Black volatility derived from today's volatility structure (pushed or rolled forward, see section \ref{sec:sim_market}). The deviation can be removed by extending the volatility modelling, e.g. implying model consistent Black volatilities in each simulation step on each path.
+One would therefore expect a flat exposure evolution up to option expiry. The deviation from this in ORE's simulation is due to the pricing approach chosen here under scenarios. A Black FX option pricer is used with deterministic Black volatility derived from today's volatility structure (pushed or rolled forward, see section \ref{sec:sim_market}). The deviation can be removed by extending the volatility modelling, e.g. implying model consistent Black volatilities in each simulation step on each path.
 \todo[inline]{Add exposure evolution graph with 'simulated' FX vol}
 
 %--------------------------------------------------------
@@ -773,7 +761,7 @@ In this example (see folder {\tt Examples/Example\_5}) we showcase a small netti
 \item collateral with threshold (THR) 1m EUR, minimum transfer amount (MTA) 100k EUR, margin period of risk (MPR) 2 weeks - figure \ref{fig_9}
 \item collateral with zero THR and MTA, and MPR 2w - figure \ref{fig_10}
 \end{itemize}
-The exposure graphs with collateral and positive margin period of risk show typical spikes. What is causing these? As sketched in appendix \ref{sec:app_collateral}, ORE uses a {\em classical collateral model} that applies collateral amounts to offset exposure with a time delay that corresponds to the margin period of risk. The spikes are then caused by instrument cash flows falling between exposure measurement dates $d_1$ and $d_2$ (an MPR apart), so that a collateral delivery amount determined at $d_1$ but settled at $d_2$ differs significantly from the closeout amount at $d_2$ causing a significant residual exposure for a short period of time. See for example \cite{Andersen2016} for a recent detailed discussion of collateral modelling. The approach currently implemented in ORE corresponds to {\em Classical+} in \cite{Andersen2016}, the more conservative approach of the classical methods. The less conservative alternative, {\em Classical-}, would assume that both parties stop paying trade flows at the beginning of the MPR, so that the P\&L over the MPR does not contain the cash flow effect, and exposure spikes are avoided. 
+The exposure graphs with collateral and positive margin period of risk show typical spikes. What is causing these? As sketched in appendix \ref{sec:app_collateral}, ORE uses a {\em classical collateral model} that applies collateral amounts to offset exposure with a time delay that corresponds to the margin period of risk. The spikes are then caused by instrument cash flows falling between exposure measurement dates $d_1$ and $d_2$ (an MPR apart), so that a collateral delivery amount determined at $d_1$ but settled at $d_2$ differs significantly from the closeout amount at $d_2$ causing a significant residual exposure for a short period of time. See for example \cite{Andersen2016} for a recent detailed discussion of collateral modelling. The approach currently implemented in ORE corresponds to {\em Classical+} in \cite{Andersen2016}, the more conservative approach of the classical methods. The less conservative alternative, {\em Classical-}, would assume that both parties stop paying trade flows at the beginning of the MPR, so that the P\&L over the MPR does not contain the cash flow effect, and exposure spikes are avoided. Note that the size and position of the largest spike in figure \ref{fig_9} is consistent with a cash flow of the 40 million GBP Swap in the example's portfolio that rolls over the 3rd of March and has a cash flow on 3 March 2020, a bit more than four years from the evaluation date. 
   
 \begin{figure}[tb]
 \begin{center}
@@ -786,7 +774,6 @@ The exposure graphs with collateral and positive margin period of risk show typi
 
 \begin{figure}[htb]
 \begin{center}
-%\includegraphics[scale=1.0]{example_threshold_break_epe.pdf}
 \includegraphics[scale=0.45]{mpl_threshold_break_epe.pdf}
 \end{center}
 \caption{Three Swaps netting set, THR=1m EUR, MTA=100k EUR, MPR=2w. The red evolution assumes that the each trade is terminated at the next break date. The blue evolution ignores break dates. Simulation with 5000 paths and bi-weekly time steps.}
@@ -803,7 +790,6 @@ The exposure graphs with collateral and positive margin period of risk show typi
 
 \begin{figure}[htb]
 \begin{center}
-%\includegraphics[scale=1.0]{example_mpor_epe.pdf}
 \includegraphics[scale=0.45]{mpl_mpor_epe.pdf}
 \end{center}
 \caption{Three Swaps, THR=MTA=0, MPR=2w. Simulation with 5000 paths and bi-weekly time steps.}
@@ -811,33 +797,48 @@ The exposure graphs with collateral and positive margin period of risk show typi
 \end{figure}
 
 %--------------------------------------------------------
-\subsection{CVA, DVA, FVA, COLVA and Collateral Floor}
+\subsection{CVA, DVA, FVA, COLVA, MVA, Collateral Floor}
 %--------------------------------------------------------
 
 We use one of the cases in {\tt Examples/Example\_5} to demonstrate the
-XVA outputs, see folder {\tt Examples/Example\_5/Output/collateral\_threshold}.
+XVA outputs, see folder {\tt Examples/Example\_5/Output/collateral\_threshold\_dim}.
 
 \medskip
-The summary of CVA, DVA, FVA, COLVA and Collateral Floor is provided in file {\tt xva.csv}. 
+The summary of all value adjustments (CVA, DVA, FVA, COLVA, MVA, as well as the Collateral Floor) is provided in file {\tt xva.csv}. 
 The file includes the allocated CVA and DVA numbers to individual trades as introduced in the next section. The following table illustrates the file's layout,
-omitting the three right-most columns containing allocated data. 
+omitting the three columns containing allocated data. 
+
+%\begin{center}
+%\scriptsize
+%\begin{tabular}{|l|l|r|r|r|r|r|r|r|r|}
+%\hline
+%TradeId & NettingSetId & CVA & DVA & FBA & FCA & COLVA & CollateralFloor  & BaselEPE & BaselEEPE\\ %& AllocatedCVA & AllocatedDVA & AllocationMethod \\
+%\hline
+%	& CPTY\_A & 31,084 	& 45,003 &	-4,803 &	 21,233 & 	 2,089 &	 182,351  & 2,313,620 & 3,398,110\\
+%Swap\_1 & CPTY\_A &	 115,944 &	 210,630 &	-17,864 &	 99,984 &	 n/a &	 n/a & 2,021,730 & 2,725,800\\
+%Swap\_2 & CPTY\_A &	 67,683 &	 96,412 &	-10,588 &	 45,488 &	 n/a &	 n/a & 1,403,660 & 2,184,730\\
+%Swap\_3 & CPTY\_A &	 71,299 & 	 84,752 & 	-11,268 & 	 40,327 & 	 n/a &	 n/a & 1,126,520 & 1,839,590\\
+%\hline
+%\end{tabular}
+%\end{center}
 
 \begin{center}
-\footnotesize
-\begin{tabular}{|l|l|r|r|r|r|r|r|}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{|l|l|r|r|r|r|r|r|r|r|r|}
 \hline
-TradeId & NettingSetId & CVA & DVA & FBA & FCA & COLVA & CollateralFloor \\ %& AllocatedCVA & AllocatedDVA & AllocationMethod \\
+TradeId & NettingSetId & CVA & DVA & FBA & FCA & COLVA & MVA & CollateralFloor & BaselEPE & BaselEEPE \\
 \hline
-	& CPTY\_A & 31,084 	& 45,003 &	-4,803 &	 21,233 & 	 2,089 &	 182,351 \\
-Swap\_1 & CPTY\_A &	 115,944 &	 210,630 &	-17,864 &	 99,984 &	 n/a &	 n/a \\
-Swap\_2 & CPTY\_A &	 67,683 &	 96,412 &	-10,588 &	 45,488 &	 n/a &	 n/a \\
-Swap\_3 & CPTY\_A &	 71,299 & 	 84,752 & 	-11,268 & 	 40,327 & 	 n/a &	 n/a \\
+ & CPTY\_A &  6,521  &  151,193  & -946  &  72,103  &  2,769  & -14,203  &  189,936  &  113,260  &  1,211,770 \\
+Swap\_1 & CPTY\_A &  127,688  &  211,936  & -19,624  &  100,584  &  n/a  &  n/a  &  n/a   &  2,022,590  &  2,727,010 \\
+Swap\_3 & CPTY\_A &  71,315  &  91,222  & -11,270  &  43,370  &  n/a  &  n/a  &  n/a   &  1,403,320  &  2,183,860 \\
+Swap\_2 & CPTY\_A &  68,763  &  100,347  & -10,755  &  47,311  &  n/a  &  n/a  &  n/a   &  1,126,520  &  1,839,590 \\
 \hline
 \end{tabular}
+}
 \end{center}
 
 The line(s) with empty TradeId column contain values at netting set level, the others contain uncollateralised single-trade VAs.
-Note that COLVA and Collateral Floor are only available at netting set level at which collateral is posted.
+Note that COLVA, MVA and Collateral Floor are only available at netting set level at which collateral is posted.
 
 \medskip
 Detailed output is written for COLVA and Collateral Floor to file {\tt colva\_nettingset\_*.csv} which shows the 
@@ -847,55 +848,111 @@ incremental contributions to these two VAs through time.
 %--------------------------------------------------------
 \subsection{Exposure Reports \& XVA Allocation to Trades}
 %--------------------------------------------------------
-
 Using the example in folder {\tt Examples/Example\_5} we illustrate here the layout of an exposure report produced by ORE. The report shows the exposure evolution of Swap\_1 without collateral which - after running Example\_5 - is found in folder \\
 {\tt Examples/Example\_5/Output/collateral\_none/exposure\_trade\_Swap\_1.csv}:
 
+%\begin{center}
+%\scriptsize
+%\begin{tabular}{|l|l|r|r|r|r|r|r|r|r|}
+%\hline
+%\#TradeId & Date & Time & EPE & ENE & AllocEPE & AllocENE & BaselEE & BaselEEE & PFE \\
+%\hline
+%Swap\_1&05/02/16& 0.0000 & 0 & 1,711,850 & 0 & 0 & 0  & 0  & 0 \\
+%Swap\_1&19/02/16& 0.0383 & 40,177 & 1,744,040 &-1,190,880 & 512,983 & 40,175.2 & 40,175.2 &263,485 \\
+%Swap\_1&04/03/16& 0.0765 & 137,451 & 1,840,660 &-915,192 & 788,016 & 137,434 & 137,434 &1,053,240 \\
+%Swap\_1&18/03/16& 0.1148 & 298,993 & 1,742,290 &-651,132 & 792,160 & 298,928 & 298,928 &1,913,310 \\
+%Swap\_1&01/04/16& 0.1530 & 389,983 & 1,834,620 &-552,148 & 892,485 & 389,863 & 389,863 &2,372,650 \\
+%Swap\_1&15/04/16& 0.1913 & 471,627 & 1,918,380 &-466,365 & 980,387 & 471,437 & 471,437 &2,764,670 \\
+%Swap\_1&29/04/16& 0.2295 & 550,054 & 2,000,390 &-331,155 & 1,119,180 & 549,770 & 549,770 &3,105,720 \\
+%Swap\_1&13/05/16& 0.2678 & 620,006 & 2,074,610 &-266,147 & 1,188,450 & 619,616 & 619,616 &3,425,930 \\
+%Swap\_1&27/05/16& 0.3060 & 689,726 & 2,140,030 &-191,144 & 1,259,160 & 689,217 & 689,217 &3,777,310 \\
+%Swap\_1&10/06/16& 0.3443 & 762,894 & 2,205,710 &-137,876 & 1,304,940 & 762,247 & 762,247 &4,051,510 \\
+%Swap\_1 & ... & ...& ... & ... & ... & ... & ... & ... & ... \\
+%\hline
+%\end{tabular}
+%\end{center}
+
 \begin{center}
-\footnotesize
-\begin{tabular}{|l|l|l|r|r|r|r|r|}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{|l|l|r|r|r|r|r|r|r|r|}
 \hline
-\#TradeId&Date& Time & EPE & ENE & AllocatedEPE & AllocatedENE & PFE \\
+TradeId & Date & Time & EPE & ENE & AllocEPE & AllocENE & PFE & BaselEE & BaselEEE \\
 \hline
-Swap\_1&05/02/16& 0.0000 & 0 & 1,711,850 & 0  & 0  & 0 \\
-Swap\_1&19/02/16& 0.0383 & 40,177 & 1,744,040 &-1,190,880 & 512,983 & 263,485 \\
-Swap\_1&04/03/16& 0.0765 & 137,451 & 1,840,660 &-915,192 & 788,016 & 1,053,240 \\
-Swap\_1&18/03/16& 0.1148 & 298,993 & 1,742,290 &-651,132 & 792,160 & 1,913,310 \\
-Swap\_1&01/04/16& 0.1530 & 389,983 & 1,834,620 &-552,148 & 892,485 & 2,372,650 \\
-Swap\_1&15/04/16& 0.1913 & 471,627 & 1,918,380 &-466,365 & 980,387 & 2,764,670 \\
-Swap\_1&29/04/16& 0.2295 & 550,054 & 2,000,390 &-331,155 & 1,119,180 & 3,105,720 \\
-Swap\_1&13/05/16& 0.2678 & 620,006 & 2,074,610 &-266,147 & 1,188,450 & 3,425,930 \\
-Swap\_1&27/05/16& 0.3060 & 689,726 & 2,140,030 &-191,144 & 1,259,160 & 3,777,310 \\
-Swap\_1&10/06/16& 0.3443 & 762,894 & 2,205,710 &-137,876 & 1,304,940 & 4,051,510 \\
-Swap\_1 & ... & ...& ... & ... & ... & ... & ... \\
+Swap\_1 & 05/02/16 & 0.0000 & 0  & 1,711,850  & 0  & 0  & 0  & 0  & 0 \\
+Swap\_1 & 19/02/16 & 0.0383 & 40,219  & 1,744,080  & -1,190,830  & 513,032  & 263,973  & 40,217  & 40,217 \\
+Swap\_1 & 04/03/16 & 0.0765 & 137,552  & 1,840,760  & -914,468  & 788,739  & 1,053,940  & 137,535  & 137,535 \\
+Swap\_1 & 18/03/16 & 0.1148 & 299,155  & 1,742,450  & -650,225  & 793,067  & 1,914,150  & 299,091  & 299,091 \\
+Swap\_1 & 01/04/16 & 0.1530 & 390,178  & 1,834,810  & -552,029  & 892,604  & 2,373,560  & 390,058  & 390,058 \\
+Swap\_1 & 15/04/16 & 0.1913 & 471,849  & 1,918,600  & -465,580  & 981,171  & 2,765,710  & 471,659  & 471,659 \\
+Swap\_1 & 29/04/16 & 0.2295 & 550,301  & 2,000,640  & -330,578  & 1,119,760  & 3,106,810  & 550,016  & 550,016 \\
+Swap\_1 & 13/05/16 & 0.2678 & 620,279  & 2,074,880  & -266,042  & 1,188,560  & 3,427,080  & 619,888  & 619,888 \\
+Swap\_1 & 27/05/16 & 0.3060 & 690,018  & 2,140,320  & -190,419  & 1,259,880  & 3,778,570  & 689,509  & 689,509 \\
+Swap\_1 & 10/06/16 & 0.3443 & 763,207  & 2,206,020  & -137,681  & 1,305,130  & 4,052,870  & 762,560  & 762,560 \\
+Swap\_1 & ... & ...& ... & ... & ... & ... & ... & ... & ... \\
 \hline
 \end{tabular}
+}
 \end{center}
 
-The exposure measures EPE, ENE and PFE are defined in appendix \ref{sec:app_exposure}. Allocated exposures are defined in appendix \ref{sec:app_allocation}. The PFE quantile and allocation method are chosen as described in section \ref{sec:analytics}.
+The exposure measures EPE, ENE and PFE, and the Basel exposure measures $EE_B$ and $EEE_B$, are defined in appendix \ref{sec:app_exposure}. Allocated exposures are defined in appendix \ref{sec:app_allocation}. The PFE quantile and allocation method are chosen as described in section \ref{sec:analytics}.
 
 In addition to single trade exposure files, ORE produces an exposure file per netting set. The example from the same folder as above is:
 
+%\begin{center}
+%\scriptsize
+%\begin{tabular}{|l|l|r|r|r|r|r|r|r|}
+%\hline
+%\#NettingSet & Date & Time & EPE & ENE & BaselEE & BaselEEE & PFE & ExpectedCollateral\\ 
+%\hline
+%%CPTY\_A&05/02/16& 0.0000 & 1,211,770 & 0  & 1,211,770 &-1,211,770 \\
+%CPTY\_A&05/02/16& 0.0000 & 1,211,770 & 0  & 1,211,770 & 1,211,770 &1,211,770 & 0 \\
+%CPTY\_A&19/02/16& 0.0383 & 1,344,230 & 137,779 & 1,344,160 & 1,344,160 & 3,414,420 & 0   \\
+%CPTY\_A&04/03/16& 0.0765 & 1,518,610 & 308,388 & 1,518,420 & 1,518,420 & 4,353,770 & 0   \\
+%CPTY\_A&18/03/16& 0.1148 & 1,846,910 & 382,078 & 1,846,510 & 1,846,510 & 5,201,760 & 0   \\
+%CPTY\_A&01/04/16& 0.1530 & 1,961,310 & 494,438 & 1,960,710 & 1,960,710 & 5,868,340 & 0   \\
+%CPTY\_A&15/04/16& 0.1913 & 2,067,270 & 598,315 & 2,066,430 & 2,066,430 & 6,385,360 & 0   \\
+%CPTY\_A&29/04/16& 0.2295 & 2,053,700 & 745,986 & 2,052,640 & 2,052,640 & 6,738,990 & 0   \\
+%CPTY\_A&13/05/16& 0.2678 & 2,149,220 & 845,534 & 2,147,870 & 2,147,870 & 6,926,730 & 0   \\
+%CPTY\_A&27/05/16& 0.3060 & 2,235,660 & 930,251 & 2,234,010 & 2,234,010 & 7,293,950 & 0   \\
+%CPTY\_A&10/06/16& 0.3443 & 2,314,510 & 1,014,740 & 2,234,010 & 2,312,550 & 7,752,770 & 0   \\
+%CPTY\_A & ... & ...& ... & ... & ... & ... & ... & ...\\
+%\hline
+%\end{tabular}
+%\end{center}
+
 \begin{center}
-\footnotesize
-\begin{tabular}{|l|l|l|r|r|r|r|r|}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{|l|l|r|r|r|r|r|r|r|}
 \hline
-\#NettingSet&Date& Time & EPE & ENE & PFE & ExpectedCollateral \\ 
+NettingSet & Date & Time & EPE & ENE & PFE & ExpectedCollateral & BaselEE & BaselEEE \\
 \hline
-%CPTY\_A&05/02/16& 0.0000 & 1,211,770 & 0  & 1,211,770 &-1,211,770 \\
-CPTY\_A&05/02/16& 0.0000 & 1,211,770 & 0  & 1,211,770 & 0 \\
-CPTY\_A&19/02/16& 0.0383 & 1,344,230 & 137,779 & 3,414,420 & 0   \\
-CPTY\_A&04/03/16& 0.0765 & 1,518,610 & 308,388 & 4,353,770 & 0   \\
-CPTY\_A&18/03/16& 0.1148 & 1,846,910 & 382,078 & 5,201,760 & 0   \\
-CPTY\_A&01/04/16& 0.1530 & 1,961,310 & 494,438 & 5,868,340 & 0   \\
-CPTY\_A&15/04/16& 0.1913 & 2,067,270 & 598,315 & 6,385,360 & 0   \\
-CPTY\_A&29/04/16& 0.2295 & 2,053,700 & 745,986 & 6,738,990 & 0   \\
-CPTY\_A&13/05/16& 0.2678 & 2,149,220 & 845,534 & 6,926,730 & 0   \\
-CPTY\_A&27/05/16& 0.3060 & 2,235,660 & 930,251 & 7,293,950 & 0   \\
-CPTY\_A&10/06/16& 0.3443 & 2,314,510 & 1,014,740 & 7,752,770 & 0   \\
-CPTY\_A & ... & ...& ... & ... & ... & ... \\
+%CPTY\_A & 05/02/16 & 0.0000 & 1,211,770 & 0 & 1,211,770 & -1,211,770 & 1,211,770 & 1,211,770\\
+CPTY\_A & 05/02/16 & 0.0000 & 1,211,770 & 0 & 1,211,770 & 0 & 1,211,770 & 1,211,770\\
+CPTY\_A & 19/02/16 & 0.0383 & 1,344,220 & 137,776 & 3,414,000 & 0 & 1,344,160 & 1,344,160\\
+CPTY\_A & 04/03/16 & 0.0765 & 1,518,610 & 308,381 & 4,354,060 & 0 & 1,518,410 & 1,518,410\\
+CPTY\_A & 18/03/16 & 0.1148 & 1,846,900 & 382,068 & 5,200,730 & 0 & 1,846,500 & 1,846,500\\
+CPTY\_A & 01/04/16 & 0.1530 & 1,961,290 & 494,416 & 5,869,470 & 0 & 1,960,690 & 1,960,690\\
+CPTY\_A & 15/04/16 & 0.1913 & 2,067,240 & 598,283 & 6,384,140 & 0 & 2,066,400 & 2,066,400\\
+CPTY\_A & 29/04/16 & 0.2295 & 2,053,670 & 745,960 & 6,740,070 & 0 & 2,052,610 & 2,066,400\\
+CPTY\_A & 13/05/16 & 0.2678 & 2,149,190 & 845,507 & 6,930,230 & 0 & 2,147,840 & 2,147,840\\
+CPTY\_A & 27/05/16 & 0.3060 & 2,235,630 & 930,218 & 7,295,440 & 0 & 2,233,980 & 2,233,980\\
+CPTY\_A & 10/06/16 & 0.3443 & 2,314,470 & 1,014,690 & 7,753,190 & 0 & 2,312,510 & 2,312,510\\
+CPTY\_A & ... & ...& ... & ... & ... & ... & ... & ...\\
+CPTY\_A & 07/07/17 & 1.4167 & 3,320,430 & 2,423,890 & 12,787,900 & 0 & 3,304,650 & 3,304,650\\
+CPTY\_A & 21/07/17 & 1.4551 & 3,351,780 & 2,452,640 & 12,964,200 & 0 & 3,335,420 & 3,335,420\\
+CPTY\_A & 04/08/17 & 1.4934 & 3,302,820 & 2,511,500 & 12,796,100 & 0 & 3,286,260 & 3,335,420\\
+CPTY\_A & 18/08/17 & 1.5318 & 3,339,840 & 2,545,850 & 13,120,000 & 0 & 3,322,640 & 3,335,420\\
+CPTY\_A & 01/09/17 & 1.5701 & 3,371,300 & 2,576,100 & 13,238,700 & 0 & 3,353,480 & 3,353,480\\
+CPTY\_A & 15/09/17 & 1.6085 & 3,279,670 & 2,555,370 & 13,041,300 & 0 & 3,261,880 & 3,353,480\\
+CPTY\_A & 29/09/17 & 1.6468 & 3,305,060 & 2,579,200 & 13,072,800 & 0 & 3,286,680 & 3,353,480\\
+CPTY\_A & 13/10/17 & 1.6852 & 3,332,830 & 2,604,200 & 13,225,600 & 0 & 3,313,850 & 3,353,480\\
+CPTY\_A & 27/10/17 & 1.7236 & 3,280,280 & 2,661,770 & 13,034,600 & 0 & 3,261,150 & 3,353,480\\
+CPTY\_A & 13/11/17 & 1.7701 & 3,316,800 & 2,701,060 & 13,331,600 & 0 & 3,296,880 & 3,353,480\\
+CPTY\_A & 24/11/17 & 1.8003 & 3,337,760 & 2,720,870 & 13,402,400 & 0 & 3,317,280 & 3,353,480\\
+CPTY\_A & ... & ...& ... & ... & ... & ... & ... & ...\\
 \hline
 \end{tabular}
+}
 \end{center}
 
 Allocated exposures are missing here, as they make sense at the trade level only, and the expected collateral balance is added for information (in this case zero as collateralisation is deactivated in this example).
@@ -974,11 +1031,9 @@ This demo uses simple Libre Office Basic macros which call Python scripts to exe
 
 \subsection{Excel}\label{sec:excel}
 
-{\color{red} Revise this, remove xlwings, add screenshot.
-
 %For Microsoft Excel, similar interaction between Python and the spread sheet can be achieved with the  Python module {\tt xlwings} \cite{xlwings} on both Windows and Mac OSX.
 %However, unlike Libre Office where the uno Python module is part of the distribution, xlwings needs to be installed separately. 
-ORE also comes with a basic Excel sheet to demonstrate launching ORE and presenting results in Excel. This demo is more self-contained than the Calc demo in the previous section, as it uses VBA only rather than calls to external Python scripts. The Excel demo is available in Example\_1. Launch {\tt Example\_1.xlsm}. Then modify the paths on the first sheet, and kick off the ORE process.}
+ORE also comes with a basic Excel sheet to demonstrate launching ORE and presenting results in Excel. This demo is more self-contained than the Calc demo in the previous section, as it uses VBA only rather than calls to external Python scripts. The Excel demo is available in Example\_1. Launch {\tt Example\_1.xlsm}. Then modify the paths on the first sheet, and kick off the ORE process.
 
 %========================================================
 \section{Parametrisation}\label{sec:configuration}
@@ -1130,6 +1185,7 @@ The purpose of the {\tt simulation} 'analytics' is to run a Monte Carlo simulati
     <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
     <Parameter name="baseCurrency">EUR</Parameter>
     <Parameter name="cubeFile">cube.dat</Parameter>
+    <Parameter name="storeFlows">Y</Parameter>
     <Parameter name="additionalScenarioDataFileName">scenariodata.dat</Parameter>
   </Analytic>
 </Analytics>      
@@ -1139,7 +1195,8 @@ The purpose of the {\tt simulation} 'analytics' is to run a Monte Carlo simulati
 \end{listing}
 
 The pricing engines file specifies how trades are priced under future scenarios which can differ from pricing as of today (specified in section Setup).
-Key base currency determines into which currency all NPVs will be converted. Key store scenarios (Y or N) determines whether the market scenarios are written to a file for later reuse.
+Key base currency determines into which currency all NPVs will be converted. Key store scenarios (Y or N) determines whether the market scenarios are written to a file for later reuse. And finally, the key `store flows' (Y or N) controls whether cumulative cash flows between simulation dates are stored in the (hyper-) cube for post processing in the context of Dynamic Initial Margin and Variation Margin calculations.
+
 \todo[inline]{Implement the store scenarios option, add file name to parametrisation}
 
 \medskip
@@ -1172,6 +1229,16 @@ The xva analytic section offers CVA, DVA, FVA and COLVA calculations which can b
     <Parameter name="collateralFloor">Y</Parameter>
     <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>
     <Parameter name="netCubeOutputFile">netcube.csv</Parameter>     
+    <Parameter name="dimQuantile">0.99</Parameter>
+    <Parameter name="dimHorizonCalendarDays">14</Parameter>
+    <Parameter name="dimRegressionOrder">1</Parameter>
+    <Parameter name="dimLocalRegressionEvaluations">100</Parameter>
+    <Parameter name="dimLocalRegressionBandwidth">0.25</Parameter>
+    <Parameter name="dimScaling">1.0</Parameter>
+    <Parameter name="dimEvolutionFile">dim_evolution.txt</Parameter>      
+    <Parameter name="dimRegressionFile">dim_regression.txt</Parameter>      
+    <Parameter name="dimOutputNettingSet">CPTY_A</Parameter>      
+    <Parameter name="dimOutputGridPoint">0</Parameter>
   </Analytic>
 </Analytics>
 \end{minted}
@@ -1197,6 +1264,16 @@ reporting
 \item {\tt fvaBorrowingCurve:} Identifier of the borrowing yield curve 
 \item {\tt fvaLendingCurve:} Identifier of the lending yield curve
 \item {\tt collateralSpread:} Deviation between collateral rate and overnight rate, expressed in absolute terms (one basis point is 0.0001) assuming the day count convention of the collateral rate. \todo[inline]{Move collateralSpread to the collateral model file (netting.xml)}
+\item {\tt dimQuantile:} Quantile for Dynamic Initial Margin (DIM) calculation
+\item {\tt dimHorizonCalendarDays:} Horizon for DIM calculation, 14 calendar days for 2 weeks, etc.  
+\item {\tt dimRegressionOrder:} Order of the regression polynomial (netting set clean NPV move over the simulation period versus netting set NPV at period start) 
+\item {\tt dimLocalRegressionEvaluations:} Nadaraya-Watson local regression evaluated at the given number of points to validate polynomial regression. Note that Nadaraya-Watson needs a large number of samples for meaningful results. Evaluating the local regression at many points (samples) has a significant performance impact, hence the option here to limit the number of evaluations.
+\item {\tt dimLocalRegressionBandwidth:} Nadaraya-Watson local regression bandwidth in standard deviations of the independent variable (NPV)
+\item {\tt dimScaling:} Scaling factor applied to all DIM values used, e.g. to reconcile simulated DIM with actual IM at $t_0$
+\item {\tt dimEvolutionFile:} Output file name to store the evolution of zero order DIM and average of nth order DIM through time
+\item {\tt dimRegressionFile:} Output file name for a DIM regression snapshot
+\item {\tt dimOutputNettingSet:} Netting set for the DIM regression snapshot
+\item {\tt dimOutputGridPoint:} Grid point (in time) for the DIM regression snapshot
 \item {\tt rawCubeOutputFile:} File name for the trade NPV cube in human readable csv file format (per trade, date, sample)
 \item {\tt netCubeOutputFile:} File name for the aggregated NPV cube in human readable csv file format (per netting set, date, sample) {\em after} taking collateral into account
 \end{itemize}
@@ -1359,7 +1436,7 @@ The following is an excerpt of the Swaption Volatilities block with ID 'default'
 
 This instructs ORE to build five Swaption volatility structures, see the curve configuration file for the definition of the volatility structure. The latter token (e.g. EUR\_SW\_N) is user defined and will be found in the curve configuration's CurveId tag.
 
-\subsubsection{CapF/Floor Volatilities}
+\subsubsection{Cap/Floor Volatilities}
 
 The following is an excerpt of the Cap/Floor Volatilities block with ID 'default' from the same example file:
 

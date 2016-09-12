@@ -157,7 +157,7 @@ void AnalyticLgmSwaptionEngine::calculate() const {
     Real yStar;
     try {
         yStar = b.solve(boost::bind(&AnalyticLgmSwaptionEngine::yStarHelper, this, _1), 1.0E-6, 0.0, 0.01);
-    } catch(const std::exception &e) {
+    } catch (const std::exception& e) {
         QL_FAIL("AnalyticLgmSwaptionEngine, failed to compute yStar, " << e.what());
     }
 

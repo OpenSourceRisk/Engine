@@ -1,47 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
 <CurveConfiguration>
   <FXVolatilities>
-
     <FXVolatility>
       <CurveId>EURUSD</CurveId>
-      <CurveDescription />
+      <CurveDescription/>
       <Dimension>ATM</Dimension>
       <Expiries>
         1M,3M,6M,1Y,2Y,3Y,10Y
       </Expiries>
     </FXVolatility>
-    
     <FXVolatility>
       <CurveId>EURGBP</CurveId>
-      <CurveDescription />
+      <CurveDescription/>
       <Dimension>ATM</Dimension>
       <Expiries>
         1M,3M,6M,1Y,2Y,5Y,10Y
       </Expiries>
     </FXVolatility>
-    
     <FXVolatility>
       <CurveId>EURCHF</CurveId>
-      <CurveDescription />
+      <CurveDescription/>
       <Dimension>ATM</Dimension>
       <Expiries>
         1M,3M,6M,1Y,2Y,3Y,4Y,5Y,10Y
       </Expiries>
     </FXVolatility>
-    
     <FXVolatility>
       <CurveId>EURJPY</CurveId>
-      <CurveDescription />
+      <CurveDescription/>
       <Dimension>ATM</Dimension>
       <Expiries>
         1M,3M,6M,1Y,2Y,3Y,4Y,5Y,10Y
       </Expiries>
     </FXVolatility>
-
   </FXVolatilities>
-  
   <SwaptionVolatilities>
-    
     <SwaptionVolatility>
       <CurveId>EUR_SW_N</CurveId>
       <CurveDescription>EUR normal swaption volatilities</CurveDescription>
@@ -65,7 +58,6 @@
       <ShortSwapIndexBase>EUR-CMS-1Y</ShortSwapIndexBase>
       <SwapIndexBase>EUR-CMS-30Y</SwapIndexBase>
     </SwaptionVolatility>
-    
     <SwaptionVolatility>
       <CurveId>USD_SW_N</CurveId>
       <CurveDescription>USD normal swaption volatilities</CurveDescription>
@@ -89,7 +81,6 @@
       <ShortSwapIndexBase>USD-CMS-1Y</ShortSwapIndexBase>
       <SwapIndexBase>USD-CMS-30Y</SwapIndexBase>
     </SwaptionVolatility>
-    
     <SwaptionVolatility>
       <CurveId>GBP_SW_N</CurveId>
       <CurveDescription>GBP normal swaption volatilities</CurveDescription>
@@ -113,7 +104,6 @@
       <ShortSwapIndexBase>GBP-CMS-1Y</ShortSwapIndexBase>
       <SwapIndexBase>GBP-CMS-30Y</SwapIndexBase>
     </SwaptionVolatility>
-    
     <SwaptionVolatility>
       <CurveId>CHF_SW_N</CurveId>
       <CurveDescription>CHF normal swaption volatilities</CurveDescription>
@@ -137,7 +127,6 @@
       <ShortSwapIndexBase>CHF-CMS-1Y</ShortSwapIndexBase>
       <SwapIndexBase>CHF-CMS-30Y</SwapIndexBase>
     </SwaptionVolatility>
-    
     <SwaptionVolatility>
       <CurveId>JPY_SW_N</CurveId>
       <CurveDescription>JPY normal swaption volatilities</CurveDescription>
@@ -161,9 +150,7 @@
       <ShortSwapIndexBase>JPY-CMS-1Y</ShortSwapIndexBase>
       <SwapIndexBase>JPY-CMS-30Y</SwapIndexBase>
     </SwaptionVolatility>
-
   </SwaptionVolatilities>
-
   <CapFloorVolatilities>
     <CapFloorVolatility>
       <CurveId>EUR_CF_N</CurveId>
@@ -225,9 +212,7 @@
       <DiscountCurve>Yield/USD/USD1D</DiscountCurve>
     </CapFloorVolatility>
   </CapFloorVolatilities>
-
   <DefaultCurves>
-
     <DefaultCurve>
       <CurveId>BANK_SR_USD</CurveId>
       <CurveDescription>BANK SR CDS USD</CurveDescription>
@@ -242,53 +227,49 @@
            for the XVA calculations, so we put it here -->
       <RecoveryRate>RECOVERY_RATE/RATE/BANK/SR/USD</RecoveryRate>
       <Quotes>
-	<Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/1Y</Quote>
-	<Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/2Y</Quote>
-	<Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/3Y</Quote>
-	<Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/4Y</Quote>
-	<Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/5Y</Quote>
-	<Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/7Y</Quote>
-	<Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/10Y</Quote>
+        <Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/1Y</Quote>
+        <Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/2Y</Quote>
+        <Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/3Y</Quote>
+        <Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/4Y</Quote>
+        <Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/5Y</Quote>
+        <Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/7Y</Quote>
+        <Quote>CDS/CREDIT_SPREAD/BANK/SR/USD/10Y</Quote>
       </Quotes>
       <Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
       <!-- interpolation is hard coded backward flat in hazard rate -->
     </DefaultCurve>
-    
     <DefaultCurve>
       <CurveId>CPTY_A_SR_USD</CurveId>
       <CurveDescription>CPTY_A SR HR USD</CurveDescription>
       <Currency>USD</Currency>
       <Type>HazardRate</Type>
-      <DiscountCurve />
+      <DiscountCurve/>
       <DayCounter>A365</DayCounter>
       <RecoveryRate>RECOVERY_RATE/RATE/CPTY_A/SR/USD</RecoveryRate>
       <Quotes>
-	<Quote>HAZARD_RATE/RATE/CPTY_A/SR/USD/0Y</Quote>
-	<Quote>HAZARD_RATE/RATE/CPTY_A/SR/USD/1Y</Quote>
-	<Quote>HAZARD_RATE/RATE/CPTY_A/SR/USD/2Y</Quote>
-	<Quote>HAZARD_RATE/RATE/CPTY_A/SR/USD/3Y</Quote>
-	<Quote>HAZARD_RATE/RATE/CPTY_A/SR/USD/4Y</Quote>
-	<Quote>HAZARD_RATE/RATE/CPTY_A/SR/USD/5Y</Quote>
-	<Quote>HAZARD_RATE/RATE/CPTY_A/SR/USD/7Y</Quote>
-	<Quote>HAZARD_RATE/RATE/CPTY_A/SR/USD/10Y</Quote>
-	<Quote>HAZARD_RATE/RATE/CPTY_A/SR/USD/15Y</Quote>
-	<Quote>HAZARD_RATE/RATE/CPTY_A/SR/USD/20Y</Quote>
-	<Quote>HAZARD_RATE/RATE/CPTY_A/SR/USD/30Y</Quote>
+        <Quote>HAZARD_RATE/RATE/CPTY_A/SR/USD/0Y</Quote>
+        <Quote>HAZARD_RATE/RATE/CPTY_A/SR/USD/1Y</Quote>
+        <Quote>HAZARD_RATE/RATE/CPTY_A/SR/USD/2Y</Quote>
+        <Quote>HAZARD_RATE/RATE/CPTY_A/SR/USD/3Y</Quote>
+        <Quote>HAZARD_RATE/RATE/CPTY_A/SR/USD/4Y</Quote>
+        <Quote>HAZARD_RATE/RATE/CPTY_A/SR/USD/5Y</Quote>
+        <Quote>HAZARD_RATE/RATE/CPTY_A/SR/USD/7Y</Quote>
+        <Quote>HAZARD_RATE/RATE/CPTY_A/SR/USD/10Y</Quote>
+        <Quote>HAZARD_RATE/RATE/CPTY_A/SR/USD/15Y</Quote>
+        <Quote>HAZARD_RATE/RATE/CPTY_A/SR/USD/20Y</Quote>
+        <Quote>HAZARD_RATE/RATE/CPTY_A/SR/USD/30Y</Quote>
       </Quotes>
       <Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
     </DefaultCurve>
-    
   </DefaultCurves>
-  
   <YieldCurves>
-
     <YieldCurve>
       <CurveId>CHF6M</CurveId>
-      <CurveDescription />
+      <CurveDescription/>
       <Currency>CHF</Currency>
-      <DiscountCurve />
+      <DiscountCurve/>
       <Segments>
-	<Simple>
+        <Simple>
           <Type>Deposit</Type>
           <Quotes>
             <Quote>MM/RATE/CHF/0D/1D</Quote>
@@ -303,8 +284,8 @@
           </Quotes>
           <Conventions>CHF-LIBOR-CONVENTIONS</Conventions>
           <ProjectionCurve>CHF6M</ProjectionCurve>
-	</Simple>
-	<Simple>
+        </Simple>
+        <Simple>
           <Type>FRA</Type>
           <Quotes>
             <Quote>FRA/RATE/CHF/1M/6M</Quote>
@@ -316,8 +297,8 @@
           </Quotes>
           <Conventions>CHF-6M-FRA-CONVENTIONS</Conventions>
           <ProjectionCurve>CHF6M</ProjectionCurve>
-	</Simple>
-	<Simple>
+        </Simple>
+        <Simple>
           <Type>Swap</Type>
           <Quotes>
             <Quote>IR_SWAP/RATE/CHF/2D/6M/2Y</Quote>
@@ -337,21 +318,20 @@
           </Quotes>
           <Conventions>CHF-6M-SWAP-CONVENTIONS</Conventions>
           <ProjectionCurve>CHF6M</ProjectionCurve>
-	</Simple>
+        </Simple>
       </Segments>
     </YieldCurve>
-    
     <YieldCurve>
       <CurveId>CHF3M</CurveId>
-      <CurveDescription />
+      <CurveDescription/>
       <Currency>CHF</Currency>
-      <DiscountCurve />
+      <DiscountCurve/>
       <Segments>
-	<Simple>
+        <Simple>
           <Type>Deposit</Type>
           <Quotes>
             <Quote>MM/RATE/CHF/0D/1D</Quote>
-	    <!--
+            <!--
 		<Quote>MM/RATE/CHF/1D/1D</Quote>
 	    -->
             <Quote>MM/RATE/CHF/2D/1W</Quote>
@@ -360,20 +340,20 @@
           </Quotes>
           <Conventions>CHF-LIBOR-CONVENTIONS</Conventions>
           <ProjectionCurve>CHF3M</ProjectionCurve>
-	</Simple>
-	<Simple>
+        </Simple>
+        <Simple>
           <Type>FRA</Type>
           <Quotes>
-	    <!--
+            <!--
 		<Quote>FRA/RATE/CHF/3M/3M</Quote>
 		<Quote>FRA/RATE/CHF/6M/3M</Quote>
 		<Quote>FRA/RATE/CHF/9M/3M</Quote>
 	    -->
-	  </Quotes>
+          </Quotes>
           <Conventions>CHF-3M-FRA-CONVENTIONS</Conventions>
           <ProjectionCurve>CHF3M</ProjectionCurve>
-	</Simple>
-	<Simple>
+        </Simple>
+        <Simple>
           <Type>Swap</Type>
           <Quotes>
             <!--
@@ -394,17 +374,16 @@
           </Quotes>
           <Conventions>CHF-3M-SWAP-CONVENTIONS</Conventions>
           <ProjectionCurve>CHF3M</ProjectionCurve>
-	</Simple>
+        </Simple>
       </Segments>
     </YieldCurve>
-    
     <YieldCurve>
       <CurveId>CHF1M</CurveId>
-      <CurveDescription />
+      <CurveDescription/>
       <Currency>CHF</Currency>
-      <DiscountCurve />
+      <DiscountCurve/>
       <Segments>
-	<Simple>
+        <Simple>
           <Type>Deposit</Type>
           <Quotes>
             <Quote>MM/RATE/CHF/0D/1D</Quote>
@@ -414,8 +393,8 @@
           </Quotes>
           <Conventions>CHF-Deposit</Conventions>
           <ProjectionCurve>CHF1M</ProjectionCurve>
-	</Simple>
-	<Simple>
+        </Simple>
+        <Simple>
           <Type>Swap</Type>
           <Quotes>
             <Quote>IR_SWAP/RATE/CHF/2D/1M/2M</Quote>
@@ -443,24 +422,23 @@
           </Quotes>
           <Conventions>CHF1M-Swap</Conventions>
           <ProjectionCurve>CHF1M</ProjectionCurve>
-	</Simple>
+        </Simple>
       </Segments>
     </YieldCurve>
-    
     <YieldCurve>
       <CurveId>CHF1D</CurveId>
       <CurveDescription>CHF discount curve bootstrapped from TOIS swap rates</CurveDescription>
       <Currency>CHF</Currency>
-      <DiscountCurve></DiscountCurve>
+      <DiscountCurve/>
       <Segments>
-	<Simple>
+        <Simple>
           <Type>Deposit</Type>
           <Quotes>
             <Quote>MM/RATE/CHF/0D/1D</Quote>
           </Quotes>
           <Conventions>CHF-TOIS-CONVENTIONS</Conventions>
-	</Simple>
-	<Simple>
+        </Simple>
+        <Simple>
           <Type>OIS</Type>
           <Quotes>
             <Quote>IR_SWAP/RATE/CHF/2D/1D/1M</Quote>
@@ -479,7 +457,7 @@
             <Quote>IR_SWAP/RATE/CHF/2D/1D/1Y6M</Quote>
             <Quote>IR_SWAP/RATE/CHF/2D/1D/1Y9M</Quote>
             <Quote>IR_SWAP/RATE/CHF/2D/1D/2Y</Quote>
-	    <!--
+            <!--
 		<Quote>IR_SWAP/RATE/CHF/2D/1D/3Y</Quote>
 		<Quote>IR_SWAP/RATE/CHF/2D/1D/4Y</Quote>
 		<Quote>IR_SWAP/RATE/CHF/2D/1D/5Y</Quote>
@@ -494,28 +472,27 @@
 	    -->
           </Quotes>
           <Conventions>CHF-OIS-CONVENTIONS</Conventions>
-	</Simple>
+        </Simple>
       </Segments>
       <InterpolationVariable>Discount</InterpolationVariable>
       <InterpolationMethod>LogLinear</InterpolationMethod>
       <YieldCurveDayCounter>A365</YieldCurveDayCounter>
       <Tolerance>0.000000000001</Tolerance>
     </YieldCurve>
-    
     <YieldCurve>
       <CurveId>EUR1D</CurveId>
       <CurveDescription>EUR discount curve bootstrapped from EONIA swap rates</CurveDescription>
       <Currency>EUR</Currency>
-      <DiscountCurve></DiscountCurve>
+      <DiscountCurve/>
       <Segments>
-	<Simple>
+        <Simple>
           <Type>Deposit</Type>
           <Quotes>
             <Quote>MM/RATE/EUR/0D/1D</Quote>
           </Quotes>
           <Conventions>EUR-EONIA-CONVENTIONS</Conventions>
-	</Simple>
-	<Simple>
+        </Simple>
+        <Simple>
           <Type>OIS</Type>
           <Quotes>
             <Quote>IR_SWAP/RATE/EUR/2D/1D/1W</Quote>
@@ -552,21 +529,20 @@
             <!--<Quote>IR_SWAP/RATE/EUR/2D/1D/50Y</Quote>-->
           </Quotes>
           <Conventions>EUR-OIS-CONVENTIONS</Conventions>
-	</Simple>
+        </Simple>
       </Segments>
       <InterpolationVariable>Discount</InterpolationVariable>
       <InterpolationMethod>LogLinear</InterpolationMethod>
       <YieldCurveDayCounter>A365</YieldCurveDayCounter>
       <Tolerance>0.000000000001</Tolerance>
     </YieldCurve>
-    
     <YieldCurve>
       <CurveId>EUR6M</CurveId>
-      <CurveDescription />
+      <CurveDescription/>
       <Currency>EUR</Currency>
-      <DiscountCurve />
+      <DiscountCurve/>
       <Segments>
-	<Simple>
+        <Simple>
           <Type>Deposit</Type>
           <Quotes>
             <!--
@@ -578,15 +554,15 @@
 		<Quote>MM/RATE/EUR/2D/4M</Quote>
 		<Quote>MM/RATE/EUR/2D/5M</Quote>
 	    -->
-	    <Quote>MM/RATE/EUR/2D/6M</Quote>
+            <Quote>MM/RATE/EUR/2D/6M</Quote>
           </Quotes>
           <Conventions>EUR-EURIBOR-CONVENTIONS</Conventions>
           <ProjectionCurve>EUR6M</ProjectionCurve>
-	</Simple>
-	<Simple>
+        </Simple>
+        <Simple>
           <Type>FRA</Type>
           <Quotes>
-	    <!--
+            <!--
 		<Quote>FRA/RATE/EUR/1M/6M</Quote>
 		<Quote>FRA/RATE/EUR/2M/6M</Quote>
 		<Quote>FRA/RATE/EUR/3M/6M</Quote>
@@ -606,11 +582,11 @@
 		<Quote>FRA/RATE/EUR/1Y5M/6M</Quote>
 		<Quote>FRA/RATE/EUR/1Y6M/6M</Quote>
             -->
-	  </Quotes>
+          </Quotes>
           <Conventions>EUR-6M-FRA-CONVENTIONS</Conventions>
           <ProjectionCurve>EUR6M</ProjectionCurve>
-	</Simple>
-	<Simple>
+        </Simple>
+        <Simple>
           <Type>Swap</Type>
           <Quotes>
             <Quote>IR_SWAP/RATE/EUR/2D/6M/2Y</Quote>
@@ -626,23 +602,22 @@
             <Quote>IR_SWAP/RATE/EUR/2D/6M/30Y</Quote>
             <Quote>IR_SWAP/RATE/EUR/2D/6M/40Y</Quote>
             <Quote>IR_SWAP/RATE/EUR/2D/6M/50Y</Quote>
-	    <!--
+            <!--
 		<Quote>IR_SWAP/RATE/EUR/2D/6M/60Y</Quote>
 	    -->
           </Quotes>
           <Conventions>EUR-6M-SWAP-CONVENTIONS</Conventions>
           <ProjectionCurve>EUR6M</ProjectionCurve>
-	</Simple>
+        </Simple>
       </Segments>
     </YieldCurve>
-    
     <YieldCurve>
       <CurveId>EUR12</CurveId>
-      <CurveDescription />
+      <CurveDescription/>
       <Currency>EUR</Currency>
-      <DiscountCurve />
+      <DiscountCurve/>
       <Segments>
-	<Simple>
+        <Simple>
           <Type>Deposit</Type>
           <Quotes>
             <Quote>MM/RATE/EUR/0D/1D</Quote>
@@ -664,8 +639,8 @@
           </Quotes>
           <Conventions>EUR-Deposit</Conventions>
           <ProjectionCurve>EUR12</ProjectionCurve>
-	</Simple>
-	<Simple>
+        </Simple>
+        <Simple>
           <Type>FRA</Type>
           <Quotes>
             <Quote>FRA/RATE/EUR/1M/1Y</Quote>
@@ -682,8 +657,8 @@
           </Quotes>
           <Conventions>EUR-FRA</Conventions>
           <ProjectionCurve>EUR12</ProjectionCurve>
-	</Simple>
-	<Simple>
+        </Simple>
+        <Simple>
           <Type>Swap</Type>
           <Quotes>
             <Quote>IR_SWAP/RATE/EUR/2D/1Y/2Y</Quote>
@@ -722,21 +697,20 @@
           </Quotes>
           <Conventions>EUR12-Swap</Conventions>
           <ProjectionCurve>EUR12</ProjectionCurve>
-	</Simple>
+        </Simple>
       </Segments>
     </YieldCurve>
-    
     <YieldCurve>
       <CurveId>EUR3M</CurveId>
-      <CurveDescription />
+      <CurveDescription/>
       <Currency>EUR</Currency>
-      <DiscountCurve />
+      <DiscountCurve/>
       <Segments>
-	<Simple>
+        <Simple>
           <Type>Deposit</Type>
           <Quotes>
             <Quote>MM/RATE/EUR/0D/1D</Quote>
-	    <!--
+            <!--
 		<Quote>MM/RATE/EUR/1D/1D</Quote>
 		<Quote>MM/RATE/EUR/2D/1D</Quote>
 	    -->
@@ -747,8 +721,8 @@
           </Quotes>
           <Conventions>EUR-EURIBOR-CONVENTIONS</Conventions>
           <ProjectionCurve>EUR3M</ProjectionCurve>
-	</Simple>
-	<Simple>
+        </Simple>
+        <Simple>
           <Type>FRA</Type>
           <Quotes>
             <Quote>FRA/RATE/EUR/1M/3M</Quote>
@@ -762,11 +736,11 @@
           </Quotes>
           <Conventions>EUR-3M-FRA-CONVENTIONS</Conventions>
           <ProjectionCurve>EUR3M</ProjectionCurve>
-	</Simple>
-	<Simple>
+        </Simple>
+        <Simple>
           <Type>Swap</Type>
           <Quotes>
-	    <Quote>IR_SWAP/RATE/EUR/2D/3M/2Y</Quote>
+            <Quote>IR_SWAP/RATE/EUR/2D/3M/2Y</Quote>
             <Quote>IR_SWAP/RATE/EUR/2D/3M/3Y</Quote>
             <Quote>IR_SWAP/RATE/EUR/2D/3M/4Y</Quote>
             <Quote>IR_SWAP/RATE/EUR/2D/3M/5Y</Quote>
@@ -784,17 +758,16 @@
           </Quotes>
           <Conventions>EUR-3M-SWAP-CONVENTIONS</Conventions>
           <ProjectionCurve>EUR3M</ProjectionCurve>
-	</Simple>
+        </Simple>
       </Segments>
     </YieldCurve>
-    
     <YieldCurve>
       <CurveId>EUR1M</CurveId>
-      <CurveDescription />
+      <CurveDescription/>
       <Currency>EUR</Currency>
-      <DiscountCurve />
+      <DiscountCurve/>
       <Segments>
-	<Simple>
+        <Simple>
           <Type>Deposit</Type>
           <Quotes>
             <Quote>MM/RATE/EUR/0D/1D</Quote>
@@ -804,8 +777,8 @@
           </Quotes>
           <Conventions>EUR-Deposit</Conventions>
           <ProjectionCurve>EUR1M</ProjectionCurve>
-	</Simple>
-	<Simple>
+        </Simple>
+        <Simple>
           <Type>Swap</Type>
           <Quotes>
             <Quote>IR_SWAP/RATE/EUR/2D/1M/2M</Quote>
@@ -836,27 +809,26 @@
           </Quotes>
           <Conventions>EUR1M-Swap</Conventions>
           <ProjectionCurve>EUR1M</ProjectionCurve>
-	</Simple>
+        </Simple>
       </Segments>
     </YieldCurve>
-    
     <YieldCurve>
       <CurveId>USD1D</CurveId>
       <CurveDescription>USD discount curve bootstrapped from FED FUNDS swap rates</CurveDescription>
       <Currency>USD</Currency>
-      <DiscountCurve></DiscountCurve>
+      <DiscountCurve/>
       <Segments>
-	<Simple>
+        <Simple>
           <Type>Deposit</Type>
           <Quotes>
             <Quote>MM/RATE/USD/0D/1D</Quote>
           </Quotes>
           <Conventions>USD-FED-FUNDS-CONVENTIONS</Conventions>
-	</Simple>
-	<Simple>
+        </Simple>
+        <Simple>
           <Type>OIS</Type>
           <Quotes>
-	    <!--<Quote>IR_SWAP/RATE/USD/2D/1D/1W</Quote>-->
+            <!--<Quote>IR_SWAP/RATE/USD/2D/1D/1W</Quote>-->
             <Quote>IR_SWAP/RATE/USD/2D/1D/1M</Quote>
             <Quote>IR_SWAP/RATE/USD/2D/1D/3M</Quote>
             <Quote>IR_SWAP/RATE/USD/2D/1D/6M</Quote>
@@ -880,8 +852,8 @@
             <!--<Quote>IR_SWAP/RATE/USD/2D/1D/50Y</Quote>-->
           </Quotes>
           <Conventions>USD-OIS-CONVENTIONS</Conventions>
-	</Simple>
-	<!--
+        </Simple>
+        <!--
 	    <AverageOIS>
             <Type>Average OIS</Type>
             <Quotes>
@@ -927,14 +899,13 @@
       <YieldCurveDayCounter>A365</YieldCurveDayCounter>
       <Tolerance>0.000000000001</Tolerance>
     </YieldCurve>
-
     <YieldCurve>
       <CurveId>USD3M</CurveId>
-      <CurveDescription />
+      <CurveDescription/>
       <Currency>USD</Currency>
-      <DiscountCurve />
+      <DiscountCurve/>
       <Segments>
-	<Simple>
+        <Simple>
           <Type>Deposit</Type>
           <Quotes>
             <Quote>MM/RATE/USD/0D/1D</Quote>
@@ -945,8 +916,8 @@
           </Quotes>
           <Conventions>USD-LIBOR-CONVENTIONS</Conventions>
           <ProjectionCurve>USD3M</ProjectionCurve>
-	</Simple>
-	<Simple>
+        </Simple>
+        <Simple>
           <Type>FRA</Type>
           <Quotes>
             <Quote>FRA/RATE/USD/3M/3M</Quote>
@@ -963,8 +934,8 @@
           </Quotes>
           <Conventions>USD-3M-FRA-CONVENTIONS</Conventions>
           <ProjectionCurve>USD3M</ProjectionCurve>
-	</Simple>
-	<Simple>
+        </Simple>
+        <Simple>
           <Type>Swap</Type>
           <Quotes>
             <Quote>IR_SWAP/RATE/USD/2D/3M/2Y</Quote>
@@ -984,17 +955,16 @@
           </Quotes>
           <Conventions>USD-3M-SWAP-CONVENTIONS</Conventions>
           <ProjectionCurve>USD3M</ProjectionCurve>
-	</Simple>
+        </Simple>
       </Segments>
     </YieldCurve>
-
     <YieldCurve>
       <CurveId>USD6M</CurveId>
-      <CurveDescription />
+      <CurveDescription/>
       <Currency>USD</Currency>
-      <DiscountCurve />
+      <DiscountCurve/>
       <Segments>
-	<Simple>
+        <Simple>
           <Type>Deposit</Type>
           <Quotes>
             <Quote>MM/RATE/USD/0D/1D</Quote>
@@ -1006,8 +976,8 @@
           </Quotes>
           <Conventions>USD-LIBOR-CONVENTIONS</Conventions>
           <ProjectionCurve>USD6M</ProjectionCurve>
-	</Simple>
-	<Simple>
+        </Simple>
+        <Simple>
           <Type>FRA</Type>
           <Quotes>
             <Quote>FRA/RATE/USD/6M/6M</Quote>
@@ -1015,8 +985,8 @@
           </Quotes>
           <Conventions>USD-FRA</Conventions>
           <ProjectionCurve>USD6M</ProjectionCurve>
-	</Simple>
-	<Simple>
+        </Simple>
+        <Simple>
           <Type>Swap</Type>
           <Quotes>
             <Quote>IR_SWAP/RATE/USD/2D/6M/2Y</Quote>
@@ -1033,16 +1003,16 @@
           </Quotes>
           <Conventions>USD6M-Swap</Conventions>
           <ProjectionCurve>USD6M</ProjectionCurve>
-	</Simple>
+        </Simple>
       </Segments>
     </YieldCurve>
     <YieldCurve>
       <CurveId>GBP1D</CurveId>
-      <CurveDescription />
+      <CurveDescription/>
       <Currency>GBP</Currency>
-      <DiscountCurve />
+      <DiscountCurve/>
       <Segments>
-	<Simple>
+        <Simple>
           <Type>OIS</Type>
           <Quotes>
             <Quote>IR_SWAP/RATE/GBP/0D/1D/1W</Quote>
@@ -1059,7 +1029,7 @@
             <Quote>IR_SWAP/RATE/GBP/0D/1D/10M</Quote>
             <Quote>IR_SWAP/RATE/GBP/0D/1D/11M</Quote>
             <Quote>IR_SWAP/RATE/GBP/0D/1D/12M</Quote>
-	    <!--<Quote>IR_SWAP/RATE/GBP/0D/1D/1Y6M</Quote>-->
+            <!--<Quote>IR_SWAP/RATE/GBP/0D/1D/1Y6M</Quote>-->
             <Quote>IR_SWAP/RATE/GBP/0D/1D/2Y</Quote>
             <Quote>IR_SWAP/RATE/GBP/0D/1D/3Y</Quote>
             <Quote>IR_SWAP/RATE/GBP/0D/1D/4Y</Quote>
@@ -1069,10 +1039,10 @@
             <Quote>IR_SWAP/RATE/GBP/0D/1D/8Y</Quote>
             <Quote>IR_SWAP/RATE/GBP/0D/1D/9Y</Quote>
             <Quote>IR_SWAP/RATE/GBP/0D/1D/10Y</Quote>
-	    <!--
+            <!--
 		<Quote>IR_SWAP/RATE/GBP/0D/1D/12Y</Quote>
             -->
-	    <Quote>IR_SWAP/RATE/GBP/0D/1D/15Y</Quote>
+            <Quote>IR_SWAP/RATE/GBP/0D/1D/15Y</Quote>
             <Quote>IR_SWAP/RATE/GBP/0D/1D/20Y</Quote>
             <Quote>IR_SWAP/RATE/GBP/0D/1D/25Y</Quote>
             <Quote>IR_SWAP/RATE/GBP/0D/1D/30Y</Quote>
@@ -1081,17 +1051,16 @@
           </Quotes>
           <Conventions>GBP-OIS-CONVENTIONS</Conventions>
           <ProjectionCurve>GBP1D</ProjectionCurve>
-	</Simple>
+        </Simple>
       </Segments>
     </YieldCurve>
-
     <YieldCurve>
       <CurveId>GBP6M</CurveId>
-      <CurveDescription />
+      <CurveDescription/>
       <Currency>GBP</Currency>
-      <DiscountCurve />
+      <DiscountCurve/>
       <Segments>
-	<Simple>
+        <Simple>
           <Type>Deposit</Type>
           <Quotes>
             <Quote>MM/RATE/GBP/0D/1W</Quote>
@@ -1102,8 +1071,8 @@
           </Quotes>
           <Conventions>GBP-DEPOSIT</Conventions>
           <ProjectionCurve>GBP6M</ProjectionCurve>
-	</Simple>
-	<Simple>
+        </Simple>
+        <Simple>
           <Type>FRA</Type>
           <Quotes>
             <Quote>FRA/RATE/GBP/1M/6M</Quote>
@@ -1116,11 +1085,11 @@
           </Quotes>
           <Conventions>GBP-6M-FRA</Conventions>
           <ProjectionCurve>GBP6M</ProjectionCurve>
-	</Simple>
-	<Simple>
+        </Simple>
+        <Simple>
           <Type>Swap</Type>
           <Quotes>
-	    <!--
+            <!--
 		<Quote>IR_SWAP/RATE/GBP/0D/6M/1Y</Quote>
 		<Quote>IR_SWAP/RATE/GBP/0D/6M/1Y6M</Quote>
             -->
@@ -1141,17 +1110,16 @@
           </Quotes>
           <Conventions>GBP-6M-SWAP-CONVENTIONS</Conventions>
           <ProjectionCurve>GBP6M</ProjectionCurve>
-	</Simple>
+        </Simple>
       </Segments>
     </YieldCurve>
-
     <YieldCurve>
       <CurveId>GBP3M</CurveId>
-      <CurveDescription />
+      <CurveDescription/>
       <Currency>GBP</Currency>
-      <DiscountCurve />
+      <DiscountCurve/>
       <Segments>
-	<Simple>
+        <Simple>
           <Type>Deposit</Type>
           <Quotes>
             <Quote>MM/RATE/GBP/0D/1W</Quote>
@@ -1161,8 +1129,8 @@
           </Quotes>
           <Conventions>GBP-DEPOSIT</Conventions>
           <ProjectionCurve>GBP3M</ProjectionCurve>
-	</Simple>
-	<TenorBasis>
+        </Simple>
+        <TenorBasis>
           <Type>Tenor Basis Swap</Type>
           <Quotes>
             <Quote>BASIS_SWAP/BASIS_SPREAD/6M/3M/GBP/1Y</Quote>
@@ -1183,23 +1151,22 @@
           </Quotes>
           <Conventions>GBP-LIBOR-3M-6M-BASIS-CONVENTIONS</Conventions>
           <ProjectionCurveLong>GBP6M</ProjectionCurveLong>
-          <ProjectionCurveShort></ProjectionCurveShort>
-	</TenorBasis>
+          <ProjectionCurveShort/>
+        </TenorBasis>
       </Segments>
     </YieldCurve>
-
     <YieldCurve>
       <CurveId>SEK6M</CurveId>
-      <CurveDescription />
+      <CurveDescription/>
       <Currency>SEK</Currency>
-      <DiscountCurve />
+      <DiscountCurve/>
       <Segments>
-	<Simple>
+        <Simple>
           <Type>Deposit</Type>
           <Quotes>
             <Quote>MM/RATE/SEK/0D/1D</Quote>
-	    <Quote>MM/RATE/SEK/0D/2D</Quote>
-	    <Quote>MM/RATE/SEK/2D/1W</Quote>
+            <Quote>MM/RATE/SEK/0D/2D</Quote>
+            <Quote>MM/RATE/SEK/2D/1W</Quote>
             <Quote>MM/RATE/SEK/2D/1M</Quote>
             <Quote>MM/RATE/SEK/2D/2M</Quote>
             <Quote>MM/RATE/SEK/2D/3M</Quote>
@@ -1207,8 +1174,8 @@
           </Quotes>
           <Conventions>SEK-STIBOR-CONVENTIONS</Conventions>
           <ProjectionCurve>SEK6M</ProjectionCurve>
-	</Simple>
-	<Simple>
+        </Simple>
+        <Simple>
           <Type>Swap</Type>
           <Quotes>
             <Quote>IR_SWAP/RATE/SEK/2D/6M/2Y</Quote>
@@ -1228,25 +1195,24 @@
           </Quotes>
           <Conventions>SEK-6M-SWAP-CONVENTIONS</Conventions>
           <ProjectionCurve>SEK6M</ProjectionCurve>
-	</Simple>
+        </Simple>
       </Segments>
     </YieldCurve>
-
     <YieldCurve>
       <CurveId>JPY1D</CurveId>
       <CurveDescription>JPY discount curve bootstrapped from MUTAN swap rates</CurveDescription>
       <Currency>JPY</Currency>
-      <DiscountCurve></DiscountCurve>
+      <DiscountCurve/>
       <Segments>
-	<Simple>
+        <Simple>
           <Type>Deposit</Type>
           <Quotes>
             <!--<Quote>MM/RATE/JPY/0D/1D</Quote>-->
             <Quote>MM/RATE/JPY/0D/2D</Quote>
           </Quotes>
           <Conventions>JPY-LIBOR-CONVENTIONS</Conventions>
-	</Simple>
-	<Simple>
+        </Simple>
+        <Simple>
           <Type>OIS</Type>
           <Quotes>
             <!--<Quote>IR_SWAP/RATE/JPY/2D/1D/1W</Quote>-->
@@ -1263,10 +1229,10 @@
             <!--<Quote>IR_SWAP/RATE/JPY/2D/1D/10M</Quote>-->
             <!--<Quote>IR_SWAP/RATE/JPY/2D/1D/11M</Quote>-->
             <Quote>IR_SWAP/RATE/JPY/2D/1D/1Y</Quote>
-	    <!--<Quote>IR_SWAP/RATE/JPY/2D/1D/1Y3M</Quote>-->
+            <!--<Quote>IR_SWAP/RATE/JPY/2D/1D/1Y3M</Quote>-->
             <Quote>IR_SWAP/RATE/JPY/2D/1D/1Y6M</Quote>
             <!--<Quote>IR_SWAP/RATE/JPY/2D/1D/1Y9M</Quote>-->
-	    <Quote>IR_SWAP/RATE/JPY/2D/1D/2Y</Quote>
+            <Quote>IR_SWAP/RATE/JPY/2D/1D/2Y</Quote>
             <Quote>IR_SWAP/RATE/JPY/2D/1D/3Y</Quote>
             <Quote>IR_SWAP/RATE/JPY/2D/1D/4Y</Quote>
             <Quote>IR_SWAP/RATE/JPY/2D/1D/5Y</Quote>
@@ -1282,21 +1248,20 @@
             <Quote>IR_SWAP/RATE/JPY/2D/1D/30Y</Quote>
           </Quotes>
           <Conventions>JPY-OIS-CONVENTIONS</Conventions>
-	</Simple>
+        </Simple>
       </Segments>
       <InterpolationVariable>Discount</InterpolationVariable>
       <InterpolationMethod>LogLinear</InterpolationMethod>
       <YieldCurveDayCounter>A365</YieldCurveDayCounter>
       <Tolerance>0.000000000001</Tolerance>
     </YieldCurve>
-
     <YieldCurve>
       <CurveId>JPY6M</CurveId>
-      <CurveDescription />
+      <CurveDescription/>
       <Currency>JPY</Currency>
-      <DiscountCurve />
+      <DiscountCurve/>
       <Segments>
-	<Simple>
+        <Simple>
           <Type>Deposit</Type>
           <Quotes>
             <!--<Quote>MM/RATE/JPY/0D/1D</Quote>-->
@@ -1309,14 +1274,14 @@
           </Quotes>
           <Conventions>JPY-LIBOR-CONVENTIONS</Conventions>
           <ProjectionCurve>JPY6M</ProjectionCurve>
-	</Simple>
-	<Simple>
+        </Simple>
+        <Simple>
           <Type>Swap</Type>
           <Quotes>
-	    <!--
+            <!--
 		<Quote>IR_SWAP/RATE/JPY/2D/6M/1Y6M</Quote>
             -->
-	    <Quote>IR_SWAP/RATE/JPY/2D/6M/2Y</Quote>
+            <Quote>IR_SWAP/RATE/JPY/2D/6M/2Y</Quote>
             <Quote>IR_SWAP/RATE/JPY/2D/6M/3Y</Quote>
             <Quote>IR_SWAP/RATE/JPY/2D/6M/4Y</Quote>
             <Quote>IR_SWAP/RATE/JPY/2D/6M/5Y</Quote>
@@ -1333,17 +1298,16 @@
           </Quotes>
           <Conventions>JPY-LIBOR-6M-SWAP-CONVENTIONS</Conventions>
           <ProjectionCurve>JPY6M</ProjectionCurve>
-	</Simple>
+        </Simple>
       </Segments>
     </YieldCurve>
-
     <YieldCurve>
       <CurveId>JPY3M</CurveId>
-      <CurveDescription />
+      <CurveDescription/>
       <Currency>JPY</Currency>
-      <DiscountCurve />
+      <DiscountCurve/>
       <Segments>
-	<Simple>
+        <Simple>
           <Type>Deposit</Type>
           <Quotes>
             <Quote>MM/RATE/JPY/0D/1D</Quote>
@@ -1354,8 +1318,8 @@
           </Quotes>
           <Conventions>JPY-Deposit</Conventions>
           <ProjectionCurve>JPY3M</ProjectionCurve>
-	</Simple>
-	<Simple>
+        </Simple>
+        <Simple>
           <Type>FRA</Type>
           <Quotes>
             <Quote>FRA/RATE/JPY/3M/3M</Quote>
@@ -1365,8 +1329,8 @@
           </Quotes>
           <Conventions>JPY-FRA</Conventions>
           <ProjectionCurve>JPY3M</ProjectionCurve>
-	</Simple>
-	<Simple>
+        </Simple>
+        <Simple>
           <Type>Swap</Type>
           <Quotes>
             <Quote>IR_SWAP/RATE/JPY/2D/3M/2Y</Quote>
@@ -1384,22 +1348,21 @@
           </Quotes>
           <Conventions>JPY3M-Swap</Conventions>
           <ProjectionCurve>JPY3M</ProjectionCurve>
-	</Simple>
+        </Simple>
       </Segments>
     </YieldCurve>
-
     <YieldCurve>
       <CurveId>SEK3M</CurveId>
-      <CurveDescription />
+      <CurveDescription/>
       <Currency>SEK</Currency>
-      <DiscountCurve />
+      <DiscountCurve/>
       <Segments>
-	<Simple>
+        <Simple>
           <Type>Deposit</Type>
           <Quotes>
             <Quote>MM/RATE/SEK/0D/1D</Quote>
-	    <Quote>MM/RATE/SEK/0D/2D</Quote>
-	    <Quote>MM/RATE/SEK/2D/1W</Quote>
+            <Quote>MM/RATE/SEK/0D/2D</Quote>
+            <Quote>MM/RATE/SEK/2D/1W</Quote>
             <Quote>MM/RATE/SEK/2D/1M</Quote>
             <Quote>MM/RATE/SEK/2D/2M</Quote>
             <Quote>MM/RATE/SEK/2D/3M</Quote>
@@ -1407,8 +1370,8 @@
           </Quotes>
           <Conventions>SEK-STIBOR-CONVENTIONS</Conventions>
           <ProjectionCurve>SEK3M</ProjectionCurve>
-	</Simple>
-	<Simple>
+        </Simple>
+        <Simple>
           <Type>Swap</Type>
           <Quotes>
             <Quote>IR_SWAP/RATE/SEK/2D/3M/1Y</Quote>
@@ -1429,17 +1392,16 @@
           </Quotes>
           <Conventions>SEK-3M-SWAP-CONVENTIONS</Conventions>
           <ProjectionCurve>SEK3M</ProjectionCurve>
-	</Simple>
+        </Simple>
       </Segments>
     </YieldCurve>
-
     <YieldCurve>
       <CurveId>EUR-IN-USD</CurveId>
       <CurveDescription>EUR collateralized in USD discount curve</CurveDescription>
       <Currency>EUR</Currency>
-      <DiscountCurve></DiscountCurve>
+      <DiscountCurve/>
       <Segments>
-	<CrossCurrency>
+        <CrossCurrency>
           <Type>FX Forward</Type>
           <Quotes>
             <Quote>FXFWD/RATE/EUR/USD/3M</Quote>
@@ -1450,8 +1412,8 @@
           <Conventions>EUR-USD-FX-CONVENTIONS</Conventions>
           <DiscountCurve>USD1D</DiscountCurve>
           <SpotRate>FX/RATE/EUR/USD</SpotRate>
-	</CrossCurrency>
-	<CrossCurrency>
+        </CrossCurrency>
+        <CrossCurrency>
           <Type>Cross Currency Basis Swap</Type>
           <Quotes>
             <Quote>CC_BASIS_SWAP/BASIS_SPREAD/USD/3M/EUR/3M/2Y</Quote>
@@ -1463,7 +1425,7 @@
             <!--
 		<Quote>CC_BASIS_SWAP/BASIS_SPREAD/USD/3M/EUR/3M/12Y</Quote>
             -->
-	    <Quote>CC_BASIS_SWAP/BASIS_SPREAD/USD/3M/EUR/3M/15Y</Quote>
+            <Quote>CC_BASIS_SWAP/BASIS_SPREAD/USD/3M/EUR/3M/15Y</Quote>
             <Quote>CC_BASIS_SWAP/BASIS_SPREAD/USD/3M/EUR/3M/20Y</Quote>
             <Quote>CC_BASIS_SWAP/BASIS_SPREAD/USD/3M/EUR/3M/30Y</Quote>
             <Quote>CC_BASIS_SWAP/BASIS_SPREAD/USD/3M/EUR/3M/40Y</Quote>
@@ -1474,21 +1436,20 @@
           <SpotRate>FX/RATE/EUR/USD</SpotRate>
           <ProjectionCurveDomestic>EUR3M</ProjectionCurveDomestic>
           <ProjectionCurveForeign>USD3M</ProjectionCurveForeign>
-	</CrossCurrency>
+        </CrossCurrency>
       </Segments>
       <InterpolationVariable>Discount</InterpolationVariable>
       <InterpolationMethod>LogLinear</InterpolationMethod>
       <YieldCurveDayCounter>A365</YieldCurveDayCounter>
       <Tolerance>0.000000000001</Tolerance>
     </YieldCurve>
-
     <YieldCurve>
       <CurveId>GBP-IN-USD</CurveId>
       <CurveDescription>GBP collateralized in USD discount curve</CurveDescription>
       <Currency>GBP</Currency>
-      <DiscountCurve></DiscountCurve>
+      <DiscountCurve/>
       <Segments>
-	<CrossCurrency>
+        <CrossCurrency>
           <Type>FX Forward</Type>
           <Quotes>
             <Quote>FXFWD/RATE/USD/GBP/3M</Quote>
@@ -1499,8 +1460,8 @@
           <Conventions>USD-GBP-FX-CONVENTIONS</Conventions>
           <DiscountCurve>USD1D</DiscountCurve>
           <SpotRate>FX/RATE/USD/GBP</SpotRate>
-	</CrossCurrency>
-	<CrossCurrency>
+        </CrossCurrency>
+        <CrossCurrency>
           <Type>Cross Currency Basis Swap</Type>
           <Quotes>
             <Quote>CC_BASIS_SWAP/BASIS_SPREAD/USD/3M/GBP/3M/2Y</Quote>
@@ -1520,21 +1481,20 @@
           <SpotRate>FX/RATE/USD/GBP</SpotRate>
           <ProjectionCurveDomestic>GBP3M</ProjectionCurveDomestic>
           <ProjectionCurveForeign>USD3M</ProjectionCurveForeign>
-	</CrossCurrency>
+        </CrossCurrency>
       </Segments>
       <InterpolationVariable>Discount</InterpolationVariable>
       <InterpolationMethod>LogLinear</InterpolationMethod>
       <YieldCurveDayCounter>A365</YieldCurveDayCounter>
       <Tolerance>0.000000000001</Tolerance>
     </YieldCurve>
-
     <YieldCurve>
       <CurveId>CHF-IN-USD</CurveId>
       <CurveDescription>CHF collateralized in USD discount curve</CurveDescription>
       <Currency>CHF</Currency>
-      <DiscountCurve></DiscountCurve>
+      <DiscountCurve/>
       <Segments>
-	<CrossCurrency>
+        <CrossCurrency>
           <Type>FX Forward</Type>
           <Quotes>
             <Quote>FXFWD/RATE/USD/CHF/3M</Quote>
@@ -1545,8 +1505,8 @@
           <Conventions>USD-CHF-FX-CONVENTIONS</Conventions>
           <DiscountCurve>USD1D</DiscountCurve>
           <SpotRate>FX/RATE/USD/CHF</SpotRate>
-	</CrossCurrency>
-	<CrossCurrency>
+        </CrossCurrency>
+        <CrossCurrency>
           <Type>Cross Currency Basis Swap</Type>
           <Quotes>
             <Quote>CC_BASIS_SWAP/BASIS_SPREAD/USD/3M/CHF/3M/2Y</Quote>
@@ -1558,34 +1518,33 @@
             <!--
 		<Quote>CC_BASIS_SWAP/BASIS_SPREAD/USD/3M/CHF/3M/12Y</Quote>
             -->
-	    <Quote>CC_BASIS_SWAP/BASIS_SPREAD/USD/3M/CHF/3M/15Y</Quote>
+            <Quote>CC_BASIS_SWAP/BASIS_SPREAD/USD/3M/CHF/3M/15Y</Quote>
             <Quote>CC_BASIS_SWAP/BASIS_SPREAD/USD/3M/CHF/3M/20Y</Quote>
             <Quote>CC_BASIS_SWAP/BASIS_SPREAD/USD/3M/CHF/3M/30Y</Quote>
             <!--
 		<Quote>CC_BASIS_SWAP/BASIS_SPREAD/USD/3M/CHF/3M/40Y</Quote>
 		<Quote>CC_BASIS_SWAP/BASIS_SPREAD/USD/3M/CHF/3M/50Y</Quote>
 	    -->
-	  </Quotes>
+          </Quotes>
           <Conventions>USD-CHF-XCCY-BASIS-CONVENTIONS</Conventions>
           <DiscountCurve>USD1D</DiscountCurve>
           <SpotRate>FX/RATE/USD/CHF</SpotRate>
           <ProjectionCurveDomestic>CHF3M</ProjectionCurveDomestic>
           <ProjectionCurveForeign>USD3M</ProjectionCurveForeign>
-	</CrossCurrency>
+        </CrossCurrency>
       </Segments>
       <InterpolationVariable>Discount</InterpolationVariable>
       <InterpolationMethod>LogLinear</InterpolationMethod>
       <YieldCurveDayCounter>A365</YieldCurveDayCounter>
       <Tolerance>0.000000000001</Tolerance>
     </YieldCurve>
-
     <YieldCurve>
       <CurveId>USD-IN-EUR</CurveId>
       <CurveDescription>USD collateralized in EUR discount curve</CurveDescription>
       <Currency>USD</Currency>
-      <DiscountCurve></DiscountCurve>
+      <DiscountCurve/>
       <Segments>
-	<CrossCurrency>
+        <CrossCurrency>
           <Type>FX Forward</Type>
           <Quotes>
             <Quote>FXFWD/RATE/EUR/USD/3M</Quote>
@@ -1596,8 +1555,8 @@
           <Conventions>EUR-USD-FX-CONVENTIONS</Conventions>
           <DiscountCurve>EUR1D</DiscountCurve>
           <SpotRate>FX/RATE/EUR/USD</SpotRate>
-	</CrossCurrency>
-	<CrossCurrency>
+        </CrossCurrency>
+        <CrossCurrency>
           <Type>Cross Currency Basis Swap</Type>
           <Quotes>
             <Quote>CC_BASIS_SWAP/BASIS_SPREAD/USD/3M/EUR/3M/2Y</Quote>
@@ -1609,7 +1568,7 @@
             <!--
 		<Quote>CC_BASIS_SWAP/BASIS_SPREAD/USD/3M/EUR/3M/12Y</Quote>
             -->
-	    <Quote>CC_BASIS_SWAP/BASIS_SPREAD/USD/3M/EUR/3M/15Y</Quote>
+            <Quote>CC_BASIS_SWAP/BASIS_SPREAD/USD/3M/EUR/3M/15Y</Quote>
             <Quote>CC_BASIS_SWAP/BASIS_SPREAD/USD/3M/EUR/3M/20Y</Quote>
             <Quote>CC_BASIS_SWAP/BASIS_SPREAD/USD/3M/EUR/3M/30Y</Quote>
             <Quote>CC_BASIS_SWAP/BASIS_SPREAD/USD/3M/EUR/3M/40Y</Quote>
@@ -1620,21 +1579,21 @@
           <SpotRate>FX/RATE/EUR/USD</SpotRate>
           <ProjectionCurveDomestic>USD3M</ProjectionCurveDomestic>
           <ProjectionCurveForeign>EUR3M</ProjectionCurveForeign>
-	</CrossCurrency>
+        </CrossCurrency>
       </Segments>
       <InterpolationVariable>Discount</InterpolationVariable>
       <InterpolationMethod>LogLinear</InterpolationMethod>
       <YieldCurveDayCounter>A365</YieldCurveDayCounter>
       <Tolerance>0.000000000001</Tolerance>
     </YieldCurve>
-
-    <YieldCurve><!-- FIXME -->
+    <YieldCurve>
+      <!-- FIXME -->
       <CurveId>GBP-IN-EUR</CurveId>
       <CurveDescription>GBP collateralized in EUR discount curve</CurveDescription>
       <Currency>GBP</Currency>
-      <DiscountCurve></DiscountCurve>
+      <DiscountCurve/>
       <Segments>
-	<CrossCurrency>
+        <CrossCurrency>
           <Type>FX Forward</Type>
           <Quotes>
             <Quote>FXFWD/RATE/EUR/GBP/3M</Quote>
@@ -1645,8 +1604,8 @@
           <Conventions>EUR-GBP-FX-CONVENTIONS</Conventions>
           <DiscountCurve>EUR1D</DiscountCurve>
           <SpotRate>FX/RATE/EUR/GBP</SpotRate>
-	</CrossCurrency>
-	<CrossCurrency>
+        </CrossCurrency>
+        <CrossCurrency>
           <Type>Cross Currency Basis Swap</Type>
           <Quotes>
             <Quote>CC_BASIS_SWAP/BASIS_SPREAD/EUR/3M/GBP/3M/2Y</Quote>
@@ -1669,21 +1628,21 @@
           <SpotRate>FX/RATE/EUR/GBP</SpotRate>
           <ProjectionCurveDomestic>GBP3M</ProjectionCurveDomestic>
           <ProjectionCurveForeign>EUR3M</ProjectionCurveForeign>
-	</CrossCurrency>
+        </CrossCurrency>
       </Segments>
       <InterpolationVariable>Discount</InterpolationVariable>
       <InterpolationMethod>LogLinear</InterpolationMethod>
       <YieldCurveDayCounter>A365</YieldCurveDayCounter>
       <Tolerance>0.000000000001</Tolerance>
     </YieldCurve>
-
-    <YieldCurve><!-- FIXME -->
+    <YieldCurve>
+      <!-- FIXME -->
       <CurveId>CHF-IN-EUR</CurveId>
       <CurveDescription>CHF collateralized in EUR discount curve</CurveDescription>
       <Currency>CHF</Currency>
-      <DiscountCurve></DiscountCurve>
+      <DiscountCurve/>
       <Segments>
-	<CrossCurrency>
+        <CrossCurrency>
           <Type>FX Forward</Type>
           <Quotes>
             <Quote>FXFWD/RATE/EUR/CHF/3M</Quote>
@@ -1694,8 +1653,8 @@
           <Conventions>EUR-CHF-FX-CONVENTIONS</Conventions>
           <DiscountCurve>EUR1D</DiscountCurve>
           <SpotRate>FX/RATE/EUR/CHF</SpotRate>
-	</CrossCurrency>
-	<CrossCurrency>
+        </CrossCurrency>
+        <CrossCurrency>
           <Type>Cross Currency Basis Swap</Type>
           <Quotes>
             <Quote>CC_BASIS_SWAP/BASIS_SPREAD/EUR/3M/CHF/3M/2Y</Quote>
@@ -1707,7 +1666,7 @@
             <!--
 		<Quote>CC_BASIS_SWAP/BASIS_SPREAD/EUR/3M/CHF/3M/12Y</Quote>
 	    -->
-	    <Quote>CC_BASIS_SWAP/BASIS_SPREAD/EUR/3M/CHF/3M/15Y</Quote>
+            <Quote>CC_BASIS_SWAP/BASIS_SPREAD/EUR/3M/CHF/3M/15Y</Quote>
             <Quote>CC_BASIS_SWAP/BASIS_SPREAD/EUR/3M/CHF/3M/20Y</Quote>
             <!--
 		<Quote>CC_BASIS_SWAP/BASIS_SPREAD/EUR/3M/CHF/3M/30Y</Quote>
@@ -1720,14 +1679,13 @@
           <SpotRate>FX/RATE/EUR/CHF</SpotRate>
           <ProjectionCurveDomestic>CHF3M</ProjectionCurveDomestic>
           <ProjectionCurveForeign>EUR3M</ProjectionCurveForeign>
-	</CrossCurrency>
+        </CrossCurrency>
       </Segments>
       <InterpolationVariable>Discount</InterpolationVariable>
       <InterpolationMethod>LogLinear</InterpolationMethod>
       <YieldCurveDayCounter>A365</YieldCurveDayCounter>
       <Tolerance>0.000000000001</Tolerance>
     </YieldCurve>
-
     <!--
     <YieldCurve>
       <CurveId>BANK_EUR_BORROW</CurveId>
@@ -1767,14 +1725,13 @@
       </Segments>
     </YieldCurve>
     -->
-    
     <YieldCurve>
       <CurveId>BANK_EUR_BORROW</CurveId>
       <CurveDescription>BANK's average borrowing spread in EUR</CurveDescription>
       <Currency>EUR</Currency>
-      <DiscountCurve />
+      <DiscountCurve/>
       <Segments>
-	<ZeroSpread>
+        <ZeroSpread>
           <Type>Zero Spread</Type>
           <Quotes>
             <Quote>ZERO/YIELD_SPREAD/EUR/BANK_EUR_BORROW/A365/2Y</Quote>
@@ -1784,17 +1741,16 @@
           </Quotes>
           <Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
           <ReferenceCurve>EUR1D</ReferenceCurve>
-	</ZeroSpread>
+        </ZeroSpread>
       </Segments>
     </YieldCurve>
-
     <YieldCurve>
       <CurveId>BANK_EUR_LEND</CurveId>
       <CurveDescription>BANK's average lending spread in EUR</CurveDescription>
       <Currency>EUR</Currency>
-      <DiscountCurve />
+      <DiscountCurve/>
       <Segments>
-	<ZeroSpread>
+        <ZeroSpread>
           <Type>Zero Spread</Type>
           <Quotes>
             <Quote>ZERO/YIELD_SPREAD/EUR/BANK_EUR_LEND/A365/2Y</Quote>
@@ -1804,9 +1760,8 @@
           </Quotes>
           <Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
           <ReferenceCurve>EUR1D</ReferenceCurve>
-	</ZeroSpread>
+        </ZeroSpread>
       </Segments>
     </YieldCurve>
-
   </YieldCurves>
 </CurveConfiguration>

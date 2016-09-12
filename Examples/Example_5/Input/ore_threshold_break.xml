@@ -1,6 +1,6 @@
+<?xml version="1.0"?>
 <OpenRiskEngine>
-
-  <Setup>    
+  <Setup>
     <Parameter name="asofDate">2016-02-05</Parameter>
     <Parameter name="inputPath">Input</Parameter>
     <Parameter name="outputPath">Output</Parameter>
@@ -15,34 +15,28 @@
     <Parameter name="portfolioFile">portfolio.xml</Parameter>
     <Parameter name="observationModel">Disable</Parameter>
   </Setup>
-
   <Markets>
     <Parameter name="lgmcalibration">collateral_inccy</Parameter>
     <Parameter name="fxcalibration">collateral_eur</Parameter>
     <Parameter name="pricing">collateral_eur</Parameter>
     <Parameter name="simulation">collateral_eur</Parameter>
   </Markets>
-
   <Analytics>
-    
     <Analytic type="npv">
       <Parameter name="active">Y</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="outputFileName">npv.csv</Parameter>
-    </Analytic>      
-
+    </Analytic>
     <Analytic type="cashflow">
       <Parameter name="active">Y</Parameter>
       <Parameter name="outputFileName">flows.csv</Parameter>
-    </Analytic>      
-
+    </Analytic>
     <Analytic type="curves">
       <Parameter name="active">Y</Parameter>
       <Parameter name="configuration">default</Parameter>
       <Parameter name="grid">240,1M</Parameter>
       <Parameter name="outputFileName">curves.csv</Parameter>
-    </Analytic>      
-
+    </Analytic>
     <Analytic type="simulation">
       <Parameter name="active">N</Parameter>
       <Parameter name="simulationConfigFile">simulation.xml</Parameter>
@@ -52,18 +46,18 @@
       <Parameter name="cubeFile">cube.dat</Parameter>
       <Parameter name="additionalScenarioDataFileName">scenariodata.dat</Parameter>
     </Analytic>
-
     <Analytic type="xva">
       <Parameter name="active">Y</Parameter>
       <Parameter name="csaFile">netting_threshold.xml</Parameter>
       <Parameter name="cubeFile">cube.dat</Parameter>
+      <Parameter name="cubeDepth">2</Parameter>
       <Parameter name="scenarioFile">scenariodata.dat</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="exposureProfiles">Y</Parameter>
       <Parameter name="quantile">0.95</Parameter>
-      <Parameter name="calculationType">Symmetric</Parameter>      
-      <Parameter name="allocationMethod">Marginal</Parameter>    
-      <Parameter name="marginalAllocationLimit">1.0</Parameter>    
+      <Parameter name="calculationType">Symmetric</Parameter>
+      <Parameter name="allocationMethod">Marginal</Parameter>
+      <Parameter name="marginalAllocationLimit">1.0</Parameter>
       <Parameter name="exerciseNextBreak">Y</Parameter>
       <Parameter name="cva">Y</Parameter>
       <Parameter name="dva">N</Parameter>
@@ -75,14 +69,11 @@
       <Parameter name="collateralSpread">0.0010</Parameter>
       <Parameter name="collateralFloor">Y</Parameter>
       <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>
-      <Parameter name="netCubeOutputFile">netcube.csv</Parameter>      
+      <Parameter name="netCubeOutputFile">netcube.csv</Parameter>
     </Analytic>
-
     <Analytic type="initialMargin">
       <Parameter name="active">N</Parameter>
-      <Parameter name="method"></Parameter>
+      <Parameter name="method"/>
     </Analytic>
-    
   </Analytics>
-  
 </OpenRiskEngine>

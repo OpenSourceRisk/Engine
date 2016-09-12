@@ -1,21 +1,17 @@
+<?xml version="1.0"?>
 <TodaysMarket>
-
   <Configuration id="default">
     <DiscountingCurvesId>xois_eur</DiscountingCurvesId>
   </Configuration>
-
   <Configuration id="collateral_inccy">
     <DiscountingCurvesId>ois</DiscountingCurvesId>
   </Configuration>
-
   <Configuration id="collateral_eur">
     <DiscountingCurvesId>xois_eur</DiscountingCurvesId>
   </Configuration>
-
   <Configuration id="libor">
     <DiscountingCurvesId>inccy_swap</DiscountingCurvesId>
   </Configuration>
-
   <!-- discounting curve definition (in ccy swap discounting) -->
   <DiscountingCurves id="inccy_swap">
     <DiscountingCurve currency="EUR">Yield/EUR/EUR6M</DiscountingCurve>
@@ -26,7 +22,6 @@
     <DiscountingCurve currency="BANK_EUR_LEND">Yield/EUR/BANK_EUR_LEND</DiscountingCurve>
     <DiscountingCurve currency="BANK_EUR_BORROW">Yield/EUR/BANK_EUR_BORROW</DiscountingCurve>
   </DiscountingCurves>
-
   <!-- discounting curve definition (in ccy ois discounting) -->
   <DiscountingCurves id="ois">
     <DiscountingCurve currency="EUR">Yield/EUR/EUR1D</DiscountingCurve>
@@ -37,7 +32,6 @@
     <DiscountingCurve currency="BANK_EUR_LEND">Yield/EUR/BANK_EUR_LEND</DiscountingCurve>
     <DiscountingCurve currency="BANK_EUR_BORROW">Yield/EUR/BANK_EUR_BORROW</DiscountingCurve>
   </DiscountingCurves>
-
   <!-- discounting curve definition (xois discounting w.r.t. EUR collateral) -->
   <DiscountingCurves id="xois_eur">
     <DiscountingCurve currency="EUR">Yield/EUR/EUR1D</DiscountingCurve>
@@ -48,7 +42,6 @@
     <DiscountingCurve currency="BANK_EUR_LEND">Yield/EUR/BANK_EUR_LEND</DiscountingCurve>
     <DiscountingCurve currency="BANK_EUR_BORROW">Yield/EUR/BANK_EUR_BORROW</DiscountingCurve>
   </DiscountingCurves>
-
   <!-- index forwarding curve definition -->
   <IndexForwardingCurves id="default">
     <Index name="EUR-EURIBOR-1M">Yield/EUR/EUR3M</Index>
@@ -68,7 +61,6 @@
     <Index name="JPY-LIBOR-6M">Yield/JPY/JPY6M</Index>
     <Index name="JPY-TONAR">Yield/JPY/JPY6M</Index>
   </IndexForwardingCurves>
-
   <SwapIndexCurves id="default">
     <SwapIndex name="EUR-CMS-1Y">
       <Index>EUR-EURIBOR-6M</Index>
@@ -96,11 +88,13 @@
     </SwapIndex>
     <SwapIndex name="CHF-CMS-1Y">
       <Index>CHF-LIBOR-6M</Index>
-      <Discounting>CHF-LIBOR-6M</Discounting><!-- CHF-TOIS and CHF1D do not work--> 
+      <Discounting>CHF-LIBOR-6M</Discounting>
+      <!-- CHF-TOIS and CHF1D do not work-->
     </SwapIndex>
     <SwapIndex name="CHF-CMS-30Y">
       <Index>CHF-LIBOR-6M</Index>
-      <Discounting>CHF-LIBOR-6M</Discounting><!-- CHF-TOIS and CHF1D do not work--> 
+      <Discounting>CHF-LIBOR-6M</Discounting>
+      <!-- CHF-TOIS and CHF1D do not work-->
     </SwapIndex>
     <SwapIndex name="JPY-CMS-1Y">
       <Index>JPY-LIBOR-6M</Index>
@@ -111,7 +105,6 @@
       <Discounting>JPY-LIBOR-6M</Discounting>
     </SwapIndex>
   </SwapIndexCurves>
-
   <!-- fx spot definition -->
   <FxSpots id="default">
     <FxSpot pair="EURUSD">FX/EUR/USD</FxSpot>
@@ -119,7 +112,6 @@
     <FxSpot pair="EURCHF">FX/EUR/CHF</FxSpot>
     <FxSpot pair="EURJPY">FX/EUR/JPY</FxSpot>
   </FxSpots>
-
   <!-- fx volatility definition -->
   <FxVolatilities id="default">
     <FxVolatility pair="EURUSD">FXVolatility/EUR/USD/EURUSD</FxVolatility>
@@ -127,7 +119,6 @@
     <FxVolatility pair="EURCHF">FXVolatility/EUR/CHF/EURCHF</FxVolatility>
     <FxVolatility pair="EURJPY">FXVolatility/EUR/JPY/EURJPY</FxVolatility>
   </FxVolatilities>
-
   <!-- swaption volatility definition -->
   <SwaptionVolatilities id="default">
     <SwaptionVolatility currency="EUR">SwaptionVolatility/EUR/EUR_SW_N</SwaptionVolatility>
@@ -136,19 +127,16 @@
     <SwaptionVolatility currency="CHF">SwaptionVolatility/CHF/CHF_SW_N</SwaptionVolatility>
     <SwaptionVolatility currency="JPY">SwaptionVolatility/CHF/JPY_SW_N</SwaptionVolatility>
   </SwaptionVolatilities>
-
   <!-- cap volatility definition -->
   <CapFloorVolatilities id="default">
     <CapFloorVolatility currency="EUR">CapFloorVolatility/EUR/EUR_CF_N</CapFloorVolatility>
     <CapFloorVolatility currency="USD">CapFloorVolatility/USD/USD_CF_N</CapFloorVolatility>
     <CapFloorVolatility currency="GBP">CapFloorVolatility/GBP/GBP_CF_N</CapFloorVolatility>
   </CapFloorVolatilities>
-
   <!-- default curves definition -->
   <DefaultCurves id="default">
     <DefaultCurve name="BANK">Default/USD/BANK_SR_USD</DefaultCurve>
     <DefaultCurve name="CPTY_A">Default/USD/CPTY_A_SR_USD</DefaultCurve>
     <DefaultCurve name="CPTY_B">Default/USD/CPTY_A_SR_USD</DefaultCurve>
   </DefaultCurves>
-
 </TodaysMarket>

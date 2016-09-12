@@ -1,13 +1,11 @@
 #!/usr/bin/env python
 
 import glob
-
 import os
-import runpy
-ore_helpers = runpy.run_path(os.path.join(os.path.dirname(os.getcwd()), "ore_examples_helper.py"))
-OreExample = ore_helpers['OreExample']
-
 import sys
+sys.path.append('../')
+from ore_examples_helper import OreExample
+
 oreex = OreExample(sys.argv[1] if len(sys.argv)>1 else False)
 
 # whithout collateral
@@ -56,6 +54,16 @@ oreex.run("Input/ore_threshold_break.xml")
 oreex.save_output_to_subdir(
     "collateral_threshold_break",
     ["log.txt", "xva.csv"]
+    + glob.glob(os.path.join(os.getcwd(), os.path.join("Output", "exposure*")))
+    + glob.glob(os.path.join(os.getcwd(), os.path.join("Output", "colva*")))
+)
+
+# threshhold>0 with collateral and dynamic initial margin
+oreex.print_headline("Run ORE to postprocess the NPV cube, with collateral (threshold>0) and dynamic initial margin")
+oreex.run("Input/ore_threshold_dim.xml")
+oreex.save_output_to_subdir(
+    "collateral_threshold_dim",
+    ["log.txt", "xva.csv", "dim_regression.txt", "dim_evolution.txt"]
     + glob.glob(os.path.join(os.getcwd(), os.path.join("Output", "exposure*")))
     + glob.glob(os.path.join(os.getcwd(), os.path.join("Output", "colva*")))
 )

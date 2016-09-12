@@ -18,16 +18,16 @@ class OreExample(object):
 
     def _locate_ore_exe(self):
         if os.name == 'nt':
-            if sys.platform == "win32":
-                self.ore_exe = "..\\..\\bin\\win32\\ore.exe"
-            else:
+            if  platform.machine()[-2:] == "64":
                 self.ore_exe = "..\\..\\bin\\x64\\ore.exe"
+            else:
+                self.ore_exe = "..\\..\\bin\\win32\\ore.exe"
         else:
             self.ore_exe = "../../App/ore"
 
     def print_headline(self, headline):
         self.headlinecounter += 1
-        print()
+        print('')
         print(str(self.headlinecounter) + ") " + headline)
 
     def get_times(self, output):
@@ -73,16 +73,19 @@ class OreExample(object):
                 linewidth=2,
                 marker=marker)
 
-    def decorate_plot(self, title, ylabel="Exposure", xlabel="Time / Years"):
+    def decorate_plot(self, title, ylabel="Exposure", xlabel="Time / Years", legend_loc="upper right"):
         self.ax.set_title(title)
         self.ax.set_xlabel(xlabel)
         self.ax.set_ylabel(ylabel)
-        self.ax.legend(loc='upper right', shadow=True)
+        self.ax.legend(loc=legend_loc, shadow=True)
         self.ax.get_yaxis().set_major_formatter(
             matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
 
     def plot_line(self, xvals, yvals, color, label):
         self.ax.plot(xvals, yvals, color=color, label=label, linewidth=2)
+    
+    def plot_hline(self, yval, color, label):
+        plt.axhline(yval, xmin=0, xmax=1, color=color, label=label, linewidth=2 )
 
     def setup_plot(self, filename):
         self.fig = plt.figure(figsize=plt.figaspect(0.4))
@@ -98,7 +101,6 @@ class OreExample(object):
     def run(self, xml):
         if not self.dry:
             subprocess.call([self.ore_exe, xml])
-
 
 if __name__ == "__main__":
     examples = [
