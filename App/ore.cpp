@@ -370,16 +370,14 @@ int main(int argc, char** argv) {
                 cube = inMemoryCube;
 	    else {
 	        // If we want to do DIM or MVA anaylsis, we expect a cube with depth > 1, otherwise depth 1 
-	        // FIXME: Loader should return an NPVCube and determine itself what is provided in the file
 	        if (analytics["mva"] || analytics["dim"])
-	            inMemoryCube =
-		      boost::make_shared<SinglePrecisionInMemoryCubeN>();
+	            inMemoryCube = boost::make_shared<SinglePrecisionInMemoryCubeN>();
 		else
-		    inMemoryCube =
-		      boost::make_shared<SinglePrecisionInMemoryCube>();
+		    inMemoryCube = boost::make_shared<SinglePrecisionInMemoryCube>();
 		string cubeFile = outputPath + "/" + params.get("xva", "cubeFile");
 		LOG("Load cube from file " << cubeFile);
 		cube->load(cubeFile);
+		LOG("Cube loading done");
 	    }
 	    
             QL_REQUIRE(cube->numIds() == portfolio->size(), "cube x dimension (" << cube->numIds()
