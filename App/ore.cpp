@@ -365,12 +365,16 @@ int main(int argc, char** argv) {
 	    else
 	        analytics["dim"] = false;
 
+
             boost::shared_ptr<NPVCube> cube;
             if (inMemoryCube)
                 cube = inMemoryCube;
 	    else {
-	        // If we want to do DIM or MVA anaylsis, we expect a cube with depth > 1, otherwise depth 1 
-	        if (analytics["mva"] || analytics["dim"])
+	        Size cubeDepth = 1;
+		if (params.has("xva", "cubeDepth"))
+		    cubeDepth = parseInteger(params.get("xva", "cubeDepth"));
+
+		if (cubeDepth > 1)
 	            cube = boost::make_shared<SinglePrecisionInMemoryCubeN>();
 		else
 		    cube = boost::make_shared<SinglePrecisionInMemoryCube>();
@@ -695,13 +699,14 @@ void writeXVA(const Parameters& params, boost::shared_ptr<Portfolio> portfolio,
     string fileName = outputPath + "/xva.csv";
     ofstream file(fileName.c_str());
     QL_REQUIRE(file.is_open(), "Error opening file " << fileName);
-    file << "#TradeId,NettingSetId,CVA,DVA,FBA,FCA,COLVA,CollateralFloor,AllocatedCVA,AllocatedDVA,AllocationMethod,"
+    file << "#TradeId,NettingSetId,CVA,DVA,FBA,FCA,COLVA,MVA,CollateralFloor,AllocatedCVA,AllocatedDVA,AllocationMethod,"
             "BaselEPE,BaselEEPE"
          << endl;
     for (auto n : postProcess->nettingSetIds()) {
         file << "," << n << "," << postProcess->nettingSetCVA(n) << "," << postProcess->nettingSetDVA(n) << ","
              << postProcess->nettingSetFBA(n) << "," << postProcess->nettingSetFCA(n) << ","
-             << postProcess->nettingSetCOLVA(n) << "," << postProcess->nettingSetCollateralFloor(n) << ","
+             << postProcess->nettingSetCOLVA(n) << "," << postProcess->nettingSetMVA(n) << ","
+	     << postProcess->nettingSetCollateralFloor(n) << ","
              << postProcess->nettingSetCVA(n) << "," << postProcess->nettingSetDVA(n) << "," << allocationMethod << ","
              << postProcess->netEPE_B(n) << "," << postProcess->netEEPE_B(n) << endl;
         for (Size k = 0; k < portfolio->trades().size(); ++k) {
@@ -712,6 +717,7 @@ void writeXVA(const Parameters& params, boost::shared_ptr<Portfolio> portfolio,
             file << tid << "," << nid << "," << postProcess->tradeCVA(tid) << "," << postProcess->tradeDVA(tid) << ","
                  << postProcess->tradeFBA(tid) << "," << postProcess->tradeFCA(tid) << ","
                  << "n/a," // no trade COLVA
+		 << "n/a,"  // no trade MVA
                  << "n/a," // no trade collateral floor
                  << postProcess->allocatedTradeCVA(tid) << "," << postProcess->allocatedTradeDVA(tid) << ","
                  << allocationMethod << "," << postProcess->tradeEPE_B(tid) << "," << postProcess->tradeEEPE_B(tid)
