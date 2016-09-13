@@ -15,14 +15,14 @@ oreex.get_times("Output/log.txt")
 oreex.print_headline("Plot results")
  
 oreex.setup_plot("Basel Measures")
-oreex.plot("exposure_trade_swap.csv", 2, 3, 'b', "EPE")
-oreex.plot("exposure_trade_swap.csv", 2, 8 ,'c', "BASEL EE")
-oreex.plot("exposure_trade_swap.csv", 2, 9 ,'r', "BASEL EEE")
+oreex.plot("exposure_trade_Swap.csv", 2, 3, 'b', "EPE")
+oreex.plot("exposure_trade_Swap.csv", 2, 8 ,'c', "BASEL EE")
+oreex.plot("exposure_trade_Swap.csv", 2, 9 ,'r', "BASEL EEE")
 
-epe = oreex.get_output_data_from_column("xva.csv", 11, 1)
+epe = oreex.get_output_data_from_column("xva.csv", 12, 1)
 oreex.plot_hline(int(epe[0]), 'g', "BASEL EPE")
 
-eepe = oreex.get_output_data_from_column("xva.csv", 12, 1)
+eepe = oreex.get_output_data_from_column("xva.csv", 13, 1)
 oreex.plot_hline(int(eepe[0]), 'y', "BASEL EEPE")
 
 oreex.decorate_plot(title="Example 13 - Basel Measures")
