@@ -2109,7 +2109,7 @@ EEE_B(t) &= \max(EEE(t-\Delta t), EE_B(t)) \label{basel_eee}\\
 \intertext{Effective Expected Positive Exposure}
 EEPE_B(T) &= \frac{1}{T} \sum_{t<T} EEE_B(t)\cdot \Delta t \label{basel_eepe}
 \end{align}
-The last definition, Effective EPE, is used in Basel documents since Basel II for Exposure At Default and capital calculation. Following \cite{bcbs128} the time averages in the EPE and EEPE calculations are taken over {\em the first year} of the exposure evolution (or until maturity if all positions of the netting set mature before one year).
+The last definition, Effective EPE, is used in Basel documents since Basel II for Exposure At Default and capital calculation. Following \cite{bcbs128,bcbs189} the time averages in the EPE and EEPE calculations are taken over {\em the first year} of the exposure evolution (or until maturity if all positions of the netting set mature before one year).
 
 \medskip
 To compute $EE_B(t)$ consistently in a risk-neutral setting, we compound (\ref{EE}) with the deterministic discount factor $P(t)$ up to horizon $t$:
@@ -2319,11 +2319,6 @@ This yields allocated exposures proportional to the netting set exposure, avoids
  
 \bibitem{QRM} \url{http://www.quaternion.com}
 
-\bibitem{Lichters} 
-Roland Lichters, Roland Stamm, Donal Gallagher, 
-{\em Modern Derivatives Pricing and Credit Exposure Analysis, Theory and Practice of CSA and XVA Pricing, Exposure Simulation and Backtesting}, 
-Palgrave Macmillan, 2015.
-
 \bibitem{quantlib-install} \url{http://quantlib.org/install/vc10.shtml}
 
 %\bibitem{confluence} https://confluence.atlassian.com/bitbucket/set-up-git-744723531.html
@@ -2342,22 +2337,29 @@ Palgrave Macmillan, 2015.
 
 %\bibitem{xlwings} \url{http://www.xlwings.org}
 
-\bibitem{Gregory12}
-Jon Gregory, {\em Counterparty Credit Risk and Credit Value Adjustment, 2nd Ed.}, Wiley Finance, 2013.
+\bibitem{bcbs128} Basel Committee on Banking Supervision, {\em International Convergenceof Capital Measurement and Capital Standards, A Revised Framework}, \url{http://www.bis.org/publ/bcbs128.pdf}, June 2006
+
+\bibitem{bcbs189} Basel Committee on Banking Supervision, {\em Basel III: A global regulatory framework for more resilient banks and banking systems}, \url{http://www.bis.org/publ/bcbs189.pdf}, June 2011
 
 \bibitem{BrigoMercurio}
 Damiano Brigo and Fabio Mercurio, {\em Interest Rate Models: Theory and Practice, 2nd Edition}, Springer, 2006.
-
-\bibitem{bcbs128} Basel Committee on Banking Supervision, {\em International Convergenceof Capital Measurement and Capital Standards, A Revised Framework}, \url{http://www.bis.org/publ/bcbs128.pdf}, June 2006
-
-\bibitem{Anfuso2016} Fabrizio Anfuso, Daniel Aziz, Paul Giltinan, Klearchos Loukopoulos, {\em A Sound Modelling and Backtesting Framework for Forecasting Initial Margin Requirements},   
-\url{http://papers.ssrn.com/sol3/papers.cfm?abstract_id=2716279}, 2016
 
 \bibitem{Pykhtin2010} Michael Pykhtin, {\em Collateralized Credit Exposure}, in Counterparty Credit Risk, (E. Canabarro, ed.), Risk Books, 2010
 
 \bibitem{PykhtinRosen}
 Michael Pykhtin and Dan Rosen, {\em Pricing Counterparty Risk at the Trade Level and CVA Allocations}, Finance and Economics Discussion Series, Divisions of Research \& Statistics and Monetary Affairs,
 Federal Reserve Board, Washington, D.C., 2010
+
+\bibitem{Gregory12}
+Jon Gregory, {\em Counterparty Credit Risk and Credit Value Adjustment, 2nd Ed.}, Wiley Finance, 2013.
+
+\bibitem{Lichters} 
+Roland Lichters, Roland Stamm, Donal Gallagher, 
+{\em Modern Derivatives Pricing and Credit Exposure Analysis, Theory and Practice of CSA and XVA Pricing, Exposure Simulation and Backtesting}, 
+Palgrave Macmillan, 2015.
+
+\bibitem{Anfuso2016} Fabrizio Anfuso, Daniel Aziz, Paul Giltinan, Klearchos Loukopoulos, {\em A Sound Modelling and Backtesting Framework for Forecasting Initial Margin Requirements},   
+\url{http://papers.ssrn.com/sol3/papers.cfm?abstract_id=2716279}, 2016
 
 \bibitem{Andersen2016} Leif B. G. Andersen, Michael Pykhtin, Alexander Sokol, {\em Rethinking Margin Period of Risk}, http://papers.ssrn.com/sol3/papers.cfm?abstract\_id=2719964, 2016
 
