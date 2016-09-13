@@ -985,13 +985,29 @@ The analytics results also feature allocated XVAs in file {\tt xva.csv} which ar
 
 \subsection{Jupyter}\label{sec:jupyter}
 
-{\color{red}
-In this section we are going to show how to use Jypyter notebooks to 
+ORE comes with an experimental Jupyter notebook for launching ORE batches and in particular for drilling into NPV cube data.
+The notebook is located in directory {\tt FrontEnd/Python/Visualization/npvcube}. To launch the notebook, change to this directory and follow instructions in the {\tt Readme.txt}. In a nutshell, type 
+
+\medskip
+\centerline{\tt jupyter notebook}
+\medskip
+
+to start the ipyton console and open a browser window. From the list of files displayed in the browser then click
+
+\medskip
+\centerline{\tt ore\_jupyter\_dashboard.ipynb} 
+\medskip
+
+to open the ORE notebook. The notebook offers
 \begin{itemize}
-\item run the examples listed in the previous section, 
-\item further analyse the NPV cube data
+\item launching an ORE job
+\item selecting an NPV cube file and netting sets or trades therein
+\item plotting a 3d exposure probability density surface
+\item viewing exposure probability density function at a selected future time
+\item viewing expected exposure evolution through time  
 \end{itemize}
-}
+
+The cube file loaded here by default when processing all cells of the notebook (without changing it or launching a ORE batch) is taken from {\tt Example\_2}.
 
 \todo[inline]{Add Jupyter section}
 
