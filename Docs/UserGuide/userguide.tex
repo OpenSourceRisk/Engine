@@ -486,8 +486,47 @@ Python (version 3.5 or higher) is required to run the examples in section \ref{s
 \section{Examples}\label{sec:examples}
 %========================================================
 
-The examples shown in the following are intended to help getting started with ORE, and to serve as plausibility checks for the simulation results generated with ORE.
-All results can be produced with the Python scripts {\tt run.py} in the ORE release's {\tt Examples} folder which work on both Windows and Unix platforms. In a nutshell, all scripts call ORE's command line application with a single input XML file
+The examples shown in table \ref{tab_0} are intended to help getting started with ORE, and to serve as plausibility checks for the simulation results generated with ORE. 
+\begin{table}[hbt]
+\begin{center}
+\begin{tabular}{|c|l|}
+\hline
+Example & Description \\
+\hline
+\hline
+1 & Vanilla at-the-money Swap with flat yield curve \\
+\hline
+2 & Vanilla Swap with normal yield curve \\
+\hline
+3 & European Swaption \\
+\hline
+4 & Bermudan Swaption \\
+\hline
+5 & Callable Swap \\
+\hline
+6 & Cap/Floor \\
+\hline
+7 & FX Forward \\
+  & European FX Option \\ 
+\hline
+8 & Cross Currency Swap without notional reset \\
+\hline
+9 & Cross Currency Swap with notional reset \\
+\hline
+10 & Three-Swap portfolio with netting and collateral \\
+   & XVAs - CVA, DVA, FVA, MVA, COLVA \\
+   & Exposure and XVA Allocation to trade level \\
+\hline
+11 & Basel exposure measures - EE, EPE, EEPE \\
+\hline
+12 & Long term simulation with horizon shift \\
+\hline
+\end{tabular}
+\caption{ORE examples.}
+\label{tab_0}
+\end{center}
+\end{table}
+All example results can be produced with the Python scripts {\tt run.py} in the ORE release's {\tt Examples} folder which work on both Windows and Unix platforms. In a nutshell, all scripts call ORE's command line application with a single input XML file
 
 \medskip
 \centerline{\tt ore[.exe] ore.xml}
@@ -546,7 +585,6 @@ File Name & Description \\
 \label{tab_2}
 \end{table}
 
-
 Note: When building ORE from sources on Windows platforms, make sure that you copy your {\tt ore.exe} to the binary directory {\tt bin/win32/} respectively {\tt bin/x64/}. Otherwise the examples may be run using the pre-compiled executables which come with the ORE release. 
 %By default, the examples will point to the 64 bit executable. To change this to the 32 bit version, edit the file {\tt Examples/ore\_examples\_helper.py} and change line 
 %\begin{listing}[H]
@@ -599,7 +637,7 @@ This simple example is an important test case which is also run similarly in one
 In Example\_1 we used co-terminal ATM Swaptions for both model calibration and Swaption pricing. Moreover, as the the yield curve is flat in this example, the exposures from both parties' perspectives (EPE and ENE) match not only at the annual resets, but also for the period between annual reset of both legs to the point in time when the floating leg resets. Thereafter, between floating leg (only) reset and next joint fixed/floating leg reset, we see and expect a deviation of the two exposure profiles.
 
 \medskip
-Moving to {\tt Examples/Example\_4}, we see what changes when using a realistic (non-flat) market environment. Running the example with
+Moving to {\tt Examples/Example\_2}, we see what changes when using a realistic (non-flat) market environment. Running the example with
 
 \medskip
 \centerline{\tt ./run.py } 
@@ -608,7 +646,7 @@ Moving to {\tt Examples/Example\_4}, we see what changes when using a realistic 
 yields the exposure evolution in 
 
 \medskip
-\centerline{\tt Examples/Example\_4/Output/*.pdf } 
+\centerline{\tt Examples/Example\_2/Output/*.pdf } 
 \medskip
 
 shown in figure \ref{fig_2}.
@@ -626,7 +664,7 @@ In this case, where the curves (discount and forward) are upward sloping, the re
 \subsection{European Swaption Exposure}\label{sec:european_swaption}
 %--------------------------------------------------------
 
-This demo case in folder {\tt Examples/Example\_7} shows the exposure evolution of European Swaptions with cash and physical delivery, respectively, see figure \ref{fig_3}.
+This demo case in folder {\tt Examples/Example\_3} shows the exposure evolution of European Swaptions with cash and physical delivery, respectively, see figure \ref{fig_3}.
 \begin{figure}[hbt]
 \begin{center}
 \includegraphics[scale=0.45]{mpl_swaption.pdf}
@@ -641,7 +679,7 @@ The delivery type (cash vs physical) yields significantly different valuations a
 \subsection{Bermudan Swaption Exposure}
 %--------------------------------------------------------
 
-This demo case in folder {\tt Examples/Example\_10} shows the exposure evolution of Bermudan rather than European Swaptions with cash and physical delivery, respectively, see figure \ref{fig_3b}.
+This demo case in folder {\tt Examples/Example\_4} shows the exposure evolution of Bermudan rather than European Swaptions with cash and physical delivery, respectively, see figure \ref{fig_3b}.
 \begin{figure}[hbt]
 \begin{center}
 %\includegraphics[scale=1.0]{example_bermudan_swaption.pdf}
@@ -656,7 +694,7 @@ The underlying Swap is the same as in the European Swaption example in section \
 \subsection{Callable Swap Exposure}
 %--------------------------------------------------------
 
-This demo case in folder {\tt Examples/Example\_6} shows the exposure evolution of a European callable Swap, represented as two trades - the non-callable Swap and a Swaption with physical delivery. We have sold the call option, i.e. the Swaption is a right for the counterparty to enter into an offsetting Swap which economically terminates all future flows if exercised. The resulting exposure evolutions for the individual components (Swap, Swaption), as well as the callable Swap are shown in figure \ref{fig_4}. 
+This demo case in folder {\tt Examples/Example\_5} shows the exposure evolution of a European callable Swap, represented as two trades - the non-callable Swap and a Swaption with physical delivery. We have sold the call option, i.e. the Swaption is a right for the counterparty to enter into an offsetting Swap which economically terminates all future flows if exercised. The resulting exposure evolutions for the individual components (Swap, Swaption), as well as the callable Swap are shown in figure \ref{fig_4}. 
 \begin{figure}[hbt]
 \begin{center}
 %\includegraphics[scale=1.0]{example_callable_swap.pdf}
@@ -671,7 +709,7 @@ The example is an extreme case where the underlying Swap is deeply in the money 
 \subsection{Cap/Floor Exposure}\label{sec:capfloor}
 %--------------------------------------------------------
 
-The example in folder {\tt Examples/Example\_12} generates exposure evolutions of several Swaps, caps and floors. The example shown in figure \ref{fig_capfloor_1} ('portfolio 1') consists of a 20y Swap receiving 1\% fixed and a 20y Collar with both cap and floor at 2.5\% so that the net exposure corresponds to a Swap receiving 0.5\% fixed.
+The example in folder {\tt Examples/Example\_6} generates exposure evolutions of several Swaps, caps and floors. The example shown in figure \ref{fig_capfloor_1} ('portfolio 1') consists of a 20y Swap receiving 1\% fixed and a 20y Collar with both cap and floor at 2.5\% so that the net exposure corresponds to a Swap receiving 0.5\% fixed.
 
 \begin{figure}[hbt]
 \begin{center}
@@ -695,7 +733,7 @@ The second example in this folder shown in figure \ref{fig_capfloor_2} ('portfol
 \subsection{FX Forward Exposure}\label{sec:fxfwd}
 %--------------------------------------------------------
 
-The example in folder {\tt Examples/Example\_2} generates the exposure evolution for a EUR / USD FX Forward transaction with value date in 10Y. This is a particularly simple show case because of the single cash flow in 10Y. On the other hand it checks the cross currency model implementation by means of comparison to analytic limits - EPE and ENE at the trade's value date must match corresponding Vanilla FX Option prices, as shown in figure \ref{fig_5}.  
+The example in folder {\tt Examples/Example\_7} generates the exposure evolution for a EUR / USD FX Forward transaction with value date in 10Y. This is a particularly simple show case because of the single cash flow in 10Y. On the other hand it checks the cross currency model implementation by means of comparison to analytic limits - EPE and ENE at the trade's value date must match corresponding Vanilla FX Option prices, as shown in figure \ref{fig_5}.  
 \begin{figure}[hbt]
 \begin{center}
 %\includegraphics[scale=1.0]{example_fxforward.pdf}
@@ -734,7 +772,7 @@ The effect of the FX resetting feature, common in Cross Currency Swaps nowadays,
 \subsection{FX Option Exposure}
 %--------------------------------------------------------
 
-This example (in folder {\tt Examples/Example\_2}, as the FX Forward example) illustrates the exposure evolution for an FX Option, see figure \ref{fig_7}. 
+This example (in folder {\tt Examples/Example\_7}, as the FX Forward example) illustrates the exposure evolution for an FX Option, see figure \ref{fig_7}. 
 \begin{figure}[hbt]
 \begin{center}
 \includegraphics[scale=0.45]{mpl_fxoption.pdf}
@@ -755,7 +793,7 @@ One would therefore expect a flat exposure evolution up to option expiry. The de
 \subsection{Netting and Collateral}
 %--------------------------------------------------------
 
-In this example (see folder {\tt Examples/Example\_5}) we showcase a small netting set consisting of three Swaps in different currencies, with different collateral choices
+In this example (see folder {\tt Examples/Example\_10}) we showcase a small netting set consisting of three Swaps in different currencies, with different collateral choices
 \begin{itemize}
 \item no collateral - figure \ref{fig_8},
 \item collateral with threshold (THR) 1m EUR, minimum transfer amount (MTA) 100k EUR, margin period of risk (MPR) 2 weeks - figure \ref{fig_9}
@@ -800,8 +838,8 @@ The exposure graphs with collateral and positive margin period of risk show typi
 \subsection{CVA, DVA, FVA, COLVA, MVA, Collateral Floor}
 %--------------------------------------------------------
 
-We use one of the cases in {\tt Examples/Example\_5} to demonstrate the
-XVA outputs, see folder {\tt Examples/Example\_5/Output/collateral\_threshold\_dim}.
+We use one of the cases in {\tt Examples/Example\_10} to demonstrate the
+XVA outputs, see folder {\tt Examples/Example\_10/Output/collateral\_threshold\_dim}.
 
 \medskip
 The summary of all value adjustments (CVA, DVA, FVA, COLVA, MVA, as well as the Collateral Floor) is provided in file {\tt xva.csv}. 
@@ -848,8 +886,8 @@ incremental contributions to these two VAs through time.
 %--------------------------------------------------------
 \subsection{Exposure Reports \& XVA Allocation to Trades}
 %--------------------------------------------------------
-Using the example in folder {\tt Examples/Example\_5} we illustrate here the layout of an exposure report produced by ORE. The report shows the exposure evolution of Swap\_1 without collateral which - after running Example\_5 - is found in folder \\
-{\tt Examples/Example\_5/Output/collateral\_none/exposure\_trade\_Swap\_1.csv}:
+Using the example in folder {\tt Examples/Example\_10} we illustrate here the layout of an exposure report produced by ORE. The report shows the exposure evolution of Swap\_1 without collateral which - after running Example\_10 - is found in folder \\
+{\tt Examples/Example\_10/Output/collateral\_none/exposure\_trade\_Swap\_1.csv}:
 
 %\begin{center}
 %\scriptsize
@@ -958,7 +996,7 @@ CPTY\_A & ... & ...& ... & ... & ... & ... & ... & ...\\
 Allocated exposures are missing here, as they make sense at the trade level only, and the expected collateral balance is added for information (in this case zero as collateralisation is deactivated in this example).
 
 \medskip
-{\tt Examples/Example\_5} features the allocation of netting set exposure and XVA to the trade level as frequently required by finance departments. We start again with the uncollateralised case in figure \ref{fig_8}, followed by the case with threshold 1m EUR in figure \ref{fig_9}.
+{\tt Examples/Example\_10} also features the allocation of netting set exposure and XVA to the trade level as frequently required by finance departments. We start again with the uncollateralised case in figure \ref{fig_8}, followed by the case with threshold 1m EUR in figure \ref{fig_9}.
 \begin{figure}[tb]
 \begin{center}
 %\includegraphics[scale=1.0]{example_nocollateral_allocated_epe.pdf}
@@ -976,7 +1014,50 @@ In both cases we apply the {\em marginal} (Euler) allocation method as published
 \caption{Exposure allocation with collateral and threshold 1m EUR. Simulation with 5000 paths and bi-weekly time steps.}
 \label{fig_13}
 \end{figure}
-The analytics results also feature allocated XVAs in file {\tt xva.csv} which are derived from the allocated exposure profiles. Note that ORE also offers alternative allocation methods to the marginal method by Pykhtin/Rosen, which can be explored with {\tt Examples/Example\_5}.
+The analytics results also feature allocated XVAs in file {\tt xva.csv} which are derived from the allocated exposure profiles. Note that ORE also offers alternative allocation methods to the marginal method by Pykhtin/Rosen, which can be explored with {\tt Examples/Example\_10}.
+
+%--------------------------------------------------------
+\subsection{Basel Exposure Measures}\label{sec:basel}
+%--------------------------------------------------------
+
+Example {\tt Example\_11} demonstrates the relation between the evolution of the expected exposure (EPE in our notation) to the `Basel' exposure measures EE\_B, EEE\_B, EPE\_B and EEPE\_B as defined in appendix \ref{app:exposure}. In particular the latter is used in internal model methods for counterparty credit risk as a measure for the exposure at default. It is a `derivative' of the expected exposure evolution and defined as a time average over the running maximum of EE\_B up to the horizon of one year. For illustration purposes in figure \ref{fig_14} we have extended the horizon here to the portfolio's maturity.
+\begin{figure}[tb]
+\begin{center}
+\includegraphics[scale=0.45]{mpl_basel_exposures.pdf}
+\end{center}
+\caption{Evolution of the expected exposure of Vanilla Swap, comparison to the `Basel' exposure measures EEE\_B, EPE\_B and EEPE\_B. Note that we have set to the horizon for time averages to the Swap's maturity (rather than 1Y) in this example.}
+\label{fig_14}
+\end{figure}
+
+%--------------------------------------------------------
+\subsection{Long Term Simulation with Horizon Shift}\label{sec:longterm}
+%--------------------------------------------------------
+
+The example in folder {\tt Example\_12} finally demonstrates an effect that - at first glance - creates a serious issue with long term simulations. Fortunately this can be avoided quite easily in the Linear Gauss Markov model setting that is used here. 
+
+In the example we consider a Swap with maturity in 50 years in a flat yield curve environment. If we simulate this naively as in all previous cases, we obtain a particularly noisy EPE profile that does not nearly reconcile with the known exposure (analytical Swaption prices). This is shown in figure \ref{fig_15} (`no horizon shift'). The origin of this issue is the width of the risk-neutral NPV distribution at long time horizons which can turn out to be quite small so that the Monte Carlo simulation with finite number of samples does not reach far enough into the positive or negative NPV range to adequately sample the distribution, and estimate both EPE and ENE in a single run.  Increasing the number of samples may not solve the problem, and may not even be feasible in a realistic setting. The way out is applying a `shift transformation' to the Linear Gauss Markov model, see {\tt Example\_12/Input/simulation2.xml} in lines 92-95: 
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+        <ParameterTransformation>
+          <ShiftHorizon>30.0</ShiftHorizon>
+          <Scaling>1.0</Scaling>
+        </ParameterTransformation>
+\end{minted}
+%\hrule
+%\caption{LGM Shift transformation}
+%\label{lst:shift_transformation}
+\end{listing}
+As explained in \cite{Lichters} this is effectively a change of measure from the `native' LGM measure to a T-Forward measure with horizon 30 years.
+In our experience it is helpful to place the horizon in the middle of the portfolio duration to significantly improve the quality of long term expectations. The effect of this change (only) is shown in the same figure \ref{fig_15} (`shifted horizon').
+
+\begin{figure}[tb]
+\begin{center}
+\includegraphics[scale=0.45]{mpl_longterm.pdf}
+\end{center}
+\caption{Long term Swap exposure simulation with and without horizon shift.}
+\label{fig_15}
+\end{figure}
 
 \clearpage
 %========================================================
@@ -1007,7 +1088,7 @@ to open the ORE notebook. The notebook offers
 \item viewing expected exposure evolution through time  
 \end{itemize}
 
-The cube file loaded here by default when processing all cells of the notebook (without changing it or launching a ORE batch) is taken from {\tt Example\_2}.
+The cube file loaded here by default when processing all cells of the notebook (without changing it or launching a ORE batch) is taken from {\tt Example\_7} (FX Forwards and FX Options).
 
 \todo[inline]{Add Jupyter section}
 
@@ -1029,13 +1110,13 @@ To launch Calc, open a terminal, change to directory {\tt Examples/Example\_1}, 
 %\caption{Calc sheet after launching.}
 %\label{fig_14}
 %\end{figure}
-The user can choose a configuration (one of the {\tt ore*.xml} files in Example\_1's subfolder Input) by hitting the 'Select' button. Initially Input/ore.xml is pre-selected. The ORE process is then kicked off by hitting 'Run'. Once completed, standard ORE reports (NPV, Cashflow, XVA) are loaded into several sheets. Moreover, exposure evolutions can then be viewed by hitting 'View' which shows the result in figure \ref{fig_15}.  
+The user can choose a configuration (one of the {\tt ore*.xml} files in Example\_1's subfolder Input) by hitting the 'Select' button. Initially Input/ore.xml is pre-selected. The ORE process is then kicked off by hitting 'Run'. Once completed, standard ORE reports (NPV, Cashflow, XVA) are loaded into several sheets. Moreover, exposure evolutions can then be viewed by hitting 'View' which shows the result in figure \ref{fig_16}.  
 \begin{figure}[hbt]
 \begin{center}
 \includegraphics[scale=0.4]{demo_calc_2}
 \end{center}
 \caption{Calc sheet after hitting 'Run'.}
-\label{fig_15}
+\label{fig_16}
 \end{figure}
 
 This demo uses simple Libre Office Basic macros which call Python scripts to execute ORE. The Libre Office Python uno module (which comes with Libre Office) is used to communicate between Python and Calc to upload results into the sheets. 

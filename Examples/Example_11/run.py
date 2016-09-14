@@ -14,7 +14,7 @@ oreex.get_times("Output/log.txt")
  
 oreex.print_headline("Plot results")
  
-oreex.setup_plot("Basel Measures")
+oreex.setup_plot("BaselMeasures")
 oreex.plot("exposure_trade_Swap.csv", 2, 3, 'b', "EPE")
 oreex.plot("exposure_trade_Swap.csv", 2, 8 ,'c', "BASEL EE")
 oreex.plot("exposure_trade_Swap.csv", 2, 9 ,'r', "BASEL EEE")
