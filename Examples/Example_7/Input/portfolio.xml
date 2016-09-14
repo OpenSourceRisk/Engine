@@ -1,13 +1,28 @@
 <?xml version="1.0"?>
 <Portfolio>
-  <Trade id="SwaptionCash">
-    <TradeType>Swaption</TradeType>
+  <Trade id="FXFWD_EURUSD_10Y">
+    <TradeType>FxForward</TradeType>
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
       <NettingSetId>CPTY_A</NettingSetId>
       <AdditionalFields/>
     </Envelope>
-    <SwaptionData>
+    <FxForwardData>
+      <ValueDate>2026-03-01</ValueDate>
+      <BoughtCurrency>EUR</BoughtCurrency>
+      <BoughtAmount>1000000</BoughtAmount>
+      <SoldCurrency>USD</SoldCurrency>
+      <SoldAmount>1100000</SoldAmount>
+    </FxForwardData>
+  </Trade>
+  <Trade id="FX_CALL_OPTION_EURUSD_10Y">
+    <TradeType>FxOption</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <FxOptionData>
       <OptionData>
         <LongShort>Long</LongShort>
         <OptionType>Call</OptionType>
@@ -18,213 +33,34 @@
           <ExerciseDate>2026-03-01</ExerciseDate>
         </ExerciseDates>
       </OptionData>
-      <LegData>
-        <LegType>Floating</LegType>
-        <Payer>true</Payer>
-        <Currency>EUR</Currency>
-        <Notionals>
-          <Notional>10000000</Notional>
-        </Notionals>
-        <DayCounter>A360</DayCounter>
-        <PaymentConvention>ModifiedFollowing</PaymentConvention>
-        <FloatingLegData>
-          <Index>EUR-EURIBOR-3M</Index>
-          <Spreads>
-            <Spread>0.0</Spread>
-          </Spreads>
-        </FloatingLegData>
-        <ScheduleData>
-          <Rules>
-            <StartDate>2026-03-01</StartDate>
-            <EndDate>2036-03-01</EndDate>
-            <Tenor>3M</Tenor>
-            <Calendar>TARGET</Calendar>
-            <Convention>ModifiedFollowing</Convention>
-            <TermConvention>ModifiedFollowing</TermConvention>
-            <Rule>Forward</Rule>
-            <EndOfMonth/>
-            <FirstDate/>
-            <LastDate/>
-          </Rules>
-        </ScheduleData>
-      </LegData>
-      <LegData>
-        <LegType>Fixed</LegType>
-        <Payer>false</Payer>
-        <Currency>EUR</Currency>
-        <Notionals>
-          <Notional>10000000</Notional>
-        </Notionals>
-        <DayCounter>ACT/ACT</DayCounter>
-        <PaymentConvention>Following</PaymentConvention>
-        <FixedLegData>
-          <Rates>
-            <Rate>0.02</Rate>
-          </Rates>
-        </FixedLegData>
-        <ScheduleData>
-          <Rules>
-            <StartDate>2026-03-01</StartDate>
-            <EndDate>2036-03-01</EndDate>
-            <Tenor>1Y</Tenor>
-            <Calendar>TARGET</Calendar>
-            <Convention>Following</Convention>
-            <TermConvention>Following</TermConvention>
-            <Rule>Forward</Rule>
-            <EndOfMonth/>
-            <FirstDate/>
-            <LastDate/>
-          </Rules>
-        </ScheduleData>
-      </LegData>
-    </SwaptionData>
+      <BoughtCurrency>EUR</BoughtCurrency>
+      <BoughtAmount>1000000</BoughtAmount>
+      <SoldCurrency>USD</SoldCurrency>
+      <SoldAmount>1100000</SoldAmount>
+    </FxOptionData>
   </Trade>
-  <Trade id="SwaptionPhysical">
-    <TradeType>Swaption</TradeType>
+  <Trade id="FX_PUT_OPTION_EURUSD_10Y">
+    <TradeType>FxOption</TradeType>
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
       <NettingSetId>CPTY_A</NettingSetId>
       <AdditionalFields/>
     </Envelope>
-    <SwaptionData>
+    <FxOptionData>
       <OptionData>
         <LongShort>Long</LongShort>
-        <OptionType>Call</OptionType>
+        <OptionType>Put</OptionType>
         <Style>European</Style>
-        <Settlement>Physical</Settlement>
+        <Settlement>Cash</Settlement>
         <PayOffAtExpiry>false</PayOffAtExpiry>
         <ExerciseDates>
           <ExerciseDate>2026-03-01</ExerciseDate>
         </ExerciseDates>
       </OptionData>
-      <LegData>
-        <LegType>Floating</LegType>
-        <Payer>true</Payer>
-        <Currency>EUR</Currency>
-        <Notionals>
-          <Notional>10000000</Notional>
-        </Notionals>
-        <DayCounter>A360</DayCounter>
-        <PaymentConvention>ModifiedFollowing</PaymentConvention>
-        <FloatingLegData>
-          <Index>EUR-EURIBOR-3M</Index>
-          <Spreads>
-            <Spread>0.0</Spread>
-          </Spreads>
-        </FloatingLegData>
-        <ScheduleData>
-          <Rules>
-            <StartDate>2026-03-01</StartDate>
-            <EndDate>2036-03-01</EndDate>
-            <Tenor>3M</Tenor>
-            <Calendar>TARGET</Calendar>
-            <Convention>ModifiedFollowing</Convention>
-            <TermConvention>ModifiedFollowing</TermConvention>
-            <Rule>Forward</Rule>
-            <EndOfMonth/>
-            <FirstDate/>
-            <LastDate/>
-          </Rules>
-        </ScheduleData>
-      </LegData>
-      <LegData>
-        <LegType>Fixed</LegType>
-        <Payer>false</Payer>
-        <Currency>EUR</Currency>
-        <Notionals>
-          <Notional>10000000</Notional>
-        </Notionals>
-        <DayCounter>ACT/ACT</DayCounter>
-        <PaymentConvention>Following</PaymentConvention>
-        <FixedLegData>
-          <Rates>
-            <Rate>0.02</Rate>
-          </Rates>
-        </FixedLegData>
-        <ScheduleData>
-          <Rules>
-            <StartDate>2026-03-01</StartDate>
-            <EndDate>2036-03-01</EndDate>
-            <Tenor>1Y</Tenor>
-            <Calendar>TARGET</Calendar>
-            <Convention>Following</Convention>
-            <TermConvention>Following</TermConvention>
-            <Rule>Forward</Rule>
-            <EndOfMonth/>
-            <FirstDate/>
-            <LastDate/>
-          </Rules>
-        </ScheduleData>
-      </LegData>
-    </SwaptionData>
-  </Trade>
-  <Trade id="Swap">
-    <TradeType>Swap</TradeType>
-    <Envelope>
-      <CounterParty>CPTY_A</CounterParty>
-      <NettingSetId>CPTY_A</NettingSetId>
-      <AdditionalFields/>
-    </Envelope>
-    <SwapData>
-      <LegData>
-        <LegType>Floating</LegType>
-        <Payer>true</Payer>
-        <Currency>EUR</Currency>
-        <Notionals>
-          <Notional>10000000</Notional>
-        </Notionals>
-        <DayCounter>A360</DayCounter>
-        <PaymentConvention>ModifiedFollowing</PaymentConvention>
-        <FloatingLegData>
-          <Index>EUR-EURIBOR-3M</Index>
-          <Spreads>
-            <Spread>0.0</Spread>
-          </Spreads>
-        </FloatingLegData>
-        <ScheduleData>
-          <Rules>
-            <StartDate>2026-03-01</StartDate>
-            <EndDate>2036-03-01</EndDate>
-            <Tenor>3M</Tenor>
-            <Calendar>TARGET</Calendar>
-            <Convention>ModifiedFollowing</Convention>
-            <TermConvention>ModifiedFollowing</TermConvention>
-            <Rule>Forward</Rule>
-            <EndOfMonth/>
-            <FirstDate/>
-            <LastDate/>
-          </Rules>
-        </ScheduleData>
-      </LegData>
-      <LegData>
-        <LegType>Fixed</LegType>
-        <Payer>false</Payer>
-        <Currency>EUR</Currency>
-        <Notionals>
-          <Notional>10000000</Notional>
-        </Notionals>
-        <DayCounter>ACT/ACT</DayCounter>
-        <PaymentConvention>Following</PaymentConvention>
-        <FixedLegData>
-          <Rates>
-            <Rate>0.02</Rate>
-          </Rates>
-        </FixedLegData>
-        <ScheduleData>
-          <Rules>
-            <StartDate>2026-03-01</StartDate>
-            <EndDate>2036-03-01</EndDate>
-            <Tenor>1Y</Tenor>
-            <Calendar>TARGET</Calendar>
-            <Convention>Following</Convention>
-            <TermConvention>Following</TermConvention>
-            <Rule>Forward</Rule>
-            <EndOfMonth/>
-            <FirstDate/>
-            <LastDate/>
-          </Rules>
-        </ScheduleData>
-      </LegData>
-    </SwapData>
+      <BoughtCurrency>EUR</BoughtCurrency>
+      <BoughtAmount>1000000</BoughtAmount>
+      <SoldCurrency>USD</SoldCurrency>
+      <SoldAmount>1100000</SoldAmount>
+    </FxOptionData>
   </Trade>
 </Portfolio>

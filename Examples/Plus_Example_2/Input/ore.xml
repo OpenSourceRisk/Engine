@@ -5,14 +5,14 @@
     <Parameter name="inputPath">Input</Parameter>
     <Parameter name="outputPath">Output</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
-    <Parameter name="marketDataFile">../../Input/market_20160205.txt</Parameter>
+    <Parameter name="marketDataFile">../../Input/market_20160205_flat.txt</Parameter>
     <Parameter name="fixingDataFile">../../Input/fixings_20160205.txt</Parameter>
-    <Parameter name="implyTodaysFixings">N</Parameter>
+    <Parameter name="implyTodaysFixings">Y</Parameter>
     <Parameter name="curveConfigFile">../../Input/curveconfig.xml</Parameter>
     <Parameter name="conventionsFile">../../Input/conventions.xml</Parameter>
     <Parameter name="marketConfigFile">../../Input/todaysmarket.xml</Parameter>
     <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
-    <Parameter name="portfolioFile">portfolio_swaption_receiver.xml</Parameter>
+    <Parameter name="portfolioFile">portfolio.xml</Parameter>
     <Parameter name="observationModel">Disable</Parameter>
   </Setup>
   <Markets>
@@ -23,16 +23,16 @@
   </Markets>
   <Analytics>
     <Analytic type="npv">
-      <Parameter name="active">Y</Parameter>
+      <Parameter name="active">N</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
-      <Parameter name="outputFileName">npv_receiver.csv</Parameter>
+      <Parameter name="outputFileName">npv.csv</Parameter>
     </Analytic>
     <Analytic type="cashflow">
-      <Parameter name="active">Y</Parameter>
+      <Parameter name="active">N</Parameter>
       <Parameter name="outputFileName">flows.csv</Parameter>
     </Analytic>
     <Analytic type="curves">
-      <Parameter name="active">Y</Parameter>
+      <Parameter name="active">N</Parameter>
       <Parameter name="configuration">default</Parameter>
       <Parameter name="grid">240,1M</Parameter>
       <Parameter name="outputFileName">curves.csv</Parameter>
@@ -65,14 +65,22 @@
       <Parameter name="fvaBorrowingCurve">BANK_EUR_BORROW</Parameter>
       <Parameter name="fvaLendingCurve">BANK_EUR_LEND</Parameter>
       <Parameter name="colva">N</Parameter>
-      <Parameter name="collateralSpread">0.0010</Parameter>
-      <Parameter name="collateralFloor">Y</Parameter>
+      <Parameter name="collateralSpread">0.0000</Parameter>
+      <Parameter name="collateralFloor">N</Parameter>
       <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>
       <Parameter name="netCubeOutputFile">netcube.csv</Parameter>
     </Analytic>
     <Analytic type="initialMargin">
-      <Parameter name="active">N</Parameter>
-      <Parameter name="method"/>
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="method">SIMM</Parameter>
+      <!-- supported: ISDA_V315 -->
+      <Parameter name="simmVersion">ISDA_V315</Parameter>
+      <!-- as of ISDA_V315 the usage of product classes is mandatory -->
+      <!-- while e.g. in V308 this was still an option -->
+      <Parameter name="simmUseProductClasses">true</Parameter>
+      <Parameter name="inputFileName">SIMM_Sample_Input.txt</Parameter>
+      <Parameter name="inputDelimiterCR">true</Parameter>
+      <Parameter name="outputFileName">SIMM_Report.csv</Parameter>
     </Analytic>
   </Analytics>
 </OpenRiskEngine>

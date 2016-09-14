@@ -1,14 +1,25 @@
 <?xml version="1.0"?>
 <Simulation>
+  <!--
+	This section determines the scenario generation
+	given the model defined below.
+    -->
   <Parameters>
     <Discretization>Exact</Discretization>
-    <Grid>80,3M</Grid>
+    <Grid>100,6M</Grid>
+    <!--<Grid>250,1M</Grid>-->
     <Calendar>EUR,USD,GBP,CHF</Calendar>
     <Sequence>SobolBrownianBridge</Sequence>
+    <!-- <Sequence>MersenneTwisterAntithetic</Sequence> -->
     <Scenario>Simple</Scenario>
     <Seed>42</Seed>
+    <!--<Samples>5000</Samples>-->
     <Samples>1000</Samples>
   </Parameters>
+  <!--
+	This section determines the simulation model composition
+	and the calibration of all components.
+    -->
   <CrossAssetModel>
     <DomesticCcy>EUR</DomesticCcy>
     <Currencies>
@@ -58,9 +69,13 @@
         <Volatility>
           <Calibrate>Y</Calibrate>
           <VolatilityType>Hagan</VolatilityType>
+          <!-- Hagan, HullWhite -->
           <ParamType>Piecewise</ParamType>
-          <TimeGrid>1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0</TimeGrid>
-          <InitialValue>0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01</InitialValue>
+          <!-- Constant, Piecewise -->
+          <TimeGrid/>
+          <!-- <TimeGrid/> -->
+          <InitialValue>0.0025</InitialValue>
+          <!-- <InitialValue>0.01</InitialValue>-->
         </Volatility>
         <Reversion>
           <Calibrate>N</Calibrate>
@@ -70,8 +85,8 @@
           <InitialValue>0.03</InitialValue>
         </Reversion>
         <CalibrationSwaptions>
-          <Expiries> 1Y,  2Y,  4Y,  6Y,  8Y, 10Y, 12Y, 14Y, 16Y, 18Y, 19Y</Expiries>
-          <Terms>   19Y, 18Y, 16Y, 14Y, 12Y, 10Y,  8Y,  6Y,  4Y,  2Y,  1Y</Terms>
+          <Expiries> 1Y,  2Y,  4Y,  6Y,  8Y, 10Y, 12Y, 14Y, 16Y, 18Y, 19Y, 20Y, 25Y, 30Y, 35Y, 40Y, 45Y</Expiries>
+          <Terms>   49Y, 48Y, 46Y, 44Y, 42Y, 40Y, 38Y, 36Y, 34Y, 32Y, 31Y, 30Y, 25Y, 20Y, 15Y, 10Y, 5Y</Terms>
           <Strikes/>
         </CalibrationSwaptions>
         <ParameterTransformation>
@@ -166,14 +181,14 @@
       <!-- ... -->
     </InstantaneousCorrelations>
   </CrossAssetModel>
+  <!--
+	This setion determines the composition of the market used for
+	pricing under future market scenarios,
+	1) the structure/composition of the actively simulated market (IR, FX)
+	2) the method applied to evolve volatility structures even if not
+	simulated (roll or push)
+    -->
   <Market>
-    <!--
-	  This files determines the composition of the market used for
-	  pricing under future market scenarios,
-	  1) the structure/composition of the actively simulated market (IR, FX)
-	  2) the method applied to evolve volatility structures even if not
-	  simulated (roll or push)
-      -->
     <BaseCurrency>EUR</BaseCurrency>
     <Currencies>
       <Currency>EUR</Currency>
@@ -184,7 +199,7 @@
     </Currencies>
     <YieldCurves>
       <Configuration>
-        <Tenors>3M,6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,12Y,15Y,20Y</Tenors>
+        <Tenors>3M,6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,12Y,15Y,20Y,30Y,40Y,50Y</Tenors>
         <Interpolation>LogLinear</Interpolation>
         <!-- Alternative: LinearZero -->
         <Extrapolation>Y</Extrapolation>
@@ -220,8 +235,8 @@
 	   surfaces, so we need to specify here how we propagate the
 	   vol structure and what its composition will be -->
     <SwaptionVolatilities>
-      <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
       <!-- Alternative: ConstantVariance -->
+      <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
       <Currencies>
         <Currency>EUR</Currency>
         <Currency>USD</Currency>
@@ -233,19 +248,10 @@
       <Terms>1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,30Y</Terms>
       <Strikes/>
     </SwaptionVolatilities>
-    <CapFloorVolatilities>
-      <!-- Alternative: ForwardVariance or ConstantVariance -->
-      <ReactionToTimeDecay>ConstantVariance</ReactionToTimeDecay>
-      <Currencies>
-        <Currency>EUR</Currency>
-        <Currency>USD</Currency>
-        <Currency>GBP</Currency>
-      </Currencies>
-    </CapFloorVolatilities>
     <FxVolatilities>
       <Simulate>false</Simulate>
-      <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
       <!-- Alternative: ConstantVariance -->
+      <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
       <CurrencyPairs>
         <CurrencyPair>EURUSD</CurrencyPair>
         <CurrencyPair>EURGBP</CurrencyPair>

@@ -2,6 +2,7 @@ set datafile sep ","
 set decimal locale
 set format y "%'.0f"
 
+set title "Example 4"
 set xlabel "Time / Years"
 set ylabel "Exposure"
 
@@ -11,26 +12,15 @@ set style line 3 linecolor rgb '#008000' linetype 1 linewidth 3
 set style line 4 linecolor rgb '#990099' linetype 1 linewidth 3
 
 set autoscale
+set xrange [0:21]
 
-set term pdfcairo
+set term pdfcairo 
 set out "tmp.pdf"
-set title "Example 2 - FX Forward"
-plot "exposure_trade_FXFWD_EURUSD_10Y.csv" us 3:4 title "EPE" w l ls 1
-replot "exposure_trade_FXFWD_EURUSD_10Y.csv" us 3:5 title "ENE" w l ls 2
-replot "call.csv" us 1:2 title "Call Price" w l ls 3
-replot "put.csv" us 1:2 title "Put Price" w l ls 4
+
+plot "exposure_trade_Swap_20.csv" us 3:4 title "EPE" w l ls 1
+replot "exposure_trade_Swap_20.csv" us 3:5 title "ENE" w l ls 2
+replot "npv_payer_2.csv" us 1:2 title "Payer Swaption" w linesp ls 3 pt 4 ps 0.5 
+replot "npv_receiver_2.csv" us 1:2 title "Receiver Swaption" w linesp ls 4 pt 4 ps 0.5 
+
 set out "plot.pdf"
 replot
-
-set term pdfcairo
-set key left
-set key bottom
-set out "tmp.pdf"
-set title "Example 2 - FX Option"
-plot "exposure_trade_FX_CALL_OPTION_EURUSD_10Y.csv" us 3:4 title "Call Option EPE" w l ls 1
-replot "call.csv" us 1:2 title "Call Price" w l ls 2
-replot "exposure_trade_FX_PUT_OPTION_EURUSD_10Y.csv" us 3:4 title "Put Option EPE" w l ls 3
-replot "put.csv" us 1:2 title "Put Price" w l ls 4
-set out "plot2.pdf"
-replot
-

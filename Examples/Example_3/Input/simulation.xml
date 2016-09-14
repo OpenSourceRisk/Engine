@@ -2,13 +2,14 @@
 <Simulation>
   <Parameters>
     <Discretization>Exact</Discretization>
-    <Grid>241,1M</Grid>
+    <Grid>83,3M</Grid>
+    <!--<Grid>250,1M</Grid>-->
+    <!--<Grid>580,1W</Grid>-->
     <Calendar>EUR,USD,GBP,CHF</Calendar>
     <Sequence>SobolBrownianBridge</Sequence>
     <Scenario>Simple</Scenario>
     <Seed>42</Seed>
-    <!--<Samples>1000</Samples>-->
-    <Samples>5000</Samples>
+    <Samples>1000</Samples>
   </Parameters>
   <CrossAssetModel>
     <DomesticCcy>EUR</DomesticCcy>
@@ -45,12 +46,8 @@
           <InitialValue>0.03</InitialValue>
         </Reversion>
         <CalibrationSwaptions>
-          <Expiries> 1Y,  2Y,  4Y,  6Y,  8Y, 10Y, 12Y, 14Y, 16Y, 18Y, 19Y</Expiries>
-          <Terms>   19Y, 18Y, 16Y, 14Y, 12Y, 10Y,  8Y,  6Y,  4Y,  2Y,  1Y</Terms>
-          <!--
-		<Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 7Y, 10Y, 12Y, 15Y, 20Y, 25Y, 30Y</Expiries>
-		<Terms>   5Y, 5Y, 5Y, 5Y, 5Y, 5Y,  5Y,  5Y,  5Y,  5Y,  5Y,  5Y</Terms>
-	    -->
+          <Expiries> 1Y,2Y,3Y,4Y,5Y,7Y,10Y,12Y,15Y,20Y,25Y</Expiries>
+          <Terms>   29Y,28Y,27Y,26Y,25Y,23Y,20Y,18Y,15Y,10Y,5Y</Terms>
           <Strikes/>
         </CalibrationSwaptions>
         <ParameterTransformation>
@@ -75,8 +72,8 @@
           <InitialValue>0.03</InitialValue>
         </Reversion>
         <CalibrationSwaptions>
-          <Expiries> 1Y,  2Y,  4Y,  6Y,  8Y, 10Y, 12Y, 14Y, 16Y, 18Y, 19Y</Expiries>
-          <Terms>   19Y, 18Y, 16Y, 14Y, 12Y, 10Y,  8Y,  6Y,  4Y,  2Y,  1Y</Terms>
+          <Expiries> 1Y,2Y,3Y,4Y,5Y,7Y,10Y,12Y,15Y,20Y,25Y</Expiries>
+          <Terms>   29Y,28Y,27Y,26Y,25Y,23Y,20Y,18Y,15Y,10Y,5Y</Terms>
           <Strikes/>
         </CalibrationSwaptions>
         <ParameterTransformation>
@@ -101,8 +98,8 @@
           <InitialValue>0.03</InitialValue>
         </Reversion>
         <CalibrationSwaptions>
-          <Expiries> 1Y,  2Y,  4Y,  6Y,  8Y, 10Y, 12Y, 14Y, 16Y, 18Y, 19Y</Expiries>
-          <Terms>   19Y, 18Y, 16Y, 14Y, 12Y, 10Y,  8Y,  6Y,  4Y,  2Y,  1Y</Terms>
+          <Expiries> 1Y,2Y,3Y,4Y,5Y,7Y,10Y,12Y,15Y,20Y,25Y</Expiries>
+          <Terms>   29Y,28Y,27Y,26Y,25Y,23Y,20Y,18Y,15Y,10Y,5Y</Terms>
           <Strikes/>
         </CalibrationSwaptions>
         <ParameterTransformation>
@@ -173,7 +170,7 @@
   </CrossAssetModel>
   <Market>
     <!--
-	  This section determines the composition of the market used for
+	  This files determines the composition of the market used for
 	  pricing under future market scenarios,
 	  1) the structure/composition of the actively simulated market (IR, FX)
 	  2) the method applied to evolve volatility structures even if not

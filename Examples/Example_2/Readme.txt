@@ -1,21 +1,19 @@
 1) Portfolio
 
-FX Forward, USD/EUR, maturity 10y
-FX EUR/USD Call and Put Option with expiry 10Y
+   Vanilla Swap, EUR, 10k notional, 20Y maturity, rec. fixed 0.99851% (ATM), pay 6m Euribor
 
 2) Market
 
-Pseudo market as of 2016-02-05
+   Pseudo market data as of 2016-02-05
 
 3) Pricing
 
-Cross currency discounting with EUR collateral
+   Dual curve, Eonia Discounting, Euribor Forwards 
 
 4) Analytics
 
-FX Forward EPE and ENE, compared to FX Put/Call Option with expiry 10Y
-FX Option EPE 
+   EPE and ENE, compared to European payer and receiver swaption prices 
 
 5) Run Example
 
-./run.sh
+   ./run.sh

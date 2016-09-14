@@ -2,7 +2,7 @@
 <Simulation>
   <Parameters>
     <Discretization>Exact</Discretization>
-    <Grid>290,2W</Grid>
+    <Grid>92,3M</Grid>
     <!--<Grid>580,1W</Grid>-->
     <Calendar>EUR,USD,GBP,CHF</Calendar>
     <Sequence>SobolBrownianBridge</Sequence>

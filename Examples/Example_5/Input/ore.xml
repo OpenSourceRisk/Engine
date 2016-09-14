@@ -43,7 +43,6 @@
       <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="storeScenarios">N</Parameter>
-      <Parameter name="storeFlows">Y</Parameter>
       <Parameter name="cubeFile">cube.dat</Parameter>
       <Parameter name="additionalScenarioDataFileName">scenariodata.dat</Parameter>
     </Analytic>
@@ -51,13 +50,12 @@
       <Parameter name="active">Y</Parameter>
       <Parameter name="csaFile">netting.xml</Parameter>
       <Parameter name="cubeFile">cube.dat</Parameter>
-      <Parameter name="cubeDepth">2</Parameter>      
       <Parameter name="scenarioFile">scenariodata.dat</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="exposureProfiles">Y</Parameter>
       <Parameter name="quantile">0.95</Parameter>
       <Parameter name="calculationType">Symmetric</Parameter>
-      <Parameter name="allocationMethod">Marginal</Parameter>
+      <Parameter name="allocationMethod">None</Parameter>
       <Parameter name="marginalAllocationLimit">1.0</Parameter>
       <Parameter name="exerciseNextBreak">N</Parameter>
       <Parameter name="cva">Y</Parameter>

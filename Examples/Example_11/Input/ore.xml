@@ -1,6 +1,6 @@
-<?xml version="1.0"?>
 <OpenRiskEngine>
-  <Setup>
+
+  <Setup>    
     <Parameter name="asofDate">2016-02-05</Parameter>
     <Parameter name="inputPath">Input</Parameter>
     <Parameter name="outputPath">Output</Parameter>
@@ -15,30 +15,36 @@
     <Parameter name="portfolioFile">portfolio.xml</Parameter>
     <Parameter name="observationModel">Disable</Parameter>
   </Setup>
+
   <Markets>
     <Parameter name="lgmcalibration">libor</Parameter>
     <Parameter name="fxcalibration">libor</Parameter>
     <Parameter name="pricing">libor</Parameter>
     <Parameter name="simulation">libor</Parameter>
   </Markets>
+
   <Analytics>
+    
     <Analytic type="npv">
-      <Parameter name="active">N</Parameter>
+      <Parameter name="active">Y</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="outputFileName">npv.csv</Parameter>
-    </Analytic>
+    </Analytic>      
+
     <Analytic type="cashflow">
-      <Parameter name="active">N</Parameter>
+      <Parameter name="active">Y</Parameter>
       <Parameter name="outputFileName">flows.csv</Parameter>
-    </Analytic>
+    </Analytic>      
+
     <Analytic type="curves">
-      <Parameter name="active">N</Parameter>
+      <Parameter name="active">Y</Parameter>
       <Parameter name="configuration">default</Parameter>
       <Parameter name="grid">240,1M</Parameter>
       <Parameter name="outputFileName">curves.csv</Parameter>
-    </Analytic>
+    </Analytic>      
+
     <Analytic type="simulation">
-      <Parameter name="active">N</Parameter>
+      <Parameter name="active">Y</Parameter>
       <Parameter name="simulationConfigFile">simulation.xml</Parameter>
       <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
@@ -46,17 +52,18 @@
       <Parameter name="cubeFile">cube.dat</Parameter>
       <Parameter name="additionalScenarioDataFileName">scenariodata.dat</Parameter>
     </Analytic>
+
     <Analytic type="xva">
-      <Parameter name="active">N</Parameter>
+      <Parameter name="active">Y</Parameter>
       <Parameter name="csaFile">netting.xml</Parameter>
       <Parameter name="cubeFile">cube.dat</Parameter>
       <Parameter name="scenarioFile">scenariodata.dat</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="exposureProfiles">Y</Parameter>
       <Parameter name="quantile">0.95</Parameter>
-      <Parameter name="calculationType">Symmetric</Parameter>
-      <Parameter name="allocationMethod">None</Parameter>
-      <Parameter name="marginalAllocationLimit">1.0</Parameter>
+      <Parameter name="calculationType">Symmetric</Parameter>      
+      <Parameter name="allocationMethod">None</Parameter>    
+      <Parameter name="marginalAllocationLimit">1.0</Parameter>    
       <Parameter name="exerciseNextBreak">N</Parameter>
       <Parameter name="cva">Y</Parameter>
       <Parameter name="dva">N</Parameter>
@@ -69,18 +76,14 @@
       <Parameter name="collateralFloor">N</Parameter>
       <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>
       <Parameter name="netCubeOutputFile">netcube.csv</Parameter>
+      
     </Analytic>
+
     <Analytic type="initialMargin">
-      <Parameter name="active">Y</Parameter>
-      <Parameter name="method">SIMM</Parameter>
-      <!-- supported: ISDA_V315 -->
-      <Parameter name="simmVersion">ISDA_V315</Parameter>
-      <!-- as of ISDA_V315 the usage of product classes is mandatory -->
-      <!-- while e.g. in V308 this was still an option -->
-      <Parameter name="simmUseProductClasses">true</Parameter>
-      <Parameter name="inputFileName">SIMM_Sample_Input.txt</Parameter>
-      <Parameter name="inputDelimiterCR">true</Parameter>
-      <Parameter name="outputFileName">SIMM_Report.csv</Parameter>
+      <Parameter name="active">N</Parameter>
+      <Parameter name="method"></Parameter>
     </Analytic>
+
   </Analytics>
+  
 </OpenRiskEngine>

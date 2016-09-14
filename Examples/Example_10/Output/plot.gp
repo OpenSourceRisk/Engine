@@ -2,6 +2,7 @@ set datafile sep ","
 set decimal locale
 set format y "%'.0f"
 
+set title "Example 5"
 set xlabel "Time / Years"
 set ylabel "Exposure"
 
@@ -11,12 +12,91 @@ set style line 3 linecolor rgb '#008000' linetype 1 linewidth 3
 set style line 4 linecolor rgb '#990099' linetype 1 linewidth 3
 
 set autoscale
+set term pdfcairo
 
-set term pdfcairo 
 set out "tmp.pdf"
-plot "exposure_trade_SwaptionCash.csv" us 3:4 title "EPE Swaption (Cash)" w l ls 1
-replot "exposure_trade_SwaptionPhysical.csv" us 3:4 title "EPE Swaption (Physical)" w l ls 2
-replot "exposure_trade_Swap.csv" us 3:4 title "EPE Forward Swap" w l ls 3
-set out "example_swaption.pdf"
+plot "collateral_none/exposure_trade_Swap_1.csv" us 3:4 title "EPE Swap 1" w l ls 1
+replot "collateral_none/exposure_trade_Swap_2.csv" us 3:4 title "EPE Swap 2" w l ls 2
+replot "collateral_none/exposure_trade_Swap_3.csv" us 3:4 title "EPE Swap 3" w l ls 3
+replot "collateral_none/exposure_nettingset_CPTY_A.csv" us 3:4 title "EPE NettingSet" w l ls 4
+set out "plot_nocollateral_epe.pdf"
 replot
 
+set out "tmp.pdf"
+plot "collateral_none/exposure_trade_Swap_1.csv" us 3:5 title "ENE Swap 1" w l ls 1
+replot "collateral_none/exposure_trade_Swap_2.csv" us 3:5 title "ENE Swap 2" w l ls 2
+replot "collateral_none/exposure_trade_Swap_3.csv" us 3:5 title "ENE Swap 3" w l ls 3
+replot "collateral_none/exposure_nettingset_CPTY_A.csv" us 3:5 title "ENE NettingSet" w l ls 4
+set out "plot_nocollateral_ene.pdf"
+replot
+
+set out "tmp.pdf"
+plot "collateral_none/exposure_trade_Swap_1.csv" us 3:6 title "Allocated EPE Swap 1" w l ls 1
+replot "collateral_none/exposure_trade_Swap_2.csv" us 3:6 title "Allocated EPE Swap 2" w l ls 2
+replot "collateral_none/exposure_trade_Swap_3.csv" us 3:6 title "Allocated EPE Swap 3" w l ls 3
+set out "plot_nocollateral_allocated_epe.pdf"
+replot
+
+set out "tmp.pdf"
+plot "collateral_none/exposure_trade_Swap_1.csv" us 3:7 title "Allocated ENE Swap 1" w l ls 1
+replot "collateral_none/exposure_trade_Swap_2.csv" us 3:7 title "Allocated ENE Swap 2" w l ls 2
+replot "collateral_none/exposure_trade_Swap_3.csv" us 3:7 title "Allocated ENE Swap 3" w l ls 3
+set out "plot_nocollateral_allocated_ene.pdf"
+replot
+
+set out "tmp.pdf"
+plot "collateral_none/exposure_nettingset_CPTY_A.csv" us 3:4 title "EPE NettingSet" w l ls 1
+replot "collateral_threshold/exposure_nettingset_CPTY_A.csv" us 3:4 title "EPE NettingSet, Threshold 1m" w l ls 2
+set out "plot_threshold_epe.pdf"
+replot
+
+set out "tmp.pdf"
+plot "collateral_threshold/exposure_trade_Swap_1.csv" us 3:6 title "Allocated EPE Swap 1" w l ls 1
+replot "collateral_threshold/exposure_trade_Swap_2.csv" us 3:6 title "Allocated EPE Swap 2" w l ls 2
+replot "collateral_threshold/exposure_trade_Swap_3.csv" us 3:6 title "Allocated EPE Swap 3" w l ls 3
+set out "plot_threshold_allocated_epe.pdf"
+replot
+
+set out "tmp.pdf"
+plot "collateral_none/exposure_nettingset_CPTY_A.csv" us 3:4 title "EPE NettingSet" w l ls 1
+replot "collateral_mta/exposure_nettingset_CPTY_A.csv" us 3:4 title "EPE NettingSet, MTA 100k" w l ls 2
+set out "plot_mta_epe.pdf"
+replot
+
+set out "tmp.pdf"
+plot "collateral_none/exposure_nettingset_CPTY_A.csv" us 3:4 title "EPE NettingSet" w l ls 1
+replot "collateral_mpor/exposure_nettingset_CPTY_A.csv" us 3:4 title "EPE NettingSet, MPOR 2W" w l ls 2
+set out "plot_mpor_epe.pdf"
+replot
+
+set out "tmp.pdf"
+set ylabel "Collateral Balance"
+plot "collateral_threshold/colva_nettingset_CPTY_A.csv" us 3:4 title "Collateral Balance" w l ls 1
+set out "plot_collateral.pdf"
+replot
+
+set out "tmp.pdf"
+set ylabel "COLVA"
+plot "collateral_threshold/colva_nettingset_CPTY_A.csv" us 3:5 title "COLVA Increments" w l ls 1
+set out "plot_colva.pdf"
+replot
+
+set out "tmp.pdf"
+set ylabel "Collateral Floor Value"
+plot "collateral_threshold/colva_nettingset_CPTY_A.csv" us 3:7 title "Collateral Floor Increments" w l ls 1
+#replot "collateral_threshold/colva_nettingset_CPTY_A.csv" us 3:8 title "Collateral Floor, Cumulative" w l ls 2
+set out "plot_collateral_floor.pdf"
+replot
+
+set out "tmp.pdf"
+plot "collateral_threshold/exposure_nettingset_CPTY_A.csv" us 3:4 title "EPE NettingSet, Threshold 1m" w l ls 1
+replot "collateral_threshold_break/exposure_nettingset_CPTY_A.csv" us 3:4 title "EPE NettingSet, Threshold 1m, Breaks" w l ls 2
+set out "plot_threshold_break_epe.pdf"
+replot
+
+set out "tmp.pdf"
+set ylabel "Collateral Floor Value"
+plot "collateral_threshold/colva_nettingset_CPTY_A.csv" us 3:7 title "Collateral Floor Increments" w l ls 1
+replot "collateral_threshold_break/colva_nettingset_CPTY_A.csv" us 3:7 title "Collateral Floor Increments, Breaks" w l ls 2
+set out "plot_collateral_floor_break.pdf"
+replot
