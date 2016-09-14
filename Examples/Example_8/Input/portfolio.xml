@@ -14,6 +14,10 @@
         <Currency>EUR</Currency>
         <Notionals>
           <Notional>10000000</Notional>
+          <Exchanges>
+            <NotionalInitialExchange>true</NotionalInitialExchange>
+            <NotionalFinalExchange>true</NotionalFinalExchange>
+          </Exchanges>
         </Notionals>
         <DayCounter>A360</DayCounter>
         <PaymentConvention>ModifiedFollowing</PaymentConvention>
@@ -44,6 +48,10 @@
         <Currency>USD</Currency>
         <Notionals>
           <Notional>11000000</Notional>
+          <Exchanges>
+            <NotionalInitialExchange>true</NotionalInitialExchange>
+            <NotionalFinalExchange>true</NotionalFinalExchange>
+          </Exchanges>
         </Notionals>
         <DayCounter>ACT/ACT</DayCounter>
         <PaymentConvention>Following</PaymentConvention>
