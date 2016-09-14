@@ -90,7 +90,7 @@
           <Strikes/>
         </CalibrationSwaptions>
         <ParameterTransformation>
-          <ShiftHorizon>50.0</ShiftHorizon>
+          <ShiftHorizon>30.0</ShiftHorizon>
           <Scaling>1.0</Scaling>
         </ParameterTransformation>
       </LGM>
