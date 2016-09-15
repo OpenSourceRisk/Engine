@@ -1,3 +1,5 @@
+\subsubsection{Yield Curves}
+
 The top level XML elements for each \lstinline!YieldCurve! node are shown in Listing \ref{lst:top_level_yc}.
 
 \begin{listing}[H]
@@ -21,7 +23,7 @@ The top level XML elements for each \lstinline!YieldCurve! node are shown in Lis
 \end{listing}
 
 The meaning of each of the top level elements in Listing \ref{lst:top_level_yc} is given below. If an element is labelled 
-as ``Optional'', then it may be excluded or included and left blank.
+as 'Optional', then it may be excluded or included and left blank.
 \begin{itemize}
 \item CurveId: Unique identifier for the yield curve.
 \item CurveDescription: A description of the yield curve. This field may be left blank.
@@ -29,7 +31,8 @@ as ``Optional'', then it may be excluded or included and left blank.
 \item DiscountCurve: If the yield curve is being bootstrapped from market instruments, this gives the CurveId of the yield 
 curve used to discount cash flows during the bootstrap procedure. If this field is left blank or set equal to the current 
 CurveId, then this yield curve itself is used to discount cash flows during the bootstrap procedure.
-\item Segments: This element contains child elements and is described in \S \ref{ss:segments_node} below.
+\item Segments: This element contains child elements and is described
+  in the following subsection.
 \item InterpolationVariable [Optional]: The variable on which the interpolation is performed. The allowable values are 
 given in Table \ref{tab:allow_interp_variables}. If the element is omitted or left blank, then it defaults to 
 \emph{Discount}.
@@ -86,7 +89,7 @@ node has the structure shown in Listing \ref{lst:direct_segment}. We refer to th
 because the discount factors, or equivalently the zero rates, are given explicitly and do not need to be bootstrapped. The 
 \lstinline!Quotes! node contains a list of \lstinline!Quote! elements. Each \lstinline!Quote! element contains an ID 
 pointing to a line in the {\tt market.txt} file, i.e.\ in this case, pointing to a particular zero rate or discount 
-factor. The \lstinline!Conventions! node contains the ID of a node in the {\tt conventions.xml} file described in \S 
+factor. The \lstinline!Conventions! node contains the ID of a node in the {\tt conventions.xml} file described in section 
 \ref{sec:conventions}. The \lstinline!Conventions! node associates conventions with the quotes.
 
 \begin{listing}[H]

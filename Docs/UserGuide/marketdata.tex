@@ -5,13 +5,23 @@
 Market data in the {\tt market.txt} file is given in three columns;  Date,  Quote and  Quote value. 
 
 \begin{itemize}
-\item {\bf Date}: The as of date of the market quote value.  \\ Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+\item {\bf Date}: The as of date of the market quote value.  
+
+Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
 
 \item {\bf Quote}: A generic description that contains Instrument Type
   and Quote Type, followed by instrument specific descriptions (See \S
-  \ref{ss:zero_rate} ff.). The base of a quote consists of InstType/QuoteType followed by instrument specific information separated by slashes "/".  \\Allowable values for Instrument Types and Quote Types are given in Table \ref{tab:allow_market_data}.
+  \ref{ss:zero_rate} ff.). The base of a quote consists of
+  InstType/QuoteType followed by instrument specific information
+  separated by slashes "/".  
 
-\item {\bf Quote Value}: The market quote value in decimal form for the given quote on the given as of date. Quote values are assumed to be mid-market. \\Allowable values: Any real number.
+Allowable values for Instrument Types and Quote Types are given in Table \ref{tab:allow_market_data}.
+
+\item {\bf Quote Value}: The market quote value in decimal form for
+  the given quote on the given as of date. Quote values are assumed to
+  be mid-market. 
+
+Allowable values: Any real number.
 \end{itemize}
 
 \begin{table}[H]
@@ -171,7 +181,8 @@ Term & An integer followed by D, W, M or Y. & Period from start to maturity\\ \h
 \end{table}
 
 
-Deposits are usually quoted as ON (Overnight), TN (Tomorrow Next), SN (Spot Next), SW (Spot Week), 3W (3 Weeks), 6M (6 Months), etc.
+Deposits are usually quoted as ON (Overnight), TN (Tomorrow Next), SN
+(Spot Next), SW (Spot Week), 3W (3 Weeks), 6M (6 Months), etc. \\
  
 Forward start for ON is today (i.e. forward start = 0D), for TN tomorrow (forward start = 1D), for SN two days from today (forward start = 2D). For longer term Deposits, forward start is derived from conventions, see \S \ref{sec:conventions}, and is between 0D and 2D, i.e. "spot days" are between 0 and 2. 
 
