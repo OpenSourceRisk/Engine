@@ -17,8 +17,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/timer.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/timer.hpp>
 
 #ifdef BOOST_MSVC
 // disable warning C4503: '__LINE__Var': decorated name length exceeded, name was truncated
@@ -32,17 +32,17 @@
 
 #include <orea/orea.hpp>
 #include <ored/ored.hpp>
+#include <ql/cashflows/floatingratecoupon.hpp>
 #include <ql/time/calendars/all.hpp>
 #include <ql/time/daycounters/all.hpp>
-#include <ql/cashflows/floatingratecoupon.hpp>
 
 #include "ore.hpp"
 
 #ifdef BOOST_MSVC
-#include <ql/auto_link.hpp>
-#include <qle/auto_link.hpp>
 #include <orea/auto_link.hpp>
 #include <ored/auto_link.hpp>
+#include <ql/auto_link.hpp>
+#include <qle/auto_link.hpp>
 // Find the name of the correct boost library with which to link.
 #define BOOST_LIB_NAME boost_regex
 #include <boost/config/auto_link.hpp>
@@ -280,7 +280,10 @@ int main(int argc, char** argv) {
             LOG("Build valuation cube engine");
             Size samples = sgd->samples();
             string baseCurrency = params.get("simulation", "baseCurrency");
-            ValuationEngine engine(asof, grid, samples, baseCurrency, simMarket);
+            // Valuation calculators
+            vector<boost::shared_ptr<ValuationCalculator>> calculators;
+            calculators.push_back(boost::make_shared<NPVCalculator>(baseCurrency));
+            ValuationEngine engine(asof, grid, samples, simMarket);
 
             ostringstream o;
             o << "Additional Scenario Data " << grid->size() << " x " << samples << "... ";
@@ -297,7 +300,7 @@ int main(int argc, char** argv) {
             engine.registerProgressIndicator(progressLog);
             inMemoryCube =
                 boost::make_shared<SinglePrecisionInMemoryCube>(asof, simPortfolio->ids(), grid->dates(), samples);
-            engine.buildCube(simPortfolio, inMemoryCube, inMemoryScenarioData);
+            engine.buildCube(simPortfolio, inMemoryCube, calculators, inMemoryScenarioData);
             cout << "OK" << endl;
 
             cout << setw(tab) << left << "Write Cube... " << flush;
@@ -446,7 +449,7 @@ void writeNpv(const Parameters& params, boost::shared_ptr<Market> market, const 
              << dc.yearFraction(today, trade->maturity()) << sep;
         try {
             Real npv = trade->instrument()->NPV();
-            file << npv << sep << npvCcy << sep << npv* fx << sep << baseCurrency << endl;
+            file << npv << sep << npvCcy << sep << npv * fx << sep << baseCurrency << endl;
         } catch (std::exception& e) {
             ALOG("Exception during pricing trade " << trade->id() << ": " << e.what());
             file << "#NA" << sep << "#NA" << sep << "#NA" << sep << "#NA" << endl;
@@ -586,16 +589,19 @@ void writeTradeExposures(const Parameters& params, boost::shared_ptr<PostProcess
         QL_REQUIRE(file.is_open(), "Error opening file " << fileName);
         const vector<Real>& epe = postProcess->tradeEPE(tradeId);
         const vector<Real>& ene = postProcess->tradeENE(tradeId);
+        const vector<Real>& ee_b = postProcess->tradeEE_B(tradeId);
+        const vector<Real>& eee_b = postProcess->tradeEEE_B(tradeId);
         const vector<Real>& pfe = postProcess->tradePFE(tradeId);
         const vector<Real>& aepe = postProcess->allocatedTradeEPE(tradeId);
         const vector<Real>& aene = postProcess->allocatedTradeENE(tradeId);
-        file << "#TradeId,Date,Time,EPE,ENE,AllocatedEPE,AllocatedENE,PFE" << endl;
+        file << "#TradeId,Date,Time,EPE,ENE,AllocatedEPE,AllocatedENE,PFE,BaselEE,BaselEEE" << endl;
         file << tradeId << "," << QuantLib::io::iso_date(today) << "," << 0.0 << "," << epe[0] << "," << ene[0] << ","
-             << aepe[0] << "," << aene[0] << "," << pfe[0] << endl;
+             << aepe[0] << "," << aene[0] << "," << pfe[0] << "," << ee_b[0] << "," << eee_b[0] << endl;
         for (Size j = 0; j < dates.size(); ++j) {
             Time time = dc.yearFraction(today, dates[j]);
             file << tradeId << "," << QuantLib::io::iso_date(dates[j]) << "," << time << "," << epe[j + 1] << ","
-                 << ene[j + 1] << "," << aepe[j + 1] << "," << aene[j + 1] << "," << pfe[j + 1] << endl;
+                 << ene[j + 1] << "," << aepe[j + 1] << "," << aene[j + 1] << "," << pfe[j + 1] << "," << ee_b[j + 1]
+                 << "," << eee_b[j + 1] << endl;
         }
         file.close();
     }
@@ -614,15 +620,18 @@ void writeNettingSetExposures(const Parameters& params, boost::shared_ptr<PostPr
         QL_REQUIRE(file.is_open(), "Error opening file " << fileName);
         const vector<Real>& epe = postProcess->netEPE(n);
         const vector<Real>& ene = postProcess->netENE(n);
+        const vector<Real>& ee_b = postProcess->netEE_B(n);
+        const vector<Real>& eee_b = postProcess->netEEE_B(n);
         const vector<Real>& pfe = postProcess->netPFE(n);
         const vector<Real>& ecb = postProcess->expectedCollateral(n);
-        file << "#NettingSet,Date,Time,EPE,ENE,PFE,ExpectedCollateral" << endl;
+        file << "#NettingSet,Date,Time,EPE,ENE,PFE,ExpectedCollateral,BaselEE,BaselEEE" << endl;
         file << n << "," << QuantLib::io::iso_date(today) << "," << 0.0 << "," << epe[0] << "," << ene[0] << ","
-             << pfe[0] << "," << ecb[0] << endl;
+             << pfe[0] << "," << ecb[0] << "," << ee_b[0] << "," << eee_b[0] << endl;
         for (Size j = 0; j < dates.size(); ++j) {
             Real time = dc.yearFraction(today, dates[j]);
             file << n << "," << QuantLib::io::iso_date(dates[j]) << "," << time << "," << epe[j + 1] << ","
-                 << ene[j + 1] << "," << pfe[j + 1] << "," << ecb[j + 1] << endl;
+                 << ene[j + 1] << "," << pfe[j + 1] << "," << ecb[j + 1] << "," << ee_b[j + 1] << "," << eee_b[j + 1]
+                 << endl;
         }
         file.close();
     }
@@ -637,14 +646,15 @@ void writeXVA(const Parameters& params, boost::shared_ptr<Portfolio> portfolio,
     string fileName = outputPath + "/xva.csv";
     ofstream file(fileName.c_str());
     QL_REQUIRE(file.is_open(), "Error opening file " << fileName);
-    file << "#TradeId,NettingSetId,CVA,DVA,FBA,FCA,COLVA,CollateralFloor,AllocatedCVA,AllocatedDVA,AllocationMethod"
+    file << "#TradeId,NettingSetId,CVA,DVA,FBA,FCA,COLVA,CollateralFloor,AllocatedCVA,AllocatedDVA,AllocationMethod,"
+            "BaselEPE,BaselEEPE"
          << endl;
     for (auto n : postProcess->nettingSetIds()) {
         file << "," << n << "," << postProcess->nettingSetCVA(n) << "," << postProcess->nettingSetDVA(n) << ","
              << postProcess->nettingSetFBA(n) << "," << postProcess->nettingSetFCA(n) << ","
              << postProcess->nettingSetCOLVA(n) << "," << postProcess->nettingSetCollateralFloor(n) << ","
-             << postProcess->nettingSetCVA(n) << "," << postProcess->nettingSetDVA(n) << "," << allocationMethod
-             << endl;
+             << postProcess->nettingSetCVA(n) << "," << postProcess->nettingSetDVA(n) << "," << allocationMethod << ","
+             << postProcess->netEPE_B(n) << "," << postProcess->netEEPE_B(n) << endl;
         for (Size k = 0; k < portfolio->trades().size(); ++k) {
             string tid = portfolio->trades()[k]->id();
             string nid = portfolio->trades()[k]->envelope().nettingSetId();
@@ -655,7 +665,8 @@ void writeXVA(const Parameters& params, boost::shared_ptr<Portfolio> portfolio,
                  << "n/a," // no trade COLVA
                  << "n/a," // no trade collateral floor
                  << postProcess->allocatedTradeCVA(tid) << "," << postProcess->allocatedTradeDVA(tid) << ","
-                 << allocationMethod << endl;
+                 << allocationMethod << "," << postProcess->tradeEPE_B(tid) << "," << postProcess->tradeEEPE_B(tid)
+                 << endl;
         }
     }
     file.close();

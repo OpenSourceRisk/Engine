@@ -31,19 +31,19 @@
           </Rates>
         </FixedLegData>
         <ScheduleData>
-	  <Rules>
-          <IsRulesBased>true</IsRulesBased>
-          <StartDate>20110607</StartDate>
-          <EndDate>20340420</EndDate>
-          <Tenor>1Y</Tenor>
-          <Calendar>TARGET</Calendar>
-          <Convention>F</Convention>
-          <TermConvention>F</TermConvention>
-          <Rule>Forward</Rule>
-          <EndOfMonth/>
-          <FirstDate>20120420</FirstDate>
-          <LastDate/>
-        </Rules>
+          <Rules>
+            <IsRulesBased>true</IsRulesBased>
+            <StartDate>20110607</StartDate>
+            <EndDate>20340420</EndDate>
+            <Tenor>1Y</Tenor>
+            <Calendar>TARGET</Calendar>
+            <Convention>F</Convention>
+            <TermConvention>F</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate>20120420</FirstDate>
+            <LastDate/>
+          </Rules>
         </ScheduleData>
       </LegData>
       <LegData>
@@ -64,19 +64,19 @@
           <FixingDays>2</FixingDays>
         </FloatingLegData>
         <ScheduleData>
-	  <Rules>
-          <IsRulesBased>true</IsRulesBased>
-          <StartDate>20110607</StartDate>
-          <EndDate>20340420</EndDate>
-          <Tenor>6M</Tenor>
-          <Calendar>TARGET</Calendar>
-          <Convention>MF</Convention>
-          <TermConvention>MF</TermConvention>
-          <Rule>Forward</Rule>
-          <EndOfMonth/>
-          <FirstDate>20110720</FirstDate>
-          <LastDate/>
-        </Rules>
+          <Rules>
+            <IsRulesBased>true</IsRulesBased>
+            <StartDate>20110607</StartDate>
+            <EndDate>20340420</EndDate>
+            <Tenor>6M</Tenor>
+            <Calendar>TARGET</Calendar>
+            <Convention>MF</Convention>
+            <TermConvention>MF</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate>20110720</FirstDate>
+            <LastDate/>
+          </Rules>
         </ScheduleData>
       </LegData>
     </SwapData>

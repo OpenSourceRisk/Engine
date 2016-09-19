@@ -14,17 +14,15 @@
         <Currency>CZK</Currency>
       -->
   </Currencies>
-
   <!-- 
        Credit "names" to be set up with a scenario default curve in scenario market.
        Each one needs be listed with a valid curve spec in section DefaultCurves below
   -->
   <Names>
-  <!--
+    <!--
       <Name>CDXNAIG</Name>
     -->
   </Names>
-
   <!-- Yield Curves -->
   <DiscountCurves>
     <DiscountCurve>
@@ -94,13 +92,11 @@
     </DiscountCurve>
   </DiscountCurves>
   <!-- Inflation -->
-
   <Regions>
     <Region>EU</Region>
     <Region>UK</Region>
     <Region>FR</Region>
   </Regions>
-
   <InflationCurves>
     <InflationCurve>
       <Region>EU</Region>
@@ -115,7 +111,6 @@
       <Spec>Inflation/Z/FRCPIXT/F/Yield/EUR/EUR6M</Spec>
     </InflationCurve>
   </InflationCurves>
-
   <InflationCurveTenors>
     <Tenor>1Y</Tenor>
     <Tenor>2Y</Tenor>
@@ -133,7 +128,6 @@
     <Tenor>25Y</Tenor>
     <Tenor>30Y</Tenor>
   </InflationCurveTenors>
-
   <InflationVolCurves>
     <InflationVolCurve>
       <Region>UK</Region>
@@ -145,10 +139,10 @@
     </InflationVolCurve>
     <InflationVolCurve>
       <Region>FR</Region>
-      <Spec>InflationVolatility/Z/EUHICP/T</Spec> <!-- FIXME : proxy FR vol with EU -->
+      <Spec>InflationVolatility/Z/EUHICP/T</Spec>
+      <!-- FIXME : proxy FR vol with EU -->
     </InflationVolCurve>
   </InflationVolCurves>
-  
   <!-- Credit -->
   <DefaultCurves>
     <!--
@@ -195,7 +189,7 @@
     <DefaultCurve>
       <Rating>CUST_C3</Rating>
       <Spec>Default/HR/CUST_C3</Spec>
-    </DefaultCurve>    
+    </DefaultCurve>
     <DefaultCurve>
       <Rating>MLIB</Rating>
       <Spec>Default/HR/MLIB</Spec>
@@ -382,7 +376,7 @@
       <CurrencyPair>EURDKK</CurrencyPair>
       <Spec>FxVolatility/EUR/DKK/Yield/EUR/EUR6M/Yield/DKK/DKK6M/ATM</Spec>
     </FxVolatility>
-<!--    <FxVolatility>
+    <!--    <FxVolatility>
       <CurrencyPair>EURNOK</CurrencyPair>
       <Spec>FxVolatility/EUR/NOK/Yield/EUR/EUR6M/Yield/NOK/NOK6M/ATM</Spec>
     </FxVolatility>
@@ -471,9 +465,8 @@
     </CapVolatility>
     -->
   </CapVolatilities>
-
   <SwaptionVolatilities>
-<!--
+    <!--
     <SwaptionVolatility>
       <Currency>EUR</Currency>
       <Spec>Volatility/Swaption/Normal/ATM/EUR/Yield/EUR/EUR1D</Spec>
@@ -714,11 +707,13 @@
     </IborIndex>
     <IborIndex>
       <Name>EUR-EURIBOR-1M</Name>
-      <Spec>Yield/EUR/EUR3M</Spec><!--FIXME-->
+      <Spec>Yield/EUR/EUR3M</Spec>
+      <!--FIXME-->
     </IborIndex>
     <IborIndex>
       <Name>EUR-EURIBOR-12M</Name>
-      <Spec>Yield/EUR/EUR6M</Spec><!--FIXME-->
+      <Spec>Yield/EUR/EUR6M</Spec>
+      <!--FIXME-->
     </IborIndex>
     <IborIndex>
       <Name>GBP-LIBOR-3M</Name>
@@ -726,23 +721,28 @@
     </IborIndex>
     <IborIndex>
       <Name>GBP-LIBOR-1M</Name>
-      <Spec>Yield/GBP/GBP6M</Spec><!--FIXME-->
+      <Spec>Yield/GBP/GBP6M</Spec>
+      <!--FIXME-->
     </IborIndex>
     <IborIndex>
       <Name>JPY-LIBOR-3M</Name>
-      <Spec>Yield/JPY/JPY6M</Spec><!--FIXME-->
+      <Spec>Yield/JPY/JPY6M</Spec>
+      <!--FIXME-->
     </IborIndex>
     <IborIndex>
       <Name>CHF-LIBOR-3M</Name>
-      <Spec>Yield/CHF/CHF6M</Spec><!--FIXME-->
+      <Spec>Yield/CHF/CHF6M</Spec>
+      <!--FIXME-->
     </IborIndex>
     <IborIndex>
       <Name>USD-LIBOR-6M</Name>
-      <Spec>Yield/USD/USD3M</Spec><!--FIXME-->
+      <Spec>Yield/USD/USD3M</Spec>
+      <!--FIXME-->
     </IborIndex>
     <IborIndex>
       <Name>USD-LIBOR-1M</Name>
-      <Spec>Yield/USD/USD3M</Spec><!--FIXME-->
+      <Spec>Yield/USD/USD3M</Spec>
+      <!--FIXME-->
     </IborIndex>
     <IborIndex>
       <Name>USD-BMA-3M</Name>
@@ -750,17 +750,19 @@
     </IborIndex>
     <IborIndex>
       <Name>USD-BMA-1M</Name>
-      <Spec>Yield/USD/BMA3M</Spec><!--FIXME-->
+      <Spec>Yield/USD/BMA3M</Spec>
+      <!--FIXME-->
     </IborIndex>
-      <IborIndex>
+    <IborIndex>
       <Name>AUD-BBSW-3M</Name>
-      <Spec>Yield/AUD/AUD6M</Spec><!--FIXME-->
+      <Spec>Yield/AUD/AUD6M</Spec>
+      <!--FIXME-->
     </IborIndex>
     <IborIndex>
       <Name>CAD-BA-3M</Name>
-      <Spec>Yield/CAD/CAD6M</Spec><!--FIXME-->
+      <Spec>Yield/CAD/CAD6M</Spec>
+      <!--FIXME-->
     </IborIndex>
-
     <!--
         <IborIndex>
             <Name>EUR-LIBOR-1M</Name>

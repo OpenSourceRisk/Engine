@@ -1,6 +1,6 @@
+<?xml version="1.0"?>
 <OpenRiskEngine>
-
-  <Setup>    
+  <Setup>
     <Parameter name="asofDate">2016-03-01</Parameter>
     <Parameter name="inputPath">Input</Parameter>
     <Parameter name="outputPath">Output</Parameter>
@@ -14,36 +14,31 @@
     <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
     <!--<Parameter name="portfolioFile">instruments_A_627291AI.xml</Parameter>-->
     <Parameter name="portfolioFile">instruments_A.xml</Parameter>
-    <Parameter name="observationModel">Disable</Parameter> <!-- Unregister, None or Disable -->
+    <Parameter name="observationModel">Disable</Parameter>
+    <!-- Unregister, None or Disable -->
   </Setup>
-
   <Markets>
     <Parameter name="lgmcalibration">libor</Parameter>
     <Parameter name="fxcalibration">libor</Parameter>
     <Parameter name="pricing">libor</Parameter>
     <Parameter name="simulation">libor</Parameter>
   </Markets>
-
   <Analytics>
-    
     <Analytic type="npv">
       <Parameter name="active">Y</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="outputFileName">npv.csv</Parameter>
-    </Analytic>      
-
+    </Analytic>
     <Analytic type="cashflow">
       <Parameter name="active">Y</Parameter>
       <Parameter name="outputFileName">flows.csv</Parameter>
-    </Analytic>      
-
+    </Analytic>
     <Analytic type="curves">
       <Parameter name="active">Y</Parameter>
       <Parameter name="configuration">default</Parameter>
       <Parameter name="grid">240,1M</Parameter>
       <Parameter name="outputFileName">curves.csv</Parameter>
-    </Analytic>      
-
+    </Analytic>
     <Analytic type="simulation">
       <Parameter name="active">Y</Parameter>
       <Parameter name="simulationConfigFile">simulation.xml</Parameter>
@@ -54,7 +49,6 @@
       <Parameter name="additionalScenarioDataFileName">scenariodata.dat</Parameter>
       <Parameter name="disableEvaluationDateObservation">Y</Parameter>
     </Analytic>
-
     <Analytic type="xva">
       <Parameter name="active">Y</Parameter>
       <Parameter name="csaFile">netting.xml</Parameter>
@@ -63,9 +57,9 @@
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="exposureProfiles">Y</Parameter>
       <Parameter name="quantile">0.95</Parameter>
-      <Parameter name="calculationType">Symmetric</Parameter>      
-      <Parameter name="allocationMethod">None</Parameter>    
-      <Parameter name="marginalAllocationLimit">1.0</Parameter>    
+      <Parameter name="calculationType">Symmetric</Parameter>
+      <Parameter name="allocationMethod">None</Parameter>
+      <Parameter name="marginalAllocationLimit">1.0</Parameter>
       <Parameter name="exerciseNextBreak">N</Parameter>
       <Parameter name="cva">Y</Parameter>
       <Parameter name="dva">N</Parameter>
@@ -78,14 +72,10 @@
       <Parameter name="collateralFloor">N</Parameter>
       <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>
       <Parameter name="netCubeOutputFile">netcube.csv</Parameter>
-      
     </Analytic>
-
     <Analytic type="initialMargin">
       <Parameter name="active">N</Parameter>
       <Parameter name="method">SIMM</Parameter>
     </Analytic>
-
   </Analytics>
-  
 </OpenRiskEngine>

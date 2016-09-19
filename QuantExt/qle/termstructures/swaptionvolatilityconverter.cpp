@@ -165,35 +165,33 @@ Real SwaptionVolatilityConverter::convert(const Date& expiry, const Period& swap
         swaptionEngine = boost::make_shared<BachelierSwaptionEngine>(discount_, inVol, volDayCounter);
     }
     swaption->setPricingEngine(swaptionEngine);
-    Real npv = swaption->NPV();
-
-    // Calculate guess for implied volatility solver
-    Real guess = 0.0;
-    if (outType == ShiftedLognormal) {
-        QL_REQUIRE(atmRate + outShift > 0.0, "SwaptionVolatilityConverter: ATM rate + shift must be > 0.0");
-        if (inType == Normal)
-            guess = inVol / (atmRate + outShift);
-        else
-            guess = inVol * (atmRate + inShift) / (atmRate + outShift);
-    } else {
-        if (inType == Normal)
-            guess = inVol;
-        else
-            guess = inVol * (atmRate + inShift);
-    }
-
-    // Imply the output volatility (on an ACT/365 basis, see note below)
+    
     Volatility impliedVol = 0.0;
     try {
+        Real npv = swaption->NPV();
+
+        // Calculate guess for implied volatility solver
+        Real guess = 0.0;
+        if (outType == ShiftedLognormal) {
+            QL_REQUIRE(atmRate + outShift > 0.0, "SwaptionVolatilityConverter: ATM rate + shift must be > 0.0");
+            if (inType == Normal)
+                guess = inVol / (atmRate + outShift);
+            else
+                guess = inVol * (atmRate + inShift) / (atmRate + outShift);
+        } else {
+            if (inType == Normal)
+                guess = inVol;
+            else
+                guess = inVol * (atmRate + inShift);
+        }
+
         // Note: In implying the volatility the volatility day counter is hardcoded to Actual365Fixed
         impliedVol = swaption->impliedVolatility(npv, discount_, guess, accuracy_, maxEvaluations_, minVol_, maxVol_,
                                                  outShift, outType);
     } catch (std::exception& e) {
         // couldn't find implied volatility
-        QL_FAIL("SwaptionVolatilityConverter: volatility conversion failed while trying to find implied volatility"
-                " for expiry "
-                << expiry << " and swap tenor " << swapTenor << "\n"
-                << "Error: " << e.what());
+        QL_FAIL("SwaptionVolatilityConverter: volatility conversion failed while trying to convert volatility"
+                " for expiry " << expiry << " and swap tenor " << swapTenor << ". Error: " << e.what());
     }
 
     return impliedVol;

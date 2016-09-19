@@ -54,7 +54,7 @@ class FxIndex : public Index, public Observer {
 public:
     /*! familyName may be e.g. ECB
         settlementDays determine the spot date of the currency pair
-        source is the asset or forein currency
+        source is the asset or foreign currency
         target is the numeraire or domestic currency
         fixingCalendar is the calendar defining good days for the pair
         this class uses the exchange rate manager to retrieve spot values */
