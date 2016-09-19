@@ -248,6 +248,13 @@ int main(int argc, char** argv) {
             ScenarioGeneratorBuilder sgb(sgd);
             boost::shared_ptr<ScenarioGenerator> sg =
                 sgb.build(model, simMarketData, asof, market, params.get("markets", "pricing"));
+
+            //Optionally write out scenarios
+            if (params.has("simulation", "scenariodump")) {
+                string filename = outputPath + "/" + params.get("simulation", "scenariodump");
+                sg = boost::make_shared<ScenarioWriter>(sg, filename);
+            }
+
             boost::shared_ptr<openriskengine::analytics::DateGrid> grid = sgd->grid();
 
             LOG("Build Simulation Market");
