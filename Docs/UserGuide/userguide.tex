@@ -442,7 +442,23 @@ before running ORE or any of the examples below. This will suppress thousand sep
 
 \subsection{Python and Jupyter}\label{sec:python}
 
-Python (version 3.5 or higher) is required to run the examples in section \ref{sec:examples} and plot exposure evolutions. Moreover, we use Jupyter \cite{jupyter} in section \ref{sec:visualisation} to visualise simulation results. Both are part of the 'Anaconda Open Data Science Analytics Platform' \cite{Anaconda}. Anaconda installation instructions for Windows, OS X and Linux are available on the anaconda site, with graphical installers for Windows\footnote{With Windows, after a fresh installation of Python the user may have to run the {\tt python} command once in a command shell so that the Python executable will be found subsequently when running the example scripts in section \ref{sec:examples}.}, Linux and OS X\footnote{With OS X, the Python scripts used in the examples section may require the  environment variables {\tt LANG} and {\tt LC\_ALL } to be set to {\tt en\_US.UTF-8} or {\tt en\_GB.UTF-8}. With Linux it is moreover recommended to set {\tt LC\_NUMERIC} to {\tt C}. }. 
+Python (version 3.5 or higher) is required to run the examples in section \ref{sec:examples} and plot exposure evolutions. Moreover, we use Jupyter \cite{jupyter} in section \ref{sec:visualisation} to visualise simulation results. Both are part of the 'Anaconda Open Data Science Analytics Platform' \cite{Anaconda}. Anaconda installation instructions for Windows, OS X and Linux are available on the Anaconda site, with graphical installers for Windows\footnote{With Windows, after a fresh installation of Python the user may have to run the {\tt python} command once in a command shell so that the Python executable will be found subsequently when running the example scripts in section \ref{sec:examples}.}, Linux and OS X\footnote{With OS X, the Python scripts used in the examples section may require the  environment variables {\tt LANG} and {\tt LC\_ALL } to be set to {\tt en\_US.UTF-8} or {\tt en\_GB.UTF-8}. With Linux it is moreover recommended to set {\tt LC\_NUMERIC} to {\tt C}. }. \\
+
+The full functionality of the Jupyter notebook introduced in section \ref{sec:jupyter} requires furthermore installing
+\begin{itemize}
+\item jupyter\_dashboards: \url{https://github.com/jupyter-incubator/dashboards}
+\item ipywidgets: \url{https://github.com/ipython/ipywidgets}
+\item pythreejs: \url{https://github.com/jovyan/pythreejs}
+\item bqplot: \url{https://github.com/bloomberg/bqplot}
+\end{itemize}
+With Python and Anaconda already installed, this can be done by running these commands
+\begin{itemize}
+\item {\tt conda install -c conda-forge ipywidgets}
+\item {\tt pip install jupyter\_dashboards}
+\item {\tt jupyter dashboards quick-setup --sys-prefix}
+\item {\tt conda install -c conda-forge bqplot}
+\item {\tt conda install -c conda-forge pythreejs}
+\end{itemize}
 
 %========================================================
 \section{Examples}\label{sec:examples}
@@ -942,7 +958,7 @@ The effect of the 'ShiftHorizon' parameter $T$ is to apply a shift to the Linear
 $$ 
 H(t) \rightarrow H(t) - H(T) 
 $$ 
-It can be shown that this leaves all expectations computed in the model (such as EPE and ENE) invariant. As explained in \cite{Lichters}, subtracting a $H$ shift effectively means performing a change of measure from the `native' LGM measure to a T-Forward measure with horizon $T$, here 30 years. Both negative and positive shifts are permissible, but only negative shifts are connected with a T-Forward measure and have a positive effect on numerical stability.\\
+It can be shown that this leaves all expectations computed in the model (such as EPE and ENE) invariant. As explained in \cite{Lichters}, subtracting a $H$ shift effectively means performing a change of measure from the `native' LGM measure to a T-Forward measure with horizon $T$, here 30 years. Both negative and positive shifts are permissible, but only negative shifts are connected with a T-Forward measure and improve numerical stability.\\
 
 In our experience it is helpful to place the horizon in the middle of the portfolio duration to significantly improve the quality of long term expectations. The effect of this change (only) is shown in the same figure \ref{fig_15} (`shifted horizon').
 
@@ -962,7 +978,7 @@ In our experience it is helpful to place the horizon in the middle of the portfo
 \subsection{Jupyter}\label{sec:jupyter}
 
 ORE comes with an experimental Jupyter notebook for launching ORE batches and in particular for drilling into NPV cube data.
-The notebook is located in directory {\tt FrontEnd/Python/Visualization/npvcube}. To launch the notebook, change to this directory and follow instructions in the {\tt Readme.txt}. In a nutshell, type 
+The notebook is located in directory {\tt FrontEnd/Python/Visualization/npvcube}. To launch the notebook, change to this directory and follow instructions in the {\tt Readme.txt}. In a nutshell, type\footnote{With Mac OS X, you may need to set the environment variable {\tt LANG} to {\tt en\_US.UTF-8} before running jupyter, as mentioned in the installation section \ref{sec:python}.} 
 
 \medskip
 \centerline{\tt jupyter notebook}
