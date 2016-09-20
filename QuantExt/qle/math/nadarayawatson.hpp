@@ -17,7 +17,6 @@
 
 using QuantLib::Real;
 using QuantLib::Size;
-using QuantLib::Interpolation;
 
 namespace QuantExt {
 namespace detail {
