@@ -320,8 +320,8 @@ Alternatively, compile all Boost libraries directly from the source code:
 \item Run bootstrap.bat
 \item Build the libraries from the source code
 \begin{itemize}
-\item 32-bit: .{\bs}b2 --stagedir=.{\bs}lib{\bs}Win32{\bs}lib --build-type=complete toolset=msvc-14.0 --address-model=32 --with-test --with-system --with-filesystem --with-serialization stage --with-date\_time
-\item 64-bit: .{\bs}b2 --	stagedir=.{\bs}lib{\bs}x64{\bs}lib   --build-type=complete toolset=msvc-14.0 --address-model=64 --with-test --with-system --with-filesystem --with-serialization stage --with-date\_time
+\item 32-bit: .{\bs}b2 --stagedir=.{\bs}lib{\bs}Win32{\bs}lib --build-type=complete toolset=msvc-14.0 --address-model=32 --with-test --with-system --with-filesystem --with-serialization ?with-regex --with-date\_time stage
+\item 64-bit: .{\bs}b2 --	stagedir=.{\bs}lib{\bs}x64{\bs}lib   --build-type=complete toolset=msvc-14.0 --address-model=64 --with-test --with-system --with-filesystem --with-serialization -with-regex --with-date\_time stage
 \end{itemize}
 \end{enumerate}
 
