@@ -179,8 +179,12 @@ int main(int argc, char** argv) {
         string pricingEnginesFile = inputPath + "/" + params.get("setup", "pricingEnginesFile");
         engineData->fromFile(pricingEnginesFile);
 
+        map<MarketContext,string> configurations;
+        configurations[MarketContext::irCalibration] = params.get("markets", "lgmcalibration");
+        configurations[MarketContext::fxCalibration] = params.get("markets", "fxcalibration");
+        configurations[MarketContext::pricing] = params.get("markets", "pricing");
         boost::shared_ptr<EngineFactory> factory =
-            boost::make_shared<EngineFactory>(engineData, market, params.get("markets", "pricing"));
+            boost::make_shared<EngineFactory>(engineData, market, configurations);
         cout << "OK" << endl;
 
         /******************************
@@ -248,7 +252,7 @@ int main(int argc, char** argv) {
             modelData->fromFile(simulationConfigFile);
             CrossAssetModelBuilder modelBuilder(market, params.get("markets", "lgmcalibration"),
                                                 params.get("markets", "fxcalibration"),
-                                                params.get("markets", "pricing"));
+                                                params.get("markets", "simulation"));
             boost::shared_ptr<QuantExt::CrossAssetModel> model = modelBuilder.build(modelData);
 
             LOG("Load Simulation Market Parameters");
@@ -260,9 +264,9 @@ int main(int argc, char** argv) {
             sgd->fromFile(simulationConfigFile);
             ScenarioGeneratorBuilder sgb(sgd);
             boost::shared_ptr<ScenarioGenerator> sg =
-                sgb.build(model, simMarketData, asof, market, params.get("markets", "pricing"));
+                sgb.build(model, simMarketData, asof, market, params.get("markets", "simulation"));
 
-            //Optionally write out scenarios
+            // Optionally write out scenarios
             if (params.has("simulation", "scenariodump")) {
                 string filename = outputPath + "/" + params.get("simulation", "scenariodump");
                 sg = boost::make_shared<ScenarioWriter>(sg, filename);
@@ -278,8 +282,12 @@ int main(int argc, char** argv) {
             boost::shared_ptr<EngineData> simEngineData = boost::make_shared<EngineData>();
             string simPricingEnginesFile = inputPath + "/" + params.get("simulation", "pricingEnginesFile");
             simEngineData->fromFile(simPricingEnginesFile);
+            map<MarketContext, string> configurations;
+            configurations[MarketContext::irCalibration] = params.get("markets", "lgmcalibration");
+            configurations[MarketContext::fxCalibration] = params.get("markets", "fxcalibration");
+            configurations[MarketContext::pricing] = params.get("markets", "simulation");
             boost::shared_ptr<EngineFactory> simFactory =
-                boost::make_shared<EngineFactory>(simEngineData, simMarket, params.get("markets", "pricing"));
+                boost::make_shared<EngineFactory>(simEngineData, simMarket, configurations);
 
             LOG("Build portfolio linked to sim market");
             boost::shared_ptr<Portfolio> simPortfolio = boost::make_shared<Portfolio>();
