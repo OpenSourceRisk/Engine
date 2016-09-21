@@ -270,12 +270,10 @@
     <SwapIndices>
       <SwapIndex>
         <Name>EUR-CMS-1Y</Name>
-        <ForwardingIndex>EUR-EURIBOR-6M</ForwardingIndex>
         <DiscountingIndex>EUR-EONIA</DiscountingIndex>
       </SwapIndex>
       <SwapIndex>
         <Name>EUR-CMS-30Y</Name>
-        <ForwardingIndex>EUR-EURIBOR-6M</ForwardingIndex>
         <DiscountingIndex>EUR-EONIA</DiscountingIndex>
       </SwapIndex>
     </SwapIndices>

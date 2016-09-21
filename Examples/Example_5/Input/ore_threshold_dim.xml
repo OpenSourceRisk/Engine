@@ -38,20 +38,19 @@
       <Parameter name="outputFileName">curves.csv</Parameter>
     </Analytic>
     <Analytic type="simulation">
-      <Parameter name="active">Y</Parameter>
+      <Parameter name="active">N</Parameter>
       <Parameter name="simulationConfigFile">simulation.xml</Parameter>
       <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="storeScenarios">N</Parameter>
-      <Parameter name="storeFlows">Y</Parameter>
       <Parameter name="cubeFile">cube.dat</Parameter>
       <Parameter name="additionalScenarioDataFileName">scenariodata.dat</Parameter>
     </Analytic>
     <Analytic type="xva">
       <Parameter name="active">Y</Parameter>
-      <Parameter name="csaFile">netting.xml</Parameter>
+      <Parameter name="csaFile">netting_threshold.xml</Parameter>
       <Parameter name="cubeFile">cube.dat</Parameter>
-      <Parameter name="cubeDepth">2</Parameter>      
+      <Parameter name="cubeDepth">2</Parameter>
       <Parameter name="scenarioFile">scenariodata.dat</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="exposureProfiles">Y</Parameter>
@@ -63,15 +62,28 @@
       <Parameter name="cva">Y</Parameter>
       <Parameter name="dva">N</Parameter>
       <Parameter name="dvaName">BANK</Parameter>
-      <Parameter name="fva">N</Parameter>
+      <Parameter name="fva">Y</Parameter>
       <Parameter name="fvaBorrowingCurve">BANK_EUR_BORROW</Parameter>
       <Parameter name="fvaLendingCurve">BANK_EUR_LEND</Parameter>
-      <Parameter name="colva">N</Parameter>
-      <Parameter name="collateralSpread">0.0000</Parameter>
-      <Parameter name="collateralFloor">N</Parameter>
+      <Parameter name="colva">Y</Parameter>
+      <Parameter name="collateralSpread">0.0010</Parameter>
+      <Parameter name="collateralFloor">Y</Parameter>
+      <Parameter name="dim">Y</Parameter>
+      <Parameter name="mva">Y</Parameter>
+      <Parameter name="dimQuantile">0.99</Parameter>
+      <Parameter name="dimHorizonCalendarDays">14</Parameter>
+      <Parameter name="dimRegressionOrder">1</Parameter>
+      <Parameter name="dimLocalRegressionEvaluations">100</Parameter>
+      <Parameter name="dimLocalRegressionBandwidth">0.25</Parameter>
+      <Parameter name="dimScaling">1.0</Parameter>
+      <Parameter name="dimEvolutionFile">dim_evolution.txt</Parameter>      
+      <Parameter name="dimRegressionFile">dim_regression.txt</Parameter>      
+      <Parameter name="dimOutputNettingSet">CPTY_A</Parameter>      
+      <Parameter name="dimOutputGridPoint">0</Parameter>
       <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>
       <Parameter name="netCubeOutputFile">netcube.csv</Parameter>
     </Analytic>
+    
     <Analytic type="initialMargin">
       <Parameter name="active">N</Parameter>
       <Parameter name="method"/>

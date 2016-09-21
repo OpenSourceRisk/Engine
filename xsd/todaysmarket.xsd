@@ -67,7 +67,6 @@
       <xs:element name="SwapIndex" maxOccurs="unbounded" minOccurs="0">
         <xs:complexType>
           <xs:sequence>
-            <xs:element type="indexNameType" name="Index"/>
             <xs:element type="indexNameType" name="Discounting"/>
           </xs:sequence>
           <xs:attribute type="indexNameType" name="name" use="required"/>
