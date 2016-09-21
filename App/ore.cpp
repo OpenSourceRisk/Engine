@@ -617,6 +617,7 @@ void writeCurves(const Parameters& params, const TodaysMarketParameters& marketC
     QL_REQUIRE(marketConfig.hasConfiguration(configID), "curve configuration " << configID << " not found");
 
     map<string, string> discountCurves = marketConfig.discountingCurves(configID);
+    map<string, string> YieldCurves = marketConfig.yieldCurves(configID);
     map<string, string> indexCurves = marketConfig.indexForwardingCurves(configID);
     string gridString = params.get("curves", "grid");
     DateGrid grid(gridString);
@@ -627,6 +628,10 @@ void writeCurves(const Parameters& params, const TodaysMarketParameters& marketC
     for (auto it : discountCurves) {
         file << sep << it.first; // it.second;
         yieldCurves.push_back(market->discountCurve(it.first));
+    }
+    for (auto it : YieldCurves) {
+        file << sep << it.first; // it.second;
+        yieldCurves.push_back(market->yieldCurve(it.first));
     }
     for (auto it : indexCurves) {
         file << sep << it.first; // it.second;
