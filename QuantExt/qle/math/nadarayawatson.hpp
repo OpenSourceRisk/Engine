@@ -58,7 +58,7 @@ public:
 
         Real tmp1 = 0.0, tmp2 = 0.0;
 
-        for (Size i = 0; i < xEnd_ - xBegin_; ++i) {
+        for (Size i = 0; i < static_cast<Size>(xEnd_ - xBegin_); ++i) {
             Real tmp = kernel_(x - xBegin_[i]);
             tmp1 += yBegin_[i] * tmp;
             tmp2 += tmp;
@@ -71,7 +71,7 @@ public:
 
         Real tmp1 = 0.0, tmp1b = 0.0, tmp2 = 0.0;
 
-        for (Size i = 0; i < xEnd_ - xBegin_; ++i) {
+        for (Size i = 0; i < static_cast<Size>(xEnd_ - xBegin_); ++i) {
             Real tmp = kernel_(x - xBegin_[i]);
             tmp1 += yBegin_[i] * tmp;
             tmp1b += yBegin_[i] * yBegin_[i] * tmp;
