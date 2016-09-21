@@ -223,6 +223,7 @@ int main(int argc, char** argv) {
 
         boost::shared_ptr<AdditionalScenarioData> inMemoryScenarioData;
         boost::shared_ptr<NPVCube> inMemoryCube;
+        Size cubeDepth = 0;
 
         if (params.hasGroup("simulation") && params.get("simulation", "active") == "Y") {
 
@@ -279,9 +280,16 @@ int main(int argc, char** argv) {
             LOG("Build valuation cube engine");
             Size samples = sgd->samples();
             string baseCurrency = params.get("simulation", "baseCurrency");
+            if (params.has("simulation", "storeFlows") && params.get("simulation", "storeFlows") == "Y")
+                cubeDepth = 2; // NPV and FLOW
+            else
+                cubeDepth = 1; // NPV only
+
             // Valuation calculators
             vector<boost::shared_ptr<ValuationCalculator>> calculators;
             calculators.push_back(boost::make_shared<NPVCalculator>(baseCurrency));
+            if (cubeDepth > 1)
+                calculators.push_back(boost::make_shared<CashflowCalculator>(baseCurrency, asof, grid, 1));
             ValuationEngine engine(asof, grid, samples, simMarket);
 
             ostringstream o;
@@ -297,8 +305,16 @@ int main(int argc, char** argv) {
             auto progressLog = boost::make_shared<ProgressLog>("Building cube...");
             engine.registerProgressIndicator(progressBar);
             engine.registerProgressIndicator(progressLog);
-            inMemoryCube =
-                boost::make_shared<SinglePrecisionInMemoryCube>(asof, simPortfolio->ids(), grid->dates(), samples);
+            if (cubeDepth == 1)
+                inMemoryCube =
+                    boost::make_shared<SinglePrecisionInMemoryCube>(asof, simPortfolio->ids(), grid->dates(), samples);
+            else if (cubeDepth == 2)
+                inMemoryCube = boost::make_shared<SinglePrecisionInMemoryCubeN>(asof, simPortfolio->ids(),
+                                                                                grid->dates(), samples, cubeDepth);
+            else {
+                QL_FAIL("cube depth 1 or 2 expected");
+            }
+
             engine.buildCube(simPortfolio, inMemoryCube, calculators, inMemoryScenarioData);
             cout << "OK" << endl;
 
@@ -339,13 +355,39 @@ int main(int argc, char** argv) {
             boost::shared_ptr<NettingSetManager> netting = boost::make_shared<NettingSetManager>();
             netting->fromFile(csaFile);
 
+            map<string, bool> analytics;
+            analytics["exerciseNextBreak"] = parseBool(params.get("xva", "exerciseNextBreak"));
+            analytics["exposureProfiles"] = parseBool(params.get("xva", "exposureProfiles"));
+            analytics["cva"] = parseBool(params.get("xva", "cva"));
+            analytics["dva"] = parseBool(params.get("xva", "dva"));
+            analytics["fva"] = parseBool(params.get("xva", "fva"));
+            analytics["colva"] = parseBool(params.get("xva", "colva"));
+            analytics["collateralFloor"] = parseBool(params.get("xva", "collateralFloor"));
+            if (params.has("xva", "mva"))
+                analytics["mva"] = parseBool(params.get("xva", "mva"));
+            else
+                analytics["mva"] = false;
+            if (params.has("xva", "dim"))
+                analytics["dim"] = parseBool(params.get("xva", "dim"));
+            else
+                analytics["dim"] = false;
+
             boost::shared_ptr<NPVCube> cube;
             if (inMemoryCube)
                 cube = inMemoryCube;
             else {
-                cube = boost::make_shared<SinglePrecisionInMemoryCube>();
+                Size cubeDepth = 1;
+                if (params.has("xva", "cubeDepth"))
+                    cubeDepth = parseInteger(params.get("xva", "cubeDepth"));
+
+                if (cubeDepth > 1)
+                    cube = boost::make_shared<SinglePrecisionInMemoryCubeN>();
+                else
+                    cube = boost::make_shared<SinglePrecisionInMemoryCube>();
                 string cubeFile = outputPath + "/" + params.get("xva", "cubeFile");
+                LOG("Load cube from file " << cubeFile);
                 cube->load(cubeFile);
+                LOG("Cube loading done");
             }
 
             QL_REQUIRE(cube->numIds() == portfolio->size(), "cube x dimension (" << cube->numIds()
@@ -365,15 +407,6 @@ int main(int argc, char** argv) {
             QL_REQUIRE(scenarioData->dimSamples() == cube->samples(),
                        "scenario sample size does not match cube sample size");
 
-            map<string, bool> analytics;
-            analytics["exerciseNextBreak"] = parseBool(params.get("xva", "exerciseNextBreak"));
-            analytics["exposureProfiles"] = parseBool(params.get("xva", "exposureProfiles"));
-            analytics["cva"] = parseBool(params.get("xva", "cva"));
-            analytics["dva"] = parseBool(params.get("xva", "dva"));
-            analytics["fva"] = parseBool(params.get("xva", "fva"));
-            analytics["colva"] = parseBool(params.get("xva", "colva"));
-            analytics["collateralFloor"] = parseBool(params.get("xva", "collateralFloor"));
-
             string baseCurrency = params.get("xva", "baseCurrency");
             string calculationType = params.get("xva", "calculationType");
             string allocationMethod = params.get("xva", "allocationMethod");
@@ -383,12 +416,30 @@ int main(int argc, char** argv) {
             string fvaLendingCurve = params.get("xva", "fvaLendingCurve");
             string fvaBorrowingCurve = params.get("xva", "fvaBorrowingCurve");
             Real collateralSpread = parseReal(params.get("xva", "collateralSpread"));
+
+            Real dimQuantile = 0.99;
+            Size dimHorizonCalendarDays = 14;
+            Size dimRegressionOrder = 0;
+            Real dimScaling = 1.0;
+            Size dimLocalRegressionEvaluations = 0;
+            Real dimLocalRegressionBandwidth = 0.25;
+
+            if (analytics["mva"] || analytics["dim"]) {
+                dimQuantile = parseReal(params.get("xva", "dimQuantile"));
+                dimHorizonCalendarDays = parseInteger(params.get("xva", "dimHorizonCalendarDays"));
+                dimRegressionOrder = parseInteger(params.get("xva", "dimRegressionOrder"));
+                dimScaling = parseReal(params.get("xva", "dimScaling"));
+                dimLocalRegressionEvaluations = parseInteger(params.get("xva", "dimLocalRegressionEvaluations"));
+                dimLocalRegressionBandwidth = parseReal(params.get("xva", "dimLocalRegressionBandwidth"));
+            }
+
             string marketConfiguration = params.get("markets", "simulation");
 
             boost::shared_ptr<PostProcess> postProcess = boost::make_shared<PostProcess>(
                 portfolio, netting, market, marketConfiguration, cube, scenarioData, analytics, baseCurrency,
                 allocationMethod, marginalAllocationLimit, quantile, calculationType, dvaName, fvaBorrowingCurve,
-                fvaLendingCurve, collateralSpread);
+                fvaLendingCurve, collateralSpread, dimQuantile, dimHorizonCalendarDays, dimRegressionOrder,
+                dimLocalRegressionEvaluations, dimLocalRegressionBandwidth, dimScaling);
 
             writeTradeExposures(params, postProcess);
             writeNettingSetExposures(params, postProcess);
@@ -403,6 +454,15 @@ int main(int argc, char** argv) {
             string netCubeOutputFile = params.get("xva", "netCubeOutputFile");
             CubeWriter cw2(outputPath + "/" + netCubeOutputFile);
             cw2.write(postProcess->netCube(), nettingSetMap);
+
+            if (analytics["dim"]) {
+                string dimFile1 = outputPath + "/" + params.get("xva", "dimEvolutionFile");
+                string dimFile2 = outputPath + "/" + params.get("xva", "dimRegressionFile");
+                string nettingSet = params.get("xva", "dimOutputNettingSet");
+                int dimOutputGridPoint = parseInteger(params.get("xva", "dimOutputGridPoint"));
+                postProcess->exportDimEvolution(dimFile1, nettingSet);
+                postProcess->exportDimRegression(dimFile2, nettingSet, dimOutputGridPoint);
+            }
 
             cout << "OK" << endl;
         } else {
@@ -645,15 +705,17 @@ void writeXVA(const Parameters& params, boost::shared_ptr<Portfolio> portfolio,
     string fileName = outputPath + "/xva.csv";
     ofstream file(fileName.c_str());
     QL_REQUIRE(file.is_open(), "Error opening file " << fileName);
-    file << "#TradeId,NettingSetId,CVA,DVA,FBA,FCA,COLVA,CollateralFloor,AllocatedCVA,AllocatedDVA,AllocationMethod,"
-            "BaselEPE,BaselEEPE"
-         << endl;
+    file
+        << "#TradeId,NettingSetId,CVA,DVA,FBA,FCA,COLVA,MVA,CollateralFloor,AllocatedCVA,AllocatedDVA,AllocationMethod,"
+           "BaselEPE,BaselEEPE"
+        << endl;
     for (auto n : postProcess->nettingSetIds()) {
         file << "," << n << "," << postProcess->nettingSetCVA(n) << "," << postProcess->nettingSetDVA(n) << ","
              << postProcess->nettingSetFBA(n) << "," << postProcess->nettingSetFCA(n) << ","
-             << postProcess->nettingSetCOLVA(n) << "," << postProcess->nettingSetCollateralFloor(n) << ","
-             << postProcess->nettingSetCVA(n) << "," << postProcess->nettingSetDVA(n) << "," << allocationMethod << ","
-             << postProcess->netEPE_B(n) << "," << postProcess->netEEPE_B(n) << endl;
+             << postProcess->nettingSetCOLVA(n) << "," << postProcess->nettingSetMVA(n) << ","
+             << postProcess->nettingSetCollateralFloor(n) << "," << postProcess->nettingSetCVA(n) << ","
+             << postProcess->nettingSetDVA(n) << "," << allocationMethod << "," << postProcess->netEPE_B(n) << ","
+             << postProcess->netEEPE_B(n) << endl;
         for (Size k = 0; k < portfolio->trades().size(); ++k) {
             string tid = portfolio->trades()[k]->id();
             string nid = portfolio->trades()[k]->envelope().nettingSetId();
@@ -662,6 +724,7 @@ void writeXVA(const Parameters& params, boost::shared_ptr<Portfolio> portfolio,
             file << tid << "," << nid << "," << postProcess->tradeCVA(tid) << "," << postProcess->tradeDVA(tid) << ","
                  << postProcess->tradeFBA(tid) << "," << postProcess->tradeFCA(tid) << ","
                  << "n/a," // no trade COLVA
+                 << "n/a," // no trade MVA
                  << "n/a," // no trade collateral floor
                  << postProcess->allocatedTradeCVA(tid) << "," << postProcess->allocatedTradeDVA(tid) << ","
                  << allocationMethod << "," << postProcess->tradeEPE_B(tid) << "," << postProcess->tradeEEPE_B(tid)

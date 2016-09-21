@@ -58,6 +58,16 @@ oreex.save_output_to_subdir(
     + glob.glob(os.path.join(os.getcwd(), os.path.join("Output", "colva*")))
 )
 
+# threshhold>0 with collateral and dynamic initial margin
+oreex.print_headline("Run ORE to postprocess the NPV cube, with collateral (threshold>0) and dynamic initial margin")
+oreex.run("Input/ore_threshold_dim.xml")
+oreex.save_output_to_subdir(
+    "collateral_threshold_dim",
+    ["log.txt", "xva.csv", "dim_regression.txt", "dim_evolution.txt"]
+    + glob.glob(os.path.join(os.getcwd(), os.path.join("Output", "exposure*")))
+    + glob.glob(os.path.join(os.getcwd(), os.path.join("Output", "colva*")))
+)
+
 oreex.print_headline("Plot results")
 
 oreex.setup_plot("nocollateral_epe")

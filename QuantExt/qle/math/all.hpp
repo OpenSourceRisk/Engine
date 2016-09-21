@@ -2,4 +2,5 @@
 /* Add the files to be included into Makefile.am instead. */
 
 #include <qle/math/flatextrapolation.hpp>
+#include <qle/math/nadarayawatson.hpp>
 
