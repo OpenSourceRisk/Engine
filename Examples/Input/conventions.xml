@@ -69,6 +69,11 @@
     <Index>EUR-EURIBOR</Index>
   </Deposit>
   <Deposit>
+    <Id>EUR-DEPOSIT</Id>
+    <IndexBased>true</IndexBased>
+    <Index>EUR-EURIBOR</Index>
+  </Deposit>
+  <Deposit>
     <Id>GBP-DEPOSIT</Id>
     <IndexBased>true</IndexBased>
     <Index>GBP-LIBOR</Index>
@@ -155,6 +160,10 @@
     <Index>SEK-STIBOR-3M</Index>
   </Future>
   <!-- Forward Rate Agreements -->
+  <FRA>
+    <Id>EUR-12M-FRA-CONVENTIONS</Id>
+    <Index>EUR-EURIBOR-12M</Index>
+  </FRA>
   <FRA>
     <Id>EUR-6M-FRA-CONVENTIONS</Id>
     <Index>EUR-EURIBOR-6M</Index>
@@ -269,6 +278,14 @@
     <Index>EUR-EURIBOR-6M</Index>
   </Swap>
   <Swap>
+    <Id>EUR-1M-SWAP-CONVENTIONS</Id>
+    <FixedCalendar>TARGET</FixedCalendar>
+    <FixedFrequency>Annual</FixedFrequency>
+    <FixedConvention>MF</FixedConvention>
+    <FixedDayCounter>30/360</FixedDayCounter>
+    <Index>EUR-EURIBOR-1M</Index>
+  </Swap>
+  <Swap>
     <Id>EUR-3M-SWAP-CONVENTIONS</Id>
     <FixedCalendar>TARGET</FixedCalendar>
     <FixedFrequency>Annual</FixedFrequency>
@@ -291,6 +308,14 @@
     <FixedConvention>MF</FixedConvention>
     <FixedDayCounter>30/360</FixedDayCounter>
     <Index>USD-LIBOR-3M</Index>
+  </Swap>
+  <Swap>
+    <Id>USD-6M-SWAP-CONVENTIONS</Id>
+    <FixedCalendar>US</FixedCalendar>
+    <FixedFrequency>Semiannual</FixedFrequency>
+    <FixedConvention>MF</FixedConvention>
+    <FixedDayCounter>30/360</FixedDayCounter>
+    <Index>USD-LIBOR-6M</Index>
   </Swap>
   <Swap>
     <Id>CHF-6M-SWAP-CONVENTIONS</Id>
@@ -350,7 +375,7 @@
   </Swap>
   <Swap>
     <Id>JPY-LIBOR-6M-SWAP-CONVENTIONS</Id>
-    <FixedCalendar>JP</FixedCalendar>
+    <FixedCalendar>JP,UK</FixedCalendar>
     <FixedFrequency>Semiannual</FixedFrequency>
     <FixedConvention>MF</FixedConvention>
     <FixedDayCounter>A365</FixedDayCounter>
@@ -358,7 +383,7 @@
   </Swap>
   <Swap>
     <Id>JPY-TIBOR-3M-SWAP-CONVENTIONS</Id>
-    <FixedCalendar>JP</FixedCalendar>
+    <FixedCalendar>JP,UK</FixedCalendar>
     <FixedFrequency>Semiannual</FixedFrequency>
     <FixedConvention>MF</FixedConvention>
     <FixedDayCounter>A365</FixedDayCounter>
@@ -405,66 +430,59 @@
     <Index>GBP-LIBOR-3M</Index>
   </Swap>
   <Swap>
-    <!-- FIXME -->
     <Id>CZK-6M-SWAP</Id>
-    <FixedCalendar>TARGET</FixedCalendar>
+    <FixedCalendar>CZK</FixedCalendar>
     <FixedFrequency>Annual</FixedFrequency>
     <FixedConvention>MF</FixedConvention>
-    <FixedDayCounter>30/360</FixedDayCounter>
+    <FixedDayCounter>ACT/360</FixedDayCounter>
     <Index>CZK-PRIBOR-6M</Index>
   </Swap>
   <Swap>
-    <!-- FIXME -->
     <Id>CZK-3M-SWAP</Id>
-    <FixedCalendar>TARGET</FixedCalendar>
+    <FixedCalendar>CZK</FixedCalendar>
     <FixedFrequency>Annual</FixedFrequency>
     <FixedConvention>MF</FixedConvention>
-    <FixedDayCounter>30/360</FixedDayCounter>
+    <FixedDayCounter>ACT/360</FixedDayCounter>
     <Index>CZK-PRIBOR-3M</Index>
   </Swap>
   <Swap>
-    <!-- FIXME -->
     <Id>HUF-6M-SWAP</Id>
-    <FixedCalendar>TARGET</FixedCalendar>
+    <FixedCalendar>HUF</FixedCalendar>
     <FixedFrequency>Annual</FixedFrequency>
     <FixedConvention>MF</FixedConvention>
-    <FixedDayCounter>30/360</FixedDayCounter>
+    <FixedDayCounter>A365</FixedDayCounter>
     <Index>HUF-BUBOR-6M</Index>
   </Swap>
   <Swap>
-    <!-- FIXME -->
     <Id>PLN-6M-SWAP</Id>
-    <FixedCalendar>TARGET</FixedCalendar>
+    <FixedCalendar>PLN</FixedCalendar>
     <FixedFrequency>Annual</FixedFrequency>
     <FixedConvention>MF</FixedConvention>
-    <FixedDayCounter>30/360</FixedDayCounter>
+    <FixedDayCounter>ACT/ACT</FixedDayCounter>
     <Index>PLN-WIBOR-6M</Index>
   </Swap>
   <Swap>
-    <!-- FIXME -->
     <Id>PLN-3M-SWAP</Id>
-    <FixedCalendar>TARGET</FixedCalendar>
+    <FixedCalendar>PLN</FixedCalendar>
     <FixedFrequency>Annual</FixedFrequency>
     <FixedConvention>MF</FixedConvention>
-    <FixedDayCounter>30/360</FixedDayCounter>
+    <FixedDayCounter>ACT/ACT</FixedDayCounter>
     <Index>PLN-WIBOR-3M</Index>
   </Swap>
   <Swap>
-    <!-- FIXME -->
     <Id>NZD-6M-SWAP</Id>
-    <FixedCalendar>TARGET</FixedCalendar>
-    <FixedFrequency>Annual</FixedFrequency>
+    <FixedCalendar>NZD</FixedCalendar>
+    <FixedFrequency>Semiannual</FixedFrequency>
     <FixedConvention>MF</FixedConvention>
-    <FixedDayCounter>30/360</FixedDayCounter>
+    <FixedDayCounter>A365</FixedDayCounter>
     <Index>NZD-BKBM-6M</Index>
   </Swap>
   <Swap>
-    <!-- FIXME -->
     <Id>NZD-3M-SWAP</Id>
-    <FixedCalendar>TARGET</FixedCalendar>
-    <FixedFrequency>Annual</FixedFrequency>
+    <FixedCalendar>NZD</FixedCalendar>
+    <FixedFrequency>Semiannual</FixedFrequency>
     <FixedConvention>MF</FixedConvention>
-    <FixedDayCounter>30/360</FixedDayCounter>
+    <FixedDayCounter>A365</FixedDayCounter>
     <Index>NZD-BKBM-3M</Index>
   </Swap>
   <!-- Overnight Index linked Swap Legs -->
@@ -481,12 +499,11 @@
     <Rule>Backward</Rule>
   </OIS>
   <OIS>
-    <!-- FIXME -->
     <Id>CHF-OIS-CONVENTIONS</Id>
-    <SpotLag>2</SpotLag>
+    <SpotLag>1</SpotLag>
     <Index>CHF-TOIS-1D</Index>
-    <FixedDayCounter>A360</FixedDayCounter>
-    <PaymentLag>1</PaymentLag>
+    <FixedDayCounter>30/360</FixedDayCounter>
+    <PaymentLag>2</PaymentLag>
     <EOM>false</EOM>
     <FixedFrequency>Annual</FixedFrequency>
     <FixedConvention>Following</FixedConvention>
@@ -519,12 +536,10 @@
   </AverageOIS>
   <OIS>
     <Id>GBP-OIS-CONVENTIONS</Id>
-    <SpotLag>2</SpotLag>
-    <!-- FIXME -->
+    <SpotLag>0</SpotLag>
     <Index>GBP-SONIA-1D</Index>
-    <FixedDayCounter>A360</FixedDayCounter>
-    <!-- FIXME -->
-    <PaymentLag>2</PaymentLag>
+    <FixedDayCounter>A365</FixedDayCounter>
+    <PaymentLag>0</PaymentLag>
     <EOM>false</EOM>
     <FixedFrequency>Annual</FixedFrequency>
     <FixedConvention>Following</FixedConvention>
@@ -557,6 +572,19 @@
     <ShortIndex>EUR-EURIBOR-3M</ShortIndex>
     <LongMinusShort>true</LongMinusShort>
   </TenorBasisTwoSwap>
+  <TenorBasisTwoSwap>
+    <Id>EUR-EURIBOR-6M-12M-BASIS-CONVENTIONS</Id>
+    <Calendar>TARGET</Calendar>
+    <LongFixedFrequency>Annual</LongFixedFrequency>
+    <LongFixedConvention>MF</LongFixedConvention>
+    <LongFixedDayCounter>30/360</LongFixedDayCounter>
+    <LongIndex>EUR-EURIBOR-12M</LongIndex>
+    <ShortFixedFrequency>Annual</ShortFixedFrequency>
+    <ShortFixedConvention>MF</ShortFixedConvention>
+    <ShortFixedDayCounter>30/360</ShortFixedDayCounter>
+    <ShortIndex>EUR-EURIBOR-6M</ShortIndex>
+    <LongMinusShort>true</LongMinusShort>
+  </TenorBasisTwoSwap>
   <TenorBasisSwap>
     <Id>USD-LIBOR-3M-6M-BASIS-CONVENTIONS</Id>
     <LongIndex>USD-LIBOR-6M</LongIndex>
@@ -575,7 +603,6 @@
   <FX>
     <Id>GBP-USD-FX-CONVENTIONS</Id>
     <SpotDays>2</SpotDays>
-    <!-- FIXME -->
     <SourceCurrency>GBP</SourceCurrency>
     <TargetCurrency>USD</TargetCurrency>
     <PointsFactor>10000</PointsFactor>
@@ -586,7 +613,6 @@
   <FX>
     <Id>USD-GBP-FX-CONVENTIONS</Id>
     <SpotDays>2</SpotDays>
-    <!-- FIXME -->
     <SourceCurrency>USD</SourceCurrency>
     <TargetCurrency>GBP</TargetCurrency>
     <PointsFactor>10000</PointsFactor>
@@ -599,7 +625,7 @@
     <SpotDays>2</SpotDays>
     <SourceCurrency>EUR</SourceCurrency>
     <TargetCurrency>USD</TargetCurrency>
-    <PointsFactor>1000000</PointsFactor>
+    <PointsFactor>10000</PointsFactor>
     <AdvanceCalendar>TARGET,US</AdvanceCalendar>
     <SpotRelative>true</SpotRelative>
     <AdditionalSettleCalendar/>
@@ -617,7 +643,6 @@
   <FX>
     <Id>USD-CHF-FX-CONVENTIONS</Id>
     <SpotDays>2</SpotDays>
-    <!-- FIXME -->
     <SourceCurrency>USD</SourceCurrency>
     <TargetCurrency>CHF</TargetCurrency>
     <PointsFactor>10000</PointsFactor>
@@ -626,18 +651,16 @@
     <AdditionalSettleCalendar/>
   </FX>
   <FX>
-    <!-- FIXME -->
     <Id>EUR-GBP-FX-CONVENTIONS</Id>
     <SpotDays>2</SpotDays>
     <SourceCurrency>EUR</SourceCurrency>
     <TargetCurrency>GBP</TargetCurrency>
-    <PointsFactor>1000000</PointsFactor>
+    <PointsFactor>10000</PointsFactor>
     <AdvanceCalendar>TARGET,UK</AdvanceCalendar>
     <SpotRelative>true</SpotRelative>
     <AdditionalSettleCalendar/>
   </FX>
   <FX>
-    <!-- FIXME -->
     <Id>EUR-CHF-FX-CONVENTIONS</Id>
     <SpotDays>2</SpotDays>
     <SourceCurrency>EUR</SourceCurrency>
@@ -665,7 +688,6 @@
     <SpreadIndex>GBP-LIBOR-3M</SpreadIndex>
   </CrossCurrencyBasis>
   <CrossCurrencyBasis>
-    <!-- FIXME -->
     <Id>EUR-GBP-XCCY-BASIS-CONVENTIONS</Id>
     <SettlementDays>2</SettlementDays>
     <SettlementCalendar>UK,TARGET</SettlementCalendar>
@@ -674,7 +696,6 @@
     <SpreadIndex>GBP-LIBOR-3M</SpreadIndex>
   </CrossCurrencyBasis>
   <CrossCurrencyBasis>
-    <!-- FIXME -->
     <Id>EUR-CHF-XCCY-BASIS-CONVENTIONS</Id>
     <SettlementDays>2</SettlementDays>
     <SettlementCalendar>ZUB,TARGET</SettlementCalendar>

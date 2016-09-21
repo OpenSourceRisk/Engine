@@ -457,19 +457,18 @@
             <Quote>IR_SWAP/RATE/CHF/2D/1D/1Y6M</Quote>
             <Quote>IR_SWAP/RATE/CHF/2D/1D/1Y9M</Quote>
             <Quote>IR_SWAP/RATE/CHF/2D/1D/2Y</Quote>
-            <!--
-		<Quote>IR_SWAP/RATE/CHF/2D/1D/3Y</Quote>
-		<Quote>IR_SWAP/RATE/CHF/2D/1D/4Y</Quote>
-		<Quote>IR_SWAP/RATE/CHF/2D/1D/5Y</Quote>
-		<Quote>IR_SWAP/RATE/CHF/2D/1D/7Y</Quote>
-		<Quote>IR_SWAP/RATE/CHF/2D/1D/10Y</Quote>
-		<Quote>IR_SWAP/RATE/CHF/2D/1D/12Y</Quote>
-		<Quote>IR_SWAP/RATE/CHF/2D/1D/15Y</Quote>
-		<Quote>IR_SWAP/RATE/CHF/2D/1D/20Y</Quote>
-		<Quote>IR_SWAP/RATE/CHF/2D/1D/25Y</Quote>
-		<Quote>IR_SWAP/RATE/CHF/2D/1D/30Y</Quote>
-		<Quote>IR_SWAP/RATE/EUR/2D/1D/50Y</Quote>
-	    -->
+            <Quote>IR_SWAP/RATE/CHF/2D/1D/3Y</Quote>
+            <Quote>IR_SWAP/RATE/CHF/2D/1D/4Y</Quote>
+            <Quote>IR_SWAP/RATE/CHF/2D/1D/5Y</Quote>
+            <Quote>IR_SWAP/RATE/CHF/2D/1D/6Y</Quote>
+            <Quote>IR_SWAP/RATE/CHF/2D/1D/7Y</Quote>
+            <Quote>IR_SWAP/RATE/CHF/2D/1D/8Y</Quote>
+            <Quote>IR_SWAP/RATE/CHF/2D/1D/10Y</Quote>
+            <Quote>IR_SWAP/RATE/CHF/2D/1D/12Y</Quote>
+            <Quote>IR_SWAP/RATE/CHF/2D/1D/15Y</Quote>
+            <Quote>IR_SWAP/RATE/CHF/2D/1D/20Y</Quote>
+            <Quote>IR_SWAP/RATE/CHF/2D/1D/25Y</Quote>
+            <Quote>IR_SWAP/RATE/CHF/2D/1D/30Y</Quote>
           </Quotes>
           <Conventions>CHF-OIS-CONVENTIONS</Conventions>
         </Simple>
@@ -612,7 +611,7 @@
       </Segments>
     </YieldCurve>
     <YieldCurve>
-      <CurveId>EUR12</CurveId>
+      <CurveId>EUR12M</CurveId>
       <CurveDescription/>
       <Currency>EUR</Currency>
       <DiscountCurve/>
@@ -621,8 +620,8 @@
           <Type>Deposit</Type>
           <Quotes>
             <Quote>MM/RATE/EUR/0D/1D</Quote>
-            <Quote>MM/RATE/EUR/1D/1D</Quote>
-            <Quote>MM/RATE/EUR/2D/1D</Quote>
+            <!--<Quote>MM/RATE/EUR/1D/1D</Quote>
+            <Quote>MM/RATE/EUR/2D/1D</Quote>-->
             <Quote>MM/RATE/EUR/2D/1W</Quote>
             <Quote>MM/RATE/EUR/2D/1M</Quote>
             <Quote>MM/RATE/EUR/2D/2M</Quote>
@@ -637,67 +636,31 @@
             <Quote>MM/RATE/EUR/2D/11M</Quote>
             <Quote>MM/RATE/EUR/2D/1Y</Quote>
           </Quotes>
-          <Conventions>EUR-Deposit</Conventions>
-          <ProjectionCurve>EUR12</ProjectionCurve>
+          <Conventions>EUR-DEPOSIT</Conventions>
+          <ProjectionCurve>EUR12M</ProjectionCurve>
         </Simple>
-        <Simple>
-          <Type>FRA</Type>
+        <TenorBasis>
+          <Type>Tenor Basis Two Swaps</Type>
           <Quotes>
-            <Quote>FRA/RATE/EUR/1M/1Y</Quote>
-            <Quote>FRA/RATE/EUR/2M/1Y</Quote>
-            <Quote>FRA/RATE/EUR/3M/1Y</Quote>
-            <Quote>FRA/RATE/EUR/4M/1Y</Quote>
-            <Quote>FRA/RATE/EUR/5M/1Y</Quote>
-            <Quote>FRA/RATE/EUR/6M/1Y</Quote>
-            <Quote>FRA/RATE/EUR/7M/1Y</Quote>
-            <Quote>FRA/RATE/EUR/8M/1Y</Quote>
-            <Quote>FRA/RATE/EUR/9M/1Y</Quote>
-            <Quote>FRA/RATE/EUR/10M/1Y</Quote>
-            <Quote>FRA/RATE/EUR/11M/1Y</Quote>
+            <Quote>BASIS_SWAP/BASIS_SPREAD/6M/12M/EUR/2Y</Quote>
+            <Quote>BASIS_SWAP/BASIS_SPREAD/6M/12M/EUR/3Y</Quote>
+            <Quote>BASIS_SWAP/BASIS_SPREAD/6M/12M/EUR/4Y</Quote>
+            <Quote>BASIS_SWAP/BASIS_SPREAD/6M/12M/EUR/5Y</Quote>
+            <Quote>BASIS_SWAP/BASIS_SPREAD/6M/12M/EUR/6Y</Quote>
+            <Quote>BASIS_SWAP/BASIS_SPREAD/6M/12M/EUR/8Y</Quote>
+            <Quote>BASIS_SWAP/BASIS_SPREAD/6M/12M/EUR/9Y</Quote>
+            <Quote>BASIS_SWAP/BASIS_SPREAD/6M/12M/EUR/10Y</Quote>
+            <Quote>BASIS_SWAP/BASIS_SPREAD/6M/12M/EUR/11Y</Quote>
+            <Quote>BASIS_SWAP/BASIS_SPREAD/6M/12M/EUR/12Y</Quote>
+            <Quote>BASIS_SWAP/BASIS_SPREAD/6M/12M/EUR/15Y</Quote>
+            <Quote>BASIS_SWAP/BASIS_SPREAD/6M/12M/EUR/20Y</Quote>
+            <Quote>BASIS_SWAP/BASIS_SPREAD/6M/12M/EUR/25Y</Quote>
+            <Quote>BASIS_SWAP/BASIS_SPREAD/6M/12M/EUR/30Y</Quote>
           </Quotes>
-          <Conventions>EUR-FRA</Conventions>
-          <ProjectionCurve>EUR12</ProjectionCurve>
-        </Simple>
-        <Simple>
-          <Type>Swap</Type>
-          <Quotes>
-            <Quote>IR_SWAP/RATE/EUR/2D/1Y/2Y</Quote>
-            <Quote>IR_SWAP/RATE/EUR/2D/1Y/3Y</Quote>
-            <Quote>IR_SWAP/RATE/EUR/2D/1Y/4Y</Quote>
-            <Quote>IR_SWAP/RATE/EUR/2D/1Y/5Y</Quote>
-            <Quote>IR_SWAP/RATE/EUR/2D/1Y/6Y</Quote>
-            <Quote>IR_SWAP/RATE/EUR/2D/1Y/7Y</Quote>
-            <Quote>IR_SWAP/RATE/EUR/2D/1Y/8Y</Quote>
-            <Quote>IR_SWAP/RATE/EUR/2D/1Y/9Y</Quote>
-            <Quote>IR_SWAP/RATE/EUR/2D/1Y/10Y</Quote>
-            <Quote>IR_SWAP/RATE/EUR/2D/1Y/11Y</Quote>
-            <Quote>IR_SWAP/RATE/EUR/2D/1Y/12Y</Quote>
-            <Quote>IR_SWAP/RATE/EUR/2D/1Y/13Y</Quote>
-            <Quote>IR_SWAP/RATE/EUR/2D/1Y/14Y</Quote>
-            <Quote>IR_SWAP/RATE/EUR/2D/1Y/15Y</Quote>
-            <Quote>IR_SWAP/RATE/EUR/2D/1Y/16Y</Quote>
-            <Quote>IR_SWAP/RATE/EUR/2D/1Y/17Y</Quote>
-            <Quote>IR_SWAP/RATE/EUR/2D/1Y/18Y</Quote>
-            <Quote>IR_SWAP/RATE/EUR/2D/1Y/19Y</Quote>
-            <Quote>IR_SWAP/RATE/EUR/2D/1Y/20Y</Quote>
-            <Quote>IR_SWAP/RATE/EUR/2D/1Y/21Y</Quote>
-            <Quote>IR_SWAP/RATE/EUR/2D/1Y/22Y</Quote>
-            <Quote>IR_SWAP/RATE/EUR/2D/1Y/23Y</Quote>
-            <Quote>IR_SWAP/RATE/EUR/2D/1Y/24Y</Quote>
-            <Quote>IR_SWAP/RATE/EUR/2D/1Y/25Y</Quote>
-            <Quote>IR_SWAP/RATE/EUR/2D/1Y/26Y</Quote>
-            <Quote>IR_SWAP/RATE/EUR/2D/1Y/27Y</Quote>
-            <Quote>IR_SWAP/RATE/EUR/2D/1Y/28Y</Quote>
-            <Quote>IR_SWAP/RATE/EUR/2D/1Y/29Y</Quote>
-            <Quote>IR_SWAP/RATE/EUR/2D/1Y/30Y</Quote>
-            <Quote>IR_SWAP/RATE/EUR/2D/1Y/35Y</Quote>
-            <Quote>IR_SWAP/RATE/EUR/2D/1Y/40Y</Quote>
-            <Quote>IR_SWAP/RATE/EUR/2D/1Y/50Y</Quote>
-            <Quote>IR_SWAP/RATE/EUR/2D/1Y/60Y</Quote>
-          </Quotes>
-          <Conventions>EUR12-Swap</Conventions>
-          <ProjectionCurve>EUR12</ProjectionCurve>
-        </Simple>
+          <Conventions>EUR-EURIBOR-6M-12M-BASIS-CONVENTIONS</Conventions>
+          <ProjectionCurveLong>EUR12M</ProjectionCurveLong>
+          <ProjectionCurveShort>EUR6M</ProjectionCurveShort>
+        </TenorBasis>
       </Segments>
     </YieldCurve>
     <YieldCurve>
@@ -710,10 +673,8 @@
           <Type>Deposit</Type>
           <Quotes>
             <Quote>MM/RATE/EUR/0D/1D</Quote>
-            <!--
-		<Quote>MM/RATE/EUR/1D/1D</Quote>
-		<Quote>MM/RATE/EUR/2D/1D</Quote>
-	    -->
+            <!--<Quote>MM/RATE/EUR/1D/1D</Quote>
+            <Quote>MM/RATE/EUR/2D/1D</Quote>-->
             <Quote>MM/RATE/EUR/2D/1W</Quote>
             <Quote>MM/RATE/EUR/2D/1M</Quote>
             <Quote>MM/RATE/EUR/2D/2M</Quote>
@@ -771,11 +732,11 @@
           <Type>Deposit</Type>
           <Quotes>
             <Quote>MM/RATE/EUR/0D/1D</Quote>
-            <Quote>MM/RATE/EUR/1D/1D</Quote>
+            <!--<Quote>MM/RATE/EUR/1D/1D</Quote>-->
             <Quote>MM/RATE/EUR/2D/1W</Quote>
             <Quote>MM/RATE/EUR/2D/1M</Quote>
           </Quotes>
-          <Conventions>EUR-Deposit</Conventions>
+          <Conventions>EUR-DEPOSIT</Conventions>
           <ProjectionCurve>EUR1M</ProjectionCurve>
         </Simple>
         <Simple>
@@ -807,7 +768,7 @@
             <Quote>IR_SWAP/RATE/EUR/2D/1M/25Y</Quote>
             <Quote>IR_SWAP/RATE/EUR/2D/1M/30Y</Quote>
           </Quotes>
-          <Conventions>EUR1M-Swap</Conventions>
+          <Conventions>EUR-1M-SWAP-CONVENTIONS</Conventions>
           <ProjectionCurve>EUR1M</ProjectionCurve>
         </Simple>
       </Segments>
@@ -983,27 +944,31 @@
             <Quote>FRA/RATE/USD/6M/6M</Quote>
             <Quote>FRA/RATE/USD/1Y/6M</Quote>
           </Quotes>
-          <Conventions>USD-FRA</Conventions>
+          <Conventions>USD-6M-FRA-CONVENTIONS</Conventions>
           <ProjectionCurve>USD6M</ProjectionCurve>
         </Simple>
-        <Simple>
-          <Type>Swap</Type>
+        <TenorBasis>
+          <Type>Tenor Basis Swap</Type>
           <Quotes>
-            <Quote>IR_SWAP/RATE/USD/2D/6M/2Y</Quote>
-            <Quote>IR_SWAP/RATE/USD/2D/6M/3Y</Quote>
-            <Quote>IR_SWAP/RATE/USD/2D/6M/4Y</Quote>
-            <Quote>IR_SWAP/RATE/USD/2D/6M/5Y</Quote>
-            <Quote>IR_SWAP/RATE/USD/2D/6M/7Y</Quote>
-            <Quote>IR_SWAP/RATE/USD/2D/6M/10Y</Quote>
-            <Quote>IR_SWAP/RATE/USD/2D/6M/12Y</Quote>
-            <Quote>IR_SWAP/RATE/USD/2D/6M/15Y</Quote>
-            <Quote>IR_SWAP/RATE/USD/2D/6M/20Y</Quote>
-            <Quote>IR_SWAP/RATE/USD/2D/6M/25Y</Quote>
-            <Quote>IR_SWAP/RATE/USD/2D/6M/30Y</Quote>
+            <Quote>BASIS_SWAP/BASIS_SPREAD/3M/6M/USD/2Y</Quote>
+            <Quote>BASIS_SWAP/BASIS_SPREAD/3M/6M/USD/3Y</Quote>
+            <Quote>BASIS_SWAP/BASIS_SPREAD/3M/6M/USD/4Y</Quote>
+            <Quote>BASIS_SWAP/BASIS_SPREAD/3M/6M/USD/5Y</Quote>
+            <Quote>BASIS_SWAP/BASIS_SPREAD/3M/6M/USD/6Y</Quote>
+            <Quote>BASIS_SWAP/BASIS_SPREAD/3M/6M/USD/7Y</Quote>
+            <Quote>BASIS_SWAP/BASIS_SPREAD/3M/6M/USD/8Y</Quote>
+            <Quote>BASIS_SWAP/BASIS_SPREAD/3M/6M/USD/9Y</Quote>
+            <Quote>BASIS_SWAP/BASIS_SPREAD/3M/6M/USD/10Y</Quote>
+            <Quote>BASIS_SWAP/BASIS_SPREAD/3M/6M/USD/12Y</Quote>
+            <Quote>BASIS_SWAP/BASIS_SPREAD/3M/6M/USD/15Y</Quote>
+            <Quote>BASIS_SWAP/BASIS_SPREAD/3M/6M/USD/20Y</Quote>
+            <Quote>BASIS_SWAP/BASIS_SPREAD/3M/6M/USD/25Y</Quote>
+            <Quote>BASIS_SWAP/BASIS_SPREAD/3M/6M/USD/30Y</Quote>
           </Quotes>
-          <Conventions>USD6M-Swap</Conventions>
-          <ProjectionCurve>USD6M</ProjectionCurve>
-        </Simple>
+          <Conventions>USD-LIBOR-3M-6M-BASIS-CONVENTIONS</Conventions>
+          <ProjectionCurveLong>USD6M</ProjectionCurveLong>
+          <ProjectionCurveShort>USD3M</ProjectionCurveShort>
+        </TenorBasis>
       </Segments>
     </YieldCurve>
     <YieldCurve>
@@ -1587,7 +1552,6 @@
       <Tolerance>0.000000000001</Tolerance>
     </YieldCurve>
     <YieldCurve>
-      <!-- FIXME -->
       <CurveId>GBP-IN-EUR</CurveId>
       <CurveDescription>GBP collateralized in EUR discount curve</CurveDescription>
       <Currency>GBP</Currency>
@@ -1636,7 +1600,6 @@
       <Tolerance>0.000000000001</Tolerance>
     </YieldCurve>
     <YieldCurve>
-      <!-- FIXME -->
       <CurveId>CHF-IN-EUR</CurveId>
       <CurveDescription>CHF collateralized in EUR discount curve</CurveDescription>
       <Currency>CHF</Currency>
