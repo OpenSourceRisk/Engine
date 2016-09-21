@@ -1,14 +1,10 @@
   <Simulation>
 
-    <!--
-	This section determines the scenario generation
-	given the model defined below.
-    -->
-    
     <Parameters>
 
       <Discretization>Exact</Discretization>
-      <Grid>80,3M</Grid>
+      <Grid>290,2W</Grid>
+      <!--<Grid>580,1W</Grid>-->
       <Calendar>EUR,USD,GBP,CHF</Calendar>
       <Sequence>SobolBrownianBridge</Sequence>
       <Scenario>Simple</Scenario>
@@ -17,10 +13,6 @@
       
     </Parameters>
 
-    <!--
-	This section determines the simulation model composition
-	and the calibration of all components.
-    -->
     <CrossAssetModel>
 
       <DomesticCcy>EUR</DomesticCcy>
@@ -57,8 +49,8 @@
 	  </Reversion>
 	  
 	  <CalibrationSwaptions>
-	    <Expiries> 1Y,  2Y,  4Y,  6Y,  8Y, 10Y, 12Y, 14Y, 16Y, 18Y, 19Y</Expiries>
-	    <Terms>   19Y, 18Y, 16Y, 14Y, 12Y, 10Y,  8Y,  6Y,  4Y,  2Y,  1Y</Terms>
+	    <Expiries> 1Y,2Y,3Y,4Y,5Y,7Y,10Y,12Y,15Y,20Y,25Y</Expiries>
+	    <Terms>   29Y,28Y,27Y,26Y,25Y,23Y,20Y,18Y,15Y,10Y,5Y</Terms>
 	    <Strikes/>
 	  </CalibrationSwaptions>
 
@@ -71,14 +63,14 @@
 
 	<LGM ccy="EUR">
 
-	  <CalibrationType>Bootstrap</CalibrationType>
+	  <CalibrationType>None</CalibrationType>
 
 	  <Volatility>
-	    <Calibrate>Y</Calibrate>
-	    <VolatilityType>Hagan</VolatilityType>
-      	    <ParamType>Piecewise</ParamType>
-	    <TimeGrid>1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0</TimeGrid>
-	    <InitialValue>0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01</InitialValue>
+	    <Calibrate>N</Calibrate>
+	    <VolatilityType>HullWhite</VolatilityType>
+      	    <ParamType>Constant</ParamType>
+	    <TimeGrid/>
+	    <InitialValue>0.01</InitialValue>
 	  </Volatility>
 	  
 	  <Reversion>
@@ -90,8 +82,8 @@
 	  </Reversion>
 	  
 	  <CalibrationSwaptions>
-	    <Expiries> 1Y,  2Y,  4Y,  6Y,  8Y, 10Y, 12Y, 14Y, 16Y, 18Y, 19Y</Expiries>
-	    <Terms>   19Y, 18Y, 16Y, 14Y, 12Y, 10Y,  8Y,  6Y,  4Y,  2Y,  1Y</Terms>
+	    <Expiries> 1Y,2Y,3Y,4Y,5Y,7Y,10Y,12Y,15Y,20Y,25Y</Expiries>
+	    <Terms>   29Y,28Y,27Y,26Y,25Y,23Y,20Y,18Y,15Y,10Y,5Y</Terms>
 	    <Strikes/>
 	  </CalibrationSwaptions>
 
@@ -100,8 +92,8 @@
 	    <Scaling>1.0</Scaling>
 	  </ParameterTransformation>
 	  
-	</LGM>      
-	
+	</LGM>
+        
 	<LGM ccy="CHF">
 
 	  <CalibrationType>Bootstrap</CalibrationType> 
@@ -123,8 +115,8 @@
 	  </Reversion>
 	  
 	  <CalibrationSwaptions>
-	    <Expiries> 1Y,  2Y,  4Y,  6Y,  8Y, 10Y, 12Y, 14Y, 16Y, 18Y, 19Y</Expiries>
-	    <Terms>   19Y, 18Y, 16Y, 14Y, 12Y, 10Y,  8Y,  6Y,  4Y,  2Y,  1Y</Terms>
+	    <Expiries> 1Y,2Y,3Y,4Y,5Y,7Y,10Y,12Y,15Y,20Y,25Y</Expiries>
+	    <Terms>   29Y,28Y,27Y,26Y,25Y,23Y,20Y,18Y,15Y,10Y,5Y</Terms>
 	    <Strikes/>
 	  </CalibrationSwaptions>
 
@@ -211,14 +203,17 @@
 
     </CrossAssetModel>
 
-    <!--
-	This setion determines the composition of the market used for
-	pricing under future market scenarios,
-	1) the structure/composition of the actively simulated market (IR, FX)
-	2) the method applied to evolve volatility structures even if not
-	simulated (roll or push)
-    -->
+
     <Market>
+
+      <!--
+	  This files determines the composition of the market used for
+	  pricing under future market scenarios,
+	  1) the structure/composition of the actively simulated market (IR, FX)
+	  2) the method applied to evolve volatility structures even if not
+	  simulated (roll or push)
+      -->
+
 
       <BaseCurrency>EUR</BaseCurrency>
       <Currencies>
@@ -228,7 +223,7 @@
 	<Currency>CHF</Currency>
 	<Currency>JPY</Currency>
       </Currencies>
-      
+
       <YieldCurves>
 	<Configuration>
 	  <Tenors>3M,6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,12Y,15Y,20Y</Tenors>
@@ -236,7 +231,7 @@
 	  <Extrapolation>Y</Extrapolation>
 	</Configuration>
       </YieldCurves>
-      
+
       <Indices>
 	<Index>EUR-EURIBOR-6M</Index>
 	<Index>EUR-EURIBOR-3M</Index>
@@ -247,18 +242,20 @@
 	<Index>CHF-LIBOR-6M</Index>
 	<Index>JPY-LIBOR-6M</Index>
       </Indices>
-      
+
       <SwapIndices>
 	<SwapIndex>
 	  <Name>EUR-CMS-1Y</Name>
+	  <ForwardingIndex>EUR-EURIBOR-6M</ForwardingIndex>
 	  <DiscountingIndex>EUR-EONIA</DiscountingIndex>
 	</SwapIndex>
 	<SwapIndex>
 	  <Name>EUR-CMS-30Y</Name>
+	  <ForwardingIndex>EUR-EURIBOR-6M</ForwardingIndex>
 	  <DiscountingIndex>EUR-EONIA</DiscountingIndex>
 	</SwapIndex>
       </SwapIndices>
-      
+
       <DefaultCurves>
         <Names/>
 	<Tenors>6M,1Y,2Y</Tenors>
@@ -268,8 +265,7 @@
 	   surfaces, so we need to specify here how we propagate the
 	   vol structure and what its composition will be -->       
       <SwaptionVolatilities>
-	<!-- Alternative: ConstantVariance -->
-	<ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
+	<ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay><!-- Alternative: ConstantVariance -->
 	<Currencies>
 	  <Currency>EUR</Currency>
 	  <Currency>USD</Currency>
@@ -281,11 +277,10 @@
 	<Terms>1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,30Y</Terms>
 	<Strikes/>
       </SwaptionVolatilities>
-      
+
       <FxVolatilities>
 	<Simulate>false</Simulate>
-	<!-- Alternative: ConstantVariance -->
-	<ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
+	<ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay><!-- Alternative: ConstantVariance -->
 	<CurrencyPairs>
 	  <CurrencyPair>EURUSD</CurrencyPair>
 	  <CurrencyPair>EURGBP</CurrencyPair>
@@ -294,21 +289,21 @@
 	<Expiries>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</Expiries>
 	<Strikes/>
       </FxVolatilities>
-      
+
       <!-- Additional data that is recorded during simulation for later
 	   use in the post processor -->
-      
+
       <AdditionalScenarioDataCurrencies>
 	<Currency>EUR</Currency>
 	<Currency>USD</Currency>
       </AdditionalScenarioDataCurrencies>
-      
+
       <AdditionalScenarioDataIndices>
 	<Index>EUR-EURIBOR-3M</Index>
 	<Index>EUR-EONIA</Index>
 	<Index>USD-LIBOR-3M</Index>
       </AdditionalScenarioDataIndices>
-      
+
     </Market>
     
   </Simulation>
