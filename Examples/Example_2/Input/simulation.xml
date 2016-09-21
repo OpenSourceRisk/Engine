@@ -2,12 +2,13 @@
 <Simulation>
   <Parameters>
     <Discretization>Exact</Discretization>
-    <Grid>42,3M</Grid>
+    <Grid>241,1M</Grid>
     <Calendar>EUR,USD,GBP,CHF</Calendar>
     <Sequence>SobolBrownianBridge</Sequence>
     <Scenario>Simple</Scenario>
     <Seed>42</Seed>
-    <Samples>5000</Samples>
+    <!--<Samples>5000</Samples>-->
+    <Samples>1000</Samples>
   </Parameters>
   <CrossAssetModel>
     <DomesticCcy>EUR</DomesticCcy>
@@ -44,8 +45,8 @@
           <InitialValue>0.03</InitialValue>
         </Reversion>
         <CalibrationSwaptions>
-          <Expiries>1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,14Y,16Y,18Y,19Y</Expiries>
-          <Terms>19Y,18Y,17Y,16Y,15Y,14Y,13Y,12Y,11Y,10Y,8Y,6Y,4Y,2Y,1Y</Terms>
+          <Expiries> 1Y,  2Y,  4Y,  6Y,  8Y, 10Y, 12Y, 14Y, 16Y, 18Y, 19Y</Expiries>
+          <Terms>   19Y, 18Y, 16Y, 14Y, 12Y, 10Y,  8Y,  6Y,  4Y,  2Y,  1Y</Terms>
           <Strikes/>
         </CalibrationSwaptions>
         <ParameterTransformation>
@@ -70,8 +71,8 @@
           <InitialValue>0.03</InitialValue>
         </Reversion>
         <CalibrationSwaptions>
-          <Expiries>1Y,2Y,3Y,4Y,5Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y,25Y</Expiries>
-          <Terms>29Y,28Y,27Y,26Y,25Y,23Y,22Y,21Y,10Y,18Y,15Y,10Y,5Y</Terms>
+          <Expiries> 1Y,  2Y,  4Y,  6Y,  8Y, 10Y, 12Y, 14Y, 16Y, 18Y, 19Y</Expiries>
+          <Terms>   19Y, 18Y, 16Y, 14Y, 12Y, 10Y,  8Y,  6Y,  4Y,  2Y,  1Y</Terms>
           <Strikes/>
         </CalibrationSwaptions>
         <ParameterTransformation>
@@ -96,8 +97,8 @@
           <InitialValue>0.03</InitialValue>
         </Reversion>
         <CalibrationSwaptions>
-          <Expiries>5Y, 7Y, 8Y, 9Y, 10Y, 12Y, 15Y, 20Y, 30Y</Expiries>
-          <Terms>   5Y, 5Y, 5Y, 5Y,  5Y,  5Y,  5Y,  5Y,  5Y</Terms>
+          <Expiries> 1Y,  2Y,  4Y,  6Y,  8Y, 10Y, 12Y, 14Y, 16Y, 18Y, 19Y</Expiries>
+          <Terms>   19Y, 18Y, 16Y, 14Y, 12Y, 10Y,  8Y,  6Y,  4Y,  2Y,  1Y</Terms>
           <Strikes/>
         </CalibrationSwaptions>
         <ParameterTransformation>
@@ -132,7 +133,7 @@
           <InitialValue>0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1</InitialValue>
         </Sigma>
         <CalibrationOptions>
-          <Expiries>1W, 1M, 2M, 3M, 6M, 9M, 1Y, 18M, 2Y, 3Y, 4Y, 5Y, 7Y, 10Y</Expiries>
+          <Expiries>1Y, 2Y, 3Y, 4Y, 5Y, 10Y</Expiries>
           <Strikes/>
           <!-- ATMF, +25D, -25D, 1.2345 -->
         </CalibrationOptions>
@@ -166,14 +167,14 @@
       <!-- ... -->
     </InstantaneousCorrelations>
   </CrossAssetModel>
-  <!--
-	This files determines the composition of the market used for
-	pricing under future market scenarios,
-	1) the structure/composition of the actively simulated market (IR, FX)
-	2) the method applied to evolve volatility structures even if not
-	simulated (roll or push)
-    -->
   <Market>
+    <!--
+	  This files determines the composition of the market used for
+	  pricing under future market scenarios,
+	  1) the structure/composition of the actively simulated market (IR, FX)
+	  2) the method applied to evolve volatility structures even if not
+	  simulated (roll or push)
+      -->
     <BaseCurrency>EUR</BaseCurrency>
     <Currencies>
       <Currency>EUR</Currency>
@@ -232,9 +233,9 @@
       <Strikes/>
     </SwaptionVolatilities>
     <FxVolatilities>
-      <!--	<ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>-->
       <Simulate>false</Simulate>
-      <ReactionToTimeDecay>ConstantVariance</ReactionToTimeDecay>
+      <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
+      <!-- Alternative: ConstantVariance -->
       <CurrencyPairs>
         <CurrencyPair>EURUSD</CurrencyPair>
         <CurrencyPair>EURGBP</CurrencyPair>

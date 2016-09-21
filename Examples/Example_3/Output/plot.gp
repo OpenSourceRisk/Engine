@@ -15,10 +15,9 @@ set autoscale
 set term pdfcairo 
 set out "tmp.pdf"
 
-plot "exposure_trade_Swap_20.csv" us 3:4 title "EPE" w l ls 1
-replot "exposure_trade_Swap_20.csv" us 3:5 title "ENE" w l ls 2
-replot "npv_payer_2.csv" us 1:2 title "Payer Swaption" w linesp ls 3 pt 4 ps 0.5
-replot "npv_receiver_2.csv" us 1:2 title "Receiver Swaption" w linesp ls 4 pt 4 ps 0.5
+plot "exposure_trade_Swap.csv" us 3:4 title "EPE Swap" w l ls 1
+replot "exposure_trade_SwaptionCash.csv" us 3:4 title "EPE Swaption Cash" w l ls 2
+replot "exposure_trade_SwaptionPhysical.csv" us 3:4 title "EPE Swaption Physical" w l ls 3
 
 set out "plot.pdf"
 replot

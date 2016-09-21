@@ -10,31 +10,18 @@ oreex.print_headline("Run ORE to produce NPV cube and exposures")
 oreex.run("Input/ore.xml")
 oreex.get_times("Output/log.txt")
 
-npv = open("Output/npv.csv")
-call = []
-put = []
-for line in npv.readlines():
-    if "CALL" in line:
-        line_list = line.split(',')
-        call=([[0,line_list[6]],[line_list[3], line_list[6]]])
-    if "PUT" in line:
-        line_list = line.split(',')
-        put=([[0, line_list[6]],[line_list[3],line_list[6]]])
+oreex.print_headline("Run ORE to price European Payer Swaptions")
+oreex.run("Input/ore_payer_swaption.xml")
 
-oreex.print_headline("Plot results: Simulated exposures vs analytical option prices")
+oreex.print_headline("Run ORE to price European Receiver Swaptions")
+oreex.run("Input/ore_receiver_swaption.xml")
 
-oreex.setup_plot("forward")
-oreex.plot("exposure_trade_FXFWD_EURUSD_10Y.csv", 2, 3, 'b', "EPE")
-oreex.plot("exposure_trade_FXFWD_EURUSD_10Y.csv", 2, 4, 'r', "ENE")
-oreex.plot_line([0, call[1][0]], [call[0][1], call[1][1]], color='g', label="Call Price")
-oreex.plot_line([0, put[1][0]], [put[0][1], put[1][1]], color='m', label="Put Price")
-oreex.decorate_plot(title="Example 2 - FX Forward")
-oreex.save_plot_to_file()
+oreex.print_headline("Plot results: Simulated exposures vs analytical Swaption prices")
 
-oreex.setup_plot("option")
-oreex.plot("exposure_trade_FX_CALL_OPTION_EURUSD_10Y.csv", 2, 3, 'b', "EPE")
-oreex.plot("exposure_trade_FX_PUT_OPTION_EURUSD_10Y.csv", 2, 3, 'r', "ENE")
-oreex.plot_line([0, call[1][0]], [call[0][1], call[1][1]], color='g', label="Call Price")
-oreex.plot_line([0, put[1][0]], [put[0][1], put[1][1]], color='m', label="Put Price")
-oreex.decorate_plot(title="Example 2 - FX Option")
+oreex.setup_plot("swaptions")
+oreex.plot("exposure_trade_Swap_20.csv", 2, 3, 'b', "EPE")
+oreex.plot("exposure_trade_Swap_20.csv", 2, 4, 'r', "ENE")
+oreex.plot_npv("npv_payer.csv", 6, 'g', 'Payer Swaption', marker='s')
+oreex.plot_npv("npv_receiver.csv", 6, 'm', "Receiver Swaption", marker='s')
+oreex.decorate_plot(title="Example 2")
 oreex.save_plot_to_file()

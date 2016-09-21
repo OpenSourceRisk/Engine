@@ -12,14 +12,14 @@
     <Parameter name="conventionsFile">../../Input/conventions.xml</Parameter>
     <Parameter name="marketConfigFile">../../Input/todaysmarket.xml</Parameter>
     <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
-    <Parameter name="portfolioFile">portfolio_swap.xml</Parameter>
+    <Parameter name="portfolioFile">portfolio.xml</Parameter>
     <Parameter name="observationModel">Disable</Parameter>
   </Setup>
   <Markets>
-    <Parameter name="lgmcalibration">libor</Parameter>
-    <Parameter name="fxcalibration">libor</Parameter>
-    <Parameter name="pricing">libor</Parameter>
-    <Parameter name="simulation">libor</Parameter>
+    <Parameter name="lgmcalibration">collateral_inccy</Parameter>
+    <Parameter name="fxcalibration">collateral_eur</Parameter>
+    <Parameter name="pricing">collateral_eur</Parameter>
+    <Parameter name="simulation">collateral_eur</Parameter>
   </Markets>
   <Analytics>
     <Analytic type="npv">

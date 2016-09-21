@@ -2,13 +2,11 @@
 <Simulation>
   <Parameters>
     <Discretization>Exact</Discretization>
-    <Grid>92,3M</Grid>
-    <!--<Grid>580,1W</Grid>-->
+    <Grid>80,3M</Grid>
     <Calendar>EUR,USD,GBP,CHF</Calendar>
     <Sequence>SobolBrownianBridge</Sequence>
     <Scenario>Simple</Scenario>
     <Seed>42</Seed>
-    <!--<Samples>5000</Samples>-->
     <Samples>1000</Samples>
   </Parameters>
   <CrossAssetModel>
@@ -46,8 +44,8 @@
           <InitialValue>0.03</InitialValue>
         </Reversion>
         <CalibrationSwaptions>
-          <Expiries> 1Y,2Y,3Y,4Y,5Y,7Y,10Y,12Y,15Y,20Y,25Y</Expiries>
-          <Terms>   29Y,28Y,27Y,26Y,25Y,23Y,20Y,18Y,15Y,10Y,5Y</Terms>
+          <Expiries> 1Y,  2Y,  4Y,  6Y,  8Y, 10Y, 12Y, 14Y, 16Y, 18Y, 19Y</Expiries>
+          <Terms>   19Y, 18Y, 16Y, 14Y, 12Y, 10Y,  8Y,  6Y,  4Y,  2Y,  1Y</Terms>
           <Strikes/>
         </CalibrationSwaptions>
         <ParameterTransformation>
@@ -72,8 +70,8 @@
           <InitialValue>0.03</InitialValue>
         </Reversion>
         <CalibrationSwaptions>
-          <Expiries> 1Y,2Y,3Y,4Y,5Y,7Y,10Y,12Y,15Y,20Y,25Y</Expiries>
-          <Terms>   29Y,28Y,27Y,26Y,25Y,23Y,20Y,18Y,15Y,10Y,5Y</Terms>
+          <Expiries> 1Y,  2Y,  4Y,  6Y,  8Y, 10Y, 12Y, 14Y, 16Y, 18Y, 19Y</Expiries>
+          <Terms>   19Y, 18Y, 16Y, 14Y, 12Y, 10Y,  8Y,  6Y,  4Y,  2Y,  1Y</Terms>
           <Strikes/>
         </CalibrationSwaptions>
         <ParameterTransformation>
@@ -98,8 +96,8 @@
           <InitialValue>0.03</InitialValue>
         </Reversion>
         <CalibrationSwaptions>
-          <Expiries> 1Y,2Y,3Y,4Y,5Y,7Y,10Y,12Y,15Y,20Y,25Y</Expiries>
-          <Terms>   29Y,28Y,27Y,26Y,25Y,23Y,20Y,18Y,15Y,10Y,5Y</Terms>
+          <Expiries> 1Y,  2Y,  4Y,  6Y,  8Y, 10Y, 12Y, 14Y, 16Y, 18Y, 19Y</Expiries>
+          <Terms>   19Y, 18Y, 16Y, 14Y, 12Y, 10Y,  8Y,  6Y,  4Y,  2Y,  1Y</Terms>
           <Strikes/>
         </CalibrationSwaptions>
         <ParameterTransformation>
@@ -233,6 +231,15 @@
       <Terms>1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,30Y</Terms>
       <Strikes/>
     </SwaptionVolatilities>
+    <CapFloorVolatilities>
+      <!-- Alternative: ForwardVariance or ConstantVariance -->
+      <ReactionToTimeDecay>ConstantVariance</ReactionToTimeDecay>
+      <Currencies>
+        <Currency>EUR</Currency>
+        <Currency>USD</Currency>
+        <Currency>GBP</Currency>
+      </Currencies>
+    </CapFloorVolatilities>
     <FxVolatilities>
       <Simulate>false</Simulate>
       <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>

@@ -1,9 +1,8 @@
-
-1) Portfolio
-
-   Small portfolio consisting of three vanilla swaps in EUR, USD and GBP,
-   with final maturity 2027
-
+1) Portfolio:
+   - Deep in-the-money Swap
+   - European Swaption as short call on the Swap above
+   - Same swap as above but with maturity at the Swaption's expiry
+	
 2) Market
 
    Pseudo market data as of 2016-02-05
@@ -14,23 +13,9 @@
 
 4) Analytics
 
-   a) no collateral:
-      EPE and ENE for individual trades and netting set, 
-      allocated trade EPEs and ENEs (marginal)
-      
-   b) collateral with THR > 0, MTA > 0, MPOR = 2W:
-      EPE and ENE for the netting set
-      allocated trade EPEs and ENEs (marginal)
-      
-   c) collateral with THR = 0, MTA > 0, MPOR = 2W:
-      EPE and ENE for the netting set
-      allocated trade EPEs and ENEs (relative CVA)
-
-   d) collateral with THR = 0, MTA = 0, MPOR = 2W:
-      EPE and ENE for the netting set
-      allocated trade EPEs and ENEs (relative CVA)
+   EPE and ENE without collateral for
+   individual trades and netting set
 
 5) Run Example
 
    ./run.sh
-   

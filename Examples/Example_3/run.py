@@ -6,23 +6,13 @@ from ore_examples_helper import OreExample
 
 oreex = OreExample(sys.argv[1] if len(sys.argv)>1 else False)
 
-oreex.print_headline("Run ORE to produce NPV cube and exposures")
+oreex.print_headline("Run ORE to produce NPV cube and exposures, without collateral")
 oreex.run("Input/ore.xml")
 oreex.get_times("Output/log.txt")
 
-oreex.print_headline("Run ORE to price European Payer Swaptions")
-oreex.run("Input/ore_payer_swaption.xml")
-
-oreex.print_headline("Run ORE to price European Receiver Swaptions")
-oreex.run("Input/ore_receiver_swaption.xml")
-
-oreex.print_headline("Plot results: Simulated exposures vs analytical Swaption prices")
-
-oreex.setup_plot("swaps_swaptions")
-oreex.plot("exposure_trade_Swap_20.csv", 2, 3, 'b', "EPE")
-oreex.plot("exposure_trade_Swap_20.csv", 2, 4, 'r', "ENE")
-oreex.plot_npv("npv_payer.csv", 6, 'g', 'Payer Swaption', marker='s')
-oreex.plot_npv("npv_receiver.csv", 6, 'm', 'Receiver Swaption', marker='s')
+oreex.setup_plot("example_swap_cash_physical")
+oreex.plot("exposure_trade_Swap.csv", 2, 3, 'b', "EPE Swap")
+oreex.plot("exposure_trade_SwaptionCash.csv", 2, 3, 'r', "EPE Swaption Cash")
+oreex.plot("exposure_trade_SwaptionPhysical.csv", 2, 3, 'g', "EPE Swaption Physical")
 oreex.decorate_plot(title="Example 3")
 oreex.save_plot_to_file()
-
