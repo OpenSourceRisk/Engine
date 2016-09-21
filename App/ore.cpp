@@ -302,7 +302,7 @@ int main(int argc, char** argv) {
             calculators.push_back(boost::make_shared<NPVCalculator>(baseCurrency));
             if (cubeDepth > 1)
                 calculators.push_back(boost::make_shared<CashflowCalculator>(baseCurrency, asof, grid, 1));
-            ValuationEngine engine(asof, grid, samples, simMarket);
+            ValuationEngine engine(asof, grid, simMarket);
 
             ostringstream o;
             o << "Additional Scenario Data " << grid->size() << " x " << samples << "... ";
