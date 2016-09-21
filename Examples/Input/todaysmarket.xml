@@ -58,50 +58,41 @@
     <!-- <Index name="CHF-TOIS">Yield/CHF/CHF1D</Index> -->
     <Index name="GBP-LIBOR-6M">Yield/GBP/GBP6M</Index>
     <Index name="CHF-LIBOR-6M">Yield/CHF/CHF6M</Index>
+    <Index name="CHF-LIBOR-3M">Yield/CHF/CHF6M</Index> <!-- FIXME -->
     <Index name="JPY-LIBOR-6M">Yield/JPY/JPY6M</Index>
     <Index name="JPY-TONAR">Yield/JPY/JPY6M</Index>
   </IndexForwardingCurves>
   <SwapIndexCurves id="default">
     <SwapIndex name="EUR-CMS-1Y">
-      <Index>EUR-EURIBOR-6M</Index>
       <Discounting>EUR-EONIA</Discounting>
     </SwapIndex>
     <SwapIndex name="EUR-CMS-30Y">
-      <Index>EUR-EURIBOR-6M</Index>
       <Discounting>EUR-EONIA</Discounting>
     </SwapIndex>
     <SwapIndex name="USD-CMS-1Y">
-      <Index>USD-LIBOR-3M</Index>
       <Discounting>USD-FedFunds</Discounting>
     </SwapIndex>
     <SwapIndex name="USD-CMS-30Y">
-      <Index>USD-LIBOR-3M</Index>
       <Discounting>USD-FedFunds</Discounting>
     </SwapIndex>
     <SwapIndex name="GBP-CMS-1Y">
-      <Index>GBP-LIBOR-6M</Index>
       <Discounting>GBP-SONIA</Discounting>
     </SwapIndex>
     <SwapIndex name="GBP-CMS-30Y">
-      <Index>GBP-LIBOR-6M</Index>
       <Discounting>GBP-SONIA</Discounting>
     </SwapIndex>
     <SwapIndex name="CHF-CMS-1Y">
-      <Index>CHF-LIBOR-6M</Index>
       <Discounting>CHF-LIBOR-6M</Discounting>
       <!-- CHF-TOIS and CHF1D do not work-->
     </SwapIndex>
     <SwapIndex name="CHF-CMS-30Y">
-      <Index>CHF-LIBOR-6M</Index>
       <Discounting>CHF-LIBOR-6M</Discounting>
       <!-- CHF-TOIS and CHF1D do not work-->
     </SwapIndex>
     <SwapIndex name="JPY-CMS-1Y">
-      <Index>JPY-LIBOR-6M</Index>
       <Discounting>JPY-LIBOR-6M</Discounting>
     </SwapIndex>
     <SwapIndex name="JPY-CMS-30Y">
-      <Index>JPY-LIBOR-6M</Index>
       <Discounting>JPY-LIBOR-6M</Discounting>
     </SwapIndex>
   </SwapIndexCurves>
