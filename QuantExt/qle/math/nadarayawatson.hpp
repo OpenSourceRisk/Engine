@@ -1,7 +1,22 @@
 /* -*- mode: c++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd.
+ Copyright (C) 2016 Quaternion Risk Management Ltd
+ All rights reserved.
+
+ This file is part of OpenRiskEngine, a free-software/open-source library
+ for transparent pricing and risk analysis - http://openriskengine.org
+
+ OpenRiskEngine is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program; if not, please email
+ <users@openriskengine.org>. The license is also available online at
+ <http://openriskengine.org/license.shtml>.
+
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
 #ifndef quantext_nadaraya_watson_regression_hpp
@@ -17,7 +32,6 @@
 
 using QuantLib::Real;
 using QuantLib::Size;
-using QuantLib::Interpolation;
 
 namespace QuantExt {
 namespace detail {
@@ -44,7 +58,7 @@ public:
 
         Real tmp1 = 0.0, tmp2 = 0.0;
 
-        for (Size i = 0; i < xEnd_ - xBegin_; ++i) {
+        for (Size i = 0; i < static_cast<Size>(xEnd_ - xBegin_); ++i) {
             Real tmp = kernel_(x - xBegin_[i]);
             tmp1 += yBegin_[i] * tmp;
             tmp2 += tmp;
@@ -57,7 +71,7 @@ public:
 
         Real tmp1 = 0.0, tmp1b = 0.0, tmp2 = 0.0;
 
-        for (Size i = 0; i < xEnd_ - xBegin_; ++i) {
+        for (Size i = 0; i < static_cast<Size>(xEnd_ - xBegin_); ++i) {
             Real tmp = kernel_(x - xBegin_[i]);
             tmp1 += yBegin_[i] * tmp;
             tmp1b += yBegin_[i] * yBegin_[i] * tmp;

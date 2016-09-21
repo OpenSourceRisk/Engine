@@ -75,7 +75,6 @@
       <Parameter name="colva">N</Parameter>
       <Parameter name="collateralSpread">0.0000</Parameter>
       <Parameter name="collateralFloor">N</Parameter>
-      <!-- NEW -->
       <Parameter name="dim">Y</Parameter>
       <Parameter name="mva">Y</Parameter>
       <Parameter name="dimQuantile">0.99</Parameter>
@@ -88,7 +87,6 @@
       <Parameter name="dimRegressionFile">dim_regression.txt</Parameter>      
       <Parameter name="dimOutputNettingSet">CPTY_A</Parameter>      
       <Parameter name="dimOutputGridPoint">0</Parameter> 
-      <!-- End of NEW -->
       <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>
       <Parameter name="netCubeOutputFile">netcube.csv</Parameter>
     </Analytic>

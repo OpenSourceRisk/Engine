@@ -2,16 +2,39 @@
 <TodaysMarket>
   <Configuration id="default">
     <DiscountingCurvesId>xois_eur</DiscountingCurvesId>
+    <YieldCurvesId>xois_eur</YieldCurvesId>
   </Configuration>
   <Configuration id="collateral_inccy">
     <DiscountingCurvesId>ois</DiscountingCurvesId>
+    <YieldCurvesId>ois</YieldCurvesId>
   </Configuration>
   <Configuration id="collateral_eur">
     <DiscountingCurvesId>xois_eur</DiscountingCurvesId>
   </Configuration>
   <Configuration id="libor">
     <DiscountingCurvesId>inccy_swap</DiscountingCurvesId>
+    <YieldCurvesId>inccy_swap</YieldCurvesId>
   </Configuration>
+  <!-- yield curve definition (in ccy swap discounting) -->
+  <YieldCurves id="default">
+    <YieldCurve name="BANK_EUR_LEND">Yield/EUR/BANK_EUR_LEND</YieldCurve>
+    <YieldCurve name="BANK_EUR_BORROW">Yield/EUR/BANK_EUR_BORROW</YieldCurve>
+  </YieldCurves>
+  <!-- yield curve definition (in ccy ois discounting) -->
+  <YieldCurves id="ois">
+    <YieldCurve name="BANK_EUR_LEND">Yield/EUR/BANK_EUR_LEND</YieldCurve>
+    <YieldCurve name="BANK_EUR_BORROW">Yield/EUR/BANK_EUR_BORROW</YieldCurve>
+  </YieldCurves>
+  <!-- yield curve definition (xois discounting w.r.t. EUR collateral) -->
+  <YieldCurves id="xois_eur">
+    <YieldCurve name="BANK_EUR_LEND">Yield/EUR/BANK_EUR_LEND</YieldCurve>
+    <YieldCurve name="BANK_EUR_BORROW">Yield/EUR/BANK_EUR_BORROW</YieldCurve>
+  </YieldCurves>
+  <!-- yield curve definition (xois discounting w.r.t. EUR collateral) -->
+  <YieldCurves id="inccy_swap">
+    <YieldCurve name="BANK_EUR_LEND">Yield/EUR/BANK_EUR_LEND</YieldCurve>
+    <YieldCurve name="BANK_EUR_BORROW">Yield/EUR/BANK_EUR_BORROW</YieldCurve>
+  </YieldCurves>
   <!-- discounting curve definition (in ccy swap discounting) -->
   <DiscountingCurves id="inccy_swap">
     <DiscountingCurve currency="EUR">Yield/EUR/EUR6M</DiscountingCurve>
@@ -19,8 +42,6 @@
     <DiscountingCurve currency="GBP">Yield/GBP/GBP6M</DiscountingCurve>
     <DiscountingCurve currency="CHF">Yield/CHF/CHF6M</DiscountingCurve>
     <DiscountingCurve currency="JPY">Yield/JPY/JPY6M</DiscountingCurve>
-    <DiscountingCurve currency="BANK_EUR_LEND">Yield/EUR/BANK_EUR_LEND</DiscountingCurve>
-    <DiscountingCurve currency="BANK_EUR_BORROW">Yield/EUR/BANK_EUR_BORROW</DiscountingCurve>
   </DiscountingCurves>
   <!-- discounting curve definition (in ccy ois discounting) -->
   <DiscountingCurves id="ois">
@@ -29,8 +50,6 @@
     <DiscountingCurve currency="GBP">Yield/GBP/GBP1D</DiscountingCurve>
     <DiscountingCurve currency="CHF">Yield/CHF/CHF6M</DiscountingCurve>
     <DiscountingCurve currency="JPY">Yield/JPY/JPY6M</DiscountingCurve>
-    <DiscountingCurve currency="BANK_EUR_LEND">Yield/EUR/BANK_EUR_LEND</DiscountingCurve>
-    <DiscountingCurve currency="BANK_EUR_BORROW">Yield/EUR/BANK_EUR_BORROW</DiscountingCurve>
   </DiscountingCurves>
   <!-- discounting curve definition (xois discounting w.r.t. EUR collateral) -->
   <DiscountingCurves id="xois_eur">
@@ -39,8 +58,6 @@
     <DiscountingCurve currency="GBP">Yield/GBP/GBP-IN-EUR</DiscountingCurve>
     <DiscountingCurve currency="CHF">Yield/CHF/CHF6M</DiscountingCurve>
     <DiscountingCurve currency="JPY">Yield/JPY/JPY6M</DiscountingCurve>
-    <DiscountingCurve currency="BANK_EUR_LEND">Yield/EUR/BANK_EUR_LEND</DiscountingCurve>
-    <DiscountingCurve currency="BANK_EUR_BORROW">Yield/EUR/BANK_EUR_BORROW</DiscountingCurve>
   </DiscountingCurves>
   <!-- index forwarding curve definition -->
   <IndexForwardingCurves id="default">
@@ -58,50 +75,41 @@
     <!-- <Index name="CHF-TOIS">Yield/CHF/CHF1D</Index> -->
     <Index name="GBP-LIBOR-6M">Yield/GBP/GBP6M</Index>
     <Index name="CHF-LIBOR-6M">Yield/CHF/CHF6M</Index>
+    <Index name="CHF-LIBOR-3M">Yield/CHF/CHF6M</Index> <!-- FIXME -->
     <Index name="JPY-LIBOR-6M">Yield/JPY/JPY6M</Index>
     <Index name="JPY-TONAR">Yield/JPY/JPY6M</Index>
   </IndexForwardingCurves>
   <SwapIndexCurves id="default">
     <SwapIndex name="EUR-CMS-1Y">
-      <Index>EUR-EURIBOR-6M</Index>
       <Discounting>EUR-EONIA</Discounting>
     </SwapIndex>
     <SwapIndex name="EUR-CMS-30Y">
-      <Index>EUR-EURIBOR-6M</Index>
       <Discounting>EUR-EONIA</Discounting>
     </SwapIndex>
     <SwapIndex name="USD-CMS-1Y">
-      <Index>USD-LIBOR-3M</Index>
       <Discounting>USD-FedFunds</Discounting>
     </SwapIndex>
     <SwapIndex name="USD-CMS-30Y">
-      <Index>USD-LIBOR-3M</Index>
       <Discounting>USD-FedFunds</Discounting>
     </SwapIndex>
     <SwapIndex name="GBP-CMS-1Y">
-      <Index>GBP-LIBOR-6M</Index>
       <Discounting>GBP-SONIA</Discounting>
     </SwapIndex>
     <SwapIndex name="GBP-CMS-30Y">
-      <Index>GBP-LIBOR-6M</Index>
       <Discounting>GBP-SONIA</Discounting>
     </SwapIndex>
     <SwapIndex name="CHF-CMS-1Y">
-      <Index>CHF-LIBOR-6M</Index>
       <Discounting>CHF-LIBOR-6M</Discounting>
       <!-- CHF-TOIS and CHF1D do not work-->
     </SwapIndex>
     <SwapIndex name="CHF-CMS-30Y">
-      <Index>CHF-LIBOR-6M</Index>
       <Discounting>CHF-LIBOR-6M</Discounting>
       <!-- CHF-TOIS and CHF1D do not work-->
     </SwapIndex>
     <SwapIndex name="JPY-CMS-1Y">
-      <Index>JPY-LIBOR-6M</Index>
       <Discounting>JPY-LIBOR-6M</Discounting>
     </SwapIndex>
     <SwapIndex name="JPY-CMS-30Y">
-      <Index>JPY-LIBOR-6M</Index>
       <Discounting>JPY-LIBOR-6M</Discounting>
     </SwapIndex>
   </SwapIndexCurves>

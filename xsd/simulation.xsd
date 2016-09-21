@@ -241,7 +241,6 @@
               <xs:complexType>
                 <xs:sequence>
                   <xs:element type="xs:string" name="Name"/>
-                  <xs:element type="indexNameType" name="ForwardingIndex"/>
                   <xs:element type="indexNameType" name="DiscountingIndex"/>
                 </xs:sequence>
               </xs:complexType>

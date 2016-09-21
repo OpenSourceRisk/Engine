@@ -8,7 +8,6 @@ QLE_TESTS = \
 	crossassetmodelparametrizations.hpp crossassetmodelparametrizations.cpp \
 	currency.hpp currency.cpp \
 	discountcurve.hpp discountcurve.cpp \
-	discountingswapenginedelta.hpp discountingswapenginedelta.cpp \
 	dynamicblackvoltermstructure.hpp dynamicblackvoltermstructure.cpp \
 	dynamicswaptionvolmatrix.hpp dynamicswaptionvolmatrix.cpp \
 	index.hpp index.cpp \
