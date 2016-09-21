@@ -30,6 +30,8 @@
 
 #include <iostream>
 
+#include <boost/filesystem.hpp>
+
 #include <orea/orea.hpp>
 #include <ored/ored.hpp>
 #include <ql/cashflows/floatingratecoupon.hpp>
@@ -51,6 +53,10 @@
 #define BOOST_LIB_NAME boost_date_time
 #include <boost/config/auto_link.hpp>
 #define BOOST_LIB_NAME boost_regex
+#include <boost/config/auto_link.hpp>
+#define BOOST_LIB_NAME boost_filesystem
+#include <boost/config/auto_link.hpp>
+#define BOOST_LIB_NAME boost_system
 #include <boost/config/auto_link.hpp>
 #endif
 
@@ -100,6 +106,12 @@ int main(int argc, char** argv) {
 
         string outputPath = params.get("setup", "outputPath");
         string logFile = outputPath + "/" + params.get("setup", "logFile");
+
+        boost::filesystem::path p{outputPath};
+        if(!boost::filesystem::exists(p)) {
+            boost::filesystem::create_directory(p);
+        }
+        QL_REQUIRE(boost::filesystem::is_directory(p), "output path '" << outputPath << "' is not a directory.");
 
         Log::instance().registerLogger(boost::make_shared<FileLogger>(logFile));
         Log::instance().switchOn();
