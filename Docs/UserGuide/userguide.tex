@@ -301,8 +301,8 @@ QuantLib and ORE depend on the boost C++ libraries. Hence these need to be insta
 \item Download the pre-compiled binaries for MSVC-14 (MSVC2015) from \cite{boost-binaries}
 %, any recent version should work
 \begin{itemize}
-\item 32-bit: \cite{boost-binaries}/VERSION/boost\_VERSION-msvc-14.0-32.exe/download 
-\item 64-bit: \cite{boost-binaries}/VERSION/boost\_VERSION-msvc-14.0-64.exe/download
+\item 32-bit: \cite{boost-binaries}{\bs}VERSION{\bs}boost\_VERSION-msvc-14.0-32.exe{\bs}download 
+\item 64-bit: \cite{boost-binaries}{\bs}VERSION{\bs}boost\_VERSION-msvc-14.0-64.exe{\bs}download
 \end{itemize}
 \item  Start the installation file and choose an installation folder. Take a note of that folder as it will be needed later on.
 \item Finish the installation by clicking Next a couple of times.
@@ -342,19 +342,21 @@ Alternatively, compile all Boost libraries directly from the source code:
 
 \item Download and install Visual Studio Community Edition. During the installation, make sure you install the Visual C++ support under the Programming Languages features (disabled by default). 
 
-\item Open any solution file and update path to Boost as described in sections 5 \& 6 in \cite{quantlib-install}. You only need to do this for a single project as this will update the path to boost across all projects and solutions on your machine. The paths should be set as follow (in case you compiled Boost on your own, use the path specified using the --stagedir cmd argument):
+\item To configure the boost paths in Visual Studio open any of the Visual Studio solution files in 3. below and select View $\rightarrow$ Other Windows $\rightarrow$ Property Manager. It does not matter which solution you open, if it is for example the QuantExt solution you should see two Projects 'QuantExt' and 'quantexttestsuite' in the property manager. Expand any of them (e.g. QuantExt) and then one of the Win32 or x64 configurations. The settings will be specific for the Win32 or x64 configuration but otherwise it does not matter which of the projects or configurations you expand, they all contain the same configuration file. You should now see 'Microsoft.Cpp.Win32.user' respectively 'Microsoft.Cpp.x64.user' depending on whether you chose a Win32 or a x64 configuration. Click on this file to open the property pages. Select VC++ Directories and then add your boost directory to the 'Include Directories' entry. Likewise add your boost library directory to the 'Library Directories' entry. If for example your boost installation is in {\tt C:{\bs}boost\_1\_59\_0} and the libraries reside in the {\tt stage{\bs}lib} subfolder, add {\tt C:{\bs}boost\_1\_59\_0} to  the 'Include Directories' entry and {\tt C:{\bs}boost\_1\_59\_0{\bs}stage{\bs}lib} to the 'Library Directories' entry. Press OK. If you want to configure the boost paths for Win32 resp. x64 as well, repeat the previous step for 'Microsoft.Cpp.Win32.user' respectively 'Microsoft.Cpp.x64.user'. To complete the configuration just close the property manager window.
 
-\begin{itemize}
-\item Include Directories: [Boost Installation Folder]
-\item Library Directories: [Boost Installation Folder]{\bs}libs
-\end{itemize}
-
-\item Add the additional path to the Boost pre-compiled libraries to the linker setting:
-
-\begin{itemize}
-\item 32-bit: [Boost Installation Folder]{\bs}lib32-msvc-14.0
-\item 64-bit: [Boost Installation Folder]{\bs}lib64-msvc-14.0
-\end{itemize}
+%\item Open any solution file and update path to Boost as described in sections 5 \& 6 in \cite{quantlib-install}. You only need to do this for a single project as this will update the path to boost across all projects and solutions on your machine. The paths should be set as follow (in case you compiled Boost on your own, use the path specified using the --stagedir cmd argument):
+%
+%\begin{itemize}
+%\item Include Directories: [Boost Installation Folder]
+%\item Library Directories: [Boost Installation Folder]{\bs}libs
+%\end{itemize}
+%
+%\item Add the additional path to the Boost pre-compiled libraries to the linker setting:
+%
+%\begin{itemize}
+%\item 32-bit: [Boost Installation Folder]{\bs}lib32-msvc-14.0
+%\item 64-bit: [Boost Installation Folder]{\bs}lib64-msvc-14.0
+%\end{itemize}
 
 \item Open each of the sub-projects and compile them in the following order: QuantLib, QuantExt, OpenRiskEngineData, OpenRiskEngineAnalytics and App. For each project, do the following:
 
@@ -392,7 +394,7 @@ This will build both the QuantExt library and test suite.
 
 \item Run the test suite
 
-{\tt
+{\tt\footnotesize
 \% ./test/quantext-test-suite 
 }
 
@@ -401,13 +403,13 @@ This will build both the QuantExt library and test suite.
 Follow the same steps as for QuantExt.
 To run the unit test suites, do 
 
-{\tt
+{\tt\footnotesize
 \% ./test/ored-test-suite 
 }
 
 and 
 
-{\tt
+{\tt\footnotesize
 \% ./test/orea-test-suite 
 }
 
@@ -415,7 +417,7 @@ in the respective library directories.
 
 \item Build App/ore
 
-{\tt
+{\tt\footnotesize
 \% cd App \\
 \% ./autogen.sh \\
 \% ./configure \\
@@ -424,7 +426,7 @@ in the respective library directories.
 
 Note: On Linux systems, the 'locale' settings can negatively affect the ORE process and output. To avoid this, we recommend setting the environment variable {\tt LC\_NUMERIC} to {\tt C}, e.g. in a bash shell, do
 
-{\tt
+{\tt\footnotesize
 \% export LC\_NUMERIC=C
 }
 
@@ -432,10 +434,9 @@ before running ORE or any of the examples below. This will suppress thousand sep
 
 \item Run Examples (see section \ref{sec:examples})
 
-{\tt
-\% cd Examples \\
-\% cd Example\_1 \\
-\% ./run.py 
+{\tt\footnotesize
+\% cd Examples/Example\_1 \\
+\% python run.py 
 }
 
 \end{enumerate}
@@ -576,7 +577,7 @@ Note: When building ORE from sources on Windows platforms, make sure that you co
 We start with a vanilla single currency Swap (currency EUR, maturity 20y, notional 10m, receive fixed 2\% annual, pay 6M-Euribor flat). The market yield curves (for both discounting and forward projection) are set to be flat at 2\% for all maturities, i.e. the Swap is at the money initially and remains at the money on average throughout its life. Running ORE in directory {\tt Examples/Example\_1} with
 
 \medskip
-\centerline{\tt ./run.py } 
+\centerline{\tt python run.py } 
 \medskip
 
 yields the exposure evolution in 
@@ -611,7 +612,7 @@ In Example\_1 we used co-terminal ATM Swaptions for both model calibration and S
 Moving to {\tt Examples/Example\_2}, we see what changes when using a realistic (non-flat) market environment. Running the example with
 
 \medskip
-\centerline{\tt ./run.py } 
+\centerline{\tt python run.py } 
 \medskip
 
 yields the exposure evolution in 
@@ -696,7 +697,7 @@ The second example in this folder shown in figure \ref{fig_capfloor_2} ('portfol
 \label{fig_capfloor_2}
 \end{figure}
 
-Further three test portfolios are provided as part of this example. Run the example and inspect the respective output directories {\tt Examples/Example\_7/Output/portfolio\_\#}. Note that these directories have to be present/created before running the batch with {\tt run.py}.
+Further three test portfolios are provided as part of this example. Run the example and inspect the respective output directories {\tt Examples/Example\_7/Output/portfolio\_\#}. Note that these directories have to be present/created before running the batch with {\tt python run.py}.
 
 %--------------------------------------------------------
 \subsection{FX Forward Exposure}\label{sec:fxfwd}
