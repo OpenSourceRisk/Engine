@@ -237,7 +237,7 @@ int main(int argc, char** argv) {
          * Simulation: Scenario and Cube Generation
          */
 
-        boost::shared_ptr<AdditionalScenarioData> inMemoryScenarioData;
+        boost::shared_ptr<AggregationScenarioData> inMemoryScenarioData;
         boost::shared_ptr<NPVCube> inMemoryCube;
         Size cubeDepth = 0;
 
@@ -316,7 +316,7 @@ int main(int argc, char** argv) {
             ostringstream o;
             o << "Additional Scenario Data " << grid->size() << " x " << samples << "... ";
             cout << setw(tab) << o.str() << flush;
-            inMemoryScenarioData = boost::make_shared<InMemoryAdditionalScenarioData>(grid->size(), samples);
+            inMemoryScenarioData = boost::make_shared<InMemoryAggregationScenarioData>(grid->size(), samples);
             cout << "OK" << endl;
 
             o.str("");
@@ -415,11 +415,11 @@ int main(int argc, char** argv) {
                                                                                  << ") does not match portfolio size ("
                                                                                  << portfolio->size() << ")");
 
-            boost::shared_ptr<AdditionalScenarioData> scenarioData;
+            boost::shared_ptr<AggregationScenarioData> scenarioData;
             if (inMemoryScenarioData)
                 scenarioData = inMemoryScenarioData;
             else {
-                scenarioData = boost::make_shared<InMemoryAdditionalScenarioData>();
+                scenarioData = boost::make_shared<InMemoryAggregationScenarioData>();
                 string scenarioFile = outputPath + "/" + params.get("xva", "scenarioFile");
                 scenarioData->load(scenarioFile);
             }
