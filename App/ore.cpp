@@ -276,7 +276,7 @@ int main(int argc, char** argv) {
             boost::shared_ptr<openriskengine::analytics::DateGrid> grid = sgd->grid();
 
             LOG("Build Simulation Market");
-            boost::shared_ptr<openriskengine::analytics::SimMarket> simMarket = boost::make_shared<ScenarioSimMarket>(
+            boost::shared_ptr<ScenarioSimMarket> simMarket = boost::make_shared<ScenarioSimMarket>(
                 sg, market, simMarketData, conventions, params.get("markets", "simulation"));
 
             LOG("Build engine factory for pricing under scenarios, linked to sim market");
@@ -317,6 +317,8 @@ int main(int argc, char** argv) {
             o << "Additional Scenario Data " << grid->size() << " x " << samples << "... ";
             cout << setw(tab) << o.str() << flush;
             inMemoryScenarioData = boost::make_shared<InMemoryAggregationScenarioData>(grid->size(), samples);
+            // Set AggregationScenarioData
+            simMarket->aggregationScenarioData() = inMemoryScenarioData;
             cout << "OK" << endl;
 
             o.str("");
@@ -336,7 +338,7 @@ int main(int argc, char** argv) {
                 QL_FAIL("cube depth 1 or 2 expected");
             }
 
-            engine.buildCube(simPortfolio, inMemoryCube, calculators, inMemoryScenarioData);
+            engine.buildCube(simPortfolio, inMemoryCube, calculators);
             cout << "OK" << endl;
 
             cout << setw(tab) << left << "Write Cube... " << flush;
