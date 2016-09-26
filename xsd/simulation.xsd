@@ -310,14 +310,14 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
-      <xs:element name="AdditionalScenarioDataCurrencies">
+      <xs:element name="AggregationScenarioDataCurrencies">
         <xs:complexType>
           <xs:sequence>
             <xs:element type="currencyCode" name="Currency" maxOccurs="unbounded" minOccurs="0"/>
           </xs:sequence>
         </xs:complexType>
       </xs:element>
-      <xs:element name="AdditionalScenarioDataIndices">
+      <xs:element name="AggregationScenarioDataIndices">
         <xs:complexType>
           <xs:sequence>
             <xs:element type="indexNameType" name="Index" maxOccurs="unbounded" minOccurs="0"/>
