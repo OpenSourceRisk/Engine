@@ -263,8 +263,9 @@ int main(int argc, char** argv) {
             boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
             sgd->fromFile(simulationConfigFile);
             ScenarioGeneratorBuilder sgb(sgd);
+            boost::shared_ptr<ScenarioFactory> sf = boost::make_shared<SimpleScenarioFactory>();
             boost::shared_ptr<ScenarioGenerator> sg =
-                sgb.build(model, simMarketData, asof, market, params.get("markets", "simulation"));
+                sgb.build(model, sf, simMarketData, asof, market, params.get("markets", "simulation")); // pricing or simulation?
 
             // Optionally write out scenarios
             if (params.has("simulation", "scenariodump")) {
