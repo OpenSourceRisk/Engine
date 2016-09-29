@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <Portfolio>
-<!--
+
   <Trade id="Swap_1">
     <TradeType>Swap</TradeType>
     <Envelope>
@@ -179,7 +179,7 @@
       </LegData>
     </SwapData>
     </Trade>
-    -->
+   
   <Trade id="Swap_2">
     <TradeType>Swap</TradeType>
     <Envelope>
