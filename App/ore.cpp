@@ -443,6 +443,7 @@ int main(int argc, char** argv) {
             Real dimQuantile = 0.99;
             Size dimHorizonCalendarDays = 14;
             Size dimRegressionOrder = 0;
+            vector<string> dimRegressors;
             Real dimScaling = 1.0;
             Size dimLocalRegressionEvaluations = 0;
             Real dimLocalRegressionBandwidth = 0.25;
@@ -451,6 +452,8 @@ int main(int argc, char** argv) {
                 dimQuantile = parseReal(params.get("xva", "dimQuantile"));
                 dimHorizonCalendarDays = parseInteger(params.get("xva", "dimHorizonCalendarDays"));
                 dimRegressionOrder = parseInteger(params.get("xva", "dimRegressionOrder"));
+                string dimRegressorsString = params.get("xva", "dimRegressors");
+                dimRegressors = parseListOfValues(dimRegressorsString);
                 dimScaling = parseReal(params.get("xva", "dimScaling"));
                 dimLocalRegressionEvaluations = parseInteger(params.get("xva", "dimLocalRegressionEvaluations"));
                 dimLocalRegressionBandwidth = parseReal(params.get("xva", "dimLocalRegressionBandwidth"));
@@ -462,7 +465,7 @@ int main(int argc, char** argv) {
                 portfolio, netting, market, marketConfiguration, cube, scenarioData, analytics, baseCurrency,
                 allocationMethod, marginalAllocationLimit, quantile, calculationType, dvaName, fvaBorrowingCurve,
                 fvaLendingCurve, collateralSpread, dimQuantile, dimHorizonCalendarDays, dimRegressionOrder,
-                dimLocalRegressionEvaluations, dimLocalRegressionBandwidth, dimScaling);
+                dimRegressors, dimLocalRegressionEvaluations, dimLocalRegressionBandwidth, dimScaling);
 
             writeTradeExposures(params, postProcess);
             writeNettingSetExposures(params, postProcess);
