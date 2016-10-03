@@ -314,7 +314,7 @@ int main(int argc, char** argv) {
             ValuationEngine engine(asof, grid, simMarket);
 
             ostringstream o;
-            o << "Additional Scenario Data " << grid->size() << " x " << samples << "... ";
+            o << "Aggregation Scenario Data " << grid->size() << " x " << samples << "... ";
             cout << setw(tab) << o.str() << flush;
             inMemoryScenarioData = boost::make_shared<InMemoryAggregationScenarioData>(grid->size(), samples);
             // Set AggregationScenarioData
@@ -350,7 +350,7 @@ int main(int argc, char** argv) {
             } else
                 cout << "SKIP" << endl;
 
-            cout << setw(tab) << left << "Write Additional Scenario Data... " << flush;
+            cout << setw(tab) << left << "Write Aggregation Scenario Data... " << flush;
             LOG("Write scenario data");
             if (params.has("simulation", "additionalScenarioDataFileName")) {
                 string outputFileNameAddScenData =
