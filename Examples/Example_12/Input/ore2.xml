@@ -45,6 +45,7 @@
       <Parameter name="storeScenarios">N</Parameter>
       <Parameter name="cubeFile">cube.dat</Parameter>
       <Parameter name="additionalScenarioDataFileName">scenariodata.dat</Parameter>
+      <Parameter name="scenariodump">scenariodump2.csv</Parameter>
     </Analytic>
     <Analytic type="xva">
       <Parameter name="active">Y</Parameter>
