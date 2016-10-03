@@ -635,18 +635,18 @@ void writeCurves(const Parameters& params, const TodaysMarketParameters& marketC
 
     vector<Handle<YieldTermStructure>> yieldCurves;
 
-    file << sep;
+    file << "Tenor" << sep << "Date";
     for (auto it : discountCurves) {
-        file << sep << it.first; // it.second;
-        yieldCurves.push_back(market->discountCurve(it.first));
+        file << sep << it.first;
+        yieldCurves.push_back(market->discountCurve(it.first, configID));
     }
     for (auto it : YieldCurves) {
-        file << sep << it.first; // it.second;
-        yieldCurves.push_back(market->yieldCurve(it.first));
+        file << sep << it.first;
+        yieldCurves.push_back(market->yieldCurve(it.first, configID));
     }
     for (auto it : indexCurves) {
-        file << sep << it.first; // it.second;
-        yieldCurves.push_back(market->iborIndex(it.first)->forwardingTermStructure());
+        file << sep << it.first;
+        yieldCurves.push_back(market->iborIndex(it.first, configID)->forwardingTermStructure());
     }
     file << endl;
 
