@@ -314,7 +314,7 @@ int main(int argc, char** argv) {
             ValuationEngine engine(asof, grid, simMarket);
 
             ostringstream o;
-            o << "Additional Scenario Data " << grid->size() << " x " << samples << "... ";
+            o << "Aggregation Scenario Data " << grid->size() << " x " << samples << "... ";
             cout << setw(tab) << o.str() << flush;
             inMemoryScenarioData = boost::make_shared<InMemoryAggregationScenarioData>(grid->size(), samples);
             // Set AggregationScenarioData
@@ -350,7 +350,7 @@ int main(int argc, char** argv) {
             } else
                 cout << "SKIP" << endl;
 
-            cout << setw(tab) << left << "Write Additional Scenario Data... " << flush;
+            cout << setw(tab) << left << "Write Aggregation Scenario Data... " << flush;
             LOG("Write scenario data");
             if (params.has("simulation", "additionalScenarioDataFileName")) {
                 string outputFileNameAddScenData =
@@ -638,18 +638,18 @@ void writeCurves(const Parameters& params, const TodaysMarketParameters& marketC
 
     vector<Handle<YieldTermStructure>> yieldCurves;
 
-    file << sep;
+    file << "Tenor" << sep << "Date";
     for (auto it : discountCurves) {
-        file << sep << it.first; // it.second;
-        yieldCurves.push_back(market->discountCurve(it.first));
+        file << sep << it.first;
+        yieldCurves.push_back(market->discountCurve(it.first, configID));
     }
     for (auto it : YieldCurves) {
-        file << sep << it.first; // it.second;
-        yieldCurves.push_back(market->yieldCurve(it.first));
+        file << sep << it.first;
+        yieldCurves.push_back(market->yieldCurve(it.first, configID));
     }
     for (auto it : indexCurves) {
-        file << sep << it.first; // it.second;
-        yieldCurves.push_back(market->iborIndex(it.first)->forwardingTermStructure());
+        file << sep << it.first;
+        yieldCurves.push_back(market->iborIndex(it.first, configID)->forwardingTermStructure());
     }
     file << endl;
 
