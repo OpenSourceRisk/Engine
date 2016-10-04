@@ -55,33 +55,16 @@ AC_DEFUN([QL_CHECK_BOOST_DEVEL],
 # ----------------------
 # Check whether the Boost installation is up to date
 AC_DEFUN([QL_CHECK_BOOST_VERSION],
-[AC_MSG_CHECKING([for Boost version >= 1.39])
+[AC_MSG_CHECKING([for Boost version >= 1.55])
  AC_REQUIRE([QL_CHECK_BOOST_DEVEL])
  AC_TRY_COMPILE(
     [@%:@include <boost/version.hpp>],
-    [@%:@if BOOST_VERSION < 103900
+    [@%:@if BOOST_VERSION < 105500
      @%:@error too old
      @%:@endif],
     [AC_MSG_RESULT([yes])],
     [AC_MSG_RESULT([no])
      AC_MSG_ERROR([outdated Boost installation])
-    ])
-])
-
-# QL_CHECK_BOOST_VERSION_1_58_OR_HIGHER
-# ----------------------
-# Check whether the Boost installation is version 1.58
-AC_DEFUN([QL_CHECK_BOOST_VERSION_1_58_OR_HIGHER],
-[AC_MSG_CHECKING([for Boost version >= 1.58])
- AC_REQUIRE([QL_CHECK_BOOST_DEVEL])
- AC_TRY_COMPILE(
-    [@%:@include <boost/version.hpp>],
-    [@%:@if BOOST_VERSION < 105800
-     @%:@error too old
-     @%:@endif],
-    [AC_MSG_RESULT([yes])],
-    [AC_MSG_RESULT([no])
-     AC_MSG_ERROR([Boost version 1.58 or higher is required for the thread-safe observer pattern])
     ])
 ])
 

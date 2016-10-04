@@ -237,7 +237,7 @@ int main(int argc, char** argv) {
          * Simulation: Scenario and Cube Generation
          */
 
-        boost::shared_ptr<AdditionalScenarioData> inMemoryScenarioData;
+        boost::shared_ptr<AggregationScenarioData> inMemoryScenarioData;
         boost::shared_ptr<NPVCube> inMemoryCube;
         Size cubeDepth = 0;
 
@@ -263,8 +263,9 @@ int main(int argc, char** argv) {
             boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
             sgd->fromFile(simulationConfigFile);
             ScenarioGeneratorBuilder sgb(sgd);
+            boost::shared_ptr<ScenarioFactory> sf = boost::make_shared<SimpleScenarioFactory>();
             boost::shared_ptr<ScenarioGenerator> sg =
-                sgb.build(model, simMarketData, asof, market, params.get("markets", "simulation"));
+                sgb.build(model, sf, simMarketData, asof, market, params.get("markets", "simulation")); // pricing or simulation?
 
             // Optionally write out scenarios
             if (params.has("simulation", "scenariodump")) {
@@ -275,7 +276,7 @@ int main(int argc, char** argv) {
             boost::shared_ptr<openriskengine::analytics::DateGrid> grid = sgd->grid();
 
             LOG("Build Simulation Market");
-            boost::shared_ptr<openriskengine::analytics::SimMarket> simMarket = boost::make_shared<ScenarioSimMarket>(
+            boost::shared_ptr<ScenarioSimMarket> simMarket = boost::make_shared<ScenarioSimMarket>(
                 sg, market, simMarketData, conventions, params.get("markets", "simulation"));
 
             LOG("Build engine factory for pricing under scenarios, linked to sim market");
@@ -313,9 +314,11 @@ int main(int argc, char** argv) {
             ValuationEngine engine(asof, grid, simMarket);
 
             ostringstream o;
-            o << "Additional Scenario Data " << grid->size() << " x " << samples << "... ";
+            o << "Aggregation Scenario Data " << grid->size() << " x " << samples << "... ";
             cout << setw(tab) << o.str() << flush;
-            inMemoryScenarioData = boost::make_shared<InMemoryAdditionalScenarioData>(grid->size(), samples);
+            inMemoryScenarioData = boost::make_shared<InMemoryAggregationScenarioData>(grid->size(), samples);
+            // Set AggregationScenarioData
+            simMarket->aggregationScenarioData() = inMemoryScenarioData;
             cout << "OK" << endl;
 
             o.str("");
@@ -335,23 +338,23 @@ int main(int argc, char** argv) {
                 QL_FAIL("cube depth 1 or 2 expected");
             }
 
-            engine.buildCube(simPortfolio, inMemoryCube, calculators, inMemoryScenarioData);
+            engine.buildCube(simPortfolio, inMemoryCube, calculators);
             cout << "OK" << endl;
 
             cout << setw(tab) << left << "Write Cube... " << flush;
             LOG("Write cube");
-            string cubeFileName = outputPath + "/" + params.get("simulation", "cubeFile");
-            if (cubeFileName != "") {
+            if (params.has("simulation", "cubeFile")) {
+                string cubeFileName = outputPath + "/" + params.get("simulation", "cubeFile");
                 inMemoryCube->save(cubeFileName);
                 cout << "OK" << endl;
             } else
                 cout << "SKIP" << endl;
 
-            cout << setw(tab) << left << "Write Additional Scenario Data... " << flush;
+            cout << setw(tab) << left << "Write Aggregation Scenario Data... " << flush;
             LOG("Write scenario data");
-            string outputFileNameAddScenData =
-                outputPath + "/" + params.get("simulation", "additionalScenarioDataFileName");
-            if (outputFileNameAddScenData != "") {
+            if (params.has("simulation", "additionalScenarioDataFileName")) {
+                string outputFileNameAddScenData =
+                    outputPath + "/" + params.get("simulation", "additionalScenarioDataFileName");
                 inMemoryScenarioData->save(outputFileNameAddScenData);
                 cout << "OK" << endl;
             } else
@@ -414,11 +417,11 @@ int main(int argc, char** argv) {
                                                                                  << ") does not match portfolio size ("
                                                                                  << portfolio->size() << ")");
 
-            boost::shared_ptr<AdditionalScenarioData> scenarioData;
+            boost::shared_ptr<AggregationScenarioData> scenarioData;
             if (inMemoryScenarioData)
                 scenarioData = inMemoryScenarioData;
             else {
-                scenarioData = boost::make_shared<InMemoryAdditionalScenarioData>();
+                scenarioData = boost::make_shared<InMemoryAggregationScenarioData>();
                 string scenarioFile = outputPath + "/" + params.get("xva", "scenarioFile");
                 scenarioData->load(scenarioFile);
             }
@@ -440,6 +443,7 @@ int main(int argc, char** argv) {
             Real dimQuantile = 0.99;
             Size dimHorizonCalendarDays = 14;
             Size dimRegressionOrder = 0;
+            vector<string> dimRegressors;
             Real dimScaling = 1.0;
             Size dimLocalRegressionEvaluations = 0;
             Real dimLocalRegressionBandwidth = 0.25;
@@ -448,6 +452,8 @@ int main(int argc, char** argv) {
                 dimQuantile = parseReal(params.get("xva", "dimQuantile"));
                 dimHorizonCalendarDays = parseInteger(params.get("xva", "dimHorizonCalendarDays"));
                 dimRegressionOrder = parseInteger(params.get("xva", "dimRegressionOrder"));
+                string dimRegressorsString = params.get("xva", "dimRegressors");
+                dimRegressors = parseListOfValues(dimRegressorsString);
                 dimScaling = parseReal(params.get("xva", "dimScaling"));
                 dimLocalRegressionEvaluations = parseInteger(params.get("xva", "dimLocalRegressionEvaluations"));
                 dimLocalRegressionBandwidth = parseReal(params.get("xva", "dimLocalRegressionBandwidth"));
@@ -459,7 +465,7 @@ int main(int argc, char** argv) {
                 portfolio, netting, market, marketConfiguration, cube, scenarioData, analytics, baseCurrency,
                 allocationMethod, marginalAllocationLimit, quantile, calculationType, dvaName, fvaBorrowingCurve,
                 fvaLendingCurve, collateralSpread, dimQuantile, dimHorizonCalendarDays, dimRegressionOrder,
-                dimLocalRegressionEvaluations, dimLocalRegressionBandwidth, dimScaling);
+                dimRegressors, dimLocalRegressionEvaluations, dimLocalRegressionBandwidth, dimScaling);
 
             writeTradeExposures(params, postProcess);
             writeNettingSetExposures(params, postProcess);
@@ -632,18 +638,18 @@ void writeCurves(const Parameters& params, const TodaysMarketParameters& marketC
 
     vector<Handle<YieldTermStructure>> yieldCurves;
 
-    file << sep;
+    file << "Tenor" << sep << "Date";
     for (auto it : discountCurves) {
-        file << sep << it.first; // it.second;
-        yieldCurves.push_back(market->discountCurve(it.first));
+        file << sep << it.first;
+        yieldCurves.push_back(market->discountCurve(it.first, configID));
     }
     for (auto it : YieldCurves) {
-        file << sep << it.first; // it.second;
-        yieldCurves.push_back(market->yieldCurve(it.first));
+        file << sep << it.first;
+        yieldCurves.push_back(market->yieldCurve(it.first, configID));
     }
     for (auto it : indexCurves) {
-        file << sep << it.first; // it.second;
-        yieldCurves.push_back(market->iborIndex(it.first)->forwardingTermStructure());
+        file << sep << it.first;
+        yieldCurves.push_back(market->iborIndex(it.first, configID)->forwardingTermStructure());
     }
     file << endl;
 

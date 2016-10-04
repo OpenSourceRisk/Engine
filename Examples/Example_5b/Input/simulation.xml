@@ -293,16 +293,16 @@
       <!-- Additional data that is recorded during simulation for later
 	   use in the post processor -->
 
-      <AdditionalScenarioDataCurrencies>
+      <AggregationScenarioDataCurrencies>
 	<Currency>EUR</Currency>
 	<Currency>USD</Currency>
-      </AdditionalScenarioDataCurrencies>
+      </AggregationScenarioDataCurrencies>
 
-      <AdditionalScenarioDataIndices>
+      <AggregationScenarioDataIndices>
 	<Index>EUR-EURIBOR-3M</Index>
 	<Index>EUR-EONIA</Index>
 	<Index>USD-LIBOR-3M</Index>
-      </AdditionalScenarioDataIndices>
+      </AggregationScenarioDataIndices>
 
     </Market>
     

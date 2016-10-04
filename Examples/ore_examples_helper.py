@@ -3,8 +3,15 @@ import platform
 import sys
 import subprocess
 import shutil
+
+import matplotlib
+matplotlib.use('Agg')
+
 import matplotlib.pyplot as plt
 import matplotlib.ticker
+import pandas as pd
+from datetime import datetime
+from math import log
 
 class OreExample(object):
 
@@ -72,6 +79,49 @@ class OreExample(object):
                 label=label,
                 linewidth=2,
                 marker=marker)
+
+    def plot_zeroratedist(self, filename, colIdxTime, colIdxVal, maturity, color, label, title='Zero Rate Distribution'):
+        f = open(os.path.join(os.path.join(os.getcwd(), "Output"), filename))
+        xdata = []
+        ydata = []
+        for line in f:
+            try :
+                xtmp = datetime.strptime(line.split(',')[colIdxTime], '%Y-%m-%d')
+                ytmp = -log(float(line.split(',')[colIdxVal])) / float(maturity)
+                xdata.append(xtmp)
+                ydata.append(ytmp)
+            except ValueError:
+                pass
+            except TypeError:
+                pass
+        d = pd.DataFrame({ 'x': xdata, 'y': ydata })
+        grouped = d.groupby('x')
+        mdata = grouped.mean()['y']
+        sdata = grouped.std()['y']
+        self.ax.plot(list(mdata.index.values),
+                     list(mdata),
+                     linewidth=3,
+                     linestyle='-',
+                     color=color,
+                     label=label+' (mean)')
+        self.ax.plot(list(mdata.index.values),
+                     list(mdata-sdata),
+                     linewidth=1,
+                     linestyle='-',
+                     color=color,
+                     label=label+' (mean +/- std)')
+        self.ax.plot(list(mdata.index.values),
+                     list(mdata+sdata),
+                     linewidth=1,
+                     linestyle='-',
+                     color=color,
+                     label='')
+        self.ax.set_xlabel("Time")
+        self.ax.set_ylabel("Zero Rate")
+        self.ax.get_yaxis().set_major_formatter(
+            matplotlib.ticker.FuncFormatter(lambda x, p: '{:1.4f}'.format(float(x))))
+        self.ax.legend(loc="upper left", shadow=True)
+        self.ax.set_title(title)
 
     def decorate_plot(self, title, ylabel="Exposure", xlabel="Time / Years", legend_loc="upper right"):
         self.ax.set_title(title)
