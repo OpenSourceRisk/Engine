@@ -28,3 +28,10 @@ oreex.plot("swaption_npv.csv", 3, 4, 'g', "NPV Swaptions", marker='s')
 oreex.decorate_plot(title="Example 12 - Simulated exposures with and without horizon shift")
 oreex.save_plot_to_file()
 
+oreex.print_headline("Plot results: Zero rate distribution with and without shift")
+
+oreex.setup_plot("rates")
+oreex.plot_zeroratedist("scenariodump.csv", 0, 23, 5, 'r', label="No horizon shift", title="")
+oreex.plot_zeroratedist("scenariodump2.csv", 0, 23, 5, 'b', label="Shifted horizon", title="Example 12 - 5y zero rate (EUR) distribution with and without horizon shift")
+oreex.save_plot_to_file()
+
