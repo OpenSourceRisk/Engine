@@ -3,10 +3,6 @@ import platform
 import sys
 import subprocess
 import shutil
-
-import matplotlib
-matplotlib.use('Agg')
-
 import matplotlib.pyplot as plt
 import matplotlib.ticker
 import pandas as pd
@@ -70,6 +66,37 @@ class OreExample(object):
                 color=color,
                 label=label,
                 marker=marker)
+
+    def plotSq(self, filename, colIdxTime, colIdxVal, color, label, offset=1, marker='', linestyle='-', title='', xlabel='', ylabel='', rescale= False):
+        xTmp = self.get_output_data_from_column(filename, colIdxTime, offset)
+        yTmp = self.get_output_data_from_column(filename, colIdxVal, offset)
+        x = []
+        y2 = []
+        yMax = 0.0
+        for i in range(0, len(xTmp)-1):
+            try :
+                tmp = float(yTmp[i])*float(yTmp[i]);
+                y2.append(tmp)
+                yMax = max(tmp, yMax)
+                x.append(float(xTmp[i]))
+            except TypeError:
+                pass
+        y2n = [ u / yMax for u in y2 ]
+        self.ax.plot(x,
+                     y2,
+                     linewidth=2,
+                     linestyle=linestyle,
+                     color=color,
+                     label=label,
+                     marker=marker)
+        if rescale:
+            self.ax.set_ylim([0, yMax])
+        self.ax.set_title(title)
+        self.ax.set_xlabel(xlabel)
+        self.ax.set_ylabel(ylabel)
+        self.ax.legend(loc="upper right", shadow=True)
+        self.ax.get_yaxis().set_major_formatter(
+            matplotlib.ticker.FuncFormatter(lambda x, p: '{:1.2e}'.format(float(x))))
 
     def plot_npv(self, filename, colIdx, color, label, marker=''):
         data = self.get_output_data_from_column(filename, colIdx)
