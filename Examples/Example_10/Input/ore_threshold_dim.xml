@@ -50,7 +50,7 @@
       <Parameter name="active">Y</Parameter>
       <Parameter name="csaFile">netting_threshold.xml</Parameter>
       <Parameter name="cubeFile">cube.dat</Parameter>
-      <Parameter name="cubeDepth">2</Parameter>
+      <Parameter name="hyperCube">Y</Parameter>
       <Parameter name="scenarioFile">scenariodata.dat</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="exposureProfiles">Y</Parameter>
@@ -73,6 +73,7 @@
       <Parameter name="dimQuantile">0.99</Parameter>
       <Parameter name="dimHorizonCalendarDays">14</Parameter>
       <Parameter name="dimRegressionOrder">1</Parameter>
+      <Parameter name="dimRegressors">USD,GBP,EUR-EURIBOR-3M,USD-LIBOR-3M,GBP-LIBOR-3M</Parameter>
       <Parameter name="dimLocalRegressionEvaluations">100</Parameter>
       <Parameter name="dimLocalRegressionBandwidth">0.25</Parameter>
       <Parameter name="dimScaling">1.0</Parameter>
