@@ -158,7 +158,7 @@ for portfolios with netting, variation and initial margin agreements.
 Subsequent ORE releases will also compute {\bf regulatory capital charges} for counterparty credit risk under the new standardised approach (SA-CCR), and the Monte Carlo based market risk measures will be complemented by parametric methods, e.g. for benchmarking various initial margin calculation models applied in cleared and non-cleared derivatives business.
 
 \medskip
-The first release of ORE in September 2016 covers the simulation of interest rate and FX risk factors and portfolios of Interest Rate Swaps, Caps/Floors, Swaptions, FX Forwards, Cross Currency Swaps and FX Options. Subsequent releases from Q1 2017 onwards will extend the derivative product and the risk factor range to Inflation, Credit, Equity and Commodity. With the introduction of credit risk factors, the scope will also be extended to cover cash products (loans and bonds) and related portfolio analytics.    
+The first release of ORE in October 2016 covers the simulation of interest rate and FX risk factors and portfolios of Interest Rate Swaps, Caps/Floors, Swaptions, FX Forwards, Cross Currency Swaps and FX Options. Subsequent releases from Q1 2017 onwards will extend the derivative product and the risk factor range to Inflation, Credit, Equity and Commodity. With the introduction of credit risk factors, the scope will also be extended to cover cash products (loans and bonds) and related portfolio analytics.    
 
 \medskip
 The simulation models applied in ORE's risk factor evolution implement the models discussed in detail in {\em Modern Derivatives Pricing and Credit Exposure Analysis} \cite{Lichters}: The IR/FX risk factor evolution is based on a cross currency model consisting of an arbitrage free combination of Linear Gauss Markov models for all interest rates and lognormal processes for the FX rates. The model components are calibrated to cross currency discounting and forward curves, Swaptions and FX Options.
@@ -168,7 +168,7 @@ The simulation models applied in ORE's risk factor evolution implement the model
 \item Open-Source Risk Project site: \url{http://www.opensourcerisk.org}
 \item Frequently Asked Questions: \url{http://www.opensourcerisk.org/faqs}
 \item Forum: \url{http://www.opensourcerisk.org/forum}
-\item Source code and releases: \url{https://github.com/OpenSourceRisk/Engine}
+\item Source code and releases: \url{https://github.com/opensourcerisk/engine}
 \item Follow ORE on Twitter {\tt @OpenSourceRisk} for updates on releases and events
 \end{itemize}
 An ORE Book will follow in 2017 that will elaborate on the engine's design and make the connection between methodology and implementation. It will be announced in due course on the channels mentioned above.
@@ -228,24 +228,23 @@ You can get ORE in two ways, either by downloading a release bundle as described
 
 \subsection{ORE Releases}\label{sec:release}
 
-ORE releases are regularly provided in the form of source code archives, Windows exe\-cutables {\tt ore.exe}, example cases and documentation. Release archives will be provided at \url{https://github.com/openriskengine/OpenRiskEngine/releases}.
+ORE releases are regularly provided in the form of source code archives, Windows exe\-cutables {\tt ore.exe}, example cases and documentation. Release archives will be provided at \url{https://github.com/opensourcerisk/engine/releases}.
 
 \medskip
 The release consists of a single archive in zip format
 \begin{itemize}
-\item {\tt OpenRiskEngine-1.8.zip}
-%\item {\tt OpenRiskEngine-1.8.tar.gz}
+\item {\tt ORE-1.8.zip}
 \end{itemize}
 
-When unpacked, it creates a directory {\tt OpenRiskEngine-1.8} with the following files respectively subdirectories
+When unpacked, it creates a directory {\tt ORE-1.8} with the following files respectively subdirectories
 \begin{enumerate}
 \item {\tt bin/win32/ore.exe}
 \item {\tt bin/x64/ore.exe}
 \item {\tt userguide.pdf}
 \item {\tt Examples/}
 \item {\tt App/}
-\item {\tt OpenRiskEngineAnalytics/}
-\item {\tt OpenRiskEngineData/}
+\item {\tt OREAnalytics/}
+\item {\tt OREData/}
 \item {\tt QuantExt/}
 \item {\tt ThirdPartyLibs/}
 \item {\tt Docs/}
@@ -261,17 +260,17 @@ The first four items (executables, userguide.pdf and examples folder) are suffic
 To build ORE from sources:
 \begin{itemize}
 \item Set up Boost as described in section \ref{sec:boost}, unless already installed
-\item Set up QuantLib 1.8 \cite{QL,quantlib-install} from its github or sourceforge download page, unless already installed; QuantLib needs to be located in this project directory {\tt OpenRiskEngine-1.8}. Alternatively, you can create a symbolic link named QuantLib here that points to the actual QuantLib directory
-\item Build QuantExt, OpenRiskEngineData, OpenRiskEngineAnalytics, App (in this order) as described in section \ref{sec:build}
+\item Set up QuantLib 1.8 \cite{QL,quantlib-install} from its github or sourceforge download page, unless already installed; QuantLib needs to be located in this project directory {\tt ORE-1.8}. Alternatively, you can create a symbolic link named QuantLib here that points to the actual QuantLib directory
+\item Build QuantExt, OREData, OREAnalytics, App (in this order) as described in section \ref{sec:build}
 \item Note that ThirdPartyLibs does not need to be built, it contains RapdidXml, header only code for reading and writing XML files
 \item Move on to section \ref{sec:python} and the examples in section \ref{sec:examples}.
 \end{itemize}
 
-Open {\tt Docs/html/index.html} to see the API documentation for QuantExt, OpenRiskEngineData and OpenRiskEngineAnalytics, generated by doxygen.
+Open {\tt Docs/html/index.html} to see the API documentation for QuantExt, OREData and OREAnalytics, generated by doxygen.
 
 \subsection{Building ORE}\label{sec:build_ore}
 
-ORE's source code is hosted on github.com at \url{https://github.com/openriskengine/OpenRiskEngine} using {\tt git}, a free and open source distributed version control system. 
+ORE's source code is hosted on github.com at \url{https://github.com/opensourcerisk/engine} using {\tt git}, a free and open source distributed version control system. 
 
 \subsubsection{Git}
 
@@ -282,7 +281,7 @@ To access the current code base on GitHub, one needs to get {\tt git} installed 
 
 \item Fetch ORE from github by running the following: 
 
-{\tt\% git clone https://github.com/openriskengine/OpenRiskEngine.git ore}      
+{\tt\% git clone https://github.com/opensourcerisk/engine.git ore}      
 
 This will create a folder 'ore' in your current directory that contains the codebase.
 
@@ -363,7 +362,7 @@ Alternatively, compile all Boost libraries directly from the source code:
 %\item 64-bit: [Boost Installation Folder]{\bs}lib64-msvc-14.0
 %\end{itemize}
 
-\item Open each of the sub-projects and compile them in the following order: QuantLib, QuantExt, OpenRiskEngineData, OpenRiskEngineAnalytics and App. For each project, do the following:
+\item Open each of the sub-projects and compile them in the following order: QuantLib, QuantExt, OREData, OREAnalytics and App. For each project, do the following:
 
 \begin{itemize}
 \item Switch to the correct platform (i.e. Win32 or x64) from the Configuration Manager. The selection should match the pre-compiled version of Boost. Trying to compile using a mixed configuration (e.g. Boost 64-bit and 32-bit QuantLib) will fail.
@@ -403,7 +402,7 @@ This will build both the QuantExt library and test suite.
 \% ./test/quantext-test-suite 
 }
 
-\item  Build OpenRiskEngineData, OpenRiskEngineAnalytics and their test suites. 
+\item  Build OREData, OREAnalytics and their test suites. 
 
 Follow the same steps as for QuantExt.
 To run the unit test suites, do 
@@ -998,14 +997,58 @@ Figure \ref{fig_15b} further illustrates the origin of the problem and its resol
 \subsection{Dynamic Initial Margin and MVA}\label{sec:dim}
 %--------------------------------------------------------
 
-This example in folder {\tt Examples/Example\_13} demonstrates Dynamic Initial Margin calculations (see also appendix \ref{sec:app_dim}) for a number of elementary products: A single currency Swap in EUR (case A), a European Swaption in EUR (case B), a single currency Swap in USD (case C), and a EUR/USD cross currency Swap (case D).  The examples can be run as before with 
+This example in folder {\tt Examples/Example\_13} demonstrates Dynamic Initial Margin calculations (see also appendix \ref{sec:app_dim}) for a number of elementary products: 
+\begin{itemize}
+\item A single currency Swap in EUR (case A), 
+\item a European Swaption in EUR with physical delivery (case B), 
+\item a single currency Swap in USD (case C), and 
+\item a EUR/USD cross currency Swap (case D).
+\end{itemize}
+
+The examples can be run as before with 
 
 \medskip
 \centerline{\tt python run\_A.py} 
 
 \medskip
-and likewise for cases B, C and D. Each run The essential results of each run are are visualised in the form 
+and likewise for cases B, C and D. The essential results of each run are are visualised in the form of 
+\begin{itemize}
+\item evolution of expected DIM
+\item regression plots at selected future times 
+\end{itemize}
+illustrated for cases A and B in figures \ref{fig_ex13a_evolution} - \ref{fig_ex13b_regression}. In all cases the zero order regression estimate of DIM differs noticeably from the higher orders (one and two). In the three swap cases we moreover see that first and second order polynomial choice makes hardly any difference; note that case C and D use up to three-dimensional regressors (simulated USD and EUR rate fixings and the EUR/USD FX rate). In the Swaption case B, first and second order polynomial choice makes a difference before option expiry.
+ 
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.45]{mpl_dim_evolution_A_swap_eur.pdf}
+\end{center}
+\caption{Evolution of expected Dynamic Initial Margin (DIM) for the EUR Swap of Example 13 A. DIM is evaluated using regression of NPV change variances versus the simulated 3M Euribor fixing; regression polynomials are zero, first and second order (first and second order curves are not distinguishable here). The simulation uses 1000 samples and a time grid with bi-weekly steps in line with the Margin Period of Risk.}
+\label{fig_ex13a_evolution}
+\end{figure}
 
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.45]{mpl_dim_regression_A_swap_eur.pdf}
+\end{center}
+\caption{Regression snapshot at time step 100 for the EUR Swap of Example 13 A.}
+\label{fig_ex13a_regression}
+\end{figure}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.45]{mpl_dim_evolution_B_swaption_eur.pdf}
+\end{center}
+\caption{Evolution of expected Dynamic Initial Margin (DIM) for the EUR Swaption of Example 13 B with expiry in 10Y around time step 100. DIM is evaluated using regression of NPV change variances versus the simulated 3M Euribor fixing; regression polynomials are zero, first and second order. The simulation uses 1000 samples and a time grid with bi-weekly steps in line with the Margin Period of Risk.}
+\label{fig_ex13b_evolution}
+\end{figure}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.45]{mpl_dim_regression_B_swaption_eur_t100.pdf}
+\end{center}
+\caption{Regression snapshot at time step 100 (before expiry) for the EUR Swaption of Example 13 B.}
+\label{fig_ex13b_regression}
+\end{figure}
 
 \clearpage
 %========================================================
@@ -1226,9 +1269,11 @@ The purpose of the {\tt simulation} 'analytics' is to run a Monte Carlo simulati
     <Parameter name="simulationConfigFile">simulation.xml</Parameter>
     <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
     <Parameter name="baseCurrency">EUR</Parameter>
-    <Parameter name="cubeFile">cube.dat</Parameter>
+    <Parameter name="storeScenarios">N</Parameter>
     <Parameter name="storeFlows">Y</Parameter>
+    <Parameter name="cubeFile">cube_A.dat</Parameter>
     <Parameter name="additionalScenarioDataFileName">scenariodata.dat</Parameter>
+    <Parameter name="scenariodump">scenariodump.csv</Parameter>
   </Analytic>
 </Analytics>      
 \end{minted}
@@ -1237,10 +1282,8 @@ The purpose of the {\tt simulation} 'analytics' is to run a Monte Carlo simulati
 \end{listing}
 
 The pricing engines file specifies how trades are priced under future scenarios which can differ from pricing as of today (specified in section Setup).
-Key base currency determines into which currency all NPVs will be converted. Key store scenarios (Y or N) determines whether the market scenarios are written to a file for later reuse. And finally, the key `store flows' (Y or N) controls whether cumulative cash flows between simulation dates are stored in the (hyper-) cube for post processing in the context of Dynamic Initial Margin and Variation Margin calculations.
-
-\todo[inline]{Implement the store scenarios option, add file name to parametrisation}
-
+Key base currency determines into which currency all NPVs will be converted. Key store scenarios (Y or N) determines whether the market scenarios are written to a file for later reuse. And finally, the key `store flows' (Y or N) controls whether cumulative cash flows between simulation dates are stored in the (hyper-) cube for post processing in the context of Dynamic Initial Margin and Variation Margin calculations. The additional scenario data (written to the specified file here) is likewise required in the post processor step. These data comprise simulated index fixing e.g. for collateral compounding and simulated FX rates for cash collateral conversion into base currency. The scenario dump file, if specified here, causes ORE to write simulated market data to a human-readable csv file.
+ 
 \medskip
 The XVA analytic section offers CVA, DVA, FVA and COLVA calculations which can be selected/deselected here individually. All XVA calculations depend on a previously generated NPV cube (see above) which is referenced here via the {\tt cubeFile} parameter. This means one can re-run the XVA analytics without regenerating the cube each time. The XVA reports depend in particular on the settings in the {\tt csaFile} which determines CSA details such as margining frequency, collateral thresholds, minimum transfer amounts, margin period of risk. By splitting the processing into pre-processing (cube generation) and post-processing (aggregation and XVA analysis) it is possible to vary these CSA details and analyse their impact on XVAs quickly without re-generating the NPV cube.  
 
@@ -1252,6 +1295,7 @@ The XVA analytic section offers CVA, DVA, FVA and COLVA calculations which can b
     <Parameter name="active">Y</Parameter>
     <Parameter name="csaFile">netting.xml</Parameter>
     <Parameter name="cubeFile">cube.dat</Parameter>
+    <Parameter name="hyperCube">Y</Parameter>
     <Parameter name="scenarioFile">scenariodata.dat</Parameter>
     <Parameter name="baseCurrency">EUR</Parameter>
     <Parameter name="exposureProfiles">Y</Parameter>
@@ -1269,11 +1313,12 @@ The XVA analytic section offers CVA, DVA, FVA and COLVA calculations which can b
     <Parameter name="colva">Y</Parameter>
     <Parameter name="collateralSpread">0.0010</Parameter>
     <Parameter name="collateralFloor">Y</Parameter>
-    <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>
-    <Parameter name="netCubeOutputFile">netcube.csv</Parameter>     
+    <Parameter name="dim">Y</Parameter>
+    <Parameter name="mva">Y</Parameter>
     <Parameter name="dimQuantile">0.99</Parameter>
     <Parameter name="dimHorizonCalendarDays">14</Parameter>
     <Parameter name="dimRegressionOrder">1</Parameter>
+    <Parameter name="dimRegressors">EUR-EURIBOR-3M,USD-LIBOR-3M,USD</Parameter>
     <Parameter name="dimLocalRegressionEvaluations">100</Parameter>
     <Parameter name="dimLocalRegressionBandwidth">0.25</Parameter>
     <Parameter name="dimScaling">1.0</Parameter>
@@ -1281,6 +1326,8 @@ The XVA analytic section offers CVA, DVA, FVA and COLVA calculations which can b
     <Parameter name="dimRegressionFile">dim_regression.txt</Parameter>      
     <Parameter name="dimOutputNettingSet">CPTY_A</Parameter>      
     <Parameter name="dimOutputGridPoint">0</Parameter>
+    <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>
+    <Parameter name="netCubeOutputFile">netcube.csv</Parameter>     
   </Analytic>
 </Analytics>
 \end{minted}
@@ -1292,6 +1339,7 @@ Parameters:
 \begin{itemize}
 \item {\tt csaFile:} Netting set definitions file covering CSA details such as margining frequency, thresholds, minimum transfer amounts, margin period of risk 
 \item {\tt cubeFile:} NPV cube file previously generated and to be post-processed here
+\item {\tt hyperCube:} If set to N, the cube file is expected to have depth 1 (storing NPV data only), if set to Y it is expected to have depth > 1 (e.g. storing NPVs and cumulative flows) 
 \item {\tt scenarioFile:} Scenario data previously generated and used in the post-processor (simulated index fixings and FX rates) 
 \item {\tt baseCurrency:} Expression currency for all NPVs, value adjustments, exposures 
 \item {\tt exposureProfiles:} Flag to enable/disable exposure output  
@@ -1301,7 +1349,7 @@ reporting
 \item {\tt allocationMethod:} XVA allocation method, choices are {\em None, Marginal, RelativeXVA} 
 \item {\tt marginalAllocationLimit:} The marginal allocation method a la Pykhtin/Rosen breaks down when the netting set value vanishes while the exposure does not. This parameter acts as a cutoff for the marginal allocation when the absolute netting set value falls below this limit and switches to equal distribution of the exposure in this case.  
 \item {\tt exerciseNextBreak:} Flag to terminate all trades at their next break date before aggregation and the subsequent analytics
-\item {\tt cva, dva, fva, colva, collateralFloor:} Flags to enable/disable these analytics. \todo[inline]{Add collateral rates floor to the collateral model file (netting.xml)}
+\item {\tt cva, dva, fva, colva, collateralFloor, dim, mva:} Flags to enable/disable these analytics. \todo[inline]{Add collateral rates floor to the collateral model file (netting.xml)}
 \item {\tt dvaName:} Credit name to look up the own default probability curve and recovery rate for DVA calculation
 \item {\tt fvaBorrowingCurve:} Identifier of the borrowing yield curve 
 \item {\tt fvaLendingCurve:} Identifier of the lending yield curve
@@ -1309,6 +1357,7 @@ reporting
 \item {\tt dimQuantile:} Quantile for Dynamic Initial Margin (DIM) calculation
 \item {\tt dimHorizonCalendarDays:} Horizon for DIM calculation, 14 calendar days for 2 weeks, etc.  
 \item {\tt dimRegressionOrder:} Order of the regression polynomial (netting set clean NPV move over the simulation period versus netting set NPV at period start) 
+\item {\tt dimRegressors:} Variables used as regressors in a single- or multi-dimensional regression; these variable names need to match entries in the {\tt simulation.xml}'s AggregationScenarioDataCurrencies and AggregationScenarioDataIndices sections (only these scenario data are passed on to the post processor) 
 \item {\tt dimLocalRegressionEvaluations:} Nadaraya-Watson local regression evaluated at the given number of points to validate polynomial regression. Note that Nadaraya-Watson needs a large number of samples for meaningful results. Evaluating the local regression at many points (samples) has a significant performance impact, hence the option here to limit the number of evaluations.
 \item {\tt dimLocalRegressionBandwidth:} Nadaraya-Watson local regression bandwidth in standard deviations of the independent variable (NPV)
 \item {\tt dimScaling:} Scaling factor applied to all DIM values used, e.g. to reconcile simulated DIM with actual IM at $t_0$
