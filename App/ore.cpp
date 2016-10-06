@@ -400,8 +400,8 @@ int main(int argc, char** argv) {
                 cube = inMemoryCube;
             else {
                 Size cubeDepth = 1;
-                if (params.has("xva", "cubeDepth"))
-                    cubeDepth = parseInteger(params.get("xva", "cubeDepth"));
+                if (params.has("xva", "hyperCube"))
+                    cubeDepth = parseBool(params.get("xva", "hyperCube")) ? 2 : 1;
 
                 if (cubeDepth > 1)
                     cube = boost::make_shared<SinglePrecisionInMemoryCubeN>();

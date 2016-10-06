@@ -2,14 +2,12 @@
 <Simulation>
   <Parameters>
     <Discretization>Exact</Discretization>
-    <Grid>290,2W</Grid>
-    <!--<Grid>580,1W</Grid>-->
+    <Grid>270,2W</Grid>
     <Calendar>EUR,USD,GBP,CHF</Calendar>
     <Sequence>SobolBrownianBridge</Sequence>
     <Scenario>Simple</Scenario>
     <Seed>42</Seed>
-    <Samples>5000</Samples>
-    <!--<Samples>1000</Samples>-->
+    <Samples>1000</Samples>
   </Parameters>
   <CrossAssetModel>
     <DomesticCcy>EUR</DomesticCcy>
@@ -59,17 +57,17 @@
         <CalibrationType>Bootstrap</CalibrationType>
         <Volatility>
           <Calibrate>Y</Calibrate>
-          <VolatilityType>Hagan</VolatilityType>
+          <VolatilityType>HullWhite</VolatilityType>
           <ParamType>Piecewise</ParamType>
-          <TimeGrid>1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0</TimeGrid>
-          <InitialValue>0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01</InitialValue>
+          <TimeGrid/>
+          <InitialValue>0.01</InitialValue>
         </Volatility>
         <Reversion>
           <Calibrate>N</Calibrate>
           <ReversionType>HullWhite</ReversionType>
           <ParamType>Constant</ParamType>
           <TimeGrid/>
-          <InitialValue>0.03</InitialValue>
+          <InitialValue>0.00</InitialValue>
         </Reversion>
         <CalibrationSwaptions>
           <Expiries> 1Y,2Y,3Y,4Y,5Y,7Y,10Y,12Y,15Y,20Y,25Y</Expiries>
@@ -205,10 +203,12 @@
     <SwapIndices>
       <SwapIndex>
         <Name>EUR-CMS-1Y</Name>
+        <ForwardingIndex>EUR-EURIBOR-6M</ForwardingIndex>
         <DiscountingIndex>EUR-EONIA</DiscountingIndex>
       </SwapIndex>
       <SwapIndex>
         <Name>EUR-CMS-30Y</Name>
+        <ForwardingIndex>EUR-EURIBOR-6M</ForwardingIndex>
         <DiscountingIndex>EUR-EONIA</DiscountingIndex>
       </SwapIndex>
     </SwapIndices>
@@ -249,8 +249,8 @@
 	   use in the post processor -->
     <AggregationScenarioDataCurrencies>
       <Currency>EUR</Currency>
-      <Currency>GBP</Currency>
       <Currency>USD</Currency>
+      <Currency>GBP</Currency>
     </AggregationScenarioDataCurrencies>
     <AggregationScenarioDataIndices>
       <Index>EUR-EURIBOR-3M</Index>
