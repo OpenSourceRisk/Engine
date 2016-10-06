@@ -44,7 +44,6 @@ oreex.setup_plot("dim_evolution_B_swaption_eur")
 oreex.plot(os.path.join("case_B_eur_swaption", "dim_evolution_1.txt"), 0, 3, 'y', "Zero Order Regression")
 oreex.plot(os.path.join("case_B_eur_swaption", "dim_evolution_1.txt"), 0, 4, 'c', "First Order Regression")
 oreex.plot(os.path.join("case_B_eur_swaption", "dim_evolution_2.txt"), 0, 4, 'm', "Second Order Regression")
-oreex.plot(os.path.join("case_B_eur_swaption", "direct_quantile_est.txt"), 0, 1, 'k', "Direct Quantile Estimation Step 0", linestyle='solid')
 oreex.decorate_plot(title="Plus Example 3 (B) - DIM Evolution Swaption (physical delivery) EUR", xlabel="Timestep", ylabel="DIM")
 oreex.save_plot_to_file()
 
