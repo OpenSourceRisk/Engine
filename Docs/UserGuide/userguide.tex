@@ -80,7 +80,8 @@
  
 \begin{document}
 
-\title{Open Risk Engine v0.1 \\ User Guide  }
+%\title{Open Source Risk Engine \\ User Guide  }
+\title{ORE User Guide}
 \author{Quaternion Risk Management}
 \date{\today}
 \maketitle
@@ -111,14 +112,14 @@
 
 \section{Introduction}
 
-The Open Risk Engine (ORE) project \cite{ORE} aims at providing a transparent platform for pricing and risk analysis that serves as
+The {\em Open-Source Risk Project} \cite{ORE} aims at providing a transparent platform for pricing and risk analysis that serves as
 %\medskip
 \begin{itemize}
 \item a benchmarking, validation, training, and teaching reference,
 \item an extensible foundation for tailored risk solutions.
 \end{itemize}
 
-ORE is an application that provides
+Its main software project is {\em Open-Source Risk Engine} (ORE), an application that provides
 \begin{itemize}
 \item a Monte Carlo simulation framework for contemporary risk analytics and value adjustments
 \item simple interfaces for trade data, market data and system configuration
@@ -130,10 +131,10 @@ on QuantLib, the open source library for quantitative finance \cite{QL}.
 
 %\medskip
 \subsubsection*{Audience}
-The project sponsored by Quaternion aims at reaching quantitative risk ma\-nage\-ment practitioners (be it in financial institutions, audit firms, consulting companies or regulatory bodies) who are looking for accessible software solutions, and quant developers in charge of the implementation pricing and risk methods similar to those in ORE. Moreover, the project aims at reaching academics and students who would like to teach or learn quantitative risk management using a freely available, contemporary risk application.  
+The project aims at reaching quantitative risk ma\-nage\-ment practitioners (be it in financial institutions, audit firms, consulting companies or regulatory bodies) who are looking for accessible software solutions, and quant developers in charge of the implementation of pricing and risk methods similar to those in ORE. Moreover, the project aims at reaching academics and students who would like to teach or learn quantitative risk management using a freely available, contemporary risk application.  
 
 \subsubsection*{Contributions}
-Quaternion Risk Management \cite{QRM} is committed to sponsoring the Open Risk Engine project through ongoing project administration, through providing this initial release and a series of subsequent releases in order to achieve a wide analytics, product and risk factor class coverage. The community is invited to contribute to ORE, for example through feedback, discussions and suggested enhancement in the forum on the ORE site \cite{ORE}, as well as contributions of ORE enhancements in the form of source code. See the FAQ section on the ORE site \cite{ORE} on how to get involved.
+Quaternion Risk Management \cite{QRM} is committed to sponsoring the Open Source Risk project through ongoing project administration, through providing this initial release and a series of subsequent releases in order to achieve a wide analytics, product and risk factor class coverage. The community is invited to contribute to ORE, for example through feedback, discussions and suggested enhancement in the forum on the ORE site \cite{ORE}, as well as contributions of ORE enhancements in the form of source code. See the FAQ section on the ORE site \cite{ORE} on how to get involved.
 
 \subsubsection*{Scope and Roadmap}
 
@@ -151,8 +152,9 @@ and {\bf derivative value adjustments}
 \item DVA (Debit Value Adjustment)
 \item FVA (Funding Value Adjustment)
 \item COLVA (Collateral Value Adjustment)
+\item MVA (Margin Value Adjustment)
 \end{itemize}
-for portfolios with netting and collateral.
+for portfolios with netting, variation and initial margin agreements.
 Subsequent ORE releases will also compute {\bf regulatory capital charges} for counterparty credit risk under the new standardised approach (SA-CCR), and the Monte Carlo based market risk measures will be complemented by parametric methods, e.g. for benchmarking various initial margin calculation models applied in cleared and non-cleared derivatives business.
 
 \medskip
@@ -163,20 +165,20 @@ The simulation models applied in ORE's risk factor evolution implement the model
 
 \subsubsection*{Further Resources}
 \begin{itemize}
-\item Open Risk Engine project site: \url{http://www.openriskengine.org}
-\item Frequently Asked Questions: {\color{red}\url{http://www.openriskengine.org/faq}}
-\item Forum: {\color{red}\url{http://www.openriskengine.org/forum}}
-\item Source code and releases: \url{https://github.com/openriskengine/OpenRiskEngine}
-\item Follow Open Risk Engine on Twitter {\tt @OpenRiskEngine} for updates on releases and events
+\item Open-Source Risk Project site: \url{http://www.opensourcerisk.org}
+\item Frequently Asked Questions: \url{http://www.opensourcerisk.org/faqs}
+\item Forum: \url{http://www.opensourcerisk.org/forum}
+\item Source code and releases: \url{https://github.com/OpenSourceRisk/Engine}
+\item Follow ORE on Twitter {\tt @OpenSourceRisk} for updates on releases and events
 \end{itemize}
-An Open Risk Engine Book will follow in 2017 that will elaborate on the engine's design and make the connection between methodology and implementation. It will be announced in due course on the channels mentioned above.
+An ORE Book will follow in 2017 that will elaborate on the engine's design and make the connection between methodology and implementation. It will be announced in due course on the channels mentioned above.
  
 \subsubsection*{Organisation of this document}
 
 This document focuses on instructions how to use ORE to cover basic workflows from individual deal analysis to portfolio processing. After an overview over the core ORE data flow in section \ref{sec:process} and installation instructions in section \ref{sec:installation} we start in section \ref{sec:examples} with a series of examples that illustrate how to launch ORE using its command line application, and we discuss typical results and reports. We then illustrate in section \ref{sec:visualisation} interactive analysis of resulting 'NPV cube' data. The final sections of this text document ORE parametrisation and the structure of trade and market data input.
 
 %========================================================
-\section{Open Risk Engine Data Flow}\label{sec:process}
+\section{ORE Data Flow}\label{sec:process}
 %========================================================
 
 The core processing steps followed in ORE to produce risk analytics results are sketched in Figure \ref{fig_process}. 
@@ -189,13 +191,14 @@ All ORE calculations and output are generated in three fundamental process steps
 \label{fig_process}
 \end{figure}
 
-The overall ORE process needs to be parametrised using a set of configuration XML files which is the subject of section \ref{sec:configuration}. The first processing step (upper left box) then comprises 
+The overall ORE process needs to be parametrised using a set of configuration XML files which is the subject of section \ref{sec:configuration}. The portfolio is provided in XML format which is explained in detail in sections \ref{sec:portfolio_data} and \ref{sec:nettingsetinput}. Note that ORE comes with 'Schema' files for all supported products so that any portfolio xml file can be validated before running through ORE. Market data is provided in a simple three-column text file with unique human-readable labelling of market data points, as explained in section \ref{sec:market_data}.  \\
+
+The first processing step (upper left box) then comprises 
 \begin{itemize}
 \item loading the portfolio to be analysed, 
 \item building any yield curves or other 'term structures' needed for pricing, 
 \item calibration of pricing and simulation models.
 \end{itemize}
-The portfolio is provided in XML format which is explained in detail in sections \ref{sec:portfolio_data} and \ref{sec:nettingsetinput}. Note that ORE comes with 'Schema' files for all supported products so that any portfolio xml file can be validated before running through ORE. Market data is provided in a simple three-column text file with unique human-readable labelling of market data points, as explained in section \ref{sec:market_data}.  \\
 
 The second processing step (upper middle box) is then 
 \begin{itemize}
@@ -221,11 +224,11 @@ Moreover, both NPV cubes can be further analysed interactively using a visualisa
 \section{Getting and Building ORE}\label{sec:installation}
 %========================================================
 
-You can get Open Risk Engine in two ways, either using a release bundle as described in section \ref{sec:release} or by checking out the source code from the github repository as described in section \ref{sec:build_ore}. 
+You can get ORE in two ways, either by downloading a release bundle as described in section \ref{sec:release} or by checking out the source code from the github repository as described in section \ref{sec:build_ore}. 
 
-\subsection{Open Risk Engine Releases}\label{sec:release}
+\subsection{ORE Releases}\label{sec:release}
 
-ORE releases are regularly provided in the form of source code archives, Windows exe\-cutables {\tt ore.exe}, example cases and documentation. Starting with the official release these archives will be provided at \url{https://github.com/openriskengine/OpenRiskEngine/releases}.
+ORE releases are regularly provided in the form of source code archives, Windows exe\-cutables {\tt ore.exe}, example cases and documentation. Release archives will be provided at \url{https://github.com/openriskengine/OpenRiskEngine/releases}.
 
 \medskip
 The release consists of a single archive in zip format
@@ -266,9 +269,9 @@ To build ORE from sources:
 
 Open {\tt Docs/html/index.html} to see the API documentation for QuantExt, OpenRiskEngineData and OpenRiskEngineAnalytics, generated by doxygen.
 
-\subsection{Building Open Risk Engine}\label{sec:build_ore}
+\subsection{Building ORE}\label{sec:build_ore}
 
-Open Risk Engine's source code is hosted on github.com at \url{https://github.com/openriskengine/OpenRiskEngine} using {\tt git}, a free and open source distributed version control system. 
+ORE's source code is hosted on github.com at \url{https://github.com/openriskengine/OpenRiskEngine} using {\tt git}, a free and open source distributed version control system. 
 
 \subsubsection{Git}
 
@@ -295,7 +298,7 @@ This will create a folder 'ore' in your current directory that contains the code
 
 \subsubsection{Boost}\label{sec:boost}
 
-QuantLib and ORE depend on the boost C++ libraries. Hence these need to be installed before building QuantLib. We recommend to use boost version 1\_58 or higher.
+QuantLib and ORE depend on the boost C++ libraries. Hence these need to be installed before building QuantLib and ORE. With Unix (Linux, OS X), we recommend boost version 1\_55 or higher, with Windows we recommend boost version 1\_57 or higher. Older versions may work on some platforms and system configurations, but were not tested.
 
 \subsubsection*{Windows}
 
@@ -336,7 +339,7 @@ Alternatively, compile all Boost libraries directly from the source code:
 (so includes should be in BOOST and libs should be in BOOST/stage/lib)
 \end{enumerate}
 
-\subsubsection{Open Risk Engine}\label{sec:build}
+\subsubsection{ORE Libraries and Application}\label{sec:build}
 
 \subsubsection*{Windows}
 
@@ -344,7 +347,7 @@ Alternatively, compile all Boost libraries directly from the source code:
 
 \item Download and install Visual Studio Community Edition. During the installation, make sure you install the Visual C++ support under the Programming Languages features (disabled by default). 
 
-\item To configure the boost paths in Visual Studio open any of the Visual Studio solution files in 3. below and select View $\rightarrow$ Other Windows $\rightarrow$ Property Manager. It does not matter which solution you open, if it is for example the QuantExt solution you should see two Projects 'QuantExt' and 'quantexttestsuite' in the property manager. Expand any of them (e.g. QuantExt) and then one of the Win32 or x64 configurations. The settings will be specific for the Win32 or x64 configuration but otherwise it does not matter which of the projects or configurations you expand, they all contain the same configuration file. You should now see 'Microsoft.Cpp.Win32.user' respectively 'Microsoft.Cpp.x64.user' depending on whether you chose a Win32 or a x64 configuration. Click on this file to open the property pages. Select VC++ Directories and then add your boost directory to the 'Include Directories' entry. Likewise add your boost library directory to the 'Library Directories' entry. If for example your boost installation is in {\tt C:{\bs}boost\_1\_59\_0} and the libraries reside in the {\tt stage{\bs}lib} subfolder, add {\tt C:{\bs}boost\_1\_59\_0} to  the 'Include Directories' entry and {\tt C:{\bs}boost\_1\_59\_0{\bs}stage{\bs}lib} to the 'Library Directories' entry. Press OK. If you want to configure the boost paths for Win32 resp. x64 as well, repeat the previous step for 'Microsoft.Cpp.Win32.user' respectively 'Microsoft.Cpp.x64.user'. To complete the configuration just close the property manager window.
+\item To configure the boost paths in Visual Studio open any of the Visual Studio solution files in item 3 below and select View $\rightarrow$ Other Windows $\rightarrow$ Property Manager. It does not matter which solution you open, if it is for example the QuantExt solution you should see two Projects 'QuantExt' and 'quantexttestsuite' in the property manager. Expand any of them (e.g. QuantExt) and then one of the Win32 or x64 configurations. The settings will be specific for the Win32 or x64 configuration but otherwise it does not matter which of the projects or configurations you expand, they all contain the same configuration file. You should now see 'Microsoft.Cpp.Win32.user' respectively 'Microsoft.Cpp.x64.user' depending on whether you chose a Win32 or a x64 configuration. Click on this file to open the property pages. Select VC++ Directories and then add your boost directory to the 'Include Directories' entry. Likewise add your boost library directory to the 'Library Directories' entry. If for example your boost installation is in {\tt C:{\bs}boost\_1\_57\_0} and the libraries reside in the {\tt stage{\bs}lib} subfolder, add {\tt C:{\bs}boost\_1\_57\_0} to  the 'Include Directories' entry and {\tt C:{\bs}boost\_1\_57\_0{\bs}stage{\bs}lib} to the 'Library Directories' entry. Press OK. If you want to configure the boost paths for Win32 resp. x64 as well, repeat the previous step for 'Microsoft.Cpp.Win32.user' respectively 'Microsoft.Cpp.x64.user'. To complete the configuration just close the property manager window.
 
 %\item Open any solution file and update path to Boost as described in sections 5 \& 6 in \cite{quantlib-install}. You only need to do this for a single project as this will update the path to boost across all projects and solutions on your machine. The paths should be set as follow (in case you compiled Boost on your own, use the path specified using the --stagedir cmd argument):
 %
@@ -445,7 +448,14 @@ before running ORE or any of the examples below. This will suppress thousand sep
 
 \subsection{Python and Jupyter}\label{sec:python}
 
-Python (version 3.5 or higher) is required to run the examples in section \ref{sec:examples} and plot exposure evolutions. Moreover, we use Jupyter \cite{jupyter} in section \ref{sec:visualisation} to visualise simulation results. Both are part of the 'Anaconda Open Data Science Analytics Platform' \cite{Anaconda}. Anaconda installation instructions for Windows, OS X and Linux are available on the Anaconda site, with graphical installers for Windows\footnote{With Windows, after a fresh installation of Python the user may have to run the {\tt python} command once in a command shell so that the Python executable will be found subsequently when running the example scripts in section \ref{sec:examples}.}, Linux and OS X\footnote{With OS X, the Python scripts used in the examples section may require the  environment variables {\tt LANG} and {\tt LC\_ALL } to be set to {\tt en\_US.UTF-8} or {\tt en\_GB.UTF-8}. With Linux it is moreover recommended to set {\tt LC\_NUMERIC} to {\tt C}. }. \\
+Python (version 3.5 or higher) is required to run the examples in section \ref{sec:examples} and plot exposure evolutions. Moreover, we use Jupyter \cite{jupyter} in section \ref{sec:visualisation} to visualise simulation results. Both are part of the 'Anaconda Open Data Science Analytics Platform' \cite{Anaconda}. Anaconda installation instructions for Windows, OS X and Linux are available on the Anaconda site, with graphical installers for Windows\footnote{With Windows, after a fresh installation of Python the user may have to run the {\tt python} command once in a command shell so that the Python executable will be found subsequently when running the example scripts in section \ref{sec:examples}.}, Linux and OS X. 
+
+With Linux and OS X, the following environment variable settings are required
+\begin{itemize}
+\item set {\tt LANG} and {\tt LC\_ALL } to {\tt en\_US.UTF-8} or {\tt en\_GB.UTF-8}
+\item set {\tt LC\_NUMERIC} to {\tt C}. 
+\end{itemize}
+The former is required for both running the Python scripts in the examples section, as well as successful installation of the following packages. \\
 
 The full functionality of the Jupyter notebook introduced in section \ref{sec:jupyter} requires furthermore installing
 \begin{itemize}
@@ -462,6 +472,7 @@ With Python and Anaconda already installed, this can be done by running these co
 \item {\tt conda install -c conda-forge bqplot}
 \item {\tt conda install -c conda-forge pythreejs}
 \end{itemize}
+Note that the bqplot installation requires the environment settings mentioned above.
 
 %========================================================
 \section{Examples}\label{sec:examples}
@@ -503,6 +514,8 @@ Example & Description \\
 11 & Basel exposure measures - EE, EPE, EEPE \\
 \hline
 12 & Long term simulation with horizon shift \\
+\hline
+13 & Dynamic Initial Margin and MVA \\
 \hline
 \end{tabular}
 \caption{ORE examples.}
@@ -763,10 +776,10 @@ The effect of the FX resetting feature, common in Cross Currency Swaps nowadays,
 In this example (see folder {\tt Examples/Example\_10}) we showcase a small netting set consisting of three Swaps in different currencies, with different collateral choices
 \begin{itemize}
 \item no collateral - figure \ref{fig_8},
-\item collateral with threshold (THR) 1m EUR, minimum transfer amount (MTA) 100k EUR, margin period of risk (MPR) 2 weeks - figure \ref{fig_9}
-\item collateral with zero THR and MTA, and MPR 2w - figure \ref{fig_10}
+\item collateral with threshold (THR) 1m EUR, minimum transfer amount (MTA) 100k EUR, margin period of risk (MPOR) 2 weeks - figure \ref{fig_9}
+\item collateral with zero THR and MTA, and MPOR 2w - figure \ref{fig_10}
 \end{itemize}
-The exposure graphs with collateral and positive margin period of risk show typical spikes. What is causing these? As sketched in appendix \ref{sec:app_collateral}, ORE uses a {\em classical collateral model} that applies collateral amounts to offset exposure with a time delay that corresponds to the margin period of risk. The spikes are then caused by instrument cash flows falling between exposure measurement dates $d_1$ and $d_2$ (an MPR apart), so that a collateral delivery amount determined at $d_1$ but settled at $d_2$ differs significantly from the closeout amount at $d_2$ causing a significant residual exposure for a short period of time. See for example \cite{Andersen2016} for a recent detailed discussion of collateral modelling. The approach currently implemented in ORE corresponds to {\em Classical+} in \cite{Andersen2016}, the more conservative approach of the classical methods. The less conservative alternative, {\em Classical-}, would assume that both parties stop paying trade flows at the beginning of the MPR, so that the P\&L over the MPR does not contain the cash flow effect, and exposure spikes are avoided. Note that the size and position of the largest spike in figure \ref{fig_9} is consistent with a cash flow of the 40 million GBP Swap in the example's portfolio that rolls over the 3rd of March and has a cash flow on 3 March 2020, a bit more than four years from the evaluation date. 
+The exposure graphs with collateral and positive margin period of risk show typical spikes. What is causing these? As sketched in appendix \ref{sec:app_collateral}, ORE uses a {\em classical collateral model} that applies collateral amounts to offset exposure with a time delay that corresponds to the margin period of risk. The spikes are then caused by instrument cash flows falling between exposure measurement dates $d_1$ and $d_2$ (an MPOR apart), so that a collateral delivery amount determined at $d_1$ but settled at $d_2$ differs significantly from the closeout amount at $d_2$ causing a significant residual exposure for a short period of time. See for example \cite{Andersen2016} for a recent detailed discussion of collateral modelling. The approach currently implemented in ORE corresponds to {\em Classical+} in \cite{Andersen2016}, the more conservative approach of the classical methods. The less conservative alternative, {\em Classical-}, would assume that both parties stop paying trade flows at the beginning of the MPOR, so that the P\&L over the MPOR does not contain the cash flow effect, and exposure spikes are avoided. Note that the size and position of the largest spike in figure \ref{fig_9} is consistent with a cash flow of the 40 million GBP Swap in the example's portfolio that rolls over the 3rd of March and has a cash flow on 3 March 2020, a bit more than four years from the evaluation date. 
   
 \begin{figure}[h!]
 \begin{center}
@@ -780,7 +793,7 @@ The exposure graphs with collateral and positive margin period of risk show typi
 \begin{center}
 \includegraphics[scale=0.45]{mpl_threshold_break_epe.pdf}
 \end{center}
-\caption{Three Swaps netting set, THR=1m EUR, MTA=100k EUR, MPR=2w. The red evolution assumes that the each trade is terminated at the next break date. The blue evolution ignores break dates. Simulation with 5000 paths and bi-weekly time steps.}
+\caption{Three Swaps netting set, THR=1m EUR, MTA=100k EUR, MPOR=2w. The red evolution assumes that the each trade is terminated at the next break date. The blue evolution ignores break dates. Simulation with 5000 paths and bi-weekly time steps.}
 \label{fig_9}
 \end{figure}
 
@@ -796,7 +809,7 @@ The exposure graphs with collateral and positive margin period of risk show typi
 \begin{center}
 \includegraphics[scale=0.45]{mpl_mpor_epe.pdf}
 \end{center}
-\caption{Three Swaps, THR=MTA=0, MPR=2w. Simulation with 5000 paths and bi-weekly time steps.}
+\caption{Three Swaps, THR=MTA=0, MPOR=2w. Simulation with 5000 paths and bi-weekly time steps.}
 \label{fig_10}
 \end{figure}
 
@@ -904,7 +917,7 @@ CPTY\_A & ... & ...& ... & ... & ... & ... & ... & ...\\
 Allocated exposures are missing here, as they make sense at the trade level only, and the expected collateral balance is added for information (in this case zero as collateralisation is deactivated in this example).
 
 \medskip
-{\tt Examples/Example\_10} also features the allocation of netting set exposure and XVA to the trade level as frequently required by finance departments. We start again with the uncollateralised case in figure \ref{fig_8}, followed by the case with threshold 1m EUR in figure \ref{fig_9}.
+The allocation of netting set exposure and XVA to the trade level is frequently required by finance departments. This allocation is also featured in {\tt Examples/Example\_10}. We start again with the uncollateralised case in figure \ref{fig_12}, followed by the case with threshold 1m EUR in figure \ref{fig_13}.
 \begin{figure}[h!]
 \begin{center}
 \includegraphics[scale=0.45]{mpl_nocollateral_allocated_epe.pdf}
@@ -926,12 +939,12 @@ The analytics results also feature allocated XVAs in file {\tt xva.csv} which ar
 \subsection{Basel Exposure Measures}\label{sec:basel}
 %--------------------------------------------------------
 
-Example {\tt Example\_11} demonstrates the relation between the evolution of the expected exposure (EPE in our notation) to the `Basel' exposure measures EE\_B, EEE\_B, EPE\_B and EEPE\_B as defined in appendix \ref{sec:app_exposure}. In particular the latter is used in internal model methods for counterparty credit risk as a measure for the exposure at default. It is a `derivative' of the expected exposure evolution and defined as a time average over the running maximum of EE\_B up to the horizon of one year. For illustration purposes in figure \ref{fig_14} we have extended the horizon here to the portfolio's maturity.
+Example {\tt Example\_11} demonstrates the relation between the evolution of the expected exposure (EPE in our notation) to the `Basel' exposure measures EE\_B, EEE\_B, EPE\_B and EEPE\_B as defined in appendix \ref{sec:app_exposure}. In particular the latter is used in internal model methods for counterparty credit risk as a measure for the exposure at default. It is a `derivative' of the expected exposure evolution and defined as a time average over the running maximum of EE\_B up to the horizon of one year. 
 \begin{figure}[h!]
 \begin{center}
 \includegraphics[scale=0.45]{mpl_basel_exposures.pdf}
 \end{center}
-\caption{Evolution of the expected exposure of Vanilla Swap, comparison to the `Basel' exposure measures EEE\_B, EPE\_B and EEPE\_B. Note that we have set to the horizon for time averages to the Swap's maturity (rather than 1Y) in this example.}
+\caption{Evolution of the expected exposure of Vanilla Swap, comparison to the `Basel' exposure measures EEE\_B, EPE\_B and EEPE\_B.}
 \label{fig_14}
 \end{figure}
 
@@ -963,8 +976,7 @@ H(t) \rightarrow H(t) - H(T)
 $$ 
 It can be shown that this leaves all expectations computed in the model (such as EPE and ENE) invariant. As explained in \cite{Lichters}, subtracting a $H$ shift effectively means performing a change of measure from the `native' LGM measure to a T-Forward measure with horizon $T$, here 30 years. Both negative and positive shifts are permissible, but only negative shifts are connected with a T-Forward measure and improve numerical stability.\\
 
-In our experience it is helpful to place the horizon in the middle of the portfolio duration to significantly improve the quality of long term expectations. The effect of this change (only) is shown in the same figure \ref{fig_15} (`shifted horizon').
-
+In our experience it is helpful to place the horizon in the middle of the portfolio duration to significantly improve the quality of long term expectations. The effect of this change (only) is shown in the same figure \ref{fig_15} (`shifted horizon'). 
 \begin{figure}[h!]
 \begin{center}
 \includegraphics[scale=0.45]{mpl_longterm.pdf}
@@ -972,6 +984,28 @@ In our experience it is helpful to place the horizon in the middle of the portfo
 \caption{Long term Swap exposure simulation with and without horizon shift.}
 \label{fig_15}
 \end{figure}
+Figure \ref{fig_15b} further illustrates the origin of the problem and its resolution: The rate distribution's mean (without horizon shift or change of measure) drifts upwards due to convexity effects (note that the yield curve is flat in this example), and the distribution's width is then too narrow at long horizons to yield a sufficient number of low rate scenarios with contributions to the Swap's $\EPE$ (it is a floating rate payer). With the horizon shift (change of measure), the distribution's mean is pulled 'back' at long horizons, because the convexity effect is effectively wiped out at the chosen horizon, and the expected rate matches the forward rate.  
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.45]{mpl_rates.pdf}
+\end{center}
+\caption{Evolution of rate distributions with and without horizon shift (change of measure). Thick lines indicate mean values, thin lines are contours of the rate distribution at $\pm$ one standard devation.}
+\label{fig_15b}
+\end{figure}
+
+%--------------------------------------------------------
+\subsection{Dynamic Initial Margin and MVA}\label{sec:dim}
+%--------------------------------------------------------
+
+This example in folder {\tt Examples/Example\_13} demonstrates Dynamic Initial Margin calculations (see also appendix \ref{sec:app_dim}) for a number of elementary products: A single currency Swap in EUR (case A), a European Swaption in EUR (case B), a single currency Swap in USD (case C), and a EUR/USD cross currency Swap (case D).  The examples can be run as before with 
+
+\medskip
+\centerline{\tt python run\_A.py} 
+
+\medskip
+and likewise for cases B, C and D. Each run The essential results of each run are are visualised in the form 
+
 
 \clearpage
 %========================================================
@@ -2094,8 +2128,8 @@ Basel III defines a number of exposures each of which is a 'derivative' of Basel
 EE_B(t) &= \E[\max(NPV(t) - C(t), 0)] \label{basel_ee}\\
 \intertext{Expected Positive Exposure}
 EPE_B(T) &= \frac{1}{T} \sum_{t<T} EE_B(t)\cdot \Delta t  \label{basel_epe} \\
-\intertext{Effective Expected Exposure}
-EEE_B(t) &= \max(EEE(t-\Delta t), EE_B(t)) \label{basel_eee}\\
+\intertext{Effective Expected Exposure, recursively defined as running maximum}
+EEE_B(t) &= \max(EEE_B(t-\Delta t), EE_B(t)) \label{basel_eee}\\
 \intertext{Effective Expected Positive Exposure}
 EEPE_B(T) &= \frac{1}{T} \sum_{t<T} EEE_B(t)\cdot \Delta t \label{basel_eepe}
 \end{align}
@@ -2180,7 +2214,7 @@ Taking both collateral spread and floor into account, the value adjustment is
 \label{CSA_floor_value_approx_2}
 \end{align}
 
-\subsection{Dynamic Initial Margin and MVA}
+\subsection{Dynamic Initial Margin and MVA}\label{sec:app_dim}
 
 The introduction of Initial Margin posting in non-cleared OTC derivatives business reduces residual credit exposures and the associated value adjustments, {\bf CVA} and {\bf DVA}. 
 
@@ -2198,12 +2232,12 @@ We skip the first option as too computationally expensive for ORE. In the first 
 $$
 X(t) = \NPV(t+\Delta) + F(t, t+\Delta) - \NPV(t) 
 $$  
-ignoring discounting/compounding over the margin period of risk. We would actually want to determine the distribution of $X(t)$ and pick its 99\% quantile to determine the Initial Margin amount for each time $t$ and conditional on the `state of the world' at time $t$. Instead of working out the distribution, we 
-content ourselves with estimating the conditional variance $\V(t)$ or standard deviation $S(t)$ of $X(t)$, assuming a normal distribution and scaling $S(t)$ to the desired 99\% quantile by multiplying with the usual factor $\alpha=2.33$ to get an estimate of the Dynamic Initial Margin $\DIM$:
+ignoring discounting/compounding over the margin period of risk. We actually want to determine the distribution of $X(t)$ conditional on the `state of the world' at time $t$, and pick a high (99\%) quantile to determine the Initial Margin amount for each time $t$. Instead of working out the distribution, we content ourselves with estimating the conditional variance $\V(t)$ or standard deviation $S(t)$ of $X(t)$, assuming a normal distribution and scaling $S(t)$ to the desired 99\% quantile by multiplying with the usual factor $\alpha=2.33$ to get an estimate of the Dynamic Initial Margin $\DIM$:
 $$
 \V(t) = \E_t[X^2] - \E_t^2[X], \qquad S(t)=\sqrt{\V(t)}, \qquad \DIM(t) = \alpha \,S(t)
 $$ 
-We will further assume that $\E_t[X]$ is small enough to set it to the expected value of $X(t)$ across all Monte Carlo samples $X$ at time $t$ (rather than estimating a scenario dependent mean). The remaining task is then to estimate the conditional expectation $\E_t[X^2]$. We do this in the spirit of the Longstaff Schwartz method using regression of $X^2$ across all Monte Carlo samples at a given time, here versus the netting set $\NPV$ as regression variable\footnote{Extension to multi-variate regression versus model state variables would be a logical next step, in order to capture more complex multi-currency portfolios.}. As regression basis functions we use polynomials, i.e. regression functions of the form $c_0 + c_1\,x + c_2\,x^2 + ...+ c_n\,x^n$ where the order $n$ of the polynomial can be selected by the user. Choosing the lowest order $n=0$, we obtain the simplest possible estimate, the variance of $X$ across all samples at time $t$, so that we apply a single $\DIM(t)$ irrespective of the 'state of the world' at time $t$ in that case.    
+We further assume that $\E_t[X]$ is small enough to set it to the expected value of $X(t)$ across all Monte Carlo samples $X$ at time $t$ (rather than estimating a scenario dependent mean). The remaining task is then to estimate the conditional expectation $\E_t[X^2]$. We do this in the spirit of the Longstaff Schwartz method using regression of $X^2(t)$ across all Monte Carlo samples at a given time. As a regressor (in the one-dimensional case) we could use $\NPV(t)$ itself. However, we rather choose to use an adequate market point (interest rate, FX spot rate) as regression variable $x$, because this is generalised more easily to the multi-dimensional case. As regression basis functions we use polynomials, i.e. regression functions of the form $c_0 + c_1\,x + c_2\,x^2 + ...+ c_n\,x^n$ where the order $n$ of the polynomial can be selected by the user. Choosing the lowest order $n=0$, we obtain the simplest possible estimate, the variance of $X$ across all samples at time $t$, so that we apply a single $\DIM(t)$ irrespective of the 'state of the world' at time $t$ in that case.    
+The extension to multi-dimensional regression is also implemented in ORE. The user can choose several regressors simultaneously (e.g. a EUR rate, a USD rate, USD/EUR spot FX rate, etc.) in order order to cover complex multi-currency portfolios.
 
 \medskip
 Given the DIM estimate along all paths, we can next work out the Margin Value Adjustment \cite{Lichters} in discrete form
@@ -2303,7 +2337,7 @@ This yields allocated exposures proportional to the netting set exposure, avoids
 
 \begin{thebibliography}{*}
 
-\bibitem{ORE} \url{http://www.openriskengine.org}
+\bibitem{ORE} \url{http://www.opensourcerisk.org}
 
 \bibitem{QL} \url{http://www.quantlib.org}
  
