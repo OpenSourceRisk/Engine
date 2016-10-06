@@ -51,7 +51,7 @@
       <Parameter name="active">Y</Parameter>
       <Parameter name="csaFile">netting.xml</Parameter>
       <Parameter name="cubeFile">cube.dat</Parameter>
-      <Parameter name="cubeDepth">2</Parameter>      
+      <Parameter name="hyperCube">Y</Parameter>
       <Parameter name="scenarioFile">scenariodata.dat</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="exposureProfiles">Y</Parameter>
