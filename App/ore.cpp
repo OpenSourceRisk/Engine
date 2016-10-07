@@ -108,7 +108,7 @@ int main(int argc, char** argv) {
 
         boost::filesystem::path p{outputPath};
         if(!boost::filesystem::exists(p)) {
-            boost::filesystem::create_directory(p);
+            boost::filesystem::create_directories(p);
         }
         QL_REQUIRE(boost::filesystem::is_directory(p), "output path '" << outputPath << "' is not a directory.");
 
