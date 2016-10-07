@@ -202,8 +202,7 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
     QL_REQUIRE(swapBuilder, "No Swap Builder found for Swaption " << id());
     boost::shared_ptr<PricingEngine> swapEngine = swapBuilder->engine(currency);
 
-    std::vector<boost::shared_ptr<Instrument>> underlyingSwaps =
-        buildUnderlyingSwaps(swapEngine, swap, exDates);
+    std::vector<boost::shared_ptr<Instrument>> underlyingSwaps = buildUnderlyingSwaps(swapEngine, swap, exDates);
 
     // instrument_ = boost::shared_ptr<InstrumentWrapper> (new VanillaInstrument (swaption, multiplier));
     instrument_ = boost::shared_ptr<InstrumentWrapper>(
@@ -235,7 +234,6 @@ boost::shared_ptr<VanillaSwap> Swaption::buildVanillaSwap(const boost::shared_pt
     QL_REQUIRE(swap_[floatingLegIndex].floatingLegData().spreads().size() == 1,
                "Vanilla Swaption: constant spread required");
 
-
     boost::shared_ptr<EngineBuilder> tmp = engineFactory->builder("Swap");
     boost::shared_ptr<SwapEngineBuilderBase> swapBuilder = boost::dynamic_pointer_cast<SwapEngineBuilderBase>(tmp);
     QL_REQUIRE(swapBuilder, "No Swap Builder found for Swaption " << id());
@@ -253,7 +251,8 @@ boost::shared_ptr<VanillaSwap> Swaption::buildVanillaSwap(const boost::shared_pt
     DayCounter fixedDayCounter = parseDayCounter(swap_[fixedLegIndex].dayCounter());
 
     Schedule floatingSchedule = makeSchedule(swap_[floatingLegIndex].schedule());
-    Handle<IborIndex> index = engineFactory->market()->iborIndex(indexName, swapBuilder->configuration(MarketContext::pricing));
+    Handle<IborIndex> index =
+        engineFactory->market()->iborIndex(indexName, swapBuilder->configuration(MarketContext::pricing));
     DayCounter floatingDayCounter = parseDayCounter(swap_[floatingLegIndex].dayCounter());
 
     BusinessDayConvention paymentConvention = parseBusinessDayConvention(swap_[floatingLegIndex].paymentConvention());
@@ -310,7 +309,8 @@ Swaption::buildNonStandardSwap(const boost::shared_ptr<EngineFactory>& engineFac
     Schedule fixedSchedule = makeSchedule(swap_[fixedLegIndex].schedule());
     DayCounter fixedDayCounter = parseDayCounter(swap_[fixedLegIndex].dayCounter());
     Schedule floatingSchedule = makeSchedule(swap_[floatingLegIndex].schedule());
-    Handle<IborIndex> index = engineFactory->market()->iborIndex(indexName, swapBuilder->configuration(MarketContext::pricing));
+    Handle<IborIndex> index =
+        engineFactory->market()->iborIndex(indexName, swapBuilder->configuration(MarketContext::pricing));
     DayCounter floatingDayCounter = parseDayCounter(swap_[floatingLegIndex].dayCounter());
     BusinessDayConvention paymentConvention = parseBusinessDayConvention(swap_[floatingLegIndex].paymentConvention());
 

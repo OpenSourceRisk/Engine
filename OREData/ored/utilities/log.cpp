@@ -161,7 +161,7 @@ void Log::log(unsigned m) {
 LoggerStream::LoggerStream(unsigned mask, const char* filename, unsigned lineNo)
     : mask_(mask), filename_(filename), lineNo_(lineNo), ss_() {
     QL_REQUIRE(mask == ORE_ALERT || mask == ORE_CRITICAL || mask == ORE_ERROR || mask == ORE_WARNING ||
-               mask == ORE_NOTICE || mask == ORE_DEBUG,
+                   mask == ORE_NOTICE || mask == ORE_DEBUG,
                "Invalid log mask " << mask);
 }
 

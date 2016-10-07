@@ -283,10 +283,10 @@ private:
   Main Logging macro, do not use this directly, use on of the below 6 macros instead
  */
 #define MLOG(mask, text)                                                                                               \
-    if (ore::data::Log::instance().enabled() && ore::data::Log::instance().filter(mask)) {       \
-        ore::data::Log::instance().header(mask, __FILE__, __LINE__);                                        \
-        ore::data::Log::instance().logStream() << text;                                                     \
-        ore::data::Log::instance().log(mask);                                                               \
+    if (ore::data::Log::instance().enabled() && ore::data::Log::instance().filter(mask)) {                             \
+        ore::data::Log::instance().header(mask, __FILE__, __LINE__);                                                   \
+        ore::data::Log::instance().logStream() << text;                                                                \
+        ore::data::Log::instance().log(mask);                                                                          \
     }
 
 //! Logging Macro (Level = Alert)

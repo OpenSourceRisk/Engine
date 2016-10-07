@@ -394,13 +394,11 @@ boost::shared_ptr<data::TodaysMarketParameters> marketParameters() {
     boost::shared_ptr<data::TodaysMarketParameters> parameters(new data::TodaysMarketParameters());
 
     // define three curves
-    map<string, string> mDiscounting = {{"EUR", "Yield/EUR/EUR1D"},
-                                        {"USD", "Yield/USD/USD1D"}};
+    map<string, string> mDiscounting = {{"EUR", "Yield/EUR/EUR1D"}, {"USD", "Yield/USD/USD1D"}};
     parameters->addDiscountingCurves("ois", mDiscounting);
 
     // define three curves
-    map<string, string> mYield = {{"EUR_LEND", "Yield/EUR/BANK_EUR_LEND"},
-                                  {"EUR_BORROW", "Yield/EUR/BANK_EUR_BORROW"}};
+    map<string, string> mYield = {{"EUR_LEND", "Yield/EUR/BANK_EUR_LEND"}, {"EUR_BORROW", "Yield/EUR/BANK_EUR_BORROW"}};
     parameters->addYieldCurves("ois", mYield);
 
     map<string, string> mIndex = {
@@ -422,7 +420,7 @@ boost::shared_ptr<data::TodaysMarketParameters> marketParameters() {
     // store this set of curves as "default" configuration
     MarketConfiguration config;
     config.discountingCurvesId = "ois";
-    config.yieldCurvesId = "ois"; 
+    config.yieldCurvesId = "ois";
     config.indexForwardingCurvesId = "ois";
     config.swapIndexCurvesId = "ois";
     config.defaultCurvesId = "ois";

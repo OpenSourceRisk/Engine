@@ -36,8 +36,8 @@ using namespace std;
 namespace ore {
 namespace data {
 
-FxBsBuilder::FxBsBuilder(const boost::shared_ptr<ore::data::Market>& market,
-                         const boost::shared_ptr<FxBsData>& data, const std::string& configuration)
+FxBsBuilder::FxBsBuilder(const boost::shared_ptr<ore::data::Market>& market, const boost::shared_ptr<FxBsData>& data,
+                         const std::string& configuration)
     : market_(market), configuration_(configuration), data_(data) {
 
     QuantLib::Currency ccy = ore::data::parseCurrency(data->foreignCcy());

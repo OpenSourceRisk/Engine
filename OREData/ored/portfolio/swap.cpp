@@ -214,7 +214,8 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         instrument_.reset(new VanillaInstrument(swap));
     } else {
         boost::shared_ptr<QuantLib::Swap> swap(new QuantLib::Swap(legs_, legPayers_));
-        boost::shared_ptr<SwapEngineBuilderBase> swapBuilder = boost::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
+        boost::shared_ptr<SwapEngineBuilderBase> swapBuilder =
+            boost::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
         QL_REQUIRE(swapBuilder, "No Builder found for Swap " << id());
         swap->setPricingEngine(swapBuilder->engine(currency));
         DLOG("Swap::build(): Swap NPV = " << swap->NPV());

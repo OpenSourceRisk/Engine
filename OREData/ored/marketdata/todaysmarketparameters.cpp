@@ -49,10 +49,11 @@ bool TodaysMarketParameters::operator==(TodaysMarketParameters& rhs) {
         }
     }
 
-    if (discountingCurves_ != rhs.discountingCurves_ || yieldCurves_ != rhs.yieldCurves_ || indexForwardingCurves_ != rhs.indexForwardingCurves_ ||
-        fxSpots_ != rhs.fxSpots_ || fxVolatilities_ != rhs.fxVolatilities_ ||
-        swaptionVolatilities_ != rhs.swaptionVolatilities_ || defaultCurves_ != rhs.defaultCurves_ ||
-        capFloorVolatilities_ != rhs.capFloorVolatilities_ || configurations_ != rhs.configurations_) {
+    if (discountingCurves_ != rhs.discountingCurves_ || yieldCurves_ != rhs.yieldCurves_ ||
+        indexForwardingCurves_ != rhs.indexForwardingCurves_ || fxSpots_ != rhs.fxSpots_ ||
+        fxVolatilities_ != rhs.fxVolatilities_ || swaptionVolatilities_ != rhs.swaptionVolatilities_ ||
+        defaultCurves_ != rhs.defaultCurves_ || capFloorVolatilities_ != rhs.capFloorVolatilities_ ||
+        configurations_ != rhs.configurations_) {
         return false;
     }
     return true;
@@ -189,10 +190,9 @@ XMLNode* TodaysMarketParameters::toXML(XMLDocument& doc) {
                 XMLUtils::addChild(doc, configurationsNode, "DiscountingCurvesId",
                                    iterator->second.discountingCurvesId);
             }
-          if (iterator->second.yieldCurvesId != "") {
-                XMLUtils::addChild(doc, configurationsNode, "YieldCurvesId",
-                                   iterator->second.yieldCurvesId);
-          }
+            if (iterator->second.yieldCurvesId != "") {
+                XMLUtils::addChild(doc, configurationsNode, "YieldCurvesId", iterator->second.yieldCurvesId);
+            }
             if (iterator->second.indexForwardingCurvesId != "") {
                 XMLUtils::addChild(doc, configurationsNode, "IndexForwardingCurvesId",
                                    iterator->second.indexForwardingCurvesId);
@@ -244,7 +244,7 @@ XMLNode* TodaysMarketParameters::toXML(XMLDocument& doc) {
             XMLUtils::addAttribute(doc, yieldCurvesNode, "id", mappingSetIterator->first.c_str());
 
             for (auto singleMappingIterator = mappingSetIterator->second.begin();
-                   singleMappingIterator != mappingSetIterator->second.end(); singleMappingIterator++) {
+                 singleMappingIterator != mappingSetIterator->second.end(); singleMappingIterator++) {
                 XMLNode* mappingNode = doc.allocNode("YieldCurve", singleMappingIterator->second);
                 XMLUtils::appendNode(yieldCurvesNode, mappingNode);
                 XMLUtils::addAttribute(doc, mappingNode, "name", singleMappingIterator->first);
@@ -354,8 +354,7 @@ XMLNode* TodaysMarketParameters::toXML(XMLDocument& doc) {
                  singleMappingIterator != mappingSetIterator->second.end(); singleMappingIterator++) {
                 XMLNode* swapIndexNode = XMLUtils::addChild(doc, swapIndexCurvesNode, "SwapIndex");
                 XMLUtils::addAttribute(doc, swapIndexNode, "name", singleMappingIterator->first.c_str());
-                XMLUtils::addChild(doc, swapIndexNode, "Discounting",
-                                   (string)singleMappingIterator->second.c_str());
+                XMLUtils::addChild(doc, swapIndexNode, "Discounting", (string)singleMappingIterator->second.c_str());
             }
         }
     }

@@ -78,7 +78,6 @@ protected:
     }
 };
 
-
 //! Engine Builder for Cross Currency Swaps
 /*! Pricing engines are cached by currencies (represented as a string list)
 

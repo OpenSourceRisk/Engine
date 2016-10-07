@@ -58,8 +58,8 @@ public:
     //@{
     virtual Handle<YieldTermStructure>
     discountCurve(const string& ccy, const string& configuration = Market::defaultConfiguration) const = 0;
-    virtual Handle<YieldTermStructure>
-    yieldCurve(const string& name, const string& configuration = Market::defaultConfiguration) const = 0;
+    virtual Handle<YieldTermStructure> yieldCurve(const string& name,
+                                                  const string& configuration = Market::defaultConfiguration) const = 0;
     virtual Handle<IborIndex> iborIndex(const string& indexName,
                                         const string& configuration = Market::defaultConfiguration) const = 0;
     virtual Handle<SwapIndex> swapIndex(const string& indexName,

@@ -56,9 +56,7 @@ public:
             underlyingInstruments_[i]->update();
         InstrumentWrapper::updateQlInstruments();
     }
-    bool isOption() override {
-        return true;
-    }
+    bool isOption() override { return true; }
     //@}
 
     //! return the underlying instruments

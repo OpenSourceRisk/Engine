@@ -30,8 +30,7 @@ boost::shared_ptr<PricingEngine> EuropeanSwaptionEngineBuilder::engineImpl(const
     const string& ccyCode = ccy.code();
     Handle<YieldTermStructure> yts = market_->discountCurve(ccyCode, configuration(MarketContext::pricing));
     QL_REQUIRE(!yts.empty(), "engineFactory error: yield term structure not found for currency " << ccyCode);
-    Handle<SwaptionVolatilityStructure> svts =
-        market_->swaptionVol(ccyCode, configuration(MarketContext::pricing));
+    Handle<SwaptionVolatilityStructure> svts = market_->swaptionVol(ccyCode, configuration(MarketContext::pricing));
     QL_REQUIRE(!svts.empty(), "engineFactory error: swaption vol structure not found for currency " << ccyCode);
 
     switch (svts->volatilityType()) {

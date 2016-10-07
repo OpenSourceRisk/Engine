@@ -63,10 +63,10 @@ void MarketConfiguration::fromXML(XMLNode* node) {
     // Get yield curve specs and attributes
     XMLNode* yieldNodes = XMLUtils::getChildNode(node, "YieldCurves");
     for (XMLNode* child = XMLUtils::getChildNode(yieldNodes); child; child = XMLUtils::getNextSibling(child)) {
-      // Get the child node information
-      string name = XMLUtils::getChildValue(child, "Name", true);
-      string spec = XMLUtils::getChildValue(child, "Spec", true);
-      yieldCurveSpecs_.insert(make_pair(name, spec));
+        // Get the child node information
+        string name = XMLUtils::getChildValue(child, "Name", true);
+        string spec = XMLUtils::getChildValue(child, "Spec", true);
+        yieldCurveSpecs_.insert(make_pair(name, spec));
     }
 }
 
@@ -95,10 +95,10 @@ XMLNode* MarketConfiguration::toXML(XMLDocument& doc) {
     XMLNode* yieldNodes = XMLUtils::addChild(doc, node, "YieldCurves");
     map<string, string>::const_iterator it;
     for (it = yieldCurveSpecs_.begin(); it != yieldCurveSpecs_.end(); ++it) {
-      // Add the main node data
-      XMLNode* yieldNode = XMLUtils::addChild(doc, yieldNodes, "YieldCurve");
-      XMLUtils::addChild(doc, yieldNode, "Name", it->first);
-      XMLUtils::addChild(doc, yieldNode, "Spec", it->second);
+        // Add the main node data
+        XMLNode* yieldNode = XMLUtils::addChild(doc, yieldNodes, "YieldCurve");
+        XMLUtils::addChild(doc, yieldNode, "Name", it->first);
+        XMLUtils::addChild(doc, yieldNode, "Spec", it->second);
     }
 
     return node;

@@ -115,9 +115,9 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                 for (auto& it : params.yieldCurves(configuration.first)) {
                     if (it.second == spec->name()) {
                         LOG("Adding YieldCurve(" << it.first << ") with spec " << *ycspec << " to configuration "
-                            << configuration.first);
+                                                 << configuration.first);
                         yieldCurves_[make_pair(configuration.first, it.first)] = itr->second->handle();
-                  }
+                    }
                 }
                 for (const auto& it : params.indexForwardingCurves(configuration.first)) {
                     if (it.second == spec->name()) {

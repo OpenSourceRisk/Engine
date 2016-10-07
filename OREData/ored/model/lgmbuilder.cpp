@@ -40,9 +40,8 @@ namespace ore {
 using namespace data;
 namespace data {
 
-LgmBuilder::LgmBuilder(const boost::shared_ptr<ore::data::Market>& market,
-                       const boost::shared_ptr<LgmData>& data, const std::string& configuration,
-                       Real bootstrapTolerance)
+LgmBuilder::LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const boost::shared_ptr<LgmData>& data,
+                       const std::string& configuration, Real bootstrapTolerance)
     : market_(market), configuration_(configuration), data_(data), bootstrapTolerance_(bootstrapTolerance),
       optimizationMethod_(boost::shared_ptr<OptimizationMethod>(new LevenbergMarquardt(1E-8, 1E-8, 1E-8))),
       endCriteria_(EndCriteria(1000, 500, 1E-8, 1E-8, 1E-8)),

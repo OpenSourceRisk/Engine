@@ -167,8 +167,7 @@ void ParseTest::testCompoundingParsing() {
 }
 
 namespace {
-void checkStrikeParser(const std::string& s, const ore::data::Strike::Type expectedType,
-                       const Real expectedValue) {
+void checkStrikeParser(const std::string& s, const ore::data::Strike::Type expectedType, const Real expectedValue) {
     if (ore::data::parseStrike(s).type != expectedType) {
         BOOST_FAIL("unexpected strike type parsed from input string " << s);
     }

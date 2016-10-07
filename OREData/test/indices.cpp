@@ -60,16 +60,16 @@ boost::shared_ptr<data::Conventions> convs() {
 
     boost::shared_ptr<ore::data::Convention> swapEURConv(new ore::data::IRSwapConvention(
         "EUR-6M-SWAP-CONVENTIONS", "TARGET", "Annual", "MF", "30/360", "EUR-EURIBOR-6M"));
-    boost::shared_ptr<ore::data::Convention> swapUSDConv(new ore::data::IRSwapConvention(
-        "USD-3M-SWAP-CONVENTIONS", "US", "Semiannual", "MF", "30/360", "USD-LIBOR-3M"));
-    boost::shared_ptr<ore::data::Convention> swapGBPConv(new ore::data::IRSwapConvention(
-        "GBP-3M-SWAP-CONVENTIONS", "UK", "Semiannual", "MF", "A365", "GBP-LIBOR-3M"));
-    boost::shared_ptr<ore::data::Convention> swapGBPLongConv(new ore::data::IRSwapConvention(
-        "GBP-6M-SWAP-CONVENTIONS", "UK", "Semiannual", "MF", "A365", "GBP-LIBOR-6M"));
-    boost::shared_ptr<ore::data::Convention> swapCHFConv(new ore::data::IRSwapConvention(
-        "CHF-3M-SWAP-CONVENTIONS", "ZUB", "Annual", "MF", "30/360", "CHF-LIBOR-3M"));
-    boost::shared_ptr<ore::data::Convention> swapCHFLongConv(new ore::data::IRSwapConvention(
-        "CHF-6M-SWAP-CONVENTIONS", "ZUB", "Annual", "MF", "30/360", "CHF-LIBOR-6M"));
+    boost::shared_ptr<ore::data::Convention> swapUSDConv(
+        new ore::data::IRSwapConvention("USD-3M-SWAP-CONVENTIONS", "US", "Semiannual", "MF", "30/360", "USD-LIBOR-3M"));
+    boost::shared_ptr<ore::data::Convention> swapGBPConv(
+        new ore::data::IRSwapConvention("GBP-3M-SWAP-CONVENTIONS", "UK", "Semiannual", "MF", "A365", "GBP-LIBOR-3M"));
+    boost::shared_ptr<ore::data::Convention> swapGBPLongConv(
+        new ore::data::IRSwapConvention("GBP-6M-SWAP-CONVENTIONS", "UK", "Semiannual", "MF", "A365", "GBP-LIBOR-6M"));
+    boost::shared_ptr<ore::data::Convention> swapCHFConv(
+        new ore::data::IRSwapConvention("CHF-3M-SWAP-CONVENTIONS", "ZUB", "Annual", "MF", "30/360", "CHF-LIBOR-3M"));
+    boost::shared_ptr<ore::data::Convention> swapCHFLongConv(
+        new ore::data::IRSwapConvention("CHF-6M-SWAP-CONVENTIONS", "ZUB", "Annual", "MF", "30/360", "CHF-LIBOR-6M"));
     boost::shared_ptr<ore::data::Convention> swapJPYConv(new ore::data::IRSwapConvention(
         "JPY-LIBOR-6M-SWAP-CONVENTIONS", "JP", "Semiannual", "MF", "A365", "JPY-LIBOR-6M"));
 

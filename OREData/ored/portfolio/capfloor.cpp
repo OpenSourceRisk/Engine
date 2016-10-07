@@ -42,7 +42,8 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
 
     string indexName = legData_.floatingLegData().index();
-    Handle<IborIndex> hIndex = engineFactory->market()->iborIndex(indexName, builder->configuration(MarketContext::pricing));
+    Handle<IborIndex> hIndex =
+        engineFactory->market()->iborIndex(indexName, builder->configuration(MarketContext::pricing));
     QL_REQUIRE(!hIndex.empty(), "Could not find ibor index " << indexName << " in market.");
     boost::shared_ptr<IborIndex> index = hIndex.currentLink();
 

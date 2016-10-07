@@ -114,7 +114,7 @@ void CalendarNameTest::testCalendarNameParsing() {
 
         if (cal.empty() || cal != ql_cal)
             BOOST_FAIL("ore::data::parseCalendar(" << name << ") returned cal " << cal.name() << " expected "
-                                                              << ql_cal.name());
+                                                   << ql_cal.name());
 
         BOOST_TEST_MESSAGE("Parsed " << name << " and got " << cal.name());
     }

@@ -31,13 +31,13 @@
 // Note that for MSVC 2015 the boost config file needs 1.58 (but this can be modified).
 #include <boost/version.hpp>
 #if BOOST_VERSION < 105500
-    #error using an old version of Boost, please update.
+#error using an old version of Boost, please update.
 #endif
 
 // We require QuantLib 1.8 or higher
 #include <ql/version.hpp>
 #if QL_HEX_VERSION < 0x010800f0
-    #error using an old version of QuantLib, please update.
+#error using an old version of QuantLib, please update.
 #endif
 
 //! Version string

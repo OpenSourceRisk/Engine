@@ -51,7 +51,7 @@ Handle<YieldTermStructure> MarketImpl::discountCurve(const string& key, const st
 }
 
 Handle<YieldTermStructure> MarketImpl::yieldCurve(const string& key, const string& configuration) const {
-  return lookup<Handle<YieldTermStructure>>(yieldCurves_, key, configuration, "yield curve");
+    return lookup<Handle<YieldTermStructure>>(yieldCurves_, key, configuration, "yield curve");
 }
 
 Handle<IborIndex> MarketImpl::iborIndex(const string& key, const string& configuration) const {
@@ -119,8 +119,7 @@ Handle<OptionletVolatilityStructure> MarketImpl::capFloorVol(const string& key, 
     return lookup<Handle<OptionletVolatilityStructure>>(capFloorCurves_, key, configuration, "capfloor curve");
 }
 
-void MarketImpl::addSwapIndex(const string& swapIndex, const string& discountIndex,
-                              const string& configuration) {
+void MarketImpl::addSwapIndex(const string& swapIndex, const string& discountIndex, const string& configuration) {
     try {
         std::vector<string> tokens;
         split(tokens, swapIndex, boost::is_any_of("-"));

@@ -42,15 +42,13 @@ std::vector<std::size_t> sort_permutation(const std::vector<T>& vec, Compare& co
     return p;
 }
 
-template <typename T>
-std::vector<T> apply_permutation(const std::vector<T>& vec, const std::vector<std::size_t>& p) {
+template <typename T> std::vector<T> apply_permutation(const std::vector<T>& vec, const std::vector<std::size_t>& p) {
     std::vector<T> sorted_vec(vec.size());
     std::transform(p.begin(), p.end(), sorted_vec.begin(), [&](std::size_t i) { return vec[i]; });
     return sorted_vec;
 }
 
-template <typename T>
-void apply_permutation_in_place(std::vector<T>& vec, const std::vector<std::size_t>& p) {
+template <typename T> void apply_permutation_in_place(std::vector<T>& vec, const std::vector<std::size_t>& p) {
     std::vector<bool> done(vec.size());
     for (std::size_t i = 0; i < vec.size(); ++i) {
         if (done[i])

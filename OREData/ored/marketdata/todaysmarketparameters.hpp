@@ -62,12 +62,13 @@ namespace data {
  */
 struct MarketConfiguration {
     MarketConfiguration()
-        : discountingCurvesId(Market::defaultConfiguration), yieldCurvesId(Market::defaultConfiguration), indexForwardingCurvesId(Market::defaultConfiguration),
-          fxSpotsId(Market::defaultConfiguration), fxVolatilitiesId(Market::defaultConfiguration),
-          swaptionVolatilitiesId(Market::defaultConfiguration), defaultCurvesId(Market::defaultConfiguration),
-          swapIndexCurvesId(Market::defaultConfiguration), capFloorVolatilitiesId(Market::defaultConfiguration) {}
-    string discountingCurvesId, yieldCurvesId, indexForwardingCurvesId, fxSpotsId, fxVolatilitiesId, swaptionVolatilitiesId,
-        defaultCurvesId, swapIndexCurvesId, capFloorVolatilitiesId;
+        : discountingCurvesId(Market::defaultConfiguration), yieldCurvesId(Market::defaultConfiguration),
+          indexForwardingCurvesId(Market::defaultConfiguration), fxSpotsId(Market::defaultConfiguration),
+          fxVolatilitiesId(Market::defaultConfiguration), swaptionVolatilitiesId(Market::defaultConfiguration),
+          defaultCurvesId(Market::defaultConfiguration), swapIndexCurvesId(Market::defaultConfiguration),
+          capFloorVolatilitiesId(Market::defaultConfiguration) {}
+    string discountingCurvesId, yieldCurvesId, indexForwardingCurvesId, fxSpotsId, fxVolatilitiesId,
+        swaptionVolatilitiesId, defaultCurvesId, swapIndexCurvesId, capFloorVolatilitiesId;
 };
 
 bool operator==(const MarketConfiguration& lhs, const MarketConfiguration& rhs);
@@ -165,8 +166,8 @@ private:
     // maps configuration name to id list
     map<string, MarketConfiguration> configurations_;
     // maps id to map (key,value)
-    map<string, map<string, string>> discountingCurves_, yieldCurves_, indexForwardingCurves_, fxSpots_, fxVolatilities_,
-        swaptionVolatilities_, defaultCurves_, capFloorVolatilities_;
+    map<string, map<string, string>> discountingCurves_, yieldCurves_, indexForwardingCurves_, fxSpots_,
+        fxVolatilities_, swaptionVolatilities_, defaultCurves_, capFloorVolatilities_;
     map<string, map<string, string>> swapIndices_;
 
     void curveSpecs(const map<string, map<string, string>>&, const string&, vector<string>&) const;
@@ -189,8 +190,8 @@ inline const string& TodaysMarketParameters::discountingCurvesId(const string& c
 }
 
 inline const string& TodaysMarketParameters::yieldCurvesId(const string& configuration) const {
-  QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
-  return configurations_.at(configuration).yieldCurvesId;
+    QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
+    return configurations_.at(configuration).yieldCurvesId;
 }
 
 inline const string& TodaysMarketParameters::indexForwardingCurvesId(const string& configuration) const {
@@ -238,12 +239,12 @@ inline const map<string, string>& TodaysMarketParameters::discountingCurves(cons
 }
 
 inline const map<string, string>& TodaysMarketParameters::yieldCurves(const string& configuration) const {
-  QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
-  auto it = yieldCurves_.find(yieldCurvesId(configuration));
-  QL_REQUIRE(it != yieldCurves_.end(), "yield curves with id " << yieldCurvesId(configuration)
-             << " specified in configuration "
-             << configuration << " not found");
-  return it->second;
+    QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
+    auto it = yieldCurves_.find(yieldCurvesId(configuration));
+    QL_REQUIRE(it != yieldCurves_.end(), "yield curves with id " << yieldCurvesId(configuration)
+                                                                 << " specified in configuration " << configuration
+                                                                 << " not found");
+    return it->second;
 }
 
 inline const map<string, string>& TodaysMarketParameters::indexForwardingCurves(const string& configuration) const {
@@ -320,9 +321,9 @@ inline void TodaysMarketParameters::addDiscountingCurves(const string& id, const
 }
 
 inline void TodaysMarketParameters::addYieldCurves(const string& id, const map<string, string>& assignments) {
-  yieldCurves_[id] = assignments;
-  for (auto s : assignments)
-    DLOG("TodaysMarketParameters, add yield curves: " << id << " " << s.first << " " << s.second);
+    yieldCurves_[id] = assignments;
+    for (auto s : assignments)
+        DLOG("TodaysMarketParameters, add yield curves: " << id << " " << s.first << " " << s.second);
 }
 
 inline void TodaysMarketParameters::addIndexForwardingCurves(const string& id, const map<string, string>& assignments) {
@@ -331,8 +332,7 @@ inline void TodaysMarketParameters::addIndexForwardingCurves(const string& id, c
         DLOG("TodaysMarketParameters, add index forwarding curves: " << id << " " << s.first << " " << s.second);
 }
 
-inline void TodaysMarketParameters::addSwapIndices(const string& id,
-                                                   const map<string, string>& assignments) {
+inline void TodaysMarketParameters::addSwapIndices(const string& id, const map<string, string>& assignments) {
     swapIndices_[id] = assignments;
     for (auto s : assignments)
         DLOG("TodaysMarketParameters, add swap indexes: " << id << " " << s.first << " " << s.second);

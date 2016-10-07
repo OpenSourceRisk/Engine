@@ -147,8 +147,7 @@ void parseDateOrPeriod(const string& s, QuantLib::Date& d, QuantLib::Period& p, 
 /*!
 \ingroup utilities
 */
-template <class T>
-std::vector<T> parseListOfValues(string s, std::function<T(string)> parser) {
+template <class T> std::vector<T> parseListOfValues(string s, std::function<T(string)> parser) {
     boost::trim(s);
     std::vector<T> vec;
     boost::char_separator<char> sep(",");

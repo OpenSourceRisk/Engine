@@ -77,7 +77,7 @@ void SimpleProgressBar::updateProgress(const unsigned long progress, const unsig
     updateCounter_++;
 }
 
-ProgressLog::ProgressLog(const std::string &message, const unsigned int numberOfMessages)
+ProgressLog::ProgressLog(const std::string& message, const unsigned int numberOfMessages)
     : message_(message), numberOfMessages_(numberOfMessages), messageCounter_(0) {}
 
 void ProgressLog::updateProgress(const unsigned long progress, const unsigned long total) {
@@ -90,7 +90,7 @@ void ProgressLog::updateProgress(const unsigned long progress, const unsigned lo
     messageCounter_++;
 }
 
-NoProgressBar::NoProgressBar(const std::string &message, const unsigned int messageWidth) {
+NoProgressBar::NoProgressBar(const std::string& message, const unsigned int messageWidth) {
     std::cout << std::setw(messageWidth) << message << std::flush;
 }
 

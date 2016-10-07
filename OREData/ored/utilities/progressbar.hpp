@@ -100,13 +100,11 @@ private:
 
 /*! Progress Bar just writes the given message and flushes */
 class NoProgressBar : public ProgressIndicator {
-  public:
-      NoProgressBar(const std::string& message,
-                    const unsigned int messageWidth = 40);
+public:
+    NoProgressBar(const std::string& message, const unsigned int messageWidth = 40);
 
-      /*! ProgressIndicator interface */
-      void updateProgress(const unsigned long progress,
-                          const unsigned long total) override {}
+    /*! ProgressIndicator interface */
+    void updateProgress(const unsigned long progress, const unsigned long total) override {}
 };
 
 } // namespace data
