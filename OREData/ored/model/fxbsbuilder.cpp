@@ -2,14 +2,13 @@
  Copyright (C) 2016 Quaternion Risk Management Ltd
  All rights reserved.
 
- This file is part of OpenRiskEngine, a free-software/open-source library
- for transparent pricing and risk analysis - http://openriskengine.org
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
 
- OpenRiskEngine is free software: you can redistribute it and/or modify it
+ ORE is free software: you can redistribute it and/or modify it
  under the terms of the Modified BSD License.  You should have received a
- copy of the license along with this program; if not, please email
- <users@openriskengine.org>. The license is also available online at
- <http://openriskengine.org/license.shtml>.
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
 
  This program is distributed on the basis that it will form a useful
  contribution to risk analytics and model standardisation, but WITHOUT
@@ -34,15 +33,15 @@ using namespace QuantLib;
 using namespace QuantExt;
 using namespace std;
 
-namespace openriskengine {
+namespace ore {
 namespace data {
 
-FxBsBuilder::FxBsBuilder(const boost::shared_ptr<openriskengine::data::Market>& market,
+FxBsBuilder::FxBsBuilder(const boost::shared_ptr<ore::data::Market>& market,
                          const boost::shared_ptr<FxBsData>& data, const std::string& configuration)
     : market_(market), configuration_(configuration), data_(data) {
 
-    QuantLib::Currency ccy = openriskengine::data::parseCurrency(data->foreignCcy());
-    QuantLib::Currency domesticCcy = openriskengine::data::parseCurrency(data->domesticCcy());
+    QuantLib::Currency ccy = ore::data::parseCurrency(data->foreignCcy());
+    QuantLib::Currency domesticCcy = ore::data::parseCurrency(data->domesticCcy());
 
     if (data->calibrateSigma())
         buildOptionBasket();
@@ -99,14 +98,14 @@ void FxBsBuilder::buildOptionBasket() {
     std::vector<Time> expiryTimes(data_->optionExpiries().size());
     for (Size j = 0; j < data_->optionExpiries().size(); j++) {
         std::string expiryString = data_->optionExpiries()[j];
-        Period expiry = openriskengine::data::parsePeriod(expiryString);
+        Period expiry = ore::data::parsePeriod(expiryString);
         Date expiryDate = today + expiry;
-        openriskengine::data::Strike strike = openriskengine::data::parseStrike(data_->optionStrikes()[j]);
+        ore::data::Strike strike = ore::data::parseStrike(data_->optionStrikes()[j]);
         Real strikeValue;
         // TODO: Extend strike type coverage
-        if (strike.type == openriskengine::data::Strike::Type::ATMF)
+        if (strike.type == ore::data::Strike::Type::ATMF)
             strikeValue = Null<Real>();
-        else if (strike.type == openriskengine::data::Strike::Type::Absolute)
+        else if (strike.type == ore::data::Strike::Type::Absolute)
             strikeValue = strike.value;
         else
             QL_FAIL("strike type ATMF or Absolute expected");

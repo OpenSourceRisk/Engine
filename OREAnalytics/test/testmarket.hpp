@@ -2,14 +2,13 @@
  Copyright (C) 2016 Quaternion Risk Management Ltd
  All rights reserved.
 
- This file is part of OpenRiskEngine, a free-software/open-source library
- for transparent pricing and risk analysis - http://openriskengine.org
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
 
- OpenRiskEngine is free software: you can redistribute it and/or modify it
+ ORE is free software: you can redistribute it and/or modify it
  under the terms of the Modified BSD License.  You should have received a
- copy of the license along with this program; if not, please email
- <users@openriskengine.org>. The license is also available online at
- <http://openriskengine.org/license.shtml>.
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
 
  This program is distributed on the basis that it will form a useful
  contribution to risk analytics and model standardisation, but WITHOUT
@@ -31,7 +30,7 @@
 #include <boost/make_shared.hpp>
 
 using namespace QuantLib;
-using namespace openriskengine::data;
+using namespace ore::data;
 using std::vector;
 using std::pair;
 
@@ -41,32 +40,32 @@ namespace testsuite {
 /*!
   \ingroup tests
 */
-class TestMarket : public openriskengine::data::MarketImpl {
+class TestMarket : public ore::data::MarketImpl {
 public:
     TestMarket(Date asof) {
         asof_ = asof;
 
         // add conventions
-        boost::shared_ptr<openriskengine::data::Convention> swapIndexEURConv(
-            new openriskengine::data::SwapIndexConvention("EUR-CMS-2Y", "EUR-6M-SWAP-CONVENTIONS"));
-        boost::shared_ptr<openriskengine::data::Convention> swapIndexEURLongConv(
-            new openriskengine::data::SwapIndexConvention("EUR-CMS-30Y", "EUR-6M-SWAP-CONVENTIONS"));
-        boost::shared_ptr<openriskengine::data::Convention> swapIndexUSDConv(
-            new openriskengine::data::SwapIndexConvention("USD-CMS-2Y", "USD-3M-SWAP-CONVENTIONS"));
-        boost::shared_ptr<openriskengine::data::Convention> swapIndexUSDLongConv(
-            new openriskengine::data::SwapIndexConvention("USD-CMS-30Y", "USD-3M-SWAP-CONVENTIONS"));
-        boost::shared_ptr<openriskengine::data::Convention> swapIndexGBPConv(
-            new openriskengine::data::SwapIndexConvention("GBP-CMS-2Y", "GBP-3M-SWAP-CONVENTIONS"));
-        boost::shared_ptr<openriskengine::data::Convention> swapIndexGBPLongConv(
-            new openriskengine::data::SwapIndexConvention("GBP-CMS-30Y", "GBP-6M-SWAP-CONVENTIONS"));
-        boost::shared_ptr<openriskengine::data::Convention> swapIndexCHFConv(
-            new openriskengine::data::SwapIndexConvention("CHF-CMS-2Y", "CHF-3M-SWAP-CONVENTIONS"));
-        boost::shared_ptr<openriskengine::data::Convention> swapIndexCHFLongConv(
-            new openriskengine::data::SwapIndexConvention("CHF-CMS-30Y", "CHF-6M-SWAP-CONVENTIONS"));
-        boost::shared_ptr<openriskengine::data::Convention> swapIndexJPYConv(
-            new openriskengine::data::SwapIndexConvention("JPY-CMS-2Y", "JPY-LIBOR-6M-SWAP-CONVENTIONS"));
-        boost::shared_ptr<openriskengine::data::Convention> swapIndexJPYLongConv(
-            new openriskengine::data::SwapIndexConvention("JPY-CMS-30Y", "JPY-LIBOR-6M-SWAP-CONVENTIONS"));
+        boost::shared_ptr<ore::data::Convention> swapIndexEURConv(
+            new ore::data::SwapIndexConvention("EUR-CMS-2Y", "EUR-6M-SWAP-CONVENTIONS"));
+        boost::shared_ptr<ore::data::Convention> swapIndexEURLongConv(
+            new ore::data::SwapIndexConvention("EUR-CMS-30Y", "EUR-6M-SWAP-CONVENTIONS"));
+        boost::shared_ptr<ore::data::Convention> swapIndexUSDConv(
+            new ore::data::SwapIndexConvention("USD-CMS-2Y", "USD-3M-SWAP-CONVENTIONS"));
+        boost::shared_ptr<ore::data::Convention> swapIndexUSDLongConv(
+            new ore::data::SwapIndexConvention("USD-CMS-30Y", "USD-3M-SWAP-CONVENTIONS"));
+        boost::shared_ptr<ore::data::Convention> swapIndexGBPConv(
+            new ore::data::SwapIndexConvention("GBP-CMS-2Y", "GBP-3M-SWAP-CONVENTIONS"));
+        boost::shared_ptr<ore::data::Convention> swapIndexGBPLongConv(
+            new ore::data::SwapIndexConvention("GBP-CMS-30Y", "GBP-6M-SWAP-CONVENTIONS"));
+        boost::shared_ptr<ore::data::Convention> swapIndexCHFConv(
+            new ore::data::SwapIndexConvention("CHF-CMS-2Y", "CHF-3M-SWAP-CONVENTIONS"));
+        boost::shared_ptr<ore::data::Convention> swapIndexCHFLongConv(
+            new ore::data::SwapIndexConvention("CHF-CMS-30Y", "CHF-6M-SWAP-CONVENTIONS"));
+        boost::shared_ptr<ore::data::Convention> swapIndexJPYConv(
+            new ore::data::SwapIndexConvention("JPY-CMS-2Y", "JPY-LIBOR-6M-SWAP-CONVENTIONS"));
+        boost::shared_ptr<ore::data::Convention> swapIndexJPYLongConv(
+            new ore::data::SwapIndexConvention("JPY-CMS-30Y", "JPY-LIBOR-6M-SWAP-CONVENTIONS"));
 
         conventions_.add(swapIndexEURConv);
         conventions_.add(swapIndexEURLongConv);
@@ -79,19 +78,19 @@ public:
         conventions_.add(swapIndexJPYConv);
         conventions_.add(swapIndexJPYLongConv);
 
-        boost::shared_ptr<openriskengine::data::Convention> swapEURConv(new openriskengine::data::IRSwapConvention(
+        boost::shared_ptr<ore::data::Convention> swapEURConv(new ore::data::IRSwapConvention(
             "EUR-6M-SWAP-CONVENTIONS", "TARGET", "Annual", "MF", "30/360", "EUR-EURIBOR-6M"));
-        boost::shared_ptr<openriskengine::data::Convention> swapUSDConv(new openriskengine::data::IRSwapConvention(
+        boost::shared_ptr<ore::data::Convention> swapUSDConv(new ore::data::IRSwapConvention(
             "USD-3M-SWAP-CONVENTIONS", "US", "Semiannual", "MF", "30/360", "USD-LIBOR-3M"));
-        boost::shared_ptr<openriskengine::data::Convention> swapGBPConv(new openriskengine::data::IRSwapConvention(
+        boost::shared_ptr<ore::data::Convention> swapGBPConv(new ore::data::IRSwapConvention(
             "GBP-3M-SWAP-CONVENTIONS", "UK", "Semiannual", "MF", "A365", "GBP-LIBOR-3M"));
-        boost::shared_ptr<openriskengine::data::Convention> swapGBPLongConv(new openriskengine::data::IRSwapConvention(
+        boost::shared_ptr<ore::data::Convention> swapGBPLongConv(new ore::data::IRSwapConvention(
             "GBP-6M-SWAP-CONVENTIONS", "UK", "Semiannual", "MF", "A365", "GBP-LIBOR-6M"));
-        boost::shared_ptr<openriskengine::data::Convention> swapCHFConv(new openriskengine::data::IRSwapConvention(
+        boost::shared_ptr<ore::data::Convention> swapCHFConv(new ore::data::IRSwapConvention(
             "CHF-3M-SWAP-CONVENTIONS", "ZUB", "Annual", "MF", "30/360", "CHF-LIBOR-3M"));
-        boost::shared_ptr<openriskengine::data::Convention> swapCHFLongConv(new openriskengine::data::IRSwapConvention(
+        boost::shared_ptr<ore::data::Convention> swapCHFLongConv(new ore::data::IRSwapConvention(
             "CHF-6M-SWAP-CONVENTIONS", "ZUB", "Annual", "MF", "30/360", "CHF-LIBOR-6M"));
-        boost::shared_ptr<openriskengine::data::Convention> swapJPYConv(new openriskengine::data::IRSwapConvention(
+        boost::shared_ptr<ore::data::Convention> swapJPYConv(new ore::data::IRSwapConvention(
             "JPY-LIBOR-6M-SWAP-CONVENTIONS", "JP", "Semiannual", "MF", "A365", "JPY-LIBOR-6M"));
 
         conventions_.add(swapEURConv);

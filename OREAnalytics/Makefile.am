@@ -8,10 +8,10 @@ m4datadir = $(datadir)/aclocal
 
 EXTRA_DIST = \
 	autogen.sh \
-	OpenRiskEngineAnalytics_vc14.sln \
-	OpenRiskEngineAnalytics.vcxproj \
-	OpenRiskEngineAnalytics.vcxproj.filters \
-	OpenRiskEngineAnalytics.props
+	OREAnalytics_vc14.sln \
+	OREAnalytics.vcxproj \
+	OREAnalytics.vcxproj.filters \
+	OREAnalytics.props
 
 .PHONY: docs docs-man docs-online docs-dist docs-clean
 BASEPATH = @abs_top_srcdir@

@@ -2,14 +2,13 @@
  Copyright (C) 2016 Quaternion Risk Management Ltd
  All rights reserved.
 
- This file is part of OpenRiskEngine, a free-software/open-source library
- for transparent pricing and risk analysis - http://openriskengine.org
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
 
- OpenRiskEngine is free software: you can redistribute it and/or modify it
+ ORE is free software: you can redistribute it and/or modify it
  under the terms of the Modified BSD License.  You should have received a
- copy of the license along with this program; if not, please email
- <users@openriskengine.org>. The license is also available online at
- <http://openriskengine.org/license.shtml>.
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
 
  This program is distributed on the basis that it will form a useful
  contribution to risk analytics and model standardisation, but WITHOUT
@@ -43,10 +42,10 @@
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/lexical_cast.hpp>
 
-namespace openriskengine {
+namespace ore {
 namespace data {
 
-CrossAssetModelBuilder::CrossAssetModelBuilder(const boost::shared_ptr<openriskengine::data::Market>& market,
+CrossAssetModelBuilder::CrossAssetModelBuilder(const boost::shared_ptr<ore::data::Market>& market,
                                                const std::string& configurationLgmCalibration,
                                                const std::string& configurationFxCalibration,
                                                const std::string& configurationFinalModel, const DayCounter& dayCounter)
@@ -110,8 +109,8 @@ CrossAssetModelBuilder::build(const boost::shared_ptr<CrossAssetModelData>& conf
     for (Size i = 0; i < config->fxConfigs().size(); i++) {
         LOG("FX Parametrization " << i);
         boost::shared_ptr<FxBsData> fx = config->fxConfigs()[i];
-        QuantLib::Currency ccy = openriskengine::data::parseCurrency(fx->foreignCcy());
-        QuantLib::Currency domCcy = openriskengine::data::parseCurrency(fx->domesticCcy());
+        QuantLib::Currency ccy = ore::data::parseCurrency(fx->foreignCcy());
+        QuantLib::Currency domCcy = ore::data::parseCurrency(fx->domesticCcy());
 
         QL_REQUIRE(ccy.code() == irParametrizations[i + 1]->currency().code(),
                    "FX parametrization currency[" << i << "]=" << ccy << " does not match IR currrency[" << i + 1
@@ -141,7 +140,7 @@ CrossAssetModelBuilder::build(const boost::shared_ptr<CrossAssetModelData>& conf
      * Build the correlation matrix
      */
 
-    openriskengine::data::CorrelationMatrixBuilder cmb;
+    ore::data::CorrelationMatrixBuilder cmb;
     for (auto it = config->correlations().begin(); it != config->correlations().end(); it++) {
         std::string factor1 = it->first.first;
         std::string factor2 = it->first.second;

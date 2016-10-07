@@ -4,9 +4,9 @@
 # Project related configuration options
 #---------------------------------------------------------------------------
 DOXYFILE_ENCODING      = UTF-8
-PROJECT_NAME           = OpenRiskEngineAnalytics
+PROJECT_NAME           = OREAnalytics
 PROJECT_NUMBER         = orea_version
-PROJECT_BRIEF          = "OpenRiskEngineAnalytics - ORE Analytics library based on QuantExt and QuantLib"
+PROJECT_BRIEF          = "OREAnalytics - ORE Analytics library based on QuantExt and QuantLib"
 PROJECT_LOGO           =
 OUTPUT_DIRECTORY       =
 CREATE_SUBDIRS         = NO
@@ -281,7 +281,7 @@ SKIP_FUNCTION_MACROS   = YES
 #---------------------------------------------------------------------------
 TAGFILES               = ../../QuantLib/Docs/quantlib.tag=../ql \
                          ../../QuantExt/doc/quantext.tag=../qle \
-                         ../../OpenRiskEngineData/doc/ored.tag=../ored 
+                         ../../OREData/doc/ored.tag=../ored
 GENERATE_TAGFILE       = orea.tag
 ALLEXTERNALS           = NO
 EXTERNAL_GROUPS        = NO

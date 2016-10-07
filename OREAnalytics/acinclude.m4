@@ -168,7 +168,7 @@ AC_DEFUN([QL_CHECK_BOOST_TEST_THREAD_SIGNALS2_SYSTEM],
      [@%:@include <boost/thread/locks.hpp>
       @%:@include <boost/thread/recursive_mutex.hpp>
       @%:@include <boost/signals2/signal.hpp>
-      
+
       #ifndef BOOST_THREAD_PLATFORM_PTHREAD
 	  #error only pthread is supported on this plattform
 	  #endif
@@ -176,9 +176,9 @@ AC_DEFUN([QL_CHECK_BOOST_TEST_THREAD_SIGNALS2_SYSTEM],
       int main() {
         boost::recursive_mutex m;
         boost::lock_guard<boost::recursive_mutex> lock(m);
-  
+
         boost::signals2::signal<void()> sig;
-  
+
         return 0;
 	 }
      ])],
@@ -186,18 +186,18 @@ AC_DEFUN([QL_CHECK_BOOST_TEST_THREAD_SIGNALS2_SYSTEM],
       break],
      [])
  LIBS="$ql_original_LIBS"
-     
+
  if test "$boost_thread_found" = no ; then
      AC_MSG_RESULT([no])
      AC_SUBST([BOOST_THREAD_LIB],[""])
-     AC_MSG_ERROR([Boost thread, signals2 and system libraries not found. 
+     AC_MSG_ERROR([Boost thread, signals2 and system libraries not found.
          These libraries are required by the thread-safe observer pattern.])
  else
      AC_MSG_RESULT([yes])
      AC_SUBST([BOOST_THREAD_LIB],[$boost_thread_lib])
  fi
 ])
-     
+
 ])
 
 

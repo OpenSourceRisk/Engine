@@ -1,21 +1,21 @@
 SUBDIRS = aggregation cube engine scenario simulation
 
-AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir} -I${top_builddir}/../QuantExt 
+AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir} -I${top_builddir}/../QuantExt
 
 AM_LDFLAGS  =  \
 	-L${top_builddir}/../QuantExt/qle -lQuantExt
 
-lib_LTLIBRARIES = libOpenRiskEngineAnalytics.la
-libOpenRiskEngineAnalytics_la_LDFLAGS = -release $(PACKAGE_VERSION)
+lib_LTLIBRARIES = libOREAnalytics.la
+libOREAnalytics_la_LDFLAGS = -release $(PACKAGE_VERSION)
 
-libOpenRiskEngineAnalytics_la_LIBADD = \
-	aggregation/libOpenRiskEngineAnalyticsAggregation.la \
-	cube/libOpenRiskEngineAnalyticsCube.la \
-	engine/libOpenRiskEngineAnalyticsEngine.la \
-	scenario/libOpenRiskEngineAnalyticsScenario.la \
-	simulation/libOpenRiskEngineAnalyticsSimulation.la
+libOREAnalytics_la_LIBADD = \
+	aggregation/libOREAnalyticsAggregation.la \
+	cube/libOREAnalyticsCube.la \
+	engine/libOREAnalyticsEngine.la \
+	scenario/libOREAnalyticsScenario.la \
+	simulation/libOREAnalyticsSimulation.la
 
-libOpenRiskEngineAnalytics_la_SOURCES = \
+libOREAnalytics_la_SOURCES = \
 	orea.hpp
 
 this_includedir=${includedir}/${subdir}

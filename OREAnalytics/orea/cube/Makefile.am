@@ -1,12 +1,12 @@
-AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir} -I${top_builddir}/../QuantExt -I${top_builddir}/../OpenRiskEngineData
+AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir} -I${top_builddir}/../QuantExt -I${top_builddir}/../OREData
 
-noinst_LTLIBRARIES = libOpenRiskEngineAnalyticsCube.la
+noinst_LTLIBRARIES = libOREAnalyticsCube.la
 
-libOpenRiskEngineAnalyticsCube_la_LDFLAGS = -release $(PACKAGE_VERSION)
+libOREAnalyticsCube_la_LDFLAGS = -release $(PACKAGE_VERSION)
 
-libOpenRiskEngineAnalyticsCube_la_LIBADD =
+libOREAnalyticsCube_la_LIBADD =
 
-libOpenRiskEngineAnalyticsCube_la_SOURCES = \
+libOREAnalyticsCube_la_SOURCES = \
 	cubewriter.cpp
 
 this_includedir=${includedir}/${subdir}

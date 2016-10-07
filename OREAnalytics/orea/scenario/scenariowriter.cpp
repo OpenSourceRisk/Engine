@@ -2,14 +2,13 @@
  Copyright (C) 2016 Quaternion Risk Management Ltd
  All rights reserved.
 
- This file is part of OpenRiskEngine, a free-software/open-source library
- for transparent pricing and risk analysis - http://openriskengine.org
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
 
- OpenRiskEngine is free software: you can redistribute it and/or modify it
+ ORE is free software: you can redistribute it and/or modify it
  under the terms of the Modified BSD License.  You should have received a
- copy of the license along with this program; if not, please email
- <users@openriskengine.org>. The license is also available online at
- <http://openriskengine.org/license.shtml>.
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
 
  This program is distributed on the basis that it will form a useful
  contribution to risk analytics and model standardisation, but WITHOUT
@@ -20,9 +19,9 @@
 #include <orea/scenario/scenariowriter.hpp>
 #include <ored/utilities/to_string.hpp>
 
-using openriskengine::data::to_string;
+using ore::data::to_string;
 
-namespace openriskengine {
+namespace ore {
 namespace analytics {
 
 ScenarioWriter::ScenarioWriter(const boost::shared_ptr<ScenarioGenerator>& src, const std::string& filename, const char sep) : src_(src), fp_(nullptr), i_(0), sep_(sep) {

@@ -2,14 +2,13 @@
  Copyright (C) 2016 Quaternion Risk Management Ltd
  All rights reserved.
 
- This file is part of OpenRiskEngine, a free-software/open-source library
- for transparent pricing and risk analysis - http://openriskengine.org
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
 
- OpenRiskEngine is free software: you can redistribute it and/or modify it
+ ORE is free software: you can redistribute it and/or modify it
  under the terms of the Modified BSD License.  You should have received a
- copy of the license along with this program; if not, please email
- <users@openriskengine.org>. The license is also available online at
- <http://openriskengine.org/license.shtml>.
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
 
  This program is distributed on the basis that it will form a useful
  contribution to risk analytics and model standardisation, but WITHOUT
@@ -30,7 +29,7 @@
 using namespace boost::posix_time;
 using namespace std;
 
-namespace openriskengine {
+namespace ore {
 namespace data {
 
 const string StderrLogger::name = "StderrLogger";
@@ -170,10 +169,10 @@ LoggerStream::~LoggerStream() {
     string text;
     while (getline(ss_, text)) {
         // we expand the MLOG macro here so we can overwrite __FILE__ and __LINE__
-        if (openriskengine::data::Log::instance().enabled() && openriskengine::data::Log::instance().filter(mask_)) {
-            openriskengine::data::Log::instance().header(mask_, filename_, lineNo_);
-            openriskengine::data::Log::instance().logStream() << text;
-            openriskengine::data::Log::instance().log(mask_);
+        if (ore::data::Log::instance().enabled() && ore::data::Log::instance().filter(mask_)) {
+            ore::data::Log::instance().header(mask_, filename_, lineNo_);
+            ore::data::Log::instance().logStream() << text;
+            ore::data::Log::instance().log(mask_);
         }
     }
 }

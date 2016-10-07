@@ -1,12 +1,12 @@
 AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir} -I${top_builddir}/../QuantExt -I${top_builddir}/../ThirdPartyLibs/rapidxml-1.13
 
-noinst_LTLIBRARIES = libOpenRiskEngineDataUtilities.la
+noinst_LTLIBRARIES = libOREDataUtilities.la
 
-libOpenRiskEngineDataUtilities_la_LDFLAGS = -release $(PACKAGE_VERSION)
+libOREDataUtilities_la_LDFLAGS = -release $(PACKAGE_VERSION)
 
-libOpenRiskEngineDataUtilities_la_LIBADD =
+libOREDataUtilities_la_LIBADD =
 
-libOpenRiskEngineDataUtilities_la_SOURCES = \
+libOREDataUtilities_la_SOURCES = \
 	log.cpp \
 	parsers.cpp \
 	indexparser.cpp \

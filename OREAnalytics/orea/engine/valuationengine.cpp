@@ -2,14 +2,13 @@
  Copyright (C) 2016 Quaternion Risk Management Ltd
  All rights reserved.
 
- This file is part of OpenRiskEngine, a free-software/open-source library
- for transparent pricing and risk analysis - http://openriskengine.org
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
 
- OpenRiskEngine is free software: you can redistribute it and/or modify it
+ ORE is free software: you can redistribute it and/or modify it
  under the terms of the Modified BSD License.  You should have received a
- copy of the license along with this program; if not, please email
- <users@openriskengine.org>. The license is also available online at
- <http://openriskengine.org/license.shtml>.
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
 
  This program is distributed on the basis that it will form a useful
  contribution to risk analytics and model standardisation, but WITHOUT
@@ -36,9 +35,9 @@
 using namespace QuantLib;
 using namespace QuantExt;
 using namespace std;
-using namespace openriskengine::data;
+using namespace ore::data;
 
-namespace openriskengine {
+namespace ore {
 namespace analytics {
 
 void applyFixings(Date start, Date end, map<string, vector<Date>>& fixingMap,
@@ -91,7 +90,7 @@ void resetFixings(const map<string, TimeSeries<Real>>& fixingCache) {
     for (auto& kv : fixingCache)
         IndexManager::instance().setHistory(kv.first, kv.second);
 }
-  
+
 ValuationEngine::FixingsMap ValuationEngine::getFixingDates(const vector<FlowList>& flowList) {
 
     std::map<std::string, std::vector<Date>> fixings;
@@ -115,7 +114,7 @@ ValuationEngine::FixingsMap ValuationEngine::getFixingDates(const vector<FlowLis
         for (Size i = 1; i < flow.size(); i++) { // skip header
             std::string indexName = flow[i][4];
             if (indexName != "#N/A") {
-                Date fixingDate = openriskengine::data::parseDate(flow[i][3]);
+                Date fixingDate = ore::data::parseDate(flow[i][3]);
                 fixings[indexName].push_back(fixingDate);
             }
         }
@@ -143,7 +142,7 @@ ValuationEngine::ValuationEngine(const Date& today, const boost::shared_ptr<Date
                                                                               << dg_->dates().front());
     QL_REQUIRE(simMarket_, "ValuationEngine: Error, Null SimMarket");
 }
-  
+
 void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfolio,
                                 boost::shared_ptr<analytics::NPVCube>& outputCube,
                                 vector<boost::shared_ptr<ValuationCalculator>> calculators) {

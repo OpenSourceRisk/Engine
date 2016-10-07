@@ -2,14 +2,13 @@
  Copyright (C) 2016 Quaternion Risk Management Ltd
  All rights reserved.
 
- This file is part of OpenRiskEngine, a free-software/open-source library
- for transparent pricing and risk analysis - http://openriskengine.org
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
 
- OpenRiskEngine is free software: you can redistribute it and/or modify it
+ ORE is free software: you can redistribute it and/or modify it
  under the terms of the Modified BSD License.  You should have received a
- copy of the license along with this program; if not, please email
- <users@openriskengine.org>. The license is also available online at
- <http://openriskengine.org/license.shtml>.
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
 
  This program is distributed on the basis that it will form a useful
  contribution to risk analytics and model standardisation, but WITHOUT
@@ -37,7 +36,7 @@ using namespace QuantLib;
 using namespace QuantExt;
 using namespace std;
 
-namespace openriskengine {
+namespace ore {
 namespace data {
 
 Date parseDate(const string& s) {
@@ -491,10 +490,10 @@ Exercise::Type parseExerciseType(const std::string& s) {
 void parseDateOrPeriod(const string& s, Date& d, Period& p, bool& isDate) {
     isDate = false;
     try {
-        p = openriskengine::data::parsePeriod(s);
+        p = ore::data::parsePeriod(s);
     } catch (...) {
         try {
-            d = openriskengine::data::parseDate(s);
+            d = ore::data::parseDate(s);
             isDate = true;
         } catch (...) {
             QL_FAIL("could not parse " << s << " as date or period");
@@ -515,4 +514,4 @@ std::vector<string> parseListOfValues(string s) {
 }
 
 } // namespace data
-} // namespace openriskengine
+} // namespace ore

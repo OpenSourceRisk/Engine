@@ -2,14 +2,13 @@
  Copyright (C) 2016 Quaternion Risk Management Ltd
  All rights reserved.
 
- This file is part of OpenRiskEngine, a free-software/open-source library
- for transparent pricing and risk analysis - http://openriskengine.org
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
 
- OpenRiskEngine is free software: you can redistribute it and/or modify it
+ ORE is free software: you can redistribute it and/or modify it
  under the terms of the Modified BSD License.  You should have received a
- copy of the license along with this program; if not, please email
- <users@openriskengine.org>. The license is also available online at
- <http://openriskengine.org/license.shtml>.
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
 
  This program is distributed on the basis that it will form a useful
  contribution to risk analytics and model standardisation, but WITHOUT
@@ -34,7 +33,7 @@
 
 using namespace QuantLib;
 
-namespace openriskengine {
+namespace ore {
 namespace data {
 
 //! Builder for a Linear Gauss Markov model component
@@ -50,7 +49,7 @@ public:
     /*! The configuration should refer to the calibration configuration here,
       alternative discounting curves are then usually set in the pricing
       engines for swaptions etc. */
-    LgmBuilder(const boost::shared_ptr<openriskengine::data::Market>& market, const boost::shared_ptr<LgmData>& data,
+    LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const boost::shared_ptr<LgmData>& data,
                const std::string& configuration = Market::defaultConfiguration, Real bootstrapTolerance = 0.001);
     //! Re-calibrate model component
     void update();
@@ -68,7 +67,7 @@ public:
 private:
     void buildSwaptionBasket();
 
-    boost::shared_ptr<openriskengine::data::Market> market_;
+    boost::shared_ptr<ore::data::Market> market_;
     const std::string configuration_;
     boost::shared_ptr<LgmData> data_;
     Real bootstrapTolerance_;

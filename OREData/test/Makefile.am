@@ -52,7 +52,7 @@ ored_test_suite_LDFLAGS = \
     -lQuantLib \
     -l${BOOST_UNIT_TEST_LIB} \
     -L../../QuantExt/qle -lQuantExt \
-    -L../ored -lOpenRiskEngineData -lboost_date_time -lboost_serialization -lboost_regex
+    -L../ored -lOREData -lboost_date_time -lboost_serialization -lboost_regex
 
 TESTS = ored-test-suite$(EXEEXT)
 TESTS_ENVIRONMENT = BOOST_TEST_LOG_LEVEL=message
@@ -63,6 +63,6 @@ else
 
 EXTRA_DIST = \
 	${OPENRISKENGINEDATA_TESTS} \
-	OpenRiskEngineDataTestSuite.vcxproj
+	OREDataTestSuite.vcxproj
 
 endif

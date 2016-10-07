@@ -1,12 +1,12 @@
 AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir} -I${top_builddir}/../QuantExt
 
-noinst_LTLIBRARIES = libOpenRiskEngineDataConfiguration.la
+noinst_LTLIBRARIES = libOREDataConfiguration.la
 
-libOpenRiskEngineDataConfiguration_la_LDFLAGS = -release $(PACKAGE_VERSION)
+libOREDataConfiguration_la_LDFLAGS = -release $(PACKAGE_VERSION)
 
-libOpenRiskEngineDataConfiguration_la_LIBADD =
+libOREDataConfiguration_la_LIBADD =
 
-libOpenRiskEngineDataConfiguration_la_SOURCES = \
+libOREDataConfiguration_la_SOURCES = \
 	capfloorvolcurveconfig.cpp \
 	curveconfigurations.cpp \
 	conventions.cpp \

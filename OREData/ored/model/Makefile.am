@@ -1,12 +1,12 @@
 AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir} -I${top_builddir}/../QuantExt
 
-noinst_LTLIBRARIES = libOpenRiskEngineDataModel.la
+noinst_LTLIBRARIES = libOREDataModel.la
 
-libOpenRiskEngineDataModel_la_LDFLAGS = -release $(PACKAGE_VERSION)
+libOREDataModel_la_LDFLAGS = -release $(PACKAGE_VERSION)
 
-libOpenRiskEngineDataModel_la_LIBADD =
+libOREDataModel_la_LIBADD =
 
-libOpenRiskEngineDataModel_la_SOURCES = \
+libOREDataModel_la_SOURCES = \
 	crossassetmodeldata.cpp \
 	crossassetmodelbuilder.cpp \
 	fxbsdata.cpp \

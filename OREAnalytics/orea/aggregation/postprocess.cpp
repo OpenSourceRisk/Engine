@@ -2,14 +2,13 @@
  Copyright (C) 2016 Quaternion Risk Management Ltd
  All rights reserved.
 
- This file is part of OpenRiskEngine, a free-software/open-source library
- for transparent pricing and risk analysis - http://openriskengine.org
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
 
- OpenRiskEngine is free software: you can redistribute it and/or modify it
+ ORE is free software: you can redistribute it and/or modify it
  under the terms of the Modified BSD License.  You should have received a
- copy of the license along with this program; if not, please email
- <users@openriskengine.org>. The license is also available online at
- <http://openriskengine.org/license.shtml>.
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
 
  This program is distributed on the basis that it will form a useful
  contribution to risk analytics and model standardisation, but WITHOUT
@@ -42,7 +41,7 @@ using namespace QuantLib;
 
 using namespace boost::accumulators;
 
-namespace openriskengine {
+namespace ore {
 namespace analytics {
 
 AllocationMethod parseAllocationMethod(const string& s) {
@@ -205,7 +204,7 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
                                         << actions[j].owner());
                 // FIXME: Introduce enumeration and parse text when building trade
                 if (actions[j].type() == "Break" && actions[j].owner() == "Mutual") {
-                    QuantLib::Schedule schedule = openriskengine::data::makeSchedule(actions[j].schedule());
+                    QuantLib::Schedule schedule = ore::data::makeSchedule(actions[j].schedule());
                     vector<Date> dates = schedule.dates();
                     std::sort(dates.begin(), dates.end());
                     Date today = Settings::instance().evaluationDate();

@@ -2,14 +2,13 @@
  Copyright (C) 2016 Quaternion Risk Management Ltd
  All rights reserved.
 
- This file is part of OpenRiskEngine, a free-software/open-source library
- for transparent pricing and risk analysis - http://openriskengine.org
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
 
- OpenRiskEngine is free software: you can redistribute it and/or modify it
+ ORE is free software: you can redistribute it and/or modify it
  under the terms of the Modified BSD License.  You should have received a
- copy of the license along with this program; if not, please email
- <users@openriskengine.org>. The license is also available online at
- <http://openriskengine.org/license.shtml>.
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
 
  This program is distributed on the basis that it will form a useful
  contribution to risk analytics and model standardisation, but WITHOUT
@@ -64,10 +63,10 @@
 using namespace QuantLib;
 using namespace QuantExt;
 using namespace boost::unit_test_framework;
-using namespace openriskengine::analytics;
-using namespace openriskengine::data;
+using namespace ore::analytics;
+using namespace ore::data;
 using namespace testsuite;
-using namespace openriskengine;
+using namespace ore;
 
 namespace {
 
@@ -165,7 +164,7 @@ struct TestData {
     boost::shared_ptr<CrossAssetModelData> config;
     boost::shared_ptr<QuantExt::CrossAssetModel> ccLgm;
     boost::shared_ptr<QuantExt::LGM> lgm;
-    boost::shared_ptr<openriskengine::data::Market> market;
+    boost::shared_ptr<ore::data::Market> market;
 };
 
 } // anonymous namespace
@@ -179,7 +178,7 @@ void test_lgm(bool sobol, bool antithetic, bool brownianBridge) {
     // Simulation date grid
     Date today = d.referenceDate;
     std::vector<Period> tenorGrid = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years};
-    openriskengine::analytics::DateGrid grid(tenorGrid);
+    ore::analytics::DateGrid grid(tenorGrid);
 
     // Model
     boost::shared_ptr<QuantExt::LGM> model = d.lgm;
@@ -278,8 +277,8 @@ void test_crossasset(bool sobol, bool antithetic, bool brownianBridge) {
     // Simulation date grid
     Date today = d.referenceDate;
     std::vector<Period> tenorGrid = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years};
-    boost::shared_ptr<openriskengine::analytics::DateGrid> grid =
-        boost::make_shared<openriskengine::analytics::DateGrid>(tenorGrid);
+    boost::shared_ptr<ore::analytics::DateGrid> grid =
+        boost::make_shared<ore::analytics::DateGrid>(tenorGrid);
 
     // Model
     boost::shared_ptr<QuantExt::CrossAssetModel> model = d.ccLgm;
@@ -420,8 +419,8 @@ void ScenarioGeneratorTest::testCrossAssetSimMarket() {
     // Simulation date grid
     Date today = d.referenceDate;
     std::vector<Period> tenorGrid = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years};
-    boost::shared_ptr<openriskengine::analytics::DateGrid> grid =
-        boost::make_shared<openriskengine::analytics::DateGrid>(tenorGrid);
+    boost::shared_ptr<ore::analytics::DateGrid> grid =
+        boost::make_shared<ore::analytics::DateGrid>(tenorGrid);
 
     // Model
     boost::shared_ptr<QuantExt::CrossAssetModel> model = d.ccLgm;
@@ -455,11 +454,11 @@ void ScenarioGeneratorTest::testCrossAssetSimMarket() {
     ScenarioGeneratorBuilder sgb(sgd);
     boost::shared_ptr<ScenarioFactory> sf = boost::make_shared<SimpleScenarioFactory>();
     boost::shared_ptr<ScenarioGenerator> sg = sgb.build(model, sf, simMarketConfig, today, d.market);
-    // boost::shared_ptr<openriskengine::analytics::DateGrid> grid = sb.dateGrid();
+    // boost::shared_ptr<ore::analytics::DateGrid> grid = sb.dateGrid();
 
     BOOST_TEST_MESSAGE("set up scenario sim market");
     Conventions conventions = *convs();
-    boost::shared_ptr<openriskengine::analytics::SimMarket> simMarket =
+    boost::shared_ptr<ore::analytics::SimMarket> simMarket =
         boost::make_shared<ScenarioSimMarket>(sg, d.market, simMarketConfig, conventions);
 
     // Basic Martingale tests
@@ -563,8 +562,8 @@ void ScenarioGeneratorTest::testCrossAssetSimMarket2() {
     // Simulation date grid
     Date today = d.referenceDate;
     std::vector<Period> tenorGrid = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years};
-    boost::shared_ptr<openriskengine::analytics::DateGrid> grid =
-        boost::make_shared<openriskengine::analytics::DateGrid>(tenorGrid);
+    boost::shared_ptr<ore::analytics::DateGrid> grid =
+        boost::make_shared<ore::analytics::DateGrid>(tenorGrid);
 
     // Model
     boost::shared_ptr<QuantExt::CrossAssetModel> model = d.ccLgm;
@@ -598,11 +597,11 @@ void ScenarioGeneratorTest::testCrossAssetSimMarket2() {
     ScenarioGeneratorBuilder sgb(sgd);
     boost::shared_ptr<ScenarioFactory> sf = boost::make_shared<SimpleScenarioFactory>();
     boost::shared_ptr<ScenarioGenerator> sg = sgb.build(model, sf, simMarketConfig, today, d.market);
-    // boost::shared_ptr<openriskengine::analytics::DateGrid> grid = sb.dateGrid();
+    // boost::shared_ptr<ore::analytics::DateGrid> grid = sb.dateGrid();
 
     BOOST_TEST_MESSAGE("set up scenario sim market");
     Conventions conventions = *convs();
-    boost::shared_ptr<openriskengine::analytics::SimMarket> simMarket =
+    boost::shared_ptr<ore::analytics::SimMarket> simMarket =
         boost::make_shared<ScenarioSimMarket>(sg, d.market, simMarketConfig, conventions);
 
     // set up model based simulation (mimicking exactly the scenario generator builder above)
@@ -700,8 +699,8 @@ void ScenarioGeneratorTest::testVanillaSwapExposure() {
     std::vector<Period> tenorGrid;
     for (Size i = 0; i < 20; ++i)
         tenorGrid.push_back((i + 1) * Years);
-    boost::shared_ptr<openriskengine::analytics::DateGrid> grid =
-        boost::make_shared<openriskengine::analytics::DateGrid>(tenorGrid);
+    boost::shared_ptr<ore::analytics::DateGrid> grid =
+        boost::make_shared<ore::analytics::DateGrid>(tenorGrid);
 
     // Model
     boost::shared_ptr<QuantExt::CrossAssetModel> model = d.ccLgm;
@@ -738,11 +737,11 @@ void ScenarioGeneratorTest::testVanillaSwapExposure() {
     ScenarioGeneratorBuilder sgb(sgd);
     boost::shared_ptr<ScenarioFactory> sf = boost::make_shared<SimpleScenarioFactory>();
     boost::shared_ptr<ScenarioGenerator> sg = sgb.build(model, sf, simMarketConfig, today, d.market);
-    // boost::shared_ptr<openriskengine::analytics::DateGrid> grid = sb.dateGrid();
+    // boost::shared_ptr<ore::analytics::DateGrid> grid = sb.dateGrid();
 
     BOOST_TEST_MESSAGE("set up scenario sim market");
     Conventions conventions = *convs();
-    boost::shared_ptr<openriskengine::analytics::SimMarket> simMarket =
+    boost::shared_ptr<ore::analytics::SimMarket> simMarket =
         boost::make_shared<ScenarioSimMarket>(sg, d.market, simMarketConfig, conventions);
 
     // swaps for expsoure generation
@@ -842,8 +841,8 @@ void ScenarioGeneratorTest::testFxForwardExposure() {
     // Simulation date grid
     Date today = d.referenceDate;
     std::vector<Period> tenorGrid = {1 * Years, 2 * Years, 3 * Years, 4 * Years, 5 * Years};
-    boost::shared_ptr<openriskengine::analytics::DateGrid> grid =
-        boost::make_shared<openriskengine::analytics::DateGrid>(tenorGrid);
+    boost::shared_ptr<ore::analytics::DateGrid> grid =
+        boost::make_shared<ore::analytics::DateGrid>(tenorGrid);
 
     // Model
     boost::shared_ptr<QuantExt::CrossAssetModel> model = d.ccLgm;
@@ -879,11 +878,11 @@ void ScenarioGeneratorTest::testFxForwardExposure() {
     ScenarioGeneratorBuilder sgb(sgd);
     boost::shared_ptr<ScenarioFactory> sf = boost::make_shared<SimpleScenarioFactory>();
     boost::shared_ptr<ScenarioGenerator> sg = sgb.build(model, sf, simMarketConfig, today, d.market);
-    // boost::shared_ptr<openriskengine::analytics::DateGrid> grid = sb.dateGrid();
+    // boost::shared_ptr<ore::analytics::DateGrid> grid = sb.dateGrid();
 
     BOOST_TEST_MESSAGE("set up scenario sim market");
     Conventions conventions = *convs();
-    boost::shared_ptr<openriskengine::analytics::SimMarket> simMarket =
+    boost::shared_ptr<ore::analytics::SimMarket> simMarket =
         boost::make_shared<ScenarioSimMarket>(sg, d.market, simMarketConfig, conventions);
 
     Size samples = 5000;
@@ -962,8 +961,8 @@ void ScenarioGeneratorTest::testFxForwardExposureZeroIrVol() {
     // Simulation date grid
     Date today = d.referenceDate;
     std::vector<Period> tenorGrid = {1 * Years, 2 * Years, 3 * Years, 4 * Years, 5 * Years};
-    boost::shared_ptr<openriskengine::analytics::DateGrid> grid =
-        boost::make_shared<openriskengine::analytics::DateGrid>(tenorGrid);
+    boost::shared_ptr<ore::analytics::DateGrid> grid =
+        boost::make_shared<ore::analytics::DateGrid>(tenorGrid);
 
     // Model
     boost::shared_ptr<QuantExt::CrossAssetModel> model = d.ccLgm;
@@ -1004,11 +1003,11 @@ void ScenarioGeneratorTest::testFxForwardExposureZeroIrVol() {
     ScenarioGeneratorBuilder sgb(sgd);
     boost::shared_ptr<ScenarioFactory> sf = boost::make_shared<SimpleScenarioFactory>();
     boost::shared_ptr<ScenarioGenerator> sg = sgb.build(model, sf, simMarketConfig, today, d.market);
-    // boost::shared_ptr<openriskengine::analytics::DateGrid> grid = sb.dateGrid();
+    // boost::shared_ptr<ore::analytics::DateGrid> grid = sb.dateGrid();
 
     BOOST_TEST_MESSAGE("set up scenario sim market");
     Conventions conventions = *convs();
-    boost::shared_ptr<openriskengine::analytics::SimMarket> simMarket =
+    boost::shared_ptr<ore::analytics::SimMarket> simMarket =
         boost::make_shared<ScenarioSimMarket>(sg, d.market, simMarketConfig, conventions);
 
     Size samples = 10000;
@@ -1081,12 +1080,12 @@ test_suite* ScenarioGeneratorTest::suite() {
 
     // Uncomment the below to get detailed output TODO: custom logger that uses BOOST_MESSAGE
     /*
-    boost::shared_ptr<openriskengine::data::FileLogger> logger
-        = boost::make_shared<openriskengine::data::FileLogger>("scenariogenerator_test.log");
-    openriskengine::data::Log::instance().removeAllLoggers();
-    openriskengine::data::Log::instance().registerLogger(logger);
-    openriskengine::data::Log::instance().switchOn();
-    openriskengine::data::Log::instance().setMask(255);
+    boost::shared_ptr<ore::data::FileLogger> logger
+        = boost::make_shared<ore::data::FileLogger>("scenariogenerator_test.log");
+    ore::data::Log::instance().removeAllLoggers();
+    ore::data::Log::instance().registerLogger(logger);
+    ore::data::Log::instance().switchOn();
+    ore::data::Log::instance().setMask(255);
     */
 
     suite->add(BOOST_TEST_CASE(&ScenarioGeneratorTest::testLgmMersenneTwister));

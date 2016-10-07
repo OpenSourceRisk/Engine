@@ -1,12 +1,12 @@
 AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir} -I${top_builddir}/../QuantExt
 
-noinst_LTLIBRARIES = libOpenRiskEngineDataPortfolioBuilders.la
+noinst_LTLIBRARIES = libOREDataPortfolioBuilders.la
 
-libOpenRiskEngineDataPortfolioBuilders_la_LDFLAGS = -release $(PACKAGE_VERSION)
+libOREDataPortfolioBuilders_la_LDFLAGS = -release $(PACKAGE_VERSION)
 
-libOpenRiskEngineDataPortfolioBuilders_la_LIBADD =
+libOREDataPortfolioBuilders_la_LIBADD =
 
-libOpenRiskEngineDataPortfolioBuilders_la_SOURCES = \
+libOREDataPortfolioBuilders_la_SOURCES = \
 	capfloor.cpp \
 	capfloorediborleg.cpp \
 	swaption.cpp

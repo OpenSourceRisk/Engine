@@ -2,14 +2,13 @@
  Copyright (C) 2016 Quaternion Risk Management Ltd
  All rights reserved.
 
- This file is part of OpenRiskEngine, a free-software/open-source library
- for transparent pricing and risk analysis - http://openriskengine.org
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
 
- OpenRiskEngine is free software: you can redistribute it and/or modify it
+ ORE is free software: you can redistribute it and/or modify it
  under the terms of the Modified BSD License.  You should have received a
- copy of the license along with this program; if not, please email
- <users@openriskengine.org>. The license is also available online at
- <http://openriskengine.org/license.shtml>.
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
 
  This program is distributed on the basis that it will form a useful
  contribution to risk analytics and model standardisation, but WITHOUT
@@ -26,13 +25,13 @@
 
 #include <orea/scenario/scenario.hpp>
 
-#include <boost/serialization/map.hpp> 
-#include <boost/serialization/vector.hpp> 
-#include <boost/serialization/export.hpp> 
+#include <boost/serialization/map.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/export.hpp>
 
 using std::string;
 
-namespace openriskengine {
+namespace ore {
 namespace analytics {
 
 //-----------------------------------------------------------------------------------------------
@@ -58,7 +57,7 @@ public:
     const std::string& label() const override { return label_; }
     //! set the label
     void label(const string& s) override { label_ = s; }
- 
+
     //! Get Numeraire ratio n = N(t) / N(0) so that Price(0) = N(0) * E [Price(t) / N(t) ]
     Real getNumeraire() const override { return numeraire_; }
     //! Set the Numeraire ratio n = N(t) / N(0) so that Price(0) = N(0) * E [Price(t) / N(t) ]
@@ -71,15 +70,15 @@ public:
     Real get(const RiskFactorKey& key) const override;
 
 private:
-    friend class boost::serialization::access; 
-    template <class Archive> void serialize(Archive& ar, const unsigned int) { 
-        ar& boost::serialization::base_object<Scenario>(*this); 
-        ar& asof_; 
-        ar& numeraire_; 
-        ar& data_; 
-        ar& keys_; 
-        ar& label_; 
-    } 
+    friend class boost::serialization::access;
+    template <class Archive> void serialize(Archive& ar, const unsigned int) {
+        ar& boost::serialization::base_object<Scenario>(*this);
+        ar& asof_;
+        ar& numeraire_;
+        ar& data_;
+        ar& keys_;
+        ar& label_;
+    }
     Date asof_;
     Real numeraire_;
     std::map<RiskFactorKey, Real> data_;

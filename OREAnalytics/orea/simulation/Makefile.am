@@ -1,12 +1,12 @@
-AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir} -I${top_builddir}/../QuantExt -I${top_builddir}/../OpenRiskEngineData
+AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir} -I${top_builddir}/../QuantExt -I${top_builddir}/../OREData
 
-noinst_LTLIBRARIES = libOpenRiskEngineAnalyticsSimulation.la
+noinst_LTLIBRARIES = libOREAnalyticsSimulation.la
 
-libOpenRiskEngineAnalyticsSimulation_la_LDFLAGS = -release $(PACKAGE_VERSION)
+libOREAnalyticsSimulation_la_LDFLAGS = -release $(PACKAGE_VERSION)
 
-libOpenRiskEngineAnalyticsSimulation_la_LIBADD =
+libOREAnalyticsSimulation_la_LIBADD =
 
-libOpenRiskEngineAnalyticsSimulation_la_SOURCES = \
+libOREAnalyticsSimulation_la_SOURCES = \
 	simmarket.cpp \
 	dategrid.cpp
 

@@ -4,9 +4,9 @@
 # Project related configuration options
 #---------------------------------------------------------------------------
 DOXYFILE_ENCODING      = UTF-8
-PROJECT_NAME           = OpenRiskEngineData
+PROJECT_NAME           = OREData
 PROJECT_NUMBER         = ored_version
-PROJECT_BRIEF          = "OpenRiskEngineData - ORE Data library based on QuantExt and QuantLib"
+PROJECT_BRIEF          = "OREData - ORE Data library based on QuantExt and QuantLib"
 PROJECT_LOGO           =
 OUTPUT_DIRECTORY       =
 CREATE_SUBDIRS         = NO

@@ -2,14 +2,13 @@
  Copyright (C) 2016 Quaternion Risk Management Ltd
  All rights reserved.
 
- This file is part of OpenRiskEngine, a free-software/open-source library
- for transparent pricing and risk analysis - http://openriskengine.org
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
 
- OpenRiskEngine is free software: you can redistribute it and/or modify it
+ ORE is free software: you can redistribute it and/or modify it
  under the terms of the Modified BSD License.  You should have received a
- copy of the license along with this program; if not, please email
- <users@openriskengine.org>. The license is also available online at
- <http://openriskengine.org/license.shtml>.
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
 
  This program is distributed on the basis that it will form a useful
  contribution to risk analytics and model standardisation, but WITHOUT
@@ -54,7 +53,7 @@
 
 using std::string;
 
-namespace openriskengine {
+namespace ore {
 namespace data {
 
 //! The Base Custom Log Handler class
@@ -284,10 +283,10 @@ private:
   Main Logging macro, do not use this directly, use on of the below 6 macros instead
  */
 #define MLOG(mask, text)                                                                                               \
-    if (openriskengine::data::Log::instance().enabled() && openriskengine::data::Log::instance().filter(mask)) {       \
-        openriskengine::data::Log::instance().header(mask, __FILE__, __LINE__);                                        \
-        openriskengine::data::Log::instance().logStream() << text;                                                     \
-        openriskengine::data::Log::instance().log(mask);                                                               \
+    if (ore::data::Log::instance().enabled() && ore::data::Log::instance().filter(mask)) {       \
+        ore::data::Log::instance().header(mask, __FILE__, __LINE__);                                        \
+        ore::data::Log::instance().logStream() << text;                                                     \
+        ore::data::Log::instance().log(mask);                                                               \
     }
 
 //! Logging Macro (Level = Alert)
@@ -309,13 +308,13 @@ private:
     can be used with QuantExt methods that take a std::ostream& for logging purposes.
 
     Once the stream falls out of focus, it's desstructor will take the buffered log
-    messages and pass them the main openriskengine::data::Log::instance().
+    messages and pass them the main ore::data::Log::instance().
 
     Note the following
     - The timestamps for each log message will correspond to when the LoggerStream
       desstructor has been called, this may not correspond to the actual time the event
       occured.
-    - The filename and linenumber in the openriskengine::data::Log() have to be explicitly passed to
+    - The filename and linenumber in the ore::data::Log() have to be explicitly passed to
       the LoggerStream, as such the log messages will not correspond to any references
       in QuantExt (or any other library).
 
@@ -353,7 +352,7 @@ private:
     std::stringstream ss_;
 };
 
-#define LOGGERSTREAM ((std::ostream&)openriskengine::data::LoggerStream(ORE_NOTICE, __FILE__, __LINE__))
-#define DLOGGERSTREAM ((std::ostream&)openriskengine::data::LoggerStream(ORE_DEBUG, __FILE__, __LINE__))
+#define LOGGERSTREAM ((std::ostream&)ore::data::LoggerStream(ORE_NOTICE, __FILE__, __LINE__))
+#define DLOGGERSTREAM ((std::ostream&)ore::data::LoggerStream(ORE_DEBUG, __FILE__, __LINE__))
 }
 }

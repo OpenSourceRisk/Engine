@@ -37,22 +37,22 @@ docs-dist: docs-html-dist docs-man-dist
 docs-html: .time-stamp
 
 docs-html-dist: docs-html
-	ln -s html OpenRiskEngineAnalytics-docs-$(VERSION)-html
-	tar chf - OpenRiskEngineAnalytics-docs-$(VERSION)-html \
-	    | GZIP=--best gzip -c > OpenRiskEngineAnalytics-docs-$(VERSION)-html.tar.gz
-	rm OpenRiskEngineAnalytics-docs-$(VERSION)-html
+	ln -s html OREAnalytics-docs-$(VERSION)-html
+	tar chf - OREAnalytics-docs-$(VERSION)-html \
+	    | GZIP=--best gzip -c > OREAnalytics-docs-$(VERSION)-html.tar.gz
+	rm OREAnalytics-docs-$(VERSION)-html
 
 docs-man: .time-stamp-man
 .time-stamp-man: .time-stamp
-	$(SED) -e "s/index/OpenRiskEngineAnalytics/" man/man3/index.3 > man/man3/OpenRiskEngineAnalytics.3
+	$(SED) -e "s/index/OREAnalytics/" man/man3/index.3 > man/man3/OREAnalytics.3
 	rm man/man3/index.3
 	touch .time-stamp-man
 
 docs-man-dist: docs-man
-	ln -s man OpenRiskEngineAnalytics-docs-$(VERSION)-man
-	tar chf - OpenRiskEngineAnalytics-docs-$(VERSION)-man \
-	    | GZIP=--best gzip -c > OpenRiskEngineAnalytics-docs-$(VERSION)-man.tar.gz
-	rm OpenRiskEngineAnalytics-docs-$(VERSION)-man
+	ln -s man OREAnalytics-docs-$(VERSION)-man
+	tar chf - OREAnalytics-docs-$(VERSION)-man \
+	    | GZIP=--best gzip -c > OREAnalytics-docs-$(VERSION)-man.tar.gz
+	rm OREAnalytics-docs-$(VERSION)-man
 
 
 docs-clean:

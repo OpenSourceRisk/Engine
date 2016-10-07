@@ -2,14 +2,13 @@
  Copyright (C) 2016 Quaternion Risk Management Ltd
  All rights reserved.
 
- This file is part of OpenRiskEngine, a free-software/open-source library
- for transparent pricing and risk analysis - http://openriskengine.org
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
 
- OpenRiskEngine is free software: you can redistribute it and/or modify it
+ ORE is free software: you can redistribute it and/or modify it
  under the terms of the Modified BSD License.  You should have received a
- copy of the license along with this program; if not, please email
- <users@openriskengine.org>. The license is also available online at
- <http://openriskengine.org/license.shtml>.
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
 
  This program is distributed on the basis that it will form a useful
  contribution to risk analytics and model standardisation, but WITHOUT
@@ -45,9 +44,9 @@ using namespace std;
 using namespace QuantLib;
 using namespace QuantExt;
 using namespace boost::unit_test_framework;
-using namespace openriskengine;
-using namespace openriskengine::data;
-using namespace openriskengine::analytics;
+using namespace ore;
+using namespace ore::data;
+using namespace ore::analytics;
 
 namespace testsuite {
 
@@ -438,12 +437,12 @@ void SwapPerformanceTest::testSingleSwapPerformance() { test_performance(1); }
 test_suite* SwapPerformanceTest::suite() {
     // Uncomment the below to get detailed output TODO: custom logger that uses BOOST_MESSAGE
     /*
-    boost::shared_ptr<openriskengine::data::FileLogger> logger
-        = boost::make_shared<openriskengine::data::FileLogger>("swapperformace_test.log");
-    openriskengine::data::Log::instance().removeAllLoggers();
-    openriskengine::data::Log::instance().registerLogger(logger);
-    openriskengine::data::Log::instance().switchOn();
-    openriskengine::data::Log::instance().setMask(255);
+    boost::shared_ptr<ore::data::FileLogger> logger
+        = boost::make_shared<ore::data::FileLogger>("swapperformace_test.log");
+    ore::data::Log::instance().removeAllLoggers();
+    ore::data::Log::instance().registerLogger(logger);
+    ore::data::Log::instance().switchOn();
+    ore::data::Log::instance().setMask(255);
     */
 
     test_suite* suite = BOOST_TEST_SUITE("SwapPerformanceTest");

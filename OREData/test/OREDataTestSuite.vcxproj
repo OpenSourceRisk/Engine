@@ -35,13 +35,13 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectName>OpenRiskEngineDataTestSuite</ProjectName>
+    <ProjectName>OREDataTestSuite</ProjectName>
     <ProjectGuid>{A613045C-34AF-4706-AA3C-730C92524F74}</ProjectGuid>
-    <RootNamespace>OpenRiskEngineDataTestSuite</RootNamespace>
+    <RootNamespace>OREDataTestSuite</RootNamespace>
     <VCTargetsPath Condition="'$(VCTargetsPath11)' != '' and '$(VSVersion)' == '' and $(VisualStudioVersion) == ''">$(VCTargetsPath11)</VCTargetsPath>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <Import Project="..\OpenRiskEngineData.props" />
+  <Import Project="..\OREData.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseOfMfc>false</UseOfMfc>
@@ -160,14 +160,14 @@
     <EmbedManifest Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</EmbedManifest>
     <PostBuildEventUseInBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</PostBuildEventUseInBuild>
     <PostBuildEventUseInBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</PostBuildEventUseInBuild>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">OpenRiskEngineData-test-suite-$(qlCompilerTag)-mt</TargetName>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">OpenRiskEngineData-test-suite-$(qlCompilerTag)-x64-mt</TargetName>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release (static runtime)|Win32'">OpenRiskEngineData-test-suite-$(qlCompilerTag)-mt-s</TargetName>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release (static runtime)|x64'">OpenRiskEngineData-test-suite-$(qlCompilerTag)-x64-mt-s</TargetName>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">OpenRiskEngineData-test-suite-$(qlCompilerTag)-mt-gd</TargetName>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">OpenRiskEngineData-test-suite-$(qlCompilerTag)-x64-mt-gd</TargetName>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|Win32'">OpenRiskEngineData-test-suite-$(qlCompilerTag)-mt-sgd</TargetName>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|x64'">OpenRiskEngineData-test-suite-$(qlCompilerTag)-x64-mt-sgd</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">OREData-test-suite-$(qlCompilerTag)-mt</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">OREData-test-suite-$(qlCompilerTag)-x64-mt</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release (static runtime)|Win32'">OREData-test-suite-$(qlCompilerTag)-mt-s</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release (static runtime)|x64'">OREData-test-suite-$(qlCompilerTag)-x64-mt-s</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">OREData-test-suite-$(qlCompilerTag)-mt-gd</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">OREData-test-suite-$(qlCompilerTag)-x64-mt-gd</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|Win32'">OREData-test-suite-$(qlCompilerTag)-mt-sgd</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|x64'">OREData-test-suite-$(qlCompilerTag)-x64-mt-sgd</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|Win32'">
     <Midl>
@@ -659,7 +659,7 @@
     <ClCompile Include="yieldcurve.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\OpenRiskEngineData.vcxproj">
+    <ProjectReference Include="..\OREData.vcxproj">
       <Project>{ad0a27da-91da-46a2-acbd-296c419ed3aa}</Project>
     </ProjectReference>
   </ItemGroup>

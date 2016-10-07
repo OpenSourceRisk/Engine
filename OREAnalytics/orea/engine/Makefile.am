@@ -1,12 +1,12 @@
-AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir} -I${top_builddir}/../QuantExt -I${top_builddir}/../OpenRiskEngineData
+AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir} -I${top_builddir}/../QuantExt -I${top_builddir}/../OREData
 
-noinst_LTLIBRARIES = libOpenRiskEngineAnalyticsEngine.la
+noinst_LTLIBRARIES = libOREAnalyticsEngine.la
 
-libOpenRiskEngineAnalyticsEngine_la_LDFLAGS = -release $(PACKAGE_VERSION)
+libOREAnalyticsEngine_la_LDFLAGS = -release $(PACKAGE_VERSION)
 
-libOpenRiskEngineAnalyticsEngine_la_LIBADD =
+libOREAnalyticsEngine_la_LIBADD =
 
-libOpenRiskEngineAnalyticsEngine_la_SOURCES = \
+libOREAnalyticsEngine_la_SOURCES = \
 	valuationengine.cpp \
 	valuationcalculator.cpp
 

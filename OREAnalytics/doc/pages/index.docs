@@ -1,15 +1,14 @@
 
 /*
- Copyright (C) 2016 Quaternion Risk Management 
+ Copyright (C) 2016 Quaternion Risk Management
 
- This file is part of OpenRiskEngine, a free-software/open-source library
- for transparent pricing and and risk analysis - http://openriskengine.org/
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and and risk analysis - http://opensourcerisk.org/
 
- OpenRiskEngine is free software: you can redistribute it and/or modify it
+ ORE is free software: you can redistribute it and/or modify it
  under the terms of the QuantLib license.  You should have received a
- copy of the license along with this program; if not, please email
+ copy of the license along with this program.
  <ore-dev@lists.sf.net>. The license is also available online at
- <http://openriskengine.org/license.shtml>.
 
  This program is distributed in the hope that it will be useful, but WITHOUT
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
@@ -21,9 +20,9 @@
     The Open Risk Project aims at establishing a framework for transparent pricing
     and risk analysis that can be adapted for production purposes in financial
     institutions and used as a benchmarking and validation tool to test in-house
-    and vendor solutions applied in the industry. 
+    and vendor solutions applied in the industry.
 
-    %OpenRiskEngine aka %ORE (http://openriskengine.org) is the software project
+    %ORE aka %ORE (http://opensourcerisk.org) is the software project
     implementing this framework. ORE comprises two libraries written in C++. It
     is based on QuantLib (http://quantlib.org), the free/open source library for quantitative finance.
 

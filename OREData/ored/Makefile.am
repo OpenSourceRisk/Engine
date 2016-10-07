@@ -1,22 +1,22 @@
 SUBDIRS = marketdata portfolio utilities configuration model
 
-AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir} -I${top_builddir}/../QuantExt 
+AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir} -I${top_builddir}/../QuantExt
 
 AM_LDFLAGS  =  \
 	-L${top_builddir}/../QuantExt/qle -lQuantExt
 
-lib_LTLIBRARIES = libOpenRiskEngineData.la
-libOpenRiskEngineData_la_LDFLAGS = -release $(PACKAGE_VERSION)
+lib_LTLIBRARIES = libOREData.la
+libOREData_la_LDFLAGS = -release $(PACKAGE_VERSION)
 
-libOpenRiskEngineData_la_LIBADD = \
-	configuration/libOpenRiskEngineDataConfiguration.la \
-	marketdata/libOpenRiskEngineDataMarketData.la \
-	model/libOpenRiskEngineDataModel.la \
-	portfolio/libOpenRiskEngineDataPortfolio.la \
-	utilities/libOpenRiskEngineDataUtilities.la
+libOREData_la_LIBADD = \
+	configuration/libOREDataConfiguration.la \
+	marketdata/libOREDataMarketData.la \
+	model/libOREDataModel.la \
+	portfolio/libOREDataPortfolio.la \
+	utilities/libOREDataUtilities.la
 
 # Do we need this?
-libOpenRiskEngineData_la_SOURCES = \
+libOREData_la_SOURCES = \
 	ored.hpp
 
 this_includedir=${includedir}/${subdir}

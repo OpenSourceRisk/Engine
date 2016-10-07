@@ -1,12 +1,12 @@
-AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir} -I${top_builddir}/../QuantExt -I${top_builddir}/../OpenRiskEngineData
+AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir} -I${top_builddir}/../QuantExt -I${top_builddir}/../OREData
 
-noinst_LTLIBRARIES = libOpenRiskEngineAnalyticsAggregation.la
+noinst_LTLIBRARIES = libOREAnalyticsAggregation.la
 
-libOpenRiskEngineAnalyticsAggregation_la_LDFLAGS = -release $(PACKAGE_VERSION)
+libOREAnalyticsAggregation_la_LDFLAGS = -release $(PACKAGE_VERSION)
 
-libOpenRiskEngineAnalyticsAggregation_la_LIBADD =
+libOREAnalyticsAggregation_la_LIBADD =
 
-libOpenRiskEngineAnalyticsAggregation_la_SOURCES = \
+libOREAnalyticsAggregation_la_SOURCES = \
 	collateralaccount.cpp \
 	collatexposurehelper.cpp \
 	postprocess.cpp

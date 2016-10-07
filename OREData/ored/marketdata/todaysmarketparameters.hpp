@@ -2,14 +2,13 @@
  Copyright (C) 2016 Quaternion Risk Management Ltd
  All rights reserved.
 
- This file is part of OpenRiskEngine, a free-software/open-source library
- for transparent pricing and risk analysis - http://openriskengine.org
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
 
- OpenRiskEngine is free software: you can redistribute it and/or modify it
+ ORE is free software: you can redistribute it and/or modify it
  under the terms of the Modified BSD License.  You should have received a
- copy of the license along with this program; if not, please email
- <users@openriskengine.org>. The license is also available online at
- <http://openriskengine.org/license.shtml>.
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
 
  This program is distributed on the basis that it will form a useful
  contribution to risk analytics and model standardisation, but WITHOUT
@@ -32,12 +31,12 @@
 using std::vector;
 using std::string;
 using std::pair;
-using openriskengine::data::XMLSerializable;
-using openriskengine::data::XMLDocument;
-using openriskengine::data::XMLNode;
-using openriskengine::data::XMLUtils;
+using ore::data::XMLSerializable;
+using ore::data::XMLDocument;
+using ore::data::XMLNode;
+using ore::data::XMLUtils;
 
-namespace openriskengine {
+namespace ore {
 namespace data {
 
 //! Market Configuration structure
@@ -95,10 +94,10 @@ public:
 
     //! EUR => Yield/EUR/EUR6M, USD => Yield/USD/USD3M etc.
     const map<string, string>& discountingCurves(const string& configuration) const;
-  
+
     //! EUR => Yield/EUR/BANK_EUR_LEND, Yield/EUR/BANK_EUR_BORROW etc.
     const map<string, string>& yieldCurves(const string& configuration) const;
-  
+
     //! EUR-EURIBOR-1M => Yield/EUR/EUR3M, EUR-EURIBOR-6M => Yield/EUR/EUR6M etc.
     const map<string, string>& indexForwardingCurves(const string& configuration) const;
 
@@ -193,7 +192,7 @@ inline const string& TodaysMarketParameters::yieldCurvesId(const string& configu
   QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
   return configurations_.at(configuration).yieldCurvesId;
 }
-  
+
 inline const string& TodaysMarketParameters::indexForwardingCurvesId(const string& configuration) const {
     QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
     return configurations_.at(configuration).indexForwardingCurvesId;
@@ -246,7 +245,7 @@ inline const map<string, string>& TodaysMarketParameters::yieldCurves(const stri
              << configuration << " not found");
   return it->second;
 }
-  
+
 inline const map<string, string>& TodaysMarketParameters::indexForwardingCurves(const string& configuration) const {
     QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
     auto it = indexForwardingCurves_.find(indexForwardingCurvesId(configuration));
@@ -325,7 +324,7 @@ inline void TodaysMarketParameters::addYieldCurves(const string& id, const map<s
   for (auto s : assignments)
     DLOG("TodaysMarketParameters, add yield curves: " << id << " " << s.first << " " << s.second);
 }
-  
+
 inline void TodaysMarketParameters::addIndexForwardingCurves(const string& id, const map<string, string>& assignments) {
     indexForwardingCurves_[id] = assignments;
     for (auto s : assignments)

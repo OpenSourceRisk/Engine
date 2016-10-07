@@ -37,22 +37,22 @@ docs-dist: docs-html-dist docs-man-dist
 docs-html: .time-stamp
 
 docs-html-dist: docs-html
-	ln -s html OpenRiskEngineData-docs-$(VERSION)-html
-	tar chf - OpenRiskEngineData-docs-$(VERSION)-html \
-	    | GZIP=--best gzip -c > OpenRiskEngineData-docs-$(VERSION)-html.tar.gz
-	rm OpenRiskEngineData-docs-$(VERSION)-html
+	ln -s html OREData-docs-$(VERSION)-html
+	tar chf - OREData-docs-$(VERSION)-html \
+	    | GZIP=--best gzip -c > OREData-docs-$(VERSION)-html.tar.gz
+	rm OREData-docs-$(VERSION)-html
 
 docs-man: .time-stamp-man
 .time-stamp-man: .time-stamp
-	$(SED) -e "s/index/OpenRiskEngineData/" man/man3/index.3 > man/man3/OpenRiskEngineData.3
+	$(SED) -e "s/index/OREData/" man/man3/index.3 > man/man3/OREData.3
 	rm man/man3/index.3
 	touch .time-stamp-man
 
 docs-man-dist: docs-man
-	ln -s man OpenRiskEngineData-docs-$(VERSION)-man
-	tar chf - OpenRiskEngineData-docs-$(VERSION)-man \
-	    | GZIP=--best gzip -c > OpenRiskEngineData-docs-$(VERSION)-man.tar.gz
-	rm OpenRiskEngineData-docs-$(VERSION)-man
+	ln -s man OREData-docs-$(VERSION)-man
+	tar chf - OREData-docs-$(VERSION)-man \
+	    | GZIP=--best gzip -c > OREData-docs-$(VERSION)-man.tar.gz
+	rm OREData-docs-$(VERSION)-man
 
 
 docs-clean:

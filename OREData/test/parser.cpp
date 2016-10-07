@@ -2,14 +2,13 @@
  Copyright (C) 2016 Quaternion Risk Management Ltd
  All rights reserved.
 
- This file is part of OpenRiskEngine, a free-software/open-source library
- for transparent pricing and risk analysis - http://openriskengine.org
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
 
- OpenRiskEngine is free software: you can redistribute it and/or modify it
+ ORE is free software: you can redistribute it and/or modify it
  under the terms of the Modified BSD License.  You should have received a
- copy of the license along with this program; if not, please email
- <users@openriskengine.org>. The license is also available online at
- <http://openriskengine.org/license.shtml>.
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
 
  This program is distributed on the basis that it will form a useful
  contribution to risk analytics and model standardisation, but WITHOUT
@@ -110,7 +109,7 @@ void ParseTest::testDayCounterParsing() {
         QuantLib::DayCounter d;
 
         try {
-            d = openriskengine::data::parseDayCounter(str);
+            d = ore::data::parseDayCounter(str);
         } catch (...) {
             BOOST_FAIL("Day Counter Parser failed to parse " << str);
         }
@@ -132,7 +131,7 @@ void ParseTest::testFrequencyParsing() {
         QuantLib::Frequency f;
 
         try {
-            f = openriskengine::data::parseFrequency(str);
+            f = ore::data::parseFrequency(str);
         } catch (...) {
             BOOST_FAIL("Frequency Parser failed to parse " << str);
         }
@@ -154,7 +153,7 @@ void ParseTest::testCompoundingParsing() {
         QuantLib::Compounding c;
 
         try {
-            c = openriskengine::data::parseCompounding(str);
+            c = ore::data::parseCompounding(str);
         } catch (...) {
             BOOST_FAIL("Compounding Parser failed to parse " << str);
         }
@@ -168,12 +167,12 @@ void ParseTest::testCompoundingParsing() {
 }
 
 namespace {
-void checkStrikeParser(const std::string& s, const openriskengine::data::Strike::Type expectedType,
+void checkStrikeParser(const std::string& s, const ore::data::Strike::Type expectedType,
                        const Real expectedValue) {
-    if (openriskengine::data::parseStrike(s).type != expectedType) {
+    if (ore::data::parseStrike(s).type != expectedType) {
         BOOST_FAIL("unexpected strike type parsed from input string " << s);
     }
-    if (!close_enough(openriskengine::data::parseStrike(s).value, expectedValue)) {
+    if (!close_enough(ore::data::parseStrike(s).value, expectedValue)) {
         BOOST_FAIL("unexpected strike value parsed from input string " << s);
     }
     return;
@@ -183,36 +182,36 @@ void checkStrikeParser(const std::string& s, const openriskengine::data::Strike:
 void ParseTest::testStrikeParsing() {
     BOOST_TEST_MESSAGE("Testing Strike parsing...");
 
-    checkStrikeParser("ATM", openriskengine::data::Strike::Type::ATM, 0.0);
-    checkStrikeParser("atm", openriskengine::data::Strike::Type::ATM, 0.0);
-    checkStrikeParser("ATMF", openriskengine::data::Strike::Type::ATMF, 0.0);
-    checkStrikeParser("atmf", openriskengine::data::Strike::Type::ATMF, 0.0);
-    checkStrikeParser("ATM+0", openriskengine::data::Strike::Type::ATM_Offset, 0.0);
-    checkStrikeParser("ATM-1", openriskengine::data::Strike::Type::ATM_Offset, -1.0);
-    checkStrikeParser("ATM+1", openriskengine::data::Strike::Type::ATM_Offset, 1.0);
-    checkStrikeParser("ATM-0.01", openriskengine::data::Strike::Type::ATM_Offset, -0.01);
-    checkStrikeParser("ATM+0.01", openriskengine::data::Strike::Type::ATM_Offset, 0.01);
-    checkStrikeParser("atm+0", openriskengine::data::Strike::Type::ATM_Offset, 0.0);
-    checkStrikeParser("atm-1", openriskengine::data::Strike::Type::ATM_Offset, -1.0);
-    checkStrikeParser("atm+1", openriskengine::data::Strike::Type::ATM_Offset, 1.0);
-    checkStrikeParser("atm-0.01", openriskengine::data::Strike::Type::ATM_Offset, -0.01);
-    checkStrikeParser("atm+0.01", openriskengine::data::Strike::Type::ATM_Offset, 0.01);
-    checkStrikeParser("1", openriskengine::data::Strike::Type::Absolute, 1.0);
-    checkStrikeParser("0.01", openriskengine::data::Strike::Type::Absolute, 0.01);
-    checkStrikeParser("+0.01", openriskengine::data::Strike::Type::Absolute, 0.01);
-    checkStrikeParser("-0.01", openriskengine::data::Strike::Type::Absolute, -0.01);
-    checkStrikeParser("10d", openriskengine::data::Strike::Type::Delta, 10.0);
-    checkStrikeParser("10.0d", openriskengine::data::Strike::Type::Delta, 10.0);
-    checkStrikeParser("+10d", openriskengine::data::Strike::Type::Delta, 10.0);
-    checkStrikeParser("+10.0d", openriskengine::data::Strike::Type::Delta, 10.0);
-    checkStrikeParser("-25d", openriskengine::data::Strike::Type::Delta, -25.0);
-    checkStrikeParser("-25.0d", openriskengine::data::Strike::Type::Delta, -25.0);
-    checkStrikeParser("10D", openriskengine::data::Strike::Type::Delta, 10.0);
-    checkStrikeParser("10.0D", openriskengine::data::Strike::Type::Delta, 10.0);
-    checkStrikeParser("+10D", openriskengine::data::Strike::Type::Delta, 10.0);
-    checkStrikeParser("+10.0D", openriskengine::data::Strike::Type::Delta, 10.0);
-    checkStrikeParser("-25D", openriskengine::data::Strike::Type::Delta, -25.0);
-    checkStrikeParser("-25.0D", openriskengine::data::Strike::Type::Delta, -25.0);
+    checkStrikeParser("ATM", ore::data::Strike::Type::ATM, 0.0);
+    checkStrikeParser("atm", ore::data::Strike::Type::ATM, 0.0);
+    checkStrikeParser("ATMF", ore::data::Strike::Type::ATMF, 0.0);
+    checkStrikeParser("atmf", ore::data::Strike::Type::ATMF, 0.0);
+    checkStrikeParser("ATM+0", ore::data::Strike::Type::ATM_Offset, 0.0);
+    checkStrikeParser("ATM-1", ore::data::Strike::Type::ATM_Offset, -1.0);
+    checkStrikeParser("ATM+1", ore::data::Strike::Type::ATM_Offset, 1.0);
+    checkStrikeParser("ATM-0.01", ore::data::Strike::Type::ATM_Offset, -0.01);
+    checkStrikeParser("ATM+0.01", ore::data::Strike::Type::ATM_Offset, 0.01);
+    checkStrikeParser("atm+0", ore::data::Strike::Type::ATM_Offset, 0.0);
+    checkStrikeParser("atm-1", ore::data::Strike::Type::ATM_Offset, -1.0);
+    checkStrikeParser("atm+1", ore::data::Strike::Type::ATM_Offset, 1.0);
+    checkStrikeParser("atm-0.01", ore::data::Strike::Type::ATM_Offset, -0.01);
+    checkStrikeParser("atm+0.01", ore::data::Strike::Type::ATM_Offset, 0.01);
+    checkStrikeParser("1", ore::data::Strike::Type::Absolute, 1.0);
+    checkStrikeParser("0.01", ore::data::Strike::Type::Absolute, 0.01);
+    checkStrikeParser("+0.01", ore::data::Strike::Type::Absolute, 0.01);
+    checkStrikeParser("-0.01", ore::data::Strike::Type::Absolute, -0.01);
+    checkStrikeParser("10d", ore::data::Strike::Type::Delta, 10.0);
+    checkStrikeParser("10.0d", ore::data::Strike::Type::Delta, 10.0);
+    checkStrikeParser("+10d", ore::data::Strike::Type::Delta, 10.0);
+    checkStrikeParser("+10.0d", ore::data::Strike::Type::Delta, 10.0);
+    checkStrikeParser("-25d", ore::data::Strike::Type::Delta, -25.0);
+    checkStrikeParser("-25.0d", ore::data::Strike::Type::Delta, -25.0);
+    checkStrikeParser("10D", ore::data::Strike::Type::Delta, 10.0);
+    checkStrikeParser("10.0D", ore::data::Strike::Type::Delta, 10.0);
+    checkStrikeParser("+10D", ore::data::Strike::Type::Delta, 10.0);
+    checkStrikeParser("+10.0D", ore::data::Strike::Type::Delta, 10.0);
+    checkStrikeParser("-25D", ore::data::Strike::Type::Delta, -25.0);
+    checkStrikeParser("-25.0D", ore::data::Strike::Type::Delta, -25.0);
 
     BOOST_CHECK(true);
 }

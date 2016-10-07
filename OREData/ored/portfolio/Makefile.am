@@ -3,13 +3,13 @@ SUBDIRS = builders
 
 AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir} -I${top_builddir}/../QuantExt
 
-noinst_LTLIBRARIES = libOpenRiskEngineDataPortfolio.la
+noinst_LTLIBRARIES = libOREDataPortfolio.la
 
-libOpenRiskEngineDataPortfolio_la_LDFLAGS = -release $(PACKAGE_VERSION)
+libOREDataPortfolio_la_LDFLAGS = -release $(PACKAGE_VERSION)
 
-libOpenRiskEngineDataPortfolio_la_LIBADD = builders/libOpenRiskEngineDataPortfolioBuilders.la
+libOREDataPortfolio_la_LIBADD = builders/libOREDataPortfolioBuilders.la
 
-libOpenRiskEngineDataPortfolio_la_SOURCES = \
+libOREDataPortfolio_la_SOURCES = \
 	enginefactory.cpp \
 	envelope.cpp \
 	fxforward.cpp \

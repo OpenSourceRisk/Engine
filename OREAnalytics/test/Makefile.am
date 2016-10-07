@@ -16,7 +16,7 @@ dist-hook:
 
 if BOOST_UNIT_TEST_FOUND
 
-AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir} -I${top_builddir}/../QuantExt ${BOOST_UNIT_TEST_DEFINE} -I${top_builddir}/../OpenRiskEngineData
+AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir} -I${top_builddir}/../QuantExt ${BOOST_UNIT_TEST_DEFINE} -I${top_builddir}/../OREData
 
 noinst_LTLIBRARIES = libUnitMain.la
 libUnitMain_la_SOURCES = main.cpp
@@ -45,8 +45,8 @@ orea_test_suite_LDFLAGS = \
     -lQuantLib \
     -l${BOOST_UNIT_TEST_LIB} \
     -L../../QuantExt/qle -lQuantExt \
-    -L../../OpenRiskEngineData/ored -lOpenRiskEngineData \
-    -L../orea -lOpenRiskEngineAnalytics \
+    -L../../OREData/ored -lOREData \
+    -L../orea -lOREAnalytics \
     -lboost_date_time -lboost_serialization -lboost_regex -lboost_filesystem -lboost_system
 
 TESTS = orea-test-suite$(EXEEXT)
@@ -58,6 +58,6 @@ else
 
 EXTRA_DIST = \
 	${OPENRISKENGINEANALYTICS_TESTS} \
-	OpenRiskEngineAnalyticsTestSuite.vcxproj
+	OREAnalyticsTestSuite.vcxproj
 
 endif

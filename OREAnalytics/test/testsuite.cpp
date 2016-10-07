@@ -2,14 +2,13 @@
  Copyright (C) 2016 Quaternion Risk Management Ltd
  All rights reserved.
 
- This file is part of OpenRiskEngine, a free-software/open-source library
- for transparent pricing and risk analysis - http://openriskengine.org
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
 
- OpenRiskEngine is free software: you can redistribute it and/or modify it
+ ORE is free software: you can redistribute it and/or modify it
  under the terms of the Modified BSD License.  You should have received a
- copy of the license along with this program; if not, please email
- <users@openriskengine.org>. The license is also available online at
- <http://openriskengine.org/license.shtml>.
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
 
  This program is distributed on the basis that it will form a useful
  contribution to risk analytics and model standardisation, but WITHOUT
@@ -72,7 +71,7 @@ void stopTimer() {
     seconds -= hours * 3600;
     int minutes = int(seconds / 60);
     seconds -= minutes * 60;
-    std::cout << endl << " OpenRiskEngineAnalytics tests completed in ";
+    std::cout << endl << " OREAnalytics tests completed in ";
     if (hours > 0)
         cout << hours << " h ";
     if (hours > 0 || minutes > 0)
@@ -83,7 +82,7 @@ void stopTimer() {
 
 test_suite* init_unit_test_suite(int, char* []) {
 
-    test_suite* test = BOOST_TEST_SUITE("OpenRiskEngineAnalyticsTestSuite");
+    test_suite* test = BOOST_TEST_SUITE("OREAnalyticsTestSuite");
 
     test->add(BOOST_TEST_CASE(startTimer));
 

@@ -2,14 +2,13 @@
  Copyright (C) 2016 Quaternion Risk Management Ltd
  All rights reserved.
 
- This file is part of OpenRiskEngine, a free-software/open-source library
- for transparent pricing and risk analysis - http://openriskengine.org
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
 
- OpenRiskEngine is free software: you can redistribute it and/or modify it
+ ORE is free software: you can redistribute it and/or modify it
  under the terms of the Modified BSD License.  You should have received a
- copy of the license along with this program; if not, please email
- <users@openriskengine.org>. The license is also available online at
- <http://openriskengine.org/license.shtml>.
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
 
  This program is distributed on the basis that it will form a useful
  contribution to risk analytics and model standardisation, but WITHOUT
@@ -35,7 +34,7 @@
 
 using namespace QuantLib;
 
-namespace openriskengine {
+namespace ore {
 namespace data {
 
 void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
@@ -149,7 +148,7 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
     // build exercise
     std::vector<QuantLib::Date> exDates;
     for (Size i = 0; i < option_.exerciseDates().size(); i++) {
-        Date exDate = openriskengine::data::parseDate(option_.exerciseDates()[i]);
+        Date exDate = ore::data::parseDate(option_.exerciseDates()[i]);
         exDates.push_back(exDate);
     }
     maturity_ = exDates.back();
@@ -268,7 +267,7 @@ boost::shared_ptr<VanillaSwap> Swaption::buildVanillaSwap(const boost::shared_pt
 
     swap->setPricingEngine(swapBuilder->engine(currency));
 
-    // Set other openriskengine::data::Trade details
+    // Set other ore::data::Trade details
     npvCurrency_ = ccy;
     legCurrencies_ = vector<string>(2, ccy);
     legs_.push_back(swap->fixedLeg());
@@ -335,7 +334,7 @@ Swaption::buildNonStandardSwap(const boost::shared_ptr<EngineFactory>& engineFac
 
     swap->setPricingEngine(swapBuilder->engine(currency));
 
-    // Set other openriskengine::data::Trade details
+    // Set other ore::data::Trade details
     npvCurrency_ = ccy;
     legCurrencies_ = vector<string>(2, ccy);
     legs_.push_back(swap->fixedLeg());

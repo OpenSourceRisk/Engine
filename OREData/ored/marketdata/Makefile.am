@@ -1,12 +1,12 @@
 AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir} -I${top_builddir}/../QuantExt
 
-noinst_LTLIBRARIES = libOpenRiskEngineDataMarketData.la
+noinst_LTLIBRARIES = libOREDataMarketData.la
 
-libOpenRiskEngineDataMarketData_la_LDFLAGS = -release $(PACKAGE_VERSION)
+libOREDataMarketData_la_LDFLAGS = -release $(PACKAGE_VERSION)
 
-libOpenRiskEngineDataMarketData_la_LIBADD =
+libOREDataMarketData_la_LIBADD =
 
-libOpenRiskEngineDataMarketData_la_SOURCES = \
+libOREDataMarketData_la_SOURCES = \
 	capfloorvolcurve.cpp \
 	csvloader.cpp \
 	curveloader.cpp \

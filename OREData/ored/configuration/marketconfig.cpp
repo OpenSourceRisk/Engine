@@ -2,14 +2,13 @@
  Copyright (C) 2016 Quaternion Risk Management Ltd
  All rights reserved.
 
- This file is part of OpenRiskEngine, a free-software/open-source library
- for transparent pricing and risk analysis - http://openriskengine.org
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
 
- OpenRiskEngine is free software: you can redistribute it and/or modify it
+ ORE is free software: you can redistribute it and/or modify it
  under the terms of the Modified BSD License.  You should have received a
- copy of the license along with this program; if not, please email
- <users@openriskengine.org>. The license is also available online at
- <http://openriskengine.org/license.shtml>.
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
 
  This program is distributed on the basis that it will form a useful
  contribution to risk analytics and model standardisation, but WITHOUT
@@ -23,7 +22,7 @@
 
 using namespace std;
 
-namespace openriskengine {
+namespace ore {
 namespace data {
 
 void MarketConfiguration::clear() {
@@ -60,7 +59,7 @@ void MarketConfiguration::fromXML(XMLNode* node) {
         string spec = XMLUtils::getChildValue(child, "Spec", true);
         discountCurveSpecs_.insert(make_pair(currency, spec));
     }
-  
+
     // Get yield curve specs and attributes
     XMLNode* yieldNodes = XMLUtils::getChildNode(node, "YieldCurves");
     for (XMLNode* child = XMLUtils::getChildNode(yieldNodes); child; child = XMLUtils::getNextSibling(child)) {
@@ -91,7 +90,7 @@ XMLNode* MarketConfiguration::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, discountNode, "Currency", it->first);
         XMLUtils::addChild(doc, discountNode, "Spec", it->second);
     }
-  
+
     // Add the YieldCurves element
     XMLNode* yieldNodes = XMLUtils::addChild(doc, node, "YieldCurves");
     map<string, string>::const_iterator it;
@@ -101,7 +100,7 @@ XMLNode* MarketConfiguration::toXML(XMLDocument& doc) {
       XMLUtils::addChild(doc, yieldNode, "Name", it->first);
       XMLUtils::addChild(doc, yieldNode, "Spec", it->second);
     }
-  
+
     return node;
 }
 }

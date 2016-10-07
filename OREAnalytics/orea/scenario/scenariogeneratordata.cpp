@@ -2,14 +2,13 @@
  Copyright (C) 2016 Quaternion Risk Management Ltd
  All rights reserved.
 
- This file is part of OpenRiskEngine, a free-software/open-source library
- for transparent pricing and risk analysis - http://openriskengine.org
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
 
- OpenRiskEngine is free software: you can redistribute it and/or modify it
+ ORE is free software: you can redistribute it and/or modify it
  under the terms of the Modified BSD License.  You should have received a
- copy of the license along with this program; if not, please email
- <users@openriskengine.org>. The license is also available online at
- <http://openriskengine.org/license.shtml>.
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
 
  This program is distributed on the basis that it will form a useful
  contribution to risk analytics and model standardisation, but WITHOUT
@@ -31,10 +30,10 @@
 
 #include <map>
 
-using namespace openriskengine::data;
+using namespace ore::data;
 using namespace std;
 
-namespace openriskengine {
+namespace ore {
 namespace analytics {
 
 void ScenarioGeneratorData::clear() {
@@ -111,10 +110,10 @@ void ScenarioGeneratorData::fromXML(XMLNode* root) {
     std::vector<std::string> tokens;
     boost::split(tokens, gridString, boost::is_any_of(","));
     if (tokens.size() <= 2) {
-        grid_ = boost::make_shared<openriskengine::analytics::DateGrid>(gridString, cal);
+        grid_ = boost::make_shared<ore::analytics::DateGrid>(gridString, cal);
     } else {
         std::vector<Period> gridTenors = XMLUtils::getChildrenValuesAsPeriods(node, "Grid", true);
-        grid_ = boost::make_shared<openriskengine::analytics::DateGrid>(gridTenors, cal);
+        grid_ = boost::make_shared<ore::analytics::DateGrid>(gridTenors, cal);
     }
     LOG("ScenarioGeneratorData grid points size = " << grid_->size());
 
