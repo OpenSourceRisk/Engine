@@ -422,6 +422,7 @@ boost::shared_ptr<data::TodaysMarketParameters> marketParameters() {
     // store this set of curves as "default" configuration
     MarketConfiguration config;
     config.discountingCurvesId = "ois";
+    config.yieldCurvesId = "ois"; 
     config.indexForwardingCurvesId = "ois";
     config.swapIndexCurvesId = "ois";
     config.defaultCurvesId = "ois";
