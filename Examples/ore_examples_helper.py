@@ -70,8 +70,8 @@ class OreExample(object):
                 color=color,
                 label=label,
                 marker=marker)
-
-    def plotSq(self, filename, colIdxTime, colIdxVal, color, label, offset=1, marker='', linestyle='-', title='', xlabel='', ylabel='', rescale= False):
+        
+    def plotSq(self, filename, colIdxTime, colIdxVal, color, label, offset=1, marker='', linestyle='-', title='', xlabel='', ylabel='', rescale=False, zoom=1):
         xTmp = self.get_output_data_from_column(filename, colIdxTime, offset)
         yTmp = self.get_output_data_from_column(filename, colIdxVal, offset)
         x = []
@@ -93,8 +93,8 @@ class OreExample(object):
                      color=color,
                      label=label,
                      marker=marker)
-        if rescale:
-            self.ax.set_ylim([0, yMax])
+        if rescale:            
+            self.ax.set_ylim([0, yMax/zoom])
         self.ax.set_title(title)
         self.ax.set_xlabel(xlabel)
         self.ax.set_ylabel(ylabel)
@@ -197,6 +197,7 @@ if __name__ == "__main__":
         "Example_10",
         "Example_11",
         "Example_12",
+        "Example_13"
     ]
 
     for example in examples:

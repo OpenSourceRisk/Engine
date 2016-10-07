@@ -31,7 +31,7 @@ oreex.setup_plot("dim_evolution_D_swap_eurusd")
 oreex.plot(os.path.join("case_D_eurusd_swap", "dim_evolution_1.txt"), 0, 3, 'y', "Zero Order Regression")
 oreex.plot(os.path.join("case_D_eurusd_swap", "dim_evolution_1.txt"), 0, 4, 'c', "First Order Regression")
 oreex.plot(os.path.join("case_D_eurusd_swap", "dim_evolution_2.txt"), 0, 4, 'm', "Second Order Regression")
-oreex.decorate_plot(title="Plus Example 3 (D) - DIM Evolution Swap EUR-USD", xlabel="Timestep", ylabel="DIM")
+oreex.decorate_plot(title="Example 13 (D) - DIM Evolution Swap EUR-USD", xlabel="Timestep", ylabel="DIM")
 oreex.save_plot_to_file()
 
 # plot the regression ? how ?

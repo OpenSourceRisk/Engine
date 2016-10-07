@@ -2,10 +2,9 @@
 \section{Fixing History}\label{sec:fixings}
 %========================================================
 
-Historical fixings data in the {\tt fixings.txt} file is given in
-three columns;  Index Name,  Fixing Date and  Index value. Columns are
-separated by semicolons ";" or blanks. Fixings are used in cases where
-the current coupon of a trade has been fixed in the past, or other path dependent features.
+Historical fixings data in the {\tt fixings.txt} file is given in three columns; Index Name, Fixing Date and Index
+value. Columns are separated by semicolons ";" or blanks. Fixings are used in cases where the current coupon of a trade
+has been fixed in the past, or other path dependent features.
 
 \begin{itemize}
 
@@ -15,15 +14,16 @@ Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
 
 \item Index Name: The name of the Index. 
 
-Allowable values are given  in Table \ref{tab:IR_indices}. %Tables \ref{tab:non-IR_indices} and.
+  Allowable values are given in Table \ref{tab:IR_indices}. %Tables \ref{tab:non-IR_indices} and.
 
 \item Index Value: The index value for the given fixing
   date. 
 
-Allowable values: Any real number (not expressed as a percentage or basis  points).
+  Allowable values: Any real number (not expressed as a percentage or basis points).
 \end{itemize}
 
-An excerpt of a fixings file is shown in Listing \ref{lst:fixings_file}. Note that alternative index name formats are used (Table \ref{tab:IR_indices}).
+An excerpt of a fixings file is shown in Listing \ref{lst:fixings_file}. Note that alternative index name formats are
+used (Table \ref{tab:IR_indices}).
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -56,12 +56,13 @@ An excerpt of a fixings file is shown in Listing \ref{lst:fixings_file}. Note th
 
 % \begin{table}[H]
 % \centering
-%   \begin{tabu} to 0.9\linewidth {| X[-1.5,l,m] | X[-5,l,m] |}
-%     \hline
-%     \bfseries{Index Type} & \bfseries{Allowable Values} \\
-%     \hline
-%     Inflation & \begin{tabular}[l]{@{}l@{}}  \\  \emph{UK RPI} \\ \emph{UK YYR\_RPI} \\ \emph{UK YY\_RPI} \\ \emph{EU HICP} \\ \emph{EU YY\_HICP} \\  \emph{EU YYR\_HICP} \\  \emph{EU HICPXT} \\  \emph{EU YY\_HICPXT} \\  \emph{EU YYR\_HICPXT} \\  \emph{FR HICPXT} \\  \emph{FR YY\_HICPXT} \\  \emph{FR YYR\_HICPXT} \\  \emph{US CPI} \\  \emph{US YY\_CPI} \\ \emph{US YYR\_CPI} \end{tabular}  \\ \hline
-%    Commodity & \begin{tabular}[l]{@{}l@{}}  \\  \emph{CMCI3M} \\ \emph{CMCI6M} \\ \emph{CMCI1Y} \\ \emph{CMCI2Y} \\ \emph{CMCI3Y} \end{tabular} \\ \hline
+% \begin{tabu} to 0.9\linewidth {| X[-1.5,l,m] | X[-5,l,m] |} \hline
+%   \bfseries{Index Type} & \bfseries{Allowable Values} \\
+%   \hline Inflation & \begin{tabular}[l]{@{}l@{}} \\ \emph{UK RPI} \\ \emph{UK YYR\_RPI} \\ \emph{UK YY\_RPI} \\
+%     \emph{EU HICP} \\ \emph{EU YY\_HICP} \\ \emph{EU YYR\_HICP} \\ \emph{EU HICPXT} \\ \emph{EU YY\_HICPXT} \\
+%     \emph{EU YYR\_HICPXT} \\ \emph{FR HICPXT} \\ \emph{FR YY\_HICPXT} \\ \emph{FR YYR\_HICPXT} \\ \emph{US CPI} \\
+%     \emph{US YY\_CPI} \\ \emph{US YYR\_CPI} \end{tabular} \\ \hline Commodity & \begin{tabular}[l]{@{}l@{}} \\
+%     \emph{CMCI3M} \\ \emph{CMCI6M} \\ \emph{CMCI1Y} \\ \emph{CMCI2Y} \\ \emph{CMCI3Y} \end{tabular} \\ \hline
 %   \end{tabu}
 %   \caption{Allowable values for non-IR indices.}
 %   \label{tab:non-IR_indices}
@@ -98,5 +99,3 @@ TENOR                    & An integer followed by \emph{D, W, M or Y}           
 %   \caption{Example IR indices.}
 %   \label{tab:example_IR_indices}
 % \end{table}
-
-

@@ -2,12 +2,17 @@
 \section{Trade Data}\label{sec:portfolio_data}
 %========================================================
 
-The trades that make up the portfolio are specified in an XML file where the portfolio data is specified in a hierarchy of nodes and sub-nodes.  The nodes containing individual trade data are referred to as elements or XML elements. These are generally the lowest level nodes.
+The trades that make up the portfolio are specified in an XML file where the portfolio data is specified in a hierarchy
+of nodes and sub-nodes.  The nodes containing individual trade data are referred to as elements or XML elements. These
+are generally the lowest level nodes.
 
 \vspace{1em}
 
-The top level portfolio node is delimited by an opening {\tt <Portfolio>} and a closing {\tt </Portfolio>} tag. Within the portfolio node, each trade is defined by a starting {\tt <Trade id="[Tradeid]">} and a closing {\tt </Trade>} tag.  Further, the trade type is set by the TradeType XML element. Each trade has an Envelope node that includes the same XML elements  for all trade types (Id, Type, Counterparty, Rating, NettingSetId) plus the 
-Additional fields node, and after that, a node containing trade specific data.
+The top level portfolio node is delimited by an opening {\tt <Portfolio>} and a closing {\tt </Portfolio>} tag. Within
+the portfolio node, each trade is defined by a starting {\tt <Trade id="[Tradeid]">} and a closing {\tt </Trade>} tag.
+Further, the trade type is set by the TradeType XML element. Each trade has an Envelope node that includes the same XML
+elements for all trade types (Id, Type, Counterparty, Rating, NettingSetId) plus the Additional fields node, and after
+that, a node containing trade specific data.
 
 \vspace{1em}
 An example of a {\tt portfolio.xml} file with one Swap trade including the full envelope node is shown in Listing \ref{lst:portfolio}.
@@ -39,15 +44,21 @@ An example of a {\tt portfolio.xml} file with one Swap trade including the full 
 \label{lst:portfolio}
 \end{listing}
 
-A description of all portfolio data, i.e. of each node and XML element in the portfolio file, with examples and allowable values follows below. There are two XML elements directly under the top level {\tt Portfolio} node:
+A description of all portfolio data, i.e. of each node and XML element in the portfolio file, with examples and
+allowable values follows below. There are two XML elements directly under the top level {\tt Portfolio} node:
 
 \begin{itemize}
-\item {\tt Trade id}: The first element of each trade is the {\tt Trade id} and it is used to identify trades within a portfolio. Trade ids should be unique within a portfolio.  The {\tt Trade id} element is entered twice in the instrument file, firstly with an attribute to the XML element {\tt <Trade>}, such as {\tt <Trade id="ExampleTrade">}  in the beginning closed by {\tt </Trade>}  at the end of the trade data, and secondly with a {\tt Id} element  in the envelope node.   Both Trade id entries should be identical.
+\item {\tt Trade id}: The first element of each trade is the {\tt Trade id} and it is used to identify trades within a
+  portfolio. Trade ids should be unique within a portfolio.  The {\tt Trade id} element is entered twice in the
+  instrument file, firstly with an attribute to the XML element {\tt <Trade>}, such as {\tt <Trade id="ExampleTrade">}
+  in the beginning closed by {\tt </Trade>} at the end of the trade data, and secondly with a {\tt Id} element in the
+  envelope node.  Both Trade id entries should be identical.
 
 Allowable values:  Any alphanumeric string. The underscore (\_) sign may be used as well. 
 
 
-\item {\tt TradeType}: The Trade type is set with the {\tt TradeType} element, as well as with the {\tt Type} element in the envelope. The two Trade type entries should be identical. ORE currently supports 5 trade types.  
+\item {\tt TradeType}: The Trade type is set with the {\tt TradeType} element, as well as with the {\tt Type} element in
+  the envelope. The two Trade type entries should be identical. ORE currently supports 5 trade types.
 
 Allowable values:  \emph{Swap, CapFloor, Swaption, FxForward, FxOption}
 
@@ -71,35 +82,42 @@ produce a CVA. \\
 The meanings and allowable values of the various elements in the \lstinline!Envelope!  node follow below.
 
 \begin{itemize}
-\item {\tt Id}: The {\tt Id} element in the envelope is used to identify trades within a portfolio. It should be set to identical values as the {\tt Trade id="   "} element.
+\item {\tt Id}: The {\tt Id} element in the envelope is used to identify trades within a portfolio. It should be set to
+  identical values as the {\tt Trade id=" "} element.
 
-Allowable values: Any alphanumeric string. The underscore (\_) sign may be used as well.
+  Allowable values: Any alphanumeric string. The underscore (\_) sign may be used as well.
 
-\item {\tt Type}: The Trade Type is in addition to being set in the {\tt ClassName} element, also set by the {\tt Type} element in the envelope. Both elements should have the same entry.
+\item {\tt Type}: The Trade Type is in addition to being set in the {\tt ClassName} element, also set by the {\tt Type}
+  element in the envelope. Both elements should have the same entry.
 
 Allowable values: \emph{Swap, CapFloor, Swaption, FxForward, FxOption }
 
-\item {\tt Counterparty}: Specifies the name of the counterparty of the trade.  It is used to show exposure analytics by counterparty. 
+\item {\tt Counterparty}: Specifies the name of the counterparty of the trade.  It is used to show exposure analytics by
+  counterparty.
 
 Allowable values: Any alphanumeric string. Underscores (\_) and blank spaces may be used as well. 
 
-\item {\tt Rating} [Optional]: The {\tt Rating} element specifies the default curve that will be used in the CVA calculations.  No CVA will be calculated if omitted or left blank.
+\item {\tt Rating} [Optional]: The {\tt Rating} element specifies the default curve that will be used in the CVA
+  calculations.  No CVA will be calculated if omitted or left blank.
 
 Allowable values: An alphanumeric string that matches default curve names in the market configuration file.  
 
-\item {\tt NettingSetId} [Optional]: The
-  {\tt NettingSetId} element specifies the identifier for a
-  netting set. If a \lstinline!NettingSetId! is specified, the trade
-  is eligible for close-out netting under the terms of an associated
-  ISDA agreement. The specified {\tt NettingSetId} must be
-  defined within the netting set definitions file (\ref{sec:nettingsetinput}). If left blank or omitted the trade will not belong to any netting set, and thus not be eligible for netting.
+\item {\tt NettingSetId} [Optional]: The {\tt NettingSetId} element specifies the identifier for a netting set. If a
+  \lstinline!NettingSetId! is specified, the trade is eligible for close-out netting under the terms of an associated
+  ISDA agreement. The specified {\tt NettingSetId} must be defined within the netting set definitions file
+  (\ref{sec:nettingsetinput}). If left blank or omitted the trade will not belong to any netting set, and thus not be
+  eligible for netting.
 
 Allowable values: Any alphanumeric string. Underscores (\_) and blank spaces may be used as well. 
 
-%-- specified netting
-%--Negative transaction values offset exposures from positive transaction values within specified netting groups. Total netting group %-- exposures and exposures from transactions not belonging to a netting group are then combined without offsetting.
+% -- specified netting --Negative transaction values offset exposures from positive transaction values within specified
+% netting groups. Total netting
+% group %-- exposures and exposures from transactions not belonging to a netting group are then combined without offsetting.
 
-\item \lstinline!AdditionalFields! [Optional]: The AdditionalFields node allows the insertion of additional trade information using custom XML elements.  For example, elements such as Sector, Desk or Folder can be used. The elements within the \lstinline!AdditionalFields! node are used for informational purposes only, and do not affect pricing or exposure calculations and analytics.
+\item \lstinline!AdditionalFields! [Optional]: The AdditionalFields node allows the insertion of additional trade
+  information using custom XML elements.  For example, elements such as Sector, Desk or Folder can be used. The elements
+  within the \lstinline!AdditionalFields! node are used for informational purposes only, and do not affect pricing or
+  exposure calculations and analytics.
 
 Allowable values: Any custom element.
 
@@ -109,7 +127,10 @@ Allowable values: Any custom element.
 \subsection{Trade Specific Data}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-After the envelope node, the {\tt instruments.xml} file includes trade-specific data for each trade type supported by ORE. Each trade type has its own trade data container which is defined by an XML node containing a trade-specific configuration of individual XML tags - called elements - and trade components. The  trade components are defined by XML sub-nodes that can be used within multiple trade data containers, i.e.  by multiple trade types.
+After the envelope node, the {\tt instruments.xml} file includes trade-specific data for each trade type supported by
+ORE. Each trade type has its own trade data container which is defined by an XML node containing a trade-specific
+configuration of individual XML tags - called elements - and trade components. The trade components are defined by XML
+sub-nodes that can be used within multiple trade data containers, i.e.  by multiple trade types.
 
 \vspace{1em}
 
@@ -117,7 +138,10 @@ Details of  trade-specific data for all trade types follow below.
 
 \subsubsection{Swap}
 
-The \lstinline!SwapData! node is the trade data container for the Swap trade type. A Swap must have at least one leg, and can have an unlimited number of legs. Each leg is represented by a \lstinline!LegData! trade component sub-node, described in section \ref{ss:leg_data} Leg Data and Notionals. An example structure of a two-legged \lstinline!SwapData! node  is shown in Listing \ref{lst:swap_data}.
+The \lstinline!SwapData! node is the trade data container for the Swap trade type. A Swap must have at least one leg,
+and can have an unlimited number of legs. Each leg is represented by a \lstinline!LegData! trade component sub-node,
+described in section \ref{ss:leg_data} Leg Data and Notionals. An example structure of a two-legged \lstinline!SwapData!
+node is shown in Listing \ref{lst:swap_data}.
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -137,7 +161,11 @@ The \lstinline!SwapData! node is the trade data container for the Swap trade typ
 
 \subsubsection{Cap/Floor}
 
-The \lstinline!CapFloorData! node is the trade data container for trade type CapFloors.  It's a single floating leg that's either capped, floored or both capped and floored. The \lstinline!CapFloorData! node contains a \lstinline!LPILegData!  sub-node where the LegType element must be set to  \emph{Floating}, plus elements for the Cap and Floor rates. An example structure with Cap rates is shown in  in Listing \ref{lst:capfloor_data}. A \lstinline!CapFloorData! node must have either \lstinline!CapRates! or \lstinline!FloorRates! elements, or both. 
+The \lstinline!CapFloorData! node is the trade data container for trade type CapFloors.  It's a single floating leg
+that's either capped, floored or both capped and floored. The \lstinline!CapFloorData! node contains a
+\lstinline!LPILegData!  sub-node where the LegType element must be set to \emph{Floating}, plus elements for the Cap and
+Floor rates. An example structure with Cap rates is shown in in Listing \ref{lst:capfloor_data}. A
+\lstinline!CapFloorData! node must have either \lstinline!CapRates! or \lstinline!FloorRates! elements, or both.
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -161,7 +189,8 @@ The meanings and allowable values of the elements in the \lstinline!CapFloorData
 
 \begin{itemize}
 
-\item LegData: This is a trade component sub-node outlined in section \ref{ss:leg_data} Leg Data and Notionals. Exactly one \lstinline!LegData! node is allowed and the LegType element must be set to \emph{floating}.  
+\item LegData: This is a trade component sub-node outlined in section \ref{ss:leg_data} Leg Data and Notionals. Exactly
+  one \lstinline!LegData! node is allowed and the LegType element must be set to \emph{floating}.
 
 \item CapRates: This node has child elements of type \lstinline!Rate!
   capping the floating leg. The first rate value corresponds to the
@@ -190,11 +219,19 @@ Allowable values for each \lstinline!Rate! element:  Any real number. The rate i
 
 \subsubsection{Swaption}
 
-The \lstinline!SwaptionData!  node is the trade data container for the Swaption trade type. The \lstinline!SwaptionData!  node has one and exactly one \lstinline!OptionData! trade component sub-node, and at least one \lstinline!LegData! trade component sub-node.  These trade components are outlined in section \ref{ss:option_data} Option Data and section \ref{ss:leg_data} Leg Data and Notionals.\\
+The \lstinline!SwaptionData!  node is the trade data container for the Swaption trade type. The \lstinline!SwaptionData!
+node has one and exactly one \lstinline!OptionData! trade component sub-node, and at least one \lstinline!LegData! trade
+component sub-node.  These trade components are outlined in section \ref{ss:option_data} Option Data and section
+\ref{ss:leg_data} Leg Data and Notionals.\\
 
-Supported swaption exercise styles are European and Bermudan. European swaptions can have unlimited number of legs, with each leg represented by a \lstinline!LegData! sub-node. Bermudan swaptions must have two legs, i.e. two \lstinline!LegData! sub-nodes. See Table \ref{tab:bermudan_requirements} for further details on requirements for Bermudan swaptions. Cross currency swaptions are not supported for either exercise style, i.e. the Currency element must have the same value for all \lstinline!LegData! sub-nodes of a swaption.\\
+Supported swaption exercise styles are European and Bermudan. European swaptions can have unlimited number of legs, with
+each leg represented by a \lstinline!LegData! sub-node. Bermudan swaptions must have two legs, i.e. two
+\lstinline!LegData! sub-nodes. See Table \ref{tab:bermudan_requirements} for further details on requirements for
+Bermudan swaptions. Cross currency swaptions are not supported for either exercise style, i.e. the Currency element must
+have the same value for all \lstinline!LegData! sub-nodes of a swaption.\\
 
-The structure of an example \lstinline!SwaptionData!  node of a two-legged European swaption is shown in Listing \ref{lst:swaption_data}.  
+The structure of an example \lstinline!SwaptionData!  node of a two-legged European swaption is shown in Listing
+\ref{lst:swaption_data}.
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -241,7 +278,9 @@ The structure of an example \lstinline!SwaptionData!  node of a two-legged Europ
 
 \subsubsection{FX Forward}
 
-The \lstinline!FXForwardData!  node is the trade data container for the FX Forward trade type.  The structure - including example values - of the \lstinline!FXForwardData!   node is shown in Listing \ref{lst:fxforward_data}. It contains no sub-nodes.
+The \lstinline!FXForwardData!  node is the trade data container for the FX Forward trade type.  The structure -
+including example values - of the \lstinline!FXForwardData!  node is shown in Listing \ref{lst:fxforward_data}. It
+contains no sub-nodes.
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -272,7 +311,12 @@ The meanings and allowable values of the various elements in the \lstinline!FXFo
 
 \subsubsection{FX Option}
 
-The \lstinline!FXOptionData!  node is the trade data container for the FX Option trade type.  Vanilla FX options as well as various barrier types as specified in the SubType element are supported. FX Options can be of exercise style \emph{European} or \emph{American}. The strike rate of an FX option is: SoldAmount / BoughtAmount.The \lstinline!FXOptionData!  node includes one and only one  \lstinline!OptionData! trade component sub-node plus elements specific to the FX Option. The structure of an example \lstinline!FXOptionData!  node of a single barrier FX Option is shown in Listing \ref{lst:fxoption_data}.  
+The \lstinline!FXOptionData!  node is the trade data container for the FX Option trade type.  Vanilla FX options as well
+as various barrier types as specified in the SubType element are supported. FX Options can be of exercise style
+\emph{European} or \emph{American}. The strike rate of an FX option is: SoldAmount / BoughtAmount.The
+\lstinline!FXOptionData!  node includes one and only one \lstinline!OptionData! trade component sub-node plus elements
+specific to the FX Option. The structure of an example \lstinline!FXOptionData!  node of a single barrier FX Option is
+shown in Listing \ref{lst:fxoption_data}.
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -299,7 +343,9 @@ The \lstinline!FXOptionData!  node is the trade data container for the FX Option
 The meanings and allowable values of the elements in the \lstinline!FXOptionData!  node follow below.
 
 \begin{itemize}
-\item OptionData: This is a trade component sub-node outlined in section \ref{ss:option_data} Option Data. Note that the FX option type allows for \emph{European} or \emph{American} option styles, but not \emph{Bermudan}.  FX options can only have one exercise date.
+\item OptionData: This is a trade component sub-node outlined in section \ref{ss:option_data} Option Data. Note that the
+  FX option type allows for \emph{European} or \emph{American} option styles, but not \emph{Bermudan}.  FX options can
+  only have one exercise date.
 \item SubType: Specifies the FX option type. The allowable values are 
 given in Table \ref{tab:fxoption_subtype}. 
 
@@ -334,8 +380,8 @@ Allowable values:  See Currency in Table \ref{tab:allow_stand_data}.
 
 Allowable values:  Any positive real number.
 
-\item BarrierType: Specifies the barrier type. It is required for \lstinline!SubType! \emph{SingleBarrier} but not used for the other subtypes. The allowable values are 
-given in Table \ref{tab:fxoption_barriertype}. 
+\item BarrierType: Specifies the barrier type. It is required for \lstinline!SubType! \emph{SingleBarrier} but not used
+  for the other subtypes. The allowable values are given in Table \ref{tab:fxoption_barriertype}.
 
 \begin{table}[H]
 \centering
@@ -378,11 +424,15 @@ Allowable values:  Any positive real number.
 \subsection{Trade Components}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-Trade components are XML sub-nodes used within the trade data containers to define sets of trade data that more than one trade type can have in common, such as a leg or a schedule. A trade data container can include multiple trade components such as a swap with multiple legs, and a trade component can itself contain further trade components in a nested way. 
+Trade components are XML sub-nodes used within the trade data containers to define sets of trade data that more than one
+trade type can have in common, such as a leg or a schedule. A trade data container can include multiple trade components
+such as a swap with multiple legs, and a trade component can itself contain further trade components in a nested way.
 
 \vspace{1em}
 
-An example of a \lstinline!SwapData! trade data container, including two \lstinline!LegData! trade components which in turn include further trade components such as \lstinline!FixedLegData!, \lstinline!ScheduleData! and \lstinline!FloatingLegData! is shown in Listing \ref{lst:trade_component}.
+An example of a \lstinline!SwapData! trade data container, including two \lstinline!LegData! trade components which in
+turn include further trade components such as \lstinline!FixedLegData!, \lstinline!ScheduleData! and
+\lstinline!FloatingLegData! is shown in Listing \ref{lst:trade_component}.
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -425,7 +475,10 @@ Descriptions of all trade components supported in ORE follow below:
 
 \subsubsection{Option Data}
 \label{ss:option_data} 
-This trade component node is used within the \lstinline!SwaptionData! and \lstinline!FXOptionData! trade data containers. It contains the \lstinline!ExerciseDates! sub-node which includes  \lstinline!ExerciseDate! child elements. An example structure of the \lstinline!OptionData! trade component node is shown in Listing \ref{lst:option_data}.
+This trade component node is used within the \lstinline!SwaptionData! and \lstinline!FXOptionData! trade data
+containers. It contains the \lstinline!ExerciseDates! sub-node which includes \lstinline!ExerciseDate! child
+elements. An example structure of the \lstinline!OptionData! trade component node is shown in Listing
+\ref{lst:option_data}.
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -461,7 +514,9 @@ Allowable values: \emph{Call} or \emph{Put}
 
 \item Style: The exercise style of the option. 
 
-Allowable values: \emph{European} or \emph{American} or \emph{Bermudan}. Note that trade type Swaption can have style  \emph{European} or  \emph{Bermudan}, but not \emph{American}. The FX Option trade type can have style \emph{European} or \emph{American}, but not \emph{Bermudan}.
+  Allowable values: \emph{European} or \emph{American} or \emph{Bermudan}. Note that trade type Swaption can have style
+  \emph{European} or \emph{Bermudan}, but not \emph{American}. The FX Option trade type can have style \emph{European}
+  or \emph{American}, but not \emph{Bermudan}.
 
 \item Settlement: Derlivery type. 
 
@@ -599,22 +654,24 @@ with the schedule's start, The subsequent notionals can have a start
 date specified from which date onwards the new notional is applied. This allows
 specifying notionals only for dates where the notional changes.
 
-\item ScheduleData: This is a trade component sub-node outlined in section \ref{ss:schedule_data} Schedule Data and Dates.  
-\item FixedLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{fixed} It is outlined in section \ref{ss:fixedleg_data} Fixed Leg Data and Rates. 
-\item FloatingLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{floating} It is outlined in section \ref{ss:floatingleg_data} Floating Leg Data and Spreads.
-%\item CPILegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{CPI}. It is outlined in section \ref{ss:cpileg_data} CPI Leg Data.
+\item ScheduleData: This is a trade component sub-node outlined in section \ref{ss:schedule_data} Schedule Data and
+Dates.
+\item FixedLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{fixed} It is
+outlined in section \ref{ss:fixedleg_data} Fixed Leg Data and Rates.
+\item FloatingLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{floating} It is
+outlined in section \ref{ss:floatingleg_data} Floating Leg Data and Spreads.
+% \item CPILegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{CPI}. It is
+%   outlined in section \ref{ss:cpileg_data} CPI Leg Data.
 \end{itemize}
 
 \subsubsection{Schedule Data and Dates}\label{ss:schedule_data}
 
-The \lstinline!ScheduleData! trade component node is used within the
-\lstinline!LegData! trade component. When
-\lstinline!IsRulesBased! is set to \emph{false}, the
-\lstinline!ScheduleData! node includes a \lstinline!Dates! sub-node
-where the schedule is determined directly by  \lstinline!Date! child
-elements. The schedule can also be generated from a set of rules based on the entries of the StartDate, EndDate, Tenor, Calendar,  Convention, TermConvention, and  Rule elements.
-Example structures of  \lstinline!ScheduleData! nodes based on rules
-respectively dates are shown in Listing \ref{lst:schedule_data_true} and Listing \ref{lst:schedule_data_false}, respectively.
+The \lstinline!ScheduleData! trade component node is used within the \lstinline!LegData! trade component. When
+\lstinline!IsRulesBased! is set to \emph{false}, the \lstinline!ScheduleData! node includes a \lstinline!Dates! sub-node
+where the schedule is determined directly by \lstinline!Date! child elements. The schedule can also be generated from a
+set of rules based on the entries of the StartDate, EndDate, Tenor, Calendar, Convention, TermConvention, and Rule
+elements.  Example structures of \lstinline!ScheduleData! nodes based on rules respectively dates are shown in Listing
+\ref{lst:schedule_data_true} and Listing \ref{lst:schedule_data_false}, respectively.
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -661,7 +718,10 @@ then be an ordered concatenation of individual schedules.
 The meanings and allowable values of the elements in the \lstinline!ScheduleData! node follow below.
 
 \begin{itemize}
-%\item IsRulesBased:  Determines whether the schedule is set by specifying dates directly, or by specifying rules that generate the schedule. If \emph{true}, the following entries are required: StartDate, EndDate, Tenor, Calendar,  Convention, TermConvention, and  Rule.  If false the Dates sub-node is required. \\ Allowable values:  \emph{true, false}
+  % \item IsRulesBased: Determines whether the schedule is set by specifying dates directly, or by specifying rules that
+  %   generate the schedule. If \emph{true}, the following entries are required: StartDate, EndDate, Tenor, Calendar,
+  %   Convention, TermConvention, and Rule.  If false the Dates sub-node is required. \\ Allowable values: \emph{true,
+  %   false}
 \item StartDate:  The schedule start date.  
 
 Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
@@ -701,7 +761,8 @@ Allowable values and descriptions: See Table \ref{tab:rule} Rule.
   directly by the \lstinline!Date! child elements.  At least two
   \lstinline!Date! child elements must be provided.     
 
-Allowable values:  Each \lstinline!Date!  child element can take the allowable values listed in \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+  Allowable values: Each \lstinline!Date!  child element can take the allowable values listed in \lstinline!Date! in
+  Table \ref{tab:allow_stand_data}.
 
 \end{itemize}
 
@@ -731,7 +792,9 @@ CDS   &   Credit derivatives standard rule since 'Big Bang' changes in 2009.\\ \
 \subsubsection{Fixed Leg Data and Rates}
 \label{ss:fixedleg_data}
 
-The \lstinline!FixedLegData! trade component node is used within the \lstinline!LegData! trade component when the \lstinline!LegType! element is set to \emph{Fixed}. The \lstinline!FixedLegData! node only includes the \lstinline!Rates! sub-node which contains the rates of the fixed leg as child elements of type \lstinline!Rate!.
+The \lstinline!FixedLegData! trade component node is used within the \lstinline!LegData! trade component when the
+\lstinline!LegType! element is set to \emph{Fixed}. The \lstinline!FixedLegData! node only includes the
+\lstinline!Rates! sub-node which contains the rates of the fixed leg as child elements of type \lstinline!Rate!.
 
 An example of a \lstinline!FixedLegData! node for a fixed leg with constant notional is shown in Listing \ref{lst:fixedleg_data}.
 \begin{listing}[H]
@@ -787,8 +850,11 @@ dates as shown in Listing \ref{lst:fixedleg_data_dates}.
 \subsubsection{Floating Leg Data and Spreads}
 \label{ss:floatingleg_data}
 
-The \lstinline!FloatingLegData! trade component node is used within the \lstinline!LegData! trade component when the \lstinline!LegType! element is set to \emph{Floating}. It is also used directly within the \lstinline!CapFloor! trade data container. 
-The \lstinline!FloatingLegData! node includes elements specific to a floating leg as well as the \lstinline!Spreads! sub-node which contains the spreads of the floating leg as child elements of type \lstinline!Spread!.
+The \lstinline!FloatingLegData! trade component node is used within the \lstinline!LegData! trade component when the
+\lstinline!LegType! element is set to \emph{Floating}. It is also used directly within the \lstinline!CapFloor! trade
+data container.  The \lstinline!FloatingLegData! node includes elements specific to a floating leg as well as the
+\lstinline!Spreads! sub-node which contains the spreads of the floating leg as child elements of type
+\lstinline!Spread!.
 
 An example of a \lstinline!FloatingLegData! node is shown in Listing \ref{lst:floatingleg_data}.
 \begin{listing}[H]
@@ -813,7 +879,9 @@ The meanings and allowable values of the elements in the \lstinline!FloatingLegD
 \item Index:  The combination of currency, index and term that
   identifies the relevant fixings and yield curve of the floating leg.  
 
-Allowable values:  An alphanumeric string on the form CCY-INDEX-TERM,  matching available Ibor indices in the {\tt simulation.xml} file. CCY, INDEX and TERM must be separated by dashes (-). TERM must be an integer followed by D, W, M or Y. See Table \ref{tab:indices}.
+  Allowable values: An alphanumeric string on the form CCY-INDEX-TERM, matching available Ibor indices in the {\tt
+    simulation.xml} file. CCY, INDEX and TERM must be separated by dashes (-). TERM must be an integer followed by D, W,
+  M or Y. See Table \ref{tab:indices}.
 
 \item IsInArrears:  \emph{true} indicates that  fixing is in arrears,
   i.e. the fixing gap is calculated in relation to the current period
@@ -840,7 +908,8 @@ Allowable values:  Positive integers.
   The number of entered spread values cannot exceed the number of
   coupons. 
 
-Allowable values: Each child element can take any  real number. The spread is expressed in decimal form, e.g. 0.005 is a spread of 0.5\% or 50 bp.
+  Allowable values: Each child element can take any real number. The spread is expressed in decimal form, e.g. 0.005 is
+  a spread of 0.5\% or 50 bp.
 
 For the {\tt <Spreads>} section, the same applies as for notionals and
 rates - a list of changing spreads can be specified without or with individual starte dates as shown
