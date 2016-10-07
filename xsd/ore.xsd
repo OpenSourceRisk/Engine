@@ -2,7 +2,7 @@
 
 <xs:include schemaLocation="ore_types.xsd"/>
 
-  <xs:element name="OpenRiskEngine">
+  <xs:element name="ORE">
     <xs:complexType>
       <xs:sequence>
         <xs:element type="parameterListType" name="Setup"/>

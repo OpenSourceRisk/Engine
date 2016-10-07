@@ -1,6 +1,6 @@
 # Process this file with autoconf to produce a configure script.
 AC_INIT([QuantExt], [1.8],
-        [dev@openriskengine.org],
+        [openriskengine.org/forum],
         [QuantExt])
 AC_PREREQ(2.62)
 AC_CONFIG_SRCDIR([qle/quantext.hpp])

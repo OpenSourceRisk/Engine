@@ -1,6 +1,6 @@
 # Process this file with autoconf to produce a configure script.
 AC_INIT([OREAnalytics], [1.8],
-        [dev@opensourcerisk.org],
+        [opensourcerisk.org/forum],
         [OREAnalytics])
 AC_PREREQ(2.62)
 AC_CONFIG_SRCDIR([orea/orea.hpp])

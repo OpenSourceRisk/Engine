@@ -1,6 +1,6 @@
 SUBDIRS = m4
 
-ACLOCAL_AMFLAGS = -I m4 
+ACLOCAL_AMFLAGS = -I m4
 
 bin_PROGRAMS = ore
 
@@ -17,7 +17,7 @@ AM_LDFLAGS = \
 	-L${top_builddir}/../QuantLib/ql -lQuantLib \
 	-lboost_serialization -lboost_date_time -lboost_regex -lboost_filesystem -lboost_system
 
-LDADD = 
+LDADD =
 
 EXTRA_DIST = \
 	autogen.sh \
