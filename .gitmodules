@@ -1,0 +1,5 @@
+[submodule "QuantLib"]
+	path = QuantLib
+	url = https://github.com/lballabio/QuantLib.git
+	branch = v1.8.x
+	ignore = dirty
