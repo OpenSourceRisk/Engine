@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<OpenRiskEngine>
+<ORE>
   <Setup>
     <Parameter name="asofDate">2016-02-05</Parameter>
     <Parameter name="inputPath">Input</Parameter>
@@ -76,4 +76,4 @@
       <Parameter name="method"/>
     </Analytic>
   </Analytics>
-</OpenRiskEngine>
+</ORE>

@@ -1,4 +1,4 @@
-<OpenRiskEngine>
+<ORE>
 
   <Setup>    
     <Parameter name="asofDate">2016-02-05</Parameter>
@@ -86,4 +86,4 @@
 
   </Analytics>
   
-</OpenRiskEngine>
+</ORE>

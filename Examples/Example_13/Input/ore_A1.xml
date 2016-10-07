@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<OpenRiskEngine>
+<ORE>
   <Setup>
     <Parameter name="asofDate">2016-02-05</Parameter>
     <Parameter name="inputPath">Input</Parameter>
@@ -38,7 +38,7 @@
       <Parameter name="outputFileName">curves.csv</Parameter>
     </Analytic>
     <Analytic type="simulation">
-      <Parameter name="active">Y</Parameter>
+      <Parameter name="active">N</Parameter>
       <Parameter name="simulationConfigFile">simulation_A.xml</Parameter>
       <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
@@ -93,4 +93,4 @@
       <Parameter name="method"/>
     </Analytic>
   </Analytics>
-</OpenRiskEngine>
+</ORE>

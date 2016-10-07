@@ -84,7 +84,7 @@ void writeXVA(const Parameters& params, boost::shared_ptr<Portfolio> portfolio,
 int main(int argc, char** argv) {
 
     if (argc == 2 && (string(argv[1]) == "-v" || string(argv[1]) == "--version")) {
-        cout << "OpenRiskEngine version " << OPEN_RISK_ENGINE_VERSION << endl;
+        cout << "ORE version " << OPEN_RISK_ENGINE_VERSION << endl;
         exit(0);
     }
 
@@ -816,14 +816,14 @@ void Parameters::fromFile(const string& fileName) {
     LOG("load ORE configuration from " << fileName);
     clear();
     XMLDocument doc(fileName);
-    fromXML(doc.getFirstNode("OpenRiskEngine"));
+    fromXML(doc.getFirstNode("ORE"));
     LOG("load ORE configuration from " << fileName << " done.");
 }
 
 void Parameters::clear() { data_.clear(); }
 
 void Parameters::fromXML(XMLNode* node) {
-    XMLUtils::checkNode(node, "OpenRiskEngine");
+    XMLUtils::checkNode(node, "ORE");
 
     XMLNode* setupNode = XMLUtils::getChildNode(node, "Setup");
     QL_REQUIRE(setupNode, "node Setup not found in parameter file");
@@ -863,7 +863,7 @@ void Parameters::fromXML(XMLNode* node) {
 }
 
 XMLNode* Parameters::toXML(XMLDocument& doc) {
-    XMLNode* node = doc.allocNode("OpenRiskEngine");
+    XMLNode* node = doc.allocNode("ORE");
     QL_FAIL("Parameters::toXML not implemented yet");
     return node;
 }
