@@ -83,29 +83,25 @@
 %\title{Open Source Risk Engine \\ User Guide  }
 \title{ORE User Guide}
 \author{Quaternion Risk Management}
-\date{\today}
+\date{7 October 2016}
 \maketitle
 
 \newpage
 
 %-------------------------------------------------------------------------------
-%\section*{Document History}
-%
-%\begin{center}
-%\begin{supertabular}{|l|l|l|p{7cm}|}
-%\hline
-%Version & Date & Author & Comment \\
-%\hline
-%0.1 & 12 May & Roland Lichters & initial version\\
-%0.5 & 7 July & Roland Lichters & first revision \\
-%0.9 & 11 July & Roland Lichters & beta release \\
-%\hline
-%\end{supertabular}
-%\end{center}
-%
-%\vspace{3cm}
-%
-%\newpage
+\section*{Document History}
+
+\begin{center}
+\begin{supertabular}{|l|l|l|p{7cm}|}
+\hline
+Date & Author & Comment \\
+\hline
+7 October 2016 & Quaternion Risk Management & initial release\\
+\hline
+\end{supertabular}
+\end{center}
+
+\newpage
 
 \tableofcontents
 \newpage
@@ -381,12 +377,14 @@ Alternatively, compile all Boost libraries directly from the source code:
 \item Run bootstrap.bat
 \item Build the libraries from the source code
 \begin{itemize}
-\item 32-bit: {\footnotesize\tt .{\bs}b2 --stagedir=.{\bs}lib{\bs}Win32{\bs}lib --build-type=complete toolset=msvc-14.0
-    --address-model=32 --with-test --with-system --with-filesystem --with-serialization --with-regex --with-date\_time
-    stage}
-\item 64-bit: {\footnotesize\tt .{\bs}b2 --stagedir=.{\bs}lib{\bs}x64{\bs}lib --build-type=complete toolset=msvc-14.0
-    --address-model=64 --with-test --with-system --with-filesystem --with-serialization --with-regex --with-date\_time
-    stage}
+\item 32-bit: \\
+	{\footnotesize\tt .{\bs}b2 --stagedir=.{\bs}lib{\bs}Win32{\bs}lib --build-type=complete toolset=msvc-14.0 \bs \\ 
+	--address-model=32 --with-test --with-system --with-filesystem  \bs \\
+    --with-serialization --with-regex --with-date\_time stage}
+\item 64-bit: \\
+	{\footnotesize\tt .{\bs}b2 --stagedir=.{\bs}lib{\bs}x64{\bs}lib --build-type=complete toolset=msvc-14.0 \bs \\ 
+    --address-model=64 --with-test --with-system --with-filesystem \bs \\ 
+    --with-serialization --with-regex --with-date\_time stage}
 \end{itemize}
 \end{enumerate}
 
@@ -410,7 +408,7 @@ Alternatively, compile all Boost libraries directly from the source code:
 
 \item To configure the boost paths in Visual Studio open any of the Visual Studio solution files in item 3 below and
   select View $\rightarrow$ Other Windows $\rightarrow$ Property Manager. It does not matter which solution you open, if
-  it is for example the QuantExt solution you should see two Projects 'QuantExt' and 'quantexttestsuite' in the property
+  it is for example the Quant\-Ext solution you should see two Projects 'QuantExt' and 'quantexttestsuite' in the property
   manager. Expand any of them (e.g. QuantExt) and then one of the Win32 or x64 configurations. The settings will be
   specific for the Win32 or x64 configuration but otherwise it does not matter which of the projects or configurations
   you expand, they all contain the same configuration file. You should now see 'Microsoft.Cpp.Win32.user' respectively
@@ -418,9 +416,9 @@ Alternatively, compile all Boost libraries directly from the source code:
   property pages. Select VC++ Directories and then add your boost directory to the 'Include Directories' entry. Likewise
   add your boost library directory to the 'Library Directories' entry. If for example your boost installation is in {\tt
     C:{\bs}boost\_1\_57\_0} and the libraries reside in the {\tt stage{\bs}lib} subfolder, add {\tt
-    C:{\bs}boost\_1\_57\_0} to the 'Include Directories' entry and {\tt C:{\bs}boost\_1\_57\_0{\bs}stage{\bs}lib} to the
+    C:{\bs}boost\_1\_57\_0} to the 'Include Directories' entry and {\tt C:{\bs}boost\_1\_57\_0{\bs}stage{\bs} lib} to the
   'Library Directories' entry. Press OK. If you want to configure the boost paths for Win32 resp. x64 as well, repeat
-  the previous step for 'Microsoft.Cpp.Win32.user' respectively 'Microsoft.Cpp.x64.user'. To complete the configuration
+  the previous step for 'Microsoft.Cpp. Win32.user' respectively 'Microsoft.Cpp.x64.user'. To complete the configuration
   just close the property manager window.
 
   % \item Open any solution file and update path to Boost as described in sections 5 \& 6 in
