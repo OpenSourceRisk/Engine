@@ -30,7 +30,7 @@
 #include <ored/utilities/xmlutils.hpp>
 
 using namespace std;
-using namespace openriskengine::data;
+using namespace ore::data;
 
 class Parameters : public XMLSerializable {
 public:

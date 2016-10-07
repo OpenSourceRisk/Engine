@@ -61,8 +61,8 @@
 #endif
 
 using namespace std;
-using namespace openriskengine::data;
-using namespace openriskengine::analytics;
+using namespace ore::data;
+using namespace ore::analytics;
 
 void writeNpv(const Parameters& params, boost::shared_ptr<Market> market, const std::string& configuration,
               boost::shared_ptr<Portfolio> portfolio);
@@ -84,7 +84,7 @@ void writeXVA(const Parameters& params, boost::shared_ptr<Portfolio> portfolio,
 int main(int argc, char** argv) {
 
     if (argc == 2 && (string(argv[1]) == "-v" || string(argv[1]) == "--version")) {
-        cout << "ORE version " << OPEN_RISK_ENGINE_VERSION << endl;
+      //cout << "ORE version " << OPEN_RISK_ENGINE_VERSION << endl;
         exit(0);
     }
 
@@ -273,7 +273,7 @@ int main(int argc, char** argv) {
                 sg = boost::make_shared<ScenarioWriter>(sg, filename);
             }
 
-            boost::shared_ptr<openriskengine::analytics::DateGrid> grid = sgd->grid();
+            boost::shared_ptr<ore::analytics::DateGrid> grid = sgd->grid();
 
             LOG("Build Simulation Market");
             boost::shared_ptr<ScenarioSimMarket> simMarket = boost::make_shared<ScenarioSimMarket>(
