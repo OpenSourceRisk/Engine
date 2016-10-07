@@ -165,7 +165,7 @@ Real SwaptionVolatilityConverter::convert(const Date& expiry, const Period& swap
         swaptionEngine = boost::make_shared<BachelierSwaptionEngine>(discount_, inVol, volDayCounter);
     }
     swaption->setPricingEngine(swaptionEngine);
-    
+
     Volatility impliedVol = 0.0;
     try {
         Real npv = swaption->NPV();
@@ -191,7 +191,8 @@ Real SwaptionVolatilityConverter::convert(const Date& expiry, const Period& swap
     } catch (std::exception& e) {
         // couldn't find implied volatility
         QL_FAIL("SwaptionVolatilityConverter: volatility conversion failed while trying to convert volatility"
-                " for expiry " << expiry << " and swap tenor " << swapTenor << ". Error: " << e.what());
+                " for expiry "
+                << expiry << " and swap tenor " << swapTenor << ". Error: " << e.what());
     }
 
     return impliedVol;

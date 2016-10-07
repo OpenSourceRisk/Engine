@@ -3,4 +3,3 @@
 
 #include <qle/math/flatextrapolation.hpp>
 #include <qle/math/nadarayawatson.hpp>
-
