@@ -1,0 +1,161 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="aggregation">
+      <UniqueIdentifier>{2b3ebb91-04dc-4730-b9f4-d58e8ad33dc2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="cube">
+      <UniqueIdentifier>{f480d315-bc77-420e-93c2-97fcf3d81e68}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine">
+      <UniqueIdentifier>{027178c8-a4c4-403e-8b5d-c9b4a7ceddcf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="scenario">
+      <UniqueIdentifier>{c12e5068-5327-45b3-9240-e649620fc89c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="simulation">
+      <UniqueIdentifier>{6dfd1b9a-8b1b-4cd1-92a5-96a4fd83bf6b}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="orea\aggregation\all.hpp">
+      <Filter>aggregation</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\aggregation\collateralaccount.hpp">
+      <Filter>aggregation</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\aggregation\collatexposurehelper.hpp">
+      <Filter>aggregation</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\aggregation\postprocess.hpp">
+      <Filter>aggregation</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\cube\all.hpp">
+      <Filter>cube</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\cube\cubewriter.hpp">
+      <Filter>cube</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\cube\inmemorycube.hpp">
+      <Filter>cube</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\cube\npvcube.hpp">
+      <Filter>cube</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\engine\all.hpp">
+      <Filter>engine</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\engine\valuationengine.hpp">
+      <Filter>engine</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\simulation\all.hpp">
+      <Filter>simulation</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\simulation\dategrid.hpp">
+      <Filter>simulation</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\simulation\simmarket.hpp">
+      <Filter>simulation</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\scenario\additionalscenariodata.hpp">
+      <Filter>scenario</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\scenario\all.hpp">
+      <Filter>scenario</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\scenario\crossassetmodelscenariogenerator.hpp">
+      <Filter>scenario</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\scenario\lgmscenariogenerator.hpp">
+      <Filter>scenario</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\scenario\scenario.hpp">
+      <Filter>scenario</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\scenario\scenariofactory.hpp">
+      <Filter>scenario</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\scenario\scenariogenerator.hpp">
+      <Filter>scenario</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\scenario\scenariogeneratorbuilder.hpp">
+      <Filter>scenario</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\scenario\scenariogeneratordata.hpp">
+      <Filter>scenario</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\scenario\scenariosimmarket.hpp">
+      <Filter>scenario</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\scenario\scenariosimmarketparameters.hpp">
+      <Filter>scenario</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\scenario\simplescenario.hpp">
+      <Filter>scenario</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\scenario\simplescenariofactory.hpp">
+      <Filter>scenario</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\scenario\scenariowriter.hpp">
+      <Filter>scenario</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\auto_link.hpp" />
+    <ClInclude Include="orea\orea.hpp" />
+    <ClInclude Include="orea\engine\observationmode.hpp" />
+    <ClInclude Include="orea\engine\valuationcalculator.hpp" />
+    <ClInclude Include="orea\scenario\aggregationscenariodata.hpp" >
+      <Filter>scenario</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="orea\aggregation\collateralaccount.cpp">
+      <Filter>aggregation</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\aggregation\collatexposurehelper.cpp">
+      <Filter>aggregation</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\aggregation\postprocess.cpp">
+      <Filter>aggregation</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\cube\cubewriter.cpp">
+      <Filter>cube</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\engine\valuationengine.cpp">
+      <Filter>engine</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\simulation\dategrid.cpp">
+      <Filter>simulation</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\simulation\simmarket.cpp">
+      <Filter>simulation</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\scenario\crossassetmodelscenariogenerator.cpp">
+      <Filter>scenario</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\scenario\lgmscenariogenerator.cpp">
+      <Filter>scenario</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\scenario\scenario.cpp">
+      <Filter>scenario</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\scenario\scenariogeneratorbuilder.cpp">
+      <Filter>scenario</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\scenario\scenariogeneratordata.cpp">
+      <Filter>scenario</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\scenario\scenariosimmarket.cpp">
+      <Filter>scenario</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\scenario\scenariosimmarketparameters.cpp">
+      <Filter>scenario</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\scenario\simplescenario.cpp">
+      <Filter>scenario</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\engine\valuationcalculator.cpp" />
+    <ClCompile Include="orea\scenario\scenariowriter.cpp">
+      <Filter>scenario</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

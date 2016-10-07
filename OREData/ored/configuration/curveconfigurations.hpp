@@ -1,0 +1,89 @@
+/*
+ Copyright (C) 2016 Quaternion Risk Management Ltd
+ All rights reserved.
+
+ This file is part of OpenRiskEngine, a free-software/open-source library
+ for transparent pricing and risk analysis - http://openriskengine.org
+
+ OpenRiskEngine is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program; if not, please email
+ <users@openriskengine.org>. The license is also available online at
+ <http://openriskengine.org/license.shtml>.
+
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
+*/
+
+/*! \file ored/configuration/curveconfigurations.hpp
+    \brief Curve configuration repoistory
+    \ingroup configuration
+*/
+
+#pragma once
+
+#include <ored/utilities/xmlutils.hpp>
+#include <ored/configuration/defaultcurveconfig.hpp>
+#include <ored/configuration/yieldcurveconfig.hpp>
+#include <ored/configuration/fxvolcurveconfig.hpp>
+#include <ored/configuration/swaptionvolcurveconfig.hpp>
+#include <ored/configuration/capfloorvolcurveconfig.hpp>
+
+using openriskengine::data::XMLSerializable;
+using openriskengine::data::XMLNode;
+using openriskengine::data::XMLDocument;
+
+namespace openriskengine {
+namespace data {
+
+//! Container class for all Curve Configurations
+/*!
+  \ingroup configuration
+*/
+class CurveConfigurations : public XMLSerializable {
+public:
+    //! Default constructor
+    CurveConfigurations(){};
+
+    //! \name Setters and Getters
+    //@{
+    boost::shared_ptr<YieldCurveConfig>& yieldCurveConfig(const string& curveID) { return yieldCurveConfigs_[curveID]; }
+    const boost::shared_ptr<YieldCurveConfig>& yieldCurveConfig(const string& curveID) const;
+
+    boost::shared_ptr<FXVolatilityCurveConfig>& fxVolCurveConfig(const string& curveID) {
+        return fxVolCurveConfigs_[curveID];
+    }
+    const boost::shared_ptr<FXVolatilityCurveConfig>& fxVolCurveConfig(const string& curveID) const;
+
+    boost::shared_ptr<SwaptionVolatilityCurveConfig>& swaptionVolCurveConfig(const string& curveID) {
+        return swaptionVolCurveConfigs_[curveID];
+    }
+    const boost::shared_ptr<SwaptionVolatilityCurveConfig>& swaptionVolCurveConfig(const string& curveID) const;
+
+    boost::shared_ptr<CapFloorVolatilityCurveConfig>& capFloorVolCurveConfig(const string& curveID) {
+        return capFloorVolCurveConfigs_[curveID];
+    }
+    const boost::shared_ptr<CapFloorVolatilityCurveConfig>& capFloorVolCurveConfig(const string& curveID) const;
+
+    boost::shared_ptr<DefaultCurveConfig>& defaultCurveConfig(const string& curveID) {
+        return defaultCurveConfigs_[curveID];
+    };
+    const boost::shared_ptr<DefaultCurveConfig>& defaultCurveConfig(const string& curveID) const;
+    //@}
+
+    //! \name Serialisation
+    //@{
+    void fromXML(XMLNode* node);
+    XMLNode* toXML(XMLDocument& doc);
+    //@}
+private:
+    std::map<std::string, boost::shared_ptr<YieldCurveConfig>> yieldCurveConfigs_;
+    std::map<std::string, boost::shared_ptr<FXVolatilityCurveConfig>> fxVolCurveConfigs_;
+    std::map<std::string, boost::shared_ptr<SwaptionVolatilityCurveConfig>> swaptionVolCurveConfigs_;
+    std::map<std::string, boost::shared_ptr<CapFloorVolatilityCurveConfig>> capFloorVolCurveConfigs_;
+    std::map<std::string, boost::shared_ptr<DefaultCurveConfig>> defaultCurveConfigs_;
+};
+}
+}

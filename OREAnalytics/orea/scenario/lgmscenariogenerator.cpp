@@ -1,0 +1,70 @@
+/*
+ Copyright (C) 2016 Quaternion Risk Management Ltd
+ All rights reserved.
+
+ This file is part of OpenRiskEngine, a free-software/open-source library
+ for transparent pricing and risk analysis - http://openriskengine.org
+
+ OpenRiskEngine is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program; if not, please email
+ <users@openriskengine.org>. The license is also available online at
+ <http://openriskengine.org/license.shtml>.
+
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
+*/
+
+#include <orea/scenario/lgmscenariogenerator.hpp>
+
+using namespace QuantLib;
+
+namespace openriskengine {
+namespace analytics {
+
+LgmScenarioGenerator::LgmScenarioGenerator(boost::shared_ptr<QuantExt::LGM> model,
+                                           boost::shared_ptr<QuantExt::MultiPathGeneratorBase> pathGenerator,
+                                           boost::shared_ptr<ScenarioFactory> scenarioFactory,
+                                           boost::shared_ptr<ScenarioSimMarketParameters> simMarketConfig, Date today,
+                                           openriskengine::analytics::DateGrid grid)
+    : ScenarioPathGenerator(today, grid.dates(), grid.timeGrid()), model_(model), pathGenerator_(pathGenerator),
+      scenarioFactory_(scenarioFactory), simMarketConfig_(simMarketConfig) {
+    QL_REQUIRE(timeGrid_.size() == dates_.size() + 1, "date/time grid size mismatch");
+}
+
+std::vector<boost::shared_ptr<Scenario>> LgmScenarioGenerator::nextPath() {
+    std::vector<boost::shared_ptr<Scenario>> scenarios(dates_.size());
+    Sample<MultiPath> sample = pathGenerator_->next();
+
+    DayCounter dc = model_->parametrization()->termStructure()->dayCounter();
+
+    std::string ccy = model_->parametrization()->currency().code();
+    vector<RiskFactorKey> keys;
+    for (Size k = 0; k < simMarketConfig_->yieldCurveTenors().size(); k++)
+        keys.emplace_back(RiskFactorKey::KeyType::DiscountCurve, ccy, k);
+
+    for (Size i = 0; i < dates_.size(); i++) {
+        Real t = timeGrid_[i + 1]; // recall: time grid has inserted t=0
+
+        scenarios[i] = scenarioFactory_->buildScenario(dates_[i]);
+
+        // Set numeraire, numeraire currency and the (deterministic) domestic discount
+        // Asset index 0 in sample.value[0][i+1] refers to the domestic currency process,
+        // the only one here.
+        Real z0 = sample.value[0][i + 1]; // second index = 0 holds initial values
+        scenarios[i]->setNumeraire(model_->numeraire(t, z0));
+
+        Real z = sample.value[0][i + 1]; // LGM factor value, second index = 0 holds initial values
+        for (Size k = 0; k < simMarketConfig_->yieldCurveTenors().size(); k++) {
+            Date d = dates_[i] + simMarketConfig_->yieldCurveTenors()[k];
+            Real T = dc.yearFraction(dates_[i], d);
+            Real discount = model_->discountBond(t, t + T, z);
+            scenarios[i]->add(keys[k], discount);
+        }
+    }
+    return scenarios;
+}
+}
+}

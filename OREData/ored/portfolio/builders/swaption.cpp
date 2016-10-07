@@ -1,0 +1,150 @@
+/*
+ Copyright (C) 2016 Quaternion Risk Management Ltd
+ All rights reserved.
+
+ This file is part of OpenRiskEngine, a free-software/open-source library
+ for transparent pricing and risk analysis - http://openriskengine.org
+
+ OpenRiskEngine is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program; if not, please email
+ <users@openriskengine.org>. The license is also available online at
+ <http://openriskengine.org/license.shtml>.
+
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
+*/
+
+#include <ored/model/lgmbuilder.hpp>
+#include <ored/portfolio/builders/swaption.hpp>
+#include <ored/utilities/parsers.hpp>
+#include <ored/utilities/to_string.hpp>
+#include <ql/pricingengines/swaption/blackswaptionengine.hpp>
+#include <qle/pricingengines/numericlgmswaptionengine.hpp>
+
+namespace openriskengine {
+namespace data {
+
+boost::shared_ptr<PricingEngine> EuropeanSwaptionEngineBuilder::engineImpl(const Currency& ccy) {
+    const string& ccyCode = ccy.code();
+    Handle<YieldTermStructure> yts = market_->discountCurve(ccyCode, configuration(MarketContext::pricing));
+    QL_REQUIRE(!yts.empty(), "engineFactory error: yield term structure not found for currency " << ccyCode);
+    Handle<SwaptionVolatilityStructure> svts =
+        market_->swaptionVol(ccyCode, configuration(MarketContext::pricing));
+    QL_REQUIRE(!svts.empty(), "engineFactory error: swaption vol structure not found for currency " << ccyCode);
+
+    switch (svts->volatilityType()) {
+    case ShiftedLognormal:
+        LOG("Build BlackSwaptionEngine for currency " << ccyCode);
+        return boost::make_shared<BlackSwaptionEngine>(yts, svts);
+    case Normal:
+        LOG("Build BachelierSwaptionEngine for currency " << ccyCode);
+        return boost::make_shared<BachelierSwaptionEngine>(yts, svts);
+    default:
+        QL_FAIL("Swaption volatility type " << svts->volatilityType() << "not covered in EngineFactory");
+        break;
+    }
+}
+
+boost::shared_ptr<PricingEngine> LGMGridBermudanSwaptionEngineBuilder::engine(const string& id, bool isNonStandard,
+                                                                              const string& ccy,
+                                                                              const std::vector<Date>& expiries,
+                                                                              const Date& maturity,
+                                                                              Real) { // fixedRate is unused
+    DLOG("Building Bermudan Swaption engine for trade " << id);
+
+    DLOG("Get model data");
+    CalibrationType calibration = parseCalibrationType(modelParameters_.at("Calibration"));
+    LgmData::CalibrationStrategy calibrationStrategy =
+        parseCalibrationStrategy(modelParameters_.at("CalibrationStrategy"));
+    Real lambda = parseReal(modelParameters_.at("Reversion"));
+    Real sigma = parseReal(modelParameters_.at("Volatility"));
+    Real tolerance = parseReal(modelParameters_.at("Tolerance"));
+    LgmData::ReversionType reversionType = parseReversionType(modelParameters_.at("ReversionType"));
+    LgmData::VolatilityType volatilityType = parseVolatilityType(modelParameters_.at("VolatilityType"));
+
+    DLOG("Get engine data");
+    Real sy = parseReal(engineParameters_.at("sy"));
+    Size ny = parseInteger(engineParameters_.at("ny"));
+    Real sx = parseReal(engineParameters_.at("sx"));
+    Size nx = parseInteger(engineParameters_.at("nx"));
+
+    boost::shared_ptr<LgmData> data = boost::make_shared<LgmData>();
+
+    // check for allowed calibration / bermudan strategy settings
+    QL_REQUIRE((calibration == CalibrationType::None && calibrationStrategy == LgmData::CalibrationStrategy::None) ||
+                   (calibration == CalibrationType::Bootstrap &&
+                    calibrationStrategy == LgmData::CalibrationStrategy::CoterminalATM) ||
+                   (calibration == CalibrationType::BestFit &&
+                    calibrationStrategy == LgmData::CalibrationStrategy::CoterminalATM),
+               "Calibration (" << calibration << ") and CalibrationStrategy (" << calibrationStrategy
+                               << ") are not allowed in this combination");
+
+    // Default: no calibration, constant lambda and sigma from engine configuration
+    data->reset();
+    data->ccy() = ccy;
+    data->calibrateH() = false;
+    data->hParamType() = ParamType::Constant;
+    data->hValues() = {lambda};
+    data->reversionType() = reversionType;
+    data->calibrateA() = false;
+    data->aParamType() = ParamType::Constant;
+    data->aValues() = {sigma};
+    data->volatilityType() = volatilityType;
+    data->calibrationStrategy() = calibrationStrategy;
+    data->calibrationType() = calibration;
+
+    if (calibrationStrategy == LgmData::CalibrationStrategy::CoterminalATM) {
+        DLOG("Build LgmData for co-terminal specification");
+        vector<string> expiryDates, termDates;
+        for (Size i = 0; i < expiries.size(); ++i) {
+            expiryDates.push_back(to_string(expiries[i]));
+            termDates.push_back(to_string(maturity));
+        }
+        data->swaptionExpiries() = expiryDates;
+        data->swaptionTerms() = termDates;
+        data->swaptionStrikes().resize(expiryDates.size(), "ATM");
+        if (calibration == CalibrationType::Bootstrap) {
+            DLOG("Calibrate piecewise alpha");
+            data->calibrationType() = CalibrationType::Bootstrap;
+            data->calibrateH() = false;
+            data->hParamType() = ParamType::Constant;
+            data->hValues() = {lambda};
+            data->calibrateA() = true;
+            data->aParamType() = ParamType::Piecewise;
+            data->aValues() = {sigma};
+        } else if (calibration == CalibrationType::BestFit) {
+            DLOG("Calibrate constant sigma");
+            data->calibrationType() = CalibrationType::BestFit;
+            data->calibrateH() = false;
+            data->hParamType() = ParamType::Constant;
+            data->hValues() = {lambda};
+            data->calibrateA() = true;
+            data->aParamType() = ParamType::Constant;
+            data->aValues() = {sigma};
+        } else
+            QL_FAIL("choice of calibration type invalid");
+    }
+
+    // Build and calibrate model
+    DLOG("Build LGM model");
+    boost::shared_ptr<LgmBuilder> calib =
+        boost::make_shared<LgmBuilder>(market_, data, configuration(MarketContext::irCalibration), tolerance);
+    DLOG("Calibrate model (configuration " << configuration(MarketContext::irCalibration) << ")");
+    calib->update();
+    boost::shared_ptr<QuantExt::LGM> lgm = calib->model();
+
+    // Build engine
+    DLOG("Build engine (configuration " << configuration(MarketContext::pricing) << ")");
+    Handle<YieldTermStructure> dscCurve = market_->discountCurve(ccy, configuration(MarketContext::pricing));
+    boost::shared_ptr<PricingEngine> p;
+    if (isNonStandard)
+        return boost::make_shared<QuantExt::NumericLgmNonstandardSwaptionEngine>(lgm, sy, ny, sx, nx, dscCurve);
+    else
+        return boost::make_shared<QuantExt::NumericLgmSwaptionEngine>(lgm, sy, ny, sx, nx, dscCurve);
+}
+
+} // namespace data
+} // namespace openriskengine
