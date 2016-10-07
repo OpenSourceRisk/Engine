@@ -2,7 +2,7 @@
 \section{Market Data}\label{sec:market_data}
 %========================================================
 
-Market data in the {\tt market.txt} file is given in three columns;  Date,  Quote and  Quote value. 
+Market data in the {\tt market.txt} file is given in three columns; Date, Quote and Quote value.
 
 \begin{itemize}
 \item {\bf Date}: The as of date of the market quote value.  
@@ -15,7 +15,7 @@ Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
   InstType/QuoteType followed by instrument specific information
   separated by slashes "/".  
 
-Allowable values for Instrument Types and Quote Types are given in Table \ref{tab:allow_market_data}.
+  Allowable values for Instrument Types and Quote Types are given in Table \ref{tab:allow_market_data}.
 
 \item {\bf Quote Value}: The market quote value in decimal form for
   the given quote on the given as of date. Quote values are assumed to
@@ -81,19 +81,20 @@ An excerpt from a typical {\tt market.txt} file is shown in Listing \ref{lst:mar
 \subsection{Zero Rate}\label{ss:zero_rate}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-The instrument specific information to be captured for quotes representing Zero Rates is shown in Table \ref{tab:zero_quote}.
+The instrument specific information to be captured for quotes representing Zero Rates is shown in Table
+\ref{tab:zero_quote}.
 
 \begin{table}[H]
 \centering
 \begin{tabular}{|p{3.3cm}|p{5cm}|p{7cm}|}
-\hline
-{\bf Property} & {\bf Allowable values} & {\bf Description} \\
-\hline
-Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Currency of the Zero rate\\ \hline
-CurveId& A CCY concatenated with a Tenor. Should match CurveIds in the {\tt yield-curves.xml} file & Unique identifier for the yield curve associated with the zero quote\\ \hline
-DayCounter & See \lstinline!DayCount Convention! in Table \ref{tab:daycount} & The day count basis associated with the zero quote \\ \hline
-Tenor or ZeroDate & Tenor: An integer followed by D, W, M or Y, ZeroDate: See \lstinline!Date! in Table \ref{tab:allow_stand_data} & Either a Tenor for tenor based zero quotes, or an explicit maturity date (ZeroDate)\\
-\hline
+  \hline
+  {\bf Property} & {\bf Allowable values} & {\bf Description} \\
+  \hline
+  Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Currency of the Zero rate\\ \hline
+  CurveId& A CCY concatenated with a Tenor. Should match CurveIds in the {\tt yield-curves.xml} file & Unique identifier for the yield curve associated with the zero quote\\ \hline
+  DayCounter & See \lstinline!DayCount Convention! in Table \ref{tab:daycount} & The day count basis associated with the zero quote \\ \hline
+  Tenor or ZeroDate & Tenor: An integer followed by D, W, M or Y, ZeroDate: See \lstinline!Date! in Table \ref{tab:allow_stand_data} & Either a Tenor for tenor based zero quotes, or an explicit maturity date (ZeroDate)\\
+  \hline
 \end{tabular}
   \caption{Zero Rate}
   \label{tab:zero_quote}
@@ -113,18 +114,19 @@ Examples with a Tenor and with a ZeroDate:
 \subsection{Discount Factor}\label{ss:discount_rate}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-The instrument specific information to be captured for quotes representing Discount Factors is shown in Table \ref{tab:discount_quote}.
+The instrument specific information to be captured for quotes representing Discount Factors is shown in Table
+\ref{tab:discount_quote}.
 
 \begin{table}[H]
 \centering
 \begin{tabular}{|p{3.3cm}|p{5cm}|p{7cm}|}
-\hline
-{\bf Property} & {\bf Allowable values} & {\bf Description} \\
-\hline
-Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Currency of the Discount rate\\ \hline
-CurveId& A CCY concatenated with a Tenor. Should match CurveIds in the {\tt yield-curves.xml} file & Unique identifier for the yield curve associated with the discount quote\\ \hline
-Term or DiscountDate & Term: An integer followed by D, W, M or Y, DiscountDate: See \lstinline!Date! in Table \ref{tab:allow_stand_data} & Either a Term is used to determine the maturity date, or an explicit maturity date (Discount Date) is given.\\
-\hline
+  \hline
+  {\bf Property} & {\bf Allowable values} & {\bf Description} \\
+  \hline
+  Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Currency of the Discount rate\\ \hline
+  CurveId& A CCY concatenated with a Tenor. Should match CurveIds in the {\tt yield-curves.xml} file & Unique identifier for the yield curve associated with the discount quote\\ \hline
+  Term or DiscountDate & Term: An integer followed by D, W, M or Y, DiscountDate: See \lstinline!Date! in Table \ref{tab:allow_stand_data} & Either a Term is used to determine the maturity date, or an explicit maturity date (Discount Date) is given.\\
+  \hline
 \end{tabular}
   \caption{Discount Rate}
   \label{tab:discount_quote}
@@ -184,7 +186,9 @@ Term & An integer followed by D, W, M or Y. & Period from start to maturity\\ \h
 Deposits are usually quoted as ON (Overnight), TN (Tomorrow Next), SN
 (Spot Next), SW (Spot Week), 3W (3 Weeks), 6M (6 Months), etc. \\
  
-Forward start for ON is today (i.e. forward start = 0D), for TN tomorrow (forward start = 1D), for SN two days from today (forward start = 2D). For longer term Deposits, forward start is derived from conventions, see \S \ref{sec:conventions}, and is between 0D and 2D, i.e. "spot days" are between 0 and 2. 
+Forward start for ON is today (i.e. forward start = 0D), for TN tomorrow (forward start = 1D), for SN two days from
+today (forward start = 2D). For longer term Deposits, forward start is derived from conventions, see \S
+\ref{sec:conventions}, and is between 0D and 2D, i.e. "spot days" are between 0 and 2.
 
 \medskip
 Example: 
@@ -210,7 +214,8 @@ Term & An integer followed by D, W, M or Y & Period from start to maturity\\ \hl
   \label{tab:fra_quote}
 \end{table}
 
-FRAs are typically quoted as e.g. 6x9 which means forward start 6M from today, maturity 9M from today, with appropriate adjustment of dates.
+FRAs are typically quoted as e.g. 6x9 which means forward start 6M from today, maturity 9M from today, with appropriate
+adjustment of dates.
 
 \medskip
 Example: 
@@ -238,7 +243,9 @@ Contract & String & Contract name\\
   \label{tab:mmfp_quote}
 \end{table}
 
-Expiry month is typically quoted as JUN08, SEP09, DEC10, etc. The exact expiry date follows from a date rule such as 3rd Wednesday of the specified month, adjusted to the following business day. The date rule is not quoted directly, but defined in the futures contract.
+Expiry month is typically quoted as JUN08, SEP09, DEC10, etc. The exact expiry date follows from a date rule such as 3rd
+Wednesday of the specified month, adjusted to the following business day. The date rule is not quoted directly, but
+defined in the futures contract.
 
 \medskip
 Example: 
@@ -266,7 +273,9 @@ Example:
 %  \label{tab:equityfp_quote}
 %\end{table}
 %
-%Expiry month is typically quoted as JUN08, SEP09, DEC10, etc. The exact expiry date follows from a date rule such as 3rd Wednesday of the specified month, adjusted to the following business day. The date rule is not quoted directly, but defined in the futures contract.
+%Expiry month is typically quoted as JUN08, SEP09, DEC10, etc. The exact expiry date follows from a date rule such as
+% 3rd Wednesday of the specified month, adjusted to the following business day. The date rule is not quoted directly,
+% but defined in the futures contract.
 %
 %\medskip
 %Example: 
@@ -415,7 +424,9 @@ Example:
 % \subsection{BMA Swap Ratio}
 % %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-% The BMA index is a reference index for US municipal tax-exempt bonds (floaters). BMA is fixed weekly. A BMA Swap exchanges quarterly BMA index-linked payments (the coupon rate is the average of weekly BMA index fixings) for quarterly payments of a fraction of USD Libor. The BMA Swap quote is the fraction of Libor and for a given Swap term. 
+% The BMA index is a reference index for US municipal tax-exempt bonds (floaters). BMA is fixed weekly. A BMA Swap
+% exchanges quarterly BMA index-linked payments (the coupon rate is the average of weekly BMA index fixings) for
+% quarterly payments of a fraction of USD Libor. The BMA Swap quote is the fraction of Libor and for a given Swap term.
 
 % \begin{table}[H]
 % \centering
@@ -472,15 +483,15 @@ Example:
 \begin{table}[H]
 \centering
 \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
-\hline
-{\bf Property} & {\bf Allowable values} & {\bf Description} \\
-\hline
-Flat currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Currency for zero spread leg\\  \hline
-Flat tenor & An integer followed by D, W, M or Y & Zero spread leg's index tenor\\ \hline
-Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}& Currency for non-zero spread leg\\ \hline
-Tenor & An integer followed by D, W, M or Y & Non-zero spread leg's index tenor\\ \hline
-Term & An integer followed by D, W, M or Y & Swap length from start to maturity\\
-\hline
+  \hline
+  {\bf Property} & {\bf Allowable values} & {\bf Description} \\
+  \hline
+  Flat currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Currency for zero spread leg\\  \hline
+  Flat tenor & An integer followed by D, W, M or Y & Zero spread leg's index tenor\\ \hline
+  Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}& Currency for non-zero spread leg\\ \hline
+  Tenor & An integer followed by D, W, M or Y & Non-zero spread leg's index tenor\\ \hline
+  Term & An integer followed by D, W, M or Y & Swap length from start to maturity\\
+  \hline
 \end{tabular}
   \caption{Cross Currency Basis Swap Spread}
   \label{tab:ccbasisspread_quote}
@@ -500,14 +511,14 @@ Example:
 \begin{table}[H]
 \centering
 \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
-\hline
-{\bf Property} & {\bf Allowable values} & {\bf Description} \\
-\hline
-Issuer & String &  Issuer name \\ \hline
-Seniority & String &  Seniority status \\ \hline
-Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & CDS Spread currency\\ \hline
-Term & An integer followed by D, W, M or Y & Generic period from start to maturity\\
-\hline
+  \hline
+  {\bf Property} & {\bf Allowable values} & {\bf Description} \\
+  \hline
+  Issuer & String &  Issuer name \\ \hline
+  Seniority & String &  Seniority status \\ \hline
+  Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & CDS Spread currency\\ \hline
+  Term & An integer followed by D, W, M or Y & Generic period from start to maturity\\
+  \hline
 \end{tabular}
   \caption{CDS Spread}
   \label{tab:cdsspread_quote}
@@ -547,7 +558,8 @@ Example:
 % \subsection{Asset Swap Spread}
 % %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-% Credit spread information expressed on an asset swap basis for a  given issuer/seniority and term rather than for a specific asset.
+% Credit spread information expressed on an asset swap basis for a given issuer/seniority and term rather than for a
+% specific asset.
  
 % \begin{table}[H]
 % \centering
@@ -590,7 +602,8 @@ Example:
 %  \label{tab:zspread_quote}
 %\end{table}
 %
-%The effect of Zero spread $s$ is increasing the zero rates of a given reference curve, i.e. modifying the discount factor $P(t)$ at time $t$ by factor $\exp(-s\cdot t)$. We assume Actual365Fixed day count for date/time conversion. 
+%The effect of Zero spread $s$ is increasing the zero rates of a given reference curve, i.e. modifying the discount
+% factor $P(t)$ at time $t$ by factor $\exp(-s\cdot t)$. We assume Actual365Fixed day count for date/time conversion.
 %
 %
 %\medskip
@@ -619,7 +632,8 @@ Example:
 %  \label{tab:parspread_quote}
 %\end{table}
 %
-%The effect of a Par/Swap spread $s$ is increasing the input Swap rates of a given reference curve by $s$ and then bootstrapping a modified discount curve $P(t)$.
+%The effect of a Par/Swap spread $s$ is increasing the input Swap rates of a given reference curve by $s$ and then
+% bootstrapping a modified discount curve $P(t)$.
 %
 %
 %\medskip
@@ -632,17 +646,18 @@ Example:
 \subsection{Probability of Default}\label{ss:prob_default_quote}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-This quote can represent a cumulative PD for the given rating and maturity, or a Loss Given Default for the given rating.
+This quote can represent a cumulative PD for the given rating and maturity, or a Loss Given Default for the given
+rating.
 
 \begin{table}[H]
 \centering
 \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
-\hline
-{\bf Property} & {\bf Allowable values} & {\bf Description} \\
-\hline
-Rating & String & Internal or external rating code \\ \hline
-Term & An integer followed by D, W, M or Y & Generic period from start to maturity\\ 
-\hline
+  \hline
+  {\bf Property} & {\bf Allowable values} & {\bf Description} \\
+  \hline
+  Rating & String & Internal or external rating code \\ \hline
+  Term & An integer followed by D, W, M or Y & Generic period from start to maturity\\
+  \hline
 \end{tabular}
   \caption{Probability of Default}
   \label{tab:pd_quote}
@@ -664,13 +679,13 @@ Example:
 % \begin{table}[H]
 % \centering
 % \begin{supertabular}{|p{3cm}|p{5cm}|p{7cm}|}
-% \hline
-% {\bf Property} & {\bf Allowable values} & {\bf Description} \\
-% \hline
-% Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Currency of inflation swap rate\\ \hline
-% Region & A string that matches inflation Region codes in the {\tt config-scenario.xml} file & Region code for the inflation index \\ \hline
-% Term & An integer followed by D, W, M or Y & Generic period from start to maturity\\
-% \hline
+%   \hline
+%   {\bf Property} & {\bf Allowable values} & {\bf Description} \\
+%   \hline Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Currency of inflation swap rate\\
+%   \hline Region & A string that matches inflation Region codes in the {\tt config-scenario.xml} file & Region code for
+%   the inflation index \\ \hline
+%   Term & An integer followed by D, W, M or Y & Generic period from start to maturity\\
+%   \hline
 % \end{supertabular}
 %   \caption{Year-on-Year Inflation Swap Rate}
 %   \label{tab:yoyinflation_quote}
@@ -787,8 +802,8 @@ Strike & Real number & Strike rate - (not required for ATM), as deviation from t
 \end{table}
 
 
-\medskip
-Note: The volatility quote is expected to be an absolute volatility, and not the deviation from the at-the-money volatility (the latter is e.g. the quotation convention used by BGC partners).
+\medskip Note: The volatility quote is expected to be an absolute volatility, and not the deviation from the
+at-the-money volatility (the latter is e.g. the quotation convention used by BGC partners).
 
 \medskip
 Examples:
