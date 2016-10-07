@@ -15,4 +15,3 @@
 #include <orea/scenario/scenariogeneratordata.hpp>
 #include <orea/scenario/scenariogeneratorbuilder.hpp>
 #include <orea/scenario/scenariowriter.hpp>
-

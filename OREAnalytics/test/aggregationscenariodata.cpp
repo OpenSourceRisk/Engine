@@ -48,8 +48,8 @@ void AggregationScenarioDataTest::testInMemoryAggregationScenarioData() {
 
     for (Size i = 0; i < 3; ++i) {
         for (Size j = 0; j < 5; ++j) {
-            BOOST_CHECK_CLOSE(data.get(i, j, AggregationScenarioDataType::IndexFixing, "OIS_EUR"), 0.0001 * i + 0.01 * j,
-                              tol);
+            BOOST_CHECK_CLOSE(data.get(i, j, AggregationScenarioDataType::IndexFixing, "OIS_EUR"),
+                              0.0001 * i + 0.01 * j, tol);
             BOOST_CHECK_CLOSE(data.get(i, j, AggregationScenarioDataType::IndexFixing, "OIS_USD"),
                               0.1 + 0.0001 * i + 0.01 * j, tol);
             BOOST_CHECK_CLOSE(data.get(i, j, AggregationScenarioDataType::IndexFixing, "OIS_GBP"),

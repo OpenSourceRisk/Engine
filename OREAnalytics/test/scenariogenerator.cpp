@@ -277,8 +277,7 @@ void test_crossasset(bool sobol, bool antithetic, bool brownianBridge) {
     // Simulation date grid
     Date today = d.referenceDate;
     std::vector<Period> tenorGrid = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years};
-    boost::shared_ptr<ore::analytics::DateGrid> grid =
-        boost::make_shared<ore::analytics::DateGrid>(tenorGrid);
+    boost::shared_ptr<ore::analytics::DateGrid> grid = boost::make_shared<ore::analytics::DateGrid>(tenorGrid);
 
     // Model
     boost::shared_ptr<QuantExt::CrossAssetModel> model = d.ccLgm;
@@ -419,8 +418,7 @@ void ScenarioGeneratorTest::testCrossAssetSimMarket() {
     // Simulation date grid
     Date today = d.referenceDate;
     std::vector<Period> tenorGrid = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years};
-    boost::shared_ptr<ore::analytics::DateGrid> grid =
-        boost::make_shared<ore::analytics::DateGrid>(tenorGrid);
+    boost::shared_ptr<ore::analytics::DateGrid> grid = boost::make_shared<ore::analytics::DateGrid>(tenorGrid);
 
     // Model
     boost::shared_ptr<QuantExt::CrossAssetModel> model = d.ccLgm;
@@ -562,8 +560,7 @@ void ScenarioGeneratorTest::testCrossAssetSimMarket2() {
     // Simulation date grid
     Date today = d.referenceDate;
     std::vector<Period> tenorGrid = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years};
-    boost::shared_ptr<ore::analytics::DateGrid> grid =
-        boost::make_shared<ore::analytics::DateGrid>(tenorGrid);
+    boost::shared_ptr<ore::analytics::DateGrid> grid = boost::make_shared<ore::analytics::DateGrid>(tenorGrid);
 
     // Model
     boost::shared_ptr<QuantExt::CrossAssetModel> model = d.ccLgm;
@@ -699,8 +696,7 @@ void ScenarioGeneratorTest::testVanillaSwapExposure() {
     std::vector<Period> tenorGrid;
     for (Size i = 0; i < 20; ++i)
         tenorGrid.push_back((i + 1) * Years);
-    boost::shared_ptr<ore::analytics::DateGrid> grid =
-        boost::make_shared<ore::analytics::DateGrid>(tenorGrid);
+    boost::shared_ptr<ore::analytics::DateGrid> grid = boost::make_shared<ore::analytics::DateGrid>(tenorGrid);
 
     // Model
     boost::shared_ptr<QuantExt::CrossAssetModel> model = d.ccLgm;
@@ -841,8 +837,7 @@ void ScenarioGeneratorTest::testFxForwardExposure() {
     // Simulation date grid
     Date today = d.referenceDate;
     std::vector<Period> tenorGrid = {1 * Years, 2 * Years, 3 * Years, 4 * Years, 5 * Years};
-    boost::shared_ptr<ore::analytics::DateGrid> grid =
-        boost::make_shared<ore::analytics::DateGrid>(tenorGrid);
+    boost::shared_ptr<ore::analytics::DateGrid> grid = boost::make_shared<ore::analytics::DateGrid>(tenorGrid);
 
     // Model
     boost::shared_ptr<QuantExt::CrossAssetModel> model = d.ccLgm;
@@ -961,8 +956,7 @@ void ScenarioGeneratorTest::testFxForwardExposureZeroIrVol() {
     // Simulation date grid
     Date today = d.referenceDate;
     std::vector<Period> tenorGrid = {1 * Years, 2 * Years, 3 * Years, 4 * Years, 5 * Years};
-    boost::shared_ptr<ore::analytics::DateGrid> grid =
-        boost::make_shared<ore::analytics::DateGrid>(tenorGrid);
+    boost::shared_ptr<ore::analytics::DateGrid> grid = boost::make_shared<ore::analytics::DateGrid>(tenorGrid);
 
     // Model
     boost::shared_ptr<QuantExt::CrossAssetModel> model = d.ccLgm;

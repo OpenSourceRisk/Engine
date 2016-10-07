@@ -72,7 +72,7 @@ public:
 
     //! load cube from an archive
     void load(const std::string& fileName) override {
-        std::ifstream ifs(fileName.c_str(), std::fstream::binary );
+        std::ifstream ifs(fileName.c_str(), std::fstream::binary);
         QL_REQUIRE(ifs.is_open(), "error opening file " << fileName);
         boost::archive::binary_iarchive ia(ifs);
         ia >> *this;

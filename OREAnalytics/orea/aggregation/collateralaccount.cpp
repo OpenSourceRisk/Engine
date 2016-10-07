@@ -23,9 +23,7 @@ using namespace std;
 using namespace QuantLib;
 
 namespace {
-bool isMarginCallExpired(ore::analytics::CollateralAccount::MarginCall mc) {
-    return !mc.openMarginRequest();
-}
+bool isMarginCallExpired(ore::analytics::CollateralAccount::MarginCall mc) { return !mc.openMarginRequest(); }
 
 bool isMarginPayDateLessThan(ore::analytics::CollateralAccount::MarginCall mc1,
                              ore::analytics::CollateralAccount::MarginCall mc2) {

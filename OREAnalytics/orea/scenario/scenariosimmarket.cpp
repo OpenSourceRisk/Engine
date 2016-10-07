@@ -229,8 +229,8 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
                 SwaptionVolatilityConverter converter(asof_, *wrapper, *swapIndex, Normal);
                 wrapper.linkTo(converter.convert());
 
-                LOG("Converting swaption volatilities in configuration "
-                    << configuration << " with currency " << ccy << " to normal swaption volatilities");
+                LOG("Converting swaption volatilities in configuration " << configuration << " with currency " << ccy
+                                                                         << " to normal swaption volatilities");
             } else {
                 // Only support conversions for swaption volatility matrices
                 LOG("Swaption volatility for ccy " << ccy << " is not a matrix so it is not converted to Normal");

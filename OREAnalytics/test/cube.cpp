@@ -33,7 +33,7 @@ void initCube(NPVCube& cube) {
         for (Size j = 0; j < cube.numDates(); ++j) {
             for (Size k = 0; k < cube.samples(); ++k) {
                 for (Size d = 0; d < cube.depth(); ++d) {
-                    cube.set(i * 1000000.0 + j + k / 1000000.0 + d*3, i, j, k, d);
+                    cube.set(i * 1000000.0 + j + k / 1000000.0 + d * 3, i, j, k, d);
                 }
             }
         }
@@ -46,9 +46,9 @@ void checkCube(NPVCube& cube, Real tolerance) {
         for (Size j = 0; j < cube.numDates(); ++j) {
             for (Size k = 0; k < cube.samples(); ++k) {
                 for (Size d = 0; d < cube.depth(); ++d) {
-		    Real expected = i * 1000000.0 + j + k / 1000000.0 + d*3;
-		    Real actual = cube.get(i, j, k, d);
-		    BOOST_CHECK_CLOSE(expected, actual, tolerance);
+                    Real expected = i * 1000000.0 + j + k / 1000000.0 + d * 3;
+                    Real actual = cube.get(i, j, k, d);
+                    BOOST_CHECK_CLOSE(expected, actual, tolerance);
                 }
             }
         }
@@ -74,8 +74,7 @@ void testCube(NPVCube& cube, const std::string& cubeName, Real tolerance) {
     // All done
 }
 
-template<class T>
-void testCubeFileIO(NPVCube& cube, const std::string& cubeName, Real tolerance) {
+template <class T> void testCubeFileIO(NPVCube& cube, const std::string& cubeName, Real tolerance) {
 
     initCube(cube);
 
@@ -104,7 +103,6 @@ void testCubeFileIO(NPVCube& cube, const std::string& cubeName, Real tolerance) 
     // All done
     delete cube2;
 }
-
 }
 
 namespace testsuite {
@@ -146,7 +144,7 @@ void CubeTest::testDoublePrecisionInMemoryCubeN() {
 
 void CubeTest::testDoublePrecisionInMemoryCubeFileIO() {
     vector<string> ids(100, string("id")); // the overlap doesn't matter
-    Date d(1, QuantLib::Jan, 2016); // need a real date here
+    Date d(1, QuantLib::Jan, 2016);        // need a real date here
     vector<Date> dates(100, d);
     Size samples = 1000;
     DoublePrecisionInMemoryCube c(d, ids, dates, samples);
@@ -155,7 +153,7 @@ void CubeTest::testDoublePrecisionInMemoryCubeFileIO() {
 
 void CubeTest::testDoublePrecisionInMemoryCubeFileNIO() {
     vector<string> ids(100, string("id")); // the overlap doesn't matter
-    Date d(1, QuantLib::Jan, 2016); // need a real date here
+    Date d(1, QuantLib::Jan, 2016);        // need a real date here
     vector<Date> dates(50, d);
     Size samples = 200;
     Size depth = 6;

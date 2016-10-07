@@ -62,6 +62,7 @@ public:
     std::string name;
     //! Index
     Size index;
+
 private:
     friend class boost::serialization::access;
     template <class Archive> void serialize(Archive& ar, const unsigned int) {
@@ -129,10 +130,10 @@ public:
     virtual void add(const RiskFactorKey& key, Real value) = 0;
     //! Get an element from the scenario
     virtual Real get(const RiskFactorKey& key) const = 0;
+
 private:
     friend class boost::serialization::access;
-    template <class Archive> void serialize(Archive&, const unsigned int) {
-    }
+    template <class Archive> void serialize(Archive&, const unsigned int) {}
 };
 }
 }

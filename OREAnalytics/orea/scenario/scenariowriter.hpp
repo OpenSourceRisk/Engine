@@ -37,7 +37,7 @@ public:
     //! Destructor
     virtual ~ScenarioWriter();
 
-   //! Return the next scenario for the given date.
+    //! Return the next scenario for the given date.
     virtual boost::shared_ptr<Scenario> next(const Date& d);
 
     //! Reset the generator so calls to next() return the first scenario.
@@ -48,11 +48,10 @@ private:
 
     boost::shared_ptr<ScenarioGenerator> src_;
     std::vector<RiskFactorKey> keys_;
-    FILE *fp_;
+    FILE* fp_;
     Date firstDate_;
     Size i_;
     const char sep_;
 };
-
 }
 }

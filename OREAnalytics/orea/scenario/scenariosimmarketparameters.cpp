@@ -148,7 +148,8 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
     XMLUtils::addGenericChildAsList(doc, fxVolatilitiesNode, "Expiries", fxVolExpiries_);
 
     // additional scenario data currencies
-    XMLUtils::addChildren(doc, marketNode, "AggregationScenarioDataCurrencies", "Currency", additionalScenarioDataCcys_);
+    XMLUtils::addChildren(doc, marketNode, "AggregationScenarioDataCurrencies", "Currency",
+                          additionalScenarioDataCcys_);
 
     // additional scenario data indices
     XMLUtils::addChildren(doc, marketNode, "AggregationScenarioDataIndices", "Index", additionalScenarioDataIndices_);

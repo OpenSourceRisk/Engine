@@ -66,7 +66,7 @@ void CashflowCalculator::calculate(const boost::shared_ptr<Trade>& trade, Size t
 
     QL_REQUIRE(dateGrid_->dates()[dateIndex] == date, "Date mixup, date is " << date << " but grid index is "
                                                                              << dateIndex);
-    //Date startDate = dateIndex == 0 ? t0Date_ : dateGrid_->dates()[dateIndex - 1];
+    // Date startDate = dateIndex == 0 ? t0Date_ : dateGrid_->dates()[dateIndex - 1];
     Date startDate = date;
     Date endDate = date == dateGrid_->dates().back() ? date : dateGrid_->dates()[dateIndex + 1];
 
@@ -78,28 +78,28 @@ void CashflowCalculator::calculate(const boost::shared_ptr<Trade>& trade, Size t
         boost::shared_ptr<data::OptionWrapper> wrapper =
             boost::dynamic_pointer_cast<data::OptionWrapper>(trade->instrument());
         isExercised = wrapper->isExercised();
-	longShort = wrapper->isLong() ? 1.0 : -1.0;
-	isPhysical = wrapper->isPhysicalDelivery();
+        longShort = wrapper->isLong() ? 1.0 : -1.0;
+        isPhysical = wrapper->isPhysicalDelivery();
     }
 
     try {
         if (!isOption || (isExercised && isPhysical)) {
-	    for (Size i = 0; i < trade->legs().size(); i++) {
-	        const Leg& leg = trade->legs()[i];
-		Real legFlow = 0;
-		for (auto flow : leg) {
-		    // Take flows in (t, t+1]
-		    if (startDate < flow->date() && flow->date() <= endDate)
-		        legFlow += flow->amount();
-		}
-		if (legFlow != 0) {
-		    // Do FX conversion and add to netFlow
-		  Real fx = simMarket->fxSpot(trade->legCurrencies()[i] + baseCcyCode_)->value();
-		  Real direction = trade->legPayers()[i] ? -1.0 : 1.0;
-		  netFlow += legFlow * direction * longShort * fx;
-		}
-	    }
-	}
+            for (Size i = 0; i < trade->legs().size(); i++) {
+                const Leg& leg = trade->legs()[i];
+                Real legFlow = 0;
+                for (auto flow : leg) {
+                    // Take flows in (t, t+1]
+                    if (startDate < flow->date() && flow->date() <= endDate)
+                        legFlow += flow->amount();
+                }
+                if (legFlow != 0) {
+                    // Do FX conversion and add to netFlow
+                    Real fx = simMarket->fxSpot(trade->legCurrencies()[i] + baseCcyCode_)->value();
+                    Real direction = trade->legPayers()[i] ? -1.0 : 1.0;
+                    netFlow += legFlow * direction * longShort * fx;
+                }
+            }
+        }
     } catch (std::exception& e) {
         ALOG("Failed to calculate cashflows for trade " << trade->id() << " : " << e.what());
         netFlow = 0;
@@ -110,7 +110,7 @@ void CashflowCalculator::calculate(const boost::shared_ptr<Trade>& trade, Size t
 
     Real numeraire = simMarket->numeraire();
 
-    outputCube->set(netFlow/numeraire, tradeIndex, dateIndex, sample, index_);
+    outputCube->set(netFlow / numeraire, tradeIndex, dateIndex, sample, index_);
 }
 }
 }

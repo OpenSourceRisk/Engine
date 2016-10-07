@@ -34,8 +34,8 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     boost::shared_ptr<QuantExt::CrossAssetModel> model,
     boost::shared_ptr<QuantExt::MultiPathGeneratorBase> pathGenerator,
     boost::shared_ptr<ScenarioFactory> scenarioFactory, boost::shared_ptr<ScenarioSimMarketParameters> simMarketConfig,
-    Date today, boost::shared_ptr<ore::analytics::DateGrid> grid,
-    boost::shared_ptr<ore::data::Market> initMarket, const std::string& configuration)
+    Date today, boost::shared_ptr<ore::analytics::DateGrid> grid, boost::shared_ptr<ore::data::Market> initMarket,
+    const std::string& configuration)
     : ScenarioPathGenerator(today, grid->dates(), grid->timeGrid()), model_(model), pathGenerator_(pathGenerator),
       scenarioFactory_(scenarioFactory), simMarketConfig_(simMarketConfig), initMarket_(initMarket),
       configuration_(configuration) {

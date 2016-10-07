@@ -61,8 +61,7 @@ public:
 
     //! Build function
     boost::shared_ptr<ScenarioGenerator>
-    build(boost::shared_ptr<QuantExt::CrossAssetModel> model,
-          boost::shared_ptr<ScenarioFactory> sf,
+    build(boost::shared_ptr<QuantExt::CrossAssetModel> model, boost::shared_ptr<ScenarioFactory> sf,
           boost::shared_ptr<ScenarioSimMarketParameters> marketConfig, Date asof,
           boost::shared_ptr<ore::data::Market> initMarket,
           const std::string& configuration = ore::data::Market::defaultConfiguration);

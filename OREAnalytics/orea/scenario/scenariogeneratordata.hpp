@@ -59,10 +59,10 @@ public:
 
     //! Constructor
     ScenarioGeneratorData(CrossAssetStateProcess::discretization discretization,
-                          boost::shared_ptr<ore::analytics::DateGrid> dateGrid, SequenceType sequenceType,
-                          long seed, Size samples)
-        : discretization_(discretization), grid_(dateGrid), sequenceType_(sequenceType),
-          seed_(seed), samples_(samples) {}
+                          boost::shared_ptr<ore::analytics::DateGrid> dateGrid, SequenceType sequenceType, long seed,
+                          Size samples)
+        : discretization_(discretization), grid_(dateGrid), sequenceType_(sequenceType), seed_(seed),
+          samples_(samples) {}
 
     void clear();
 

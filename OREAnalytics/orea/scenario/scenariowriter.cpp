@@ -24,14 +24,14 @@ using ore::data::to_string;
 namespace ore {
 namespace analytics {
 
-ScenarioWriter::ScenarioWriter(const boost::shared_ptr<ScenarioGenerator>& src, const std::string& filename, const char sep) : src_(src), fp_(nullptr), i_(0), sep_(sep) {
+ScenarioWriter::ScenarioWriter(const boost::shared_ptr<ScenarioGenerator>& src, const std::string& filename,
+                               const char sep)
+    : src_(src), fp_(nullptr), i_(0), sep_(sep) {
     fp_ = fopen(filename.c_str(), "w+");
     QL_REQUIRE(fp_, "Error opening file " << filename << " for scenarios");
 }
 
-ScenarioWriter::~ScenarioWriter() {
-    close();
-}
+ScenarioWriter::~ScenarioWriter() { close(); }
 
 void ScenarioWriter::reset() {
     if (src_)
@@ -57,10 +57,10 @@ boost::shared_ptr<Scenario> ScenarioWriter::next(const Date& d) {
             std::sort(keys_.begin(), keys_.end());
 
             QL_REQUIRE(keys_.size() > 0, "No keys in scenario");
-            fprintf(fp_,"Date%cScenario%cNumeraire%c%s", sep_, sep_, sep_, to_string(keys_[0]).c_str());
+            fprintf(fp_, "Date%cScenario%cNumeraire%c%s", sep_, sep_, sep_, to_string(keys_[0]).c_str());
             for (Size i = 1; i < keys_.size(); i++)
-                fprintf(fp_,"%c%s", sep_, to_string(keys_[i]).c_str());
-            fprintf(fp_,"\n");
+                fprintf(fp_, "%c%s", sep_, to_string(keys_[i]).c_str());
+            fprintf(fp_, "\n");
 
             // set the first date, this will bump i_ to 1 below
             firstDate_ = d;
@@ -68,13 +68,12 @@ boost::shared_ptr<Scenario> ScenarioWriter::next(const Date& d) {
         if (d == firstDate_)
             i_++;
 
-        fprintf(fp_,"%s%c%zu%c%.8f", to_string(d).c_str(), sep_, i_, sep_, s->getNumeraire());
+        fprintf(fp_, "%s%c%zu%c%.8f", to_string(d).c_str(), sep_, i_, sep_, s->getNumeraire());
         for (auto k : keys_)
-            fprintf(fp_,"%c%.8f", sep_, s->get(k));
-        fprintf(fp_,"\n");
+            fprintf(fp_, "%c%.8f", sep_, s->get(k));
+        fprintf(fp_, "\n");
     }
     return s;
 }
-
 }
 }
