@@ -1,0 +1,226 @@
+/*
+ Copyright (C) 2016 Quaternion Risk Management Ltd
+ All rights reserved.
+
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
+
+ ORE is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
+
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
+*/
+
+#include <test/parser.hpp>
+#include <ored/utilities/parsers.hpp>
+#include <ored/utilities/strike.hpp>
+#include <ql/math/comparison.hpp>
+#include <ql/time/daycounters/all.hpp>
+#include <iostream>
+
+using namespace QuantLib;
+using namespace boost::unit_test_framework;
+using namespace std;
+
+namespace testsuite {
+
+struct test_daycounter_data {
+    const char* str;
+    DayCounter dc;
+};
+
+static struct test_daycounter_data daycounter_data[] = {{"A360", Actual360()},
+                                                        {"Actual/360", Actual360()},
+                                                        {"ACT/360", Actual360()},
+                                                        {"A365", Actual365Fixed()},
+                                                        {"A365F", Actual365Fixed()},
+                                                        {"Actual/365 (Fixed)", Actual365Fixed()},
+                                                        {"ACT/365", Actual365Fixed()},
+                                                        {"T360", Thirty360(Thirty360::USA)},
+                                                        {"30/360", Thirty360(Thirty360::USA)},
+                                                        {"30/360 (Bond Basis)", Thirty360(Thirty360::USA)},
+                                                        {"ACT/nACT", Thirty360(Thirty360::USA)},
+                                                        {"30E/360 (Eurobond Basis)", Thirty360(Thirty360::European)},
+                                                        {"30E/360", Thirty360(Thirty360::European)},
+                                                        {"30/360 (Italian)", Thirty360(Thirty360::Italian)},
+                                                        {"ActActISDA", ActualActual(ActualActual::ISDA)},
+                                                        {"Actual/Actual (ISDA)", ActualActual(ActualActual::ISDA)},
+                                                        {"ACT/ACT", ActualActual(ActualActual::ISDA)},
+                                                        {"ACT29", ActualActual(ActualActual::ISDA)},
+                                                        {"ACT", ActualActual(ActualActual::ISDA)},
+                                                        {"ActActISMA", ActualActual(ActualActual::ISMA)},
+                                                        {"Actual/Actual (ISMA)", ActualActual(ActualActual::ISMA)},
+                                                        {"ActActAFB", ActualActual(ActualActual::AFB)},
+                                                        {"Actual/Actual (AFB)", ActualActual(ActualActual::AFB)},
+                                                        {"1/1", OneDayCounter()},
+                                                        {"BUS/252", Business252()},
+                                                        {"Business/252", Business252()},
+                                                        {"Actual/365 (No Leap)", Actual365NoLeap()},
+                                                        {"Act/365 (NL)", Actual365NoLeap()},
+                                                        {"NL/365", Actual365NoLeap()},
+                                                        {"Actual/365 (JGB)", Actual365NoLeap()}};
+struct test_freq_data {
+    const char* str;
+    Frequency freq;
+};
+
+static struct test_freq_data freq_data[] = {{"Z", Once},
+                                            {"Once", Once},
+                                            {"A", Annual},
+                                            {"Annual", Annual},
+                                            {"S", Semiannual},
+                                            {"Semiannual", Semiannual},
+                                            {"Q", Quarterly},
+                                            {"Quarterly", Quarterly},
+                                            {"B", Bimonthly},
+                                            {"Bimonthly", Bimonthly},
+                                            {"M", Monthly},
+                                            {"Monthly", Monthly},
+                                            {"L", EveryFourthWeek},
+                                            {"Lunarmonth", EveryFourthWeek},
+                                            {"W", Weekly},
+                                            {"Weekly", Weekly},
+                                            {"D", Daily},
+                                            {"Daily", Daily}};
+
+struct test_comp_data {
+    const char* str;
+    Compounding comp;
+};
+
+static struct test_comp_data comp_data[] = {
+    {"Simple", Simple},
+    {"Compounded", Compounded},
+    {"Continuous", Continuous},
+    {"SimpleThenCompounded", SimpleThenCompounded},
+};
+
+void ParseTest::testDayCounterParsing() {
+    BOOST_TEST_MESSAGE("Testing day counter parsing...");
+
+    Size len = sizeof(daycounter_data) / sizeof(daycounter_data[0]);
+    for (Size i = 0; i < len; ++i) {
+        string str(daycounter_data[i].str);
+        QuantLib::DayCounter d;
+
+        try {
+            d = ore::data::parseDayCounter(str);
+        } catch (...) {
+            BOOST_FAIL("Day Counter Parser failed to parse " << str);
+        }
+        if (d.empty() || d != daycounter_data[i].dc) {
+            BOOST_FAIL("Day Counter Parser(" << str << ") returned day counter " << d << " expected "
+                                             << daycounter_data[i].dc);
+
+            BOOST_TEST_MESSAGE("Parsed \"" << str << "\" and got " << d);
+        }
+    }
+}
+
+void ParseTest::testFrequencyParsing() {
+    BOOST_TEST_MESSAGE("Testing frequency parsing...");
+
+    Size len = sizeof(freq_data) / sizeof(freq_data[0]);
+    for (Size i = 0; i < len; ++i) {
+        string str(freq_data[i].str);
+        QuantLib::Frequency f;
+
+        try {
+            f = ore::data::parseFrequency(str);
+        } catch (...) {
+            BOOST_FAIL("Frequency Parser failed to parse " << str);
+        }
+        if (f) {
+            if (f != freq_data[i].freq)
+                BOOST_FAIL("Frequency Parser(" << str << ") returned frequency " << f << " expected "
+                                               << freq_data[i].freq);
+            BOOST_TEST_MESSAGE("Parsed \"" << str << "\" and got " << f);
+        }
+    }
+}
+
+void ParseTest::testCompoundingParsing() {
+    BOOST_TEST_MESSAGE("Testing Compounding parsing...");
+
+    Size len = sizeof(comp_data) / sizeof(comp_data[0]);
+    for (Size i = 0; i < len; ++i) {
+        string str(comp_data[i].str);
+        QuantLib::Compounding c;
+
+        try {
+            c = ore::data::parseCompounding(str);
+        } catch (...) {
+            BOOST_FAIL("Compounding Parser failed to parse " << str);
+        }
+        if (c) {
+            if (c != comp_data[i].comp)
+                BOOST_FAIL("Compounding Parser(" << str << ") returned Compounding " << c << " expected "
+                                                 << comp_data[i].comp);
+            BOOST_TEST_MESSAGE("Parsed \"" << str << "\" and got " << c);
+        }
+    }
+}
+
+namespace {
+void checkStrikeParser(const std::string& s, const ore::data::Strike::Type expectedType, const Real expectedValue) {
+    if (ore::data::parseStrike(s).type != expectedType) {
+        BOOST_FAIL("unexpected strike type parsed from input string " << s);
+    }
+    if (!close_enough(ore::data::parseStrike(s).value, expectedValue)) {
+        BOOST_FAIL("unexpected strike value parsed from input string " << s);
+    }
+    return;
+}
+}
+
+void ParseTest::testStrikeParsing() {
+    BOOST_TEST_MESSAGE("Testing Strike parsing...");
+
+    checkStrikeParser("ATM", ore::data::Strike::Type::ATM, 0.0);
+    checkStrikeParser("atm", ore::data::Strike::Type::ATM, 0.0);
+    checkStrikeParser("ATMF", ore::data::Strike::Type::ATMF, 0.0);
+    checkStrikeParser("atmf", ore::data::Strike::Type::ATMF, 0.0);
+    checkStrikeParser("ATM+0", ore::data::Strike::Type::ATM_Offset, 0.0);
+    checkStrikeParser("ATM-1", ore::data::Strike::Type::ATM_Offset, -1.0);
+    checkStrikeParser("ATM+1", ore::data::Strike::Type::ATM_Offset, 1.0);
+    checkStrikeParser("ATM-0.01", ore::data::Strike::Type::ATM_Offset, -0.01);
+    checkStrikeParser("ATM+0.01", ore::data::Strike::Type::ATM_Offset, 0.01);
+    checkStrikeParser("atm+0", ore::data::Strike::Type::ATM_Offset, 0.0);
+    checkStrikeParser("atm-1", ore::data::Strike::Type::ATM_Offset, -1.0);
+    checkStrikeParser("atm+1", ore::data::Strike::Type::ATM_Offset, 1.0);
+    checkStrikeParser("atm-0.01", ore::data::Strike::Type::ATM_Offset, -0.01);
+    checkStrikeParser("atm+0.01", ore::data::Strike::Type::ATM_Offset, 0.01);
+    checkStrikeParser("1", ore::data::Strike::Type::Absolute, 1.0);
+    checkStrikeParser("0.01", ore::data::Strike::Type::Absolute, 0.01);
+    checkStrikeParser("+0.01", ore::data::Strike::Type::Absolute, 0.01);
+    checkStrikeParser("-0.01", ore::data::Strike::Type::Absolute, -0.01);
+    checkStrikeParser("10d", ore::data::Strike::Type::Delta, 10.0);
+    checkStrikeParser("10.0d", ore::data::Strike::Type::Delta, 10.0);
+    checkStrikeParser("+10d", ore::data::Strike::Type::Delta, 10.0);
+    checkStrikeParser("+10.0d", ore::data::Strike::Type::Delta, 10.0);
+    checkStrikeParser("-25d", ore::data::Strike::Type::Delta, -25.0);
+    checkStrikeParser("-25.0d", ore::data::Strike::Type::Delta, -25.0);
+    checkStrikeParser("10D", ore::data::Strike::Type::Delta, 10.0);
+    checkStrikeParser("10.0D", ore::data::Strike::Type::Delta, 10.0);
+    checkStrikeParser("+10D", ore::data::Strike::Type::Delta, 10.0);
+    checkStrikeParser("+10.0D", ore::data::Strike::Type::Delta, 10.0);
+    checkStrikeParser("-25D", ore::data::Strike::Type::Delta, -25.0);
+    checkStrikeParser("-25.0D", ore::data::Strike::Type::Delta, -25.0);
+
+    BOOST_CHECK(true);
+}
+
+test_suite* ParseTest::suite() {
+    test_suite* suite = BOOST_TEST_SUITE("ParseTest");
+    suite->add(BOOST_TEST_CASE(&ParseTest::testDayCounterParsing));
+    suite->add(BOOST_TEST_CASE(&ParseTest::testFrequencyParsing));
+    suite->add(BOOST_TEST_CASE(&ParseTest::testCompoundingParsing));
+    suite->add(BOOST_TEST_CASE(&ParseTest::testStrikeParsing));
+    return suite;
+}
+}

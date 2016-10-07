@@ -1,0 +1,41 @@
+
+/*
+ Copyright (C) 2016 Quaternion Risk Management
+
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and and risk analysis - http://opensourcerisk.org/
+
+ ORE is free software: you can redistribute it and/or modify it
+ under the terms of the QuantLib license.  You should have received a
+ copy of the license along with this program.
+ <ore-dev@lists.sf.net>. The license is also available online at
+
+ This program is distributed in the hope that it will be useful, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ FOR A PARTICULAR PURPOSE.  See the license for more details.
+*/
+
+/*!
+    Base namespace for Open Risk Engine Data
+*/
+namespace ore{
+
+/*!
+    Data Checks namespace
+*/
+namespace data{
+
+/*!
+    Various OS specific utilities
+*/
+namespace os{}
+
+}
+
+/*!
+    Forward declarations and typedefs so we don't need to include rapidxml everywhere
+
+*/
+namespace rapidxml{}
+
+}

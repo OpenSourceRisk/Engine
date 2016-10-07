@@ -1,0 +1,82 @@
+/*
+ Copyright (C) 2016 Quaternion Risk Management Ltd
+ All rights reserved.
+
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
+
+ ORE is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
+
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
+*/
+
+/*! \file ored/portfolio/builders/cachingenginebuilder.hpp
+    \ingroup portfolio
+*/
+
+#pragma once
+
+#include <ored/portfolio/enginefactory.hpp>
+
+#include <ql/cashflows/couponpricer.hpp>
+
+namespace ore {
+namespace data {
+
+//! Abstract template EngineBuilder class that can cache engines and coupon pricers
+/*! Subclasses must implement two protected methods:
+ *  - keyImpl() returns a key that is used to cache
+ *  - engineImpl() return a new pricing engine or coupon pricer.
+ *  When the engine() method is called the CachingEngineBuilder first
+ *  looks in it's cache to see if it has an engine or coupon pricer for this key already
+ *  if so it is returned, otherwise a new engine or coupon pricer is created, stored and
+ *  returned.
+ *
+ *  The first template argument is the cache key type (e.g. a std::string)
+ *  The second template argument is PricingEngine or FloatingRateCouponPricer
+ *  The remaining variable arguments are to be passed to engine() and
+ *  engineImpl(), these are the specific parameters required to build
+ *  an engine or coupon pricer for this trade type.
+    \ingroup portfolio
+ */
+template <class T, class U, typename... Args> class CachingEngineBuilder : public EngineBuilder {
+public:
+    /*! Constructor that takes a model and engine name
+        @param model the model name
+        @param engine the engine name
+     */
+    CachingEngineBuilder(const string& model, const string& engine) : EngineBuilder(model, engine) {}
+
+    //! Return a PricingEngine or a FloatingRateCouponPricer
+    boost::shared_ptr<U> engine(Args... params) {
+        T key = keyImpl(params...);
+        if (engines_.find(key) == engines_.end()) {
+            // build first (in case it throws)
+            boost::shared_ptr<U> engine = engineImpl(params...);
+            // then add to map
+            engines_[key] = engine;
+        }
+        return engines_[key];
+    }
+
+protected:
+    virtual T keyImpl(Args...) = 0;
+    virtual boost::shared_ptr<U> engineImpl(Args...) = 0;
+
+    map<T, boost::shared_ptr<U>> engines_;
+};
+
+template <class T, typename... Args>
+using CachingPricingEngineBuilder = CachingEngineBuilder<T, PricingEngine, Args...>;
+
+template <class T, typename... Args>
+using CachingCouponPricerBuilder = CachingEngineBuilder<T, FloatingRateCouponPricer, Args...>;
+
+} // namespace data
+} // namespace ore

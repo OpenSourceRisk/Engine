@@ -1,0 +1,115 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="testsuite.cpp" />
+    <ClCompile Include="currency.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="discountcurve.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="index.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="logquote.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="analyticlgmswaptionengine.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="crossassetmodel.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="crossassetmodel2.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="crossassetmodelparametrizations.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="dynamicblackvoltermstructure.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="dynamicswaptionvolmatrix.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="staticallycorrectedyieldtermstructure.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="blackvariancecurve.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="cashflow.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="swaptionvolatilityconverter.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="optionletstripper.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="source">
+      <UniqueIdentifier>{8bf6c172-3cec-4354-a7ae-d1634454ff15}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="headers">
+      <UniqueIdentifier>{f43de631-e8f3-49f7-be00-bbe4d2cc9863}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="currency.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="discountcurve.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="index.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="logquote.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="analyticlgmswaptionengine.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="crossassetmodel.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="crossassetmodel2.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="crossassetmodelparametrizations.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="dynamicblackvoltermstructure.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="dynamicswaptionvolmatrix.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="staticallycorrectedyieldtermstructure.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="blackvariancecurve.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cashflow.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="swaptionvolatilityconverter.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="swaptionmarketdata.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="yieldcurvemarketdata.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="capfloormarketdata.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="optionletstripper.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
