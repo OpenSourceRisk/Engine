@@ -1,6 +1,6 @@
 # Process this file with autoconf to produce a configure script.
 AC_INIT([QuantExt], [1.8],
-        [openriskengine.org/forum],
+        [opensourcerisk.org/forum],
         [QuantExt])
 AC_PREREQ(2.62)
 AC_CONFIG_SRCDIR([qle/quantext.hpp])
@@ -10,7 +10,7 @@ AM_INIT_AUTOMAKE([foreign])
 AC_CONFIG_MACRO_DIR([m4])
 
 AC_COPYRIGHT([
-OpenRiskEngine is
+ORE is
 
 Copyright (C) 2016 Quaternion Risk Management Ltd.
 All rights reserved.
@@ -25,7 +25,7 @@ modification, are permitted provided that the following conditions are met :
     this list of conditions and the following disclaimer in the documentation
     and/or other materials provided with the distribution.
 
-    Neither the names of the copyright holders nor the names of the OpenRiskEngine
+    Neither the names of the copyright holders nor the names of the ORE
     Group or its contributors may be used to endorse or promote products
     derived from this software without specific prior written permission.
 
