@@ -33,27 +33,4 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 </pre>
 
-<hr>
-\section license_comments Comments on Copyright and License
-
-%ORE is Non-Copylefted Free Software [1] released under the modified BSD
-License [2] (also know as XFree86-style license).
-
-%ORE is Open Source [3] because of its license: it is OSI Certified Open
-Source Software [4]. OSI Certified is a certification mark of the Open Source
-Initiative [5].
-
-The modified BSD License is GPL compatible as confirmed by the Free Software
-Foundation [6].
-
-This license has been adopted to allow free use of %ORE and its source, to
-make %ORE flourish as a free-software/open-source project. It allows
-proprietary extensions to be commercialized.
-
-[1] http://www.gnu.org/philosophy/categories.html#Non-CopyleftedFreeSoftware<br>
-[2] http://www.opensource.org/licenses/bsd-license.html<br>
-[3] http://www.opensource.org/docs/definition.html<br>
-[4] http://www.opensource.org/docs/certification_mark.html<br>
-[5] http://www.opensource.org<br>
-[6] http://www.gnu.org/philosophy/bsd.html
 */
