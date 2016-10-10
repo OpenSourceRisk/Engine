@@ -1,0 +1,457 @@
+%--------------------------------------------------------
+\subsection{Conventions: {\tt conventions.xml}}
+\label{sec:conventions}
+%--------------------------------------------------------
+
+The conventions to associate with a set market quotes in the construction of termstructures are specified in another xml
+file which we will refer to as {\tt conventions.xml} in the following though the file name can be chosen by the user.
+Each separate set of conventions is stored in an XML node. The type of conventions that a node holds is determined by
+the node name. Every node has an \lstinline!Id! node that gives a unique identifier for the convention set. The
+following sections describe the type of conventions that can be created and the allowed values.
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsubsection{Zero Conventions}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+A node with name \emph{Zero} is used to store conventions for direct zero rate quotes. Direct zero rate quotes can be
+given with an explicit maturity date or with a tenor and a set of conventions from which the maturity date is
+deduced. The node for a zero rate quote with an explicit maturity date is shown in Listing
+\ref{lst:zero_conventions_date}. The node for a tenor based zero rate is shown in Listing
+\ref{lst:zero_conventions_tenor}.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Zero>
+  <Id> </Id>
+  <TenorBased>False</TenorBased>
+  <DayCounter> </DayCounter>
+  <CompoundingFrequency> </CompoundingFrequency>
+  <Compounding> </Compounding>
+</Zero>
+\end{minted}
+\caption{Zero conventions}
+\label{lst:zero_conventions_date}
+\end{listing}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Zero>
+  <Id> </Id>
+  <TenorBased>True</TenorBased>
+  <DayCounter> </DayCounter>
+  <CompoundingFrequency> </CompoundingFrequency>
+  <Compounding> </Compounding>
+  <TenorCalendar> </TenorCalendar>
+  <SpotLag> </SpotLag>
+  <SpotCalendar> </SpotCalendar>
+  <RollConvention> </RollConvention>
+  <EOM> </EOM>
+</Zero>
+\end{minted}
+\caption{Zero conventions, tenor based}
+\label{lst:zero_conventions_tenor}
+\end{listing}
+
+The meanings of the various elements in this node are as follows:
+\begin{itemize}
+\item €TenorBased€: True if the conventions are for a tenor based zero quote and False if they are
+for a zero quote with an explicit maturity date.
+\item DayCounter: The day count basis associated with the zero rate quote (for choices see section
+\ref{sec:allowable_values})
+\item CompoundingFrequency: The frequency of compounding (Choices are {\em Once, Annual, Semiannual, Quarterly,
+Bimonthly, Monthly, Weekly, Daily}).
+\item Compounding: The type of compounding for the zero rate (Choices are {\em Simple, Compounded, Continuous,
+SimpleThenCompounded}).
+\item TenorCalendar: The calendar used to advance from the spot date to the maturity date by the zero rate tenor (for
+choices see section \ref{sec:allowable_values}).
+\item SpotLag [Optional]: The number of business days to advance from the valuation date before applying the zero rate
+tenor. If not provided, this defaults to 0.
+\item SpotCalendar [Optional]: The calendar to use for business days when applying the \lstinline!SpotLag!. If not
+provided, it defaults to a calendar with no holidays.
+\item RollConvention [Optional]: The roll convention to use when applying the zero rate tenor. If not provided, it
+defaults to Following (Choices are {\em Backward, Forward, Zero, ThirdWednesday, Twentieth, TwentiethIMM, CDS}).
+\item EOM [Optional]: Whether or not to use the end of month convention when applying the zero rate tenor. If not
+provided, it defaults to false.
+\end{itemize}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsubsection{Deposit Conventions}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+A node with name \emph{Deposit} is used to store conventions for deposit or index fixing quotes. The conventions can be
+index based, in which case all necessary conventions are deduced from a given index family. The structure of the index
+based node is shown in Listing \ref{lst:deposit_conventions_index}. Alternatively, all the necessary conventions can be
+given explicitly without reference to an index family. The structure of this node is shown in Listing
+\ref{lst:deposit_conventions_explicit}.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Deposit>
+  <Id> </Id>
+  <IndexBased>True</IndexBased>
+  <Index> </Index>
+</Deposit>
+\end{minted}
+\caption{Deposit conventions}
+\label{lst:deposit_conventions_index}
+\end{listing}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Deposit>
+  <Id> </Id>
+  <IndexBased>False</IndexBased>
+  <Calendar> </Calendar>
+  <Convention> </Convention>
+  <EOM> </EOM>
+  <DayCounter> </DayCounter>
+</Deposit>
+\end{minted}
+\caption{Deposit conventions}
+\label{lst:deposit_conventions_explicit}
+\end{listing}
+
+
+The meanings of the various elements in this node are as follows:
+\begin{itemize}
+\item IndexBased: \emph{True} if the deposit conventions are index based and \emph{False} if the conventions are given
+explicitly.
+\item Index: The index family from which to imply the conventions for the deposit quote. For example, this could be
+EUR-EURIBOR, USD-LIBOR etc.
+\item Calendar: The business day calendar for the deposit quote.
+\item Convention: The roll convention for the deposit quote.
+\item EOM: \emph{True} if the end of month roll convention is to be used for the deposit quote and \emph{False} if not.
+\item DayCounter: The day count basis associated with the deposit quote.
+\end{itemize}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsubsection{Future Conventions}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+A node with name \emph{Future} is used to store conventions for IMM Future quotes. The structure of this node is shown
+in Listing \ref{lst:future_conventions}. The only piece of information needed is the underlying money market index name
+and this is given in the \lstinline!Index! node. For example, this could be EUR-EURIBOR-3M, USD-LIBOR-3M etc.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Future>
+  <Id> </Id>
+  <Index> </Index>
+</Future>
+\end{minted}
+\caption{Future conventions}
+\label{lst:future_conventions}
+\end{listing}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsubsection{FRA Conventions}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+A node with name \emph{FRA} is used to store conventions for FRA quotes. The structure of this node is shown in Listing 
+\ref{lst:fra_conventions}. The only piece of information needed is the underlying index name and this is given in the 
+\lstinline!Index! node. For example, this could be EUR-EURIBOR-6M, CHF-LIBOR-6M etc.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<FRA>
+  <Id> </Id>
+  <Index> </Index>
+</FRA>
+\end{minted}
+\caption{FRA conventions}
+\label{lst:fra_conventions}
+\end{listing}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsubsection{OIS Conventions}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+A node with name \emph{OIS} is used to store conventions for Overnight Indexed Swap (OIS) quotes. The structure of this
+node is shown in Listing \ref{lst:ois_conventions}.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<OIS>
+  <Id> </Id>
+  <SpotLag> </SpotLag>
+  <Index> </Index>
+  <FixedDayCounter> </FixedDayCounter>
+  <PaymentLag> </PaymentLag>
+  <EOM> </EOM>
+  <FixedFrequency> </FixedFrequency>
+  <FixedConvention> </FixedConvention>
+  <FixedPaymentConvention> </FixedPaymentConvention>
+  <Rule> </Rule>
+</OIS>
+\end{minted}
+\caption{OIS conventions}
+\label{lst:ois_conventions}
+\end{listing}
+
+The meanings of the various elements in this node are as follows:
+\begin{itemize}
+\item SpotLag: The number of business days until the start of the OIS.
+\item Index: The name of the overnight index. For example, this could be EUR-EONIA, USD-FedFunds etc.
+\item FixedDayCounter: The day count basis on the fixed leg of the OIS.
+\item PaymentLag [Optional]: The payment lag, as a number of business days, on both legs. If not provided, this defaults
+to 0.
+\item EOM [Optional]: \emph{True} if the end of month roll convention is to be used when generating the OIS schedule and
+\emph{False} if not. If not provided, this defaults to \emph{False}.
+\item FixedFrequency [Optional]: The frequency of payments on the fixed leg. If not provided, this defaults to
+\emph{Annual}.
+\item FixedConvention [Optional]: The roll convention for accruals on the fixed leg. If not provided, this defaults to
+\emph{Following}.
+\item FixedPaymentConvention [Optional]: The roll convention for payments on the fixed leg. If not provided, this
+defaults to \emph{Following}.
+\item Rule [Optional]: The rule used for generating the OIS dates schedule i.e.\ \emph{Backward} or \emph{Forward}. If
+not provided, this defaults to \emph{Backward}.
+\end{itemize}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsubsection{Swap Conventions}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+A node with name \emph{Swap} is used to store conventions for vanilla interest rate swap (IRS) quotes. The structure of
+this node is shown in Listing \ref{lst:swap_conventions}.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Swap>
+  <Id> </Id>
+  <FixedCalendar> </FixedCalendar>
+  <FixedFrequency> </FixedFrequency>
+  <FixedConvention> </FixedConvention>
+  <FixedDayCounter> </FixedDayCounter>
+  <Index> </Index>
+</Swap>
+\end{minted}
+\caption{Swap conventions}
+\label{lst:swap_conventions}
+\end{listing}
+
+The meanings of the various elements in this node are as follows:
+\begin{itemize}
+\item FixedCalendar: The business day calendar on the fixed leg.
+\item FixedFrequency: The frequency of payments on the fixed leg.
+\item FixedConvention: The roll convention on the fixed leg.
+\item FixedDayCounter: The day count basis on the fixed leg.
+\item Index: The Ibor index on the floating leg.
+\end{itemize}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsubsection{Average OIS Conventions}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+A node with name \emph{AverageOIS} is used to store conventions for average OIS quotes. An average OIS is a swap where a
+fixed rate is swapped against a daily averaged overnight index plus a spread. The structure of this node is shown in
+Listing \ref{lst:average_ois_conventions}.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<AverageOIS>
+  <Id> </Id>
+  <SpotLag> </SpotLag>
+  <FixedTenor> </FixedTenor>
+  <FixedDayCounter> </FixedDayCounter>
+  <FixedCalendar> </FixedCalendar>
+  <FixedConvention> </FixedConvention>
+  <FixedPaymentConvention> </FixedPaymentConvention>
+  <Index> </Index>
+  <OnTenor> </OnTenor>
+  <RateCutoff> </RateCutoff>
+</AverageOIS>
+\end{minted}
+\caption{Average OIS conventions}
+\label{lst:average_ois_conventions}
+\end{listing}
+
+
+The meanings of the various elements in this node are as follows:
+\begin{itemize}
+\item SpotLag: Number of business days until the start of the average OIS.
+\item FixedTenor: The frequency of payments on the fixed leg.
+\item FixedDayCounter: The day count basis on the fixed leg.
+\item FixedCalendar: The business day calendar on the fixed leg.
+\item FixedFrequency: The frequency of payments on the fixed leg.
+\item FixedConvention: The roll convention for accruals on the fixed leg.
+\item FixedPaymentConvention: The roll convention for payments on the fixed leg.
+\item Index: The name of the overnight index.
+\item OnTenor: The frequency of payments on the overnight leg.
+\item RateCutoff: The rate cut-off on the overnight leg. Generally, the overnight fixing is only observed up to a
+certain number of days before the payment date and the last observed rate is applied for the remaining days in the
+period. This rate cut-off gives the number of days e.g.\ 2 for Fed Funds average OIS.
+\end{itemize}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsubsection{Tenor Basis Swap Conventions}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+A node with name \emph{TenorBasisSwap} is used to store conventions for tenor basis swap quotes. The structure of this 
+node is shown in Listing \ref{lst:tenor_basis_conventions}.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<TenorBasisSwap>
+  <Id> </Id>
+  <LongIndex> </LongIndex>
+  <ShortIndex> </ShortIndex>
+  <ShortPayTenor> </ShortPayTenor>
+  <SpreadOnShort> </SpreadOnShort>
+  <IncludeSpread> </IncludeSpread>
+  <SubPeriodsCouponType> </SubPeriodsCouponType>
+</TenorBasisSwap>
+\end{minted}
+\caption{Tenor basis swap conventions}
+\label{lst:tenor_basis_conventions}
+\end{listing}
+
+
+The meanings of the various elements in this node are as follows:
+\begin{itemize}
+\item LongIndex: The name of the long tenor Ibor index.
+\item ShortIndex: The name of the short tenor Ibor index.
+\item ShortPayTenor [Optional]: The frequency of payments on the short tenor Ibor leg. This is usually the same as the
+short tenor Ibor index's tenor. However, it can also be longer e.g.\ USD tenor basis swaps where the short tenor Ibor
+index is compounded and paid on the same frequency as the long tenor Ibor index. If not provided, this defaults to the
+short tenor Ibor index's tenor.
+\item SpreadOnShort [Optional]: \emph{True} if the tenor basis swap quote has the spread on the short tenor Ibor index
+leg and \emph{False} if not. If not provided, this defaults to \emph{True}.
+\item IncludeSpread [Optional]: \emph{True} if the tenor basis swap spread is to be included when compounding is
+performed on the short tenor Ibor index leg and \emph{False} if not. If not provided, this defaults to \emph{False}.
+\item SubPeriodsCouponType [Optional]: This field can have the value \emph{Compounding} or \emph{Averaging} and it only
+applies when the frequency of payments on the short tenor Ibor leg does not equal the short tenor Ibor index's tenor. If
+\emph{Compounding} is specified, then the short tenor Ibor index is compounded and paid on the frequency specified in
+the \lstinline!ShortPayTenor! node. If \emph{Averaging} is specified, then the short tenor Ibor index is averaged and
+paid on the frequency specified in the \lstinline!ShortPayTenor! node. If not provided, this defaults to
+\emph{Compounding}.
+\end{itemize}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsubsection{Tenor Basis Two Swap Conventions}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+A node with name \emph{TenorBasisTwoSwap} is used to store conventions for tenor basis swap quotes where the quote is
+the spread between the fair fixed rate on two swaps against Ibor indices of different tenors. We call the swap against
+the Ibor index of longer tenor the long swap and the remaining swap the short swap. The structure of the tenor basis two
+swap conventions node is shown in Listing \ref{lst:tenor_basis_two_conventions}.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<TenorBasisTwoSwap>
+  <Id> </Id>
+  <Calendar> </Calendar>
+  <LongFixedFrequency> </LongFixedFrequency>
+  <LongFixedConvention> </LongFixedConvention>
+  <LongFixedDayCounter> </LongFixedDayCounter>
+  <LongIndex> </LongIndex>
+  <ShortFixedFrequency> </ShortFixedFrequency>
+  <ShortFixedConvention> </ShortFixedConvention>
+  <ShortFixedDayCounter> </ShortFixedDayCounter>
+  <ShortIndex> </ShortIndex>
+  <LongMinusShort> </LongMinusShort>
+</TenorBasisTwoSwap>
+\end{minted}
+\caption{Tenor basis two swap conventions}
+\label{lst:tenor_basis_two_conventions}
+\end{listing}
+
+The meanings of the various elements in this node are as follows:
+\begin{itemize}
+\item Calendar: The business day calendar on both swaps.
+\item LongFixedFrequency: The frequency of payments on the fixed leg of the long swap.
+\item LongFixedConvention: The roll convention on the fixed leg of the long swap.
+\item LongFixedDayCounter: The day count basis on the fixed leg of the long swap.
+\item LongIndex: The Ibor index on the floating leg of the long swap.
+\item ShortFixedFrequency: The frequency of payments on the fixed leg of the short swap.
+\item ShortFixedConvention: The roll convention on the fixed leg of the short swap.
+\item ShortFixedDayCounter: The day count basis on the fixed leg of the short swap.
+\item ShortIndex: The Ibor index on the floating leg of the short swap.
+\item LongMinusShort [Optional]: \emph{True} if the basis swap spread is to be interpreted as the fair rate on the long
+swap minus the fair rate on the short swap and \emph{False} if the basis swap spread is to be interpreted as the fair
+rate on the short swap minus the fair rate on the long swap. If not provided, it defaults to \emph{True}.
+\end{itemize}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsubsection{FX Conventions}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+A node with name \emph{FX} is used to store conventions for FX spot and forward quotes for a given currency pair. The
+structure of this node is shown in Listing \ref{lst:fx_conventions}.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<FX>
+  <Id> </Id>
+  <SpotDays> </SpotDays>
+  <SourceCurrency> </SourceCurrency>
+  <TargetCurrency> </TargetCurrency>
+  <PointsFactor> </PointsFactor>
+  <AdvanceCalendar> </AdvanceCalendar>
+  <SpotRelative> </SpotRelative>
+  <AdditionalSettleCalendar> </AdditionalSettleCalendar>
+</FX>
+\end{minted}
+\caption{FX conventions}
+\label{lst:fx_conventions}
+\end{listing}
+
+
+The meanings of the various elements in this node are as follows:
+\begin{itemize}
+\item SpotDays: The number of business days to spot for the currency pair.
+\item SourceCurrency: The source currency of the currency pair. The FX quote is assumed to give the number of units of
+target currency per unit of source currency.
+\item TargetCurrency: The target currency of the currency pair.
+\item PointsFactor: The number by which a points quote for the currency pair should be divided before adding it to the
+spot quote to obtain the forward rate.
+\item AdvanceCalendar [Optional]: The business day calendar(s) used for advancing dates for both spot and forwards. If
+not provided, it defaults to a calendar with no holidays.
+\item SpotRelative [Optional]: \emph{True} if the forward tenor is to be interpreted as being relative to the spot date.
+\emph{False} if the forward tenor is to be interpreted as being relative to the valuation date. If not provided, it
+defaults to \emph{True}.
+\item AdditionalSettleCalendar [Optional]: In some cases, when the spot date is calculated using the values in the
+\lstinline!AdvanceCalendar! and \lstinline!SpotDays! nodes, it is checked against an additional settlement calendar(s)
+and if it is not a good business day then it is moved forward until it is a good business day on both the additional
+settlement calendar(s) and the AdvanceCalendar. This additional settlement calendar(s) can be specified here. If not
+provided, it defaults to a calendar with no holidays.
+\end{itemize}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsubsection{Cross Currency Basis Swap Conventions}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+A node with name \emph{CrossCurrencyBasis} is used to store conventions for cross currency basis swap quotes. The
+structure of this node is shown in Listing \ref{lst:xccy_basis_conventions}.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CrossCurrencyBasis>
+  <Id> </Id>
+  <SettlementDays> </SettlementDays>
+  <SettlementCalendar> </SettlementCalendar>
+  <RollConvention> </RollConvention>
+  <FlatIndex> </FlatIndex>
+  <SpreadIndex> </SpreadIndex>
+  <EOM> </EOM>
+</CrossCurrencyBasis>
+\end{minted}
+\caption{Cross currency basis swap conventions}
+\label{lst:xccy_basis_conventions}
+\end{listing}
+
+
+The meanings of the various elements in this node are as follows:
+\begin{itemize}
+\item SettlementDays: The number of business days to the start of the cross currency basis swap.
+\item SettlementCalendar: The business day calendar(s) for both legs and to arrive at the settlement date using the
+SettlementDays above.
+\item RollConvention: The roll convention for both legs.
+\item FlatIndex: The name of the index on the leg that does not have the cross currency basis spread.
+\item SpreadIndex: The name of the index on the leg that has the cross currency basis spread.
+\item EOM [Optional]: \emph{True} if the end of month convention is to be used when generating the schedule on both legs
+and \emph{False} if not. If not provided, it defaults to \emph{False}.
+\end{itemize}
