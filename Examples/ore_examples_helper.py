@@ -26,9 +26,9 @@ class OreExample(object):
     def _locate_ore_exe(self):
         if os.name == 'nt':
             if  platform.machine()[-2:] == "64":
-                self.ore_exe = "..\\..\\bin\\x64\\ore.exe"
+                self.ore_exe = "..\\..\\App\\bin\\x64\\Release\\ore.exe"
             else:
-                self.ore_exe = "..\\..\\bin\\win32\\ore.exe"
+                self.ore_exe = "..\\..\\App\\bin\\Win32\\Release\\ore.exe"
         else:
             self.ore_exe = "../../App/ore"
 
