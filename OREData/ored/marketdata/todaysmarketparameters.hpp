@@ -369,4 +369,4 @@ inline void TodaysMarketParameters::addDefaultCurves(const string& id, const map
 }
 
 } // namespace data
-} // namesapce openriskengine
+} // namesapce ore

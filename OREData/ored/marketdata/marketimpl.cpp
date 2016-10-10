@@ -200,4 +200,4 @@ void MarketImpl::refresh(const string& configuration) {
 } // refresh
 
 } // namespace data
-} // namesapce openriskengine
+} // namespace ore
