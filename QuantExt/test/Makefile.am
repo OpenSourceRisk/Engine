@@ -15,7 +15,10 @@ QLE_TESTS = \
 	logquote.hpp logquote.cpp \
     cashflow.hpp cashflow.cpp \
 	swaptionvolatilityconverter.hpp swaptionvolatilityconverter.cpp \
-	optionletstripper.hpp optionletstripper.cpp
+	optionletstripper.hpp optionletstripper.cpp \
+	capfloormarketdata.hpp \
+	swaptionmarketdata.hpp \
+	yieldcurvemarketdata.hpp
 
 dist-hook:
 	mkdir -p $(distdir)/build

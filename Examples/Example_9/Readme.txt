@@ -17,5 +17,5 @@
 
 5) Run Example
 
-   ./run.py
+   python run.py
          

@@ -50,3 +50,5 @@
    EPE and ENE compared for different trade combinations 
 
 5) Run Example
+
+   python run.py

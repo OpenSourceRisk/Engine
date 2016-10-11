@@ -25,7 +25,11 @@
 
 5) Run Example
 
-   ./python3 run_A.py
-   ./python3 run_B.py
-   ./python3 run_C.py
-   ./python3 run_D.py
+   python run_A.py
+   python run_B.py
+   python run_C.py
+   python run_D.py
+
+   or combine all cases with
+
+   python run.py
