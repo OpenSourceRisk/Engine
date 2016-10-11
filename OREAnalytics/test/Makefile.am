@@ -1,5 +1,5 @@
 
-OPENRISKENGINEANALYTICS_TESTS = \
+OREANALYTICS_TESTS = \
 	testsuite.cpp \
 	aggregationscenariodata.hpp aggregationscenariodata.cpp \
 	cube.hpp cube.cpp \
@@ -39,7 +39,7 @@ main.cpp: Makefile.am
 
 bin_PROGRAMS = orea-test-suite
 
-orea_test_suite_SOURCES = ${OPENRISKENGINEANALYTICS_TESTS}
+orea_test_suite_SOURCES = ${OREANALYTICS_TESTS}
 orea_test_suite_LDADD = libUnitMain.la
 orea_test_suite_LDFLAGS = \
     -lQuantLib \
@@ -52,12 +52,15 @@ orea_test_suite_LDFLAGS = \
 TESTS = orea-test-suite$(EXEEXT)
 TESTS_ENVIRONMENT = BOOST_TEST_LOG_LEVEL=message
 
-EXTRA_DIST =
+EXTRA_DIST = \
+	OREAnalyticsTestSuite.vcxproj \
+	OREAnalyticsTestSuite.vcxproj.filters
 
 else
 
 EXTRA_DIST = \
-	${OPENRISKENGINEANALYTICS_TESTS} \
-	OREAnalyticsTestSuite.vcxproj
+	${OREANALYTICS_TESTS} \
+	OREAnalyticsTestSuite.vcxproj \
+	OREAnalyticsTestSuite.vcxproj.filters
 
 endif

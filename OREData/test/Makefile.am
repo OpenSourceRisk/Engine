@@ -1,9 +1,9 @@
 
-OPENRISKENGINEDATA_TESTS = \
+OREDATA_TESTS = \
 	testsuite.cpp \
 	calendars.hpp calendars.cpp \
 	fxoption.hpp fxoption.cpp \
-    ccyswapwithresets.hpp ccyswapwithresets.cpp \
+	ccyswapwithresets.hpp ccyswapwithresets.cpp \
 	fxtriangulation.hpp fxtriangulation.cpp \
 	indices.hpp indices.cpp \
 	parser.hpp parser.cpp \
@@ -46,7 +46,7 @@ main.cpp: Makefile.am
 
 bin_PROGRAMS = ored-test-suite
 
-ored_test_suite_SOURCES = ${OPENRISKENGINEDATA_TESTS}
+ored_test_suite_SOURCES = ${OREDATA_TESTS}
 ored_test_suite_LDADD = libUnitMain.la
 ored_test_suite_LDFLAGS = \
     -lQuantLib \
@@ -57,12 +57,15 @@ ored_test_suite_LDFLAGS = \
 TESTS = ored-test-suite$(EXEEXT)
 TESTS_ENVIRONMENT = BOOST_TEST_LOG_LEVEL=message
 
-EXTRA_DIST =
+EXTRA_DIST = \
+	OREDataTestSuite.vcxproj \
+	OREDataTestSuite.vcxproj.filters
 
 else
 
 EXTRA_DIST = \
-	${OPENRISKENGINEDATA_TESTS} \
-	OREDataTestSuite.vcxproj
+	${OREDATA_TESTS} \
+	OREDataTestSuite.vcxproj \
+	OREDataTestSuite.vcxproj.filters
 
 endif
