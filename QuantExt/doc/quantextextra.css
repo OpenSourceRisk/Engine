@@ -93,3 +93,59 @@
     text-shadow: none !important;
 }
 
+.navpath ul
+{
+	font-size: 11px;
+	background-image:url('http://www.opensourcerisk.org/docs/orea/tab_b.png')!important;
+	background-repeat:repeat-x;
+	background-position: 0 -5px;
+	height:30px;
+	line-height:30px;
+	color:#fff;
+	border:solid 1px #C2CDE4;
+	overflow:hidden;
+	margin:0px;
+	padding:0px;
+}
+
+.navpath li
+{
+	list-style-type:none;
+	float:left;
+	padding-left:10px;
+	padding-right:15px;
+	background-image:url('http://www.opensourcerisk.org/docs/orea/bc_s.png') !important;
+	background-repeat:no-repeat;
+	background-position:right;
+	color:#fff;
+}
+
+.navpath li.navelem a
+{
+	height:32px;
+	display:block;
+	text-decoration: none;
+	outline: none;
+	color: #fff;
+	font-family: 'Lucida Grande',Geneva,Helvetica,Arial,sans-serif;
+	text-shadow: none;
+	text-decoration: none;        
+}
+
+.navpath li.navelem a:hover
+{
+	color:#6884BD;
+}
+
+.navpath li.footer
+{
+        list-style-type:none;
+        float:right;
+        padding-left:10px;
+        padding-right:15px;
+        background-image:none;
+        background-repeat:no-repeat;
+        background-position:right;
+        color:#fff;
+        font-size: 8pt;
+}
