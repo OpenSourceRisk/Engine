@@ -155,7 +155,7 @@ HTML_HEADER            = quantextheader.html
 HTML_FOOTER            = quantextfooter.html
 HTML_STYLESHEET        =
 HTML_EXTRA_STYLESHEET  = quantextextra.css
-HTML_EXTRA_FILES       = images/favicon.png
+HTML_EXTRA_FILES       = images/favicon.png images/logo-qle@2x.png
 HTML_COLORSTYLE_HUE    = 220
 HTML_COLORSTYLE_SAT    = 100
 HTML_COLORSTYLE_GAMMA  = 80
@@ -279,7 +279,7 @@ SKIP_FUNCTION_MACROS   = YES
 #---------------------------------------------------------------------------
 # Configuration options related to external references
 #---------------------------------------------------------------------------
-TAGFILES               = ../../QuantLib/Docs/quantlib.tag=../ql
+TAGFILES               = #../../QuantLib/Docs/quantlib.tag=../ql
 GENERATE_TAGFILE       = quantext.tag
 ALLEXTERNALS           = NO
 EXTERNAL_GROUPS        = NO
