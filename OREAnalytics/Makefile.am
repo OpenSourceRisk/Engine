@@ -8,6 +8,7 @@ m4datadir = $(datadir)/aclocal
 
 EXTRA_DIST = \
 	autogen.sh \
+	OREAnalytics_vc12.sln \
 	OREAnalytics_vc14.sln \
 	OREAnalytics.vcxproj \
 	OREAnalytics.vcxproj.filters \
