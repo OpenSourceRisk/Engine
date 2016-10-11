@@ -155,7 +155,7 @@ HTML_HEADER            = oreaheader.html
 HTML_FOOTER            = oreafooter.html
 HTML_STYLESHEET        =
 HTML_EXTRA_STYLESHEET  = oreaextra.css
-HTML_EXTRA_FILES       = images/favicon.png
+HTML_EXTRA_FILES       = images/favicon.png images/logo-analytics@2x.png
 HTML_COLORSTYLE_HUE    = 220
 HTML_COLORSTYLE_SAT    = 100
 HTML_COLORSTYLE_GAMMA  = 80
@@ -279,8 +279,7 @@ SKIP_FUNCTION_MACROS   = YES
 #---------------------------------------------------------------------------
 # Configuration options related to external references
 #---------------------------------------------------------------------------
-TAGFILES               = ../../QuantLib/Docs/quantlib.tag=../ql \
-                         ../../QuantExt/doc/quantext.tag=../qle \
+TAGFILES               = ../../QuantExt/doc/quantext.tag=../qle \
                          ../../OREData/doc/ored.tag=../ored
 GENERATE_TAGFILE       = orea.tag
 ALLEXTERNALS           = NO
