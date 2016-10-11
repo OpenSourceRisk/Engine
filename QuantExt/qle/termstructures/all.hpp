@@ -21,3 +21,10 @@
 #include <qle/termstructures/datedstrippedoptionletbase.hpp>
 #include <qle/termstructures/dynamicoptionletvolatilitystructure.hpp>
 #include <qle/termstructures/dynamicstype.hpp>
+#include <qle/termstructures/optionletstripper1.hpp>
+#include <qle/termstructures/optionletstripper2.hpp>
+#include <qle/termstructures/spreadedoptionletvolatility.hpp>
+#include <qle/termstructures/spreadedsmilesection.hpp>
+#include <qle/termstructures/spreadedswaptionvolatility.hpp>
+#include <qle/termstructures/swaptionvolatilityconverter.hpp>
+

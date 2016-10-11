@@ -1,12 +1,16 @@
 1) Portfolio
-   20Y EUR swap, notional = 1M, receive 3% semi-annual and pay EURIBOR 6M semi-annual. Netting set = CPTY_A.
+   20Y EUR swap, notional = 1M, receive 3% semi-annual and pay EURIBOR
+   6M semi-annual. Netting set = CPTY_A.
+
 2) Market
    
-   Yield curves 20/05/2016 and normal cap volatility surfaces in EUR, GBP and USD
+   Yield curves 20/05/2016 and normal cap volatility surfaces in EUR,
+   GBP and USD
 		
 3) Pricing
 
-   Multi-curve pricing (EUR collateralised) with normal (Bachelier) cap pricing
+   Multi-curve pricing (EUR collateralised) with normal (Bachelier)
+   cap pricing
 
 4) Analytics
 
@@ -14,4 +18,4 @@
 
 5) Run Example
 
-python3 run.py
+   python run.py

@@ -32,5 +32,5 @@
 
 5) Run Example
 
-   ./run.sh
+   python run.py
    

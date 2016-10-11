@@ -49,7 +49,7 @@ this_include_HEADERS = \
 	datedstrippedoptionletadapter.hpp \
 	datedstrippedoptionletbase.hpp \
 	dynamicoptionletvolatilitystructure.hpp \
-	dynamicstype.hpp
+	dynamicstype.hpp \
 	optionletstripper1.hpp \
 	optionletstripper2.hpp \
 	spreadedoptionletvolatility.hpp \
