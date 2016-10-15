@@ -474,7 +474,17 @@ Alternatively, compile all Boost libraries directly from the source code:
 \% make -j4
 }
 
-This will build both the QuantExt library and test suite.
+This will build both the QuantExt library and test suite using the
+QuantLib code you compiled in the previous step.  If you already have
+an installed version of QuantLib on your machine and you want to use
+it, you can change the {\tt ./configure} command above to
+
+{\tt\footnotesize
+\% ./configure --with-quantlib-prefix=/usr/local
+}
+
+where you can replace {\tt /usr/local} with the path where you
+installed QuantLib.
 
 \item Run the test suite
 

@@ -35,7 +35,7 @@
 #include <ql/time/calendars/nullcalendar.hpp>
 #include <ql/time/calendars/target.hpp>
 
-#include <test-suite/utilities.hpp>
+#include <test/utilities.hpp>
 
 #include <boost/make_shared.hpp>
 
