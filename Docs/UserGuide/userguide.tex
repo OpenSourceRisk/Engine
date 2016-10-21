@@ -2653,7 +2653,9 @@ $\Delta$:
 \COLVA &= \E^N\left[ \sum_i C(t_i)\cdot \Delta \cdot \delta_i \cdot D(t_{i+1}) \right]
 \label{COLVA}
 \end{align}
-where $C(t)$ is the collateral posted and $D(t)$ is the stochastic discount factor $1/N(t)$ in LGM. Both $C(t)$ and
+where $C(t)$ is the collateral posted\footnote{i.e. $C(t)>0$ means that {\em we} have to post a collateral amount of
+  $C(t)$ and $C(t)<0$ means that we receive a collateral amount of $-C(t)$ from the counterparty} and $D(t)$ is the
+stochastic discount factor $1/N(t)$ in LGM. Both $C(t)$ and
 $N(t)$ are computed in ORE's Monte Carlo framework, and the expectation yields the desired adjustment. \\
  
 Replacing the constant spread by a time-dependent deterministic function in ORE is straight forward. 
