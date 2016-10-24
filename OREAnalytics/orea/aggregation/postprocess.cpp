@@ -758,7 +758,7 @@ void PostProcess::updateAllocatedXVA() {
     }
 }
 
-Array PostProcess::regressorArray(Size dateIndex, Size sampleIndex) {
+Disposable<Array> PostProcess::regressorArray(Size dateIndex, Size sampleIndex) {
     Array a(dimRegressors_.size());
     for (Size i = 0; i < dimRegressors_.size(); ++i) {
         string variable = dimRegressors_[i];
@@ -821,7 +821,7 @@ void PostProcess::dynamicInitialMargin() {
     Size polynomOrder = dimRegressionOrder_;
     LOG("DIM regression polynom order = " << dimRegressionOrder_);
     LsmBasisSystem::PolynomType polynomType = LsmBasisSystem::Monomial;
-    Size regressionDimension = dimRegressors_.size() == 0 ? 1 : dimRegressors_.size();
+    Size regressionDimension = dimRegressors_.empty() ? 1 : dimRegressors_.size();
     LOG("DIM regression dimension = " << regressionDimension);
     std::vector<boost::function1<Real, Array>> v(
         LsmBasisSystem::multiPathBasisSystem(regressionDimension, polynomOrder, polynomType));
@@ -866,7 +866,7 @@ void PostProcess::dynamicInitialMargin() {
                 Real f = nettingSetFLOW_[n][j][k] * num1;
                 Real y = nettingSetNPV_[n][j + 1][k] * num2;
                 Real z = (y + f - x);
-                rx[k] = regressorArray(j, k);
+                rx[k] = dimRegressors_.empty() ? Array(1, nettingSetNPV_[n][j][k]) : regressorArray(j, k);
                 rx0[k] = rx[k][0];
                 ry1[k] = z;     // for local regression
                 ry2[k] = z * z; // for least squares regression
@@ -902,7 +902,7 @@ void PostProcess::dynamicInitialMargin() {
                 // Evaluate regression function to compute DIM for each scenario
                 for (Size k = 0; k < samples; ++k) {
                     Real num1 = scenarioData_->get(j, k, AggregationScenarioDataType::Numeraire);
-                    Array regressor = regressorArray(j, k);
+                    Array regressor = dimRegressors_.empty() ? Array(1, nettingSetNPV_[n][j][k]) : regressorArray(j, k);
                     Real e = 0.0;
                     for (Size l = 0; l < v.size(); l++)
                         e += coeff[l] * v[l](regressor);
@@ -1163,62 +1163,74 @@ void PostProcess::exportDimEvolution(const std::string& fileName, const std::str
     LOG("Exporting expected DIM through time done");
 }
 
-bool lessThan(const Array& a, const Array& b) { return a[0] < b[0]; }
+bool lessThan(const Array& a, const Array& b) {
+    QL_REQUIRE(a.size() > 0, "array a is empty");
+    QL_REQUIRE(b.size() > 0, "array a is empty");
+    return a[0] < b[0];
+}
 
-void PostProcess::exportDimRegression(const std::string& fileName, const std::string& nettingSet, Size timeStep) {
-    LOG("Export DIM by sample for netting set " << nettingSet << " and time step " << timeStep);
+void PostProcess::exportDimRegression(const std::vector<string>& fileNames, const std::string& nettingSet,
+                                      const std::vector<Size>& timeSteps) {
 
-    std::ofstream file;
-    file.open(fileName.c_str());
-    QL_REQUIRE(file.is_open(), "error opening file " << fileName);
-    file.setf(ios::fixed, ios::floatfield);
-    file.setf(ios::showpoint);
+    QL_REQUIRE(fileNames.size() == timeSteps.size(),
+               "number of file names (" << fileNames.size() << ") does not match number of time steps ("
+                                        << timeSteps.size() << ")");
+    for (Size ii = 0; ii < timeSteps.size(); ++ii) {
+        Size timeStep = timeSteps[ii];
+        LOG("Export DIM by sample for netting set " << nettingSet << " and time step " << timeStep);
 
-    Size dates = dimCube_->dates().size();
-    const std::vector<std::string>& ids = dimCube_->ids();
+        std::ofstream file;
+        file.open(fileNames[ii].c_str());
+        QL_REQUIRE(file.is_open(), "error opening file " << fileNames[ii]);
+        file.setf(ios::fixed, ios::floatfield);
+        file.setf(ios::showpoint);
 
-    int index = -1;
-    for (Size i = 0; i < ids.size(); ++i) {
-        if (ids[i] == nettingSet) {
-            index = i;
-            break;
+        Size dates = dimCube_->dates().size();
+        const std::vector<std::string>& ids = dimCube_->ids();
+
+        int index = -1;
+        for (Size i = 0; i < ids.size(); ++i) {
+            if (ids[i] == nettingSet) {
+                index = i;
+                break;
+            }
         }
-    }
-    QL_REQUIRE(index >= 0, "netting set " << nettingSet << " not found in DIM cube");
+        QL_REQUIRE(index >= 0, "netting set " << nettingSet << " not found in DIM cube");
 
-    QL_REQUIRE(timeStep < dates - 1, "selected time step " << timeStep << " out of range [0, " << dates - 1 << "]");
+        QL_REQUIRE(timeStep < dates - 1, "selected time step " << timeStep << " out of range [0, " << dates - 1 << "]");
 
-    Size samples = cube_->samples();
-    vector<Real> numeraires(samples, 0.0);
-    for (Size k = 0; k < samples; ++k)
-        numeraires[k] = scenarioData_->get(timeStep, k, AggregationScenarioDataType::Numeraire);
+        Size samples = cube_->samples();
+        vector<Real> numeraires(samples, 0.0);
+        for (Size k = 0; k < samples; ++k)
+            numeraires[k] = scenarioData_->get(timeStep, k, AggregationScenarioDataType::Numeraire);
 
-    auto p = sort_permutation(regressorArray_[nettingSet][timeStep], lessThan);
-    vector<Array> reg = apply_permutation(regressorArray_[nettingSet][timeStep], p);
-    vector<Real> dim = apply_permutation(nettingSetDIM_[nettingSet][timeStep], p);
-    vector<Real> ldim = apply_permutation(nettingSetLocalDIM_[nettingSet][timeStep], p);
-    vector<Real> delta = apply_permutation(nettingSetDeltaNPV_[nettingSet][timeStep], p);
-    vector<Real> num = apply_permutation(numeraires, p);
+        auto p = sort_permutation(regressorArray_[nettingSet][timeStep], lessThan);
+        vector<Array> reg = apply_permutation(regressorArray_[nettingSet][timeStep], p);
+        vector<Real> dim = apply_permutation(nettingSetDIM_[nettingSet][timeStep], p);
+        vector<Real> ldim = apply_permutation(nettingSetLocalDIM_[nettingSet][timeStep], p);
+        vector<Real> delta = apply_permutation(nettingSetDeltaNPV_[nettingSet][timeStep], p);
+        vector<Real> num = apply_permutation(numeraires, p);
 
-    file << "Sample,";
-    for (Size k = 0; k < reg[0].size(); ++k) {
-        file << "Regressor_" << k << "_" << dimRegressors_[k] << ",";
-    }
-    file << "RegressionDIM,LocalDIM,ExpectedDIM,ZeroOrderDIM,DeltaNPV" << endl;
-
-    // Note that RegressionDIM, LocalDIM, ZeroOrderDim, DeltaNPV are _not_ reduced by the numeraire in this output,
-    // but ExpectedDIM _is_ reduced by the numeraire.
-
-    for (Size j = 0; j < reg.size(); ++j) {
-        file << j << "," << setprecision(6);
-        for (Size k = 0; k < reg[j].size(); ++k) {
-            file << reg[j][k] << ",";
+        file << "Sample,";
+        for (Size k = 0; k < reg[0].size(); ++k) {
+            file << "Regressor_" << k << "_" << (dimRegressors_.empty() ? "NPV" : dimRegressors_[k]) << ",";
         }
-        file << dim[j] * num[j] << "," << ldim[j] * num[j] << "," << nettingSetExpectedDIM_[nettingSet][timeStep] << ","
-             << nettingSetZeroOrderDIM_[nettingSet][timeStep] << "," << delta[j] << endl;
+        file << "RegressionDIM,LocalDIM,ExpectedDIM,ZeroOrderDIM,DeltaNPV" << endl;
+
+        // Note that RegressionDIM, LocalDIM, ZeroOrderDim, DeltaNPV are _not_ reduced by the numeraire in this output,
+        // but ExpectedDIM _is_ reduced by the numeraire.
+
+        for (Size j = 0; j < reg.size(); ++j) {
+            file << j << "," << setprecision(6);
+            for (Size k = 0; k < reg[j].size(); ++k) {
+                file << reg[j][k] << ",";
+            }
+            file << dim[j] * num[j] << "," << ldim[j] * num[j] << "," << nettingSetExpectedDIM_[nettingSet][timeStep]
+                 << "," << nettingSetZeroOrderDIM_[nettingSet][timeStep] << "," << delta[j] << endl;
+        }
+        file.close();
+        LOG("Exporting DIM by Sample done");
     }
-    file.close();
-    LOG("Exporting DIM by Sample done");
 }
 }
 }
