@@ -50,13 +50,13 @@ bool CrossAssetModelData::operator==(const CrossAssetModelData& rhs) {
         return false;
     }
 
-    for (int i = 0; i < irConfigs_.size(); i++) {
+    for (unsigned int i = 0; i < irConfigs_.size(); i++) {
         if (*irConfigs_[i] != *(rhs.irConfigs_[i])) {
             return false;
         }
     }
 
-    for (int i = 0; i < fxConfigs_.size(); i++) {
+    for (unsigned int i = 0; i < fxConfigs_.size(); i++) {
         if (*fxConfigs_[i] != *(rhs.fxConfigs_[i])) {
             return false;
         }
@@ -264,13 +264,13 @@ XMLNode* CrossAssetModelData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, crossAssetModelNode, "BootstrapTolerance", bootstrapTolerance_);
 
     XMLNode* interestRateModelsNode = XMLUtils::addChild(doc, crossAssetModelNode, "InterestRateModels");
-    for (int irConfigs_Iterator = 0; irConfigs_Iterator < irConfigs_.size(); irConfigs_Iterator++) {
+    for (unsigned int irConfigs_Iterator = 0; irConfigs_Iterator < irConfigs_.size(); irConfigs_Iterator++) {
         XMLNode* lgmNode = irConfigs_[irConfigs_Iterator]->toXML(doc);
         XMLUtils::appendNode(interestRateModelsNode, lgmNode);
     }
 
     XMLNode* foreignExchangeModelsNode = XMLUtils::addChild(doc, crossAssetModelNode, "ForeignExchangeModels");
-    for (int fxConfigs_Iterator = 0; fxConfigs_Iterator < fxConfigs_.size(); fxConfigs_Iterator++) {
+    for (unsigned int fxConfigs_Iterator = 0; fxConfigs_Iterator < fxConfigs_.size(); fxConfigs_Iterator++) {
         XMLNode* crossCcyLgmNode = fxConfigs_[fxConfigs_Iterator]->toXML(doc);
         XMLUtils::appendNode(foreignExchangeModelsNode, crossCcyLgmNode);
     }
