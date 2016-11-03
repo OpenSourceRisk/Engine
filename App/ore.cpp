@@ -105,7 +105,30 @@ int main(int argc, char** argv) {
 
         string outputPath = params.get("setup", "outputPath");
         string logFile = outputPath + "/" + params.get("setup", "logFile");
+		string logLevel="WARNING";			// Default level
+		Size logMask=15;					// Default level
 
+		if (params.has("setup", "logLevel"))
+		{
+			logLevel = params.get("setup", "logLevel");
+			try
+			{
+				logMask = parseLogLevel(logLevel);
+				cout << "Log level set to " << logLevel << endl;
+			}
+			catch (QuantLib::Error)
+			{
+				cout << "Log level:" << logLevel << " invalid. Defaulted to WARNING" << endl;
+			}
+
+		}
+		else
+		{
+			cout << "No log Level given in XML. Defaulted to WARNING"<< endl;
+		}
+		
+		
+		
         boost::filesystem::path p{outputPath};
         if(!boost::filesystem::exists(p)) {
             boost::filesystem::create_directories(p);
@@ -113,16 +136,20 @@ int main(int argc, char** argv) {
         QL_REQUIRE(boost::filesystem::is_directory(p), "output path '" << outputPath << "' is not a directory.");
 
         Log::instance().registerLogger(boost::make_shared<FileLogger>(logFile));
-        Log::instance().switchOn();
+		Log::instance().setMask(logMask);
+		Log::instance().switchOn();
+		
 
         LOG("ORE starting");
-        params.log();
+		params.log();
 
         if (params.has("setup", "observationModel")) {
             string om = params.get("setup", "observationModel");
             ObservationMode::instance().setMode(om);
             LOG("Observation Mode is " << om);
         }
+
+		
 
         string asofString = params.get("setup", "asofDate");
         Date asof = parseDate(asofString);
