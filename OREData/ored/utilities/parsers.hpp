@@ -68,9 +68,6 @@ QuantLib::Integer parseInteger(const string& s);
 */
 bool parseBool(const string& s);
 
-// Convert text to warning level for log
-QuantLib::Size parseLogLevel(const string& s);
-
 //! Convert text to QuantLib::Calendar
 /*!
 

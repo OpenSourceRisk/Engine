@@ -105,26 +105,11 @@ int main(int argc, char** argv) {
 
         string outputPath = params.get("setup", "outputPath");
         string logFile = outputPath + "/" + params.get("setup", "logFile");
-        string logLevel="WARNING";          // Default level
-        Size logMask=15;                    // Default level
+        Size logMask = 15; // Default level
 
-        if (params.has("setup", "logLevel"))
-        {
-            logLevel = params.get("setup", "logLevel");
-            try
-            {
-                logMask = parseLogLevel(logLevel);
-                cout << "Log level set to " << logLevel << endl;
-            }
-            catch (QuantLib::Error)
-            {
-                cout << "Log level:" << logLevel << " invalid. Defaulted to WARNING" << endl;
-            }
-
-        }
-        else
-        {
-            cout << "No log Level given in XML. Defaulted to WARNING"<< endl;
+        // Get log mask if available
+        if (params.has("setup", "logMask")) {
+            logMask = static_cast<Size>(parseInteger(params.get("setup", "logMask")));
         }
         
         boost::filesystem::path p{outputPath};

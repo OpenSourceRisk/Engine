@@ -8,7 +8,6 @@
     <Parameter name="fixingDataFile">../../Input/fixings_20160205.txt</Parameter>
     <Parameter name="implyTodaysFixings">N</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
-    <Parameter name="logLevel">WARNING</Parameter>
     <Parameter name="curveConfigFile">../../Input/curveconfig.xml</Parameter>
     <Parameter name="conventionsFile">../../Input/conventions.xml</Parameter>
     <Parameter name="marketConfigFile">../../Input/todaysmarket.xml</Parameter>

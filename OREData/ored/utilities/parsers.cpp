@@ -127,28 +127,6 @@ bool parseBool(const string& s) {
     }
 }
 
-Size parseLogLevel(const string& s)
-{
-    static map<string, Size> b = 
-    { 
-        { "ALERT", 1 },
-        { "CRITICAL", 3 },
-        { "ERROR", 7 },
-        { "WARNING", 15 },
-        { "NOTICE", 31 },
-        { "DEBUG", 63 },
-        { "DATA", 127 },
-    };
-
-    auto it = b.find(s);
-    if (it != b.end()) {
-        return it->second;
-    }
-    else {
-        QL_FAIL("Cannot convert warning level '" << s << "' to Size");
-    }
-}
-
 Calendar parseCalendar(const string& s) {
     static map<string, Calendar> m = {{"TGT", TARGET()},
                                       {"TARGET", TARGET()},
