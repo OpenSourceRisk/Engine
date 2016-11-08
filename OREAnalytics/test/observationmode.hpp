@@ -42,6 +42,8 @@ public:
     static void testDisableShort();
     //! Observation mode Unregister
     static void testUnregister();
+    //! Observation mode Defer
+    static void testDefer();
     //! Observation mode None
     static void testNone();
     static boost::unit_test_framework::test_suite* suite();

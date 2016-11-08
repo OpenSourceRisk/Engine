@@ -402,7 +402,23 @@ void ObservationModeTest::testUnregister() {
     simulation("10,1Y", true);
 }
 
-  test_suite* ObservationModeTest::suite() {
+void ObservationModeTest::testDefer() {
+    ObservationMode::instance().setMode(ObservationMode::Mode::Defer);
+
+    BOOST_TEST_MESSAGE("Testing Observation Mode Defer, Long Grid, No Fixing Checks");
+    simulation("11,1Y", false);
+
+    BOOST_TEST_MESSAGE("Testing Observation Mode Defer, Long Grid, With Fixing Checks");
+    simulation("11,1Y", true);
+
+    BOOST_TEST_MESSAGE("Testing Observation Mode Defer, Short Grid, No Fixing Checks");
+    simulation("10,1Y", false);
+
+    BOOST_TEST_MESSAGE("Testing Observation Mode Defer, Short Grid, With Fixing Checks");
+    simulation("10,1Y", true);
+}
+
+test_suite* ObservationModeTest::suite() {
     // Uncomment the below to get detailed output TODO: custom logger that uses BOOST_MESSAGE
     /*
     boost::shared_ptr<ore::data::FileLogger> logger
@@ -417,6 +433,7 @@ void ObservationModeTest::testUnregister() {
     // Set the Observation mode here
     suite->add(BOOST_TEST_CASE(&ObservationModeTest::testNone));
     suite->add(BOOST_TEST_CASE(&ObservationModeTest::testUnregister));
+    suite->add(BOOST_TEST_CASE(&ObservationModeTest::testDefer));
     suite->add(BOOST_TEST_CASE(&ObservationModeTest::testDisableShort));
     suite->add(BOOST_TEST_CASE(&ObservationModeTest::testDisableLong));
     return suite;
