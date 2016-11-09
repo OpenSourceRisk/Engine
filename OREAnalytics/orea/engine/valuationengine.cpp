@@ -39,58 +39,7 @@ using namespace ore::data;
 
 namespace ore {
 namespace analytics {
-
-void applyFixings(Date start, Date end, map<string, vector<Date>>& fixingMap,
-                  const vector<boost::shared_ptr<Index>>& indices) {
-    // Loop over all indices
-    for (const boost::shared_ptr<Index>& index : indices) {
-        string qlIndexName = index->name();
-        // Only need to apply fixings if the index is in fixingMap
-        if (fixingMap.find(qlIndexName) != fixingMap.end()) {
-
-            // Add we have a coupon between start and asof.
-            bool needFixings = false;
-            vector<Date>& fixingDates = fixingMap[qlIndexName];
-            for (Size i = 0; i < fixingDates.size(); i++) {
-                if (fixingDates[i] >= start && fixingDates[i] < end) {
-                    needFixings = true;
-                    break;
-                }
-            }
-
-            if (needFixings) {
-                Date currentFixingDate = index->fixingCalendar().adjust(end, Following);
-                Rate currentFixing = index->fixing(currentFixingDate);
-                TimeSeries<Real> history;
-                vector<Date>& fixingDates = fixingMap[qlIndexName];
-                for (Size i = 0; i < fixingDates.size(); i++) {
-                    if (fixingDates[i] >= start && fixingDates[i] < end)
-                        history[fixingDates[i]] = currentFixing;
-                    if (fixingDates[i] >= end)
-                        break;
-                }
-                index->addFixings(history, true);
-            }
-        }
-    }
-}
-
-void buildCache(const map<string, vector<Date>>& fixingMap, const vector<boost::shared_ptr<Index>>& indices,
-                map<string, TimeSeries<Real>>& fixingCache) {
-
-    for (const boost::shared_ptr<Index>& index : indices) {
-        string qlIndexName = index->name();
-        if (fixingMap.find(qlIndexName) != fixingMap.end()) {
-            fixingCache[qlIndexName] = IndexManager::instance().getHistory(qlIndexName);
-        }
-    }
-}
-
-void resetFixings(const map<string, TimeSeries<Real>>& fixingCache) {
-    for (auto& kv : fixingCache)
-        IndexManager::instance().setHistory(kv.first, kv.second);
-}
-
+  
 ValuationEngine::FixingsMap ValuationEngine::getFixingDates(const vector<FlowList>& flowList) {
 
     std::map<std::string, std::vector<Date>> fixings;
@@ -181,9 +130,6 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
         DLOG("Initialise wrapper for trade " << trades[i]->id());
         trades[i]->instrument()->initialise(dates);
 
-        if (om == ObservationMode::Mode::Disable)
-            trades[i]->instrument()->updateQlInstruments();
-
         // T0 values
         for (auto calc : calculators)
             calc->calculateT0(trades[i], i, simMarket_, outputCube);
@@ -227,9 +173,9 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
 
     vector<boost::shared_ptr<Index>> indices(setIndices.begin(), setIndices.end());
     FixingsMap fixings = getFixingDates(flowList);
-    map<string, TimeSeries<Real>> fixingCache;
-    buildCache(fixings, indices, fixingCache);
 
+    simMarket_->cacheFixings(fixings, indices);
+    
     boost::timer timer;
     boost::timer loopTimer;
 
@@ -244,39 +190,20 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
         // loop over Dates
         for (Size i = 0; i < dates.size(); ++i) {
             Date d = dates[i];
-
-            timer.restart();
-            if (om == ObservationMode::Mode::Disable)
-                ObservableSettings::instance().disableUpdates(false);
-            else if (om == ObservationMode::Mode::Defer)
-                ObservableSettings::instance().disableUpdates(true);
-
-            simMarket_->update(d);
-            updateTime += timer.elapsed();
-
             Date prev = i == 0 ? today_ : dates[i - 1];
+
             timer.restart();
-
-            if (om == ObservationMode::Mode::Disable) {
-                simMarket_->refresh();
-                applyFixings(prev, d, fixings, indices);
-                ObservableSettings::instance().enableUpdates();
-            } else if (om == ObservationMode::Mode::Defer) {
-                ObservableSettings::instance().enableUpdates();
-                applyFixings(prev, d, fixings, indices);
-            } else {
-                applyFixings(prev, d, fixings, indices);
-            }
-
-            fixingTime += timer.elapsed(); // Note fixing time includes defered observation
+            simMarket_->update(d, prev);
+            updateTime += timer.elapsed();
 
             // loop over trades
             timer.restart();
             for (Size j = 0; j < trades.size(); ++j) {
                 auto trade = trades[j];
 
-                if (om == ObservationMode::Mode::Disable)
-                    trade->instrument()->updateQlInstruments();
+		// We can avoid checking mode here and always call updateQlInstruments()
+                //if (om == ObservationMode::Mode::Disable)
+		trade->instrument()->updateQlInstruments();
 
                 for (auto calc : calculators)
                     calc->calculate(trade, j, simMarket_, outputCube, d, i, sample);
@@ -285,7 +212,7 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
         }
 
         timer.restart();
-        resetFixings(fixingCache);
+        simMarket_->resetFixings();
         fixingTime += timer.elapsed();
     }
 

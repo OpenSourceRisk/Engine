@@ -373,8 +373,14 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
     LOG("fx volatilities done");
 }
 
-void ScenarioSimMarket::update(const Date& d) {
+void ScenarioSimMarket::update(const Date& d, const Date& previous) {
     // DLOG("ScenarioSimMarket::update called with Date " << QuantLib::io::iso_date(d));
+
+    ObservationMode::Mode om = ObservationMode::instance().mode();
+    if (om == ObservationMode::Mode::Disable)
+        ObservableSettings::instance().disableUpdates(false);
+    else if (om == ObservationMode::Mode::Defer)
+        ObservableSettings::instance().disableUpdates(true);
 
     boost::shared_ptr<Scenario> scenario = scenarioGenerator_->next(d);
 
@@ -400,6 +406,19 @@ void ScenarioSimMarket::update(const Date& d) {
                 ALOG("Key " << it.first << " missing in scenario");
         }
         QL_FAIL("mismatch between scenario and sim data size, exit.");
+    }
+
+    // Apply current fixings as historical fixings  
+
+    if (om == ObservationMode::Mode::Disable) {
+        this->refresh();
+	applyFixings(previous, d);
+	ObservableSettings::instance().enableUpdates();
+    } else if (om == ObservationMode::Mode::Defer) {
+        ObservableSettings::instance().enableUpdates();
+	applyFixings(previous, d);
+    } else {
+        applyFixings(previous, d);
     }
 
     if (asd_) {

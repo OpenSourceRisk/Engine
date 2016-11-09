@@ -43,14 +43,30 @@ class SimMarket : public data::MarketImpl {
 public:
     SimMarket(const Conventions& conventions) : MarketImpl(conventions), numeraire_(1.0) {}
 
-    //! Generate or retrieve market scenario, update market, notify termstructures
-    virtual void update(const Date&) = 0;
+    //! Generate or retrieve market scenario, update market at asof and fixing history in (prev,asof), notify termstructures
+    virtual void update(const Date& asof, const Date& previous) = 0;
 
     //! Return current numeraire value
     Real numeraire() { return numeraire_; }
 
+    //! Cache fixing time series for required indices, determined by portfolio
+    void cacheFixings(const map<string, vector<Date>>& fixingMap,
+		      const vector<boost::shared_ptr<Index>>& indices);
+
+    //! Reset index manager to real historical fixings at t0
+    void resetFixings();
+
 protected:
+    //! Insert simulated current fixings (at end date) as historical fixings between start and end date
+    void applyFixings(Date start, Date end);
+
     Real numeraire_;
+
+    map<string, TimeSeries<Real>> fixingCache_;
+    //! Required fixing dates by index name
+    map<string, vector<Date>> fixingMap_;
+    //! indices that need historical fixings during simulation
+    vector<boost::shared_ptr<Index>> indices_;
 };
 }
 }
