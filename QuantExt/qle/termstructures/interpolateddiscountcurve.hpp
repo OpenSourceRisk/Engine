@@ -47,6 +47,8 @@ public:
     InterpolatedDiscountCurve(const std::vector<Time>& times, const std::vector<Handle<Quote> >& quotes,
                               const Natural settlementDays, const Calendar& cal, const DayCounter& dc)
         : YieldTermStructure(settlementDays, cal, dc), times_(times) {
+        for (Size i = 0; i < quotes.size(); ++i)
+	  registerWith(quotes[i]);
         initalise(quotes);
     }
 
