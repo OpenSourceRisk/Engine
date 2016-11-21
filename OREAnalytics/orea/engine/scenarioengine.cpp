@@ -88,7 +88,7 @@ void ScenarioEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfol
     boost::timer loopTimer;
 
     for (Size sample = 0; sample < outputCube->samples(); ++sample) {
-        LOG("processing scenario " << sample);
+	LOG("processing scenario " << sample);
         updateProgress(sample, outputCube->samples());
 
 	timer.restart();
@@ -97,7 +97,7 @@ void ScenarioEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfol
 
 	timer.restart();
 	for (Size i = 0; i < trades.size(); ++i) {
-	  LOG("processing trade " << i);
+	  LOG("processing trade #" << i << " " << trades[i]->id());
 	  Real fx = simMarket_->fxSpot(trades[i]->npvCurrency() + baseCurrency_)->value();
 	  Real npv = trades[i]->instrument()->NPV() * fx;
 	  outputCube->set(npv, i, 0, sample, 0); 
