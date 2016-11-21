@@ -410,7 +410,8 @@ void ScenarioSimMarket::update(const Date& d) {
 
     numeraire_ = scenario->getNumeraire();
 
-    Settings::instance().evaluationDate() = d;
+    if (d != Settings::instance().evaluationDate())
+        Settings::instance().evaluationDate() = d;
 
     const vector<RiskFactorKey>& keys = scenario->keys();
 
@@ -420,8 +421,6 @@ void ScenarioSimMarket::update(const Date& d) {
         // TODO: Is this really an error?
         auto it = simData_.find(key);
         QL_REQUIRE(it != simData_.end(), "simulation data point missing for key " << key);
-	//LOG("updating key " << key << " from " << it->second->value() << " to " << scenario->get(key));
-        //if (fabs(it->second->value() - scenario->get(key)) > tolerance)
 	it->second->setValue(scenario->get(key));
         count++;
     }
