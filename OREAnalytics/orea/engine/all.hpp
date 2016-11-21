@@ -4,3 +4,5 @@
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/valuationengine.hpp>
 #include <orea/engine/valuationcalculator.hpp>
+#include <orea/engine/scenarioengine.hpp>
+

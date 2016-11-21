@@ -32,8 +32,8 @@ bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& 
     if (baseCcy_ != rhs.baseCcy_ || ccys_ != rhs.ccys_ || yieldCurveTenors_ != rhs.yieldCurveTenors_ ||
         indices_ != rhs.indices_ || swapIndices_ != rhs.swapIndices_ || interpolation_ != rhs.interpolation_ ||
         extrapolate_ != rhs.extrapolate_ || swapVolTerms_ != rhs.swapVolTerms_ || swapVolCcys_ != rhs.swapVolCcys_ ||
-        swapVolExpiries_ != rhs.swapVolExpiries_ || swapVolDecayMode_ != rhs.swapVolDecayMode_ ||
-        capFloorVolCcys_ != rhs.capFloorVolCcys_ || capFloorVolDecayMode_ != rhs.capFloorVolDecayMode_ ||
+        swapVolSimulate_ != rhs.swapVolSimulate_ || swapVolExpiries_ != rhs.swapVolExpiries_ || swapVolDecayMode_ != rhs.swapVolDecayMode_ ||
+        capFloorVolSimulate_ != rhs.capFloorVolSimulate_ || capFloorVolCcys_ != rhs.capFloorVolCcys_ || capFloorVolDecayMode_ != rhs.capFloorVolDecayMode_ ||
         defaultNames_ != rhs.defaultNames_ || defaultTenors_ != rhs.defaultTenors_ ||
         fxVolSimulate_ != rhs.fxVolSimulate_ || fxVolExpiries_ != rhs.fxVolExpiries_ ||
         fxVolDecayMode_ != rhs.fxVolDecayMode_ || ccyPairs_ != rhs.ccyPairs_ ||
@@ -76,6 +76,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     }
 
     nodeChild = XMLUtils::getChildNode(node, "SwaptionVolatilities");
+    swapVolSimulate_ = XMLUtils::getChildValueAsBool(nodeChild, "Simulate", true);
     swapVolTerms_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Terms", true);
     swapVolExpiries_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Expiries", true);
     swapVolCcys_ = XMLUtils::getChildrenValues(nodeChild, "Currencies", "Currency", true);
@@ -83,6 +84,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
 
     nodeChild = XMLUtils::getChildNode(node, "CapFloorVolatilities");
     if (nodeChild) {
+        capFloorVolSimulate_ = XMLUtils::getChildValueAsBool(nodeChild, "Simulate", true);
         capFloorVolCcys_ = XMLUtils::getChildrenValues(nodeChild, "Currencies", "Currency", true);
         capFloorVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
     }
@@ -135,6 +137,7 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
 
     // swaption volatilities
     XMLNode* swaptionVolatilitiesNode = XMLUtils::addChild(doc, marketNode, "SwaptionVolatilities");
+    XMLUtils::addChild(doc, swaptionVolatilitiesNode, "Simulate", swapVolSimulate_);
     XMLUtils::addChild(doc, swaptionVolatilitiesNode, "ReactionToTimeDecay", swapVolDecayMode_);
     XMLUtils::addChildren(doc, swaptionVolatilitiesNode, "Currencies", "Currency", swapVolCcys_);
     XMLUtils::addGenericChildAsList(doc, swaptionVolatilitiesNode, "Expiries", swapVolExpiries_);

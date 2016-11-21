@@ -58,6 +58,7 @@ public:
     const string& interpolation() const { return interpolation_; }
     const bool& extrapolate() const { return extrapolate_; }
 
+    bool simulateSwapVols() const { return swapVolSimulate_; }
     const vector<Period>& swapVolTerms() const { return swapVolTerms_; }
     const vector<Period>& swapVolExpiries() const { return swapVolExpiries_; }
     const vector<string>& swapVolCcys() const { return swapVolCcys_; }
@@ -89,11 +90,13 @@ public:
     string& interpolation() { return interpolation_; }
     bool& extrapolate() { return extrapolate_; }
 
+    bool& simulateSwapVols() { return swapVolSimulate_; }
     vector<Period>& swapVolTerms() { return swapVolTerms_; }
     vector<string>& swapVolCcys() { return swapVolCcys_; }
     vector<Period>& swapVolExpiries() { return swapVolExpiries_; }
     string& swapVolDecayMode() { return swapVolDecayMode_; }
 
+    bool& simulateCapFloorVols() { return swapVolSimulate_; }
     vector<string>& capFloorVolCcys() { return capFloorVolCcys_; }
     string& capFloorVolDecayMode() { return capFloorVolDecayMode_; }
 
@@ -130,11 +133,13 @@ private:
     string interpolation_;
     bool extrapolate_;
 
+    bool swapVolSimulate_;
     vector<Period> swapVolTerms_;
     vector<string> swapVolCcys_;
     vector<Period> swapVolExpiries_;
     string swapVolDecayMode_;
 
+    bool capFloorVolSimulate_;
     vector<string> capFloorVolCcys_;
     string capFloorVolDecayMode_;
 

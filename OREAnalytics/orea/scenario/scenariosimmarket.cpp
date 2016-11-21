@@ -215,7 +215,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
 
         LOG("Initial market " << ccy << " swaption volatility type = " << wrapper->volatilityType());
 
-        // Check that we have a swaption volatility matrix
+	// Check that we have a swaption volatility matrix
         bool isMatrix = boost::dynamic_pointer_cast<SwaptionVolatilityMatrix>(*wrapper) != nullptr;
 
         // If swaption volatility type is not Normal, convert to Normal for the simulation
@@ -237,12 +237,42 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
             }
         }
 
-        string decayModeString = parameters->swapVolDecayMode();
-        ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);
-        boost::shared_ptr<QuantLib::SwaptionVolatilityStructure> svolp =
-            boost::make_shared<QuantExt::DynamicSwaptionVolatilityMatrix>(*wrapper, 0, NullCalendar(), decayMode);
-
-        Handle<SwaptionVolatilityStructure> svp(svolp);
+	Handle<SwaptionVolatilityStructure> svp;
+        if (parameters->simulateSwapVols()) {
+	    LOG("Simulating (normal) Swaption vols for ccy " << ccy);
+	    vector<Period> optionTenors = parameters->swapVolExpiries();
+	    vector<Period> swapTenors = parameters->swapVolTerms();
+	    vector<vector<Handle<Quote>>> quotes(optionTenors.size(), vector<Handle<Quote>>(swapTenors.size(), Handle<Quote>()));
+	    vector<vector<Real>> shift(optionTenors.size(), vector<Real>(swapTenors.size(), 0.0));
+	    for (Size i = 0; i < optionTenors.size(); ++i) {
+	        for (Size j = 0; j < swapTenors.size(); ++j) {
+		  Real strike = 0.0; // FIXME
+		  Real vol = wrapper->volatility(optionTenors[i], swapTenors[j], strike);
+		  boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
+		  Size index = i * swapTenors.size() + j;
+		  simData_.emplace(std::piecewise_construct,
+				   std::forward_as_tuple(RiskFactorKey::KeyType::SwaptionVolatility, ccy, index),
+				   std::forward_as_tuple(q));
+		  quotes[i][j] = Handle<Quote>(q);
+		  shift[i][j] = wrapper->shift(optionTenors[i], swapTenors[j]);
+		}
+	    }
+	    bool flatExtrapolation = true; // FIXME: get this from curve configuration
+	    VolatilityType volType = wrapper->volatilityType();
+	    boost::shared_ptr<SwaptionVolatilityStructure> svolp(new SwaptionVolatilityMatrix(
+		      asof_, wrapper->calendar(), wrapper->businessDayConvention(), optionTenors, swapTenors, quotes,
+		      wrapper->dayCounter(), flatExtrapolation, volType, shift)); 
+	    svp = Handle<SwaptionVolatilityStructure>(svolp);
+	}
+	else {
+	    string decayModeString = parameters->swapVolDecayMode();
+	    ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);
+	    boost::shared_ptr<QuantLib::SwaptionVolatilityStructure> svolp =
+	      boost::make_shared<QuantExt::DynamicSwaptionVolatilityMatrix>(*wrapper, 0, NullCalendar(), decayMode);
+	    svp = Handle<SwaptionVolatilityStructure>(svolp);
+	}
+	svp->enableExtrapolation(); // FIXME	    
+	
         swaptionCurves_.insert(pair<pair<string, string>, Handle<SwaptionVolatilityStructure>>(
             make_pair(Market::defaultConfiguration, ccy), svp));
 
@@ -385,11 +415,14 @@ void ScenarioSimMarket::update(const Date& d) {
     const vector<RiskFactorKey>& keys = scenario->keys();
 
     Size count = 0;
+    Real tolerance = 1e-8;
     for (const auto& key : keys) {
         // TODO: Is this really an error?
         auto it = simData_.find(key);
         QL_REQUIRE(it != simData_.end(), "simulation data point missing for key " << key);
-        it->second->setValue(scenario->get(key));
+	//LOG("updating key " << key << " from " << it->second->value() << " to " << scenario->get(key));
+        //if (fabs(it->second->value() - scenario->get(key)) > tolerance)
+	it->second->setValue(scenario->get(key));
         count++;
     }
 
