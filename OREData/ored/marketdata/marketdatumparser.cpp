@@ -49,7 +49,11 @@ static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
                                                          {"FX_FWD", MarketDatum::InstrumentType::FX_FWD},
                                                          {"SWAPTION", MarketDatum::InstrumentType::SWAPTION},
                                                          {"CAPFLOOR", MarketDatum::InstrumentType::CAPFLOOR},
-                                                         {"FX_OPTION", MarketDatum::InstrumentType::FX_OPTION}};
+                                                         {"FX_OPTION", MarketDatum::InstrumentType::FX_OPTION},
+                                                         { "EQUITY", MarketDatum::InstrumentType::EQUITY_SPOT },
+                                                         { "EQUITY_FWD", MarketDatum::InstrumentType::EQUITY_FWD },
+                                                         { "EQUITY_DIVIDEND", MarketDatum::InstrumentType::EQUITY_DIVIDEND },
+                                                         { "EQUITY_OPTION", MarketDatum::InstrumentType::EQUITY_OPTION }};
 
     auto it = b.find(s);
     if (it != b.end()) {
@@ -276,6 +280,54 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         Period expiry = parsePeriod(tokens[4]);
         const string& strike = tokens[5];
         return boost::make_shared<FXOptionQuote>(value, asof, datumName, quoteType, unitCcy, ccy, expiry, strike);
+    }
+
+    case MarketDatum::InstrumentType::EQUITY_SPOT: {
+        QL_REQUIRE(tokens.size() == 4, "4 tokens expected in " << datumName);
+        QL_REQUIRE(quoteType == MarketDatum::QuoteType::PRICE, "Invalid quote type for " << datumName);
+        const string& equityName = tokens[2];
+        const string& ccy = tokens[3];
+        return boost::make_shared<EquitySpotQuote>(value, asof, datumName, quoteType, equityName, ccy);
+    }
+
+    case MarketDatum::InstrumentType::EQUITY_FWD: {
+        QL_REQUIRE(tokens.size() == 5, "5 tokens expected in " << datumName);
+        const string& equityName = tokens[2];
+        const string& ccy = tokens[3];
+        Period term; // gets populated by parseDateOrPeriod
+        Date expiryDate; // gets populated by parseDateOrPeriod
+        bool tmpIsDate; // gets populated by parseDateOrPeriod
+        parseDateOrPeriod(tokens[4], expiryDate, term, tmpIsDate); // checks if the market string contains a date or a period
+        if (!tmpIsDate)
+            expiryDate = WeekendsOnly().adjust(asof + term); // we have no calendar information here, so we use a generic calendar
+        return boost::make_shared<EquityForwardQuote>(value, asof, datumName, quoteType, equityName, ccy, expiryDate);
+    }
+
+    case MarketDatum::InstrumentType::EQUITY_DIVIDEND: {
+        QL_REQUIRE(tokens.size() == 5, "5 tokens expected in " << datumName);
+        const string& equityName = tokens[2];
+        const string& ccy = tokens[3];
+        Period term; // gets populated by parseDateOrPeriod
+        Date tenorDate; // gets populated by parseDateOrPeriod
+        bool tmpIsDate; // gets populated by parseDateOrPeriod
+        parseDateOrPeriod(tokens[4], tenorDate, term, tmpIsDate); // checks if the market string contains a date or a period
+        if (!tmpIsDate)
+            tenorDate = WeekendsOnly().adjust(asof + term); // we have no calendar information here, so we use a generic calendar
+        return boost::make_shared<EquityDividendYieldQuote>(value, asof, datumName, quoteType, equityName, ccy, tenorDate);
+    }
+
+    case MarketDatum::InstrumentType::EQUITY_OPTION: {
+        QL_REQUIRE(tokens.size() == 6, "6 tokens expected in " << datumName);
+        const string& equityName = tokens[2];
+        const string& ccy = tokens[3];
+        Period expiryTenor; // gets populated by parseDateOrPeriod
+        Date expiryDate; // gets populated by parseDateOrPeriod
+        bool tmpIsDate; // gets populated by parseDateOrPeriod
+        parseDateOrPeriod(tokens[4], expiryDate, expiryTenor, tmpIsDate); // checks if the market string contains a date or a period
+        if (!tmpIsDate)
+            expiryDate = WeekendsOnly().adjust(asof + expiryTenor); // we have no calendar information here, so we use a generic calendar
+        const string& strike = tokens[5];
+        return boost::make_shared<EquityOptionQuote>(value, asof, datumName, quoteType, equityName, ccy, expiryDate, strike);
     }
 
     default:

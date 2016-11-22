@@ -57,9 +57,6 @@
     <ClInclude Include="orea\simulation\simmarket.hpp">
       <Filter>simulation</Filter>
     </ClInclude>
-    <ClInclude Include="orea\scenario\additionalscenariodata.hpp">
-      <Filter>scenario</Filter>
-    </ClInclude>
     <ClInclude Include="orea\scenario\all.hpp">
       <Filter>scenario</Filter>
     </ClInclude>
@@ -103,7 +100,7 @@
     <ClInclude Include="orea\orea.hpp" />
     <ClInclude Include="orea\engine\observationmode.hpp" />
     <ClInclude Include="orea\engine\valuationcalculator.hpp" />
-    <ClInclude Include="orea\scenario\aggregationscenariodata.hpp" >
+    <ClInclude Include="orea\scenario\aggregationscenariodata.hpp">
       <Filter>scenario</Filter>
     </ClInclude>
   </ItemGroup>
