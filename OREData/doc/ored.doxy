@@ -18,8 +18,8 @@ ABBREVIATE_BRIEF       =
 ALWAYS_DETAILED_SEC    = NO
 INLINE_INHERITED_MEMB  = NO
 FULL_PATH_NAMES        = YES
-STRIP_FROM_PATH        = ../ored
-STRIP_FROM_INC_PATH    = ../ored
+STRIP_FROM_PATH        = ..
+STRIP_FROM_INC_PATH    = ..
 SHORT_NAMES            = NO
 JAVADOC_AUTOBRIEF      = NO
 QT_AUTOBRIEF           = NO
@@ -155,7 +155,7 @@ HTML_HEADER            = oredheader.html
 HTML_FOOTER            = oredfooter.html
 HTML_STYLESHEET        =
 HTML_EXTRA_STYLESHEET  = oredextra.css
-HTML_EXTRA_FILES       = images/favicon.png
+HTML_EXTRA_FILES       = images/favicon.png images/logo-data@2x.png
 HTML_COLORSTYLE_HUE    = 220
 HTML_COLORSTYLE_SAT    = 100
 HTML_COLORSTYLE_GAMMA  = 80
@@ -279,8 +279,8 @@ SKIP_FUNCTION_MACROS   = YES
 #---------------------------------------------------------------------------
 # Configuration options related to external references
 #---------------------------------------------------------------------------
-TAGFILES               = ../../QuantLib/Docs/quantlib.tag=../ql \
-                         ../../QuantExt/doc/quantext.tag=../qle
+#TAGFILES               = ../../QuantLib/Docs/quantlib.tag=../ql \
+TAGFILES               = ../../QuantExt/doc/quantext.tag=../qle
 GENERATE_TAGFILE       = ored.tag
 ALLEXTERNALS           = NO
 EXTERNAL_GROUPS        = NO

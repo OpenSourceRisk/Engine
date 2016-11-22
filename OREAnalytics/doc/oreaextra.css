@@ -1,22 +1,95 @@
 #projectname
 {
-    font-size: 16px;
+    font-size: 13px;
     padding: 1em;
+	height: 100px;
 }
 
 #projectbrief
 {
-    font-family: 'Merriweather Sans', serif;
-    font-size: 120%;
-    margin-top: 2px;
+    font-family: 'Open Sans', serif;
+    font-size: 80%;
+    margin-top: 10px;
     margin-bottom: 0;
+	color: #fff;
+	float:right;
 }
 
 #projectnumber
 {
-    font-family: 'Merriweather Sans', serif;
+    font-family: 'Open Sans', serif;
     font-size: 100%;
     margin-top: 1em;
     margin-bottom: 0;
+}
+
+#titlearea
+{
+	padding: 0px;
+	margin: 0px;
+	width: 100%;
+	border-bottom: 1px solid #fff;
+	background-color: #026D95;
+}
+
+.tabs, .tabs2, .tabs3 {
+    background-image: url('http://www.opensourcerisk.org/docs/orea/tab_b.png') !important;
+    width: 100%;
+    z-index: 101;
+    font-size: 13px;
+    font-family: 'Lucida Grande',Geneva,Helvetica,Arial,sans-serif;
+}
+
+.tabs {
+	border-bottom: 1px solid #fff !important;
+}
+
+.tabs2 {
+    font-size: 10px;
+	border-bottom: 1px solid #fff !important;
+}
+.tabs3 {
+    font-size: 9px !important;
+
+}
+
+.tablist li {
+    float: left;
+    display: table-cell;
+    background-image: url('http://www.opensourcerisk.org/docs/orea/tab_b.png') !important;
+    line-height: 36px;
+    list-style: none;
+}
+
+.tablist a {
+    display: block;
+    padding: 0 20px;
+    font-weight: bold;
+    background-image:url('http://www.opensourcerisk.org/docs/orea/tab_s.png') !important;
+    background-repeat:no-repeat;
+    background-position:right;
+    color: #fff !important;
+    text-shadow: none !important;
+    text-decoration: none;
+    outline: none;
+}
+
+.tabs3 .tablist a {
+    padding: 0 10px;
+}
+
+.tablist a:hover {
+    background-image: url('http://www.opensourcerisk.org/docs/orea/tab_h.png') !important;
+    background-repeat:repeat-x;
+    color: #fff !important;
+    text-shadow: none !important;
+    text-decoration: none;
+}
+
+.tablist li.current a {
+    background-image: url('http://www.opensourcerisk.org/docs/orea/tab_a.png') !important;
+    background-repeat:repeat-x;
+    color: #fff;
+    text-shadow: none !important;
 }
 

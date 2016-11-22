@@ -11,9 +11,9 @@ QLE_TESTS = \
 	dynamicblackvoltermstructure.hpp dynamicblackvoltermstructure.cpp \
 	dynamicswaptionvolmatrix.hpp dynamicswaptionvolmatrix.cpp \
 	index.hpp index.cpp \
-    blackvariancecurve.hpp blackvariancecurve.cpp \
+	blackvariancecurve.hpp blackvariancecurve.cpp \
 	logquote.hpp logquote.cpp \
-    cashflow.hpp cashflow.cpp \
+	cashflow.hpp cashflow.cpp \
 	swaptionvolatilityconverter.hpp swaptionvolatilityconverter.cpp \
 	optionletstripper.hpp optionletstripper.cpp \
 	capfloormarketdata.hpp \
@@ -63,11 +63,14 @@ TESTS = quantext-test-suite$(EXEEXT)
 TESTS_ENVIRONMENT = BOOST_TEST_LOG_LEVEL=message
 
 EXTRA_DIST = \
-	testsuite.vcxproj
+	testsuite.vcxproj \
+	testsuite.vcxproj.filters
 
 else
 
 EXTRA_DIST = \
-	${QLE_TESTS}
+	${QLE_TESTS} \
+	testsuite.vcxproj \
+	testsuite.vcxproj.filters
 
 endif
