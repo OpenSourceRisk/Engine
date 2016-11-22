@@ -27,6 +27,7 @@ using namespace QuantLib;
 namespace ore {
 namespace analytics {
 
+  /*
 bool SensitivityScenarioData::operator==(const SensitivityScenarioData& rhs) {
 
     if (irDomain_ != rhs.irDomain_ ||
@@ -61,29 +62,40 @@ bool SensitivityScenarioData::operator==(const SensitivityScenarioData& rhs) {
 }
 
 bool SensitivityScenarioData::operator!=(const SensitivityScenarioData& rhs) { return !(*this == rhs); }
-
+  */
+  
 void SensitivityScenarioData::fromXML(XMLNode* root) {
     XMLNode* node = XMLUtils::locateNode(root, "SensitivityAnalysis");
     XMLUtils::checkNode(node, "SensitivityAnalysis");
 
-    //irCurrencies_ = XMLUtils::getChildrenValues(node, "InterestRateCurrencies", "Currency", true);
-    //irIndices_ = XMLUtils::getChildrenValues(node, "InterestRateIndices", "Index", true);
-    irDomain_ = XMLUtils::getChildValue(node, "InterestRateDomain", true);
-    irShiftType_ = XMLUtils::getChildValue(node, "InterestRateShiftType", true);
-    irShiftSize_ = XMLUtils::getChildValueAsDouble(node, "InterestRateShiftSize", true);
-    irShiftTenors_ = XMLUtils::getChildrenValuesAsPeriods(node, "InterestRateShiftTenors", true);
+    //discountCurrencies_ = XMLUtils::getChildrenValues(node, "DiscountCurrencies", "Currency", true);
+    discountLabel_ = XMLUtils::getChildValue(node, "DiscountLabel", true);
+    discountDomain_ = XMLUtils::getChildValue(node, "DiscountDomain", true);
+    discountShiftType_ = XMLUtils::getChildValue(node, "DiscountShiftType", true);
+    discountShiftSize_ = XMLUtils::getChildValueAsDouble(node, "DiscountShiftSize", true);
+    discountShiftTenors_ = XMLUtils::getChildrenValuesAsPeriods(node, "DiscountShiftTenors", true);
+
+    //indexNames_ = XMLUtils::getChildrenValues(node, "IndexNames", "Index", true);
+    indexLabel_ = XMLUtils::getChildValue(node, "IndexLabel", true);
+    indexDomain_ = XMLUtils::getChildValue(node, "IndexDomain", true);
+    indexShiftType_ = XMLUtils::getChildValue(node, "IndexShiftType", true);
+    indexShiftSize_ = XMLUtils::getChildValueAsDouble(node, "IndexShiftSize", true);
+    indexShiftTenors_ = XMLUtils::getChildrenValuesAsPeriods(node, "IndexShiftTenors", true);
 
     //fxCurrencyPairs_ = XMLUtils::getChildrenValues(node, "FxCurrencyPairs", "CurrencyPair", true);
+    fxLabel_ = XMLUtils::getChildValue(node, "FxLabel", true);
     fxShiftType_ = XMLUtils::getChildValue(node, "FxShiftType", true);
     fxShiftSize_ = XMLUtils::getChildValueAsDouble(node, "FxShiftSize", true);
 
     //infIndices_ = XMLUtils::getChildrenValues(node, "InflationIndices", "Index", true);
+    infLabel_ = XMLUtils::getChildValue(node, "InflationLabel", true);
     infDomain_ = XMLUtils::getChildValue(node, "InflationDomain", true);
     infShiftType_ = XMLUtils::getChildValue(node, "InflationShiftType", true);
     infShiftSize_ = XMLUtils::getChildValueAsDouble(node, "InflationShiftSize", true);
     infShiftTenors_ = XMLUtils::getChildrenValuesAsPeriods(node, "InflationShiftTenors", true);
 
     //swaptionVolCurrencies_ = XMLUtils::getChildrenValues(node, "SwaptionVolatilityCurrencies", "Currency", true);
+    swaptionVolLabel_ = XMLUtils::getChildValue(node, "SwaptionVolatilityLabel", true);
     swaptionVolShiftType_ = XMLUtils::getChildValue(node, "SwaptionVolatilityShiftType");
     swaptionVolShiftSize_ = XMLUtils::getChildValueAsDouble(node, "SwaptionVolatilityShiftSize");
     swaptionVolShiftTerms_ = XMLUtils::getChildrenValuesAsPeriods(node, "SwaptionVolatilityShiftTerms", true);
@@ -91,6 +103,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
     swaptionVolShiftStrikes_ = XMLUtils::getChildrenValuesAsDoubles(node, "SwaptionVolatilityShiftStrikes", "Strike", true);
 
     //crNames_ = XMLUtils::getChildrenValues(node, "CreditNames", "Name", true);
+    crLabel_ = XMLUtils::getChildValue(node, "CreditLabel", true);
     crDomain_ = XMLUtils::getChildValue(node, "CreditDomain", true);
     crShiftType_ = XMLUtils::getChildValue(node, "CreditShiftType", true);
     crShiftSize_ = XMLUtils::getChildValueAsDouble(node, "CreditShiftSize", true);

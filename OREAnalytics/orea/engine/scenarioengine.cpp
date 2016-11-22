@@ -57,13 +57,10 @@ void ScenarioEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfol
                                     << "expected to be 1");
 
     LOG("Starting ScenarioEngine for " << portfolio->size() << " trades and " << outputCube->samples() << " samples");
-
+    
     // Check observation mode
     ObservationMode::Mode om = ObservationMode::instance().mode();
-    if (om != ObservationMode::Mode::None) {
-        ALOG("Observation mode is amended to 'None'");
-	om = ObservationMode::Mode::None;
-    }
+    QL_REQUIRE(om == ObservationMode::Mode::None, "Observation mode None required");
     
     Real updateTime = 0.0;
     Real pricingTime = 0.0;

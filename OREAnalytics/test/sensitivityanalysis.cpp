@@ -94,13 +94,13 @@ void test_sensitivity() {
     boost::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData(new analytics::ScenarioSimMarketParameters());
     simMarketData->baseCcy() = "EUR";
     simMarketData->ccys() = {"EUR", "GBP", "USD", "CHF", "JPY"};
-    simMarketData->yieldCurveTenors() = {1*Months, 6*Months, 1*Years, 2*Years, 5*Years, 10*Years, 20*Years};
+    simMarketData->yieldCurveTenors() = {1*Months, 6*Months, 1*Years, 2*Years, 3*Years, 4*Years, 5*Years, 7*Years, 10*Years, 15*Years, 20*Years, 30*Years};
     simMarketData->indices() = {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M", "CHF-LIBOR-6M", "JPY-LIBOR-6M"};
     simMarketData->interpolation() = "LogLinear";
     simMarketData->extrapolate() = true;
 
-    simMarketData->swapVolTerms() = {6*Months, 1*Years, 5*Years, 10*Years};
-    simMarketData->swapVolExpiries() = {1*Years, 2*Years, 5*Years, 10*Years};
+    simMarketData->swapVolTerms() = {1*Years, 5*Years, 10*Years};
+    simMarketData->swapVolExpiries() = {6*Months, 1*Years, 2*Years, 5*Years, 10*Years};
     simMarketData->swapVolCcys() = ccys;
     simMarketData->swapVolDecayMode() = "ForwardVariance";
     simMarketData->simulateSwapVols() = true;//false;
@@ -108,32 +108,41 @@ void test_sensitivity() {
     simMarketData->fxVolExpiries() = {1*Months, 3*Months, 6*Months, 2*Years, 3*Years, 4*Years, 5*Years};
     simMarketData->fxVolDecayMode() = "ConstantVariance";
     simMarketData->simulateFXVols() = true; //false;
-
     simMarketData->ccyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY"};
 
     // sensitivity config
     boost::shared_ptr<SensitivityScenarioData> sensiData = boost::make_shared<SensitivityScenarioData>();
-    // sensiData->irCurrencies() = {"EUR", "GBP", "USD", "CHF", "JPY"};
-    // sensiData->irIndices() = {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M", "CHF-LIBOR-6M", "JPY-LIBOR-6M"};
-    sensiData->irByCurrency() = false;
-    sensiData->irDomain() = "ZERO";
-    sensiData->irShiftTenors() = {1*Years, 2*Years, 3*Years, 5*Years, 7*Years, 10*Years, 15*Years, 20*Years}; // multiple tenors: triangular shifts
-    //sensiData->irShiftTenors() = {5*Years}; // one tenor point means parallel shift
-    sensiData->irShiftType() = "Absolute";
-    sensiData->irShiftSize() = 0.0001; 
+    // sensiData->discountCurrencies() = {"EUR", "GBP", "USD", "CHF", "JPY"};
+    sensiData->discountDomain() = "ZERO";
+    sensiData->discountShiftTenors() = {1*Years, 2*Years, 3*Years, 5*Years, 7*Years, 10*Years, 15*Years, 20*Years}; // multiple tenors: triangular shifts
+    sensiData->discountShiftType() = "Absolute";
+    sensiData->discountShiftSize() = 0.0001; 
+    sensiData->discountLabel() = "YIELD_DISCOUNT";
+    
+    // sensiData->indexNames() = {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M", "CHF-LIBOR-6M", "JPY-LIBOR-6M"};
+    sensiData->indexDomain() = "ZERO";
+    sensiData->indexShiftTenors() = {1*Years, 2*Years, 3*Years, 5*Years, 7*Years, 10*Years, 15*Years, 20*Years}; // multiple tenors: triangular shifts
+    sensiData->indexShiftType() = "Absolute";
+    sensiData->indexShiftSize() = 0.0001; 
+    sensiData->indexLabel() = "YIELD_INDEX";
     
     // sensiData->fxCurrencyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY"};
     sensiData->fxShiftType() = "Relative";
     sensiData->fxShiftSize() = 0.01; 
-    sensiData->fxVolShiftExpiries() = {1*Years, 2*Years, 3*Years}; 
+    sensiData->fxLabel() = "FX";
 
+    // sensiData->fxVolCurrencyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY"};
     sensiData->fxVolShiftType() = "Relative";
-    sensiData->fxVolShiftSize() = 0.01; 
+    sensiData->fxVolShiftSize() = 1.0; //0.01; 
+    sensiData->fxVolShiftExpiries() = {5*Years}; // parallel shift only { 6*Months, 1*Years, 2*Years, 3*Years };
+    sensiData->fxVolLabel() = "VOL_FX";
     
+    // sensiData->swaptionVolCurrencies() = {"EUR", "GBP", "USD", "CHF", "JPY"};
     sensiData->swaptionVolShiftType() = "Relative";
     sensiData->swaptionVolShiftSize() = 0.01; 
-    sensiData->swaptionVolShiftExpiries() = {1*Years, 2*Years, 3*Years, 5*Years}; 
-    sensiData->swaptionVolShiftTerms() = {1*Years, 2*Years, 3*Years, 5*Years}; 
+    sensiData->swaptionVolShiftExpiries() = { 5*Years }; // parallel shift only //{1*Years, 2*Years, 3*Years, 5*Years}; 
+    sensiData->swaptionVolShiftTerms() = { 5*Years }; // parallel shifts only //{1*Years, 2*Years, 3*Years, 5*Years}; 
+    sensiData->swaptionVolLabel() = "VOL_SWAPTION";
 
     // build scenario generator
     boost::shared_ptr<ScenarioFactory> scenarioFactory(new SimpleScenarioFactory);
@@ -168,12 +177,12 @@ void test_sensitivity() {
 
     //boost::shared_ptr<Portfolio> portfolio = buildSwapPortfolio(portfolioSize, factory);
     boost::shared_ptr<Portfolio> portfolio(new Portfolio());
-    portfolio->add(buildSwap("1_Swap_EUR", "EUR", true, 10000.0, 0, 10, 0.03, 0.00, "1Y", "30/360", "6M", "A360", "EUR-EURIBOR-6M"));    
-    portfolio->add(buildSwap("2_Swap_USD", "USD", true, 10000.0, 0, 15, 0.02, 0.00, "6M", "30/360", "3M", "A360", "USD-LIBOR-3M"));    
-    portfolio->add(buildSwap("3_Swap_GBP", "GBP", true, 10000.0, 0, 20, 0.04, 0.00, "6M", "30/360", "3M", "A360", "GBP-LIBOR-6M"));    
-    portfolio->add(buildSwap("4_Swap_JPY", "JPY", true, 1000000.0, 0, 5,  0.01, 0.00, "6M", "30/360", "3M", "A360", "JPY-LIBOR-6M"));    
-    portfolio->add(buildEuropeanSwaption("5_Swaption_EUR", "Long", "EUR", true, 10000.0, 10, 10, 0.03, 0.00, "1Y", "30/360", "6M", "A360", "EUR-EURIBOR-6M"));    
-    portfolio->add(buildFxOption("6_FxOption_EUR_USD", "Long", "Call", 3, "EUR", 10000.0, "USD", 11000.0));
+    portfolio->add(buildSwap("1_Swap_EUR", "EUR", true, 10000000.0, 0, 10, 0.03, 0.00, "1Y", "30/360", "6M", "A360", "EUR-EURIBOR-6M"));    
+    portfolio->add(buildSwap("2_Swap_USD", "USD", true, 10000000.0, 0, 15, 0.02, 0.00, "6M", "30/360", "3M", "A360", "USD-LIBOR-3M"));    
+    portfolio->add(buildSwap("3_Swap_GBP", "GBP", true, 10000000.0, 0, 20, 0.04, 0.00, "6M", "30/360", "3M", "A360", "GBP-LIBOR-6M"));    
+    portfolio->add(buildSwap("4_Swap_JPY", "JPY", true, 1000000000.0, 0, 5,  0.01, 0.00, "6M", "30/360", "3M", "A360", "JPY-LIBOR-6M"));    
+    portfolio->add(buildEuropeanSwaption("5_Swaption_EUR", "Long", "EUR", true, 1000000.0, 10, 10, 0.03, 0.00, "1Y", "30/360", "6M", "A360", "EUR-EURIBOR-6M"));    
+    portfolio->add(buildFxOption("6_FxOption_EUR_USD", "Long", "Call", 3, "EUR", 10000000.0, "USD", 11000000.0));
     portfolio->build(factory);
 
     BOOST_TEST_MESSAGE("Portfolio size after build: " << portfolio->size());
@@ -197,7 +206,7 @@ void test_sensitivity() {
 	    Real sensi = npv - npv0;
 	    string label = scenarioGenerator->scenarios()[j]->label();
 	    if (fabs(sensi) > tiny)
-	      BOOST_TEST_MESSAGE(id << " " << label << " " << sensi); 
+	      BOOST_TEST_MESSAGE(id << " " << label << " NPV=" << npv0 << " SENSI=" << sensi); 
 	}
     }
     
@@ -243,7 +252,7 @@ test_suite* SensitivityAnalysisTest::suite() {
 
     test_suite* suite = BOOST_TEST_SUITE("SensitivityAnalysisTest");
     // Set the Observation mode here
-    ObservationMode::instance().setMode(ObservationMode::Mode::Unregister);
+    ObservationMode::instance().setMode(ObservationMode::Mode::None);
     suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testPortfolioSensitivity));
     return suite;
 }

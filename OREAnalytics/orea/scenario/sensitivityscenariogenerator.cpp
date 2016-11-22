@@ -108,6 +108,7 @@ SensitivityScenarioGenerator::SensitivityScenarioGenerator(
     Size n_fxvol_pairs = simMarketData_->ccyPairs().size();
     Size n_fxvol_exp = simMarketData_->fxVolExpiries().size();
     fxVolKeys_.reserve(n_fxvol_pairs * n_fxvol_exp);
+    count = 0;
     for (Size j = 0; j < n_fxvol_pairs; ++j) {
         string ccypair = simMarketData_->ccyPairs()[j];
 	Real strike = 0.0; // FIXME
@@ -116,8 +117,9 @@ SensitivityScenarioGenerator::SensitivityScenarioGenerator(
 	    fxVolKeys_.emplace_back(RiskFactorKey::KeyType::FXVolatility, ccypair, k);
 	    Period expiry = simMarketData_->fxVolExpiries()[k];
 	    Real fxvol = ts->blackVol(today_ + expiry, strike);
-	    fxVolCache_[fxVolKeys_[j * n_fxvol_exp + k]] = fxvol;
-	    LOG("cache FX vol " << fxvol << " for key " << fxVolKeys_[j * n_fxvol_exp + k]);
+	    fxVolCache_[fxVolKeys_[count]] = fxvol;
+	    LOG("cache FX vol " << fxvol << " for key " << fxVolKeys_[count]);
+	    count++;
         }
     }
 
@@ -197,15 +199,15 @@ void SensitivityScenarioGenerator::generateFxScenarios() {
     for (Size k = 0; k < n_ccy - 1; k++) {
         string foreign = simMarketData_->ccys()[k+1];
 	string ccypair = foreign + domestic;
-	string label = "FX_" + ccypair;
+	string label = sensitivityData_->fxLabel() + "/" + ccypair; 
 	boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_, label);
-	Real rate = initMarket_->fxSpot(ccypair)->value(); // FIXME: configuration
+	Real rate = initMarket_->fxSpot(ccypair)->value(); 
 	Real newRate = rate * (1.0 + sensitivityData_->fxShiftSize());
 	scenario->add(fxKeys_[k], newRate);
 	// add remaining unshifted data from cache for a complete scenario
 	addCacheTo(scenario);
 	scenarios_.push_back(scenario);
-	LOG("Sensitivity scenario " << scenario->label() << " created: " << newRate);
+	LOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created: " << newRate);
     }
     LOG("FX scenarios done");
 }
@@ -213,52 +215,51 @@ void SensitivityScenarioGenerator::generateFxScenarios() {
 void SensitivityScenarioGenerator::generateDiscountCurveScenarios() {
     Size n_ccy = simMarketData_->ccys().size();
     Size n_ten = simMarketData_->yieldCurveTenors().size();
-    bool absolute = isShiftAbsolute(sensitivityData_->irShiftType());
+    bool absolute = isShiftAbsolute(sensitivityData_->discountShiftType());
     QL_REQUIRE(absolute, "relative shifts not supported for IR sensitivities");
   
     // original curves' buffer
-    std::vector<Real> discounts(n_ten);
     std::vector<Real> zeros(n_ten);
     std::vector<Real> times(n_ten);
-    std::vector<Date> dates(n_ten);
 
     for (Size i = 0; i < n_ccy; ++i) {
 
         string ccy = simMarketData_->ccys()[i];
 	Handle<YieldTermStructure> ts = initMarket_->discountCurve(ccy); // FIXME: configuration
-	DayCounter zerodc = ts->dayCounter();
+	DayCounter dc = ts->dayCounter();
 	for (Size j = 0; j < n_ten; ++j) {
 	    Date d = today_ + simMarketData_->yieldCurveTenors()[j];
-	    dates[j] = d;
-	    discounts[j] = ts->discount(d);
-	    zeros[j] = ts->zeroRate(d, zerodc, Continuous);
-	    times[j] = ts->dayCounter().yearFraction(today_, d);
+	    zeros[j] = ts->zeroRate(d, dc, Continuous);
+	    times[j] = dc.yearFraction(today_, d);
 	}
     
-	std::vector<Period> tenors = sensitivityData_->irShiftTenors();
-	QL_REQUIRE(tenors.size() > 0, "IR shift tenors not specified");
+	std::vector<Period> tenors = sensitivityData_->discountShiftTenors();
+	Real shiftSize = sensitivityData_->discountShiftSize();
+	QL_REQUIRE(tenors.size() > 0, "Discount shift tenors not specified");
 	
 	for (Size j = 0; j < tenors.size(); ++j) {
 
 	    // each shift tenor is associated with a scenario
 	    ostringstream o;
-	    o << "DISCOUNT_" << ccy << "_" << j;
-	    string label = o.str();	  
+	    o << sensitivityData_->discountLabel() << "/" << ccy << "/" << j << "/" << tenors[j];
+	    string label = o.str(); 
 	    boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_, label);
 
 	    // apply zero rate shift at tenor point j
-	    std::vector<Real> shiftedDiscounts = applyZeroShift(j, ts, discounts, zeros, times);
+	    std::vector<Real> shiftedZeros = applyShift(j, tenors, shiftSize, dc, zeros, times);
 
 	    // store shifted discount curve in the scenario
-	    for (Size k = 0; k < n_ten; ++k) 
-	        scenario->add(discountCurveKeys_[i * n_ten + k], shiftedDiscounts[k]);
-
+	    for (Size k = 0; k < n_ten; ++k) {
+	        Real shiftedDiscount = exp(-shiftedZeros[k] * times[k]);
+	        scenario->add(discountCurveKeys_[i * n_ten + k], shiftedDiscount);
+	    }
+	    
 	    // add remaining unshifted data from cache for a complete scenario
 	    addCacheTo(scenario);
 
 	    // add this scenario to the scenario vector
 	    scenarios_.push_back(scenario);
-            LOG("Sensitivity scenario " << scenario->label() << " created");
+            LOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
 	    
         } // end of shift curve tenors
     }
@@ -268,91 +269,108 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios() {
 void SensitivityScenarioGenerator::generateIndexCurveScenarios() {
     Size n_indices = simMarketData_->indices().size();
     Size n_ten = simMarketData_->yieldCurveTenors().size();
-    bool absolute = isShiftAbsolute(sensitivityData_->irShiftType());
+    bool absolute = isShiftAbsolute(sensitivityData_->indexShiftType());
     QL_REQUIRE(absolute, "relative shifts not supported for IR sensitivities");
   
     // original curves' buffer
-    std::vector<Real> discounts(n_ten);
     std::vector<Real> zeros(n_ten);
     std::vector<Real> times(n_ten);
-    std::vector<Date> dates(n_ten);
 
     for (Size i = 0; i < n_indices; ++i) {
 
         string indexName = simMarketData_->indices()[i];
 	Handle<IborIndex> iborIndex = initMarket_->iborIndex(indexName);// FIXME: configuration
 	Handle<YieldTermStructure> ts = iborIndex->forwardingTermStructure();
-	DayCounter zerodc = ts->dayCounter();
+	DayCounter dc = ts->dayCounter();
 	for (Size j = 0; j < n_ten; ++j) {
 	    Date d = today_ + simMarketData_->yieldCurveTenors()[j];
-	    dates[j] = d;
-	    discounts[j] = ts->discount(d);
-	    zeros[j] = ts->zeroRate(d, zerodc, Continuous);
-	    times[j] = ts->dayCounter().yearFraction(today_, d);
+	    zeros[j] = ts->zeroRate(d, dc, Continuous);
+	    times[j] = dc.yearFraction(today_, d);
 	}
     
-	std::vector<Period> tenors = sensitivityData_->irShiftTenors();
-	QL_REQUIRE(tenors.size() > 0, "IR shift tenors not specified");
+	std::vector<Period> tenors = sensitivityData_->indexShiftTenors();
+	Real shiftSize = sensitivityData_->indexShiftSize();
+	QL_REQUIRE(tenors.size() > 0, "Index shift tenors not specified");
 	
 	for (Size j = 0; j < tenors.size(); ++j) {
 
 	    // each shift tenor is associated with a scenario
 	    ostringstream o;
-	    o << "INDEX_" << indexName << "_" << j;
-	    string label = o.str();	  
+	    o << sensitivityData_->indexLabel() << "/" << indexName << "/" << j << "/" << tenors[j];
+	    string label = o.str(); 
 	    boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_, label);
 
 	    // apply zero rate shift at tenor point j
-	    std::vector<Real> shiftedDiscounts = applyZeroShift(j, ts, discounts, zeros, times);
+	    std::vector<Real> shiftedZeros = applyShift(j, tenors, shiftSize, dc, zeros, times);
 
 	    // store shifted discount curve for this index in the scenario
-	    for (Size k = 0; k < n_ten; ++k) 
-	        scenario->add(indexCurveKeys_[i * n_ten + k], shiftedDiscounts[k]);
-
+	    for (Size k = 0; k < n_ten; ++k) {
+	        Real shiftedDiscount = exp(-shiftedZeros[k] * times[k]);
+		scenario->add(indexCurveKeys_[i * n_ten + k], shiftedDiscount);
+	    }
+	    
 	    // add remaining unshifted data from cache for a complete scenario
 	    addCacheTo(scenario);
 
 	    // add this scenario to the scenario vector
 	    scenarios_.push_back(scenario);
-            LOG("Sensitivity scenario " << scenario->label() << " created");
+            LOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
 	    
         } // end of shift curve tenors
     }
     LOG("Index curve scenarios done");
 }
- 
+
 void SensitivityScenarioGenerator::generateFxVolScenarios() {
-    Size n_ccy = simMarketData_->ccys().size();
     string domestic = simMarketData_->baseCcy();
     bool absolute = isShiftAbsolute(sensitivityData_->fxVolShiftType());
     QL_REQUIRE(!absolute, "FX vol scenario type must be relative");
 
     Size n_fxvol_pairs = simMarketData_->ccyPairs().size();
     Size n_fxvol_exp = simMarketData_->fxVolExpiries().size();
-    // FIXME: This does a parallel shift to all ATM vols per currency pair for the moment
+
+    std::vector<Real> values(n_fxvol_exp);
+    std::vector<Real> times(n_fxvol_exp);
+
+    std::vector<Period> tenors = sensitivityData_->fxVolShiftExpiries();
+    Real shiftSize = sensitivityData_->fxVolShiftSize();
+    QL_REQUIRE(tenors.size() > 0, "FX vol shift tenors not specified");
+
     Size count = 0;
-    for (Size j = 0; j < n_fxvol_pairs; ++j) {
-        string ccypair = simMarketData_->ccyPairs()[j];
-	string label = "FXVOL_" + ccypair;
-	boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_, label);
-        for (Size k = 0; k < n_fxvol_exp; ++k) {
-  	    Real vol = fxVolCache_[fxVolKeys_[count]];
-	    Real newVol = vol * (1.0 + sensitivityData_->fxVolShiftSize());
-	    scenario->add(fxVolKeys_[count], newVol);
-	    count++;
+    for (Size i = 0; i < n_fxvol_pairs; ++i) {
+        string ccypair = simMarketData_->ccyPairs()[i];
+	Handle<BlackVolTermStructure> ts = initMarket_->fxVol(ccypair); // FIXME: configuration
+	DayCounter dc = ts->dayCounter();
+	Real strike = 0.0; // FIXME
+	for (Size j = 0; j < n_fxvol_exp; ++j) {
+	    Date d = today_ + simMarketData_->fxVolExpiries()[j];
+	    values[j] = ts->blackVol(d, strike);
+	    times[j] = dc.yearFraction(today_, d);
+	}
+
+	for (Size j = 0; j < tenors.size(); ++j) {
+	    // each shift tenor is associated with a scenario
+	    ostringstream o;
+	    o << sensitivityData_->fxVolLabel() << "/" << ccypair << "/" << j << "/" << tenors[j];
+	    string label = o.str(); 
+	    boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_, label);
+	    // apply shift at tenor point j
+	    std::vector<Real> shiftedVols = applyShift(j, tenors, shiftSize, dc, values, times);
+	    for (Size k = 0; k < n_fxvol_exp; ++k) {
+	        scenario->add(fxVolKeys_[count], shiftedVols[k]);
+		count++;
+	    }
+	    // add remaining unshifted data from cache for a complete scenario
+	    addCacheTo(scenario);
+	    // add this scenario to the scenario vector
+	    scenarios_.push_back(scenario);
+	    LOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
         }
-	// add remaining unshifted data from cache for a complete scenario
-	addCacheTo(scenario);
-	// add this scenario to the scenario vector
-	scenarios_.push_back(scenario);
-	LOG("Sensitivity scenario " << scenario->label() << " created");
     }
     LOG("FX vol scenarios done");
 }
 
 void SensitivityScenarioGenerator::generateSwaptionVolScenarios() {
-    Size n_ccy = simMarketData_->ccys().size();
-    string domestic = simMarketData_->baseCcy();
     bool absolute = isShiftAbsolute(sensitivityData_->swaptionVolShiftType());
     QL_REQUIRE(!absolute, "FX vol scenario type must be relative");
 
@@ -363,7 +381,7 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios() {
     // FIXME: This does a parallel shift to all ATM vols per currency for the moment
     for (Size i = 0; i < n_swvol_ccy; ++i) {
         std::string ccy = simMarketData_->swapVolCcys()[i];
-	string label = "SWAPTIONVOL_" + ccy;
+	string label = sensitivityData_->swaptionVolLabel() + "/" + ccy; 
 	boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_, label);
 	for (Size j = 0; j < n_swvol_exp; ++j) {
 	    for (Size k = 0; k < n_swvol_term; ++k) {
@@ -377,16 +395,17 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios() {
 	addCacheTo(scenario);
 	// add this scenario to the scenario vector
 	scenarios_.push_back(scenario);
-	LOG("Sensitivity scenario " << scenario->label() << " created");
+	LOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
     }
     LOG("Swaption vol scenarios done");
 }
 
-vector<Real> SensitivityScenarioGenerator::applyZeroShift(Size j,
-							  Handle<YieldTermStructure> ts,
-							  const vector<Real>& discounts,
-							  const vector<Real>& zeros,
-							  const vector<Real>& times) {
+vector<Real> SensitivityScenarioGenerator::applyShift(Size j,
+						      const vector<Period>& tenors,
+						      Real shiftSize,
+						      DayCounter dc,
+						      const vector<Real>& zeros,
+						      const vector<Real>& times) {
     /****************************************************************************
    * Apply triangular shaped zero rate shifts to the underlying curve
    * where the triangle reaches from the previous to the next shift tenor point
@@ -400,56 +419,56 @@ vector<Real> SensitivityScenarioGenerator::applyZeroShift(Size j,
    */
   // FIXME: Check case where the shift curve is more granular than the original
 	
-    std::vector<Period> tenors = sensitivityData_->irShiftTenors();
+  //std::vector<Period> tenors = sensitivityData_->irShiftTenors();
 	
     std::vector<Real> shiftedZeros = zeros; // FIXME: hard coded zero domain
     Date currentShiftDate = today_ + tenors[j];
-    Real t1 = ts->dayCounter().yearFraction(today_, currentShiftDate);
+    Real t1 = dc.yearFraction(today_, currentShiftDate);
     
     if (tenors.size() == 1) { // single shift tenor means parallel shift
         for (Size k = 0; k < times.size(); k++)
-	    shiftedZeros[k] += sensitivityData_->irShiftSize(); 
+	    shiftedZeros[k] += shiftSize; 
     }
     else if (j == 0) { // first shift tenor, flat extrapolation to the left
         Date nextShiftDate = today_ + tenors[j+1];
-	Real t2 = ts->dayCounter().yearFraction(today_, nextShiftDate);
+	Real t2 = dc.yearFraction(today_, nextShiftDate);
 	for (Size k = 0; k < times.size(); k++) {
 	  if (times[k] <= t1) // full shift
-	    shiftedZeros[k] += sensitivityData_->irShiftSize();
+	    shiftedZeros[k] += shiftSize;
 	  else if (times[k] <= t2) // linear interpolation in t1 < times[k] < t2
-	    shiftedZeros[k] += sensitivityData_->irShiftSize() * (t2 - times[k]) / (t2 - t1);
+	    shiftedZeros[k] += shiftSize * (t2 - times[k]) / (t2 - t1);
 	  else break;
 	}
     }
     else if (j == tenors.size() - 1) { // last shift tenor, flat extrapolation to the right
       Date previousShiftDate = today_ + tenors[j-1];
-      Real t0 = ts->dayCounter().yearFraction(today_, previousShiftDate);
+      Real t0 = dc.yearFraction(today_, previousShiftDate);
       for(Size k = 0; k < times.size(); k++) {
 	if (times[k] >= t0 && times[k] <= t1) // linear interpolation in t0 < times[k] < t1
-	  shiftedZeros[k] += sensitivityData_->irShiftSize() * (times[k] - t0) / (t1 - t0); 
+	  shiftedZeros[k] += shiftSize * (times[k] - t0) / (t1 - t0); 
 	else if (times[k] > t1) // full shift
-	  shiftedZeros[k] += sensitivityData_->irShiftSize();
+	  shiftedZeros[k] += shiftSize;
       }
     }
     else { // intermediate shift tenor
       Date previousShiftDate = today_ + tenors[j-1];
-      Real t0 = ts->dayCounter().yearFraction(today_, previousShiftDate);
+      Real t0 = dc.yearFraction(today_, previousShiftDate);
       Date nextShiftDate = today_ + tenors[j+1];
-      Real t2 = ts->dayCounter().yearFraction(today_, nextShiftDate);
+      Real t2 = dc.yearFraction(today_, nextShiftDate);
       for (Size k = 0; k < times.size(); k++) {
 	if (times[k] >= t0 && times[k] <= t1) // linear interpolation in t0 < times[k] < t1
-	  shiftedZeros[k] += sensitivityData_->irShiftSize() * (times[k] - t0) / (t1 - t0); 
+	  shiftedZeros[k] += shiftSize * (times[k] - t0) / (t1 - t0); 
 	else if (times[k] > t1 && times[k] <= t2) // linear interpolation in t1 < times[k] < t2
-	  shiftedZeros[k] += sensitivityData_->irShiftSize() * (t2 - times[k]) / (t2 - t1); 
+	  shiftedZeros[k] += shiftSize * (t2 - times[k]) / (t2 - t1); 
       }
     }
     
     // convert zeros into a shifted discount curve
-    std::vector<Real> shiftedDiscounts(shiftedZeros.size());
-    for (Size k = 0; k < shiftedZeros.size(); k++) 
-      shiftedDiscounts[k] = exp(-shiftedZeros[k] * times[k]);
+    // std::vector<Real> shiftedDiscounts(shiftedZeros.size());
+    // for (Size k = 0; k < shiftedZeros.size(); k++) 
+    //   shiftedDiscounts[k] = exp(-shiftedZeros[k] * times[k]);
 
-    return shiftedDiscounts;
+    return shiftedZeros;
 }
   
 }

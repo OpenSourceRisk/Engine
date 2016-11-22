@@ -67,25 +67,34 @@ public:
 
     //! \name Inspectors
     //@{
-    // const vector<string>& irCurrencies() const { return irCurrencies_; }
-    // const vector<string>& irIndices() const { return irIndices_; }
-    const bool& irByCurrency() const { return irByCurrency_; }
-    const string& irDomain() const { return irDomain_; }
-    const vector<Period>& irShiftTenors() const { return irShiftTenors_; }
-    const string& irShiftType() const { return irShiftType_; }
-    const Real& irShiftSize() const { return irShiftSize_; }
+    // const vector<string>& discountCurrencies() const { return discountCurrencies_; }
+    const string& discountLabel() const { return discountLabel_; }
+    const string& discountDomain() const { return discountDomain_; }
+    const vector<Period>& discountShiftTenors() const { return discountShiftTenors_; }
+    const string& discountShiftType() const { return discountShiftType_; }
+    const Real& discountShiftSize() const { return discountShiftSize_; }
+
+    // const vector<string>& indexNames() const { return indexNames_; }
+    const string& indexLabel() const { return indexLabel_; }
+    const string& indexDomain() const { return indexDomain_; }
+    const vector<Period>& indexShiftTenors() const { return indexShiftTenors_; }
+    const string& indexShiftType() const { return indexShiftType_; }
+    const Real& indexShiftSize() const { return indexShiftSize_; }
 
     // const vector<string>& infIndices() const { return infIndices_; }
-    // const string& infDomain() const { return infDomain_; }
+    const string& infLabel() const { return infLabel_; }
+    const string& infDomain() const { return infDomain_; }
     const vector<Period>& infShiftTenors() const { return infShiftTenors_; }
     const string& infShiftType() const { return infShiftType_; }
     const Real& infShiftSize() const { return infShiftSize_; }
 
     // const vector<string>& fxCurrencyPairs() const { return fxCurrencyPairs_; }
+    const string& fxLabel() const { return fxLabel_; }
     const string& fxShiftType() const { return fxShiftType_; }
     const Real& fxShiftSize() const { return fxShiftSize_; }
 
     // const vector<string>& swaptionVolCurrencies() const { return swaptionVolCurrencies_; }
+    const string& swaptionVolLabel() const { return swaptionVolLabel_; }
     const vector<Period>& swaptionVolShiftExpiries() const { return swaptionVolShiftExpiries_; }
     const vector<Period>& swaptionVolShiftTerms() const { return swaptionVolShiftTerms_; }
     const vector<Real>& swaptionVolShiftStrikes() const { return swaptionVolShiftStrikes_; }
@@ -93,12 +102,14 @@ public:
     const Real& swaptionVolShiftSize() const { return swaptionVolShiftSize_; }
 
     // const vector<string>& fxVolPairs() const { return fxVolCurrencies_; }
+    const string& fxVolLabel() const { return fxVolLabel_; }
     const vector<Period>& fxVolShiftExpiries() const { return fxVolShiftExpiries_; }
     const vector<Real>& fxVolShiftStrikes() const { return fxVolShiftStrikes_; }
     const string& fxVolShiftType() const { return fxVolShiftType_; }
     const Real& fxVolShiftSize() const { return fxVolShiftSize_; }
 
     // const vector<string>& crNames() const { return crNames_; }
+    const string& crLabel() const { return crLabel_; }
     const string& crDomain() const { return crDomain_; }
     const vector<Period>& crShiftTenors() const { return crShiftTenors_; }
     const string& crShiftType() const { return crShiftType_; }
@@ -107,42 +118,53 @@ public:
 
     //! \name Setters
     //@{
-    // vector<string>& irCurrencies()  { return irCurrencies_; }
-    // vector<string>& irIndices()  { return irIndices_; }
-    bool& irByCurrency()  { return irByCurrency_; }
-    string& irDomain() { return irDomain_; }
-    vector<Period>& irShiftTenors() { return irShiftTenors_; }
-    string& irShiftType() { return irShiftType_; }
-    Real& irShiftSize() { return irShiftSize_; }
+    // vector<string>& discountCurrencies()  { return irCurrencies_; }
+    string& discountLabel() { return discountLabel_; }
+    string& discountDomain() { return discountDomain_; }
+    vector<Period>& discountShiftTenors() { return discountShiftTenors_; }
+    string& discountShiftType() { return discountShiftType_; }
+    Real& discountShiftSize() { return discountShiftSize_; }
+
+    // vector<string>& indexNames() { return indexNames_; }
+    string& indexLabel() { return indexLabel_; }
+    string& indexDomain() { return indexDomain_; }
+    vector<Period>& indexShiftTenors() { return indexShiftTenors_; }
+    string& indexShiftType() { return indexShiftType_; }
+    Real& indexShiftSize() { return indexShiftSize_; }
 
     // vector<string>& infIndices()  { return infIndices_; }
+    string& infLabel() { return infLabel_; }
     string& infDomain()  { return infDomain_; }
     vector<Period>& infShiftTenors()  { return infShiftTenors_; }
     string& infShiftType()  { return infShiftType_; }
     Real& infShiftSize()  { return infShiftSize_; }
 
     // vector<string>& fxCurrencyPairs()  { return fxCurrencyPairs_; }
+    string& fxLabel() { return fxLabel_; }
     string& fxShiftType()  { return fxShiftType_; }
     Real& fxShiftSize()  { return fxShiftSize_; }
 
     // vector<string>& swaptionVolCurrencies()  { return swaptionVolCurrencies_; }
-    vector<Period>& swaptionVolShiftExpiries()  { return swaptionVolShiftExpiries_; }
-    vector<Period>& swaptionVolShiftTerms()  { return swaptionVolShiftTerms_; }
-    vector<Real>& swaptionVolShiftStrikes()  { return swaptionVolShiftStrikes_; }
-    string& swaptionVolShiftType()  { return swaptionVolShiftType_; }
-    Real& swaptionVolShiftSize()  { return swaptionVolShiftSize_; }
+    string& swaptionVolLabel() { return swaptionVolLabel_; }
+    vector<Period>& swaptionVolShiftExpiries() { return swaptionVolShiftExpiries_; }
+    vector<Period>& swaptionVolShiftTerms() { return swaptionVolShiftTerms_; }
+    vector<Real>& swaptionVolShiftStrikes() { return swaptionVolShiftStrikes_; }
+    string& swaptionVolShiftType() { return swaptionVolShiftType_; }
+    Real& swaptionVolShiftSize() { return swaptionVolShiftSize_; }
 
     // vector<string>& fxVolPairs() { return fxVolCurrencies_; }
+    string& fxVolLabel() { return fxVolLabel_; }
     vector<Period>& fxVolShiftExpiries() { return fxVolShiftExpiries_; }
     vector<Real>& fxVolShiftStrikes() { return fxVolShiftStrikes_; }
     string& fxVolShiftType() { return fxVolShiftType_; }
     Real& fxVolShiftSize() { return fxVolShiftSize_; }
 
-    // vector<string>& crNames()  { return crNames_; }
-    string& crDomain()  { return crDomain_; }
-    vector<Period>& crShiftTenors()  { return crShiftTenors_; }
-    string& crShiftType()  { return crShiftType_; }
-    Real& crShiftSize()  { return crShiftSize_; }
+    // vector<string>& crNames() { return crNames_; }
+    string& crLabel() { return crLabel_; }
+    string& crDomain() { return crDomain_; }
+    vector<Period>& crShiftTenors() { return crShiftTenors_; }
+    string& crShiftType() { return crShiftType_; }
+    Real& crShiftSize() { return crShiftSize_; }
     //@}
 
     //! \name Serialisation
@@ -153,36 +175,46 @@ public:
 
     //! \Equality Operators
     //@{
-    bool operator==(const SensitivityScenarioData& rhs);
-    bool operator!=(const SensitivityScenarioData& rhs);
+    //bool operator==(const SensitivityScenarioData& rhs);
+    //bool operator!=(const SensitivityScenarioData& rhs);
     //@}
 
 private:
-    //vector<string> irCurrencies_;
-    //vector<string> irIndices_;
-    bool irByCurrency_;
-    string irDomain_; 
-    vector<Period> irShiftTenors_;
-    string irShiftType_;
-    Real irShiftSize_;
+    //vector<string> discountCurrencies_;
+    string discountLabel_;
+    string discountDomain_; 
+    vector<Period> discountShiftTenors_;
+    string discountShiftType_;
+    Real discountShiftSize_;
+
+    //vector<string> indexNames_;
+    string indexLabel_;
+    string indexDomain_; 
+    vector<Period> indexShiftTenors_;
+    string indexShiftType_;
+    Real indexShiftSize_;
 
     //vector<string> fxCurrencyPairs_;
+    string fxLabel_;
     string fxShiftType_;
     Real fxShiftSize_;
 
     //vector<string> infIndices_;
+    string infLabel_;
     string infDomain_;
     vector<Period> infShiftTenors_;
     string infShiftType_;
     Real infShiftSize_;
 
     //vector<string> crNames_;
+    string crLabel_;
     string crDomain_;
     vector<Period> crShiftTenors_;
     string crShiftType_;
     Real crShiftSize_;
 
     //vector<string> swaptionVolCurrencies_;
+    string swaptionVolLabel_;
     string swaptionVolShiftType_;
     Real swaptionVolShiftSize_;
     vector<Period> swaptionVolShiftExpiries_;
@@ -190,6 +222,7 @@ private:
     vector<Real> swaptionVolShiftStrikes_; // FIXME: absolute or relative to ATM ?
 
     //vector<string> fxVolPairs_;
+    string fxVolLabel_;
     string fxVolShiftType_;
     Real fxVolShiftSize_;
     vector<Period> fxVolShiftExpiries_;

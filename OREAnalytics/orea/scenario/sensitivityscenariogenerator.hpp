@@ -66,12 +66,12 @@ private:
     void generateCapFloorVolScenarios();
     void generateCdsSpreadScenarios();
     //! Apply a zero rate shift at tenor point j and return the sim market discount curve scenario
-    vector<Real> applyZeroShift(Size j,
-				Handle<YieldTermStructure> ts,
-				const vector<Real>& discounts,
-				const vector<Real>& zeros,
-				const vector<Real>& times);
-  
+    vector<Real> applyShift(Size j,
+			    const vector<Period>& tenors,
+			    Real shiftSize,
+			    DayCounter dc,
+			    const vector<Real>& values,
+			    const vector<Real>& times);
     boost::shared_ptr<ScenarioFactory> scenarioFactory_;
     boost::shared_ptr<SensitivityScenarioData> sensitivityData_;
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketData_;
