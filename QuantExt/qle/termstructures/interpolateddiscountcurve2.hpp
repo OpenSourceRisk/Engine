@@ -60,9 +60,6 @@ public:
         }
         interpolation_ = boost::make_shared<LogLinearInterpolation>(times_.begin(), times_.end(), data_.begin());
         registerWith(Settings::instance().evaluationDate());
-        for (Size i = 0; i < quotes.size(); ++i) {
-            registerWith(quotes[i]);
-        }
     }
     //@}
 
