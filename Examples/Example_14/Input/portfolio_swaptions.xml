@@ -62,7 +62,7 @@
             <Spread>0.000000</Spread>
           </Spreads>
           <IsInArrears>false</IsInArrears>
-          <FixingDays>2</FixingDays>
+          <FixingDays>0</FixingDays>
         </FloatingLegData>
         <ScheduleData>
           <Rules>
@@ -143,7 +143,7 @@
             <Spread>0.000000</Spread>
           </Spreads>
           <IsInArrears>false</IsInArrears>
-          <FixingDays>2</FixingDays>
+          <FixingDays>0</FixingDays>
         </FloatingLegData>
         <ScheduleData>
           <Rules>
@@ -224,7 +224,7 @@
             <Spread>0.000000</Spread>
           </Spreads>
           <IsInArrears>false</IsInArrears>
-          <FixingDays>2</FixingDays>
+          <FixingDays>0</FixingDays>
         </FloatingLegData>
         <ScheduleData>
           <Rules>
@@ -305,7 +305,7 @@
             <Spread>0.000000</Spread>
           </Spreads>
           <IsInArrears>false</IsInArrears>
-          <FixingDays>2</FixingDays>
+          <FixingDays>0</FixingDays>
         </FloatingLegData>
         <ScheduleData>
           <Rules>
@@ -386,7 +386,7 @@
             <Spread>0.000000</Spread>
           </Spreads>
           <IsInArrears>false</IsInArrears>
-          <FixingDays>2</FixingDays>
+          <FixingDays>0</FixingDays>
         </FloatingLegData>
         <ScheduleData>
           <Rules>
@@ -467,7 +467,7 @@
             <Spread>0.000000</Spread>
           </Spreads>
           <IsInArrears>false</IsInArrears>
-          <FixingDays>2</FixingDays>
+          <FixingDays>0</FixingDays>
         </FloatingLegData>
         <ScheduleData>
           <Rules>
@@ -548,7 +548,7 @@
             <Spread>0.000000</Spread>
           </Spreads>
           <IsInArrears>false</IsInArrears>
-          <FixingDays>2</FixingDays>
+          <FixingDays>0</FixingDays>
         </FloatingLegData>
         <ScheduleData>
           <Rules>
@@ -629,7 +629,7 @@
             <Spread>0.000000</Spread>
           </Spreads>
           <IsInArrears>false</IsInArrears>
-          <FixingDays>2</FixingDays>
+          <FixingDays>0</FixingDays>
         </FloatingLegData>
         <ScheduleData>
           <Rules>
@@ -710,7 +710,7 @@
             <Spread>0.000000</Spread>
           </Spreads>
           <IsInArrears>false</IsInArrears>
-          <FixingDays>2</FixingDays>
+          <FixingDays>0</FixingDays>
         </FloatingLegData>
         <ScheduleData>
           <Rules>
@@ -791,7 +791,7 @@
             <Spread>0.000000</Spread>
           </Spreads>
           <IsInArrears>false</IsInArrears>
-          <FixingDays>2</FixingDays>
+          <FixingDays>0</FixingDays>
         </FloatingLegData>
         <ScheduleData>
           <Rules>
@@ -872,7 +872,7 @@
             <Spread>0.000000</Spread>
           </Spreads>
           <IsInArrears>false</IsInArrears>
-          <FixingDays>2</FixingDays>
+          <FixingDays>0</FixingDays>
         </FloatingLegData>
         <ScheduleData>
           <Rules>
@@ -953,7 +953,7 @@
             <Spread>0.000000</Spread>
           </Spreads>
           <IsInArrears>false</IsInArrears>
-          <FixingDays>2</FixingDays>
+          <FixingDays>0</FixingDays>
         </FloatingLegData>
         <ScheduleData>
           <Rules>
@@ -1034,7 +1034,7 @@
             <Spread>0.000000</Spread>
           </Spreads>
           <IsInArrears>false</IsInArrears>
-          <FixingDays>2</FixingDays>
+          <FixingDays>0</FixingDays>
         </FloatingLegData>
         <ScheduleData>
           <Rules>
@@ -1115,7 +1115,7 @@
             <Spread>0.000000</Spread>
           </Spreads>
           <IsInArrears>false</IsInArrears>
-          <FixingDays>2</FixingDays>
+          <FixingDays>0</FixingDays>
         </FloatingLegData>
         <ScheduleData>
           <Rules>
@@ -1196,7 +1196,7 @@
             <Spread>0.000000</Spread>
           </Spreads>
           <IsInArrears>false</IsInArrears>
-          <FixingDays>2</FixingDays>
+          <FixingDays>0</FixingDays>
         </FloatingLegData>
         <ScheduleData>
           <Rules>
@@ -1277,7 +1277,7 @@
             <Spread>0.000000</Spread>
           </Spreads>
           <IsInArrears>false</IsInArrears>
-          <FixingDays>2</FixingDays>
+          <FixingDays>0</FixingDays>
         </FloatingLegData>
         <ScheduleData>
           <Rules>
@@ -1358,7 +1358,7 @@
             <Spread>0.000000</Spread>
           </Spreads>
           <IsInArrears>false</IsInArrears>
-          <FixingDays>2</FixingDays>
+          <FixingDays>0</FixingDays>
         </FloatingLegData>
         <ScheduleData>
           <Rules>
@@ -1439,7 +1439,7 @@
             <Spread>0.000000</Spread>
           </Spreads>
           <IsInArrears>false</IsInArrears>
-          <FixingDays>2</FixingDays>
+          <FixingDays>0</FixingDays>
         </FloatingLegData>
         <ScheduleData>
           <Rules>
@@ -1520,7 +1520,7 @@
             <Spread>0.000000</Spread>
           </Spreads>
           <IsInArrears>false</IsInArrears>
-          <FixingDays>2</FixingDays>
+          <FixingDays>0</FixingDays>
         </FloatingLegData>
         <ScheduleData>
           <Rules>
