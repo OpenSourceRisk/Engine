@@ -36,6 +36,8 @@ public:
     //! Test the market datum parser
     static void testMarketDatumParser();
     static void testBadMarketDatumStrings();
+    static void testEqCurveConfigLoad();
+    static void testEqCurveConfigBadLoad();
 
     static boost::unit_test_framework::test_suite* suite();
 };

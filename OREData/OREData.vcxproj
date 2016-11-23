@@ -41,6 +41,8 @@
     <ClInclude Include="ored\configuration\conventions.hpp" />
     <ClInclude Include="ored\configuration\curveconfigurations.hpp" />
     <ClInclude Include="ored\configuration\defaultcurveconfig.hpp" />
+    <ClInclude Include="ored\configuration\equitycurveconfig.hpp" />
+    <ClInclude Include="ored\configuration\equityvolcurveconfig.hpp" />
     <ClInclude Include="ored\configuration\fxvolcurveconfig.hpp" />
     <ClInclude Include="ored\configuration\swaptionvolcurveconfig.hpp" />
     <ClInclude Include="ored\configuration\yieldcurveconfig.hpp" />
@@ -123,6 +125,8 @@
     <ClCompile Include="ored\configuration\conventions.cpp" />
     <ClCompile Include="ored\configuration\curveconfigurations.cpp" />
     <ClCompile Include="ored\configuration\defaultcurveconfig.cpp" />
+    <ClCompile Include="ored\configuration\equitycurveconfig.cpp" />
+    <ClCompile Include="ored\configuration\equityvolcurveconfig.cpp" />
     <ClCompile Include="ored\configuration\fxvolcurveconfig.cpp" />
     <ClCompile Include="ored\configuration\swaptionvolcurveconfig.cpp" />
     <ClCompile Include="ored\configuration\yieldcurveconfig.cpp" />

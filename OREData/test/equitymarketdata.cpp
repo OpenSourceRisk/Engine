@@ -18,7 +18,9 @@
 
 #include "equitymarketdata.hpp"
 #include <ored/marketdata/marketdatumparser.hpp>
+#include <ored/configuration/curveconfigurations.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/xmlutils.hpp>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/assign/list_of.hpp>
@@ -70,6 +72,49 @@ std::vector<std::string> getBadMarketDataStrings() {
         ("20160226 EQUITY_OPTION/RATE_LNVOL/SP5/USD/1678W5D/37.75 0.25") // explicit strike axis not supported yet
         ("20160226 EQUITY_OPTION/RATE_LNVOL/Lufthansa/EUR/1Y1M/-0.05 0.13"); // sticky-delta strike axis not supported yet
 }
+
+std::string divYieldCurveConfigString =
+"<CurveConfiguration>"
+"<EquityCurves>"
+"<EquityCurve>"
+"<CurveId>SP5</CurveId>"
+"<CurveDescription>SP 500 equity price projection curve</CurveDescription>"
+"<Currency>USD</Currency> <!--is this really needed ? -->"
+"<Type>DividendYield</Type> <!-- {DividendYield, ForwardPrice} -->"
+"<SpotQuote>EQUITY/PRICE/SP5/USD</SpotQuote> <!--the spot quote from the market data file-->"
+"<InterestRateCurve>Yield/USD/USDFedFundsCurve</InterestRateCurve> <!--the IR rate curve to be used when projecting the forward prices-->"
+"<Quotes>"
+"<Quote>EQUITY_DIVIDEND/RATE/SP5/USD/1M</Quote>"
+"<Quote>EQUITY_DIVIDEND/RATE/SP5/USD/2016-09-15</Quote>"
+"<Quote>EQUITY_DIVIDEND/RATE/SP5/USD/1Y</Quote>"
+"<Quote>EQUITY_DIVIDEND/RATE/SP5/USD/2Y</Quote>"
+"<Quote>EQUITY_DIVIDEND/RATE/SP5/USD/5Y</Quote>"
+"</Quotes>"
+"<Conventions>GenericZeroConventions</Conventions>"
+"</EquityCurve>"
+"</EquityCurves>"
+"</CurveConfiguration>";
+
+std::string eqBadConfigString =
+"<CurveConfiguration>"
+"<EquityCurves>"
+"<EquityCurve>"
+"<CurveId>SP5Mini</CurveId>"
+"<CurveDescription>SP Mini equity price projection curve</CurveDescription>"
+"<Currency>USD</Currency> <!--is this really needed ? -->"
+"<Type>ForwardPrice</Type> <!-- {DividendYield, ForwardPrice} -->"
+"<InterestRateCurve>Yield/USD/USDFedFundsCurve</InterestRateCurve> <!--the IR rate curve to be used when projecting the forward prices-->"
+"<Quotes>"
+"<Quote>EQUITY_FWD/PRICE/SP5Mini/USD/1M</Quote>"
+"<Quote>EQUITY_FWD/PRICE/SP5Mini/USD/2016-09-15</Quote>"
+"<Quote>EQUITY_FWD/PRICE/SP5Mini/USD/1Y</Quote>"
+"<Quote>EQUITY_FWD/PRICE/SP5Mini/USD/2Y</Quote>"
+"<Quote>EQUITY_FWD/PRICE/SP5Mini/USD/5Y</Quote>"
+"</Quotes>"
+"</EquityCurve>"
+"</EquityCurves>"
+"</CurveConfiguration>";
+
 }
 
 namespace testsuite {
@@ -110,11 +155,63 @@ void EquityMarketDataTest::testBadMarketDatumStrings() {
     }
 }
 
+void EquityMarketDataTest::testEqCurveConfigLoad() {
+    ore::data::XMLDocument testDoc;
+    testDoc.fromXMLString(divYieldCurveConfigString);
+    // check that the root node is as expected
+    ore::data::XMLNode* node = testDoc.getFirstNode("CurveConfiguration");
+    BOOST_CHECK_NO_THROW(ore::data::XMLUtils::checkNode(node, "CurveConfiguration"));
+
+    ore::data::CurveConfigurations cc;
+    BOOST_CHECK_NO_THROW(cc.fromXML(node));
+    boost::shared_ptr<ore::data::EquityCurveConfig> ec = cc.equityCurveConfig("SP5");
+    BOOST_CHECK(ec);
+    BOOST_CHECK_EQUAL("SP5", ec->curveID());
+    BOOST_CHECK_EQUAL("SP 500 equity price projection curve", 
+        ec->curveDescription());
+    BOOST_CHECK_EQUAL("USD", ec->currency());
+    BOOST_CHECK_EQUAL("EQUITY/PRICE/SP5/USD", ec->equitySpotQuoteID());
+    BOOST_CHECK_EQUAL("Yield/USD/USDFedFundsCurve", ec->equityInterestRateCurveID());
+    bool testType = (ec->type() == ore::data::EquityCurveConfig::Type::DividendYield);
+    BOOST_CHECK(testType);
+    //BOOST_CHECK_EQUAL(ore::data::EquityCurveConfig::Type::DividendYield, ec->type());
+    BOOST_CHECK_EQUAL("GenericZeroConventions", ec->conventionID());
+    vector<string> anticipatedQuotes = boost::assign::list_of
+        ("EQUITY_DIVIDEND/RATE/SP5/USD/1M")
+        ("EQUITY_DIVIDEND/RATE/SP5/USD/2016-09-15")
+        ("EQUITY_DIVIDEND/RATE/SP5/USD/1Y")
+        ("EQUITY_DIVIDEND/RATE/SP5/USD/2Y")
+        ("EQUITY_DIVIDEND/RATE/SP5/USD/5Y");
+    vector<string> actualQuotes = ec->quotes();
+    BOOST_CHECK_EQUAL_COLLECTIONS(anticipatedQuotes.begin(), anticipatedQuotes.end(),
+        actualQuotes.begin(), actualQuotes.end());
+    BOOST_CHECK(ec->extrapolation());
+
+    // now test the toXML member function
+    ore::data::XMLDocument testDumpDoc;
+    BOOST_CHECK_NO_THROW(cc.toXML(testDumpDoc));
+    //! TODO - query the XML to ensure that the curve configuration objects have been dumped correctly
+}
+
+void EquityMarketDataTest::testEqCurveConfigBadLoad() {
+    ore::data::XMLDocument testBadDoc;
+    testBadDoc.fromXMLString(eqBadConfigString);
+    // check that the root node is as expected
+    ore::data::XMLNode* badNode = testBadDoc.getFirstNode("CurveConfiguration");
+    BOOST_CHECK_NO_THROW(ore::data::XMLUtils::checkNode(badNode, "CurveConfiguration"));
+    ore::data::CurveConfigurations cc;
+    BOOST_CHECK_NO_THROW(cc.fromXML(badNode)); // the spot price is missing, but the correct behaviour is to log error and move on
+    boost::shared_ptr<ore::data::EquityCurveConfig> ec = cc.equityCurveConfig("SP5Mini");
+    BOOST_CHECK(!ec); // this checks that the XML did not actually get loaded
+}
+
 boost::unit_test_framework::test_suite* EquityMarketDataTest::suite() {
     boost::unit_test_framework::test_suite* suite = BOOST_TEST_SUITE("EquityMarketDataTest");
 
     suite->add(BOOST_TEST_CASE(&EquityMarketDataTest::testMarketDatumParser));
     suite->add(BOOST_TEST_CASE(&EquityMarketDataTest::testBadMarketDatumStrings));
+    suite->add(BOOST_TEST_CASE(&EquityMarketDataTest::testEqCurveConfigLoad));
+    suite->add(BOOST_TEST_CASE(&EquityMarketDataTest::testEqCurveConfigBadLoad));
     return suite;
 }
 }
