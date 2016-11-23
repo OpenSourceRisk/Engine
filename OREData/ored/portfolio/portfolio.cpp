@@ -40,7 +40,6 @@ void Portfolio::reset() {
 }
 
 void Portfolio::load(const string& fileName, const boost::shared_ptr<TradeFactory>& factory) {
-    trades_.clear();
 
     LOG("Parsing XML " << fileName.c_str());
     XMLDocument doc(fileName);
