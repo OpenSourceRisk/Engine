@@ -126,10 +126,10 @@ SensitivityScenarioGenerator::SensitivityScenarioGenerator(
     generateDiscountCurveScenarios();
     generateIndexCurveScenarios();
     generateFxScenarios();
-    if (simMarketData_->simulateSwapVols())
-      generateSwaptionVolScenarios();
     if (simMarketData_->simulateFXVols())
       generateFxVolScenarios();
+    if (simMarketData_->simulateSwapVols())
+      generateSwaptionVolScenarios();
 
     //generateCapFloorVolScenarios();
     //generateCdsSpreadScenarios();
@@ -237,8 +237,8 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios() {
     
 	std::vector<Period> shiftTenors = sensitivityData_->discountShiftTenors();
 	std::vector<Time> shiftTimes(shiftTenors.size());
-	for (Size i = 0; i < shiftTenors.size(); ++i)
-	    shiftTimes[i] = dc.yearFraction(today_, today_ + shiftTenors[i]);	
+	for (Size j = 0; j < shiftTenors.size(); ++j)
+	    shiftTimes[j] = dc.yearFraction(today_, today_ + shiftTenors[j]);	
 	Real shiftSize = sensitivityData_->discountShiftSize();
 	QL_REQUIRE(shiftTenors.size() > 0, "Discount shift tenors not specified");
 	
@@ -298,8 +298,8 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios() {
     
 	std::vector<Period> shiftTenors = sensitivityData_->indexShiftTenors();
 	std::vector<Time> shiftTimes(shiftTenors.size());
-	for (Size i = 0; i < shiftTenors.size(); ++i)
-	    shiftTimes[i] = dc.yearFraction(today_, today_ + shiftTenors[i]);
+	for (Size j = 0; j < shiftTenors.size(); ++j)
+	    shiftTimes[j] = dc.yearFraction(today_, today_ + shiftTenors[j]);
 	Real shiftSize = sensitivityData_->indexShiftSize();
 	QL_REQUIRE(shiftTenors.size() > 0, "Index shift tenors not specified");
 	
@@ -347,11 +347,14 @@ void SensitivityScenarioGenerator::generateFxVolScenarios() {
     std::vector<Real> shiftedValues(n_fxvol_exp);
 
     std::vector<Period> shiftTenors = sensitivityData_->fxVolShiftExpiries();
+    for (Size i = 0; i < shiftTenors.size(); ++i)
+      LOG("FX Vol Shift Tenor " << i << ": " << shiftTenors[i]);
+    LOG("FX Vol Keys size = " << fxVolKeys_.size());
+    
     std::vector<Time> shiftTimes(shiftTenors.size());
     Real shiftSize = sensitivityData_->fxVolShiftSize();
     QL_REQUIRE(shiftTenors.size() > 0, "FX vol shift tenors not specified");
 
-    Size count = 0;
     for (Size i = 0; i < n_fxvol_pairs; ++i) {
         string ccypair = simMarketData_->ccyPairs()[i];
 	Handle<BlackVolTermStructure> ts = initMarket_->fxVol(ccypair); // FIXME: configuration
@@ -363,8 +366,8 @@ void SensitivityScenarioGenerator::generateFxVolScenarios() {
 	    times[j] = dc.yearFraction(today_, d);
 	}
 
-	for (Size i = 0; i < shiftTenors.size(); ++i)
-	    shiftTimes[i] = dc.yearFraction(today_, today_ + shiftTenors[i]);
+	for (Size j = 0; j < shiftTenors.size(); ++j)
+	    shiftTimes[j] = dc.yearFraction(today_, today_ + shiftTenors[j]);
 
 	for (Size j = 0; j < shiftTenors.size(); ++j) {
 	    // each shift tenor is associated with a scenario
@@ -372,13 +375,13 @@ void SensitivityScenarioGenerator::generateFxVolScenarios() {
 	    //o << sensitivityData_->fxVolLabel() << "/" << ccypair << "/" << j << "/" << shiftTenors[j];
 	    o << sensitivityData_->fxVolLabel() << "/" << ccypair << "/" << shiftTenors[j];
 	    string label = o.str(); 
+	    //LOG("FX Vol shift, " << ccypair << ", tenor " << j << " " <<  shiftTenors[j] << " label " << label);
 	    boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_, label);
 	    // apply shift at tenor point j
 	    applyShift(j, shiftSize, shiftType, shiftTimes, values, times, shiftedValues);
-	    for (Size k = 0; k < n_fxvol_exp; ++k) {
-	        scenario->add(fxVolKeys_[count], shiftedValues[k]);
-		count++;
-	    }
+	    for (Size k = 0; k < n_fxvol_exp; ++k)
+	        scenario->add(fxVolKeys_[i * n_fxvol_exp + k], shiftedValues[k]);
+	    
 	    // add remaining unshifted data from cache for a complete scenario
 	    addCacheTo(scenario);
 	    // add this scenario to the scenario vector
@@ -404,9 +407,6 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios() {
 
     vector<Real> shiftExpiryTimes(sensitivityData_->swaptionVolShiftExpiries().size(), 0.0);
     vector<Real> shiftTermTimes(sensitivityData_->swaptionVolShiftTerms().size(), 0.0);
-
-    // for (Size i = 0; i < shiftTenors.size(); ++i)
-    //     shiftTimes[i] = dc.yearFraction(today_, today_ + shiftTenors[i]);
 
     for (Size i = 0; i < n_swvol_ccy; ++i) {
         std::string ccy = simMarketData_->swapVolCcys()[i];
@@ -453,8 +453,8 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios() {
 		// add shifted vol data to the scenario
 		for (Size jj = 0; jj < n_swvol_exp; ++jj) {
 		    for (Size kk = 0; kk < n_swvol_term; ++kk) {
-		        Size count = i * n_swvol_exp * n_swvol_term + jj * n_swvol_term + kk;
-			scenario->add(swaptionVolKeys_[count], shiftedVolData[jj][kk]);
+		        Size idx = i * n_swvol_exp * n_swvol_term + jj * n_swvol_term + kk;
+			scenario->add(swaptionVolKeys_[idx], shiftedVolData[jj][kk]);
 		    }
 		}
 		// add remaining unshifted data from cache for a complete scenario

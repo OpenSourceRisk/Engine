@@ -88,26 +88,33 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
     fxShiftSize_ = XMLUtils::getChildValueAsDouble(node, "FxShiftSize", true);
 
     //infIndices_ = XMLUtils::getChildrenValues(node, "InflationIndices", "Index", true);
-    infLabel_ = XMLUtils::getChildValue(node, "InflationLabel", true);
-    infDomain_ = XMLUtils::getChildValue(node, "InflationDomain", true);
-    infShiftType_ = XMLUtils::getChildValue(node, "InflationShiftType", true);
-    infShiftSize_ = XMLUtils::getChildValueAsDouble(node, "InflationShiftSize", true);
-    infShiftTenors_ = XMLUtils::getChildrenValuesAsPeriods(node, "InflationShiftTenors", true);
+    infLabel_ = XMLUtils::getChildValue(node, "InflationLabel");
+    infDomain_ = XMLUtils::getChildValue(node, "InflationDomain");
+    infShiftType_ = XMLUtils::getChildValue(node, "InflationShiftType");
+    infShiftSize_ = XMLUtils::getChildValueAsDouble(node, "InflationShiftSize");
+    infShiftTenors_ = XMLUtils::getChildrenValuesAsPeriods(node, "InflationShiftTenors");
 
     //swaptionVolCurrencies_ = XMLUtils::getChildrenValues(node, "SwaptionVolatilityCurrencies", "Currency", true);
     swaptionVolLabel_ = XMLUtils::getChildValue(node, "SwaptionVolatilityLabel", true);
-    swaptionVolShiftType_ = XMLUtils::getChildValue(node, "SwaptionVolatilityShiftType");
-    swaptionVolShiftSize_ = XMLUtils::getChildValueAsDouble(node, "SwaptionVolatilityShiftSize");
+    swaptionVolShiftType_ = XMLUtils::getChildValue(node, "SwaptionVolatilityShiftType", true);
+    swaptionVolShiftSize_ = XMLUtils::getChildValueAsDouble(node, "SwaptionVolatilityShiftSize", true);
     swaptionVolShiftTerms_ = XMLUtils::getChildrenValuesAsPeriods(node, "SwaptionVolatilityShiftTerms", true);
     swaptionVolShiftExpiries_ = XMLUtils::getChildrenValuesAsPeriods(node, "SwaptionVolatilityShiftExpiries", true);
     swaptionVolShiftStrikes_ = XMLUtils::getChildrenValuesAsDoubles(node, "SwaptionVolatilityShiftStrikes", "Strike", true);
 
+    //swaptionVolCurrencies_ = XMLUtils::getChildrenValues(node, "SwaptionVolatilityCurrencies", "Currency", true);
+    fxVolLabel_ = XMLUtils::getChildValue(node, "FxVolatilityLabel", true);
+    fxVolShiftType_ = XMLUtils::getChildValue(node, "FxVolatilityShiftType");
+    fxVolShiftSize_ = XMLUtils::getChildValueAsDouble(node, "FxVolatilityShiftSize", true);
+    fxVolShiftExpiries_ = XMLUtils::getChildrenValuesAsPeriods(node, "FxVolatilityShiftExpiries", true);
+    fxVolShiftStrikes_ = XMLUtils::getChildrenValuesAsDoubles(node, "FxVolatilityShiftStrikes", "Strike", true);
+
     //crNames_ = XMLUtils::getChildrenValues(node, "CreditNames", "Name", true);
-    crLabel_ = XMLUtils::getChildValue(node, "CreditLabel", true);
-    crDomain_ = XMLUtils::getChildValue(node, "CreditDomain", true);
-    crShiftType_ = XMLUtils::getChildValue(node, "CreditShiftType", true);
-    crShiftSize_ = XMLUtils::getChildValueAsDouble(node, "CreditShiftSize", true);
-    crShiftTenors_ = XMLUtils::getChildrenValuesAsPeriods(node, "CreditShiftTenors", true);  
+    crLabel_ = XMLUtils::getChildValue(node, "CreditLabel");
+    crDomain_ = XMLUtils::getChildValue(node, "CreditDomain");
+    crShiftType_ = XMLUtils::getChildValue(node, "CreditShiftType");
+    crShiftSize_ = XMLUtils::getChildValueAsDouble(node, "CreditShiftSize");
+    crShiftTenors_ = XMLUtils::getChildrenValuesAsPeriods(node, "CreditShiftTenors");  
 }
 
 XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
