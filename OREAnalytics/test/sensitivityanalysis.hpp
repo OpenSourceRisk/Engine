@@ -33,6 +33,11 @@ namespace testsuite {
 */
 class SensitivityAnalysisTest {
 public:
+    //! Test that shifting all shift curve tenor points by DELTA yields DELTA shifts at all tenor points of the an underlying curve
+    static void test1dShifts();
+    //! Test that shifting all 2-d shift tenor points by DELTA yields DELTA shifts at all 2-d grid points of the underlying data
+    static void test2dShifts();
+    //! Test that the portfolio shows the expected sensitivity 
     static void testPortfolioSensitivity();
     static boost::unit_test_framework::test_suite* suite();
 };

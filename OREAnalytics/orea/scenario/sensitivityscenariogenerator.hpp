@@ -40,6 +40,11 @@ namespace analytics {
  */
 class SensitivityScenarioGenerator : public ScenarioGenerator {
 public:
+    enum class ShiftType {
+      Absolute,
+      Relative
+    };
+
     //! Constructor
     SensitivityScenarioGenerator(boost::shared_ptr<ScenarioFactory> scenarioFactory,
 				 boost::shared_ptr<SensitivityScenarioData> sensitivityData,
@@ -55,6 +60,30 @@ public:
     const std::vector<boost::shared_ptr<Scenario>>& scenarios() {
         return scenarios_;
     }
+
+    //! Apply 1d triangular shift to 1d data, public to allow test suite access
+    void applyShift(Size j,
+		    Real shiftSize,
+		    ShiftType type,
+		    const vector<Time>& shiftTimes,
+		    const vector<Real>& values,
+		    const vector<Time>& times,
+		    vector<Real>& shiftedValues);
+    // vector<Real> applyShift(Size j, Real shiftSize, DayCounter dc,
+    // 			    const vector<Period>& tenors,
+    // 			    const vector<Real>& values,
+    // 			    const vector<Real>& times);
+    //! Apply 2d shift to 2d matrix such as swaption volatiities, public to allow test suite access
+    void applyShift(Size j,
+		    Size k,
+		    Real shiftSize,
+		    ShiftType type,
+		    const vector<Time>& shiftX,
+		    const vector<Time>& shiftY,
+		    const vector<Time>& dataX,
+		    const vector<Time>& dataY,
+		    const vector<vector<Real>>& data,
+		    vector<vector<Real>>& shiftedData);
 private:
     void addCacheTo(boost::shared_ptr<Scenario> scenario);
     void generateYieldCurveScenarios();
@@ -63,15 +92,9 @@ private:
     void generateFxScenarios();
     void generateSwaptionVolScenarios();
     void generateFxVolScenarios();
-    void generateCapFloorVolScenarios();
-    void generateCdsSpreadScenarios();
+    void generateCapFloorVolScenarios(); // todo
+    void generateCdsSpreadScenarios(); // todo
     //! Apply a zero rate shift at tenor point j and return the sim market discount curve scenario
-    vector<Real> applyShift(Size j,
-			    const vector<Period>& tenors,
-			    Real shiftSize,
-			    DayCounter dc,
-			    const vector<Real>& values,
-			    const vector<Real>& times);
     boost::shared_ptr<ScenarioFactory> scenarioFactory_;
     boost::shared_ptr<SensitivityScenarioData> sensitivityData_;
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketData_;
