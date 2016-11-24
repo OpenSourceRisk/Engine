@@ -8,7 +8,8 @@ OREANALYTICS_TESTS = \
 	scenariogenerator.hpp scenariogenerator.cpp \
 	sensitivityanalysis.hpp sensitivityanalysis.cpp \
 	testmarket.hpp \
-	testportfolio.hpp testportfolio.cpp
+	testportfolio.hpp testportfolio.cpp \
+	observationmode.hpp observationmode.cpp
 
 dist-hook:
 	mkdir -p $(distdir)/build

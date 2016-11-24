@@ -136,6 +136,13 @@ SwaptionVolatilityConverter::convert(const boost::shared_ptr<SwaptionVolatilityM
     }
 }
 
+
+
+// Ignore "warning C4996: 'Quantlib::Swaption::impliedVolatility': was declared deprecated"
+#ifdef BOOST_MSVC
+#pragma warning(push)
+#pragma warning(disable : 4996)
+#endif
 Real SwaptionVolatilityConverter::convert(const Date& expiry, const Period& swapTenor, const DayCounter& volDayCounter,
                                           Real inVol, VolatilityType inType, VolatilityType outType, Real inShift,
                                           Real outShift) const {
@@ -196,4 +203,7 @@ Real SwaptionVolatilityConverter::convert(const Date& expiry, const Period& swap
 
     return impliedVol;
 }
+#ifdef BOOST_MSVC
+#pragma warning(pop)
+#endif
 }

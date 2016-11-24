@@ -527,6 +527,7 @@
     <ClInclude Include="qle\instruments\tenorbasisswap.hpp" />
     <ClInclude Include="qle\math\all.hpp" />
     <ClInclude Include="qle\math\flatextrapolation.hpp" />
+	<ClInclude Include="qle\math\nadarayawatson.hpp" />
     <ClInclude Include="qle\methods\all.hpp" />
     <ClInclude Include="qle\methods\multipathgeneratorbase.hpp" />
     <ClInclude Include="qle\models\all.hpp" />

@@ -50,7 +50,7 @@ public:
     void reset();
     //! Portfolio size
     QuantLib::Size size() const { return trades_.size(); }
-    //! Load using a default or user supplied TradeFactory
+    //! Load using a default or user supplied TradeFactory, existing trades are kept
     void load(const std::string& fileName,
               const boost::shared_ptr<TradeFactory>& tf = boost::make_shared<TradeFactory>());
     //! Save portfolio to an XML file

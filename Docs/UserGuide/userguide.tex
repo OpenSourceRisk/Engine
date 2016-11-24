@@ -2558,11 +2558,12 @@ In ORE we use the following exposure definitions
 \EE(t) = \EPE(t) &= \E^N\left[ \frac{(NPV(t)-C(t))^+}{N(t)} \right] \label{EE}\\
 \ENE(t) &= \E^N\left[ \frac{(-NPV(t)+C(t))^+}{N(t)} \right] \label{ENE}
 \end{align}
-where $\NPV(t)$ stands for the netting set NPV and $C$ is the posted collateral. Note that these exposures are
-expectations of values discounted with numeraire $N$ (in ORE the Linear Gauss Markov model's numeraire) to today, and
-expectations are taken in the measure associated with numeraire $N$. These are the exposures which enter into unilateral
-CVA and DVA calculation, respectively, see next section. Note that we sometimes label the expected exposure (\ref{EE})
-EPE, not to be confused with the Basel III Expected Positive Exposure below.
+where $\NPV(t)$ stands for the netting set NPV and $C(t)$ is the collateral balance\footnote{$C(t)>0$ means that we have
+  {\em received} collateral from the counterparty} at time $t$. Note that these exposures are expectations of values
+discounted with numeraire $N$ (in ORE the Linear Gauss Markov model's numeraire) to today, and expectations are taken in
+the measure associated with numeraire $N$. These are the exposures which enter into unilateral CVA and DVA calculation,
+respectively, see next section. Note that we sometimes label the expected exposure (\ref{EE}) EPE, not to be confused
+with the Basel III Expected Positive Exposure below.
 
 \medskip
 Basel III defines a number of exposures each of which is a 'derivative' of Basel's Expected Exposure:
@@ -2650,10 +2651,12 @@ When the CSA defines a collateral compounding rate that deviates from the overni
 value adjustment labeled COLVA \cite{Lichters}. In the simplest case the deviation is just given by a constant spread
 $\Delta$:
 \begin{align}
-\COLVA &= \E^N\left[ \sum_i C(t_i)\cdot \Delta \cdot \delta_i \cdot D(t_{i+1}) \right]
+\COLVA &= \E^N\left[ \sum_i -C(t_i)\cdot \Delta \cdot \delta_i \cdot D(t_{i+1}) \right]
 \label{COLVA}
 \end{align}
-where $C(t)$ is the collateral posted and $D(t)$ is the stochastic discount factor $1/N(t)$ in LGM. Both $C(t)$ and
+where $C(t)$ is the collateral balance\footnote{see \ref{sec:app_exposure}, $C(t)>0$ means that we have {\em received}
+  collateral from the counterparty} at time $t$ and $D(t)$ is the stochastic discount factor $1/N(t)$ in LGM. Both
+$C(t)$ and
 $N(t)$ are computed in ORE's Monte Carlo framework, and the expectation yields the desired adjustment. \\
  
 Replacing the constant spread by a time-dependent deterministic function in ORE is straight forward. 
@@ -2666,14 +2669,14 @@ rate is the overnight rate {\em floored at zero}. To work out the value of this 
 of discounted margin cash flows with and without the floor feature. It is shown in \cite{Lichters} that the following
 formula is a good approximation to the collateral floor value
 \begin{align}
-\Pi_{Floor} &= \E^N\left[ \sum_i C(t_i)\cdot (-r(t_i))^+\cdot\delta_i \cdot D(t_{i+1}) \right]
+\Pi_{Floor} &= \E^N\left[ \sum_i -C(t_i)\cdot (-r(t_i))^+\cdot\delta_i \cdot D(t_{i+1}) \right]
 \label{CSA_floor_value_approx}
 \end{align}
 where $r$ is the stochastic overnight rate and $(-r)^+ = r^+ - r$ is the difference between floored and 'un-floored' compounding rate. \\
 
 Taking both collateral spread and floor into account, the value adjustment is 
 \begin{align}
-\Pi_{Floor,\Delta} &= \E^N\left[ \sum_i C(t_i)\cdot ((r(t_i)-\Delta)^+-r(t_i))\cdot\delta_i \cdot D(t_{i+1}) \right] 
+\Pi_{Floor,\Delta} &= \E^N\left[ \sum_i -C(t_i)\cdot ((r(t_i)-\Delta)^+-r(t_i))\cdot\delta_i \cdot D(t_{i+1}) \right] 
 \label{CSA_floor_value_approx_2}
 \end{align}
 
