@@ -50,8 +50,9 @@ public:
     //! Default constructor
     EquityVolatilityCurveConfig() {}
     //! Detailed constructor
-    EquityVolatilityCurveConfig(const string& curveID, const string& curveDescription, const Dimension& dimension,
-                            const vector<string>& expiries);
+    EquityVolatilityCurveConfig(const string& curveID, const string& curveDescription, 
+        const string& currency, const Dimension& dimension,
+        const vector<string>& expiries);
     //! Default destructor
     virtual ~EquityVolatilityCurveConfig() {}
     //@}
@@ -66,6 +67,7 @@ public:
     //@{
     const string& curveID() const { return curveID_; }
     const string& curveDescription() const { return curveDescription_; }
+    const string& ccy() const { return ccy_; }
     const Dimension& dimension() const { return dimension_; }
     const vector<string>& expiries() const { return expiries_; }
     //@}
@@ -74,12 +76,14 @@ public:
     //@{
     string& curveID() { return curveID_; }
     string& curveDescription() { return curveDescription_; }
+    string& ccy() { return ccy_; }
     Dimension& dimension() { return dimension_; }
     vector<string>& expiries() { return expiries_; }
     //@}
 private:
     string curveID_;
     string curveDescription_;
+    string ccy_;
     Dimension dimension_;
     vector<string> expiries_;
 };

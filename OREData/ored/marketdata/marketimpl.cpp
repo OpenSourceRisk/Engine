@@ -131,6 +131,10 @@ Handle<YieldTermStructure> MarketImpl::equityInterestRateCurve(const string& key
     return lookup<Handle<YieldTermStructure>>(equityInterestRateCurves_, key, configuration, "dividend yield curve");
 }
 
+Handle<BlackVolTermStructure> MarketImpl::equityVolCurve(const string& key, const string& configuration) const {
+    return lookup<Handle<BlackVolTermStructure>>(equityVols_, key, configuration, "equity vol curve");
+}
+
 void MarketImpl::addSwapIndex(const string& swapIndex, const string& discountIndex, const string& configuration) {
     try {
         std::vector<string> tokens;

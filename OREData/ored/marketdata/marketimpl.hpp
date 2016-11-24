@@ -94,6 +94,9 @@ public:
     Handle<Quote> equitySpot(const string& eqName, const string& configuration = Market::defaultConfiguration) const;
     Handle<YieldTermStructure> equityDividendCurve(const string& eqName, const string& configuration = Market::defaultConfiguration) const;
     Handle<YieldTermStructure> equityInterestRateCurve(const string& eqName, const string& configuration = Market::defaultConfiguration) const;
+
+    //! Equity volatilities
+    Handle<BlackVolTermStructure> equityVolCurve(const string& eqName, const string& configuration = Market::defaultConfiguration) const;
     //@}
 
     //! \name Disable copying

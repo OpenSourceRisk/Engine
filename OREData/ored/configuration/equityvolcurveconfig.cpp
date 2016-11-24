@@ -24,15 +24,18 @@ using ore::data::XMLUtils;
 namespace ore {
 namespace data {
 
-EquityVolatilityCurveConfig::EquityVolatilityCurveConfig(const string& curveID, const string& curveDescription,
-                                                 const Dimension& dimension, const vector<string>& expiries)
-    : curveID_(curveID), curveDescription_(curveDescription), dimension_(dimension), expiries_(expiries) {}
+EquityVolatilityCurveConfig::EquityVolatilityCurveConfig(
+    const string& curveID, const string& curveDescription,
+    const string& currency, const Dimension& dimension, 
+    const vector<string>& expiries)
+    : curveID_(curveID), curveDescription_(curveDescription), ccy_(currency), dimension_(dimension), expiries_(expiries) {}
 
 void EquityVolatilityCurveConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "EquityVolatility");
 
     curveID_ = XMLUtils::getChildValue(node, "CurveId", true);
     curveDescription_ = XMLUtils::getChildValue(node, "CurveDescription", true);
+    ccy_ = XMLUtils::getChildValue(node, "Currency", true);
     string dim = XMLUtils::getChildValue(node, "Dimension", true);
     if (dim == "ATM")
         dimension_ = Dimension::ATM;
@@ -47,6 +50,7 @@ XMLNode* EquityVolatilityCurveConfig::toXML(XMLDocument& doc) {
 
     XMLUtils::addChild(doc, node, "CurveId", curveID_);
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
+    XMLUtils::addChild(doc, node, "Currency", ccy_);
     if (dimension_ == Dimension::ATM) {
         XMLUtils::addChild(doc, node, "Dimension", "ATM");
     } else {

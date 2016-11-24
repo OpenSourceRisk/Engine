@@ -381,7 +381,9 @@ MarketDataLoader::MarketDataLoader() {
         ("20160226 EQUITY_FWD/PRICE/SP5/USD/1Y 1500.00")
         ("20160226 EQUITY_FWD/PRICE/SP5/USD/20180226 1500.00")
         ("20160226 EQUITY_DIVIDEND/RATE/SP5/USD/20170226 0.00")
-        ("20160226 EQUITY_DIVIDEND/RATE/SP5/USD/2Y 0.00");
+        ("20160226 EQUITY_DIVIDEND/RATE/SP5/USD/2Y 0.00")
+        ("20160226 EQUITY_OPTION/RATE_LNVOL/SP5/USD/1Y/ATMF 0.25")
+        ("20160226 EQUITY_OPTION/RATE_LNVOL/SP5/USD/2018-02-26/ATMF 0.35");
     // clang-format on
 
     for (auto s : data) {
@@ -421,12 +423,14 @@ boost::shared_ptr<data::TodaysMarketParameters> marketParameters() {
     map<string, string> equityMap = { {"SP5", "Equity/USD/SP5"} };
     parameters->addEquityCurves("ois", equityMap);
 
+    map<string, string> equityVolMap = { { "SP5", "EquityVolatility/USD/SP5" } };
+    parameters->addEquityVolatilities("ois", equityVolMap);
+
     // all others empty so far
     map<string, string> emptyMap;
     parameters->addFxSpots("ois", emptyMap);
     parameters->addFxVolatilities("ois", emptyMap);
     parameters->addDefaultCurves("ois", emptyMap);
-    parameters->addEquityVolatilities("ois", emptyMap);
 
     // store this set of curves as "default" configuration
     MarketConfiguration config;
@@ -677,11 +681,18 @@ boost::shared_ptr<data::CurveConfigurations> curveConfigurations() {
         "EQUITY_FWD/PRICE/SP5/USD/1Y",
         "EQUITY_FWD/PRICE/SP5/USD/20180226"
     };
+    vector<string> eqVolExpiries{
+        "1Y",
+        "2018-02-26"
+    };
     // clang-format on
 
     configs->equityCurveConfig("SP5") = boost::make_shared<EquityCurveConfig>(
         "SP5", "", "USD", EquityCurveConfig::Type::ForwardPrice, 
         "EQUITY/PRICE/SP5/USD", "Yield/USD/USD3M", eqFwdQuotes);
+
+    configs->equityVolCurveConfig("SP5") = boost::make_shared<EquityVolatilityCurveConfig>(
+        "SP5","", "USD", EquityVolatilityCurveConfig::Dimension::ATM,eqVolExpiries);
 
     return configs;
 }
@@ -820,12 +831,37 @@ void TodaysMarketTest::testEquityCurve() {
     BOOST_CHECK_EQUAL(spotVal, fwd_0);
 }
 
+void TodaysMarketTest::testEquityVolCurve() {
+    CommonVars vars;
+
+    BOOST_TEST_MESSAGE("Testing equity curve...");
+    Handle<BlackVolTermStructure> eqVol = market->equityVolCurve("SP5");
+    BOOST_CHECK(eqVol.currentLink());
+
+    Date d_1y = Date(27, Feb, 2017);
+    Date d_2y = Date(26, Feb, 2018);
+    Volatility v_1y_atm = eqVol->blackVol(d_1y,0.0);
+    Volatility v_1y_smile = eqVol->blackVol(d_1y, 2000.0);
+    BOOST_CHECK_EQUAL(v_1y_atm, v_1y_smile); // test ATM flat smile
+    BOOST_CHECK_EQUAL(v_1y_atm, 0.25); // test input = output
+    Volatility v_2y_atm = eqVol->blackVol(d_2y, 0.0);
+    Volatility v_2y_smile = eqVol->blackVol(d_2y, 2000.0);
+    BOOST_CHECK_EQUAL(v_2y_atm, v_2y_smile); // test ATM flat smile
+    BOOST_CHECK_EQUAL(v_2y_atm, 0.35); // test input = output
+
+    // test flat extrapolation
+    Volatility v_5y_atm = eqVol->blackVol(5.0, 0.0);
+    Volatility v_50y_atm = eqVol->blackVol(50.0, 0.0);
+    BOOST_CHECK_CLOSE(v_5y_atm, v_50y_atm, 1.e-10);
+}
+
 test_suite* TodaysMarketTest::suite() {
     test_suite* suite = BOOST_TEST_SUITE("TodaysMarketTest");
 
     suite->add(BOOST_TEST_CASE(&TodaysMarketTest::testZeroSpreadedYieldCurve));
     suite->add(BOOST_TEST_CASE(&TodaysMarketTest::testNormalOptionletVolatility));
     suite->add(BOOST_TEST_CASE(&TodaysMarketTest::testEquityCurve));
+    suite->add(BOOST_TEST_CASE(&TodaysMarketTest::testEquityVolCurve));
     return suite;
 }
 }
