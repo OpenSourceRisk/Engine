@@ -14,7 +14,7 @@
     <Compounding>Continuous</Compounding>
     <CompoundingFrequency>Daily</CompoundingFrequency>
     <TenorCalendar>TARGET</TenorCalendar>
-    <SpotLag>0</SpotLag>
+    <SpotLag>2</SpotLag>
     <SpotCalendar>TARGET</SpotCalendar>
     <RollConvention>Following</RollConvention>
     <EOM>false</EOM>
