@@ -55,7 +55,7 @@ public:
     //! Detailed constructor
     EquityCurveConfig(const string& curveID, const string& curveDescription, const string& currency, const Type& type,
                        const string& equitySpotQuote, const string& equityInterestRateCurve,
-                       const string& conventionID, const vector<string>& quotes, bool extrapolation = true);
+                       const vector<string>& quotes, const string& conventionID = "", bool extrapolation = true);
     //! Default constructor
     EquityCurveConfig() {}
     //! Default destructor

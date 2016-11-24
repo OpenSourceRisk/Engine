@@ -41,8 +41,11 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader,
         const boost::shared_ptr<EquityCurveConfig>& config = curveConfigs.equityCurveConfig(spec.curveConfigID());
 
         DayCounter conv_dc = Actual365Fixed();
-        boost::shared_ptr<Convention> tmp = conventions.get(config->conventionID());
-        if (tmp != NULL) {
+        if (config->conventionID() == "") {
+            DLOG("No conventions specified for " << spec.curveConfigID() << ", using hardcoded defaults");
+        }
+        else {
+            boost::shared_ptr<Convention> tmp = conventions.get(config->conventionID());
             boost::shared_ptr<ZeroRateConvention> zeroConv = boost::dynamic_pointer_cast<ZeroRateConvention>(tmp);
             QL_REQUIRE(zeroConv != NULL, "Yield implied default curve requires ZERO convention (wrong type)");
             conv_dc = zeroConv->dayCounter();
@@ -72,7 +75,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader,
 
                 boost::shared_ptr<EquitySpotQuote> q = boost::dynamic_pointer_cast<EquitySpotQuote>(md);
 
-                if (q->name() == equityIrCurveStr_) {
+                if (q->name() == config->equitySpotQuoteID()) {
                     QL_REQUIRE(equitySpot_ == Null<Real>(), "duplicate equity spot quote " << q->name()
                                                                                                << " found.");
                     equitySpot_ = q->quote()->value();
@@ -102,7 +105,8 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader,
 
             if (config->type() == EquityCurveConfig::Type::DividendYield && 
                 md->asofDate() == asof &&
-                md->instrumentType() == MarketDatum::InstrumentType::EQUITY_DIVIDEND) {
+                md->instrumentType() == MarketDatum::InstrumentType::EQUITY_DIVIDEND &&
+                md->quoteType() == MarketDatum::QuoteType::RATE) {
                 
                 boost::shared_ptr<EquityDividendYieldQuote> q = boost::dynamic_pointer_cast<EquityDividendYieldQuote>(md);
 
@@ -144,7 +148,8 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader,
                 QL_REQUIRE(terms[i] > asof, "Invalid Fwd Expiry " << terms[i] << " vs. " << asof);
                 QL_REQUIRE(quotes[i] > 0, "Invalid Fwd Price " << quotes[i] << " for " << spec.name());
                 Time t = conv_dc.yearFraction(asof, terms[i]);
-                dividendRates.push_back(::log(equitySpot_ / quotes[i]) / t + equityIrCurve_->zeroRate(t, Continuous));
+                Rate ir_rate = equityIrCurve_->zeroRate(t, Continuous);
+                dividendRates.push_back(::log(equitySpot_ / quotes[i]) / t + ir_rate);
                 dividendTerms.push_back(Period(terms[i] - asof, Days));
             }
         }
@@ -184,6 +189,10 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader,
             }
             dates[0] = asof;
             rates[0] = rates[1];
+            if (equityIrCurve_->maxDate() > dates.back()) {
+                dates.push_back(equityIrCurve_->maxDate());
+                rates.push_back(rates.back());
+            }
             divCurve_.reset(new InterpolatedZeroCurve<QuantLib::Linear>(dates, rates, conv_dc, QuantLib::Linear()));
             divCurve_->enableExtrapolation();
         }

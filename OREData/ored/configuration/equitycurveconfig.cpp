@@ -27,10 +27,10 @@ namespace data {
 EquityCurveConfig::EquityCurveConfig(const string& curveID, const string& curveDescription, 
     const string& currency, const EquityCurveConfig::Type& type,
     const string& equitySpotQuote, const string& equityInterestRateCurve,
-    const string& conventionID, const vector<string>& quotes, bool extrapolation)
+    const vector<string>& quotes, const string& conventionID, bool extrapolation)
     : curveID_(curveID), curveDescription_(curveDescription), currency_(currency), type_(type),
     equitySpotQuoteID_(equitySpotQuote), equityInterestRateCurveID_(equityInterestRateCurve),
-    conventionID_(conventionID), quotes_(quotes), extrapolation_(extrapolation) {}
+    quotes_(quotes), conventionID_(conventionID), extrapolation_(extrapolation) {}
 
 void EquityCurveConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "EquityCurve");

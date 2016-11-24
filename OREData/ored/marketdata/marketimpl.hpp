@@ -89,6 +89,11 @@ public:
     //! CapFloor volatilities
     Handle<OptionletVolatilityStructure> capFloorVol(const string& ccy,
                                                      const string& configuration = Market::defaultConfiguration) const;
+
+    //! Equity curves
+    Handle<Quote> equitySpot(const string& eqName, const string& configuration = Market::defaultConfiguration) const;
+    Handle<YieldTermStructure> equityDividendCurve(const string& eqName, const string& configuration = Market::defaultConfiguration) const;
+    Handle<YieldTermStructure> equityInterestRateCurve(const string& eqName, const string& configuration = Market::defaultConfiguration) const;
     //@}
 
     //! \name Disable copying

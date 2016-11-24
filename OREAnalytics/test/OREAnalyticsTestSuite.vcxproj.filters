@@ -24,7 +24,10 @@
     <ClInclude Include="cube.hpp">
       <Filter>headers</Filter>
     </ClInclude>
-    <ClInclude Include="aggregationscenariodata.hpp" >
+    <ClInclude Include="aggregationscenariodata.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="observationmode.hpp">
       <Filter>headers</Filter>
     </ClInclude>
   </ItemGroup>
@@ -42,7 +45,10 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="testsuite.cpp" />
-    <ClCompile Include="aggregationscenariodata.cpp" >
+    <ClCompile Include="aggregationscenariodata.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="observationmode.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>

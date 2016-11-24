@@ -119,6 +119,18 @@ Handle<OptionletVolatilityStructure> MarketImpl::capFloorVol(const string& key, 
     return lookup<Handle<OptionletVolatilityStructure>>(capFloorCurves_, key, configuration, "capfloor curve");
 }
 
+Handle<Quote> MarketImpl::equitySpot(const string& key, const string& configuration) const {
+    return lookup<Handle<Quote>>(equitySpots_, key, configuration, "equity spot");
+}
+
+Handle<YieldTermStructure> MarketImpl::equityDividendCurve(const string& key, const string& configuration) const {
+    return lookup<Handle<YieldTermStructure>>(equityDividendCurves_, key, configuration, "dividend yield curve");
+}
+
+Handle<YieldTermStructure> MarketImpl::equityInterestRateCurve(const string& key, const string& configuration) const {
+    return lookup<Handle<YieldTermStructure>>(equityInterestRateCurves_, key, configuration, "dividend yield curve");
+}
+
 void MarketImpl::addSwapIndex(const string& swapIndex, const string& discountIndex, const string& configuration) {
     try {
         std::vector<string> tokens;
