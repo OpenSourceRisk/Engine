@@ -296,7 +296,7 @@ int main(int argc, char** argv) {
             ostringstream o;
             o << "Sensitivity analysis " << simPortfolio->size() << " x " << scenarioGenerator->samples() << "... ";
             auto progressBar = boost::make_shared<SimpleProgressBar>(o.str(), tab);
-            auto progressLog = boost::make_shared<ProgressLog>("Building cube...");
+            auto progressLog = boost::make_shared<ProgressLog>("Sensitivity scenarios...");
             engine.registerProgressIndicator(progressBar);
             engine.registerProgressIndicator(progressLog);
 

@@ -67,28 +67,29 @@ void ScenarioEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfol
 
     const auto& trades = portfolio->trades();
 
-    // initialise state objects for each trade (required for path-dependent derivatives in particular)
+    // Store t0 NPVs
     for (Size i = 0; i < trades.size(); i++) {
         QL_REQUIRE(trades[i]->npvCurrency() != "", "NPV currency not set for trade " << trades[i]->id());
 	Real fx = simMarket_->fxSpot(trades[i]->npvCurrency() + baseCurrency_)->value();
 	Real npv = trades[i]->instrument()->NPV() * fx;
 	outputCube->setT0(npv, i, 0); 
-	LOG("Before update: trade " << trades[i]->id() << " npv=" << npv);
     }
 
-    // Reset the sim market to the base scenario (number 0)
+    // First call to update() resets the sim market to the base scenario (number 0)
     simMarket_->update(today_); 
     
-    // initialise state objects for each trade (required for path-dependent derivatives in particular)
+    // Store t0 NPVs after market update to base scenario, check difference
     for (Size i = 0; i < trades.size(); i++) {
         QL_REQUIRE(trades[i]->npvCurrency() != "", "NPV currency not set for trade " << trades[i]->id());
 	Real fx = simMarket_->fxSpot(trades[i]->npvCurrency() + baseCurrency_)->value();
 	Real npv = trades[i]->instrument()->NPV() * fx;
+	LOG("Trade " << trades[i]->id()
+	    << " NPV0 " << npv << " " << outputCube->getT0(i, 0)
+	    << " DIFF " << npv - outputCube->getT0(i, 0));
 	outputCube->setT0(npv, i, 0); 
-	outputCube->set(npv, i, 0, 0, 0);
-	LOG("After update: trade " << trades[i]->id() << " npv=" << npv);
+	outputCube->set(npv, i, 0, 0, 0);	
     }
-    LOG("Total number of swaps = " << portfolio->size());
+    LOG("Portfolio size = " << portfolio->size());
 
     boost::timer timer;
     boost::timer loopTimer;
