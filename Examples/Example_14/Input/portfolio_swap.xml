@@ -16,7 +16,7 @@
           <Notional>10000000.000000</Notional>
         </Notionals>
         <DayCounter>A360</DayCounter>
-        <PaymentConvention>MF</PaymentConvention>
+        <PaymentConvention>F</PaymentConvention>
         <FixedLegData>
           <Rates>
             <Rate>0.021</Rate>
@@ -24,12 +24,12 @@
         </FixedLegData>
         <ScheduleData>
           <Rules>
-            <StartDate>20160205</StartDate>
-            <EndDate>20360205</EndDate>
+            <StartDate>20160301</StartDate>
+            <EndDate>20360301</EndDate>
             <Tenor>1Y</Tenor>
             <Calendar>TARGET</Calendar>
-            <Convention>MF</Convention>
-            <TermConvention>MF</TermConvention>
+            <Convention>F</Convention>
+            <TermConvention>F</TermConvention>
             <Rule>Forward</Rule>
             <EndOfMonth/>
             <FirstDate/>
@@ -52,13 +52,13 @@
             <Spread>0.000000</Spread>
           </Spreads>
           <IsInArrears>false</IsInArrears>
-          <FixingDays>0</FixingDays>
+          <FixingDays>2</FixingDays>
         </FloatingLegData>
         <ScheduleData>
           <Rules>
-            <StartDate>20160205</StartDate>
-            <EndDate>20360205</EndDate>
-            <Tenor>1Y</Tenor>
+            <StartDate>20160301</StartDate>
+            <EndDate>20360301</EndDate>
+            <Tenor>6M</Tenor>
             <Calendar>TARGET</Calendar>
             <Convention>MF</Convention>
             <TermConvention>MF</TermConvention>
