@@ -59,6 +59,7 @@ using boost::unit_test::test_suite;
 #include "scenariosimmarket.hpp"
 #include "scenariogenerator.hpp"
 #include "swapperformance.hpp"
+#include "observationmode.hpp"
 
 namespace {
 
@@ -91,6 +92,7 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(testsuite::ScenarioSimMarketTest::suite());
     test->add(testsuite::ScenarioGeneratorTest::suite());
     test->add(testsuite::SwapPerformanceTest::suite());
+    test->add(testsuite::ObservationModeTest::suite());
 
     // test->add(FXSwapTest::suite());
     test->add(BOOST_TEST_CASE(stopTimer));

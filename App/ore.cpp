@@ -105,7 +105,13 @@ int main(int argc, char** argv) {
 
         string outputPath = params.get("setup", "outputPath");
         string logFile = outputPath + "/" + params.get("setup", "logFile");
+        Size logMask = 15; // Default level
 
+        // Get log mask if available
+        if (params.has("setup", "logMask")) {
+            logMask = static_cast<Size>(parseInteger(params.get("setup", "logMask")));
+        }
+        
         boost::filesystem::path p{outputPath};
         if(!boost::filesystem::exists(p)) {
             boost::filesystem::create_directories(p);
@@ -113,8 +119,9 @@ int main(int argc, char** argv) {
         QL_REQUIRE(boost::filesystem::is_directory(p), "output path '" << outputPath << "' is not a directory.");
 
         Log::instance().registerLogger(boost::make_shared<FileLogger>(logFile));
+        Log::instance().setMask(logMask);
         Log::instance().switchOn();
-
+        
         LOG("ORE starting");
         params.log();
 
@@ -123,7 +130,7 @@ int main(int argc, char** argv) {
             ObservationMode::instance().setMode(om);
             LOG("Observation Mode is " << om);
         }
-
+        
         string asofString = params.get("setup", "asofDate");
         Date asof = parseDate(asofString);
         Settings::instance().evaluationDate() = asof;
