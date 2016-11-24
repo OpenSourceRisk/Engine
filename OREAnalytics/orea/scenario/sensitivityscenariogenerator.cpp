@@ -36,8 +36,29 @@ SensitivityScenarioGenerator::SensitivityScenarioGenerator(
   : scenarioFactory_(scenarioFactory),
     sensitivityData_(sensitivityData), simMarketData_(simMarketData), today_(today),
     initMarket_(initMarket), configuration_(configuration), counter_(0) {
-
     QL_REQUIRE(initMarket != NULL, "SensitivityScenarioGenerator: initMarket is null");
+    //init(initMarket);
+}
+
+void SensitivityScenarioGenerator::clear() {
+    discountCurveKeys_.clear();
+    discountCurveCache_.clear();
+    indexCurveKeys_.clear();
+    indexCurveCache_.clear();
+    fxKeys_.clear();
+    fxCache_.clear();
+    swaptionVolKeys_.clear();
+    swaptionVolCache_.clear();
+    fxVolKeys_.clear();
+    fxVolCache_.clear();
+    // capFloorVolKeys_.clear();
+    // capFloorVolCache_.clear();
+    // cdsSpreadKeys_.clear();
+    // cdsSpreadCache_.clear();
+}
+  
+void SensitivityScenarioGenerator::init(boost::shared_ptr<Market> market) {
+    clear();
 
     // Cache discount curve keys and discount factors
     Size n_ccy = simMarketData_->ccys().size();
@@ -45,7 +66,7 @@ SensitivityScenarioGenerator::SensitivityScenarioGenerator(
     discountCurveKeys_.reserve(n_ccy * n_ten);
     for (Size j = 0; j < n_ccy; j++) {
         std::string ccy = simMarketData_->ccys()[j];
-	Handle<YieldTermStructure> ts = initMarket_->discountCurve(ccy);
+	Handle<YieldTermStructure> ts = market->discountCurve(ccy, configuration_);
         for (Size k = 0; k < n_ten; k++) {
             discountCurveKeys_.emplace_back(RiskFactorKey::KeyType::DiscountCurve, ccy, k); // j * n_ten + k
 	    Period tenor = simMarketData_->yieldCurveTenors()[k];
@@ -59,7 +80,7 @@ SensitivityScenarioGenerator::SensitivityScenarioGenerator(
     Size n_indices = simMarketData_->indices().size();
     indexCurveKeys_.reserve(n_indices * n_ten);
     for (Size j = 0; j < n_indices; ++j) {
-        Handle<IborIndex> index = initMarket_->iborIndex(simMarketData_->indices()[j]);
+        Handle<IborIndex> index = market->iborIndex(simMarketData_->indices()[j], configuration_);
 	Handle<YieldTermStructure> ts = index->forwardingTermStructure();
         for (Size k = 0; k < n_ten; ++k) {
             indexCurveKeys_.emplace_back(RiskFactorKey::KeyType::IndexCurve, simMarketData_->indices()[j], k);
@@ -76,7 +97,7 @@ SensitivityScenarioGenerator::SensitivityScenarioGenerator(
         const string& foreign = simMarketData_->ccys()[k+1];
         const string& domestic = simMarketData_->ccys()[0];
         fxKeys_.emplace_back(RiskFactorKey::KeyType::FXSpot, foreign + domestic); // k
-	Real fx = initMarket_->fxSpot(foreign + domestic)->value();
+	Real fx = market->fxSpot(foreign + domestic, configuration_)->value();
 	fxCache_[fxKeys_[k]] = fx;
 	LOG("cache FX spot " << fx << " for key " << fxKeys_[k]);
     }
@@ -89,7 +110,7 @@ SensitivityScenarioGenerator::SensitivityScenarioGenerator(
     Size count = 0;
     for (Size i = 0; i < n_swvol_ccy; ++i) {
         std::string ccy = simMarketData_->swapVolCcys()[i];
-	Handle<SwaptionVolatilityStructure> ts = initMarket_->swaptionVol(ccy);
+	Handle<SwaptionVolatilityStructure> ts = market->swaptionVol(ccy, configuration_);
 	Real strike = 0.0; // FIXME
 	for (Size j = 0; j < n_swvol_exp; ++j) {
 	    Period expiry = simMarketData_->swapVolExpiries()[j];
@@ -112,7 +133,7 @@ SensitivityScenarioGenerator::SensitivityScenarioGenerator(
     for (Size j = 0; j < n_fxvol_pairs; ++j) {
         string ccypair = simMarketData_->ccyPairs()[j];
 	Real strike = 0.0; // FIXME
-        Handle<BlackVolTermStructure> ts = initMarket_->fxVol(ccypair);
+        Handle<BlackVolTermStructure> ts = market->fxVol(ccypair, configuration_);
         for (Size k = 0; k < n_fxvol_exp; ++k) {
 	    fxVolKeys_.emplace_back(RiskFactorKey::KeyType::FXVolatility, ccypair, k);
 	    Period expiry = simMarketData_->fxVolExpiries()[k];
@@ -123,19 +144,22 @@ SensitivityScenarioGenerator::SensitivityScenarioGenerator(
         }
     }
 
-    generateDiscountCurveScenarios();
-    generateIndexCurveScenarios();
-    generateFxScenarios();
+    baseScenario_ = scenarioFactory_->buildScenario(today_, "BASE");
+    addCacheTo(baseScenario_);
+    scenarios_.push_back(baseScenario_);
+    
+    generateDiscountCurveScenarios(market);
+    generateIndexCurveScenarios(market);
+    generateFxScenarios(market);
     if (simMarketData_->simulateFXVols())
-      generateFxVolScenarios();
+        generateFxVolScenarios(market);
     if (simMarketData_->simulateSwapVols())
-      generateSwaptionVolScenarios();
+        generateSwaptionVolScenarios(market);
 
-    //generateCapFloorVolScenarios();
-    //generateCdsSpreadScenarios();
-
+    //generateCapFloorVolScenarios(market);
+    //generateCdsSpreadScenarios(market);
 }
-
+  
 boost::shared_ptr<Scenario> SensitivityScenarioGenerator::next(const Date& d) {
     QL_REQUIRE(counter_ < scenarios_.size(),
 	       "scenario vector size " << scenarios_.size() << " exceeded"); 
@@ -190,7 +214,7 @@ void SensitivityScenarioGenerator::addCacheTo(boost::shared_ptr<Scenario> scenar
     }
 }
   
-void SensitivityScenarioGenerator::generateFxScenarios() {
+void SensitivityScenarioGenerator::generateFxScenarios(boost::shared_ptr<Market> market) {
     Size n_ccy = simMarketData_->ccys().size();
     string domestic = simMarketData_->baseCcy();
     ShiftType type = parseShiftType(sensitivityData_->fxShiftType());
@@ -201,7 +225,7 @@ void SensitivityScenarioGenerator::generateFxScenarios() {
 	string ccypair = foreign + domestic;
 	string label = sensitivityData_->fxLabel() + "/" + ccypair; 
 	boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_, label);
-	Real rate = initMarket_->fxSpot(ccypair)->value(); 
+	Real rate = market->fxSpot(ccypair,configuration_)->value(); 
 	Real newRate = rate * (1.0 + sensitivityData_->fxShiftSize());
 	scenario->add(fxKeys_[k], newRate);
 	// add remaining unshifted data from cache for a complete scenario
@@ -212,7 +236,7 @@ void SensitivityScenarioGenerator::generateFxScenarios() {
     LOG("FX scenarios done");
 }
   
-void SensitivityScenarioGenerator::generateDiscountCurveScenarios() {
+void SensitivityScenarioGenerator::generateDiscountCurveScenarios(boost::shared_ptr<Market> market) {
     Size n_ccy = simMarketData_->ccys().size();
     Size n_ten = simMarketData_->yieldCurveTenors().size();
     ShiftType shiftType = parseShiftType(sensitivityData_->discountShiftType());
@@ -227,7 +251,7 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios() {
     for (Size i = 0; i < n_ccy; ++i) {
 
         string ccy = simMarketData_->ccys()[i];
-	Handle<YieldTermStructure> ts = initMarket_->discountCurve(ccy); // FIXME: configuration
+	Handle<YieldTermStructure> ts = market->discountCurve(ccy,configuration_);
 	DayCounter dc = ts->dayCounter();
 	for (Size j = 0; j < n_ten; ++j) {
 	    Date d = today_ + simMarketData_->yieldCurveTenors()[j];
@@ -246,7 +270,6 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios() {
 
 	    // each shift tenor is associated with a scenario
 	    ostringstream o;
-	    //o << sensitivityData_->discountLabel() << "/" << ccy << "/" << j << "/" << shiftTenors[j];
 	    o << sensitivityData_->discountLabel() << "/" << ccy << "/" << shiftTenors[j];
 	    string label = o.str(); 
 	    boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_, label);
@@ -272,7 +295,7 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios() {
     LOG("Discount curve scenarios done");
 }
 
-void SensitivityScenarioGenerator::generateIndexCurveScenarios() {
+void SensitivityScenarioGenerator::generateIndexCurveScenarios(boost::shared_ptr<Market> market) {
     Size n_indices = simMarketData_->indices().size();
     Size n_ten = simMarketData_->yieldCurveTenors().size();
     ShiftType shiftType = parseShiftType(sensitivityData_->indexShiftType());
@@ -287,7 +310,7 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios() {
     for (Size i = 0; i < n_indices; ++i) {
 
         string indexName = simMarketData_->indices()[i];
-	Handle<IborIndex> iborIndex = initMarket_->iborIndex(indexName);// FIXME: configuration
+	Handle<IborIndex> iborIndex = market->iborIndex(indexName,configuration_);
 	Handle<YieldTermStructure> ts = iborIndex->forwardingTermStructure();
 	DayCounter dc = ts->dayCounter();
 	for (Size j = 0; j < n_ten; ++j) {
@@ -307,7 +330,6 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios() {
 
 	    // each shift tenor is associated with a scenario
 	    ostringstream o;
-	    //o << sensitivityData_->indexLabel() << "/" << indexName << "/" << j << "/" << shiftTenors[j];
 	    o << sensitivityData_->indexLabel() << "/" << indexName << "/" << shiftTenors[j];
 	    string label = o.str(); 
 	    boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_, label);
@@ -333,7 +355,7 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios() {
     LOG("Index curve scenarios done");
 }
 
-void SensitivityScenarioGenerator::generateFxVolScenarios() {
+void SensitivityScenarioGenerator::generateFxVolScenarios(boost::shared_ptr<Market> market) {
     string domestic = simMarketData_->baseCcy();
     ShiftType shiftType = parseShiftType(sensitivityData_->fxVolShiftType());
 
@@ -346,18 +368,14 @@ void SensitivityScenarioGenerator::generateFxVolScenarios() {
     // buffer for shifted zero curves
     std::vector<Real> shiftedValues(n_fxvol_exp);
 
-    std::vector<Period> shiftTenors = sensitivityData_->fxVolShiftExpiries();
-    for (Size i = 0; i < shiftTenors.size(); ++i)
-      LOG("FX Vol Shift Tenor " << i << ": " << shiftTenors[i]);
-    LOG("FX Vol Keys size = " << fxVolKeys_.size());
-    
+    std::vector<Period> shiftTenors = sensitivityData_->fxVolShiftExpiries();    
     std::vector<Time> shiftTimes(shiftTenors.size());
     Real shiftSize = sensitivityData_->fxVolShiftSize();
     QL_REQUIRE(shiftTenors.size() > 0, "FX vol shift tenors not specified");
 
     for (Size i = 0; i < n_fxvol_pairs; ++i) {
         string ccypair = simMarketData_->ccyPairs()[i];
-	Handle<BlackVolTermStructure> ts = initMarket_->fxVol(ccypair); // FIXME: configuration
+	Handle<BlackVolTermStructure> ts = market->fxVol(ccypair,configuration_);
 	DayCounter dc = ts->dayCounter();
 	Real strike = 0.0; // FIXME
 	for (Size j = 0; j < n_fxvol_exp; ++j) {
@@ -372,10 +390,8 @@ void SensitivityScenarioGenerator::generateFxVolScenarios() {
 	for (Size j = 0; j < shiftTenors.size(); ++j) {
 	    // each shift tenor is associated with a scenario
 	    ostringstream o;
-	    //o << sensitivityData_->fxVolLabel() << "/" << ccypair << "/" << j << "/" << shiftTenors[j];
 	    o << sensitivityData_->fxVolLabel() << "/" << ccypair << "/" << shiftTenors[j];
 	    string label = o.str(); 
-	    //LOG("FX Vol shift, " << ccypair << ", tenor " << j << " " <<  shiftTenors[j] << " label " << label);
 	    boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_, label);
 	    // apply shift at tenor point j
 	    applyShift(j, shiftSize, shiftType, shiftTimes, values, times, shiftedValues);
@@ -392,7 +408,7 @@ void SensitivityScenarioGenerator::generateFxVolScenarios() {
     LOG("FX vol scenarios done");
 }
 
-void SensitivityScenarioGenerator::generateSwaptionVolScenarios() {
+void SensitivityScenarioGenerator::generateSwaptionVolScenarios(boost::shared_ptr<Market> market) {
     ShiftType shiftType = parseShiftType(sensitivityData_->swaptionVolShiftType());
     Real shiftSize = sensitivityData_->swaptionVolShiftSize();
     Size n_swvol_ccy = simMarketData_->swapVolCcys().size();
@@ -410,7 +426,7 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios() {
 
     for (Size i = 0; i < n_swvol_ccy; ++i) {
         std::string ccy = simMarketData_->swapVolCcys()[i];
-	Handle<SwaptionVolatilityStructure> ts = initMarket_->swaptionVol(ccy);
+	Handle<SwaptionVolatilityStructure> ts = market->swaptionVol(ccy,configuration_);
 	DayCounter dc = ts->dayCounter();
 	Real strike = 0.0; // FIXME
 
@@ -443,8 +459,9 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios() {
 	    for (Size k = 0; k < shiftTermTimes.size(); ++k) {
 	        // each shift expiry and term is associated with a scenario
 	        ostringstream o;
-		o << sensitivityData_->swaptionVolLabel() << "/" << ccy //<< "/" << j
-		  << "/" << sensitivityData_->swaptionVolShiftExpiries()[j] //<< "/" << k
+		o << sensitivityData_->swaptionVolLabel()
+		  << "/" << ccy 
+		  << "/" << sensitivityData_->swaptionVolShiftExpiries()[j] 
 		  << "/" << sensitivityData_->swaptionVolShiftTerms()[k];
 		string label = o.str(); 
 		boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_, label);
@@ -475,17 +492,6 @@ void SensitivityScenarioGenerator::applyShift(Size j,
 					      const vector<Real>& values,
 					      const vector<Real>& times,
 					      vector<Real>& shiftedValues) {
-    /****************************************************************************
-     * Apply triangular shaped shifts to the underlying curve
-     * where the triangle reaches from the previous to the next shift tenor point
-     * with peak at the current shift tenor point. At the initial and final shift
-     * tenor the shape is replaced such that the full shift is applied to all curve 
-     * grid points to the left of the first shift point and to the right of the last
-     * shift point, respectively. The procedure guarantees that no sensitivity to 
-     * original curve points is "missed" when the shift curve is less granular, e.g.
-     * original curve |...|...|...|...|...|...|...|...|...|
-     * shift curve    ......|...........|...........|......
-     */
     // FIXME: Check case where the shift curve is more granular than the original
 	
     QL_REQUIRE(j < tenors.size(), "index j out of range");

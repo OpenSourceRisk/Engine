@@ -143,17 +143,20 @@ void SensitivityAnalysisTest::testPortfolioSensitivity() {
     sensiData->swaptionVolShiftExpiries() = { 2*Years, 5*Years, 10*Years }; // parallel shift only //{1*Years, 2*Years, 3*Years, 5*Years}; 
     sensiData->swaptionVolShiftTerms() = { 5*Years, 10*Years }; // parallel shifts only //{1*Years, 2*Years, 3*Years, 5*Years}; 
     sensiData->swaptionVolLabel() = "VOL_SWAPTION";
-
+    
     // build scenario generator
     boost::shared_ptr<ScenarioFactory> scenarioFactory(new SimpleScenarioFactory);
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(new SensitivityScenarioGenerator(scenarioFactory, sensiData, simMarketData, today, initMarket));
     boost::shared_ptr<ScenarioGenerator> sgen(scenarioGenerator);
-    
+
     // build scenario sim market
     Conventions conventions = *conv();
-    boost::shared_ptr<analytics::SimMarket> simMarket =
+    boost::shared_ptr<analytics::ScenarioSimMarket> simMarket =
       boost::make_shared<analytics::ScenarioSimMarket>(sgen, initMarket, simMarketData, conventions);
 
+    // initialise scenario generator: cache base scenario and build sensitivity scenarios
+    scenarioGenerator->init(simMarket);
+    
     // build porfolio
     boost::shared_ptr<EngineData> data = boost::make_shared<EngineData>();
     data->model("Swap") = "DiscountedCashflows";
@@ -306,7 +309,7 @@ void SensitivityAnalysisTest::testPortfolioSensitivity() {
     for (Size i = 0; i < portfolio->size(); ++i) {
         Real npv0 = cube->getT0(i, 0); 
 	string id = portfolio->trades()[i]->id();
-	for (Size j = 0; j < scenarioGenerator->samples(); ++j ) {
+	for (Size j = 1; j < scenarioGenerator->samples(); ++j ) { // skip j = 0, this is the base scenario
 	    Real npv = cube->get(i, 0, j, 0);
 	    Real sensi = npv - npv0;
 	    string label = scenarioGenerator->scenarios()[j]->label();

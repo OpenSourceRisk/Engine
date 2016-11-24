@@ -54,26 +54,60 @@ public:
 				 const std::string& configuration = Market::defaultConfiguration);
     //! Default destructor
     ~SensitivityScenarioGenerator(){};
+
+    //! Scenario Generator interface
+    //@{
     boost::shared_ptr<Scenario> next(const Date& d);
     void reset() { counter_ = 0; }
-    Size samples() { return scenarios_.size(); }
-    const std::vector<boost::shared_ptr<Scenario>>& scenarios() {
-        return scenarios_;
-    }
+    //@}
 
-    //! Apply 1d triangular shift to 1d data, public to allow test suite access
-    void applyShift(Size j,
+    //! Inspectors
+    //@{
+    //! Number of sensitivity scenarios
+    Size samples() { return scenarios_.size(); }
+    //! Return the base scenario, i.e. cached initial values of all relevant market points
+    const boost::shared_ptr<Scenario>& baseScenario() { return baseScenario_; }
+    //! Return vector of sensitivity scenarios, scenario 0 is the base scenario
+    const std::vector<boost::shared_ptr<Scenario>>& scenarios() { return scenarios_; }
+    //@}
+
+    //! Clear the caches for base scenario keys and values
+    void clear();
+  
+    //! Set up the "base" scenario and all shift scenarios using market points/values from the market object
+    void init(boost::shared_ptr<Market> market);
+  
+    //! Apply 1d triangular shift to 1d data such as yield curves, public to allow test suite access
+    /*!
+      Apply triangular shaped shifts to the underlying curve where the triangle 
+      reaches from the previous to the next shift tenor point with peak at the 
+      current shift tenor point. 
+      At the initial and final shift tenor the shape is replaced such that the 
+      full shift is applied to all curve grid points to the left of the first 
+      shift point and to the right of the last shift point, respectively. 
+      The procedure guarantees that no sensitivity to original curve points is 
+      "missed" when the shift curve is less granular, e.g.
+      original curve |...|...|...|...|...|...|...|...|...|
+      shift curve    ......|...........|...........|......
+     */
+    void applyShift(//! Number of the shift curve tenor point to be shifted here
+		    Size j,
+		    //! Shift size interpreted as either absolute or relative shift
 		    Real shiftSize,
+		    //! Absolute: newValue = oldValue + shiftSize. Relative: newValue = oldValue * (1 + shiftSize)
 		    ShiftType type,
+		    //! Shift tenors expressed as times
 		    const vector<Time>& shiftTimes,
+		    //! Input curve values such as zero rates  
 		    const vector<Real>& values,
+		    //! Tenor points of the input curve, expressed as times
 		    const vector<Time>& times,
+		    //! Resulting shifted curve with same tenor structure as the input curve
 		    vector<Real>& shiftedValues);
-    // vector<Real> applyShift(Size j, Real shiftSize, DayCounter dc,
-    // 			    const vector<Period>& tenors,
-    // 			    const vector<Real>& values,
-    // 			    const vector<Real>& times);
-    //! Apply 2d shift to 2d matrix such as swaption volatiities, public to allow test suite access
+
+    //! Apply 2d shift to 2d matrix such as swaption volatilities, public to allow test suite access
+    /*! This is the 2d generalisation of the 1d version of applyShift()
+     */
     void applyShift(Size j,
 		    Size k,
 		    Real shiftSize,
@@ -86,15 +120,15 @@ public:
 		    vector<vector<Real>>& shiftedData);
 private:
     void addCacheTo(boost::shared_ptr<Scenario> scenario);
-    void generateYieldCurveScenarios();
-    void generateDiscountCurveScenarios();
-    void generateIndexCurveScenarios();
-    void generateFxScenarios();
-    void generateSwaptionVolScenarios();
-    void generateFxVolScenarios();
-    void generateCapFloorVolScenarios(); // todo
-    void generateCdsSpreadScenarios(); // todo
-    //! Apply a zero rate shift at tenor point j and return the sim market discount curve scenario
+    void generateYieldCurveScenarios(boost::shared_ptr<Market> market);
+    void generateDiscountCurveScenarios(boost::shared_ptr<Market> market);
+    void generateIndexCurveScenarios(boost::shared_ptr<Market> market);
+    void generateFxScenarios(boost::shared_ptr<Market> market);
+    void generateSwaptionVolScenarios(boost::shared_ptr<Market> market);
+    void generateFxVolScenarios(boost::shared_ptr<Market> market);
+    void generateCapFloorVolScenarios(boost::shared_ptr<Market> market); // todo
+    void generateCdsSpreadScenarios(boost::shared_ptr<Market> market); // todo
+
     boost::shared_ptr<ScenarioFactory> scenarioFactory_;
     boost::shared_ptr<SensitivityScenarioData> sensitivityData_;
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketData_;
@@ -104,6 +138,7 @@ private:
     std::vector<RiskFactorKey> discountCurveKeys_, indexCurveKeys_, fxKeys_, swaptionVolKeys_, fxVolKeys_;
     std::map<RiskFactorKey,Real> discountCurveCache_, indexCurveCache_, fxCache_, swaptionVolCache_, fxVolCache_;
     std::vector<boost::shared_ptr<Scenario>> scenarios_;
+    boost::shared_ptr<Scenario> baseScenario_;
     Size counter_;
 };
 }

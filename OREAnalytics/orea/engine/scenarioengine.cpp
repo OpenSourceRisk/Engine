@@ -59,33 +59,42 @@ void ScenarioEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfol
     LOG("Starting ScenarioEngine for " << portfolio->size() << " trades and " << outputCube->samples() << " samples");
     
     // Check observation mode
-    ObservationMode::Mode om = ObservationMode::instance().mode();
-    QL_REQUIRE(om == ObservationMode::Mode::None, "Observation mode None required");
+    QL_REQUIRE(ObservationMode::instance().mode() == ObservationMode::Mode::None,
+	       "Observation mode None required");
     
     Real updateTime = 0.0;
     Real pricingTime = 0.0;
 
-    // Loop is Samples, Trades
     const auto& trades = portfolio->trades();
 
     // initialise state objects for each trade (required for path-dependent derivatives in particular)
     for (Size i = 0; i < trades.size(); i++) {
         QL_REQUIRE(trades[i]->npvCurrency() != "", "NPV currency not set for trade " << trades[i]->id());
-
-        DLOG("Initialise wrapper for trade " << trades[i]->id());
-        trades[i]->instrument()->initialise(vector<Date>());
-
 	Real fx = simMarket_->fxSpot(trades[i]->npvCurrency() + baseCurrency_)->value();
 	Real npv = trades[i]->instrument()->NPV() * fx;
 	outputCube->setT0(npv, i, 0); 
+	LOG("Before update: trade " << trades[i]->id() << " npv=" << npv);
+    }
+
+    // Reset the sim market to the base scenario (number 0)
+    simMarket_->update(today_); 
+    
+    // initialise state objects for each trade (required for path-dependent derivatives in particular)
+    for (Size i = 0; i < trades.size(); i++) {
+        QL_REQUIRE(trades[i]->npvCurrency() != "", "NPV currency not set for trade " << trades[i]->id());
+	Real fx = simMarket_->fxSpot(trades[i]->npvCurrency() + baseCurrency_)->value();
+	Real npv = trades[i]->instrument()->NPV() * fx;
+	outputCube->setT0(npv, i, 0); 
+	outputCube->set(npv, i, 0, 0, 0);
+	LOG("After update: trade " << trades[i]->id() << " npv=" << npv);
     }
     LOG("Total number of swaps = " << portfolio->size());
 
     boost::timer timer;
     boost::timer loopTimer;
 
-    for (Size sample = 0; sample < outputCube->samples(); ++sample) {
-	LOG("processing scenario " << sample);
+    for (Size sample = 1; sample < outputCube->samples(); ++sample) { // skip sample 0, this is the base scenario
+      //LOG("processing scenario " << sample);
         updateProgress(sample, outputCube->samples());
 
 	timer.restart();
@@ -94,7 +103,7 @@ void ScenarioEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfol
 
 	timer.restart();
 	for (Size i = 0; i < trades.size(); ++i) {
-	  LOG("processing trade #" << i << " " << trades[i]->id());
+	  //LOG("processing trade #" << i << " " << trades[i]->id());
 	  Real fx = simMarket_->fxSpot(trades[i]->npvCurrency() + baseCurrency_)->value();
 	  Real npv = trades[i]->instrument()->NPV() * fx;
 	  outputCube->set(npv, i, 0, sample, 0); 

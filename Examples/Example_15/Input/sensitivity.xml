@@ -1,0 +1,41 @@
+<ORE>
+  
+  <SensitivityAnalysis>
+
+    <!-- Discount curve shifts -->
+    <DiscountDomain>ZERO</DiscountDomain>
+    <DiscountShiftType>Absolute</DiscountShiftType>
+    <DiscountShiftSize>0.0001</DiscountShiftSize>
+    <DiscountShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</DiscountShiftTenors>
+    <DiscountLabel>YIELD_DISCOUNT</DiscountLabel>
+
+    <!-- Index curve shifts -->
+    <IndexDomain>ZERO</IndexDomain>
+    <IndexShiftType>Absolute</IndexShiftType>
+    <IndexShiftSize>0.0001</IndexShiftSize>
+    <IndexShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</IndexShiftTenors>
+    <IndexLabel>YIELD_INDEX</IndexLabel>
+
+    <!-- FX spot shifts -->
+    <FxShiftType>Relative</FxShiftType>
+    <FxShiftSize>0.01</FxShiftSize>
+    <FxLabel>FX</FxLabel>
+
+    <!-- FX ATM vol shifts -->
+    <FxVolatilityShiftType>Relative</FxVolatilityShiftType>
+    <FxVolatilityShiftSize>0.01</FxVolatilityShiftSize>
+    <FxVolatilityShiftExpiries>1Y,2Y,3Y,5Y</FxVolatilityShiftExpiries>
+    <FxVolatilityShiftStrikes/>
+    <FxVolatilityLabel>VOL_FX</FxVolatilityLabel>
+
+    <!-- Swaption ATM vol shifts -->
+    <SwaptionVolatilityShiftType>Relative</SwaptionVolatilityShiftType>
+    <SwaptionVolatilityShiftSize>0.01</SwaptionVolatilityShiftSize>
+    <SwaptionVolatilityShiftExpiries>1Y,5Y,7Y,10Y</SwaptionVolatilityShiftExpiries>
+    <SwaptionVolatilityShiftTerms>1Y,5Y,10Y</SwaptionVolatilityShiftTerms>
+    <SwaptionVolatilityShiftStrikes/>
+    <SwaptionVolatilityLabel>VOL_SWAPTION</SwaptionVolatilityLabel>
+
+  </SensitivityAnalysis>
+
+</ORE>
