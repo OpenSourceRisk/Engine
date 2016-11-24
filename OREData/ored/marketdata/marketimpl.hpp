@@ -114,6 +114,11 @@ protected:
     map<pair<string, string>, Handle<DefaultProbabilityTermStructure>> defaultCurves_;
     map<pair<string, string>, Handle<Quote>> recoveryRates_;
     map<pair<string, string>, Handle<OptionletVolatilityStructure>> capFloorCurves_;
+    map<pair<string, string>, Handle<Quote>> equitySpots_;
+    map<pair<string, string>, Handle<YieldTermStructure>> equityInterestRateCurves_;
+    map<pair<string, string>, Handle<YieldTermStructure>> equityDividendCurves_;
+    map<pair<string, string>, Handle<BlackVolTermStructure>> equityVols_;
+    
     Conventions conventions_;
 
     //! add a swap index to the market

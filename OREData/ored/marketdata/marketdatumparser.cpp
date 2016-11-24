@@ -326,11 +326,13 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         Period expiryTenor; // gets populated by parseDateOrPeriod
         Date expiryDate; // gets populated by parseDateOrPeriod
         bool tmpIsDate; // gets populated by parseDateOrPeriod
-        parseDateOrPeriod(tokens[4], expiryDate, expiryTenor, tmpIsDate); // checks if the market string contains a date or a period
+        string expiryString = tokens[4];
+        parseDateOrPeriod(expiryString, expiryDate, expiryTenor, tmpIsDate); // checks if the market string contains a date or a period
         if (!tmpIsDate)
             expiryDate = WeekendsOnly().adjust(asof + expiryTenor); // we have no calendar information here, so we use a generic calendar
         const string& strike = tokens[5];
-        return boost::make_shared<EquityOptionQuote>(value, asof, datumName, quoteType, equityName, ccy, expiryDate, strike);
+        // note how we only store the expiry string - to ensure we can support both Periods and Dates being specified in the vol curve-config.
+        return boost::make_shared<EquityOptionQuote>(value, asof, datumName, quoteType, equityName, ccy, expiryString, strike); 
     }
 
     default:

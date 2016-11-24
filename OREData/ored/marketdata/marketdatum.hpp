@@ -813,24 +813,19 @@ class EquityOptionQuote : public MarketDatum {
 public:
     //! Constructor
     EquityOptionQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string equityName, string ccy,
-        Date expiry, string strike)
-        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::EQUITY_OPTION), eqName_(equityName), ccy_(ccy),
-        expiry_(expiry), strike_(strike) {
-        QL_REQUIRE(strike == "ATMF", "Invalid EquityOptionQuote strike (" << strike
-            << ")");
-    }
+        string expiry, string strike);
 
     //! \name Inspectors
     //@{
     const string& eqName() const { return eqName_; }
     const string& ccy() const { return ccy_; }
-    const Date& expiry() const { return expiry_; }
+    const string& expiry() const { return expiry_; }
     const string& strike() const { return strike_; }
     //@}
 private:
     string eqName_;
     string ccy_;
-    Date expiry_;
+    string expiry_;
     string strike_; // ATMF only supported
 };
 

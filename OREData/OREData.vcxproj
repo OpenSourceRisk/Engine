@@ -53,6 +53,8 @@
     <ClInclude Include="ored\marketdata\curvespec.hpp" />
     <ClInclude Include="ored\marketdata\curvespecparser.hpp" />
     <ClInclude Include="ored\marketdata\defaultcurve.hpp" />
+    <ClInclude Include="ored\marketdata\equitycurve.hpp" />
+    <ClInclude Include="ored\marketdata\equityvolcurve.hpp" />
     <ClInclude Include="ored\marketdata\fixings.hpp" />
     <ClInclude Include="ored\marketdata\fxspot.hpp" />
     <ClInclude Include="ored\marketdata\fxtriangulation.hpp" />
@@ -136,6 +138,8 @@
     <ClCompile Include="ored\marketdata\curvespec.cpp" />
     <ClCompile Include="ored\marketdata\curvespecparser.cpp" />
     <ClCompile Include="ored\marketdata\defaultcurve.cpp" />
+    <ClCompile Include="ored\marketdata\equitycurve.cpp" />
+    <ClCompile Include="ored\marketdata\equityvolcurve.cpp" />
     <ClCompile Include="ored\marketdata\fixings.cpp" />
     <ClCompile Include="ored\marketdata\fxspot.cpp" />
     <ClCompile Include="ored\marketdata\fxtriangulation.cpp" />

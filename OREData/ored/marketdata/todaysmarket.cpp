@@ -32,6 +32,8 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/marketdata/capfloorvolcurve.hpp>
+#include <ored/marketdata/equitycurve.hpp>
+#include <ored/marketdata/equityvolcurve.hpp>
 
 using namespace std;
 using namespace QuantLib;
@@ -57,6 +59,8 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
     map<string, boost::shared_ptr<SwaptionVolCurve>> requiredSwaptionVolCurves;
     map<string, boost::shared_ptr<CapFloorVolCurve>> requiredCapFloorVolCurves;
     map<string, boost::shared_ptr<DefaultCurve>> requiredDefaultCurves;
+    map<string, boost::shared_ptr<EquityCurve>> requiredEquityCurves;
+    map<string, boost::shared_ptr<EquityVolCurve>> requiredEquityVolCurves;
 
     for (const auto& configuration : params.configurations()) {
 
@@ -280,6 +284,68 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                             Handle<DefaultProbabilityTermStructure>(itr->second->defaultTermStructure());
                         recoveryRates_[make_pair(configuration.first, it.first)] =
                             Handle<Quote>(boost::make_shared<SimpleQuote>(itr->second->recoveryRate()));
+                    }
+                }
+                break;
+            }
+
+            case CurveSpec::CurveType::Equity: {
+                boost::shared_ptr<EquityCurveSpec> equityspec = boost::dynamic_pointer_cast<EquityCurveSpec>(spec);
+                QL_REQUIRE(equityspec, "Failed to convert spec " << *spec);
+
+                // have we built the curve already ?
+                auto itr = requiredEquityCurves.find(equityspec->name());
+                if (itr == requiredEquityCurves.end()) {
+                    // build the curve
+                    LOG("Building EquityCurve for asof " << asof);
+                    boost::shared_ptr<EquityCurve> equityCurve = boost::make_shared<EquityCurve>(
+                        asof, *equityspec, loader, curveConfigs, conventions, requiredYieldCurves);
+                    itr = requiredEquityCurves.insert(make_pair(equityspec->name(), equityCurve)).first;
+                }
+
+                for (const auto it : params.equityCurves(configuration.first)) {
+                    if (it.second == spec->name()) {
+                        LOG("Adding EquityCurve (" << it.first << ") with spec " << *equityspec
+                            << " to configuration " << configuration.first);
+                        equityDividendCurves_[make_pair(configuration.first, it.first)] =
+                            Handle<YieldTermStructure>(itr->second->divYieldTermStructure());
+                        equitySpots_[make_pair(configuration.first, it.first)] =
+                            Handle<Quote>(boost::make_shared<SimpleQuote>(itr->second->equitySpot()));
+                        string eqIrCurveString = itr->second->equityIrTermStructureString();
+                        auto it_eqir = requiredYieldCurves.find(eqIrCurveString);
+                        QL_REQUIRE(it_eqir != requiredYieldCurves.end(),
+                            "Required Yield Curve " << eqIrCurveString << " not found " << 
+                            "(referenced by " << equityspec->name() << ")");
+                        equityInterestRateCurves_[make_pair(configuration.first, it.first)] =
+                            it_eqir->second->handle();
+                    }
+                }
+                break;
+            }
+
+            case CurveSpec::CurveType::EquityVolatility: {
+                // convert to fxspec
+                boost::shared_ptr<EquityVolatilityCurveSpec> eqvolspec =
+                    boost::dynamic_pointer_cast<EquityVolatilityCurveSpec>(spec);
+                QL_REQUIRE(eqvolspec, "Failed to convert spec " << *spec);
+
+                // have we built the curve already ?
+                auto itr = requiredEquityVolCurves.find(eqvolspec->name());
+                if (itr == requiredEquityVolCurves.end()) {
+                    // build the curve
+                    LOG("Building EquityVol for asof " << asof);
+                    boost::shared_ptr<EquityVolCurve> eqVolCurve =
+                        boost::make_shared<EquityVolCurve>(asof, *eqvolspec, loader, curveConfigs);
+                    itr = requiredEquityVolCurves.insert(make_pair(eqvolspec->name(), eqVolCurve)).first;
+                }
+
+                // add the handle to the Market Map (possible lots of times for proxies)
+                for (const auto& it : params.equityVolatilities(configuration.first)) {
+                    if (it.second == spec->name()) {
+                        LOG("Adding EquityVol (" << it.first << ") with spec " << *eqvolspec << " to configuration "
+                            << configuration.first);
+                        equityVols_[make_pair(configuration.first, it.first)] =
+                            Handle<BlackVolTermStructure>(itr->second->volTermStructure());
                     }
                 }
                 break;
