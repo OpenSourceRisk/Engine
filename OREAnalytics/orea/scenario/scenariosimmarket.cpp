@@ -111,7 +111,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         quotes.push_back(Handle<Quote>(q));
         vector<Real> discounts(yieldCurveTimes.size());
         for (Size i = 0; i < yieldCurveTimes.size() - 1; i++) {
-            boost::shared_ptr<SimpleQuote> q(new SimpleQuote(wrapper->discount(yieldCurveTimes[i + 1])));
+	    boost::shared_ptr<SimpleQuote> q(new SimpleQuote(wrapper->discount(yieldCurveDates[i + 1])));
             Handle<Quote> qh(q);
             quotes.push_back(qh);
 
@@ -129,7 +129,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
                 new QuantExt::InterpolatedDiscountCurve(yieldCurveTimes, quotes, 0, TARGET(), wrapper->dayCounter()));
         } else {
             discountCurve = boost::shared_ptr<YieldTermStructure>(
-                new QuantExt::InterpolatedDiscountCurve2(yieldCurveTimes, quotes, wrapper->dayCounter()));
+                new QuantExt::InterpolatedDiscountCurve2(yieldCurveDates, quotes, wrapper->dayCounter()));
         }
 
         Handle<YieldTermStructure> dch(discountCurve);
@@ -157,7 +157,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         quotes.push_back(Handle<Quote>(q));
 
         for (Size i = 0; i < yieldCurveTimes.size() - 1; i++) {
-            boost::shared_ptr<SimpleQuote> q(new SimpleQuote(wrapperIndex->discount(yieldCurveTimes[i + 1])));
+            boost::shared_ptr<SimpleQuote> q(new SimpleQuote(wrapperIndex->discount(yieldCurveDates[i + 1])));
             Handle<Quote> qh(q);
             quotes.push_back(qh);
 
@@ -174,7 +174,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
                 yieldCurveTimes, quotes, 0, index->fixingCalendar(), wrapperIndex->dayCounter()));
         } else {
             indexCurve = boost::shared_ptr<YieldTermStructure>(
-                new QuantExt::InterpolatedDiscountCurve2(yieldCurveTimes, quotes, wrapperIndex->dayCounter()));
+                new QuantExt::InterpolatedDiscountCurve2(yieldCurveDates, quotes, wrapperIndex->dayCounter()));
         }
 
         // wrapped curve, is slower than a native curve
