@@ -167,18 +167,10 @@ boost::shared_ptr<Scenario> SensitivityScenarioGenerator::next(const Date& d) {
 }
   
 SensitivityScenarioGenerator::ShiftType parseShiftType(const std::string& s) {
-  static map<string, SensitivityScenarioGenerator::ShiftType> m = {
-      {"Absolute", SensitivityScenarioGenerator::ShiftType::Absolute },
-      {"ABSOLUTE", SensitivityScenarioGenerator::ShiftType::Absolute },
-      {"Abs", SensitivityScenarioGenerator::ShiftType::Absolute },
-      {"ABS", SensitivityScenarioGenerator::ShiftType::Absolute },
-      {"A", SensitivityScenarioGenerator::ShiftType::Absolute },
-      {"Relative", SensitivityScenarioGenerator::ShiftType::Relative },
-      {"RELATIVE", SensitivityScenarioGenerator::ShiftType::Relative },
-      {"Rel", SensitivityScenarioGenerator::ShiftType::Relative },
-      {"REL", SensitivityScenarioGenerator::ShiftType::Relative },
-      {"R", SensitivityScenarioGenerator::ShiftType::Relative } };
-    
+    static map<string, SensitivityScenarioGenerator::ShiftType> m = {
+        {"Absolute", SensitivityScenarioGenerator::ShiftType::Absolute },
+        {"Relative", SensitivityScenarioGenerator::ShiftType::Relative }
+    };    
     auto it = m.find(s);
     if (it != m.end()) {
         return it->second;

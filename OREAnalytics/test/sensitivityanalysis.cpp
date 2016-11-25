@@ -152,7 +152,7 @@ void SensitivityAnalysisTest::testPortfolioSensitivity() {
     // build scenario sim market
     Conventions conventions = *conv();
     boost::shared_ptr<analytics::ScenarioSimMarket> simMarket =
-      boost::make_shared<analytics::ScenarioSimMarket>(sgen, initMarket, simMarketData, conventions);
+        boost::make_shared<analytics::ScenarioSimMarket>(sgen, initMarket, simMarketData, conventions);
 
     // build porfolio
     boost::shared_ptr<EngineData> data = boost::make_shared<EngineData>();

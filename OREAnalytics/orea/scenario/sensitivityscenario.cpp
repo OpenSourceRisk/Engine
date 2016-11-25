@@ -33,14 +33,10 @@ using namespace QuantLib;
 namespace ore {
 namespace analytics {
 
-    SensitivityScenario::SensitivityScenario(Real absoluteYieldShift, 
-                                             bool shiftIndexCurves,
-                                             Real relativeFxRateShift,
-                                             Real absoluteVolShift) 
-        : absoluteYieldShift_(absoluteYieldShift), 
-          shiftIndexCurves_(shiftIndexCurves),
-          relativeFxRateShift_(relativeFxRateShift),
-          absoluteVolShift_(absoluteVolShift) {
+SensitivityScenario::SensitivityScenario(Real absoluteYieldShift, bool shiftIndexCurves, Real relativeFxRateShift,
+                                         Real absoluteVolShift)
+    : absoluteYieldShift_(absoluteYieldShift), shiftIndexCurves_(shiftIndexCurves),
+      relativeFxRateShift_(relativeFxRateShift), absoluteVolShift_(absoluteVolShift) {
         ScenarioConfiguration& sc = ScenarioConfiguration::instance();
         Risk::Market& market = Risk::Market::instance();
         QLW_REQUIRE(market.isInitialised(), "market is not initialised");

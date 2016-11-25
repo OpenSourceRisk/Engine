@@ -71,14 +71,14 @@ void ScenarioEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfol
     for (Size i = 0; i < trades.size(); i++) {
         QL_REQUIRE(trades[i]->npvCurrency() != "", "NPV currency not set for trade " << trades[i]->id());
 	Real fx = simMarket_->fxSpot(trades[i]->npvCurrency() + baseCurrency_)->value();
-	Real npv = trades[i]->instrument()->NPV() * fx;
-	outputCube->setT0(npv, i, 0); 
+        Real npv = trades[i]->instrument()->NPV() * fx;
+        outputCube->setT0(npv, i, 0); 
     }
 
     // First call to update() resets the sim market to the base scenario (number 0)
     simMarket_->update(today_); 
     
-    // Check t0 NPVs after market update to base scenario
+    // Check t0 NPVs after market update to base scenario, should match
     for (Size i = 0; i < trades.size(); i++) {
         QL_REQUIRE(trades[i]->npvCurrency() != "", "NPV currency not set for trade " << trades[i]->id());
 	Real fx = simMarket_->fxSpot(trades[i]->npvCurrency() + baseCurrency_)->value();

@@ -27,43 +27,6 @@ using namespace QuantLib;
 namespace ore {
 namespace analytics {
 
-  /*
-bool SensitivityScenarioData::operator==(const SensitivityScenarioData& rhs) {
-
-    if (irDomain_ != rhs.irDomain_ ||
-	//irCurrencies_ != rhs.irCurrencies_ ||
-	//irIndices_ != rhs.irIndices_ ||
-	irShiftTenors_ != rhs.irShiftTenors_ ||
-	irShiftType_ != rhs.irShiftType_ ||
-	irShiftSize_ != rhs.irShiftSize_ ||
-	fxShiftType_ != rhs.fxShiftType_ ||
-	//fxCurrencyPairs_ != rhs.fxCurrencyPairs_ ||
-	fxShiftSize_ != rhs.fxShiftSize_ ||
-	infDomain_ != rhs.infDomain_ ||
-	//infIndices_ != rhs.infIndices_ ||
-	infShiftTenors_ != rhs.infShiftTenors_ ||
-	infShiftType_ != rhs.infShiftType_ ||
-	infShiftSize_ != rhs.infShiftSize_ ||
-	crDomain_ != rhs.crDomain_ ||
-	//crNames_ != rhs.crNames_ ||
-	crShiftTenors_ != rhs.crShiftTenors_ ||
-	crShiftType_ != rhs.crShiftType_ ||
-	crShiftSize_ != rhs.crShiftSize_ ||
-	//swaptionVolCurrencies_ != rhs.swaptionVolCurrencies_ ||
-	swaptionVolShiftExpiries_ != rhs.swaptionVolShiftExpiries_ ||
-	swaptionVolShiftTerms_ != rhs.swaptionVolShiftTerms_ ||
-	swaptionVolShiftStrikes_ != rhs.swaptionVolShiftStrikes_ ||
-	swaptionVolShiftType_ != rhs.swaptionVolShiftType_ ||
-	swaptionVolShiftSize_ != rhs.swaptionVolShiftSize_) {
-      return false;
-    } else {
-        return true;
-    }
-}
-
-bool SensitivityScenarioData::operator!=(const SensitivityScenarioData& rhs) { return !(*this == rhs); }
-  */
-  
 void SensitivityScenarioData::fromXML(XMLNode* root) {
     XMLNode* node = XMLUtils::locateNode(root, "SensitivityAnalysis");
     XMLUtils::checkNode(node, "SensitivityAnalysis");
