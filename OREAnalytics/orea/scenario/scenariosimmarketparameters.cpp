@@ -32,8 +32,10 @@ bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& 
     if (baseCcy_ != rhs.baseCcy_ || ccys_ != rhs.ccys_ || yieldCurveTenors_ != rhs.yieldCurveTenors_ ||
         indices_ != rhs.indices_ || swapIndices_ != rhs.swapIndices_ || interpolation_ != rhs.interpolation_ ||
         extrapolate_ != rhs.extrapolate_ || swapVolTerms_ != rhs.swapVolTerms_ || swapVolCcys_ != rhs.swapVolCcys_ ||
-        swapVolSimulate_ != rhs.swapVolSimulate_ || swapVolExpiries_ != rhs.swapVolExpiries_ || swapVolDecayMode_ != rhs.swapVolDecayMode_ ||
-        capFloorVolSimulate_ != rhs.capFloorVolSimulate_ || capFloorVolCcys_ != rhs.capFloorVolCcys_ || capFloorVolDecayMode_ != rhs.capFloorVolDecayMode_ ||
+        swapVolSimulate_ != rhs.swapVolSimulate_ || swapVolExpiries_ != rhs.swapVolExpiries_ ||
+        swapVolDecayMode_ != rhs.swapVolDecayMode_ || capFloorVolSimulate_ != rhs.capFloorVolSimulate_ ||
+        capFloorVolCcys_ != rhs.capFloorVolCcys_ || capFloorVolExpiries_ != rhs.capFloorVolExpiries_ ||
+        capFloorVolStrikes_ != rhs.capFloorVolStrikes_ || capFloorVolDecayMode_ != rhs.capFloorVolDecayMode_ ||
         defaultNames_ != rhs.defaultNames_ || defaultTenors_ != rhs.defaultTenors_ ||
         fxVolSimulate_ != rhs.fxVolSimulate_ || fxVolExpiries_ != rhs.fxVolExpiries_ ||
         fxVolDecayMode_ != rhs.fxVolDecayMode_ || ccyPairs_ != rhs.ccyPairs_ ||
@@ -85,6 +87,8 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     nodeChild = XMLUtils::getChildNode(node, "CapFloorVolatilities");
     if (nodeChild) {
         capFloorVolSimulate_ = XMLUtils::getChildValueAsBool(nodeChild, "Simulate", true);
+        capFloorVolExpiries_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Expiries", true);
+        capFloorVolStrikes_ = XMLUtils::getChildrenValuesAsDoublesCompact(nodeChild, "Strikes", true);
         capFloorVolCcys_ = XMLUtils::getChildrenValues(nodeChild, "Currencies", "Currency", true);
         capFloorVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
     }

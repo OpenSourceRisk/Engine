@@ -36,6 +36,13 @@
     <SwaptionVolatilityShiftStrikes/>
     <SwaptionVolatilityLabel>VOL_SWAPTION</SwaptionVolatilityLabel>
 
+    <!-- Cap/Floor (Optionlet) vol surface shifts -->
+    <CapFloorVolatilityShiftType>Relative</CapFloorVolatilityShiftType>
+    <CapFloorVolatilityShiftSize>0.01</CapFloorVolatilityShiftSize>
+    <CapFloorVolatilityShiftExpiries>1Y,2Y,3Y,5Y,7Y,10Y</CapFloorVolatilityShiftExpiries>
+    <CapFloorVolatilityShiftStrikes>0.05</CapFloorVolatilityShiftStrikes>
+    <CapFloorVolatilityLabel>VOL_CAPFLOOR</CapFloorVolatilityLabel>
+
   </SensitivityAnalysis>
 
 </ORE>

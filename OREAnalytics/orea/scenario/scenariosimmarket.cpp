@@ -27,6 +27,8 @@
 #include <ql/termstructures/volatility/swaption/swaptionvolmatrix.hpp>
 #include <ql/termstructures/volatility/capfloor/capfloortermvolatilitystructure.hpp>
 #include <ql/termstructures/volatility/capfloor/capfloortermvolsurface.hpp>
+#include <ql/termstructures/volatility/optionlet/strippedoptionlet.hpp>
+#include <ql/termstructures/volatility/optionlet/strippedoptionletadapter.hpp>
 #include <ql/termstructures/defaulttermstructure.hpp>
 #include <ql/termstructures/yield/discountcurve.hpp>
 #include <ql/termstructures/credit/interpolatedsurvivalprobabilitycurve.hpp>
@@ -296,12 +298,46 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
 
         LOG("Initial market cap/floor volatility type = " << wrapper->volatilityType());
 
-        string decayModeString = parameters->capFloorVolDecayMode();
-        ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);
-        boost::shared_ptr<OptionletVolatilityStructure> capletVol =
-            boost::make_shared<DynamicOptionletVolatilityStructure>(*wrapper, 0, NullCalendar(), decayMode);
+        Handle<OptionletVolatilityStructure> hCapletVol;
 
-        Handle<OptionletVolatilityStructure> hCapletVol(capletVol);
+        if (parameters->simulateCapFloorVols()) {
+            LOG("Simulating Cap/Floor Optionlet vols for ccy " << ccy);
+            vector<Period> optionTenors = parameters->capFloorVolExpiries();
+            vector<Date> optionDates(optionTenors.size());
+            vector<Real> strikes = parameters->capFloorVolStrikes();
+            vector<vector<Handle<Quote> > > quotes(optionTenors.size(),
+                                                   vector<Handle<Quote> >(strikes.size(), Handle<Quote>()));
+            for (Size i = 0; i < optionTenors.size(); ++i) {
+                optionDates[i] = asof_ + optionTenors[i];
+                for (Size j = 0; j < strikes.size(); ++j) {
+                    Real vol = wrapper->volatility(optionTenors[i], strikes[j], wrapper->allowsExtrapolation());
+                    boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
+                    Size index = i * strikes.size() + j;
+                    simData_.emplace(std::piecewise_construct,
+                                     std::forward_as_tuple(RiskFactorKey::KeyType::OptionletVolatility, ccy, index),
+                                     std::forward_as_tuple(q));
+                    quotes[i][j] = Handle<Quote>(q);
+                }
+            }
+            // FIXME: Works as of today only, i.e. for sensitivity/scenario analysis.
+            // TODO: Build floating reference date StrippedOptionlet class for MC path generators
+            boost::shared_ptr<StrippedOptionlet> optionlet =
+                boost::make_shared<StrippedOptionlet>(0, // FIXME: settlement days
+                                                      wrapper->calendar(), wrapper->businessDayConvention(),
+                                                      iborIndex("EUR-EURIBOR-6M").currentLink(), // FIXME: index
+                                                      optionDates, strikes, quotes, wrapper->dayCounter(),
+                                                      wrapper->volatilityType(), wrapper->displacement());
+            boost::shared_ptr<StrippedOptionletAdapter> adapter =
+                boost::make_shared<StrippedOptionletAdapter>(optionlet);
+            hCapletVol = Handle<OptionletVolatilityStructure>(adapter);
+        } else {
+            string decayModeString = parameters->capFloorVolDecayMode();
+            ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);
+            boost::shared_ptr<OptionletVolatilityStructure> capletVol =
+                boost::make_shared<DynamicOptionletVolatilityStructure>(*wrapper, 0, NullCalendar(), decayMode);
+            hCapletVol = Handle<OptionletVolatilityStructure>(capletVol);
+        }
+
         capFloorCurves_.emplace(std::piecewise_construct, std::forward_as_tuple(Market::defaultConfiguration, ccy),
                                 std::forward_as_tuple(hCapletVol));
 

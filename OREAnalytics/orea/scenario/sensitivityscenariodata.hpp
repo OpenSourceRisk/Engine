@@ -101,7 +101,14 @@ public:
     const string& swaptionVolShiftType() const { return swaptionVolShiftType_; }
     const Real& swaptionVolShiftSize() const { return swaptionVolShiftSize_; }
 
-    // const vector<string>& fxVolPairs() const { return fxVolCurrencies_; }
+    // const vector<string>& capFloorVolCurrencies() const { return capFloorVolCurrencies_; }
+    const string& capFloorVolLabel() const { return capFloorVolLabel_; }
+    const vector<Period>& capFloorVolShiftExpiries() const { return capFloorVolShiftExpiries_; }
+    const vector<Real>& capFloorVolShiftStrikes() const { return capFloorVolShiftStrikes_; }
+    const string& capFloorVolShiftType() const { return capFloorVolShiftType_; }
+    const Real& capFloorVolShiftSize() const { return capFloorVolShiftSize_; }
+
+  // const vector<string>& fxVolPairs() const { return fxVolCurrencies_; }
     const string& fxVolLabel() const { return fxVolLabel_; }
     const vector<Period>& fxVolShiftExpiries() const { return fxVolShiftExpiries_; }
     const vector<Real>& fxVolShiftStrikes() const { return fxVolShiftStrikes_; }
@@ -151,6 +158,13 @@ public:
     vector<Real>& swaptionVolShiftStrikes() { return swaptionVolShiftStrikes_; }
     string& swaptionVolShiftType() { return swaptionVolShiftType_; }
     Real& swaptionVolShiftSize() { return swaptionVolShiftSize_; }
+
+    // vector<string>& capFloorVolCurrencies() { return capFloorVolCurrencies_; }
+    string& capFloorVolLabel() { return capFloorVolLabel_; }
+    vector<Period>& capFloorVolShiftExpiries() { return capFloorVolShiftExpiries_; }
+    vector<Real>& capFloorVolShiftStrikes() { return capFloorVolShiftStrikes_; }
+    string& capFloorVolShiftType() { return capFloorVolShiftType_; }
+    Real& capFloorVolShiftSize() { return capFloorVolShiftSize_; }
 
     // vector<string>& fxVolPairs() { return fxVolCurrencies_; }
     string& fxVolLabel() { return fxVolLabel_; }
@@ -221,7 +235,14 @@ private:
     vector<Period> swaptionVolShiftTerms_;
     vector<Real> swaptionVolShiftStrikes_; // FIXME: absolute or relative to ATM ?
 
-    //vector<string> fxVolPairs_;
+    //vector<string> capFloorVolCurrencies_;
+    string capFloorVolLabel_;
+    string capFloorVolShiftType_;
+    Real capFloorVolShiftSize_;
+    vector<Period> capFloorVolShiftExpiries_;
+    vector<Real> capFloorVolShiftStrikes_; // absolute
+
+  //vector<string> fxVolPairs_;
     string fxVolLabel_;
     string fxVolShiftType_;
     Real fxVolShiftSize_;

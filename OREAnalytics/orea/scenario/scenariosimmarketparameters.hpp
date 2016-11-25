@@ -64,7 +64,10 @@ public:
     const vector<string>& swapVolCcys() const { return swapVolCcys_; }
     const string& swapVolDecayMode() const { return swapVolDecayMode_; }
 
+    const bool& simulateCapFloorVols() const { return capFloorVolSimulate_; }
     const vector<string>& capFloorVolCcys() const { return capFloorVolCcys_; }
+    const vector<Period>& capFloorVolExpiries() const { return capFloorVolExpiries_; }
+    const vector<Real>& capFloorVolStrikes() const { return capFloorVolStrikes_; }
     const string& capFloorVolDecayMode() const { return capFloorVolDecayMode_; }
 
     const vector<string>& defaultNames() const { return defaultNames_; }
@@ -96,8 +99,10 @@ public:
     vector<Period>& swapVolExpiries() { return swapVolExpiries_; }
     string& swapVolDecayMode() { return swapVolDecayMode_; }
 
-    bool& simulateCapFloorVols() { return swapVolSimulate_; }
+    bool& simulateCapFloorVols() { return capFloorVolSimulate_; }
     vector<string>& capFloorVolCcys() { return capFloorVolCcys_; }
+    vector<Period>& capFloorVolExpiries() { return capFloorVolExpiries_; }
+    vector<Real>& capFloorVolStrikes() { return capFloorVolStrikes_; }
     string& capFloorVolDecayMode() { return capFloorVolDecayMode_; }
 
     vector<string>& defaultNames() { return defaultNames_; }
@@ -141,6 +146,8 @@ private:
 
     bool capFloorVolSimulate_;
     vector<string> capFloorVolCcys_;
+    vector<Period> capFloorVolExpiries_;
+    vector<Real> capFloorVolStrikes_;
     string capFloorVolDecayMode_;
 
     vector<string> defaultNames_;
