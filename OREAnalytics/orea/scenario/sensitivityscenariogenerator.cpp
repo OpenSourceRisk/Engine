@@ -37,7 +37,7 @@ SensitivityScenarioGenerator::SensitivityScenarioGenerator(
     sensitivityData_(sensitivityData), simMarketData_(simMarketData), today_(today),
     initMarket_(initMarket), configuration_(configuration), counter_(0) {
     QL_REQUIRE(initMarket != NULL, "SensitivityScenarioGenerator: initMarket is null");
-    //init(initMarket);
+    init(initMarket);
 }
 
 void SensitivityScenarioGenerator::clear() {

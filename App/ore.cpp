@@ -261,16 +261,13 @@ int main(int argc, char** argv) {
             LOG("Build Sensitivity Scenario Generator");
 	    boost::shared_ptr<ScenarioFactory> scenarioFactory(new SimpleScenarioFactory);
 	    boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator = boost::make_shared<SensitivityScenarioGenerator>(
-		scenarioFactory, sensiData, simMarketData, asof, market, "default");
+		scenarioFactory, sensiData, simMarketData, asof, market);
 	    boost::shared_ptr<ScenarioGenerator> sgen(scenarioGenerator);
 	    
             LOG("Build Simulation Market");
             boost::shared_ptr<ScenarioSimMarket> simMarket = boost::make_shared<ScenarioSimMarket>(
                 sgen, market, simMarketData, conventions);
 
-	    LOG("Initialise Sensitivity Scenarios");
-	    scenarioGenerator->init(simMarket);
-	    
             LOG("Build engine factory for pricing under scenarios, linked to sim market");
             string sensiPricingEnginesFile = inputPath + "/" + params.get("sensitivity", "pricingEnginesFile");
             boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();

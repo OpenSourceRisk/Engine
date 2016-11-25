@@ -154,9 +154,6 @@ void SensitivityAnalysisTest::testPortfolioSensitivity() {
     boost::shared_ptr<analytics::ScenarioSimMarket> simMarket =
       boost::make_shared<analytics::ScenarioSimMarket>(sgen, initMarket, simMarketData, conventions);
 
-    // initialise scenario generator: cache base scenario and build sensitivity scenarios
-    scenarioGenerator->init(simMarket);
-    
     // build porfolio
     boost::shared_ptr<EngineData> data = boost::make_shared<EngineData>();
     data->model("Swap") = "DiscountedCashflows";
@@ -428,7 +425,6 @@ void SensitivityAnalysisTest::test1dShifts() {
     vector<Time> shiftTimes(shiftTenors.size());
     for (Size i = 0; i < shiftTenors.size(); ++i)
       shiftTimes[i] = dc.yearFraction(today, today + shiftTenors[i]);
-
 
     vector<Real> shiftedZeros(tenors.size());
     vector<Real> diffAbsolute(tenors.size(), 0.0);

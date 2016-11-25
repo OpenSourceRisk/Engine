@@ -78,14 +78,13 @@ void ScenarioEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfol
     // First call to update() resets the sim market to the base scenario (number 0)
     simMarket_->update(today_); 
     
-    // Store t0 NPVs after market update to base scenario, check difference
+    // Check t0 NPVs after market update to base scenario
     for (Size i = 0; i < trades.size(); i++) {
         QL_REQUIRE(trades[i]->npvCurrency() != "", "NPV currency not set for trade " << trades[i]->id());
 	Real fx = simMarket_->fxSpot(trades[i]->npvCurrency() + baseCurrency_)->value();
 	Real npv = trades[i]->instrument()->NPV() * fx;
-	LOG("Trade " << trades[i]->id()
-	    << " NPV0 " << npv << " " << outputCube->getT0(i, 0)
-	    << " DIFF " << npv - outputCube->getT0(i, 0));
+	Real tiny = 1.0e-10;
+	QL_REQUIRE(fabs(npv - outputCube->getT0(i, 0)) < tiny, "unexpected NPV difference base scenario vs simulation market");
 	outputCube->setT0(npv, i, 0); 
 	outputCube->set(npv, i, 0, 0, 0);	
     }
@@ -95,7 +94,7 @@ void ScenarioEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfol
     boost::timer loopTimer;
 
     for (Size sample = 1; sample < outputCube->samples(); ++sample) { // skip sample 0, this is the base scenario
-      //LOG("processing scenario " << sample);
+        //LOG("processing scenario " << sample);
         updateProgress(sample, outputCube->samples());
 
 	timer.restart();
