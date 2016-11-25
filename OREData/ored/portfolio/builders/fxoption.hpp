@@ -48,8 +48,6 @@ protected:
 
     virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy) override {
         string pair = keyImpl(forCcy, domCcy);
-	QL_REQUIRE(!market_->fxSpot(pair, configuration(MarketContext::pricing)).empty(), "no fx spot for pair " + pair);
-	QL_REQUIRE(!market_->fxVol(pair, configuration(MarketContext::pricing)).empty(), "no fx vol for pair " + pair);
         boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = boost::make_shared<GeneralizedBlackScholesProcess>(
             market_->fxSpot(pair, configuration(MarketContext::pricing)),
             market_->discountCurve(forCcy.code(),
