@@ -35,6 +35,37 @@ namespace analytics {
 
 //! Sensitivity Scenario Generator
 /*!
+  This class builds a vector of sensitivity scenarios based on instructions in SensitivityScenarioData
+  and ScenarioSimMarketParameters objects passed.
+
+  The ScenarioSimMarketParameters object determines the scope and structure of a "simulation"
+  market (currencies, currency pairs, curve tenor points, vol matrix expiries and terms/strikes etc)
+  to which sensitivity scenarios are applied in order to compute their NPV impact.
+
+  The SensitivityScenarioData object determines the structure of shift curves (shift tenor points
+  can differ from the simulation market's tenor points), as well as type (relative/absolute) and size
+  of shifts applied.
+
+  The generator then produces comprehensive scenarios that can be applied to the simulation market,
+  i.e. covering all quotes in the simulation market, possibly filled with "base" scenario values.
+
+  Both UP and DOWN shifts are generated in order to facilitate delta and gamma calculation.
+
+  The generator currently covers the IR/FX asset class, with shifts for the following term 
+  structure types:
+  - FX spot rates 
+  - FX ATM volatilities 
+  - Discount curve zero rates
+  - Index curve zero rates
+  - Swaption ATM volatility matrices
+  - Cap/Floor volatility matrices (by expiry and strike)
+
+  Note: 
+  - For yield curves, the class generates sensitivites in the Zero rate domain only. 
+  Conversion into par rate sensivities has to be implemented as a postprocessor step.
+  - Likewise, Cap/Floor volatilitiy sensitivties are computed in the optionlet domain.
+  Conversion into par (flat cap/floor) volatility sensis has to be implemented as a 
+  postprocessor step.
 
   \ingroup scenario
  */
@@ -86,10 +117,13 @@ public:
       original curve |...|...|...|...|...|...|...|...|...|
       shift curve    ......|...........|...........|......
      */
-    void applyShift( //! Number of the shift curve tenor point to be shifted here
+    void applyShift(
+        //! Number of the shift curve tenor point to be shifted here
         Size j,
         //! Shift size interpreted as either absolute or relative shift
         Real shiftSize,
+        //! Upwards shift if true, otherwise downwards
+        bool up,
         //! Absolute: newValue = oldValue + shiftSize. Relative: newValue = oldValue * (1 + shiftSize)
         ShiftType type,
         //! Shift tenors expressed as times
@@ -104,19 +138,39 @@ public:
     //! Apply 2d shift to 2d matrix such as swaption volatilities, public to allow test suite access
     /*! This is the 2d generalisation of the 1d version of applyShift()
      */
-    void applyShift(Size j, Size k, Real shiftSize, ShiftType type, const vector<Time>& shiftX,
-                    const vector<Time>& shiftY, const vector<Time>& dataX, const vector<Time>& dataY,
-                    const vector<vector<Real> >& data, vector<vector<Real> >& shiftedData);
+    void applyShift(
+        //! Index of the shift tenor in "expiry" direction
+        Size j,
+        //! Index of the shift tenor in "term" (Swaptions) or "strike" (Caps) direction
+        Size k,
+        //! Shift size interpreted as either absolute or relative shift
+        Real shiftSize,
+        //! Upwards shift if true, otherwise downwards
+        bool up,
+        //! Absolute: newValue = oldValue + shiftSize. Relative: newValue = oldValue * (1 + shiftSize)
+        ShiftType type,
+        //! Coordinate time in "expiry" direction of the shift curve
+        const vector<Time>& shiftX,
+        //! Coordinate time in "term" or "strike" direction of the shift curve
+        const vector<Time>& shiftY,
+        //! Coordinate time in "expiry" direction of the underlying data
+        const vector<Time>& dataX,
+        //! Coordinate time in "term" or "strike" direction of the underlying data
+        const vector<Time>& dataY,
+        //! Matrix of input  data
+        const vector<vector<Real> >& data,
+        //! Matrix of shifted result data
+        vector<vector<Real> >& shiftedData);
 
 private:
     void addCacheTo(boost::shared_ptr<Scenario> scenario);
-    void generateYieldCurveScenarios(boost::shared_ptr<Market> market);
-    void generateDiscountCurveScenarios(boost::shared_ptr<Market> market);
-    void generateIndexCurveScenarios(boost::shared_ptr<Market> market);
-    void generateFxScenarios(boost::shared_ptr<Market> market);
-    void generateSwaptionVolScenarios(boost::shared_ptr<Market> market);
-    void generateFxVolScenarios(boost::shared_ptr<Market> market);
-    void generateCapFloorVolScenarios(boost::shared_ptr<Market> market);
+    void generateYieldCurveScenarios(bool up, boost::shared_ptr<Market> market);
+    void generateDiscountCurveScenarios(bool up, boost::shared_ptr<Market> market);
+    void generateIndexCurveScenarios(bool up, boost::shared_ptr<Market> market);
+    void generateFxScenarios(bool up, boost::shared_ptr<Market> market);
+    void generateSwaptionVolScenarios(bool up, boost::shared_ptr<Market> market);
+    void generateFxVolScenarios(bool up, boost::shared_ptr<Market> market);
+    void generateCapFloorVolScenarios(bool up, boost::shared_ptr<Market> market);
 
     boost::shared_ptr<ScenarioFactory> scenarioFactory_;
     boost::shared_ptr<SensitivityScenarioData> sensitivityData_;

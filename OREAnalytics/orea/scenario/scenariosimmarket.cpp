@@ -324,7 +324,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
             boost::shared_ptr<StrippedOptionlet> optionlet =
                 boost::make_shared<StrippedOptionlet>(0, // FIXME: settlement days
                                                       wrapper->calendar(), wrapper->businessDayConvention(),
-                                                      iborIndex("EUR-EURIBOR-6M").currentLink(), // FIXME: index
+                                                      boost::shared_ptr<IborIndex>(),// FIXME: required for ATM vol calculation
                                                       optionDates, strikes, quotes, wrapper->dayCounter(),
                                                       wrapper->volatilityType(), wrapper->displacement());
             boost::shared_ptr<StrippedOptionletAdapter> adapter =

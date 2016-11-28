@@ -166,15 +166,29 @@ void SensitivityScenarioGenerator::init(boost::shared_ptr<Market> market) {
     addCacheTo(baseScenario_);
     scenarios_.push_back(baseScenario_);
 
-    generateDiscountCurveScenarios(market);
-    generateIndexCurveScenarios(market);
-    generateFxScenarios(market);
-    if (simMarketData_->simulateFXVols())
-        generateFxVolScenarios(market);
-    if (simMarketData_->simulateSwapVols())
-        generateSwaptionVolScenarios(market);
-    if (simMarketData_->simulateCapFloorVols())
-        generateCapFloorVolScenarios(market);
+    generateDiscountCurveScenarios(true, market);
+    generateDiscountCurveScenarios(false, market);
+
+    generateIndexCurveScenarios(true, market);
+    generateIndexCurveScenarios(false, market);
+
+    generateFxScenarios(true, market);
+    generateFxScenarios(false, market);
+
+    if (simMarketData_->simulateFXVols()) {
+        generateFxVolScenarios(true, market);
+        generateFxVolScenarios(false, market);
+    }
+
+    if (simMarketData_->simulateSwapVols()) {
+        generateSwaptionVolScenarios(true, market);
+        generateSwaptionVolScenarios(false, market);
+    }
+
+    if (simMarketData_->simulateCapFloorVols()) {
+        generateCapFloorVolScenarios(true, market);
+        generateCapFloorVolScenarios(false, market);
+    }
 }
 
 boost::shared_ptr<Scenario> SensitivityScenarioGenerator::next(const Date& d) {
@@ -228,19 +242,21 @@ void SensitivityScenarioGenerator::addCacheTo(boost::shared_ptr<Scenario> scenar
     }
 }
 
-void SensitivityScenarioGenerator::generateFxScenarios(boost::shared_ptr<Market> market) {
+void SensitivityScenarioGenerator::generateFxScenarios(bool up, boost::shared_ptr<Market> market) {
     Size n_ccy = simMarketData_->ccys().size();
     string domestic = simMarketData_->baseCcy();
     ShiftType type = parseShiftType(sensitivityData_->fxShiftType());
     QL_REQUIRE(type == SensitivityScenarioGenerator::ShiftType::Relative, "FX scenario type must be relative");
+    string direction = up ? "/UP" : "/DOWN";
 
     for (Size k = 0; k < n_ccy - 1; k++) {
         string foreign = simMarketData_->ccys()[k + 1];
         string ccypair = foreign + domestic;
-        string label = sensitivityData_->fxLabel() + "/" + ccypair;
+        string label = sensitivityData_->fxLabel() + "/" + ccypair + direction;
         boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_, label);
         Real rate = market->fxSpot(ccypair, configuration_)->value();
-        Real newRate = rate * (1.0 + sensitivityData_->fxShiftSize());
+        Real newRate =
+            up ? rate * (1.0 + sensitivityData_->fxShiftSize()) : rate * (1.0 - sensitivityData_->fxShiftSize());
         scenario->add(fxKeys_[k], newRate);
         // add remaining unshifted data from cache for a complete scenario
         addCacheTo(scenario);
@@ -251,10 +267,11 @@ void SensitivityScenarioGenerator::generateFxScenarios(boost::shared_ptr<Market>
     LOG("FX scenarios done");
 }
 
-void SensitivityScenarioGenerator::generateDiscountCurveScenarios(boost::shared_ptr<Market> market) {
+void SensitivityScenarioGenerator::generateDiscountCurveScenarios(bool up, boost::shared_ptr<Market> market) {
     Size n_ccy = simMarketData_->ccys().size();
     Size n_ten = simMarketData_->yieldCurveTenors().size();
     ShiftType shiftType = parseShiftType(sensitivityData_->discountShiftType());
+    string direction = up ? "/UP" : "/DOWN";
 
     // original curves' buffer
     std::vector<Real> zeros(n_ten);
@@ -285,12 +302,12 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(boost::shared_
 
             // each shift tenor is associated with a scenario
             ostringstream o;
-            o << sensitivityData_->discountLabel() << "/" << ccy << "/" << shiftTenors[j];
+            o << sensitivityData_->discountLabel() << "/" << ccy << "/" << shiftTenors[j] <<  direction;
             string label = o.str();
             boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_, label);
 
             // apply zero rate shift at tenor point j
-            applyShift(j, shiftSize, shiftType, shiftTimes, zeros, times, shiftedZeros);
+            applyShift(j, shiftSize, up, shiftType, shiftTimes, zeros, times, shiftedZeros);
 
             // store shifted discount curve in the scenario
             for (Size k = 0; k < n_ten; ++k) {
@@ -310,10 +327,11 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(boost::shared_
     LOG("Discount curve scenarios done");
 }
 
-void SensitivityScenarioGenerator::generateIndexCurveScenarios(boost::shared_ptr<Market> market) {
+void SensitivityScenarioGenerator::generateIndexCurveScenarios(bool up, boost::shared_ptr<Market> market) {
     Size n_indices = simMarketData_->indices().size();
     Size n_ten = simMarketData_->yieldCurveTenors().size();
     ShiftType shiftType = parseShiftType(sensitivityData_->indexShiftType());
+    string direction = up ? "/UP" : "/DOWN";
 
     // original curves' buffer
     std::vector<Real> zeros(n_ten);
@@ -345,12 +363,12 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(boost::shared_ptr
 
             // each shift tenor is associated with a scenario
             ostringstream o;
-            o << sensitivityData_->indexLabel() << "/" << indexName << "/" << shiftTenors[j];
+            o << sensitivityData_->indexLabel() << "/" << indexName << "/" << shiftTenors[j] << direction;
             string label = o.str();
             boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_, label);
 
             // apply zero rate shift at tenor point j
-            applyShift(j, shiftSize, shiftType, shiftTimes, zeros, times, shiftedZeros);
+            applyShift(j, shiftSize, up, shiftType, shiftTimes, zeros, times, shiftedZeros);
 
             // store shifted discount curve for this index in the scenario
             for (Size k = 0; k < n_ten; ++k) {
@@ -370,9 +388,10 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(boost::shared_ptr
     LOG("Index curve scenarios done");
 }
 
-void SensitivityScenarioGenerator::generateFxVolScenarios(boost::shared_ptr<Market> market) {
+void SensitivityScenarioGenerator::generateFxVolScenarios(bool up, boost::shared_ptr<Market> market) {
     string domestic = simMarketData_->baseCcy();
     ShiftType shiftType = parseShiftType(sensitivityData_->fxVolShiftType());
+    string direction = up ? "/UP" : "/DOWN";
 
     Size n_fxvol_pairs = simMarketData_->ccyPairs().size();
     Size n_fxvol_exp = simMarketData_->fxVolExpiries().size();
@@ -405,11 +424,11 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(boost::shared_ptr<Mark
         for (Size j = 0; j < shiftTenors.size(); ++j) {
             // each shift tenor is associated with a scenario
             ostringstream o;
-            o << sensitivityData_->fxVolLabel() << "/" << ccypair << "/" << shiftTenors[j];
+            o << sensitivityData_->fxVolLabel() << "/" << ccypair << "/" << shiftTenors[j] << direction;
             string label = o.str();
             boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_, label);
             // apply shift at tenor point j
-            applyShift(j, shiftSize, shiftType, shiftTimes, values, times, shiftedValues);
+            applyShift(j, shiftSize, up, shiftType, shiftTimes, values, times, shiftedValues);
             for (Size k = 0; k < n_fxvol_exp; ++k)
                 scenario->add(fxVolKeys_[i * n_fxvol_exp + k], shiftedValues[k]);
 
@@ -423,9 +442,10 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(boost::shared_ptr<Mark
     LOG("FX vol scenarios done");
 }
 
-void SensitivityScenarioGenerator::generateSwaptionVolScenarios(boost::shared_ptr<Market> market) {
+void SensitivityScenarioGenerator::generateSwaptionVolScenarios(bool up, boost::shared_ptr<Market> market) {
     ShiftType shiftType = parseShiftType(sensitivityData_->swaptionVolShiftType());
     Real shiftSize = sensitivityData_->swaptionVolShiftSize();
+    string direction = up ? "/UP" : "/DOWN";
     Size n_swvol_ccy = simMarketData_->swapVolCcys().size();
     Size n_swvol_term = simMarketData_->swapVolTerms().size();
     Size n_swvol_exp = simMarketData_->swapVolExpiries().size();
@@ -475,11 +495,11 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(boost::shared_pt
                 ostringstream o;
                 o << sensitivityData_->swaptionVolLabel() << "/" << ccy << "/"
                   << sensitivityData_->swaptionVolShiftExpiries()[j] << "/"
-                  << sensitivityData_->swaptionVolShiftTerms()[k];
+                  << sensitivityData_->swaptionVolShiftTerms()[k] << direction;
                 string label = o.str();
                 boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_, label);
-                applyShift(j, k, shiftSize, shiftType, shiftExpiryTimes, shiftTermTimes, volExpiryTimes, volTermTimes,
-                           volData, shiftedVolData);
+                applyShift(j, k, shiftSize, up, shiftType, shiftExpiryTimes, shiftTermTimes, volExpiryTimes,
+                           volTermTimes, volData, shiftedVolData);
                 // add shifted vol data to the scenario
                 for (Size jj = 0; jj < n_swvol_exp; ++jj) {
                     for (Size kk = 0; kk < n_swvol_term; ++kk) {
@@ -498,9 +518,10 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(boost::shared_pt
     LOG("Swaption vol scenarios done");
 }
 
-void SensitivityScenarioGenerator::generateCapFloorVolScenarios(boost::shared_ptr<Market> market) {
+void SensitivityScenarioGenerator::generateCapFloorVolScenarios(bool up, boost::shared_ptr<Market> market) {
     ShiftType shiftType = parseShiftType(sensitivityData_->capFloorVolShiftType());
     Real shiftSize = sensitivityData_->capFloorVolShiftSize();
+    string direction = up ? "/UP" : "/DOWN";
     Size n_cfvol_ccy = simMarketData_->capFloorVolCcys().size();
     Size n_cfvol_strikes = simMarketData_->capFloorVolStrikes().size();
     Size n_cfvol_exp = simMarketData_->capFloorVolExpiries().size();
@@ -542,10 +563,10 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(boost::shared_pt
                 ostringstream o;
                 o << sensitivityData_->capFloorVolLabel() << "/" << ccy << "/"
                   << sensitivityData_->capFloorVolShiftExpiries()[j] << "/" << setprecision(4)
-                  << sensitivityData_->capFloorVolShiftStrikes()[k];
+                  << sensitivityData_->capFloorVolShiftStrikes()[k] << direction;
                 string label = o.str();
                 boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_, label);
-                applyShift(j, k, shiftSize, shiftType, shiftExpiryTimes, shiftStrikes, volExpiryTimes, volStrikes,
+                applyShift(j, k, shiftSize, up, shiftType, shiftExpiryTimes, shiftStrikes, volExpiryTimes, volStrikes,
                            volData, shiftedVolData);
                 // add shifted vol data to the scenario
                 for (Size jj = 0; jj < n_cfvol_exp; ++jj) {
@@ -565,9 +586,9 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(boost::shared_pt
     LOG("Optionlet vol scenarios done");
 }
 
-void SensitivityScenarioGenerator::applyShift(Size j, Real shiftSize, ShiftType shiftType, const vector<Time>& tenors,
-                                              const vector<Real>& values, const vector<Real>& times,
-                                              vector<Real>& shiftedValues) {
+void SensitivityScenarioGenerator::applyShift(Size j, Real shiftSize, bool up, ShiftType shiftType,
+                                              const vector<Time>& tenors, const vector<Real>& values,
+                                              const vector<Real>& times, vector<Real>& shiftedValues) {
     // FIXME: Check case where the shift curve is more granular than the original
 
     QL_REQUIRE(j < tenors.size(), "index j out of range");
@@ -579,11 +600,13 @@ void SensitivityScenarioGenerator::applyShift(Size j, Real shiftSize, ShiftType 
     Time t1 = tenors[j];
 
     if (tenors.size() == 1) { // single shift tenor means parallel shift
-        for (Size k = 0; k < times.size(); k++)
+        Real w = up ? 1.0 : -1.0;
+        for (Size k = 0; k < times.size(); k++) {
             if (shiftType == ShiftType::Absolute)
-                shiftedValues[k] += shiftSize;
+                shiftedValues[k] += w * shiftSize;
             else
-                shiftedValues[k] *= (1.0 + shiftSize);
+                shiftedValues[k] *= (1.0 + w * shiftSize);
+        }
     } else if (j == 0) { // first shift tenor, flat extrapolation to the left
         Time t2 = tenors[j + 1];
         for (Size k = 0; k < times.size(); k++) {
@@ -592,6 +615,8 @@ void SensitivityScenarioGenerator::applyShift(Size j, Real shiftSize, ShiftType 
                 w = 1.0;
             else if (times[k] <= t2) // linear interpolation in t1 < times[k] < t2
                 w = (t2 - times[k]) / (t2 - t1);
+            if (!up)
+                w *= -1.0;
             if (shiftType == ShiftType::Absolute)
                 shiftedValues[k] += w * shiftSize;
             else
@@ -605,6 +630,8 @@ void SensitivityScenarioGenerator::applyShift(Size j, Real shiftSize, ShiftType 
                 w = (times[k] - t0) / (t1 - t0);
             else if (times[k] > t1) // full shift
                 w = 1.0;
+            if (!up)
+                w *= -1.0;
             if (shiftType == ShiftType::Absolute)
                 shiftedValues[k] += w * shiftSize;
             else
@@ -619,6 +646,8 @@ void SensitivityScenarioGenerator::applyShift(Size j, Real shiftSize, ShiftType 
                 w = (times[k] - t0) / (t1 - t0);
             else if (times[k] > t1 && times[k] <= t2) // linear interpolation in t1 < times[k] < t2
                 w = (t2 - times[k]) / (t2 - t1);
+            if (!up)
+                w *= -1.0;
             if (shiftType == ShiftType::Absolute)
                 shiftedValues[k] += w * shiftSize;
             else
@@ -627,7 +656,7 @@ void SensitivityScenarioGenerator::applyShift(Size j, Real shiftSize, ShiftType 
     }
 }
 
-void SensitivityScenarioGenerator::applyShift(Size i, Size j, Real shiftSize, ShiftType shiftType,
+void SensitivityScenarioGenerator::applyShift(Size i, Size j, Real shiftSize, bool up, ShiftType shiftType,
                                               const vector<Time>& shiftX, const vector<Time>& shiftY,
                                               const vector<Time>& dataX, const vector<Time>& dataY,
                                               const vector<vector<Real> >& data, vector<vector<Real> >& shiftedData) {
@@ -641,14 +670,16 @@ void SensitivityScenarioGenerator::applyShift(Size i, Size j, Real shiftSize, Sh
             shiftedData[k][l] = data[k][l];
     }
 
-    // single or no shift point means parallel shift
+    // single shift point means parallel shift
     if (shiftX.size() == 1 && shiftY.size() == 1) {
+        Real w = up ? 1.0 : -1.0;
         for (Size k = 0; k < dataX.size(); ++k) {
-            for (Size l = 0; l < dataY.size(); ++l)
+            for (Size l = 0; l < dataY.size(); ++l) {
                 if (shiftType == ShiftType::Absolute)
-                    shiftedData[k][l] += shiftSize;
+                    shiftedData[k][l] += w * shiftSize;
                 else
-                    shiftedData[k][l] *= (1.0 + shiftSize);
+                    shiftedData[k][l] *= (1.0 + w * shiftSize);
+            }
         }
         return;
     }
@@ -700,10 +731,11 @@ void SensitivityScenarioGenerator::applyShift(Size i, Size j, Real shiftSize, Sh
             QL_REQUIRE(wx >= 0.0 && wx <= 1.0, "wx out of range");
             QL_REQUIRE(wy >= 0.0 && wy <= 1.0, "wy out of range");
 
+	    Real w = up ? 1.0 : -1.0;
             if (shiftType == ShiftType::Absolute)
-                shiftedData[ix][iy] += wx * wy * shiftSize;
+                shiftedData[ix][iy] += w * wx * wy * shiftSize;
             else
-                shiftedData[ix][iy] *= (1.0 + wx * wy * shiftSize);
+                shiftedData[ix][iy] *= (1.0 + w * wx * wy * shiftSize);
         }
     }
 }

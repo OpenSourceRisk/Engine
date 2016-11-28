@@ -111,9 +111,9 @@ int main(int argc, char** argv) {
         if (params.has("setup", "logMask")) {
             logMask = static_cast<Size>(parseInteger(params.get("setup", "logMask")));
         }
-        
-        boost::filesystem::path p{outputPath};
-        if(!boost::filesystem::exists(p)) {
+
+        boost::filesystem::path p{ outputPath };
+        if (!boost::filesystem::exists(p)) {
             boost::filesystem::create_directories(p);
         }
         QL_REQUIRE(boost::filesystem::is_directory(p), "output path '" << outputPath << "' is not a directory.");
@@ -121,7 +121,7 @@ int main(int argc, char** argv) {
         Log::instance().registerLogger(boost::make_shared<FileLogger>(logFile));
         Log::instance().setMask(logMask);
         Log::instance().switchOn();
-        
+
         LOG("ORE starting");
         params.log();
 
@@ -130,7 +130,7 @@ int main(int argc, char** argv) {
             ObservationMode::instance().setMode(om);
             LOG("Observation Mode is " << om);
         }
-        
+
         string asofString = params.get("setup", "asofDate");
         Date asof = parseDate(asofString);
         Settings::instance().evaluationDate() = asof;
@@ -185,7 +185,7 @@ int main(int argc, char** argv) {
         string pricingEnginesFile = inputPath + "/" + params.get("setup", "pricingEnginesFile");
         engineData->fromFile(pricingEnginesFile);
 
-        map<MarketContext,string> configurations;
+        map<MarketContext, string> configurations;
         configurations[MarketContext::irCalibration] = params.get("markets", "lgmcalibration");
         configurations[MarketContext::fxCalibration] = params.get("markets", "fxcalibration");
         configurations[MarketContext::pricing] = params.get("markets", "pricing");
@@ -239,111 +239,54 @@ int main(int argc, char** argv) {
             cout << "SKIP" << endl;
         }
 
-	/**********************
+        /**********************
          * Sensitivity analysis
          */
         if (params.hasGroup("sensitivity") && params.get("sensitivity", "active") == "Y") {
-	  
-	    cout << setw(tab) << left << "Sensitivity Setup... " << flush;
+
+            cout << setw(tab) << left << "Sensitivity Report... " << flush;
             // We reset this here because the date grid building below depends on it.
             Settings::instance().evaluationDate() = asof;
 
-            LOG("Load Sensitivity Market Parameters");
+            LOG("Get Simulation Market Parameters");
             string marketConfigFile = inputPath + "/" + params.get("sensitivity", "marketConfigFile");
             boost::shared_ptr<ScenarioSimMarketParameters> simMarketData(new ScenarioSimMarketParameters);
             simMarketData->fromFile(marketConfigFile);
 
-            LOG("Load Sensitivity Parameters");
+            LOG("Get Sensitivity Parameters");
             string sensitivityConfigFile = inputPath + "/" + params.get("sensitivity", "sensitivityConfigFile");
             boost::shared_ptr<SensitivityScenarioData> sensiData(new SensitivityScenarioData);
             sensiData->fromFile(sensitivityConfigFile);
 
-            LOG("Build Sensitivity Scenario Generator");
-	    boost::shared_ptr<ScenarioFactory> scenarioFactory(new SimpleScenarioFactory);
-	    boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator = boost::make_shared<SensitivityScenarioGenerator>(
-		scenarioFactory, sensiData, simMarketData, asof, market);
-	    boost::shared_ptr<ScenarioGenerator> sgen(scenarioGenerator);
-	    
-            LOG("Build Simulation Market");
-            boost::shared_ptr<ScenarioSimMarket> simMarket = boost::make_shared<ScenarioSimMarket>(
-                sgen, market, simMarketData, conventions);
-
-            LOG("Build engine factory for pricing under scenarios, linked to sim market");
+            LOG("Get Engine Data");
             string sensiPricingEnginesFile = inputPath + "/" + params.get("sensitivity", "pricingEnginesFile");
             boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
             engineData->fromFile(sensiPricingEnginesFile);
 
-            map<MarketContext, string> configurations;
-            configurations[MarketContext::irCalibration] = params.get("markets", "lgmcalibration");
-            configurations[MarketContext::fxCalibration] = params.get("markets", "fxcalibration");
-            configurations[MarketContext::pricing] = params.get("markets", "simulation");
-            boost::shared_ptr<EngineFactory> simFactory =
-	      boost::make_shared<EngineFactory>(engineData, simMarket, configurations);
-
-            LOG("Build portfolio linked to sim market");
-            boost::shared_ptr<Portfolio> simPortfolio = boost::make_shared<Portfolio>();
-            simPortfolio->load(portfolioFile);
-            simPortfolio->build(simFactory);
-            QL_REQUIRE(simPortfolio->size() == portfolio->size(),
-                       "portfolio size mismatch, check simulation market setup");
-
-            LOG("Build the cube object to store sensitivities");
-	    boost::shared_ptr<NPVCube> cube = boost::make_shared<DoublePrecisionInMemoryCube>(
-		asof, simPortfolio->ids(), vector<Date>(1, asof), scenarioGenerator->samples());
-
-            LOG("Build scenario engine");
-	    ScenarioEngine engine(asof, simMarket, simMarketData->baseCcy());
-
-	    cout << "OK" << endl;
-
-            LOG("Build cube");
-            ostringstream o;
-            o << "Sensitivity analysis " << simPortfolio->size() << " x " << scenarioGenerator->samples() << "... ";
-            auto progressBar = boost::make_shared<SimpleProgressBar>(o.str(), tab);
-            auto progressLog = boost::make_shared<ProgressLog>("Sensitivity scenarios...");
-            engine.registerProgressIndicator(progressBar);
-            engine.registerProgressIndicator(progressLog);
-
-            engine.buildCube(simPortfolio, cube);
-
-            string outputFile = outputPath + "/" + params.get("sensitivity", "outputFile");
-	    ofstream file;
-	    file.open(outputFile.c_str());
-	    QL_REQUIRE(file.is_open(), "error opening file " << outputFile);
-	    file.setf(ios::fixed, ios::floatfield);
-	    file.setf(ios::showpoint);
-	    char sep = ',';
-	    file << "#TradeId" << sep
-		 << "Scenario Label" << sep
-		 << "Base NPV" << sep
-		 << "Scenario NPV" << sep
-		 << "Sensitivity" << endl; 
-	    LOG("Write sensitivity output to outputFile");
-            bool outputSmallSensi = parseBool(params.get("sensitivity", "ouputSmallSensitivity"));
-            Real outputSensiThreshold = parseReal(params.get("sensitivity", "outputSensitivityThreshold"));
-	    for (Size i = 0; i < simPortfolio->size(); ++i) {
-	        Real npv0 = cube->getT0(i, 0); 
-		string id = simPortfolio->trades()[i]->id();
-		for (Size j = 0; j < scenarioGenerator->samples(); ++j) {
-		    Real npv = cube->get(i, 0, j, 0);
-		    Real sensi = npv - npv0;
-		    string label = scenarioGenerator->scenarios()[j]->label();
-		    if (outputSmallSensi || fabs(sensi) > outputSensiThreshold)
-		        file << id << sep
-			     << label << sep
-			     << npv0 << sep
-			     << npv << sep
-			     << sensi << endl;
-		}
-	    }
-	    file.close();
-            cout << "OK" << endl;
+            LOG("Get Portfolio");
+            boost::shared_ptr<Portfolio> sensiPortfolio = boost::make_shared<Portfolio>();
+	    // Just load here. We build the portfolio in SensitivityAnalysis, after building SimMarket.
+	    sensiPortfolio->load(portfolioFile);
+	      
+            LOG("Build Sensitivity Analysis");
+	    string marketConfiguration =  params.get("markets", "pricing");
+            boost::shared_ptr<SensitivityAnalysis> sensiAnalysis =
+                boost::make_shared<SensitivityAnalysis>(sensiPortfolio, market, marketConfiguration,
+                                                        engineData, simMarketData, sensiData, conventions);
 	    
-	} else {
+            string outputFile1 = outputPath + "/" + params.get("sensitivity", "scenarioOutputFile");
+	    Real sensiThreshold = parseReal(params.get("sensitivity", "outputSensitivityThreshold"));
+	    sensiAnalysis->writeScenarioReport(outputFile1, sensiThreshold);
+
+	    string outputFile2 = outputPath + "/" + params.get("sensitivity", "sensitivityOutputFile");
+	    sensiAnalysis->writeSensitivityReport(outputFile2, sensiThreshold);
+
+            cout << "OK" << endl;
+
+        } else {
             LOG("skip sensitivity report");
-            cout << "SKIP" << endl;
-        }
-	
+	}
+
         /******************************************
          * Simulation: Scenario and Cube Generation
          */
@@ -375,8 +318,8 @@ int main(int argc, char** argv) {
             sgd->fromFile(simulationConfigFile);
             ScenarioGeneratorBuilder sgb(sgd);
             boost::shared_ptr<ScenarioFactory> sf = boost::make_shared<SimpleScenarioFactory>();
-            boost::shared_ptr<ScenarioGenerator> sg =
-                sgb.build(model, sf, simMarketData, asof, market, params.get("markets", "simulation")); // pricing or simulation?
+            boost::shared_ptr<ScenarioGenerator> sg = sgb.build(
+                model, sf, simMarketData, asof, market, params.get("markets", "simulation")); // pricing or simulation?
 
             // Optionally write out scenarios
             if (params.has("simulation", "scenariodump")) {
@@ -418,7 +361,7 @@ int main(int argc, char** argv) {
                 cubeDepth = 1; // NPV only
 
             // Valuation calculators
-            vector<boost::shared_ptr<ValuationCalculator>> calculators;
+            vector<boost::shared_ptr<ValuationCalculator> > calculators;
             calculators.push_back(boost::make_shared<NPVCalculator>(baseCurrency));
             if (cubeDepth > 1)
                 calculators.push_back(boost::make_shared<CashflowCalculator>(baseCurrency, asof, grid, 1));
@@ -605,7 +548,6 @@ int main(int argc, char** argv) {
             cout << "SKIP" << endl;
         }
 
-
     } catch (std::exception& e) {
         ALOG("Error: " << e.what());
         cout << "Error: " << e.what() << endl;
@@ -670,7 +612,7 @@ void writeCashflow(const Parameters& params, boost::shared_ptr<Portfolio> portfo
     file << "#ID" << sep << "Type" << sep << "LegNo" << sep << "PayDate" << sep << "Amount" << sep << "Currency" << sep
          << "Coupon" << sep << "Accrual" << sep << "fixingDate" << sep << "fixingValue" << sep << endl;
 
-    const vector<boost::shared_ptr<Trade>>& trades = portfolio->trades();
+    const vector<boost::shared_ptr<Trade> >& trades = portfolio->trades();
 
     for (Size k = 0; k < trades.size(); k++) {
         if (trades[k]->tradeType() == "Swaption" || trades[k]->tradeType() == "CapFloor") {
@@ -746,7 +688,7 @@ void writeCurves(const Parameters& params, const TodaysMarketParameters& marketC
     string gridString = params.get("curves", "grid");
     DateGrid grid(gridString);
 
-    vector<Handle<YieldTermStructure>> yieldCurves;
+    vector<Handle<YieldTermStructure> > yieldCurves;
 
     file << "Tenor" << sep << "Date";
     for (auto it : discountCurves) {
