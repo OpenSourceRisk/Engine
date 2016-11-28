@@ -835,7 +835,7 @@ void TodaysMarketTest::testEquityVolCurve() {
     CommonVars vars;
 
     BOOST_TEST_MESSAGE("Testing equity curve...");
-    Handle<BlackVolTermStructure> eqVol = market->equityVolCurve("SP5");
+    Handle<BlackVolTermStructure> eqVol = market->equityVol("SP5");
     BOOST_CHECK(eqVol.currentLink());
 
     Date d_1y = Date(27, Feb, 2017);

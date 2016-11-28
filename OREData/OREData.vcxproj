@@ -82,6 +82,8 @@
     <ClInclude Include="ored\portfolio\builders\cachingenginebuilder.hpp" />
     <ClInclude Include="ored\portfolio\builders\capfloor.hpp" />
     <ClInclude Include="ored\portfolio\builders\capfloorediborleg.hpp" />
+    <ClInclude Include="ored\portfolio\builders\equityforward.hpp" />
+    <ClInclude Include="ored\portfolio\builders\equityoption.hpp" />
     <ClInclude Include="ored\portfolio\builders\fxforward.hpp" />
     <ClInclude Include="ored\portfolio\builders\fxoption.hpp" />
     <ClInclude Include="ored\portfolio\builders\swap.hpp" />
@@ -90,6 +92,8 @@
     <ClInclude Include="ored\portfolio\enginedata.hpp" />
     <ClInclude Include="ored\portfolio\enginefactory.hpp" />
     <ClInclude Include="ored\portfolio\envelope.hpp" />
+    <ClInclude Include="ored\portfolio\equityforward.hpp" />
+    <ClInclude Include="ored\portfolio\equityoption.hpp" />
     <ClInclude Include="ored\portfolio\fxforward.hpp" />
     <ClInclude Include="ored\portfolio\fxoption.hpp" />
     <ClInclude Include="ored\portfolio\fxswap.hpp" />
@@ -166,6 +170,8 @@
     <ClCompile Include="ored\portfolio\enginedata.cpp" />
     <ClCompile Include="ored\portfolio\enginefactory.cpp" />
     <ClCompile Include="ored\portfolio\envelope.cpp" />
+    <ClCompile Include="ored\portfolio\equityforward.cpp" />
+    <ClCompile Include="ored\portfolio\equityoption.cpp" />
     <ClCompile Include="ored\portfolio\fxforward.cpp" />
     <ClCompile Include="ored\portfolio\fxoption.cpp" />
     <ClCompile Include="ored\portfolio\fxswap.cpp" />

@@ -96,7 +96,7 @@ public:
     Handle<YieldTermStructure> equityInterestRateCurve(const string& eqName, const string& configuration = Market::defaultConfiguration) const;
 
     //! Equity volatilities
-    Handle<BlackVolTermStructure> equityVolCurve(const string& eqName, const string& configuration = Market::defaultConfiguration) const;
+    Handle<BlackVolTermStructure> equityVol(const string& eqName, const string& configuration = Market::defaultConfiguration) const;
     //@}
 
     //! \name Disable copying

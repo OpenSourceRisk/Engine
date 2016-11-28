@@ -131,7 +131,7 @@ Handle<YieldTermStructure> MarketImpl::equityInterestRateCurve(const string& key
     return lookup<Handle<YieldTermStructure>>(equityInterestRateCurves_, key, configuration, "dividend yield curve");
 }
 
-Handle<BlackVolTermStructure> MarketImpl::equityVolCurve(const string& key, const string& configuration) const {
+Handle<BlackVolTermStructure> MarketImpl::equityVol(const string& key, const string& configuration) const {
     return lookup<Handle<BlackVolTermStructure>>(equityVols_, key, configuration, "equity vol curve");
 }
 
@@ -208,6 +208,19 @@ void MarketImpl::refresh(const string& configuration) {
             if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
                 it->second.insert(*x.second);
         }
+        for (auto& x : equityDividendCurves_) {
+            if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
+                it->second.insert(*x.second);
+        }
+        for (auto& x : equityInterestRateCurves_) {
+            if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
+                it->second.insert(*x.second);
+        }
+        for (auto& x : equityVols_) {
+            if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
+                it->second.insert(*x.second);
+        }
+        // why no fx spot? - why no equity spot?
     }
 
     for (auto& x : it->second)
