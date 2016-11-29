@@ -16,7 +16,7 @@
           <Notional>10000000.000000</Notional>
         </Notionals>
         <DayCounter>A360</DayCounter>
-        <PaymentConvention>F</PaymentConvention>
+        <PaymentConvention>MF</PaymentConvention>
         <FixedLegData>
           <Rates>
             <Rate>0.021</Rate>
@@ -28,8 +28,8 @@
             <EndDate>20360301</EndDate>
             <Tenor>1Y</Tenor>
             <Calendar>TARGET</Calendar>
-            <Convention>F</Convention>
-            <TermConvention>F</TermConvention>
+            <Convention>MF</Convention>
+            <TermConvention>MF</TermConvention>
             <Rule>Forward</Rule>
             <EndOfMonth/>
             <FirstDate/>

@@ -105,7 +105,7 @@
           <Type>Zero</Type>
           <Quotes>
             <Quote>ZERO/RATE/EUR/EUR1D/A360/1Y</Quote>
-            <!-- <Quote>ZERO/RATE/EUR/EUR1D/A365F/10Y</Quote> -->
+            <!-- <Quote>ZERO/RATE/EUR/EUR1D/A360/10Y</Quote> -->
           </Quotes>
           <Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
         </Direct>
@@ -125,10 +125,14 @@
           <Type>Zero</Type>
           <Quotes>
             <Quote>ZERO/RATE/EUR/EUR6M/A360/1Y</Quote>
+            <!-- <Quote>ZERO/RATE/EUR/EUR6M/A360/10Y</Quote> -->
           </Quotes>
           <Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
         </Direct>
       </Segments>
+      <InterpolationVariable>Discount</InterpolationVariable>
+      <InterpolationMethod>LogLinear</InterpolationMethod>
+      <YieldCurveDayCounter>A360</YieldCurveDayCounter>
     </YieldCurve>
     <YieldCurve>
       <CurveId>GBP1D</CurveId>
