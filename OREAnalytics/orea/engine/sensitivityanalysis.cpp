@@ -36,14 +36,12 @@ using namespace ore::data;
 namespace ore {
 namespace analytics {
 
-string remove(string input, string ending) {
-    char buf[1000];
-    if (input.find(ending) != string::npos) {
-        strncpy(buf, input.c_str(), input.length() - ending.length());
-        buf[input.length() - ending.length()] = '\0';
-        return string(buf);
-    } else
-        return input;
+string remove(const string& input, const string& ending) {
+    string output = input;
+    std::string::size_type i = output.find(ending);
+    if (i != std::string::npos)
+        output.erase(i, ending.length());
+    return output;
 }
 
 SensitivityAnalysis::SensitivityAnalysis(boost::shared_ptr<ore::data::Portfolio>& portfolio,
@@ -123,9 +121,15 @@ SensitivityAnalysis::SensitivityAnalysis(boost::shared_ptr<ore::data::Portfolio>
         Real d = downNPV_[p];
         // f'(x) = (f(x+s) - f(x)) / s
         delta_[p] = u - b; // f'(x) * s
-        // f''(x) = (f'(x) - f'(x-s)) / s = ((f(x+s) - f(x))/s - (f(x)-f(x-s))/s ) / s = ( f(x+s) - 2*f(x) + f(x-s) ) / s^2
+        // f''(x) = (f'(x) - f'(x-s)) / s = ((f(x+s) - f(x))/s - (f(x)-f(x-s))/s ) / s = ( f(x+s) - 2*f(x) + f(x-s) ) /
+        // s^2
         gamma_[p] = u - 2.0 * b + d; // f''(x) * s^2
     }
+    //
+    // f(x,y):
+    // \partial_y \partial_x f(x,y) = \partial_y (f(x+u,y) - f(x,y)) / u)
+    // = (f(x+u,y+v) - f(x,y+v) - f(x+u,y) + f(x,y)) / (u*v)
+    //
 }
 
 void SensitivityAnalysis::writeScenarioReport(string fileName, Real outputThreshold) {
