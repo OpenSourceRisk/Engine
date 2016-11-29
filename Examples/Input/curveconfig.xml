@@ -1727,4 +1727,56 @@
       </Segments>
     </YieldCurve>
   </YieldCurves>
+  <EquityCurves>
+        <EquityCurve>
+            <CurveId>SP5</CurveId>
+            <CurveDescription>SP 500 equity price projection curve</CurveDescription>
+            <Currency>USD</Currency>
+            <Type>ForwardPrice</Type> <!-- {DividendYield, ForwardPrice} -->
+            <SpotQuote>EQUITY/PRICE/SP5/USD</SpotQuote> <!--  the spot quote from the market data file -->
+            <InterestRateCurve>Yield/USD/USD1D</InterestRateCurve> <!-- the IR rate curve to be used when projecting the forward prices -->
+            <Quotes>
+                <Quote>EQUITY_FWD/PRICE/SP5/USD/2016-06-16</Quote>
+                <Quote>EQUITY_FWD/PRICE/SP5/USD/6M</Quote>
+                <Quote>EQUITY_FWD/PRICE/SP5/USD/2017-06-16</Quote>
+                <Quote>EQUITY_FWD/PRICE/SP5/USD/2Y</Quote>
+            </Quotes>
+            <DayCounter>A365</DayCounter>
+        </EquityCurve>
+        <EquityCurve>
+            <CurveId>Lufthansa</CurveId>
+            <CurveDescription>Lufthansa equity price projection curve</CurveDescription>
+            <Currency>EUR</Currency>
+            <Type>DividendYield</Type> <!-- {DividendYield, ForwardPrice} -->
+            <SpotQuote>EQUITY/PRICE/Lufthansa/EUR</SpotQuote> <!--  the spot quote from the market data file -->
+            <InterestRateCurve>Yield/EUR/EUR1D</InterestRateCurve> <!-- the IR rate curve to be used when projecting the forward prices -->
+            <Quotes>
+                <Quote>EQUITY_DIVIDEND/RATE/Lufthansa/EUR/3M</Quote>
+                <Quote>EQUITY_DIVIDEND/RATE/Lufthansa/EUR/20160915</Quote>
+                <Quote>EQUITY_DIVIDEND/RATE/Lufthansa/EUR/1Y</Quote>
+                <Quote>EQUITY_DIVIDEND/RATE/Lufthansa/EUR/20170915</Quote>
+            </Quotes>
+            <DayCounter>A365</DayCounter>
+        </EquityCurve> 
+  </EquityCurves>
+  <EquityVolatilities>
+        <EquityVolatility>
+            <CurveId>SP5</CurveId>
+            <CurveDescription>Lognormal option implied vols for SP 500</CurveDescription>
+            <Currency>USD</Currency>
+            <Dimension>ATM</Dimension>
+            <Expiries>
+              6M
+            </Expiries>
+        </EquityVolatility>
+        <EquityVolatility>
+            <CurveId>Lufthansa</CurveId>
+            <CurveDescription/>
+            <Currency>EUR</Currency>
+            <Dimension>ATM</Dimension>
+            <Expiries>
+              2016-06-15
+            </Expiries>
+        </EquityVolatility>
+  </EquityVolatilities>
 </CurveConfiguration>

@@ -144,4 +144,12 @@
     <DefaultCurve name="CPTY_A">Default/USD/CPTY_A_SR_USD</DefaultCurve>
     <DefaultCurve name="CPTY_B">Default/USD/CPTY_A_SR_USD</DefaultCurve>
   </DefaultCurves>
+  <EquityCurves id="default">
+      <EquityCurve name="SP5">Equity/USD/SP5</EquityCurve>
+      <EquityCurve name="Lufthansa">Equity/EUR/Lufthansa</EquityCurve>
+  </EquityCurves>
+  <EquityVolatilities id="default">
+      <EquityVolatility name="SP5">EquityVolatility/USD/SP5</EquityVolatility>
+      <EquityVolatility name="Lufthansa">EquityVolatility/EUR/Lufthansa</EquityVolatility>
+  </EquityVolatilities>
 </TodaysMarket>

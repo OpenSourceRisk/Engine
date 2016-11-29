@@ -23,6 +23,7 @@
 #include <ql/math/interpolations/loginterpolation.hpp>
 #include <ql/math/interpolations/backwardflatinterpolation.hpp>
 
+#include<ored/utilities/parsers.hpp>
 
 #include <algorithm>
 
@@ -41,14 +42,11 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader,
         const boost::shared_ptr<EquityCurveConfig>& config = curveConfigs.equityCurveConfig(spec.curveConfigID());
 
         DayCounter conv_dc = Actual365Fixed();
-        if (config->conventionID() == "") {
-            DLOG("No conventions specified for " << spec.curveConfigID() << ", using hardcoded defaults");
+        if (config->dayCountID() == "") {
+            DLOG("No Day Count convention specified for " << spec.curveConfigID() << ", using A365F as default");
         }
         else {
-            boost::shared_ptr<Convention> tmp = conventions.get(config->conventionID());
-            boost::shared_ptr<ZeroRateConvention> zeroConv = boost::dynamic_pointer_cast<ZeroRateConvention>(tmp);
-            QL_REQUIRE(zeroConv != NULL, "Yield implied default curve requires ZERO convention (wrong type)");
-            conv_dc = zeroConv->dayCounter();
+            conv_dc = parseDayCounter(config->dayCountID());
         }
 
         equityIrCurveStr_ = config->equityInterestRateCurveID();
@@ -197,9 +195,9 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader,
             divCurve_->enableExtrapolation();
         }
     } catch (std::exception& e) {
-        QL_FAIL("default curve building failed: " << e.what());
+        QL_FAIL("equity curve building failed: " << e.what());
     } catch (...) {
-        QL_FAIL("default curve building failed: unknown error");
+        QL_FAIL("equity curve building failed: unknown error");
     }
 }
 }

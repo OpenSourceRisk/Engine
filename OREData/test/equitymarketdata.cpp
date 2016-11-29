@@ -90,7 +90,7 @@ std::string divYieldCurveConfigString =
 "<Quote>EQUITY_DIVIDEND/RATE/SP5/USD/2Y</Quote>"
 "<Quote>EQUITY_DIVIDEND/RATE/SP5/USD/5Y</Quote>"
 "</Quotes>"
-"<Conventions>GenericZeroConventions</Conventions>"
+"<DayCounter>A365</DayCounter>"
 "</EquityCurve>"
 "</EquityCurves>"
 "</CurveConfiguration>";
@@ -175,7 +175,7 @@ void EquityMarketDataTest::testEqCurveConfigLoad() {
     bool testType = (ec->type() == ore::data::EquityCurveConfig::Type::DividendYield);
     BOOST_CHECK(testType);
     //BOOST_CHECK_EQUAL(ore::data::EquityCurveConfig::Type::DividendYield, ec->type());
-    BOOST_CHECK_EQUAL("GenericZeroConventions", ec->conventionID());
+    BOOST_CHECK_EQUAL("A365", ec->dayCountID());
     vector<string> anticipatedQuotes = boost::assign::list_of
         ("EQUITY_DIVIDEND/RATE/SP5/USD/1M")
         ("EQUITY_DIVIDEND/RATE/SP5/USD/2016-09-15")

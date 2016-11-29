@@ -190,7 +190,7 @@ void TodaysMarketParameters::fromXML(XMLNode* node) {
             string id = XMLUtils::getAttribute(n, "id");
             if (id == "")
                 id = Market::defaultConfiguration;
-            addEquityCurves(id, XMLUtils::getChildrenAttributesAndValues(n, "EquityVolatility", "name", false));
+            addEquityVolatilities(id, XMLUtils::getChildrenAttributesAndValues(n, "EquityVolatility", "name", false));
         } else
             QL_FAIL("TodaysMarketParameters::fromXML(): node not recognized: " << XMLUtils::getNodeName(n));
         n = XMLUtils::getNextSibling(n);

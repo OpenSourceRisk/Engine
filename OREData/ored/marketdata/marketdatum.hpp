@@ -781,7 +781,7 @@ public:
     //! Constructor
     EquityDividendYieldQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string equityName, string ccy,
         const Date& tenorDate)
-        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::EQUITY_FWD), eqName_(equityName), ccy_(ccy),
+        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::EQUITY_DIVIDEND), eqName_(equityName), ccy_(ccy),
         tenor_(tenorDate) {}
 
     //! \name Inspectors

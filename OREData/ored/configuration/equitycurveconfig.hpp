@@ -55,7 +55,7 @@ public:
     //! Detailed constructor
     EquityCurveConfig(const string& curveID, const string& curveDescription, const string& currency, const Type& type,
                        const string& equitySpotQuote, const string& equityInterestRateCurve,
-                       const vector<string>& quotes, const string& conventionID = "", bool extrapolation = true);
+                       const vector<string>& quotes, const string& dayCountID = "", bool extrapolation = true);
     //! Default constructor
     EquityCurveConfig() {}
     //! Default destructor
@@ -76,7 +76,7 @@ public:
     const Type& type() const { return type_; }
     const string& equitySpotQuoteID() const { return equitySpotQuoteID_; }
     const string& equityInterestRateCurveID() const { return equityInterestRateCurveID_; }
-    const string& conventionID() const { return conventionID_; }
+    const string& dayCountID() const { return dayCountID_; }
     const vector<string>& quotes() const { return quotes_; }
     bool extrapolation() const { return extrapolation_; }
     //@}
@@ -89,7 +89,7 @@ public:
     Type& type() { return type_; }
     string& equitySpotQuoteID() { return equitySpotQuoteID_; }
     string& equityInterestRateCurveID() { return equityInterestRateCurveID_; }
-    string& conventionID() { return conventionID_; }
+    string& dayCountID() { return dayCountID_; }
     vector<string>& quotes() { return quotes_; }
     bool& extrapolation() { return extrapolation_; }
     //@}
@@ -101,7 +101,7 @@ private:
     Type type_;
     string equitySpotQuoteID_;
     string equityInterestRateCurveID_;
-    string conventionID_;
+    string dayCountID_;
     vector<string> quotes_;
     bool extrapolation_;
 };

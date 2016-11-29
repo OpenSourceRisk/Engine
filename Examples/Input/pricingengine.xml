@@ -62,4 +62,16 @@
     <Engine>BlackIborCouponPricer</Engine>
     <EngineParameters/>
   </Product>
+  <Product type="EquityForward">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingEquityForwardEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="EquityOption">
+    <Model>GarmanKohlhagen</Model>
+    <ModelParameters/>
+    <Engine>AnalyticMultiCurveEuropeanEngine</Engine>
+    <EngineParameters/>
+  </Product>
 </PricingEngines>

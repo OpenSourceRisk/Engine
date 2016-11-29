@@ -27,10 +27,10 @@ namespace data {
 EquityCurveConfig::EquityCurveConfig(const string& curveID, const string& curveDescription, 
     const string& currency, const EquityCurveConfig::Type& type,
     const string& equitySpotQuote, const string& equityInterestRateCurve,
-    const vector<string>& quotes, const string& conventionID, bool extrapolation)
+    const vector<string>& quotes, const string& dayCountID, bool extrapolation)
     : curveID_(curveID), curveDescription_(curveDescription), currency_(currency), type_(type),
     equitySpotQuoteID_(equitySpotQuote), equityInterestRateCurveID_(equityInterestRateCurve),
-    quotes_(quotes), conventionID_(conventionID), extrapolation_(extrapolation) {}
+    quotes_(quotes), dayCountID_(dayCountID), extrapolation_(extrapolation) {}
 
 void EquityCurveConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "EquityCurve");
@@ -50,7 +50,7 @@ void EquityCurveConfig::fromXML(XMLNode* node) {
 
     equityInterestRateCurveID_ = XMLUtils::getChildValue(node, "InterestRateCurve", true);
     equitySpotQuoteID_ = XMLUtils::getChildValue(node, "SpotQuote", true);
-    conventionID_ = XMLUtils::getChildValue(node, "Conventions", false);
+    dayCountID_ = XMLUtils::getChildValue(node, "DayCounter", false);
     quotes_ = XMLUtils::getChildrenValues(node, "Quotes", "Quote", true);
     extrapolation_ = XMLUtils::getChildValueAsBool(node, "Extrapolation"); // defaults to true
 }
@@ -71,7 +71,7 @@ XMLNode* EquityCurveConfig::toXML(XMLDocument& doc) {
 
     XMLUtils::addChild(doc, node, "SpotQuote", equitySpotQuoteID_);
     XMLUtils::addChild(doc, node, "InterestRateCurve", equityInterestRateCurveID_);
-    XMLUtils::addChild(doc, node, "Conventions", conventionID_);
+    XMLUtils::addChild(doc, node, "DayCounter", dayCountID_);
     XMLUtils::addChildren(doc, node, "Quotes", "Quote", quotes_);
     XMLUtils::addChild(doc, node, "Extrapolation", extrapolation_);
 

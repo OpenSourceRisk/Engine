@@ -181,7 +181,7 @@ void CurveConfigurations::fromXML(XMLNode* node) {
     // Load EquityVolCurves
     XMLNode* equityVolsNode = XMLUtils::getChildNode(node, "EquityVolatilities");
     if (equityVolsNode) {
-        for (XMLNode* child = XMLUtils::getChildNode(equityCurvesNode, "EquityVolatility"); child;
+        for (XMLNode* child = XMLUtils::getChildNode(equityVolsNode, "EquityVolatility"); child;
             child = XMLUtils::getNextSibling(child, "EquityVolatility")) {
             boost::shared_ptr<EquityVolatilityCurveConfig> equityVolConfig(new EquityVolatilityCurveConfig());
             try {

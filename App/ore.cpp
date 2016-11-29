@@ -569,7 +569,8 @@ void writeCashflow(const Parameters& params, boost::shared_ptr<Portfolio> portfo
     const vector<boost::shared_ptr<Trade>>& trades = portfolio->trades();
 
     for (Size k = 0; k < trades.size(); k++) {
-        if (trades[k]->tradeType() == "Swaption" || trades[k]->tradeType() == "CapFloor") {
+        if (trades[k]->tradeType() == "Swaption" || trades[k]->tradeType() == "CapFloor" ||
+            trades[k]->tradeType() == "EquityOption" || trades[k]->tradeType() == "EquityForward") {
             WLOG("cashflow for " << trades[k]->tradeType() << " " << trades[k]->id() << " skipped");
             continue;
         }
