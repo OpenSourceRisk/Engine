@@ -69,7 +69,7 @@
     <EngineParameters/>
   </Product>
   <Product type="EquityOption">
-    <Model>GarmanKohlhagen</Model>
+    <Model>BlackScholesMerton</Model>
     <ModelParameters/>
     <Engine>AnalyticMultiCurveEuropeanEngine</Engine>
     <EngineParameters/>
