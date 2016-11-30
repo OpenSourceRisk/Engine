@@ -383,7 +383,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
 
     // building fx volatilities
     LOG("building fx volatilities...");
-    for (const auto& ccyPair : parameters->ccyPairs()) {
+    for (const auto& ccyPair : parameters->fxVolCcyPairs()) {
         Handle<BlackVolTermStructure> wrapper = initMarket->fxVol(ccyPair, configuration);
 
         Handle<BlackVolTermStructure> fvh;
@@ -452,7 +452,6 @@ void ScenarioSimMarket::update(const Date& d) {
     const vector<RiskFactorKey>& keys = scenario->keys();
 
     Size count = 0;
-    Real tolerance = 1e-8;
     for (const auto& key : keys) {
         // TODO: Is this really an error?
         auto it = simData_.find(key);

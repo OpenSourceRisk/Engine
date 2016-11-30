@@ -172,7 +172,9 @@ boost::shared_ptr<Portfolio> buildPortfolio(boost::shared_ptr<EngineFactory>& fa
     parameters->fxVolDecayMode() = "ConstantVariance";
     parameters->simulateFXVols() = false;
 
-    parameters->ccyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY"};
+    parameters->fxVolCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY"};
+
+    parameters->fxCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY"};
 
     parameters->additionalScenarioDataIndices() = {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M", "CHF-LIBOR-6M", "JPY-LIBOR-6M"};
     parameters->additionalScenarioDataCcys() = {"EUR", "GBP", "USD", "CHF", "JPY"};

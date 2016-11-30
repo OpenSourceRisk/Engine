@@ -75,7 +75,9 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> scenarioParameters() {
     parameters->fxVolExpiries() = {2 * Years, 3 * Years, 4 * Years};
     parameters->fxVolDecayMode() = "ConstantVariance";
 
-    parameters->ccyPairs() = {"EURUSD"};
+    parameters->fxVolCcyPairs() = {"EURUSD"};
+
+    parameters->fxCcyPairs() = {"EURUSD"};
 
     return parameters;
 }
@@ -155,7 +157,7 @@ void testSwaptionVolCurve(boost::shared_ptr<ore::data::Market>& initMarket,
 void testFxVolCurve(boost::shared_ptr<data::Market>& initMarket,
                     boost::shared_ptr<analytics::ScenarioSimMarket>& simMarket,
                     boost::shared_ptr<analytics::ScenarioSimMarketParameters>& parameters) {
-    for (const auto& ccyPair : parameters->ccyPairs()) {
+    for (const auto& ccyPair : parameters->fxVolCcyPairs()) {
         Handle<BlackVolTermStructure> simCurve = simMarket->fxVol(ccyPair);
         Handle<BlackVolTermStructure> initCurve = initMarket->fxVol(ccyPair);
         vector<Date> dates;

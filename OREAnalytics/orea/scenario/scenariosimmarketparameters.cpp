@@ -38,7 +38,8 @@ bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& 
         capFloorVolStrikes_ != rhs.capFloorVolStrikes_ || capFloorVolDecayMode_ != rhs.capFloorVolDecayMode_ ||
         defaultNames_ != rhs.defaultNames_ || defaultTenors_ != rhs.defaultTenors_ ||
         fxVolSimulate_ != rhs.fxVolSimulate_ || fxVolExpiries_ != rhs.fxVolExpiries_ ||
-        fxVolDecayMode_ != rhs.fxVolDecayMode_ || ccyPairs_ != rhs.ccyPairs_ ||
+        fxVolDecayMode_ != rhs.fxVolDecayMode_ || fxVolCcyPairs_ != rhs.fxVolCcyPairs_ ||
+        fxCcyPairs_ != rhs.fxCcyPairs_ ||
         additionalScenarioDataIndices_ != rhs.additionalScenarioDataIndices_ ||
         additionalScenarioDataCcys_ != rhs.additionalScenarioDataCcys_) {
         return false;
@@ -77,6 +78,9 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         }
     }
 
+    nodeChild = XMLUtils::getChildNode(node, "FxRates");
+    fxCcyPairs_ = XMLUtils::getChildrenValues(nodeChild, "CurrencyPairs", "CurrencyPair", true);
+
     nodeChild = XMLUtils::getChildNode(node, "SwaptionVolatilities");
     swapVolSimulate_ = XMLUtils::getChildValueAsBool(nodeChild, "Simulate", true);
     swapVolTerms_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Terms", true);
@@ -101,7 +105,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     fxVolSimulate_ = XMLUtils::getChildValueAsBool(nodeChild, "Simulate", true);
     fxVolExpiries_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Expiries", true);
     fxVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
-    ccyPairs_ = XMLUtils::getChildrenValues(nodeChild, "CurrencyPairs", "CurrencyPair", true);
+    fxVolCcyPairs_ = XMLUtils::getChildrenValues(nodeChild, "CurrencyPairs", "CurrencyPair", true);
 
     additionalScenarioDataIndices_ = XMLUtils::getChildrenValues(node, "AggregationScenarioDataIndices", "Index");
     additionalScenarioDataCcys_ =
@@ -151,8 +155,12 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
     XMLNode* fxVolatilitiesNode = XMLUtils::addChild(doc, marketNode, "FxVolatilities");
     XMLUtils::addChild(doc, fxVolatilitiesNode, "Simulate", fxVolSimulate_);
     XMLUtils::addChild(doc, fxVolatilitiesNode, "ReactionToTimeDecay", fxVolDecayMode_);
-    XMLUtils::addChildren(doc, fxVolatilitiesNode, "CurrencyPairs", "CurrencyPair", ccyPairs_);
+    XMLUtils::addChildren(doc, fxVolatilitiesNode, "CurrencyPairs", "CurrencyPair", fxVolCcyPairs_);
     XMLUtils::addGenericChildAsList(doc, fxVolatilitiesNode, "Expiries", fxVolExpiries_);
+
+    // fx volatilities
+    XMLNode* fxRatesNode = XMLUtils::addChild(doc, marketNode, "FxRates");
+    XMLUtils::addChildren(doc, fxRatesNode, "CurrencyPairs", "CurrencyPair", fxCcyPairs_);
 
     // additional scenario data currencies
     XMLUtils::addChildren(doc, marketNode, "AggregationScenarioDataCurrencies", "Currency",

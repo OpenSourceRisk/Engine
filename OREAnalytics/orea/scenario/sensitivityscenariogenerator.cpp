@@ -121,12 +121,12 @@ void SensitivityScenarioGenerator::init(boost::shared_ptr<Market> market) {
     }
 
     // Cache FX (ATM) vol keys
-    Size n_fxvol_pairs = simMarketData_->ccyPairs().size();
+    Size n_fxvol_pairs = simMarketData_->fxVolCcyPairs().size();
     Size n_fxvol_exp = simMarketData_->fxVolExpiries().size();
     fxVolKeys_.reserve(n_fxvol_pairs * n_fxvol_exp);
     count = 0;
     for (Size j = 0; j < n_fxvol_pairs; ++j) {
-        string ccypair = simMarketData_->ccyPairs()[j];
+        string ccypair = simMarketData_->fxVolCcyPairs()[j];
         Real strike = 0.0; // FIXME
         Handle<BlackVolTermStructure> ts = market->fxVol(ccypair, configuration_);
         for (Size k = 0; k < n_fxvol_exp; ++k) {
@@ -188,6 +188,41 @@ void SensitivityScenarioGenerator::init(boost::shared_ptr<Market> market) {
     if (simMarketData_->simulateCapFloorVols()) {
         generateCapFloorVolScenarios(true, market);
         generateCapFloorVolScenarios(false, market);
+    }
+
+    // add simultaneous up-moves in two risk factors for cross gamma calculation
+    vector<RiskFactorKey> keys = baseScenario_->keys();
+    Size index = scenarios_.size();
+    for (Size i = 0; i < index; ++i) {
+        for (Size j = i + 1; j < index; ++j) {
+            if (i == j ||
+		scenarios_[i]->label().find("/UP") == string::npos ||
+                scenarios_[j]->label().find("/UP") == string::npos)
+                continue;
+            // filter desired cross shift combinations
+            bool match = false;
+            for (Size k = 0; k < sensitivityData_->crossGammaFilter().size(); ++k) {
+                if ((scenarios_[i]->label().find(sensitivityData_->crossGammaFilter()[k].first) != string::npos &&
+                     scenarios_[j]->label().find(sensitivityData_->crossGammaFilter()[k].second) != string::npos) ||
+                    (scenarios_[i]->label().find(sensitivityData_->crossGammaFilter()[k].second) != string::npos &&
+                     scenarios_[j]->label().find(sensitivityData_->crossGammaFilter()[k].first) != string::npos)) {
+                    match = true;
+                    break;
+                }
+            }
+            if (!match)
+                continue;
+            string crossLabel = "CROSS:" + scenarios_[i]->label() + ":" + scenarios_[j]->label();
+            boost::shared_ptr<Scenario> crossScenario = scenarioFactory_->buildScenario(today_, crossLabel);
+            for (Size k = 0; k < keys.size(); ++k) {
+                Real baseValue = baseScenario_->get(keys[k]);
+                Real iValue = scenarios_[i]->get(keys[k]);
+                Real jValue = scenarios_[j]->get(keys[k]);
+                crossScenario->add(keys[k], iValue + jValue - baseValue);
+            }
+            scenarios_.push_back(crossScenario);
+            LOG("Sensitivity scenario # " << scenarios_.size() << ", label " << crossScenario->label() << " created");
+        }
     }
 }
 
@@ -302,7 +337,7 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(bool up, boost
 
             // each shift tenor is associated with a scenario
             ostringstream o;
-            o << sensitivityData_->discountLabel() << "/" << ccy << "/" << shiftTenors[j] <<  direction;
+            o << sensitivityData_->discountLabel() << "/" << ccy << "/" << shiftTenors[j] << direction;
             string label = o.str();
             boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_, label);
 
@@ -393,7 +428,7 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(bool up, boost::shared
     ShiftType shiftType = parseShiftType(sensitivityData_->fxVolShiftType());
     string direction = up ? "/UP" : "/DOWN";
 
-    Size n_fxvol_pairs = simMarketData_->ccyPairs().size();
+    Size n_fxvol_pairs = simMarketData_->fxVolCcyPairs().size();
     Size n_fxvol_exp = simMarketData_->fxVolExpiries().size();
 
     std::vector<Real> values(n_fxvol_exp);
@@ -408,7 +443,7 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(bool up, boost::shared
     QL_REQUIRE(shiftTenors.size() > 0, "FX vol shift tenors not specified");
 
     for (Size i = 0; i < n_fxvol_pairs; ++i) {
-        string ccypair = simMarketData_->ccyPairs()[i];
+        string ccypair = simMarketData_->fxVolCcyPairs()[i];
         Handle<BlackVolTermStructure> ts = market->fxVol(ccypair, configuration_);
         DayCounter dc = ts->dayCounter();
         Real strike = 0.0; // FIXME
@@ -731,7 +766,7 @@ void SensitivityScenarioGenerator::applyShift(Size i, Size j, Real shiftSize, bo
             QL_REQUIRE(wx >= 0.0 && wx <= 1.0, "wx out of range");
             QL_REQUIRE(wy >= 0.0 && wy <= 1.0, "wy out of range");
 
-	    Real w = up ? 1.0 : -1.0;
+            Real w = up ? 1.0 : -1.0;
             if (shiftType == ShiftType::Absolute)
                 shiftedData[ix][iy] += w * wx * wy * shiftSize;
             else

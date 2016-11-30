@@ -73,9 +73,9 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     // set up CrossAssetModelImpliedFxVolTermStructures
     if (simMarketConfig_->simulateFXVols()) {
         LOG("CrossAssetModel is simulating FX vols");
-        for (Size k = 0; k < simMarketConfig_->ccyPairs().size(); k++) {
+        for (Size k = 0; k < simMarketConfig_->fxVolCcyPairs().size(); k++) {
             // Calculating the index is messy
-            const string& pair = simMarketConfig_->ccyPairs()[k];
+            const string& pair = simMarketConfig_->fxVolCcyPairs()[k];
             LOG("Set up CrossAssetModelImpliedFxVolTermStructures for " << pair);
             QL_REQUIRE(pair.size() == 6, "Invalid ccypair " << pair);
             const string& domestic = pair.substr(0, 3);
@@ -167,8 +167,8 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
         // FX vols
         if (simMarketConfig_->simulateFXVols()) {
             const vector<Period>& expires = simMarketConfig_->fxVolExpiries();
-            for (Size k = 0; k < simMarketConfig_->ccyPairs().size(); k++) {
-                const string& ccyPair = simMarketConfig_->ccyPairs()[k];
+            for (Size k = 0; k < simMarketConfig_->fxVolCcyPairs().size(); k++) {
+                const string& ccyPair = simMarketConfig_->fxVolCcyPairs()[k];
 
                 Size fxIndex = fxVols_[k]->fxIndex();
                 Real zFor = sample.value[fxIndex + 1][i + 1];

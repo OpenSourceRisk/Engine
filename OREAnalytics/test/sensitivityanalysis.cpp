@@ -111,7 +111,9 @@ void SensitivityAnalysisTest::testPortfolioSensitivity() {
     simMarketData->fxVolExpiries() = { 1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years };
     simMarketData->fxVolDecayMode() = "ConstantVariance";
     simMarketData->simulateFXVols() = true; // false;
-    simMarketData->ccyPairs() = { "EURUSD", "EURGBP", "EURCHF", "EURJPY" };
+    simMarketData->fxVolCcyPairs() = { "EURUSD", "EURGBP", "EURCHF", "EURJPY" };
+
+    simMarketData->fxCcyPairs() = { "EURUSD", "EURGBP", "EURCHF", "EURJPY" };
 
     simMarketData->simulateCapFloorVols() = false;
 
@@ -486,7 +488,9 @@ void SensitivityAnalysisTest::test1dShifts() {
     simMarketData->fxVolExpiries() = { 1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years };
     simMarketData->fxVolDecayMode() = "ConstantVariance";
     simMarketData->simulateFXVols() = true;
-    simMarketData->ccyPairs() = { "EURGBP" };
+    simMarketData->fxVolCcyPairs() = { "EURGBP" };
+
+    simMarketData->fxCcyPairs() = { "EURGBP" };
 
     simMarketData->simulateCapFloorVols() = false;
 
@@ -629,7 +633,9 @@ void SensitivityAnalysisTest::test2dShifts() {
     simMarketData->fxVolExpiries() = { 1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years };
     simMarketData->fxVolDecayMode() = "ConstantVariance";
     simMarketData->simulateFXVols() = true;
-    simMarketData->ccyPairs() = { "EURGBP" };
+    simMarketData->fxVolCcyPairs() = { "EURGBP" };
+
+    simMarketData->fxCcyPairs() = { "EURGBP" };
 
     simMarketData->simulateCapFloorVols() = false;
 

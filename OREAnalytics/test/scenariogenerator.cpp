@@ -860,7 +860,8 @@ void ScenarioGeneratorTest::testFxForwardExposure() {
     simMarketConfig->swapVolTerms() = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years};
     simMarketConfig->fxVolExpiries() = {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
     simMarketConfig->fxVolDecayMode() = "ForwardVariance";
-    simMarketConfig->ccyPairs() = std::vector<string>(1, "USDEUR");
+    simMarketConfig->fxVolCcyPairs() = { "USDEUR" };
+    simMarketConfig->fxCcyPairs() = { "USDEUR", "GBPEUR" };
     simMarketConfig->simulateFXVols() = false;
 
     BOOST_TEST_MESSAGE("set up scenario generator builder");

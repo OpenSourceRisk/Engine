@@ -268,7 +268,9 @@ void test_performance(Size portfolioSize) {
     parameters->fxVolDecayMode() = "ConstantVariance";
     parameters->simulateFXVols() = false;
 
-    parameters->ccyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY"};
+    parameters->fxVolCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY"};
+
+    parameters->fxCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY"};
 
     // Config
 

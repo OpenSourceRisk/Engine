@@ -83,21 +83,26 @@ SensitivityAnalysis::SensitivityAnalysis(boost::shared_ptr<ore::data::Portfolio>
     // no progress bar here
     engine.buildCube(portfolio, cube);
 
-    // first pass: fill base, up and down NPVs
+    // base NPV, up NPV, down NPV, delta, cross gamma
     baseNPV_.clear();
     for (Size i = 0; i < portfolio->size(); ++i) {
         Real npv0 = cube->getT0(i, 0);
         string id = portfolio->trades()[i]->id();
         trades_.insert(id);
         baseNPV_[id] = npv0;
+        // single shift scenarios: up, down, delta
         for (Size j = 0; j < scenarioGenerator->samples(); ++j) {
-            Real npv = cube->get(i, 0, j, 0);
             string label = scenarioGenerator->scenarios()[j]->label();
+            // skip cross scenarios here
+            if (label.find("CROSS") != string::npos)
+                continue;
+            Real npv = cube->get(i, 0, j, 0);
             if (label.find("/UP") != string::npos) {
                 string factor = remove(label, "/UP");
                 factors_.insert(factor);
                 pair<string, string> p(id, factor);
                 upNPV_[p] = npv;
+                delta_[p] = npv - npv0;
             } else if (label.find("/DOWN") != string::npos) {
                 string factor = remove(label, "/DOWN");
                 factors_.insert(factor);
@@ -106,9 +111,34 @@ SensitivityAnalysis::SensitivityAnalysis(boost::shared_ptr<ore::data::Portfolio>
             } else if (label != "BASE")
                 QL_FAIL("label ending /UP or /DOWN expected in: " << label);
         }
+        // double shift scenarios: cross gamma
+        for (Size j = 0; j < scenarioGenerator->samples(); ++j) {
+            string label = scenarioGenerator->scenarios()[j]->label();
+            // select cross scenarios here
+            if (label.find("CROSS") == string::npos)
+                continue;
+            Real npv = cube->get(i, 0, j, 0);
+            vector<string> tokens;
+            boost::split(tokens, label, boost::is_any_of(":"));
+            QL_REQUIRE(tokens.size() == 3, "expected 3 tokens, found " << tokens.size());
+            string factor1up = tokens[1];
+            string factor2up = tokens[2];
+            QL_REQUIRE(factor1up.find("/UP") != string::npos, "scenario " << factor1up << " is not an up shift");
+            QL_REQUIRE(factor2up.find("/UP") != string::npos, "scenario " << factor2up << " is not an up shift");
+            string factor1 = remove(factor1up, "/UP");
+            string factor2 = remove(factor2up, "/UP");
+            std::pair<string, string> p1(id, factor1);
+            std::pair<string, string> p2(id, factor2);
+            // f_xy(x,y) = (f(x+u,y+v) - f(x,y+v) - f(x+u,y) + f(x,y)) / (u*v)
+            Real base = baseNPV_[id];
+            Real up1 = upNPV_[p1];
+            Real up2 = upNPV_[p2];
+            std::tuple<string, string, string> triple(id, factor1, factor2);
+            crossGamma_[triple] = npv - up1 - up2 + base; // f_xy(x,y) * u * v
+        }
     }
 
-    // second pass: fill delta and gamma
+    // gamma
     for (auto data : upNPV_) {
         pair<string, string> p = data.first;
         Real u = data.second;
@@ -116,20 +146,14 @@ SensitivityAnalysis::SensitivityAnalysis(boost::shared_ptr<ore::data::Portfolio>
         string factor = p.second;
         QL_REQUIRE(baseNPV_.find(id) != baseNPV_.end(), "base NPV not found for trade " << id);
         Real b = baseNPV_[id];
-        QL_REQUIRE(downNPV_.find(p) != downNPV_.end(), "down shift result not found for trade " << id << ", factor"
+        QL_REQUIRE(downNPV_.find(p) != downNPV_.end(), "down shift result not found for trade " << id << ", factor "
                                                                                                 << factor);
         Real d = downNPV_[p];
-        // f'(x) = (f(x+s) - f(x)) / s
-        delta_[p] = u - b; // f'(x) * s
-        // f''(x) = (f'(x) - f'(x-s)) / s = ((f(x+s) - f(x))/s - (f(x)-f(x-s))/s ) / s = ( f(x+s) - 2*f(x) + f(x-s) ) /
-        // s^2
-        gamma_[p] = u - 2.0 * b + d; // f''(x) * s^2
+        // f_x(x) = (f(x+u) - f(x)) / u
+        delta_[p] = u - b; // = f_x(x) * u
+        // f_xx(x) = (f(x+u) - 2*f(x) + f(x-u)) / u^2
+        gamma_[p] = u - 2.0 * b + d; // = f_xx(x) * u^2
     }
-    //
-    // f(x,y):
-    // \partial_y \partial_x f(x,y) = \partial_y (f(x+u,y) - f(x,y)) / u)
-    // = (f(x+u,y+v) - f(x,y+v) - f(x+u,y) + f(x,y)) / (u*v)
-    //
 }
 
 void SensitivityAnalysis::writeScenarioReport(string fileName, Real outputThreshold) {
@@ -182,6 +206,28 @@ void SensitivityAnalysis::writeSensitivityReport(string fileName, Real outputThr
         Real base = baseNPV_[id];
         if (fabs(delta) > outputThreshold || fabs(gamma) > outputThreshold)
             file << id << sep << factor << sep << base << sep << delta << sep << gamma << endl;
+    }
+    file.close();
+}
+
+void SensitivityAnalysis::writeCrossGammaReport(string fileName, Real outputThreshold) {
+    ofstream file;
+    file.open(fileName.c_str());
+    QL_REQUIRE(file.is_open(), "error opening file " << fileName);
+    file.setf(ios::fixed, ios::floatfield);
+    file.setf(ios::showpoint);
+    char sep = ',';
+    file << "#TradeId" << sep << "Factor 1" << sep << "Factor 2" << sep << "Base NPV" << sep << "CrossGamma*Shift^2"
+         << endl;
+    LOG("Write cross gamma output to " << fileName);
+    for (auto data : crossGamma_) {
+        string id = std::get<0>(data.first);
+        string factor1 = std::get<1>(data.first);
+        string factor2 = std::get<2>(data.first);
+        Real crossGamma = data.second;
+        Real base = baseNPV_[id];
+        if (fabs(crossGamma) > outputThreshold)
+            file << id << sep << factor1 << sep << factor2 << sep << base << sep << crossGamma << endl;
     }
     file.close();
 }

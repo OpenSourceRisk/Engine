@@ -63,24 +63,38 @@ public:
 
     //! Return set of trades analysed
     const std::set<std::string>& trades() { return trades_; }
+
     //! Return unique set of factors shifted
     const std::set<std::string>& factors() { return factors_; }
+
     //! Return base NPV by trade, before shift
     const std::map<std::string, Real>& baseNPV() { return baseNPV_; }
+
     //! Return delta (first order sensitivity times shift) by trade/factor pair
     const std::map<std::pair<std::string, std::string>, Real>& delta() { return delta_; }
+
     //! Return gamma (second order sensitivity times shift^2) by trade/factor pair
     const std::map<std::pair<std::string, std::string>, Real>& gamma() { return gamma_; }
+
+    //! Return cross gamma (mixed second order sensitivity times shift^2) by trade/factor1/factor2
+    const std::map<std::tuple<std::string, std::string, std::string>, Real>& crossGamma() { return crossGamma_; }
+
     //! Write "raw" NPV by trade/scenario to a file (contains base, up and down shift scenarios)
     void writeScenarioReport(string fileName, Real outputThreshold = 0.0);
+
     //! Write deltas and gammas by trade/factor pair to a file
     void writeSensitivityReport(string fileName, Real outputThreshold = 0.0);
+
+    //! Write cross gammas by trade/factor1/factor2 to a file
+    void writeCrossGammaReport(string fileName, Real outputThreshold = 0.0);
 
 private:
     // base NPV by trade
     std::map<std::string, Real> baseNPV_;
     // NPV respectively sensitivity by trade and factor
     std::map<std::pair<string, string>, Real> upNPV_, downNPV_, delta_, gamma_;
+    // cross gamma by trade, factor1, factor2
+    std::map<std::tuple<string, string, string>, Real> crossGamma_;
     // unique set of factors
     std::set<std::string> factors_;
     // unique set of trades

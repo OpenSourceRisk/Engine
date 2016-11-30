@@ -58,6 +58,8 @@ public:
     const string& interpolation() const { return interpolation_; }
     const bool& extrapolate() const { return extrapolate_; }
 
+    const vector<string>& fxCcyPairs() const { return fxCcyPairs_; }
+
     bool simulateSwapVols() const { return swapVolSimulate_; }
     const vector<Period>& swapVolTerms() const { return swapVolTerms_; }
     const vector<Period>& swapVolExpiries() const { return swapVolExpiries_; }
@@ -76,8 +78,7 @@ public:
     bool simulateFXVols() const { return fxVolSimulate_; }
     const vector<Period>& fxVolExpiries() const { return fxVolExpiries_; }
     const string& fxVolDecayMode() const { return fxVolDecayMode_; }
-    // TODO: rename fxVolCurrencyPairs or something to indicate this is for FX vols
-    const vector<string>& ccyPairs() const { return ccyPairs_; }
+    const vector<string>& fxVolCcyPairs() const { return fxVolCcyPairs_; }
 
     const vector<string>& additionalScenarioDataIndices() const { return additionalScenarioDataIndices_; }
     const vector<string>& additionalScenarioDataCcys() const { return additionalScenarioDataCcys_; }
@@ -92,6 +93,8 @@ public:
     map<string, string>& swapIndices() { return swapIndices_; }
     string& interpolation() { return interpolation_; }
     bool& extrapolate() { return extrapolate_; }
+
+    vector<string>& fxCcyPairs() { return fxCcyPairs_; }
 
     bool& simulateSwapVols() { return swapVolSimulate_; }
     vector<Period>& swapVolTerms() { return swapVolTerms_; }
@@ -111,7 +114,7 @@ public:
     bool& simulateFXVols() { return fxVolSimulate_; }
     vector<Period>& fxVolExpiries() { return fxVolExpiries_; }
     string& fxVolDecayMode() { return fxVolDecayMode_; }
-    vector<string>& ccyPairs() { return ccyPairs_; }
+    vector<string>& fxVolCcyPairs() { return fxVolCcyPairs_; }
 
     vector<string>& additionalScenarioDataIndices() { return additionalScenarioDataIndices_; }
     vector<string>& additionalScenarioDataCcys() { return additionalScenarioDataCcys_; }
@@ -138,6 +141,8 @@ private:
     string interpolation_;
     bool extrapolate_;
 
+    vector<string> fxCcyPairs_;
+
     bool swapVolSimulate_;
     vector<Period> swapVolTerms_;
     vector<string> swapVolCcys_;
@@ -156,7 +161,7 @@ private:
     bool fxVolSimulate_;
     vector<Period> fxVolExpiries_;
     string fxVolDecayMode_;
-    vector<string> ccyPairs_;
+    vector<string> fxVolCcyPairs_;
 
     vector<string> additionalScenarioDataIndices_;
     vector<string> additionalScenarioDataCcys_;

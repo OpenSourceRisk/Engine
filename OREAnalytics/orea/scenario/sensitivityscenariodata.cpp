@@ -31,60 +31,86 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
     XMLNode* node = XMLUtils::locateNode(root, "SensitivityAnalysis");
     XMLUtils::checkNode(node, "SensitivityAnalysis");
 
-    //discountCurrencies_ = XMLUtils::getChildrenValues(node, "DiscountCurrencies", "Currency", true);
-    discountLabel_ = XMLUtils::getChildValue(node, "DiscountLabel", true);
-    discountDomain_ = XMLUtils::getChildValue(node, "DiscountDomain", true);
-    discountShiftType_ = XMLUtils::getChildValue(node, "DiscountShiftType", true);
-    discountShiftSize_ = XMLUtils::getChildValueAsDouble(node, "DiscountShiftSize", true);
-    discountShiftTenors_ = XMLUtils::getChildrenValuesAsPeriods(node, "DiscountShiftTenors", true);
+    LOG("Get discount curve sensitivity parameters");
+    XMLNode* child = XMLUtils::getChildNode(node, "DiscountCurve");
+    discountCurrencies_ = XMLUtils::getChildrenValues(child, "Currencies", "Currency", false);
+    discountLabel_ = XMLUtils::getChildValue(child, "Label", true);
+    discountDomain_ = XMLUtils::getChildValue(child, "Domain", true);
+    discountShiftType_ = XMLUtils::getChildValue(child, "ShiftType", true);
+    discountShiftSize_ = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
+    discountShiftTenors_ = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
 
-    //indexNames_ = XMLUtils::getChildrenValues(node, "IndexNames", "Index", true);
-    indexLabel_ = XMLUtils::getChildValue(node, "IndexLabel", true);
-    indexDomain_ = XMLUtils::getChildValue(node, "IndexDomain", true);
-    indexShiftType_ = XMLUtils::getChildValue(node, "IndexShiftType", true);
-    indexShiftSize_ = XMLUtils::getChildValueAsDouble(node, "IndexShiftSize", true);
-    indexShiftTenors_ = XMLUtils::getChildrenValuesAsPeriods(node, "IndexShiftTenors", true);
+    LOG("Get index curve sensitivity parameters");
+    child = XMLUtils::getChildNode(node, "IndexCurve");
+    indexNames_ = XMLUtils::getChildrenValues(child, "IndexNames", "Index", false);
+    indexLabel_ = XMLUtils::getChildValue(child, "Label", true);
+    indexDomain_ = XMLUtils::getChildValue(child, "Domain", true);
+    indexShiftType_ = XMLUtils::getChildValue(child, "ShiftType", true);
+    indexShiftSize_ = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
+    indexShiftTenors_ = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
 
-    //fxCurrencyPairs_ = XMLUtils::getChildrenValues(node, "FxCurrencyPairs", "CurrencyPair", true);
-    fxLabel_ = XMLUtils::getChildValue(node, "FxLabel", true);
-    fxShiftType_ = XMLUtils::getChildValue(node, "FxShiftType", true);
-    fxShiftSize_ = XMLUtils::getChildValueAsDouble(node, "FxShiftSize", true);
+    LOG("Get FX spot sensitivity parameters");
+    child = XMLUtils::getChildNode(node, "FxSpot");
+    fxCcyPairs_ = XMLUtils::getChildrenValues(child, "CurrencyPairs", "CurrencyPair", false);
+    fxLabel_ = XMLUtils::getChildValue(child, "Label", true);
+    fxShiftType_ = XMLUtils::getChildValue(child, "ShiftType", true);
+    fxShiftSize_ = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
 
-    //infIndices_ = XMLUtils::getChildrenValues(node, "InflationIndices", "Index", true);
-    infLabel_ = XMLUtils::getChildValue(node, "InflationLabel");
-    infDomain_ = XMLUtils::getChildValue(node, "InflationDomain");
-    infShiftType_ = XMLUtils::getChildValue(node, "InflationShiftType");
-    infShiftSize_ = XMLUtils::getChildValueAsDouble(node, "InflationShiftSize");
-    infShiftTenors_ = XMLUtils::getChildrenValuesAsPeriods(node, "InflationShiftTenors");
+    LOG("Get swaption vol sensitivity parameters");
+    child = XMLUtils::getChildNode(node, "SwaptionVolatility");
+    swaptionVolCurrencies_ = XMLUtils::getChildrenValues(child, "Currencies", "Currency", false);
+    swaptionVolLabel_ = XMLUtils::getChildValue(child, "Label", true);
+    swaptionVolShiftType_ = XMLUtils::getChildValue(child, "ShiftType", true);
+    swaptionVolShiftSize_ = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
+    swaptionVolShiftTerms_ = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTerms", true);
+    swaptionVolShiftExpiries_ = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftExpiries", true);
+    swaptionVolShiftStrikes_ = XMLUtils::getChildrenValuesAsDoublesCompact(child, "ShiftStrikes", true);
 
-    //swaptionVolCurrencies_ = XMLUtils::getChildrenValues(node, "SwaptionVolatilityCurrencies", "Currency", true);
-    swaptionVolLabel_ = XMLUtils::getChildValue(node, "SwaptionVolatilityLabel", true);
-    swaptionVolShiftType_ = XMLUtils::getChildValue(node, "SwaptionVolatilityShiftType", true);
-    swaptionVolShiftSize_ = XMLUtils::getChildValueAsDouble(node, "SwaptionVolatilityShiftSize", true);
-    swaptionVolShiftTerms_ = XMLUtils::getChildrenValuesAsPeriods(node, "SwaptionVolatilityShiftTerms", true);
-    swaptionVolShiftExpiries_ = XMLUtils::getChildrenValuesAsPeriods(node, "SwaptionVolatilityShiftExpiries", true);
-    swaptionVolShiftStrikes_ = XMLUtils::getChildrenValuesAsDoublesCompact(node, "SwaptionVolatilityShiftStrikes", true);
+    LOG("Get cap/floor vol sensitivity parameters");
+    child = XMLUtils::getChildNode(node, "CapFloorVolatility");
+    capFloorVolCurrencies_ = XMLUtils::getChildrenValues(child, "Currencies", "Currency", false);
+    capFloorVolLabel_ = XMLUtils::getChildValue(child, "Label", true);
+    capFloorVolShiftType_ = XMLUtils::getChildValue(child, "ShiftType", true);
+    capFloorVolShiftSize_ = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
+    capFloorVolShiftExpiries_ = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftExpiries", true);
+    capFloorVolShiftStrikes_ = XMLUtils::getChildrenValuesAsDoublesCompact(child, "ShiftStrikes", true);
 
-    //capFloorVolCurrencies_ = XMLUtils::getChildrenValues(node, "CapFloorVolatilityCurrencies", "Currency", true);
-    capFloorVolLabel_ = XMLUtils::getChildValue(node, "CapFloorVolatilityLabel", true);
-    capFloorVolShiftType_ = XMLUtils::getChildValue(node, "CapFloorVolatilityShiftType", true);
-    capFloorVolShiftSize_ = XMLUtils::getChildValueAsDouble(node, "CapFloorVolatilityShiftSize", true);
-    capFloorVolShiftExpiries_ = XMLUtils::getChildrenValuesAsPeriods(node, "CapFloorVolatilityShiftExpiries", true);
-    capFloorVolShiftStrikes_ = XMLUtils::getChildrenValuesAsDoublesCompact(node, "CapFloorVolatilityShiftStrikes", true);
+    LOG("Get fx vol sensitivity parameters");
+    child = XMLUtils::getChildNode(node, "FxVolatility");
+    fxVolCcyPairs_ = XMLUtils::getChildrenValues(child, "CurrencyPairs", "CurrencyPair", false);
+    fxVolLabel_ = XMLUtils::getChildValue(child, "Label", true);
+    fxVolShiftType_ = XMLUtils::getChildValue(child, "ShiftType");
+    fxVolShiftSize_ = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
+    fxVolShiftExpiries_ = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftExpiries", true);
+    fxVolShiftStrikes_ = XMLUtils::getChildrenValuesAsDoubles(child, "ShiftStrikes", "Strike", true);
 
-    //swaptionVolCurrencies_ = XMLUtils::getChildrenValues(node, "SwaptionVolatilityCurrencies", "Currency", true);
-    fxVolLabel_ = XMLUtils::getChildValue(node, "FxVolatilityLabel", true);
-    fxVolShiftType_ = XMLUtils::getChildValue(node, "FxVolatilityShiftType");
-    fxVolShiftSize_ = XMLUtils::getChildValueAsDouble(node, "FxVolatilityShiftSize", true);
-    fxVolShiftExpiries_ = XMLUtils::getChildrenValuesAsPeriods(node, "FxVolatilityShiftExpiries", true);
-    fxVolShiftStrikes_ = XMLUtils::getChildrenValuesAsDoubles(node, "FxVolatilityShiftStrikes", "Strike", true);
+    // LOG("Get inflation curve sensitivity parameters");
+    // child = XMLUtils::getChildNode(node, "InflationCurve");
+    // infIndices_ = XMLUtils::getChildrenValues(child, "IndexNames", "Index", false);
+    // infLabel_ = XMLUtils::getChildValue(child, "Label");
+    // infDomain_ = XMLUtils::getChildValue(child, "Domain");
+    // infShiftType_ = XMLUtils::getChildValue(child, "ShiftType");
+    // infShiftSize_ = XMLUtils::getChildValueAsDouble(child, "ShiftSize");
+    // infShiftTenors_ = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors");
 
-    //crNames_ = XMLUtils::getChildrenValues(node, "CreditNames", "Name", true);
-    crLabel_ = XMLUtils::getChildValue(node, "CreditLabel");
-    crDomain_ = XMLUtils::getChildValue(node, "CreditDomain");
-    crShiftType_ = XMLUtils::getChildValue(node, "CreditShiftType");
-    crShiftSize_ = XMLUtils::getChildValueAsDouble(node, "CreditShiftSize");
-    crShiftTenors_ = XMLUtils::getChildrenValuesAsPeriods(node, "CreditShiftTenors");  
+    // LOG("Get credit curve sensitivity parameters");
+    // child = XMLUtils::getChildNode(node, "CreditCurves");
+    // crNames_ = XMLUtils::getChildrenValues(child, "CreditNames", "Name", false);
+    // crLabel_ = XMLUtils::getChildValue(child, "Label");
+    // crDomain_ = XMLUtils::getChildValue(child, "Domain");
+    // crShiftType_ = XMLUtils::getChildValue(child, "ShiftType");
+    // crShiftSize_ = XMLUtils::getChildValueAsDouble(child, "ShiftSize");
+    // crShiftTenors_ = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors");  
+
+    LOG("Get cross gamma parameters");
+    vector<string> filter = XMLUtils::getChildrenValues(node, "CrossGammaFilter", "Pair", true);
+    for (Size i = 0; i < filter.size(); ++i) {
+      vector<string> tokens;
+      boost::split(tokens, filter[i], boost::is_any_of(","));
+      QL_REQUIRE(tokens.size() == 2, "expected 2 tokens, found " << tokens.size() << " in " << filter[i]);
+      crossGammaFilter_.push_back(pair<string,string>(tokens[0],tokens[1]));
+      crossGammaFilter_.push_back(pair<string,string>(tokens[1],tokens[0]));
+    }
 }
 
 XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
