@@ -51,20 +51,20 @@ namespace analytics {
 
   Both UP and DOWN shifts are generated in order to facilitate delta and gamma calculation.
 
-  The generator currently covers the IR/FX asset class, with shifts for the following term 
+  The generator currently covers the IR/FX asset class, with shifts for the following term
   structure types:
-  - FX spot rates 
-  - FX ATM volatilities 
+  - FX spot rates
+  - FX ATM volatilities
   - Discount curve zero rates
   - Index curve zero rates
   - Swaption ATM volatility matrices
   - Cap/Floor volatility matrices (by expiry and strike)
 
-  Note: 
-  - For yield curves, the class generates sensitivites in the Zero rate domain only. 
+  Note:
+  - For yield curves, the class generates sensitivites in the Zero rate domain only.
   Conversion into par rate sensivities has to be implemented as a postprocessor step.
   - Likewise, Cap/Floor volatilitiy sensitivties are computed in the optionlet domain.
-  Conversion into par (flat cap/floor) volatility sensis has to be implemented as a 
+  Conversion into par (flat cap/floor) volatility sensis has to be implemented as a
   postprocessor step.
 
   \ingroup scenario
@@ -172,6 +172,13 @@ private:
     void generateFxVolScenarios(bool up, boost::shared_ptr<Market> market);
     void generateCapFloorVolScenarios(bool up, boost::shared_ptr<Market> market);
 
+    RiskFactorKey getFxKey(const std::string& ccypair);
+    RiskFactorKey getDiscountKey(const std::string& ccy, Size index);
+    RiskFactorKey getIndexKey(const std::string& indexName, Size index);
+    RiskFactorKey getSwaptionVolKey(const std::string& ccy, Size index);
+    RiskFactorKey getOptionletVolKey(const std::string& ccy, Size index);
+    RiskFactorKey getFxVolKey(const std::string& ccypair, Size index);
+
     boost::shared_ptr<ScenarioFactory> scenarioFactory_;
     boost::shared_ptr<SensitivityScenarioData> sensitivityData_;
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketData_;
@@ -185,6 +192,9 @@ private:
     std::vector<boost::shared_ptr<Scenario> > scenarios_;
     boost::shared_ptr<Scenario> baseScenario_;
     Size counter_;
+
+    vector<string> discountCurrencies_, indexNames_, fxCcyPairs_, fxVolCcyPairs_, swaptionVolCurrencies_,
+        capFloorVolCurrencies_, crNames_, infIndexNames_;
 };
 }
 }

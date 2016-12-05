@@ -33,6 +33,14 @@
         1M,3M,6M,1Y,2Y,3Y,4Y,5Y,10Y
       </Expiries>
     </FXVolatility>
+    <FXVolatility>
+      <CurveId>GBPUSD</CurveId>
+      <CurveDescription/>
+      <Dimension>ATM</Dimension>
+      <Expiries>
+        1M,3M,6M,1Y,2Y,3Y,4Y,5Y,10Y
+      </Expiries>
+    </FXVolatility>
   </FXVolatilities>
   <SwaptionVolatilities>
     <SwaptionVolatility>

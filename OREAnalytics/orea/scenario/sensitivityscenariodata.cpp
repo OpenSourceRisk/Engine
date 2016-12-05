@@ -39,6 +39,13 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
     discountShiftType_ = XMLUtils::getChildValue(child, "ShiftType", true);
     discountShiftSize_ = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
     discountShiftTenors_ = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
+    XMLNode* par = XMLUtils::getChildNode(child, "ParConversion");
+    if (par) {
+        discountParInstruments_ = XMLUtils::getChildrenValuesAsStrings(par, "Instruments", true);
+        discountParInstrumentsSingleCurve_ = XMLUtils::getChildValueAsBool(par, "SingleCurve", true);
+	XMLNode* conventionsNode = XMLUtils::getChildNode(par, "Conventions");
+	discountParInstrumentConventions_ = XMLUtils::getChildrenAttributePairsAndValues(conventionsNode, "Convention", "id", true);
+    }
 
     LOG("Get index curve sensitivity parameters");
     child = XMLUtils::getChildNode(node, "IndexCurve");
@@ -48,6 +55,13 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
     indexShiftType_ = XMLUtils::getChildValue(child, "ShiftType", true);
     indexShiftSize_ = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
     indexShiftTenors_ = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
+    par = XMLUtils::getChildNode(child, "ParConversion");
+    if (par) {
+        indexParInstruments_ = XMLUtils::getChildrenValuesAsStrings(par, "Instruments", true);
+        indexParInstrumentsSingleCurve_ = XMLUtils::getChildValueAsBool(par, "SingleCurve", true);
+	XMLNode* conventionsNode = XMLUtils::getChildNode(par, "Conventions");
+	indexParInstrumentConventions_ = XMLUtils::getChildrenAttributePairsAndValues(conventionsNode, "Convention", "id", true);
+    }
 
     LOG("Get FX spot sensitivity parameters");
     child = XMLUtils::getChildNode(node, "FxSpot");
@@ -100,16 +114,16 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
     // crDomain_ = XMLUtils::getChildValue(child, "Domain");
     // crShiftType_ = XMLUtils::getChildValue(child, "ShiftType");
     // crShiftSize_ = XMLUtils::getChildValueAsDouble(child, "ShiftSize");
-    // crShiftTenors_ = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors");  
+    // crShiftTenors_ = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors");
 
     LOG("Get cross gamma parameters");
     vector<string> filter = XMLUtils::getChildrenValues(node, "CrossGammaFilter", "Pair", true);
     for (Size i = 0; i < filter.size(); ++i) {
-      vector<string> tokens;
-      boost::split(tokens, filter[i], boost::is_any_of(","));
-      QL_REQUIRE(tokens.size() == 2, "expected 2 tokens, found " << tokens.size() << " in " << filter[i]);
-      crossGammaFilter_.push_back(pair<string,string>(tokens[0],tokens[1]));
-      crossGammaFilter_.push_back(pair<string,string>(tokens[1],tokens[0]));
+        vector<string> tokens;
+        boost::split(tokens, filter[i], boost::is_any_of(","));
+        QL_REQUIRE(tokens.size() == 2, "expected 2 tokens, found " << tokens.size() << " in " << filter[i]);
+        crossGammaFilter_.push_back(pair<string, string>(tokens[0], tokens[1]));
+        crossGammaFilter_.push_back(pair<string, string>(tokens[1], tokens[0]));
     }
 }
 

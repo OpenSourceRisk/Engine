@@ -290,8 +290,8 @@ void SensitivityAnalysisTest::testPortfolioSensitivity() {
         { "2_Swap_USD", "YIELD_INDEX/USD-LIBOR-3M/10Y/DOWN", 980404, -729.248 },
         { "2_Swap_USD", "YIELD_INDEX/USD-LIBOR-3M/15Y/DOWN", 980404, -8626.13 },
         { "2_Swap_USD", "YIELD_INDEX/USD-LIBOR-3M/20Y/DOWN", 980404, -5.86436 },
-        { "2_Swap_USD", "FX/USDEUR/UP", 980404, 9804.04 },
-        { "2_Swap_USD", "FX/USDEUR/DOWN", 980404, -9804.04 },
+        { "2_Swap_USD", "FX/EURUSD/UP", 980404, -9706.97 },
+        { "2_Swap_USD", "FX/EURUSD/DOWN", 980404, 9903.07 },
         { "3_Swap_GBP", "YIELD_DISCOUNT/GBP/1Y/UP", 69795.3, 1.47798 },
         { "3_Swap_GBP", "YIELD_DISCOUNT/GBP/2Y/UP", 69795.3, -1.75066 },
         { "3_Swap_GBP", "YIELD_DISCOUNT/GBP/3Y/UP", 69795.3, -4.24827 },
@@ -324,8 +324,8 @@ void SensitivityAnalysisTest::testPortfolioSensitivity() {
         { "3_Swap_GBP", "YIELD_INDEX/GBP-LIBOR-6M/10Y/DOWN", 69795.3, -1341.88 },
         { "3_Swap_GBP", "YIELD_INDEX/GBP-LIBOR-6M/15Y/DOWN", 69795.3, -2138.11 },
         { "3_Swap_GBP", "YIELD_INDEX/GBP-LIBOR-6M/20Y/DOWN", 69795.3, -12632.5 },
-        { "3_Swap_GBP", "FX/GBPEUR/UP", 69795.3, 697.953 },
-        { "3_Swap_GBP", "FX/GBPEUR/DOWN", 69795.3, -697.953 },
+        { "3_Swap_GBP", "FX/EURGBP/UP", 69795.3, -691.043 },
+        { "3_Swap_GBP", "FX/EURGBP/DOWN", 69795.3, 705.003 },
         { "4_Swap_JPY", "YIELD_DISCOUNT/JPY/1Y/UP", 871.03, -0.00895744 },
         { "4_Swap_JPY", "YIELD_DISCOUNT/JPY/2Y/UP", 871.03, -0.020079 },
         { "4_Swap_JPY", "YIELD_DISCOUNT/JPY/3Y/UP", 871.03, -0.0667249 },
@@ -342,8 +342,8 @@ void SensitivityAnalysisTest::testPortfolioSensitivity() {
         { "4_Swap_JPY", "YIELD_INDEX/JPY-LIBOR-6M/2Y/DOWN", 871.03, -7.6631 },
         { "4_Swap_JPY", "YIELD_INDEX/JPY-LIBOR-6M/3Y/DOWN", 871.03, -19.0907 },
         { "4_Swap_JPY", "YIELD_INDEX/JPY-LIBOR-6M/5Y/DOWN", 871.03, -3832.59 },
-        { "4_Swap_JPY", "FX/JPYEUR/UP", 871.03, 8.7103 },
-        { "4_Swap_JPY", "FX/JPYEUR/DOWN", 871.03, -8.7103 },
+        { "4_Swap_JPY", "FX/EURJPY/UP", 871.03, -8.62406 },
+        { "4_Swap_JPY", "FX/EURJPY/DOWN", 871.03, 8.79829 },
         { "5_Swaption_EUR", "YIELD_DISCOUNT/EUR/10Y/UP", 18027.1, -1.33793 },
         { "5_Swaption_EUR", "YIELD_DISCOUNT/EUR/15Y/UP", 18027.1, 0.197251 },
         { "5_Swaption_EUR", "YIELD_DISCOUNT/EUR/20Y/UP", 18027.1, 2.41317 },
@@ -390,16 +390,16 @@ void SensitivityAnalysisTest::testPortfolioSensitivity() {
         { "7_FxOption_EUR_USD", "YIELD_DISCOUNT/EUR/5Y/DOWN", 1.36968e+06, 3.85768 },
         { "7_FxOption_EUR_USD", "YIELD_DISCOUNT/USD/3Y/DOWN", 1.36968e+06, -1698.12 },
         { "7_FxOption_EUR_USD", "YIELD_DISCOUNT/USD/5Y/DOWN", 1.36968e+06, -3.10717 },
-        { "7_FxOption_EUR_USD", "FX/USDEUR/UP", 1.36968e+06, -55979.6 },
-        { "7_FxOption_EUR_USD", "FX/USDEUR/DOWN", 1.36968e+06, 57426.4 },
+        { "7_FxOption_EUR_USD", "FX/EURUSD/UP", 1.36968e+06, 56850.7 },
+        { "7_FxOption_EUR_USD", "FX/EURUSD/DOWN", 1.36968e+06, -56537.6 },
         { "7_FxOption_EUR_USD", "VOL_FX/EURUSD/5Y/UP", 1.36968e+06, 672236 },
         { "7_FxOption_EUR_USD", "VOL_FX/EURUSD/5Y/DOWN", 1.36968e+06, -329688 },
         { "8_FxOption_EUR_GBP", "YIELD_DISCOUNT/EUR/7Y/UP", 798336, -2435.22 },
         { "8_FxOption_EUR_GBP", "YIELD_DISCOUNT/GBP/7Y/UP", 798336, 1880.89 },
         { "8_FxOption_EUR_GBP", "YIELD_DISCOUNT/EUR/7Y/DOWN", 798336, 2441.08 },
         { "8_FxOption_EUR_GBP", "YIELD_DISCOUNT/GBP/7Y/DOWN", 798336, -1878.05 },
-        { "8_FxOption_EUR_GBP", "FX/GBPEUR/UP", 798336, -26437.4 },
-        { "8_FxOption_EUR_GBP", "FX/GBPEUR/DOWN", 798336, 27284.3 },
+        { "8_FxOption_EUR_GBP", "FX/EURGBP/UP", 798336, 27009.9 },
+        { "8_FxOption_EUR_GBP", "FX/EURGBP/DOWN", 798336, -26700.2 },
         { "8_FxOption_EUR_GBP", "VOL_FX/EURGBP/5Y/UP", 798336, 1.36635e+06 },
         { "8_FxOption_EUR_GBP", "VOL_FX/EURGBP/5Y/DOWN", 798336, -798336 }
     };
@@ -423,7 +423,7 @@ void SensitivityAnalysisTest::testPortfolioSensitivity() {
             string label = scenarioGenerator->scenarios()[j]->label();
             if (fabs(sensi) > tiny) {
                 count++;
-                //BOOST_TEST_MESSAGE("{ \"" << id << "\", \"" << label << "\", " << npv0 << ", " << sensi << " },");
+                // BOOST_TEST_MESSAGE("{ \"" << id << "\", \"" << label << "\", " << npv0 << ", " << sensi << " },");
                 pair<string, string> p(id, label);
                 QL_REQUIRE(npvMap.find(p) != npvMap.end(), "pair (" << p.first << ", " << p.second
                                                                     << ") not found in npv map");

@@ -123,6 +123,7 @@
     <FxVolatility pair="EURGBP">FXVolatility/EUR/GBP/EURGBP</FxVolatility>
     <FxVolatility pair="EURCHF">FXVolatility/EUR/CHF/EURCHF</FxVolatility>
     <FxVolatility pair="EURJPY">FXVolatility/EUR/JPY/EURJPY</FxVolatility>
+    <FxVolatility pair="GBPUSD">FXVolatility/GBP/USD/GBPUSD</FxVolatility>
   </FxVolatilities>
   <!-- swaption volatility definition -->
   <SwaptionVolatilities id="default">

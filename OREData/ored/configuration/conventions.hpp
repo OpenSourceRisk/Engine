@@ -248,6 +248,7 @@ public:
     //! \name Inspectors
     //@{
     const boost::shared_ptr<IborIndex>& index() const { return index_; }
+    const string& indexName() const { return strIndex_; }
     //@}
 
     //! \name Serialisation
@@ -739,7 +740,7 @@ public:
     //@}
 
 private:
-    map<string, boost::shared_ptr<Convention>> data_;
+    map<string, boost::shared_ptr<Convention> > data_;
 };
 }
 }

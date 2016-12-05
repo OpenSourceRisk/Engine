@@ -87,12 +87,13 @@ void SensitivityScenarioGenerator::init(boost::shared_ptr<Market> market) {
     }
 
     // Cache FX rate keys
-    fxKeys_.reserve(n_ccy - 1);
-    for (Size k = 0; k < n_ccy - 1; k++) {
-        const string& foreign = simMarketData_->ccys()[k + 1];
-        const string& domestic = simMarketData_->ccys()[0];
-        fxKeys_.emplace_back(RiskFactorKey::KeyType::FXSpot, foreign + domestic); // k
-        Real fx = market->fxSpot(foreign + domestic, configuration_)->value();
+    fxKeys_.reserve(simMarketData_->fxCcyPairs().size());
+    for (Size k = 0; k < simMarketData_->fxCcyPairs().size(); k++) {
+        // const string& foreign = simMarketData_->ccys()[k + 1];
+        // const string& domestic = simMarketData_->ccys()[0];
+        string ccypair = simMarketData_->fxCcyPairs()[k];
+        fxKeys_.emplace_back(RiskFactorKey::KeyType::FXSpot, ccypair); // k
+        Real fx = market->fxSpot(ccypair, configuration_)->value();
         fxCache_[fxKeys_[k]] = fx;
         LOG("cache FX spot " << fx << " for key " << fxKeys_[k]);
     }
@@ -195,8 +196,7 @@ void SensitivityScenarioGenerator::init(boost::shared_ptr<Market> market) {
     Size index = scenarios_.size();
     for (Size i = 0; i < index; ++i) {
         for (Size j = i + 1; j < index; ++j) {
-            if (i == j ||
-		scenarios_[i]->label().find("/UP") == string::npos ||
+            if (i == j || scenarios_[i]->label().find("/UP") == string::npos ||
                 scenarios_[j]->label().find("/UP") == string::npos)
                 continue;
             // filter desired cross shift combinations
@@ -277,22 +277,76 @@ void SensitivityScenarioGenerator::addCacheTo(boost::shared_ptr<Scenario> scenar
     }
 }
 
+RiskFactorKey SensitivityScenarioGenerator::getFxKey(const std::string& key) {
+    for (Size i = 0; i < fxKeys_.size(); ++i) {
+        LOG("Check FX Key " << fxKeys_[i].name << " vs " << key);
+        if (fxKeys_[i].name == key)
+            return fxKeys_[i];
+    }
+    QL_FAIL("error locating FX RiskFactorKey for ccy pair " << key);
+}
+
+RiskFactorKey SensitivityScenarioGenerator::getDiscountKey(const std::string& ccy, Size index) {
+    for (Size i = 0; i < discountCurveKeys_.size(); ++i) {
+        if (discountCurveKeys_[i].name == ccy && discountCurveKeys_[i].index == index)
+            return discountCurveKeys_[i];
+    }
+    QL_FAIL("error locating Discount RiskFactorKey for " << ccy << ", index " << index);
+}
+
+RiskFactorKey SensitivityScenarioGenerator::getIndexKey(const std::string& indexName, Size index) {
+    for (Size i = 0; i < indexCurveKeys_.size(); ++i) {
+        if (indexCurveKeys_[i].name == indexName && indexCurveKeys_[i].index == index)
+            return indexCurveKeys_[i];
+    }
+    QL_FAIL("error locating Index RiskFactorKey for " << indexName << ", index " << index);
+}
+
+RiskFactorKey SensitivityScenarioGenerator::getSwaptionVolKey(const std::string& ccy, Size index) {
+    for (Size i = 0; i < swaptionVolKeys_.size(); ++i) {
+        if (swaptionVolKeys_[i].name == ccy && swaptionVolKeys_[i].index == index)
+            return swaptionVolKeys_[i];
+    }
+    QL_FAIL("error locating SwaptionVol RiskFactorKey for " << ccy << ", index " << index);
+}
+
+RiskFactorKey SensitivityScenarioGenerator::getOptionletVolKey(const std::string& ccy, Size index) {
+    for (Size i = 0; i < optionletVolKeys_.size(); ++i) {
+        if (optionletVolKeys_[i].name == ccy && optionletVolKeys_[i].index == index)
+            return optionletVolKeys_[i];
+    }
+    QL_FAIL("error locating OptionletVol RiskFactorKey for " << ccy << ", index " << index);
+}
+
+RiskFactorKey SensitivityScenarioGenerator::getFxVolKey(const std::string& ccypair, Size index) {
+    for (Size i = 0; i < fxVolKeys_.size(); ++i) {
+        if (fxVolKeys_[i].name == ccypair && fxVolKeys_[i].index == index)
+            return fxVolKeys_[i];
+    }
+    QL_FAIL("error locating FxVol RiskFactorKey for " << ccypair << ", index " << index);
+}
+
 void SensitivityScenarioGenerator::generateFxScenarios(bool up, boost::shared_ptr<Market> market) {
-    Size n_ccy = simMarketData_->ccys().size();
+    // We can choose to shift fewer discount curves than listed in the market
+    if (sensitivityData_->fxCcyPairs().size() > 0)
+        fxCcyPairs_ = sensitivityData_->fxCcyPairs();
+    else
+        fxCcyPairs_ = simMarketData_->fxCcyPairs();
+
     string domestic = simMarketData_->baseCcy();
     ShiftType type = parseShiftType(sensitivityData_->fxShiftType());
     QL_REQUIRE(type == SensitivityScenarioGenerator::ShiftType::Relative, "FX scenario type must be relative");
     string direction = up ? "/UP" : "/DOWN";
 
-    for (Size k = 0; k < n_ccy - 1; k++) {
-        string foreign = simMarketData_->ccys()[k + 1];
-        string ccypair = foreign + domestic;
+    for (Size k = 0; k < fxCcyPairs_.size(); k++) {
+        // string foreign = simMarketData_->ccys()[k + 1];
+        string ccypair = fxCcyPairs_[k]; // foreign + domestic;
         string label = sensitivityData_->fxLabel() + "/" + ccypair + direction;
         boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_, label);
         Real rate = market->fxSpot(ccypair, configuration_)->value();
         Real newRate =
             up ? rate * (1.0 + sensitivityData_->fxShiftSize()) : rate * (1.0 - sensitivityData_->fxShiftSize());
-        scenario->add(fxKeys_[k], newRate);
+        scenario->add(getFxKey(ccypair), newRate);
         // add remaining unshifted data from cache for a complete scenario
         addCacheTo(scenario);
         scenarios_.push_back(scenario);
@@ -303,7 +357,13 @@ void SensitivityScenarioGenerator::generateFxScenarios(bool up, boost::shared_pt
 }
 
 void SensitivityScenarioGenerator::generateDiscountCurveScenarios(bool up, boost::shared_ptr<Market> market) {
-    Size n_ccy = simMarketData_->ccys().size();
+    // We can choose to shift fewer discount curves than listed in the market
+    if (sensitivityData_->discountCurrencies().size() > 0)
+        discountCurrencies_ = sensitivityData_->discountCurrencies();
+    else
+        discountCurrencies_ = simMarketData_->ccys();
+
+    Size n_ccy = discountCurrencies_.size();
     Size n_ten = simMarketData_->yieldCurveTenors().size();
     ShiftType shiftType = parseShiftType(sensitivityData_->discountShiftType());
     string direction = up ? "/UP" : "/DOWN";
@@ -317,7 +377,7 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(bool up, boost
 
     for (Size i = 0; i < n_ccy; ++i) {
 
-        string ccy = simMarketData_->ccys()[i];
+        string ccy = discountCurrencies_[i];
         Handle<YieldTermStructure> ts = market->discountCurve(ccy, configuration_);
         DayCounter dc = ts->dayCounter();
         for (Size j = 0; j < n_ten; ++j) {
@@ -347,7 +407,7 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(bool up, boost
             // store shifted discount curve in the scenario
             for (Size k = 0; k < n_ten; ++k) {
                 Real shiftedDiscount = exp(-shiftedZeros[k] * times[k]);
-                scenario->add(discountCurveKeys_[i * n_ten + k], shiftedDiscount);
+                scenario->add(getDiscountKey(ccy, k), shiftedDiscount);
             }
 
             // add remaining unshifted data from cache for a complete scenario
@@ -363,7 +423,13 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(bool up, boost
 }
 
 void SensitivityScenarioGenerator::generateIndexCurveScenarios(bool up, boost::shared_ptr<Market> market) {
-    Size n_indices = simMarketData_->indices().size();
+    // We can choose to shift fewer discount curves than listed in the market
+    if (sensitivityData_->indexNames().size() > 0)
+        indexNames_ = sensitivityData_->indexNames();
+    else
+        indexNames_ = simMarketData_->indices();
+
+    Size n_indices = indexNames_.size();
     Size n_ten = simMarketData_->yieldCurveTenors().size();
     ShiftType shiftType = parseShiftType(sensitivityData_->indexShiftType());
     string direction = up ? "/UP" : "/DOWN";
@@ -377,7 +443,7 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(bool up, boost::s
 
     for (Size i = 0; i < n_indices; ++i) {
 
-        string indexName = simMarketData_->indices()[i];
+        string indexName = indexNames_[i];
         Handle<IborIndex> iborIndex = market->iborIndex(indexName, configuration_);
         Handle<YieldTermStructure> ts = iborIndex->forwardingTermStructure();
         DayCounter dc = ts->dayCounter();
@@ -408,7 +474,7 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(bool up, boost::s
             // store shifted discount curve for this index in the scenario
             for (Size k = 0; k < n_ten; ++k) {
                 Real shiftedDiscount = exp(-shiftedZeros[k] * times[k]);
-                scenario->add(indexCurveKeys_[i * n_ten + k], shiftedDiscount);
+                scenario->add(getIndexKey(indexName, k), shiftedDiscount);
             }
 
             // add remaining unshifted data from cache for a complete scenario
@@ -416,7 +482,8 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(bool up, boost::s
 
             // add this scenario to the scenario vector
             scenarios_.push_back(scenario);
-            LOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
+            LOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label()
+                                          << " created for indexName " << indexName);
 
         } // end of shift curve tenors
     }
@@ -424,11 +491,17 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(bool up, boost::s
 }
 
 void SensitivityScenarioGenerator::generateFxVolScenarios(bool up, boost::shared_ptr<Market> market) {
+    // We can choose to shift fewer discount curves than listed in the market
+    if (sensitivityData_->fxVolCcyPairs().size() > 0)
+        fxVolCcyPairs_ = sensitivityData_->fxVolCcyPairs();
+    else
+        fxVolCcyPairs_ = simMarketData_->fxVolCcyPairs();
+
     string domestic = simMarketData_->baseCcy();
     ShiftType shiftType = parseShiftType(sensitivityData_->fxVolShiftType());
     string direction = up ? "/UP" : "/DOWN";
 
-    Size n_fxvol_pairs = simMarketData_->fxVolCcyPairs().size();
+    Size n_fxvol_pairs = fxVolCcyPairs_.size();
     Size n_fxvol_exp = simMarketData_->fxVolExpiries().size();
 
     std::vector<Real> values(n_fxvol_exp);
@@ -443,7 +516,7 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(bool up, boost::shared
     QL_REQUIRE(shiftTenors.size() > 0, "FX vol shift tenors not specified");
 
     for (Size i = 0; i < n_fxvol_pairs; ++i) {
-        string ccypair = simMarketData_->fxVolCcyPairs()[i];
+        string ccypair = fxVolCcyPairs_[i];
         Handle<BlackVolTermStructure> ts = market->fxVol(ccypair, configuration_);
         DayCounter dc = ts->dayCounter();
         Real strike = 0.0; // FIXME
@@ -465,7 +538,7 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(bool up, boost::shared
             // apply shift at tenor point j
             applyShift(j, shiftSize, up, shiftType, shiftTimes, values, times, shiftedValues);
             for (Size k = 0; k < n_fxvol_exp; ++k)
-                scenario->add(fxVolKeys_[i * n_fxvol_exp + k], shiftedValues[k]);
+                scenario->add(getFxVolKey(ccypair, k), shiftedValues[k]);
 
             // add remaining unshifted data from cache for a complete scenario
             addCacheTo(scenario);
@@ -478,10 +551,16 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(bool up, boost::shared
 }
 
 void SensitivityScenarioGenerator::generateSwaptionVolScenarios(bool up, boost::shared_ptr<Market> market) {
+    // We can choose to shift fewer discount curves than listed in the market
+    if (sensitivityData_->swaptionVolCurrencies().size() > 0)
+        swaptionVolCurrencies_ = sensitivityData_->swaptionVolCurrencies();
+    else
+        swaptionVolCurrencies_ = simMarketData_->swapVolCcys();
+
     ShiftType shiftType = parseShiftType(sensitivityData_->swaptionVolShiftType());
     Real shiftSize = sensitivityData_->swaptionVolShiftSize();
     string direction = up ? "/UP" : "/DOWN";
-    Size n_swvol_ccy = simMarketData_->swapVolCcys().size();
+    Size n_swvol_ccy = swaptionVolCurrencies_.size();
     Size n_swvol_term = simMarketData_->swapVolTerms().size();
     Size n_swvol_exp = simMarketData_->swapVolExpiries().size();
 
@@ -494,7 +573,7 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(bool up, boost::
     vector<Real> shiftTermTimes(sensitivityData_->swaptionVolShiftTerms().size(), 0.0);
 
     for (Size i = 0; i < n_swvol_ccy; ++i) {
-        std::string ccy = simMarketData_->swapVolCcys()[i];
+        std::string ccy = swaptionVolCurrencies_[i];
         Handle<SwaptionVolatilityStructure> ts = market->swaptionVol(ccy, configuration_);
         DayCounter dc = ts->dayCounter();
         Real strike = 0.0; // FIXME
@@ -538,8 +617,8 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(bool up, boost::
                 // add shifted vol data to the scenario
                 for (Size jj = 0; jj < n_swvol_exp; ++jj) {
                     for (Size kk = 0; kk < n_swvol_term; ++kk) {
-                        Size idx = i * n_swvol_exp * n_swvol_term + jj * n_swvol_term + kk;
-                        scenario->add(swaptionVolKeys_[idx], shiftedVolData[jj][kk]);
+                        Size idx = jj * n_swvol_term + kk;
+                        scenario->add(getSwaptionVolKey(ccy, idx), shiftedVolData[jj][kk]);
                     }
                 }
                 // add remaining unshifted data from cache for a complete scenario
@@ -554,10 +633,16 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(bool up, boost::
 }
 
 void SensitivityScenarioGenerator::generateCapFloorVolScenarios(bool up, boost::shared_ptr<Market> market) {
+    // We can choose to shift fewer discount curves than listed in the market
+    if (sensitivityData_->capFloorVolCurrencies().size() > 0)
+        capFloorVolCurrencies_ = sensitivityData_->capFloorVolCurrencies();
+    else
+        capFloorVolCurrencies_ = simMarketData_->capFloorVolCcys();
+
     ShiftType shiftType = parseShiftType(sensitivityData_->capFloorVolShiftType());
     Real shiftSize = sensitivityData_->capFloorVolShiftSize();
     string direction = up ? "/UP" : "/DOWN";
-    Size n_cfvol_ccy = simMarketData_->capFloorVolCcys().size();
+    Size n_cfvol_ccy = capFloorVolCurrencies_.size();
     Size n_cfvol_strikes = simMarketData_->capFloorVolStrikes().size();
     Size n_cfvol_exp = simMarketData_->capFloorVolExpiries().size();
 
@@ -569,7 +654,7 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(bool up, boost::
     vector<Real> shiftStrikes = sensitivityData_->capFloorVolShiftStrikes();
 
     for (Size i = 0; i < n_cfvol_ccy; ++i) {
-        std::string ccy = simMarketData_->capFloorVolCcys()[i];
+        std::string ccy = capFloorVolCurrencies_[i];
         Handle<OptionletVolatilityStructure> ts = market->capFloorVol(ccy, configuration_);
         DayCounter dc = ts->dayCounter();
 
@@ -606,8 +691,8 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(bool up, boost::
                 // add shifted vol data to the scenario
                 for (Size jj = 0; jj < n_cfvol_exp; ++jj) {
                     for (Size kk = 0; kk < n_cfvol_strikes; ++kk) {
-                        Size idx = i * n_cfvol_exp * n_cfvol_strikes + jj * n_cfvol_strikes + kk;
-                        scenario->add(optionletVolKeys_[idx], shiftedVolData[jj][kk]);
+                        Size idx = jj * n_cfvol_strikes + kk;
+                        scenario->add(getOptionletVolKey(ccy, idx), shiftedVolData[jj][kk]);
                     }
                 }
                 // add remaining unshifted data from cache for a complete scenario

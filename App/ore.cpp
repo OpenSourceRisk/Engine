@@ -281,6 +281,9 @@ int main(int argc, char** argv) {
 	    string outputFile2 = outputPath + "/" + params.get("sensitivity", "sensitivityOutputFile");
 	    sensiAnalysis->writeSensitivityReport(outputFile2, sensiThreshold);
 
+	    string outputFile3 = outputPath + "/" + params.get("sensitivity", "crossGammaOutputFile");
+	    sensiAnalysis->writeCrossGammaReport(outputFile3, sensiThreshold);
+
             cout << "OK" << endl;
 
         } else {

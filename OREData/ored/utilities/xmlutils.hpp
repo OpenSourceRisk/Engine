@@ -33,6 +33,7 @@
 using std::string;
 using std::vector;
 using std::map;
+using std::pair;
 using QuantLib::Real;
 using QuantLib::Size;
 using QuantLib::Period;
@@ -165,6 +166,7 @@ public:
 
     static vector<Period> getChildrenValuesAsPeriods(XMLNode* node, const string& name, bool mandatory = false);
     static vector<string> getChildrenValuesAsStrings(XMLNode* node, const string& name, bool mandatory = false);
+    static vector<string> getChildrenValuesAsStringsCompact(XMLNode* node, const string& name, bool mandatory = false);
 
     static map<string, string> getChildrenValues(XMLNode* node, const string& names, const string& name,
                                                  const string& firstName, const string& secondName,
@@ -172,6 +174,10 @@ public:
 
     static map<string, string> getChildrenAttributesAndValues(XMLNode* parent, const string& names,
                                                               const string& attributeName, bool mandatory = false);
+
+    static map<pair<string, string>, string> getChildrenAttributePairsAndValues(XMLNode* parent, const string& names,
+                                                                                const string& attributeName,
+                                                                                bool mandatory = false);
 
     // returns first child node
     static XMLNode* getChildNode(XMLNode* n, const string& name = "");

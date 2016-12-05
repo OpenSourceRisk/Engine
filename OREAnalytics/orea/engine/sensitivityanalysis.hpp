@@ -89,6 +89,25 @@ public:
     void writeCrossGammaReport(string fileName, Real outputThreshold = 0.0);
 
 private:
+    //! Create Deposit helper for implying par rate sensitivity from zero rate sensitivity
+    boost::shared_ptr<RateHelper> makeDeposit(string ccy, string indexName, Period term,
+                                              const boost::shared_ptr<ore::data::Market>& market,
+                                              const boost::shared_ptr<Convention>& conventions, bool singleCurve);
+    //! Create FRA helper for implying par rate sensitivity from zero rate sensitivity
+    boost::shared_ptr<RateHelper> makeFRA(string ccy, string indexName, Period term,
+                                          const boost::shared_ptr<ore::data::Market>& market,
+                                          const boost::shared_ptr<Convention>& conventions, bool singleCurve);
+    //! Create Swap helper for implying par rate sensitivity from zero rate sensitivity
+    boost::shared_ptr<RateHelper> makeSwap(string ccy, string indexName, Period term,
+                                           const boost::shared_ptr<ore::data::Market>& market,
+                                           const boost::shared_ptr<Convention>& conventions, bool singleCurve);
+    //! Create OIS helper for implying par rate sensitivity from zero rate sensitivity
+    boost::shared_ptr<RateHelper> makeOIS(string ccy, string indexName, Period term,
+                                          const boost::shared_ptr<ore::data::Market>& market,
+                                          const boost::shared_ptr<Convention>& conventions, bool singleCurve);
+    //! Return copy of input string with ending removed
+    string remove(const string& input, const string& ending);
+
     // base NPV by trade
     std::map<std::string, Real> baseNPV_;
     // NPV respectively sensitivity by trade and factor
@@ -99,6 +118,8 @@ private:
     std::set<std::string> factors_;
     // unique set of trades
     std::set<std::string> trades_;
+    // fair par rate by factor shift
+    std::map<std::string, Real> fairParRate_;
 };
 }
 }

@@ -77,16 +77,13 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
 
     // constructing fxSpots_
     LOG("building FX triangulation..");
-    for (const auto& ccy : parameters->ccys()) {
-        if (ccy != parameters->baseCcy()) {
-            string ccyPair(ccy + parameters->baseCcy());
-            LOG("adding " << ccyPair << " FX rates");
-            boost::shared_ptr<SimpleQuote> q(new SimpleQuote(initMarket->fxSpot(ccyPair, configuration)->value()));
-            Handle<Quote> qh(q);
-            fxSpots_[Market::defaultConfiguration].addQuote(ccyPair, qh);
-            simData_.emplace(std::piecewise_construct, std::forward_as_tuple(RiskFactorKey::KeyType::FXSpot, ccyPair),
-                             std::forward_as_tuple(q));
-        }
+    for (const auto& ccyPair : parameters->fxCcyPairs()) {
+        LOG("adding " << ccyPair << " FX rates");
+        boost::shared_ptr<SimpleQuote> q(new SimpleQuote(initMarket->fxSpot(ccyPair, configuration)->value()));
+        Handle<Quote> qh(q);
+        fxSpots_[Market::defaultConfiguration].addQuote(ccyPair, qh);
+        simData_.emplace(std::piecewise_construct, std::forward_as_tuple(RiskFactorKey::KeyType::FXSpot, ccyPair),
+                         std::forward_as_tuple(q));
     }
     LOG("FX triangulation done");
 
@@ -321,12 +318,12 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
             }
             // FIXME: Works as of today only, i.e. for sensitivity/scenario analysis.
             // TODO: Build floating reference date StrippedOptionlet class for MC path generators
-            boost::shared_ptr<StrippedOptionlet> optionlet =
-                boost::make_shared<StrippedOptionlet>(0, // FIXME: settlement days
-                                                      wrapper->calendar(), wrapper->businessDayConvention(),
-                                                      boost::shared_ptr<IborIndex>(),// FIXME: required for ATM vol calculation
-                                                      optionDates, strikes, quotes, wrapper->dayCounter(),
-                                                      wrapper->volatilityType(), wrapper->displacement());
+            boost::shared_ptr<StrippedOptionlet> optionlet = boost::make_shared<StrippedOptionlet>(
+                0, // FIXME: settlement days
+                wrapper->calendar(), wrapper->businessDayConvention(),
+                boost::shared_ptr<IborIndex>(), // FIXME: required for ATM vol calculation
+                optionDates, strikes, quotes, wrapper->dayCounter(), wrapper->volatilityType(),
+                wrapper->displacement());
             boost::shared_ptr<StrippedOptionletAdapter> adapter =
                 boost::make_shared<StrippedOptionletAdapter>(optionlet);
             hCapletVol = Handle<OptionletVolatilityStructure>(adapter);
@@ -456,6 +453,9 @@ void ScenarioSimMarket::update(const Date& d) {
         // TODO: Is this really an error?
         auto it = simData_.find(key);
         QL_REQUIRE(it != simData_.end(), "simulation data point missing for key " << key);
+        // if (fabs(it->second->value() - scenario->get(key)) > 1e-10)
+        //     LOG("Update key " << key << " from scenario " << scenario->label() << " from " << it->second->value()
+        //                       << " to " << scenario->get(key));
         it->second->setValue(scenario->get(key));
         count++;
     }

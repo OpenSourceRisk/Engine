@@ -61,6 +61,11 @@ public:
     const vector<Period>& discountShiftTenors() const { return discountShiftTenors_; }
     const string& discountShiftType() const { return discountShiftType_; }
     const Real& discountShiftSize() const { return discountShiftSize_; }
+    const vector<string>& discountParInstruments() const { return discountParInstruments_; }
+    const bool& discountParInstrumentsSingleCurve() const { return discountParInstrumentsSingleCurve_; }
+    const map<pair<string, string>, string>& discountParInstrumentConventions() const {
+        return discountParInstrumentConventions_;
+    }
 
     const vector<string>& indexNames() const { return indexNames_; }
     const string& indexLabel() const { return indexLabel_; }
@@ -116,12 +121,15 @@ public:
 
     //! \name Setters
     //@{
-    vector<string>& discountCurrencies()  { return discountCurrencies_; }
+    vector<string>& discountCurrencies() { return discountCurrencies_; }
     string& discountLabel() { return discountLabel_; }
     string& discountDomain() { return discountDomain_; }
     vector<Period>& discountShiftTenors() { return discountShiftTenors_; }
     string& discountShiftType() { return discountShiftType_; }
     Real& discountShiftSize() { return discountShiftSize_; }
+    vector<string>& discountParInstruments() { return discountParInstruments_; }
+    bool& discountParInstrumentsSingleCurve() { return discountParInstrumentsSingleCurve_; }
+    map<pair<string, string>, string>& discountParInstrumentConventions() { return discountParInstrumentConventions_; }
 
     vector<string>& indexNames() { return indexNames_; }
     string& indexLabel() { return indexLabel_; }
@@ -129,20 +137,23 @@ public:
     vector<Period>& indexShiftTenors() { return indexShiftTenors_; }
     string& indexShiftType() { return indexShiftType_; }
     Real& indexShiftSize() { return indexShiftSize_; }
+    vector<string>& indexParInstruments() { return indexParInstruments_; }
+    bool& indexParInstrumentsSingleCurve() { return indexParInstrumentsSingleCurve_; }
+    map<pair<string, string>, string>& indexParInstrumentConventions() { return indexParInstrumentConventions_; }
 
-    vector<string>& infIndices()  { return infIndices_; }
+    vector<string>& infIndices() { return infIndices_; }
     string& infLabel() { return infLabel_; }
     string& infDomain() { return infDomain_; }
     vector<Period>& infShiftTenors() { return infShiftTenors_; }
     string& infShiftType() { return infShiftType_; }
     Real& infShiftSize() { return infShiftSize_; }
 
-    vector<string>& fxCcyPairs()  { return fxCcyPairs_; }
+    vector<string>& fxCcyPairs() { return fxCcyPairs_; }
     string& fxLabel() { return fxLabel_; }
     string& fxShiftType() { return fxShiftType_; }
     Real& fxShiftSize() { return fxShiftSize_; }
 
-    vector<string>& swaptionVolCurrencies()  { return swaptionVolCurrencies_; }
+    vector<string>& swaptionVolCurrencies() { return swaptionVolCurrencies_; }
     string& swaptionVolLabel() { return swaptionVolLabel_; }
     vector<Period>& swaptionVolShiftExpiries() { return swaptionVolShiftExpiries_; }
     vector<Period>& swaptionVolShiftTerms() { return swaptionVolShiftTerms_; }
@@ -193,6 +204,9 @@ private:
     vector<Period> discountShiftTenors_;
     string discountShiftType_;
     Real discountShiftSize_;
+    vector<string> discountParInstruments_;
+    bool discountParInstrumentsSingleCurve_;
+    map<pair<string,string>, string> discountParInstrumentConventions_;
 
     vector<string> indexNames_;
     string indexLabel_;
@@ -200,6 +214,9 @@ private:
     vector<Period> indexShiftTenors_;
     string indexShiftType_;
     Real indexShiftSize_;
+    vector<string> indexParInstruments_;
+    bool indexParInstrumentsSingleCurve_;
+    map<pair<string,string>, string> indexParInstrumentConventions_;
 
     vector<string> fxCcyPairs_;
     string fxLabel_;
