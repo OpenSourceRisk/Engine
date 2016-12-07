@@ -178,6 +178,7 @@
     <Indices>
       <Index>EUR-EURIBOR-6M</Index>
       <Index>EUR-EONIA</Index>
+      <Index>GBP-LIBOR-6M</Index>
     </Indices>
     <SwapIndices>
       <SwapIndex>
