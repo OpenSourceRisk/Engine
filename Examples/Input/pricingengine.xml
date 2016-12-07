@@ -71,7 +71,7 @@
   <Product type="EquityOption">
     <Model>BlackScholesMerton</Model>
     <ModelParameters/>
-    <Engine>AnalyticMultiCurveEuropeanEngine</Engine>
+    <Engine>AnalyticEuropeanEngine</Engine>
     <EngineParameters/>
   </Product>
 </PricingEngines>

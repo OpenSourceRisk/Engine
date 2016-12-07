@@ -328,9 +328,6 @@
       <Filter>termstructures</Filter>
     </ClInclude>
     <ClInclude Include="qle\math\nadarayawatson.hpp" />
-    <ClInclude Include="qle\pricingengines\analyticmulticurveeuropeanengine.hpp">
-      <Filter>pricingengines</Filter>
-    </ClInclude>
     <ClInclude Include="qle\pricingengines\discountingequityforwardengine.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
@@ -565,9 +562,6 @@
     </ClCompile>
     <ClCompile Include="qle\termstructures\spreadedswaptionvolatility.cpp">
       <Filter>termstructures</Filter>
-    </ClCompile>
-    <ClCompile Include="qle\pricingengines\analyticmulticurveeuropeanengine.cpp">
-      <Filter>pricingengines</Filter>
     </ClCompile>
     <ClCompile Include="qle\pricingengines\discountingequityforwardengine.cpp">
       <Filter>pricingengines</Filter>

@@ -26,7 +26,7 @@
 #include <boost/make_shared.hpp>
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/enginefactory.hpp>
-#include <qle/pricingengines/analyticmulticurveeuropeanengine.hpp>
+#include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
 #include <ql/processes/blackscholesprocess.hpp>
 
 namespace ore {
@@ -39,7 +39,7 @@ namespace data {
  */
 class EquityOptionEngineBuilder : public CachingPricingEngineBuilder<string, const string&, const Currency&> {
 public:
-    EquityOptionEngineBuilder() : CachingEngineBuilder("BlackScholesMerton", "AnalyticMultiCurveEuropeanEngine") {}
+    EquityOptionEngineBuilder() : CachingEngineBuilder("BlackScholesMerton", "AnalyticEuropeanEngine") {}
 
 protected:
     virtual string keyImpl(const string& equityName, const Currency& ccy) override {
@@ -56,7 +56,9 @@ protected:
             market_->equityVol(equityName, configuration(MarketContext::pricing)));
         // separate IR curves required for "discounting" and "forward price estimation"
         Handle<YieldTermStructure> discountCurve = market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
-        return boost::make_shared<QuantExt::AnalyticMultiCurveEuropeanEngine>(gbsp,discountCurve);
+        //! TODO: This pricing engine only takes a single rate curve as input - hence multi-curve discounting is not supported.
+        //! - for now we pass the curve required to retrieve equity forward quotes. This means the specified CSA discount curve is not used in pricing.
+        return boost::make_shared<QuantLib::AnalyticEuropeanEngine>(gbsp);
     }
 };
 
