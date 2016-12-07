@@ -167,14 +167,13 @@ SwaptionVolCurve::SwaptionVolCurve(Date asof, SwaptionVolatilityCurveSpec spec, 
             vol_->enableExtrapolation(config->extrapolate());
         } else {
             // Constant volatility
-            if (config->volatilityType() == SwaptionVolatilityCurveConfig::VolatilityType::Normal) {
-                QL_FAIL("Constant swaption volatility model only supports lognormal volatilities.");
-            }
             vol_ = boost::shared_ptr<SwaptionVolatilityStructure>(new ConstantSwaptionVolatility(
                 asof, config->calendar(), config->businessDayConvention(), 
-                vols[0][0], config->dayCounter(), QuantLib::ShiftedLognormal, 
-                !shifts.empty() ? shifts[0][0] : 0.0
-            ));
+                vols[0][0], config->dayCounter(), 
+                config->volatilityType() == SwaptionVolatilityCurveConfig::VolatilityType::Normal
+                ? QuantLib::Normal
+                : QuantLib::ShiftedLognormal,
+                !shifts.empty() ? shifts[0][0] : 0.0));
         }
 
     } catch (std::exception& e) {
