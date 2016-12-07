@@ -17,6 +17,8 @@
                 <xs:element type="fxForwardData" name="FxForwardData"/>
                 <xs:element type="fxOptionData" name="FxOptionData"/>
                 <xs:element type="capFloorData" name="CapFloorData"/>
+                <xs:element type="equityOptionData" name="EquityOptionData"/>
+                <xs:element type="equityForwardData" name="EquityForwardData"/>
               </xs:choice>
             </xs:sequence>
             <xs:attribute type="xs:string" name="id" use="required"/>
@@ -180,6 +182,8 @@
       <xs:enumeration value="FxForward"/>
       <xs:enumeration value="FxOption"/>
       <xs:enumeration value="CapFloor"/>
+      <xs:enumeration value="EquityOption"/>
+      <xs:enumeration value="EquityForward"/>
     </xs:restriction>
   </xs:simpleType>
 
@@ -228,6 +232,27 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  
+  <xs:complexType name="equityOptionData">
+    <xs:sequence>
+      <xs:element type="optionData" name="OptionData"/>
+      <xs:element type="currencyCode" name="Currency"/>
+      <xs:element type="xs:float" name="Strike"/>
+      <xs:element type="xs:string" name="Name"/>
+      <xs:element type="xs:float" name="Quantity"/>
+    </xs:sequence>
+  </xs:complexType>
+  
+  <xs:complexType name="equityForwardData">
+    <xs:sequence>
+      <xs:element type="date" name="Maturity"/>
+      <xs:element type="currencyCode" name="Currency"/>
+      <xs:element type="xs:float" name="Strike"/>
+      <xs:element type="xs:string" name="Name"/>
+      <xs:element type="xs:float" name="Quantity"/>
+      <xs:element type="longShort" name="LongShort"/>
     </xs:sequence>
   </xs:complexType>
 

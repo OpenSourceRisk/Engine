@@ -14,6 +14,8 @@
         <xs:element type="swaptionVolatilitiesType" name="SwaptionVolatilities" maxOccurs="unbounded" minOccurs="1"/>
         <xs:element type="capFloorVolatilitiesType" name="CapFloorVolatilities" maxOccurs="unbounded" minOccurs="0"/>
         <xs:element type="defaultCurvesType" name="DefaultCurves" maxOccurs="unbounded" minOccurs="1"/>
+        <xs:element type="equityCurvesType" name="EquityCurves" maxOccurs="unbounded" minOccurs="0"/>
+        <xs:element type="equityVolatilitiesType" name="EquityVolatilities" maxOccurs="unbounded" minOccurs="0"/>
       </xs:sequence>
     </xs:complexType>
   </xs:element>
@@ -139,6 +141,36 @@
   <xs:complexType name="defaultCurvesType">
     <xs:sequence>
       <xs:element name="DefaultCurve" maxOccurs="unbounded" minOccurs="0">
+        <xs:complexType>
+          <xs:simpleContent>
+            <xs:extension base="xs:string">
+              <xs:attribute type="xs:string" name="name" use="required"/>
+            </xs:extension>
+          </xs:simpleContent>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="id"/>
+  </xs:complexType>
+  
+  <xs:complexType name="equityCurvesType">
+    <xs:sequence>
+      <xs:element name="EquityCurve" maxOccurs="unbounded" minOccurs="0">
+        <xs:complexType>
+          <xs:simpleContent>
+            <xs:extension base="xs:string">
+              <xs:attribute type="xs:string" name="name" use="required"/>
+            </xs:extension>
+          </xs:simpleContent>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="id"/>
+  </xs:complexType>
+
+  <xs:complexType name="equityVolatilitiesType">
+    <xs:sequence>
+      <xs:element name="EquityVolatility" maxOccurs="unbounded" minOccurs="0">
         <xs:complexType>
           <xs:simpleContent>
             <xs:extension base="xs:string">
