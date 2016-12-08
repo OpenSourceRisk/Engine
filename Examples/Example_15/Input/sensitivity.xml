@@ -1,48 +1,117 @@
-<ORE>
+<SensitivityAnalysis>
   
-  <SensitivityAnalysis>
+  <!-- Discount curve shifts -->
+  <DiscountCurve>
+    <Currencies><!-- optional selection, default to sim market settings -->
+      <Currency>EUR</Currency>
+      <Currency>USD</Currency>
+      <Currency>GBP</Currency>
+      <Currency>JPY</Currency>
+      <Currency>CHF</Currency>
+    </Currencies>
+    <Domain>Par</Domain>
+    <ShiftType>Absolute</ShiftType>
+    <ShiftSize>0.0001</ShiftSize>
+    <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    <Label>YIELD_DISCOUNT</Label>
 
-    <!-- Discount curve shifts -->
-    <DiscountDomain>ZERO</DiscountDomain>
-    <DiscountShiftType>Absolute</DiscountShiftType>
-    <DiscountShiftSize>0.0001</DiscountShiftSize>
-    <DiscountShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</DiscountShiftTenors>
-    <DiscountLabel>YIELD_DISCOUNT</DiscountLabel>
-
-    <!-- Index curve shifts -->
-    <IndexDomain>ZERO</IndexDomain>
-    <IndexShiftType>Absolute</IndexShiftType>
-    <IndexShiftSize>0.0001</IndexShiftSize>
-    <IndexShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</IndexShiftTenors>
-    <IndexLabel>YIELD_INDEX</IndexLabel>
-
-    <!-- FX spot shifts -->
-    <FxShiftType>Relative</FxShiftType>
-    <FxShiftSize>0.01</FxShiftSize>
-    <FxLabel>FX</FxLabel>
-
-    <!-- FX ATM vol shifts -->
-    <FxVolatilityShiftType>Relative</FxVolatilityShiftType>
-    <FxVolatilityShiftSize>0.01</FxVolatilityShiftSize>
-    <FxVolatilityShiftExpiries>1Y,2Y,3Y,5Y</FxVolatilityShiftExpiries>
-    <FxVolatilityShiftStrikes/>
-    <FxVolatilityLabel>VOL_FX</FxVolatilityLabel>
-
-    <!-- Swaption ATM vol shifts -->
-    <SwaptionVolatilityShiftType>Relative</SwaptionVolatilityShiftType>
-    <SwaptionVolatilityShiftSize>0.01</SwaptionVolatilityShiftSize>
-    <SwaptionVolatilityShiftExpiries>1Y,5Y,7Y,10Y</SwaptionVolatilityShiftExpiries>
-    <SwaptionVolatilityShiftTerms>1Y,5Y,10Y</SwaptionVolatilityShiftTerms>
-    <SwaptionVolatilityShiftStrikes/>
-    <SwaptionVolatilityLabel>VOL_SWAPTION</SwaptionVolatilityLabel>
-
-    <!-- Cap/Floor (Optionlet) vol surface shifts -->
-    <CapFloorVolatilityShiftType>Relative</CapFloorVolatilityShiftType>
-    <CapFloorVolatilityShiftSize>0.01</CapFloorVolatilityShiftSize>
-    <CapFloorVolatilityShiftExpiries>1Y,2Y,3Y,5Y,7Y,10Y</CapFloorVolatilityShiftExpiries>
-    <CapFloorVolatilityShiftStrikes>0.05</CapFloorVolatilityShiftStrikes>
-    <CapFloorVolatilityLabel>VOL_CAPFLOOR</CapFloorVolatilityLabel>
-
-  </SensitivityAnalysis>
-
-</ORE>
+    <ParConversion><!-- required if Domain = Par -->
+      <Instruments>DEP,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS</Instruments><!-- DEP, FRA, IRS, OIS -->
+      <SingleCurve>true</SingleCurve>
+      <Conventions><!-- key is currency, instrument type -->
+	<Convention id="EUR,DEP">EUR-EURIBOR-CONVENTIONS</Convention>
+	<Convention id="EUR,IRS">EUR-6M-SWAP-CONVENTIONS</Convention>
+	<Convention id="EUR,OIS">EUR-OIS-CONVENTIONS</Convention>
+	<Convention id="USD,DEP">USD-LIBOR-CONVENTIONS</Convention>
+	<Convention id="USD,IRS">USD-3M-SWAP-CONVENTIONS</Convention>
+	<Convention id="GBP,DEP">GBP-DEPOSIT</Convention>
+	<Convention id="GBP,IRS">GBP-6M-SWAP-CONVENTIONS</Convention>
+	<Convention id="JPY,DEP">JPY-LIBOR-CONVENTIONS</Convention>
+	<Convention id="JPY,IRS">JPY-LIBOR-6M-SWAP-CONVENTIONS</Convention>
+	<Convention id="CHF,DEP">CHF-LIBOR-CONVENTIONS</Convention>
+	<Convention id="CHF,IRS">CHF-6M-SWAP-CONVENTIONS</Convention>
+      </Conventions>
+    </ParConversion>
+  </DiscountCurve>
+  
+  <!-- Index curve shifts -->
+  <IndexCurve>
+    <IndexNames><!-- optional selection -->
+      <Index>EUR-EURIBOR-6M</Index>
+     <Index>EUR-EURIBOR-3M</Index>
+      <Index>EUR-EONIA</Index>
+    <Index>USD-LIBOR-3M</Index>
+      <Index>USD-LIBOR-6M</Index>
+      <Index>GBP-LIBOR-6M</Index>
+      <Index>GBP-LIBOR-3M</Index>
+      <Index>CHF-LIBOR-6M</Index>
+      <Index>JPY-LIBOR-6M</Index>
+    </IndexNames>
+    <Domain>Par</Domain>
+    <ShiftType>Absolute</ShiftType>
+    <ShiftSize>0.0001</ShiftSize>
+    <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    <Label>YIELD_INDEX</Label>
+    <ParConversion><!-- required if Domain = Par -->
+      <Instruments>DEP,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS</Instruments><!-- DEP, FRA, IRS, OIS -->
+      <SingleCurve>false</SingleCurve>
+      <Conventions><!-- key is currency, instrument type -->
+	<Convention id="EUR,DEP">EUR-EURIBOR-CONVENTIONS</Convention>
+	<Convention id="EUR,IRS">EUR-6M-SWAP-CONVENTIONS</Convention>
+	<Convention id="EUR,OIS">EUR-OIS-CONVENTIONS</Convention>
+	<Convention id="USD,DEP">USD-LIBOR-CONVENTIONS</Convention>
+	<Convention id="USD,IRS">USD-3M-SWAP-CONVENTIONS</Convention>
+	<Convention id="GBP,DEP">GBP-DEPOSIT</Convention>
+	<Convention id="GBP,IRS">GBP-6M-SWAP-CONVENTIONS</Convention>
+	<Convention id="JPY,DEP">JPY-LIBOR-CONVENTIONS</Convention>
+	<Convention id="JPY,IRS">JPY-LIBOR-6M-SWAP-CONVENTIONS</Convention>
+	<Convention id="CHF,DEP">CHF-LIBOR-CONVENTIONS</Convention>
+	<Convention id="CHF,IRS">CHF-6M-SWAP-CONVENTIONS</Convention>
+      </Conventions>
+    </ParConversion>
+    </IndexCurve>
+  
+  <!-- FX spot shifts -->
+  <FxSpot>
+    <ShiftType>Relative</ShiftType>
+    <ShiftSize>0.01</ShiftSize>
+    <Label>FX</Label>
+  </FxSpot>
+  
+  <!-- FX ATM vol shifts -->
+  <FxVolatility>
+    <ShiftType>Relative</ShiftType>
+    <ShiftSize>0.01</ShiftSize>
+    <ShiftExpiries>1Y,2Y,3Y,5Y</ShiftExpiries>
+    <ShiftStrikes/>
+    <Label>VOL_FX</Label>
+  </FxVolatility>
+  
+  <!-- Swaption ATM vol shifts -->
+  <SwaptionVolatility>
+    <ShiftType>Relative</ShiftType>
+    <ShiftSize>0.01</ShiftSize>
+    <ShiftExpiries>1Y,5Y,7Y,10Y</ShiftExpiries>
+    <ShiftTerms>1Y,5Y,10Y</ShiftTerms>
+    <ShiftStrikes/>
+    <Label>VOL_SWAPTION</Label>
+  </SwaptionVolatility>
+  
+  <!-- Cap/Floor (Optionlet) vol surface shifts -->
+  <CapFloorVolatility>
+    <Domain>Optionlet</Domain>
+    <ShiftType>Relative</ShiftType>
+    <ShiftSize>0.01</ShiftSize>
+    <ShiftExpiries>1Y,2Y,3Y,5Y,7Y,10Y</ShiftExpiries>
+    <ShiftStrikes>0.05</ShiftStrikes>
+    <Label>VOL_CAPFLOOR</Label>
+  </CapFloorVolatility>
+  
+  <!-- Cross Gamma filter: Pairs of factor sub-strings -->
+  <CrossGammaFilter>
+    <Pair>DISOUNT/EUR,DISCOUNT/EUR</Pair>
+    <Pair>INDEX/EUR,INDEX/EUR</Pair>
+    <Pair>DISCOUNT/EUR,INDEX/EUR</Pair>      
+  </CrossGammaFilter>
+  
+</SensitivityAnalysis>

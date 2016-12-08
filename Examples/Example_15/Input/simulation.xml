@@ -15,13 +15,24 @@
 
     <YieldCurves>
       <Configuration>
-        <Tenors>3M,6M,1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y,30Y,40Y,50Y</Tenors>
+        <!--<Tenors>3M,6M,1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y,30Y,40Y,50Y</Tenors>-->
+        <Tenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</Tenors>
         <Interpolation>LogLinear</Interpolation>
         <!-- Alternative: LinearZero -->
         <Extrapolation>Y</Extrapolation>
       </Configuration>
     </YieldCurves>
 
+    <FxRates>
+      <CurrencyPairs>
+        <CurrencyPair>USDEUR</CurrencyPair>
+        <CurrencyPair>GBPEUR</CurrencyPair>
+        <CurrencyPair>CHFEUR</CurrencyPair>
+        <CurrencyPair>JPYEUR</CurrencyPair>
+        <CurrencyPair>USDGBP</CurrencyPair>
+      </CurrencyPairs>      
+    </FxRates>
+    
     <Indices>
       <Index>EUR-EURIBOR-6M</Index>
       <Index>EUR-EURIBOR-3M</Index>
@@ -88,6 +99,7 @@
         <CurrencyPair>EURUSD</CurrencyPair>
         <CurrencyPair>EURGBP</CurrencyPair>
         <CurrencyPair>EURJPY</CurrencyPair>
+        <CurrencyPair>GBPUSD</CurrencyPair>
       </CurrencyPairs>
       <Expiries>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</Expiries>
       <Strikes/>

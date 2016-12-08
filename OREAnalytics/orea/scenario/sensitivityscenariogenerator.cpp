@@ -397,7 +397,7 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(bool up, boost
 
             // each shift tenor is associated with a scenario
             ostringstream o;
-            o << sensitivityData_->discountLabel() << "/" << ccy << "/" << shiftTenors[j] << direction;
+            o << sensitivityData_->discountLabel() << "/" << ccy << "/#" << j << "/" << shiftTenors[j] << direction;
             string label = o.str();
             boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_, label);
 
@@ -464,7 +464,7 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(bool up, boost::s
 
             // each shift tenor is associated with a scenario
             ostringstream o;
-            o << sensitivityData_->indexLabel() << "/" << indexName << "/" << shiftTenors[j] << direction;
+            o << sensitivityData_->indexLabel() << "/" << indexName << "/#" << j << "/" << shiftTenors[j] << direction;
             string label = o.str();
             boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_, label);
 
@@ -532,7 +532,7 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(bool up, boost::shared
         for (Size j = 0; j < shiftTenors.size(); ++j) {
             // each shift tenor is associated with a scenario
             ostringstream o;
-            o << sensitivityData_->fxVolLabel() << "/" << ccypair << "/" << shiftTenors[j] << direction;
+            o << sensitivityData_->fxVolLabel() << "/" << ccypair << "/#" << j << "/" << shiftTenors[j] << direction;
             string label = o.str();
             boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_, label);
             // apply shift at tenor point j

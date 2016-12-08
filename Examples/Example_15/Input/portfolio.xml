@@ -23,9 +23,9 @@
           </Rates>
         </FixedLegData>
         <ScheduleData>
-          <Rules>
-            <StartDate>20160301</StartDate>
-            <EndDate>20360301</EndDate>
+          <Rules><!-- spot start from 20160205, 20Y term --> 
+            <StartDate>20160209</StartDate>
+            <EndDate>20360209</EndDate>
             <Tenor>1Y</Tenor>
             <Calendar>TARGET</Calendar>
             <Convention>F</Convention>
@@ -55,9 +55,9 @@
           <FixingDays>2</FixingDays>
         </FloatingLegData>
         <ScheduleData>
-          <Rules>
-            <StartDate>20160301</StartDate>
-            <EndDate>20360301</EndDate>
+          <Rules><!-- spot start 20160205, 20Y term -->
+            <StartDate>20160209</StartDate>
+            <EndDate>20360209</EndDate>
             <Tenor>6M</Tenor>
             <Calendar>TARGET</Calendar>
             <Convention>MF</Convention>
@@ -277,6 +277,30 @@
         </ExerciseDates>
       </OptionData>
       <BoughtCurrency>EUR</BoughtCurrency>
+      <BoughtAmount>1000000</BoughtAmount>
+      <SoldCurrency>USD</SoldCurrency>
+      <SoldAmount>1100000</SoldAmount>
+    </FxOptionData>
+  </Trade>
+  <Trade id="FX_CALL_OPTION_USDGBP">
+    <TradeType>FxOption</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <FxOptionData>
+      <OptionData>
+        <LongShort>Long</LongShort>
+        <OptionType>Call</OptionType>
+        <Style>European</Style>
+        <Settlement>Cash</Settlement>
+        <PayOffAtExpiry>false</PayOffAtExpiry>
+        <ExerciseDates>
+          <ExerciseDate>2026-03-01</ExerciseDate>
+        </ExerciseDates>
+      </OptionData>
+      <BoughtCurrency>GBP</BoughtCurrency>
       <BoughtAmount>1000000</BoughtAmount>
       <SoldCurrency>USD</SoldCurrency>
       <SoldAmount>1100000</SoldAmount>

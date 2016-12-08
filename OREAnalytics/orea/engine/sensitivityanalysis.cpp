@@ -36,6 +36,88 @@ using namespace ore::data;
 namespace ore {
 namespace analytics {
 
+void ParSensitivityConverter::buildJacobiMatrix() {
+    vector<string> currencies = sensitivityData_->discountCurrencies();
+    Size n_discountTenors = sensitivityData_->discountShiftTenors().size();
+    vector<string> indices = sensitivityData_->indexNames();
+    Size n_indexTenors = sensitivityData_->indexShiftTenors().size();
+    Size n_zeroShifts = yieldFactors_.size();
+    Size n_par = currencies.size() * n_discountTenors + indices.size() * n_indexTenors;
+    jacobi_ = Matrix(n_par, n_zeroShifts, 0.0);
+
+    LOG("Build Jacobi matrix");
+    for (Size i = 0; i < yieldFactors_.size(); ++i)
+        LOG("Yield factor " << i << " " << yieldFactors_[i]);
+
+    // Check ordering of the yield curve factors
+    vector<string> curves, types;
+    for (auto f : yieldFactors_) {
+        vector<string> tokens;
+        boost::split(tokens, f, boost::is_any_of("/"));
+        QL_REQUIRE(tokens.size() >= 2, "more than two toekns expected in " << f);
+        QL_REQUIRE(tokens[0] == "YIELD_DISCOUNT" || tokens[0] == "YIELD_INDEX", "discount or index factors expected");
+        string type = tokens[0];
+        string curve = tokens[1];
+        if (curves.size() == 0 || curve != curves.back()) {
+            curves.push_back(curve);
+            types.push_back(type);
+        }
+    }
+
+    Size offset = 0;
+    for (Size i = 0; i < curves.size(); ++i) {
+        string curve = curves[i];
+        LOG("Curve " << i << " " << curve);
+        Size tenors = types[i] == "YIELD_DISCOUNT" ? n_discountTenors : n_indexTenors;
+        for (Size k = 0; k < n_zeroShifts; ++k) {
+            string factor = yieldFactors_[k];
+            pair<string, string> p(curve, factor);
+            vector<Real> v;
+            if (parRateSensi_.find(p) == parRateSensi_.end())
+                v = vector<Real>(tenors, 0.0);
+            else
+                v = parRateSensi_[p];
+            for (Size j = 0; j < tenors; ++j) {
+                jacobi_[offset + j][k] = v[j];
+            }
+        }
+        offset += tenors;
+    }
+
+    LOG("Jacobi matrix dimension " << jacobi_.rows() << " x " << jacobi_.columns());
+
+    jacobiInverse_ = inverse(jacobi_);
+
+    LOG("Inverse Jacobi done");
+}
+
+void ParSensitivityConverter::convertSensitivity() {
+    set<string> trades;
+    for (auto d : delta_) {
+        string trade = d.first.first;
+        trades.insert(trade);
+    }
+    for (auto t : trades) {
+        Array deltaArray(yieldFactors_.size(), 0.0);
+        for (Size i = 0; i < yieldFactors_.size(); ++i) {
+            pair<string, string> p(t, yieldFactors_[i]);
+            if (delta_.find(p) != delta_.end())
+                deltaArray[i] = delta_[p];
+            if (t == "SWAP_EUR")
+                LOG("delta " << yieldFactors_[i] << " " << deltaArray[i]);
+        }
+        Array parDeltaArray = transpose(jacobiInverse_) * deltaArray;
+        for (Size i = 0; i < yieldFactors_.size(); ++i) {
+            if (parDeltaArray[i] != 0.0) {
+                pair<string, string> p(t, yieldFactors_[i]);
+                parDelta_[p] = parDeltaArray[i];
+                if (t == "SWAP_EUR")
+                    LOG("par delta " << yieldFactors_[i] << " " << deltaArray[i] << " " << parDeltaArray[i]);
+            }
+        }
+    }
+}
+
 string SensitivityAnalysis::remove(const string& input, const string& ending) {
     string output = input;
     std::string::size_type i = output.find(ending);
@@ -138,6 +220,12 @@ SensitivityAnalysis::SensitivityAnalysis(boost::shared_ptr<ore::data::Portfolio>
         }
     }
 
+    vector<string> yieldFactors;
+    for (auto f : factors_) {
+        if (f.find("YIELD") != string::npos)
+            yieldFactors.push_back(f);
+    }
+
     // gamma
     for (auto data : upNPV_) {
         pair<string, string> p = data.first;
@@ -163,7 +251,6 @@ SensitivityAnalysis::SensitivityAnalysis(boost::shared_ptr<ore::data::Portfolio>
 
     map<string, vector<boost::shared_ptr<RateHelper> > > discountParInstruments;
     map<string, vector<Real> > discountParRatesBase;
-    map<pair<string,string>, vector<vector<Real> > > discountParRates, discountParRatesSensi;
     Size n_ten = sensitivityData->discountShiftTenors().size();
     QL_REQUIRE(sensitivityData->discountParInstruments().size() == n_ten,
                "number of tenors does not match number of discount curve par instruments");
@@ -196,7 +283,6 @@ SensitivityAnalysis::SensitivityAnalysis(boost::shared_ptr<ore::data::Portfolio>
 
     map<string, vector<boost::shared_ptr<RateHelper> > > indexParInstruments;
     map<string, vector<Real> > indexParRatesBase;
-    map<pair<string,string>, vector<vector<Real> > > indexParRates, indexParRatesSensi;
     QL_REQUIRE(sensitivityData->indexParInstruments().size() == n_ten,
                "number of tenors does not match number of index curve par instruments");
     for (Size i = 0; i < simMarketData->indices().size(); ++i) {
@@ -236,6 +322,7 @@ SensitivityAnalysis::SensitivityAnalysis(boost::shared_ptr<ore::data::Portfolio>
     file.open("ratesensi.csv");
     vector<string> labels;
 
+    map<pair<string, string>, vector<Real> > discountParRatesSensi, discountParRates, indexParRatesSensi, indexParRates;
     for (Size i = 1; i < scenarioGenerator->samples(); ++i) {
         string label = scenarioGenerator->scenarios()[i]->label();
         // use "UP" shift scenarios only
@@ -248,17 +335,18 @@ SensitivityAnalysis::SensitivityAnalysis(boost::shared_ptr<ore::data::Portfolio>
                 string ccy = simMarketData->ccys()[j];
                 if (label.find(ccy) == string::npos)
                     continue;
-                pair<string,string> key(ccy, remove(label, "UP"));
-                discountParRates[key].push_back(vector<Real>(n_ten));
-                discountParRatesSensi[key].push_back(vector<Real>(n_ten));
+                pair<string, string> key(ccy, remove(label, "/UP"));
+                factorToCurve_[remove(label, "/UP")] = ccy;
+                discountParRates[key] = vector<Real>(n_ten);
+                discountParRatesSensi[key] = vector<Real>(n_ten);
+                LOG("discountParRatesSensi.size() = " << discountParRatesSensi[key].size());
                 file << label << "," << ccy;
                 for (Size k = 0; k < n_ten; ++k) {
-                    discountParInstruments[ccy][k]->update();
                     Real fair = discountParInstruments[ccy][k]->impliedQuote();
                     Real base = discountParRatesBase[ccy][k];
-                    discountParRates[key].back().at(k) = fair;
-                    discountParRatesSensi[key].back().at(k) = fair - base;
-                    file << "," << (fair - base) * 1e4; // in bp
+                    discountParRates[key][k] = fair;
+                    discountParRatesSensi[key][k] = (fair - base) * 1e4; // FIXME
+                    file << "," << (fair - base) * 1e4;                  // in bp
                 }
                 file << endl;
             }
@@ -271,16 +359,17 @@ SensitivityAnalysis::SensitivityAnalysis(boost::shared_ptr<ore::data::Portfolio>
                 string ccy = tokens[0];
                 if (label.find(ccy) == string::npos)
                     continue;
-                pair<string,string> key(indexName, remove(label, "/UP"));
-                indexParRates[key].push_back(vector<Real>(n_ten));
-                indexParRatesSensi[key].push_back(vector<Real>(n_ten));
+                pair<string, string> key(indexName, remove(label, "/UP"));
+                factorToCurve_[remove(label, "/UP")] = indexName;
+                indexParRates[key] = vector<Real>(n_ten);
+                indexParRatesSensi[key] = vector<Real>(n_ten);
+                LOG("indexParRatesSensi.size() = " << indexParRatesSensi[key].size());
                 file << label << "," << indexName;
                 for (Size k = 0; k < n_ten; ++k) {
-                    indexParInstruments[indexName][k]->update();
                     Real fair = indexParInstruments[indexName][k]->impliedQuote();
                     Real base = indexParRatesBase[indexName][k];
-                    indexParRates[key].back().at(k) = fair;
-                    indexParRatesSensi[key].back().at(k) = fair - base;
+                    indexParRates[key][k] = fair;
+                    indexParRatesSensi[key][k] = (fair - base) * 1e4;
                     file << "," << (fair - base) * 1e4; // in bp
                 }
                 file << endl;
@@ -289,6 +378,17 @@ SensitivityAnalysis::SensitivityAnalysis(boost::shared_ptr<ore::data::Portfolio>
     }
 
     file.close();
+
+    // Build Jacobi matrices for each curve
+    map<pair<string, string>, vector<Real> > parRatesSensi;
+    parRatesSensi.insert(discountParRatesSensi.begin(), discountParRatesSensi.end());
+    parRatesSensi.insert(indexParRatesSensi.begin(), indexParRatesSensi.end());
+    ParSensitivityConverter jacobi(sensitivityData, yieldFactors, delta_, parRatesSensi);
+    parDelta_ = jacobi.parDelta();
+
+    // cout << "Jacobi" << endl << jacobi.jacobi() << endl;
+
+    // cout << "Jacobi Inverse" << endl << jacobi.jacobiInverse() << endl;
 }
 
 void SensitivityAnalysis::writeScenarioReport(string fileName, Real outputThreshold) {
@@ -329,8 +429,8 @@ void SensitivityAnalysis::writeSensitivityReport(string fileName, Real outputThr
     file.setf(ios::fixed, ios::floatfield);
     file.setf(ios::showpoint);
     char sep = ',';
-    file << "#TradeId" << sep << "Factor" << sep << "Base NPV" << sep << "Delta*Shift" << sep << "Gamma*Shift^2"
-         << endl;
+    file << "#TradeId" << sep << "Factor" << sep << "Base NPV" << sep << "Delta*Shift" << sep << "ParDelta*Shift" << sep
+         << "Gamma*Shift^2" << endl;
     LOG("Write sensitivity output to " << fileName);
     for (auto data : delta_) {
         pair<string, string> p = data.first;
@@ -339,8 +439,13 @@ void SensitivityAnalysis::writeSensitivityReport(string fileName, Real outputThr
         Real delta = data.second;
         Real gamma = gamma_[p];
         Real base = baseNPV_[id];
-        if (fabs(delta) > outputThreshold || fabs(gamma) > outputThreshold)
-            file << id << sep << factor << sep << base << sep << delta << sep << gamma << endl;
+        if (fabs(delta) > outputThreshold || fabs(gamma) > outputThreshold) {
+            if (parDelta_.find(p) != parDelta_.end())
+                file << id << sep << factor << sep << base << sep << delta << sep << parDelta_[p] << sep << gamma
+                     << endl;
+            else
+                file << id << sep << factor << sep << base << sep << delta << sep << "N/A" << sep << gamma << endl;
+        }
     }
     file.close();
 }
@@ -463,15 +568,5 @@ boost::shared_ptr<RateHelper> SensitivityAnalysis::makeOIS(string ccy, string in
     }
     return helper;
 }
-
-// Real fairRate(boost::shared_ptr<Instrument> instrument) {
-//     boost::shared_ptr<VanillaSwap> swap = boost::dynamic_pointer_cast<VanillaSwap>(instrument);
-//     if (swap)
-//         return swap->fairRate();
-//     boost::shared_ptr<OvernightIndexedSwap> ois = boost::dynamic_pointer_cast<OvernightIndexedSwap>(instrument);
-//     if (ois)
-//         return ois->fairRate();
-//     QL_FAIL("Unexpected instrument type, vanilla swap or overnight index swap expected");
-// }
 }
 }
