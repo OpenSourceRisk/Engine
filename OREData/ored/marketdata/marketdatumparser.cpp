@@ -49,7 +49,9 @@ static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
                                                          {"FX_FWD", MarketDatum::InstrumentType::FX_FWD},
                                                          {"SWAPTION", MarketDatum::InstrumentType::SWAPTION},
                                                          {"CAPFLOOR", MarketDatum::InstrumentType::CAPFLOOR},
-                                                         {"FX_OPTION", MarketDatum::InstrumentType::FX_OPTION}};
+                                                         {"FX_OPTION", MarketDatum::InstrumentType::FX_OPTION},
+                                                         {"ZC_INFLATIONSWAP", MarketDatum::InstrumentType::ZC_INFLATIONSWAP},
+                                                         {"ZC_INFLATIONCAPFLOOR", MarketDatum::InstrumentType::ZC_INFLATIONCAPFLOOR}};
 
     auto it = b.find(s);
     if (it != b.end()) {
@@ -276,6 +278,25 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         Period expiry = parsePeriod(tokens[4]);
         const string& strike = tokens[5];
         return boost::make_shared<FXOptionQuote>(value, asof, datumName, quoteType, unitCcy, ccy, expiry, strike);
+    }
+
+    case MarketDatum::InstrumentType::ZC_INFLATIONSWAP: {
+        QL_REQUIRE(tokens.size() == 4, "4 tokens expected in " << datumName);
+        const string& index = tokens[2];
+        Period term = parsePeriod(tokens[3]);
+        return boost::make_shared<ZcInflationSwapQuote>(value, asof, datumName, index, term);
+    }
+        
+    case MarketDatum::InstrumentType::ZC_INFLATIONCAPFLOOR: {
+        QL_REQUIRE(tokens.size() == 6, "6 tokens expected in " << datumName);
+        const string& index = tokens[2];
+        Period term = parsePeriod(tokens[3]);
+        QL_REQUIRE(tokens[4] == "C" || tokens[4] == "F", "excepted C or F for Cap or Floor at position 5 in "
+                   << datumName);
+        bool isCap = tokens[4] == "C";
+        string strike = tokens[5];
+        return boost::make_shared<ZcInflationCapFloorQuote>(value, asof, datumName, quoteType, index, term, isCap,
+                                                            strike);
     }
 
     default:

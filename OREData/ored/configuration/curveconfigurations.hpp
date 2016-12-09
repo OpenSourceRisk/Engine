@@ -27,6 +27,8 @@
 #include <ored/configuration/defaultcurveconfig.hpp>
 #include <ored/configuration/yieldcurveconfig.hpp>
 #include <ored/configuration/fxvolcurveconfig.hpp>
+#include <ored/configuration/inflationcapfloorpricesurfaceconfig.hpp>
+#include <ored/configuration/inflationcurveconfig.hpp>
 #include <ored/configuration/swaptionvolcurveconfig.hpp>
 #include <ored/configuration/capfloorvolcurveconfig.hpp>
 
@@ -70,6 +72,19 @@ public:
         return defaultCurveConfigs_[curveID];
     };
     const boost::shared_ptr<DefaultCurveConfig>& defaultCurveConfig(const string& curveID) const;
+    
+    const boost::shared_ptr<InflationCurveConfig>& inflationCurveConfig(const string& curveID) const;
+    
+    boost::shared_ptr<InflationCurveConfig>& inflationCurveConfig(const string& curveID) {
+        return inflationCurveConfigs_[curveID];
+    };
+    
+    const boost::shared_ptr<InflationCapFloorPriceSurfaceConfig>&
+    inflationCapFloorPriceSurfaceConfig(const string& curveID) const;
+    
+    boost::shared_ptr<InflationCapFloorPriceSurfaceConfig>& inflationCapFloorPriceSurfaceConfig(const string& curveID) {
+        return inflationCapFloorPriceSurfaceConfigs_[curveID];
+    };
     //@}
 
     //! \name Serialisation
@@ -83,6 +98,8 @@ private:
     std::map<std::string, boost::shared_ptr<SwaptionVolatilityCurveConfig>> swaptionVolCurveConfigs_;
     std::map<std::string, boost::shared_ptr<CapFloorVolatilityCurveConfig>> capFloorVolCurveConfigs_;
     std::map<std::string, boost::shared_ptr<DefaultCurveConfig>> defaultCurveConfigs_;
+    std::map<std::string, boost::shared_ptr<InflationCurveConfig>> inflationCurveConfigs_;
+    std::map<std::string, boost::shared_ptr<InflationCapFloorPriceSurfaceConfig>> inflationCapFloorPriceSurfaceConfigs_;
 };
 }
 }

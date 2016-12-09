@@ -26,6 +26,8 @@
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/indexes/iborindex.hpp>
 #include <ql/indexes/swapindex.hpp>
+#include <ql/indexes/inflationindex.hpp>
+#include <ql/experimental/inflation/cpicapfloortermpricesurface.hpp>
 #include <ql/termstructures/volatility/swaption/swaptionvolstructure.hpp>
 #include <ql/termstructures/volatility/optionlet/optionletvolatilitystructure.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
@@ -98,6 +100,15 @@ public:
     capFloorVol(const string& ccy, const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 
+    //! Inflation Indexes
+    virtual Handle<InflationIndex> inflationIndex(const string& indexName, const bool interpolated,
+                                                  const string& configuration = Market::defaultConfiguration) const = 0;
+    
+    //! Inflation Cap Floor Price Surfaces
+    virtual Handle<CPICapFloorTermPriceSurface>
+    inflationCapFloorPriceSurface(const string& indexName,
+                                  const string& configuration = Market::defaultConfiguration) const = 0;
+    
     //! Refresh term structures for a given configuration
     virtual void refresh(const string&) {}
 

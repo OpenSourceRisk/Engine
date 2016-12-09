@@ -180,17 +180,67 @@ boost::shared_ptr<SwapIndex> parseSwapIndex(const string& s, const Handle<YieldT
                                              d);
 }
 
-boost::shared_ptr<Index> parseIndex(const string& s, const Handle<YieldTermStructure>& h) {
+// Zero Inflation Index Parser
+class ZeroInflationIndexParserBase {
+public:
+    virtual boost::shared_ptr<ZeroInflationIndex> build(bool isInterpolated,
+                                                        const Handle<ZeroInflationTermStructure>& h) const = 0;
+};
+
+template <class T> class ZeroInflationIndexParser : public ZeroInflationIndexParserBase {
+public:
+    boost::shared_ptr<ZeroInflationIndex> build(bool isInterpolated,
+                                                const Handle<ZeroInflationTermStructure>& h) const override {
+        return boost::make_shared<T>(isInterpolated, h);
+    }
+};
+
+boost::shared_ptr<ZeroInflationIndex> parseZeroInflationIndex(const string& s, bool isInterpolated,
+                                                              const Handle<ZeroInflationTermStructure>& h) {
+    
+    static map<string, boost::shared_ptr<ZeroInflationIndexParserBase>> m = {
+        {"EUHICP", boost::make_shared<ZeroInflationIndexParser<EUHICP>>()},
+        {"EUHICPXT", boost::make_shared<ZeroInflationIndexParser<EUHICPXT>>()},
+        {"UKRPI", boost::make_shared<ZeroInflationIndexParser<UKRPI>>()},
+        {"FRHICP", boost::make_shared<ZeroInflationIndexParser<FRHICP>>()},
+        {"USCPI", boost::make_shared<ZeroInflationIndexParser<USCPI>>()}};
+    
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second->build(isInterpolated, h);
+    } else {
+        QL_FAIL("parseZeroInflationIndex: \"" << s << "\" not recognized");
+    }
+}
+boost::shared_ptr<Index> parseIndex(const string& s) {
     try {
-        // TODO: Added non Ibor checks first (Inflation, etc)
+        return parseIborIndex(s);
+    } catch (...) {
+    }
+    try {
+        return parseSwapIndex(s);
+    } catch (...) {
+    }
+    try {
+        return parseZeroInflationIndex(s);
+    } catch (...) {
+    }
+    QL_FAIL("parseIndex \"" << s << "\" not recognized");
+}
+/*boost::shared_ptr<Index> parseIndex(const string& s, const Handle<YieldTermStructure>& h) {
+    try {
+        // TODO: Added non Ibor checks first (FX, Inflation, etc)
         if (s.size() > 2 && s.substr(0, 2) == "FX") {
             return parseFxIndex(s);
+        } else if (s.size() > 2 && s.substr(0, 9) == "Inflation") {
+            return parseZeroInflationIndex(s);
         } else {
             return parseIborIndex(s, h);
         }
     } catch (...) {
         QL_FAIL("parseIndex \"" << s << "\" not recognized");
     }
-}
+}*/
+    
 }
 }

@@ -711,4 +711,41 @@
     <FlatIndex>USD-LIBOR-3M</FlatIndex>
     <SpreadIndex>CHF-LIBOR-3M</SpreadIndex>
   </CrossCurrencyBasis>
+  <!-- Zc Inflation Swaps -->
+  <ZcInflationSwap>
+      <Id>EUHICPXT_ZC_INFLATIONSWAP</Id>
+      <FixCalendar>TARGET</FixCalendar>
+      <FixConvention>MF</FixConvention>
+      <DayCounter>30/360</DayCounter>
+      <Index>EUHICPXT</Index>
+      <Interpolated>false</Interpolated>
+      <ObservationLag>3M</ObservationLag>
+      <AdjustInfObsDates>false</AdjustInfObsDates>
+      <InfCalendar>TARGET</InfCalendar>
+      <InfConvention>MF</InfConvention>
+  </ZcInflationSwap>
+  <ZcInflationSwap>
+      <Id>UKRPI_ZC_INFLATIONSWAP</Id>
+      <FixCalendar>UK</FixCalendar>
+      <FixConvention>MF</FixConvention>
+      <DayCounter>30/360</DayCounter>
+      <Index>UKRPI</Index>
+      <Interpolated>false</Interpolated>
+      <ObservationLag>3M</ObservationLag>
+      <AdjustInfObsDates>false</AdjustInfObsDates>
+      <InfCalendar>UK</InfCalendar>
+      <InfConvention>MF</InfConvention>
+  </ZcInflationSwap>
+  <ZcInflationSwap>
+      <Id>USCPI_ZC_INFLATIONSWAP</Id>
+      <FixCalendar>US</FixCalendar>
+      <FixConvention>MF</FixConvention>
+      <DayCounter>30/360</DayCounter>
+      <Index>USCPI</Index>
+      <Interpolated>false</Interpolated>
+      <ObservationLag>3M</ObservationLag>
+      <AdjustInfObsDates>false</AdjustInfObsDates>
+      <InfCalendar>US</InfCalendar>
+      <InfConvention>MF</InfConvention>
+  </ZcInflationSwap>
 </Conventions>

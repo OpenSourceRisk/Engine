@@ -678,6 +678,66 @@ XMLNode* CdsConvention::toXML(XMLDocument& doc) {
     return node;
 }
 
+ZcInflationSwapConvention::ZcInflationSwapConvention(const string& id, const string& strFixCalendar,
+                                                       const string& strFixConvention, const string& strDayCounter,
+                                                       const string& strIndex, const string& strInterpolated,
+                                                       const string& strObservationLag,
+                                                       const string& strAdjustInfObsDates, const string& strInfCalendar,
+                                                       const string& strInfConvention)
+  : Convention(id, Type::ZcInflationSwap), strFixCalendar_(strFixCalendar), strFixConvention_(strFixConvention),
+  strDayCounter_(strDayCounter), strIndex_(strIndex), strInterpolated_(strInterpolated),
+  strObservationLag_(strObservationLag), strAdjustInfObsDates_(strAdjustInfObsDates),
+  strInfCalendar_(strInfCalendar), strInfConvention_(strInfConvention) {
+    build();
+}
+  
+void ZcInflationSwapConvention::build() {
+    fixCalendar_ = parseCalendar(strFixCalendar_);
+    fixConvention_ = parseBusinessDayConvention(strFixConvention_);
+    dayCounter_ = parseDayCounter(strDayCounter_);
+    interpolated_ = parseBool(strInterpolated_);
+    index_ = parseZeroInflationIndex(strIndex_, interpolated_);
+    observationLag_ = parsePeriod(strObservationLag_);
+    adjustInfObsDates_ = parseBool(strAdjustInfObsDates_);
+    infCalendar_ = parseCalendar(strInfCalendar_);
+    infConvention_ = parseBusinessDayConvention(strInfConvention_);
+}
+  
+void ZcInflationSwapConvention::fromXML(XMLNode* node) {
+    
+    XMLUtils::checkNode(node, "ZcInflationSwap");
+    type_ = Type::ZcInflationSwap;
+    id_ = XMLUtils::getChildValue(node, "Id", true);
+    
+    // Get string values from xml
+    strFixCalendar_ = XMLUtils::getChildValue(node, "FixCalendar", true);
+    strFixConvention_ = XMLUtils::getChildValue(node, "FixConvention", true);
+    strDayCounter_ = XMLUtils::getChildValue(node, "DayCounter", true);
+    strIndex_ = XMLUtils::getChildValue(node, "Index", true);
+    strInterpolated_ = XMLUtils::getChildValue(node, "Interpolated", true);
+    strObservationLag_ = XMLUtils::getChildValue(node, "ObservationLag", true);
+    strAdjustInfObsDates_ = XMLUtils::getChildValue(node, "AdjustInfObsDates", true);
+    strInfCalendar_ = XMLUtils::getChildValue(node, "InfCalendar", true);
+    strInfConvention_ = XMLUtils::getChildValue(node, "InfConvention", true);
+    build();
+}
+  
+XMLNode* ZcInflationSwapConvention::toXML(XMLDocument& doc) {
+    
+    XMLNode* node = doc.allocNode("ZcInflationSwap");
+    XMLUtils::addChild(doc, node, "Id", id_);
+    XMLUtils::addChild(doc, node, "FixCalendar", strFixCalendar_);
+    XMLUtils::addChild(doc, node, "FixConvention", strFixConvention_);
+    XMLUtils::addChild(doc, node, "DayCounter", strDayCounter_);
+    XMLUtils::addChild(doc, node, "Index", strIndex_);
+    XMLUtils::addChild(doc, node, "Interpolated", strInterpolated_);
+    XMLUtils::addChild(doc, node, "ObservationLag", strObservationLag_);
+    XMLUtils::addChild(doc, node, "AdjustInfObsDates", strAdjustInfObsDates_);
+    XMLUtils::addChild(doc, node, "InfCalendar", strInfCalendar_);
+    XMLUtils::addChild(doc, node, "InfConvention", strInfConvention_);
+    return node;
+}
+  
 void Conventions::fromXML(XMLNode* node) {
 
     XMLUtils::checkNode(node, "Conventions");
@@ -713,6 +773,8 @@ void Conventions::fromXML(XMLNode* node) {
             convention.reset(new CdsConvention());
         } else if (childName == "SwapIndex") {
             convention.reset(new SwapIndexConvention());
+        } else if (childName == "ZcInflationSwap") {
+          convention.reset(new ZcInflationSwapConvention());
         } else {
             QL_FAIL("Convention name, " << childName << ", not recognized.");
         }

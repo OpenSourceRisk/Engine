@@ -40,7 +40,7 @@ namespace data {
 class CurveSpec {
 public:
     //! Supported curve types
-    enum class CurveType { Yield, CapFloorVolatility, SwaptionVolatility, FX, FXVolatility, Default };
+    enum class CurveType { Yield, CapFloorVolatility, SwaptionVolatility, FX, FXVolatility, Default, Inflation,InflationCapFloorPrice };
     //! Default destructor
     virtual ~CurveSpec() {}
 
@@ -66,6 +66,10 @@ public:
             return "FXVolatility";
         case CurveType::Default:
             return "Default";
+        case CurveType::Inflation:
+            return "Inflation";
+        case CurveType::InflationCapFloorPrice:
+            return "InflationCapFloorPrice";
         default:
             return "N/A";
         }
@@ -236,6 +240,46 @@ public:
 private:
     string unitCcy_;
     string ccy_;
+    string curveConfigID_;
+};
+    
+//! Inflation curve description
+/*! \ingroup curves
+ */
+class InflationCurveSpec : public CurveSpec {
+public:
+    InflationCurveSpec() {}
+    InflationCurveSpec(const string& index, const string& curveConfigID)
+    : index_(index), curveConfigID_(curveConfigID) {}
+    
+    CurveType baseType() const { return CurveType::Inflation; }
+    const string& index() const { return index_; }
+    const string& curveConfigID() const { return curveConfigID_; }
+    
+    string subName() const { return index() + "/" + curveConfigID(); }
+    
+private:
+    string index_;
+    string curveConfigID_;
+};
+
+//! Inflation cap floor price description
+/*! \ingroup curves
+ */
+class InflationCapFloorPriceSurfaceSpec : public CurveSpec {
+public:
+    InflationCapFloorPriceSurfaceSpec() {}
+    InflationCapFloorPriceSurfaceSpec(const string& index, const string& curveConfigID)
+    : index_(index), curveConfigID_(curveConfigID) {}
+    
+    CurveType baseType() const { return CurveType::InflationCapFloorPrice; }
+    const string& index() const { return index_; }
+    const string& curveConfigID() const { return curveConfigID_; }
+    
+    string subName() const { return index() + "/" + curveConfigID(); }
+    
+private:
+    string index_;
     string curveConfigID_;
 };
 }

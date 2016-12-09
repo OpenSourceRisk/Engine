@@ -110,6 +110,12 @@
       <Discounting>JPY-TONAR</Discounting>
     </SwapIndex>
   </SwapIndexCurves>
+  <!-- inflation index definition -->
+  <InflationIndexCurves id="default">
+      <InflationIndexCurve name="EUHICPXT">Inflation/EUHICPXT/EUHICPXT_ZC_Swaps</InflationIndexCurve>
+      <InflationIndexCurve name="USCPI">Inflation/USCPI/USCPI_ZC_Swaps</InflationIndexCurve>
+      <InflationIndexCurve name="UKRPI">Inflation/UKRPI/UKRPI_ZC_Swaps</InflationIndexCurve>
+  </InflationIndexCurves>
   <!-- fx spot definition -->
   <FxSpots id="default">
     <FxSpot pair="EURUSD">FX/EUR/USD</FxSpot>
@@ -144,4 +150,10 @@
     <DefaultCurve name="CPTY_A">Default/USD/CPTY_A_SR_USD</DefaultCurve>
     <DefaultCurve name="CPTY_B">Default/USD/CPTY_A_SR_USD</DefaultCurve>
   </DefaultCurves>
+  <!-- inflation price surface definition -->
+  <InflationCapFloorPriceSurfaces id="default">
+      <InflationCapFloorPriceSurface name="EUHICPXT">InflationCapFloorPrice/EUHICPXT/EUHICPXT_ZC_CF</InflationCapFloorPriceSurface>
+      <InflationCapFloorPriceSurface name="USCPI">InflationCapFloorPrice/USCPI/USCPI_ZC_CF</InflationCapFloorPriceSurface>
+      <InflationCapFloorPriceSurface name="UKRPI">InflationCapFloorPrice/UKRPI/UKRPI_ZC_CF</InflationCapFloorPriceSurface>
+  </InflationCapFloorPriceSurfaces>
 </TodaysMarket>

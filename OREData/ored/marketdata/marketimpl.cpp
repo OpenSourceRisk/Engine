@@ -34,7 +34,13 @@ namespace ore {
 namespace data {
 
 namespace {
-template <class A, class B> A lookup(const B& map, const string& key, const string& configuration, const string& type) {
+
+inline std::ostream& operator<<(std::ostream& out, pair<string, bool> p) {
+    return out << p.first << " (" << (p.second ? "true" : "false") << ")";
+}
+
+template <class A, class B, class C>
+A lookup(const B& map, const C& key, const string& configuration, const string& type) {
     auto it = map.find(make_pair(configuration, key));
     if (it == map.end()) {
         // fall back to default configuration
@@ -118,6 +124,18 @@ Handle<Quote> MarketImpl::recoveryRate(const string& key, const string& configur
 Handle<OptionletVolatilityStructure> MarketImpl::capFloorVol(const string& key, const string& configuration) const {
     return lookup<Handle<OptionletVolatilityStructure>>(capFloorCurves_, key, configuration, "capfloor curve");
 }
+    
+Handle<InflationIndex> MarketImpl::inflationIndex(const string& indexName, const bool interpolated,
+                                                  const string& configuration) const {
+    return lookup<Handle<InflationIndex>>(inflationIndices_, std::make_pair(indexName, interpolated), configuration,
+                                          "inflation index");
+}
+
+Handle<CPICapFloorTermPriceSurface> MarketImpl::inflationCapFloorPriceSurface(const string& indexName,
+                                                                              const string& configuration) const {
+    return lookup<Handle<CPICapFloorTermPriceSurface>>(inflationCapFloorPriceSurfaces_, indexName, configuration,
+                                                       "inflation cap floor price surface");
+}
 
 void MarketImpl::addSwapIndex(const string& swapIndex, const string& discountIndex, const string& configuration) {
     try {
@@ -189,6 +207,23 @@ void MarketImpl::refresh(const string& configuration) {
                 it->second.insert(*x.second);
         }
         for (auto& x : defaultCurves_) {
+            if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
+                it->second.insert(*x.second);
+        }
+        for (auto& x : inflationIndices_) {
+            if (x.first.first == configuration || x.first.first == Market::defaultConfiguration) {
+                boost::shared_ptr<ZeroInflationIndex> tmp = boost::dynamic_pointer_cast<ZeroInflationIndex>(*x.second);
+                if (tmp != nullptr) {
+                    it->second.insert(*tmp->zeroInflationTermStructure());
+                } else {
+                    boost::shared_ptr<YoYInflationIndex> tmp =
+                    boost::dynamic_pointer_cast<YoYInflationIndex>(*x.second);
+                    if (tmp != nullptr)
+                        it->second.insert(*tmp->yoyInflationTermStructure());
+                }
+            }
+        }
+        for (auto& x : inflationCapFloorPriceSurfaces_) {
             if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
                 it->second.insert(*x.second);
         }

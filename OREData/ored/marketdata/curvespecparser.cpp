@@ -34,7 +34,9 @@ static CurveSpec::CurveType parseCurveSpecType(const string& s) {
                                                   {"SwaptionVolatility", CurveSpec::CurveType::SwaptionVolatility},
                                                   {"FX", CurveSpec::CurveType::FX},
                                                   {"FXVolatility", CurveSpec::CurveType::FXVolatility},
-                                                  {"Default", CurveSpec::CurveType::Default}};
+                                                  {"Default", CurveSpec::CurveType::Default},
+                                                  {"Inflation", CurveSpec::CurveType::Inflation},
+                                                  {"InflationCapFloorPrice", CurveSpec::CurveType::InflationCapFloorPrice}};
 
     auto it = b.find(s);
     if (it != b.end()) {
@@ -116,6 +118,26 @@ boost::shared_ptr<CurveSpec> parseCurveSpec(const string& s) {
         const string& ccy = tokens[1];
         const string& curveConfigID = tokens[2];
         return boost::make_shared<CapFloorVolatilityCurveSpec>(ccy, curveConfigID);
+    }
+            
+    case CurveSpec::CurveType::Inflation: {
+        // Inflation/EUHICPXT/CurveConfigID
+        QL_REQUIRE(tokens.size() == 3, "Unexpected number"
+                   " of tokens in inflation curve spec "
+                   << s);
+        const string& index = tokens[1];
+        const string& curveConfigID = tokens[2];
+        return boost::make_shared<InflationCurveSpec>(index, curveConfigID);
+    }
+        
+    case CurveSpec::CurveType::InflationCapFloorPrice: {
+        // InflationCapFloorPrice/EUHICPXT/CurveConfigID
+        QL_REQUIRE(tokens.size() == 3, "Unexpected number"
+                   " of tokens in inflation cap floor price surface spec "
+                   << s);
+        const string& index = tokens[1];
+        const string& curveConfigID = tokens[2];
+        return boost::make_shared<InflationCapFloorPriceSurfaceSpec>(index, curveConfigID);
     }
 
         // TODO: the rest...

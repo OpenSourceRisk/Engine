@@ -25,15 +25,19 @@
 
 #include <ql/index.hpp>
 #include <ql/indexes/iborindex.hpp>
+#include <ql/indexes/inflationindex.hpp>
 #include <ql/indexes/swapindex.hpp>
 #include <ored/configuration/conventions.hpp>
 #include <qle/indexes/fxindex.hpp>
+
 using std::string;
 using QuantLib::IborIndex;
 using QuantLib::SwapIndex;
 using QuantLib::Index;
+using QuantLib::ZeroInflationIndex;
 using QuantLib::Handle;
 using QuantLib::YieldTermStructure;
+using QuantLib::ZeroInflationTermStructure;
 using ore::data::Convention;
 
 namespace ore {
@@ -52,15 +56,22 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s,
     \ingroup utilities
 */
 boost::shared_ptr<SwapIndex>
-parseSwapIndex(const string& s, const Handle<YieldTermStructure>& forwarding,
-               const Handle<YieldTermStructure>& discounting,
-               boost::shared_ptr<data::IRSwapConvention> convention = boost::shared_ptr<data::IRSwapConvention>());
+    parseSwapIndex(const string& s, const Handle<YieldTermStructure>& forwarding = Handle<YieldTermStructure>(),
+                   const Handle<YieldTermStructure>& discounting = Handle<YieldTermStructure>(),
+                   boost::shared_ptr<data::IRSwapConvention> convention = boost::shared_ptr<data::IRSwapConvention>());
 
+//! Convert std::string to QuantLib::ZeroInflationIndex
+/*!
+ \ingroup utilities
+ */
+boost::shared_ptr<ZeroInflationIndex>
+parseZeroInflationIndex(const string& s, bool isInterpolated = false,
+                        const Handle<ZeroInflationTermStructure>& h = Handle<ZeroInflationTermStructure>());
+    
 //! Convert std::string to QuantLib::Index
 /*!
     \ingroup utilities
 */
-boost::shared_ptr<Index> parseIndex(const string& s,
-                                    const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>());
+boost::shared_ptr<Index> parseIndex(const string& s);
 }
 }
