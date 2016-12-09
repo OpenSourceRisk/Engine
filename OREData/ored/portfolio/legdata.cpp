@@ -26,6 +26,9 @@
 #include <ql/cashflows/iborcoupon.hpp>
 #include <ql/cashflows/fixedratecoupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
+#include <ql/cashflows/cpicoupon.hpp>
+#include <qle/cashflows/cpicouponpricer.hpp>
+#include <qle/cashflows/cpicashflow.hpp>
 #include <ql/cashflows/capflooredcoupon.hpp>
 
 #include <boost/make_shared.hpp>
@@ -80,6 +83,34 @@ XMLNode* FloatingLegData::toXML(XMLDocument& doc) {
     XMLUtils::addChildrenWithAttributes(doc, node, "Gearings", "Gearing", gearings_, "startDate", gearingDates_);
     return node;
 }
+    
+void CPILegData::fromXML(XMLNode* node) {
+    XMLUtils::checkNode(node, "CPILegData");
+    index_ = XMLUtils::getChildValue(node, "Index", true);
+    rate_ = XMLUtils::getChildValueAsDouble(node, "Rate");
+    baseCPI_ = XMLUtils::getChildValueAsDouble(node, "BaseCPI");
+    observationLag_ = XMLUtils::getChildValue(node, "ObservationLag");
+    interpolated_ = XMLUtils::getChildValueAsBool(node, "Interpolated");
+    adjustedNotional_ = XMLUtils::getChildValueAsBool(node, "AdjustedNotional");
+    redemptionDates_ = XMLUtils::getChildrenValues(node, "RedemptionDates", "Date");
+    indexRedemptionBaseDate_ = XMLUtils::getChildValue(node, "IndexRedemptionBaseDate");
+    growthOnly_ = XMLUtils::getChildValueAsBool(node, "GrowthOnly");
+}
+
+XMLNode* CPILegData::toXML(XMLDocument& doc) {
+    XMLNode* node = doc.allocNode("CPILegData");
+    XMLUtils::addChild(doc, node, "Index", index_);
+    XMLUtils::addChild(doc, node,"Rate", rate_);
+    XMLUtils::addChild(doc, node, "BaseCPI", baseCPI_);
+    XMLUtils::addChild(doc, node, "ObservationLag", observationLag_);
+    XMLUtils::addChild(doc, node, "Interpolated", interpolated_);
+    XMLUtils::addChild(doc, node, "AdjustedNotional", adjustedNotional_);
+    XMLUtils::addChildren(doc, node, "RedemptionDates", "Date", redemptionDates_);
+    if (indexRedemptionBaseDate_ != "")
+        XMLUtils::addChild(doc, node, "IndexRedemptionBaseDate", indexRedemptionBaseDate_);
+    XMLUtils::addChild(doc, node, "GrowthOnly", growthOnly_);
+    return node;
+}
 
 void LegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "LegData");
@@ -121,14 +152,22 @@ void LegData::fromXML(XMLNode* node) {
         fixedLegData_.fromXML(XMLUtils::getChildNode(node, "FixedLegData"));
         floatingLegData_ = FloatingLegData();
         cashflowData_ = CashflowData();
+        cpiLegData_ = CPILegData();
     } else if (legType_ == "Floating") {
         floatingLegData_.fromXML(XMLUtils::getChildNode(node, "FloatingLegData"));
         fixedLegData_ = FixedLegData();
         cashflowData_ = CashflowData();
+        cpiLegData_ = CPILegData();
     } else if (legType_ == "Cashflow") {
         cashflowData_.fromXML(XMLUtils::getChildNode(node, "CashflowData"));
         fixedLegData_ = FixedLegData();
         floatingLegData_ = FloatingLegData();
+        cpiLegData_ = CPILegData();
+    } else if (legType_ == "CPI") {
+        cpiLegData_.fromXML (XMLUtils::getChildNode(node, "CPILegData"));
+        fixedLegData_ = FixedLegData ();
+        floatingLegData_ = FloatingLegData ();
+        cashflowData_ = CashflowData();
     } else {
         QL_FAIL("Unkown legType :" << legType_);
     }
@@ -297,6 +336,140 @@ Leg makeNotionalLeg(const Leg& refLeg, bool initNomFlow, bool finalNomFlow, bool
             leg.push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(finalNomFlow, finalDate)));
     }
 
+    return leg;
+}
+
+Leg makeCPILeg(LegData& data, boost::shared_ptr<ZeroInflationIndex> index) {
+    
+    Schedule schedule = makeSchedule(data.schedule());
+    DayCounter dc = parseDayCounter(data.dayCounter());
+    BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
+    
+    //requires format "3M" for 3 months and so on...
+    Period observationLag = parsePeriod(data.cpiLegData().observationLag());
+    
+    vector<Date> redemptionDates;        // i.e. the pay dates
+    vector<Date> redemptionDatesLagged;  // i.e. the fixing dates
+    const vector<string>& dates = data.cpiLegData().redemptionDates();
+    for (Size i = 0; i < dates.size(); i++) {
+        redemptionDates.push_back(parseDate(dates[i]));
+        redemptionDatesLagged.push_back(redemptionDates.back() - observationLag);
+    }
+    
+    // make sure the redemptionDates includes the final maturity date
+    if (redemptionDates.size() > 0) {
+        QL_REQUIRE (redemptionDates.front() > schedule.startDate(), "First Redemption date must be after schedule start");
+        
+        if (redemptionDates.back() != schedule.endDate())
+            redemptionDates.push_back(schedule.endDate());
+    }
+    
+    CPI::InterpolationType interpolationMethod = CPI::Flat;
+    if (data.cpiLegData().interpolated())
+        interpolationMethod = CPI::Linear;
+    
+    /*
+     there are three methods...
+     
+     QuantLib::CPI::AsIndex
+     QuantLib::CPI::Flat
+     QuantLib::CPI::Linear
+     */
+    
+    Leg leg = CPILeg (schedule, index, data.cpiLegData().baseCPI(), observationLag)
+                  .withNotionals(data.notionals())
+                  .withPaymentDayCounter(dc)
+                  .withPaymentAdjustment(bdc)
+                  .withFixedRates(data.cpiLegData().rate())
+                  .withSubtractInflationNominal(data.cpiLegData().growthOnly())
+                  .withObservationInterpolation(interpolationMethod);
+    QL_REQUIRE(leg.size() > 0, "Empty CPI Leg");
+    
+    // Change CPICouponPricers to QLE ones.
+    boost::shared_ptr<QuantLib::CPICouponPricer> pricer (new QuantExt::CPICouponPricer (data.cpiLegData().adjustedNotional(), redemptionDatesLagged));
+    for (Size i = 0; i < leg.size(); i++) {
+        boost::shared_ptr<CPICoupon> cpi = boost::dynamic_pointer_cast<CPICoupon>(leg[i]);
+        if (cpi)
+            cpi->setPricer(pricer);
+    }
+    
+    // Check to see if we have redemption dates, if so we have a PAYG so we need to correct
+    // the CPI XNL legs
+    if (redemptionDates.size() > 0) {
+        
+        // First, we remove the normal CPI XNL flow from the end of the leg (created by CPILeg)
+        boost::shared_ptr<QuantLib::CPICashFlow> cpiFlow = boost::dynamic_pointer_cast<QuantLib::CPICashFlow> (leg.back());
+        QL_REQUIRE(cpiFlow, "Last Cashflow in CPI Leg is not a CPICashflow");
+        
+        leg.pop_back();
+        
+        // check that the remaining ones are all CPICoupons
+        for (Size i = 0; i < leg.size(); i++) {
+            boost::shared_ptr<CPICoupon> cpi = boost::dynamic_pointer_cast<CPICoupon>(leg[i]);
+            QL_REQUIRE(cpi, "CPI Cashflow " << i << " is not a CPICoupon");
+        }
+        
+        // Now create a set of QuantExt::CPICashFlows based on the redemptionDates vector
+        QL_REQUIRE(data.notionals().size() == 1, "Cannot build partial CPICashflows with amortizing notionals");
+        double notional = data.notionals().front();
+        string indexRedemptionBaseDate = data.cpiLegData().indexRedemptionBaseDate();
+        for (Size i = 0; i < redemptionDates.size(); i++) {
+            
+            Date payDate = redemptionDates[i];
+            Date fixingDate = payDate - observationLag;
+            
+            boost::shared_ptr<CashFlow> xnl;
+            
+            if (i == 0 && indexRedemptionBaseDate == "") {
+                // we use a QuantLib::CPICashFlow here so the prev date is the basedate
+                xnl = boost::shared_ptr<CashFlow> (new QuantLib::CPICashFlow(notional,
+                                                           index,
+                                                           Date(),
+                                                           cpiFlow->baseFixing(),
+                                                           fixingDate,
+                                                           payDate,
+                                                           true,
+                                                           cpiFlow->interpolation(),
+                                                           cpiFlow->frequency()));
+                
+            } else {
+                Date prevFixingDate;
+                if (i == 0)
+                    prevFixingDate = parseDate(indexRedemptionBaseDate);
+                else
+                    prevFixingDate = redemptionDates[i-1] - observationLag;
+                
+                xnl = boost::shared_ptr<CashFlow> (new QuantExt::CPICashFlow(notional,
+                                                           index,
+                                                           cpiFlow->baseFixing(),
+                                                           fixingDate,
+                                                           prevFixingDate,
+                                                           payDate,
+                                                           cpiFlow->interpolation(),
+                                                           cpiFlow->frequency()));
+            }
+            leg.push_back(xnl);
+        }
+        if (indexRedemptionBaseDate != "") {
+            // We also need a final extra cpi cashflow, from the base to the indexRedemptionBaseDate
+            // This is just a normal QL one.
+            // with paydate = maturity.
+            Date fixingDate = parseDate(indexRedemptionBaseDate);
+            leg.push_back (boost::shared_ptr<CashFlow> (new QuantLib::CPICashFlow(notional,
+                                                                index,
+                                                                Date(),
+                                                                cpiFlow->baseFixing(),
+                                                                fixingDate,
+                                                                cpiFlow->date(),
+                                                                true,
+                                                                cpiFlow->interpolation(),
+                                                                cpiFlow->frequency())));
+            
+        }
+        // Leg now has both CPI Coupons and CPI Cashflows, but not in payDate order.
+        // However last Cashflow has payDate == maturityDate.
+    }
+    
     return leg;
 }
 

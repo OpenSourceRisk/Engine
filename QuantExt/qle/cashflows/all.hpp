@@ -4,7 +4,10 @@
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/averageonindexedcouponpricer.hpp>
 #include <qle/cashflows/couponpricer.hpp>
+#include <qle/cashflows/cpicashflow.hpp>
+#include <qle/cashflows/cpicouponpricer.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp>
 #include <qle/cashflows/subperiodscouponpricer.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
+

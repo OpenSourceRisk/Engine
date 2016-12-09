@@ -143,6 +143,13 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             } else {
                 legs_[i] = makeIborLeg(legData_[i], index, engineFactory);
             }
+        } else if (legData_[i].legType() == "CPI") {
+            boost::shared_ptr<ZeroInflationIndex> index = parseZeroInflationIndex(legData_[i].cpiLegData().index());
+            QL_REQUIRE(index,
+                       "zero inflation index not found for index " << legData_[i].cpiLegData().index());
+            legs_[i] = makeCPILeg(legData_[i], index);
+            // legTypes[i] = Inflation;
+            // legTypes_[i] = "INFLATION";
         } else {
             QL_FAIL("Unknown leg type " << legData_[i].legType());
         }
