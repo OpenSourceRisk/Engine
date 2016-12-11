@@ -37,6 +37,7 @@
   <ItemGroup>
     <ClInclude Include="aggregationscenariodata.hpp" />
     <ClInclude Include="cube.hpp" />
+    <ClInclude Include="observationmode.hpp" />
     <ClInclude Include="scenariogenerator.hpp" />
     <ClInclude Include="scenariosimmarket.hpp" />
     <ClInclude Include="swapperformance.hpp" />
@@ -45,6 +46,7 @@
   <ItemGroup>
     <ClCompile Include="aggregationscenariodata.cpp" />
     <ClCompile Include="cube.cpp" />
+    <ClCompile Include="observationmode.cpp" />
     <ClCompile Include="scenariogenerator.cpp" />
     <ClCompile Include="scenariosimmarket.cpp" />
     <ClCompile Include="swapperformance.cpp" />
