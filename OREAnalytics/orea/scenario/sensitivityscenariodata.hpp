@@ -197,7 +197,25 @@ public:
     // bool operator!=(const SensitivityScenarioData& rhs);
     //@}
 
+    string discountShiftScenarioLabel(string ccy, Size bucket, bool up);
+    string indexShiftScenarioLabel(string ccy, Size bucket, bool up);
+    string fxShiftScenarioLabel(string ccypair, bool up);
+    string swaptionVolShiftScenarioLabel(string ccy, Size expiryBucket, Size termBucket, Size strikeBucket, bool up);
+    string capFloorVolShiftScenarioLabel(string ccy, Size expiryBucket, Size strikeBucket, bool up);
+    string fxVolShiftScenarioLabel(string ccypair, Size expiryBucket, Size strikeBucket, bool up);
+    string shiftDirectionLabel(bool up);
+    string labelSeparator();
+    string labelToFactor(string label);
+    bool isBaseScenario(string label);
+    bool isSingleShiftScenario(string label);
+    bool isCrossShiftScenario(string label);
+    bool isUpShiftScenario(string label);
+    bool isDownShiftScenario(string label);
+
 private:
+    //! Return copy of input string with ending removed
+    string remove(const string& input, const string& ending);
+
     vector<string> discountCurrencies_;
     string discountLabel_;
     string discountDomain_;
@@ -206,7 +224,7 @@ private:
     Real discountShiftSize_;
     vector<string> discountParInstruments_;
     bool discountParInstrumentsSingleCurve_;
-    map<pair<string,string>, string> discountParInstrumentConventions_;
+    map<pair<string, string>, string> discountParInstrumentConventions_;
 
     vector<string> indexNames_;
     string indexLabel_;
@@ -216,7 +234,7 @@ private:
     Real indexShiftSize_;
     vector<string> indexParInstruments_;
     bool indexParInstrumentsSingleCurve_;
-    map<pair<string,string>, string> indexParInstrumentConventions_;
+    map<pair<string, string>, string> indexParInstrumentConventions_;
 
     vector<string> fxCcyPairs_;
     string fxLabel_;

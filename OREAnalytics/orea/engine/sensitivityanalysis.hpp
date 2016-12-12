@@ -39,15 +39,16 @@ namespace analytics {
 
 //! Sensitivity Analysis
 /*!
-  This class wraps all functionality to perform a sensitivity analysis for a given portfolio.
+  This class wraps functionality to perform a sensitivity analysis for a given portfolio.
   It comprises
   - building the "simulation" market to which sensitivity scenarios are applied
   - building the portfolio linked to this simulation market
   - generating sensitivity scenarios
   - running the scenario "engine" to apply these and compute the NPV impacts of all required shifts
   - compile first and second order sensitivities for all factors and all trades
-  - fill a result structure that can be queried
-  - write result report to a file
+  - convert zero rate / caplet vol sensitivities into "par" rate / cap vol sensitivities
+  - fill result structures that can be queried
+  - write sensitivity report to a file
 
   \ingroup simulation
 */

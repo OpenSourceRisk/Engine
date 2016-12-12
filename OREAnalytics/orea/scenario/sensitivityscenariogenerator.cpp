@@ -336,12 +336,10 @@ void SensitivityScenarioGenerator::generateFxScenarios(bool up, boost::shared_pt
     string domestic = simMarketData_->baseCcy();
     ShiftType type = parseShiftType(sensitivityData_->fxShiftType());
     QL_REQUIRE(type == SensitivityScenarioGenerator::ShiftType::Relative, "FX scenario type must be relative");
-    string direction = up ? "/UP" : "/DOWN";
 
     for (Size k = 0; k < fxCcyPairs_.size(); k++) {
-        // string foreign = simMarketData_->ccys()[k + 1];
         string ccypair = fxCcyPairs_[k]; // foreign + domestic;
-        string label = sensitivityData_->fxLabel() + "/" + ccypair + direction;
+        string label = sensitivityData_->fxShiftScenarioLabel(ccypair, up);
         boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_, label);
         Real rate = market->fxSpot(ccypair, configuration_)->value();
         Real newRate =
@@ -366,7 +364,6 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(bool up, boost
     Size n_ccy = discountCurrencies_.size();
     Size n_ten = simMarketData_->yieldCurveTenors().size();
     ShiftType shiftType = parseShiftType(sensitivityData_->discountShiftType());
-    string direction = up ? "/UP" : "/DOWN";
 
     // original curves' buffer
     std::vector<Real> zeros(n_ten);
@@ -395,10 +392,7 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(bool up, boost
 
         for (Size j = 0; j < shiftTenors.size(); ++j) {
 
-            // each shift tenor is associated with a scenario
-            ostringstream o;
-            o << sensitivityData_->discountLabel() << "/" << ccy << "/#" << j << "/" << shiftTenors[j] << direction;
-            string label = o.str();
+            string label = sensitivityData_->discountShiftScenarioLabel(ccy, j, up);
             boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_, label);
 
             // apply zero rate shift at tenor point j
@@ -432,7 +426,6 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(bool up, boost::s
     Size n_indices = indexNames_.size();
     Size n_ten = simMarketData_->yieldCurveTenors().size();
     ShiftType shiftType = parseShiftType(sensitivityData_->indexShiftType());
-    string direction = up ? "/UP" : "/DOWN";
 
     // original curves' buffer
     std::vector<Real> zeros(n_ten);
@@ -462,10 +455,7 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(bool up, boost::s
 
         for (Size j = 0; j < shiftTenors.size(); ++j) {
 
-            // each shift tenor is associated with a scenario
-            ostringstream o;
-            o << sensitivityData_->indexLabel() << "/" << indexName << "/#" << j << "/" << shiftTenors[j] << direction;
-            string label = o.str();
+            string label = sensitivityData_->indexShiftScenarioLabel(indexName, j, up);
             boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_, label);
 
             // apply zero rate shift at tenor point j
@@ -499,7 +489,6 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(bool up, boost::shared
 
     string domestic = simMarketData_->baseCcy();
     ShiftType shiftType = parseShiftType(sensitivityData_->fxVolShiftType());
-    string direction = up ? "/UP" : "/DOWN";
 
     Size n_fxvol_pairs = fxVolCcyPairs_.size();
     Size n_fxvol_exp = simMarketData_->fxVolExpiries().size();
@@ -530,10 +519,8 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(bool up, boost::shared
             shiftTimes[j] = dc.yearFraction(today_, today_ + shiftTenors[j]);
 
         for (Size j = 0; j < shiftTenors.size(); ++j) {
-            // each shift tenor is associated with a scenario
-            ostringstream o;
-            o << sensitivityData_->fxVolLabel() << "/" << ccypair << "/#" << j << "/" << shiftTenors[j] << direction;
-            string label = o.str();
+            Size strikeBucket = 0; // FIXME
+            string label = sensitivityData_->fxVolShiftScenarioLabel(ccypair, j, strikeBucket, up);
             boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_, label);
             // apply shift at tenor point j
             applyShift(j, shiftSize, up, shiftType, shiftTimes, values, times, shiftedValues);
@@ -559,7 +546,6 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(bool up, boost::
 
     ShiftType shiftType = parseShiftType(sensitivityData_->swaptionVolShiftType());
     Real shiftSize = sensitivityData_->swaptionVolShiftSize();
-    string direction = up ? "/UP" : "/DOWN";
     Size n_swvol_ccy = swaptionVolCurrencies_.size();
     Size n_swvol_term = simMarketData_->swapVolTerms().size();
     Size n_swvol_exp = simMarketData_->swapVolExpiries().size();
@@ -605,12 +591,8 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(bool up, boost::
         // loop over shift expiries and terms
         for (Size j = 0; j < shiftExpiryTimes.size(); ++j) {
             for (Size k = 0; k < shiftTermTimes.size(); ++k) {
-                // each shift expiry and term is associated with a scenario
-                ostringstream o;
-                o << sensitivityData_->swaptionVolLabel() << "/" << ccy << "/"
-                  << sensitivityData_->swaptionVolShiftExpiries()[j] << "/"
-                  << sensitivityData_->swaptionVolShiftTerms()[k] << direction;
-                string label = o.str();
+                Size strikeBucket = 0; // FIXME
+                string label = sensitivityData_->swaptionVolShiftScenarioLabel(ccy, j, k, strikeBucket, up);
                 boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_, label);
                 applyShift(j, k, shiftSize, up, shiftType, shiftExpiryTimes, shiftTermTimes, volExpiryTimes,
                            volTermTimes, volData, shiftedVolData);
@@ -641,7 +623,6 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(bool up, boost::
 
     ShiftType shiftType = parseShiftType(sensitivityData_->capFloorVolShiftType());
     Real shiftSize = sensitivityData_->capFloorVolShiftSize();
-    string direction = up ? "/UP" : "/DOWN";
     Size n_cfvol_ccy = capFloorVolCurrencies_.size();
     Size n_cfvol_strikes = simMarketData_->capFloorVolStrikes().size();
     Size n_cfvol_exp = simMarketData_->capFloorVolExpiries().size();
@@ -679,12 +660,7 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(bool up, boost::
         // loop over shift expiries and terms
         for (Size j = 0; j < shiftExpiryTimes.size(); ++j) {
             for (Size k = 0; k < shiftStrikes.size(); ++k) {
-                // each shift expiry and term is associated with a scenario
-                ostringstream o;
-                o << sensitivityData_->capFloorVolLabel() << "/" << ccy << "/"
-                  << sensitivityData_->capFloorVolShiftExpiries()[j] << "/" << setprecision(4)
-                  << sensitivityData_->capFloorVolShiftStrikes()[k] << direction;
-                string label = o.str();
+                string label = sensitivityData_->capFloorVolShiftScenarioLabel(ccy, j, k, up);
                 boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_, label);
                 applyShift(j, k, shiftSize, up, shiftType, shiftExpiryTimes, shiftStrikes, volExpiryTimes, volStrikes,
                            volData, shiftedVolData);

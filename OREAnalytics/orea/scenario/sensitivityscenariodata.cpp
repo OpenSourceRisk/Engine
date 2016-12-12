@@ -43,8 +43,9 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
     if (par) {
         discountParInstruments_ = XMLUtils::getChildrenValuesAsStrings(par, "Instruments", true);
         discountParInstrumentsSingleCurve_ = XMLUtils::getChildValueAsBool(par, "SingleCurve", true);
-	XMLNode* conventionsNode = XMLUtils::getChildNode(par, "Conventions");
-	discountParInstrumentConventions_ = XMLUtils::getChildrenAttributePairsAndValues(conventionsNode, "Convention", "id", true);
+        XMLNode* conventionsNode = XMLUtils::getChildNode(par, "Conventions");
+        discountParInstrumentConventions_ =
+            XMLUtils::getChildrenAttributePairsAndValues(conventionsNode, "Convention", "id", true);
     }
 
     LOG("Get index curve sensitivity parameters");
@@ -59,8 +60,9 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
     if (par) {
         indexParInstruments_ = XMLUtils::getChildrenValuesAsStrings(par, "Instruments", true);
         indexParInstrumentsSingleCurve_ = XMLUtils::getChildValueAsBool(par, "SingleCurve", true);
-	XMLNode* conventionsNode = XMLUtils::getChildNode(par, "Conventions");
-	indexParInstrumentConventions_ = XMLUtils::getChildrenAttributePairsAndValues(conventionsNode, "Convention", "id", true);
+        XMLNode* conventionsNode = XMLUtils::getChildNode(par, "Conventions");
+        indexParInstrumentConventions_ =
+            XMLUtils::getChildrenAttributePairsAndValues(conventionsNode, "Convention", "id", true);
     }
 
     LOG("Get FX spot sensitivity parameters");
@@ -132,6 +134,126 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("SensitivityAnalysis");
 
     return node;
+}
+
+std::string SensitivityScenarioData::labelSeparator() { return "/"; }
+
+std::string SensitivityScenarioData::shiftDirectionLabel(bool up) { return up ? "UP" : "DOWN"; }
+
+std::string SensitivityScenarioData::discountShiftScenarioLabel(string ccy, Size bucket, bool up) {
+    std::ostringstream o;
+    QL_REQUIRE(bucket < discountShiftTenors_.size(), "bucket " << bucket << " out of range");
+    o << discountLabel_ << labelSeparator() << ccy << labelSeparator() << "#" << bucket << labelSeparator()
+      << discountShiftTenors_[bucket] << labelSeparator() << shiftDirectionLabel(up);
+    return o.str();
+}
+
+std::string SensitivityScenarioData::indexShiftScenarioLabel(string indexName, Size bucket, bool up) {
+    QL_REQUIRE(bucket < indexShiftTenors_.size(), "bucket " << bucket << " out of range");
+    std::ostringstream o;
+    o << indexLabel_ << labelSeparator() << indexName << labelSeparator() << "#" << bucket << labelSeparator()
+      << indexShiftTenors_[bucket] << labelSeparator() << shiftDirectionLabel(up);
+    return o.str();
+}
+
+std::string SensitivityScenarioData::fxShiftScenarioLabel(string ccypair, bool up) {
+    std::ostringstream o;
+    o << fxLabel_ << labelSeparator() << ccypair << labelSeparator() << shiftDirectionLabel(up);
+    return o.str();
+}
+
+string SensitivityScenarioData::swaptionVolShiftScenarioLabel(string ccy, Size expiryBucket, Size termBucket,
+                                                              Size strikeBucket, bool up) {
+    QL_REQUIRE(expiryBucket < swaptionVolShiftExpiries_.size(), "expiry bucket " << expiryBucket << " out of range");
+    QL_REQUIRE(termBucket < swaptionVolShiftTerms_.size(), "term bucket " << termBucket << " out of range");
+    std::ostringstream o;
+    if (swaptionVolShiftStrikes_.size() == 0) {
+        // ignore the strike bucket in this case
+        o << swaptionVolLabel_ << labelSeparator() << ccy << labelSeparator() << swaptionVolShiftExpiries_[expiryBucket]
+          << labelSeparator() << swaptionVolShiftTerms_[termBucket] << labelSeparator() << shiftDirectionLabel(up);
+    } else {
+        QL_REQUIRE(strikeBucket < swaptionVolShiftStrikes_.size(), "strike bucket " << strikeBucket << " out of range");
+        o << swaptionVolLabel_ << labelSeparator() << ccy << labelSeparator() << swaptionVolShiftExpiries_[expiryBucket]
+          << labelSeparator() << swaptionVolShiftTerms_[termBucket] << labelSeparator() << std::setprecision(4)
+          << swaptionVolShiftStrikes_[strikeBucket] << labelSeparator() << shiftDirectionLabel(up);
+    }
+    return o.str();
+}
+
+string SensitivityScenarioData::fxVolShiftScenarioLabel(string ccypair, Size expiryBucket, Size strikeBucket, bool up) {
+    QL_REQUIRE(expiryBucket < fxVolShiftExpiries_.size(), "expiry bucket " << expiryBucket << " out of range");
+    std::ostringstream o;
+    if (fxVolShiftStrikes_.size() == 0) {
+        o << fxVolLabel_ << labelSeparator() << ccypair << labelSeparator() << "#" << expiryBucket << labelSeparator()
+          << fxVolShiftExpiries_[expiryBucket] << labelSeparator() << shiftDirectionLabel(up);
+    } else {
+        // ignore the strike bucket in this case
+        QL_REQUIRE(strikeBucket < fxVolShiftStrikes_.size(), "strike bucket " << strikeBucket << " out of range");
+        o << fxVolLabel_ << labelSeparator() << ccypair << labelSeparator() << "#" << expiryBucket << labelSeparator()
+          << fxVolShiftExpiries_[expiryBucket] << labelSeparator() << std::setprecision(4)
+          << fxVolShiftStrikes_[strikeBucket] << labelSeparator() << shiftDirectionLabel(up);
+    }
+    return o.str();
+}
+
+string SensitivityScenarioData::capFloorVolShiftScenarioLabel(string ccy, Size expiryBucket, Size strikeBucket,
+                                                              bool up) {
+    QL_REQUIRE(expiryBucket < capFloorVolShiftExpiries_.size(), "expiry bucket " << expiryBucket << " out of range");
+    QL_REQUIRE(strikeBucket < capFloorVolShiftStrikes_.size(), "strike bucket " << strikeBucket << " out of range");
+    std::ostringstream o;
+    o << capFloorVolLabel_ << labelSeparator() << ccy << labelSeparator() << capFloorVolShiftExpiries_[expiryBucket]
+      << labelSeparator() << std::setprecision(4) << capFloorVolShiftStrikes_[strikeBucket] << labelSeparator()
+      << shiftDirectionLabel(up);
+    return o.str();
+}
+
+string SensitivityScenarioData::labelToFactor(string label) {
+    string upString = labelSeparator() + shiftDirectionLabel(true);
+    string downString = labelSeparator() + shiftDirectionLabel(false);
+    if (label.find(upString) != string::npos)
+        return remove(label, upString);
+    else if (label.find(downString) != string::npos)
+        return remove(label, downString);
+}
+
+string SensitivityScenarioData::remove(const string& input, const string& ending) {
+    string output = input;
+    std::string::size_type i = output.find(ending);
+    if (i != std::string::npos)
+        output.erase(i, ending.length());
+    return output;
+}
+
+bool SensitivityScenarioData::isSingleShiftScenario(string label) {
+    return !isCrossShiftScenario(label) && !isBaseScenario(label);
+}
+
+bool SensitivityScenarioData::isCrossShiftScenario(string label) {
+    if (label.find("CROSS") != string::npos)
+        return true;
+    else
+        return false;
+}
+
+bool SensitivityScenarioData::isBaseScenario(string label) {
+    if (label.find("BASE") != string::npos)
+        return true;
+    else
+        return false;
+}
+
+bool SensitivityScenarioData::isUpShiftScenario(string label) {
+    if (label.find(shiftDirectionLabel(true)) != string::npos)
+        return true;
+    else
+        return false;
+}
+
+bool SensitivityScenarioData::isDownShiftScenario(string label) {
+    if (label.find(shiftDirectionLabel(false)) != string::npos)
+        return true;
+    else
+        return false;
 }
 }
 }

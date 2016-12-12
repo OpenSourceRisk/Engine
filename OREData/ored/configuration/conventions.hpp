@@ -283,6 +283,7 @@ public:
     //! \name Inspectors
     //@{
     Natural spotLag() const { return spotLag_; }
+    const string& indexName() const { return strIndex_; }  
     const boost::shared_ptr<OvernightIndex>& index() const { return index_; }
     const DayCounter& fixedDayCounter() const { return fixedDayCounter_; }
     Natural paymentLag() const { return paymentLag_; }
@@ -414,6 +415,7 @@ public:
     const Calendar& fixedCalendar() const { return fixedCalendar_; }
     BusinessDayConvention fixedConvention() const { return fixedConvention_; }
     BusinessDayConvention fixedPaymentConvention() const { return fixedPaymentConvention_; }
+    const string& indexName() const { return strIndex_; }  
     const boost::shared_ptr<OvernightIndex>& index() const { return index_; }
     const Period& onTenor() const { return onTenor_; }
     Natural rateCutoff() const { return rateCutoff_; }
