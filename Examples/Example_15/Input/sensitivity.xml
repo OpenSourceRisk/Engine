@@ -16,7 +16,8 @@
     <Label>YIELD_DISCOUNT</Label>
 
     <ParConversion><!-- required if Domain = Par -->
-      <Instruments>DEP,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS</Instruments><!-- DEP, FRA, IRS, OIS -->
+      <!--<Instruments>DEP,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS</Instruments>--><!-- DEP, FRA, IRS, OIS -->
+      <Instruments>OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS</Instruments><!-- DEP, FRA, IRS, OIS -->
       <SingleCurve>true</SingleCurve>
       <Conventions><!-- key is currency, instrument type -->
 	<Convention id="EUR,DEP">EUR-EURIBOR-CONVENTIONS</Convention>
@@ -24,12 +25,16 @@
 	<Convention id="EUR,OIS">EUR-OIS-CONVENTIONS</Convention>
 	<Convention id="USD,DEP">USD-LIBOR-CONVENTIONS</Convention>
 	<Convention id="USD,IRS">USD-3M-SWAP-CONVENTIONS</Convention>
+	<Convention id="USD,OIS">USD-OIS-CONVENTIONS</Convention>
 	<Convention id="GBP,DEP">GBP-DEPOSIT</Convention>
 	<Convention id="GBP,IRS">GBP-6M-SWAP-CONVENTIONS</Convention>
+	<Convention id="GBP,OIS">GBP-OIS-CONVENTIONS</Convention>
 	<Convention id="JPY,DEP">JPY-LIBOR-CONVENTIONS</Convention>
 	<Convention id="JPY,IRS">JPY-LIBOR-6M-SWAP-CONVENTIONS</Convention>
+	<Convention id="JPY,OIS">JPY-OIS-CONVENTIONS</Convention>
 	<Convention id="CHF,DEP">CHF-LIBOR-CONVENTIONS</Convention>
 	<Convention id="CHF,IRS">CHF-6M-SWAP-CONVENTIONS</Convention>
+	<Convention id="CHF,OIS">CHF-OIS-CONVENTIONS</Convention>
       </Conventions>
     </ParConversion>
   </DiscountCurve>

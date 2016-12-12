@@ -39,10 +39,14 @@
       <Index>EUR-EONIA</Index>
       <Index>USD-LIBOR-3M</Index>
       <Index>USD-LIBOR-6M</Index>
+      <Index>USD-FedFunds</Index>
       <Index>GBP-LIBOR-6M</Index>
       <Index>GBP-LIBOR-3M</Index>
+      <Index>GBP-SONIA</Index>
       <Index>CHF-LIBOR-6M</Index>
+      <Index>CHF-TOIS</Index>
       <Index>JPY-LIBOR-6M</Index>
+      <Index>JPY-TONAR</Index>
     </Indices>
 
     <SwapIndices>
