@@ -10,8 +10,8 @@ oreex.print_headline("Run ORE to produce NPV cube and exposures")
 oreex.run("Input/ore.xml")
 oreex.get_times("Output/log.txt")
 
-oreex.print_headline("Run ORE again to price European Swaptions")
-oreex.run("Input/ore_swaption.xml")
+#oreex.print_headline("Run ORE again to price European Swaptions")
+#oreex.run("Input/ore_swaption.xml")
 
 oreex.print_headline("Plot results: Simulated exposures vs analytical swaption prices")
 
