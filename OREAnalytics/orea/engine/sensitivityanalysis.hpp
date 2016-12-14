@@ -33,6 +33,7 @@
 
 #include <map>
 #include <set>
+#include <tuple>
 
 namespace ore {
 namespace analytics {
@@ -71,8 +72,11 @@ public:
     //! Return base NPV by trade, before shift
     const std::map<std::string, Real>& baseNPV() { return baseNPV_; }
 
-    //! Return delta (first order sensitivity times shift) by trade/factor pair
+    //! Return delta/vega (first order sensitivity times shift) by trade/factor pair
     const std::map<std::pair<std::string, std::string>, Real>& delta() { return delta_; }
+
+    //! Return par delta (first order sensitivity times shift) by trade/factor pair
+    const std::map<std::pair<std::string, std::string>, Real>& parDelta() { return parDelta_; }
 
     //! Return gamma (second order sensitivity times shift^2) by trade/factor pair
     const std::map<std::pair<std::string, std::string>, Real>& gamma() { return gamma_; }
@@ -88,6 +92,9 @@ public:
 
     //! Write cross gammas by trade/factor1/factor2 to a file
     void writeCrossGammaReport(string fileName, Real outputThreshold = 0.0);
+
+    //! Write sensitivity of par rates w.r.t. zero rates to a file
+    void writeParRateSensitivityReport(string fileName);
 
 private:
     //! Create Deposit helper for implying par rate sensitivity from zero rate sensitivity
@@ -106,8 +113,9 @@ private:
     boost::shared_ptr<RateHelper> makeOIS(string ccy, string indexName, Period term,
                                           const boost::shared_ptr<ore::data::Market>& market,
                                           const boost::shared_ptr<Convention>& conventions, bool singleCurve);
-    //! Return copy of input string with ending removed
-    string remove(const string& input, const string& ending);
+    //! Create Cap/Floor isntrument for implying flat vol sensitivity from optionlet vol sensitivity
+    boost::shared_ptr<CapFloor> makeCapFloor(string ccy, string indexName, Period term, Real strike,
+                                             const boost::shared_ptr<ore::data::Market>& market);
 
     // base NPV by trade
     std::map<std::string, Real> baseNPV_;
@@ -123,6 +131,10 @@ private:
     std::map<std::string, Real> fairParRate_;
     // map of factors to curve names
     std::map<std::string, std::string> factorToCurve_;
+    // map of sensitivity of par rates w.r.t. zero rates by curve name (ccy, indexName) and factor
+    map<std::pair<std::string, std::string>, std::vector<Real> > parRatesSensi_;
+    // map of sensitivity of flat cap vols w.r.t. optionlet vols by curve name (ccy), strike index and factor
+    map<std::tuple<std::string, Size, std::string>, std::vector<Real> > flatCapVolSensi_;
 };
 
 //! ParSensitivityConverter class
@@ -160,12 +172,14 @@ private:
 class ParSensitivityConverter {
 public:
     ParSensitivityConverter(
-        const boost::shared_ptr<SensitivityScenarioData>& sensitivityData, const vector<string>& yieldFactors,
+        const boost::shared_ptr<SensitivityScenarioData>& sensitivityData, 
         //! Delta by trade and factor
         const std::map<std::pair<string, string>, Real>& delta,
         //! Par rate sensitivity w.r.t. zero shifts by factor and curve name (discount:ccy, index:ccy-name-tenor)
-        const map<pair<string, string>, vector<Real> >& parRateSensi)
-        : sensitivityData_(sensitivityData), yieldFactors_(yieldFactors), delta_(delta), parRateSensi_(parRateSensi) {
+        const map<pair<string, string>, vector<Real> >& parRateSensi,
+        const map<std::tuple<std::string, Size, std::string>, std::vector<Real> >& flatCapVolSensi)
+        : sensitivityData_(sensitivityData), delta_(delta), parRateSensi_(parRateSensi),
+          flatCapVolSensi_(flatCapVolSensi) {
         buildJacobiMatrix();
         convertSensitivity();
     }
@@ -173,7 +187,7 @@ public:
     //! Inspectors
     //@{
     //! List of factor names as defined by the sensitivity scenario generator
-    const vector<string>& factors(string curveId) { return yieldFactors_; }
+    const vector<string>& factors(string curveId) { return factors_; }
     //! Yield curve names identified in the factors (ccy for discount curves, index name for index curves)
     const vector<string>& curves() { return curves_; }
     //@}
@@ -182,7 +196,7 @@ public:
     const Matrix& jacobi() { return jacobi_; }
     //! Inverse of the Jacobi matrix
     const Matrix& jacobiInverse() { return jacobiInverse_; }
-    //! Resulting par delta data
+    //! Resulting par delta/vega data
     const std::map<std::pair<string, string>, Real>& parDelta() { return parDelta_; }
 
 private:
@@ -190,12 +204,36 @@ private:
     void convertSensitivity();
 
     boost::shared_ptr<SensitivityScenarioData> sensitivityData_;
-    vector<string> yieldFactors_;
+    std::vector<string> factors_;
     std::map<std::pair<string, string>, Real> delta_;
     std::map<std::pair<string, string>, Real> parDelta_;
-    map<pair<string, string>, vector<Real> > parRateSensi_;
-    vector<string> curves_;
+    std::map<std::pair<string, string>, std::vector<Real> > parRateSensi_;
+    std::map<std::tuple<std::string, Size, std::string>, std::vector<Real> > flatCapVolSensi_;
+    std::vector<string> curves_;
     Matrix jacobi_, jacobiInverse_;
 };
+
+//! Helper class for implying the fair flat cap/floor volatility
+/*! This class is copied from QuantLib's capfloor.cpp and generalised to cover both normal and lognormal volatilities */
+class ImpliedCapFloorVolHelper {
+public:
+    ImpliedCapFloorVolHelper(VolatilityType type, const CapFloor&, const Handle<YieldTermStructure>& discountCurve,
+                             Real targetValue, Real displacement);
+    Real operator()(Volatility x) const;
+    Real derivative(Volatility x) const;
+
+private:
+    boost::shared_ptr<PricingEngine> engine_;
+    Handle<YieldTermStructure> discountCurve_;
+    Real targetValue_;
+    boost::shared_ptr<SimpleQuote> vol_;
+    const Instrument::results* results_;
+};
+
+//! Utility for implying a flat volatility which reproduces the provided Cap/Floor price
+Volatility impliedVolatility(const CapFloor& cap, Real targetValue, const Handle<YieldTermStructure>& d,
+                             Volatility guess, VolatilityType type = Normal, Real displacement = 0.0,
+                             Real accuracy = 1.0e-6, Natural maxEvaluations = 100, Volatility minVol = 1.0e-7,
+                             Volatility maxVol = 4.0);
 }
 }

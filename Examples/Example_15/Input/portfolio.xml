@@ -429,8 +429,12 @@
         </Notionals>
         <ScheduleData>
           <Rules>
-            <StartDate>20140923</StartDate>
-            <EndDate>20260923</EndDate>
+	    <!--
+		<StartDate>20140923</StartDate>
+		<EndDate>20260923</EndDate>
+            -->
+	    <StartDate>20160209</StartDate><!-- spot start -->
+            <EndDate>20260209</EndDate>
             <Tenor>3M</Tenor>
             <Calendar>US</Calendar>
             <Convention>MF</Convention>
@@ -451,7 +455,7 @@
         </FloatingLegData>
       </LegData>
       <CapRates>
-        <Rate>0.03</Rate>
+        <Rate>0.04</Rate>
       </CapRates>
       <FloorRates/>
     </CapFloorData>
@@ -476,8 +480,12 @@
         </Notionals>
         <ScheduleData>
           <Rules>
-            <StartDate>20140923</StartDate>
-            <EndDate>20260923</EndDate>
+	    <!--
+		<StartDate>20140923</StartDate>
+		<EndDate>20260923</EndDate>
+            -->
+	    <StartDate>20160209</StartDate><!-- spot start -->
+            <EndDate>20260209</EndDate>
             <Tenor>3M</Tenor>
             <Calendar>US</Calendar>
             <Convention>MF</Convention>
@@ -499,7 +507,109 @@
       </LegData>
       <CapRates/>
       <FloorRates>
-        <Rate>0.005</Rate>
+        <Rate>0.01</Rate>
+      </FloorRates>
+    </CapFloorData>
+  </Trade>
+  <Trade id="CAP_EUR">
+    <TradeType>CapFloor</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <CapFloorData>
+      <LongShort>Short</LongShort>
+      <LegData>
+        <LegType>Floating</LegType>
+        <Payer>true</Payer>
+        <Currency>EUR</Currency>
+        <DayCounter>ACT/360</DayCounter>
+        <PaymentConvention>MF</PaymentConvention>
+        <Notionals>
+          <Notional>1000000.00</Notional>
+        </Notionals>
+        <ScheduleData>
+          <Rules>
+	    <!--
+		<StartDate>20140923</StartDate>
+		<EndDate>20260923</EndDate>
+            -->
+	    <StartDate>20160209</StartDate><!-- spot start -->
+            <EndDate>20260209</EndDate>
+            <Tenor>6M</Tenor>
+            <Calendar>TARGET</Calendar>
+            <Convention>MF</Convention>
+            <TermConvention>MF</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+        <FloatingLegData>
+          <Index>EUR-EURIBOR-6M</Index>
+          <Spreads>
+            <Spread>0</Spread>
+          </Spreads>
+          <IsInArrears>false</IsInArrears>
+          <FixingDays>2</FixingDays>
+        </FloatingLegData>
+      </LegData>
+      <CapRates>
+        <Rate>0.04</Rate>
+      </CapRates>
+      <FloorRates/>
+    </CapFloorData>
+  </Trade>
+  <Trade id="FLOOR_EUR">
+    <TradeType>CapFloor</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <CapFloorData>
+      <LongShort>Long</LongShort>
+      <LegData>
+        <LegType>Floating</LegType>
+        <Payer>true</Payer>
+        <Currency>EUR</Currency>
+        <DayCounter>ACT/360</DayCounter>
+        <PaymentConvention>MF</PaymentConvention>
+        <Notionals>
+          <Notional>1000000.00</Notional>
+        </Notionals>
+        <ScheduleData>
+          <Rules>
+	    <!--
+		<StartDate>20140923</StartDate>
+		<EndDate>20260923</EndDate>
+            -->
+	    <StartDate>20160209</StartDate><!-- spot start -->
+            <EndDate>20260209</EndDate>
+            <Tenor>6M</Tenor>
+            <Calendar>TARGET</Calendar>
+            <Convention>MF</Convention>
+            <TermConvention>MF</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+        <FloatingLegData>
+          <Index>EUR-EURIBOR-6M</Index>
+          <Spreads>
+            <Spread>0</Spread>
+          </Spreads>
+          <IsInArrears>false</IsInArrears>
+          <FixingDays>2</FixingDays>
+        </FloatingLegData>
+      </LegData>
+      <CapRates/>
+      <FloorRates>
+        <Rate>0.01</Rate>
       </FloorRates>
     </CapFloorData>
   </Trade>

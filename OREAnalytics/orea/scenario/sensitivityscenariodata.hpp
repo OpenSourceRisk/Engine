@@ -46,6 +46,7 @@ namespace analytics {
 class SensitivityScenarioData : public XMLSerializable {
 public:
     enum class InterestRateDomain { ZeroRate, ParRate };
+    enum class CapFloorVolDomain { OptionletVol, FlatVol };
     enum class InflationDomain { ZeroRate, ParRate };
     enum class CreditDomain { HazardRate, Spread };
     enum class ShiftType { Absolute, Relative };
@@ -100,6 +101,7 @@ public:
     const vector<Real>& capFloorVolShiftStrikes() const { return capFloorVolShiftStrikes_; }
     const string& capFloorVolShiftType() const { return capFloorVolShiftType_; }
     const Real& capFloorVolShiftSize() const { return capFloorVolShiftSize_; }
+    const map<string, string>& capFloorVolIndexMapping() const { return capFloorVolIndexMapping_; }
 
     const vector<string>& fxVolCcyPairs() const { return fxVolCcyPairs_; }
     const string& fxVolLabel() const { return fxVolLabel_; }
@@ -167,6 +169,7 @@ public:
     vector<Real>& capFloorVolShiftStrikes() { return capFloorVolShiftStrikes_; }
     string& capFloorVolShiftType() { return capFloorVolShiftType_; }
     Real& capFloorVolShiftSize() { return capFloorVolShiftSize_; }
+    map<string, string>& capFloorVolIndexMapping() { return capFloorVolIndexMapping_; }
 
     vector<string>& fxVolCcyPairs() { return fxVolCcyPairs_; }
     string& fxVolLabel() { return fxVolLabel_; }
@@ -197,6 +200,8 @@ public:
     // bool operator!=(const SensitivityScenarioData& rhs);
     //@}
 
+    //! Utilities for constructing and interpreting shift scenario labels
+    //@{
     string discountShiftScenarioLabel(string ccy, Size bucket, bool up);
     string indexShiftScenarioLabel(string ccy, Size bucket, bool up);
     string fxShiftScenarioLabel(string ccypair, bool up);
@@ -211,6 +216,11 @@ public:
     bool isCrossShiftScenario(string label);
     bool isUpShiftScenario(string label);
     bool isDownShiftScenario(string label);
+    bool isYieldShiftScenario(string label);
+    bool isCapFloorVolShiftScenario(string label);
+    string getCrossShiftScenarioLabel(string label, Size factor);
+    string getIndexCurrency(string indexName);
+    //@}
 
 private:
     //! Return copy of input string with ending removed
@@ -269,6 +279,7 @@ private:
     Real capFloorVolShiftSize_;
     vector<Period> capFloorVolShiftExpiries_;
     vector<Real> capFloorVolShiftStrikes_; // absolute
+    map<string, string> capFloorVolIndexMapping_;
 
     vector<string> fxVolCcyPairs_;
     string fxVolLabel_;

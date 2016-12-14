@@ -84,12 +84,17 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
 
     LOG("Get cap/floor vol sensitivity parameters");
     child = XMLUtils::getChildNode(node, "CapFloorVolatility");
-    capFloorVolCurrencies_ = XMLUtils::getChildrenValues(child, "Currencies", "Currency", false);
+    capFloorVolCurrencies_ = XMLUtils::getChildrenValues(child, "Currencies", "Currency", true);
     capFloorVolLabel_ = XMLUtils::getChildValue(child, "Label", true);
     capFloorVolShiftType_ = XMLUtils::getChildValue(child, "ShiftType", true);
     capFloorVolShiftSize_ = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
     capFloorVolShiftExpiries_ = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftExpiries", true);
     capFloorVolShiftStrikes_ = XMLUtils::getChildrenValuesAsDoublesCompact(child, "ShiftStrikes", true);
+    par = XMLUtils::getChildNode(child, "ParConversion");
+    if (par) {
+        XMLNode* indexMappingNode = XMLUtils::getChildNode(par, "IndexMapping");
+        capFloorVolIndexMapping_ = XMLUtils::getChildrenAttributesAndValues(indexMappingNode, "Index", "ccy", true);
+    }
 
     LOG("Get fx vol sensitivity parameters");
     child = XMLUtils::getChildNode(node, "FxVolatility");
@@ -143,7 +148,7 @@ std::string SensitivityScenarioData::shiftDirectionLabel(bool up) { return up ? 
 std::string SensitivityScenarioData::discountShiftScenarioLabel(string ccy, Size bucket, bool up) {
     std::ostringstream o;
     QL_REQUIRE(bucket < discountShiftTenors_.size(), "bucket " << bucket << " out of range");
-    o << discountLabel_ << labelSeparator() << ccy << labelSeparator() << "#" << bucket << labelSeparator()
+    o << discountLabel_ << labelSeparator() << ccy << labelSeparator() << bucket << labelSeparator()
       << discountShiftTenors_[bucket] << labelSeparator() << shiftDirectionLabel(up);
     return o.str();
 }
@@ -151,7 +156,7 @@ std::string SensitivityScenarioData::discountShiftScenarioLabel(string ccy, Size
 std::string SensitivityScenarioData::indexShiftScenarioLabel(string indexName, Size bucket, bool up) {
     QL_REQUIRE(bucket < indexShiftTenors_.size(), "bucket " << bucket << " out of range");
     std::ostringstream o;
-    o << indexLabel_ << labelSeparator() << indexName << labelSeparator() << "#" << bucket << labelSeparator()
+    o << indexLabel_ << labelSeparator() << indexName << labelSeparator() << bucket << labelSeparator()
       << indexShiftTenors_[bucket] << labelSeparator() << shiftDirectionLabel(up);
     return o.str();
 }
@@ -169,13 +174,16 @@ string SensitivityScenarioData::swaptionVolShiftScenarioLabel(string ccy, Size e
     std::ostringstream o;
     if (swaptionVolShiftStrikes_.size() == 0) {
         // ignore the strike bucket in this case
-        o << swaptionVolLabel_ << labelSeparator() << ccy << labelSeparator() << swaptionVolShiftExpiries_[expiryBucket]
-          << labelSeparator() << swaptionVolShiftTerms_[termBucket] << labelSeparator() << shiftDirectionLabel(up);
+        o << swaptionVolLabel_ << labelSeparator() << ccy << labelSeparator() << expiryBucket << labelSeparator()
+          << swaptionVolShiftExpiries_[expiryBucket] << labelSeparator() << termBucket << labelSeparator()
+          << swaptionVolShiftTerms_[termBucket] << labelSeparator() << shiftDirectionLabel(up);
     } else {
         QL_REQUIRE(strikeBucket < swaptionVolShiftStrikes_.size(), "strike bucket " << strikeBucket << " out of range");
-        o << swaptionVolLabel_ << labelSeparator() << ccy << labelSeparator() << swaptionVolShiftExpiries_[expiryBucket]
-          << labelSeparator() << swaptionVolShiftTerms_[termBucket] << labelSeparator() << std::setprecision(4)
-          << swaptionVolShiftStrikes_[strikeBucket] << labelSeparator() << shiftDirectionLabel(up);
+        o << swaptionVolLabel_ << labelSeparator() << ccy << labelSeparator() << expiryBucket << labelSeparator()
+          << swaptionVolShiftExpiries_[expiryBucket] << labelSeparator() << termBucket << labelSeparator()
+          << swaptionVolShiftTerms_[termBucket] << labelSeparator() << strikeBucket << labelSeparator()
+          << std::setprecision(4) << swaptionVolShiftStrikes_[strikeBucket] << labelSeparator()
+          << shiftDirectionLabel(up);
     }
     return o.str();
 }
@@ -184,12 +192,12 @@ string SensitivityScenarioData::fxVolShiftScenarioLabel(string ccypair, Size exp
     QL_REQUIRE(expiryBucket < fxVolShiftExpiries_.size(), "expiry bucket " << expiryBucket << " out of range");
     std::ostringstream o;
     if (fxVolShiftStrikes_.size() == 0) {
-        o << fxVolLabel_ << labelSeparator() << ccypair << labelSeparator() << "#" << expiryBucket << labelSeparator()
+        o << fxVolLabel_ << labelSeparator() << ccypair << labelSeparator() << expiryBucket << labelSeparator()
           << fxVolShiftExpiries_[expiryBucket] << labelSeparator() << shiftDirectionLabel(up);
     } else {
         // ignore the strike bucket in this case
         QL_REQUIRE(strikeBucket < fxVolShiftStrikes_.size(), "strike bucket " << strikeBucket << " out of range");
-        o << fxVolLabel_ << labelSeparator() << ccypair << labelSeparator() << "#" << expiryBucket << labelSeparator()
+        o << fxVolLabel_ << labelSeparator() << ccypair << labelSeparator() << expiryBucket << labelSeparator()
           << fxVolShiftExpiries_[expiryBucket] << labelSeparator() << std::setprecision(4)
           << fxVolShiftStrikes_[strikeBucket] << labelSeparator() << shiftDirectionLabel(up);
     }
@@ -201,9 +209,9 @@ string SensitivityScenarioData::capFloorVolShiftScenarioLabel(string ccy, Size e
     QL_REQUIRE(expiryBucket < capFloorVolShiftExpiries_.size(), "expiry bucket " << expiryBucket << " out of range");
     QL_REQUIRE(strikeBucket < capFloorVolShiftStrikes_.size(), "strike bucket " << strikeBucket << " out of range");
     std::ostringstream o;
-    o << capFloorVolLabel_ << labelSeparator() << ccy << labelSeparator() << capFloorVolShiftExpiries_[expiryBucket]
-      << labelSeparator() << std::setprecision(4) << capFloorVolShiftStrikes_[strikeBucket] << labelSeparator()
-      << shiftDirectionLabel(up);
+    o << capFloorVolLabel_ << labelSeparator() << ccy << labelSeparator() << strikeBucket << labelSeparator()
+      << std::setprecision(4) << capFloorVolShiftStrikes_[strikeBucket] << labelSeparator() << expiryBucket
+      << labelSeparator() << capFloorVolShiftExpiries_[expiryBucket] << labelSeparator() << shiftDirectionLabel(up);
     return o.str();
 }
 
@@ -214,6 +222,8 @@ string SensitivityScenarioData::labelToFactor(string label) {
         return remove(label, upString);
     else if (label.find(downString) != string::npos)
         return remove(label, downString);
+    else
+        QL_FAIL("direction label not found");
 }
 
 string SensitivityScenarioData::remove(const string& input, const string& ending) {
@@ -254,6 +264,36 @@ bool SensitivityScenarioData::isDownShiftScenario(string label) {
         return true;
     else
         return false;
+}
+
+string SensitivityScenarioData::getCrossShiftScenarioLabel(string label, Size index) {
+    QL_REQUIRE(index == 1 || index == 2, "index " << index << " out of range");
+    vector<string> tokens;
+    boost::split(tokens, label, boost::is_any_of(":"));
+    QL_REQUIRE(tokens.size() == 3, "expected 3 tokens in cross shift scenario label " << label << ", found "
+                                                                                      << tokens.size());
+    return tokens[index];
+}
+
+bool SensitivityScenarioData::isYieldShiftScenario(string label) {
+    if (label.find(discountLabel_) != string::npos || label.find(indexLabel_) != string::npos)
+        return true;
+    else
+        return false;
+}
+
+bool SensitivityScenarioData::isCapFloorVolShiftScenario(string label) {
+    if (label.find(capFloorVolLabel_) != string::npos)
+        return true;
+    else
+        return false;
+}
+
+string SensitivityScenarioData::getIndexCurrency(string indexName) {
+    vector<string> tokens;
+    boost::split(tokens, indexName, boost::is_any_of("-"));
+    QL_REQUIRE(tokens.size() > 1, "expected 2 or 3 tokens, found " << tokens.size() << " in " << indexName);
+    return tokens[0];
 }
 }
 }
