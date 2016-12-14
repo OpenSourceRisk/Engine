@@ -20,9 +20,11 @@
 #include <ored/portfolio/swap.hpp>
 #include <ored/portfolio/swaption.hpp>
 #include <ored/portfolio/fxoption.hpp>
+#include <ored/portfolio/capfloor.hpp>
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/builders/swaption.hpp>
 #include <ored/portfolio/builders/fxoption.hpp>
+#include <ored/portfolio/builders/capfloor.hpp>
 #include <ql/time/calendars/all.hpp>
 
 namespace testsuite {
@@ -30,12 +32,12 @@ namespace testsuite {
 string toString(Date d) {
     ostringstream o;
     o << io::iso_date(d);
-    return o.str(); 
+    return o.str();
 }
 
-boost::shared_ptr<Trade>
-buildSwap(string id, string ccy, bool isPayer, Real notional, int start, Size term, Real rate, Real spread,
-	  string fixedFreq, string fixedDC, string floatFreq, string floatDC, string index) {
+boost::shared_ptr<Trade> buildSwap(string id, string ccy, bool isPayer, Real notional, int start, Size term, Real rate,
+                                   Real spread, string fixedFreq, string fixedDC, string floatFreq, string floatDC,
+                                   string index) {
     Date today = Settings::instance().evaluationDate();
     Calendar calendar = TARGET();
     Size days = 2;
@@ -46,7 +48,7 @@ buildSwap(string id, string ccy, bool isPayer, Real notional, int start, Size te
     vector<Real> notionals(1, notional);
     vector<Real> rates(1, rate);
     vector<Real> spreads(1, spread);
-    
+
     Date qlStartDate = calendar.adjust(today + start * Years);
     Date qlEndDate = calendar.adjust(qlStartDate + term * Years);
     string startDate = toString(qlStartDate);
@@ -70,9 +72,9 @@ buildSwap(string id, string ccy, bool isPayer, Real notional, int start, Size te
     return trade;
 }
 
-boost::shared_ptr<Trade>
-buildEuropeanSwaption(string id, string longShort, string ccy, bool isPayer, Real notional, int start, Size term, Real rate, Real spread,
-		      string fixedFreq, string fixedDC, string floatFreq, string floatDC, string index) {
+boost::shared_ptr<Trade> buildEuropeanSwaption(string id, string longShort, string ccy, bool isPayer, Real notional,
+                                               int start, Size term, Real rate, Real spread, string fixedFreq,
+                                               string fixedDC, string floatFreq, string floatDC, string index) {
     Date today = Settings::instance().evaluationDate();
     Calendar calendar = TARGET();
     Size days = 2;
@@ -83,7 +85,7 @@ buildEuropeanSwaption(string id, string longShort, string ccy, bool isPayer, Rea
     vector<Real> notionals(1, notional);
     vector<Real> rates(1, rate);
     vector<Real> spreads(1, spread);
-    
+
     Date qlStartDate = calendar.adjust(today + start * Years);
     Date qlEndDate = calendar.adjust(qlStartDate + term * Years);
     string startDate = toString(qlStartDate);
@@ -105,7 +107,7 @@ buildEuropeanSwaption(string id, string longShort, string ccy, bool isPayer, Rea
     legs.push_back(fixedLeg);
     legs.push_back(floatingLeg);
     // option data
-    OptionData option(longShort, "Call", "European", false, vector<string>(1, startDate), "Cash");    
+    OptionData option(longShort, "Call", "European", false, vector<string>(1, startDate), "Cash");
     // trade
     boost::shared_ptr<Trade> trade(new ore::data::Swaption(env, option, legs));
     trade->id() = id;
@@ -113,22 +115,22 @@ buildEuropeanSwaption(string id, string longShort, string ccy, bool isPayer, Rea
     return trade;
 }
 
-boost::shared_ptr<Trade>
-buildFxOption(string id, string longShort, string putCall, Size expiry, string boughtCcy, Real boughtAmount, string soldCcy, Real soldAmount) {
+boost::shared_ptr<Trade> buildFxOption(string id, string longShort, string putCall, Size expiry, string boughtCcy,
+                                       Real boughtAmount, string soldCcy, Real soldAmount) {
     Date today = Settings::instance().evaluationDate();
     Calendar calendar = TARGET();
     Size days = 2;
     string cal = "TARGET";
     string conv = "MF";
     string rule = "Forward";
-    
+
     Date qlExpiry = calendar.adjust(today + expiry * Years);
     string expiryDate = toString(qlExpiry);
 
     // envelope
     Envelope env("CP");
     // option data
-    OptionData option(longShort, putCall, "European", false, vector<string>(1, expiryDate), "Cash");    
+    OptionData option(longShort, putCall, "European", false, vector<string>(1, expiryDate), "Cash");
     // trade
     boost::shared_ptr<Trade> trade(new ore::data::FxOption(env, option, boughtCcy, boughtAmount, soldCcy, soldAmount));
     trade->id() = id;
@@ -136,4 +138,47 @@ buildFxOption(string id, string longShort, string putCall, Size expiry, string b
     return trade;
 }
 
+boost::shared_ptr<Trade> buildCap(string id, string ccy, string longShort, Real capRate, Real notional, int start,
+                                  Size term, string floatFreq, string floatDC, string index) {
+    return buildCapFloor(id, ccy, longShort, vector<Real>(1, capRate), vector<Real>(), notional, start, term, floatFreq,
+                         floatDC, index);
+}
+
+boost::shared_ptr<Trade> buildFloor(string id, string ccy, string longShort, Real floorRate, Real notional, int start,
+                                    Size term, string floatFreq, string floatDC, string index) {
+    return buildCapFloor(id, ccy, longShort, vector<Real>(), vector<Real>(1, floorRate), notional, start, term,
+                         floatFreq, floatDC, index);
+}
+
+boost::shared_ptr<Trade> buildCapFloor(string id, string ccy, string longShort, vector<Real> capRates,
+                                       vector<Real> floorRates, Real notional, int start, Size term, string floatFreq,
+                                       string floatDC, string index) {
+    Date today = Settings::instance().evaluationDate();
+    Calendar calendar = TARGET();
+    Size days = 2;
+    string cal = "TARGET";
+    string conv = "MF";
+    string rule = "Forward";
+
+    vector<Real> notionals(1, notional);
+    vector<Real> spreads(1, 0.0);
+    
+    Date qlStartDate = calendar.adjust(today + start * Years);
+    Date qlEndDate = calendar.adjust(qlStartDate + term * Years);
+    string startDate = toString(qlStartDate);
+    string endDate = toString(qlEndDate);
+
+    // envelope
+    Envelope env("CP");
+    // schedules
+    ScheduleData floatSchedule(ScheduleRules(startDate, endDate, floatFreq, cal, conv, conv, rule));
+    // float leg
+    FloatingLegData floatingLegData(index, days, true, spreads);
+    LegData floatingLeg(false, ccy, floatingLegData, floatSchedule, floatDC, notionals);
+    // trade
+    boost::shared_ptr<Trade> trade(new ore::data::CapFloor(env, longShort, floatingLeg, capRates, floorRates));
+    trade->id() = id;
+    
+    return trade;
+}
 }

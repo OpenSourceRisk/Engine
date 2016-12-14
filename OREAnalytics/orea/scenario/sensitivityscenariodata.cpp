@@ -31,11 +31,13 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
     XMLNode* node = XMLUtils::locateNode(root, "SensitivityAnalysis");
     XMLUtils::checkNode(node, "SensitivityAnalysis");
 
+    parConversion_ = XMLUtils::getChildValueAsBool(node, "ParConversion", true);
+    
     LOG("Get discount curve sensitivity parameters");
     XMLNode* child = XMLUtils::getChildNode(node, "DiscountCurve");
     discountCurrencies_ = XMLUtils::getChildrenValues(child, "Currencies", "Currency", false);
     discountLabel_ = XMLUtils::getChildValue(child, "Label", true);
-    discountDomain_ = XMLUtils::getChildValue(child, "Domain", true);
+    //discountDomain_ = XMLUtils::getChildValue(child, "Domain", true);
     discountShiftType_ = XMLUtils::getChildValue(child, "ShiftType", true);
     discountShiftSize_ = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
     discountShiftTenors_ = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
@@ -52,7 +54,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
     child = XMLUtils::getChildNode(node, "IndexCurve");
     indexNames_ = XMLUtils::getChildrenValues(child, "IndexNames", "Index", false);
     indexLabel_ = XMLUtils::getChildValue(child, "Label", true);
-    indexDomain_ = XMLUtils::getChildValue(child, "Domain", true);
+    //indexDomain_ = XMLUtils::getChildValue(child, "Domain", true);
     indexShiftType_ = XMLUtils::getChildValue(child, "ShiftType", true);
     indexShiftSize_ = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
     indexShiftTenors_ = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);

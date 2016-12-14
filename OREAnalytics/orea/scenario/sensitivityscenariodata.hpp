@@ -56,9 +56,11 @@ public:
 
     //! \name Inspectors
     //@{
+    bool parConversion() const { return parConversion_; }
+
     const vector<string>& discountCurrencies() const { return discountCurrencies_; }
     const string& discountLabel() const { return discountLabel_; }
-    const string& discountDomain() const { return discountDomain_; }
+    // const string& discountDomain() const { return discountDomain_; }
     const vector<Period>& discountShiftTenors() const { return discountShiftTenors_; }
     const string& discountShiftType() const { return discountShiftType_; }
     const Real& discountShiftSize() const { return discountShiftSize_; }
@@ -70,14 +72,14 @@ public:
 
     const vector<string>& indexNames() const { return indexNames_; }
     const string& indexLabel() const { return indexLabel_; }
-    const string& indexDomain() const { return indexDomain_; }
+    // const string& indexDomain() const { return indexDomain_; }
     const vector<Period>& indexShiftTenors() const { return indexShiftTenors_; }
     const string& indexShiftType() const { return indexShiftType_; }
     const Real& indexShiftSize() const { return indexShiftSize_; }
 
     const vector<string>& infIndices() const { return infIndices_; }
     const string& infLabel() const { return infLabel_; }
-    const string& infDomain() const { return infDomain_; }
+    // const string& infDomain() const { return infDomain_; }
     const vector<Period>& infShiftTenors() const { return infShiftTenors_; }
     const string& infShiftType() const { return infShiftType_; }
     const Real& infShiftSize() const { return infShiftSize_; }
@@ -112,7 +114,7 @@ public:
 
     const vector<string>& crNames() const { return crNames_; }
     const string& crLabel() const { return crLabel_; }
-    const string& crDomain() const { return crDomain_; }
+    // const string& crDomain() const { return crDomain_; }
     const vector<Period>& crShiftTenors() const { return crShiftTenors_; }
     const string& crShiftType() const { return crShiftType_; }
     const Real& crShiftSize() const { return crShiftSize_; }
@@ -123,9 +125,11 @@ public:
 
     //! \name Setters
     //@{
+    bool& parConversion() { return parConversion_; }
+
     vector<string>& discountCurrencies() { return discountCurrencies_; }
     string& discountLabel() { return discountLabel_; }
-    string& discountDomain() { return discountDomain_; }
+    // string& discountDomain() { return discountDomain_; }
     vector<Period>& discountShiftTenors() { return discountShiftTenors_; }
     string& discountShiftType() { return discountShiftType_; }
     Real& discountShiftSize() { return discountShiftSize_; }
@@ -135,7 +139,7 @@ public:
 
     vector<string>& indexNames() { return indexNames_; }
     string& indexLabel() { return indexLabel_; }
-    string& indexDomain() { return indexDomain_; }
+    // string& indexDomain() { return indexDomain_; }
     vector<Period>& indexShiftTenors() { return indexShiftTenors_; }
     string& indexShiftType() { return indexShiftType_; }
     Real& indexShiftSize() { return indexShiftSize_; }
@@ -145,7 +149,7 @@ public:
 
     vector<string>& infIndices() { return infIndices_; }
     string& infLabel() { return infLabel_; }
-    string& infDomain() { return infDomain_; }
+    // string& infDomain() { return infDomain_; }
     vector<Period>& infShiftTenors() { return infShiftTenors_; }
     string& infShiftType() { return infShiftType_; }
     Real& infShiftSize() { return infShiftSize_; }
@@ -180,7 +184,7 @@ public:
 
     vector<string>& crNames() { return crNames_; }
     string& crLabel() { return crLabel_; }
-    string& crDomain() { return crDomain_; }
+    // string& crDomain() { return crDomain_; }
     vector<Period>& crShiftTenors() { return crShiftTenors_; }
     string& crShiftType() { return crShiftType_; }
     Real& crShiftSize() { return crShiftSize_; }
@@ -226,9 +230,11 @@ private:
     //! Return copy of input string with ending removed
     string remove(const string& input, const string& ending);
 
+    bool parConversion_;
+
     vector<string> discountCurrencies_;
     string discountLabel_;
-    string discountDomain_;
+    // string discountDomain_;
     vector<Period> discountShiftTenors_;
     string discountShiftType_;
     Real discountShiftSize_;
@@ -238,7 +244,7 @@ private:
 
     vector<string> indexNames_;
     string indexLabel_;
-    string indexDomain_;
+    // string indexDomain_;
     vector<Period> indexShiftTenors_;
     string indexShiftType_;
     Real indexShiftSize_;
@@ -253,14 +259,14 @@ private:
 
     vector<string> infIndices_;
     string infLabel_;
-    string infDomain_;
+    // string infDomain_;
     vector<Period> infShiftTenors_;
     string infShiftType_;
     Real infShiftSize_;
 
     vector<string> crNames_;
     string crLabel_;
-    string crDomain_;
+    // string crDomain_;
     vector<Period> crShiftTenors_;
     string crShiftType_;
     Real crShiftSize_;

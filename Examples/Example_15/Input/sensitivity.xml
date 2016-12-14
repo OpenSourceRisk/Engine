@@ -1,4 +1,6 @@
 <SensitivityAnalysis>
+
+  <ParConversion>true</ParConversion>
   
   <!-- Discount curve shifts -->
   <DiscountCurve>
@@ -9,7 +11,6 @@
       <Currency>JPY</Currency>
       <Currency>CHF</Currency>
     </Currencies>
-    <Domain>Par</Domain><!-- Zero or Par -->
     <ShiftType>Absolute</ShiftType>
     <ShiftSize>0.0001</ShiftSize>
     <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
@@ -51,7 +52,6 @@
       <Index>CHF-LIBOR-6M</Index>
       <Index>JPY-LIBOR-6M</Index>
     </IndexNames>
-    <Domain>Par</Domain><!-- Zero or Par -->
     <ShiftType>Absolute</ShiftType>
     <ShiftSize>0.0001</ShiftSize>
     <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
@@ -107,7 +107,6 @@
       <Currency>EUR</Currency>
       <Currency>USD</Currency>
     </Currencies>
-    <Domain>Optionlet</Domain><!-- Optionlet or Flat -->
     <ShiftType>Absolute</ShiftType>
     <ShiftSize>0.0001</ShiftSize>
     <ShiftExpiries>1Y,2Y,3Y,5Y,7Y,10Y</ShiftExpiries>

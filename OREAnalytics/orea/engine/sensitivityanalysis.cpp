@@ -156,7 +156,9 @@ SensitivityAnalysis::SensitivityAnalysis(boost::shared_ptr<ore::data::Portfolio>
         gamma_[p] = u - 2.0 * b + d; // = f_xx(x) * u^2
     }
 
-    // return;
+    // The remainder below is about converting sensitivity to sensitivity w.r.t. specified par rates and flat vols
+    if (!sensitivityData->parConversion())
+        return;
 
     /****************************************************************
      * Discount curve instrument fair rate sensitivity to zero shifts
@@ -474,12 +476,12 @@ void SensitivityAnalysis::writeParRateSensitivityReport(string fileName) {
         file << endl;
     }
     for (auto data : flatCapVolSensi_) {
-      std::tuple<string, Size, string> p = data.first;
-      string curveName = std::get<0>(p);
-      string factor = std::get<2>(p);
-      Size bucket = std::get<1>(p);
-      vector<Real> sensi = data.second;
-      file << "CapFloor" << sep << curveName << "_" << bucket << sep << factor;
+        std::tuple<string, Size, string> p = data.first;
+        string curveName = std::get<0>(p);
+        string factor = std::get<2>(p);
+        Size bucket = std::get<1>(p);
+        vector<Real> sensi = data.second;
+        file << "CapFloor" << sep << curveName << "_" << bucket << sep << factor;
         for (Size i = 0; i < sensi.size(); ++i)
             file << sep << sensi[i];
         file << endl;
@@ -687,7 +689,8 @@ void ParSensitivityConverter::buildJacobiMatrix() {
             dim = n_capTerms;
         else
             QL_FAIL("curve type " << curveType << " not covered");
-        LOG("Curve " << i << " type " << curveType << " name " << curveName << " bucket " << bucket << ": dimension " << dim);
+        LOG("Curve " << i << " type " << curveType << " name " << curveName << " bucket " << bucket << ": dimension "
+                     << dim);
 
         for (Size k = 0; k < n_shifts; ++k) {
             string factor = factors_[k];
@@ -705,10 +708,10 @@ void ParSensitivityConverter::buildJacobiMatrix() {
                     v = vector<Real>(dim, 0.0);
                 else
                     v = flatCapVolSensi_[key];
-		// cout << i << " " << curveType << " " << curveName << " " << sBucket << " " << factor << ": ";
-		// for (Size l = 0; l < dim; ++l)
-		//   cout << v[l] << " ";
-		// cout << endl;
+                // cout << i << " " << curveType << " " << curveName << " " << sBucket << " " << factor << ": ";
+                // for (Size l = 0; l < dim; ++l)
+                //   cout << v[l] << " ";
+                // cout << endl;
             } else
                 QL_FAIL("factor " << factor << " not covered");
 
