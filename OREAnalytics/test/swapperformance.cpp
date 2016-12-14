@@ -438,14 +438,14 @@ void SwapPerformanceTest::testSingleSwapPerformance() { test_performance(1); }
 
 test_suite* SwapPerformanceTest::suite() {
     // Uncomment the below to get detailed output TODO: custom logger that uses BOOST_MESSAGE
-    /*
+    
     boost::shared_ptr<ore::data::FileLogger> logger
         = boost::make_shared<ore::data::FileLogger>("swapperformace_test.log");
     ore::data::Log::instance().removeAllLoggers();
     ore::data::Log::instance().registerLogger(logger);
     ore::data::Log::instance().switchOn();
     ore::data::Log::instance().setMask(255);
-    */
+    
 
     test_suite* suite = BOOST_TEST_SUITE("SwapPerformanceTest");
     // Set the Observation mode here
