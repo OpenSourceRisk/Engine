@@ -84,6 +84,8 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         fxSpots_[Market::defaultConfiguration].addQuote(ccyPair, qh);
         simData_.emplace(std::piecewise_construct, std::forward_as_tuple(RiskFactorKey::KeyType::FXSpot, ccyPair),
                          std::forward_as_tuple(q));
+	// for (auto sd : simData_)
+	//   LOG("Add sim data quote for FX key " << sd.first);
     }
     LOG("FX triangulation done");
 

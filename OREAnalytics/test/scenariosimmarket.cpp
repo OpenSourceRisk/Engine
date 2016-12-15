@@ -19,6 +19,7 @@
 #include <test/scenariosimmarket.hpp>
 #include <test/testmarket.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
+#include <ored/utilities/log.hpp>
 #include <ored/marketdata/market.hpp>
 #include <ored/marketdata/marketimpl.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
@@ -57,27 +58,27 @@ boost::shared_ptr<data::Conventions> convs() {
 boost::shared_ptr<analytics::ScenarioSimMarketParameters> scenarioParameters() {
     boost::shared_ptr<analytics::ScenarioSimMarketParameters> parameters(new analytics::ScenarioSimMarketParameters());
     parameters->baseCcy() = "EUR";
-    parameters->ccys() = {"EUR", "USD"};
-    parameters->yieldCurveTenors() = {6 * Months, 1 * Years, 2 * Years};
-    parameters->indices() = {"EUR-EURIBOR-6M", "USD-LIBOR-6M"};
+    parameters->ccys() = { "EUR", "USD" };
+    parameters->yieldCurveTenors() = { 6 * Months, 1 * Years, 2 * Years };
+    parameters->indices() = { "EUR-EURIBOR-6M", "USD-LIBOR-6M" };
     parameters->interpolation() = "LogLinear";
     parameters->extrapolate() = true;
 
-    parameters->swapVolTerms() = {6 * Months, 1 * Years};
-    parameters->swapVolExpiries() = {1 * Years, 2 * Years};
-    parameters->swapVolCcys() = {"EUR", "USD"};
+    parameters->swapVolTerms() = { 6 * Months, 1 * Years };
+    parameters->swapVolExpiries() = { 1 * Years, 2 * Years };
+    parameters->swapVolCcys() = { "EUR", "USD" };
     parameters->swapVolDecayMode() = "ForwardVariance";
 
-    parameters->defaultNames() = {"dc2"};
-    parameters->defaultTenors() = {6 * Months, 8 * Months, 1 * Years, 2 * Years};
+    parameters->defaultNames() = { "dc2" };
+    parameters->defaultTenors() = { 6 * Months, 8 * Months, 1 * Years, 2 * Years };
 
     parameters->simulateFXVols() = false;
-    parameters->fxVolExpiries() = {2 * Years, 3 * Years, 4 * Years};
+    parameters->fxVolExpiries() = { 2 * Years, 3 * Years, 4 * Years };
     parameters->fxVolDecayMode() = "ConstantVariance";
 
-    parameters->fxVolCcyPairs() = {"EURUSD"};
+    parameters->fxVolCcyPairs() = { "USDEUR" };
 
-    parameters->fxCcyPairs() = {"EURUSD"};
+    parameters->fxCcyPairs() = { "USDEUR" };
 
     return parameters;
 }
@@ -217,7 +218,13 @@ void testToXML(boost::shared_ptr<analytics::ScenarioSimMarketParameters> params)
 void ScenarioSimMarketTest::testScenarioSimMarket() {
     BOOST_TEST_MESSAGE("Testing Wrap ScenarioSimMarket...");
 
-    boost::shared_ptr<ore::data::Market> initMarket = boost::make_shared<TestMarket>(Date(20, Jan, 2015));
+    SavedSettings backup;
+
+    Date today(20, Jan, 2015);
+
+    Settings::instance().evaluationDate() = today;
+
+    boost::shared_ptr<ore::data::Market> initMarket = boost::make_shared<TestMarket>(today);
 
     // Empty scenario generator
     boost::shared_ptr<ore::analytics::ScenarioGenerator> scenarioGenerator;
@@ -240,6 +247,12 @@ void ScenarioSimMarketTest::testScenarioSimMarket() {
 }
 
 test_suite* ScenarioSimMarketTest::suite() {
+    // boost::shared_ptr<ore::data::FileLogger> logger = boost::make_shared<ore::data::FileLogger>("simmarket_test.log");
+    // ore::data::Log::instance().removeAllLoggers();
+    // ore::data::Log::instance().registerLogger(logger);
+    // ore::data::Log::instance().switchOn();
+    // ore::data::Log::instance().setMask(255);
+
     test_suite* suite = BOOST_TEST_SUITE("ScenarioSimMarketTests");
     suite->add(BOOST_TEST_CASE(&ScenarioSimMarketTest::testScenarioSimMarket));
     return suite;
