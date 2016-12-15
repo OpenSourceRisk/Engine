@@ -205,6 +205,14 @@
         <Extrapolation>Y</Extrapolation>
       </Configuration>
     </YieldCurves>
+    <FxRates>
+      <CurrencyPairs>
+        <CurrencyPair>USDEUR</CurrencyPair>
+        <CurrencyPair>GBPEUR</CurrencyPair>
+        <CurrencyPair>CHFEUR</CurrencyPair>
+        <CurrencyPair>JPYEUR</CurrencyPair>
+      </CurrencyPairs>      
+    </FxRates>
     <Indices>
       <Index>EUR-EURIBOR-6M</Index>
       <Index>EUR-EURIBOR-3M</Index>
@@ -233,6 +241,7 @@
 	   surfaces, so we need to specify here how we propagate the
 	   vol structure and what its composition will be -->
     <SwaptionVolatilities>
+      <Simulate>false</Simulate>
       <!-- Alternative: ConstantVariance -->
       <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
       <Currencies>
@@ -251,9 +260,9 @@
       <!-- Alternative: ConstantVariance -->
       <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
       <CurrencyPairs>
-        <CurrencyPair>EURUSD</CurrencyPair>
-        <CurrencyPair>EURGBP</CurrencyPair>
-        <CurrencyPair>EURJPY</CurrencyPair>
+        <CurrencyPair>USDEUR</CurrencyPair>
+        <CurrencyPair>GBPEUR</CurrencyPair>
+        <CurrencyPair>JPYEUR</CurrencyPair>
       </CurrencyPairs>
       <Expiries>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</Expiries>
       <Strikes/>
