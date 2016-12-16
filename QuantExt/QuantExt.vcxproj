@@ -36,7 +36,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectName>QuantExt</ProjectName>
-    <ProjectGuid>{AD0A27DA-91DA-46A2-ACBD-296C419ED3AA}</ProjectGuid>
+    <ProjectGuid>{EE3B829C-8824-4656-B37F-32DED1F62E68}</ProjectGuid>
     <RootNamespace>QuantExt</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />

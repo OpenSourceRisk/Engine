@@ -59,7 +59,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectName>OREAnalyticsTestSuite</ProjectName>
-    <ProjectGuid>{A613045C-34AF-4706-AA3C-730C92524F74}</ProjectGuid>
+    <ProjectGuid>{87DD6B48-D3E0-4C2D-A984-0E41259A9D3C}</ProjectGuid>
     <RootNamespace>OREAnalyticsTestSuite</RootNamespace>
     <VCTargetsPath Condition="'$(VCTargetsPath11)' != '' and '$(VSVersion)' == '' and $(VisualStudioVersion) == ''">$(VCTargetsPath11)</VCTargetsPath>
   </PropertyGroup>

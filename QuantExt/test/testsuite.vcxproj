@@ -36,7 +36,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectName>quantexttestsuite</ProjectName>
-    <ProjectGuid>{A613045C-34AF-4706-AA3C-730C92524F74}</ProjectGuid>
+    <ProjectGuid>{643BCBE7-4369-42EC-9766-DCB8DAD6615F}</ProjectGuid>
     <RootNamespace>quantexttestsuite</RootNamespace>
     <VCTargetsPath Condition="'$(VCTargetsPath11)' != '' and '$(VSVersion)' == '' and $(VisualStudioVersion) == ''">$(VCTargetsPath11)</VCTargetsPath>
   </PropertyGroup>
