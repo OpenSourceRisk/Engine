@@ -18,7 +18,7 @@
 
 /*! \file ored/portfolio/envelope.hpp
     \brief trade envelope data model and serialization
-    \ingroup openxva::portfolio
+    \ingroup portfolio
 */
 
 #pragma once

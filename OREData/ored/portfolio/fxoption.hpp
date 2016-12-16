@@ -18,7 +18,7 @@
 
 /*! \file portfolio/fxoption.hpp
     \brief FX Option data model and serialization
-    \ingroup openxva::portfolio
+    \ingroup portfolio
 */
 
 #pragma once
