@@ -18,7 +18,7 @@
 
 /*! \file ored/portfolio/trade.hpp
     \brief base trade data model and serialization
-    \ingroup openxva::portfolio
+    \ingroup portfolio
 */
 
 #pragma once

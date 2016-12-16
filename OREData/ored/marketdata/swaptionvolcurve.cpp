@@ -19,6 +19,7 @@
 #include <ored/marketdata/swaptionvolcurve.hpp>
 #include <ored/utilities/log.hpp>
 #include <ql/termstructures/volatility/swaption/swaptionvolmatrix.hpp>
+#include <ql/termstructures/volatility/swaption/swaptionconstantvol.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <algorithm>
 
@@ -154,15 +155,25 @@ SwaptionVolCurve::SwaptionVolCurve(Date asof, SwaptionVolatilityCurveSpec spec, 
             QL_FAIL("could not build swaption vol curve");
         }
 
-        vol_ = boost::shared_ptr<SwaptionVolatilityStructure>(new SwaptionVolatilityMatrix(
-            asof, config->calendar(), config->businessDayConvention(), optionTenors, swapTenors, vols,
-            config->dayCounter(), config->flatExtrapolation(),
-            config->volatilityType() == SwaptionVolatilityCurveConfig::VolatilityType::Normal
-                ? QuantLib::Normal
-                : QuantLib::ShiftedLognormal,
-            shifts));
+        if (quotesRead != 1) {
+            vol_ = boost::shared_ptr<SwaptionVolatilityStructure>(new SwaptionVolatilityMatrix(
+                asof, config->calendar(), config->businessDayConvention(), optionTenors, swapTenors, vols,
+                config->dayCounter(), config->flatExtrapolation(),
+                config->volatilityType() == SwaptionVolatilityCurveConfig::VolatilityType::Normal
+                    ? QuantLib::Normal
+                    : QuantLib::ShiftedLognormal,
+                shifts));
 
-        vol_->enableExtrapolation(config->extrapolate());
+            vol_->enableExtrapolation(config->extrapolate());
+        } else {
+            // Constant volatility
+            vol_ = boost::shared_ptr<SwaptionVolatilityStructure>(new ConstantSwaptionVolatility(
+                asof, config->calendar(), config->businessDayConvention(), vols[0][0], config->dayCounter(),
+                config->volatilityType() == SwaptionVolatilityCurveConfig::VolatilityType::Normal
+                    ? QuantLib::Normal
+                    : QuantLib::ShiftedLognormal,
+                !shifts.empty() ? shifts[0][0] : 0.0));
+        }
 
     } catch (std::exception& e) {
         QL_FAIL("swaption vol curve building failed :" << e.what());
