@@ -12,7 +12,7 @@
 
 \begin{document}
 
-\title{OpenRiskEngine Coding Standards}
+\title{ORE Coding Standards}
 \date{\today}
 \maketitle
 
@@ -45,10 +45,10 @@ Version & Date & Author & Comment \\
 %-------------------------------------------------------------------------------
 \section*{Introduction}
 
-This document outlines the coding standards to be employed in all OpenRiskEngine development.
+This document outlines the coding standards to be employed in all ORE development.
 
 \subsection*{C++ Version}
-OpenRiskEngine is written using C++11, C++14 features are not permitted. The most commonly used feature in C++11 is auto boxing and foreach loops, e.g.
+ORE is written using C++11, C++14 features are not permitted. The most commonly used feature in C++11 is auto boxing and foreach loops, e.g.
 \begin{verbatim}
 vector<int> v = { 1, 2, 3 };
 for (const auto& a : v)
@@ -60,20 +60,20 @@ vector<vector<int>> v;
 \end{verbatim}
 Note that the use of QuantLib means we must use  \textbf{boost::shared\_ptr} for the majority of objects. For simplicity we will use
 \textbf{boost::shared\_ptr} everywhere and there will be no \textbf{\#define PTR or Ptr} macros.
-OpenRiskEngine
+ORE
 QuantExt development must be comparable with the QuantLib coding standards and so must be C++98 compliant.
 
 \subsection*{Platform Support}
-OpenRiskEngine should be able to build on any platform that supports QuantLib and has a C++11 compliant compiler. Development files will be maintained for MSVC 2013 and 2015 on Windows and a QL style automake for Unix and MacOS.
+ORE should be able to build on any platform that supports QuantLib and has a C++11 compliant compiler. Development files will be maintained for MSVC 2013 and 2015 on Windows and a QL style automake for Unix and MacOS.
 
 All development will be done on 64-bit architecture.
 
 \subsection*{Third Party Libraries}
-OpenRiskEngine is written using the following libraries
+ORE is written using the following libraries
 \begin{enumerate}
 \item Boost - Any version of Boost greater than 1.57, this environment variable \$BOOST must be defined on Unix and should point to the root Boost folder.
 \item QuantLib - strictly 1.8 or higher, source code is stored in the QuantLib git repository and cannot be modified.
-\item RapidXML - 1.13, source code is stored in the OpenRiskEngine git repository and cannot be modified.
+\item RapidXML - 1.13, source code is stored in the ORE git repository and cannot be modified.
 \end{enumerate}
 Other libraries may be included in the future, including:
 \begin{enumerate}
@@ -84,10 +84,10 @@ Other libraries may be included in the future, including:
 \end{enumerate}
 
 \subsection*{Environment variables}
-OpenRiskEngine will not depend or use any environment variables or windows registry files. The only environment variable ever used will be \$BOOST as defined above for development purposes.
+ORE will not depend or use any environment variables or windows registry files. The only environment variable ever used will be \$BOOST as defined above for development purposes.
 
 \subsection*{Threading and singletons}
-OpenRiskEngine is a single threaded application, the use of singletons is to be avoided where possible. If a developer feels that a singleton must be employed than this must be justified in detail.
+ORE is a single threaded application, the use of singletons is to be avoided where possible. If a developer feels that a singleton must be employed than this must be justified in detail.
 
 \subsection*{Code Layout and indention}
 All code is to be indented with four spaces, tabs are not to be included in any source file. Redundant whitespace is not to be inserted into files. 
