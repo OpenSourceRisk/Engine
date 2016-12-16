@@ -327,12 +327,14 @@
     <ClInclude Include="qle\termstructures\spreadedswaptionvolatility.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
-    <ClInclude Include="qle\math\nadarayawatson.hpp" />
-    <ClInclude Include="qle\pricingengines\discountingequityforwardengine.hpp">
-      <Filter>pricingengines</Filter>
+    <ClInclude Include="qle\math\nadarayawatson.hpp">
+      <Filter>math</Filter>
     </ClInclude>
-    <ClInclude Include="qle\instruments\equityforward.hpp">
-      <Filter>instruments</Filter>
+    <ClInclude Include="qle\math\cumulativenormaldistribution.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\dynamicstype.hpp">
+      <Filter>termstructures</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -562,12 +564,6 @@
     </ClCompile>
     <ClCompile Include="qle\termstructures\spreadedswaptionvolatility.cpp">
       <Filter>termstructures</Filter>
-    </ClCompile>
-    <ClCompile Include="qle\pricingengines\discountingequityforwardengine.cpp">
-      <Filter>pricingengines</Filter>
-    </ClCompile>
-    <ClCompile Include="qle\instruments\equityforward.cpp">
-      <Filter>instruments</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

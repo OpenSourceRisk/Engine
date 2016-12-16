@@ -1,4 +1,4 @@
-bash/#!/bin
+#!/bin/bash
 
 # execute this script from the root of an uncompressed QuantLib tarball
 
