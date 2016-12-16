@@ -18,7 +18,7 @@
 
 /*! \file portfolio/swaption.hpp
     \brief Swaption data model and serialization
-    \ingroup openxva::portfolio
+    \ingroup portfolio
 */
 
 #pragma once

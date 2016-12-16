@@ -31,7 +31,8 @@ namespace testsuite {
 /*!
     Observation Modes are None, Unregister and Disable
     Each mode is tested with a simulation grid that is shorter/longer than portfolio maturity
-    Each test runs with and without checks that the index fixing data is correctly stored in the aggregation scenario data object 
+    Each test runs with and without checks that the index fixing data is correctly stored in the aggregation scenario
+   data object
     \ingroup tests
 */
 class ObservationModeTest {
