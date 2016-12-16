@@ -5,6 +5,7 @@
 
 2) Market
 
+   Minimal market data file, using single points where possible
    Flat Zero Coupon curve at 2.1%
 
    Note that today's fixings in the fixing file need to be commented
@@ -23,11 +24,3 @@
 5) Run Example
 
    python run.py
-
-6) Run Example via LibreOffice Calc
-
-   a) Install LibreOffice 5.0.6.3 (latest stable)
-
-   b) In this Example_14 directory launch Calc on sheet run.ods with
-      ./launchCalc.sh
-         
