@@ -222,9 +222,9 @@ void LgmBuilder::buildSwaptionBasket() {
         if (expiryDateBased && termDateBased) {
             vol = Handle<Quote>(boost::make_shared<SimpleQuote>(svts->volatility(expiryDb, termT, strikeValue)));
             Real shift = svts->volatilityType() == ShiftedLognormal ? svts->shift(expiryDb, termT) : 0.0;
-            helper = boost::make_shared<SwaptionHelper>(
-                expiryDb, termDb, vol, iborIndex, fixedLegTenor, fixedDayCounter, floatDayCounter, yts,
-                calibrationErrorType_, strikeValue, 1.0, svts->volatilityType(), shift);
+            helper = boost::make_shared<SwaptionHelper>(expiryDb, termDb, vol, iborIndex, fixedLegTenor,
+                                                        fixedDayCounter, floatDayCounter, yts, calibrationErrorType_,
+                                                        strikeValue, 1.0, svts->volatilityType(), shift);
             LOG("Added Date / Date based SwaptionHelper " << data_->ccy() << " " << expiryDb << ", " << termDb << ", "
                                                           << strike << " : " << vol->value() << " "
                                                           << svts->volatilityType());
@@ -232,9 +232,9 @@ void LgmBuilder::buildSwaptionBasket() {
         if (expiryDateBased && !termDateBased) {
             vol = Handle<Quote>(boost::make_shared<SimpleQuote>(svts->volatility(expiryDb, termPb, strikeValue)));
             Real shift = svts->volatilityType() == ShiftedLognormal ? svts->shift(expiryDb, termPb) : 0.0;
-            helper = boost::make_shared<SwaptionHelper>(
-                expiryDb, termPb, vol, iborIndex, fixedLegTenor, fixedDayCounter, floatDayCounter, yts,
-                calibrationErrorType_, strikeValue, 1.0, svts->volatilityType(), shift);
+            helper = boost::make_shared<SwaptionHelper>(expiryDb, termPb, vol, iborIndex, fixedLegTenor,
+                                                        fixedDayCounter, floatDayCounter, yts, calibrationErrorType_,
+                                                        strikeValue, 1.0, svts->volatilityType(), shift);
             LOG("Added Date / Period based SwaptionHelper " << data_->ccy() << " " << expiryDb << ", " << termPb << ", "
                                                             << strike << " : " << vol->value() << " "
                                                             << svts->volatilityType());
@@ -253,9 +253,9 @@ void LgmBuilder::buildSwaptionBasket() {
         if (!expiryDateBased && !termDateBased) {
             vol = Handle<Quote>(boost::make_shared<SimpleQuote>(svts->volatility(expiryPb, termPb, strikeValue)));
             Real shift = svts->volatilityType() == ShiftedLognormal ? svts->shift(expiryPb, termPb) : 0.0;
-            helper = boost::make_shared<SwaptionHelper>(
-                expiryPb, termPb, vol, iborIndex, fixedLegTenor, fixedDayCounter, floatDayCounter, yts,
-                calibrationErrorType_, strikeValue, 1.0, svts->volatilityType(), shift);
+            helper = boost::make_shared<SwaptionHelper>(expiryPb, termPb, vol, iborIndex, fixedLegTenor,
+                                                        fixedDayCounter, floatDayCounter, yts, calibrationErrorType_,
+                                                        strikeValue, 1.0, svts->volatilityType(), shift);
             LOG("Added Period / Period based SwaptionHelper " << data_->ccy() << " " << expiryPb << ", " << termPb
                                                               << ", " << strike << " : " << vol->value() << " "
                                                               << svts->volatilityType());

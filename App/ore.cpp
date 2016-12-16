@@ -111,9 +111,9 @@ int main(int argc, char** argv) {
         if (params.has("setup", "logMask")) {
             logMask = static_cast<Size>(parseInteger(params.get("setup", "logMask")));
         }
-        
+
         boost::filesystem::path p{outputPath};
-        if(!boost::filesystem::exists(p)) {
+        if (!boost::filesystem::exists(p)) {
             boost::filesystem::create_directories(p);
         }
         QL_REQUIRE(boost::filesystem::is_directory(p), "output path '" << outputPath << "' is not a directory.");
@@ -121,7 +121,7 @@ int main(int argc, char** argv) {
         Log::instance().registerLogger(boost::make_shared<FileLogger>(logFile));
         Log::instance().setMask(logMask);
         Log::instance().switchOn();
-        
+
         LOG("ORE starting");
         params.log();
 
@@ -130,7 +130,7 @@ int main(int argc, char** argv) {
             ObservationMode::instance().setMode(om);
             LOG("Observation Mode is " << om);
         }
-        
+
         string asofString = params.get("setup", "asofDate");
         Date asof = parseDate(asofString);
         Settings::instance().evaluationDate() = asof;
@@ -185,7 +185,7 @@ int main(int argc, char** argv) {
         string pricingEnginesFile = inputPath + "/" + params.get("setup", "pricingEnginesFile");
         engineData->fromFile(pricingEnginesFile);
 
-        map<MarketContext,string> configurations;
+        map<MarketContext, string> configurations;
         configurations[MarketContext::irCalibration] = params.get("markets", "lgmcalibration");
         configurations[MarketContext::fxCalibration] = params.get("markets", "fxcalibration");
         configurations[MarketContext::pricing] = params.get("markets", "pricing");
@@ -270,8 +270,8 @@ int main(int argc, char** argv) {
             sgd->fromFile(simulationConfigFile);
             ScenarioGeneratorBuilder sgb(sgd);
             boost::shared_ptr<ScenarioFactory> sf = boost::make_shared<SimpleScenarioFactory>();
-            boost::shared_ptr<ScenarioGenerator> sg =
-                sgb.build(model, sf, simMarketData, asof, market, params.get("markets", "simulation")); // pricing or simulation?
+            boost::shared_ptr<ScenarioGenerator> sg = sgb.build(
+                model, sf, simMarketData, asof, market, params.get("markets", "simulation")); // pricing or simulation?
 
             // Optionally write out scenarios
             if (params.has("simulation", "scenariodump")) {
@@ -540,7 +540,7 @@ void writeNpv(const Parameters& params, boost::shared_ptr<Market> market, const 
              << dc.yearFraction(today, trade->maturity()) << sep;
         try {
             Real npv = trade->instrument()->NPV();
-            file << npv << sep << npvCcy << sep << npv * fx << sep << baseCurrency << endl;
+            file << npv << sep << npvCcy << sep << npv* fx << sep << baseCurrency << endl;
         } catch (std::exception& e) {
             ALOG("Exception during pricing trade " << trade->id() << ": " << e.what());
             file << "#NA" << sep << "#NA" << sep << "#NA" << sep << "#NA" << endl;
@@ -744,8 +744,7 @@ void writeXVA(const Parameters& params, boost::shared_ptr<Portfolio> portfolio,
     QL_REQUIRE(file.is_open(), "Error opening file " << fileName);
     file
         << "#TradeId,NettingSetId,CVA,DVA,FBA,FCA,COLVA,MVA,CollateralFloor,AllocatedCVA,AllocatedDVA,AllocationMethod,"
-           "BaselEPE,BaselEEPE"
-        << endl;
+           "BaselEPE,BaselEEPE" << endl;
     for (auto n : postProcess->nettingSetIds()) {
         file << "," << n << "," << postProcess->nettingSetCVA(n) << "," << postProcess->nettingSetDVA(n) << ","
              << postProcess->nettingSetFBA(n) << "," << postProcess->nettingSetFCA(n) << ","
