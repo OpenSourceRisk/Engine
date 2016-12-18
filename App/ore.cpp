@@ -639,10 +639,13 @@ void writeCurves(const Parameters& params, const TodaysMarketParameters& marketC
     map<string, string> discountCurves = marketConfig.discountingCurves(configID);
     map<string, string> YieldCurves = marketConfig.yieldCurves(configID);
     map<string, string> indexCurves = marketConfig.indexForwardingCurves(configID);
+    map<string, string> inflationIndices = marketConfig.inflationIndexCurves(configID);
+    
     string gridString = params.get("curves", "grid");
     DateGrid grid(gridString);
 
     vector<Handle<YieldTermStructure>> yieldCurves;
+    vector<Handle<InflationIndex>> inflationFixings;
 
     file << "Tenor" << sep << "Date";
     for (auto it : discountCurves) {
@@ -657,6 +660,10 @@ void writeCurves(const Parameters& params, const TodaysMarketParameters& marketC
         file << sep << it.first;
         yieldCurves.push_back(market->iborIndex(it.first, configID)->forwardingTermStructure());
     }
+    for (auto it : inflationIndices) {
+        file << sep << it.first;
+        inflationFixings.push_back(market->inflationIndex(it.first, true, configID));
+    }
     file << endl;
 
     // Output the discount factors for each tenor in turn
@@ -665,6 +672,8 @@ void writeCurves(const Parameters& params, const TodaysMarketParameters& marketC
         file << grid.tenors()[j] << sep << QuantLib::io::iso_date(date);
         for (Size i = 0; i < yieldCurves.size(); ++i)
             file << sep << yieldCurves[i]->discount(date);
+        for (Size i = 0; i < inflationFixings.size(); ++i)
+            file << sep << inflationFixings[i]->fixing(date);
         file << endl;
     }
 
