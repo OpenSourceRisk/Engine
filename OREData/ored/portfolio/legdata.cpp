@@ -91,9 +91,6 @@ void CPILegData::fromXML(XMLNode* node) {
     observationLag_ = XMLUtils::getChildValue(node, "ObservationLag");
     interpolated_ = XMLUtils::getChildValueAsBool(node, "Interpolated");
     adjustedNotional_ = XMLUtils::getChildValueAsBool(node, "AdjustedNotional");
-    redemptionDates_ = XMLUtils::getChildrenValues(node, "RedemptionDates", "Date");
-    indexRedemptionBaseDate_ = XMLUtils::getChildValue(node, "IndexRedemptionBaseDate");
-    growthOnly_ = XMLUtils::getChildValueAsBool(node, "GrowthOnly");
 }
 
 XMLNode* CPILegData::toXML(XMLDocument& doc) {
@@ -104,10 +101,6 @@ XMLNode* CPILegData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "ObservationLag", observationLag_);
     XMLUtils::addChild(doc, node, "Interpolated", interpolated_);
     XMLUtils::addChild(doc, node, "AdjustedNotional", adjustedNotional_);
-    XMLUtils::addChildren(doc, node, "RedemptionDates", "Date", redemptionDates_);
-    if (indexRedemptionBaseDate_ != "")
-        XMLUtils::addChild(doc, node, "IndexRedemptionBaseDate", indexRedemptionBaseDate_);
-    XMLUtils::addChild(doc, node, "GrowthOnly", growthOnly_);
     return node;
 }
 
@@ -364,7 +357,6 @@ Leg makeCPILeg(LegData& data, boost::shared_ptr<ZeroInflationIndex> index) {
                   .withPaymentAdjustment(bdc)
                   .withPaymentCalendar(schedule.calendar())
                   .withFixedRates(data.cpiLegData().rate())
-                  .withSubtractInflationNominal(data.cpiLegData().growthOnly())
                   .withObservationInterpolation(interpolationMethod);
     QL_REQUIRE(leg.size() > 0, "Empty CPI Leg");
     

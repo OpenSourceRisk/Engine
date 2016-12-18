@@ -154,19 +154,13 @@ public:
                string observationLag,
                double rate,
                bool interpolated,
-               bool adjustedNotional,
-               vector<string> redemptionDates,
-               string indexRedemptionBaseDate,
-               bool growthOnly)
+               bool adjustedNotional)
     : index_(index),
     baseCPI_(baseCPI),
     observationLag_(observationLag),
     rate_(rate),
     interpolated_(interpolated),
-    adjustedNotional_(adjustedNotional),
-    redemptionDates_(redemptionDates),
-    indexRedemptionBaseDate_(indexRedemptionBaseDate),
-    growthOnly_(growthOnly) {}
+    adjustedNotional_(adjustedNotional) {}
     
     const string index() const { return index_; }
     double baseCPI() const { return baseCPI_; }
@@ -174,9 +168,6 @@ public:
     double rate() const { return rate_; }
     bool interpolated() const { return interpolated_; }
     bool adjustedNotional() const { return adjustedNotional_; }
-    const vector<string>& redemptionDates() const { return redemptionDates_; }
-    const string indexRedemptionBaseDate() const { return indexRedemptionBaseDate_; }
-    bool growthOnly() const { return growthOnly_; }
     
     virtual void fromXML(XMLNode *node);
     virtual XMLNode* toXML (XMLDocument& doc);
@@ -187,9 +178,6 @@ private:
     double rate_;
     bool interpolated_;
     bool adjustedNotional_;
-    vector<string> redemptionDates_;
-    string indexRedemptionBaseDate_;
-    bool growthOnly_;
 };
     
 //! Serializable object holding leg data
