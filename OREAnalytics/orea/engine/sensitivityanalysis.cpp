@@ -517,9 +517,9 @@ boost::shared_ptr<Instrument> SensitivityAnalysis::makeSwap(string ccy, string i
                                                             bool singleCurve) {
     boost::shared_ptr<IRSwapConvention> conv = boost::dynamic_pointer_cast<IRSwapConvention>(conventions);
     QL_REQUIRE(conv, "convention not recognised, expected IRSwapConvention");
-    Handle<YieldTermStructure> yts = market->discountCurve(ccy);
     string name = indexName != "" ? indexName : conv->indexName();
-    boost::shared_ptr<IborIndex> index = market->iborIndex(name).currentLink();
+    boost::shared_ptr<IborIndex> index =
+        singleCurve ? market->iborIndex(name)->clone(market->discountCurve(ccy)) : *market->iborIndex(name);
     // LOG("Make Swap for ccy " << ccy << " index " << name);
     boost::shared_ptr<VanillaSwap> helper = MakeVanillaSwap(term, index, 0.0, 0 * Days)
                                                 .withSettlementDays(index->fixingDays())
@@ -533,7 +533,7 @@ boost::shared_ptr<Instrument> SensitivityAnalysis::makeSwap(string ccy, string i
     boost::shared_ptr<PricingEngine> swapEngine = boost::make_shared<DiscountingSwapEngine>(engineYts);
     helper->setPricingEngine(swapEngine);
     if (singleCurve)
-        engineYts.linkTo(*yts);
+        engineYts.linkTo(*market->discountCurve(ccy));
     else
         engineYts.linkTo(*index->forwardingTermStructure());
     return helper;
@@ -545,7 +545,6 @@ boost::shared_ptr<Instrument> SensitivityAnalysis::makeDeposit(string ccy, strin
                                                                bool singleCurve) {
     boost::shared_ptr<DepositConvention> conv = boost::dynamic_pointer_cast<DepositConvention>(conventions);
     QL_REQUIRE(conv, "convention not recognised, expected DepositConvention");
-    Handle<YieldTermStructure> yts = market->discountCurve(ccy);
     string name = indexName;
     // if empty, use conventions and append term
     if (name == "") {
@@ -563,7 +562,7 @@ boost::shared_ptr<Instrument> SensitivityAnalysis::makeDeposit(string ccy, strin
     boost::shared_ptr<PricingEngine> depositEngine = boost::make_shared<DepositEngine>(engineYts);
     helper->setPricingEngine(depositEngine);
     if (singleCurve)
-        engineYts.linkTo(*yts);
+        engineYts.linkTo(*market->discountCurve(ccy));
     else
         engineYts.linkTo(*index->forwardingTermStructure());
     return helper;
@@ -577,7 +576,8 @@ boost::shared_ptr<Instrument> SensitivityAnalysis::makeFRA(string ccy, string in
     QL_REQUIRE(conv, "convention not recognised, expected FraConvention");
     Handle<YieldTermStructure> yts = market->discountCurve(ccy);
     string name = indexName != "" ? indexName : conv->indexName();
-    boost::shared_ptr<IborIndex> index = market->iborIndex(name).currentLink();
+    boost::shared_ptr<IborIndex> index =
+        singleCurve ? market->iborIndex(name)->clone(market->discountCurve(ccy)) : *market->iborIndex(name);
     QL_REQUIRE(term.units() == Months, "term unit must be Months");
     QL_REQUIRE(index->tenor().units() == Months, "index tenor unit must be Months");
     QL_REQUIRE(term.length() > index->tenor().length(), "term must be larger than index tenor");
@@ -586,7 +586,7 @@ boost::shared_ptr<Instrument> SensitivityAnalysis::makeFRA(string ccy, string in
     Date maturityDate = index->maturityDate(asof);
     Handle<YieldTermStructure> ytsTmp;
     if (singleCurve)
-        ytsTmp = yts;
+        ytsTmp = market->discountCurve(ccy);
     else
         ytsTmp = index->forwardingTermStructure();
     auto helper =
@@ -600,16 +600,18 @@ boost::shared_ptr<Instrument> SensitivityAnalysis::makeOIS(string ccy, string in
                                                            bool singleCurve) {
     boost::shared_ptr<OisConvention> conv = boost::dynamic_pointer_cast<OisConvention>(conventions);
     QL_REQUIRE(conv, "convention not recognised, expected OisConvention");
-    Handle<YieldTermStructure> yts = market->discountCurve(ccy);
     string name = indexName != "" ? indexName : conv->indexName();
     boost::shared_ptr<IborIndex> index = market->iborIndex(name).currentLink();
-    boost::shared_ptr<OvernightIndex> overnightIndex = boost::dynamic_pointer_cast<OvernightIndex>(index);
+    boost::shared_ptr<OvernightIndex> overnightIndexTmp = boost::dynamic_pointer_cast<OvernightIndex>(index);
+    boost::shared_ptr<OvernightIndex> overnightIndex =
+        singleCurve ? boost::dynamic_pointer_cast<OvernightIndex>(overnightIndexTmp->clone(market->discountCurve(ccy)))
+                    : overnightIndexTmp;
     boost::shared_ptr<OvernightIndexedSwap> helper = MakeOIS(term, overnightIndex, Null<Rate>(), 0 * Days);
     RelinkableHandle<YieldTermStructure> engineYts;
     boost::shared_ptr<PricingEngine> swapEngine = boost::make_shared<DiscountingSwapEngine>(engineYts);
     helper->setPricingEngine(swapEngine);
     if (singleCurve) {
-        engineYts.linkTo(*yts);
+        engineYts.linkTo(*market->discountCurve(ccy));
     } else {
         engineYts.linkTo(*index->forwardingTermStructure());
     }
