@@ -16,27 +16,27 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <orea/engine/sensitivityanalysis.hpp>
-#include <orea/engine/scenarioengine.hpp>
-#include <orea/scenario/simplescenariofactory.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/timer.hpp>
 #include <orea/cube/inmemorycube.hpp>
+#include <orea/engine/scenarioengine.hpp>
+#include <orea/engine/sensitivityanalysis.hpp>
+#include <orea/scenario/simplescenariofactory.hpp>
 #include <ored/utilities/log.hpp>
+#include <ql/errors.hpp>
+#include <ql/instruments/forwardrateagreement.hpp>
+#include <ql/instruments/makeois.hpp>
+#include <ql/instruments/makevanillaswap.hpp>
+#include <ql/math/solvers1d/newtonsafe.hpp>
+#include <ql/pricingengines/capfloor/bacheliercapfloorengine.hpp>
+#include <ql/pricingengines/capfloor/blackcapfloorengine.hpp>
+#include <ql/pricingengines/swap/discountingswapengine.hpp>
+#include <ql/termstructures/yield/oisratehelper.hpp>
 #include <qle/instruments/deposit.hpp>
 #include <qle/pricingengines/depositengine.hpp>
-#include <ql/instruments/forwardrateagreement.hpp>
-#include <ql/instruments/makevanillaswap.hpp>
-#include <ql/instruments/makeois.hpp>
-#include <ql/termstructures/yield/oisratehelper.hpp>
-#include <ql/pricingengines/swap/discountingswapengine.hpp>
-#include <ql/pricingengines/capfloor/blackcapfloorengine.hpp>
-#include <ql/pricingengines/capfloor/bacheliercapfloorengine.hpp>
-#include <ql/errors.hpp>
-#include <ql/math/solvers1d/newtonsafe.hpp>
-#include <boost/timer.hpp>
-#include <boost/lexical_cast.hpp>
 
-#include <iostream>
 #include <iomanip>
+#include <iostream>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -196,8 +196,8 @@ SensitivityAnalysis::SensitivityAnalysis(boost::shared_ptr<ore::data::Portfolio>
     scenarioGenerator->reset();
     simMarket->update(asof);
 
-    map<string, vector<boost::shared_ptr<Instrument> > > parHelpers;
-    map<string, vector<Real> > parRatesBase;
+    map<string, vector<boost::shared_ptr<Instrument>>> parHelpers;
+    map<string, vector<Real>> parRatesBase;
 
     // Discount curve instruments
     Size n_ten = sensitivityData->discountShiftTenors().size();
@@ -205,7 +205,7 @@ SensitivityAnalysis::SensitivityAnalysis(boost::shared_ptr<ore::data::Portfolio>
                "number of tenors does not match number of discount curve par instruments");
     for (Size i = 0; i < simMarketData->ccys().size(); ++i) {
         string ccy = simMarketData->ccys()[i];
-        parHelpers[ccy] = vector<boost::shared_ptr<Instrument> >(n_ten);
+        parHelpers[ccy] = vector<boost::shared_ptr<Instrument>>(n_ten);
         parRatesBase[ccy] = vector<Real>(n_ten);
         for (Size j = 0; j < n_ten; ++j) {
             Period term = sensitivityData->discountShiftTenors()[j];
@@ -240,7 +240,7 @@ SensitivityAnalysis::SensitivityAnalysis(boost::shared_ptr<ore::data::Portfolio>
         QL_REQUIRE(tokens.size() >= 2, "index name " << indexName << " unexpected");
         string ccy = tokens[0];
         QL_REQUIRE(ccy.length() == 3, "currency token not recognised");
-        parHelpers[indexName] = vector<boost::shared_ptr<Instrument> >(n_ten);
+        parHelpers[indexName] = vector<boost::shared_ptr<Instrument>>(n_ten);
         parRatesBase[indexName] = vector<Real>(n_ten);
         for (Size j = 0; j < n_ten; ++j) {
             Period term = sensitivityData->indexShiftTenors()[j];
@@ -267,8 +267,8 @@ SensitivityAnalysis::SensitivityAnalysis(boost::shared_ptr<ore::data::Portfolio>
     }
 
     // Caps/Floors
-    map<pair<string, Size>, vector<boost::shared_ptr<CapFloor> > > parCaps;
-    map<pair<string, Size>, vector<Real> > parCapVols;
+    map<pair<string, Size>, vector<boost::shared_ptr<CapFloor>>> parCaps;
+    map<pair<string, Size>, vector<Real>> parCapVols;
     Size n_strikes = sensitivityData->capFloorVolShiftStrikes().size();
     Size n_expiries = sensitivityData->capFloorVolShiftExpiries().size();
     map<string, string> indexMap = sensitivityData->capFloorVolIndexMapping();
@@ -281,7 +281,7 @@ SensitivityAnalysis::SensitivityAnalysis(boost::shared_ptr<ore::data::Portfolio>
         for (Size j = 0; j < n_strikes; ++j) {
             Real strike = sensitivityData->capFloorVolShiftStrikes()[j];
             pair<string, Size> key(ccy, j);
-            parCaps[key] = vector<boost::shared_ptr<CapFloor> >(n_expiries);
+            parCaps[key] = vector<boost::shared_ptr<CapFloor>>(n_expiries);
             parCapVols[key] = vector<Real>(n_expiries, 0.0);
             for (Size k = 0; k < n_expiries; ++k) {
                 Period term = sensitivityData->capFloorVolShiftExpiries()[k];
