@@ -72,7 +72,7 @@ Disposable<Matrix> CorrelationMatrixBuilder::correlationMatrixImpl(const vector<
                                                                    vector<string>& factors) {
     QL_REQUIRE(factors.size() == 0, "Factors Input vector must be empty");
 
-    QL_REQUIRE(ccys.size() > 1, "More than 1 currency required to build correlation matrix");
+    QL_REQUIRE(ccys.size() >= 1, "At least one currency required to build correlation matrix");
     for (Size i = 0; i < ccys.size(); i++)
         QL_REQUIRE(ccys[i].size() == 3, "Invalid ccy code " << ccys[i]);
 
