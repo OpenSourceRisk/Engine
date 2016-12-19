@@ -97,20 +97,20 @@ public:
     void writeParRateSensitivityReport(string fileName);
 
 private:
-    //! Create Deposit helper for implying par rate sensitivity from zero rate sensitivity
-    boost::shared_ptr<RateHelper> makeDeposit(string ccy, string indexName, Period term,
+    //! Create Deposit for implying par rate sensitivity from zero rate sensitivity
+    boost::shared_ptr<Instrument> makeDeposit(string ccy, string indexName, Period term,
                                               const boost::shared_ptr<ore::data::Market>& market,
                                               const boost::shared_ptr<Convention>& conventions, bool singleCurve);
-    //! Create FRA helper for implying par rate sensitivity from zero rate sensitivity
-    boost::shared_ptr<RateHelper> makeFRA(string ccy, string indexName, Period term,
+    //! Create FRA for implying par rate sensitivity from zero rate sensitivity
+    boost::shared_ptr<Instrument> makeFRA(string ccy, string indexName, Period term,
                                           const boost::shared_ptr<ore::data::Market>& market,
                                           const boost::shared_ptr<Convention>& conventions, bool singleCurve);
-    //! Create Swap helper for implying par rate sensitivity from zero rate sensitivity
-    boost::shared_ptr<RateHelper> makeSwap(string ccy, string indexName, Period term,
+    //! Create Swap for implying par rate sensitivity from zero rate sensitivity
+    boost::shared_ptr<Instrument> makeSwap(string ccy, string indexName, Period term,
                                            const boost::shared_ptr<ore::data::Market>& market,
                                            const boost::shared_ptr<Convention>& conventions, bool singleCurve);
-    //! Create OIS helper for implying par rate sensitivity from zero rate sensitivity
-    boost::shared_ptr<RateHelper> makeOIS(string ccy, string indexName, Period term,
+    //! Create OIS Swap for implying par rate sensitivity from zero rate sensitivity
+    boost::shared_ptr<Instrument> makeOIS(string ccy, string indexName, Period term,
                                           const boost::shared_ptr<ore::data::Market>& market,
                                           const boost::shared_ptr<Convention>& conventions, bool singleCurve);
     //! Create Cap/Floor isntrument for implying flat vol sensitivity from optionlet vol sensitivity
