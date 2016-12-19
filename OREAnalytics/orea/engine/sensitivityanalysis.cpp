@@ -529,13 +529,8 @@ boost::shared_ptr<Instrument> SensitivityAnalysis::makeSwap(string ccy, string i
                                                 .withFixedLegTerminationDateConvention(conv->fixedConvention())
                                                 .withFixedLegCalendar(conv->fixedCalendar())
                                                 .withFloatingLegCalendar(conv->fixedCalendar());
-    RelinkableHandle<YieldTermStructure> engineYts;
-    boost::shared_ptr<PricingEngine> swapEngine = boost::make_shared<DiscountingSwapEngine>(engineYts);
+    boost::shared_ptr<PricingEngine> swapEngine = boost::make_shared<DiscountingSwapEngine>(market->discountCurve(ccy));
     helper->setPricingEngine(swapEngine);
-    if (singleCurve)
-        engineYts.linkTo(*market->discountCurve(ccy));
-    else
-        engineYts.linkTo(*index->forwardingTermStructure());
     return helper;
 }
 
@@ -608,13 +603,8 @@ boost::shared_ptr<Instrument> SensitivityAnalysis::makeOIS(string ccy, string in
                     : overnightIndexTmp;
     boost::shared_ptr<OvernightIndexedSwap> helper = MakeOIS(term, overnightIndex, Null<Rate>(), 0 * Days);
     RelinkableHandle<YieldTermStructure> engineYts;
-    boost::shared_ptr<PricingEngine> swapEngine = boost::make_shared<DiscountingSwapEngine>(engineYts);
+    boost::shared_ptr<PricingEngine> swapEngine = boost::make_shared<DiscountingSwapEngine>(market->discountCurve(ccy));
     helper->setPricingEngine(swapEngine);
-    if (singleCurve) {
-        engineYts.linkTo(*market->discountCurve(ccy));
-    } else {
-        engineYts.linkTo(*index->forwardingTermStructure());
-    }
     return helper;
 }
 
