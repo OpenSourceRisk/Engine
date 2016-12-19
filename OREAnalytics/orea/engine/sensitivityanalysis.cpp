@@ -21,7 +21,13 @@
 #include <orea/scenario/simplescenariofactory.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <ored/utilities/log.hpp>
+#include <qle/instruments/deposit.hpp>
+#include <qle/pricingengines/depositengine.hpp>
+#include <ql/instruments/forwardrateagreement.hpp>
+#include <ql/instruments/makevanillaswap.hpp>
+#include <ql/instruments/makeois.hpp>
 #include <ql/termstructures/yield/oisratehelper.hpp>
+#include <ql/pricingengines/swap/discountingswapengine.hpp>
 #include <ql/pricingengines/capfloor/blackcapfloorengine.hpp>
 #include <ql/pricingengines/capfloor/bacheliercapfloorengine.hpp>
 #include <ql/errors.hpp>
@@ -39,6 +45,22 @@ using namespace ore::data;
 
 namespace ore {
 namespace analytics {
+
+namespace {
+
+Real impliedQuote(const boost::shared_ptr<Instrument>& i) {
+    if (boost::dynamic_pointer_cast<VanillaSwap>(i))
+        return boost::dynamic_pointer_cast<VanillaSwap>(i)->fairRate();
+    if (boost::dynamic_pointer_cast<Deposit>(i))
+        return boost::dynamic_pointer_cast<Deposit>(i)->fairRate();
+    if (boost::dynamic_pointer_cast<ForwardRateAgreement>(i))
+        return boost::dynamic_pointer_cast<ForwardRateAgreement>(i)->forwardRate();
+    if (boost::dynamic_pointer_cast<OvernightIndexedSwap>(i))
+        return boost::dynamic_pointer_cast<OvernightIndexedSwap>(i)->fairRate();
+    QL_FAIL("SensitivityAnalysis: impliedQuote: unknown instrument");
+}
+
+} // anonymous namespace
 
 SensitivityAnalysis::SensitivityAnalysis(boost::shared_ptr<ore::data::Portfolio>& portfolio,
                                          boost::shared_ptr<ore::data::Market>& market,
@@ -174,7 +196,7 @@ SensitivityAnalysis::SensitivityAnalysis(boost::shared_ptr<ore::data::Portfolio>
     scenarioGenerator->reset();
     simMarket->update(asof);
 
-    map<string, vector<boost::shared_ptr<RateHelper> > > parHelpers;
+    map<string, vector<boost::shared_ptr<Instrument> > > parHelpers;
     map<string, vector<Real> > parRatesBase;
 
     // Discount curve instruments
@@ -183,7 +205,7 @@ SensitivityAnalysis::SensitivityAnalysis(boost::shared_ptr<ore::data::Portfolio>
                "number of tenors does not match number of discount curve par instruments");
     for (Size i = 0; i < simMarketData->ccys().size(); ++i) {
         string ccy = simMarketData->ccys()[i];
-        parHelpers[ccy] = vector<boost::shared_ptr<RateHelper> >(n_ten);
+        parHelpers[ccy] = vector<boost::shared_ptr<Instrument> >(n_ten);
         parRatesBase[ccy] = vector<Real>(n_ten);
         for (Size j = 0; j < n_ten; ++j) {
             Period term = sensitivityData->discountShiftTenors()[j];
@@ -204,7 +226,7 @@ SensitivityAnalysis::SensitivityAnalysis(boost::shared_ptr<ore::data::Portfolio>
                 parHelpers[ccy][j] = makeOIS(ccy, indexName, term, simMarket, convention, true);
             else
                 QL_FAIL("Instrument type " << instType << " for par sensitivity conversin not recognised");
-            parRatesBase[ccy][j] = parHelpers[ccy][j]->impliedQuote();
+            parRatesBase[ccy][j] = impliedQuote(parHelpers[ccy][j]);
         }
     }
 
@@ -218,7 +240,7 @@ SensitivityAnalysis::SensitivityAnalysis(boost::shared_ptr<ore::data::Portfolio>
         QL_REQUIRE(tokens.size() >= 2, "index name " << indexName << " unexpected");
         string ccy = tokens[0];
         QL_REQUIRE(ccy.length() == 3, "currency token not recognised");
-        parHelpers[indexName] = vector<boost::shared_ptr<RateHelper> >(n_ten);
+        parHelpers[indexName] = vector<boost::shared_ptr<Instrument> >(n_ten);
         parRatesBase[indexName] = vector<Real>(n_ten);
         for (Size j = 0; j < n_ten; ++j) {
             Period term = sensitivityData->indexShiftTenors()[j];
@@ -238,7 +260,7 @@ SensitivityAnalysis::SensitivityAnalysis(boost::shared_ptr<ore::data::Portfolio>
                 parHelpers[indexName][j] = makeOIS(ccy, indexName, term, simMarket, convention, false);
             else
                 QL_FAIL("Instrument type " << instType << " for par sensitivity conversin not recognised");
-            parRatesBase[indexName][j] = parHelpers[indexName][j]->impliedQuote();
+            parRatesBase[indexName][j] = impliedQuote(parHelpers[indexName][j]);
             // LOG("Par instrument for index " << indexName << " ccy " << ccy << " tenor " << j << " base rate "
             //                                 << setprecision(4) << parRatesBase[indexName][j]);
         }
@@ -311,7 +333,7 @@ SensitivityAnalysis::SensitivityAnalysis(boost::shared_ptr<ore::data::Portfolio>
                 pair<string, string> key(ccy, sensitivityData->labelToFactor(label));
                 parRatesSensi_[key] = vector<Real>(n_ten);
                 for (Size k = 0; k < n_ten; ++k) {
-                    Real fair = parHelpers[ccy][k]->impliedQuote();
+                    Real fair = impliedQuote(parHelpers[ccy][k]);
                     Real base = parRatesBase[ccy][k];
                     parRatesSensi_[key][k] = (fair - base) / sensitivityData->discountShiftSize();
                 }
@@ -327,7 +349,7 @@ SensitivityAnalysis::SensitivityAnalysis(boost::shared_ptr<ore::data::Portfolio>
                 pair<string, string> key(indexName, sensitivityData->labelToFactor(label));
                 parRatesSensi_[key] = vector<Real>(n_ten);
                 for (Size k = 0; k < n_ten; ++k) {
-                    Real fair = parHelpers[indexName][k]->impliedQuote();
+                    Real fair = impliedQuote(parHelpers[indexName][k]);
                     Real base = parRatesBase[indexName][k];
                     parRatesSensi_[key][k] = (fair - base) / sensitivityData->indexShiftSize();
                 }
@@ -489,7 +511,7 @@ void SensitivityAnalysis::writeParRateSensitivityReport(string fileName) {
     file.close();
 }
 
-boost::shared_ptr<RateHelper> SensitivityAnalysis::makeSwap(string ccy, string indexName, Period term,
+boost::shared_ptr<Instrument> SensitivityAnalysis::makeSwap(string ccy, string indexName, Period term,
                                                             const boost::shared_ptr<ore::data::Market>& market,
                                                             const boost::shared_ptr<Convention>& conventions,
                                                             bool singleCurve) {
@@ -499,23 +521,25 @@ boost::shared_ptr<RateHelper> SensitivityAnalysis::makeSwap(string ccy, string i
     string name = indexName != "" ? indexName : conv->indexName();
     boost::shared_ptr<IborIndex> index = market->iborIndex(name).currentLink();
     // LOG("Make Swap for ccy " << ccy << " index " << name);
-    boost::shared_ptr<SwapRateHelper> helper;
-    if (singleCurve) {
-        helper = boost::make_shared<SwapRateHelper>(Handle<Quote>(boost::shared_ptr<Quote>(new SimpleQuote(0.05))),
-                                                    term, conv->fixedCalendar(), conv->fixedFrequency(),
-                                                    conv->fixedConvention(), conv->fixedDayCounter(), index);
-        helper->setTermStructure(yts.currentLink().get());
-    } else {
-        helper =
-            boost::make_shared<SwapRateHelper>(Handle<Quote>(boost::shared_ptr<Quote>(new SimpleQuote(0.05))), term,
-                                               conv->fixedCalendar(), conv->fixedFrequency(), conv->fixedConvention(),
-                                               conv->fixedDayCounter(), index, Handle<Quote>(), 0 * Days, yts);
-        helper->setTermStructure(index->forwardingTermStructure().currentLink().get());
-    }
+    boost::shared_ptr<VanillaSwap> helper = MakeVanillaSwap(term, index, 0.0, 0 * Days)
+                                                .withSettlementDays(index->fixingDays())
+                                                .withFixedLegDayCount(conv->fixedDayCounter())
+                                                .withFixedLegTenor(Period(conv->fixedFrequency()))
+                                                .withFixedLegConvention(conv->fixedConvention())
+                                                .withFixedLegTerminationDateConvention(conv->fixedConvention())
+                                                .withFixedLegCalendar(conv->fixedCalendar())
+                                                .withFloatingLegCalendar(conv->fixedCalendar());
+    RelinkableHandle<YieldTermStructure> engineYts;
+    boost::shared_ptr<PricingEngine> swapEngine = boost::make_shared<DiscountingSwapEngine>(engineYts);
+    helper->setPricingEngine(swapEngine);
+    if (singleCurve)
+        engineYts.linkTo(*yts);
+    else
+        engineYts.linkTo(*index->forwardingTermStructure());
     return helper;
 }
 
-boost::shared_ptr<RateHelper> SensitivityAnalysis::makeDeposit(string ccy, string indexName, Period term,
+boost::shared_ptr<Instrument> SensitivityAnalysis::makeDeposit(string ccy, string indexName, Period term,
                                                                const boost::shared_ptr<ore::data::Market>& market,
                                                                const boost::shared_ptr<Convention>& conventions,
                                                                bool singleCurve) {
@@ -532,17 +556,20 @@ boost::shared_ptr<RateHelper> SensitivityAnalysis::makeDeposit(string ccy, strin
         LOG("Deposit index name = " << name);
     }
     boost::shared_ptr<IborIndex> index = market->iborIndex(name).currentLink();
-    boost::shared_ptr<DepositRateHelper> helper = boost::make_shared<DepositRateHelper>(
-        Handle<Quote>(boost::shared_ptr<Quote>(new SimpleQuote(0.05))), term, index->fixingDays(),
-        index->fixingCalendar(), index->businessDayConvention(), index->endOfMonth(), index->dayCounter());
+    auto helper = boost::make_shared<Deposit>(1.0, 0.0, term, index->fixingDays(), index->fixingCalendar(),
+                                              index->businessDayConvention(), index->endOfMonth(), index->dayCounter(),
+                                              market->asofDate(), true, 0 * Days);
+    RelinkableHandle<YieldTermStructure> engineYts;
+    boost::shared_ptr<PricingEngine> depositEngine = boost::make_shared<DepositEngine>(engineYts);
+    helper->setPricingEngine(depositEngine);
     if (singleCurve)
-        helper->setTermStructure(yts.currentLink().get());
+        engineYts.linkTo(*yts);
     else
-        helper->setTermStructure(index->forwardingTermStructure().currentLink().get());
+        engineYts.linkTo(*index->forwardingTermStructure());
     return helper;
 }
 
-boost::shared_ptr<RateHelper> SensitivityAnalysis::makeFRA(string ccy, string indexName, Period term,
+boost::shared_ptr<Instrument> SensitivityAnalysis::makeFRA(string ccy, string indexName, Period term,
                                                            const boost::shared_ptr<ore::data::Market>& market,
                                                            const boost::shared_ptr<Convention>& conventions,
                                                            bool singleCurve) {
@@ -554,17 +581,20 @@ boost::shared_ptr<RateHelper> SensitivityAnalysis::makeFRA(string ccy, string in
     QL_REQUIRE(term.units() == Months, "term unit must be Months");
     QL_REQUIRE(index->tenor().units() == Months, "index tenor unit must be Months");
     QL_REQUIRE(term.length() > index->tenor().length(), "term must be larger than index tenor");
-    Natural monthsToStart = term.length() - index->tenor().length();
-    boost::shared_ptr<FraRateHelper> helper = boost::make_shared<FraRateHelper>(
-        Handle<Quote>(boost::shared_ptr<Quote>(new SimpleQuote(0.05))), monthsToStart, index);
+    Date asof = market->asofDate();
+    Date valueDate = index->valueDate(asof);
+    Date maturityDate = index->maturityDate(asof);
+    Handle<YieldTermStructure> ytsTmp;
     if (singleCurve)
-        helper->setTermStructure(yts.currentLink().get());
+        ytsTmp = yts;
     else
-        helper->setTermStructure(index->forwardingTermStructure().currentLink().get());
+        ytsTmp = index->forwardingTermStructure();
+    auto helper =
+        boost::make_shared<ForwardRateAgreement>(valueDate, maturityDate, Position::Long, 0.0, 1.0, index, ytsTmp);
     return helper;
 }
 
-boost::shared_ptr<RateHelper> SensitivityAnalysis::makeOIS(string ccy, string indexName, Period term,
+boost::shared_ptr<Instrument> SensitivityAnalysis::makeOIS(string ccy, string indexName, Period term,
                                                            const boost::shared_ptr<ore::data::Market>& market,
                                                            const boost::shared_ptr<Convention>& conventions,
                                                            bool singleCurve) {
@@ -574,15 +604,14 @@ boost::shared_ptr<RateHelper> SensitivityAnalysis::makeOIS(string ccy, string in
     string name = indexName != "" ? indexName : conv->indexName();
     boost::shared_ptr<IborIndex> index = market->iborIndex(name).currentLink();
     boost::shared_ptr<OvernightIndex> overnightIndex = boost::dynamic_pointer_cast<OvernightIndex>(index);
-    boost::shared_ptr<QuantLib::OISRateHelper> helper;
+    boost::shared_ptr<OvernightIndexedSwap> helper = MakeOIS(term, overnightIndex, Null<Rate>(), 0 * Days);
+    RelinkableHandle<YieldTermStructure> engineYts;
+    boost::shared_ptr<PricingEngine> swapEngine = boost::make_shared<DiscountingSwapEngine>(engineYts);
+    helper->setPricingEngine(swapEngine);
     if (singleCurve) {
-        helper = boost::make_shared<QuantLib::OISRateHelper>(
-            conv->spotLag(), term, Handle<Quote>(boost::shared_ptr<Quote>(new SimpleQuote(0.05))), overnightIndex);
-        helper->setTermStructure(yts.currentLink().get());
+        engineYts.linkTo(*yts);
     } else {
-        helper = boost::make_shared<QuantLib::OISRateHelper>(
-            conv->spotLag(), term, Handle<Quote>(boost::shared_ptr<Quote>(new SimpleQuote(0.05))), overnightIndex, yts);
-        helper->setTermStructure(index->forwardingTermStructure().currentLink().get());
+        engineYts.linkTo(*index->forwardingTermStructure());
     }
     return helper;
 }
