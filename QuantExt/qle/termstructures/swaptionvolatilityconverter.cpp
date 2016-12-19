@@ -136,8 +136,6 @@ SwaptionVolatilityConverter::convert(const boost::shared_ptr<SwaptionVolatilityM
     }
 }
 
-
-
 // Ignore "warning C4996: 'Quantlib::Swaption::impliedVolatility': was declared deprecated"
 #ifdef BOOST_MSVC
 #pragma warning(push)

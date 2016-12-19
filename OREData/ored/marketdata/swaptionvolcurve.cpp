@@ -155,24 +155,23 @@ SwaptionVolCurve::SwaptionVolCurve(Date asof, SwaptionVolatilityCurveSpec spec, 
             QL_FAIL("could not build swaption vol curve");
         }
 
-        if (quotesRead!=1) {
+        if (quotesRead != 1) {
             vol_ = boost::shared_ptr<SwaptionVolatilityStructure>(new SwaptionVolatilityMatrix(
                 asof, config->calendar(), config->businessDayConvention(), optionTenors, swapTenors, vols,
                 config->dayCounter(), config->flatExtrapolation(),
                 config->volatilityType() == SwaptionVolatilityCurveConfig::VolatilityType::Normal
-                ? QuantLib::Normal
-                : QuantLib::ShiftedLognormal,
+                    ? QuantLib::Normal
+                    : QuantLib::ShiftedLognormal,
                 shifts));
 
             vol_->enableExtrapolation(config->extrapolate());
         } else {
             // Constant volatility
             vol_ = boost::shared_ptr<SwaptionVolatilityStructure>(new ConstantSwaptionVolatility(
-                asof, config->calendar(), config->businessDayConvention(), 
-                vols[0][0], config->dayCounter(), 
+                asof, config->calendar(), config->businessDayConvention(), vols[0][0], config->dayCounter(),
                 config->volatilityType() == SwaptionVolatilityCurveConfig::VolatilityType::Normal
-                ? QuantLib::Normal
-                : QuantLib::ShiftedLognormal,
+                    ? QuantLib::Normal
+                    : QuantLib::ShiftedLognormal,
                 !shifts.empty() ? shifts[0][0] : 0.0));
         }
 

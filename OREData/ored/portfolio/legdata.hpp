@@ -18,7 +18,7 @@
 
 /*! \file portfolio/legdata.hpp
     \brief leg data model and serialization
-    \ingroup openxva::portfolio
+    \ingroup portfolio
 */
 
 #pragma once
