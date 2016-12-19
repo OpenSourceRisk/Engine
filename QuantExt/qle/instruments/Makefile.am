@@ -9,6 +9,7 @@ libInstruments_la_SOURCES = \
 	crossccybasisswap.cpp \
 	crossccyswap.cpp \
 	currencyswap.cpp \
+	deposit.cpp \
 	fxforward.cpp \
 	makeaverageois.cpp \
 	oibasisswap.cpp \
@@ -22,6 +23,7 @@ this_include_HEADERS = \
 	crossccybasisswap.hpp \
 	crossccyswap.hpp \
 	currencyswap.hpp \
+	deposit.hpp \
 	fxforward.hpp \
 	makeaverageois.hpp \
 	oibasisswap.hpp \
