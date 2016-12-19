@@ -57,6 +57,7 @@ using boost::unit_test::test_suite;
 #include "cashflow.hpp"
 #include "swaptionvolatilityconverter.hpp"
 #include "optionletstripper.hpp"
+#include "ratehelpers.hpp"
 
 namespace {
 
@@ -103,6 +104,7 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(testsuite::BlackVarianceCurveTest::suite());
     test->add(testsuite::SwaptionVolatilityConverterTest::suite());
     test->add(testsuite::OptionletStripperTest::suite());
+    test->add(testsuite::RateHelpersTest::suite());
 
     test->add(BOOST_TEST_CASE(stopTimer));
 
