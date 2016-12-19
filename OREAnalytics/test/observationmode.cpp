@@ -88,7 +88,7 @@ boost::shared_ptr<Portfolio> buildPortfolio(boost::shared_ptr<EngineFactory>& fa
     vector<double> notional(1, 1000000);
     vector<double> spread(1, 0);
 
-    Date startDate = cal.adjust(today+1*Months);
+    Date startDate = cal.adjust(today + 1 * Months);
     Date endDate = cal.adjust(startDate + term * Years);
 
     // date 2 string
@@ -99,14 +99,14 @@ boost::shared_ptr<Portfolio> buildPortfolio(boost::shared_ptr<EngineFactory>& fa
     oss.clear();
     oss << io::iso_date(endDate);
     string end(oss.str());
-    
+
     // envelope
     Envelope env("CP");
-    
+
     // Schedules
     ScheduleData floatSchedule(ScheduleRules(start, end, floatFreq, calStr, conv, conv, rule));
     ScheduleData fixedSchedule(ScheduleRules(start, end, fixFreq, calStr, conv, conv, rule));
-    
+
     // fixed Leg - with dummy rate
     FixedLegData fixedLegData(vector<double>(1, fixedRate));
     LegData fixedLeg(isPayer, ccy, fixedLegData, fixedSchedule, fixDC, notional);
@@ -115,19 +115,19 @@ boost::shared_ptr<Portfolio> buildPortfolio(boost::shared_ptr<EngineFactory>& fa
     vector<double> spreads(1, 0);
     FloatingLegData floatingLegData(index, days, true, spread);
     LegData floatingLeg(!isPayer, ccy, floatingLegData, floatSchedule, floatDC, notional);
-    
+
     boost::shared_ptr<Trade> swap(new data::Swap(env, floatingLeg, fixedLeg));
-    
+
     swap->id() = "SWAP";
-    
+
     portfolio->add(swap);
-    
+
     portfolio->build(factory);
-    
+
     return portfolio;
 }
-  
-  void simulation(string dateGridString, bool checkFixings) {
+
+void simulation(string dateGridString, bool checkFixings) {
     SavedSettings backup;
 
     // Log::instance().registerLogger(boost::make_shared<StderrLogger>());
@@ -136,7 +136,7 @@ boost::shared_ptr<Portfolio> buildPortfolio(boost::shared_ptr<EngineFactory>& fa
     Date today = Date(14, April, 2016); // Settings::instance().evaluationDate();
     Settings::instance().evaluationDate() = today;
 
-    //string dateGridStr = "80,3M"; // 20 years
+    // string dateGridStr = "80,3M"; // 20 years
     boost::shared_ptr<DateGrid> dg = boost::make_shared<DateGrid>(dateGridString);
     Size samples = 100;
 
@@ -174,7 +174,8 @@ boost::shared_ptr<Portfolio> buildPortfolio(boost::shared_ptr<EngineFactory>& fa
 
     parameters->ccyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY"};
 
-    parameters->additionalScenarioDataIndices() = {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M", "CHF-LIBOR-6M", "JPY-LIBOR-6M"};
+    parameters->additionalScenarioDataIndices() = {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M", "CHF-LIBOR-6M",
+                                                   "JPY-LIBOR-6M"};
     parameters->additionalScenarioDataCcys() = {"EUR", "GBP", "USD", "CHF", "JPY"};
 
     // Config
@@ -284,9 +285,10 @@ boost::shared_ptr<Portfolio> buildPortfolio(boost::shared_ptr<EngineFactory>& fa
 
     // Storage for selected scenario data (index fixings, FX rates, ..)
     if (checkFixings) {
-      boost::shared_ptr<InMemoryAggregationScenarioData> inMemoryScenarioData = boost::make_shared<InMemoryAggregationScenarioData>(dg->size(), samples);
-	// Set AggregationScenarioData
-	simMarket->aggregationScenarioData() = inMemoryScenarioData;
+        boost::shared_ptr<InMemoryAggregationScenarioData> inMemoryScenarioData =
+            boost::make_shared<InMemoryAggregationScenarioData>(dg->size(), samples);
+        // Set AggregationScenarioData
+        simMarket->aggregationScenarioData() = inMemoryScenarioData;
     }
 
     // Now calculate exposure
@@ -303,49 +305,30 @@ boost::shared_ptr<Portfolio> buildPortfolio(boost::shared_ptr<EngineFactory>& fa
 
     BOOST_TEST_MESSAGE("Cube generated in " << elapsed << " seconds");
 
-    map<string,vector<Real>> referenceFixings;
-    // First 10 EUR-EURIBOR-6M fixings at dateIndex 5, date grid 11,1Y 
-    referenceFixings["11,1Y"] = {
-        0.00745427, 
-	0.028119, 
-	0.0343574, 
-	0.0335416, 
-	0.0324554, 
-	0.0305116, 
-	0.00901458, 
-	0.016573, 
-	0.0194405, 
-	0.0113262, 
-	0.0238971 };
+    map<string, vector<Real>> referenceFixings;
+    // First 10 EUR-EURIBOR-6M fixings at dateIndex 5, date grid 11,1Y
+    referenceFixings["11,1Y"] = {0.00745427, 0.028119, 0.0343574, 0.0335416, 0.0324554, 0.0305116,
+                                 0.00901458, 0.016573, 0.0194405, 0.0113262, 0.0238971};
 
-    // First 10 EUR-EURIBOR-6M fixings at dateIndex 5, date grid 10,1Y 
-    referenceFixings["10,1Y"] = {
-        0.00745427, 
-	0.0296431, 
-	0.0338739, 
-	0.012485, 
-	0.0135247, 
-	0.0148336, 
-	0.018856, 
-	0.0276796, 
-	0.0349766, 
-	0.0105696, 
-	0.0103713 } ;
-      
+    // First 10 EUR-EURIBOR-6M fixings at dateIndex 5, date grid 10,1Y
+    referenceFixings["10,1Y"] = {0.00745427, 0.0296431, 0.0338739, 0.012485,  0.0135247, 0.0148336,
+                                 0.018856,   0.0276796, 0.0349766, 0.0105696, 0.0103713};
+
     if (simMarket->aggregationScenarioData()) {
-        QL_REQUIRE(dateGridString == "10,1Y" || dateGridString == "11,1Y",
-		   "date grid string " << dateGridString << " unexpected");
-	// Reference scenario data:
-	Size dateIndex = 5;
-	Size maxSample = 10;
-	string qualifier = "EUR-EURIBOR-6M";
-	Real tolerance = 1.0e-6;
-	for (Size sampleIndex = 0; sampleIndex <= maxSample; ++sampleIndex) {
-	    Real fix = simMarket->aggregationScenarioData()->get(dateIndex, sampleIndex, AggregationScenarioDataType::IndexFixing, qualifier);
-	    Real ref = referenceFixings[dateGridString][sampleIndex];
-	    if (fabs(fix - ref) > tolerance)
-	        BOOST_FAIL("Stored fixing differs from reference value, found " << fix << ", expected " << ref);
-	}
+        QL_REQUIRE(dateGridString == "10,1Y" || dateGridString == "11,1Y", "date grid string " << dateGridString
+                                                                                               << " unexpected");
+        // Reference scenario data:
+        Size dateIndex = 5;
+        Size maxSample = 10;
+        string qualifier = "EUR-EURIBOR-6M";
+        Real tolerance = 1.0e-6;
+        for (Size sampleIndex = 0; sampleIndex <= maxSample; ++sampleIndex) {
+            Real fix = simMarket->aggregationScenarioData()->get(dateIndex, sampleIndex,
+                                                                 AggregationScenarioDataType::IndexFixing, qualifier);
+            Real ref = referenceFixings[dateGridString][sampleIndex];
+            if (fabs(fix - ref) > tolerance)
+                BOOST_FAIL("Stored fixing differs from reference value, found " << fix << ", expected " << ref);
+        }
     }
 }
 
@@ -369,7 +352,7 @@ void ObservationModeTest::testDisableLong() {
     simulation("11,1Y", true);
 }
 
-  void ObservationModeTest::testNone() {
+void ObservationModeTest::testNone() {
     ObservationMode::instance().setMode(ObservationMode::Mode::None);
 
     BOOST_TEST_MESSAGE("Testing Observation Mode None, Short Grid, No Fixing Checks");
@@ -383,9 +366,8 @@ void ObservationModeTest::testDisableLong() {
 
     BOOST_TEST_MESSAGE("Testing Observation Mode None, Long Grid, With Fixing Checks");
     simulation("11,1Y", true);
-
 }
-  
+
 void ObservationModeTest::testUnregister() {
     ObservationMode::instance().setMode(ObservationMode::Mode::Unregister);
 
