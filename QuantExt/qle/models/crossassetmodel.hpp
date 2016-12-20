@@ -55,6 +55,7 @@ public:
     /*! Parametrizations must be given in the following order
         - IR  (first parametrization defines the domestic currency)
         - FX  (for all pairs domestic-ccy defined by the IR models)
+        - EQ  (for all names equity currency defined in Parametrization)
         If the correlation matrix is not given, it is initialized
         as the unit matrix (and can be customized after
         construction of the model).

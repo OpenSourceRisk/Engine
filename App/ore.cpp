@@ -258,6 +258,7 @@ int main(int argc, char** argv) {
             modelData->fromFile(simulationConfigFile);
             CrossAssetModelBuilder modelBuilder(market, params.get("markets", "lgmcalibration"),
                                                 params.get("markets", "fxcalibration"),
+                                                params.get("markets", "eqcalibration"),
                                                 params.get("markets", "simulation"));
             boost::shared_ptr<QuantExt::CrossAssetModel> model = modelBuilder.build(modelData);
 

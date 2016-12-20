@@ -280,6 +280,9 @@ void CorrelationMatrixBuilder::checkFactor(const string& f) {
     } else if (f.substr(0, 3) == "CR:") {
         // credit name, just check it's at leasr 1 character
         QL_REQUIRE(f.size() > 3, "Invalid factor name " << f);
+    } else if (f.substr(0, 3) == "EQ:") {
+        // equity name, just check it's at leasr 1 character
+        QL_REQUIRE(f.size() > 3, "Invalid factor name " << f);
     } else {
         QL_FAIL("Invalid factor name " << f);
     }

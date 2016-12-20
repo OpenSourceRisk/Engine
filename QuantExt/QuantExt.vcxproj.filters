@@ -336,6 +336,11 @@
     <ClInclude Include="qle\termstructures\dynamicstype.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
+    <ClInclude Include="qle\instruments\equityforward.hpp" />
+    <ClInclude Include="qle\pricingengines\discountingequityforwardengine.hpp" />
+    <ClInclude Include="qle\models\equityoptionhelper.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -564,6 +569,11 @@
     </ClCompile>
     <ClCompile Include="qle\termstructures\spreadedswaptionvolatility.cpp">
       <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\equityforward.cpp" />
+    <ClCompile Include="qle\pricingengines\discountingequityforwardengine.cpp" />
+    <ClCompile Include="qle\models\equityoptionhelper.cpp">
+      <Filter>models</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

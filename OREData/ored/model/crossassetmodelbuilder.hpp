@@ -60,6 +60,8 @@ public:
         const std::string& configurationLgmCalibration = Market::defaultConfiguration,
         //! Market configuration for FX model calibration
         const std::string& configurationFxCalibration = Market::defaultConfiguration,
+        //! Market configuration for EQ model calibration
+        const std::string& configurationEqCalibration = Market::defaultConfiguration,
         //! Market configuration for simulation
         const std::string& configurationFinalModel = Market::defaultConfiguration,
         //! Daycounter for date/time conversions
@@ -75,18 +77,22 @@ public:
     //@{
     const std::vector<Real>& swaptionCalibrationErrors() { return swaptionCalibrationErrors_; }
     const std::vector<Real>& fxOptionCalibrationErrors() { return fxOptionCalibrationErrors_; }
+    const std::vector<Real>& eqOptionCalibrationErrors() { return eqOptionCalibrationErrors_; }
     //@}
 
 private:
     std::vector<std::vector<boost::shared_ptr<CalibrationHelper>>> swaptionBaskets_;
     std::vector<std::vector<boost::shared_ptr<CalibrationHelper>>> fxOptionBaskets_;
+    std::vector<std::vector<boost::shared_ptr<CalibrationHelper>>> eqOptionBaskets_;
     std::vector<Array> swaptionExpiries_;
     std::vector<Array> swaptionMaturities_;
     std::vector<Array> fxOptionExpiries_;
+    std::vector<Array> eqOptionExpiries_;
     std::vector<Real> swaptionCalibrationErrors_;
     std::vector<Real> fxOptionCalibrationErrors_;
+    std::vector<Real> eqOptionCalibrationErrors_;
     boost::shared_ptr<ore::data::Market> market_;
-    const std::string configurationLgmCalibration_, configurationFxCalibration_, configurationFinalModel_;
+    const std::string configurationLgmCalibration_, configurationFxCalibration_, configurationEqCalibration_, configurationFinalModel_;
     const DayCounter dayCounter_;
 
     // TODO: Move CalibrationErrorType, optimizer and end criteria parameters to data

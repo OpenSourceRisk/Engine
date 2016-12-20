@@ -300,6 +300,12 @@
     <ClInclude Include="ored\report\report.hpp">
       <Filter>report</Filter>
     </ClInclude>
+    <ClInclude Include="ored\model\eqbsdata.hpp">
+      <Filter>model</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\model\eqbsbuilder.hpp">
+      <Filter>model</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp">
@@ -517,6 +523,12 @@
     </ClCompile>
     <ClCompile Include="ored\report\csvreport.cpp">
       <Filter>report</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\model\eqbsdata.cpp">
+      <Filter>model</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\model\eqbsbuilder.cpp">
+      <Filter>model</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
