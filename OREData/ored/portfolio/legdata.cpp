@@ -353,6 +353,7 @@ Leg makeCPILeg(LegData& data, boost::shared_ptr<ZeroInflationIndex> index) {
      */
     
     Leg leg = CPILeg (schedule, index, data.cpiLegData().baseCPI(), observationLag)
+                  .withNotionals(data.notionals())
                   .withPaymentDayCounter(dc)
                   .withPaymentAdjustment(bdc)
                   .withPaymentCalendar(schedule.calendar())
