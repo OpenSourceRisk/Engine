@@ -6,8 +6,8 @@
     <xs:complexType>
       <xs:sequence>
         <xs:element type="configurationType" name="Configuration" maxOccurs="unbounded" minOccurs="1"/>
-		<xs:element type="yieldCurves"  name= "YieldCurves" minOccurs="0" maxOccurs="unbounded"/>
-		<xs:element type="discountCurvesType" name="DiscountingCurves" maxOccurs="unbounded" minOccurs="1"/>
+    	<xs:element type="yieldCurves"  name= "YieldCurves" minOccurs="0" maxOccurs="unbounded"/>
+    	<xs:element type="discountCurvesType" name="DiscountingCurves" maxOccurs="unbounded" minOccurs="1"/>
         <xs:element type="indexForwardingCurvesType" name="IndexForwardingCurves" maxOccurs="unbounded" minOccurs="1"/>
         <xs:element type="swapIndexCurvesType" name="SwapIndexCurves" maxOccurs="unbounded" minOccurs="1"/>
         <xs:element type="fxSpotsType" name="FxSpots" maxOccurs="unbounded" minOccurs="1"/>
@@ -22,8 +22,8 @@
   <xs:complexType name="configurationType">
     <xs:all>
       <xs:element type="xs:string" name="DiscountingCurvesId" minOccurs="0"/>
-	  <xs:element type="xs:string" name="YieldCurvesId" minOccurs="0"/>
-	  <xs:element type="xs:string" name="IndexForwardingCurvesId" minOccurs="0"/>
+      <xs:element type="xs:string" name="YieldCurvesId" minOccurs="0"/>
+      <xs:element type="xs:string" name="IndexForwardingCurvesId" minOccurs="0"/>
       <xs:element type="xs:string" name="SwapIndexCurvesId" minOccurs="0"/>
       <xs:element type="xs:string" name="FxSpotsId" minOccurs="0"/>
       <xs:element type="xs:string" name="FxVolatilitiesId" minOccurs="0"/>
