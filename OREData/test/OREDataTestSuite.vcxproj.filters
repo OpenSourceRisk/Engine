@@ -51,6 +51,9 @@
     <ClInclude Include="equitymarketdata.hpp">
       <Filter>headers</Filter>
     </ClInclude>
+    <ClInclude Include="equitytrades.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="calendars.cpp">
@@ -94,6 +97,9 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="equitymarketdata.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="equitytrades.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
