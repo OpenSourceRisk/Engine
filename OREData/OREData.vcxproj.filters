@@ -19,6 +19,9 @@
     <Filter Include="portfolio\builders">
       <UniqueIdentifier>{366dc296-9975-4787-a9f4-6e3e3d30a55c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="report">
+      <UniqueIdentifier>{4131282b-d9e6-4ff1-95bc-7720b426edd8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ored\configuration\all.hpp">
@@ -285,6 +288,18 @@
     <ClInclude Include="ored\portfolio\builders\equityforward.hpp">
       <Filter>portfolio\builders</Filter>
     </ClInclude>
+    <ClInclude Include="ored\report\all.hpp">
+      <Filter>report</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\report\csvreport.hpp">
+      <Filter>report</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\report\inmemoryreport.hpp">
+      <Filter>report</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\report\report.hpp">
+      <Filter>report</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp">
@@ -499,6 +514,9 @@
     </ClCompile>
     <ClCompile Include="ored\portfolio\equityforward.cpp">
       <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\report\csvreport.cpp">
+      <Filter>report</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
