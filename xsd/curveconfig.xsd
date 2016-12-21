@@ -87,14 +87,28 @@
       <xs:element type="xs:string" name="CurveId"/>
       <xs:element type="xs:string" name="CurveDescription"/>
       <xs:element type="currencyCode" name="Currency"/>
-      <xs:element type="cdsType" name="Type"/>
-      <xs:element type="xs:string" name="DiscountCurve"/>
-      <xs:element type="dayCounter" name="DayCounter" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="xs:string" name="RecoveryRate"/>
-      <xs:element type="quoteType" name="Quotes"/>
-      <xs:element type="xs:string" name="Conventions"/>
+      <xs:element type="defaultCurveType" name="Type"/>
+      <xs:element type="xs:string" name="DiscountCurve" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="dayCounter" name="DayCounter"/>
+      <xs:element type="xs:string" name="RecoveryRate" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="quoteType" name="Quotes" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="BenchmarkCurve" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="SourceCurve" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="Pillars" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:decimal" name="SpotLag" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="Conventions" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="Extrapolation" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
+
+  <xs:simpleType name="defaultCurveType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="SpreadCDS"/>
+      <xs:enumeration value="HazardRate"/>
+      <xs:enumeration value="Benchmark"/>
+    </xs:restriction>
+  </xs:simpleType>
 
   <xs:complexType name="yieldCurves">
     <xs:sequence>
@@ -199,7 +213,7 @@
       <xs:element type="xs:string" name="ProjectionCurveForeign" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
-  
+
   <xs:simpleType name="crossCurrencySegmentTypeType">
     <xs:restriction base="xs:string">
       <xs:enumeration value="Cross Currency Basis Swap"/>
@@ -237,9 +251,8 @@
             <xs:element type="xs:string" name="RateQuote"/>
           </xs:sequence>
         </xs:complexType>
-      </xs:element> 
+      </xs:element>
     </xs:sequence>
   </xs:complexType>
 
 </xs:schema>
-

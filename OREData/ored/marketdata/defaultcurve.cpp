@@ -21,6 +21,7 @@
 
 #include <ql/math/interpolations/loginterpolation.hpp>
 #include <ql/math/interpolations/backwardflatinterpolation.hpp>
+#include <ql/math/interpolations/loginterpolation.hpp>
 #include <ql/termstructures/credit/defaultprobabilityhelpers.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 
@@ -40,19 +41,13 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
 
         const boost::shared_ptr<DefaultCurveConfig>& config = curveConfigs.defaultCurveConfig(spec.curveConfigID());
 
-        boost::shared_ptr<Convention> tmp = conventions.get(config->conventionID());
-        QL_REQUIRE(tmp, "no conventions found with id " << config->conventionID());
-
-        boost::shared_ptr<CdsConvention> cdsConv = boost::dynamic_pointer_cast<CdsConvention>(tmp);
-        boost::shared_ptr<ZeroRateConvention> zeroConv = boost::dynamic_pointer_cast<ZeroRateConvention>(tmp);
-
+        boost::shared_ptr<CdsConvention> cdsConv;
         if (config->type() == DefaultCurveConfig::Type::SpreadCDS ||
             config->type() == DefaultCurveConfig::Type::HazardRate) {
+            boost::shared_ptr<Convention> tmp = conventions.get(config->conventionID());
+            QL_REQUIRE(tmp, "no conventions found with id " << config->conventionID());
+            cdsConv = boost::dynamic_pointer_cast<CdsConvention>(tmp);
             QL_REQUIRE(cdsConv != NULL, "SpreadCDS and HazardRate curves require CDS convention (wrong type)");
-        }
-
-        if (config->type() == DefaultCurveConfig::Type::Yield) {
-            QL_REQUIRE(zeroConv != NULL, "Yield implied default curve requires ZERO convention (wrong type)");
         }
 
         Handle<YieldTermStructure> discountCurve;
@@ -62,20 +57,28 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                 discountCurve = it->second->handle();
             } else {
                 QL_FAIL("The discount curve, " << config->discountCurveID() << ", required in the building "
-                                                                               "of the curve, " << spec.name()
-                                               << ", was not found.");
+                                                                               "of the curve, "
+                                               << spec.name() << ", was not found.");
             }
         }
 
-        Handle<YieldTermStructure> benchmarkCurve;
-        if (config->type() == DefaultCurveConfig::Type::Yield) {
+        boost::shared_ptr<YieldCurve> benchmarkCurve, sourceCurve;
+        if (config->type() == DefaultCurveConfig::Type::Benchmark) {
             auto it = yieldCurves.find(config->benchmarkCurveID());
             if (it != yieldCurves.end()) {
-                benchmarkCurve = it->second->handle();
+                benchmarkCurve = it->second;
             } else {
                 QL_FAIL("The benchmark curve, " << config->benchmarkCurveID() << ", required in the building "
-                                                                                 "of the curve, " << spec.name()
-                                                << ", was not found.");
+                                                                                 "of the curve, "
+                                                << spec.name() << ", was not found.");
+            }
+            auto it2 = yieldCurves.find(config->sourceCurveID());
+            if (it2 != yieldCurves.end()) {
+                sourceCurve = it2->second;
+            } else {
+                QL_FAIL("The source curve, " << config->sourceCurveID() << ", required in the building "
+                                                                           "of the curve, "
+                                             << spec.name() << ", was not found.");
             }
         }
 
@@ -136,28 +139,6 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                                                        << q->term() << ") while loading default curve "
                                                        << config->curveID());
                     terms.push_back(q->term());
-                    quotes.push_back(q->quote()->value());
-                }
-            }
-
-            if (config->type() == DefaultCurveConfig::Type::Yield && md->asofDate() == asof &&
-                md->instrumentType() == MarketDatum::InstrumentType::ZERO) {
-                boost::shared_ptr<ZeroQuote> q = boost::dynamic_pointer_cast<ZeroQuote>(md);
-
-                vector<string>::const_iterator it1 =
-                    std::find(config->quotes().begin(), config->quotes().end(), q->name());
-
-                // is the quote one of the list in the config ?
-                if (it1 != config->quotes().end()) {
-                    QL_REQUIRE(q->tenorBased(), "require tenor based "
-                                                "zero quote in default "
-                                                "curves, date based "
-                                                "not allowed");
-                    vector<Period>::const_iterator it2 = std::find(terms.begin(), terms.end(), q->tenor());
-                    QL_REQUIRE(it2 == terms.end(), "duplicate term in quotes found ("
-                                                       << q->tenor() << ") while loading default curve "
-                                                       << config->curveID());
-                    terms.push_back(q->tenor());
                     quotes.push_back(q->quote()->value());
                 }
             }
@@ -227,36 +208,28 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
             return;
         }
 
-        if (config->type() == DefaultCurveConfig::Type::Yield) {
-            DayCounter dc = zeroConv->dayCounter();
-            Calendar cal = zeroConv->tenorCalendar();
-            Compounding comp = zeroConv->compounding();
-            Frequency freq = zeroConv->compoundingFrequency();
-            Natural spotLag = zeroConv->spotLag();
-            Calendar spotCal = zeroConv->spotCalendar();
-            BusinessDayConvention bdc = zeroConv->rollConvention();
-            bool eom = zeroConv->eom();
+        if (config->type() == DefaultCurveConfig::Type::Benchmark) {
+            std::vector<Period> pillars = config->pillars();
+            Calendar cal = config->calendar();
+            Size spotLag = config->spotLag();
             // setup
             std::vector<Date> dates;
             std::vector<Real> impliedHazardRates;
-            if (terms[0] != 0 * Days) {
-                LOG("DefaultCurve: assume asof (" << asof << "), yield rate " << quotes[0] << ", because not given");
-                dates.push_back(asof);
-                quotes.insert(quotes.begin(), quotes[0]);
-            }
-            Date spot = spotCal.advance(asof, spotLag * Days);
-            for (Size i = 0; i < terms.size(); ++i) {
-                dates.push_back(cal.advance(spot, terms[i], bdc, eom));
-            }
-            for (Size i = 0; i < dates.size(); ++i) {
-                // day counter in the quote is ignored, the one from the
-                // convention is used
-                InterestRate yield(quotes[i], dc, comp, freq);
-                Real t_y = dc.yearFraction(asof, dates[i]);
+            Date spot = cal.advance(asof, spotLag * Days);
+            for (Size i = 0; i < pillars.size(); ++i) {
+                dates.push_back(cal.advance(spot, pillars[i]));
                 Real t_c = config->dayCounter().yearFraction(asof, dates[i]);
                 // hazard rates are always continnuously compounded
-                Real impliedHr = -std::log(yield.discountFactor(t_y) / benchmarkCurve->discount(t_c)) / t_c;
+                Real impliedHr =
+                    -std::log(sourceCurve->handle()->discount(dates[i]) / benchmarkCurve->handle()->discount(dates[i])) /
+                    t_c;
                 impliedHazardRates.push_back(impliedHr);
+            }
+            QL_REQUIRE(dates.size() > 0, "DefaultCurve (Benchmark): no dates given");
+            if (dates[0] != asof) {
+                dates.insert(dates.begin(), asof);
+                Real tmp = impliedHazardRates.front();
+                impliedHazardRates.insert(impliedHazardRates.begin(), tmp);
             }
             LOG("DefaultCurve: set up interpolated hazard rate curve as yield over benchmark");
             curve_ = boost::make_shared<InterpolatedHazardRateCurve<BackwardFlat>>(
@@ -266,7 +239,7 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                 DLOG("DefaultCurve: Enabled Extrapolation");
             }
             QL_REQUIRE(recoveryRate_ == Null<Real>(), "DefaultCurve: recovery rate must not be given "
-                                                      "for yield implied curve type, it is assumed to "
+                                                      "for benchmark implied curve type, it is assumed to "
                                                       "be 0.0");
             recoveryRate_ = 0.0;
             return;
@@ -279,5 +252,6 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
         QL_FAIL("default curve building failed: unknown error");
     }
 }
-}
-}
+
+} // namespace data
+} // namespace ore

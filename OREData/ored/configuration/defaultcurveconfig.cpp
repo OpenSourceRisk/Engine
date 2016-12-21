@@ -25,12 +25,15 @@ namespace ore {
 namespace data {
 
 DefaultCurveConfig::DefaultCurveConfig(const string& curveID, const string& curveDescription, const string& currency,
-                                       const Type& type, const string& discountCurveID, const string& recoveryRateQuote,
+                                       const Type& type, const string& discountCurveID, const string& benchmarkCurveID,
+                                       const string& sourceCurveID, const string& recoveryRateQuote,
                                        const DayCounter& dayCounter, const string& conventionID,
-                                       const vector<string>& quotes, bool extrapolation)
+                                       const std::vector<string>& quotes, const std::vector<Period>& pillars,
+                                       const Calendar& calendar, const Size spotLag, bool extrapolation)
     : curveID_(curveID), curveDescription_(curveDescription), currency_(currency), type_(type),
-      discountCurveID_(discountCurveID), recoveryRateQuote_(recoveryRateQuote), dayCounter_(dayCounter),
-      conventionID_(conventionID), quotes_(quotes), extrapolation_(extrapolation) {}
+      discountCurveID_(discountCurveID), benchmarkCurveID_(benchmarkCurveID), sourceCurveID_(sourceCurveID),
+      recoveryRateQuote_(recoveryRateQuote), dayCounter_(dayCounter), conventionID_(conventionID), quotes_(quotes),
+      pillars_(pillars), calendar_(calendar), spotLag_(spotLag), extrapolation_(extrapolation) {}
 
 void DefaultCurveConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "DefaultCurve");
@@ -44,22 +47,30 @@ void DefaultCurveConfig::fromXML(XMLNode* node) {
         type_ = Type::SpreadCDS;
     } else if (type == "HazardRate") {
         type_ = Type::HazardRate;
-    } else if (type == "Yield") {
-        type_ = Type::Yield;
+    } else if (type == "Benchmark") {
+        type_ = Type::Benchmark;
     } else {
         QL_FAIL("Type " << type << " not recognized");
     }
 
     discountCurveID_ = XMLUtils::getChildValue(node, "DiscountCurve", false);
-    benchmarkCurveID_ = XMLUtils::getChildValue(node, "BenchmarkCurve", false);
+
+    if (type_ == Type::Benchmark) {
+        benchmarkCurveID_ = XMLUtils::getChildValue(node, "BenchmarkCurve", true);
+        sourceCurveID_ = XMLUtils::getChildValue(node, "SourceCurve", true);
+        pillars_ = XMLUtils::getChildrenValuesAsPeriods(node, "Pillars", true);
+        spotLag_ = parseInteger(XMLUtils::getChildValue(node, "SpotLag", true));
+        calendar_ = parseCalendar(XMLUtils::getChildValue(node, "Calendar", true));
+    }
 
     recoveryRateQuote_ = XMLUtils::getChildValue(node, "RecoveryRate", false);
 
     string dc = XMLUtils::getChildValue(node, "DayCounter", true);
     dayCounter_ = parseDayCounter(dc);
 
-    conventionID_ = XMLUtils::getChildValue(node, "Conventions", true);
-    quotes_ = XMLUtils::getChildrenValues(node, "Quotes", "Quote", true);
+    conventionID_ = XMLUtils::getChildValue(node, "Conventions", false);
+    quotes_ = XMLUtils::getChildrenValues(node, "Quotes", "Quote", false);
+
     extrapolation_ = XMLUtils::getChildValueAsBool(node, "Extrapolation"); // defaults to true
 }
 
@@ -80,10 +91,18 @@ XMLNode* DefaultCurveConfig::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "Type", "HazardRate");
         rec = true;
     }
+    if (type_ == Type::Benchmark) {
+        XMLUtils::addChild(doc, node, "Type", "Benchmark");
+        rec = true;
+        XMLUtils::addChild(doc, node, "BenchmarkCurve", benchmarkCurveID_);
+        XMLUtils::addChild(doc, node, "SourceCurve", sourceCurveID_);
+        XMLUtils::addGenericChildAsList(doc, node, "Pillars", pillars_);
+        XMLUtils::addChild(doc, node, "SpotLag", (int)spotLag_);
+        XMLUtils::addChild(doc, node, "Calendar", calendar_.name());
+    }
     QL_REQUIRE(rec, "Unkown type in DefaultCurveConfig::toXML()");
 
     XMLUtils::addChild(doc, node, "DiscountCurve", discountCurveID_);
-    XMLUtils::addChild(doc, node, "BenchmarkCurve", benchmarkCurveID_);
     XMLUtils::addChild(doc, node, "RecoveryRate", recoveryRateQuote_);
     XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
     XMLUtils::addChild(doc, node, "Conventions", conventionID_);
