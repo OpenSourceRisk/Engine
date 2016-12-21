@@ -45,7 +45,7 @@ namespace analytics {
 class RiskFactorKey {
 public:
     //! Risk Factor types
-    enum class KeyType { DiscountCurve, YieldCurve, IndexCurve, SwaptionVolatility, FXSpot, FXVolatility };
+    enum class KeyType { DiscountCurve, YieldCurve, IndexCurve, SwaptionVolatility, FXSpot, FXVolatility, EQSpot, EQIRCurve, EQVolatility };
 
     //! Constructor
     RiskFactorKey() {}

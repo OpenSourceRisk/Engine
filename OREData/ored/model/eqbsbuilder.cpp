@@ -19,8 +19,8 @@
 #include <ql/math/optimization/levenbergmarquardt.hpp>
 #include <ql/quotes/simplequote.hpp>
 
-#include <qle/models/fxbsconstantparametrization.hpp>
-#include <qle/models/fxbspiecewiseconstantparametrization.hpp>
+#include <qle/models/eqbsconstantparametrization.hpp>
+#include <qle/models/eqbspiecewiseconstantparametrization.hpp>
 //#include <qle/pricingengines/analyticcclgmeqoptionengine.hpp>
 #include <qle/models/equityoptionhelper.hpp>
 
@@ -70,12 +70,14 @@ EqBsBuilder::EqBsBuilder(const boost::shared_ptr<ore::data::Market>& market,
 
     // Quotation needs to be consistent with FX spot quotation in the FX calibration basket
     Handle<Quote> eqSpot = market_->equitySpot(eqName, configuration_);
+    string ccyPair = ccy.code() + baseCcy.code();
+    Handle<Quote> fxSpot = market_->fxSpot(ccyPair, configuration_);
 
     if (data->sigmaParamType() == ParamType::Piecewise)
         parametrization_ =
-            boost::make_shared<QuantExt::FxBsPiecewiseConstantParametrization>(ccy, eqSpot, sigmaTimes, sigma);
+            boost::make_shared<QuantExt::EqBsPiecewiseConstantParametrization>(ccy, eqName, eqSpot, fxSpot, sigmaTimes, sigma);
     else if (data->sigmaParamType() == ParamType::Constant)
-        parametrization_ = boost::make_shared<QuantExt::FxBsConstantParametrization>(ccy, eqSpot, sigma[0]);
+        parametrization_ = boost::make_shared<QuantExt::EqBsConstantParametrization>(ccy, eqName, eqSpot, fxSpot, sigma[0]);
     else
         QL_FAIL("interpolation type not supported for Equity");
 }

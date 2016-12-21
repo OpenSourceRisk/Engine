@@ -777,9 +777,9 @@ void CrossAssetModelTest::testLgm5fFxCalibration() {
     EndCriteria ec(1000, 500, 1E-8, 1E-8, 1E-8);
 
     // calibrate USD-EUR FX volatility
-    d.ccLgm->calibrateFxBsVolatilitiesIterative(0, helpersUsd, lm, ec);
+    d.ccLgm->calibrateBsVolatilitiesIterative(CrossAssetModelTypes::FX, 0, helpersUsd, lm, ec);
     // calibrate GBP-EUR FX volatility
-    d.ccLgm->calibrateFxBsVolatilitiesIterative(1, helpersGbp, lm, ec);
+    d.ccLgm->calibrateBsVolatilitiesIterative(CrossAssetModelTypes::FX, 1, helpersGbp, lm, ec);
 
     Real tol = 1E-6;
     for (Size i = 0; i < helpersUsd.size(); ++i) {
@@ -818,7 +818,7 @@ void CrossAssetModelTest::testLgm5fFxCalibration() {
         helpersGbp[i]->setPricingEngine(ccLgmProjectedFxOptionEngineGbp);
     }
 
-    ccLgmProjected->calibrateFxBsVolatilitiesIterative(0, helpersGbp, lm, ec);
+    ccLgmProjected->calibrateBsVolatilitiesIterative(CrossAssetModelTypes::FX, 0, helpersGbp, lm, ec);
 
     for (Size i = 0; i < helpersGbp.size(); ++i) {
         Real fullModelVol = d.ccLgm->fxbs(1)->parameterValues(0)[i];
@@ -913,8 +913,8 @@ void CrossAssetModelTest::testLgm5fFullCalibration() {
     d.ccLgm->calibrateIrLgm1fVolatilitiesIterative(1, basketUsd, lm, ec);
     d.ccLgm->calibrateIrLgm1fVolatilitiesIterative(2, basketGbp, lm, ec);
 
-    d.ccLgm->calibrateFxBsVolatilitiesIterative(0, basketEurUsd, lm, ec);
-    d.ccLgm->calibrateFxBsVolatilitiesIterative(1, basketEurGbp, lm, ec);
+    d.ccLgm->calibrateBsVolatilitiesIterative(CrossAssetModelTypes::FX, 0, basketEurUsd, lm, ec);
+    d.ccLgm->calibrateBsVolatilitiesIterative(CrossAssetModelTypes::FX, 1, basketEurGbp, lm, ec);
 
     // check the results
 

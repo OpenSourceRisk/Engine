@@ -33,6 +33,7 @@
 #include <qle/models/fxbspiecewiseconstantparametrization.hpp>
 #include <qle/pricingengines/analyticlgmswaptionengine.hpp>
 #include <qle/pricingengines/analyticcclgmfxoptionengine.hpp>
+#include <qle/pricingengines/analyticxassetlgmeqoptionengine.hpp>
 #include <qle/models/fxoptionhelper.hpp>
 
 #include <ql/math/optimization/levenbergmarquardt.hpp>
@@ -138,7 +139,7 @@ CrossAssetModelBuilder::build(const boost::shared_ptr<CrossAssetModelData>& conf
     /*******************************************************
     * Build the EQ parametrizations and calibration baskets
     */
-    std::vector<boost::shared_ptr<QuantExt::FxBsParametrization>> eqParametrizations;
+    std::vector<boost::shared_ptr<QuantExt::EqBsParametrization>> eqParametrizations;
     for (Size i = 0; i < config->eqConfigs().size(); i++) {
         LOG("EQ Parametrization " << i);
         boost::shared_ptr<EqBsData> eq = config->eqConfigs()[i];
@@ -149,7 +150,7 @@ CrossAssetModelBuilder::build(const boost::shared_ptr<CrossAssetModelData>& conf
             "Currency (" << eqCcy << ") for equity " << eqName << " not covered by CrossAssetModelData");
         boost::shared_ptr<EqBsBuilder> builder =
             boost::make_shared<EqBsBuilder>(market_, eq, domesticCcy, configurationEqCalibration_);
-        boost::shared_ptr<QuantExt::FxBsParametrization> parametrization = builder->parametrization();
+        boost::shared_ptr<QuantExt::EqBsParametrization> parametrization = builder->parametrization();
         eqOptionBaskets_[i] = builder->optionBasket();
         eqParametrizations.push_back(parametrization);
         eqNames.push_back(eqName);
@@ -232,7 +233,9 @@ CrossAssetModelBuilder::build(const boost::shared_ptr<CrossAssetModelData>& conf
         for (Size j = 0; j < fxOptionBaskets_[i].size(); j++)
             fxOptionBaskets_[i][j]->setPricingEngine(engine);
 
-        model->calibrateFxBsVolatilitiesIterative(i, fxOptionBaskets_[i], *optimizationMethod_, endCriteria_);
+        model->calibrateBsVolatilitiesIterative(
+            CrossAssetModelTypes::FX, i, fxOptionBaskets_[i], 
+            *optimizationMethod_, endCriteria_);
 
         LOG("FX " << fx->foreignCcy() << " calibration errors:");
         fxOptionCalibrationErrors_[i] =
@@ -241,6 +244,52 @@ CrossAssetModelBuilder::build(const boost::shared_ptr<CrossAssetModelData>& conf
             QL_REQUIRE(fabs(fxOptionCalibrationErrors_[i]) < config->bootstrapTolerance(),
                        "calibration error " << fxOptionCalibrationErrors_[i] << " exceeds tolerance "
                                             << config->bootstrapTolerance());
+        }
+    }
+
+    /*************************
+    * Relink LGM discount curves to curves used for EQ calibration
+    */
+
+    for (Size i = 0; i < irParametrizations.size(); i++) {
+        auto p = irParametrizations[i];
+        irDiscountCurves[i].linkTo(*market_->discountCurve(p->currency().code(), configurationEqCalibration_));
+        LOG("Relinked discounting curve for " << p->currency().code() << " for EQ calibration");
+    }
+
+    /*************************
+    * Calibrate EQ components
+    */
+
+    for (Size i = 0; i < eqParametrizations.size(); i++) {
+        boost::shared_ptr<EqBsData> eq = config->eqConfigs()[i];
+        if (!eq->calibrateSigma()) {
+            LOG("EQ Calibration " << i << " skipped");
+            continue;
+        }
+        LOG("EQ Calibration " << i);
+        // attach pricing engines to helpers
+        Currency eqCcy = eqParametrizations[i]->currency();
+        Size eqCcyIdx = model->ccyIndex(eqCcy);
+        boost::shared_ptr<QuantExt::AnalyticXAssetLgmEquityOptionEngine> engine =
+            boost::make_shared<QuantExt::AnalyticXAssetLgmEquityOptionEngine>(model, i, eqCcyIdx);
+        // enable caching for calibration
+        // TODO: review this
+        engine->cache(true);
+        for (Size j = 0; j < eqOptionBaskets_[i].size(); j++)
+            eqOptionBaskets_[i][j]->setPricingEngine(engine);
+
+        model->calibrateBsVolatilitiesIterative(
+            CrossAssetModelTypes::EQ, i, fxOptionBaskets_[i],
+            *optimizationMethod_, endCriteria_);
+
+        LOG("EQ " << eq->eqName() << " calibration errors:");
+        eqOptionCalibrationErrors_[i] =
+            logCalibrationErrors(eqOptionBaskets_[i], eqParametrizations[i], irParametrizations[0]);
+        if (eq->calibrationType() == CalibrationType::Bootstrap) {
+            QL_REQUIRE(fabs(eqOptionCalibrationErrors_[i]) < config->bootstrapTolerance(),
+                "calibration error " << eqOptionCalibrationErrors_[i] << " exceeds tolerance "
+                << config->bootstrapTolerance());
         }
     }
 

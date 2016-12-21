@@ -90,12 +90,26 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
             LOG("Set up CrossAssetModelImpliedFxVolTermStructures for " << pair << " done");
         }
     }
+
+    if (simMarketConfig_->eqVolNames().size() > 0 && 
+        simMarketConfig_->simulateEQVols()) {
+        QL_FAIL("simulation of equity volatilities is not yet supported");
+    }
+
+    // Cache EQ rate keys
+    Size n_eq = model_->components(EQ);
+    eqKeys_.reserve(n_eq);
+    for (Size k = 0; k < n_eq; k++) {
+        const string& eqName = model_->eqbs(k)->eqName();
+        eqKeys_.emplace_back(RiskFactorKey::KeyType::EQSpot, eqName);
+    }
 }
 
 std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextPath() {
     std::vector<boost::shared_ptr<Scenario>> scenarios(dates_.size());
     Sample<MultiPath> sample = pathGenerator_->next();
     Size n_ccy = model_->components(IR);
+    Size n_eq = model_->components(EQ);
     Size n_indices = simMarketConfig_->indices().size();
     Size n_ten = simMarketConfig_->yieldCurveTenors().size();
     vector<string> ccyPairs(n_ccy - 1);
@@ -180,6 +194,12 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
                     scenarios[i]->add(RiskFactorKey(RiskFactorKey::KeyType::FXVolatility, ccyPair, j), vol);
                 }
             }
+        }
+
+        // Equity spots
+        for (Size k = 0; k < n_eq; k++) {
+            Real eqSpot = std::exp(sample.value[model_->pIdx(EQ, k)][i + 1]); 
+            scenarios[i]->add(eqKeys_[k], eqSpot);
         }
 
         // TODO: Further risk factor classes are added here

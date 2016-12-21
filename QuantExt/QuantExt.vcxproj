@@ -537,6 +537,9 @@
     <ClInclude Include="qle\models\crossassetanalyticsbase.hpp" />
     <ClInclude Include="qle\models\crossassetmodel.hpp" />
     <ClInclude Include="qle\models\crossassetmodelimpliedfxvoltermstructure.hpp" />
+    <ClInclude Include="qle\models\eqbsconstantparametrization.hpp" />
+    <ClInclude Include="qle\models\eqbsparametrization.hpp" />
+    <ClInclude Include="qle\models\eqbspiecewiseconstantparametrization.hpp" />
     <ClInclude Include="qle\models\equityoptionhelper.hpp" />
     <ClInclude Include="qle\models\fxbsconstantparametrization.hpp" />
     <ClInclude Include="qle\models\fxbsparametrization.hpp" />
@@ -557,6 +560,7 @@
     <ClInclude Include="qle\pricingengines\all.hpp" />
     <ClInclude Include="qle\pricingengines\analyticcclgmfxoptionengine.hpp" />
     <ClInclude Include="qle\pricingengines\analyticlgmswaptionengine.hpp" />
+    <ClInclude Include="qle\pricingengines\analyticxassetlgmeqoptionengine.hpp" />
     <ClInclude Include="qle\pricingengines\crossccyswapengine.hpp" />
     <ClInclude Include="qle\pricingengines\discountingcurrencyswapengine.hpp" />
     <ClInclude Include="qle\pricingengines\discountingequityforwardengine.hpp" />
@@ -623,6 +627,9 @@
     <ClCompile Include="qle\models\crossassetanalytics.cpp" />
     <ClCompile Include="qle\models\crossassetmodel.cpp" />
     <ClCompile Include="qle\models\crossassetmodelimpliedfxvoltermstructure.cpp" />
+    <ClCompile Include="qle\models\eqbsconstantparametrization.cpp" />
+    <ClCompile Include="qle\models\eqbsparametrization.cpp" />
+    <ClCompile Include="qle\models\eqbspiecewiseconstantparametrization.cpp" />
     <ClCompile Include="qle\models\equityoptionhelper.cpp" />
     <ClCompile Include="qle\models\fxbsconstantparametrization.cpp" />
     <ClCompile Include="qle\models\fxbsparametrization.cpp" />
@@ -636,6 +643,7 @@
     <ClCompile Include="qle\models\piecewiseconstanthelper.cpp" />
     <ClCompile Include="qle\pricingengines\analyticcclgmfxoptionengine.cpp" />
     <ClCompile Include="qle\pricingengines\analyticlgmswaptionengine.cpp" />
+    <ClCompile Include="qle\pricingengines\analyticxassetlgmeqoptionengine.cpp" />
     <ClCompile Include="qle\pricingengines\crossccyswapengine.cpp" />
     <ClCompile Include="qle\pricingengines\discountingcurrencyswapengine.cpp" />
     <ClCompile Include="qle\pricingengines\discountingequityforwardengine.cpp" />

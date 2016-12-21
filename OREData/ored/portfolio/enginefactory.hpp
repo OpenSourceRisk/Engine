@@ -48,7 +48,7 @@ class Trade;
   If several are needed (for different trade types, different collateral
   currencies etc.), several engine factories should be set up for each such
   portfolio subset. */
-enum class MarketContext { irCalibration, fxCalibration, pricing };
+enum class MarketContext { irCalibration, fxCalibration, eqCalibration, pricing };
 
 //! Base PricingEngine Builder class for a specific model and engine
 /*!

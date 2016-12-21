@@ -74,6 +74,7 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> scenarioParameters() {
     parameters->simulateFXVols() = false;
     parameters->fxVolExpiries() = {2 * Years, 3 * Years, 4 * Years};
     parameters->fxVolDecayMode() = "ConstantVariance";
+    parameters->simulateEQVols() = false;
 
     parameters->ccyPairs() = {"EURUSD"};
 
