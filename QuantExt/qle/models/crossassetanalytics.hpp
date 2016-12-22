@@ -308,6 +308,41 @@ struct rxx {
     const Size i_, j_;
 };
 
+/*! EQ sigma component */
+struct ss {
+    ss(const Size i) : i_(i) {}
+    Real eval(const CrossAssetModel* x, const Real t) const { return x->eqbs(i_)->sigma(t); }
+    const Size i_;
+};
+
+/*! FX variance component */
+struct vs {
+    vs(const Size i) : i_(i) {}
+    Real eval(const CrossAssetModel* x, const Real t) const { return x->eqbs(i_)->variance(t); }
+    const Size i_;
+};
+
+/*! EQ-EQ correlation component */
+struct rss {
+    rss(const Size i, const Size j) : i_(i), j_(j) {}
+    Real eval(const CrossAssetModel* x, const Real) const { return x->correlation(EQ, i_, EQ, j_, 0, 0); }
+    const Size i_, j_;
+};
+
+/*! IR-EQ correlation component */
+struct rzs {
+    rzs(const Size i, const Size j) : i_(i), j_(j) {}
+    Real eval(const CrossAssetModel* x, const Real) const { return x->correlation(IR, i_, EQ, j_, 0, 0); }
+    const Size i_, j_;
+};
+
+/*! FX-EQ correlation component */
+struct rxs {
+    rxs(const Size i, const Size j) : i_(i), j_(j) {}
+    Real eval(const CrossAssetModel* x, const Real) const { return x->correlation(FX, i_, EQ, j_, 0, 0); }
+    const Size i_, j_;
+};
+
 /*! @} */
 
 } // namespace CrossAssetAnalytics
