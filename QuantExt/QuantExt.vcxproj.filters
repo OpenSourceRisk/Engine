@@ -338,9 +338,6 @@
     </ClInclude>
     <ClInclude Include="qle\instruments\equityforward.hpp" />
     <ClInclude Include="qle\pricingengines\discountingequityforwardengine.hpp" />
-    <ClInclude Include="qle\models\equityoptionhelper.hpp">
-      <Filter>models</Filter>
-    </ClInclude>
     <ClInclude Include="qle\models\eqbsparametrization.hpp">
       <Filter>models</Filter>
     </ClInclude>
@@ -584,9 +581,6 @@
     </ClCompile>
     <ClCompile Include="qle\instruments\equityforward.cpp" />
     <ClCompile Include="qle\pricingengines\discountingequityforwardengine.cpp" />
-    <ClCompile Include="qle\models\equityoptionhelper.cpp">
-      <Filter>models</Filter>
-    </ClCompile>
     <ClCompile Include="qle\models\eqbsparametrization.cpp">
       <Filter>models</Filter>
     </ClCompile>

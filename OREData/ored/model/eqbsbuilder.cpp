@@ -22,7 +22,7 @@
 #include <qle/models/eqbsconstantparametrization.hpp>
 #include <qle/models/eqbspiecewiseconstantparametrization.hpp>
 //#include <qle/pricingengines/analyticcclgmeqoptionengine.hpp>
-#include <qle/models/equityoptionhelper.hpp>
+#include <qle/models/fxoptionhelper.hpp>
 
 #include <ored/model/eqbsbuilder.hpp>
 #include <ored/utilities/log.hpp>
@@ -126,8 +126,8 @@ void EqBsBuilder::buildOptionBasket() {
         else
             QL_FAIL("strike type ATMF or Absolute expected");
         Handle<Quote> volQuote(boost::make_shared<SimpleQuote>(eqVol->blackVol(expiryDate, strikeValue)));
-        boost::shared_ptr<QuantExt::EquityOptionHelper> helper =
-            boost::make_shared<QuantExt::EquityOptionHelper>(expiryDate, strikeValue, eqSpot, fxSpot, volQuote, ytsRate, ytsDiv);
+        boost::shared_ptr<QuantExt::FxOptionHelper> helper =
+            boost::make_shared<QuantExt::FxOptionHelper>(expiryDate, strikeValue, eqSpot, volQuote, ytsRate, ytsDiv);
         optionBasket_.push_back(helper);
         helper->performCalculations();
         expiryTimes[j] = ytsRate->timeFromReference(helper->option()->exercise()->date(0));

@@ -20,7 +20,6 @@
 #include <ored/utilities/log.hpp>
 
 #include <qle/models/fxoptionhelper.hpp>
-#include <qle/models/equityoptionhelper.hpp>
 
 #include <ql/exercise.hpp>
 #include <ql/models/shortrate/calibrationhelpers/swaptionhelper.hpp>
@@ -131,7 +130,7 @@ Real logCalibrationErrors(const std::vector<boost::shared_ptr<CalibrationHelper>
         Real marketValue = basket[j]->marketValue();
         Real valueDiff = modelValue - marketValue;
         Volatility modelVol = 0, marketVol = 0, volDiff = 0;
-        boost::shared_ptr<EquityOptionHelper> eqoption = boost::dynamic_pointer_cast<EquityOptionHelper>(basket[j]);
+        boost::shared_ptr<FxOptionHelper> eqoption = boost::dynamic_pointer_cast<FxOptionHelper>(basket[j]);
         if (eqoption != nullptr && parametrization != nullptr && domesticLgm != nullptr) {
             // report alpha, kappa at t_expiry^-
             t = domesticLgm->termStructure()->timeFromReference(eqoption->option()->exercise()->date(0)) - 1E-4;

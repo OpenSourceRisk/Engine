@@ -540,7 +540,6 @@
     <ClInclude Include="qle\models\eqbsconstantparametrization.hpp" />
     <ClInclude Include="qle\models\eqbsparametrization.hpp" />
     <ClInclude Include="qle\models\eqbspiecewiseconstantparametrization.hpp" />
-    <ClInclude Include="qle\models\equityoptionhelper.hpp" />
     <ClInclude Include="qle\models\fxbsconstantparametrization.hpp" />
     <ClInclude Include="qle\models\fxbsparametrization.hpp" />
     <ClInclude Include="qle\models\fxbspiecewiseconstantparametrization.hpp" />
@@ -630,7 +629,6 @@
     <ClCompile Include="qle\models\eqbsconstantparametrization.cpp" />
     <ClCompile Include="qle\models\eqbsparametrization.cpp" />
     <ClCompile Include="qle\models\eqbspiecewiseconstantparametrization.cpp" />
-    <ClCompile Include="qle\models\equityoptionhelper.cpp" />
     <ClCompile Include="qle\models\fxbsconstantparametrization.cpp" />
     <ClCompile Include="qle\models\fxbsparametrization.cpp" />
     <ClCompile Include="qle\models\fxbspiecewiseconstantparametrization.cpp" />
