@@ -277,9 +277,9 @@ CrossAssetModel::stateProcess(CrossAssetStateProcess::discretization disc) const
     return disc == CrossAssetStateProcess::exact ? stateProcessExact_ : stateProcessEuler_;
 }
 
-inline Size CrossAssetModel::dimension() const { return nIrLgm1f_ * 1 + nFxBs_ * 1; }
+inline Size CrossAssetModel::dimension() const { return nIrLgm1f_ * 1 + nFxBs_ * 1 + (nInfl_*1) + (nEqBs_*1); }
 
-inline Size CrossAssetModel::brownians() const { return nIrLgm1f_ * 1 + nFxBs_ * 1; }
+inline Size CrossAssetModel::brownians() const { return nIrLgm1f_ * 1 + nFxBs_ * 1 + (nInfl_ * 1) + (nEqBs_ * 1); }
 
 inline Size CrossAssetModel::totalNumberOfParameters() const { return totalNumberOfParameters_; }
 

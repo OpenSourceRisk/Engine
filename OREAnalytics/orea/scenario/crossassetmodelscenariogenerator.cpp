@@ -103,6 +103,15 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
         const string& eqName = model_->eqbs(k)->eqName();
         eqKeys_.emplace_back(RiskFactorKey::KeyType::EQSpot, eqName);
     }
+
+    // Cache equity interest rate curve keys
+    Size n_eq_ten = simMarketConfig_->equityNames().size();
+    eqirCurveKeys_.reserve(n_eq * n_eq_ten);
+    for (Size j = 0; j < n_eq; ++j) {
+        for (Size k = 0; k < n_eq_ten; ++k) {
+            indexCurveKeys_.emplace_back(RiskFactorKey::KeyType::EQIRCurve, model_->eqbs(j)->eqName(), k); // j*n_eq + k
+        }
+    }
 }
 
 std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextPath() {
@@ -110,6 +119,7 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
     Sample<MultiPath> sample = pathGenerator_->next();
     Size n_ccy = model_->components(IR);
     Size n_eq = model_->components(EQ);
+    Size n_eq_ten = simMarketConfig_->equityTenors().size();
     Size n_indices = simMarketConfig_->indices().size();
     Size n_ten = simMarketConfig_->yieldCurveTenors().size();
     vector<string> ccyPairs(n_ccy - 1);
@@ -130,6 +140,16 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
             model_->lgm(model_->ccyIndex(index->currency())), fts, dc, false);
         fwdCurves.push_back(impliedFwdCurve);
         indices.push_back(index->clone(Handle<YieldTermStructure>(impliedFwdCurve)));
+    }
+
+    // Equity rate curves and curves
+    vector<boost::shared_ptr<LgmImpliedYieldTermStructure>> eqircurves;
+    for (Size j = 0; j < n_eq; ++j) {
+        std::string eqName = simMarketConfig_->equityNames()[j];
+        Handle<YieldTermStructure> eqirts = initMarket_->equityInterestRateCurve(eqName, configuration_);
+        auto impliedRateCurve = boost::make_shared<LgmImpliedYtsFwdFwdCorrected>(
+            model_->lgm(model_->ccyIndex(model_->eqbs(j)->currency())), eqirts, dc, false);
+        eqircurves.push_back(impliedRateCurve);
     }
 
     for (Size i = 0; i < dates_.size(); i++) {
@@ -200,6 +220,18 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
         for (Size k = 0; k < n_eq; k++) {
             Real eqSpot = std::exp(sample.value[model_->pIdx(EQ, k)][i + 1]); 
             scenarios[i]->add(eqKeys_[k], eqSpot);
+        }
+
+        // Equity interest rate curves
+        for (Size j = 0; j < n_eq; ++j) {
+            Real z = sample.value[model_->pIdx(IR, model_->ccyIndex(model_->eqbs(j)->currency()))][i + 1];
+            eqircurves[j]->move(dates_[i], z);
+            for (Size k = 0; k < n_eq_ten; ++k) {
+                Date d = dates_[i] + simMarketConfig_->equityTenors()[k];
+                Time T = dc.yearFraction(dates_[i], d);
+                Real discount = eqircurves[j]->discount(T);
+                scenarios[i]->add(eqirCurveKeys_[j * n_eq_ten + k], discount);
+            }
         }
 
         // TODO: Further risk factor classes are added here

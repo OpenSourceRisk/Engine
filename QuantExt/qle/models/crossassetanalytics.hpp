@@ -117,6 +117,23 @@ Real fx_expectation_1(const CrossAssetModel* model, const Size i, const Time t0,
 Real fx_expectation_2(const CrossAssetModel* model, const Size i, const Time t0, const Real xi_0, const Real zi_0,
                       const Real z0_0, const Real dt);
 
+/*! EQ state expectation
+
+  TODO : DOCUMENT THE EQ EXPECTATION FORMULA
+
+  This function covers the state-independent part of the EQ expectation
+*/
+Real eq_expectation_1(const CrossAssetModel* model, const Size i, const Time t0, const Real dt);
+/*! EQ state expectation
+
+TODO : DOCUMENT THE EQ EXPECTATION FORMULA
+
+This function covers the state-dependent part of the EQ expectation
+*/
+Real eq_expectation_2(const CrossAssetModel* model, const Size i, const Time t0, const Real xi_0, const Real zi_0,
+    const Real z0_0, const Real dt);
+
+
 /*! IR-IR Covariance
 
   This function evaluates the covariance term
@@ -215,8 +232,25 @@ Real ir_fx_covariance(const CrossAssetModel* model, const Size i, const Size j, 
       \f]
 
 */
-
 Real fx_fx_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
+
+/*! IR-EQ Covariance 
+
+  TODO : Document
+*/
+Real ir_eq_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
+
+/*! FX-EQ Covariance
+
+TODO : Document
+*/
+Real fx_eq_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
+
+/*! EQ-EQ Covariance
+
+TODO : Document
+*/
+Real eq_eq_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
 
 /*! IR H component */
 struct Hz {

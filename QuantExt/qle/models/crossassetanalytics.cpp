@@ -123,5 +123,26 @@ Real fx_fx_covariance(const CrossAssetModel* x, const Size i, const Size j, cons
     return res;
 }
 
+Real ir_eq_covariance(const CrossAssetModel* x, const Size i, const Size j, const Time t0, const Time dt) {
+    QL_FAIL("ir_eq_covariance not yet implemented");
+}
+
+Real fx_eq_covariance(const CrossAssetModel* x, const Size i, const Size j, const Time t0, const Time dt) {
+    QL_FAIL("fx_eq_covariance not yet implemented");
+}
+
+Real eq_eq_covariance(const CrossAssetModel* x, const Size i, const Size j, const Time t0, const Time dt) {
+    QL_FAIL("eq_eq_covariance not yet implemented");
+}
+
+Real eq_expectation_1(const CrossAssetModel* model, const Size i, const Time t0, const Real dt) {
+    QL_FAIL("eq_expecation_1 not yet implemented");
+}
+
+Real eq_expectation_2(const CrossAssetModel* model, const Size i, const Time t0, const Real xi_0, const Real zi_0,
+    const Real z0_0, const Real dt) {
+    QL_FAIL("eq_expectation_2 not yet implemented");
+}
+
 } // namesapce crossassetanalytics
 } // namespace QuantExt
