@@ -26,8 +26,11 @@ EqBsConstantParametrization::EqBsConstantParametrization(
     const std::string& eqName,
     const Handle<Quote>& eqSpotToday,
     const Handle<Quote>& fxSpotToday,
-    const Real sigma)
-    : EqBsParametrization(currency, eqName, eqSpotToday, fxSpotToday),
+    const Real sigma,
+    const Handle<YieldTermStructure>& eqIrCurveToday,
+    const Handle<YieldTermStructure>& eqDivYieldCurveToday)
+    : EqBsParametrization(currency, eqName, eqSpotToday, 
+        fxSpotToday, eqIrCurveToday, eqDivYieldCurveToday),
     sigma_(boost::make_shared<PseudoParameter>(1)) {
     sigma_->setParam(0, inverse(0, sigma));
 }

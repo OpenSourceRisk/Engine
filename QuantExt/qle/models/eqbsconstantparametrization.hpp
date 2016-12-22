@@ -40,7 +40,9 @@ public:
         const std::string& eqName,
         const Handle<Quote>& eqSpotToday,
         const Handle<Quote>& fxSpotToday, 
-        const Real sigma);
+        const Real sigma,
+        const Handle<YieldTermStructure>& eqIrCurveToday,
+        const Handle<YieldTermStructure>& eqDivYieldCurveToday);
     Real variance(const Time t) const;
     Real sigma(const Time t) const;
     const boost::shared_ptr<Parameter> parameter(const Size) const;

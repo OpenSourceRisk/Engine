@@ -24,10 +24,14 @@ EqBsParametrization::EqBsParametrization(
     const Currency& eqCcy,
     const std::string& eqName,
     const Handle<Quote>& equitySpotToday,
-    const Handle<Quote>& fxSpotToday)
+    const Handle<Quote>& fxSpotToday,
+    const Handle<YieldTermStructure>& equityIrCurveToday,
+    const Handle<YieldTermStructure>& equityDivCurveToday)
     : Parametrization(eqCcy),
     eqName_(eqName),
     eqSpotToday_(equitySpotToday), 
-    fxSpotToday_(fxSpotToday) {}
+    fxSpotToday_(fxSpotToday),
+    eqRateCurveToday_(equityIrCurveToday),
+    eqDivYieldCurveToday_(equityDivCurveToday) {}
 
 } // namespace QuantExt

@@ -43,7 +43,9 @@ public:
         const Handle<Quote>& eqSpotToday,
         const Handle<Quote>& fxSpotToday, 
         const Array& times,
-        const Array& sigma);
+        const Array& sigma,
+        const Handle<YieldTermStructure>& eqIrCurveToday,
+        const Handle<YieldTermStructure>& eqDivYieldCurveToday);
     /*! The term structure is needed in addition because it
         it's day counter and reference date is needed to
         convert dates to times. It should be the term structure
@@ -54,7 +56,9 @@ public:
         const Currency& currency, const std::string& eqName,
         const Handle<Quote>& eqSpotToday, const Handle<Quote>& fxSpotToday,
         const std::vector<Date>& dates, const Array& sigma,
-        const Handle<YieldTermStructure>& domesticTermStructure);
+        const Handle<YieldTermStructure>& domesticTermStructure,
+        const Handle<YieldTermStructure>& eqIrCurveToday,
+        const Handle<YieldTermStructure>& eqDivYieldCurveToday);
     Real variance(const Time t) const;
     Real sigma(const Time t) const;
     const Array& parameterTimes(const Size) const;

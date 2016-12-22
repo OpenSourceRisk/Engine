@@ -72,12 +72,14 @@ EqBsBuilder::EqBsBuilder(const boost::shared_ptr<ore::data::Market>& market,
     Handle<Quote> eqSpot = market_->equitySpot(eqName, configuration_);
     string ccyPair = ccy.code() + baseCcy.code();
     Handle<Quote> fxSpot = market_->fxSpot(ccyPair, configuration_);
+    Handle<YieldTermStructure> eqRateCurve = market_->equityInterestRateCurve(eqName, configuration_);
+    Handle<YieldTermStructure> eqDivCurve = market_->equityDividendCurve(eqName, configuration_);
 
     if (data->sigmaParamType() == ParamType::Piecewise)
         parametrization_ =
-            boost::make_shared<QuantExt::EqBsPiecewiseConstantParametrization>(ccy, eqName, eqSpot, fxSpot, sigmaTimes, sigma);
+            boost::make_shared<QuantExt::EqBsPiecewiseConstantParametrization>(ccy, eqName, eqSpot, fxSpot, sigmaTimes, sigma, eqRateCurve, eqDivCurve);
     else if (data->sigmaParamType() == ParamType::Constant)
-        parametrization_ = boost::make_shared<QuantExt::EqBsConstantParametrization>(ccy, eqName, eqSpot, fxSpot, sigma[0]);
+        parametrization_ = boost::make_shared<QuantExt::EqBsConstantParametrization>(ccy, eqName, eqSpot, fxSpot, sigma[0], eqRateCurve, eqDivCurve);
     else
         QL_FAIL("interpolation type not supported for Equity");
 }

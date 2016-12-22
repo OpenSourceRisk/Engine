@@ -100,7 +100,26 @@ Disposable<Array> CrossAssetStateProcess::drift(Time t, const Array& x) const {
         }
         /* log equity spot drifts (the cache-able parts) */
         for (Size i = 0; i < n_eq; ++i) {
-            QL_FAIL("EQUITY DRIFT 1 (EULER) STILL IN PROGRESS");
+            Size eqCcyIdx = model_->ccyIndex(model_->eqbs(i)->currency());
+            // ir params (for equity currency)
+            Real eps_ccy = (eqCcyIdx == 0) ? 0.0 : 1.0;
+            Real Hr = model_->irlgm1f(eqCcyIdx)->H(t);
+            Real alphar = model_->irlgm1f(eqCcyIdx)->alpha(t);
+            // eq vol
+            Real sigmai = model_->eqbs(i)->sigma(t);
+            // fx vol (eq ccy / base ccy)
+            Real sigmax = (eqCcyIdx == 0) ? 0.0 :
+                model_->fxbs(eqCcyIdx - 1)->sigma(t);
+            // ir-eq corr
+            Real rhozsri = model_->correlation(EQ, i, IR, eqCcyIdx);
+            // fx-eq corr
+            Real rhoxsri = model_->correlation(FX, eqCcyIdx - 1, EQ, i);
+            // ir instantaneous forward rate (from curve used for eq forward projection)
+            Real f_r = model_->eqbs(i)->equityIrCurveToday()->forwardRate(t, t, Continuous);
+            // div yield instantaneous forward rate
+            Real f_q = model_->eqbs(i)->equityDivYieldCurveToday()->forwardRate(t, t, Continuous);
+            res[model_->pIdx(EQ, i, 0)] = f_r - f_q + (rhozsri*Hr*alphar*sigmai) -
+                (eps_ccy*rhoxsri*sigmax*sigmai) - (0.5*sigmai*sigmai);
         }
         /* the inflation drifts (the cache-able parts) */
         for (Size i = 0; i < n_infl; ++i) {
@@ -121,7 +140,14 @@ Disposable<Array> CrossAssetStateProcess::drift(Time t, const Array& x) const {
     }
     for (Size i = 0; i < n_eq; ++i) {
         // log equity spot drifts (path-dependent parts)
-        QL_FAIL("EQUITY DRIFT 2 (EULER) STILL IN PROGRESS");
+        // notice the assumption in below that dividend yield curve is static
+        Size eqCcyIdx = model_->ccyIndex(model_->eqbs(i)->currency());
+        // ir params (for equity currency)
+        Real Hr = model_->irlgm1f(eqCcyIdx)->H(t);
+        Real Hprimer = model_->irlgm1f(eqCcyIdx)->Hprime(t);
+        Real zetar = model_->irlgm1f(eqCcyIdx)->zeta(t);
+        res[model_->pIdx(EQ, i, 0)] += 
+            (x[model_->pIdx(IR, eqCcyIdx, 0)] * Hprimer) + (zetar*Hprimer*H0);
     }
     for (Size i = 0; i < n_infl; ++i) {
         // inflation drifts (path-dependent parts)

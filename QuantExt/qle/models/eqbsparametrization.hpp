@@ -45,7 +45,9 @@ public:
         const Currency& eqCcy,
         const std::string& eqName,
         const Handle<Quote>& equitySpotToday,
-        const Handle<Quote>& fxSpotToday);
+        const Handle<Quote>& fxSpotToday,
+        const Handle<YieldTermStructure>& equityIrCurveToday,
+        const Handle<YieldTermStructure>& equityDivYieldCurveToday);
     /*! must satisfy variance(0) = 0.0, variance'(t) >= 0 */
     virtual Real variance(const Time t) const = 0;
     /*! is supposed to be positive */
@@ -53,10 +55,13 @@ public:
     virtual Real stdDeviation(const Time t) const;
     const Handle<Quote> eqSpotToday() const;
     const Handle<Quote> fxSpotToday() const;
+    const Handle<YieldTermStructure> equityIrCurveToday() const;
+    const Handle<YieldTermStructure> equityDivYieldCurveToday() const;
     const std::string& eqName() const { return eqName_; }
 
 private:
     const Handle<Quote> eqSpotToday_, fxSpotToday_;
+    const Handle<YieldTermStructure> eqRateCurveToday_, eqDivYieldCurveToday_;
     std::string eqName_;
 };
 
@@ -71,6 +76,10 @@ inline Real EqBsParametrization::stdDeviation(const Time t) const { return std::
 inline const Handle<Quote> EqBsParametrization::eqSpotToday() const { return eqSpotToday_; }
 
 inline const Handle<Quote> EqBsParametrization::fxSpotToday() const { return fxSpotToday_; }
+
+inline const Handle<YieldTermStructure> EqBsParametrization::equityIrCurveToday() const { return eqRateCurveToday_; }
+
+inline const Handle<YieldTermStructure> EqBsParametrization::equityDivYieldCurveToday() const { return eqDivYieldCurveToday_; }
 
 } // namespace QuantExt
 
