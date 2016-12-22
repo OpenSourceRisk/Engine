@@ -146,57 +146,6 @@ private:
     vector<string> gearingDates_;
 };
 
-// TODO: Push this to OREDataPlus
-class CmsLegData : public XMLSerializable {
-public:
-    //! Default constructor
-    // TODO: This default constructor... why is it setting anything?
-    CmsLegData() : fixingDays_(0), isInArrears_(true) {}
-    //! Constructor
-    CmsLegData(const string& index, int fixingDays, bool isInArrears, const vector<double>& spreads,
-        const vector<string>& spreadDates = vector<string>(), const vector<double>& caps = vector<double>(),
-        const vector<string>& capDates = vector<string>(), const vector<double>& floors = vector<double>(),
-        const vector<string>& floorDates = vector<string>(),
-        const vector<double>& gearings = vector<double>(),
-        const vector<string>& gearingDates = vector<string>())
-        : index_(index), fixingDays_(fixingDays), isInArrears_(isInArrears), spreads_(spreads),
-        spreadDates_(spreadDates), caps_(caps), capDates_(capDates), floors_(floors), floorDates_(floorDates),
-        gearings_(gearings), gearingDates_(gearingDates) {}
-
-    //! \name Inspectors
-    //@{
-    const string& index() const { return index_; }
-    int fixingDays() const { return fixingDays_; }
-    bool isInArrears() const { return isInArrears_; }
-    const vector<double>& spreads() const { return spreads_; }
-    const vector<string>& spreadDates() const { return spreadDates_; }
-    const vector<double>& caps() const { return caps_; }
-    const vector<string>& capDates() const { return capDates_; }
-    const vector<double>& floors() const { return floors_; }
-    const vector<string>& floorDates() const { return floorDates_; }
-    const vector<double>& gearings() const { return gearings_; }
-    const vector<string>& gearingDates() const { return gearingDates_; }
-    //@}
-
-    //! \name Serialisation
-    //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
-    //@}
-private:
-    string index_;
-    int fixingDays_;
-    bool isInArrears_;
-    vector<double> spreads_;
-    vector<string> spreadDates_;
-    vector<double> caps_;
-    vector<string> capDates_;
-    vector<double> floors_;
-    vector<string> floorDates_;
-    vector<double> gearings_;
-    vector<string> gearingDates_;
-};
-
 //! Serializable object holding leg data
 class LegData : public XMLSerializable {
 public:
@@ -243,21 +192,6 @@ public:
           isNotResetXCCY_(isNotResetXCCY), foreignCurrency_(foreignCurrency), foreignAmount_(foreignAmount),
           fxIndex_(fxIndex), fixingDays_(fixingDays) {}
 
-    // TODO: Push this to OREDataPlus
-    //! Constructor with CmsLegData
-    LegData(bool isPayer, const string& currency, CmsLegData& data, ScheduleData& schedule,
-        const string& dayCounter, const vector<double>& notionals,
-        const vector<string>& notionalDates = vector<string>(), const string& paymentConvention = "F",
-        bool notionalInitialExchange = false, bool notionalFinalExchange = false,
-        bool notionalAmortizingExchange = false, bool isNotResetXCCY = true, const string& foreignCurrency = "",
-        double foreignAmount = 0, const string& fxIndex = "", int fixingDays = 0)
-        : isPayer_(isPayer), currency_(currency), legType_("CMS"), cmsLegData_(data), schedule_(schedule),
-        dayCounter_(dayCounter), notionals_(notionals), notionalDates_(notionalDates),
-        paymentConvention_(paymentConvention), notionalInitialExchange_(notionalInitialExchange),
-        notionalFinalExchange_(notionalFinalExchange), notionalAmortizingExchange_(notionalAmortizingExchange),
-        isNotResetXCCY_(isNotResetXCCY), foreignCurrency_(foreignCurrency), foreignAmount_(foreignAmount),
-        fxIndex_(fxIndex), fixingDays_(fixingDays) {}
-
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node);
@@ -279,7 +213,6 @@ public:
     const string& legType() const { return legType_; }
     const CashflowData& cashflowData() const { return cashflowData_; }
     const FloatingLegData& floatingLegData() const { return floatingLegData_; }
-    const CmsLegData& cmsLegData() const { return cmsLegData_; }
     const FixedLegData& fixedLegData() const { return fixedLegData_; }
     bool isNotResetXCCY() const { return isNotResetXCCY_; }
     const string& foreignCurrency() const { return foreignCurrency_; }
@@ -293,7 +226,6 @@ private:
     string legType_;
     CashflowData cashflowData_;
     FloatingLegData floatingLegData_;
-    CmsLegData cmsLegData_;
     FixedLegData fixedLegData_;
     ScheduleData schedule_;
     string dayCounter_;
@@ -316,9 +248,6 @@ Leg makeFixedLeg(LegData& data);
 Leg makeIborLeg(LegData& data, boost::shared_ptr<IborIndex> index,
                 const boost::shared_ptr<EngineFactory>& engineFactory);
 Leg makeOISLeg(LegData& data, boost::shared_ptr<OvernightIndex> index);
-// TODO: CMS is only for OREDataPlus
-Leg makeCMSLeg(LegData& data, boost::shared_ptr<SwapIndex> index,
-                const boost::shared_ptr<EngineFactory>& engineFactory);
 Leg makeSimpleLeg(LegData& data);
 Leg makeNotionalLeg(const Leg& refLeg, bool initNomFlow, bool finalNomFlow, bool amortNomFlow = true);
 
