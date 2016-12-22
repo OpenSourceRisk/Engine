@@ -43,7 +43,7 @@
       <Parameter name="simulationParamFile">simulationparams.xml</Parameter>
       <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
-      <Parameter name="storeScenarios">N</Parameter>
+      <!-- Parameter name="scenariodump">scenariodump.csv</Parameter> -->
       <Parameter name="cubeFile">cube.dat</Parameter>
       <Parameter name="additionalScenarioDataFileName">scenariodata.dat</Parameter>
     </Analytic>
