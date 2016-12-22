@@ -113,7 +113,8 @@ Disposable<Array> CrossAssetStateProcess::drift(Time t, const Array& x) const {
             // ir-eq corr
             Real rhozsri = model_->correlation(EQ, i, IR, eqCcyIdx);
             // fx-eq corr
-            Real rhoxsri = model_->correlation(FX, eqCcyIdx - 1, EQ, i);
+            Real rhoxsri = (eqCcyIdx == 0) ? 0.0 : // no fx process for base-ccy
+                model_->correlation(FX, eqCcyIdx - 1, EQ, i);
             // ir instantaneous forward rate (from curve used for eq forward projection)
             Real f_r = model_->eqbs(i)->equityIrCurveToday()->forwardRate(t, t, Continuous);
             // div yield instantaneous forward rate
