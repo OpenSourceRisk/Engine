@@ -99,28 +99,29 @@ Disposable<Array> CrossAssetStateProcess::drift(Time t, const Array& x) const {
                 model_->irlgm1f(i)->termStructure()->forwardRate(t, t, Continuous) - 0.5 * sigmai * sigmai;
         }
         /* log equity spot drifts (the cache-able parts) */
-        for (Size i = 0; i < n_eq; ++i) {
-            Size eqCcyIdx = model_->ccyIndex(model_->eqbs(i)->currency());
+        for (Size k = 0; k < n_eq; ++k) {
+            Size i = model_->ccyIndex(model_->eqbs(k)->currency());
             // ir params (for equity currency)
-            Real eps_ccy = (eqCcyIdx == 0) ? 0.0 : 1.0;
-            Real Hr = model_->irlgm1f(eqCcyIdx)->H(t);
-            Real alphar = model_->irlgm1f(eqCcyIdx)->alpha(t);
+            Real eps_ccy = (i == 0) ? 0.0 : 1.0;
+            //Real Hi = model_->irlgm1f(i)->H(t);
+            //Real alphai = model_->irlgm1f(i)->alpha(t);
             // eq vol
-            Real sigmai = model_->eqbs(i)->sigma(t);
+            Real sigmask = model_->eqbs(k)->sigma(t);
             // fx vol (eq ccy / base ccy)
-            Real sigmax = (eqCcyIdx == 0) ? 0.0 :
-                model_->fxbs(eqCcyIdx - 1)->sigma(t);
+            Real sigmaxi = (i == 0) ? 0.0 :
+                model_->fxbs(i - 1)->sigma(t);
             // ir-eq corr
-            Real rhozsri = model_->correlation(EQ, i, IR, eqCcyIdx);
+            //Real rhozsik = model_->correlation(EQ, k, IR, i); // eq cur
+            Real rhozs0k = model_->correlation(EQ, k, IR, 0); // base cur
             // fx-eq corr
-            Real rhoxsri = (eqCcyIdx == 0) ? 0.0 : // no fx process for base-ccy
-                model_->correlation(FX, eqCcyIdx - 1, EQ, i);
+            Real rhoxsik = (i == 0) ? 0.0 : // no fx process for base-ccy
+                model_->correlation(FX, i-1, EQ, k);
             // ir instantaneous forward rate (from curve used for eq forward projection)
-            Real f_r = model_->eqbs(i)->equityIrCurveToday()->forwardRate(t, t, Continuous);
+            Real fr_i = model_->eqbs(k)->equityIrCurveToday()->forwardRate(t, t, Continuous);
             // div yield instantaneous forward rate
-            Real f_q = model_->eqbs(i)->equityDivYieldCurveToday()->forwardRate(t, t, Continuous);
-            res[model_->pIdx(EQ, i, 0)] = f_r - f_q + (rhozsri*Hr*alphar*sigmai) -
-                (eps_ccy*rhoxsri*sigmax*sigmai) - (0.5*sigmai*sigmai);
+            Real fq_k = model_->eqbs(k)->equityDivYieldCurveToday()->forwardRate(t, t, Continuous);
+            res[model_->pIdx(EQ, k, 0)] = fr_i - fq_k + (rhozs0k*H0*alpha0*sigmask) -
+                (eps_ccy*rhoxsik*sigmaxi*sigmask) - (0.5*sigmask*sigmask);
         }
         /* the inflation drifts (the cache-able parts) */
         for (Size i = 0; i < n_infl; ++i) {
@@ -139,16 +140,16 @@ Disposable<Array> CrossAssetStateProcess::drift(Time t, const Array& x) const {
         res[model_->pIdx(FX, i - 1, 0)] += x[model_->pIdx(IR, 0, 0)] * Hprime0 + zeta0 * Hprime0 * H0 -
                                            x[model_->pIdx(IR, i, 0)] * Hprimei - zetai * Hprimei * Hi;
     }
-    for (Size i = 0; i < n_eq; ++i) {
+    for (Size k = 0; k < n_eq; ++k) {
         // log equity spot drifts (path-dependent parts)
         // notice the assumption in below that dividend yield curve is static
-        Size eqCcyIdx = model_->ccyIndex(model_->eqbs(i)->currency());
+        Size i = model_->ccyIndex(model_->eqbs(k)->currency());
         // ir params (for equity currency)
-        Real Hr = model_->irlgm1f(eqCcyIdx)->H(t);
-        Real Hprimer = model_->irlgm1f(eqCcyIdx)->Hprime(t);
-        Real zetar = model_->irlgm1f(eqCcyIdx)->zeta(t);
-        res[model_->pIdx(EQ, i, 0)] += 
-            (x[model_->pIdx(IR, eqCcyIdx, 0)] * Hprimer) + (zetar*Hprimer*H0);
+        Real Hi = model_->irlgm1f(i)->H(t);
+        Real Hprimei = model_->irlgm1f(i)->Hprime(t);
+        Real zetai = model_->irlgm1f(i)->zeta(t);
+        res[model_->pIdx(EQ, k, 0)] += 
+            (x[model_->pIdx(IR, i, 0)] * Hprimei) + (zetai*Hprimei*Hi);
     }
     for (Size i = 0; i < n_infl; ++i) {
         // inflation drifts (path-dependent parts)
