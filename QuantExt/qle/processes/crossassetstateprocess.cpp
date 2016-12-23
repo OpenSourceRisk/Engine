@@ -303,6 +303,7 @@ Disposable<Array> CrossAssetStateProcess::ExactDiscretization::driftImpl1(const 
     Size n = model_->components(IR);
     Size m = model_->components(FX);
     Size n_eq = model_->components(EQ);
+    Size n_infl = model_->components(INF);
     Array res(model_->dimension(), 0.0);
     for (Size i = 0; i < n; ++i) {
         res[model_->pIdx(IR, i, 0)] = ir_expectation_1(model_, i, t0, dt);
@@ -313,6 +314,9 @@ Disposable<Array> CrossAssetStateProcess::ExactDiscretization::driftImpl1(const 
     for (Size k = 0; k < n_eq; ++k) {
         res[model_->pIdx(EQ, k, 0)] = eq_expectation_1(model_, k, t0, dt);
     }
+    for (Size l = 0; l < n_infl; ++l) {
+        QL_FAIL("Inflation driftImpl1 not yet implemented");
+    }
     // TODO : inflation
     return res;
 }
@@ -322,6 +326,7 @@ Disposable<Array> CrossAssetStateProcess::ExactDiscretization::driftImpl2(const 
     Size n = model_->components(IR);
     Size m = model_->components(FX);
     Size n_eq = model_->components(EQ);
+    Size n_infl = model_->components(INF);
     Array res(model_->dimension(), 0.0);
     for (Size i = 0; i < n; ++i) {
         res[model_->pIdx(IR, i, 0)] += ir_expectation_2(model_, i, x0[model_->pIdx(IR, i, 0)]);
@@ -333,9 +338,12 @@ Disposable<Array> CrossAssetStateProcess::ExactDiscretization::driftImpl2(const 
     for (Size k = 0; k < n_eq; ++k) {
         Size eqCcyIdx = model_->ccyIndex(model_->eqbs(k)->currency());
         res[model_->pIdx(EQ, k, 0)] += eq_expectation_2(model_, k, t0, x0[model_->pIdx(EQ, k, 0)],
-            x0[model_->pIdx(IR, eqCcyIdx, 0)], x0[model_->pIdx(IR, 0, 0)], dt);
+            x0[model_->pIdx(IR, eqCcyIdx, 0)], dt);
     }
     // TODO : inflation
+    for (Size l = 0; l < n_infl; ++l) {
+        QL_FAIL("Inflation driftImpl2 not yet implemented");
+    }
     return res;
 }
 
@@ -345,6 +353,7 @@ Disposable<Matrix> CrossAssetStateProcess::ExactDiscretization::covarianceImpl(c
     Size n = model_->components(IR);
     Size m = model_->components(FX);
     Size n_eq = model_->components(EQ);
+    Size n_infl = model_->components(INF);
     // ir-ir
     for (Size i = 0; i < n; ++i) {
         for (Size j = 0; j <= i; ++j) {
@@ -388,6 +397,9 @@ Disposable<Matrix> CrossAssetStateProcess::ExactDiscretization::covarianceImpl(c
         }
     }
     // TODO : inflation co-variances and cross-inflation co-variances
+    for (Size i = 0; i < n_infl; ++i) {
+        QL_FAIL("CovarianceImpl not yet implemented for inflation");
+    }
     return res;
 }
 

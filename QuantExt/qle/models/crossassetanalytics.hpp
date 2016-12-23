@@ -130,8 +130,8 @@ TODO : DOCUMENT THE EQ EXPECTATION FORMULA
 
 This function covers the state-dependent part of the EQ expectation
 */
-Real eq_expectation_2(const CrossAssetModel* model, const Size i, const Time t0, const Real xi_0, const Real zi_0,
-    const Real z0_0, const Real dt);
+Real eq_expectation_2(const CrossAssetModel* model, const Size k, const Time t0, const Real si_0, 
+                      const Real zi_0, const Real dt);
 
 
 /*! IR-IR Covariance
