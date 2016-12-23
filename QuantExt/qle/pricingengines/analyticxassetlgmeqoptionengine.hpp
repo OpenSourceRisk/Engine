@@ -41,12 +41,6 @@ public:
         const Size ccyIdx);
     void calculate() const;
 
-    /*! if cache is enabled, the integrals independent of fx
-      volatility are cached, which can speed up calibtration;
-      remember to flush the cache when the ir parameters
-      change, this can be done by another call to cache */
-    void cache(bool enable = true);
-
     /*! the actual option price calculation, exposed to public,
       since it is useful to directly use the core computation
       sometimes */
@@ -56,17 +50,7 @@ public:
 private:
     const boost::shared_ptr<CrossAssetModel> model_;
     const Size eqIdx_, ccyIdx_;
-    bool cacheEnabled_;
-    mutable bool cacheDirty_;
-    mutable Real cachedIntegrals_, cachedT0_, cachedT_;
 };
-
-// inline
-
-inline void AnalyticXAssetLgmEquityOptionEngine::cache(bool enable) {
-    cacheEnabled_ = enable;
-    cacheDirty_ = true;
-}
 
 } // namespace QuantExt
 

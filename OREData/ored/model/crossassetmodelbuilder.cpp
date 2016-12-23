@@ -273,9 +273,6 @@ CrossAssetModelBuilder::build(const boost::shared_ptr<CrossAssetModelData>& conf
         Size eqCcyIdx = model->ccyIndex(eqCcy);
         boost::shared_ptr<QuantExt::AnalyticXAssetLgmEquityOptionEngine> engine =
             boost::make_shared<QuantExt::AnalyticXAssetLgmEquityOptionEngine>(model, i, eqCcyIdx);
-        // enable caching for calibration
-        // TODO: review this
-        engine->cache(true);
         for (Size j = 0; j < eqOptionBaskets_[i].size(); j++)
             eqOptionBaskets_[i][j]->setPricingEngine(engine);
 
