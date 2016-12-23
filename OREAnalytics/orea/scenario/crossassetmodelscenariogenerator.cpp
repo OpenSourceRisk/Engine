@@ -109,7 +109,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     eqirCurveKeys_.reserve(n_eq * n_eq_ten);
     for (Size j = 0; j < n_eq; ++j) {
         for (Size k = 0; k < n_eq_ten; ++k) {
-            indexCurveKeys_.emplace_back(RiskFactorKey::KeyType::EQIRCurve, model_->eqbs(j)->eqName(), k); // j*n_eq + k
+            eqirCurveKeys_.emplace_back(RiskFactorKey::KeyType::YieldCurve, model_->eqbs(j)->eqName(), k); // j*n_eq + k
         }
     }
 }

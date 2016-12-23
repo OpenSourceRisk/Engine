@@ -413,7 +413,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
             Handle<Quote> qh(q);
             quotes.push_back(qh);
             simData_.emplace(std::piecewise_construct,
-                std::forward_as_tuple(RiskFactorKey::KeyType::EQIRCurve, eqName, i),
+                std::forward_as_tuple(RiskFactorKey::KeyType::YieldCurve, eqName, i),
                 std::forward_as_tuple(q));
         }
         boost::shared_ptr<YieldTermStructure> eqirCurve;
