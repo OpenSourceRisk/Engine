@@ -84,8 +84,6 @@ void AnalyticXAssetLgmEquityOptionEngine::calculate() const {
 
     results_.value = value(0.0, t, payoff, cashflowsDiscount, eqForward);
 
-    QL_FAIL("AnalyticXAssetLgmEquityOptionEngine::calculate() not yet implemented");
-
 } // calculate()
 
 } // namespace QuantExt

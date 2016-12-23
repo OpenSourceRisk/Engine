@@ -206,7 +206,7 @@ Disposable<Matrix> CorrelationMatrixBuilder::correlationMatrixImpl(const vector<
     // build extra factors
     // { "GOOGLE", "AMAZON" } -> { "EQ:GOOGLE", "EQ:AMAZON" }
     for (Size i = 0; i < q; i++)
-        factors.push_back("EQ:" + names[i]);
+        factors.push_back("EQ:" + equities[i]);
 
     // Build extended matrix. 2n-1+2m+p => 2n-1+2m+p+q
     Matrix mat = extendMatrix(mat3, q);

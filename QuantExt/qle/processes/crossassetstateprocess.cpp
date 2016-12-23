@@ -392,7 +392,7 @@ Disposable<Matrix> CrossAssetStateProcess::ExactDiscretization::covarianceImpl(c
     // eq-eq
     for (Size i = 0; i < n_eq; ++i) {
         for (Size j = 0; j <= i; ++j) {
-            res[model_->pIdx(EQ, i, 0)][model_->pIdx(EQ, j, 0)] = res[model_->pIdx(FX, j, 0)][model_->pIdx(FX, i, 0)] =
+            res[model_->pIdx(EQ, i, 0)][model_->pIdx(EQ, j, 0)] = res[model_->pIdx(EQ, j, 0)][model_->pIdx(EQ, i, 0)] =
                 eq_eq_covariance(model_, i, j, t0, dt);
         }
     }

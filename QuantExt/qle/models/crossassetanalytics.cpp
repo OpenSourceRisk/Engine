@@ -123,7 +123,7 @@ Real fx_fx_covariance(const CrossAssetModel* x, const Size i, const Size j, cons
     return res;
 }
 
-Real ir_eq_covariance(const CrossAssetModel* x, const Size k, const Size j, const Time t0, const Time dt) {
+Real ir_eq_covariance(const CrossAssetModel* x, const Size j, const Size k, const Time t0, const Time dt) {
     Size i = x->ccyIndex(x->eqbs(k)->currency()); // the equity underlying currency
     Real Hi_b = Hz(i).eval(x, t0 + dt);
     Real res = Hi_b * integral(x,P(rzz(i,j),az(i),az(j)),t0,t0+dt);

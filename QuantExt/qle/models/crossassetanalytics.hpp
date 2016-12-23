@@ -238,7 +238,7 @@ Real fx_fx_covariance(const CrossAssetModel* model, const Size i, const Size j, 
 
   TODO : Document
 */
-Real ir_eq_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt);
+Real ir_eq_covariance(const CrossAssetModel* model, const Size irIdx, const Size eqIdx, const Time t0, const Time dt);
 
 /*! FX-EQ Covariance
 

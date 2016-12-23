@@ -76,7 +76,7 @@ void EqBsData::fromXML(XMLNode* node) {
 
 XMLNode* EqBsData::toXML(XMLDocument& doc) {
 
-    XMLNode* crossCcyLGMNode = doc.allocNode("CrossAssetEquity");
+    XMLNode* crossCcyLGMNode = doc.allocNode("CrossAssetLGM");
     XMLUtils::addAttribute(doc, crossCcyLGMNode, "name", name_);
 
     XMLUtils::addChild(doc, crossCcyLGMNode, "Currency", ccy_);

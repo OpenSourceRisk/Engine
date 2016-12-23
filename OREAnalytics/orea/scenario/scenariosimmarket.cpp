@@ -385,6 +385,9 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         Handle<Quote> qh(q);
         equitySpots_.insert(pair<pair<string, string>, Handle<Quote>>(
             make_pair(Market::defaultConfiguration, eqName), qh));
+        simData_.emplace(std::piecewise_construct,
+            std::forward_as_tuple(RiskFactorKey::KeyType::EQSpot, eqName),
+            std::forward_as_tuple(q));
     }
     LOG("equity spots done");
 
@@ -396,7 +399,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         QL_REQUIRE(parameters->equityTenors().front() > 0 * Days, 
             "equity curve tenors must not include t=0");
     }
-    for (auto& tenor : parameters->yieldCurveTenors()) {
+    for (auto& tenor : parameters->equityTenors()) {
         equityCurveTimes.push_back(dc.yearFraction(asof_, asof_ + tenor));
         equityCurveDates.push_back(asof_ + tenor);
     }
@@ -407,6 +410,8 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         DLOG("building " << eqName << " equity rate projection curve..");
         Handle<YieldTermStructure> wrapper = initMarket->equityInterestRateCurve(eqName, configuration);
         vector<Handle<Quote>> quotes;
+        boost::shared_ptr<SimpleQuote> q(new SimpleQuote(1.0));
+        quotes.push_back(Handle<Quote>(q));
 
         for (Size i = 0; i < equityCurveTimes.size() - 1; i++) {
             boost::shared_ptr<SimpleQuote> q(new SimpleQuote(wrapper->discount(equityCurveTimes[i + 1])));
@@ -441,6 +446,8 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         DLOG("building " << eqName << " equity dividend yield curve..");
         Handle<YieldTermStructure> wrapper = initMarket->equityDividendCurve(eqName, configuration);
         vector<Handle<Quote>> quotes;
+        boost::shared_ptr<SimpleQuote> q(new SimpleQuote(1.0));
+        quotes.push_back(Handle<Quote>(q));
 
         for (Size i = 0; i < equityCurveTimes.size() - 1; i++) {
             boost::shared_ptr<SimpleQuote> q(new SimpleQuote(wrapper->discount(equityCurveTimes[i + 1])));
@@ -510,13 +517,22 @@ void ScenarioSimMarket::update(const Date& d) {
     const vector<RiskFactorKey>& keys = scenario->keys();
 
     Size count = 0;
+    bool missingPoint = false;
     for (const auto& key : keys) {
         // TODO: Is this really an error?
         auto it = simData_.find(key);
-        QL_REQUIRE(it != simData_.end(), "simulation data point missing for key " << key);
-        it->second->setValue(scenario->get(key));
-        count++;
+        if (it == simData_.end()) {
+            ALOG("simulation data point missing for key " << key);
+            missingPoint = true;
+        }
+        else {
+            //LOG("simulation data point found for key " << key);
+            it->second->setValue(scenario->get(key));
+            count++;
+        }
     }
+    QL_REQUIRE(!missingPoint, 
+        "simulation data points missing from scenario, exit.");
 
     if (count != simData_.size()) {
         ALOG("mismatch between scenario and sim data size, " << count << " vs " << simData_.size());

@@ -156,8 +156,8 @@ Size CrossAssetModel::idx(const AssetType t, const Size i) const {
         QL_REQUIRE(i < nFxBs_, "fx index (" << i << ") must be in 0..." << (nFxBs_ - 1));
         return nIrLgm1f_ + i;
     case INF:
-        QL_REQUIRE(nInfl_ > 0, "eq index (" << i << ") invalid, no eq components");
-        QL_REQUIRE(i < nInfl_, "eq index (" << i << ") must be in 0..." << (nInfl_ - 1));
+        QL_REQUIRE(nInfl_ > 0, "inflation index (" << i << ") invalid, no eq components");
+        QL_REQUIRE(i < nInfl_, "inflation index (" << i << ") must be in 0..." << (nInfl_ - 1));
         return nIrLgm1f_ + nFxBs_ + i;
     case EQ:
         QL_REQUIRE(nEqBs_ > 0, "eq index (" << i << ") invalid, no eq components");
@@ -225,6 +225,7 @@ Size CrossAssetModel::aIdx(const AssetType t, const Size i, const Size offset) c
                                                       << " must be in 0..." << arguments(t, i) - 1);
     // the return values below assume specific models and have to be
     // generalized when other model types are added
+    Size tmp_infl_args_count = 1; // TODO : update this when inflation being implemented
     switch (t) {
     case IR:
         QL_REQUIRE(i < nIrLgm1f_, "irlgm1f index (" << i << ") must be in 0..." << (nIrLgm1f_ - 1));
@@ -234,9 +235,10 @@ Size CrossAssetModel::aIdx(const AssetType t, const Size i, const Size offset) c
         QL_REQUIRE(i < nFxBs_, "fxbs index (" << i << ") must be in 0..." << (nFxBs_ - 1));
         return 2 * nIrLgm1f_ + i;
     case INF:
+        // don't forget tmp_infl_args_count when implementing this.
         QL_FAIL("Inflation not yet supported - this is to be completed later as part of the inflation implementation");
     case EQ:
-        QL_FAIL("Equity implementation still in progress - this aIdx will be done soon");
+        return (arguments(IR, i)*nIrLgm1f_) + (arguments(FX,i)*nFxBs_) + (tmp_infl_args_count*nInfl_) + (arguments(EQ,i)*i) + offset;
     default:
         QL_FAIL("CR, COM not yet supported or type (" << t << ") unknown");
     }

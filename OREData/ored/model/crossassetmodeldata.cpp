@@ -109,6 +109,11 @@ void CrossAssetModelData::fromXML(XMLNode* root) {
         LOG("CrossAssetModelData: ccy " << ccy);
     }
 
+    equities_ = XMLUtils::getChildrenValues(modelNode, "Equities", "Equity");
+    for (auto eq : equities_) {
+        LOG("CrossAssetModelData equity " << eq);
+    }
+
     bootstrapTolerance_ = XMLUtils::getChildValueAsDouble(modelNode, "BootstrapTolerance", true);
     LOG("CrossAssetModelData: bootstrap tolerance = " << bootstrapTolerance_);
 
@@ -176,8 +181,8 @@ void CrossAssetModelData::fromXML(XMLNode* root) {
     std::map<std::string, boost::shared_ptr<EqBsData>> eqDataMap;
     XMLNode* eqNode = XMLUtils::getChildNode(modelNode, "EquityModels");
     if (eqNode) {
-        for (XMLNode* child = XMLUtils::getChildNode(eqNode, "CrossAssetEquity"); child;
-            child = XMLUtils::getNextSibling(child, "CrossAssetEquity")) {
+        for (XMLNode* child = XMLUtils::getChildNode(eqNode, "CrossAssetLGM"); child;
+            child = XMLUtils::getNextSibling(child, "CrossAssetLGM")) {
 
             boost::shared_ptr<EqBsData> config(new EqBsData());
             config->fromXML(child);
@@ -317,6 +322,7 @@ XMLNode* CrossAssetModelData::toXML(XMLDocument& doc) {
 
     XMLUtils::addChild(doc, crossAssetModelNode, "DomesticCcy", domesticCurrency_);
     XMLUtils::addChildren(doc, crossAssetModelNode, "Currencies", "Currency", currencies_);
+    XMLUtils::addChildren(doc, crossAssetModelNode, "Equities", "Equity", equities_);
     XMLUtils::addChild(doc, crossAssetModelNode, "BootstrapTolerance", bootstrapTolerance_);
 
     XMLNode* interestRateModelsNode = XMLUtils::addChild(doc, crossAssetModelNode, "InterestRateModels");

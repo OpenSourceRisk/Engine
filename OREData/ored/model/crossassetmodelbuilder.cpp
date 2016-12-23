@@ -277,7 +277,7 @@ CrossAssetModelBuilder::build(const boost::shared_ptr<CrossAssetModelData>& conf
             eqOptionBaskets_[i][j]->setPricingEngine(engine);
 
         model->calibrateBsVolatilitiesIterative(
-            CrossAssetModelTypes::EQ, i, fxOptionBaskets_[i],
+            CrossAssetModelTypes::EQ, i, eqOptionBaskets_[i],
             *optimizationMethod_, endCriteria_);
 
         LOG("EQ " << eq->eqName() << " calibration errors:");

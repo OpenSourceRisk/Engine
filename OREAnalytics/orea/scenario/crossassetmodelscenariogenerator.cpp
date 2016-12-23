@@ -105,7 +105,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     }
 
     // Cache equity interest rate curve keys
-    Size n_eq_ten = simMarketConfig_->equityNames().size();
+    Size n_eq_ten = simMarketConfig_->equityTenors().size();
     eqirCurveKeys_.reserve(n_eq * n_eq_ten);
     for (Size j = 0; j < n_eq; ++j) {
         for (Size k = 0; k < n_eq_ten; ++k) {
