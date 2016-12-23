@@ -219,7 +219,7 @@ Real eq_expectation_2(const CrossAssetModel* x, const Size k, const Time t0, con
     Size i = x->ccyIndex(x->eqbs(k)->currency());
     Real Hi_a = Hz(i).eval(x,t0);
     Real Hi_b = Hz(i).eval(x,t0 + dt);
-    Real res = (Hi_b - Hi_a)*zi_0;
+    Real res = sk_0 + (Hi_b - Hi_a)*zi_0;
     return res;
 }
 
