@@ -336,8 +336,6 @@
     <ClInclude Include="qle\termstructures\dynamicstype.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
-    <ClInclude Include="qle\instruments\equityforward.hpp" />
-    <ClInclude Include="qle\pricingengines\discountingequityforwardengine.hpp" />
     <ClInclude Include="qle\models\eqbsparametrization.hpp">
       <Filter>models</Filter>
     </ClInclude>
@@ -349,6 +347,12 @@
     </ClInclude>
     <ClInclude Include="qle\pricingengines\analyticxassetlgmeqoptionengine.hpp">
       <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\discountingequityforwardengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\instruments\equityforward.hpp">
+      <Filter>instruments</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -579,8 +583,6 @@
     <ClCompile Include="qle\termstructures\spreadedswaptionvolatility.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
-    <ClCompile Include="qle\instruments\equityforward.cpp" />
-    <ClCompile Include="qle\pricingengines\discountingequityforwardengine.cpp" />
     <ClCompile Include="qle\models\eqbsparametrization.cpp">
       <Filter>models</Filter>
     </ClCompile>
@@ -592,6 +594,12 @@
     </ClCompile>
     <ClCompile Include="qle\pricingengines\analyticxassetlgmeqoptionengine.cpp">
       <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\discountingequityforwardengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\equityforward.cpp">
+      <Filter>instruments</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

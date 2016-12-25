@@ -56,7 +56,7 @@
       <AdditionalFields/>
     </Envelope>
     <EquityForwardData>
-      <LongShort>Long</LongShort>
+      <LongShort>Short</LongShort>
       <Maturity>2018-02-05</Maturity>
       <Name>SP5</Name>
       <Currency>USD</Currency>
@@ -73,7 +73,7 @@
     </Envelope>
     <EquityOptionData>
       <OptionData>
-        <LongShort>Long</LongShort>
+        <LongShort>Short</LongShort>
         <OptionType>Call</OptionType>
         <Style>European</Style>
         <Settlement>Cash</Settlement>
@@ -97,7 +97,7 @@
     </Envelope>
     <EquityOptionData>
       <OptionData>
-        <LongShort>Short</LongShort>
+        <LongShort>Long</LongShort>
         <OptionType>Put</OptionType>
         <Style>European</Style>
         <Settlement>Cash</Settlement>
