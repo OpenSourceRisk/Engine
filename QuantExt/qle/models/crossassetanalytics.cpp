@@ -207,7 +207,7 @@ Real eq_expectation_1(const CrossAssetModel* x, const Size k, const Time t0, con
             -integral(x, P(Hz(i), az(i), az(i)), t0, t0 + dt) - 
             integral(x,P(rzx(i,i-1),sx(i-1),az(i)),t0,t0+dt) + 
             integral(x,P(rzz(0,i),az(i),az(0),Hz(0)),t0,t0+dt));
-        res += 
+        res -= 
             (-integral(x, P(Hz(i), Hz(i), az(i), az(i)), t0, t0 + dt) -
             integral(x, P(Hz(i), rzx(i, i - 1), sx(i - 1), az(i)), t0, t0 + dt) +
             integral(x, P(Hz(i), rzz(0, i), az(i), az(0), Hz(0)), t0, t0 + dt));

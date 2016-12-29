@@ -50,6 +50,9 @@
     <ClCompile Include="ratehelpers.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="equitycrossassetmodel.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="source">
@@ -115,6 +118,9 @@
       <Filter>headers</Filter>
     </ClInclude>
     <ClInclude Include="ratehelpers.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="equitycrossassetmodel.hpp">
       <Filter>headers</Filter>
     </ClInclude>
   </ItemGroup>
