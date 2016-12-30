@@ -37,12 +37,12 @@ public:
 
     /*! Test the calibration of all components of a full CrossAssetModel (3 IR LGM models and 2 FX Black Scholes
      * models and 2 equities) by comparing the model prices and market prices of the calibration instruments. */
-    static void testLgm7fFullCalibration();
+    static void testLgm5fEqCalibration();
 
     /*! Compare the analytical (unconditional) expectation and covariance matrix of the 7 dimensional stochastic process
      * of a CrossAssetModel at t=10 against Monte Carlo estimates using both an exact and an Euler
      * discretisation. Special attention paid to the equity components of the process. */
-    static void testLgm7fMoments();
+    static void testLgm5fMoments();
 
     static boost::unit_test_framework::test_suite* suite();
 };

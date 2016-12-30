@@ -240,7 +240,7 @@ protected:
         if (isFx)
             volGridSize = fxbs(aIdx)->parameter(0)->size();
         else
-            volGridSize = fxbs(aIdx)->parameter(0)->size();
+            volGridSize = eqbs(aIdx)->parameter(0)->size();
         QL_REQUIRE(tIdx < volGridSize, 
             "bs volatility index (" << tIdx << ") for " 
             << assetStr << " asset " << aIdx 
