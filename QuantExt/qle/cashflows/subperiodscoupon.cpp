@@ -159,17 +159,25 @@ SubPeriodsLeg::operator Leg() const {
     }
 
     Size numPeriods = schedule_.size() - 1;
+    if(numPeriods == 0)
+        return cashflows;
+
+    startDate = schedule_.date(0);
     for (Size i = 0; i < numPeriods; ++i) {
-        startDate = schedule_.date(i);
         endDate = schedule_.date(i + 1);
         paymentDate = calendar.adjust(endDate, paymentAdjustment_);
+        // the sub periods coupon might produce degenerated schedules, in this
+        // case we just join the current period with the next one
+        try {
+            boost::shared_ptr<SubPeriodsCoupon> cashflow(
+                new SubPeriodsCoupon(paymentDate, detail::get(notionals_, i, notionals_.back()), startDate, endDate,
+                                     index_, type_, paymentAdjustment_, detail::get(spreads_, i, 0.0),
+                                     paymentDayCounter_, includeSpread_, detail::get(gearings_, i, 1.0)));
 
-        boost::shared_ptr<SubPeriodsCoupon> cashflow(
-            new SubPeriodsCoupon(paymentDate, detail::get(notionals_, i, notionals_.back()), startDate, endDate, index_,
-                                 type_, paymentAdjustment_, detail::get(spreads_, i, 0.0), paymentDayCounter_,
-                                 includeSpread_, detail::get(gearings_, i, 1.0)));
-
-        cashflows.push_back(cashflow);
+            cashflows.push_back(cashflow);
+            startDate = endDate;
+        } catch (...) {
+        }
     }
 
     boost::shared_ptr<QuantExt::SubPeriodsCouponPricer> pricer(new SubPeriodsCouponPricer);
