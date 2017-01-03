@@ -17,12 +17,12 @@
 */
 
 #include <orea/scenario/scenario.hpp>
-#include <ql\errors.hpp>
+#include <ql/errors.hpp>
 #include <vector>
-#include <boost\algorithm\string\predicate.hpp>
-#include <boost\algorithm\string\split.hpp>
-#include <boost\algorithm\string\classification.hpp>
-#include <ored\utilities\parsers.hpp>
+#include <boost/algorithm/string/predicate.hpp>
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/classification.hpp>
+#include <ored/utilities/parsers.hpp>
 
 using namespace ore::data;
 
@@ -72,11 +72,7 @@ RiskFactorKey parseRiskFactorKey(const string &string_key) {
     std::vector<string> tokens;
     boost::split(tokens, string_key, boost::is_any_of("/"), boost::token_compress_on);
     QL_REQUIRE(tokens.size() >= 3, "Could not parse key " << string_key);
-    RiskFactorKey rfk;
-    rfk.keytype = parseRiskFactorKeyType(tokens[0]);
-    rfk.name = tokens[1];
-    if (tokens.size() >= 3)
-        rfk.index = parseInteger(tokens[2]);
+    RiskFactorKey rfk(parseRiskFactorKeyType(tokens[0]), tokens[1], tokens.size() == 3 ? parseInteger(tokens[2]) : 0 );
     return rfk;
 }
 
