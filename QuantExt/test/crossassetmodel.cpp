@@ -586,7 +586,7 @@ void CrossAssetModelTest::testCcyLgm3fForeignPayouts() {
                     << npv2a << ", foreign measure result is " << npv2b << ", tolerance " << tolErrEst << "*"
                     << std::sqrt(error2a * error2a + error2b * error2b));
 
-    if (std::fabs(npv3 - fxOption->NPV()) > tolErrEst * std::sqrt(error3))
+    if (std::fabs(npv3 - fxOption->NPV()) > tolErrEst * error3)
         BOOST_ERROR("can no reproduce fx option pricing, monte carlo result is "
                     << npv3 << ", analytical pricing result is " << fxOption->NPV() << ", tolerance is " << tolErrEst
                     << "*" << error3);
