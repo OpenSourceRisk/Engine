@@ -148,7 +148,7 @@ void LgmBuilder::update() {
         }
         LOG("LGM " << data_->ccy() << " calibration errors:");
         error_ = logCalibrationErrors(swaptionBasket_, parametrization_);
-        if (data_->calibrationType() == CalibrationType::Bootstrap) {
+        if (data_->calibrationType() == CalibrationType::Bootstrap && (data_->calibrateA() || data_->calibrateH())) {
             QL_REQUIRE(fabs(error_) < bootstrapTolerance_, "calibration error " << error_ << " exceeds tolerance "
                                                                                 << bootstrapTolerance_);
         }
