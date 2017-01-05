@@ -52,6 +52,7 @@ using boost::unit_test::test_suite;
 #include "calendars.hpp"
 #include "fxoption.hpp"
 #include "ccyswapwithresets.hpp"
+#include "cpiswap.hpp"
 #include "fxtriangulation.hpp"
 #include "indices.hpp"
 #include "parser.hpp"
@@ -89,7 +90,7 @@ test_suite* init_unit_test_suite(int, char* []) {
 
     test->add(BOOST_TEST_CASE(startTimer));
 
-    test->add(testsuite::FXSwapTest::suite());
+    /*test->add(testsuite::FXSwapTest::suite());
     test->add(testsuite::FXOptionTest::suite());
     test->add(testsuite::CcySwapWithResetsTest::suite());
     test->add(testsuite::FXTriangulationTest::suite());
@@ -101,8 +102,9 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(testsuite::ScheduleDataTest::suite());
     test->add(testsuite::TodaysMarketTest::suite());
     test->add(testsuite::CrossAssetModelDataTest::suite());
-    test->add(testsuite::YieldCurveTest::suite());
-
+    test->add(testsuite::YieldCurveTest::suite());*/
+    test->add(testsuite::CPISwapTest::suite());
+    
     // test->add(FXSwapTest::suite());
     test->add(BOOST_TEST_CASE(stopTimer));
 
