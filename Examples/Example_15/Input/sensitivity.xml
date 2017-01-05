@@ -3,9 +3,7 @@
   <ParConversion>true</ParConversion>
   
   <!-- Discount curve shifts -->
-
   <DiscountCurves>
-
     <DiscountCurve ccy="EUR">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
@@ -85,11 +83,9 @@
 	</Conventions>
       </ParConversion>
     </DiscountCurve>
-
   </DiscountCurves>
   
   <!-- Index curve shifts -->
-
   <IndexCurves>
   
     <IndexCurve index="EUR-EURIBOR-6M">
@@ -226,58 +222,97 @@
 	  <Convention id="IRS">JPY-LIBOR-6M-SWAP-CONVENTIONS</Convention>
 	</Conventions>
       </ParConversion>
-    </IndexCurve>
-    
+    </IndexCurve>    
   </IndexCurves>
   
   <!-- FX spot shifts -->
-  <FxSpot>
-    <ShiftType>Relative</ShiftType>
-    <ShiftSize>0.01</ShiftSize>
-    <Label>FXSPOT</Label>
-  </FxSpot>
+  <FxSpots>
+    <FxSpot ccypair="USDEUR">
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.01</ShiftSize>
+      <Label>FXSPOT</Label>
+    </FxSpot>
+    <FxSpot ccypair="GBPEUR">
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.01</ShiftSize>
+      <Label>FXSPOT</Label>
+    </FxSpot>
+    <FxSpot ccypair="CHFEUR">
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.01</ShiftSize>
+      <Label>FXSPOT</Label>
+    </FxSpot>
+    <FxSpot ccypair="JPYEUR">
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.01</ShiftSize>
+      <Label>FXSPOT</Label>
+    </FxSpot>
+  </FxSpots>
   
   <!-- FX ATM vol shifts -->
-  <FxVolatility>
-    <ShiftType>Relative</ShiftType>
-    <ShiftSize>0.01</ShiftSize>
-    <ShiftExpiries>1Y,2Y,3Y,5Y</ShiftExpiries>
-    <ShiftStrikes/>
-    <Label>FXOPTION</Label>
-  </FxVolatility>
+  <FxVolatilities>
+    <FxVolatility ccypair="USDEUR">
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.01</ShiftSize>
+      <ShiftExpiries>1Y,2Y,3Y,5Y</ShiftExpiries>
+      <ShiftStrikes/>
+      <Label>FXOPTION</Label>
+    </FxVolatility>
+    <FxVolatility ccypair="GBPEUR">
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.01</ShiftSize>
+      <ShiftExpiries>1Y,2Y,3Y,5Y</ShiftExpiries>
+      <ShiftStrikes/>
+      <Label>FXOPTION</Label>
+    </FxVolatility>
+    <FxVolatility ccypair="CHFEUR">
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.01</ShiftSize>
+      <ShiftExpiries>1Y,2Y,3Y,5Y</ShiftExpiries>
+      <ShiftStrikes/>
+      <Label>FXOPTION</Label>
+    </FxVolatility>
+    <FxVolatility ccypair="JPYEUR">
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.01</ShiftSize>
+      <ShiftExpiries>1Y,2Y,3Y,5Y</ShiftExpiries>
+      <ShiftStrikes/>
+      <Label>FXOPTION</Label>
+    </FxVolatility>
+  </FxVolatilities>
   
   <!-- Swaption ATM vol shifts -->
-  <SwaptionVolatility>
-    <ShiftType>Relative</ShiftType>
-    <ShiftSize>0.01</ShiftSize>
-    <ShiftExpiries>1Y,5Y,7Y,10Y</ShiftExpiries>
-    <ShiftTerms>1Y,5Y,10Y</ShiftTerms>
-    <ShiftStrikes/>
-    <Label>SWAPTION</Label>
-  </SwaptionVolatility>
-  
+  <SwaptionVolatilities>
+    <SwaptionVolatility ccy="EUR">
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.01</ShiftSize>
+      <ShiftExpiries>1Y,5Y,7Y,10Y</ShiftExpiries>
+      <ShiftTerms>1Y,5Y,10Y</ShiftTerms>
+      <ShiftStrikes/>
+      <Label>SWAPTION</Label>
+    </SwaptionVolatility>
+  </SwaptionVolatilities>
+      
   <!-- Cap/Floor (Optionlet or Flat) vol surface shifts -->
-  <CapFloorVolatility>
-    <Currencies><!-- optional selection, default to sim market settings -->
-      <Currency>EUR</Currency>
-      <Currency>USD</Currency>
-    </Currencies>
-    <ShiftType>Absolute</ShiftType>
-    <ShiftSize>0.0001</ShiftSize>
-    <ShiftExpiries>1Y,2Y,3Y,5Y,7Y,10Y</ShiftExpiries>
-    <ShiftStrikes>0.01,0.02,0.03,0.04,0.05</ShiftStrikes>
-    <Label>CAPFLOOR</Label>
-    <ParConversion>
-      <IndexMapping>
-	<Index ccy="EUR">EUR-EURIBOR-6M</Index>
-	<Index ccy="USD">USD-LIBOR-3M</Index>
-	<Index ccy="GBP">GBP-LIBOR-6M</Index>
-	<Index ccy="JPY">JPY-LIBOR-6M</Index>
-	<Index ccy="CHF">CHF-LIBOR-6M</Index>
-      </IndexMapping>
-    </ParConversion>
-  </CapFloorVolatility>
-  
+  <CapFloorVolatilities>
+    <CapFloorVolatility ccy="EUR">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftExpiries>1Y,2Y,3Y,5Y,7Y,10Y</ShiftExpiries>
+      <ShiftStrikes>0.01,0.02,0.03,0.04,0.05</ShiftStrikes>
+      <Label>CAPFLOOR</Label>
+      <Index>EUR-EURIBOR-6M</Index>
+    </CapFloorVolatility>
+    <CapFloorVolatility ccy="USD">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftExpiries>1Y,2Y,3Y,5Y,7Y,10Y</ShiftExpiries>
+      <ShiftStrikes>0.01,0.02,0.03,0.04,0.05</ShiftStrikes>
+      <Label>CAPFLOOR</Label>
+      <Index>USD-LIBOR-3M</Index>
+    </CapFloorVolatility>
+  </CapFloorVolatilities>
+
   <!-- Cross Gamma filter: Pairs of factor sub-strings -->
   <CrossGammaFilter>
     <Pair>DISOUNT/EUR,DISCOUNT/EUR</Pair>
