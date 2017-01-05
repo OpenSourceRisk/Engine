@@ -3,77 +3,232 @@
   <ParConversion>true</ParConversion>
   
   <!-- Discount curve shifts -->
-  <DiscountCurve>
-    <Currencies><!-- optional selection, default to sim market settings -->
-      <Currency>EUR</Currency>
-      <Currency>USD</Currency>
-      <Currency>GBP</Currency>
-      <Currency>JPY</Currency>
-      <Currency>CHF</Currency>
-    </Currencies>
-    <ShiftType>Absolute</ShiftType>
-    <ShiftSize>0.0001</ShiftSize>
-    <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
-    <Label>DISCOUNT</Label>
-    <ParConversion><!-- required if Domain = Par -->
-      <Instruments>DEP,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS</Instruments><!-- DEP, FRA, IRS, OIS -->
-      <!--<Instruments>OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS</Instruments>--><!-- DEP, FRA, IRS, OIS -->
-      <SingleCurve>true</SingleCurve>
-      <Conventions><!-- key is currency, instrument type -->
-	<Convention id="EUR,DEP">EUR-EURIBOR-CONVENTIONS</Convention>
-	<Convention id="EUR,IRS">EUR-6M-SWAP-CONVENTIONS</Convention>
-	<Convention id="EUR,OIS">EUR-OIS-CONVENTIONS</Convention>
-	<Convention id="USD,DEP">USD-LIBOR-CONVENTIONS</Convention>
-	<Convention id="USD,IRS">USD-3M-SWAP-CONVENTIONS</Convention>
-	<Convention id="USD,OIS">USD-OIS-CONVENTIONS</Convention>
-	<Convention id="GBP,DEP">GBP-DEPOSIT</Convention>
-	<Convention id="GBP,IRS">GBP-6M-SWAP-CONVENTIONS</Convention>
-	<Convention id="GBP,OIS">GBP-OIS-CONVENTIONS</Convention>
-	<Convention id="JPY,DEP">JPY-LIBOR-CONVENTIONS</Convention>
-	<Convention id="JPY,IRS">JPY-LIBOR-6M-SWAP-CONVENTIONS</Convention>
-	<Convention id="JPY,OIS">JPY-OIS-CONVENTIONS</Convention>
-	<Convention id="CHF,DEP">CHF-LIBOR-CONVENTIONS</Convention>
-	<Convention id="CHF,IRS">CHF-6M-SWAP-CONVENTIONS</Convention>
-	<Convention id="CHF,OIS">CHF-OIS-CONVENTIONS</Convention>
-      </Conventions>
-    </ParConversion>
-  </DiscountCurve>
+
+  <DiscountCurves>
+
+    <DiscountCurve ccy="EUR">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+      <Label>DISCOUNT</Label>
+      <ParConversion><!-- required if ParConversion is set to true -->
+	<Instruments>DEP,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS</Instruments><!-- DEP, FRA, IRS, OIS -->
+	<!--<Instruments>OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS</Instruments>--><!-- DEP, FRA, IRS, OIS -->
+	<SingleCurve>true</SingleCurve>
+	<Conventions><!-- key instrument type -->
+	  <Convention id="DEP">EUR-EURIBOR-CONVENTIONS</Convention>
+	  <Convention id="IRS">EUR-6M-SWAP-CONVENTIONS</Convention>
+	  <Convention id="OIS">EUR-OIS-CONVENTIONS</Convention>
+	</Conventions>
+      </ParConversion>
+    </DiscountCurve>
+    
+    <DiscountCurve ccy="USD">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+      <Label>DISCOUNT</Label>
+      <ParConversion>
+	<Instruments>DEP,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS</Instruments>
+	<SingleCurve>true</SingleCurve>
+	<Conventions>
+	  <Convention id="IRS">USD-3M-SWAP-CONVENTIONS</Convention>
+	  <Convention id="OIS">USD-OIS-CONVENTIONS</Convention>
+	</Conventions>
+      </ParConversion>
+    </DiscountCurve>
+    
+    <DiscountCurve ccy="GBP">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+      <Label>DISCOUNT</Label>
+      <ParConversion>
+	<Instruments>DEP,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS</Instruments>
+	<SingleCurve>true</SingleCurve>
+	<Conventions>
+	  <Convention id="DEP">GBP-DEPOSIT</Convention>
+	  <Convention id="IRS">GBP-6M-SWAP-CONVENTIONS</Convention>
+	  <Convention id="OIS">GBP-OIS-CONVENTIONS</Convention>
+	</Conventions>
+      </ParConversion>
+    </DiscountCurve>
+    
+    <DiscountCurve ccy="CHF">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+      <Label>DISCOUNT</Label>
+      <ParConversion>
+	<Instruments>DEP,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS</Instruments>
+	<SingleCurve>true</SingleCurve>
+	<Conventions>
+	  <Convention id="DEP">CHF-LIBOR-CONVENTIONS</Convention>
+	  <Convention id="IRS">CHF-6M-SWAP-CONVENTIONS</Convention>
+	  <Convention id="OIS">CHF-OIS-CONVENTIONS</Convention>
+	</Conventions>
+      </ParConversion>
+    </DiscountCurve>
+    
+    <DiscountCurve ccy="JPY">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+      <Label>DISCOUNT</Label>
+      <ParConversion>
+	<Instruments>DEP,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS</Instruments>
+	<SingleCurve>true</SingleCurve>
+	<Conventions>
+	  <Convention id="DEP">JPY-LIBOR-CONVENTIONS</Convention>
+	  <Convention id="IRS">JPY-LIBOR-6M-SWAP-CONVENTIONS</Convention>
+	  <Convention id="OIS">JPY-OIS-CONVENTIONS</Convention>
+	</Conventions>
+      </ParConversion>
+    </DiscountCurve>
+
+  </DiscountCurves>
   
   <!-- Index curve shifts -->
-  <IndexCurve>
-    <IndexNames><!-- optional selection -->
-      <Index>EUR-EURIBOR-6M</Index>
-      <Index>EUR-EURIBOR-3M</Index>
-      <Index>EUR-EONIA</Index>
-      <Index>USD-LIBOR-3M</Index>
-      <Index>USD-LIBOR-6M</Index>
-      <Index>GBP-LIBOR-6M</Index>
-      <Index>GBP-LIBOR-3M</Index>
-      <Index>CHF-LIBOR-6M</Index>
-      <Index>JPY-LIBOR-6M</Index>
-    </IndexNames>
-    <ShiftType>Absolute</ShiftType>
-    <ShiftSize>0.0001</ShiftSize>
-    <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
-    <Label>INDEX</Label>
-    <ParConversion><!-- required if Domain = Par -->
-      <Instruments>DEP,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS</Instruments><!-- DEP, FRA, IRS, OIS -->
-      <SingleCurve>false</SingleCurve>
-      <Conventions><!-- key is currency, instrument type -->
-	<Convention id="EUR,DEP">EUR-EURIBOR-CONVENTIONS</Convention>
-	<Convention id="EUR,IRS">EUR-6M-SWAP-CONVENTIONS</Convention>
-	<Convention id="EUR,OIS">EUR-OIS-CONVENTIONS</Convention>
-	<Convention id="USD,DEP">USD-LIBOR-CONVENTIONS</Convention>
-	<Convention id="USD,IRS">USD-3M-SWAP-CONVENTIONS</Convention>
-	<Convention id="GBP,DEP">GBP-DEPOSIT</Convention>
-	<Convention id="GBP,IRS">GBP-6M-SWAP-CONVENTIONS</Convention>
-	<Convention id="JPY,DEP">JPY-LIBOR-CONVENTIONS</Convention>
-	<Convention id="JPY,IRS">JPY-LIBOR-6M-SWAP-CONVENTIONS</Convention>
-	<Convention id="CHF,DEP">CHF-LIBOR-CONVENTIONS</Convention>
-	<Convention id="CHF,IRS">CHF-6M-SWAP-CONVENTIONS</Convention>
-      </Conventions>
-    </ParConversion>
+
+  <IndexCurves>
+  
+    <IndexCurve index="EUR-EURIBOR-6M">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+      <Label>INDEX</Label>
+      <ParConversion>
+	<Instruments>DEP,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS</Instruments>
+	<SingleCurve>false</SingleCurve>
+	<Conventions>
+	  <Convention id="DEP">EUR-EURIBOR-CONVENTIONS</Convention>
+	  <Convention id="IRS">EUR-6M-SWAP-CONVENTIONS</Convention>
+	  <Convention id="OIS">EUR-OIS-CONVENTIONS</Convention>
+	</Conventions>
+      </ParConversion>
     </IndexCurve>
+    
+    <IndexCurve index="EUR-EURIBOR-3M">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+      <Label>INDEX</Label>
+      <ParConversion>
+	<Instruments>DEP,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS</Instruments>
+	<SingleCurve>false</SingleCurve>
+	<Conventions>
+	  <Convention id="DEP">EUR-EURIBOR-CONVENTIONS</Convention>
+	  <Convention id="IRS">EUR-3M-SWAP-CONVENTIONS</Convention>
+	  <Convention id="OIS">EUR-OIS-CONVENTIONS</Convention>
+	</Conventions>
+      </ParConversion>
+    </IndexCurve>
+    
+    <IndexCurve index="EUR-EONIA">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+      <Label>INDEX</Label>
+      <ParConversion>
+	<Instruments>OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS</Instruments>
+	<SingleCurve>false</SingleCurve>
+	<Conventions>
+	  <Convention id="OIS">EUR-OIS-CONVENTIONS</Convention>
+	</Conventions>
+      </ParConversion>
+    </IndexCurve>
+    
+    <IndexCurve index="USD-LIBOR-3M">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+      <Label>INDEX</Label>
+      <ParConversion>
+	<Instruments>DEP,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS</Instruments>
+	<SingleCurve>false</SingleCurve>
+	<Conventions>
+	  <Convention id="DEP">USD-LIBOR-CONVENTIONS</Convention>
+	  <Convention id="IRS">USD-3M-SWAP-CONVENTIONS</Convention>
+	</Conventions>
+      </ParConversion>
+    </IndexCurve>
+    
+    <IndexCurve index="USD-LIBOR-6M">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+      <Label>INDEX</Label>
+      <ParConversion>
+	<Instruments>DEP,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS</Instruments>
+	<SingleCurve>false</SingleCurve>
+	<Conventions>
+	  <Convention id="DEP">USD-LIBOR-CONVENTIONS</Convention>
+	  <Convention id="IRS">USD-6M-SWAP-CONVENTIONS</Convention>
+	</Conventions>
+      </ParConversion>
+    </IndexCurve>
+    
+    <IndexCurve index="GBP-LIBOR-3M">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+      <Label>INDEX</Label>
+      <ParConversion>
+	<Instruments>DEP,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS</Instruments>
+	<SingleCurve>false</SingleCurve>
+	<Conventions>
+	  <Convention id="DEP">GBP-DEPOSIT</Convention>
+	  <Convention id="IRS">GBP-3M-SWAP-CONVENTIONS</Convention>
+	</Conventions>
+      </ParConversion>
+    </IndexCurve>
+    
+    <IndexCurve index="GBP-LIBOR-6M">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+      <Label>INDEX</Label>
+      <ParConversion>
+	<Instruments>DEP,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS</Instruments>
+	<SingleCurve>false</SingleCurve>
+	<Conventions>
+	  <Convention id="DEP">GBP-DEPOSIT</Convention>
+	  <Convention id="IRS">GBP-6M-SWAP-CONVENTIONS</Convention>
+	</Conventions>
+      </ParConversion>
+    </IndexCurve>
+    
+    <IndexCurve index="CHF-LIBOR-6M">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+      <Label>INDEX</Label>
+      <ParConversion>
+	<Instruments>DEP,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS</Instruments>
+	<SingleCurve>false</SingleCurve>
+	<Conventions>
+	  <Convention id="DEP">CHF-LIBOR-CONVENTIONS</Convention>
+	  <Convention id="IRS">CHF-6M-SWAP-CONVENTIONS</Convention>
+	</Conventions>
+      </ParConversion>
+    </IndexCurve>
+    
+    <IndexCurve index="JPY-LIBOR-6M">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+      <Label>INDEX</Label>
+      <ParConversion>
+	<Instruments>DEP,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS</Instruments>
+	<SingleCurve>false</SingleCurve>
+	<Conventions>
+	  <Convention id="DEP">JPY-LIBOR-CONVENTIONS</Convention>
+	  <Convention id="IRS">JPY-LIBOR-6M-SWAP-CONVENTIONS</Convention>
+	</Conventions>
+      </ParConversion>
+    </IndexCurve>
+    
+  </IndexCurves>
   
   <!-- FX spot shifts -->
   <FxSpot>
