@@ -227,10 +227,12 @@ public:
           fxIndex_(fxIndex), fixingDays_(fixingDays) {}
     
     //! Constructor with CPILegData
-    LegData(bool isPayer, const string& currency, CPILegData& data, ScheduleData& schedule, const string dayCounter, const vector<double> notionals, const vector<string>& notionalDates = vector<string>(), const string& paymentConvention = "F")
+    LegData(bool isPayer, const string& currency, CPILegData& data, ScheduleData& schedule, const string dayCounter, const vector<double> notionals, const vector<string>& notionalDates = vector<string>(), const string& paymentConvention = "F", bool notionalInitialExchange = false, bool notionalFinalExchange = false, bool notionalAmortizingExchange = false, bool isNotResetXCCY = true)
         : isPayer_(isPayer), currency_(currency), legType_("CPI"), cpiLegData_(data), schedule_(schedule),
           dayCounter_(dayCounter), notionals_(notionals), notionalDates_(notionalDates),
-          paymentConvention_(paymentConvention) {}
+          paymentConvention_(paymentConvention), notionalInitialExchange_(notionalInitialExchange),
+          notionalFinalExchange_(notionalFinalExchange), notionalAmortizingExchange_(notionalAmortizingExchange),
+          isNotResetXCCY_(isNotResetXCCY) {}
     
     //! \name Serialisation
     //@{
