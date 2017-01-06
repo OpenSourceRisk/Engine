@@ -4,11 +4,13 @@
   
   <!-- Discount curve shifts -->
   <DiscountCurves>
+
+    <Label>DISCOUNT</Label>
+
     <DiscountCurve ccy="EUR">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
-      <Label>DISCOUNT</Label>
       <ParConversion><!-- required if ParConversion is set to true -->
 	<Instruments>DEP,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS</Instruments><!-- DEP, FRA, IRS, OIS -->
 	<!--<Instruments>OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS</Instruments>--><!-- DEP, FRA, IRS, OIS -->
@@ -25,7 +27,6 @@
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
-      <Label>DISCOUNT</Label>
       <ParConversion>
 	<Instruments>DEP,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS</Instruments>
 	<SingleCurve>true</SingleCurve>
@@ -40,7 +41,6 @@
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
-      <Label>DISCOUNT</Label>
       <ParConversion>
 	<Instruments>DEP,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS</Instruments>
 	<SingleCurve>true</SingleCurve>
@@ -56,7 +56,6 @@
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
-      <Label>DISCOUNT</Label>
       <ParConversion>
 	<Instruments>DEP,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS</Instruments>
 	<SingleCurve>true</SingleCurve>
@@ -72,7 +71,6 @@
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
-      <Label>DISCOUNT</Label>
       <ParConversion>
 	<Instruments>DEP,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS</Instruments>
 	<SingleCurve>true</SingleCurve>
@@ -88,11 +86,12 @@
   <!-- Index curve shifts -->
   <IndexCurves>
   
+    <Label>INDEX</Label>
+
     <IndexCurve index="EUR-EURIBOR-6M">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
-      <Label>INDEX</Label>
       <ParConversion>
 	<Instruments>DEP,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS</Instruments>
 	<SingleCurve>false</SingleCurve>
@@ -108,7 +107,6 @@
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
-      <Label>INDEX</Label>
       <ParConversion>
 	<Instruments>DEP,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS</Instruments>
 	<SingleCurve>false</SingleCurve>
@@ -124,7 +122,6 @@
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
-      <Label>INDEX</Label>
       <ParConversion>
 	<Instruments>OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS,OIS</Instruments>
 	<SingleCurve>false</SingleCurve>
@@ -138,7 +135,6 @@
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
-      <Label>INDEX</Label>
       <ParConversion>
 	<Instruments>DEP,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS</Instruments>
 	<SingleCurve>false</SingleCurve>
@@ -153,7 +149,6 @@
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
-      <Label>INDEX</Label>
       <ParConversion>
 	<Instruments>DEP,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS</Instruments>
 	<SingleCurve>false</SingleCurve>
@@ -168,7 +163,6 @@
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
-      <Label>INDEX</Label>
       <ParConversion>
 	<Instruments>DEP,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS</Instruments>
 	<SingleCurve>false</SingleCurve>
@@ -183,7 +177,6 @@
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
-      <Label>INDEX</Label>
       <ParConversion>
 	<Instruments>DEP,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS</Instruments>
 	<SingleCurve>false</SingleCurve>
@@ -198,7 +191,6 @@
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
-      <Label>INDEX</Label>
       <ParConversion>
 	<Instruments>DEP,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS</Instruments>
 	<SingleCurve>false</SingleCurve>
@@ -213,7 +205,6 @@
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
-      <Label>INDEX</Label>
       <ParConversion>
 	<Instruments>DEP,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS</Instruments>
 	<SingleCurve>false</SingleCurve>
@@ -227,80 +218,74 @@
   
   <!-- FX spot shifts -->
   <FxSpots>
+    <Label>FXSPOT</Label>
     <FxSpot ccypair="USDEUR">
       <ShiftType>Relative</ShiftType>
       <ShiftSize>0.01</ShiftSize>
-      <Label>FXSPOT</Label>
     </FxSpot>
     <FxSpot ccypair="GBPEUR">
       <ShiftType>Relative</ShiftType>
       <ShiftSize>0.01</ShiftSize>
-      <Label>FXSPOT</Label>
     </FxSpot>
     <FxSpot ccypair="CHFEUR">
       <ShiftType>Relative</ShiftType>
       <ShiftSize>0.01</ShiftSize>
-      <Label>FXSPOT</Label>
     </FxSpot>
     <FxSpot ccypair="JPYEUR">
       <ShiftType>Relative</ShiftType>
       <ShiftSize>0.01</ShiftSize>
-      <Label>FXSPOT</Label>
     </FxSpot>
   </FxSpots>
   
   <!-- FX ATM vol shifts -->
   <FxVolatilities>
+    <Label>FXOPTION</Label>
     <FxVolatility ccypair="USDEUR">
       <ShiftType>Relative</ShiftType>
       <ShiftSize>0.01</ShiftSize>
       <ShiftExpiries>1Y,2Y,3Y,5Y</ShiftExpiries>
       <ShiftStrikes/>
-      <Label>FXOPTION</Label>
     </FxVolatility>
     <FxVolatility ccypair="GBPEUR">
       <ShiftType>Relative</ShiftType>
       <ShiftSize>0.01</ShiftSize>
       <ShiftExpiries>1Y,2Y,3Y,5Y</ShiftExpiries>
       <ShiftStrikes/>
-      <Label>FXOPTION</Label>
     </FxVolatility>
     <FxVolatility ccypair="CHFEUR">
       <ShiftType>Relative</ShiftType>
       <ShiftSize>0.01</ShiftSize>
       <ShiftExpiries>1Y,2Y,3Y,5Y</ShiftExpiries>
       <ShiftStrikes/>
-      <Label>FXOPTION</Label>
     </FxVolatility>
     <FxVolatility ccypair="JPYEUR">
       <ShiftType>Relative</ShiftType>
       <ShiftSize>0.01</ShiftSize>
       <ShiftExpiries>1Y,2Y,3Y,5Y</ShiftExpiries>
       <ShiftStrikes/>
-      <Label>FXOPTION</Label>
     </FxVolatility>
   </FxVolatilities>
   
   <!-- Swaption ATM vol shifts -->
   <SwaptionVolatilities>
+    <Label>SWAPTION</Label>
     <SwaptionVolatility ccy="EUR">
       <ShiftType>Relative</ShiftType>
       <ShiftSize>0.01</ShiftSize>
       <ShiftExpiries>1Y,5Y,7Y,10Y</ShiftExpiries>
       <ShiftTerms>1Y,5Y,10Y</ShiftTerms>
       <ShiftStrikes/>
-      <Label>SWAPTION</Label>
     </SwaptionVolatility>
   </SwaptionVolatilities>
       
   <!-- Cap/Floor (Optionlet or Flat) vol surface shifts -->
   <CapFloorVolatilities>
+    <Label>CAPFLOOR</Label>
     <CapFloorVolatility ccy="EUR">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
       <ShiftExpiries>1Y,2Y,3Y,5Y,7Y,10Y</ShiftExpiries>
       <ShiftStrikes>0.01,0.02,0.03,0.04,0.05</ShiftStrikes>
-      <Label>CAPFLOOR</Label>
       <Index>EUR-EURIBOR-6M</Index>
     </CapFloorVolatility>
     <CapFloorVolatility ccy="USD">
@@ -308,7 +293,6 @@
       <ShiftSize>0.0001</ShiftSize>
       <ShiftExpiries>1Y,2Y,3Y,5Y,7Y,10Y</ShiftExpiries>
       <ShiftStrikes>0.01,0.02,0.03,0.04,0.05</ShiftStrikes>
-      <Label>CAPFLOOR</Label>
       <Index>USD-LIBOR-3M</Index>
     </CapFloorVolatility>
   </CapFloorVolatilities>

@@ -52,7 +52,6 @@ public:
     enum class ShiftType { Absolute, Relative };
 
     struct CurveShiftData {
-        string label;
         string shiftType;
         Real shiftSize;
         vector<Period> shiftTenors;
@@ -62,7 +61,6 @@ public:
     };
 
     struct CapFloorVolShiftData {
-        string label;
         string shiftType;
         Real shiftSize;
         vector<Period> shiftExpiries;
@@ -71,7 +69,6 @@ public:
     };
 
     struct SwaptionVolShiftData {
-        string label;
         string shiftType;
         Real shiftSize;
         vector<Period> shiftExpiries;
@@ -81,7 +78,6 @@ public:
     };
 
     struct FxVolShiftData {
-        string label;
         string shiftType;
         Real shiftSize;
         vector<Period> shiftExpiries;
@@ -89,7 +85,6 @@ public:
     };
 
     struct FxShiftData {
-        string label;
         string shiftType;
         Real shiftSize;
     };
@@ -101,21 +96,27 @@ public:
     //@{
     bool parConversion() const { return parConversion_; }
 
+    const string& discountLabel() const { return discountLabel_; }
     const vector<string>& discountCurrencies() const { return discountCurrencies_; }
     const map<string, CurveShiftData>& discountCurveShiftData() const { return discountCurveShiftData_; }
 
+    const string& indexLabel() const { return indexLabel_; }
     const vector<string>& indexNames() const { return indexNames_; }
     const map<string, CurveShiftData>& indexCurveShiftData() const { return indexCurveShiftData_; }
 
+    const string& fxLabel() const { return fxLabel_; }
     const vector<string>& fxCcyPairs() const { return fxCcyPairs_; }
     const map<string, FxShiftData>& fxShiftData() const { return fxShiftData_; }
 
+    const string& swaptionVolLabel() const { return swaptionVolLabel_; }
     const vector<string>& swaptionVolCurrencies() const { return swaptionVolCurrencies_; }
     const map<string, SwaptionVolShiftData>& swaptionVolShiftData() const { return swaptionVolShiftData_; }
 
+    const string& capFloorVolLabel() const { return capFloorVolLabel_; }
     const vector<string>& capFloorVolCurrencies() const { return capFloorVolCurrencies_; }
     const map<string, CapFloorVolShiftData>& capFloorVolShiftData() const { return capFloorVolShiftData_; }
 
+    const string& fxVolLabel() const { return fxVolLabel_; }
     const vector<string>& fxVolCcyPairs() const { return fxVolCcyPairs_; }
     const map<string, FxVolShiftData>& fxVolShiftData() const { return fxVolShiftData_; }
 
@@ -135,21 +136,27 @@ public:
     //@{
     bool& parConversion() { return parConversion_; }
 
+    string& discountLabel() { return discountLabel_; }
     vector<string>& discountCurrencies() { return discountCurrencies_; }
     map<string, CurveShiftData>& discountCurveShiftData() { return discountCurveShiftData_; }
 
+    string& indexLabel() { return indexLabel_; }
     vector<string>& indexNames() { return indexNames_; }
     map<string, CurveShiftData>& indexCurveShiftData() { return indexCurveShiftData_; }
 
+    string& fxLabel() { return fxLabel_; }
     vector<string>& fxCcyPairs() { return fxCcyPairs_; }
     map<string, FxShiftData>& fxShiftData() { return fxShiftData_; }
 
+    string& swaptionVolLabel() { return swaptionVolLabel_; }
     vector<string>& swaptionVolCurrencies() { return swaptionVolCurrencies_; }
     map<string, SwaptionVolShiftData>& swaptionVolShiftData() { return swaptionVolShiftData_; }
 
+    string& capFloorVolLabel() { return capFloorVolLabel_; }
     vector<string>& capFloorVolCurrencies() { return capFloorVolCurrencies_; }
     map<string, CapFloorVolShiftData>& capFloorVolShiftData() { return capFloorVolShiftData_; }
 
+    string& fxVolLabel() { return fxVolLabel_; }
     vector<string>& fxVolCcyPairs() { return fxVolCcyPairs_; }
     map<string, FxVolShiftData>& fxVolShiftData() { return fxVolShiftData_; }
 
@@ -205,39 +212,39 @@ private:
 
     bool parConversion_;
 
+    string discountLabel_;
     vector<string> discountCurrencies_;
     map<string, CurveShiftData> discountCurveShiftData_; // key: ccy
 
+    string indexLabel_;
     vector<string> indexNames_;
     map<string, CurveShiftData> indexCurveShiftData_; // key: indexName
 
+    string capFloorVolLabel_;
     vector<string> capFloorVolCurrencies_;
     map<string, CapFloorVolShiftData> capFloorVolShiftData_; // key: ccy
 
+    string swaptionVolLabel_;
     vector<string> swaptionVolCurrencies_;
     map<string, SwaptionVolShiftData> swaptionVolShiftData_; // key: ccy
 
+    string fxVolLabel_;
     vector<string> fxVolCcyPairs_;
     map<string, FxVolShiftData> fxVolShiftData_; // key: ccy pair
 
+    string fxLabel_;
     vector<string> fxCcyPairs_;
     map<string, FxShiftData> fxShiftData_; // key: ccy pair
 
     // todo
+    string inflationLabel_;
     vector<string> inflationIndices_;
-    map<string, InflationCurveShiftData> inflationCurveShiftData_; // key: inflation index name
-    // string infLabel_;
-    // vector<Period> infShiftTenors_;
-    // string infShiftType_;
-    // Real infShiftSize_;
+    map<string, CurveShiftData> inflationCurveShiftData_; // key: inflation index name
 
     // todo
+    string creditLabel_;
     vector<string> creditNames_;
-    map<string, CreditCurveShiftData> creditCurveShiftData_; // key: credit name
-    // string crLabel_;
-    // vector<Period> crShiftTenors_;
-    // string crShiftType_;
-    // Real crShiftSize_;
+    map<string, CurveShiftData> creditCurveShiftData_; // key: credit name
 
     vector<pair<string, string> > crossGammaFilter_;
 };

@@ -196,25 +196,25 @@ SensitivityAnalysis::SensitivityAnalysis(boost::shared_ptr<ore::data::Portfolio>
     scenarioGenerator->reset();
     simMarket->update(asof);
 
-    map<string, vector<boost::shared_ptr<Instrument>>> parHelpers;
-    map<string, vector<Real>> parRatesBase;
+    map<string, vector<boost::shared_ptr<Instrument> > > parHelpers;
+    map<string, vector<Real> > parRatesBase;
 
     // Discount curve instruments
-    Size n_ten = sensitivityData->discountShiftTenors().size();
-    QL_REQUIRE(sensitivityData->discountParInstruments().size() == n_ten,
-               "number of tenors does not match number of discount curve par instruments");
-    for (Size i = 0; i < simMarketData->ccys().size(); ++i) {
-        string ccy = simMarketData->ccys()[i];
-        parHelpers[ccy] = vector<boost::shared_ptr<Instrument>>(n_ten);
+    for (Size i = 0; i < sensitivityData->discountCurrencies().size(); ++i) {
+        string ccy = sensitivityData->discountCurrencies()[i];
+        SensitivityScenarioData::CurveShiftData data = sensitivityData->discountCurveShiftData()[ccy];
+        Size n_ten = data.shiftTenors.size();
+        QL_REQUIRE(data.parInstruments.size() == n_ten,
+                   "number of tenors does not match number of discount curve par instruments");
+        parHelpers[ccy] = vector<boost::shared_ptr<Instrument> >(n_ten);
         parRatesBase[ccy] = vector<Real>(n_ten);
         for (Size j = 0; j < n_ten; ++j) {
-            Period term = sensitivityData->discountShiftTenors()[j];
-            string instType = sensitivityData->discountParInstruments()[j];
-            pair<string, string> p(ccy, instType);
-            map<pair<string, string>, string> conventionsMap = sensitivityData->discountParInstrumentConventions();
-            QL_REQUIRE(conventionsMap.find(p) != conventionsMap.end(),
+            Period term = data.shiftTenors[j];
+            string instType = data.parInstruments[j];
+            map<string, string> conventionsMap = data.parInstrumentConventions;
+            QL_REQUIRE(conventionsMap.find(instType) != conventionsMap.end(),
                        "conventions not found for ccy " << ccy << " and instrument type " << instType);
-            boost::shared_ptr<Convention> convention = conventions.get(conventionsMap[p]);
+            boost::shared_ptr<Convention> convention = conventions.get(conventionsMap[instType]);
             string indexName = ""; // if empty, it will be picked from conventions
             if (instType == "IRS")
                 parHelpers[ccy][j] = makeSwap(ccy, indexName, term, simMarket, convention, true);
@@ -231,25 +231,26 @@ SensitivityAnalysis::SensitivityAnalysis(boost::shared_ptr<ore::data::Portfolio>
     }
 
     // Index curve instruments
-    QL_REQUIRE(sensitivityData->indexParInstruments().size() == n_ten,
-               "number of tenors does not match number of index curve par instruments");
-    for (Size i = 0; i < simMarketData->indices().size(); ++i) {
-        string indexName = simMarketData->indices()[i];
+    for (Size i = 0; i < sensitivityData->indexNames().size(); ++i) {
+        string indexName = sensitivityData->indexNames()[i];
+        SensitivityScenarioData::CurveShiftData data = sensitivityData->indexCurveShiftData()[indexName];
+        Size n_ten = data.shiftTenors.size();
+        QL_REQUIRE(data.parInstruments.size() == n_ten,
+                   "number of tenors does not match number of discount curve par instruments");
         vector<string> tokens;
         boost::split(tokens, indexName, boost::is_any_of("-"));
         QL_REQUIRE(tokens.size() >= 2, "index name " << indexName << " unexpected");
         string ccy = tokens[0];
         QL_REQUIRE(ccy.length() == 3, "currency token not recognised");
-        parHelpers[indexName] = vector<boost::shared_ptr<Instrument>>(n_ten);
+        parHelpers[indexName] = vector<boost::shared_ptr<Instrument> >(n_ten);
         parRatesBase[indexName] = vector<Real>(n_ten);
         for (Size j = 0; j < n_ten; ++j) {
-            Period term = sensitivityData->indexShiftTenors()[j];
-            string instType = sensitivityData->indexParInstruments()[j];
-            pair<string, string> p(ccy, instType);
-            map<pair<string, string>, string> conventionsMap = sensitivityData->indexParInstrumentConventions();
-            QL_REQUIRE(conventionsMap.find(p) != conventionsMap.end(),
+            Period term = data.shiftTenors[j];
+            string instType = data.parInstruments[j];
+            map<string, string> conventionsMap = data.parInstrumentConventions;
+            QL_REQUIRE(conventionsMap.find(instType) != conventionsMap.end(),
                        "conventions not found for ccy " << ccy << " and instrument type " << instType);
-            boost::shared_ptr<Convention> convention = conventions.get(conventionsMap[p]);
+            boost::shared_ptr<Convention> convention = conventions.get(conventionsMap[instType]);
             if (instType == "IRS")
                 parHelpers[indexName][j] = makeSwap(ccy, indexName, term, simMarket, convention, false);
             else if (instType == "DEP")
@@ -267,24 +268,23 @@ SensitivityAnalysis::SensitivityAnalysis(boost::shared_ptr<ore::data::Portfolio>
     }
 
     // Caps/Floors
-    map<pair<string, Size>, vector<boost::shared_ptr<CapFloor>>> parCaps;
-    map<pair<string, Size>, vector<Real>> parCapVols;
-    Size n_strikes = sensitivityData->capFloorVolShiftStrikes().size();
-    Size n_expiries = sensitivityData->capFloorVolShiftExpiries().size();
-    map<string, string> indexMap = sensitivityData->capFloorVolIndexMapping();
-    for (Size i = 0; i < simMarketData->capFloorVolCcys().size(); ++i) {
-        string ccy = simMarketData->capFloorVolCcys()[i];
-        QL_REQUIRE(indexMap.find(ccy) != indexMap.end(), "no cap/floor index found in the index map for ccy " << ccy);
-        string indexName = indexMap[ccy];
+    map<pair<string, Size>, vector<boost::shared_ptr<CapFloor> > > parCaps;
+    map<pair<string, Size>, vector<Real> > parCapVols;
+    for (Size i = 0; i < sensitivityData->capFloorVolCurrencies().size(); ++i) {
+        string ccy = sensitivityData->capFloorVolCurrencies()[i];
+        SensitivityScenarioData::CapFloorVolShiftData data = sensitivityData->capFloorVolShiftData()[ccy];
+        string indexName = data.indexName;
         Handle<YieldTermStructure> yts = simMarket->discountCurve(ccy);
         Handle<OptionletVolatilityStructure> ovs = simMarket->capFloorVol(ccy); // FIXME: configuration
+        Size n_strikes = data.shiftStrikes.size();
+        Size n_expiries = data.shiftExpiries.size();
         for (Size j = 0; j < n_strikes; ++j) {
-            Real strike = sensitivityData->capFloorVolShiftStrikes()[j];
+            Real strike = data.shiftStrikes[j];
             pair<string, Size> key(ccy, j);
-            parCaps[key] = vector<boost::shared_ptr<CapFloor>>(n_expiries);
+            parCaps[key] = vector<boost::shared_ptr<CapFloor> >(n_expiries);
             parCapVols[key] = vector<Real>(n_expiries, 0.0);
             for (Size k = 0; k < n_expiries; ++k) {
-                Period term = sensitivityData->capFloorVolShiftExpiries()[k];
+                Period term = data.shiftExpiries[k];
                 parCaps[key][k] = makeCapFloor(ccy, indexName, term, strike, simMarket);
                 Real price = parCaps[key][k]->NPV();
                 parCapVols[key][k] = impliedVolatility(*parCaps[key][k], price, yts, 0.01, // initial guess
@@ -330,12 +330,14 @@ SensitivityAnalysis::SensitivityAnalysis(boost::shared_ptr<ore::data::Portfolio>
                 // FIXME: Assumption of sensitivity within currency only
                 if (label.find(ccy) == string::npos)
                     continue;
+                SensitivityScenarioData::CurveShiftData data = sensitivityData->discountCurveShiftData()[ccy];
+                Size n_ten = data.shiftTenors.size();
                 pair<string, string> key(ccy, sensitivityData->labelToFactor(label));
                 parRatesSensi_[key] = vector<Real>(n_ten);
                 for (Size k = 0; k < n_ten; ++k) {
                     Real fair = impliedQuote(parHelpers[ccy][k]);
                     Real base = parRatesBase[ccy][k];
-                    parRatesSensi_[key][k] = (fair - base) / sensitivityData->discountShiftSize();
+                    parRatesSensi_[key][k] = (fair - base) / data.shiftSize;
                 }
             }
 
@@ -346,12 +348,14 @@ SensitivityAnalysis::SensitivityAnalysis(boost::shared_ptr<ore::data::Portfolio>
                 // FIXME: Assumption of sensitivity within currency only
                 if (label.find(indexCurrency) == string::npos)
                     continue;
+                SensitivityScenarioData::CurveShiftData data = sensitivityData->indexCurveShiftData()[indexName];
+                Size n_ten = data.shiftTenors.size();
                 pair<string, string> key(indexName, sensitivityData->labelToFactor(label));
                 parRatesSensi_[key] = vector<Real>(n_ten);
                 for (Size k = 0; k < n_ten; ++k) {
                     Real fair = impliedQuote(parHelpers[indexName][k]);
                     Real base = parRatesBase[indexName][k];
-                    parRatesSensi_[key][k] = (fair - base) / sensitivityData->indexShiftSize();
+                    parRatesSensi_[key][k] = (fair - base) / data.shiftSize;
                 }
             }
         }
@@ -369,6 +373,9 @@ SensitivityAnalysis::SensitivityAnalysis(boost::shared_ptr<ore::data::Portfolio>
                     continue;
                 Handle<YieldTermStructure> yts = simMarket->discountCurve(ccy);         // FIXME: configuration
                 Handle<OptionletVolatilityStructure> ovs = simMarket->capFloorVol(ccy); // FIXME: configuration
+                SensitivityScenarioData::CapFloorVolShiftData data = sensitivityData->capFloorVolShiftData()[ccy];
+                Size n_strikes = data.shiftStrikes.size();
+                Size n_expiries = data.shiftExpiries.size();
                 for (Size j = 0; j < n_strikes; ++j) {
                     tuple<string, Size, string> sensiKey(ccy, j, factor);
                     pair<string, Size> baseKey(ccy, j);
@@ -378,7 +385,7 @@ SensitivityAnalysis::SensitivityAnalysis(boost::shared_ptr<ore::data::Portfolio>
                         Real fair = impliedVolatility(*parCaps[baseKey][k], price, yts, 0.01, // initial guess
                                                       ovs->volatilityType(), ovs->displacement());
                         Real base = parCapVols[baseKey][k];
-                        flatCapVolSensi_[sensiKey][k] = (fair - base) / sensitivityData->capFloorVolShiftSize();
+                        flatCapVolSensi_[sensiKey][k] = (fair - base) / data.shiftSize;
                         if (flatCapVolSensi_[sensiKey][k] != 0.0)
                             LOG("CapFloorVol Sensi " << std::get<0>(sensiKey) << " " << std::get<2>(sensiKey)
                                                      << " strike " << std::get<1>(sensiKey) << " tenor " << k << " = "
@@ -641,12 +648,12 @@ boost::shared_ptr<CapFloor> SensitivityAnalysis::makeCapFloor(string ccy, string
 
 void ParSensitivityConverter::buildJacobiMatrix() {
     vector<string> currencies = sensitivityData_->discountCurrencies();
-    Size n_discountTenors = sensitivityData_->discountShiftTenors().size();
+    // Size n_discountTenors = sensitivityData_->discountShiftTenors().size();
     vector<string> indices = sensitivityData_->indexNames();
-    Size n_indexTenors = sensitivityData_->indexShiftTenors().size();
+    // Size n_indexTenors = sensitivityData_->indexShiftTenors().size();
     vector<string> capCurrencies = sensitivityData_->capFloorVolCurrencies();
-    Size n_capTerms = sensitivityData_->capFloorVolShiftExpiries().size();
-    Size n_capStrikes = sensitivityData_->capFloorVolShiftStrikes().size();
+    // Size n_capTerms = sensitivityData_->capFloorVolShiftExpiries().size();
+    // Size n_capStrikes = sensitivityData_->capFloorVolShiftStrikes().size();
 
     // unique set of factors relevant for conversion
     std::set<std::string> factorSet;
@@ -659,8 +666,28 @@ void ParSensitivityConverter::buildJacobiMatrix() {
 
     // Jacobi matrix dimension and allocation
     Size n_shifts = factorSet.size();
-    Size n_par = currencies.size() * n_discountTenors + indices.size() * n_indexTenors +
-                 capCurrencies.size() * n_capStrikes * n_capTerms;
+    // Size n_par = currencies.size() * n_discountTenors + indices.size() * n_indexTenors +
+    //              capCurrencies.size() * n_capStrikes * n_capTerms;
+    Size n_par = 0;
+    // discount curves
+    for (Size i = 0; i < currencies.size(); ++i) {
+        string ccy = currencies[i];
+        SensitivityScenarioData::CurveShiftData data = sensitivityData_->discountCurveShiftData()[ccy];
+        n_par += data.shiftTenors.size();
+    }
+    // index curves
+    for (Size i = 0; i < indices.size(); ++i) {
+        string indexName = indices[i];
+        SensitivityScenarioData::CurveShiftData data = sensitivityData_->indexCurveShiftData()[indexName];
+        n_par += data.shiftTenors.size();
+    }
+    // cap/floor matrices
+    for (Size i = 0; i < capCurrencies.size(); ++i) {
+        string ccy = capCurrencies[i];
+        SensitivityScenarioData::CapFloorVolShiftData data = sensitivityData_->capFloorVolShiftData()[ccy];
+        n_par += data.shiftExpiries.size() * data.shiftStrikes.size();
+    }
+
     // Size n_par = currencies.size() * n_discountTenors + indices.size() * n_indexTenors;
     jacobi_ = Matrix(n_par, n_shifts, 0.0);
     LOG("Jacobi matrix dimension " << n_par << " x " << n_shifts);
@@ -702,13 +729,19 @@ void ParSensitivityConverter::buildJacobiMatrix() {
         string curveType = types[i];
         string bucket = buckets[i];
         Size dim;
-        if (curveType == sensitivityData_->discountLabel())
-            dim = n_discountTenors;
-        else if (curveType == sensitivityData_->indexLabel())
-            dim = n_indexTenors;
-        else if (curveType == sensitivityData_->capFloorVolLabel())
-            dim = n_capTerms;
-        else
+        if (curveType == sensitivityData_->discountLabel()) {
+            // curve name is ccy code
+            SensitivityScenarioData::CurveShiftData data = sensitivityData_->discountCurveShiftData()[curveName];
+            dim = data.shiftTenors.size();
+        } else if (curveType == sensitivityData_->indexLabel()) {
+            // curve name is indexName
+            SensitivityScenarioData::CurveShiftData data = sensitivityData_->indexCurveShiftData()[curveName];
+            dim = data.shiftTenors.size();
+        } else if (curveType == sensitivityData_->capFloorVolLabel()) {
+            // curve name is cy code
+            SensitivityScenarioData::CapFloorVolShiftData data = sensitivityData_->capFloorVolShiftData()[curveName];
+            dim = data.shiftExpiries.size();
+        } else
             QL_FAIL("curve type " << curveType << " not covered");
         LOG("Curve " << i << " type " << curveType << " name " << curveName << " bucket " << bucket << ": dimension "
                      << dim);
