@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <ored/reports/report.hpp>
+#include <ored/report/report.hpp>
 #include <ql/errors.hpp>
 
 namespace ore {
