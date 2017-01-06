@@ -32,6 +32,7 @@
 
 #include <qle/models/crossassetmodel.hpp>
 #include <qle/models/crossassetmodelimpliedfxvoltermstructure.hpp>
+#include <qle/models/crossassetmodelimpliedeqvoltermstructure.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
 
 namespace ore {
@@ -76,6 +77,7 @@ private:
     std::vector<RiskFactorKey> discountCurveKeys_, indexCurveKeys_;
     std::vector<RiskFactorKey> fxKeys_, eqKeys_, eqirCurveKeys_;
     std::vector<boost::shared_ptr<QuantExt::CrossAssetModelImpliedFxVolTermStructure>> fxVols_;
+    std::vector<boost::shared_ptr<QuantExt::CrossAssetModelImpliedEqVolTermStructure>> eqVols_;
 };
 }
 }

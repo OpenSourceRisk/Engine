@@ -536,6 +536,7 @@
     <ClInclude Include="qle\models\crossassetanalytics.hpp" />
     <ClInclude Include="qle\models\crossassetanalyticsbase.hpp" />
     <ClInclude Include="qle\models\crossassetmodel.hpp" />
+    <ClInclude Include="qle\models\crossassetmodelimpliedeqvoltermstructure.hpp" />
     <ClInclude Include="qle\models\crossassetmodelimpliedfxvoltermstructure.hpp" />
     <ClInclude Include="qle\models\eqbsconstantparametrization.hpp" />
     <ClInclude Include="qle\models\eqbsparametrization.hpp" />
@@ -625,6 +626,7 @@
     <ClCompile Include="qle\methods\multipathgeneratorbase.cpp" />
     <ClCompile Include="qle\models\crossassetanalytics.cpp" />
     <ClCompile Include="qle\models\crossassetmodel.cpp" />
+    <ClCompile Include="qle\models\crossassetmodelimpliedeqvoltermstructure.cpp" />
     <ClCompile Include="qle\models\crossassetmodelimpliedfxvoltermstructure.cpp" />
     <ClCompile Include="qle\models\eqbsconstantparametrization.cpp" />
     <ClCompile Include="qle\models\eqbsparametrization.cpp" />

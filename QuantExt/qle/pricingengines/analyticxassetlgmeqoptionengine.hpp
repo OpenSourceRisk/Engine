@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file analyticcclgmfxoptionengine.hpp
-    \brief analytic cc lgm fx option engine
+/*! \file analyticxassetlgmeqoptionengine.hpp
+    \brief analytic cross-asset lgm eq option engine
 
         \ingroup engines
 */

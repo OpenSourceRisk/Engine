@@ -354,6 +354,9 @@
     <ClInclude Include="qle\instruments\equityforward.hpp">
       <Filter>instruments</Filter>
     </ClInclude>
+    <ClInclude Include="qle\models\crossassetmodelimpliedeqvoltermstructure.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -600,6 +603,9 @@
     </ClCompile>
     <ClCompile Include="qle\instruments\equityforward.cpp">
       <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\crossassetmodelimpliedeqvoltermstructure.cpp">
+      <Filter>models</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
