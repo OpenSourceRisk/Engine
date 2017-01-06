@@ -19,9 +19,7 @@
 #include <orea/scenario/scenario.hpp>
 #include <ql/errors.hpp>
 #include <vector>
-#include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/split.hpp>
-#include <boost/algorithm/string/classification.hpp>
 #include <ored/utilities/parsers.hpp>
 
 using namespace ore::data;
