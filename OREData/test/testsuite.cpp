@@ -90,9 +90,10 @@ test_suite* init_unit_test_suite(int, char* []) {
 
     test->add(BOOST_TEST_CASE(startTimer));
 
-    /*test->add(testsuite::FXSwapTest::suite());
+    test->add(testsuite::FXSwapTest::suite());
     test->add(testsuite::FXOptionTest::suite());
     test->add(testsuite::CcySwapWithResetsTest::suite());
+    test->add(testsuite::CPISwapTest::suite());
     test->add(testsuite::FXTriangulationTest::suite());
     test->add(testsuite::CalendarNameTest::suite());
     test->add(testsuite::IndexTest::suite());
@@ -102,8 +103,7 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(testsuite::ScheduleDataTest::suite());
     test->add(testsuite::TodaysMarketTest::suite());
     test->add(testsuite::CrossAssetModelDataTest::suite());
-    test->add(testsuite::YieldCurveTest::suite());*/
-    test->add(testsuite::CPISwapTest::suite());
+    test->add(testsuite::YieldCurveTest::suite());
     
     // test->add(FXSwapTest::suite());
     test->add(BOOST_TEST_CASE(stopTimer));
