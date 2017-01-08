@@ -32,98 +32,112 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
     XMLUtils::checkNode(node, "SensitivityAnalysis");
 
     parConversion_ = XMLUtils::getChildValueAsBool(node, "ParConversion", true);
-    
+
     LOG("Get discount curve sensitivity parameters");
-    XMLNode* child = XMLUtils::getChildNode(node, "DiscountCurve");
-    discountCurrencies_ = XMLUtils::getChildrenValues(child, "Currencies", "Currency", false);
-    discountLabel_ = XMLUtils::getChildValue(child, "Label", true);
-    //discountDomain_ = XMLUtils::getChildValue(child, "Domain", true);
-    discountShiftType_ = XMLUtils::getChildValue(child, "ShiftType", true);
-    discountShiftSize_ = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
-    discountShiftTenors_ = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
-    XMLNode* par = XMLUtils::getChildNode(child, "ParConversion");
-    if (par) {
-        discountParInstruments_ = XMLUtils::getChildrenValuesAsStrings(par, "Instruments", true);
-        discountParInstrumentsSingleCurve_ = XMLUtils::getChildValueAsBool(par, "SingleCurve", true);
-        XMLNode* conventionsNode = XMLUtils::getChildNode(par, "Conventions");
-        discountParInstrumentConventions_ =
-            XMLUtils::getChildrenAttributePairsAndValues(conventionsNode, "Convention", "id", true);
+    XMLNode* discountCurves = XMLUtils::getChildNode(node, "DiscountCurves");
+    discountLabel_ = XMLUtils::getChildValue(discountCurves, "Label", true);
+    for (XMLNode* child = XMLUtils::getChildNode(discountCurves, "DiscountCurve"); child;
+         child = XMLUtils::getNextSibling(child)) {
+        string ccy = XMLUtils::getAttribute(child, "ccy");
+        LOG("Discount curve for ccy " << ccy);
+        CurveShiftData data;
+        data.shiftType = XMLUtils::getChildValue(child, "ShiftType", true);
+        data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
+        data.shiftTenors = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
+        XMLNode* par = XMLUtils::getChildNode(child, "ParConversion");
+        if (par) {
+            data.parInstruments = XMLUtils::getChildrenValuesAsStrings(par, "Instruments", true);
+            data.parInstrumentSingleCurve = XMLUtils::getChildValueAsBool(par, "SingleCurve", true);
+            XMLNode* conventionsNode = XMLUtils::getChildNode(par, "Conventions");
+            data.parInstrumentConventions =
+                XMLUtils::getChildrenAttributesAndValues(conventionsNode, "Convention", "id", true);
+        }
+        discountCurveShiftData_[ccy] = data;
+        discountCurrencies_.push_back(ccy);
     }
 
     LOG("Get index curve sensitivity parameters");
-    child = XMLUtils::getChildNode(node, "IndexCurve");
-    indexNames_ = XMLUtils::getChildrenValues(child, "IndexNames", "Index", false);
-    indexLabel_ = XMLUtils::getChildValue(child, "Label", true);
-    //indexDomain_ = XMLUtils::getChildValue(child, "Domain", true);
-    indexShiftType_ = XMLUtils::getChildValue(child, "ShiftType", true);
-    indexShiftSize_ = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
-    indexShiftTenors_ = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
-    par = XMLUtils::getChildNode(child, "ParConversion");
-    if (par) {
-        indexParInstruments_ = XMLUtils::getChildrenValuesAsStrings(par, "Instruments", true);
-        indexParInstrumentsSingleCurve_ = XMLUtils::getChildValueAsBool(par, "SingleCurve", true);
-        XMLNode* conventionsNode = XMLUtils::getChildNode(par, "Conventions");
-        indexParInstrumentConventions_ =
-            XMLUtils::getChildrenAttributePairsAndValues(conventionsNode, "Convention", "id", true);
+    XMLNode* indexCurves = XMLUtils::getChildNode(node, "IndexCurves");
+    indexLabel_ = XMLUtils::getChildValue(indexCurves, "Label", true);
+    for (XMLNode* child = XMLUtils::getChildNode(indexCurves, "IndexCurve"); child;
+         child = XMLUtils::getNextSibling(child)) {
+        string index = XMLUtils::getAttribute(child, "index");
+        // same as discount curve sensitivity loading from here ...
+        CurveShiftData data;
+        data.shiftType = XMLUtils::getChildValue(child, "ShiftType", true);
+        data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
+        data.shiftTenors = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
+        XMLNode* par = XMLUtils::getChildNode(child, "ParConversion");
+        if (par) {
+            data.parInstruments = XMLUtils::getChildrenValuesAsStrings(par, "Instruments", true);
+            data.parInstrumentSingleCurve = XMLUtils::getChildValueAsBool(par, "SingleCurve", true);
+            XMLNode* conventionsNode = XMLUtils::getChildNode(par, "Conventions");
+            data.parInstrumentConventions =
+                XMLUtils::getChildrenAttributesAndValues(conventionsNode, "Convention", "id", true);
+        }
+        // ... to here
+        indexCurveShiftData_[index] = data;
+        indexNames_.push_back(index);
     }
 
     LOG("Get FX spot sensitivity parameters");
-    child = XMLUtils::getChildNode(node, "FxSpot");
-    fxCcyPairs_ = XMLUtils::getChildrenValues(child, "CurrencyPairs", "CurrencyPair", false);
-    fxLabel_ = XMLUtils::getChildValue(child, "Label", true);
-    fxShiftType_ = XMLUtils::getChildValue(child, "ShiftType", true);
-    fxShiftSize_ = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
+    XMLNode* fxSpots = XMLUtils::getChildNode(node, "FxSpots");
+    fxLabel_ = XMLUtils::getChildValue(fxSpots, "Label", true);
+    for (XMLNode* child = XMLUtils::getChildNode(fxSpots, "FxSpot"); child; child = XMLUtils::getNextSibling(child)) {
+        string ccypair = XMLUtils::getAttribute(child, "ccypair");
+        FxShiftData data;
+        data.shiftType = XMLUtils::getChildValue(child, "ShiftType", true);
+        data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
+        fxShiftData_[ccypair] = data;
+        fxCcyPairs_.push_back(ccypair);
+    }
 
     LOG("Get swaption vol sensitivity parameters");
-    child = XMLUtils::getChildNode(node, "SwaptionVolatility");
-    swaptionVolCurrencies_ = XMLUtils::getChildrenValues(child, "Currencies", "Currency", false);
-    swaptionVolLabel_ = XMLUtils::getChildValue(child, "Label", true);
-    swaptionVolShiftType_ = XMLUtils::getChildValue(child, "ShiftType", true);
-    swaptionVolShiftSize_ = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
-    swaptionVolShiftTerms_ = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTerms", true);
-    swaptionVolShiftExpiries_ = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftExpiries", true);
-    swaptionVolShiftStrikes_ = XMLUtils::getChildrenValuesAsDoublesCompact(child, "ShiftStrikes", true);
+    XMLNode* swaptionVols = XMLUtils::getChildNode(node, "SwaptionVolatilities");
+    swaptionVolLabel_ = XMLUtils::getChildValue(swaptionVols, "Label", true);
+    for (XMLNode* child = XMLUtils::getChildNode(swaptionVols, "SwaptionVolatility"); child;
+         child = XMLUtils::getNextSibling(child)) {
+        string ccy = XMLUtils::getAttribute(child, "ccy");
+        SwaptionVolShiftData data;
+        data.shiftType = XMLUtils::getChildValue(child, "ShiftType", true);
+        data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
+        data.shiftTerms = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTerms", true);
+        data.shiftExpiries = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftExpiries", true);
+        data.shiftStrikes = XMLUtils::getChildrenValuesAsDoublesCompact(child, "ShiftStrikes", true);
+        swaptionVolShiftData_[ccy] = data;
+        swaptionVolCurrencies_.push_back(ccy);
+    }
 
     LOG("Get cap/floor vol sensitivity parameters");
-    child = XMLUtils::getChildNode(node, "CapFloorVolatility");
-    capFloorVolCurrencies_ = XMLUtils::getChildrenValues(child, "Currencies", "Currency", true);
-    capFloorVolLabel_ = XMLUtils::getChildValue(child, "Label", true);
-    capFloorVolShiftType_ = XMLUtils::getChildValue(child, "ShiftType", true);
-    capFloorVolShiftSize_ = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
-    capFloorVolShiftExpiries_ = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftExpiries", true);
-    capFloorVolShiftStrikes_ = XMLUtils::getChildrenValuesAsDoublesCompact(child, "ShiftStrikes", true);
-    par = XMLUtils::getChildNode(child, "ParConversion");
-    if (par) {
-        XMLNode* indexMappingNode = XMLUtils::getChildNode(par, "IndexMapping");
-        capFloorVolIndexMapping_ = XMLUtils::getChildrenAttributesAndValues(indexMappingNode, "Index", "ccy", true);
+    XMLNode* capVols = XMLUtils::getChildNode(node, "CapFloorVolatilities");
+    capFloorVolLabel_ = XMLUtils::getChildValue(capVols, "Label", true);
+    for (XMLNode* child = XMLUtils::getChildNode(capVols, "CapFloorVolatility"); child;
+         child = XMLUtils::getNextSibling(child)) {
+        string ccy = XMLUtils::getAttribute(child, "ccy");
+        CapFloorVolShiftData data;
+        data.shiftType = XMLUtils::getChildValue(child, "ShiftType", true);
+        data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
+        data.shiftExpiries = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftExpiries", true);
+        data.shiftStrikes = XMLUtils::getChildrenValuesAsDoublesCompact(child, "ShiftStrikes", true);
+        data.indexName = XMLUtils::getChildValue(child, "Index", true);
+        capFloorVolShiftData_[ccy] = data;
+        capFloorVolCurrencies_.push_back(ccy);
     }
 
     LOG("Get fx vol sensitivity parameters");
-    child = XMLUtils::getChildNode(node, "FxVolatility");
-    fxVolCcyPairs_ = XMLUtils::getChildrenValues(child, "CurrencyPairs", "CurrencyPair", false);
-    fxVolLabel_ = XMLUtils::getChildValue(child, "Label", true);
-    fxVolShiftType_ = XMLUtils::getChildValue(child, "ShiftType");
-    fxVolShiftSize_ = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
-    fxVolShiftExpiries_ = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftExpiries", true);
-    fxVolShiftStrikes_ = XMLUtils::getChildrenValuesAsDoubles(child, "ShiftStrikes", "Strike", true);
-
-    // LOG("Get inflation curve sensitivity parameters");
-    // child = XMLUtils::getChildNode(node, "InflationCurve");
-    // infIndices_ = XMLUtils::getChildrenValues(child, "IndexNames", "Index", false);
-    // infLabel_ = XMLUtils::getChildValue(child, "Label");
-    // infDomain_ = XMLUtils::getChildValue(child, "Domain");
-    // infShiftType_ = XMLUtils::getChildValue(child, "ShiftType");
-    // infShiftSize_ = XMLUtils::getChildValueAsDouble(child, "ShiftSize");
-    // infShiftTenors_ = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors");
-
-    // LOG("Get credit curve sensitivity parameters");
-    // child = XMLUtils::getChildNode(node, "CreditCurves");
-    // crNames_ = XMLUtils::getChildrenValues(child, "CreditNames", "Name", false);
-    // crLabel_ = XMLUtils::getChildValue(child, "Label");
-    // crDomain_ = XMLUtils::getChildValue(child, "Domain");
-    // crShiftType_ = XMLUtils::getChildValue(child, "ShiftType");
-    // crShiftSize_ = XMLUtils::getChildValueAsDouble(child, "ShiftSize");
-    // crShiftTenors_ = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors");
+    XMLNode* fxVols = XMLUtils::getChildNode(node, "FxVolatilities");
+    fxVolLabel_ = XMLUtils::getChildValue(fxVols, "Label", true);
+    for (XMLNode* child = XMLUtils::getChildNode(fxVols, "FxVolatility"); child;
+         child = XMLUtils::getNextSibling(child)) {
+        string ccypair = XMLUtils::getAttribute(child, "ccypair");
+        FxVolShiftData data;
+        data.shiftType = XMLUtils::getChildValue(child, "ShiftType");
+        data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
+        data.shiftExpiries = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftExpiries", true);
+        data.shiftStrikes = XMLUtils::getChildrenValuesAsDoubles(child, "ShiftStrikes", "Strike", true);
+        fxVolShiftData_[ccypair] = data;
+        fxVolCcyPairs_.push_back(ccypair);
+    }
 
     LOG("Get cross gamma parameters");
     vector<string> filter = XMLUtils::getChildrenValues(node, "CrossGammaFilter", "Pair", true);
@@ -137,9 +151,8 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
 }
 
 XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
-
     XMLNode* node = doc.allocNode("SensitivityAnalysis");
-
+    // TODO
     return node;
 }
 
@@ -148,18 +161,22 @@ std::string SensitivityScenarioData::labelSeparator() { return "/"; }
 std::string SensitivityScenarioData::shiftDirectionLabel(bool up) { return up ? "UP" : "DOWN"; }
 
 std::string SensitivityScenarioData::discountShiftScenarioLabel(string ccy, Size bucket, bool up) {
+    QL_REQUIRE(discountCurveShiftData_.find(ccy) != discountCurveShiftData_.end(),
+               "currency " << ccy << " not found in discount shift data");
+    QL_REQUIRE(bucket < discountCurveShiftData_[ccy].shiftTenors.size(), "bucket " << bucket << " out of range");
     std::ostringstream o;
-    QL_REQUIRE(bucket < discountShiftTenors_.size(), "bucket " << bucket << " out of range");
     o << discountLabel_ << labelSeparator() << ccy << labelSeparator() << bucket << labelSeparator()
-      << discountShiftTenors_[bucket] << labelSeparator() << shiftDirectionLabel(up);
+      << discountCurveShiftData_[ccy].shiftTenors[bucket] << labelSeparator() << shiftDirectionLabel(up);
     return o.str();
 }
 
 std::string SensitivityScenarioData::indexShiftScenarioLabel(string indexName, Size bucket, bool up) {
-    QL_REQUIRE(bucket < indexShiftTenors_.size(), "bucket " << bucket << " out of range");
+    QL_REQUIRE(indexCurveShiftData_.find(indexName) != indexCurveShiftData_.end(),
+               "index name " << indexName << " not found in index shift data");
+    QL_REQUIRE(bucket < indexCurveShiftData_[indexName].shiftTenors.size(), "bucket " << bucket << " out of range");
     std::ostringstream o;
     o << indexLabel_ << labelSeparator() << indexName << labelSeparator() << bucket << labelSeparator()
-      << indexShiftTenors_[bucket] << labelSeparator() << shiftDirectionLabel(up);
+      << indexCurveShiftData_[indexName].shiftTenors[bucket] << labelSeparator() << shiftDirectionLabel(up);
     return o.str();
 }
 
@@ -171,49 +188,57 @@ std::string SensitivityScenarioData::fxShiftScenarioLabel(string ccypair, bool u
 
 string SensitivityScenarioData::swaptionVolShiftScenarioLabel(string ccy, Size expiryBucket, Size termBucket,
                                                               Size strikeBucket, bool up) {
-    QL_REQUIRE(expiryBucket < swaptionVolShiftExpiries_.size(), "expiry bucket " << expiryBucket << " out of range");
-    QL_REQUIRE(termBucket < swaptionVolShiftTerms_.size(), "term bucket " << termBucket << " out of range");
+    QL_REQUIRE(swaptionVolShiftData_.find(ccy) != swaptionVolShiftData_.end(),
+               "currency " << ccy << " not found in swaption vol shift data");
+    SwaptionVolShiftData data = swaptionVolShiftData_[ccy];
+    QL_REQUIRE(expiryBucket < data.shiftExpiries.size(), "expiry bucket " << expiryBucket << " out of range");
+    QL_REQUIRE(termBucket < data.shiftTerms.size(), "term bucket " << termBucket << " out of range");
     std::ostringstream o;
-    if (swaptionVolShiftStrikes_.size() == 0) {
+    if (data.shiftStrikes.size() == 0) {
         // ignore the strike bucket in this case
         o << swaptionVolLabel_ << labelSeparator() << ccy << labelSeparator() << expiryBucket << labelSeparator()
-          << swaptionVolShiftExpiries_[expiryBucket] << labelSeparator() << termBucket << labelSeparator()
-          << swaptionVolShiftTerms_[termBucket] << labelSeparator() << shiftDirectionLabel(up);
+          << data.shiftExpiries[expiryBucket] << labelSeparator() << termBucket << labelSeparator()
+          << data.shiftTerms[termBucket] << labelSeparator() << shiftDirectionLabel(up);
     } else {
-        QL_REQUIRE(strikeBucket < swaptionVolShiftStrikes_.size(), "strike bucket " << strikeBucket << " out of range");
+        QL_REQUIRE(strikeBucket < data.shiftStrikes.size(), "strike bucket " << strikeBucket << " out of range");
         o << swaptionVolLabel_ << labelSeparator() << ccy << labelSeparator() << expiryBucket << labelSeparator()
-          << swaptionVolShiftExpiries_[expiryBucket] << labelSeparator() << termBucket << labelSeparator()
-          << swaptionVolShiftTerms_[termBucket] << labelSeparator() << strikeBucket << labelSeparator()
-          << std::setprecision(4) << swaptionVolShiftStrikes_[strikeBucket] << labelSeparator()
-          << shiftDirectionLabel(up);
+          << data.shiftExpiries[expiryBucket] << labelSeparator() << termBucket << labelSeparator()
+          << data.shiftTerms[termBucket] << labelSeparator() << strikeBucket << labelSeparator() << std::setprecision(4)
+          << data.shiftStrikes[strikeBucket] << labelSeparator() << shiftDirectionLabel(up);
     }
     return o.str();
 }
 
 string SensitivityScenarioData::fxVolShiftScenarioLabel(string ccypair, Size expiryBucket, Size strikeBucket, bool up) {
-    QL_REQUIRE(expiryBucket < fxVolShiftExpiries_.size(), "expiry bucket " << expiryBucket << " out of range");
+    QL_REQUIRE(fxVolShiftData_.find(ccypair) != fxVolShiftData_.end(),
+               "currency pair " << ccypair << " not found in fx vol shift data");
+    FxVolShiftData data = fxVolShiftData_[ccypair];
+    QL_REQUIRE(expiryBucket < data.shiftExpiries.size(), "expiry bucket " << expiryBucket << " out of range");
     std::ostringstream o;
-    if (fxVolShiftStrikes_.size() == 0) {
+    if (data.shiftStrikes.size() == 0) {
         o << fxVolLabel_ << labelSeparator() << ccypair << labelSeparator() << expiryBucket << labelSeparator()
-          << fxVolShiftExpiries_[expiryBucket] << labelSeparator() << shiftDirectionLabel(up);
+          << data.shiftExpiries[expiryBucket] << labelSeparator() << shiftDirectionLabel(up);
     } else {
         // ignore the strike bucket in this case
-        QL_REQUIRE(strikeBucket < fxVolShiftStrikes_.size(), "strike bucket " << strikeBucket << " out of range");
+        QL_REQUIRE(strikeBucket < data.shiftStrikes.size(), "strike bucket " << strikeBucket << " out of range");
         o << fxVolLabel_ << labelSeparator() << ccypair << labelSeparator() << expiryBucket << labelSeparator()
-          << fxVolShiftExpiries_[expiryBucket] << labelSeparator() << std::setprecision(4)
-          << fxVolShiftStrikes_[strikeBucket] << labelSeparator() << shiftDirectionLabel(up);
+          << data.shiftExpiries[expiryBucket] << labelSeparator() << std::setprecision(4)
+          << data.shiftStrikes[strikeBucket] << labelSeparator() << shiftDirectionLabel(up);
     }
     return o.str();
 }
 
 string SensitivityScenarioData::capFloorVolShiftScenarioLabel(string ccy, Size expiryBucket, Size strikeBucket,
                                                               bool up) {
-    QL_REQUIRE(expiryBucket < capFloorVolShiftExpiries_.size(), "expiry bucket " << expiryBucket << " out of range");
-    QL_REQUIRE(strikeBucket < capFloorVolShiftStrikes_.size(), "strike bucket " << strikeBucket << " out of range");
+    QL_REQUIRE(capFloorVolShiftData_.find(ccy) != capFloorVolShiftData_.end(),
+               "currency " << ccy << " not found in cap/floor vol shift data");
+    CapFloorVolShiftData data = capFloorVolShiftData_[ccy];
+    QL_REQUIRE(expiryBucket < data.shiftExpiries.size(), "expiry bucket " << expiryBucket << " out of range");
+    QL_REQUIRE(strikeBucket < data.shiftStrikes.size(), "strike bucket " << strikeBucket << " out of range");
     std::ostringstream o;
     o << capFloorVolLabel_ << labelSeparator() << ccy << labelSeparator() << strikeBucket << labelSeparator()
-      << std::setprecision(4) << capFloorVolShiftStrikes_[strikeBucket] << labelSeparator() << expiryBucket
-      << labelSeparator() << capFloorVolShiftExpiries_[expiryBucket] << labelSeparator() << shiftDirectionLabel(up);
+      << std::setprecision(4) << data.shiftStrikes[strikeBucket] << labelSeparator() << expiryBucket << labelSeparator()
+      << data.shiftExpiries[expiryBucket] << labelSeparator() << shiftDirectionLabel(up);
     return o.str();
 }
 

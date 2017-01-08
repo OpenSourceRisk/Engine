@@ -31,6 +31,7 @@
 	<Instruments>DEP,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS</Instruments>
 	<SingleCurve>true</SingleCurve>
 	<Conventions>
+	  <Convention id="DEP">USD-LIBOR-CONVENTIONS</Convention>
 	  <Convention id="IRS">USD-3M-SWAP-CONVENTIONS</Convention>
 	  <Convention id="OIS">USD-OIS-CONVENTIONS</Convention>
 	</Conventions>
@@ -219,19 +220,19 @@
   <!-- FX spot shifts -->
   <FxSpots>
     <Label>FXSPOT</Label>
-    <FxSpot ccypair="USDEUR">
+    <FxSpot ccypair="EURUSD">
       <ShiftType>Relative</ShiftType>
       <ShiftSize>0.01</ShiftSize>
     </FxSpot>
-    <FxSpot ccypair="GBPEUR">
+    <FxSpot ccypair="EURGBP">
       <ShiftType>Relative</ShiftType>
       <ShiftSize>0.01</ShiftSize>
     </FxSpot>
-    <FxSpot ccypair="CHFEUR">
+    <FxSpot ccypair="EURCHF">
       <ShiftType>Relative</ShiftType>
       <ShiftSize>0.01</ShiftSize>
     </FxSpot>
-    <FxSpot ccypair="JPYEUR">
+    <FxSpot ccypair="EURJPY">
       <ShiftType>Relative</ShiftType>
       <ShiftSize>0.01</ShiftSize>
     </FxSpot>
@@ -240,25 +241,19 @@
   <!-- FX ATM vol shifts -->
   <FxVolatilities>
     <Label>FXOPTION</Label>
-    <FxVolatility ccypair="USDEUR">
+    <FxVolatility ccypair="EURUSD">
       <ShiftType>Relative</ShiftType>
       <ShiftSize>0.01</ShiftSize>
       <ShiftExpiries>1Y,2Y,3Y,5Y</ShiftExpiries>
       <ShiftStrikes/>
     </FxVolatility>
-    <FxVolatility ccypair="GBPEUR">
+    <FxVolatility ccypair="EURGBP">
       <ShiftType>Relative</ShiftType>
       <ShiftSize>0.01</ShiftSize>
       <ShiftExpiries>1Y,2Y,3Y,5Y</ShiftExpiries>
       <ShiftStrikes/>
     </FxVolatility>
-    <FxVolatility ccypair="CHFEUR">
-      <ShiftType>Relative</ShiftType>
-      <ShiftSize>0.01</ShiftSize>
-      <ShiftExpiries>1Y,2Y,3Y,5Y</ShiftExpiries>
-      <ShiftStrikes/>
-    </FxVolatility>
-    <FxVolatility ccypair="JPYEUR">
+    <FxVolatility ccypair="EURJPY">
       <ShiftType>Relative</ShiftType>
       <ShiftSize>0.01</ShiftSize>
       <ShiftExpiries>1Y,2Y,3Y,5Y</ShiftExpiries>
