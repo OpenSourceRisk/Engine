@@ -265,33 +265,32 @@ int main(int argc, char** argv) {
 
             LOG("Get Portfolio");
             boost::shared_ptr<Portfolio> sensiPortfolio = boost::make_shared<Portfolio>();
-	    // Just load here. We build the portfolio in SensitivityAnalysis, after building SimMarket.
-	    sensiPortfolio->load(portfolioFile);
-	      
+            // Just load here. We build the portfolio in SensitivityAnalysis, after building SimMarket.
+            sensiPortfolio->load(portfolioFile);
+
             LOG("Build Sensitivity Analysis");
-	    string marketConfiguration =  params.get("markets", "pricing");
-            boost::shared_ptr<SensitivityAnalysis> sensiAnalysis =
-                boost::make_shared<SensitivityAnalysis>(sensiPortfolio, market, marketConfiguration,
-                                                        engineData, simMarketData, sensiData, conventions);
-	    
+            string marketConfiguration = params.get("markets", "pricing");
+            boost::shared_ptr<SensitivityAnalysis> sensiAnalysis = boost::make_shared<SensitivityAnalysis>(
+                sensiPortfolio, market, marketConfiguration, engineData, simMarketData, sensiData, conventions);
+
             string outputFile1 = outputPath + "/" + params.get("sensitivity", "scenarioOutputFile");
-	    Real sensiThreshold = parseReal(params.get("sensitivity", "outputSensitivityThreshold"));
-	    sensiAnalysis->writeScenarioReport(outputFile1, sensiThreshold);
+            Real sensiThreshold = parseReal(params.get("sensitivity", "outputSensitivityThreshold"));
+            sensiAnalysis->writeScenarioReport(outputFile1, sensiThreshold);
 
-	    string outputFile2 = outputPath + "/" + params.get("sensitivity", "sensitivityOutputFile");
-	    sensiAnalysis->writeSensitivityReport(outputFile2, sensiThreshold);
+            string outputFile2 = outputPath + "/" + params.get("sensitivity", "sensitivityOutputFile");
+            sensiAnalysis->writeSensitivityReport(outputFile2, sensiThreshold);
 
-	    string outputFile3 = outputPath + "/" + params.get("sensitivity", "crossGammaOutputFile");
-	    sensiAnalysis->writeCrossGammaReport(outputFile3, sensiThreshold);
+            string outputFile3 = outputPath + "/" + params.get("sensitivity", "crossGammaOutputFile");
+            sensiAnalysis->writeCrossGammaReport(outputFile3, sensiThreshold);
 
-	    string outputFile4 = outputPath + "/" + params.get("sensitivity", "parRateSensitivityOutputFile");
-	    sensiAnalysis->writeParRateSensitivityReport(outputFile4);
+            string outputFile4 = outputPath + "/" + params.get("sensitivity", "parRateSensitivityOutputFile");
+            sensiAnalysis->writeParRateSensitivityReport(outputFile4);
 
             cout << "OK" << endl;
 
         } else {
             LOG("skip sensitivity report");
-	}
+        }
 
         /******************************************
          * Simulation: Scenario and Cube Generation

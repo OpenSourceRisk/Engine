@@ -85,7 +85,7 @@ protected:
                         (1. - y_[i] / h_) * N(y_[i] - h_) // opposite sign in the paper
                         + (G(y_[i] + h_) - 2. * G(y_[i]) + G(y_[i] - h_)) / h_;
             // w_[i] might be negative due to numerical errors
-            if(w_[i] < 0.0) {
+            if (w_[i] < 0.0) {
                 QL_REQUIRE(w_[i] > -1.0E-10, "NumericLgmSwaptionEngine: negative w (" << w_[i] << ") at i=" << i);
                 w_[i] = 0.0;
             }
