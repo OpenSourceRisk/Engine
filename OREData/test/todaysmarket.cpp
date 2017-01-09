@@ -689,7 +689,7 @@ boost::shared_ptr<data::CurveConfigurations> curveConfigurations() {
 
     configs->equityCurveConfig("SP5") = boost::make_shared<EquityCurveConfig>(
         "SP5", "", "USD", EquityCurveConfig::Type::ForwardPrice, 
-        "EQUITY/PRICE/SP5/USD", "Yield/USD/USD3M", eqFwdQuotes);
+        "EQUITY/PRICE/SP5/USD",  eqFwdQuotes);
 
     configs->equityVolCurveConfig("SP5") = boost::make_shared<EquityVolatilityCurveConfig>(
         "SP5","", "USD", EquityVolatilityCurveConfig::Dimension::ATM,eqVolExpiries);
@@ -800,7 +800,7 @@ void TodaysMarketTest::testEquityCurve() {
     BOOST_TEST_MESSAGE("Testing equity curve...");
     Handle<YieldTermStructure> divTs = market->equityDividendCurve("SP5");
     BOOST_CHECK(divTs.currentLink());
-    Handle<YieldTermStructure> equityIrTs = market->equityInterestRateCurve("SP5");
+    Handle<YieldTermStructure> equityIrTs = market->discountCurve("USD");
     BOOST_CHECK(equityIrTs.currentLink());
     Handle<Quote> equitySpot = market->equitySpot("SP5");
     BOOST_CHECK(equitySpot.currentLink());
@@ -834,7 +834,7 @@ void TodaysMarketTest::testEquityCurve() {
 void TodaysMarketTest::testEquityVolCurve() {
     CommonVars vars;
 
-    BOOST_TEST_MESSAGE("Testing equity curve...");
+    BOOST_TEST_MESSAGE("Testing equity vol curve...");
     Handle<BlackVolTermStructure> eqVol = market->equityVol("SP5");
     BOOST_CHECK(eqVol.currentLink());
 

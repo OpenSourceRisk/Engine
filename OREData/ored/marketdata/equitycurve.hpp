@@ -47,22 +47,25 @@ public:
     //! Default constructor
     EquityCurve() {}
     //! Detailed constructor
-    EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, const CurveConfigurations& curveConfigs,
-                 const Conventions& conventions, map<string, boost::shared_ptr<YieldCurve>>& yieldCurves);
+    EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
+        const CurveConfigurations& curveConfigs,
+        const Conventions& conventions);
     //@}
     //! \name Inspectors
     //@{
     const EquityCurveSpec& spec() const { return spec_; }
-    const boost::shared_ptr<YieldTermStructure>& divYieldTermStructure() const { return divCurve_; }
-    const boost::shared_ptr<YieldTermStructure>& equityIrTermStructure() const { return equityIrCurve_; }
-    const std::string& equityIrTermStructureString() const { return equityIrCurveStr_;  }
+    boost::shared_ptr<YieldTermStructure> divYieldTermStructure(
+        const Date& asof,
+        const Handle<YieldTermStructure>& equityIrCurve) const; 
     const Real equitySpot() const { return equitySpot_; }
     //@}
 private:
     EquityCurveSpec spec_;
-    boost::shared_ptr<YieldTermStructure> divCurve_, equityIrCurve_;
     Real equitySpot_;
-    std::string equityIrCurveStr_;
+    EquityCurveConfig::Type curveType_;
+    vector<Real> quotes_;
+    vector<Period> terms_;
+    DayCounter dc_;
 };
 }
 }
