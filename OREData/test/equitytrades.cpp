@@ -60,9 +60,6 @@ public:
         // add dividend yield
         equityDividendCurves_[make_pair(Market::defaultConfiguration, "zzzCorp")] = flatRateYts(0.05);
 
-        // add dividend yield
-        equityInterestRateCurves_[make_pair(Market::defaultConfiguration, "zzzCorp")] = flatRateYts(0.1);
-
         // build equity vols
         equityVols_[make_pair(Market::defaultConfiguration, "zzzCorp")] = flatRateFxv(0.20);
     }

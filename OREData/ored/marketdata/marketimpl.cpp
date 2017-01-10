@@ -127,9 +127,6 @@ Handle<YieldTermStructure> MarketImpl::equityDividendCurve(const string& key, co
     return lookup<Handle<YieldTermStructure>>(equityDividendCurves_, key, configuration, "dividend yield curve");
 }
 
-Handle<YieldTermStructure> MarketImpl::equityInterestRateCurve(const string& key, const string& configuration) const {
-    return lookup<Handle<YieldTermStructure>>(equityInterestRateCurves_, key, configuration, "dividend yield curve");
-}
 
 Handle<BlackVolTermStructure> MarketImpl::equityVol(const string& key, const string& configuration) const {
     return lookup<Handle<BlackVolTermStructure>>(equityVols_, key, configuration, "equity vol curve");
@@ -209,10 +206,6 @@ void MarketImpl::refresh(const string& configuration) {
                 it->second.insert(*x.second);
         }
         for (auto& x : equityDividendCurves_) {
-            if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
-                it->second.insert(*x.second);
-        }
-        for (auto& x : equityInterestRateCurves_) {
             if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
                 it->second.insert(*x.second);
         }

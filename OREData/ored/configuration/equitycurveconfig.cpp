@@ -26,11 +26,11 @@ namespace data {
 
 EquityCurveConfig::EquityCurveConfig(const string& curveID, const string& curveDescription, 
     const string& currency, const EquityCurveConfig::Type& type,
-    const string& equitySpotQuote, const string& equityInterestRateCurve,
-    const vector<string>& quotes, const string& dayCountID, bool extrapolation)
+    const string& equitySpotQuote, const vector<string>& quotes, 
+    const string& dayCountID, bool extrapolation)
     : curveID_(curveID), curveDescription_(curveDescription), currency_(currency), type_(type),
-    equitySpotQuoteID_(equitySpotQuote), equityInterestRateCurveID_(equityInterestRateCurve),
-    quotes_(quotes), dayCountID_(dayCountID), extrapolation_(extrapolation) {}
+    equitySpotQuoteID_(equitySpotQuote), quotes_(quotes), dayCountID_(dayCountID), 
+    extrapolation_(extrapolation) {}
 
 void EquityCurveConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "EquityCurve");
@@ -48,7 +48,6 @@ void EquityCurveConfig::fromXML(XMLNode* node) {
         QL_FAIL("Type " << type << " not recognized");
     }
 
-    equityInterestRateCurveID_ = XMLUtils::getChildValue(node, "InterestRateCurve", true);
     equitySpotQuoteID_ = XMLUtils::getChildValue(node, "SpotQuote", true);
     dayCountID_ = XMLUtils::getChildValue(node, "DayCounter", false);
     quotes_ = XMLUtils::getChildrenValues(node, "Quotes", "Quote", true);
@@ -70,7 +69,6 @@ XMLNode* EquityCurveConfig::toXML(XMLDocument& doc) {
      QL_FAIL("Unkown type in EquityCurveConfig::toXML()");
 
     XMLUtils::addChild(doc, node, "SpotQuote", equitySpotQuoteID_);
-    XMLUtils::addChild(doc, node, "InterestRateCurve", equityInterestRateCurveID_);
     XMLUtils::addChild(doc, node, "DayCounter", dayCountID_);
     XMLUtils::addChildren(doc, node, "Quotes", "Quote", quotes_);
     XMLUtils::addChild(doc, node, "Extrapolation", extrapolation_);

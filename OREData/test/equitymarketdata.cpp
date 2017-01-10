@@ -82,7 +82,6 @@ std::string divYieldCurveConfigString =
 "<Currency>USD</Currency> <!--is this really needed ? -->"
 "<Type>DividendYield</Type> <!-- {DividendYield, ForwardPrice} -->"
 "<SpotQuote>EQUITY/PRICE/SP5/USD</SpotQuote> <!--the spot quote from the market data file-->"
-"<InterestRateCurve>Yield/USD/USDFedFundsCurve</InterestRateCurve> <!--the IR rate curve to be used when projecting the forward prices-->"
 "<Quotes>"
 "<Quote>EQUITY_DIVIDEND/RATE/SP5/USD/1M</Quote>"
 "<Quote>EQUITY_DIVIDEND/RATE/SP5/USD/2016-09-15</Quote>"
@@ -103,7 +102,6 @@ std::string eqBadConfigString =
 "<CurveDescription>SP Mini equity price projection curve</CurveDescription>"
 "<Currency>USD</Currency> <!--is this really needed ? -->"
 "<Type>ForwardPrice</Type> <!-- {DividendYield, ForwardPrice} -->"
-"<InterestRateCurve>Yield/USD/USDFedFundsCurve</InterestRateCurve> <!--the IR rate curve to be used when projecting the forward prices-->"
 "<Quotes>"
 "<Quote>EQUITY_FWD/PRICE/SP5Mini/USD/1M</Quote>"
 "<Quote>EQUITY_FWD/PRICE/SP5Mini/USD/2016-09-15</Quote>"
@@ -171,7 +169,6 @@ void EquityMarketDataTest::testEqCurveConfigLoad() {
         ec->curveDescription());
     BOOST_CHECK_EQUAL("USD", ec->currency());
     BOOST_CHECK_EQUAL("EQUITY/PRICE/SP5/USD", ec->equitySpotQuoteID());
-    BOOST_CHECK_EQUAL("Yield/USD/USDFedFundsCurve", ec->equityInterestRateCurveID());
     bool testType = (ec->type() == ore::data::EquityCurveConfig::Type::DividendYield);
     BOOST_CHECK(testType);
     //BOOST_CHECK_EQUAL(ore::data::EquityCurveConfig::Type::DividendYield, ec->type());

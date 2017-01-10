@@ -96,7 +96,6 @@ public:
     //! Equity curves
     Handle<Quote> equitySpot(const string& eqName, const string& configuration = Market::defaultConfiguration) const;
     Handle<YieldTermStructure> equityDividendCurve(const string& eqName, const string& configuration = Market::defaultConfiguration) const;
-    Handle<YieldTermStructure> equityInterestRateCurve(const string& eqName, const string& configuration = Market::defaultConfiguration) const;
 
     //! Equity volatilities
     Handle<BlackVolTermStructure> equityVol(const string& eqName, const string& configuration = Market::defaultConfiguration) const;
@@ -126,7 +125,6 @@ protected:
     map<pair<string, string>, Handle<Quote>> recoveryRates_;
     map<pair<string, string>, Handle<OptionletVolatilityStructure>> capFloorCurves_;
     map<pair<string, string>, Handle<Quote>> equitySpots_;
-    map<pair<string, string>, Handle<YieldTermStructure>> equityInterestRateCurves_;
     map<pair<string, string>, Handle<YieldTermStructure>> equityDividendCurves_;
     map<pair<string, string>, Handle<BlackVolTermStructure>> equityVols_;
     

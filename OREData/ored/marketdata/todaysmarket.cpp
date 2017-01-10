@@ -299,7 +299,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                     // build the curve
                     LOG("Building EquityCurve for asof " << asof);
                     boost::shared_ptr<EquityCurve> equityCurve = boost::make_shared<EquityCurve>(
-                        asof, *equityspec, loader, curveConfigs, conventions, requiredYieldCurves);
+                        asof, *equityspec, loader, curveConfigs, conventions);
                     itr = requiredEquityCurves.insert(make_pair(equityspec->name(), equityCurve)).first;
                 }
 
@@ -307,17 +307,14 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                     if (it.second == spec->name()) {
                         LOG("Adding EquityCurve (" << it.first << ") with spec " << *equityspec
                             << " to configuration " << configuration.first);
-                        equityDividendCurves_[make_pair(configuration.first, it.first)] =
-                            Handle<YieldTermStructure>(itr->second->divYieldTermStructure());
+                        Handle<YieldTermStructure> discYts = discountCurve(equityspec->ccy(), configuration.first);
+                        boost::shared_ptr<YieldTermStructure> divYield =
+                            itr->second->divYieldTermStructure(
+                                asof, discYts);
+                        Handle<YieldTermStructure> div_h(divYield);
+                        equityDividendCurves_[make_pair(configuration.first, it.first)] = div_h;
                         equitySpots_[make_pair(configuration.first, it.first)] =
                             Handle<Quote>(boost::make_shared<SimpleQuote>(itr->second->equitySpot()));
-                        string eqIrCurveString = itr->second->equityIrTermStructureString();
-                        auto it_eqir = requiredYieldCurves.find(eqIrCurveString);
-                        QL_REQUIRE(it_eqir != requiredYieldCurves.end(),
-                            "Required Yield Curve " << eqIrCurveString << " not found " << 
-                            "(referenced by " << equityspec->name() << ")");
-                        equityInterestRateCurves_[make_pair(configuration.first, it.first)] =
-                            it_eqir->second->handle();
                     }
                 }
                 break;

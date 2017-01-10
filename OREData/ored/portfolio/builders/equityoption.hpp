@@ -50,9 +50,8 @@ protected:
         string key = keyImpl(equityName, ccy);
         boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = boost::make_shared<GeneralizedBlackScholesProcess>(
             market_->equitySpot(equityName, configuration(MarketContext::pricing)),
-            market_->equityDividendCurve(equityName,
-                                   configuration(MarketContext::pricing)), // dividend yield ~ foreign yield
-            market_->equityInterestRateCurve(equityName, configuration(MarketContext::pricing)),
+            market_->equityDividendCurve(equityName,configuration(MarketContext::pricing)), // dividend yield ~ foreign yield
+            market_->discountCurve(ccy.code(), configuration(MarketContext::pricing)),
             market_->equityVol(equityName, configuration(MarketContext::pricing)));
         // separate IR curves required for "discounting" and "forward price estimation"
         Handle<YieldTermStructure> discountCurve = market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));

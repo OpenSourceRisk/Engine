@@ -102,7 +102,6 @@ public:
     //@{
     virtual Handle<Quote> equitySpot(const string& eqName, const string& configuration = Market::defaultConfiguration) const = 0;
     virtual Handle<YieldTermStructure> equityDividendCurve(const string& eqName, const string& configuration = Market::defaultConfiguration) const = 0;
-    virtual Handle<YieldTermStructure> equityInterestRateCurve(const string& eqName, const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 
     //! \name Equity volatilities
