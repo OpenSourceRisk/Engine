@@ -403,42 +403,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         equityCurveTimes.push_back(dc.yearFraction(asof_, asof_ + tenor));
         equityCurveDates.push_back(asof_ + tenor);
     }
-    // building equity interest rate curves
-    // separate curve per equity name (should we compress this, so that there is a currency look-up instead?)
-    LOG("building equity interest rate curves...");
-    for (const auto& eqName : parameters->equityNames()) {
-        DLOG("building " << eqName << " equity rate projection curve..");
-        Handle<YieldTermStructure> wrapper = initMarket->equityInterestRateCurve(eqName, configuration);
-        vector<Handle<Quote>> quotes;
-        boost::shared_ptr<SimpleQuote> q(new SimpleQuote(1.0));
-        quotes.push_back(Handle<Quote>(q));
 
-        for (Size i = 0; i < equityCurveTimes.size() - 1; i++) {
-            boost::shared_ptr<SimpleQuote> q(new SimpleQuote(wrapper->discount(equityCurveTimes[i + 1])));
-            Handle<Quote> qh(q);
-            quotes.push_back(qh);
-            simData_.emplace(std::piecewise_construct,
-                std::forward_as_tuple(RiskFactorKey::KeyType::YieldCurve, eqName, i),
-                std::forward_as_tuple(q));
-        }
-        boost::shared_ptr<YieldTermStructure> eqirCurve;
-        if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister) {
-            eqirCurve = boost::shared_ptr<YieldTermStructure>(new QuantExt::InterpolatedDiscountCurve(
-                equityCurveTimes, quotes, 0, wrapper->calendar(), wrapper->dayCounter()));
-        }
-        else {
-            eqirCurve = boost::shared_ptr<YieldTermStructure>(
-                new QuantExt::InterpolatedDiscountCurve2(equityCurveTimes, quotes, wrapper->dayCounter()));
-        }
-        Handle<YieldTermStructure> eqir_h(eqirCurve);
-        if (wrapper->allowsExtrapolation())
-            eqir_h->enableExtrapolation();
-
-        equityInterestRateCurves_.insert(
-            pair<pair<string, string>, Handle<YieldTermStructure>>(make_pair(Market::defaultConfiguration, eqName), eqir_h));
-        DLOG("building " << eqName << " equity rate curve done");
-    }
-    LOG("equity rate projection curves done");
 
     // building equity dividend yield curves
     LOG("building equity dividend yield curves...");

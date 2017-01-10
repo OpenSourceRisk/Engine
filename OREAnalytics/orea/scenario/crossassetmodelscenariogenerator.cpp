@@ -154,16 +154,6 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
         indices.push_back(index->clone(Handle<YieldTermStructure>(impliedFwdCurve)));
     }
 
-    // Equity rate curves and curves
-    vector<boost::shared_ptr<LgmImpliedYieldTermStructure>> eqircurves;
-    for (Size j = 0; j < n_eq; ++j) {
-        std::string eqName = simMarketConfig_->equityNames()[j];
-        Handle<YieldTermStructure> eqirts = initMarket_->equityInterestRateCurve(eqName, configuration_);
-        auto impliedRateCurve = boost::make_shared<LgmImpliedYtsFwdFwdCorrected>(
-            model_->lgm(model_->ccyIndex(model_->eqbs(j)->currency())), eqirts, dc, false);
-        eqircurves.push_back(impliedRateCurve);
-    }
-
     for (Size i = 0; i < dates_.size(); i++) {
         Real t = timeGrid_[i + 1]; // recall: time grid has inserted t=0
 
@@ -232,18 +222,6 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
         for (Size k = 0; k < n_eq; k++) {
             Real eqSpot = std::exp(sample.value[model_->pIdx(EQ, k)][i + 1]); 
             scenarios[i]->add(eqKeys_[k], eqSpot);
-        }
-
-        // Equity interest rate curves
-        for (Size j = 0; j < n_eq; ++j) {
-            Real z = sample.value[model_->pIdx(IR, model_->ccyIndex(model_->eqbs(j)->currency()))][i + 1];
-            eqircurves[j]->move(dates_[i], z);
-            for (Size k = 0; k < n_eq_ten; ++k) {
-                Date d = dates_[i] + simMarketConfig_->equityTenors()[k];
-                Time T = dc.yearFraction(dates_[i], d);
-                Real discount = eqircurves[j]->discount(T);
-                scenarios[i]->add(eqirCurveKeys_[j * n_eq_ten + k], discount);
-            }
         }
 
         // Equity vols

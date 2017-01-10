@@ -72,7 +72,7 @@ EqBsBuilder::EqBsBuilder(const boost::shared_ptr<ore::data::Market>& market,
     Handle<Quote> eqSpot = market_->equitySpot(eqName, configuration_);
     string ccyPair = ccy.code() + baseCcy.code();
     Handle<Quote> fxSpot = market_->fxSpot(ccyPair, configuration_);
-    Handle<YieldTermStructure> eqRateCurve = market_->equityInterestRateCurve(eqName, configuration_);
+    Handle<YieldTermStructure> eqRateCurve = market_->discountCurve(ccy.code(), configuration_);
     Handle<YieldTermStructure> eqDivCurve = market_->equityDividendCurve(eqName, configuration_);
 
     if (data->sigmaParamType() == ParamType::Piecewise)
