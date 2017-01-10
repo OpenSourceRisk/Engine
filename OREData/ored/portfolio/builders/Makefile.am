@@ -17,6 +17,8 @@ this_include_HEADERS = \
 	cachingenginebuilder.hpp \
 	capfloor.hpp \
 	capfloorediborleg.hpp \
+	equityforward.hpp \
+	equityoption.hpp \
 	fxforward.hpp \
 	fxoption.hpp \
 	swap.hpp \

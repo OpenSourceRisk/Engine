@@ -30,7 +30,7 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #include <ql/exchangerate.hpp>
 #include <ql/instrument.hpp>
 #include <ql/quote.hpp>
-#include <ql\position.hpp>
+#include <ql/position.hpp>
 
 using namespace QuantLib;
 
