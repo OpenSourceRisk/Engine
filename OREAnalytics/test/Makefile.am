@@ -6,6 +6,7 @@ OREANALYTICS_TESTS = \
 	scenariosimmarket.hpp scenariosimmarket.cpp \
 	swapperformance.hpp swapperformance.cpp \
 	scenariogenerator.hpp scenariogenerator.cpp \
+	observationmode.hpp observationmode.cpp \
 	testmarket.hpp
 
 dist-hook:
