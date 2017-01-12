@@ -75,6 +75,7 @@
     <ClInclude Include="ored\ored.hpp" />
     <ClInclude Include="ored\portfolio\all.hpp" />
     <ClInclude Include="ored\portfolio\builders\all.hpp" />
+    <ClInclude Include="ored\portfolio\builders\bond.hpp" />
     <ClInclude Include="ored\portfolio\builders\cachingenginebuilder.hpp" />
     <ClInclude Include="ored\portfolio\builders\capfloor.hpp" />
     <ClInclude Include="ored\portfolio\builders\capfloorediborleg.hpp" />
