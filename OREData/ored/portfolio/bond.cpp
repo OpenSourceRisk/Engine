@@ -15,7 +15,7 @@ contribution to risk analytics and model standardisation, but WITHOUT
 ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
-
+//#include <ored/portfolio/builders/bond.hpp>
 #include <ored/portfolio/swap.hpp>
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/bond.hpp>
@@ -40,6 +40,9 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("Bond");
 
+    string ccy_str = coupons_.currency();
+    Currency currency = parseCurrency(ccy_str);
+
     Date issueDate = parseDate(issueDate_);
     Calendar calendar = parseCalendar(calendar_);
     Natural settlementDays;
@@ -53,13 +56,27 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             engineFactory->market()->iborIndex(indexName, builder->configuration(MarketContext::pricing));
         QL_REQUIRE(!hIndex.empty(), "Could not find ibor index " << indexName << " in market.");
         boost::shared_ptr<IborIndex> index = hIndex.currentLink();
+        leg = makeIborLeg(coupons_, index, engineFactory);
     } else {
         QL_FAIL("Unknown leg type " << coupons_.legType());
     }
 
     boost::shared_ptr<QuantLib::Bond> bond(new QuantLib::Bond(settlementDays, calendar, issueDate, leg));
+    //ADD IN BUILDER WHEN READY - follow swap example
+    //boost::shared_ptr<BondEngineBuilder> bondBuilder = boost::dynamic_pointer_cast<BondEngineBuilder>(builder);
+    //QL_REQUIRE(bondBuilder, "No Builder found for Bond" << id());
+    //bond->setPricingEngine(bondBuilder->engine(currency));
+    //DLOG("Bond::build(): Bond NPV = " << bond->NPV());
 
-    //add maturity
+    // ?????
+    instrument_.reset(new VanillaInstrument(bond)); 
+
+    // set maturity
+    maturity_ = leg.back()->date();
+    Date d = leg.back()->date();
+    if (d > maturity_)
+        maturity_ = d;
+
 
 }
 
