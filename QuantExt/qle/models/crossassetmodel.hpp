@@ -186,6 +186,13 @@ public:
                                             const Constraint& constraint = Constraint(),
                                             const std::vector<Real>& weights = std::vector<Real>());
 
+    /*! calibrate fx volatilities globally to a set of fx options */
+    void calibrateFxBsVolatilitiesGlobal(const Size ccy,
+                                         const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers,
+                                         OptimizationMethod& method, const EndCriteria& endCriteria,
+                                         const Constraint& constraint = Constraint(),
+                                         const std::vector<Real>& weights = std::vector<Real>());
+
     /* ... add more calibration procedures here ... */
 
 protected:
@@ -239,6 +246,21 @@ protected:
             if (ccy == j) {
                 tmp[i] = false;
             }
+            res.insert(res.end(), tmp.begin(), tmp.end());
+        }
+        return res;
+    }
+
+    Disposable<std::vector<bool> > MoveFxBsVolatilities(const Size ccy) {
+        std::vector<bool> res(0);
+        for (Size j = 0; j < nIrLgm1f_; ++j) {
+            std::vector<bool> tmp1(p_[idx(IR, j)]->parameter(0)->size(), true);
+            std::vector<bool> tmp2(p_[idx(IR, j)]->parameter(1)->size(), true);
+            res.insert(res.end(), tmp1.begin(), tmp1.end());
+            res.insert(res.end(), tmp2.begin(), tmp2.end());
+        }
+        for (Size j = 0; j < nFxBs_; ++j) {
+            std::vector<bool> tmp(p_[idx(FX, j)]->parameter(0)->size(), ccy != j);
             res.insert(res.end(), tmp.begin(), tmp.end());
         }
         return res;
