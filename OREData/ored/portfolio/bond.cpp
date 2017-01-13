@@ -63,12 +63,10 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     boost::shared_ptr<QuantLib::Bond> bond(new QuantLib::Bond(settlementDays, calendar, issueDate, leg));
     //ADD IN BUILDER WHEN READY - follow swap example
-    //boost::shared_ptr<BondEngineBuilder> bondBuilder = boost::dynamic_pointer_cast<BondEngineBuilder>(builder);
-    //QL_REQUIRE(bondBuilder, "No Builder found for Bond" << id());
-    //bond->setPricingEngine(bondBuilder->engine(currency));
-    //DLOG("Bond::build(): Bond NPV = " << bond->NPV());
-
-    // ?????
+    boost::shared_ptr<BondEngineBuilder> bondBuilder = boost::dynamic_pointer_cast<BondEngineBuilder>(builder);
+    QL_REQUIRE(bondBuilder, "No Builder found for Bond" << id());
+    bond->setPricingEngine(bondBuilder->engine(currency));
+    DLOG("Bond::build(): Bond NPV = " << bond->NPV()); 
     instrument_.reset(new VanillaInstrument(bond)); 
 
     // set maturity
