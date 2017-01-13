@@ -40,6 +40,7 @@ public:
         string s = to_string(p);
         fprintf(fp_, "%s", s.c_str());
     }
+
 private:
     FILE* fp_;
     int prec_;
@@ -51,9 +52,7 @@ CSVFileReport::CSVFileReport(const string& filename, const char sep)
     QL_REQUIRE(fp_, "Error opening file " << filename_);
 }
 
-CSVFileReport::~CSVFileReport() {
-    end();
-}
+CSVFileReport::~CSVFileReport() { end(); }
 
 Report& CSVFileReport::addColumn(const string& name, const ReportType& rt, Size precision) {
     columnTypes_.push_back(rt);

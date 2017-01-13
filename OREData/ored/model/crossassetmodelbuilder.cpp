@@ -208,7 +208,7 @@ CrossAssetModelBuilder::build(const boost::shared_ptr<CrossAssetModelData>& conf
         if (fx->calibrationType() == CalibrationType::Bootstrap && fx->sigmaParamType() == ParamType::Piecewise)
             model->calibrateFxBsVolatilitiesIterative(i, fxOptionBaskets_[i], *optimizationMethod_, endCriteria_);
         else
-            model->calibrateFxBsVolatilitiesGlobal(i,fxOptionBaskets_[i], *optimizationMethod_, endCriteria_);
+            model->calibrateFxBsVolatilitiesGlobal(i, fxOptionBaskets_[i], *optimizationMethod_, endCriteria_);
 
         LOG("FX " << fx->foreignCcy() << " calibration errors:");
         fxOptionCalibrationErrors_[i] =

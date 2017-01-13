@@ -138,10 +138,9 @@ void LgmBuilder::update() {
                 model_->calibrate(swaptionBasket_, *optimizationMethod_, endCriteria_);
             }
         } else {
-            if(!data_->calibrateA() && !data_->calibrateH()) {
+            if (!data_->calibrateA() && !data_->calibrateH()) {
                 LOG("skip LGM calibration (both calibrate volatility and reversion are false)");
-            }
-            else {
+            } else {
                 LOG("call calibrateGlobal");
                 model_->calibrate(swaptionBasket_, *optimizationMethod_, endCriteria_);
             }
@@ -152,8 +151,7 @@ void LgmBuilder::update() {
             QL_REQUIRE(fabs(error_) < bootstrapTolerance_, "calibration error " << error_ << " exceeds tolerance "
                                                                                 << bootstrapTolerance_);
         }
-    }
-    else {
+    } else {
         LOG("skip LGM calibration (calibration type is none)");
     }
 
