@@ -12,3 +12,4 @@
 #include <ored/utilities/all.hpp>
 #include <ored/configuration/all.hpp>
 #include <ored/model/all.hpp>
+#include <ored/report/all.hpp>
