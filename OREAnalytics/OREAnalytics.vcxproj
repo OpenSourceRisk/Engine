@@ -49,7 +49,6 @@
     <ClInclude Include="orea\engine\valuationcalculator.hpp" />
     <ClInclude Include="orea\engine\valuationengine.hpp" />
     <ClInclude Include="orea\orea.hpp" />
-    <ClInclude Include="orea\scenario\additionalscenariodata.hpp" />
     <ClInclude Include="orea\scenario\aggregationscenariodata.hpp" />
     <ClInclude Include="orea\scenario\all.hpp" />
     <ClInclude Include="orea\scenario\crossassetmodelscenariogenerator.hpp" />

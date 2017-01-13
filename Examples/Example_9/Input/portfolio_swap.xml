@@ -3,7 +3,6 @@
   <Trade id="XCCY_Swap_EUR_USD">
     <TradeType>Swap</TradeType>
     <Envelope>
-      <Type>Swap</Type>
       <CounterParty>CPTY_A</CounterParty>
       <NettingSetId>CPTY_A</NettingSetId>
     </Envelope>
@@ -87,7 +86,6 @@
   <Trade id="XCCY_Swap_EUR_USD_RESET">
     <TradeType>Swap</TradeType>
     <Envelope>
-      <Type>Swap</Type>
       <CounterParty>CPTY_A</CounterParty>
       <NettingSetId>CPTY_A</NettingSetId>
     </Envelope>

@@ -40,5 +40,5 @@ public:
                                                             Real numeraire = 0.0) const = 0;
 };
 
-} // namesapce scenario
+} // namespace scenario
 } // namespace ore

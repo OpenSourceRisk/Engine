@@ -303,7 +303,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
             probs.push_back(prob);
         }
 
-        // FIXME riskmarket uses SurvivalProbabilityCurve but this isn't added to ore 
+        // FIXME riskmarket uses SurvivalProbabilityCurve but this isn't added to ore
         boost::shared_ptr<DefaultProbabilityTermStructure> defaultCurve(
             new InterpolatedSurvivalProbabilityCurve<Linear>(dates, probs, wrapper->dayCounter(), wrapper->calendar()));
         Handle<DefaultProbabilityTermStructure> dch(defaultCurve);

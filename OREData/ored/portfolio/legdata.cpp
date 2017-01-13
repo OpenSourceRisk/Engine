@@ -130,7 +130,7 @@ void LegData::fromXML(XMLNode* node) {
         fixedLegData_ = FixedLegData();
         floatingLegData_ = FloatingLegData();
     } else {
-        QL_FAIL("Unkown legType :" << legType_);
+        QL_FAIL("Unknown legType :" << legType_);
     }
 }
 

@@ -64,7 +64,7 @@ LgmBuilder::LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const
         QL_REQUIRE(data_->aTimes().size() == 0, "empty alpha times expected");
         QL_REQUIRE(data_->aValues().size() == 1, "initial alpha array should have size 1");
     } else if (data_->aParamType() == ParamType::Piecewise) {
-        if (data_->calibrateA()) { // override
+        if (data_->calibrateA() && data_->calibrationType() == CalibrationType::Bootstrap) { // override
             if (data_->aTimes().size() > 0) {
                 LOG("overriding alpha time grid with swaption expiries");
             }
@@ -138,15 +138,21 @@ void LgmBuilder::update() {
                 model_->calibrate(swaptionBasket_, *optimizationMethod_, endCriteria_);
             }
         } else {
-            LOG("call calibrateGlobal");
-            model_->calibrate(swaptionBasket_, *optimizationMethod_, endCriteria_);
+            if (!data_->calibrateA() && !data_->calibrateH()) {
+                LOG("skip LGM calibration (both calibrate volatility and reversion are false)");
+            } else {
+                LOG("call calibrateGlobal");
+                model_->calibrate(swaptionBasket_, *optimizationMethod_, endCriteria_);
+            }
         }
         LOG("LGM " << data_->ccy() << " calibration errors:");
         error_ = logCalibrationErrors(swaptionBasket_, parametrization_);
-        if (data_->calibrationType() == CalibrationType::Bootstrap) {
+        if (data_->calibrationType() == CalibrationType::Bootstrap && (data_->calibrateA() || data_->calibrateH())) {
             QL_REQUIRE(fabs(error_) < bootstrapTolerance_, "calibration error " << error_ << " exceeds tolerance "
                                                                                 << bootstrapTolerance_);
         }
+    } else {
+        LOG("skip LGM calibration (calibration type is none)");
     }
 
     LOG("Apply shift horizon and scale (if not 0.0 and 1.0 respectively)");
@@ -221,37 +227,41 @@ void LgmBuilder::buildSwaptionBasket() {
                                                                  : shortSwapIndex->iborIndex()->dayCounter();
         if (expiryDateBased && termDateBased) {
             vol = Handle<Quote>(boost::make_shared<SimpleQuote>(svts->volatility(expiryDb, termT, strikeValue)));
-            helper = boost::make_shared<SwaptionHelper>(
-                expiryDb, termDb, vol, iborIndex, fixedLegTenor, fixedDayCounter, floatDayCounter, yts,
-                calibrationErrorType_, strikeValue, 1.0, svts->volatilityType(), svts->shift(expiryDb, termT));
+            Real shift = svts->volatilityType() == ShiftedLognormal ? svts->shift(expiryDb, termT) : 0.0;
+            helper = boost::make_shared<SwaptionHelper>(expiryDb, termDb, vol, iborIndex, fixedLegTenor,
+                                                        fixedDayCounter, floatDayCounter, yts, calibrationErrorType_,
+                                                        strikeValue, 1.0, svts->volatilityType(), shift);
             LOG("Added Date / Date based SwaptionHelper " << data_->ccy() << " " << expiryDb << ", " << termDb << ", "
                                                           << strike << " : " << vol->value() << " "
                                                           << svts->volatilityType());
         }
         if (expiryDateBased && !termDateBased) {
             vol = Handle<Quote>(boost::make_shared<SimpleQuote>(svts->volatility(expiryDb, termPb, strikeValue)));
-            helper = boost::make_shared<SwaptionHelper>(
-                expiryDb, termPb, vol, iborIndex, fixedLegTenor, fixedDayCounter, floatDayCounter, yts,
-                calibrationErrorType_, strikeValue, 1.0, svts->volatilityType(), svts->shift(expiryDb, termPb));
+            Real shift = svts->volatilityType() == ShiftedLognormal ? svts->shift(expiryDb, termPb) : 0.0;
+            helper = boost::make_shared<SwaptionHelper>(expiryDb, termPb, vol, iborIndex, fixedLegTenor,
+                                                        fixedDayCounter, floatDayCounter, yts, calibrationErrorType_,
+                                                        strikeValue, 1.0, svts->volatilityType(), shift);
             LOG("Added Date / Period based SwaptionHelper " << data_->ccy() << " " << expiryDb << ", " << termPb << ", "
                                                             << strike << " : " << vol->value() << " "
                                                             << svts->volatilityType());
         }
         if (!expiryDateBased && termDateBased) {
             Date expiry = svts->optionDateFromTenor(expiryPb);
+            Real shift = svts->volatilityType() == ShiftedLognormal ? svts->shift(expiryPb, termT) : 0.0;
             vol = Handle<Quote>(boost::make_shared<SimpleQuote>(svts->volatility(expiryPb, termT, strikeValue)));
             helper = boost::make_shared<SwaptionHelper>(expiry, termDb, vol, iborIndex, fixedLegTenor, fixedDayCounter,
                                                         floatDayCounter, yts, calibrationErrorType_, strikeValue, 1.0,
-                                                        svts->volatilityType(), svts->shift(expiryPb, termT));
+                                                        svts->volatilityType(), shift);
             LOG("Added Period / Date based SwaptionHelper " << data_->ccy() << " " << expiryPb << ", " << termDb << ", "
                                                             << strike << " : " << vol->value() << " "
                                                             << svts->volatilityType());
         }
         if (!expiryDateBased && !termDateBased) {
             vol = Handle<Quote>(boost::make_shared<SimpleQuote>(svts->volatility(expiryPb, termPb, strikeValue)));
-            helper = boost::make_shared<SwaptionHelper>(
-                expiryPb, termPb, vol, iborIndex, fixedLegTenor, fixedDayCounter, floatDayCounter, yts,
-                calibrationErrorType_, strikeValue, 1.0, svts->volatilityType(), svts->shift(expiryPb, termPb));
+            Real shift = svts->volatilityType() == ShiftedLognormal ? svts->shift(expiryPb, termPb) : 0.0;
+            helper = boost::make_shared<SwaptionHelper>(expiryPb, termPb, vol, iborIndex, fixedLegTenor,
+                                                        fixedDayCounter, floatDayCounter, yts, calibrationErrorType_,
+                                                        strikeValue, 1.0, svts->volatilityType(), shift);
             LOG("Added Period / Period based SwaptionHelper " << data_->ccy() << " " << expiryPb << ", " << termPb
                                                               << ", " << strike << " : " << vol->value() << " "
                                                               << svts->volatilityType());

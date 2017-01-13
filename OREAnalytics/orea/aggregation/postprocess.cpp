@@ -393,8 +393,8 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
                 if (netting->activeCsaFlag()) {
                     Real indexValue = scenarioData->get(j, k, AggregationScenarioDataType::IndexFixing, csaIndexName);
                     Real dcf = csaIndex->dayCounter().yearFraction(prevDate, date);
-                    Real colvaDelta = balance * collateralSpread_ * dcf / samples;
-                    Real floorDelta = balance * std::max(-indexValue, 0.0) * dcf / samples;
+                    Real colvaDelta = -balance * collateralSpread_ * dcf / samples;
+                    Real floorDelta = -balance * std::max(-indexValue, 0.0) * dcf / samples;
                     colvaInc[j + 1] += colvaDelta;
                     nettingSetCOLVA_[nettingSetId] += colvaDelta;
                     eoniaFloorInc[j + 1] += floorDelta;
