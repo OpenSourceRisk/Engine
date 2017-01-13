@@ -32,6 +32,8 @@ Version & Date & Author & Comment \\
 \hline
 0.3 & 4 November 2016 & Niall O'Sullivan& multiple repos and comments from RL\\
 \hline
+0.4 & 5 Janurary 2017 & Niall O'Sullivan& clarification on line endings and formatting\\
+\hline
 \end{supertabular}
 \end{center}
 
@@ -90,10 +92,12 @@ ORE will not depend or use any environment variables or windows registry files. 
 ORE is a single threaded application, the use of singletons is to be avoided where possible. If a developer feels that a singleton must be employed than this must be justified in detail.
 
 \subsection*{Code Layout and indention}
-All code is to be indented with four spaces, tabs are not to be included in any source file. Redundant whitespace is not to be inserted into files. 
-
-\noindent
-A full set of rules and/or a configuration for a source code formatting tool (e.g. astyle or clang-format) will be defined.
+\begin{itemize}
+\item All code is to be indented with four spaces, tabs are not to be included in any source file.
+\item Redundant whitespace is not to be inserted into files. 
+\item There are two clang-format files that define the exact coding formatting rules, QuantExt has it's own one (which is C++98 compatable) while the other top level one is to be used for all other coding. Clang-format can be run on windows and Mac.
+\item All C++ files should use unix style line endings (\textbackslash n or LF). All MSVC files (vcxpoj and sln files) should be Dos style (\textbackslash r\textbackslash n or CRLF). There are many ways, using git configuration or otherwise, to ensure this. No commits should be made that violate this (check with git diff before commiting)
+\end{itemize}
 
 \subsection*{Namespace}
 With the exception of QuantExt, all code will be in the namespace openxva, nested namespaces should be used for logical modules (like boost), all namespaces should be in lower case, e.g. \textbf{openxva::data, openxva::analytics}.
@@ -108,7 +112,8 @@ All header files should include Doxygen style comments and description, the buil
 All header files should have a \textbf{\#pragma once} statement instead of \textbf{\#define} statements
 
 \subsection*{Copyright}
-All source files should be copyright \textbf{Quaternion Risk Management Ltd.} and contains the ORE licence.
+All ORE source files should be copyright \textbf{Quaternion Risk Management Ltd.} and contains the ORE licence.
+All ORE+ source files should simply be copyright \textbf{Quaternion Risk Management Ltd.}.
 
 %-------------------------------------------------------------------------------
 \section*{git usage - pull requests}

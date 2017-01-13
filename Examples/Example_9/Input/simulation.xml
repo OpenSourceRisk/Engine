@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<Root>
+
   <Simulation>
     <!--
 	This section determines the scenario generation
@@ -266,4 +266,4 @@
       </AggregationScenarioDataIndices>
     </Market>
   </Simulation>
-</Root>
+
