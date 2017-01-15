@@ -28,6 +28,7 @@
 #include <ored/marketdata/fxvolcurve.hpp>
 #include <ored/marketdata/swaptionvolcurve.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
+#include <ored/marketdata/bondspread.hpp>
 #include <ored/marketdata/curveloader.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/indexparser.hpp>
@@ -57,6 +58,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
     map<string, boost::shared_ptr<SwaptionVolCurve>> requiredSwaptionVolCurves;
     map<string, boost::shared_ptr<CapFloorVolCurve>> requiredCapFloorVolCurves;
     map<string, boost::shared_ptr<DefaultCurve>> requiredDefaultCurves;
+    map<string, boost::shared_ptr<BondSpread>> requiredBondSpreads;
 
     for (const auto& configuration : params.configurations()) {
 
@@ -285,8 +287,32 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                 break;
             }
 
+            case CurveSpec::CurveType::BondSpread: {
+                boost::shared_ptr<BondSpreadSpec> bondspreadspec = boost::dynamic_pointer_cast<BondSpreadSpec>(spec);
+                QL_REQUIRE(bondspreadspec, "Failed to convert spec " << *spec << " to security spread spec");
+
+                // have we built the curve already?
+                auto itr = requiredBondSpreads.find(bondspreadspec->securityID());
+                if (itr == requiredBondSpreads.end()) {
+                    // build the curve
+                    LOG("Building BondSpreads for asof " << asof);
+                    boost::shared_ptr<BondSpread> bondSpread = boost::make_shared<BondSpread>(asof, *bondspreadspec, loader);
+                    itr = requiredBondSpreads.insert(make_pair(bondspreadspec->securityID(), bondSpread)).first;
+                }
+
+                // add the handle to the Market Map (possible lots of times for proxies)
+                for (const auto& it : params.bondSpreads(configuration.first)) {
+                    if (it.second == spec->name()) {
+                        LOG("Adding BondSpread (" << it.first << ") with spec " << *bondspreadspec << " to configuration "
+                            << configuration.first);
+                        bondSpreads_[make_pair(configuration.first, it.first)] = itr->second->spread();
+                    }
+                }
+                break;
+            }
+
             default: {
-                // maybe we just log an continue? need to update count then
+                // maybe we just log and continue? need to update count then
                 QL_FAIL("Unhandled spec " << *spec);
             }
             }

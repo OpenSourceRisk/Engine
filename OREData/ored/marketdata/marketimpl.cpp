@@ -62,6 +62,10 @@ Handle<SwapIndex> MarketImpl::swapIndex(const string& key, const string& configu
     return lookup<Handle<SwapIndex>>(swapIndices_, key, configuration, "swap index");
 }
 
+Handle<YieldTermStructure> MarketImpl::spreadCurve(const string& key, const string& configuration) const {
+    return lookup<Handle<YieldTermStructure>>(spreadCurves_, key, configuration, "spread curve");
+}
+
 Handle<QuantLib::SwaptionVolatilityStructure> MarketImpl::swaptionVol(const string& key,
                                                                       const string& configuration) const {
     return lookup<Handle<QuantLib::SwaptionVolatilityStructure>>(swaptionCurves_, key, configuration, "swaption curve");
@@ -117,6 +121,10 @@ Handle<Quote> MarketImpl::recoveryRate(const string& key, const string& configur
 
 Handle<OptionletVolatilityStructure> MarketImpl::capFloorVol(const string& key, const string& configuration) const {
     return lookup<Handle<OptionletVolatilityStructure>>(capFloorCurves_, key, configuration, "capfloor curve");
+}
+
+Handle<Quote> MarketImpl::bondSpread(const string& key, const string& configuration) const {
+    return lookup<Handle<Quote>>(bondSpreads_, key, configuration, "security spread");
 }
 
 void MarketImpl::addSwapIndex(const string& swapIndex, const string& discountIndex, const string& configuration) {
