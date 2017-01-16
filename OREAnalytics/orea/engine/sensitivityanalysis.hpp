@@ -116,6 +116,10 @@ private:
     //! Create Cap/Floor isntrument for implying flat vol sensitivity from optionlet vol sensitivity
     boost::shared_ptr<CapFloor> makeCapFloor(string ccy, string indexName, Period term, Real strike,
                                              const boost::shared_ptr<ore::data::Market>& market);
+    //! Create Cross Ccy Basis Swap for implying par rate sensitivity from zero rate sensitivity
+    boost::shared_ptr<Instrument> makeCrossCcyBasisSwap(string baseCcy, string ccy, Period term,
+                                                        const boost::shared_ptr<ore::data::Market>& market,
+                                                        const boost::shared_ptr<Convention>& conventions);
 
     // base NPV by trade
     std::map<std::string, Real> baseNPV_;
@@ -172,7 +176,7 @@ private:
 class ParSensitivityConverter {
 public:
     ParSensitivityConverter(
-        const boost::shared_ptr<SensitivityScenarioData>& sensitivityData, 
+        const boost::shared_ptr<SensitivityScenarioData>& sensitivityData,
         //! Delta by trade and factor
         const std::map<std::pair<string, string>, Real>& delta,
         //! Par rate sensitivity w.r.t. zero shifts by factor and curve name (discount:ccy, index:ccy-name-tenor)

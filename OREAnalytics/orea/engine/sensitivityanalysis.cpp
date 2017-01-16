@@ -34,6 +34,8 @@
 #include <ql/termstructures/yield/oisratehelper.hpp>
 #include <qle/instruments/deposit.hpp>
 #include <qle/pricingengines/depositengine.hpp>
+#include <qle/instruments/crossccybasisswap.hpp>
+#include <qle/pricingengines/crossccyswapengine.hpp>
 
 #include <iomanip>
 #include <iostream>
@@ -57,6 +59,8 @@ Real impliedQuote(const boost::shared_ptr<Instrument>& i) {
         return boost::dynamic_pointer_cast<ForwardRateAgreement>(i)->forwardRate();
     if (boost::dynamic_pointer_cast<OvernightIndexedSwap>(i))
         return boost::dynamic_pointer_cast<OvernightIndexedSwap>(i)->fairRate();
+    if (boost::dynamic_pointer_cast<CrossCcyBasisSwap>(i))
+        return boost::dynamic_pointer_cast<CrossCcyBasisSwap>(i)->fairPaySpread();
     QL_FAIL("SensitivityAnalysis: impliedQuote: unknown instrument");
 }
 
@@ -200,6 +204,7 @@ SensitivityAnalysis::SensitivityAnalysis(boost::shared_ptr<ore::data::Portfolio>
     map<string, vector<Real> > parRatesBase;
 
     // Discount curve instruments
+    string baseCcy = simMarketData->baseCcy(); // FIXME
     for (Size i = 0; i < sensitivityData->discountCurrencies().size(); ++i) {
         string ccy = sensitivityData->discountCurrencies()[i];
         SensitivityScenarioData::CurveShiftData data = sensitivityData->discountCurveShiftData()[ccy];
@@ -224,6 +229,8 @@ SensitivityAnalysis::SensitivityAnalysis(boost::shared_ptr<ore::data::Portfolio>
                 parHelpers[ccy][j] = makeFRA(ccy, indexName, term, simMarket, convention, true);
             else if (instType == "OIS")
                 parHelpers[ccy][j] = makeOIS(ccy, indexName, term, simMarket, convention, true);
+            else if (instType == "CCBS")
+                parHelpers[ccy][j] = makeCrossCcyBasisSwap(baseCcy, ccy, term, simMarket, convention);
             else
                 QL_FAIL("Instrument type " << instType << " for par sensitivity conversin not recognised");
             parRatesBase[ccy][j] = impliedQuote(parHelpers[ccy][j]);
@@ -644,6 +651,55 @@ boost::shared_ptr<CapFloor> SensitivityAnalysis::makeCapFloor(string ccy, string
         break;
     }
     return capFloor;
+}
+
+boost::shared_ptr<Instrument>
+SensitivityAnalysis::makeCrossCcyBasisSwap(string baseCcy, string ccy, Period term,
+                                           const boost::shared_ptr<ore::data::Market>& market,
+                                           const boost::shared_ptr<Convention>& conventions) {
+    boost::shared_ptr<CrossCcyBasisSwapConvention> conv =
+        boost::dynamic_pointer_cast<CrossCcyBasisSwapConvention>(conventions);
+    QL_REQUIRE(conv, "convention not recognised, expected CrossCcyBasisSwapConvention");
+    QL_REQUIRE(baseCcy == conv->flatIndex()->currency().code() || baseCcy == conv->spreadIndex()->currency().code(),
+               "base currency " << baseCcy << " not covered by convention " << conv->id());
+    QL_REQUIRE(ccy == conv->flatIndex()->currency().code() || ccy == conv->spreadIndex()->currency().code(),
+               "currency " << ccy << " not covered by convention " << conv->id());
+    string baseIndexName, indexName;
+    if (baseCcy == conv->flatIndex()->currency().code()) {
+        baseIndexName = conv->flatIndexName();
+        indexName = conv->spreadIndexName();
+    } else {
+        baseIndexName = conv->spreadIndexName();
+        indexName = conv->flatIndexName();
+    }
+    Currency baseCurrency = parseCurrency(baseCcy);
+    Currency currency = parseCurrency(ccy);
+    Handle<IborIndex> baseIndex = market->iborIndex(baseIndexName);
+    Handle<IborIndex> index = market->iborIndex(indexName);
+    Handle<YieldTermStructure> baseDiscountCurve = market->discountCurve(baseCcy);
+    Handle<YieldTermStructure> discountCurve = market->discountCurve(ccy);
+    Handle<Quote> fxSpot = market->fxSpot(ccy + baseCcy); // multiplicative conversion into base ccy
+    Date today = Settings::instance().evaluationDate();
+    Date start = conv->settlementCalendar().adjust(today + conv->settlementDays(), conv->rollConvention());
+    Date end = start + term;
+    Schedule baseSchedule = MakeSchedule().from(start).to(end).withTenor(baseIndex->tenor());
+    Schedule schedule = MakeSchedule().from(start).to(end).withTenor(index->tenor());
+    Real baseNotional = 1.0;
+    Real notional = 1.0 / fxSpot->value();
+    // LOG("Make Cross Ccy Swap for base ccy " << baseCcy << " currency " << ccy);
+    // Set up first leg as spread leg, second as flat leg
+    boost::shared_ptr<CrossCcyBasisSwap> helper;
+    if (baseCcy == conv->spreadIndex()->currency().code())
+        helper = boost::make_shared<CrossCcyBasisSwap>(baseNotional, baseCurrency, baseSchedule, *baseIndex, 0.0,
+                                                       notional, currency, schedule, *index, 0.0);
+    else
+        helper = boost::make_shared<CrossCcyBasisSwap>(notional, currency, schedule, *index, 0.0, baseNotional,
+                                                       baseCurrency, baseSchedule, *baseIndex, 0.0);
+
+    boost::shared_ptr<PricingEngine> swapEngine =
+        boost::make_shared<CrossCcySwapEngine>(baseCurrency, baseDiscountCurve, currency, discountCurve, fxSpot);
+    helper->setPricingEngine(swapEngine);
+    return helper;
 }
 
 void ParSensitivityConverter::buildJacobiMatrix() {
