@@ -28,12 +28,15 @@
       <ShiftSize>0.0001</ShiftSize>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
       <ParConversion>
-	<Instruments>DEP,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS</Instruments>
+	<!--<Instruments>DEP,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS</Instruments>-->
+	<Instruments>FXF,FXF,XBS,XBS,XBS,XBS,XBS,XBS,XBS</Instruments>
 	<SingleCurve>true</SingleCurve>
 	<Conventions>
 	  <Convention id="DEP">USD-LIBOR-CONVENTIONS</Convention>
 	  <Convention id="IRS">USD-3M-SWAP-CONVENTIONS</Convention>
 	  <Convention id="OIS">USD-OIS-CONVENTIONS</Convention>
+	  <Convention id="XBS">EUR-USD-XCCY-BASIS-CONVENTIONS</Convention>
+	  <Convention id="FXF">EUR-USD-FX-CONVENTIONS</Convention>
 	</Conventions>
       </ParConversion>
     </DiscountCurve>
