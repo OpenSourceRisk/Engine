@@ -120,8 +120,12 @@ private:
     boost::shared_ptr<Instrument> makeCrossCcyBasisSwap(string baseCcy, string ccy, Period term,
                                                         const boost::shared_ptr<ore::data::Market>& market,
                                                         const boost::shared_ptr<Convention>& conventions);
+    //! Create FX Forwrad for implying par rate sensitivity from zero rate sensitivity
+    boost::shared_ptr<Instrument> makeFxForward(string baseCcy, string ccy, Period term,
+						const boost::shared_ptr<ore::data::Market>& market,
+						const boost::shared_ptr<Convention>& conventions);
 
-    // base NPV by trade
+  // base NPV by trade
     std::map<std::string, Real> baseNPV_;
     // NPV respectively sensitivity by trade and factor
     std::map<std::pair<string, string>, Real> upNPV_, downNPV_, delta_, gamma_, parDelta_;

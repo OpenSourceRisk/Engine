@@ -36,6 +36,8 @@
 #include <qle/pricingengines/depositengine.hpp>
 #include <qle/instruments/crossccybasisswap.hpp>
 #include <qle/pricingengines/crossccyswapengine.hpp>
+#include <qle/instruments/fxforward.hpp>
+#include <qle/pricingengines/discountingfxforwardengine.hpp>
 
 #include <iomanip>
 #include <iostream>
@@ -61,6 +63,8 @@ Real impliedQuote(const boost::shared_ptr<Instrument>& i) {
         return boost::dynamic_pointer_cast<OvernightIndexedSwap>(i)->fairRate();
     if (boost::dynamic_pointer_cast<CrossCcyBasisSwap>(i))
         return boost::dynamic_pointer_cast<CrossCcyBasisSwap>(i)->fairPaySpread();
+    if (boost::dynamic_pointer_cast<FxForward>(i))
+        return boost::dynamic_pointer_cast<FxForward>(i)->fairForwardRate().rate();
     QL_FAIL("SensitivityAnalysis: impliedQuote: unknown instrument");
 }
 
@@ -229,11 +233,16 @@ SensitivityAnalysis::SensitivityAnalysis(boost::shared_ptr<ore::data::Portfolio>
                 parHelpers[ccy][j] = makeFRA(ccy, indexName, term, simMarket, convention, true);
             else if (instType == "OIS")
                 parHelpers[ccy][j] = makeOIS(ccy, indexName, term, simMarket, convention, true);
-            else if (instType == "CCBS")
+            else if (instType == "XBS")
                 parHelpers[ccy][j] = makeCrossCcyBasisSwap(baseCcy, ccy, term, simMarket, convention);
+            else if (instType == "FXF")
+                parHelpers[ccy][j] = makeFxForward(baseCcy, ccy, term, simMarket, convention);
             else
-                QL_FAIL("Instrument type " << instType << " for par sensitivity conversin not recognised");
+                QL_FAIL("Instrument type " << instType << " for par sensitivity conversion not recognised");
             parRatesBase[ccy][j] = impliedQuote(parHelpers[ccy][j]);
+            LOG("Par instrument for discount curve, ccy " << ccy << " tenor " << j << ", type " << instType
+                                                          << ", base rate " << setprecision(4)
+                                                          << parRatesBase[ccy][j]);
         }
     }
 
@@ -699,6 +708,33 @@ SensitivityAnalysis::makeCrossCcyBasisSwap(string baseCcy, string ccy, Period te
     boost::shared_ptr<PricingEngine> swapEngine =
         boost::make_shared<CrossCcySwapEngine>(baseCurrency, baseDiscountCurve, currency, discountCurve, fxSpot);
     helper->setPricingEngine(swapEngine);
+    return helper;
+}
+
+boost::shared_ptr<Instrument> SensitivityAnalysis::makeFxForward(string baseCcy, string ccy, Period term,
+                                                                 const boost::shared_ptr<ore::data::Market>& market,
+                                                                 const boost::shared_ptr<Convention>& conventions) {
+    boost::shared_ptr<FXConvention> conv = boost::dynamic_pointer_cast<FXConvention>(conventions);
+    QL_REQUIRE(conv, "convention not recognised, expected FXConvention");
+    QL_REQUIRE(baseCcy == conv->sourceCurrency().code() || baseCcy == conv->targetCurrency().code(),
+               "base currency " << baseCcy << " not covered by convention " << conv->id());
+    QL_REQUIRE(ccy == conv->targetCurrency().code() || ccy == conv->targetCurrency().code(),
+               "currency " << ccy << " not covered by convention " << conv->id());
+    Currency baseCurrency = parseCurrency(baseCcy);
+    Currency currency = parseCurrency(ccy);
+    Handle<YieldTermStructure> baseDiscountCurve = market->discountCurve(baseCcy);
+    Handle<YieldTermStructure> discountCurve = market->discountCurve(ccy);
+    Handle<Quote> fxSpot = market->fxSpot(ccy + baseCcy); // multiplicative conversion into base ccy
+    Date today = Settings::instance().evaluationDate();
+    Date maturity = today + term; // FIXME: adjustment ?
+    Real baseNotional = 1.0;
+    Real notional = 1.0 / fxSpot->value();
+    boost::shared_ptr<FxForward> helper =
+        boost::make_shared<FxForward>(baseNotional, baseCurrency, notional, currency, maturity, true);
+
+    boost::shared_ptr<PricingEngine> engine = boost::make_shared<DiscountingFxForwardEngine>(
+        baseCurrency, baseDiscountCurve, currency, discountCurve, fxSpot);
+    helper->setPricingEngine(engine);
     return helper;
 }
 
