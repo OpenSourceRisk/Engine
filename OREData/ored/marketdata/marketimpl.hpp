@@ -71,6 +71,8 @@ public:
                                 const string& configuration = Market::defaultConfiguration) const;
     Handle<SwapIndex> swapIndex(const string& indexName,
                                 const string& configuration = Market::defaultConfiguration) const;
+    Handle<YieldTermStructure> spreadCurve(const string& name,
+                                            const string& configuration = Market::defaultConfiguration) const;
 
     //! Swaptions
     Handle<QuantLib::SwaptionVolatilityStructure>
@@ -92,6 +94,9 @@ public:
     //! CapFloor volatilities
     Handle<OptionletVolatilityStructure> capFloorVol(const string& ccy,
                                                      const string& configuration = Market::defaultConfiguration) const;
+
+    //! Bond Spreads
+    Handle<Quote> bondSpread(const string& securityID, const string& configuration = Market::defaultConfiguration) const;
     //@}
 
     //! \name Disable copying
@@ -110,6 +115,7 @@ protected:
     map<pair<string, string>, Handle<YieldTermStructure>> yieldCurves_;
     map<pair<string, string>, Handle<IborIndex>> iborIndices_;
     map<pair<string, string>, Handle<SwapIndex>> swapIndices_;
+    map<pair<string, string>, Handle<YieldTermStructure>> spreadCurves_;
     map<pair<string, string>, Handle<QuantLib::SwaptionVolatilityStructure>> swaptionCurves_;
     map<pair<string, string>, pair<string, string>> swaptionIndexBases_;
     map<string, FXTriangulation> fxSpots_;
@@ -117,6 +123,7 @@ protected:
     map<pair<string, string>, Handle<DefaultProbabilityTermStructure>> defaultCurves_;
     map<pair<string, string>, Handle<Quote>> recoveryRates_;
     map<pair<string, string>, Handle<OptionletVolatilityStructure>> capFloorCurves_;
+    map<pair<string, string>, Handle<Quote>> bondSpreads_;
     Conventions conventions_;
 
     //! add a swap index to the market

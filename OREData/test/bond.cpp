@@ -21,7 +21,7 @@
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/portfolio/envelope.hpp>
 #include <ored/portfolio/legdata.hpp>
-#include <ored/portfolio/bond.hpp>
+#include <ored/portfolio/builders/bond.hpp>
 #include <ored/portfolio/schedule.hpp>
 #include <ored/portfolio/enginedata.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
@@ -39,7 +39,6 @@ using namespace QuantLib;
 using namespace boost::unit_test_framework;
 using namespace std;
 using namespace ore::data;
-using namespace oreplus::data;
 
 // Bond test
 

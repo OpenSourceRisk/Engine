@@ -78,7 +78,8 @@ public:
         RECOVERY_RATE,
         SWAPTION,
         CAPFLOOR,
-        FX_OPTION
+        FX_OPTION,
+        BOND
     };
 
     //! Supported market quote types
@@ -698,6 +699,27 @@ private:
     string ccy_;
     Period expiry_;
     string strike_; // TODO: either: ATM, 25RR, 25BF. Should be an enum?
+};
+
+//! Bond spread data class
+/*!
+This class holds single market points of type
+- BOND SPREAD
+\ingroup marketdata
+*/
+class BondSpreadQuote : public MarketDatum {
+public:
+    //! Constructor
+    BondSpreadQuote(Real value, Date asofDate, const string& name, const string& securityID)
+        : MarketDatum(value, asofDate, name, QuoteType::YIELD_SPREAD, InstrumentType::BOND),
+        securityID_(securityID) {}
+
+    //! \name Inspectors
+    //@{
+    const string& securityID() const { return securityID_; }
+    //@}
+private:
+    string securityID_;
 };
 }
 }

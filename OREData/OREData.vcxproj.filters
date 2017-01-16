@@ -255,11 +255,15 @@
     <ClInclude Include="ored\utilities\to_string.hpp">
       <Filter>utilities</Filter>
     </ClInclude>
-    <ClInclude Include="ored\utilities\vectorutils.hpp" >
+    <ClInclude Include="ored\utilities\vectorutils.hpp">
       <Filter>utilities</Filter>
     </ClInclude>
-    <ClInclude Include="ored\utilities\serializationdate.hpp" >
+    <ClInclude Include="ored\utilities\serializationdate.hpp">
       <Filter>utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\bond.hpp" />
+    <ClInclude Include="ored\marketdata\bondspread.hpp">
+      <Filter>marketdata</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -457,6 +461,9 @@
     </ClCompile>
     <ClCompile Include="ored\utilities\to_string.cpp">
       <Filter>utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\marketdata\bondspread.cpp">
+      <Filter>marketdata</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
