@@ -73,8 +73,10 @@ void InflationCurveConfig::fromXML(XMLNode* node) {
     string freq = XMLUtils::getChildValue(node, "Frequency", true);
     frequency_ = parseFrequency(freq);
 
-    string baseZr = XMLUtils::getChildValue(node, "BaseZeroRate", true);
-    baseZeroRate_ = parseReal(baseZr);
+    baseZeroRate_ = QuantLib::Null<Real>();
+    string baseZr = XMLUtils::getChildValue(node, "BaseZeroRate", false);
+    if (baseZr != "")
+        baseZeroRate_ = parseReal(baseZr);
 
     string tol = XMLUtils::getChildValue(node, "Tolerance", true);
     tolerance_ = parseReal(tol);
@@ -112,7 +114,8 @@ XMLNode* InflationCurveConfig::toXML(XMLDocument& doc) {
     dc << dayCounter_;
     lag << lag_;
     freq << frequency_;
-    baseZr << std::setprecision(16) << std::fixed << baseZeroRate_;
+    if (baseZeroRate_ != QuantLib::Null<Real>())
+        baseZr << std::setprecision(16) << std::fixed << baseZeroRate_;
     tol << std::setprecision(16) << std::scientific << tolerance_;
 
     XMLUtils::addChild(doc, node, "Calendar", cal.str());

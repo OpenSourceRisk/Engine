@@ -99,11 +99,14 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
             seasonality = boost::make_shared<MultiplicativePriceSeasonality>(
                 config->seasonalityBaseDate(), config->seasonalityFrequency(), config->seasonalityFactors());
         }
-
+        
+        // base zero rate: if given, take it, otherwise set it to first quote
+        Real baseZeroRate = config->baseZeroRate() != Null<Real>() ? config->baseZeroRate() : quotes[0]->value();
+        
         curveIndexInterpolated_ =
             boost::shared_ptr<PiecewiseZeroInflationCurve<Linear>>(new PiecewiseZeroInflationCurve<Linear>(
                 asof, config->calendar(), config->dayCounter(), config->lag(), config->frequency(), true,
-                config->baseZeroRate(), nominalTs, instruments, config->tolerance()));
+                baseZeroRate, nominalTs, instruments, config->tolerance()));
         curveIndexInterpolated_->enableExtrapolation(config->extrapolate());
         if (seasonality != nullptr)
             curveIndexInterpolated_->setSeasonality(seasonality);
@@ -111,7 +114,7 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
         curveIndexNotInterpolated_ =
             boost::shared_ptr<PiecewiseZeroInflationCurve<Linear>>(new PiecewiseZeroInflationCurve<Linear>(
                 asof, config->calendar(), config->dayCounter(), config->lag(), config->frequency(), false,
-                config->baseZeroRate(), nominalTs, instruments, config->tolerance()));
+                baseZeroRate, nominalTs, instruments, config->tolerance()));
         curveIndexNotInterpolated_->enableExtrapolation(config->extrapolate());
         if (seasonality != nullptr)
             curveIndexNotInterpolated_->setSeasonality(seasonality);
