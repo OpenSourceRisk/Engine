@@ -489,11 +489,14 @@ int main(int argc, char** argv) {
 
             if (analytics["dim"]) {
                 string dimFile1 = outputPath + "/" + params.get("xva", "dimEvolutionFile");
-                string dimFile2 = outputPath + "/" + params.get("xva", "dimRegressionFile");
+                vector<string> dimFiles2;
+                for (auto f : parseListOfValues(params.get("xva", "dimRegressionFiles")))
+                    dimFiles2.push_back(outputPath + "/" + f);
                 string nettingSet = params.get("xva", "dimOutputNettingSet");
-                int dimOutputGridPoint = parseInteger(params.get("xva", "dimOutputGridPoint"));
+                std::vector<Size> dimOutputGridPoints =
+                    parseListOfValues<Size>(params.get("xva", "dimOutputGridPoints"), &parseInteger);
                 postProcess->exportDimEvolution(dimFile1, nettingSet);
-                postProcess->exportDimRegression(dimFile2, nettingSet, dimOutputGridPoint);
+                postProcess->exportDimRegression(dimFiles2, nettingSet, dimOutputGridPoints);
             }
 
             cout << "OK" << endl;
