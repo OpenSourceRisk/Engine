@@ -23,7 +23,7 @@
 #include <ql/math/interpolations/loginterpolation.hpp>
 #include <ql/math/interpolations/backwardflatinterpolation.hpp>
 
-#include<ored/utilities/parsers.hpp>
+#include <ored/utilities/parsers.hpp>
 
 #include <algorithm>
 
@@ -52,9 +52,10 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader,
         // until we found the whole set of quotes or do not have more quotes in the
         // market data
 
-        vector<Real> quotes; // can be either dividend yields, or forward prices (depending upon the CurveConfig type)
-        vector<Date> terms;
+        quotes_ = std::vector<Real>(config->quotes().size(), Null<Real>()); // can be either dividend yields, or forward prices (depending upon the CurveConfig type)
+        terms_ = std::vector<Date>(config->quotes().size(), Null<Date>());
         equitySpot_ = Null<Real>();
+        Size quotesRead = 0;
 
         for (auto& md : loader.loadQuotes(asof)) {
 
@@ -82,13 +83,11 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader,
 
                 // is the quote one of the list in the config ?
                 if (it1 != config->quotes().end()) {
-
-                    vector<Date>::const_iterator it2 = std::find(terms.begin(), terms.end(), q->expiryDate());
-                    QL_REQUIRE(it2 == terms.end(), "duplicate term in quotes found ("
-                        << q->expiryDate() << ") while loading equity curve "
-                        << config->curveID());
-                    terms.push_back(q->expiryDate());
-                    quotes.push_back(q->quote()->value());
+                    Size pos = it1 - config->quotes().begin();
+                    QL_REQUIRE(terms_[pos] == Null<Date>(), "duplicate market datum found for " << config->quotes()[pos]);
+                    terms_[pos] = q->expiryDate();
+                    quotes_[pos] = q->quote()->value();
+                    quotesRead++;
                 }
             }
 
@@ -104,36 +103,31 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader,
 
                 // is the quote one of the list in the config ?
                 if (it1 != config->quotes().end()) {
-
-                    vector<Date>::const_iterator it2 = std::find(terms.begin(), terms.end(), q->tenorDate());
-                    QL_REQUIRE(it2 == terms.end(), "duplicate term in quotes found ("
-                        << q->tenorDate() << ") while loading dividend yield curve "
-                        << config->curveID());
-                    terms.push_back(q->tenorDate());
-                    quotes.push_back(q->quote()->value());
+                    Size pos = it1 - config->quotes().begin();
+                    QL_REQUIRE(terms_[pos] == Null<Date>(), "duplicate market datum found for " << config->quotes()[pos]);
+                    terms_[pos] = q->tenorDate();
+                    quotes_[pos] = q->quote()->value();
+                    quotesRead++;
                 }
             }
         }
         string curveTypeStr = (config->type() == EquityCurveConfig::Type::ForwardPrice) ?
             "EQUITY_FWD" :
             "EQUITY_DIVIDEND";
-        LOG("EquityCurve: read " << quotes.size() << " quotes of type " << curveTypeStr);
-        QL_REQUIRE(quotes.size() == config->quotes().size(), "read " << quotes.size() << ", but "
+
+        LOG("EquityCurve: read " << quotesRead << " quotes of type " << curveTypeStr);
+        QL_REQUIRE(quotesRead == config->quotes().size(), "read " << quotesRead << ", but "
             << config->quotes().size() << " required.");
-        QL_REQUIRE(quotes.size() == terms.size(), "read " << quotes.size() << "quotes, but "
-            << terms.size() << " tenors.");
         QL_REQUIRE(equitySpot_ != Null<Real>(),
             "Equity spot quote not found for " << config->curveID());
 
-        quotes_.resize(0);
-        terms_.resize(0);
-        quotes_ = quotes;
-        for (Size i = 0; i < terms.size(); i++) {
-            QL_REQUIRE(terms[i] > asof, 
-                "Invalid Fwd Expiry " << terms[i] << " vs. " << asof);
-            terms_.push_back(Period(terms[i] - asof, Days));
+        for (Size i = 0; i < terms_.size(); i++) {
+            QL_REQUIRE(terms_[i] > asof,
+                "Invalid Fwd Expiry " << terms_[i] << " vs. " << asof);
+            if(i>0) {
+                QL_REQUIRE(terms_[i] > terms_[i - 1], "terms must be increasing in curve config");
+            }
         }
-        sort(terms_.begin(), terms_.end());
         curveType_ = config->type();
     }
     catch (std::exception& e) {
@@ -148,6 +142,12 @@ boost::shared_ptr<YieldTermStructure> EquityCurve::divYieldTermStructure(
     const Date& asof,
     const Handle<YieldTermStructure>& equityIrCurve) const {
 
+    Handle<YieldTermStructure> irCurve = equityIrCurve;
+    if(irCurve.empty()) {
+        QL_REQUIRE(!discountCurve_.empty(), "EquityCurve: discount curve and equityIrCurve are both empty");
+        irCurve = discountCurve_;
+    }
+
     try {
         vector<Rate> dividendRates;
         if (curveType_ == EquityCurveConfig::Type::ForwardPrice) {
@@ -155,10 +155,10 @@ boost::shared_ptr<YieldTermStructure> EquityCurve::divYieldTermStructure(
             // Fwd = Spot e^{(r-q)T}
             // => q = 1/T Log(Spot/Fwd) + r
             for (Size i = 0; i < quotes_.size(); i++) {
-                QL_REQUIRE(quotes_[i] > 0, 
+                QL_REQUIRE(quotes_[i] > 0,
                     "Invalid Fwd Price " << quotes_[i] << " for " << spec_.name());
-                Time t = dc_.yearFraction(asof, asof + terms_[i]);
-                Rate ir_rate = equityIrCurve->zeroRate(t, Continuous);
+                Time t = dc_.yearFraction(asof, terms_[i]);
+                Rate ir_rate = irCurve->zeroRate(t, Continuous);
                 dividendRates.push_back(::log(equitySpot_ / quotes_[i]) / t + ir_rate);
             }
         }
@@ -168,10 +168,10 @@ boost::shared_ptr<YieldTermStructure> EquityCurve::divYieldTermStructure(
         else
             QL_FAIL("Invalid Equity curve configuration type for " << spec_.name());
 
-        QL_REQUIRE(dividendRates.size() > 0, 
+        QL_REQUIRE(dividendRates.size() > 0,
             "No dividend yield rates extracted for " << spec_.name());
-        QL_REQUIRE(dividendRates.size() == terms_.size(), 
-            "vector size mismatch - dividend rates (" << dividendRates.size() << 
+        QL_REQUIRE(dividendRates.size() == terms_.size(),
+            "vector size mismatch - dividend rates (" << dividendRates.size() <<
             ") vs terms (" << terms_.size() << ")");
 
         boost::shared_ptr<YieldTermStructure> divCurve;
@@ -182,26 +182,20 @@ boost::shared_ptr<YieldTermStructure> EquityCurve::divYieldTermStructure(
         }
         else {
             // Build a ZeroCurve
-            // For some reason, the order of the dates/rates is getting messed up above
-            // so we use a map here and sort by dates.
-            vector<Period> dividendTerms = terms_;
-            Size n = dividendTerms.size();
-            map<Period, Rate> m;
-            for (Size i = 0; i < n; i++)
-                m[dividendTerms[i]] = dividendRates[i];
-            sort(dividendTerms.begin(), dividendTerms.end());
+            Size n = terms_.size();
             vector<Date> dates(n + 1); // n+1 so we include asof
             vector<Rate> rates(n + 1);
             for (Size i = 0; i < n; i++) {
-                dates[i + 1] = asof + dividendTerms[i];
-                rates[i + 1] = m[dividendTerms[i]];
+                dates[i + 1] = terms_[i];
+                rates[i + 1] = dividendRates[i];
             }
             dates[0] = asof;
             rates[0] = rates[1];
-            if (equityIrCurve->maxDate() > dates.back()) {
-                dates.push_back(equityIrCurve->maxDate());
+            if (irCurve->maxDate() > dates.back()) {
+                dates.push_back(irCurve->maxDate());
                 rates.push_back(rates.back());
             }
+            // FIXME, interpolation should be part of config?
             divCurve.reset(new InterpolatedZeroCurve<QuantLib::Linear>(dates, rates, dc_, QuantLib::Linear()));
             divCurve->enableExtrapolation();
         }
