@@ -80,9 +80,10 @@ public:
         CAPFLOOR,
         FX_OPTION,
         ZC_INFLATIONSWAP,
-        ZC_INFLATIONCAPFLOOR
+        ZC_INFLATIONCAPFLOOR,
+        SEASONALITY
     };
-
+    
     //! Supported market quote types
     enum class QuoteType {
         BASIS_SPREAD,
@@ -748,6 +749,29 @@ private:
     Period term_;
     bool isCap_;
     string strike_;
+};
+    
+//! Inflation seasonality data class
+/*!
+ This class holds single market points of type
+ - SEASONALITY
+ Specific data comprise inflation index, factor type (ADD, MULT) and month (JAN to DEC).
+ 
+ \ingroup marketdata
+ */
+class SeasonalityQuote : public MarketDatum {
+public:
+    SeasonalityQuote(Real value, Date asofDate, const string& name, const string& index, const string& type, const string& month)
+    : MarketDatum(value, asofDate, name, QuoteType::RATE, InstrumentType::SEASONALITY), index_(index), type_(type), month_(month) {}
+    string index() { return index_; }
+    string type() { return type_; }
+    string month() { return month_; }
+    int applyMonth() const;
+    
+private:
+    string index_;
+    string type_;
+    string month_;
 };
 }
 }

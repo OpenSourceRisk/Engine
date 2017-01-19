@@ -68,7 +68,7 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
             if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::ZC_INFLATIONSWAP) {
 
                 boost::shared_ptr<ZcInflationSwapQuote> q = boost::dynamic_pointer_cast<ZcInflationSwapQuote>(md);
-
+                
                 if (q != NULL && q->index() == spec.index()) {
 
                     auto it = std::find(strQuotes.begin(), strQuotes.end(), q->name());
@@ -96,8 +96,30 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
         // construct seasonality
         boost::shared_ptr<Seasonality> seasonality;
         if (config->seasonalityBaseDate() != Null<Date>()) {
+            std::vector<string> strFactorIDs = config->seasonalityFactors();
+            std::vector<double> factors(strFactorIDs.size());
+            for (Size i = 0; i < strFactorIDs.size(); i++) {
+                boost::shared_ptr<MarketDatum> marketQuote = loader.get(strFactorIDs[i], asof);
+                
+                // Check that we have a valid seasonality factor
+                if (marketQuote) {
+                    QL_REQUIRE(marketQuote->instrumentType() == MarketDatum::InstrumentType::SEASONALITY,
+                               "Market quote (" << marketQuote->name() << ") not of type seasonality.");
+                    // Currently only monthly seasonality with 12 multiplicative factors os allowed
+                    QL_REQUIRE(config->seasonalityFrequency() == Monthly && strFactorIDs.size() == 12, "Only monthly seasonality with 12 factors is allowed. Provided " << config->seasonalityFrequency() << " with " << strFactorIDs.size() << " factors.");
+                    boost::shared_ptr<SeasonalityQuote> sq = boost::dynamic_pointer_cast<SeasonalityQuote>(marketQuote);
+                    QL_REQUIRE(sq->type() == "MULT", "Market quote (" << sq->name() << ") not of multiplicative type.");
+                    int findex = config->seasonalityBaseDate().month() - sq->applyMonth() < 0 ?
+                                   config->seasonalityBaseDate().month() - sq->applyMonth() + 12 :
+                                   config->seasonalityBaseDate().month() - sq->applyMonth();
+                    factors[findex] = sq->quote()->value();
+                } else {
+                    QL_FAIL("Could not find quote for ID " << strFactorIDs[i] << " with as of date " << io::iso_date(asof)
+                            << ".");
+                }
+            }
             seasonality = boost::make_shared<MultiplicativePriceSeasonality>(
-                config->seasonalityBaseDate(), config->seasonalityFrequency(), config->seasonalityFactors());
+                                                                             config->seasonalityBaseDate(), config->seasonalityFrequency(), factors);
         }
         
         // base zero rate: if given, take it, otherwise set it to first quote

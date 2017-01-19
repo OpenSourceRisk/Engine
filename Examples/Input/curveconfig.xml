@@ -1759,6 +1759,24 @@
           <Frequency>Monthly</Frequency>
           <BaseZeroRate>0.01</BaseZeroRate>
           <Tolerance>0.000000000001</Tolerance>
+          <Seasonality>
+              <BaseDate>20160101</BaseDate>
+              <Frequency>Monthly</Frequency>
+              <Factors>
+                  <Factor>SEASONALITY/RATE/MULT/USCPI/JAN</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/USCPI/FEB</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/USCPI/MAR</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/USCPI/APR</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/USCPI/MAY</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/USCPI/JUN</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/USCPI/JUL</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/USCPI/AUG</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/USCPI/SEP</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/USCPI/OCT</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/USCPI/NOV</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/USCPI/DEC</Factor>
+              </Factors>
+          </Seasonality>
       </InflationCurve>
       
       <InflationCurve>
@@ -1791,6 +1809,24 @@
           <Frequency>Monthly</Frequency>
           <BaseZeroRate>0.01</BaseZeroRate>
           <Tolerance>0.000000000001</Tolerance>
+          <Seasonality>
+              <BaseDate>20160101</BaseDate>
+              <Frequency>Monthly</Frequency>
+              <Factors>
+                  <Factor>SEASONALITY/RATE/MULT/EUHICPXT/JAN</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/EUHICPXT/FEB</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/EUHICPXT/MAR</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/EUHICPXT/APR</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/EUHICPXT/MAY</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/EUHICPXT/JUN</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/EUHICPXT/JUL</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/EUHICPXT/AUG</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/EUHICPXT/SEP</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/EUHICPXT/OCT</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/EUHICPXT/NOV</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/EUHICPXT/DEC</Factor>
+              </Factors>
+          </Seasonality>
       </InflationCurve>
       
       <InflationCurve>
@@ -1824,6 +1860,24 @@
           <Frequency>Monthly</Frequency>
           <BaseZeroRate>0.01</BaseZeroRate>
           <Tolerance>0.000000000001</Tolerance>
+          <Seasonality>
+              <BaseDate>20160101</BaseDate>
+              <Frequency>Monthly</Frequency>
+              <Factors>
+                  <Factor>SEASONALITY/RATE/MULT/UKRPI/JAN</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/UKRPI/FEB</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/UKRPI/MAR</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/UKRPI/APR</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/UKRPI/MAY</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/UKRPI/JUN</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/UKRPI/JUL</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/UKRPI/AUG</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/UKRPI/SEP</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/UKRPI/OCT</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/UKRPI/NOV</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/UKRPI/DEC</Factor>
+              </Factors>
+          </Seasonality>
       </InflationCurve>
   </InflationCurves>
   <InflationCapFloorPriceSurfaces>

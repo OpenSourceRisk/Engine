@@ -34,7 +34,7 @@ InflationCurveConfig::InflationCurveConfig(const string& curveID, const string& 
                                            const DayCounter& dayCounter, const Period& lag, const Frequency& frequency,
                                            const Real baseZeroRate, const Real tolerance,
                                            const Date& seasonalityBaseDate, const Frequency& seasonalityFrequency,
-                                           const vector<double>& seasonalityFactors)
+                                           const vector<string>& seasonalityFactors)
     : curveID_(curveID), curveDescription_(curveDescription), nominalTermStructure_(nominalTermStructure), type_(type),
       quotes_(quotes), conventions_(conventions), extrapolate_(extrapolate), calendar_(calendar),
       dayCounter_(dayCounter), lag_(lag), frequency_(frequency), baseZeroRate_(baseZeroRate), tolerance_(tolerance),
@@ -88,7 +88,7 @@ void InflationCurveConfig::fromXML(XMLNode* node) {
     if (seasonalityNode != nullptr) {
         seasonalityBaseDate_ = parseDate(XMLUtils::getChildValue(seasonalityNode, "BaseDate", true));
         seasonalityFrequency_ = parseFrequency(XMLUtils::getChildValue(seasonalityNode, "Frequency", true));
-        seasonalityFactors_ = XMLUtils::getChildrenValuesAsDoublesCompact(seasonalityNode, "Factors", true);
+        seasonalityFactors_ = XMLUtils::getChildrenValues(seasonalityNode, "Factors", "Factor", true);
     }
 }
 
@@ -131,7 +131,7 @@ XMLNode* InflationCurveConfig::toXML(XMLDocument& doc) {
         dateStr << QuantLib::io::iso_date(seasonalityBaseDate_);
         XMLUtils::addChild(doc, seasonalityNode, "BaseDate", dateStr.str());
         XMLUtils::addChild(doc, seasonalityNode, "Frequency", seasonalityFrequency_);
-        XMLUtils::addChild(doc, seasonalityNode, "Factors", seasonalityFactors_);
+        XMLUtils::addChildren(doc, seasonalityNode, "Factors", "Factor", seasonalityFactors_);
     }
 
     return node;

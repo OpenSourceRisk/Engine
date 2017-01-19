@@ -51,7 +51,8 @@ static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
                                                          {"CAPFLOOR", MarketDatum::InstrumentType::CAPFLOOR},
                                                          {"FX_OPTION", MarketDatum::InstrumentType::FX_OPTION},
                                                          {"ZC_INFLATIONSWAP", MarketDatum::InstrumentType::ZC_INFLATIONSWAP},
-                                                         {"ZC_INFLATIONCAPFLOOR", MarketDatum::InstrumentType::ZC_INFLATIONCAPFLOOR}};
+                                                         {"ZC_INFLATIONCAPFLOOR", MarketDatum::InstrumentType::ZC_INFLATIONCAPFLOOR},
+                                                         {"SEASONALITY", MarketDatum::InstrumentType::SEASONALITY}};
 
     auto it = b.find(s);
     if (it != b.end()) {
@@ -297,6 +298,14 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         string strike = tokens[5];
         return boost::make_shared<ZcInflationCapFloorQuote>(value, asof, datumName, quoteType, index, term, isCap,
                                                             strike);
+    }
+    
+    case MarketDatum::InstrumentType::SEASONALITY: {
+        QL_REQUIRE(tokens.size() == 5, "5 tokens expected in " << datumName);
+        const string& index = tokens[3];
+        const string& type = tokens[2];
+        const string& month = tokens[4];
+        return boost::make_shared<SeasonalityQuote>(value, asof, datumName, index, type, month);
     }
 
     default:

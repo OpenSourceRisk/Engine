@@ -55,7 +55,7 @@ public:
                          const bool extrapolate, const Calendar& calendar, const DayCounter& dayCounter,
                          const Period& lag, const Frequency& frequency, const Real baseZeroRate, const Real tolerance,
                          const Date& seasonalityBaseDate, const Frequency& seasonalityFrequency,
-                         const vector<double>& seasonalityFactors);
+                         const vector<string>& seasonalityFactors);
     virtual ~InflationCurveConfig() {}
 
     virtual void fromXML(XMLNode* node);
@@ -77,7 +77,7 @@ public:
     const Real& tolerance() const { return tolerance_; }
     const Date& seasonalityBaseDate() const { return seasonalityBaseDate_; }
     const Frequency& seasonalityFrequency() const { return seasonalityFrequency_; }
-    const vector<double>& seasonalityFactors() const { return seasonalityFactors_; }
+    const vector<string>& seasonalityFactors() const { return seasonalityFactors_; }
 
     // Setters
     string& curveID() { return curveID_; }
@@ -95,7 +95,7 @@ public:
     Real& tolerance() { return tolerance_; }
     Date& seasonalityBaseDate() { return seasonalityBaseDate_; }
     Frequency& seasonalityFrequency() { return seasonalityFrequency_; }
-    vector<double>& seasonalityFactors() { return seasonalityFactors_; }
+    vector<string>& seasonalityFactors() { return seasonalityFactors_; }
 
 private:
     string curveID_;
@@ -114,7 +114,7 @@ private:
     Real tolerance_;
     Date seasonalityBaseDate_;
     Frequency seasonalityFrequency_;
-    vector<double> seasonalityFactors_;
+    vector<string> seasonalityFactors_;
 };
 }
 }
