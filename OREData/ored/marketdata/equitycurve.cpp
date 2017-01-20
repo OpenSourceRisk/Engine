@@ -142,12 +142,6 @@ boost::shared_ptr<YieldTermStructure> EquityCurve::divYieldTermStructure(
     const Date& asof,
     const Handle<YieldTermStructure>& equityIrCurve) const {
 
-    Handle<YieldTermStructure> irCurve = equityIrCurve;
-    if(irCurve.empty()) {
-        QL_REQUIRE(!discountCurve_.empty(), "EquityCurve: discount curve and equityIrCurve are both empty");
-        irCurve = discountCurve_;
-    }
-
     try {
         vector<Rate> dividendRates;
         if (curveType_ == EquityCurveConfig::Type::ForwardPrice) {
@@ -158,7 +152,7 @@ boost::shared_ptr<YieldTermStructure> EquityCurve::divYieldTermStructure(
                 QL_REQUIRE(quotes_[i] > 0,
                     "Invalid Fwd Price " << quotes_[i] << " for " << spec_.name());
                 Time t = dc_.yearFraction(asof, terms_[i]);
-                Rate ir_rate = irCurve->zeroRate(t, Continuous);
+                Rate ir_rate = equityIrCurve->zeroRate(t, Continuous);
                 dividendRates.push_back(::log(equitySpot_ / quotes_[i]) / t + ir_rate);
             }
         }
@@ -191,8 +185,8 @@ boost::shared_ptr<YieldTermStructure> EquityCurve::divYieldTermStructure(
             }
             dates[0] = asof;
             rates[0] = rates[1];
-            if (irCurve->maxDate() > dates.back()) {
-                dates.push_back(irCurve->maxDate());
+            if (equityIrCurve->maxDate() > dates.back()) {
+                dates.push_back(equityIrCurve->maxDate());
                 rates.push_back(rates.back());
             }
             // FIXME, interpolation should be part of config?
