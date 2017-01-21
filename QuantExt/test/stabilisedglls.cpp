@@ -21,6 +21,8 @@
 #include <qle/math/stabilisedglls.hpp>
 
 #include <ql/math/functional.hpp>
+#include <ql/math/randomnumbers/mt19937uniformrng.hpp>
+#include <ql/methods/montecarlo/lsmbasissystem.hpp>
 #include <ql/types.hpp>
 
 using namespace boost::unit_test_framework;
@@ -29,9 +31,9 @@ using namespace QuantExt;
 
 namespace testsuite {
 
-void StabilisedGllsTest::testBigInputNumbers() {
+void StabilisedGLLSTest::testBigInputNumbers() {
 
-    BOOST_TEST_MESSAGE("Testing QuantExt::StablizedGlls with big input numbers (1D)");
+    BOOST_TEST_MESSAGE("Testing QuantExt::StablizedGLLS with big input numbers (1D)");
 
     std::vector<Real> x, y;
 
@@ -39,6 +41,9 @@ void StabilisedGllsTest::testBigInputNumbers() {
     v.push_back(constant<Real, Real>(1.0));
     v.push_back(identity<Real>());
     v.push_back(square<Real>());
+
+    // the following test data is taken from a real use case, where GeneralLinearLeastSquares
+    // fails to produce decent regression coefficient estimates
 
     // clang-format off
     x.push_back(-3785510); y.push_back(6647590000);
@@ -1041,15 +1046,106 @@ void StabilisedGllsTest::testBigInputNumbers() {
     x.push_back(6929240); y.push_back(113606000000);
     x.push_back(7532910); y.push_back(12801500000);
     x.push_back(7946080); y.push_back(355173000000);
-
     // clang-format on
+
+    // run stabilized GLLS
     StabilisedGLLS m(x, y, v, StabilisedGLLS::MaxAbs);
-    BOOST_TEST_MESSAGE("coefficients: " << m.transformedCoefficients());
+
+    // calculate effective parameters
+    Real c0 = m.transformedCoefficients()[0] / m.yMultiplier();
+    Real c1 = m.transformedCoefficients()[1] * m.xMultiplier()[0] / m.yMultiplier();
+    Real c2 = m.transformedCoefficients()[2] * m.xMultiplier()[0] / m.yMultiplier() * m.xMultiplier()[0];
+
+    // transform data manually and compute effective coefficients
+    Real scaling = 1E-12;
+    std::vector<Real> xt(x.size()), yt(y.size());
+    std::transform(x.begin(), x.end(), xt.begin(), std::bind1st(std::multiplies<Real>(), scaling));
+    std::transform(y.begin(), y.end(), yt.begin(), std::bind1st(std::multiplies<Real>(), scaling));
+    GeneralLinearLeastSquares m2(xt, yt, v);
+    Real d0 = m2.coefficients()[0] / scaling;
+    Real d1 = m2.coefficients()[1];
+    Real d2 = m2.coefficients()[2] * scaling;
+
+    // check coefficients
+    Real tol = 1E-8;
+    if (std::abs((c0 - d0) / d0) > tol)
+        BOOST_TEST_ERROR("could not verify c0 (" << c0 << ") against expected value (" << d0 << "), relative error ("
+                                                 << (c0 - d0) / d0 << ") exceeds tolerance (" << tol << ")");
+    if (std::abs((c1 - d1) / d1) > tol)
+        BOOST_TEST_ERROR("could not verify c1 (" << c1 << ") against expected value (" << d1 << "), relative error ("
+                                                 << (c1 - d1) / d1 << ") exceeds tolerance (" << tol << ")");
+    if (std::abs((c2 - d2) / d2) > tol)
+        BOOST_TEST_ERROR("could not verify c2 (" << c2 << ") against expected value (" << d2 << "), relative error ("
+                                                 << (c2 - d2) / d2 << ") exceeds tolerance (" << tol << ")");
+
+    // check eval function
+    Real x0 = -1E10;
+    while (x0 < 1E10) {
+        Real y = m.eval(x0, v);
+        Real y2 = c0 + c1 * x0 + c2 * x0 * x0;
+        if (std::abs((y - y2) / y2) > tol)
+            BOOST_TEST_ERROR("could not verify eval(" << x0 << "), got " << y << ", expected " << y2
+                                                      << ", relative error " << (y - y2) / y2 << ", tolerance " << tol);
+        x0 += 1E7;
+    }
+
+    BOOST_CHECK(true);
 }
 
-test_suite* StabilisedGllsTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("StabilisedGllsTests");
-    suite->add(BOOST_TEST_CASE(&StabilisedGllsTest::testBigInputNumbers));
+void StabilisedGLLSTest::test2DRegression() {
+
+    BOOST_TEST_MESSAGE("Testing QuantExt::StablizedGLLS 2D Regression");
+
+    std::vector<Array> x;
+    std::vector<Real> y;
+
+    // both GeneralLinearLeastSquares and StabilisedGLLS should work on this data
+    MersenneTwisterUniformRng mt(42);
+    for (Size n = 0; n < 1000; ++n) {
+        Array xa(2);
+        xa[0] = mt.nextReal() * 1000.0;
+        xa[1] = mt.nextReal() * 2000.0;
+        Real yt = -4982.0 + xa[0] * 43.0 + xa[1] * 142.0 + xa[0] * xa[1] * 0.8 - xa[0] * xa[0] * 0.02948 +
+                  xa[1] * xa[1] * 1533.0;
+        x.push_back(xa);
+        y.push_back(yt);
+    }
+
+    std::vector<boost::function1<Real, Array> > basis =
+        LsmBasisSystem::multiPathBasisSystem(2, 2, LsmBasisSystem::Monomial);
+
+    StabilisedGLLS m(x, y, basis, StabilisedGLLS::MaxAbs);
+    GeneralLinearLeastSquares m2(x, y, basis);
+
+    Real tol = 5E-4;
+
+    Real x0 = -10.0;
+    while (x0 < 10.0) {
+        Real x1 = -10.0;
+        while (x1 < 10.0) {
+            Array p(2);
+            p[0] = x0;
+            p[1] = x1;
+            Real yn = 0.0;
+            for (Size i = 0; i < basis.size(); ++i) {
+                yn += basis[i](p) * m2.coefficients()[i];
+            }
+            Real ys = m.eval(p, basis);
+            if (std::abs((ys - yn) / yn) > tol)
+                BOOST_TEST_ERROR("could not verify eval(" << p << "), got " << ys << ", expected " << yn
+                                                          << ", relative error " << (ys - yn) / yn << ", tolerance "
+                                                          << tol);
+            x1 += 0.1;
+        }
+        x0 += 0.1;
+    }
+    BOOST_CHECK(true);
+}
+
+test_suite* StabilisedGLLSTest::suite() {
+    test_suite* suite = BOOST_TEST_SUITE("StabilisedGLLSTests");
+    suite->add(BOOST_TEST_CASE(&StabilisedGLLSTest::testBigInputNumbers));
+    suite->add(BOOST_TEST_CASE(&StabilisedGLLSTest::test2DRegression));
     return suite;
 }
 }

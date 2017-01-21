@@ -106,7 +106,7 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(testsuite::SwaptionVolatilityConverterTest::suite());
     test->add(testsuite::OptionletStripperTest::suite());
     test->add(testsuite::RateHelpersTest::suite());
-    test->add(testsuite::StabilisedGllsTest::suite());
+    test->add(testsuite::StabilisedGLLSTest::suite());
 
     test->add(BOOST_TEST_CASE(stopTimer));
 

@@ -28,10 +28,14 @@
 namespace testsuite {
 
 //! stabilised glls tests
-class StabilisedGllsTest {
+class StabilisedGLLSTest {
 public:
-    /*! Regression test case */
+    /*! GeneralLinearLeastSquares fails to produce resonable regression coefficients on the
+      (untransformed) data used in this test case.  */
     static void testBigInputNumbers();
+
+    /*! Test 2D regression on random data against GeneralLinearLeastSquares */
+    static void test2DRegression();
 
     static boost::unit_test_framework::test_suite* suite();
 };
