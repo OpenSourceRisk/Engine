@@ -32,8 +32,8 @@
 #include <boost/accumulators/statistics/mean.hpp>
 #include <boost/accumulators/statistics/stats.hpp>
 #include <boost/accumulators/statistics/variance.hpp>
-#include <boost/make_unique.hpp>
 #include <boost/type_traits.hpp>
+#include <boost/make_shared.hpp>
 
 #include <vector>
 
@@ -84,7 +84,7 @@ protected:
     Array a_, err_, residuals_, standardErrors_, xMultiplier_, xShift_;
     Real yMultiplier_, yShift_;
     Method method_;
-    std::unique_ptr<GeneralLinearLeastSquares> glls_;
+    boost::shared_ptr<GeneralLinearLeastSquares> glls_;
 
     template <class xContainer, class yContainer, class vContainer>
     void calculate(
@@ -121,12 +121,12 @@ void StabilisedGLLS::calculate(
         break;
     case MaxAbs: {
         Real mx = 0.0, my = 0.0;
-        for (Size i = 0; i < x.end() - x.begin(); ++i) {
+        for (Size i = 0; i < static_cast<Size>(x.end() - x.begin()); ++i) {
             mx = std::max(std::abs(x[i]), mx);
         }
         if (!close_enough(mx, 0.0))
             xMultiplier_[0] = 1.0 / mx;
-        for (Size i = 0; i < y.end() - y.begin(); ++i) {
+        for (Size i = 0; i < static_cast<Size>(y.end() - y.begin()); ++i) {
             my = std::max(std::abs(y[i]), my);
         }
         if (!close_enough(my, 0.0))
@@ -135,7 +135,7 @@ void StabilisedGLLS::calculate(
     }
     case MeanStdDev: {
         accumulator_set<Real, stats<tag::mean, tag::variance> > acc;
-        for (Size i = 0; i < x.end() - x.begin(); ++i) {
+        for (Size i = 0; i < static_cast<Size>(x.end() - x.begin()); ++i) {
             acc(x[i]);
         }
         xShift_[0] = -mean(acc);
@@ -143,7 +143,7 @@ void StabilisedGLLS::calculate(
         if (!close_enough(tmp, 0.0))
             xMultiplier_[0] = 1.0 / std::sqrt(tmp);
         accumulator_set<Real, stats<tag::mean, tag::variance> > acc2;
-        for (Size i = 0; i < y.end() - y.begin(); ++i) {
+        for (Size i = 0; i < static_cast<Size>(y.end() - y.begin()); ++i) {
             acc2(y[i]);
         }
         yShift_ = -mean(acc2);
@@ -156,14 +156,14 @@ void StabilisedGLLS::calculate(
         QL_FAIL("unknown stabilisation method");
     }
 
-    for (Size i = 0; i < x.end() - x.begin(); ++i) {
+    for (Size i = 0; i < static_cast<Size>(x.end() - x.begin()); ++i) {
         xData[i] = (x[i] + xShift_[0]) * xMultiplier_[0];
     }
-    for (Size i = 0; i < y.end() - y.begin(); ++i) {
+    for (Size i = 0; i < static_cast<Size>(y.end() - y.begin()); ++i) {
         yData[i] = (y[i] + yShift_) * yMultiplier_;
     }
 
-    glls_ = boost::make_unique<GeneralLinearLeastSquares>(xData, yData, v);
+    glls_ = boost::make_shared<GeneralLinearLeastSquares>(xData, yData, v);
 }
 
 template <class xContainer, class yContainer, class vContainer>
@@ -187,7 +187,7 @@ void StabilisedGLLS::calculate(
     case MaxAbs: {
         Array m(x[0].end() - x[0].begin(), 0.0);
         Real my = 0.0;
-        for (Size i = 0; i < x.end() - x.begin(); ++i) {
+        for (Size i = 0; i < static_cast<Size>(x.end() - x.begin()); ++i) {
             for (Size j = 0; j < m.size(); ++j) {
                 m[j] = std::max(std::abs(x[i][j]), m[j]);
             }
@@ -196,7 +196,7 @@ void StabilisedGLLS::calculate(
             if (!close_enough(m[j], 0.0))
                 xMultiplier_[j] = 1.0 / m[j];
         }
-        for (Size i = 0; i < y.end() - y.begin(); ++i) {
+        for (Size i = 0; i < static_cast<Size>(y.end() - y.begin()); ++i) {
             my = std::max(std::abs(y[i]), my);
         }
         if (!close_enough(my, 0.0))
@@ -205,7 +205,7 @@ void StabilisedGLLS::calculate(
     }
     case MeanStdDev: {
         std::vector<accumulator_set<Real, stats<tag::mean, tag::variance> > > acc(x[0].end() - x[0].begin());
-        for (Size i = 0; i < x.end() - x.begin(); ++i) {
+        for (Size i = 0; i < static_cast<Size>(x.end() - x.begin()); ++i) {
             for (Size j = 0; j < acc.size(); ++j) {
                 acc[j](x[i][j]);
             }
@@ -217,7 +217,7 @@ void StabilisedGLLS::calculate(
                 xMultiplier_[j] = 1.0 / std::sqrt(tmp);
         }
         accumulator_set<Real, stats<tag::mean, tag::variance> > acc2;
-        for (Size i = 0; i < y.end() - y.begin(); ++i) {
+        for (Size i = 0; i < static_cast<Size>(y.end() - y.begin()); ++i) {
             acc2(y[i]);
         }
         yShift_ = -mean(acc2);
@@ -231,16 +231,16 @@ void StabilisedGLLS::calculate(
         break;
     }
 
-    for (Size i = 0; i < x.end() - x.begin(); ++i) {
+    for (Size i = 0; i < static_cast<Size>(x.end() - x.begin()); ++i) {
         for (Size j = 0; j < xMultiplier_.size(); ++j) {
             xData[i][j] = (x[i][j] + xShift_[j]) * xMultiplier_[j];
         }
     }
-    for (Size i = 0; i < y.end() - y.begin(); ++i) {
+    for (Size i = 0; i < static_cast<Size>(y.end() - y.begin()); ++i) {
         yData[i] = (y[i] + yShift_) * yMultiplier_;
     }
 
-    glls_ = boost::make_unique<GeneralLinearLeastSquares>(xData, yData, v);
+    glls_ = boost::make_shared<GeneralLinearLeastSquares>(xData, yData, v);
 }
 
 template <class xType, class vContainer>
@@ -263,7 +263,7 @@ Real StabilisedGLLS::eval(xType x, vContainer& v,
     Real tmp = 0.0;
     for (Size i = 0; i < v.size(); ++i) {
         xType xNew(x.end() - x.begin());
-        for (Size j = 0; j < x.end() - x.begin(); ++j) {
+        for (Size j = 0; j < static_cast<Size>(x.end() - x.begin()); ++j) {
             xNew[j] = (x[j] + xShift_[j]) * xMultiplier_[j];
         }
         tmp += glls_->coefficients()[i] * v[i](xNew);
