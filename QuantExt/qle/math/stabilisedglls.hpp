@@ -44,14 +44,15 @@ namespace QuantExt {
 
 //! Numerically stabilised general linear least squares
 /*! The input data is lineaerly transformed before performing the linear least squares fit.
-  See GeneralLinearLeastSquares for additional information on the least squares
-  method itself. */
+  The linear least squares fit on the transformed data is done using the
+  GeneralLinearLeastSquares class. */
+
 class StabilisedGLLS {
 public:
     enum Method {
         None,      // No stabilisation
-        MaxAbs,    // Divide x and y values by max of abs of values (per x coordinate and y vector)
-        MeanStdDev // Subtract mean and divide by std dev (per x coordinate and y vector)
+        MaxAbs,    // Divide x and y values by max of abs of values (per x coordinate, y)
+        MeanStdDev // Subtract mean and divide by std dev (per x coordinate, y)
     };
     template <class xContainer, class yContainer, class vContainer>
     StabilisedGLLS(const xContainer& x, const yContainer& y, const vContainer& v, const Method method = MeanStdDev);
