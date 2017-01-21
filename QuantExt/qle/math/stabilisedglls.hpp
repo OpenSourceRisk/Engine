@@ -92,7 +92,8 @@ protected:
 template <class xContainer, class yContainer, class vContainer>
 inline StabilisedGLLS::StabilisedGLLS(const xContainer& x, const yContainer& y, const vContainer& v,
                                       const Method method)
-    : a_(v.size(), 0.0), err_(v.size(), 0.0), residuals_(y.size()), standardErrors_(v.size()), method_(method) {
+    : a_(v.end() - v.begin(), 0.0), err_(v.end() - v.begin(), 0.0), residuals_(y.end() - y.begin()),
+      standardErrors_(v.end() - v.begin()), method_(method) {
     calculate(x, y, v);
 }
 
@@ -101,7 +102,7 @@ void StabilisedGLLS::calculate(
     xContainer x, yContainer y, vContainer v,
     typename boost::enable_if<typename boost::is_arithmetic<typename xContainer::value_type>::type>::type*) {
 
-    std::vector<Real> xData(x.size(), 0.0), yData(y.size(), 0.0);
+    std::vector<Real> xData(x.end() - x.begin(), 0.0), yData(y.end() - y.begin(), 0.0);
     xMultiplier_ = Array(1, 1.0);
     xShift_ = Array(1, 0.0);
     yMultiplier_ = 1.0;
@@ -112,12 +113,12 @@ void StabilisedGLLS::calculate(
         break;
     case MaxAbs: {
         Real mx = 0.0, my = 0.0;
-        for (Size i = 0; i < x.size(); ++i) {
+        for (Size i = 0; i < x.end() - x.begin(); ++i) {
             mx = std::max(std::abs(x[i]), mx);
         }
         if (!close_enough(mx, 0.0))
             xMultiplier_[0] = 1.0 / mx;
-        for (Size i = 0; i < y.size(); ++i) {
+        for (Size i = 0; i < y.end() - y.begin(); ++i) {
             my = std::max(std::abs(y[i]), my);
         }
         if (!close_enough(my, 0.0))
@@ -131,10 +132,10 @@ void StabilisedGLLS::calculate(
         QL_FAIL("unknown stabilization method");
     }
 
-    for (Size i = 0; i < x.size(); ++i) {
+    for (Size i = 0; i < x.end() - x.begin(); ++i) {
         xData[i] = x[i] * xMultiplier_[0] + xShift_[0];
     }
-    for (Size i = 0; i < y.size(); ++i) {
+    for (Size i = 0; i < y.end() - y.begin(); ++i) {
         yData[i] = y[i] * yMultiplier_ + yShift_;
     }
 
@@ -146,13 +147,13 @@ void StabilisedGLLS::calculate(
     xContainer x, yContainer y, vContainer v,
     typename boost::disable_if<typename boost::is_arithmetic<typename xContainer::value_type>::type>::type*) {
 
-    QL_REQUIRE(x.size() > 0, "StabilisedGLLS::calculate(): x container is empty");
-    QL_REQUIRE(x[0].size() > 0, "StabilisedGLLS:calculate(): x contains empty point(s)");
+    QL_REQUIRE(x.end() - x.begin() > 0, "StabilisedGLLS::calculate(): x container is empty");
+    QL_REQUIRE(x[0].end() - x[0].begin() > 0, "StabilisedGLLS:calculate(): x contains empty point(s)");
 
-    std::vector<Array> xData(x.size(), Array(x[0].size(), 0.0));
-    std::vector<Real> yData(y.size(), 0.0);
-    xMultiplier_ = Array(x.size(), 1.0);
-    xShift_ = Array(x.size(), 0.0);
+    std::vector<Array> xData(x.end() - x.begin(), Array(x[0].end() - x[0].begin(), 0.0));
+    std::vector<Real> yData(y.end() - y.begin(), 0.0);
+    xMultiplier_ = Array(x.end() - x.begin(), 1.0);
+    xShift_ = Array(x.end() - x.begin(), 0.0);
     yMultiplier_ = 1.0;
     yShift_ = 0.0;
 
@@ -160,9 +161,9 @@ void StabilisedGLLS::calculate(
     case None:
         break;
     case MaxAbs: {
-        Array m(x[0].size(), 0.0);
+        Array m(x[0].end() - x[0].begin(), 0.0);
         Real my = 0.0;
-        for (Size i = 0; i < x.size(); ++i) {
+        for (Size i = 0; i < x.end() - x.begin(); ++i) {
             for (Size j = 0; j < m.size(); ++j) {
                 m[j] = std::max(std::abs(x[i][j]), m[j]);
             }
@@ -171,7 +172,7 @@ void StabilisedGLLS::calculate(
             if (!close_enough(m[j], 0.0))
                 xMultiplier_[j] = 1.0 / m[j];
         }
-        for (Size i = 0; i < y.size(); ++i) {
+        for (Size i = 0; i < y.end() - y.begin(); ++i) {
             my = std::max(std::abs(y[i]), my);
         }
         if (!close_enough(my, 0.0))
@@ -186,12 +187,12 @@ void StabilisedGLLS::calculate(
         break;
     }
 
-    for (Size i = 0; i < x.size(); ++i) {
+    for (Size i = 0; i < x.end() - x.begin(); ++i) {
         for (Size j = 0; j < xMultiplier_.size(); ++j) {
             xData[i][j] = x[i][j] * xMultiplier_[j] + xShift_[j];
         }
     }
-    for (Size i = 0; i < y.size(); ++i) {
+    for (Size i = 0; i < y.end() - y.begin(); ++i) {
         yData[i] = y[i] * yMultiplier_ + yShift_;
     }
 
@@ -217,8 +218,8 @@ Real StabilisedGLLS::eval(xType x, vContainer& v,
                                                                             << glls_->dim());
     Real tmp = 0.0;
     for (Size i = 0; i < v.size(); ++i) {
-        xType xNew(x.size());
-        for (Size j = 0; j < x.size(); ++j) {
+        xType xNew(x.end() - x.begin());
+        for (Size j = 0; j < x.end() - x.begin(); ++j) {
             xNew[j] = x[j] * xMultiplier_[j] + xShift_[j];
         }
         tmp += glls_->coefficients()[i] * v[i](xNew);
