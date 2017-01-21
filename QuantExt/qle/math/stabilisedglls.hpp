@@ -28,12 +28,17 @@
 #include <ql/math/comparison.hpp>
 #include <ql/math/generallinearleastsquares.hpp>
 
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics/mean.hpp>
+#include <boost/accumulators/statistics/stats.hpp>
+#include <boost/accumulators/statistics/variance.hpp>
 #include <boost/make_unique.hpp>
 #include <boost/type_traits.hpp>
 
 #include <vector>
 
 using namespace QuantLib;
+using namespace boost::accumulators;
 
 namespace QuantExt {
 
@@ -56,7 +61,7 @@ public:
     const Array& transformedStandardErrors() const { return glls_->standardErrors(); }
     const Array& transformedError() const { return glls_->error(); }
 
-    //! Transformation parameters
+    //! Transformation parameters (u => (u + shift) * multiplier for u = x, y)
     const Array& xMultiplier() const { return xMultiplier_; }
     const Array& xShift() const { return xShift_; }
     const Real yMultiplier() const { return yMultiplier_; }
@@ -65,9 +70,11 @@ public:
     Size size() const { return glls_->residuals().size(); }
     Size dim() const { return glls_->coefficients().size(); }
 
+    //! evaluate regression function in terms of original x, y
     template <class xType, class vContainer>
     Real eval(xType x, vContainer& v, typename boost::enable_if<typename boost::is_arithmetic<xType>::type>::type* = 0);
 
+    //! evaluate regression function in terms of original x, y
     template <class xType, class vContainer>
     Real eval(xType x, vContainer& v,
               typename boost::disable_if<typename boost::is_arithmetic<xType>::type>::type* = 0);
@@ -125,18 +132,34 @@ void StabilisedGLLS::calculate(
             yMultiplier_ = 1.0 / my;
         break;
     }
-    case MeanStdDev:
-        QL_FAIL("std dev to do ...");
+    case MeanStdDev: {
+        accumulator_set<Real, stats<tag::mean, tag::variance> > acc;
+        for (Size i = 0; i < x.end() - x.begin(); ++i) {
+            acc(x[i]);
+        }
+        xShift_[0] = -mean(acc);
+        Real tmp = variance(acc);
+        if (!close_enough(tmp, 0.0))
+            xMultiplier_[0] = 1.0 / std::sqrt(tmp);
+        accumulator_set<Real, stats<tag::mean, tag::variance> > acc2;
+        for (Size i = 0; i < y.end() - y.begin(); ++i) {
+            acc2(y[i]);
+        }
+        yShift_ = -mean(acc2);
+        Real tmp2 = variance(acc2);
+        if (!close_enough(tmp2, 0.0))
+            yMultiplier_ = 1.0 / std::sqrt(tmp2);
         break;
+    }
     default:
-        QL_FAIL("unknown stabilization method");
+        QL_FAIL("unknown stabilisation method");
     }
 
     for (Size i = 0; i < x.end() - x.begin(); ++i) {
-        xData[i] = x[i] * xMultiplier_[0] + xShift_[0];
+        xData[i] = (x[i] + xShift_[0]) * xMultiplier_[0];
     }
     for (Size i = 0; i < y.end() - y.begin(); ++i) {
-        yData[i] = y[i] * yMultiplier_ + yShift_;
+        yData[i] = (y[i] + yShift_) * yMultiplier_;
     }
 
     glls_ = boost::make_unique<GeneralLinearLeastSquares>(xData, yData, v);
@@ -152,8 +175,8 @@ void StabilisedGLLS::calculate(
 
     std::vector<Array> xData(x.end() - x.begin(), Array(x[0].end() - x[0].begin(), 0.0));
     std::vector<Real> yData(y.end() - y.begin(), 0.0);
-    xMultiplier_ = Array(x.end() - x.begin(), 1.0);
-    xShift_ = Array(x.end() - x.begin(), 0.0);
+    xMultiplier_ = Array(x[0].end() - x[0].begin(), 1.0);
+    xShift_ = Array(x[0].end() - x[0].begin(), 0.0);
     yMultiplier_ = 1.0;
     yShift_ = 0.0;
 
@@ -179,21 +202,41 @@ void StabilisedGLLS::calculate(
             yMultiplier_ = 1.0 / my;
         break;
     }
-    case MeanStdDev:
-        QL_FAIL("std dev to do ...");
+    case MeanStdDev: {
+        std::vector<accumulator_set<Real, stats<tag::mean, tag::variance> > > acc(x[0].end() - x[0].begin());
+        for (Size i = 0; i < x.end() - x.begin(); ++i) {
+            for (Size j = 0; j < acc.size(); ++j) {
+                acc[j](x[i][j]);
+            }
+        }
+        for (Size j = 0; j < acc.size(); ++j) {
+            xShift_[j] = -mean(acc[j]);
+            Real tmp = variance(acc[j]);
+            if (!close_enough(tmp, 0.0))
+                xMultiplier_[j] = 1.0 / std::sqrt(tmp);
+        }
+        accumulator_set<Real, stats<tag::mean, tag::variance> > acc2;
+        for (Size i = 0; i < y.end() - y.begin(); ++i) {
+            acc2(y[i]);
+        }
+        yShift_ = -mean(acc2);
+        Real tmp2 = variance(acc2);
+        if (!close_enough(tmp2, 0.0))
+            yMultiplier_ = 1.0 / std::sqrt(tmp2);
         break;
+    }
     default:
-        QL_FAIL("unknown stabilization method");
+        QL_FAIL("unknown stabilisation method");
         break;
     }
 
     for (Size i = 0; i < x.end() - x.begin(); ++i) {
         for (Size j = 0; j < xMultiplier_.size(); ++j) {
-            xData[i][j] = x[i][j] * xMultiplier_[j] + xShift_[j];
+            xData[i][j] = (x[i][j] + xShift_[j]) * xMultiplier_[j];
         }
     }
     for (Size i = 0; i < y.end() - y.begin(); ++i) {
-        yData[i] = y[i] * yMultiplier_ + yShift_;
+        yData[i] = (y[i] + yShift_) * yMultiplier_;
     }
 
     glls_ = boost::make_unique<GeneralLinearLeastSquares>(xData, yData, v);
@@ -206,9 +249,9 @@ Real StabilisedGLLS::eval(xType x, vContainer& v,
                                                                             << glls_->dim());
     Real tmp = 0.0;
     for (Size i = 0; i < v.size(); ++i) {
-        tmp += glls_->coefficients()[i] * v[i](x * xMultiplier_[0] + xShift_[0]);
+        tmp += glls_->coefficients()[i] * v[i]((x + xShift_[0]) * xMultiplier_[0]);
     }
-    return (tmp - yShift_) / yMultiplier_;
+    return tmp / yMultiplier_ - yShift_;
 }
 
 template <class xType, class vContainer>
@@ -220,11 +263,11 @@ Real StabilisedGLLS::eval(xType x, vContainer& v,
     for (Size i = 0; i < v.size(); ++i) {
         xType xNew(x.end() - x.begin());
         for (Size j = 0; j < x.end() - x.begin(); ++j) {
-            xNew[j] = x[j] * xMultiplier_[j] + xShift_[j];
+            xNew[j] = (x[j] + xShift_[j]) * xMultiplier_[j];
         }
         tmp += glls_->coefficients()[i] * v[i](xNew);
     }
-    return (tmp - yShift_) / yMultiplier_;
+    return tmp / yMultiplier_ - yShift_;
 }
 
 } // namespace QuantExt

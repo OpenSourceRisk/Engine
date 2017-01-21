@@ -1084,7 +1084,20 @@ void StabilisedGLLSTest::testBigInputNumbers() {
         Real y = m.eval(x0, v);
         Real y2 = c0 + c1 * x0 + c2 * x0 * x0;
         if (std::abs((y - y2) / y2) > tol)
-            BOOST_TEST_ERROR("could not verify eval(" << x0 << "), got " << y << ", expected " << y2
+            BOOST_TEST_ERROR("could not verify eval(" << x0 << ") for MaxBas mode, got " << y << ", expected " << y2
+                                                      << ", relative error " << (y - y2) / y2 << ", tolerance " << tol);
+        x0 += 1E7;
+    }
+
+    // check alternative mode
+    StabilisedGLLS mb(x, y, v, StabilisedGLLS::MeanStdDev);
+
+    x0 = -1E10;
+    while (x0 < 1E10) {
+        Real y = mb.eval(x0, v);
+        Real y2 = c0 + c1 * x0 + c2 * x0 * x0;
+        if (std::abs((y - y2) / y2) > tol)
+            BOOST_TEST_ERROR("could not verify eval(" << x0 << ") for MeanStdDev mode, got " << y << ", expected " << y2
                                                       << ", relative error " << (y - y2) / y2 << ", tolerance " << tol);
         x0 += 1E7;
     }
@@ -1115,6 +1128,7 @@ void StabilisedGLLSTest::test2DRegression() {
         LsmBasisSystem::multiPathBasisSystem(2, 2, LsmBasisSystem::Monomial);
 
     StabilisedGLLS m(x, y, basis, StabilisedGLLS::MaxAbs);
+    StabilisedGLLS mb(x, y, basis, StabilisedGLLS::MeanStdDev);
     GeneralLinearLeastSquares m2(x, y, basis);
 
     Real tol = 5E-4;
@@ -1132,9 +1146,14 @@ void StabilisedGLLSTest::test2DRegression() {
             }
             Real ys = m.eval(p, basis);
             if (std::abs((ys - yn) / yn) > tol)
-                BOOST_TEST_ERROR("could not verify eval(" << p << "), got " << ys << ", expected " << yn
+                BOOST_TEST_ERROR("could not verify eval(" << p << ") for MaxAbs mode, got " << ys << ", expected " << yn
                                                           << ", relative error " << (ys - yn) / yn << ", tolerance "
                                                           << tol);
+            Real ysb = mb.eval(p, basis);
+            if (std::abs((ysb - yn) / yn) > tol)
+                BOOST_TEST_ERROR("could not verify eval(" << p << ") for MeanStdDev mode, got " << ysb << ", expected "
+                                                          << yn << ", relative error " << (ysb - yn) / yn
+                                                          << ", tolerance " << tol);
             x1 += 0.1;
         }
         x0 += 0.1;
