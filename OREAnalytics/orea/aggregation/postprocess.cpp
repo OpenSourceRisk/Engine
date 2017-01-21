@@ -25,10 +25,10 @@
 #include <ql/math/distributions/normaldistribution.hpp>
 #include <ql/math/generallinearleastsquares.hpp>
 #include <ql/math/kernelfunctions.hpp>
-#include <ql/math/linearleastsquaresregression.hpp>
 #include <ql/methods/montecarlo/lsmbasissystem.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 
+#include <qle/math/stabilisedglls.hpp>
 #include <qle/math/nadarayawatson.hpp>
 
 #include <boost/accumulators/accumulators.hpp>
@@ -884,9 +884,12 @@ void PostProcess::dynamicInitialMargin() {
                 }
             } else {
                 // Least squares polynomial regression with specified polynom order
-                GeneralLinearLeastSquares ls(rx, ry2, v);
-                Array coeff = ls.coefficients();
-                LOG("DIM regression coefficients at time step " << j << ": " << setprecision(6) << coeff);
+                QuantExt::StabilisedGLLS ls(rx, ry2, v, QuantExt::StabilisedGLLS::MeanStdDev);
+                LOG("DIM data normalisation at time step "
+                    << j << ": " << scientific << setprecision(6) << " x-shift = " << ls.xShift() << " x-multiplier = "
+                    << ls.xMultiplier() << " y-shift = " << ls.yShift() << " y-multiplier = " << ls.yMultiplier());
+                LOG("DIM regression coefficients at time step " << j << ": " << fixed << setprecision(6)
+                                                                << ls.transformedCoefficients());
 
                 // Local regression versus first regression variable (i.e. we do not perform a
                 // multidimensional local regression):
@@ -903,9 +906,7 @@ void PostProcess::dynamicInitialMargin() {
                 for (Size k = 0; k < samples; ++k) {
                     Real num1 = scenarioData_->get(j, k, AggregationScenarioDataType::Numeraire);
                     Array regressor = dimRegressors_.empty() ? Array(1, nettingSetNPV_[n][j][k]) : regressorArray(j, k);
-                    Real e = 0.0;
-                    for (Size l = 0; l < v.size(); l++)
-                        e += coeff[l] * v[l](regressor);
+                    Real e = ls.eval(regressor, v);
                     if (e < 0.0)
                         LOG("Negative variance regression for date " << j << ", sample " << k
                                                                      << ", regressor = " << regressor);
