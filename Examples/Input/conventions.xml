@@ -713,11 +713,35 @@
   </CrossCurrencyBasis>
   <!-- Zc Inflation Swaps -->
   <ZcInflationSwap>
+      <Id>EUHICP_ZC_INFLATIONSWAP</Id>
+      <FixCalendar>TARGET</FixCalendar>
+      <FixConvention>MF</FixConvention>
+      <DayCounter>30/360</DayCounter>
+      <Index>EUHICP</Index>
+      <Interpolated>false</Interpolated>
+      <ObservationLag>3M</ObservationLag>
+      <AdjustInfObsDates>false</AdjustInfObsDates>
+      <InfCalendar>TARGET</InfCalendar>
+      <InfConvention>MF</InfConvention>
+  </ZcInflationSwap>
+  <ZcInflationSwap>
       <Id>EUHICPXT_ZC_INFLATIONSWAP</Id>
       <FixCalendar>TARGET</FixCalendar>
       <FixConvention>MF</FixConvention>
       <DayCounter>30/360</DayCounter>
       <Index>EUHICPXT</Index>
+      <Interpolated>false</Interpolated>
+      <ObservationLag>3M</ObservationLag>
+      <AdjustInfObsDates>false</AdjustInfObsDates>
+      <InfCalendar>TARGET</InfCalendar>
+      <InfConvention>MF</InfConvention>
+  </ZcInflationSwap>
+  <ZcInflationSwap>
+      <Id>FRHICP_ZC_INFLATIONSWAP</Id>
+      <FixCalendar>TARGET</FixCalendar>
+      <FixConvention>MF</FixConvention>
+      <DayCounter>30/360</DayCounter>
+      <Index>FRHICP</Index>
       <Interpolated>false</Interpolated>
       <ObservationLag>3M</ObservationLag>
       <AdjustInfObsDates>false</AdjustInfObsDates>
@@ -746,6 +770,18 @@
       <ObservationLag>3M</ObservationLag>
       <AdjustInfObsDates>false</AdjustInfObsDates>
       <InfCalendar>US</InfCalendar>
+      <InfConvention>MF</InfConvention>
+  </ZcInflationSwap>
+  <ZcInflationSwap>
+      <Id>ZACPI_ZC_INFLATIONSWAP</Id>
+      <FixCalendar>ZAR</FixCalendar>
+      <FixConvention>MF</FixConvention>
+      <DayCounter>30/360</DayCounter>
+      <Index>ZACPI</Index>
+      <Interpolated>false</Interpolated>
+      <ObservationLag>3M</ObservationLag>
+      <AdjustInfObsDates>false</AdjustInfObsDates>
+      <InfCalendar>ZAR</InfCalendar>
       <InfConvention>MF</InfConvention>
   </ZcInflationSwap>
 </Conventions>
