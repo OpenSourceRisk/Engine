@@ -17,6 +17,7 @@ QLE_TESTS = \
 	swaptionvolatilityconverter.hpp swaptionvolatilityconverter.cpp \
 	optionletstripper.hpp optionletstripper.cpp \
 	ratehelpers.hpp ratehelpers.cpp \
+	stabilisedglls.hpp stabilisedglls.cpp \
 	capfloormarketdata.hpp \
 	swaptionmarketdata.hpp \
 	yieldcurvemarketdata.hpp
