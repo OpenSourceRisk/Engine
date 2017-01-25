@@ -216,10 +216,10 @@ void CPISwapTest::testCPISwapPrice() {
     string indexCPI = "UKRPI";
     Real baseCPI = 210.0;
     string CPIlag = "2M";
-    Real fixedRate = 1.0;
+    std::vector<double> fixedRate(1,1.0);
     bool interpolated = false;
     bool adjustedNotional = false;
-    CPILegData legdataCPI(indexCPI, baseCPI, CPIlag, fixedRate, interpolated, adjustedNotional);
+    CPILegData legdataCPI(indexCPI, baseCPI, CPIlag, interpolated, adjustedNotional, fixedRate);
     LegData legCPI(isPayerCPI, "GBP", legdataCPI, scheduleCPI, dc, notional, vector<string>(),
                    paymentConvention);
     

@@ -82,11 +82,11 @@ XMLNode* FloatingLegData::toXML(XMLDocument& doc) {
     XMLUtils::addChildrenWithAttributes(doc, node, "Gearings", "Gearing", gearings_, "startDate", gearingDates_);
     return node;
 }
-    
+
 void CPILegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "CPILegData");
     index_ = XMLUtils::getChildValue(node, "Index", true);
-    rate_ = XMLUtils::getChildValueAsDouble(node, "Rate");
+    rates_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Rates", "Rate", "startDate", rateDates_);
     baseCPI_ = XMLUtils::getChildValueAsDouble(node, "BaseCPI");
     observationLag_ = XMLUtils::getChildValue(node, "ObservationLag");
     interpolated_ = XMLUtils::getChildValueAsBool(node, "Interpolated");
@@ -96,7 +96,7 @@ void CPILegData::fromXML(XMLNode* node) {
 XMLNode* CPILegData::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("CPILegData");
     XMLUtils::addChild(doc, node, "Index", index_);
-    XMLUtils::addChild(doc, node,"Rate", rate_);
+    XMLUtils::addChildrenWithAttributes(doc, node, "Rates", "Rate", rates_, "startDate", rateDates_);
     XMLUtils::addChild(doc, node, "BaseCPI", baseCPI_);
     XMLUtils::addChild(doc, node, "ObservationLag", observationLag_);
     XMLUtils::addChild(doc, node, "Interpolated", interpolated_);
@@ -332,35 +332,38 @@ Leg makeNotionalLeg(const Leg& refLeg, bool initNomFlow, bool finalNomFlow, bool
 }
 
 Leg makeCPILeg(LegData& data, boost::shared_ptr<ZeroInflationIndex> index) {
-    
+
     Schedule schedule = makeSchedule(data.schedule());
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
-    
+
     //requires format "3M" for 3 months and so on...
     Period observationLag = parsePeriod(data.cpiLegData().observationLag());
-    
-    CPI::InterpolationType interpolationMethod = CPI::Flat;
-    if (data.cpiLegData().interpolated())
-        interpolationMethod = CPI::Linear;
-    
+
     /*
      there are three methods...
-     
      QuantLib::CPI::AsIndex
      QuantLib::CPI::Flat
      QuantLib::CPI::Linear
+     we never fall back on the index, but rather explicity choose flat or
+     linear based on the interpolation flag given in the cpi leg data
      */
-    
+
+    CPI::InterpolationType interpolationMethod = CPI::Flat;
+    if (data.cpiLegData().interpolated())
+        interpolationMethod = CPI::Linear;
+
+    vector<double> rates = buildScheduledVector(data.cpiLegData().rates(), data.cpiLegData().rateDates(), schedule);
+
     Leg leg = CPILeg (schedule, index, data.cpiLegData().baseCPI(), observationLag)
                   .withNotionals(data.notionals())
                   .withPaymentDayCounter(dc)
                   .withPaymentAdjustment(bdc)
                   .withPaymentCalendar(schedule.calendar())
-                  .withFixedRates(data.cpiLegData().rate())
+                  .withFixedRates(rates)
                   .withObservationInterpolation(interpolationMethod);
     QL_REQUIRE(leg.size() > 0, "Empty CPI Leg");
-    
+
     // Change CPICouponPricers to QLE ones.
     boost::shared_ptr<CPICouponPricer> pricer (new CPICouponPricer);
     for (Size i = 0; i < leg.size(); i++) {
@@ -368,7 +371,7 @@ Leg makeCPILeg(LegData& data, boost::shared_ptr<ZeroInflationIndex> index) {
         if (cpi)
             cpi->setPricer(pricer);
     }
-    
+
     return leg;
 }
 

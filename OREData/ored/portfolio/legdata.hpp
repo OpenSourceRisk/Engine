@@ -23,12 +23,12 @@
 
 #pragma once
 
-#include <ored/utilities/parsers.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/schedule.hpp>
+#include <ored/utilities/parsers.hpp>
 
-#include <ql/indexes/iborindex.hpp>
 #include <ql/cashflow.hpp>
+#include <ql/indexes/iborindex.hpp>
 
 #include <vector>
 
@@ -149,37 +149,32 @@ private:
 class CPILegData : public XMLSerializable {
 public:
     CPILegData() {}
-    CPILegData(string index,
-               double baseCPI,
-               string observationLag,
-               double rate,
-               bool interpolated,
-               bool adjustedNotional)
-    : index_(index),
-    baseCPI_(baseCPI),
-    observationLag_(observationLag),
-    rate_(rate),
-    interpolated_(interpolated),
-    adjustedNotional_(adjustedNotional) {}
-    
+    CPILegData(string index, double baseCPI, string observationLag, bool interpolated, bool adjustedNotional,
+               const vector<double>& rates, const vector<string>& rateDates = std::vector<string>())
+        : index_(index), baseCPI_(baseCPI), observationLag_(observationLag), interpolated_(interpolated),
+          adjustedNotional_(adjustedNotional), rates_(rates), rateDates_(rateDates) {}
+
     const string index() const { return index_; }
     double baseCPI() const { return baseCPI_; }
     const string observationLag() const { return observationLag_; }
-    double rate() const { return rate_; }
     bool interpolated() const { return interpolated_; }
     bool adjustedNotional() const { return adjustedNotional_; }
-    
-    virtual void fromXML(XMLNode *node);
-    virtual XMLNode* toXML (XMLDocument& doc);
+    const std::vector<double>& rates() const { return rates_; }
+    const std::vector<string>& rateDates() const { return rateDates_; }
+
+    virtual void fromXML(XMLNode* node);
+    virtual XMLNode* toXML(XMLDocument& doc);
+
 private:
     string index_;
     double baseCPI_;
     string observationLag_;
-    double rate_;
     bool interpolated_;
     bool adjustedNotional_;
+    vector<double> rates_;
+    vector<string> rateDates_;
 };
-    
+
 //! Serializable object holding leg data
 class LegData : public XMLSerializable {
 public:
@@ -225,15 +220,18 @@ public:
           notionalFinalExchange_(notionalFinalExchange), notionalAmortizingExchange_(notionalAmortizingExchange),
           isNotResetXCCY_(isNotResetXCCY), foreignCurrency_(foreignCurrency), foreignAmount_(foreignAmount),
           fxIndex_(fxIndex), fixingDays_(fixingDays) {}
-    
+
     //! Constructor with CPILegData
-    LegData(bool isPayer, const string& currency, CPILegData& data, ScheduleData& schedule, const string dayCounter, const vector<double> notionals, const vector<string>& notionalDates = vector<string>(), const string& paymentConvention = "F", bool notionalInitialExchange = false, bool notionalFinalExchange = false, bool notionalAmortizingExchange = false, bool isNotResetXCCY = true)
+    LegData(bool isPayer, const string& currency, CPILegData& data, ScheduleData& schedule, const string dayCounter,
+            const vector<double> notionals, const vector<string>& notionalDates = vector<string>(),
+            const string& paymentConvention = "F", bool notionalInitialExchange = false,
+            bool notionalFinalExchange = false, bool notionalAmortizingExchange = false, bool isNotResetXCCY = true)
         : isPayer_(isPayer), currency_(currency), legType_("CPI"), cpiLegData_(data), schedule_(schedule),
           dayCounter_(dayCounter), notionals_(notionals), notionalDates_(notionalDates),
           paymentConvention_(paymentConvention), notionalInitialExchange_(notionalInitialExchange),
           notionalFinalExchange_(notionalFinalExchange), notionalAmortizingExchange_(notionalAmortizingExchange),
           isNotResetXCCY_(isNotResetXCCY) {}
-    
+
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node);
