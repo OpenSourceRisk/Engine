@@ -214,26 +214,21 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
             Size spotLag = config->spotLag();
             // setup
             std::vector<Date> dates;
-            std::vector<Real> impliedHazardRates;
+            std::vector<Real> impliedSurvProb;
             Date spot = cal.advance(asof, spotLag * Days);
             for (Size i = 0; i < pillars.size(); ++i) {
                 dates.push_back(cal.advance(spot, pillars[i]));
-                Real t_c = config->dayCounter().yearFraction(asof, dates[i]);
-                // hazard rates are always continnuously compounded
-                Real impliedHr =
-                    -std::log(sourceCurve->handle()->discount(dates[i]) / benchmarkCurve->handle()->discount(dates[i])) /
-                    t_c;
-                impliedHazardRates.push_back(impliedHr);
+                Real tmp = sourceCurve->handle()->discount(dates[i]) / benchmarkCurve->handle()->discount(dates[i]);
+                impliedSurvProb.push_back(dates[i] == asof ? 1.0 : tmp);
             }
             QL_REQUIRE(dates.size() > 0, "DefaultCurve (Benchmark): no dates given");
             if (dates[0] != asof) {
                 dates.insert(dates.begin(), asof);
-                Real tmp = impliedHazardRates.front();
-                impliedHazardRates.insert(impliedHazardRates.begin(), tmp);
+                impliedSurvProb.insert(impliedSurvProb.begin(), 1.0);
             }
-            LOG("DefaultCurve: set up interpolated hazard rate curve as yield over benchmark");
-            curve_ = boost::make_shared<InterpolatedHazardRateCurve<BackwardFlat>>(
-                dates, impliedHazardRates, config->dayCounter(), BackwardFlat());
+            LOG("DefaultCurve: set up interpolated surv prob curve as yield over benchmark");
+            curve_ = boost::make_shared<InterpolatedSurvivalProbabilityCurve<LogLinear>>(dates, impliedSurvProb,
+                                                                                         config->dayCounter());
             if (config->extrapolation()) {
                 curve_->enableExtrapolation();
                 DLOG("DefaultCurve: Enabled Extrapolation");
