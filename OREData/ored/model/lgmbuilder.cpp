@@ -93,30 +93,22 @@ LgmBuilder::LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const
     } else
         QL_FAIL("H type case not covered");
 
-    if (data_->aParamType() == ParamType::Piecewise) {
-        if (data_->reversionType() == LgmData::ReversionType::HullWhite &&
-            data_->volatilityType() == LgmData::VolatilityType::HullWhite) {
-            LOG("IR parametrization for " << ccy << ": IrLgm1fPiecewiseConstantHullWhiteAdaptor");
-            parametrization_ = boost::make_shared<QuantExt::IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
-                ccy, discountCurve_, aTimes, alpha, hTimes, h);
-        } else if (data_->reversionType() == LgmData::ReversionType::HullWhite) {
-            LOG("IR parametrization for " << ccy << ": IrLgm1fPiecewiseConstant");
-            parametrization_ = boost::make_shared<QuantExt::IrLgm1fPiecewiseConstantParametrization>(
-                ccy, discountCurve_, aTimes, alpha, hTimes, h);
-        } else {
-            parametrization_ = boost::make_shared<QuantExt::IrLgm1fPiecewiseLinearParametrization>(
-                ccy, discountCurve_, aTimes, alpha, hTimes, h);
-            LOG("IR parametrization for " << ccy << ": IrLgm1fPiecewiseLinear");
-        }
-        LOG("alpha times size: " << aTimes.size());
-        LOG("lambda times size: " << hTimes.size());
+    if (data_->reversionType() == LgmData::ReversionType::HullWhite &&
+        data_->volatilityType() == LgmData::VolatilityType::HullWhite) {
+        LOG("IR parametrization for " << ccy << ": IrLgm1fPiecewiseConstantHullWhiteAdaptor");
+        parametrization_ = boost::make_shared<QuantExt::IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
+            ccy, discountCurve_, aTimes, alpha, hTimes, h);
+    } else if (data_->reversionType() == LgmData::ReversionType::HullWhite) {
+        LOG("IR parametrization for " << ccy << ": IrLgm1fPiecewiseConstant");
+        parametrization_ = boost::make_shared<QuantExt::IrLgm1fPiecewiseConstantParametrization>(
+            ccy, discountCurve_, aTimes, alpha, hTimes, h);
     } else {
-        parametrization_ =
-            boost::make_shared<QuantExt::IrLgm1fConstantParametrization>(ccy, discountCurve_, alpha[0], h[0]);
-        LOG("IR parametrization for ccy " << ccy << ": IrLgm1fConstant");
-        LOG("alpha times size: " << aTimes.size());
-        LOG("lambda times size: " << hTimes.size());
+        parametrization_ = boost::make_shared<QuantExt::IrLgm1fPiecewiseLinearParametrization>(
+            ccy, discountCurve_, aTimes, alpha, hTimes, h);
+        LOG("IR parametrization for " << ccy << ": IrLgm1fPiecewiseLinear");
     }
+    LOG("alpha times size: " << aTimes.size());
+    LOG("lambda times size: " << hTimes.size());
 
     model_ = boost::make_shared<QuantExt::LGM>(parametrization_);
 
