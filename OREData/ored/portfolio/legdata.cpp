@@ -86,11 +86,10 @@ XMLNode* FloatingLegData::toXML(XMLDocument& doc) {
 void CPILegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "CPILegData");
     index_ = XMLUtils::getChildValue(node, "Index", true);
-    rates_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Rates", "Rate", "startDate", rateDates_);
-    baseCPI_ = XMLUtils::getChildValueAsDouble(node, "BaseCPI");
-    observationLag_ = XMLUtils::getChildValue(node, "ObservationLag");
-    interpolated_ = XMLUtils::getChildValueAsBool(node, "Interpolated");
-    adjustedNotional_ = XMLUtils::getChildValueAsBool(node, "AdjustedNotional");
+    baseCPI_ = XMLUtils::getChildValueAsDouble(node, "BaseCPI", true);
+    observationLag_ = XMLUtils::getChildValue(node, "ObservationLag", true);
+    interpolated_ = XMLUtils::getChildValueAsBool(node, "Interpolated", true);
+    rates_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Rates", "Rate", "startDate", rateDates_, true);
 }
 
 XMLNode* CPILegData::toXML(XMLDocument& doc) {
@@ -100,7 +99,25 @@ XMLNode* CPILegData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "BaseCPI", baseCPI_);
     XMLUtils::addChild(doc, node, "ObservationLag", observationLag_);
     XMLUtils::addChild(doc, node, "Interpolated", interpolated_);
-    XMLUtils::addChild(doc, node, "AdjustedNotional", adjustedNotional_);
+    return node;
+}
+
+void YoYLegData::fromXML(XMLNode* node) {
+    XMLUtils::checkNode(node, "YoYLegData");
+    index_ = XMLUtils::getChildValue(node, "Index", true);
+    fixingDays_ = XMLUtils::getChildValueAsInt(node, "FixingDays", true);
+    observationLag_ = XMLUtils::getChildValue(node, "ObservationLag", true);
+    gearings_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Gearings", "Gearing", "startDate", gearingDates_);
+    spreads_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Spreads", "Spread", "startDate", spreadDates_);
+}
+
+XMLNode* YoYLegData::toXML(XMLDocument& doc) {
+    XMLNode* node = doc.allocNode("CPILegData");
+    XMLUtils::addChild(doc, node, "Index", index_);
+    XMLUtils::addChild(doc, node, "ObservationLag", observationLag_);
+    XMLUtils::addChild(doc, node, "FixingDays", static_cast<int>(fixingDays_));
+    XMLUtils::addChildrenWithAttributes(doc, node, "Gearings", "Gearing", gearings_, "startDate", gearingDates_);
+    XMLUtils::addChildrenWithAttributes(doc, node, "Spreads", "Spread", spreads_, "startDate", spreadDates_);
     return node;
 }
 
@@ -140,26 +157,21 @@ void LegData::fromXML(XMLNode* node) {
         notionalAmortizingExchange_ = false;
     }
     schedule_.fromXML(XMLUtils::getChildNode(node, "ScheduleData"));
+    fixedLegData_ = FixedLegData();
+    floatingLegData_ = FloatingLegData();
+    cashflowData_ = CashflowData();
+    cpiLegData_ = CPILegData();
+    yoyLegData_ = YoYLegData();
     if (legType_ == "Fixed") {
         fixedLegData_.fromXML(XMLUtils::getChildNode(node, "FixedLegData"));
-        floatingLegData_ = FloatingLegData();
-        cashflowData_ = CashflowData();
-        cpiLegData_ = CPILegData();
     } else if (legType_ == "Floating") {
         floatingLegData_.fromXML(XMLUtils::getChildNode(node, "FloatingLegData"));
-        fixedLegData_ = FixedLegData();
-        cashflowData_ = CashflowData();
-        cpiLegData_ = CPILegData();
     } else if (legType_ == "Cashflow") {
         cashflowData_.fromXML(XMLUtils::getChildNode(node, "CashflowData"));
-        fixedLegData_ = FixedLegData();
-        floatingLegData_ = FloatingLegData();
-        cpiLegData_ = CPILegData();
     } else if (legType_ == "CPI") {
-        cpiLegData_.fromXML (XMLUtils::getChildNode(node, "CPILegData"));
-        fixedLegData_ = FixedLegData ();
-        floatingLegData_ = FloatingLegData ();
-        cashflowData_ = CashflowData();
+        cpiLegData_.fromXML(XMLUtils::getChildNode(node, "CPILegData"));
+    } else if (legType_ == "YoY") {
+        yoyLegData_.fromXML(XMLUtils::getChildNode(node, "YoYLegData"));
     } else {
         QL_FAIL("Unkown legType :" << legType_);
     }
@@ -332,30 +344,16 @@ Leg makeNotionalLeg(const Leg& refLeg, bool initNomFlow, bool finalNomFlow, bool
 }
 
 Leg makeCPILeg(LegData& data, boost::shared_ptr<ZeroInflationIndex> index) {
-
     Schedule schedule = makeSchedule(data.schedule());
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
-
-    //requires format "3M" for 3 months and so on...
     Period observationLag = parsePeriod(data.cpiLegData().observationLag());
-
-    /*
-     there are three methods...
-     QuantLib::CPI::AsIndex
-     QuantLib::CPI::Flat
-     QuantLib::CPI::Linear
-     we never fall back on the index, but rather explicity choose flat or
-     linear based on the interpolation flag given in the cpi leg data
-     */
-
     CPI::InterpolationType interpolationMethod = CPI::Flat;
     if (data.cpiLegData().interpolated())
         interpolationMethod = CPI::Linear;
-
     vector<double> rates = buildScheduledVector(data.cpiLegData().rates(), data.cpiLegData().rateDates(), schedule);
 
-    Leg leg = CPILeg (schedule, index, data.cpiLegData().baseCPI(), observationLag)
+    Leg leg = CPILeg(schedule, index, data.cpiLegData().baseCPI(), observationLag)
                   .withNotionals(data.notionals())
                   .withPaymentDayCounter(dc)
                   .withPaymentAdjustment(bdc)
@@ -363,15 +361,28 @@ Leg makeCPILeg(LegData& data, boost::shared_ptr<ZeroInflationIndex> index) {
                   .withFixedRates(rates)
                   .withObservationInterpolation(interpolationMethod);
     QL_REQUIRE(leg.size() > 0, "Empty CPI Leg");
+    return leg;
+}
 
-    // Change CPICouponPricers to QLE ones.
-    boost::shared_ptr<CPICouponPricer> pricer (new CPICouponPricer);
-    for (Size i = 0; i < leg.size(); i++) {
-        boost::shared_ptr<CPICoupon> cpi = boost::dynamic_pointer_cast<CPICoupon>(leg[i]);
-        if (cpi)
-            cpi->setPricer(pricer);
-    }
+Leg makeYoYLeg(LegData& data, boost::shared_ptr<YoYInflationIndex> index) {
+    Schedule schedule = makeSchedule(data.schedule());
+    DayCounter dc = parseDayCounter(data.dayCounter());
+    BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
+    Period observationLag = parsePeriod(data.yoyLegData().observationLag());
+    vector<double> gearings =
+        buildScheduledVector(data.yoyLegData().gearings(), data.yoyLegData().gearingDates(), schedule);
+    vector<double> spreads =
+        buildScheduledVector(data.yoyLegData().spreads(), data.yoyLegData().spreadDates(), schedule);
 
+    // floors and caps not suported yet by QL yoy coupon pricer...
+    Leg leg = yoyInflationLeg(schedule, schedule.calendar(), index, observationLag)
+                  .withNotionals(data.notionals())
+                  .withPaymentDayCounter(dc)
+                  .withPaymentAdjustment(bdc)
+                  .withFixingDays(data.yoyLegData().fixingDays())
+                  .withGearings(gearings)
+                  .withSpreads(spreads);
+    QL_REQUIRE(leg.size() > 0, "Empty YoY Leg");
     return leg;
 }
 

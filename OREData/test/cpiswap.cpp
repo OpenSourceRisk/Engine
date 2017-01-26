@@ -218,8 +218,7 @@ void CPISwapTest::testCPISwapPrice() {
     string CPIlag = "2M";
     std::vector<double> fixedRate(1,1.0);
     bool interpolated = false;
-    bool adjustedNotional = false;
-    CPILegData legdataCPI(indexCPI, baseCPI, CPIlag, interpolated, adjustedNotional, fixedRate);
+    CPILegData legdataCPI(indexCPI, baseCPI, CPIlag, interpolated, fixedRate);
     LegData legCPI(isPayerCPI, "GBP", legdataCPI, scheduleCPI, dc, notional, vector<string>(),
                    paymentConvention);
     
