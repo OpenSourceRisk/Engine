@@ -146,9 +146,9 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         } else if (legData_[i].legType() == "CPI") {
             string inflationIndexName = legData_[i].cpiLegData().index();
             bool inflationIndexInterpolated = legData_[i].cpiLegData().interpolated();
-            boost::shared_ptr<ZeroInflationIndex> index = boost::dynamic_pointer_cast<ZeroInflationIndex>(*market->inflationIndex(inflationIndexName, inflationIndexInterpolated));
-            QL_REQUIRE(index,
-                       "zero inflation index not found for index " << legData_[i].cpiLegData().index());
+            boost::shared_ptr<ZeroInflationIndex> index = boost::dynamic_pointer_cast<ZeroInflationIndex>(
+                *market->inflationIndex(inflationIndexName, inflationIndexInterpolated));
+            QL_REQUIRE(index, "zero inflation index not found for index " << legData_[i].cpiLegData().index());
             legs_[i] = makeCPILeg(legData_[i], index);
             // legTypes[i] = Inflation;
             // legTypes_[i] = "INFLATION";
