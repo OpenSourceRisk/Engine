@@ -89,11 +89,15 @@ public:
     //! CapFloor volatilities
     Handle<OptionletVolatilityStructure> capFloorVol(const string& ccy,
                                                      const string& configuration = Market::defaultConfiguration) const;
-    
+
     //! Inflation Indexes
-    virtual Handle<InflationIndex> inflationIndex(const string& indexName, const bool interpoated,
-                                                  const string& configuration = Market::defaultConfiguration) const;
-    
+    virtual Handle<ZeroInflationIndex>
+    zeroInflationIndex(const string& indexName, const bool interpoated,
+                       const string& configuration = Market::defaultConfiguration) const;
+    virtual Handle<YoYInflationIndex>
+    yoyInflationIndex(const string& indexName, const bool interpoated,
+                      const string& configuration = Market::defaultConfiguration) const;
+
     //! Inflation Cap Floor Price Surfaces
     virtual Handle<CPICapFloorTermPriceSurface>
     inflationCapFloorPriceSurface(const string& indexName,
@@ -124,7 +128,8 @@ protected:
     map<pair<string, string>, Handle<DefaultProbabilityTermStructure>> defaultCurves_;
     map<pair<string, string>, Handle<Quote>> recoveryRates_;
     map<pair<string, string>, Handle<OptionletVolatilityStructure>> capFloorCurves_;
-    map<pair<string, pair<string, bool>>, Handle<InflationIndex>> inflationIndices_;
+    map<pair<string, pair<string, bool>>, Handle<ZeroInflationIndex>> zeroInflationIndices_;
+    map<pair<string, pair<string, bool>>, Handle<YoYInflationIndex>> yoyInflationIndices_;
     map<pair<string, string>, Handle<CPICapFloorTermPriceSurface>> inflationCapFloorPriceSurfaces_;
     Conventions conventions_;
 

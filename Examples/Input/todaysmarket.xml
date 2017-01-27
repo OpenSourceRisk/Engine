@@ -111,7 +111,7 @@
     </SwapIndex>
   </SwapIndexCurves>
   <!-- inflation index definition -->
-  <InflationIndexCurves id="default">
+  <ZeroInflationIndexCurves id="default">
       <!--<InflationIndexCurve name="AUCPI">Inflation/AUCPI/AUCPI_ZC_Swaps</InflationIndexCurve> -->
       <InflationIndexCurve name="EUHICP">Inflation/EUHICP/EUHICP_ZC_Swaps</InflationIndexCurve>
       <InflationIndexCurve name="EUHICPXT">Inflation/EUHICPXT/EUHICPXT_ZC_Swaps</InflationIndexCurve>
@@ -119,7 +119,10 @@
       <InflationIndexCurve name="UKRPI">Inflation/UKRPI/UKRPI_ZC_Swaps</InflationIndexCurve>
       <InflationIndexCurve name="USCPI">Inflation/USCPI/USCPI_ZC_Swaps</InflationIndexCurve>
       <InflationIndexCurve name="ZACPI">Inflation/ZACPI/ZACPI_ZC_Swaps</InflationIndexCurve>
-  </InflationIndexCurves>
+  </ZeroInflationIndexCurves>
+  <YoYInflationIndexCurves id="default">
+      <InflationIndexCurve name="EUHICPXT">Inflation/EUHICPXT/EUHICPXT_YoY_Swaps</InflationIndexCurve>
+  </YoYInflationIndexCurves>
   <!-- fx spot definition -->
   <FxSpots id="default">
     <FxSpot pair="EURUSD">FX/EUR/USD</FxSpot>

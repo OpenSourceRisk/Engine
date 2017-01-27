@@ -24,8 +24,8 @@
 #pragma once
 
 #include <boost/shared_ptr.hpp>
-#include <string>
 #include <ostream>
+#include <string>
 
 using std::string;
 
@@ -40,7 +40,16 @@ namespace data {
 class CurveSpec {
 public:
     //! Supported curve types
-    enum class CurveType { Yield, CapFloorVolatility, SwaptionVolatility, FX, FXVolatility, Default, Inflation,InflationCapFloorPrice };
+    enum class CurveType {
+        Yield,
+        CapFloorVolatility,
+        SwaptionVolatility,
+        FX,
+        FXVolatility,
+        Default,
+        Inflation,
+        InflationCapFloorPrice
+    };
     //! Default destructor
     virtual ~CurveSpec() {}
 
@@ -242,7 +251,7 @@ private:
     string ccy_;
     string curveConfigID_;
 };
-    
+
 //! Inflation curve description
 /*! \ingroup curves
  */
@@ -250,14 +259,14 @@ class InflationCurveSpec : public CurveSpec {
 public:
     InflationCurveSpec() {}
     InflationCurveSpec(const string& index, const string& curveConfigID)
-    : index_(index), curveConfigID_(curveConfigID) {}
-    
+        : index_(index), curveConfigID_(curveConfigID) {}
+
     CurveType baseType() const { return CurveType::Inflation; }
     const string& index() const { return index_; }
     const string& curveConfigID() const { return curveConfigID_; }
-    
+
     string subName() const { return index() + "/" + curveConfigID(); }
-    
+
 private:
     string index_;
     string curveConfigID_;
@@ -270,14 +279,14 @@ class InflationCapFloorPriceSurfaceSpec : public CurveSpec {
 public:
     InflationCapFloorPriceSurfaceSpec() {}
     InflationCapFloorPriceSurfaceSpec(const string& index, const string& curveConfigID)
-    : index_(index), curveConfigID_(curveConfigID) {}
-    
+        : index_(index), curveConfigID_(curveConfigID) {}
+
     CurveType baseType() const { return CurveType::InflationCapFloorPrice; }
     const string& index() const { return index_; }
     const string& curveConfigID() const { return curveConfigID_; }
-    
+
     string subName() const { return index() + "/" + curveConfigID(); }
-    
+
 private:
     string index_;
     string curveConfigID_;

@@ -711,8 +711,8 @@
     <FlatIndex>USD-LIBOR-3M</FlatIndex>
     <SpreadIndex>CHF-LIBOR-3M</SpreadIndex>
   </CrossCurrencyBasis>
-  <!-- Zc Inflation Swaps -->
-  <ZcInflationSwap>
+  <!-- Inflation Swaps -->
+  <InflationSwap>
       <Id>EUHICP_ZC_INFLATIONSWAP</Id>
       <FixCalendar>TARGET</FixCalendar>
       <FixConvention>MF</FixConvention>
@@ -723,8 +723,8 @@
       <AdjustInfObsDates>false</AdjustInfObsDates>
       <InfCalendar>TARGET</InfCalendar>
       <InfConvention>MF</InfConvention>
-  </ZcInflationSwap>
-  <ZcInflationSwap>
+  </InflationSwap>
+  <InflationSwap>
       <Id>EUHICPXT_ZC_INFLATIONSWAP</Id>
       <FixCalendar>TARGET</FixCalendar>
       <FixConvention>MF</FixConvention>
@@ -735,8 +735,8 @@
       <AdjustInfObsDates>false</AdjustInfObsDates>
       <InfCalendar>TARGET</InfCalendar>
       <InfConvention>MF</InfConvention>
-  </ZcInflationSwap>
-  <ZcInflationSwap>
+  </InflationSwap>
+  <InflationSwap>
       <Id>FRHICP_ZC_INFLATIONSWAP</Id>
       <FixCalendar>TARGET</FixCalendar>
       <FixConvention>MF</FixConvention>
@@ -747,8 +747,8 @@
       <AdjustInfObsDates>false</AdjustInfObsDates>
       <InfCalendar>TARGET</InfCalendar>
       <InfConvention>MF</InfConvention>
-  </ZcInflationSwap>
-  <ZcInflationSwap>
+  </InflationSwap>
+  <InflationSwap>
       <Id>UKRPI_ZC_INFLATIONSWAP</Id>
       <FixCalendar>UK</FixCalendar>
       <FixConvention>MF</FixConvention>
@@ -759,8 +759,8 @@
       <AdjustInfObsDates>false</AdjustInfObsDates>
       <InfCalendar>UK</InfCalendar>
       <InfConvention>MF</InfConvention>
-  </ZcInflationSwap>
-  <ZcInflationSwap>
+  </InflationSwap>
+  <InflationSwap>
       <Id>USCPI_ZC_INFLATIONSWAP</Id>
       <FixCalendar>US</FixCalendar>
       <FixConvention>MF</FixConvention>
@@ -771,8 +771,8 @@
       <AdjustInfObsDates>false</AdjustInfObsDates>
       <InfCalendar>US</InfCalendar>
       <InfConvention>MF</InfConvention>
-  </ZcInflationSwap>
-  <ZcInflationSwap>
+  </InflationSwap>
+  <InflationSwap>
       <Id>ZACPI_ZC_INFLATIONSWAP</Id>
       <FixCalendar>ZAR</FixCalendar>
       <FixConvention>MF</FixConvention>
@@ -783,5 +783,5 @@
       <AdjustInfObsDates>false</AdjustInfObsDates>
       <InfCalendar>ZAR</InfCalendar>
       <InfConvention>MF</InfConvention>
-  </ZcInflationSwap>
+  </InflationSwap>
 </Conventions>

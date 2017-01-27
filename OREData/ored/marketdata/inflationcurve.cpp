@@ -39,8 +39,8 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
 
         const boost::shared_ptr<InflationCurveConfig>& config = curveConfigs.inflationCurveConfig(spec.curveConfigID());
 
-        boost::shared_ptr<ZcInflationSwapConvention> conv =
-            boost::dynamic_pointer_cast<ZcInflationSwapConvention>(conventions.get(config->conventions()));
+        boost::shared_ptr<InflationSwapConvention> conv =
+            boost::dynamic_pointer_cast<InflationSwapConvention>(conventions.get(config->conventions()));
 
         QL_REQUIRE(conv != nullptr, "convention " << config->conventions() << " could not be found.");
 
@@ -65,10 +65,13 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
 
         for (auto& md : loader.loadQuotes(asof)) {
 
-            if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::ZC_INFLATIONSWAP) {
+            if (md->asofDate() == asof && ((md->instrumentType() == MarketDatum::InstrumentType::ZC_INFLATIONSWAP &&
+                                            config->type() == InflationCurveConfig::Type::ZC) ||
+                                           (md->instrumentType() == MarketDatum::InstrumentType::YY_INFLATIONSWAP &&
+                                            config->type() == InflationCurveConfig::Type::YY))) {
 
                 boost::shared_ptr<ZcInflationSwapQuote> q = boost::dynamic_pointer_cast<ZcInflationSwapQuote>(md);
-                
+
                 if (q != NULL && q->index() == spec.index()) {
 
                     auto it = std::find(strQuotes.begin(), strQuotes.end(), q->name());
@@ -82,17 +85,6 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
             }
         }
 
-        std::vector<boost::shared_ptr<ZeroInflationTraits::helper>> instruments;
-        boost::shared_ptr<ZeroInflationIndex> index = conv->index();
-        for (Size i = 0; i < strQuotes.size(); ++i) {
-            QL_REQUIRE(!quotes[i].empty(), "quote " << strQuotes[i] << " not found in market data.");
-            // QL conventions do not incorporate settlement delay => patch here once QL is patched
-            Date maturity = asof + terms[i];
-            instruments.push_back(boost::make_shared<ZeroCouponInflationSwapHelper>(
-                quotes[i], conv->observationLag(), maturity, conv->fixCalendar(), conv->fixConvention(),
-                conv->dayCounter(), index));
-        }
-
         // construct seasonality
         boost::shared_ptr<Seasonality> seasonality;
         if (config->seasonalityBaseDate() != Null<Date>()) {
@@ -100,46 +92,89 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
             std::vector<double> factors(strFactorIDs.size());
             for (Size i = 0; i < strFactorIDs.size(); i++) {
                 boost::shared_ptr<MarketDatum> marketQuote = loader.get(strFactorIDs[i], asof);
-                
+
                 // Check that we have a valid seasonality factor
                 if (marketQuote) {
                     QL_REQUIRE(marketQuote->instrumentType() == MarketDatum::InstrumentType::SEASONALITY,
                                "Market quote (" << marketQuote->name() << ") not of type seasonality.");
                     // Currently only monthly seasonality with 12 multiplicative factors os allowed
-                    QL_REQUIRE(config->seasonalityFrequency() == Monthly && strFactorIDs.size() == 12, "Only monthly seasonality with 12 factors is allowed. Provided " << config->seasonalityFrequency() << " with " << strFactorIDs.size() << " factors.");
+                    QL_REQUIRE(config->seasonalityFrequency() == Monthly && strFactorIDs.size() == 12,
+                               "Only monthly seasonality with 12 factors is allowed. Provided "
+                                   << config->seasonalityFrequency() << " with " << strFactorIDs.size() << " factors.");
                     boost::shared_ptr<SeasonalityQuote> sq = boost::dynamic_pointer_cast<SeasonalityQuote>(marketQuote);
                     QL_REQUIRE(sq->type() == "MULT", "Market quote (" << sq->name() << ") not of multiplicative type.");
-                    int findex = config->seasonalityBaseDate().month() - sq->applyMonth() < 0 ?
-                                   config->seasonalityBaseDate().month() - sq->applyMonth() + 12 :
-                                   config->seasonalityBaseDate().month() - sq->applyMonth();
+                    int findex = config->seasonalityBaseDate().month() - sq->applyMonth() < 0
+                                     ? config->seasonalityBaseDate().month() - sq->applyMonth() + 12
+                                     : config->seasonalityBaseDate().month() - sq->applyMonth();
                     factors[findex] = sq->quote()->value();
                 } else {
-                    QL_FAIL("Could not find quote for ID " << strFactorIDs[i] << " with as of date " << io::iso_date(asof)
-                            << ".");
+                    QL_FAIL("Could not find quote for ID " << strFactorIDs[i] << " with as of date "
+                                                           << io::iso_date(asof) << ".");
                 }
             }
-            seasonality = boost::make_shared<MultiplicativePriceSeasonality>(
-                                                                             config->seasonalityBaseDate(), config->seasonalityFrequency(), factors);
+            seasonality = boost::make_shared<MultiplicativePriceSeasonality>(config->seasonalityBaseDate(),
+                                                                             config->seasonalityFrequency(), factors);
         }
-        
-        // base zero rate: if given, take it, otherwise set it to first quote
-        Real baseZeroRate = config->baseZeroRate() != Null<Real>() ? config->baseZeroRate() : quotes[0]->value();
-        
-        curveIndexInterpolated_ =
-            boost::shared_ptr<PiecewiseZeroInflationCurve<Linear>>(new PiecewiseZeroInflationCurve<Linear>(
-                asof, config->calendar(), config->dayCounter(), config->lag(), config->frequency(), true,
-                baseZeroRate, nominalTs, instruments, config->tolerance()));
-        curveIndexInterpolated_->enableExtrapolation(config->extrapolate());
-        if (seasonality != nullptr)
-            curveIndexInterpolated_->setSeasonality(seasonality);
 
-        curveIndexNotInterpolated_ =
-            boost::shared_ptr<PiecewiseZeroInflationCurve<Linear>>(new PiecewiseZeroInflationCurve<Linear>(
-                asof, config->calendar(), config->dayCounter(), config->lag(), config->frequency(), false,
-                baseZeroRate, nominalTs, instruments, config->tolerance()));
-        curveIndexNotInterpolated_->enableExtrapolation(config->extrapolate());
-        if (seasonality != nullptr)
+        // construct curve (ZC or YY depending on configuration)
+
+        // base zero / yoy rate: if given, take it, otherwise set it to first quote
+        Real baseRate = config->baseRate() != Null<Real>() ? config->baseRate() : quotes[0]->value();
+
+        if (config->type() == InflationCurveConfig::Type::ZC) {
+            std::vector<boost::shared_ptr<ZeroInflationTraits::helper>> instruments;
+            boost::shared_ptr<ZeroInflationIndex> index = conv->index();
+            for (Size i = 0; i < strQuotes.size(); ++i) {
+                QL_REQUIRE(!quotes[i].empty(), "quote " << strQuotes[i] << " not found in market data.");
+                // QL conventions do not incorporate settlement delay => patch here once QL is patched
+                Date maturity = asof + terms[i];
+                instruments.push_back(boost::make_shared<ZeroCouponInflationSwapHelper>(
+                    quotes[i], conv->observationLag(), maturity, conv->fixCalendar(), conv->fixConvention(),
+                    conv->dayCounter(), index));
+            }
+            curveIndexInterpolated_ =
+                boost::shared_ptr<PiecewiseZeroInflationCurve<Linear>>(new PiecewiseZeroInflationCurve<Linear>(
+                    asof, config->calendar(), config->dayCounter(), config->lag(), config->frequency(), true, baseRate,
+                    nominalTs, instruments, config->tolerance()));
+            curveIndexInterpolated_->enableExtrapolation(config->extrapolate());
+            curveIndexNotInterpolated_ =
+                boost::shared_ptr<PiecewiseZeroInflationCurve<Linear>>(new PiecewiseZeroInflationCurve<Linear>(
+                    asof, config->calendar(), config->dayCounter(), config->lag(), config->frequency(), false, baseRate,
+                    nominalTs, instruments, config->tolerance()));
+        } else if (config->type() == InflationCurveConfig::Type::YY) {
+            std::vector<boost::shared_ptr<YoYInflationTraits::helper>> instruments;
+            boost::shared_ptr<ZeroInflationIndex> zcindex = conv->index();
+            boost::shared_ptr<YoYInflationIndex> index = boost::make_shared < YoYInflationIndexWrapper(zcindex);
+            for (Size i = 0; i < strQuotes.size(); ++i) {
+                QL_REQUIRE(!quotes[i].empty(), "quote " << strQuotes[i] << " not found in market data.");
+                // QL conventions do not incorporate settlement delay => patch here once QL is patched
+                Date maturity = asof + terms[i];
+                instruments.push_back(boost::make_shared<YearOnYearInflationSwapHelper>(
+                    quotes[i], conv->observationLag(), maturity, conv->fixCalendar(), conv->fixConvention(),
+                    conv->dayCounter(), index));
+            }
+            // base zero rate: if given, take it, otherwise set it to first quote
+            Real baseRate = config->baseRate() != Null<Real>() ? config->baseRate() : quotes[0]->value();
+            curveIndexInterpolated_ =
+                boost::shared_ptr<PiecewiseZeroInflationCurve<Linear>>(new PiecewiseZeroInflationCurve<Linear>(
+                    asof, config->calendar(), config->dayCounter(), config->lag(), config->frequency(), true, baseRate,
+                    nominalTs, instruments, config->tolerance()));
+            curveIndexInterpolated_->enableExtrapolation(config->extrapolate());
+            curveIndexNotInterpolated_ =
+                boost::shared_ptr<PiecewiseZeroInflationCurve<Linear>>(new PiecewiseZeroInflationCurve<Linear>(
+                    asof, config->calendar(), config->dayCounter(), config->lag(), config->frequency(), false, baseRate,
+                    nominalTs, instruments, config->tolerance()));
+            curveIndexNotInterpolated_->enableExtrapolation(config->extrapolate());
+        } else {
+            QL_FAIL("InflationCurve: curve type not covered");
+        }
+
+        if (seasonality != nullptr) {
             curveIndexNotInterpolated_->setSeasonality(seasonality);
+            curveIndexInterpolated_->setSeasonality(seasonality);
+            curveIndexNotInterpolated_->enableExtrapolation(config->extrapolate());
+            curveIndexInterpolated_->enableExtrapolation(config->extrapolate());
+        }
 
     } catch (std::exception& e) {
         QL_FAIL("inflation curve building failed: " << e.what());

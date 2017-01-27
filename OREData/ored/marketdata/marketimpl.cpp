@@ -16,13 +16,13 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/algorithm/string.hpp>
+#include <boost/make_shared.hpp>
 #include <ored/configuration/conventions.hpp>
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/utilities/indexparser.hpp>
-#include <qle/termstructures/blackinvertedvoltermstructure.hpp>
-#include <boost/algorithm/string.hpp>
-#include <boost/make_shared.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <qle/termstructures/blackinvertedvoltermstructure.hpp>
 
 using namespace QuantLib;
 using namespace std;
@@ -124,11 +124,17 @@ Handle<Quote> MarketImpl::recoveryRate(const string& key, const string& configur
 Handle<OptionletVolatilityStructure> MarketImpl::capFloorVol(const string& key, const string& configuration) const {
     return lookup<Handle<OptionletVolatilityStructure>>(capFloorCurves_, key, configuration, "capfloor curve");
 }
-    
-Handle<InflationIndex> MarketImpl::inflationIndex(const string& indexName, const bool interpolated,
-                                                  const string& configuration) const {
-    return lookup<Handle<InflationIndex>>(inflationIndices_, std::make_pair(indexName, interpolated), configuration,
-                                          "inflation index");
+
+Handle<ZeroInflationIndex> MarketImpl::zeroInflationIndex(const string& indexName, const bool interpolated,
+                                                          const string& configuration) const {
+    return lookup<Handle<ZeroInflationIndex>>(zeroInflationIndices_, std::make_pair(indexName, interpolated),
+                                              configuration, "zero inflation index");
+}
+
+Handle<YoYInflationIndex> MarketImpl::yoyInflationIndex(const string& indexName, const bool interpolated,
+                                                        const string& configuration) const {
+    return lookup<Handle<YoYInflationIndex>>(yoyInflationIndices_, std::make_pair(indexName, interpolated),
+                                             configuration, "yoy inflation index");
 }
 
 Handle<CPICapFloorTermPriceSurface> MarketImpl::inflationCapFloorPriceSurface(const string& indexName,
@@ -210,17 +216,14 @@ void MarketImpl::refresh(const string& configuration) {
             if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
                 it->second.insert(*x.second);
         }
-        for (auto& x : inflationIndices_) {
+        for (auto& x : zeroInflationIndices_) {
             if (x.first.first == configuration || x.first.first == Market::defaultConfiguration) {
-                boost::shared_ptr<ZeroInflationIndex> tmp = boost::dynamic_pointer_cast<ZeroInflationIndex>(*x.second);
-                if (tmp != nullptr) {
-                    it->second.insert(*tmp->zeroInflationTermStructure());
-                } else {
-                    boost::shared_ptr<YoYInflationIndex> tmp =
-                    boost::dynamic_pointer_cast<YoYInflationIndex>(*x.second);
-                    if (tmp != nullptr)
-                        it->second.insert(*tmp->yoyInflationTermStructure());
-                }
+                it->second.insert(*x.second->zeroInflationTermStructure());
+            }
+        }
+        for (auto& x : yoyInflationIndices_) {
+            if (x.first.first == configuration || x.first.first == Market::defaultConfiguration) {
+                it->second.insert(*x.second->yoyInflationTermStructure());
             }
         }
         for (auto& x : inflationCapFloorPriceSurfaces_) {

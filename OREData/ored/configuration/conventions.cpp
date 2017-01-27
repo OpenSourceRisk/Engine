@@ -1,4 +1,4 @@
-/*
+ﬁ/*
  Copyright (C) 2016 Quaternion Risk Management Ltd
  All rights reserved.
 
@@ -678,20 +678,20 @@ XMLNode* CdsConvention::toXML(XMLDocument& doc) {
     return node;
 }
 
-ZcInflationSwapConvention::ZcInflationSwapConvention(const string& id, const string& strFixCalendar,
+InflationSwapConvention::InflationSwapConvention(const string& id, const string& strFixCalendar,
                                                        const string& strFixConvention, const string& strDayCounter,
                                                        const string& strIndex, const string& strInterpolated,
                                                        const string& strObservationLag,
                                                        const string& strAdjustInfObsDates, const string& strInfCalendar,
                                                        const string& strInfConvention)
-  : Convention(id, Type::ZcInflationSwap), strFixCalendar_(strFixCalendar), strFixConvention_(strFixConvention),
+  : Convention(id, Type::InflationSwap), strFixCalendar_(strFixCalendar), strFixConvention_(strFixConvention),
   strDayCounter_(strDayCounter), strIndex_(strIndex), strInterpolated_(strInterpolated),
   strObservationLag_(strObservationLag), strAdjustInfObsDates_(strAdjustInfObsDates),
   strInfCalendar_(strInfCalendar), strInfConvention_(strInfConvention) {
     build();
 }
   
-void ZcInflationSwapConvention::build() {
+void InflationSwapConvention::build() {
     fixCalendar_ = parseCalendar(strFixCalendar_);
     fixConvention_ = parseBusinessDayConvention(strFixConvention_);
     dayCounter_ = parseDayCounter(strDayCounter_);
@@ -703,10 +703,10 @@ void ZcInflationSwapConvention::build() {
     infConvention_ = parseBusinessDayConvention(strInfConvention_);
 }
   
-void ZcInflationSwapConvention::fromXML(XMLNode* node) {
+void InflationSwapConvention::fromXML(XMLNode* node) {
     
-    XMLUtils::checkNode(node, "ZcInflationSwap");
-    type_ = Type::ZcInflationSwap;
+    XMLUtils::checkNode(node, "InflationSwap");
+    type_ = Type::InflationSwap;
     id_ = XMLUtils::getChildValue(node, "Id", true);
     
     // Get string values from xml
@@ -722,9 +722,9 @@ void ZcInflationSwapConvention::fromXML(XMLNode* node) {
     build();
 }
   
-XMLNode* ZcInflationSwapConvention::toXML(XMLDocument& doc) {
+XMLNode* InflationSwapConvention::toXML(XMLDocument& doc) {
     
-    XMLNode* node = doc.allocNode("ZcInflationSwap");
+    XMLNode* node = doc.allocNode("InflationSwap");
     XMLUtils::addChild(doc, node, "Id", id_);
     XMLUtils::addChild(doc, node, "FixCalendar", strFixCalendar_);
     XMLUtils::addChild(doc, node, "FixConvention", strFixConvention_);
@@ -773,8 +773,8 @@ void Conventions::fromXML(XMLNode* node) {
             convention.reset(new CdsConvention());
         } else if (childName == "SwapIndex") {
             convention.reset(new SwapIndexConvention());
-        } else if (childName == "ZcInflationSwap") {
-          convention.reset(new ZcInflationSwapConvention());
+        } else if (childName == "InflationSwap") {
+          convention.reset(new InflationSwapConvention());
         } else {
             QL_FAIL("Convention name, " << childName << ", not recognized.");
         }

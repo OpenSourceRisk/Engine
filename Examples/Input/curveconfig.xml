@@ -1757,7 +1757,7 @@
           <DayCounter>A365</DayCounter>
           <Lag>3M</Lag>
           <Frequency>Monthly</Frequency>
-          <BaseZeroRate>0.01</BaseZeroRate>
+          <BaseRate>0.01</BaseRate>
           <Tolerance>0.000000000001</Tolerance>
           <Seasonality>
               <BaseDate>20160101</BaseDate>
@@ -1807,7 +1807,7 @@
           <DayCounter>A365</DayCounter>
           <Lag>3M</Lag>
           <Frequency>Monthly</Frequency>
-          <BaseZeroRate>0.01</BaseZeroRate>
+          <BaseRate>0.01</BaseRate>
           <Tolerance>0.000000000001</Tolerance>
       </InflationCurve>
 
@@ -1839,7 +1839,7 @@
           <DayCounter>A365</DayCounter>
           <Lag>3M</Lag>
           <Frequency>Monthly</Frequency>
-          <BaseZeroRate>0.01</BaseZeroRate>
+          <BaseRate>0.01</BaseRate>
           <Tolerance>0.000000000001</Tolerance>
           <Seasonality>
               <BaseDate>20160101</BaseDate>
@@ -1889,7 +1889,7 @@
           <DayCounter>A365</DayCounter>
           <Lag>3M</Lag>
           <Frequency>Monthly</Frequency>
-          <BaseZeroRate>0.01</BaseZeroRate>
+          <BaseRate>0.01</BaseRate>
           <Tolerance>0.000000000001</Tolerance>
       </InflationCurve>
       
@@ -1922,7 +1922,7 @@
           <DayCounter>A365</DayCounter>
           <Lag>3M</Lag>
           <Frequency>Monthly</Frequency>
-          <BaseZeroRate>0.01</BaseZeroRate>
+          <BaseRate>0.01</BaseRate>
           <Tolerance>0.000000000001</Tolerance>
           <Seasonality>
               <BaseDate>20160101</BaseDate>
@@ -1973,7 +1973,7 @@
           <DayCounter>A365</DayCounter>
           <Lag>3M</Lag>
           <Frequency>Monthly</Frequency>
-          <BaseZeroRate>0.01</BaseZeroRate>
+          <BaseRate>0.01</BaseRate>
           <Tolerance>0.000000000001</Tolerance>
       </InflationCurve>
       

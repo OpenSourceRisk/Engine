@@ -101,14 +101,18 @@ public:
     //@}
 
     //! Inflation Indexes
-    virtual Handle<InflationIndex> inflationIndex(const string& indexName, const bool interpolated,
-                                                  const string& configuration = Market::defaultConfiguration) const = 0;
-    
+    virtual Handle<ZeroInflationIndex>
+    inflationIndex(const string& indexName, const bool interpolated,
+                   const string& configuration = Market::defaultConfiguration) const = 0;
+    virtual Handle<YoYInflationIndex>
+    yoyInflationIndex(const string& indexName, const bool interpolated,
+                      const string& configuration = Market::defaultConfiguration) const = 0;
+
     //! Inflation Cap Floor Price Surfaces
     virtual Handle<CPICapFloorTermPriceSurface>
     inflationCapFloorPriceSurface(const string& indexName,
                                   const string& configuration = Market::defaultConfiguration) const = 0;
-    
+
     //! Refresh term structures for a given configuration
     virtual void refresh(const string&) {}
 

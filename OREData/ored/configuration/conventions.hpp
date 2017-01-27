@@ -59,7 +59,7 @@ public:
         CrossCcyBasis,
         CDS,
         SwapIndex,
-        ZcInflationSwap
+        InflationSwap
     };
 
     //! Default destructor
@@ -716,10 +716,10 @@ private:
     string strPaysAtDefaultTime_;
 };
     
-class ZcInflationSwapConvention : public Convention {
+class InflationSwapConvention : public Convention {
 public:
-    ZcInflationSwapConvention() {}
-    ZcInflationSwapConvention(const string& id, const string& strFixCalendar, const string& strFixConvention,
+    InflationSwapConvention() {}
+    InflationSwapConvention(const string& id, const string& strFixCalendar, const string& strFixConvention,
                               const string& strDayCounter, const string& strIndex, const string& strInterpolated,
                               const string& strObservationLag, const string& strAdjustInfObsDates,
                               const string& strInfCalendar, const string& strInfConvention);

@@ -52,6 +52,7 @@ static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
                                                          {"FX_OPTION", MarketDatum::InstrumentType::FX_OPTION},
                                                          {"ZC_INFLATIONSWAP", MarketDatum::InstrumentType::ZC_INFLATIONSWAP},
                                                          {"ZC_INFLATIONCAPFLOOR", MarketDatum::InstrumentType::ZC_INFLATIONCAPFLOOR},
+                                                         {"YY_INFLATIONSWAP", MarketDatum::InstrumentType::YY_INFLATIONSWAP},
                                                          {"SEASONALITY", MarketDatum::InstrumentType::SEASONALITY}};
 
     auto it = b.find(s);
@@ -282,6 +283,13 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
     }
 
     case MarketDatum::InstrumentType::ZC_INFLATIONSWAP: {
+        QL_REQUIRE(tokens.size() == 4, "4 tokens expected in " << datumName);
+        const string& index = tokens[2];
+        Period term = parsePeriod(tokens[3]);
+        return boost::make_shared<ZcInflationSwapQuote>(value, asof, datumName, index, term);
+    }
+        
+    case MarketDatum::InstrumentType::YOY_INFLATIONSWAP: {
         QL_REQUIRE(tokens.size() == 4, "4 tokens expected in " << datumName);
         const string& index = tokens[2];
         Period term = parsePeriod(tokens[3]);
