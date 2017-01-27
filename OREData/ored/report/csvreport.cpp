@@ -29,12 +29,28 @@ class ReportTypePrinter : public boost::static_visitor<> {
 public:
     ReportTypePrinter(FILE* fp, int prec) : fp_(fp), prec_(prec) {}
 
-    void operator()(const Size i) const { fprintf(fp_, "%lu", i); }
-    void operator()(const Real d) const { fprintf(fp_, "%.*f", prec_, d); }
+    void operator()(const Size i) const { 
+        if (i == QuantLib::Null<Size>()) {
+            fprintf(fp_, "#NA");
+        } else {
+            fprintf(fp_, "%lu", i);
+        }
+    }
+    void operator()(const Real d) const { 
+        if (d == QuantLib::Null<Real>()) { 
+            fprintf(fp_, "#NA");
+        } else { 
+            fprintf(fp_, "%.*f", prec_, d); 
+        }
+    }
     void operator()(const string& s) const { fprintf(fp_, "%s", s.c_str()); }
     void operator()(const Date& d) const {
-        string s = to_string(d);
-        fprintf(fp_, "%s", s.c_str());
+        if (d == QuantLib::Null<Date>()) {
+            fprintf(fp_, "#NA");
+        } else {
+            string s = to_string(d);
+            fprintf(fp_, "%s", s.c_str());
+        }
     }
     void operator()(const Period& p) const {
         string s = to_string(p);

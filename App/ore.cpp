@@ -66,7 +66,7 @@ using namespace ore::analytics;
 void writeNpv(const Parameters& params, boost::shared_ptr<Market> market, const std::string& configuration,
               boost::shared_ptr<Portfolio> portfolio, boost::shared_ptr<ore::data::Report> report);
 
-void writeCashflow(const Parameters& params, boost::shared_ptr<Portfolio> portfolio);
+void writeCashflow(const Parameters& params, boost::shared_ptr<Portfolio> portfolio, boost::shared_ptr<ore::data::Report> report);
 
 void writeCurves(const Parameters& params, const TodaysMarketParameters& marketConfig,
                  const boost::shared_ptr<Market>& market);
@@ -234,7 +234,9 @@ int main(int argc, char** argv) {
          */
         cout << setw(tab) << left << "Cashflow Report... " << flush;
         if (params.hasGroup("cashflow") && params.get("cashflow", "active") == "Y") {
-            writeCashflow(params, portfolio);
+            string cashflowFile = outputPath + "/" + params.get("cashflow", "outputFileName");
+            boost::shared_ptr<Report> cashflowReport = boost::make_shared<CSVFileReport>(cashflowFile);
+            writeCashflow(params, portfolio, cashflowReport);
             cout << "OK" << endl;
         } else {
             LOG("skip cashflow generation");
@@ -552,21 +554,20 @@ void writeNpv(const Parameters& params, boost::shared_ptr<Market> market, const 
     LOG("NPV file written");
 }
 
-void writeCashflow(const Parameters& params, boost::shared_ptr<Portfolio> portfolio) {
+void writeCashflow(const Parameters& params, boost::shared_ptr<Portfolio> portfolio, boost::shared_ptr<Report> report) {
     Date asof = Settings::instance().evaluationDate();
-    string outputPath = params.get("setup", "outputPath");
-    string fileName = outputPath + "/" + params.get("cashflow", "outputFileName");
-    ofstream file;
-    file.open(fileName.c_str());
-    QL_REQUIRE(file.is_open(), "error opening file " << fileName);
-    file.setf(ios::fixed, ios::floatfield);
-    file.setf(ios::showpoint);
-    char sep = ',';
-
-    LOG("Writing cashflow report to " << fileName << " for " << asof);
-
-    file << "#ID" << sep << "Type" << sep << "LegNo" << sep << "PayDate" << sep << "Amount" << sep << "Currency" << sep
-         << "Coupon" << sep << "Accrual" << sep << "fixingDate" << sep << "fixingValue" << sep << endl;
+    QL_REQUIRE(report, "error opening report");
+    LOG("Writing cashflow report for " << asof);
+    report->addColumn("ID",string());
+    report->addColumn("Type",string());
+    report->addColumn("LegNo",Size());
+    report->addColumn("PayDate",Date());
+    report->addColumn("Amount",double(), 4);
+    report->addColumn("Currency",string());
+    report->addColumn("Coupon",double(), 10);
+    report->addColumn("Accrual",double(), 10);
+    report->addColumn("fixingDate",Date());
+    report->addColumn("fixingValue",double(), 10);
 
     const vector<boost::shared_ptr<Trade>>& trades = portfolio->trades();
 
@@ -585,43 +586,44 @@ void writeCashflow(const Parameters& params, boost::shared_ptr<Portfolio> portfo
                     boost::shared_ptr<QuantLib::CashFlow> ptrFlow = leg[j];
                     Date payDate = ptrFlow->date();
                     if (payDate >= asof) {
-                        file << setprecision(0) << trades[k]->id() << sep << trades[k]->tradeType() << sep << i << sep
-                             << QuantLib::io::iso_date(payDate) << sep;
                         Real amount = ptrFlow->amount();
                         if (payer)
                             amount *= -1.0;
-                        file << setprecision(4) << amount << sep << ccy << sep;
-
                         std::string ccy = trades[k]->legCurrencies()[i];
-
                         boost::shared_ptr<QuantLib::Coupon> ptrCoupon =
                             boost::dynamic_pointer_cast<QuantLib::Coupon>(ptrFlow);
+                        Real coupon;
+                        Real accrual;
                         if (ptrCoupon) {
-                            Real coupon = ptrCoupon->rate();
-                            Real accrual = ptrCoupon->accrualPeriod();
-                            file << setprecision(10) << coupon << sep << setprecision(10) << accrual << sep;
-                        } else
-                            file << sep << sep;
-
+                            coupon = ptrCoupon->rate();
+                            accrual = ptrCoupon->accrualPeriod();
+                        } else {
+                            coupon = Null<Real>();
+                            accrual = Null<Real>();
+                        }
                         boost::shared_ptr<QuantLib::FloatingRateCoupon> ptrFloat =
                             boost::dynamic_pointer_cast<QuantLib::FloatingRateCoupon>(ptrFlow);
+                        Date fixingDate;
+                        Real fixingValue;
                         if (ptrFloat) {
-                            Date fixingDate = ptrFloat->fixingDate();
-                            Real fixingValue = ptrFloat->index()->fixing(fixingDate);
-                            file << QuantLib::io::iso_date(fixingDate) << sep << fixingValue << endl;
-                        } else
-                            file << sep << sep << endl;
+                            fixingDate = ptrFloat->fixingDate();
+                            fixingValue = ptrFloat->index()->fixing(fixingDate);
+                        } else {
+                            fixingDate = Null<Date>();
+                            fixingValue = Null<Real>();
+                        }
+                        report->next().add(trades[k]->id()).add(trades[k]->tradeType()).add(i).add(payDate).add(amount).add(ccy).add(coupon).add(accrual).add(fixingDate).add(fixingValue);
                     }
                 }
             }
         } catch (std::exception& e) {
-            LOG("Exception writing to " << fileName << " : " << e.what());
+            LOG("Exception writing cashflow report : " << e.what());
         } catch (...) {
-            LOG("Exception writing to " << fileName << " : Unkown Exception");
+            LOG("Exception writing cashflow report : Unkown Exception");
         }
     }
-    file.close();
-    LOG("Cashflow report written to " << fileName);
+    report->end();
+    LOG("Cashflow report written");
 }
 
 void writeCurves(const Parameters& params, const TodaysMarketParameters& marketConfig,
