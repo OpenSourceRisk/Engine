@@ -40,7 +40,7 @@ public:
         if (d == QuantLib::Null<Real>()) { 
             fprintf(fp_, "#NA");
         } else { 
-            fprintf(fp_, "%.*g", prec_, d); 
+            fprintf(fp_, "%.*f", prec_, d); 
         }
     }
     void operator()(const string& s) const { fprintf(fp_, "%s", s.c_str()); }

@@ -71,7 +71,7 @@ void writeCashflow(const Parameters& params, boost::shared_ptr<Portfolio> portfo
 void writeCurves(const Parameters& params, const TodaysMarketParameters& marketConfig,
                  const boost::shared_ptr<Market>& market, boost::shared_ptr<ore::data::Report> report);
 
-void writeTradeExposures(const Parameters& params, boost::shared_ptr<PostProcess> postProcess);
+void writeTradeExposures(const Parameters& params, boost::shared_ptr<PostProcess> postProcess, boost::shared_ptr<ore::data::Report> report, const std::string& tradeId);
 
 void writeNettingSetExposures(const Parameters& params, boost::shared_ptr<PostProcess> postProcess);
 
@@ -479,7 +479,14 @@ int main(int argc, char** argv) {
                 fvaLendingCurve, collateralSpread, dimQuantile, dimHorizonCalendarDays, dimRegressionOrder,
                 dimRegressors, dimLocalRegressionEvaluations, dimLocalRegressionBandwidth, dimScaling);
 
-            writeTradeExposures(params, postProcess);
+            for (Size i = 0; i < postProcess->tradeIds().size(); ++i) {
+                string tradeId = postProcess->tradeIds()[i];
+                ostringstream o;
+                o << outputPath << "/exposure_trade_" << tradeId << ".csv";
+                string tradeExposureFile = o.str();
+                boost::shared_ptr<Report> tradeExposureReport = boost::make_shared<CSVFileReport>(tradeExposureFile);
+                writeTradeExposures(params, postProcess, tradeExposureReport, tradeId);
+            }
             writeNettingSetExposures(params, postProcess);
             writeXVA(params, portfolio, postProcess);
             writeNettingSetColva(params, postProcess);
@@ -669,36 +676,35 @@ void writeCurves(const Parameters& params, const TodaysMarketParameters& marketC
     report->end();
 }
 
-void writeTradeExposures(const Parameters& params, boost::shared_ptr<PostProcess> postProcess) {
-    string outputPath = params.get("setup", "outputPath");
+void writeTradeExposures(const Parameters& params, boost::shared_ptr<PostProcess> postProcess, boost::shared_ptr<Report> report, const string& tradeId) {
     const vector<Date> dates = postProcess->cube()->dates();
     Date today = Settings::instance().evaluationDate();
     DayCounter dc = ActualActual();
-    for (Size i = 0; i < postProcess->tradeIds().size(); ++i) {
-        string tradeId = postProcess->tradeIds()[i];
-        ostringstream o;
-        o << outputPath << "/exposure_trade_" << tradeId << ".csv";
-        string fileName = o.str();
-        ofstream file(fileName.c_str());
-        QL_REQUIRE(file.is_open(), "Error opening file " << fileName);
-        const vector<Real>& epe = postProcess->tradeEPE(tradeId);
-        const vector<Real>& ene = postProcess->tradeENE(tradeId);
-        const vector<Real>& ee_b = postProcess->tradeEE_B(tradeId);
-        const vector<Real>& eee_b = postProcess->tradeEEE_B(tradeId);
-        const vector<Real>& pfe = postProcess->tradePFE(tradeId);
-        const vector<Real>& aepe = postProcess->allocatedTradeEPE(tradeId);
-        const vector<Real>& aene = postProcess->allocatedTradeENE(tradeId);
-        file << "#TradeId,Date,Time,EPE,ENE,AllocatedEPE,AllocatedENE,PFE,BaselEE,BaselEEE" << endl;
-        file << tradeId << "," << QuantLib::io::iso_date(today) << "," << 0.0 << "," << epe[0] << "," << ene[0] << ","
-             << aepe[0] << "," << aene[0] << "," << pfe[0] << "," << ee_b[0] << "," << eee_b[0] << endl;
+    QL_REQUIRE(report, "Error opening report");
+    const vector<Real>& epe = postProcess->tradeEPE(tradeId);
+    const vector<Real>& ene = postProcess->tradeENE(tradeId);
+    const vector<Real>& ee_b = postProcess->tradeEE_B(tradeId);
+    const vector<Real>& eee_b = postProcess->tradeEEE_B(tradeId);
+    const vector<Real>& pfe = postProcess->tradePFE(tradeId);
+    const vector<Real>& aepe = postProcess->allocatedTradeEPE(tradeId);
+    const vector<Real>& aene = postProcess->allocatedTradeENE(tradeId);
+    report->addColumn("TradeId",string());
+    report->addColumn("Date",Date());
+    report->addColumn("Time",double(),6);
+    report->addColumn("EPE",double());
+    report->addColumn("ENE",double());
+    report->addColumn("AllocatedEPE",double());
+    report->addColumn("AllocatedENE",double());
+    report->addColumn("PFE",double());
+    report->addColumn("BaselEE",double());
+    report->addColumn("BaselEEE",double());
+
+    report->next().add(tradeId).add(today).add(0.0).add(epe[0]).add(ene[0]).add(aepe[0]).add(aene[0]).add(pfe[0]).add(ee_b[0]).add(eee_b[0]);
         for (Size j = 0; j < dates.size(); ++j) {
             Time time = dc.yearFraction(today, dates[j]);
-            file << tradeId << "," << QuantLib::io::iso_date(dates[j]) << "," << time << "," << epe[j + 1] << ","
-                 << ene[j + 1] << "," << aepe[j + 1] << "," << aene[j + 1] << "," << pfe[j + 1] << "," << ee_b[j + 1]
-                 << "," << eee_b[j + 1] << endl;
+            report->next().add(tradeId).add(dates[j]).add(time).add(epe[j+1]).add(ene[j+1]).add(aepe[j+1]).add(aene[j+1]).add(pfe[j+1]).add(ee_b[j+1]).add(eee_b[j+1]);
         }
-        file.close();
-    }
+    report->end();
 }
 
 void writeNettingSetExposures(const Parameters& params, boost::shared_ptr<PostProcess> postProcess) {
