@@ -69,7 +69,7 @@ void writeNpv(const Parameters& params, boost::shared_ptr<Market> market, const 
 void writeCashflow(const Parameters& params, boost::shared_ptr<Portfolio> portfolio, boost::shared_ptr<ore::data::Report> report);
 
 void writeCurves(const Parameters& params, const TodaysMarketParameters& marketConfig,
-                 const boost::shared_ptr<Market>& market);
+                 const boost::shared_ptr<Market>& market, boost::shared_ptr<ore::data::Report> report);
 
 void writeTradeExposures(const Parameters& params, boost::shared_ptr<PostProcess> postProcess);
 
@@ -208,7 +208,9 @@ int main(int argc, char** argv) {
          */
         cout << setw(tab) << left << "Curve Report... " << flush;
         if (params.hasGroup("curves") && params.get("curves", "active") == "Y") {
-            writeCurves(params, marketParameters, market);
+            string curvesFile = outputPath + "/" + params.get("curves", "outputFileName");
+            boost::shared_ptr<Report> curvesReport = boost::make_shared<CSVFileReport>(curvesFile);
+            writeCurves(params, marketParameters, market, curvesReport);
             cout << "OK" << endl;
         } else {
             LOG("skip curve report");
@@ -627,15 +629,8 @@ void writeCashflow(const Parameters& params, boost::shared_ptr<Portfolio> portfo
 }
 
 void writeCurves(const Parameters& params, const TodaysMarketParameters& marketConfig,
-                 const boost::shared_ptr<Market>& market) {
+                 const boost::shared_ptr<Market>& market, boost::shared_ptr<Report> report) {
     LOG("Write yield curve discount factors... ");
-
-    string outputPath = params.get("setup", "outputPath");
-    string fileName = outputPath + "/" + params.get("curves", "outputFileName");
-    ofstream file(fileName.c_str());
-    QL_REQUIRE(file.is_open(), "Error opening file " << fileName);
-    file.precision(15);
-    char sep = ',';
 
     string configID = params.get("curves", "configuration");
     QL_REQUIRE(marketConfig.hasConfiguration(configID), "curve configuration " << configID << " not found");
@@ -648,31 +643,30 @@ void writeCurves(const Parameters& params, const TodaysMarketParameters& marketC
 
     vector<Handle<YieldTermStructure>> yieldCurves;
 
-    file << "Tenor" << sep << "Date";
+    report->addColumn("Tenor",Period());
+    report->addColumn("Date",Date());
+
     for (auto it : discountCurves) {
-        file << sep << it.first;
-        yieldCurves.push_back(market->discountCurve(it.first, configID));
+        report->addColumn(it.first,double(),15);
+        yieldCurves.push_back(market->discountCurve(it.first));
     }
     for (auto it : YieldCurves) {
-        file << sep << it.first;
-        yieldCurves.push_back(market->yieldCurve(it.first, configID));
+        report->addColumn(it.first,double(),15);
+        yieldCurves.push_back(market->yieldCurve(it.first));
     }
     for (auto it : indexCurves) {
-        file << sep << it.first;
-        yieldCurves.push_back(market->iborIndex(it.first, configID)->forwardingTermStructure());
+        report->addColumn(it.first,double(),15);
+        yieldCurves.push_back(market->iborIndex(it.first)->forwardingTermStructure());
     }
-    file << endl;
 
     // Output the discount factors for each tenor in turn
     for (Size j = 0; j < grid.size(); ++j) {
         Date date = grid[j];
-        file << grid.tenors()[j] << sep << QuantLib::io::iso_date(date);
+        report->next().add(grid.tenors()[j]).add(date);
         for (Size i = 0; i < yieldCurves.size(); ++i)
-            file << sep << yieldCurves[i]->discount(date);
-        file << endl;
+            report->add(yieldCurves[i]->discount(date));
     }
-
-    file.close();
+    report->end();
 }
 
 void writeTradeExposures(const Parameters& params, boost::shared_ptr<PostProcess> postProcess) {
