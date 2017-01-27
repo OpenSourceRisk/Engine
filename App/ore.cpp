@@ -64,7 +64,7 @@ using namespace ore::data;
 using namespace ore::analytics;
 
 void writeNpv(const Parameters& params, boost::shared_ptr<Market> market, const std::string& configuration,
-              boost::shared_ptr<Portfolio> portfolio);
+              boost::shared_ptr<Portfolio> portfolio, boost::shared_ptr<ore::data::Report> report);
 
 void writeCashflow(const Parameters& params, boost::shared_ptr<Portfolio> portfolio);
 
@@ -220,7 +220,9 @@ int main(int argc, char** argv) {
          */
         cout << setw(tab) << left << "NPV Report... " << flush;
         if (params.hasGroup("npv") && params.get("npv", "active") == "Y") {
-            writeNpv(params, market, params.get("markets", "pricing"), portfolio);
+            string npvFile = outputPath + "/" + params.get("npv", "outputFileName");
+            boost::shared_ptr<Report> npvReport = boost::make_shared<CSVFileReport>(npvFile);
+            writeNpv(params, market, params.get("markets", "pricing"), portfolio, npvReport);
             cout << "OK" << endl;
         } else {
             LOG("skip portfolio valuation");
@@ -519,38 +521,35 @@ int main(int argc, char** argv) {
 }
 
 void writeNpv(const Parameters& params, boost::shared_ptr<Market> market, const std::string& configuration,
-              boost::shared_ptr<Portfolio> portfolio) {
+              boost::shared_ptr<Portfolio> portfolio, boost::shared_ptr<Report> report) {
     LOG("portfolio valuation");
-    // Date asof = Settings::instance().evaluationDate();
-    string outputPath = params.get("setup", "outputPath");
-    string npvFile = outputPath + "/" + params.get("npv", "outputFileName");
     string baseCurrency = params.get("npv", "baseCurrency");
-    ofstream file;
-    file.open(npvFile.c_str());
-    file.setf(ios::fixed, ios::floatfield);
-    file.setf(ios::showpoint);
-    char sep = ',';
     DayCounter dc = ActualActual();
     Date today = Settings::instance().evaluationDate();
-    QL_REQUIRE(file.is_open(), "error opening file " << npvFile);
-    file << "#TradeId,TradeType,Maturity,MaturityTime,NPV,NpvCurrency,NPV(Base),BaseCurrency" << endl;
+    QL_REQUIRE(report, "error opening file ");
+    report->addColumn("TradeId",string());
+    report->addColumn("TradeType",string());
+    report->addColumn("Maturity",Date());
+    report->addColumn("MaturityTime",double(),6);
+    report->addColumn("NPV",double(),6);
+    report->addColumn("NpvCurrency",string());
+    report->addColumn("NPV(Base)",double(),6);
+    report->addColumn("BaseCurrency",string());
     for (auto trade : portfolio->trades()) {
         string npvCcy = trade->npvCurrency();
         Real fx = 1.0;
         if (npvCcy != baseCurrency)
             fx = market->fxSpot(npvCcy + baseCurrency, configuration)->value();
-        file << trade->id() << sep << trade->tradeType() << sep << io::iso_date(trade->maturity()) << sep
-             << dc.yearFraction(today, trade->maturity()) << sep;
         try {
             Real npv = trade->instrument()->NPV();
-            file << npv << sep << npvCcy << sep << npv* fx << sep << baseCurrency << endl;
+            report->next().add(trade->id()).add(trade->tradeType()).add(trade->maturity()).add(dc.yearFraction(today, trade->maturity())).add(npv).add(npvCcy).add(npv*fx).add(baseCurrency);
         } catch (std::exception& e) {
             ALOG("Exception during pricing trade " << trade->id() << ": " << e.what());
-            file << "#NA" << sep << "#NA" << sep << "#NA" << sep << "#NA" << endl;
+            report->next().add(trade->id()).add(trade->tradeType()).add(trade->maturity()).add(dc.yearFraction(today, trade->maturity())).add(Null<Real>()).add("#NA").add(Null<Real>()).add("#NA");
         }
     }
-    file.close();
-    LOG("NPV file written to " << npvFile);
+    report->end();
+    LOG("NPV file written");
 }
 
 void writeCashflow(const Parameters& params, boost::shared_ptr<Portfolio> portfolio) {
