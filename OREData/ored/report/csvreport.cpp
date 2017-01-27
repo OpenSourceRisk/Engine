@@ -16,10 +16,10 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/variant/static_visitor.hpp>
 #include <ored/report/csvreport.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
-#include <boost/variant/static_visitor.hpp>
 
 namespace ore {
 namespace data {
@@ -29,18 +29,18 @@ class ReportTypePrinter : public boost::static_visitor<> {
 public:
     ReportTypePrinter(FILE* fp, int prec) : fp_(fp), prec_(prec) {}
 
-    void operator()(const Size i) const { 
+    void operator()(const Size i) const {
         if (i == QuantLib::Null<Size>()) {
             fprintf(fp_, "#NA");
         } else {
             fprintf(fp_, "%lu", i);
         }
     }
-    void operator()(const Real d) const { 
-        if (d == QuantLib::Null<Real>()) { 
+    void operator()(const Real d) const {
+        if (d == QuantLib::Null<Real>()) {
             fprintf(fp_, "#NA");
-        } else { 
-            fprintf(fp_, "%.*f", prec_, d); 
+        } else {
+            fprintf(fp_, "%.*f", prec_, d);
         }
     }
     void operator()(const string& s) const { fprintf(fp_, "%s", s.c_str()); }
