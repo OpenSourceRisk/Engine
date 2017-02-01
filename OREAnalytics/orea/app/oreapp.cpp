@@ -66,13 +66,13 @@ using namespace ore::analytics;
 namespace ore {
 namespace analytics {
 
-void OreApp::run() {
+void OREApp::run() {
 
     boost::timer timer;
 
     try {
         std::cout << "ORE starting" << std::endl;
-        setupLogFile();
+        setupLog();
 
         LOG("ORE starting");
         params_->log();
@@ -83,332 +83,86 @@ void OreApp::run() {
             LOG("Observation Mode is " << om);
         }
 
-        Date asof = asof_;
-        string outputPath = params_->get("setup", "outputPath");
-        string inputPath = params_->get("setup", "inputPath");
-
         /*************
-         * Conventions
+         * Load Conventions
          */
-        cout << setw(tab) << left << "Conventions... " << flush;
+        cout << setw(tab_) << left << "Conventions... " << flush;
         getConventions();
         cout << "OK" << endl;
 
         /*********
-         * Markets
+         * Build Markets
          */
-        cout << setw(tab) << left << "Market... " << flush;
-        TodaysMarketParameters marketParameters = getMarketParameters();
-        boost::shared_ptr<Market> market = buildMarket(marketParameters);
+        cout << setw(tab_) << left << "Market... " << flush;
+
+        getMarketParameters();
+        buildMarket();
 
         cout << "OK" << endl;
 
         /************************
-         * Pricing Engine Factory
+         *Build Pricing Engine Factory
          */
-        cout << setw(tab) << left << "Engine factory... " << flush;
-        boost::shared_ptr<EngineFactory> factory = buildFactory(market);
+        cout << setw(tab_) << left << "Engine factory... " << flush;
+        boost::shared_ptr<EngineFactory> factory = buildFactory(market_);
         cout << "OK" << endl;
 
         /******************************
          * Load and Build the Portfolio
          */
-        cout << setw(tab) << left << "Portfolio... " << flush;
-        boost::shared_ptr<Portfolio> portfolio = buildPortfolio(factory);
+        cout << setw(tab_) << left << "Portfolio... " << flush;
+        portfolio_ = buildPortfolio(factory);
         cout << "OK" << endl;
 
-        /************
-         * Curve dump
-         */
-        cout << setw(tab) << left << "Curve Report... " << flush;
-        if (params_->hasGroup("curves") && params_->get("curves", "active") == "Y") {
-            string fileName = outputPath + "/" + params_->get("curves", "outputFileName");
-            CSVFileReport curvesReport(fileName);
-            DateGrid grid(params_->get("curves", "grid"));
-            ReportWriter::writeCurves(curvesReport, params_->get("curves", "configuration"), grid, marketParameters,
-                                      market);
-            cout << "OK" << endl;
-        } else {
-            LOG("skip curve report");
-            cout << "SKIP" << endl;
-        }
-
-        /*********************
-         * Portfolio valuation
-         */
-        cout << setw(tab) << left << "NPV Report... " << flush;
-        if (params_->hasGroup("npv") && params_->get("npv", "active") == "Y") {
-            string fileName = outputPath + "/" + params_->get("npv", "outputFileName");
-            CSVFileReport npvReport(fileName);
-            ReportWriter::writeNpv(npvReport, params_->get("npv", "baseCurrency"), market,
-                                   params_->get("markets", "pricing"), portfolio);
-            cout << "OK" << endl;
-        } else {
-            LOG("skip portfolio valuation");
-            cout << "SKIP" << endl;
-        }
-
-        /**********************
-         * Cash flow generation
-         */
-        cout << setw(tab) << left << "Cashflow Report... " << flush;
-        if (params_->hasGroup("cashflow") && params_->get("cashflow", "active") == "Y") {
-            string fileName = outputPath + "/" + params_->get("cashflow", "outputFileName");
-            CSVFileReport cashflowReport(fileName);
-            ReportWriter::writeCashflow(cashflowReport, portfolio);
-            cout << "OK" << endl;
-        } else {
-            LOG("skip cashflow generation");
-            cout << "SKIP" << endl;
-        }
+        cout << setw(tab_) << left << "Write Reports... " << flush;
+        writeInitialReports();
+        cout << "OK" << endl;
 
         /******************************************
          * Simulation: Scenario and Cube Generation
          */
 
-        boost::shared_ptr<AggregationScenarioData> inMemoryScenarioData;
-        boost::shared_ptr<NPVCube> inMemoryCube;
-        Size cubeDepth = 0;
-
+        fflush(stdout);
         if (params_->hasGroup("simulation") && params_->get("simulation", "active") == "Y") {
-
-            cout << setw(tab) << left << "Simulation Setup... ";
-            fflush(stdout);
-            LOG("Load Simulation Market Parameters");
-            boost::shared_ptr<ScenarioSimMarketParameters> simMarketData = getSimMarketData();
-            boost::shared_ptr<ScenarioGeneratorData> sgd = getScenarioGeneratorData();
-            boost::shared_ptr<ScenarioGenerator> sg = buildScenarioGenerator(market, simMarketData, sgd);
-
-            boost::shared_ptr<ore::analytics::DateGrid> grid = sgd->grid();
-
-            LOG("Build Simulation Market");
-            boost::shared_ptr<ScenarioSimMarket> simMarket = boost::make_shared<ScenarioSimMarket>(
-                sg, market, simMarketData, *conventions_, params_->get("markets", "simulation"));
-
-            boost::shared_ptr<EngineFactory> simFactory = buildSimFactory(simMarket);
-
-            LOG("Build portfolio linked to sim market");
-            boost::shared_ptr<Portfolio> simPortfolio = boost::make_shared<Portfolio>();
-            string portfolioFile = inputPath + "/" + params_->get("setup", "portfolioFile");
-            simPortfolio->load(portfolioFile);
-            simPortfolio->build(simFactory);
-            QL_REQUIRE(simPortfolio->size() == portfolio->size(),
-                       "portfolio size mismatch, check simulation market setup");
-            cout << "OK" << endl;
-
-            LOG("Build valuation cube engine");
-            Size samples = sgd->samples();
-            string baseCurrency = params_->get("simulation", "baseCurrency");
-            if (params_->has("simulation", "storeFlows") && params_->get("simulation", "storeFlows") == "Y")
-                cubeDepth = 2; // NPV and FLOW
-            else
-                cubeDepth = 1; // NPV only
-
-            // Valuation calculators
-            vector<boost::shared_ptr<ValuationCalculator>> calculators;
-            calculators.push_back(boost::make_shared<NPVCalculator>(baseCurrency));
-            if (cubeDepth > 1)
-                calculators.push_back(boost::make_shared<CashflowCalculator>(baseCurrency, asof, grid, 1));
-            ValuationEngine engine(asof, grid, simMarket);
-
-            ostringstream o;
-            o << "Aggregation Scenario Data " << grid->size() << " x " << samples << "... ";
-            cout << setw(tab) << o.str() << flush;
-            inMemoryScenarioData = boost::make_shared<InMemoryAggregationScenarioData>(grid->size(), samples);
-            // Set AggregationScenarioData
-            simMarket->aggregationScenarioData() = inMemoryScenarioData;
-            cout << "OK" << endl;
-
-            o.str("");
-            o << "Build Cube " << simPortfolio->size() << " x " << grid->size() << " x " << samples << "... ";
-            LOG("Build cube");
-            auto progressBar = boost::make_shared<SimpleProgressBar>(o.str(), tab);
-            auto progressLog = boost::make_shared<ProgressLog>("Building cube...");
-            engine.registerProgressIndicator(progressBar);
-            engine.registerProgressIndicator(progressLog);
-            if (cubeDepth == 1)
-                inMemoryCube =
-                    boost::make_shared<SinglePrecisionInMemoryCube>(asof, simPortfolio->ids(), grid->dates(), samples);
-            else if (cubeDepth == 2)
-                inMemoryCube = boost::make_shared<SinglePrecisionInMemoryCubeN>(asof, simPortfolio->ids(),
-                                                                                grid->dates(), samples, cubeDepth);
-            else {
-                QL_FAIL("cube depth 1 or 2 expected");
-            }
-
-            engine.buildCube(simPortfolio, inMemoryCube, calculators);
-            cout << "OK" << endl;
-
-            cout << setw(tab) << left << "Write Cube... " << flush;
-            LOG("Write cube");
-            if (params_->has("simulation", "cubeFile")) {
-                string cubeFileName = outputPath + "/" + params_->get("simulation", "cubeFile");
-                inMemoryCube->save(cubeFileName);
-                cout << "OK" << endl;
-            } else
-                cout << "SKIP" << endl;
-
-            cout << setw(tab) << left << "Write Aggregation Scenario Data... " << flush;
-            LOG("Write scenario data");
-            if (params_->has("simulation", "additionalScenarioDataFileName")) {
-                string outputFileNameAddScenData =
-                    outputPath + "/" + params_->get("simulation", "additionalScenarioDataFileName");
-                inMemoryScenarioData->save(outputFileNameAddScenData);
-                cout << "OK" << endl;
-            } else
-                cout << "SKIP" << endl;
+            generateNPVCube();
         } else {
             LOG("skip simulation");
-            cout << setw(tab) << left << "Simulation... ";
+            cout << setw(tab_) << left << "Simulation... ";
             cout << "SKIP" << endl;
         }
 
         /*****************************
          * Aggregation and XVA Reports
          */
-        cout << setw(tab) << left << "Aggregation and XVA Reports... " << flush;
+        cout << setw(tab_) << left << "Aggregation and XVA Reports... " << flush;
         if (params_->hasGroup("xva") && params_->get("xva", "active") == "Y") {
 
             // We reset this here because the date grid building below depends on it.
-            Settings::instance().evaluationDate() = asof;
+            Settings::instance().evaluationDate() = asof_;
 
-            string csaFile = inputPath + "/" + params_->get("xva", "csaFile");
-            boost::shared_ptr<NettingSetManager> netting = boost::make_shared<NettingSetManager>();
-            netting->fromFile(csaFile);
+            // Use pregenerated cube
+            if (!cube_)
+                loadCube();
 
-            map<string, bool> analytics;
-            analytics["exerciseNextBreak"] = parseBool(params_->get("xva", "exerciseNextBreak"));
-            analytics["exposureProfiles"] = parseBool(params_->get("xva", "exposureProfiles"));
-            analytics["cva"] = parseBool(params_->get("xva", "cva"));
-            analytics["dva"] = parseBool(params_->get("xva", "dva"));
-            analytics["fva"] = parseBool(params_->get("xva", "fva"));
-            analytics["colva"] = parseBool(params_->get("xva", "colva"));
-            analytics["collateralFloor"] = parseBool(params_->get("xva", "collateralFloor"));
-            if (params_->has("xva", "mva"))
-                analytics["mva"] = parseBool(params_->get("xva", "mva"));
-            else
-                analytics["mva"] = false;
-            if (params_->has("xva", "dim"))
-                analytics["dim"] = parseBool(params_->get("xva", "dim"));
-            else
-                analytics["dim"] = false;
+            QL_REQUIRE(cube_->numIds() == portfolio_->size(),
+                       "cube x dimension (" << cube_->numIds() << ") does not match portfolio size ("
+                                            << portfolio_->size() << ")");
 
-            boost::shared_ptr<NPVCube> cube;
-            if (inMemoryCube)
-                cube = inMemoryCube;
-            else {
-                Size cubeDepth = 1;
-                if (params_->has("xva", "hyperCube"))
-                    cubeDepth = parseBool(params_->get("xva", "hyperCube")) ? 2 : 1;
+            // Use pregenerared scenarios
+            if (!scenarioData_)
+                loadScenarioData();
 
-                if (cubeDepth > 1)
-                    cube = boost::make_shared<SinglePrecisionInMemoryCubeN>();
-                else
-                    cube = boost::make_shared<SinglePrecisionInMemoryCube>();
-                string cubeFile = outputPath + "/" + params_->get("xva", "cubeFile");
-                LOG("Load cube from file " << cubeFile);
-                cube->load(cubeFile);
-                LOG("Cube loading done");
-            }
-
-            QL_REQUIRE(cube->numIds() == portfolio->size(), "cube x dimension (" << cube->numIds()
-                                                                                 << ") does not match portfolio size ("
-                                                                                 << portfolio->size() << ")");
-
-            boost::shared_ptr<AggregationScenarioData> scenarioData;
-            if (inMemoryScenarioData)
-                scenarioData = inMemoryScenarioData;
-            else {
-                scenarioData = boost::make_shared<InMemoryAggregationScenarioData>();
-                string scenarioFile = outputPath + "/" + params_->get("xva", "scenarioFile");
-                scenarioData->load(scenarioFile);
-            }
-
-            QL_REQUIRE(scenarioData->dimDates() == cube->dates().size(), "scenario dates do not match cube grid size");
-            QL_REQUIRE(scenarioData->dimSamples() == cube->samples(),
+            QL_REQUIRE(scenarioData_->dimDates() == cube_->dates().size(),
+                       "scenario dates do not match cube grid size");
+            QL_REQUIRE(scenarioData_->dimSamples() == cube_->samples(),
                        "scenario sample size does not match cube sample size");
 
-            string baseCurrency = params_->get("xva", "baseCurrency");
-            string calculationType = params_->get("xva", "calculationType");
-            string allocationMethod = params_->get("xva", "allocationMethod");
-            Real marginalAllocationLimit = parseReal(params_->get("xva", "marginalAllocationLimit"));
-            Real quantile = parseReal(params_->get("xva", "quantile"));
-            string dvaName = params_->get("xva", "dvaName");
-            string fvaLendingCurve = params_->get("xva", "fvaLendingCurve");
-            string fvaBorrowingCurve = params_->get("xva", "fvaBorrowingCurve");
-            Real collateralSpread = parseReal(params_->get("xva", "collateralSpread"));
+            runPostProcessor();
+            writeXVAReports();
 
-            Real dimQuantile = 0.99;
-            Size dimHorizonCalendarDays = 14;
-            Size dimRegressionOrder = 0;
-            vector<string> dimRegressors;
-            Real dimScaling = 1.0;
-            Size dimLocalRegressionEvaluations = 0;
-            Real dimLocalRegressionBandwidth = 0.25;
-
-            if (analytics["mva"] || analytics["dim"]) {
-                dimQuantile = parseReal(params_->get("xva", "dimQuantile"));
-                dimHorizonCalendarDays = parseInteger(params_->get("xva", "dimHorizonCalendarDays"));
-                dimRegressionOrder = parseInteger(params_->get("xva", "dimRegressionOrder"));
-                string dimRegressorsString = params_->get("xva", "dimRegressors");
-                dimRegressors = parseListOfValues(dimRegressorsString);
-                dimScaling = parseReal(params_->get("xva", "dimScaling"));
-                dimLocalRegressionEvaluations = parseInteger(params_->get("xva", "dimLocalRegressionEvaluations"));
-                dimLocalRegressionBandwidth = parseReal(params_->get("xva", "dimLocalRegressionBandwidth"));
-            }
-
-            string marketConfiguration = params_->get("markets", "simulation");
-
-            boost::shared_ptr<PostProcess> postProcess = boost::make_shared<PostProcess>(
-                portfolio, netting, market, marketConfiguration, cube, scenarioData, analytics, baseCurrency,
-                allocationMethod, marginalAllocationLimit, quantile, calculationType, dvaName, fvaBorrowingCurve,
-                fvaLendingCurve, collateralSpread, dimQuantile, dimHorizonCalendarDays, dimRegressionOrder,
-                dimRegressors, dimLocalRegressionEvaluations, dimLocalRegressionBandwidth, dimScaling);
-
-            for (auto t : postProcess->tradeIds()) {
-                ostringstream o;
-                o << outputPath << "/exposure_trade_" << t << ".csv";
-                string tradeExposureFile = o.str();
-                CSVFileReport tradeExposureReport(tradeExposureFile);
-                ReportWriter::writeTradeExposures(tradeExposureReport, postProcess, t);
-            }
-            for (auto n : postProcess->nettingSetIds()) {
-                ostringstream o1;
-                o1 << outputPath << "/exposure_nettingset_" << n << ".csv";
-                string nettingSetExposureFile = o1.str();
-                CSVFileReport nettingSetExposureReport(nettingSetExposureFile);
-                ReportWriter::writeNettingSetExposures(nettingSetExposureReport, postProcess, n);
-
-                ostringstream o2;
-                o2 << outputPath << "/colva_nettingset_" << n << ".csv";
-                string nettingSetColvaFile = o2.str();
-                CSVFileReport nettingSetColvaReport(nettingSetColvaFile);
-                ReportWriter::writeNettingSetColva(nettingSetColvaReport, postProcess, n);
-            }
-
-            string XvaFile = outputPath + "/xva.csv";
-            CSVFileReport xvaReport(XvaFile);
-            ReportWriter::writeXVA(xvaReport, params_->get("xva", "allocationMethod"), portfolio, postProcess);
-
-            string rawCubeOutputFile = params_->get("xva", "rawCubeOutputFile");
-            CubeWriter cw1(outputPath + "/" + rawCubeOutputFile);
-            map<string, string> nettingSetMap = portfolio->nettingSetMap();
-            cw1.write(cube, nettingSetMap);
-
-            string netCubeOutputFile = params_->get("xva", "netCubeOutputFile");
-            CubeWriter cw2(outputPath + "/" + netCubeOutputFile);
-            cw2.write(postProcess->netCube(), nettingSetMap);
-
-            if (analytics["dim"]) {
-                string dimFile1 = outputPath + "/" + params_->get("xva", "dimEvolutionFile");
-                vector<string> dimFiles2;
-                for (auto f : parseListOfValues(params_->get("xva", "dimRegressionFiles")))
-                    dimFiles2.push_back(outputPath + "/" + f);
-                string nettingSet = params_->get("xva", "dimOutputNettingSet");
-                std::vector<Size> dimOutputGridPoints =
-                    parseListOfValues<Size>(params_->get("xva", "dimOutputGridPoints"), &parseInteger);
-                postProcess->exportDimEvolution(dimFile1, nettingSet);
-                postProcess->exportDimRegression(dimFiles2, nettingSet, dimOutputGridPoints);
+            if (params_->has("xva", "dim")) {
+                if (parseBool(params_->get("xva", "dim")))
+                    writeDIMReport();
             }
 
             cout << "OK" << endl;
@@ -427,7 +181,8 @@ void OreApp::run() {
 
     LOG("ORE done.");
 }
-void OreApp::setupLogFile() {
+
+void OREApp::setupLog() {
     string outputPath = params_->get("setup", "outputPath");
     string logFile = outputPath + "/" + params_->get("setup", "logFile");
     Size logMask = 15; // Default level
@@ -448,19 +203,17 @@ void OreApp::setupLogFile() {
     Log::instance().switchOn();
 }
 
-void OreApp::getConventions() {
-    Conventions conventions;
+void OREApp::getConventions() {
     string inputPath = params_->get("setup", "inputPath");
     string conventionsFile = inputPath + "/" + params_->get("setup", "conventionsFile");
-    conventions.fromFile(conventionsFile);
-    conventions_ = boost::make_shared<Conventions>(conventions);
+    conventions_.fromFile(conventionsFile);
 }
 
-boost::shared_ptr<Market> OreApp::buildMarket(TodaysMarketParameters& marketParams) {
+void OREApp::buildMarket() {
     /*******************************
      * Market and fixing data loader
      */
-    cout << setw(tab) << left << "Market data loader... " << flush;
+    cout << endl << setw(tab_) << left << "Market data loader... " << flush;
     string inputPath = params_->get("setup", "inputPath");
     string marketFile = inputPath + "/" + params_->get("setup", "marketDataFile");
     string fixingFile = inputPath + "/" + params_->get("setup", "fixingDataFile");
@@ -471,32 +224,25 @@ boost::shared_ptr<Market> OreApp::buildMarket(TodaysMarketParameters& marketPara
     /**********************
      * Curve configurations
      */
-    cout << setw(tab) << left << "Curve configuration... " << flush;
+    cout << setw(tab_) << left << "Curve configuration... " << flush;
     CurveConfigurations curveConfigs;
     string curveConfigFile = inputPath + "/" + params_->get("setup", "curveConfigFile");
     curveConfigs.fromFile(curveConfigFile);
     cout << "OK" << endl;
 
-    boost::shared_ptr<Market> market =
-        boost::make_shared<TodaysMarket>(asof_, marketParams, loader, curveConfigs, *conventions_);
-
-    return market;
+    market_ = boost::make_shared<TodaysMarket>(asof_, marketParameters_, loader, curveConfigs, conventions_);
 }
 
-TodaysMarketParameters OreApp::getMarketParameters() {
-    TodaysMarketParameters marketParameters;
+void OREApp::getMarketParameters() {
     string inputPath = params_->get("setup", "inputPath");
     string marketConfigFile = inputPath + "/" + params_->get("setup", "marketConfigFile");
-    marketParameters.fromFile(marketConfigFile);
-
-    return marketParameters;
+    marketParameters_.fromFile(marketConfigFile);
 }
 
-boost::shared_ptr<EngineFactory> OreApp::buildFactory(boost::shared_ptr<Market> market) {
+boost::shared_ptr<EngineFactory> OREApp::buildFactory(boost::shared_ptr<Market> market) {
     string inputPath = params_->get("setup", "inputPath");
-
-    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
     string pricingEnginesFile = inputPath + "/" + params_->get("setup", "pricingEnginesFile");
+    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
     engineData->fromFile(pricingEnginesFile);
 
     map<MarketContext, string> configurations;
@@ -507,42 +253,36 @@ boost::shared_ptr<EngineFactory> OreApp::buildFactory(boost::shared_ptr<Market> 
     return factory;
 }
 
-boost::shared_ptr<Portfolio> OreApp::buildPortfolio(boost::shared_ptr<EngineFactory> factory) {
-
-    boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
+boost::shared_ptr<Portfolio> OREApp::buildPortfolio(boost::shared_ptr<EngineFactory> factory) {
     string inputPath = params_->get("setup", "inputPath");
     string portfolioFile = inputPath + "/" + params_->get("setup", "portfolioFile");
+    boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
     portfolio->load(portfolioFile);
     portfolio->build(factory);
-
     return portfolio;
 }
 
-boost::shared_ptr<ScenarioSimMarketParameters> OreApp::getSimMarketData() {
+boost::shared_ptr<ScenarioSimMarketParameters> OREApp::getSimMarketData() {
     string inputPath = params_->get("setup", "inputPath");
     string simulationConfigFile = inputPath + "/" + params_->get("simulation", "simulationConfigFile");
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketData(new ScenarioSimMarketParameters);
     simMarketData->fromFile(simulationConfigFile);
-
     return simMarketData;
 }
-boost::shared_ptr<ScenarioGeneratorData> OreApp::getScenarioGeneratorData() {
+
+boost::shared_ptr<ScenarioGeneratorData> OREApp::getScenarioGeneratorData() {
     string inputPath = params_->get("setup", "inputPath");
-
     string simulationConfigFile = inputPath + "/" + params_->get("simulation", "simulationConfigFile");
-
     boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
     sgd->fromFile(simulationConfigFile);
-
     return sgd;
 }
 boost::shared_ptr<ScenarioGenerator>
-OreApp::buildScenarioGenerator(boost::shared_ptr<Market> market,
+OREApp::buildScenarioGenerator(boost::shared_ptr<Market> market,
                                boost::shared_ptr<ScenarioSimMarketParameters> simMarketData,
                                boost::shared_ptr<ScenarioGeneratorData> sgd) {
-    string inputPath = params_->get("setup", "inputPath");
-
     LOG("Build Simulation Model");
+    string inputPath = params_->get("setup", "inputPath");
     string simulationConfigFile = inputPath + "/" + params_->get("simulation", "simulationConfigFile");
     LOG("Load simulation model data from file: " << simulationConfigFile);
     boost::shared_ptr<CrossAssetModelData> modelData = boost::make_shared<CrossAssetModelData>();
@@ -566,21 +306,292 @@ OreApp::buildScenarioGenerator(boost::shared_ptr<Market> market,
     return sg;
 }
 
-boost::shared_ptr<EngineFactory> OreApp::buildSimFactory(boost::shared_ptr<ScenarioSimMarket> simMarket) {
+void OREApp::writeInitialReports() {
 
-    LOG("Build engine factory for pricing under scenarios, linked to sim market");
+    string outputPath = params_->get("setup", "outputPath");
     string inputPath = params_->get("setup", "inputPath");
-    boost::shared_ptr<EngineData> simEngineData = boost::make_shared<EngineData>();
-    string simPricingEnginesFile = inputPath + "/" + params_->get("simulation", "pricingEnginesFile");
-    simEngineData->fromFile(simPricingEnginesFile);
-    map<MarketContext, string> configurations;
-    configurations[MarketContext::irCalibration] = params_->get("markets", "lgmcalibration");
-    configurations[MarketContext::fxCalibration] = params_->get("markets", "fxcalibration");
-    configurations[MarketContext::pricing] = params_->get("markets", "simulation");
-    boost::shared_ptr<EngineFactory> simFactory =
-        boost::make_shared<EngineFactory>(simEngineData, simMarket, configurations);
 
-    return simFactory;
+    /************
+     * Curve dump
+     */
+    cout << endl << setw(tab_) << left << "Curve Report... " << flush;
+    if (params_->hasGroup("curves") && params_->get("curves", "active") == "Y") {
+        string fileName = outputPath + "/" + params_->get("curves", "outputFileName");
+        CSVFileReport curvesReport(fileName);
+        DateGrid grid(params_->get("curves", "grid"));
+        ReportWriter::writeCurves(curvesReport, params_->get("curves", "configuration"), grid, marketParameters_,
+                                  market_);
+        cout << "OK" << endl;
+    } else {
+        LOG("skip curve report");
+        cout << "SKIP" << endl;
+    }
+
+    /*********************
+     * Portfolio valuation
+     */
+    cout << setw(tab_) << left << "NPV Report... " << flush;
+    if (params_->hasGroup("npv") && params_->get("npv", "active") == "Y") {
+        string fileName = outputPath + "/" + params_->get("npv", "outputFileName");
+        CSVFileReport npvReport(fileName);
+        ReportWriter::writeNpv(npvReport, params_->get("npv", "baseCurrency"), market_,
+                               params_->get("markets", "pricing"), portfolio_);
+        cout << "OK" << endl;
+    } else {
+        LOG("skip portfolio valuation");
+        cout << "SKIP" << endl;
+    }
+
+    /**********************
+     * Cash flow generation
+     */
+    cout << setw(tab_) << left << "Cashflow Report... " << flush;
+    if (params_->hasGroup("cashflow") && params_->get("cashflow", "active") == "Y") {
+        string fileName = outputPath + "/" + params_->get("cashflow", "outputFileName");
+        CSVFileReport cashflowReport(fileName);
+        ReportWriter::writeCashflow(cashflowReport, portfolio_);
+        cout << "OK" << endl;
+    } else {
+        LOG("skip cashflow generation");
+        cout << "SKIP" << endl;
+    }
+}
+
+void OREApp::getAggregationScenarioData() {
+    scenarioData_ = boost::make_shared<InMemoryAggregationScenarioData>(grid_->size(), samples_);
+}
+
+void OREApp::getEmptyCube() {
+    if (cubeDepth_ == 1)
+        cube_ = boost::make_shared<SinglePrecisionInMemoryCube>(asof_, simPortfolio_->ids(), grid_->dates(), samples_);
+    else if (cubeDepth_ == 2)
+        cube_ = boost::make_shared<SinglePrecisionInMemoryCubeN>(asof_, simPortfolio_->ids(), grid_->dates(), samples_,
+                                                                 cubeDepth_);
+    else {
+        QL_FAIL("cube depth 1 or 2 expected");
+    }
+}
+
+void OREApp::buildNPVCube() {
+    LOG("Build valuation cube engine");
+    // Valuation calculators
+    string baseCurrency = params_->get("simulation", "baseCurrency");
+    vector<boost::shared_ptr<ValuationCalculator>> calculators;
+    calculators.push_back(boost::make_shared<NPVCalculator>(baseCurrency));
+    if (cubeDepth_ > 1)
+        calculators.push_back(boost::make_shared<CashflowCalculator>(baseCurrency, asof_, grid_, 1));
+    LOG("Build cube");
+    ValuationEngine engine(asof_, grid_, simMarket_);
+    ostringstream o;
+    o.str("");
+    o << "Build Cube " << simPortfolio_->size() << " x " << grid_->size() << " x " << samples_ << "... ";
+
+    auto progressBar = boost::make_shared<SimpleProgressBar>(o.str(), tab_);
+    auto progressLog = boost::make_shared<ProgressLog>("Building cube...");
+    engine.registerProgressIndicator(progressBar);
+    engine.registerProgressIndicator(progressLog);
+    engine.buildCube(simPortfolio_, cube_, calculators);
+    cout << "OK" << endl;
+}
+
+void OREApp::generateNPVCube() {
+    cout << setw(tab_) << left << "Simulation Setup... ";
+    LOG("Load Simulation Market Parameters");
+    boost::shared_ptr<ScenarioSimMarketParameters> simMarketData = getSimMarketData();
+    boost::shared_ptr<ScenarioGeneratorData> sgd = getScenarioGeneratorData();
+    grid_ = sgd->grid();
+    samples_ = sgd->samples();
+    boost::shared_ptr<ScenarioGenerator> sg = buildScenarioGenerator(market_, simMarketData, sgd);
+
+    LOG("Build Simulation Market");
+    simMarket_ = boost::make_shared<ScenarioSimMarket>(sg, market_, simMarketData, conventions_,
+                                                       params_->get("markets", "simulation"));
+    boost::shared_ptr<EngineFactory> simFactory = buildFactory(simMarket_);
+
+    LOG("Build portfolio linked to sim market");
+    simPortfolio_ = buildPortfolio(simFactory);
+    QL_REQUIRE(simPortfolio_->size() == portfolio_->size(), "portfolio size mismatch, check simulation market setup");
+    cout << "OK" << endl;
+
+    if (params_->has("simulation", "storeFlows") && params_->get("simulation", "storeFlows") == "Y")
+        cubeDepth_ = 2; // NPV and FLOW
+    else
+        cubeDepth_ = 1; // NPV only
+
+    ostringstream o;
+    o << "Aggregation Scenario Data " << grid_->size() << " x " << samples_ << "... ";
+    cout << setw(tab_) << o.str() << flush;
+
+    getAggregationScenarioData();
+    // Set AggregationScenarioData
+    simMarket_->aggregationScenarioData() = scenarioData_;
+    cout << "OK" << endl;
+
+    getEmptyCube();
+    buildNPVCube();
+}
+
+void OREApp::writeCube() {
+    cout << endl << setw(tab_) << left << "Write Cube... " << flush;
+    LOG("Write cube");
+    if (params_->has("simulation", "cubeFile")) {
+        string outputPath = params_->get("setup", "outputPath");
+        string cubeFileName = outputPath + "/" + params_->get("simulation", "cubeFile");
+        cube_->save(cubeFileName);
+        cout << "OK" << endl;
+    } else
+        cout << "SKIP" << endl;
+}
+
+void OREApp::writeScenarioData() {
+    cout << endl << setw(tab_) << left << "Write Aggregation Scenario Data... " << flush;
+    LOG("Write scenario data");
+    if (params_->has("simulation", "additionalScenarioDataFileName")) {
+        string outputPath = params_->get("setup", "outputPath");
+        string outputFileNameAddScenData =
+            outputPath + "/" + params_->get("simulation", "additionalScenarioDataFileName");
+        scenarioData_->save(outputFileNameAddScenData);
+        cout << "OK" << endl;
+    } else
+        cout << "SKIP" << endl;
+}
+
+void OREApp::loadScenarioData() {
+    string outputPath = params_->get("setup", "outputPath");
+    string scenarioFile = outputPath + "/" + params_->get("xva", "scenarioFile");
+    scenarioData_ = boost::make_shared<InMemoryAggregationScenarioData>();
+    scenarioData_->load(scenarioFile);
+}
+
+void OREApp::loadCube() {
+    string outputPath = params_->get("setup", "outputPath");
+    string cubeFile = outputPath + "/" + params_->get("xva", "cubeFile");
+    cubeDepth_ = 1;
+    if (params_->has("xva", "hyperCube"))
+        cubeDepth_ = parseBool(params_->get("xva", "hyperCube")) ? 2 : 1;
+
+    if (cubeDepth_ > 1)
+        cube_ = boost::make_shared<SinglePrecisionInMemoryCubeN>();
+    else
+        cube_ = boost::make_shared<SinglePrecisionInMemoryCube>();
+    LOG("Load cube from file " << cubeFile);
+    cube_->load(cubeFile);
+    LOG("Cube loading done");
+}
+
+boost::shared_ptr<NettingSetManager> OREApp::getNettingSetManager() {
+    string inputPath = params_->get("setup", "inputPath");
+    string csaFile = inputPath + "/" + params_->get("xva", "csaFile");
+    boost::shared_ptr<NettingSetManager> netting = boost::make_shared<NettingSetManager>();
+    netting->fromFile(csaFile);
+    return netting;
+}
+
+void OREApp::runPostProcessor() {
+    boost::shared_ptr<NettingSetManager> netting = getNettingSetManager();
+    map<string, bool> analytics;
+    analytics["exerciseNextBreak"] = parseBool(params_->get("xva", "exerciseNextBreak"));
+    analytics["exposureProfiles"] = parseBool(params_->get("xva", "exposureProfiles"));
+    analytics["cva"] = parseBool(params_->get("xva", "cva"));
+    analytics["dva"] = parseBool(params_->get("xva", "dva"));
+    analytics["fva"] = parseBool(params_->get("xva", "fva"));
+    analytics["colva"] = parseBool(params_->get("xva", "colva"));
+    analytics["collateralFloor"] = parseBool(params_->get("xva", "collateralFloor"));
+    if (params_->has("xva", "mva"))
+        analytics["mva"] = parseBool(params_->get("xva", "mva"));
+    else
+        analytics["mva"] = false;
+    if (params_->has("xva", "dim"))
+        analytics["dim"] = parseBool(params_->get("xva", "dim"));
+    else
+        analytics["dim"] = false;
+
+    string baseCurrency = params_->get("xva", "baseCurrency");
+    string calculationType = params_->get("xva", "calculationType");
+    string allocationMethod = params_->get("xva", "allocationMethod");
+    Real marginalAllocationLimit = parseReal(params_->get("xva", "marginalAllocationLimit"));
+    Real quantile = parseReal(params_->get("xva", "quantile"));
+    string dvaName = params_->get("xva", "dvaName");
+    string fvaLendingCurve = params_->get("xva", "fvaLendingCurve");
+    string fvaBorrowingCurve = params_->get("xva", "fvaBorrowingCurve");
+    Real collateralSpread = parseReal(params_->get("xva", "collateralSpread"));
+
+    Real dimQuantile = 0.99;
+    Size dimHorizonCalendarDays = 14;
+    Size dimRegressionOrder = 0;
+    vector<string> dimRegressors;
+    Real dimScaling = 1.0;
+    Size dimLocalRegressionEvaluations = 0;
+    Real dimLocalRegressionBandwidth = 0.25;
+
+    if (analytics["mva"] || analytics["dim"]) {
+        dimQuantile = parseReal(params_->get("xva", "dimQuantile"));
+        dimHorizonCalendarDays = parseInteger(params_->get("xva", "dimHorizonCalendarDays"));
+        dimRegressionOrder = parseInteger(params_->get("xva", "dimRegressionOrder"));
+        string dimRegressorsString = params_->get("xva", "dimRegressors");
+        dimRegressors = parseListOfValues(dimRegressorsString);
+        dimScaling = parseReal(params_->get("xva", "dimScaling"));
+        dimLocalRegressionEvaluations = parseInteger(params_->get("xva", "dimLocalRegressionEvaluations"));
+        dimLocalRegressionBandwidth = parseReal(params_->get("xva", "dimLocalRegressionBandwidth"));
+    }
+
+    string marketConfiguration = params_->get("markets", "simulation");
+
+    postProcess_ = boost::make_shared<PostProcess>(
+        portfolio_, netting, market_, marketConfiguration, cube_, scenarioData_, analytics, baseCurrency,
+        allocationMethod, marginalAllocationLimit, quantile, calculationType, dvaName, fvaBorrowingCurve,
+        fvaLendingCurve, collateralSpread, dimQuantile, dimHorizonCalendarDays, dimRegressionOrder, dimRegressors,
+        dimLocalRegressionEvaluations, dimLocalRegressionBandwidth, dimScaling);
+}
+
+void OREApp::writeXVAReports() {
+    string outputPath = params_->get("setup", "outputPath");
+    for (auto t : postProcess_->tradeIds()) {
+        ostringstream o;
+        o << outputPath << "/exposure_trade_" << t << ".csv";
+        string tradeExposureFile = o.str();
+        CSVFileReport tradeExposureReport(tradeExposureFile);
+        ReportWriter::writeTradeExposures(tradeExposureReport, postProcess_, t);
+    }
+    for (auto n : postProcess_->nettingSetIds()) {
+        ostringstream o1;
+        o1 << outputPath << "/exposure_nettingset_" << n << ".csv";
+        string nettingSetExposureFile = o1.str();
+        CSVFileReport nettingSetExposureReport(nettingSetExposureFile);
+        ReportWriter::writeNettingSetExposures(nettingSetExposureReport, postProcess_, n);
+
+        ostringstream o2;
+        o2 << outputPath << "/colva_nettingset_" << n << ".csv";
+        string nettingSetColvaFile = o2.str();
+        CSVFileReport nettingSetColvaReport(nettingSetColvaFile);
+        ReportWriter::writeNettingSetColva(nettingSetColvaReport, postProcess_, n);
+    }
+
+    string XvaFile = outputPath + "/xva.csv";
+    CSVFileReport xvaReport(XvaFile);
+    ReportWriter::writeXVA(xvaReport, params_->get("xva", "allocationMethod"), portfolio_, postProcess_);
+
+    string rawCubeOutputFile = params_->get("xva", "rawCubeOutputFile");
+    CubeWriter cw1(outputPath + "/" + rawCubeOutputFile);
+    map<string, string> nettingSetMap = portfolio_->nettingSetMap();
+    cw1.write(cube_, nettingSetMap);
+
+    string netCubeOutputFile = params_->get("xva", "netCubeOutputFile");
+    CubeWriter cw2(outputPath + "/" + netCubeOutputFile);
+    cw2.write(postProcess_->netCube(), nettingSetMap);
+}
+
+void OREApp::writeDIMReport() {
+    string outputPath = params_->get("setup", "outputPath");
+    string dimFile1 = outputPath + "/" + params_->get("xva", "dimEvolutionFile");
+    vector<string> dimFiles2;
+    for (auto f : parseListOfValues(params_->get("xva", "dimRegressionFiles")))
+        dimFiles2.push_back(outputPath + "/" + f);
+    string nettingSet = params_->get("xva", "dimOutputNettingSet");
+    std::vector<Size> dimOutputGridPoints =
+        parseListOfValues<Size>(params_->get("xva", "dimOutputGridPoints"), &parseInteger);
+    postProcess_->exportDimEvolution(dimFile1, nettingSet);
+    postProcess_->exportDimRegression(dimFiles2, nettingSet, dimOutputGridPoints);
 }
 }
 }

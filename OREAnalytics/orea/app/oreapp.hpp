@@ -16,8 +16,8 @@
    FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
  */
 
-/*! \file App/ore.hpp
-  \brief Open Risk Engine setup and analytics choice
+/*! \file orea/app/oreapp.hpp
+  \brief Open Risk Engine App
   \ingroup
  */
 
@@ -34,35 +34,88 @@ using namespace ore::data;
 namespace ore {
 namespace analytics {
 
-class OreApp {
+class OREApp {
 public:
-    OreApp(boost::shared_ptr<Parameters> params) : params_(params) {
-        tab = 40;
+    OREApp(boost::shared_ptr<Parameters> params) : params_(params), cubeDepth_(0) {
+        tab_ = 40;
         string asofString = params_->get("setup", "asofDate");
         asof_ = parseDate(asofString);
         Settings::instance().evaluationDate() = asof_;
     }
+    //! generates XVA reports for a given portfolio and market
     void run();
-    void setupLogFile();
+    //! set up logging
+    void setupLog();
+    //! load market conventions
     void getConventions();
-    TodaysMarketParameters getMarketParameters();
-    boost::shared_ptr<Market> buildMarket(TodaysMarketParameters& marketParams);
+    //! load market parameters
+    void getMarketParameters();
+    //! build today's market
+    void buildMarket();
+    //! build engine factory for a given market
     boost::shared_ptr<EngineFactory> buildFactory(boost::shared_ptr<Market> market);
+    //! build portfolio for a given market
     boost::shared_ptr<Portfolio> buildPortfolio(boost::shared_ptr<EngineFactory> factory);
-    boost::shared_ptr<ScenarioGenerator>
+
+    //! generate NPV cube
+    void generateNPVCube();
+    //! get an instance of an aggregationScenarioData class
+    virtual void getAggregationScenarioData();
+    //! get an instance of a cube class
+    virtual void getEmptyCube();
+    //! build an NPV cube
+    virtual void buildNPVCube();
+    //! load simMarketData
+    boost::shared_ptr<ScenarioSimMarketParameters> getSimMarketData();
+    //! load scenarioGeneratorData
+    boost::shared_ptr<ScenarioGeneratorData> getScenarioGeneratorData();
+    //! build scenarioGenerator
+    virtual boost::shared_ptr<ScenarioGenerator>
     buildScenarioGenerator(boost::shared_ptr<Market> market,
                            boost::shared_ptr<ScenarioSimMarketParameters> simMarketData,
                            boost::shared_ptr<ScenarioGeneratorData> sgd);
-    boost::shared_ptr<ScenarioSimMarketParameters> getSimMarketData();
-    boost::shared_ptr<ScenarioGeneratorData> getScenarioGeneratorData();
-    boost::shared_ptr<EngineFactory> buildSimFactory(boost::shared_ptr<ScenarioSimMarket> simMarket);
 
-    boost::shared_ptr<Conventions> conventions_;
+    //! load in scenarioData
+    virtual void loadScenarioData();
+    //! load in cube
+    virtual void loadCube();
+    //! run postProcessor to generate reports from cube
+    void runPostProcessor();
+
+    //! write out initial (pre-cube) reports
+    void writeInitialReports();
+    //! write out XVA reports
+    void writeXVAReports();
+    //! write out DIM reports
+    void writeDIMReport();
+    //! write out cube
+    void writeCube();
+    //! write out scenarioData
+    void writeScenarioData();
+    //! load in nettingSet data
+    boost::shared_ptr<NettingSetManager> getNettingSetManager();
 
 private:
-    boost::shared_ptr<Parameters> params_;
-    Size tab;
+    Size tab_;
     Date asof_;
+    //! ORE Input parameters
+    boost::shared_ptr<Parameters> params_;
+
+    boost::shared_ptr<Market> market_;
+    boost::shared_ptr<Portfolio> portfolio_;
+    Conventions conventions_;
+    TodaysMarketParameters marketParameters_;
+
+    boost::shared_ptr<ScenarioSimMarket> simMarket_;
+    boost::shared_ptr<Portfolio> simPortfolio_;
+
+    boost::shared_ptr<DateGrid> grid_;
+    Size samples_;
+
+    Size cubeDepth_;
+    boost::shared_ptr<NPVCube> cube_;
+    boost::shared_ptr<AggregationScenarioData> scenarioData_;
+    boost::shared_ptr<PostProcess> postProcess_;
 };
 }
 }

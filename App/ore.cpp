@@ -78,7 +78,7 @@ int main(int argc, char** argv) {
     Parameters params;
     params.fromFile(inputFile);
 
-    OreApp ore(boost::make_shared<Parameters>(params));
+    OREApp ore(boost::make_shared<Parameters>(params));
     ore.run();
 
     return 0;
