@@ -23,8 +23,7 @@
 
 #pragma once
 
-#include <vector>
 #include <map>
+#include <vector>
 
 #include <ored/utilities/xmlutils.hpp>
-
