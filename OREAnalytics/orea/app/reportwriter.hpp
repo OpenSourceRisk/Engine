@@ -28,6 +28,7 @@
 #include <orea/aggregation/postprocess.hpp>
 #include <orea/app/parameters.hpp>
 #include <orea/cube/npvcube.hpp>
+#include <orea/simulation/dategrid.hpp>
 #include <ored/marketdata/market.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
 #include <ored/portfolio/portfolio.hpp>
@@ -40,29 +41,32 @@ namespace analytics {
 
 class ReportWriter {
 public:
+    static void writeNpv(ore::data::Report& report, const std::string& baseCurrency,
+                         boost::shared_ptr<ore::data::Market> market, const std::string& configuration,
+                         boost::shared_ptr<Portfolio> portfolio);
+
+    static void writeCashflow(ore::data::Report& report, boost::shared_ptr<ore::data::Portfolio> portfolio);
+
+    static void writeCurves(ore::data::Report& report, const std::string& configID, const DateGrid& grid,
+                            const TodaysMarketParameters& marketConfig, const boost::shared_ptr<Market>& market);
+
+    static void writeTradeExposures(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
+                                    const std::string& tradeId);
+
+    static void writeNettingSetExposures(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
+                                         const std::string& nettingSetId);
+
+    static void writeNettingSetColva(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
+                                     const std::string& nettingSetId);
+
+    static void writeXVA(ore::data::Report& report, const string& allocationMethod,
+                         boost::shared_ptr<Portfolio> portfolio, boost::shared_ptr<PostProcess> postProcess);
+
+private:
     //! ctor
     ReportWriter(){};
-
-    void writeNpv(const Parameters& params, boost::shared_ptr<ore::data::Market> market,
-                  const std::string& configuration, boost::shared_ptr<Portfolio> portfolio,
-                  boost::shared_ptr<ore::data::Report> report);
-
-    void writeCashflow(boost::shared_ptr<ore::data::Portfolio> portfolio, boost::shared_ptr<ore::data::Report> report);
-
-    void writeCurves(const Parameters& params, const TodaysMarketParameters& marketConfig,
-                     const boost::shared_ptr<Market>& market, boost::shared_ptr<ore::data::Report> report);
-
-    void writeTradeExposures(boost::shared_ptr<PostProcess> postProcess, boost::shared_ptr<ore::data::Report> report,
-                             const std::string& tradeId);
-
-    void writeNettingSetExposures(boost::shared_ptr<PostProcess> postProcess,
-                                  boost::shared_ptr<ore::data::Report> report, const std::string& nettingSetId);
-
-    void writeNettingSetColva(boost::shared_ptr<PostProcess> postProcess, boost::shared_ptr<ore::data::Report> report,
-                              const std::string& nettingSetId);
-
-    void writeXVA(const Parameters& params, boost::shared_ptr<Portfolio> portfolio,
-                  boost::shared_ptr<PostProcess> postProcess, boost::shared_ptr<ore::data::Report> report);
+    ReportWriter(const ReportWriter&);
+    ReportWriter& operator=(const ReportWriter&);
 };
 }
 }

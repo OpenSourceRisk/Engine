@@ -31,15 +31,13 @@ using QuantLib::Date;
 namespace ore {
 namespace analytics {
 
-void ReportWriter::writeNpv(const Parameters& params, boost::shared_ptr<Market> market,
-                            const std::string& configuration, boost::shared_ptr<Portfolio> portfolio,
-                            boost::shared_ptr<Report> report) {
+void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCurrency,
+                            boost::shared_ptr<Market> market, const std::string& configuration,
+                            boost::shared_ptr<Portfolio> portfolio) {
     LOG("portfolio valuation");
-    string baseCurrency = params.get("npv", "baseCurrency");
     DayCounter dc = ActualActual();
     Date today = Settings::instance().evaluationDate();
-    QL_REQUIRE(report, "error opening file ");
-    report->addColumn("TradeId", string())
+    report.addColumn("TradeId", string())
         .addColumn("TradeType", string())
         .addColumn("Maturity", Date())
         .addColumn("MaturityTime", double(), 6)
@@ -54,7 +52,7 @@ void ReportWriter::writeNpv(const Parameters& params, boost::shared_ptr<Market> 
             fx = market->fxSpot(npvCcy + baseCurrency, configuration)->value();
         try {
             Real npv = trade->instrument()->NPV();
-            report->next()
+            report.next()
                 .add(trade->id())
                 .add(trade->tradeType())
                 .add(trade->maturity())
@@ -65,7 +63,7 @@ void ReportWriter::writeNpv(const Parameters& params, boost::shared_ptr<Market> 
                 .add(baseCurrency);
         } catch (std::exception& e) {
             ALOG("Exception during pricing trade " << trade->id() << ": " << e.what());
-            report->next()
+            report.next()
                 .add(trade->id())
                 .add(trade->tradeType())
                 .add(trade->maturity())
@@ -76,15 +74,14 @@ void ReportWriter::writeNpv(const Parameters& params, boost::shared_ptr<Market> 
                 .add("#NA");
         }
     }
-    report->end();
+    report.end();
     LOG("NPV file written");
 }
 
-void ReportWriter::writeCashflow(boost::shared_ptr<Portfolio> portfolio, boost::shared_ptr<Report> report) {
+void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Portfolio> portfolio) {
     Date asof = Settings::instance().evaluationDate();
-    QL_REQUIRE(report, "error opening report");
     LOG("Writing cashflow report for " << asof);
-    report->addColumn("ID", string())
+    report.addColumn("ID", string())
         .addColumn("Type", string())
         .addColumn("LegNo", Size())
         .addColumn("PayDate", Date())
@@ -138,7 +135,7 @@ void ReportWriter::writeCashflow(boost::shared_ptr<Portfolio> portfolio, boost::
                             fixingDate = Null<Date>();
                             fixingValue = Null<Real>();
                         }
-                        report->next()
+                        report.next()
                             .add(trades[k]->id())
                             .add(trades[k]->tradeType())
                             .add(i)
@@ -158,56 +155,52 @@ void ReportWriter::writeCashflow(boost::shared_ptr<Portfolio> portfolio, boost::
             LOG("Exception writing cashflow report : Unkown Exception");
         }
     }
-    report->end();
+    report.end();
     LOG("Cashflow report written");
 }
 
-void ReportWriter::writeCurves(const Parameters& params, const TodaysMarketParameters& marketConfig,
-                               const boost::shared_ptr<Market>& market, boost::shared_ptr<Report> report) {
+void ReportWriter::writeCurves(ore::data::Report& report, const std::string& configID, const DateGrid& grid,
+                               const TodaysMarketParameters& marketConfig, const boost::shared_ptr<Market>& market) {
     LOG("Write yield curve discount factors... ");
 
-    string configID = params.get("curves", "configuration");
     QL_REQUIRE(marketConfig.hasConfiguration(configID), "curve configuration " << configID << " not found");
 
     map<string, string> discountCurves = marketConfig.discountingCurves(configID);
     map<string, string> YieldCurves = marketConfig.yieldCurves(configID);
     map<string, string> indexCurves = marketConfig.indexForwardingCurves(configID);
-    string gridString = params.get("curves", "grid");
-    DateGrid grid(gridString);
 
     vector<Handle<YieldTermStructure>> yieldCurves;
 
-    report->addColumn("Tenor", Period()).addColumn("Date", Date());
+    report.addColumn("Tenor", Period()).addColumn("Date", Date());
 
     for (auto it : discountCurves) {
-        report->addColumn(it.first, double(), 15);
+        report.addColumn(it.first, double(), 15);
         yieldCurves.push_back(market->discountCurve(it.first));
     }
     for (auto it : YieldCurves) {
-        report->addColumn(it.first, double(), 15);
+        report.addColumn(it.first, double(), 15);
         yieldCurves.push_back(market->yieldCurve(it.first));
     }
     for (auto it : indexCurves) {
-        report->addColumn(it.first, double(), 15);
+        report.addColumn(it.first, double(), 15);
         yieldCurves.push_back(market->iborIndex(it.first)->forwardingTermStructure());
     }
 
     // Output the discount factors for each tenor in turn
     for (Size j = 0; j < grid.size(); ++j) {
         Date date = grid[j];
-        report->next().add(grid.tenors()[j]).add(date);
+        report.next().add(grid.tenors()[j]).add(date);
         for (Size i = 0; i < yieldCurves.size(); ++i)
-            report->add(yieldCurves[i]->discount(date));
+            report.add(yieldCurves[i]->discount(date));
     }
-    report->end();
+    report.end();
 }
 
-void ReportWriter::writeTradeExposures(boost::shared_ptr<PostProcess> postProcess, boost::shared_ptr<Report> report,
+void ReportWriter::writeTradeExposures(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
                                        const string& tradeId) {
     const vector<Date> dates = postProcess->cube()->dates();
     Date today = Settings::instance().evaluationDate();
     DayCounter dc = ActualActual();
-    QL_REQUIRE(report, "Error opening report");
     const vector<Real>& epe = postProcess->tradeEPE(tradeId);
     const vector<Real>& ene = postProcess->tradeENE(tradeId);
     const vector<Real>& ee_b = postProcess->tradeEE_B(tradeId);
@@ -215,7 +208,7 @@ void ReportWriter::writeTradeExposures(boost::shared_ptr<PostProcess> postProces
     const vector<Real>& pfe = postProcess->tradePFE(tradeId);
     const vector<Real>& aepe = postProcess->allocatedTradeEPE(tradeId);
     const vector<Real>& aene = postProcess->allocatedTradeENE(tradeId);
-    report->addColumn("TradeId", string())
+    report.addColumn("TradeId", string())
         .addColumn("Date", Date())
         .addColumn("Time", double(), 6)
         .addColumn("EPE", double())
@@ -226,7 +219,7 @@ void ReportWriter::writeTradeExposures(boost::shared_ptr<PostProcess> postProces
         .addColumn("BaselEE", double())
         .addColumn("BaselEEE", double());
 
-    report->next()
+    report.next()
         .add(tradeId)
         .add(today)
         .add(0.0)
@@ -239,7 +232,7 @@ void ReportWriter::writeTradeExposures(boost::shared_ptr<PostProcess> postProces
         .add(eee_b[0]);
     for (Size j = 0; j < dates.size(); ++j) {
         Time time = dc.yearFraction(today, dates[j]);
-        report->next()
+        report.next()
             .add(tradeId)
             .add(dates[j])
             .add(time)
@@ -251,22 +244,21 @@ void ReportWriter::writeTradeExposures(boost::shared_ptr<PostProcess> postProces
             .add(ee_b[j + 1])
             .add(eee_b[j + 1]);
     }
-    report->end();
+    report.end();
 }
 
-void ReportWriter::writeNettingSetExposures(boost::shared_ptr<PostProcess> postProcess,
-                                            boost::shared_ptr<Report> report, const string& nettingSetId) {
+void ReportWriter::writeNettingSetExposures(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
+                                            const string& nettingSetId) {
     const vector<Date> dates = postProcess->cube()->dates();
     Date today = Settings::instance().evaluationDate();
     DayCounter dc = ActualActual();
-    QL_REQUIRE(report, "Error opening report");
     const vector<Real>& epe = postProcess->netEPE(nettingSetId);
     const vector<Real>& ene = postProcess->netENE(nettingSetId);
     const vector<Real>& ee_b = postProcess->netEE_B(nettingSetId);
     const vector<Real>& eee_b = postProcess->netEEE_B(nettingSetId);
     const vector<Real>& pfe = postProcess->netPFE(nettingSetId);
     const vector<Real>& ecb = postProcess->expectedCollateral(nettingSetId);
-    report->addColumn("NettingSet", string())
+    report.addColumn("NettingSet", string())
         .addColumn("Date", Date())
         .addColumn("Time", double(), 6)
         .addColumn("EPE", double(), 2)
@@ -276,7 +268,7 @@ void ReportWriter::writeNettingSetExposures(boost::shared_ptr<PostProcess> postP
         .addColumn("BaselEE", double(), 2)
         .addColumn("BaselEEE", double(), 2);
 
-    report->next()
+    report.next()
         .add(nettingSetId)
         .add(today)
         .add(0.0)
@@ -288,7 +280,7 @@ void ReportWriter::writeNettingSetExposures(boost::shared_ptr<PostProcess> postP
         .add(eee_b[0]);
     for (Size j = 0; j < dates.size(); ++j) {
         Real time = dc.yearFraction(today, dates[j]);
-        report->next()
+        report.next()
             .add(nettingSetId)
             .add(dates[j])
             .add(time)
@@ -299,16 +291,14 @@ void ReportWriter::writeNettingSetExposures(boost::shared_ptr<PostProcess> postP
             .add(ee_b[j + 1])
             .add(eee_b[j + 1]);
     }
-    report->end();
+    report.end();
 }
 
-void ReportWriter::writeXVA(const Parameters& params, boost::shared_ptr<Portfolio> portfolio,
-                            boost::shared_ptr<PostProcess> postProcess, boost::shared_ptr<Report> report) {
-    string allocationMethod = params.get("xva", "allocationMethod");
+void ReportWriter::writeXVA(ore::data::Report& report, const string& allocationMethod,
+                            boost::shared_ptr<Portfolio> portfolio, boost::shared_ptr<PostProcess> postProcess) {
     const vector<Date> dates = postProcess->cube()->dates();
     DayCounter dc = ActualActual();
-    QL_REQUIRE(report, "Error opening report");
-    report->addColumn("TradeId", string())
+    report.addColumn("TradeId", string())
         .addColumn("NettingSetId", string())
         .addColumn("CVA", double(), 2)
         .addColumn("DVA", double(), 2)
@@ -324,7 +314,7 @@ void ReportWriter::writeXVA(const Parameters& params, boost::shared_ptr<Portfoli
         .addColumn("BaselEEPE", double(), 2);
 
     for (auto n : postProcess->nettingSetIds()) {
-        report->next()
+        report.next()
             .add("")
             .add(n)
             .add(postProcess->nettingSetCVA(n))
@@ -345,7 +335,7 @@ void ReportWriter::writeXVA(const Parameters& params, boost::shared_ptr<Portfoli
             string nid = portfolio->trades()[k]->envelope().nettingSetId();
             if (nid != n)
                 continue;
-            report->next()
+            report.next()
                 .add(tid)
                 .add(nid)
                 .add(postProcess->tradeCVA(tid))
@@ -362,22 +352,21 @@ void ReportWriter::writeXVA(const Parameters& params, boost::shared_ptr<Portfoli
                 .add(postProcess->tradeEEPE_B(tid));
         }
     }
-    report->end();
+    report.end();
 }
 
-void ReportWriter::writeNettingSetColva(boost::shared_ptr<PostProcess> postProcess, boost::shared_ptr<Report> report,
+void ReportWriter::writeNettingSetColva(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
                                         const string& nettingSetId) {
     const vector<Date> dates = postProcess->cube()->dates();
     Date today = Settings::instance().evaluationDate();
     DayCounter dc = ActualActual();
-    QL_REQUIRE(report, "Error opening report");
     const vector<Real>& collateral = postProcess->expectedCollateral(nettingSetId);
     const vector<Real>& colvaInc = postProcess->colvaIncrements(nettingSetId);
     const vector<Real>& floorInc = postProcess->collateralFloorIncrements(nettingSetId);
     Real colva = postProcess->nettingSetCOLVA(nettingSetId);
     Real floorValue = postProcess->nettingSetCollateralFloor(nettingSetId);
 
-    report->addColumn("NettingSet", string())
+    report.addColumn("NettingSet", string())
         .addColumn("Date", Date())
         .addColumn("Time", double(), 4)
         .addColumn("CollateralBalance", double(), 4)
@@ -386,7 +375,7 @@ void ReportWriter::writeNettingSetColva(boost::shared_ptr<PostProcess> postProce
         .addColumn("CollateralFloor Increment", double(), 4)
         .addColumn("CollateralFloor", double(), 4);
 
-    report->next()
+    report.next()
         .add(nettingSetId)
         .add(Null<Date>())
         .add(Null<Real>())
@@ -401,7 +390,7 @@ void ReportWriter::writeNettingSetColva(boost::shared_ptr<PostProcess> postProce
         Real time = dc.yearFraction(today, dates[j]);
         colvaSum += colvaInc[j + 1];
         floorSum += floorInc[j + 1];
-        report->next()
+        report.next()
             .add(nettingSetId)
             .add(dates[j])
             .add(time)
@@ -411,7 +400,7 @@ void ReportWriter::writeNettingSetColva(boost::shared_ptr<PostProcess> postProce
             .add(floorInc[j + 1])
             .add(floorSum);
     }
-    report->end();
+    report.end();
 }
 }
 }
