@@ -94,10 +94,8 @@ void OREApp::run() {
          * Build Markets
          */
         cout << setw(tab_) << left << "Market... " << flush;
-
         getMarketParameters();
         buildMarket();
-
         cout << "OK" << endl;
 
         /************************
@@ -114,6 +112,9 @@ void OREApp::run() {
         portfolio_ = buildPortfolio(factory);
         cout << "OK" << endl;
 
+        /******************************
+         * Write initial reports
+         */
         cout << setw(tab_) << left << "Write Reports... " << flush;
         writeInitialReports();
         cout << "OK" << endl;
@@ -140,7 +141,7 @@ void OREApp::run() {
             // We reset this here because the date grid building below depends on it.
             Settings::instance().evaluationDate() = asof_;
 
-            // Use pregenerated cube
+            // Use pre-generated cube
             if (!cube_)
                 loadCube();
 
@@ -148,7 +149,7 @@ void OREApp::run() {
                        "cube x dimension (" << cube_->numIds() << ") does not match portfolio size ("
                                             << portfolio_->size() << ")");
 
-            // Use pregenerared scenarios
+            // Use pre-generared scenarios
             if (!scenarioData_)
                 loadScenarioData();
 
