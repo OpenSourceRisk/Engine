@@ -186,10 +186,12 @@ void NumericLgmNonstandardSwaptionEngine::calculate() const {
 Real NumericLgmNonstandardSwaptionEngine::conditionalSwapValue(Real x, Real t, const Date expiry0) const {
     Schedule fixedSchedule = arguments_.swap->fixedSchedule();
     Schedule floatSchedule = arguments_.swap->floatingSchedule();
-    Size j1 = std::upper_bound(fixedSchedule.dates().begin(), fixedSchedule.dates().end(), expiry0 - 1) -
-              fixedSchedule.dates().begin();
-    Size k1 = std::upper_bound(floatSchedule.dates().begin(), floatSchedule.dates().end(), expiry0 - 1) -
-              floatSchedule.dates().begin();
+    Size j1 = std::upper_bound(arguments_.fixedResetDates.begin(), arguments_.fixedResetDates.end(), expiry0 - 1) -
+              arguments_.fixedResetDates.begin();
+    fixedSchedule.dates().begin();
+    Size k1 =
+        std::upper_bound(arguments_.floatingResetDates.begin(), arguments_.floatingResetDates.end(), expiry0 - 1) -
+        arguments_.floatingResetDates.begin();
 
     iborModelCurve_->move(expiry0, x);
 
