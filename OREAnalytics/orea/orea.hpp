@@ -2,11 +2,13 @@
 /* Add the files to be included into Makefile.am instead. */
 
 #ifdef BOOST_MSVC
-#include <orea/auto_link.hpp>
+#  include <orea/auto_link.hpp>
 #endif
+
 
 #include <orea/aggregation/all.hpp>
 #include <orea/cube/all.hpp>
 #include <orea/engine/all.hpp>
 #include <orea/scenario/all.hpp>
 #include <orea/simulation/all.hpp>
+#include <orea/app/all.hpp>
