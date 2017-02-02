@@ -44,6 +44,8 @@ public:
     }
     //! generates XVA reports for a given portfolio and market
     void run();
+    //! read setup from params_
+    virtual void readSetup();
     //! set up logging
     void setupLog();
     //! load market conventions
@@ -53,16 +55,16 @@ public:
     //! build today's market
     void buildMarket();
     //! build engine factory for a given market
-    boost::shared_ptr<EngineFactory> buildFactory(boost::shared_ptr<Market> market);
+    virtual boost::shared_ptr<EngineFactory> buildFactory(boost::shared_ptr<Market> market);
     //! build portfolio for a given market
     boost::shared_ptr<Portfolio> buildPortfolio(boost::shared_ptr<EngineFactory> factory);
 
     //! generate NPV cube
     void generateNPVCube();
     //! get an instance of an aggregationScenarioData class
-    virtual void getAggregationScenarioData();
+    virtual void initAggregationScenarioData();
     //! get an instance of a cube class
-    virtual void getEmptyCube();
+    virtual void initCube();
     //! build an NPV cube
     virtual void buildNPVCube();
     //! load simMarketData
@@ -93,13 +95,18 @@ public:
     //! write out scenarioData
     void writeScenarioData();
     //! load in nettingSet data
-    boost::shared_ptr<NettingSetManager> getNettingSetManager();
+    boost::shared_ptr<NettingSetManager> initNettingSetManager();
 
 private:
     Size tab_;
     Date asof_;
     //! ORE Input parameters
     boost::shared_ptr<Parameters> params_;
+    bool writeInitialReports_;
+    bool simulate_;
+    bool buildSimMarket_;
+    bool xva_;
+    bool writeDIMReport_;
 
     boost::shared_ptr<Market> market_;
     boost::shared_ptr<Portfolio> portfolio_;

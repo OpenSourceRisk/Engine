@@ -16,9 +16,6 @@
    FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
  */
 
-#include <boost/algorithm/string.hpp>
-#include <boost/timer.hpp>
-
 #ifdef BOOST_MSVC
 // disable warning C4503: '__LINE__Var': decorated name length exceeded, name was truncated
 // This pragma statement needs to be at the top of the file - lower and it will not work:
@@ -29,15 +26,9 @@
 
 #include <iostream>
 
-#include <boost/filesystem.hpp>
-
 #include <orea/orea.hpp>
 #include <ored/ored.hpp>
-#include <ql/cashflows/floatingratecoupon.hpp>
-#include <ql/time/calendars/all.hpp>
-#include <ql/time/daycounters/all.hpp>
 
-#include "ore.hpp"
 #ifdef BOOST_MSVC
 #include <orea/auto_link.hpp>
 #include <ored/auto_link.hpp>
@@ -57,6 +48,7 @@
 #define BOOST_LIB_NAME boost_system
 #include <boost/config/auto_link.hpp>
 #endif
+
 
 using namespace std;
 using namespace ore::data;

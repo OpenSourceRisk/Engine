@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2016 Quaternion Risk Management Ltd
+   Copyright (C) 2017 Quaternion Risk Management Ltd
    All rights reserved.
 
    This file is part of ORE, a free-software/open-source library
@@ -39,26 +39,6 @@
 
 #include <orea/app/oreapp.hpp>
 
-#ifdef BOOST_MSVC
-#include <orea/auto_link.hpp>
-#include <ored/auto_link.hpp>
-#include <ql/auto_link.hpp>
-#include <qle/auto_link.hpp>
-// Find the name of the correct boost library with which to link.
-#define BOOST_LIB_NAME boost_regex
-#include <boost/config/auto_link.hpp>
-#define BOOST_LIB_NAME boost_serialization
-#include <boost/config/auto_link.hpp>
-#define BOOST_LIB_NAME boost_date_time
-#include <boost/config/auto_link.hpp>
-#define BOOST_LIB_NAME boost_regex
-#include <boost/config/auto_link.hpp>
-#define BOOST_LIB_NAME boost_filesystem
-#include <boost/config/auto_link.hpp>
-#define BOOST_LIB_NAME boost_system
-#include <boost/config/auto_link.hpp>
-#endif
-
 using namespace std;
 using namespace ore::data;
 using namespace ore::analytics;
@@ -71,17 +51,10 @@ void OREApp::run() {
     boost::timer timer;
 
     try {
-        std::cout << "ORE starting" << std::endl;
         setupLog();
-
+        std::cout << "ORE starting" << std::endl;
         LOG("ORE starting");
-        params_->log();
-
-        if (params_->has("setup", "observationModel")) {
-            string om = params_->get("setup", "observationModel");
-            ObservationMode::instance().setMode(om);
-            LOG("Observation Mode is " << om);
-        }
+        readSetup();
 
         /*************
          * Load Conventions
@@ -124,7 +97,7 @@ void OREApp::run() {
          */
 
         fflush(stdout);
-        if (params_->hasGroup("simulation") && params_->get("simulation", "active") == "Y") {
+        if (simulate_) {
             generateNPVCube();
         } else {
             LOG("skip simulation");
@@ -136,7 +109,7 @@ void OREApp::run() {
          * Aggregation and XVA Reports
          */
         cout << setw(tab_) << left << "Aggregation and XVA Reports... " << flush;
-        if (params_->hasGroup("xva") && params_->get("xva", "active") == "Y") {
+        if (xva_) {
 
             // We reset this here because the date grid building below depends on it.
             Settings::instance().evaluationDate() = asof_;
@@ -159,13 +132,10 @@ void OREApp::run() {
                        "scenario sample size does not match cube sample size");
 
             runPostProcessor();
+            cout << "OK" << endl;
+            cout << setw(tab_) << left << "Write Reports... " << flush;
             writeXVAReports();
-
-            if (params_->has("xva", "dim")) {
-                if (parseBool(params_->get("xva", "dim")))
-                    writeDIMReport();
-            }
-
+            if (writeDIMReport_) writeDIMReport();
             cout << "OK" << endl;
         } else {
             LOG("skip XVA reports");
@@ -181,6 +151,23 @@ void OREApp::run() {
     cout << "ORE done." << endl;
 
     LOG("ORE done.");
+}
+
+void OREApp::readSetup() {
+
+        params_->log();
+
+        if (params_->has("setup", "observationModel")) {
+            string om = params_->get("setup", "observationModel");
+            ObservationMode::instance().setMode(om);
+            LOG("Observation Mode is " << om);
+        }
+        
+        writeInitialReports_ = true;
+        simulate_ = (params_->hasGroup("simulation") && params_->get("simulation", "active") == "Y") ? true : false;
+        buildSimMarket_ = true;
+        xva_ = (params_->hasGroup("xva") && params_->get("xva", "active") == "Y") ? true : false;
+        writeDIMReport_ =  (params_->has("xva", "dim") && parseBool(params_->get("xva", "dim")) ) ? true : false;
 }
 
 void OREApp::setupLog() {
@@ -358,11 +345,11 @@ void OREApp::writeInitialReports() {
     }
 }
 
-void OREApp::getAggregationScenarioData() {
+void OREApp::initAggregationScenarioData() {
     scenarioData_ = boost::make_shared<InMemoryAggregationScenarioData>(grid_->size(), samples_);
 }
 
-void OREApp::getEmptyCube() {
+void OREApp::initCube() {
     if (cubeDepth_ == 1)
         cube_ = boost::make_shared<SinglePrecisionInMemoryCube>(asof_, simPortfolio_->ids(), grid_->dates(), samples_);
     else if (cubeDepth_ == 2)
@@ -404,15 +391,17 @@ void OREApp::generateNPVCube() {
     samples_ = sgd->samples();
     boost::shared_ptr<ScenarioGenerator> sg = buildScenarioGenerator(market_, simMarketData, sgd);
 
-    LOG("Build Simulation Market");
-    simMarket_ = boost::make_shared<ScenarioSimMarket>(sg, market_, simMarketData, conventions_,
+    if( buildSimMarket_) {
+        LOG("Build Simulation Market");
+        simMarket_ = boost::make_shared<ScenarioSimMarket>(sg, market_, simMarketData, conventions_,
                                                        params_->get("markets", "simulation"));
-    boost::shared_ptr<EngineFactory> simFactory = buildFactory(simMarket_);
+        boost::shared_ptr<EngineFactory> simFactory = buildFactory(simMarket_);
 
-    LOG("Build portfolio linked to sim market");
-    simPortfolio_ = buildPortfolio(simFactory);
-    QL_REQUIRE(simPortfolio_->size() == portfolio_->size(), "portfolio size mismatch, check simulation market setup");
-    cout << "OK" << endl;
+        LOG("Build portfolio linked to sim market");
+        simPortfolio_ = buildPortfolio(simFactory);
+        QL_REQUIRE(simPortfolio_->size() == portfolio_->size(), "portfolio size mismatch, check simulation market setup");
+        cout << "OK" << endl;
+    }
 
     if (params_->has("simulation", "storeFlows") && params_->get("simulation", "storeFlows") == "Y")
         cubeDepth_ = 2; // NPV and FLOW
@@ -423,12 +412,12 @@ void OREApp::generateNPVCube() {
     o << "Aggregation Scenario Data " << grid_->size() << " x " << samples_ << "... ";
     cout << setw(tab_) << o.str() << flush;
 
-    getAggregationScenarioData();
+    initAggregationScenarioData();
     // Set AggregationScenarioData
     simMarket_->aggregationScenarioData() = scenarioData_;
     cout << "OK" << endl;
 
-    getEmptyCube();
+    initCube();
     buildNPVCube();
 }
 
@@ -480,7 +469,7 @@ void OREApp::loadCube() {
     LOG("Cube loading done");
 }
 
-boost::shared_ptr<NettingSetManager> OREApp::getNettingSetManager() {
+boost::shared_ptr<NettingSetManager> OREApp::initNettingSetManager() {
     string inputPath = params_->get("setup", "inputPath");
     string csaFile = inputPath + "/" + params_->get("xva", "csaFile");
     boost::shared_ptr<NettingSetManager> netting = boost::make_shared<NettingSetManager>();
@@ -489,7 +478,7 @@ boost::shared_ptr<NettingSetManager> OREApp::getNettingSetManager() {
 }
 
 void OREApp::runPostProcessor() {
-    boost::shared_ptr<NettingSetManager> netting = getNettingSetManager();
+    boost::shared_ptr<NettingSetManager> netting = initNettingSetManager();
     map<string, bool> analytics;
     analytics["exerciseNextBreak"] = parseBool(params_->get("xva", "exerciseNextBreak"));
     analytics["exposureProfiles"] = parseBool(params_->get("xva", "exposureProfiles"));
