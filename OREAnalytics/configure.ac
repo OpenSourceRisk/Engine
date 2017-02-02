@@ -132,6 +132,7 @@ AC_CONFIG_FILES([
     orea/Makefile
     orea/aggregation/Makefile
     orea/cube/Makefile
+    orea/app/Makefile
     orea/engine/Makefile
     orea/scenario/Makefile
     orea/simulation/Makefile
