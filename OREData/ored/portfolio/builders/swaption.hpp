@@ -26,6 +26,9 @@
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/utilities/log.hpp>
+
+#include <qle/models/lgm.hpp>
+
 #include <boost/make_shared.hpp>
 
 namespace ore {
