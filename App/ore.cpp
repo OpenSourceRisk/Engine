@@ -1,20 +1,20 @@
 /*
-   Copyright (C) 2016 Quaternion Risk Management Ltd
-   All rights reserved.
+ Copyright (C) 2016 Quaternion Risk Management Ltd
+ All rights reserved.
 
-   This file is part of ORE, a free-software/open-source library
-   for transparent pricing and risk analysis - http://opensourcerisk.org
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
 
-   ORE is free software: you can redistribute it and/or modify it
-   under the terms of the Modified BSD License.  You should have received a
-   copy of the license along with this program.
-   The license is also available online at <http://opensourcerisk.org>
+ ORE is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
 
-   This program is distributed on the basis that it will form a useful
-   contribution to risk analytics and model standardisation, but WITHOUT
-   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-   FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
- */
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
+*/
 
 #ifdef BOOST_MSVC
 // disable warning C4503: '__LINE__Var': decorated name length exceeded, name was truncated
@@ -26,8 +26,7 @@
 
 #include <iostream>
 
-#include <orea/orea.hpp>
-#include <ored/ored.hpp>
+#include <orea/app/oreapp.hpp>
 
 #ifdef BOOST_MSVC
 #include <orea/auto_link.hpp>
@@ -67,10 +66,10 @@ int main(int argc, char** argv) {
     }
 
     string inputFile(argv[1]);
-    Parameters params;
-    params.fromFile(inputFile);
 
-    OREApp ore(boost::make_shared<Parameters>(params));
+    boost::shared_ptr<Parameters> params = boost::make_shared<Parameters>();
+    params->fromFile(inputFile);
+    OREApp ore(params);
     ore.run();
 
     return 0;
