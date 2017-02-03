@@ -262,7 +262,8 @@
       <Filter>utilities</Filter>
     </ClInclude>
     <ClInclude Include="ored\portfolio\builders\bond.hpp" />
-    <ClInclude Include="ored\marketdata\bondspread.hpp">
+    <ClInclude Include="ored\portfolio\bond.hpp" />
+    <ClInclude Include="ored\marketdata\securityspread.hpp">
       <Filter>marketdata</Filter>
     </ClInclude>
   </ItemGroup>
@@ -462,7 +463,8 @@
     <ClCompile Include="ored\utilities\to_string.cpp">
       <Filter>utilities</Filter>
     </ClCompile>
-    <ClCompile Include="ored\marketdata\bondspread.cpp">
+    <ClCompile Include="ored\portfolio\bond.cpp" />
+    <ClCompile Include="ored\marketdata\securityspread.cpp">
       <Filter>marketdata</Filter>
     </ClCompile>
   </ItemGroup>

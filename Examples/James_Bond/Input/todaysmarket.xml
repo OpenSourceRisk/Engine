@@ -5,11 +5,11 @@
     <YieldCurvesId>default</YieldCurvesId>
   </Configuration>
   <YieldCurves id="default">
-    <YieldCurve name="BANK_EUR_LEND">Yield/EUR/TESTSPREAD</YieldCurve>
-    <YieldCurve name="BANK_EUR_BORROW">Yield/EUR/TESTSPREAD</YieldCurve>
+    <YieldCurve name="BANK_EUR_LEND">Yield/EUR/EUR6M</YieldCurve>
+    <YieldCurve name="BANK_EUR_BORROW">Yield/EUR/GBP1D</YieldCurve>
   </YieldCurves>
   <DiscountingCurves id="default">
-    <DiscountingCurve currency="EUR">Yield/EUR/TESTSPREAD</DiscountingCurve>
+    <DiscountingCurve currency="EUR">Yield/EUR/EUR6M</DiscountingCurve>
     <DiscountingCurve currency="GBP">Yield/GBP/GBP1D</DiscountingCurve>
   </DiscountingCurves>
   <!-- index forwarding curve definition -->
@@ -34,12 +34,9 @@
       <Discounting>GBP-SONIA</Discounting>
     </SwapIndex>
   </SwapIndexCurves>
-  <SpreadCurves id="default">
-	<SpreadCurve name="TESTBONDSPREADCURVE">Yield/EUR/TESTSPREAD</SpreadCurve>
-  </SpreadCurves>
-  <BondSpreads id="default">
-	<BondSpread name="TESTBONDSPREAD">BondSpread/TESTBOND</BondSpread>
-  </BondSpreads>
+  <SecuritySpreads id="default">
+	<SecuritySpread name="TESTBONDSPREAD">SecuritySpread/TESTBOND</SecuritySpread>
+  </SecuritySpreads>
   <!-- fx spot definition -->
   <FxSpots id="default">
     <FxSpot pair="EURGBP">FX/EUR/GBP</FxSpot>

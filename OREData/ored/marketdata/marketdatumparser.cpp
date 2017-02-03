@@ -74,6 +74,7 @@ static MarketDatum::QuoteType parseQuoteType(const string& s) {
         {"RATE_NVOL", MarketDatum::QuoteType::RATE_NVOL},
         {"RATE_SLNVOL", MarketDatum::QuoteType::RATE_SLNVOL},
         {"SHIFT", MarketDatum::QuoteType::SHIFT},
+        {"SECURITY_SPREAD", MarketDatum::QuoteType::SECURITY_SPREAD},
     };
 
     if (s == "RATE_GVOL")
@@ -283,7 +284,7 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
     case MarketDatum::InstrumentType::BOND: {
         QL_REQUIRE(tokens.size() == 3, "3 tokens expected in " << datumName);
         const string& securityID = tokens[2];
-        return boost::make_shared<BondSpreadQuote>(value, asof, datumName, securityID);
+        return boost::make_shared<SecuritySpreadQuote>(value, asof, datumName, securityID);
     }
 
     default:

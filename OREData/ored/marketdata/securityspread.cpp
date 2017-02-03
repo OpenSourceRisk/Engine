@@ -21,20 +21,20 @@
     \ingroup
 */
 
-#include <ored/marketdata/bondspread.hpp>
+#include <ored/marketdata/securityspread.hpp>
 #include <ored/marketdata/marketdatum.hpp>
 
 namespace ore {
 namespace data {
 
-BondSpread::BondSpread(const Date& asof, BondSpreadSpec spec, const Loader& loader) {
+SecuritySpread::SecuritySpread(const Date& asof, SecuritySpreadSpec spec, const Loader& loader) {
 
     for (auto& md : loader.loadQuotes(asof)) {
 
         if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::BOND) {
 
-            boost::shared_ptr<BondSpreadQuote> q = boost::dynamic_pointer_cast<BondSpreadQuote>(md);
-            QL_REQUIRE(q, "Failed to cast " << md->name() << " to BondSpreadQuote");
+            boost::shared_ptr<SecuritySpreadQuote> q = boost::dynamic_pointer_cast<SecuritySpreadQuote>(md);
+            QL_REQUIRE(q, "Failed to cast " << md->name() << " to SecuritySpreadQuote");
             if (q->securityID() == spec.securityID()) {
                 spread_ = q->quote();
                 return;

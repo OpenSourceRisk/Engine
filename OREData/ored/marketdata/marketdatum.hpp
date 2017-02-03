@@ -94,7 +94,8 @@ public:
         RATE_LNVOL,
         RATE_NVOL,
         RATE_SLNVOL,
-        SHIFT
+        SHIFT,
+        SECURITY_SPREAD
     };
 
     //! Constructor
@@ -707,10 +708,10 @@ This class holds single market points of type
 - BOND SPREAD
 \ingroup marketdata
 */
-class BondSpreadQuote : public MarketDatum {
+class SecuritySpreadQuote : public MarketDatum {
 public:
     //! Constructor
-    BondSpreadQuote(Real value, Date asofDate, const string& name, const string& securityID)
+    SecuritySpreadQuote(Real value, Date asofDate, const string& name, const string& securityID)
         : MarketDatum(value, asofDate, name, QuoteType::YIELD_SPREAD, InstrumentType::BOND),
         securityID_(securityID) {}
 

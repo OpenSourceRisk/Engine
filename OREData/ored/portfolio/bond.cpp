@@ -1,30 +1,31 @@
-/*
-Copyright (C) 2016 Quaternion Risk Management Ltd
-All rights reserved.
+ /*
+ Copyright (C) 2016 Quaternion Risk Management Ltd
+ All rights reserved.
 
-This file is part of ORE, a free-software/open-source library
-for transparent pricing and risk analysis - http://opensourcerisk.org
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
 
-ORE is free software: you can redistribute it and/or modify it
-under the terms of the Modified BSD License.  You should have received a
-copy of the license along with this program.
-The license is also available online at <http://opensourcerisk.org>
+ ORE is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
 
-This program is distributed on the basis that it will form a useful
-contribution to risk analytics and model standardisation, but WITHOUT
-ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
-//#include <ored/portfolio/builders/bond.hpp>
+
 #include <ored/portfolio/swap.hpp>
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/bond.hpp>
+#include <ored/portfolio/builders/bond.hpp>
 #include <ql/instruments/bond.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/log.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
 #include <ored/utilities/indexparser.hpp>
-
+#include <boost/lexical_cast.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -34,7 +35,7 @@ namespace ore {
 namespace data {
 
 void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
-    DLOG("Swap::build() called for trade " << id());
+    DLOG("Bond::build() called for trade " << id());
 
     const boost::shared_ptr<Market> market = engineFactory->market();
     
@@ -45,7 +46,7 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     Date issueDate = parseDate(issueDate_);
     Calendar calendar = parseCalendar(calendar_);
-    Natural settlementDays;
+    Natural settlementDays = boost::lexical_cast<Natural>(settlementDays_);
 
     Leg leg;
     if (coupons_.legType() == "Fixed")
@@ -65,7 +66,7 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     //ADD IN BUILDER WHEN READY - follow swap example
     boost::shared_ptr<BondEngineBuilder> bondBuilder = boost::dynamic_pointer_cast<BondEngineBuilder>(builder);
     QL_REQUIRE(bondBuilder, "No Builder found for Bond" << id());
-    bond->setPricingEngine(bondBuilder->engine(currency));
+    bond->setPricingEngine(bondBuilder->engine(currency, "Security1"));
     DLOG("Bond::build(): Bond NPV = " << bond->NPV()); 
     instrument_.reset(new VanillaInstrument(bond)); 
 
@@ -74,8 +75,6 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     Date d = leg.back()->date();
     if (d > maturity_)
         maturity_ = d;
-
-
 }
 
 void Bond::fromXML(XMLNode* node) {
@@ -100,11 +99,5 @@ XMLNode* Bond::toXML(XMLDocument& doc) {
 
 }
 
-
 }
 }
-
-
-
-
-

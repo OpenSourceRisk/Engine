@@ -58,7 +58,7 @@ public:
         CrossCcyBasis,
         CDS,
         SwapIndex,
-        BondSpread
+        SecuritySpread
     };
 
     //! Default destructor
@@ -747,15 +747,15 @@ private:
 /*!
 \ingroup marketdata
 */
-class BondSpreadRateConvention : public Convention {
+class SecuritySpreadConvention : public Convention {
 public:
     //! \name Constructors
     //@{
     //! Default constructor
-    BondSpreadRateConvention() {}
-    BondSpreadRateConvention(const string& id, const string& dayCounter, const string& compounding,
+    SecuritySpreadConvention() {}
+    SecuritySpreadConvention(const string& id, const string& dayCounter, const string& compounding,
         const string& compoundingFrequency);
-    BondSpreadRateConvention(const string& id, const string& dayCounter, const string& tenorCalendar,
+    SecuritySpreadConvention(const string& id, const string& dayCounter, const string& tenorCalendar,
         const string& compounding = "Continuous", const string& compoundingFrequency = "Annual",
         const string& spotLag = "", const string& spotCalendar = "", const string& rollConvention = "",
         const string& eom = "");

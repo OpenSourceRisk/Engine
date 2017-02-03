@@ -35,7 +35,7 @@ static CurveSpec::CurveType parseCurveSpecType(const string& s) {
                                                   {"FX", CurveSpec::CurveType::FX},
                                                   {"FXVolatility", CurveSpec::CurveType::FXVolatility},
                                                   {"Default", CurveSpec::CurveType::Default},
-                                                  {"BondSpread", CurveSpec::CurveType::BondSpread}};
+                                                  {"SecuritySpread", CurveSpec::CurveType::SecuritySpread}};
 
     auto it = b.find(s);
     if (it != b.end()) {
@@ -119,13 +119,13 @@ boost::shared_ptr<CurveSpec> parseCurveSpec(const string& s) {
         return boost::make_shared<CapFloorVolatilityCurveSpec>(ccy, curveConfigID);
     }
 
-    case CurveSpec::CurveType::BondSpread: {
-        // BondSpread/ISIN
+    case CurveSpec::CurveType::SecuritySpread: {
+        // SecuritySpread/ISIN
         QL_REQUIRE(tokens.size() == 2, "Unexpected number"
-            " of tokens in Bond Spread spec "
+            " of tokens in Security Spread spec "
             << s);
         const string& securityID = tokens[1];
-        return boost::make_shared<BondSpreadSpec>(securityID);
+        return boost::make_shared<SecuritySpreadSpec>(securityID);
     }
 
 

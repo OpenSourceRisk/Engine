@@ -34,7 +34,7 @@ namespace testsuite {
 */
 class BondTest {
 public:
-    //! Test CMS Swap pricing
+    //! Test Bond pricing
     static void testBondPrice();
     static boost::unit_test_framework::test_suite* suite();
 };

@@ -20,6 +20,7 @@
 #include <test/bond.hpp>
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/portfolio/envelope.hpp>
+#include <ored/portfolio/bond.hpp>
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/builders/bond.hpp>
 #include <ored/portfolio/schedule.hpp>
@@ -30,6 +31,7 @@
 #include <ql/termstructures/volatility/swaption/swaptionconstantvol.hpp>
 #include <boost/make_shared.hpp>
 #include <ored/utilities/indexparser.hpp>
+#include <ql/termstructures/credit/flathazardrate.hpp>
 
 #include <iostream>
 
@@ -50,6 +52,9 @@ class TestMarket : public MarketImpl {
             asof_ = Date(3, Feb, 2016);
             // build discount
             discountCurves_[make_pair(Market::defaultConfiguration, "EUR")] = flatRateYts(0.02);
+            defaultCurves_[make_pair(Market::defaultConfiguration, "Security1")] = flatRateDcs(0.0);
+            recoveryRates_[make_pair(Market::defaultConfiguration, "Security1")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.00));
+            securitySpreads_[make_pair(Market::defaultConfiguration, "Security1")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.00));
         }
 
     private:
@@ -57,6 +62,11 @@ class TestMarket : public MarketImpl {
             boost::shared_ptr<YieldTermStructure> yts(new FlatForward(0, NullCalendar(), forward, ActualActual()));
             return Handle<YieldTermStructure>(yts);
         }
+        Handle<DefaultProbabilityTermStructure> flatRateDcs(Volatility forward) {
+            boost::shared_ptr<DefaultProbabilityTermStructure> dcs(new FlatHazardRate(asof_, forward, ActualActual()));
+            return Handle<DefaultProbabilityTermStructure>(dcs);
+        }
+
 };
 
 struct CommonVars {
@@ -65,6 +75,7 @@ struct CommonVars {
     bool isPayer;
     string start;
     string end;
+    string issue;
     string fixtenor;
     Calendar cal;
     string calStr;
@@ -73,15 +84,14 @@ struct CommonVars {
     Size days;
     string fixDC;
     Real fixedRate;
-    string index;
-    int fixingdays;
+    string settledays;
     bool isinarrears;
     double notional;
     vector<double> notionals;
     vector<double> spread;
 
     // utilities
-    boost::shared_ptr<Bond> makeBond() {
+    boost::shared_ptr<ore::data::Bond> makeBond() {
         ScheduleData fixedSchedule(ScheduleRules(start, end, fixtenor, calStr, conv, conv, rule));
 
         // build CMSSwap
@@ -90,8 +100,8 @@ struct CommonVars {
 
         Envelope env("CP1");
 
-        boost::shared_ptr<Bond> swap(new Bond(env, fixedLegData));
-        return swap;
+        boost::shared_ptr<ore::data::Bond> bond(new ore::data::Bond(env, settledays, calStr, issue, fixedLegData));
+        return bond;
     }
 
     CommonVars() {
@@ -99,6 +109,7 @@ struct CommonVars {
         isPayer = false;
         start = "20160301";
         end = "20360301";
+        issue = "20160101";
         fixtenor = "1Y";
         cal = TARGET();
         calStr = "TARGET";
@@ -106,8 +117,7 @@ struct CommonVars {
         rule = "Forward";
         fixDC = "ACT/360";
         fixedRate = 0.0;
-        index = "EUR-CMS-30Y";
-        fixingdays = 2;
+        settledays = "2";
         isinarrears = false;
         notional = 10000000;
         notionals.push_back(10000000);
@@ -129,6 +139,18 @@ void BondTest::testBondPrice() {
     Settings::instance().evaluationDate() = market->asofDate();
 
     CommonVars vars;
+    boost::shared_ptr<ore::data::Bond> bond = vars.makeBond();
+
+    // Build and price
+    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+    engineData->model("Bond") = "DiscountedCashflows";
+    engineData->engine("Bond") = "DiscountingRiskyBondEngine";
+
+    boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+
+    bond->build(engineFactory);
+
+    Real npv = bond->instrument()->NPV();
 }
 
 test_suite* BondTest::suite() {

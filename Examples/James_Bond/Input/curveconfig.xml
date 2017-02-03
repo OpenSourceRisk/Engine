@@ -40,23 +40,6 @@
       <YieldCurveDayCounter>A360</YieldCurveDayCounter>
     </YieldCurve>
     <YieldCurve>
-      <CurveId>TESTSPREAD</CurveId>
-      <CurveDescription>Testing Spread Curve</CurveDescription>
-      <Currency>EUR</Currency>
-      <DiscountCurve />
-      <Segments>
-        <ZeroSpread>
-          <Type>Zero Spread</Type>
-          <Quotes>
-            <Quote>ZERO/YIELD_SPREAD/EUR/TESTSPREAD/A360/1D</Quote>
-            <Quote>ZERO/YIELD_SPREAD/EUR/TESTSPREAD/A360/30Y</Quote>
-          </Quotes>
-		  <ReferenceCurve>EUR1D</ReferenceCurve>
-          <Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
-        </ZeroSpread>
-      </Segments>
-    </YieldCurve>
-    <YieldCurve>
       <CurveId>GBP1D</CurveId>
       <CurveDescription />
       <Currency>GBP</Currency>
@@ -87,25 +70,6 @@
       </Segments>
     </YieldCurve>
   </YieldCurves>
-  <SpreadCurves>
-    <SpreadCurve>
-      <CurveId>TESTSPREAD</CurveId>
-      <CurveDescription>Testing Spread Curve</CurveDescription>
-      <Currency>EUR</Currency>
-      <DiscountCurve />
-      <Segments>
-        <ZeroSpread>
-          <Type>Zero Spread</Type>
-          <Quotes>
-            <Quote>ZERO/YIELD_SPREAD/EUR/TESTSPREAD/A360/1D</Quote>
-            <Quote>ZERO/YIELD_SPREAD/EUR/TESTSPREAD/A360/30Y</Quote>
-          </Quotes>
-		  <ReferenceCurve>EUR1D</ReferenceCurve>
-          <Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
-        </ZeroSpread>
-      </Segments>
-    </SpreadCurve>
-  </SpreadCurves>
   <FXVolatilities>    
     <FXVolatility>
       <CurveId>EURGBP</CurveId>

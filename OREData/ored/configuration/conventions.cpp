@@ -678,24 +678,24 @@ XMLNode* CdsConvention::toXML(XMLDocument& doc) {
     return node;
 }
 
-BondSpreadRateConvention::BondSpreadRateConvention(const string& id, const string& dayCounter, const string& compounding,
+SecuritySpreadConvention::SecuritySpreadConvention(const string& id, const string& dayCounter, const string& compounding,
     const string& compoundingFrequency)
-    : Convention(id, Type::BondSpread), tenorBased_(false), strDayCounter_(dayCounter), strCompounding_(compounding),
+    : Convention(id, Type::SecuritySpread), tenorBased_(false), strDayCounter_(dayCounter), strCompounding_(compounding),
     strCompoundingFrequency_(compoundingFrequency) {
     build();
 }
 
-BondSpreadRateConvention::BondSpreadRateConvention(const string& id, const string& dayCounter, const string& tenorCalendar,
+SecuritySpreadConvention::SecuritySpreadConvention(const string& id, const string& dayCounter, const string& tenorCalendar,
     const string& compounding, const string& compoundingFrequency,
     const string& spotLag, const string& spotCalendar, const string& rollConvention,
     const string& eom)
-    : Convention(id, Type::BondSpread), tenorBased_(true), strDayCounter_(dayCounter), strTenorCalendar_(tenorCalendar),
+    : Convention(id, Type::SecuritySpread), tenorBased_(true), strDayCounter_(dayCounter), strTenorCalendar_(tenorCalendar),
     strCompounding_(compounding), strCompoundingFrequency_(compoundingFrequency), strSpotLag_(spotLag),
     strSpotCalendar_(spotCalendar), strRollConvention_(rollConvention), strEom_(eom) {
     build();
 }
 
-void BondSpreadRateConvention::build() {
+void SecuritySpreadConvention::build() {
     dayCounter_ = parseDayCounter(strDayCounter_);
     compounding_ = strCompounding_.empty() ? Continuous : parseCompounding(strCompounding_);
     compoundingFrequency_ = strCompoundingFrequency_.empty() ? Annual : parseFrequency(strCompoundingFrequency_);
@@ -708,10 +708,10 @@ void BondSpreadRateConvention::build() {
     }
 }
 
-void BondSpreadRateConvention::fromXML(XMLNode* node) {
+void SecuritySpreadConvention::fromXML(XMLNode* node) {
 
     XMLUtils::checkNode(node, "BondSpread");
-    type_ = Type::BondSpread;
+    type_ = Type::SecuritySpread;
     id_ = XMLUtils::getChildValue(node, "Id", true);
     tenorBased_ = XMLUtils::getChildValueAsBool(node, "TenorBased", true);
 
@@ -729,7 +729,7 @@ void BondSpreadRateConvention::fromXML(XMLNode* node) {
     build();
 }
 
-XMLNode* BondSpreadRateConvention::toXML(XMLDocument& doc) {
+XMLNode* SecuritySpreadConvention::toXML(XMLDocument& doc) {
 
     XMLNode* node = doc.allocNode("BondSpread");
     XMLUtils::addChild(doc, node, "Id", id_);

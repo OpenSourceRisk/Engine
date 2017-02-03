@@ -35,10 +35,10 @@ namespace data {
 /*!
   \ingroup marketdata
 */
-class BondSpread {
+class SecuritySpread {
 public:
     //! Constructor
-    BondSpread(const Date& asof, BondSpreadSpec spec, const Loader& loader);
+    SecuritySpread(const Date& asof, SecuritySpreadSpec spec, const Loader& loader);
 
     //! Inspector
     Handle<Quote> spread() const { return spread_; }

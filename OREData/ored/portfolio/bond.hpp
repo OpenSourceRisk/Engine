@@ -20,7 +20,6 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 
 #include <ored/portfolio/trade.hpp>
 #include <ored/portfolio/legdata.hpp>
-#include <ored/portfolio/swap.hpp>
 
 namespace ore{
 namespace data{
