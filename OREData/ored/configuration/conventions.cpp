@@ -1,4 +1,4 @@
-ﬁ/*
+/*
  Copyright (C) 2016 Quaternion Risk Management Ltd
  All rights reserved.
 
