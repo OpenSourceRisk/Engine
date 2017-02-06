@@ -19,7 +19,10 @@
 #include <ored/marketdata/inflationcurve.hpp>
 #include <ored/utilities/log.hpp>
 
+#include <qle/indexes/yoyinflationindexwrapper.hpp>
+
 #include <ql/termstructures/inflation/piecewisezeroinflationcurve.hpp>
+#include <ql/termstructures/inflation/piecewiseyoyinflationcurve.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 
 #include <algorithm>
@@ -43,9 +46,6 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
             boost::dynamic_pointer_cast<InflationSwapConvention>(conventions.get(config->conventions()));
 
         QL_REQUIRE(conv != nullptr, "convention " << config->conventions() << " could not be found.");
-
-        QL_REQUIRE(config->type() == InflationCurveConfig::Type::ZC,
-                   "Only type ZC is supported for inflation curves currently");
 
         Handle<YieldTermStructure> nominalTs;
         auto it = yieldCurves.find(config->nominalTermStructure());
@@ -71,15 +71,22 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                                             config->type() == InflationCurveConfig::Type::YY))) {
 
                 boost::shared_ptr<ZcInflationSwapQuote> q = boost::dynamic_pointer_cast<ZcInflationSwapQuote>(md);
-
                 if (q != NULL && q->index() == spec.index()) {
-
                     auto it = std::find(strQuotes.begin(), strQuotes.end(), q->name());
-
                     if (it != strQuotes.end()) {
                         QL_REQUIRE(quotes[it - strQuotes.begin()].empty(), "duplicate quote " << q->name());
                         quotes[it - strQuotes.begin()] = q->quote();
                         terms[it - strQuotes.begin()] = q->term();
+                    }
+                }
+
+                boost::shared_ptr<YoYInflationSwapQuote> q2 = boost::dynamic_pointer_cast<YoYInflationSwapQuote>(md);
+                if (q2 != NULL && q2->index() == spec.index()) {
+                    auto it = std::find(strQuotes.begin(), strQuotes.end(), q2->name());
+                    if (it != strQuotes.end()) {
+                        QL_REQUIRE(quotes[it - strQuotes.begin()].empty(), "duplicate quote " << q2->name());
+                        quotes[it - strQuotes.begin()] = q2->quote();
+                        terms[it - strQuotes.begin()] = q2->term();
                     }
                 }
             }
@@ -122,6 +129,7 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
         Real baseRate = config->baseRate() != Null<Real>() ? config->baseRate() : quotes[0]->value();
 
         if (config->type() == InflationCurveConfig::Type::ZC) {
+            // ZC Curve
             std::vector<boost::shared_ptr<ZeroInflationTraits::helper>> instruments;
             boost::shared_ptr<ZeroInflationIndex> index = conv->index();
             for (Size i = 0; i < strQuotes.size(); ++i) {
@@ -142,9 +150,10 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                     asof, config->calendar(), config->dayCounter(), config->lag(), config->frequency(), false, baseRate,
                     nominalTs, instruments, config->tolerance()));
         } else if (config->type() == InflationCurveConfig::Type::YY) {
+            // YOY Curve
             std::vector<boost::shared_ptr<YoYInflationTraits::helper>> instruments;
             boost::shared_ptr<ZeroInflationIndex> zcindex = conv->index();
-            boost::shared_ptr<YoYInflationIndex> index = boost::make_shared < YoYInflationIndexWrapper(zcindex);
+            boost::shared_ptr<YoYInflationIndex> index = boost::make_shared <QuantExt::YoYInflationIndexWrapper>(zcindex);
             for (Size i = 0; i < strQuotes.size(); ++i) {
                 QL_REQUIRE(!quotes[i].empty(), "quote " << strQuotes[i] << " not found in market data.");
                 // QL conventions do not incorporate settlement delay => patch here once QL is patched
@@ -156,12 +165,12 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
             // base zero rate: if given, take it, otherwise set it to first quote
             Real baseRate = config->baseRate() != Null<Real>() ? config->baseRate() : quotes[0]->value();
             curveIndexInterpolated_ =
-                boost::shared_ptr<PiecewiseZeroInflationCurve<Linear>>(new PiecewiseZeroInflationCurve<Linear>(
+                boost::shared_ptr<PiecewiseYoYInflationCurve<Linear>>(new PiecewiseYoYInflationCurve<Linear>(
                     asof, config->calendar(), config->dayCounter(), config->lag(), config->frequency(), true, baseRate,
                     nominalTs, instruments, config->tolerance()));
             curveIndexInterpolated_->enableExtrapolation(config->extrapolate());
             curveIndexNotInterpolated_ =
-                boost::shared_ptr<PiecewiseZeroInflationCurve<Linear>>(new PiecewiseZeroInflationCurve<Linear>(
+                boost::shared_ptr<PiecewiseYoYInflationCurve<Linear>>(new PiecewiseYoYInflationCurve<Linear>(
                     asof, config->calendar(), config->dayCounter(), config->lag(), config->frequency(), false, baseRate,
                     nominalTs, instruments, config->tolerance()));
             curveIndexNotInterpolated_->enableExtrapolation(config->extrapolate());

@@ -639,13 +639,13 @@ void writeCurves(const Parameters& params, const TodaysMarketParameters& marketC
     map<string, string> discountCurves = marketConfig.discountingCurves(configID);
     map<string, string> YieldCurves = marketConfig.yieldCurves(configID);
     map<string, string> indexCurves = marketConfig.indexForwardingCurves(configID);
-    map<string, string> inflationIndices = marketConfig.inflationIndexCurves(configID);
+    map<string, string> zeroInflationIndices = marketConfig.zeroInflationIndexCurves(configID);
     
     string gridString = params.get("curves", "grid");
     DateGrid grid(gridString);
 
     vector<Handle<YieldTermStructure>> yieldCurves;
-    vector<Handle<InflationIndex>> inflationFixings;
+    vector<Handle<ZeroInflationIndex>> zeroInflationFixings;
 
     file << "Tenor" << sep << "Date";
     for (auto it : discountCurves) {
@@ -660,9 +660,9 @@ void writeCurves(const Parameters& params, const TodaysMarketParameters& marketC
         file << sep << it.first;
         yieldCurves.push_back(market->iborIndex(it.first, configID)->forwardingTermStructure());
     }
-    for (auto it : inflationIndices) {
+    for (auto it : zeroInflationIndices) {
         file << sep << it.first;
-        inflationFixings.push_back(market->inflationIndex(it.first, true, configID));
+        zeroInflationFixings.push_back(market->zeroInflationIndex(it.first, true, configID));
     }
     file << endl;
 
@@ -672,8 +672,8 @@ void writeCurves(const Parameters& params, const TodaysMarketParameters& marketC
         file << grid.tenors()[j] << sep << QuantLib::io::iso_date(date);
         for (Size i = 0; i < yieldCurves.size(); ++i)
             file << sep << yieldCurves[i]->discount(date);
-        for (Size i = 0; i < inflationFixings.size(); ++i)
-            file << sep << inflationFixings[i]->fixing(date);
+        for (Size i = 0; i < zeroInflationFixings.size(); ++i)
+            file << sep << zeroInflationFixings[i]->fixing(date);
         file << endl;
     }
 

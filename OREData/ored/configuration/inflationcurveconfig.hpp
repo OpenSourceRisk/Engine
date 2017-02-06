@@ -53,7 +53,7 @@ public:
     InflationCurveConfig(const string& curveID, const string& curveDescription, const string& nominalTermStructure,
                          const Type type, const vector<string>& quotes, const string& conventions,
                          const bool extrapolate, const Calendar& calendar, const DayCounter& dayCounter,
-                         const Period& lag, const Frequency& frequency, const Real baseZeroRate, const Real tolerance,
+                         const Period& lag, const Frequency& frequency, const Real baseRate, const Real tolerance,
                          const Date& seasonalityBaseDate, const Frequency& seasonalityFrequency,
                          const vector<string>& seasonalityFactors);
     virtual ~InflationCurveConfig() {}
@@ -73,7 +73,7 @@ public:
     const DayCounter& dayCounter() const { return dayCounter_; }
     const Period& lag() const { return lag_; }
     const Frequency& frequency() const { return frequency_; }
-    const Real& baseZeroRate() const { return baseZeroRate_; }
+    const Real& baseRate() const { return baseRate_; }
     const Real& tolerance() const { return tolerance_; }
     const Date& seasonalityBaseDate() const { return seasonalityBaseDate_; }
     const Frequency& seasonalityFrequency() const { return seasonalityFrequency_; }
@@ -91,7 +91,7 @@ public:
     DayCounter& dayCounter() { return dayCounter_; }
     Period& lag() { return lag_; }
     Frequency& frequency() { return frequency_; }
-    Real& baseZeroRate() { return baseZeroRate_; }
+    Real& baseRate() { return baseRate_; }
     Real& tolerance() { return tolerance_; }
     Date& seasonalityBaseDate() { return seasonalityBaseDate_; }
     Frequency& seasonalityFrequency() { return seasonalityFrequency_; }
@@ -110,7 +110,7 @@ private:
     DayCounter dayCounter_;
     Period lag_;
     Frequency frequency_;
-    Real baseZeroRate_;
+    Real baseRate_;
     Real tolerance_;
     Date seasonalityBaseDate_;
     Frequency seasonalityFrequency_;

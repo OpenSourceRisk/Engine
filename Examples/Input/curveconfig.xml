@@ -1751,7 +1751,7 @@
               <Quote>ZC_INFLATIONSWAP/RATE/USCPI/30Y</Quote>
               <Quote>ZC_INFLATIONSWAP/RATE/USCPI/40Y</Quote>
           </Quotes>
-          <Conventions>USCPI_ZC_INFLATIONSWAP</Conventions>
+          <Conventions>USCPI_INFLATIONSWAP</Conventions>
           <Extrapolation>true</Extrapolation>
           <Calendar>US</Calendar>
           <DayCounter>A365</DayCounter>
@@ -1801,7 +1801,7 @@
               <Quote>ZC_INFLATIONSWAP/RATE/EUHICP/25Y</Quote>
               <Quote>ZC_INFLATIONSWAP/RATE/EUHICP/30Y</Quote>
           </Quotes>
-          <Conventions>EUHICP_ZC_INFLATIONSWAP</Conventions>
+          <Conventions>EUHICP_INFLATIONSWAP</Conventions>
           <Extrapolation>true</Extrapolation>
           <Calendar>TARGET</Calendar>
           <DayCounter>A365</DayCounter>
@@ -1833,7 +1833,57 @@
               <Quote>ZC_INFLATIONSWAP/RATE/EUHICPXT/25Y</Quote>
               <Quote>ZC_INFLATIONSWAP/RATE/EUHICPXT/30Y</Quote>
           </Quotes>
-          <Conventions>EUHICPXT_ZC_INFLATIONSWAP</Conventions>
+          <Conventions>EUHICPXT_INFLATIONSWAP</Conventions>
+          <Extrapolation>true</Extrapolation>
+          <Calendar>TARGET</Calendar>
+          <DayCounter>A365</DayCounter>
+          <Lag>3M</Lag>
+          <Frequency>Monthly</Frequency>
+          <BaseRate>0.01</BaseRate>
+          <Tolerance>0.000000000001</Tolerance>
+          <Seasonality>
+              <BaseDate>20160101</BaseDate>
+              <Frequency>Monthly</Frequency>
+              <Factors>
+                  <Factor>SEASONALITY/RATE/MULT/EUHICPXT/JAN</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/EUHICPXT/FEB</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/EUHICPXT/MAR</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/EUHICPXT/APR</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/EUHICPXT/MAY</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/EUHICPXT/JUN</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/EUHICPXT/JUL</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/EUHICPXT/AUG</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/EUHICPXT/SEP</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/EUHICPXT/OCT</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/EUHICPXT/NOV</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/EUHICPXT/DEC</Factor>
+              </Factors>
+          </Seasonality>
+      </InflationCurve>
+
+      <InflationCurve>
+          <CurveId>EUHICPXT_YY_Swaps</CurveId>
+          <CurveDescription>Estimation Curve for EUCPI YoY</CurveDescription>
+          <NominalTermStructure>Yield/EUR/EUR1D</NominalTermStructure>
+          <Type>YY</Type>
+          <Quotes>
+              <Quote>YY_INFLATIONSWAP/RATE/EUHICPXT/1Y</Quote>
+              <Quote>YY_INFLATIONSWAP/RATE/EUHICPXT/2Y</Quote>
+              <Quote>YY_INFLATIONSWAP/RATE/EUHICPXT/3Y</Quote>
+              <Quote>YY_INFLATIONSWAP/RATE/EUHICPXT/4Y</Quote>
+              <Quote>YY_INFLATIONSWAP/RATE/EUHICPXT/5Y</Quote>
+              <Quote>YY_INFLATIONSWAP/RATE/EUHICPXT/6Y</Quote>
+              <Quote>YY_INFLATIONSWAP/RATE/EUHICPXT/7Y</Quote>
+              <Quote>YY_INFLATIONSWAP/RATE/EUHICPXT/8Y</Quote>
+              <Quote>YY_INFLATIONSWAP/RATE/EUHICPXT/9Y</Quote>
+              <Quote>YY_INFLATIONSWAP/RATE/EUHICPXT/10Y</Quote>
+              <Quote>YY_INFLATIONSWAP/RATE/EUHICPXT/12Y</Quote>
+              <Quote>YY_INFLATIONSWAP/RATE/EUHICPXT/15Y</Quote>
+              <Quote>YY_INFLATIONSWAP/RATE/EUHICPXT/20Y</Quote>
+              <Quote>YY_INFLATIONSWAP/RATE/EUHICPXT/25Y</Quote>
+              <Quote>YY_INFLATIONSWAP/RATE/EUHICPXT/30Y</Quote>
+          </Quotes>
+          <Conventions>EUHICPXT_INFLATIONSWAP</Conventions>
           <Extrapolation>true</Extrapolation>
           <Calendar>TARGET</Calendar>
           <DayCounter>A365</DayCounter>
@@ -1883,7 +1933,7 @@
               <Quote>ZC_INFLATIONSWAP/RATE/FRHICP/25Y</Quote>
               <Quote>ZC_INFLATIONSWAP/RATE/FRHICP/30Y</Quote>
           </Quotes>
-          <Conventions>FRHICP_ZC_INFLATIONSWAP</Conventions>
+          <Conventions>FRHICP_INFLATIONSWAP</Conventions>
           <Extrapolation>true</Extrapolation>
           <Calendar>TARGET</Calendar>
           <DayCounter>A365</DayCounter>
@@ -1916,7 +1966,7 @@
               <Quote>ZC_INFLATIONSWAP/RATE/UKRPI/30Y</Quote>
               <Quote>ZC_INFLATIONSWAP/RATE/UKRPI/40Y</Quote>
           </Quotes>
-          <Conventions>UKRPI_ZC_INFLATIONSWAP</Conventions>
+          <Conventions>UKRPI_INFLATIONSWAP</Conventions>
           <Extrapolation>true</Extrapolation>
           <Calendar>UK</Calendar>
           <DayCounter>A365</DayCounter>
@@ -1967,7 +2017,7 @@
               <Quote>ZC_INFLATIONSWAP/RATE/ZACPI/25Y</Quote>
               <Quote>ZC_INFLATIONSWAP/RATE/ZACPI/30Y</Quote>
           </Quotes>
-          <Conventions>ZACPI_ZC_INFLATIONSWAP</Conventions>
+          <Conventions>ZACPI_INFLATIONSWAP</Conventions>
           <Extrapolation>true</Extrapolation>
           <Calendar>ZAR</Calendar>
           <DayCounter>A365</DayCounter>
@@ -2039,3 +2089,4 @@
       
   </InflationCapFloorPriceSurfaces>
 </CurveConfiguration>
+

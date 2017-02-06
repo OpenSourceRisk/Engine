@@ -35,6 +35,8 @@
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 
+#include <qle/indexes/yoyinflationindexwrapper.hpp>
+
 using namespace std;
 using namespace QuantLib;
 
@@ -308,7 +310,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                         LOG("Adding ZeroInflationIndex (" << it.first << ") with spec " << *inflationspec
                                                           << " to configuration " << configuration.first);
                         for (int interpolated = 0; interpolated < 2; ++interpolated) {
-                            boost::sharey0d_ptr<ZeroInflationTermStructure> ts =
+                            boost::shared_ptr<ZeroInflationTermStructure> ts =
                                 boost::dynamic_pointer_cast<ZeroInflationTermStructure>(
                                     itr->second->inflationTermStructure(interpolated == 1));
                             QL_REQUIRE(ts, "expected zero inflation term structure for index "
@@ -326,14 +328,14 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                         LOG("Adding YoYInflationIndex (" << it.first << ") with spec " << *inflationspec
                                                          << " to configuration " << configuration.first);
                         for (int interpolated = 0; interpolated < 2; ++interpolated) {
-                            boost::sharey0d_ptr<Y0YInflationTermStructure> ts =
+                            boost::shared_ptr<YoYInflationTermStructure> ts =
                                 boost::dynamic_pointer_cast<YoYInflationTermStructure>(
                                     itr->second->inflationTermStructure(interpolated == 1));
                             QL_REQUIRE(ts, "expected yoy inflation term structure for index "
                                                << it.first << ", but could not cast");
                             yoyInflationIndices_[make_pair(configuration.first,
                                                            make_pair(it.first, interpolated == 1))] =
-                                Handle<ZeroInflationIndex>(boost::make_shared<YoYInflationIndexWrapper>(
+                                Handle<YoYInflationIndex>(boost::make_shared<QuantExt::YoYInflationIndexWrapper>(
                                     parseZeroInflationIndex(it.first, interpolated),
                                     Handle<YoYInflationTermStructure>(ts)));
                         }

@@ -103,10 +103,11 @@ XMLNode* CPILegData::toXML(XMLDocument& doc) {
 }
 
 void YoYLegData::fromXML(XMLNode* node) {
-    XMLUtils::checkNode(node, "YoYLegData");
+    XMLUtils::checkNode(node, "YYLegData");
     index_ = XMLUtils::getChildValue(node, "Index", true);
     fixingDays_ = XMLUtils::getChildValueAsInt(node, "FixingDays", true);
     observationLag_ = XMLUtils::getChildValue(node, "ObservationLag", true);
+    interpolated_ = XMLUtils::getChildValueAsBool(node, "Interpolated", true);
     gearings_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Gearings", "Gearing", "startDate", gearingDates_);
     spreads_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Spreads", "Spread", "startDate", spreadDates_);
 }
@@ -170,8 +171,8 @@ void LegData::fromXML(XMLNode* node) {
         cashflowData_.fromXML(XMLUtils::getChildNode(node, "CashflowData"));
     } else if (legType_ == "CPI") {
         cpiLegData_.fromXML(XMLUtils::getChildNode(node, "CPILegData"));
-    } else if (legType_ == "YoY") {
-        yoyLegData_.fromXML(XMLUtils::getChildNode(node, "YoYLegData"));
+    } else if (legType_ == "YY") {
+        yoyLegData_.fromXML(XMLUtils::getChildNode(node, "YYLegData"));
     } else {
         QL_FAIL("Unkown legType :" << legType_);
     }

@@ -102,7 +102,7 @@ public:
 
     //! Inflation Indexes
     virtual Handle<ZeroInflationIndex>
-    inflationIndex(const string& indexName, const bool interpolated,
+    zeroInflationIndex(const string& indexName, const bool interpolated,
                    const string& configuration = Market::defaultConfiguration) const = 0;
     virtual Handle<YoYInflationIndex>
     yoyInflationIndex(const string& indexName, const bool interpolated,

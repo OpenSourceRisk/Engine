@@ -16,20 +16,20 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ored/portfolio/swap.hpp>
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/legdata.hpp>
-#include <ored/utilities/log.hpp>
+#include <ored/portfolio/swap.hpp>
 #include <ored/utilities/indexparser.hpp>
+#include <ored/utilities/log.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
 
-#include <qle/instruments/currencyswap.hpp>
-#include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <ql/time/calendars/target.hpp>
+#include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/indexes/fxindex.hpp>
+#include <qle/instruments/currencyswap.hpp>
 
-#include <ql/time/daycounters/actualactual.hpp>
 #include <ql/instruments/swap.hpp>
+#include <ql/time/daycounters/actualactual.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -146,12 +146,20 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         } else if (legData_[i].legType() == "CPI") {
             string inflationIndexName = legData_[i].cpiLegData().index();
             bool inflationIndexInterpolated = legData_[i].cpiLegData().interpolated();
-            boost::shared_ptr<ZeroInflationIndex> index = boost::dynamic_pointer_cast<ZeroInflationIndex>(
-                *market->inflationIndex(inflationIndexName, inflationIndexInterpolated));
+            boost::shared_ptr<ZeroInflationIndex> index =
+                *market->zeroInflationIndex(inflationIndexName, inflationIndexInterpolated);
             QL_REQUIRE(index, "zero inflation index not found for index " << legData_[i].cpiLegData().index());
             legs_[i] = makeCPILeg(legData_[i], index);
             // legTypes[i] = Inflation;
             // legTypes_[i] = "INFLATION";
+        } else if (legData_[i].legType() == "YY") {
+            string inflationIndexName = legData_[i].yoyLegData().index();
+            bool inflationIndexInterpolated = legData_[i].yoyLegData().interpolated();
+            boost::shared_ptr<YoYInflationIndex> index =
+                *market->yoyInflationIndex(inflationIndexName, inflationIndexInterpolated);
+            legs_[i] = makeYoYLeg(legData_[i], index);
+            // legTypes[i] = Inflation;
+            // legTypes_[i] = "INFLATION_YOY";
         } else {
             QL_FAIL("Unknown leg type " << legData_[i].legType());
         }

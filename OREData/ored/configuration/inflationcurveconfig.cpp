@@ -32,12 +32,12 @@ InflationCurveConfig::InflationCurveConfig(const string& curveID, const string& 
                                            const vector<string>& quotes, const string& conventions,
                                            const bool extrapolate, const Calendar& calendar,
                                            const DayCounter& dayCounter, const Period& lag, const Frequency& frequency,
-                                           const Real baseZeroRate, const Real tolerance,
+                                           const Real baseRate, const Real tolerance,
                                            const Date& seasonalityBaseDate, const Frequency& seasonalityFrequency,
                                            const vector<string>& seasonalityFactors)
     : curveID_(curveID), curveDescription_(curveDescription), nominalTermStructure_(nominalTermStructure), type_(type),
       quotes_(quotes), conventions_(conventions), extrapolate_(extrapolate), calendar_(calendar),
-      dayCounter_(dayCounter), lag_(lag), frequency_(frequency), baseZeroRate_(baseZeroRate), tolerance_(tolerance),
+      dayCounter_(dayCounter), lag_(lag), frequency_(frequency), baseRate_(baseRate), tolerance_(tolerance),
       seasonalityBaseDate_(seasonalityBaseDate), seasonalityFrequency_(seasonalityFrequency),
       seasonalityFactors_(seasonalityFactors) {}
 
@@ -73,10 +73,10 @@ void InflationCurveConfig::fromXML(XMLNode* node) {
     string freq = XMLUtils::getChildValue(node, "Frequency", true);
     frequency_ = parseFrequency(freq);
 
-    baseZeroRate_ = QuantLib::Null<Real>();
-    string baseZr = XMLUtils::getChildValue(node, "BaseZeroRate", false);
+    baseRate_ = QuantLib::Null<Real>();
+    string baseZr = XMLUtils::getChildValue(node, "BaseRate", false);
     if (baseZr != "")
-        baseZeroRate_ = parseReal(baseZr);
+        baseRate_ = parseReal(baseZr);
 
     string tol = XMLUtils::getChildValue(node, "Tolerance", true);
     tolerance_ = parseReal(tol);
@@ -114,15 +114,15 @@ XMLNode* InflationCurveConfig::toXML(XMLDocument& doc) {
     dc << dayCounter_;
     lag << lag_;
     freq << frequency_;
-    if (baseZeroRate_ != QuantLib::Null<Real>())
-        baseZr << std::setprecision(16) << std::fixed << baseZeroRate_;
+    if (baseRate_ != QuantLib::Null<Real>())
+        baseZr << std::setprecision(16) << std::fixed << baseRate_;
     tol << std::setprecision(16) << std::scientific << tolerance_;
 
     XMLUtils::addChild(doc, node, "Calendar", cal.str());
     XMLUtils::addChild(doc, node, "DayCounter", dc.str());
     XMLUtils::addChild(doc, node, "Lag", lag.str());
     XMLUtils::addChild(doc, node, "Frequency", freq.str());
-    XMLUtils::addChild(doc, node, "BaseZeroRate", baseZr.str());
+    XMLUtils::addChild(doc, node, "BaseRate", baseZr.str());
     XMLUtils::addChild(doc, node, "Tolerance", tol.str());
 
     XMLNode* seasonalityNode = XMLUtils::addChild(doc, node, "Seasonality");

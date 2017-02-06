@@ -176,13 +176,14 @@ private:
 class YoYLegData : public XMLSerializable {
 public:
     YoYLegData() {}
-    YoYLegData(string index, string observationLag, Size fixingDays, const vector<double>& gearings,
+    YoYLegData(string index, string observationLag, bool interpolated, Size fixingDays, const vector<double>& gearings,
                const vector<string>& gearingDates, const vector<double>& spreads, const vector<string>& spreadDates)
-        : index_(index), fixingDays_(fixingDays), gearings_(gearings), gearingDates_(gearingDates), spreads_(spreads),
-          spreadDates_(spreadDates) {}
+        : index_(index), interpolated_(interpolated), fixingDays_(fixingDays), gearings_(gearings),
+          gearingDates_(gearingDates), spreads_(spreads), spreadDates_(spreadDates) {}
 
     const string index() const { return index_; }
     const string observationLag() const { return observationLag_; }
+    bool interpolated() const { return interpolated_; }
     Size fixingDays() const { return fixingDays_; }
     const std::vector<double>& gearings() const { return gearings_; }
     const std::vector<string>& gearingDates() const { return gearingDates_; }
@@ -195,6 +196,7 @@ public:
 private:
     string index_;
     string observationLag_;
+    bool interpolated_;
     Size fixingDays_;
     vector<double> gearings_;
     vector<string> gearingDates_;

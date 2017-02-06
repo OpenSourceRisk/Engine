@@ -56,6 +56,7 @@ public:
 
     const boost::shared_ptr<InflationTermStructure> inflationTermStructure(const bool indexIsInterpolated) const {
         return indexIsInterpolated ? curveIndexInterpolated_ : curveIndexNotInterpolated_;
+    }
 
 private:
     InflationCurveSpec spec_;

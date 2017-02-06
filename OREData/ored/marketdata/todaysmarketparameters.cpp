@@ -29,7 +29,10 @@ bool operator==(const MarketConfiguration& lhs, const MarketConfiguration& rhs) 
         lhs.indexForwardingCurvesId != rhs.indexForwardingCurvesId || lhs.fxSpotsId != rhs.fxSpotsId ||
         lhs.fxVolatilitiesId != rhs.fxVolatilitiesId || lhs.swaptionVolatilitiesId != rhs.swaptionVolatilitiesId ||
         lhs.defaultCurvesId != rhs.defaultCurvesId || lhs.swapIndexCurvesId != rhs.swapIndexCurvesId ||
-        lhs.capFloorVolatilitiesId != rhs.capFloorVolatilitiesId) {
+        lhs.capFloorVolatilitiesId != rhs.capFloorVolatilitiesId ||
+        lhs.zeroInflationIndexCurvesId != rhs.zeroInflationIndexCurvesId ||
+        lhs.yoyInflationIndexCurvesId != rhs.yoyInflationIndexCurvesId ||
+        lhs.inflationCapFloorPriceSurfacesId != rhs.inflationCapFloorPriceSurfacesId) {
         return false;
     } else {
         return true;
@@ -53,7 +56,9 @@ bool TodaysMarketParameters::operator==(TodaysMarketParameters& rhs) {
         indexForwardingCurves_ != rhs.indexForwardingCurves_ || fxSpots_ != rhs.fxSpots_ ||
         fxVolatilities_ != rhs.fxVolatilities_ || swaptionVolatilities_ != rhs.swaptionVolatilities_ ||
         defaultCurves_ != rhs.defaultCurves_ || capFloorVolatilities_ != rhs.capFloorVolatilities_ ||
-        configurations_ != rhs.configurations_) {
+        configurations_ != rhs.configurations_ || zeroInflationIndexCurves_ != rhs.zeroInflationIndexCurves_ ||
+        yoyInflationIndexCurves_ != rhs.yoyInflationIndexCurves_ ||
+        inflationCapFloorPriceSurfaces_ != rhs.inflationCapFloorPriceSurfaces_) {
         return false;
     }
     return true;
@@ -74,7 +79,8 @@ void TodaysMarketParameters::fromXML(XMLNode* node) {
     defaultCurves_.clear();
     swapIndices_.clear();
     capFloorVolatilities_.clear();
-    inflationIndexCurves_.clear();
+    zeroInflationIndexCurves_.clear();
+    yoyInflationIndexCurves_.clear();
     inflationCapFloorPriceSurfaces_.clear();
 
     // add default configuration (may be overwritten below)
@@ -96,7 +102,8 @@ void TodaysMarketParameters::fromXML(XMLNode* node) {
             tmp.swaptionVolatilitiesId = XMLUtils::getChildValue(n, "SwaptionVolatilitiesId", false);
             tmp.defaultCurvesId = XMLUtils::getChildValue(n, "DefaultCurvesId", false);
             tmp.capFloorVolatilitiesId = XMLUtils::getChildValue(n, "CapFloorVolatilitiesId", false);
-            tmp.inflationIndexCurvesId = XMLUtils::getChildValue(n, "InflationIndexCurvesId", false);
+            tmp.zeroInflationIndexCurvesId = XMLUtils::getChildValue(n, "ZeroInflationIndexCurvesId", false);
+            tmp.yoyInflationIndexCurvesId = XMLUtils::getChildValue(n, "YYInflationIndexCurvesId", false);
             tmp.inflationCapFloorPriceSurfacesId = XMLUtils::getChildValue(n, "InflationCapFloorPriceSurfaceId", false);
             if (tmp.discountingCurvesId == "")
                 tmp.discountingCurvesId = Market::defaultConfiguration;
@@ -116,8 +123,10 @@ void TodaysMarketParameters::fromXML(XMLNode* node) {
                 tmp.capFloorVolatilitiesId = Market::defaultConfiguration;
             if (tmp.defaultCurvesId == "")
                 tmp.defaultCurvesId = Market::defaultConfiguration;
-            if (tmp.inflationIndexCurvesId == "")
-                tmp.inflationIndexCurvesId = Market::defaultConfiguration;
+            if (tmp.zeroInflationIndexCurvesId == "")
+                tmp.zeroInflationIndexCurvesId = Market::defaultConfiguration;
+            if (tmp.yoyInflationIndexCurvesId == "")
+                tmp.yoyInflationIndexCurvesId = Market::defaultConfiguration;
             if (tmp.inflationCapFloorPriceSurfacesId == "")
                 tmp.inflationCapFloorPriceSurfacesId = Market::defaultConfiguration;
             addConfiguration(XMLUtils::getAttribute(n, "id"), tmp);
@@ -177,18 +186,24 @@ void TodaysMarketParameters::fromXML(XMLNode* node) {
             if (id == "")
                 id = Market::defaultConfiguration;
             addDefaultCurves(id, XMLUtils::getChildrenAttributesAndValues(n, "DefaultCurve", "name", false));
-        } else if (XMLUtils::getNodeName(n) == "InflationIndexCurves") {
+        } else if (XMLUtils::getNodeName(n) == "ZeroInflationIndexCurves") {
             string id = XMLUtils::getAttribute(n, "id");
             if (id == "")
                 id = Market::defaultConfiguration;
-            addInflationIndexCurves(id,
-                                    XMLUtils::getChildrenAttributesAndValues(n, "InflationIndexCurve", "name", false));
+            addZeroInflationIndexCurves(
+                id, XMLUtils::getChildrenAttributesAndValues(n, "ZeroInflationIndexCurve", "name", false));
+        } else if (XMLUtils::getNodeName(n) == "YYInflationIndexCurves") {
+            string id = XMLUtils::getAttribute(n, "id");
+            if (id == "")
+                id = Market::defaultConfiguration;
+            addYoYInflationIndexCurves(
+                id, XMLUtils::getChildrenAttributesAndValues(n, "YYInflationIndexCurve", "name", false));
         } else if (XMLUtils::getNodeName(n) == "InflationCapFloorPriceSurfaces") {
             string id = XMLUtils::getAttribute(n, "id");
             if (id == "")
                 id = Market::defaultConfiguration;
             addInflationCapFloorPriceSurfaces(
-                                              id, XMLUtils::getChildrenAttributesAndValues(n, "InflationCapFloorPriceSurface", "name", false));
+                id, XMLUtils::getChildrenAttributesAndValues(n, "InflationCapFloorPriceSurface", "name", false));
         } else
             QL_FAIL("TodaysMarketParameters::fromXML(): node not recognized: " << XMLUtils::getNodeName(n));
         n = XMLUtils::getNextSibling(n);
@@ -233,11 +248,17 @@ XMLNode* TodaysMarketParameters::toXML(XMLDocument& doc) {
             if (iterator->second.defaultCurvesId != "") {
                 XMLUtils::addChild(doc, configurationsNode, "DefaultCurvesId", iterator->second.defaultCurvesId);
             }
-            if (iterator->second.inflationIndexCurvesId != "") {
-                XMLUtils::addChild(doc, configurationsNode, "InflationIndexCurvesId", iterator->second.inflationIndexCurvesId);
+            if (iterator->second.zeroInflationIndexCurvesId != "") {
+                XMLUtils::addChild(doc, configurationsNode, "ZeroInflationIndexCurvesId",
+                                   iterator->second.zeroInflationIndexCurvesId);
+            }
+            if (iterator->second.yoyInflationIndexCurvesId != "") {
+                XMLUtils::addChild(doc, configurationsNode, "YYInflationIndexCurvesId",
+                                   iterator->second.yoyInflationIndexCurvesId);
             }
             if (iterator->second.inflationCapFloorPriceSurfacesId != "") {
-                XMLUtils::addChild(doc, configurationsNode, "InflationCapFloorPriceSurfaceId", iterator->second.inflationCapFloorPriceSurfacesId);
+                XMLUtils::addChild(doc, configurationsNode, "InflationCapFloorPriceSurfaceId",
+                                   iterator->second.inflationCapFloorPriceSurfacesId);
             }
         }
     }
@@ -367,33 +388,53 @@ XMLNode* TodaysMarketParameters::toXML(XMLDocument& doc) {
         }
     }
 
-    // inflation Curves
-    if (inflationIndexCurves_.size() > 0) {
-        
-        for (auto mappingSetIterator = inflationIndexCurves_.begin(); mappingSetIterator != inflationIndexCurves_.end();
-             mappingSetIterator++) {
-            
-            XMLNode* inflationIndexCurvesNode = XMLUtils::addChild(doc, todaysMarketNode, "InflationCurves");
-            XMLUtils::addAttribute(doc, inflationIndexCurvesNode, "id", mappingSetIterator->first.c_str());
-            
+    // zero inflation Curves
+    if (zeroInflationIndexCurves_.size() > 0) {
+
+        for (auto mappingSetIterator = zeroInflationIndexCurves_.begin();
+             mappingSetIterator != zeroInflationIndexCurves_.end(); mappingSetIterator++) {
+
+            XMLNode* zeroInflationIndexCurvesNode =
+                XMLUtils::addChild(doc, todaysMarketNode, "ZeroInflationIndexCurves");
+            XMLUtils::addAttribute(doc, zeroInflationIndexCurvesNode, "id", mappingSetIterator->first.c_str());
+
             for (auto singleMappingIterator = mappingSetIterator->second.begin();
                  singleMappingIterator != mappingSetIterator->second.end(); singleMappingIterator++) {
-                XMLNode* mappingNode = doc.allocNode("InflationCurve", singleMappingIterator->second);
-                XMLUtils::appendNode(inflationIndexCurvesNode, mappingNode);
+                XMLNode* mappingNode = doc.allocNode("ZeroInflationIndexCurve", singleMappingIterator->second);
+                XMLUtils::appendNode(zeroInflationIndexCurvesNode, mappingNode);
                 XMLUtils::addAttribute(doc, mappingNode, "name", singleMappingIterator->first);
             }
         }
     }
-    
+
+    // yoy inflation Curves
+    if (yoyInflationIndexCurves_.size() > 0) {
+
+        for (auto mappingSetIterator = yoyInflationIndexCurves_.begin();
+             mappingSetIterator != yoyInflationIndexCurves_.end(); mappingSetIterator++) {
+
+            XMLNode* yoyInflationIndexCurvesNode = XMLUtils::addChild(doc, todaysMarketNode, "YoyInflationIndexCurves");
+            XMLUtils::addAttribute(doc, yoyInflationIndexCurvesNode, "id", mappingSetIterator->first.c_str());
+
+            for (auto singleMappingIterator = mappingSetIterator->second.begin();
+                 singleMappingIterator != mappingSetIterator->second.end(); singleMappingIterator++) {
+                XMLNode* mappingNode = doc.allocNode("YoyInflationIndexCurve", singleMappingIterator->second);
+                XMLUtils::appendNode(yoyInflationIndexCurvesNode, mappingNode);
+                XMLUtils::addAttribute(doc, mappingNode, "name", singleMappingIterator->first);
+            }
+        }
+    }
+
     // inflation CapFloor Price Surfaces
     if (inflationCapFloorPriceSurfaces_.size() > 0) {
-        
-        for (auto mappingSetIterator = inflationCapFloorPriceSurfaces_.begin(); mappingSetIterator != inflationCapFloorPriceSurfaces_.end();
-             mappingSetIterator++) {
-            
-            XMLNode* inflationCapFloorPriceSurfacesNode = XMLUtils::addChild(doc, todaysMarketNode, "InflationCapFloorPriceSurfaces");
+
+        for (auto mappingSetIterator = inflationCapFloorPriceSurfaces_.begin();
+             mappingSetIterator != inflationCapFloorPriceSurfaces_.end(); mappingSetIterator++) {
+
+            XMLNode* inflationCapFloorPriceSurfacesNode =
+                XMLUtils::addChild(doc, todaysMarketNode, "InflationCapFloorPriceSurfaces");
             XMLUtils::addAttribute(doc, inflationCapFloorPriceSurfacesNode, "id", mappingSetIterator->first.c_str());
-            
+
             for (auto singleMappingIterator = mappingSetIterator->second.begin();
                  singleMappingIterator != mappingSetIterator->second.end(); singleMappingIterator++) {
                 XMLNode* mappingNode = doc.allocNode("InflationCapFloorPriceSurface", singleMappingIterator->second);
@@ -402,7 +443,7 @@ XMLNode* TodaysMarketParameters::toXML(XMLDocument& doc) {
             }
         }
     }
-    
+
     // swap Indices
     if (swapIndices_.size() > 0) {
 
@@ -445,7 +486,8 @@ vector<string> TodaysMarketParameters::curveSpecs(const string& configuration) c
     curveSpecs(swaptionVolatilities_, swaptionVolatilitiesId(configuration), specs);
     curveSpecs(capFloorVolatilities_, capFloorVolatilitiesId(configuration), specs);
     curveSpecs(defaultCurves_, defaultCurvesId(configuration), specs);
-    curveSpecs(inflationIndexCurves_, inflationIndexCurvesId(configuration), specs);
+    curveSpecs(zeroInflationIndexCurves_, zeroInflationIndexCurvesId(configuration), specs);
+    curveSpecs(yoyInflationIndexCurves_, yoyInflationIndexCurvesId(configuration), specs);
     curveSpecs(inflationCapFloorPriceSurfaces_, inflationCapFloorPriceSurfacesId(configuration), specs);
     return specs;
 }

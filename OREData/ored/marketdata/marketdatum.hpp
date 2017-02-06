@@ -762,8 +762,8 @@ private:
  */
 class YoYInflationSwapQuote : public MarketDatum {
 public:
-    ZcInflationSwapQuote(Real value, Date asofDate, const string& name, const string& index, Period term)
-    : MarketDatum(value, asofDate, name, QuoteType::RATE, InstrumentType::YoY_INFLATIONSWAP), index_(index),
+    YoYInflationSwapQuote(Real value, Date asofDate, const string& name, const string& index, Period term)
+    : MarketDatum(value, asofDate, name, QuoteType::RATE, InstrumentType::YY_INFLATIONSWAP), index_(index),
     term_(term) {}
     string index() { return index_; }
     Period term() { return term_; }

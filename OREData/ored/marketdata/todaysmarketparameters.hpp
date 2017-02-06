@@ -24,9 +24,9 @@
 #pragma once
 
 #include <ored/marketdata/market.hpp>
-#include <ored/utilities/xmlutils.hpp>
-#include <ored/utilities/parsers.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/parsers.hpp>
+#include <ored/utilities/xmlutils.hpp>
 
 using std::vector;
 using std::string;
@@ -52,6 +52,9 @@ namespace data {
   - cap/floor volatilities
   - default curves
   - swap index forwarding curves
+  - zero inflation index curves
+  - yoy inflation index curves
+  - zero inflation cap floor price surfaces
   and assigns a configuration ID.
 
   Several Market Configurations can be specified and held in a market object in parallel.
@@ -66,9 +69,13 @@ struct MarketConfiguration {
           indexForwardingCurvesId(Market::defaultConfiguration), fxSpotsId(Market::defaultConfiguration),
           fxVolatilitiesId(Market::defaultConfiguration), swaptionVolatilitiesId(Market::defaultConfiguration),
           defaultCurvesId(Market::defaultConfiguration), swapIndexCurvesId(Market::defaultConfiguration),
-    capFloorVolatilitiesId(Market::defaultConfiguration), inflationIndexCurvesId(Market::defaultConfiguration),
-    inflationCapFloorPriceSurfacesId(Market::defaultConfiguration) {}
-    string discountingCurvesId, yieldCurvesId, indexForwardingCurvesId, fxSpotsId, fxVolatilitiesId,swaptionVolatilitiesId, defaultCurvesId, swapIndexCurvesId, capFloorVolatilitiesId, inflationIndexCurvesId,inflationCapFloorPriceSurfacesId;
+          capFloorVolatilitiesId(Market::defaultConfiguration),
+          zeroInflationIndexCurvesId(Market::defaultConfiguration),
+          yoyInflationIndexCurvesId(Market::defaultConfiguration),
+          inflationCapFloorPriceSurfacesId(Market::defaultConfiguration) {}
+    string discountingCurvesId, yieldCurvesId, indexForwardingCurvesId, fxSpotsId, fxVolatilitiesId,
+        swaptionVolatilitiesId, defaultCurvesId, swapIndexCurvesId, capFloorVolatilitiesId, zeroInflationIndexCurvesId,
+        yoyInflationIndexCurvesId, inflationCapFloorPriceSurfacesId;
 };
 
 bool operator==(const MarketConfiguration& lhs, const MarketConfiguration& rhs);
@@ -121,12 +128,15 @@ public:
     // GBP => CapFloorVolatility/GBP/GBP_CF_LN etc.
     const map<string, string>& capFloorVolatilities(const string& configuration) const;
 
-    // EUHICPXT => Inflation/EUHICPXT
-    const map<string, string>& inflationIndexCurves(const string& configuration) const;
-    
+    // EUHICPXT => Inflation/EUHICPXT/EUHICPXT_ZC
+    const map<string, string>& zeroInflationIndexCurves(const string& configuration) const;
+
+    // EUHICPXT => Inflation/EUHICPXT/EUHICPXT_YY
+    const map<string, string>& yoyInflationIndexCurves(const string& configuration) const;
+
     // EUHICPXT => InflationCapFloorPrice/EUHICPXT
     const map<string, string>& inflationCapFloorPriceSurfaces(const string& configuration) const;
-    
+
     //! Build a vector of all the curve specs (may contain duplicates)
     vector<string> curveSpecs(const string& configuration) const;
 
@@ -140,8 +150,9 @@ public:
     const string& swaptionVolatilitiesId(const string& configuration) const;
     const string& defaultCurvesId(const string& configuration) const;
     const string& capFloorVolatilitiesId(const string& configuration) const;
-    const string& inflationIndexCurvesId(const string &configuration) const;
-    const string& inflationCapFloorPriceSurfacesId(const string &configuration) const;
+    const string& zeroInflationIndexCurvesId(const string& configuration) const;
+    const string& yoyInflationIndexCurvesId(const string& configuration) const;
+    const string& inflationCapFloorPriceSurfacesId(const string& configuration) const;
     //@}
 
     //! \name Setters
@@ -156,7 +167,8 @@ public:
     void addSwaptionVolatilities(const string& id, const map<string, string>& assignments);
     void addDefaultCurves(const string& id, const map<string, string>& assignments);
     void addCapFloorVolatilities(const string& id, const map<string, string>& assignments);
-    void addInflationIndexCurves(const string& id, const map<string, string>& assignments);
+    void addZeroInflationIndexCurves(const string& id, const map<string, string>& assignments);
+    void addYoYInflationIndexCurves(const string& id, const map<string, string>& assignments);
     void addInflationCapFloorPriceSurfaces(const string& id, const map<string, string>& assignemnts);
     //@}
 
@@ -177,8 +189,8 @@ private:
     map<string, MarketConfiguration> configurations_;
     // maps id to map (key,value)
     map<string, map<string, string>> discountingCurves_, yieldCurves_, indexForwardingCurves_, fxSpots_,
-    fxVolatilities_, swaptionVolatilities_, defaultCurves_, capFloorVolatilities_, inflationIndexCurves_,
-    inflationCapFloorPriceSurfaces_;
+        fxVolatilities_, swaptionVolatilities_, defaultCurves_, capFloorVolatilities_, zeroInflationIndexCurves_,
+        yoyInflationIndexCurves_, inflationCapFloorPriceSurfaces_;
     map<string, map<string, string>> swapIndices_;
 
     void curveSpecs(const map<string, map<string, string>>&, const string&, vector<string>&) const;
@@ -240,16 +252,21 @@ inline const string& TodaysMarketParameters::capFloorVolatilitiesId(const string
     return configurations_.at(configuration).capFloorVolatilitiesId;
 }
 
-inline const string& TodaysMarketParameters::inflationIndexCurvesId(const string& configuration) const {
+inline const string& TodaysMarketParameters::zeroInflationIndexCurvesId(const string& configuration) const {
     QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
-    return configurations_.at(configuration).inflationIndexCurvesId;
+    return configurations_.at(configuration).zeroInflationIndexCurvesId;
+}
+
+inline const string& TodaysMarketParameters::yoyInflationIndexCurvesId(const string& configuration) const {
+    QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
+    return configurations_.at(configuration).zeroInflationIndexCurvesId;
 }
 
 inline const string& TodaysMarketParameters::inflationCapFloorPriceSurfacesId(const string& configuration) const {
     QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
     return configurations_.at(configuration).inflationCapFloorPriceSurfacesId;
 }
-    
+
 inline const map<string, string>& TodaysMarketParameters::discountingCurves(const string& configuration) const {
     QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
     auto it = discountingCurves_.find(discountingCurvesId(configuration));
@@ -331,12 +348,21 @@ inline const map<string, string>& TodaysMarketParameters::defaultCurves(const st
     return it->second;
 }
 
-inline const map<string, string>& TodaysMarketParameters::inflationIndexCurves(const string& configuration) const {
+inline const map<string, string>& TodaysMarketParameters::zeroInflationIndexCurves(const string& configuration) const {
     QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
-    auto it = inflationIndexCurves_.find(inflationIndexCurvesId(configuration));
-    QL_REQUIRE(it != inflationIndexCurves_.end(),
-               "inflation index curves with id " << inflationIndexCurvesId(configuration)
-               << " specified in configuration " << configuration << " not found");
+    auto it = zeroInflationIndexCurves_.find(zeroInflationIndexCurvesId(configuration));
+    QL_REQUIRE(it != zeroInflationIndexCurves_.end(),
+               "zero inflation index curves with id " << zeroInflationIndexCurvesId(configuration)
+                                                 << " specified in configuration " << configuration << " not found");
+    return it->second;
+}
+
+inline const map<string, string>& TodaysMarketParameters::yoyInflationIndexCurves(const string& configuration) const {
+    QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
+    auto it = yoyInflationIndexCurves_.find(yoyInflationIndexCurvesId(configuration));
+    QL_REQUIRE(it != yoyInflationIndexCurves_.end(),
+               "yoy inflation index curves with id " << yoyInflationIndexCurvesId(configuration)
+                                                 << " specified in configuration " << configuration << " not found");
     return it->second;
 }
 
@@ -345,9 +371,9 @@ TodaysMarketParameters::inflationCapFloorPriceSurfaces(const string& configurati
     QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
     auto it = inflationCapFloorPriceSurfaces_.find(inflationCapFloorPriceSurfacesId(configuration));
     QL_REQUIRE(it != inflationCapFloorPriceSurfaces_.end(), "inflation cap floor price surface with id "
-               << inflationCapFloorPriceSurfacesId(configuration)
-               << " specified in configuration " << configuration
-               << " not found");
+                                                                << inflationCapFloorPriceSurfacesId(configuration)
+                                                                << " specified in configuration " << configuration
+                                                                << " not found");
     return it->second;
 }
 
@@ -409,18 +435,26 @@ inline void TodaysMarketParameters::addDefaultCurves(const string& id, const map
         DLOG("TodaysMarketParameters, add default curves: " << id << " " << s.first << " " << s.second);
 }
 
-inline void TodaysMarketParameters::addInflationIndexCurves(const string& id, const map<string, string>& assignments) {
-    inflationIndexCurves_[id] = assignments;
+inline void TodaysMarketParameters::addZeroInflationIndexCurves(const string& id,
+                                                                const map<string, string>& assignments) {
+    zeroInflationIndexCurves_[id] = assignments;
     for (auto s : assignments)
-        DLOG("TodaysMarketParameters, add inflation index curves: "
-             << id << " " << s.first << " " << s.second);
+        DLOG("TodaysMarketParameters, add zero inflation index curves: " << id << " " << s.first << " " << s.second);
 }
 
-inline void TodaysMarketParameters::addInflationCapFloorPriceSurfaces(const string& id, const map<string, string>& assignments) {
+inline void TodaysMarketParameters::addYoYInflationIndexCurves(const string& id,
+                                                                const map<string, string>& assignments) {
+    yoyInflationIndexCurves_[id] = assignments;
+    for (auto s : assignments)
+        DLOG("TodaysMarketParameters, add yoy inflation index curves: " << id << " " << s.first << " " << s.second);
+}
+
+inline void TodaysMarketParameters::addInflationCapFloorPriceSurfaces(const string& id,
+                                                                      const map<string, string>& assignments) {
     inflationCapFloorPriceSurfaces_[id] = assignments;
     for (auto s : assignments)
-        DLOG("TodaysMarketParameters, add inflation cap floor price surfaces: "
-             << id << " " << s.first << " " << s.second);
+        DLOG("TodaysMarketParameters, add inflation cap floor price surfaces: " << id << " " << s.first << " "
+                                                                                << s.second);
 }
 
 } // namespace data

@@ -713,7 +713,7 @@
   </CrossCurrencyBasis>
   <!-- Inflation Swaps -->
   <InflationSwap>
-      <Id>EUHICP_ZC_INFLATIONSWAP</Id>
+      <Id>EUHICP_INFLATIONSWAP</Id>
       <FixCalendar>TARGET</FixCalendar>
       <FixConvention>MF</FixConvention>
       <DayCounter>30/360</DayCounter>
@@ -725,7 +725,7 @@
       <InfConvention>MF</InfConvention>
   </InflationSwap>
   <InflationSwap>
-      <Id>EUHICPXT_ZC_INFLATIONSWAP</Id>
+      <Id>EUHICPXT_INFLATIONSWAP</Id>
       <FixCalendar>TARGET</FixCalendar>
       <FixConvention>MF</FixConvention>
       <DayCounter>30/360</DayCounter>
@@ -737,7 +737,7 @@
       <InfConvention>MF</InfConvention>
   </InflationSwap>
   <InflationSwap>
-      <Id>FRHICP_ZC_INFLATIONSWAP</Id>
+      <Id>FRHICP_INFLATIONSWAP</Id>
       <FixCalendar>TARGET</FixCalendar>
       <FixConvention>MF</FixConvention>
       <DayCounter>30/360</DayCounter>
@@ -749,7 +749,7 @@
       <InfConvention>MF</InfConvention>
   </InflationSwap>
   <InflationSwap>
-      <Id>UKRPI_ZC_INFLATIONSWAP</Id>
+      <Id>UKRPI_INFLATIONSWAP</Id>
       <FixCalendar>UK</FixCalendar>
       <FixConvention>MF</FixConvention>
       <DayCounter>30/360</DayCounter>
@@ -761,7 +761,7 @@
       <InfConvention>MF</InfConvention>
   </InflationSwap>
   <InflationSwap>
-      <Id>USCPI_ZC_INFLATIONSWAP</Id>
+      <Id>USCPI_INFLATIONSWAP</Id>
       <FixCalendar>US</FixCalendar>
       <FixConvention>MF</FixConvention>
       <DayCounter>30/360</DayCounter>
@@ -773,7 +773,7 @@
       <InfConvention>MF</InfConvention>
   </InflationSwap>
   <InflationSwap>
-      <Id>ZACPI_ZC_INFLATIONSWAP</Id>
+      <Id>ZACPI_INFLATIONSWAP</Id>
       <FixCalendar>ZAR</FixCalendar>
       <FixConvention>MF</FixConvention>
       <DayCounter>30/360</DayCounter>
