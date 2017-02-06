@@ -47,12 +47,18 @@ using namespace QuantLib;
 namespace QuantExt {
 
 //! Wrapper that creates a yoy from a zc index
-/*! This creates a "ratio"-typed YoYInflationIndex with the same family name as the zero
-  index so that historical fixings can be reused */
+/*! This creates a "ratio" - type YoYInflationIndex with the same family name as the zero
+  index so that historical fixings can be reused. If a yoy ts is given, this is used to
+  forecast fixings. If the ts is not given, the forecast falls back on the zero index, i.e.
+  if the zero index has a curve attached a plain yoy rate without convexity adjustment
+  is estimated using this index. */
 class YoYInflationIndexWrapper : public YoYInflationIndex {
 public:
     YoYInflationIndexWrapper(const boost::shared_ptr<ZeroInflationIndex> zeroIndex,
                              const Handle<YoYInflationTermStructure>& ts = Handle<YoYInflationTermStructure>());
+    Real forecastFixing(const Date& fixingDate) const;
+private:
+    const boost::shared_ptr<ZeroInflationIndex> zeroIndex_;
 };
 
 } // namesapce QuantExt

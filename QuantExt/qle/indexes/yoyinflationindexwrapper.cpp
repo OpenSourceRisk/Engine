@@ -42,6 +42,15 @@ namespace QuantExt {
 YoYInflationIndexWrapper::YoYInflationIndexWrapper(const boost::shared_ptr<ZeroInflationIndex> zeroIndex,
                                                    const Handle<YoYInflationTermStructure>& ts)
     : YoYInflationIndex(zeroIndex->familyName(), zeroIndex->region(), zeroIndex->revised(), zeroIndex->interpolated(),
-                        true, zeroIndex->frequency(), zeroIndex->availabilityLag(), zeroIndex->currency(), ts) {}
+                        true, zeroIndex->frequency(), zeroIndex->availabilityLag(), zeroIndex->currency(), ts),
+      zeroIndex_(zeroIndex) {}
+
+Real YoYInflationIndexWrapper::forecastFixing(const Date& fixingDate) const {
+    if (!yoyInflationTermStructure().empty())
+        return YoYInflationIndex::fixing(fixingDate);
+    Real f1 = zeroIndex_->fixing(fixingDate);
+    Real f0 = zeroIndex_->fixing(fixingDate - 1 * Years); // FIXME convention ?
+    return (f1 - f0) / f0;
+}
 
 } // namesapce QuantExt

@@ -21,8 +21,9 @@
 
 #include <qle/indexes/yoyinflationindexwrapper.hpp>
 
-#include <ql/termstructures/inflation/piecewisezeroinflationcurve.hpp>
+#include <ql/pricingengines/swap/discountingswapengine.hpp>
 #include <ql/termstructures/inflation/piecewiseyoyinflationcurve.hpp>
+#include <ql/termstructures/inflation/piecewisezeroinflationcurve.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 
 #include <algorithm>
@@ -62,11 +63,11 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
         const std::vector<string> strQuotes = config->quotes();
         std::vector<Handle<Quote>> quotes(strQuotes.size(), Handle<Quote>());
         std::vector<Period> terms(strQuotes.size());
+        std::vector<bool> isZc(strQuotes.size(), true);
 
         for (auto& md : loader.loadQuotes(asof)) {
 
-            if (md->asofDate() == asof && ((md->instrumentType() == MarketDatum::InstrumentType::ZC_INFLATIONSWAP &&
-                                            config->type() == InflationCurveConfig::Type::ZC) ||
+            if (md->asofDate() == asof && (md->instrumentType() == MarketDatum::InstrumentType::ZC_INFLATIONSWAP ||
                                            (md->instrumentType() == MarketDatum::InstrumentType::YY_INFLATIONSWAP &&
                                             config->type() == InflationCurveConfig::Type::YY))) {
 
@@ -77,6 +78,7 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                         QL_REQUIRE(quotes[it - strQuotes.begin()].empty(), "duplicate quote " << q->name());
                         quotes[it - strQuotes.begin()] = q->quote();
                         terms[it - strQuotes.begin()] = q->term();
+                        isZc[it - strQuotes.begin()] = true;
                     }
                 }
 
@@ -87,10 +89,18 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                         QL_REQUIRE(quotes[it - strQuotes.begin()].empty(), "duplicate quote " << q2->name());
                         quotes[it - strQuotes.begin()] = q2->quote();
                         terms[it - strQuotes.begin()] = q2->term();
+                        isZc[it - strQuotes.begin()] = false;
                     }
                 }
             }
         }
+
+        // do we have all quotes and do we derive yoy quotes from zc ?
+        for (Size i = 0; i < strQuotes.size(); ++i) {
+            QL_REQUIRE(!quotes[i].empty(), "quote " << strQuotes[i] << " not found in market data.");
+            QL_REQUIRE(isZc[i] == isZc[0], "mixed zc and yoy quotes");
+        }
+        bool derive_yoy_from_zc = (config->type() == InflationCurveConfig::Type::YY && isZc[0]);
 
         // construct seasonality
         boost::shared_ptr<Seasonality> seasonality;
@@ -128,12 +138,12 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
         // base zero / yoy rate: if given, take it, otherwise set it to first quote
         Real baseRate = config->baseRate() != Null<Real>() ? config->baseRate() : quotes[0]->value();
 
-        if (config->type() == InflationCurveConfig::Type::ZC) {
+        boost::shared_ptr<YoYInflationIndex> zc_to_yoy_conversion_index;
+        if (config->type() == InflationCurveConfig::Type::ZC || derive_yoy_from_zc) {
             // ZC Curve
             std::vector<boost::shared_ptr<ZeroInflationTraits::helper>> instruments;
             boost::shared_ptr<ZeroInflationIndex> index = conv->index();
             for (Size i = 0; i < strQuotes.size(); ++i) {
-                QL_REQUIRE(!quotes[i].empty(), "quote " << strQuotes[i] << " not found in market data.");
                 // QL conventions do not incorporate settlement delay => patch here once QL is patched
                 Date maturity = asof + terms[i];
                 instruments.push_back(boost::make_shared<ZeroCouponInflationSwapHelper>(
@@ -149,18 +159,49 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                 boost::shared_ptr<PiecewiseZeroInflationCurve<Linear>>(new PiecewiseZeroInflationCurve<Linear>(
                     asof, config->calendar(), config->dayCounter(), config->lag(), config->frequency(), false, baseRate,
                     nominalTs, instruments, config->tolerance()));
-        } else if (config->type() == InflationCurveConfig::Type::YY) {
+            if (derive_yoy_from_zc) {
+                // set up yoy wrapper with empty ts, so that zero index is used to forecast fixings
+                // for this link the appropriate curve to the zero index
+                zc_to_yoy_conversion_index = boost::make_shared<QuantExt::YoYInflationIndexWrapper>(index->clone(
+                    index->interpolated()
+                        ? Handle<ZeroInflationTermStructure>(
+                              boost::dynamic_pointer_cast<ZeroInflationTermStructure>(curveIndexInterpolated_))
+                        : Handle<ZeroInflationTermStructure>(
+                              boost::dynamic_pointer_cast<ZeroInflationTermStructure>(curveIndexNotInterpolated_))));
+            }
+        }
+
+        if (config->type() == InflationCurveConfig::Type::YY) {
             // YOY Curve
             std::vector<boost::shared_ptr<YoYInflationTraits::helper>> instruments;
             boost::shared_ptr<ZeroInflationIndex> zcindex = conv->index();
-            boost::shared_ptr<YoYInflationIndex> index = boost::make_shared <QuantExt::YoYInflationIndexWrapper>(zcindex);
+            boost::shared_ptr<YoYInflationIndex> index =
+                boost::make_shared<QuantExt::YoYInflationIndexWrapper>(zcindex);
             for (Size i = 0; i < strQuotes.size(); ++i) {
-                QL_REQUIRE(!quotes[i].empty(), "quote " << strQuotes[i] << " not found in market data.");
-                // QL conventions do not incorporate settlement delay => patch here once QL is patched
                 Date maturity = asof + terms[i];
+                Real effectiveQuote = quotes[i]->value();
+                if (derive_yoy_from_zc) {
+                    // contruct a yoy swap just as it is done in the yoy inflation helper
+                    Schedule schedule = MakeSchedule()
+                                            .from(Settings::instance().evaluationDate())
+                                            .to(maturity)
+                                            .withTenor(1 * Years)
+                                            .withConvention(Unadjusted)
+                                            .withCalendar(conv->fixCalendar())
+                                            .backwards();
+                    YearOnYearInflationSwap tmp(YearOnYearInflationSwap::Payer, 1000000.0, schedule, 0.02,
+                                                conv->dayCounter(), schedule, zc_to_yoy_conversion_index,
+                                                conv->observationLag(), 0.0, conv->dayCounter(), conv->fixCalendar(),
+                                                conv->fixConvention());
+                    boost::shared_ptr<PricingEngine> engine = boost::make_shared<QuantLib::DiscountingSwapEngine>(nominalTs);
+                    tmp.setPricingEngine(engine);
+                    effectiveQuote = tmp.fairRate();
+                    DLOG("Derive " << terms[i] << " yoy quote " << effectiveQuote << " from zc quote " << quotes[i]->value());
+                }
+                // QL conventions do not incorporate settlement delay => patch here once QL is patched
                 instruments.push_back(boost::make_shared<YearOnYearInflationSwapHelper>(
-                    quotes[i], conv->observationLag(), maturity, conv->fixCalendar(), conv->fixConvention(),
-                    conv->dayCounter(), index));
+                    Handle<Quote>(boost::make_shared<SimpleQuote>(effectiveQuote)), conv->observationLag(), maturity,
+                    conv->fixCalendar(), conv->fixConvention(), conv->dayCounter(), index));
             }
             // base zero rate: if given, take it, otherwise set it to first quote
             Real baseRate = config->baseRate() != Null<Real>() ? config->baseRate() : quotes[0]->value();
@@ -174,8 +215,6 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                     asof, config->calendar(), config->dayCounter(), config->lag(), config->frequency(), false, baseRate,
                     nominalTs, instruments, config->tolerance()));
             curveIndexNotInterpolated_->enableExtrapolation(config->extrapolate());
-        } else {
-            QL_FAIL("InflationCurve: curve type not covered");
         }
 
         if (seasonality != nullptr) {
