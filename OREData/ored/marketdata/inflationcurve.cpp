@@ -19,10 +19,10 @@
 #include <ored/marketdata/inflationcurve.hpp>
 #include <ored/utilities/log.hpp>
 
-#include <qle/indexes/yoyinflationindexwrapper.hpp>
+#include <qle/indexes/inflationindexwrapper.hpp>
 
-#include <ql/cashflows/yoyinflationcoupon.hpp>
 #include <ql/cashflows/couponpricer.hpp>
+#include <ql/cashflows/yoyinflationcoupon.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
 #include <ql/termstructures/inflation/piecewiseyoyinflationcurve.hpp>
 #include <ql/termstructures/inflation/piecewisezeroinflationcurve.hpp>
@@ -140,6 +140,8 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
         // base zero / yoy rate: if given, take it, otherwise set it to first quote
         Real baseRate = config->baseRate() != Null<Real>() ? config->baseRate() : quotes[0]->value();
 
+        interpolatedIndex_ = conv->interpolated();
+
         boost::shared_ptr<YoYInflationIndex> zc_to_yoy_conversion_index;
         if (config->type() == InflationCurveConfig::Type::ZC || derive_yoy_from_zc) {
             // ZC Curve
@@ -152,24 +154,16 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                     quotes[i], conv->observationLag(), maturity, conv->fixCalendar(), conv->fixConvention(),
                     conv->dayCounter(), index));
             }
-            curveIndexInterpolated_ =
-                boost::shared_ptr<PiecewiseZeroInflationCurve<Linear>>(new PiecewiseZeroInflationCurve<Linear>(
-                    asof, config->calendar(), config->dayCounter(), config->lag(), config->frequency(), true, baseRate,
-                    nominalTs, instruments, config->tolerance()));
-            curveIndexInterpolated_->enableExtrapolation(config->extrapolate());
-            curveIndexNotInterpolated_ =
-                boost::shared_ptr<PiecewiseZeroInflationCurve<Linear>>(new PiecewiseZeroInflationCurve<Linear>(
-                    asof, config->calendar(), config->dayCounter(), config->lag(), config->frequency(), false, baseRate,
-                    nominalTs, instruments, config->tolerance()));
+            curve_ = boost::shared_ptr<PiecewiseZeroInflationCurve<Linear>>(new PiecewiseZeroInflationCurve<Linear>(
+                asof, config->calendar(), config->dayCounter(), config->lag(), config->frequency(), interpolatedIndex_,
+                baseRate, nominalTs, instruments, config->tolerance()));
             if (derive_yoy_from_zc) {
                 // set up yoy wrapper with empty ts, so that zero index is used to forecast fixings
                 // for this link the appropriate curve to the zero index
-                zc_to_yoy_conversion_index = boost::make_shared<QuantExt::YoYInflationIndexWrapper>(index->clone(
-                    index->interpolated()
-                        ? Handle<ZeroInflationTermStructure>(
-                              boost::dynamic_pointer_cast<ZeroInflationTermStructure>(curveIndexInterpolated_))
-                        : Handle<ZeroInflationTermStructure>(
-                              boost::dynamic_pointer_cast<ZeroInflationTermStructure>(curveIndexNotInterpolated_))));
+                zc_to_yoy_conversion_index = boost::make_shared<QuantExt::YoYInflationIndexWrapper>(
+                    index->clone(Handle<ZeroInflationTermStructure>(
+                        boost::dynamic_pointer_cast<ZeroInflationTermStructure>(curve_))),
+                    interpolatedIndex_);
             }
         }
 
@@ -178,7 +172,7 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
             std::vector<boost::shared_ptr<YoYInflationTraits::helper>> instruments;
             boost::shared_ptr<ZeroInflationIndex> zcindex = conv->index();
             boost::shared_ptr<YoYInflationIndex> index =
-                boost::make_shared<QuantExt::YoYInflationIndexWrapper>(zcindex);
+                boost::make_shared<QuantExt::YoYInflationIndexWrapper>(zcindex, interpolatedIndex_);
             boost::shared_ptr<InflationCouponPricer> yoyCpnPricer =
                 boost::make_shared<QuantExt::YoYInflationCouponPricer2>(nominalTs);
             for (Size i = 0; i < strQuotes.size(); ++i) {
@@ -197,7 +191,7 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                                                 conv->dayCounter(), schedule, zc_to_yoy_conversion_index,
                                                 conv->observationLag(), 0.0, conv->dayCounter(), conv->fixCalendar(),
                                                 conv->fixConvention());
-                    for(auto &c: tmp.yoyLeg()) {
+                    for (auto& c : tmp.yoyLeg()) {
                         auto cpn = boost::dynamic_pointer_cast<YoYInflationCoupon>(c);
                         QL_REQUIRE(cpn, "yoy inflation coupon expected, could not cast");
                         cpn->setPricer(yoyCpnPricer);
@@ -216,23 +210,14 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
             }
             // base zero rate: if given, take it, otherwise set it to first quote
             Real baseRate = config->baseRate() != Null<Real>() ? config->baseRate() : quotes[0]->value();
-            curveIndexInterpolated_ =
-                boost::shared_ptr<PiecewiseYoYInflationCurve<Linear>>(new PiecewiseYoYInflationCurve<Linear>(
-                    asof, config->calendar(), config->dayCounter(), config->lag(), config->frequency(), true, baseRate,
-                    nominalTs, instruments, config->tolerance()));
-            curveIndexInterpolated_->enableExtrapolation(config->extrapolate());
-            curveIndexNotInterpolated_ =
-                boost::shared_ptr<PiecewiseYoYInflationCurve<Linear>>(new PiecewiseYoYInflationCurve<Linear>(
-                    asof, config->calendar(), config->dayCounter(), config->lag(), config->frequency(), false, baseRate,
-                    nominalTs, instruments, config->tolerance()));
-            curveIndexNotInterpolated_->enableExtrapolation(config->extrapolate());
+            curve_ = boost::shared_ptr<PiecewiseYoYInflationCurve<Linear>>(new PiecewiseYoYInflationCurve<Linear>(
+                asof, config->calendar(), config->dayCounter(), config->lag(), config->frequency(), interpolatedIndex_,
+                baseRate, nominalTs, instruments, config->tolerance()));
         }
 
         if (seasonality != nullptr) {
-            curveIndexNotInterpolated_->setSeasonality(seasonality);
-            curveIndexInterpolated_->setSeasonality(seasonality);
-            curveIndexNotInterpolated_->enableExtrapolation(config->extrapolate());
-            curveIndexInterpolated_->enableExtrapolation(config->extrapolate());
+            curve_->setSeasonality(seasonality);
+            curve_->enableExtrapolation(config->extrapolate());
         }
 
     } catch (std::exception& e) {

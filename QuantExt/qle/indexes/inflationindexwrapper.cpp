@@ -54,8 +54,8 @@ Rate ZeroInflationIndexWrapper::fixing(const Date& fixingDate, bool /*forecastTo
 }
 
 YoYInflationIndexWrapper::YoYInflationIndexWrapper(const boost::shared_ptr<ZeroInflationIndex> zeroIndex,
-                                                   const Handle<YoYInflationTermStructure>& ts)
-    : YoYInflationIndex(zeroIndex->familyName(), zeroIndex->region(), zeroIndex->revised(), zeroIndex->interpolated(),
+                                                   const bool interpolated, const Handle<YoYInflationTermStructure>& ts)
+    : YoYInflationIndex(zeroIndex->familyName(), zeroIndex->region(), zeroIndex->revised(), interpolated,
                         true, zeroIndex->frequency(), zeroIndex->availabilityLag(), zeroIndex->currency(), ts),
       zeroIndex_(zeroIndex) {}
 

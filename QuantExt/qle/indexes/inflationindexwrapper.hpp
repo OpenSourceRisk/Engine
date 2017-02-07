@@ -23,8 +23,8 @@
 #ifndef quantext_inflation_index_wrapper_hpp
 #define quantext_inflation_index_wrapper_hpp
 
-#include <ql/cashflows/inflationcouponpricer.hpp>
 #include <ql/cashflows/cpicoupon.hpp>
+#include <ql/cashflows/inflationcouponpricer.hpp>
 #include <ql/indexes/inflationindex.hpp>
 
 using namespace QuantLib;
@@ -52,10 +52,16 @@ private:
   index so that historical fixings can be reused. If a yoy ts is given, this is used to
   forecast fixings. If the ts is not given, the forecast falls back on the zero index, i.e.
   if the zero index has a curve attached a plain yoy rate without convexity adjustment
-  is estimated using this index. */
+  is estimated using this index.
+  The interpolation follows
+  - the interpolated flag for historical fixings
+  - the interpolated flag for forecasted fixings if a yoy ts is given
+  - the underlying zero index behaviour for forecasted fixings if no yoy ts is given
+*/
 class YoYInflationIndexWrapper : public YoYInflationIndex {
 public:
     YoYInflationIndexWrapper(const boost::shared_ptr<ZeroInflationIndex> zeroIndex,
+                             const bool interpolated,
                              const Handle<YoYInflationTermStructure>& ts = Handle<YoYInflationTermStructure>());
     /*! \warning the forecastTodaysFixing parameter (required by the Index interface) is currently ignored. */
     Rate fixing(const Date& fixingDate, bool forecastTodaysFixing = false) const;

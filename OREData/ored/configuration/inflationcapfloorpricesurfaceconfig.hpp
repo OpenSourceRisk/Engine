@@ -24,11 +24,11 @@
 
 #pragma once
 
+#include <ored/utilities/xmlutils.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/daycounter.hpp>
 #include <ql/time/period.hpp>
 #include <ql/types.hpp>
-#include <ored/utilities/xmlutils.hpp>
 
 using std::string;
 using std::vector;
@@ -52,9 +52,8 @@ public:
                                         const Period& observationLag, const Calendar& calendar,
                                         const BusinessDayConvention& businessDayConvention,
                                         const DayCounter& dayCounter, const string& index, const string& indexCurve,
-                                        const bool indexInterpolated, const string& yieldTermStructure,
-                                        const vector<Real>& capStrikes, const vector<Real>& floorStrikes,
-                                        const vector<Period>& maturities);
+                                        const string& yieldTermStructure, const vector<Real>& capStrikes,
+                                        const vector<Real>& floorStrikes, const vector<Period>& maturities);
     virtual ~InflationCapFloorPriceSurfaceConfig() {}
 
     virtual void fromXML(XMLNode* node);
@@ -71,7 +70,6 @@ public:
     const DayCounter& dayCounter() const { return dayCounter_; }
     const string& index() const { return index_; }
     const string& indexCurve() const { return indexCurve_; }
-    const bool& indexInterpolated() const { return indexInterpolated_; }
     const string& yieldTermStructure() const { return yieldTermStructure_; }
     const vector<Real>& capStrikes() const { return capStrikes_; }
     const vector<Real>& floorStrikes() const { return floorStrikes_; }
@@ -88,7 +86,6 @@ public:
     DayCounter& dayCounter() { return dayCounter_; }
     string& index() { return index_; }
     string& indexCurve() { return indexCurve_; }
-    bool& indexInterpolated() { return indexInterpolated_; }
     string& yieldTermStructure() { return yieldTermStructure_; }
     vector<Real>& capStrikes() { return capStrikes_; }
     vector<Real>& floorStrikes() { return floorStrikes_; }
@@ -105,7 +102,6 @@ private:
     DayCounter dayCounter_;
     string index_;
     string indexCurve_;
-    bool indexInterpolated_;
     string yieldTermStructure_;
     vector<Real> capStrikes_;
     vector<Real> floorStrikes_;

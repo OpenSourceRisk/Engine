@@ -16,9 +16,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ql/errors.hpp>
 #include <ored/configuration/inflationcapfloorpricesurfaceconfig.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ql/errors.hpp>
 
 #include <iomanip>
 
@@ -30,12 +30,12 @@ namespace data {
 InflationCapFloorPriceSurfaceConfig::InflationCapFloorPriceSurfaceConfig(
     const string& curveID, const string& curveDescription, const Type type, const Period& observationLag,
     const Calendar& calendar, const BusinessDayConvention& businessDayConvention, const DayCounter& dayCounter,
-    const string& index, const string& indexCurve, const bool indexInterpolated, const string& yieldTermStructure,
-    const vector<Real>& capStrikes, const vector<Real>& floorStrikes, const vector<Period>& maturities)
+    const string& index, const string& indexCurve, const string& yieldTermStructure, const vector<Real>& capStrikes,
+    const vector<Real>& floorStrikes, const vector<Period>& maturities)
     : curveID_(curveID), curveDescription_(curveDescription), type_(type), observationLag_(observationLag),
       calendar_(calendar), businessDayConvention_(businessDayConvention), dayCounter_(dayCounter), index_(index),
-      indexCurve_(indexCurve), indexInterpolated_(indexInterpolated), yieldTermStructure_(yieldTermStructure),
-      capStrikes_(capStrikes), floorStrikes_(floorStrikes), maturities_(maturities) {}
+      indexCurve_(indexCurve), yieldTermStructure_(yieldTermStructure), capStrikes_(capStrikes),
+      floorStrikes_(floorStrikes), maturities_(maturities) {}
 
 void InflationCapFloorPriceSurfaceConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "InflationCapFloorPriceSurface");
@@ -68,9 +68,6 @@ void InflationCapFloorPriceSurfaceConfig::fromXML(XMLNode* node) {
 
     index_ = XMLUtils::getChildValue(node, "Index", true);
     indexCurve_ = XMLUtils::getChildValue(node, "IndexCurve", true);
-
-    string idxInt = XMLUtils::getChildValue(node, "IndexInterpolated", true);
-    indexInterpolated_ = parseBool(idxInt);
 
     yieldTermStructure_ = XMLUtils::getChildValue(node, "YieldTermStructure", true);
 
@@ -107,7 +104,6 @@ XMLNode* InflationCapFloorPriceSurfaceConfig::toXML(XMLDocument& doc) {
 
     XMLUtils::addChild(doc, node, "Index", index_);
     XMLUtils::addChild(doc, node, "IndexCurve", indexCurve_);
-    XMLUtils::addChild(doc, node, "IndexInterpolated", indexInterpolated_ ? "true" : "false");
     XMLUtils::addChild(doc, node, "YieldTermStructure", yieldTermStructure_);
     XMLUtils::addChild(doc, node, "CapStrikes", capStrikes_);
     XMLUtils::addChild(doc, node, "FloorStrikes", floorStrikes_);

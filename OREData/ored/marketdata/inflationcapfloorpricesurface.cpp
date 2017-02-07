@@ -60,11 +60,11 @@ InflationCapFloorPriceSurface::InflationCapFloorPriceSurface(
         boost::shared_ptr<ZeroInflationIndex> index;
         auto it2 = inflationCurves.find(config->indexCurve());
         if (it2 != inflationCurves.end()) {
-            boost::shared_ptr<ZeroInflationTermStructure> ts = boost::dynamic_pointer_cast<ZeroInflationTermStructure>(
-                it2->second->inflationTermStructure(config->indexInterpolated()));
+            boost::shared_ptr<ZeroInflationTermStructure> ts =
+                boost::dynamic_pointer_cast<ZeroInflationTermStructure>(it2->second->inflationTermStructure());
             QL_REQUIRE(ts, "inflation term structure " << config->indexCurve()
                                                        << " was expected to be zero, but is not");
-            index = parseZeroInflationIndex(config->index(), config->indexInterpolated(),
+            index = parseZeroInflationIndex(config->index(), it2->second->interpolatedIndex(),
                                             Handle<ZeroInflationTermStructure>(ts));
         } else {
             QL_FAIL("The zero inflation curve, " << config->indexCurve()

@@ -54,13 +54,18 @@ public:
     //! getters
     const InflationCurveSpec& spec() const { return spec_; }
 
-    const boost::shared_ptr<InflationTermStructure> inflationTermStructure(const bool indexIsInterpolated) const {
-        return indexIsInterpolated ? curveIndexInterpolated_ : curveIndexNotInterpolated_;
+    const boost::shared_ptr<InflationTermStructure> inflationTermStructure() const {
+        return curve_;
+    }
+
+    const bool interpolatedIndex() const {
+        return interpolatedIndex_;
     }
 
 private:
     InflationCurveSpec spec_;
-    boost::shared_ptr<InflationTermStructure> curveIndexInterpolated_, curveIndexNotInterpolated_;
+    boost::shared_ptr<InflationTermStructure> curve_;
+    bool interpolatedIndex_;
 };
 }
 }
