@@ -16,36 +16,36 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*
- Copyright (C) 2007 Chris Kenyon
-
- This file is part of QuantLib, a free-software/open-source library
- for financial quantitative analysts and developers - http://quantlib.org/
-
- QuantLib is free software: you can redistribute it and/or modify it
- under the terms of the QuantLib license.  You should have received a
- copy of the license along with this program; if not, please email
- <quantlib-dev@lists.sf.net>. The license is also available online at
- <http://quantlib.org/license.shtml>.
-
- This program is distributed in the hope that it will be useful, but WITHOUT
- ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- FOR A PARTICULAR PURPOSE.  See the license for more details.
+/*! \file inflationindexwrapper.hpp
+    \brief wrapper classes for inflation yoy and interpolation
 */
 
-/*! \file yoyinflationindexwrapper.hpp
-    \brief wrapper class to create yoy from zc indices
-*/
-
-#ifndef quantext_yoy_inflation_index_wrapper_hpp
-#define quantext_yoy_inflation_index_wrapper_hpp
+#ifndef quantext_inflation_index_wrapper_hpp
+#define quantext_inflation_index_wrapper_hpp
 
 #include <ql/cashflows/inflationcouponpricer.hpp>
+#include <ql/cashflows/cpicoupon.hpp>
 #include <ql/indexes/inflationindex.hpp>
 
 using namespace QuantLib;
 
 namespace QuantExt {
+
+//! Wrapper that changes the interpolation of an underlying ZC inflation index
+/*! The (possible) change in the interpolation is _not_ reflected in the index class itself,
+  only the fixing methods behave consistently */
+class ZeroInflationIndexWrapper : public ZeroInflationIndex {
+public:
+    ZeroInflationIndexWrapper(const boost::shared_ptr<ZeroInflationIndex> source,
+                              const CPI::InterpolationType interpolation);
+    /*! \warning the forecastTodaysFixing parameter (required by the Index interface) is currently ignored. */
+    Rate fixing(const Date& fixingDate, bool forecastTodaysFixing = false) const;
+
+private:
+    Rate forecastFixing(const Date& fixingDate) const;
+    const boost::shared_ptr<ZeroInflationIndex> source_;
+    const CPI::InterpolationType interpolation_;
+};
 
 //! Wrapper that creates a yoy from a zc index
 /*! This creates a "ratio" - type YoYInflationIndex with the same family name as the zero

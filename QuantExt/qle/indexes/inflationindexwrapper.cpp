@@ -16,28 +16,42 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*
- Copyright (C) 2007 Chris Kenyon
-
- This file is part of QuantLib, a free-software/open-source library
- for financial quantitative analysts and developers - http://quantlib.org/
-
- QuantLib is free software: you can redistribute it and/or modify it
- under the terms of the QuantLib license.  You should have received a
- copy of the license along with this program; if not, please email
- <quantlib-dev@lists.sf.net>. The license is also available online at
- <http://quantlib.org/license.shtml>.
-
- This program is distributed in the hope that it will be useful, but WITHOUT
- ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- FOR A PARTICULAR PURPOSE.  See the license for more details.
-*/
-
 #include <ql/termstructures/inflationtermstructure.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
-#include <qle/indexes/yoyinflationindexwrapper.hpp>
+#include <qle/indexes/inflationindexwrapper.hpp>
 
 namespace QuantExt {
+
+ZeroInflationIndexWrapper::ZeroInflationIndexWrapper(const boost::shared_ptr<ZeroInflationIndex> source,
+                                                     const CPI::InterpolationType interpolation)
+    : ZeroInflationIndex(source->familyName(), source->region(), source->revised(), source->interpolated(),
+                         source->frequency(), source->availabilityLag(), source->currency(),
+                         source->zeroInflationTermStructure()),
+      source_(source), interpolation_(interpolation) {}
+
+Rate ZeroInflationIndexWrapper::fixing(const Date& fixingDate, bool /*forecastTodaysFixing*/) const {
+
+    // duplicated logic from CPICashFlow::amount()
+
+    // what interpolation do we use? Index / flat / linear
+    if (interpolation_ == CPI::AsIndex) {
+        return source_->fixing(fixingDate);
+    } else {
+        std::pair<Date, Date> dd = inflationPeriod(fixingDate, frequency());
+        Real indexStart = source_->fixing(dd.first);
+        if (interpolation_ == CPI::Linear) {
+            Real indexEnd = source_->fixing(dd.second + Period(1, Days));
+            // linear interpolation
+            return indexStart +
+                   (indexEnd - indexStart) * (fixingDate - dd.first) /
+                       ((dd.second + Period(1, Days)) -
+                        dd.first); // can't get to next period's value within current period
+        } else {
+            // no interpolation, i.e. flat = constant, so use start-of-period value
+            return indexStart;
+        }
+    }
+}
 
 YoYInflationIndexWrapper::YoYInflationIndexWrapper(const boost::shared_ptr<ZeroInflationIndex> zeroIndex,
                                                    const Handle<YoYInflationTermStructure>& ts)
