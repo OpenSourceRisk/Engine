@@ -217,8 +217,8 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
 
         if (seasonality != nullptr) {
             curve_->setSeasonality(seasonality);
-            curve_->enableExtrapolation(config->extrapolate());
         }
+        curve_->enableExtrapolation(config->extrapolate());
 
     } catch (std::exception& e) {
         QL_FAIL("inflation curve building failed: " << e.what());
