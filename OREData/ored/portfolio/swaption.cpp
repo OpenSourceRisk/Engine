@@ -371,7 +371,8 @@ Swaption::buildUnderlyingSwaps(const boost::shared_ptr<PricingEngine>& swapEngin
                                                 << QuantLib::io::iso_date(coupon2->accrualStartDate()) << " "
                                                 << "exercise " << QuantLib::io::iso_date(exerciseDates[i]));
         } else {
-            WLOG("Added underlying Swap with at least one empty leg!");
+            WLOG("Added underlying Swap with at least one empty leg for exercise "
+                 << QuantLib::io::iso_date(exerciseDates[i]) << "!");
         }
     }
     return swaps;
