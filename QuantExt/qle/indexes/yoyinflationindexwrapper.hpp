@@ -40,6 +40,7 @@
 #ifndef quantext_yoy_inflation_index_wrapper_hpp
 #define quantext_yoy_inflation_index_wrapper_hpp
 
+#include <ql/cashflows/inflationcouponpricer.hpp>
 #include <ql/indexes/inflationindex.hpp>
 
 using namespace QuantLib;
@@ -56,9 +57,29 @@ class YoYInflationIndexWrapper : public YoYInflationIndex {
 public:
     YoYInflationIndexWrapper(const boost::shared_ptr<ZeroInflationIndex> zeroIndex,
                              const Handle<YoYInflationTermStructure>& ts = Handle<YoYInflationTermStructure>());
-    Real forecastFixing(const Date& fixingDate) const;
+    /*! \warning the forecastTodaysFixing parameter (required by the Index interface) is currently ignored. */
+    Rate fixing(const Date& fixingDate, bool forecastTodaysFixing = false) const;
+
 private:
+    Rate forecastFixing(const Date& fixingDate) const;
     const boost::shared_ptr<ZeroInflationIndex> zeroIndex_;
+};
+
+//! YY coupon pricer that takes the nominal ts directly instead of reading it from the yoy ts
+/*! This is useful if no yoy ts is given, as it might be the case of the yoy inflation index wrapper */
+class YoYInflationCouponPricer2 : public YoYInflationCouponPricer {
+public:
+    YoYInflationCouponPricer2(
+        const Handle<YieldTermStructure>& nominalTs,
+        const Handle<YoYOptionletVolatilitySurface>& capletVol = Handle<YoYOptionletVolatilitySurface>())
+        : YoYInflationCouponPricer(capletVol), nominalTs_(nominalTs) {}
+    //! \name InflationCouponPricer interface
+    //@{
+    virtual void initialize(const InflationCoupon&);
+    //@}
+
+protected:
+    const Handle<YieldTermStructure> nominalTs_;
 };
 
 } // namesapce QuantExt

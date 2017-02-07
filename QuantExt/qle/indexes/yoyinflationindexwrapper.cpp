@@ -45,12 +45,57 @@ YoYInflationIndexWrapper::YoYInflationIndexWrapper(const boost::shared_ptr<ZeroI
                         true, zeroIndex->frequency(), zeroIndex->availabilityLag(), zeroIndex->currency(), ts),
       zeroIndex_(zeroIndex) {}
 
+Rate YoYInflationIndexWrapper::fixing(const Date& fixingDate, bool /*forecastTodaysFixing*/) const {
+
+    // duplicated logic from YoYInflationIndex, this would not be necessary, if forecastFixing
+    // was defined virtual in InflationIndex
+    Date today = Settings::instance().evaluationDate();
+    Date todayMinusLag = today - availabilityLag_;
+    std::pair<Date, Date> lim = inflationPeriod(todayMinusLag, frequency_);
+    Date lastFix = lim.first - 1;
+
+    Date flatMustForecastOn = lastFix + 1;
+    Date interpMustForecastOn = lastFix + 1 - Period(frequency_);
+
+    if (interpolated() && fixingDate >= interpMustForecastOn) {
+        return forecastFixing(fixingDate);
+    }
+
+    if (!interpolated() && fixingDate >= flatMustForecastOn) {
+        return forecastFixing(fixingDate);
+    }
+
+    // historical fixing
+    return YoYInflationIndex::fixing(fixingDate);
+}
+
 Real YoYInflationIndexWrapper::forecastFixing(const Date& fixingDate) const {
     if (!yoyInflationTermStructure().empty())
         return YoYInflationIndex::fixing(fixingDate);
     Real f1 = zeroIndex_->fixing(fixingDate);
     Real f0 = zeroIndex_->fixing(fixingDate - 1 * Years); // FIXME convention ?
     return (f1 - f0) / f0;
+}
+
+void YoYInflationCouponPricer2::initialize(const InflationCoupon& coupon) {
+    // duplicated logic from YoYInflationCouponPricer
+    coupon_ = dynamic_cast<const YoYInflationCoupon*>(&coupon);
+    QL_REQUIRE(coupon_, "year-on-year inflation coupon needed");
+    gearing_ = coupon_->gearing();
+    spread_ = coupon_->spread();
+    paymentDate_ = coupon_->date();
+
+    // this is different from QuantLib::YoYInflationCouponPricer
+    rateCurve_ = nominalTs_;
+
+    // past or future fixing is managed in YoYInflationIndex::fixing()
+    // use yield curve from index (which sets discount)
+
+    discount_ = 1.0;
+    if (paymentDate_ > rateCurve_->referenceDate())
+        discount_ = rateCurve_->discount(paymentDate_);
+
+    spreadLegValue_ = spread_ * coupon_->accrualPeriod() * discount_;
 }
 
 } // namesapce QuantExt

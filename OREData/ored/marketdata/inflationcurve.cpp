@@ -21,6 +21,8 @@
 
 #include <qle/indexes/yoyinflationindexwrapper.hpp>
 
+#include <ql/cashflows/yoyinflationcoupon.hpp>
+#include <ql/cashflows/couponpricer.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
 #include <ql/termstructures/inflation/piecewiseyoyinflationcurve.hpp>
 #include <ql/termstructures/inflation/piecewisezeroinflationcurve.hpp>
@@ -177,6 +179,8 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
             boost::shared_ptr<ZeroInflationIndex> zcindex = conv->index();
             boost::shared_ptr<YoYInflationIndex> index =
                 boost::make_shared<QuantExt::YoYInflationIndexWrapper>(zcindex);
+            boost::shared_ptr<InflationCouponPricer> yoyCpnPricer =
+                boost::make_shared<QuantExt::YoYInflationCouponPricer2>(nominalTs);
             for (Size i = 0; i < strQuotes.size(); ++i) {
                 Date maturity = asof + terms[i];
                 Real effectiveQuote = quotes[i]->value();
@@ -193,10 +197,17 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                                                 conv->dayCounter(), schedule, zc_to_yoy_conversion_index,
                                                 conv->observationLag(), 0.0, conv->dayCounter(), conv->fixCalendar(),
                                                 conv->fixConvention());
-                    boost::shared_ptr<PricingEngine> engine = boost::make_shared<QuantLib::DiscountingSwapEngine>(nominalTs);
+                    for(auto &c: tmp.yoyLeg()) {
+                        auto cpn = boost::dynamic_pointer_cast<YoYInflationCoupon>(c);
+                        QL_REQUIRE(cpn, "yoy inflation coupon expected, could not cast");
+                        cpn->setPricer(yoyCpnPricer);
+                    }
+                    boost::shared_ptr<PricingEngine> engine =
+                        boost::make_shared<QuantLib::DiscountingSwapEngine>(nominalTs);
                     tmp.setPricingEngine(engine);
                     effectiveQuote = tmp.fairRate();
-                    DLOG("Derive " << terms[i] << " yoy quote " << effectiveQuote << " from zc quote " << quotes[i]->value());
+                    DLOG("Derive " << terms[i] << " yoy quote " << effectiveQuote << " from zc quote "
+                                   << quotes[i]->value());
                 }
                 // QL conventions do not incorporate settlement delay => patch here once QL is patched
                 instruments.push_back(boost::make_shared<YearOnYearInflationSwapHelper>(
