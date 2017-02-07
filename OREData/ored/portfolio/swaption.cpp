@@ -364,14 +364,13 @@ Swaption::buildUnderlyingSwaps(const boost::shared_ptr<PricingEngine>& swapEngin
         boost::shared_ptr<Swap> newSwap(new Swap(legs, payer));
         newSwap->setPricingEngine(swapEngine);
         swaps.push_back(newSwap);
-        if(legs[0].size() > 0 && legs[1].size() > 0) {
-        boost::shared_ptr<Coupon> coupon1 = boost::dynamic_pointer_cast<Coupon>(legs[0].front());
-        boost::shared_ptr<Coupon> coupon2 = boost::dynamic_pointer_cast<Coupon>(legs[1].front());
-        DLOG("Added underlying Swap start " << QuantLib::io::iso_date(coupon1->accrualStartDate()) << " "
-                                            << QuantLib::io::iso_date(coupon2->accrualStartDate()) << " "
-                                            << "exercise " << QuantLib::io::iso_date(exerciseDates[i]));
-        }
-        else {
+        if (legs[0].size() > 0 && legs[1].size() > 0) {
+            boost::shared_ptr<Coupon> coupon1 = boost::dynamic_pointer_cast<Coupon>(legs[0].front());
+            boost::shared_ptr<Coupon> coupon2 = boost::dynamic_pointer_cast<Coupon>(legs[1].front());
+            DLOG("Added underlying Swap start " << QuantLib::io::iso_date(coupon1->accrualStartDate()) << " "
+                                                << QuantLib::io::iso_date(coupon2->accrualStartDate()) << " "
+                                                << "exercise " << QuantLib::io::iso_date(exerciseDates[i]));
+        } else {
             WLOG("Added underlying Swap with at least one empty leg!");
         }
     }
