@@ -28,8 +28,10 @@
 
 #include <ored/utilities/xmlutils.hpp>
 
-using namespace std;
 using namespace ore::data;
+using std::map;
+using std::string;
+
 namespace ore {
 namespace analytics {
 
