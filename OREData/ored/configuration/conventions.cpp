@@ -724,7 +724,7 @@ void Conventions::fromXML(XMLNode* node) {
             convention->fromXML(child);
             add(convention);
         } catch (exception& e) {
-            WLOG("Exception parsing convention "
+            LOG("Exception parsing convention "
                 "XML Node (id = "
                 << id << ") : " << e.what());
         }
