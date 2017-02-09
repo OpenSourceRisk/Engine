@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<TodaysMarket>
+  <Configuration id="default">
+    <DiscountingCurvesId>default</DiscountingCurvesId>
+    <YieldCurvesId>default</YieldCurvesId>
+  </Configuration>
+  <YieldCurves id="default">
+    <YieldCurve name="BANK_EUR_LEND">Yield/EUR/EUR6M</YieldCurve>
+  </YieldCurves>
+  <DiscountingCurves id="default">
+    <DiscountingCurve currency="EUR">Yield/EUR/EUR6M</DiscountingCurve>
+  </DiscountingCurves>
+  <!-- index forwarding curve definition -->
+  <IndexForwardingCurves id="default">
+    <Index name="EUR-EURIBOR-3M">Yield/EUR/EUR3M</Index>
+    <Index name="EUR-EURIBOR-6M">Yield/EUR/EUR6M</Index>
+  </IndexForwardingCurves>
+  <SwapIndexCurves id="default">
+    <SwapIndex name="EUR-CMS-1Y">
+      <Discounting>EUR-EURIBOR-6M</Discounting>
+    </SwapIndex>
+    <SwapIndex name="EUR-CMS-30Y">
+      <Discounting>EUR-EURIBOR-6M</Discounting>
+    </SwapIndex>
+  </SwapIndexCurves>
+  <SecuritySpreads id="default">
+    <SecuritySpread name="SECURITY_1">SecuritySpread/SECURITY_1</SecuritySpread>
+  </SecuritySpreads>
+  <!-- default curves definition -->
+  <DefaultCurves id="default">
+    <DefaultCurve name="CPTY_A">Default/EUR/CPTY_A_SR_EUR</DefaultCurve>
+  </DefaultCurves>
+</TodaysMarket>

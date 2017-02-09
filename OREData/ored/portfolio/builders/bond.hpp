@@ -17,8 +17,8 @@
 */
 
 /*! \file portfolio/builders/bond.hpp
-	\brief
-	\ingroup portfolio
+\brief
+\ingroup portfolio
 */
 
 #pragma once
@@ -26,7 +26,7 @@
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/utilities/log.hpp>
-#include <ql/pricingengines/bond/discountingbondengine.hpp>
+#include <qle/pricingengines/discountingriskybondengine.hpp>
 #include <ql/termstructures/yield/zerospreadedtermstructure.hpp>
 #include <boost/make_shared.hpp>
 
@@ -37,21 +37,22 @@ namespace data {
 /*! Pricing engines are cached by currency
     \ingroup portfolio
 */
-class BondEngineBuilder : public CachingPricingEngineBuilder<string, const string&> {
+class BondEngineBuilder : public CachingPricingEngineBuilder<string, const Currency&, const string&, const string&> {
 public:
-    BondEngineBuilder() : CachingEngineBuilder("DiscountedCashflows", "DiscountingBondEngine") {}
+	BondEngineBuilder() : CachingEngineBuilder("DiscountedCashflows", "DiscountingRiskyBondEngine") {}
 
 protected:
-    virtual string keyImpl(const string& secId) override { return secId; }
+	virtual string keyImpl(const Currency& ccy, const string&, const string&) override { return ccy.code(); }
 
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const string& secId) override {
-        Handle<YieldTermStructure> yts = market_->spreadCurve(secId, configuration(MarketContext::pricing));
-        Handle<Quote> spread = market_->securitySpread(secId, configuration(MarketContext::pricing));
-        
-        Handle<YieldTermStructure> spreadYts = Handle<YieldTermStructure>(boost::make_shared<ZeroSpreadedTermStructure>(yts, spread));
-        return boost::make_shared<QuantLib::DiscountingBondEngine>(spreadYts);
-    }
+	virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const string& issuerId, const string& securityId) override {
+        Handle<YieldTermStructure> yts = market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
+        Handle<DefaultProbabilityTermStructure> dpts = market_->defaultCurve(issuerId, configuration(MarketContext::pricing));
+        Handle<Quote> recovery = market_->recoveryRate(issuerId, configuration(MarketContext::pricing));
+        Handle<Quote> spread = market_->securitySpread(securityId, configuration(MarketContext::pricing));
+
+        return boost::make_shared<QuantExt::DiscountingRiskyBondEngine>(yts, dpts, recovery, spread);
+	}
 };
-    
+
 } // namespace data
 } // namespace ore

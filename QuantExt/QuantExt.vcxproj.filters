@@ -336,6 +336,7 @@
     <ClInclude Include="qle\termstructures\dynamicstype.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
+    <ClInclude Include="qle\pricingengines\discountingriskybondengine.hpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -565,5 +566,6 @@
     <ClCompile Include="qle\termstructures\spreadedswaptionvolatility.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
+    <ClCompile Include="qle\pricingengines\discountingriskybondengine.cpp" />
   </ItemGroup>
 </Project>

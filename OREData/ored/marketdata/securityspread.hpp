@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2017 Quaternion Risk Management Ltd
+ Copyright (C) 2016 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,27 +16,35 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
-/*! \file test/bond.hpp
-    \brief bond test
-    \ingroup tests
+/*! \file ored/marketdata/bondspreadspot.hpp
+    \brief
+    \ingroup marketdata
 */
 
 #pragma once
 
-#include <boost/test/unit_test.hpp>
+#include <ored/marketdata/curvespec.hpp>
+#include <ored/marketdata/loader.hpp>
+#include <ql/quote.hpp>
+#include <ql/handle.hpp>
 
-namespace testsuite {
+namespace ore {
+namespace data {
 
-//! Test Bond pricing
+//! Wrapper class for holding Bond Spread quotes
 /*!
-    \ingroup tests
+  \ingroup marketdata
 */
-class BondTest {
+class SecuritySpread {
 public:
-    //! Test Bond pricing
-    static void testBondZeroSpreadDefault();
-    static void testBondCompareDefault();
-    static boost::unit_test_framework::test_suite* suite();
+    //! Constructor
+    SecuritySpread(const Date& asof, SecuritySpreadSpec spec, const Loader& loader);
+
+    //! Inspector
+    Handle<Quote> spread() const { return spread_; }
+
+private:
+    Handle<Quote> spread_;
 };
+}
 }

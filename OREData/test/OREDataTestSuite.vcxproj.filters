@@ -48,6 +48,9 @@
     <ClInclude Include="ccyswapwithresets.hpp">
       <Filter>headers</Filter>
     </ClInclude>
+    <ClInclude Include="bond.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="calendars.cpp">
@@ -89,9 +92,6 @@
     </ClCompile>
     <ClCompile Include="ccyswapwithresets.cpp">
       <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="bond.hpp">
-      <Filter>headers</Filter>
     </ClCompile>
     <ClCompile Include="bond.cpp">
       <Filter>source</Filter>
