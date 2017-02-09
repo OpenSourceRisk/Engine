@@ -53,10 +53,10 @@ namespace data {
 class YieldCurve {
 public:
     //! Supported interpolation variables
-    enum class InterpolationVariable { Zero, Discount };
+    enum class InterpolationVariable { Zero, Discount, Forward };
 
     //! Supported interpolation methods
-    enum class InterpolationMethod { Linear, LogLinear, NaturalCubic, FinancialCubic };
+    enum class InterpolationMethod { Linear, LogLinear, NaturalCubic, FinancialCubic, ConvexMonotone };
 
     //! Constructor
     YieldCurve( //! Valuation date
@@ -116,6 +116,9 @@ private:
 
     boost::shared_ptr<YieldTermStructure> discountcurve(const vector<Date>& dates, const vector<DiscountFactor>& dfs,
                                                         const DayCounter& dayCounter);
+
+    boost::shared_ptr<YieldTermStructure> forwardcurve(const vector<Date>& dates, const vector<Rate>& forwards,
+                                                    const DayCounter& dayCounter);
 
     /* Functions to build RateHelpers from yield curve segments */
     void addDeposits(const boost::shared_ptr<YieldCurveSegment>& segment,
