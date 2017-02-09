@@ -35,19 +35,19 @@ namespace data {
 
 //! Engine Builder base class for Bonds
 /*! Pricing engines are cached by currency
-\ingroup portfolio
+    \ingroup portfolio
 */
-class BondEngineBuilder : public CachingPricingEngineBuilder<string, const Currency&, const string&> {
+class BondEngineBuilder : public CachingPricingEngineBuilder<string, const Currency&, const string&, const string&> {
 public:
 	BondEngineBuilder() : CachingEngineBuilder("DiscountedCashflows", "DiscountingRiskyBondEngine") {}
 
 protected:
-	virtual string keyImpl(const Currency& ccy, const string&) override { return ccy.code(); }
+	virtual string keyImpl(const Currency& ccy, const string&, const string&) override { return ccy.code(); }
 
-	virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const string& securityId) override {
+	virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const string& issuerId, const string& securityId) override {
         Handle<YieldTermStructure> yts = market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
-        Handle<DefaultProbabilityTermStructure> dpts = market_->defaultCurve(securityId, configuration(MarketContext::pricing));
-        Handle<Quote> recovery = market_->recoveryRate(securityId, configuration(MarketContext::pricing));
+        Handle<DefaultProbabilityTermStructure> dpts = market_->defaultCurve(issuerId, configuration(MarketContext::pricing));
+        Handle<Quote> recovery = market_->recoveryRate(issuerId, configuration(MarketContext::pricing));
         Handle<Quote> spread = market_->securitySpread(securityId, configuration(MarketContext::pricing));
 
         return boost::make_shared<QuantExt::DiscountingRiskyBondEngine>(yts, dpts, recovery, spread);

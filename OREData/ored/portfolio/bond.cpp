@@ -42,6 +42,7 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("Bond");
 
     string ccy_str = coupons_.currency();
+    npvCurrency_ = ccy_str;
     Currency currency = parseCurrency(ccy_str);
 
     Date issueDate = parseDate(issueDate_);
@@ -63,10 +64,9 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     }
 
     boost::shared_ptr<QuantLib::Bond> bond(new QuantLib::Bond(settlementDays, calendar, issueDate, leg));
-    //ADD IN BUILDER WHEN READY - follow swap example
     boost::shared_ptr<BondEngineBuilder> bondBuilder = boost::dynamic_pointer_cast<BondEngineBuilder>(builder);
     QL_REQUIRE(bondBuilder, "No Builder found for Bond" << id());
-    bond->setPricingEngine(bondBuilder->engine(currency, "Security1"));
+    bond->setPricingEngine(bondBuilder->engine(currency, issuerId_, securityId_));
     DLOG("Bond::build(): Bond NPV = " << bond->NPV()); 
     instrument_.reset(new VanillaInstrument(bond)); 
 
@@ -81,10 +81,13 @@ void Bond::fromXML(XMLNode* node) {
     Trade::fromXML(node);
     XMLNode* bondNode = XMLUtils::getChildNode(node, "BondData");
     QL_REQUIRE(bondNode, "No BondData Node");
+    issuerId_ = XMLUtils::getChildValue(bondNode, "IssuerId", true);
+    securityId_ = XMLUtils::getChildValue(bondNode, "SecurityId", true);
     settlementDays_ = XMLUtils::getChildValue(bondNode, "SettlementDays", true);
     calendar_ = XMLUtils::getChildValue(bondNode, "Calendar", true);
     issueDate_ = XMLUtils::getChildValue(bondNode, "IssueDate", true);
-    coupons_.fromXML(XMLUtils::getChildNode(bondNode, "Coupon"));
+    XMLNode* legNode = XMLUtils::getChildNode(bondNode, "LegData");
+    coupons_ .fromXML(legNode);
 }
 
 XMLNode* Bond::toXML(XMLDocument& doc) {

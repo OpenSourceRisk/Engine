@@ -30,8 +30,8 @@ public:
     Bond() : Trade("Bond") {}
 
     //! Constructor 
-    Bond(Envelope env, string settlementDays, string calendar, string issueDate, LegData& coupons) 
-        : Trade("Bond", env), settlementDays_(settlementDays), calendar_(calendar), issueDate_(issueDate), 
+    Bond(Envelope env, string issuerId, string securityId, string settlementDays, string calendar, string issueDate, LegData& coupons) 
+        : Trade("Bond", env), issuerId_(issuerId), securityId_(securityId), settlementDays_(settlementDays), calendar_(calendar), issueDate_(issueDate), 
           coupons_({coupons}) {}
 
     //Build QuantLib/QuantExt instrument, link pricing engine
@@ -40,12 +40,16 @@ public:
     virtual void fromXML(XMLNode* node);
     virtual XMLNode* toXML(XMLDocument& doc);
 
+    const string& issuerId() const { return issuerId_; }
+    const string& securityId() const { return securityId_; }
     const string& settlementDays() const { return settlementDays_; }  
     const string& calendar() const { return calendar_; }
     const string& issueDate() const { return issueDate_; }
     const LegData& coupons() const { return coupons_; } 
 
 private:
+    string issuerId_;
+    string securityId_;
     string settlementDays_;
     string calendar_;
     string issueDate_;

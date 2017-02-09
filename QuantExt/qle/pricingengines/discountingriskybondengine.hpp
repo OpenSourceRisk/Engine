@@ -19,7 +19,6 @@
 
 /*! \file qle/pricingengines/discountingriskybondengine.hpp
     \brief Risky Bond Engine
-
     \ingroup engines
 */
 
@@ -41,6 +40,7 @@ public:
                                boost::optional<bool> includeSettlementDateFlows = boost::none);
     
     void calculate() const;
+    Real calculateNpv(Date npvDate) const;
     Handle<YieldTermStructure> discountCurve() const { return discountCurve_; };
     Handle<DefaultProbabilityTermStructure> defaultCurve() const { return defaultCurve_; };
     Handle<Quote> recoveryRate() const { return recoveryRate_; }; 

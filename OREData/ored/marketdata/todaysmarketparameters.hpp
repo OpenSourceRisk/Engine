@@ -67,7 +67,7 @@ struct MarketConfiguration {
         fxVolatilitiesId(Market::defaultConfiguration), swaptionVolatilitiesId(Market::defaultConfiguration),
         defaultCurvesId(Market::defaultConfiguration), swapIndexCurvesId(Market::defaultConfiguration),
         capFloorVolatilitiesId(Market::defaultConfiguration), securitySpreadsId(Market::defaultConfiguration) {}
-		string discountingCurvesId, yieldCurvesId, indexForwardingCurvesId, spreadCurvesId, fxSpotsId, 
+		string discountingCurvesId, yieldCurvesId, indexForwardingCurvesId, fxSpotsId, 
         fxVolatilitiesId, swaptionVolatilitiesId, defaultCurvesId, swapIndexCurvesId, capFloorVolatilitiesId,
         securitySpreadsId;
 };

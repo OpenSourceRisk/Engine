@@ -52,8 +52,17 @@ class TestMarket : public MarketImpl {
             asof_ = Date(3, Feb, 2016);
             // build discount
             discountCurves_[make_pair(Market::defaultConfiguration, "EUR")] = flatRateYts(0.02);
-            defaultCurves_[make_pair(Market::defaultConfiguration, "Security1")] = flatRateDcs(0.0);
-            recoveryRates_[make_pair(Market::defaultConfiguration, "Security1")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.00));
+            defaultCurves_[make_pair(Market::defaultConfiguration, "CPTY_A")] = flatRateDcs(0.0);
+            recoveryRates_[make_pair(Market::defaultConfiguration, "CPTY_A")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.00));
+            securitySpreads_[make_pair(Market::defaultConfiguration, "Security1")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.00));
+        }
+
+        TestMarket(Real defaultFlatRate) {
+            asof_ = Date(3, Feb, 2016);
+            // build discount
+            discountCurves_[make_pair(Market::defaultConfiguration, "EUR")] = flatRateYts(0.02);
+            defaultCurves_[make_pair(Market::defaultConfiguration, "CPTY_A")] = flatRateDcs(defaultFlatRate);
+            recoveryRates_[make_pair(Market::defaultConfiguration, "CPTY_A")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.00));
             securitySpreads_[make_pair(Market::defaultConfiguration, "Security1")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.00));
         }
 
@@ -62,7 +71,7 @@ class TestMarket : public MarketImpl {
             boost::shared_ptr<YieldTermStructure> yts(new FlatForward(0, NullCalendar(), forward, ActualActual()));
             return Handle<YieldTermStructure>(yts);
         }
-        Handle<DefaultProbabilityTermStructure> flatRateDcs(Volatility forward) {
+        Handle<DefaultProbabilityTermStructure> flatRateDcs(Real forward) {
             boost::shared_ptr<DefaultProbabilityTermStructure> dcs(new FlatHazardRate(asof_, forward, ActualActual()));
             return Handle<DefaultProbabilityTermStructure>(dcs);
         }
@@ -72,6 +81,8 @@ class TestMarket : public MarketImpl {
 struct CommonVars {
     // global data
     string ccy;
+    string securityId;
+    string issuerId;
     bool isPayer;
     string start;
     string end;
@@ -100,23 +111,25 @@ struct CommonVars {
 
         Envelope env("CP1");
 
-        boost::shared_ptr<ore::data::Bond> bond(new ore::data::Bond(env, settledays, calStr, issue, fixedLegData));
+        boost::shared_ptr<ore::data::Bond> bond(new ore::data::Bond(env, issuerId, securityId, settledays, calStr, issue, fixedLegData));
         return bond;
     }
 
     CommonVars() {
         ccy = "EUR";
+        securityId = "Security1";
+        issuerId = "CPTY_A";
         isPayer = false;
-        start = "20160301";
-        end = "20360301";
-        issue = "20160101";
+        start = "20160203";
+        end = "20210203";
+        issue = "20160203";
         fixtenor = "1Y";
         cal = TARGET();
         calStr = "TARGET";
         conv = "MF";
         rule = "Forward";
-        fixDC = "ACT/360";
-        fixedRate = 0.0;
+        fixDC = "ACT/ACT";
+        fixedRate = 0.05;
         settledays = "2";
         isinarrears = false;
         notional = 10000000;
@@ -129,7 +142,7 @@ struct CommonVars {
 
 namespace testsuite {
 
-void BondTest::testBondPrice() {
+void BondTest::testBondZeroSpreadDefault() {
     BOOST_TEST_MESSAGE("Testing Bond price...");
 
     Date today = Settings::instance().evaluationDate();
@@ -151,11 +164,53 @@ void BondTest::testBondPrice() {
     bond->build(engineFactory);
 
     Real npv = bond->instrument()->NPV();
+    Real expectedNpv = 11403727.39;
+
+    BOOST_CHECK_CLOSE(npv, expectedNpv, 1.0);
+
 }
+
+void BondTest::testBondCompareDefault() {
+    BOOST_TEST_MESSAGE("Testing Bond price...");
+
+    Date today = Settings::instance().evaluationDate();
+
+    // build market
+    boost::shared_ptr<Market> market1 = boost::make_shared<TestMarket>(0.0);
+    boost::shared_ptr<Market> market2 = boost::make_shared<TestMarket>(0.5);
+    boost::shared_ptr<Market> market3 = boost::make_shared<TestMarket>(0.99);
+    Settings::instance().evaluationDate() = market1->asofDate();
+
+    CommonVars vars;
+    boost::shared_ptr<ore::data::Bond> bond = vars.makeBond();
+
+    // Build and price
+    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+    engineData->model("Bond") = "DiscountedCashflows";
+    engineData->engine("Bond") = "DiscountingRiskyBondEngine";
+
+    boost::shared_ptr<EngineFactory> engineFactory1 = boost::make_shared<EngineFactory>(engineData, market1);
+    boost::shared_ptr<EngineFactory> engineFactory2 = boost::make_shared<EngineFactory>(engineData, market2);
+    boost::shared_ptr<EngineFactory> engineFactory3 = boost::make_shared<EngineFactory>(engineData, market3);
+
+    bond->build(engineFactory1);
+    Real npv1 = bond->instrument()->NPV();
+    bond->build(engineFactory2);
+    Real npv2 = bond->instrument()->NPV();
+    bond->build(engineFactory3);
+    Real npv3 = bond->instrument()->NPV();
+    
+    BOOST_CHECK((npv1 > npv2) && (npv2 > npv3));
+    
+ //   BOOST_CHECK_CLOSE(npv, expectedNpv, 1.0);
+
+}
+
 
 test_suite* BondTest::suite() {
     test_suite* suite = BOOST_TEST_SUITE("BondTest");
-    suite->add(BOOST_TEST_CASE(&BondTest::testBondPrice));
+    suite->add(BOOST_TEST_CASE(&BondTest::testBondZeroSpreadDefault));
+    suite->add(BOOST_TEST_CASE(&BondTest::testBondCompareDefault));
     return suite;
 }
 }

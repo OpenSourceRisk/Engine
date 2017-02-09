@@ -19,6 +19,9 @@
 #include <qle/pricingengines/discountingriskybondengine.hpp>
 #include <ql/cashflows/cashflows.hpp>
 #include <ql/cashflows/coupon.hpp>
+#include <ql/cashflows/simplecashflow.hpp>
+#include <ql/termstructures/yield/ZeroSpreadedTermStructure.hpp>
+#include <boost/make_shared.hpp>
 
 using namespace std;
 using namespace QuantLib;
@@ -29,55 +32,67 @@ DiscountingRiskyBondEngine::DiscountingRiskyBondEngine(
     const Handle<YieldTermStructure>& discountCurve, const Handle<DefaultProbabilityTermStructure>& defaultCurve,
     const Handle<Quote>& securitySpread, const Handle<Quote>& recoveryRate, 
     boost::optional<bool> includeSettlementDateFlows) :
-    discountCurve_(discountCurve), defaultCurve_(defaultCurve), 
-    securitySpread_(securitySpread), includeSettlementDateFlows_(includeSettlementDateFlows) {
+    defaultCurve_(defaultCurve), securitySpread_(securitySpread), recoveryRate_(recoveryRate),
+    includeSettlementDateFlows_(includeSettlementDateFlows) {
+    discountCurve_ = Handle<YieldTermStructure>(boost::make_shared<ZeroSpreadedTermStructure>(discountCurve, securitySpread));
     registerWith(discountCurve_);
     registerWith(defaultCurve_);
+    registerWith(recoveryRate_);
     registerWith(securitySpread_);
-    }
+}
 
 void DiscountingRiskyBondEngine::calculate() const {
     QL_REQUIRE(!discountCurve_.empty(), "discounting term structure handle is empty");
-
+    
     results_.valuationDate = (*discountCurve_)->referenceDate();
-    results_.value = 0;
+    results_.value = calculateNpv(results_.valuationDate);
 
     bool includeRefDateFlows = includeSettlementDateFlows_ ? *includeSettlementDateFlows_ : Settings::instance().includeReferenceDateEvents();
-    
-    Date prevDate = boost::dynamic_pointer_cast<Coupon>(arguments_.cashflows[0])->accrualStartDate();
-    for (auto& cf : arguments_.cashflows) {
-        Date couponDate = cf->date();
-        if (couponDate > results_.valuationDate) {
-            prevDate = max(results_.valuationDate, prevDate);
-            Date defaultDate = prevDate + (couponDate - prevDate) / 2;
-            Real coupon = cf->amount() * defaultCurve_->survivalProbability(couponDate) * discountCurve_->discount(couponDate);
-            Real recovery = recoveryRate_->value() * (defaultCurve_->survivalProbability(prevDate) - defaultCurve_->survivalProbability(couponDate)) *
-                discountCurve_->discount(defaultDate);
-            results_.value += coupon;
-            results_.value+=recovery;
-        }
-        prevDate = couponDate;
-    }
-
-
-  //  results_.value = CashFlows::npv(arguments_.cashflows, **discountCurve_, includeRefDateFlows, results_.valuationDate, results_.valuationDate);
-
     // a bond's cashflow on settlement date is never taken into
     // account, so we might have to play it safe and recalculate
     // same parameters as above, we can avoid another call
-    if (!includeRefDateFlows && results_.valuationDate == arguments_.settlementDate)
-        {
+    if (!includeRefDateFlows && results_.valuationDate == arguments_.settlementDate){
         results_.settlementValue = results_.value;    
         }
     else {
         // no such luck
-        results_.settlementValue =
-            CashFlows::npv(arguments_.cashflows,
-                **discountCurve_,
-                false,
-                arguments_.settlementDate,
-                arguments_.settlementDate);
+        results_.settlementValue = calculateNpv(arguments_.settlementDate);
+        }
+}
+
+Real DiscountingRiskyBondEngine::calculateNpv(Date npvDate) const {
+    Real npvValue = 0;
+    boost::shared_ptr<Coupon> firstCoupon = boost::dynamic_pointer_cast<Coupon>(arguments_.cashflows[0]);
+    QL_REQUIRE(firstCoupon, "Cannot cast first cashflow to a coupon");
+    Date prevDate = firstCoupon->accrualStartDate();
+    Real prevNotional = firstCoupon->nominal();
+
+    for (auto& cf : arguments_.cashflows) {
+        Date couponDate = cf->date();
+        Real couponNotional = cf->amount();
+        if (couponDate > results_.valuationDate) {
+            prevDate = max(results_.valuationDate, prevDate);
+            Date defaultDate = prevDate + (couponDate - prevDate) / 2;
+            Real coupon = couponNotional * defaultCurve_->survivalProbability(couponDate) * discountCurve_->discount(couponDate);
+            Real recovery = prevNotional * recoveryRate_->value() * (defaultCurve_->survivalProbability(prevDate) -
+                            defaultCurve_->survivalProbability(couponDate)) * discountCurve_->discount(defaultDate);
+            Real dfsp = defaultCurve_->survivalProbability(couponDate);
+            Real dcc = discountCurve_->discount(couponDate);
+            Real rr = recoveryRate_->value();
+            npvValue += coupon;
+            npvValue += recovery;
+        }
+        prevDate = couponDate;
+        
+        boost::shared_ptr<Redemption> redemption = boost::dynamic_pointer_cast<Redemption>(cf);
+        if (redemption)
+            continue;
+     
+        boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(cf);
+        if (coupon)
+            prevNotional = coupon->nominal();
     }
+    return npvValue;
 }
 
 }
