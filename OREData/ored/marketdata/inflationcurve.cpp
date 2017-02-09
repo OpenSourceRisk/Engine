@@ -131,6 +131,7 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                                                            << io::iso_date(asof) << ".");
                 }
             }
+            QL_REQUIRE(!factors.empty(), "no seasonality factors found");
             seasonality = boost::make_shared<MultiplicativePriceSeasonality>(config->seasonalityBaseDate(),
                                                                              config->seasonalityFrequency(), factors);
         }
