@@ -128,7 +128,7 @@
     <xs:sequence>
       <xs:element type="xs:string" name="CurveId"/>
       <xs:element type="xs:string" name="CurveDescription"/>
-	  <xs:element type="quoteType" name="Quotes"/>
+      <xs:element type="quoteType" name="Quotes"/>
     </xs:sequence>
   </xs:complexType>
 
