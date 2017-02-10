@@ -258,5 +258,12 @@ Leg makeNotionalLeg(const Leg& refLeg, bool initNomFlow, bool finalNomFlow, bool
 //  In all cases we can expand the vector to take the given schedule into account
 vector<double> buildScheduledVector(const vector<double>& values, const vector<string>& dates,
                                     const Schedule& schedule);
+// extend values to schedule size
+vector<double> normaliseToSchedule(const vector<double>& values, const Schedule& schedule);
+
+// normaliseToSchedule concat buildScheduledVector
+vector<double> buildScheduledVectorNormalised(const vector<double>& values, const vector<string>& dates,
+                                              const Schedule& schedule);
+
 }
 }
