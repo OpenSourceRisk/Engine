@@ -10,7 +10,7 @@
         <xs:element type="capFloorVolatilities" name="CapFloorVolatilities"/>
         <xs:element type="defaultCurves" name="DefaultCurves"/>
         <xs:element type="yieldCurves" name="YieldCurves"/>
-		<xs:element type="securitySpreads" name="SecuritySpreads"/>
+        <xs:element type="securitySpreads" name="SecuritySpreads"/>
       </xs:sequence>
     </xs:complexType>
   </xs:element>
