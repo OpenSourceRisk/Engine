@@ -9,9 +9,9 @@
     <Parameter name="marketDataFile">../../Input/market_20160205_flat.txt</Parameter>
     <Parameter name="fixingDataFile">../../Input/fixings_20160205.txt</Parameter>
     <Parameter name="implyTodaysFixings">Y</Parameter>
-    <Parameter name="curveConfigFile">curveconfig.xml</Parameter>
+    <Parameter name="curveConfigFile">../../Input/curveconfig.xml</Parameter>
     <Parameter name="conventionsFile">../../Input/conventions.xml</Parameter>
-    <Parameter name="marketConfigFile">todaysmarket.xml</Parameter>
+    <Parameter name="marketConfigFile">../../Input/todaysmarket.xml</Parameter>
     <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
     <Parameter name="portfolioFile">portfolio.xml</Parameter>
     <Parameter name="observationModel">Disable</Parameter>
@@ -40,7 +40,7 @@
     </Analytic>
     <Analytic type="simulation">
       <Parameter name="active">Y</Parameter>
-      <Parameter name="simulationConfigFile">simulation.xml</Parameter>
+      <Parameter name="simulationConfigFile">../../Input/simulation.xml</Parameter>
       <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <!-- Parameter name="scenariodump">scenariodump.csv</Parameter> -->
@@ -49,7 +49,7 @@
     </Analytic>
     <Analytic type="xva">
       <Parameter name="active">Y</Parameter>
-      <Parameter name="csaFile">netting.xml</Parameter>
+      <Parameter name="csaFile">../../Input/netting.xml</Parameter>
       <Parameter name="cubeFile">cube.dat</Parameter>
       <Parameter name="scenarioFile">scenariodata.dat</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>

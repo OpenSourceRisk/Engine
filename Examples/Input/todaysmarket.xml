@@ -143,5 +143,9 @@
     <DefaultCurve name="BANK">Default/USD/BANK_SR_USD</DefaultCurve>
     <DefaultCurve name="CPTY_A">Default/USD/CPTY_A_SR_USD</DefaultCurve>
     <DefaultCurve name="CPTY_B">Default/USD/CPTY_A_SR_USD</DefaultCurve>
+	<DefaultCurve name="CPTY_C">Default/EUR/CPTY_C_SR_EUR</DefaultCurve>
   </DefaultCurves>
+  <SecuritySpreads id="default">
+    <SecuritySpread name="SECURITY_1">SecuritySpread/SECURITY_1</SecuritySpread>
+  </SecuritySpreads>
 </TodaysMarket>

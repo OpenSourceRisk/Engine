@@ -8,8 +8,9 @@
       <AdditionalFields/>
     </Envelope>
     <BondData>
-	  <IssuerId>CPTY_A</IssuerId>
+	  <IssuerId>CPTY_C</IssuerId>
 	  <SecurityId>SECURITY_1</SecurityId>
+	  <ReferenceCurveId>BANK_EUR_LEND</ReferenceCurveId>
 	  <SettlementDays>2</SettlementDays>
 	  <Calendar>TARGET</Calendar>
 	  <IssueDate>20160203</IssueDate>

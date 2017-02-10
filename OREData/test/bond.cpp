@@ -51,7 +51,7 @@ class TestMarket : public MarketImpl {
         TestMarket() {
             asof_ = Date(3, Feb, 2016);
             // build discount
-            discountCurves_[make_pair(Market::defaultConfiguration, "EUR")] = flatRateYts(0.02);
+            yieldCurves_[make_pair(Market::defaultConfiguration, "BANK_EUR_LEND")] = flatRateYts(0.02);
             defaultCurves_[make_pair(Market::defaultConfiguration, "CPTY_A")] = flatRateDcs(0.0);
             recoveryRates_[make_pair(Market::defaultConfiguration, "CPTY_A")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.00));
             securitySpreads_[make_pair(Market::defaultConfiguration, "Security1")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.00));
@@ -60,7 +60,7 @@ class TestMarket : public MarketImpl {
         TestMarket(Real defaultFlatRate) {
             asof_ = Date(3, Feb, 2016);
             // build discount
-            discountCurves_[make_pair(Market::defaultConfiguration, "EUR")] = flatRateYts(0.02);
+            yieldCurves_[make_pair(Market::defaultConfiguration, "BANK_EUR_LEND")] = flatRateYts(0.02);
             defaultCurves_[make_pair(Market::defaultConfiguration, "CPTY_A")] = flatRateDcs(defaultFlatRate);
             recoveryRates_[make_pair(Market::defaultConfiguration, "CPTY_A")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.00));
             securitySpreads_[make_pair(Market::defaultConfiguration, "Security1")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.00));
@@ -83,6 +83,7 @@ struct CommonVars {
     string ccy;
     string securityId;
     string issuerId;
+    string referenceCurveId;
     bool isPayer;
     string start;
     string end;
@@ -111,7 +112,7 @@ struct CommonVars {
 
         Envelope env("CP1");
 
-        boost::shared_ptr<ore::data::Bond> bond(new ore::data::Bond(env, issuerId, securityId, settledays, calStr, issue, fixedLegData));
+        boost::shared_ptr<ore::data::Bond> bond(new ore::data::Bond(env, issuerId, securityId, referenceCurveId, settledays, calStr, issue, fixedLegData));
         return bond;
     }
 
@@ -119,6 +120,7 @@ struct CommonVars {
         ccy = "EUR";
         securityId = "Security1";
         issuerId = "CPTY_A";
+        referenceCurveId = "BANK_EUR_LEND";
         isPayer = false;
         start = "20160203";
         end = "20210203";

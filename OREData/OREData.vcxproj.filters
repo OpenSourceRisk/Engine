@@ -266,6 +266,10 @@
     <ClInclude Include="ored\marketdata\securityspread.hpp">
       <Filter>marketdata</Filter>
     </ClInclude>
+    <ClInclude Include="ored\report\all.hpp" />
+    <ClInclude Include="ored\report\csvreport.hpp" />
+    <ClInclude Include="ored\report\inmemoryreport.hpp" />
+    <ClInclude Include="ored\report\report.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp">
@@ -467,5 +471,6 @@
     <ClCompile Include="ored\marketdata\securityspread.cpp">
       <Filter>marketdata</Filter>
     </ClCompile>
+    <ClCompile Include="ored\report\csvreport.cpp" />
   </ItemGroup>
 </Project>

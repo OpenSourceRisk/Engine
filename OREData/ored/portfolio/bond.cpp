@@ -66,7 +66,7 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     boost::shared_ptr<QuantLib::Bond> bond(new QuantLib::Bond(settlementDays, calendar, issueDate, leg));
     boost::shared_ptr<BondEngineBuilder> bondBuilder = boost::dynamic_pointer_cast<BondEngineBuilder>(builder);
     QL_REQUIRE(bondBuilder, "No Builder found for Bond" << id());
-    bond->setPricingEngine(bondBuilder->engine(currency, issuerId_, securityId_));
+    bond->setPricingEngine(bondBuilder->engine(currency, issuerId_, securityId_, referenceCurveId_));
     DLOG("Bond::build(): Bond NPV = " << bond->NPV()); 
     instrument_.reset(new VanillaInstrument(bond)); 
 
@@ -83,6 +83,7 @@ void Bond::fromXML(XMLNode* node) {
     QL_REQUIRE(bondNode, "No BondData Node");
     issuerId_ = XMLUtils::getChildValue(bondNode, "IssuerId", true);
     securityId_ = XMLUtils::getChildValue(bondNode, "SecurityId", true);
+    referenceCurveId_ = XMLUtils::getChildValue(bondNode, "ReferenceCurveId", true);
     settlementDays_ = XMLUtils::getChildValue(bondNode, "SettlementDays", true);
     calendar_ = XMLUtils::getChildValue(bondNode, "Calendar", true);
     issueDate_ = XMLUtils::getChildValue(bondNode, "IssueDate", true);
@@ -94,6 +95,9 @@ XMLNode* Bond::toXML(XMLDocument& doc) {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* bondNode = doc.allocNode("BondData");
     XMLUtils::appendNode(node, bondNode);
+    XMLUtils::addChild(doc, bondNode, "IssuerId", issuerId_);
+    XMLUtils::addChild(doc, bondNode, "SecurityId", securityId_);
+    XMLUtils::addChild(doc, bondNode, "ReferenceCurveId", referenceCurveId_);
     XMLUtils::addChild(doc, bondNode, "SettlementDays", settlementDays_);
     XMLUtils::addChild(doc, bondNode, "Calendar", calendar_);
     XMLUtils::addChild(doc, bondNode, "IssueDate", issueDate_);
