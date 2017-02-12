@@ -188,7 +188,6 @@ Real NumericLgmNonstandardSwaptionEngine::conditionalSwapValue(Real x, Real t, c
     Schedule floatSchedule = arguments_.swap->floatingSchedule();
     Size j1 = std::upper_bound(arguments_.fixedResetDates.begin(), arguments_.fixedResetDates.end(), expiry0 - 1) -
               arguments_.fixedResetDates.begin();
-    fixedSchedule.dates().begin();
     Size k1 =
         std::upper_bound(arguments_.floatingResetDates.begin(), arguments_.floatingResetDates.end(), expiry0 - 1) -
         arguments_.floatingResetDates.begin();
