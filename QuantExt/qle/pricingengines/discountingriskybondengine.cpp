@@ -66,7 +66,24 @@ Real DiscountingRiskyBondEngine::calculateNpv(Date npvDate) const {
     for (auto& cf : arguments_.cashflows) {
         if (cf->hasOccurred(npvDate,includeSettlementDateFlows_))
             continue;
-       
+
+	Probability S = defaultCurve_->survivalProbability(cf->date());
+	npvValue += cf->amount() * S * discountCurve_->discount(cf->date());
+
+	// Add recovery value contributions using the coupon schedule dates as time discretisation
+	// and coupon period mid points as default dates (consistent with CDS mid point engine).
+	// FIXME: This works for fixed and floating coupon bonds, does not for zero bonds. 
+        boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(cf);
+        if (coupon) {
+            Date startDate = coupon->accrualStartDate();
+            Date endDate = coupon->accrualEndDate();
+            Date effectiveStartDate = (startDate <= npvDate && npvDate <= endDate) ? npvDate : startDate;
+            Date defaultDate = effectiveStartDate + (endDate - effectiveStartDate) / 2;
+            Probability P = defaultCurve_->defaultProbability(effectiveStartDate, endDate);
+            npvValue += coupon->nominal() * recoveryRate_->value() * P * discountCurve_->discount(defaultDate);
+	}
+
+	/*
         boost::shared_ptr<Redemption> redemption = boost::dynamic_pointer_cast<Redemption>(cf);
         if (redemption) {
             Date startDate = npvDate;
@@ -94,6 +111,9 @@ Real DiscountingRiskyBondEngine::calculateNpv(Date npvDate) const {
             npvValue += cf->amount() * S * discountCurve_->discount(cf->date());
             npvValue += cf->amount() * recoveryRate_->value() * P * discountCurve_->discount(defaultDate);
         }
+	*/
+
+	
     }
     return npvValue;
 }
