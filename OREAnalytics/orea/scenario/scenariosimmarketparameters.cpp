@@ -29,9 +29,10 @@ namespace analytics {
 
 bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& rhs) {
 
-    if (baseCcy_ != rhs.baseCcy_ || ccys_ != rhs.ccys_ || yieldCurveTenors_ != rhs.yieldCurveTenors_ ||
-        indices_ != rhs.indices_ || swapIndices_ != rhs.swapIndices_ || interpolation_ != rhs.interpolation_ ||
-        extrapolate_ != rhs.extrapolate_ || swapVolTerms_ != rhs.swapVolTerms_ || swapVolCcys_ != rhs.swapVolCcys_ ||
+    if (baseCcy_ != rhs.baseCcy_ || ccys_ != rhs.ccys_ || yieldCurveNames_ != rhs.yieldCurveNames_ ||
+        yieldCurveTenors_ != rhs.yieldCurveTenors_ || indices_ != rhs.indices_ || swapIndices_ != rhs.swapIndices_ ||
+        interpolation_ != rhs.interpolation_ || extrapolate_ != rhs.extrapolate_ ||
+        swapVolTerms_ != rhs.swapVolTerms_ || swapVolCcys_ != rhs.swapVolCcys_ ||
         swapVolSimulate_ != rhs.swapVolSimulate_ || swapVolExpiries_ != rhs.swapVolExpiries_ ||
         swapVolDecayMode_ != rhs.swapVolDecayMode_ || capFloorVolSimulate_ != rhs.capFloorVolSimulate_ ||
         capFloorVolCcys_ != rhs.capFloorVolCcys_ || capFloorVolExpiries_ != rhs.capFloorVolExpiries_ ||
@@ -39,8 +40,7 @@ bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& 
         defaultNames_ != rhs.defaultNames_ || defaultTenors_ != rhs.defaultTenors_ ||
         fxVolSimulate_ != rhs.fxVolSimulate_ || fxVolExpiries_ != rhs.fxVolExpiries_ ||
         fxVolDecayMode_ != rhs.fxVolDecayMode_ || fxVolCcyPairs_ != rhs.fxVolCcyPairs_ ||
-        fxCcyPairs_ != rhs.fxCcyPairs_ ||
-        additionalScenarioDataIndices_ != rhs.additionalScenarioDataIndices_ ||
+        fxCcyPairs_ != rhs.fxCcyPairs_ || additionalScenarioDataIndices_ != rhs.additionalScenarioDataIndices_ ||
         additionalScenarioDataCcys_ != rhs.additionalScenarioDataCcys_) {
         return false;
     } else {
@@ -61,6 +61,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     ccys_ = XMLUtils::getChildrenValues(node, "Currencies", "Currency");
 
     XMLNode* nodeChild = XMLUtils::getChildNode(node, "YieldCurves");
+    yieldCurveNames_ = XMLUtils::getChildrenValues(nodeChild, "YieldCurveNames", "Name");
     nodeChild = XMLUtils::getChildNode(nodeChild, "Configuration");
     yieldCurveTenors_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Tenors", true);
     interpolation_ = XMLUtils::getChildValue(nodeChild, "Interpolation", true);
@@ -122,6 +123,7 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
 
     // yield curves
     XMLNode* yieldCurvesNode = XMLUtils::addChild(doc, marketNode, "YieldCurves");
+    XMLUtils::addChildren(doc, yieldCurvesNode, "YieldCurveNames", "Name", yieldCurveNames_);
     XMLNode* configurationNode = XMLUtils::addChild(doc, yieldCurvesNode, "Configuration");
     XMLUtils::addGenericChildAsList(doc, configurationNode, "Tenors", yieldCurveTenors_);
     XMLUtils::addChild(doc, configurationNode, "Interpolation", interpolation_);

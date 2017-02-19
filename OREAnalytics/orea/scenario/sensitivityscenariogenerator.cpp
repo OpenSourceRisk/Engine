@@ -42,6 +42,8 @@ void SensitivityScenarioGenerator::clear() {
     discountCurveCache_.clear();
     indexCurveKeys_.clear();
     indexCurveCache_.clear();
+    yieldCurveKeys_.clear();
+    yieldCurveCache_.clear();
     fxKeys_.clear();
     fxCache_.clear();
     swaptionVolKeys_.clear();
@@ -83,6 +85,21 @@ void SensitivityScenarioGenerator::init(boost::shared_ptr<Market> market) {
             Real disc = ts->discount(today_ + tenor);
             indexCurveCache_[indexCurveKeys_[j * n_ten + k]] = ts->discount(today_ + tenor);
             LOG("cache discount " << disc << " for key " << indexCurveKeys_[j * n_ten + k]);
+        }
+    }
+
+    // Cache yield curve keys
+    Size n_ycnames = simMarketData_->yieldCurveNames().size();
+    yieldCurveKeys_.reserve(n_ycnames * n_ten);
+    for (Size j = 0; j < n_ycnames; ++j) {
+        std::string ycname = simMarketData_->yieldCurveNames()[j];
+        Handle<YieldTermStructure> ts = market->yieldCurve(ycname, configuration_);
+        for (Size k = 0; k < n_ten; ++k) {
+            yieldCurveKeys_.emplace_back(RiskFactorKey::KeyType::YieldCurve, ycname, k);
+            Period tenor = simMarketData_->yieldCurveTenors()[k];
+            Real disc = ts->discount(today_ + tenor);
+            yieldCurveCache_[yieldCurveKeys_[j * n_ten + k]] = ts->discount(today_ + tenor);
+            LOG("cache discount " << disc << " for key " << yieldCurveKeys_[j * n_ten + k]);
         }
     }
 
@@ -173,6 +190,9 @@ void SensitivityScenarioGenerator::init(boost::shared_ptr<Market> market) {
     generateIndexCurveScenarios(true, market);
     generateIndexCurveScenarios(false, market);
 
+    generateYieldCurveScenarios(true, market);
+    generateYieldCurveScenarios(false, market);
+
     generateFxScenarios(true, market);
     generateFxScenarios(false, market);
 
@@ -255,6 +275,10 @@ void SensitivityScenarioGenerator::addCacheTo(boost::shared_ptr<Scenario> scenar
         if (!scenario->has(key))
             scenario->add(key, indexCurveCache_[key]);
     }
+    for (auto key : yieldCurveKeys_) {
+        if (!scenario->has(key))
+            scenario->add(key, yieldCurveCache_[key]);
+    }
     for (auto key : fxKeys_) {
         if (!scenario->has(key))
             scenario->add(key, fxCache_[key]);
@@ -302,6 +326,14 @@ RiskFactorKey SensitivityScenarioGenerator::getIndexKey(const std::string& index
             return indexCurveKeys_[i];
     }
     QL_FAIL("error locating Index RiskFactorKey for " << indexName << ", index " << index);
+}
+
+RiskFactorKey SensitivityScenarioGenerator::getYieldKey(const std::string& curveName, Size index) {
+    for (Size i = 0; i < yieldCurveKeys_.size(); ++i) {
+        if (yieldCurveKeys_[i].name == curveName && yieldCurveKeys_[i].index == index)
+            return yieldCurveKeys_[i];
+    }
+    QL_FAIL("error locating YieldCurve RiskFactorKey for " << curveName << ", index " << index);
 }
 
 RiskFactorKey SensitivityScenarioGenerator::getSwaptionVolKey(const std::string& ccy, Size index) {
@@ -436,8 +468,8 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(bool up, boost::s
 
     for (Size i = 0; i < n_indices; ++i) {
         string indexName = indexNames_[i];
-	SensitivityScenarioData::CurveShiftData data = sensitivityData_->indexCurveShiftData()[indexName];	
-	ShiftType shiftType = parseShiftType(data.shiftType);
+        SensitivityScenarioData::CurveShiftData data = sensitivityData_->indexCurveShiftData()[indexName];
+        ShiftType shiftType = parseShiftType(data.shiftType);
         Handle<IborIndex> iborIndex = market->iborIndex(indexName, configuration_);
         Handle<YieldTermStructure> ts = iborIndex->forwardingTermStructure();
         DayCounter dc = ts->dayCounter();
@@ -481,6 +513,68 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(bool up, boost::s
     LOG("Index curve scenarios done");
 }
 
+void SensitivityScenarioGenerator::generateYieldCurveScenarios(bool up, boost::shared_ptr<Market> market) {
+    // We can choose to shift fewer yield curves than listed in the market
+    if (sensitivityData_->yieldCurveNames().size() > 0)
+        yieldCurveNames_ = sensitivityData_->yieldCurveNames();
+    else
+        yieldCurveNames_ = simMarketData_->yieldCurveNames();
+
+    Size n_curves = yieldCurveNames_.size();
+    Size n_ten = simMarketData_->yieldCurveTenors().size();
+
+    // original curves' buffer
+    std::vector<Real> zeros(n_ten);
+    std::vector<Real> times(n_ten);
+
+    // buffer for shifted zero curves
+    std::vector<Real> shiftedZeros(n_ten);
+
+    for (Size i = 0; i < n_curves; ++i) {
+        string name = yieldCurveNames_[i];
+        SensitivityScenarioData::CurveShiftData data = sensitivityData_->yieldCurveShiftData()[name];
+        ShiftType shiftType = parseShiftType(data.shiftType);
+        Handle<YieldTermStructure> ts = market->yieldCurve(name, configuration_);
+        DayCounter dc = ts->dayCounter();
+        for (Size j = 0; j < n_ten; ++j) {
+            Date d = today_ + simMarketData_->yieldCurveTenors()[j];
+            zeros[j] = ts->zeroRate(d, dc, Continuous);
+            times[j] = dc.yearFraction(today_, d);
+        }
+
+        std::vector<Period> shiftTenors = data.shiftTenors;
+        std::vector<Time> shiftTimes(shiftTenors.size());
+        for (Size j = 0; j < shiftTenors.size(); ++j)
+            shiftTimes[j] = dc.yearFraction(today_, today_ + shiftTenors[j]);
+        Real shiftSize = data.shiftSize;
+        QL_REQUIRE(shiftTenors.size() > 0, "Discount shift tenors not specified");
+
+        for (Size j = 0; j < shiftTenors.size(); ++j) {
+
+            string label = sensitivityData_->yieldShiftScenarioLabel(name, j, up);
+            boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_, label);
+
+            // apply zero rate shift at tenor point j
+            applyShift(j, shiftSize, up, shiftType, shiftTimes, zeros, times, shiftedZeros);
+
+            // store shifted discount curve in the scenario
+            for (Size k = 0; k < n_ten; ++k) {
+                Real shiftedDiscount = exp(-shiftedZeros[k] * times[k]);
+                scenario->add(getYieldKey(name, k), shiftedDiscount);
+            }
+
+            // add remaining unshifted data from cache for a complete scenario
+            addCacheTo(scenario);
+
+            // add this scenario to the scenario vector
+            scenarios_.push_back(scenario);
+            LOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
+
+        } // end of shift curve tenors
+    }
+    LOG("Yield curve scenarios done");
+}
+
 void SensitivityScenarioGenerator::generateFxVolScenarios(bool up, boost::shared_ptr<Market> market) {
     // We can choose to shift fewer discount curves than listed in the market
     if (sensitivityData_->fxVolCcyPairs().size() > 0)
@@ -499,18 +593,19 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(bool up, boost::shared
     // buffer for shifted zero curves
     std::vector<Real> shiftedValues(n_fxvol_exp);
 
-    map<string,SensitivityScenarioData::FxVolShiftData> shiftDataMap = sensitivityData_->fxVolShiftData();
+    map<string, SensitivityScenarioData::FxVolShiftData> shiftDataMap = sensitivityData_->fxVolShiftData();
     for (Size i = 0; i < n_fxvol_pairs; ++i) {
         string ccypair = fxVolCcyPairs_[i];
-	QL_REQUIRE(shiftDataMap.find(ccypair) != shiftDataMap.end(), "ccy pair " << ccypair << " not found in FxVolShiftData");
-	SensitivityScenarioData::FxVolShiftData data = shiftDataMap[ccypair];	
-	ShiftType shiftType = parseShiftType(data.shiftType);
-	std::vector<Period> shiftTenors = data.shiftExpiries;
-	std::vector<Time> shiftTimes(shiftTenors.size());
-	Real shiftSize = data.shiftSize;
-	QL_REQUIRE(shiftTenors.size() > 0, "FX vol shift tenors not specified");
+        QL_REQUIRE(shiftDataMap.find(ccypair) != shiftDataMap.end(), "ccy pair " << ccypair
+                                                                                 << " not found in FxVolShiftData");
+        SensitivityScenarioData::FxVolShiftData data = shiftDataMap[ccypair];
+        ShiftType shiftType = parseShiftType(data.shiftType);
+        std::vector<Period> shiftTenors = data.shiftExpiries;
+        std::vector<Time> shiftTimes(shiftTenors.size());
+        Real shiftSize = data.shiftSize;
+        QL_REQUIRE(shiftTenors.size() > 0, "FX vol shift tenors not specified");
 
-	Handle<BlackVolTermStructure> ts = market->fxVol(ccypair, configuration_);
+        Handle<BlackVolTermStructure> ts = market->fxVol(ccypair, configuration_);
         DayCounter dc = ts->dayCounter();
         Real strike = 0.0; // FIXME
         for (Size j = 0; j < n_fxvol_exp; ++j) {
@@ -559,14 +654,14 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(bool up, boost::
 
     for (Size i = 0; i < n_swvol_ccy; ++i) {
         std::string ccy = swaptionVolCurrencies_[i];
-	SensitivityScenarioData::SwaptionVolShiftData data = sensitivityData_->swaptionVolShiftData()[ccy];	
-	ShiftType shiftType = parseShiftType(data.shiftType);
-	Real shiftSize = data.shiftSize;
+        SensitivityScenarioData::SwaptionVolShiftData data = sensitivityData_->swaptionVolShiftData()[ccy];
+        ShiftType shiftType = parseShiftType(data.shiftType);
+        Real shiftSize = data.shiftSize;
 
-	vector<Real> shiftExpiryTimes(data.shiftExpiries.size(), 0.0);
-	vector<Real> shiftTermTimes(data.shiftTerms.size(), 0.0);
+        vector<Real> shiftExpiryTimes(data.shiftExpiries.size(), 0.0);
+        vector<Real> shiftTermTimes(data.shiftTerms.size(), 0.0);
 
-	Handle<SwaptionVolatilityStructure> ts = market->swaptionVol(ccy, configuration_);
+        Handle<SwaptionVolatilityStructure> ts = market->swaptionVol(ccy, configuration_);
         DayCounter dc = ts->dayCounter();
         Real strike = 0.0; // FIXME
 
@@ -638,14 +733,14 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(bool up, boost::
 
     for (Size i = 0; i < n_cfvol_ccy; ++i) {
         std::string ccy = capFloorVolCurrencies_[i];
-	SensitivityScenarioData::CapFloorVolShiftData data = sensitivityData_->capFloorVolShiftData()[ccy];	
+        SensitivityScenarioData::CapFloorVolShiftData data = sensitivityData_->capFloorVolShiftData()[ccy];
 
-	ShiftType shiftType = parseShiftType(data.shiftType);
-	Real shiftSize = data.shiftSize;
-	vector<Real> shiftExpiryTimes(data.shiftExpiries.size(), 0.0);
-	vector<Real> shiftStrikes = data.shiftStrikes;
+        ShiftType shiftType = parseShiftType(data.shiftType);
+        Real shiftSize = data.shiftSize;
+        vector<Real> shiftExpiryTimes(data.shiftExpiries.size(), 0.0);
+        vector<Real> shiftStrikes = data.shiftStrikes;
 
-	Handle<OptionletVolatilityStructure> ts = market->capFloorVol(ccy, configuration_);
+        Handle<OptionletVolatilityStructure> ts = market->capFloorVol(ccy, configuration_);
         DayCounter dc = ts->dayCounter();
 
         // cache original vol data

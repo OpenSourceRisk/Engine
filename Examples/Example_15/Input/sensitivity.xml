@@ -219,6 +219,16 @@
       </ParConversion>
     </IndexCurve>    
   </IndexCurves>
+
+  <!-- Yield curve shifts -->
+  <YieldCurves>
+    <Label>YIELD</Label>
+    <YieldCurve name="BENCHMARK_EUR">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </YieldCurve>
+  </YieldCurves>
   
   <!-- FX spot shifts -->
   <FxSpots>

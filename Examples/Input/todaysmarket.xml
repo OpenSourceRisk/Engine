@@ -17,21 +17,25 @@
   </Configuration>
   <!-- yield curve definition (in ccy swap discounting) -->
   <YieldCurves id="default">
+    <YieldCurve name="BENCHMARK_EUR">Yield/EUR/BENCHMARK_EUR</YieldCurve>
     <YieldCurve name="BANK_EUR_LEND">Yield/EUR/BANK_EUR_LEND</YieldCurve>
     <YieldCurve name="BANK_EUR_BORROW">Yield/EUR/BANK_EUR_BORROW</YieldCurve>
   </YieldCurves>
   <!-- yield curve definition (in ccy ois discounting) -->
   <YieldCurves id="ois">
+    <YieldCurve name="BENCHMARK_EUR">Yield/EUR/BENCHMARK_EUR</YieldCurve>
     <YieldCurve name="BANK_EUR_LEND">Yield/EUR/BANK_EUR_LEND</YieldCurve>
     <YieldCurve name="BANK_EUR_BORROW">Yield/EUR/BANK_EUR_BORROW</YieldCurve>
   </YieldCurves>
   <!-- yield curve definition (xois discounting w.r.t. EUR collateral) -->
   <YieldCurves id="xois_eur">
+    <YieldCurve name="BENCHMARK_EUR">Yield/EUR/BENCHMARK_EUR</YieldCurve>
     <YieldCurve name="BANK_EUR_LEND">Yield/EUR/BANK_EUR_LEND</YieldCurve>
     <YieldCurve name="BANK_EUR_BORROW">Yield/EUR/BANK_EUR_BORROW</YieldCurve>
   </YieldCurves>
   <!-- yield curve definition (xois discounting w.r.t. EUR collateral) -->
   <YieldCurves id="inccy_swap">
+    <YieldCurve name="BENCHMARK_EUR">Yield/EUR/BENCHMARK_EUR</YieldCurve>
     <YieldCurve name="BANK_EUR_LEND">Yield/EUR/BANK_EUR_LEND</YieldCurve>
     <YieldCurve name="BANK_EUR_BORROW">Yield/EUR/BANK_EUR_BORROW</YieldCurve>
   </YieldCurves>

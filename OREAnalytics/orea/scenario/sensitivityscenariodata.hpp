@@ -104,6 +104,10 @@ public:
     const vector<string>& indexNames() const { return indexNames_; }
     const map<string, CurveShiftData>& indexCurveShiftData() const { return indexCurveShiftData_; }
 
+    const string& yieldLabel() const { return yieldLabel_; }
+    const vector<string>& yieldCurveNames() const { return yieldCurveNames_; }
+    const map<string, CurveShiftData>& yieldCurveShiftData() const { return yieldCurveShiftData_; }
+
     const string& fxLabel() const { return fxLabel_; }
     const vector<string>& fxCcyPairs() const { return fxCcyPairs_; }
     const map<string, FxShiftData>& fxShiftData() const { return fxShiftData_; }
@@ -143,6 +147,10 @@ public:
     string& indexLabel() { return indexLabel_; }
     vector<string>& indexNames() { return indexNames_; }
     map<string, CurveShiftData>& indexCurveShiftData() { return indexCurveShiftData_; }
+
+    string& yieldLabel() { return yieldLabel_; }
+    vector<string>& yieldCurveNames() { return yieldCurveNames_; }
+    map<string, CurveShiftData>& yieldCurveShiftData() { return yieldCurveShiftData_; }
 
     string& fxLabel() { return fxLabel_; }
     vector<string>& fxCcyPairs() { return fxCcyPairs_; }
@@ -188,6 +196,7 @@ public:
     //@{
     string discountShiftScenarioLabel(string ccy, Size bucket, bool up);
     string indexShiftScenarioLabel(string ccy, Size bucket, bool up);
+    string yieldShiftScenarioLabel(string name, Size bucket, bool up);
     string fxShiftScenarioLabel(string ccypair, bool up);
     string swaptionVolShiftScenarioLabel(string ccy, Size expiryBucket, Size termBucket, Size strikeBucket, bool up);
     string capFloorVolShiftScenarioLabel(string ccy, Size expiryBucket, Size strikeBucket, bool up);
@@ -219,6 +228,10 @@ private:
     string indexLabel_;
     vector<string> indexNames_;
     map<string, CurveShiftData> indexCurveShiftData_; // key: indexName
+
+    string yieldLabel_;
+    vector<string> yieldCurveNames_;
+    map<string, CurveShiftData> yieldCurveShiftData_; // key: yieldCurveName
 
     string capFloorVolLabel_;
     vector<string> capFloorVolCurrencies_;

@@ -80,6 +80,30 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
         indexNames_.push_back(index);
     }
 
+    LOG("Get yield curve sensitivity parameters");
+    XMLNode* yieldCurves = XMLUtils::getChildNode(node, "YieldCurves");
+    yieldLabel_ = XMLUtils::getChildValue(yieldCurves, "Label", true);
+    for (XMLNode* child = XMLUtils::getChildNode(yieldCurves, "YieldCurve"); child;
+         child = XMLUtils::getNextSibling(child)) {
+        string curveName = XMLUtils::getAttribute(child, "name");
+        // same as discount curve sensitivity loading from here ...
+        CurveShiftData data;
+        data.shiftType = XMLUtils::getChildValue(child, "ShiftType", true);
+        data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
+        data.shiftTenors = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
+        XMLNode* par = XMLUtils::getChildNode(child, "ParConversion");
+        if (par) {
+            data.parInstruments = XMLUtils::getChildrenValuesAsStrings(par, "Instruments", true);
+            data.parInstrumentSingleCurve = XMLUtils::getChildValueAsBool(par, "SingleCurve", true);
+            XMLNode* conventionsNode = XMLUtils::getChildNode(par, "Conventions");
+            data.parInstrumentConventions =
+                XMLUtils::getChildrenAttributesAndValues(conventionsNode, "Convention", "id", true);
+        }
+        // ... to here
+        yieldCurveShiftData_[curveName] = data;
+        yieldCurveNames_.push_back(curveName);
+    }
+
     LOG("Get FX spot sensitivity parameters");
     XMLNode* fxSpots = XMLUtils::getChildNode(node, "FxSpots");
     fxLabel_ = XMLUtils::getChildValue(fxSpots, "Label", true);
@@ -177,6 +201,16 @@ std::string SensitivityScenarioData::indexShiftScenarioLabel(string indexName, S
     std::ostringstream o;
     o << indexLabel_ << labelSeparator() << indexName << labelSeparator() << bucket << labelSeparator()
       << indexCurveShiftData_[indexName].shiftTenors[bucket] << labelSeparator() << shiftDirectionLabel(up);
+    return o.str();
+}
+
+std::string SensitivityScenarioData::yieldShiftScenarioLabel(string name, Size bucket, bool up) {
+    QL_REQUIRE(yieldCurveShiftData_.find(name) != yieldCurveShiftData_.end(),
+               "curve name " << name << " not found in yield shift data");
+    QL_REQUIRE(bucket < yieldCurveShiftData_[name].shiftTenors.size(), "bucket " << bucket << " out of range");
+    std::ostringstream o;
+    o << yieldLabel_ << labelSeparator() << name << labelSeparator() << bucket << labelSeparator()
+      << yieldCurveShiftData_[name].shiftTenors[bucket] << labelSeparator() << shiftDirectionLabel(up);
     return o.str();
 }
 

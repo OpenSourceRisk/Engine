@@ -1697,6 +1697,23 @@
     </YieldCurve>
     -->
     <YieldCurve>
+      <CurveId>BENCHMARK_EUR</CurveId>
+      <CurveDescription>Bond benchmark curve in EUR</CurveDescription>
+      <Currency>EUR</Currency>
+      <DiscountCurve/>
+      <Segments>
+        <ZeroSpread>
+          <Type>Zero Spread</Type>
+          <Quotes>
+            <Quote>ZERO/YIELD_SPREAD/EUR/BENCHMARK_EUR/A365/5Y</Quote>
+            <Quote>ZERO/YIELD_SPREAD/EUR/BENCHMARK_EUR/A365/10Y</Quote>
+          </Quotes>
+          <Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+          <ReferenceCurve>EUR1D</ReferenceCurve>
+        </ZeroSpread>
+      </Segments>
+    </YieldCurve>
+    <YieldCurve>
       <CurveId>BANK_EUR_BORROW</CurveId>
       <CurveDescription>BANK's average borrowing spread in EUR</CurveDescription>
       <Currency>EUR</Currency>

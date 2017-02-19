@@ -142,6 +142,47 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
     }
     LOG("discount yield curves done");
 
+    LOG("building benchmark yield curves...");
+    for (const auto& name : parameters->yieldCurveNames()) {
+        LOG("building benchmark yield curve name " << name);
+        Handle<YieldTermStructure> wrapper = initMarket->yieldCurve(name, configuration);
+        QL_REQUIRE(!wrapper.empty(), "yield curve for name " << name << " not provided");
+        // include today
+        vector<Handle<Quote> > quotes;
+        boost::shared_ptr<SimpleQuote> q(new SimpleQuote(1.0));
+        quotes.push_back(Handle<Quote>(q));
+        vector<Real> discounts(yieldCurveTimes.size());
+        for (Size i = 0; i < yieldCurveTimes.size() - 1; i++) {
+            boost::shared_ptr<SimpleQuote> q(new SimpleQuote(wrapper->discount(yieldCurveDates[i + 1])));
+            Handle<Quote> qh(q);
+            quotes.push_back(qh);
+
+            simData_.emplace(std::piecewise_construct,
+                             std::forward_as_tuple(RiskFactorKey::KeyType::YieldCurve, name, i),
+                             std::forward_as_tuple(q));
+
+            LOG("SimMarket yield curve name " << name << " discount[" << i << "]=" << q->value());
+        }
+
+        boost::shared_ptr<YieldTermStructure> yieldCurve;
+
+        if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister) {
+            yieldCurve = boost::shared_ptr<YieldTermStructure>(
+                new QuantExt::InterpolatedDiscountCurve(yieldCurveTimes, quotes, 0, TARGET(), wrapper->dayCounter()));
+        } else {
+            yieldCurve = boost::shared_ptr<YieldTermStructure>(
+                new QuantExt::InterpolatedDiscountCurve2(yieldCurveDates, quotes, wrapper->dayCounter()));
+        }
+
+        Handle<YieldTermStructure> dch(yieldCurve);
+        if (wrapper->allowsExtrapolation())
+            dch->enableExtrapolation();
+        yieldCurves_.insert(
+            pair<pair<string, string>, Handle<YieldTermStructure> >(make_pair(Market::defaultConfiguration, name), dch));
+        LOG("building benchmark yield curve " << name << " done");
+    }
+    LOG("benchmark yield curves done");
+
     // constructing index curves
     LOG("building index curves...");
     for (const auto& ind : parameters->indices()) {
