@@ -18,6 +18,7 @@ QLE_TESTS = \
 	optionletstripper.hpp optionletstripper.cpp \
 	deposit.hpp deposit.cpp \
 	ratehelpers.hpp ratehelpers.cpp \
+	stabilisedglls.hpp stabilisedglls.cpp \
 	capfloormarketdata.hpp \
 	swaptionmarketdata.hpp \
 	yieldcurvemarketdata.hpp

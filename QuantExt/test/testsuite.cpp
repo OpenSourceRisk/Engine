@@ -59,6 +59,7 @@ using boost::unit_test::test_suite;
 #include "optionletstripper.hpp"
 #include "deposit.hpp"
 #include "ratehelpers.hpp"
+#include "stabilisedglls.hpp"
 
 namespace {
 
@@ -107,6 +108,7 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(testsuite::OptionletStripperTest::suite());
     test->add(testsuite::DepositTest::suite());
     test->add(testsuite::RateHelpersTest::suite());
+    test->add(testsuite::StabilisedGLLSTest::suite());
 
     test->add(BOOST_TEST_CASE(stopTimer));
 

@@ -1615,10 +1615,10 @@ details and analyse their impact on XVAs quickly without re-generating the NPV c
     <Parameter name="dimLocalRegressionEvaluations">100</Parameter>
     <Parameter name="dimLocalRegressionBandwidth">0.25</Parameter>
     <Parameter name="dimScaling">1.0</Parameter>
-    <Parameter name="dimEvolutionFile">dim_evolution.txt</Parameter>      
-    <Parameter name="dimRegressionFile">dim_regression.txt</Parameter>      
+    <Parameter name="dimEvolutionFile">dim_evolution.txt</Parameter>
+    <Parameter name="dimRegressionFiles">dim_regression.txt</Parameter>
     <Parameter name="dimOutputNettingSet">CPTY_A</Parameter>      
-    <Parameter name="dimOutputGridPoint">0</Parameter>
+    <Parameter name="dimOutputGridPoints">0</Parameter>
     <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>
     <Parameter name="netCubeOutputFile">netcube.csv</Parameter>     
   </Analytic>
@@ -1663,8 +1663,9 @@ the collateral model file (netting.xml)}
 \item {\tt dimRegressionOrder:} Order of the regression polynomial (netting set clean NPV move over the simulation
 period versus netting set NPV at period start)
 \item {\tt dimRegressors:} Variables used as regressors in a single- or multi-dimensional regression; these variable
-names need to match entries in the {\tt simulation.xml}'s AggregationScenarioDataCurrencies and
-AggregationScenarioDataIndices sections (only these scenario data are passed on to the post processor)
+  names need to match entries in the {\tt simulation.xml}'s AggregationScenarioDataCurrencies and
+  AggregationScenarioDataIndices sections (only these scenario data are passed on to the post processor); if the list is
+  empty, the NPV will be used as a single regressor
 \item {\tt dimLocalRegressionEvaluations:} Nadaraya-Watson local regression evaluated at the given number of points to
 validate polynomial regression. Note that Nadaraya-Watson needs a large number of samples for meaningful
 results. Evaluating the local regression at many points (samples) has a significant performance impact, hence the option
@@ -1675,9 +1676,9 @@ independent variable (NPV)
 $t_0$
 \item {\tt dimEvolutionFile:} Output file name to store the evolution of zero order DIM and average of nth order DIM
 through time
-\item {\tt dimRegressionFile:} Output file name for a DIM regression snapshot
+\item {\tt dimRegressionFiles:} Output file name(s) for a DIM regression snapshot, comma separated list
 \item {\tt dimOutputNettingSet:} Netting set for the DIM regression snapshot
-\item {\tt dimOutputGridPoint:} Grid point (in time) for the DIM regression snapshot
+\item {\tt dimOutputGridPoints:} Grid point(s) (in time) for the DIM regression snapshot, comma separated list
 \item {\tt rawCubeOutputFile:} File name for the trade NPV cube in human readable csv file format (per trade, date,
 sample)
 \item {\tt netCubeOutputFile:} File name for the aggregated NPV cube in human readable csv file format (per netting set,
@@ -2515,40 +2516,191 @@ configuration determines the composition of yield curves, default curves, Swapti
 ORE applies the cross asset model described in detail in \cite{Lichters} to evolve  the market through time. So far the
 evolution model in ORE is limited to IR and FX risk factors for any number of currencies, extensions to further risk
 factor classes (Inflation, Credit, Equity, Commodity) will follow. \\
-  
-The Cross Asset Model is based on the Linear Gauss Markov model (LGM) for interest rates and lognormal FX processes. We
-identify a single {\em domestic} currency; its LGM process, which is labelled $z_0$; and a set of $n$ foreign currencies
-with associated LGM processes that are labelled $z_i$, $i=1,\dots,n$.  If we consider $n$ foreign exchange rates for
-converting foreign currency amounts into the single domestic currency by multiplication, $x_i$, $i=1,\dots,n$, then the
-cross asset model is given by the system of SDEs
+
+The Cross Asset Model is based on the Linear Gauss Markov model (LGM) for interest rates, lognormal FX processes and the
+Dodgson-Kainth model for inflation. We identify a single {\em domestic} currency; its LGM process, which is labelled
+$z_0$; and a set of $n$ foreign currencies with associated LGM processes that are labelled $z_i$, $i=1,\dots,n$.
+Following \cite{Lichters}, 13.27 - 13.29 we write the inflation processes in the domestic LGM measure with state
+variables $z_{I,k}$ and $y_{I,k}$ for $k=1,\ldots,K$.  If we consider $n$ foreign exchange rates for converting foreign
+currency amounts into the single domestic currency by multiplication, $x_i$, $i=1,\dots,n$, then the cross asset model
+is given by the system of SDEs
 \begin{eqnarray*}
 dz_0 &=& \alpha_0\,dW_0^z \\
 dz_i &=& \gamma_i\,dt + \alpha_i\,dW_i^z,  \qquad i>0 \\
-\frac{d x_i}{x_i} &=& \mu_i\, dt + \sigma_i\,dW_i^x, \qquad i > 0 \\ \\
-\gamma_i &=& 
--\alpha_i^2\,H_i -\rho_{ii}^{zx}\,\sigma_i\,\alpha_i + \rho_{i0}^{zz}\,\alpha_i\,\alpha_0\,H_0\\ 
+  \frac{d x_i}{x_i} &=& \mu_i\, dt + \sigma_i\,dW_i^x, \qquad i > 0 \\
+  dz_{I,k} &=& \alpha_{I,k}(t)dW_k^I \\
+  dy_{I,k} &=& \alpha_{I,k}(t)H_{I,k}(t)dW_k^I \\ \\
+\gamma_i &=&
+-\alpha_i^2\,H_i -\rho_{ii}^{zx}\,\sigma_i\,\alpha_i + \rho_{i0}^{zz}\,\alpha_i\,\alpha_0\,H_0\\
 \mu_i &=& r_0 - r_i + \rho_{0i}^{zx}\,\alpha_0\,H_0\,\sigma_i\\
 r_i &=& f_i(0,t) + z_i(t)\,H'_i(t) + \zeta_i(t)\,H_i(t)\,H'_i(t),
-\quad \zeta_i(t) = \int_0^t \alpha_i^2(s)\,ds  \\ \\ 
-  dW^a_i\,dW^b_j &=& \rho^{ab}_{ij}\,dt, \qquad a, b \in \{z, x\} 
-%\zeta_i(t) &=& \int_0^t \alpha_i^2(s)\,ds, 
+\quad \zeta_i(t) = \int_0^t \alpha_i^2(s)\,ds  \\ \\
+dW^\alpha_a\,dW^\beta_b &=& \rho^{\alpha\beta}_{ij}\,dt, \qquad \alpha, \beta \in \{z, x, I\}, \qquad a, b \text{
+                              suitable indices }
+%\zeta_i(t) &=& \int_0^t \alpha_i^2(s)\,ds,
 %\qquad H_i(t) = \int_0^t e^{-\beta_i(s)} \,ds \\
-%\beta_i(t) &=& \int_0^t \lambda_i(s)\,ds, 
+%\beta_i(t) &=& \int_0^t \lambda_i(s)\,ds,
 %\qquad \alpha_i(t) = \sigma_i^{HW}(t)\,e^{\beta(t)} \\
 \end{eqnarray*}
-where we have dropped time dependencies for readability, and $f_i(0,t)$ is the instantaneous forward curve in currency $i$. 
+where we have dropped time dependencies for readability, and $f_i(0,t)$ is the instantaneous forward curve in currency $i$.
 
 \medskip Parameters $H_i(t)$ and $\alpha_i(t)$ (or alternatively $\zeta_i(t)$) are LGM model parameters which determine,
 together with the stochastic factor $z_i(t)$, the evolution of numeraire and zero bond prices in the LGM model:
 \begin{align}
 N(t) &= \frac{1}{P(0,t)}\exp\left\{H_t\, z_t + \frac{1}{2}H^2_t\,\zeta_t \right\}
 \label{lgm1f_numeraire} \\
-P(t,T,z_t)  
-&= \frac{P(0,T)}{P(0,t)}\:\exp\left\{ -(H_T-H_t)\,z_t - \frac{1}{2} \left(H^2_T-H^2_t\right)\,\zeta_t\right\}. 
+P(t,T,z_t)
+&= \frac{P(0,T)}{P(0,t)}\:\exp\left\{ -(H_T-H_t)\,z_t - \frac{1}{2} \left(H^2_T-H^2_t\right)\,\zeta_t\right\}.
 \label{lgm1f_zerobond}
 \end{align}
 
 Note that the LGM model is closely related to the Hull-White model in T-forward measure \cite{Lichters}.
+
+\medskip The parameters $H_{I,k}(t)$ and $\alpha_{I,k}(t)$ determine together with the factors $z_{I,k}(t), y_{I,k}(t)$
+the evolution of the spot Index $I(t)$ and the forward index $\hat{I}(t,T) = P_I(t,T) / P_n(t,T)$ defined as the ratio
+of the inflation linked zero bond and the nominal zero bond,
+
+\begin{eqnarray*}
+  \hat{I}(t,T) &=& \frac{\hat{I}(0,T)}{\hat{I}(0,t)} e^{(H_{I,k}(T)-H_{I,k}(t))z_{I,k}(t)+\tilde{V}(t,T)} \\
+  I(t) &=& I(0) \hat{I}(0,t)e^{H_{I,k}(t)z_{I,k}(t)-y_{I,k}(t)-V(0,t)}
+\end{eqnarray*}
+
+with, in case of domestic currency inflation,
+
+\begin{eqnarray*}
+  V(t,T) &=& \frac{1}{2} \int_t^T (H_{I,k}(T)-H_{I,k}(s))^2 \alpha_{I,k}^2(s) ds \\
+         & & - \rho^{zI}_{0,k} H_0(T) \int_t^T (H_{I,k}(t)-H_{I,k}(s))\alpha_0(s)\alpha_{I,k}(s)ds \\
+  \tilde{V}(t,T) &=& V(t,T) - V(0,T) -V(0,t) \\
+         &=& -\frac{1}{2}(H_{I,k}^2(T)-H_{I,k}^2(t))\zeta_{I,k}(t,0) \\
+         & & +(H_{I,k}(T)-H_{I,k}(t)) \zeta_{I,k}(t,1) \\
+         & & +(H_0(T)H_{I,k}(T) - H_0(t)H_{I,k}(t))\zeta_{0I}(t,0) \\
+         & & -(H_0(T)-H_0(t))\zeta_{0I}(t,1) \\
+  V(0,t) &=& \frac{1}{2}H_{I,k}^2(t)\zeta_{I,k}(t,0)-H_{I,k}(t)\zeta_{I,k}(t,1)+\frac{1}{2}\zeta_{I,k}(t,2) \\
+         & & -H_0(t)H_{I,k}(t)\zeta_{0I}(t,0)+H_0(t)\zeta_{0I}(t,1) \\
+  \zeta_{I,k}(t,k) &=& \int_0^t H_{I,k}^k(s)\alpha_{I,k}^2(s) ds \\
+  \zeta_{0I}(t,k) &=& \rho^{zI}_{0,k}\int_0^t H_{I,k}^k(t) \alpha_0(s) \alpha_{I,k}(s) ds
+\end{eqnarray*}
+
+and for foreign currency inflation in currency $i>0$, with
+
+\begin{eqnarray*}
+  \tilde{V}(t,T) &=& V(t,T) -V(0,T) + V(0,T)
+\end{eqnarray*}
+
+and
+
+\begin{eqnarray*}
+  V(t,T) &=& \frac{1}{2}\int_t^T (H_{I,k}(T)-H_{I,k}(s))^2 \alpha_{I,k}(s) ds \\
+  & & -\rho^{zI}_{0,k} \int_t^T H_0(s)\alpha_0(s)(H_{I,k}(T)-H_{I,k}(s)\alpha_{I,k}(s)) ds \\
+  & & -\rho^{zI}_{i,k} \int_t^T (H_i(T)-H_i(s))\alpha_i(s)(H_{I,k}(T)-H_{I,k}(s))\alpha_{I,k}(s) ds \\
+  & & +\rho^{xI}_{i,k} \int_t^T \sigma_i(s)(H_{I,k}(T)-H_{I,k}(s))\alpha_{I,k}(s) ds
+\end{eqnarray*}
+
+\subsection{Analytical Moments of the Risk Factor Evolution Model}\label{sec:app_analytical_moments}
+
+We follow \cite{Lichters}, chapter 16. The expectation of the interest rate process $z_i$ conditional on $\mathcal{F}_{t_0}$ at $t_0+\Delta t$ is
+
+\begin{eqnarray*}
+  \mathbb{E}_{t_0}[z_i(t_0+\Delta t)] &=& z_i(t_0) + \mathbb{E}_{t_0}[\Delta z_i],
+  \qquad\mbox{with}\quad \Delta z_i = z_i(t_0+\Delta t) - z_i(t_0) \\
+  &=& z_i(t_0) -\int_{t_0}^{t_0+\Delta t} H^z_i\,(\alpha^z_i)^2\,du + \rho^{zz}_{0i} \int_{t_0}^{t_0+\Delta t}
+  H^z_0\,\alpha^z_0\,\alpha^z_i\,du \\
+  & & - \epsilon_i  \rho^{zx}_{ii}\int_{t_0}^{t_0+\Delta t} \sigma_i^x\,\alpha^z_i\,du
+\end{eqnarray*}
+
+where $\epsilon_i$ is zero for $i=0$ (domestic currency) and one otherwise.
+
+The expectation of the FX process $x_i$ conditional on $\mathcal{F}_{t_0}$ at $t_0+\Delta t$ is
+
+\begin{eqnarray*}
+  \mathbb{E}_{t_0}[\ln x_i(t_0+\Delta t)] &=& \ln x_i(t_0) +  \mathbb{E}_{t_0}[\Delta \ln x_i],
+  \qquad\mbox{with}\quad \Delta \ln x_i = \ln x_i(t_0+\Delta t) - \ln x_i(t_0) \\
+  &=& \ln x_i(t_0) + \left(H^z_0(t)-H^z_0(s)\right) z_0(s) -\left(H^z_i(t)-H^z_i(s)\right)z_i(s)\\
+  &&+ \ln \left( \frac{P^n_0(0,s)}{P^n_0(0,t)} \frac{P^n_i(0,t)}{P^n_i(0,s)}\right) \\
+  && - \frac12 \int_s^t (\sigma^x_i)^2\,du \\
+  &&+\frac12 \left((H^z_0(t))^2 \zeta^z_0(t) -  (H^z_0(s))^2 \zeta^z_0(s)- \int_s^t (H^z_0)^2
+  (\alpha^z_0)^2\,du\right)\\
+  &&-\frac12 \left((H^z_i(t))^2 \zeta^z_i(t) -  (H^z_i(s))^2 \zeta^z_i(s)-\int_s^t (H^z_i)^2 (\alpha^z_i)^2\,du
+  \right)\\
+  && + \rho^{zx}_{0i} \int_s^t H^z_0\, \alpha^z_0\, \sigma^x_i\,du \\
+  &&  - \int_s^t \left(H^z_i(t)-H^z_i\right)\gamma_i \,du, \qquad\mbox{with}\quad s = t_0, \quad t = t_0+\Delta t
+\end{eqnarray*}
+
+with
+
+\begin{eqnarray*}
+  \gamma_i = -H^z_i\,(\alpha^z_i)^2  + H^z_0\,\alpha^z_0\,\alpha^z_i\,\rho^{zz}_{0i} - \sigma_i^x\,\alpha^z_i\,
+  \rho^{zx}_{ii}
+\end{eqnarray*}
+
+The expectation of the Inflation processes $z_{I,k}, y_{I,k}$ conditional on $\mathcal{F}_{t_0}$ at any time $t>t_0$ is
+equal to $z_{I,k}(t_0)$ resp. $y_{I,k}(t_0)$ since both processes are drift free.
+
+The IR-IR covariance over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditional on $\mathcal{F}_{t_0}$) is
+
+\begin{eqnarray*}
+      \mathrm{Cov} [\Delta z_a, \Delta \ln x_b] &=& \rho^{zz}_{0a}\int_s^t \left(H^z_0(t)-H^z_0\right)
+  \alpha^z_0\,\alpha^z_a\,du \nonumber\\
+      &&- \rho^{zz}_{ab}\int_s^t \alpha^z_a \left(H^z_b(t)-H^z_b\right) \alpha^z_b \,du \nonumber\\
+      &&+\rho^{zx}_{ab}\int_s^t \alpha^z_a \, \sigma^x_b \,du.
+\end{eqnarray*}
+
+The IR-FX covariance over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditional on $\mathcal{F}_{t_0}$) is
+
+\begin{eqnarray*}
+      \mathrm{Cov} [\Delta z_a, \Delta \ln x_b] &=& \rho^{zz}_{0a}\int_s^t \left(H^z_0(t)-H^z_0\right)
+  \alpha^z_0\,\alpha^z_a\,du \nonumber\\
+      &&- \rho^{zz}_{ab}\int_s^t \alpha^z_a \left(H^z_b(t)-H^z_b\right) \alpha^z_b \,du \nonumber\\
+      &&+\rho^{zx}_{ab}\int_s^t \alpha^z_a \, \sigma^x_b \,du.
+\end{eqnarray*}
+
+The FX-FX covariance over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditional on $\mathcal{F}_{t_0}$) is
+
+\begin{eqnarray*}
+      \mathrm{Cov}[\Delta \ln x_a, \Delta \ln x_b] &=&
+      \int_s^t \left(H^z_0(t)-H^z_0\right)^2 (\alpha_0^z)^2\,du \nonumber\\
+      && -\rho^{zz}_{0a} \int_s^t \left(H^z_a(t)-H^z_a\right) \alpha_a^z\left(H^z_0(t)-H^z_0\right) \alpha_0^z\,du
+  \nonumber\\
+      &&- \rho^{zz}_{0b}\int_s^t \left(H^z_0(t)-H^z_0\right)\alpha_0^z \left(H^z_b(t)-H^z_b\right)\alpha_b^z\,du
+  \nonumber\\
+      &&+ \rho^{zx}_{0b}\int_s^t \left(H^z_0(t)-H^z_0\right)\alpha_0^z \sigma^x_b\,du \nonumber\\
+      &&+ \rho^{zx}_{0a}\int_s^t \left(H^z_0(t)-H^z_0\right)\alpha_0^z\,\sigma^x_a\,du \nonumber\\
+      &&- \rho^{zx}_{ab}\int_s^t \left(H^z_a(t)-H^z_a\right)\alpha_a^z \sigma^x_b,du\nonumber\\
+      &&- \rho^{zx}_{ba}\int_s^t \left(H^z_b(t)-H^z_b\right)\alpha_b^z\,\sigma^x_a\, du \nonumber\\
+      &&+ \rho^{zz}_{ab}\int_s^t \left(H^z_a(t)-H^z_a\right)\alpha_a^z \left(H^z_b(t)-H^z_b\right)\alpha_b^z\,du
+  \nonumber\\
+      &&+ \rho^{xx}_{ab}\int_s^t\sigma^x_a\,\sigma^x_b \,du
+\end{eqnarray*}
+
+The IR-INF covariance over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditional on $\mathcal{F}_{t_0}$) is
+
+\begin{eqnarray*}
+  \mathrm{Cov}[ \Delta z_a, \Delta z_{I,b} ] & = & \rho_{ab}^{zI} \int_s^t \alpha_a(s) \alpha_{I,b}(s) ds \\
+  \mathrm{Cov}[ \Delta z_a, \Delta y_{I,b} ] & = & \rho_{ab}^{zI} \int_s^t \alpha_a(s) H_{I,b}(s) \alpha_{I,b}(s) ds
+\end{eqnarray*}
+
+The FX-INF covariance over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditional on $\mathcal{F}_{t_0}$) is
+
+\begin{eqnarray*}
+  \mathrm{Cov}[ \Delta x_a, \Delta z_{I,b} ] & = & \rho_{0b}^{zI} \int_s^t \alpha_0(s) (H_0(t)-H_0(s)) \alpha_{I,b}(s) ds \\
+                                             & & -\rho_{ab}^{zI} \int_s^t \alpha_a(s)(H_a(t)-H_a(s))\alpha_{I,b}(s) ds \\
+                                             & & +\rho_{ab}^{xI}\int_s^t \sigma_a(s) \alpha_{I,b}(s) ds \\
+  \mathrm{Cov}[ \Delta x_a, \Delta y_{I,b} ] & = & \rho_{0b}^{zI} \int_s^t \alpha_0(s) (H_0(t)-H_0(s)) H_{I,b}(s)\alpha_{I,b}(s) ds \\
+                                             & & -\rho_{ab}^{zI} \int_s^t \alpha_a(s)(H_a(t)-H_a(s))H_{I,b}(s)\alpha_{I,b}(s) ds \\
+                                             & & +\rho_{ab}^{xI}\int_s^t \sigma_a(s) H_{I,b}(s)\alpha_{I,b}(s) ds
+\end{eqnarray*}
+
+The INF-INF covariance over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditional on $\mathcal{F}_{t_0}$) is
+
+\begin{eqnarray*}
+  \mathrm{Cov}[ \Delta z_{I,a}, \Delta z_{I,b} ] & = & \rho_{ab}^{II} \int_s^t \alpha_{I,a}(s) \alpha_{I,b}(s) ds \\
+  \mathrm{Cov}[ \Delta z_{I,a}, \Delta y_{I,b} ] & = & \rho_{ab}^{II} \int_s^t \alpha_{I,a}(s) H_{I,b}(s)
+                                                       \alpha_{I,b}(s) ds \\
+  \mathrm{Cov}[ \Delta y_{I,a}, \Delta y_{I,b} ] & = & \rho_{ab}^{II} \int_s^t H_{I,a}(s) \alpha_{I,a}(s) H_{I,b}(s) \alpha_{I,b}(s) ds
+\end{eqnarray*}
+
+\begin{eqnarray*}
+\end{eqnarray*}
 
 \subsection{Exposures}\label{sec:app_exposure}
 
