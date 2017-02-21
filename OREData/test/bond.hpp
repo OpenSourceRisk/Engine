@@ -35,6 +35,7 @@ namespace testsuite {
 class BondTest {
 public:
     //! Test Bond pricing
+    static void testZeroBond();
     static void testBondZeroSpreadDefault();
     static void testBondCompareDefault();
     static boost::unit_test_framework::test_suite* suite();

@@ -98,9 +98,9 @@ struct CommonVars {
     Real fixedRate;
     string settledays;
     bool isinarrears;
-    double notional;
-    vector<double> notionals;
-    vector<double> spread;
+    Real notional;
+    vector<Real> notionals;
+    vector<Real> spread;
 
     // utilities
     boost::shared_ptr<ore::data::Bond> makeBond() {
@@ -113,6 +113,13 @@ struct CommonVars {
         Envelope env("CP1");
 
         boost::shared_ptr<ore::data::Bond> bond(new ore::data::Bond(env, issuerId, securityId, referenceCurveId, settledays, calStr, issue, fixedLegData));
+        return bond;
+    }
+
+    boost::shared_ptr<ore::data::Bond> makeZeroBond() {
+        Envelope env("CP1");
+
+        boost::shared_ptr<ore::data::Bond> bond(new ore::data::Bond(env, issuerId, securityId, referenceCurveId, settledays, calStr, notional, end, ccy, issue));
         return bond;
     }
 
@@ -144,10 +151,33 @@ struct CommonVars {
 
 namespace testsuite {
 
+void BondTest::testZeroBond() {
+    BOOST_TEST_MESSAGE("Testing Zero Bond...");
+
+    // build market
+    boost::shared_ptr<Market> market = boost::make_shared<TestMarket>();
+    Settings::instance().evaluationDate() = market->asofDate();
+
+    CommonVars vars;
+    boost::shared_ptr<ore::data::Bond> bond = vars.makeZeroBond();
+
+    // Build and price
+    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+    engineData->model("Bond") = "DiscountedCashflows";
+    engineData->engine("Bond") = "DiscountingRiskyBondEngine";
+
+    boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+
+    bond->build(engineFactory);
+
+    Real npv = bond->instrument()->NPV();
+    Real expectedNpv = 11403727.39;
+
+    BOOST_CHECK_CLOSE(npv, expectedNpv, 1.0);
+}
+
 void BondTest::testBondZeroSpreadDefault() {
     BOOST_TEST_MESSAGE("Testing Bond price...");
-
-    Date today = Settings::instance().evaluationDate();
 
     // build market
     boost::shared_ptr<Market> market = boost::make_shared<TestMarket>();
@@ -174,8 +204,6 @@ void BondTest::testBondZeroSpreadDefault() {
 
 void BondTest::testBondCompareDefault() {
     BOOST_TEST_MESSAGE("Testing Bond price...");
-
-    Date today = Settings::instance().evaluationDate();
 
     // build market
     boost::shared_ptr<Market> market1 = boost::make_shared<TestMarket>(0.0);
@@ -211,6 +239,7 @@ void BondTest::testBondCompareDefault() {
 
 test_suite* BondTest::suite() {
     test_suite* suite = BOOST_TEST_SUITE("BondTest");
+    suite->add(BOOST_TEST_CASE(&BondTest::testZeroBond));
     suite->add(BOOST_TEST_CASE(&BondTest::testBondZeroSpreadDefault));
     suite->add(BOOST_TEST_CASE(&BondTest::testBondCompareDefault));
     return suite;

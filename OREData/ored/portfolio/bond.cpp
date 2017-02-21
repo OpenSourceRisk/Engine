@@ -21,6 +21,7 @@
 #include <ored/portfolio/bond.hpp>
 #include <ored/portfolio/builders/bond.hpp>
 #include <ql/instruments/bond.hpp>
+#include <ql/instruments/bonds/zerocouponbond.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/log.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
@@ -41,40 +42,55 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("Bond");
 
-    string ccy_str = coupons_.currency();
-    npvCurrency_ = ccy_str;
-    Currency currency = parseCurrency(ccy_str);
-
+    Currency currency;
     Date issueDate = parseDate(issueDate_);
     Calendar calendar = parseCalendar(calendar_);
     Natural settlementDays = boost::lexical_cast<Natural>(settlementDays_);
+    boost::shared_ptr<QuantLib::Bond> bond;
 
-    Leg leg;
-    if (coupons_.legType() == "Fixed")
-        leg = makeFixedLeg(coupons_);
-    else if (coupons_.legType() == "Floating") {
-        string indexName = coupons_.floatingLegData().index();
-        Handle<IborIndex> hIndex =
-            engineFactory->market()->iborIndex(indexName, builder->configuration(MarketContext::pricing));
-        QL_REQUIRE(!hIndex.empty(), "Could not find ibor index " << indexName << " in market.");
-        boost::shared_ptr<IborIndex> index = hIndex.currentLink();
-        leg = makeIborLeg(coupons_, index, engineFactory);
-    } else {
-        QL_FAIL("Unknown leg type " << coupons_.legType());
+    if (zeroBond_) { //Zero coupon bond
+        currency = parseCurrency(currency_);
+        maturity_ = parseDate(maturityDate_);
+        bond.reset(new QuantLib::ZeroCouponBond(settlementDays, calendar, faceAmount_, maturity_));
+
     }
+    else {//Coupon bond
+        
+        string ccy_str = coupons_.currency();
+        npvCurrency_ = ccy_str;
+        currency = parseCurrency(ccy_str);
 
-    boost::shared_ptr<QuantLib::Bond> bond(new QuantLib::Bond(settlementDays, calendar, issueDate, leg));
+        Leg leg;
+        if (coupons_.legType() == "Fixed")
+            leg = makeFixedLeg(coupons_);
+        else if (coupons_.legType() == "Floating") {
+            string indexName = coupons_.floatingLegData().index();
+            Handle<IborIndex> hIndex =
+                engineFactory->market()->iborIndex(indexName, builder->configuration(MarketContext::pricing));
+            QL_REQUIRE(!hIndex.empty(), "Could not find ibor index " << indexName << " in market.");
+            boost::shared_ptr<IborIndex> index = hIndex.currentLink();
+            leg = makeIborLeg(coupons_, index, engineFactory);
+        }
+        else {
+            QL_FAIL("Unknown leg type " << coupons_.legType());
+        }
+
+        bond.reset(new QuantLib::Bond(settlementDays, calendar, issueDate, leg));
+
+        // set maturity
+        maturity_ = leg.back()->date();
+        Date d = leg.back()->date();
+        if (d > maturity_)
+            maturity_ = d;
+    }
+    
     boost::shared_ptr<BondEngineBuilder> bondBuilder = boost::dynamic_pointer_cast<BondEngineBuilder>(builder);
     QL_REQUIRE(bondBuilder, "No Builder found for Bond" << id());
     bond->setPricingEngine(bondBuilder->engine(currency, issuerId_, securityId_, referenceCurveId_));
     DLOG("Bond::build(): Bond NPV = " << bond->NPV()); 
     instrument_.reset(new VanillaInstrument(bond)); 
 
-    // set maturity
-    maturity_ = leg.back()->date();
-    Date d = leg.back()->date();
-    if (d > maturity_)
-        maturity_ = d;
+
 }
 
 void Bond::fromXML(XMLNode* node) {
