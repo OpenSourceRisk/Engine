@@ -18,6 +18,7 @@
 
 #include <orea/scenario/crossassetmodelscenariogenerator.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/parsers.hpp>
 
 #include <qle/models/lgmimpliedyieldtermstructure.hpp>
 
@@ -62,6 +63,15 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
         }
     }
 
+    // Cache yield curve keys
+    Size n_curves = simMarketConfig_->yieldCurveNames().size();
+    yieldCurveKeys_.reserve(n_curves * n_ten);
+    for (Size j = 0; j < n_curves; ++j) {
+        for (Size k = 0; k < n_ten; ++k) {
+            yieldCurveKeys_.emplace_back(RiskFactorKey::KeyType::YieldCurve, simMarketConfig_->yieldCurveNames()[j], k);
+        }
+    }
+
     // Cache FX rate keys
     fxKeys_.reserve(n_ccy - 1);
     for (Size k = 0; k < n_ccy - 1; k++) {
@@ -92,15 +102,17 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     }
 }
 
-std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextPath() {
-    std::vector<boost::shared_ptr<Scenario>> scenarios(dates_.size());
+std::vector<boost::shared_ptr<Scenario> > CrossAssetModelScenarioGenerator::nextPath() {
+    std::vector<boost::shared_ptr<Scenario> > scenarios(dates_.size());
     Sample<MultiPath> sample = pathGenerator_->next();
     Size n_ccy = model_->components(IR);
     Size n_indices = simMarketConfig_->indices().size();
+    Size n_curves = simMarketConfig_->yieldCurveNames().size();
     Size n_ten = simMarketConfig_->yieldCurveTenors().size();
     vector<string> ccyPairs(n_ccy - 1);
-    vector<boost::shared_ptr<QuantExt::LgmImpliedYieldTermStructure>> curves, fwdCurves;
-    vector<boost::shared_ptr<IborIndex>> indices;
+    vector<boost::shared_ptr<QuantExt::LgmImpliedYieldTermStructure> > curves, fwdCurves, yieldCurves;
+    vector<boost::shared_ptr<IborIndex> > indices;
+    vector<Currency> yieldCurveCurrency;
 
     DayCounter dc = model_->irlgm1f(0)->termStructure()->dayCounter();
 
@@ -118,6 +130,16 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
         indices.push_back(index->clone(Handle<YieldTermStructure>(impliedFwdCurve)));
     }
 
+    for (Size j = 0; j < n_curves; ++j) {
+        std::string curveName = simMarketConfig_->yieldCurveNames()[j];
+        Currency ccy = ore::data::parseCurrency(simMarketConfig_->yieldCurveCurrencies()[j]);
+        Handle<YieldTermStructure> yts = initMarket_->yieldCurve(curveName, configuration_);
+        auto impliedYieldCurve =
+            boost::make_shared<LgmImpliedYtsFwdFwdCorrected>(model_->lgm(model_->ccyIndex(ccy)), yts, dc, false);
+        yieldCurves.push_back(impliedYieldCurve);
+        yieldCurveCurrency.push_back(ccy);
+    }
+
     for (Size i = 0; i < dates_.size(); i++) {
         Real t = timeGrid_[i + 1]; // recall: time grid has inserted t=0
 
@@ -128,7 +150,7 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
         Real z0 = sample.value[0][i + 1]; // domestic LGM factor, second index = 0 holds initial values
         scenarios[i]->setNumeraire(model_->numeraire(0, t, z0));
 
-        // Yield curves
+        // Discount curves
         for (Size j = 0; j < n_ccy; j++) {
             // LGM factor value, second index = 0 holds initial values
             Real z = sample.value[model_->pIdx(IR, j)][i + 1];
@@ -150,6 +172,18 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
                 Time T = dc.yearFraction(dates_[i], d);
                 Real discount = fwdCurves[j]->discount(T);
                 scenarios[i]->add(indexCurveKeys_[j * n_ten + k], discount);
+            }
+        }
+
+        // Yield curves
+        for (Size j = 0; j < n_curves; ++j) {
+            Real z = sample.value[model_->pIdx(IR, model_->ccyIndex(yieldCurveCurrency[j]))][i + 1];
+            yieldCurves[j]->move(dates_[i], z);
+            for (Size k = 0; k < n_ten; ++k) {
+                Date d = dates_[i] + simMarketConfig_->yieldCurveTenors()[k];
+                Time T = dc.yearFraction(dates_[i], d);
+                Real discount = yieldCurves[j]->discount(T);
+                scenarios[i]->add(yieldCurveKeys_[j * n_ten + k], discount);
             }
         }
 

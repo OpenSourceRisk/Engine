@@ -233,19 +233,19 @@
   <!-- FX spot shifts -->
   <FxSpots>
     <Label>FXSPOT</Label>
-    <FxSpot ccypair="EURUSD">
+    <FxSpot ccypair="USDEUR">
       <ShiftType>Relative</ShiftType>
       <ShiftSize>0.01</ShiftSize>
     </FxSpot>
-    <FxSpot ccypair="EURGBP">
+    <FxSpot ccypair="GBPEUR">
       <ShiftType>Relative</ShiftType>
       <ShiftSize>0.01</ShiftSize>
     </FxSpot>
-    <FxSpot ccypair="EURCHF">
+    <FxSpot ccypair="CHFEUR">
       <ShiftType>Relative</ShiftType>
       <ShiftSize>0.01</ShiftSize>
     </FxSpot>
-    <FxSpot ccypair="EURJPY">
+    <FxSpot ccypair="JPYEUR">
       <ShiftType>Relative</ShiftType>
       <ShiftSize>0.01</ShiftSize>
     </FxSpot>

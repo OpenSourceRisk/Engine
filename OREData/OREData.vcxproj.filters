@@ -255,12 +255,21 @@
     <ClInclude Include="ored\utilities\to_string.hpp">
       <Filter>utilities</Filter>
     </ClInclude>
-    <ClInclude Include="ored\utilities\vectorutils.hpp" >
+    <ClInclude Include="ored\utilities\vectorutils.hpp">
       <Filter>utilities</Filter>
     </ClInclude>
-    <ClInclude Include="ored\utilities\serializationdate.hpp" >
+    <ClInclude Include="ored\utilities\serializationdate.hpp">
       <Filter>utilities</Filter>
     </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\bond.hpp" />
+    <ClInclude Include="ored\portfolio\bond.hpp" />
+    <ClInclude Include="ored\marketdata\securityspread.hpp">
+      <Filter>marketdata</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\report\all.hpp" />
+    <ClInclude Include="ored\report\csvreport.hpp" />
+    <ClInclude Include="ored\report\inmemoryreport.hpp" />
+    <ClInclude Include="ored\report\report.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp">
@@ -458,5 +467,10 @@
     <ClCompile Include="ored\utilities\to_string.cpp">
       <Filter>utilities</Filter>
     </ClCompile>
+    <ClCompile Include="ored\portfolio\bond.cpp" />
+    <ClCompile Include="ored\marketdata\securityspread.cpp">
+      <Filter>marketdata</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\report\csvreport.cpp" />
   </ItemGroup>
 </Project>

@@ -53,6 +53,7 @@ public:
     const string& baseCcy() const { return baseCcy_; }
     const vector<string>& ccys() const { return ccys_; }
     const vector<string>& yieldCurveNames() const { return yieldCurveNames_; }
+    const vector<string>& yieldCurveCurrencies() const { return yieldCurveCurrencies_; }
     const vector<Period>& yieldCurveTenors() const { return yieldCurveTenors_; }
     const vector<string>& indices() const { return indices_; }
     const map<string, string>& swapIndices() const { return swapIndices_; }
@@ -83,6 +84,8 @@ public:
 
     const vector<string>& additionalScenarioDataIndices() const { return additionalScenarioDataIndices_; }
     const vector<string>& additionalScenarioDataCcys() const { return additionalScenarioDataCcys_; }
+
+    const vector<string>& securities() const { return securities_; }
     //@}
 
     //! \name Setters
@@ -90,6 +93,7 @@ public:
     string& baseCcy() { return baseCcy_; }
     vector<string>& ccys() { return ccys_; }
     vector<string>& yieldCurveNames() { return yieldCurveNames_; }
+    vector<string>& yieldCurveCurrencies() { return yieldCurveCurrencies_; }
     vector<Period>& yieldCurveTenors() { return yieldCurveTenors_; }
     vector<string>& indices() { return indices_; }
     map<string, string>& swapIndices() { return swapIndices_; }
@@ -120,6 +124,8 @@ public:
 
     vector<string>& additionalScenarioDataIndices() { return additionalScenarioDataIndices_; }
     vector<string>& additionalScenarioDataCcys() { return additionalScenarioDataCcys_; }
+
+    vector<string>& securities() { return securities_; }
     //@}
 
     //! \name Serialisation
@@ -136,8 +142,9 @@ public:
 
 private:
     string baseCcy_;
-    vector<string> ccys_;            // may or may not include baseCcy;
-    vector<string> yieldCurveNames_; 
+    vector<string> ccys_; // may or may not include baseCcy;
+    vector<string> yieldCurveNames_;
+    vector<string> yieldCurveCurrencies_;
     vector<Period> yieldCurveTenors_;
     vector<string> indices_;
     map<string, string> swapIndices_;
@@ -168,6 +175,8 @@ private:
 
     vector<string> additionalScenarioDataIndices_;
     vector<string> additionalScenarioDataCcys_;
+
+    vector<string> securities_;
 };
 }
 }

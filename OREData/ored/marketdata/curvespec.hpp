@@ -40,7 +40,7 @@ namespace data {
 class CurveSpec {
 public:
     //! Supported curve types
-    enum class CurveType { Yield, CapFloorVolatility, SwaptionVolatility, FX, FXVolatility, Default };
+    enum class CurveType { Yield, CapFloorVolatility, SwaptionVolatility, FX, FXVolatility, Default, SecuritySpread };
     //! Default destructor
     virtual ~CurveSpec() {}
 
@@ -64,9 +64,11 @@ public:
             return "FX";
         case CurveType::FXVolatility:
             return "FXVolatility";
+        case CurveType::SecuritySpread:
+            return "SecuritySpread";
         case CurveType::Default:
             return "Default";
-        default:
+        default: 
             return "N/A";
         }
     }
@@ -237,6 +239,28 @@ private:
     string unitCcy_;
     string ccy_;
     string curveConfigID_;
+};
+
+//! SecuritySpread description
+class SecuritySpreadSpec : public CurveSpec {
+public:
+    //! \name Constructors
+    //@{
+    //! Detailed constructor
+    SecuritySpreadSpec(const string& securityID) : securityID_(securityID) {}
+    //! Default constructor
+    SecuritySpreadSpec() {}
+    //@}
+
+    //! \name Inspectors
+    //@{
+    CurveType baseType() const { return CurveType::SecuritySpread; }
+    string subName() const { return securityID_; }
+    const string& securityID() const { return securityID_; }
+    //@}
+
+protected:
+    string securityID_;
 };
 }
 }

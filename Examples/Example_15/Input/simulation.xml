@@ -14,9 +14,6 @@
     </Currencies>
 
     <YieldCurves>
-      <YieldCurveNames>
-	<Name>BENCHMARK_EUR</Name>
-      </YieldCurveNames>
       <Configuration>
         <!--<Tenors>3M,6M,1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y,30Y,40Y,50Y</Tenors>-->
         <Tenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</Tenors>
@@ -28,10 +25,10 @@
 
     <FxRates>
       <CurrencyPairs>
-        <CurrencyPair>EURUSD</CurrencyPair>
-        <CurrencyPair>EURGBP</CurrencyPair>
-        <CurrencyPair>EURCHF</CurrencyPair>
-        <CurrencyPair>EURJPY</CurrencyPair>
+        <CurrencyPair>USDEUR</CurrencyPair>
+	<CurrencyPair>GBPEUR</CurrencyPair>
+	<CurrencyPair>CHFEUR</CurrencyPair>
+	<CurrencyPair>JPYEUR</CurrencyPair>
         <!--<CurrencyPair>GBPUSD</CurrencyPair>-->
       </CurrencyPairs>      
     </FxRates>
@@ -64,7 +61,9 @@
     </SwapIndices>
 
     <DefaultCurves>
-      <Names/>
+      <Names>
+	<Name>CPTY_C</Name>
+      </Names>
       <Tenors>6M,1Y,2Y</Tenors>
     </DefaultCurves>
 
@@ -125,6 +124,17 @@
       <Index>USD-LIBOR-3M</Index>
     </AggregationScenarioDataIndices>
 
+    <BenchmarkCurves>
+      <BenchmarkCurve>
+	<Currency>EUR</Currency>
+	<Name>BENCHMARK_EUR</Name>
+      </BenchmarkCurve>
+    </BenchmarkCurves>
+
+    <Securities>
+      <Security>SECURITY_1</Security>
+    </Securities>
+    
   </Market>
 
 </Simulation>

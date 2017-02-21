@@ -28,8 +28,8 @@ bool operator==(const MarketConfiguration& lhs, const MarketConfiguration& rhs) 
     if (lhs.discountingCurvesId != rhs.discountingCurvesId || lhs.yieldCurvesId != rhs.yieldCurvesId ||
         lhs.indexForwardingCurvesId != rhs.indexForwardingCurvesId || lhs.fxSpotsId != rhs.fxSpotsId ||
         lhs.fxVolatilitiesId != rhs.fxVolatilitiesId || lhs.swaptionVolatilitiesId != rhs.swaptionVolatilitiesId ||
-        lhs.defaultCurvesId != rhs.defaultCurvesId || lhs.swapIndexCurvesId != rhs.swapIndexCurvesId ||
-        lhs.capFloorVolatilitiesId != rhs.capFloorVolatilitiesId) {
+        lhs.defaultCurvesId != rhs.defaultCurvesId || lhs.swapIndexCurvesId != rhs.swapIndexCurvesId || 
+        lhs.capFloorVolatilitiesId != rhs.capFloorVolatilitiesId || lhs.securitySpreadsId != rhs.securitySpreadsId) {
         return false;
     } else {
         return true;
@@ -74,6 +74,7 @@ void TodaysMarketParameters::fromXML(XMLNode* node) {
     defaultCurves_.clear();
     swapIndices_.clear();
     capFloorVolatilities_.clear();
+    securitySpreads_.clear();
 
     // add default configuration (may be overwritten below)
     MarketConfiguration defaultConfig;
@@ -94,6 +95,7 @@ void TodaysMarketParameters::fromXML(XMLNode* node) {
             tmp.swaptionVolatilitiesId = XMLUtils::getChildValue(n, "SwaptionVolatilitiesId", false);
             tmp.defaultCurvesId = XMLUtils::getChildValue(n, "DefaultCurvesId", false);
             tmp.capFloorVolatilitiesId = XMLUtils::getChildValue(n, "CapFloorVolatilitiesId", false);
+            tmp.securitySpreadsId = XMLUtils::getChildValue(n, "SecuritySpreadsId", false);
             if (tmp.discountingCurvesId == "")
                 tmp.discountingCurvesId = Market::defaultConfiguration;
             if (tmp.yieldCurvesId == "")
@@ -112,6 +114,8 @@ void TodaysMarketParameters::fromXML(XMLNode* node) {
                 tmp.capFloorVolatilitiesId = Market::defaultConfiguration;
             if (tmp.defaultCurvesId == "")
                 tmp.defaultCurvesId = Market::defaultConfiguration;
+            if (tmp.securitySpreadsId == "")
+                tmp.securitySpreadsId = Market::defaultConfiguration;
             addConfiguration(XMLUtils::getAttribute(n, "id"), tmp);
         } else if (XMLUtils::getNodeName(n) == "DiscountingCurves") {
             string id = XMLUtils::getAttribute(n, "id");
@@ -142,7 +146,7 @@ void TodaysMarketParameters::fromXML(XMLNode* node) {
                 swapIndices[name] = disc; //.emplace(name, { ibor, disc }); won't work?
             }
             addSwapIndices(id, swapIndices);
-        } else if (XMLUtils::getNodeName(n) == "FxSpots") {
+         } else if (XMLUtils::getNodeName(n) == "FxSpots") {
             string id = XMLUtils::getAttribute(n, "id");
             if (id == "")
                 id = Market::defaultConfiguration;
@@ -169,6 +173,11 @@ void TodaysMarketParameters::fromXML(XMLNode* node) {
             if (id == "")
                 id = Market::defaultConfiguration;
             addDefaultCurves(id, XMLUtils::getChildrenAttributesAndValues(n, "DefaultCurve", "name", false));
+        } else if (XMLUtils::getNodeName(n) == "SecuritySpreads") {
+            string id = XMLUtils::getAttribute(n, "id");
+            if (id == "")
+                id = Market::defaultConfiguration;
+            addSecuritySpreads(id, XMLUtils::getChildrenAttributesAndValues(n, "SecuritySpread", "name", false));
         } else
             QL_FAIL("TodaysMarketParameters::fromXML(): node not recognized: " << XMLUtils::getNodeName(n));
         n = XMLUtils::getNextSibling(n);
@@ -212,6 +221,9 @@ XMLNode* TodaysMarketParameters::toXML(XMLDocument& doc) {
             }
             if (iterator->second.defaultCurvesId != "") {
                 XMLUtils::addChild(doc, configurationsNode, "DefaultCurvesId", iterator->second.defaultCurvesId);
+            }
+            if (iterator->second.securitySpreadsId != "") {
+                XMLUtils::addChild(doc, configurationsNode, "SecuritySpreadsId", iterator->second.securitySpreadsId);
             }
         }
     }
@@ -358,6 +370,24 @@ XMLNode* TodaysMarketParameters::toXML(XMLDocument& doc) {
             }
         }
     }
+
+    // security Spreads
+    if (securitySpreads_.size() > 0) {
+
+        for (auto mappingSetIterator = securitySpreads_.begin(); mappingSetIterator != securitySpreads_.end(); mappingSetIterator++) {
+
+            XMLNode* bondSpreadsNode = XMLUtils::addChild(doc, todaysMarketNode, "BondSpreads");
+            XMLUtils::addAttribute(doc, bondSpreadsNode, "id", mappingSetIterator->first.c_str());
+
+            for (auto singleMappingIterator = mappingSetIterator->second.begin();
+                singleMappingIterator != mappingSetIterator->second.end(); singleMappingIterator++) {
+                XMLNode* mappingNode = doc.allocNode("BondSpreads", singleMappingIterator->second);
+                XMLUtils::appendNode(bondSpreadsNode, mappingNode);
+                XMLUtils::addAttribute(doc, mappingNode, "pair", singleMappingIterator->first);
+            }
+        }
+    }
+
     return todaysMarketNode;
 }
 
@@ -383,6 +413,7 @@ vector<string> TodaysMarketParameters::curveSpecs(const string& configuration) c
     curveSpecs(swaptionVolatilities_, swaptionVolatilitiesId(configuration), specs);
     curveSpecs(capFloorVolatilities_, capFloorVolatilitiesId(configuration), specs);
     curveSpecs(defaultCurves_, defaultCurvesId(configuration), specs);
+    curveSpecs(securitySpreads_, securitySpreadsId(configuration), specs);
     return specs;
 }
 } // namespace data

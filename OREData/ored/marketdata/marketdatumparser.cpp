@@ -49,7 +49,9 @@ static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
                                                          {"FX_FWD", MarketDatum::InstrumentType::FX_FWD},
                                                          {"SWAPTION", MarketDatum::InstrumentType::SWAPTION},
                                                          {"CAPFLOOR", MarketDatum::InstrumentType::CAPFLOOR},
-                                                         {"FX_OPTION", MarketDatum::InstrumentType::FX_OPTION}};
+                                                         {"FX_OPTION", MarketDatum::InstrumentType::FX_OPTION},
+                                                         {"BOND", MarketDatum::InstrumentType::BOND}};
+
 
     auto it = b.find(s);
     if (it != b.end()) {
@@ -72,6 +74,7 @@ static MarketDatum::QuoteType parseQuoteType(const string& s) {
         {"RATE_NVOL", MarketDatum::QuoteType::RATE_NVOL},
         {"RATE_SLNVOL", MarketDatum::QuoteType::RATE_SLNVOL},
         {"SHIFT", MarketDatum::QuoteType::SHIFT},
+        {"SECURITY_SPREAD", MarketDatum::QuoteType::SECURITY_SPREAD},
     };
 
     if (s == "RATE_GVOL")
@@ -90,7 +93,7 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
 
     vector<string> tokens;
     boost::split(tokens, datumName, boost::is_any_of("/"));
-    QL_REQUIRE(tokens.size() >= 2, "more than 2 tokens expected in " << datumName);
+    QL_REQUIRE(tokens.size() > 2, "more than 2 tokens expected in " << datumName);
 
     MarketDatum::InstrumentType instrumentType = parseInstrumentType(tokens[0]);
     MarketDatum::QuoteType quoteType = parseQuoteType(tokens[1]);
@@ -276,6 +279,12 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         Period expiry = parsePeriod(tokens[4]);
         const string& strike = tokens[5];
         return boost::make_shared<FXOptionQuote>(value, asof, datumName, quoteType, unitCcy, ccy, expiry, strike);
+    }
+
+    case MarketDatum::InstrumentType::BOND: {
+        QL_REQUIRE(tokens.size() == 3, "3 tokens expected in " << datumName);
+        const string& securityID = tokens[2];
+        return boost::make_shared<SecuritySpreadQuote>(value, asof, datumName, securityID);
     }
 
     default:

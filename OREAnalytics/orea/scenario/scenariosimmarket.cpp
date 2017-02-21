@@ -84,8 +84,8 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         fxSpots_[Market::defaultConfiguration].addQuote(ccyPair, qh);
         simData_.emplace(std::piecewise_construct, std::forward_as_tuple(RiskFactorKey::KeyType::FXSpot, ccyPair),
                          std::forward_as_tuple(q));
-	// for (auto sd : simData_)
-	//   LOG("Add sim data quote for FX key " << sd.first);
+        // for (auto sd : simData_)
+        //   LOG("Add sim data quote for FX key " << sd.first);
     }
     LOG("FX triangulation done");
 
@@ -177,11 +177,19 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         Handle<YieldTermStructure> dch(yieldCurve);
         if (wrapper->allowsExtrapolation())
             dch->enableExtrapolation();
-        yieldCurves_.insert(
-            pair<pair<string, string>, Handle<YieldTermStructure> >(make_pair(Market::defaultConfiguration, name), dch));
+        yieldCurves_.insert(pair<pair<string, string>, Handle<YieldTermStructure> >(
+            make_pair(Market::defaultConfiguration, name), dch));
         LOG("building benchmark yield curve " << name << " done");
     }
     LOG("benchmark yield curves done");
+
+    // building security spreads
+    LOG("building security spreads...");
+    for (const auto& name : parameters->securities()) {
+        boost::shared_ptr<Quote> spreadQuote(new SimpleQuote(initMarket->securitySpread(name, configuration)->value()));
+        securitySpreads_.insert(pair<pair<string, string>, Handle<Quote> >(
+            make_pair(Market::defaultConfiguration, name), Handle<Quote>(spreadQuote)));
+    }
 
     // constructing index curves
     LOG("building index curves...");
@@ -418,6 +426,11 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
 
         defaultCurves_.insert(pair<pair<string, string>, Handle<DefaultProbabilityTermStructure> >(
             make_pair(Market::defaultConfiguration, name), dch));
+
+        // add recovery rate
+        boost::shared_ptr<Quote> rrQuote(new SimpleQuote(initMarket->recoveryRate(name, configuration)->value()));
+        recoveryRates_.insert(pair<pair<string, string>, Handle<Quote> >(make_pair(Market::defaultConfiguration, name),
+                                                                         Handle<Quote>(rrQuote)));
     }
     LOG("default curves done");
 

@@ -5,22 +5,22 @@
     <Parameter name="inputPath">Input</Parameter>
     <Parameter name="outputPath">Output</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
-    <Parameter name="logMask">255</Parameter>
-    <Parameter name="marketDataFile">../../Input/market_20160205.txt</Parameter>
+    <Parameter name="logMask">31</Parameter>
+    <Parameter name="marketDataFile">../../Input/market_20160205_flat.txt</Parameter>
     <Parameter name="fixingDataFile">../../Input/fixings_20160205.txt</Parameter>
-    <Parameter name="implyTodaysFixings">N</Parameter>
+    <Parameter name="implyTodaysFixings">Y</Parameter>
     <Parameter name="curveConfigFile">../../Input/curveconfig.xml</Parameter>
     <Parameter name="conventionsFile">../../Input/conventions.xml</Parameter>
     <Parameter name="marketConfigFile">../../Input/todaysmarket.xml</Parameter>
     <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
     <Parameter name="portfolioFile">portfolio.xml</Parameter>
-    <Parameter name="observationModel">None</Parameter>
+    <Parameter name="observationModel">Disable</Parameter>
   </Setup>
   <Markets>
-    <Parameter name="lgmcalibration">collateral_inccy</Parameter>
-    <Parameter name="fxcalibration">collateral_eur</Parameter>
-    <Parameter name="pricing">collateral_eur</Parameter>
-    <Parameter name="simulation">collateral_eur</Parameter>
+    <Parameter name="lgmcalibration">libor</Parameter>
+    <Parameter name="fxcalibration">libor</Parameter>
+    <Parameter name="pricing">libor</Parameter>
+    <Parameter name="simulation">libor</Parameter>
   </Markets>
   <Analytics>
     <Analytic type="npv">
@@ -40,16 +40,16 @@
     </Analytic>
     <Analytic type="simulation">
       <Parameter name="active">Y</Parameter>
-      <Parameter name="simulationConfigFile">mcsimulation.xml</Parameter>
+      <Parameter name="simulationConfigFile">../../Input/simulation.xml</Parameter>
       <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
-      <Parameter name="storeScenarios">N</Parameter>
+      <!-- Parameter name="scenariodump">scenariodump.csv</Parameter> -->
       <Parameter name="cubeFile">cube.dat</Parameter>
       <Parameter name="additionalScenarioDataFileName">scenariodata.dat</Parameter>
     </Analytic>
     <Analytic type="xva">
-      <Parameter name="active">N</Parameter>
-      <Parameter name="csaFile">netting.xml</Parameter>
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="csaFile">../../Input/netting.xml</Parameter>
       <Parameter name="cubeFile">cube.dat</Parameter>
       <Parameter name="scenarioFile">scenariodata.dat</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
@@ -74,17 +74,6 @@
     <Analytic type="initialMargin">
       <Parameter name="active">N</Parameter>
       <Parameter name="method"/>
-    </Analytic>
-    <Analytic type="sensitivity">
-      <Parameter name="active">Y</Parameter>
-      <Parameter name="marketConfigFile">simulation.xml</Parameter>
-      <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
-      <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
-      <Parameter name="scenarioOutputFile">scenario.csv</Parameter>
-      <Parameter name="sensitivityOutputFile">sensitivity.csv</Parameter>
-      <Parameter name="crossGammaOutputFile">crossgamma.csv</Parameter>
-      <Parameter name="parRateSensitivityOutputFile">parsensi.csv</Parameter>
-      <Parameter name="outputSensitivityThreshold">0.000001</Parameter>
     </Analytic>
   </Analytics>
 </ORE>
