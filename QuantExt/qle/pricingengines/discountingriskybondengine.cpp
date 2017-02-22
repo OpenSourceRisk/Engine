@@ -35,8 +35,8 @@ DiscountingRiskyBondEngine::DiscountingRiskyBondEngine(const Handle<YieldTermStr
                                                        const Handle<Quote>& recoveryRate,
                                                        string timestepPeriod, Real timestepSize,
                                                        boost::optional<bool> includeSettlementDateFlows)
-    : defaultCurve_(defaultCurve), securitySpread_(securitySpread), recoveryRate_(recoveryRate),
-      timestepPeriod_(timestepPeriod), timestepSize_(timestepSize),
+    : defaultCurve_(defaultCurve), recoveryRate_(recoveryRate), securitySpread_(securitySpread),
+      timestepPeriod_(timestepPeriod), timestepSize_(timstepSize),
       includeSettlementDateFlows_(includeSettlementDateFlows) {
     discountCurve_ =
         Handle<YieldTermStructure>(boost::make_shared<ZeroSpreadedTermStructure>(discountCurve, securitySpread));
@@ -68,7 +68,8 @@ void DiscountingRiskyBondEngine::calculate() const {
 Real DiscountingRiskyBondEngine::calculateNpv(Date npvDate) const {
     Real npvValue = 0;
 
-    for (auto& cf : arguments_.cashflows) {
+    for (Size i = 0; i < arguments_.cashflows.size(); i++) {
+        boost::shared_ptr<CashFlow> cf = arguments_.cashflows[i];
         if (cf->hasOccurred(npvDate, includeSettlementDateFlows_))
             continue;
 
