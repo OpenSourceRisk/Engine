@@ -27,7 +27,7 @@ namespace data {
 class Bond : public Trade {
 public:
     //!Default constructor
-    Bond() : Trade("Bond") {}
+    Bond() : Trade("Bond"), zeroBond_(false) {}
 
     //! Constructor
     Bond(Envelope env, string issuerId, string securityId, string referenceCurveId, string settlementDays,
