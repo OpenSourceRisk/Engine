@@ -712,8 +712,7 @@ class SecuritySpreadQuote : public MarketDatum {
 public:
     //! Constructor
     SecuritySpreadQuote(Real value, Date asofDate, const string& name, const string& securityID)
-        : MarketDatum(value, asofDate, name, QuoteType::YIELD_SPREAD, InstrumentType::BOND),
-        securityID_(securityID) {}
+        : MarketDatum(value, asofDate, name, QuoteType::YIELD_SPREAD, InstrumentType::BOND), securityID_(securityID) {}
 
     //! \name Inspectors
     //@{

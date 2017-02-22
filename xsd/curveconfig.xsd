@@ -120,7 +120,7 @@
 
   <xs:complexType name="securitySpreads">
     <xs:sequence>
-      <xs:element type="securitySpread" name="securitySpread" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element type="securitySpread" name="SecuritySpread" minOccurs="0" maxOccurs="unbounded"/>
     </xs:sequence>
   </xs:complexType>
 

@@ -36,8 +36,10 @@ namespace QuantExt {
 
 class DiscountingRiskyBondEngine : public QuantLib::Bond::engine {
 public:
-    DiscountingBondEngine(const Handle<YieldTermStructure>& discountCurve, const Handle<DefaultProbabilityTermStructure>& defaultCurve,
-                          const Handle<Quote>& securitySpread, boost::optional<bool> includeSettlementDateFlows = boost::none);
+    DiscountingBondEngine(const Handle<YieldTermStructure>& discountCurve,
+                          const Handle<DefaultProbabilityTermStructure>& defaultCurve,
+                          const Handle<Quote>& securitySpread,
+                          boost::optional<bool> includeSettlementDateFlows = boost::none);
     void calculate() const;
     Handle<YieldTermStructure> discountCurve() const { return discountCurve_; }
 
@@ -47,7 +49,6 @@ private:
     const Handle<Quote> securitySpread_;
     boost::optional<bool> includeSettlementDateFlows_;
 };
-
 }
 
 #endif

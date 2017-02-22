@@ -218,6 +218,7 @@
       <xs:enumeration value="FxForward"/>
       <xs:enumeration value="FxOption"/>
       <xs:enumeration value="CapFloor"/>
+      <xs:enumeration value="Bond"/>
     </xs:restriction>
   </xs:simpleType>
 

@@ -51,12 +51,17 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     QL_REQUIRE(!isCrossCcy, "Cross Currency Swaptions not supported");
     QL_REQUIRE(isFixedFloating, "Basis Swaptions not supported");
 
-    bool isNonStandard = (swap_[0].notionals().size() > 1 || swap_[1].notionals().size() > 1);
+    bool isNonStandard =
+        (swap_[0].notionals().size() > 1 || swap_[1].notionals().size() > 1 ||
+         swap_[0].floatingLegData().spreads().size() > 1 || swap_[1].floatingLegData().spreads().size() > 1 ||
+         swap_[0].floatingLegData().gearings().size() > 1 || swap_[1].floatingLegData().gearings().size() > 1 ||
+         swap_[0].fixedLegData().rates().size() > 1 || swap_[1].fixedLegData().rates().size() > 1);
 
     Exercise::Type exerciseType = parseExerciseType(option_.style());
-    QL_REQUIRE(!(isNonStandard && exerciseType == Exercise::European),
-               "nonstandard European Swaptions not implemented");
-    if (exerciseType == Exercise::Bermudan)
+    // QL_REQUIRE(!(isNonStandard && exerciseType == Exercise::European),
+    //            "nonstandard European Swaptions not implemented");
+    // treat non standard europeans as bermudans
+    if (exerciseType == Exercise::Bermudan || (isNonStandard && exerciseType == Exercise::European))
         buildBermudan(engineFactory);
     else if (exerciseType == Exercise::European)
         buildEuropean(engineFactory);
@@ -120,7 +125,11 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
     string ccy_str = swap_[0].currency();
     Currency currency = parseCurrency(ccy_str);
 
-    bool isNonStandard = (swap_[0].notionals().size() > 1 || swap_[1].notionals().size() > 1);
+    bool isNonStandard =
+        (swap_[0].notionals().size() > 1 || swap_[1].notionals().size() > 1 ||
+         swap_[0].floatingLegData().spreads().size() > 1 || swap_[1].floatingLegData().spreads().size() > 1 ||
+         swap_[0].floatingLegData().gearings().size() > 1 || swap_[1].floatingLegData().gearings().size() > 1 ||
+         swap_[0].fixedLegData().rates().size() > 1 || swap_[1].fixedLegData().rates().size() > 1);
 
     boost::shared_ptr<VanillaSwap> vanillaSwap;
     boost::shared_ptr<NonstandardSwap> nonstandardSwap;
@@ -137,19 +146,11 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
     DLOG("Swaption::Build(): Underlying NPV = " << swap->NPV());
     // DLOG("Swaption::Build(): Fair Swap Rate = " << swap->fairRate());
 
-    vector<string> iborIndices;
-    for (Size i = 0; i < swap_.size(); ++i) {
-        if (swap_[i].legType() == "Floating") {
-            string indexName = swap_[i].floatingLegData().index();
-            iborIndices.push_back(indexName);
-        }
-    }
-
     // build exercise
     std::vector<QuantLib::Date> exDates;
     for (Size i = 0; i < option_.exerciseDates().size(); i++) {
         Date exDate = ore::data::parseDate(option_.exerciseDates()[i]);
-        if(exDate > Settings::instance().evaluationDate())
+        if (exDate > Settings::instance().evaluationDate())
             exDates.push_back(exDate);
     }
     QL_REQUIRE(exDates.size() > 0, "Bermudan Swaption does not have any alive exercise dates");
@@ -303,14 +304,22 @@ Swaption::buildNonStandardSwap(const boost::shared_ptr<EngineFactory>& engineFac
     // Get Trade details
     string ccy = swap_[0].currency();
     Currency currency = parseCurrency(ccy);
-    vector<Real> fixedNominal = swap_[fixedLegIndex].notionals();
-    vector<Real> floatNominal = swap_[floatingLegIndex].notionals();
-    vector<Real> fixedRate = swap_[fixedLegIndex].fixedLegData().rates();
-    Real spread = swap_[floatingLegIndex].floatingLegData().spreads().front();
-    string indexName = swap_[floatingLegIndex].floatingLegData().index();
     Schedule fixedSchedule = makeSchedule(swap_[fixedLegIndex].schedule());
-    DayCounter fixedDayCounter = parseDayCounter(swap_[fixedLegIndex].dayCounter());
     Schedule floatingSchedule = makeSchedule(swap_[floatingLegIndex].schedule());
+    vector<Real> fixedNominal = buildScheduledVectorNormalised(swap_[fixedLegIndex].notionals(),
+                                                               swap_[fixedLegIndex].notionalDates(), fixedSchedule);
+    vector<Real> floatNominal = buildScheduledVectorNormalised(
+        swap_[floatingLegIndex].notionals(), swap_[floatingLegIndex].notionalDates(), floatingSchedule);
+    vector<Real> fixedRate = buildScheduledVectorNormalised(
+        swap_[fixedLegIndex].fixedLegData().rates(), swap_[fixedLegIndex].fixedLegData().rateDates(), fixedSchedule);
+    vector<Real> spreads =
+        buildScheduledVectorNormalised(swap_[floatingLegIndex].floatingLegData().spreads(),
+                                       swap_[floatingLegIndex].floatingLegData().spreadDates(), floatingSchedule);
+    vector<Real> gearings =
+        buildScheduledVectorNormalised(swap_[floatingLegIndex].floatingLegData().spreads(),
+                                       swap_[floatingLegIndex].floatingLegData().spreadDates(), floatingSchedule);
+    string indexName = swap_[floatingLegIndex].floatingLegData().index();
+    DayCounter fixedDayCounter = parseDayCounter(swap_[fixedLegIndex].dayCounter());
     Handle<IborIndex> index =
         engineFactory->market()->iborIndex(indexName, swapBuilder->configuration(MarketContext::pricing));
     DayCounter floatingDayCounter = parseDayCounter(swap_[floatingLegIndex].dayCounter());
@@ -318,18 +327,10 @@ Swaption::buildNonStandardSwap(const boost::shared_ptr<EngineFactory>& engineFac
 
     VanillaSwap::Type type = swap_[fixedLegIndex].isPayer() ? VanillaSwap::Payer : VanillaSwap::Receiver;
 
-    while (fixedNominal.size() < fixedSchedule.size() - 1)
-        fixedNominal.push_back(fixedNominal.back());
-    while (fixedRate.size() < fixedSchedule.size() - 1)
-        fixedRate.push_back(fixedRate.back());
-    while (floatNominal.size() < floatingSchedule.size() - 1)
-        floatNominal.push_back(floatNominal.back());
-
     // Build a vanilla (bullet) swap underlying
     boost::shared_ptr<NonstandardSwap> swap(new NonstandardSwap(type, fixedNominal, floatNominal, fixedSchedule,
                                                                 fixedRate, fixedDayCounter, floatingSchedule, *index,
-                                                                1.0, // gearing
-                                                                spread, floatingDayCounter,
+                                                                gearings, spreads, floatingDayCounter,
                                                                 false, // no intermediate notional exchanges
                                                                 false, // no final notional exchanges
                                                                 paymentConvention));

@@ -312,7 +312,7 @@ map<string, string> XMLUtils::getChildrenAttributesAndValues(XMLNode* parent, co
                                                              const string& attributeName, bool mandatory) {
     map<string, string> res;
     for (XMLNode* child = getChildNode(parent, names.c_str()); child;
-        child = XMLUtils::getNextSibling(child, names.c_str())) {
+         child = XMLUtils::getNextSibling(child, names.c_str())) {
         string first = getAttribute(child, attributeName);
         string second = child->value();
         if (mandatory) {

@@ -288,7 +288,8 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
             }
 
             case CurveSpec::CurveType::SecuritySpread: {
-                boost::shared_ptr<SecuritySpreadSpec> securityspreadspec = boost::dynamic_pointer_cast<SecuritySpreadSpec>(spec);
+                boost::shared_ptr<SecuritySpreadSpec> securityspreadspec =
+                    boost::dynamic_pointer_cast<SecuritySpreadSpec>(spec);
                 QL_REQUIRE(securityspreadspec, "Failed to convert spec " << *spec << " to security spread spec");
 
                 // have we built the curve already?
@@ -296,15 +297,17 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                 if (itr == requiredSecuritySpreads.end()) {
                     // build the curve
                     LOG("Building SecuritySpreads for asof " << asof);
-                    boost::shared_ptr<SecuritySpread> securitySpread = boost::make_shared<SecuritySpread>(asof, *securityspreadspec, loader);
-                    itr = requiredSecuritySpreads.insert(make_pair(securityspreadspec->securityID(), securitySpread)).first;
+                    boost::shared_ptr<SecuritySpread> securitySpread =
+                        boost::make_shared<SecuritySpread>(asof, *securityspreadspec, loader);
+                    itr = requiredSecuritySpreads.insert(make_pair(securityspreadspec->securityID(), securitySpread))
+                              .first;
                 }
 
                 // add the handle to the Market Map (possible lots of times for proxies)
                 for (const auto& it : params.securitySpreads(configuration.first)) {
                     if (it.second == spec->name()) {
-                        LOG("Adding SecuritySpread (" << it.first << ") with spec " << *securityspreadspec << " to configuration "
-                            << configuration.first);
+                        LOG("Adding SecuritySpread (" << it.first << ") with spec " << *securityspreadspec
+                                                      << " to configuration " << configuration.first);
                         securitySpreads_[make_pair(configuration.first, it.first)] = itr->second->spread();
                     }
                 }

@@ -28,7 +28,7 @@ bool operator==(const MarketConfiguration& lhs, const MarketConfiguration& rhs) 
     if (lhs.discountingCurvesId != rhs.discountingCurvesId || lhs.yieldCurvesId != rhs.yieldCurvesId ||
         lhs.indexForwardingCurvesId != rhs.indexForwardingCurvesId || lhs.fxSpotsId != rhs.fxSpotsId ||
         lhs.fxVolatilitiesId != rhs.fxVolatilitiesId || lhs.swaptionVolatilitiesId != rhs.swaptionVolatilitiesId ||
-        lhs.defaultCurvesId != rhs.defaultCurvesId || lhs.swapIndexCurvesId != rhs.swapIndexCurvesId || 
+        lhs.defaultCurvesId != rhs.defaultCurvesId || lhs.swapIndexCurvesId != rhs.swapIndexCurvesId ||
         lhs.capFloorVolatilitiesId != rhs.capFloorVolatilitiesId || lhs.securitySpreadsId != rhs.securitySpreadsId) {
         return false;
     } else {
@@ -146,7 +146,7 @@ void TodaysMarketParameters::fromXML(XMLNode* node) {
                 swapIndices[name] = disc; //.emplace(name, { ibor, disc }); won't work?
             }
             addSwapIndices(id, swapIndices);
-         } else if (XMLUtils::getNodeName(n) == "FxSpots") {
+        } else if (XMLUtils::getNodeName(n) == "FxSpots") {
             string id = XMLUtils::getAttribute(n, "id");
             if (id == "")
                 id = Market::defaultConfiguration;
@@ -374,13 +374,14 @@ XMLNode* TodaysMarketParameters::toXML(XMLDocument& doc) {
     // security Spreads
     if (securitySpreads_.size() > 0) {
 
-        for (auto mappingSetIterator = securitySpreads_.begin(); mappingSetIterator != securitySpreads_.end(); mappingSetIterator++) {
+        for (auto mappingSetIterator = securitySpreads_.begin(); mappingSetIterator != securitySpreads_.end();
+             mappingSetIterator++) {
 
             XMLNode* bondSpreadsNode = XMLUtils::addChild(doc, todaysMarketNode, "BondSpreads");
             XMLUtils::addAttribute(doc, bondSpreadsNode, "id", mappingSetIterator->first.c_str());
 
             for (auto singleMappingIterator = mappingSetIterator->second.begin();
-                singleMappingIterator != mappingSetIterator->second.end(); singleMappingIterator++) {
+                 singleMappingIterator != mappingSetIterator->second.end(); singleMappingIterator++) {
                 XMLNode* mappingNode = doc.allocNode("BondSpreads", singleMappingIterator->second);
                 XMLUtils::appendNode(bondSpreadsNode, mappingNode);
                 XMLUtils::addAttribute(doc, mappingNode, "pair", singleMappingIterator->first);

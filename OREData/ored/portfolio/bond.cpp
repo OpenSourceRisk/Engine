@@ -1,4 +1,4 @@
- /*
+/*
  Copyright (C) 2016 Quaternion Risk Management Ltd
  All rights reserved.
 
@@ -21,6 +21,7 @@
 #include <ored/portfolio/bond.hpp>
 #include <ored/portfolio/builders/bond.hpp>
 #include <ql/instruments/bond.hpp>
+#include <ql/instruments/bonds/zerocouponbond.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/log.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
@@ -30,7 +31,6 @@
 using namespace QuantLib;
 using namespace QuantExt;
 
-
 namespace ore {
 namespace data {
 
@@ -38,43 +38,53 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("Bond::build() called for trade " << id());
 
     const boost::shared_ptr<Market> market = engineFactory->market();
-    
-    boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("Bond");
 
-    string ccy_str = coupons_.currency();
-    npvCurrency_ = ccy_str;
-    Currency currency = parseCurrency(ccy_str);
+    boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("Bond");
 
     Date issueDate = parseDate(issueDate_);
     Calendar calendar = parseCalendar(calendar_);
     Natural settlementDays = boost::lexical_cast<Natural>(settlementDays_);
+    boost::shared_ptr<QuantLib::Bond> bond;
 
-    Leg leg;
-    if (coupons_.legType() == "Fixed")
-        leg = makeFixedLeg(coupons_);
-    else if (coupons_.legType() == "Floating") {
-        string indexName = coupons_.floatingLegData().index();
-        Handle<IborIndex> hIndex =
-            engineFactory->market()->iborIndex(indexName, builder->configuration(MarketContext::pricing));
-        QL_REQUIRE(!hIndex.empty(), "Could not find ibor index " << indexName << " in market.");
-        boost::shared_ptr<IborIndex> index = hIndex.currentLink();
-        leg = makeIborLeg(coupons_, index, engineFactory);
-    } else {
-        QL_FAIL("Unknown leg type " << coupons_.legType());
+    if (zeroBond_) { // Zero coupon bond
+        bond.reset(new QuantLib::ZeroCouponBond(settlementDays, calendar, faceAmount_, parseDate(maturityDate_)));
+    } else { // Coupon bond
+
+        currency_ = coupons_.currency();
+        Leg leg;
+        if (coupons_.legType() == "Fixed")
+            leg = makeFixedLeg(coupons_);
+        else if (coupons_.legType() == "Floating") {
+            string indexName = coupons_.floatingLegData().index();
+            Handle<IborIndex> hIndex =
+                engineFactory->market()->iborIndex(indexName, builder->configuration(MarketContext::pricing));
+            QL_REQUIRE(!hIndex.empty(), "Could not find ibor index " << indexName << " in market.");
+            boost::shared_ptr<IborIndex> index = hIndex.currentLink();
+            leg = makeIborLeg(coupons_, index, engineFactory);
+        } else {
+            QL_FAIL("Unknown leg type " << coupons_.legType());
+        }
+
+        bond.reset(new QuantLib::Bond(settlementDays, calendar, issueDate, leg));
     }
 
-    boost::shared_ptr<QuantLib::Bond> bond(new QuantLib::Bond(settlementDays, calendar, issueDate, leg));
+    Currency currency = parseCurrency(currency_);
     boost::shared_ptr<BondEngineBuilder> bondBuilder = boost::dynamic_pointer_cast<BondEngineBuilder>(builder);
     QL_REQUIRE(bondBuilder, "No Builder found for Bond" << id());
     bond->setPricingEngine(bondBuilder->engine(currency, issuerId_, securityId_, referenceCurveId_));
-    DLOG("Bond::build(): Bond NPV = " << bond->NPV()); 
-    instrument_.reset(new VanillaInstrument(bond)); 
+    DLOG("Bond::build(): Bond NPV = " << bond->NPV());
+    DLOG("Bond::build(): Bond CleanPrice = " << bond->cleanPrice());
+    DLOG("Bond::build(): Bond DirtyPrice = " << bond->dirtyPrice());
+    DLOG("Bond::build(): Bond Settlement = " << bond->settlementValue());
+    instrument_.reset(new VanillaInstrument(bond));
 
-    // set maturity
-    maturity_ = leg.back()->date();
-    Date d = leg.back()->date();
-    if (d > maturity_)
-        maturity_ = d;
+    npvCurrency_ = currency_;
+    maturity_ = bond->cashflows().back()->date();
+
+    // Add legs (only 1)
+    legs_ = { bond->cashflows() };
+    legCurrencies_ = { npvCurrency_ };
+    legPayers_ = { false }; // We own the bond => we receive the flows
 }
 
 void Bond::fromXML(XMLNode* node) {
@@ -88,7 +98,7 @@ void Bond::fromXML(XMLNode* node) {
     calendar_ = XMLUtils::getChildValue(bondNode, "Calendar", true);
     issueDate_ = XMLUtils::getChildValue(bondNode, "IssueDate", true);
     XMLNode* legNode = XMLUtils::getChildNode(bondNode, "LegData");
-    coupons_ .fromXML(legNode);
+    coupons_.fromXML(legNode);
 }
 
 XMLNode* Bond::toXML(XMLDocument& doc) {
@@ -103,8 +113,6 @@ XMLNode* Bond::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, bondNode, "IssueDate", issueDate_);
     XMLUtils::appendNode(bondNode, coupons_.toXML(doc));
     return node;
-
 }
-
 }
 }

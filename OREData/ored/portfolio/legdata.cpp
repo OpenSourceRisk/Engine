@@ -59,7 +59,8 @@ XMLNode* FixedLegData::toXML(XMLDocument& doc) {
 void FloatingLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "FloatingLegData");
     index_ = XMLUtils::getChildValue(node, "Index", true);
-    spreads_ = XMLUtils::getChildrenValuesAsDoubles(node, "Spreads", "Spread", true);
+    spreads_ =
+        XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Spreads", "Spread", "startDate", spreadDates_, true);
     // These are all optional
     isInArrears_ = XMLUtils::getChildValueAsBool(node, "IsInArrears"); // defaults to true
     fixingDays_ = XMLUtils::getChildValueAsInt(node, "FixingDays");    // defaults to 0
@@ -351,6 +352,18 @@ vector<double> buildScheduledVector(const vector<double>& values, const vector<s
     }
 
     return data;
+}
+
+vector<double> normaliseToSchedule(const vector<double>& values, const Schedule& schedule) {
+    vector<double> res = values;
+    if (res.size() < schedule.size() - 1)
+        res.resize(schedule.size() - 1, res.back());
+    return res;
+}
+
+vector<double> buildScheduledVectorNormalised(const vector<double>& values, const vector<string>& dates,
+                                              const Schedule& schedule) {
+    return normaliseToSchedule(buildScheduledVector(values, dates, schedule), schedule);
 }
 
 } // namespace data

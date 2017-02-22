@@ -66,6 +66,8 @@
     <Model>DiscountedCashflows</Model>
     <ModelParameters/>
     <Engine>DiscountingRiskyBondEngine</Engine>
-    <EngineParameters/>
+    <EngineParameters>
+        <Parameter name="TimestepPeriod">6M</Parameter>
+    </EngineParameters>
   </Product>
 </PricingEngines>

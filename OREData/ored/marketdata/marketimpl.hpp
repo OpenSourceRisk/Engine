@@ -94,7 +94,8 @@ public:
                                                      const string& configuration = Market::defaultConfiguration) const;
 
     //! Bond Spreads
-    Handle<Quote> securitySpread(const string& securityID, const string& configuration = Market::defaultConfiguration) const;
+    Handle<Quote> securitySpread(const string& securityID,
+                                 const string& configuration = Market::defaultConfiguration) const;
     //@}
 
     //! \name Disable copying

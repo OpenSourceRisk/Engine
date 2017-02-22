@@ -26,6 +26,7 @@
 #define quantext_discounting_riskybond_engine_hpp
 
 #include <ql/instruments/bond.hpp>
+#include <ql/time/period.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/termstructures/defaulttermstructure.hpp>
 
@@ -35,25 +36,27 @@ namespace QuantExt {
 
 class DiscountingRiskyBondEngine : public QuantLib::Bond::engine {
 public:
-    DiscountingRiskyBondEngine(const Handle<YieldTermStructure>& discountCurve, const Handle<DefaultProbabilityTermStructure>& defaultCurve,
+    DiscountingRiskyBondEngine(const Handle<YieldTermStructure>& discountCurve,
+                               const Handle<DefaultProbabilityTermStructure>& defaultCurve,
                                const Handle<Quote>& recoveryRate, const Handle<Quote>& securitySpread,
+                               Period timestepPeriod,
                                boost::optional<bool> includeSettlementDateFlows = boost::none);
-    
+
     void calculate() const;
     Real calculateNpv(Date npvDate) const;
     Handle<YieldTermStructure> discountCurve() const { return discountCurve_; };
     Handle<DefaultProbabilityTermStructure> defaultCurve() const { return defaultCurve_; };
-    Handle<Quote> recoveryRate() const { return recoveryRate_; }; 
+    Handle<Quote> recoveryRate() const { return recoveryRate_; };
     Handle<Quote> securitySpread() const { return securitySpread_; };
-    
+
 private:
     Handle<YieldTermStructure> discountCurve_;
     Handle<DefaultProbabilityTermStructure> defaultCurve_;
     Handle<Quote> recoveryRate_;
     Handle<Quote> securitySpread_;
+    Period timestepPeriod_;
     boost::optional<bool> includeSettlementDateFlows_;
 };
-
 }
 
 #endif

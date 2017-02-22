@@ -90,7 +90,7 @@ protected:
     mutable boost::shared_ptr<QuantLib::Instrument> activeUnderlyingInstrument_;
     Real undMultiplier_;
     mutable bool exercised_;
-    bool permanentlyExercised_;
+    mutable QuantLib::Date exerciseDate_;
 
     virtual bool exercise() const = 0;
 };

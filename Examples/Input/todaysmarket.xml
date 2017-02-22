@@ -38,6 +38,7 @@
     <YieldCurve name="BENCHMARK_EUR">Yield/EUR/BENCHMARK_EUR</YieldCurve>
     <YieldCurve name="BANK_EUR_LEND">Yield/EUR/BANK_EUR_LEND</YieldCurve>
     <YieldCurve name="BANK_EUR_BORROW">Yield/EUR/BANK_EUR_BORROW</YieldCurve>
+    <YieldCurve name="EUR-EURIBOR-6M">Yield/EUR/EUR6M</YieldCurve>
   </YieldCurves>
   <!-- discounting curve definition (in ccy swap discounting) -->
   <DiscountingCurves id="inccy_swap">
@@ -148,7 +149,7 @@
     <DefaultCurve name="BANK">Default/USD/BANK_SR_USD</DefaultCurve>
     <DefaultCurve name="CPTY_A">Default/USD/CPTY_A_SR_USD</DefaultCurve>
     <DefaultCurve name="CPTY_B">Default/USD/CPTY_A_SR_USD</DefaultCurve>
-	<DefaultCurve name="CPTY_C">Default/EUR/CPTY_C_SR_EUR</DefaultCurve>
+    <DefaultCurve name="CPTY_C">Default/EUR/CPTY_C_SR_EUR</DefaultCurve>
   </DefaultCurves>
   <SecuritySpreads id="default">
     <SecuritySpread name="SECURITY_1">SecuritySpread/SECURITY_1</SecuritySpread>
