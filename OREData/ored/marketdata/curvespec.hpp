@@ -68,7 +68,7 @@ public:
             return "SecuritySpread";
         case CurveType::Default:
             return "Default";
-        default: 
+        default:
             return "N/A";
         }
     }

@@ -135,7 +135,8 @@ void OREApp::run() {
             cout << "OK" << endl;
             cout << setw(tab_) << left << "Write Reports... " << flush;
             writeXVAReports();
-            if (writeDIMReport_) writeDIMReport();
+            if (writeDIMReport_)
+                writeDIMReport();
             cout << "OK" << endl;
         } else {
             LOG("skip XVA reports");
@@ -155,19 +156,19 @@ void OREApp::run() {
 
 void OREApp::readSetup() {
 
-        params_->log();
+    params_->log();
 
-        if (params_->has("setup", "observationModel")) {
-            string om = params_->get("setup", "observationModel");
-            ObservationMode::instance().setMode(om);
-            LOG("Observation Mode is " << om);
-        }
-        
-        writeInitialReports_ = true;
-        simulate_ = (params_->hasGroup("simulation") && params_->get("simulation", "active") == "Y") ? true : false;
-        buildSimMarket_ = true;
-        xva_ = (params_->hasGroup("xva") && params_->get("xva", "active") == "Y") ? true : false;
-        writeDIMReport_ =  (params_->has("xva", "dim") && parseBool(params_->get("xva", "dim")) ) ? true : false;
+    if (params_->has("setup", "observationModel")) {
+        string om = params_->get("setup", "observationModel");
+        ObservationMode::instance().setMode(om);
+        LOG("Observation Mode is " << om);
+    }
+
+    writeInitialReports_ = true;
+    simulate_ = (params_->hasGroup("simulation") && params_->get("simulation", "active") == "Y") ? true : false;
+    buildSimMarket_ = true;
+    xva_ = (params_->hasGroup("xva") && params_->get("xva", "active") == "Y") ? true : false;
+    writeDIMReport_ = (params_->has("xva", "dim") && parseBool(params_->get("xva", "dim"))) ? true : false;
 }
 
 void OREApp::setupLog() {
@@ -391,15 +392,16 @@ void OREApp::generateNPVCube() {
     samples_ = sgd->samples();
     boost::shared_ptr<ScenarioGenerator> sg = buildScenarioGenerator(market_, simMarketData, sgd);
 
-    if( buildSimMarket_) {
+    if (buildSimMarket_) {
         LOG("Build Simulation Market");
         simMarket_ = boost::make_shared<ScenarioSimMarket>(sg, market_, simMarketData, conventions_,
-                                                       params_->get("markets", "simulation"));
+                                                           params_->get("markets", "simulation"));
         boost::shared_ptr<EngineFactory> simFactory = buildFactory(simMarket_);
 
         LOG("Build portfolio linked to sim market");
         simPortfolio_ = buildPortfolio(simFactory);
-        QL_REQUIRE(simPortfolio_->size() == portfolio_->size(), "portfolio size mismatch, check simulation market setup");
+        QL_REQUIRE(simPortfolio_->size() == portfolio_->size(),
+                   "portfolio size mismatch, check simulation market setup");
         cout << "OK" << endl;
     }
 

@@ -52,7 +52,6 @@ static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
                                                          {"FX_OPTION", MarketDatum::InstrumentType::FX_OPTION},
                                                          {"BOND", MarketDatum::InstrumentType::BOND}};
 
-
     auto it = b.find(s);
     if (it != b.end()) {
         return it->second;

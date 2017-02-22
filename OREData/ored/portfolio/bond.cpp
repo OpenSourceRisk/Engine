@@ -1,19 +1,19 @@
- /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
- All rights reserved.
+/*
+Copyright (C) 2016 Quaternion Risk Management Ltd
+All rights reserved.
 
- This file is part of ORE, a free-software/open-source library
- for transparent pricing and risk analysis - http://opensourcerisk.org
+This file is part of ORE, a free-software/open-source library
+for transparent pricing and risk analysis - http://opensourcerisk.org
 
- ORE is free software: you can redistribute it and/or modify it
- under the terms of the Modified BSD License.  You should have received a
- copy of the license along with this program.
- The license is also available online at <http://opensourcerisk.org>
+ORE is free software: you can redistribute it and/or modify it
+under the terms of the Modified BSD License.  You should have received a
+copy of the license along with this program.
+The license is also available online at <http://opensourcerisk.org>
 
- This program is distributed on the basis that it will form a useful
- contribution to risk analytics and model standardisation, but WITHOUT
- ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
+This program is distributed on the basis that it will form a useful
+contribution to risk analytics and model standardisation, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
 #include <ored/portfolio/swap.hpp>
@@ -31,7 +31,6 @@
 using namespace QuantLib;
 using namespace QuantExt;
 
-
 namespace ore {
 namespace data {
 
@@ -39,7 +38,7 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     DLOG("Bond::build() called for trade " << id());
 
     const boost::shared_ptr<Market> market = engineFactory->market();
-    
+
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("Bond");
 
     Currency currency;
@@ -48,14 +47,13 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     Natural settlementDays = boost::lexical_cast<Natural>(settlementDays_);
     boost::shared_ptr<QuantLib::Bond> bond;
 
-    if (zeroBond_) { //Zero coupon bond
+    if (zeroBond_) { // Zero coupon bond
         currency = parseCurrency(currency_);
         maturity_ = parseDate(maturityDate_);
         bond.reset(new QuantLib::ZeroCouponBond(settlementDays, calendar, faceAmount_, maturity_));
 
-    }
-    else {//Coupon bond
-        
+    } else { // Coupon bond
+
         string ccy_str = coupons_.currency();
         npvCurrency_ = ccy_str;
         currency = parseCurrency(ccy_str);
@@ -70,8 +68,7 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             QL_REQUIRE(!hIndex.empty(), "Could not find ibor index " << indexName << " in market.");
             boost::shared_ptr<IborIndex> index = hIndex.currentLink();
             leg = makeIborLeg(coupons_, index, engineFactory);
-        }
-        else {
+        } else {
             QL_FAIL("Unknown leg type " << coupons_.legType());
         }
 
@@ -83,14 +80,12 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         if (d > maturity_)
             maturity_ = d;
     }
-    
+
     boost::shared_ptr<BondEngineBuilder> bondBuilder = boost::dynamic_pointer_cast<BondEngineBuilder>(builder);
     QL_REQUIRE(bondBuilder, "No Builder found for Bond" << id());
     bond->setPricingEngine(bondBuilder->engine(currency, issuerId_, securityId_, referenceCurveId_));
-    DLOG("Bond::build(): Bond NPV = " << bond->NPV()); 
-    instrument_.reset(new VanillaInstrument(bond)); 
-
-
+    DLOG("Bond::build(): Bond NPV = " << bond->NPV());
+    instrument_.reset(new VanillaInstrument(bond));
 }
 
 void Bond::fromXML(XMLNode* node) {
@@ -104,7 +99,7 @@ void Bond::fromXML(XMLNode* node) {
     calendar_ = XMLUtils::getChildValue(bondNode, "Calendar", true);
     issueDate_ = XMLUtils::getChildValue(bondNode, "IssueDate", true);
     XMLNode* legNode = XMLUtils::getChildNode(bondNode, "LegData");
-    coupons_ .fromXML(legNode);
+    coupons_.fromXML(legNode);
 }
 
 XMLNode* Bond::toXML(XMLDocument& doc) {
@@ -119,8 +114,6 @@ XMLNode* Bond::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, bondNode, "IssueDate", issueDate_);
     XMLUtils::appendNode(bondNode, coupons_.toXML(doc));
     return node;
-
 }
-
 }
 }

@@ -107,9 +107,8 @@ public:
     //! \name BondSpreads
     //@{
     virtual Handle<Quote> securitySpread(const string& securityID,
-        const string& configuration = Market::defaultConfiguration) const = 0;
+                                         const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
-
 };
 }
 }

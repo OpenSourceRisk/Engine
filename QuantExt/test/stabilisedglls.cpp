@@ -1070,13 +1070,13 @@ void StabilisedGLLSTest::testBigInputNumbers() {
     Real tol = 1E-8;
     if (std::abs((c0 - d0) / d0) > tol)
         BOOST_ERROR("could not verify c0 (" << c0 << ") against expected value (" << d0 << "), relative error ("
-                                                 << (c0 - d0) / d0 << ") exceeds tolerance (" << tol << ")");
+                                            << (c0 - d0) / d0 << ") exceeds tolerance (" << tol << ")");
     if (std::abs((c1 - d1) / d1) > tol)
         BOOST_ERROR("could not verify c1 (" << c1 << ") against expected value (" << d1 << "), relative error ("
-                                                 << (c1 - d1) / d1 << ") exceeds tolerance (" << tol << ")");
+                                            << (c1 - d1) / d1 << ") exceeds tolerance (" << tol << ")");
     if (std::abs((c2 - d2) / d2) > tol)
         BOOST_ERROR("could not verify c2 (" << c2 << ") against expected value (" << d2 << "), relative error ("
-                                                 << (c2 - d2) / d2 << ") exceeds tolerance (" << tol << ")");
+                                            << (c2 - d2) / d2 << ") exceeds tolerance (" << tol << ")");
 
     // check eval function
     Real x0 = -1E10;
@@ -1085,7 +1085,7 @@ void StabilisedGLLSTest::testBigInputNumbers() {
         Real y2 = c0 + c1 * x0 + c2 * x0 * x0;
         if (std::abs((y - y2) / y2) > tol)
             BOOST_ERROR("could not verify eval(" << x0 << ") for MaxBas mode, got " << y << ", expected " << y2
-                                                      << ", relative error " << (y - y2) / y2 << ", tolerance " << tol);
+                                                 << ", relative error " << (y - y2) / y2 << ", tolerance " << tol);
         x0 += 1E7;
     }
 
@@ -1098,7 +1098,7 @@ void StabilisedGLLSTest::testBigInputNumbers() {
         Real y2 = c0 + c1 * x0 + c2 * x0 * x0;
         if (std::abs((y - y2) / y2) > tol)
             BOOST_ERROR("could not verify eval(" << x0 << ") for MeanStdDev mode, got " << y << ", expected " << y2
-                                                      << ", relative error " << (y - y2) / y2 << ", tolerance " << tol);
+                                                 << ", relative error " << (y - y2) / y2 << ", tolerance " << tol);
         x0 += 1E7;
     }
 
@@ -1142,18 +1142,17 @@ void StabilisedGLLSTest::test2DRegression() {
             p[1] = x1;
             Real yn = 0.0;
             for (Size i = 0; i < basis.size(); ++i) {
-                yn += basis[i](p) * m2.coefficients()[i];
+                yn += basis[i](p)*m2.coefficients()[i];
             }
             Real ys = m.eval(p, basis);
             if (std::abs((ys - yn) / yn) > tol)
                 BOOST_ERROR("could not verify eval(" << p << ") for MaxAbs mode, got " << ys << ", expected " << yn
-                                                          << ", relative error " << (ys - yn) / yn << ", tolerance "
-                                                          << tol);
+                                                     << ", relative error " << (ys - yn) / yn << ", tolerance " << tol);
             Real ysb = mb.eval(p, basis);
             if (std::abs((ysb - yn) / yn) > tol)
-                BOOST_ERROR("could not verify eval(" << p << ") for MeanStdDev mode, got " << ysb << ", expected "
-                                                          << yn << ", relative error " << (ysb - yn) / yn
-                                                          << ", tolerance " << tol);
+                BOOST_ERROR("could not verify eval(" << p << ") for MeanStdDev mode, got " << ysb << ", expected " << yn
+                                                     << ", relative error " << (ysb - yn) / yn << ", tolerance "
+                                                     << tol);
             x1 += 0.1;
         }
         x0 += 0.1;

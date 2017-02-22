@@ -122,14 +122,13 @@ boost::shared_ptr<CurveSpec> parseCurveSpec(const string& s) {
     case CurveSpec::CurveType::SecuritySpread: {
         // SecuritySpread/ISIN
         QL_REQUIRE(tokens.size() == 2, "Unexpected number"
-            " of tokens in Security Spread spec "
-            << s);
+                                       " of tokens in Security Spread spec "
+                                           << s);
         const string& securityID = tokens[1];
         return boost::make_shared<SecuritySpreadSpec>(securityID);
     }
 
-
-     // TODO: the rest...
+        // TODO: the rest...
     }
 
     QL_FAIL("Unable to convert \"" << s << "\" into CurveSpec");

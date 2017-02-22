@@ -1,4 +1,4 @@
-/* 
+/*
 Copyright (C) 2016 Quaternion Risk Management Ltd
 All rights reserved.
 
@@ -21,27 +21,28 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #include <ored/portfolio/trade.hpp>
 #include <ored/portfolio/legdata.hpp>
 
-namespace ore{
-namespace data{
+namespace ore {
+namespace data {
 
 class Bond : public Trade {
 public:
     //!Default constructor
     Bond() : Trade("Bond") {}
 
-    //! Constructor 
-    Bond(Envelope env, string issuerId, string securityId, string referenceCurveId, string settlementDays, string calendar, string issueDate, 
-         LegData& coupons) : Trade("Bond", env), issuerId_(issuerId), securityId_(securityId), referenceCurveId_(referenceCurveId), 
-         settlementDays_(settlementDays), calendar_(calendar), issueDate_(issueDate), coupons_(coupons) {}
+    //! Constructor
+    Bond(Envelope env, string issuerId, string securityId, string referenceCurveId, string settlementDays,
+         string calendar, string issueDate, LegData& coupons)
+        : Trade("Bond", env), issuerId_(issuerId), securityId_(securityId), referenceCurveId_(referenceCurveId),
+          settlementDays_(settlementDays), calendar_(calendar), issueDate_(issueDate), coupons_(coupons) {}
 
-    //! Constructor 
-    Bond(Envelope env, string issuerId, string securityId, string referenceCurveId, string settlementDays, string calendar, 
-        Real faceAmount, string maturityDate, string currency, string issueDate ) : Trade("Bond", env), zeroBond_(true), issuerId_(issuerId), 
-        securityId_(securityId), referenceCurveId_(referenceCurveId), settlementDays_(settlementDays), calendar_(calendar), faceAmount_(faceAmount),
-        maturityDate_(maturityDate), currency_(currency), issueDate_(issueDate) {}
+    //! Constructor
+    Bond(Envelope env, string issuerId, string securityId, string referenceCurveId, string settlementDays,
+         string calendar, Real faceAmount, string maturityDate, string currency, string issueDate)
+        : Trade("Bond", env), zeroBond_(true), issuerId_(issuerId), securityId_(securityId),
+          referenceCurveId_(referenceCurveId), settlementDays_(settlementDays), calendar_(calendar),
+          faceAmount_(faceAmount), maturityDate_(maturityDate), currency_(currency), issueDate_(issueDate) {}
 
-
-    //Build QuantLib/QuantExt instrument, link pricing engine
+    // Build QuantLib/QuantExt instrument, link pricing engine
     virtual void build(const boost::shared_ptr<EngineFactory>&);
 
     virtual void fromXML(XMLNode* node);
@@ -50,10 +51,10 @@ public:
     const string& issuerId() const { return issuerId_; }
     const string& securityId() const { return securityId_; }
     const string& referenceCurveId() const { return referenceCurveId_; }
-    const string& settlementDays() const { return settlementDays_; }  
+    const string& settlementDays() const { return settlementDays_; }
     const string& calendar() const { return calendar_; }
     const string& issueDate() const { return issueDate_; }
-    const LegData& coupons() const { return coupons_; } 
+    const LegData& coupons() const { return coupons_; }
     const Real& faceAmount() const { return faceAmount_; }
     const string& maturityDate() const { return maturityDate_; }
     const string& currency() const { return currency_; }
@@ -73,4 +74,3 @@ private:
 };
 }
 }
-

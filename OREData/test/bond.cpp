@@ -16,7 +16,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 #include <test/bond.hpp>
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/portfolio/envelope.hpp>
@@ -47,35 +46,38 @@ using namespace ore::data;
 namespace {
 
 class TestMarket : public MarketImpl {
-    public:
-        TestMarket() {
-            asof_ = Date(3, Feb, 2016);
-            // build discount
-            yieldCurves_[make_pair(Market::defaultConfiguration, "BANK_EUR_LEND")] = flatRateYts(0.02);
-            defaultCurves_[make_pair(Market::defaultConfiguration, "CPTY_A")] = flatRateDcs(0.0);
-            recoveryRates_[make_pair(Market::defaultConfiguration, "CPTY_A")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.00));
-            securitySpreads_[make_pair(Market::defaultConfiguration, "Security1")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.00));
-        }
+public:
+    TestMarket() {
+        asof_ = Date(3, Feb, 2016);
+        // build discount
+        yieldCurves_[make_pair(Market::defaultConfiguration, "BANK_EUR_LEND")] = flatRateYts(0.02);
+        defaultCurves_[make_pair(Market::defaultConfiguration, "CPTY_A")] = flatRateDcs(0.0);
+        recoveryRates_[make_pair(Market::defaultConfiguration, "CPTY_A")] =
+            Handle<Quote>(boost::make_shared<SimpleQuote>(0.00));
+        securitySpreads_[make_pair(Market::defaultConfiguration, "Security1")] =
+            Handle<Quote>(boost::make_shared<SimpleQuote>(0.00));
+    }
 
-        TestMarket(Real defaultFlatRate) {
-            asof_ = Date(3, Feb, 2016);
-            // build discount
-            yieldCurves_[make_pair(Market::defaultConfiguration, "BANK_EUR_LEND")] = flatRateYts(0.02);
-            defaultCurves_[make_pair(Market::defaultConfiguration, "CPTY_A")] = flatRateDcs(defaultFlatRate);
-            recoveryRates_[make_pair(Market::defaultConfiguration, "CPTY_A")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.00));
-            securitySpreads_[make_pair(Market::defaultConfiguration, "Security1")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.00));
-        }
+    TestMarket(Real defaultFlatRate) {
+        asof_ = Date(3, Feb, 2016);
+        // build discount
+        yieldCurves_[make_pair(Market::defaultConfiguration, "BANK_EUR_LEND")] = flatRateYts(0.02);
+        defaultCurves_[make_pair(Market::defaultConfiguration, "CPTY_A")] = flatRateDcs(defaultFlatRate);
+        recoveryRates_[make_pair(Market::defaultConfiguration, "CPTY_A")] =
+            Handle<Quote>(boost::make_shared<SimpleQuote>(0.00));
+        securitySpreads_[make_pair(Market::defaultConfiguration, "Security1")] =
+            Handle<Quote>(boost::make_shared<SimpleQuote>(0.00));
+    }
 
-    private:
-        Handle<YieldTermStructure> flatRateYts(Real forward) {
-            boost::shared_ptr<YieldTermStructure> yts(new FlatForward(0, NullCalendar(), forward, ActualActual()));
-            return Handle<YieldTermStructure>(yts);
-        }
-        Handle<DefaultProbabilityTermStructure> flatRateDcs(Real forward) {
-            boost::shared_ptr<DefaultProbabilityTermStructure> dcs(new FlatHazardRate(asof_, forward, ActualActual()));
-            return Handle<DefaultProbabilityTermStructure>(dcs);
-        }
-
+private:
+    Handle<YieldTermStructure> flatRateYts(Real forward) {
+        boost::shared_ptr<YieldTermStructure> yts(new FlatForward(0, NullCalendar(), forward, ActualActual()));
+        return Handle<YieldTermStructure>(yts);
+    }
+    Handle<DefaultProbabilityTermStructure> flatRateDcs(Real forward) {
+        boost::shared_ptr<DefaultProbabilityTermStructure> dcs(new FlatHazardRate(asof_, forward, ActualActual()));
+        return Handle<DefaultProbabilityTermStructure>(dcs);
+    }
 };
 
 struct CommonVars {
@@ -112,14 +114,16 @@ struct CommonVars {
 
         Envelope env("CP1");
 
-        boost::shared_ptr<ore::data::Bond> bond(new ore::data::Bond(env, issuerId, securityId, referenceCurveId, settledays, calStr, issue, fixedLegData));
+        boost::shared_ptr<ore::data::Bond> bond(
+            new ore::data::Bond(env, issuerId, securityId, referenceCurveId, settledays, calStr, issue, fixedLegData));
         return bond;
     }
 
     boost::shared_ptr<ore::data::Bond> makeZeroBond() {
         Envelope env("CP1");
 
-        boost::shared_ptr<ore::data::Bond> bond(new ore::data::Bond(env, issuerId, securityId, referenceCurveId, settledays, calStr, notional, end, ccy, issue));
+        boost::shared_ptr<ore::data::Bond> bond(new ore::data::Bond(env, issuerId, securityId, referenceCurveId,
+                                                                    settledays, calStr, notional, end, ccy, issue));
         return bond;
     }
 
@@ -146,7 +150,6 @@ struct CommonVars {
         spread.push_back(0.0);
     }
 };
-
 }
 
 namespace testsuite {
@@ -199,7 +202,6 @@ void BondTest::testBondZeroSpreadDefault() {
     Real expectedNpv = 11403727.39;
 
     BOOST_CHECK_CLOSE(npv, expectedNpv, 1.0);
-
 }
 
 void BondTest::testBondCompareDefault() {
@@ -229,13 +231,11 @@ void BondTest::testBondCompareDefault() {
     Real npv2 = bond->instrument()->NPV();
     bond->build(engineFactory3);
     Real npv3 = bond->instrument()->NPV();
-    
+
     BOOST_CHECK((npv1 > npv2) && (npv2 > npv3));
-    
- //   BOOST_CHECK_CLOSE(npv, expectedNpv, 1.0);
 
+    //   BOOST_CHECK_CLOSE(npv, expectedNpv, 1.0);
 }
-
 
 test_suite* BondTest::suite() {
     test_suite* suite = BOOST_TEST_SUITE("BondTest");

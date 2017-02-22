@@ -678,20 +678,21 @@ XMLNode* CdsConvention::toXML(XMLDocument& doc) {
     return node;
 }
 
-SecuritySpreadConvention::SecuritySpreadConvention(const string& id, const string& dayCounter, const string& compounding,
-    const string& compoundingFrequency)
-    : Convention(id, Type::SecuritySpread), tenorBased_(false), strDayCounter_(dayCounter), strCompounding_(compounding),
-    strCompoundingFrequency_(compoundingFrequency) {
+SecuritySpreadConvention::SecuritySpreadConvention(const string& id, const string& dayCounter,
+                                                   const string& compounding, const string& compoundingFrequency)
+    : Convention(id, Type::SecuritySpread), tenorBased_(false), strDayCounter_(dayCounter),
+      strCompounding_(compounding), strCompoundingFrequency_(compoundingFrequency) {
     build();
 }
 
-SecuritySpreadConvention::SecuritySpreadConvention(const string& id, const string& dayCounter, const string& tenorCalendar,
-    const string& compounding, const string& compoundingFrequency,
-    const string& spotLag, const string& spotCalendar, const string& rollConvention,
-    const string& eom)
-    : Convention(id, Type::SecuritySpread), tenorBased_(true), strDayCounter_(dayCounter), strTenorCalendar_(tenorCalendar),
-    strCompounding_(compounding), strCompoundingFrequency_(compoundingFrequency), strSpotLag_(spotLag),
-    strSpotCalendar_(spotCalendar), strRollConvention_(rollConvention), strEom_(eom) {
+SecuritySpreadConvention::SecuritySpreadConvention(const string& id, const string& dayCounter,
+                                                   const string& tenorCalendar, const string& compounding,
+                                                   const string& compoundingFrequency, const string& spotLag,
+                                                   const string& spotCalendar, const string& rollConvention,
+                                                   const string& eom)
+    : Convention(id, Type::SecuritySpread), tenorBased_(true), strDayCounter_(dayCounter),
+      strTenorCalendar_(tenorCalendar), strCompounding_(compounding), strCompoundingFrequency_(compoundingFrequency),
+      strSpotLag_(spotLag), strSpotCalendar_(spotCalendar), strRollConvention_(rollConvention), strEom_(eom) {
     build();
 }
 

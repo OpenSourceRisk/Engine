@@ -35,17 +35,18 @@ namespace QuantExt {
 
 class DiscountingRiskyBondEngine : public QuantLib::Bond::engine {
 public:
-    DiscountingRiskyBondEngine(const Handle<YieldTermStructure>& discountCurve, const Handle<DefaultProbabilityTermStructure>& defaultCurve,
+    DiscountingRiskyBondEngine(const Handle<YieldTermStructure>& discountCurve,
+                               const Handle<DefaultProbabilityTermStructure>& defaultCurve,
                                const Handle<Quote>& recoveryRate, const Handle<Quote>& securitySpread,
                                boost::optional<bool> includeSettlementDateFlows = boost::none);
-    
+
     void calculate() const;
     Real calculateNpv(Date npvDate) const;
     Handle<YieldTermStructure> discountCurve() const { return discountCurve_; };
     Handle<DefaultProbabilityTermStructure> defaultCurve() const { return defaultCurve_; };
-    Handle<Quote> recoveryRate() const { return recoveryRate_; }; 
+    Handle<Quote> recoveryRate() const { return recoveryRate_; };
     Handle<Quote> securitySpread() const { return securitySpread_; };
-    
+
 private:
     Handle<YieldTermStructure> discountCurve_;
     Handle<DefaultProbabilityTermStructure> defaultCurve_;
@@ -53,7 +54,6 @@ private:
     Handle<Quote> securitySpread_;
     boost::optional<bool> includeSettlementDateFlows_;
 };
-
 }
 
 #endif

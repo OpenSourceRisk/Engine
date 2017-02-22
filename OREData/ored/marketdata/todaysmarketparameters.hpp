@@ -63,13 +63,12 @@ namespace data {
 struct MarketConfiguration {
     MarketConfiguration()
         : discountingCurvesId(Market::defaultConfiguration), yieldCurvesId(Market::defaultConfiguration),
-        indexForwardingCurvesId(Market::defaultConfiguration), fxSpotsId(Market::defaultConfiguration),
-        fxVolatilitiesId(Market::defaultConfiguration), swaptionVolatilitiesId(Market::defaultConfiguration),
-        defaultCurvesId(Market::defaultConfiguration), swapIndexCurvesId(Market::defaultConfiguration),
-        capFloorVolatilitiesId(Market::defaultConfiguration), securitySpreadsId(Market::defaultConfiguration) {}
-		string discountingCurvesId, yieldCurvesId, indexForwardingCurvesId, fxSpotsId, 
-        fxVolatilitiesId, swaptionVolatilitiesId, defaultCurvesId, swapIndexCurvesId, capFloorVolatilitiesId,
-        securitySpreadsId;
+          indexForwardingCurvesId(Market::defaultConfiguration), fxSpotsId(Market::defaultConfiguration),
+          fxVolatilitiesId(Market::defaultConfiguration), swaptionVolatilitiesId(Market::defaultConfiguration),
+          defaultCurvesId(Market::defaultConfiguration), swapIndexCurvesId(Market::defaultConfiguration),
+          capFloorVolatilitiesId(Market::defaultConfiguration), securitySpreadsId(Market::defaultConfiguration) {}
+    string discountingCurvesId, yieldCurvesId, indexForwardingCurvesId, fxSpotsId, fxVolatilitiesId,
+        swaptionVolatilitiesId, defaultCurvesId, swapIndexCurvesId, capFloorVolatilitiesId, securitySpreadsId;
 };
 
 bool operator==(const MarketConfiguration& lhs, const MarketConfiguration& rhs);
@@ -325,8 +324,8 @@ inline const map<string, string>& TodaysMarketParameters::securitySpreads(const 
     QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
     auto it = securitySpreads_.find(securitySpreadsId(configuration));
     QL_REQUIRE(it != securitySpreads_.end(), "security spreads with id " << securitySpreadsId(configuration)
-        << " specified in configuration " << configuration
-        << " not found");
+                                                                         << " specified in configuration "
+                                                                         << configuration << " not found");
     return it->second;
 }
 

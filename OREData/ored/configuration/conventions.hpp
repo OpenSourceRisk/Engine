@@ -754,11 +754,11 @@ public:
     //! Default constructor
     SecuritySpreadConvention() {}
     SecuritySpreadConvention(const string& id, const string& dayCounter, const string& compounding,
-        const string& compoundingFrequency);
+                             const string& compoundingFrequency);
     SecuritySpreadConvention(const string& id, const string& dayCounter, const string& tenorCalendar,
-        const string& compounding = "Continuous", const string& compoundingFrequency = "Annual",
-        const string& spotLag = "", const string& spotCalendar = "", const string& rollConvention = "",
-        const string& eom = "");
+                             const string& compounding = "Continuous", const string& compoundingFrequency = "Annual",
+                             const string& spotLag = "", const string& spotCalendar = "",
+                             const string& rollConvention = "", const string& eom = "");
     //@}
 
     //! \name Inspectors
