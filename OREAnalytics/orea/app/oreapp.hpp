@@ -57,9 +57,11 @@ public:
     //! build today's market
     void buildMarket();
     //! build engine factory for a given market
-    virtual boost::shared_ptr<EngineFactory> buildFactory(boost::shared_ptr<Market> market);
+    virtual boost::shared_ptr<EngineFactory> buildEngineFactory(const boost::shared_ptr<Market>& market);
+    //! build trade factory
+    virtual boost::shared_ptr<TradeFactory> buildTradeFactory();
     //! build portfolio for a given market
-    boost::shared_ptr<Portfolio> buildPortfolio(boost::shared_ptr<EngineFactory> factory);
+    boost::shared_ptr<Portfolio> buildPortfolio(const boost::shared_ptr<EngineFactory>& factory);
 
     //! generate NPV cube
     void generateNPVCube();
