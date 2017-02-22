@@ -68,6 +68,7 @@ void DiscountingRiskyBondEngine::calculate() const {
 Real DiscountingRiskyBondEngine::calculateNpv(Date npvDate) const {
     Real npvValue = 0;
 
+    Size numCoupons = 0;
     for (Size i = 0; i < arguments_.cashflows.size(); i++) {
         boost::shared_ptr<CashFlow> cf = arguments_.cashflows[i];
         if (cf->hasOccurred(npvDate, includeSettlementDateFlows_))
@@ -78,6 +79,7 @@ Real DiscountingRiskyBondEngine::calculateNpv(Date npvDate) const {
 
         boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(cf);
         if (coupon) {
+            numCoupons++;
             Date startDate = coupon->accrualStartDate();
             Date endDate = coupon->accrualEndDate();
             Date effectiveStartDate = (startDate <= npvDate && npvDate <= endDate) ? npvDate : startDate;
@@ -86,6 +88,10 @@ Real DiscountingRiskyBondEngine::calculateNpv(Date npvDate) const {
 
             npvValue += cf->amount() * recoveryRate_->value() * P * discountCurve_->discount(defaultDate);
         }
+    }
+
+    if (arguments_.cashflows.size() > 1 && numCoupons == 0) {
+        QL_FAIL("DiscountingRiskyBondEngine does not support bonds with multiple cashflows but no coupons");
     }
 
     if (arguments_.cashflows.size() == 1) {
