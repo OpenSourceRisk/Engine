@@ -38,6 +38,7 @@ public:
     DiscountingRiskyBondEngine(const Handle<YieldTermStructure>& discountCurve,
                                const Handle<DefaultProbabilityTermStructure>& defaultCurve,
                                const Handle<Quote>& recoveryRate, const Handle<Quote>& securitySpread,
+                               std::string timestepPeriod, Real timestepSize,
                                boost::optional<bool> includeSettlementDateFlows = boost::none);
 
     void calculate() const;
@@ -52,6 +53,8 @@ private:
     Handle<DefaultProbabilityTermStructure> defaultCurve_;
     Handle<Quote> recoveryRate_;
     Handle<Quote> securitySpread_;
+    std::string timestepPeriod_;
+    Real timestepSize_;
     boost::optional<bool> includeSettlementDateFlows_;
 };
 }

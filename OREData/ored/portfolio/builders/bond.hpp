@@ -51,13 +51,16 @@ protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const string& issuerId,
                                                         const string& securityId,
                                                         const string& referenceCurveId) override {
+        
+        string tsperiod = engineParameters_.at("Timestepperiod");
+        Real tssize = parseReal(engineParameters_.at("TimestepSize"));
         Handle<YieldTermStructure> yts = market_->yieldCurve(referenceCurveId, configuration(MarketContext::pricing));
         Handle<DefaultProbabilityTermStructure> dpts =
             market_->defaultCurve(issuerId, configuration(MarketContext::pricing));
         Handle<Quote> recovery = market_->recoveryRate(issuerId, configuration(MarketContext::pricing));
         Handle<Quote> spread = market_->securitySpread(securityId, configuration(MarketContext::pricing));
 
-        return boost::make_shared<QuantExt::DiscountingRiskyBondEngine>(yts, dpts, recovery, spread);
+        return boost::make_shared<QuantExt::DiscountingRiskyBondEngine>(yts, dpts, recovery, spread, tsperiod, tssize);
     }
 };
 

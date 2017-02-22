@@ -33,8 +33,10 @@ DiscountingRiskyBondEngine::DiscountingRiskyBondEngine(const Handle<YieldTermStr
                                                        const Handle<DefaultProbabilityTermStructure>& defaultCurve,
                                                        const Handle<Quote>& securitySpread,
                                                        const Handle<Quote>& recoveryRate,
+                                                       string timestepPeriod, Real timestepSize,
                                                        boost::optional<bool> includeSettlementDateFlows)
     : defaultCurve_(defaultCurve), securitySpread_(securitySpread), recoveryRate_(recoveryRate),
+      timestepPeriod_(timestepPeriod), timestepSize_(timestepSize),
       includeSettlementDateFlows_(includeSettlementDateFlows) {
     discountCurve_ =
         Handle<YieldTermStructure>(boost::make_shared<ZeroSpreadedTermStructure>(discountCurve, securitySpread));
@@ -90,7 +92,7 @@ Real DiscountingRiskyBondEngine::calculateNpv(Date npvDate) const {
         if (redemption) {
             Date startDate = npvDate;
             while (startDate < redemption->date()) {
-                Date stepDate = startDate + 6 * Months;
+                Date stepDate = startDate + timestepSize_ * Months;
                 Date endDate = (stepDate > redemption->date()) ? redemption->date() : stepDate;
                 Date defaultDate = startDate + (endDate - startDate) / 2;
                 Probability P = defaultCurve_->defaultProbability(startDate, endDate);
