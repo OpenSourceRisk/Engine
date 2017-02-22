@@ -399,7 +399,7 @@ void YieldCurve::buildZeroSpreadedCurve() {
     QL_REQUIRE(curveSegments_.size() <= 1, "More than one zero spreaded curve "
                                            "segment not supported yet.");
     QL_REQUIRE(curveSegments_[0]->type() == YieldCurveSegment::Type::ZeroSpread,
-               "The curve segment is not of type Zero.");
+               "The curve segment is not of type Zero Spread.");
 
     // Fill a vector of zero spread quotes.
     vector<boost::shared_ptr<ZeroQuote>> quotes;

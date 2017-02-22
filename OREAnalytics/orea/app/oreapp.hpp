@@ -24,11 +24,14 @@
 #pragma once
 
 #include <orea/app/parameters.hpp>
-#include <orea/scenario/all.hpp> // FIXME
-#include <orea/aggregation/all.hpp> // FIXME
-#include <ored/ored.hpp> // FIXME
+#include <orea/scenario/scenariogeneratorbuilder.hpp>
+#include <orea/scenario/scenariogenerator.hpp>
+#include <orea/scenario/scenariosimmarket.hpp>
+#include <orea/scenario/scenariosimmarketparameters.hpp>
+#include <orea/aggregation/all.hpp>
+#include <ored/ored.hpp>
+#include <boost/make_shared.hpp>
 
-using namespace std;
 using namespace ore::data;
 
 namespace ore {

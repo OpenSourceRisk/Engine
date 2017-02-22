@@ -48,7 +48,6 @@
 #include <boost/config/auto_link.hpp>
 #endif
 
-
 using namespace std;
 using namespace ore::data;
 using namespace ore::analytics;

@@ -16,42 +16,35 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file App/ore.hpp
-    \brief Open Risk Engine setup and analytics choice
-    \ingroup
+/*! \file ored/marketdata/bondspreadspot.hpp
+    \brief
+    \ingroup marketdata
 */
 
 #pragma once
 
-#include <map>
-#include <vector>
-
-#include <ored/utilities/xmlutils.hpp>
-
-using namespace ore::data;
-using std::map;
-using std::string;
+#include <ored/marketdata/curvespec.hpp>
+#include <ored/marketdata/loader.hpp>
+#include <ql/quote.hpp>
+#include <ql/handle.hpp>
 
 namespace ore {
-namespace analytics {
+namespace data {
 
-class Parameters : public XMLSerializable {
+//! Wrapper class for holding Bond Spread quotes
+/*!
+  \ingroup marketdata
+*/
+class SecuritySpread {
 public:
-    Parameters() {}
+    //! Constructor
+    SecuritySpread(const Date& asof, SecuritySpreadSpec spec, const Loader& loader);
 
-    void clear();
-    void fromFile(const string&);
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
-
-    bool hasGroup(const string& groupName) const;
-    bool has(const string& groupName, const string& paramName) const;
-    string get(const string& groupName, const string& paramName) const;
-
-    void log();
+    //! Inspector
+    Handle<Quote> spread() const { return spread_; }
 
 private:
-    map<string, map<string, string>> data_;
+    Handle<Quote> spread_;
 };
 }
 }
