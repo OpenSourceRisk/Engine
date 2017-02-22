@@ -58,7 +58,10 @@ void OptionWrapper::initialise(const vector<Date>& dateGrid) {
     }
 }
 
-void OptionWrapper::reset() { exercised_ = false; }
+void OptionWrapper::reset() {
+    exercised_ = false;
+    exerciseDate_ = Date();
+}
 
 Real OptionWrapper::NPV() const {
     Date today = Settings::instance().evaluationDate();
@@ -80,7 +83,7 @@ Real OptionWrapper::NPV() const {
         // date, but before or on the next simulation date. Check this explicitly
         // by introducing the cash settlement date into the option wrapper (note
         // that we will probably need an effective cash settlement date then to
-        // maintain the relvative position to the effective exexrcise date).
+        // maintain the relative position to the effective exercise date).
         return (isPhysicalDelivery_ || today == exerciseDate_)
                    ? (isLong_ ? 1.0 : -1.0) * activeUnderlyingInstrument_->NPV() * undMultiplier_
                    : 0.0;
