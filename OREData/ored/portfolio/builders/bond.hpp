@@ -51,7 +51,7 @@ protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const string& issuerId,
                                                         const string& securityId,
                                                         const string& referenceCurveId) override {
-        
+
         string tsperiodStr = engineParameters_.at("TimestepPeriod");
         Period tsperiod = parsePeriod(tsperiodStr);
         Handle<YieldTermStructure> yts = market_->yieldCurve(referenceCurveId, configuration(MarketContext::pricing));
