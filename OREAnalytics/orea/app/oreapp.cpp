@@ -75,7 +75,7 @@ void OREApp::run() {
          *Build Pricing Engine Factory
          */
         cout << setw(tab_) << left << "Engine factory... " << flush;
-        boost::shared_ptr<EngineFactory> factory = buildFactory(market_);
+        boost::shared_ptr<EngineFactory> factory = buildEngineFactory(market_);
         cout << "OK" << endl;
 
         /******************************
@@ -241,7 +241,7 @@ void OREApp::getMarketParameters() {
     marketParameters_.fromFile(marketConfigFile);
 }
 
-boost::shared_ptr<EngineFactory> OREApp::buildFactory(boost::shared_ptr<Market> market) {
+boost::shared_ptr<EngineFactory> OREApp::buildEngineFactory(const boost::shared_ptr<Market>& market) {
     string inputPath = params_->get("setup", "inputPath");
     string pricingEnginesFile = inputPath + "/" + params_->get("setup", "pricingEnginesFile");
     boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
@@ -255,11 +255,15 @@ boost::shared_ptr<EngineFactory> OREApp::buildFactory(boost::shared_ptr<Market> 
     return factory;
 }
 
-boost::shared_ptr<Portfolio> OREApp::buildPortfolio(boost::shared_ptr<EngineFactory> factory) {
+boost::shared_ptr<TradeFactory> OREApp::buildTradeFactory() {
+    return boost::make_shared<TradeFactory>();
+}
+
+boost::shared_ptr<Portfolio> OREApp::buildPortfolio(const boost::shared_ptr<EngineFactory>& factory) {
     string inputPath = params_->get("setup", "inputPath");
     string portfolioFile = inputPath + "/" + params_->get("setup", "portfolioFile");
     boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
-    portfolio->load(portfolioFile);
+    portfolio->load(portfolioFile, buildTradeFactory());
     portfolio->build(factory);
     return portfolio;
 }
@@ -459,7 +463,7 @@ void OREApp::generateNPVCube() {
         LOG("Build Simulation Market");
         simMarket_ = boost::make_shared<ScenarioSimMarket>(sg, market_, simMarketData, conventions_,
                                                            params_->get("markets", "simulation"));
-        boost::shared_ptr<EngineFactory> simFactory = buildFactory(simMarket_);
+        boost::shared_ptr<EngineFactory> simFactory = buildEngineFactory(simMarket_);
 
         LOG("Build portfolio linked to sim market");
         simPortfolio_ = buildPortfolio(simFactory);
