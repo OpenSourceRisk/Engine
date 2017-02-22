@@ -73,10 +73,18 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     QL_REQUIRE(bondBuilder, "No Builder found for Bond" << id());
     bond->setPricingEngine(bondBuilder->engine(currency, issuerId_, securityId_, referenceCurveId_));
     DLOG("Bond::build(): Bond NPV = " << bond->NPV());
+    DLOG("Bond::build(): Bond CleanPrice = " << bond->cleanPrice());
+    DLOG("Bond::build(): Bond DirtyPrice = " << bond->dirtyPrice());
+    DLOG("Bond::build(): Bond Settlement = " << bond->settlementValue());
     instrument_.reset(new VanillaInstrument(bond));
 
     npvCurrency_ = currency_;
     maturity_ = bond->cashflows().back()->date();
+
+    // Add legs (only 1)
+    legs_ = { bond->cashflows() };
+    legCurrencies_ = { npvCurrency_ };
+    legPayers_ = { false }; // We own the bond => we receive the flows
 }
 
 void Bond::fromXML(XMLNode* node) {
