@@ -73,9 +73,14 @@ Real DiscountingRiskyBondEngine::calculateNpv(Date npvDate) const {
         if (cf->hasOccurred(npvDate, includeSettlementDateFlows_))
             continue;
 
+        // Coupon value is discounted future payment times the survival probability
         Probability S = defaultCurve_->survivalProbability(cf->date());
         npvValue += cf->amount() * S * discountCurve_->discount(cf->date());
-
+        
+        /* The amount recovered in the case of default is the recoveryrate*Notional*Probability of
+           Default; this is added to the NPV value. For coupon bonds the coupon periods are taken 
+           as the timesteps for integrating over the probability of default. 
+        */
         boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(cf);
         if (coupon) {
             Date startDate = coupon->accrualStartDate();
@@ -88,6 +93,10 @@ Real DiscountingRiskyBondEngine::calculateNpv(Date npvDate) const {
         }
     }
 
+    /* If there are no coupon, as in a Zero Bond, we must integrate over the entire period from npv date to
+       maturity. The timestepPeriod specified is used as provide the steps for the integration. This only applies
+       to bonds with 1 cashflow, identified as a final redemption payment.
+    */
     if (arguments_.cashflows.size() == 1) {
         boost::shared_ptr<Redemption> redemption = boost::dynamic_pointer_cast<Redemption>(arguments_.cashflows[0]);
         if (redemption) {

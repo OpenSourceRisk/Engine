@@ -34,6 +34,21 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
+//! Discounting Risky Bond Engine
+/*! WARNING: Only covers Vanilla coupon bonds (floating and fixed rate), and 
+    Zero Bonds (one cashflow, a redemption at maturity).
+
+    This class implements pricing of Risky Bonds by discounting the future
+    nominal cash flows using the respective yield curves, and probability of
+    survival.
+    The nominal recovered in case of default is calculated as recovery rate times
+    the integral of probability of default until maturity date. For coupon bonds
+    the coupon periods are taken as the time step for integration, for a zero
+    bond the time step period provided is used.
+
+    \ingroup engines
+    
+*/
 class DiscountingRiskyBondEngine : public QuantLib::Bond::engine {
 public:
     DiscountingRiskyBondEngine(const Handle<YieldTermStructure>& discountCurve,
