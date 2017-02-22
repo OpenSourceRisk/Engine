@@ -68,6 +68,6 @@
     <Engine>DiscountingRiskyBondEngine</Engine>
     <EngineParameters>
         <Parameter name="TimestepPeriod">6M</Parameter>
-    <EngineParameters/>
+    </EngineParameters>
   </Product>
 </PricingEngines>
