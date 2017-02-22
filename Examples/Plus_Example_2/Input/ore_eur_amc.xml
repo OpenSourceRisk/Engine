@@ -12,7 +12,7 @@
     <Parameter name="curveConfigFile">../../Input/curveconfig.xml</Parameter>
     <Parameter name="conventionsFile">../../Input/conventions.xml</Parameter>
     <Parameter name="marketConfigFile">../../Input/todaysmarket.xml</Parameter>
-    <Parameter name="pricingEnginesFile">../../Input/pricingengine-amc_eur.xml</Parameter>
+    <Parameter name="pricingEnginesFile">pricingengine-amc_eur.xml</Parameter>
     <Parameter name="portfolioFile">portfolio_unit_test_eur.xml</Parameter>
     <Parameter name="observationModel">Disable</Parameter>
   </Setup>
@@ -41,7 +41,7 @@
     <Analytic type="simulation">
       <Parameter name="active">Y</Parameter>
       <Parameter name="simulationConfigFile">simulation_eur.xml</Parameter>
-      <Parameter name="pricingEnginesFile">../../Input/pricingengine-amc_eur.xml</Parameter>
+      <Parameter name="pricingEnginesFile">pricingengine-amc_eur.xml</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <!-- Parameter name="scenariodump">scenariodump.csv</Parameter> -->
       <Parameter name="storeFlows">Y</Parameter>
