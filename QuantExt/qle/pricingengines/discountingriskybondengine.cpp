@@ -20,7 +20,7 @@
 #include <ql/cashflows/cashflows.hpp>
 #include <ql/cashflows/coupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
-#include <ql/termstructures/yield/ZeroSpreadedTermStructure.hpp>
+#include <ql/termstructures/yield/zerospreadedtermstructure.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/date_time.hpp>
 
