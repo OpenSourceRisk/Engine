@@ -93,7 +93,7 @@ Real DiscountingRiskyBondEngine::calculateNpv(Date npvDate) const {
         if (redemption) {
             Date startDate = npvDate;
             while (startDate < redemption->date()) {
-                Date stepDate = startDate + timestepPeriod_.length() * timestepPeriod_.units();
+                Date stepDate = startDate + timestepPeriod_;
                 Date endDate = (stepDate > redemption->date()) ? redemption->date() : stepDate;
                 Date defaultDate = startDate + (endDate - startDate) / 2;
                 Probability P = defaultCurve_->defaultProbability(startDate, endDate);

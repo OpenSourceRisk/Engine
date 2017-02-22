@@ -50,7 +50,7 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         bond.reset(new QuantLib::ZeroCouponBond(settlementDays, calendar, faceAmount_, parseDate(maturityDate_)));
     } else { // Coupon bond
 
-        currency_ = coupons_.currency();        
+        currency_ = coupons_.currency();
         Leg leg;
         if (coupons_.legType() == "Fixed")
             leg = makeFixedLeg(coupons_);
