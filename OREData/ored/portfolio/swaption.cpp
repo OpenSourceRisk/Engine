@@ -149,7 +149,7 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
     std::vector<QuantLib::Date> exDates;
     for (Size i = 0; i < option_.exerciseDates().size(); i++) {
         Date exDate = ore::data::parseDate(option_.exerciseDates()[i]);
-        if(exDate > Settings::instance().evaluationDate())
+        if (exDate > Settings::instance().evaluationDate())
             exDates.push_back(exDate);
     }
     QL_REQUIRE(exDates.size() > 0, "Bermudan Swaption does not have any alive exercise dates");

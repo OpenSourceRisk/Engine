@@ -119,6 +119,10 @@ Handle<OptionletVolatilityStructure> MarketImpl::capFloorVol(const string& key, 
     return lookup<Handle<OptionletVolatilityStructure>>(capFloorCurves_, key, configuration, "capfloor curve");
 }
 
+Handle<Quote> MarketImpl::securitySpread(const string& key, const string& configuration) const {
+    return lookup<Handle<Quote>>(securitySpreads_, key, configuration, "security spread");
+}
+
 void MarketImpl::addSwapIndex(const string& swapIndex, const string& discountIndex, const string& configuration) {
     try {
         std::vector<string> tokens;

@@ -62,4 +62,12 @@
     <Engine>BlackIborCouponPricer</Engine>
     <EngineParameters/>
   </Product>
+    <Product type="Bond">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingRiskyBondEngine</Engine>
+    <EngineParameters>
+        <Parameter name="TimestepPeriod">6M</Parameter>
+    </EngineParameters>
+  </Product>
 </PricingEngines>
