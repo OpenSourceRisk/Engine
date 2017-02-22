@@ -169,6 +169,10 @@ void BondTest::testZeroBond() {
     engineData->model("Bond") = "DiscountedCashflows";
     engineData->engine("Bond") = "DiscountingRiskyBondEngine";
 
+    map<string, string> engineparams;
+    engineparams["TimestepPeriod"] = "6M";
+    engineData->engineParameters("Bond") = engineparams;
+
     boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
 
     bond->build(engineFactory);
@@ -193,6 +197,10 @@ void BondTest::testBondZeroSpreadDefault() {
     boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
     engineData->model("Bond") = "DiscountedCashflows";
     engineData->engine("Bond") = "DiscountingRiskyBondEngine";
+
+    map<string, string> engineparams;
+    engineparams["TimestepPeriod"] = "6M";
+    engineData->engineParameters("Bond") = engineparams;
 
     boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
 
@@ -220,6 +228,9 @@ void BondTest::testBondCompareDefault() {
     boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
     engineData->model("Bond") = "DiscountedCashflows";
     engineData->engine("Bond") = "DiscountingRiskyBondEngine";
+    map<string, string> engineparams;
+    engineparams["TimestepPeriod"] = "6M";
+    engineData->engineParameters("Bond") = engineparams;
 
     boost::shared_ptr<EngineFactory> engineFactory1 = boost::make_shared<EngineFactory>(engineData, market1);
     boost::shared_ptr<EngineFactory> engineFactory2 = boost::make_shared<EngineFactory>(engineData, market2);

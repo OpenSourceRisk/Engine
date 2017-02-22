@@ -41,23 +41,16 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("Bond");
 
-    Currency currency;
     Date issueDate = parseDate(issueDate_);
     Calendar calendar = parseCalendar(calendar_);
     Natural settlementDays = boost::lexical_cast<Natural>(settlementDays_);
     boost::shared_ptr<QuantLib::Bond> bond;
 
     if (zeroBond_) { // Zero coupon bond
-        currency = parseCurrency(currency_);
-        maturity_ = parseDate(maturityDate_);
-        bond.reset(new QuantLib::ZeroCouponBond(settlementDays, calendar, faceAmount_, maturity_));
-
+        bond.reset(new QuantLib::ZeroCouponBond(settlementDays, calendar, faceAmount_, parseDate(maturityDate_)));
     } else { // Coupon bond
 
-        string ccy_str = coupons_.currency();
-        npvCurrency_ = ccy_str;
-        currency = parseCurrency(ccy_str);
-
+        currency_ = coupons_.currency();        
         Leg leg;
         if (coupons_.legType() == "Fixed")
             leg = makeFixedLeg(coupons_);
@@ -73,19 +66,17 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         }
 
         bond.reset(new QuantLib::Bond(settlementDays, calendar, issueDate, leg));
-
-        // set maturity
-        maturity_ = leg.back()->date();
-        Date d = leg.back()->date();
-        if (d > maturity_)
-            maturity_ = d;
     }
 
+    Currency currency = parseCurrency(currency_);
     boost::shared_ptr<BondEngineBuilder> bondBuilder = boost::dynamic_pointer_cast<BondEngineBuilder>(builder);
     QL_REQUIRE(bondBuilder, "No Builder found for Bond" << id());
     bond->setPricingEngine(bondBuilder->engine(currency, issuerId_, securityId_, referenceCurveId_));
     DLOG("Bond::build(): Bond NPV = " << bond->NPV());
     instrument_.reset(new VanillaInstrument(bond));
+
+    npvCurrency_ = currency_;
+    maturity_ = bond->cashflows().back()->date();
 }
 
 void Bond::fromXML(XMLNode* node) {

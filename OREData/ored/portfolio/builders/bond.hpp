@@ -52,15 +52,15 @@ protected:
                                                         const string& securityId,
                                                         const string& referenceCurveId) override {
         
-        string tsperiod = engineParameters_.at("Timestepperiod");
-        Real tssize = parseReal(engineParameters_.at("TimestepSize"));
+        string tsperiodStr = engineParameters_.at("TimestepPeriod");
+        Period tsperiod = parsePeriod(tsperiodStr);
         Handle<YieldTermStructure> yts = market_->yieldCurve(referenceCurveId, configuration(MarketContext::pricing));
         Handle<DefaultProbabilityTermStructure> dpts =
             market_->defaultCurve(issuerId, configuration(MarketContext::pricing));
         Handle<Quote> recovery = market_->recoveryRate(issuerId, configuration(MarketContext::pricing));
         Handle<Quote> spread = market_->securitySpread(securityId, configuration(MarketContext::pricing));
 
-        return boost::make_shared<QuantExt::DiscountingRiskyBondEngine>(yts, dpts, recovery, spread, tsperiod, tssize);
+        return boost::make_shared<QuantExt::DiscountingRiskyBondEngine>(yts, dpts, recovery, spread, tsperiod);
     }
 };
 

@@ -26,6 +26,7 @@
 #define quantext_discounting_riskybond_engine_hpp
 
 #include <ql/instruments/bond.hpp>
+#include <ql/time/period.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/termstructures/defaulttermstructure.hpp>
 
@@ -38,7 +39,7 @@ public:
     DiscountingRiskyBondEngine(const Handle<YieldTermStructure>& discountCurve,
                                const Handle<DefaultProbabilityTermStructure>& defaultCurve,
                                const Handle<Quote>& recoveryRate, const Handle<Quote>& securitySpread,
-                               std::string timestepPeriod, Real timestepSize,
+                               Period timestepPeriod,
                                boost::optional<bool> includeSettlementDateFlows = boost::none);
 
     void calculate() const;
@@ -53,8 +54,7 @@ private:
     Handle<DefaultProbabilityTermStructure> defaultCurve_;
     Handle<Quote> recoveryRate_;
     Handle<Quote> securitySpread_;
-    std::string timestepPeriod_;
-    Real timestepSize_;
+    Period timestepPeriod_;
     boost::optional<bool> includeSettlementDateFlows_;
 };
 }
