@@ -178,7 +178,7 @@ void BondTest::testZeroBond() {
     bond->build(engineFactory);
 
     Real npv = bond->instrument()->NPV();
-    Real expectedNpv = 11403727.39;
+    Real expectedNpv = 9048374.18;
 
     BOOST_CHECK_CLOSE(npv, expectedNpv, 1.0);
 }
