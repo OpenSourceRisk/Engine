@@ -22,6 +22,7 @@
 #include <ored/portfolio/fxforward.hpp>
 #include <ored/portfolio/fxoption.hpp>
 #include <ored/portfolio/capfloor.hpp>
+#include <ored/portfolio/bond.hpp>
 
 using namespace std;
 
@@ -34,6 +35,7 @@ TradeFactory::TradeFactory() {
     addBuilder("FxForward", boost::make_shared<TradeBuilder<FxForward>>());
     addBuilder("FxOption", boost::make_shared<TradeBuilder<FxOption>>());
     addBuilder("CapFloor", boost::make_shared<TradeBuilder<CapFloor>>());
+    addBuilder("Bond", boost::make_shared<TradeBuilder<Bond>>());
 }
 
 void TradeFactory::addBuilder(const string& className, const boost::shared_ptr<AbstractTradeBuilder>& b) {

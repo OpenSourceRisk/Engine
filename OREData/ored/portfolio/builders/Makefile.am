@@ -14,6 +14,7 @@ libOREDataPortfolioBuilders_la_SOURCES = \
 this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \
 	all.hpp \
+	bond.hpp \
 	cachingenginebuilder.hpp \
 	capfloor.hpp \
 	capfloorediborleg.hpp \
