@@ -143,6 +143,8 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             } else {
                 legs_[i] = makeIborLeg(legData_[i], index, engineFactory);
             }
+        } else if (legData_[i].legType() == "Cashflow") {
+            legs_[i] = makeSimpleLeg(legData_[i]);
         } else {
             QL_FAIL("Unknown leg type " << legData_[i].legType());
         }
