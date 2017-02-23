@@ -93,6 +93,10 @@ void LegData::fromXML(XMLNode* node) {
     notionals_ =
         XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Notionals", "Notional", "startDate", notionalDates_);
     XMLNode* tmp = XMLUtils::getChildNode(node, "Notionals");
+    isNotResetXCCY_ = true;
+    notionalInitialExchange_ = false;
+    notionalFinalExchange_ = false;
+    notionalAmortizingExchange_ = false;
     if (tmp) {
         XMLNode* fxResetNode = XMLUtils::getChildNode(tmp, "FXReset");
         if (fxResetNode) {
@@ -109,16 +113,8 @@ void LegData::fromXML(XMLNode* node) {
             notionalFinalExchange_ = XMLUtils::getChildValueAsBool(exchangeNode, "NotionalFinalExchange");
             if (XMLUtils::getChildNode(exchangeNode, "NotionalAmortizingExchange"))
                 notionalAmortizingExchange_ = XMLUtils::getChildValueAsBool(exchangeNode, "NotionalAmortizingExchange");
-            else
-                notionalAmortizingExchange_ = false;
         }
-    } else {
-        isNotResetXCCY_ = true;
-        notionalInitialExchange_ = false;
-        notionalFinalExchange_ = false;
-        notionalAmortizingExchange_ = false;
     }
-
     tmp = XMLUtils::getChildNode(node, "ScheduleData");
     if (tmp)
         schedule_.fromXML(tmp);
