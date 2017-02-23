@@ -23,6 +23,7 @@
 #include <orea/engine/sensitivityanalysis.hpp>
 #include <orea/scenario/simplescenariofactory.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/report/csvreport.hpp>
 #include <ql/errors.hpp>
 #include <ql/instruments/forwardrateagreement.hpp>
 #include <ql/instruments/makeois.hpp>
@@ -76,7 +77,8 @@ SensitivityAnalysis::SensitivityAnalysis(boost::shared_ptr<ore::data::Portfolio>
                                          const boost::shared_ptr<ore::data::EngineData>& engineData,
                                          boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
                                          const boost::shared_ptr<SensitivityScenarioData>& sensitivityData,
-                                         const Conventions& conventions) {
+                                         const Conventions& conventions)
+    : marketConfiguration_(marketConfiguration) {
 
     LOG("Build Sensitivity Scenario Generator");
     Date asof = market->asofDate();
@@ -113,7 +115,7 @@ SensitivityAnalysis::SensitivityAnalysis(boost::shared_ptr<ore::data::Portfolio>
     string downString = sensitivityData->labelSeparator() + sensitivityData->shiftDirectionLabel(false);
 
     /***********************************************
-     * Compute
+     * Collect results
      * - base NPVs,
      * - NPVs after single factor up shifts,
      * - NPVs after single factor down shifts
@@ -241,8 +243,7 @@ SensitivityAnalysis::SensitivityAnalysis(boost::shared_ptr<ore::data::Portfolio>
                 QL_FAIL("Instrument type " << instType << " for par sensitivity conversion not recognised");
             parRatesBase[ccy][j] = impliedQuote(parHelpers[ccy][j]);
             LOG("Par instrument for discount curve, ccy " << ccy << " tenor " << j << ", type " << instType
-                                                          << ", base rate " << setprecision(4)
-                                                          << parRatesBase[ccy][j]);
+                                                          << ", base rate " << setprecision(4) << parRatesBase[ccy][j]);
         }
     }
 
@@ -290,8 +291,8 @@ SensitivityAnalysis::SensitivityAnalysis(boost::shared_ptr<ore::data::Portfolio>
         string ccy = sensitivityData->capFloorVolCurrencies()[i];
         SensitivityScenarioData::CapFloorVolShiftData data = sensitivityData->capFloorVolShiftData()[ccy];
         string indexName = data.indexName;
-        Handle<YieldTermStructure> yts = simMarket->discountCurve(ccy);
-        Handle<OptionletVolatilityStructure> ovs = simMarket->capFloorVol(ccy); // FIXME: configuration
+        Handle<YieldTermStructure> yts = simMarket->discountCurve(ccy, marketConfiguration_);
+        Handle<OptionletVolatilityStructure> ovs = simMarket->capFloorVol(ccy, marketConfiguration_);
         Size n_strikes = data.shiftStrikes.size();
         Size n_expiries = data.shiftExpiries.size();
         for (Size j = 0; j < n_strikes; ++j) {
@@ -387,8 +388,8 @@ SensitivityAnalysis::SensitivityAnalysis(boost::shared_ptr<ore::data::Portfolio>
                 // FIXME: Assumption of sensitivity within currency only
                 if (label.find(ccy) == string::npos)
                     continue;
-                Handle<YieldTermStructure> yts = simMarket->discountCurve(ccy);         // FIXME: configuration
-                Handle<OptionletVolatilityStructure> ovs = simMarket->capFloorVol(ccy); // FIXME: configuration
+                Handle<YieldTermStructure> yts = simMarket->discountCurve(ccy, marketConfiguration_);
+                Handle<OptionletVolatilityStructure> ovs = simMarket->capFloorVol(ccy, marketConfiguration_);
                 SensitivityScenarioData::CapFloorVolShiftData data = sensitivityData->capFloorVolShiftData()[ccy];
                 Size n_strikes = data.shiftStrikes.size();
                 Size n_expiries = data.shiftExpiries.size();
@@ -420,46 +421,64 @@ SensitivityAnalysis::SensitivityAnalysis(boost::shared_ptr<ore::data::Portfolio>
 }
 
 void SensitivityAnalysis::writeScenarioReport(string fileName, Real outputThreshold) {
-    ofstream file;
-    file.open(fileName.c_str());
-    QL_REQUIRE(file.is_open(), "error opening file " << fileName);
-    file.setf(ios::fixed, ios::floatfield);
-    file.setf(ios::showpoint);
-    char sep = ',';
-    file << "#TradeId" << sep << "Scenario Label" << sep << "Up/Down" << sep << "Base NPV" << sep << "Scenario NPV"
-         << sep << "Sensitivity" << endl;
-    LOG("Write scenario output to " << fileName);
+
+    CSVFileReport report(fileName);
+
+    report.addColumn("#TradeId", string());
+    report.addColumn("ScenarioLabel", string());
+    report.addColumn("Up/Down", string());
+    report.addColumn("Base NPV", double(), 2);
+    report.addColumn("Scenario NPV", double(), 2);
+    report.addColumn("Sensitivity", double(), 2);
+
     for (auto data : upNPV_) {
         string id = data.first.first;
         string factor = data.first.second;
         Real npv = data.second;
         Real base = baseNPV_[id];
         Real sensi = npv - base;
-        if (fabs(sensi) > outputThreshold)
-            file << id << sep << factor << sep << "Up" << sep << base << sep << npv << sep << sensi << endl;
+        if (fabs(sensi) > outputThreshold) {
+            report.next();
+            report.add(id);
+            report.add(factor);
+            report.add("Up");
+            report.add(base);
+            report.add(npv);
+            report.add(sensi);
+        }
     }
+
     for (auto data : downNPV_) {
         string id = data.first.first;
         string factor = data.first.second;
         Real npv = data.second;
         Real base = baseNPV_[id];
         Real sensi = npv - base;
-        if (fabs(sensi) > outputThreshold)
-            file << id << sep << factor << sep << "Down" << sep << base << sep << npv << sep << sensi << endl;
+        if (fabs(sensi) > outputThreshold) {
+            report.next();
+            report.add(id);
+            report.add(factor);
+            report.add("Down");
+            report.add(base);
+            report.add(npv);
+            report.add(sensi);
+        }
     }
-    file.close();
+
+    report.end();
 }
 
 void SensitivityAnalysis::writeSensitivityReport(string fileName, Real outputThreshold) {
-    ofstream file;
-    file.open(fileName.c_str());
-    QL_REQUIRE(file.is_open(), "error opening file " << fileName);
-    file.setf(ios::fixed, ios::floatfield);
-    file.setf(ios::showpoint);
-    char sep = ',';
-    file << "#TradeId" << sep << "Factor" << sep << "Base NPV" << sep << "Delta*Shift" << sep << "ParDelta*Shift" << sep
-         << "Gamma*Shift^2" << sep << "ParGamma*Shift^2" << endl;
-    LOG("Write sensitivity output to " << fileName);
+    CSVFileReport report(fileName);
+
+    report.addColumn("#TradeId", string());
+    report.addColumn("Factor", string());
+    report.addColumn("Base NPV", double(), 2);
+    report.addColumn("Delta*Shift", double(), 2);
+    report.addColumn("ParDelta*Shift", double(), 2);
+    report.addColumn("Gamma*Shift^2", double(), 2);
+    report.addColumn("ParGamma*Shift^2", double(), 2); // TODO
+
     for (auto data : delta_) {
         pair<string, string> p = data.first;
         string id = data.first.first;
@@ -468,57 +487,77 @@ void SensitivityAnalysis::writeSensitivityReport(string fileName, Real outputThr
         Real gamma = gamma_[p];
         Real base = baseNPV_[id];
         if (fabs(delta) > outputThreshold || fabs(gamma) > outputThreshold) {
+            report.next();
+            report.add(id);
+            report.add(factor);
+            report.add(base);
+            report.add(delta);
             if (parDelta_.find(p) != parDelta_.end())
-                file << id << sep << factor << sep << base << sep << delta << sep << parDelta_[p] << sep << gamma << sep
-                     << "N/A" << endl;
+                report.add(parDelta_[p]);
             else
-                file << id << sep << factor << sep << base << sep << delta << sep << "N/A" << sep << gamma << sep
-                     << "N/A" << endl;
+                report.add(Null<Real>());
+            report.add(gamma);
+            report.add(Null<Real>()); // TODO
         }
     }
-    file.close();
+    report.end();
 }
 
 void SensitivityAnalysis::writeCrossGammaReport(string fileName, Real outputThreshold) {
-    ofstream file;
-    file.open(fileName.c_str());
-    QL_REQUIRE(file.is_open(), "error opening file " << fileName);
-    file.setf(ios::fixed, ios::floatfield);
-    file.setf(ios::showpoint);
-    char sep = ',';
-    file << "#TradeId" << sep << "Factor 1" << sep << "Factor 2" << sep << "Base NPV" << sep << "CrossGamma*Shift^2"
-         << sep << "ParCrossGamma*Shift^2" << endl;
-    LOG("Write cross gamma output to " << fileName);
+    CSVFileReport report(fileName);
+
+    report.addColumn("#TradeId", string());
+    report.addColumn("Factor 1", string());
+    report.addColumn("Factor 2", string());
+    report.addColumn("Base NPV", double(), 2);
+    report.addColumn("CrossGamma*Shift^2", double(), 2);
+    report.addColumn("ParCrossGamma*Shift^2", double(), 2); // TODO
+
     for (auto data : crossGamma_) {
         string id = std::get<0>(data.first);
         string factor1 = std::get<1>(data.first);
         string factor2 = std::get<2>(data.first);
         Real crossGamma = data.second;
         Real base = baseNPV_[id];
-        if (fabs(crossGamma) > outputThreshold)
-            file << id << sep << factor1 << sep << factor2 << sep << base << sep << crossGamma << sep << "N/A" << endl;
+        if (fabs(crossGamma) > outputThreshold) {
+            report.next();
+            report.add(id);
+            report.add(factor1);
+            report.add(factor2);
+            report.add(base);
+            report.add(crossGamma);
+            report.add(Null<Real>()); // TODO
+        }
     }
-    file.close();
+    report.end();
 }
 
 void SensitivityAnalysis::writeParRateSensitivityReport(string fileName) {
-    ofstream file;
-    file.open(fileName.c_str());
-    QL_REQUIRE(file.is_open(), "error opening file " << fileName);
-    file.setf(ios::fixed, ios::floatfield);
-    file.setf(ios::showpoint);
+    CSVFileReport report(fileName);
+
+    report.addColumn("#ParInstrumentType", string());
+    report.addColumn("ParCurveName", string());
+    report.addColumn("Bucket", Size());
+    report.addColumn("Factor", string());
+    report.addColumn("ParSensitivityVector", string());
+
     char sep = ',';
-    file << "ParInstrumentType" << sep << "ParCurveName" << sep << "Factor" << sep << "ParSensitivity" << endl;
     LOG("Write sensitivity output to " << fileName);
     for (auto data : parRatesSensi_) {
         pair<string, string> p = data.first;
         string curveName = data.first.first;
         string factor = data.first.second;
         vector<Real> sensi = data.second;
-        file << "YieldCurve" << sep << curveName << sep << factor;
+        Size bucket = 0;
+	report.next();
+        report.add("YieldCurve");
+        report.add(curveName);
+        report.add(bucket);
+        report.add(factor);
+        ostringstream o;
         for (Size i = 0; i < sensi.size(); ++i)
-            file << sep << sensi[i];
-        file << endl;
+            o << sep << sensi[i];
+        report.add(o.str());
     }
     for (auto data : flatCapVolSensi_) {
         std::tuple<string, Size, string> p = data.first;
@@ -526,12 +565,17 @@ void SensitivityAnalysis::writeParRateSensitivityReport(string fileName) {
         string factor = std::get<2>(p);
         Size bucket = std::get<1>(p);
         vector<Real> sensi = data.second;
-        file << "CapFloor" << sep << curveName << "_" << bucket << sep << factor;
+        report.next();
+        report.add("CapFloor");
+        report.add(curveName);
+        report.add(bucket);
+        report.add(factor);
+        ostringstream o;
         for (Size i = 0; i < sensi.size(); ++i)
-            file << sep << sensi[i];
-        file << endl;
+            o << sep << sensi[i];
+        report.add(o.str());
     }
-    file.close();
+    report.end();
 }
 
 boost::shared_ptr<Instrument> SensitivityAnalysis::makeSwap(string ccy, string indexName, Period term,
@@ -542,7 +586,8 @@ boost::shared_ptr<Instrument> SensitivityAnalysis::makeSwap(string ccy, string i
     QL_REQUIRE(conv, "convention not recognised, expected IRSwapConvention");
     string name = indexName != "" ? indexName : conv->indexName();
     boost::shared_ptr<IborIndex> index =
-        singleCurve ? market->iborIndex(name)->clone(market->discountCurve(ccy)) : *market->iborIndex(name);
+        singleCurve ? market->iborIndex(name)->clone(market->discountCurve(ccy, marketConfiguration_))
+                    : *market->iborIndex(name, marketConfiguration_);
     // LOG("Make Swap for ccy " << ccy << " index " << name);
     boost::shared_ptr<VanillaSwap> helper = MakeVanillaSwap(term, index, 0.0, 0 * Days)
                                                 .withSettlementDays(index->fixingDays())
@@ -552,7 +597,8 @@ boost::shared_ptr<Instrument> SensitivityAnalysis::makeSwap(string ccy, string i
                                                 .withFixedLegTerminationDateConvention(conv->fixedConvention())
                                                 .withFixedLegCalendar(conv->fixedCalendar())
                                                 .withFloatingLegCalendar(conv->fixedCalendar());
-    boost::shared_ptr<PricingEngine> swapEngine = boost::make_shared<DiscountingSwapEngine>(market->discountCurve(ccy));
+    boost::shared_ptr<PricingEngine> swapEngine =
+        boost::make_shared<DiscountingSwapEngine>(market->discountCurve(ccy, marketConfiguration_));
     helper->setPricingEngine(swapEngine);
     return helper;
 }
@@ -572,7 +618,7 @@ boost::shared_ptr<Instrument> SensitivityAnalysis::makeDeposit(string ccy, strin
         boost::to_upper(name);
         LOG("Deposit index name = " << name);
     }
-    boost::shared_ptr<IborIndex> index = market->iborIndex(name).currentLink();
+    boost::shared_ptr<IborIndex> index = market->iborIndex(name, marketConfiguration_).currentLink();
     auto helper = boost::make_shared<Deposit>(1.0, 0.0, term, index->fixingDays(), index->fixingCalendar(),
                                               index->businessDayConvention(), index->endOfMonth(), index->dayCounter(),
                                               market->asofDate(), true, 0 * Days);
@@ -580,7 +626,7 @@ boost::shared_ptr<Instrument> SensitivityAnalysis::makeDeposit(string ccy, strin
     boost::shared_ptr<PricingEngine> depositEngine = boost::make_shared<DepositEngine>(engineYts);
     helper->setPricingEngine(depositEngine);
     if (singleCurve)
-        engineYts.linkTo(*market->discountCurve(ccy));
+        engineYts.linkTo(*market->discountCurve(ccy, marketConfiguration_));
     else
         engineYts.linkTo(*index->forwardingTermStructure());
     return helper;
@@ -592,10 +638,10 @@ boost::shared_ptr<Instrument> SensitivityAnalysis::makeFRA(string ccy, string in
                                                            bool singleCurve) {
     boost::shared_ptr<FraConvention> conv = boost::dynamic_pointer_cast<FraConvention>(conventions);
     QL_REQUIRE(conv, "convention not recognised, expected FraConvention");
-    Handle<YieldTermStructure> yts = market->discountCurve(ccy);
     string name = indexName != "" ? indexName : conv->indexName();
     boost::shared_ptr<IborIndex> index =
-        singleCurve ? market->iborIndex(name)->clone(market->discountCurve(ccy)) : *market->iborIndex(name);
+        singleCurve ? market->iborIndex(name)->clone(market->discountCurve(ccy, marketConfiguration_))
+                    : *market->iborIndex(name, marketConfiguration_);
     QL_REQUIRE(term.units() == Months, "term unit must be Months");
     QL_REQUIRE(index->tenor().units() == Months, "index tenor unit must be Months");
     QL_REQUIRE(term.length() > index->tenor().length(), "term must be larger than index tenor");
@@ -604,7 +650,7 @@ boost::shared_ptr<Instrument> SensitivityAnalysis::makeFRA(string ccy, string in
     Date maturityDate = index->maturityDate(asof);
     Handle<YieldTermStructure> ytsTmp;
     if (singleCurve)
-        ytsTmp = market->discountCurve(ccy);
+        ytsTmp = market->discountCurve(ccy, marketConfiguration_);
     else
         ytsTmp = index->forwardingTermStructure();
     auto helper =
@@ -619,14 +665,16 @@ boost::shared_ptr<Instrument> SensitivityAnalysis::makeOIS(string ccy, string in
     boost::shared_ptr<OisConvention> conv = boost::dynamic_pointer_cast<OisConvention>(conventions);
     QL_REQUIRE(conv, "convention not recognised, expected OisConvention");
     string name = indexName != "" ? indexName : conv->indexName();
-    boost::shared_ptr<IborIndex> index = market->iborIndex(name).currentLink();
+    boost::shared_ptr<IborIndex> index = market->iborIndex(name, marketConfiguration_).currentLink();
     boost::shared_ptr<OvernightIndex> overnightIndexTmp = boost::dynamic_pointer_cast<OvernightIndex>(index);
     boost::shared_ptr<OvernightIndex> overnightIndex =
-        singleCurve ? boost::dynamic_pointer_cast<OvernightIndex>(overnightIndexTmp->clone(market->discountCurve(ccy)))
+        singleCurve ? boost::dynamic_pointer_cast<OvernightIndex>(
+                          overnightIndexTmp->clone(market->discountCurve(ccy, marketConfiguration_)))
                     : overnightIndexTmp;
     boost::shared_ptr<OvernightIndexedSwap> helper = MakeOIS(term, overnightIndex, Null<Rate>(), 0 * Days);
     RelinkableHandle<YieldTermStructure> engineYts;
-    boost::shared_ptr<PricingEngine> swapEngine = boost::make_shared<DiscountingSwapEngine>(market->discountCurve(ccy));
+    boost::shared_ptr<PricingEngine> swapEngine =
+        boost::make_shared<DiscountingSwapEngine>(market->discountCurve(ccy, marketConfiguration_));
     helper->setPricingEngine(swapEngine);
     return helper;
 }
@@ -635,9 +683,9 @@ boost::shared_ptr<CapFloor> SensitivityAnalysis::makeCapFloor(string ccy, string
                                                               const boost::shared_ptr<ore::data::Market>& market) {
     // conventions not needed here, index is sufficient
     Date today = Settings::instance().evaluationDate();
-    Handle<YieldTermStructure> yts = market->discountCurve(ccy);
-    boost::shared_ptr<IborIndex> index = market->iborIndex(indexName).currentLink();
-    Date start = index->fixingCalendar().adjust(today + index->fixingDays(), Following); // FIXME
+    Handle<YieldTermStructure> yts = market->discountCurve(ccy, marketConfiguration_);
+    boost::shared_ptr<IborIndex> index = market->iborIndex(indexName, marketConfiguration_).currentLink();
+    Date start = index->fixingCalendar().adjust(today + index->fixingDays(), Following); // FIXME: Convention
     Date end = start + term;
     Schedule schedule = MakeSchedule().from(start).to(end).withTenor(index->tenor());
     Leg leg = IborLeg(schedule, index).withNotionals(1.0);
@@ -646,7 +694,7 @@ boost::shared_ptr<CapFloor> SensitivityAnalysis::makeCapFloor(string ccy, string
     Real rate = strike == Null<Real>() ? atmRate : strike;
     CapFloor::Type type = strike == Null<Real>() || strike >= atmRate ? CapFloor::Cap : CapFloor::Floor;
     boost::shared_ptr<CapFloor> capFloor = boost::make_shared<CapFloor>(type, leg, vector<Rate>(1, rate));
-    Handle<OptionletVolatilityStructure> ovs = market->capFloorVol(ccy); // FIXME: configuration
+    Handle<OptionletVolatilityStructure> ovs = market->capFloorVol(ccy, marketConfiguration_);
     QL_REQUIRE(!ovs.empty(), "caplet volatility structure not found for currency " << ccy);
     switch (ovs->volatilityType()) {
     case ShiftedLognormal:
@@ -683,11 +731,12 @@ SensitivityAnalysis::makeCrossCcyBasisSwap(string baseCcy, string ccy, Period te
     }
     Currency baseCurrency = parseCurrency(baseCcy);
     Currency currency = parseCurrency(ccy);
-    Handle<IborIndex> baseIndex = market->iborIndex(baseIndexName);
-    Handle<IborIndex> index = market->iborIndex(indexName);
-    Handle<YieldTermStructure> baseDiscountCurve = market->discountCurve(baseCcy);
-    Handle<YieldTermStructure> discountCurve = market->discountCurve(ccy);
-    Handle<Quote> fxSpot = market->fxSpot(ccy + baseCcy); // multiplicative conversion into base ccy
+    Handle<IborIndex> baseIndex = market->iborIndex(baseIndexName, marketConfiguration_);
+    Handle<IborIndex> index = market->iborIndex(indexName, marketConfiguration_);
+    Handle<YieldTermStructure> baseDiscountCurve = market->discountCurve(baseCcy, marketConfiguration_);
+    Handle<YieldTermStructure> discountCurve = market->discountCurve(ccy, marketConfiguration_);
+    Handle<Quote> fxSpot =
+        market->fxSpot(ccy + baseCcy, marketConfiguration_); // multiplicative conversion into base ccy
     Date today = Settings::instance().evaluationDate();
     Date start = conv->settlementCalendar().adjust(today + conv->settlementDays(), conv->rollConvention());
     Date end = start + term;
@@ -722,11 +771,12 @@ boost::shared_ptr<Instrument> SensitivityAnalysis::makeFxForward(string baseCcy,
                "currency " << ccy << " not covered by convention " << conv->id());
     Currency baseCurrency = parseCurrency(baseCcy);
     Currency currency = parseCurrency(ccy);
-    Handle<YieldTermStructure> baseDiscountCurve = market->discountCurve(baseCcy);
-    Handle<YieldTermStructure> discountCurve = market->discountCurve(ccy);
-    Handle<Quote> fxSpot = market->fxSpot(ccy + baseCcy); // multiplicative conversion into base ccy
+    Handle<YieldTermStructure> baseDiscountCurve = market->discountCurve(baseCcy, marketConfiguration_);
+    Handle<YieldTermStructure> discountCurve = market->discountCurve(ccy, marketConfiguration_);
+    Handle<Quote> fxSpot =
+        market->fxSpot(ccy + baseCcy, marketConfiguration_); // multiplicative conversion into base ccy
     Date today = Settings::instance().evaluationDate();
-    Date maturity = today + term; // FIXME: adjustment ?
+    Date maturity = today + term; // FIXME: Adjustment
     Real baseNotional = 1.0;
     Real notional = 1.0 / fxSpot->value();
     boost::shared_ptr<FxForward> helper =
@@ -740,12 +790,8 @@ boost::shared_ptr<Instrument> SensitivityAnalysis::makeFxForward(string baseCcy,
 
 void ParSensitivityConverter::buildJacobiMatrix() {
     vector<string> currencies = sensitivityData_->discountCurrencies();
-    // Size n_discountTenors = sensitivityData_->discountShiftTenors().size();
     vector<string> indices = sensitivityData_->indexNames();
-    // Size n_indexTenors = sensitivityData_->indexShiftTenors().size();
     vector<string> capCurrencies = sensitivityData_->capFloorVolCurrencies();
-    // Size n_capTerms = sensitivityData_->capFloorVolShiftExpiries().size();
-    // Size n_capStrikes = sensitivityData_->capFloorVolShiftStrikes().size();
 
     // unique set of factors relevant for conversion
     std::set<std::string> factorSet;
@@ -758,8 +804,6 @@ void ParSensitivityConverter::buildJacobiMatrix() {
 
     // Jacobi matrix dimension and allocation
     Size n_shifts = factorSet.size();
-    // Size n_par = currencies.size() * n_discountTenors + indices.size() * n_indexTenors +
-    //              capCurrencies.size() * n_capStrikes * n_capTerms;
     Size n_par = 0;
     // discount curves
     for (Size i = 0; i < currencies.size(); ++i) {
@@ -780,7 +824,6 @@ void ParSensitivityConverter::buildJacobiMatrix() {
         n_par += data.shiftExpiries.size() * data.shiftStrikes.size();
     }
 
-    // Size n_par = currencies.size() * n_discountTenors + indices.size() * n_indexTenors;
     jacobi_ = Matrix(n_par, n_shifts, 0.0);
     LOG("Jacobi matrix dimension " << n_par << " x " << n_shifts);
 
