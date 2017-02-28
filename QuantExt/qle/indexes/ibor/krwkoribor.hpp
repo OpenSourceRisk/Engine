@@ -27,7 +27,7 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #include <ql/indexes/iborindex.hpp>
 #include <ql/currencies/asia.hpp>
 #include <ql/time/calendars/southkorea.hpp>
-#include <ql/time/daycounters/actual360.hpp>
+#include <ql/time/daycounters/actual365fixed.hpp>
 
 using namespace QuantLib;
 
@@ -43,7 +43,7 @@ namespace QuantExt {
     class KRWKoribor : public IborIndex {
     public:
         KRWKoribor(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
-            : IborIndex("KRW-KORIBOR", tenor, 2, KRWCurrency(), SouthKorea(), ModifiedFollowing, false, Actual360(), h) {}
+            : IborIndex("KRW-KORIBOR", tenor, 2, KRWCurrency(), SouthKorea(), ModifiedFollowing, false, Actual365Fixed(), h) {}
     };
 }
 

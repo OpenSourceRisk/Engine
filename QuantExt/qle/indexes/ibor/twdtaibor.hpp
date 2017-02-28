@@ -27,24 +27,24 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #include <ql/indexes/iborindex.hpp>
 #include <ql/currencies/asia.hpp>
 #include <ql/time/calendars/taiwan.hpp>
-#include <ql/time/daycounters/actual360.hpp>
+#include <ql/time/daycounters/actual365fixed.hpp>
 
 using namespace QuantLib;
 
 namespace QuantExt {
 
-    //! TWD-TAIBOR index
-    /*! TWD-TAIBOR rate.
+//! TWD-TAIBOR index
+/*! TWD-TAIBOR rate.
 
-    \warning Check roll convention and EOM.
+\warning Check roll convention and EOM.
 
-    \ingroup indexes
-    */
-    class TWDTaibor : public IborIndex {
-    public:
-        TWDTaibor(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
-            : IborIndex("TWD-TAIBOR", tenor, 2, TWDCurrency(), Taiwan(), ModifiedFollowing, false, Actual360(), h) {}
-    };
+\ingroup indexes
+*/
+class TWDTaibor : public IborIndex {
+public:
+    TWDTaibor(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
+        : IborIndex("TWD-TAIBOR", tenor, 2, TWDCurrency(), Taiwan(), ModifiedFollowing, false, Actual365Fixed(), h) {}
+};
 }
 
 #endif
