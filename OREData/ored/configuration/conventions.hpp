@@ -354,7 +354,9 @@ public:
     IRSwapConvention() {}
     //! Detailed constructor
     IRSwapConvention(const string& id, const string& fixedCalendar, const string& fixedFrequency,
-                     const string& fixedConvention, const string& fixedDayCounter, const string& index);
+                     const string& fixedConvention, const string& fixedDayCounter, const string& index,
+                     bool hasSubPeriod = false, const string& floatFrequency = "",
+                     const string& subPeriodsCouponType = "");
     //@}
 
     //! \name Inspectors
@@ -365,6 +367,10 @@ public:
     const DayCounter& fixedDayCounter() const { return fixedDayCounter_; }
     const string& indexName() const { return strIndex_; }
     const boost::shared_ptr<IborIndex>& index() const { return index_; }
+    // For sub period
+    bool hasSubPeriod() const { return hasSubPeriod_; }
+    Frequency floatFrequency() const { return floatFrequency_; } // returns NoFrequency for normal swaps
+    QuantExt::SubPeriodsCoupon::Type subPeriodsCouponType() const { return subPeriodsCouponType_; }
     //@}
 
     //! \name Serialisation
@@ -380,6 +386,9 @@ private:
     BusinessDayConvention fixedConvention_;
     DayCounter fixedDayCounter_;
     boost::shared_ptr<IborIndex> index_;
+    bool hasSubPeriod_;
+    Frequency floatFrequency_;
+    QuantExt::SubPeriodsCoupon::Type subPeriodsCouponType_;
 
     // Strings to store the inputs
     string strFixedCalendar_;
@@ -387,6 +396,8 @@ private:
     string strFixedConvention_;
     string strFixedDayCounter_;
     string strIndex_;
+    string strFloatFrequency_;
+    string strSubPeriodsCouponType_;
 };
 
 //! Container for storing Average OIS conventions
