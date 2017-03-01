@@ -1103,11 +1103,11 @@ void SensitivityAnalysisTest::test1dShifts() {
     SensitivityScenarioGenerator::ShiftType shiftTypeRelative = SensitivityScenarioGenerator::ShiftType::Relative;
     for (Size i = 0; i < shiftTenors.size(); ++i) {
         scenarioGenerator->applyShift(i, shiftSize, true, shiftTypeAbsolute, shiftTimes, initialZeros, times,
-                                      shiftedZeros);
+                                      shiftedZeros, true);
         for (Size j = 0; j < tenors.size(); ++j)
             diffAbsolute[j] += shiftedZeros[j] - initialZeros[j];
         scenarioGenerator->applyShift(i, shiftSize, true, shiftTypeRelative, shiftTimes, initialZeros, times,
-                                      shiftedZeros);
+                                      shiftedZeros, true);
         for (Size j = 0; j < tenors.size(); ++j)
             diffRelative[j] += shiftedZeros[j] / initialZeros[j] - 1.0;
     }
@@ -1265,13 +1265,13 @@ void SensitivityAnalysisTest::test2dShifts() {
     for (Size i = 0; i < expiryShiftTenors.size(); ++i) {
         for (Size j = 0; j < termShiftTenors.size(); ++j) {
             scenarioGenerator->applyShift(i, j, shiftSize, true, shiftTypeAbsolute, shiftExpiryTimes, shiftTermTimes,
-                                          expiryTimes, termTimes, initialData, shiftedData);
+                                          expiryTimes, termTimes, initialData, shiftedData, true);
             for (Size k = 0; k < expiries.size(); ++k) {
                 for (Size l = 0; l < terms.size(); ++l)
                     diffAbsolute[k][l] += shiftedData[k][l] - initialData[k][l];
             }
             scenarioGenerator->applyShift(i, j, shiftSize, true, shiftTypeRelative, shiftExpiryTimes, shiftTermTimes,
-                                          expiryTimes, termTimes, initialData, shiftedData);
+                                          expiryTimes, termTimes, initialData, shiftedData, true);
             for (Size k = 0; k < expiries.size(); ++k) {
                 for (Size l = 0; l < terms.size(); ++l)
                     diffRelative[k][l] += shiftedData[k][l] / initialData[k][l] - 1.0;

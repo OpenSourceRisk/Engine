@@ -27,30 +27,28 @@
 #include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariofactory.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
-#include <orea/scenario/sensitivityscenariodata.hpp>
+#include <orea/scenario/stressscenariodata.hpp>
 #include <orea/scenario/shiftscenariogenerator.hpp>
 
 namespace ore {
 using namespace data;
 namespace analytics {
 
-//! Sensitivity Scenario Generator
+//! Stress Scenario Generator
 /*!
-  This class builds a vector of sensitivity scenarios based on instructions in SensitivityScenarioData
+  This class builds a vector of stress scenarios based on instructions in StressScenarioData
   and ScenarioSimMarketParameters objects passed.
 
   The ScenarioSimMarketParameters object determines the scope and structure of a "simulation"
   market (currencies, currency pairs, curve tenor points, vol matrix expiries and terms/strikes etc)
   to which sensitivity scenarios are applied in order to compute their NPV impact.
 
-  The SensitivityScenarioData object determines the structure of shift curves (shift tenor points
+  The StressScenarioData object determines the structure of shift curves (shift tenor points
   can differ from the simulation market's tenor points), as well as type (relative/absolute) and size
   of shifts applied.
 
   The generator then produces comprehensive scenarios that can be applied to the simulation market,
   i.e. covering all quotes in the simulation market, possibly filled with "base" scenario values.
-
-  Both UP and DOWN shifts are generated in order to facilitate delta and gamma calculation.
 
   The generator currently covers the IR/FX asset class, with shifts for the following term
   structure types:
@@ -63,35 +61,32 @@ namespace analytics {
   - Cap/Floor volatility matrices (by expiry and strike)
 
   Note:
-  - For yield curves, the class generates sensitivites in the Zero rate domain only.
-  Conversion into par rate sensivities has to be implemented as a postprocessor step.
-  - Likewise, Cap/Floor volatilitiy sensitivties are computed in the optionlet domain.
-  Conversion into par (flat cap/floor) volatility sensis has to be implemented as a
-  postprocessor step.
+  - For yield curves, the class applies shifts in the Zero rate domain only.
+  - Likewise, Cap/Floor volatilitiy stress tests are applied in the optionlet domain.
 
   \ingroup scenario
  */
-class SensitivityScenarioGenerator : public ShiftScenarioGenerator {
+class StressScenarioGenerator : public ShiftScenarioGenerator {
 public:
     //! Constructor
-    SensitivityScenarioGenerator(boost::shared_ptr<ScenarioFactory> scenarioFactory,
-				 boost::shared_ptr<SensitivityScenarioData> sensitivityData,
-				 boost::shared_ptr<ScenarioSimMarketParameters> simMarketData, QuantLib::Date today,
-                                 boost::shared_ptr<ore::data::Market> initMarket,
-                                 const std::string& configuration = Market::defaultConfiguration);
+    StressScenarioGenerator(boost::shared_ptr<ScenarioFactory> scenarioFactory,
+                            boost::shared_ptr<StressTestScenarioData> stressData,
+                            boost::shared_ptr<ScenarioSimMarketParameters> simMarketData, QuantLib::Date today,
+                            boost::shared_ptr<ore::data::Market> initMarket,
+                            const std::string& configuration = Market::defaultConfiguration);
     //! Default destructor
-    ~SensitivityScenarioGenerator(){};
+    ~StressScenarioGenerator(){};
 
 private:
-    void generateYieldCurveScenarios(bool up, boost::shared_ptr<Market> market);
-    void generateDiscountCurveScenarios(bool up, boost::shared_ptr<Market> market);
-    void generateIndexCurveScenarios(bool up, boost::shared_ptr<Market> market);
-    void generateFxScenarios(bool up, boost::shared_ptr<Market> market);
-    void generateSwaptionVolScenarios(bool up, boost::shared_ptr<Market> market);
-    void generateFxVolScenarios(bool up, boost::shared_ptr<Market> market);
-    void generateCapFloorVolScenarios(bool up, boost::shared_ptr<Market> market);
+    void addFxShifts(StressTestScenarioData::StressTestData& data, boost::shared_ptr<Scenario>& scenario);
+    void addDiscountCurveShifts(StressTestScenarioData::StressTestData& data, boost::shared_ptr<Scenario>& scenario);
+    void addIndexCurveShifts(StressTestScenarioData::StressTestData& data, boost::shared_ptr<Scenario>& scenario);
+    void addYieldCurveShifts(StressTestScenarioData::StressTestData& data, boost::shared_ptr<Scenario>& scenario);
+    void addFxVolShifts(StressTestScenarioData::StressTestData& data, boost::shared_ptr<Scenario>& scenario);
+    void addSwaptionVolShifts(StressTestScenarioData::StressTestData& data, boost::shared_ptr<Scenario>& scenario);
+    void addCapFloorVolShifts(StressTestScenarioData::StressTestData& data, boost::shared_ptr<Scenario>& scenario);
 
-    boost::shared_ptr<SensitivityScenarioData> sensitivityData_;
+    boost::shared_ptr<StressTestScenarioData> stressData_;
 };
 }
 }

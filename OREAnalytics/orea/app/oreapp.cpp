@@ -69,7 +69,7 @@ void OREApp::run() {
         cout << setw(tab_) << left << "Market... " << flush;
         getMarketParameters();
         buildMarket();
-        cout << "OK" << endl;
+        //cout << "OK" << endl;
 
         /************************
          *Build Pricing Engine Factory
@@ -90,7 +90,7 @@ void OREApp::run() {
          */
         cout << setw(tab_) << left << "Write Reports... " << flush;
         writeInitialReports();
-        cout << "OK" << endl;
+        //cout << "OK" << endl;
 
         /**********************
          * Sensitivity analysis
@@ -101,6 +101,18 @@ void OREApp::run() {
         } else {
             LOG("skip sensitivity analysis");
             cout << setw(tab_) << left << "Sensitivity... ";
+            cout << "SKIP" << endl;
+        }
+
+        /****************
+         * Stress testing
+         */
+        fflush(stdout);
+        if (stress_) {
+            runStressTest();
+        } else {
+            LOG("skip stress test");
+            cout << setw(tab_) << left << "Stress testing... ";
             cout << "SKIP" << endl;
         }
 
@@ -182,6 +194,7 @@ void OREApp::readSetup() {
     xva_ = (params_->hasGroup("xva") && params_->get("xva", "active") == "Y") ? true : false;
     writeDIMReport_ = (params_->has("xva", "dim") && parseBool(params_->get("xva", "dim"))) ? true : false;
     sensitivity_ = (params_->hasGroup("sensitivity") && params_->get("sensitivity", "active") == "Y") ? true : false;
+    stress_ = (params_->hasGroup("stress") && params_->get("stress", "active") == "Y") ? true : false;
 }
 
 void OREApp::setupLog() {
@@ -255,9 +268,7 @@ boost::shared_ptr<EngineFactory> OREApp::buildEngineFactory(const boost::shared_
     return factory;
 }
 
-boost::shared_ptr<TradeFactory> OREApp::buildTradeFactory() {
-    return boost::make_shared<TradeFactory>();
-}
+boost::shared_ptr<TradeFactory> OREApp::buildTradeFactory() { return boost::make_shared<TradeFactory>(); }
 
 boost::shared_ptr<Portfolio> OREApp::buildPortfolio(const boost::shared_ptr<EngineFactory>& factory) {
     string inputPath = params_->get("setup", "inputPath");
@@ -409,6 +420,47 @@ void OREApp::runSensitivityAnalysis() {
 
     string outputFile4 = outputPath + "/" + params_->get("sensitivity", "parRateSensitivityOutputFile");
     sensiAnalysis->writeParRateSensitivityReport(outputFile4);
+
+    cout << "OK" << endl;
+}
+
+void OREApp::runStressTest() {
+
+    cout << setw(tab_) << left << "Stress Test Report... " << flush;
+    // We reset this here because the date grid building below depends on it.
+    Settings::instance().evaluationDate() = asof_;
+
+    LOG("Get Simulation Market Parameters");
+    string inputPath = params_->get("setup", "inputPath");
+    string marketConfigFile = inputPath + "/" + params_->get("stress", "marketConfigFile");
+    boost::shared_ptr<ScenarioSimMarketParameters> simMarketData(new ScenarioSimMarketParameters);
+    simMarketData->fromFile(marketConfigFile);
+
+    LOG("Get Stress Test Parameters");
+    string stressConfigFile = inputPath + "/" + params_->get("stress", "stressConfigFile");
+    boost::shared_ptr<StressTestScenarioData> stressData(new StressTestScenarioData);
+    stressData->fromFile(stressConfigFile);
+
+    LOG("Get Engine Data");
+    string pricingEnginesFile = inputPath + "/" + params_->get("stress", "pricingEnginesFile");
+    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+    engineData->fromFile(pricingEnginesFile);
+
+    LOG("Get Portfolio");
+    string portfolioFile = inputPath + "/" + params_->get("setup", "portfolioFile");
+    boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
+    // Just load here. We build the portfolio in SensitivityAnalysis, after building SimMarket.
+    portfolio->load(portfolioFile);
+
+    LOG("Build Stress Test");
+    string marketConfiguration = params_->get("markets", "pricing");
+    boost::shared_ptr<StressTest> stressTest = boost::make_shared<StressTest>(
+        portfolio, market_, marketConfiguration, engineData, simMarketData, stressData, conventions_);
+
+    string outputPath = params_->get("setup", "outputPath");
+    string outputFile = outputPath + "/" + params_->get("stress", "scenarioOutputFile");
+    Real threshold = parseReal(params_->get("stress", "outputThreshold"));
+    stressTest->writeReport(outputFile, threshold);
 
     cout << "OK" << endl;
 }

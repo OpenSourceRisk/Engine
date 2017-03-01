@@ -88,7 +88,10 @@ public:
     //! run postProcessor to generate reports from cube
     void runPostProcessor();
 
+    //! run sensitivity analysis and write out reports
     void runSensitivityAnalysis();
+    //! run stress tests and write out report
+    void runStressTest();
 
     //! write out initial (pre-cube) reports
     void writeInitialReports();
@@ -114,6 +117,7 @@ protected:
     bool xva_;
     bool writeDIMReport_;
     bool sensitivity_;
+    bool stress_;
 
     boost::shared_ptr<Market> market_;
     boost::shared_ptr<Portfolio> portfolio_;

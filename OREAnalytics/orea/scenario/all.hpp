@@ -15,6 +15,9 @@
 #include <orea/scenario/scenariogeneratordata.hpp>
 #include <orea/scenario/scenariogeneratorbuilder.hpp>
 #include <orea/scenario/scenariowriter.hpp>
+#include <orea/scenario/shiftscenariogenerator.hpp>
 #include <orea/scenario/sensitivityscenariodata.hpp>
 #include <orea/scenario/sensitivityscenariogenerator.hpp>
+#include <orea/scenario/stressscenariodata.hpp>
+#include <orea/scenario/stressscenariogenerator.hpp>
 

@@ -6,4 +6,5 @@
 #include <orea/engine/valuationcalculator.hpp>
 #include <orea/engine/scenarioengine.hpp>
 #include <orea/engine/sensitivityanalysis.hpp>
+#include <orea/engine/stresstest.hpp>
 

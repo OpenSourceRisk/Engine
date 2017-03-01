@@ -254,19 +254,19 @@
   <!-- FX ATM vol shifts -->
   <FxVolatilities>
     <Label>FXOPTION</Label>
-    <FxVolatility ccypair="EURUSD">
+    <FxVolatility ccypair="USDEUR">
       <ShiftType>Relative</ShiftType>
       <ShiftSize>0.01</ShiftSize>
       <ShiftExpiries>1Y,2Y,3Y,5Y</ShiftExpiries>
       <ShiftStrikes/>
     </FxVolatility>
-    <FxVolatility ccypair="EURGBP">
+    <FxVolatility ccypair="GBPEUR">
       <ShiftType>Relative</ShiftType>
       <ShiftSize>0.01</ShiftSize>
       <ShiftExpiries>1Y,2Y,3Y,5Y</ShiftExpiries>
       <ShiftStrikes/>
     </FxVolatility>
-    <FxVolatility ccypair="EURJPY">
+    <FxVolatility ccypair="JPYEUR">
       <ShiftType>Relative</ShiftType>
       <ShiftSize>0.01</ShiftSize>
       <ShiftExpiries>1Y,2Y,3Y,5Y</ShiftExpiries>
