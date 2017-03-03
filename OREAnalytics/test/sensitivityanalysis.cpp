@@ -851,8 +851,8 @@ void SensitivityAnalysisTest::testParConversion() {
     BOOST_TEST_MESSAGE("Portfolio size after build: " << portfolio->size());
 
     // build the sensitivity analysis object
-    ore::analytics::SensitivityAnalysis analysis(portfolio, initMarket, "default", engineData, simMarketData, sensiData,
-                                                 conventions);
+    ore::analytics::ParSensitivityAnalysis analysis(portfolio, initMarket, "default", engineData, simMarketData, sensiData,
+						    conventions);
 
     std::map<std::pair<std::string, std::string>, Real> parDelta = analysis.parDelta();
 
