@@ -341,7 +341,7 @@ vector<double> buildScheduledVector(const vector<double>& values, const vector<s
     Date d = parseDate(dates[j + 1]);     // The first start date
     for (Size i = 0; i < len; i++) {      // loop over data vector and populate it.
         // If j == max_j we just fall through and take the final value
-        while (schedule[i] > d && j < max_j) {
+        while (schedule[i] >= d && j < max_j) {
             j++;
             if (j < max_j) {
                 QL_REQUIRE(dates[j + 1] != "", "Cannot have empty date attribute for node " << j + 1);
