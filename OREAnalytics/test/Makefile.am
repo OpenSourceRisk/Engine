@@ -9,7 +9,8 @@ OREANALYTICS_TESTS = \
 	sensitivityanalysis.hpp sensitivityanalysis.cpp \
 	testmarket.hpp \
 	testportfolio.hpp testportfolio.cpp \
-	observationmode.hpp observationmode.cpp
+	observationmode.hpp observationmode.cpp \
+	stresstest.hpp stresstest.cpp
 
 dist-hook:
 	mkdir -p $(distdir)/build
