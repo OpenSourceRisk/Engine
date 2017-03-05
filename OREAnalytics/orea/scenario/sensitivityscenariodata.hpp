@@ -45,10 +45,6 @@ namespace analytics {
 */
 class SensitivityScenarioData : public XMLSerializable {
 public:
-    enum class InterestRateDomain { ZeroRate, ParRate };
-    enum class CapFloorVolDomain { OptionletVol, FlatVol };
-    enum class InflationDomain { ZeroRate, ParRate };
-    enum class CreditDomain { HazardRate, Spread };
     enum class ShiftType { Absolute, Relative };
 
     struct CurveShiftData {

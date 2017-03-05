@@ -83,13 +83,13 @@ public:
     ~SensitivityScenarioGenerator(){};
 
 private:
-    void generateYieldCurveScenarios(bool up, boost::shared_ptr<Market> market);
-    void generateDiscountCurveScenarios(bool up, boost::shared_ptr<Market> market);
-    void generateIndexCurveScenarios(bool up, boost::shared_ptr<Market> market);
-    void generateFxScenarios(bool up, boost::shared_ptr<Market> market);
-    void generateSwaptionVolScenarios(bool up, boost::shared_ptr<Market> market);
-    void generateFxVolScenarios(bool up, boost::shared_ptr<Market> market);
-    void generateCapFloorVolScenarios(bool up, boost::shared_ptr<Market> market);
+    void generateYieldCurveScenarios(bool up);
+    void generateDiscountCurveScenarios(bool up);
+    void generateIndexCurveScenarios(bool up);
+    void generateFxScenarios(bool up);
+    void generateSwaptionVolScenarios(bool up);
+    void generateFxVolScenarios(bool up);
+    void generateCapFloorVolScenarios(bool up);
 
     boost::shared_ptr<SensitivityScenarioData> sensitivityData_;
 };
