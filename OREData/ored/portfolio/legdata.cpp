@@ -47,7 +47,7 @@ XMLNode* CashflowData::toXML(XMLDocument& doc) {
 }
 void FixedLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "FixedLegData");
-    rates_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Rates", "Rate", "startDate", rateDates_);
+    rates_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Rates", "Rate", "startDate", rateDates_, true);
 }
 
 XMLNode* FixedLegData::toXML(XMLDocument& doc) {
@@ -354,16 +354,16 @@ vector<double> buildScheduledVector(const vector<double>& values, const vector<s
     return data;
 }
 
-vector<double> normaliseToSchedule(const vector<double>& values, const Schedule& schedule) {
+vector<double> normaliseToSchedule(const vector<double>& values, const Schedule& schedule, const Real defaultValue) {
     vector<double> res = values;
     if (res.size() < schedule.size() - 1)
-        res.resize(schedule.size() - 1, res.back());
+        res.resize(schedule.size() - 1, res.size() == 0 ? defaultValue : res.back());
     return res;
 }
 
 vector<double> buildScheduledVectorNormalised(const vector<double>& values, const vector<string>& dates,
-                                              const Schedule& schedule) {
-    return normaliseToSchedule(buildScheduledVector(values, dates, schedule), schedule);
+                                              const Schedule& schedule, const Real defaultValue) {
+    return normaliseToSchedule(buildScheduledVector(values, dates, schedule), schedule, defaultValue);
 }
 
 } // namespace data
