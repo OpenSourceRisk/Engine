@@ -105,8 +105,8 @@ void ParSensitivityAnalysis::parDeltaConversion() {
     scenarioGenerator_->reset();
     simMarket_->update(asof_);
 
-    map<string, vector<boost::shared_ptr<Instrument> > > parHelpers;
-    map<string, vector<Real> > parRatesBase;
+    map<RiskFactorKey, boost::shared_ptr<Instrument> > parHelpers;
+    map<RiskFactorKey, Real> parRatesBase;
 
     // Discount curve instruments
     string baseCcy = simMarketData_->baseCcy(); // FIXME
@@ -116,9 +116,8 @@ void ParSensitivityAnalysis::parDeltaConversion() {
         Size n_ten = data.shiftTenors.size();
         QL_REQUIRE(data.parInstruments.size() == n_ten,
                    "number of tenors does not match number of discount curve par instruments");
-        parHelpers[ccy] = vector<boost::shared_ptr<Instrument> >(n_ten);
-        parRatesBase[ccy] = vector<Real>(n_ten);
         for (Size j = 0; j < n_ten; ++j) {
+            RiskFactorKey key(RiskFactorKey::KeyType::DiscountCurve, ccy, j);
             Period term = data.shiftTenors[j];
             string instType = data.parInstruments[j];
             map<string, string> conventionsMap = data.parInstrumentConventions;
@@ -127,22 +126,23 @@ void ParSensitivityAnalysis::parDeltaConversion() {
             boost::shared_ptr<Convention> convention = conventions_.get(conventionsMap[instType]);
             string indexName = ""; // if empty, it will be picked from conventions
             if (instType == "IRS")
-                parHelpers[ccy][j] = makeSwap(ccy, indexName, term, convention, true);
+                parHelpers[key] = makeSwap(ccy, indexName, term, convention, true);
             else if (instType == "DEP")
-                parHelpers[ccy][j] = makeDeposit(ccy, indexName, term, convention, true);
+                parHelpers[key] = makeDeposit(ccy, indexName, term, convention, true);
             else if (instType == "FRA")
-                parHelpers[ccy][j] = makeFRA(ccy, indexName, term, convention, true);
+                parHelpers[key] = makeFRA(ccy, indexName, term, convention, true);
             else if (instType == "OIS")
-                parHelpers[ccy][j] = makeOIS(ccy, indexName, term, convention, true);
+                parHelpers[key] = makeOIS(ccy, indexName, term, convention, true);
             else if (instType == "XBS")
-                parHelpers[ccy][j] = makeCrossCcyBasisSwap(baseCcy, ccy, term, convention);
+                parHelpers[key] = makeCrossCcyBasisSwap(baseCcy, ccy, term, convention);
             else if (instType == "FXF")
-                parHelpers[ccy][j] = makeFxForward(baseCcy, ccy, term, convention);
+                parHelpers[key] = makeFxForward(baseCcy, ccy, term, convention);
             else
                 QL_FAIL("Instrument type " << instType << " for par sensitivity conversion not recognised");
-            parRatesBase[ccy][j] = impliedQuote(parHelpers[ccy][j]);
-            LOG("Par instrument for discount curve, ccy " << ccy << " tenor " << j << ", type " << instType
-                                                          << ", base rate " << setprecision(4) << parRatesBase[ccy][j]);
+            parRatesBase[key] = impliedQuote(parHelpers[key]);
+            LOG("Par instrument for discount curve, ccy "
+                << ccy << " tenor " << j << ", type " << instType
+                << ", base rate " << setprecision(4) << parRatesBase[key]);
         }
     }
 
@@ -158,9 +158,8 @@ void ParSensitivityAnalysis::parDeltaConversion() {
         QL_REQUIRE(tokens.size() >= 2, "index name " << indexName << " unexpected");
         string ccy = tokens[0];
         QL_REQUIRE(ccy.length() == 3, "currency token not recognised");
-        parHelpers[indexName] = vector<boost::shared_ptr<Instrument> >(n_ten);
-        parRatesBase[indexName] = vector<Real>(n_ten);
         for (Size j = 0; j < n_ten; ++j) {
+            RiskFactorKey key(RiskFactorKey::KeyType::IndexCurve, indexName, j);
             Period term = data.shiftTenors[j];
             string instType = data.parInstruments[j];
             map<string, string> conventionsMap = data.parInstrumentConventions;
@@ -168,24 +167,24 @@ void ParSensitivityAnalysis::parDeltaConversion() {
                        "conventions not found for ccy " << ccy << " and instrument type " << instType);
             boost::shared_ptr<Convention> convention = conventions_.get(conventionsMap[instType]);
             if (instType == "IRS")
-                parHelpers[indexName][j] = makeSwap(ccy, indexName, term, convention, false);
+                parHelpers[key] = makeSwap(ccy, indexName, term, convention, false);
             else if (instType == "DEP")
-                parHelpers[indexName][j] = makeDeposit(ccy, indexName, term, convention, false);
+                parHelpers[key] = makeDeposit(ccy, indexName, term, convention, false);
             else if (instType == "FRA")
-                parHelpers[indexName][j] = makeFRA(ccy, indexName, term, convention, false);
+                parHelpers[key] = makeFRA(ccy, indexName, term, convention, false);
             else if (instType == "OIS")
-                parHelpers[indexName][j] = makeOIS(ccy, indexName, term, convention, false);
+                parHelpers[key] = makeOIS(ccy, indexName, term, convention, false);
             else
                 QL_FAIL("Instrument type " << instType << " for par sensitivity conversin not recognised");
-            parRatesBase[indexName][j] = impliedQuote(parHelpers[indexName][j]);
+            parRatesBase[key] = impliedQuote(parHelpers[key]);
             LOG("Par instrument for index " << indexName << " ccy " << ccy << " tenor " << j << " base rate "
-		<< setprecision(4) << parRatesBase[indexName][j]);
+                                            << setprecision(4) << parRatesBase[key]);
         }
     }
 
     // Caps/Floors
-    map<pair<string, Size>, vector<boost::shared_ptr<CapFloor> > > parCaps;
-    map<pair<string, Size>, vector<Real> > parCapVols;
+    map<RiskFactorKey, boost::shared_ptr<CapFloor> > parCaps;
+    map<RiskFactorKey, Real> parCapVols;
     for (Size i = 0; i < sensitivityData_->capFloorVolCurrencies().size(); ++i) {
         string ccy = sensitivityData_->capFloorVolCurrencies()[i];
         SensitivityScenarioData::CapFloorVolShiftData data = sensitivityData_->capFloorVolShiftData()[ccy];
@@ -197,26 +196,19 @@ void ParSensitivityAnalysis::parDeltaConversion() {
         for (Size j = 0; j < n_strikes; ++j) {
             Real strike = data.shiftStrikes[j];
             pair<string, Size> key(ccy, j);
-            parCaps[key] = vector<boost::shared_ptr<CapFloor> >(n_expiries);
-            parCapVols[key] = vector<Real>(n_expiries, 0.0);
             for (Size k = 0; k < n_expiries; ++k) {
+                RiskFactorKey key(RiskFactorKey::KeyType::OptionletVolatility, ccy, k * n_strikes + j);
                 Period term = data.shiftExpiries[k];
-                parCaps[key][k] = makeCapFloor(ccy, indexName, term, strike);
-                Real price = parCaps[key][k]->NPV();
-                parCapVols[key][k] = impliedVolatility(*parCaps[key][k], price, yts, 0.01, // initial guess
-                                                       ovs->volatilityType(), ovs->displacement());
-		LOG("Par cap/floor ccy " << ccy << " strike " << j << " expiry " << k << " base vol "
-		    << setprecision(4) << parCapVols[key][k]);
+                parCaps[key] = makeCapFloor(ccy, indexName, term, strike);
+                Real price = parCaps[key]->NPV();
+                parCapVols[key] = impliedVolatility(*parCaps[key], price, yts, 0.01, // initial guess
+                                                    ovs->volatilityType(), ovs->displacement());
+                LOG("Par cap/floor ccy " << ccy << " strike " << j << " expiry " << k << " base vol " << setprecision(4)
+                                         << parCapVols[key]);
             }
         }
     }
     LOG("Caching base scenario par rates and flat vols done");
-
-    // vector<string> parConversionFactors;
-    // for (auto f : factors_) {
-    //     if (f.find("YIELD") != string::npos) // || f.find("CAPFLOOR") != string::npos)
-    //         parConversionFactors.push_back(f);
-    // }
 
     /****************************************************************
      * Discount curve instrument fair rate sensitivity to zero shifts
@@ -230,32 +222,42 @@ void ParSensitivityAnalysis::parDeltaConversion() {
      */
     LOG("Compute par rate and flat vol sensitivities");
 
+    vector<ShiftScenarioGenerator::ScenarioDescription> desc = scenarioGenerator_->scenarioDescriptions();
+    QL_REQUIRE(desc.size() == scenarioGenerator_->samples(),
+               "descriptions size " << desc.size() << " does not match samples " << scenarioGenerator_->samples());
+
+    std::set<string> parFactors;
     for (Size i = 1; i < scenarioGenerator_->samples(); ++i) {
         string label = scenarioGenerator_->scenarios()[i]->label();
 
         simMarket_->update(asof_);
 
         // use single "UP" shift scenarios only
-        if (!sensitivityData_->isSingleShiftScenario(label) || !sensitivityData_->isUpShiftScenario(label))
+        if (desc[i].type() != ShiftScenarioGenerator::ScenarioDescription::Type::Up)
             continue;
 
+        string factor = desc[i].factor1();
+
         // par rate sensi to yield shifts
-        if (sensitivityData_->isYieldShiftScenario(label)) {
+        if (desc[i].key1().keytype == RiskFactorKey::KeyType::DiscountCurve ||
+            desc[i].key1().keytype == RiskFactorKey::KeyType::IndexCurve) {
+
+            parFactors.insert(factor);
 
             // discount curves
             for (Size j = 0; j < simMarketData_->ccys().size(); ++j) {
                 string ccy = simMarketData_->ccys()[j];
-                // FIXME: Assumption of sensitivity within currency only
-                if (label.find(ccy) == string::npos)
+                // FIXME: Assumption of sensitivity within currency only, relax this?
+                if (factor.find(ccy) == string::npos)
                     continue;
                 SensitivityScenarioData::CurveShiftData data = sensitivityData_->discountCurveShiftData()[ccy];
                 Size n_ten = data.shiftTenors.size();
-                pair<string, string> key(ccy, sensitivityData_->labelToFactor(label));
-                parRatesSensi_[key] = vector<Real>(n_ten);
                 for (Size k = 0; k < n_ten; ++k) {
-                    Real fair = impliedQuote(parHelpers[ccy][k]);
-                    Real base = parRatesBase[ccy][k];
-                    parRatesSensi_[key][k] = (fair - base) / data.shiftSize;
+                    RiskFactorKey key(RiskFactorKey::KeyType::DiscountCurve, ccy, k);
+                    Real fair = impliedQuote(parHelpers[key]);
+                    Real base = parRatesBase[key];
+                    std::pair<RiskFactorKey, RiskFactorKey> sensiKey(key, desc[i].key1());
+                    parSensi_[sensiKey] = (fair - base) / data.shiftSize;
                 }
             }
 
@@ -264,30 +266,32 @@ void ParSensitivityAnalysis::parDeltaConversion() {
                 string indexName = simMarketData_->indices()[j];
                 string indexCurrency = sensitivityData_->getIndexCurrency(indexName);
                 // FIXME: Assumption of sensitivity within currency only
-                if (label.find(indexCurrency) == string::npos)
+                if (factor.find(indexCurrency) == string::npos)
                     continue;
                 SensitivityScenarioData::CurveShiftData data = sensitivityData_->indexCurveShiftData()[indexName];
                 Size n_ten = data.shiftTenors.size();
-                pair<string, string> key(indexName, sensitivityData_->labelToFactor(label));
-                parRatesSensi_[key] = vector<Real>(n_ten);
                 for (Size k = 0; k < n_ten; ++k) {
-                    Real fair = impliedQuote(parHelpers[indexName][k]);
-                    Real base = parRatesBase[indexName][k];
-                    parRatesSensi_[key][k] = (fair - base) / data.shiftSize;
+                    RiskFactorKey key(RiskFactorKey::KeyType::IndexCurve, indexName, k);
+                    Real fair = impliedQuote(parHelpers[key]);
+                    Real base = parRatesBase[key];
+                    std::pair<RiskFactorKey, RiskFactorKey> sensiKey(key, desc[i].key1());
+                    parSensi_[sensiKey] = (fair - base) / data.shiftSize;
                 }
             }
         }
 
         // flat cap/floor vol sensitivity to yield shifts and optionlet vol shifts
-        if (sensitivityData_->isYieldShiftScenario(label) || sensitivityData_->isCapFloorVolShiftScenario(label)) {
+        if (desc[i].key1().keytype == RiskFactorKey::KeyType::DiscountCurve ||
+            desc[i].key1().keytype == RiskFactorKey::KeyType::IndexCurve ||
+            desc[i].key1().keytype == RiskFactorKey::KeyType::OptionletVolatility) {
 
-            string factor = sensitivityData_->labelToFactor(label);
+            parFactors.insert(factor);
 
             // caps/floors
             for (Size ii = 0; ii < simMarketData_->capFloorVolCcys().size(); ++ii) {
                 string ccy = simMarketData_->capFloorVolCcys()[ii];
                 // FIXME: Assumption of sensitivity within currency only
-                if (label.find(ccy) == string::npos)
+                if (factor.find(ccy) == string::npos)
                     continue;
                 Handle<YieldTermStructure> yts = simMarket_->discountCurve(ccy, marketConfiguration_);
                 Handle<OptionletVolatilityStructure> ovs = simMarket_->capFloorVol(ccy, marketConfiguration_);
@@ -295,19 +299,17 @@ void ParSensitivityAnalysis::parDeltaConversion() {
                 Size n_strikes = data.shiftStrikes.size();
                 Size n_expiries = data.shiftExpiries.size();
                 for (Size j = 0; j < n_strikes; ++j) {
-                    tuple<string, Size, string> sensiKey(ccy, j, factor);
-                    pair<string, Size> baseKey(ccy, j);
-                    flatCapVolSensi_[sensiKey] = vector<Real>(n_expiries, 0.0);
                     for (Size k = 0; k < n_expiries; ++k) {
-                        Real price = parCaps[baseKey][k]->NPV();
-                        Real fair = impliedVolatility(*parCaps[baseKey][k], price, yts, 0.01, // initial guess
+                        RiskFactorKey key(RiskFactorKey::KeyType::OptionletVolatility, ccy, k * n_strikes + j);
+                        Real price = parCaps[key]->NPV();
+                        Real fair = impliedVolatility(*parCaps[key], price, yts, 0.01, // initial guess
                                                       ovs->volatilityType(), ovs->displacement());
-                        Real base = parCapVols[baseKey][k];
-                        flatCapVolSensi_[sensiKey][k] = (fair - base) / data.shiftSize;
-                        if (flatCapVolSensi_[sensiKey][k] != 0.0)
-                            LOG("CapFloorVol Sensi " << std::get<0>(sensiKey) << " " << std::get<2>(sensiKey)
-                                                     << " strike " << std::get<1>(sensiKey) << " tenor " << k << " = "
-                                                     << setprecision(6) << flatCapVolSensi_[sensiKey][k]);
+                        Real base = parCapVols[key];
+                        std::pair<RiskFactorKey, RiskFactorKey> sensiKey(key, desc[i].key1());
+                        parSensi_[sensiKey] = (fair - base) / data.shiftSize;
+                        if (parSensi_[sensiKey] != 0.0)
+                            LOG("CapFloorVol Sensi " << sensiKey.first << " w.r.t. " << sensiKey.second << " "
+                                                     << setprecision(6) << parSensi_[sensiKey]);
                     }
                 }
             }
@@ -317,7 +319,7 @@ void ParSensitivityAnalysis::parDeltaConversion() {
     LOG("Computing par rate and flat vol sensitivities done");
 
     // Build Jacobi matrix and convert sensitivities
-    ParSensitivityConverter jacobi(sensitivityData_, delta_, parRatesSensi_, flatCapVolSensi_);
+    ParSensitivityConverter jacobi(sensitivityData_, delta_, parSensi_, parFactors);
     parDelta_ = jacobi.parDelta();
 }
 
@@ -525,160 +527,86 @@ boost::shared_ptr<Instrument> ParSensitivityAnalysis::makeFxForward(string baseC
 }
 
 void ParSensitivityConverter::buildJacobiMatrix() {
-    vector<string> currencies = sensitivityData_->discountCurrencies();
-    vector<string> indices = sensitivityData_->indexNames();
-    vector<string> capCurrencies = sensitivityData_->capFloorVolCurrencies();
-
-    // unique set of factors relevant for conversion
-    std::set<std::string> factorSet;
-    for (auto d : delta_) {
-        string factor = d.first.second;
-        if (sensitivityData_->isYieldShiftScenario(factor) || sensitivityData_->isCapFloorVolShiftScenario(factor))
-            // if (sensitivityData_->isYieldShiftScenario(factor))
-            factorSet.insert(factor);
+    parKeySet_.clear();
+    rawKeySet_.clear();
+    for (auto d : parSensi_) {
+        RiskFactorKey parKey = d.first.first;
+        RiskFactorKey rawKey = d.first.second;
+        parKeySet_.insert(parKey);
+        rawKeySet_.insert(rawKey);
     }
 
-    // Jacobi matrix dimension and allocation
-    Size n_shifts = factorSet.size();
-    Size n_par = 0;
-    // discount curves
-    for (Size i = 0; i < currencies.size(); ++i) {
-        string ccy = currencies[i];
-        SensitivityScenarioData::CurveShiftData data = sensitivityData_->discountCurveShiftData()[ccy];
-        n_par += data.shiftTenors.size();
-    }
-    // index curves
-    for (Size i = 0; i < indices.size(); ++i) {
-        string indexName = indices[i];
-        SensitivityScenarioData::CurveShiftData data = sensitivityData_->indexCurveShiftData()[indexName];
-        n_par += data.shiftTenors.size();
-    }
-    // cap/floor matrices
-    for (Size i = 0; i < capCurrencies.size(); ++i) {
-        string ccy = capCurrencies[i];
-        SensitivityScenarioData::CapFloorVolShiftData data = sensitivityData_->capFloorVolShiftData()[ccy];
-        n_par += data.shiftExpiries.size() * data.shiftStrikes.size();
-    }
+    Size n_par = parKeySet_.size();
+    Size n_raw = rawKeySet_.size();
+    jacobi_ = Matrix(n_par, n_raw, 0.0);
+    LOG("Jacobi matrix dimension " << n_par << " x " << n_raw);
 
-    jacobi_ = Matrix(n_par, n_shifts, 0.0);
-    LOG("Jacobi matrix dimension " << n_par << " x " << n_shifts);
-
-    // Derive unique curves (by type, curveName, bucketIndex).
-    // Curve identifier is
-    // - curveName=ccy for discount curves,
-    // - curveName=indexName for index curves
-    // - curveName=ccy + strikeBucketIndex for cap vol curves
-    std::vector<std::string> curves, types, buckets;
-    for (auto f : factorSet) {
-        factors_.push_back(f);
-        vector<string> tokens;
-        boost::split(tokens, f, boost::is_any_of(sensitivityData_->labelSeparator()));
-        QL_REQUIRE(tokens.size() >= 3, "more than three tokens expected in " << f);
-        string type = tokens[0];
-        string curve = tokens[1];
-        string bucket = tokens[2]; // third token is always a bucket index, can be converted to Size
-        LOG("Conversion factor " << f << " type " << type << " curve " << curve << " bucket " << bucket);
-        if (sensitivityData_->isYieldShiftScenario(f)) {
-            if (curves.size() == 0 || curve != curves.back() || type != types.back()) {
-                types.push_back(type);
-                curves.push_back(curve);
-                buckets.push_back(bucket);
-            }
-        } else if (sensitivityData_->isCapFloorVolShiftScenario(f)) {
-            if (curves.size() == 0 || curve != curves.back() || type != types.back() || bucket != buckets.back()) {
-                types.push_back(type);
-                curves.push_back(curve);
-                buckets.push_back(bucket);
-            }
+    Size i = 0;
+    for (auto p : parKeySet_) {
+        Size j = 0;
+        for (auto r : rawKeySet_) {
+            std::pair<RiskFactorKey, RiskFactorKey> key(p, r);
+            if (parSensi_.find(key) == parSensi_.end())
+                jacobi_[i][j] = 0.0;
+            else
+                jacobi_[i][j] = parSensi_[key];
+            //LOG("matrix entry " << i << " " << j << " " << key.first << " " << key.second << " " << jacobi_[i][j]);
+            j++;
         }
+        i++;
     }
-
-    LOG("Build Jacobi matrix");
-    Size offset = 0;
-    for (Size i = 0; i < curves.size(); ++i) {
-        string curveName = curves[i];
-        string curveType = types[i];
-        string bucket = buckets[i];
-        Size dim;
-        if (curveType == sensitivityData_->discountLabel()) {
-            // curve name is ccy code
-            SensitivityScenarioData::CurveShiftData data = sensitivityData_->discountCurveShiftData()[curveName];
-            dim = data.shiftTenors.size();
-        } else if (curveType == sensitivityData_->indexLabel()) {
-            // curve name is indexName
-            SensitivityScenarioData::CurveShiftData data = sensitivityData_->indexCurveShiftData()[curveName];
-            dim = data.shiftTenors.size();
-        } else if (curveType == sensitivityData_->capFloorVolLabel()) {
-            // curve name is cy code
-            SensitivityScenarioData::CapFloorVolShiftData data = sensitivityData_->capFloorVolShiftData()[curveName];
-            dim = data.shiftExpiries.size();
-        } else
-            QL_FAIL("curve type " << curveType << " not covered");
-        LOG("Curve " << i << " type " << curveType << " name " << curveName << " bucket " << bucket << ": dimension "
-                     << dim);
-
-        for (Size k = 0; k < n_shifts; ++k) {
-            string factor = factors_[k];
-            vector<Real> v;
-            if (curveType == sensitivityData_->discountLabel() || curveType == sensitivityData_->indexLabel()) {
-                pair<string, string> key(curveName, factor);
-                if (parRateSensi_.find(key) == parRateSensi_.end())
-                    v = vector<Real>(dim, 0.0);
-                else
-                    v = parRateSensi_[key];
-            } else if (curveType == sensitivityData_->capFloorVolLabel()) {
-                Size sBucket = boost::lexical_cast<Size>(bucket);
-                std::tuple<string, Size, string> key(curveName, sBucket, factor);
-                if (flatCapVolSensi_.find(key) == flatCapVolSensi_.end())
-                    v = vector<Real>(dim, 0.0);
-                else
-                    v = flatCapVolSensi_[key];
-		// cout << i << " " << curveType << " " << curveName << " " << sBucket << " " << factor << ": ";
-                // for (Size l = 0; l < dim; ++l)
-		//   cout << v[l] << " ";
-		// cout << endl;
-            } else
-                QL_FAIL("factor " << factor << " not covered");
-
-            for (Size j = 0; j < dim; ++j) {
-                jacobi_[offset + j][k] = v[j];
-            }
-        }
-        offset += dim;
-    }
-
-    LOG("Jacobi matrix dimension " << jacobi_.rows() << " x " << jacobi_.columns());
 
     LOG("Invert Jacobi matrix");
-    
+
     jacobiInverse_ = inverse(jacobi_);
 
     LOG("Inverse Jacobi done");
 }
 
 void ParSensitivityConverter::convertSensitivity() {
+    LOG("Start sensitivity conversion");
+
+    // ensure matching size order of par factors and raw keys
+    QL_REQUIRE(parFactors_.size() == rawKeySet_.size(), "factor/key size mismatch: " << parFactors_.size() << " vs "
+                                                                                     << rawKeySet_.size());
+    std::map<RiskFactorKey, string> keyToFactor;
+    for (auto f : parFactors_) {
+        RiskFactorKey key = parseRiskFactorKey(f);
+        keyToFactor[key] = f;
+    }
+    for (auto k : rawKeySet_)
+        QL_REQUIRE(keyToFactor.find(k) != keyToFactor.end(), "raw key " << k << " not found in factor map");
+
+    // unique set of trade IDs
     set<string> trades;
     for (auto d : delta_) {
         string trade = d.first.first;
         trades.insert(trade);
     }
+
     for (auto t : trades) {
-        Array deltaArray(factors_.size(), 0.0);
-        for (Size i = 0; i < factors_.size(); ++i) {
-            pair<string, string> p(t, factors_[i]);
+        Array deltaArray(parFactors_.size(), 0.0);
+        Size i = 0;
+        for (auto k : rawKeySet_) {
+            pair<string, string> p(t, keyToFactor[k]);
             if (delta_.find(p) != delta_.end())
                 deltaArray[i] = delta_[p];
-            // LOG("delta " << yieldFactors_[i] << " " << deltaArray[i]);
+            i++;
+            // LOG("delta " << f << " " << deltaArray[i]);
         }
         Array parDeltaArray = transpose(jacobiInverse_) * deltaArray;
-        for (Size i = 0; i < factors_.size(); ++i) {
+        i = 0;
+        for (auto k : rawKeySet_) {
             if (parDeltaArray[i] != 0.0) {
-                pair<string, string> p(t, factors_[i]);
+                pair<string, string> p(t, keyToFactor[k]);
                 parDelta_[p] = parDeltaArray[i];
-                // LOG("par delta " << factors_[i] << " " << deltaArray[i] << " " << parDeltaArray[i]);
+                // LOG("par delta " << f << " " << deltaArray[i] << " " << parDeltaArray[i]);
             }
+            i++;
         }
     }
+
+    LOG("sensitivity conversion done");
 }
 
 ImpliedCapFloorVolHelper::ImpliedCapFloorVolHelper(VolatilityType type, const CapFloor& cap,

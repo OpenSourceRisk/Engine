@@ -26,6 +26,50 @@ using namespace std;
 namespace ore {
 namespace analytics {
 
+string ShiftScenarioGenerator::ScenarioDescription::typeString() {
+    if (type_ == ScenarioDescription::Type::Base)
+        return "Base";
+    else if (type_ == ScenarioDescription::Type::Up)
+        return "Up";
+    else if (type_ == ScenarioDescription::Type::Down)
+        return "Down";
+    else if (type_ == ScenarioDescription::Type::Cross)
+        return "Cross";
+    else
+        QL_FAIL("ScenarioDescription::Type not covered");
+}
+string ShiftScenarioGenerator::ScenarioDescription::factor1() {
+    ostringstream o;
+    if (key1_ != RiskFactorKey()) {
+        o << key1_;
+        // if (indexDesc1_ != "")
+	o << "/" << indexDesc1_;
+        return o.str();
+    }
+    return "";
+}
+string ShiftScenarioGenerator::ScenarioDescription::factor2() {
+    ostringstream o;
+    if (key2_ != RiskFactorKey()) {
+        o << key2_;
+        //if (indexDesc2_ != "")
+	o << "/" << indexDesc2_;
+        return o.str();
+    }
+    return "";
+}
+string ShiftScenarioGenerator::ScenarioDescription::text() {
+  string t = typeString();
+  string f1 = factor1();
+  string f2 = factor2();
+  string ret = t;
+  if (f1 != "")
+    ret += ":" + f1;
+  if (f2 != "")
+    ret += ":" + f2;
+  return ret;
+}
+  
 ShiftScenarioGenerator::ShiftScenarioGenerator(boost::shared_ptr<ScenarioFactory> scenarioFactory,
                                                boost::shared_ptr<ScenarioSimMarketParameters> simMarketData, Date today,
                                                boost::shared_ptr<ore::data::Market> initMarket,
@@ -179,72 +223,12 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
         }
     }
 
+    LOG("generate base scenario");
     baseScenario_ = scenarioFactory_->buildScenario(today_, "BASE");
     addCacheTo(baseScenario_);
     scenarios_.push_back(baseScenario_);
+    scenarioDescriptions_.push_back(ScenarioDescription(ScenarioDescription::Type::Base));
 
-    /*
-    generateDiscountCurveScenarios(true, market);
-    generateDiscountCurveScenarios(false, market);
-
-    generateIndexCurveScenarios(true, market);
-    generateIndexCurveScenarios(false, market);
-
-    generateYieldCurveScenarios(true, market);
-    generateYieldCurveScenarios(false, market);
-
-    generateFxScenarios(true, market);
-    generateFxScenarios(false, market);
-
-    if (simMarketData_->simulateFXVols()) {
-        generateFxVolScenarios(true, market);
-        generateFxVolScenarios(false, market);
-    }
-
-    if (simMarketData_->simulateSwapVols()) {
-        generateSwaptionVolScenarios(true, market);
-        generateSwaptionVolScenarios(false, market);
-    }
-
-    if (simMarketData_->simulateCapFloorVols()) {
-        generateCapFloorVolScenarios(true, market);
-        generateCapFloorVolScenarios(false, market);
-    }
-
-    // add simultaneous up-moves in two risk factors for cross gamma calculation
-    vector<RiskFactorKey> keys = baseScenario_->keys();
-    Size index = scenarios_.size();
-    for (Size i = 0; i < index; ++i) {
-        for (Size j = i + 1; j < index; ++j) {
-            if (i == j || scenarios_[i]->label().find("/UP") == string::npos ||
-                scenarios_[j]->label().find("/UP") == string::npos)
-                continue;
-            // filter desired cross shift combinations
-            bool match = false;
-            for (Size k = 0; k < sensitivityData_->crossGammaFilter().size(); ++k) {
-                if ((scenarios_[i]->label().find(sensitivityData_->crossGammaFilter()[k].first) != string::npos &&
-                     scenarios_[j]->label().find(sensitivityData_->crossGammaFilter()[k].second) != string::npos) ||
-                    (scenarios_[i]->label().find(sensitivityData_->crossGammaFilter()[k].second) != string::npos &&
-                     scenarios_[j]->label().find(sensitivityData_->crossGammaFilter()[k].first) != string::npos)) {
-                    match = true;
-                    break;
-                }
-            }
-            if (!match)
-                continue;
-            string crossLabel = "CROSS:" + scenarios_[i]->label() + ":" + scenarios_[j]->label();
-            boost::shared_ptr<Scenario> crossScenario = scenarioFactory_->buildScenario(today_, crossLabel);
-            for (Size k = 0; k < keys.size(); ++k) {
-                Real baseValue = baseScenario_->get(keys[k]);
-                Real iValue = scenarios_[i]->get(keys[k]);
-                Real jValue = scenarios_[j]->get(keys[k]);
-                crossScenario->add(keys[k], iValue + jValue - baseValue);
-            }
-            scenarios_.push_back(crossScenario);
-            LOG("Sensitivity scenario # " << scenarios_.size() << ", label " << crossScenario->label() << " created");
-        }
-    }
-    */
     LOG("shift scenario generator, base class initialisation done");
 }
 

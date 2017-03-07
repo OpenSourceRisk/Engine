@@ -5,8 +5,6 @@
   <!-- Discount curve shifts -->
   <DiscountCurves>
 
-    <Label>DISCOUNT</Label>
-
     <DiscountCurve ccy="EUR">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
@@ -90,8 +88,6 @@
   <!-- Index curve shifts -->
   <IndexCurves>
   
-    <Label>INDEX</Label>
-
     <IndexCurve index="EUR-EURIBOR-6M">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
@@ -222,17 +218,24 @@
 
   <!-- Yield curve shifts -->
   <YieldCurves>
-    <Label>YIELD</Label>
     <YieldCurve name="BENCHMARK_EUR">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+      <ParConversion><!-- required if ParConversion is set to true -->
+	<Instruments>DEP,IRS,IRS,IRS,IRS,IRS,IRS,IRS,IRS</Instruments><!-- DEP, FRA, IRS, OIS -->
+	<SingleCurve>true</SingleCurve>
+	<Conventions><!-- key instrument type -->
+	  <Convention id="DEP">EUR-EURIBOR-CONVENTIONS</Convention>
+	  <Convention id="IRS">EUR-6M-SWAP-CONVENTIONS</Convention>
+	  <Convention id="OIS">EUR-OIS-CONVENTIONS</Convention>
+	</Conventions>
+      </ParConversion>
     </YieldCurve>
   </YieldCurves>
   
   <!-- FX spot shifts -->
   <FxSpots>
-    <Label>FXSPOT</Label>
     <FxSpot ccypair="USDEUR">
       <ShiftType>Relative</ShiftType>
       <ShiftSize>0.01</ShiftSize>
@@ -253,7 +256,6 @@
   
   <!-- FX ATM vol shifts -->
   <FxVolatilities>
-    <Label>FXOPTION</Label>
     <FxVolatility ccypair="USDEUR">
       <ShiftType>Relative</ShiftType>
       <ShiftSize>0.01</ShiftSize>
@@ -276,7 +278,6 @@
   
   <!-- Swaption ATM vol shifts -->
   <SwaptionVolatilities>
-    <Label>SWAPTION</Label>
     <SwaptionVolatility ccy="EUR">
       <ShiftType>Relative</ShiftType>
       <ShiftSize>0.01</ShiftSize>
@@ -288,7 +289,6 @@
       
   <!-- Cap/Floor (Optionlet or Flat) vol surface shifts -->
   <CapFloorVolatilities>
-    <Label>CAPFLOOR</Label>
     <CapFloorVolatility ccy="EUR">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
@@ -307,9 +307,9 @@
 
   <!-- Cross Gamma filter: Pairs of factor sub-strings -->
   <CrossGammaFilter>
-    <Pair>DISOUNT/EUR,DISCOUNT/EUR</Pair>
-    <Pair>INDEX/EUR,INDEX/EUR</Pair>
-    <Pair>DISCOUNT/EUR,INDEX/EUR</Pair>      
+    <Pair>DiscountCurve/EUR,DiscountCurve/EUR</Pair>
+    <Pair>IndexCurve/EUR,IndexCurve/EUR</Pair>
+    <Pair>DiscountCurve/EUR,IndexCurve/EUR</Pair>
   </CrossGammaFilter>
   
 </SensitivityAnalysis>

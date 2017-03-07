@@ -42,6 +42,42 @@ class ShiftScenarioGenerator : public ScenarioGenerator {
 public:
     enum class ShiftType { Absolute, Relative };
 
+    class ScenarioDescription {
+    public:
+        enum class Type { Base, Up, Down, Cross };
+        //! Constructor
+        ScenarioDescription(Type type)
+            : type_(type), key1_(RiskFactorKey()), indexDesc1_(""), key2_(RiskFactorKey()), indexDesc2_("") {}
+        ScenarioDescription(Type type, RiskFactorKey key1, string indexDesc1)
+            : type_(type), key1_(key1), indexDesc1_(indexDesc1), key2_(RiskFactorKey()), indexDesc2_("") {}
+        ScenarioDescription(ScenarioDescription d1, ScenarioDescription d2)
+            : type_(Type::Cross), key1_(d1.key1()), indexDesc1_(d1.indexDesc1()), key2_(d2.key1()),
+              indexDesc2_(d2.indexDesc1()) {}
+        //! Inspectors
+        //@{
+        Type type() { return type_; }
+        RiskFactorKey key1() { return key1_; }
+        RiskFactorKey key2() { return key2_; }
+        string indexDesc1() { return indexDesc1_; }
+        string indexDesc2() { return indexDesc2_; }
+        //@}
+        //! Return type as string
+        string typeString();
+        //! Return key1 as string with text1 appended as key index description
+        string factor1();
+        //! Return key2 as string with text2 appended as key index description
+        string factor2();
+        //! Return full description
+        string text();
+
+    private:
+        Type type_;
+        RiskFactorKey key1_;
+        string indexDesc1_;
+        RiskFactorKey key2_;
+        string indexDesc2_;
+    };
+
     //! Constructor
     ShiftScenarioGenerator(boost::shared_ptr<ScenarioFactory> scenarioFactory,
                            boost::shared_ptr<ScenarioSimMarketParameters> simMarketData, QuantLib::Date today,
@@ -64,6 +100,9 @@ public:
     const boost::shared_ptr<Scenario>& baseScenario() { return baseScenario_; }
     //! Return vector of sensitivity scenarios, scenario 0 is the base scenario
     const std::vector<boost::shared_ptr<Scenario> >& scenarios() { return scenarios_; }
+    //! Return vector of scenario descriptions
+    std::vector<ScenarioDescription> scenarioDescriptions() { return scenarioDescriptions_; }
+
     //@}
 
     //! Apply 1d triangular shift to 1d data such as yield curves, public to allow test suite access
@@ -125,7 +164,7 @@ public:
         const vector<vector<Real> >& data,
         //! Matrix of shifted result data
         vector<vector<Real> >& shiftedData,
-	//! Initialise shiftedData vector before applying this shift j/k (yes for sensitivity, no for stress)
+        //! Initialise shiftedData vector before applying this shift j/k (yes for sensitivity, no for stress)
         bool initialise);
 
 protected:
@@ -160,6 +199,8 @@ protected:
 
     vector<string> discountCurrencies_, indexNames_, yieldCurveNames_, fxCcyPairs_, fxVolCcyPairs_,
         swaptionVolCurrencies_, capFloorVolCurrencies_, crNames_, infIndexNames_;
+
+    std::vector<ScenarioDescription> scenarioDescriptions_;
 };
 
 ShiftScenarioGenerator::ShiftType parseShiftType(const std::string& s);

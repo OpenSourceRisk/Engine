@@ -45,10 +45,19 @@ namespace analytics {
 class RiskFactorKey {
 public:
     //! Risk Factor types
-  enum class KeyType { DiscountCurve, YieldCurve, IndexCurve, SwaptionVolatility, OptionletVolatility, FXSpot, FXVolatility };
+    enum class KeyType {
+        None,
+        DiscountCurve,
+        YieldCurve,
+        IndexCurve,
+        SwaptionVolatility,
+        OptionletVolatility,
+        FXSpot,
+        FXVolatility
+    };
 
     //! Constructor
-    RiskFactorKey() {}
+    RiskFactorKey() : keytype(KeyType::None), name(""), index(0) {}
     //! Constructor
     RiskFactorKey(const KeyType& iKeytype, const string& iName, const Size& iIndex = 0)
         : keytype(iKeytype), name(iName), index(iIndex) {}
@@ -87,6 +96,10 @@ inline bool operator!=(const RiskFactorKey& lhs, const RiskFactorKey& rhs) { ret
 
 std::ostream& operator<<(std::ostream& out, const RiskFactorKey::KeyType& type);
 std::ostream& operator<<(std::ostream& out, const RiskFactorKey& key);
+
+std::string toString(const RiskFactorKey::KeyType& keytype);
+std::string toString(const RiskFactorKey& key);
+RiskFactorKey parseRiskFactorKey(const std::string& s);
 
 //-----------------------------------------------------------------------------------------------
 //! Scenario Base Class

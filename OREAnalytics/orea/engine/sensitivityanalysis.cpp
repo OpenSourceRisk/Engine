@@ -99,6 +99,9 @@ SensitivityAnalysis::SensitivityAnalysis(const boost::shared_ptr<ore::data::Port
      * - deltas, gammas and cross gammas
      */
     baseNPV_.clear();
+    vector<ShiftScenarioGenerator::ScenarioDescription> desc = scenarioGenerator_->scenarioDescriptions();
+    QL_REQUIRE(desc.size() == scenarioGenerator_->samples(),
+               "descriptions size " << desc.size() << " does not match samples " << scenarioGenerator_->samples());
     for (Size i = 0; i < portfolio->size(); ++i) {
 
         Real npv0 = cube->getT0(i, 0);
@@ -109,14 +112,17 @@ SensitivityAnalysis::SensitivityAnalysis(const boost::shared_ptr<ore::data::Port
         // single shift scenarios: up, down, delta
         for (Size j = 0; j < scenarioGenerator_->samples(); ++j) {
             string label = scenarioGenerator_->scenarios()[j]->label();
-            if (sensitivityData_->isSingleShiftScenario(label)) {
+            //LOG("scenario description " << j << ": " << desc[j].text());
+            if (desc[j].type() == ShiftScenarioGenerator::ScenarioDescription::Type::Up ||
+                desc[j].type() == ShiftScenarioGenerator::ScenarioDescription::Type::Down) {
                 Real npv = cube->get(i, 0, j, 0);
-                string factor = sensitivityData_->labelToFactor(label);
+                string factor = desc[j].factor1();
                 pair<string, string> p(id, factor);
-                if (sensitivityData_->isUpShiftScenario(label)) {
+                if (desc[j].type() == ShiftScenarioGenerator::ScenarioDescription::Type::Up) {
+                    LOG("up npv stored for id " << id << ", factor " << factor);
                     upNPV_[p] = npv;
                     delta_[p] = npv - npv0;
-                } else if (sensitivityData_->isDownShiftScenario(label)) {
+                } else if (desc[j].type() == ShiftScenarioGenerator::ScenarioDescription::Type::Down) {
                     downNPV_[p] = npv;
                 } else
                     continue;
@@ -128,14 +134,10 @@ SensitivityAnalysis::SensitivityAnalysis(const boost::shared_ptr<ore::data::Port
         for (Size j = 0; j < scenarioGenerator_->samples(); ++j) {
             string label = scenarioGenerator_->scenarios()[j]->label();
             // select cross scenarios here
-            if (sensitivityData_->isCrossShiftScenario(label)) {
+            if (desc[j].type() == ShiftScenarioGenerator::ScenarioDescription::Type::Cross) {
                 Real npv = cube->get(i, 0, j, 0);
-                string f1up = sensitivityData_->getCrossShiftScenarioLabel(label, 1);
-                string f2up = sensitivityData_->getCrossShiftScenarioLabel(label, 2);
-                QL_REQUIRE(sensitivityData_->isUpShiftScenario(f1up), "scenario " << f1up << " not an up shift");
-                QL_REQUIRE(sensitivityData_->isUpShiftScenario(f2up), "scenario " << f2up << " not an up shift");
-                string f1 = sensitivityData_->labelToFactor(f1up);
-                string f2 = sensitivityData_->labelToFactor(f2up);
+                string f1 = desc[j].factor1();
+                string f2 = desc[j].factor2();
                 std::pair<string, string> p1(id, f1);
                 std::pair<string, string> p2(id, f2);
                 // f_xy(x,y) = (f(x+u,y+v) - f(x,y+v) - f(x+u,y) + f(x,y)) / (u*v)
@@ -173,7 +175,7 @@ void SensitivityAnalysis::writeScenarioReport(string fileName, Real outputThresh
     CSVFileReport report(fileName);
 
     report.addColumn("#TradeId", string());
-    report.addColumn("ScenarioLabel", string());
+    report.addColumn("Factor", string());
     report.addColumn("Up/Down", string());
     report.addColumn("Base NPV", double(), 2);
     report.addColumn("Scenario NPV", double(), 2);
@@ -283,45 +285,19 @@ void SensitivityAnalysis::writeCrossGammaReport(string fileName, Real outputThre
 void SensitivityAnalysis::writeParRateSensitivityReport(string fileName) {
     CSVFileReport report(fileName);
 
-    report.addColumn("#ParInstrumentType", string());
-    report.addColumn("ParCurveName", string());
-    report.addColumn("Bucket", Size());
-    report.addColumn("Factor", string());
-    report.addColumn("ParSensitivityVector", string());
+    report.addColumn("ParFactor", string());
+    report.addColumn("RawFactor", string());
+    report.addColumn("ParSensitivity", double(), 6);
 
-    char sep = ',';
     LOG("Write sensitivity output to " << fileName);
-    for (auto data : parRatesSensi_) {
-        pair<string, string> p = data.first;
-        string curveName = data.first.first;
-        string factor = data.first.second;
-        vector<Real> sensi = data.second;
-        Size bucket = 0;
+    for (auto data : parSensi_) {
+        RiskFactorKey parKey = data.first.first;
+        RiskFactorKey rawKey = data.first.second;
+        Real sensi = data.second;
         report.next();
-        report.add("YieldCurve");
-        report.add(curveName);
-        report.add(bucket);
-        report.add(factor);
-        ostringstream o;
-        for (Size i = 0; i < sensi.size(); ++i)
-            o << sep << sensi[i];
-        report.add(o.str());
-    }
-    for (auto data : flatCapVolSensi_) {
-        std::tuple<string, Size, string> p = data.first;
-        string curveName = std::get<0>(p);
-        string factor = std::get<2>(p);
-        Size bucket = std::get<1>(p);
-        vector<Real> sensi = data.second;
-        report.next();
-        report.add("CapFloor");
-        report.add(curveName);
-        report.add(bucket);
-        report.add(factor);
-        ostringstream o;
-        for (Size i = 0; i < sensi.size(); ++i)
-            o << sep << sensi[i];
-        report.add(o.str());
+        report.add(toString(parKey));
+        report.add(toString(rawKey));
+        report.add(sensi);
     }
     report.end();
 }

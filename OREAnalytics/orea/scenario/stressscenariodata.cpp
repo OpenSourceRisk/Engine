@@ -37,7 +37,8 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
          testCase = XMLUtils::getNextSibling(testCase)) {
 
         StressTestData test;
-        test.label = XMLUtils::getChildValue(testCase, "Label", true);
+        test.label = XMLUtils::getAttribute(testCase, "id");
+	//XMLUtils::getChildValue(testCase, "Label", true);
 
         LOG("Load stress test label " << test.label);
 

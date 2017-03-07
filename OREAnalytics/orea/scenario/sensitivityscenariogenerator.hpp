@@ -75,8 +75,8 @@ class SensitivityScenarioGenerator : public ShiftScenarioGenerator {
 public:
     //! Constructor
     SensitivityScenarioGenerator(boost::shared_ptr<ScenarioFactory> scenarioFactory,
-				 boost::shared_ptr<SensitivityScenarioData> sensitivityData,
-				 boost::shared_ptr<ScenarioSimMarketParameters> simMarketData, QuantLib::Date today,
+                                 boost::shared_ptr<SensitivityScenarioData> sensitivityData,
+                                 boost::shared_ptr<ScenarioSimMarketParameters> simMarketData, QuantLib::Date today,
                                  boost::shared_ptr<ore::data::Market> initMarket,
                                  const std::string& configuration = Market::defaultConfiguration);
     //! Default destructor
@@ -90,6 +90,15 @@ private:
     void generateSwaptionVolScenarios(bool up);
     void generateFxVolScenarios(bool up);
     void generateCapFloorVolScenarios(bool up);
+
+    ScenarioDescription discountScenarioDescription(string ccy, Size bucket, bool up);
+    ScenarioDescription indexScenarioDescription(string index, Size bucket, bool up);
+    ScenarioDescription yieldScenarioDescription(string name, Size bucket, bool up);
+    ScenarioDescription fxScenarioDescription(string ccypair, bool up);
+    ScenarioDescription fxVolScenarioDescription(string ccypair, Size expiryBucket, Size strikeBucket, bool up);
+    ScenarioDescription swaptionVolScenarioDescription(string ccy, Size expiryBucket, Size termBucket,
+                                                       Size strikeBucket, bool up);
+    ScenarioDescription capFloorVolScenarioDescription(string ccy, Size expiryBucket, Size strikeBucket, bool up);
 
     boost::shared_ptr<SensitivityScenarioData> sensitivityData_;
 };

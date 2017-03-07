@@ -120,13 +120,10 @@ protected:
     // unique set of trades
     std::set<std::string> trades_;
     // fair par rate by factor shift
-    std::map<std::string, Real> fairParRate_;
+    // std::map<std::string, Real> fairParRate_;
     // map of factors to curve names
-    std::map<std::string, std::string> factorToCurve_;
-    // map of sensitivity of par rates w.r.t. zero rates by curve name (ccy, indexName) and factor
-    map<std::pair<std::string, std::string>, std::vector<Real> > parRatesSensi_;
-    // map of sensitivity of flat cap vols w.r.t. optionlet vols by curve name (ccy), strike index and factor
-    map<std::tuple<std::string, Size, std::string>, std::vector<Real> > flatCapVolSensi_;
+    // std::map<std::string, std::string> factorToCurve_;
+    std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> parSensi_;
 };
 }
 }

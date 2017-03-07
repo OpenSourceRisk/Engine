@@ -18,6 +18,7 @@
 
 #include <orea/scenario/sensitivityscenariogenerator.hpp>
 #include <ored/utilities/log.hpp>
+#include <ostream>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -67,24 +68,29 @@ SensitivityScenarioGenerator::SensitivityScenarioGenerator(boost::shared_ptr<Sce
     Size index = scenarios_.size();
     for (Size i = 0; i < index; ++i) {
         for (Size j = i + 1; j < index; ++j) {
-            if (i == j || scenarios_[i]->label().find("/UP") == string::npos ||
-                scenarios_[j]->label().find("/UP") == string::npos)
+            if (i == j || scenarioDescriptions_[i].type() != ScenarioDescription::Type::Up ||
+                scenarioDescriptions_[j].type() != ScenarioDescription::Type::Up)
                 continue;
             // filter desired cross shift combinations
             bool match = false;
             for (Size k = 0; k < sensitivityData_->crossGammaFilter().size(); ++k) {
-                if ((scenarios_[i]->label().find(sensitivityData_->crossGammaFilter()[k].first) != string::npos &&
-                     scenarios_[j]->label().find(sensitivityData_->crossGammaFilter()[k].second) != string::npos) ||
-                    (scenarios_[i]->label().find(sensitivityData_->crossGammaFilter()[k].second) != string::npos &&
-                     scenarios_[j]->label().find(sensitivityData_->crossGammaFilter()[k].first) != string::npos)) {
+                if ((scenarioDescriptions_[i].factor1().find(sensitivityData_->crossGammaFilter()[k].first) !=
+                         string::npos &&
+                     scenarioDescriptions_[j].factor1().find(sensitivityData_->crossGammaFilter()[k].second) !=
+                         string::npos) ||
+                    (scenarioDescriptions_[i].factor1().find(sensitivityData_->crossGammaFilter()[k].second) !=
+                         string::npos &&
+                     scenarioDescriptions_[j].factor1().find(sensitivityData_->crossGammaFilter()[k].first) !=
+                         string::npos)) {
                     match = true;
                     break;
                 }
             }
             if (!match)
                 continue;
-            string crossLabel = "CROSS:" + scenarios_[i]->label() + ":" + scenarios_[j]->label();
-            boost::shared_ptr<Scenario> crossScenario = scenarioFactory_->buildScenario(today_, crossLabel);
+
+            boost::shared_ptr<Scenario> crossScenario = scenarioFactory_->buildScenario(today_);
+
             for (Size k = 0; k < keys.size(); ++k) {
                 Real baseValue = baseScenario_->get(keys[k]);
                 Real iValue = scenarios_[i]->get(keys[k]);
@@ -92,6 +98,7 @@ SensitivityScenarioGenerator::SensitivityScenarioGenerator(boost::shared_ptr<Sce
                 crossScenario->add(keys[k], iValue + jValue - baseValue);
             }
             scenarios_.push_back(crossScenario);
+            scenarioDescriptions_.push_back(ScenarioDescription(scenarioDescriptions_[i], scenarioDescriptions_[j]));
             LOG("Sensitivity scenario # " << scenarios_.size() << ", label " << crossScenario->label() << " created");
         }
     }
@@ -112,8 +119,10 @@ void SensitivityScenarioGenerator::generateFxScenarios(bool up) {
         ShiftType type = parseShiftType(data.shiftType);
         QL_REQUIRE(type == SensitivityScenarioGenerator::ShiftType::Relative, "FX scenario type must be relative");
 
-        string label = sensitivityData_->fxShiftScenarioLabel(ccypair, up);
-        boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_, label);
+        boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_);
+
+        scenarioDescriptions_.push_back(fxScenarioDescription(ccypair, up));
+
         Real rate = initMarket_->fxSpot(ccypair, configuration_)->value();
         Real newRate = up ? rate * (1.0 + data.shiftSize) : rate * (1.0 - data.shiftSize);
         scenario->add(getFxKey(ccypair), newRate);
@@ -164,8 +173,10 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(bool up) {
 
         for (Size j = 0; j < shiftTenors.size(); ++j) {
 
-            string label = sensitivityData_->discountShiftScenarioLabel(ccy, j, up);
-            boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_, label);
+            boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_);
+            scenarioDescriptions_.push_back(discountScenarioDescription(ccy, j, up));
+            LOG("generate discount curve scenario, ccy " << ccy << ", bucket " << j << ", up " << up << ", desc "
+                                                         << scenarioDescriptions_.back().text());
 
             // apply zero rate shift at tenor point j
             applyShift(j, shiftSize, up, shiftType, shiftTimes, zeros, times, shiftedZeros, true);
@@ -227,8 +238,9 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(bool up) {
 
         for (Size j = 0; j < shiftTenors.size(); ++j) {
 
-            string label = sensitivityData_->indexShiftScenarioLabel(indexName, j, up);
-            boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_, label);
+            boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_);
+
+            scenarioDescriptions_.push_back(indexScenarioDescription(indexName, j, up));
 
             // apply zero rate shift at tenor point j
             applyShift(j, shiftSize, up, shiftType, shiftTimes, zeros, times, shiftedZeros, true);
@@ -290,8 +302,9 @@ void SensitivityScenarioGenerator::generateYieldCurveScenarios(bool up) {
 
         for (Size j = 0; j < shiftTenors.size(); ++j) {
 
-            string label = sensitivityData_->yieldShiftScenarioLabel(name, j, up);
-            boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_, label);
+            boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_);
+
+            scenarioDescriptions_.push_back(yieldScenarioDescription(name, j, up));
 
             // apply zero rate shift at tenor point j
             applyShift(j, shiftSize, up, shiftType, shiftTimes, zeros, times, shiftedZeros, true);
@@ -358,8 +371,10 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(bool up) {
 
         for (Size j = 0; j < shiftTenors.size(); ++j) {
             Size strikeBucket = 0; // FIXME
-            string label = sensitivityData_->fxVolShiftScenarioLabel(ccypair, j, strikeBucket, up);
-            boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_, label);
+            boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_);
+
+            scenarioDescriptions_.push_back(fxVolScenarioDescription(ccypair, j, strikeBucket, up));
+
             // apply shift at tenor point j
             applyShift(j, shiftSize, up, shiftType, shiftTimes, values, times, shiftedValues, true);
             for (Size k = 0; k < n_fxvol_exp; ++k)
@@ -432,8 +447,10 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(bool up) {
         for (Size j = 0; j < shiftExpiryTimes.size(); ++j) {
             for (Size k = 0; k < shiftTermTimes.size(); ++k) {
                 Size strikeBucket = 0; // FIXME
-                string label = sensitivityData_->swaptionVolShiftScenarioLabel(ccy, j, k, strikeBucket, up);
-                boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_, label);
+                boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_);
+
+                scenarioDescriptions_.push_back(swaptionVolScenarioDescription(ccy, j, k, strikeBucket, up));
+
                 applyShift(j, k, shiftSize, up, shiftType, shiftExpiryTimes, shiftTermTimes, volExpiryTimes,
                            volTermTimes, volData, shiftedVolData, true);
                 // add shifted vol data to the scenario
@@ -503,8 +520,10 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(bool up) {
         // loop over shift expiries and terms
         for (Size j = 0; j < shiftExpiryTimes.size(); ++j) {
             for (Size k = 0; k < shiftStrikes.size(); ++k) {
-                string label = sensitivityData_->capFloorVolShiftScenarioLabel(ccy, j, k, up);
-                boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_, label);
+                boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_);
+
+                scenarioDescriptions_.push_back(capFloorVolScenarioDescription(ccy, j, k, up));
+
                 applyShift(j, k, shiftSize, up, shiftType, shiftExpiryTimes, shiftStrikes, volExpiryTimes, volStrikes,
                            volData, shiftedVolData, true);
                 // add shifted vol data to the scenario
@@ -523,6 +542,129 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(bool up) {
         }
     }
     LOG("Optionlet vol scenarios done");
+}
+
+SensitivityScenarioGenerator::ScenarioDescription SensitivityScenarioGenerator::fxScenarioDescription(string ccypair,
+                                                                                                      bool up) {
+    RiskFactorKey key(RiskFactorKey::KeyType::FXSpot, ccypair);
+    std::ostringstream o;
+    ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
+    ScenarioDescription desc(type, key, "spot");
+    return desc;
+}
+
+SensitivityScenarioGenerator::ScenarioDescription
+SensitivityScenarioGenerator::discountScenarioDescription(string ccy, Size bucket, bool up) {
+    QL_REQUIRE(sensitivityData_->discountCurveShiftData().find(ccy) != sensitivityData_->discountCurveShiftData().end(),
+               "currency " << ccy << " not found in discount shift data");
+    QL_REQUIRE(bucket < sensitivityData_->discountCurveShiftData()[ccy].shiftTenors.size(),
+               "bucket " << bucket << " out of range");
+    RiskFactorKey key(RiskFactorKey::KeyType::DiscountCurve, ccy, bucket);
+    std::ostringstream o;
+    o << sensitivityData_->discountCurveShiftData()[ccy].shiftTenors[bucket];
+    string text = o.str();
+    ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
+    ScenarioDescription desc(type, key, text);
+    return desc;
+}
+
+SensitivityScenarioGenerator::ScenarioDescription
+SensitivityScenarioGenerator::indexScenarioDescription(string index, Size bucket, bool up) {
+    QL_REQUIRE(sensitivityData_->indexCurveShiftData().find(index) != sensitivityData_->indexCurveShiftData().end(),
+               "currency " << index << " not found in index shift data");
+    QL_REQUIRE(bucket < sensitivityData_->indexCurveShiftData()[index].shiftTenors.size(),
+               "bucket " << bucket << " out of range");
+    RiskFactorKey key(RiskFactorKey::KeyType::IndexCurve, index, bucket);
+    std::ostringstream o;
+    o << sensitivityData_->indexCurveShiftData()[index].shiftTenors[bucket];
+    string text = o.str();
+    ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
+    ScenarioDescription desc(type, key, text);
+    return desc;
+}
+
+SensitivityScenarioGenerator::ScenarioDescription
+SensitivityScenarioGenerator::yieldScenarioDescription(string name, Size bucket, bool up) {
+    QL_REQUIRE(sensitivityData_->yieldCurveShiftData().find(name) != sensitivityData_->yieldCurveShiftData().end(),
+               "currency " << name << " not found in index shift data");
+    QL_REQUIRE(bucket < sensitivityData_->yieldCurveShiftData()[name].shiftTenors.size(), "bucket " << bucket
+                                                                                                    << " out of range");
+    RiskFactorKey key(RiskFactorKey::KeyType::YieldCurve, name, bucket);
+    std::ostringstream o;
+    o << sensitivityData_->yieldCurveShiftData()[name].shiftTenors[bucket];
+    string text = o.str();
+    ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
+    ScenarioDescription desc(type, key, text);
+    return desc;
+}
+
+SensitivityScenarioGenerator::ScenarioDescription
+SensitivityScenarioGenerator::fxVolScenarioDescription(string ccypair, Size expiryBucket, Size strikeBucket, bool up) {
+    QL_REQUIRE(sensitivityData_->fxVolShiftData().find(ccypair) != sensitivityData_->fxVolShiftData().end(),
+               "currency pair " << ccypair << " not found in fx vol shift data");
+    SensitivityScenarioData::FxVolShiftData data = sensitivityData_->fxVolShiftData()[ccypair];
+    QL_REQUIRE(expiryBucket < data.shiftExpiries.size(), "expiry bucket " << expiryBucket << " out of range");
+    Size index = strikeBucket * data.shiftExpiries.size() + expiryBucket;
+    RiskFactorKey key(RiskFactorKey::KeyType::FXVolatility, ccypair, index);
+    std::ostringstream o;
+    if (data.shiftStrikes.size() == 0) {
+        o << data.shiftExpiries[expiryBucket] << "/ATM";
+    } else {
+        QL_REQUIRE(strikeBucket < data.shiftStrikes.size(), "strike bucket " << strikeBucket << " out of range");
+        o << data.shiftExpiries[expiryBucket] << "/" << data.shiftStrikes[strikeBucket];
+    }
+    string text = o.str();
+    ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
+    ScenarioDescription desc(type, key, text);
+    return desc;
+}
+
+SensitivityScenarioGenerator::ScenarioDescription
+SensitivityScenarioGenerator::swaptionVolScenarioDescription(string ccy, Size expiryBucket, Size termBucket,
+                                                             Size strikeBucket, bool up) {
+    QL_REQUIRE(sensitivityData_->swaptionVolShiftData().find(ccy) != sensitivityData_->swaptionVolShiftData().end(),
+               "currency " << ccy << " not found in swaption vol shift data");
+    SensitivityScenarioData::SwaptionVolShiftData data = sensitivityData_->swaptionVolShiftData()[ccy];
+    QL_REQUIRE(expiryBucket < data.shiftExpiries.size(), "expiry bucket " << expiryBucket << " out of range");
+    QL_REQUIRE(termBucket < data.shiftTerms.size(), "term bucket " << termBucket << " out of range");
+    QL_REQUIRE(data.shiftStrikes.size() == 0, "empty Swaption strike vector expected");
+    Size index = strikeBucket * data.shiftExpiries.size() * data.shiftTerms.size() +
+                 expiryBucket * data.shiftTerms.size() + termBucket;
+    RiskFactorKey key(RiskFactorKey::KeyType::SwaptionVolatility, ccy, index);
+    std::ostringstream o;
+    if (data.shiftStrikes.size() == 0) {
+        o << data.shiftExpiries[expiryBucket] << "/" << data.shiftTerms[termBucket] << "/ATM";
+    } else {
+        o << data.shiftExpiries[expiryBucket] << "/" << data.shiftTerms[termBucket] << "/" << std::setprecision(4)
+          << data.shiftStrikes[strikeBucket];
+    }
+    string text = o.str();
+    ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
+    ScenarioDescription desc(type, key, text);
+    return desc;
+}
+
+SensitivityScenarioGenerator::ScenarioDescription
+SensitivityScenarioGenerator::capFloorVolScenarioDescription(string ccy, Size expiryBucket, Size strikeBucket,
+                                                             bool up) {
+    QL_REQUIRE(sensitivityData_->capFloorVolShiftData().find(ccy) != sensitivityData_->capFloorVolShiftData().end(),
+               "currency " << ccy << " not found in cap/floor vol shift data");
+    SensitivityScenarioData::CapFloorVolShiftData data = sensitivityData_->capFloorVolShiftData()[ccy];
+    QL_REQUIRE(expiryBucket < data.shiftExpiries.size(), "expiry bucket " << expiryBucket << " out of range");
+    QL_REQUIRE(strikeBucket < data.shiftStrikes.size(), "strike bucket " << strikeBucket << " out of range");
+    // Size index = strikeBucket * data.shiftExpiries.size() + expiryBucket;
+    Size index = expiryBucket * data.shiftStrikes.size() + strikeBucket;
+    RiskFactorKey key(RiskFactorKey::KeyType::OptionletVolatility, ccy, index);
+    std::ostringstream o;
+    if (data.shiftStrikes.size() == 0) {
+        o << data.shiftExpiries[expiryBucket] << "/ATM";
+    } else {
+        o << data.shiftExpiries[expiryBucket] << "/" << std::setprecision(4) << data.shiftStrikes[strikeBucket];
+    }
+    string text = o.str();
+    ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
+    ScenarioDescription desc(type, key, text);
+    return desc;
 }
 }
 }

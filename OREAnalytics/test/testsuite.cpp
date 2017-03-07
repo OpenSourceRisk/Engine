@@ -88,7 +88,6 @@ test_suite* init_unit_test_suite(int, char* []) {
     test_suite* test = BOOST_TEST_SUITE("OREAnalyticsTestSuite");
 
     test->add(BOOST_TEST_CASE(startTimer));
-
     test->add(testsuite::AggregationScenarioDataTest::suite());
     test->add(testsuite::CubeTest::suite());
     test->add(testsuite::ScenarioSimMarketTest::suite());
@@ -97,8 +96,7 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(testsuite::SensitivityAnalysisTest::suite());
     test->add(testsuite::StressTestingTest::suite());
     test->add(testsuite::ObservationModeTest::suite());
-
-    // test->add(FXSwapTest::suite());
+    //test->add(FXSwapTest::suite());
     test->add(BOOST_TEST_CASE(stopTimer));
 
     return test;

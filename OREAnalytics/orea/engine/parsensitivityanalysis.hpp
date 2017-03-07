@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2017 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -55,7 +55,7 @@ public:
                            const Conventions& conventions);
 
     //! Run par delta conversion, zero to par rate sensi, caplet/floorlet vega to cap/floor vega
-  void parDeltaConversion();
+    virtual void parDeltaConversion() override;
 
 private:
     //! Create Deposit for implying par rate sensitivity from zero rate sensitivity
@@ -83,7 +83,7 @@ private:
 //! ParSensitivityConverter class
 /*!
   1) Build Jacobi matrix containing sensitivities of par rates (first index) w.r.t. zero shifts (second index)
-  2) Convert zero rate sensitivities into par rate sensitivities
+  2) Convert zero rate and optionlet vol sensitivities into par rate/vol sensitivities
 
   Let: p_ij denote curve i's par instrument j (curve may be a discount or an index curve)
            z_kl denote curve k's zero shift l (curve may be a discount or an index curve)
@@ -119,10 +119,10 @@ public:
         //! Delta by trade and factor
         const std::map<std::pair<string, string>, Real>& delta,
         //! Par rate sensitivity w.r.t. zero shifts by factor and curve name (discount:ccy, index:ccy-name-tenor)
-        const map<pair<string, string>, vector<Real> >& parRateSensi,
-        const map<std::tuple<std::string, Size, std::string>, std::vector<Real> >& flatCapVolSensi)
-        : sensitivityData_(sensitivityData), delta_(delta), parRateSensi_(parRateSensi),
-          flatCapVolSensi_(flatCapVolSensi) {
+        const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real>& parSensi,
+	//! List of relevant factors for par ensi conversion
+	const std::set<string>& parFactors)
+        : sensitivityData_(sensitivityData), delta_(delta), parSensi_(parSensi), parFactors_(parFactors) {
         buildJacobiMatrix();
         convertSensitivity();
     }
@@ -130,9 +130,7 @@ public:
     //! Inspectors
     //@{
     //! List of factor names as defined by the sensitivity scenario generator
-    const vector<string>& factors(string curveId) { return factors_; }
-    //! Yield curve names identified in the factors (ccy for discount curves, index name for index curves)
-    const vector<string>& curves() { return curves_; }
+    const std::set<string>& parFactors(string curveId) { return parFactors_; }
     //@}
 
     //! Resulting Jacobi matrix
@@ -147,12 +145,11 @@ private:
     void convertSensitivity();
 
     boost::shared_ptr<SensitivityScenarioData> sensitivityData_;
-    std::vector<string> factors_;
     std::map<std::pair<string, string>, Real> delta_;
     std::map<std::pair<string, string>, Real> parDelta_;
-    std::map<std::pair<string, string>, std::vector<Real> > parRateSensi_;
-    std::map<std::tuple<std::string, Size, std::string>, std::vector<Real> > flatCapVolSensi_;
-    std::vector<string> curves_;
+    std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> parSensi_;
+    std::set<string> parFactors_;
+    std::set<RiskFactorKey> rawKeySet_, parKeySet_;
     Matrix jacobi_, jacobiInverse_;
 };
 
