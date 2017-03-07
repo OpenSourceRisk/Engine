@@ -315,9 +315,10 @@ Swaption::buildNonStandardSwap(const boost::shared_ptr<EngineFactory>& engineFac
     vector<Real> spreads =
         buildScheduledVectorNormalised(swap_[floatingLegIndex].floatingLegData().spreads(),
                                        swap_[floatingLegIndex].floatingLegData().spreadDates(), floatingSchedule);
+    // gearings are optional, i.e. may be empty
     vector<Real> gearings =
-        buildScheduledVectorNormalised(swap_[floatingLegIndex].floatingLegData().spreads(),
-                                       swap_[floatingLegIndex].floatingLegData().spreadDates(), floatingSchedule);
+        buildScheduledVectorNormalised(swap_[floatingLegIndex].floatingLegData().gearings(),
+                                       swap_[floatingLegIndex].floatingLegData().gearingDates(), floatingSchedule, 1.0);
     string indexName = swap_[floatingLegIndex].floatingLegData().index();
     DayCounter fixedDayCounter = parseDayCounter(swap_[fixedLegIndex].dayCounter());
     Handle<IborIndex> index =
