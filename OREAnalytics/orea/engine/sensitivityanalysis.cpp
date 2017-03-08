@@ -23,6 +23,7 @@
 #include <orea/engine/sensitivityanalysis.hpp>
 #include <orea/scenario/simplescenariofactory.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/to_string.hpp>
 #include <ored/report/csvreport.hpp>
 #include <ql/errors.hpp>
 #include <ql/instruments/forwardrateagreement.hpp>
@@ -295,8 +296,8 @@ void SensitivityAnalysis::writeParRateSensitivityReport(string fileName) {
         RiskFactorKey rawKey = data.first.second;
         Real sensi = data.second;
         report.next();
-        report.add(toString(parKey));
-        report.add(toString(rawKey));
+        report.add(ore::data::to_string(parKey));
+        report.add(ore::data::to_string(rawKey));
         report.add(sensi);
     }
     report.end();

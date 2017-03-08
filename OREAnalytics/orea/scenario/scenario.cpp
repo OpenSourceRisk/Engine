@@ -48,42 +48,5 @@ std::ostream& operator<<(std::ostream& out, const RiskFactorKey& key) {
     return out << key.keytype << "/" << key.name << "/" << key.index;
 }
 
-std::string toString(const RiskFactorKey::KeyType& keytype) {
-    std::ostringstream o;
-    o << keytype;
-    return o.str();
-}
-
-std::string toString(const RiskFactorKey& key) {
-    std::ostringstream o;
-    o << key;
-    return o.str();
-}
-
-  RiskFactorKey parseRiskFactorKey(const std::string& s) {
-    std::vector<std::string> tokens;
-    boost::split(tokens, s, boost::is_any_of("/:;,|"));
-    QL_REQUIRE(tokens.size() >= 3, "at least three tokens expected in risk factor key string " << s);
-    static std::map<std::string, RiskFactorKey::KeyType> keys = {
-        { "None", RiskFactorKey::KeyType::None },
-        { "DiscountCurve", RiskFactorKey::KeyType::DiscountCurve },
-        { "YieldCurve", RiskFactorKey::KeyType::YieldCurve },
-        { "IndexCurve", RiskFactorKey::KeyType::IndexCurve },
-        { "SwaptionVolatility", RiskFactorKey::KeyType::SwaptionVolatility },
-        { "OptionletVolatility", RiskFactorKey::KeyType::OptionletVolatility },
-        { "FXSpot", RiskFactorKey::KeyType::FXSpot },
-        { "FXVolatility", RiskFactorKey::KeyType::FXVolatility }
-    };
-    RiskFactorKey::KeyType type;
-    auto it = keys.find(tokens[0]);
-    if (it != keys.end()) {
-        type = it->second;
-    } else {
-        QL_FAIL("Cannot convert " << s << " to RiskFactorKey::KeyType");
-    }
-    string name = tokens[1];
-    Size index = ore::data::parseInteger(tokens[2]);
-    return RiskFactorKey(type, name, index);
-}
 }
 }

@@ -120,9 +120,12 @@ public:
         const std::map<std::pair<string, string>, Real>& delta,
         //! Par rate sensitivity w.r.t. zero shifts by factor and curve name (discount:ccy, index:ccy-name-tenor)
         const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real>& parSensi,
-	//! List of relevant factors for par ensi conversion
-	const std::set<string>& parFactors)
-        : sensitivityData_(sensitivityData), delta_(delta), parSensi_(parSensi), parFactors_(parFactors) {
+        //! List of relevant factors for par ensi conversion
+        const std::set<string>& parFactors,
+        //! Map for converting RiskFactorKeys into factors
+        const std::map<RiskFactorKey, std::string>& keyToFactor)
+        : sensitivityData_(sensitivityData), delta_(delta), parSensi_(parSensi), parFactors_(parFactors),
+          keyToFactor_(keyToFactor) {
         buildJacobiMatrix();
         convertSensitivity();
     }
@@ -149,6 +152,7 @@ private:
     std::map<std::pair<string, string>, Real> parDelta_;
     std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> parSensi_;
     std::set<string> parFactors_;
+    std::map<RiskFactorKey, std::string> keyToFactor_;
     std::set<RiskFactorKey> rawKeySet_, parKeySet_;
     Matrix jacobi_, jacobiInverse_;
 };
@@ -175,5 +179,6 @@ Volatility impliedVolatility(const CapFloor& cap, Real targetValue, const Handle
                              Volatility guess, VolatilityType type = Normal, Real displacement = 0.0,
                              Real accuracy = 1.0e-6, Natural maxEvaluations = 100, Volatility minVol = 1.0e-7,
                              Volatility maxVol = 4.0);
+
 }
 }

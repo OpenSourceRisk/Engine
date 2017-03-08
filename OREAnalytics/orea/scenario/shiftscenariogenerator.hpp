@@ -102,7 +102,10 @@ public:
     const std::vector<boost::shared_ptr<Scenario> >& scenarios() { return scenarios_; }
     //! Return vector of scenario descriptions
     std::vector<ScenarioDescription> scenarioDescriptions() { return scenarioDescriptions_; }
-
+    //! Return map of RiskFactorKeys to factors, i.e. human readable text representations
+    const std::map<RiskFactorKey, std::string>& keyToFactor() { return keyToFactor_; }
+    //! Return revers map of factors to RiskFactorKeys
+    const std::map<std::string, RiskFactorKey>& factorToKey() { return factorToKey_; }
     //@}
 
     //! Apply 1d triangular shift to 1d data such as yield curves, public to allow test suite access
@@ -201,6 +204,11 @@ protected:
         swaptionVolCurrencies_, capFloorVolCurrencies_, crNames_, infIndexNames_;
 
     std::vector<ScenarioDescription> scenarioDescriptions_;
+
+    // map risk factor key to "factor", i.e. human readable text representation
+    std::map<RiskFactorKey, std::string> keyToFactor_;
+    // reverse map of factors to risk factor keys
+    std::map<std::string, RiskFactorKey> factorToKey_;
 };
 
 ShiftScenarioGenerator::ShiftType parseShiftType(const std::string& s);

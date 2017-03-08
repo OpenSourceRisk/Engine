@@ -140,9 +140,8 @@ void ParSensitivityAnalysis::parDeltaConversion() {
             else
                 QL_FAIL("Instrument type " << instType << " for par sensitivity conversion not recognised");
             parRatesBase[key] = impliedQuote(parHelpers[key]);
-            LOG("Par instrument for discount curve, ccy "
-                << ccy << " tenor " << j << ", type " << instType
-                << ", base rate " << setprecision(4) << parRatesBase[key]);
+            LOG("Par instrument for discount curve, ccy " << ccy << " tenor " << j << ", type " << instType
+                                                          << ", base rate " << setprecision(4) << parRatesBase[key]);
         }
     }
 
@@ -319,7 +318,7 @@ void ParSensitivityAnalysis::parDeltaConversion() {
     LOG("Computing par rate and flat vol sensitivities done");
 
     // Build Jacobi matrix and convert sensitivities
-    ParSensitivityConverter jacobi(sensitivityData_, delta_, parSensi_, parFactors);
+    ParSensitivityConverter jacobi(sensitivityData_, delta_, parSensi_, parFactors, scenarioGenerator_->keyToFactor());
     parDelta_ = jacobi.parDelta();
 }
 
@@ -550,7 +549,7 @@ void ParSensitivityConverter::buildJacobiMatrix() {
                 jacobi_[i][j] = 0.0;
             else
                 jacobi_[i][j] = parSensi_[key];
-            //LOG("matrix entry " << i << " " << j << " " << key.first << " " << key.second << " " << jacobi_[i][j]);
+            // LOG("matrix entry " << i << " " << j << " " << key.first << " " << key.second << " " << jacobi_[i][j]);
             j++;
         }
         i++;
@@ -569,14 +568,6 @@ void ParSensitivityConverter::convertSensitivity() {
     // ensure matching size order of par factors and raw keys
     QL_REQUIRE(parFactors_.size() == rawKeySet_.size(), "factor/key size mismatch: " << parFactors_.size() << " vs "
                                                                                      << rawKeySet_.size());
-    std::map<RiskFactorKey, string> keyToFactor;
-    for (auto f : parFactors_) {
-        RiskFactorKey key = parseRiskFactorKey(f);
-        keyToFactor[key] = f;
-    }
-    for (auto k : rawKeySet_)
-        QL_REQUIRE(keyToFactor.find(k) != keyToFactor.end(), "raw key " << k << " not found in factor map");
-
     // unique set of trade IDs
     set<string> trades;
     for (auto d : delta_) {
@@ -588,7 +579,7 @@ void ParSensitivityConverter::convertSensitivity() {
         Array deltaArray(parFactors_.size(), 0.0);
         Size i = 0;
         for (auto k : rawKeySet_) {
-            pair<string, string> p(t, keyToFactor[k]);
+            pair<string, string> p(t, keyToFactor_[k]);
             if (delta_.find(p) != delta_.end())
                 deltaArray[i] = delta_[p];
             i++;
@@ -598,7 +589,7 @@ void ParSensitivityConverter::convertSensitivity() {
         i = 0;
         for (auto k : rawKeySet_) {
             if (parDeltaArray[i] != 0.0) {
-                pair<string, string> p(t, keyToFactor[k]);
+                pair<string, string> p(t, keyToFactor_[k]);
                 parDelta_[p] = parDeltaArray[i];
                 // LOG("par delta " << f << " " << deltaArray[i] << " " << parDeltaArray[i]);
             }
