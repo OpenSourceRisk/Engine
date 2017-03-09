@@ -271,6 +271,7 @@ boost::shared_ptr<VanillaSwap> Swaption::buildVanillaSwap(const boost::shared_pt
 
     // Set other ore::data::Trade details
     npvCurrency_ = ccy;
+    notional_ = nominal;
     legCurrencies_ = vector<string>(2, ccy);
     legs_.push_back(swap->fixedLeg());
     legs_.push_back(swap->floatingLeg());
@@ -340,6 +341,7 @@ Swaption::buildNonStandardSwap(const boost::shared_ptr<EngineFactory>& engineFac
 
     // Set other ore::data::Trade details
     npvCurrency_ = ccy;
+    notional_ = std::max(currentNotional(swap->fixedLeg()), currentNotional(swap->floatingLeg()));
     legCurrencies_ = vector<string>(2, ccy);
     legs_.push_back(swap->fixedLeg());
     legs_.push_back(swap->floatingLeg());

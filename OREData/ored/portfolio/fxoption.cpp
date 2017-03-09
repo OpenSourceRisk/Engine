@@ -74,6 +74,7 @@ void FxOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     instrument_ = boost::shared_ptr<InstrumentWrapper>(new VanillaInstrument(vanilla, boughtAmount_));
 
     npvCurrency_ = soldCurrency_; // sold is the domestic
+    notional_ = soldAmount_;
     maturity_ = expiryDate;
 }
 
