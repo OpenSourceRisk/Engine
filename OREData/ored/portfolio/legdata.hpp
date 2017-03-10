@@ -250,6 +250,7 @@ Leg makeIborLeg(LegData& data, boost::shared_ptr<IborIndex> index,
 Leg makeOISLeg(LegData& data, boost::shared_ptr<OvernightIndex> index);
 Leg makeSimpleLeg(LegData& data);
 Leg makeNotionalLeg(const Leg& refLeg, bool initNomFlow, bool finalNomFlow, bool amortNomFlow = true);
+Real currentNotional(const Leg& leg);
 
 //@}
 
