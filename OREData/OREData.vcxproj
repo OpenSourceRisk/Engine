@@ -64,6 +64,7 @@
     <ClInclude Include="ored\marketdata\marketdatum.hpp" />
     <ClInclude Include="ored\marketdata\marketdatumparser.hpp" />
     <ClInclude Include="ored\marketdata\marketimpl.hpp" />
+    <ClInclude Include="ored\marketdata\securityspread.hpp" />
     <ClInclude Include="ored\marketdata\swaptionvolcurve.hpp" />
     <ClInclude Include="ored\marketdata\todaysmarket.hpp" />
     <ClInclude Include="ored\marketdata\todaysmarketparameters.hpp" />
@@ -78,7 +79,9 @@
     <ClInclude Include="ored\model\utilities.hpp" />
     <ClInclude Include="ored\ored.hpp" />
     <ClInclude Include="ored\portfolio\all.hpp" />
+    <ClInclude Include="ored\portfolio\bond.hpp" />
     <ClInclude Include="ored\portfolio\builders\all.hpp" />
+    <ClInclude Include="ored\portfolio\builders\bond.hpp" />
     <ClInclude Include="ored\portfolio\builders\cachingenginebuilder.hpp" />
     <ClInclude Include="ored\portfolio\builders\capfloor.hpp" />
     <ClInclude Include="ored\portfolio\builders\capfloorediborleg.hpp" />
@@ -110,6 +113,10 @@
     <ClInclude Include="ored\portfolio\trade.hpp" />
     <ClInclude Include="ored\portfolio\tradeactions.hpp" />
     <ClInclude Include="ored\portfolio\tradefactory.hpp" />
+    <ClInclude Include="ored\report\all.hpp" />
+    <ClInclude Include="ored\report\csvreport.hpp" />
+    <ClInclude Include="ored\report\inmemoryreport.hpp" />
+    <ClInclude Include="ored\report\report.hpp" />
     <ClInclude Include="ored\utilities\all.hpp" />
     <ClInclude Include="ored\utilities\correlationmatrix.hpp" />
     <ClInclude Include="ored\utilities\currencycheck.hpp" />
@@ -152,6 +159,7 @@
     <ClCompile Include="ored\marketdata\marketdatum.cpp" />
     <ClCompile Include="ored\marketdata\marketdatumparser.cpp" />
     <ClCompile Include="ored\marketdata\marketimpl.cpp" />
+    <ClCompile Include="ored\marketdata\securityspread.cpp" />
     <ClCompile Include="ored\marketdata\swaptionvolcurve.cpp" />
     <ClCompile Include="ored\marketdata\todaysmarket.cpp" />
     <ClCompile Include="ored\marketdata\todaysmarketparameters.cpp" />
@@ -163,6 +171,7 @@
     <ClCompile Include="ored\model\lgmbuilder.cpp" />
     <ClCompile Include="ored\model\lgmdata.cpp" />
     <ClCompile Include="ored\model\utilities.cpp" />
+    <ClCompile Include="ored\portfolio\bond.cpp" />
     <ClCompile Include="ored\portfolio\builders\capfloor.cpp" />
     <ClCompile Include="ored\portfolio\builders\capfloorediborleg.cpp" />
     <ClCompile Include="ored\portfolio\builders\swaption.cpp" />
@@ -187,6 +196,7 @@
     <ClCompile Include="ored\portfolio\trade.cpp" />
     <ClCompile Include="ored\portfolio\tradeactions.cpp" />
     <ClCompile Include="ored\portfolio\tradefactory.cpp" />
+    <ClCompile Include="ored\report\csvreport.cpp" />
     <ClCompile Include="ored\utilities\correlationmatrix.cpp" />
     <ClCompile Include="ored\utilities\currencycheck.cpp" />
     <ClCompile Include="ored\utilities\flowanalysis.cpp" />

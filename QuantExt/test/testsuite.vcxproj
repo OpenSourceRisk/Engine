@@ -642,6 +642,7 @@
     <ClCompile Include="logquote.cpp" />
     <ClCompile Include="optionletstripper.cpp" />
     <ClCompile Include="ratehelpers.cpp" />
+    <ClCompile Include="stabilisedglls.cpp" />
     <ClCompile Include="staticallycorrectedyieldtermstructure.cpp" />
     <ClCompile Include="swaptionvolatilityconverter.cpp" />
     <ClCompile Include="testsuite.cpp" />
@@ -662,6 +663,7 @@
     <ClInclude Include="logquote.hpp" />
     <ClInclude Include="optionletstripper.hpp" />
     <ClInclude Include="ratehelpers.hpp" />
+    <ClInclude Include="stabilisedglls.hpp" />
     <ClInclude Include="staticallycorrectedyieldtermstructure.hpp" />
     <ClInclude Include="swaptionmarketdata.hpp" />
     <ClInclude Include="swaptionvolatilityconverter.hpp" />

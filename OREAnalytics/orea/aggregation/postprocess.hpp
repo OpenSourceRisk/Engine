@@ -234,7 +234,8 @@ public:
     //! Write average (over samples) DIM evolution through time for given netting set
     void exportDimEvolution(const std::string& fileName, const std::string& nettingSet);
     //! Write DIM as a function of sample netting set NPV for a given time step
-    void exportDimRegression(const std::string& fileName, const std::string& nettingSet, Size timeStep);
+    void exportDimRegression(const std::vector<string>& fileNames, const std::string& nettingSet,
+                             const std::vector<Size>& timeSteps);
 
 private:
     //! Helper function to return the collateral account evolution for a given netting set
@@ -251,7 +252,7 @@ private:
     //! Fill dynamic initial margin cube (per netting set, date and sample)
     void dynamicInitialMargin();
     //! Compile the array of DIM regressors for the specified date and sample index
-    Array regressorArray(Size dateIndex, Size sampleIndex);
+    Disposable<Array> regressorArray(Size dateIndex, Size sampleIndex);
 
     boost::shared_ptr<Portfolio> portfolio_;
     boost::shared_ptr<NettingSetManager> nettingSetManager_;

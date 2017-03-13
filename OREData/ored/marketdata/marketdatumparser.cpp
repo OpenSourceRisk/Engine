@@ -53,7 +53,8 @@ static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
                                                          { "EQUITY", MarketDatum::InstrumentType::EQUITY_SPOT },
                                                          { "EQUITY_FWD", MarketDatum::InstrumentType::EQUITY_FWD },
                                                          { "EQUITY_DIVIDEND", MarketDatum::InstrumentType::EQUITY_DIVIDEND },
-                                                         { "EQUITY_OPTION", MarketDatum::InstrumentType::EQUITY_OPTION }};
+                                                         { "EQUITY_OPTION", MarketDatum::InstrumentType::EQUITY_OPTION },
+                                                         {"BOND", MarketDatum::InstrumentType::BOND}};
 
     auto it = b.find(s);
     if (it != b.end()) {
@@ -76,6 +77,7 @@ static MarketDatum::QuoteType parseQuoteType(const string& s) {
         {"RATE_NVOL", MarketDatum::QuoteType::RATE_NVOL},
         {"RATE_SLNVOL", MarketDatum::QuoteType::RATE_SLNVOL},
         {"SHIFT", MarketDatum::QuoteType::SHIFT},
+        {"SECURITY_SPREAD", MarketDatum::QuoteType::SECURITY_SPREAD},
     };
 
     if (s == "RATE_GVOL")
@@ -94,7 +96,7 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
 
     vector<string> tokens;
     boost::split(tokens, datumName, boost::is_any_of("/"));
-    QL_REQUIRE(tokens.size() >= 2, "more than 2 tokens expected in " << datumName);
+    QL_REQUIRE(tokens.size() > 2, "more than 2 tokens expected in " << datumName);
 
     MarketDatum::InstrumentType instrumentType = parseInstrumentType(tokens[0]);
     MarketDatum::QuoteType quoteType = parseQuoteType(tokens[1]);
@@ -332,7 +334,13 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
             expiryDate = WeekendsOnly().adjust(asof + expiryTenor); // we have no calendar information here, so we use a generic calendar
         const string& strike = tokens[5];
         // note how we only store the expiry string - to ensure we can support both Periods and Dates being specified in the vol curve-config.
-        return boost::make_shared<EquityOptionQuote>(value, asof, datumName, quoteType, equityName, ccy, expiryString, strike); 
+        return boost::make_shared<EquityOptionQuote>(value, asof, datumName, quoteType, equityName, ccy, expiryString, strike);
+    }
+
+    case MarketDatum::InstrumentType::BOND: {
+        QL_REQUIRE(tokens.size() == 3, "3 tokens expected in " << datumName);
+        const string& securityID = tokens[2];
+        return boost::make_shared<SecuritySpreadQuote>(value, asof, datumName, securityID);
     }
 
     default:

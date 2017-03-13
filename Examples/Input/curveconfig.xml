@@ -261,6 +261,19 @@
       </Quotes>
       <Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
     </DefaultCurve>
+    <DefaultCurve>
+      <CurveId>CPTY_C_SR_EUR</CurveId>
+      <CurveDescription>CPTY_C SR HR EUR</CurveDescription>
+      <Currency>EUR</Currency>
+      <Type>HazardRate</Type>
+      <DiscountCurve/>
+      <DayCounter>A360</DayCounter>
+      <RecoveryRate>RECOVERY_RATE/RATE/CPTY_C/SR/EUR</RecoveryRate>
+      <Quotes>
+        <Quote>HAZARD_RATE/RATE/CPTY_C/SR/EUR/1Y</Quote>
+      </Quotes>
+      <Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
+    </DefaultCurve>
   </DefaultCurves>
   <YieldCurves>
     <YieldCurve>
@@ -1777,4 +1790,13 @@
             </Expiries>
         </EquityVolatility>
   </EquityVolatilities>
+    <SecuritySpreads>
+	<SecuritySpread>
+	  <CurveId>SECURITY_1</CurveId>
+	  <CurveDescription>Security Spread</CurveDescription>
+	  <Quotes>
+        <Quote>BOND/YIELD_SPREAD/SECURITY_1</Quote>
+      </Quotes>
+	</SecuritySpread>
+  </SecuritySpreads>
 </CurveConfiguration>

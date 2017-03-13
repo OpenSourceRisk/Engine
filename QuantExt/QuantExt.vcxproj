@@ -506,7 +506,9 @@
     <ClInclude Include="qle\indexes\ibor\hufbubor.hpp" />
     <ClInclude Include="qle\indexes\ibor\idridrfix.hpp" />
     <ClInclude Include="qle\indexes\ibor\inrmifor.hpp" />
+    <ClInclude Include="qle\indexes\ibor\krwkoribor.hpp" />
     <ClInclude Include="qle\indexes\ibor\mxntiie.hpp" />
+    <ClInclude Include="qle\indexes\ibor\myrklibor.hpp" />
     <ClInclude Include="qle\indexes\ibor\noknibor.hpp" />
     <ClInclude Include="qle\indexes\ibor\nzdbkbm.hpp" />
     <ClInclude Include="qle\indexes\ibor\plnwibor.hpp" />
@@ -515,6 +517,7 @@
     <ClInclude Include="qle\indexes\ibor\sgdsor.hpp" />
     <ClInclude Include="qle\indexes\ibor\skkbribor.hpp" />
     <ClInclude Include="qle\indexes\ibor\tonar.hpp" />
+    <ClInclude Include="qle\indexes\ibor\twdtaibor.hpp" />
     <ClInclude Include="qle\instruments\all.hpp" />
     <ClInclude Include="qle\instruments\averageois.hpp" />
     <ClInclude Include="qle\instruments\crossccybasisswap.hpp" />
@@ -560,6 +563,7 @@
     <ClInclude Include="qle\pricingengines\discountingcurrencyswapengine.hpp" />
     <ClInclude Include="qle\pricingengines\discountingequityforwardengine.hpp" />
     <ClInclude Include="qle\pricingengines\discountingfxforwardengine.hpp" />
+    <ClInclude Include="qle\pricingengines\discountingriskybondengine.hpp" />
     <ClInclude Include="qle\pricingengines\discountingswapenginemulticurve.hpp" />
     <ClInclude Include="qle\pricingengines\numericlgmswaptionengine.hpp" />
     <ClInclude Include="qle\pricingengines\oiccbasisswapengine.hpp" />
@@ -638,6 +642,7 @@
     <ClCompile Include="qle\pricingengines\discountingcurrencyswapengine.cpp" />
     <ClCompile Include="qle\pricingengines\discountingequityforwardengine.cpp" />
     <ClCompile Include="qle\pricingengines\discountingfxforwardengine.cpp" />
+    <ClCompile Include="qle\pricingengines\discountingriskybondengine.cpp" />
     <ClCompile Include="qle\pricingengines\discountingswapenginemulticurve.cpp" />
     <ClCompile Include="qle\pricingengines\numericlgmswaptionengine.cpp" />
     <ClCompile Include="qle\pricingengines\oiccbasisswapengine.cpp" />

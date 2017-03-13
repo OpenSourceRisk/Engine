@@ -19,6 +19,7 @@
                 <xs:element type="capFloorData" name="CapFloorData"/>
                 <xs:element type="equityOptionData" name="EquityOptionData"/>
                 <xs:element type="equityForwardData" name="EquityForwardData"/>
+                <xs:element type="bondData" name="BondData"/>
               </xs:choice>
             </xs:sequence>
             <xs:attribute type="xs:string" name="id" use="required"/>
@@ -95,6 +96,18 @@
     </xs:all>
   </xs:complexType>
 
+  <xs:complexType name="bondData">
+    <xs:sequence>
+      <xs:element type="xs:string" name="IssuerId" maxOccurs="unbounded" minOccurs="1"/>
+      <xs:element type="xs:string" name="SecurityId" maxOccurs="unbounded" minOccurs="1"/>
+      <xs:element type="xs:string" name="ReferenceCurveId" maxOccurs="unbounded" minOccurs="1"/>
+      <xs:element type="xs:string" name="SettlementDays" maxOccurs="unbounded" minOccurs="1"/>
+      <xs:element type="xs:string" name="Calendar" maxOccurs="unbounded" minOccurs="1"/>
+      <xs:element type="xs:string" name="IssueDate" maxOccurs="unbounded" minOccurs="1"/>
+      <xs:element type="legData" name="LegData" maxOccurs="unbounded" minOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+  
   <xs:element name="legDataType" abstract="true"/>
   <xs:element name="FixedLegData" substitutionGroup="legDataType">
     <xs:complexType>
@@ -209,6 +222,7 @@
       <xs:enumeration value="CapFloor"/>
       <xs:enumeration value="EquityOption"/>
       <xs:enumeration value="EquityForward"/>
+      <xs:enumeration value="Bond"/>
     </xs:restriction>
   </xs:simpleType>
 

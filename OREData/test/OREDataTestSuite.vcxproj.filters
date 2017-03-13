@@ -48,10 +48,7 @@
     <ClInclude Include="ccyswapwithresets.hpp">
       <Filter>headers</Filter>
     </ClInclude>
-    <ClInclude Include="equitymarketdata.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="equitytrades.hpp">
+    <ClInclude Include="bond.hpp">
       <Filter>headers</Filter>
     </ClInclude>
   </ItemGroup>
@@ -96,10 +93,7 @@
     <ClCompile Include="ccyswapwithresets.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="equitymarketdata.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="equitytrades.cpp">
+    <ClCompile Include="bond.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>

@@ -28,6 +28,7 @@
 #include <ored/marketdata/fxvolcurve.hpp>
 #include <ored/marketdata/swaptionvolcurve.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
+#include <ored/marketdata/securityspread.hpp>
 #include <ored/marketdata/curveloader.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/indexparser.hpp>
@@ -61,6 +62,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
     map<string, boost::shared_ptr<DefaultCurve>> requiredDefaultCurves;
     map<string, boost::shared_ptr<EquityCurve>> requiredEquityCurves;
     map<string, boost::shared_ptr<EquityVolCurve>> requiredEquityVolCurves;
+    map<string, boost::shared_ptr<SecuritySpread>> requiredSecuritySpreads;
 
     for (const auto& configuration : params.configurations()) {
 
@@ -348,8 +350,35 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                 break;
             }
 
+            case CurveSpec::CurveType::SecuritySpread: {
+                boost::shared_ptr<SecuritySpreadSpec> securityspreadspec =
+                    boost::dynamic_pointer_cast<SecuritySpreadSpec>(spec);
+                QL_REQUIRE(securityspreadspec, "Failed to convert spec " << *spec << " to security spread spec");
+
+                // have we built the curve already?
+                auto itr = requiredSecuritySpreads.find(securityspreadspec->securityID());
+                if (itr == requiredSecuritySpreads.end()) {
+                    // build the curve
+                    LOG("Building SecuritySpreads for asof " << asof);
+                    boost::shared_ptr<SecuritySpread> securitySpread =
+                        boost::make_shared<SecuritySpread>(asof, *securityspreadspec, loader);
+                    itr = requiredSecuritySpreads.insert(make_pair(securityspreadspec->securityID(), securitySpread))
+                              .first;
+                }
+
+                // add the handle to the Market Map (possible lots of times for proxies)
+                for (const auto& it : params.securitySpreads(configuration.first)) {
+                    if (it.second == spec->name()) {
+                        LOG("Adding SecuritySpread (" << it.first << ") with spec " << *securityspreadspec
+                                                      << " to configuration " << configuration.first);
+                        securitySpreads_[make_pair(configuration.first, it.first)] = itr->second->spread();
+                    }
+                }
+                break;
+            }
+
             default: {
-                // maybe we just log an continue? need to update count then
+                // maybe we just log and continue? need to update count then
                 QL_FAIL("Unhandled spec " << *spec);
             }
             }

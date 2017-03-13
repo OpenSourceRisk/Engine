@@ -47,7 +47,7 @@ XMLNode* CashflowData::toXML(XMLDocument& doc) {
 }
 void FixedLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "FixedLegData");
-    rates_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Rates", "Rate", "startDate", rateDates_);
+    rates_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Rates", "Rate", "startDate", rateDates_, true);
 }
 
 XMLNode* FixedLegData::toXML(XMLDocument& doc) {
@@ -59,7 +59,8 @@ XMLNode* FixedLegData::toXML(XMLDocument& doc) {
 void FloatingLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "FloatingLegData");
     index_ = XMLUtils::getChildValue(node, "Index", true);
-    spreads_ = XMLUtils::getChildrenValuesAsDoubles(node, "Spreads", "Spread", true);
+    spreads_ =
+        XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Spreads", "Spread", "startDate", spreadDates_, true);
     // These are all optional
     isInArrears_ = XMLUtils::getChildValueAsBool(node, "IsInArrears"); // defaults to true
     fixingDays_ = XMLUtils::getChildValueAsInt(node, "FixingDays");    // defaults to 0
@@ -92,31 +93,31 @@ void LegData::fromXML(XMLNode* node) {
     notionals_ =
         XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Notionals", "Notional", "startDate", notionalDates_);
     XMLNode* tmp = XMLUtils::getChildNode(node, "Notionals");
-    XMLNode* fxResetNode = XMLUtils::getChildNode(tmp, "FXReset");
-    if (fxResetNode) {
-        isNotResetXCCY_ = false;
-        foreignCurrency_ = XMLUtils::getChildValue(fxResetNode, "ForeignCurrency");
-        foreignAmount_ = XMLUtils::getChildValueAsDouble(fxResetNode, "ForeignAmount");
-        fxIndex_ = XMLUtils::getChildValue(fxResetNode, "FXIndex");
-        fixingDays_ = XMLUtils::getChildValueAsInt(fxResetNode, "FixingDays");
-        // TODO add schedule
-    } else {
-        isNotResetXCCY_ = true;
+    isNotResetXCCY_ = true;
+    notionalInitialExchange_ = false;
+    notionalFinalExchange_ = false;
+    notionalAmortizingExchange_ = false;
+    if (tmp) {
+        XMLNode* fxResetNode = XMLUtils::getChildNode(tmp, "FXReset");
+        if (fxResetNode) {
+            isNotResetXCCY_ = false;
+            foreignCurrency_ = XMLUtils::getChildValue(fxResetNode, "ForeignCurrency");
+            foreignAmount_ = XMLUtils::getChildValueAsDouble(fxResetNode, "ForeignAmount");
+            fxIndex_ = XMLUtils::getChildValue(fxResetNode, "FXIndex");
+            fixingDays_ = XMLUtils::getChildValueAsInt(fxResetNode, "FixingDays");
+            // TODO add schedule
+        }
+        XMLNode* exchangeNode = XMLUtils::getChildNode(tmp, "Exchanges");
+        if (exchangeNode) {
+            notionalInitialExchange_ = XMLUtils::getChildValueAsBool(exchangeNode, "NotionalInitialExchange");
+            notionalFinalExchange_ = XMLUtils::getChildValueAsBool(exchangeNode, "NotionalFinalExchange");
+            if (XMLUtils::getChildNode(exchangeNode, "NotionalAmortizingExchange"))
+                notionalAmortizingExchange_ = XMLUtils::getChildValueAsBool(exchangeNode, "NotionalAmortizingExchange");
+        }
     }
-    XMLNode* exchangeNode = XMLUtils::getChildNode(tmp, "Exchanges");
-    if (exchangeNode) {
-        notionalInitialExchange_ = XMLUtils::getChildValueAsBool(exchangeNode, "NotionalInitialExchange");
-        notionalFinalExchange_ = XMLUtils::getChildValueAsBool(exchangeNode, "NotionalFinalExchange");
-        if (XMLUtils::getChildNode(exchangeNode, "NotionalAmortizingExchange"))
-            notionalAmortizingExchange_ = XMLUtils::getChildValueAsBool(exchangeNode, "NotionalAmortizingExchange");
-        else
-            notionalAmortizingExchange_ = false;
-    } else {
-        notionalInitialExchange_ = false;
-        notionalFinalExchange_ = false;
-        notionalAmortizingExchange_ = false;
-    }
-    schedule_.fromXML(XMLUtils::getChildNode(node, "ScheduleData"));
+    tmp = XMLUtils::getChildNode(node, "ScheduleData");
+    if (tmp)
+        schedule_.fromXML(tmp);
     if (legType_ == "Fixed") {
         fixedLegData_.fromXML(XMLUtils::getChildNode(node, "FixedLegData"));
         floatingLegData_ = FloatingLegData();
@@ -130,7 +131,7 @@ void LegData::fromXML(XMLNode* node) {
         fixedLegData_ = FixedLegData();
         floatingLegData_ = FloatingLegData();
     } else {
-        QL_FAIL("Unkown legType :" << legType_);
+        QL_FAIL("Unknown legType :" << legType_);
     }
 }
 
@@ -340,7 +341,7 @@ vector<double> buildScheduledVector(const vector<double>& values, const vector<s
     Date d = parseDate(dates[j + 1]);     // The first start date
     for (Size i = 0; i < len; i++) {      // loop over data vector and populate it.
         // If j == max_j we just fall through and take the final value
-        while (schedule[i] > d && j < max_j) {
+        while (schedule[i] >= d && j < max_j) {
             j++;
             if (j < max_j) {
                 QL_REQUIRE(dates[j + 1] != "", "Cannot have empty date attribute for node " << j + 1);
@@ -351,6 +352,18 @@ vector<double> buildScheduledVector(const vector<double>& values, const vector<s
     }
 
     return data;
+}
+
+vector<double> normaliseToSchedule(const vector<double>& values, const Schedule& schedule, const Real defaultValue) {
+    vector<double> res = values;
+    if (res.size() < schedule.size() - 1)
+        res.resize(schedule.size() - 1, res.size() == 0 ? defaultValue : res.back());
+    return res;
+}
+
+vector<double> buildScheduledVectorNormalised(const vector<double>& values, const vector<string>& dates,
+                                              const Schedule& schedule, const Real defaultValue) {
+    return normaliseToSchedule(buildScheduledVector(values, dates, schedule), schedule, defaultValue);
 }
 
 } // namespace data

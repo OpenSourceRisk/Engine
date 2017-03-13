@@ -67,9 +67,10 @@ struct MarketConfiguration {
           fxVolatilitiesId(Market::defaultConfiguration), swaptionVolatilitiesId(Market::defaultConfiguration),
           defaultCurvesId(Market::defaultConfiguration), swapIndexCurvesId(Market::defaultConfiguration),
           capFloorVolatilitiesId(Market::defaultConfiguration), equityCurvesId(Market::defaultConfiguration), 
-          equityVolatilitiesId(Market::defaultConfiguration) {}
+          equityVolatilitiesId(Market::defaultConfiguration), securitySpreadsId(Market::defaultConfiguration) {}
     string discountingCurvesId, yieldCurvesId, indexForwardingCurvesId, fxSpotsId, fxVolatilitiesId,
-        swaptionVolatilitiesId, defaultCurvesId, swapIndexCurvesId, capFloorVolatilitiesId, equityCurvesId, equityVolatilitiesId;
+        swaptionVolatilitiesId, defaultCurvesId, swapIndexCurvesId, capFloorVolatilitiesId, 
+        equityCurvesId, equityVolatilitiesId, securitySpreadsId;
 };
 
 bool operator==(const MarketConfiguration& lhs, const MarketConfiguration& rhs);
@@ -124,9 +125,10 @@ public:
 
     // SP5 => Equity/USD/SP5, Lufthansa => Equity/EUR/Lufthansa, etc.
     const map<string, string>& equityCurves(const string& configuration) const;
-
     // SP5 => EquityVolatility/USD/SP5, Lufthansa => Equity/EUR/Lufthansa, etc.
     const map<string, string>& equityVolatilities(const string& configuration) const;
+    //! TODO: give an example
+    const map<string, string>& securitySpreads(const string& configuration) const;
 
     //! Build a vector of all the curve specs (may contain duplicates)
     vector<string> curveSpecs(const string& configuration) const;
@@ -143,6 +145,7 @@ public:
     const string& capFloorVolatilitiesId(const string& configuration) const;
     const string& equityCurvesId(const string& configuration) const;
     const string& equityVolatilitiesId(const string& configuration) const;
+    const string& securitySpreadsId(const string& configuration) const;
     //@}
 
     //! \name Setters
@@ -159,6 +162,7 @@ public:
     void addCapFloorVolatilities(const string& id, const map<string, string>& assignments);
     void addEquityCurves(const string& id, const map<string, string>& assignments);
     void addEquityVolatilities(const string& id, const map<string, string>& assignments);
+    void addSecuritySpreads(const string& id, const map<string, string>& assignments);
     //@}
 
     //! \name Serialisation
@@ -178,7 +182,8 @@ private:
     map<string, MarketConfiguration> configurations_;
     // maps id to map (key,value)
     map<string, map<string, string>> discountingCurves_, yieldCurves_, indexForwardingCurves_, fxSpots_,
-        fxVolatilities_, swaptionVolatilities_, defaultCurves_, capFloorVolatilities_, equityCurves_, equityVolatilities_;
+        fxVolatilities_, swaptionVolatilities_, defaultCurves_, capFloorVolatilities_, equityCurves_, 
+        equityVolatilities_, securitySpreads_;;
     map<string, map<string, string>> swapIndices_;
 
     void curveSpecs(const map<string, map<string, string>>&, const string&, vector<string>&) const;
@@ -248,6 +253,11 @@ inline const string& TodaysMarketParameters::equityCurvesId(const string& config
 inline const string& TodaysMarketParameters::equityVolatilitiesId(const string& configuration) const {
     QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
     return configurations_.at(configuration).equityVolatilitiesId;
+}
+
+inline const string& TodaysMarketParameters::securitySpreadsId(const string& configuration) const {
+    QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
+    return configurations_.at(configuration).securitySpreadsId;
 }
 
 inline const map<string, string>& TodaysMarketParameters::discountingCurves(const string& configuration) const {
@@ -349,6 +359,15 @@ inline const map<string, string>& TodaysMarketParameters::equityVolatilities(con
     return it->second;
 }
 
+inline const map<string, string>& TodaysMarketParameters::securitySpreads(const string& configuration) const {
+    QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
+    auto it = securitySpreads_.find(securitySpreadsId(configuration));
+    QL_REQUIRE(it != securitySpreads_.end(), "security spreads with id " << securitySpreadsId(configuration)
+                                                                         << " specified in configuration "
+                                                                         << configuration << " not found");
+    return it->second;
+}
+
 inline void TodaysMarketParameters::addConfiguration(const string& id, const MarketConfiguration& configuration) {
     configurations_[id] = configuration;
 }
@@ -417,6 +436,12 @@ inline void TodaysMarketParameters::addEquityVolatilities(const string& id, cons
     equityVolatilities_[id] = assignments;
     for (auto s : assignments)
         DLOG("TodaysMarketParameters, add equity volatilities: " << id << " " << s.first << " " << s.second);
+}
+
+inline void TodaysMarketParameters::addSecuritySpreads(const string& id, const map<string, string>& assignments) {
+    securitySpreads_[id] = assignments;
+    for (auto s : assignments)
+        DLOG("TodaysMarketParameters, add security spreads: " << id << " " << s.first << " " << s.second);
 }
 
 } // namespace data
