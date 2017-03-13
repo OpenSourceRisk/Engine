@@ -64,7 +64,7 @@ private:
     Real equitySpot_;
     EquityCurveConfig::Type curveType_;
     vector<Real> quotes_;
-    vector<Period> terms_;
+    vector<Date> terms_;
     DayCounter dc_;
 };
 }

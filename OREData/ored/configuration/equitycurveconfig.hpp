@@ -100,8 +100,8 @@ private:
     string currency_;
     Type type_;
     string equitySpotQuoteID_;
-    string dayCountID_;
     vector<string> quotes_;
+    string dayCountID_;
     bool extrapolation_;
 };
 }
