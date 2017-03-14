@@ -154,6 +154,8 @@ void EquityMarketDataTest::testBadMarketDatumStrings() {
 }
 
 void EquityMarketDataTest::testEqCurveConfigLoad() {
+
+    BOOST_TEST_MESSAGE("Testing equity curve config load...");
     ore::data::XMLDocument testDoc;
     testDoc.fromXMLString(divYieldCurveConfigString);
     // check that the root node is as expected
@@ -191,6 +193,8 @@ void EquityMarketDataTest::testEqCurveConfigLoad() {
 }
 
 void EquityMarketDataTest::testEqCurveConfigBadLoad() {
+
+    BOOST_TEST_MESSAGE("Testing equity curve config load (bad input)...");
     ore::data::XMLDocument testBadDoc;
     testBadDoc.fromXMLString(eqBadConfigString);
     // check that the root node is as expected

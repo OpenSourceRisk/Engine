@@ -501,6 +501,25 @@ void parseDateOrPeriod(const string& s, Date& d, Period& p, bool& isDate) {
     }
 }
 
+QuantLib::LsmBasisSystem::PolynomType parsePolynomType(const std::string& s) {
+    static map<string, LsmBasisSystem::PolynomType> poly = {
+        {"Monomial", LsmBasisSystem::PolynomType::Monomial},
+        {"Laguerre", LsmBasisSystem::PolynomType::Laguerre},
+        {"Hermite", LsmBasisSystem::PolynomType::Hermite},
+        {"Hyperbolic", LsmBasisSystem::PolynomType::Hyperbolic},
+        {"Legendre", LsmBasisSystem::PolynomType::Legendre},
+        {"Chebyshev", LsmBasisSystem::PolynomType::Chebyshev},
+        {"Chebyshev2nd", LsmBasisSystem::PolynomType::Chebyshev2nd},
+    };
+
+    auto it = poly.find(s);
+    if (it != poly.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("Polynom type \"" << s << "\" not recognized");
+    }
+}
+
 std::vector<string> parseListOfValues(string s) {
     boost::trim(s);
     std::vector<string> vec;

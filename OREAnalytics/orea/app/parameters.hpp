@@ -23,13 +23,17 @@
 
 #pragma once
 
-#include <vector>
 #include <map>
+#include <vector>
 
 #include <ored/utilities/xmlutils.hpp>
 
-using namespace std;
 using namespace ore::data;
+using std::map;
+using std::string;
+
+namespace ore {
+namespace analytics {
 
 class Parameters : public XMLSerializable {
 public:
@@ -49,3 +53,5 @@ public:
 private:
     map<string, map<string, string>> data_;
 };
+}
+}

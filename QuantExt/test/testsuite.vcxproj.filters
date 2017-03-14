@@ -50,6 +50,9 @@
     <ClCompile Include="ratehelpers.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="stabilisedglls.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
     <ClCompile Include="equitycrossassetmodel.cpp">
       <Filter>source</Filter>
     </ClCompile>
@@ -118,6 +121,9 @@
       <Filter>headers</Filter>
     </ClInclude>
     <ClInclude Include="ratehelpers.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="stabilisedglls.hpp">
       <Filter>headers</Filter>
     </ClInclude>
     <ClInclude Include="equitycrossassetmodel.hpp">

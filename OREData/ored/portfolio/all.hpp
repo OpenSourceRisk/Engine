@@ -21,5 +21,6 @@
 #include <ored/portfolio/nettingsetdefinition.hpp>
 #include <ored/portfolio/nettingsetmanager.hpp>
 #include <ored/portfolio/capfloor.hpp>
+#include <ored/portfolio/bond.hpp>
 
 #include <ored/portfolio/builders/all.hpp>

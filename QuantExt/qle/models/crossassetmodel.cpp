@@ -523,4 +523,12 @@ void CrossAssetModel::calibrateBsVolatilitiesIterative(
     update();
 }
 
+void CrossAssetModel::calibrateFxBsVolatilitiesGlobal(const Size ccy,
+                                                      const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers,
+                                                      OptimizationMethod& method, const EndCriteria& endCriteria,
+                                                      const Constraint& constraint, const std::vector<Real>& weights) {
+    calibrate(helpers, method, endCriteria, constraint, weights, MoveFxBsVolatilities(ccy));
+    update();
+}
+
 } // namespace QuantExt

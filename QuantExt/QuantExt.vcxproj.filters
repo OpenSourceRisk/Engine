@@ -336,18 +336,10 @@
     <ClInclude Include="qle\termstructures\dynamicstype.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
-    <ClInclude Include="qle\models\eqbsparametrization.hpp">
-      <Filter>models</Filter>
-    </ClInclude>
-    <ClInclude Include="qle\models\eqbsconstantparametrization.hpp">
-      <Filter>models</Filter>
-    </ClInclude>
-    <ClInclude Include="qle\models\eqbspiecewiseconstantparametrization.hpp">
-      <Filter>models</Filter>
-    </ClInclude>
-    <ClInclude Include="qle\pricingengines\analyticxassetlgmeqoptionengine.hpp">
-      <Filter>pricingengines</Filter>
-    </ClInclude>
+    <ClInclude Include="qle\pricingengines\discountingriskybondengine.hpp" />
+    <ClInclude Include="qle\indexes\ibor\krwkoribor.hpp" />
+    <ClInclude Include="qle\indexes\ibor\twdtaibor.hpp" />
+    <ClInclude Include="qle\indexes\ibor\myrklibor.hpp" />
     <ClInclude Include="qle\pricingengines\discountingequityforwardengine.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
@@ -356,6 +348,18 @@
     </ClInclude>
     <ClInclude Include="qle\models\crossassetmodelimpliedeqvoltermstructure.hpp">
       <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\eqbsconstantparametrization.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\eqbsparametrization.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\eqbspiecewiseconstantparametrization.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\analyticxassetlgmeqoptionengine.hpp">
+      <Filter>pricingengines</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -586,18 +590,7 @@
     <ClCompile Include="qle\termstructures\spreadedswaptionvolatility.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
-    <ClCompile Include="qle\models\eqbsparametrization.cpp">
-      <Filter>models</Filter>
-    </ClCompile>
-    <ClCompile Include="qle\models\eqbsconstantparametrization.cpp">
-      <Filter>models</Filter>
-    </ClCompile>
-    <ClCompile Include="qle\models\eqbspiecewiseconstantparametrization.cpp">
-      <Filter>models</Filter>
-    </ClCompile>
-    <ClCompile Include="qle\pricingengines\analyticxassetlgmeqoptionengine.cpp">
-      <Filter>pricingengines</Filter>
-    </ClCompile>
+    <ClCompile Include="qle\pricingengines\discountingriskybondengine.cpp" />
     <ClCompile Include="qle\pricingengines\discountingequityforwardengine.cpp">
       <Filter>pricingengines</Filter>
     </ClCompile>
@@ -606,6 +599,18 @@
     </ClCompile>
     <ClCompile Include="qle\models\crossassetmodelimpliedeqvoltermstructure.cpp">
       <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\eqbsconstantparametrization.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\eqbsparametrization.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\eqbspiecewiseconstantparametrization.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\analyticxassetlgmeqoptionengine.cpp">
+      <Filter>pricingengines</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

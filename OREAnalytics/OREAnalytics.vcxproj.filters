@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="aggregation">
@@ -103,6 +103,10 @@
     <ClInclude Include="orea\scenario\aggregationscenariodata.hpp">
       <Filter>scenario</Filter>
     </ClInclude>
+    <ClInclude Include="orea\app\all.hpp" />
+    <ClInclude Include="orea\app\oreapp.hpp" />
+    <ClInclude Include="orea\app\parameters.hpp" />
+    <ClInclude Include="orea\app\reportwriter.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="orea\aggregation\collateralaccount.cpp">
@@ -154,5 +158,8 @@
     <ClCompile Include="orea\scenario\scenariowriter.cpp">
       <Filter>scenario</Filter>
     </ClCompile>
+    <ClCompile Include="orea\app\parameters.cpp" />
+    <ClCompile Include="orea\app\oreapp.cpp" />
+    <ClCompile Include="orea\app\reportwriter.cpp" />
   </ItemGroup>
 </Project>

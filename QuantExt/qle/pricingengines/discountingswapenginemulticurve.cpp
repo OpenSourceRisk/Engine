@@ -194,8 +194,10 @@ void DiscountingSwapEngineMultiCurve::calculate() const {
             results_.legNPV[i] += impl_->amountGetter_->amount() * discount;
             results_.legBPS[i] += impl_->amountGetter_->bpsFactor() * discount;
 
-            // For all coupons after first do not call amount().
-            impl_->amountGetter_->setCallAmount(false);
+            // For all coupons after second do not call amount(), since for those
+            // we can be sure that they are not fixed yet
+            if (j == 1)
+                impl_->amountGetter_->setCallAmount(false);
         }
 
         results_.legNPV[i] *= arguments_.payer[i];

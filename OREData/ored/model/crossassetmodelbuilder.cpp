@@ -217,7 +217,8 @@ CrossAssetModelBuilder::build(const boost::shared_ptr<CrossAssetModelData>& conf
 
     for (Size i = 0; i < fxParametrizations.size(); i++) {
         boost::shared_ptr<FxBsData> fx = config->fxConfigs()[i];
-        if (!fx->calibrateSigma()) {
+
+        if (fx->calibrationType() == CalibrationType::None || !fx->calibrateSigma()) {
             LOG("FX Calibration " << i << " skipped");
             continue;
         }
@@ -233,9 +234,12 @@ CrossAssetModelBuilder::build(const boost::shared_ptr<CrossAssetModelData>& conf
         for (Size j = 0; j < fxOptionBaskets_[i].size(); j++)
             fxOptionBaskets_[i][j]->setPricingEngine(engine);
 
-        model->calibrateBsVolatilitiesIterative(
-            CrossAssetModelTypes::FX, i, fxOptionBaskets_[i], 
-            *optimizationMethod_, endCriteria_);
+        if (fx->calibrationType() == CalibrationType::Bootstrap && fx->sigmaParamType() == ParamType::Piecewise)
+            model->calibrateBsVolatilitiesIterative(
+                CrossAssetModelTypes::FX, i, fxOptionBaskets_[i], 
+                *optimizationMethod_, endCriteria_);
+        else
+            model->calibrateFxBsVolatilitiesGlobal(i, fxOptionBaskets_[i], *optimizationMethod_, endCriteria_);
 
         LOG("FX " << fx->foreignCcy() << " calibration errors:");
         fxOptionCalibrationErrors_[i] =

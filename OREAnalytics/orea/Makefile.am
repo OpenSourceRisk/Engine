@@ -1,4 +1,4 @@
-SUBDIRS = aggregation cube engine scenario simulation
+SUBDIRS = aggregation cube engine scenario simulation app
 
 AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir} -I${top_builddir}/../QuantExt
 
@@ -13,6 +13,7 @@ libOREAnalytics_la_LIBADD = \
 	cube/libOREAnalyticsCube.la \
 	engine/libOREAnalyticsEngine.la \
 	scenario/libOREAnalyticsScenario.la \
+	app/libOREAnalyticsApp.la \
 	simulation/libOREAnalyticsSimulation.la
 
 libOREAnalytics_la_SOURCES = \

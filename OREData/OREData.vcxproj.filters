@@ -20,7 +20,7 @@
       <UniqueIdentifier>{366dc296-9975-4787-a9f4-6e3e3d30a55c}</UniqueIdentifier>
     </Filter>
     <Filter Include="report">
-      <UniqueIdentifier>{4131282b-d9e6-4ff1-95bc-7720b426edd8}</UniqueIdentifier>
+      <UniqueIdentifier>{f56268ea-d150-4fb7-b75b-9618e16d7c3d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -264,46 +264,55 @@
     <ClInclude Include="ored\utilities\serializationdate.hpp">
       <Filter>utilities</Filter>
     </ClInclude>
+    <ClInclude Include="ored\marketdata\securityspread.hpp">
+      <Filter>marketdata</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\marketdata\equitycurve.hpp">
+      <Filter>marketdata</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\marketdata\equityvolcurve.hpp">
+      <Filter>marketdata</Filter>
+    </ClInclude>
     <ClInclude Include="ored\configuration\equitycurveconfig.hpp">
       <Filter>configuration</Filter>
     </ClInclude>
     <ClInclude Include="ored\configuration\equityvolcurveconfig.hpp">
       <Filter>configuration</Filter>
     </ClInclude>
-    <ClInclude Include="ored\marketdata\equityvolcurve.hpp">
-      <Filter>marketdata</Filter>
-    </ClInclude>
-    <ClInclude Include="ored\marketdata\equitycurve.hpp">
-      <Filter>marketdata</Filter>
-    </ClInclude>
-    <ClInclude Include="ored\portfolio\equityoption.hpp">
+    <ClInclude Include="ored\portfolio\equityforward.hpp">
       <Filter>portfolio</Filter>
     </ClInclude>
-    <ClInclude Include="ored\portfolio\builders\equityoption.hpp">
-      <Filter>portfolio\builders</Filter>
-    </ClInclude>
-    <ClInclude Include="ored\portfolio\equityforward.hpp">
+    <ClInclude Include="ored\portfolio\equityoption.hpp">
       <Filter>portfolio</Filter>
     </ClInclude>
     <ClInclude Include="ored\portfolio\builders\equityforward.hpp">
       <Filter>portfolio\builders</Filter>
     </ClInclude>
-    <ClInclude Include="ored\report\all.hpp">
-      <Filter>report</Filter>
+    <ClInclude Include="ored\portfolio\builders\equityoption.hpp">
+      <Filter>portfolio\builders</Filter>
     </ClInclude>
-    <ClInclude Include="ored\report\csvreport.hpp">
+    <ClInclude Include="ored\report\report.hpp">
       <Filter>report</Filter>
     </ClInclude>
     <ClInclude Include="ored\report\inmemoryreport.hpp">
       <Filter>report</Filter>
     </ClInclude>
-    <ClInclude Include="ored\report\report.hpp">
+    <ClInclude Include="ored\report\csvreport.hpp">
       <Filter>report</Filter>
     </ClInclude>
-    <ClInclude Include="ored\model\eqbsdata.hpp">
-      <Filter>model</Filter>
+    <ClInclude Include="ored\report\all.hpp">
+      <Filter>report</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\bond.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\bond.hpp">
+      <Filter>portfolio\builders</Filter>
     </ClInclude>
     <ClInclude Include="ored\model\eqbsbuilder.hpp">
+      <Filter>model</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\model\eqbsdata.hpp">
       <Filter>model</Filter>
     </ClInclude>
   </ItemGroup>
@@ -503,31 +512,37 @@
     <ClCompile Include="ored\utilities\to_string.cpp">
       <Filter>utilities</Filter>
     </ClCompile>
+    <ClCompile Include="ored\marketdata\securityspread.cpp">
+      <Filter>marketdata</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\marketdata\equitycurve.cpp">
+      <Filter>marketdata</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\marketdata\equityvolcurve.cpp">
+      <Filter>marketdata</Filter>
+    </ClCompile>
     <ClCompile Include="ored\configuration\equitycurveconfig.cpp">
       <Filter>configuration</Filter>
     </ClCompile>
     <ClCompile Include="ored\configuration\equityvolcurveconfig.cpp">
       <Filter>configuration</Filter>
     </ClCompile>
-    <ClCompile Include="ored\marketdata\equityvolcurve.cpp">
-      <Filter>marketdata</Filter>
-    </ClCompile>
-    <ClCompile Include="ored\marketdata\equitycurve.cpp">
-      <Filter>marketdata</Filter>
-    </ClCompile>
-    <ClCompile Include="ored\portfolio\equityoption.cpp">
+    <ClCompile Include="ored\portfolio\equityforward.cpp">
       <Filter>portfolio</Filter>
     </ClCompile>
-    <ClCompile Include="ored\portfolio\equityforward.cpp">
+    <ClCompile Include="ored\portfolio\equityoption.cpp">
       <Filter>portfolio</Filter>
     </ClCompile>
     <ClCompile Include="ored\report\csvreport.cpp">
       <Filter>report</Filter>
     </ClCompile>
-    <ClCompile Include="ored\model\eqbsdata.cpp">
-      <Filter>model</Filter>
+    <ClCompile Include="ored\portfolio\bond.cpp">
+      <Filter>portfolio</Filter>
     </ClCompile>
     <ClCompile Include="ored\model\eqbsbuilder.cpp">
+      <Filter>model</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\model\eqbsdata.cpp">
       <Filter>model</Filter>
     </ClCompile>
   </ItemGroup>

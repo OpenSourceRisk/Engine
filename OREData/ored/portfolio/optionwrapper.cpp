@@ -32,61 +32,63 @@ OptionWrapper::OptionWrapper(const boost::shared_ptr<Instrument>& inst, const bo
                              const Real undMultiplier)
     : InstrumentWrapper(inst, multiplier), isLong_(isLongOption), isPhysicalDelivery_(isPhysicalDelivery),
       contractExerciseDates_(exerciseDate), effectiveExerciseDates_(exerciseDate), underlyingInstruments_(undInst),
-      activeUnderlyingInstrument_(undInst.at(0)), undMultiplier_(undMultiplier), exercised_(false),
-      permanentlyExercised_(false) {}
+      activeUnderlyingInstrument_(undInst.at(0)), undMultiplier_(undMultiplier), exercised_(false) {
+    QL_REQUIRE(exerciseDate.size() == undInst.size(), "number of exercise dates ("
+                                                          << exerciseDate.size()
+                                                          << ") must be equal to underlying instrument vector size ("
+                                                          << undInst.size() << ")");
+}
 
 void OptionWrapper::initialise(const vector<Date>& dateGrid) {
-
     // set "effective" exercise dates which get used to determine exercise during cube valuation
     // this is necessary since there is no guarantee that actual exercise dates are included in
-    // the valuation date grid.
-
-    if (contractExerciseDates_.back() < dateGrid.front()) {
-        // Here we exercise before the first date.
-        if (exercise()) {
-            permanentlyExercised_ = true;
-            exercised_ = true;
-        }
-    } else {
-        for (Size i = 0; i < contractExerciseDates_.size(); ++i) {
-            if (contractExerciseDates_[i] >= dateGrid.front() && contractExerciseDates_[i] <= dateGrid.back()) {
-
-                // Find the effective exercise date in our grid.
-                auto it = std::lower_bound(dateGrid.begin(), dateGrid.end(), contractExerciseDates_[i]);
-                if (*it == contractExerciseDates_[i])
-                    effectiveExerciseDates_[i] = contractExerciseDates_[i]; // we are pricing on the exercise date
-                else
-                    effectiveExerciseDates_[i] = *(it - 1); // we simulate the exercise just before the actual exercise
-            }
+    // the valuation date grid
+    Date today = Settings::instance().evaluationDate();
+    for (Size i = 0; i < contractExerciseDates_.size(); ++i) {
+        effectiveExerciseDates_[i] = Null<Date>();
+        if (contractExerciseDates_[i] > today && contractExerciseDates_[i] <= dateGrid.back()) {
+            // Find the effective exercise date in our grid. We simulate the exercise just after the actual
+            // exercise.This ensures that the QL instrument's NPV is a proper continuation value, i.e.
+            // does not contain the possibility of exercising in to the underlying on the current exercise
+            // date and can  therefore it be used as such in the exercise decision made in the exercise()
+            // method of derived classes.
+            auto it = std::lower_bound(dateGrid.begin(), dateGrid.end(), contractExerciseDates_[i]);
+            effectiveExerciseDates_[i] = *it;
         }
     }
 }
 
 void OptionWrapper::reset() {
-    if (!permanentlyExercised_)
-        exercised_ = false;
+    exercised_ = false;
+    exerciseDate_ = Date();
 }
 
 Real OptionWrapper::NPV() const {
-
-    if (exercised_) {
-        if (isPhysicalDelivery_) {
-            return (isLong_ ? 1.0 : -1.0) * activeUnderlyingInstrument_->NPV() * undMultiplier_;
-        } else {
-            return 0.0;
-        }
-    } else {
-        // check to see if we are exercising now.
+    Date today = Settings::instance().evaluationDate();
+    if (!exercised_) {
         for (Size i = 0; i < effectiveExerciseDates_.size(); ++i) {
-            if (Settings::instance().evaluationDate() == effectiveExerciseDates_[i]) {
+            if (today == effectiveExerciseDates_[i]) {
                 if (exercise()) {
                     exercised_ = true;
+                    exerciseDate_ = today;
                 }
             }
         }
-
-        // Today, our NPV is still the option NPV
-        // This will get called if the option is expired, but not exercised.
+    }
+    if (exercised_) {
+        // if exercised, return underlying npv for physical settlement and also for
+        // cash settlement if we are still on the exercise date (since the cash
+        // settlement takes place strictly after the exercise date usually)
+        // FIXME: we assume that the settlement date lies strictly after the exercise
+        // date, but before or on the next simulation date. Check this explicitly
+        // by introducing the cash settlement date into the option wrapper (note
+        // that we will probably need an effective cash settlement date then to
+        // maintain the relative position to the effective exercise date).
+        return (isPhysicalDelivery_ || today == exerciseDate_)
+                   ? (isLong_ ? 1.0 : -1.0) * activeUnderlyingInstrument_->NPV() * undMultiplier_
+                   : 0.0;
+    } else {
+        // if not exercised we just return the original option's NPV
         return (isLong_ ? 1.0 : -1.0) * instrument_->NPV() * multiplier_;
     }
 }
@@ -112,11 +114,8 @@ bool BermudanOptionWrapper::exercise() const {
             break;
         }
     }
-
-    if (today == effectiveExerciseDates_.back())
-        return activeUnderlyingInstrument_->NPV() * undMultiplier_ > 0.0;
-    else
-        return activeUnderlyingInstrument_->NPV() * undMultiplier_ > instrument_->NPV() * multiplier_;
+    bool exercise = activeUnderlyingInstrument_->NPV() * undMultiplier_ > instrument_->NPV() * multiplier_;
+    return exercise;
 }
-}
-}
+} // namespace data
+} // namespace ored

@@ -127,9 +127,12 @@ Handle<YieldTermStructure> MarketImpl::equityDividendCurve(const string& key, co
     return lookup<Handle<YieldTermStructure>>(equityDividendCurves_, key, configuration, "dividend yield curve");
 }
 
-
 Handle<BlackVolTermStructure> MarketImpl::equityVol(const string& key, const string& configuration) const {
     return lookup<Handle<BlackVolTermStructure>>(equityVols_, key, configuration, "equity vol curve");
+}
+
+Handle<Quote> MarketImpl::securitySpread(const string& key, const string& configuration) const {
+    return lookup<Handle<Quote>>(securitySpreads_, key, configuration, "security spread");
 }
 
 void MarketImpl::addSwapIndex(const string& swapIndex, const string& discountIndex, const string& configuration) {
