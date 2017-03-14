@@ -204,16 +204,17 @@ Leg makeIborLeg(LegData& data, boost::shared_ptr<IborIndex> index,
                           .withSpreads(spreads)
                           .withPaymentDayCounter(dc)
                           .withPaymentAdjustment(bdc)
-                          .withFixingDays(floatData.fixingDays());
+                          .withFixingDays(floatData.fixingDays())
+                          .inArrears(floatData.isInArrears());
 
     if (floatData.gearings().size() > 0)
         iborLeg.withGearings(buildScheduledVector(floatData.gearings(), floatData.gearingDates(), schedule));
 
-    // If no caps or floors, return the leg
-    if (!hasCapsFloors)
+    // If no caps or floors or in arrears fixing, return the leg
+    if (!hasCapsFloors && !floatData.isInArrears())
         return iborLeg;
 
-    // If there are caps or floors, add them and set pricer
+    // If there are caps or floors or in arrears fixing, add them and set pricer
     if (floatData.caps().size() > 0)
         iborLeg.withCaps(buildScheduledVector(floatData.caps(), floatData.capDates(), schedule));
 
