@@ -8,11 +8,11 @@
 
 3) Pricing
 
-   Garman-Kohlhagen for options, separate curve for discounting
+   Black-Scholes for options
 
 4) Analytics
 
-   NPV and cashflows
+   NPV, cashflows and simulated exposure profiles
 
 5) Run Example
 
