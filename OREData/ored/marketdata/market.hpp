@@ -103,6 +103,12 @@ public:
 
     //! Default configuration label
     static const string defaultConfiguration;
+
+    //! \name BondSpreads
+    //@{
+    virtual Handle<Quote> securitySpread(const string& securityID,
+                                         const string& configuration = Market::defaultConfiguration) const = 0;
+    //@}
 };
 }
 }

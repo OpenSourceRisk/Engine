@@ -53,7 +53,7 @@ FxBsBuilder::FxBsBuilder(const boost::shared_ptr<ore::data::Market>& market, con
         sigmaTimes = Array(0);
         sigma = Array(data_->sigmaValues().begin(), data_->sigmaValues().end());
     } else {
-        if (data->calibrateSigma()) { // override
+        if (data->calibrateSigma() && data->calibrationType() == CalibrationType::Bootstrap) { // override
             QL_REQUIRE(optionExpiries_.size() > 0, "optionExpiries is empty");
             sigmaTimes = Array(optionExpiries_.begin(), optionExpiries_.end() - 1);
             sigma = Array(sigmaTimes.size() + 1, data->sigmaValues()[0]);

@@ -53,6 +53,5 @@ private:
     Size i_;
     FILE* fp_;
 };
-
 }
 }

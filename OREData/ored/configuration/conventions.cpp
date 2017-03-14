@@ -678,6 +678,77 @@ XMLNode* CdsConvention::toXML(XMLDocument& doc) {
     return node;
 }
 
+SecuritySpreadConvention::SecuritySpreadConvention(const string& id, const string& dayCounter,
+                                                   const string& compounding, const string& compoundingFrequency)
+    : Convention(id, Type::SecuritySpread), tenorBased_(false), strDayCounter_(dayCounter),
+      strCompounding_(compounding), strCompoundingFrequency_(compoundingFrequency) {
+    build();
+}
+
+SecuritySpreadConvention::SecuritySpreadConvention(const string& id, const string& dayCounter,
+                                                   const string& tenorCalendar, const string& compounding,
+                                                   const string& compoundingFrequency, const string& spotLag,
+                                                   const string& spotCalendar, const string& rollConvention,
+                                                   const string& eom)
+    : Convention(id, Type::SecuritySpread), tenorBased_(true), strDayCounter_(dayCounter),
+      strTenorCalendar_(tenorCalendar), strCompounding_(compounding), strCompoundingFrequency_(compoundingFrequency),
+      strSpotLag_(spotLag), strSpotCalendar_(spotCalendar), strRollConvention_(rollConvention), strEom_(eom) {
+    build();
+}
+
+void SecuritySpreadConvention::build() {
+    dayCounter_ = parseDayCounter(strDayCounter_);
+    compounding_ = strCompounding_.empty() ? Continuous : parseCompounding(strCompounding_);
+    compoundingFrequency_ = strCompoundingFrequency_.empty() ? Annual : parseFrequency(strCompoundingFrequency_);
+    if (tenorBased_) {
+        tenorCalendar_ = parseCalendar(strTenorCalendar_);
+        spotLag_ = strSpotLag_.empty() ? 0 : lexical_cast<Natural>(strSpotLag_);
+        spotCalendar_ = strSpotCalendar_.empty() ? NullCalendar() : parseCalendar(strSpotCalendar_);
+        rollConvention_ = strRollConvention_.empty() ? Following : parseBusinessDayConvention(strRollConvention_);
+        eom_ = strEom_.empty() ? false : parseBool(strEom_);
+    }
+}
+
+void SecuritySpreadConvention::fromXML(XMLNode* node) {
+
+    XMLUtils::checkNode(node, "BondSpread");
+    type_ = Type::SecuritySpread;
+    id_ = XMLUtils::getChildValue(node, "Id", true);
+    tenorBased_ = XMLUtils::getChildValueAsBool(node, "TenorBased", true);
+
+    // Get string values from xml
+    strDayCounter_ = XMLUtils::getChildValue(node, "DayCounter", true);
+    strCompoundingFrequency_ = XMLUtils::getChildValue(node, "CompoundingFrequency", false);
+    strCompounding_ = XMLUtils::getChildValue(node, "Compounding", false);
+    if (tenorBased_) {
+        strTenorCalendar_ = XMLUtils::getChildValue(node, "TenorCalendar", true);
+        strSpotLag_ = XMLUtils::getChildValue(node, "SpotLag", false);
+        strSpotCalendar_ = XMLUtils::getChildValue(node, "SpotCalendar", false);
+        strRollConvention_ = XMLUtils::getChildValue(node, "RollConvention", false);
+        strEom_ = XMLUtils::getChildValue(node, "EOM", false);
+    }
+    build();
+}
+
+XMLNode* SecuritySpreadConvention::toXML(XMLDocument& doc) {
+
+    XMLNode* node = doc.allocNode("BondSpread");
+    XMLUtils::addChild(doc, node, "Id", id_);
+    XMLUtils::addChild(doc, node, "TenorBased", tenorBased_);
+    XMLUtils::addChild(doc, node, "DayCounter", strDayCounter_);
+    XMLUtils::addChild(doc, node, "CompoundingFrequency", strCompoundingFrequency_);
+    XMLUtils::addChild(doc, node, "Compounding", strCompounding_);
+    if (tenorBased_) {
+        XMLUtils::addChild(doc, node, "TenorCalendar", strTenorCalendar_);
+        XMLUtils::addChild(doc, node, "SpotLag", strSpotLag_);
+        XMLUtils::addChild(doc, node, "SpotCalendar", strSpotCalendar_);
+        XMLUtils::addChild(doc, node, "RollConvention", strRollConvention_);
+        XMLUtils::addChild(doc, node, "EOM", strEom_);
+    }
+
+    return node;
+}
+
 void Conventions::fromXML(XMLNode* node) {
 
     XMLUtils::checkNode(node, "Conventions");
@@ -724,7 +795,7 @@ void Conventions::fromXML(XMLNode* node) {
             convention->fromXML(child);
             add(convention);
         } catch (exception& e) {
-            LOG("Exception parsing convention "
+            WLOG("Exception parsing convention "
                 "XML Node (id = "
                 << id << ") : " << e.what());
         }

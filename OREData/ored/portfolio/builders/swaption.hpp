@@ -26,6 +26,9 @@
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/utilities/log.hpp>
+
+#include <qle/models/lgm.hpp>
+
 #include <boost/make_shared.hpp>
 
 namespace ore {
@@ -76,12 +79,20 @@ public:
         Real fixedRate) = 0;
 };
 
+class LGMBermudanSwaptionEngineBuilder : public BermudanSwaptionEngineBuilder {
+public:
+    LGMBermudanSwaptionEngineBuilder(const string& engine) : BermudanSwaptionEngineBuilder("LGM", engine) {}
+
+    boost::shared_ptr<QuantExt::LGM> model(const string& id, bool isNonStandard, const string& ccy,
+                                           const std::vector<Date>& dates, const Date& maturity);
+};
+
 //! Implementation of BermudanSwaptionEngineBuilder using LGM Grid pricer
 /*! \ingroup portfolio
 */
-class LGMGridBermudanSwaptionEngineBuilder : public BermudanSwaptionEngineBuilder {
+class LGMGridBermudanSwaptionEngineBuilder : public LGMBermudanSwaptionEngineBuilder {
 public:
-    LGMGridBermudanSwaptionEngineBuilder() : BermudanSwaptionEngineBuilder("LGM", "Grid") {}
+    LGMGridBermudanSwaptionEngineBuilder() : LGMBermudanSwaptionEngineBuilder("Grid") {}
 
     boost::shared_ptr<PricingEngine> engine(const string& id, bool isNonStandard, const string& ccy,
                                             const std::vector<Date>& dates, const Date& maturity,

@@ -64,7 +64,7 @@ LgmBuilder::LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const
         QL_REQUIRE(data_->aTimes().size() == 0, "empty alpha times expected");
         QL_REQUIRE(data_->aValues().size() == 1, "initial alpha array should have size 1");
     } else if (data_->aParamType() == ParamType::Piecewise) {
-        if (data_->calibrateA()) { // override
+        if (data_->calibrateA() && data_->calibrationType() == CalibrationType::Bootstrap) { // override
             if (data_->aTimes().size() > 0) {
                 LOG("overriding alpha time grid with swaption expiries");
             }
@@ -93,30 +93,25 @@ LgmBuilder::LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const
     } else
         QL_FAIL("H type case not covered");
 
-    if (data_->aParamType() == ParamType::Piecewise) {
-        if (data_->reversionType() == LgmData::ReversionType::HullWhite &&
-            data_->volatilityType() == LgmData::VolatilityType::HullWhite) {
-            LOG("IR parametrization for " << ccy << ": IrLgm1fPiecewiseConstantHullWhiteAdaptor");
-            parametrization_ = boost::make_shared<QuantExt::IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
-                ccy, discountCurve_, aTimes, alpha, hTimes, h);
-        } else if (data_->reversionType() == LgmData::ReversionType::HullWhite) {
-            LOG("IR parametrization for " << ccy << ": IrLgm1fPiecewiseConstant");
-            parametrization_ = boost::make_shared<QuantExt::IrLgm1fPiecewiseConstantParametrization>(
-                ccy, discountCurve_, aTimes, alpha, hTimes, h);
-        } else {
-            parametrization_ = boost::make_shared<QuantExt::IrLgm1fPiecewiseLinearParametrization>(
-                ccy, discountCurve_, aTimes, alpha, hTimes, h);
-            LOG("IR parametrization for " << ccy << ": IrLgm1fPiecewiseLinear");
-        }
-        LOG("alpha times size: " << aTimes.size());
-        LOG("lambda times size: " << hTimes.size());
+    LOG("before calibration: alpha times = " << aTimes << " values = " << alpha);
+    LOG("before calibration:     h times = " << hTimes << " values = " << h);
+
+    if (data_->reversionType() == LgmData::ReversionType::HullWhite &&
+        data_->volatilityType() == LgmData::VolatilityType::HullWhite) {
+        LOG("IR parametrization for " << ccy << ": IrLgm1fPiecewiseConstantHullWhiteAdaptor");
+        parametrization_ = boost::make_shared<QuantExt::IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
+            ccy, discountCurve_, aTimes, alpha, hTimes, h);
+    } else if (data_->reversionType() == LgmData::ReversionType::HullWhite) {
+        LOG("IR parametrization for " << ccy << ": IrLgm1fPiecewiseConstant");
+        parametrization_ = boost::make_shared<QuantExt::IrLgm1fPiecewiseConstantParametrization>(
+            ccy, discountCurve_, aTimes, alpha, hTimes, h);
     } else {
-        parametrization_ =
-            boost::make_shared<QuantExt::IrLgm1fConstantParametrization>(ccy, discountCurve_, alpha[0], h[0]);
-        LOG("IR parametrization for ccy " << ccy << ": IrLgm1fConstant");
-        LOG("alpha times size: " << aTimes.size());
-        LOG("lambda times size: " << hTimes.size());
+        parametrization_ = boost::make_shared<QuantExt::IrLgm1fPiecewiseLinearParametrization>(
+            ccy, discountCurve_, aTimes, alpha, hTimes, h);
+        LOG("IR parametrization for " << ccy << ": IrLgm1fPiecewiseLinear");
     }
+    LOG("alpha times size: " << aTimes.size());
+    LOG("lambda times size: " << hTimes.size());
 
     model_ = boost::make_shared<QuantExt::LGM>(parametrization_);
 
@@ -138,15 +133,21 @@ void LgmBuilder::update() {
                 model_->calibrate(swaptionBasket_, *optimizationMethod_, endCriteria_);
             }
         } else {
-            LOG("call calibrateGlobal");
-            model_->calibrate(swaptionBasket_, *optimizationMethod_, endCriteria_);
+            if (!data_->calibrateA() && !data_->calibrateH()) {
+                LOG("skip LGM calibration (both calibrate volatility and reversion are false)");
+            } else {
+                LOG("call calibrateGlobal");
+                model_->calibrate(swaptionBasket_, *optimizationMethod_, endCriteria_);
+            }
         }
         LOG("LGM " << data_->ccy() << " calibration errors:");
         error_ = logCalibrationErrors(swaptionBasket_, parametrization_);
-        if (data_->calibrationType() == CalibrationType::Bootstrap) {
+        if (data_->calibrationType() == CalibrationType::Bootstrap && (data_->calibrateA() || data_->calibrateH())) {
             QL_REQUIRE(fabs(error_) < bootstrapTolerance_, "calibration error " << error_ << " exceeds tolerance "
                                                                                 << bootstrapTolerance_);
         }
+    } else {
+        LOG("skip LGM calibration (calibration type is none)");
     }
 
     LOG("Apply shift horizon and scale (if not 0.0 and 1.0 respectively)");
