@@ -215,7 +215,11 @@ void testToXML(boost::shared_ptr<analytics::ScenarioSimMarketParameters> params)
 void ScenarioSimMarketTest::testScenarioSimMarket() {
     BOOST_TEST_MESSAGE("Testing OREAnalytics ScenarioSimMarket...");
 
-    boost::shared_ptr<ore::data::Market> initMarket = boost::make_shared<TestMarket>(Date(20, Jan, 2015));
+    SavedSettings backup;
+
+    Date today(20, Jan, 2015);
+    Settings::instance().evaluationDate() = today;
+    boost::shared_ptr<ore::data::Market> initMarket = boost::make_shared<TestMarket>(today);
 
     // Empty scenario generator
     boost::shared_ptr<ore::analytics::ScenarioGenerator> scenarioGenerator;
