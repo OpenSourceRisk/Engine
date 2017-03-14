@@ -29,9 +29,9 @@ namespace data {
 
 Real logCalibrationErrors(const std::vector<boost::shared_ptr<CalibrationHelper>>& basket,
                           const boost::shared_ptr<IrLgm1fParametrization>& parametrization) {
-    LOG("# modelVol marketVol (diff) modelValue marketValue (diff) irlgm1fAlpha irlgm1fKappa");
+    LOG("# modelVol marketVol (diff) modelValue marketValue (diff) irlgm1fAlpha irlgm1fKappa irlgm1fHwSigma");
     Real rmse = 0;
-    Real t = 0.0, modelAlpha = 0.0, modelKappa = 0.0;
+    Real t = 0.0, modelAlpha = 0.0, modelKappa = 0.0, modelHwSigma = 0.0;
     for (Size j = 0; j < basket.size(); j++) {
         Real modelValue = basket[j]->modelValue();
         Real marketValue = basket[j]->marketValue();
@@ -43,6 +43,7 @@ Real logCalibrationErrors(const std::vector<boost::shared_ptr<CalibrationHelper>
             t = parametrization->termStructure()->timeFromReference(swaption->swaption()->exercise()->date(0)) - 1E-4;
             modelAlpha = parametrization->alpha(t);
             modelKappa = parametrization->kappa(t);
+            modelHwSigma = parametrization->hullWhiteSigma(t);
         }
         // TODO handle other calibration helpers, too (capfloor)
         try {
@@ -61,15 +62,17 @@ Real logCalibrationErrors(const std::vector<boost::shared_ptr<CalibrationHelper>
         rmse += volDiff * volDiff;
         LOG(std::setw(2) << j << "  " << std::setprecision(6) << modelVol << " " << marketVol << " (" << std::setw(8)
                          << volDiff << ")  " << modelValue << " " << marketValue << " (" << std::setw(8) << valueDiff
-                         << ")  " << modelAlpha << " " << modelKappa);
+                         << ")  " << modelAlpha << " " << modelKappa << " " << modelHwSigma);
     }
     if (parametrization != nullptr) {
         // report alpha, kappa at t_expiry^+ for last expiry
         t += 2 * 1E-4;
         modelAlpha = parametrization->alpha(t);
         modelKappa = parametrization->kappa(t);
+        modelHwSigma = parametrization->hullWhiteSigma(t);
     }
-    LOG("t >= " << t << ": irlgm1fAlpha = " << modelAlpha << " irlgm1fKappa = " << modelKappa);
+    LOG("t >= " << t << ": irlgm1fAlpha = " << modelAlpha << " irlgm1fKappa = " << modelKappa
+                << " irlgm1fHwSigma = " << modelHwSigma);
     rmse = sqrt(rmse / basket.size());
     LOG("rmse = " << rmse);
     return rmse;
