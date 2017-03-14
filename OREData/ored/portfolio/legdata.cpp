@@ -204,16 +204,17 @@ Leg makeIborLeg(LegData& data, boost::shared_ptr<IborIndex> index,
                           .withSpreads(spreads)
                           .withPaymentDayCounter(dc)
                           .withPaymentAdjustment(bdc)
-                          .withFixingDays(floatData.fixingDays());
+                          .withFixingDays(floatData.fixingDays())
+                          .inArrears(floatData.isInArrears());
 
     if (floatData.gearings().size() > 0)
         iborLeg.withGearings(buildScheduledVector(floatData.gearings(), floatData.gearingDates(), schedule));
 
-    // If no caps or floors, return the leg
-    if (!hasCapsFloors)
+    // If no caps or floors or in arrears fixing, return the leg
+    if (!hasCapsFloors && !floatData.isInArrears())
         return iborLeg;
 
-    // If there are caps or floors, add them and set pricer
+    // If there are caps or floors or in arrears fixing, add them and set pricer
     if (floatData.caps().size() > 0)
         iborLeg.withCaps(buildScheduledVector(floatData.caps(), floatData.capDates(), schedule));
 
@@ -299,6 +300,20 @@ Leg makeNotionalLeg(const Leg& refLeg, bool initNomFlow, bool finalNomFlow, bool
     }
 
     return leg;
+}
+
+Real currentNotional(const Leg& leg) {
+    Date today = Settings::instance().evaluationDate();
+    // assume the leg is sorted
+    // We just take the first coupon::nominal we find, otherwise return 0
+    for (auto cf : leg) {
+        if (cf->date() >= today) {
+            boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<QuantLib::Coupon>(cf);
+            if (coupon)
+                return coupon->nominal();
+        }
+    }
+    return 0;
 }
 
 // e.g. node is Notionals, get all the children Notional

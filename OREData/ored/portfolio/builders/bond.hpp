@@ -17,37 +17,50 @@
 */
 
 /*! \file portfolio/builders/bond.hpp
-    \brief
-    \ingroup portfolio
+\brief
+\ingroup portfolio
 */
 
 #pragma once
 
-#include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
+#include <ored/portfolio/enginefactory.hpp>
 #include <ored/utilities/log.hpp>
+
 #include <qle/pricingengines/discountingriskybondengine.hpp>
+
 #include <ql/termstructures/yield/zerospreadedtermstructure.hpp>
+
 #include <boost/make_shared.hpp>
 
 namespace ore {
 namespace data {
 
 //! Engine Builder base class for Bonds
-/*! Pricing engines are cached by currency
-    \ingroup portfolio
+/*! Pricing engines are cached by security id
+\ingroup portfolio
 */
 
 class BondEngineBuilder
     : public CachingPricingEngineBuilder<string, const Currency&, const string&, const string&, const string&> {
+protected:
+    BondEngineBuilder(const std::string& model, const std::string& engine) : CachingEngineBuilder(model, engine) {}
+
+    virtual string keyImpl(const Currency&, const string& securityId, const string&, const string&) override {
+        return securityId;
+    }
+};
+
+//! Discounting Engine Builder class for Bonds
+/*! This class creates a DiscountingRiskyBondEngine
+\ingroup portfolio
+*/
+
+class BondDiscountingEngineBuilder : public BondEngineBuilder {
 public:
-    BondEngineBuilder() : CachingEngineBuilder("DiscountedCashflows", "DiscountingRiskyBondEngine") {}
+    BondDiscountingEngineBuilder() : BondEngineBuilder("DiscountedCashflows", "DiscountingRiskyBondEngine") {}
 
 protected:
-    virtual string keyImpl(const Currency& ccy, const string&, const string&, const string&) override {
-        return ccy.code();
-    }
-
     virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const string& issuerId,
                                                         const string& securityId,
                                                         const string& referenceCurveId) override {

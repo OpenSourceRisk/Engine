@@ -181,9 +181,9 @@ Calendar parseCalendar(const string& s) {
                                       {"TWD", Taiwan()},
                                       {"TRY", Turkey()},
                                       {"UAH", Ukraine()},
+                                      {"HUF", Hungary()},
                                       // fallback to TARGET for these emerging ccys
                                       {"CLP", TARGET()},
-                                      {"HUF", TARGET()},
                                       {"RON", TARGET()},
                                       {"THB", TARGET()},
                                       {"COP", TARGET()},
