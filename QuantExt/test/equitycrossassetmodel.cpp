@@ -444,7 +444,7 @@ void EquityCrossAssetModelTest::testLgm5fMoments() {
 
     Real T = 10.0;                            // horizon at which we compare the moments
     Size steps_euler = static_cast<Size>(T * 50.0); // number of simulation steps
-    Size steps_exact = static_cast<Size>(T * 5.0);
+    Size steps_exact = 1;
     Size paths = 25000;                       // number of paths
 
     Array e_an = p_exact->expectation(0.0, p_exact->initialValues(), T);
@@ -500,14 +500,19 @@ void EquityCrossAssetModelTest::testLgm5fMoments() {
     // tolerances apply
     Real tollNormal = 0.1E-4; // ir-ir
     Real tolMixed = 0.25E-4;  // ir-fx
-    Real tolLn = 8.0E-4;      // fx-fx
+    Real tolLn = 8.0E-4;      // fx-fx, fx-eq
+    Real tolEq = 12.0E-4;     // eq-eq (to account for higher eq vols)
     Real tol;                 // set below
 
     for (Size i = 0; i < 5; ++i) {
         for (Size j = 0; j <= i; ++j) {
             if (i < 2) {
                 tol = tollNormal;
-            } else {
+            }
+            else if ((i >= 3) && (j >= 3)) {
+                tol = tolEq;
+            }
+            else {
                 if (j < 2) {
                     tol = tolMixed;
                 } else {
