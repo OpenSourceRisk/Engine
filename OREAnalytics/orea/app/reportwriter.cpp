@@ -44,7 +44,9 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
         .addColumn("NPV", double(), 6)
         .addColumn("NpvCurrency", string())
         .addColumn("NPV(Base)", double(), 6)
-        .addColumn("BaseCurrency", string());
+        .addColumn("BaseCurrency", string())
+        .addColumn("Notional", double(), 2)
+        .addColumn("Notional(Base)", double(), 2);
     for (auto trade : portfolio->trades()) {
         string npvCcy = trade->npvCurrency();
         Real fx = 1.0;
@@ -60,7 +62,9 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
                 .add(npv)
                 .add(npvCcy)
                 .add(npv * fx)
-                .add(baseCurrency);
+                .add(baseCurrency)
+                .add(trade->notional())
+                .add(trade->notional() * fx);
         } catch (std::exception& e) {
             ALOG("Exception during pricing trade " << trade->id() << ": " << e.what());
             report.next()
@@ -71,7 +75,9 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
                 .add(Null<Real>())
                 .add("#NA")
                 .add(Null<Real>())
-                .add("#NA");
+                .add("#NA")
+                .add(Null<Real>())
+                .add(Null<Real>());
         }
     }
     report.end();
