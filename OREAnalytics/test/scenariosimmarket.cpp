@@ -213,7 +213,7 @@ void testToXML(boost::shared_ptr<analytics::ScenarioSimMarketParameters> params)
 }
 
 void ScenarioSimMarketTest::testScenarioSimMarket() {
-    BOOST_TEST_MESSAGE("Testing Wrap ScenarioSimMarket...");
+    BOOST_TEST_MESSAGE("Testing OREAnalytics ScenarioSimMarket...");
 
     boost::shared_ptr<ore::data::Market> initMarket = boost::make_shared<TestMarket>(Date(20, Jan, 2015));
 
