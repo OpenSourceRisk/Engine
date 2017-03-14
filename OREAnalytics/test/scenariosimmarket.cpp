@@ -216,7 +216,10 @@ void testToXML(boost::shared_ptr<analytics::ScenarioSimMarketParameters> params)
 void ScenarioSimMarketTest::testScenarioSimMarket() {
     BOOST_TEST_MESSAGE("Testing Wrap ScenarioSimMarket...");
 
-    boost::shared_ptr<ore::data::Market> initMarket = boost::make_shared<TestMarket>(Date(20, Jan, 2015));
+    Date tmp = Settings::instance().evaluationDate(); // archive original value
+    Date today(20, Jan, 2015);
+    Settings::instance().evaluationDate() = today;
+    boost::shared_ptr<ore::data::Market> initMarket = boost::make_shared<TestMarket>(today);
 
     // Empty scenario generator
     boost::shared_ptr<ore::analytics::ScenarioGenerator> scenarioGenerator;
@@ -236,6 +239,8 @@ void ScenarioSimMarketTest::testScenarioSimMarket() {
     testFxVolCurve(initMarket, simMarket, parameters);
     testDefaultCurve(initMarket, simMarket, parameters);
     testToXML(parameters);
+
+    Settings::instance().evaluationDate() = tmp; // reset to original value
 }
 
 test_suite* ScenarioSimMarketTest::suite() {
