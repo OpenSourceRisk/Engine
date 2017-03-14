@@ -188,14 +188,14 @@ public:
 
     /*! calibrate eq or fx volatilities to a sequence of options with
             expiry times equal to step times in the parametrization */
-    void calibrateBsVolatilitiesIterative(const AssetType& assetType, const Size ccy,
+    void calibrateBsVolatilitiesIterative(const AssetType& assetType, const Size aIdx,
                                             const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers,
                                             OptimizationMethod& method, const EndCriteria& endCriteria,
                                             const Constraint& constraint = Constraint(),
                                             const std::vector<Real>& weights = std::vector<Real>());
 
     /*! calibrate fx volatilities globally to a set of fx options */
-    void calibrateFxBsVolatilitiesGlobal(const Size ccy,
+    void calibrateFxBsVolatilitiesGlobal(const AssetType& assetType, const Size aIdx,
                                          const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers,
                                          OptimizationMethod& method, const EndCriteria& endCriteria,
                                          const Constraint& constraint = Constraint(),
@@ -276,7 +276,11 @@ protected:
         return res;
     }
 
-    Disposable<std::vector<bool> > MoveFxBsVolatilities(const Size ccy) {
+    Disposable<std::vector<bool> > MoveFxBsVolatilities(const AssetType& assetClass, const Size& aIdx) {
+        bool isFx = (assetClass == FX);
+        bool isEq = (assetClass == EQ);
+        QL_REQUIRE(isFx || isEq, "Invalid AssetType for MoveBsVolatility");
+        std::string assetStr = isFx ? "FX" : "EQ";
         std::vector<bool> res(0);
         for (Size j = 0; j < nIrLgm1f_; ++j) {
             std::vector<bool> tmp1(p_[idx(IR, j)]->parameter(0)->size(), true);
@@ -285,7 +289,13 @@ protected:
             res.insert(res.end(), tmp2.begin(), tmp2.end());
         }
         for (Size j = 0; j < nFxBs_; ++j) {
-            std::vector<bool> tmp(p_[idx(FX, j)]->parameter(0)->size(), ccy != j);
+            bool fixFlag = !(isFx && aIdx == j);
+            std::vector<bool> tmp(p_[idx(FX, j)]->parameter(0)->size(), fixFlag);
+            res.insert(res.end(), tmp.begin(), tmp.end());
+        }
+        for (Size j = 0; j < nEqBs_; ++j) {
+            bool fixFlag = !(isEq && aIdx == j);
+            std::vector<bool> tmp(p_[idx(EQ, j)]->parameter(0)->size(), fixFlag);
             res.insert(res.end(), tmp.begin(), tmp.end());
         }
         return res;

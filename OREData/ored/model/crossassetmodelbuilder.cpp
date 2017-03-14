@@ -239,7 +239,9 @@ CrossAssetModelBuilder::build(const boost::shared_ptr<CrossAssetModelData>& conf
                 CrossAssetModelTypes::FX, i, fxOptionBaskets_[i], 
                 *optimizationMethod_, endCriteria_);
         else
-            model->calibrateFxBsVolatilitiesGlobal(i, fxOptionBaskets_[i], *optimizationMethod_, endCriteria_);
+            model->calibrateFxBsVolatilitiesGlobal(
+                CrossAssetModelTypes::FX, i, 
+                fxOptionBaskets_[i], *optimizationMethod_, endCriteria_);
 
         LOG("FX " << fx->foreignCcy() << " calibration errors:");
         fxOptionCalibrationErrors_[i] =
@@ -280,9 +282,15 @@ CrossAssetModelBuilder::build(const boost::shared_ptr<CrossAssetModelData>& conf
         for (Size j = 0; j < eqOptionBaskets_[i].size(); j++)
             eqOptionBaskets_[i][j]->setPricingEngine(engine);
 
-        model->calibrateBsVolatilitiesIterative(
-            CrossAssetModelTypes::EQ, i, eqOptionBaskets_[i],
-            *optimizationMethod_, endCriteria_);
+
+        if (eq->calibrationType() == CalibrationType::Bootstrap && eq->sigmaParamType() == ParamType::Piecewise)
+            model->calibrateBsVolatilitiesIterative(
+                CrossAssetModelTypes::EQ, i, eqOptionBaskets_[i],
+                *optimizationMethod_, endCriteria_);
+        else
+            model->calibrateFxBsVolatilitiesGlobal(
+                CrossAssetModelTypes::EQ, i, eqOptionBaskets_[i], 
+                *optimizationMethod_, endCriteria_);
 
         LOG("EQ " << eq->eqName() << " calibration errors:");
         eqOptionCalibrationErrors_[i] =
