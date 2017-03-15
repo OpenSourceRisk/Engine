@@ -214,8 +214,10 @@ void testToXML(boost::shared_ptr<analytics::ScenarioSimMarketParameters> params)
 }
 
 void ScenarioSimMarketTest::testScenarioSimMarket() {
-    BOOST_TEST_MESSAGE("Testing Wrap ScenarioSimMarket...");
+    BOOST_TEST_MESSAGE("Testing OREAnalytics ScenarioSimMarket...");
 
+    SavedSettings backup;
+    
     Date tmp = Settings::instance().evaluationDate(); // archive original value
     Date today(20, Jan, 2015);
     Settings::instance().evaluationDate() = today;
