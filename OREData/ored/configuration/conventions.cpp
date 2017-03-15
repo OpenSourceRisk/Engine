@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file wrap/data/conventions.cpp
+/*! \file configuration/conventions.cpp
     \brief Currency and instrument specific conventions
     \ingroup
 */

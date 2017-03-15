@@ -47,7 +47,7 @@ namespace analytics {
   requirements and collateral balances, and the timestamps updated
   accordingly.
 
-  For further information refer to the detailed Wrap documentation.
+  For further information refer to the detailed ORE documentation.
 
   \ingroup analytics
 */
