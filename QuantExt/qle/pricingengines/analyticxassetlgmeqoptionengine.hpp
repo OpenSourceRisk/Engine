@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file analyticxassetlgmeqoptionengine.hpp
+/*! \file qle\pricingengines\analyticxassetlgmeqoptionengine.hpp
     \brief analytic cross-asset lgm eq option engine
 
         \ingroup engines
@@ -31,7 +31,15 @@
 namespace QuantExt {
 
 //! Analytic cross-asset lgm equity option engine
-/*! \ingroup engines
+/*! 
+        This class prices an equity option analytically using the dynamics of 
+        a CrossAssetModel. The formula is black-like, with the variance of the
+        underlying equity being dependent upon the dynamics of related interest
+        and FX rates within the CrossAssetModel universe.
+        See the book "Modern Derivatives Pricing and Credit Exposure Analysis"
+        by Lichters, Stamm and Gallagher.
+
+        \ingroup engines
 */
 class AnalyticXAssetLgmEquityOptionEngine : public VanillaOption::engine {
 public:

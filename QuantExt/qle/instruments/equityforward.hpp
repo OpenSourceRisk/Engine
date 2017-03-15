@@ -16,8 +16,8 @@ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file qle/instruments/fxforward.hpp
-\brief defaultable fxforward instrument
+/*! \file qle/instruments/equityforward.hpp
+\brief equity forward instrument
 
 \ingroup instruments
 */
@@ -36,9 +36,9 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-    //! <strong> FX Forward </strong>
+    //! <strong> Equity Forward </strong>
 
-    /*! This class holds the term sheet data for an FX Forward instrument.
+    /*! This class holds the term sheet data for an Equity Forward instrument.
 
     \ingroup instruments
     */
@@ -54,7 +54,7 @@ public:
                      const Currency& currency,
                      //! if true, we are long the forward
                      const Position::Type& longShort,
-                     //! Quantity (number of lots \times lot size)
+                     //! Quantity (number of lots \f$ \times \f$ lot size)
                      const Real& quantity,
                      //! Maturity date
                      const Date& maturityDate,

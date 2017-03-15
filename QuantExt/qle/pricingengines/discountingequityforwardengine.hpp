@@ -42,13 +42,15 @@ namespace QuantExt {
 */
 class DiscountingEquityForwardEngine : public EquityForward::engine {
 public:
-    /*! \param equityRateCurve
+    /*! \param equityInterestRateCurve
                The IR rate curve for estimating forward price.
-        \param divYieldCurve
+        \param dividendYieldCurve
                The dividend yield term structure for estimating 
                forward price.
         \param equitySpot
                The market spot rate quote.
+        \param discountCurve
+               The discounting curve
         \param includeSettlementDateFlows, settlementDate
                If includeSettlementDateFlows is true (false), cashflows
                on the settlementDate are (not) included in the NPV.

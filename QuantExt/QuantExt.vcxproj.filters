@@ -361,6 +361,9 @@
     <ClInclude Include="qle\pricingengines\analyticxassetlgmeqoptionengine.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
+    <ClInclude Include="qle\math\stabilisedglls.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
