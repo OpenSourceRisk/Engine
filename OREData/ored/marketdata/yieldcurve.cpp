@@ -65,7 +65,7 @@ YieldCurve::InterpolationMethod parseYieldCurveInterpolationMethod(const string&
         return YieldCurve::InterpolationMethod::NaturalCubic;
     else if (s == "FinancialCubic")
         return YieldCurve::InterpolationMethod::FinancialCubic;
-    if (s == "ConvexMonotone")
+    else if (s == "ConvexMonotone")
         return YieldCurve::InterpolationMethod::ConvexMonotone;
     else
         QL_FAIL("Yield curve interpolation method " << s << " not recognized");
