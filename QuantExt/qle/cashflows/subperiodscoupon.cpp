@@ -168,6 +168,10 @@ SubPeriodsLeg::operator Leg() const {
         paymentDate = calendar.adjust(endDate, paymentAdjustment_);
         // the sub periods coupon might produce degenerated schedules, in this
         // case we just join the current period with the next one
+        // we catch all QL exceptions here, although we should only pick the one
+        // that is thrown in case of a degenerated schedule, but there is no way
+        // of identifying it except parsing the exception text, which isn't a
+        // clean solution either
         try {
             boost::shared_ptr<SubPeriodsCoupon> cashflow(
                 new SubPeriodsCoupon(paymentDate, detail::get(notionals_, i, notionals_.back()), startDate, endDate,
@@ -176,7 +180,7 @@ SubPeriodsLeg::operator Leg() const {
 
             cashflows.push_back(cashflow);
             startDate = endDate;
-        } catch (...) {
+        } catch (const QuantLib::Error& e) {
         }
     }
 
