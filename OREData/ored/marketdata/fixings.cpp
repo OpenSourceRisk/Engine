@@ -48,7 +48,7 @@ void applyFixings(const vector<Fixing>& fixings) {
                 index = it->second;
             }
             index->addFixing(f.date, f.fixing, true);
-            DLOG("Added fixing for " << f.name << " (" << io::iso_date(f.date) << ") value:" << f.fixing);
+            TLOG("Added fixing for " << f.name << " (" << io::iso_date(f.date) << ") value:" << f.fixing);
             count++;
         } catch (const std::exception& e) {
             WLOG("Error during adding fixing for " << f.name << ": " << e.what());

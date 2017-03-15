@@ -93,6 +93,9 @@ LgmBuilder::LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const
     } else
         QL_FAIL("H type case not covered");
 
+    LOG("before calibration: alpha times = " << aTimes << " values = " << alpha);
+    LOG("before calibration:     h times = " << hTimes << " values = " << h);
+
     if (data_->reversionType() == LgmData::ReversionType::HullWhite &&
         data_->volatilityType() == LgmData::VolatilityType::HullWhite) {
         LOG("IR parametrization for " << ccy << ": IrLgm1fPiecewiseConstantHullWhiteAdaptor");

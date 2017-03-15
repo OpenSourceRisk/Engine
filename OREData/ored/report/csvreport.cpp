@@ -16,10 +16,10 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/variant/static_visitor.hpp>
 #include <ored/report/csvreport.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
-#include <boost/variant/static_visitor.hpp>
 
 namespace ore {
 namespace data {
@@ -27,14 +27,30 @@ namespace data {
 // Local class for printing each report type via fprintf
 class ReportTypePrinter : public boost::static_visitor<> {
 public:
-    ReportTypePrinter(FILE* fp, int prec) : fp_(fp), prec_(prec) {}
+    ReportTypePrinter(FILE* fp, int prec) : fp_(fp), prec_(prec), null_("#N/A") {}
 
-    void operator()(const Size i) const { fprintf(fp_, "%lu", i); }
-    void operator()(const Real d) const { fprintf(fp_, "%.*f", prec_, d); }
+    void operator()(const Size i) const {
+        if (i == QuantLib::Null<Size>()) {
+            fprintNull();
+        } else {
+            fprintf(fp_, "%lu", i);
+        }
+    }
+    void operator()(const Real d) const {
+        if (d == QuantLib::Null<Real>()) {
+            fprintNull();
+        } else {
+            fprintf(fp_, "%.*f", prec_, d);
+        }
+    }
     void operator()(const string& s) const { fprintf(fp_, "%s", s.c_str()); }
     void operator()(const Date& d) const {
-        string s = to_string(d);
-        fprintf(fp_, "%s", s.c_str());
+        if (d == QuantLib::Null<Date>()) {
+            fprintNull();
+        } else {
+            string s = to_string(d);
+            fprintf(fp_, "%s", s.c_str());
+        }
     }
     void operator()(const Period& p) const {
         string s = to_string(p);
@@ -42,8 +58,11 @@ public:
     }
 
 private:
+    void fprintNull() const { fprintf(fp_, "%s", null_.c_str()); }
+
     FILE* fp_;
     int prec_;
+    const string null_;
 };
 
 CSVFileReport::CSVFileReport(const string& filename, const char sep)

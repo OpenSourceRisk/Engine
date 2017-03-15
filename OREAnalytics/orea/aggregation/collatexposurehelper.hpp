@@ -44,7 +44,7 @@ namespace analytics {
   account details with e.g. new margin call info, and return
   collateralised exposures to the user/invoker.
 
-  For further information refer to the detailed Wrap documentation.
+  For further information refer to the detailed ORE documentation.
 
   \ingroup analytics
 */

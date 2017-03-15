@@ -407,9 +407,6 @@
   <ItemGroup>
     <ClCompile Include="ore.cpp" />
   </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="ore.hpp" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

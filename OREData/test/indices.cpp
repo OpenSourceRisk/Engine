@@ -279,7 +279,28 @@ static struct test_data index_data[] = {
     {"NZD-BKBM-3M", "NZD-BKBM3M Actual/Actual (ISDA)", 3 * Months},
     {"NZD-BKBM-4M", "NZD-BKBM4M Actual/Actual (ISDA)", 4 * Months},
     {"NZD-BKBM-5M", "NZD-BKBM5M Actual/Actual (ISDA)", 5 * Months},
-    {"NZD-BKBM-6M", "NZD-BKBM6M Actual/Actual (ISDA)", 6 * Months}};
+    {"NZD-BKBM-6M", "NZD-BKBM6M Actual/Actual (ISDA)", 6 * Months},
+
+    {"KRW-KORIBOR-1M", "KRW-KORIBOR1M Actual/365 (Fixed)", 1 * Months},
+    {"KRW-KORIBOR-2M", "KRW-KORIBOR2M Actual/365 (Fixed)", 2 * Months },
+    {"KRW-KORIBOR-3M", "KRW-KORIBOR3M Actual/365 (Fixed)", 3 * Months },
+    {"KRW-KORIBOR-4M", "KRW-KORIBOR4M Actual/365 (Fixed)", 4 * Months },
+    {"KRW-KORIBOR-5M", "KRW-KORIBOR5M Actual/365 (Fixed)", 5 * Months },
+    {"KRW-KORIBOR-6M", "KRW-KORIBOR6M Actual/365 (Fixed)", 6 * Months },
+
+    {"TWD-TAIBOR-1M", "TWD-TAIBOR1M Actual/365 (Fixed)", 1 * Months},
+    {"TWD-TAIBOR-2M", "TWD-TAIBOR2M Actual/365 (Fixed)", 2 * Months },
+    {"TWD-TAIBOR-3M", "TWD-TAIBOR3M Actual/365 (Fixed)", 3 * Months },
+    {"TWD-TAIBOR-4M", "TWD-TAIBOR4M Actual/365 (Fixed)", 4 * Months },
+    {"TWD-TAIBOR-5M", "TWD-TAIBOR5M Actual/365 (Fixed)", 5 * Months },
+    {"TWD-TAIBOR-6M", "TWD-TAIBOR6M Actual/365 (Fixed)", 6 * Months },
+
+    {"MYR-KLIBOR-1M", "MYR-KLIBOR1M Actual/365 (Fixed)", 1 * Months },
+    {"MYR-KLIBOR-2M", "MYR-KLIBOR2M Actual/365 (Fixed)", 2 * Months },
+    {"MYR-KLIBOR-3M", "MYR-KLIBOR3M Actual/365 (Fixed)", 3 * Months },
+    {"MYR-KLIBOR-4M", "MYR-KLIBOR4M Actual/365 (Fixed)", 4 * Months },
+    {"MYR-KLIBOR-5M", "MYR-KLIBOR5M Actual/365 (Fixed)", 5 * Months },
+    {"MYR-KLIBOR-6M", "MYR-KLIBOR6M Actual/365 (Fixed)", 6 * Months } };
 
 static struct test_data swap_index_data[] = {
     {"EUR-CMS-2Y", "EURLiborSwapIsdaFix2Y 30/360 (Bond Basis)", 2 * Years},
