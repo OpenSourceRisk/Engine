@@ -211,11 +211,11 @@ YieldCurve::piecewisecurve(const vector<boost::shared_ptr<RateHelper>>& instrume
         switch (interpolationMethod_) {
         case InterpolationMethod::Linear:
             yieldts.reset(new PiecewiseYieldCurve<QuantLib::ForwardRate, QuantLib::Linear>(asofDate_, instruments,
-                                                                                        zeroDayCounter_, accuracy_));
+                                                                                           zeroDayCounter_, accuracy_));
             break;
         case InterpolationMethod::LogLinear:
-            yieldts.reset(new PiecewiseYieldCurve<QuantLib::ForwardRate, QuantLib::LogLinear>(asofDate_, instruments,
-                                                                                           zeroDayCounter_, accuracy_));
+            yieldts.reset(new PiecewiseYieldCurve<QuantLib::ForwardRate, QuantLib::LogLinear>(
+                asofDate_, instruments, zeroDayCounter_, accuracy_));
             break;
         case InterpolationMethod::NaturalCubic:
             yieldts.reset(new PiecewiseYieldCurve<QuantLib::ForwardRate, Cubic>(
@@ -229,7 +229,7 @@ YieldCurve::piecewisecurve(const vector<boost::shared_ptr<RateHelper>>& instrume
             break;
         case InterpolationMethod::ConvexMonotone:
             yieldts.reset(new PiecewiseYieldCurve<QuantLib::ForwardRate, ConvexMonotone>(asofDate_, instruments,
-                                                                                      zeroDayCounter_, accuracy_));
+                                                                                         zeroDayCounter_, accuracy_));
             break;
         default:
             QL_FAIL("Interpolation method not recognised.");
@@ -253,7 +253,7 @@ YieldCurve::piecewisecurve(const vector<boost::shared_ptr<RateHelper>>& instrume
         dates[i + 1] = instruments[i]->latestDate();
         zeros[i + 1] = yieldts->zeroRate(dates[i + 1], zeroDayCounter_, Continuous);
         discounts[i + 1] = yieldts->discount(dates[i + 1]);
-        forwards[i + 1] = yieldts->forwardRate(dates[i + 1], dates[i+1], zeroDayCounter_, Continuous);
+        forwards[i + 1] = yieldts->forwardRate(dates[i + 1], dates[i + 1], zeroDayCounter_, Continuous);
     }
     zeros[0] = zeros[1];
     forwards[0] = forwards[1];
@@ -330,7 +330,7 @@ YieldCurve::discountcurve(const vector<Date>& dates, const vector<DiscountFactor
 }
 
 boost::shared_ptr<YieldTermStructure> YieldCurve::forwardcurve(const vector<Date>& dates, const vector<Rate>& forwards,
-                                                            const DayCounter& dayCounter) {
+                                                               const DayCounter& dayCounter) {
 
     boost::shared_ptr<YieldTermStructure> yieldts;
     switch (interpolationMethod_) {
@@ -338,11 +338,12 @@ boost::shared_ptr<YieldTermStructure> YieldCurve::forwardcurve(const vector<Date
         yieldts.reset(new InterpolatedForwardCurve<QuantLib::Linear>(dates, forwards, dayCounter, QuantLib::Linear()));
         break;
     case InterpolationMethod::LogLinear:
-        yieldts.reset(new InterpolatedForwardCurve<QuantLib::LogLinear>(dates, forwards, dayCounter, QuantLib::LogLinear()));
+        yieldts.reset(
+            new InterpolatedForwardCurve<QuantLib::LogLinear>(dates, forwards, dayCounter, QuantLib::LogLinear()));
         break;
     case InterpolationMethod::NaturalCubic:
         yieldts.reset(new InterpolatedForwardCurve<QuantLib::Cubic>(dates, forwards, dayCounter,
-                                                                 QuantLib::Cubic(CubicInterpolation::Kruger, true)));
+                                                                    QuantLib::Cubic(CubicInterpolation::Kruger, true)));
         break;
     case InterpolationMethod::FinancialCubic:
         yieldts.reset(new InterpolatedForwardCurve<QuantLib::Cubic>(

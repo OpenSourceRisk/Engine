@@ -53,7 +53,9 @@ class Trade : public XMLSerializable {
 public:
     //! Base class constructor
     Trade(const string& tradeType, const Envelope& env = Envelope(), const TradeActions& ta = TradeActions())
-        : tradeType_(tradeType), envelope_(env), tradeActions_(ta) { reset(); }
+        : tradeType_(tradeType), envelope_(env), tradeActions_(ta) {
+        reset();
+    }
 
     //! Default destructor
     virtual ~Trade() {}
