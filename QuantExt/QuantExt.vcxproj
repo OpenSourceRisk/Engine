@@ -523,6 +523,7 @@
     <ClInclude Include="qle\instruments\crossccybasisswap.hpp" />
     <ClInclude Include="qle\instruments\crossccyswap.hpp" />
     <ClInclude Include="qle\instruments\currencyswap.hpp" />
+    <ClInclude Include="qle\instruments\deposit.hpp" />
     <ClInclude Include="qle\instruments\fxforward.hpp" />
     <ClInclude Include="qle\instruments\makeaverageois.hpp" />
     <ClInclude Include="qle\instruments\oibasisswap.hpp" />
@@ -559,6 +560,7 @@
     <ClInclude Include="qle\pricingengines\analyticcclgmfxoptionengine.hpp" />
     <ClInclude Include="qle\pricingengines\analyticlgmswaptionengine.hpp" />
     <ClInclude Include="qle\pricingengines\crossccyswapengine.hpp" />
+    <ClInclude Include="qle\pricingengines\depositengine.hpp" />
     <ClInclude Include="qle\pricingengines\discountingcurrencyswapengine.hpp" />
     <ClInclude Include="qle\pricingengines\discountingfxforwardengine.hpp" />
     <ClInclude Include="qle\pricingengines\discountingriskybondengine.hpp" />
@@ -614,6 +616,7 @@
     <ClCompile Include="qle\instruments\crossccybasisswap.cpp" />
     <ClCompile Include="qle\instruments\crossccyswap.cpp" />
     <ClCompile Include="qle\instruments\currencyswap.cpp" />
+    <ClCompile Include="qle\instruments\deposit.cpp" />
     <ClCompile Include="qle\instruments\fxforward.cpp" />
     <ClCompile Include="qle\instruments\makeaverageois.cpp" />
     <ClCompile Include="qle\instruments\oibasisswap.cpp" />
@@ -636,6 +639,7 @@
     <ClCompile Include="qle\pricingengines\analyticcclgmfxoptionengine.cpp" />
     <ClCompile Include="qle\pricingengines\analyticlgmswaptionengine.cpp" />
     <ClCompile Include="qle\pricingengines\crossccyswapengine.cpp" />
+    <ClCompile Include="qle\pricingengines\depositengine.cpp" />
     <ClCompile Include="qle\pricingengines\discountingcurrencyswapengine.cpp" />
     <ClCompile Include="qle\pricingengines\discountingfxforwardengine.cpp" />
     <ClCompile Include="qle\pricingengines\discountingriskybondengine.cpp" />

@@ -107,6 +107,33 @@
     <ClInclude Include="orea\app\oreapp.hpp" />
     <ClInclude Include="orea\app\parameters.hpp" />
     <ClInclude Include="orea\app\reportwriter.hpp" />
+    <ClInclude Include="orea\scenario\sensitivityscenariodata.hpp">
+      <Filter>scenario</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\scenario\sensitivityscenariogenerator.hpp">
+      <Filter>scenario</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\scenario\shiftscenariogenerator.hpp">
+      <Filter>scenario</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\scenario\stressscenariodata.hpp">
+      <Filter>scenario</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\scenario\stressscenariogenerator.hpp">
+      <Filter>scenario</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\engine\parsensitivityanalysis.hpp">
+      <Filter>engine</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\engine\scenarioengine.hpp">
+      <Filter>engine</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\engine\sensitivityanalysis.hpp">
+      <Filter>engine</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\engine\stresstest.hpp">
+      <Filter>engine</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="orea\aggregation\collateralaccount.cpp">
@@ -161,5 +188,32 @@
     <ClCompile Include="orea\app\parameters.cpp" />
     <ClCompile Include="orea\app\oreapp.cpp" />
     <ClCompile Include="orea\app\reportwriter.cpp" />
+    <ClCompile Include="orea\scenario\sensitivityscenariodata.cpp">
+      <Filter>scenario</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\scenario\sensitivityscenariogenerator.cpp">
+      <Filter>scenario</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\scenario\shiftscenariogenerator.cpp">
+      <Filter>scenario</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\scenario\stressscenariodata.cpp">
+      <Filter>scenario</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\scenario\stressscenariogenerator.cpp">
+      <Filter>scenario</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\engine\parsensitivityanalysis.cpp">
+      <Filter>engine</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\engine\scenarioengine.cpp">
+      <Filter>engine</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\engine\sensitivityanalysis.cpp">
+      <Filter>engine</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\engine\stresstest.cpp">
+      <Filter>engine</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

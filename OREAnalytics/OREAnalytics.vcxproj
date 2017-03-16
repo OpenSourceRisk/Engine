@@ -50,6 +50,10 @@
     <ClInclude Include="orea\cube\npvcube.hpp" />
     <ClInclude Include="orea\engine\all.hpp" />
     <ClInclude Include="orea\engine\observationmode.hpp" />
+    <ClInclude Include="orea\engine\parsensitivityanalysis.hpp" />
+    <ClInclude Include="orea\engine\scenarioengine.hpp" />
+    <ClInclude Include="orea\engine\sensitivityanalysis.hpp" />
+    <ClInclude Include="orea\engine\stresstest.hpp" />
     <ClInclude Include="orea\engine\valuationcalculator.hpp" />
     <ClInclude Include="orea\engine\valuationengine.hpp" />
     <ClInclude Include="orea\orea.hpp" />
@@ -65,8 +69,13 @@
     <ClInclude Include="orea\scenario\scenariosimmarket.hpp" />
     <ClInclude Include="orea\scenario\scenariosimmarketparameters.hpp" />
     <ClInclude Include="orea\scenario\scenariowriter.hpp" />
+    <ClInclude Include="orea\scenario\sensitivityscenariodata.hpp" />
+    <ClInclude Include="orea\scenario\sensitivityscenariogenerator.hpp" />
+    <ClInclude Include="orea\scenario\shiftscenariogenerator.hpp" />
     <ClInclude Include="orea\scenario\simplescenario.hpp" />
     <ClInclude Include="orea\scenario\simplescenariofactory.hpp" />
+    <ClInclude Include="orea\scenario\stressscenariodata.hpp" />
+    <ClInclude Include="orea\scenario\stressscenariogenerator.hpp" />
     <ClInclude Include="orea\simulation\all.hpp" />
     <ClInclude Include="orea\simulation\dategrid.hpp" />
     <ClInclude Include="orea\simulation\simmarket.hpp" />
@@ -79,6 +88,10 @@
     <ClCompile Include="orea\app\parameters.cpp" />
     <ClCompile Include="orea\app\reportwriter.cpp" />
     <ClCompile Include="orea\cube\cubewriter.cpp" />
+    <ClCompile Include="orea\engine\parsensitivityanalysis.cpp" />
+    <ClCompile Include="orea\engine\scenarioengine.cpp" />
+    <ClCompile Include="orea\engine\sensitivityanalysis.cpp" />
+    <ClCompile Include="orea\engine\stresstest.cpp" />
     <ClCompile Include="orea\engine\valuationcalculator.cpp" />
     <ClCompile Include="orea\engine\valuationengine.cpp" />
     <ClCompile Include="orea\scenario\crossassetmodelscenariogenerator.cpp" />
@@ -89,7 +102,12 @@
     <ClCompile Include="orea\scenario\scenariosimmarket.cpp" />
     <ClCompile Include="orea\scenario\scenariosimmarketparameters.cpp" />
     <ClCompile Include="orea\scenario\scenariowriter.cpp" />
+    <ClCompile Include="orea\scenario\sensitivityscenariodata.cpp" />
+    <ClCompile Include="orea\scenario\sensitivityscenariogenerator.cpp" />
+    <ClCompile Include="orea\scenario\shiftscenariogenerator.cpp" />
     <ClCompile Include="orea\scenario\simplescenario.cpp" />
+    <ClCompile Include="orea\scenario\stressscenariodata.cpp" />
+    <ClCompile Include="orea\scenario\stressscenariogenerator.cpp" />
     <ClCompile Include="orea\simulation\dategrid.cpp" />
     <ClCompile Include="orea\simulation\simmarket.cpp" />
   </ItemGroup>

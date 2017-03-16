@@ -47,6 +47,15 @@
     <ClCompile Include="optionletstripper.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="deposit.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="ratehelpers.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="stabilisedglls.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="source">
@@ -109,6 +118,15 @@
       <Filter>headers</Filter>
     </ClInclude>
     <ClInclude Include="optionletstripper.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="deposit.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="ratehelpers.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="stabilisedglls.hpp">
       <Filter>headers</Filter>
     </ClInclude>
   </ItemGroup>

@@ -40,8 +40,11 @@
     <ClInclude Include="observationmode.hpp" />
     <ClInclude Include="scenariogenerator.hpp" />
     <ClInclude Include="scenariosimmarket.hpp" />
+    <ClInclude Include="sensitivityanalysis.hpp" />
+    <ClInclude Include="stresstest.hpp" />
     <ClInclude Include="swapperformance.hpp" />
     <ClInclude Include="testmarket.hpp" />
+    <ClInclude Include="testportfolio.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="aggregationscenariodata.cpp" />
@@ -49,7 +52,10 @@
     <ClCompile Include="observationmode.cpp" />
     <ClCompile Include="scenariogenerator.cpp" />
     <ClCompile Include="scenariosimmarket.cpp" />
+    <ClCompile Include="sensitivityanalysis.cpp" />
+    <ClCompile Include="stresstest.cpp" />
     <ClCompile Include="swapperformance.cpp" />
+    <ClCompile Include="testportfolio.cpp" />
     <ClCompile Include="testsuite.cpp" />
   </ItemGroup>
   <ItemGroup>
