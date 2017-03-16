@@ -271,6 +271,7 @@ boost::shared_ptr<VanillaSwap> Swaption::buildVanillaSwap(const boost::shared_pt
 
     // Set other ore::data::Trade details
     npvCurrency_ = ccy;
+    notional_ = nominal;
     legCurrencies_ = vector<string>(2, ccy);
     legs_.push_back(swap->fixedLeg());
     legs_.push_back(swap->floatingLeg());
@@ -315,9 +316,10 @@ Swaption::buildNonStandardSwap(const boost::shared_ptr<EngineFactory>& engineFac
     vector<Real> spreads =
         buildScheduledVectorNormalised(swap_[floatingLegIndex].floatingLegData().spreads(),
                                        swap_[floatingLegIndex].floatingLegData().spreadDates(), floatingSchedule);
+    // gearings are optional, i.e. may be empty
     vector<Real> gearings =
-        buildScheduledVectorNormalised(swap_[floatingLegIndex].floatingLegData().spreads(),
-                                       swap_[floatingLegIndex].floatingLegData().spreadDates(), floatingSchedule);
+        buildScheduledVectorNormalised(swap_[floatingLegIndex].floatingLegData().gearings(),
+                                       swap_[floatingLegIndex].floatingLegData().gearingDates(), floatingSchedule, 1.0);
     string indexName = swap_[floatingLegIndex].floatingLegData().index();
     DayCounter fixedDayCounter = parseDayCounter(swap_[fixedLegIndex].dayCounter());
     Handle<IborIndex> index =
@@ -339,6 +341,7 @@ Swaption::buildNonStandardSwap(const boost::shared_ptr<EngineFactory>& engineFac
 
     // Set other ore::data::Trade details
     npvCurrency_ = ccy;
+    notional_ = std::max(currentNotional(swap->fixedLeg()), currentNotional(swap->floatingLeg()));
     legCurrencies_ = vector<string>(2, ccy);
     legs_.push_back(swap->fixedLeg());
     legs_.push_back(swap->floatingLeg());
