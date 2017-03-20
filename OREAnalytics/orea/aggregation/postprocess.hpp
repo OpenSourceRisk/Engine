@@ -253,6 +253,8 @@ private:
     void dynamicInitialMargin();
     //! Compile the array of DIM regressors for the specified date and sample index
     Disposable<Array> regressorArray(Size dateIndex, Size sampleIndex);
+    //! Perform the calculation of IM as of t=t0
+    void performT0DimCalc();
 
     boost::shared_ptr<Portfolio> portfolio_;
     boost::shared_ptr<NettingSetManager> nettingSetManager_;
@@ -280,6 +282,7 @@ private:
     map<string, Real> nettingSetFCA_, nettingSetFBA_;
     boost::shared_ptr<NPVCube> nettedCube_;
     boost::shared_ptr<NPVCube> dimCube_;
+    map<string, Real> net_t0_im_reg_h_, net_t0_im_simple_h_;
 
     vector<string> tradeIds_;
     vector<string> nettingSetIds_;
