@@ -810,6 +810,8 @@ void PostProcess::dynamicInitialMargin() {
             nettingSetLocalDIM_[nettingSetId] = vector<vector<Real>>(dates, vector<Real>(samples, 0.0));
             nettingSetExpectedDIM_[nettingSetId] = vector<Real>(dates, 0.0);
             nettingSetZeroOrderDIM_[nettingSetId] = vector<Real>(dates, 0.0);
+            nettingSetSimpleDIMh_[nettingSetId] = vector<Real>(dates, 0.0);
+            nettingSetSimpleDIMp_[nettingSetId] = vector<Real>(dates, 0.0);
             nettingSets.insert(nettingSetId);
             nettingSetSize[nettingSetId] = 0;
         }
@@ -842,6 +844,9 @@ void PostProcess::dynamicInitialMargin() {
         LsmBasisSystem::multiPathBasisSystem(regressionDimension, polynomOrder, polynomType));
     Real confidenceLevel = QuantLib::InverseCumulativeNormal()(dimQuantile_);
     LOG("DIM confidence level " << confidenceLevel);
+
+    Size simple_dim_index_h = Size(floor(dimQuantile_ * (samples - 1) + 0.5));
+    Size simple_dim_index_p = Size(floor((1.0 - dimQuantile_) * (samples - 1) + 0.5));
 
     Size nettingSetCount = 0;
     for (auto n : nettingSets) {
@@ -892,6 +897,14 @@ void PostProcess::dynamicInitialMargin() {
                 nettingSetDeltaNPV_[n][j][k] = std::abs(z * horizonScaling * confidenceLevel);
                 regressorArray_[n][j][k] = rx[k];
             }
+            vector<Real> delNpvVec_copy = nettingSetDeltaNPV_[n][j];
+            sort(delNpvVec_copy.begin(), delNpvVec_copy.end());
+            Real simpleDim_h = delNpvVec_copy[simple_dim_index_h];
+            Real simpleDim_p = delNpvVec_copy[simple_dim_index_p];
+            simpleDim_h *= horizonScaling; // the usual scaling factors
+            simpleDim_p *= horizonScaling; // the usual scaling factors
+            nettingSetSimpleDIMh_[n][j] = simpleDim_h * E_OneOverNumeraire; // discounted DIM
+            nettingSetSimpleDIMp_[n][j] = simpleDim_p * E_OneOverNumeraire; // discounted DIM
 
             QL_REQUIRE(rx.size() > v.size(), "not enough points for regression with polynom order " << polynomOrder);
             if (close_enough(stdevDiff, 0.0)) {
@@ -1165,7 +1178,7 @@ void PostProcess::exportDimEvolution(const std::string& fileName, const std::str
     }
     QL_REQUIRE(index >= 0, "netting set " << nettingSet << " not found in DIM cube");
 
-    file << "TimeStep,Date,DaysInPeriod,ZeroOrderDIM,AverageDIM,AverageFLOW" << endl;
+    file << "TimeStep,Date,DaysInPeriod,ZeroOrderDIM,AverageDIM,AverageFLOW,SimpleDIM" << endl;
     for (Size i = 0; i < dates - 1; ++i) {
         Real expectedFlow = 0.0;
         for (Size j = 0; j < samples; ++j) {
@@ -1177,7 +1190,7 @@ void PostProcess::exportDimEvolution(const std::string& fileName, const std::str
         Size days = d2 - d1;
         file << i << "," << QuantLib::io::iso_date(d1) << "," << days << "," << setprecision(6)
              << nettingSetZeroOrderDIM_[nettingSet][i] << "," << nettingSetExpectedDIM_[nettingSet][i] << ","
-             << expectedFlow << endl;
+             << expectedFlow << "," << nettingSetSimpleDIMh_[nettingSet][i] << endl;
     }
     file.close();
     LOG("Exporting expected DIM through time done");
@@ -1235,7 +1248,7 @@ void PostProcess::exportDimRegression(const std::vector<string>& fileNames, cons
         for (Size k = 0; k < reg[0].size(); ++k) {
             file << "Regressor_" << k << "_" << (dimRegressors_.empty() ? "NPV" : dimRegressors_[k]) << ",";
         }
-        file << "RegressionDIM,LocalDIM,ExpectedDIM,ZeroOrderDIM,DeltaNPV" << endl;
+        file << "RegressionDIM,LocalDIM,ExpectedDIM,ZeroOrderDIM,DeltaNPV,SimpleDIM" << endl;
 
         // Note that RegressionDIM, LocalDIM, ZeroOrderDim, DeltaNPV are _not_ reduced by the numeraire in this output,
         // but ExpectedDIM _is_ reduced by the numeraire.
@@ -1246,7 +1259,8 @@ void PostProcess::exportDimRegression(const std::vector<string>& fileNames, cons
                 file << reg[j][k] << ",";
             }
             file << dim[j] * num[j] << "," << ldim[j] * num[j] << "," << nettingSetExpectedDIM_[nettingSet][timeStep]
-                 << "," << nettingSetZeroOrderDIM_[nettingSet][timeStep] << "," << delta[j] << endl;
+                 << "," << nettingSetZeroOrderDIM_[nettingSet][timeStep] << "," << delta[j] 
+                << "," << nettingSetSimpleDIMh_ [nettingSet][timeStep] << endl;
         }
         file.close();
         LOG("Exporting DIM by Sample done");

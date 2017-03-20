@@ -265,7 +265,7 @@ private:
     map<string, vector<vector<Real>>> nettingSetNPV_, nettingSetFLOW_, nettingSetDIM_, nettingSetLocalDIM_,
         nettingSetDeltaNPV_;
     map<string, vector<vector<Array>>> regressorArray_;
-    map<string, vector<Real>> nettingSetExpectedDIM_, nettingSetZeroOrderDIM_;
+    map<string, vector<Real>> nettingSetExpectedDIM_, nettingSetZeroOrderDIM_, nettingSetSimpleDIMh_, nettingSetSimpleDIMp_;
     map<string, vector<Real>> tradeEPE_, tradeENE_, tradeEE_B_, tradeEEE_B_, tradePFE_, tradeVAR_;
     map<string, Real> tradeEPE_B_, tradeEEPE_B_;
     map<string, vector<Real>> allocatedTradeEPE_, allocatedTradeENE_;
