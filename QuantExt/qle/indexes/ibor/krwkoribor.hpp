@@ -33,18 +33,19 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-    //! KRW-KORIBOR index
-    /*! KRW-KORIIBOR rate.
-    
-    \warning Check roll convention and EOM.
+//! KRW-KORIBOR index
+/*! KRW-KORIIBOR rate.
 
-    \ingroup indexes
-    */
-    class KRWKoribor : public IborIndex {
-    public:
-        KRWKoribor(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
-            : IborIndex("KRW-KORIBOR", tenor, 2, KRWCurrency(), SouthKorea(), ModifiedFollowing, false, Actual365Fixed(), h) {}
-    };
+\warning Check roll convention and EOM.
+
+\ingroup indexes
+*/
+class KRWKoribor : public IborIndex {
+public:
+    KRWKoribor(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
+        : IborIndex("KRW-KORIBOR", tenor, 2, KRWCurrency(), SouthKorea(), ModifiedFollowing, false, Actual365Fixed(),
+                    h) {}
+};
 }
 
 #endif

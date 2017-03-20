@@ -118,7 +118,7 @@ private:
                                                         const DayCounter& dayCounter);
 
     boost::shared_ptr<YieldTermStructure> forwardcurve(const vector<Date>& dates, const vector<Rate>& forwards,
-                                                    const DayCounter& dayCounter);
+                                                       const DayCounter& dayCounter);
 
     /* Functions to build RateHelpers from yield curve segments */
     void addDeposits(const boost::shared_ptr<YieldCurveSegment>& segment,

@@ -35,7 +35,7 @@ using namespace QuantLib;
 namespace QuantExt {
 
 //! Discounting Risky Bond Engine
-/*! WARNING: Only covers Vanilla coupon bonds (floating and fixed rate), and 
+/*! WARNING: Only covers Vanilla coupon bonds (floating and fixed rate), and
     Zero Bonds (one cashflow, a redemption at maturity).
 
     This class implements pricing of Risky Bonds by discounting the future
@@ -47,15 +47,14 @@ namespace QuantExt {
     bond the time step period provided is used.
 
     \ingroup engines
-    
+
 */
 class DiscountingRiskyBondEngine : public QuantLib::Bond::engine {
 public:
     DiscountingRiskyBondEngine(const Handle<YieldTermStructure>& discountCurve,
                                const Handle<DefaultProbabilityTermStructure>& defaultCurve,
                                const Handle<Quote>& recoveryRate, const Handle<Quote>& securitySpread,
-                               Period timestepPeriod,
-                               boost::optional<bool> includeSettlementDateFlows = boost::none);
+                               Period timestepPeriod, boost::optional<bool> includeSettlementDateFlows = boost::none);
 
     void calculate() const;
     Real calculateNpv(Date npvDate) const;
