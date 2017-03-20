@@ -555,7 +555,7 @@ PostProcess::collateralPaths(const string& nettingSetId, const boost::shared_ptr
     vector<vector<Real>> csaScenFxRates(dates, vector<Real>(samples, 0.0));
     vector<vector<Real>> csaScenRates(dates, vector<Real>(samples, 0.0));
     if (netting->csaCurrency() != baseCurrency_) {
-        QL_REQUIRE(scenarioData_->has(AggregationScenarioDataType::FXSpot, csaFxPair),
+        QL_REQUIRE(scenarioData_->has(AggregationScenarioDataType::FXSpot, netting->csaCurrency()),
                    "scenario data does not provide FX rates for " << csaFxPair);
     }
     QL_REQUIRE(scenarioData_->has(AggregationScenarioDataType::IndexFixing, csaIndexName),
@@ -563,7 +563,7 @@ PostProcess::collateralPaths(const string& nettingSetId, const boost::shared_ptr
     for (Size j = 0; j < dates; ++j) {
         for (Size k = 0; k < samples; ++k) {
             if (netting->csaCurrency() != baseCurrency_)
-                csaScenFxRates[j][k] = scenarioData_->get(j, k, AggregationScenarioDataType::FXSpot, csaFxPair);
+                csaScenFxRates[j][k] = scenarioData_->get(j, k, AggregationScenarioDataType::FXSpot, netting->csaCurrency());
             else
                 csaScenFxRates[j][k] = 1.0;
             csaScenRates[j][k] = scenarioData_->get(j, k, AggregationScenarioDataType::IndexFixing, csaIndexName);
