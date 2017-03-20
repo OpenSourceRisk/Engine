@@ -57,7 +57,7 @@ boost::shared_ptr<QuantExt::LGM> LGMBermudanSwaptionEngineBuilder::model(const s
     Real lambda = parseReal(modelParameters_.at("Reversion"));
     vector<Real> sigma = parseListOfValues<Real>(modelParameters_.at("Volatility"), &parseReal);
     vector<Real> sigmaTimes(0);
-    if(modelParameters_.count("VolatilityTimes") > 0)
+    if (modelParameters_.count("VolatilityTimes") > 0)
         sigmaTimes = parseListOfValues<Real>(modelParameters_.at("VolatilityTimes"), &parseReal);
     QL_REQUIRE(sigma.size() == sigmaTimes.size() + 1, "there must be n+1 volatilities (" << sigma.size()
                                                                                          << ") for n volatility times ("

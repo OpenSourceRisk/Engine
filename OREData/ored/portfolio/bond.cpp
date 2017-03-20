@@ -83,9 +83,9 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     notional_ = currentNotional(bond->cashflows());
 
     // Add legs (only 1)
-    legs_ = { bond->cashflows() };
-    legCurrencies_ = { npvCurrency_ };
-    legPayers_ = { false }; // We own the bond => we receive the flows
+    legs_ = {bond->cashflows()};
+    legCurrencies_ = {npvCurrency_};
+    legPayers_ = {false}; // We own the bond => we receive the flows
 }
 
 void Bond::fromXML(XMLNode* node) {
