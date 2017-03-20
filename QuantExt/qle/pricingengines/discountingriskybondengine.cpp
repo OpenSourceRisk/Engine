@@ -32,12 +32,10 @@ namespace QuantExt {
 DiscountingRiskyBondEngine::DiscountingRiskyBondEngine(const Handle<YieldTermStructure>& discountCurve,
                                                        const Handle<DefaultProbabilityTermStructure>& defaultCurve,
                                                        const Handle<Quote>& securitySpread,
-                                                       const Handle<Quote>& recoveryRate,
-                                                       Period timestepPeriod,
+                                                       const Handle<Quote>& recoveryRate, Period timestepPeriod,
                                                        boost::optional<bool> includeSettlementDateFlows)
-    : defaultCurve_(defaultCurve), recoveryRate_(recoveryRate), 
-      securitySpread_(securitySpread), timestepPeriod_(timestepPeriod),
-      includeSettlementDateFlows_(includeSettlementDateFlows) {
+    : defaultCurve_(defaultCurve), recoveryRate_(recoveryRate), securitySpread_(securitySpread),
+      timestepPeriod_(timestepPeriod), includeSettlementDateFlows_(includeSettlementDateFlows) {
     discountCurve_ =
         Handle<YieldTermStructure>(boost::make_shared<ZeroSpreadedTermStructure>(discountCurve, securitySpread));
     registerWith(discountCurve_);
@@ -77,10 +75,10 @@ Real DiscountingRiskyBondEngine::calculateNpv(Date npvDate) const {
         // Coupon value is discounted future payment times the survival probability
         Probability S = defaultCurve_->survivalProbability(cf->date());
         npvValue += cf->amount() * S * discountCurve_->discount(cf->date());
-        
+
         /* The amount recovered in the case of default is the recoveryrate*Notional*Probability of
-           Default; this is added to the NPV value. For coupon bonds the coupon periods are taken 
-           as the timesteps for integrating over the probability of default. 
+           Default; this is added to the NPV value. For coupon bonds the coupon periods are taken
+           as the timesteps for integrating over the probability of default.
         */
         boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(cf);
         if (coupon) {
