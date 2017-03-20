@@ -337,9 +337,11 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
         Handle<IborIndex> csaIndex;
         if (netting->activeCsaFlag()) {
             csaIndexName = netting->index();
-            csaIndex = market->iborIndex(csaIndexName);
-            QL_REQUIRE(scenarioData->has(AggregationScenarioDataType::IndexFixing, csaIndexName),
-                       "scenario data does not provide index values for " << csaIndexName);
+            if (csaIndexName != "") {
+                csaIndex = market->iborIndex(csaIndexName);
+                QL_REQUIRE(scenarioData->has(AggregationScenarioDataType::IndexFixing, csaIndexName),
+                    "scenario data does not provide index values for " << csaIndexName);
+            }
         }
 
         Handle<YieldTermStructure> curve = market_->discountCurve(baseCurrency_, configuration_);
@@ -391,8 +393,13 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
                 nettedCube_->set(exposure, nettingSetCount, j, k);
 
                 if (netting->activeCsaFlag()) {
-                    Real indexValue = scenarioData->get(j, k, AggregationScenarioDataType::IndexFixing, csaIndexName);
-                    Real dcf = csaIndex->dayCounter().yearFraction(prevDate, date);
+                    Real indexValue = 0.0;
+                    DayCounter dc = ActualActual();
+                    if (csaIndexName != "") {
+                        Real indexValue = scenarioData->get(j, k, AggregationScenarioDataType::IndexFixing, csaIndexName);
+                        dc = csaIndex->dayCounter();
+                    }
+                    Real dcf = dc.yearFraction(prevDate, date);
                     Real colvaDelta = -balance * collateralSpread_ * dcf / samples;
                     Real floorDelta = -balance * std::max(-indexValue, 0.0) * dcf / samples;
                     colvaInc[j + 1] += colvaDelta;
@@ -558,15 +565,19 @@ PostProcess::collateralPaths(const string& nettingSetId, const boost::shared_ptr
         QL_REQUIRE(scenarioData_->has(AggregationScenarioDataType::FXSpot, netting->csaCurrency()),
                    "scenario data does not provide FX rates for " << csaFxPair);
     }
-    QL_REQUIRE(scenarioData_->has(AggregationScenarioDataType::IndexFixing, csaIndexName),
-               "scenario data does not provide index values for " << csaIndexName);
+    if (csaIndexName != "") {
+        QL_REQUIRE(scenarioData_->has(AggregationScenarioDataType::IndexFixing, csaIndexName),
+            "scenario data does not provide index values for " << csaIndexName);
+    }
     for (Size j = 0; j < dates; ++j) {
         for (Size k = 0; k < samples; ++k) {
             if (netting->csaCurrency() != baseCurrency_)
                 csaScenFxRates[j][k] = scenarioData_->get(j, k, AggregationScenarioDataType::FXSpot, netting->csaCurrency());
             else
                 csaScenFxRates[j][k] = 1.0;
-            csaScenRates[j][k] = scenarioData_->get(j, k, AggregationScenarioDataType::IndexFixing, csaIndexName);
+            if (csaIndexName != "") {
+                csaScenRates[j][k] = scenarioData_->get(j, k, AggregationScenarioDataType::IndexFixing, csaIndexName);
+            }
         }
     }
 
