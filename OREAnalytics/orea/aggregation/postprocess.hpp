@@ -251,8 +251,8 @@ private:
 
     //! Fill dynamic initial margin cube (per netting set, date and sample)
     void dynamicInitialMargin();
-    //! Compile the array of DIM regressors for the specified date and sample index
-    Disposable<Array> regressorArray(Size dateIndex, Size sampleIndex);
+    //! Compile the array of DIM regressors for the specified netting set, date and sample index
+    Disposable<Array> regressorArray(string nettingSet, Size dateIndex, Size sampleIndex);
 
     boost::shared_ptr<Portfolio> portfolio_;
     boost::shared_ptr<NettingSetManager> nettingSetManager_;

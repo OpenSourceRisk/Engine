@@ -758,14 +758,18 @@ void PostProcess::updateAllocatedXVA() {
     }
 }
 
-Disposable<Array> PostProcess::regressorArray(Size dateIndex, Size sampleIndex) {
+Disposable<Array> PostProcess::regressorArray(string nettingSet, Size dateIndex, Size sampleIndex) {
     Array a(dimRegressors_.size());
     for (Size i = 0; i < dimRegressors_.size(); ++i) {
         string variable = dimRegressors_[i];
-        if (scenarioData_->has(AggregationScenarioDataType::IndexFixing, variable))
+        if (boost::to_upper_copy(variable) == "NPV") // this allows possibility to include NPV as a regressor alongside more fundamental risk factors
+            a[i] = nettingSetNPV_[nettingSet][dateIndex][sampleIndex];
+        else if (scenarioData_->has(AggregationScenarioDataType::IndexFixing, variable))
             a[i] = scenarioData_->get(dateIndex, sampleIndex, AggregationScenarioDataType::IndexFixing, variable);
         else if (scenarioData_->has(AggregationScenarioDataType::FXSpot, variable))
             a[i] = scenarioData_->get(dateIndex, sampleIndex, AggregationScenarioDataType::FXSpot, variable);
+        else if (scenarioData_->has(AggregationScenarioDataType::Generic, variable))
+            a[i] = scenarioData_->get(dateIndex, sampleIndex, AggregationScenarioDataType::Generic, variable);
         else
             QL_FAIL("scenario data does not provide data for " << variable);
     }
@@ -870,7 +874,7 @@ void PostProcess::dynamicInitialMargin() {
                 Real f = nettingSetFLOW_[n][j][k] * num1;
                 Real y = nettingSetNPV_[n][j + 1][k] * num2;
                 Real z = (y + f - x);
-                rx[k] = dimRegressors_.empty() ? Array(1, nettingSetNPV_[n][j][k]) : regressorArray(j, k);
+                rx[k] = dimRegressors_.empty() ? Array(1, nettingSetNPV_[n][j][k]) : regressorArray(n, j, k);
                 rx0[k] = rx[k][0];
                 ry1[k] = z;     // for local regression
                 ry2[k] = z * z; // for least squares regression
@@ -909,7 +913,7 @@ void PostProcess::dynamicInitialMargin() {
                 // Evaluate regression function to compute DIM for each scenario
                 for (Size k = 0; k < samples; ++k) {
                     Real num1 = scenarioData_->get(j, k, AggregationScenarioDataType::Numeraire);
-                    Array regressor = dimRegressors_.empty() ? Array(1, nettingSetNPV_[n][j][k]) : regressorArray(j, k);
+                    Array regressor = dimRegressors_.empty() ? Array(1, nettingSetNPV_[n][j][k]) : regressorArray(n, j, k);
                     Real e = ls.eval(regressor, v);
                     if (e < 0.0)
                         LOG("Negative variance regression for date " << j << ", sample " << k
