@@ -839,6 +839,7 @@ void PostProcess::dynamicInitialMargin() {
         }
         for (Size j = 0; j < dates - 1; ++j) {
             accumulator_set<double, stats<tag::mean, tag::variance>> accDiff;
+            accumulator_set<double, stats<tag::mean>> accOneOverNumeraire;
             for (Size k = 0; k < samples; ++k) {
                 Real num1 = scenarioData_->get(j, k, AggregationScenarioDataType::Numeraire);
                 Real num2 = scenarioData_->get(j + 1, k, AggregationScenarioDataType::Numeraire);
@@ -846,14 +847,17 @@ void PostProcess::dynamicInitialMargin() {
                 Real flow = nettingSetFLOW_[n][j][k];
                 Real npv2 = nettingSetNPV_[n][j + 1][k];
                 accDiff(npv2 * num2 + flow * num1 - npv1 * num1);
+                accOneOverNumeraire(1.0 / num1);
             }
 
             Date d1 = cube_->dates()[j];
             Date d2 = cube_->dates()[j + 1];
             Real horizonScaling = sqrt(1.0 * dimHorizonCalendarDays_ / (d2 - d1));
             Real stdevDiff = sqrt(variance(accDiff));
+            Real E_OneOverNumeraire = mean(accOneOverNumeraire); // "re-discount" (the stdev is calculated on non-discounted deltaNPVs)
 
             nettingSetZeroOrderDIM_[n][j] = stdevDiff * horizonScaling * confidenceLevel;
+            nettingSetZeroOrderDIM_[n][j] *= E_OneOverNumeraire;
 
             vector<Real> rx0(samples, 0.0);
             vector<Array> rx(samples, Array());
