@@ -63,7 +63,7 @@ boost::shared_ptr<Trade> buildSwap(string id, string ccy, bool isPayer, Real not
     FixedLegData fixedLegData(rates);
     LegData fixedLeg(isPayer, ccy, fixedLegData, fixedSchedule, fixedDC, notionals);
     // float leg
-    FloatingLegData floatingLegData(index, days, true, spreads);
+    FloatingLegData floatingLegData(index, days, false, spreads);
     LegData floatingLeg(!isPayer, ccy, floatingLegData, floatSchedule, floatDC, notionals);
     // trade
     boost::shared_ptr<Trade> trade(new ore::data::Swap(env, floatingLeg, fixedLeg));
