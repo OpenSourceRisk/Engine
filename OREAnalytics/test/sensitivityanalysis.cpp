@@ -175,7 +175,7 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData2() {
     SensitivityScenarioData::FxVolShiftData fxvsData;
     fxvsData.shiftType = "Relative";
     fxvsData.shiftSize = 1.0;
-    fxvsData.shiftExpiries = { 1 * Years, 5 * Years };
+    fxvsData.shiftExpiries = { 2 * Years, 5 * Years };
 
     SensitivityScenarioData::CapFloorVolShiftData cfvsData;
     cfvsData.shiftType = "Absolute";
@@ -711,8 +711,8 @@ void SensitivityAnalysisTest::testPortfolioSensitivity() {
             string label = desc[j].text();
             if (fabs(sensi) > tiny) {
                 count++;
-                // BOOST_TEST_MESSAGE("{ \"" << id << "\", \"" << label << "\", " << npv0 << ", " << sensi
-                //                           << " },");
+                //BOOST_TEST_MESSAGE("{ \"" << id << "\", \"" << label << "\", " << npv0 << ", " << sensi
+                  //                        << " },");
                 pair<string, string> p(id, label);
                 QL_REQUIRE(npvMap.find(p) != npvMap.end(), "pair (" << p.first << ", " << p.second
                                                                     << ") not found in npv map");
@@ -728,7 +728,10 @@ void SensitivityAnalysisTest::testPortfolioSensitivity() {
             }
         }
     }
-    BOOST_CHECK_MESSAGE(count == cachedResults.size(), "number of non-zero sensitivities do not match regression data");
+    BOOST_CHECK_MESSAGE(count == cachedResults.size(), 
+        "number of non-zero sensitivities (" << count << 
+        ") do not match regression data (" << cachedResults.size() << 
+        ")");
 
     BOOST_TEST_MESSAGE("Cube generated in " << elapsed << " seconds");
 }
@@ -1106,19 +1109,19 @@ void SensitivityAnalysisTest::test2dShifts() {
 
 test_suite* SensitivityAnalysisTest::suite() {
     // Uncomment the below to get detailed output TODO: custom logger that uses BOOST_MESSAGE
-
+    /*
     boost::shared_ptr<ore::data::FileLogger> logger = boost::make_shared<ore::data::FileLogger>("sensitivity.log");
     ore::data::Log::instance().removeAllLoggers();
     ore::data::Log::instance().registerLogger(logger);
     ore::data::Log::instance().switchOn();
     ore::data::Log::instance().setMask(255);
-
+    */
     test_suite* suite = BOOST_TEST_SUITE("SensitivityAnalysisTest");
     // Set the Observation mode here
     ObservationMode::instance().setMode(ObservationMode::Mode::None);
-    // suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::test1dShifts));
-    // suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::test2dShifts));
-    // suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testPortfolioSensitivity));
+    suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::test1dShifts));
+    suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::test2dShifts));
+    suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testPortfolioSensitivity));
     suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testParConversion));
     return suite;
 }
