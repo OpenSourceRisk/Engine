@@ -1,6 +1,6 @@
 <SensitivityAnalysis>
 
-  <ParConversion>true</ParConversion>
+  <ParConversion>false</ParConversion>
   
   <!-- Discount curve shifts -->
   <DiscountCurves>

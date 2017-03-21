@@ -404,7 +404,7 @@ void OREApp::runSensitivityAnalysis() {
 
     LOG("Build Sensitivity Analysis");
     string marketConfiguration = params_->get("markets", "pricing");
-    QL_REQUIRE(!sensiData->parConversion(), "Par sensitivity conversion not supported here")
+    QL_REQUIRE(!sensiData->parConversion(), "Par sensitivity conversion not supported here");
     boost::shared_ptr<SensitivityAnalysis> sensiAnalysis = boost::make_shared<SensitivityAnalysis>(
         sensiPortfolio, market_, marketConfiguration, engineData, simMarketData, sensiData, conventions_);
 
@@ -418,9 +418,6 @@ void OREApp::runSensitivityAnalysis() {
 
     string outputFile3 = outputPath + "/" + params_->get("sensitivity", "crossGammaOutputFile");
     sensiAnalysis->writeCrossGammaReport(outputFile3, sensiThreshold);
-
-    string outputFile4 = outputPath + "/" + params_->get("sensitivity", "parRateSensitivityOutputFile");
-    sensiAnalysis->writeParRateSensitivityReport(outputFile4);
 
     cout << "OK" << endl;
 }

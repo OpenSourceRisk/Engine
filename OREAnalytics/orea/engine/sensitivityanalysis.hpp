@@ -76,7 +76,7 @@ public:
     const std::map<std::pair<std::string, std::string>, Real>& delta() { return delta_; }
 
     //! Return par delta (first order sensitivity times shift) by trade/factor pair
-    const std::map<std::pair<std::string, std::string>, Real>& parDelta() { return parDelta_; }
+    virtual const std::map<std::pair<std::string, std::string>, Real>& parDelta();
 
     //! Return gamma (second order sensitivity times shift^2) by trade/factor pair
     const std::map<std::pair<std::string, std::string>, Real>& gamma() { return gamma_; }
@@ -94,7 +94,7 @@ public:
     void writeCrossGammaReport(string fileName, Real outputThreshold = 0.0);
 
     //! Write sensitivity of par rates w.r.t. zero rates to a file
-    void writeParRateSensitivityReport(string fileName);
+    virtual void writeParRateSensitivityReport(string fileName) { QL_FAIL("par sensitivities not implemented"); };
 
     //! Run par delta conversion, zero to par rate sensi, caplet/floorlet vega to cap/floor vega
     virtual void parDeltaConversion() { QL_FAIL("par delta conversion not implemented"); }
@@ -112,15 +112,13 @@ protected:
     // base NPV by trade
     std::map<std::string, Real> baseNPV_;
     // NPV respectively sensitivity by trade and factor
-    std::map<std::pair<string, string>, Real> upNPV_, downNPV_, delta_, gamma_, parDelta_;
+    std::map<std::pair<string, string>, Real> upNPV_, downNPV_, delta_, gamma_;
     // cross gamma by trade, factor1, factor2
     std::map<std::tuple<string, string, string>, Real> crossGamma_;
     // unique set of factors
     std::set<std::string> factors_;
     // unique set of trades
     std::set<std::string> trades_;
-    // sensitivity of par rates w.r.t. raw rate shifts (including optionlet/cap volatility)
-    std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> parSensi_;
 };
 }
 }

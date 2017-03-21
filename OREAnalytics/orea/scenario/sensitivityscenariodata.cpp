@@ -31,7 +31,10 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
     XMLNode* node = XMLUtils::locateNode(root, "SensitivityAnalysis");
     XMLUtils::checkNode(node, "SensitivityAnalysis");
 
-    parConversion_ = XMLUtils::getChildValueAsBool(node, "ParConversion", true);
+    XMLNode* parNode = XMLUtils::getChildNode(node, "ParConversion");
+    parConversion_ = false;
+    if (parNode)
+        parConversion_ = XMLUtils::getChildValueAsBool(node, "ParConversion");
 
     LOG("Get discount curve sensitivity parameters");
     XMLNode* discountCurves = XMLUtils::getChildNode(node, "DiscountCurves");

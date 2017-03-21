@@ -11,7 +11,6 @@ libOREAnalyticsEngine_la_SOURCES = \
 	valuationcalculator.cpp \
 	scenarioengine.cpp \
 	sensitivityanalysis.cpp \
-	parsensitivityanalysis.cpp \
 	stresstest.cpp
 
 this_includedir=${includedir}/${subdir}
@@ -22,7 +21,6 @@ this_include_HEADERS = \
 	valuationcalculator.hpp \
 	scenarioengine.hpp \
 	sensitivityanalysis.hpp \
-	parsensitivityanalysis.hpp \
 	stresstest.hpp
 
 all.hpp: Makefile.am

@@ -226,9 +226,7 @@ void SensitivityAnalysis::writeSensitivityReport(string fileName, Real outputThr
     report.addColumn("Factor", string());
     report.addColumn("Base NPV", double(), 2);
     report.addColumn("Delta*Shift", double(), 2);
-    report.addColumn("ParDelta*Shift", double(), 2);
     report.addColumn("Gamma*Shift^2", double(), 2);
-    report.addColumn("ParGamma*Shift^2", double(), 2); // TODO
 
     for (auto data : delta_) {
         pair<string, string> p = data.first;
@@ -243,12 +241,7 @@ void SensitivityAnalysis::writeSensitivityReport(string fileName, Real outputThr
             report.add(factor);
             report.add(base);
             report.add(delta);
-            if (parDelta_.find(p) != parDelta_.end())
-                report.add(parDelta_[p]);
-            else
-                report.add(Null<Real>());
             report.add(gamma);
-            report.add(Null<Real>()); // TODO
         }
     }
     report.end();
@@ -262,7 +255,6 @@ void SensitivityAnalysis::writeCrossGammaReport(string fileName, Real outputThre
     report.addColumn("Factor 2", string());
     report.addColumn("Base NPV", double(), 2);
     report.addColumn("CrossGamma*Shift^2", double(), 2);
-    report.addColumn("ParCrossGamma*Shift^2", double(), 2); // TODO
 
     for (auto data : crossGamma_) {
         string id = std::get<0>(data.first);
@@ -277,30 +269,14 @@ void SensitivityAnalysis::writeCrossGammaReport(string fileName, Real outputThre
             report.add(factor2);
             report.add(base);
             report.add(crossGamma);
-            report.add(Null<Real>()); // TODO
         }
     }
     report.end();
 }
 
-void SensitivityAnalysis::writeParRateSensitivityReport(string fileName) {
-    CSVFileReport report(fileName);
-
-    report.addColumn("ParFactor", string());
-    report.addColumn("RawFactor", string());
-    report.addColumn("ParSensitivity", double(), 6);
-
-    LOG("Write sensitivity output to " << fileName);
-    for (auto data : parSensi_) {
-        RiskFactorKey parKey = data.first.first;
-        RiskFactorKey rawKey = data.first.second;
-        Real sensi = data.second;
-        report.next();
-        report.add(ore::data::to_string(parKey));
-        report.add(ore::data::to_string(rawKey));
-        report.add(sensi);
-    }
-    report.end();
+const std::map<std::pair<std::string, std::string>, Real>& SensitivityAnalysis::parDelta() {
+    QL_FAIL("Par sensitivities calculation not implemented - returning empty container");
 }
+
 }
 }
