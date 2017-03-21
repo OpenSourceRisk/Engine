@@ -45,6 +45,7 @@
     <ClInclude Include="orea\app\reportwriter.hpp" />
     <ClInclude Include="orea\auto_link.hpp" />
     <ClInclude Include="orea\cube\all.hpp" />
+    <ClInclude Include="orea\cube\cubecsvreader.hpp" />
     <ClInclude Include="orea\cube\cubewriter.hpp" />
     <ClInclude Include="orea\cube\inmemorycube.hpp" />
     <ClInclude Include="orea\cube\npvcube.hpp" />
@@ -78,6 +79,7 @@
     <ClCompile Include="orea\app\oreapp.cpp" />
     <ClCompile Include="orea\app\parameters.cpp" />
     <ClCompile Include="orea\app\reportwriter.cpp" />
+    <ClCompile Include="orea\cube\cubecsvreader.cpp" />
     <ClCompile Include="orea\cube\cubewriter.cpp" />
     <ClCompile Include="orea\engine\valuationcalculator.cpp" />
     <ClCompile Include="orea\engine\valuationengine.cpp" />
