@@ -103,18 +103,18 @@
     <FxVolatilities><!-- strike dimension ignored -->
       <FxVolatility ccypair="USDEUR">
 	<ShiftType>Absolute</ShiftType>
-	<ShiftExpiries>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y,30Y</ShiftExpiries>
-	<Shifts>0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1</Shifts>
+	<ShiftExpiries>1Y,2Y,3Y,5Y</ShiftExpiries>
+	<Shifts>0.1,0.1,0.1,0.1</Shifts>
       </FxVolatility>
       <FxVolatility ccypair="GBPEUR">
 	<ShiftType>Absolute</ShiftType>
-	<ShiftExpiries>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y,30Y</ShiftExpiries>
-	<Shifts>0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1</Shifts>
+	<ShiftExpiries>1Y,2Y,3Y,5Y</ShiftExpiries>
+	<Shifts>0.1,0.1,0.1,0.1</Shifts>
       </FxVolatility>
       <FxVolatility ccypair="JPYEUR">
 	<ShiftType>Absolute</ShiftType>
-	<ShiftExpiries>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y,30Y</ShiftExpiries>
-	<Shifts>0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1</Shifts>
+	<ShiftExpiries>1Y,2Y,3Y,5Y</ShiftExpiries>
+	<Shifts>0.1,0.1,0.1,0.1</Shifts>
       </FxVolatility>
     </FxVolatilities>
   
