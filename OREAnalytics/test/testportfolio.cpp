@@ -100,7 +100,7 @@ boost::shared_ptr<Trade> buildEuropeanSwaption(string id, string longShort, stri
     FixedLegData fixedLegData(rates);
     LegData fixedLeg(isPayer, ccy, fixedLegData, fixedSchedule, fixedDC, notionals);
     // float leg
-    FloatingLegData floatingLegData(index, days, true, spreads);
+    FloatingLegData floatingLegData(index, days, false, spreads);
     LegData floatingLeg(!isPayer, ccy, floatingLegData, floatSchedule, floatDC, notionals);
     // leg vector
     vector<LegData> legs;
@@ -173,7 +173,7 @@ boost::shared_ptr<Trade> buildCapFloor(string id, string ccy, string longShort, 
     // schedules
     ScheduleData floatSchedule(ScheduleRules(startDate, endDate, floatFreq, cal, conv, conv, rule));
     // float leg
-    FloatingLegData floatingLegData(index, days, true, spreads);
+    FloatingLegData floatingLegData(index, days, false, spreads);
     LegData floatingLeg(false, ccy, floatingLegData, floatSchedule, floatDC, notionals);
     // trade
     boost::shared_ptr<Trade> trade(new ore::data::CapFloor(env, longShort, floatingLeg, capRates, floorRates));
