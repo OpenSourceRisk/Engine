@@ -120,11 +120,17 @@ SensitivityScenarioGenerator::SensitivityScenarioGenerator(boost::shared_ptr<Sce
 
 void SensitivityScenarioGenerator::generateFxScenarios(bool up) {
     // We can choose to shift fewer discount curves than listed in the market
+    std::vector<string> simMarketFxPairs = simMarketData_->fxCcyPairs();
     if (sensitivityData_->fxCcyPairs().size() > 0)
         fxCcyPairs_ = sensitivityData_->fxCcyPairs();
     else
-        fxCcyPairs_ = simMarketData_->fxCcyPairs();
-
+        fxCcyPairs_ = simMarketFxPairs;
+    // Log an ALERT if some currencies in simmarket are excluded from the list
+    for (auto sim_fx : simMarketFxPairs) {
+        if (std::find(fxCcyPairs_.begin(), fxCcyPairs_.end(), sim_fx) == fxCcyPairs_.end()) {
+            ALOG("FX pair " << sim_fx << " in simmarket is not included in sensitivities analysis");
+        }
+    }
     for (Size k = 0; k < fxCcyPairs_.size(); k++) {
         string ccypair = fxCcyPairs_[k]; // foreign + domestic;
         SensitivityScenarioData::FxShiftData data = sensitivityData_->fxShiftData()[ccypair];
@@ -141,7 +147,7 @@ void SensitivityScenarioGenerator::generateFxScenarios(bool up) {
         // add remaining unshifted data from cache for a complete scenario
         addCacheTo(scenario);
         scenarios_.push_back(scenario);
-        LOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label()
+        DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label()
                                       << " created: " << newRate);
     }
     LOG("FX scenarios done");
@@ -149,10 +155,17 @@ void SensitivityScenarioGenerator::generateFxScenarios(bool up) {
 
 void SensitivityScenarioGenerator::generateDiscountCurveScenarios(bool up) {
     // We can choose to shift fewer discount curves than listed in the market
+    std::vector<string> simMarketCcys = simMarketData_->ccys();
     if (sensitivityData_->discountCurrencies().size() > 0)
         discountCurrencies_ = sensitivityData_->discountCurrencies();
     else
-        discountCurrencies_ = simMarketData_->ccys();
+        discountCurrencies_ = simMarketCcys;
+    // Log an ALERT if some currencies in simmarket are excluded from the list
+    for (auto sim_ccy : simMarketCcys) {
+        if (std::find(discountCurrencies_.begin(), discountCurrencies_.end(), sim_ccy) == discountCurrencies_.end()) {
+            ALOG("Currency " << sim_ccy << " in simmarket is not included in sensitivities analysis");
+        }
+    }
 
     Size n_ccy = discountCurrencies_.size();
     Size n_ten = simMarketData_->yieldCurveTenors().size();
@@ -187,7 +200,7 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(bool up) {
 
             boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_);
             scenarioDescriptions_.push_back(discountScenarioDescription(ccy, j, up));
-            LOG("generate discount curve scenario, ccy " << ccy << ", bucket " << j << ", up " << up << ", desc "
+            DLOG("generate discount curve scenario, ccy " << ccy << ", bucket " << j << ", up " << up << ", desc "
                                                          << scenarioDescriptions_.back().text());
 
             // apply zero rate shift at tenor point j
@@ -204,7 +217,7 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(bool up) {
 
             // add this scenario to the scenario vector
             scenarios_.push_back(scenario);
-            LOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
+            DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
 
         } // end of shift curve tenors
     }
@@ -213,10 +226,17 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(bool up) {
 
 void SensitivityScenarioGenerator::generateIndexCurveScenarios(bool up) {
     // We can choose to shift fewer discount curves than listed in the market
+    std::vector<string> simMarketIndices = simMarketData_->indices();
     if (sensitivityData_->indexNames().size() > 0)
         indexNames_ = sensitivityData_->indexNames();
     else
-        indexNames_ = simMarketData_->indices();
+        indexNames_ = simMarketIndices;
+    // Log an ALERT if some ibor indices in simmarket are excluded from the list
+    for (auto sim_idx : simMarketIndices) {
+        if (std::find(indexNames_.begin(), indexNames_.end(), sim_idx) == indexNames_.end()) {
+            ALOG("Index " << sim_idx << " in simmarket is not included in sensitivities analysis");
+        }
+    }
 
     Size n_indices = indexNames_.size();
     Size n_ten = simMarketData_->yieldCurveTenors().size();
@@ -268,7 +288,7 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(bool up) {
 
             // add this scenario to the scenario vector
             scenarios_.push_back(scenario);
-            LOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label()
+            DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label()
                                           << " created for indexName " << indexName);
 
         } // end of shift curve tenors
@@ -278,10 +298,17 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(bool up) {
 
 void SensitivityScenarioGenerator::generateYieldCurveScenarios(bool up) {
     // We can choose to shift fewer yield curves than listed in the market
+    vector<string> simMarketYieldCurves = simMarketData_->yieldCurveNames();
     if (sensitivityData_->yieldCurveNames().size() > 0)
         yieldCurveNames_ = sensitivityData_->yieldCurveNames();
     else
-        yieldCurveNames_ = simMarketData_->yieldCurveNames();
+        yieldCurveNames_ = simMarketYieldCurves;
+    // Log an ALERT if some yield curves in simmarket are excluded from the list
+    for (auto sim_yc : simMarketYieldCurves) {
+        if (std::find(yieldCurveNames_.begin(), yieldCurveNames_.end(), sim_yc) == yieldCurveNames_.end()) {
+            ALOG("Yield Curve " << sim_yc << " in simmarket is not included in sensitivities analysis");
+        }
+    }
 
     Size n_curves = yieldCurveNames_.size();
     Size n_ten = simMarketData_->yieldCurveTenors().size();
@@ -332,7 +359,7 @@ void SensitivityScenarioGenerator::generateYieldCurveScenarios(bool up) {
 
             // add this scenario to the scenario vector
             scenarios_.push_back(scenario);
-            LOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
+            DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
 
         } // end of shift curve tenors
     }
@@ -341,10 +368,17 @@ void SensitivityScenarioGenerator::generateYieldCurveScenarios(bool up) {
 
 void SensitivityScenarioGenerator::generateFxVolScenarios(bool up) {
     // We can choose to shift fewer discount curves than listed in the market
+    std::vector<string> simMarketFxPairs = simMarketData_->fxVolCcyPairs();
     if (sensitivityData_->fxVolCcyPairs().size() > 0)
         fxVolCcyPairs_ = sensitivityData_->fxVolCcyPairs();
     else
-        fxVolCcyPairs_ = simMarketData_->fxVolCcyPairs();
+        fxVolCcyPairs_ = simMarketFxPairs;
+    // Log an ALERT if some FX vol pairs in simmarket are excluded from the list
+    for (auto sim_fx : simMarketFxPairs) {
+        if (std::find(fxVolCcyPairs_.begin(), fxVolCcyPairs_.end(), sim_fx) == fxVolCcyPairs_.end()) {
+            ALOG("FX pair " << sim_fx << " in simmarket is not included in sensitivities analysis");
+        }
+    }
 
     string domestic = simMarketData_->baseCcy();
 
@@ -396,7 +430,7 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(bool up) {
             addCacheTo(scenario);
             // add this scenario to the scenario vector
             scenarios_.push_back(scenario);
-            LOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
+            DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
         }
     }
     LOG("FX vol scenarios done");
@@ -404,10 +438,17 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(bool up) {
 
 void SensitivityScenarioGenerator::generateSwaptionVolScenarios(bool up) {
     // We can choose to shift fewer discount curves than listed in the market
+    std::vector<string> simMarketCcys = simMarketData_->swapVolCcys();
     if (sensitivityData_->swaptionVolCurrencies().size() > 0)
         swaptionVolCurrencies_ = sensitivityData_->swaptionVolCurrencies();
     else
-        swaptionVolCurrencies_ = simMarketData_->swapVolCcys();
+        swaptionVolCurrencies_ = simMarketCcys;
+    // Log an ALERT if some swaption currencies in simmarket are excluded from the list
+    for (auto sim_ccy : simMarketCcys) {
+        if (std::find(swaptionVolCurrencies_.begin(), swaptionVolCurrencies_.end(), sim_ccy) == swaptionVolCurrencies_.end()) {
+            ALOG("Swaption currency " << sim_ccy << " in simmarket is not included in sensitivities analysis");
+        }
+    }
 
     Size n_swvol_ccy = swaptionVolCurrencies_.size();
     Size n_swvol_term = simMarketData_->swapVolTerms().size();
@@ -476,7 +517,7 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(bool up) {
                 addCacheTo(scenario);
                 // add this scenario to the scenario vector
                 scenarios_.push_back(scenario);
-                LOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
+                DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
             }
         }
     }
@@ -485,10 +526,17 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(bool up) {
 
 void SensitivityScenarioGenerator::generateCapFloorVolScenarios(bool up) {
     // We can choose to shift fewer discount curves than listed in the market
+    vector<string> simMarketCapCcys = simMarketData_->capFloorVolCcys();
     if (sensitivityData_->capFloorVolCurrencies().size() > 0)
         capFloorVolCurrencies_ = sensitivityData_->capFloorVolCurrencies();
     else
-        capFloorVolCurrencies_ = simMarketData_->capFloorVolCcys();
+        capFloorVolCurrencies_ = simMarketCapCcys;
+    // Log an ALERT if some cap currencies in simmarket are excluded from the list
+    for (auto sim_cap : simMarketCapCcys) {
+        if (std::find(capFloorVolCurrencies_.begin(), capFloorVolCurrencies_.end(), sim_cap) == capFloorVolCurrencies_.end()) {
+            ALOG("CapFloor currency " << sim_cap << " in simmarket is not included in sensitivities analysis");
+        }
+    }
 
     Size n_cfvol_ccy = capFloorVolCurrencies_.size();
     Size n_cfvol_strikes = simMarketData_->capFloorVolStrikes().size();
@@ -549,7 +597,7 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(bool up) {
                 addCacheTo(scenario);
                 // add this scenario to the scenario vector
                 scenarios_.push_back(scenario);
-                LOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
+                DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
             }
         }
     }
