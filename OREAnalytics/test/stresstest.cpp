@@ -197,24 +197,20 @@ boost::shared_ptr<StressTestScenarioData> setupStressScenarioData() {
     data.fxShifts["EURCHF"].shiftSize = 0.01;
     data.fxVolShifts["EURUSD"] = StressTestScenarioData::FxVolShiftData();
     data.fxVolShifts["EURUSD"].shiftType = "Absolute";
-    data.fxVolShifts["EURUSD"].shiftExpiries = { 6 * Months, 1 * Years, 2 * Years, 3 * Years,
-                                                 5 * Years,  7 * Years, 10 * Years };
-    data.fxVolShifts["EURUSD"].shifts = { 0.10, 0.11, 0.12, 0.13, 0.14, 0.15, 0.16 };
+    data.fxVolShifts["EURUSD"].shiftExpiries = { 6 * Months, 2 * Years, 3 * Years, 5 * Years };
+    data.fxVolShifts["EURUSD"].shifts = { 0.10, 0.11, 0.13, 0.14 };
     data.fxVolShifts["EURGBP"] = StressTestScenarioData::FxVolShiftData();
     data.fxVolShifts["EURGBP"].shiftType = "Absolute";
-    data.fxVolShifts["EURGBP"].shiftExpiries = { 6 * Months, 1 * Years, 2 * Years, 3 * Years,
-                                                 5 * Years,  7 * Years, 10 * Years };
-    data.fxVolShifts["EURGBP"].shifts = { 0.10, 0.11, 0.12, 0.13, 0.14, 0.15, 0.16 };
+    data.fxVolShifts["EURGBP"].shiftExpiries = { 6 * Months, 2 * Years, 3 * Years, 5 * Years };
+    data.fxVolShifts["EURGBP"].shifts = { 0.10, 0.11, 0.13, 0.14 };
     data.fxVolShifts["EURJPY"] = StressTestScenarioData::FxVolShiftData();
     data.fxVolShifts["EURJPY"].shiftType = "Absolute";
-    data.fxVolShifts["EURJPY"].shiftExpiries = { 6 * Months, 1 * Years, 2 * Years, 3 * Years,
-                                                 5 * Years,  7 * Years, 10 * Years };
-    data.fxVolShifts["EURJPY"].shifts = { 0.10, 0.11, 0.12, 0.13, 0.14, 0.15, 0.16 };
+    data.fxVolShifts["EURJPY"].shiftExpiries = { 6 * Months, 2 * Years, 3 * Years, 5 * Years };
+    data.fxVolShifts["EURJPY"].shifts = { 0.10, 0.11, 0.13, 0.14 };
     data.fxVolShifts["EURCHF"] = StressTestScenarioData::FxVolShiftData();
     data.fxVolShifts["EURCHF"].shiftType = "Absolute";
-    data.fxVolShifts["EURCHF"].shiftExpiries = { 6 * Months, 1 * Years, 2 * Years, 3 * Years,
-                                                 5 * Years,  7 * Years, 10 * Years };
-    data.fxVolShifts["EURCHF"].shifts = { 0.10, 0.11, 0.12, 0.13, 0.14, 0.15, 0.16 };
+    data.fxVolShifts["EURCHF"].shiftExpiries = { 6 * Months, 2 * Years, 3 * Years, 5 * Years };
+    data.fxVolShifts["EURCHF"].shifts = { 0.10, 0.11, 0.13, 0.14 };
 
     stressData->data() = vector<StressTestScenarioData::StressTestData>(1, data);
 
@@ -336,6 +332,7 @@ void StressTestingTest::regression() {
     }
 
     Real tolerance = 0.01;
+    Size count = 0;
     for (auto data : shiftedNPV) {
         pair<string, string> p = data.first;
         string id = data.first.first;
@@ -345,6 +342,7 @@ void StressTestingTest::regression() {
         Real base = baseNPV[id];
         Real delta = npv - base;
         if (fabs(delta) > 0.0) {
+            count++;
             // BOOST_TEST_MESSAGE("{ \"" << id << "\", \"" << label << "\", " << delta << " },");
             QL_REQUIRE(stressMap.find(p) != stressMap.end(), "pair (" << p.first << ", " << p.second
                                                                       << ") not found in sensi map");
@@ -354,17 +352,21 @@ void StressTestingTest::regression() {
                                                                            << "): " << delta << " vs " << stressMap[p]);
         }
     }
+    BOOST_CHECK_MESSAGE(count == cachedResults.size(),
+        "number of non-zero stress impacts (" << count <<
+        ") do not match regression data (" << cachedResults.size() <<
+        ")");
 }
 
 test_suite* StressTestingTest::suite() {
     // Uncomment the below to get detailed output TODO: custom logger that uses BOOST_MESSAGE
-
+    /*
     boost::shared_ptr<ore::data::FileLogger> logger = boost::make_shared<ore::data::FileLogger>("stresstest.log");
     ore::data::Log::instance().removeAllLoggers();
     ore::data::Log::instance().registerLogger(logger);
     ore::data::Log::instance().switchOn();
     ore::data::Log::instance().setMask(255);
-
+    */
     test_suite* suite = BOOST_TEST_SUITE("StressTestingTest");
     // Set the Observation mode here
     ObservationMode::instance().setMode(ObservationMode::Mode::None);
