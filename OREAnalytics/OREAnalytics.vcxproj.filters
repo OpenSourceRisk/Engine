@@ -107,9 +107,6 @@
     <ClInclude Include="orea\app\oreapp.hpp" />
     <ClInclude Include="orea\app\parameters.hpp" />
     <ClInclude Include="orea\app\reportwriter.hpp" />
-    <ClInclude Include="orea\cube\cubecsvreader.hpp">
-      <Filter>cube</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="orea\aggregation\collateralaccount.cpp">
@@ -164,8 +161,5 @@
     <ClCompile Include="orea\app\parameters.cpp" />
     <ClCompile Include="orea\app\oreapp.cpp" />
     <ClCompile Include="orea\app\reportwriter.cpp" />
-    <ClCompile Include="orea\cube\cubecsvreader.cpp">
-      <Filter>cube</Filter>
-    </ClCompile>
   </ItemGroup>
 </Project>
