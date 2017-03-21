@@ -404,7 +404,8 @@ void OREApp::runSensitivityAnalysis() {
 
     LOG("Build Sensitivity Analysis");
     string marketConfiguration = params_->get("markets", "pricing");
-    boost::shared_ptr<ParSensitivityAnalysis> sensiAnalysis = boost::make_shared<ParSensitivityAnalysis>(
+    QL_REQUIRE(!sensiData->parConversion(), "Par sensitivity conversion not supported here")
+    boost::shared_ptr<SensitivityAnalysis> sensiAnalysis = boost::make_shared<SensitivityAnalysis>(
         sensiPortfolio, market_, marketConfiguration, engineData, simMarketData, sensiData, conventions_);
 
     string outputPath = params_->get("setup", "outputPath");

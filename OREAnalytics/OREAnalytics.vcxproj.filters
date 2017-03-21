@@ -116,9 +116,6 @@
     <ClInclude Include="orea\scenario\stressscenariogenerator.hpp">
       <Filter>scenario</Filter>
     </ClInclude>
-    <ClInclude Include="orea\engine\parsensitivityanalysis.hpp">
-      <Filter>engine</Filter>
-    </ClInclude>
     <ClInclude Include="orea\engine\sensitivityanalysis.hpp">
       <Filter>engine</Filter>
     </ClInclude>
@@ -210,9 +207,6 @@
     </ClCompile>
     <ClCompile Include="orea\scenario\stressscenariogenerator.cpp">
       <Filter>scenario</Filter>
-    </ClCompile>
-    <ClCompile Include="orea\engine\parsensitivityanalysis.cpp">
-      <Filter>engine</Filter>
     </ClCompile>
     <ClCompile Include="orea\engine\sensitivityanalysis.cpp">
       <Filter>engine</Filter>
