@@ -54,6 +54,9 @@ void EquityForward::build(const boost::shared_ptr<EngineFactory>& engineFactory)
     instrument_ = boost::shared_ptr<InstrumentWrapper>(new VanillaInstrument(inst));
     npvCurrency_ = currency_;
     maturity_ = maturity;
+    // Notional - we really need todays spot to get the correct notional.
+    // But rather than having it move around we use strike * quantity
+    notional_ = strike_ * quantity_;
 }
 
 void EquityForward::fromXML(XMLNode *node) {

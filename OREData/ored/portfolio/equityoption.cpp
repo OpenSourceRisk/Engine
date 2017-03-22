@@ -71,6 +71,10 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
 
     npvCurrency_ = currency_;
     maturity_ = expiryDate;
+
+    // Notional - we really need todays spot to get the correct notional.
+    // But rather than having it move around we use strike * quantity
+    notional_ = strike_ * quantity_;
 }
 
 void EquityOption::fromXML(XMLNode* node) {
