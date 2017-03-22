@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file engine/sensitivityengine.hpp
+/*! \file engine/scenarioengine.hpp
     \brief Cube valuation specialised to 2-d (trades, scenarios) for sensitivity scenarios at t_0
     \ingroup simulation
 */
@@ -37,7 +37,7 @@ namespace analytics {
 //! Scenario Engine
 /*!
   The scenario engine's purpose is to generate a 2-d NPV "cube".
-  The rime dimension is colapsed to a single date (today), and scenarios
+  The time dimension is colapsed to a single date (today), and scenarios
   are sensitivity, stress or historical scenaries applied to today's market. 
   Its buildCube loops over samples->trades and prices the portfolio
   under all samples.
