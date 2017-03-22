@@ -40,7 +40,17 @@ namespace data {
 class CurveSpec {
 public:
     //! Supported curve types
-    enum class CurveType { Yield, CapFloorVolatility, SwaptionVolatility, FX, FXVolatility, Default, Equity, EquityVolatility, SecuritySpread };
+    enum class CurveType {
+        Yield,
+        CapFloorVolatility,
+        SwaptionVolatility,
+        FX,
+        FXVolatility,
+        Default,
+        Equity,
+        EquityVolatility,
+        SecuritySpread
+    };
     //! Default destructor
     virtual ~CurveSpec() {}
 

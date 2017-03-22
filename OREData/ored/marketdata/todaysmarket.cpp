@@ -300,19 +300,18 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                 if (itr == requiredEquityCurves.end()) {
                     // build the curve
                     LOG("Building EquityCurve for asof " << asof);
-                    boost::shared_ptr<EquityCurve> equityCurve = boost::make_shared<EquityCurve>(
-                        asof, *equityspec, loader, curveConfigs, conventions);
+                    boost::shared_ptr<EquityCurve> equityCurve =
+                        boost::make_shared<EquityCurve>(asof, *equityspec, loader, curveConfigs, conventions);
                     itr = requiredEquityCurves.insert(make_pair(equityspec->name(), equityCurve)).first;
                 }
 
                 for (const auto it : params.equityCurves(configuration.first)) {
                     if (it.second == spec->name()) {
-                        LOG("Adding EquityCurve (" << it.first << ") with spec " << *equityspec
-                            << " to configuration " << configuration.first);
+                        LOG("Adding EquityCurve (" << it.first << ") with spec " << *equityspec << " to configuration "
+                                                   << configuration.first);
                         Handle<YieldTermStructure> discYts = discountCurve(equityspec->ccy(), configuration.first);
                         boost::shared_ptr<YieldTermStructure> divYield =
-                            itr->second->divYieldTermStructure(
-                                asof, discYts);
+                            itr->second->divYieldTermStructure(asof, discYts);
                         Handle<YieldTermStructure> div_h(divYield);
                         equityDividendCurves_[make_pair(configuration.first, it.first)] = div_h;
                         equitySpots_[make_pair(configuration.first, it.first)] =
@@ -342,7 +341,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                 for (const auto& it : params.equityVolatilities(configuration.first)) {
                     if (it.second == spec->name()) {
                         LOG("Adding EquityVol (" << it.first << ") with spec " << *eqvolspec << " to configuration "
-                            << configuration.first);
+                                                 << configuration.first);
                         equityVols_[make_pair(configuration.first, it.first)] =
                             Handle<BlackVolTermStructure>(itr->second->volTermStructure());
                     }

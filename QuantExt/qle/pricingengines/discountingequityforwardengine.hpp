@@ -34,8 +34,8 @@ namespace QuantExt {
 //! Discounting Equity Forward Engine
 
 /*! This class implements pricing of Equity Forwards by discounting the future
-    nominal cash flows using the respective yield curves. The forward price is 
-    estimated using reference rate and dividend yield curves as input. The 
+    nominal cash flows using the respective yield curves. The forward price is
+    estimated using reference rate and dividend yield curves as input. The
     cashflows are discounted using a separate discounting curve input.
 
             \ingroup engines
@@ -45,7 +45,7 @@ public:
     /*! \param equityRateCurve
                The IR rate curve for estimating forward price.
         \param divYieldCurve
-               The dividend yield term structure for estimating 
+               The dividend yield term structure for estimating
                forward price.
         \param equitySpot
                The market spot rate quote.
@@ -58,13 +58,11 @@ public:
                Discount to this date. If not given the npv date
                is set to the evaluation date
     */
-    DiscountingEquityForwardEngine(
-        const Handle<YieldTermStructure>& equityInterestRateCurve,
-        const Handle<YieldTermStructure>& dividendYieldCurve,
-        const Handle<Quote>& equitySpot,
-        const Handle<YieldTermStructure>& discountCurve,
-        boost::optional<bool> includeSettlementDateFlows = boost::none,
-        const Date& settlementDate = Date(), const Date& npvDate = Date());
+    DiscountingEquityForwardEngine(const Handle<YieldTermStructure>& equityInterestRateCurve,
+                                   const Handle<YieldTermStructure>& dividendYieldCurve,
+                                   const Handle<Quote>& equitySpot, const Handle<YieldTermStructure>& discountCurve,
+                                   boost::optional<bool> includeSettlementDateFlows = boost::none,
+                                   const Date& settlementDate = Date(), const Date& npvDate = Date());
 
     void calculate() const;
 

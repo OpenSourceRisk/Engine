@@ -47,7 +47,8 @@ public:
     //! Default constructor
     EquityVolCurve() {}
     //! Detailed constructor
-    EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const Loader& loader, const CurveConfigurations& curveConfigs);
+    EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const Loader& loader,
+                   const CurveConfigurations& curveConfigs);
     //@}
 
     //! \name Inspectors

@@ -40,7 +40,7 @@ void FxOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     // Payoff
     Real strike = soldAmount_ / boughtAmount_;
     Option::Type type = parseOptionType(option_.callPut());
-    boost::shared_ptr<StrikedTypePayoff> payoff (new PlainVanillaPayoff(type, strike));
+    boost::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(type, strike));
 
     // Only European Vanilla supported for now
     QL_REQUIRE(option_.style() == "European", "Option Style unknown: " << option_.style());

@@ -66,11 +66,11 @@ struct MarketConfiguration {
           indexForwardingCurvesId(Market::defaultConfiguration), fxSpotsId(Market::defaultConfiguration),
           fxVolatilitiesId(Market::defaultConfiguration), swaptionVolatilitiesId(Market::defaultConfiguration),
           defaultCurvesId(Market::defaultConfiguration), swapIndexCurvesId(Market::defaultConfiguration),
-          capFloorVolatilitiesId(Market::defaultConfiguration), equityCurvesId(Market::defaultConfiguration), 
+          capFloorVolatilitiesId(Market::defaultConfiguration), equityCurvesId(Market::defaultConfiguration),
           equityVolatilitiesId(Market::defaultConfiguration), securitySpreadsId(Market::defaultConfiguration) {}
     string discountingCurvesId, yieldCurvesId, indexForwardingCurvesId, fxSpotsId, fxVolatilitiesId,
-        swaptionVolatilitiesId, defaultCurvesId, swapIndexCurvesId, capFloorVolatilitiesId, 
-        equityCurvesId, equityVolatilitiesId, securitySpreadsId;
+        swaptionVolatilitiesId, defaultCurvesId, swapIndexCurvesId, capFloorVolatilitiesId, equityCurvesId,
+        equityVolatilitiesId, securitySpreadsId;
 };
 
 bool operator==(const MarketConfiguration& lhs, const MarketConfiguration& rhs);
@@ -182,8 +182,9 @@ private:
     map<string, MarketConfiguration> configurations_;
     // maps id to map (key,value)
     map<string, map<string, string>> discountingCurves_, yieldCurves_, indexForwardingCurves_, fxSpots_,
-        fxVolatilities_, swaptionVolatilities_, defaultCurves_, capFloorVolatilities_, equityCurves_, 
-        equityVolatilities_, securitySpreads_;;
+        fxVolatilities_, swaptionVolatilities_, defaultCurves_, capFloorVolatilities_, equityCurves_,
+        equityVolatilities_, securitySpreads_;
+    ;
     map<string, map<string, string>> swapIndices_;
 
     void curveSpecs(const map<string, map<string, string>>&, const string&, vector<string>&) const;
@@ -345,8 +346,8 @@ inline const map<string, string>& TodaysMarketParameters::equityCurves(const str
     QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
     auto it = equityCurves_.find(equityCurvesId(configuration));
     QL_REQUIRE(it != equityCurves_.end(), "equity curves with id " << equityCurvesId(configuration)
-        << " specified in configuration " << configuration
-        << " not found");
+                                                                   << " specified in configuration " << configuration
+                                                                   << " not found");
     return it->second;
 }
 
@@ -354,8 +355,8 @@ inline const map<string, string>& TodaysMarketParameters::equityVolatilities(con
     QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
     auto it = equityVolatilities_.find(equityVolatilitiesId(configuration));
     QL_REQUIRE(it != equityVolatilities_.end(), "equity volatilities with id " << equityVolatilitiesId(configuration)
-        << " specified in configuration " << configuration
-        << " not found");
+                                                                               << " specified in configuration "
+                                                                               << configuration << " not found");
     return it->second;
 }
 

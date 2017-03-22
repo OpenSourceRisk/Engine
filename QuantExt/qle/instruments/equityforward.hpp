@@ -36,69 +36,66 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-    /*! This class holds the term sheet data for an Equity Forward instrument.
+/*! This class holds the term sheet data for an Equity Forward instrument.
 
-    \ingroup instruments
-    */
+\ingroup instruments
+*/
 class EquityForward : public Instrument {
-public:    
-        class arguments;
-        class engine;
-        //! \name Constructors
-        //@{
-        EquityForward(//! Equity Name
-                     const std::string& name,
-                     //! Currency 
-                     const Currency& currency,
-                     //! if true, we are long the forward
-                     const Position::Type& longShort,
-                     //! Quantity (number of lots \times lot size)
-                     const Real& quantity,
-                     //! Maturity date
-                     const Date& maturityDate,
-                     //! Strike
-                     const Real& strike
-                     );
-        //! \name Instrument interface
-        //@{
-        bool isExpired() const;
-        void setupArguments(PricingEngine::arguments*) const;
-        //@}
+public:
+    class arguments;
+    class engine;
+    //! \name Constructors
+    //@{
+    EquityForward( //! Equity Name
+        const std::string& name,
+        //! Currency
+        const Currency& currency,
+        //! if true, we are long the forward
+        const Position::Type& longShort,
+        //! Quantity (number of lots \times lot size)
+        const Real& quantity,
+        //! Maturity date
+        const Date& maturityDate,
+        //! Strike
+        const Real& strike);
+    //! \name Instrument interface
+    //@{
+    bool isExpired() const;
+    void setupArguments(PricingEngine::arguments*) const;
+    //@}
 
-        //! \name Additional interface
-        //@{
-        const std::string& name () const { return name_; }
-        Currency currency() const { return currency_; }
-        Position::Type longShort() const { return longShort_; }
-        Real quantity() const { return quantity_; }
-        Date maturityDate() const { return maturityDate_; }
-        Real strike() const { return strike_; }
-        boost::shared_ptr<PricingEngine> engine() { return engine_; }
-        //@}
-    private:
+    //! \name Additional interface
+    //@{
+    const std::string& name() const { return name_; }
+    Currency currency() const { return currency_; }
+    Position::Type longShort() const { return longShort_; }
+    Real quantity() const { return quantity_; }
+    Date maturityDate() const { return maturityDate_; }
+    Real strike() const { return strike_; }
+    boost::shared_ptr<PricingEngine> engine() { return engine_; }
+    //@}
+private:
+    // data members
+    std::string name_;
+    Currency currency_;
+    Position::Type longShort_;
+    Real quantity_;
+    Date maturityDate_;
+    Real strike_;
+};
 
-        // data members
-        std::string name_;
-        Currency currency_;
-        Position::Type longShort_;
-        Real quantity_;
-        Date maturityDate_;
-        Real strike_;
-    };
+class EquityForward::arguments : public virtual PricingEngine::arguments {
+public:
+    std::string name;
+    Currency currency;
+    Position::Type longShort;
+    Real quantity;
+    Date maturityDate;
+    Real strike;
+    void validate() const;
+};
 
-    class EquityForward::arguments : public virtual PricingEngine::arguments {
-    public:
-        std::string name;
-        Currency currency;
-        Position::Type longShort;
-        Real quantity;
-        Date maturityDate;
-        Real strike;
-        void validate() const;
-    };
-
-    class EquityForward::engine : public GenericEngine<EquityForward::arguments,
-                                                       Instrument::results> {};
+class EquityForward::engine : public GenericEngine<EquityForward::arguments, Instrument::results> {};
 }
 
 #endif

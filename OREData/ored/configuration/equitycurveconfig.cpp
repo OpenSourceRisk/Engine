@@ -24,13 +24,11 @@
 namespace ore {
 namespace data {
 
-EquityCurveConfig::EquityCurveConfig(const string& curveID, const string& curveDescription, 
-    const string& currency, const EquityCurveConfig::Type& type,
-    const string& equitySpotQuote, const vector<string>& quotes, 
-    const string& dayCountID, bool extrapolation)
+EquityCurveConfig::EquityCurveConfig(const string& curveID, const string& curveDescription, const string& currency,
+                                     const EquityCurveConfig::Type& type, const string& equitySpotQuote,
+                                     const vector<string>& quotes, const string& dayCountID, bool extrapolation)
     : curveID_(curveID), curveDescription_(curveDescription), currency_(currency), type_(type),
-    equitySpotQuoteID_(equitySpotQuote), quotes_(quotes), dayCountID_(dayCountID), 
-    extrapolation_(extrapolation) {}
+      equitySpotQuoteID_(equitySpotQuote), quotes_(quotes), dayCountID_(dayCountID), extrapolation_(extrapolation) {}
 
 void EquityCurveConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "EquityCurve");
@@ -66,7 +64,7 @@ XMLNode* EquityCurveConfig::toXML(XMLDocument& doc) {
     else if (type_ == Type::ForwardPrice)
         XMLUtils::addChild(doc, node, "Type", "ForwardPrice");
     else
-     QL_FAIL("Unkown type in EquityCurveConfig::toXML()");
+        QL_FAIL("Unkown type in EquityCurveConfig::toXML()");
 
     XMLUtils::addChild(doc, node, "SpotQuote", equitySpotQuoteID_);
     XMLUtils::addChild(doc, node, "DayCounter", dayCountID_);

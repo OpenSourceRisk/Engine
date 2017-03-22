@@ -23,20 +23,13 @@
 namespace QuantExt {
 
 DiscountingEquityForwardEngine::DiscountingEquityForwardEngine(
-    const Handle<YieldTermStructure>& equityInterestRateCurve,
-    const Handle<YieldTermStructure>& dividendYieldCurve,
-    const Handle<Quote>& equitySpot,
-    const Handle<YieldTermStructure>& discountCurve,
-    boost::optional<bool> includeSettlementDateFlows,
-    const Date& settlementDate, const Date& npvDate)
-    : equityRefRateCurve_(equityInterestRateCurve),
-    divYieldCurve_(dividendYieldCurve),
-    equitySpot_(equitySpot),
-    discountCurve_(discountCurve),
-    includeSettlementDateFlows_(includeSettlementDateFlows), 
-    settlementDate_(settlementDate), 
-    npvDate_(npvDate) {
-        
+    const Handle<YieldTermStructure>& equityInterestRateCurve, const Handle<YieldTermStructure>& dividendYieldCurve,
+    const Handle<Quote>& equitySpot, const Handle<YieldTermStructure>& discountCurve,
+    boost::optional<bool> includeSettlementDateFlows, const Date& settlementDate, const Date& npvDate)
+    : equityRefRateCurve_(equityInterestRateCurve), divYieldCurve_(dividendYieldCurve), equitySpot_(equitySpot),
+      discountCurve_(discountCurve), includeSettlementDateFlows_(includeSettlementDateFlows),
+      settlementDate_(settlementDate), npvDate_(npvDate) {
+
     registerWith(equityRefRateCurve_);
     registerWith(divYieldCurve_);
     registerWith(equitySpot_);
@@ -61,12 +54,10 @@ void DiscountingEquityForwardEngine::calculate() const {
         Real qty = arguments_.quantity;
         Date maturity = arguments_.maturityDate;
         Real strike = arguments_.strike;
-        Real forwardPrice = equitySpot_->value() * 
-            divYieldCurve_->discount(maturity) / 
-            equityRefRateCurve_->discount(maturity);
+        Real forwardPrice =
+            equitySpot_->value() * divYieldCurve_->discount(maturity) / equityRefRateCurve_->discount(maturity);
         DiscountFactor df = discountCurve_->discount(maturity);
-        results_.value = (lsInd * qty) * 
-            (forwardPrice - strike) * df;
+        results_.value = (lsInd * qty) * (forwardPrice - strike) * df;
     }
 } // calculate
 

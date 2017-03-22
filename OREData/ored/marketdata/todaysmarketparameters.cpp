@@ -29,7 +29,7 @@ bool operator==(const MarketConfiguration& lhs, const MarketConfiguration& rhs) 
         lhs.indexForwardingCurvesId != rhs.indexForwardingCurvesId || lhs.fxSpotsId != rhs.fxSpotsId ||
         lhs.fxVolatilitiesId != rhs.fxVolatilitiesId || lhs.swaptionVolatilitiesId != rhs.swaptionVolatilitiesId ||
         lhs.defaultCurvesId != rhs.defaultCurvesId || lhs.swapIndexCurvesId != rhs.swapIndexCurvesId ||
-        lhs.capFloorVolatilitiesId != rhs.capFloorVolatilitiesId || lhs.equityCurvesId != rhs.equityCurvesId || 
+        lhs.capFloorVolatilitiesId != rhs.capFloorVolatilitiesId || lhs.equityCurvesId != rhs.equityCurvesId ||
         lhs.equityVolatilitiesId != rhs.equityVolatilitiesId || lhs.securitySpreadsId != rhs.securitySpreadsId) {
         return false;
     } else {
@@ -183,14 +183,12 @@ void TodaysMarketParameters::fromXML(XMLNode* node) {
             if (id == "")
                 id = Market::defaultConfiguration;
             addDefaultCurves(id, XMLUtils::getChildrenAttributesAndValues(n, "DefaultCurve", "name", false));
-        }
-        else if (XMLUtils::getNodeName(n) == "EquityCurves") {
+        } else if (XMLUtils::getNodeName(n) == "EquityCurves") {
             string id = XMLUtils::getAttribute(n, "id");
             if (id == "")
                 id = Market::defaultConfiguration;
             addEquityCurves(id, XMLUtils::getChildrenAttributesAndValues(n, "EquityCurve", "name", false));
-        }
-        else if (XMLUtils::getNodeName(n) == "EquityVolatilities") {
+        } else if (XMLUtils::getNodeName(n) == "EquityVolatilities") {
             string id = XMLUtils::getAttribute(n, "id");
             if (id == "")
                 id = Market::defaultConfiguration;
@@ -248,7 +246,8 @@ XMLNode* TodaysMarketParameters::toXML(XMLDocument& doc) {
                 XMLUtils::addChild(doc, configurationsNode, "EquityCurvesId", iterator->second.equityCurvesId);
             }
             if (iterator->second.equityVolatilitiesId != "") {
-                XMLUtils::addChild(doc, configurationsNode, "EquityVolatilitiesId", iterator->second.equityVolatilitiesId);
+                XMLUtils::addChild(doc, configurationsNode, "EquityVolatilitiesId",
+                                   iterator->second.equityVolatilitiesId);
             }
             if (iterator->second.securitySpreadsId != "") {
                 XMLUtils::addChild(doc, configurationsNode, "SecuritySpreadsId", iterator->second.securitySpreadsId);
@@ -385,13 +384,13 @@ XMLNode* TodaysMarketParameters::toXML(XMLDocument& doc) {
     if (equityCurves_.size() > 0) {
 
         for (auto mappingSetIterator = equityCurves_.begin(); mappingSetIterator != equityCurves_.end();
-            mappingSetIterator++) {
+             mappingSetIterator++) {
 
             XMLNode* equityCurvesNode = XMLUtils::addChild(doc, todaysMarketNode, "EquityCurves");
             XMLUtils::addAttribute(doc, equityCurvesNode, "id", mappingSetIterator->first.c_str());
 
             for (auto singleMappingIterator = mappingSetIterator->second.begin();
-                singleMappingIterator != mappingSetIterator->second.end(); singleMappingIterator++) {
+                 singleMappingIterator != mappingSetIterator->second.end(); singleMappingIterator++) {
                 XMLNode* mappingNode = doc.allocNode("EquityCurve", singleMappingIterator->second);
                 XMLUtils::appendNode(equityCurvesNode, mappingNode);
                 XMLUtils::addAttribute(doc, mappingNode, "name", singleMappingIterator->first);
@@ -403,13 +402,13 @@ XMLNode* TodaysMarketParameters::toXML(XMLDocument& doc) {
     if (equityVolatilities_.size() > 0) {
 
         for (auto mappingSetIterator = equityCurves_.begin(); mappingSetIterator != equityCurves_.end();
-            mappingSetIterator++) {
+             mappingSetIterator++) {
 
             XMLNode* equityVolatilitiesNode = XMLUtils::addChild(doc, todaysMarketNode, "EquityVolatilities");
             XMLUtils::addAttribute(doc, equityVolatilitiesNode, "id", mappingSetIterator->first.c_str());
 
             for (auto singleMappingIterator = mappingSetIterator->second.begin();
-                singleMappingIterator != mappingSetIterator->second.end(); singleMappingIterator++) {
+                 singleMappingIterator != mappingSetIterator->second.end(); singleMappingIterator++) {
                 XMLNode* mappingNode = doc.allocNode("EquityVolatility", singleMappingIterator->second);
                 XMLUtils::appendNode(equityVolatilitiesNode, mappingNode);
                 XMLUtils::addAttribute(doc, mappingNode, "name", singleMappingIterator->first);

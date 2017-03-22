@@ -40,11 +40,9 @@ public:
     //! Default constructor
     EquityOption() : Trade("EquityOption"), strike_(0.0), quantity_(0.0) {}
     //! Constructor
-    EquityOption(Envelope& env, OptionData option, 
-        string equityName, string currency,
-        double strike, double quantity)
-        : Trade("EquityOption", env), option_(option), eqName_(equityName),
-          currency_(currency), strike_(strike), quantity_(quantity) {}
+    EquityOption(Envelope& env, OptionData option, string equityName, string currency, double strike, double quantity)
+        : Trade("EquityOption", env), option_(option), eqName_(equityName), currency_(currency), strike_(strike),
+          quantity_(quantity) {}
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
     void build(const boost::shared_ptr<EngineFactory>&);

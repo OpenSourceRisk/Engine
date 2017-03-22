@@ -31,30 +31,31 @@ namespace ore {
 namespace data {
 
 static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
-    static map<string, MarketDatum::InstrumentType> b = {{"ZERO", MarketDatum::InstrumentType::ZERO},
-                                                         {"DISCOUNT", MarketDatum::InstrumentType::DISCOUNT},
-                                                         {"MM", MarketDatum::InstrumentType::MM},
-                                                         {"MM_FUTURE", MarketDatum::InstrumentType::MM_FUTURE},
-                                                         {"FRA", MarketDatum::InstrumentType::FRA},
-                                                         {"IR_SWAP", MarketDatum::InstrumentType::IR_SWAP},
-                                                         {"BASIS_SWAP", MarketDatum::InstrumentType::BASIS_SWAP},
-                                                         {"CC_BASIS_SWAP", MarketDatum::InstrumentType::CC_BASIS_SWAP},
-                                                         {"CDS", MarketDatum::InstrumentType::CDS},
-                                                         {"FX", MarketDatum::InstrumentType::FX_SPOT},
-                                                         {"FX_SPOT", MarketDatum::InstrumentType::FX_SPOT},
-                                                         {"FXFWD", MarketDatum::InstrumentType::FX_FWD},
-                                                         {"FX_FWD", MarketDatum::InstrumentType::FX_FWD},
-                                                         {"HAZARD_RATE", MarketDatum::InstrumentType::HAZARD_RATE},
-                                                         {"RECOVERY_RATE", MarketDatum::InstrumentType::RECOVERY_RATE},
-                                                         {"FX_FWD", MarketDatum::InstrumentType::FX_FWD},
-                                                         {"SWAPTION", MarketDatum::InstrumentType::SWAPTION},
-                                                         {"CAPFLOOR", MarketDatum::InstrumentType::CAPFLOOR},
-                                                         {"FX_OPTION", MarketDatum::InstrumentType::FX_OPTION},
-                                                         { "EQUITY", MarketDatum::InstrumentType::EQUITY_SPOT },
-                                                         { "EQUITY_FWD", MarketDatum::InstrumentType::EQUITY_FWD },
-                                                         { "EQUITY_DIVIDEND", MarketDatum::InstrumentType::EQUITY_DIVIDEND },
-                                                         { "EQUITY_OPTION", MarketDatum::InstrumentType::EQUITY_OPTION },
-                                                         {"BOND", MarketDatum::InstrumentType::BOND}};
+    static map<string, MarketDatum::InstrumentType> b = {
+        {"ZERO", MarketDatum::InstrumentType::ZERO},
+        {"DISCOUNT", MarketDatum::InstrumentType::DISCOUNT},
+        {"MM", MarketDatum::InstrumentType::MM},
+        {"MM_FUTURE", MarketDatum::InstrumentType::MM_FUTURE},
+        {"FRA", MarketDatum::InstrumentType::FRA},
+        {"IR_SWAP", MarketDatum::InstrumentType::IR_SWAP},
+        {"BASIS_SWAP", MarketDatum::InstrumentType::BASIS_SWAP},
+        {"CC_BASIS_SWAP", MarketDatum::InstrumentType::CC_BASIS_SWAP},
+        {"CDS", MarketDatum::InstrumentType::CDS},
+        {"FX", MarketDatum::InstrumentType::FX_SPOT},
+        {"FX_SPOT", MarketDatum::InstrumentType::FX_SPOT},
+        {"FXFWD", MarketDatum::InstrumentType::FX_FWD},
+        {"FX_FWD", MarketDatum::InstrumentType::FX_FWD},
+        {"HAZARD_RATE", MarketDatum::InstrumentType::HAZARD_RATE},
+        {"RECOVERY_RATE", MarketDatum::InstrumentType::RECOVERY_RATE},
+        {"FX_FWD", MarketDatum::InstrumentType::FX_FWD},
+        {"SWAPTION", MarketDatum::InstrumentType::SWAPTION},
+        {"CAPFLOOR", MarketDatum::InstrumentType::CAPFLOOR},
+        {"FX_OPTION", MarketDatum::InstrumentType::FX_OPTION},
+        {"EQUITY", MarketDatum::InstrumentType::EQUITY_SPOT},
+        {"EQUITY_FWD", MarketDatum::InstrumentType::EQUITY_FWD},
+        {"EQUITY_DIVIDEND", MarketDatum::InstrumentType::EQUITY_DIVIDEND},
+        {"EQUITY_OPTION", MarketDatum::InstrumentType::EQUITY_OPTION},
+        {"BOND", MarketDatum::InstrumentType::BOND}};
 
     auto it = b.find(s);
     if (it != b.end()) {
@@ -93,12 +94,13 @@ static MarketDatum::QuoteType parseQuoteType(const string& s) {
 
 // calls parseDateOrPeriod and returns a Date (either the supplied date or asof+period)
 static Date getDateFromDateOrPeriod(const string& token, Date asof) {
-    Period term; // gets populated by parseDateOrPeriod
-    Date expiryDate; // gets populated by parseDateOrPeriod
-    bool tmpIsDate; // gets populated by parseDateOrPeriod
+    Period term;                                           // gets populated by parseDateOrPeriod
+    Date expiryDate;                                       // gets populated by parseDateOrPeriod
+    bool tmpIsDate;                                        // gets populated by parseDateOrPeriod
     parseDateOrPeriod(token, expiryDate, term, tmpIsDate); // checks if the market string contains a date or a period
     if (!tmpIsDate)
-        expiryDate = WeekendsOnly().adjust(asof + term); // we have no calendar information here, so we use a generic calendar
+        expiryDate =
+            WeekendsOnly().adjust(asof + term); // we have no calendar information here, so we use a generic calendar
     return expiryDate;
 }
 
@@ -318,7 +320,8 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         const string& equityName = tokens[2];
         const string& ccy = tokens[3];
         Date tenorDate = getDateFromDateOrPeriod(tokens[4], asof);
-        return boost::make_shared<EquityDividendYieldQuote>(value, asof, datumName, quoteType, equityName, ccy, tenorDate);
+        return boost::make_shared<EquityDividendYieldQuote>(value, asof, datumName, quoteType, equityName, ccy,
+                                                            tenorDate);
     }
 
     case MarketDatum::InstrumentType::EQUITY_OPTION: {
@@ -328,8 +331,10 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         const string& ccy = tokens[3];
         string expiryString = tokens[4];
         const string& strike = tokens[5];
-        // note how we only store the expiry string - to ensure we can support both Periods and Dates being specified in the vol curve-config.
-        return boost::make_shared<EquityOptionQuote>(value, asof, datumName, quoteType, equityName, ccy, expiryString, strike);
+        // note how we only store the expiry string - to ensure we can support both Periods and Dates being specified in
+        // the vol curve-config.
+        return boost::make_shared<EquityOptionQuote>(value, asof, datumName, quoteType, equityName, ccy, expiryString,
+                                                     strike);
     }
 
     case MarketDatum::InstrumentType::BOND: {

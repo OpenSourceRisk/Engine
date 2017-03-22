@@ -38,7 +38,7 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
 
     // Payoff
     Option::Type type = parseOptionType(option_.callPut());
-    boost::shared_ptr<StrikedTypePayoff> payoff (new PlainVanillaPayoff(type, strike_));
+    boost::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(type, strike_));
 
     // Only European Vanilla supported for now
     QL_REQUIRE(option_.style() == "European", "Option Style unknown: " << option_.style());
@@ -59,13 +59,14 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
     // we buy foriegn with domestic(=sold ccy).
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
     QL_REQUIRE(builder, "No builder found for " << tradeType_);
-    boost::shared_ptr<EquityOptionEngineBuilder> eqOptBuilder = boost::dynamic_pointer_cast<EquityOptionEngineBuilder>(builder);
+    boost::shared_ptr<EquityOptionEngineBuilder> eqOptBuilder =
+        boost::dynamic_pointer_cast<EquityOptionEngineBuilder>(builder);
 
     vanilla->setPricingEngine(eqOptBuilder->engine(eqName_, ccy));
 
     Position::Type positionType = parsePositionType(option_.longShort());
     Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
-    Real mult = quantity_* bsInd;
+    Real mult = quantity_ * bsInd;
 
     instrument_ = boost::shared_ptr<InstrumentWrapper>(new VanillaInstrument(vanilla, mult));
 

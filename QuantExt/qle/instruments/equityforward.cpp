@@ -23,27 +23,15 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-EquityForward::EquityForward(const std::string& name,
-                                const Currency& currency,
-                                const Position::Type& longShort,
-                                const Real& quantity,
-                                const Date& maturityDate,
-                                const Real& strike)
-    : name_(name),
-        currency_(currency),
-        longShort_(longShort),
-        quantity_(quantity),
-        maturityDate_(maturityDate),
-        strike_(strike)
-{}    
+EquityForward::EquityForward(const std::string& name, const Currency& currency, const Position::Type& longShort,
+                             const Real& quantity, const Date& maturityDate, const Real& strike)
+    : name_(name), currency_(currency), longShort_(longShort), quantity_(quantity), maturityDate_(maturityDate),
+      strike_(strike) {}
 
-bool EquityForward::isExpired() const {
-    return detail::simple_event(maturityDate_).hasOccurred();
-}
+bool EquityForward::isExpired() const { return detail::simple_event(maturityDate_).hasOccurred(); }
 
 void EquityForward::setupArguments(PricingEngine::arguments* args) const {
-    EquityForward::arguments* arguments
-        = dynamic_cast<EquityForward::arguments*>(args);
+    EquityForward::arguments* arguments = dynamic_cast<EquityForward::arguments*>(args);
     QL_REQUIRE(arguments != 0, "wrong argument type in equityforward");
     arguments->name = name_;
     arguments->currency = currency_;
@@ -54,7 +42,7 @@ void EquityForward::setupArguments(PricingEngine::arguments* args) const {
 }
 
 void EquityForward::arguments::validate() const {
-    QL_REQUIRE(quantity > 0, "quantity should be positive: "<<quantity);
-    QL_REQUIRE(strike > 0, "strike should be positive: "<<strike);
+    QL_REQUIRE(quantity > 0, "quantity should be positive: " << quantity);
+    QL_REQUIRE(strike > 0, "strike should be positive: " << strike);
 }
 }

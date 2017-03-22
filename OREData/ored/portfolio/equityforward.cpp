@@ -16,10 +16,10 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! 
-  \file qlw/trades/equityforward.cpp  
+/*!
+  \file qlw/trades/equityforward.cpp
   \brief Equity Forward data model
-  \ingroup Wrap 
+  \ingroup Wrap
 */
 
 #include <ored/portfolio/equityforward.hpp>
@@ -40,14 +40,14 @@ void EquityForward::build(const boost::shared_ptr<EngineFactory>& engineFactory)
     QuantLib::Position::Type longShort = parsePositionType(longShort_);
     Date maturity = parseDate(maturityDate_);
 
-    boost::shared_ptr<Instrument> inst = 
-        boost::make_shared<QuantExt::EquityForward>(
-            eqName_,ccy,longShort,quantity_,maturity,strike_);
+    boost::shared_ptr<Instrument> inst =
+        boost::make_shared<QuantExt::EquityForward>(eqName_, ccy, longShort, quantity_, maturity, strike_);
 
     // Pricing engine
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
     QL_REQUIRE(builder, "No builder found for " << tradeType_);
-    boost::shared_ptr<EquityForwardEngineBuilder> eqFwdBuilder = boost::dynamic_pointer_cast<EquityForwardEngineBuilder>(builder);
+    boost::shared_ptr<EquityForwardEngineBuilder> eqFwdBuilder =
+        boost::dynamic_pointer_cast<EquityForwardEngineBuilder>(builder);
     inst->setPricingEngine(eqFwdBuilder->engine(eqName_, ccy));
 
     // set up other Trade details
@@ -59,7 +59,7 @@ void EquityForward::build(const boost::shared_ptr<EngineFactory>& engineFactory)
     notional_ = strike_ * quantity_;
 }
 
-void EquityForward::fromXML(XMLNode *node) {
+void EquityForward::fromXML(XMLNode* node) {
     Trade::fromXML(node);
     XMLNode* eNode = XMLUtils::getChildNode(node, "EquityForwardData");
 

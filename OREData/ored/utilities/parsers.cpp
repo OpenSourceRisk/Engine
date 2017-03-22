@@ -488,10 +488,7 @@ Exercise::Type parseExerciseType(const std::string& s) {
 }
 
 Option::Type parseOptionType(const std::string& s) {
-    static map<string, Option::Type> m = {
-        {"Put", Option::Put},
-        {"Call", Option::Call}
-    };
+    static map<string, Option::Type> m = {{"Put", Option::Put}, {"Call", Option::Call}};
 
     auto it = m.find(s);
     if (it != m.end()) {

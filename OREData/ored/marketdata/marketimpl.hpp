@@ -95,10 +95,12 @@ public:
 
     //! Equity curves
     Handle<Quote> equitySpot(const string& eqName, const string& configuration = Market::defaultConfiguration) const;
-    Handle<YieldTermStructure> equityDividendCurve(const string& eqName, const string& configuration = Market::defaultConfiguration) const;
+    Handle<YieldTermStructure> equityDividendCurve(const string& eqName,
+                                                   const string& configuration = Market::defaultConfiguration) const;
 
     //! Equity volatilities
-    Handle<BlackVolTermStructure> equityVol(const string& eqName, const string& configuration = Market::defaultConfiguration) const;
+    Handle<BlackVolTermStructure> equityVol(const string& eqName,
+                                            const string& configuration = Market::defaultConfiguration) const;
     //! Bond Spreads
     Handle<Quote> securitySpread(const string& securityID,
                                  const string& configuration = Market::defaultConfiguration) const;

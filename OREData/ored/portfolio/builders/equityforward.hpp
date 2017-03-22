@@ -50,7 +50,7 @@ protected:
             market_->discountCurve(ccy.code(), configuration(MarketContext::pricing)),
             market_->equityDividendCurve(equityName, configuration(MarketContext::pricing)),
             market_->equitySpot(equityName, configuration(MarketContext::pricing)),
-            market_->discountCurve(ccy.code(),configuration(MarketContext::pricing)));
+            market_->discountCurve(ccy.code(), configuration(MarketContext::pricing)));
     }
 };
 

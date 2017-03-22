@@ -100,13 +100,16 @@ public:
 
     //! \name Equity curves
     //@{
-    virtual Handle<Quote> equitySpot(const string& eqName, const string& configuration = Market::defaultConfiguration) const = 0;
-    virtual Handle<YieldTermStructure> equityDividendCurve(const string& eqName, const string& configuration = Market::defaultConfiguration) const = 0;
+    virtual Handle<Quote> equitySpot(const string& eqName,
+                                     const string& configuration = Market::defaultConfiguration) const = 0;
+    virtual Handle<YieldTermStructure>
+    equityDividendCurve(const string& eqName, const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 
     //! \name Equity volatilities
     //@{
-    virtual Handle<BlackVolTermStructure> equityVol(const string& eqName, const string& configuration = Market::defaultConfiguration) const = 0;
+    virtual Handle<BlackVolTermStructure>
+    equityVol(const string& eqName, const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 
     //! Refresh term structures for a given configuration

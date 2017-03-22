@@ -55,7 +55,8 @@ public:
         fxVols_[make_pair(Market::defaultConfiguration, "EURUSD")] = flatRateFxv(0.10);
 
         // add equity spots
-        equitySpots_[make_pair(Market::defaultConfiguration, "zzzCorp")] = Handle<Quote>(boost::make_shared<SimpleQuote>(100));
+        equitySpots_[make_pair(Market::defaultConfiguration, "zzzCorp")] =
+            Handle<Quote>(boost::make_shared<SimpleQuote>(100));
 
         // add dividend yield
         equityDividendCurves_[make_pair(Market::defaultConfiguration, "zzzCorp")] = flatRateYts(0.05);

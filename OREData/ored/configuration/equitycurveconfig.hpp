@@ -53,11 +53,9 @@ public:
     //! \name Constructors/Destructors
     //@{
     //! Detailed constructor
-    EquityCurveConfig(
-        const string& curveID, const string& curveDescription, 
-        const string& currency, const Type& type,
-        const string& equitySpotQuote, const vector<string>& quotes, 
-        const string& dayCountID = "", bool extrapolation = true);
+    EquityCurveConfig(const string& curveID, const string& curveDescription, const string& currency, const Type& type,
+                      const string& equitySpotQuote, const vector<string>& quotes, const string& dayCountID = "",
+                      bool extrapolation = true);
     //! Default constructor
     EquityCurveConfig() {}
     //! Default destructor

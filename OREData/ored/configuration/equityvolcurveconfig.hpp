@@ -50,9 +50,8 @@ public:
     //! Default constructor
     EquityVolatilityCurveConfig() {}
     //! Detailed constructor
-    EquityVolatilityCurveConfig(const string& curveID, const string& curveDescription, 
-        const string& currency, const Dimension& dimension,
-        const vector<string>& expiries);
+    EquityVolatilityCurveConfig(const string& curveID, const string& curveDescription, const string& currency,
+                                const Dimension& dimension, const vector<string>& expiries);
     //! Default destructor
     virtual ~EquityVolatilityCurveConfig() {}
     //@}
