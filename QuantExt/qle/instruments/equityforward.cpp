@@ -1,8 +1,19 @@
-/* -*- mode: c++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-
 /*
-  Copyright (C) 2013 - 2016 Quaternion Risk Management Ltd.
-  All rights reserved.
+ Copyright (C) 2016 Quaternion Risk Management Ltd
+ All rights reserved.
+
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
+
+ ORE is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
+
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
 #include <qle/instruments/equityforward.hpp>
@@ -33,7 +44,7 @@ bool EquityForward::isExpired() const {
 void EquityForward::setupArguments(PricingEngine::arguments* args) const {
     EquityForward::arguments* arguments
         = dynamic_cast<EquityForward::arguments*>(args);
-    QL_REQUIRE(arguments != 0, "wrong argument type in fxforward");
+    QL_REQUIRE(arguments != 0, "wrong argument type in equityforward");
     arguments->name = name_;
     arguments->currency = currency_;
     arguments->longShort = longShort_;
