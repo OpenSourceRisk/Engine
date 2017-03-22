@@ -94,7 +94,10 @@ public:
     void writeCrossGammaReport(string fileName, Real outputThreshold = 0.0);
 
     //! Write sensitivity of par rates w.r.t. zero rates to a file
-    virtual void writeParRateSensitivityReport(string fileName) { QL_FAIL("par sensitivities not implemented"); };
+    virtual void writeParRateSensitivityReport(string fileName, Real outputThreshold = 0.0) { QL_FAIL("par sensitivities not implemented"); };
+
+    //! Write the conversion (Jacobi) matrix for par sensitivities to a file
+    virtual void writeParConversionMatrix(string fileName) { QL_FAIL("par sensitivities conversion not implemented"); };
 
     //! Run par delta conversion, zero to par rate sensi, caplet/floorlet vega to cap/floor vega
     virtual void parDeltaConversion() { QL_FAIL("par delta conversion not implemented"); }

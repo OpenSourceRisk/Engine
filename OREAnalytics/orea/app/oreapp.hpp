@@ -37,6 +37,9 @@ using namespace ore::data;
 namespace ore {
 namespace analytics {
 
+class SensitivityScenarioData;
+class SensitivityAnalysis;
+
 class OREApp {
 public:
     OREApp(boost::shared_ptr<Parameters> params) : params_(params), cubeDepth_(0) {
@@ -89,9 +92,9 @@ public:
     void runPostProcessor();
 
     //! run sensitivity analysis and write out reports
-    void runSensitivityAnalysis();
+    virtual void runSensitivityAnalysis();
     //! run stress tests and write out report
-    void runStressTest();
+    virtual void runStressTest();
 
     //! write out initial (pre-cube) reports
     void writeInitialReports();
@@ -107,6 +110,17 @@ public:
     boost::shared_ptr<NettingSetManager> initNettingSetManager();
 
 protected:
+    //! Initialize input parameters to the sensitivities analysis
+    void sensiInputInitialize(
+        boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+        boost::shared_ptr<SensitivityScenarioData>& sensiData,
+        boost::shared_ptr<EngineData>& engineData,
+        boost::shared_ptr<Portfolio>& sensiPortfolio,
+        string& marketConfiguration);
+
+    //! Write out some standard sensitivities reports
+    void sensiOutputReports(const boost::shared_ptr<SensitivityAnalysis>& sensiAnalysis);
+
     Size tab_;
     Date asof_;
     //! ORE Input parameters

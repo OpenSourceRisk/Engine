@@ -377,36 +377,58 @@ void OREApp::writeInitialReports() {
 void OREApp::runSensitivityAnalysis() {
 
     cout << setw(tab_) << left << "Sensitivity Report... " << flush;
+
+    boost::shared_ptr<ScenarioSimMarketParameters> simMarketData(new ScenarioSimMarketParameters);
+    boost::shared_ptr<SensitivityScenarioData> sensiData(new SensitivityScenarioData);
+    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+    boost::shared_ptr<Portfolio> sensiPortfolio = boost::make_shared<Portfolio>();
+    string marketConfiguration;
+
+    sensiInputInitialize(simMarketData, sensiData, engineData, sensiPortfolio, marketConfiguration);
+
+    QL_REQUIRE(!sensiData->parConversion(), "Par sensitivity conversion not supported here");
+    boost::shared_ptr<SensitivityAnalysis> sensiAnalysis = boost::make_shared<SensitivityAnalysis>(
+        sensiPortfolio, market_, marketConfiguration, engineData, simMarketData, sensiData, conventions_);
+
+    sensiOutputReports(sensiAnalysis);
+
+    cout << "OK" << endl;
+}
+
+void OREApp::sensiInputInitialize(
+    boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+    boost::shared_ptr<SensitivityScenarioData>& sensiData,
+    boost::shared_ptr<EngineData>& engineData,
+    boost::shared_ptr<Portfolio>& sensiPortfolio,
+    string& marketConfiguration) {
+
     // We reset this here because the date grid building below depends on it.
     Settings::instance().evaluationDate() = asof_;
 
     LOG("Get Simulation Market Parameters");
     string inputPath = params_->get("setup", "inputPath");
     string marketConfigFile = inputPath + "/" + params_->get("sensitivity", "marketConfigFile");
-    boost::shared_ptr<ScenarioSimMarketParameters> simMarketData(new ScenarioSimMarketParameters);
     simMarketData->fromFile(marketConfigFile);
 
     LOG("Get Sensitivity Parameters");
     string sensitivityConfigFile = inputPath + "/" + params_->get("sensitivity", "sensitivityConfigFile");
-    boost::shared_ptr<SensitivityScenarioData> sensiData(new SensitivityScenarioData);
     sensiData->fromFile(sensitivityConfigFile);
 
     LOG("Get Engine Data");
     string sensiPricingEnginesFile = inputPath + "/" + params_->get("sensitivity", "pricingEnginesFile");
-    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
     engineData->fromFile(sensiPricingEnginesFile);
 
     LOG("Get Portfolio");
     string portfolioFile = inputPath + "/" + params_->get("setup", "portfolioFile");
-    boost::shared_ptr<Portfolio> sensiPortfolio = boost::make_shared<Portfolio>();
     // Just load here. We build the portfolio in SensitivityAnalysis, after building SimMarket.
     sensiPortfolio->load(portfolioFile);
 
     LOG("Build Sensitivity Analysis");
-    string marketConfiguration = params_->get("markets", "pricing");
-    QL_REQUIRE(!sensiData->parConversion(), "Par sensitivity conversion not supported here");
-    boost::shared_ptr<SensitivityAnalysis> sensiAnalysis = boost::make_shared<SensitivityAnalysis>(
-        sensiPortfolio, market_, marketConfiguration, engineData, simMarketData, sensiData, conventions_);
+    marketConfiguration = params_->get("markets", "pricing");
+    return;
+}
+
+void OREApp::sensiOutputReports(const boost::shared_ptr<SensitivityAnalysis>& sensiAnalysis) {
 
     string outputPath = params_->get("setup", "outputPath");
     string outputFile1 = outputPath + "/" + params_->get("sensitivity", "scenarioOutputFile");
@@ -418,8 +440,7 @@ void OREApp::runSensitivityAnalysis() {
 
     string outputFile3 = outputPath + "/" + params_->get("sensitivity", "crossGammaOutputFile");
     sensiAnalysis->writeCrossGammaReport(outputFile3, sensiThreshold);
-
-    cout << "OK" << endl;
+    return;
 }
 
 void OREApp::runStressTest() {
