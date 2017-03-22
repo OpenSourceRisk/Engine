@@ -415,14 +415,16 @@ void SensitivityAnalysisTest::testPortfolioSensitivity() {
 
     BOOST_TEST_MESSAGE("Portfolio size after build: " << portfolio->size());
 
-    // build the scenario engine
-    ScenarioEngine engine(today, simMarket, simMarketData->baseCcy());
-
+    // build the scenario valuation engine
+    boost::shared_ptr<DateGrid> dg = boost::make_shared<DateGrid>("1,0W"); //TODO - extend the DateGrid interface so that it can actually take a vector of dates as input
+    vector<boost::shared_ptr<ValuationCalculator> > calculators;
+    calculators.push_back(boost::make_shared<NPVCalculator>(simMarketData->baseCcy()));
+    ValuationEngine engine(today, dg, simMarket);
     // run scenarios and fill the cube
     boost::timer t;
     boost::shared_ptr<NPVCube> cube = boost::make_shared<DoublePrecisionInMemoryCube>(
         today, portfolio->ids(), vector<Date>(1, today), scenarioGenerator->samples());
-    engine.buildCube(portfolio, cube);
+    engine.buildCube(portfolio, cube, calculators);
     double elapsed = t.elapsed();
 
     struct Results {

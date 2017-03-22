@@ -50,7 +50,6 @@
     <ClInclude Include="orea\cube\npvcube.hpp" />
     <ClInclude Include="orea\engine\all.hpp" />
     <ClInclude Include="orea\engine\observationmode.hpp" />
-    <ClInclude Include="orea\engine\scenarioengine.hpp" />
     <ClInclude Include="orea\engine\sensitivityanalysis.hpp" />
     <ClInclude Include="orea\engine\stresstest.hpp" />
     <ClInclude Include="orea\engine\valuationcalculator.hpp" />
@@ -87,7 +86,6 @@
     <ClCompile Include="orea\app\parameters.cpp" />
     <ClCompile Include="orea\app\reportwriter.cpp" />
     <ClCompile Include="orea\cube\cubewriter.cpp" />
-    <ClCompile Include="orea\engine\scenarioengine.cpp" />
     <ClCompile Include="orea\engine\sensitivityanalysis.cpp" />
     <ClCompile Include="orea\engine\stresstest.cpp" />
     <ClCompile Include="orea\engine\valuationcalculator.cpp" />

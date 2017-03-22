@@ -100,6 +100,7 @@ void ShiftScenarioGenerator::clear() {
 void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
     clear();
 
+    numeraireCache_ = 1.0; // assumption that the init numeraire is 1.0
     // Cache discount curve keys and discount factors
     Size n_ccy = simMarketData_->ccys().size();
     Size n_ten = simMarketData_->yieldCurveTenors().size();
@@ -251,6 +252,8 @@ ShiftScenarioGenerator::ShiftType parseShiftType(const std::string& s) {
 }
 
 void ShiftScenarioGenerator::addCacheTo(boost::shared_ptr<Scenario> scenario) {
+    if (scenario->getNumeraire() == 0.0) // assume zero means numeraire has not been set or updated
+        scenario->setNumeraire(numeraireCache_);
     for (auto key : discountCurveKeys_) {
         if (!scenario->has(key))
             scenario->add(key, discountCurveCache_[key]);

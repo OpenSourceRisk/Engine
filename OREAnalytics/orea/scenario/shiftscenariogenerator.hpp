@@ -196,6 +196,7 @@ protected:
         fxVolKeys_, optionletVolKeys_;
     std::map<RiskFactorKey, Real> discountCurveCache_, indexCurveCache_, yieldCurveCache_, fxCache_, swaptionVolCache_,
         fxVolCache_, optionletVolCache_;
+    Real numeraireCache_;
     std::vector<boost::shared_ptr<Scenario> > scenarios_;
     boost::shared_ptr<Scenario> baseScenario_;
     Size counter_;

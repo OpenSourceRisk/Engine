@@ -19,7 +19,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/timer.hpp>
 #include <orea/cube/inmemorycube.hpp>
-#include <orea/engine/scenarioengine.hpp>
+#include <orea/engine/valuationengine.hpp>
 #include <orea/engine/sensitivityanalysis.hpp>
 #include <orea/scenario/simplescenariofactory.hpp>
 #include <ored/utilities/log.hpp>
@@ -85,12 +85,19 @@ SensitivityAnalysis::SensitivityAnalysis(const boost::shared_ptr<ore::data::Port
     boost::shared_ptr<NPVCube> cube = boost::make_shared<DoublePrecisionInMemoryCube>(
         asof_, portfolio->ids(), vector<Date>(1, asof_), scenarioGenerator_->samples());
 
-    LOG("Build Scenario Engine");
-    ScenarioEngine engine(asof_, simMarket_, simMarketData_->baseCcy());
-
+    boost::shared_ptr<DateGrid> dg = boost::make_shared<DateGrid>("1,0W"); //TODO - extend the DateGrid interface so that it can actually take a vector of dates as input
+    vector<boost::shared_ptr<ValuationCalculator> > calculators;
+    calculators.push_back(boost::make_shared<NPVCalculator>(simMarketData_->baseCcy()));
+    ValuationEngine engine(asof_, dg, simMarket_);
     LOG("Run Sensitivity Scenarios");
-    // no progress bar here
-    engine.buildCube(portfolio, cube);
+    ostringstream o;
+    o.str("");
+    o << "Build sensitivities " << portfolio->size() << " x " << dg->size() << " x " << scenarioGenerator_->samples() << "... ";
+    auto progressBar = boost::make_shared<SimpleProgressBar>(o.str());
+    auto progressLog = boost::make_shared<ProgressLog>("Building sensitivities...");
+    engine.registerProgressIndicator(progressBar);
+    engine.registerProgressIndicator(progressLog);
+    engine.buildCube(portfolio, cube, calculators);
 
     /***********************************************
      * Collect results
@@ -120,7 +127,7 @@ SensitivityAnalysis::SensitivityAnalysis(const boost::shared_ptr<ore::data::Port
                 string factor = desc[j].factor1();
                 pair<string, string> p(id, factor);
                 if (desc[j].type() == ShiftScenarioGenerator::ScenarioDescription::Type::Up) {
-                    LOG("up npv stored for id " << id << ", factor " << factor);
+                    LOG("up npv stored for id " << id << ", factor " << factor << ", npv " << npv);
                     upNPV_[p] = npv;
                     delta_[p] = npv - npv0;
                 } else if (desc[j].type() == ShiftScenarioGenerator::ScenarioDescription::Type::Down) {

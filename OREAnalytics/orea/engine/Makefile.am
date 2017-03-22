@@ -9,7 +9,6 @@ libOREAnalyticsEngine_la_LIBADD =
 libOREAnalyticsEngine_la_SOURCES = \
 	valuationengine.cpp \
 	valuationcalculator.cpp \
-	scenarioengine.cpp \
 	sensitivityanalysis.cpp \
 	stresstest.cpp
 
@@ -19,7 +18,6 @@ this_include_HEADERS = \
 	observationmode.hpp \
 	valuationengine.hpp \
 	valuationcalculator.hpp \
-	scenarioengine.hpp \
 	sensitivityanalysis.hpp \
 	stresstest.hpp
 

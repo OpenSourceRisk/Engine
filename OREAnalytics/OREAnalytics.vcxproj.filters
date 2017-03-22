@@ -122,9 +122,6 @@
     <ClInclude Include="orea\engine\stresstest.hpp">
       <Filter>engine</Filter>
     </ClInclude>
-    <ClInclude Include="orea\engine\scenarioengine.hpp">
-      <Filter>engine</Filter>
-    </ClInclude>
     <ClInclude Include="orea\engine\observationmode.hpp">
       <Filter>engine</Filter>
     </ClInclude>
@@ -212,9 +209,6 @@
       <Filter>engine</Filter>
     </ClCompile>
     <ClCompile Include="orea\engine\stresstest.cpp">
-      <Filter>engine</Filter>
-    </ClCompile>
-    <ClCompile Include="orea\engine\scenarioengine.cpp">
       <Filter>engine</Filter>
     </ClCompile>
     <ClCompile Include="orea\engine\valuationcalculator.cpp">

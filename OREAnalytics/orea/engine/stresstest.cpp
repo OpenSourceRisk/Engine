@@ -19,7 +19,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/timer.hpp>
 #include <orea/cube/inmemorycube.hpp>
-#include <orea/engine/scenarioengine.hpp>
+#include <orea/engine/valuationengine.hpp>
 #include <orea/engine/stresstest.hpp>
 #include <orea/scenario/simplescenariofactory.hpp>
 #include <ored/utilities/log.hpp>
@@ -80,12 +80,19 @@ StressTest::StressTest(boost::shared_ptr<ore::data::Portfolio>& portfolio, boost
     boost::shared_ptr<NPVCube> cube = boost::make_shared<DoublePrecisionInMemoryCube>(
         asof, portfolio->ids(), vector<Date>(1, asof), scenarioGenerator->samples());
 
-    LOG("Build Scenario Engine");
-    ScenarioEngine engine(asof, simMarket, simMarketData->baseCcy());
-
+    boost::shared_ptr<DateGrid> dg = boost::make_shared<DateGrid>("1,0W"); //TODO - extend the DateGrid interface so that it can actually take a vector of dates as input
+    vector<boost::shared_ptr<ValuationCalculator> > calculators;
+    calculators.push_back(boost::make_shared<NPVCalculator>(simMarketData->baseCcy()));
+    ValuationEngine engine(asof, dg, simMarket);
     LOG("Run Stress Scenarios");
-    // no progress bar here
-    engine.buildCube(portfolio, cube);
+    ostringstream o;
+    o.str("");
+    o << "Stress scenarios " << portfolio->size() << " x " << dg->size() << " x " << scenarioGenerator->samples() << "... ";
+    auto progressBar = boost::make_shared<SimpleProgressBar>(o.str());
+    auto progressLog = boost::make_shared<ProgressLog>("Building scenarios...");
+    engine.registerProgressIndicator(progressBar);
+    engine.registerProgressIndicator(progressLog);
+    engine.buildCube(portfolio, cube, calculators);
 
     /*****************
      * Collect results
