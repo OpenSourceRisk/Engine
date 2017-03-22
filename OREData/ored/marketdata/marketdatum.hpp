@@ -748,10 +748,10 @@ The quote is expected as a forward price
 class EquityForwardQuote : public MarketDatum {
 public:
     //! Constructor
-    EquityForwardQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string equityName, string ccy,
-        const Date& expiryDate)
+    EquityForwardQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string equityName,
+                       string ccy, const Date& expiryDate)
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::EQUITY_FWD), eqName_(equityName), ccy_(ccy),
-        expiry_(expiryDate) {}
+          expiry_(expiryDate) {}
 
     //! \name Inspectors
     //@{
@@ -781,10 +781,10 @@ The quote is expected as a forward price
 class EquityDividendYieldQuote : public MarketDatum {
 public:
     //! Constructor
-    EquityDividendYieldQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string equityName, string ccy,
-        const Date& tenorDate)
-        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::EQUITY_DIVIDEND), eqName_(equityName), ccy_(ccy),
-        tenor_(tenorDate) {}
+    EquityDividendYieldQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string equityName,
+                             string ccy, const Date& tenorDate)
+        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::EQUITY_DIVIDEND), eqName_(equityName),
+          ccy_(ccy), tenor_(tenorDate) {}
 
     //! \name Inspectors
     //@{
@@ -797,7 +797,6 @@ private:
     string ccy_;
     Date tenor_;
 };
-
 
 //! Equity/Index Option data class
 /*!
@@ -815,7 +814,7 @@ class EquityOptionQuote : public MarketDatum {
 public:
     //! Constructor
     EquityOptionQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string equityName, string ccy,
-        string expiry, string strike);
+                      string expiry, string strike);
 
     //! \name Inspectors
     //@{

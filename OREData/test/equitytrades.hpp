@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file test/fxoption.hpp
-    \brief FXOption test
+/*! \file test/equityoption.hpp
+    \brief EquityOption test
     \ingroup tests
 */
 
@@ -33,7 +33,6 @@ namespace testsuite {
 */
 class EquityTradesTest {
 public:
-    //! Test FX Option pricing against example from Wystup, section 1.2.6, page 28
     static void testEquityTradePrices();
     static boost::unit_test_framework::test_suite* suite();
 };

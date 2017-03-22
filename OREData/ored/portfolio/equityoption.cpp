@@ -37,14 +37,8 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
     QL_REQUIRE(tradeActions().empty(), "TradeActions not supported for EquityOption");
 
     // Payoff
-    boost::shared_ptr<StrikedTypePayoff> payoff;
-    if (option_.callPut() == "Call") {
-        payoff.reset(new PlainVanillaPayoff(Option::Call, strike_));
-    } else if (option_.callPut() == "Put") {
-        payoff.reset(new PlainVanillaPayoff(Option::Put, strike_));
-    } else {
-        QL_FAIL("Option Type unknown: " << option_.callPut());
-    }
+    Option::Type type = parseOptionType(option_.callPut());
+    boost::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(type, strike_));
 
     // Only European Vanilla supported for now
     QL_REQUIRE(option_.style() == "European", "Option Style unknown: " << option_.style());
@@ -58,36 +52,41 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
     // If price adjustment is necessary we build a simple EU Option
     boost::shared_ptr<QuantLib::Instrument> instrument;
 
-    // QL does not have an FXOption, so we add a vanilla one here and wrap
+    // QL does not have an EquityOption, so we add a vanilla one here and wrap
     // it in a composite to get the notional in.
     boost::shared_ptr<Instrument> vanilla = boost::make_shared<VanillaOption>(payoff, exercise);
 
     // we buy foriegn with domestic(=sold ccy).
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
     QL_REQUIRE(builder, "No builder found for " << tradeType_);
-    boost::shared_ptr<EquityOptionEngineBuilder> eqOptBuilder = boost::dynamic_pointer_cast<EquityOptionEngineBuilder>(builder);
+    boost::shared_ptr<EquityOptionEngineBuilder> eqOptBuilder =
+        boost::dynamic_pointer_cast<EquityOptionEngineBuilder>(builder);
 
     vanilla->setPricingEngine(eqOptBuilder->engine(eqName_, ccy));
 
     Position::Type positionType = parsePositionType(option_.longShort());
     Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
-    Real mult = quantity_* bsInd;
+    Real mult = quantity_ * bsInd;
 
     instrument_ = boost::shared_ptr<InstrumentWrapper>(new VanillaInstrument(vanilla, mult));
 
     npvCurrency_ = currency_;
     maturity_ = expiryDate;
+
+    // Notional - we really need todays spot to get the correct notional.
+    // But rather than having it move around we use strike * quantity
+    notional_ = strike_ * quantity_;
 }
 
 void EquityOption::fromXML(XMLNode* node) {
     Trade::fromXML(node);
-    XMLNode* fxNode = XMLUtils::getChildNode(node, "EquityOptionData");
-    QL_REQUIRE(fxNode, "No EquityOptionData Node");
-    option_.fromXML(XMLUtils::getChildNode(fxNode, "OptionData"));
-    eqName_ = XMLUtils::getChildValue(fxNode, "Name", true);
-    currency_ = XMLUtils::getChildValue(fxNode, "Currency", true);
-    strike_ = XMLUtils::getChildValueAsDouble(fxNode, "Strike", true);
-    quantity_ = XMLUtils::getChildValueAsDouble(fxNode, "Quantity", true);
+    XMLNode* eqNode = XMLUtils::getChildNode(node, "EquityOptionData");
+    QL_REQUIRE(eqNode, "No EquityOptionData Node");
+    option_.fromXML(XMLUtils::getChildNode(eqNode, "OptionData"));
+    eqName_ = XMLUtils::getChildValue(eqNode, "Name", true);
+    currency_ = XMLUtils::getChildValue(eqNode, "Currency", true);
+    strike_ = XMLUtils::getChildValueAsDouble(eqNode, "Strike", true);
+    quantity_ = XMLUtils::getChildValueAsDouble(eqNode, "Quantity", true);
 }
 
 XMLNode* EquityOption::toXML(XMLDocument& doc) {

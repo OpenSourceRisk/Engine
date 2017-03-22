@@ -55,7 +55,8 @@ public:
         fxVols_[make_pair(Market::defaultConfiguration, "EURUSD")] = flatRateFxv(0.10);
 
         // add equity spots
-        equitySpots_[make_pair(Market::defaultConfiguration, "zzzCorp")] = Handle<Quote>(boost::make_shared<SimpleQuote>(100));
+        equitySpots_[make_pair(Market::defaultConfiguration, "zzzCorp")] =
+            Handle<Quote>(boost::make_shared<SimpleQuote>(100));
 
         // add dividend yield
         equityDividendCurves_[make_pair(Market::defaultConfiguration, "zzzCorp")] = flatRateYts(0.05);
@@ -91,7 +92,7 @@ void EquityTradesTest::testEquityTradePrices() {
     o << QuantLib::io::iso_date(expiry);
     string exp_str = o.str();
 
-    // build FXOption - expiry in 1 Year
+    // build EquityOption - expiry in 1 Year
     OptionData callData("Long", "Call", "European", true, vector<string>(1, exp_str));
     OptionData putData("Short", "Put", "European", true, vector<string>(1, exp_str));
     Envelope env("CP1");

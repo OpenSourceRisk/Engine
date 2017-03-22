@@ -24,11 +24,11 @@ using ore::data::XMLUtils;
 namespace ore {
 namespace data {
 
-EquityVolatilityCurveConfig::EquityVolatilityCurveConfig(
-    const string& curveID, const string& curveDescription,
-    const string& currency, const Dimension& dimension, 
-    const vector<string>& expiries)
-    : curveID_(curveID), curveDescription_(curveDescription), ccy_(currency), dimension_(dimension), expiries_(expiries) {}
+EquityVolatilityCurveConfig::EquityVolatilityCurveConfig(const string& curveID, const string& curveDescription,
+                                                         const string& currency, const Dimension& dimension,
+                                                         const vector<string>& expiries)
+    : curveID_(curveID), curveDescription_(curveDescription), ccy_(currency), dimension_(dimension),
+      expiries_(expiries) {}
 
 void EquityVolatilityCurveConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "EquityVolatility");

@@ -32,12 +32,13 @@ namespace ore {
 namespace data {
 
 EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const Loader& loader,
-                       const CurveConfigurations& curveConfigs) {
+                               const CurveConfigurations& curveConfigs) {
 
     try {
-        const boost::shared_ptr<EquityVolatilityCurveConfig>& config = curveConfigs.equityVolCurveConfig(spec.curveConfigID());
+        const boost::shared_ptr<EquityVolatilityCurveConfig>& config =
+            curveConfigs.equityVolCurveConfig(spec.curveConfigID());
         QL_REQUIRE(config->dimension() == EquityVolatilityCurveConfig::Dimension::ATM,
-            "Unkown Equity curve building dimension");
+                   "Unkown Equity curve building dimension");
         // We loop over all market data, looking for quotes that match the configuration
         // every time we find a matching expiry we remove it from the list
         vector<boost::shared_ptr<EquityOptionQuote>> quotes;
@@ -74,22 +75,19 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
         } else {
             vector<Date> dates(quotes.size());
             vector<Volatility> atmVols(quotes.size());
-            std::sort(
-                quotes.begin(), 
-                quotes.end(),
-                [asof](const boost::shared_ptr<EquityOptionQuote>& a, const boost::shared_ptr<EquityOptionQuote>& b) -> bool {
-                    Date a_tmp_date, b_tmp_date;
-                    Period a_tmp_per, b_tmp_per;
-                    bool a_tmp_isDate, b_tmp_isDate;
-                    parseDateOrPeriod(a->expiry(), a_tmp_date, a_tmp_per, a_tmp_isDate);
-                    if (!a_tmp_isDate)
-                        a_tmp_date = WeekendsOnly().adjust(asof + a_tmp_per);
-                    parseDateOrPeriod(b->expiry(), b_tmp_date, b_tmp_per, b_tmp_isDate);
-                    if (!b_tmp_isDate)
-                        b_tmp_date = WeekendsOnly().adjust(asof + b_tmp_per);
-                    return a_tmp_date < b_tmp_date;
-                }
-            );
+            std::sort(quotes.begin(), quotes.end(), [asof](const boost::shared_ptr<EquityOptionQuote>& a,
+                                                           const boost::shared_ptr<EquityOptionQuote>& b) -> bool {
+                Date a_tmp_date, b_tmp_date;
+                Period a_tmp_per, b_tmp_per;
+                bool a_tmp_isDate, b_tmp_isDate;
+                parseDateOrPeriod(a->expiry(), a_tmp_date, a_tmp_per, a_tmp_isDate);
+                if (!a_tmp_isDate)
+                    a_tmp_date = WeekendsOnly().adjust(asof + a_tmp_per);
+                parseDateOrPeriod(b->expiry(), b_tmp_date, b_tmp_per, b_tmp_isDate);
+                if (!b_tmp_isDate)
+                    b_tmp_date = WeekendsOnly().adjust(asof + b_tmp_per);
+                return a_tmp_date < b_tmp_date;
+            });
             for (Size i = 0; i < quotes.size(); i++) {
                 Date tmpDate;
                 Period tmpPer;
@@ -97,9 +95,8 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
                 parseDateOrPeriod(quotes[i]->expiry(), tmpDate, tmpPer, tmpIsDate);
                 if (!tmpIsDate)
                     tmpDate = WeekendsOnly().adjust(asof + tmpPer);
-                QL_REQUIRE(tmpDate > asof, 
-                    "Equity Vol Curve cannot contain a vol quote for a past date (" 
-                    << io::iso_date(tmpDate) << ")");
+                QL_REQUIRE(tmpDate > asof, "Equity Vol Curve cannot contain a vol quote for a past date ("
+                                               << io::iso_date(tmpDate) << ")");
                 dates[i] = tmpDate;
                 atmVols[i] = quotes[i]->quote()->value();
             }

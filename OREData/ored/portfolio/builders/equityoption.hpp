@@ -50,13 +50,17 @@ protected:
         string key = keyImpl(equityName, ccy);
         boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = boost::make_shared<GeneralizedBlackScholesProcess>(
             market_->equitySpot(equityName, configuration(MarketContext::pricing)),
-            market_->equityDividendCurve(equityName,configuration(MarketContext::pricing)), // dividend yield ~ foreign yield
+            market_->equityDividendCurve(equityName,
+                                         configuration(MarketContext::pricing)), // dividend yield ~ foreign yield
             market_->discountCurve(ccy.code(), configuration(MarketContext::pricing)),
             market_->equityVol(equityName, configuration(MarketContext::pricing)));
         // separate IR curves required for "discounting" and "forward price estimation"
-        Handle<YieldTermStructure> discountCurve = market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
-        //! TODO: This pricing engine only takes a single rate curve as input - hence multi-curve discounting is not supported.
-        //! - for now we pass the curve required to retrieve equity forward quotes. This means the specified CSA discount curve is not used in pricing.
+        Handle<YieldTermStructure> discountCurve =
+            market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
+        //! TODO: This pricing engine only takes a single rate curve as input - hence multi-curve discounting is not
+        //supported.
+        //! - for now we pass the curve required to retrieve equity forward quotes. This means the specified CSA
+        //discount curve is not used in pricing.
         return boost::make_shared<QuantLib::AnalyticEuropeanEngine>(gbsp);
     }
 };

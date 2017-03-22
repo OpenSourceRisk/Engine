@@ -23,20 +23,13 @@
 namespace QuantExt {
 
 DiscountingEquityForwardEngine::DiscountingEquityForwardEngine(
-    const Handle<YieldTermStructure>& equityInterestRateCurve,
-    const Handle<YieldTermStructure>& dividendYieldCurve,
-    const Handle<Quote>& equitySpot,
-    const Handle<YieldTermStructure>& discountCurve,
-    boost::optional<bool> includeSettlementDateFlows,
-    const Date& settlementDate, const Date& npvDate)
-    : equityRefRateCurve_(equityInterestRateCurve),
-    divYieldCurve_(dividendYieldCurve),
-    equitySpot_(equitySpot),
-    discountCurve_(discountCurve),
-    includeSettlementDateFlows_(includeSettlementDateFlows), 
-    settlementDate_(settlementDate), 
-    npvDate_(npvDate) {
-        
+    const Handle<YieldTermStructure>& equityInterestRateCurve, const Handle<YieldTermStructure>& dividendYieldCurve,
+    const Handle<Quote>& equitySpot, const Handle<YieldTermStructure>& discountCurve,
+    boost::optional<bool> includeSettlementDateFlows, const Date& settlementDate, const Date& npvDate)
+    : equityRefRateCurve_(equityInterestRateCurve), divYieldCurve_(dividendYieldCurve), equitySpot_(equitySpot),
+      discountCurve_(discountCurve), includeSettlementDateFlows_(includeSettlementDateFlows),
+      settlementDate_(settlementDate), npvDate_(npvDate) {
+
     registerWith(equityRefRateCurve_);
     registerWith(divYieldCurve_);
     registerWith(equitySpot_);
@@ -57,16 +50,14 @@ void DiscountingEquityForwardEngine::calculate() const {
     results_.value = 0.0;
 
     if (!detail::simple_event(arguments_.maturityDate).hasOccurred(settlementDate, includeSettlementDateFlows_)) {
-        Real lsInd = ((arguments_.longShort == Position::Type::Long) ? 1.0 : -1.0);
+        Real lsInd = ((arguments_.longShort == Position::Long) ? 1.0 : -1.0);
         Real qty = arguments_.quantity;
         Date maturity = arguments_.maturityDate;
         Real strike = arguments_.strike;
-        Real forwardPrice = equitySpot_->value() * 
-            divYieldCurve_->discount(maturity) / 
-            equityRefRateCurve_->discount(maturity);
+        Real forwardPrice =
+            equitySpot_->value() * divYieldCurve_->discount(maturity) / equityRefRateCurve_->discount(maturity);
         DiscountFactor df = discountCurve_->discount(maturity);
-        results_.value = (lsInd * qty) * 
-            (forwardPrice - strike) * df;
+        results_.value = (lsInd * qty) * (forwardPrice - strike) * df;
     }
 } // calculate
 

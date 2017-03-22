@@ -47,16 +47,14 @@ public:
     //! Default constructor
     EquityCurve() {}
     //! Detailed constructor
-    EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
-        const CurveConfigurations& curveConfigs,
-        const Conventions& conventions);
+    EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, const CurveConfigurations& curveConfigs,
+                const Conventions& conventions);
     //@}
     //! \name Inspectors
     //@{
     const EquityCurveSpec& spec() const { return spec_; }
-    boost::shared_ptr<YieldTermStructure> divYieldTermStructure(
-        const Date& asof,
-        const Handle<YieldTermStructure>& equityIrCurve) const; 
+    boost::shared_ptr<YieldTermStructure> divYieldTermStructure(const Date& asof,
+                                                                const Handle<YieldTermStructure>& equityIrCurve) const;
     const Real equitySpot() const { return equitySpot_; }
     //@}
 private:

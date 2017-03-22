@@ -27,7 +27,6 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/assign/list_of.hpp>
-#include <math.h>
 #include <map>
 
 using namespace QuantLib;
@@ -420,10 +419,10 @@ boost::shared_ptr<data::TodaysMarketParameters> marketParameters() {
     map<string, string> swapIndexMap = {{"USD-CMS-1Y", "USD-FedFunds"}, {"USD-CMS-30Y", "USD-LIBOR-3M"}};
     parameters->addSwapIndices("ois", swapIndexMap);
 
-    map<string, string> equityMap = { {"SP5", "Equity/USD/SP5"} };
+    map<string, string> equityMap = {{"SP5", "Equity/USD/SP5"}};
     parameters->addEquityCurves("ois", equityMap);
 
-    map<string, string> equityVolMap = { { "SP5", "EquityVolatility/USD/SP5" } };
+    map<string, string> equityVolMap = {{"SP5", "EquityVolatility/USD/SP5"}};
     parameters->addEquityVolatilities("ois", equityVolMap);
 
     // all others empty so far
@@ -688,11 +687,10 @@ boost::shared_ptr<data::CurveConfigurations> curveConfigurations() {
     // clang-format on
 
     configs->equityCurveConfig("SP5") = boost::make_shared<EquityCurveConfig>(
-        "SP5", "", "USD", EquityCurveConfig::Type::ForwardPrice, 
-        "EQUITY/PRICE/SP5/USD",  eqFwdQuotes);
+        "SP5", "", "USD", EquityCurveConfig::Type::ForwardPrice, "EQUITY/PRICE/SP5/USD", eqFwdQuotes);
 
     configs->equityVolCurveConfig("SP5") = boost::make_shared<EquityVolatilityCurveConfig>(
-        "SP5","", "USD", EquityVolatilityCurveConfig::Dimension::ATM,eqVolExpiries);
+        "SP5", "", "USD", EquityVolatilityCurveConfig::Dimension::ATM, eqVolExpiries);
 
     return configs;
 }
@@ -814,11 +812,11 @@ void TodaysMarketTest::testEquityCurve() {
     Rate r_2y = equityIrTs->zeroRate(d_2y, divDc, Continuous);
     Rate q_1y = divTs->zeroRate(d_1y, divDc, Continuous);
     Rate q_2y = divTs->zeroRate(d_2y, divDc, Continuous);
-    Real f_1y = spotVal*std::exp((r_1y - q_1y)*(divDc.yearFraction(today,d_1y)));
-    Real f_2y = spotVal*std::exp((r_2y - q_2y)*(divDc.yearFraction(today, d_2y)));
-    BOOST_CHECK_CLOSE(1500.00, f_1y,1.e-10); // hardcoded, to be the same as the input quote
-    BOOST_CHECK_CLOSE(1500.0, f_2y, 1.e-10); // hardcoded, to be the same as the input quote
-    
+    Real f_1y = spotVal * std::exp((r_1y - q_1y) * (divDc.yearFraction(today, d_1y)));
+    Real f_2y = spotVal * std::exp((r_2y - q_2y) * (divDc.yearFraction(today, d_2y)));
+    BOOST_CHECK_CLOSE(1500.00, f_1y, 1.e-10); // hardcoded, to be the same as the input quote
+    BOOST_CHECK_CLOSE(1500.0, f_2y, 1.e-10);  // hardcoded, to be the same as the input quote
+
     // test flat extrapolation of the dividend yield term structure (N.B. NOT FLAT ON FORWARDS!)
     Rate q_5y = divTs->zeroRate(5.0, Continuous);
     Rate q_50y = divTs->zeroRate(50.0, Continuous);
@@ -827,7 +825,7 @@ void TodaysMarketTest::testEquityCurve() {
     // test that the t=0 forward value is equal to the spot
     Rate r_0 = equityIrTs->zeroRate(0.0, Continuous);
     Rate q_0 = divTs->zeroRate(0.0, Continuous);
-    Real fwd_0 = spotVal*std::exp((r_0 - q_0)*0.0);
+    Real fwd_0 = spotVal * std::exp((r_0 - q_0) * 0.0);
     BOOST_CHECK_EQUAL(spotVal, fwd_0);
 }
 
@@ -840,14 +838,14 @@ void TodaysMarketTest::testEquityVolCurve() {
 
     Date d_1y = Date(27, Feb, 2017);
     Date d_2y = Date(26, Feb, 2018);
-    Volatility v_1y_atm = eqVol->blackVol(d_1y,0.0);
+    Volatility v_1y_atm = eqVol->blackVol(d_1y, 0.0);
     Volatility v_1y_smile = eqVol->blackVol(d_1y, 2000.0);
     BOOST_CHECK_EQUAL(v_1y_atm, v_1y_smile); // test ATM flat smile
-    BOOST_CHECK_EQUAL(v_1y_atm, 0.25); // test input = output
+    BOOST_CHECK_EQUAL(v_1y_atm, 0.25);       // test input = output
     Volatility v_2y_atm = eqVol->blackVol(d_2y, 0.0);
     Volatility v_2y_smile = eqVol->blackVol(d_2y, 2000.0);
     BOOST_CHECK_EQUAL(v_2y_atm, v_2y_smile); // test ATM flat smile
-    BOOST_CHECK_EQUAL(v_2y_atm, 0.35); // test input = output
+    BOOST_CHECK_EQUAL(v_2y_atm, 0.35);       // test input = output
 
     // test flat extrapolation
     Volatility v_5y_atm = eqVol->blackVol(5.0, 0.0);
