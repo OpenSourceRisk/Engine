@@ -91,7 +91,7 @@ void EquityTradesTest::testEquityTradePrices() {
     o << QuantLib::io::iso_date(expiry);
     string exp_str = o.str();
 
-    // build FXOption - expiry in 1 Year
+    // build EquityOption - expiry in 1 Year
     OptionData callData("Long", "Call", "European", true, vector<string>(1, exp_str));
     OptionData putData("Short", "Put", "European", true, vector<string>(1, exp_str));
     Envelope env("CP1");

@@ -36,7 +36,7 @@ using QuantLib::Period;
 namespace ore {
 namespace data {
 
-//! FX volatility structure configuration
+//! Equity volatility structure configuration
 /*!
   \ingroup configuration
 */

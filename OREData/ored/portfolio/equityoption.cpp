@@ -58,7 +58,7 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
     // If price adjustment is necessary we build a simple EU Option
     boost::shared_ptr<QuantLib::Instrument> instrument;
 
-    // QL does not have an FXOption, so we add a vanilla one here and wrap
+    // QL does not have an EquityOption, so we add a vanilla one here and wrap
     // it in a composite to get the notional in.
     boost::shared_ptr<Instrument> vanilla = boost::make_shared<VanillaOption>(payoff, exercise);
 
@@ -81,13 +81,13 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
 
 void EquityOption::fromXML(XMLNode* node) {
     Trade::fromXML(node);
-    XMLNode* fxNode = XMLUtils::getChildNode(node, "EquityOptionData");
-    QL_REQUIRE(fxNode, "No EquityOptionData Node");
-    option_.fromXML(XMLUtils::getChildNode(fxNode, "OptionData"));
-    eqName_ = XMLUtils::getChildValue(fxNode, "Name", true);
-    currency_ = XMLUtils::getChildValue(fxNode, "Currency", true);
-    strike_ = XMLUtils::getChildValueAsDouble(fxNode, "Strike", true);
-    quantity_ = XMLUtils::getChildValueAsDouble(fxNode, "Quantity", true);
+    XMLNode* eqNode = XMLUtils::getChildNode(node, "EquityOptionData");
+    QL_REQUIRE(eqNode, "No EquityOptionData Node");
+    option_.fromXML(XMLUtils::getChildNode(eqNode, "OptionData"));
+    eqName_ = XMLUtils::getChildValue(eqNode, "Name", true);
+    currency_ = XMLUtils::getChildValue(eqNode, "Currency", true);
+    strike_ = XMLUtils::getChildValueAsDouble(eqNode, "Strike", true);
+    quantity_ = XMLUtils::getChildValueAsDouble(eqNode, "Quantity", true);
 }
 
 XMLNode* EquityOption::toXML(XMLDocument& doc) {
