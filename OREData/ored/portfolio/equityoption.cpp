@@ -37,14 +37,8 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
     QL_REQUIRE(tradeActions().empty(), "TradeActions not supported for EquityOption");
 
     // Payoff
-    boost::shared_ptr<StrikedTypePayoff> payoff;
-    if (option_.callPut() == "Call") {
-        payoff.reset(new PlainVanillaPayoff(Option::Call, strike_));
-    } else if (option_.callPut() == "Put") {
-        payoff.reset(new PlainVanillaPayoff(Option::Put, strike_));
-    } else {
-        QL_FAIL("Option Type unknown: " << option_.callPut());
-    }
+    Option::Type type = parseOptionType(option_.callPut());
+    boost::shared_ptr<StrikedTypePayoff> payoff (new PlainVanillaPayoff(type, strike_));
 
     // Only European Vanilla supported for now
     QL_REQUIRE(option_.style() == "European", "Option Style unknown: " << option_.style());
