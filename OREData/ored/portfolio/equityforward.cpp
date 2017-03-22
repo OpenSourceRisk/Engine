@@ -24,9 +24,7 @@ using namespace std;
 namespace ore {
 namespace data {
 
-//--------------------------------------------------------------------------
 void EquityForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
-    //--------------------------------------------------------------------------
     Currency ccy = parseCurrency(currency_);
     QuantLib::Position::Type longShort = parsePositionType(longShort_);
     Date maturity = parseDate(maturityDate_);
@@ -47,9 +45,7 @@ void EquityForward::build(const boost::shared_ptr<EngineFactory>& engineFactory)
     maturity_ = maturity;
 }
 
-//--------------------------------------------------------------------------
 void EquityForward::fromXML(XMLNode *node) {
-    //--------------------------------------------------------------------------
     Trade::fromXML(node);
     XMLNode* eNode = XMLUtils::getChildNode(node, "EquityForwardData");
 
@@ -61,9 +57,7 @@ void EquityForward::fromXML(XMLNode *node) {
     strike_ = XMLUtils::getChildValueAsDouble(eNode, "Strike", true);
 }
 
-//--------------------------------------------------------------------------
 XMLNode* EquityForward::toXML(XMLDocument& doc) {
-    //--------------------------------------------------------------------------
     XMLNode* node = Trade::toXML(doc);
     XMLNode* eNode = doc.allocNode("EquityForwardData");
     XMLUtils::appendNode(node, eNode);
