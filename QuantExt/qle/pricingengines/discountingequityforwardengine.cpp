@@ -57,7 +57,7 @@ void DiscountingEquityForwardEngine::calculate() const {
     results_.value = 0.0;
 
     if (!detail::simple_event(arguments_.maturityDate).hasOccurred(settlementDate, includeSettlementDateFlows_)) {
-        Real lsInd = ((arguments_.longShort == Position::Type::Long) ? 1.0 : -1.0);
+        Real lsInd = ((arguments_.longShort == Position::Long) ? 1.0 : -1.0);
         Real qty = arguments_.quantity;
         Date maturity = arguments_.maturityDate;
         Real strike = arguments_.strike;

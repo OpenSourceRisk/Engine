@@ -7,6 +7,8 @@
 #include <ored/marketdata/curvespec.hpp>
 #include <ored/marketdata/curvespecparser.hpp>
 #include <ored/marketdata/defaultcurve.hpp>
+#include <ored/marketdata/equitycurve.hpp>
+#include <ored/marketdata/equityvolcurve.hpp>
 #include <ored/marketdata/fixings.hpp>
 #include <ored/marketdata/fxspot.hpp>
 #include <ored/marketdata/fxtriangulation.hpp>
