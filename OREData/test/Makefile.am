@@ -1,6 +1,7 @@
 
 OREDATA_TESTS = \
 	testsuite.cpp \
+	bond.hpp bond.cpp \
 	calendars.hpp calendars.cpp \
 	fxoption.hpp fxoption.cpp \
 	ccyswapwithresets.hpp ccyswapwithresets.cpp \

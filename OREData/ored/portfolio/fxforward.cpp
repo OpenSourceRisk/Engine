@@ -47,6 +47,7 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         instrument_.reset(new VanillaInstrument(instrument));
 
         npvCurrency_ = soldCurrency_;
+        notional_ = soldAmount_;
         maturity_ = maturityDate;
 
     } catch (std::exception&) {

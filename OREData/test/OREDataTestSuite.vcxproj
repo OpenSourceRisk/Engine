@@ -628,6 +628,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="bond.hpp" />
     <ClInclude Include="calendars.hpp" />
     <ClInclude Include="ccyswapwithresets.hpp" />
     <ClInclude Include="crossassetmodeldata.hpp" />
@@ -643,6 +644,7 @@
     <ClInclude Include="yieldcurve.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="bond.cpp" />
     <ClCompile Include="calendars.cpp" />
     <ClCompile Include="ccyswapwithresets.cpp" />
     <ClCompile Include="crossassetmodeldata.cpp" />

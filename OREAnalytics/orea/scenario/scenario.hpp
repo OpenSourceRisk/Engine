@@ -73,13 +73,7 @@ private:
 };
 
 inline bool operator<(const RiskFactorKey& lhs, const RiskFactorKey& rhs) {
-    if (lhs.keytype == rhs.keytype) {
-        if (lhs.name == rhs.name)
-            return lhs.index < rhs.index;
-        else
-            return lhs.name < rhs.name;
-    }
-    return lhs.keytype < rhs.keytype;
+    return std::tie(lhs.keytype, lhs.name, lhs.index) < std::tie(rhs.keytype, rhs.name, rhs.index);
 }
 
 inline bool operator==(const RiskFactorKey& lhs, const RiskFactorKey& rhs) {
