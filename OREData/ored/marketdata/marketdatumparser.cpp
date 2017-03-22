@@ -91,6 +91,17 @@ static MarketDatum::QuoteType parseQuoteType(const string& s) {
     }
 }
 
+// calls parseDateOrPeriod and returns a Date (either the supplied date or asof+period)
+static Date getDateFromDateOrPeriod(const string& token, Date asof) {
+    Period term; // gets populated by parseDateOrPeriod
+    Date expiryDate; // gets populated by parseDateOrPeriod
+    bool tmpIsDate; // gets populated by parseDateOrPeriod
+    parseDateOrPeriod(token, expiryDate, term, tmpIsDate); // checks if the market string contains a date or a period
+    if (!tmpIsDate)
+        expiryDate = WeekendsOnly().adjust(asof + term); // we have no calendar information here, so we use a generic calendar
+    return expiryDate;
+}
+
 //! Function to parse a market datum
 boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& datumName, const Real& value) {
 
@@ -297,12 +308,7 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         QL_REQUIRE(quoteType == MarketDatum::QuoteType::PRICE, "Invalid quote type for " << datumName);
         const string& equityName = tokens[2];
         const string& ccy = tokens[3];
-        Period term; // gets populated by parseDateOrPeriod
-        Date expiryDate; // gets populated by parseDateOrPeriod
-        bool tmpIsDate; // gets populated by parseDateOrPeriod
-        parseDateOrPeriod(tokens[4], expiryDate, term, tmpIsDate); // checks if the market string contains a date or a period
-        if (!tmpIsDate)
-            expiryDate = WeekendsOnly().adjust(asof + term); // we have no calendar information here, so we use a generic calendar
+        Date expiryDate = getDateFromDateOrPeriod(tokens[4], asof);
         return boost::make_shared<EquityForwardQuote>(value, asof, datumName, quoteType, equityName, ccy, expiryDate);
     }
 
@@ -311,12 +317,7 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         QL_REQUIRE(quoteType == MarketDatum::QuoteType::RATE, "Invalid quote type for " << datumName);
         const string& equityName = tokens[2];
         const string& ccy = tokens[3];
-        Period term; // gets populated by parseDateOrPeriod
-        Date tenorDate; // gets populated by parseDateOrPeriod
-        bool tmpIsDate; // gets populated by parseDateOrPeriod
-        parseDateOrPeriod(tokens[4], tenorDate, term, tmpIsDate); // checks if the market string contains a date or a period
-        if (!tmpIsDate)
-            tenorDate = WeekendsOnly().adjust(asof + term); // we have no calendar information here, so we use a generic calendar
+        Date tenorDate = getDateFromDateOrPeriod(tokens[4], asof);
         return boost::make_shared<EquityDividendYieldQuote>(value, asof, datumName, quoteType, equityName, ccy, tenorDate);
     }
 
@@ -325,13 +326,7 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         QL_REQUIRE(quoteType == MarketDatum::QuoteType::RATE_LNVOL, "Invalid quote type for " << datumName);
         const string& equityName = tokens[2];
         const string& ccy = tokens[3];
-        Period expiryTenor; // gets populated by parseDateOrPeriod
-        Date expiryDate; // gets populated by parseDateOrPeriod
-        bool tmpIsDate; // gets populated by parseDateOrPeriod
         string expiryString = tokens[4];
-        parseDateOrPeriod(expiryString, expiryDate, expiryTenor, tmpIsDate); // checks if the market string contains a date or a period
-        if (!tmpIsDate)
-            expiryDate = WeekendsOnly().adjust(asof + expiryTenor); // we have no calendar information here, so we use a generic calendar
         const string& strike = tokens[5];
         // note how we only store the expiry string - to ensure we can support both Periods and Dates being specified in the vol curve-config.
         return boost::make_shared<EquityOptionQuote>(value, asof, datumName, quoteType, equityName, ccy, expiryString, strike);
