@@ -130,7 +130,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
                 new QuantExt::InterpolatedDiscountCurve(yieldCurveTimes, quotes, 0, TARGET(), wrapper->dayCounter()));
         } else {
             discountCurve = boost::shared_ptr<YieldTermStructure>(
-                new QuantExt::InterpolatedDiscountCurve2(yieldCurveDates, quotes, wrapper->dayCounter()));
+                new QuantExt::InterpolatedDiscountCurve2(yieldCurveTimes, quotes, wrapper->dayCounter()));
         }
 
         Handle<YieldTermStructure> dch(discountCurve);
@@ -171,7 +171,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
                 new QuantExt::InterpolatedDiscountCurve(yieldCurveTimes, quotes, 0, TARGET(), wrapper->dayCounter()));
         } else {
             yieldCurve = boost::shared_ptr<YieldTermStructure>(
-                new QuantExt::InterpolatedDiscountCurve2(yieldCurveDates, quotes, wrapper->dayCounter()));
+                new QuantExt::InterpolatedDiscountCurve2(yieldCurveTimes, quotes, wrapper->dayCounter()));
         }
 
         Handle<YieldTermStructure> dch(yieldCurve);
@@ -224,7 +224,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
                 yieldCurveTimes, quotes, 0, index->fixingCalendar(), wrapperIndex->dayCounter()));
         } else {
             indexCurve = boost::shared_ptr<YieldTermStructure>(
-                new QuantExt::InterpolatedDiscountCurve2(yieldCurveDates, quotes, wrapperIndex->dayCounter()));
+                new QuantExt::InterpolatedDiscountCurve2(yieldCurveTimes, quotes, wrapperIndex->dayCounter()));
         }
 
         // wrapped curve, is slower than a native curve
