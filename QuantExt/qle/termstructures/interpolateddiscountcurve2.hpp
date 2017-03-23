@@ -56,7 +56,7 @@ public:
             QL_REQUIRE(times_.size() == quotes.size(), "size of time and quote vectors do not match");
             QL_REQUIRE(times_[0] == 0.0, "First time must be 0, got " << times_[0]);
             QL_REQUIRE(!quotes[i].empty(), "quote at index " << i << " is empty");
-            registerWith(quotes[i]);
+            registerWith(quotes_[i]);
         }
         interpolation_ = boost::make_shared<LogLinearInterpolation>(times_.begin(), times_.end(), data_.begin());
         registerWith(Settings::instance().evaluationDate());
@@ -73,7 +73,7 @@ public:
             QL_REQUIRE(times_.size() == quotes.size(), "size of time and quote vectors do not match");
             QL_REQUIRE(times_[0] == 0.0, "First time must be 0, got " << times_[0]);
             QL_REQUIRE(!quotes[i].empty(), "quote at index " << i << " is empty");
-            registerWith(quotes[i]);
+            registerWith(quotes_[i]);
         }
         interpolation_ = boost::make_shared<LogLinearInterpolation>(times_.begin(), times_.end(), data_.begin());
         registerWith(Settings::instance().evaluationDate());
