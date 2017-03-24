@@ -135,6 +135,7 @@ AC_CONFIG_FILES([
     ored/model/Makefile
     ored/portfolio/Makefile
     ored/portfolio/builders/Makefile
+    ored/report/Makefile
     ored/utilities/Makefile
     m4/Makefile
     doc/Makefile
