@@ -107,6 +107,17 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         Handle<YieldTermStructure> wrapper = initMarket->discountCurve(ccy, configuration);
         QL_REQUIRE(!wrapper.empty(), "discount curve for currency " << ccy << " not provided");
         // include today
+
+        // constructing discount yield curves
+        DayCounter dc = wrapper->dayCounter();       // used to convert YieldCurve Periods to Times
+        vector<Time> yieldCurveTimes(1, 0.0); // include today
+        vector<Date> yieldCurveDates(1, asof_);
+        QL_REQUIRE(parameters->yieldCurveTenors().front() > 0 * Days, "yield curve tenors must not include t=0");
+        for (auto& tenor : parameters->yieldCurveTenors()) {
+            yieldCurveTimes.push_back(dc.yearFraction(asof_, asof_ + tenor));
+            yieldCurveDates.push_back(asof_ + tenor);
+        }
+
         vector<Handle<Quote> > quotes;
         boost::shared_ptr<SimpleQuote> q(new SimpleQuote(1.0));
         quotes.push_back(Handle<Quote>(q));
@@ -147,6 +158,16 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         LOG("building benchmark yield curve name " << name);
         Handle<YieldTermStructure> wrapper = initMarket->yieldCurve(name, configuration);
         QL_REQUIRE(!wrapper.empty(), "yield curve for name " << name << " not provided");
+
+        DayCounter dc = wrapper->dayCounter();       // used to convert YieldCurve Periods to Times
+        vector<Time> yieldCurveTimes(1, 0.0); // include today
+        vector<Date> yieldCurveDates(1, asof_);
+        QL_REQUIRE(parameters->yieldCurveTenors().front() > 0 * Days, "yield curve tenors must not include t=0");
+        for (auto& tenor : parameters->yieldCurveTenors()) {
+            yieldCurveTimes.push_back(dc.yearFraction(asof_, asof_ + tenor));
+            yieldCurveDates.push_back(asof_ + tenor);
+        }
+
         // include today
         vector<Handle<Quote> > quotes;
         boost::shared_ptr<SimpleQuote> q(new SimpleQuote(1.0));
@@ -200,6 +221,15 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         Handle<YieldTermStructure> wrapperIndex = index->forwardingTermStructure();
         QL_REQUIRE(!wrapperIndex.empty(), "no termstructure for index " << ind);
         vector<string> keys(parameters->yieldCurveTenors().size());
+
+        DayCounter dc = wrapperIndex->dayCounter();       // used to convert YieldCurve Periods to Times
+        vector<Time> yieldCurveTimes(1, 0.0); // include today
+        vector<Date> yieldCurveDates(1, asof_);
+        QL_REQUIRE(parameters->yieldCurveTenors().front() > 0 * Days, "yield curve tenors must not include t=0");
+        for (auto& tenor : parameters->yieldCurveTenors()) {
+            yieldCurveTimes.push_back(dc.yearFraction(asof_, asof_ + tenor));
+            yieldCurveDates.push_back(asof_ + tenor);
+        }
 
         // include today
         vector<Handle<Quote> > quotes;
