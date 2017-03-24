@@ -62,6 +62,7 @@ using boost::unit_test::test_suite;
 #include "fxswap.hpp"
 #include "yieldcurve.hpp"
 #include "crossassetmodeldata.hpp"
+#include "bond.hpp"
 
 namespace {
 
@@ -102,6 +103,7 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(testsuite::TodaysMarketTest::suite());
     test->add(testsuite::CrossAssetModelDataTest::suite());
     test->add(testsuite::YieldCurveTest::suite());
+    test->add(testsuite::BondTest::suite());
 
     // test->add(FXSwapTest::suite());
     test->add(BOOST_TEST_CASE(stopTimer));

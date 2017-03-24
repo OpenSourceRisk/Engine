@@ -35,6 +35,7 @@
 #include <ql/position.hpp>
 #include <ql/exercise.hpp>
 #include <ql/instruments/swaption.hpp>
+#include <ql/methods/montecarlo/lsmbasissystem.hpp>
 
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/tokenizer.hpp>
@@ -142,6 +143,12 @@ QuantLib::Exercise::Type parseExerciseType(const string& s);
 \ingroup utilities
 */
 void parseDateOrPeriod(const string& s, QuantLib::Date& d, QuantLib::Period& p, bool& isDate);
+
+//! Convert text to QuantLib::LsmBasisSystem::PolynomType
+/*!
+\ingroup utilities
+*/
+QuantLib::LsmBasisSystem::PolynomType parsePolynomType(const std::string& s);
 
 //! Convert comma separated list of values to vector of values
 /*!
