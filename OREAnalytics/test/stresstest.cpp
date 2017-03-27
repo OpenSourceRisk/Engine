@@ -356,6 +356,7 @@ void StressTestingTest::regression() {
         "number of non-zero stress impacts (" << count <<
         ") do not match regression data (" << cachedResults.size() <<
         ")");
+    IndexManager::instance().clearHistories();
 }
 
 test_suite* StressTestingTest::suite() {

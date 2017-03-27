@@ -85,13 +85,13 @@ StressTest::StressTest(boost::shared_ptr<ore::data::Portfolio>& portfolio, boost
     calculators.push_back(boost::make_shared<NPVCalculator>(simMarketData->baseCcy()));
     ValuationEngine engine(asof, dg, simMarket);
     LOG("Run Stress Scenarios");
-    ostringstream o;
+    /*ostringstream o;
     o.str("");
     o << "Stress scenarios " << portfolio->size() << " x " << dg->size() << " x " << scenarioGenerator->samples() << "... ";
     auto progressBar = boost::make_shared<SimpleProgressBar>(o.str());
     auto progressLog = boost::make_shared<ProgressLog>("Building scenarios...");
     engine.registerProgressIndicator(progressBar);
-    engine.registerProgressIndicator(progressLog);
+    engine.registerProgressIndicator(progressLog);*/
     engine.buildCube(portfolio, cube, calculators);
 
     /*****************

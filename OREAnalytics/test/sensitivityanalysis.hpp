@@ -37,10 +37,14 @@ public:
     static void test1dShifts();
     //! Test that shifting all 2-d shift tenor points by DELTA yields DELTA shifts at all 2-d grid points of the underlying data
     static void test2dShifts();
-    //! Test that the portfolio shows the expected sensitivity (regression test)
-    static void testPortfolioSensitivity();
-    //! Test par conversion of sensitivities
-    static void testParConversion();
+    //! Test that the portfolio shows the expected sensitivity (regression test - "None" observation mode)
+    static void testPortfolioSensitivityNoneObs();
+    //! Test that the portfolio shows the expected sensitivity (regression test - "Disable" observation mode)
+    static void testPortfolioSensitivityDisableObs();
+    //! Test that the portfolio shows the expected sensitivity (regression test - "Defer" observation mode)
+    static void testPortfolioSensitivityDeferObs();
+    //! Test that the portfolio shows the expected sensitivity (regression test - "Unregister" observation mode)
+    static void testPortfolioSensitivityUnregisterObs();
     static boost::unit_test_framework::test_suite* suite();
 };
 }

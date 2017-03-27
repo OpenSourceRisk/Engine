@@ -90,13 +90,13 @@ SensitivityAnalysis::SensitivityAnalysis(const boost::shared_ptr<ore::data::Port
     calculators.push_back(boost::make_shared<NPVCalculator>(simMarketData_->baseCcy()));
     ValuationEngine engine(asof_, dg, simMarket_);
     LOG("Run Sensitivity Scenarios");
-    ostringstream o;
+    /*ostringstream o;
     o.str("");
     o << "Build sensitivities " << portfolio->size() << " x " << dg->size() << " x " << scenarioGenerator_->samples() << "... ";
     auto progressBar = boost::make_shared<SimpleProgressBar>(o.str());
     auto progressLog = boost::make_shared<ProgressLog>("Building sensitivities...");
     engine.registerProgressIndicator(progressBar);
-    engine.registerProgressIndicator(progressLog);
+    engine.registerProgressIndicator(progressLog);*/
     engine.buildCube(portfolio, cube, calculators);
 
     /***********************************************

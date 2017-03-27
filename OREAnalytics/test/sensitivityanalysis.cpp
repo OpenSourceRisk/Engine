@@ -341,10 +341,12 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5() {
     return sensiData;
 }
 
-void SensitivityAnalysisTest::testPortfolioSensitivity() {
-    BOOST_TEST_MESSAGE("Testing Portfolio sensitivity");
+void testPortfolioSensitivity(ObservationMode::Mode om) {
 
     SavedSettings backup;
+
+    ObservationMode::Mode backupMode = ObservationMode::instance().mode();
+    ObservationMode::instance().setMode(om);
 
     Date today = Date(14, April, 2016); // Settings::instance().evaluationDate();
     Settings::instance().evaluationDate() = today;
@@ -736,12 +738,37 @@ void SensitivityAnalysisTest::testPortfolioSensitivity() {
         ")");
 
     BOOST_TEST_MESSAGE("Cube generated in " << elapsed << " seconds");
+    ObservationMode::instance().setMode(backupMode);
+    IndexManager::instance().clearHistories();
+}
+
+void SensitivityAnalysisTest::testPortfolioSensitivityNoneObs() {
+    BOOST_TEST_MESSAGE("Testing Portfolio sensitivity (None observation mode)");
+    testPortfolioSensitivity(ObservationMode::Mode::None);
+}
+
+void SensitivityAnalysisTest::testPortfolioSensitivityDisableObs() {
+    BOOST_TEST_MESSAGE("Testing Portfolio sensitivity (Disable observation mode)");
+    testPortfolioSensitivity(ObservationMode::Mode::Disable);
+}
+
+void SensitivityAnalysisTest::testPortfolioSensitivityDeferObs() {
+    BOOST_TEST_MESSAGE("Testing Portfolio sensitivity (Defer observation mode)");
+    testPortfolioSensitivity(ObservationMode::Mode::Defer);
+}
+
+void SensitivityAnalysisTest::testPortfolioSensitivityUnregisterObs() {
+    BOOST_TEST_MESSAGE("Testing Portfolio sensitivity (Unregister observation mode)");
+    testPortfolioSensitivity(ObservationMode::Mode::Unregister);
 }
 
 void SensitivityAnalysisTest::test1dShifts() {
     BOOST_TEST_MESSAGE("Testing 1d shifts");
 
     SavedSettings backup;
+
+    ObservationMode::Mode backupMode = ObservationMode::instance().mode();
+    ObservationMode::instance().setMode(ObservationMode::Mode::None);
 
     Date today = Date(14, April, 2016);
     Settings::instance().evaluationDate() = today;
@@ -815,12 +842,17 @@ void SensitivityAnalysisTest::test1dShifts() {
         BOOST_CHECK_MESSAGE(fabs(diffRelative[j] - shiftSize) < tolerance,
                             "inconsistency in relative 1d shifts at curve tenor point " << j);
     }
+    ObservationMode::instance().setMode(backupMode);
+    IndexManager::instance().clearHistories();
 }
 
 void SensitivityAnalysisTest::test2dShifts() {
     BOOST_TEST_MESSAGE("Testing 2d shifts");
 
     SavedSettings backup;
+
+    ObservationMode::Mode backupMode = ObservationMode::instance().mode();
+    ObservationMode::instance().setMode(ObservationMode::Mode::None);
 
     Date today = Date(14, April, 2016);
     Settings::instance().evaluationDate() = today;
@@ -915,6 +947,8 @@ void SensitivityAnalysisTest::test2dShifts() {
                                                                                       << "): " << diffRelative[k][l]);
         }
     }
+    ObservationMode::instance().setMode(backupMode);
+    IndexManager::instance().clearHistories();
 }
 
 test_suite* SensitivityAnalysisTest::suite() {
@@ -928,10 +962,12 @@ test_suite* SensitivityAnalysisTest::suite() {
     */
     test_suite* suite = BOOST_TEST_SUITE("SensitivityAnalysisTest");
     // Set the Observation mode here
-    ObservationMode::instance().setMode(ObservationMode::Mode::None);
     suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::test1dShifts));
     suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::test2dShifts));
-    suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testPortfolioSensitivity));
+    suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testPortfolioSensitivityNoneObs));
+    suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testPortfolioSensitivityDisableObs));
+    suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testPortfolioSensitivityDeferObs));
+    suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testPortfolioSensitivityUnregisterObs));
     return suite;
 }
 }
