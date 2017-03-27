@@ -25,6 +25,7 @@ libTermStructures_la_SOURCES = \
 	spreadedoptionletvolatility.cpp \
 	spreadedsmilesection.cpp \
 	spreadedswaptionvolatility.cpp \
+    strippedoptionletadapter2.cpp \
 	swaptionvolatilityconverter.cpp
 
 this_includedir=${includedir}/${subdir}
@@ -55,6 +56,7 @@ this_include_HEADERS = \
 	spreadedoptionletvolatility.hpp \
 	spreadedsmilesection.hpp \
 	spreadedswaptionvolatility.hpp \
+    strippedoptionletadapter2.hpp \
 	swaptionvolatilityconverter.hpp
 
 all.hpp: Makefile.am

@@ -41,6 +41,7 @@
 #include <qle/termstructures/dynamicswaptionvolmatrix.hpp>
 #include <qle/termstructures/dynamicblackvoltermstructure.hpp>
 #include <qle/termstructures/swaptionvolatilityconverter.hpp>
+#include <qle/termstructures/strippedoptionletadapter2.hpp>
 
 #include <boost/timer.hpp>
 
@@ -405,8 +406,8 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
                 boost::shared_ptr<IborIndex>(), // FIXME: required for ATM vol calculation
                 optionDates, strikes, quotes, wrapper->dayCounter(), wrapper->volatilityType(),
                 wrapper->displacement());
-            boost::shared_ptr<StrippedOptionletAdapter> adapter =
-                boost::make_shared<StrippedOptionletAdapter>(optionlet);
+            boost::shared_ptr<StrippedOptionletAdapter2> adapter =
+                boost::make_shared<StrippedOptionletAdapter2>(optionlet);
             hCapletVol = Handle<OptionletVolatilityStructure>(adapter);
         } else {
             string decayModeString = parameters->capFloorVolDecayMode();

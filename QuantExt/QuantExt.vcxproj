@@ -598,6 +598,7 @@
     <ClInclude Include="qle\termstructures\spreadedsmilesection.hpp" />
     <ClInclude Include="qle\termstructures\spreadedswaptionvolatility.hpp" />
     <ClInclude Include="qle\termstructures\staticallycorrectedyieldtermstructure.hpp" />
+    <ClInclude Include="qle\termstructures\strippedoptionletadapter2.hpp" />
     <ClInclude Include="qle\termstructures\swaptionvolatilityconverter.hpp" />
     <ClInclude Include="qle\termstructures\tenorbasisswaphelper.hpp" />
   </ItemGroup>
@@ -666,6 +667,7 @@
     <ClCompile Include="qle\termstructures\spreadedoptionletvolatility.cpp" />
     <ClCompile Include="qle\termstructures\spreadedsmilesection.cpp" />
     <ClCompile Include="qle\termstructures\spreadedswaptionvolatility.cpp" />
+    <ClCompile Include="qle\termstructures\strippedoptionletadapter2.cpp" />
     <ClCompile Include="qle\termstructures\swaptionvolatilityconverter.cpp" />
     <ClCompile Include="qle\termstructures\tenorbasisswaphelper.cpp" />
   </ItemGroup>

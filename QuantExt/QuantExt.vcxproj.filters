@@ -346,6 +346,9 @@
     <ClInclude Include="qle\pricingengines\depositengine.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\strippedoptionletadapter2.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -581,6 +584,9 @@
     </ClCompile>
     <ClCompile Include="qle\pricingengines\depositengine.cpp">
       <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\strippedoptionletadapter2.cpp">
+      <Filter>termstructures</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
