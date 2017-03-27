@@ -14,7 +14,7 @@
     <Parameter name="marketConfigFile">../../Input/todaysmarket.xml</Parameter>
     <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
     <Parameter name="portfolioFile">portfolio.xml</Parameter>
-    <Parameter name="observationModel">Unregister</Parameter>
+    <Parameter name="observationModel">None</Parameter>
   </Setup>
   <Markets>
     <Parameter name="lgmcalibration">collateral_inccy</Parameter>
