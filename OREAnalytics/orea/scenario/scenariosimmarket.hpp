@@ -54,8 +54,8 @@ public:
     //! Get aggregation data
     const boost::shared_ptr<AggregationScenarioData>& aggregationScenarioData() const { return asd_; }
 
-    //! Update
-    virtual void update(const Date&);
+    //! Update market snapshot and relevant fixing history
+    virtual void update(const Date& asof, const Date& previous);
 
 private:
     boost::shared_ptr<ScenarioGenerator> scenarioGenerator_;

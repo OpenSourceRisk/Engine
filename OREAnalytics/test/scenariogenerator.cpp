@@ -479,10 +479,12 @@ void ScenarioGeneratorTest::testCrossAssetSimMarket() {
     Real updateTime = 0.0;
     BOOST_TEST_MESSAGE("running " << samples << " samples simulation over " << grid->dates().size() << " time steps");
     for (Size i = 0; i < samples; i++) {
+        Date prev = today;
         for (Date d : grid->dates()) {
-            timer.restart();
-            simMarket->update(d);
-            updateTime += timer.elapsed();
+	    timer.restart();
+            simMarket->update(d, prev);
+	    prev = d;
+	    updateTime += timer.elapsed();
             if (d == grid->dates().back()) {
                 Real numeraire = simMarket->numeraire();
                 Real usdeurFX = simMarket->fxSpot("USDEUR")->value();
@@ -621,9 +623,11 @@ void ScenarioGeneratorTest::testCrossAssetSimMarket2() {
     for (Size i = 0; i < samples; i++) {
         Sample<MultiPath> path = pathGen.next();
         Size idx = 0;
+	Date prev = today;
         for (Date date : grid->dates()) {
             timer.restart();
-            simMarket->update(date);
+            simMarket->update(date, prev);
+	    prev = date;
             updateTime += timer.elapsed();
             // compare a sample of the simulated data with a parallel direct run of the model
             // sim market
@@ -779,9 +783,11 @@ void ScenarioGeneratorTest::testVanillaSwapExposure() {
     BOOST_TEST_MESSAGE("running " << samples << " samples simulation over " << grid->dates().size() << " time steps");
     for (Size i = 0; i < samples; i++) {
         Size idx = 0;
+	Date prev = today;
         for (Date date : grid->dates()) {
             timer.restart();
-            simMarket->update(date);
+            simMarket->update(date, prev);
+	    prev = date;
             // do not include the first payments (to be comparable with a standard swaption)
             // i.e. set a settlement lag that kills this payment
             Date settlementDate = date + 10;
@@ -916,8 +922,10 @@ void ScenarioGeneratorTest::testFxForwardExposure() {
     Real updateTime = 0.0;
     BOOST_TEST_MESSAGE("running " << samples << " samples simulation over " << grid->dates().size() << " time steps");
     for (Size i = 0; i < samples; i++) {
+        Date prev = today;
         for (Date date : grid->dates()) {
-            simMarket->update(date);
+	    simMarket->update(date, prev);
+	    prev = date;
             // we do not use the valuation engine, so in case updates are disabled we need to
             // take care of the instrument update ourselves
             fxfwd->update();
@@ -1044,8 +1052,10 @@ void ScenarioGeneratorTest::testFxForwardExposureZeroIrVol() {
     BOOST_TEST_MESSAGE("running " << samples << " samples simulation over " << grid->dates().size() << " time steps");
     for (Size i = 0; i < samples; i++) {
         Size idx = 0;
+	Date prev = today;
         for (Date date : grid->dates()) {
-            simMarket->update(date);
+	    simMarket->update(date, prev);
+	    prev = date;
             // we do not use the valuation engine, so in case updates are disabled we need to
             // take care of the instrument update ourselves
             fxfwd->update();
