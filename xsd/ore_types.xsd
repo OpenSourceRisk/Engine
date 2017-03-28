@@ -326,6 +326,13 @@
        <xs:enumeration value="Yield"/>
      </xs:restriction>
    </xs:simpleType>
+   
+   <xs:simpleType name="equityType">
+     <xs:restriction base="xs:string">
+       <xs:enumeration value="ForwardPrice"/>
+       <xs:enumeration value="DividendYield"/>
+     </xs:restriction>
+   </xs:simpleType>
 
    <xs:simpleType name="dimensionType">
      <xs:restriction base="xs:string">

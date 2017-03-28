@@ -13,6 +13,8 @@ libOREDataMarketData_la_SOURCES = \
 	curvespec.cpp \
 	curvespecparser.cpp \
 	defaultcurve.cpp \
+	equitycurve.cpp \
+	equityvolcurve.cpp \
 	fixings.cpp \
 	fxspot.cpp \
 	fxtriangulation.cpp \
@@ -36,6 +38,8 @@ this_include_HEADERS = \
 	curvespec.hpp \
 	curvespecparser.hpp \
 	defaultcurve.hpp \
+	equitycurve.hpp \
+	equityvolcurve.hpp \
 	fixings.hpp \
 	fxspot.hpp \
 	fxtriangulation.hpp \

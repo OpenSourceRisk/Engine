@@ -17,6 +17,7 @@
 */
 
 #include <ored/marketdata/marketdatum.hpp>
+#include <ored/utilities/parsers.hpp>
 #include <boost/lexical_cast.hpp>
 
 using boost::lexical_cast;
@@ -24,6 +25,19 @@ using boost::bad_lexical_cast;
 
 namespace ore {
 namespace data {
+
+EquityOptionQuote::EquityOptionQuote(Real value, Date asofDate, const string& name, QuoteType quoteType,
+                                     string equityName, string ccy, string expiry, string strike)
+    : MarketDatum(value, asofDate, name, quoteType, InstrumentType::EQUITY_OPTION), eqName_(equityName), ccy_(ccy),
+      expiry_(expiry), strike_(strike) {
+
+    QL_REQUIRE(strike == "ATMF", "Invalid EquityOptionQuote strike (" << strike << ")");
+    // we will call a parser on the expiry string, to ensure it is a correctly-formatted date or tenor
+    Date tmpDate;
+    Period tmpPeriod;
+    bool tmpBool;
+    parseDateOrPeriod(expiry, tmpDate, tmpPeriod, tmpBool);
+}
 
 Natural MMFutureQuote::expiryYear() const {
     QL_REQUIRE(expiry_.length() == 7, "The expiry string must be of "

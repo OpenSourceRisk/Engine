@@ -132,11 +132,17 @@ QuantLib::Position::Type parsePositionType(const string& s);
 */
 QuantLib::Settlement::Type parseSettlementType(const string& s);
 
-//! Convert text to QuantLib::Settlement::Type
+//! Convert text to QuantLib::Exercise::Type
 /*!
 \ingroup utilities
 */
 QuantLib::Exercise::Type parseExerciseType(const string& s);
+
+//! Convert text to QuantLib::Option::Type
+/*!
+\ingroup utilities
+*/
+QuantLib::Option::Type parseOptionType(const string& s);
 
 //! Convert text to QuantLib::Period or QuantLib::Date
 /*!

@@ -5,6 +5,9 @@
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/configuration/conventions.hpp>
 #include <ored/configuration/defaultcurveconfig.hpp>
+#include <ored/configuration/equitycurveconfig.hpp>
+#include <ored/configuration/equityvolcurveconfig.hpp>
 #include <ored/configuration/fxvolcurveconfig.hpp>
 #include <ored/configuration/swaptionvolcurveconfig.hpp>
 #include <ored/configuration/yieldcurveconfig.hpp>
+
