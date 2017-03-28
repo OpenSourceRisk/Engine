@@ -55,12 +55,16 @@ public:
     const boost::shared_ptr<AggregationScenarioData>& aggregationScenarioData() const { return asd_; }
 
     //! Update market snapshot and relevant fixing history
-    virtual void update(const Date& asof, const Date& previous);
+    void update(const Date& d) override;
+
+    //! Return the fixing manager
+    const boost::shared_ptr<FixingManager>& fixingManager() const override { return fixingManager_; }
 
 private:
     boost::shared_ptr<ScenarioGenerator> scenarioGenerator_;
     boost::shared_ptr<ScenarioSimMarketParameters> parameters_;
     boost::shared_ptr<AggregationScenarioData> asd_;
+    boost::shared_ptr<FixingManager> fixingManager_;
 
     std::map<RiskFactorKey, boost::shared_ptr<SimpleQuote>> simData_;
 };

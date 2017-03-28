@@ -23,13 +23,9 @@
 #include <ored/portfolio/optionwrapper.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
-#include <ored/utilities/flowanalysis.hpp>
 #include <ored/utilities/progressbar.hpp>
-#include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
-#include <qle/cashflows/fxlinkedcashflow.hpp>
 
 #include <ql/errors.hpp>
-#include <ql/cashflows/iborcoupon.hpp>
 #include <boost/timer.hpp>
 
 using namespace QuantLib;
@@ -40,47 +36,6 @@ using namespace ore::data;
 namespace ore {
 namespace analytics {
   
-ValuationEngine::FixingsMap ValuationEngine::getFixingDates(const vector<FlowList>& flowList) {
-
-    std::map<std::string, std::vector<Date>> fixings;
-    // first pass: init date vectors
-    for (Size j = 0; j < flowList.size(); j++) {
-        FlowList flow = flowList[j];
-        QL_REQUIRE(flow.size() > 0, "flowList " << j << " is empty");
-        for (Size i = 1; i < flow.size(); i++) { // skip header
-            std::string indexName = flow[i][4];
-            if (indexName != "#N/A" && fixings.find(indexName) == fixings.end()) {
-                LOG("add index name for fixing history: " << indexName);
-                fixings[indexName] = vector<Date>();
-            }
-        }
-    }
-
-    // second pass: Add to date vectors
-    for (Size j = 0; j < flowList.size(); j++) {
-        FlowList flow = flowList[j];
-        QL_REQUIRE(flow.size() > 0, "flowList " << j << " is empty");
-        for (Size i = 1; i < flow.size(); i++) { // skip header
-            std::string indexName = flow[i][4];
-            if (indexName != "#N/A") {
-                Date fixingDate = ore::data::parseDate(flow[i][3]);
-                fixings[indexName].push_back(fixingDate);
-            }
-        }
-    }
-
-    // third pass: sort date vectors and remove duplicates
-    std::map<std::string, std::vector<Date>>::iterator it;
-    for (it = fixings.begin(); it != fixings.end(); ++it) {
-        std::sort(it->second.begin(), it->second.end());
-        // using default comparison:
-        vector<Date>::iterator it2 = std::unique(it->second.begin(), it->second.end());
-        it->second.resize(it2 - it->second.begin());
-    }
-
-    return fixings;
-}
-
 ValuationEngine::ValuationEngine(const Date& today, const boost::shared_ptr<DateGrid>& dg,
                                  const boost::shared_ptr<SimMarket>& simMarket)
     : today_(today), dg_(dg), simMarket_(simMarket) {
@@ -117,9 +72,6 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
     // Loop is Samples, Dates, Trades
     const auto& dates = dg_->dates();
     const auto& trades = portfolio->trades();
-    vector<FlowList> flowList;
-
-    set<boost::shared_ptr<Index>> setIndices; // for fixing
 
     LOG("Initialise state objects...");
     Size numFRC = 0;
@@ -134,14 +86,11 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
         for (auto calc : calculators)
             calc->calculateT0(trades[i], i, simMarket_, outputCube);
 
-        for (const Leg& leg : trades[i]->legs()) {
-            // fixings
-            flowList.push_back(data::flowAnalysis(leg));
-
-            for (Size n = 0; n < leg.size(); n++) {
-                boost::shared_ptr<FloatingRateCoupon> frc = boost::dynamic_pointer_cast<FloatingRateCoupon>(leg[n]);
-                if (frc) {
-                    if (om == ObservationMode::Mode::Unregister) {
+        if (om == ObservationMode::Mode::Unregister) {
+            for (const Leg& leg : trades[i]->legs()) {
+                for (Size n = 0; n < leg.size(); n++) {
+                    boost::shared_ptr<FloatingRateCoupon> frc = boost::dynamic_pointer_cast<FloatingRateCoupon>(leg[n]);
+                    if (frc) {
                         frc->unregisterWith(frc->index());
                         trades[i]->instrument()->qlInstrument()->unregisterWith(frc);
                         // Unregister with eval dates
@@ -149,21 +98,6 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
                         frc->index()->unregisterWith(Settings::instance().evaluationDate());
                         trades[i]->instrument()->qlInstrument()->unregisterWith(Settings::instance().evaluationDate());
                     }
-
-                    boost::shared_ptr<IborCoupon> ic = boost::dynamic_pointer_cast<IborCoupon>(frc);
-                    if (ic) {
-                        setIndices.insert(ic->iborIndex());
-                    }
-                    boost::shared_ptr<FloatingRateFXLinkedNotionalCoupon> fc =
-                        boost::dynamic_pointer_cast<FloatingRateFXLinkedNotionalCoupon>(frc);
-                    if (fc) {
-                        setIndices.insert(fc->index());
-                        setIndices.insert(fc->fxLinkedCashFlow().index());
-                    }
-                } else {
-                    boost::shared_ptr<FXLinkedCashFlow> flcf = boost::dynamic_pointer_cast<FXLinkedCashFlow>(leg[n]);
-                    if (flcf)
-                        setIndices.insert(flcf->index());
                 }
             }
         }
@@ -171,10 +105,7 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
     LOG("Total number of swaps = " << portfolio->size());
     LOG("Total number of FRC = " << numFRC);
 
-    vector<boost::shared_ptr<Index>> indices(setIndices.begin(), setIndices.end());
-    FixingsMap fixings = getFixingDates(flowList);
-
-    simMarket_->cacheFixings(fixings, indices);
+    simMarket_->fixingManager()->initialise(portfolio);
     
     boost::timer timer;
     boost::timer loopTimer;
@@ -190,10 +121,9 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
         // loop over Dates
         for (Size i = 0; i < dates.size(); ++i) {
             Date d = dates[i];
-            Date prev = i == 0 ? today_ : dates[i - 1];
 
             timer.restart();
-            simMarket_->update(d, prev);
+            simMarket_->update(d);
             updateTime += timer.elapsed();
 
             // loop over trades
@@ -201,9 +131,9 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
             for (Size j = 0; j < trades.size(); ++j) {
                 auto trade = trades[j];
 
-		// We can avoid checking mode here and always call updateQlInstruments()
-                //if (om == ObservationMode::Mode::Disable)
-		trade->instrument()->updateQlInstruments();
+                // We can avoid checking mode here and always call updateQlInstruments()
+                if (om == ObservationMode::Mode::Disable)
+                    trade->instrument()->updateQlInstruments();
 
                 for (auto calc : calculators)
                     calc->calculate(trade, j, simMarket_, outputCube, d, i, sample);
@@ -212,7 +142,7 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
         }
 
         timer.restart();
-        simMarket_->resetFixings();
+        simMarket_->fixingManager()->reset();
         fixingTime += timer.elapsed();
     }
 
