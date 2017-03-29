@@ -29,6 +29,21 @@
       <xs:element type="xs:string" name="Expiries"/>
     </xs:sequence>
   </xs:complexType>
+  
+  <xs:complexType name="equityVolatilities">
+    <xs:sequence>
+      <xs:element type="equityVolatility" name="EquityVolatility" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="equityVolatility">
+    <xs:sequence>
+      <xs:element type="xs:string" name="CurveId"/>
+      <xs:element type="xs:string" name="CurveDescription"/>
+      <xs:element type="dimensionType" name="Dimension"/>
+      <xs:element type="xs:string" name="Expiries"/>
+    </xs:sequence>
+  </xs:complexType>
 
 
   <xs:complexType name="swaptionVolatilities">
@@ -77,6 +92,25 @@
     </xs:sequence>
   </xs:complexType>
 
+  <xs:complexType name="equityCurves">
+    <xs:sequence>
+      <xs:element type="equityurve" name="EquityCurve" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="equityCurve">
+    <xs:sequence>
+      <xs:element type="xs:string" name="CurveId"/>
+      <xs:element type="xs:string" name="CurveDescription"/>
+      <xs:element type="currencyCode" name="Currency"/>
+      <xs:element type="equityType" name="Type"/>
+      <xs:element type="xs:string" name="SpotQuote"/>
+      <xs:element type="xs:string" name="InterestRateCurve"/>
+      <xs:element type="dayCounter" name="DayCounter" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="quoteType" name="Quotes"/>
+    </xs:sequence>
+  </xs:complexType>
+  
   <xs:complexType name="defaultCurves">
     <xs:sequence>
       <xs:element type="defaultCurve" name="DefaultCurve" minOccurs="0" maxOccurs="unbounded"/>

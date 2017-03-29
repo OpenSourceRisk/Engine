@@ -632,6 +632,8 @@
     <ClInclude Include="calendars.hpp" />
     <ClInclude Include="ccyswapwithresets.hpp" />
     <ClInclude Include="crossassetmodeldata.hpp" />
+    <ClInclude Include="equitymarketdata.hpp" />
+    <ClInclude Include="equitytrades.hpp" />
     <ClInclude Include="fxoption.hpp" />
     <ClInclude Include="fxswap.hpp" />
     <ClInclude Include="fxtriangulation.hpp" />
@@ -648,6 +650,8 @@
     <ClCompile Include="calendars.cpp" />
     <ClCompile Include="ccyswapwithresets.cpp" />
     <ClCompile Include="crossassetmodeldata.cpp" />
+    <ClCompile Include="equitymarketdata.cpp" />
+    <ClCompile Include="equitytrades.cpp" />
     <ClCompile Include="fxoption.cpp" />
     <ClCompile Include="fxswap.cpp" />
     <ClCompile Include="fxtriangulation.cpp" />
