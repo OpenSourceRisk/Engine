@@ -16,29 +16,42 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file orea/scenario/scenariofactory.hpp
-    \brief factory classes for scenarios
-    \ingroup scenario
+/*! \file App/ore.hpp
+    \brief Open Risk Engine setup and analytics choice
+    \ingroup
 */
 
 #pragma once
 
-#include <orea/scenario/scenario.hpp>
+#include <map>
+#include <vector>
+
+#include <ored/utilities/xmlutils.hpp>
+
+using namespace ore::data;
+using std::map;
+using std::string;
 
 namespace ore {
 namespace analytics {
 
-//! Scenario factory base class
-/*! \ingroup scenario
-*/
-class ScenarioFactory {
+class Parameters : public XMLSerializable {
 public:
-    //! Default destructor
-    virtual ~ScenarioFactory(){};
-    //! Build a scenario instance without filling it
-    virtual const boost::shared_ptr<Scenario> buildScenario(Date asof, const std::string& label = "",
-                                                            Real numeraire = 0.0) const = 0;
-};
+    Parameters() {}
 
-} // namespace scenario
-} // namespace ore
+    void clear();
+    void fromFile(const string&);
+    virtual void fromXML(XMLNode* node);
+    virtual XMLNode* toXML(XMLDocument& doc);
+
+    bool hasGroup(const string& groupName) const;
+    bool has(const string& groupName, const string& paramName) const;
+    string get(const string& groupName, const string& paramName) const;
+
+    void log();
+
+private:
+    map<string, map<string, string>> data_;
+};
+}
+}

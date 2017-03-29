@@ -39,6 +39,10 @@
     <ClInclude Include="orea\aggregation\collateralaccount.hpp" />
     <ClInclude Include="orea\aggregation\collatexposurehelper.hpp" />
     <ClInclude Include="orea\aggregation\postprocess.hpp" />
+    <ClInclude Include="orea\app\all.hpp" />
+    <ClInclude Include="orea\app\oreapp.hpp" />
+    <ClInclude Include="orea\app\parameters.hpp" />
+    <ClInclude Include="orea\app\reportwriter.hpp" />
     <ClInclude Include="orea\auto_link.hpp" />
     <ClInclude Include="orea\cube\all.hpp" />
     <ClInclude Include="orea\cube\cubewriter.hpp" />
@@ -49,7 +53,6 @@
     <ClInclude Include="orea\engine\valuationcalculator.hpp" />
     <ClInclude Include="orea\engine\valuationengine.hpp" />
     <ClInclude Include="orea\orea.hpp" />
-    <ClInclude Include="orea\scenario\additionalscenariodata.hpp" />
     <ClInclude Include="orea\scenario\aggregationscenariodata.hpp" />
     <ClInclude Include="orea\scenario\all.hpp" />
     <ClInclude Include="orea\scenario\crossassetmodelscenariogenerator.hpp" />
@@ -72,6 +75,9 @@
     <ClCompile Include="orea\aggregation\collateralaccount.cpp" />
     <ClCompile Include="orea\aggregation\collatexposurehelper.cpp" />
     <ClCompile Include="orea\aggregation\postprocess.cpp" />
+    <ClCompile Include="orea\app\oreapp.cpp" />
+    <ClCompile Include="orea\app\parameters.cpp" />
+    <ClCompile Include="orea\app\reportwriter.cpp" />
     <ClCompile Include="orea\cube\cubewriter.cpp" />
     <ClCompile Include="orea\engine\valuationcalculator.cpp" />
     <ClCompile Include="orea\engine\valuationengine.cpp" />
