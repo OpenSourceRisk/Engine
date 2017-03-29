@@ -1201,7 +1201,8 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
                 BOOST_ERROR("Unrecognised sensitivity factor - " << sensiId);
             }
         }
-        // PUT HERE THE COMPARISONS OF SENSIS PER TRADE
+        // HERE COME THE ACTUAL SENSI COMPARISONS
+        // index and yc sensis not expected
         BOOST_CHECK_EQUAL(res.forIndexDelta, 0.0);
         BOOST_CHECK_EQUAL(res.domIndexDelta, 0.0);
         BOOST_CHECK_EQUAL(res.forYcDelta, 0.0);
@@ -1220,6 +1221,9 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
         Real pc = 0.01;
         Real unit = 1.0;
         Real tol = 0.5; // % relative tolerance
+        // rate sensis are 1bp absolute shifts
+        // fx vol sensis are 1bp relative shifts
+        // fx spot sensis are 1pb relative shifts
         BOOST_CHECK_CLOSE(res.domDiscountDelta, qlInfo.rho*qlInfo.fx*bp, tol);
         BOOST_CHECK_CLOSE(res.forDiscountDelta, qlInfo.divRho*qlInfo.fx*bp, tol);
         Real fxVol = initMarket->fxVol(qlInfo.forCcy + qlInfo.domCcy)->blackVol(1.0,1.0,true); // TO-DO more appropriate vol extraction
@@ -1233,6 +1237,7 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
             BOOST_CHECK_CLOSE(res.fxSpotGammaFor, qlInfo.gamma*qlInfo.fx*(pow(-bp*qlInfo.trnFx,2)), tol);
         }
     }
+    //TODO - turn off the report writing
     sa->writeSensitivityReport("./unitTest_fxOption_sensi.csv");
     sa->writeScenarioReport("./unitTest_fxOption_scenario.csv");
     ObservationMode::instance().setMode(backupMode);
