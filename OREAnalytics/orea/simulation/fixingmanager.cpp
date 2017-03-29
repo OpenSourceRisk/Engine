@@ -44,7 +44,7 @@ void FixingManager::initialise(const boost::shared_ptr<Portfolio>& portfolio) {
         }
     }
     // convert to a vector
-    indices_ = vector<boost::shared_ptr<Index>> (setIndices.begin(), setIndices.end());
+    indices_ = vector<boost::shared_ptr<Index>>(setIndices.begin(), setIndices.end());
 
     // first pass: init date vectors
     for (Size j = 0; j < flowList.size(); j++) {
@@ -93,7 +93,8 @@ void FixingManager::initialise(const boost::shared_ptr<Portfolio>& portfolio) {
 void FixingManager::update(Date d) {
     if (!fixingMap_.empty()) {
         QL_REQUIRE(d > fixingsEnd_, "Can't go back in time, fixings must be reset."
-        " Update date " << d << " but current fixings go to " << fixingsEnd_);
+                                    " Update date "
+                                        << d << " but current fixings go to " << fixingsEnd_);
         applyFixings(fixingsEnd_, d);
     }
     fixingsEnd_ = d;
@@ -140,7 +141,5 @@ void FixingManager::applyFixings(Date start, Date end) {
         }
     }
 }
-
-
 }
 }

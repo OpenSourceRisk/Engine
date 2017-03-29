@@ -62,16 +62,15 @@ void CubeWriter::write(const boost::shared_ptr<NPVCube>& cube, const std::map<st
             nettingSetIds[i] = "";
 
         fprintf(fp, fmt, ids[i].c_str(), nettingSetIds[i], static_cast<Size>(0), asofString.c_str(),
-            static_cast<Size>(0), static_cast<Size>(0), cube->getT0(i));
+                static_cast<Size>(0), static_cast<Size>(0), cube->getT0(i));
     }
     // Cube
     for (Size i = 0; i < ids.size(); i++) {
         for (Size j = 0; j < cube->numDates(); j++) {
             for (Size k = 0; k < cube->samples(); k++) {
                 for (Size l = 0; l < cube->depth(); l++) {
-                    fprintf(fp, fmt, ids[i].c_str(), nettingSetIds[i],
-                        j + 1, dateStrings[j].c_str(), k + 1, l,
-                        cube->get(i, j, k, l));
+                    fprintf(fp, fmt, ids[i].c_str(), nettingSetIds[i], j + 1, dateStrings[j].c_str(), k + 1, l,
+                            cube->get(i, j, k, l));
                 }
             }
         }
