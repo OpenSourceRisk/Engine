@@ -223,7 +223,7 @@ private:
   Zero rates are hardly quoted in the market, but derived from quoted
   yields such as deposits, swaps, as well as futures prices.
   This data type is included here nevertheless
-  to enable consistency checks between Wrap and reference systems.
+  to enable consistency checks between ORE and reference systems.
 
   \ingroup marketdata
 */
