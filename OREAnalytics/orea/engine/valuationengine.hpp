@@ -71,12 +71,7 @@ public:
         //! Calculators to use
         std::vector<boost::shared_ptr<ValuationCalculator>> calculators);
 
-    using FixingsMap = std::map<std::string, std::vector<QuantLib::Date>>;
-
 private:
-    typedef std::vector<std::vector<std::string>> FlowList;
-    static FixingsMap getFixingDates(const std::vector<FlowList>& flowList);
-
     QuantLib::Date today_;
     boost::shared_ptr<analytics::DateGrid> dg_;
     boost::shared_ptr<analytics::SimMarket> simMarket_;

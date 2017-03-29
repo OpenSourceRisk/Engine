@@ -35,6 +35,8 @@ static CurveSpec::CurveType parseCurveSpecType(const string& s) {
                                                   {"FX", CurveSpec::CurveType::FX},
                                                   {"FXVolatility", CurveSpec::CurveType::FXVolatility},
                                                   {"Default", CurveSpec::CurveType::Default},
+                                                  {"Equity", CurveSpec::CurveType::Equity},
+                                                  {"EquityVolatility", CurveSpec::CurveType::EquityVolatility},
                                                   {"SecuritySpread", CurveSpec::CurveType::SecuritySpread}};
 
     auto it = b.find(s);
@@ -119,6 +121,26 @@ boost::shared_ptr<CurveSpec> parseCurveSpec(const string& s) {
         return boost::make_shared<CapFloorVolatilityCurveSpec>(ccy, curveConfigID);
     }
 
+    case CurveSpec::CurveType::Equity: {
+        // Equity/USD/CurveConfigID
+        QL_REQUIRE(tokens.size() == 3, "Unexpected number"
+                                       " of tokens in default curve spec "
+                                           << s);
+        const string& ccy = tokens[1];
+        const string& curveConfigID = tokens[2];
+        return boost::make_shared<EquityCurveSpec>(ccy, curveConfigID);
+    }
+
+    case CurveSpec::CurveType::EquityVolatility: {
+        // EquityVolatility/USD/CurveConfigID
+        QL_REQUIRE(tokens.size() == 3, "Unexpected number"
+                                       " of tokens in default curve spec "
+                                           << s);
+        const string& ccy = tokens[1];
+        const string& curveConfigID = tokens[2];
+        return boost::make_shared<EquityVolatilityCurveSpec>(ccy, curveConfigID);
+    }
+
     case CurveSpec::CurveType::SecuritySpread: {
         // SecuritySpread/ISIN
         QL_REQUIRE(tokens.size() == 2, "Unexpected number"
@@ -127,7 +149,6 @@ boost::shared_ptr<CurveSpec> parseCurveSpec(const string& s) {
         const string& securityID = tokens[1];
         return boost::make_shared<SecuritySpreadSpec>(securityID);
     }
-
         // TODO: the rest...
     }
 
