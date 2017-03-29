@@ -87,7 +87,7 @@ SensitivityAnalysis::SensitivityAnalysis(const boost::shared_ptr<ore::data::Port
 
     boost::shared_ptr<DateGrid> dg = boost::make_shared<DateGrid>("1,0W"); //TODO - extend the DateGrid interface so that it can actually take a vector of dates as input
     vector<boost::shared_ptr<ValuationCalculator> > calculators;
-    calculators.push_back(boost::make_shared<NPVCalculator>(simMarketData_->baseCcy()));
+    calculators.push_back(boost::make_shared<NPVCalculatorFXT0>(simMarketData_->baseCcy(),market_));
     ValuationEngine engine(asof_, dg, simMarket_);
     LOG("Run Sensitivity Scenarios");
     /*ostringstream o;
