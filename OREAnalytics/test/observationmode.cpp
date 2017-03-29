@@ -113,7 +113,7 @@ boost::shared_ptr<Portfolio> buildPortfolio(boost::shared_ptr<EngineFactory>& fa
 
     // float Leg
     vector<double> spreads(1, 0);
-    FloatingLegData floatingLegData(index, days, true, spread);
+    FloatingLegData floatingLegData(index, days, false, spread);
     LegData floatingLeg(!isPayer, ccy, floatingLegData, floatSchedule, floatDC, notional);
 
     boost::shared_ptr<Trade> swap(new data::Swap(env, floatingLeg, fixedLeg));

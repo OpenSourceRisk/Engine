@@ -73,6 +73,9 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
     asof_ = initMarket->asofDate();
     LOG("AsOf " << QuantLib::io::iso_date(asof_));
 
+    // Build fixing manager
+    fixingManager_ = boost::make_shared<FixingManager> (asof_);
+
     // constructing fxSpots_
     LOG("building FX triangulation..");
     for (const auto& ccy : parameters->ccys()) {
@@ -376,6 +379,12 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
 void ScenarioSimMarket::update(const Date& d) {
     // DLOG("ScenarioSimMarket::update called with Date " << QuantLib::io::iso_date(d));
 
+    ObservationMode::Mode om = ObservationMode::instance().mode();
+    if (om == ObservationMode::Mode::Disable)
+        ObservableSettings::instance().disableUpdates(false);
+    else if (om == ObservationMode::Mode::Defer)
+        ObservableSettings::instance().disableUpdates(true);
+
     boost::shared_ptr<Scenario> scenario = scenarioGenerator_->next(d);
 
     numeraire_ = scenario->getNumeraire();
@@ -401,6 +410,17 @@ void ScenarioSimMarket::update(const Date& d) {
         }
         QL_FAIL("mismatch between scenario and sim data size, exit.");
     }
+
+    // Observation Mode - key to update these before fixings are set
+    if (om == ObservationMode::Mode::Disable) {
+        refresh();
+        ObservableSettings::instance().enableUpdates();
+    } else if (om == ObservationMode::Mode::Defer) {
+        ObservableSettings::instance().enableUpdates();
+    }
+
+    // Apply fixings as historical fixings. Must do this before we populate ASD 
+    fixingManager_->update(d);
 
     if (asd_) {
         // add additional scenario data to the given container, if required
