@@ -1042,7 +1042,7 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
 
     boost::shared_ptr<SensitivityAnalysis> sa = 
         boost::make_shared<SensitivityAnalysis>(
-            portfolio, simMarket, Market::defaultConfiguration, data, simMarketData, sensiData, conventions);
+            portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, conventions);
     map<pair<string, string>, Real> deltaMap = sa->delta();
     map<pair<string, string>, Real> gammaMap = sa->gamma();
     map<std::string, Real> baseNpvMap = sa->baseNPV();
@@ -1082,6 +1082,7 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
             string sensiTrnId = it2.first.first;
             if (sensiTrnId != id)
                 continue;
+            res.id = sensiTrnId;
             res.baseNpv = baseNpvMap[sensiTrnId];
             string sensiId = it2.first.second;
             Real sensiVal = it2.second;
@@ -1179,6 +1180,8 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
             ", delta=" << qlInfo.delta << ", gamma=" << qlInfo.gamma << ", vega=" << qlInfo.vega << 
             ", rho=" << qlInfo.rho << ", divRho=" << qlInfo.divRho);
     }
+    sa->writeSensitivityReport("./unitTest_fxOption_sensi.csv");
+    sa->writeScenarioReport("./unitTest_fxOption_scenario.csv");
     ObservationMode::instance().setMode(backupMode);
     IndexManager::instance().clearHistories();
 }
