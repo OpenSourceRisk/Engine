@@ -14,7 +14,9 @@ OREDATA_TESTS = \
 	todaysmarket.hpp todaysmarket.cpp \
 	fxswap.hpp fxswap.cpp \
 	yieldcurve.hpp yieldcurve.cpp \
-	crossassetmodeldata.hpp crossassetmodeldata.cpp
+	crossassetmodeldata.hpp crossassetmodeldata.cpp \
+	equitymarketdata.hpp equitymarketdata.cpp \
+	equitytrades.hpp equitytrades.cpp
 
 dist-hook:
 	mkdir -p $(distdir)/build

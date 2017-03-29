@@ -79,6 +79,10 @@ public:
         SWAPTION,
         CAPFLOOR,
         FX_OPTION,
+        EQUITY_SPOT,
+        EQUITY_FWD,
+        EQUITY_DIVIDEND,
+        EQUITY_OPTION,
         BOND
     };
 
@@ -219,7 +223,7 @@ private:
   Zero rates are hardly quoted in the market, but derived from quoted
   yields such as deposits, swaps, as well as futures prices.
   This data type is included here nevertheless
-  to enable consistency checks between Wrap and reference systems.
+  to enable consistency checks between ORE and reference systems.
 
   \ingroup marketdata
 */
@@ -700,6 +704,130 @@ private:
     string ccy_;
     Period expiry_;
     string strike_; // TODO: either: ATM, 25RR, 25BF. Should be an enum?
+};
+
+//! Equity/Index spot price data class
+/*!
+This class holds single market points of type
+- EQUITY_SPOT
+Specific data comprise
+- Equity/Index name
+- currency
+
+\ingroup marketdata
+*/
+class EquitySpotQuote : public MarketDatum {
+public:
+    //! Constructor
+    EquitySpotQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string equityName, string ccy)
+        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::EQUITY_SPOT), eqName_(equityName), ccy_(ccy) {}
+
+    //! \name Inspectors
+    //@{
+    const string& eqName() const { return eqName_; }
+    const string& ccy() const { return ccy_; }
+    //@}
+private:
+    string eqName_;
+    string ccy_;
+};
+
+//! Equity forward data class
+/*!
+This class holds single market points of type
+- EQUITY_FWD
+Specific data comprise
+- Equity/Index name
+- currency
+- expiry date
+
+The quote is expected as a forward price
+
+\ingroup marketdata
+*/
+class EquityForwardQuote : public MarketDatum {
+public:
+    //! Constructor
+    EquityForwardQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string equityName,
+                       string ccy, const Date& expiryDate)
+        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::EQUITY_FWD), eqName_(equityName), ccy_(ccy),
+          expiry_(expiryDate) {}
+
+    //! \name Inspectors
+    //@{
+    const string& eqName() const { return eqName_; }
+    const string& ccy() const { return ccy_; }
+    const Date& expiryDate() const { return expiry_; }
+    //@}
+private:
+    string eqName_;
+    string ccy_;
+    Date expiry_;
+};
+
+//! Equity/Index Dividend yield data class
+/*!
+This class holds single market points of type
+- EQUITY_DIVIDEND
+Specific data comprise
+- Equity/Index name
+- currency
+- yield tenor date
+
+The quote is expected as a forward price
+
+\ingroup marketdata
+*/
+class EquityDividendYieldQuote : public MarketDatum {
+public:
+    //! Constructor
+    EquityDividendYieldQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string equityName,
+                             string ccy, const Date& tenorDate)
+        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::EQUITY_DIVIDEND), eqName_(equityName),
+          ccy_(ccy), tenor_(tenorDate) {}
+
+    //! \name Inspectors
+    //@{
+    const string& eqName() const { return eqName_; }
+    const string& ccy() const { return ccy_; }
+    const Date& tenorDate() const { return tenor_; }
+    //@}
+private:
+    string eqName_;
+    string ccy_;
+    Date tenor_;
+};
+
+//! Equity/Index Option data class
+/*!
+This class holds single market points of type
+- EQUITY_OPTION
+Specific data comprise
+- Equity/Index name
+- currency
+- expiry
+- "strike" {ATMF} (in future we should support explicit strikes here)
+
+\ingroup marketdata
+*/
+class EquityOptionQuote : public MarketDatum {
+public:
+    //! Constructor
+    EquityOptionQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string equityName, string ccy,
+                      string expiry, string strike);
+
+    //! \name Inspectors
+    //@{
+    const string& eqName() const { return eqName_; }
+    const string& ccy() const { return ccy_; }
+    const string& expiry() const { return expiry_; }
+    const string& strike() const { return strike_; }
+    //@}
+private:
+    string eqName_;
+    string ccy_;
+    string expiry_;
+    string strike_; // ATMF only supported
 };
 
 //! Bond spread data class

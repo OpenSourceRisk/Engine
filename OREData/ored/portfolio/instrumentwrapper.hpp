@@ -79,7 +79,7 @@ protected:
 
 //! Vanilla Instrument Wrapper
 /*!
-  Derived from Wrap::InstrumentWrapper
+  Derived from InstrumentWrapper
   Used for any non path-dependent trades
 
   \ingroup tradedata

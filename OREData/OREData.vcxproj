@@ -41,6 +41,8 @@
     <ClInclude Include="ored\configuration\conventions.hpp" />
     <ClInclude Include="ored\configuration\curveconfigurations.hpp" />
     <ClInclude Include="ored\configuration\defaultcurveconfig.hpp" />
+    <ClInclude Include="ored\configuration\equitycurveconfig.hpp" />
+    <ClInclude Include="ored\configuration\equityvolcurveconfig.hpp" />
     <ClInclude Include="ored\configuration\fxvolcurveconfig.hpp" />
     <ClInclude Include="ored\configuration\swaptionvolcurveconfig.hpp" />
     <ClInclude Include="ored\configuration\yieldcurveconfig.hpp" />
@@ -51,6 +53,8 @@
     <ClInclude Include="ored\marketdata\curvespec.hpp" />
     <ClInclude Include="ored\marketdata\curvespecparser.hpp" />
     <ClInclude Include="ored\marketdata\defaultcurve.hpp" />
+    <ClInclude Include="ored\marketdata\equitycurve.hpp" />
+    <ClInclude Include="ored\marketdata\equityvolcurve.hpp" />
     <ClInclude Include="ored\marketdata\fixings.hpp" />
     <ClInclude Include="ored\marketdata\fxspot.hpp" />
     <ClInclude Include="ored\marketdata\fxtriangulation.hpp" />
@@ -81,6 +85,8 @@
     <ClInclude Include="ored\portfolio\builders\cachingenginebuilder.hpp" />
     <ClInclude Include="ored\portfolio\builders\capfloor.hpp" />
     <ClInclude Include="ored\portfolio\builders\capfloorediborleg.hpp" />
+    <ClInclude Include="ored\portfolio\builders\equityforward.hpp" />
+    <ClInclude Include="ored\portfolio\builders\equityoption.hpp" />
     <ClInclude Include="ored\portfolio\builders\fxforward.hpp" />
     <ClInclude Include="ored\portfolio\builders\fxoption.hpp" />
     <ClInclude Include="ored\portfolio\builders\swap.hpp" />
@@ -89,6 +95,8 @@
     <ClInclude Include="ored\portfolio\enginedata.hpp" />
     <ClInclude Include="ored\portfolio\enginefactory.hpp" />
     <ClInclude Include="ored\portfolio\envelope.hpp" />
+    <ClInclude Include="ored\portfolio\equityforward.hpp" />
+    <ClInclude Include="ored\portfolio\equityoption.hpp" />
     <ClInclude Include="ored\portfolio\fxforward.hpp" />
     <ClInclude Include="ored\portfolio\fxoption.hpp" />
     <ClInclude Include="ored\portfolio\fxswap.hpp" />
@@ -130,6 +138,8 @@
     <ClCompile Include="ored\configuration\conventions.cpp" />
     <ClCompile Include="ored\configuration\curveconfigurations.cpp" />
     <ClCompile Include="ored\configuration\defaultcurveconfig.cpp" />
+    <ClCompile Include="ored\configuration\equitycurveconfig.cpp" />
+    <ClCompile Include="ored\configuration\equityvolcurveconfig.cpp" />
     <ClCompile Include="ored\configuration\fxvolcurveconfig.cpp" />
     <ClCompile Include="ored\configuration\swaptionvolcurveconfig.cpp" />
     <ClCompile Include="ored\configuration\yieldcurveconfig.cpp" />
@@ -139,6 +149,8 @@
     <ClCompile Include="ored\marketdata\curvespec.cpp" />
     <ClCompile Include="ored\marketdata\curvespecparser.cpp" />
     <ClCompile Include="ored\marketdata\defaultcurve.cpp" />
+    <ClCompile Include="ored\marketdata\equitycurve.cpp" />
+    <ClCompile Include="ored\marketdata\equityvolcurve.cpp" />
     <ClCompile Include="ored\marketdata\fixings.cpp" />
     <ClCompile Include="ored\marketdata\fxspot.cpp" />
     <ClCompile Include="ored\marketdata\fxtriangulation.cpp" />
@@ -167,6 +179,8 @@
     <ClCompile Include="ored\portfolio\enginedata.cpp" />
     <ClCompile Include="ored\portfolio\enginefactory.cpp" />
     <ClCompile Include="ored\portfolio\envelope.cpp" />
+    <ClCompile Include="ored\portfolio\equityforward.cpp" />
+    <ClCompile Include="ored\portfolio\equityoption.cpp" />
     <ClCompile Include="ored\portfolio\fxforward.cpp" />
     <ClCompile Include="ored\portfolio\fxoption.cpp" />
     <ClCompile Include="ored\portfolio\fxswap.cpp" />
