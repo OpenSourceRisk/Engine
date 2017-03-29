@@ -142,7 +142,7 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData5() 
     simMarketData->fxVolExpiries() = { 1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years };
     simMarketData->fxVolDecayMode() = "ConstantVariance";
     simMarketData->simulateFXVols() = true; // false;
-    simMarketData->fxVolCcyPairs() = { "EURUSD", "EURGBP", "EURCHF", "EURJPY" };
+    simMarketData->fxVolCcyPairs() = { "EURUSD", "EURGBP", "EURCHF", "EURJPY", "GBPCHF" };
 
     simMarketData->fxCcyPairs() = { "EURUSD", "EURGBP", "EURCHF", "EURJPY" };
 
@@ -320,11 +320,12 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5() {
     sensiData->fxShiftData()["EURJPY"] = fxsData;
     sensiData->fxShiftData()["EURCHF"] = fxsData;
 
-    sensiData->fxVolCcyPairs() = { "EURUSD", "EURGBP", "EURCHF", "EURJPY" };
+    sensiData->fxVolCcyPairs() = { "EURUSD", "EURGBP", "EURCHF", "EURJPY", "GBPCHF" };
     sensiData->fxVolShiftData()["EURUSD"] = fxvsData;
     sensiData->fxVolShiftData()["EURGBP"] = fxvsData;
     sensiData->fxVolShiftData()["EURJPY"] = fxvsData;
     sensiData->fxVolShiftData()["EURCHF"] = fxvsData;
+    sensiData->fxVolShiftData()["GBPCHF"] = fxvsData;
 
     sensiData->swaptionVolCurrencies() = { "EUR", "USD", "GBP", "CHF", "JPY" };
     sensiData->swaptionVolShiftData()["EUR"] = swvsData;
@@ -973,7 +974,14 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
     // sensitivity config
     boost::shared_ptr<SensitivityScenarioData> sensiData = setupSensitivityScenarioData5();
     sensiData->parConversion() = false;
-
+    map<string, SensitivityScenarioData::FxVolShiftData>& fxvs = sensiData->fxVolShiftData();
+    for (auto& it : fxvs) {
+        it.second.shiftSize = 0.0001; // want a smaller shift size than 1.0 to test the analytic sensitivities
+    }
+    map<string, SensitivityScenarioData::FxShiftData>& fxs = sensiData->fxShiftData();
+    for (auto& it : fxs) {
+        it.second.shiftSize = 0.0001; // want a smaller shift size to test the analytic sensitivities
+    }
     // build scenario generator
     boost::shared_ptr<ScenarioFactory> scenarioFactory(new SimpleScenarioFactory);
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(
@@ -993,11 +1001,21 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
     factory->registerBuilder(boost::make_shared<FxOptionEngineBuilder>());
 
     boost::shared_ptr<Portfolio> portfolio(new Portfolio());
-    portfolio->add(buildFxOption("Call_1", "Long", "Call", 1, "USD", 100.0, "EUR", 100.0));
-    portfolio->add(buildFxOption("Put_1", "Long", "Put", 1, "USD", 100.0, "EUR", 100.0));
-    portfolio->add(buildFxOption("Call_2", "Short", "Call", 2, "GBP", 100.0, "CHF", 130.0));
-    portfolio->add(buildFxOption("Put_2", "Short", "Put", 2, "GBP", 100.0, "CHF", 130.0));
+    Size trnCount = 0;
+    portfolio->add(buildFxOption("Call_1", "Long", "Call", 1, "USD", 100000000.0, "EUR", 100000000.0));
+    trnCount++;
+    portfolio->add(buildFxOption("Put_1", "Long", "Put", 1, "USD", 100000000.0, "EUR", 100000000.0));
+    trnCount++;
+    portfolio->add(buildFxOption("Call_2", "Short", "Call", 2, "GBP", 100000000.0, "CHF", 130000000.0));
+    trnCount++;
+    portfolio->add(buildFxOption("Put_2", "Short", "Put", 2, "GBP", 100000000.0, "CHF", 130000000.0));
+    trnCount++;
+    portfolio->add(buildFxOption("Call_3", "Long", "Call", 1, "EUR", 100000000.0, "USD", 100000000.0));
+    trnCount++;
+    portfolio->add(buildFxOption("Put_3", "Short", "Put", 1, "EUR", 100000000.0, "USD", 100000000.0));
+    trnCount++;
     portfolio->build(factory);
+    BOOST_CHECK_EQUAL(portfolio->size(), trnCount);
 
     struct AnalyticInfo {
         string id;
@@ -1005,6 +1023,7 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
         string forCcy;
         string domCcy;
         Real fx;
+        Real trnFx;
         Real baseNpv;
         Real qlNpv;
         Real delta;
@@ -1025,17 +1044,19 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
         info.domCcy = fxoTrn->soldCurrency();
         BOOST_CHECK_EQUAL(info.npvCcy, info.domCcy);
         string pair = info.npvCcy + simMarketData->baseCcy();
-        info.fx = simMarket->fxSpot(pair)->value();
-        info.baseNpv = trn->instrument()->NPV();
+        info.fx = initMarket->fxSpot(pair)->value();
+        string trnPair = info.forCcy + info.domCcy;
+        info.trnFx = initMarket->fxSpot(trnPair)->value();
+        info.baseNpv = trn->instrument()->NPV() * info.fx;
         boost::shared_ptr<QuantLib::VanillaOption> qlOpt =
             boost::dynamic_pointer_cast<QuantLib::VanillaOption>(trn->instrument()->qlInstrument());
         BOOST_CHECK(qlOpt);
         info.qlNpv = qlOpt->NPV() * fxoTrn->boughtAmount();
-        info.delta = qlOpt->delta();
-        info.gamma = qlOpt->gamma();
-        info.vega = qlOpt->vega();
-        info.rho = qlOpt->rho();
-        info.divRho = qlOpt->dividendRho();
+        info.delta = qlOpt->delta() * fxoTrn->boughtAmount();
+        info.gamma = qlOpt->gamma() * fxoTrn->boughtAmount();
+        info.vega = qlOpt->vega() * fxoTrn->boughtAmount();
+        info.rho = qlOpt->rho() * fxoTrn->boughtAmount();
+        info.divRho = qlOpt->dividendRho() * fxoTrn->boughtAmount();
         BOOST_CHECK_CLOSE(info.fx, info.baseNpv / info.qlNpv, 0.01);
         qlInfoMap[info.id] = info;
     }
@@ -1062,6 +1083,10 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
         Real fxVolDelta;
         Real fxSpotGammaFor;
         Real fxSpotGammaDom;
+        Real fxRateSensiFor;
+        Real fxRateSensiDom;
+        bool hasFxSpotDomSensi;
+        bool hasFxSpotForSensi;
     };
 
     Real epsilon = 1.e-15; // a small number
@@ -1076,7 +1101,7 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
         string id = it.first;
         BOOST_CHECK(sensiTrades.find(id) != sensiTrades.end());
         AnalyticInfo qlInfo = it.second;
-        SensiResults res = { string(""), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+        SensiResults res = { string(""), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, false, false };
         for (auto it2 : deltaMap) {
             pair<string,string> sensiKey = it2.first;
             string sensiTrnId = it2.first.first;
@@ -1131,21 +1156,33 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
                 BOOST_CHECK_EQUAL(pair.length(), 6);
                 string sensiForCcy = pair.substr(0, 3);
                 string sensiDomCcy = pair.substr(3, 3);
+                Real fxSensi = initMarket->fxSpot(pair)->value();
                 bool isSensiForBase = (sensiForCcy == simMarketData->baseCcy());
                 bool isSensiDomBase = (sensiDomCcy == simMarketData->baseCcy());
-                BOOST_CHECK(isSensiForBase || isSensiDomBase);
-                if (isSensiForBase)
-                    res.fxSpotDeltaFor += sensiVal;
-                else if (isSensiDomBase)
-                    res.fxSpotDeltaDom += sensiVal;
+                // TO-DO this could be relaxed to handle case where market stores the currency pairs the other way around
+                BOOST_CHECK(isSensiForBase && !isSensiDomBase); 
                 bool hasGamma = (gammaMap.find(sensiKey) != gammaMap.end());
                 BOOST_CHECK(hasGamma);
+                Real gammaVal = 0.0;
                 if (hasGamma) {
-                    Real gammaVal = gammaMap[sensiKey];
-                    if (isSensiForBase)
+                    gammaVal = gammaMap[sensiKey];
+                }
+                if (isSensiForBase) {
+                    if (sensiDomCcy == qlInfo.forCcy) {
+                        res.fxSpotDeltaFor += sensiVal;
+                        res.fxRateSensiFor = fxSensi;
+                        res.hasFxSpotForSensi = true;
                         res.fxSpotGammaFor += gammaVal;
-                    else if (isSensiDomBase)
+                    }
+                    else if (sensiDomCcy == qlInfo.domCcy) {
+                        res.fxSpotDeltaDom += sensiVal;
+                        res.fxRateSensiDom = fxSensi;
+                        res.hasFxSpotDomSensi = true;
                         res.fxSpotGammaDom += gammaVal;
+                    }
+                }
+                else {
+                    BOOST_ERROR("This ccy pair configuration not supported yet by this test");
                 }
                 continue;
             }
@@ -1172,13 +1209,29 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
         BOOST_TEST_MESSAGE(
             "SA: id=" << res.id << ", npv=" << res.baseNpv << ", forDiscountDelta=" << res.forDiscountDelta << 
             ", domDiscountDelta=" << res.domDiscountDelta << ", fxSpotDeltaFor=" << res.fxSpotDeltaFor << 
-            ", fxSpotDeltaDom=" << res.fxSpotDeltaDom << ", fxVolDela=" << res.fxVolDelta << 
+            ", fxSpotDeltaDom=" << res.fxSpotDeltaDom << ", fxVolDelta=" << res.fxVolDelta << 
             ", fxSpotGammaFor=" << res.fxSpotGammaFor << ", fxSpotGammaDom=" << res.fxSpotGammaDom);
         BOOST_TEST_MESSAGE(
             "QL: id=" << qlInfo.id << ", forCcy=" << qlInfo.forCcy << ", domCcy=" << qlInfo.domCcy << 
             ", fx=" << qlInfo.fx << ", npv=" << qlInfo.baseNpv << ", ccyNpv=" << qlInfo.qlNpv << 
             ", delta=" << qlInfo.delta << ", gamma=" << qlInfo.gamma << ", vega=" << qlInfo.vega << 
             ", rho=" << qlInfo.rho << ", divRho=" << qlInfo.divRho);
+        Real bp = 1.e-4;
+        Real pc = 0.01;
+        Real unit = 1.0;
+        Real tol = 0.5; // % relative tolerance
+        BOOST_CHECK_CLOSE(res.domDiscountDelta, qlInfo.rho*qlInfo.fx*bp, tol);
+        BOOST_CHECK_CLOSE(res.forDiscountDelta, qlInfo.divRho*qlInfo.fx*bp, tol);
+        Real fxVol = initMarket->fxVol(qlInfo.forCcy + qlInfo.domCcy)->blackVol(1.0,1.0,true); // TO-DO more appropriate vol extraction
+        BOOST_CHECK_CLOSE(res.fxVolDelta, qlInfo.vega*qlInfo.fx*(bp*fxVol), tol);
+        if (res.hasFxSpotDomSensi) {
+            BOOST_CHECK_CLOSE(res.fxSpotDeltaDom, qlInfo.delta*qlInfo.fx*(bp*qlInfo.trnFx), tol);
+            BOOST_CHECK_CLOSE(res.fxSpotGammaDom, qlInfo.gamma*qlInfo.fx*(pow(bp*qlInfo.trnFx,2)), tol);
+        }
+        if (res.hasFxSpotForSensi) {
+            BOOST_CHECK_CLOSE(res.fxSpotDeltaFor, qlInfo.delta*qlInfo.fx*(-bp*qlInfo.trnFx), tol);
+            BOOST_CHECK_CLOSE(res.fxSpotGammaFor, qlInfo.gamma*qlInfo.fx*(pow(-bp*qlInfo.trnFx,2)), tol);
+        }
     }
     sa->writeSensitivityReport("./unitTest_fxOption_sensi.csv");
     sa->writeScenarioReport("./unitTest_fxOption_scenario.csv");
