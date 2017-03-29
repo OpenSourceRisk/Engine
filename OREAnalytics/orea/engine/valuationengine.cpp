@@ -35,7 +35,7 @@ using namespace ore::data;
 
 namespace ore {
 namespace analytics {
-  
+
 ValuationEngine::ValuationEngine(const Date& today, const boost::shared_ptr<DateGrid>& dg,
                                  const boost::shared_ptr<SimMarket>& simMarket)
     : today_(today), dg_(dg), simMarket_(simMarket) {
@@ -106,7 +106,7 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
     LOG("Total number of FRC = " << numFRC);
 
     simMarket_->fixingManager()->initialise(portfolio);
-    
+
     boost::timer timer;
     boost::timer loopTimer;
 

@@ -74,7 +74,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
     LOG("AsOf " << QuantLib::io::iso_date(asof_));
 
     // Build fixing manager
-    fixingManager_ = boost::make_shared<FixingManager> (asof_);
+    fixingManager_ = boost::make_shared<FixingManager>(asof_);
 
     // constructing fxSpots_
     LOG("building FX triangulation..");
@@ -419,7 +419,7 @@ void ScenarioSimMarket::update(const Date& d) {
         ObservableSettings::instance().enableUpdates();
     }
 
-    // Apply fixings as historical fixings. Must do this before we populate ASD 
+    // Apply fixings as historical fixings. Must do this before we populate ASD
     fixingManager_->update(d);
 
     if (asd_) {

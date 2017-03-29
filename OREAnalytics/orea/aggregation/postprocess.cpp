@@ -340,7 +340,7 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
             if (csaIndexName != "") {
                 csaIndex = market->iborIndex(csaIndexName);
                 QL_REQUIRE(scenarioData->has(AggregationScenarioDataType::IndexFixing, csaIndexName),
-                    "scenario data does not provide index values for " << csaIndexName);
+                           "scenario data does not provide index values for " << csaIndexName);
             }
         }
 
@@ -567,12 +567,13 @@ PostProcess::collateralPaths(const string& nettingSetId, const boost::shared_ptr
     }
     if (csaIndexName != "") {
         QL_REQUIRE(scenarioData_->has(AggregationScenarioDataType::IndexFixing, csaIndexName),
-            "scenario data does not provide index values for " << csaIndexName);
+                   "scenario data does not provide index values for " << csaIndexName);
     }
     for (Size j = 0; j < dates; ++j) {
         for (Size k = 0; k < samples; ++k) {
             if (netting->csaCurrency() != baseCurrency_)
-                csaScenFxRates[j][k] = scenarioData_->get(j, k, AggregationScenarioDataType::FXSpot, netting->csaCurrency());
+                csaScenFxRates[j][k] =
+                    scenarioData_->get(j, k, AggregationScenarioDataType::FXSpot, netting->csaCurrency());
             else
                 csaScenFxRates[j][k] = 1.0;
             if (csaIndexName != "") {
@@ -773,7 +774,8 @@ Disposable<Array> PostProcess::regressorArray(string nettingSet, Size dateIndex,
     Array a(dimRegressors_.size());
     for (Size i = 0; i < dimRegressors_.size(); ++i) {
         string variable = dimRegressors_[i];
-        if (boost::to_upper_copy(variable) == "NPV") // this allows possibility to include NPV as a regressor alongside more fundamental risk factors
+        if (boost::to_upper_copy(variable) ==
+            "NPV") // this allows possibility to include NPV as a regressor alongside more fundamental risk factors
             a[i] = nettingSetNPV_[nettingSet][dateIndex][sampleIndex];
         else if (scenarioData_->has(AggregationScenarioDataType::IndexFixing, variable))
             a[i] = scenarioData_->get(dateIndex, sampleIndex, AggregationScenarioDataType::IndexFixing, variable);
@@ -874,7 +876,8 @@ void PostProcess::dynamicInitialMargin() {
             Date d2 = cube_->dates()[j + 1];
             Real horizonScaling = sqrt(1.0 * dimHorizonCalendarDays_ / (d2 - d1));
             Real stdevDiff = sqrt(variance(accDiff));
-            Real E_OneOverNumeraire = mean(accOneOverNumeraire); // "re-discount" (the stdev is calculated on non-discounted deltaNPVs)
+            Real E_OneOverNumeraire =
+                mean(accOneOverNumeraire); // "re-discount" (the stdev is calculated on non-discounted deltaNPVs)
 
             nettingSetZeroOrderDIM_[n][j] = stdevDiff * horizonScaling * confidenceLevel;
             nettingSetZeroOrderDIM_[n][j] *= E_OneOverNumeraire;
@@ -901,8 +904,8 @@ void PostProcess::dynamicInitialMargin() {
             sort(delNpvVec_copy.begin(), delNpvVec_copy.end());
             Real simpleDim_h = delNpvVec_copy[simple_dim_index_h];
             Real simpleDim_p = delNpvVec_copy[simple_dim_index_p];
-            simpleDim_h *= horizonScaling; // the usual scaling factors
-            simpleDim_p *= horizonScaling; // the usual scaling factors
+            simpleDim_h *= horizonScaling;                                  // the usual scaling factors
+            simpleDim_p *= horizonScaling;                                  // the usual scaling factors
             nettingSetSimpleDIMh_[n][j] = simpleDim_h * E_OneOverNumeraire; // discounted DIM
             nettingSetSimpleDIMp_[n][j] = simpleDim_p * E_OneOverNumeraire; // discounted DIM
 
@@ -937,7 +940,8 @@ void PostProcess::dynamicInitialMargin() {
                 // Evaluate regression function to compute DIM for each scenario
                 for (Size k = 0; k < samples; ++k) {
                     Real num1 = scenarioData_->get(j, k, AggregationScenarioDataType::Numeraire);
-                    Array regressor = dimRegressors_.empty() ? Array(1, nettingSetNPV_[n][j][k]) : regressorArray(n, j, k);
+                    Array regressor =
+                        dimRegressors_.empty() ? Array(1, nettingSetNPV_[n][j][k]) : regressorArray(n, j, k);
                     Real e = ls.eval(regressor, v);
                     if (e < 0.0)
                         LOG("Negative variance regression for date " << j << ", sample " << k
@@ -1259,8 +1263,8 @@ void PostProcess::exportDimRegression(const std::vector<string>& fileNames, cons
                 file << reg[j][k] << ",";
             }
             file << dim[j] * num[j] << "," << ldim[j] * num[j] << "," << nettingSetExpectedDIM_[nettingSet][timeStep]
-                 << "," << nettingSetZeroOrderDIM_[nettingSet][timeStep] << "," << delta[j] 
-                << "," << nettingSetSimpleDIMh_ [nettingSet][timeStep] << endl;
+                 << "," << nettingSetZeroOrderDIM_[nettingSet][timeStep] << "," << delta[j] << ","
+                 << nettingSetSimpleDIMh_[nettingSet][timeStep] << endl;
         }
         file.close();
         LOG("Exporting DIM by Sample done");
