@@ -396,7 +396,7 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
                     Real indexValue = 0.0;
                     DayCounter dc = ActualActual();
                     if (csaIndexName != "") {
-                        Real indexValue = scenarioData->get(j, k, AggregationScenarioDataType::IndexFixing, csaIndexName);
+                        indexValue = scenarioData->get(j, k, AggregationScenarioDataType::IndexFixing, csaIndexName);
                         dc = csaIndex->dayCounter();
                     }
                     Real dcf = dc.yearFraction(prevDate, date);
