@@ -119,6 +119,18 @@ Handle<OptionletVolatilityStructure> MarketImpl::capFloorVol(const string& key, 
     return lookup<Handle<OptionletVolatilityStructure>>(capFloorCurves_, key, configuration, "capfloor curve");
 }
 
+Handle<Quote> MarketImpl::equitySpot(const string& key, const string& configuration) const {
+    return lookup<Handle<Quote>>(equitySpots_, key, configuration, "equity spot");
+}
+
+Handle<YieldTermStructure> MarketImpl::equityDividendCurve(const string& key, const string& configuration) const {
+    return lookup<Handle<YieldTermStructure>>(equityDividendCurves_, key, configuration, "dividend yield curve");
+}
+
+Handle<BlackVolTermStructure> MarketImpl::equityVol(const string& key, const string& configuration) const {
+    return lookup<Handle<BlackVolTermStructure>>(equityVols_, key, configuration, "equity vol curve");
+}
+
 Handle<Quote> MarketImpl::securitySpread(const string& key, const string& configuration) const {
     return lookup<Handle<Quote>>(securitySpreads_, key, configuration, "security spread");
 }
@@ -196,6 +208,15 @@ void MarketImpl::refresh(const string& configuration) {
             if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
                 it->second.insert(*x.second);
         }
+        for (auto& x : equityDividendCurves_) {
+            if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
+                it->second.insert(*x.second);
+        }
+        for (auto& x : equityVols_) {
+            if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
+                it->second.insert(*x.second);
+        }
+        // why no fx spot? - why no equity spot?
     }
 
     for (auto& x : it->second)

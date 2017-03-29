@@ -17,7 +17,7 @@
       <UniqueIdentifier>{6dfd1b9a-8b1b-4cd1-92a5-96a4fd83bf6b}</UniqueIdentifier>
     </Filter>
     <Filter Include="app">
-      <UniqueIdentifier>{8522c533-f03d-4825-b514-d1529d018898}</UniqueIdentifier>
+      <UniqueIdentifier>{5e2b1c12-06b6-468c-b52b-f2937bc8facc}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -50,9 +50,6 @@
     </ClInclude>
     <ClInclude Include="orea\engine\valuationengine.hpp">
       <Filter>engine</Filter>
-    </ClInclude>
-    <ClInclude Include="orea\simulation\all.hpp">
-      <Filter>simulation</Filter>
     </ClInclude>
     <ClInclude Include="orea\simulation\dategrid.hpp">
       <Filter>simulation</Filter>
@@ -104,8 +101,17 @@
     <ClInclude Include="orea\scenario\aggregationscenariodata.hpp">
       <Filter>scenario</Filter>
     </ClInclude>
+    <ClInclude Include="orea\simulation\fixingmanager.hpp">
+      <Filter>simulation</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\simulation\all.hpp">
+      <Filter>simulation</Filter>
+    </ClInclude>
     <ClInclude Include="orea\app\all.hpp">
       <Filter>app</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\engine\observationmode.hpp">
+      <Filter>engine</Filter>
     </ClInclude>
     <ClInclude Include="orea\app\oreapp.hpp">
       <Filter>app</Filter>
@@ -117,9 +123,6 @@
       <Filter>app</Filter>
     </ClInclude>
     <ClInclude Include="orea\engine\valuationcalculator.hpp">
-      <Filter>engine</Filter>
-    </ClInclude>
-    <ClInclude Include="orea\engine\observationmode.hpp">
       <Filter>engine</Filter>
     </ClInclude>
   </ItemGroup>
@@ -171,6 +174,9 @@
     </ClCompile>
     <ClCompile Include="orea\scenario\scenariowriter.cpp">
       <Filter>scenario</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\simulation\fixingmanager.cpp">
+      <Filter>simulation</Filter>
     </ClCompile>
     <ClCompile Include="orea\app\oreapp.cpp">
       <Filter>app</Filter>

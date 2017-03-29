@@ -5,6 +5,7 @@
 #include <qle/pricingengines/analyticlgmswaptionengine.hpp>
 #include <qle/pricingengines/crossccyswapengine.hpp>
 #include <qle/pricingengines/discountingcurrencyswapengine.hpp>
+#include <qle/pricingengines/discountingequityforwardengine.hpp>
 #include <qle/pricingengines/discountingfxforwardengine.hpp>
 #include <qle/pricingengines/discountingswapenginemulticurve.hpp>
 #include <qle/pricingengines/oiccbasisswapengine.hpp>
