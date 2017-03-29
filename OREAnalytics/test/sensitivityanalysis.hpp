@@ -45,6 +45,8 @@ public:
     static void testPortfolioSensitivityDeferObs();
     //! Test that the portfolio shows the expected sensitivity (regression test - "Unregister" observation mode)
     static void testPortfolioSensitivityUnregisterObs();
+    //! Test computed delta/gamma/vega values for an FX option against analytic results
+    static void testFxOptionDeltaGamma();
     static boost::unit_test_framework::test_suite* suite();
 };
 }

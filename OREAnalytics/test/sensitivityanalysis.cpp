@@ -33,6 +33,7 @@
 #include <orea/engine/all.hpp>
 #include <ored/portfolio/swap.hpp>
 #include <ored/portfolio/swaption.hpp>
+#include <ored/portfolio/fxoption.hpp>
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/builders/swaption.hpp>
 #include <ored/portfolio/builders/fxforward.hpp>
@@ -951,6 +952,237 @@ void SensitivityAnalysisTest::test2dShifts() {
     IndexManager::instance().clearHistories();
 }
 
+void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
+
+    SavedSettings backup;
+
+    ObservationMode::Mode backupMode = ObservationMode::instance().mode();
+    ObservationMode::instance().setMode(ObservationMode::Mode::None);
+
+    Date today = Date(14, April, 2016); // Settings::instance().evaluationDate();
+    Settings::instance().evaluationDate() = today;
+
+    BOOST_TEST_MESSAGE("Today is " << today);
+
+    // Init market
+    boost::shared_ptr<Market> initMarket = boost::make_shared<TestMarket>(today);
+
+    // build scenario sim market parameters
+    boost::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData = setupSimMarketData5();
+
+    // sensitivity config
+    boost::shared_ptr<SensitivityScenarioData> sensiData = setupSensitivityScenarioData5();
+    sensiData->parConversion() = false;
+
+    // build scenario generator
+    boost::shared_ptr<ScenarioFactory> scenarioFactory(new SimpleScenarioFactory);
+    boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(
+        new SensitivityScenarioGenerator(scenarioFactory, sensiData, simMarketData, today, initMarket));
+    boost::shared_ptr<ScenarioGenerator> sgen(scenarioGenerator);
+
+    // build scenario sim market
+    Conventions conventions = *conv();
+    boost::shared_ptr<analytics::ScenarioSimMarket> simMarket =
+        boost::make_shared<analytics::ScenarioSimMarket>(sgen, initMarket, simMarketData, conventions);
+
+    // build porfolio
+    boost::shared_ptr<EngineData> data = boost::make_shared<EngineData>();
+    data->model("FxOption") = "GarmanKohlhagen";
+    data->engine("FxOption") = "AnalyticEuropeanEngine";
+    boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(data, simMarket);
+    factory->registerBuilder(boost::make_shared<FxOptionEngineBuilder>());
+
+    boost::shared_ptr<Portfolio> portfolio(new Portfolio());
+    portfolio->add(buildFxOption("Call_1", "Long", "Call", 1, "USD", 100.0, "EUR", 100.0));
+    portfolio->add(buildFxOption("Put_1", "Long", "Put", 1, "USD", 100.0, "EUR", 100.0));
+    portfolio->add(buildFxOption("Call_2", "Short", "Call", 2, "GBP", 100.0, "CHF", 130.0));
+    portfolio->add(buildFxOption("Put_2", "Short", "Put", 2, "GBP", 100.0, "CHF", 130.0));
+    portfolio->build(factory);
+
+    struct AnalyticInfo {
+        string id;
+        string npvCcy;
+        string forCcy;
+        string domCcy;
+        Real fx;
+        Real baseNpv;
+        Real qlNpv;
+        Real delta;
+        Real gamma;
+        Real vega;
+        Real rho;
+        Real divRho;
+    };
+    map<string,AnalyticInfo> qlInfoMap;
+    for (Size i = 0; i < portfolio->size(); ++i) {
+        AnalyticInfo info;
+        boost::shared_ptr<Trade> trn = portfolio->trades()[i];
+        boost::shared_ptr<ore::data::FxOption> fxoTrn = boost::dynamic_pointer_cast<ore::data::FxOption>(trn);
+        BOOST_CHECK(fxoTrn);
+        info.id = trn->id();
+        info.npvCcy = trn->npvCurrency();
+        info.forCcy = fxoTrn->boughtCurrency();
+        info.domCcy = fxoTrn->soldCurrency();
+        BOOST_CHECK_EQUAL(info.npvCcy, info.domCcy);
+        string pair = info.npvCcy + simMarketData->baseCcy();
+        info.fx = simMarket->fxSpot(pair)->value();
+        info.baseNpv = trn->instrument()->NPV();
+        boost::shared_ptr<QuantLib::VanillaOption> qlOpt =
+            boost::dynamic_pointer_cast<QuantLib::VanillaOption>(trn->instrument()->qlInstrument());
+        BOOST_CHECK(qlOpt);
+        info.qlNpv = qlOpt->NPV() * fxoTrn->boughtAmount();
+        info.delta = qlOpt->delta();
+        info.gamma = qlOpt->gamma();
+        info.vega = qlOpt->vega();
+        info.rho = qlOpt->rho();
+        info.divRho = qlOpt->dividendRho();
+        BOOST_CHECK_CLOSE(info.fx, info.baseNpv / info.qlNpv, 0.01);
+        qlInfoMap[info.id] = info;
+    }
+
+    boost::shared_ptr<SensitivityAnalysis> sa = 
+        boost::make_shared<SensitivityAnalysis>(
+            portfolio, simMarket, Market::defaultConfiguration, data, simMarketData, sensiData, conventions);
+    map<pair<string, string>, Real> deltaMap = sa->delta();
+    map<pair<string, string>, Real> gammaMap = sa->gamma();
+    map<std::string, Real> baseNpvMap = sa->baseNPV();
+    std::set<string> sensiTrades = sa->trades();
+
+    struct SensiResults {
+        string id;
+        Real baseNpv;
+        Real forDiscountDelta;
+        Real forIndexDelta;
+        Real forYcDelta;
+        Real domDiscountDelta;
+        Real domIndexDelta;
+        Real domYcDelta;
+        Real fxSpotDeltaFor;
+        Real fxSpotDeltaDom;
+        Real fxVolDelta;
+        Real fxSpotGammaFor;
+        Real fxSpotGammaDom;
+    };
+
+    Real epsilon = 1.e-15; // a small number
+    string discountCurveStr = "DiscountCurve";
+    string indexCurveStr = "IndexCurve";
+    string yieldCurveStr = "YieldCurve";
+    string fxSpotStr = "FXSpot";
+    string fxVolStr = "FXVolatility";
+    string swaptionStr = "SwaptionVolatility";
+    string capStr = "OptionletVolatility";
+    for (auto it : qlInfoMap) {
+        string id = it.first;
+        BOOST_CHECK(sensiTrades.find(id) != sensiTrades.end());
+        AnalyticInfo qlInfo = it.second;
+        SensiResults res = { string(""), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+        for (auto it2 : deltaMap) {
+            pair<string,string> sensiKey = it2.first;
+            string sensiTrnId = it2.first.first;
+            if (sensiTrnId != id)
+                continue;
+            res.baseNpv = baseNpvMap[sensiTrnId];
+            string sensiId = it2.first.second;
+            Real sensiVal = it2.second;
+            if (std::fabs(sensiVal) < epsilon) // not interested in zero sensis
+                continue;
+            vector<string> tokens;
+            boost::split(tokens, sensiId, boost::is_any_of("/-"));
+            BOOST_CHECK(tokens.size() > 0);
+            bool isDiscountCurve = (tokens[0] == discountCurveStr);
+            bool isIndexCurve = (tokens[0] == indexCurveStr);
+            bool isYieldCurve = (tokens[0] == yieldCurveStr);
+            bool isFxSpot = (tokens[0] == fxSpotStr);
+            bool isFxVol = (tokens[0] == fxVolStr);
+            bool isSwaption = (tokens[0] == swaptionStr);
+            bool isCapFloorlet = (tokens[0] == capStr);
+            BOOST_CHECK(!(isSwaption || isCapFloorlet)); // no relation to fx options
+            if (isDiscountCurve || isIndexCurve || isYieldCurve) {
+                BOOST_CHECK(tokens.size() > 2);
+                string ccy = tokens[1];
+                bool isFgnCcySensi = (ccy == qlInfo.forCcy);
+                bool isDomCcySensi = (ccy == qlInfo.domCcy);
+                BOOST_CHECK(isFgnCcySensi || isDomCcySensi);
+                if (isDiscountCurve) {
+                    if (isFgnCcySensi)
+                        res.forDiscountDelta += sensiVal;
+                    else if (isDomCcySensi)
+                        res.domDiscountDelta += sensiVal;
+                }
+                else if (isIndexCurve) {
+                    if (isFgnCcySensi)
+                        res.forIndexDelta += sensiVal;
+                    else if (isDomCcySensi)
+                        res.domIndexDelta += sensiVal;
+                }
+                else if (isYieldCurve) {
+                    if (isFgnCcySensi)
+                        res.forYcDelta += sensiVal;
+                    if (isDomCcySensi)
+                        res.domYcDelta += sensiVal;
+                }
+                continue;
+            }
+            else if (isFxSpot) {
+                BOOST_CHECK(tokens.size() > 2);
+                string pair = tokens[1];
+                BOOST_CHECK_EQUAL(pair.length(), 6);
+                string sensiForCcy = pair.substr(0, 3);
+                string sensiDomCcy = pair.substr(3, 3);
+                bool isSensiForBase = (sensiForCcy == simMarketData->baseCcy());
+                bool isSensiDomBase = (sensiDomCcy == simMarketData->baseCcy());
+                BOOST_CHECK(isSensiForBase || isSensiDomBase);
+                if (isSensiForBase)
+                    res.fxSpotDeltaFor += sensiVal;
+                else if (isSensiDomBase)
+                    res.fxSpotDeltaDom += sensiVal;
+                bool hasGamma = (gammaMap.find(sensiKey) != gammaMap.end());
+                BOOST_CHECK(hasGamma);
+                if (hasGamma) {
+                    Real gammaVal = gammaMap[sensiKey];
+                    if (isSensiForBase)
+                        res.fxSpotGammaFor += gammaVal;
+                    else if (isSensiDomBase)
+                        res.fxSpotGammaDom += gammaVal;
+                }
+                continue;
+            }
+            else if (isFxVol) {
+                BOOST_CHECK(tokens.size() > 2);
+                string pair = tokens[1];
+                BOOST_CHECK_EQUAL(pair.length(), 6);
+                string sensiForCcy = pair.substr(0, 3);
+                string sensiDomCcy = pair.substr(3, 3);
+                BOOST_CHECK((sensiForCcy == qlInfo.forCcy) || (sensiForCcy == qlInfo.domCcy));
+                BOOST_CHECK((sensiDomCcy == qlInfo.forCcy) || (sensiDomCcy == qlInfo.domCcy));
+                res.fxVolDelta += sensiVal;
+                continue;
+            }
+            else {
+                BOOST_ERROR("Unrecognised sensitivity factor - " << sensiId);
+            }
+        }
+        // PUT HERE THE COMPARISONS OF SENSIS PER TRADE
+        BOOST_CHECK_EQUAL(res.forIndexDelta, 0.0);
+        BOOST_CHECK_EQUAL(res.domIndexDelta, 0.0);
+        BOOST_CHECK_EQUAL(res.forYcDelta, 0.0);
+        BOOST_CHECK_EQUAL(res.domYcDelta, 0.0);
+        BOOST_TEST_MESSAGE(
+            "SA: id=" << res.id << ", npv=" << res.baseNpv << ", forDiscountDelta=" << res.forDiscountDelta << 
+            ", domDiscountDelta=" << res.domDiscountDelta << ", fxSpotDeltaFor=" << res.fxSpotDeltaFor << 
+            ", fxSpotDeltaDom=" << res.fxSpotDeltaDom << ", fxVolDela=" << res.fxVolDelta << 
+            ", fxSpotGammaFor=" << res.fxSpotGammaFor << ", fxSpotGammaDom=" << res.fxSpotGammaDom);
+        BOOST_TEST_MESSAGE(
+            "QL: id=" << qlInfo.id << ", forCcy=" << qlInfo.forCcy << ", domCcy=" << qlInfo.domCcy << 
+            ", fx=" << qlInfo.fx << ", npv=" << qlInfo.baseNpv << ", ccyNpv=" << qlInfo.qlNpv << 
+            ", delta=" << qlInfo.delta << ", gamma=" << qlInfo.gamma << ", vega=" << qlInfo.vega << 
+            ", rho=" << qlInfo.rho << ", divRho=" << qlInfo.divRho);
+    }
+    ObservationMode::instance().setMode(backupMode);
+    IndexManager::instance().clearHistories();
+}
+
 test_suite* SensitivityAnalysisTest::suite() {
     // Uncomment the below to get detailed output TODO: custom logger that uses BOOST_MESSAGE
     /*
@@ -968,6 +1200,7 @@ test_suite* SensitivityAnalysisTest::suite() {
     suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testPortfolioSensitivityDisableObs));
     suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testPortfolioSensitivityDeferObs));
     suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testPortfolioSensitivityUnregisterObs));
+    suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testFxOptionDeltaGamma));
     return suite;
 }
 }
