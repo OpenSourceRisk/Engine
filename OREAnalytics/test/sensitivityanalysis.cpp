@@ -788,10 +788,6 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     map<pair<string, string>, Real> deltaMap = sa->delta();
     map<pair<string, string>, Real> gammaMap = sa->gamma();
 
-    // pair<string, string> bondEurRate("11_ZeroBond_EUR", "YieldCurve/BondCurve1/6/10Y");
-    // pair<string, string> bondUsdRate("12_ZeroBond_USD", "YieldCurve/BondCurve1/6/10Y");
-    // pair<string, string> bondUsdFx("12_ZeroBond_USD", "FXSpot/EURUSD/0/spot");
-
     std::vector<Results> cachedResults2 = {
         // trade, factor, delta, gamma
         { "11_ZeroBond_EUR", "YieldCurve/BondCurve1/6/10Y", -0.000606168, 6.06352e-07 }, // gamma OK see case 1 below
