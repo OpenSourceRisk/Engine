@@ -782,23 +782,39 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
 
     BOOST_TEST_MESSAGE("Cube generated in " << elapsed << " seconds");
 
-    // Repeat analysis using the SensitivityAnalysis class and spot check
+    // Repeat analysis using the SensitivityAnalysis class and spot check a few deltas and gammas
     boost::shared_ptr<SensitivityAnalysis> sa = boost::make_shared<SensitivityAnalysis>(
         portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, conventions);
     map<pair<string, string>, Real> deltaMap = sa->delta();
     map<pair<string, string>, Real> gammaMap = sa->gamma();
 
-    pair<string, string> bondEurRate("11_ZeroBond_EUR", "YieldCurve/BondCurve1/6/10Y");
-    pair<string, string> bondUsdRate("12_ZeroBond_USD", "YieldCurve/BondCurve1/6/10Y");
-    pair<string, string> bondUsdFx("12_ZeroBond_USD", "FXSpot/EURUSD/0/spot");
+    // pair<string, string> bondEurRate("11_ZeroBond_EUR", "YieldCurve/BondCurve1/6/10Y");
+    // pair<string, string> bondUsdRate("12_ZeroBond_USD", "YieldCurve/BondCurve1/6/10Y");
+    // pair<string, string> bondUsdFx("12_ZeroBond_USD", "FXSpot/EURUSD/0/spot");
 
     std::vector<Results> cachedResults2 = {
         // trade, factor, delta, gamma
-        { "11_ZeroBond_EUR", "YieldCurve/BondCurve1/6/10Y", -0.000606168, 6.06352e-07 },
-        { "12_ZeroBond_USD", "YieldCurve/BondCurve1/6/10Y", -0.00050514, 5.05294e-07 },
-        { "12_ZeroBond_USD", "FXSpot/EURUSD/0/spot", -0.00500487, 0.000101108 }
+        { "11_ZeroBond_EUR", "YieldCurve/BondCurve1/6/10Y", -0.000606168, 6.06352e-07 }, // gamma OK see case 1 below
+        { "12_ZeroBond_USD", "YieldCurve/BondCurve1/6/10Y", -0.00050514, 5.05294e-07 }, // gamma OK, see case 2 below
+        { "12_ZeroBond_USD", "FXSpot/EURUSD/0/spot", -0.00500487, 0.000101108 } // gamma OK, see case 3
     };
 
+    // Validation of cached gammas:
+    // gamma * (dx)^2 = \partial^2_x NPV(x) * (dx)^2
+    //               \approx (NPV(x_up) - 2 NPV(x) + NPV(x_down)) = sensi(up) + sensi(down)
+    //
+    // Case 1: "11_ZeroBond_EUR", "YieldCurve/BondCurve1/6/10Y"
+    // NPV(x_up) - NPV(x) = -0.000606168, NPV(x_down) - NPV(x) = 0.000606774
+    // gamma * (dx)^2 = -0.000606168 + 0.000606774 = 0.000000606 = 6.06e-7
+    //
+    // Case 2: "12_ZeroBond_USD", "YieldCurve/BondCurve1/6/10Y"
+    // NPV(x_up) - NPV(x) = -0.00050514, NPV(x_down) - NPV(x) = 0.000505645
+    // gamma * (dx)^2 =  -0.00050514 + 0.000505645 = 0.000000505 = 5.05e-7
+    // 
+    // Case 3: "12_ZeroBond_USD", "FXSpot/EURUSD/0/spot"
+    // NPV(x_up) - NPV(x) = -0.00500487, NPV(x_down) - NPV(x) = 0.00510598
+    // gamma * (dx)^2 =  -0.00500487 + 0.00510598 = 0.00010111
+    // 
     for (Size i = 0; i < cachedResults2.size(); ++i) {
         pair<string, string> p(cachedResults2[i].id, cachedResults2[i].label);
         Real delta = cachedResults2[i].npv;   // is delta
@@ -1310,20 +1326,20 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
 
 test_suite* SensitivityAnalysisTest::suite() {
     // Uncomment the below to get detailed output TODO: custom logger that uses BOOST_MESSAGE
-    boost::shared_ptr<ore::data::FileLogger> logger = boost::make_shared<ore::data::FileLogger>("sensitivity.log");
-    ore::data::Log::instance().removeAllLoggers();
-    ore::data::Log::instance().registerLogger(logger);
-    ore::data::Log::instance().switchOn();
-    ore::data::Log::instance().setMask(255);
+    // boost::shared_ptr<ore::data::FileLogger> logger = boost::make_shared<ore::data::FileLogger>("sensitivity.log");
+    // ore::data::Log::instance().removeAllLoggers();
+    // ore::data::Log::instance().registerLogger(logger);
+    // ore::data::Log::instance().switchOn();
+    // ore::data::Log::instance().setMask(255);
     test_suite* suite = BOOST_TEST_SUITE("SensitivityAnalysisTest");
     // Set the Observation mode here
     suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::test1dShifts));
     suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::test2dShifts));
     suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testPortfolioSensitivityNoneObs));
-    // suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testPortfolioSensitivityDisableObs));
-    // suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testPortfolioSensitivityDeferObs));
-    // suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testPortfolioSensitivityUnregisterObs));
-    // suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testFxOptionDeltaGamma));
+    suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testPortfolioSensitivityDisableObs));
+    suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testPortfolioSensitivityDeferObs));
+    suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testPortfolioSensitivityUnregisterObs));
+    suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testFxOptionDeltaGamma));
     return suite;
 }
 }
