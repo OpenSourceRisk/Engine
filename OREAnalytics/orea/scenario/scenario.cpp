@@ -69,8 +69,8 @@ RiskFactorKey::KeyType parseRiskFactorKeyType(const string &string_type) {
 RiskFactorKey parseRiskFactorKey(const string &string_key) {
     std::vector<string> tokens;
     boost::split(tokens, string_key, boost::is_any_of("/"), boost::token_compress_on);
-    QL_REQUIRE(tokens.size() >= 3, "Could not parse key " << string_key);
-    RiskFactorKey rfk(parseRiskFactorKeyType(tokens[0]), tokens[1], tokens.size() == 3 ? parseInteger(tokens[2]) : 0 );
+    QL_REQUIRE(tokens.size() == 3, "Could not parse key " << string_key);
+    RiskFactorKey rfk(parseRiskFactorKeyType(tokens[0]), tokens[1], parseInteger(tokens[2]));
     return rfk;
 }
 
