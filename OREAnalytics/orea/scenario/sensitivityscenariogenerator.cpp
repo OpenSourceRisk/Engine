@@ -139,14 +139,17 @@ void SensitivityScenarioGenerator::generateFxScenarios(bool up) {
         string ccypair = fxCcyPairs_[k]; // foreign + domestic;
         SensitivityScenarioData::FxShiftData data = sensitivityData_->fxShiftData()[ccypair];
         ShiftType type = parseShiftType(data.shiftType);
-        QL_REQUIRE(type == SensitivityScenarioGenerator::ShiftType::Relative, "FX scenario type must be relative");
+        Real size = up ? data.shiftSize : -1.0*data.shiftSize;
+        //QL_REQUIRE(type == SensitivityScenarioGenerator::ShiftType::Relative, "FX scenario type must be relative");
+        bool relShift = (type == SensitivityScenarioGenerator::ShiftType::Relative);
 
         boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_);
 
         scenarioDescriptions_.push_back(fxScenarioDescription(ccypair, up));
 
         Real rate = initMarket_->fxSpot(ccypair, configuration_)->value();
-        Real newRate = up ? rate * (1.0 + data.shiftSize) : rate * (1.0 - data.shiftSize);
+        Real newRate = relShift ? rate*(1.0 + size) : (rate + size);
+        //Real newRate = up ? rate * (1.0 + data.shiftSize) : rate * (1.0 - data.shiftSize);
         scenario->add(getFxKey(ccypair), newRate);
         // add remaining unshifted data from cache for a complete scenario
         addCacheTo(scenario);
