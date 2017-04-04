@@ -47,6 +47,8 @@ public:
     static void testPortfolioSensitivityUnregisterObs();
     //! Test computed delta/gamma/vega values for an FX option against analytic results
     static void testFxOptionDeltaGamma();
+    //! Test computed cross gamma against archived values (smoke test only - no external benchmark)
+    static void testCrossGamma();
     static boost::unit_test_framework::test_suite* suite();
 };
 }
