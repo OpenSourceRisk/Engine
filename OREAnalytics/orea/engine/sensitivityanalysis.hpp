@@ -61,7 +61,8 @@ public:
                         const boost::shared_ptr<ore::data::EngineData>& engineData,
                         const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
                         const boost::shared_ptr<SensitivityScenarioData>& sensitivityData,
-                        const Conventions& conventions);
+                        const Conventions& conventions,
+                        const bool nonShiftedBaseCurrencyConversion = false);
 
     //! Return set of trades analysed
     const std::set<std::string>& trades() { return trades_; }
@@ -122,6 +123,8 @@ protected:
     std::set<std::string> factors_;
     // unique set of trades
     std::set<std::string> trades_;
+    // if true, convert sensis to base currency using the original (non-shifted) FX rate
+    bool nonShiftedBaseCurrencyConversion_;
 };
 }
 }

@@ -58,9 +58,11 @@ SensitivityAnalysis::SensitivityAnalysis(const boost::shared_ptr<ore::data::Port
                                          const boost::shared_ptr<ore::data::EngineData>& engineData,
                                          const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
                                          const boost::shared_ptr<SensitivityScenarioData>& sensitivityData,
-                                         const Conventions& conventions)
+                                         const Conventions& conventions,
+                                         const bool nonShiftedBaseCurrencyConversion)
     : market_(market), marketConfiguration_(marketConfiguration), asof_(market->asofDate()),
-      simMarketData_(simMarketData), sensitivityData_(sensitivityData), conventions_(conventions) {
+      simMarketData_(simMarketData), sensitivityData_(sensitivityData), conventions_(conventions),
+      nonShiftedBaseCurrencyConversion_(nonShiftedBaseCurrencyConversion) {
 
     LOG("Build Sensitivity Scenario Generator");
     boost::shared_ptr<ScenarioFactory> scenarioFactory(new SimpleScenarioFactory);
@@ -87,7 +89,10 @@ SensitivityAnalysis::SensitivityAnalysis(const boost::shared_ptr<ore::data::Port
 
     boost::shared_ptr<DateGrid> dg = boost::make_shared<DateGrid>("1,0W"); //TODO - extend the DateGrid interface so that it can actually take a vector of dates as input
     vector<boost::shared_ptr<ValuationCalculator> > calculators;
-    calculators.push_back(boost::make_shared<NPVCalculatorFXT0>(simMarketData_->baseCcy(),market_));
+    if (nonShiftedBaseCurrencyConversion_) // use "original" FX rates to convert sensi to base currency
+        calculators.push_back(boost::make_shared<NPVCalculatorFXT0>(simMarketData_->baseCcy(),market_));
+    else // use the scenario FX rate when converting sensi to base currency
+        calculators.push_back(boost::make_shared<NPVCalculator>(simMarketData_->baseCcy()));
     ValuationEngine engine(asof_, dg, simMarket_);
     LOG("Run Sensitivity Scenarios");
     /*ostringstream o;

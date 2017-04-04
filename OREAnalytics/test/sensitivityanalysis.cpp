@@ -1014,6 +1014,10 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
     trnCount++;
     portfolio->add(buildFxOption("Put_3", "Short", "Put", 1, "EUR", 100000000.0, "USD", 100000000.0));
     trnCount++;
+    portfolio->add(buildFxOption("Call_4", "Long", "Call", 1, "JPY", 10000000000.0, "EUR", 100000000.0));
+    trnCount++;
+    portfolio->add(buildFxOption("Call_5", "Long", "Call", 1, "EUR", 100000000.0, "JPY", 10000000000.0));
+    trnCount++;
     portfolio->build(factory);
     BOOST_CHECK_EQUAL(portfolio->size(), trnCount);
 
@@ -1031,6 +1035,7 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
         Real vega;
         Real rho;
         Real divRho;
+        Real fxForBase;
     };
     map<string,AnalyticInfo> qlInfoMap;
     for (Size i = 0; i < portfolio->size(); ++i) {
@@ -1047,6 +1052,8 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
         info.fx = initMarket->fxSpot(pair)->value();
         string trnPair = info.forCcy + info.domCcy;
         info.trnFx = initMarket->fxSpot(trnPair)->value();
+        string forPair = info.forCcy + simMarketData->baseCcy();
+        info.fxForBase = initMarket->fxSpot(forPair)->value();
         info.baseNpv = trn->instrument()->NPV() * info.fx;
         boost::shared_ptr<QuantLib::VanillaOption> qlOpt =
             boost::dynamic_pointer_cast<QuantLib::VanillaOption>(trn->instrument()->qlInstrument());
@@ -1061,9 +1068,11 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
         qlInfoMap[info.id] = info;
     }
 
+    bool useOriginalFxForBaseCcyConv = true; // convert sensi to EUR using original FX rate (not the shifted rate)
     boost::shared_ptr<SensitivityAnalysis> sa = 
         boost::make_shared<SensitivityAnalysis>(
-            portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, conventions);
+            portfolio, initMarket, Market::defaultConfiguration, data, 
+            simMarketData, sensiData, conventions, useOriginalFxForBaseCcyConv);
     map<pair<string, string>, Real> deltaMap = sa->delta();
     map<pair<string, string>, Real> gammaMap = sa->gamma();
     map<std::string, Real> baseNpvMap = sa->baseNPV();
@@ -1087,6 +1096,8 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
         Real fxRateSensiDom;
         bool hasFxSpotDomSensi;
         bool hasFxSpotForSensi;
+        string fxSensiForCcy;
+        string fxSensiDomCcy;
     };
 
     Real epsilon = 1.e-15; // a small number
@@ -1101,7 +1112,7 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
         string id = it.first;
         BOOST_CHECK(sensiTrades.find(id) != sensiTrades.end());
         AnalyticInfo qlInfo = it.second;
-        SensiResults res = { string(""), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, false, false };
+        SensiResults res = { string(""), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, false, false, string(""), string("") };
         for (auto it2 : deltaMap) {
             pair<string,string> sensiKey = it2.first;
             string sensiTrnId = it2.first.first;
@@ -1180,6 +1191,8 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
                         res.hasFxSpotDomSensi = true;
                         res.fxSpotGammaDom += gammaVal;
                     }
+                    res.fxSensiForCcy = sensiForCcy;
+                    res.fxSensiDomCcy = sensiDomCcy;
                 }
                 else {
                     BOOST_ERROR("This ccy pair configuration not supported yet by this test");
@@ -1211,7 +1224,8 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
             "SA: id=" << res.id << ", npv=" << res.baseNpv << ", forDiscountDelta=" << res.forDiscountDelta << 
             ", domDiscountDelta=" << res.domDiscountDelta << ", fxSpotDeltaFor=" << res.fxSpotDeltaFor << 
             ", fxSpotDeltaDom=" << res.fxSpotDeltaDom << ", fxVolDelta=" << res.fxVolDelta << 
-            ", fxSpotGammaFor=" << res.fxSpotGammaFor << ", fxSpotGammaDom=" << res.fxSpotGammaDom);
+            ", fxSpotGammaFor=" << res.fxSpotGammaFor << ", fxSpotGammaDom=" << res.fxSpotGammaDom << 
+            ", hasFxDom=" << res.hasFxSpotDomSensi << ", hasFxFor=" << res.hasFxSpotForSensi);
         BOOST_TEST_MESSAGE(
             "QL: id=" << qlInfo.id << ", forCcy=" << qlInfo.forCcy << ", domCcy=" << qlInfo.domCcy << 
             ", fx=" << qlInfo.fx << ", npv=" << qlInfo.baseNpv << ", ccyNpv=" << qlInfo.qlNpv << 
@@ -1229,12 +1243,46 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
         Real fxVol = initMarket->fxVol(qlInfo.forCcy + qlInfo.domCcy)->blackVol(1.0,1.0,true); // TO-DO more appropriate vol extraction
         BOOST_CHECK_CLOSE(res.fxVolDelta, qlInfo.vega*qlInfo.fx*(bp*fxVol), tol);
         if (res.hasFxSpotDomSensi) {
+            Real qlGamma = qlInfo.gamma;
+            if ((res.fxSensiForCcy == qlInfo.domCcy) &&
+                (res.fxSensiDomCcy == qlInfo.forCcy)) {
+                // the QL sensi is relative to the inverted FX quote, so we need to convert to the sensi that we want (via chain rule)
+                Real ql_fx = qlInfo.trnFx;
+                qlGamma = 2 * pow(ql_fx, 3)*qlInfo.delta + pow(ql_fx, 4)*qlInfo.gamma;
+            }
+            else if ((res.fxSensiForCcy == qlInfo.forCcy) &&
+                (res.fxSensiDomCcy == qlInfo.domCcy)) {
+                qlGamma = qlInfo.gamma;
+            }
+            else {
+                // perform the necessary conversion for cross quotes
+                Real otherFx = 1.0 / qlInfo.fxForBase;
+                qlGamma = qlInfo.gamma / pow(otherFx, 2);
+            }
             BOOST_CHECK_CLOSE(res.fxSpotDeltaDom, qlInfo.delta*qlInfo.fx*(bp*qlInfo.trnFx), tol);
-            BOOST_CHECK_CLOSE(res.fxSpotGammaDom, qlInfo.gamma*qlInfo.fx*(pow(bp*qlInfo.trnFx,2)), tol);
+            BOOST_CHECK_CLOSE(res.fxSpotGammaDom, qlGamma*qlInfo.fx*(pow(bp*res.fxRateSensiDom,2)), tol);
         }
         if (res.hasFxSpotForSensi) {
+            Real qlGamma = qlInfo.gamma;
+            if ((res.fxSensiForCcy == qlInfo.domCcy) && 
+                (res.fxSensiDomCcy == qlInfo.forCcy)) {
+                // the QL sensi is relative to the inverted FX quote, so we need to convert to the sensi that we want (via chain rule)
+                Real ql_fx = qlInfo.trnFx;
+                qlGamma = 2 * pow(ql_fx, 3)*qlInfo.delta + pow(ql_fx, 4)*qlInfo.gamma;
+            }
+            else if ((res.fxSensiForCcy == qlInfo.forCcy) &&
+                (res.fxSensiDomCcy == qlInfo.domCcy)) {
+                qlGamma = qlInfo.gamma;
+            }
+            else {
+                // perform the necessary conversion for cross quotes
+                Real y = 1.0 / qlInfo.fx; // BASE/TrnDom
+                Real z = 1.0 / qlInfo.fxForBase; // BASE/TrnFor
+                Real s = qlInfo.trnFx; // TrnFor/TrnDom
+                qlGamma = ((2.0*y) / pow(z, 3))*qlInfo.delta + (y / pow(z, 4))*qlInfo.gamma;
+            }
             BOOST_CHECK_CLOSE(res.fxSpotDeltaFor, qlInfo.delta*qlInfo.fx*(-bp*qlInfo.trnFx), tol);
-            BOOST_CHECK_CLOSE(res.fxSpotGammaFor, qlInfo.gamma*qlInfo.fx*(pow(-bp*qlInfo.trnFx,2)), tol);
+            BOOST_CHECK_CLOSE(res.fxSpotGammaFor, qlGamma*qlInfo.fx*(pow(-bp*res.fxRateSensiFor,2)), tol);
         }
     }
     //TODO - turn off the report writing
