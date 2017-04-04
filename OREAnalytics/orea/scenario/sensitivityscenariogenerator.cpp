@@ -95,11 +95,15 @@ SensitivityScenarioGenerator::SensitivityScenarioGenerator(boost::shared_ptr<Sce
                 Real baseValue = baseScenario_->get(keys[k]);
                 Real iValue = scenarios_[i]->get(keys[k]);
                 Real jValue = scenarios_[j]->get(keys[k]);
-                crossScenario->add(keys[k], iValue + jValue - baseValue);
+                Real newVal = iValue + jValue - baseValue;
+                if (newVal != baseValue)
+                    crossScenario->add(keys[k], newVal);
             }
+            // add remaining unshifted data from cache for a complete scenario
+            addCacheTo(crossScenario);
             scenarios_.push_back(crossScenario);
             scenarioDescriptions_.push_back(ScenarioDescription(scenarioDescriptions_[i], scenarioDescriptions_[j]));
-            LOG("Sensitivity scenario # " << scenarios_.size() << ", label " << crossScenario->label() << " created");
+            DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << crossScenario->label() << " created");
         }
     }
 
