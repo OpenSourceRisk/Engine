@@ -158,6 +158,7 @@ SensitivityAnalysis::SensitivityAnalysis(const boost::shared_ptr<ore::data::Port
                 Real up1 = upNPV_[p1];
                 Real up2 = upNPV_[p2];
                 std::tuple<string, string, string> triple(id, f1, f2);
+                crossNPV_[triple] = npv;
                 crossGamma_[triple] = npv - up1 - up2 + base; // f_xy(x,y) * u * v
             }
         }
@@ -192,7 +193,7 @@ void SensitivityAnalysis::writeScenarioReport(string fileName, Real outputThresh
     report.addColumn("Up/Down", string());
     report.addColumn("Base NPV", double(), 2);
     report.addColumn("Scenario NPV", double(), 2);
-    report.addColumn("Sensitivity", double(), 2);
+    report.addColumn("Difference", double(), 2);
 
     for (auto data : upNPV_) {
         string id = data.first.first;
@@ -222,6 +223,27 @@ void SensitivityAnalysis::writeScenarioReport(string fileName, Real outputThresh
             report.add(id);
             report.add(factor);
             report.add("Down");
+            report.add(base);
+            report.add(npv);
+            report.add(sensi);
+        }
+    }
+
+    for (auto data : crossNPV_) {
+        string id = std::get<0>(data.first);
+        string factor1 = std::get<1>(data.first);
+        string factor2 = std::get<2>(data.first);
+        ostringstream o;
+        o << factor1 << ":" << factor2;
+        string factor = o.str();
+        Real npv = data.second;
+        Real base = baseNPV_[id];
+        Real sensi = npv - base;
+        if (fabs(sensi) > outputThreshold) {
+            report.next();
+            report.add(id);
+            report.add(factor);
+            report.add("Cross");
             report.add(base);
             report.add(npv);
             report.add(sensi);
