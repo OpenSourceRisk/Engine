@@ -120,8 +120,8 @@ private:
 
 //! NPVCalculatorFXT0
 /*! Calculate the NPV of the given trade, convert to base currency USING T0 RATES and divide by the numeraire
-*  This is needed for finite difference sensitivities 
-*    (for FX spot sensis, we wish to bump the spot in the pricing model, but still convert to base using static FX)
+*  This can sometimes be useful for finite difference ("bump-revalue") sensitivities 
+*    (for FX spot sensis, if we wish to bump the spot in the pricing model, but still convert to base using static FX)
 *  If the NPV() call throws, we log an exception and write 0 to the cube
 *
 */

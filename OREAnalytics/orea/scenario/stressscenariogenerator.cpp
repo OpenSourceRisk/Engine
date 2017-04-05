@@ -66,10 +66,12 @@ void StressScenarioGenerator::addFxShifts(StressTestScenarioData::StressTestData
 
         StressTestScenarioData::FxShiftData data = d.second;
         ShiftType type = parseShiftType(data.shiftType);
-        QL_REQUIRE(type == ShiftType::Relative, "FX scenario type must be relative");
+        bool relShift = (type == ShiftType::Relative);
+        //QL_REQUIRE(type == ShiftType::Relative, "FX scenario type must be relative");
+        Real size = data.shiftSize;
 
         Real rate = initMarket_->fxSpot(ccypair, configuration_)->value();
-        Real newRate = rate * (1.0 + data.shiftSize);
+        Real newRate = relShift ? rate * (1.0 + size) : (rate + size);
         scenario->add(getFxKey(ccypair), newRate);
     }
     LOG("FX scenarios done");

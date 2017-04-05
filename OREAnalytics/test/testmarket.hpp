@@ -179,9 +179,19 @@ public:
         // build default curves
         defaultCurves_[make_pair(Market::defaultConfiguration, "dc")] = flatRateDcs(0.1);
         defaultCurves_[make_pair(Market::defaultConfiguration, "dc2")] = flatRateDcs(0.2);
+        defaultCurves_[make_pair(Market::defaultConfiguration, "BondIssuer1")] = flatRateDcs(0.0);
 
-        recoveryRates_[make_pair(Market::defaultConfiguration, "dc")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.4));
-        recoveryRates_[make_pair(Market::defaultConfiguration, "dc2")] = Handle<Quote>(boost::make_shared<SimpleQuote>(0.4));
+        recoveryRates_[make_pair(Market::defaultConfiguration, "dc")] =
+            Handle<Quote>(boost::make_shared<SimpleQuote>(0.4));
+        recoveryRates_[make_pair(Market::defaultConfiguration, "dc2")] =
+            Handle<Quote>(boost::make_shared<SimpleQuote>(0.4));
+        recoveryRates_[make_pair(Market::defaultConfiguration, "BondIssuer1")] =
+            Handle<Quote>(boost::make_shared<SimpleQuote>(0.0));
+
+        yieldCurves_[make_pair(Market::defaultConfiguration, "BondCurve1")] = flatRateYts(0.05);
+
+        securitySpreads_[make_pair(Market::defaultConfiguration, "Bond1")] =
+            Handle<Quote>(boost::make_shared<SimpleQuote>(0.0));
     }
 
 private:

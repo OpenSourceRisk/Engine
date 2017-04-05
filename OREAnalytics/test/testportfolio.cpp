@@ -17,10 +17,12 @@
 */
 
 #include <test/testportfolio.hpp>
+#include <ored/portfolio/bond.hpp>
 #include <ored/portfolio/swap.hpp>
 #include <ored/portfolio/swaption.hpp>
 #include <ored/portfolio/fxoption.hpp>
 #include <ored/portfolio/capfloor.hpp>
+#include <ored/portfolio/builders/bond.hpp>
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/builders/swaption.hpp>
 #include <ored/portfolio/builders/fxoption.hpp>
@@ -162,7 +164,7 @@ boost::shared_ptr<Trade> buildCapFloor(string id, string ccy, string longShort, 
 
     vector<Real> notionals(1, notional);
     vector<Real> spreads(1, 0.0);
-    
+
     Date qlStartDate = calendar.adjust(today + start * Years);
     Date qlEndDate = calendar.adjust(qlStartDate + term * Years);
     string startDate = toString(qlStartDate);
@@ -178,7 +180,27 @@ boost::shared_ptr<Trade> buildCapFloor(string id, string ccy, string longShort, 
     // trade
     boost::shared_ptr<Trade> trade(new ore::data::CapFloor(env, longShort, floatingLeg, capRates, floorRates));
     trade->id() = id;
-    
+
+    return trade;
+}
+
+boost::shared_ptr<Trade> buildZeroBond(string id, string ccy, Real notional, Size term) {
+    Date today = Settings::instance().evaluationDate();
+    Date qlEndDate = today + term * Years;
+    string maturityDate = toString(qlEndDate);
+    string issueDate = toString(today);
+
+    string settlementDays = "2";
+    string calendar = "TARGET";
+    string issuerId = "BondIssuer1";
+    string securityId = "Bond1";
+    string referenceCurveId = "BondCurve1";
+    // envelope
+    Envelope env("CP");
+    boost::shared_ptr<Trade> trade(new ore::data::Bond(env, issuerId, securityId, referenceCurveId, settlementDays,
+                                                       calendar, notional, maturityDate, ccy, issueDate));
+    trade->id() = id;
+
     return trade;
 }
 }

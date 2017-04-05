@@ -61,7 +61,8 @@ public:
                         const boost::shared_ptr<ore::data::EngineData>& engineData,
                         const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
                         const boost::shared_ptr<SensitivityScenarioData>& sensitivityData,
-                        const Conventions& conventions);
+                        const Conventions& conventions,
+                        const bool nonShiftedBaseCurrencyConversion = false);
 
     //! Return set of trades analysed
     const std::set<std::string>& trades() { return trades_; }
@@ -117,11 +118,13 @@ protected:
     // NPV respectively sensitivity by trade and factor
     std::map<std::pair<string, string>, Real> upNPV_, downNPV_, delta_, gamma_;
     // cross gamma by trade, factor1, factor2
-    std::map<std::tuple<string, string, string>, Real> crossGamma_;
+    std::map<std::tuple<string, string, string>, Real> crossNPV_, crossGamma_;
     // unique set of factors
     std::set<std::string> factors_;
     // unique set of trades
     std::set<std::string> trades_;
+    // if true, convert sensis to base currency using the original (non-shifted) FX rate
+    bool nonShiftedBaseCurrencyConversion_;
 };
 }
 }

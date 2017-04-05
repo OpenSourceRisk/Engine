@@ -92,10 +92,15 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData2() 
         new analytics::ScenarioSimMarketParameters());
     simMarketData->baseCcy() = "EUR";
     simMarketData->ccys() = { "EUR", "GBP" };
+    simMarketData->yieldCurveNames() = { "BondCurve1" };
     simMarketData->yieldCurveTenors() = { 1 * Months, 6 * Months, 1 * Years,  2 * Years,  3 * Years, 4 * Years,
                                           5 * Years,  6 * Years,  7 * Years,  8 * Years,  9 * Years, 10 * Years,
                                           12 * Years, 15 * Years, 20 * Years, 25 * Years, 30 * Years };
     simMarketData->indices() = { "EUR-EURIBOR-6M", "GBP-LIBOR-6M" };
+    simMarketData->defaultNames() = { "BondIssuer1" };
+    simMarketData->defaultTenors() = { 1 * Months, 6 * Months, 1 * Years,  2 * Years,  3 * Years, 4 * Years,
+                                       5 * Years,  7 * Years,  10 * Years, 20 * Years, 30 * Years };
+    simMarketData->securities() = { "Bond1" };
     simMarketData->interpolation() = "LogLinear";
     simMarketData->extrapolate() = true;
 
@@ -116,6 +121,9 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData2() 
 
     simMarketData->simulateCapFloorVols() = false;
 
+    simMarketData->defaultNames() = { "BondIssuer1" };
+    simMarketData->securities() = { "Bond1" };
+
     return simMarketData;
 }
 
@@ -129,6 +137,7 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData5() 
                                           5 * Years,  7 * Years,  10 * Years, 15 * Years, 20 * Years, 30 * Years };
     simMarketData->indices() = { "EUR-EURIBOR-6M", "USD-LIBOR-3M", "USD-LIBOR-6M",
                                  "GBP-LIBOR-6M",   "CHF-LIBOR-6M", "JPY-LIBOR-6M" };
+    simMarketData->yieldCurveNames() = { "BondCurve1" };
     simMarketData->interpolation() = "LogLinear";
     simMarketData->extrapolate() = true;
 
@@ -152,6 +161,11 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData5() 
     simMarketData->capFloorVolExpiries() = { 6 * Months, 1 * Years,  2 * Years,  3 * Years, 5 * Years,
                                              7 * Years,  10 * Years, 15 * Years, 20 * Years };
     simMarketData->capFloorVolStrikes() = { 0.00, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06 };
+
+    simMarketData->defaultNames() = { "BondIssuer1" };
+    simMarketData->defaultTenors() = { 1 * Months, 6 * Months, 1 * Years,  2 * Years,  3 * Years, 4 * Years,
+                                       5 * Years,  7 * Years,  10 * Years, 20 * Years, 30 * Years };
+    simMarketData->securities() = { "Bond1" };
 
     return simMarketData;
 }
@@ -211,6 +225,9 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData2() {
     sensiData->indexCurveShiftData()["GBP-LIBOR-6M"].parInstrumentConventions = {
         { "DEP", "GBP-DEP-CONVENTIONS" }, { "IRS", "GBP-6M-SWAP-CONVENTIONS" }
     };
+
+    sensiData->yieldCurveNames() = { "BondCurve1" };
+    sensiData->yieldCurveShiftData()["BondCurve1"] = cvsData;
 
     sensiData->fxCcyPairs() = { "EURGBP" };
     sensiData->fxShiftData()["EURGBP"] = fxsData;
@@ -314,6 +331,9 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5() {
         { "DEP", "CHF-DEP-CONVENTIONS" }, { "IRS", "CHF-6M-SWAP-CONVENTIONS" }
     };
 
+    sensiData->yieldCurveNames() = { "BondCurve1" };
+    sensiData->yieldCurveShiftData()["BondCurve1"] = cvsData;
+
     sensiData->fxCcyPairs() = { "EURUSD", "EURGBP", "EURCHF", "EURJPY" };
     sensiData->fxShiftData()["EURUSD"] = fxsData;
     sensiData->fxShiftData()["EURGBP"] = fxsData;
@@ -390,6 +410,9 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     data->engine("FxOption") = "AnalyticEuropeanEngine";
     data->model("CapFloor") = "IborCapModel";
     data->engine("CapFloor") = "IborCapEngine";
+    data->model("Bond") = "DiscountedCashflows";
+    data->engine("Bond") = "DiscountingRiskyBondEngine";
+    data->engineParameters("Bond")["TimestepPeriod"] = "6M";
     boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(data, simMarket);
     factory->registerBuilder(boost::make_shared<SwapEngineBuilder>());
     factory->registerBuilder(boost::make_shared<EuropeanSwaptionEngineBuilder>());
@@ -415,12 +438,15 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     portfolio->add(buildFxOption("8_FxOption_EUR_GBP", "Long", "Call", 7, "EUR", 10000000.0, "GBP", 11000000.0));
     portfolio->add(buildCap("9_Cap_EUR", "EUR", "Long", 0.05, 1000000.0, 0, 10, "6M", "A360", "EUR-EURIBOR-6M"));
     portfolio->add(buildFloor("10_Floor_USD", "USD", "Long", 0.01, 1000000.0, 0, 10, "3M", "A360", "USD-LIBOR-3M"));
+    portfolio->add(buildZeroBond("11_ZeroBond_EUR", "EUR", 1.0, 10));
+    portfolio->add(buildZeroBond("12_ZeroBond_USD", "USD", 1.0, 10));
     portfolio->build(factory);
 
     BOOST_TEST_MESSAGE("Portfolio size after build: " << portfolio->size());
 
     // build the scenario valuation engine
-    boost::shared_ptr<DateGrid> dg = boost::make_shared<DateGrid>("1,0W"); //TODO - extend the DateGrid interface so that it can actually take a vector of dates as input
+    boost::shared_ptr<DateGrid> dg = boost::make_shared<DateGrid>(
+        "1,0W"); // TODO - extend the DateGrid interface so that it can actually take a vector of dates as input
     vector<boost::shared_ptr<ValuationCalculator> > calculators;
     calculators.push_back(boost::make_shared<NPVCalculator>(simMarketData->baseCcy()));
     ValuationEngine engine(today, dg, simMarket);
@@ -694,7 +720,24 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
         { "10_Floor_USD", "Down:OptionletVolatility/USD/5/2Y/0.01", 3406.46, -3.14445 },
         { "10_Floor_USD", "Down:OptionletVolatility/USD/10/3Y/0.01", 3406.46, -16.3074 },
         { "10_Floor_USD", "Down:OptionletVolatility/USD/15/5Y/0.01", 3406.46, -94.5309 },
-        { "10_Floor_USD", "Down:OptionletVolatility/USD/20/10Y/0.01", 3406.46, -90.9303 }
+        { "10_Floor_USD", "Down:OptionletVolatility/USD/20/10Y/0.01", 3406.46, -90.9303 },
+        // Excel calculation with z=5% flat rate, term structure day counter ActAct,
+        // time to maturity T = YEARFRAC(14/4/16, 14/4/26, 1) = 9.99800896, yields
+        // sensi to up shift d=1bp: exp(-(z+d)*T)-exp(z*T)
+        // = -0.00060616719559925
+        { "11_ZeroBond_EUR", "Up:YieldCurve/BondCurve1/6/10Y", 0.60659, -0.000606168 }, // OK, diff 1e-9
+        // sensi to down shift d=-1bp: 0.00060677354516836
+        { "11_ZeroBond_EUR", "Down:YieldCurve/BondCurve1/6/10Y", 0.60659, 0.000606774 }, // OK, diff < 1e-9
+        // sensi to up shift d=+1bp: exp(-(z+d)*T)*USDEUR - exp(-z*T)*USDEUR
+        // = -0.000505139329666004
+        { "12_ZeroBond_USD", "Up:YieldCurve/BondCurve1/6/10Y", 0.505492, -0.00050514 }, // OK, diff < 1e-8
+        // sensi to down shit d=-1bp: 0.000505644620973689
+        { "12_ZeroBond_USD", "Down:YieldCurve/BondCurve1/6/10Y", 0.505492, 0.000505645 }, // OK, diff < 1e-9
+        // sensi to EURUSD upshift d=+1%: exp(-z*T)*USDEUR/(1+d) - exp(-z*T)*USDEUR
+        // = -0.00500487660122262
+        { "12_ZeroBond_USD", "Up:FXSpot/EURUSD/0/spot", 0.505492, -0.00500487 }, // OK, diff < 1e-8
+        // sensi to EURUSD down shift d=-1%: 0.00510598521942907
+        { "12_ZeroBond_USD", "Down:FXSpot/EURUSD/0/spot", 0.505492, 0.00510598 } // OK, diff < 1e-8
     };
 
     std::map<pair<string, string>, Real> npvMap, sensiMap;
@@ -717,8 +760,7 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
             string label = desc[j].text();
             if (fabs(sensi) > tiny) {
                 count++;
-                //BOOST_TEST_MESSAGE("{ \"" << id << "\", \"" << label << "\", " << npv0 << ", " << sensi
-                  //                        << " },");
+                // BOOST_TEST_MESSAGE("{ \"" << id << "\", \"" << label << "\", " << npv0 << ", " << sensi << " },");
                 pair<string, string> p(id, label);
                 QL_REQUIRE(npvMap.find(p) != npvMap.end(), "pair (" << p.first << ", " << p.second
                                                                     << ") not found in npv map");
@@ -734,12 +776,51 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
             }
         }
     }
-    BOOST_CHECK_MESSAGE(count == cachedResults.size(), 
-        "number of non-zero sensitivities (" << count << 
-        ") do not match regression data (" << cachedResults.size() << 
-        ")");
+    BOOST_CHECK_MESSAGE(count == cachedResults.size(), "number of non-zero sensitivities ("
+                                                           << count << ") do not match regression data ("
+                                                           << cachedResults.size() << ")");
 
     BOOST_TEST_MESSAGE("Cube generated in " << elapsed << " seconds");
+
+    // Repeat analysis using the SensitivityAnalysis class and spot check a few deltas and gammas
+    boost::shared_ptr<SensitivityAnalysis> sa = boost::make_shared<SensitivityAnalysis>(
+        portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, conventions);
+    map<pair<string, string>, Real> deltaMap = sa->delta();
+    map<pair<string, string>, Real> gammaMap = sa->gamma();
+
+    std::vector<Results> cachedResults2 = {
+        // trade, factor, delta, gamma
+        { "11_ZeroBond_EUR", "YieldCurve/BondCurve1/6/10Y", -0.000606168, 6.06352e-07 }, // gamma OK see case 1 below
+        { "12_ZeroBond_USD", "YieldCurve/BondCurve1/6/10Y", -0.00050514, 5.05294e-07 }, // gamma OK, see case 2 below
+        { "12_ZeroBond_USD", "FXSpot/EURUSD/0/spot", -0.00500487, 0.000101108 } // gamma OK, see case 3
+    };
+
+    // Validation of cached gammas:
+    // gamma * (dx)^2 = \partial^2_x NPV(x) * (dx)^2
+    //               \approx (NPV(x_up) - 2 NPV(x) + NPV(x_down)) = sensi(up) + sensi(down)
+    //
+    // Case 1: "11_ZeroBond_EUR", "YieldCurve/BondCurve1/6/10Y"
+    // NPV(x_up) - NPV(x) = -0.000606168, NPV(x_down) - NPV(x) = 0.000606774
+    // gamma * (dx)^2 = -0.000606168 + 0.000606774 = 0.000000606 = 6.06e-7
+    //
+    // Case 2: "12_ZeroBond_USD", "YieldCurve/BondCurve1/6/10Y"
+    // NPV(x_up) - NPV(x) = -0.00050514, NPV(x_down) - NPV(x) = 0.000505645
+    // gamma * (dx)^2 =  -0.00050514 + 0.000505645 = 0.000000505 = 5.05e-7
+    // 
+    // Case 3: "12_ZeroBond_USD", "FXSpot/EURUSD/0/spot"
+    // NPV(x_up) - NPV(x) = -0.00500487, NPV(x_down) - NPV(x) = 0.00510598
+    // gamma * (dx)^2 =  -0.00500487 + 0.00510598 = 0.00010111
+    // 
+    for (Size i = 0; i < cachedResults2.size(); ++i) {
+        pair<string, string> p(cachedResults2[i].id, cachedResults2[i].label);
+        Real delta = cachedResults2[i].npv;   // is delta
+        Real gamma = cachedResults2[i].sensi; // is gamma
+        BOOST_CHECK_MESSAGE(fabs((delta - deltaMap[p]) / delta) < tolerance, "delta regression failed for trade "
+                                                                                 << p.first << " factor " << p.second);
+        BOOST_CHECK_MESSAGE(fabs((gamma - gammaMap[p]) / gamma) < tolerance, "gamma regression failed for trade "
+                                                                                 << p.first << " factor " << p.second);
+    }
+
     ObservationMode::instance().setMode(backupMode);
     IndexManager::instance().clearHistories();
 }
@@ -939,7 +1020,8 @@ void SensitivityAnalysisTest::test2dShifts() {
     Real tolerance = 1.0e-10;
     for (Size k = 0; k < expiries.size(); ++k) {
         for (Size l = 0; l < terms.size(); ++l) {
-            // BOOST_TEST_MESSAGE("2d shift: checking sensitivity to underlying grid point (" << k << ", " << l << "): "
+            // BOOST_TEST_MESSAGE("2d shift: checking sensitivity to underlying grid point (" << k << ", " << l <<
+            // "): "
             // << diff[k][l]);
             BOOST_CHECK_MESSAGE(fabs(diffAbsolute[k][l] - shiftSize) < tolerance,
                                 "inconsistency in absolute 2d shifts at grid point (" << k << ", " << l
@@ -1006,13 +1088,17 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
     trnCount++;
     portfolio->add(buildFxOption("Put_1", "Long", "Put", 1, "USD", 100000000.0, "EUR", 100000000.0));
     trnCount++;
-    portfolio->add(buildFxOption("Call_2", "Short", "Call", 2, "GBP", 100000000.0, "CHF", 130000000.0));
-    trnCount++;
-    portfolio->add(buildFxOption("Put_2", "Short", "Put", 2, "GBP", 100000000.0, "CHF", 130000000.0));
-    trnCount++;
+    // portfolio->add(buildFxOption("Call_2", "Short", "Call", 2, "GBP", 100000000.0, "CHF", 130000000.0));
+    // trnCount++;
+    // portfolio->add(buildFxOption("Put_2", "Short", "Put", 2, "GBP", 100000000.0, "CHF", 130000000.0));
+    // trnCount++;
     portfolio->add(buildFxOption("Call_3", "Long", "Call", 1, "EUR", 100000000.0, "USD", 100000000.0));
     trnCount++;
     portfolio->add(buildFxOption("Put_3", "Short", "Put", 1, "EUR", 100000000.0, "USD", 100000000.0));
+    trnCount++;
+    portfolio->add(buildFxOption("Call_4", "Long", "Call", 1, "JPY", 10000000000.0, "EUR", 100000000.0));
+    trnCount++;
+    portfolio->add(buildFxOption("Call_5", "Long", "Call", 1, "EUR", 100000000.0, "JPY", 10000000000.0));
     trnCount++;
     portfolio->build(factory);
     BOOST_CHECK_EQUAL(portfolio->size(), trnCount);
@@ -1031,8 +1117,9 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
         Real vega;
         Real rho;
         Real divRho;
+        Real fxForBase;
     };
-    map<string,AnalyticInfo> qlInfoMap;
+    map<string, AnalyticInfo> qlInfoMap;
     for (Size i = 0; i < portfolio->size(); ++i) {
         AnalyticInfo info;
         boost::shared_ptr<Trade> trn = portfolio->trades()[i];
@@ -1047,6 +1134,8 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
         info.fx = initMarket->fxSpot(pair)->value();
         string trnPair = info.forCcy + info.domCcy;
         info.trnFx = initMarket->fxSpot(trnPair)->value();
+        string forPair = info.forCcy + simMarketData->baseCcy();
+        info.fxForBase = initMarket->fxSpot(forPair)->value();
         info.baseNpv = trn->instrument()->NPV() * info.fx;
         boost::shared_ptr<QuantLib::VanillaOption> qlOpt =
             boost::dynamic_pointer_cast<QuantLib::VanillaOption>(trn->instrument()->qlInstrument());
@@ -1061,9 +1150,11 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
         qlInfoMap[info.id] = info;
     }
 
+    bool useOriginalFxForBaseCcyConv = true; // convert sensi to EUR using original FX rate (not the shifted rate)
     boost::shared_ptr<SensitivityAnalysis> sa = 
         boost::make_shared<SensitivityAnalysis>(
-            portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, conventions);
+            portfolio, initMarket, Market::defaultConfiguration, data, 
+            simMarketData, sensiData, conventions, useOriginalFxForBaseCcyConv);
     map<pair<string, string>, Real> deltaMap = sa->delta();
     map<pair<string, string>, Real> gammaMap = sa->gamma();
     map<std::string, Real> baseNpvMap = sa->baseNPV();
@@ -1087,6 +1178,8 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
         Real fxRateSensiDom;
         bool hasFxSpotDomSensi;
         bool hasFxSpotForSensi;
+        string fxSensiForCcy;
+        string fxSensiDomCcy;
     };
 
     Real epsilon = 1.e-15; // a small number
@@ -1101,9 +1194,9 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
         string id = it.first;
         BOOST_CHECK(sensiTrades.find(id) != sensiTrades.end());
         AnalyticInfo qlInfo = it.second;
-        SensiResults res = { string(""), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, false, false };
+        SensiResults res = { string(""), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, false, false, string(""), string("") };
         for (auto it2 : deltaMap) {
-            pair<string,string> sensiKey = it2.first;
+            pair<string, string> sensiKey = it2.first;
             string sensiTrnId = it2.first.first;
             if (sensiTrnId != id)
                 continue;
@@ -1135,22 +1228,19 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
                         res.forDiscountDelta += sensiVal;
                     else if (isDomCcySensi)
                         res.domDiscountDelta += sensiVal;
-                }
-                else if (isIndexCurve) {
+                } else if (isIndexCurve) {
                     if (isFgnCcySensi)
                         res.forIndexDelta += sensiVal;
                     else if (isDomCcySensi)
                         res.domIndexDelta += sensiVal;
-                }
-                else if (isYieldCurve) {
+                } else if (isYieldCurve) {
                     if (isFgnCcySensi)
                         res.forYcDelta += sensiVal;
                     if (isDomCcySensi)
                         res.domYcDelta += sensiVal;
                 }
                 continue;
-            }
-            else if (isFxSpot) {
+            } else if (isFxSpot) {
                 BOOST_CHECK(tokens.size() > 2);
                 string pair = tokens[1];
                 BOOST_CHECK_EQUAL(pair.length(), 6);
@@ -1159,8 +1249,9 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
                 Real fxSensi = initMarket->fxSpot(pair)->value();
                 bool isSensiForBase = (sensiForCcy == simMarketData->baseCcy());
                 bool isSensiDomBase = (sensiDomCcy == simMarketData->baseCcy());
-                // TO-DO this could be relaxed to handle case where market stores the currency pairs the other way around
-                BOOST_CHECK(isSensiForBase && !isSensiDomBase); 
+                // TO-DO this could be relaxed to handle case where market stores the currency pairs the other way
+                // around
+                BOOST_CHECK(isSensiForBase && !isSensiDomBase);
                 bool hasGamma = (gammaMap.find(sensiKey) != gammaMap.end());
                 BOOST_CHECK(hasGamma);
                 Real gammaVal = 0.0;
@@ -1173,20 +1264,20 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
                         res.fxRateSensiFor = fxSensi;
                         res.hasFxSpotForSensi = true;
                         res.fxSpotGammaFor += gammaVal;
-                    }
-                    else if (sensiDomCcy == qlInfo.domCcy) {
+                    } else if (sensiDomCcy == qlInfo.domCcy) {
                         res.fxSpotDeltaDom += sensiVal;
                         res.fxRateSensiDom = fxSensi;
                         res.hasFxSpotDomSensi = true;
                         res.fxSpotGammaDom += gammaVal;
                     }
+                    res.fxSensiForCcy = sensiForCcy;
+                    res.fxSensiDomCcy = sensiDomCcy;
                 }
                 else {
                     BOOST_ERROR("This ccy pair configuration not supported yet by this test");
                 }
                 continue;
-            }
-            else if (isFxVol) {
+            } else if (isFxVol) {
                 BOOST_CHECK(tokens.size() > 2);
                 string pair = tokens[1];
                 BOOST_CHECK_EQUAL(pair.length(), 6);
@@ -1196,8 +1287,7 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
                 BOOST_CHECK((sensiDomCcy == qlInfo.forCcy) || (sensiDomCcy == qlInfo.domCcy));
                 res.fxVolDelta += sensiVal;
                 continue;
-            }
-            else {
+            } else {
                 BOOST_ERROR("Unrecognised sensitivity factor - " << sensiId);
             }
         }
@@ -1211,7 +1301,8 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
             "SA: id=" << res.id << ", npv=" << res.baseNpv << ", forDiscountDelta=" << res.forDiscountDelta << 
             ", domDiscountDelta=" << res.domDiscountDelta << ", fxSpotDeltaFor=" << res.fxSpotDeltaFor << 
             ", fxSpotDeltaDom=" << res.fxSpotDeltaDom << ", fxVolDelta=" << res.fxVolDelta << 
-            ", fxSpotGammaFor=" << res.fxSpotGammaFor << ", fxSpotGammaDom=" << res.fxSpotGammaDom);
+            ", fxSpotGammaFor=" << res.fxSpotGammaFor << ", fxSpotGammaDom=" << res.fxSpotGammaDom << 
+            ", hasFxDom=" << res.hasFxSpotDomSensi << ", hasFxFor=" << res.hasFxSpotForSensi);
         BOOST_TEST_MESSAGE(
             "QL: id=" << qlInfo.id << ", forCcy=" << qlInfo.forCcy << ", domCcy=" << qlInfo.domCcy << 
             ", fx=" << qlInfo.fx << ", npv=" << qlInfo.baseNpv << ", ccyNpv=" << qlInfo.qlNpv << 
@@ -1224,35 +1315,302 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
         // rate sensis are 1bp absolute shifts
         // fx vol sensis are 1bp relative shifts
         // fx spot sensis are 1pb relative shifts
-        BOOST_CHECK_CLOSE(res.domDiscountDelta, qlInfo.rho*qlInfo.fx*bp, tol);
-        BOOST_CHECK_CLOSE(res.forDiscountDelta, qlInfo.divRho*qlInfo.fx*bp, tol);
-        Real fxVol = initMarket->fxVol(qlInfo.forCcy + qlInfo.domCcy)->blackVol(1.0,1.0,true); // TO-DO more appropriate vol extraction
-        BOOST_CHECK_CLOSE(res.fxVolDelta, qlInfo.vega*qlInfo.fx*(bp*fxVol), tol);
+        BOOST_CHECK_CLOSE(res.domDiscountDelta, qlInfo.rho * qlInfo.fx * bp, tol);
+        BOOST_CHECK_CLOSE(res.forDiscountDelta, qlInfo.divRho * qlInfo.fx * bp, tol);
+        Real fxVol = initMarket->fxVol(qlInfo.forCcy + qlInfo.domCcy)
+                         ->blackVol(1.0, 1.0, true); // TO-DO more appropriate vol extraction
+        BOOST_CHECK_CLOSE(res.fxVolDelta, qlInfo.vega * qlInfo.fx * (bp * fxVol), tol);
         if (res.hasFxSpotDomSensi) {
+            Real qlGamma = qlInfo.gamma;
+            if ((res.fxSensiForCcy == qlInfo.domCcy) &&
+                (res.fxSensiDomCcy == qlInfo.forCcy)) {
+                // the QL sensi is relative to the inverted FX quote, so we need to convert to the sensi that we want (via chain rule)
+                Real ql_fx = qlInfo.trnFx;
+                qlGamma = 2 * pow(ql_fx, 3)*qlInfo.delta + pow(ql_fx, 4)*qlInfo.gamma;
+            }
+            else if ((res.fxSensiForCcy == qlInfo.forCcy) &&
+                (res.fxSensiDomCcy == qlInfo.domCcy)) {
+                qlGamma = qlInfo.gamma;
+            }
+            else {
+                // perform the necessary conversion for cross quotes
+                Real otherFx = 1.0 / qlInfo.fxForBase;
+                qlGamma = qlInfo.gamma / pow(otherFx, 2);
+            }
             BOOST_CHECK_CLOSE(res.fxSpotDeltaDom, qlInfo.delta*qlInfo.fx*(bp*qlInfo.trnFx), tol);
-            BOOST_CHECK_CLOSE(res.fxSpotGammaDom, qlInfo.gamma*qlInfo.fx*(pow(bp*qlInfo.trnFx,2)), tol);
+            BOOST_CHECK_CLOSE(res.fxSpotGammaDom, qlGamma*qlInfo.fx*(pow(bp*res.fxRateSensiDom,2)), tol);
         }
         if (res.hasFxSpotForSensi) {
+            Real qlGamma = qlInfo.gamma;
+            if ((res.fxSensiForCcy == qlInfo.domCcy) && 
+                (res.fxSensiDomCcy == qlInfo.forCcy)) {
+                // the QL sensi is relative to the inverted FX quote, so we need to convert to the sensi that we want (via chain rule)
+                Real ql_fx = qlInfo.trnFx;
+                qlGamma = 2 * pow(ql_fx, 3)*qlInfo.delta + pow(ql_fx, 4)*qlInfo.gamma;
+            }
+            else if ((res.fxSensiForCcy == qlInfo.forCcy) &&
+                (res.fxSensiDomCcy == qlInfo.domCcy)) {
+                qlGamma = qlInfo.gamma;
+            }
+            else {
+                // perform the necessary conversion for cross quotes
+                Real y = 1.0 / qlInfo.fx; // BASE/TrnDom
+                Real z = 1.0 / qlInfo.fxForBase; // BASE/TrnFor
+                Real s = qlInfo.trnFx; // TrnFor/TrnDom
+                qlGamma = ((2.0*y) / pow(z, 3))*qlInfo.delta + (y / pow(z, 4))*qlInfo.gamma;
+            }
             BOOST_CHECK_CLOSE(res.fxSpotDeltaFor, qlInfo.delta*qlInfo.fx*(-bp*qlInfo.trnFx), tol);
-            BOOST_CHECK_CLOSE(res.fxSpotGammaFor, qlInfo.gamma*qlInfo.fx*(pow(-bp*qlInfo.trnFx,2)), tol);
+            BOOST_CHECK_CLOSE(res.fxSpotGammaFor, qlGamma*qlInfo.fx*(pow(-bp*res.fxRateSensiFor,2)), tol);
         }
     }
-    //TODO - turn off the report writing
+    // TODO - turn off the report writing
     sa->writeSensitivityReport("./unitTest_fxOption_sensi.csv");
     sa->writeScenarioReport("./unitTest_fxOption_scenario.csv");
     ObservationMode::instance().setMode(backupMode);
     IndexManager::instance().clearHistories();
 }
 
+void SensitivityAnalysisTest::testCrossGamma() {
+
+    SavedSettings backup;
+
+    ObservationMode::Mode backupMode = ObservationMode::instance().mode();
+    ObservationMode::instance().setMode(ObservationMode::Mode::None);
+
+    Date today = Date(14, April, 2016);
+    Settings::instance().evaluationDate() = today;
+
+    BOOST_TEST_MESSAGE("Today is " << today);
+
+    // Init market
+    boost::shared_ptr<Market> initMarket = boost::make_shared<TestMarket>(today);
+
+    // build scenario sim market parameters
+    boost::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData = setupSimMarketData5();
+
+    // sensitivity config
+    boost::shared_ptr<SensitivityScenarioData> sensiData = setupSensitivityScenarioData5();
+    sensiData->parConversion() = false;
+    map<string, SensitivityScenarioData::FxVolShiftData>& fxvs = sensiData->fxVolShiftData();
+    vector<pair<string, string>>& cgFilter = sensiData->crossGammaFilter();
+    BOOST_CHECK_EQUAL(cgFilter.size(), 0);
+    cgFilter.push_back(pair<string, string>("DiscountCurve/EUR", "DiscountCurve/EUR"));
+    cgFilter.push_back(pair<string, string>("DiscountCurve/EUR", "IndexCurve/EUR"));
+    cgFilter.push_back(pair<string, string>("IndexCurve/EUR", "IndexCurve/EUR"));
+    // build scenario generator
+    boost::shared_ptr<ScenarioFactory> scenarioFactory(new SimpleScenarioFactory);
+    boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(
+        new SensitivityScenarioGenerator(scenarioFactory, sensiData, simMarketData, today, initMarket));
+    boost::shared_ptr<ScenarioGenerator> sgen(scenarioGenerator);
+
+    // build scenario sim market
+    Conventions conventions = *conv();
+    boost::shared_ptr<analytics::ScenarioSimMarket> simMarket =
+        boost::make_shared<analytics::ScenarioSimMarket>(sgen, initMarket, simMarketData, conventions);
+
+    // build porfolio
+    boost::shared_ptr<EngineData> data = boost::make_shared<EngineData>();
+    data->model("Swap") = "DiscountedCashflows";
+    data->engine("Swap") = "DiscountingSwapEngine";
+    data->model("CrossCurrencySwap") = "DiscountedCashflows";
+    data->engine("CrossCurrencySwap") = "DiscountingCrossCurrencySwapEngine";
+    data->model("EuropeanSwaption") = "BlackBachelier";
+    data->engine("EuropeanSwaption") = "BlackBachelierSwaptionEngine";
+    data->model("FxForward") = "DiscountedCashflows";
+    data->engine("FxForward") = "DiscountingFxForwardEngine";
+    data->model("FxOption") = "GarmanKohlhagen";
+    data->engine("FxOption") = "AnalyticEuropeanEngine";
+    data->model("CapFloor") = "IborCapModel";
+    data->engine("CapFloor") = "IborCapEngine";
+    boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(data, simMarket);
+    factory->registerBuilder(boost::make_shared<SwapEngineBuilder>());
+    factory->registerBuilder(boost::make_shared<EuropeanSwaptionEngineBuilder>());
+    factory->registerBuilder(boost::make_shared<FxOptionEngineBuilder>());
+    factory->registerBuilder(boost::make_shared<FxForwardEngineBuilder>());
+    factory->registerBuilder(boost::make_shared<CapFloorEngineBuilder>());
+
+    // boost::shared_ptr<Portfolio> portfolio = buildSwapPortfolio(portfolioSize, factory);
+    boost::shared_ptr<Portfolio> portfolio(new Portfolio());
+    Size trnCount = 0;
+    portfolio->add(buildSwap("1_Swap_EUR", "EUR", true, 10000000.0, 0, 10, 0.03, 0.00, "1Y", "30/360", "6M", "A360",
+        "EUR-EURIBOR-6M"));
+    trnCount++;
+    portfolio->add(buildSwap("2_Swap_USD", "USD", true, 10000000.0, 0, 15, 0.02, 0.00, "6M", "30/360", "3M", "A360",
+        "USD-LIBOR-3M"));
+    trnCount++;
+    portfolio->add(buildSwap("3_Swap_GBP", "GBP", true, 10000000.0, 0, 20, 0.04, 0.00, "6M", "30/360", "3M", "A360",
+        "GBP-LIBOR-6M"));
+    trnCount++;
+    portfolio->add(buildSwap("4_Swap_JPY", "JPY", true, 1000000000.0, 0, 5, 0.01, 0.00, "6M", "30/360", "3M", "A360",
+        "JPY-LIBOR-6M"));
+    trnCount++;
+    portfolio->add(buildEuropeanSwaption("5_Swaption_EUR", "Long", "EUR", true, 1000000.0, 10, 10, 0.03, 0.00, "1Y",
+        "30/360", "6M", "A360", "EUR-EURIBOR-6M"));
+    trnCount++;
+    portfolio->add(buildEuropeanSwaption("6_Swaption_EUR", "Long", "EUR", true, 1000000.0, 2, 5, 0.03, 0.00, "1Y",
+        "30/360", "6M", "A360", "EUR-EURIBOR-6M"));
+    trnCount++;
+    portfolio->add(buildFxOption("7_FxOption_EUR_USD", "Long", "Call", 3, "EUR", 10000000.0, "USD", 11000000.0));
+    trnCount++;
+    portfolio->add(buildFxOption("8_FxOption_EUR_GBP", "Long", "Call", 7, "EUR", 10000000.0, "GBP", 11000000.0));
+    trnCount++;
+    portfolio->add(buildCap("9_Cap_EUR", "EUR", "Long", 0.05, 1000000.0, 0, 10, "6M", "A360", "EUR-EURIBOR-6M"));
+    trnCount++;
+    portfolio->add(buildFloor("10_Floor_USD", "USD", "Long", 0.01, 1000000.0, 0, 10, "3M", "A360", "USD-LIBOR-3M"));
+    trnCount++;
+    portfolio->build(factory);
+    BOOST_CHECK_EQUAL(trnCount, portfolio->size());
+
+    bool useOriginalFxForBaseCcyConv = false;
+    boost::shared_ptr<SensitivityAnalysis> sa =
+        boost::make_shared<SensitivityAnalysis>(
+            portfolio, initMarket, Market::defaultConfiguration, data,
+            simMarketData, sensiData, conventions, useOriginalFxForBaseCcyConv);
+    map<pair<string, string>, Real> deltaMap = sa->delta();
+    map<pair<string, string>, Real> gammaMap = sa->gamma(); 
+    map<tuple<string,string,string>,Real> cgMap = sa->crossGamma();
+    map<std::string, Real> baseNpvMap = sa->baseNPV();
+    std::set<string> sensiTrades = sa->trades();
+
+    struct GammaResult {
+        string id;
+        string factor1;
+        string factor2;
+        Real crossgamma;
+    };
+
+    vector<GammaResult> cachedResults = {
+        { "1_Swap_EUR", "DiscountCurve/EUR/0/6M", "DiscountCurve/EUR/1/1Y", 2.32831e-10 },
+        { "1_Swap_EUR", "DiscountCurve/EUR/0/6M", "DiscountCurve/EUR/2/2Y", 2.32831e-10 },
+        { "1_Swap_EUR", "DiscountCurve/EUR/0/6M", "DiscountCurve/EUR/3/3Y", 2.32831e-10 },
+        { "1_Swap_EUR", "DiscountCurve/EUR/0/6M", "IndexCurve/EUR-EURIBOR-6M/1/1Y", 2.09548e-09 },
+        { "1_Swap_EUR", "DiscountCurve/EUR/1/1Y", "DiscountCurve/EUR/2/2Y", 0.000439457 },
+        { "1_Swap_EUR", "DiscountCurve/EUR/1/1Y", "DiscountCurve/EUR/3/3Y", 4.65661e-10 },
+        { "1_Swap_EUR", "DiscountCurve/EUR/1/1Y", "DiscountCurve/EUR/4/5Y", 2.32831e-10 },
+        { "1_Swap_EUR", "DiscountCurve/EUR/1/1Y", "DiscountCurve/EUR/5/7Y", 2.32831e-10 },
+        { "1_Swap_EUR", "DiscountCurve/EUR/1/1Y", "DiscountCurve/EUR/6/10Y", 4.65661e-10 },
+        { "1_Swap_EUR", "DiscountCurve/EUR/1/1Y", "DiscountCurve/EUR/7/15Y", 4.65661e-10 },
+        { "1_Swap_EUR", "DiscountCurve/EUR/1/1Y", "DiscountCurve/EUR/8/20Y", 4.65661e-10 },
+        { "1_Swap_EUR", "DiscountCurve/EUR/1/1Y", "IndexCurve/EUR-EURIBOR-6M/0/6M", 0.0488603 },
+        { "1_Swap_EUR", "DiscountCurve/EUR/1/1Y", "IndexCurve/EUR-EURIBOR-6M/3/3Y", 2.32831e-10 },
+        { "1_Swap_EUR", "DiscountCurve/EUR/1/1Y", "IndexCurve/EUR-EURIBOR-6M/5/7Y", 4.65661e-10 },
+        { "1_Swap_EUR", "DiscountCurve/EUR/1/1Y", "IndexCurve/EUR-EURIBOR-6M/6/10Y", 4.65661e-10 },
+        { "1_Swap_EUR", "DiscountCurve/EUR/1/1Y", "IndexCurve/EUR-EURIBOR-6M/7/15Y", 4.65661e-10 },
+        { "1_Swap_EUR", "DiscountCurve/EUR/1/1Y", "IndexCurve/EUR-EURIBOR-6M/8/20Y", 4.65661e-10 },
+        { "1_Swap_EUR", "DiscountCurve/EUR/2/2Y", "DiscountCurve/EUR/3/3Y", 0.00136526 },
+        { "1_Swap_EUR", "DiscountCurve/EUR/2/2Y", "DiscountCurve/EUR/4/5Y", 4.65661e-10 },
+        { "1_Swap_EUR", "DiscountCurve/EUR/2/2Y", "DiscountCurve/EUR/5/7Y", 4.65661e-10 },
+        { "1_Swap_EUR", "DiscountCurve/EUR/2/2Y", "IndexCurve/EUR-EURIBOR-6M/0/6M", 0.00108389 },
+        { "1_Swap_EUR", "DiscountCurve/EUR/2/2Y", "IndexCurve/EUR-EURIBOR-6M/1/1Y", 0.141865 },
+        { "1_Swap_EUR", "DiscountCurve/EUR/2/2Y", "IndexCurve/EUR-EURIBOR-6M/5/7Y", 2.32831e-10 },
+        { "1_Swap_EUR", "DiscountCurve/EUR/3/3Y", "DiscountCurve/EUR/4/5Y", 0.00183081 },
+        { "1_Swap_EUR", "DiscountCurve/EUR/3/3Y", "DiscountCurve/EUR/5/7Y", 4.65661e-10 },
+        { "1_Swap_EUR", "DiscountCurve/EUR/3/3Y", "DiscountCurve/EUR/6/10Y", 4.65661e-10 },
+        { "1_Swap_EUR", "DiscountCurve/EUR/3/3Y", "IndexCurve/EUR-EURIBOR-6M/1/1Y", 0.000784549 },
+        { "1_Swap_EUR", "DiscountCurve/EUR/3/3Y", "IndexCurve/EUR-EURIBOR-6M/2/2Y", 0.425321 },
+        { "1_Swap_EUR", "DiscountCurve/EUR/3/3Y", "IndexCurve/EUR-EURIBOR-6M/5/7Y", 2.32831e-10 },
+        { "1_Swap_EUR", "DiscountCurve/EUR/4/5Y", "IndexCurve/EUR-EURIBOR-6M/1/1Y", 2.09548e-09 },
+        { "1_Swap_EUR", "DiscountCurve/EUR/4/5Y", "IndexCurve/EUR-EURIBOR-6M/2/2Y", 0.000516383 },
+        { "1_Swap_EUR", "DiscountCurve/EUR/4/5Y", "IndexCurve/EUR-EURIBOR-6M/3/3Y", 0.918071 },
+        { "1_Swap_EUR", "DiscountCurve/EUR/5/7Y", "IndexCurve/EUR-EURIBOR-6M/1/1Y", 2.09548e-09 },
+        { "1_Swap_EUR", "DiscountCurve/EUR/5/7Y", "IndexCurve/EUR-EURIBOR-6M/4/5Y", 1.93838 },
+        { "1_Swap_EUR", "DiscountCurve/EUR/6/10Y", "IndexCurve/EUR-EURIBOR-6M/1/1Y", 2.09548e-09 },
+        { "1_Swap_EUR", "DiscountCurve/EUR/6/10Y", "IndexCurve/EUR-EURIBOR-6M/5/7Y", 3.43097 },
+        { "1_Swap_EUR", "DiscountCurve/EUR/7/15Y", "IndexCurve/EUR-EURIBOR-6M/1/1Y", 2.09548e-09 },
+        { "1_Swap_EUR", "DiscountCurve/EUR/8/20Y", "IndexCurve/EUR-EURIBOR-6M/1/1Y", 2.09548e-09 },
+        { "1_Swap_EUR", "IndexCurve/EUR-EURIBOR-6M/1/1Y", "IndexCurve/EUR-EURIBOR-6M/4/5Y", 1.86265e-09 },
+        { "1_Swap_EUR", "IndexCurve/EUR-EURIBOR-6M/1/1Y", "IndexCurve/EUR-EURIBOR-6M/5/7Y", 2.09548e-09 },
+        { "1_Swap_EUR", "IndexCurve/EUR-EURIBOR-6M/1/1Y", "IndexCurve/EUR-EURIBOR-6M/6/10Y", 2.09548e-09 },
+        { "1_Swap_EUR", "IndexCurve/EUR-EURIBOR-6M/1/1Y", "IndexCurve/EUR-EURIBOR-6M/7/15Y", 2.09548e-09 },
+        { "1_Swap_EUR", "IndexCurve/EUR-EURIBOR-6M/1/1Y", "IndexCurve/EUR-EURIBOR-6M/8/20Y", 2.09548e-09 },
+        { "5_Swaption_EUR", "DiscountCurve/EUR/6/10Y", "IndexCurve/EUR-EURIBOR-6M/6/10Y", 0.0728828 },
+        { "5_Swaption_EUR", "DiscountCurve/EUR/6/10Y", "IndexCurve/EUR-EURIBOR-6M/8/20Y", 0.0905886 },
+        { "5_Swaption_EUR", "DiscountCurve/EUR/7/15Y", "DiscountCurve/EUR/8/20Y", 0.00224834 },
+        { "5_Swaption_EUR", "DiscountCurve/EUR/7/15Y", "IndexCurve/EUR-EURIBOR-6M/6/10Y", 0.0136493 },
+        { "5_Swaption_EUR", "DiscountCurve/EUR/7/15Y", "IndexCurve/EUR-EURIBOR-6M/8/20Y", 0.0360955 },
+        { "5_Swaption_EUR", "DiscountCurve/EUR/8/20Y", "IndexCurve/EUR-EURIBOR-6M/7/15Y", 0.417352 },
+        { "5_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/7/15Y", "IndexCurve/EUR-EURIBOR-6M/8/20Y", 0.332563 },
+        { "6_Swaption_EUR", "DiscountCurve/EUR/2/2Y", "DiscountCurve/EUR/3/3Y", 4.65582e-06 },
+        { "6_Swaption_EUR", "DiscountCurve/EUR/2/2Y", "IndexCurve/EUR-EURIBOR-6M/2/2Y", 0.00218121 },
+        { "6_Swaption_EUR", "DiscountCurve/EUR/3/3Y", "DiscountCurve/EUR/4/5Y", 2.01547e-05 },
+        { "6_Swaption_EUR", "DiscountCurve/EUR/3/3Y", "DiscountCurve/EUR/5/7Y", 3.39963e-05 },
+        { "6_Swaption_EUR", "DiscountCurve/EUR/3/3Y", "DiscountCurve/EUR/6/10Y", 2.59882e-07 },
+        { "6_Swaption_EUR", "DiscountCurve/EUR/3/3Y", "IndexCurve/EUR-EURIBOR-6M/2/2Y", 0.00233446 },
+        { "6_Swaption_EUR", "DiscountCurve/EUR/3/3Y", "IndexCurve/EUR-EURIBOR-6M/5/7Y", 0.006986 },
+        { "6_Swaption_EUR", "DiscountCurve/EUR/3/3Y", "IndexCurve/EUR-EURIBOR-6M/6/10Y", 2.59471e-05 },
+        { "6_Swaption_EUR", "DiscountCurve/EUR/4/5Y", "DiscountCurve/EUR/5/7Y", 0.000102988 },
+        { "6_Swaption_EUR", "DiscountCurve/EUR/4/5Y", "DiscountCurve/EUR/6/10Y", 4.9095e-07 },
+        { "6_Swaption_EUR", "DiscountCurve/EUR/4/5Y", "IndexCurve/EUR-EURIBOR-6M/3/3Y", 0.00963019 },
+        { "6_Swaption_EUR", "DiscountCurve/EUR/4/5Y", "IndexCurve/EUR-EURIBOR-6M/5/7Y", 0.000396239 },
+        { "6_Swaption_EUR", "DiscountCurve/EUR/4/5Y", "IndexCurve/EUR-EURIBOR-6M/6/10Y", 4.87477e-05 },
+        { "6_Swaption_EUR", "DiscountCurve/EUR/5/7Y", "IndexCurve/EUR-EURIBOR-6M/3/3Y", 0.000347485 },
+        { "6_Swaption_EUR", "DiscountCurve/EUR/5/7Y", "IndexCurve/EUR-EURIBOR-6M/4/5Y", 0.0207398 },
+        { "6_Swaption_EUR", "DiscountCurve/EUR/6/10Y", "IndexCurve/EUR-EURIBOR-6M/3/3Y", 1.69569e-06 },
+        { "6_Swaption_EUR", "DiscountCurve/EUR/6/10Y", "IndexCurve/EUR-EURIBOR-6M/4/5Y", 3.42705e-05 },
+        { "6_Swaption_EUR", "DiscountCurve/EUR/6/10Y", "IndexCurve/EUR-EURIBOR-6M/5/7Y", 9.33649e-05 },
+        { "6_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/3/3Y", "IndexCurve/EUR-EURIBOR-6M/5/7Y", 0.0333717 },
+        { "6_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/3/3Y", "IndexCurve/EUR-EURIBOR-6M/6/10Y", 0.000127656 },
+        { "6_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/4/5Y", "IndexCurve/EUR-EURIBOR-6M/5/7Y", 0.0655785 },
+        { "6_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/4/5Y", "IndexCurve/EUR-EURIBOR-6M/6/10Y", 0.000251968 },
+        { "6_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/5/7Y", "IndexCurve/EUR-EURIBOR-6M/6/10Y", 0.0103058 },
+        { "7_FxOption_EUR_USD", "DiscountCurve/EUR/3/3Y", "DiscountCurve/EUR/4/5Y", 0.00276123 },
+        { "9_Cap_EUR", "DiscountCurve/EUR/2/2Y", "DiscountCurve/EUR/3/3Y", 1.03512e-10 },
+        { "9_Cap_EUR", "DiscountCurve/EUR/2/2Y", "IndexCurve/EUR-EURIBOR-6M/1/1Y", 3.60478e-09 },
+        { "9_Cap_EUR", "DiscountCurve/EUR/2/2Y", "IndexCurve/EUR-EURIBOR-6M/2/2Y", 7.6887e-08 },
+        { "9_Cap_EUR", "DiscountCurve/EUR/3/3Y", "DiscountCurve/EUR/4/5Y", 2.51167e-08 },
+        { "9_Cap_EUR", "DiscountCurve/EUR/3/3Y", "IndexCurve/EUR-EURIBOR-6M/2/2Y", 1.89362e-06 },
+        { "9_Cap_EUR", "DiscountCurve/EUR/3/3Y", "IndexCurve/EUR-EURIBOR-6M/3/3Y", 1.60205e-05 },
+        { "9_Cap_EUR", "DiscountCurve/EUR/4/5Y", "DiscountCurve/EUR/5/7Y", 1.87919e-06 },
+        { "9_Cap_EUR", "DiscountCurve/EUR/4/5Y", "IndexCurve/EUR-EURIBOR-6M/2/2Y", 3.22785e-09 },
+        { "9_Cap_EUR", "DiscountCurve/EUR/4/5Y", "IndexCurve/EUR-EURIBOR-6M/3/3Y", 0.000141955 },
+        { "9_Cap_EUR", "DiscountCurve/EUR/4/5Y", "IndexCurve/EUR-EURIBOR-6M/4/5Y", 0.000136532 },
+        { "9_Cap_EUR", "DiscountCurve/EUR/5/7Y", "DiscountCurve/EUR/6/10Y", 2.44088e-05 },
+        { "9_Cap_EUR", "DiscountCurve/EUR/5/7Y", "IndexCurve/EUR-EURIBOR-6M/4/5Y", 0.00131098 },
+        { "9_Cap_EUR", "DiscountCurve/EUR/5/7Y", "IndexCurve/EUR-EURIBOR-6M/5/7Y", 0.000537752 },
+        { "9_Cap_EUR", "DiscountCurve/EUR/6/10Y", "IndexCurve/EUR-EURIBOR-6M/5/7Y", 0.0067744 }
+    };
+
+    map<tuple<string, string, string>, Real> cachedMap;
+    for (Size i = 0; i < cachedResults.size(); ++i) {
+        tuple<string, string, string> p(cachedResults[i].id, cachedResults[i].factor1, cachedResults[i].factor2);
+        cachedMap[p] = cachedResults[i].crossgamma;
+    }
+
+    Real rel_tol = 0.0005;
+    Real threshold = 1.e-10;
+    Size count = 0;
+    for (auto it : cgMap) {
+        tuple<string, string, string> key = it.first;
+        string id = std::get<0>(it.first);
+        string factor1 = std::get<1>(it.first);
+        string factor2 = std::get<2>(it.first);
+        Real crossgamma = it.second;
+        if (crossgamma >= threshold) {
+            auto cached_it = cachedMap.find(key);
+            BOOST_CHECK(cached_it != cachedMap.end());
+            tuple<string, string, string> cached_key = cached_it->first;
+            Real cached_cg = cached_it->second;
+            BOOST_CHECK_CLOSE(crossgamma, cached_cg, rel_tol);
+            count++;
+        }
+        //if (crossgamma > threshold)
+          //  BOOST_TEST_MESSAGE("{ \"" << id << "\", \"" << factor1 << "\", \"" << factor2 << "\", " << crossgamma << " },");
+    }
+    BOOST_CHECK_MESSAGE(count == cachedResults.size(),
+        "number of non-zero sensitivities (" << count <<
+        ") do not match regression data (" << cachedResults.size() <<
+        ")");
+    ObservationMode::instance().setMode(backupMode);
+    IndexManager::instance().clearHistories();
+}
+
 test_suite* SensitivityAnalysisTest::suite() {
     // Uncomment the below to get detailed output TODO: custom logger that uses BOOST_MESSAGE
-    /*
-    boost::shared_ptr<ore::data::FileLogger> logger = boost::make_shared<ore::data::FileLogger>("sensitivity.log");
-    ore::data::Log::instance().removeAllLoggers();
-    ore::data::Log::instance().registerLogger(logger);
-    ore::data::Log::instance().switchOn();
-    ore::data::Log::instance().setMask(255);
-    */
+    // boost::shared_ptr<ore::data::FileLogger> logger = boost::make_shared<ore::data::FileLogger>("sensitivity.log");
+    // ore::data::Log::instance().removeAllLoggers();
+    // ore::data::Log::instance().registerLogger(logger);
+    // ore::data::Log::instance().switchOn();
+    // ore::data::Log::instance().setMask(255);
     test_suite* suite = BOOST_TEST_SUITE("SensitivityAnalysisTest");
     // Set the Observation mode here
     suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::test1dShifts));
@@ -1262,6 +1620,7 @@ test_suite* SensitivityAnalysisTest::suite() {
     suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testPortfolioSensitivityDeferObs));
     suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testPortfolioSensitivityUnregisterObs));
     suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testFxOptionDeltaGamma));
+    suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testCrossGamma));
     return suite;
 }
 }
