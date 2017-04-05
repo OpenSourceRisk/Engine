@@ -72,7 +72,10 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<CapFloorEngineBuilder>());
     registerBuilder(boost::make_shared<CapFlooredIborLegEngineBuilder>());
 
-    registerBuilder(boost::make_shared<BondEngineBuilder>());
+    registerBuilder(boost::make_shared<EquityForwardEngineBuilder>());
+    registerBuilder(boost::make_shared<EquityOptionEngineBuilder>());
+
+    registerBuilder(boost::make_shared<BondDiscountingEngineBuilder>());
 }
 
 } // namespace data

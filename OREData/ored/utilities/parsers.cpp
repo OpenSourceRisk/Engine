@@ -181,9 +181,9 @@ Calendar parseCalendar(const string& s) {
                                       {"TWD", Taiwan()},
                                       {"TRY", Turkey()},
                                       {"UAH", Ukraine()},
+                                      {"HUF", Hungary()},
                                       // fallback to TARGET for these emerging ccys
                                       {"CLP", TARGET()},
-                                      {"HUF", TARGET()},
                                       {"RON", TARGET()},
                                       {"THB", TARGET()},
                                       {"COP", TARGET()},
@@ -484,6 +484,17 @@ Exercise::Type parseExerciseType(const std::string& s) {
         return it->second;
     } else {
         QL_FAIL("Exercise type \"" << s << "\" not recognized");
+    }
+}
+
+Option::Type parseOptionType(const std::string& s) {
+    static map<string, Option::Type> m = {{"Put", Option::Put}, {"Call", Option::Call}};
+
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("Option type \"" << s << "\" not recognized");
     }
 }
 

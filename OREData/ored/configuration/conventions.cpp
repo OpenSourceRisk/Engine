@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file wrap/data/conventions.cpp
+/*! \file configuration/conventions.cpp
     \brief Currency and instrument specific conventions
     \ingroup
 */
@@ -815,9 +815,9 @@ void Conventions::fromXML(XMLNode* node) {
             convention->fromXML(child);
             add(convention);
         } catch (exception& e) {
-            LOG("Exception parsing convention "
-                "XML Node (id = "
-                << id << ") : " << e.what());
+            WLOG("Exception parsing convention "
+                 "XML Node (id = "
+                 << id << ") : " << e.what());
         }
     }
 }

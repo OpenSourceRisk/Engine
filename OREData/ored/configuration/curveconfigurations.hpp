@@ -29,6 +29,8 @@
 #include <ored/configuration/fxvolcurveconfig.hpp>
 #include <ored/configuration/swaptionvolcurveconfig.hpp>
 #include <ored/configuration/capfloorvolcurveconfig.hpp>
+#include <ored/configuration/equitycurveconfig.hpp>
+#include <ored/configuration/equityvolcurveconfig.hpp>
 
 using ore::data::XMLSerializable;
 using ore::data::XMLNode;
@@ -70,6 +72,16 @@ public:
         return defaultCurveConfigs_[curveID];
     };
     const boost::shared_ptr<DefaultCurveConfig>& defaultCurveConfig(const string& curveID) const;
+
+    boost::shared_ptr<EquityCurveConfig>& equityCurveConfig(const string& curveID) {
+        return equityCurveConfigs_[curveID];
+    };
+    const boost::shared_ptr<EquityCurveConfig>& equityCurveConfig(const string& curveID) const;
+
+    boost::shared_ptr<EquityVolatilityCurveConfig>& equityVolCurveConfig(const string& curveID) {
+        return equityVolCurveConfigs_[curveID];
+    };
+    const boost::shared_ptr<EquityVolatilityCurveConfig>& equityVolCurveConfig(const string& curveID) const;
     //@}
 
     //! \name Serialisation
@@ -83,6 +95,8 @@ private:
     std::map<std::string, boost::shared_ptr<SwaptionVolatilityCurveConfig>> swaptionVolCurveConfigs_;
     std::map<std::string, boost::shared_ptr<CapFloorVolatilityCurveConfig>> capFloorVolCurveConfigs_;
     std::map<std::string, boost::shared_ptr<DefaultCurveConfig>> defaultCurveConfigs_;
+    std::map<std::string, boost::shared_ptr<EquityCurveConfig>> equityCurveConfigs_;
+    std::map<std::string, boost::shared_ptr<EquityVolatilityCurveConfig>> equityVolCurveConfigs_;
 };
 }
 }

@@ -33,7 +33,7 @@ public:
         if (i == QuantLib::Null<Size>()) {
             fprintNull();
         } else {
-            fprintf(fp_, "%lu", i);
+            fprintf(fp_, "%zu", i);
         }
     }
     void operator()(const Real d) const {

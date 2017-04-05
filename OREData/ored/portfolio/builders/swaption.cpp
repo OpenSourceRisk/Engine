@@ -55,7 +55,13 @@ boost::shared_ptr<QuantExt::LGM> LGMBermudanSwaptionEngineBuilder::model(const s
     auto calibration = parseCalibrationType(modelParameters_.at("Calibration"));
     auto calibrationStrategy = parseCalibrationStrategy(modelParameters_.at("CalibrationStrategy"));
     Real lambda = parseReal(modelParameters_.at("Reversion"));
-    Real sigma = parseReal(modelParameters_.at("Volatility"));
+    vector<Real> sigma = parseListOfValues<Real>(modelParameters_.at("Volatility"), &parseReal);
+    vector<Real> sigmaTimes(0);
+    if (modelParameters_.count("VolatilityTimes") > 0)
+        sigmaTimes = parseListOfValues<Real>(modelParameters_.at("VolatilityTimes"), &parseReal);
+    QL_REQUIRE(sigma.size() == sigmaTimes.size() + 1, "there must be n+1 volatilities (" << sigma.size()
+                                                                                         << ") for n volatility times ("
+                                                                                         << sigmaTimes.size() << ")");
     Real tolerance = parseReal(modelParameters_.at("Tolerance"));
     auto reversionType = parseReversionType(modelParameters_.at("ReversionType"));
     auto volatilityType = parseVolatilityType(modelParameters_.at("VolatilityType"));
@@ -83,8 +89,9 @@ boost::shared_ptr<QuantExt::LGM> LGMBermudanSwaptionEngineBuilder::model(const s
     data->hValues() = {lambda};
     data->reversionType() = reversionType;
     data->calibrateA() = false;
-    data->aParamType() = ParamType::Constant;
-    data->aValues() = {sigma};
+    data->aParamType() = ParamType::Piecewise;
+    data->aValues() = sigma;
+    data->aTimes() = sigmaTimes;
     data->volatilityType() = volatilityType;
     data->calibrationStrategy() = calibrationStrategy;
     data->calibrationType() = calibration;

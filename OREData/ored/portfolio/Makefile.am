@@ -12,6 +12,8 @@ libOREDataPortfolio_la_LIBADD = builders/libOREDataPortfolioBuilders.la
 libOREDataPortfolio_la_SOURCES = \
 	enginefactory.cpp \
 	envelope.cpp \
+	equityforward.cpp \
+	equityoption.cpp \
 	fxforward.cpp \
 	fxoption.cpp \
 	fxswap.cpp \
@@ -36,6 +38,8 @@ this_include_HEADERS = \
 	all.hpp \
 	enginefactory.hpp \
 	envelope.hpp \
+	equityforward.hpp \
+	equityoption.hpp \
 	fxforward.hpp \
 	fxoption.hpp \
 	fxswap.hpp \
