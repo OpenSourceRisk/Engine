@@ -1640,7 +1640,7 @@ void SensitivityAnalysisTest::testCrossGamma() {
         cachedMap[p] = cachedResults[i].crossgamma;
     }
 
-    Real rel_tol = 0.0005;
+    Real rel_tol = 0.005;
     Real threshold = 1.e-6;
     Size count = 0;
     for (auto it : cgMap) {
