@@ -95,11 +95,15 @@ SensitivityScenarioGenerator::SensitivityScenarioGenerator(boost::shared_ptr<Sce
                 Real baseValue = baseScenario_->get(keys[k]);
                 Real iValue = scenarios_[i]->get(keys[k]);
                 Real jValue = scenarios_[j]->get(keys[k]);
-                crossScenario->add(keys[k], iValue + jValue - baseValue);
+                Real newVal = iValue + jValue - baseValue;
+                if (newVal != baseValue)
+                    crossScenario->add(keys[k], newVal);
             }
+            // add remaining unshifted data from cache for a complete scenario
+            addCacheTo(crossScenario);
             scenarios_.push_back(crossScenario);
             scenarioDescriptions_.push_back(ScenarioDescription(scenarioDescriptions_[i], scenarioDescriptions_[j]));
-            LOG("Sensitivity scenario # " << scenarios_.size() << ", label " << crossScenario->label() << " created");
+            DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << crossScenario->label() << " created");
         }
     }
 
@@ -135,14 +139,17 @@ void SensitivityScenarioGenerator::generateFxScenarios(bool up) {
         string ccypair = fxCcyPairs_[k]; // foreign + domestic;
         SensitivityScenarioData::FxShiftData data = sensitivityData_->fxShiftData()[ccypair];
         ShiftType type = parseShiftType(data.shiftType);
-        QL_REQUIRE(type == SensitivityScenarioGenerator::ShiftType::Relative, "FX scenario type must be relative");
+        Real size = up ? data.shiftSize : -1.0*data.shiftSize;
+        //QL_REQUIRE(type == SensitivityScenarioGenerator::ShiftType::Relative, "FX scenario type must be relative");
+        bool relShift = (type == SensitivityScenarioGenerator::ShiftType::Relative);
 
         boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_);
 
         scenarioDescriptions_.push_back(fxScenarioDescription(ccypair, up));
 
         Real rate = initMarket_->fxSpot(ccypair, configuration_)->value();
-        Real newRate = up ? rate * (1.0 + data.shiftSize) : rate * (1.0 - data.shiftSize);
+        Real newRate = relShift ? rate*(1.0 + size) : (rate + size);
+        //Real newRate = up ? rate * (1.0 + data.shiftSize) : rate * (1.0 - data.shiftSize);
         scenario->add(getFxKey(ccypair), newRate);
         // add remaining unshifted data from cache for a complete scenario
         addCacheTo(scenario);
