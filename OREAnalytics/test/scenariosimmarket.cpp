@@ -242,7 +242,6 @@ void ScenarioSimMarketTest::testScenarioSimMarket() {
     testDefaultCurve(initMarket, simMarket, parameters);
     testToXML(parameters);
 
-    Settings::instance().evaluationDate() = tmp; // reset to original value
 }
 
 test_suite* ScenarioSimMarketTest::suite() {
