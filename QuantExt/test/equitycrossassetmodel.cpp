@@ -499,7 +499,7 @@ void EquityCrossAssetModelTest::testLgm5fMoments() {
     // for ir (normal) and fx (ln) so different error
     // tolerances apply
     Real tollNormal = 0.1E-4; // ir-ir
-    Real tolMixed = 0.25E-4;  // ir-fx
+    Real tolMixed = 0.25E-4;  // ir-fx, ir-eq
     Real tolLn = 8.0E-4;      // fx-fx, fx-eq
     Real tolEq = 12.0E-4;     // eq-eq (to account for higher eq vols)
     Real tol;                 // set below
