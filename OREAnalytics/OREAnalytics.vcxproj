@@ -69,6 +69,7 @@
     <ClInclude Include="orea\scenario\simplescenariofactory.hpp" />
     <ClInclude Include="orea\simulation\all.hpp" />
     <ClInclude Include="orea\simulation\dategrid.hpp" />
+    <ClInclude Include="orea\simulation\fixingmanager.hpp" />
     <ClInclude Include="orea\simulation\simmarket.hpp" />
   </ItemGroup>
   <ItemGroup>
@@ -91,6 +92,7 @@
     <ClCompile Include="orea\scenario\scenariowriter.cpp" />
     <ClCompile Include="orea\scenario\simplescenario.cpp" />
     <ClCompile Include="orea\simulation\dategrid.cpp" />
+    <ClCompile Include="orea\simulation\fixingmanager.cpp" />
     <ClCompile Include="orea\simulation\simmarket.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

@@ -3,3 +3,5 @@
 
 #include <orea/simulation/simmarket.hpp>
 #include <orea/simulation/dategrid.hpp>
+#include <orea/simulation/fixingmanager.hpp>
+

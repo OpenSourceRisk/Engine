@@ -58,9 +58,9 @@ protected:
         Handle<YieldTermStructure> discountCurve =
             market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
         //! TODO: This pricing engine only takes a single rate curve as input - hence multi-curve discounting is not
-        //supported.
+        // supported.
         //! - for now we pass the curve required to retrieve equity forward quotes. This means the specified CSA
-        //discount curve is not used in pricing.
+        // discount curve is not used in pricing.
         return boost::make_shared<QuantLib::AnalyticEuropeanEngine>(gbsp);
     }
 };

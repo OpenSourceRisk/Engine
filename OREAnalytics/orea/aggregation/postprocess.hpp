@@ -251,8 +251,8 @@ private:
 
     //! Fill dynamic initial margin cube (per netting set, date and sample)
     void dynamicInitialMargin();
-    //! Compile the array of DIM regressors for the specified date and sample index
-    Disposable<Array> regressorArray(Size dateIndex, Size sampleIndex);
+    //! Compile the array of DIM regressors for the specified netting set, date and sample index
+    Disposable<Array> regressorArray(string nettingSet, Size dateIndex, Size sampleIndex);
 
     boost::shared_ptr<Portfolio> portfolio_;
     boost::shared_ptr<NettingSetManager> nettingSetManager_;
@@ -265,7 +265,8 @@ private:
     map<string, vector<vector<Real>>> nettingSetNPV_, nettingSetFLOW_, nettingSetDIM_, nettingSetLocalDIM_,
         nettingSetDeltaNPV_;
     map<string, vector<vector<Array>>> regressorArray_;
-    map<string, vector<Real>> nettingSetExpectedDIM_, nettingSetZeroOrderDIM_;
+    map<string, vector<Real>> nettingSetExpectedDIM_, nettingSetZeroOrderDIM_, nettingSetSimpleDIMh_,
+        nettingSetSimpleDIMp_;
     map<string, vector<Real>> tradeEPE_, tradeENE_, tradeEE_B_, tradeEEE_B_, tradePFE_, tradeVAR_;
     map<string, Real> tradeEPE_B_, tradeEEPE_B_;
     map<string, vector<Real>> allocatedTradeEPE_, allocatedTradeENE_;
