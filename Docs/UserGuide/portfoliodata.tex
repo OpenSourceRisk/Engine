@@ -318,12 +318,11 @@ The meanings and allowable values of the various elements in the \lstinline!FXFo
 
 \subsubsection{FX Option}
 
-The \lstinline!FXOptionData!  node is the trade data container for the FX Option trade type.  Vanilla FX options as well
-as various barrier types as specified in the SubType element are supported. FX Options can be of exercise style
-\emph{European} or \emph{American}. The strike rate of an FX option is: SoldAmount / BoughtAmount.The
+The \lstinline!FXOptionData!  node is the trade data container for the FX Option trade type.  Vanilla FX options are
+supported, the exercise style must be \emph{European}. The strike rate of an FX option is: SoldAmount / BoughtAmount.The
 \lstinline!FXOptionData!  node includes one and only one \lstinline!OptionData! trade component sub-node plus elements
-specific to the FX Option. The structure of an example \lstinline!FXOptionData!  node of a single barrier FX Option is
-shown in Listing \ref{lst:fxoption_data}.
+specific to the FX Option. The structure of an example \lstinline!FXOptionData! node for a FX Option is shown in Listing
+\ref{lst:fxoption_data}.
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -332,15 +331,10 @@ shown in Listing \ref{lst:fxoption_data}.
             <OptionData>
              ...
             </OptionData>
-            <SubType>SingleBarrier</SubType>
             <BoughtCurrency>EUR</BoughtCurrency>
             <BoughtAmount>1000000</BoughtAmount>
             <SoldCurrency>USD</SoldCurrency>
             <SoldAmount>1350000</SoldAmount>
-            <BarrierType>DI</BarrierType>
-            <BarrierLevel>1.25</BarrierLevel>
-            <BarrierRebate>0.04</BarrierRebate>
-            <BarrierRebateFactor>0.1</BarrierRebateFactor>
         </FxOptionData>
 \end{minted}
 \caption{FX Option data}
@@ -351,25 +345,7 @@ The meanings and allowable values of the elements in the \lstinline!FXOptionData
 
 \begin{itemize}
 \item OptionData: This is a trade component sub-node outlined in section \ref{ss:option_data} Option Data. Note that the
-  FX option type allows for \emph{European} or \emph{American} option styles, but not \emph{Bermudan}.  FX options can
-  only have one exercise date.
-\item SubType: Specifies the FX option type. The allowable values are 
-given in Table \ref{tab:fxoption_subtype}. 
-
-\begin{table}[H]
-\centering
-  \begin{tabu} to 0.9\linewidth {| X[-1.5,l,m] | X[-5,l,m] |}
-    \hline
-    \bfseries{SubType} & \bfseries{Description} \\
-    \hline
-    \emph{Vanilla} & A vanilla FX option with no barrier or other structured features. \\ \hline
-    \emph{SingleBarrier} & Regular vanilla option payout plus a knock-in or knock-out barrier. \\ \hline
-    \emph{OneTouch} & Fixed payout if barrier is breached, no payout otherwise. \\ \hline
-    \emph{NoTouch} & No payout if barrier is breached, fixed payout otherwise. \\ \hline    
-  \end{tabu}
-  \caption{Allowable SubType Values.}
-  \label{tab:fxoption_subtype}
-\end{table}
+  FX option type allows for \emph{European} option style only.
 
 \item BoughtCurrency: The bought currency of the FX option.  
 
@@ -387,44 +363,6 @@ Allowable values:  See Currency in Table \ref{tab:allow_stand_data}.
 
 Allowable values:  Any positive real number.
 
-\item BarrierType: Specifies the barrier type. It is required for \lstinline!SubType! \emph{SingleBarrier} but not used
-  for the other subtypes. The allowable values are given in Table \ref{tab:fxoption_barriertype}.
-
-\begin{table}[H]
-\centering
-  \begin{tabu} to 0.9\linewidth {| X[-1.5,l,m] | X[-5,l,m] |}
-    \hline
-    \bfseries{BarrierType} & \bfseries{Description} \\
-    \hline
-    \emph{UO} & Up and Out\\ \hline
-    \emph{DO} & Down and Out\\ \hline
-    \emph{UI} & Up and In \\ \hline
-    \emph{DI} & Down and In\\ \hline    
-  \end{tabu}
-  \caption{Allowable BarrierType Values.}
-  \label{tab:fxoption_barriertype}
-\end{table}
-
-\item BarrierLevel: The barrier FX rate.  Required for SubTypes
-  \emph{SingleBarrier, OneTouch, NoTouch}. 
-
-Allowable values:  Any positive real number.
-
-\item BarrierRebate [Optional]:  When an option of type
-  \emph{SingleBarrier} expires without the barrier being hit, the
-  buyer can receive a rebate as a fraction of the original premium
-  paid. The BarrierRebate is the original premium in percentage terms,
-  and BarrierRebateFactor is the fraction to be returned if the
-  barrier is not hit. Only used for SubType:
-  \emph{SingleBarrier}. Defaults to zero if left blank or omitted. 
-
-Allowable values:  Any positive real number.
-
-\item BarrierRebateFactor [Optional]: The fraction to be returned if
-  the barrier is not hit. Only used for SubType:
-  \emph{SingleBarrier}. Defaults to zero if left blank or omitted. 
-
-Allowable values:  Any positive real number.
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
