@@ -5,6 +5,7 @@ QLE_TESTS = \
 	staticallycorrectedyieldtermstructure.hpp staticallycorrectedyieldtermstructure.cpp \
 	crossassetmodel.hpp crossassetmodel.cpp \
 	crossassetmodel2.hpp crossassetmodel2.cpp \
+	equitycrossassetmodel.hpp equitycrossassetmodel.cpp \
 	crossassetmodelparametrizations.hpp crossassetmodelparametrizations.cpp \
 	currency.hpp currency.cpp \
 	discountcurve.hpp discountcurve.cpp \

@@ -4,12 +4,13 @@
 #include <qle/models/crossassetanalytics.hpp>
 #include <qle/models/crossassetanalyticsbase.hpp>
 #include <qle/models/crossassetmodel.hpp>
+#include <qle/models/crossassetmodelimpliedeqvoltermstructure.hpp>
 #include <qle/models/crossassetmodelimpliedfxvoltermstructure.hpp>
 #include <qle/models/eqbsconstantparametrization.hpp>
-#include <qle/models/eqbsparametrization.hpp>
-#include <qle/models/eqbspiecewiseconstantparametrization.hpp>
 #include <qle/models/fxbsconstantparametrization.hpp>
+#include <qle/models/eqbsparametrization.hpp>
 #include <qle/models/fxbsparametrization.hpp>
+#include <qle/models/eqbspiecewiseconstantparametrization.hpp>
 #include <qle/models/fxbspiecewiseconstantparametrization.hpp>
 #include <qle/models/fxeqoptionhelper.hpp>
 #include <qle/models/gaussian1dcrossassetadaptor.hpp>
@@ -24,3 +25,4 @@
 #include <qle/models/parametrization.hpp>
 #include <qle/models/piecewiseconstanthelper.hpp>
 #include <qle/models/pseudoparameter.hpp>
+

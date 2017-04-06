@@ -9,6 +9,8 @@ libOREDataModel_la_LIBADD =
 libOREDataModel_la_SOURCES = \
 	crossassetmodeldata.cpp \
 	crossassetmodelbuilder.cpp \
+	eqbsbuilder.cpp \
+	eqbsdata.cpp \
 	fxbsdata.cpp \
 	fxbsbuilder.cpp \
 	lgmdata.cpp \
@@ -20,6 +22,8 @@ this_include_HEADERS = \
 	all.hpp \
 	crossassetmodeldata.hpp \
 	crossassetmodelbuilder.hpp \
+	eqbsbuilder.hpp \
+	eqbsdata.hpp \
 	fxbsdata.hpp \
 	fxbsbuilder.hpp \
 	lgmdata.hpp \

@@ -66,10 +66,10 @@ struct CrossAssetData {
     : referenceDate(30, July, 2015), 
     eurYts(boost::make_shared<FlatForward>(referenceDate, 0.02, Actual365Fixed())),
     usdYts(boost::make_shared<FlatForward>(referenceDate, 0.05, Actual365Fixed())),
-    usdEurSpotToday(boost::make_shared<SimpleQuote>(0.90)),
-    eurEurSpotToday(boost::make_shared<SimpleQuote>(1.0)),
     eqDivSp(boost::make_shared<FlatForward>(referenceDate, 0.01, Actual365Fixed())),
     eqDivLh(boost::make_shared<FlatForward>(referenceDate, 0.0075, Actual365Fixed())),
+    usdEurSpotToday(boost::make_shared<SimpleQuote>(0.90)),
+    eurEurSpotToday(boost::make_shared<SimpleQuote>(1.0)),
     spSpotToday(boost::make_shared<SimpleQuote>(2100)),
     lhSpotToday(boost::make_shared<SimpleQuote>(12.50)) {
 
