@@ -586,9 +586,9 @@ Another allowable specification of the notional schedule is shown in Listing \re
 \begin{minted}[fontsize=\footnotesize]{xml}
                 <Notionals>
                     <Notional>65000000</Notional>
-                    <Notional start='2016-01-02'>65000000</Notional>
-                    <Notional start='2017-01-02'>55000000</Notional>
-                    <Notional start='2021-01-02'>45000000</Notional>
+                    <Notional startDate='2016-01-02'>65000000</Notional>
+                    <Notional startDate='2017-01-02'>55000000</Notional>
+                    <Notional startDate='2021-01-02'>45000000</Notional>
                 </Notionals>
 \end{minted}
 \caption{Notional list with dates}
@@ -781,8 +781,8 @@ dates as shown in Listing \ref{lst:fixedleg_data_dates}.
               <FixedLegData>
                     <Rates>
                         <Rate>0.05</Rate>
-                        <Rate start='2016-02-04'>0.05</Rate>
-                        <Rate start='2019-02-05'>0.05</Rate>
+                        <Rate startDate='2016-02-04'>0.05</Rate>
+                        <Rate startDate='2019-02-05'>0.05</Rate>
                     </Rates>
               </FixedLegData>
 \end{minted}
@@ -792,7 +792,7 @@ dates as shown in Listing \ref{lst:fixedleg_data_dates}.
 
 \end{itemize}
 
-\subsubsection{Floating Leg Data and Spreads}
+\subsubsection{Floating Leg Data, Spreads, Gearings, Caps and Floors}
 \label{ss:floatingleg_data}
 
 The \lstinline!FloatingLegData! trade component node is used within the \lstinline!LegData! trade component when the
@@ -812,6 +812,15 @@ An example of a \lstinline!FloatingLegData! node is shown in Listing \ref{lst:fl
                     <Spreads>
                         <Spread>0.005</Spread>
                     </Spreads>
+                    <Gearings>
+                        <Gearing>2.0</Gearing>
+                    </Gearings>
+                    <Caps>
+                        <Cap>0.05</Cap>
+                    </Caps>
+                    <Floors>
+                        <Floor>0.01</Floor>
+                    </Floors>
                 </FloatingLegData>
 \end{minted}
 \caption{Floating leg data}
@@ -864,13 +873,24 @@ in Listing \ref{lst:spreads_dates}.
 \begin{minted}[fontsize=\footnotesize]{xml}
                     <Spreads>
                         <Spread>0.005</Spread>
-                        <Spread start='2017-03-05'>0.007</Spread>
-                        <Spread start='2019-03-05'>0.009</Spread>
+                        <Spread startDate='2017-03-05'>0.007</Spread>
+                        <Spread startDate='2019-03-05'>0.009</Spread>
                     </Spreads>
 \end{minted}
 \caption{'Dated' spreads}
 \label{lst:spreads_dates}
 \end{listing}
+
+\item Gearings: This node contains child elements of type \lstinline!Gearing! indicating that the coupon rate is
+  multiplied by the given factors. The mode of specification is analogous to spreads, see above.
+
+\item Caps: This node contains child elements of type \lstinline!Cap! indicating that the coupon rate is capped at the
+  given rate (after applying gearing and spread, if any). The mode of specification is analogous to spreads, see above.
+
+\item Floors: This node contains child elements of type \lstinline!Floor! indicating that the coupon rate is floored at
+  the given rate(after applying gearing and spread, if any). The mode of specification is analogous to spreads, see
+  above.
+
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
