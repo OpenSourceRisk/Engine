@@ -40,7 +40,7 @@ EqBsBuilder::EqBsBuilder(const boost::shared_ptr<ore::data::Market>& market,
                          const QuantLib::Currency& baseCcy,
                          const std::string& configuration)
     : market_(market), configuration_(configuration), 
-    baseCcy_(baseCcy), data_(data) {
+      data_(data), baseCcy_(baseCcy) {
 
     QuantLib::Currency ccy = ore::data::parseCurrency(data->currency());
     string eqName = data->eqName();

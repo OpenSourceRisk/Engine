@@ -9,9 +9,13 @@ noinst_LTLIBRARIES = libModels.la
 libModels_la_SOURCES = \
 	crossassetanalytics.cpp \
 	crossassetmodel.cpp \
+	crossassetmodelimpliedeqvoltermstructure.cpp \
 	crossassetmodelimpliedfxvoltermstructure.cpp \
+	eqbsconstantparametrization.cpp \
 	fxbsconstantparametrization.cpp \
+	eqbsparametrization.cpp \
 	fxbsparametrization.cpp \
+	eqbspiecewiseconstantparametrization.cpp \
 	fxbspiecewiseconstantparametrization.cpp \
 	fxeqoptionhelper.cpp \
 	gaussian1dcrossassetadaptor.cpp \
@@ -27,9 +31,13 @@ this_include_HEADERS = \
 	crossassetanalytics.hpp \
 	crossassetanalyticsbase.hpp \
 	crossassetmodel.hpp \
+	crossassetmodelimpliedeqvoltermstructure.hpp \
 	crossassetmodelimpliedfxvoltermstructure.hpp \
+	eqbsconstantparametrization.hpp \
 	fxbsconstantparametrization.hpp \
+	eqbsparametrization.hpp \
 	fxbsparametrization.hpp \
+	eqbspiecewiseconstantparametrization.hpp \
 	fxbspiecewiseconstantparametrization.hpp \
 	fxeqoptionhelper.hpp \
 	gaussian1dcrossassetadaptor.hpp \

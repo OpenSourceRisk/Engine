@@ -28,10 +28,10 @@ EqBsParametrization::EqBsParametrization(
     const Handle<YieldTermStructure>& equityIrCurveToday,
     const Handle<YieldTermStructure>& equityDivCurveToday)
     : Parametrization(eqCcy),
-    eqName_(eqName),
-    eqSpotToday_(equitySpotToday), 
-    fxSpotToday_(fxSpotToday),
-    eqRateCurveToday_(equityIrCurveToday),
-    eqDivYieldCurveToday_(equityDivCurveToday) {}
+      eqSpotToday_(equitySpotToday),
+      fxSpotToday_(fxSpotToday),
+      eqRateCurveToday_(equityIrCurveToday),
+      eqDivYieldCurveToday_(equityDivCurveToday),
+      eqName_(eqName) {}
 
 } // namespace QuantExt
