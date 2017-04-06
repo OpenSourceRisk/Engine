@@ -1531,6 +1531,36 @@ the list above.
 \label{lst:ore_analytics}
 \end{listing}
 
+The cashflow analytic writes a report containing all future cashflows of the portfolio. Table \ref{cashflowreport} shows
+a typical output for a vanilla swap.
+
+\begin{table}[hbt]
+\scriptsize
+\begin{center}
+  \begin{tabular}{l|l|l|l|r|l|r|r|l|r}
+\hline
+\#ID & Type & LegNo & PayDate & Amount & Currency & Coupon & Accrual & fixingDate & fixingValue \\
+\hline
+\hline
+tr123 & Swap & 0 & 13/03/17 & -76212.5 & EUR & -0.00201 & 0.50556 & 08/09/16 & -0.00201 \\
+tr123 & Swap & 0 & 12/09/17 & -90683.9212 & EUR & -0.002379 & 0.50833 & 09/03/17 & -0.002381 \\
+\ldots
+\end{tabular}
+\caption{Cashflow Report}
+\label{cashflowreport}
+\end{center}
+\end{table}
+
+The amount column contains the projected amount including embedded caps and floors and convexity (if applicable), the
+coupon column displays the corresponding rate estimation. The fixing value on the other hand is the plain fixing
+projection as given by the forward value, i.e. without embedded caps and floors or convexity.
+
+Note that the fixing value might deviate from the coupon value even for a vanilla coupon, if the QuantLib library was
+compiled {\em without} the flag \verb+QL_USE_INDEXED_COUPON+ (which is the default case). In this case the coupon value
+uses a par approximation for the forward rate assuming the index estimation period to be identical to the accrual
+period, while the fixing value is the actual forward rate for the index estimation period, i.e. whenever the index estimation
+period differs from the accrual period the values will be slightly different.
+
 The curves analytic exports all yield curves that have been built according to the specification in {\tt
   todaysmarket.xml}. Key {\tt configuration} selects the curve set to be used (see explanation in the previous Markets
 section).  Key {\tt grid} defines the time grid on which the yield curves are evaluated, in the example above a grid of
