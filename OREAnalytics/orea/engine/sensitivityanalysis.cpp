@@ -308,9 +308,5 @@ void SensitivityAnalysis::writeCrossGammaReport(string fileName, Real outputThre
     report.end();
 }
 
-const std::map<std::pair<std::string, std::string>, Real>& SensitivityAnalysis::parDelta() {
-    QL_FAIL("Par sensitivities calculation not implemented - returning empty container");
-}
-
 }
 }

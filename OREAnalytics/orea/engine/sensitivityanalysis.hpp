@@ -47,7 +47,6 @@ namespace analytics {
   - generating sensitivity scenarios
   - running the scenario "engine" to apply these and compute the NPV impacts of all required shifts
   - compile first and second order sensitivities for all factors and all trades
-  - convert zero rate / caplet vol sensitivities into "par" rate / cap vol sensitivities
   - fill result structures that can be queried
   - write sensitivity report to a file
 
@@ -76,9 +75,6 @@ public:
     //! Return delta/vega (first order sensitivity times shift) by trade/factor pair
     const std::map<std::pair<std::string, std::string>, Real>& delta() { return delta_; }
 
-    //! Return par delta (first order sensitivity times shift) by trade/factor pair
-    virtual const std::map<std::pair<std::string, std::string>, Real>& parDelta();
-
     //! Return gamma (second order sensitivity times shift^2) by trade/factor pair
     const std::map<std::pair<std::string, std::string>, Real>& gamma() { return gamma_; }
 
@@ -94,14 +90,26 @@ public:
     //! Write cross gammas by trade/factor1/factor2 to a file
     void writeCrossGammaReport(string fileName, Real outputThreshold = 0.0);
 
-    //! Write sensitivity of par rates w.r.t. zero rates to a file
-    virtual void writeParRateSensitivityReport(string fileName, Real outputThreshold = 0.0) { QL_FAIL("par sensitivities not implemented"); };
+    //! The ASOF date for the sensitivity analysis
+    virtual const QuantLib::Date asof() const { return asof_;  }
 
-    //! Write the conversion (Jacobi) matrix for par sensitivities to a file
-    virtual void writeParConversionMatrix(string fileName) { QL_FAIL("par sensitivities conversion not implemented"); };
+    //! The market configuration string
+    virtual const std::string marketConfiguration() const { return marketConfiguration_; }
 
-    //! Run par delta conversion, zero to par rate sensi, caplet/floorlet vega to cap/floor vega
-    virtual void parDeltaConversion() { QL_FAIL("par delta conversion not implemented"); }
+    //! A getter for the sim market
+    virtual const boost::shared_ptr<ScenarioSimMarket> simMarket() const { return simMarket_; }
+
+    //! A getter for SensitivityScenarioGenerator
+    virtual const boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator() const { return scenarioGenerator_; }
+
+    //! A getter for ScenarioSimMarketParameters
+    virtual const boost::shared_ptr<ScenarioSimMarketParameters> simMarketData() const { return simMarketData_; }
+
+    //! A getter for SensitivityScenarioData
+    virtual const boost::shared_ptr<SensitivityScenarioData> sensitivityData() const { return sensitivityData_; }
+
+    //! A getter for Conventions
+    virtual const Conventions& conventions() const { return conventions_; }
 
 protected:
     boost::shared_ptr<ore::data::Market> market_;
