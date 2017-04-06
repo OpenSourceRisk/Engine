@@ -205,11 +205,11 @@
   </CrossAssetModel>
   <Market>
     <!--
-	  This files determines the composition of the market used for
-	  pricing under future market scenarios,
-	  1) the structure/composition of the actively simulated market (IR, FX)
-	  2) the method applied to evolve volatility structures even if not
-	  simulated (roll or push)
+      This files determines the composition of the market used for
+      pricing under future market scenarios,
+      1) the structure/composition of the actively simulated market (IR, FX)
+      2) the method applied to evolve volatility structures even if not
+      simulated (roll or push)
       -->
     <BaseCurrency>EUR</BaseCurrency>
     <Currencies>
@@ -256,11 +256,11 @@
         <Name>SP5</Name>
         <Name>Lufthansa</Name>
       </Names>
-      <Tenors>6M,1Y,2Y</Tenors> <!-- for dividend only, or for the rate curve also? Will the rate curve used in forward projection also be simulated? -->
+      <Tenors>6M,1Y,2Y</Tenors> <!-- for dividend only -->
     </Equities>    
     <!-- Even if we do not simulate them - option pricing needs vol
-	   surfaces, so we need to specify here how we propagate the
-	   vol structure and what its composition will be -->
+    surfaces, so we need to specify here how we propagate the
+    vol structure and what its composition will be -->
     <SwaptionVolatilities>
       <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
       <!-- Alternative: ConstantVariance -->
@@ -289,7 +289,7 @@
     </FxVolatilities>
     <EquityVolatilities>
       <Simulate>false</Simulate>
-      <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay> <!-- Is this relevant for equities? -->
+      <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
       <!-- Alternative: ConstantVariance -->
       <Names>
         <Name>SP5</Name>
@@ -299,7 +299,7 @@
       <Strikes/>
     </EquityVolatilities>     
     <!-- Additional data that is recorded during simulation for later
-	   use in the post processor -->
+    use in the post processor -->
     <AggregationScenarioDataCurrencies>
       <Currency>EUR</Currency>
       <Currency>USD</Currency>
