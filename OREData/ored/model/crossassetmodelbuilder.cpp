@@ -239,7 +239,7 @@ CrossAssetModelBuilder::build(const boost::shared_ptr<CrossAssetModelData>& conf
                 CrossAssetModelTypes::FX, i, fxOptionBaskets_[i], 
                 *optimizationMethod_, endCriteria_);
         else
-            model->calibrateFxBsVolatilitiesGlobal(
+            model->calibrateBsVolatilitiesGlobal(
                 CrossAssetModelTypes::FX, i, 
                 fxOptionBaskets_[i], *optimizationMethod_, endCriteria_);
 
@@ -288,7 +288,7 @@ CrossAssetModelBuilder::build(const boost::shared_ptr<CrossAssetModelData>& conf
                 CrossAssetModelTypes::EQ, i, eqOptionBaskets_[i],
                 *optimizationMethod_, endCriteria_);
         else
-            model->calibrateFxBsVolatilitiesGlobal(
+            model->calibrateBsVolatilitiesGlobal(
                 CrossAssetModelTypes::EQ, i, eqOptionBaskets_[i], 
                 *optimizationMethod_, endCriteria_);
 

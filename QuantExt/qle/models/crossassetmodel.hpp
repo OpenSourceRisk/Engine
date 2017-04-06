@@ -194,8 +194,8 @@ public:
                                             const Constraint& constraint = Constraint(),
                                             const std::vector<Real>& weights = std::vector<Real>());
 
-    /*! calibrate fx volatilities globally to a set of fx options */
-    void calibrateFxBsVolatilitiesGlobal(const AssetType& assetType, const Size aIdx,
+    /*! calibrate eq/fx volatilities globally to a set of fx options */
+    void calibrateBsVolatilitiesGlobal(const AssetType& assetType, const Size aIdx,
                                          const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers,
                                          OptimizationMethod& method, const EndCriteria& endCriteria,
                                          const Constraint& constraint = Constraint(),
@@ -276,7 +276,7 @@ protected:
         return res;
     }
 
-    Disposable<std::vector<bool> > MoveFxBsVolatilities(const AssetType& assetClass, const Size& aIdx) {
+    Disposable<std::vector<bool> > MoveBsVolatilities(const AssetType& assetClass, const Size& aIdx) {
         bool isFx = (assetClass == FX);
         bool isEq = (assetClass == EQ);
         QL_REQUIRE(isFx || isEq, "Invalid AssetType for MoveBsVolatility");
