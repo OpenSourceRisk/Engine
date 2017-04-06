@@ -77,9 +77,9 @@ FxBsBuilder::FxBsBuilder(const boost::shared_ptr<ore::data::Market>& market, con
         QL_FAIL("interpolation type not supported for FX");
 }
 
-// void FxBsBuilder::update() {
-//     // nothing to do here
-// }
+void FxBsBuilder::update() {
+    ;// nothing to do here
+}
 
 void FxBsBuilder::buildOptionBasket() {
     QL_REQUIRE(data_->optionExpiries().size() == data_->optionStrikes().size(), "fx option vector size mismatch");

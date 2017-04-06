@@ -83,9 +83,9 @@ EqBsBuilder::EqBsBuilder(const boost::shared_ptr<ore::data::Market>& market,
         QL_FAIL("interpolation type not supported for Equity");
 }
 
-// void FxBsBuilder::update() {
-//     // nothing to do here
-// }
+void EqBsBuilder::update() {
+    ;// nothing to do here
+}
 
 void EqBsBuilder::buildOptionBasket() {
     QL_REQUIRE(data_->optionExpiries().size() == data_->optionStrikes().size(), "Eq option vector size mismatch");
