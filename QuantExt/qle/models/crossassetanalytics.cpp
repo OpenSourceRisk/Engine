@@ -183,13 +183,9 @@ Real eq_eq_covariance(const CrossAssetModel* x, const Size k, const Size l, cons
 Real eq_expectation_1(const CrossAssetModel* x, const Size k, const Time t0, const Real dt) {
     Size i = x->ccyIndex(x->eqbs(k)->currency());
     Size eps_i = (i == 0) ? 0 : 1;
-    Real H0_a = Hz(0).eval(x, t0);
     Real Hi_a = Hz(i).eval(x, t0);
-    Real H0_b = Hz(0).eval(x, t0 + dt);
     Real Hi_b = Hz(i).eval(x, t0 + dt);
-    Real zeta0_a = zetaz(0).eval(x, t0);
     Real zetai_a = zetaz(i).eval(x, t0);
-    Real zeta0_b = zetaz(0).eval(x, t0 + dt);
     Real zetai_b = zetaz(i).eval(x, t0 + dt);
     Real res = std::log(
         x->eqbs(k)->equityDivYieldCurveToday()->discount(t0 + dt) / x->eqbs(k)->equityDivYieldCurveToday()->discount(t0) *

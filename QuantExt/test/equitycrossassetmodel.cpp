@@ -264,7 +264,6 @@ void EquityCrossAssetModelTest::testEqLgm5fPayouts() {
         Size l = path.value[0].length() - 1;
         Real eurusdfx = std::exp(path.value[2][l]);
         Real zeur = path.value[0][l];
-        Real zusd = path.value[1][l];
         Real eqsp = std::exp(path.value[3][l]);
         Real eqlh = std::exp(path.value[4][l]);
         Real ccnum = d.ccLgm->numeraire(0, T, zeur);
@@ -363,7 +362,7 @@ void EquityCrossAssetModelTest::testEqLgm5fPayouts() {
 
 void EquityCrossAssetModelTest::testLgm5fEqCalibration() {
 
-    BOOST_TEST_MESSAGE("Testing full calibration of Ccy LGM 5F model...");
+    BOOST_TEST_MESSAGE("Testing EQ calibration of IR-FX-EQ LGM 5F model...");
 
     CrossAssetData d;
     Settings::instance().evaluationDate() = d.referenceDate;
@@ -434,7 +433,7 @@ void EquityCrossAssetModelTest::testLgm5fMoments() {
 
     // TODO : REVIEW TOLERANCES
     BOOST_TEST_MESSAGE("Testing analytic moments vs. Euler and exact discretization "
-                       "in Ccy LGM 5F model...");
+                       "in IR-FX-EQ LGM 5F model...");
 
     CrossAssetData d;
     Settings::instance().evaluationDate() = d.referenceDate;
