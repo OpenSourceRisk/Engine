@@ -99,15 +99,6 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
         eqKeys_.emplace_back(RiskFactorKey::KeyType::EQSpot, eqName);
     }
 
-    // Cache equity interest rate curve keys
-    Size n_eq_ten = simMarketConfig_->equityTenors().size();
-    eqirCurveKeys_.reserve(n_eq * n_eq_ten);
-    for (Size j = 0; j < n_eq; ++j) {
-        for (Size k = 0; k < n_eq_ten; ++k) {
-            eqirCurveKeys_.emplace_back(RiskFactorKey::KeyType::YieldCurve, model_->eqbs(j)->eqName(), k); // j*n_eq + k
-        }
-    }
-
     // equity vols
     if (simMarketConfig_->eqVolNames().size() > 0 &&
         simMarketConfig_->simulateEQVols()) {
