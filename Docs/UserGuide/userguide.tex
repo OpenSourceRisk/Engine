@@ -97,6 +97,7 @@
 Date & Author & Comment \\
 \hline
 7 October 2016 & Quaternion Risk Management & initial release\\
+6 April 2017 & Quaternion Risk Management & updates for release v2\\
 \hline
 \end{supertabular}
 \end{center}
@@ -847,27 +848,28 @@ exercise.
 %--------------------------------------------------------
 
 The example in folder {\tt Examples/Example\_6} generates exposure evolutions of several Swaps, caps and floors. The
-example shown in figure \ref{fig_capfloor_1} ('portfolio 1') consists of a 20y Swap receiving 1\% fixed and a 20y Collar
-with both cap and floor at 2.5\% so that the net exposure corresponds to a Swap receiving 0.5\% fixed. \\
+example shown in figure \ref{fig_capfloor_1} ('portfolio 1') consists of a 20y Swap receiving 3\% fixed and paying
+Euribor 6M plus a long 20y Collar
+with both cap and floor at 4\% so that the net exposure corresponds to a Swap paying 1\% fixed. \\
 
 \begin{figure}[h!]
 \begin{center}
 \includegraphics[scale=0.45]{mpl_capfloor_1.pdf}
 \end{center}
-\caption{Swap+Collar, portfolio 1. The Collar has identical cap and floor rates at 2.5\% so that it corresponds to a
+\caption{Swap+Collar, portfolio 1. The Collar has identical cap and floor rates at 4\% so that it corresponds to a
   fixed leg which reduces the exposure of the Swap, which receives 3\% fixed. Simulation with 1000 paths and quarterly
   time steps.}
 \label{fig_capfloor_1}
 \end{figure}
 
 The second example in this folder shown in figure \ref{fig_capfloor_2} ('portfolio 2') consists of a short Cap, long
-Floor and a Collar that corresponds to the netted Cap and Floor.
+Floor and a long Collar that exactly offsets the netted Cap and Floor.
 
 \begin{figure}[h!]
 \begin{center}
 \includegraphics[scale=0.45]{mpl_capfloor_2.pdf}
 \end{center}
-\caption{Short Cap and long Floor vs Collar, portfolio 2. Simulation with 1000 paths and quarterly time steps.}
+\caption{Short Cap and long Floor vs long Collar, portfolio 2. Simulation with 1000 paths and quarterly time steps.}
 \label{fig_capfloor_2}
 \end{figure}
 

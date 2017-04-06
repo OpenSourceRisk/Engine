@@ -161,16 +161,19 @@ node is shown in Listing \ref{lst:swap_data}.
 
 \subsubsection{Cap/Floor}
 
-The \lstinline!CapFloorData! node is the trade data container for trade type CapFloors.  It's a single floating leg
-that's either capped, floored or both capped and floored. The \lstinline!CapFloorData! node contains a
-\lstinline!LPILegData!  sub-node where the LegType element must be set to \emph{Floating}, plus elements for the Cap and
-Floor rates. An example structure with Cap rates is shown in in Listing \ref{lst:capfloor_data}. A
-\lstinline!CapFloorData! node must have either \lstinline!CapRates! or \lstinline!FloorRates! elements, or both.
+The \lstinline!CapFloorData! node is the trade data container for trade type CapFloors.  It's a cap, floor or collar
+(i.e. a portfolio of a long cap and a short floor for a long position in the collar) on a series of Ibor rates. The
+\lstinline!CapFloorData! node contains a \lstinline!LongShort! sub-node which indicates whether the cap (floor, collar)
+is long or short, and a \lstinline!LegData!  sub-node where the LegType element must be set to \emph{Floating}, plus
+elements for the Cap and Floor rates. An example structure with Cap rates is shown in in Listing
+\ref{lst:capfloor_data}. A \lstinline!CapFloorData! node must have either \lstinline!CapRates! or \lstinline!FloorRates!
+elements, or both.
 
 \begin{listing}[H]
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
-<CapFloorData>
+  <CapFloorData>
+  <LongShort>Long</LongShort>
   <LegData>
     <Payer>false</Payer>
     <LegType>Floating</LegType>
@@ -189,6 +192,9 @@ The meanings and allowable values of the elements in the \lstinline!CapFloorData
 
 \begin{itemize}
 
+\item LongShort: This node defines the position in the cap (floor, collar) and can take values \lstinline!Long! or
+  \lstinline!Short!
+
 \item LegData: This is a trade component sub-node outlined in section \ref{ss:leg_data} Leg Data and Notionals. Exactly
   one \lstinline!LegData! node is allowed and the LegType element must be set to \emph{floating}.
 
@@ -201,8 +207,8 @@ The meanings and allowable values of the elements in the \lstinline!CapFloorData
   one single rate value is sufficient. The number of entered rate
   values cannot exceed the number of coupons. 
 
-Allowable values for each \lstinline!Rate! element:  
-Any real number. The rate is expressed in decimal form, eg 0.05 is a rate of  0.5\%
+  Allowable values for each \lstinline!Rate! element: Any real number. The rate is expressed in decimal form, eg 0.05 is
+  a rate of 5\%
 
 \item FloorRates: This node has child elements of type
   \lstinline!Rate! flooring the floating leg.  The first rate value
@@ -213,7 +219,8 @@ Any real number. The rate is expressed in decimal form, eg 0.05 is a rate of  0.
   over all coupons, one single rate value is sufficient. The number of
   entered rate values cannot exceed the number of coupons.
 
-Allowable values for each \lstinline!Rate! element:  Any real number. The rate is expressed in decimal form, eg 0.05 is a rate of  0.5\%
+  Allowable values for each \lstinline!Rate! element: Any real number. The rate is expressed in decimal form, eg 0.05 is
+  a rate of 5\%
 
 \end{itemize}
 
