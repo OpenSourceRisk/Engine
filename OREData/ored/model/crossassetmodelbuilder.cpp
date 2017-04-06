@@ -34,7 +34,7 @@
 #include <qle/pricingengines/analyticlgmswaptionengine.hpp>
 #include <qle/pricingengines/analyticcclgmfxoptionengine.hpp>
 #include <qle/pricingengines/analyticxassetlgmeqoptionengine.hpp>
-#include <qle/models/fxoptionhelper.hpp>
+#include <qle/models/fxeqoptionhelper.hpp>
 
 #include <ql/math/optimization/levenbergmarquardt.hpp>
 #include <ql/quotes/simplequote.hpp>

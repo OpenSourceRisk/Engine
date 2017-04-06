@@ -27,9 +27,6 @@
 #include <qle/models/irlgm1fpiecewiseconstanthullwhiteadaptor.hpp>
 #include <qle/models/fxbsconstantparametrization.hpp>
 #include <qle/models/fxbspiecewiseconstantparametrization.hpp>
-// #include <qle/pricingengines/analyticlgmswaptionengine.hpp>
-// #include <qle/pricingengines/analyticcclgmfxoptionengine.hpp>
-//#include <qle/models/fxoptionhelper.hpp>
 
 #include <ql/math/optimization/levenbergmarquardt.hpp>
 #include <ql/quotes/simplequote.hpp>

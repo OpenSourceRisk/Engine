@@ -1,21 +1,4 @@
 /*
- Copyright (C) 2015 Peter Caspers
-
- This file is part of QuantLib, a free-software/open-source library
- for financial quantitative analysts and developers - http://quantlib.org/
-
- QuantLib is free software: you can redistribute it and/or modify it
- under the terms of the QuantLib license.  You should have received a
- copy of the license along with this program.
- <quantlib-dev@lists.sf.net>. The license is also available online at
- <http://quantlib.org/license.shtml>.
-
- This program is distributed in the hope that it will be useful, but WITHOUT
- ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- FOR A PARTICULAR PURPOSE.  See the license for more details.
-*/
-
-/*
  Copyright (C) 2016 Quaternion Risk Management Ltd
  All rights reserved.
 
@@ -33,13 +16,13 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file fxoptionhelper.hpp
-    \brief calibration helper for fx options
+/*! \file fxeqoptionhelper.hpp
+    \brief calibration helper for Black-Scholes options
     \ingroup models
 */
 
-#ifndef quantext_calibrationhelper_fxoption_hpp
-#define quantext_calibrationhelper_fxoption_hpp
+#ifndef quantext_calibrationhelper_fxeqoption_hpp
+#define quantext_calibrationhelper_fxeqoption_hpp
 
 #include <ql/models/calibrationhelper.hpp>
 #include <ql/instruments/vanillaoption.hpp>
@@ -48,21 +31,21 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-//! FX Option Helper
+//! FxEq Option Helper
 /*! \ingroup models
 */
-class FxOptionHelper : public CalibrationHelper {
+class FxEqOptionHelper : public CalibrationHelper {
 public:
-    /*! the fx spot is interpreted as of today (or discounted spot)
+    /*! the spot is interpreted as of today (or discounted spot)
         if strike is null, an (fwd-) atm option is constructed,
         a slight approximation is introduced because there is no
         settlement lag, however this applies consistently to
         the black and the model pricing */
-    FxOptionHelper(const Period& maturity, const Calendar& calendar, const Real strike, const Handle<Quote> fxSpot,
+    FxEqOptionHelper(const Period& maturity, const Calendar& calendar, const Real strike, const Handle<Quote> spot,
                    const Handle<Quote> volatility, const Handle<YieldTermStructure>& domesticYield,
                    const Handle<YieldTermStructure>& foreignYield,
                    CalibrationHelper::CalibrationErrorType errorType = CalibrationHelper::RelativePriceError);
-    FxOptionHelper(const Date& exerciseDate, const Real strike, const Handle<Quote> fxSpot,
+    FxEqOptionHelper(const Date& exerciseDate, const Real strike, const Handle<Quote> spot,
                    const Handle<Quote> volatility, const Handle<YieldTermStructure>& domesticYield,
                    const Handle<YieldTermStructure>& foreignYield,
                    CalibrationHelper::CalibrationErrorType errorType = CalibrationHelper::RelativePriceError);
@@ -78,7 +61,7 @@ private:
     mutable Date exerciseDate_;
     Calendar calendar_;
     const Real strike_;
-    const Handle<Quote> fxSpot_;
+    const Handle<Quote> spot_;
     const Handle<YieldTermStructure> foreignYield_;
     mutable Real tau_;
     mutable Real atm_;

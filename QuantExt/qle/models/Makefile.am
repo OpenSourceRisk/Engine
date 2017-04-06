@@ -13,7 +13,7 @@ libModels_la_SOURCES = \
 	fxbsconstantparametrization.cpp \
 	fxbsparametrization.cpp \
 	fxbspiecewiseconstantparametrization.cpp \
-	fxoptionhelper.cpp \
+	fxeqoptionhelper.cpp \
 	gaussian1dcrossassetadaptor.cpp \
 	linkablecalibratedmodel.cpp \
 	lgm.cpp \
@@ -31,7 +31,7 @@ this_include_HEADERS = \
 	fxbsconstantparametrization.hpp \
 	fxbsparametrization.hpp \
 	fxbspiecewiseconstantparametrization.hpp \
-	fxoptionhelper.hpp \
+	fxeqoptionhelper.hpp \
 	gaussian1dcrossassetadaptor.hpp \
 	irlgm1fconstantparametrization.hpp \
 	irlgm1fpiecewiseconstanthullwhiteadaptor.hpp \

@@ -373,7 +373,7 @@ void EquityCrossAssetModelTest::testLgm5fEqCalibration() {
 
     for (Size i = 0; i < d.volstepdatesEqSp.size(); ++i) {
         Date tmp = i < d.volstepdatesEqSp.size() ? d.volstepdatesEqSp[i] : d.volstepdatesEqSp.back() + 365;
-        basketSp.push_back(boost::make_shared<FxOptionHelper>(
+        basketSp.push_back(boost::make_shared<FxEqOptionHelper>(
             tmp, Null<Real>(), d.spSpotToday, 
             Handle<Quote>(boost::make_shared<SimpleQuote>(0.20)), 
             d.usdYts, d.eqDivSp,
@@ -381,7 +381,7 @@ void EquityCrossAssetModelTest::testLgm5fEqCalibration() {
     }
     for (Size i = 0; i < d.volstepdatesEqLh.size(); ++i) {
         Date tmp = i < d.volstepdatesEqLh.size() ? d.volstepdatesEqLh[i] : d.volstepdatesEqLh.back() + 365;
-        basketLh.push_back(boost::make_shared<FxOptionHelper>(
+        basketLh.push_back(boost::make_shared<FxEqOptionHelper>(
             tmp, Null<Real>(), d.lhSpotToday,
             Handle<Quote>(boost::make_shared<SimpleQuote>(0.20)),
             d.eurYts, d.eqDivLh,

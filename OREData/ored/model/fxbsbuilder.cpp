@@ -22,7 +22,7 @@
 #include <qle/models/fxbsconstantparametrization.hpp>
 #include <qle/models/fxbspiecewiseconstantparametrization.hpp>
 #include <qle/pricingengines/analyticcclgmfxoptionengine.hpp>
-#include <qle/models/fxoptionhelper.hpp>
+#include <qle/models/fxeqoptionhelper.hpp>
 
 #include <ored/model/fxbsbuilder.hpp>
 #include <ored/utilities/log.hpp>
@@ -110,12 +110,12 @@ void FxBsBuilder::buildOptionBasket() {
         else
             QL_FAIL("strike type ATMF or Absolute expected");
         Handle<Quote> quote(boost::make_shared<SimpleQuote>(fxVol->blackVol(expiryDate, strikeValue)));
-        boost::shared_ptr<QuantExt::FxOptionHelper> helper =
-            boost::make_shared<QuantExt::FxOptionHelper>(expiryDate, strikeValue, fxSpot, quote, ytsDom, ytsFor);
+        boost::shared_ptr<QuantExt::FxEqOptionHelper> helper =
+            boost::make_shared<QuantExt::FxEqOptionHelper>(expiryDate, strikeValue, fxSpot, quote, ytsDom, ytsFor);
         optionBasket_.push_back(helper);
         helper->performCalculations();
         expiryTimes[j] = ytsDom->timeFromReference(helper->option()->exercise()->date(0));
-        LOG("Added FxOptionHelper " << ccyPair << " " << expiry << " " << quote->value());
+        LOG("Added FxEqOptionHelper " << ccyPair << " " << expiry << " " << quote->value());
     }
 
     std::sort(expiryTimes.begin(), expiryTimes.end());

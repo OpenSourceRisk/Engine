@@ -548,7 +548,7 @@
     <ClInclude Include="qle\models\fxbsconstantparametrization.hpp" />
     <ClInclude Include="qle\models\fxbsparametrization.hpp" />
     <ClInclude Include="qle\models\fxbspiecewiseconstantparametrization.hpp" />
-    <ClInclude Include="qle\models\fxoptionhelper.hpp" />
+    <ClInclude Include="qle\models\fxeqoptionhelper.hpp" />
     <ClInclude Include="qle\models\gaussian1dcrossassetadaptor.hpp" />
     <ClInclude Include="qle\models\irlgm1fconstantparametrization.hpp" />
     <ClInclude Include="qle\models\irlgm1fparametrization.hpp" />
@@ -639,7 +639,7 @@
     <ClCompile Include="qle\models\fxbsconstantparametrization.cpp" />
     <ClCompile Include="qle\models\fxbsparametrization.cpp" />
     <ClCompile Include="qle\models\fxbspiecewiseconstantparametrization.cpp" />
-    <ClCompile Include="qle\models\fxoptionhelper.cpp" />
+    <ClCompile Include="qle\models\fxeqoptionhelper.cpp" />
     <ClCompile Include="qle\models\gaussian1dcrossassetadaptor.cpp" />
     <ClCompile Include="qle\models\lgm.cpp" />
     <ClCompile Include="qle\models\lgmimpliedyieldtermstructure.cpp" />

@@ -759,11 +759,11 @@ void CrossAssetModelTest::testLgm5fFxCalibration() {
     // we calibrate to helpers with 0.15 and 0.2 target implied vol
     std::vector<boost::shared_ptr<CalibrationHelper> > helpersUsd, helpersGbp;
     for (Size i = 0; i <= d.volstepdatesFx.size(); ++i) {
-        boost::shared_ptr<CalibrationHelper> tmpUsd = boost::make_shared<FxOptionHelper>(
+        boost::shared_ptr<CalibrationHelper> tmpUsd = boost::make_shared<FxEqOptionHelper>(
             i < d.volstepdatesFx.size() ? d.volstepdatesFx[i] : d.volstepdatesFx.back() + 365, 0.90, d.fxEurUsd,
             Handle<Quote>(boost::make_shared<SimpleQuote>(0.15)), d.ccLgm->irlgm1f(0)->termStructure(),
             d.ccLgm->irlgm1f(1)->termStructure());
-        boost::shared_ptr<CalibrationHelper> tmpGbp = boost::make_shared<FxOptionHelper>(
+        boost::shared_ptr<CalibrationHelper> tmpGbp = boost::make_shared<FxEqOptionHelper>(
             i < d.volstepdatesFx.size() ? d.volstepdatesFx[i] : d.volstepdatesFx.back() + 365, 1.35, d.fxEurGbp,
             Handle<Quote>(boost::make_shared<SimpleQuote>(0.20)), d.ccLgm->irlgm1f(0)->termStructure(),
             d.ccLgm->irlgm1f(2)->termStructure());
@@ -864,11 +864,11 @@ void CrossAssetModelTest::testLgm5fFullCalibration() {
     for (Size i = 0; i < d.volstepdatesFx.size(); ++i) {
         Date tmp = i < d.volstepdatesFx.size() ? d.volstepdatesFx[i] : d.volstepdatesFx.back() + 365;
         // EUR-USD: atm, 30% (lognormal) vol
-        basketEurUsd.push_back(boost::make_shared<FxOptionHelper>(
+        basketEurUsd.push_back(boost::make_shared<FxEqOptionHelper>(
             tmp, Null<Real>(), d.fxEurUsd, Handle<Quote>(boost::make_shared<SimpleQuote>(0.20)), d.eurYts, d.usdYts,
             CalibrationHelper::RelativePriceError));
         // EUR-GBP: atm, 10% (lognormal) vol
-        basketEurGbp.push_back(boost::make_shared<FxOptionHelper>(
+        basketEurGbp.push_back(boost::make_shared<FxEqOptionHelper>(
             tmp, Null<Real>(), d.fxEurGbp, Handle<Quote>(boost::make_shared<SimpleQuote>(0.20)), d.eurYts, d.gbpYts,
             CalibrationHelper::RelativePriceError));
     }

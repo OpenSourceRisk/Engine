@@ -19,7 +19,7 @@
 #include <ored/model/utilities.hpp>
 #include <ored/utilities/log.hpp>
 
-#include <qle/models/fxoptionhelper.hpp>
+#include <qle/models/fxeqoptionhelper.hpp>
 
 #include <ql/exercise.hpp>
 #include <ql/models/shortrate/calibrationhelpers/swaptionhelper.hpp>
@@ -89,7 +89,7 @@ Real logCalibrationErrors(const std::vector<boost::shared_ptr<CalibrationHelper>
         Real marketValue = basket[j]->marketValue();
         Real valueDiff = modelValue - marketValue;
         Volatility modelVol = 0, marketVol = 0, volDiff = 0;
-        boost::shared_ptr<FxOptionHelper> fxoption = boost::dynamic_pointer_cast<FxOptionHelper>(basket[j]);
+        boost::shared_ptr<FxEqOptionHelper> fxoption = boost::dynamic_pointer_cast<FxEqOptionHelper>(basket[j]);
         if (fxoption != nullptr && parametrization != nullptr && domesticLgm != nullptr) {
             // report alpha, kappa at t_expiry^-
             t = domesticLgm->termStructure()->timeFromReference(fxoption->option()->exercise()->date(0)) - 1E-4;
@@ -133,7 +133,7 @@ Real logCalibrationErrors(const std::vector<boost::shared_ptr<CalibrationHelper>
         Real marketValue = basket[j]->marketValue();
         Real valueDiff = modelValue - marketValue;
         Volatility modelVol = 0, marketVol = 0, volDiff = 0;
-        boost::shared_ptr<FxOptionHelper> eqoption = boost::dynamic_pointer_cast<FxOptionHelper>(basket[j]);
+        boost::shared_ptr<FxEqOptionHelper> eqoption = boost::dynamic_pointer_cast<FxEqOptionHelper>(basket[j]);
         if (eqoption != nullptr && parametrization != nullptr && domesticLgm != nullptr) {
             // report alpha, kappa at t_expiry^-
             t = domesticLgm->termStructure()->timeFromReference(eqoption->option()->exercise()->date(0)) - 1E-4;
