@@ -449,6 +449,7 @@ void EquityCrossAssetModelTest::testLgm5fMoments() {
 
     Array e_an = p_exact->expectation(0.0, p_exact->initialValues(), T);
     Matrix v_an = p_exact->covariance(0.0, p_exact->initialValues(), T);
+    Matrix v_an_eu = p_euler->covariance(0.0, p_euler->initialValues(), T);
 
     TimeGrid grid_euler(T, steps_euler);
     TimeGrid grid_exact(T, steps_exact);
@@ -533,6 +534,42 @@ void EquityCrossAssetModelTest::testLgm5fMoments() {
                                                          << "), error is " << v_an[i][j] - covariance(v_eu2[i][j])
                                                          << " tolerance is " << tol);
             }
+        }
+    }
+
+    BOOST_TEST_MESSAGE("Testing correlation matrix recovery in presence of equity simulation");
+    Matrix corr_input = d.ccLgm->correlation();
+    BOOST_CHECK(corr_input.rows() == corr_input.columns());
+    Size dim = corr_input.rows();
+    BOOST_CHECK(corr_input.rows() == 5);
+    Matrix r1(dim, dim), r2(dim, dim);
+    Real dt = 1.0E-6;
+    Real tol_corr = 1.0E-7;
+    Matrix v_an_dt = p_exact->covariance(0.0, p_exact->initialValues(), dt);
+    Matrix v_an_eu_dt = p_euler->covariance(0.0, p_euler->initialValues(), dt);
+    BOOST_CHECK(v_an_dt.rows() == v_an_eu_dt.rows());
+    BOOST_CHECK(v_an_dt.columns() == v_an_eu_dt.columns());
+    BOOST_CHECK(corr_input.rows() == v_an_dt.rows());
+    BOOST_CHECK(corr_input.columns() == corr_input.columns());
+
+    for (Size i = 0; i < dim; ++i) {
+        for (Size j = 0; j <= i; ++j) {
+            r1[i][j] = r1[j][i] = v_an_dt[i][j] / std::sqrt(v_an_dt[i][i] * v_an_dt[j][j]);
+            r2[i][j] = r2[j][i] = v_an_eu_dt[i][j] / std::sqrt(v_an_eu_dt[i][i] * v_an_eu_dt[j][j]);
+            BOOST_CHECK_MESSAGE(std::fabs(r1[i][j] - corr_input[i][j]) < tol_corr,
+                "failed to recover correlation matrix from "
+                "exact state process (i,j)=("
+                << i << "," << j << "), input correlation is " << corr_input[i][j] <<
+                ", output is " << r1[i][j]
+                << ", difference " << (corr_input[i][j] - r1[i][j]) <<
+                ", tolerance " << tol_corr);
+            BOOST_CHECK_MESSAGE(std::fabs(r2[i][j] - corr_input[i][j]) < tol_corr, 
+                "failed to recover correlation matrix from "
+                "Euler state process (i,j)=("
+                << i << "," << j << "), input correlation is " << corr_input[i][j] << 
+                ", output is " << r2[i][j]
+                << ", difference " << (corr_input[i][j] - r2[i][j]) << 
+                ", tolerance " << tol_corr);
         }
     }
     /*
