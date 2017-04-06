@@ -373,19 +373,19 @@ Alternatively, compile all Boost libraries directly from the source code:
 \item Open a Visual Studio Tools Command Prompt
 \begin{itemize}
 \item 32-bit: VS2015/VS2013 x86 Native Tools Command Prompt
-\item 64-bit: VS2015/VS2013 x86 x64 Cross Tools Command Prompt
+\item 64-bit: VS2015/VS2013 x64 Native Tools Command Prompt
 \end{itemize}
 \item Navigate to the boost root directory
 \item Run bootstrap.bat
 \item Build the libraries from the source code
 \begin{itemize}
 \item 32-bit: \\
-	{\footnotesize\tt .{\bs}b2 --stagedir=.{\bs}lib{\bs}Win32{\bs}lib --build-type=complete toolset=msvc-14.0 \bs \\ 
-	--address-model=32 --with-test --with-system --with-filesystem  \bs \\
+  {\footnotesize\tt .{\bs}b2 --stagedir=.{\bs}lib{\bs}Win32{\bs}lib --build-type=complete toolset=msvc-14.0 \bs \\
+    address-model=32 --with-test --with-system --with-filesystem  \bs \\
     --with-serialization --with-regex --with-date\_time stage}
 \item 64-bit: \\
-	{\footnotesize\tt .{\bs}b2 --stagedir=.{\bs}lib{\bs}x64{\bs}lib --build-type=complete toolset=msvc-14.0 \bs \\ 
-    --address-model=64 --with-test --with-system --with-filesystem \bs \\ 
+  {\footnotesize\tt .{\bs}b2 --stagedir=.{\bs}lib{\bs}x64{\bs}lib --build-type=complete toolset=msvc-14.0 \bs \\
+    address-model=64 --with-test --with-system --with-filesystem \bs \\
     --with-serialization --with-regex --with-date\_time stage}
 \end{itemize}
 \end{enumerate}
