@@ -73,7 +73,7 @@
     </Envelope>
     <EquityOptionData>
       <OptionData>
-        <LongShort>Short</LongShort>
+        <LongShort>Long</LongShort>
         <OptionType>Call</OptionType>
         <Style>European</Style>
         <Settlement>Cash</Settlement>

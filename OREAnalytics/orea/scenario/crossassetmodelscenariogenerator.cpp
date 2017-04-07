@@ -122,7 +122,6 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
     Sample<MultiPath> sample = pathGenerator_->next();
     Size n_ccy = model_->components(IR);
     Size n_eq = model_->components(EQ);
-    Size n_eq_ten = simMarketConfig_->equityTenors().size();
     Size n_indices = simMarketConfig_->indices().size();
     Size n_ten = simMarketConfig_->yieldCurveTenors().size();
     vector<string> ccyPairs(n_ccy - 1);
