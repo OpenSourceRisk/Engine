@@ -26,22 +26,25 @@ namespace data {
 
 class Bond : public Trade {
 public:
-    //!Default constructor
+    //! Default constructor
     Bond() : Trade("Bond"), zeroBond_(false) {}
 
     //! Constructor
-    Bond(Envelope env, string issuerId, string securityId, string referenceCurveId, string settlementDays,
-         string calendar, string issueDate, LegData& coupons)
-        : Trade("Bond", env), issuerId_(issuerId), securityId_(securityId), referenceCurveId_(referenceCurveId),
-          settlementDays_(settlementDays), calendar_(calendar), issueDate_(issueDate), coupons_(coupons),
-          faceAmount_(0), maturityDate_(), currency_(), zeroBond_(false) {}
+    Bond(Envelope env, string issuerId, string creditCurveId, string securityId, string referenceCurveId,
+         string settlementDays, string calendar, string issueDate, LegData& coupons, Real lgd = Null<Real>())
+        : Trade("Bond", env), issuerId_(issuerId), creditCurveId_(creditCurveId), securityId_(securityId),
+          referenceCurveId_(referenceCurveId), settlementDays_(settlementDays), calendar_(calendar),
+          issueDate_(issueDate), coupons_(coupons), faceAmount_(0), maturityDate_(), currency_(),
+          zeroBond_(false), lgd_(lgd) {}
 
     //! Constructor
-    Bond(Envelope env, string issuerId, string securityId, string referenceCurveId, string settlementDays,
-         string calendar, Real faceAmount, string maturityDate, string currency, string issueDate)
-        : Trade("Bond", env), issuerId_(issuerId), securityId_(securityId), referenceCurveId_(referenceCurveId),
-          settlementDays_(settlementDays), calendar_(calendar), issueDate_(issueDate), coupons_(),
-          faceAmount_(faceAmount), maturityDate_(maturityDate), currency_(currency), zeroBond_(true) {}
+    Bond(Envelope env, string issuerId, string creditCurveId, string securityId, string referenceCurveId,
+         string settlementDays, string calendar, Real faceAmount, string maturityDate, string currency,
+         string issueDate, Real lgd = Null<Real>())
+        : Trade("Bond", env), issuerId_(issuerId), creditCurveId_(creditCurveId), securityId_(securityId),
+          referenceCurveId_(referenceCurveId), settlementDays_(settlementDays), calendar_(calendar),
+          issueDate_(issueDate), coupons_(), faceAmount_(faceAmount), maturityDate_(maturityDate),
+          currency_(currency), zeroBond_(true), lgd_(lgd) {}
 
     // Build QuantLib/QuantExt instrument, link pricing engine
     virtual void build(const boost::shared_ptr<EngineFactory>&);
@@ -50,6 +53,7 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc);
 
     const string& issuerId() const { return issuerId_; }
+    const string& creditCurveId() const { return creditCurveId_; }
     const string& securityId() const { return securityId_; }
     const string& referenceCurveId() const { return referenceCurveId_; }
     const string& settlementDays() const { return settlementDays_; }
@@ -59,9 +63,11 @@ public:
     const Real& faceAmount() const { return faceAmount_; }
     const string& maturityDate() const { return maturityDate_; }
     const string& currency() const { return currency_; }
+    const Real& lgd() const { return lgd_; }
 
 private:
     string issuerId_;
+    string creditCurveId_;
     string securityId_;
     string referenceCurveId_;
     string settlementDays_;
@@ -72,6 +78,7 @@ private:
     string maturityDate_;
     string currency_;
     bool zeroBond_;
+    Real lgd_;
 };
 }
 }

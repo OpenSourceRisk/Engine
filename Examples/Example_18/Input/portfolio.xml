@@ -9,6 +9,10 @@
     </Envelope>
     <BondData>
 	  <IssuerId>CPTY_C</IssuerId>
+	  <CreditCurveId>CPTY_C</CreditCurveId>
+	  <!-- LGD tag can be omitted, then we use a "generic" LGD
+	       that comes with the credit curve -->
+	  <LGD>0.5</LGD>
 	  <SecurityId>SECURITY_1</SecurityId>
 	  <ReferenceCurveId>EUR-EURIBOR-6M</ReferenceCurveId>
 	  <SettlementDays>2</SettlementDays>
@@ -54,6 +58,10 @@
     </Envelope>
     <BondData>
 	  <IssuerId>CPTY_C</IssuerId>
+	  <CreditCurveId>CPTY_C</CreditCurveId>
+	  <!-- LGD tag can be omitted, then we use a "generic" LGD
+	       that comes with the credit curve -->
+	  <!--<LGD>0.5</LGD>-->
 	  <SecurityId>SECURITY_1</SecurityId>
 	  <ReferenceCurveId>EUR-EURIBOR-6M</ReferenceCurveId>
 	  <SettlementDays>2</SettlementDays>
