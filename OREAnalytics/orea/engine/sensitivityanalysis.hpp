@@ -67,7 +67,7 @@ public:
     const std::set<std::string>& trades() { return trades_; }
 
     //! Return unique set of factors shifted
-    const std::set<std::string>& factors() { return factors_; }
+    const std::map<std::string, QuantLib::Real>& factors() const { return factors_; }
 
     //! Return base NPV by trade, before shift
     const std::map<std::string, Real>& baseNPV() { return baseNPV_; }
@@ -111,7 +111,10 @@ public:
     //! A getter for Conventions
     virtual const Conventions& conventions() const { return conventions_; }
 
-protected:
+private:
+    void storeFactorShifts(const ShiftScenarioGenerator::ScenarioDescription& desc);
+    Real getShiftSize(const RiskFactorKey& desc) const;
+
     boost::shared_ptr<ore::data::Market> market_;
     std::string marketConfiguration_;
     Date asof_;
@@ -128,7 +131,7 @@ protected:
     // cross gamma by trade, factor1, factor2
     std::map<std::tuple<string, string, string>, Real> crossNPV_, crossGamma_;
     // unique set of factors
-    std::set<std::string> factors_;
+    std::map<std::string, QuantLib::Real> factors_;
     // unique set of trades
     std::set<std::string> trades_;
     // if true, convert sensis to base currency using the original (non-shifted) FX rate

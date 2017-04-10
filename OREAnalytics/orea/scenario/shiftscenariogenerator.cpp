@@ -26,7 +26,7 @@ using namespace std;
 namespace ore {
 namespace analytics {
 
-string ShiftScenarioGenerator::ScenarioDescription::typeString() {
+string ShiftScenarioGenerator::ScenarioDescription::typeString()  const {
     if (type_ == ScenarioDescription::Type::Base)
         return "Base";
     else if (type_ == ScenarioDescription::Type::Up)
@@ -38,7 +38,7 @@ string ShiftScenarioGenerator::ScenarioDescription::typeString() {
     else
         QL_FAIL("ScenarioDescription::Type not covered");
 }
-string ShiftScenarioGenerator::ScenarioDescription::factor1() {
+string ShiftScenarioGenerator::ScenarioDescription::factor1() const {
     ostringstream o;
     if (key1_ != RiskFactorKey()) {
         o << key1_;
@@ -48,7 +48,7 @@ string ShiftScenarioGenerator::ScenarioDescription::factor1() {
     }
     return "";
 }
-string ShiftScenarioGenerator::ScenarioDescription::factor2() {
+string ShiftScenarioGenerator::ScenarioDescription::factor2() const {
     ostringstream o;
     if (key2_ != RiskFactorKey()) {
         o << key2_;
@@ -58,7 +58,7 @@ string ShiftScenarioGenerator::ScenarioDescription::factor2() {
     }
     return "";
 }
-string ShiftScenarioGenerator::ScenarioDescription::text() {
+string ShiftScenarioGenerator::ScenarioDescription::text() const {
   string t = typeString();
   string f1 = factor1();
   string f2 = factor2();

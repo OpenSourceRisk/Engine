@@ -139,7 +139,7 @@ SensitivityAnalysis::SensitivityAnalysis(const boost::shared_ptr<ore::data::Port
                     downNPV_[p] = npv;
                 } else
                     continue;
-                factors_.insert(factor);
+                storeFactorShifts(desc[j]);
             }
         }
 
@@ -258,6 +258,7 @@ void SensitivityAnalysis::writeSensitivityReport(string fileName, Real outputThr
 
     report.addColumn("#TradeId", string());
     report.addColumn("Factor", string());
+    report.addColumn("ShiftSize", double(), 6);
     report.addColumn("Base NPV", double(), 2);
     report.addColumn("Delta*Shift", double(), 2);
     report.addColumn("Gamma*Shift^2", double(), 2);
@@ -266,6 +267,7 @@ void SensitivityAnalysis::writeSensitivityReport(string fileName, Real outputThr
         pair<string, string> p = data.first;
         string id = data.first.first;
         string factor = data.first.second;
+        Real shiftSize = factors_[factor];
         Real delta = data.second;
         Real gamma = gamma_[p];
         Real base = baseNPV_[id];
@@ -273,6 +275,7 @@ void SensitivityAnalysis::writeSensitivityReport(string fileName, Real outputThr
             report.next();
             report.add(id);
             report.add(factor);
+            report.add(shiftSize);
             report.add(base);
             report.add(delta);
             report.add(gamma);
@@ -286,21 +289,27 @@ void SensitivityAnalysis::writeCrossGammaReport(string fileName, Real outputThre
 
     report.addColumn("#TradeId", string());
     report.addColumn("Factor 1", string());
+    report.addColumn("ShiftSize1", double(), 6);
     report.addColumn("Factor 2", string());
+    report.addColumn("ShiftSize2", double(), 6);
     report.addColumn("Base NPV", double(), 2);
     report.addColumn("CrossGamma*Shift^2", double(), 2);
 
     for (auto data : crossGamma_) {
         string id = std::get<0>(data.first);
         string factor1 = std::get<1>(data.first);
+        Real shiftSize1 = factors_[factor1];
         string factor2 = std::get<2>(data.first);
+        Real shiftSize2 = factors_[factor2];
         Real crossGamma = data.second;
         Real base = baseNPV_[id];
         if (fabs(crossGamma) > outputThreshold) {
             report.next();
             report.add(id);
             report.add(factor1);
+            report.add(shiftSize1);
             report.add(factor2);
+            report.add(shiftSize2);
             report.add(base);
             report.add(crossGamma);
         }
@@ -308,5 +317,162 @@ void SensitivityAnalysis::writeCrossGammaReport(string fileName, Real outputThre
     report.end();
 }
 
+void SensitivityAnalysis::storeFactorShifts(const ShiftScenarioGenerator::ScenarioDescription& desc) {
+    RiskFactorKey key1 = desc.key1();
+    string factor1 = desc.factor1();
+    if (factors_.find(factor1) == factors_.end()) {
+        Real shift1Size = getShiftSize(key1);
+        //cout << factor1 << "," << key1 << shift1Size << endl;
+        factors_[factor1] = shift1Size;
+    }
+    if (desc.type() == ShiftScenarioGenerator::ScenarioDescription::Type::Cross) {
+        RiskFactorKey key2 = desc.key2();
+        string factor2 = desc.factor2();
+        if (factors_.find(factor2) == factors_.end()) {
+            Real shift2Size = getShiftSize(key2);
+            factors_[factor2] = shift2Size;
+        }
+    }
+}
+
+Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
+    RiskFactorKey::KeyType keytype = key.keytype;
+    string keylabel = key.name;
+    Real shiftSize = 0.0;
+    Real shiftMult = 1.0;
+    if (keytype == RiskFactorKey::KeyType::FXSpot) {
+        shiftSize = sensitivityData_->fxShiftData()[keylabel].shiftSize;
+        if (boost::to_upper_copy(sensitivityData_->fxShiftData()[keylabel].shiftType) == "RELATIVE") {
+            shiftMult = simMarket_->fxSpot(keylabel,marketConfiguration_)->value();
+        }
+    }
+    else if (keytype == RiskFactorKey::KeyType::DiscountCurve) {
+        string ccy = keylabel;
+       // vector<string> tokens;
+        //boost::split(tokens, keylabel, boost::is_any_of("/"));
+       // QL_REQUIRE(tokens.size() == 3, "Unexpected risk factor key label for type DiscountCurve - " << keylabel);
+        //string ccy = tokens.front();
+        shiftSize = sensitivityData_->discountCurveShiftData()[ccy].shiftSize;
+        if (boost::to_upper_copy(sensitivityData_->discountCurveShiftData()[ccy].shiftType) == "RELATIVE") {
+            Size keyIdx = key.index;
+            Period p = sensitivityData_->discountCurveShiftData()[ccy].shiftTenors[keyIdx];
+            //Period p = ore::data::parsePeriod(tokens.back());
+            Handle<YieldTermStructure> yts = simMarket_->discountCurve(ccy, marketConfiguration_);
+            Time t = yts->dayCounter().yearFraction(asof_, asof_ + p);
+            Real zeroRate = yts->zeroRate(t,Continuous);
+            shiftMult = zeroRate;
+        }
+    }
+    else if (keytype == RiskFactorKey::KeyType::IndexCurve) {
+        string idx = keylabel;
+        //vector<string> tokens;
+        //boost::split(tokens, keylabel, boost::is_any_of("/"));
+        //QL_REQUIRE(tokens.size() == 3, "Unexpected risk factor key label for type IndexCurve - " << keylabel);
+        //string idx = tokens.front();
+        shiftSize = sensitivityData_->indexCurveShiftData()[idx].shiftSize;
+        if (boost::to_upper_copy(sensitivityData_->indexCurveShiftData()[idx].shiftType) == "RELATIVE") {
+            Size keyIdx = key.index;
+            Period p = sensitivityData_->indexCurveShiftData()[idx].shiftTenors[keyIdx];
+            //Period p = ore::data::parsePeriod(tokens.back());
+            Handle<YieldTermStructure> yts = simMarket_->iborIndex(idx, marketConfiguration_)->forwardingTermStructure();
+            Time t = yts->dayCounter().yearFraction(asof_, asof_ + p);
+            Real zeroRate = yts->zeroRate(t, Continuous);
+            shiftMult = zeroRate;
+        }
+    }
+    else if (keytype == RiskFactorKey::KeyType::YieldCurve) {
+        string yc = keylabel;
+        //vector<string> tokens;
+        //boost::split(tokens, keylabel, boost::is_any_of("/"));
+        //QL_REQUIRE(tokens.size() == 3, "Unexpected risk factor key label for type YieldCurve - " << keylabel);
+        //string yc = tokens.front();
+        shiftSize = sensitivityData_->yieldCurveShiftData()[yc].shiftSize;
+        if (boost::to_upper_copy(sensitivityData_->yieldCurveShiftData()[yc].shiftType) == "RELATIVE") {
+            Size keyIdx = key.index;
+            Period p = sensitivityData_->yieldCurveShiftData()[yc].shiftTenors[keyIdx];
+            //Period p = ore::data::parsePeriod(tokens.back());
+            Handle<YieldTermStructure> yts = simMarket_->yieldCurve(yc, marketConfiguration_);
+            Time t = yts->dayCounter().yearFraction(asof_, asof_ + p);
+            Real zeroRate = yts->zeroRate(t, Continuous);
+            shiftMult = zeroRate;
+        }
+    }
+    else if (keytype == RiskFactorKey::KeyType::FXVolatility) {
+        string pair = keylabel;
+        //vector<string> tokens;
+        //boost::split(tokens, keylabel, boost::is_any_of("/"));
+        //QL_REQUIRE(tokens.size() == 4, "Unexpected risk factor key label for type FXVolatility - " << keylabel);
+        //string pair = tokens.front();
+        shiftSize = sensitivityData_->fxVolShiftData()[pair].shiftSize;
+        if (boost::to_upper_copy(sensitivityData_->fxVolShiftData()[pair].shiftType) == "RELATIVE") {
+            vector<Real> strikes = sensitivityData_->fxVolShiftData()[pair].shiftStrikes;
+            QL_REQUIRE(strikes.size() == 0, "Only ATM FX vols supported");
+            //QL_REQUIRE(tokens.back() == "ATM", "Only ATM FX vols supported, not " << tokens.back());
+            Real atmFwd = 0.0; // hardcoded, since only ATM supported
+            Size keyIdx = key.index;
+            Period p = sensitivityData_->fxVolShiftData()[pair].shiftExpiries[keyIdx];
+            //Period p = ore::data::parsePeriod(tokens[2]);
+            Handle<BlackVolTermStructure> vts = simMarket_->fxVol(pair, marketConfiguration_);
+            Time t = vts->dayCounter().yearFraction(asof_, asof_ + p);
+            Real atmVol = vts->blackVol(t,atmFwd);
+            shiftMult = atmVol;
+        }
+    }
+    else if (keytype == RiskFactorKey::KeyType::SwaptionVolatility) {
+        string ccy = keylabel;
+        //vector<string> tokens;
+        //boost::split(tokens, keylabel, boost::is_any_of("/"));
+        //QL_REQUIRE(tokens.size() == 5, "Unexpected risk factor key label for type SwaptionVolatility - " << keylabel);
+        //string ccy = tokens.front();
+        shiftSize = sensitivityData_->swaptionVolShiftData()[ccy].shiftSize;
+        if (boost::to_upper_copy(sensitivityData_->swaptionVolShiftData()[ccy].shiftType) == "RELATIVE") {
+            vector<Real> strikes = sensitivityData_->swaptionVolShiftData()[ccy].shiftStrikes;
+            vector<Period> tenors = sensitivityData_->swaptionVolShiftData()[ccy].shiftTerms;
+            vector<Period> expiries = sensitivityData_->swaptionVolShiftData()[ccy].shiftExpiries;
+            QL_REQUIRE(strikes.size() == 0, "Only ATM Swaption vols supported");
+            //QL_REQUIRE(isAtm, "Only ATM vols supported, not " << tokens.back());
+            Real atmFwd = 0.0; // hardcoded, since only ATM supported
+            Size keyIdx = key.index;
+            Size expIdx = keyIdx / tenors.size();
+            Period p_exp = expiries[expIdx];
+            Size tenIdx = keyIdx % tenors.size();
+            Period p_ten = tenors[tenIdx];
+            //Period p_exp = ore::data::parsePeriod(tokens[2]);
+            //Period p_ten = ore::data::parsePeriod(tokens[3]);
+            Handle<SwaptionVolatilityStructure> vts = simMarket_->swaptionVol(ccy, marketConfiguration_);
+            Time t_exp = vts->dayCounter().yearFraction(asof_, asof_ + p_exp);
+            Time t_ten = vts->dayCounter().yearFraction(asof_, asof_ + p_ten);
+            Real atmVol = vts->volatility(t_exp, t_ten, atmFwd);
+            shiftMult = atmVol;
+        }
+    }
+    else if (keytype == RiskFactorKey::KeyType::OptionletVolatility) {
+        string ccy = keylabel;
+        //vector<string> tokens;
+        //boost::split(tokens, keylabel, boost::is_any_of("/"));
+        //QL_REQUIRE(tokens.size() == 4, "Unexpected risk factor key label for type OptionletVolatility - " << keylabel);
+        //string ccy = tokens.front();
+        shiftSize = sensitivityData_->capFloorVolShiftData()[ccy].shiftSize;
+        if (boost::to_upper_copy(sensitivityData_->capFloorVolShiftData()[ccy].shiftType) == "RELATIVE") {
+            vector<Real> strikes = sensitivityData_->capFloorVolShiftData()[ccy].shiftStrikes;
+            vector<Period> expiries = sensitivityData_->capFloorVolShiftData()[ccy].shiftExpiries;
+            QL_REQUIRE(strikes.size() > 0, "Only strike capfloor vols supported");
+            Size keyIdx = key.index;
+            Size expIdx = keyIdx / strikes.size();
+            Period p_exp = expiries[expIdx];
+            Size strIdx = keyIdx % strikes.size();
+            Real strike = strikes[strIdx];
+            Handle<OptionletVolatilityStructure> vts = simMarket_->capFloorVol(ccy, marketConfiguration_);
+            Time t_exp = vts->dayCounter().yearFraction(asof_, asof_ + p_exp);
+            Real vol = vts->volatility(t_exp, strike);
+            shiftMult = vol;
+        }
+    }
+    else {
+        QL_FAIL("KeyType not supported yet - " << keytype);
+    }
+    Real realShift = shiftSize * shiftMult;
+    return realShift;
+}
 }
 }

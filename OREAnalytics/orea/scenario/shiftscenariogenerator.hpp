@@ -55,20 +55,20 @@ public:
               indexDesc2_(d2.indexDesc1()) {}
         //! Inspectors
         //@{
-        Type type() { return type_; }
-        RiskFactorKey key1() { return key1_; }
-        RiskFactorKey key2() { return key2_; }
-        string indexDesc1() { return indexDesc1_; }
-        string indexDesc2() { return indexDesc2_; }
+        Type type() const { return type_; }
+        RiskFactorKey key1() const { return key1_; }
+        RiskFactorKey key2() const { return key2_; }
+        string indexDesc1() const { return indexDesc1_; }
+        string indexDesc2() const { return indexDesc2_; }
         //@}
         //! Return type as string
-        string typeString();
+        string typeString() const;
         //! Return key1 as string with text1 appended as key index description
-        string factor1();
+        string factor1() const;
         //! Return key2 as string with text2 appended as key index description
-        string factor2();
+        string factor2() const;
         //! Return full description
-        string text();
+        string text() const;
 
     private:
         Type type_;
