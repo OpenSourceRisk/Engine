@@ -159,15 +159,12 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData5() 
 boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData2() {
     boost::shared_ptr<SensitivityScenarioData> sensiData = boost::make_shared<SensitivityScenarioData>();
 
-    sensiData->parConversion() = false;
-
     SensitivityScenarioData::CurveShiftData cvsData;
     cvsData.shiftTenors = {
         1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 15 * Years, 20 * Years
     }; // multiple tenors: triangular shifts
     cvsData.shiftType = "Absolute";
     cvsData.shiftSize = 0.0001;
-    cvsData.parInstruments = { "DEP", "IRS", "IRS", "IRS", "IRS", "IRS", "IRS", "IRS", "IRS" };
 
     SensitivityScenarioData::FxShiftData fxsData;
     fxsData.shiftType = "Relative";
@@ -192,25 +189,12 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData2() {
 
     sensiData->discountCurrencies() = { "EUR", "GBP" };
     sensiData->discountCurveShiftData()["EUR"] = cvsData;
-    sensiData->discountCurveShiftData()["EUR"].parInstrumentSingleCurve = true;
-    sensiData->discountCurveShiftData()["EUR"].parInstrumentConventions = { { "DEP", "EUR-DEP-CONVENTIONS" },
-                                                                            { "IRS", "EUR-6M-SWAP-CONVENTIONS" } };
+
     sensiData->discountCurveShiftData()["GBP"] = cvsData;
-    sensiData->discountCurveShiftData()["GBP"].parInstrumentSingleCurve = true;
-    sensiData->discountCurveShiftData()["GBP"].parInstrumentConventions = { { "DEP", "GBP-DEP-CONVENTIONS" },
-                                                                            { "IRS", "GBP-6M-SWAP-CONVENTIONS" } };
 
     sensiData->indexNames() = { "EUR-EURIBOR-6M", "GBP-LIBOR-6M" };
     sensiData->indexCurveShiftData()["EUR-EURIBOR-6M"] = cvsData;
-    sensiData->indexCurveShiftData()["EUR-EURIBOR-6M"].parInstrumentSingleCurve = false;
-    sensiData->indexCurveShiftData()["EUR-EURIBOR-6M"].parInstrumentConventions = {
-        { "DEP", "EUR-DEP-CONVENTIONS" }, { "IRS", "EUR-6M-SWAP-CONVENTIONS" }
-    };
     sensiData->indexCurveShiftData()["GBP-LIBOR-6M"] = cvsData;
-    sensiData->indexCurveShiftData()["GBP-LIBOR-6M"].parInstrumentSingleCurve = false;
-    sensiData->indexCurveShiftData()["GBP-LIBOR-6M"].parInstrumentConventions = {
-        { "DEP", "GBP-DEP-CONVENTIONS" }, { "IRS", "GBP-6M-SWAP-CONVENTIONS" }
-    };
 
     sensiData->fxCcyPairs() = { "EURGBP" };
     sensiData->fxShiftData()["EURGBP"] = fxsData;
@@ -235,14 +219,11 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData2() {
 boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5() {
     boost::shared_ptr<SensitivityScenarioData> sensiData = boost::make_shared<SensitivityScenarioData>();
 
-    sensiData->parConversion() = false;
-
     SensitivityScenarioData::CurveShiftData cvsData;
     cvsData.shiftTenors = { 6 * Months, 1 * Years,  2 * Years,  3 * Years, 5 * Years,
                             7 * Years,  10 * Years, 15 * Years, 20 * Years }; // multiple tenors: triangular shifts
     cvsData.shiftType = "Absolute";
     cvsData.shiftSize = 0.0001;
-    cvsData.parInstruments = { "DEP", "IRS", "IRS", "IRS", "IRS", "IRS", "IRS", "IRS", "IRS" };
 
     SensitivityScenarioData::FxShiftData fxsData;
     fxsData.shiftType = "Relative";
@@ -267,52 +248,27 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5() {
 
     sensiData->discountCurrencies() = { "EUR", "USD", "GBP", "CHF", "JPY" };
     sensiData->discountCurveShiftData()["EUR"] = cvsData;
-    sensiData->discountCurveShiftData()["EUR"].parInstrumentSingleCurve = true;
-    sensiData->discountCurveShiftData()["EUR"].parInstrumentConventions = { { "DEP", "EUR-DEP-CONVENTIONS" },
-                                                                            { "IRS", "EUR-6M-SWAP-CONVENTIONS" } };
+
     sensiData->discountCurveShiftData()["USD"] = cvsData;
-    sensiData->discountCurveShiftData()["USD"].parInstrumentSingleCurve = true;
-    sensiData->discountCurveShiftData()["USD"].parInstrumentConventions = { { "DEP", "USD-DEP-CONVENTIONS" },
-                                                                            { "IRS", "USD-3M-SWAP-CONVENTIONS" } };
+
     sensiData->discountCurveShiftData()["GBP"] = cvsData;
-    sensiData->discountCurveShiftData()["GBP"].parInstrumentSingleCurve = true;
-    sensiData->discountCurveShiftData()["GBP"].parInstrumentConventions = { { "DEP", "GBP-DEP-CONVENTIONS" },
-                                                                            { "IRS", "GBP-6M-SWAP-CONVENTIONS" } };
+
     sensiData->discountCurveShiftData()["JPY"] = cvsData;
-    sensiData->discountCurveShiftData()["JPY"].parInstrumentSingleCurve = true;
-    sensiData->discountCurveShiftData()["JPY"].parInstrumentConventions = { { "DEP", "JPY-DEP-CONVENTIONS" },
-                                                                            { "IRS", "JPY-6M-SWAP-CONVENTIONS" } };
+
     sensiData->discountCurveShiftData()["CHF"] = cvsData;
-    sensiData->discountCurveShiftData()["CHF"].parInstrumentSingleCurve = true;
-    sensiData->discountCurveShiftData()["CHF"].parInstrumentConventions = { { "DEP", "CHF-DEP-CONVENTIONS" },
-                                                                            { "IRS", "CHF-6M-SWAP-CONVENTIONS" } };
+
 
     sensiData->indexNames() = { "EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M", "CHF-LIBOR-6M", "JPY-LIBOR-6M" };
     sensiData->indexCurveShiftData()["EUR-EURIBOR-6M"] = cvsData;
-    sensiData->indexCurveShiftData()["EUR-EURIBOR-6M"].parInstrumentSingleCurve = false;
-    sensiData->indexCurveShiftData()["EUR-EURIBOR-6M"].parInstrumentConventions = {
-        { "DEP", "EUR-DEP-CONVENTIONS" }, { "IRS", "EUR-6M-SWAP-CONVENTIONS" }
-    };
+
     sensiData->indexCurveShiftData()["USD-LIBOR-3M"] = cvsData;
-    sensiData->indexCurveShiftData()["USD-LIBOR-3M"].parInstrumentSingleCurve = false;
-    sensiData->indexCurveShiftData()["USD-LIBOR-3M"].parInstrumentConventions = {
-        { "DEP", "USD-DEP-CONVENTIONS" }, { "IRS", "USD-3M-SWAP-CONVENTIONS" }
-    };
+
     sensiData->indexCurveShiftData()["GBP-LIBOR-6M"] = cvsData;
-    sensiData->indexCurveShiftData()["GBP-LIBOR-6M"].parInstrumentSingleCurve = false;
-    sensiData->indexCurveShiftData()["GBP-LIBOR-6M"].parInstrumentConventions = {
-        { "DEP", "GBP-DEP-CONVENTIONS" }, { "IRS", "GBP-6M-SWAP-CONVENTIONS" }
-    };
+
     sensiData->indexCurveShiftData()["JPY-LIBOR-6M"] = cvsData;
-    sensiData->indexCurveShiftData()["JPY-LIBOR-6M"].parInstrumentSingleCurve = false;
-    sensiData->indexCurveShiftData()["JPY-LIBOR-6M"].parInstrumentConventions = {
-        { "DEP", "JPY-DEP-CONVENTIONS" }, { "IRS", "JPY-6M-SWAP-CONVENTIONS" }
-    };
+
     sensiData->indexCurveShiftData()["CHF-LIBOR-6M"] = cvsData;
-    sensiData->indexCurveShiftData()["CHF-LIBOR-6M"].parInstrumentSingleCurve = true;
-    sensiData->indexCurveShiftData()["CHF-LIBOR-6M"].parInstrumentConventions = {
-        { "DEP", "CHF-DEP-CONVENTIONS" }, { "IRS", "CHF-6M-SWAP-CONVENTIONS" }
-    };
+
 
     sensiData->fxCcyPairs() = { "EURUSD", "EURGBP", "EURCHF", "EURJPY" };
     sensiData->fxShiftData()["EURUSD"] = fxsData;
@@ -363,7 +319,6 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
 
     // sensitivity config
     boost::shared_ptr<SensitivityScenarioData> sensiData = setupSensitivityScenarioData5();
-    sensiData->parConversion() = false;
 
     // build scenario generator
     boost::shared_ptr<ScenarioFactory> scenarioFactory(new SimpleScenarioFactory);
@@ -975,7 +930,7 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
 
     // sensitivity config
     boost::shared_ptr<SensitivityScenarioData> sensiData = setupSensitivityScenarioData5();
-    sensiData->parConversion() = false;
+
     map<string, SensitivityScenarioData::FxVolShiftData>& fxvs = sensiData->fxVolShiftData();
     for (auto& it : fxvs) {
         it.second.shiftSize = 0.0001; // want a smaller shift size than 1.0 to test the analytic sensitivities
@@ -1313,7 +1268,6 @@ void SensitivityAnalysisTest::testCrossGamma() {
 
     // sensitivity config
     boost::shared_ptr<SensitivityScenarioData> sensiData = setupSensitivityScenarioData5();
-    sensiData->parConversion() = false;
     map<string, SensitivityScenarioData::FxVolShiftData>& fxvs = sensiData->fxVolShiftData();
     vector<pair<string, string>>& cgFilter = sensiData->crossGammaFilter();
     BOOST_CHECK_EQUAL(cgFilter.size(), 0);
