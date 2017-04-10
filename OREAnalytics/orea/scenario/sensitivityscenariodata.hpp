@@ -86,7 +86,7 @@ public:
     };
 
     //! Default constructor
-    SensitivityScenarioData(){};
+    SensitivityScenarioData() : parConversion_(false) {};
 
     //! \name Inspectors
     //@{
