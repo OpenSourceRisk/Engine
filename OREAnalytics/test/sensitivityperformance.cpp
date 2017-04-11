@@ -464,7 +464,7 @@ void addCrossGammas(vector<pair<string, string>>& cgFilter) {
     //cgFilter.push_back(pair<string, string>("SwaptionVolatility/JPY", "SwaptionVolatility/JPY"));
 }
 
-boost::shared_ptr<Portfolio> buildPortfolio(Size portfolioSize, boost::shared_ptr<EngineFactory>& factory) {
+boost::shared_ptr<Portfolio> buildPortfolio(Size portfolioSize, boost::shared_ptr<EngineFactory> factory = {}) {
 
     boost::shared_ptr<Portfolio> portfolio(new Portfolio());
 
@@ -540,8 +540,8 @@ boost::shared_ptr<Portfolio> buildPortfolio(Size portfolioSize, boost::shared_pt
                 fixedRate, spread, fixFreq, fixDC, floatFreq, floatDC, index));
         }
     }
-
-    portfolio->build(factory);
+    if (factory)
+        portfolio->build(factory);
 
     BOOST_CHECK_MESSAGE(portfolio->size() == portfolioSize,
         "Failed to build portfolio (got " << portfolio->size() << " expected " << portfolioSize << ")");
@@ -594,28 +594,8 @@ void test_performance(bool bigPortfolio, bool bigScenario, bool lotsOfSensis, bo
         addCrossGammas(sensiData->crossGammaFilter());
     }
 
-    // build scenario generator
-    boost::timer t1;
-    t1.restart();
-    boost::shared_ptr<ScenarioFactory> scenarioFactory(new SimpleScenarioFactory);
-    boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(
-        new SensitivityScenarioGenerator(scenarioFactory, sensiData, simMarketData, today, initMarket));
-    Real sgElapsed = t1.elapsed();
-    Size numScenarios = scenarioGenerator->samples();
-    Size scenarioSize = scenarioGenerator->scenarios().front()->keys().size();
-    BOOST_TEST_MESSAGE("number of scenarios=" << numScenarios);
-    BOOST_TEST_MESSAGE("Size of scenario = " << scenarioSize << " keys");
-    BOOST_TEST_MESSAGE("scenario generation time=" << sgElapsed << " seconds");
-    Real sgAvg = sgElapsed / ((Real)numScenarios);
-    BOOST_TEST_MESSAGE("average sgen time=" << sgAvg << " seconds");
-    BOOST_TEST_MESSAGE("Memory usage - " << os::getMemoryUsage());
-    boost::shared_ptr<ScenarioGenerator> sgen(scenarioGenerator);
-    BOOST_TEST_MESSAGE("Memory usage - " << os::getMemoryUsage());
-
     // build scenario sim market
     Conventions conventions = *conv();
-    boost::shared_ptr<analytics::ScenarioSimMarket> simMarket =
-        boost::make_shared<analytics::ScenarioSimMarket>(sgen, initMarket, simMarketData, conventions);
 
     // build porfolio
     boost::shared_ptr<EngineData> data = boost::make_shared<EngineData>();
@@ -623,11 +603,8 @@ void test_performance(bool bigPortfolio, bool bigScenario, bool lotsOfSensis, bo
     data->engine("Swap") = "DiscountingSwapEngine";
     data->model("EuropeanSwaption") = "BlackBachelier";
     data->engine("EuropeanSwaption") = "BlackBachelierSwaptionEngine";
-    boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(data, simMarket);
-    factory->registerBuilder(boost::make_shared<SwapEngineBuilder>());
-    factory->registerBuilder(boost::make_shared<EuropeanSwaptionEngineBuilder>());
 
-    boost::shared_ptr<Portfolio> portfolio = buildPortfolio(portfolioSize, factory);
+    boost::shared_ptr<Portfolio> portfolio = buildPortfolio(portfolioSize);
 
     boost::timer t2;
     t2.restart();
@@ -636,7 +613,11 @@ void test_performance(bool bigPortfolio, bool bigScenario, bool lotsOfSensis, bo
             portfolio, initMarket, Market::defaultConfiguration, data,
             simMarketData, sensiData, conventions);
     Real elapsed = t2.elapsed();
-    BOOST_TEST_MESSAGE("Sensi scenarios priced in " << elapsed << " seconds");
+    Size numScenarios = sa->scenarioGenerator()->samples();
+    Size scenarioSize = sa->scenarioGenerator()->scenarios().front()->keys().size();
+    BOOST_TEST_MESSAGE("number of scenarios=" << numScenarios);
+    BOOST_TEST_MESSAGE("Size of scenario = " << scenarioSize << " keys");
+    BOOST_TEST_MESSAGE("time = " << elapsed << " seconds");
     Real avTime = (elapsed / ((Real)(numScenarios*portfolioSize)));
     BOOST_TEST_MESSAGE("Average pricing time =  " << avTime << " seconds");
     BOOST_TEST_MESSAGE("Memory usage - " << os::getMemoryUsage());
