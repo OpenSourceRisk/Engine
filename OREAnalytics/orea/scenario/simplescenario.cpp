@@ -28,8 +28,6 @@ namespace analytics {
 bool SimpleScenario::has(const RiskFactorKey& key) const { return data_.find(key) != data_.end(); }
 
 void SimpleScenario::add(const RiskFactorKey& key, Real value) {
-    // TODO: why can we not overwrite??
-    QL_REQUIRE(!has(key), "key " << key << " already used, we do not overwrite");
     data_.emplace(key, value);
     keys_.emplace_back(key);
 }
