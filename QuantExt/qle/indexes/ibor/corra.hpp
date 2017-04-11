@@ -27,14 +27,14 @@
 #include <ql/currencies/america.hpp>
 #include <ql/indexes/iborindex.hpp>
 #include <ql/time/calendars/canada.hpp>
-#include <ql/time/daycounters/actual360.hpp>
+#include <ql/time/daycounters/actual365fixed.hpp>
 
 namespace QuantExt {
 
 class CORRA : public OvernightIndex {
 public:
     explicit CORRA(const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
-        : OvernightIndex("CORRA", 0, CADCurrency(), Canada(), Actual360(), h) {}
+        : OvernightIndex("CORRA", 0, CADCurrency(), Canada(), Actual365Fixed(), h) {}
 };
 } // namespace QuantExt
 
