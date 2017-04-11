@@ -608,7 +608,9 @@ void test_performance(bool bigPortfolio, bool bigScenario, bool lotsOfSensis, bo
     BOOST_TEST_MESSAGE("scenario generation time=" << sgElapsed << " seconds");
     Real sgAvg = sgElapsed / ((Real)numScenarios);
     BOOST_TEST_MESSAGE("average sgen time=" << sgAvg << " seconds");
+    BOOST_TEST_MESSAGE("Memory usage - " << os::getMemoryUsage());
     boost::shared_ptr<ScenarioGenerator> sgen(scenarioGenerator);
+    BOOST_TEST_MESSAGE("Memory usage - " << os::getMemoryUsage());
 
     // build scenario sim market
     Conventions conventions = *conv();
@@ -637,6 +639,7 @@ void test_performance(bool bigPortfolio, bool bigScenario, bool lotsOfSensis, bo
     BOOST_TEST_MESSAGE("Sensi scenarios priced in " << elapsed << " seconds");
     Real avTime = (elapsed / ((Real)(numScenarios*portfolioSize)));
     BOOST_TEST_MESSAGE("Average pricing time =  " << avTime << " seconds");
+    BOOST_TEST_MESSAGE("Memory usage - " << os::getMemoryUsage());
 }
 }
 
