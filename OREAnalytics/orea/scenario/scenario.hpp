@@ -134,6 +134,9 @@ public:
     //! Get an element from the scenario
     virtual Real get(const RiskFactorKey& key) const = 0;
 
+    //! clones a scenario and returns a pointer to the new object
+    virtual boost::shared_ptr<Scenario> clone() const = 0;
+
 private:
     friend class boost::serialization::access;
     template <class Archive> void serialize(Archive&, const unsigned int) {}
