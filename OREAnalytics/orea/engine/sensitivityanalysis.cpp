@@ -53,72 +53,123 @@ namespace ore {
 namespace analytics {
 
 SensitivityAnalysis::SensitivityAnalysis(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
-                                         const boost::shared_ptr<ore::data::Market>& market,
-                                         const string& marketConfiguration,
-                                         const boost::shared_ptr<ore::data::EngineData>& engineData,
-                                         const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
-                                         const boost::shared_ptr<SensitivityScenarioData>& sensitivityData,
-                                         const Conventions& conventions,
-                                         const bool nonShiftedBaseCurrencyConversion)
+    const boost::shared_ptr<ore::data::Market>& market,
+    const string& marketConfiguration,
+    const boost::shared_ptr<ore::data::EngineData>& engineData,
+    const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+    const boost::shared_ptr<SensitivityScenarioData>& sensitivityData,
+    const Conventions& conventions,
+    const bool nonShiftedBaseCurrencyConversion)
     : market_(market), marketConfiguration_(marketConfiguration), asof_(market->asofDate()),
-      simMarketData_(simMarketData), sensitivityData_(sensitivityData), conventions_(conventions),
-      nonShiftedBaseCurrencyConversion_(nonShiftedBaseCurrencyConversion) {
+    simMarketData_(simMarketData), sensitivityData_(sensitivityData), conventions_(conventions),
+    nonShiftedBaseCurrencyConversion_(nonShiftedBaseCurrencyConversion), engineData_(engineData),
+    portfolio_(portfolio), initialized_(false), computed_(false) {}
 
-    LOG("Build Sensitivity Scenario Generator");
-    boost::shared_ptr<ScenarioFactory> scenarioFactory(new SimpleScenarioFactory);
-    scenarioGenerator_ = boost::make_shared<SensitivityScenarioGenerator>(scenarioFactory, sensitivityData_,
-                                                                          simMarketData_, asof_, market_);
-    boost::shared_ptr<ScenarioGenerator> sgen(scenarioGenerator_);
-
-    LOG("Build Simulation Market");
-    simMarket_ = boost::make_shared<ScenarioSimMarket>(sgen, market_, simMarketData_, conventions_);
-
-    LOG("Build Engine Factory");
-    map<MarketContext, string> configurations;
-    configurations[MarketContext::pricing] = marketConfiguration;
-    boost::shared_ptr<EngineFactory> factory =
-        boost::make_shared<EngineFactory>(engineData, simMarket_, configurations);
-
-    LOG("Reset and Build Portfolio");
-    portfolio->reset();
-    portfolio->build(factory);
-
-    LOG("Build the cube object to store sensitivities");
-    boost::shared_ptr<NPVCube> cube = boost::make_shared<DoublePrecisionInMemoryCube>(
-        asof_, portfolio->ids(), vector<Date>(1, asof_), scenarioGenerator_->samples());
-
-    boost::shared_ptr<DateGrid> dg = boost::make_shared<DateGrid>("1,0W"); //TODO - extend the DateGrid interface so that it can actually take a vector of dates as input
+std::vector<boost::shared_ptr<ValuationCalculator>> SensitivityAnalysis::buildValuationCalculators() const {
     vector<boost::shared_ptr<ValuationCalculator> > calculators;
     if (nonShiftedBaseCurrencyConversion_) // use "original" FX rates to convert sensi to base currency
-        calculators.push_back(boost::make_shared<NPVCalculatorFXT0>(simMarketData_->baseCcy(),market_));
+        calculators.push_back(boost::make_shared<NPVCalculatorFXT0>(simMarketData_->baseCcy(), market_));
     else // use the scenario FX rate when converting sensi to base currency
         calculators.push_back(boost::make_shared<NPVCalculator>(simMarketData_->baseCcy()));
+    return calculators;
+}
+
+void SensitivityAnalysis::initialize(boost::shared_ptr<NPVCube>& cube) {
+    LOG("Build Sensitivity Scenario Generator");
+    initializeSensitivityScenarioGenerator();
+
+    LOG("Build Simulation Market");
+    initializeSimMarket();
+
+    LOG("Build Engine Factory and rebuild portfolio");
+    boost::shared_ptr<EngineFactory> factory = buildFactory();
+    resetPortfolio(factory);
+
+    if (!cube) {
+        LOG("Build the cube object to store sensitivities");
+        initializeCube(cube);
+    }
+    initialized_ = true;
+}
+
+void SensitivityAnalysis::generateSensitivities() {
+    QL_REQUIRE(!initialized_,
+        "unexpected state of SensitivitiesAnalysis object");
+
+    // initialize the helper member objects
+    boost::shared_ptr<NPVCube> cube;
+    initialize(cube);
+    QL_REQUIRE(initialized_,
+        "SensitivitiesAnalysis member objects not correctly initialized");
+
+    boost::shared_ptr<DateGrid> dg = boost::make_shared<DateGrid>("1,0W");
+    vector<boost::shared_ptr<ValuationCalculator> > calculators = buildValuationCalculators();
     ValuationEngine engine(asof_, dg, simMarket_);
     LOG("Run Sensitivity Scenarios");
-    /*ostringstream o;
-    o.str("");
-    o << "Build sensitivities " << portfolio->size() << " x " << dg->size() << " x " << scenarioGenerator_->samples() << "... ";
-    auto progressBar = boost::make_shared<SimpleProgressBar>(o.str());
-    auto progressLog = boost::make_shared<ProgressLog>("Building sensitivities...");
-    engine.registerProgressIndicator(progressBar);
-    engine.registerProgressIndicator(progressLog);*/
-    engine.buildCube(portfolio, cube, calculators);
+    engine.buildCube(portfolio_, cube, calculators);
+
+    collectResultsFromCube(cube);
+    computed_ = true;
+    LOG("Sensitivity analysis completed");
+}
+
+void SensitivityAnalysis::initializeSensitivityScenarioGenerator(
+    boost::shared_ptr<ScenarioFactory> scenFact) {
+    boost::shared_ptr<ScenarioFactory> scenFactory =
+        scenFact ? scenFact
+        : boost::make_shared<SimpleScenarioFactory>();
+    scenarioGenerator_ = 
+        boost::make_shared<SensitivityScenarioGenerator>(
+            scenFactory, sensitivityData_,
+            simMarketData_, asof_, market_);
+}
+
+void SensitivityAnalysis::initializeSimMarket() {
+    boost::shared_ptr<ScenarioGenerator> sgen = 
+        boost::static_pointer_cast<ScenarioGenerator,SensitivityScenarioGenerator>(scenarioGenerator_);
+    simMarket_ = boost::make_shared<ScenarioSimMarket>(sgen, market_, simMarketData_, conventions_);
+}
+
+boost::shared_ptr<EngineFactory> SensitivityAnalysis::buildFactory(
+    const std::vector<boost::shared_ptr<EngineBuilder> > extraBuilders) const {
+    map<MarketContext, string> configurations;
+    configurations[MarketContext::pricing] = marketConfiguration_;
+    boost::shared_ptr<EngineFactory> factory =
+        boost::make_shared<EngineFactory>(engineData_, simMarket_, configurations);
+    if (extraBuilders.size() > 0) {
+        for (auto eb : extraBuilders)
+            factory->registerBuilder(eb);
+    }
+    return factory;
+}
+
+void SensitivityAnalysis::resetPortfolio(const boost::shared_ptr<EngineFactory>& factory) {
+    portfolio_->reset();
+    portfolio_->build(factory);
+}
+
+void SensitivityAnalysis::initializeCube(boost::shared_ptr<NPVCube>& cube) const {
+    cube = boost::make_shared<DoublePrecisionInMemoryCube>(
+        asof_, portfolio_->ids(), vector<Date>(1, asof_), scenarioGenerator_->samples());
+}
+
+void SensitivityAnalysis::collectResultsFromCube(const boost::shared_ptr<NPVCube>& cube) {
 
     /***********************************************
-     * Collect results
-     * - base NPVs,
-     * - NPVs after single factor up shifts,
-     * - NPVs after single factor down shifts
-     * - deltas, gammas and cross gammas
-     */
+    * Collect results
+    * - base NPVs,
+    * - NPVs after single factor up shifts,
+    * - NPVs after single factor down shifts
+    * - deltas, gammas and cross gammas
+    */
     baseNPV_.clear();
     vector<ShiftScenarioGenerator::ScenarioDescription> desc = scenarioGenerator_->scenarioDescriptions();
     QL_REQUIRE(desc.size() == scenarioGenerator_->samples(),
-               "descriptions size " << desc.size() << " does not match samples " << scenarioGenerator_->samples());
-    for (Size i = 0; i < portfolio->size(); ++i) {
+        "descriptions size " << desc.size() << " does not match samples " << scenarioGenerator_->samples());
+    for (Size i = 0; i < portfolio_->size(); ++i) {
 
         Real npv0 = cube->getT0(i, 0);
-        string id = portfolio->trades()[i]->id();
+        string id = portfolio_->trades()[i]->id();
         trades_.insert(id);
         baseNPV_[id] = npv0;
 
@@ -135,9 +186,11 @@ SensitivityAnalysis::SensitivityAnalysis(const boost::shared_ptr<ore::data::Port
                     LOG("up npv stored for id " << id << ", factor " << factor << ", npv " << npv);
                     upNPV_[p] = npv;
                     delta_[p] = npv - npv0;
-                } else if (desc[j].type() == ShiftScenarioGenerator::ScenarioDescription::Type::Down) {
+                }
+                else if (desc[j].type() == ShiftScenarioGenerator::ScenarioDescription::Type::Down) {
                     downNPV_[p] = npv;
-                } else
+                }
+                else
                     continue;
                 storeFactorShifts(desc[j]);
             }
@@ -173,19 +226,19 @@ SensitivityAnalysis::SensitivityAnalysis(const boost::shared_ptr<ore::data::Port
         QL_REQUIRE(baseNPV_.find(id) != baseNPV_.end(), "base NPV not found for trade " << id);
         Real b = baseNPV_[id];
         QL_REQUIRE(downNPV_.find(p) != downNPV_.end(), "down shift result not found for trade " << id << ", factor "
-                                                                                                << factor);
+            << factor);
         Real d = downNPV_[p];
         // f_x(x) = (f(x+u) - f(x)) / u
         delta_[p] = u - b; // = f_x(x) * u
-        // f_xx(x) = (f(x+u) - 2*f(x) + f(x-u)) / u^2
+                           // f_xx(x) = (f(x+u) - 2*f(x) + f(x-u)) / u^2
         gamma_[p] = u - 2.0 * b + d; // = f_xx(x) * u^2
     }
 
-    LOG("Sensitivity analysis done");
 }
 
 void SensitivityAnalysis::writeScenarioReport(string fileName, Real outputThreshold) {
 
+    QL_REQUIRE(computed_, "Sensitivities have not been successfully computed");
     CSVFileReport report(fileName);
 
     report.addColumn("#TradeId", string());
@@ -254,6 +307,8 @@ void SensitivityAnalysis::writeScenarioReport(string fileName, Real outputThresh
 }
 
 void SensitivityAnalysis::writeSensitivityReport(string fileName, Real outputThreshold) {
+
+    QL_REQUIRE(computed_, "Sensitivities have not been successfully computed");
     CSVFileReport report(fileName);
 
     report.addColumn("#TradeId", string());
@@ -285,6 +340,8 @@ void SensitivityAnalysis::writeSensitivityReport(string fileName, Real outputThr
 }
 
 void SensitivityAnalysis::writeCrossGammaReport(string fileName, Real outputThreshold) {
+
+    QL_REQUIRE(computed_, "Sensitivities have not been successfully computed");
     CSVFileReport report(fileName);
 
     report.addColumn("#TradeId", string());

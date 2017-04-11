@@ -388,6 +388,7 @@ void OREApp::runSensitivityAnalysis() {
 
     boost::shared_ptr<SensitivityAnalysis> sensiAnalysis = boost::make_shared<SensitivityAnalysis>(
         sensiPortfolio, market_, marketConfiguration, engineData, simMarketData, sensiData, conventions_);
+    sensiAnalysis->generateSensitivities();
 
     sensiOutputReports(sensiAnalysis);
 

@@ -38,6 +38,9 @@
 namespace ore {
 namespace analytics {
 
+class ScenarioFactory;
+class ValuationCalculator;
+
 //! Sensitivity Analysis
 /*!
   This class wraps functionality to perform a sensitivity analysis for a given portfolio.
@@ -52,6 +55,7 @@ namespace analytics {
 
   \ingroup simulation
 */
+
 class SensitivityAnalysis {
 public:
     //! Constructor
@@ -62,6 +66,9 @@ public:
                         const boost::shared_ptr<SensitivityScenarioData>& sensitivityData,
                         const Conventions& conventions,
                         const bool nonShiftedBaseCurrencyConversion = false);
+
+    //! Generate the Sensitivities
+    void generateSensitivities();
 
     //! Return set of trades analysed
     const std::set<std::string>& trades() { return trades_; }
@@ -111,8 +118,28 @@ public:
     //! A getter for Conventions
     virtual const Conventions& conventions() const { return conventions_; }
 
-private:
+protected:
+    //! initialize the various components that will be passed to the sensitivities valuation engine
+    void initialize(boost::shared_ptr<NPVCube>& cube);
+    //! initialize the cube with the appropriate dimensions
+    virtual void initializeCube(boost::shared_ptr<NPVCube>& cube) const;
+    //! build engine factory
+    virtual boost::shared_ptr<EngineFactory> buildFactory(const std::vector<boost::shared_ptr<EngineBuilder> > extraBuilders = {}) const;
+    //! reset and rebuild the portfolio to make use of the appropriate engine factory
+    virtual void resetPortfolio(const boost::shared_ptr<EngineFactory>& factory);
+    //! build the ScenarioSimMarket that will be used by ValuationEngine
+    virtual void initializeSimMarket();
+    //! initialize the SensitivityScenarioGenerator that determines which sensitivities to compute
+    virtual void initializeSensitivityScenarioGenerator(boost::shared_ptr<ScenarioFactory> scenFact = {});
+
+    //! build valuation calculators for valuation engine
+    std::vector<boost::shared_ptr<ValuationCalculator>> buildValuationCalculators() const;
+    //! collect the sensitivity results from the cube and populate appropriate containers
+    void collectResultsFromCube(const boost::shared_ptr<NPVCube>& cube);
+
+    //! archive the actual shift size for each risk factor (so as to interpret results)
     void storeFactorShifts(const ShiftScenarioGenerator::ScenarioDescription& desc);
+    //! returns the shift size corresponding to a particular risk factor
     Real getShiftSize(const RiskFactorKey& desc) const;
 
     boost::shared_ptr<ore::data::Market> market_;
@@ -136,6 +163,12 @@ private:
     std::set<std::string> trades_;
     // if true, convert sensis to base currency using the original (non-shifted) FX rate
     bool nonShiftedBaseCurrencyConversion_;
+    //! the engine data (provided as input, needed to construct the engine factory)
+    boost::shared_ptr<EngineData> engineData_;
+    //! the portfolio (provided as input)
+    boost::shared_ptr<Portfolio> portfolio_;
+    //! initializationFlag
+    bool initialized_, computed_;
 };
 }
 }

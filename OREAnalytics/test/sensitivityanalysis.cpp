@@ -1030,6 +1030,7 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
         boost::make_shared<SensitivityAnalysis>(
             portfolio, initMarket, Market::defaultConfiguration, data, 
             simMarketData, sensiData, conventions, useOriginalFxForBaseCcyConv);
+    sa->generateSensitivities();
     map<pair<string, string>, Real> deltaMap = sa->delta();
     map<pair<string, string>, Real> gammaMap = sa->gamma();
     map<std::string, Real> baseNpvMap = sa->baseNPV();
@@ -1357,6 +1358,7 @@ void SensitivityAnalysisTest::testCrossGamma() {
         boost::make_shared<SensitivityAnalysis>(
             portfolio, initMarket, Market::defaultConfiguration, data,
             simMarketData, sensiData, conventions, useOriginalFxForBaseCcyConv);
+    sa->generateSensitivities();
     map<pair<string, string>, Real> deltaMap = sa->delta();
     map<pair<string, string>, Real> gammaMap = sa->gamma(); 
     map<tuple<string,string,string>,Real> cgMap = sa->crossGamma();
