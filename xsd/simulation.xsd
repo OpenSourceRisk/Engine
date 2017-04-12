@@ -227,6 +227,19 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
+      <xs:element name="FxRates">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="CurrencyPairs" maxOccurs="1">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element type="currencyPair" name="CurrencyPair" maxOccurs="unbounded" minOccurs="0"/>
+                </xs:sequence>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
       <xs:element name="Indices">
         <xs:complexType>
           <xs:sequence>
