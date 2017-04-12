@@ -43,6 +43,11 @@ FOR /R "..\\Examples" %%I IN (sensi*.xml) DO (xmllint --schema sensitivity.xsd -
 echo ------------------------------------------------------------------
 echo.
 
+echo Sensitivities Files Examples:
+FOR /R "..\\Examples" %%I IN (stress*.xml) DO (xmllint --schema stress.xsd --path xsd --noout %%I)
+echo ------------------------------------------------------------------
+echo.
+
 echo ORE Examples:
 FOR /R "..\\Examples" %%I IN (ore*.xml) DO (xmllint --schema ore.xsd --path xsd --noout %%I)
 echo ------------------------------------------------------------------
