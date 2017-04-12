@@ -74,9 +74,11 @@ boost::shared_ptr<Trade> buildSwap(string id, string ccy, bool isPayer, Real not
     return trade;
 }
 
-boost::shared_ptr<Trade> buildEuropeanSwaption(string id, string longShort, string ccy, bool isPayer, Real notional,
-                                               int start, Size term, Real rate, Real spread, string fixedFreq,
-                                               string fixedDC, string floatFreq, string floatDC, string index) {
+boost::shared_ptr<Trade> buildEuropeanSwaption(
+    string id, string longShort, string ccy, bool isPayer, Real notional,
+    int start, Size term, Real rate, Real spread, string fixedFreq,
+    string fixedDC, string floatFreq, string floatDC, string index, string cashPhysical) {
+
     Date today = Settings::instance().evaluationDate();
     Calendar calendar = TARGET();
     Size days = 2;
@@ -109,7 +111,7 @@ boost::shared_ptr<Trade> buildEuropeanSwaption(string id, string longShort, stri
     legs.push_back(fixedLeg);
     legs.push_back(floatingLeg);
     // option data
-    OptionData option(longShort, "Call", "European", false, vector<string>(1, startDate), "Cash");
+    OptionData option(longShort, "Call", "European", false, vector<string>(1, startDate), cashPhysical);
     // trade
     boost::shared_ptr<Trade> trade(new ore::data::Swaption(env, option, legs));
     trade->id() = id;
