@@ -239,11 +239,6 @@ vector<string> XMLUtils::getChildrenValues(XMLNode* parent, const string& names,
     return vec;
 }
 
-vector<string> XMLUtils::getChildrenValuesAsStringsCompact(XMLNode* node, const string& name, bool mandatory) {
-    string s = getChildValue(node, name, mandatory);
-    return parseListOfValues(s);
-}
-
 vector<Real> XMLUtils::getChildrenValuesAsDoubles(XMLNode* node, const string& names, const string& name,
                                                   bool mandatory) {
     vector<string> vecS = getChildrenValues(node, names, name, mandatory);
@@ -322,31 +317,6 @@ map<string, string> XMLUtils::getChildrenAttributesAndValues(XMLNode* parent, co
     }
     if (mandatory) {
         QL_REQUIRE(res.size() > 0, "Error: No XML Node " << names << " found.");
-    }
-    return res;
-}
-
-map<pair<string, string>, string> XMLUtils::getChildrenAttributePairsAndValues(XMLNode* parent, const string& names,
-                                                                               const string& attributeName,
-                                                                               bool mandatory) {
-    map<pair<string, string>, string> res;
-    for (XMLNode* child = XMLUtils::getChildNode(parent); child; child = XMLUtils::getNextSibling(child)) {
-        string key = XMLUtils::getAttribute(child, attributeName);
-        if (mandatory) {
-            QL_REQUIRE(key != "", "empty attribute for " << names);
-        }
-        string value = XMLUtils::getNodeValue(child);
-        boost::trim(key);
-        boost::char_separator<char> sep(",");
-        boost::tokenizer<boost::char_separator<char> > tokens(key, sep);
-        vector<string> vec;
-        for (auto r : tokens) {
-            boost::trim(r);
-            vec.push_back(r);
-        }
-        QL_REQUIRE(vec.size() == 2, "two tokens expected in " << key);
-        pair<string, string> p(vec[0], vec[1]);
-        res[p] = value;
     }
     return res;
 }

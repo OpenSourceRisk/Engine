@@ -26,18 +26,22 @@ using namespace std;
 namespace ore {
 namespace analytics {
 
-StressScenarioGenerator::StressScenarioGenerator(boost::shared_ptr<ScenarioFactory> scenarioFactory,
-                                                 boost::shared_ptr<StressTestScenarioData> stressData,
-                                                 boost::shared_ptr<ScenarioSimMarketParameters> simMarketData,
-                                                 Date today, boost::shared_ptr<ore::data::Market> initMarket,
-                                                 const std::string& configuration)
-    : ShiftScenarioGenerator(scenarioFactory, simMarketData, today, initMarket, configuration),
-      stressData_(stressData) {
-    QL_REQUIRE(stressData != NULL, "StressScenarioGenerator: stressData is null");
+StressScenarioGenerator::StressScenarioGenerator(
+    const boost::shared_ptr<StressTestScenarioData>& stressData,
+    const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+    const QuantLib::Date& today,
+    const boost::shared_ptr<ore::data::Market>& initMarket,
+    const std::string& configuration,
+    boost::shared_ptr<ScenarioFactory> baseScenarioFactory)
+    : ShiftScenarioGenerator(simMarketData, today, initMarket, configuration, baseScenarioFactory),
+    stressData_(stressData) {
+    QL_REQUIRE(stressData_ != NULL, "StressScenarioGenerator: stressData is null");
+}
 
+void StressScenarioGenerator::generateScenarios(const boost::shared_ptr<ScenarioFactory>& stressScenarioFactory) {
     for (Size i = 0; i < stressData_->data().size(); ++i) {
         StressTestScenarioData::StressTestData data = stressData_->data().at(i);
-        boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_, data.label);
+        boost::shared_ptr<Scenario> scenario = stressScenarioFactory->buildScenario(today_, data.label);
 
         addFxShifts(data, scenario);
         addDiscountCurveShifts(data, scenario);
@@ -49,8 +53,6 @@ StressScenarioGenerator::StressScenarioGenerator(boost::shared_ptr<ScenarioFacto
             addSwaptionVolShifts(data, scenario);
         if (simMarketData_->simulateCapFloorVols())
             addCapFloorVolShifts(data, scenario);
-
-        addCacheTo(scenario);
 
         scenarios_.push_back(scenario);
     }

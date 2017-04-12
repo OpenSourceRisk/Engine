@@ -17,6 +17,7 @@
 */
 
 #include <orea/scenario/shiftscenariogenerator.hpp>
+#include <orea/scenario/simplescenariofactory.hpp>
 #include <ored/utilities/log.hpp>
 
 using namespace QuantLib;
@@ -26,7 +27,7 @@ using namespace std;
 namespace ore {
 namespace analytics {
 
-string ShiftScenarioGenerator::ScenarioDescription::typeString() {
+string ShiftScenarioGenerator::ScenarioDescription::typeString()  const {
     if (type_ == ScenarioDescription::Type::Base)
         return "Base";
     else if (type_ == ScenarioDescription::Type::Up)
@@ -38,7 +39,7 @@ string ShiftScenarioGenerator::ScenarioDescription::typeString() {
     else
         QL_FAIL("ScenarioDescription::Type not covered");
 }
-string ShiftScenarioGenerator::ScenarioDescription::factor1() {
+string ShiftScenarioGenerator::ScenarioDescription::factor1() const {
     ostringstream o;
     if (key1_ != RiskFactorKey()) {
         o << key1_;
@@ -48,7 +49,7 @@ string ShiftScenarioGenerator::ScenarioDescription::factor1() {
     }
     return "";
 }
-string ShiftScenarioGenerator::ScenarioDescription::factor2() {
+string ShiftScenarioGenerator::ScenarioDescription::factor2() const {
     ostringstream o;
     if (key2_ != RiskFactorKey()) {
         o << key2_;
@@ -58,7 +59,7 @@ string ShiftScenarioGenerator::ScenarioDescription::factor2() {
     }
     return "";
 }
-string ShiftScenarioGenerator::ScenarioDescription::text() {
+string ShiftScenarioGenerator::ScenarioDescription::text() const {
   string t = typeString();
   string f1 = factor1();
   string f2 = factor2();
@@ -70,13 +71,17 @@ string ShiftScenarioGenerator::ScenarioDescription::text() {
   return ret;
 }
   
-ShiftScenarioGenerator::ShiftScenarioGenerator(boost::shared_ptr<ScenarioFactory> scenarioFactory,
-                                               boost::shared_ptr<ScenarioSimMarketParameters> simMarketData, Date today,
-                                               boost::shared_ptr<ore::data::Market> initMarket,
-                                               const std::string& configuration)
-    : scenarioFactory_(scenarioFactory), simMarketData_(simMarketData), today_(today), initMarket_(initMarket),
+ShiftScenarioGenerator::ShiftScenarioGenerator(
+    const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData, 
+    const Date& today,
+    const boost::shared_ptr<ore::data::Market>& initMarket,
+    const std::string& configuration,
+    boost::shared_ptr<ScenarioFactory> baseScenarioFactory)
+    : baseScenarioFactory_(baseScenarioFactory), simMarketData_(simMarketData), today_(today), initMarket_(initMarket),
       configuration_(configuration), counter_(0) {
-    QL_REQUIRE(initMarket != NULL, "ShiftScenarioGenerator: initMarket is null");
+    QL_REQUIRE(initMarket_ != NULL, "ShiftScenarioGenerator: initMarket is null");
+    if (baseScenarioFactory_ == NULL)
+        baseScenarioFactory_ = boost::make_shared<SimpleScenarioFactory>();
     init(initMarket);
 }
 
@@ -225,7 +230,7 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
     }
 
     LOG("generate base scenario");
-    baseScenario_ = scenarioFactory_->buildScenario(today_, "BASE");
+    baseScenario_ = baseScenarioFactory_->buildScenario(today_, "BASE");
     addCacheTo(baseScenario_);
     scenarios_.push_back(baseScenario_);
     scenarioDescriptions_.push_back(ScenarioDescription(ScenarioDescription::Type::Base));

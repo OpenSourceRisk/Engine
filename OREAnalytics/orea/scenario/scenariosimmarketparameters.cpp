@@ -88,7 +88,10 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     fxCcyPairs_ = XMLUtils::getChildrenValues(nodeChild, "CurrencyPairs", "CurrencyPair", true);
 
     nodeChild = XMLUtils::getChildNode(node, "SwaptionVolatilities");
-    swapVolSimulate_ = XMLUtils::getChildValueAsBool(nodeChild, "Simulate", true);
+    swapVolSimulate_ = false;
+    XMLNode* swapVolSimNode = XMLUtils::getChildNode(nodeChild, "Simulate");
+    if (swapVolSimNode)
+        swapVolSimulate_ = ore::data::parseBool(XMLUtils::getNodeValue(swapVolSimNode));
     swapVolTerms_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Terms", true);
     swapVolExpiries_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Expiries", true);
     swapVolCcys_ = XMLUtils::getChildrenValues(nodeChild, "Currencies", "Currency", true);
@@ -96,7 +99,10 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
 
     nodeChild = XMLUtils::getChildNode(node, "CapFloorVolatilities");
     if (nodeChild) {
-        capFloorVolSimulate_ = XMLUtils::getChildValueAsBool(nodeChild, "Simulate", true);
+        capFloorVolSimulate_ = false;
+        XMLNode* capVolSimNode = XMLUtils::getChildNode(nodeChild, "Simulate");
+        if (capVolSimNode)
+            capFloorVolSimulate_ = ore::data::parseBool(XMLUtils::getNodeValue(capVolSimNode));
         capFloorVolExpiries_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Expiries", true);
         capFloorVolStrikes_ = XMLUtils::getChildrenValuesAsDoublesCompact(nodeChild, "Strikes", true);
         capFloorVolCcys_ = XMLUtils::getChildrenValues(nodeChild, "Currencies", "Currency", true);
@@ -108,7 +114,10 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     defaultTenors_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Tenors", true);
 
     nodeChild = XMLUtils::getChildNode(node, "FxVolatilities");
-    fxVolSimulate_ = XMLUtils::getChildValueAsBool(nodeChild, "Simulate", true);
+    fxVolSimulate_ = false;
+    XMLNode* fxVolSimNode = XMLUtils::getChildNode(nodeChild, "Simulate");
+    if (fxVolSimNode)
+        fxVolSimulate_ = ore::data::parseBool(XMLUtils::getNodeValue(fxVolSimNode));
     fxVolExpiries_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Expiries", true);
     fxVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
     fxVolCcyPairs_ = XMLUtils::getChildrenValues(nodeChild, "CurrencyPairs", "CurrencyPair", true);

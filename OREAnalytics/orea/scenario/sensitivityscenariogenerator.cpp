@@ -27,40 +27,44 @@ using namespace std;
 namespace ore {
 namespace analytics {
 
-SensitivityScenarioGenerator::SensitivityScenarioGenerator(boost::shared_ptr<ScenarioFactory> scenarioFactory,
-                                                           boost::shared_ptr<SensitivityScenarioData> sensitivityData,
-                                                           boost::shared_ptr<ScenarioSimMarketParameters> simMarketData,
-                                                           Date today, boost::shared_ptr<ore::data::Market> initMarket,
-                                                           const std::string& configuration)
-    : ShiftScenarioGenerator(scenarioFactory, simMarketData, today, initMarket, configuration),
-      sensitivityData_(sensitivityData) {
-    QL_REQUIRE(sensitivityData != NULL, "SensitivityScenarioGenerator: sensitivityData is null");
+SensitivityScenarioGenerator::SensitivityScenarioGenerator(
+    const boost::shared_ptr<SensitivityScenarioData>& sensitivityData,
+    const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+    const Date& today,
+    const boost::shared_ptr<ore::data::Market>& initMarket,
+    const std::string& configuration,
+    boost::shared_ptr<ScenarioFactory> baseScenarioFactory)
+    : ShiftScenarioGenerator(simMarketData, today, initMarket, configuration, baseScenarioFactory),
+    sensitivityData_(sensitivityData) {
+    QL_REQUIRE(sensitivityData_ != NULL, "SensitivityScenarioGenerator: sensitivityData is null");
+}
 
-    generateDiscountCurveScenarios(true);
-    generateDiscountCurveScenarios(false);
+void SensitivityScenarioGenerator::generateScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory) {
+    generateDiscountCurveScenarios(sensiScenarioFactory, true);
+    generateDiscountCurveScenarios(sensiScenarioFactory, false);
 
-    generateIndexCurveScenarios(true);
-    generateIndexCurveScenarios(false);
+    generateIndexCurveScenarios(sensiScenarioFactory, true);
+    generateIndexCurveScenarios(sensiScenarioFactory, false);
 
-    generateYieldCurveScenarios(true);
-    generateYieldCurveScenarios(false);
+    generateYieldCurveScenarios(sensiScenarioFactory, true);
+    generateYieldCurveScenarios(sensiScenarioFactory, false);
 
-    generateFxScenarios(true);
-    generateFxScenarios(false);
+    generateFxScenarios(sensiScenarioFactory, true);
+    generateFxScenarios(sensiScenarioFactory, false);
 
     if (simMarketData_->simulateFXVols()) {
-        generateFxVolScenarios(true);
-        generateFxVolScenarios(false);
+        generateFxVolScenarios(sensiScenarioFactory, true);
+        generateFxVolScenarios(sensiScenarioFactory, false);
     }
 
     if (simMarketData_->simulateSwapVols()) {
-        generateSwaptionVolScenarios(true);
-        generateSwaptionVolScenarios(false);
+        generateSwaptionVolScenarios(sensiScenarioFactory, true);
+        generateSwaptionVolScenarios(sensiScenarioFactory, false);
     }
 
     if (simMarketData_->simulateCapFloorVols()) {
-        generateCapFloorVolScenarios(true);
-        generateCapFloorVolScenarios(false);
+        generateCapFloorVolScenarios(sensiScenarioFactory, true);
+        generateCapFloorVolScenarios(sensiScenarioFactory, false);
     }
 
     // add simultaneous up-moves in two risk factors for cross gamma calculation
@@ -89,7 +93,7 @@ SensitivityScenarioGenerator::SensitivityScenarioGenerator(boost::shared_ptr<Sce
             if (!match)
                 continue;
 
-            boost::shared_ptr<Scenario> crossScenario = scenarioFactory_->buildScenario(today_);
+            boost::shared_ptr<Scenario> crossScenario = sensiScenarioFactory->buildScenario(today_);
 
             for (Size k = 0; k < keys.size(); ++k) {
                 Real baseValue = baseScenario_->get(keys[k]);
@@ -99,8 +103,6 @@ SensitivityScenarioGenerator::SensitivityScenarioGenerator(boost::shared_ptr<Sce
                 if (newVal != baseValue)
                     crossScenario->add(keys[k], newVal);
             }
-            // add remaining unshifted data from cache for a complete scenario
-            addCacheTo(crossScenario);
             scenarios_.push_back(crossScenario);
             scenarioDescriptions_.push_back(ScenarioDescription(scenarioDescriptions_[i], scenarioDescriptions_[j]));
             DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << crossScenario->label() << " created");
@@ -122,7 +124,7 @@ SensitivityScenarioGenerator::SensitivityScenarioGenerator(boost::shared_ptr<Sce
     LOG("sensitivity scenario generator initialised");
 }
 
-void SensitivityScenarioGenerator::generateFxScenarios(bool up) {
+void SensitivityScenarioGenerator::generateFxScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up) {
     // We can choose to shift fewer discount curves than listed in the market
     std::vector<string> simMarketFxPairs = simMarketData_->fxCcyPairs();
     if (sensitivityData_->fxCcyPairs().size() > 0)
@@ -143,7 +145,7 @@ void SensitivityScenarioGenerator::generateFxScenarios(bool up) {
         //QL_REQUIRE(type == SensitivityScenarioGenerator::ShiftType::Relative, "FX scenario type must be relative");
         bool relShift = (type == SensitivityScenarioGenerator::ShiftType::Relative);
 
-        boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_);
+        boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(today_);
 
         scenarioDescriptions_.push_back(fxScenarioDescription(ccypair, up));
 
@@ -151,8 +153,6 @@ void SensitivityScenarioGenerator::generateFxScenarios(bool up) {
         Real newRate = relShift ? rate*(1.0 + size) : (rate + size);
         //Real newRate = up ? rate * (1.0 + data.shiftSize) : rate * (1.0 - data.shiftSize);
         scenario->add(getFxKey(ccypair), newRate);
-        // add remaining unshifted data from cache for a complete scenario
-        addCacheTo(scenario);
         scenarios_.push_back(scenario);
         DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label()
                                       << " created: " << newRate);
@@ -160,7 +160,7 @@ void SensitivityScenarioGenerator::generateFxScenarios(bool up) {
     LOG("FX scenarios done");
 }
 
-void SensitivityScenarioGenerator::generateDiscountCurveScenarios(bool up) {
+void SensitivityScenarioGenerator::generateDiscountCurveScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up) {
     // We can choose to shift fewer discount curves than listed in the market
     std::vector<string> simMarketCcys = simMarketData_->ccys();
     if (sensitivityData_->discountCurrencies().size() > 0)
@@ -205,7 +205,7 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(bool up) {
 
         for (Size j = 0; j < shiftTenors.size(); ++j) {
 
-            boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_);
+            boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(today_);
             scenarioDescriptions_.push_back(discountScenarioDescription(ccy, j, up));
             DLOG("generate discount curve scenario, ccy " << ccy << ", bucket " << j << ", up " << up << ", desc "
                                                          << scenarioDescriptions_.back().text());
@@ -218,10 +218,6 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(bool up) {
                 Real shiftedDiscount = exp(-shiftedZeros[k] * times[k]);
                 scenario->add(getDiscountKey(ccy, k), shiftedDiscount);
             }
-
-            // add remaining unshifted data from cache for a complete scenario
-            addCacheTo(scenario);
-
             // add this scenario to the scenario vector
             scenarios_.push_back(scenario);
             DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
@@ -231,7 +227,7 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(bool up) {
     LOG("Discount curve scenarios done");
 }
 
-void SensitivityScenarioGenerator::generateIndexCurveScenarios(bool up) {
+void SensitivityScenarioGenerator::generateIndexCurveScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up) {
     // We can choose to shift fewer discount curves than listed in the market
     std::vector<string> simMarketIndices = simMarketData_->indices();
     if (sensitivityData_->indexNames().size() > 0)
@@ -277,7 +273,7 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(bool up) {
 
         for (Size j = 0; j < shiftTenors.size(); ++j) {
 
-            boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_);
+            boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(today_);
 
             scenarioDescriptions_.push_back(indexScenarioDescription(indexName, j, up));
 
@@ -289,10 +285,6 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(bool up) {
                 Real shiftedDiscount = exp(-shiftedZeros[k] * times[k]);
                 scenario->add(getIndexKey(indexName, k), shiftedDiscount);
             }
-
-            // add remaining unshifted data from cache for a complete scenario
-            addCacheTo(scenario);
-
             // add this scenario to the scenario vector
             scenarios_.push_back(scenario);
             DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label()
@@ -303,7 +295,7 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(bool up) {
     LOG("Index curve scenarios done");
 }
 
-void SensitivityScenarioGenerator::generateYieldCurveScenarios(bool up) {
+void SensitivityScenarioGenerator::generateYieldCurveScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up) {
     // We can choose to shift fewer yield curves than listed in the market
     vector<string> simMarketYieldCurves = simMarketData_->yieldCurveNames();
     if (sensitivityData_->yieldCurveNames().size() > 0)
@@ -348,7 +340,7 @@ void SensitivityScenarioGenerator::generateYieldCurveScenarios(bool up) {
 
         for (Size j = 0; j < shiftTenors.size(); ++j) {
 
-            boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_);
+            boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(today_);
 
             scenarioDescriptions_.push_back(yieldScenarioDescription(name, j, up));
 
@@ -360,10 +352,6 @@ void SensitivityScenarioGenerator::generateYieldCurveScenarios(bool up) {
                 Real shiftedDiscount = exp(-shiftedZeros[k] * times[k]);
                 scenario->add(getYieldKey(name, k), shiftedDiscount);
             }
-
-            // add remaining unshifted data from cache for a complete scenario
-            addCacheTo(scenario);
-
             // add this scenario to the scenario vector
             scenarios_.push_back(scenario);
             DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
@@ -373,7 +361,7 @@ void SensitivityScenarioGenerator::generateYieldCurveScenarios(bool up) {
     LOG("Yield curve scenarios done");
 }
 
-void SensitivityScenarioGenerator::generateFxVolScenarios(bool up) {
+void SensitivityScenarioGenerator::generateFxVolScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up) {
     // We can choose to shift fewer discount curves than listed in the market
     std::vector<string> simMarketFxPairs = simMarketData_->fxVolCcyPairs();
     if (sensitivityData_->fxVolCcyPairs().size() > 0)
@@ -424,7 +412,7 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(bool up) {
 
         for (Size j = 0; j < shiftTenors.size(); ++j) {
             Size strikeBucket = 0; // FIXME
-            boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_);
+            boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(today_);
 
             scenarioDescriptions_.push_back(fxVolScenarioDescription(ccypair, j, strikeBucket, up));
 
@@ -432,9 +420,6 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(bool up) {
             applyShift(j, shiftSize, up, shiftType, shiftTimes, values, times, shiftedValues, true);
             for (Size k = 0; k < n_fxvol_exp; ++k)
                 scenario->add(getFxVolKey(ccypair, k), shiftedValues[k]);
-
-            // add remaining unshifted data from cache for a complete scenario
-            addCacheTo(scenario);
             // add this scenario to the scenario vector
             scenarios_.push_back(scenario);
             DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
@@ -443,7 +428,7 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(bool up) {
     LOG("FX vol scenarios done");
 }
 
-void SensitivityScenarioGenerator::generateSwaptionVolScenarios(bool up) {
+void SensitivityScenarioGenerator::generateSwaptionVolScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up) {
     // We can choose to shift fewer discount curves than listed in the market
     std::vector<string> simMarketCcys = simMarketData_->swapVolCcys();
     if (sensitivityData_->swaptionVolCurrencies().size() > 0)
@@ -507,7 +492,7 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(bool up) {
         for (Size j = 0; j < shiftExpiryTimes.size(); ++j) {
             for (Size k = 0; k < shiftTermTimes.size(); ++k) {
                 Size strikeBucket = 0; // FIXME
-                boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_);
+                boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(today_);
 
                 scenarioDescriptions_.push_back(swaptionVolScenarioDescription(ccy, j, k, strikeBucket, up));
 
@@ -520,8 +505,6 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(bool up) {
                         scenario->add(getSwaptionVolKey(ccy, idx), shiftedVolData[jj][kk]);
                     }
                 }
-                // add remaining unshifted data from cache for a complete scenario
-                addCacheTo(scenario);
                 // add this scenario to the scenario vector
                 scenarios_.push_back(scenario);
                 DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
@@ -531,7 +514,7 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(bool up) {
     LOG("Swaption vol scenarios done");
 }
 
-void SensitivityScenarioGenerator::generateCapFloorVolScenarios(bool up) {
+void SensitivityScenarioGenerator::generateCapFloorVolScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up) {
     // We can choose to shift fewer discount curves than listed in the market
     vector<string> simMarketCapCcys = simMarketData_->capFloorVolCcys();
     if (sensitivityData_->capFloorVolCurrencies().size() > 0)
@@ -587,7 +570,7 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(bool up) {
         // loop over shift expiries and terms
         for (Size j = 0; j < shiftExpiryTimes.size(); ++j) {
             for (Size k = 0; k < shiftStrikes.size(); ++k) {
-                boost::shared_ptr<Scenario> scenario = scenarioFactory_->buildScenario(today_);
+                boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(today_);
 
                 scenarioDescriptions_.push_back(capFloorVolScenarioDescription(ccy, j, k, up));
 
@@ -600,8 +583,6 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(bool up) {
                         scenario->add(getOptionletVolKey(ccy, idx), shiftedVolData[jj][kk]);
                     }
                 }
-                // add remaining unshifted data from cache for a complete scenario
-                addCacheTo(scenario);
                 // add this scenario to the scenario vector
                 scenarios_.push_back(scenario);
                 DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");

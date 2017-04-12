@@ -386,9 +386,9 @@ void OREApp::runSensitivityAnalysis() {
 
     sensiInputInitialize(simMarketData, sensiData, engineData, sensiPortfolio, marketConfiguration);
 
-    QL_REQUIRE(!sensiData->parConversion(), "Par sensitivity conversion not supported here");
     boost::shared_ptr<SensitivityAnalysis> sensiAnalysis = boost::make_shared<SensitivityAnalysis>(
         sensiPortfolio, market_, marketConfiguration, engineData, simMarketData, sensiData, conventions_);
+    sensiAnalysis->generateSensitivities();
 
     sensiOutputReports(sensiAnalysis);
 

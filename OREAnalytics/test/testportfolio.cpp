@@ -121,7 +121,6 @@ boost::shared_ptr<Trade> buildFxOption(string id, string longShort, string putCa
                                        Real boughtAmount, string soldCcy, Real soldAmount) {
     Date today = Settings::instance().evaluationDate();
     Calendar calendar = TARGET();
-    Size days = 2;
     string cal = "TARGET";
     string conv = "MF";
     string rule = "Forward";
