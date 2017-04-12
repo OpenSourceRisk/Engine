@@ -54,4 +54,6 @@ boost::shared_ptr<Trade> buildFloor(string id, string ccy, string longShort, Rea
 boost::shared_ptr<Trade> buildCapFloor(string id, string ccy, string longShort, vector<Real> capRates,
                                        vector<Real> floorRates, Real notional, int start, Size term, string floatFreq,
                                        string floatDC, string index);
+
+boost::shared_ptr<Trade> buildZeroBond(string id, string ccy, Real notional, Size term);
 }
