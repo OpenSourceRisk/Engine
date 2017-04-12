@@ -26,7 +26,7 @@
 #include <ored/model/lgmdata.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
-#include <orea/scenario/simplescenariofactory.hpp>
+#include <orea/scenario/clonescenariofactory.hpp>
 #include <orea/scenario/sensitivityscenariogenerator.hpp>
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/sensitivityanalysis.hpp>
@@ -321,9 +321,12 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     boost::shared_ptr<SensitivityScenarioData> sensiData = setupSensitivityScenarioData5();
 
     // build scenario generator
-    boost::shared_ptr<ScenarioFactory> scenarioFactory(new SimpleScenarioFactory);
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(
-        new SensitivityScenarioGenerator(scenarioFactory, sensiData, simMarketData, today, initMarket));
+        new SensitivityScenarioGenerator(sensiData, simMarketData, today, initMarket));
+    boost::shared_ptr<Scenario> baseScen = scenarioGenerator->baseScenario();
+    boost::shared_ptr<ScenarioFactory> scenarioFactory(new CloneScenarioFactory(baseScen));
+    scenarioGenerator->generateScenarios(scenarioFactory);
+    
     boost::shared_ptr<ScenarioGenerator> sgen(scenarioGenerator);
 
     // build scenario sim market
@@ -748,9 +751,11 @@ void SensitivityAnalysisTest::test1dShifts() {
     boost::shared_ptr<SensitivityScenarioData> sensiData = setupSensitivityScenarioData2();
 
     // build scenario generator
-    boost::shared_ptr<ScenarioFactory> scenarioFactory(new SimpleScenarioFactory);
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(
-        new SensitivityScenarioGenerator(scenarioFactory, sensiData, simMarketData, today, initMarket));
+        new SensitivityScenarioGenerator(sensiData, simMarketData, today, initMarket));
+    boost::shared_ptr<Scenario> baseScen = scenarioGenerator->baseScenario();
+    boost::shared_ptr<ScenarioFactory> scenarioFactory(new CloneScenarioFactory(baseScen));
+    scenarioGenerator->generateScenarios(scenarioFactory);
 
     // cache initial zero rates
     vector<Period> tenors = simMarketData->yieldCurveTenors();
@@ -832,9 +837,11 @@ void SensitivityAnalysisTest::test2dShifts() {
     boost::shared_ptr<SensitivityScenarioData> sensiData = setupSensitivityScenarioData2();
 
     // build scenario generator
-    boost::shared_ptr<ScenarioFactory> scenarioFactory(new SimpleScenarioFactory);
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(
-        new SensitivityScenarioGenerator(scenarioFactory, sensiData, simMarketData, today, initMarket));
+        new SensitivityScenarioGenerator(sensiData, simMarketData, today, initMarket));
+    boost::shared_ptr<Scenario> baseScen = scenarioGenerator->baseScenario();
+    boost::shared_ptr<ScenarioFactory> scenarioFactory(new CloneScenarioFactory(baseScen));
+    scenarioGenerator->generateScenarios(scenarioFactory);
 
     // cache initial zero rates
     vector<Period> expiries = simMarketData->swapVolExpiries();
@@ -940,9 +947,12 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
         it.second.shiftSize = 0.0001; // want a smaller shift size to test the analytic sensitivities
     }
     // build scenario generator
-    boost::shared_ptr<ScenarioFactory> scenarioFactory(new SimpleScenarioFactory);
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(
-        new SensitivityScenarioGenerator(scenarioFactory, sensiData, simMarketData, today, initMarket));
+        new SensitivityScenarioGenerator(sensiData, simMarketData, today, initMarket));
+    boost::shared_ptr<Scenario> baseScen = scenarioGenerator->baseScenario();
+    boost::shared_ptr<ScenarioFactory> scenarioFactory(new CloneScenarioFactory(baseScen));
+    scenarioGenerator->generateScenarios(scenarioFactory);
+
     boost::shared_ptr<ScenarioGenerator> sgen(scenarioGenerator);
 
     // build scenario sim market
@@ -1290,9 +1300,12 @@ void SensitivityAnalysisTest::testCrossGamma() {
     cgFilter.push_back(pair<string, string>("FXSpot/EURUSD", "IndexCurve/EUR"));
     cgFilter.push_back(pair<string, string>("FXSpot/EURGBP", "DiscountCurve/GBP"));
     // build scenario generator
-    boost::shared_ptr<ScenarioFactory> scenarioFactory(new SimpleScenarioFactory);
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(
-        new SensitivityScenarioGenerator(scenarioFactory, sensiData, simMarketData, today, initMarket));
+        new SensitivityScenarioGenerator(sensiData, simMarketData, today, initMarket));
+    boost::shared_ptr<Scenario> baseScen = scenarioGenerator->baseScenario();
+    boost::shared_ptr<ScenarioFactory> scenarioFactory(new CloneScenarioFactory(baseScen));
+    scenarioGenerator->generateScenarios(scenarioFactory);
+
     boost::shared_ptr<ScenarioGenerator> sgen(scenarioGenerator);
 
     // build scenario sim market

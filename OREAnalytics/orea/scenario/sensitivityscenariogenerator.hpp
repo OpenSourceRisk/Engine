@@ -74,22 +74,26 @@ namespace analytics {
 class SensitivityScenarioGenerator : public ShiftScenarioGenerator {
 public:
     //! Constructor
-    SensitivityScenarioGenerator(boost::shared_ptr<ScenarioFactory> scenarioFactory,
-                                 boost::shared_ptr<SensitivityScenarioData> sensitivityData,
-                                 boost::shared_ptr<ScenarioSimMarketParameters> simMarketData, QuantLib::Date today,
-                                 boost::shared_ptr<ore::data::Market> initMarket,
-                                 const std::string& configuration = Market::defaultConfiguration);
+    SensitivityScenarioGenerator(
+        const boost::shared_ptr<SensitivityScenarioData>& sensitivityData,
+        const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+        const Date& today,
+        const boost::shared_ptr<ore::data::Market>& initMarket,
+        const std::string& configuration = Market::defaultConfiguration,
+        boost::shared_ptr<ScenarioFactory> baseScenarioFactory = {});
     //! Default destructor
     ~SensitivityScenarioGenerator(){};
 
+    void generateScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory);
+
 private:
-    void generateYieldCurveScenarios(bool up);
-    void generateDiscountCurveScenarios(bool up);
-    void generateIndexCurveScenarios(bool up);
-    void generateFxScenarios(bool up);
-    void generateSwaptionVolScenarios(bool up);
-    void generateFxVolScenarios(bool up);
-    void generateCapFloorVolScenarios(bool up);
+    void generateYieldCurveScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
+    void generateDiscountCurveScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
+    void generateIndexCurveScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
+    void generateFxScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
+    void generateSwaptionVolScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
+    void generateFxVolScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
+    void generateCapFloorVolScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
 
     ScenarioDescription discountScenarioDescription(string ccy, Size bucket, bool up);
     ScenarioDescription indexScenarioDescription(string index, Size bucket, bool up);

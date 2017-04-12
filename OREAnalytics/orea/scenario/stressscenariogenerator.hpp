@@ -69,13 +69,18 @@ namespace analytics {
 class StressScenarioGenerator : public ShiftScenarioGenerator {
 public:
     //! Constructor
-    StressScenarioGenerator(boost::shared_ptr<ScenarioFactory> scenarioFactory,
-                            boost::shared_ptr<StressTestScenarioData> stressData,
-                            boost::shared_ptr<ScenarioSimMarketParameters> simMarketData, QuantLib::Date today,
-                            boost::shared_ptr<ore::data::Market> initMarket,
-                            const std::string& configuration = Market::defaultConfiguration);
+    StressScenarioGenerator(
+        const boost::shared_ptr<StressTestScenarioData>& stressData,
+        const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData, 
+        const QuantLib::Date& today,
+        const boost::shared_ptr<ore::data::Market>& initMarket,
+        const std::string& configuration = Market::defaultConfiguration,
+        boost::shared_ptr<ScenarioFactory> baseScenarioFactory = {});
     //! Default destructor
     ~StressScenarioGenerator(){};
+
+    //! generate the scenarios
+    void generateScenarios(const boost::shared_ptr<ScenarioFactory>& stressScenarioFactory);
 
 private:
     void addFxShifts(StressTestScenarioData::StressTestData& data, boost::shared_ptr<Scenario>& scenario);

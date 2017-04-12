@@ -21,7 +21,7 @@
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/engine/valuationengine.hpp>
 #include <orea/engine/sensitivityanalysis.hpp>
-#include <orea/scenario/simplescenariofactory.hpp>
+#include <orea/scenario/clonescenariofactory.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ored/report/csvreport.hpp>
@@ -115,13 +115,15 @@ void SensitivityAnalysis::generateSensitivities() {
 
 void SensitivityAnalysis::initializeSensitivityScenarioGenerator(
     boost::shared_ptr<ScenarioFactory> scenFact) {
-    boost::shared_ptr<ScenarioFactory> scenFactory =
-        scenFact ? scenFact
-        : boost::make_shared<SimpleScenarioFactory>();
     scenarioGenerator_ = 
         boost::make_shared<SensitivityScenarioGenerator>(
-            scenFactory, sensitivityData_,
-            simMarketData_, asof_, market_);
+            sensitivityData_, simMarketData_, asof_, market_);
+    boost::shared_ptr<Scenario> baseScen = scenarioGenerator_->baseScenario();
+    boost::shared_ptr<ScenarioFactory> scenFactory =
+        (scenFact != NULL) ? scenFact
+        : boost::make_shared<CloneScenarioFactory>(baseScen); // needed so that sensi scenarios are consistent with base scenario
+    LOG("Generating sensitivity scenarios");
+    scenarioGenerator_->generateScenarios(scenFactory);
 }
 
 void SensitivityAnalysis::initializeSimMarket() {

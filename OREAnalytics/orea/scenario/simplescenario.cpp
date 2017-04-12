@@ -28,8 +28,9 @@ namespace analytics {
 bool SimpleScenario::has(const RiskFactorKey& key) const { return data_.find(key) != data_.end(); }
 
 void SimpleScenario::add(const RiskFactorKey& key, Real value) {
-    data_.emplace(key, value);
-    keys_.emplace_back(key);
+    data_[key] = value; // key might already exist, so we cannot use insert/emplace
+    if (std::find(keys_.begin(), keys_.end(), key) == keys_.end())
+        keys_.emplace_back(key);
 }
 
 Real SimpleScenario::get(const RiskFactorKey& key) const {

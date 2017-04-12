@@ -26,7 +26,7 @@
 #include <ored/model/lgmdata.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
-#include <orea/scenario/simplescenariofactory.hpp>
+#include <orea/scenario/clonescenariofactory.hpp>
 #include <orea/scenario/stressscenariogenerator.hpp>
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/sensitivityanalysis.hpp>
@@ -246,9 +246,11 @@ void StressTestingTest::regression() {
     boost::shared_ptr<StressTestScenarioData> stressData = setupStressScenarioData();
 
     // build scenario generator
-    boost::shared_ptr<ScenarioFactory> scenarioFactory(new SimpleScenarioFactory);
     boost::shared_ptr<StressScenarioGenerator> scenarioGenerator(
-        new StressScenarioGenerator(scenarioFactory, stressData, simMarketData, today, initMarket));
+        new StressScenarioGenerator(stressData, simMarketData, today, initMarket));
+    boost::shared_ptr<Scenario> baseScen = scenarioGenerator->baseScenario();
+    boost::shared_ptr<ScenarioFactory> scenarioFactory(new CloneScenarioFactory(baseScen));
+    scenarioGenerator->generateScenarios(scenarioFactory);
     boost::shared_ptr<ScenarioGenerator> sgen(scenarioGenerator);
 
     // build scenario sim market

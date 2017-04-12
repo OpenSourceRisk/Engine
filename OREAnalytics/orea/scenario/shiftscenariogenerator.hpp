@@ -79,10 +79,12 @@ public:
     };
 
     //! Constructor
-    ShiftScenarioGenerator(boost::shared_ptr<ScenarioFactory> scenarioFactory,
-                           boost::shared_ptr<ScenarioSimMarketParameters> simMarketData, QuantLib::Date today,
-                           boost::shared_ptr<ore::data::Market> initMarket,
-                           const std::string& configuration = Market::defaultConfiguration);
+    ShiftScenarioGenerator(
+        const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+        const Date& today,
+        const boost::shared_ptr<ore::data::Market>& initMarket,
+        const std::string& configuration = Market::defaultConfiguration,
+        boost::shared_ptr<ScenarioFactory> baseScenarioFactory = {});
     //! Default destructor
     ~ShiftScenarioGenerator(){};
 
@@ -170,14 +172,15 @@ public:
         //! Initialise shiftedData vector before applying this shift j/k (yes for sensitivity, no for stress)
         bool initialise);
 
+    //! return the base scenario
+    boost::shared_ptr<Scenario> baseScenario() const { return baseScenario_; }
+
 protected:
     //! Clear the caches for base scenario keys and values
     void clear();
 
     //! Set up the "base" scenario and all shift scenarios using market points/values from the market object
     void init(boost::shared_ptr<Market> market);
-
-    void addCacheTo(boost::shared_ptr<Scenario> scenario);
 
     RiskFactorKey getFxKey(const std::string& ccypair);
     RiskFactorKey getDiscountKey(const std::string& ccy, Size index);
@@ -187,7 +190,7 @@ protected:
     RiskFactorKey getOptionletVolKey(const std::string& ccy, Size index);
     RiskFactorKey getFxVolKey(const std::string& ccypair, Size index);
 
-    boost::shared_ptr<ScenarioFactory> scenarioFactory_;
+    boost::shared_ptr<ScenarioFactory> baseScenarioFactory_;
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketData_;
     Date today_;
     boost::shared_ptr<ore::data::Market> initMarket_;
@@ -210,6 +213,10 @@ protected:
     std::map<RiskFactorKey, std::string> keyToFactor_;
     // reverse map of factors to risk factor keys
     std::map<std::string, RiskFactorKey> factorToKey_;
+
+private:
+    void addCacheTo(boost::shared_ptr<Scenario> scenario);
+
 };
 
 ShiftScenarioGenerator::ShiftType parseShiftType(const std::string& s);
