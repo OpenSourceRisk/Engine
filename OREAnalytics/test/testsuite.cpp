@@ -60,6 +60,7 @@ using boost::unit_test::test_suite;
 #include "scenariogenerator.hpp"
 #include "swapperformance.hpp"
 #include "sensitivityanalysis.hpp"
+#include "sensitivityanalysis2.hpp"
 #include "sensitivityperformance.hpp"
 #include "stresstest.hpp"
 #include "observationmode.hpp"
@@ -94,6 +95,7 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(testsuite::ScenarioSimMarketTest::suite());
     test->add(testsuite::ScenarioGeneratorTest::suite());
     test->add(testsuite::SensitivityAnalysisTest::suite());
+    test->add(testsuite::SensitivityAnalysis2Test::suite());
     test->add(testsuite::StressTestingTest::suite());
     test->add(testsuite::ObservationModeTest::suite());
     test->add(testsuite::SensitivityPerformanceTest::suite());
