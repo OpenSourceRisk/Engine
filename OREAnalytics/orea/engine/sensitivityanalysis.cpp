@@ -533,5 +533,36 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
     Real realShift = shiftSize * shiftMult;
     return realShift;
 }
+
+const std::set<std::string>& SensitivityAnalysis::trades() const {
+    QL_REQUIRE(computed_, "Sensitivities have not been successfully computed");
+    return trades_;
+}
+
+const std::map<std::string, QuantLib::Real>& SensitivityAnalysis::factors() const {
+    QL_REQUIRE(computed_, "Sensitivities have not been successfully computed");
+    return factors_;
+}
+
+const std::map<std::string, Real>& SensitivityAnalysis::baseNPV() const {
+    QL_REQUIRE(computed_, "Sensitivities have not been successfully computed");
+    return baseNPV_;
+}
+
+const std::map<std::pair<std::string, std::string>, Real>& SensitivityAnalysis::delta() const {
+    QL_REQUIRE(computed_, "Sensitivities have not been successfully computed");
+    return delta_;
+}
+
+const std::map<std::pair<std::string, std::string>, Real>& SensitivityAnalysis::gamma() const {
+    QL_REQUIRE(computed_, "Sensitivities have not been successfully computed");
+    return gamma_;
+}
+
+const std::map<std::tuple<std::string, std::string, std::string>, Real>& SensitivityAnalysis::crossGamma() const {
+    QL_REQUIRE(computed_, "Sensitivities have not been successfully computed");
+    return crossGamma_;
+}
+
 }
 }
