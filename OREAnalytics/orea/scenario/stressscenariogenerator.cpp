@@ -64,6 +64,24 @@ void StressScenarioGenerator::addFxShifts(StressTestScenarioData::StressTestData
                                           boost::shared_ptr<Scenario>& scenario) {
     for (auto d : std.fxShifts) {
         string ccypair = d.first; // foreign + domestic;
+
+        // Is this too strict?
+        // - implemented to avoid cases where input cross FX rates are not consistent
+        // - Consider an example (baseCcy = EUR) of a GBPUSD FX trade - two separate routes to pricing
+        // - (a) call GBPUSD FX rate from sim market
+        // - (b) call GBPEUR and EURUSD FX rates, manually join them to obtain GBPUSD
+        // - now, if GBPUSD is an explicit risk factor in sim market, consider what happens
+        // - if we bump GBPUSD value and leave other FX rates unchanged (for e.g. a sensitivity analysis)
+        // - (a) the value of the trade changes
+        // - (b) the value of the GBPUSD trade stays the same
+        //in light of the above we restrict the universe of FX pairs that we support here for the time being
+        string baseCcy = simMarketData_->baseCcy();
+        string foreign = ccypair.substr(0, 3);
+        string domestic = ccypair.substr(3);
+        QL_REQUIRE((domestic == baseCcy) || (foreign == baseCcy),
+            "SensitivityScenarioGenerator does not support cross FX pairs(" <<
+            ccypair << ", but base currency is " << baseCcy << ")");
+
         LOG("Apply stress scenario to fx " << ccypair);
 
         StressTestScenarioData::FxShiftData data = d.second;
@@ -225,7 +243,6 @@ void StressScenarioGenerator::addYieldCurveShifts(StressTestScenarioData::Stress
 
 void StressScenarioGenerator::addFxVolShifts(StressTestScenarioData::StressTestData& std,
                                              boost::shared_ptr<Scenario>& scenario) {
-    string domestic = simMarketData_->baseCcy();
     Size n_fxvol_exp = simMarketData_->fxVolExpiries().size();
 
     std::vector<Real> values(n_fxvol_exp);
@@ -262,7 +279,7 @@ void StressScenarioGenerator::addFxVolShifts(StressTestScenarioData::StressTestD
         // FIXME: Apply same shifts to non-ATM vectors if present
         for (Size j = 0; j < shiftTenors.size(); ++j) {
             // apply shift at tenor point j
-	  applyShift(j, shifts[j], true, shiftType, shiftTimes, values, times, shiftedValues, j == 0 ? true : false);
+      applyShift(j, shifts[j], true, shiftType, shiftTimes, values, times, shiftedValues, j == 0 ? true : false);
         }
 
         for (Size k = 0; k < n_fxvol_exp; ++k)

@@ -131,7 +131,25 @@ void SensitivityScenarioGenerator::generateFxScenarios(const boost::shared_ptr<S
         fxCcyPairs_ = sensitivityData_->fxCcyPairs();
     else
         fxCcyPairs_ = simMarketFxPairs;
-    // Log an ALERT if some currencies in simmarket are excluded from the list
+    // Is this too strict?
+    // - implemented to avoid cases where input cross FX rates are not consistent
+    // - Consider an example (baseCcy = EUR) of a GBPUSD FX trade - two separate routes to pricing
+    // - (a) call GBPUSD FX rate from sim market
+    // - (b) call GBPEUR and EURUSD FX rates, manually join them to obtain GBPUSD
+    // - now, if GBPUSD is an explicit risk factor in sim market, consider what happens
+    // - if we bump GBPUSD value and leave other FX rates unchanged (for e.g. a sensitivity analysis)
+    // - (a) the value of the trade changes
+    // - (b) the value of the GBPUSD trade stays the same
+    // - in light of the above we restrict the universe of FX pairs that we support here for the time being
+    string baseCcy = simMarketData_->baseCcy();
+    for (auto sensi_fx : fxCcyPairs_) {
+        string foreign = sensi_fx.substr(0, 3);
+        string domestic = sensi_fx.substr(3);
+        QL_REQUIRE((domestic == baseCcy) || (foreign == baseCcy),
+            "SensitivityScenarioGenerator does not support cross FX pairs(" <<
+            sensi_fx << ", but base currency is " << baseCcy << ")");
+    }
+        // Log an ALERT if some currencies in simmarket are excluded from the list
     for (auto sim_fx : simMarketFxPairs) {
         if (std::find(fxCcyPairs_.begin(), fxCcyPairs_.end(), sim_fx) == fxCcyPairs_.end()) {
             ALOG("FX pair " << sim_fx << " in simmarket is not included in sensitivities analysis");
