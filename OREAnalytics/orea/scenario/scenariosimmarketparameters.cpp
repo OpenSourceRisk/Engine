@@ -85,7 +85,13 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     }
 
     nodeChild = XMLUtils::getChildNode(node, "FxRates");
-    fxCcyPairs_ = XMLUtils::getChildrenValues(nodeChild, "CurrencyPairs", "CurrencyPair", true);
+    if (nodeChild)
+        fxCcyPairs_ = XMLUtils::getChildrenValues(nodeChild, "CurrencyPairs", "CurrencyPair", true);
+    else {
+        fxCcyPairs_.resize(0);
+        for (auto ccy : ccys_)
+            fxCcyPairs_.push_back(ccy + baseCcy_);
+    }
 
     nodeChild = XMLUtils::getChildNode(node, "SwaptionVolatilities");
     swapVolSimulate_ = false;
