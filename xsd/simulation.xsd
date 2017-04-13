@@ -7,9 +7,9 @@
 
   <xs:complexType name="simulation">
     <xs:sequence>
-      <xs:element type="parameters" name="Parameters"/>
-      <xs:element type="crossAssetModel" name="CrossAssetModel"/>
-      <xs:element type="market" name="Market"/>
+      <xs:element type="parameters" name="Parameters" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="crossAssetModel" name="CrossAssetModel" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="market" name="Market" minOccurs="1" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 
@@ -227,7 +227,7 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
-      <xs:element name="FxRates">
+      <xs:element name="FxRates" maxOccurs="1" minOccurs="0">
         <xs:complexType>
           <xs:sequence>
             <xs:element name="CurrencyPairs" maxOccurs="1">
@@ -279,6 +279,7 @@
       <xs:element name="SwaptionVolatilities">
         <xs:complexType>
           <xs:sequence>
+            <xs:element type="bool" name="Simulate" maxOccurs="1" minOccurs="0"/>
             <xs:element type="timeDecayType" name="ReactionToTimeDecay"/>
             <xs:element name="Currencies">
               <xs:complexType>
@@ -296,6 +297,7 @@
       <xs:element name="CapFloorVolatilities" minOccurs="0">
         <xs:complexType>
           <xs:sequence>
+            <xs:element type="bool" name="Simulate" maxOccurs="1" minOccurs="0"/>
             <xs:element type="timeDecayType" name="ReactionToTimeDecay"/>
             <xs:element name="Currencies">
               <xs:complexType>
@@ -304,13 +306,15 @@
                 </xs:sequence>
               </xs:complexType>
             </xs:element>
+            <xs:element type="xs:string" name="Expiries"/>
+            <xs:element type="xs:string" name="Strikes"/>
           </xs:sequence>
         </xs:complexType>
       </xs:element>
       <xs:element name="FxVolatilities">
         <xs:complexType>
           <xs:sequence>
-            <xs:element type="bool" name="Simulate"/>
+            <xs:element type="bool" name="Simulate"  maxOccurs="1" minOccurs="0"/>
             <xs:element type="timeDecayType" name="ReactionToTimeDecay"/>
             <xs:element name="CurrencyPairs">
               <xs:complexType>
@@ -324,6 +328,27 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
+      <xs:element name="BenchmarkCurves" minOccurs="0" maxOccurs="1">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="BenchmarkCurve" minOccurs="0" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element type="currencyCode" name="Currency" maxOccurs="1"/>
+                  <xs:element type="xs:string" name="Name" maxOccurs="1"/>
+                </xs:sequence>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="Securities" minOccurs="0" maxOccurs="1">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="xs:string" name="Security" minOccurs="0" maxOccurs="unbounded" />
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>     
       <xs:element name="AggregationScenarioDataCurrencies">
         <xs:complexType>
           <xs:sequence>
