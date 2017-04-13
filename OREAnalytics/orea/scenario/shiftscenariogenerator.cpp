@@ -297,7 +297,6 @@ void ShiftScenarioGenerator::addCacheTo(boost::shared_ptr<Scenario> scenario) {
 
 RiskFactorKey ShiftScenarioGenerator::getFxKey(const std::string& key) {
     for (Size i = 0; i < fxKeys_.size(); ++i) {
-        LOG("Check FX Key " << fxKeys_[i].name << " vs " << key);
         if (fxKeys_[i].name == key)
             return fxKeys_[i];
     }
