@@ -189,17 +189,17 @@ public:
     /*! calibrate eq or fx volatilities to a sequence of options with
             expiry times equal to step times in the parametrization */
     void calibrateBsVolatilitiesIterative(const AssetType& assetType, const Size aIdx,
-                                            const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers,
-                                            OptimizationMethod& method, const EndCriteria& endCriteria,
-                                            const Constraint& constraint = Constraint(),
-                                            const std::vector<Real>& weights = std::vector<Real>());
+                                          const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers,
+                                          OptimizationMethod& method, const EndCriteria& endCriteria,
+                                          const Constraint& constraint = Constraint(),
+                                          const std::vector<Real>& weights = std::vector<Real>());
 
     /*! calibrate eq/fx volatilities globally to a set of fx options */
     void calibrateBsVolatilitiesGlobal(const AssetType& assetType, const Size aIdx,
-                                         const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers,
-                                         OptimizationMethod& method, const EndCriteria& endCriteria,
-                                         const Constraint& constraint = Constraint(),
-                                         const std::vector<Real>& weights = std::vector<Real>());
+                                       const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers,
+                                       OptimizationMethod& method, const EndCriteria& endCriteria,
+                                       const Constraint& constraint = Constraint(),
+                                       const std::vector<Real>& weights = std::vector<Real>());
 
     /* ... add more calibration procedures here ... */
 
@@ -248,10 +248,8 @@ protected:
             volGridSize = fxbs(aIdx)->parameter(0)->size();
         else
             volGridSize = eqbs(aIdx)->parameter(0)->size();
-        QL_REQUIRE(tIdx < volGridSize, 
-            "bs volatility index (" << tIdx << ") for " 
-            << assetStr << " asset " << aIdx 
-            << " out of bounds 0..." << volGridSize - 1);
+        QL_REQUIRE(tIdx < volGridSize, "bs volatility index (" << tIdx << ") for " << assetStr << " asset " << aIdx
+                                                               << " out of bounds 0..." << volGridSize - 1);
         std::vector<bool> res(0);
         for (Size j = 0; j < nIrLgm1f_; ++j) {
             std::vector<bool> tmp1(p_[idx(IR, j)]->parameter(0)->size(), true);
@@ -309,7 +307,7 @@ CrossAssetModel::stateProcess(CrossAssetStateProcess::discretization disc) const
     return disc == CrossAssetStateProcess::exact ? stateProcessExact_ : stateProcessEuler_;
 }
 
-inline Size CrossAssetModel::dimension() const { return nIrLgm1f_ * 1 + nFxBs_ * 1 + (nInfl_*1) + (nEqBs_*1); }
+inline Size CrossAssetModel::dimension() const { return nIrLgm1f_ * 1 + nFxBs_ * 1 + (nInfl_ * 1) + (nEqBs_ * 1); }
 
 inline Size CrossAssetModel::brownians() const { return nIrLgm1f_ * 1 + nFxBs_ * 1 + (nInfl_ * 1) + (nEqBs_ * 1); }
 

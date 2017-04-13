@@ -58,9 +58,9 @@ public:
              ParamType sigmaType, const std::vector<Time>& sigmaTimes, const std::vector<Real>& sigmaValues,
              std::vector<std::string> optionExpiries = std::vector<std::string>(),
              std::vector<std::string> optionStrikes = std::vector<std::string>())
-        : name_(name), ccy_(currency), calibrationType_(calibrationType),
-          calibrateSigma_(calibrateSigma), sigmaType_(sigmaType), sigmaTimes_(sigmaTimes), sigmaValues_(sigmaValues),
-          optionExpiries_(optionExpiries), optionStrikes_(optionStrikes) {}
+        : name_(name), ccy_(currency), calibrationType_(calibrationType), calibrateSigma_(calibrateSigma),
+          sigmaType_(sigmaType), sigmaTimes_(sigmaTimes), sigmaValues_(sigmaValues), optionExpiries_(optionExpiries),
+          optionStrikes_(optionStrikes) {}
 
     //! \name Setters/Getters
     //@{

@@ -26,10 +26,10 @@
 namespace QuantExt {
 
 FxEqOptionHelper::FxEqOptionHelper(const Period& maturity, const Calendar& calendar, const Real strike,
-                               const Handle<Quote> spot, const Handle<Quote> volatility,
-                               const Handle<YieldTermStructure>& domesticYield,
-                               const Handle<YieldTermStructure>& foreignYield,
-                               CalibrationHelper::CalibrationErrorType errorType)
+                                   const Handle<Quote> spot, const Handle<Quote> volatility,
+                                   const Handle<YieldTermStructure>& domesticYield,
+                                   const Handle<YieldTermStructure>& foreignYield,
+                                   CalibrationHelper::CalibrationErrorType errorType)
     : CalibrationHelper(volatility, domesticYield, errorType), hasMaturity_(true), maturity_(maturity),
       calendar_(calendar), strike_(strike), spot_(spot), foreignYield_(foreignYield) {
     registerWith(spot_);
@@ -37,9 +37,9 @@ FxEqOptionHelper::FxEqOptionHelper(const Period& maturity, const Calendar& calen
 }
 
 FxEqOptionHelper::FxEqOptionHelper(const Date& exerciseDate, const Real strike, const Handle<Quote> spot,
-                               const Handle<Quote> volatility, const Handle<YieldTermStructure>& domesticYield,
-                               const Handle<YieldTermStructure>& foreignYield,
-                               CalibrationHelper::CalibrationErrorType errorType)
+                                   const Handle<Quote> volatility, const Handle<YieldTermStructure>& domesticYield,
+                                   const Handle<YieldTermStructure>& foreignYield,
+                                   CalibrationHelper::CalibrationErrorType errorType)
     : CalibrationHelper(volatility, domesticYield, errorType), hasMaturity_(false), exerciseDate_(exerciseDate),
       strike_(strike), spot_(spot), foreignYield_(foreignYield) {
     registerWith(spot_);

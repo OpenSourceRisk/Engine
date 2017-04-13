@@ -25,10 +25,10 @@ namespace data {
 
 bool EqBsData::operator==(const EqBsData& rhs) {
 
-    if (name_ != rhs.name_ || ccy_ != rhs.ccy_ ||
-        calibrationType_ != rhs.calibrationType_ || calibrateSigma_ != rhs.calibrateSigma_ ||
-        sigmaType_ != rhs.sigmaType_ || sigmaTimes_ != rhs.sigmaTimes_ || sigmaValues_ != rhs.sigmaValues_ ||
-        optionExpiries_ != rhs.optionExpiries_ || optionStrikes_ != rhs.optionStrikes_) {
+    if (name_ != rhs.name_ || ccy_ != rhs.ccy_ || calibrationType_ != rhs.calibrationType_ ||
+        calibrateSigma_ != rhs.calibrateSigma_ || sigmaType_ != rhs.sigmaType_ || sigmaTimes_ != rhs.sigmaTimes_ ||
+        sigmaValues_ != rhs.sigmaValues_ || optionExpiries_ != rhs.optionExpiries_ ||
+        optionStrikes_ != rhs.optionStrikes_) {
         return false;
     }
     return true;

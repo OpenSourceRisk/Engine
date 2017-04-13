@@ -31,8 +31,8 @@
 namespace QuantExt {
 
 //! Analytic cross-asset lgm equity option engine
-/*! 
-        This class prices an equity option analytically using the dynamics of 
+/*!
+        This class prices an equity option analytically using the dynamics of
         a CrossAssetModel. The formula is black-like, with the variance of the
         underlying equity being dependent upon the dynamics of related interest
         and FX rates within the CrossAssetModel universe.
@@ -43,10 +43,8 @@ namespace QuantExt {
 */
 class AnalyticXAssetLgmEquityOptionEngine : public VanillaOption::engine {
 public:
-    AnalyticXAssetLgmEquityOptionEngine(
-        const boost::shared_ptr<CrossAssetModel>& model,
-        const Size equityIdx,
-        const Size ccyIdx);
+    AnalyticXAssetLgmEquityOptionEngine(const boost::shared_ptr<CrossAssetModel>& model, const Size equityIdx,
+                                        const Size ccyIdx);
     void calculate() const;
 
     /*! the actual option price calculation, exposed to public,

@@ -30,7 +30,6 @@ namespace testsuite {
 //! EquityCrossAssetModel tests
 class EquityCrossAssetModelTest {
 public:
-
     /*! In a EUR-USD CrossAssetModel with two equities, test a Monte Carlo pricing of an equiy forward under the base
      *  currency numeraire against the analytical expectation. Perform similar checks for an equity option. */
     static void testEqLgm5fPayouts();

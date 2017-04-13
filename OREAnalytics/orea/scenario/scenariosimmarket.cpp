@@ -64,9 +64,9 @@ ReactionToTimeDecay parseDecayMode(const string& s) {
 }
 
 ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scenarioGenerator,
-    boost::shared_ptr<Market>& initMarket,
-    boost::shared_ptr<ScenarioSimMarketParameters>& parameters,
-    Conventions conventions, const std::string& configuration)
+                                     boost::shared_ptr<Market>& initMarket,
+                                     boost::shared_ptr<ScenarioSimMarketParameters>& parameters,
+                                     Conventions conventions, const std::string& configuration)
     : SimMarket(conventions), scenarioGenerator_(scenarioGenerator), parameters_(parameters) {
 
     LOG("building ScenarioSimMarket...");
@@ -86,7 +86,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
             Handle<Quote> qh(q);
             fxSpots_[Market::defaultConfiguration].addQuote(ccyPair, qh);
             simData_.emplace(std::piecewise_construct, std::forward_as_tuple(RiskFactorKey::KeyType::FXSpot, ccyPair),
-                std::forward_as_tuple(q));
+                             std::forward_as_tuple(q));
         }
     }
     LOG("FX triangulation done");
@@ -119,8 +119,8 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
             quotes.push_back(qh);
 
             simData_.emplace(std::piecewise_construct,
-                std::forward_as_tuple(RiskFactorKey::KeyType::DiscountCurve, ccy, i),
-                std::forward_as_tuple(q));
+                             std::forward_as_tuple(RiskFactorKey::KeyType::DiscountCurve, ccy, i),
+                             std::forward_as_tuple(q));
 
             LOG("SimMarket yield curve " << ccy << " discount[" << i << "]=" << q->value());
         }
@@ -130,8 +130,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister) {
             discountCurve = boost::shared_ptr<YieldTermStructure>(
                 new QuantExt::InterpolatedDiscountCurve(yieldCurveTimes, quotes, 0, TARGET(), wrapper->dayCounter()));
-        }
-        else {
+        } else {
             discountCurve = boost::shared_ptr<YieldTermStructure>(
                 new QuantExt::InterpolatedDiscountCurve2(yieldCurveTimes, quotes, wrapper->dayCounter()));
         }
@@ -166,8 +165,8 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
             quotes.push_back(qh);
 
             simData_.emplace(std::piecewise_construct,
-                std::forward_as_tuple(RiskFactorKey::KeyType::IndexCurve, ind, i),
-                std::forward_as_tuple(q));
+                             std::forward_as_tuple(RiskFactorKey::KeyType::IndexCurve, ind, i),
+                             std::forward_as_tuple(q));
 
             LOG("SimMarket index curve " << ind << " discount[" << i << "]=" << q->value());
         }
@@ -176,8 +175,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister) {
             indexCurve = boost::shared_ptr<YieldTermStructure>(new QuantExt::InterpolatedDiscountCurve(
                 yieldCurveTimes, quotes, 0, index->fixingCalendar(), wrapperIndex->dayCounter()));
-        }
-        else {
+        } else {
             indexCurve = boost::shared_ptr<YieldTermStructure>(
                 new QuantExt::InterpolatedDiscountCurve2(yieldCurveTimes, quotes, wrapperIndex->dayCounter()));
         }
@@ -235,9 +233,8 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
                 wrapper.linkTo(converter.convert());
 
                 LOG("Converting swaption volatilities in configuration " << configuration << " with currency " << ccy
-                    << " to normal swaption volatilities");
-            }
-            else {
+                                                                         << " to normal swaption volatilities");
+            } else {
                 // Only support conversions for swaption volatility matrices
                 LOG("Swaption volatility for ccy " << ccy << " is not a matrix so it is not converted to Normal");
             }
@@ -279,7 +276,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
 
         Handle<OptionletVolatilityStructure> hCapletVol(capletVol);
         capFloorCurves_.emplace(std::piecewise_construct, std::forward_as_tuple(Market::defaultConfiguration, ccy),
-            std::forward_as_tuple(hCapletVol));
+                                std::forward_as_tuple(hCapletVol));
 
         LOG("Simulaton market cap/floor volatility type = " << hCapletVol->volatilityType());
     }
@@ -339,8 +336,8 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
                 times.push_back(wrapper->timeFromReference(date));
                 boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
                 simData_.emplace(std::piecewise_construct,
-                    std::forward_as_tuple(RiskFactorKey::KeyType::FXVolatility, ccyPair, i),
-                    std::forward_as_tuple(q));
+                                 std::forward_as_tuple(RiskFactorKey::KeyType::FXVolatility, ccyPair, i),
+                                 std::forward_as_tuple(q));
                 quotes.emplace_back(q);
             }
 
@@ -349,8 +346,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
 
             fvh = Handle<BlackVolTermStructure>(fxVolCurve);
 
-        }
-        else {
+        } else {
             string decayModeString = parameters->fxVolDecayMode();
             LOG("Deterministic FX Vols with decay mode " << decayModeString << " for " << ccyPair);
             ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);
@@ -386,27 +382,23 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         DLOG("adding " << eqName << " equity spot price");
         boost::shared_ptr<SimpleQuote> q(new SimpleQuote(spotVal));
         Handle<Quote> qh(q);
-        equitySpots_.insert(pair<pair<string, string>, Handle<Quote>>(
-            make_pair(Market::defaultConfiguration, eqName), qh));
-        simData_.emplace(std::piecewise_construct,
-            std::forward_as_tuple(RiskFactorKey::KeyType::EQSpot, eqName),
-            std::forward_as_tuple(q));
+        equitySpots_.insert(
+            pair<pair<string, string>, Handle<Quote>>(make_pair(Market::defaultConfiguration, eqName), qh));
+        simData_.emplace(std::piecewise_construct, std::forward_as_tuple(RiskFactorKey::KeyType::EQSpot, eqName),
+                         std::forward_as_tuple(q));
     }
     LOG("equity spots done");
 
     vector<Time> equityCurveTimes(1, 0.0);
     vector<Date> equityCurveDates(1, asof_);
     if (parameters->equityNames().size() > 0) {
-        QL_REQUIRE(parameters->equityTenors().size() > 0,
-            "Equity curve tenor grid not defined");
-        QL_REQUIRE(parameters->equityTenors().front() > 0 * Days, 
-            "equity curve tenors must not include t=0");
+        QL_REQUIRE(parameters->equityTenors().size() > 0, "Equity curve tenor grid not defined");
+        QL_REQUIRE(parameters->equityTenors().front() > 0 * Days, "equity curve tenors must not include t=0");
     }
     for (auto& tenor : parameters->equityTenors()) {
         equityCurveTimes.push_back(dc.yearFraction(asof_, asof_ + tenor));
         equityCurveDates.push_back(asof_ + tenor);
     }
-
 
     // building equity dividend yield curves
     LOG("building equity dividend yield curves...");
@@ -426,8 +418,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister) {
             eqdivCurve = boost::shared_ptr<YieldTermStructure>(new QuantExt::InterpolatedDiscountCurve(
                 equityCurveTimes, quotes, 0, wrapper->calendar(), wrapper->dayCounter()));
-        }
-        else {
+        } else {
             eqdivCurve = boost::shared_ptr<YieldTermStructure>(
                 new QuantExt::InterpolatedDiscountCurve2(equityCurveTimes, quotes, wrapper->dayCounter()));
         }
@@ -435,8 +426,8 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         if (wrapper->allowsExtrapolation())
             eqdiv_h->enableExtrapolation();
 
-        equityDividendCurves_.insert(
-            pair<pair<string, string>, Handle<YieldTermStructure>>(make_pair(Market::defaultConfiguration, eqName), eqdiv_h));
+        equityDividendCurves_.insert(pair<pair<string, string>, Handle<YieldTermStructure>>(
+            make_pair(Market::defaultConfiguration, eqName), eqdiv_h));
         DLOG("building " << eqName << " equity dividend yield curve done");
     }
     LOG("equity dividend yield curves done");
@@ -458,15 +449,14 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
                 times.push_back(wrapper->timeFromReference(date));
                 boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
                 simData_.emplace(std::piecewise_construct,
-                    std::forward_as_tuple(RiskFactorKey::KeyType::EQVolatility, eqName, i),
-                    std::forward_as_tuple(q));
+                                 std::forward_as_tuple(RiskFactorKey::KeyType::EQVolatility, eqName, i),
+                                 std::forward_as_tuple(q));
                 quotes.emplace_back(q);
             }
             boost::shared_ptr<BlackVolTermStructure> eqVolCurve(new BlackVarianceCurve3(
                 0, NullCalendar(), wrapper->businessDayConvention(), wrapper->dayCounter(), times, quotes));
             evh = Handle<BlackVolTermStructure>(eqVolCurve);
-        }
-        else {
+        } else {
             string decayModeString = parameters->eqVolDecayMode();
             DLOG("Deterministic EQ Vols with decay mode " << decayModeString << " for " << eqName);
             ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);
@@ -512,15 +502,13 @@ void ScenarioSimMarket::update(const Date& d) {
         if (it == simData_.end()) {
             ALOG("simulation data point missing for key " << key);
             missingPoint = true;
-        }
-        else {
-            //LOG("simulation data point found for key " << key);
+        } else {
+            // LOG("simulation data point found for key " << key);
             it->second->setValue(scenario->get(key));
             count++;
         }
     }
-    QL_REQUIRE(!missingPoint, 
-        "simulation data points missing from scenario, exit.");
+    QL_REQUIRE(!missingPoint, "simulation data points missing from scenario, exit.");
 
     if (count != simData_.size()) {
         ALOG("mismatch between scenario and sim data size, " << count << " vs " << simData_.size());

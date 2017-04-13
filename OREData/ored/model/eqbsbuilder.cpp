@@ -35,12 +35,9 @@ using namespace std;
 namespace ore {
 namespace data {
 
-EqBsBuilder::EqBsBuilder(const boost::shared_ptr<ore::data::Market>& market, 
-                         const boost::shared_ptr<EqBsData>& data,
-                         const QuantLib::Currency& baseCcy,
-                         const std::string& configuration)
-    : market_(market), configuration_(configuration), 
-      data_(data), baseCcy_(baseCcy) {
+EqBsBuilder::EqBsBuilder(const boost::shared_ptr<ore::data::Market>& market, const boost::shared_ptr<EqBsData>& data,
+                         const QuantLib::Currency& baseCcy, const std::string& configuration)
+    : market_(market), configuration_(configuration), data_(data), baseCcy_(baseCcy) {
 
     QuantLib::Currency ccy = ore::data::parseCurrency(data->currency());
     string eqName = data->eqName();
@@ -75,16 +72,17 @@ EqBsBuilder::EqBsBuilder(const boost::shared_ptr<ore::data::Market>& market,
     Handle<YieldTermStructure> eqDivCurve = market_->equityDividendCurve(eqName, configuration_);
 
     if (data->sigmaParamType() == ParamType::Piecewise)
-        parametrization_ =
-            boost::make_shared<QuantExt::EqBsPiecewiseConstantParametrization>(ccy, eqName, eqSpot, fxSpot, sigmaTimes, sigma, eqRateCurve, eqDivCurve);
+        parametrization_ = boost::make_shared<QuantExt::EqBsPiecewiseConstantParametrization>(
+            ccy, eqName, eqSpot, fxSpot, sigmaTimes, sigma, eqRateCurve, eqDivCurve);
     else if (data->sigmaParamType() == ParamType::Constant)
-        parametrization_ = boost::make_shared<QuantExt::EqBsConstantParametrization>(ccy, eqName, eqSpot, fxSpot, sigma[0], eqRateCurve, eqDivCurve);
+        parametrization_ = boost::make_shared<QuantExt::EqBsConstantParametrization>(ccy, eqName, eqSpot, fxSpot,
+                                                                                     sigma[0], eqRateCurve, eqDivCurve);
     else
         QL_FAIL("interpolation type not supported for Equity");
 }
 
 void EqBsBuilder::update() {
-    ;// nothing to do here
+    ; // nothing to do here
 }
 
 void EqBsBuilder::buildOptionBasket() {
@@ -114,9 +112,7 @@ void EqBsBuilder::buildOptionBasket() {
         parseDateOrPeriod(expiryString, expiryDate, expiry, isDate);
         if (!isDate)
             expiryDate = today + expiry;
-        QL_REQUIRE(expiryDate > today, 
-            "expired calibration option expiry " 
-            << QuantLib::io::iso_date(expiryDate));
+        QL_REQUIRE(expiryDate > today, "expired calibration option expiry " << QuantLib::io::iso_date(expiryDate));
         ore::data::Strike strike = ore::data::parseStrike(data_->optionStrikes()[j]);
         Real strikeValue;
         // TODO: Extend strike type coverage

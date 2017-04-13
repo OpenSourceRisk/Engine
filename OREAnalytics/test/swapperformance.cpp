@@ -268,7 +268,7 @@ void test_performance(Size portfolioSize) {
     parameters->fxVolDecayMode() = "ConstantVariance";
     parameters->simulateFXVols() = false;
 
-    parameters->eqVolExpiries() = { 1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years };
+    parameters->eqVolExpiries() = {1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years};
     parameters->eqVolDecayMode() = "ConstantVariance";
     parameters->simulateEQVols() = false;
 

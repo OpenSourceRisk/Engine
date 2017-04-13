@@ -20,18 +20,11 @@
 
 namespace QuantExt {
 
-EqBsParametrization::EqBsParametrization(
-    const Currency& eqCcy,
-    const std::string& eqName,
-    const Handle<Quote>& equitySpotToday,
-    const Handle<Quote>& fxSpotToday,
-    const Handle<YieldTermStructure>& equityIrCurveToday,
-    const Handle<YieldTermStructure>& equityDivCurveToday)
-    : Parametrization(eqCcy),
-      eqSpotToday_(equitySpotToday),
-      fxSpotToday_(fxSpotToday),
-      eqRateCurveToday_(equityIrCurveToday),
-      eqDivYieldCurveToday_(equityDivCurveToday),
-      eqName_(eqName) {}
+EqBsParametrization::EqBsParametrization(const Currency& eqCcy, const std::string& eqName,
+                                         const Handle<Quote>& equitySpotToday, const Handle<Quote>& fxSpotToday,
+                                         const Handle<YieldTermStructure>& equityIrCurveToday,
+                                         const Handle<YieldTermStructure>& equityDivCurveToday)
+    : Parametrization(eqCcy), eqSpotToday_(equitySpotToday), fxSpotToday_(fxSpotToday),
+      eqRateCurveToday_(equityIrCurveToday), eqDivYieldCurveToday_(equityDivCurveToday), eqName_(eqName) {}
 
 } // namespace QuantExt

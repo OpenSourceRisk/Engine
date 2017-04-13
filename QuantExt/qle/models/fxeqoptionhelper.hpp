@@ -42,13 +42,13 @@ public:
         settlement lag, however this applies consistently to
         the black and the model pricing */
     FxEqOptionHelper(const Period& maturity, const Calendar& calendar, const Real strike, const Handle<Quote> spot,
-                   const Handle<Quote> volatility, const Handle<YieldTermStructure>& domesticYield,
-                   const Handle<YieldTermStructure>& foreignYield,
-                   CalibrationHelper::CalibrationErrorType errorType = CalibrationHelper::RelativePriceError);
+                     const Handle<Quote> volatility, const Handle<YieldTermStructure>& domesticYield,
+                     const Handle<YieldTermStructure>& foreignYield,
+                     CalibrationHelper::CalibrationErrorType errorType = CalibrationHelper::RelativePriceError);
     FxEqOptionHelper(const Date& exerciseDate, const Real strike, const Handle<Quote> spot,
-                   const Handle<Quote> volatility, const Handle<YieldTermStructure>& domesticYield,
-                   const Handle<YieldTermStructure>& foreignYield,
-                   CalibrationHelper::CalibrationErrorType errorType = CalibrationHelper::RelativePriceError);
+                     const Handle<Quote> volatility, const Handle<YieldTermStructure>& domesticYield,
+                     const Handle<YieldTermStructure>& foreignYield,
+                     CalibrationHelper::CalibrationErrorType errorType = CalibrationHelper::RelativePriceError);
     void addTimesTo(std::list<Time>&) const {}
     void performCalculations() const;
     Real modelValue() const;

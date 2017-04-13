@@ -92,7 +92,8 @@ private:
     std::vector<Real> fxOptionCalibrationErrors_;
     std::vector<Real> eqOptionCalibrationErrors_;
     boost::shared_ptr<ore::data::Market> market_;
-    const std::string configurationLgmCalibration_, configurationFxCalibration_, configurationEqCalibration_, configurationFinalModel_;
+    const std::string configurationLgmCalibration_, configurationFxCalibration_, configurationEqCalibration_,
+        configurationFinalModel_;
     const DayCounter dayCounter_;
 
     // TODO: Move CalibrationErrorType, optimizer and end criteria parameters to data

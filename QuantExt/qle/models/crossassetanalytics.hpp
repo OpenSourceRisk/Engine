@@ -119,12 +119,13 @@ Real fx_expectation_2(const CrossAssetModel* model, const Size i, const Time t0,
 
 /*! EQ state expectation
 
-    This function covers part of the EQ expectation. 
-    The overall expectation formula (taken from the book "Modern Derivatives Pricing and Credit Exposure Analysis" 
+    This function covers part of the EQ expectation.
+    The overall expectation formula (taken from the book "Modern Derivatives Pricing and Credit Exposure Analysis"
     by Lichters, Stamm and Gallagher) is as follows:
 
     \f{eqnarray}{
-    \mathbb{E} \left[\Delta ln[s_k]\right] &=& ln \left[  \frac{P_{\phi(k)}(0,s)}{P_{\phi(k)}(0,t)} \right] - \int_{s}^{t} q_k(u) du - \frac{1}{2} \int_{s}^{t}\sigma_{s_k}^2(u) du\\
+    \mathbb{E} \left[\Delta ln[s_k]\right] &=& ln \left[  \frac{P_{\phi(k)}(0,s)}{P_{\phi(k)}(0,t)} \right] -
+   \int_{s}^{t} q_k(u) du - \frac{1}{2} \int_{s}^{t}\sigma_{s_k}^2(u) du\\
     &&
     +\rho_{z_0,s_k}\int_{s}^{t}\alpha_0(u) H_0(u) \sigma_{s_k}(u) du
     - \epsilon_{\phi(k)} \rho_{s_k,x_{\phi(k)}} \int_{s}^{t} \sigma_{s_k}(u)\sigma_{x_{\phi(k)}}(u) du\\
@@ -132,7 +133,8 @@ Real fx_expectation_2(const CrossAssetModel* model, const Size i, const Time t0,
     - \int_{s}^{t} H_{\phi(k)}^2(u) \alpha_{\phi(k)}^2(u) du \right)\\
     &&  + (H_{\phi(k)}(t) - H_{\phi(k)}(s)) z_{\phi(k)}(s)
     +\epsilon_{\phi(k)} \int_{s}^{t} \gamma_{\phi(k)} (u) (H_{\phi(k)}(t) - H_{\phi(k)}(u)) du,\\
-    &&  \qquad\mbox{with}\quad s = t_0, \quad t = t_0+\Delta t, \quad \phi(k) = \qquad\mbox{ interest rate for currency of equity k}
+    &&  \qquad\mbox{with}\quad s = t_0, \quad t = t_0+\Delta t, \quad \phi(k) = \qquad\mbox{ interest rate for currency
+   of equity k}
     \f}
 
     This function covers the state-independent part of the EQ expectation
@@ -143,8 +145,8 @@ Real eq_expectation_1(const CrossAssetModel* model, const Size i, const Time t0,
 
 This function covers the state-dependent part of the EQ expectation (see overall expression above).
 */
-Real eq_expectation_2(const CrossAssetModel* model, const Size k, const Time t0, const Real si_0, 
-                      const Real zi_0, const Real dt);
+Real eq_expectation_2(const CrossAssetModel* model, const Size k, const Time t0, const Real si_0, const Real zi_0,
+                      const Real dt);
 
 /*! IR-IR Covariance
 
@@ -261,8 +263,10 @@ Real ir_eq_covariance(const CrossAssetModel* model, const Size irIdx, const Size
 
 \f{eqnarray}{
 Cov \left[\Delta ln[s_i], \Delta ln[x_j] \right] &=&
-\rho_{z_{\phi(i)},z_0} \int_{s}^{t} (H_{\phi(i)} (t) - H_{\phi(i)} (u)) (H_0 (t) - H_0 (u)) \alpha_{\phi(i)}(u) \alpha_0(u) du\\
-&& - \rho_{z_{\phi(i)},z_j} \int_{s}^{t} (H_{\phi(i)} (t) - H_{\phi(i)} (u)) (H_j (t) - H_j (u)) \alpha_{\phi(i)} (u)\alpha_j(u) du\\
+\rho_{z_{\phi(i)},z_0} \int_{s}^{t} (H_{\phi(i)} (t) - H_{\phi(i)} (u)) (H_0 (t) - H_0 (u)) \alpha_{\phi(i)}(u)
+\alpha_0(u) du\\
+&& - \rho_{z_{\phi(i)},z_j} \int_{s}^{t} (H_{\phi(i)} (t) - H_{\phi(i)} (u)) (H_j (t) - H_j (u)) \alpha_{\phi(i)}
+(u)\alpha_j(u) du\\
 && + \rho_{z_{\phi(i)},x_j} \int_{s}^{t} (H_{\phi(i)} (t) - H_{\phi(i)} (u)) \alpha_{\phi(i)} (u) \sigma_{x_j}(u) du\\
 &&+ \rho_{s_i,z_0} \int_{s}^{t} (H_0 (t) - H_0 (u)) \alpha_0 (u) \sigma_{s_i}(u) du\\
 &&- \rho_{s_i,z_j} \int_{s}^{t} (H_j (t) - H_j (u)) \alpha_j (u) \sigma_{s_i}(u) du\\

@@ -84,8 +84,7 @@ Size CrossAssetModel::eqIndex(const std::string& name) const {
         while (eqbs(i)->eqName() != name)
             ++i;
         return i;
-    }
-    catch (...) {
+    } catch (...) {
         QL_FAIL("equity name " << name << " not present in cross asset model");
     }
 }
@@ -238,7 +237,8 @@ Size CrossAssetModel::aIdx(const AssetType t, const Size i, const Size offset) c
         // don't forget tmp_infl_args_count when implementing this.
         QL_FAIL("Inflation not yet supported - this is to be completed later as part of the inflation implementation");
     case EQ:
-        return (arguments(IR, i)*nIrLgm1f_) + (arguments(FX,i)*nFxBs_) + (tmp_infl_args_count*nInfl_) + (arguments(EQ,i)*i) + offset;
+        return (arguments(IR, i) * nIrLgm1f_) + (arguments(FX, i) * nFxBs_) + (tmp_infl_args_count * nInfl_) +
+               (arguments(EQ, i) * i) + offset;
     default:
         QL_FAIL("CR, COM not yet supported or type (" << t << ") unknown");
     }
@@ -310,7 +310,7 @@ void CrossAssetModel::setIntegrationPolicy(const boost::shared_ptr<Integrator> i
     }
     for (Size i = 0; i < nEqBs_; ++i) {
         allTimes.insert(allTimes.end(), p_[idx(EQ, i)]->parameterTimes(0).begin(),
-            p_[idx(EQ, i)]->parameterTimes(0).end());
+                        p_[idx(EQ, i)]->parameterTimes(0).end());
     }
 
     // use piecewise integrator avoiding the step points
@@ -361,7 +361,7 @@ void CrossAssetModel::initializeParametrizations() {
                                             << nIrLgm1f_ << " ir and " << nFxBs_ << " fx parametrizations");
 
     QL_REQUIRE(nIrLgm1f_ + nFxBs_ + nInfl_ + nEqBs_ == p_.size(),
-        "problem initializing CrossAssetModel parametrizations");
+               "problem initializing CrossAssetModel parametrizations");
 
     // check currencies
 
@@ -392,13 +392,9 @@ void CrossAssetModel::initializeParametrizations() {
         Currency eqCcy = eqbs(i)->currency();
         try {
             Size eqCcyIdx = ccyIndex(eqCcy);
-            QL_REQUIRE(eqCcyIdx < nIrLgm1f_, 
-                "Invalid currency for equity " << eqbs(i)->eqName());
-        }
-        catch (...) {
-            QL_FAIL("Invalid currency (" 
-                << eqCcy.code() << ") for equity " 
-                << eqbs(i)->eqName());
+            QL_REQUIRE(eqCcyIdx < nIrLgm1f_, "Invalid currency for equity " << eqbs(i)->eqName());
+        } catch (...) {
+            QL_FAIL("Invalid currency (" << eqCcy.code() << ") for equity " << eqbs(i)->eqName());
         }
     }
 }
@@ -443,8 +439,8 @@ void CrossAssetModel::checkCorrelationMatrix() const {
 
 void CrossAssetModel::initializeArguments() {
 
-    QL_REQUIRE(nInfl_ == 0, 
-        "Inflation not covered yet, when covered please remove this check and update this function (how many parameters per inflation index?)");
+    QL_REQUIRE(nInfl_ == 0, "Inflation not covered yet, when covered please remove this check and update this function "
+                            "(how many parameters per inflation index?)");
     arguments_.resize(2 * nIrLgm1f_ + nFxBs_ + nEqBs_);
     for (Size i = 0; i < nIrLgm1f_; ++i) {
         // volatility
@@ -457,7 +453,7 @@ void CrossAssetModel::initializeArguments() {
         arguments_[aIdx(FX, i, 0)] = fxbs(i)->parameter(0);
     }
     for (Size i = 0; i < nInfl_; ++i) {
-        //inflation
+        // inflation
         QL_FAIL("Inflation not supported yet");
     }
     for (Size i = 0; i < nEqBs_; ++i) {
@@ -477,12 +473,11 @@ void CrossAssetModel::finalizeArguments() {
 
 void CrossAssetModel::checkModelConsistency() const {
     QL_REQUIRE(nIrLgm1f_ > 0, "at least one IR component must be given");
-    QL_REQUIRE(nIrLgm1f_ + nFxBs_ + nInfl_ + nEqBs_ == p_.size(), 
-        "the parametrizations must be given in the following order: ir, "
-        "fx, inflation, equity (others not supported by this class), found "
-        << nIrLgm1f_ << " ir, " << nFxBs_ << " fx, " << nInfl_ << " inflation and "
-        << nEqBs_ << " equity parametrizations, but there are " << p_.size()
-        << " parametrizations given in total");
+    QL_REQUIRE(nIrLgm1f_ + nFxBs_ + nInfl_ + nEqBs_ == p_.size(),
+               "the parametrizations must be given in the following order: ir, "
+               "fx, inflation, equity (others not supported by this class), found "
+                   << nIrLgm1f_ << " ir, " << nFxBs_ << " fx, " << nInfl_ << " inflation and " << nEqBs_
+                   << " equity parametrizations, but there are " << p_.size() << " parametrizations given in total");
 }
 
 void CrossAssetModel::calibrateIrLgm1fVolatilitiesIterative(
@@ -508,30 +503,27 @@ void CrossAssetModel::calibrateIrLgm1fGlobal(const Size ccy,
 }
 
 void CrossAssetModel::calibrateBsVolatilitiesIterative(
-    const AssetType& assetClass, const Size idx, 
-    const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers, 
-    OptimizationMethod& method, const EndCriteria& endCriteria, 
-    const Constraint& constraint, const std::vector<Real>& weights) {
+    const AssetType& assetClass, const Size idx, const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers,
+    OptimizationMethod& method, const EndCriteria& endCriteria, const Constraint& constraint,
+    const std::vector<Real>& weights) {
     bool isFx = (assetClass == FX);
     bool isEq = (assetClass == EQ);
-    QL_REQUIRE(isFx || isEq, 
-        "Unsupported AssetType for BS calibration");
+    QL_REQUIRE(isFx || isEq, "Unsupported AssetType for BS calibration");
     for (Size i = 0; i < helpers.size(); ++i) {
         std::vector<boost::shared_ptr<CalibrationHelper> > h(1, helpers[i]);
-        calibrate(h, method, endCriteria, constraint, weights, MoveBsVolatility(assetClass,idx, i));
+        calibrate(h, method, endCriteria, constraint, weights, MoveBsVolatility(assetClass, idx, i));
     }
     update();
 }
 
 void CrossAssetModel::calibrateBsVolatilitiesGlobal(const AssetType& assetType, const Size aIdx,
-                                                      const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers,
-                                                      OptimizationMethod& method, const EndCriteria& endCriteria,
-                                                      const Constraint& constraint, const std::vector<Real>& weights) {
+                                                    const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers,
+                                                    OptimizationMethod& method, const EndCriteria& endCriteria,
+                                                    const Constraint& constraint, const std::vector<Real>& weights) {
     bool isFx = (assetType == FX);
     bool isEq = (assetType == EQ);
-    QL_REQUIRE(isFx || isEq,
-        "Unsupported AssetType for BS calibration");
-    calibrate(helpers, method, endCriteria, constraint, weights, MoveBsVolatilities(assetType,aIdx));
+    QL_REQUIRE(isFx || isEq, "Unsupported AssetType for BS calibration");
+    calibrate(helpers, method, endCriteria, constraint, weights, MoveBsVolatilities(assetType, aIdx));
     update();
 }
 

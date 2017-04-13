@@ -26,15 +26,12 @@ namespace QuantExt {
 using namespace CrossAssetAnalytics;
 
 AnalyticXAssetLgmEquityOptionEngine::AnalyticXAssetLgmEquityOptionEngine(
-    const boost::shared_ptr<CrossAssetModel>& model,
-    const Size eqName,
-    const Size EqCcy)
+    const boost::shared_ptr<CrossAssetModel>& model, const Size eqName, const Size EqCcy)
     : model_(model), eqIdx_(eqName), ccyIdx_(EqCcy) {}
 
-Real AnalyticXAssetLgmEquityOptionEngine::value(
-    const Time t0, const Time t, 
-    const boost::shared_ptr<StrikedTypePayoff> payoff,
-    const Real discount, const Real eqForward) const {
+Real AnalyticXAssetLgmEquityOptionEngine::value(const Time t0, const Time t,
+                                                const boost::shared_ptr<StrikedTypePayoff> payoff, const Real discount,
+                                                const Real eqForward) const {
 
     const Size& k = eqIdx_;
     const Size& i = ccyIdx_;
@@ -46,12 +43,12 @@ Real AnalyticXAssetLgmEquityOptionEngine::value(
     Real variance = 0;
     variance += (vs(k).eval(x, t) - vs(k).eval(x, t0));
 
-    variance += Hi_t*Hi_t*(zetaz(i).eval(x,t) - zetaz(i).eval(x,t0));
-    variance -= 2.0*Hi_t*integral(x, P(Hz(i),az(i),az(i)), t0, t);
-    variance += integral(x, P(Hz(i),Hz(i),az(i),az(i)), t0, t);
+    variance += Hi_t * Hi_t * (zetaz(i).eval(x, t) - zetaz(i).eval(x, t0));
+    variance -= 2.0 * Hi_t * integral(x, P(Hz(i), az(i), az(i)), t0, t);
+    variance += integral(x, P(Hz(i), Hz(i), az(i), az(i)), t0, t);
 
-    variance += 2.0*Hi_t*integral(x, P(rzs(i,k),ss(k),az(i)), t0, t);
-    variance -= 2.0*integral(x, P(Hz(i),rzs(i, k), ss(k), az(i)), t0, t);
+    variance += 2.0 * Hi_t * integral(x, P(rzs(i, k), ss(k), az(i)), t0, t);
+    variance -= 2.0 * integral(x, P(Hz(i), rzs(i, k), ss(k), az(i)), t0, t);
 
     Real stdev = sqrt(variance);
     BlackCalculator black(payoff, eqForward, stdev, discount);

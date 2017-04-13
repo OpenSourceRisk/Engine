@@ -38,16 +38,12 @@ namespace QuantExt {
 */
 class EqBsParametrization : public Parametrization {
 public:
-    /*! The currency refers to the equity currency, 
-        the equity and fx spots are as of today 
+    /*! The currency refers to the equity currency,
+        the equity and fx spots are as of today
         (i.e. the discounted spot) */
-    EqBsParametrization(
-        const Currency& eqCcy,
-        const std::string& eqName,
-        const Handle<Quote>& equitySpotToday,
-        const Handle<Quote>& fxSpotToday,
-        const Handle<YieldTermStructure>& equityIrCurveToday,
-        const Handle<YieldTermStructure>& equityDivYieldCurveToday);
+    EqBsParametrization(const Currency& eqCcy, const std::string& eqName, const Handle<Quote>& equitySpotToday,
+                        const Handle<Quote>& fxSpotToday, const Handle<YieldTermStructure>& equityIrCurveToday,
+                        const Handle<YieldTermStructure>& equityDivYieldCurveToday);
     /*! must satisfy variance(0) = 0.0, variance'(t) >= 0 */
     virtual Real variance(const Time t) const = 0;
     /*! is supposed to be positive */
@@ -79,7 +75,9 @@ inline const Handle<Quote> EqBsParametrization::fxSpotToday() const { return fxS
 
 inline const Handle<YieldTermStructure> EqBsParametrization::equityIrCurveToday() const { return eqRateCurveToday_; }
 
-inline const Handle<YieldTermStructure> EqBsParametrization::equityDivYieldCurveToday() const { return eqDivYieldCurveToday_; }
+inline const Handle<YieldTermStructure> EqBsParametrization::equityDivYieldCurveToday() const {
+    return eqDivYieldCurveToday_;
+}
 
 } // namespace QuantExt
 

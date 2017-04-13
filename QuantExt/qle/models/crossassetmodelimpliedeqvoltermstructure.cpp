@@ -33,7 +33,7 @@ CrossAssetModelImpliedEqVolTermStructure::CrossAssetModelImpliedEqVolTermStructu
       referenceDate_(purelyTimeBased ? Null<Date>() : model_->irlgm1f(0)->termStructure()->referenceDate()) {
 
     registerWith(model_);
-    //engine_->cache(false);
+    // engine_->cache(false);
     Real eqSpot = model_->eqbs(eqIndex_)->eqSpotToday()->value();
     QL_REQUIRE(eqSpot > 0, "EQ Spot for index " << eqIndex_ << " must be positive");
     state(0.0, std::log(eqSpot));
@@ -47,7 +47,7 @@ Real CrossAssetModelImpliedEqVolTermStructure::blackVarianceImpl(Time t, Real st
     Real eqSpot = std::exp(eq_);
     Real rateDisc = model_->discountBond(eqCcyIndex(), relativeTime_, relativeTime_ + t, eqIr_);
     Real divDisc = model_->eqbs(eqIndex_)->equityDivYieldCurveToday()->discount(t);
-    //Real forDisc = model_->discountBond(fxIndex_ + 1, relativeTime_, relativeTime_ + t, irFor_);
+    // Real forDisc = model_->discountBond(fxIndex_ + 1, relativeTime_, relativeTime_ + t, irFor_);
     Real atm = eqSpot * divDisc / rateDisc;
 
     if (tmpStrike == Null<Real>()) {
@@ -98,14 +98,12 @@ void CrossAssetModelImpliedEqVolTermStructure::state(const Real eqIr, const Real
     eq_ = logEq;
 }
 
-void CrossAssetModelImpliedEqVolTermStructure::move(const Date& d, const Real eqIr, 
-                                                    const Real logEq) {
+void CrossAssetModelImpliedEqVolTermStructure::move(const Date& d, const Real eqIr, const Real logEq) {
     state(eqIr, logEq);
     referenceDate(d);
 }
 
-void CrossAssetModelImpliedEqVolTermStructure::move(const Time t, const Real eqIr,
-                                                    const Real logEq) {
+void CrossAssetModelImpliedEqVolTermStructure::move(const Time t, const Real eqIr, const Real logEq) {
     state(eqIr, logEq);
     referenceTime(t);
 }

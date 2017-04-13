@@ -62,16 +62,13 @@ using namespace boost::accumulators;
 namespace {
 
 struct CrossAssetData {
-    CrossAssetData() 
-    : referenceDate(30, July, 2015), 
-    eurYts(boost::make_shared<FlatForward>(referenceDate, 0.02, Actual365Fixed())),
-    usdYts(boost::make_shared<FlatForward>(referenceDate, 0.05, Actual365Fixed())),
-    eqDivSp(boost::make_shared<FlatForward>(referenceDate, 0.01, Actual365Fixed())),
-    eqDivLh(boost::make_shared<FlatForward>(referenceDate, 0.0075, Actual365Fixed())),
-    usdEurSpotToday(boost::make_shared<SimpleQuote>(0.90)),
-    eurEurSpotToday(boost::make_shared<SimpleQuote>(1.0)),
-    spSpotToday(boost::make_shared<SimpleQuote>(2100)),
-    lhSpotToday(boost::make_shared<SimpleQuote>(12.50)) {
+    CrossAssetData()
+        : referenceDate(30, July, 2015), eurYts(boost::make_shared<FlatForward>(referenceDate, 0.02, Actual365Fixed())),
+          usdYts(boost::make_shared<FlatForward>(referenceDate, 0.05, Actual365Fixed())),
+          eqDivSp(boost::make_shared<FlatForward>(referenceDate, 0.01, Actual365Fixed())),
+          eqDivLh(boost::make_shared<FlatForward>(referenceDate, 0.0075, Actual365Fixed())),
+          usdEurSpotToday(boost::make_shared<SimpleQuote>(0.90)), eurEurSpotToday(boost::make_shared<SimpleQuote>(1.0)),
+          spSpotToday(boost::make_shared<SimpleQuote>(2100)), lhSpotToday(boost::make_shared<SimpleQuote>(12.50)) {
 
         SavedSettings backup;
 
@@ -105,18 +102,18 @@ struct CrossAssetData {
         volstepdatesFx.push_back(Date(13, September, 2017)); // shared with USD
         volstepdatesFx.push_back(Date(15, July, 2018));      //  shared with EUR and USD
 
-        volstepdatesEqSp.push_back(Date(13, April, 2016)); // shared with USD
+        volstepdatesEqSp.push_back(Date(13, April, 2016));   // shared with USD
         volstepdatesEqSp.push_back(Date(15, October, 2016)); // shared with FX
         volstepdatesEqSp.push_back(Date(15, March, 2017));
         volstepdatesEqSp.push_back(Date(13, October, 2017));
-        volstepdatesEqSp.push_back(Date(15, July, 2018));      //  shared with EUR and USD
+        volstepdatesEqSp.push_back(Date(15, July, 2018)); //  shared with EUR and USD
         volstepdatesEqSp.push_back(Date(13, October, 2018));
 
         volstepdatesEqLh.push_back(Date(13, June, 2016));
         volstepdatesEqLh.push_back(Date(15, September, 2016));
         volstepdatesEqLh.push_back(Date(15, April, 2017));
         volstepdatesEqLh.push_back(Date(13, October, 2017));
-        volstepdatesEqLh.push_back(Date(15, July, 2018));      //  shared with EUR and USD
+        volstepdatesEqLh.push_back(Date(15, July, 2018)); //  shared with EUR and USD
         volstepdatesEqLh.push_back(Date(13, December, 2018));
 
         std::vector<Real> eurVols, usdVols, fxVols, eqSpVols, eqLhVols;
@@ -161,24 +158,22 @@ struct CrossAssetData {
             eqLhTimes[i] = eurYts->timeFromReference(volstepdatesEqLh[i]);
         }
 
-        boost::shared_ptr<IrLgm1fParametrization> eurLgmParam = boost::make_shared<IrLgm1fPiecewiseConstantParametrization>(
-            EURCurrency(), eurYts, alphaTimesEur, alphaEur, kappaTimesEur, kappaEur);
+        boost::shared_ptr<IrLgm1fParametrization> eurLgmParam =
+            boost::make_shared<IrLgm1fPiecewiseConstantParametrization>(EURCurrency(), eurYts, alphaTimesEur, alphaEur,
+                                                                        kappaTimesEur, kappaEur);
 
-        boost::shared_ptr<IrLgm1fParametrization> usdLgmParam = boost::make_shared<IrLgm1fPiecewiseConstantParametrization>(
-            USDCurrency(), usdYts, alphaTimesUsd, alphaUsd, kappaTimesUsd, kappaUsd);
+        boost::shared_ptr<IrLgm1fParametrization> usdLgmParam =
+            boost::make_shared<IrLgm1fPiecewiseConstantParametrization>(USDCurrency(), usdYts, alphaTimesUsd, alphaUsd,
+                                                                        kappaTimesUsd, kappaUsd);
 
         boost::shared_ptr<FxBsParametrization> fxUsdEurBsParam =
             boost::make_shared<FxBsPiecewiseConstantParametrization>(USDCurrency(), usdEurSpotToday, fxTimes, fxSigmas);
 
-        boost::shared_ptr<EqBsParametrization> eqSpBsParam =
-            boost::make_shared<EqBsPiecewiseConstantParametrization>(
-                USDCurrency(), "SP", spSpotToday, usdEurSpotToday,
-                eqSpTimes, spSigmas, usdYts, eqDivSp);
+        boost::shared_ptr<EqBsParametrization> eqSpBsParam = boost::make_shared<EqBsPiecewiseConstantParametrization>(
+            USDCurrency(), "SP", spSpotToday, usdEurSpotToday, eqSpTimes, spSigmas, usdYts, eqDivSp);
 
-        boost::shared_ptr<EqBsParametrization> eqLhBsParam =
-            boost::make_shared<EqBsPiecewiseConstantParametrization>(
-                EURCurrency(), "LH", lhSpotToday, eurEurSpotToday,
-                eqLhTimes, lhSigmas, eurYts, eqDivLh);
+        boost::shared_ptr<EqBsParametrization> eqLhBsParam = boost::make_shared<EqBsPiecewiseConstantParametrization>(
+            EURCurrency(), "LH", lhSpotToday, eurEurSpotToday, eqLhTimes, lhSigmas, eurYts, eqDivLh);
 
         singleModels.resize(0);
         singleModels.push_back(eurLgmParam);
@@ -202,17 +197,17 @@ struct CrossAssetData {
         ccLgm->correlation(EQ, eqSpIdx, IR, usdIdx, -0.1);
         ccLgm->correlation(EQ, eqLhIdx, IR, eurIdx, -0.05);
         ccLgm->correlation(EQ, eqSpIdx, FX, eurUsdIdx, 0.1);
-}
+    }
 
-SavedSettings backup;
-Date referenceDate;
-Handle<YieldTermStructure> eurYts, usdYts;
-Handle<YieldTermStructure> eqDivSp, eqDivLh;
-Handle<Quote> usdEurSpotToday, eurEurSpotToday, spSpotToday, lhSpotToday;
-std::vector<boost::shared_ptr<Parametrization> > singleModels;
-boost::shared_ptr<CrossAssetModel> ccLgm;
-Size eurIdx, usdIdx, eurUsdIdx, eqSpIdx, eqLhIdx;
-std::vector<Date> volstepdatesEqSp, volstepdatesEqLh;
+    SavedSettings backup;
+    Date referenceDate;
+    Handle<YieldTermStructure> eurYts, usdYts;
+    Handle<YieldTermStructure> eqDivSp, eqDivLh;
+    Handle<Quote> usdEurSpotToday, eurEurSpotToday, spSpotToday, lhSpotToday;
+    std::vector<boost::shared_ptr<Parametrization> > singleModels;
+    boost::shared_ptr<CrossAssetModel> ccLgm;
+    Size eurIdx, usdIdx, eurUsdIdx, eqSpIdx, eqLhIdx;
+    std::vector<Date> volstepdatesEqSp, volstepdatesEqLh;
 };
 
 } // anonymous namespace
@@ -260,7 +255,7 @@ void EquityCrossAssetModelTest::testEqLgm5fPayouts() {
     // same for paths2 since shared time grid
     for (Size j = 0; j < n; ++j) {
         Sample<MultiPath> path = pg.next();
-        //Sample<MultiPath> path = pg2.next();
+        // Sample<MultiPath> path = pg2.next();
         Size l = path.value[0].length() - 1;
         Real eurusdfx = std::exp(path.value[2][l]);
         Real zeur = path.value[0][l];
@@ -277,14 +272,14 @@ void EquityCrossAssetModelTest::testEqLgm5fPayouts() {
         stat2(spFwd / ccnum);
 
         // 3 LH option exercise at T deflated with numeraire
-        Real lhCall = std::max(lhFwd,0.0);
-        Real lhPut = std::max(-1.0*lhFwd, 0.0);
+        Real lhCall = std::max(lhFwd, 0.0);
+        Real lhPut = std::max(-1.0 * lhFwd, 0.0);
         stat3a(lhCall / ccnum);
         stat3b(lhPut / ccnum);
 
         // 4 SP option exercise at T (converted to base) deflated with numeraire
         Real spCall = std::max(spFwd, 0.0);
-        Real spPut = std::max(-1.0*spFwd, 0.0);
+        Real spPut = std::max(-1.0 * spFwd, 0.0);
         stat4a(spCall / ccnum);
         stat4b(spPut / ccnum);
     }
@@ -301,16 +296,16 @@ void EquityCrossAssetModelTest::testEqLgm5fPayouts() {
                                           boost::make_shared<EuropeanExercise>(d.referenceDate + 5 * 365));
     boost::shared_ptr<VanillaOption> lhPut =
         boost::make_shared<VanillaOption>(boost::make_shared<PlainVanillaPayoff>(Option::Put, strikeLh),
-            boost::make_shared<EuropeanExercise>(d.referenceDate + 5 * 365));
+                                          boost::make_shared<EuropeanExercise>(d.referenceDate + 5 * 365));
     boost::shared_ptr<VanillaOption> spCall =
         boost::make_shared<VanillaOption>(boost::make_shared<PlainVanillaPayoff>(Option::Call, strikeSp),
-            boost::make_shared<EuropeanExercise>(d.referenceDate + 5 * 365));
+                                          boost::make_shared<EuropeanExercise>(d.referenceDate + 5 * 365));
     boost::shared_ptr<VanillaOption> spPut =
         boost::make_shared<VanillaOption>(boost::make_shared<PlainVanillaPayoff>(Option::Put, strikeSp),
-            boost::make_shared<EuropeanExercise>(d.referenceDate + 5 * 365));
+                                          boost::make_shared<EuropeanExercise>(d.referenceDate + 5 * 365));
 
     boost::shared_ptr<DiscountingEquityForwardEngine> lhFwdEngine =
-        boost::make_shared<DiscountingEquityForwardEngine>(d.eurYts,d.eqDivLh,d.lhSpotToday,d.eurYts);
+        boost::make_shared<DiscountingEquityForwardEngine>(d.eurYts, d.eqDivLh, d.lhSpotToday, d.eurYts);
     boost::shared_ptr<DiscountingEquityForwardEngine> spFwdEngine =
         boost::make_shared<DiscountingEquityForwardEngine>(d.usdYts, d.eqDivSp, d.spSpotToday, d.usdYts);
 
@@ -318,9 +313,11 @@ void EquityCrossAssetModelTest::testEqLgm5fPayouts() {
     spFwdTrade->setPricingEngine(spFwdEngine);
 
     boost::shared_ptr<AnalyticXAssetLgmEquityOptionEngine> spEqOptionEngine =
-        boost::make_shared<AnalyticXAssetLgmEquityOptionEngine>(d.ccLgm, d.eqSpIdx, d.ccLgm->ccyIndex(d.ccLgm->eqbs(d.eqSpIdx)->currency()));
+        boost::make_shared<AnalyticXAssetLgmEquityOptionEngine>(
+            d.ccLgm, d.eqSpIdx, d.ccLgm->ccyIndex(d.ccLgm->eqbs(d.eqSpIdx)->currency()));
     boost::shared_ptr<AnalyticXAssetLgmEquityOptionEngine> lhEqOptionEngine =
-        boost::make_shared<AnalyticXAssetLgmEquityOptionEngine>(d.ccLgm, d.eqLhIdx, d.ccLgm->ccyIndex(d.ccLgm->eqbs(d.eqLhIdx)->currency()));
+        boost::make_shared<AnalyticXAssetLgmEquityOptionEngine>(
+            d.ccLgm, d.eqLhIdx, d.ccLgm->ccyIndex(d.ccLgm->eqbs(d.eqLhIdx)->currency()));
 
     lhCall->setPricingEngine(lhEqOptionEngine);
     lhPut->setPricingEngine(lhEqOptionEngine);
@@ -351,12 +348,12 @@ void EquityCrossAssetModelTest::testEqLgm5fPayouts() {
 
     Real tolErrEst = 1.5; // allow absolute diffs to be within 1.5 standard errors
     // TODO : IS THIS STRICT ENOUGH?
-    BOOST_CHECK_LE(std::fabs(npv1-expected1),tolErrEst*error1);
-    BOOST_CHECK_LE(std::fabs(npv2 - expected2), tolErrEst*error2);
-    BOOST_CHECK_LE(std::fabs(npv3a - expected3a), tolErrEst*error3a);
-    BOOST_CHECK_LE(std::fabs(npv3b - expected3b), tolErrEst*error3b);
-    BOOST_CHECK_LE(std::fabs(npv4a - expected4a), tolErrEst*error4a);
-    BOOST_CHECK_LE(std::fabs(npv4b - expected4b), tolErrEst*error4b);
+    BOOST_CHECK_LE(std::fabs(npv1 - expected1), tolErrEst * error1);
+    BOOST_CHECK_LE(std::fabs(npv2 - expected2), tolErrEst * error2);
+    BOOST_CHECK_LE(std::fabs(npv3a - expected3a), tolErrEst * error3a);
+    BOOST_CHECK_LE(std::fabs(npv3b - expected3b), tolErrEst * error3b);
+    BOOST_CHECK_LE(std::fabs(npv4a - expected4a), tolErrEst * error4a);
+    BOOST_CHECK_LE(std::fabs(npv4b - expected4b), tolErrEst * error4b);
 
 } // testEqLgm5fPayouts
 
@@ -373,25 +370,23 @@ void EquityCrossAssetModelTest::testLgm5fEqCalibration() {
     for (Size i = 0; i < d.volstepdatesEqSp.size(); ++i) {
         Date tmp = i < d.volstepdatesEqSp.size() ? d.volstepdatesEqSp[i] : d.volstepdatesEqSp.back() + 365;
         basketSp.push_back(boost::make_shared<FxEqOptionHelper>(
-            tmp, Null<Real>(), d.spSpotToday, 
-            Handle<Quote>(boost::make_shared<SimpleQuote>(0.20)), 
-            d.usdYts, d.eqDivSp,
+            tmp, Null<Real>(), d.spSpotToday, Handle<Quote>(boost::make_shared<SimpleQuote>(0.20)), d.usdYts, d.eqDivSp,
             CalibrationHelper::RelativePriceError));
     }
     for (Size i = 0; i < d.volstepdatesEqLh.size(); ++i) {
         Date tmp = i < d.volstepdatesEqLh.size() ? d.volstepdatesEqLh[i] : d.volstepdatesEqLh.back() + 365;
         basketLh.push_back(boost::make_shared<FxEqOptionHelper>(
-            tmp, Null<Real>(), d.lhSpotToday,
-            Handle<Quote>(boost::make_shared<SimpleQuote>(0.20)),
-            d.eurYts, d.eqDivLh,
+            tmp, Null<Real>(), d.lhSpotToday, Handle<Quote>(boost::make_shared<SimpleQuote>(0.20)), d.eurYts, d.eqDivLh,
             CalibrationHelper::RelativePriceError));
     }
 
     // pricing engines
     boost::shared_ptr<AnalyticXAssetLgmEquityOptionEngine> spEqOptionEngine =
-        boost::make_shared<AnalyticXAssetLgmEquityOptionEngine>(d.ccLgm, d.eqSpIdx, d.ccLgm->ccyIndex(d.ccLgm->eqbs(d.eqSpIdx)->currency()));
+        boost::make_shared<AnalyticXAssetLgmEquityOptionEngine>(
+            d.ccLgm, d.eqSpIdx, d.ccLgm->ccyIndex(d.ccLgm->eqbs(d.eqSpIdx)->currency()));
     boost::shared_ptr<AnalyticXAssetLgmEquityOptionEngine> lhEqOptionEngine =
-        boost::make_shared<AnalyticXAssetLgmEquityOptionEngine>(d.ccLgm, d.eqLhIdx, d.ccLgm->ccyIndex(d.ccLgm->eqbs(d.eqLhIdx)->currency()));
+        boost::make_shared<AnalyticXAssetLgmEquityOptionEngine>(
+            d.ccLgm, d.eqLhIdx, d.ccLgm->ccyIndex(d.ccLgm->eqbs(d.eqLhIdx)->currency()));
 
     // assign engines to calibration instruments
     for (Size i = 0; i < basketSp.size(); ++i) {
@@ -424,8 +419,8 @@ void EquityCrossAssetModelTest::testLgm5fEqCalibration() {
         Real market = basketLh[i]->marketValue();
         if (std::abs((model - market) / market) > tol)
             BOOST_ERROR("calibration failed for instrument #"
-                << i << " in LH basket, model value is " << model << " market value is " << market
-                << " relative error " << std::abs((model - market) / market) << " tolerance " << tol);
+                        << i << " in LH basket, model value is " << model << " market value is " << market
+                        << " relative error " << std::abs((model - market) / market) << " tolerance " << tol);
     }
 }
 
@@ -441,10 +436,10 @@ void EquityCrossAssetModelTest::testLgm5fMoments() {
     boost::shared_ptr<StochasticProcess> p_exact = d.ccLgm->stateProcess(CrossAssetStateProcess::exact);
     boost::shared_ptr<StochasticProcess> p_euler = d.ccLgm->stateProcess(CrossAssetStateProcess::euler);
 
-    Real T = 10.0;                            // horizon at which we compare the moments
+    Real T = 10.0;                                  // horizon at which we compare the moments
     Size steps_euler = static_cast<Size>(T * 50.0); // number of simulation steps
     Size steps_exact = 1;
-    Size paths = 25000;                       // number of paths
+    Size paths = 25000; // number of paths
 
     Array e_an = p_exact->expectation(0.0, p_exact->initialValues(), T);
     Matrix v_an = p_exact->covariance(0.0, p_exact->initialValues(), T);
@@ -508,11 +503,9 @@ void EquityCrossAssetModelTest::testLgm5fMoments() {
         for (Size j = 0; j <= i; ++j) {
             if (i < 2) {
                 tol = tollNormal;
-            }
-            else if ((i >= 3) && (j >= 3)) {
+            } else if ((i >= 3) && (j >= 3)) {
                 tol = tolEq;
-            }
-            else {
+            } else {
                 if (j < 2) {
                     tol = tolMixed;
                 } else {
@@ -556,19 +549,17 @@ void EquityCrossAssetModelTest::testLgm5fMoments() {
             r1[i][j] = r1[j][i] = v_an_dt[i][j] / std::sqrt(v_an_dt[i][i] * v_an_dt[j][j]);
             r2[i][j] = r2[j][i] = v_an_eu_dt[i][j] / std::sqrt(v_an_eu_dt[i][i] * v_an_eu_dt[j][j]);
             BOOST_CHECK_MESSAGE(std::fabs(r1[i][j] - corr_input[i][j]) < tol_corr,
-                "failed to recover correlation matrix from "
-                "exact state process (i,j)=("
-                << i << "," << j << "), input correlation is " << corr_input[i][j] <<
-                ", output is " << r1[i][j]
-                << ", difference " << (corr_input[i][j] - r1[i][j]) <<
-                ", tolerance " << tol_corr);
-            BOOST_CHECK_MESSAGE(std::fabs(r2[i][j] - corr_input[i][j]) < tol_corr, 
-                "failed to recover correlation matrix from "
-                "Euler state process (i,j)=("
-                << i << "," << j << "), input correlation is " << corr_input[i][j] << 
-                ", output is " << r2[i][j]
-                << ", difference " << (corr_input[i][j] - r2[i][j]) << 
-                ", tolerance " << tol_corr);
+                                "failed to recover correlation matrix from "
+                                "exact state process (i,j)=("
+                                    << i << "," << j << "), input correlation is " << corr_input[i][j] << ", output is "
+                                    << r1[i][j] << ", difference " << (corr_input[i][j] - r1[i][j]) << ", tolerance "
+                                    << tol_corr);
+            BOOST_CHECK_MESSAGE(std::fabs(r2[i][j] - corr_input[i][j]) < tol_corr,
+                                "failed to recover correlation matrix from "
+                                "Euler state process (i,j)=("
+                                    << i << "," << j << "), input correlation is " << corr_input[i][j] << ", output is "
+                                    << r2[i][j] << ", difference " << (corr_input[i][j] - r2[i][j]) << ", tolerance "
+                                    << tol_corr);
         }
     }
     /*

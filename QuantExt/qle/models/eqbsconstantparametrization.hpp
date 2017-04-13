@@ -35,14 +35,10 @@ class EqBsConstantParametrization : public EqBsParametrization {
 public:
     /*! The currency refers to the equity currency, the
         spots are as of today (i.e. the discounted spot) */
-    EqBsConstantParametrization(
-        const Currency& currency,
-        const std::string& eqName,
-        const Handle<Quote>& eqSpotToday,
-        const Handle<Quote>& fxSpotToday, 
-        const Real sigma,
-        const Handle<YieldTermStructure>& eqIrCurveToday,
-        const Handle<YieldTermStructure>& eqDivYieldCurveToday);
+    EqBsConstantParametrization(const Currency& currency, const std::string& eqName, const Handle<Quote>& eqSpotToday,
+                                const Handle<Quote>& fxSpotToday, const Real sigma,
+                                const Handle<YieldTermStructure>& eqIrCurveToday,
+                                const Handle<YieldTermStructure>& eqDivYieldCurveToday);
     Real variance(const Time t) const;
     Real sigma(const Time t) const;
     const boost::shared_ptr<Parameter> parameter(const Size) const;

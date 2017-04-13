@@ -179,21 +179,21 @@ void CrossAssetModelData::fromXML(XMLNode* root) {
     XMLNode* eqNode = XMLUtils::getChildNode(modelNode, "EquityModels");
     if (eqNode) {
         for (XMLNode* child = XMLUtils::getChildNode(eqNode, "CrossAssetLGM"); child;
-            child = XMLUtils::getNextSibling(child, "CrossAssetLGM")) {
+             child = XMLUtils::getNextSibling(child, "CrossAssetLGM")) {
 
             boost::shared_ptr<EqBsData> config(new EqBsData());
             config->fromXML(child);
 
             for (Size i = 0; i < config->optionExpiries().size(); i++) {
-                LOG("Cross-Asset Equity calibration option " << config->optionExpiries()[i] << " " << config->optionStrikes()[i]);
+                LOG("Cross-Asset Equity calibration option " << config->optionExpiries()[i] << " "
+                                                             << config->optionStrikes()[i]);
             }
 
             eqDataMap[config->eqName()] = config;
 
             LOG("CrossAssetModelData: Equity config built with key " << config->eqName());
         }
-    }
-    else {
+    } else {
         LOG("No Equity Models section found");
     }
 
@@ -287,7 +287,7 @@ void CrossAssetModelData::buildFxConfigs(std::map<std::string, boost::shared_ptr
 }
 
 void CrossAssetModelData::buildEqConfigs(std::map<std::string, boost::shared_ptr<EqBsData>>& eqDataMap) {
-    // Append Eq configurations into the eqConfigs vector in the order of the equity 
+    // Append Eq configurations into the eqConfigs vector in the order of the equity
     // names in the equities) vector.
     // If there is an Eq configuration for any of the names missing,
     // then we will look up the configuration with key "default" and use this instead.

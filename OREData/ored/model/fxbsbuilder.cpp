@@ -78,7 +78,7 @@ FxBsBuilder::FxBsBuilder(const boost::shared_ptr<ore::data::Market>& market, con
 }
 
 void FxBsBuilder::update() {
-    ;// nothing to do here
+    ; // nothing to do here
 }
 
 void FxBsBuilder::buildOptionBasket() {

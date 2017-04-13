@@ -217,7 +217,7 @@ void ScenarioSimMarketTest::testScenarioSimMarket() {
     BOOST_TEST_MESSAGE("Testing OREAnalytics ScenarioSimMarket...");
 
     SavedSettings backup;
-    
+
     Date tmp = Settings::instance().evaluationDate(); // archive original value
     Date today(20, Jan, 2015);
     Settings::instance().evaluationDate() = today;
@@ -241,7 +241,6 @@ void ScenarioSimMarketTest::testScenarioSimMarket() {
     testFxVolCurve(initMarket, simMarket, parameters);
     testDefaultCurve(initMarket, simMarket, parameters);
     testToXML(parameters);
-
 }
 
 test_suite* ScenarioSimMarketTest::suite() {

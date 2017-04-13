@@ -100,8 +100,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     }
 
     // equity vols
-    if (simMarketConfig_->eqVolNames().size() > 0 &&
-        simMarketConfig_->simulateEQVols()) {
+    if (simMarketConfig_->eqVolNames().size() > 0 && simMarketConfig_->simulateEQVols()) {
         LOG("CrossAssetModel is simulating EQ vols");
         for (Size k = 0; k < simMarketConfig_->eqVolNames().size(); k++) {
             // Calculating the index is messy
@@ -210,7 +209,7 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
 
         // Equity spots
         for (Size k = 0; k < n_eq; k++) {
-            Real eqSpot = std::exp(sample.value[model_->pIdx(EQ, k)][i + 1]); 
+            Real eqSpot = std::exp(sample.value[model_->pIdx(EQ, k)][i + 1]);
             scenarios[i]->add(eqKeys_[k], eqSpot);
         }
 
@@ -223,7 +222,7 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
                 Size eqIndex = eqVols_[k]->equityIndex();
                 Size eqCcyIdx = eqVols_[k]->eqCcyIndex();
                 Real z_eqIr = sample.value[eqCcyIdx][i + 1];
-                Real logEq = sample.value[eqIndex][i + 1]; 
+                Real logEq = sample.value[eqIndex][i + 1];
                 eqVols_[k]->move(dates_[i], z_eqIr, logEq);
 
                 for (Size j = 0; j < expiries.size(); j++) {

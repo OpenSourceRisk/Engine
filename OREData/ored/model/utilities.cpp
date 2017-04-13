@@ -123,8 +123,8 @@ Real logCalibrationErrors(const std::vector<boost::shared_ptr<CalibrationHelper>
 }
 
 Real logCalibrationErrors(const std::vector<boost::shared_ptr<CalibrationHelper>>& basket,
-    const boost::shared_ptr<EqBsParametrization>& parametrization,
-    const boost::shared_ptr<IrLgm1fParametrization>& domesticLgm) {
+                          const boost::shared_ptr<EqBsParametrization>& parametrization,
+                          const boost::shared_ptr<IrLgm1fParametrization>& domesticLgm) {
     LOG("# modelVol marketVol (diff) modelValue marketValue (diff) eqbsSigma");
     Real rmse = 0;
     Real t = 0.0, modelSigma = 0.0;
@@ -140,21 +140,19 @@ Real logCalibrationErrors(const std::vector<boost::shared_ptr<CalibrationHelper>
         }
         try {
             marketVol = basket[j]->impliedVolatility(marketValue, 1e-4, 1000, 5e-10, 0.5);
-        }
-        catch (...) {
+        } catch (...) {
             LOG("error implying market vol for instrument " << j);
         }
         try {
             modelVol = basket[j]->impliedVolatility(modelValue, 1e-4, 1000, 5e-10, 0.5);
             volDiff = modelVol - marketVol;
-        }
-        catch (...) {
+        } catch (...) {
             LOG("error implying model vol for instrument " << j);
         }
         rmse += volDiff * volDiff;
         LOG(std::setw(2) << j << "  " << std::setprecision(6) << modelVol << " " << marketVol << " (" << std::setw(8)
-            << volDiff << ")  " << modelValue << " " << marketValue << " (" << std::setw(8) << valueDiff
-            << ")  " << modelSigma);
+                         << volDiff << ")  " << modelValue << " " << marketValue << " (" << std::setw(8) << valueDiff
+                         << ")  " << modelSigma);
     }
     if (parametrization != nullptr) {
         t += 2 * 1E-4;

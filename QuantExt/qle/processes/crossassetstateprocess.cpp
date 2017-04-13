@@ -103,25 +103,24 @@ Disposable<Array> CrossAssetStateProcess::drift(Time t, const Array& x) const {
             Size i = model_->ccyIndex(model_->eqbs(k)->currency());
             // ir params (for equity currency)
             Real eps_ccy = (i == 0) ? 0.0 : 1.0;
-            //Real Hi = model_->irlgm1f(i)->H(t);
-            //Real alphai = model_->irlgm1f(i)->alpha(t);
+            // Real Hi = model_->irlgm1f(i)->H(t);
+            // Real alphai = model_->irlgm1f(i)->alpha(t);
             // eq vol
             Real sigmask = model_->eqbs(k)->sigma(t);
             // fx vol (eq ccy / base ccy)
-            Real sigmaxi = (i == 0) ? 0.0 :
-                model_->fxbs(i - 1)->sigma(t);
+            Real sigmaxi = (i == 0) ? 0.0 : model_->fxbs(i - 1)->sigma(t);
             // ir-eq corr
-            //Real rhozsik = model_->correlation(EQ, k, IR, i); // eq cur
+            // Real rhozsik = model_->correlation(EQ, k, IR, i); // eq cur
             Real rhozs0k = model_->correlation(EQ, k, IR, 0); // base cur
             // fx-eq corr
             Real rhoxsik = (i == 0) ? 0.0 : // no fx process for base-ccy
-                model_->correlation(FX, i-1, EQ, k);
+                               model_->correlation(FX, i - 1, EQ, k);
             // ir instantaneous forward rate (from curve used for eq forward projection)
             Real fr_i = model_->eqbs(k)->equityIrCurveToday()->forwardRate(t, t, Continuous);
             // div yield instantaneous forward rate
             Real fq_k = model_->eqbs(k)->equityDivYieldCurveToday()->forwardRate(t, t, Continuous);
-            res[model_->pIdx(EQ, k, 0)] = fr_i - fq_k + (rhozs0k*H0*alpha0*sigmask) -
-                (eps_ccy*rhoxsik*sigmaxi*sigmask) - (0.5*sigmask*sigmask);
+            res[model_->pIdx(EQ, k, 0)] = fr_i - fq_k + (rhozs0k * H0 * alpha0 * sigmask) -
+                                          (eps_ccy * rhoxsik * sigmaxi * sigmask) - (0.5 * sigmask * sigmask);
         }
         /* the inflation drifts (the cache-able parts) */
         for (Size i = 0; i < n_infl; ++i) {
@@ -148,8 +147,7 @@ Disposable<Array> CrossAssetStateProcess::drift(Time t, const Array& x) const {
         Real Hi = model_->irlgm1f(i)->H(t);
         Real Hprimei = model_->irlgm1f(i)->Hprime(t);
         Real zetai = model_->irlgm1f(i)->zeta(t);
-        res[model_->pIdx(EQ, k, 0)] += 
-            (x[model_->pIdx(IR, i, 0)] * Hprimei) + (zetai*Hprimei*Hi);
+        res[model_->pIdx(EQ, k, 0)] += (x[model_->pIdx(IR, i, 0)] * Hprimei) + (zetai * Hprimei * Hi);
     }
     for (Size i = 0; i < n_infl; ++i) {
         // inflation drifts (path-dependent parts)
@@ -337,8 +335,8 @@ Disposable<Array> CrossAssetStateProcess::ExactDiscretization::driftImpl2(const 
     }
     for (Size k = 0; k < n_eq; ++k) {
         Size eqCcyIdx = model_->ccyIndex(model_->eqbs(k)->currency());
-        res[model_->pIdx(EQ, k, 0)] += eq_expectation_2(model_, k, t0, x0[model_->pIdx(EQ, k, 0)],
-            x0[model_->pIdx(IR, eqCcyIdx, 0)], dt);
+        res[model_->pIdx(EQ, k, 0)] +=
+            eq_expectation_2(model_, k, t0, x0[model_->pIdx(EQ, k, 0)], x0[model_->pIdx(IR, eqCcyIdx, 0)], dt);
     }
     // TODO : inflation
     for (Size l = 0; l < n_infl; ++l) {

@@ -34,13 +34,11 @@ bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& 
         extrapolate_ != rhs.extrapolate_ || swapVolTerms_ != rhs.swapVolTerms_ || swapVolCcys_ != rhs.swapVolCcys_ ||
         swapVolExpiries_ != rhs.swapVolExpiries_ || swapVolDecayMode_ != rhs.swapVolDecayMode_ ||
         capFloorVolCcys_ != rhs.capFloorVolCcys_ || capFloorVolDecayMode_ != rhs.capFloorVolDecayMode_ ||
-        defaultNames_ != rhs.defaultNames_ || defaultTenors_ != rhs.defaultTenors_ ||
-        eqNames_ != rhs.eqNames_ || eqTenors_ != rhs.eqTenors_ ||
-        fxVolSimulate_ != rhs.fxVolSimulate_ || fxVolExpiries_ != rhs.fxVolExpiries_ ||
-        fxVolDecayMode_ != rhs.fxVolDecayMode_ || ccyPairs_ != rhs.ccyPairs_ ||
-        eqVolSimulate_ != rhs.eqVolSimulate_ || eqVolExpiries_ != rhs.eqVolExpiries_ ||
-        eqVolDecayMode_ != rhs.eqVolDecayMode_ || eqVolNames_ != rhs.eqVolNames_ ||
-        additionalScenarioDataIndices_ != rhs.additionalScenarioDataIndices_ ||
+        defaultNames_ != rhs.defaultNames_ || defaultTenors_ != rhs.defaultTenors_ || eqNames_ != rhs.eqNames_ ||
+        eqTenors_ != rhs.eqTenors_ || fxVolSimulate_ != rhs.fxVolSimulate_ || fxVolExpiries_ != rhs.fxVolExpiries_ ||
+        fxVolDecayMode_ != rhs.fxVolDecayMode_ || ccyPairs_ != rhs.ccyPairs_ || eqVolSimulate_ != rhs.eqVolSimulate_ ||
+        eqVolExpiries_ != rhs.eqVolExpiries_ || eqVolDecayMode_ != rhs.eqVolDecayMode_ ||
+        eqVolNames_ != rhs.eqVolNames_ || additionalScenarioDataIndices_ != rhs.additionalScenarioDataIndices_ ||
         additionalScenarioDataCcys_ != rhs.additionalScenarioDataCcys_) {
         return false;
     } else {
@@ -98,8 +96,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     if (nodeChild) {
         eqNames_ = XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true);
         eqTenors_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Tenors", true);
-    }
-    else {
+    } else {
         eqNames_.clear();
         eqTenors_.clear();
     }
@@ -116,8 +113,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         eqVolExpiries_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Expiries", true);
         eqVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
         eqVolNames_ = XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true);
-    }
-    else {
+    } else {
         eqVolSimulate_ = false;
         eqVolExpiries_.clear();
         eqVolNames_.clear();

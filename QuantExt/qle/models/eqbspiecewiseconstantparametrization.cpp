@@ -21,29 +21,20 @@
 namespace QuantExt {
 
 EqBsPiecewiseConstantParametrization::EqBsPiecewiseConstantParametrization(
-    const Currency& currency,
-    const std::string& eqName,
-    const Handle<Quote>& eqSpotToday,
-    const Handle<Quote>& fxSpotToday,
-    const Array& times,
-    const Array& sigma,
-    const Handle<YieldTermStructure>& eqIrCurveToday,
-    const Handle<YieldTermStructure>& eqDivYieldCurveToday)
-    : EqBsParametrization(currency, eqName, eqSpotToday, 
-        fxSpotToday,eqIrCurveToday,eqDivYieldCurveToday), 
+    const Currency& currency, const std::string& eqName, const Handle<Quote>& eqSpotToday,
+    const Handle<Quote>& fxSpotToday, const Array& times, const Array& sigma,
+    const Handle<YieldTermStructure>& eqIrCurveToday, const Handle<YieldTermStructure>& eqDivYieldCurveToday)
+    : EqBsParametrization(currency, eqName, eqSpotToday, fxSpotToday, eqIrCurveToday, eqDivYieldCurveToday),
       PiecewiseConstantHelper1(times) {
     initialize(sigma);
 }
 
 EqBsPiecewiseConstantParametrization::EqBsPiecewiseConstantParametrization(
-    const Currency& currency, const std::string& eqName,
-    const Handle<Quote>& eqSpotToday, const Handle<Quote>& fxSpotToday,
-    const std::vector<Date>& dates, const Array& sigma,
-    const Handle<YieldTermStructure>& domesticTermStructure,
-    const Handle<YieldTermStructure>& eqIrCurveToday,
+    const Currency& currency, const std::string& eqName, const Handle<Quote>& eqSpotToday,
+    const Handle<Quote>& fxSpotToday, const std::vector<Date>& dates, const Array& sigma,
+    const Handle<YieldTermStructure>& domesticTermStructure, const Handle<YieldTermStructure>& eqIrCurveToday,
     const Handle<YieldTermStructure>& eqDivYieldCurveToday)
-    : EqBsParametrization(currency, eqName, eqSpotToday,
-        fxSpotToday, eqIrCurveToday, eqDivYieldCurveToday),
+    : EqBsParametrization(currency, eqName, eqSpotToday, fxSpotToday, eqIrCurveToday, eqDivYieldCurveToday),
       PiecewiseConstantHelper1(dates, domesticTermStructure) {
     initialize(sigma);
 }

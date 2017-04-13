@@ -53,7 +53,7 @@ CrossAssetModelBuilder::CrossAssetModelBuilder(const boost::shared_ptr<ore::data
                                                const std::string& configurationEqCalibration,
                                                const std::string& configurationFinalModel, const DayCounter& dayCounter)
     : market_(market), configurationLgmCalibration_(configurationLgmCalibration),
-      configurationFxCalibration_(configurationFxCalibration), configurationEqCalibration_(configurationEqCalibration), 
+      configurationFxCalibration_(configurationFxCalibration), configurationEqCalibration_(configurationEqCalibration),
       configurationFinalModel_(configurationFinalModel), dayCounter_(dayCounter),
       optimizationMethod_(boost::shared_ptr<OptimizationMethod>(new LevenbergMarquardt(1E-8, 1E-8, 1E-8))),
       endCriteria_(EndCriteria(1000, 500, 1E-8, 1E-8, 1E-8)) {
@@ -64,10 +64,8 @@ boost::shared_ptr<QuantExt::CrossAssetModel>
 CrossAssetModelBuilder::build(const boost::shared_ptr<CrossAssetModelData>& config) {
 
     LOG("Start building CrossAssetModel, configurations: LgmCalibration "
-        << configurationLgmCalibration_ 
-        << ", FxCalibration " << configurationFxCalibration_ 
-        << ", EqCalibration " << configurationEqCalibration_
-        << ", FinalModel " << configurationFinalModel_);
+        << configurationLgmCalibration_ << ", FxCalibration " << configurationFxCalibration_ << ", EqCalibration "
+        << configurationEqCalibration_ << ", FinalModel " << configurationFinalModel_);
 
     QL_REQUIRE(config->irConfigs().size() > 0, "missing IR configurations");
     QL_REQUIRE(config->irConfigs().size() == config->fxConfigs().size() + 1,
@@ -145,9 +143,8 @@ CrossAssetModelBuilder::build(const boost::shared_ptr<CrossAssetModelData>& conf
         boost::shared_ptr<EqBsData> eq = config->eqConfigs()[i];
         string eqName = eq->eqName();
         QuantLib::Currency eqCcy = ore::data::parseCurrency(eq->currency());
-        QL_REQUIRE(
-            std::find(currencies.begin(), currencies.end(), eqCcy.code()) != currencies.end(), 
-            "Currency (" << eqCcy << ") for equity " << eqName << " not covered by CrossAssetModelData");
+        QL_REQUIRE(std::find(currencies.begin(), currencies.end(), eqCcy.code()) != currencies.end(),
+                   "Currency (" << eqCcy << ") for equity " << eqName << " not covered by CrossAssetModelData");
         boost::shared_ptr<EqBsBuilder> builder =
             boost::make_shared<EqBsBuilder>(market_, eq, domesticCcy, configurationEqCalibration_);
         boost::shared_ptr<QuantExt::EqBsParametrization> parametrization = builder->parametrization();
@@ -235,13 +232,11 @@ CrossAssetModelBuilder::build(const boost::shared_ptr<CrossAssetModelData>& conf
             fxOptionBaskets_[i][j]->setPricingEngine(engine);
 
         if (fx->calibrationType() == CalibrationType::Bootstrap && fx->sigmaParamType() == ParamType::Piecewise)
-            model->calibrateBsVolatilitiesIterative(
-                CrossAssetModelTypes::FX, i, fxOptionBaskets_[i], 
-                *optimizationMethod_, endCriteria_);
+            model->calibrateBsVolatilitiesIterative(CrossAssetModelTypes::FX, i, fxOptionBaskets_[i],
+                                                    *optimizationMethod_, endCriteria_);
         else
-            model->calibrateBsVolatilitiesGlobal(
-                CrossAssetModelTypes::FX, i, 
-                fxOptionBaskets_[i], *optimizationMethod_, endCriteria_);
+            model->calibrateBsVolatilitiesGlobal(CrossAssetModelTypes::FX, i, fxOptionBaskets_[i], *optimizationMethod_,
+                                                 endCriteria_);
 
         LOG("FX " << fx->foreignCcy() << " calibration errors:");
         fxOptionCalibrationErrors_[i] =
@@ -282,23 +277,20 @@ CrossAssetModelBuilder::build(const boost::shared_ptr<CrossAssetModelData>& conf
         for (Size j = 0; j < eqOptionBaskets_[i].size(); j++)
             eqOptionBaskets_[i][j]->setPricingEngine(engine);
 
-
         if (eq->calibrationType() == CalibrationType::Bootstrap && eq->sigmaParamType() == ParamType::Piecewise)
-            model->calibrateBsVolatilitiesIterative(
-                CrossAssetModelTypes::EQ, i, eqOptionBaskets_[i],
-                *optimizationMethod_, endCriteria_);
+            model->calibrateBsVolatilitiesIterative(CrossAssetModelTypes::EQ, i, eqOptionBaskets_[i],
+                                                    *optimizationMethod_, endCriteria_);
         else
-            model->calibrateBsVolatilitiesGlobal(
-                CrossAssetModelTypes::EQ, i, eqOptionBaskets_[i], 
-                *optimizationMethod_, endCriteria_);
+            model->calibrateBsVolatilitiesGlobal(CrossAssetModelTypes::EQ, i, eqOptionBaskets_[i], *optimizationMethod_,
+                                                 endCriteria_);
 
         LOG("EQ " << eq->eqName() << " calibration errors:");
         eqOptionCalibrationErrors_[i] =
             logCalibrationErrors(eqOptionBaskets_[i], eqParametrizations[i], irParametrizations[0]);
         if (eq->calibrationType() == CalibrationType::Bootstrap) {
             QL_REQUIRE(fabs(eqOptionCalibrationErrors_[i]) < config->bootstrapTolerance(),
-                "calibration error " << eqOptionCalibrationErrors_[i] << " exceeds tolerance "
-                << config->bootstrapTolerance());
+                       "calibration error " << eqOptionCalibrationErrors_[i] << " exceeds tolerance "
+                                            << config->bootstrapTolerance());
         }
     }
 
