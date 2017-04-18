@@ -216,34 +216,36 @@ boost::shared_ptr<ZeroInflationIndex> parseZeroInflationIndex(const string& s, b
     }
 }
 boost::shared_ptr<Index> parseIndex(const string& s) {
+    boost::shared_ptr<QuantLib::Index> ret_idx;
     try {
-        return parseIborIndex(s);
-    } catch (...) {
+        ret_idx = parseIborIndex(s);
     }
-    try {
-        return parseSwapIndex(s);
-    } catch (...) {
+    catch (...) {
     }
-    try {
-        return parseZeroInflationIndex(s);
-    } catch (...) {
-    }
-    QL_FAIL("parseIndex \"" << s << "\" not recognized");
-}
-/*boost::shared_ptr<Index> parseIndex(const string& s, const Handle<YieldTermStructure>& h) {
-    try {
-        // TODO: Added non Ibor checks first (FX, Inflation, etc)
-        if (s.size() > 2 && s.substr(0, 2) == "FX") {
-            return parseFxIndex(s);
-        } else if (s.size() > 2 && s.substr(0, 9) == "Inflation") {
-            return parseZeroInflationIndex(s);
-        } else {
-            return parseIborIndex(s, h);
+    if (!ret_idx) {
+        try {
+            ret_idx = parseSwapIndex(s);
         }
-    } catch (...) {
-        QL_FAIL("parseIndex \"" << s << "\" not recognized");
+        catch (...) {
+        }
     }
-}*/
-    
+    if (!ret_idx) {
+        try {
+            ret_idx = parseZeroInflationIndex(s);
+        }
+        catch (...) {
+        }
+    }
+    if (!ret_idx) {
+        try {
+            ret_idx = parseFxIndex(s);
+        }
+        catch (...) {
+        }
+    }
+    QL_REQUIRE(ret_idx, "parseIndex \"" << s << "\" not recognized");
+    return ret_idx;
+}
+
 }
 }
