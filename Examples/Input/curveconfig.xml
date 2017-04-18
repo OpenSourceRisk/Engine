@@ -261,6 +261,19 @@
       </Quotes>
       <Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
     </DefaultCurve>
+    <DefaultCurve>
+      <CurveId>CPTY_C_SR_EUR</CurveId>
+      <CurveDescription>CPTY_C SR HR EUR</CurveDescription>
+      <Currency>EUR</Currency>
+      <Type>HazardRate</Type>
+      <DiscountCurve/>
+      <DayCounter>A360</DayCounter>
+      <RecoveryRate>RECOVERY_RATE/RATE/CPTY_C/SR/EUR</RecoveryRate>
+      <Quotes>
+        <Quote>HAZARD_RATE/RATE/CPTY_C/SR/EUR/1Y</Quote>
+      </Quotes>
+      <Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
+    </DefaultCurve>
   </DefaultCurves>
   <YieldCurves>
     <YieldCurve>
@@ -2088,5 +2101,65 @@
       </InflationCapFloorPriceSurface>
       
   </InflationCapFloorPriceSurfaces>
+
+  <EquityCurves>
+        <EquityCurve>
+            <CurveId>SP5</CurveId>
+            <CurveDescription>SP 500 equity price projection curve</CurveDescription>
+            <Currency>USD</Currency>
+            <Type>ForwardPrice</Type> <!-- {DividendYield, ForwardPrice} -->
+            <SpotQuote>EQUITY/PRICE/SP5/USD</SpotQuote> <!--  the spot quote from the market data file -->
+            <Quotes>
+                <Quote>EQUITY_FWD/PRICE/SP5/USD/2016-06-16</Quote>
+                <Quote>EQUITY_FWD/PRICE/SP5/USD/6M</Quote>
+                <Quote>EQUITY_FWD/PRICE/SP5/USD/2017-06-16</Quote>
+                <Quote>EQUITY_FWD/PRICE/SP5/USD/2Y</Quote>
+            </Quotes>
+            <DayCounter>A365</DayCounter>
+        </EquityCurve>
+        <EquityCurve>
+            <CurveId>Lufthansa</CurveId>
+            <CurveDescription>Lufthansa equity price projection curve</CurveDescription>
+            <Currency>EUR</Currency>
+            <Type>DividendYield</Type> <!-- {DividendYield, ForwardPrice} -->
+            <SpotQuote>EQUITY/PRICE/Lufthansa/EUR</SpotQuote> <!--  the spot quote from the market data file -->
+            <Quotes>
+                <Quote>EQUITY_DIVIDEND/RATE/Lufthansa/EUR/3M</Quote>
+                <Quote>EQUITY_DIVIDEND/RATE/Lufthansa/EUR/20160915</Quote>
+                <Quote>EQUITY_DIVIDEND/RATE/Lufthansa/EUR/1Y</Quote>
+                <Quote>EQUITY_DIVIDEND/RATE/Lufthansa/EUR/20170915</Quote>
+            </Quotes>
+            <DayCounter>A365</DayCounter>
+        </EquityCurve> 
+  </EquityCurves>
+  <EquityVolatilities>
+        <EquityVolatility>
+            <CurveId>SP5</CurveId>
+            <CurveDescription>Lognormal option implied vols for SP 500</CurveDescription>
+            <Currency>USD</Currency>
+            <Dimension>ATM</Dimension>
+            <Expiries>
+              6M
+            </Expiries>
+        </EquityVolatility>
+        <EquityVolatility>
+            <CurveId>Lufthansa</CurveId>
+            <CurveDescription/>
+            <Currency>EUR</Currency>
+            <Dimension>ATM</Dimension>
+            <Expiries>
+              2016-06-15
+            </Expiries>
+        </EquityVolatility>
+  </EquityVolatilities>
+  <SecuritySpreads>
+    <SecuritySpread>
+      <CurveId>SECURITY_1</CurveId>
+      <CurveDescription>Security Spread</CurveDescription>
+      <Quotes>
+        <Quote>BOND/YIELD_SPREAD/SECURITY_1</Quote>
+      </Quotes>
+    </SecuritySpread>
+  </SecuritySpreads>
 </CurveConfiguration>
 

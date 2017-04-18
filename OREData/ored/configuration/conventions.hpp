@@ -59,7 +59,8 @@ public:
         CrossCcyBasis,
         CDS,
         SwapIndex,
-        InflationSwap
+        InflationSwap,
+        SecuritySpread
     };
 
     //! Default destructor
@@ -787,6 +788,75 @@ public:
 
 private:
     map<string, boost::shared_ptr<Convention>> data_;
+};
+
+//! Container for storing Bond Spread Rate conventions
+/*!
+\ingroup marketdata
+*/
+class SecuritySpreadConvention : public Convention {
+public:
+    //! \name Constructors
+    //@{
+    //! Default constructor
+    SecuritySpreadConvention() {}
+    SecuritySpreadConvention(const string& id, const string& dayCounter, const string& compounding,
+                             const string& compoundingFrequency);
+    SecuritySpreadConvention(const string& id, const string& dayCounter, const string& tenorCalendar,
+                             const string& compounding = "Continuous", const string& compoundingFrequency = "Annual",
+                             const string& spotLag = "", const string& spotCalendar = "",
+                             const string& rollConvention = "", const string& eom = "");
+    //@}
+
+    //! \name Inspectors
+    //@{
+    //! Zero rate day counter
+    const DayCounter& dayCounter() const { return dayCounter_; }
+    //! Return the calendar used for converting tenor points into dates
+    const Calendar& tenorCalendar() const { return tenorCalendar_; }
+    //! Zero rate compounding
+    Compounding compounding() const { return compounding_; }
+    //! Zero rate compounding frequency
+    Frequency compoundingFrequency() const { return compoundingFrequency_; }
+    //! Zero rate spot lag
+    Natural spotLag() const { return spotLag_; }
+    //! Calendar used for spot date adjustment
+    const Calendar& spotCalendar() const { return spotCalendar_; }
+    //! Business day convention used in converting tenor points into dates
+    BusinessDayConvention rollConvention() const { return rollConvention_; }
+    //! End of month adjustment
+    bool eom() { return eom_; }
+    //! Flag to indicate whether the Zero Rate convention is based on a tenor input
+    bool tenorBased() { return tenorBased_; }
+    //@}
+
+    //! \name Serialisation
+    //@{
+    virtual void fromXML(XMLNode* node);
+    virtual XMLNode* toXML(XMLDocument& doc);
+    virtual void build();
+    //@}
+
+private:
+    DayCounter dayCounter_;
+    Calendar tenorCalendar_;
+    Compounding compounding_;
+    Frequency compoundingFrequency_;
+    Natural spotLag_;
+    Calendar spotCalendar_;
+    BusinessDayConvention rollConvention_;
+    bool eom_;
+    bool tenorBased_;
+
+    // Strings to store the inputs
+    string strDayCounter_;
+    string strTenorCalendar_;
+    string strCompounding_;
+    string strCompoundingFrequency_;
+    string strSpotLag_;
+    string strSpotCalendar_;
+    string strRollConvention_;
+    string strEom_;
 };
 }
 }

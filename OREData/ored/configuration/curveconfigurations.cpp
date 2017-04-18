@@ -58,6 +58,7 @@ const boost::shared_ptr<DefaultCurveConfig>& CurveConfigurations::defaultCurveCo
     return it->second;
 }
 
+
 const boost::shared_ptr<InflationCurveConfig>& CurveConfigurations::inflationCurveConfig(const string& curveID) const {
     auto it = inflationCurveConfigs_.find(curveID);
     QL_REQUIRE(it != inflationCurveConfigs_.end(), "No curve id for " << curveID);
@@ -69,7 +70,20 @@ const boost::shared_ptr<InflationCapFloorPriceSurfaceConfig>& CurveConfiguration
     QL_REQUIRE(it != inflationCapFloorPriceSurfaceConfigs_.end(), "No curve id for " << curveID);
     return it->second;
 }
-    
+
+const boost::shared_ptr<EquityCurveConfig>& CurveConfigurations::equityCurveConfig(const string& curveID) const {
+    auto it = equityCurveConfigs_.find(curveID);
+    QL_REQUIRE(it != equityCurveConfigs_.end(), "No curve id for " << curveID);
+    return it->second;
+}
+
+const boost::shared_ptr<EquityVolatilityCurveConfig>&
+CurveConfigurations::equityVolCurveConfig(const string& curveID) const {
+    auto it = equityVolCurveConfigs_.find(curveID);
+    QL_REQUIRE(it != equityVolCurveConfigs_.end(), "No curve id for " << curveID);
+    return it->second;
+}
+
 void CurveConfigurations::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "CurveConfiguration");
 
@@ -160,6 +174,40 @@ void CurveConfigurations::fromXML(XMLNode* node) {
         }
     }
 
+    // Load EquityCurves
+    XMLNode* equityCurvesNode = XMLUtils::getChildNode(node, "EquityCurves");
+    if (equityCurvesNode) {
+        for (XMLNode* child = XMLUtils::getChildNode(equityCurvesNode, "EquityCurve"); child;
+             child = XMLUtils::getNextSibling(child, "EquityCurve")) {
+            boost::shared_ptr<EquityCurveConfig> equityCurveConfig(new EquityCurveConfig());
+            try {
+                equityCurveConfig->fromXML(child);
+                const string& id = equityCurveConfig->curveID();
+                equityCurveConfigs_[id] = equityCurveConfig;
+                DLOG("Added equity curve config with ID = " << id);
+            } catch (std::exception& ex) {
+                ALOG("Exception parsing equity curve config: " << ex.what());
+            }
+        }
+    }
+
+    // Load EquityVolCurves
+    XMLNode* equityVolsNode = XMLUtils::getChildNode(node, "EquityVolatilities");
+    if (equityVolsNode) {
+        for (XMLNode* child = XMLUtils::getChildNode(equityVolsNode, "EquityVolatility"); child;
+             child = XMLUtils::getNextSibling(child, "EquityVolatility")) {
+            boost::shared_ptr<EquityVolatilityCurveConfig> equityVolConfig(new EquityVolatilityCurveConfig());
+            try {
+                equityVolConfig->fromXML(child);
+                const string& id = equityVolConfig->curveID();
+                equityVolCurveConfigs_[id] = equityVolConfig;
+                DLOG("Added equity volatility config with ID = " << id);
+            } catch (std::exception& ex) {
+                ALOG("Exception parsing equity volatility config: " << ex.what());
+            }
+        }
+    }
+
     // Load InflationCurves
     XMLNode* inflationCurvesNode = XMLUtils::getChildNode(node, "InflationCurves");
     if (inflationCurvesNode) {
@@ -235,7 +283,17 @@ XMLNode* CurveConfigurations::toXML(XMLDocument& doc) {
     XMLUtils::appendNode(parent, node);
     for (auto it : inflationCapFloorPriceSurfaceConfigs_)
         XMLUtils::appendNode(node, it.second->toXML(doc));
-    
+
+    node = doc.allocNode("EquityCurves");
+    XMLUtils::appendNode(parent, node);
+    for (auto it : equityCurveConfigs_)
+        XMLUtils::appendNode(node, it.second->toXML(doc));
+
+    node = doc.allocNode("EquityVolatilities");
+    XMLUtils::appendNode(parent, node);
+    for (auto it : equityVolCurveConfigs_)
+        XMLUtils::appendNode(node, it.second->toXML(doc));
+
     return parent;
 }
 }

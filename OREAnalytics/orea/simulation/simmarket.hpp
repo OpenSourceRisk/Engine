@@ -26,6 +26,7 @@
 #include <ored/marketdata/marketimpl.hpp>
 #include <orea/scenario/aggregationscenariodata.hpp>
 #include <ored/configuration/conventions.hpp>
+#include <orea/simulation/fixingmanager.hpp>
 
 namespace ore {
 namespace analytics {
@@ -43,11 +44,14 @@ class SimMarket : public data::MarketImpl {
 public:
     SimMarket(const Conventions& conventions) : MarketImpl(conventions), numeraire_(1.0) {}
 
-    //! Generate or retrieve market scenario, update market, notify termstructures
+    //! Generate or retrieve market scenario, update market, notify termstructures and update fixings
     virtual void update(const Date&) = 0;
 
     //! Return current numeraire value
     Real numeraire() { return numeraire_; }
+
+    //! Get the fixing manager
+    virtual const boost::shared_ptr<FixingManager>& fixingManager() const = 0;
 
 protected:
     Real numeraire_;

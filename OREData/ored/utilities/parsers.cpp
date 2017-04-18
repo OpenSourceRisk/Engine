@@ -181,9 +181,9 @@ Calendar parseCalendar(const string& s) {
                                       {"TWD", Taiwan()},
                                       {"TRY", Turkey()},
                                       {"UAH", Ukraine()},
+                                      {"HUF", Hungary()},
                                       // fallback to TARGET for these emerging ccys
                                       {"CLP", TARGET()},
-                                      {"HUF", TARGET()},
                                       {"RON", TARGET()},
                                       {"THB", TARGET()},
                                       {"COP", TARGET()},
@@ -487,6 +487,17 @@ Exercise::Type parseExerciseType(const std::string& s) {
     }
 }
 
+Option::Type parseOptionType(const std::string& s) {
+    static map<string, Option::Type> m = {{"Put", Option::Put}, {"Call", Option::Call}};
+
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("Option type \"" << s << "\" not recognized");
+    }
+}
+
 void parseDateOrPeriod(const string& s, Date& d, Period& p, bool& isDate) {
     isDate = false;
     try {
@@ -498,6 +509,25 @@ void parseDateOrPeriod(const string& s, Date& d, Period& p, bool& isDate) {
         } catch (...) {
             QL_FAIL("could not parse " << s << " as date or period");
         }
+    }
+}
+
+QuantLib::LsmBasisSystem::PolynomType parsePolynomType(const std::string& s) {
+    static map<string, LsmBasisSystem::PolynomType> poly = {
+        {"Monomial", LsmBasisSystem::PolynomType::Monomial},
+        {"Laguerre", LsmBasisSystem::PolynomType::Laguerre},
+        {"Hermite", LsmBasisSystem::PolynomType::Hermite},
+        {"Hyperbolic", LsmBasisSystem::PolynomType::Hyperbolic},
+        {"Legendre", LsmBasisSystem::PolynomType::Legendre},
+        {"Chebyshev", LsmBasisSystem::PolynomType::Chebyshev},
+        {"Chebyshev2nd", LsmBasisSystem::PolynomType::Chebyshev2nd},
+    };
+
+    auto it = poly.find(s);
+    if (it != poly.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("Polynom type \"" << s << "\" not recognized");
     }
 }
 

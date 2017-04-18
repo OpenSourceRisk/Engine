@@ -10,6 +10,7 @@
         <xs:element type="capFloorVolatilities" name="CapFloorVolatilities"/>
         <xs:element type="defaultCurves" name="DefaultCurves"/>
         <xs:element type="yieldCurves" name="YieldCurves"/>
+        <xs:element type="securitySpreads" name="SecuritySpreads"/>
       </xs:sequence>
     </xs:complexType>
   </xs:element>
@@ -21,6 +22,21 @@
   </xs:complexType>
 
   <xs:complexType name="fxVolatility">
+    <xs:sequence>
+      <xs:element type="xs:string" name="CurveId"/>
+      <xs:element type="xs:string" name="CurveDescription"/>
+      <xs:element type="dimensionType" name="Dimension"/>
+      <xs:element type="xs:string" name="Expiries"/>
+    </xs:sequence>
+  </xs:complexType>
+  
+  <xs:complexType name="equityVolatilities">
+    <xs:sequence>
+      <xs:element type="equityVolatility" name="EquityVolatility" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="equityVolatility">
     <xs:sequence>
       <xs:element type="xs:string" name="CurveId"/>
       <xs:element type="xs:string" name="CurveDescription"/>
@@ -76,6 +92,25 @@
     </xs:sequence>
   </xs:complexType>
 
+  <xs:complexType name="equityCurves">
+    <xs:sequence>
+      <xs:element type="equityurve" name="EquityCurve" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="equityCurve">
+    <xs:sequence>
+      <xs:element type="xs:string" name="CurveId"/>
+      <xs:element type="xs:string" name="CurveDescription"/>
+      <xs:element type="currencyCode" name="Currency"/>
+      <xs:element type="equityType" name="Type"/>
+      <xs:element type="xs:string" name="SpotQuote"/>
+      <xs:element type="xs:string" name="InterestRateCurve"/>
+      <xs:element type="dayCounter" name="DayCounter" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="quoteType" name="Quotes"/>
+    </xs:sequence>
+  </xs:complexType>
+  
   <xs:complexType name="defaultCurves">
     <xs:sequence>
       <xs:element type="defaultCurve" name="DefaultCurve" minOccurs="0" maxOccurs="unbounded"/>
@@ -114,6 +149,20 @@
       <xs:element type="dayCounter" name="YieldCurveDayCounter" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:decimal" name="Tolerance" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="Extrapolation" minOccurs="0" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="securitySpreads">
+    <xs:sequence>
+      <xs:element type="securitySpread" name="SecuritySpread" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="securitySpread">
+    <xs:sequence>
+      <xs:element type="xs:string" name="CurveId"/>
+      <xs:element type="xs:string" name="CurveDescription"/>
+      <xs:element type="quoteType" name="Quotes"/>
     </xs:sequence>
   </xs:complexType>
 

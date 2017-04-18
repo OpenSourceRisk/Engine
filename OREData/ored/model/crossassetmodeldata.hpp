@@ -37,7 +37,10 @@
 #include <ored/model/fxbsdata.hpp>
 
 using namespace QuantLib;
-using namespace std;
+using std::string;
+using std::map;
+using std::vector;
+using std::pair;
 
 namespace ore {
 namespace data {
@@ -59,11 +62,11 @@ public:
     CrossAssetModelData() {}
     //! Detailed constructor
     CrossAssetModelData( //! Vector of IR model specifications
-        const std::vector<boost::shared_ptr<LgmData>>& irConfigs,
+        const vector<boost::shared_ptr<LgmData>>& irConfigs,
         //! Vector of FX model specifications
-        const std::vector<boost::shared_ptr<FxBsData>>& fxConfigs,
+        const vector<boost::shared_ptr<FxBsData>>& fxConfigs,
         //! Correlation map, key is a pair of factors labeled as IR:EUR, IR:GBP, FX:GBPEUR, FX:USDEUR,
-        const std::map<std::pair<std::string, std::string>, Real>& c,
+        const map<pair<string, string>, Real>& c,
         //! Bootstrap tolerance used in model calibration
         Real tolerance = 1e-4)
         : irConfigs_(irConfigs), fxConfigs_(fxConfigs), correlations_(c), bootstrapTolerance_(tolerance) {
@@ -117,12 +120,12 @@ public:
 
 private:
     //! helper to convert LGM data, possibly including defaults, into an IR config vector
-    void buildIrConfigs(std::map<std::string, boost::shared_ptr<LgmData>>& irMap);
+    void buildIrConfigs(map<string, boost::shared_ptr<LgmData>>& irMap);
     //! helper to convert FX data, possibly including defaults, into an FX config vector
-    void buildFxConfigs(std::map<std::string, boost::shared_ptr<FxBsData>>& fxMap);
+    void buildFxConfigs(map<string, boost::shared_ptr<FxBsData>>& fxMap);
 
     string domesticCurrency_;
-    vector<std::string> currencies_;
+    vector<string> currencies_;
     vector<boost::shared_ptr<LgmData>> irConfigs_;
     vector<boost::shared_ptr<FxBsData>> fxConfigs_;
     map<pair<string, string>, Real> correlations_;

@@ -149,9 +149,8 @@ CapFloorVolCurve::CapFloorVolCurve(Date asof, CapFloorVolatilityCurveSpec spec, 
 
         // Build the stripped caplet/floorlet surface
         // Hardcoded target volatility type to Normal - decision made to always work with a Normal optionlet surface
-        boost::shared_ptr<OptionletStripper1> optionletStripper =
-            boost::make_shared<OptionletStripper1>(capVol, iborIndex, Null<Rate>(), 1.0e-6, 100, discountCurve,
-                                                   quoteVolatilityType, shift, false, Normal, 0.0);
+        boost::shared_ptr<OptionletStripper1> optionletStripper = boost::make_shared<OptionletStripper1>(
+            capVol, iborIndex, Null<Rate>(), 1.0e-6, 100, discountCurve, quoteVolatilityType, shift, true, Normal, 0.0);
         boost::shared_ptr<DatedStrippedOptionlet> datedOptionletStripper =
             boost::make_shared<DatedStrippedOptionlet>(asof, optionletStripper);
         capletVol_ = boost::make_shared<DatedStrippedOptionletAdapter>(datedOptionletStripper);

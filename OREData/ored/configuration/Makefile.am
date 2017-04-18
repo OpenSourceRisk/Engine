@@ -11,6 +11,8 @@ libOREDataConfiguration_la_SOURCES = \
 	curveconfigurations.cpp \
 	conventions.cpp \
 	defaultcurveconfig.cpp \
+	equitycurveconfig.cpp \
+	equityvolcurveconfig.cpp \
 	fxvolcurveconfig.cpp \
     inflationcapfloorpricesurfaceconfig.cpp \
     inflationcurveconfig.cpp \
@@ -25,6 +27,8 @@ this_include_HEADERS = \
 	curveconfigurations.hpp \
 	conventions.hpp \
 	defaultcurveconfig.hpp \
+	equitycurveconfig.hpp \
+	equityvolcurveconfig.hpp \
 	fxvolcurveconfig.hpp \
     inflationcapfloorpricesurfaceconfig.hpp \
     inflationcurveconfig.hpp \

@@ -143,6 +143,22 @@ Handle<CPICapFloorTermPriceSurface> MarketImpl::inflationCapFloorPriceSurface(co
                                                        "inflation cap floor price surface");
 }
 
+Handle<Quote> MarketImpl::equitySpot(const string& key, const string& configuration) const {
+    return lookup<Handle<Quote>>(equitySpots_, key, configuration, "equity spot");
+}
+
+Handle<YieldTermStructure> MarketImpl::equityDividendCurve(const string& key, const string& configuration) const {
+    return lookup<Handle<YieldTermStructure>>(equityDividendCurves_, key, configuration, "dividend yield curve");
+}
+
+Handle<BlackVolTermStructure> MarketImpl::equityVol(const string& key, const string& configuration) const {
+    return lookup<Handle<BlackVolTermStructure>>(equityVols_, key, configuration, "equity vol curve");
+}
+
+Handle<Quote> MarketImpl::securitySpread(const string& key, const string& configuration) const {
+    return lookup<Handle<Quote>>(securitySpreads_, key, configuration, "security spread");
+}
+
 void MarketImpl::addSwapIndex(const string& swapIndex, const string& discountIndex, const string& configuration) {
     try {
         std::vector<string> tokens;
@@ -227,6 +243,14 @@ void MarketImpl::refresh(const string& configuration) {
             }
         }
         for (auto& x : inflationCapFloorPriceSurfaces_) {
+            if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
+                it->second.insert(*x.second);
+        }
+        for (auto& x : equityDividendCurves_) {
+            if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
+                it->second.insert(*x.second);
+        }
+        for (auto& x : equityVols_) {
             if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
                 it->second.insert(*x.second);
         }

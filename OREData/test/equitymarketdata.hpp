@@ -16,36 +16,29 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file App/ore.hpp
-    \brief Open Risk Engine setup and analytics choice
-    \ingroup
+/*! \file test/todaysmarket.hpp
+    \brief scenario market test
+    \ingroup tests
 */
 
 #pragma once
 
-#include <vector>
-#include <map>
+#include <boost/test/unit_test.hpp>
 
-#include <ored/utilities/xmlutils.hpp>
+namespace testsuite {
 
-using namespace std;
-using namespace ore::data;
-
-class Parameters : public XMLSerializable {
+//! Test Equity Market Data Loading
+/*!
+  \ingroup tests
+*/
+class EquityMarketDataTest {
 public:
-    Parameters() {}
+    //! Test the market datum parser
+    static void testMarketDatumParser();
+    static void testBadMarketDatumStrings();
+    static void testEqCurveConfigLoad();
+    static void testEqCurveConfigBadLoad();
 
-    void clear();
-    void fromFile(const string&);
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
-
-    bool hasGroup(const string& groupName) const;
-    bool has(const string& groupName, const string& paramName) const;
-    string get(const string& groupName, const string& paramName) const;
-
-    void log();
-
-private:
-    map<string, map<string, string>> data_;
+    static boost::unit_test_framework::test_suite* suite();
 };
+}

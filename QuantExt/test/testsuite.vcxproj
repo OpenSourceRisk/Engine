@@ -36,7 +36,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectName>quantexttestsuite</ProjectName>
-    <ProjectGuid>{A613045C-34AF-4706-AA3C-730C92524F74}</ProjectGuid>
+    <ProjectGuid>{643BCBE7-4369-42EC-9766-DCB8DAD6615F}</ProjectGuid>
     <RootNamespace>quantexttestsuite</RootNamespace>
     <VCTargetsPath Condition="'$(VCTargetsPath11)' != '' and '$(VSVersion)' == '' and $(VisualStudioVersion) == ''">$(VCTargetsPath11)</VCTargetsPath>
   </PropertyGroup>
@@ -641,6 +641,8 @@
     <ClCompile Include="index.cpp" />
     <ClCompile Include="logquote.cpp" />
     <ClCompile Include="optionletstripper.cpp" />
+    <ClCompile Include="ratehelpers.cpp" />
+    <ClCompile Include="stabilisedglls.cpp" />
     <ClCompile Include="staticallycorrectedyieldtermstructure.cpp" />
     <ClCompile Include="swaptionvolatilityconverter.cpp" />
     <ClCompile Include="testsuite.cpp" />
@@ -660,6 +662,8 @@
     <ClInclude Include="index.hpp" />
     <ClInclude Include="logquote.hpp" />
     <ClInclude Include="optionletstripper.hpp" />
+    <ClInclude Include="ratehelpers.hpp" />
+    <ClInclude Include="stabilisedglls.hpp" />
     <ClInclude Include="staticallycorrectedyieldtermstructure.hpp" />
     <ClInclude Include="swaptionmarketdata.hpp" />
     <ClInclude Include="swaptionvolatilityconverter.hpp" />

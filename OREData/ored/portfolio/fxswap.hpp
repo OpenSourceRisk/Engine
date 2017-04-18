@@ -18,7 +18,7 @@
 
 /*! \file portfolio/fxswap.hpp
     \brief FX Swap data model and serialization
-    \ingroup openxva::portfolio
+    \ingroup portfolio
 */
 
 #pragma once

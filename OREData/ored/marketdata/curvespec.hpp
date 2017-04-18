@@ -48,7 +48,10 @@ public:
         FXVolatility,
         Default,
         Inflation,
-        InflationCapFloorPrice
+        InflationCapFloorPrice,
+        Equity,
+        EquityVolatility,
+        SecuritySpread
     };
     //! Default destructor
     virtual ~CurveSpec() {}
@@ -73,12 +76,18 @@ public:
             return "FX";
         case CurveType::FXVolatility:
             return "FXVolatility";
+        case CurveType::SecuritySpread:
+            return "SecuritySpread";
         case CurveType::Default:
             return "Default";
         case CurveType::Inflation:
             return "Inflation";
         case CurveType::InflationCapFloorPrice:
             return "InflationCapFloorPrice";
+        case CurveType::Equity:
+            return "Equity";
+        case CurveType::EquityVolatility:
+            return "EquityVolatility";
         default:
             return "N/A";
         }
@@ -290,6 +299,75 @@ public:
 private:
     string index_;
     string curveConfigID_;
+};
+
+//! Equity curve description
+/*!  \ingroup curves
+*/
+class EquityCurveSpec : public CurveSpec {
+
+public:
+    //! \name Constructors
+    //@{
+    //! Detailed constructor
+    EquityCurveSpec(const string& ccy, const string& curveConfigID) : ccy_(ccy), curveConfigID_(curveConfigID) {}
+    //! Default constructor
+    EquityCurveSpec() {}
+
+    //@}
+
+    //! \name Inspectors
+    //@{
+    CurveType baseType() const { return CurveType::Equity; }
+    const string& ccy() const { return ccy_; }
+    const string& curveConfigID() const { return curveConfigID_; }
+    string subName() const { return ccy_ + "/" + curveConfigID_; }
+    //@}
+
+private:
+    string ccy_;
+    string curveConfigID_;
+};
+
+//! Equity Volatility curve description
+/*! \ingroup curves
+*/
+class EquityVolatilityCurveSpec : public CurveSpec {
+public:
+    //! \name Constructors
+    //@{
+    //! Default constructor
+    EquityVolatilityCurveSpec() {}
+    //! Detailed constructor
+    EquityVolatilityCurveSpec(const string& ccy, const string& curveConfigID)
+        : ccy_(ccy), curveConfigID_(curveConfigID) {}
+    //@}
+
+    //! \name Inspectors
+    //@{
+    CurveType baseType() const { return CurveType::EquityVolatility; }
+    const string& ccy() const { return ccy_; }
+    const string& curveConfigID() const { return curveConfigID_; }
+    string subName() const { return ccy() + "/" + curveConfigID(); }
+    //@}
+private:
+    string ccy_;
+    string curveConfigID_;
+};
+
+//! SecuritySpread description
+class SecuritySpreadSpec : public CurveSpec {
+public:
+    SecuritySpreadSpec(const string& securityID) : securityID_(securityID) {}
+    //! Default constructor
+    SecuritySpreadSpec() {}
+    CurveType baseType() const { return CurveType::SecuritySpread; }
+    string subName() const { return securityID_; }
+    const string& securityID() const { return securityID_; }
+    //@}
+
+protected:
+    string securityID_;
 };
 }
 }

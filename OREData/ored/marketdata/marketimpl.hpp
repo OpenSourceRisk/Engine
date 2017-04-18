@@ -52,7 +52,10 @@ class MarketImpl : public Market {
 public:
     //! Default constructor
     MarketImpl() {}
-    MarketImpl(const Conventions& conventions) : conventions_(conventions) {}
+    MarketImpl(const Conventions& conventions) : conventions_(conventions) {
+        // if no fx spots are defined we still need an empty triangulation
+        fxSpots_[Market::defaultConfiguration] = FXTriangulation();
+    }
 
     //! \name Market interface
     //@{
@@ -103,6 +106,17 @@ public:
     inflationCapFloorPriceSurface(const string& indexName,
                                   const string& configuration = Market::defaultConfiguration) const;
 
+    //! Equity curves
+    Handle<Quote> equitySpot(const string& eqName, const string& configuration = Market::defaultConfiguration) const;
+    Handle<YieldTermStructure> equityDividendCurve(const string& eqName,
+                                                   const string& configuration = Market::defaultConfiguration) const;
+
+    //! Equity volatilities
+    Handle<BlackVolTermStructure> equityVol(const string& eqName,
+                                            const string& configuration = Market::defaultConfiguration) const;
+    //! Bond Spreads
+    Handle<Quote> securitySpread(const string& securityID,
+                                 const string& configuration = Market::defaultConfiguration) const;
     //@}
 
     //! \name Disable copying
@@ -131,6 +145,10 @@ protected:
     map<pair<string, pair<string, bool>>, Handle<ZeroInflationIndex>> zeroInflationIndices_;
     map<pair<string, pair<string, bool>>, Handle<YoYInflationIndex>> yoyInflationIndices_;
     map<pair<string, string>, Handle<CPICapFloorTermPriceSurface>> inflationCapFloorPriceSurfaces_;
+    map<pair<string, string>, Handle<Quote>> equitySpots_;
+    map<pair<string, string>, Handle<YieldTermStructure>> equityDividendCurves_;
+    map<pair<string, string>, Handle<BlackVolTermStructure>> equityVols_;
+    map<pair<string, string>, Handle<Quote>> securitySpreads_;
     Conventions conventions_;
 
     //! add a swap index to the market

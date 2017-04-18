@@ -18,7 +18,7 @@
 
 /*! \file portfolio/legdata.hpp
     \brief leg data model and serialization
-    \ingroup openxva::portfolio
+    \ingroup portfolio
 */
 
 #pragma once
@@ -336,6 +336,7 @@ Leg makeSimpleLeg(LegData& data);
 Leg makeNotionalLeg(const Leg& refLeg, bool initNomFlow, bool finalNomFlow, bool amortNomFlow = true);
 Leg makeCPILeg(LegData& data, boost::shared_ptr<ZeroInflationIndex> index);
 Leg makeYoYLeg(LegData& data, boost::shared_ptr<YoYInflationIndex> index);
+Real currentNotional(const Leg& leg);
 
 //@}
 
@@ -344,5 +345,13 @@ Leg makeYoYLeg(LegData& data, boost::shared_ptr<YoYInflationIndex> index);
 //  In all cases we can expand the vector to take the given schedule into account
 vector<double> buildScheduledVector(const vector<double>& values, const vector<string>& dates,
                                     const Schedule& schedule);
+
+// extend values to schedule size (if values is empty, the default value is used)
+vector<double> normaliseToSchedule(const vector<double>& values, const Schedule& schedule,
+                                   const Real defaultValue = Null<Real>());
+
+// normaliseToSchedule concat buildScheduledVector
+vector<double> buildScheduledVectorNormalised(const vector<double>& values, const vector<string>& dates,
+                                              const Schedule& schedule, const Real defaultValue = Null<Real>());
 }
 }

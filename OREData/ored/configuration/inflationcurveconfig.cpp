@@ -107,7 +107,8 @@ XMLNode* InflationCurveConfig::toXML(XMLDocument& doc) {
 
     XMLUtils::addChildren(doc, node, "Quotes", "Quote", quotes_);
     XMLUtils::addChild(doc, node, "Conventions", conventions_);
-    XMLUtils::addChild(doc, node, "Extrapolation", extrapolate_ ? "true" : "false");
+    string extrap = (extrapolate_ ? "true" : "false");
+    XMLUtils::addChild(doc, node, "Extrapolation", extrap);
 
     std::ostringstream cal, dc, lag, freq, baseZr, tol;
     cal << calendar_;
