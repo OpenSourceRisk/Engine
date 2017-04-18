@@ -180,14 +180,13 @@ InflationCapFloorPriceSurface::InflationCapFloorPriceSurface(
         DLOG("Cap Strikes are: " << capStrikesString.str());
         DLOG("Floor Strikes are: " << floorStrikesString.str());
         DLOGGERSTREAM << "Cap Price Matrix:\n" << cPrice << "Floor Price Matrix:\n" << fPrice;
-        LOG("PG - test log");
+
         // Build the term structure
         surface_ = boost::shared_ptr<InterpolatedCPICapFloorTermPriceSurface<QuantLib::Bilinear>>(
             new InterpolatedCPICapFloorTermPriceSurface<QuantLib::Bilinear>(
                 1.0, config->startRate(), config->observationLag(), config->calendar(), config->businessDayConvention(),
                 config->dayCounter(), Handle<ZeroInflationIndex>(index), yts, capStrikes, floorStrikes, terms, cPrice,
                 fPrice));
-        LOG("PG - test log");
     } catch (std::exception& e) {
         QL_FAIL("inflation cap floor price surface building failed: " << e.what());
     } catch (...) {

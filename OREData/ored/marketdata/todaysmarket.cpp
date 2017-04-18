@@ -372,7 +372,6 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                               .insert(make_pair(infcapfloorspec->name(), inflationCapFloorPriceSurface))
                               .first;
                 }
-                LOG("PG - test log");
                 for (const auto it : params.inflationCapFloorPriceSurfaces(configuration.first)) {
                     if (it.second == spec->name()) {
                         LOG("Adding InflationCapFloorPriceSurface (" << it.first << ") with spec " << *infcapfloorspec
