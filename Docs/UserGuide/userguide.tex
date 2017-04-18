@@ -607,6 +607,9 @@ Example & Description \\
 \hline
 13 & Dynamic Initial Margin and MVA \\
 \hline
+14 & Minimal Market Data Setup \\
+\hline
+15 & Sensitivity and Stress Scenario Computation
 \end{tabular}
 \caption{ORE examples.}
 \label{tab_0}
@@ -1295,6 +1298,79 @@ and second order polynomial choice makes a difference before option expiry.
 \label{fig_ex13b_regression}
 \end{figure}
 
+%--------------------------------------------------------
+\subsection{Minimal Market Data Setup}
+%--------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_14} uses a minimimal market data setup.
+
+%--------------------------------------------------------
+\subsection{Sensitivity and Stress Scenario Computation}\label{ex:sensitivity_stress}
+%--------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_15} demonstrates the calculation of sensitivities and stress scenarios. The
+portfolio used in this example consists of
+
+\begin{itemize}
+\item a vanilla swap in EUR
+\item a cross currency swap EUR-USD
+\item a resettable cross currency swap EUR-USD
+\item a FX forward EUR-USD
+\item a FX call option
+\item a FX put option
+\item an European swaption
+\item a cap in USD
+\item a floor in USD
+\item a cap in EUR
+\item a floor in UER
+\item a fixed rate bond
+\end{itemize}
+
+The sensitivity configuration in {\tt sensitivity.xml} aims at computing the following sensitivities
+
+\begin{itemize}
+\item discount curve sensitivities in EUR, USD; GBP, CHF, JPY, on pillars 6M, 1Y, 2Y, 3Y, 5Y, 7Y, 10Y, 15Y, 20Y (absolute shift of 0.0001)
+\item forward curve sensitivities for EUR-EURIBOR 6M and 3M indices, EUR-EONIA, USD-LIBOR 3M and 6M, GBP-LIBOR 3M and
+  6M, CHF-LIBOR-6M and JPY-LIBOR-6M indices (absolute shift of 0.0001)
+\item yield curve shifts for a bond benchmark curve in EUR (absolute shift of 0.0001)
+\item FX spot sensitivities for USD, GBP, CHF, JPY against EUR as the base currency (relative shift of 0.01)
+\item FX vegas for USDEUR, GBPEUR, JPYEUR volatility surfaces (relative shift of 0.01)
+\item swaption vegas for the EUR surface on expiries 1Y, 5Y, 7Y, 10Y and underlying terms 1Y, 5Y, 10Y (relative shift of 0.01)
+\item caplet vegas for EUR and USD on an expiry grid 1Y, 2Y, 3Y, 5Y, 7Y, 10Y and strikes 0.01, 0.02, 0.03, 0.04,
+  0.05. (absolute shift of 0.0001)
+\end{itemize}
+
+Furthermore, mixed second order derivatives (``cross gammas'') are computed for discount-discount, discount-forward and
+forward-forward curves in EUR.
+
+By definition the sensitivities are zero rate sensitivities and optionlet sensitivities, no par sensitivities are
+provided. The sensitivity analysis produces three output files.
+
+The first, {\tt scenario.csv}, contains the shift
+direction ({\tt UP}, {\tt DOWN}, {\tt CROSS}), the base NPV, the scenario NPV and the difference of these two for each
+trade and sensitivity key. For an overview over the possible scenario keys see \ref{sec:sensitivity}.
+
+The second file, {\tt sensitivity.csv}, contains the shift size (in absolute terms always) and first (``Delta'') and second
+(``Gamma'') order finite differences computed from the scenario results. Note that the Delta and Gamma results pure
+differences, i.e. they are not divided by the shift size.
+
+The third file, {\tt crossgamma.csv} contains second order mixed differences according to the specified cross gamma
+filter, along with the shift sizes for the two factors involved. Again the reported result is not divided by the shift
+sizes.
+
+The stress scenario definition in {\tt stresstest.xml} defines two stress tests:
+
+\begin{itemize}
+\item {\tt parallel\_rates}: Rates are shifted in parallel by 0.01 (absolute). The EUR bond benchmark curve is shifted by
+  increasing amounts 0.001, ..., 0.009 on the pillars 6M, ..., 20Y. FX Spots are shifted by 0.01 (relative), FX vols by
+  0.1 (relative), swaption and cap floor vols by 0.0010 (absolute)
+\item {\tt twist}: The EUR bond benchmark curve is shifted by amounts -0.0050, -0.0040, -0.0030, -0.0020, 0.0020,
+  0.0040, 0.0060, 0.0080, 0.0100 on pillars 6M, 1Y, 2Y, 3Y, 5Y, 7Y, 10Y, 15Y, 20Y.
+\end{itemize}
+
+The corresponding output file {\tt stresstest.csv} contains the base NPV, the NPV under the scenario shifts and the
+difference of the two for each trade and scenario label.
+
 \clearpage
 %========================================================
 \section{Launchers and Visualisation}\label{sec:visualisation}
@@ -1757,9 +1833,9 @@ The parameters have the following interpretation:
 \item {\tt scenarioOutputFile:} File containing the results of the sensitivity calculation in terms of the base scenario
   NPV, the scenario NPV and their difference.
 \item {\tt sensitivityOutputFile:} File containing the results of the sensitivity calculation in terms of the base scenario
-  NPV, the shift size and the resulting first and second order finite differences
+  NPV, the shift size and the resulting first and (pure) second order finite differences
 \item {\tt crossGammaOutputFile:} File containing the results of the sensitivity calculation in terms of the base scenario
-  NPV, two shift sizes and a second order finite difference associated to a cross gamma calculation
+  NPV, two shift sizes and a (mixed) second order finite difference associated to a cross gamma calculation
 \item {\tt parRateSensitivityOutputFile:} File containing par sensitivities (only available in ORE+)
 \item {\tt outputSensitivityThreshold:} Only finite differences with absolute value greater than this number are written
   to the output files.
