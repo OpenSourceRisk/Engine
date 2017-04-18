@@ -311,8 +311,15 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                         asof, *inflationspec, loader, curveConfigs, conventions, requiredYieldCurves);
                     itr = requiredInflationCurves.insert(make_pair(inflationspec->name(), inflationCurve)).first;
                 }
-
-                for (const auto it : params.zeroInflationIndexCurves(configuration.first)) {
+                // this try-catch is necessary to handle cases where no ZC inflation index curves exist in scope
+                map<string, string> zcInfMap;
+                try {
+                    zcInfMap = params.zeroInflationIndexCurves(configuration.first);
+                }
+                catch (QuantLib::Error& e) {
+                    LOG(e.what());
+                }
+                for (const auto it : zcInfMap) {
                     if (it.second == spec->name()) {
                         LOG("Adding ZeroInflationIndex (" << it.first << ") with spec " << *inflationspec
                                                           << " to configuration " << configuration.first);
@@ -331,7 +338,15 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                                 tmp, indexInterpolated ? CPI::Flat : CPI::Linear));
                     }
                 }
-                for (const auto it : params.yoyInflationIndexCurves(configuration.first)) {
+                // this try-catch is necessary to handle cases where no YoY inflation index curves exist in scope
+                map<string, string> yyInfMap;
+                try {
+                    yyInfMap = params.yoyInflationIndexCurves(configuration.first);
+                }
+                catch (QuantLib::Error& e) {
+                    LOG(e.what());
+                }
+                for (const auto it : yyInfMap) {
                     if (it.second == spec->name()) {
                         LOG("Adding YoYInflationIndex (" << it.first << ") with spec " << *inflationspec
                                                          << " to configuration " << configuration.first);
