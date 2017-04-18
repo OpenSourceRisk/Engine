@@ -145,6 +145,7 @@ public:
         bool interp = false;
         ii = boost::shared_ptr<UKRPI>(new UKRPI(interp, hcpi));
         for (Size i = 0; i < fixingDatesUKRPI.size(); i++) {
+            //std::cout << i << ", " << fixingDatesUKRPI[i] << ", " << fixingRatesUKRPI[i] << std::endl;
             ii->addFixing(fixingDatesUKRPI[i], fixingRatesUKRPI[i], true);
         };
         // now build the helpers ...
@@ -188,13 +189,16 @@ void CPISwapTest::testCPISwapPrice() {
     Log::instance().switchOn();
     */
 
-    // build market
-    boost::shared_ptr<Market> market = boost::make_shared<TestMarket>();
-    Settings::instance().evaluationDate() = market->asofDate();
+    QuantLib::SavedSettings backup;
 
-    // test asof date
-    Date today = market->asofDate();
-    BOOST_CHECK_EQUAL(today, Date(18, July, 2016));
+    // build market
+    Date today(18, July, 2016);
+    Settings::instance().evaluationDate() = today;
+    boost::shared_ptr<Market> market = boost::make_shared<TestMarket>();
+    Date marketDate = market->asofDate();
+    BOOST_CHECK_EQUAL(today, marketDate);
+    Settings::instance().evaluationDate() = marketDate;
+
 
     // Test if GBP discount curve is empty
     Handle<YieldTermStructure> dts = market->discountCurve("GBP");
@@ -247,7 +251,7 @@ void CPISwapTest::testCPISwapPrice() {
     vector<Real> spread(1, 0);
     FloatingLegData legdataLibor(indexLibor, days, isInArrears, spread);
     LegData legLibor(isPayerLibor, "GBP", legdataLibor, scheduleLibor, dc, notional, vector<string>(),
-                     paymentConvention, days);
+                     paymentConvention);
 
     // GBP CPI Leg
     bool isPayerCPI = false;
