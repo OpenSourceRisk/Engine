@@ -1495,7 +1495,8 @@ type can be (so far) in
 \item curves
 \item simulation
 \item xva
-\item initialMargin
+\item sensitivity
+\item stress
 \end{itemize}
 
 Each {\tt Analytic} section contains a list of key/value pairs to parameterise the analysis of the form {\tt <Parameter
@@ -1719,6 +1720,74 @@ date, sample) {\em after} taking collateral into account
 
 The latter two cube file outputs are provided for interactive analysis and visualisation purposes, see section
 \ref{sec:visualisation}.
+
+\medskip The {\tt sensitivity} and {\tt stress} 'analytics' provide computation of bump and revalue (zero rate
+resp. optionlet) sensitivities and NPV changes under user defined stress scenarios. Listing \ref{lst:ore_sensitivity}
+shows a typical configuration for sensitvity calculation.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Analytics>
+ <Analytic type="sensitivity">
+   <Parameter name="active">Y</Parameter>
+   <Parameter name="marketConfigFile">simulation.xml</Parameter>
+   <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
+   <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
+   <Parameter name="scenarioOutputFile">scenario.csv</Parameter>
+   <Parameter name="sensitivityOutputFile">sensitivity.csv</Parameter>
+   <Parameter name="crossGammaOutputFile">crossgamma.csv</Parameter>
+   <Parameter name="parRateSensitivityOutputFile">parsensi.csv</Parameter>
+   <Parameter name="outputSensitivityThreshold">0.000001</Parameter>
+ </Analytic>
+</Analytics>
+\end{minted}
+\caption{ORE analytic: sensitivity}
+\label{lst:ore_sensitivity}
+\end{listing}
+
+The parameters have the following interpretation:
+
+\begin{itemize}
+\item {\tt marketConfigFile:} Configuration file defining the simulation market under which sensitivities are computed,
+  see \ref{sec:simulation}. Only a subset of the specification is needed (the one given under {\tt Market}, see
+  \ref{sec:sim_market} for a defailled description).
+\item {\tt sensitivityConfigFile:} Configuration file  for the sensitivity calculation, see section \ref{sec:sensitivity}.
+\item {\tt pricingEnginesFile:} Configuration file for the pricing engines to be used for sensitivity calculation.
+\item {\tt scenarioOutputFile:} File containing the results of the sensitivity calculation in terms of the base scenario
+  NPV, the scenario NPV and their difference.
+\item {\tt sensitivityOutputFile:} File containing the results of the sensitivity calculation in terms of the base scenario
+  NPV, the shift size and the resulting first and second order finite differences
+\item {\tt crossGammaOutputFile:} File containing the results of the sensitivity calculation in terms of the base scenario
+  NPV, two shift sizes and a second order finite difference associated to a cross gamma calculation
+\item {\tt parRateSensitivityOutputFile:} File containing par sensitivities (only available in ORE+)
+\item {\tt outputSensitivityThreshold:} Only finite differences with absolute value greater than this number are written
+  to the output files.
+\end{itemize}
+
+The stress analytics configuration is similar to the one of the sensitivity calculation. Listing \ref{lst:ore_stress}
+shows an example.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Analytics>
+ <Analytic type="stress">
+   <Parameter name="active">Y</Parameter>
+   <Parameter name="marketConfigFile">simulation.xml</Parameter>
+   <Parameter name="stressConfigFile">stresstest.xml</Parameter>
+   <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
+   <Parameter name="scenarioOutputFile">stresstest.csv</Parameter>
+   <Parameter name="outputThreshold">0.000001</Parameter>
+ </Analytic>
+</Analytics>
+\end{minted}
+\caption{ORE analytic: stress}
+\label{lst:ore_stress}
+\end{listing}
+
+The parameters have the same interpretation as for the sensitivity analytic. The configuration file for the stress
+scenarios is described in more detail in section \ref{sec:stress}.
 
 %--------------------------------------------------------
 \subsection{Market: {\tt todaysmarket.xml}}\label{sec:market}
@@ -2068,7 +2137,7 @@ This file is relevant in particular for structured products which are in scope o
 intended to allow the selection of optimised pricing engines for vanilla products such as Interest Rate Swaps.
  
 %--------------------------------------------------------
-\subsection{Simulation: {\tt simulation.xml}}
+\subsection{Simulation: {\tt simulation.xml}}\label{sec:simulation}
 %--------------------------------------------------------
 
 This file determines the behaviour of the risk factor simulation (scenario generation) module.
@@ -2114,7 +2183,7 @@ Let us discuss this section using the following example
 exploiting the analytcal tractability of the model to avoid any time discretization error. {\em Euler} uses a naive time
 discretization scheme which has numerical error and requires small time steps for accurate results (useful for testing
 purposes)
-\item {\tt Grid: }Specifies the simulation time grid, here 80 quarterly steps.
+\item {\tt Grid:} Specifies the simulation time grid, here 80 quarterly steps.
 \item {\tt Calendar:} Calendar or combination of calendars used to adjust the dates of the grid. Date adjustment is
 required because the simulation must step over 'good' dates on which index fixings can be stored.
 %\item {\tt Scenario: } Choose between {\em Simple } and {\em Complex } implementations, the latter optimized for
@@ -2403,6 +2472,209 @@ tags {\tt <Market>} and {\tt </Market}, as shown in the following small two-curr
 
 \todo[inline]{Comment on cap/floor surface structure and reaction to time decay}
 \todo[inline]{Remove DefaultCurves from SimMarket constructor and configuration section}
+
+%--------------------------------------------------------
+\subsection{Sensitivity Analysis: {\tt sensitivity.xml}}\label{sec:sensitivity}
+%--------------------------------------------------------
+
+This file specifies how sensitivities are computed. The general structure is shown in listing
+\ref{list:sensitivity_config}. For each market component, a set of parameters is defined determining how sensitvities
+are computed with regards to the component:
+
+\begin{itemize}
+\item {\tt ShiftType} Both absolute or relative shifts can be used to compute a sensitivity, specified by the key words
+  {\tt Absolute} resp. {\tt Relative}.
+\item {\tt ShiftSize} The size of the shift to apply.
+\item {\tt ShiftTenors} For curves, the tenor buckets to apply shifts to, given as a comma separated list of periods.
+\item {\tt ShiftExpiries} For volatility surfaces, the option expiry buckets to apply shifts to, given as a comma
+  separated list of periods.
+\item {\tt ShiftTemrs} For swaption volatility surfaces, the underlying terms to apply shifts to, given as a comma
+  separated list of periods.
+\item {\tt ShiftStrikes} For cap / floor volatility surfaces, the strikes to apply shifts to, given as a comma separated
+  list of absolute strikes
+\item {\tt Index} For cap / floor volatility surfaces, the index which together wit the currency defines the surface.
+  list of absolute strikes
+\end{itemize}
+
+The cross gamma filter section contains a list of pairs of sensitivity keys. For each possible pair of sensitivity keys
+matching the given strings, a cross gamma sensitivity is computed. The given pair of keys can be (and usually are)
+shorter than the actual sensitivity keys, in this case only the prefix of the actual key is matched. For example, the
+pair {\tt DiscountCurve/EUR,DiscountCurve/EUR} matches all actual sensitivity pairs belonging to a cross sensitivity by
+one pillar of the EUR discount curve and another (different) pillar of the same curve. We list the possible keys by
+giving an example in each category:
+
+\begin{itemize}
+\item {\tt DiscountCurve/EUR/5/7Y}: 7y pillar of discounting curve in EUR, the pillar is at position 5 in the list of
+  all pillars (counting starts with zero)
+\item {\tt YieldCurve/BENCHMARK\_EUR/0/6M}: 6M pillar of yield curve ``BENCHMARK\_EUR'', the index of the 6M pillar is
+  zero (i.e. it is the first pillar)
+\item {\tt IndexCurve/EUR-EURIBOR-6M/2/2Y}: 2Y pillar of index forwarding curve for the Ibor index ``EUR-EURIBOR-6M'',
+  the pillar index is 2 in this case
+\item {\tt OptionletVolatility/EUR/18/5Y/0.04}: EUR caplet volatility surface, at 5Y option expiry and $4\%$ strike, the
+  running index for this expiry - strike pair is 18; the index counts the points in the surface in lexical order
+  w.r.t. the dimensions option expiry, strike
+\item {\tt FXSpot/USDEUR/0/spot}: FX spot USD vs EUR (with EUR as base ccy), the index is always zero for FX spots, the
+  pillar is labelled as ``spot'' always
+\item {\tt SwaptionVolatility/EUR/11/10Y/10Y/ATM}: EUR Swaption volatility surface at 10Y option expiry and 10Y
+  underlying term, ATM level, the running index for this expiry, term, strike triple has running index 11; the index
+  counts the points in the surface in lexical order w.r.t. the dimensions option expiry, underlying term and strike
+\end{itemize}
+
+\begin{listing}[H]
+%\hrule\medskip
+  \begin{minted}[fontsize=\scriptsize]{xml}
+<SensitivityAnalysis>
+  <DiscountCurves>
+    <DiscountCurve ccy="EUR">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </DiscountCurve>
+    ...
+  </DiscountCurves>
+  ...
+  <IndexCurves>
+    <IndexCurve index="EUR-EURIBOR-6M">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </IndexCurve>
+  </IndexCurves>
+  ...
+  <YieldCurves>
+    <YieldCurve name="BENCHMARK_EUR">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </YieldCurve>
+  </YieldCurves>
+  ...
+  <FxSpots>
+    <FxSpot ccypair="USDEUR">
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.01</ShiftSize>
+    </FxSpot>
+  </FxSpots>
+  ...
+  <FxVolatilities>
+    <FxVolatility ccypair="USDEUR">
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.01</ShiftSize>
+      <ShiftExpiries>1Y,2Y,3Y,5Y</ShiftExpiries>
+      <ShiftStrikes/>
+    </FxVolatility>
+  </FxVolatilities>
+  ...
+  <SwaptionVolatilities>
+    <SwaptionVolatility ccy="EUR">
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.01</ShiftSize>
+      <ShiftExpiries>1Y,5Y,7Y,10Y</ShiftExpiries>
+      <ShiftTerms>1Y,5Y,10Y</ShiftTerms>
+      <ShiftStrikes/>
+    </SwaptionVolatility>
+  </SwaptionVolatilities>
+  ...
+  <CapFloorVolatilities>
+    <CapFloorVolatility ccy="EUR">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftExpiries>1Y,2Y,3Y,5Y,7Y,10Y</ShiftExpiries>
+      <ShiftStrikes>0.01,0.02,0.03,0.04,0.05</ShiftStrikes>
+      <Index>EUR-EURIBOR-6M</Index>
+    </CapFloorVolatility>
+  </CapFloorVolatilities>
+  ...
+  <CrossGammaFilter>
+    <Pair>DiscountCurve/EUR,DiscountCurve/EUR</Pair>
+    <Pair>IndexCurve/EUR,IndexCurve/EUR</Pair>
+    <Pair>DiscountCurve/EUR,IndexCurve/EUR</Pair>
+  </CrossGammaFilter>
+</SensitivityAnalysis>
+\end{minted}
+\caption{Sensitivity configuration}
+\label{lst:sensitivity_config}
+\end{listing}
+
+%--------------------------------------------------------
+\subsection{Stress Scenario Analysis: {\tt stressconfig.xml}}\label{sec:stress}
+%--------------------------------------------------------
+
+This file specifies how sensitivities are computed. The general structure is shown in listing
+\ref{list:sensitivity_config}.
+
+In this example, two stress scenarios ``parallel\_rates'' and ``twist'' are defined. Each scenario definition contains
+the market components to be shifted in this scenario in a similar syntax that is also used for the sensitivity
+configuration, see \ref{sec:sensitivity}. Components that should not be shifted, can just be omitted in the definition
+of the scenario.
+
+However, instead of specifying one shift size per market component, here a whole vector of shifts can be given, with
+different shift sizes applied to each point of the curve (or surface / cube).
+
+In case of the swaption volatility shifts, the single value given as {\tt Shift} (without the attributes {\tt expiry}
+and {\tt term}) represents a default value that is used whenever no explicit value is given for a expiry / term pair.
+
+\begin{listing}[H]
+%\hrule\medskip
+  \begin{minted}[fontsize=\scriptsize]{xml}
+<StressTesting>
+  <StressTest id="parallel_rates">
+    <DiscountCurves>
+      <DiscountCurve ccy="EUR">
+        <ShiftType>Absolute</ShiftType>
+        <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+        <Shifts>0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01</Shifts>
+      </DiscountCurve>
+      ...
+    </DiscountCurves>
+    <IndexCurves>
+      ...
+    </IndexCurves>
+    <YieldCurves>
+      ...
+    </YieldCurves>
+    <FxSpots>
+      <FxSpot ccypair="USDEUR">
+        <ShiftType>Relative</ShiftType>
+        <ShiftSize>0.01</ShiftSize>
+      </FxSpot>
+    </FxSpots>
+    <FxVolatilities>
+      ...
+    </FxVolatilities>
+    <SwaptionVolatilities>
+      <SwaptionVolatility ccy="EUR">
+        <ShiftType>Absolute</ShiftType>
+        <ShiftExpiries>1Y,10Y</ShiftExpiries>
+        <ShiftTerms>5Y</ShiftTerms>
+        <Shifts>
+          <Shift>0.0010</Shift>
+          <Shift expiry="1Y" term="5Y">0.0010</Shift>
+          <Shift expiry="1Y" term="5Y">0.0010</Shift>
+          <Shift expiry="1Y" term="5Y">0.0010</Shift>
+          <Shift expiry="10Y" term="5Y">0.0010</Shift>
+          <Shift expiry="10Y" term="5Y">0.0010</Shift>
+          <Shift expiry="10Y" term="5Y">0.0010</Shift>
+        </Shifts>
+      </SwaptionVolatility>
+    </SwaptionVolatilities>
+    <CapFloorVolatilities>
+      <CapFloorVolatility ccy="EUR">
+        <ShiftType>Absolute</ShiftType>
+        <ShiftExpiries>6M,1Y,2Y,3Y,5Y,10Y</ShiftExpiries>
+        <Shifts>0.001,0.001,0.001,0.001,0.001,0.001</Shifts>
+      </CapFloorVolatility>
+    </CapFloorVolatilities>
+  </StressTest>
+  <StressTest id="twist">
+    ...
+  </StressTest>
+</StressTesting>
+  \end{minted}
+\caption{Stress configuration}
+\label{lst:stress_config}
+\end{listing}
+
 
 %--------------------------------------------------------
 \subsection{Curves: {\tt curveconfig.xml}}\label{sec:curveconfig}
