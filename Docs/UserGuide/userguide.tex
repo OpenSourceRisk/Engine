@@ -297,7 +297,7 @@ The first three items and {\tt userguide.pdf} are sufficient to run the compiled
 on the list of examples described in the user guide (this works on Windows only). The Windows executables are located in {\tt App/bin/Win32/Release/} respectively {\tt App/bin/x64/Release/}. To continue with the compiled
 executables:
 \begin{itemize}
-\item Ensure that the scripting language Python is installed on your computer, see also section \ref{sec:python} 
+\item Ensure that the scripting language Python is installed on your computer, see also section \ref{sec:python}
   below;
 \item Move on to the examples in section \ref{sec:examples}.
 \end{itemize}
@@ -540,7 +540,7 @@ Windows\footnote{With Windows, after a fresh installation of Python the user may
 
 With Linux and OS X, the following environment variable settings are required
 \begin{itemize}
-\item set {\tt LANG} and {\tt LC\_ALL } to {\tt en\_US.UTF-8} or {\tt en\_GB.UTF-8}
+\item set {\tt LANG} and {\tt LC\_ALL } to {\tt en\_US.UTF-8} or {\tt en\_GB.UTF-8}
 \item set {\tt LC\_NUMERIC} to {\tt C}. 
 \end{itemize}
 The former is required for both running the Python scripts in the examples section, as well as successful installation
@@ -636,7 +636,7 @@ examples. The particular selection of input files is determined by the 'master' 
   \hline
   File Name & Description \\
   \hline
-  {\tt ore.xml} &   Master input file, selection of further inputs below and selection of analytics \\
+  {\tt ore.xml}&   Master input file, selection of further inputs below and selection of analytics \\
   {\tt portfolio.xml} & Trade data \\
   {\tt netting.xml} &  Collateral (CSA) data \\
   {\tt simulation.xml} & Configuration of simulation model and market\\
@@ -665,7 +665,7 @@ through the master input file {\tt ore.xml}. Whether these reports are generated
 \hline
 File Name & Description \\
 \hline
-{\tt npv.csv} &   NPV report \\
+{\tt npv.csv}&   NPV report \\
 {\tt flows.csv} & Cashflow report \\
 {\tt curves.csv} & Generated yield (discount) curves report \\
 {\tt xva.csv} & XVA report, value adjustments at netting set and trade level \\
@@ -1444,7 +1444,7 @@ fixings would not be loaded but implied, relevant when pricing/bootstrapping off
 scenario analysis and stress testing.
 
 \medskip The last parameter {\tt observationModel} can be used to control ORE performance during simulation. The choices
-{\em Disable } and {\em Unregister } yield similarly improved performance relative to choice {\em None}. For users
+{\em Disable } and {\em Unregister } yield similarly improved performance relative to choice {\em None}. For users
 familiar with the QuantLib design - the parameter controls to which extent {\em QuantLib observer notifications} are
 used when market and fixing data is updated and the evaluation date is shifted:
 \begin{itemize}
@@ -2114,10 +2114,10 @@ Let us discuss this section using the following example
 exploiting the analytcal tractability of the model to avoid any time discretization error. {\em Euler} uses a naive time
 discretization scheme which has numerical error and requires small time steps for accurate results (useful for testing
 purposes)
-\item {\tt Grid: } Specifies the simulation time grid, here 80 quarterly steps.
+\item {\tt Grid: }Specifies the simulation time grid, here 80 quarterly steps.
 \item {\tt Calendar:} Calendar or combination of calendars used to adjust the dates of the grid. Date adjustment is
 required because the simulation must step over 'good' dates on which index fixings can be stored.
-%\item {\tt Scenario: } Choose between {\em Simple } and {\em Complex } implementations, the latter optimized for
+%\item {\tt Scenario: } Choose between {\em Simple } and {\em Complex } implementations, the latter optimized for
 more efficient memory usage. \todo[inline]{Remove Scenario choice}
 \item {\tt Sequence:} Choose random sequence generator ({\em MersenneTwister, MersenneTwisterAntithetic, Sobol,
 SobolBrownianBridge}).
@@ -2962,7 +2962,7 @@ D(t_m) &=
 \end{align}
 where $MTA$ is the minimum transfer amount.
 
-\medskip Finally, the {\em Delivery Amount } is settled with a delay specified by the {\em Margin Period of Risk}
+\medskip Finally, the {\em Delivery Amount } is settled with a delay specified by the {\em Margin Period of Risk}
 (MPoR) which leads to residual exposure and XVA even for daily margining, zero thresholds and minimum transfer amounts,
 see for example \cite{Pykhtin2010}. A more detailed framework for collateralised exposure modelling is introduced in the
 2016 article \cite{Andersen2016}, indicating a potential route for extending ORE.
