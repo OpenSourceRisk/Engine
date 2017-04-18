@@ -24,6 +24,18 @@
 
 #include <boost/make_shared.hpp>
 
+namespace {
+static inline void setValue(
+    Matrix& m, const Real& value, const QuantExt::CrossAssetModel* model,
+    const QuantExt::CrossAssetModelTypes::AssetType& t1, const Size& i1,
+    const QuantExt::CrossAssetModelTypes::AssetType& t2, const Size& i2,
+    const Size& offset1 = 0, const Size& offset2 = 0) {
+    Size i = model->pIdx(t1, i1, offset1);
+    Size j = model->pIdx(t2, i2, offset2);
+    m[i][j] = m[j][i] = value;
+}
+}
+
 namespace QuantExt {
 
 using namespace CrossAssetAnalytics;
@@ -182,8 +194,8 @@ Disposable<Matrix> CrossAssetStateProcess::diffusionImpl(Time t, const Array&) c
             Real alphai = model_->irlgm1f(i)->alpha(t);
             Real alphaj = model_->irlgm1f(j)->alpha(t);
             Real rhozz = model_->correlation(IR, i, IR, j, 0, 0);
-            res[model_->pIdx(IR, i, 0)][model_->pIdx(IR, j, 0)] = res[model_->pIdx(IR, j, 0)][model_->pIdx(IR, i, 0)] =
-                alphai * alphaj * rhozz;
+            Real value = alphai*alphaj*rhozz;
+            setValue(res, value, model_, IR, i, IR, j, 0, 0);
         }
     }
     // ir-fx
@@ -192,8 +204,8 @@ Disposable<Matrix> CrossAssetStateProcess::diffusionImpl(Time t, const Array&) c
             Real alphai = model_->irlgm1f(i)->alpha(t);
             Real sigmaj = model_->fxbs(j)->sigma(t);
             Real rhozx = model_->correlation(IR, i, FX, j, 0, 0);
-            res[model_->pIdx(IR, i, 0)][model_->pIdx(FX, j, 0)] = res[model_->pIdx(FX, j, 0)][model_->pIdx(IR, i, 0)] =
-                alphai * sigmaj * rhozx;
+            Real value = alphai*sigmaj*rhozx;
+            setValue(res, value, model_, IR, i, FX, j, 0, 0);
         }
     }
     // fx-fx
@@ -202,8 +214,8 @@ Disposable<Matrix> CrossAssetStateProcess::diffusionImpl(Time t, const Array&) c
             Real sigmai = model_->fxbs(i)->sigma(t);
             Real sigmaj = model_->fxbs(j)->sigma(t);
             Real rhoxx = model_->correlation(FX, i, FX, j, 0, 0);
-            res[model_->pIdx(FX, i, 0)][model_->pIdx(FX, j, 0)] = res[model_->pIdx(FX, j, 0)][model_->pIdx(FX, i, 0)] =
-                sigmai * sigmaj * rhoxx;
+            Real value = sigmai*sigmaj*rhoxx;
+            setValue(res, value, model_, FX, i, FX, j, 0, 0);
         }
     }
     // ir-eq
@@ -212,8 +224,8 @@ Disposable<Matrix> CrossAssetStateProcess::diffusionImpl(Time t, const Array&) c
             Real alphai = model_->irlgm1f(i)->alpha(t);
             Real sigmaj = model_->eqbs(j)->sigma(t);
             Real rhozs = model_->correlation(IR, i, EQ, j, 0, 0);
-            res[model_->pIdx(IR, i, 0)][model_->pIdx(EQ, j, 0)] = res[model_->pIdx(EQ, j, 0)][model_->pIdx(IR, i, 0)] =
-                alphai * sigmaj * rhozs;
+            Real value = alphai*sigmaj*rhozs;
+            setValue(res, value, model_, IR, i, EQ, j, 0, 0);
         }
     }
     // fx-eq
@@ -222,8 +234,8 @@ Disposable<Matrix> CrossAssetStateProcess::diffusionImpl(Time t, const Array&) c
             Real sigmai = model_->fxbs(i)->sigma(t);
             Real sigmaj = model_->eqbs(j)->sigma(t);
             Real rhoxs = model_->correlation(FX, i, EQ, j, 0, 0);
-            res[model_->pIdx(FX, i, 0)][model_->pIdx(EQ, j, 0)] = res[model_->pIdx(EQ, j, 0)][model_->pIdx(FX, i, 0)] =
-                sigmai * sigmaj * rhoxs;
+            Real value = sigmai*sigmaj*rhoxs;
+            setValue(res, value, model_, FX, i, EQ, j, 0, 0);
         }
     }
     // eq-eq
@@ -232,8 +244,8 @@ Disposable<Matrix> CrossAssetStateProcess::diffusionImpl(Time t, const Array&) c
             Real sigmai = model_->eqbs(i)->sigma(t);
             Real sigmaj = model_->eqbs(j)->sigma(t);
             Real rhoss = model_->correlation(EQ, i, EQ, j, 0, 0);
-            res[model_->pIdx(EQ, i, 0)][model_->pIdx(EQ, j, 0)] = res[model_->pIdx(EQ, j, 0)][model_->pIdx(EQ, i, 0)] =
-                sigmai * sigmaj * rhoss;
+            Real value = sigmai*sigmaj*rhoss;
+            setValue(res, value, model_, EQ, i, EQ, j, 0, 0);
         }
     }
     // TODO : INFLATION components
