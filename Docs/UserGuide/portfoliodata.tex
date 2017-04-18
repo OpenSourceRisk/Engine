@@ -161,16 +161,19 @@ node is shown in Listing \ref{lst:swap_data}.
 
 \subsubsection{Cap/Floor}
 
-The \lstinline!CapFloorData! node is the trade data container for trade type CapFloors.  It's a single floating leg
-that's either capped, floored or both capped and floored. The \lstinline!CapFloorData! node contains a
-\lstinline!LPILegData!  sub-node where the LegType element must be set to \emph{Floating}, plus elements for the Cap and
-Floor rates. An example structure with Cap rates is shown in in Listing \ref{lst:capfloor_data}. A
-\lstinline!CapFloorData! node must have either \lstinline!CapRates! or \lstinline!FloorRates! elements, or both.
+The \lstinline!CapFloorData! node is the trade data container for trade type CapFloors.  It's a cap, floor or collar
+(i.e. a portfolio of a long cap and a short floor for a long position in the collar) on a series of Ibor rates. The
+\lstinline!CapFloorData! node contains a \lstinline!LongShort! sub-node which indicates whether the cap (floor, collar)
+is long or short, and a \lstinline!LegData!  sub-node where the LegType element must be set to \emph{Floating}, plus
+elements for the Cap and Floor rates. An example structure with Cap rates is shown in in Listing
+\ref{lst:capfloor_data}. A \lstinline!CapFloorData! node must have either \lstinline!CapRates! or \lstinline!FloorRates!
+elements, or both.
 
 \begin{listing}[H]
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
-<CapFloorData>
+  <CapFloorData>
+  <LongShort>Long</LongShort>
   <LegData>
     <Payer>false</Payer>
     <LegType>Floating</LegType>
@@ -189,6 +192,9 @@ The meanings and allowable values of the elements in the \lstinline!CapFloorData
 
 \begin{itemize}
 
+\item LongShort: This node defines the position in the cap (floor, collar) and can take values \lstinline!Long! or
+  \lstinline!Short!
+
 \item LegData: This is a trade component sub-node outlined in section \ref{ss:leg_data} Leg Data and Notionals. Exactly
   one \lstinline!LegData! node is allowed and the LegType element must be set to \emph{floating}.
 
@@ -201,8 +207,8 @@ The meanings and allowable values of the elements in the \lstinline!CapFloorData
   one single rate value is sufficient. The number of entered rate
   values cannot exceed the number of coupons. 
 
-Allowable values for each \lstinline!Rate! element:  
-Any real number. The rate is expressed in decimal form, eg 0.05 is a rate of  0.5\%
+  Allowable values for each \lstinline!Rate! element: Any real number. The rate is expressed in decimal form, eg 0.05 is
+  a rate of 5\%
 
 \item FloorRates: This node has child elements of type
   \lstinline!Rate! flooring the floating leg.  The first rate value
@@ -213,7 +219,8 @@ Any real number. The rate is expressed in decimal form, eg 0.05 is a rate of  0.
   over all coupons, one single rate value is sufficient. The number of
   entered rate values cannot exceed the number of coupons.
 
-Allowable values for each \lstinline!Rate! element:  Any real number. The rate is expressed in decimal form, eg 0.05 is a rate of  0.5\%
+  Allowable values for each \lstinline!Rate! element: Any real number. The rate is expressed in decimal form, eg 0.05 is
+  a rate of 5\%
 
 \end{itemize}
 
@@ -311,12 +318,11 @@ The meanings and allowable values of the various elements in the \lstinline!FXFo
 
 \subsubsection{FX Option}
 
-The \lstinline!FXOptionData!  node is the trade data container for the FX Option trade type.  Vanilla FX options as well
-as various barrier types as specified in the SubType element are supported. FX Options can be of exercise style
-\emph{European} or \emph{American}. The strike rate of an FX option is: SoldAmount / BoughtAmount.The
+The \lstinline!FXOptionData!  node is the trade data container for the FX Option trade type.  Vanilla FX options are
+supported, the exercise style must be \emph{European}. The strike rate of an FX option is: SoldAmount / BoughtAmount.The
 \lstinline!FXOptionData!  node includes one and only one \lstinline!OptionData! trade component sub-node plus elements
-specific to the FX Option. The structure of an example \lstinline!FXOptionData!  node of a single barrier FX Option is
-shown in Listing \ref{lst:fxoption_data}.
+specific to the FX Option. The structure of an example \lstinline!FXOptionData! node for a FX Option is shown in Listing
+\ref{lst:fxoption_data}.
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -325,15 +331,10 @@ shown in Listing \ref{lst:fxoption_data}.
             <OptionData>
              ...
             </OptionData>
-            <SubType>SingleBarrier</SubType>
             <BoughtCurrency>EUR</BoughtCurrency>
             <BoughtAmount>1000000</BoughtAmount>
             <SoldCurrency>USD</SoldCurrency>
             <SoldAmount>1350000</SoldAmount>
-            <BarrierType>DI</BarrierType>
-            <BarrierLevel>1.25</BarrierLevel>
-            <BarrierRebate>0.04</BarrierRebate>
-            <BarrierRebateFactor>0.1</BarrierRebateFactor>
         </FxOptionData>
 \end{minted}
 \caption{FX Option data}
@@ -344,25 +345,7 @@ The meanings and allowable values of the elements in the \lstinline!FXOptionData
 
 \begin{itemize}
 \item OptionData: This is a trade component sub-node outlined in section \ref{ss:option_data} Option Data. Note that the
-  FX option type allows for \emph{European} or \emph{American} option styles, but not \emph{Bermudan}.  FX options can
-  only have one exercise date.
-\item SubType: Specifies the FX option type. The allowable values are 
-given in Table \ref{tab:fxoption_subtype}. 
-
-\begin{table}[H]
-\centering
-  \begin{tabu} to 0.9\linewidth {| X[-1.5,l,m] | X[-5,l,m] |}
-    \hline
-    \bfseries{SubType} & \bfseries{Description} \\
-    \hline
-    \emph{Vanilla} & A vanilla FX option with no barrier or other structured features. \\ \hline
-    \emph{SingleBarrier} & Regular vanilla option payout plus a knock-in or knock-out barrier. \\ \hline
-    \emph{OneTouch} & Fixed payout if barrier is breached, no payout otherwise. \\ \hline
-    \emph{NoTouch} & No payout if barrier is breached, fixed payout otherwise. \\ \hline    
-  \end{tabu}
-  \caption{Allowable SubType Values.}
-  \label{tab:fxoption_subtype}
-\end{table}
+  FX option type allows for \emph{European} option style only.
 
 \item BoughtCurrency: The bought currency of the FX option.  
 
@@ -380,44 +363,6 @@ Allowable values:  See Currency in Table \ref{tab:allow_stand_data}.
 
 Allowable values:  Any positive real number.
 
-\item BarrierType: Specifies the barrier type. It is required for \lstinline!SubType! \emph{SingleBarrier} but not used
-  for the other subtypes. The allowable values are given in Table \ref{tab:fxoption_barriertype}.
-
-\begin{table}[H]
-\centering
-  \begin{tabu} to 0.9\linewidth {| X[-1.5,l,m] | X[-5,l,m] |}
-    \hline
-    \bfseries{BarrierType} & \bfseries{Description} \\
-    \hline
-    \emph{UO} & Up and Out\\ \hline
-    \emph{DO} & Down and Out\\ \hline
-    \emph{UI} & Up and In \\ \hline
-    \emph{DI} & Down and In\\ \hline    
-  \end{tabu}
-  \caption{Allowable BarrierType Values.}
-  \label{tab:fxoption_barriertype}
-\end{table}
-
-\item BarrierLevel: The barrier FX rate.  Required for SubTypes
-  \emph{SingleBarrier, OneTouch, NoTouch}. 
-
-Allowable values:  Any positive real number.
-
-\item BarrierRebate [Optional]:  When an option of type
-  \emph{SingleBarrier} expires without the barrier being hit, the
-  buyer can receive a rebate as a fraction of the original premium
-  paid. The BarrierRebate is the original premium in percentage terms,
-  and BarrierRebateFactor is the fraction to be returned if the
-  barrier is not hit. Only used for SubType:
-  \emph{SingleBarrier}. Defaults to zero if left blank or omitted. 
-
-Allowable values:  Any positive real number.
-
-\item BarrierRebateFactor [Optional]: The fraction to be returned if
-  the barrier is not hit. Only used for SubType:
-  \emph{SingleBarrier}. Defaults to zero if left blank or omitted. 
-
-Allowable values:  Any positive real number.
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -641,9 +586,9 @@ Another allowable specification of the notional schedule is shown in Listing \re
 \begin{minted}[fontsize=\footnotesize]{xml}
                 <Notionals>
                     <Notional>65000000</Notional>
-                    <Notional start='2016-01-02'>65000000</Notional>
-                    <Notional start='2017-01-02'>55000000</Notional>
-                    <Notional start='2021-01-02'>45000000</Notional>
+                    <Notional startDate='2016-01-02'>65000000</Notional>
+                    <Notional startDate='2017-01-02'>55000000</Notional>
+                    <Notional startDate='2021-01-02'>45000000</Notional>
                 </Notionals>
 \end{minted}
 \caption{Notional list with dates}
@@ -836,8 +781,8 @@ dates as shown in Listing \ref{lst:fixedleg_data_dates}.
               <FixedLegData>
                     <Rates>
                         <Rate>0.05</Rate>
-                        <Rate start='2016-02-04'>0.05</Rate>
-                        <Rate start='2019-02-05'>0.05</Rate>
+                        <Rate startDate='2016-02-04'>0.05</Rate>
+                        <Rate startDate='2019-02-05'>0.05</Rate>
                     </Rates>
               </FixedLegData>
 \end{minted}
@@ -847,7 +792,7 @@ dates as shown in Listing \ref{lst:fixedleg_data_dates}.
 
 \end{itemize}
 
-\subsubsection{Floating Leg Data and Spreads}
+\subsubsection{Floating Leg Data, Spreads, Gearings, Caps and Floors}
 \label{ss:floatingleg_data}
 
 The \lstinline!FloatingLegData! trade component node is used within the \lstinline!LegData! trade component when the
@@ -867,6 +812,15 @@ An example of a \lstinline!FloatingLegData! node is shown in Listing \ref{lst:fl
                     <Spreads>
                         <Spread>0.005</Spread>
                     </Spreads>
+                    <Gearings>
+                        <Gearing>2.0</Gearing>
+                    </Gearings>
+                    <Caps>
+                        <Cap>0.05</Cap>
+                    </Caps>
+                    <Floors>
+                        <Floor>0.01</Floor>
+                    </Floors>
                 </FloatingLegData>
 \end{minted}
 \caption{Floating leg data}
@@ -919,13 +873,24 @@ in Listing \ref{lst:spreads_dates}.
 \begin{minted}[fontsize=\footnotesize]{xml}
                     <Spreads>
                         <Spread>0.005</Spread>
-                        <Spread start='2017-03-05'>0.007</Spread>
-                        <Spread start='2019-03-05'>0.009</Spread>
+                        <Spread startDate='2017-03-05'>0.007</Spread>
+                        <Spread startDate='2019-03-05'>0.009</Spread>
                     </Spreads>
 \end{minted}
 \caption{'Dated' spreads}
 \label{lst:spreads_dates}
 \end{listing}
+
+\item Gearings: This node contains child elements of type \lstinline!Gearing! indicating that the coupon rate is
+  multiplied by the given factors. The mode of specification is analogous to spreads, see above.
+
+\item Caps: This node contains child elements of type \lstinline!Cap! indicating that the coupon rate is capped at the
+  given rate (after applying gearing and spread, if any). The mode of specification is analogous to spreads, see above.
+
+\item Floors: This node contains child elements of type \lstinline!Floor! indicating that the coupon rate is floored at
+  the given rate(after applying gearing and spread, if any). The mode of specification is analogous to spreads, see
+  above.
+
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
