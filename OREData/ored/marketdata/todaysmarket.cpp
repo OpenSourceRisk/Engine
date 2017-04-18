@@ -331,7 +331,6 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                                 tmp, indexInterpolated ? CPI::Flat : CPI::Linear));
                     }
                 }
-
                 for (const auto it : params.yoyInflationIndexCurves(configuration.first)) {
                     if (it.second == spec->name()) {
                         LOG("Adding YoYInflationIndex (" << it.first << ") with spec " << *inflationspec
@@ -352,7 +351,6 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                                 Handle<YoYInflationTermStructure>(ts)));
                     }
                 }
-
                 break;
             }
 
