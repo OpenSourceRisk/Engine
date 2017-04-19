@@ -20,11 +20,9 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/flowanalysis.hpp>
-#include <ql/cashflows/capflooredcoupon.hpp>
-#include <ql/cashflows/iborcoupon.hpp>
-#include <ql/cashflows/cmscoupon.hpp>
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
+#include <ql/cashflows/floatingratecoupon.hpp>
 
 using namespace std;
 using namespace QuantLib;
@@ -45,17 +43,9 @@ void FixingManager::initialise(const boost::shared_ptr<Portfolio>& portfolio) {
         for (auto leg : trade->legs()) {
             flowList.push_back(data::flowAnalysis(leg));
             for (auto cf : leg) {
-                boost::shared_ptr<CappedFlooredCoupon> cfc = boost::dynamic_pointer_cast<CappedFlooredCoupon>(cf);
-                if (cfc)
-                    cf = cfc->underlying();
-
-                boost::shared_ptr<IborCoupon> ic = boost::dynamic_pointer_cast<IborCoupon>(cf);
-                if (ic)
-                    setIndices.insert(ic->iborIndex());
-
-                boost::shared_ptr<CmsCoupon> cc = boost::dynamic_pointer_cast<CmsCoupon>(cf);
-                if (cc)
-                    setIndices.insert(cc->swapIndex());
+                boost::shared_ptr<FloatingRateCoupon> frc = boost::dynamic_pointer_cast<FloatingRateCoupon>(cf);
+                if (frc)
+                    setIndices.insert(frc->index());
 
                 boost::shared_ptr<FloatingRateFXLinkedNotionalCoupon> fc =
                     boost::dynamic_pointer_cast<FloatingRateFXLinkedNotionalCoupon>(cf);
