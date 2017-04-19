@@ -812,6 +812,81 @@ Examples:
 \item { SWAPTION/RATE\_LNVOL/EUR/5Y/10Y/SMILE/0.0050} (absolute vol quote for ATM strike plus 50bp)
 \end{itemize}
 
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Equity Spot Price}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\begin{table}[H]
+	\centering
+	\begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+		\hline
+		{\bf Property} & {\bf Allowable values} & {\bf Description} \\
+		\hline
+		Name & String & Identifying name of the equity \\ 
+		\hline
+		Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}&  Currency of the equity \\ 
+		\hline
+	\end{tabular}
+	\caption{Equity Spot Price}
+	\label{tab:eqspot_quote}
+\end{table}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Equity Forward Price}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\begin{table}[H]
+	\centering
+	\begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+		\hline
+		{\bf Property} & {\bf Allowable values} & {\bf Description} \\
+		\hline
+		Name & String & Identifying name of the equity \\ 
+		\hline
+		Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}&  Currency of the equity \\ 
+		\hline
+		Maturity & Date string, or integer followed by D, W, M or Y & Maturity of the forward quote \\ 
+		\hline
+	\end{tabular}
+	\caption{Equity Forward Price}
+	\label{tab:eqfwd_quote}
+\end{table}
+
+\medskip
+Examples:
+\begin{itemize}
+	\item {EQUITY\_FWD/PRICE/SP5/USD/2016-06-16}
+	\item {EQUITY\_FWD/PRICE/SP5/USD/2Y}
+\end{itemize}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Equity Dividend Rate}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\begin{table}[H]
+	\centering
+	\begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+		\hline
+		{\bf Property} & {\bf Allowable values} & {\bf Description} \\
+		\hline
+		Name & String & Identifying name of the equity \\ 
+		\hline
+		Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}&  Currency of the equity \\ 
+		\hline
+		Maturity & Date string, or integer followed by D, W, M or Y & Maturity of the forward quote \\ 
+		\hline
+	\end{tabular}
+	\caption{Equity Dividend Yield Rate}
+	\label{tab:eqdiv_quote}
+\end{table}
+
+\medskip
+Examples:
+\begin{itemize}
+	\item {EQUITY\_DIVIDEND/RATE/SP5/USD/2016-06-16}
+	\item {EQUITY\_DIVIDEND/RATE/PRICE/SP5/USD/2Y}
+\end{itemize}
+
 % %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 % \subsection{Year-on-Year Inflation Cap/Floor Volatility} \label{ss:yoy_inflation_vol}
 % %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
