@@ -609,7 +609,12 @@ Example & Description \\
 \hline
 14 & Minimal Market Data Setup \\
 \hline
-15 & Sensitivity and Stress Scenario Computation
+15 & Sensitivity and Stress Scenario Computation \\
+\hline
+16 & Equity Derivatives \\
+\hline
+17 & Inflation Swaps \\
+\hline
 \end{tabular}
 \caption{ORE examples.}
 \label{tab_0}
@@ -899,7 +904,7 @@ trade's value date must match corresponding Vanilla FX Option prices, as shown i
 \end{figure}
 
 %--------------------------------------------------------
-\subsection{FX Option Exposure}
+\subsection{FX Option Exposure}\label{sec:fxoption}
 %--------------------------------------------------------
 
 This example (in folder {\tt Examples/Example\_7}, as the FX Forward example) illustrates the exposure evolution for an
@@ -1371,6 +1376,44 @@ The stress scenario definition in {\tt stresstest.xml} defines two stress tests:
 The corresponding output file {\tt stresstest.csv} contains the base NPV, the NPV under the scenario shifts and the
 difference of the two for each trade and scenario label.
 
+%--------------------------------------------------------
+\subsection{Equity Derivatives}\label{ex:equityderivatives}
+%--------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_16} demonstrates the computation of NPV, exposures and XVA for a portfolio 
+of OTC equity derivatives. The portfolio used in this example consists of:
+
+\begin{itemize}
+	\item an equity call option denominated in EUR (``Luft'')
+	\item an equity put option denominated in EUR (``Luft'')
+	\item an equity forward denominated in EUR (``Luft'')
+	\item an equity call option denominated in USD (``SP5'')
+	\item an equity put option denominated in USD (``SP5'')
+	\item an equity forward denominated in USD (``SP5'')
+\end{itemize}
+
+The step-by-step procedure for running ORE is identicaly for equities as for other asset classes; the same market and 
+portfolio data files are used to store the equity market data and trade details, respectively. For the exposure 
+simulation, the calibration parameters for the equity risk factors can be set in the usual {\tt simulation.xml} file.
+
+Looking at the MtM results in the output file {\tt npv.csv} we observe that put-call parity ($V_{Fwd} = V_{Call} - 
+V_{Put}$) is observed as expected. Looking at Figure \ref{fig_eq_call} we observe that the Expected Exposure profile of 
+the equity call option trade is relatively smooth over time, while for the equity forward trade the Expected Exposure 
+tends to increase as we approach maturity. This behaviour is similar to what we observe in sections \ref{sec:fxfwd} 
+and \ref{sec:fxoption}. 
+
+\begin{figure}[h!]
+	\begin{center}
+		\includegraphics[scale=0.45]{mpl_eq_call.pdf}
+	\end{center}
+	\caption{Equity (``Luft'') call option and OTC forward exposure evolution, maturity in approximately 2.5 years. 
+	Simulation with 
+	10000 paths and quarterly time steps.}
+	\label{fig_eq_call}
+\end{figure}
+
+%--------------------------------------------------------
+
 \clearpage
 %========================================================
 \section{Launchers and Visualisation}\label{sec:visualisation}
@@ -1538,7 +1581,8 @@ and kicks off updates afterwards when enabled again
 \subsubsection{Markets}\label{sec:master_input_markets}
 
 The {\tt Markets} section (see listing \ref{lst:ore_markets}) is used to choose market configurations for calibrating
-the IR and FX simulation model components, pricing and simulation, respectively. These configurations have to be defined
+the IR, FX and EQ simulation model components, pricing and simulation, respectively. These configurations have to be 
+defined
 in {\tt todaysmarket.xml} (see section \ref{sec:market}).
 
 \begin{listing}[H]
@@ -1547,6 +1591,7 @@ in {\tt todaysmarket.xml} (see section \ref{sec:market}).
 <Markets>
   <Parameter name="lgmcalibration">collateral_inccy</Parameter>
   <Parameter name="fxcalibration">collateral_eur</Parameter>
+  <Parameter name="eqcalibration">collateral_inccy</Parameter>
   <Parameter name="pricing">collateral_eur</Parameter>
   <Parameter name="simulation">collateral_eur</Parameter>
 </Markets>
@@ -1877,17 +1922,21 @@ the application will complain at run time and exit.
 be chosen by the user. The file name needs to be entered into the master configuration file {\tt ore.xml}, see section
 \ref{sec:master_input}.
 
-\medskip The file starts and ends with the opening and closing tags {\tt <TodaysMarket>} and {\tt </TodaysMarket>}. The
-file then contains configuration blocks for
+\medskip 
+The file starts and ends with the opening and closing tags {\tt <TodaysMarket>} 
+and {\tt </TodaysMarket>}. The file then contains configuration blocks for
 \begin{itemize}
 \item Discounting curves
 \item Index curves (to project index fixings)
 \item Swap index curves (to project Swap rates)
 \item FX spot rates
-\item FX Volatility structures
+\item FX volatility structures
 \item Swaption volatility structures
 \item Cap/Floor volatility structures
 \item Default curves
+\item Equity curves (to project forward prices)
+\item Equity volatility structures
+\item Security Spreads
 \end{itemize}
 
 There can be alternative versions of each block each labeled with a unique identifier (e.g. Discount curve block with ID
@@ -2081,10 +2130,64 @@ The following is an excerpt of the Default Curves block with ID 'default' from t
 \label{lst:defaultcurve_spec}
 \end{listing}
 
-
 This instructs ORE to build a set of default probability curves, again defined in the curve configuration file. Each
 curve is then associated with a name (BANK, CUST\_A) for subsequent lookup.  As before, the last token
 (e.g. BANK\_SR\_USD) is user defined and will be found in the curve configuration's CurveId tag.
+
+\subsubsection{Security Spreads}
+The following is an excerpt of the Security Spreads block with ID 'default' from the same example file:
+
+\begin{listing}[H]
+	%\hrule\medskip
+	\begin{minted}[fontsize=\footnotesize]{xml}
+<SecuritySpreads id="default">
+  <SecuritySpread name="SECURITY_1">SecuritySpread/SECURITY_1</SecuritySpread>
+</SecuritySpreads>
+	\end{minted}
+	\caption{Security spreads block with ID 'default'}
+	\label{lst:secspread_spec}
+\end{listing}
+
+\todo[inline]{Write explanation of security spreads}
+
+\subsubsection{Equity Curves}
+The following is an excerpt of the Equity curves block with ID 'default' from the same example file:
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<EquityCurves id="default">
+  <EquityCurve name="SP5">Equity/USD/SP5</EquityCurve>
+  <EquityCurve name="Lufthansa">Equity/EUR/Lufthansa</EquityCurve>
+</EquityCurves>
+\end{minted}
+\caption{Equity curves block with ID 'default'}
+\label{lst:eqcurve_spec}
+\end{listing}
+
+This instructs ORE to build a set of equity curves, again defined in the curve configuration file. Each equity curve 
+after construction will consist of a spot equity price, as well as a term structure of dividend yields, which can be 
+used to determine forward prices. This object is then associated with a name (e.g. SP5) for subsequent lookup. 
+
+\subsubsection{Equity Volatilities}
+
+The following is an excerpt of the equity volatilities block with ID 'default' from the same example file:
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<EquityVolatilities id="default">
+  <EquityVolatility name="SP5">EquityVolatility/USD/SP5</EquityVolatility>
+  <EquityVolatility name="Lufthansa">EquityVolatility/EUR/Lufthansa</EquityVolatility>
+</EquityVolatilities>
+\end{minted}
+\caption{EQ volatility block with ID 'default'}
+\label{lst:eqvol_spec}
+\end{listing}
+
+This instructs ORE to build two equity volatility structures for SP5 and Lufthansa, respectively. See the curve
+configuration file for the definition of the equity volatility structure.
+
 
 \subsubsection{Market Configurations}
 
@@ -2166,6 +2269,14 @@ following excerpt of the Example section's {\tt pricingengine.xml} shows the sel
     <ModelParameters/>
     <Engine>BlackBachelierSwaptionEngine</Engine>
     <EngineParameters/>
+  </Product>
+  <Product type="Bond">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingRiskyBondEngine</Engine>
+    <EngineParameters>
+      <Parameter name="TimestepPeriod">6M</Parameter>
+    </EngineParameters>
   </Product>
   <Product type="BermudanSwaption">
     <Model>LGM</Model>
@@ -2439,6 +2550,61 @@ the default, ATMF options), or explicitly specified (in terms of FX rates as abs
 such as $\pm 25D$, $ATMF$ for at the money)
 \end{itemize}
 
+
+\medskip
+
+Each equity model is specified by a block as follows
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CrossAssetModel>	
+  <!-- ... -->
+  <EquityModels>
+    <CrossAssetLGM name="default">
+      <Currency>EUR</Currency>
+      <CalibrationType>Bootstrap</CalibrationType>
+      <Sigma>
+        <Calibrate>Y</Calibrate>
+        <ParamType>Piecewise</ParamType>
+        <TimeGrid>1.0,2.0,3.0,4.0,5.0,7.0,10.0</TimeGrid>
+        <InitialValue>0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1</InitialValue>
+      </Sigma>
+      <CalibrationOptions>
+        <Expiries>1Y,2Y,3Y,4Y,5Y,10Y</Expiries>
+        <Strikes/>
+      </CalibrationOptions>
+    </CrossAssetLGM>
+    <CrossAssetLGM name="SP5">
+      <!-- ... -->
+    </CrossAssetLGM>
+    <CrossAssetLGM name="Lufthansa">
+      <!-- ... -->
+    </CrossAssetLGM>
+      <!-- ... -->
+  </EquityModels>
+  <!-- ... -->
+<CrossAssetModel>	
+\end{minted}
+\caption{Simulation model equity configuration}
+\label{lst:simulation_model_eq_configuration}
+\end{listing}
+
+CrossAssetLGM sections are defined by equity name, but we also support a default configuration as above for the IR and 
+FX model parametrisations.  Within each CrossAssetLGM section, the interpretation of elements is as follows:
+
+\begin{itemize}
+	\item {\tt Currency: } Currency of denomination
+	\item {\tt CalibrationType: } Choose between {\em Bootstrap} and {\em BestFit} as in the IR section
+	\item {\tt Sigma/Calibrate: } Flag to enable/disable calibration of this particular parameter
+	\item {\tt Sigma/ParamType: } Choose between {\em Constant} and {\em Piecewise}
+	\item {\tt Sigma/TimeGrid: } Initial time grid for this parameter, can be left empty if ParamType is Constant
+	\item {\tt Sigma/InitialValue: } Vector of initial values, matching number of entries in time, or single value if 
+	the time grid is empty
+	\item {\tt CalibrationOptions: } Choice of calibration instruments by expiry and strike, strikes can be empty 
+	(implying the default, ATMF options), or explicitly specified (in terms of equity prices as absolute strike values)
+\end{itemize}
+
 \medskip
 Finally, the instantaneous correlation structure is specified as follows.
 
@@ -2472,10 +2638,11 @@ Any risk factor pair not specified explicitly here will be assumed to have zero 
 
 The last part of the simulation configuration file covers the specification of the simulated market.  Note that the
 simulation model will yield the evolution of risk factors such as short rates which need to be translated into entire
-yield curves that can be 'understood' by the instruments which we want to price under scenarios.  Moreover we need to
-specify how volatility structures evolve even if we do not explicitly simulate volatility. This translation happens
-based on the information in the {\em simulation market} object, which is configured in the section within the enclosing
-tags {\tt <Market>} and {\tt </Market}, as shown in the following small two-currency example.
+yield curves that can be 'understood' by the instruments which we want to price under scenarios.  
+
+Moreover we need to specify how volatility structures evolve even if we do not explicitly simulate volatility. This 
+translation happens based on the information in the {\em simulation market} object, which is configured in the section 
+within the enclosing tags {\tt <Market>} and {\tt </Market}, as shown in the following small example.
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -2554,7 +2721,7 @@ tags {\tt <Market>} and {\tt </Market}, as shown in the following small two-curr
 %--------------------------------------------------------
 
 This file specifies how sensitivities are computed. The general structure is shown in listing
-\ref{list:sensitivity_config}. For each market component, a set of parameters is defined determining how sensitvities
+\ref{lst:sensitivity_config}. For each market component, a set of parameters is defined determining how sensitvities
 are computed with regards to the component:
 
 \begin{itemize}
@@ -2677,7 +2844,7 @@ giving an example in each category:
 %--------------------------------------------------------
 
 This file specifies how sensitivities are computed. The general structure is shown in listing
-\ref{list:sensitivity_config}.
+\ref{lst:sensitivity_config}.
 
 In this example, two stress scenarios ``parallel\_rates'' and ``twist'' are defined. Each scenario definition contains
 the market components to be shifted in this scenario in a similar syntax that is also used for the sensitivity
@@ -2857,6 +3024,62 @@ configuration determines the composition of yield curves, default curves, Swapti
 \label{lst:fxoptionvol_configuration}
 \end{listing}
 
+\subsubsection{Equity Curve Structures}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<EquityCurves>
+  <EquityCurve>
+    <CurveId>SP5</CurveId>
+    <CurveDescription>SP 500 equity price projection curve</CurveDescription>
+    <Currency>USD</Currency>
+    <Type>DividendYield</Type> <!-- {DividendYield, ForwardPrice} -->
+    <SpotQuote>EQUITY/PRICE/SP5/USD</SpotQuote> <!--  the spot quote from the market data file -->
+    <Quotes>
+      <Quote>EQUITY_DIVIDEND/RATE/SP5/USD/3M</Quote>
+      <Quote>EQUITY_DIVIDEND/RATE/SP5/USD/20160915</Quote>
+      <Quote>EQUITY_DIVIDEND/RATE/SP5/USD/1Y</Quote>
+      <Quote>EQUITY_DIVIDEND/RATE/SP5/USD/20170915</Quote>
+    </Quotes>
+    <DayCounter>A365</DayCounter>
+  </EquityCurve>
+  <EquityCurve>
+    <!-- ... -->
+  </EquityCurve> 
+  </EquityCurves>
+\end{minted}
+\caption{Equity curve configuration}
+\label{lst:eqcurve_configuration}
+\end{listing}
+
+The equity curves here consists of a spot equity price, as well as a set of either forward prices or else dividend 
+yields. Upon construction, ORE stores internally an equity spot price quote and a dividend yield term structure, which 
+are then used together for projection of forward prices.
+
+\subsubsection{Equity Volatility Structures}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<EquityVolatilities>
+  <EquityVolatility>
+    <CurveId>SP5</CurveId>
+    <CurveDescription>Lognormal option implied vols for SP 500</CurveDescription>
+    <Currency>USD</Currency>
+    <Dimension>ATM</Dimension>
+    <Expiries>
+      6M
+    </Expiries>
+  </EquityVolatility>
+  <EquityVolatility>
+    <!-- ... -->
+  </EquityVolatility>
+</EquityVolatilities>
+\end{minted}
+\caption{Equity option volatility configuration}
+\label{lst:eqoptionvol_configuration}
+\end{listing}
 
 %--------------------------------------------------------
 %\subsection{Conventions: {\tt conventions.xml}}

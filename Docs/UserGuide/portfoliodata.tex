@@ -365,6 +365,86 @@ Allowable values:  Any positive real number.
 
 \end{itemize}
 
+
+\subsubsection{Equity Option}
+
+The \lstinline!EquityOptionData!  node is the trade data container for the equity option trade type.  Vanilla equity 
+options are supported, the exercise style must be \emph{European}. The \lstinline!FXOptionData!  node includes one and 
+only one \lstinline!OptionData! trade component sub-node plus elements specific to the equity option. The structure of 
+an example \lstinline!EquityOptionData! node for an equity option is shown in Listing
+\ref{lst:eqoption_data}.
+
+\begin{listing}[H]
+	%\hrule\medskip
+	\begin{minted}[fontsize=\footnotesize]{xml}
+<EquityOptionData>
+	<OptionData>
+	...
+	</OptionData>
+	<Name>SP5</Name>
+	<Currency>USD</Currency>
+	<Strike>2147.56</Strike>
+	<Quantity>17000</Quantity>
+</EquityOptionData>
+	\end{minted}
+	\caption{FX Option data}
+	\label{lst:eqoption_data}
+\end{listing}
+
+The meanings and allowable values of the elements in the \lstinline!EquityOptionData!  node follow below.
+
+\begin{itemize}
+	\item OptionData: This is a trade component sub-node outlined in section \ref{ss:option_data} Option Data. Note 
+	that the FX option type allows for \emph{European} option style only.	
+	\item Name: The name of the underlying equity 	
+	Allowable values:  Any string (provided it is the ID of an equity in the market configuration).
+	\item Currency: The bought currency of the equity option.  	
+	Allowable values:  See Currency in Table \ref{tab:allow_stand_data}.	
+	\item Strike: The option strike price.  
+	Allowable values:  Any positive real number.	
+	\item Quantity: The number of units of the underlying covered by the transaction  
+	Allowable values:  Any positive real number.
+\end{itemize}
+
+\subsubsection{Equity Forward}
+
+The \lstinline!EquityForwardData!  node is the trade data container for the equity forward trade type.  Vanilla equity 
+forwards are supported. The structure of an example \lstinline!EquityForwardData! node for an equity option is shown in 
+Listing \ref{lst:eqfwd_data}.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<EquityForwardData>
+  <LongShort>Long</LongShort>
+  <Maturity>2018-06-30</Maturity>
+  <Name>SP5</Name>
+  <Currency>USD</Currency>
+  <Strike>2147.56</Strike>
+  <Quantity>17000</Quantity>
+</EquityForwardData>
+\end{minted}
+\caption{Equity Forward data}
+\label{lst:eqfwd_data}
+\end{listing}
+
+The meanings and allowable values of the elements in the \lstinline!EquityForwardData!  node follow below.
+
+\begin{itemize}
+	\item LongShort: Defines whether the trade is long or short the underlying equity
+	Allowable values: Long, Short.
+	\item Maturity: The maturity date of the forward contract
+	Allowable values: Any date string.
+	\item Name: The name of the underlying equity 	
+	Allowable values:  Any string (provided it is the ID of an equity in the market configuration).
+	\item Currency: The bought currency of the equity option.  	
+	Allowable values:  See Currency in Table \ref{tab:allow_stand_data}.	
+	\item Strike: The option strike price.  
+	Allowable values:  Any positive real number.	
+	\item Quantity: The number of units of the underlying covered by the transaction  
+	Allowable values:  Any positive real number.
+\end{itemize}
+
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Trade Components}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
