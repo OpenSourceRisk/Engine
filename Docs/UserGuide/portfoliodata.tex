@@ -365,6 +365,63 @@ Allowable values:  Any positive real number.
 
 \end{itemize}
 
+\subsubsection{CPI Swap}
+
+A CPI swap is set up as a swap, with one leg of type {\tt CPI}. Listing \ref{lst:cpiswap} shows an example. The
+CPI leg contains an additional {\tt CPILegData} block. See \ref{ss:cpilegdata} for details on the CPI leg specification.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <SwapData>
+      <LegData>
+        <LegType>Floating</LegType>
+        <Payer>true</Payer>
+        ...
+      </LegData>
+      <LegData>
+        <LegType>CPI</LegType>
+        <Payer>false</Payer>
+        ...
+        <CPILegData>
+        ...
+        </CPILegData>
+      </LegData>
+    </SwapData>
+\end{minted}
+\caption{CPI Swap Data}
+\label{lst:cpiswap}
+\end{listing}
+
+\subsubsection{Year on Year Inflation Swap}
+
+A Year on Year inflation swap is set up as a swap, with one leg of type {\tt YY}. Listing \ref{lst:yyswap} shows an
+example. The YY leg contains an additional {\tt YYLegData} block. See \ref{ss:yylegdata} for details on the YY leg
+specification.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <SwapData>
+      <LegData>
+        <LegType>Floating</LegType>
+        <Payer>true</Payer>
+        ...
+      </LegData>
+      <LegData>
+        <LegType>YY</LegType>
+        <Payer>false</Payer>
+        ...
+        <YYLegData>
+        ...
+        </YYLegData>
+      </LegData>
+    </SwapData>
+\end{minted}
+\caption{Year on Year Swao Data}
+\label{lst:yyswap}
+\end{listing}
+
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Trade Components}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -605,8 +662,10 @@ Dates.
 outlined in section \ref{ss:fixedleg_data} Fixed Leg Data and Rates.
 \item FloatingLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{floating} It is
 outlined in section \ref{ss:floatingleg_data} Floating Leg Data and Spreads.
-% \item CPILegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{CPI}. It is
-%   outlined in section \ref{ss:cpileg_data} CPI Leg Data.
+\item CPILegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{CPI}. It is
+  outlined in section \ref{ss:cpilegdata} CPI Leg Data.
+\item YYLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{YY}. It is
+  outlined in section \ref{ss:yylegdata} YY Leg Data.
 \end{itemize}
 
 \subsubsection{Schedule Data and Dates}\label{ss:schedule_data}
@@ -892,6 +951,114 @@ in Listing \ref{lst:spreads_dates}.
   above.
 
 \end{itemize}
+
+\subsubsection{CPI Leg Data}
+\label{ss:cpilegdata}
+
+Listing \ref{lst:cpilegdata} shows an example for a leg of type CPI. The CPILegData block contains the following
+elements:
+
+\begin{itemize}
+\item Index: The underlying zero inflation index
+\item Rates: The fixed rate(s) of the leg. As usual, this can be a single value, a vector of values or a dated vector of
+  values.
+\item BaseCPI: The base CPI used to determine the lifting factor for the fixed coupons
+\item ObservationLag: The observation lag to be applied.
+\item Interpolated: A flag indicating whether interpolation should be applied to inflation fixings.
+\end{itemize}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+      <LegData>
+        <LegType>CPI</LegType>
+        <Payer>false</Payer>
+        <Currency>GBP</Currency>
+        <Notionals>
+          <Notional>10000000</Notional>
+        </Notionals>
+        <DayCounter>ACT/ACT</DayCounter>
+        <PaymentConvention>Following</PaymentConvention>
+        <ScheduleData>
+          <Rules>
+            <StartDate>2016-07-18</StartDate>
+            <EndDate>2021-07-18</EndDate>
+            <Tenor>1Y</Tenor>
+            <Calendar>UK</Calendar>
+            <Convention>ModifiedFollowing</Convention>
+            <TermConvention>ModifiedFollowing</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+        <CPILegData>
+          <Index>UKRPI</Index>
+          <Rates>
+            <Rate>0.02</Rate>
+          </Rates>
+          <BaseCPI>210</BaseCPI>
+          <ObservationLag>2M</ObservationLag>
+          <Interpolated>false</Interpolated>
+        </CPILegData>
+      </LegData>
+\end{minted}
+\caption{CPI leg data}
+\label{lst:cpilegdata}
+\end{listing}
+
+\subsubsection{YY Leg Data}
+\label{ss:yylegdata}
+
+Listing \ref{lst:yylegdata} shows an example for a leg of type YY. The YYLegData block contains the following
+elements:
+
+\begin{itemize}
+\item Index: The underlying zero inflation index
+\item FixingDays: The number of fixing days
+\item ObservationLag: The observation lag to be applied.
+\item Interpolated: A flag indicating whether interpolation should be applied to inflation fixings.
+\end{itemize}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+      <LegData>
+        <LegType>YY</LegType>
+        <Payer>false</Payer>
+        <Currency>EUR</Currency>
+        <Notionals>
+          <Notional>10000000</Notional>
+        </Notionals>
+        <DayCounter>ACT/ACT</DayCounter>
+        <PaymentConvention>Following</PaymentConvention>
+        <ScheduleData>
+          <Rules>
+            <StartDate>2016-07-18</StartDate>
+            <EndDate>2021-07-18</EndDate>
+            <Tenor>1Y</Tenor>
+            <Calendar>UK</Calendar>
+            <Convention>ModifiedFollowing</Convention>
+            <TermConvention>ModifiedFollowing</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+        <YYLegData>
+          <Index>EUHICPXT</Index>
+          <FixingDays>2</FixingDays>
+          <ObservationLag>2M</ObservationLag>
+          <Interpolated>true</Interpolated>
+        </YYLegData>
+      </LegData>
+\end{minted}
+\caption{YY leg data}
+\label{lst:yylegdata}
+\end{listing}
+
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Allowable Values for Standard Trade Data}

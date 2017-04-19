@@ -455,3 +455,44 @@ SettlementDays above.
 \item EOM [Optional]: \emph{True} if the end of month convention is to be used when generating the schedule on both legs
 and \emph{False} if not. If not provided, it defaults to \emph{False}.
 \end{itemize}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsubsection{Inflation Conventions}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+A node with name \emph{InflationSwap} is used to store conventions for zero or year on year inflation swap quotes. The
+structure of this node is shown in Listing \ref{lst:inflation_conventions}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <InflationSwap>
+      <Id>EUHICPXT_INFLATIONSWAP</Id>
+      <FixCalendar>TARGET</FixCalendar>
+      <FixConvention>MF</FixConvention>
+      <DayCounter>30/360</DayCounter>
+      <Index>EUHICPXT</Index>
+      <Interpolated>false</Interpolated>
+      <ObservationLag>3M</ObservationLag>
+      <AdjustInfObsDates>false</AdjustInfObsDates>
+      <InfCalendar>TARGET</InfCalendar>
+      <InfConvention>MF</InfConvention>
+  </InflationSwap>
+\end{minted}
+\caption{Inflation swap conventions}
+\label{lst:inflation_conventions}
+\end{listing}
+
+The meaning of the elements is as follows:
+
+\begin{itemize}
+\item FixCalendar: The calendar for the fixed rate leg of the swap.
+\item FixConvention: The rolling convention for the fixed rate leg of the swap.
+\item DayCounter: The payoff / coupon day counter (applied to both legs).
+\item Index: The underlying inflation index.
+\item Interpolated: Flag indicating interpolation of the index in the swap's payoff calculation.
+\item ObservationLag: The index observation lag to be applied.
+\item AdjustInfObsDates: Flag indicating whether index observation dates should be adjusted or not.
+\item InfCalendar: The calendar for the inflation leg of the swap.
+\item InfConvention: The rolling convention for the inflation leg of the swap.
+\end{itemize}
