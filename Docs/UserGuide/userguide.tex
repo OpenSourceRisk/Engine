@@ -1937,6 +1937,8 @@ and {\tt </TodaysMarket>}. The file then contains configuration blocks for
 \item Equity curves (to project forward prices)
 \item Equity volatility structures
 \item Security Spreads
+\item Inflation index curves (to project zero or yoy inflation fixings)
+\item Inflation Cap/Floor price surfaces
 \end{itemize}
 
 There can be alternative versions of each block each labeled with a unique identifier (e.g. Discount curve block with ID
@@ -2189,11 +2191,76 @@ This instructs ORE to build two equity volatility structures for SP5 and Lufthan
 configuration file for the definition of the equity volatility structure.
 
 
+\subsubsection{Inflation Index Curves}
+
+The following is an excerpt of the Zero Inflation Index Curves block with ID 'default' from the sample example file:
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<ZeroInflationIndexCurves id="default">
+    <ZeroInflationIndexCurve name="EUHICPXT">Inflation/EUHICPXT/EUHICPXT_ZC_Swaps</ZeroInflationIndexCurve>
+    <ZeroInflationIndexCurve name="FRHICP">Inflation/FRHICP/FRHICP_ZC_Swaps</ZeroInflationIndexCurve>
+    <ZeroInflationIndexCurve name="UKRPI">Inflation/UKRPI/UKRPI_ZC_Swaps</ZeroInflationIndexCurve>
+    <ZeroInflationIndexCurve name="USCPI">Inflation/USCPI/USCPI_ZC_Swaps</ZeroInflationIndexCurve>
+    ...
+</ZeroInflationIndexCurves>
+\end{minted}
+\caption{Zero Inflation Index Curves block with ID 'default'}
+\label{lst:zeroinflationindexcurve_spec}
+\end{listing}
+
+This instructs ORE to build a set of zero inflation index curves, which are defined in the curve configuration
+file. Each curve is then associated with an index name (like e.g. EUHICPXT or UKRPI). The last token
+(e.g. EUHICPXT\_ZC\_Swap) is user defined and will be found in the curve configuration's CurveId tag.
+
+In a similar way, Year on Year index curves are specified:
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <YYInflationIndexCurves id="default">
+      <YYInflationIndexCurve name="EUHICPXT">Inflation/EUHICPXT/EUHICPXT_YY_Swaps</YYInflationIndexCurve>
+      ...
+  </YYInflationIndexCurves>
+\end{minted}
+\caption{YoY Inflation Index Curves block with ID 'default'}
+\label{lst:yoyinflationindexcurve_spec}
+\end{listing}
+
+Note that the index name is the same as in the corresponding zero index curve definition, but the token corresponding to
+the CurveId tag is different. This is because the actual underlying index (and in particular its fixings) are shared
+between the two index types, while different projection curves are used to forecast future index realisations.
+
+\subsubsection{Inflation Cap/Floor Price Surfaces}
+
+The following is an excerpt of the Inflation Cap/Floor Price Surfaces block with ID 'default' from the sample example
+file:
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<InflationCapFloorPriceSurfaces id="default">
+    <InflationCapFloorPriceSurface name="EUHICPXT">InflationCapFloorPrice/EUHICPXT/EUHICPXT_ZC_CF</InflationCapFloorPriceSurface>
+    <InflationCapFloorPriceSurface name="USCPI">InflationCapFloorPrice/USCPI/USCPI_ZC_CF</InflationCapFloorPriceSurface>
+    <InflationCapFloorPriceSurface name="UKRPI">InflationCapFloorPrice/UKRPI/UKRPI_ZC_CF</InflationCapFloorPriceSurface>
+</InflationCapFloorPriceSurfaces>
+\end{minted}
+\caption{Inflation Cap/Floor Price Surfaces block with ID 'default'}
+\label{lst:yoyinflationindexcurve_spec}
+\end{listing}
+
+This instructs ORE to build a set of zero inflation cap floor price surfaces, which are defined in the curve
+configuration file. Each surface is associated with an idnex name. The last token (e.g. EUHICPXT\_ZC\_CF) is user defined
+and will be found in the curve configuration's CurveId tag.
+
+Currently only zero coupon surfaces are supported, year on year surfaces are not supported.
+
 \subsubsection{Market Configurations}
 
-Finally, representatives of each type of block (Discount Curves, Index Curves, Volatility structures, etc, up to Default
-curves) can be bundled into a market configuration. This is done by adding the following to the {\tt todaysmarket.xml}
-file:
+Finally, representatives of each type of block (Discount Curves, Index Curves, Volatility structures, etc, up to
+Inflation Cap/Floor Price Surfaces) can be bundled into a market configuration. This is done by adding the following to
+the {\tt todaysmarket.xml} file:
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -2844,7 +2911,7 @@ giving an example in each category:
 %--------------------------------------------------------
 
 This file specifies how sensitivities are computed. The general structure is shown in listing
-\ref{lst:sensitivity_config}.
+\ref{lst:stress_config}.
 
 In this example, two stress scenarios ``parallel\_rates'' and ``twist'' are defined. Each scenario definition contains
 the market components to be shifted in this scenario in a similar syntax that is also used for the sensitivity
@@ -3080,6 +3147,133 @@ are then used together for projection of forward prices.
 \caption{Equity option volatility configuration}
 \label{lst:eqoptionvol_configuration}
 \end{listing}
+
+\subsubsection{Inflation Curves}
+
+Listing \ref{lst:inflationcurve_configuration} shows the configuration of an inflation curve. The inflation curve specific
+elements are the following:
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<InflationCurves>
+   <InflationCurve>
+       <CurveId>USCPI_ZC_Swaps</CurveId>
+       <CurveDescription>Estimation Curve for USCPI</CurveDescription>
+       <NominalTermStructure>Yield/USD/USD1D</NominalTermStructure>
+       <Type>ZC</Type>
+       <Quotes>
+           <Quote>ZC_INFLATIONSWAP/RATE/USCPI/1Y</Quote>
+           <Quote>ZC_INFLATIONSWAP/RATE/USCPI/2Y</Quote>
+           ...
+           <Quote>ZC_INFLATIONSWAP/RATE/USCPI/30Y</Quote>
+           <Quote>ZC_INFLATIONSWAP/RATE/USCPI/40Y</Quote>
+       </Quotes>
+       <Conventions>USCPI_INFLATIONSWAP</Conventions>
+       <Extrapolation>true</Extrapolation>
+       <Calendar>US</Calendar>
+       <DayCounter>A365</DayCounter>
+       <Lag>3M</Lag>
+       <Frequency>Monthly</Frequency>
+       <BaseRate>0.01</BaseRate>
+       <Tolerance>0.000000000001</Tolerance>
+       <Seasonality>
+           <BaseDate>20160101</BaseDate>
+           <Frequency>Monthly</Frequency>
+           <Factors>
+               <Factor>SEASONALITY/RATE/MULT/USCPI/JAN</Factor>
+               <Factor>SEASONALITY/RATE/MULT/USCPI/FEB</Factor>
+               <Factor>SEASONALITY/RATE/MULT/USCPI/MAR</Factor>
+               <Factor>SEASONALITY/RATE/MULT/USCPI/APR</Factor>
+               <Factor>SEASONALITY/RATE/MULT/USCPI/MAY</Factor>
+               <Factor>SEASONALITY/RATE/MULT/USCPI/JUN</Factor>
+               <Factor>SEASONALITY/RATE/MULT/USCPI/JUL</Factor>
+               <Factor>SEASONALITY/RATE/MULT/USCPI/AUG</Factor>
+               <Factor>SEASONALITY/RATE/MULT/USCPI/SEP</Factor>
+               <Factor>SEASONALITY/RATE/MULT/USCPI/OCT</Factor>
+               <Factor>SEASONALITY/RATE/MULT/USCPI/NOV</Factor>
+               <Factor>SEASONALITY/RATE/MULT/USCPI/DEC</Factor>
+           </Factors>
+       </Seasonality>
+   </InflationCurve>
+</InflationCurves>
+\end{minted}
+\caption{Inflation Curve Configuration}
+\label{lst:inflationcurve_configuration}
+\end{listing}
+
+\begin{itemize}
+\item {\tt NominalTermStructure}: The interest rate curve to be used to strip the inflation curve.
+\item {\tt Type}: The type of the curve, {\tt ZC} for zero coupon, {\tt YY} for year on year.
+\item {\tt Quotes}: The instruments' market quotes from which to bootstrap the curve.
+\item {\tt Conventions}: The conventions applicable to the curve instruments.
+\item {\tt Lag}: The observation lag used in the term structure.
+\item {\tt Frequency}: The frequency of index fixings.
+\item {\tt BaseRate}: The rate at $t=0$, this introduces an additional degree of freedom to get a smoother curve. If not
+  given, it is defaulted to the first market rate.
+\end{itemize}
+
+The optional seasonality block defines a multiplicative seasonality and contains the following elements:
+
+\begin{itemize}
+\item {\tt BaseDate}: Defines the first inflation period to which to apply the seasonality correction, only day and
+  month matters, the year is ignored.
+\item {\tt Frequency:} Defines the frequency of the factors (usually identical to the index's fixing frequency).
+\item {\tt Factors:} Multiplicative seasonality correction factors, must be part of the market data.
+\end{itemize}
+
+We note that if zero coupon swap market quotes are given, but the type is set to YY, the zero coupon swap quotes will be
+converted to year on year swap quotes on the fly, using the plain forward rates, i.e. no convexity adjustment is
+applied.
+
+\subsubsection{Inflation Cap/Floor Price Surfaces}
+
+Listing \ref{lst:inflationcapfloorpricesurface_configuration} shows the configuration of an zero cuopon inflation cap
+floor price surface.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<InflationCapFloorPriceSurfaces>
+  <InflationCapFloorPriceSurface>
+      <CurveId>EUHICPXT_ZC_CF</CurveId>
+      <CurveDescription>Price Surface ZC CapFloor EUHICPXT</CurveDescription>
+      <Type>ZC</Type>
+      <StartRate>0.10</StartRate>
+      <ObservationLag>3M</ObservationLag>
+      <Calendar>TARGET</Calendar>
+      <BusinessDayConvention>MF</BusinessDayConvention>
+      <DayCounter>A365</DayCounter>
+      <Index>EUHICPXT</Index>
+      <IndexCurve>Inflation/EUHICPXT/EUHICPXT_ZC_Swaps</IndexCurve>
+      <IndexInterpolated>false</IndexInterpolated>
+      <YieldTermStructure>Yield/EUR/EUR1D</YieldTermStructure>
+      <CapStrikes>0.01,0.015,0.02,0.025,0.03</CapStrikes>
+      <FloorStrikes>-0.02,-0.01,-0.005,0.00,0.01,0.015,0.02,0.025,0.03</FloorStrikes>
+      <Maturities>1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y,30Y</Maturities>
+  </InflationCapFloorPriceSurface>
+</InflationCapFloorPriceSurfaces>
+\end{minted}
+\caption{Inflation zc cap floor price surface configuration}
+\label{lst:inflationcapfloorpricesurface_configuration}
+\end{listing}
+
+\begin{itemize}
+\item {\tt Type}: The type of the surface, {\tt ZC} for zero coupon, {\tt YY} for year on year. Only zero coupon
+  surfaces are supported currently.
+\item {\tt StartRate}: A fall back value used in case the inflation index does not have a term structure
+  attached. Should not be relevant.
+\item {\tt Observation Lag}: The observation lag applicable to the term structure.
+\item {\tt Index}: The underlying zero inflation index.
+\item {\tt IndexCurve}: The curve id of the index's projection curve used to determine the ATM levels for the surface.
+\item {\tt IndexInterpolated}: Flag indicating whether the index should be interpolating.
+\item {\tt YieldTermStructure}: The nominal term structure.
+\item {\tt CapStrikes}: The strikes for which cap prices are quoted (may (and will usually) overlap with the floor
+  strike region).
+\item {\tt FloorStrikes}: The strikes for which floor prices are quoted (may (and will usually) overlap with the cap
+  strike region).
+\item {\tt Maturities:} The maturities for which cap and floor prices are quoted
+\end{itemize}
 
 %--------------------------------------------------------
 %\subsection{Conventions: {\tt conventions.xml}}
