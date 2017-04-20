@@ -34,10 +34,13 @@ Allowable values: Any real number.
   IR\_SWAP,  BASIS\_SWAP, CC\_BASIS\_SWAP, CDS, FX\_SPOT, FX\_FWD,
   SWAPTION, CAPFLOOR, FX\_OPTION, HAZARD\_RATE, RECOVERY\_RATE,
   ZC\_INFLATIONSWAP, YY\_INFLATIONSWAP, ZC\_INFLATIONCAPFLOOR,
-  SEASONALITY}    \\ \hline
-    Quote Type & \emph{BASIS\_SPREAD, CREDIT\_SPREAD, YIELD\_SPREAD,
-      RATE, RATIO, PRICE, RATE\_LNVOL, RATE\_NVOL,
-      RATE\_SLNVOL, SHIFT }    \\ \hline
+  SEASONALITY, EQUITY\_SPOT, EQUITY\_FWD, EQUITY\_DIVIDEND, 
+  EQUITY\_OPTION, BOND} \\
+\hline
+  Quote Type & \emph{BASIS\_SPREAD, CREDIT\_SPREAD, YIELD\_SPREAD,
+  RATE, RATIO, PRICE, RATE\_LNVOL, RATE\_NVOL, RATE\_SLNVOL, SHIFT,
+  SECURITY\_SPREAD } \\
+\hline
   \end{tabu}
   \caption{Allowable values for Instrument and Quote type market data.}
   \label{tab:allow_market_data}
@@ -810,7 +813,7 @@ Examples:
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\subsection{Equity Dividend Rate}
+\subsection{Equity Dividend Yield}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 \begin{table}[H]
@@ -835,6 +838,40 @@ Examples:
 \begin{itemize}
     \item {EQUITY\_DIVIDEND/RATE/SP5/USD/2016-06-16}
     \item {EQUITY\_DIVIDEND/RATE/PRICE/SP5/USD/2Y}
+\end{itemize}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Equity Option Implied Volatility}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\begin{table}[H]
+	\centering
+	\begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+		\hline
+		{\bf Property} & {\bf Allowable values} & {\bf Description} \\
+		\hline
+        Name & String & Identifying name of the equity \\
+        \hline
+        Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}&  Currency of the equity \\
+        \hline
+        Expiry & Date string, or integer followed by D, W, M or Y & Maturity of the forward quote \\
+		\hline
+		Strike & {\tt ATMF}, or else any {\tt Real} & strike price \\
+		\hline
+	\end{tabular}
+	\caption{Equity Option Implied Volatility}
+	\label{tab:eqimplvol_quote}
+\end{table}
+
+Volatilities are quoted as a function of strike price - either at-the-money forward ({\tt ATMF}) or else a specified 
+real number, corresponding to the absolute strike value.Only log-normal implied volatilities ({\tt RATE\_LNVOL}) are 
+supported.
+
+\medskip
+Example:
+\begin{itemize}
+	\item {EQUITY\_OPTION/RATE\_LNVOL/SP5/USD/6M/ATMF}
+	\item {EQUITY\_OPTION/RATE\_LNVOL/SP5/USD/2018-06-30/ATMF}
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -952,6 +989,33 @@ Examples:
 \item SEASONALITY/RATE/MULT/EUHICPXT/JAN
 \item SEASONALITY/RATE/MULT/EUHICPXT/FEB
 \item SEASONALITY/RATE/MULT/EUHICPXT/NOV
+\end{itemize}
+
+Examples for inflation index names include EUHICP, EUHICPXT,FRHICP, UKRPI, USCPI, ZACPI.
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Bond Yield Spreads}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\begin{table}[H]
+	\centering
+	\begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+		\hline
+		{\bf Property} & {\bf Allowable values} & {\bf Description} \\
+		\hline
+		Name & String & Identifying name of the bond \\
+		\hline
+	\end{tabular}
+	\caption{Bond Yield Spreads}
+	\label{tab:bondyieldspread_quote}
+\end{table}
+
+This quote provides the spread for a specified bond over the benchmark rate.
+
+\medskip
+Examples:
+\begin{itemize}
+	\item {\tt BOND/YIELD\_SPREAD/SECURITY\_1}
 \end{itemize}
 
 Examples for inflation index names include EUHICP, EUHICPXT,FRHICP, UKRPI, USCPI, ZACPI.
