@@ -363,5 +363,12 @@
      </xs:restriction>
    </xs:simpleType>
 
+   <xs:simpleType name="inflationType">
+     <xs:restriction base="xs:string">
+       <xs:enumeration value="ZC"/>
+       <xs:enumeration value="YY"/>
+     </xs:restriction>
+   </xs:simpleType>
+
 </xs:schema>
 

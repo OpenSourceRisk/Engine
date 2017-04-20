@@ -10,6 +10,10 @@
         <xs:element type="capFloorVolatilities" name="CapFloorVolatilities"/>
         <xs:element type="defaultCurves" name="DefaultCurves"/>
         <xs:element type="yieldCurves" name="YieldCurves"/>
+        <xs:element type="inflationCurves" name="InflationCurves"/>
+        <xs:element type="inflationCapFloorPriceSurfaces" name="InflationCapFloorPriceSurfaces"/>
+        <xs:element type="equityCurves" name="EquityCurves"/>
+        <xs:element type="equityVolatilities" name="EquityVolatilities"/>
         <xs:element type="securitySpreads" name="SecuritySpreads"/>
       </xs:sequence>
     </xs:complexType>
@@ -40,11 +44,11 @@
     <xs:sequence>
       <xs:element type="xs:string" name="CurveId"/>
       <xs:element type="xs:string" name="CurveDescription"/>
+      <xs:element type="currencyCode" name="Currency"/>
       <xs:element type="dimensionType" name="Dimension"/>
       <xs:element type="xs:string" name="Expiries"/>
     </xs:sequence>
   </xs:complexType>
-
 
   <xs:complexType name="swaptionVolatilities">
     <xs:sequence>
@@ -94,7 +98,7 @@
 
   <xs:complexType name="equityCurves">
     <xs:sequence>
-      <xs:element type="equityurve" name="EquityCurve" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element type="equityCurve" name="EquityCurve" minOccurs="0" maxOccurs="unbounded"/>
     </xs:sequence>
   </xs:complexType>
 
@@ -105,9 +109,8 @@
       <xs:element type="currencyCode" name="Currency"/>
       <xs:element type="equityType" name="Type"/>
       <xs:element type="xs:string" name="SpotQuote"/>
-      <xs:element type="xs:string" name="InterestRateCurve"/>
-      <xs:element type="dayCounter" name="DayCounter" minOccurs="0" maxOccurs="1"/>
       <xs:element type="quoteType" name="Quotes"/>
+      <xs:element type="dayCounter" name="DayCounter" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
   
@@ -128,6 +131,65 @@
       <xs:element type="xs:string" name="RecoveryRate"/>
       <xs:element type="quoteType" name="Quotes"/>
       <xs:element type="xs:string" name="Conventions"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="inflationCurves">
+    <xs:sequence>
+      <xs:element type="inflationCurve" name="InflationCurve" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="inflationCurve">
+    <xs:sequence>
+      <xs:element type="xs:string" name="CurveId"/>
+      <xs:element type="xs:string" name="CurveDescription"/>
+      <xs:element type="xs:string" name="NominalTermStructure" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="inflationType" name="Type" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="quoteType" name="Quotes"/>
+      <xs:element type="xs:string" name="Conventions"/>
+      <xs:element type="bool" name="Extrapolation" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="calendar" name="Calendar"/>
+      <xs:element type="dayCounter" name="DayCounter" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="Lag" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="frequencyType" name="Frequency" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:decimal" name="BaseRate" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:decimal" name="Tolerance" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="seasonalityType" name="Seasonality" minOccurs="0" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="seasonalityType">
+    <xs:sequence>
+      <xs:element type="date" name="BaseDate" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="frequencyType" name="Frequency" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="factorType" name="Factors"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="inflationCapFloorPriceSurfaces">
+    <xs:sequence>
+      <xs:element type="inflationCapFloorPriceSurface" name="InflationCapFloorPriceSurface" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="inflationCapFloorPriceSurface">
+    <xs:sequence>
+      <xs:element type="xs:string" name="CurveId"/>
+      <xs:element type="xs:string" name="CurveDescription"/>
+      <xs:element type="inflationType" name="Type" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:decimal" name="StartRate" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="ObservationLag" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="calendar" name="Calendar" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="businessDayConvention" name="BusinessDayConvention" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="dayCounter" name="DayCounter" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="Index" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="IndexCurve" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="bool" name="IndexInterpolated" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="YieldTermStructure" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="CapStrikes" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="FloorStrikes" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="Maturities" minOccurs="1" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 
@@ -287,6 +349,12 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element> 
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="factorType">
+    <xs:sequence>
+      <xs:element type="xs:string" name="Factor" minOccurs="0" maxOccurs="unbounded"/>
     </xs:sequence>
   </xs:complexType>
 
