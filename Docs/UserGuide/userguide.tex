@@ -615,6 +615,8 @@ Example & Description \\
 \hline
 17 & Inflation Swaps \\
 \hline
+18 & Bonds \\
+\hline
 \end{tabular}
 \caption{ORE examples.}
 \label{tab_0}
@@ -1437,6 +1439,16 @@ Year on Year Swap:
 After running the example, the results of the computation can be found in the output file {\tt npv.csv}.
 
 %--------------------------------------------------------
+\subsection{Bonds}
+%--------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_18} computes NPVs and flow projections for a vanilla bond portfolio
+consisting of a fixed rate bond and a Euribor-6M floater.
+
+After running the example, the results of the computation can be found in the output files {\tt npv.csv} and {\tt
+  flows.csv}, respectively.
+
+%--------------------------------------------------------
 
 \clearpage
 %========================================================
@@ -1952,6 +1964,7 @@ and {\tt </TodaysMarket>}. The file then contains configuration blocks for
 \begin{itemize}
 \item Discounting curves
 \item Index curves (to project index fixings)
+\item Yield curves (for other purposes, e.g. as benchmark curve for bond pricing)
 \item Swap index curves (to project Swap rates)
 \item FX spot rates
 \item FX volatility structures
@@ -2019,6 +2032,33 @@ This block of curve specifications instructs ORE to build another set of yield c
 (e.g. Yield/EUR/EUR6M etc.) point to the {\tt curveconfig.xml} file where these curves are defined. Each curve is then
 associated with an index name (of format Ccy-IndexName-Tenor, e.g. EUR-EURIBOR-6M) so that ORE will project the
 respective index using the selected curve (e.g. Yield/EUR/EUR6M).
+
+\subsubsection{Yield Curves}
+
+See an excerpt of the yield curve block with ID 'default' from the same example file:
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<YieldCurves id="default">
+  <YieldCurve name="BANK_EUR_LEND">Yield/EUR/BANK_EUR_LEND</YieldCurve>
+  <YieldCurve name="BANK_EUR_BORROW">Yield/EUR/BANK_EUR_BORROW</YieldCurve>
+  <!-- ... -->
+</YieldCurves>
+\end{minted}
+\caption{Yield curve block with ID 'default'}
+\label{lst:indexcurve_spec}
+\end{listing}
+
+This block of curve specifications instructs ORE to build another set of yield curves, unique strings
+(e.g. Yield/EUR/EUR6M etc.) point to the {\tt curveconfig.xml} file where these curves are defined. Other than
+discounting and index curves the yield curves in this block are not tied to a particular purpose. The curves defined in
+this block typically include
+
+\begin{itemize}
+\item additional curves needed in the XVA post processor, e.g. for the FVA calculation
+\item benchmark curves used for bond pricing
+\end{itemize}
 
 \subsubsection{Swap Index Curves}
 
@@ -2160,7 +2200,8 @@ This instructs ORE to build a set of default probability curves, again defined i
 curve is then associated with a name (BANK, CUST\_A) for subsequent lookup.  As before, the last token
 (e.g. BANK\_SR\_USD) is user defined and will be found in the curve configuration's CurveId tag.
 
-\subsubsection{Security Spreads}
+\subsubsection{Security Spreads}\label{sssec:securityspreads}
+
 The following is an excerpt of the Security Spreads block with ID 'default' from the same example file:
 
 \begin{listing}[H]
@@ -2174,7 +2215,9 @@ The following is an excerpt of the Security Spreads block with ID 'default' from
 	\label{lst:secspread_spec}
 \end{listing}
 
-\todo[inline]{Write explanation of security spreads}
+The pricing of bonds includes (among other components) a security specific spread, which is defined in this block. The
+link to the specific security is established via the name in the security spread definition and the security id in the
+bond trade definition.
 
 \subsubsection{Equity Curves}
 The following is an excerpt of the Equity curves block with ID 'default' from the same example file:

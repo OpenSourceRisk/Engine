@@ -60,7 +60,7 @@ Allowable values:  Any alphanumeric string. The underscore (\_) sign may be used
 \item {\tt TradeType}: The Trade type is set with the {\tt TradeType} element, as well as with the {\tt Type} element in
   the envelope. The two Trade type entries should be identical. ORE currently supports 5 trade types.
 
-Allowable values:  \emph{Swap, CapFloor, Swaption, FxForward, FxOption}
+Allowable values:  \emph{Swap, CapFloor, Swaption, FxForward, FxOption, Bond}
 
 
 \end{itemize}
@@ -497,8 +497,51 @@ specification.
       </LegData>
     </SwapData>
 \end{minted}
-\caption{Year on Year Swao Data}
+\caption{Year on Year Swap Data}
 \label{lst:yyswap}
+\end{listing}
+
+\subsubsection{Bond}
+
+A vanilla Bond is set up using a {\tt BondData} block as shown in listing \ref{lst:bonddata}. The bond specific elemnents
+are
+
+\begin{itemize}
+\item IssuerId: A unique identifier for the issuer of the bond
+\item CreditCurveId: The entity defining the default curve used for pricing, via the default curves block in {\tt
+    todaysmarket.xml}
+% \item LGD (optional): If given, this LGD is used for pricing, overriding the default LGD of the default curve
+\item SecurityId: A unique identifier for the security, this defines the security specific spread to be used for
+  pricing, see section \ref{sssec:securityspreads}
+\item ReferenceCurveId: The benchmark curve to be used for pricing, this must match a name of a curve in the yield
+  curves block in {\tt todaysmarket.xml}
+\item SettlementDays: The settlement delay applicable to the security
+\item Calendar: The calendar associated to the settlement lag
+\item IssueDate: The issue date of the security.
+\end{itemize}
+
+A LegData block then defines the cashflow structure of the bond, this can be of type fixed, floating etc.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <BondData>
+	  <IssuerId>CPTY_C</IssuerId>
+	  <CreditCurveId>CPTY_C</CreditCurveId>
+	  <SecurityId>SECURITY_1</SecurityId>
+	  <ReferenceCurveId>EUR-EURIBOR-6M</ReferenceCurveId>
+	  <SettlementDays>2</SettlementDays>
+	  <Calendar>TARGET</Calendar>
+	  <IssueDate>20160203</IssueDate>
+      <LegData>
+        <LegType>Fixed</LegType>
+        <Payer>false</Payer>
+        ...
+      </LegData>
+     </BondData>
+\end{minted}
+\caption{Bond Data}
+\label{lst:bonddata}
 \end{listing}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
