@@ -3338,22 +3338,26 @@ ORE applies the cross asset model described in detail in \cite{Lichters} to evol
 evolution model in ORE is limited to IR and FX risk factors for any number of currencies, extensions to further risk
 factor classes (Inflation, Credit, Equity, Commodity) will follow. \\
 
-The Cross Asset Model is based on the Linear Gauss Markov model (LGM) for interest rates, lognormal FX processes and the
-Dodgson-Kainth model for inflation. We identify a single {\em domestic} currency; its LGM process, which is labelled
-$z_0$; and a set of $n$ foreign currencies with associated LGM processes that are labelled $z_i$, $i=1,\dots,n$.
-Following \cite{Lichters}, 13.27 - 13.29 we write the inflation processes in the domestic LGM measure with state
-variables $z_{I,k}$ and $y_{I,k}$ for $k=1,\ldots,K$.  If we consider $n$ foreign exchange rates for converting foreign
-currency amounts into the single domestic currency by multiplication, $x_i$, $i=1,\dots,n$, then the cross asset model
-is given by the system of SDEs
+The Cross Asset Model is based on the Linear Gauss Markov model (LGM) for interest rates, lognormal FX and equity 
+processes and the Dodgson-Kainth model for inflation. We identify a single {\em domestic} currency; its LGM process, 
+which is labelled $z_0$; and a set of $n$ foreign currencies with associated LGM processes that are labelled $z_i$, 
+$i=1,\dots,n$. We denote the equity spot price processes with state variables $s_j$ and the index of the denominating 
+currency for the equity process as $\phi(j)$. Following \cite{Lichters}, 13.27 - 13.29 we write the inflation processes 
+in the domestic LGM measure with state variables $z_{I,k}$ and $y_{I,k}$ for $k=1,\ldots,K$.  If we consider $n$ 
+foreign exchange rates for converting foreign currency amounts into the single domestic currency by multiplication, 
+$x_i$, $i=1,\dots,n$, then the cross asset model is given by the system of SDEs
 \begin{eqnarray*}
 dz_0 &=& \alpha_0\,dW_0^z \\
 dz_i &=& \gamma_i\,dt + \alpha_i\,dW_i^z,  \qquad i>0 \\
-  \frac{d x_i}{x_i} &=& \mu_i\, dt + \sigma_i\,dW_i^x, \qquad i > 0 \\
-  dz_{I,k} &=& \alpha_{I,k}(t)dW_k^I \\
-  dy_{I,k} &=& \alpha_{I,k}(t)H_{I,k}(t)dW_k^I \\ \\
+\frac{d x_i}{x_i} &=& \mu_i\, dt + \sigma_i\,dW_i^x, \qquad i > 0 \\
+\frac{d s_j}{s_j} &=& \mu_j^S\, dt + \sigma_j^S\,dW_j^S \\
+dz_{I,k} &=& \alpha_{I,k}(t)dW_k^I \\
+dy_{I,k} &=& \alpha_{I,k}(t)H_{I,k}(t)dW_k^I \\ \\
 \gamma_i &=&
 -\alpha_i^2\,H_i -\rho_{ii}^{zx}\,\sigma_i\,\alpha_i + \rho_{i0}^{zz}\,\alpha_i\,\alpha_0\,H_0\\
 \mu_i &=& r_0 - r_i + \rho_{0i}^{zx}\,\alpha_0\,H_0\,\sigma_i\\
+\mu_j^S &=& (r_{\phi(j)}(t) - q_j(t) + \rho_{0j}^{zs} \alpha_0 H_0 \sigma_j^S - \epsilon_{\phi(j)}
+\rho_{j \phi(j)}^{sx}\sigma_j^S \sigma_{\phi(j)}) \\
 r_i &=& f_i(0,t) + z_i(t)\,H'_i(t) + \zeta_i(t)\,H_i(t)\,H'_i(t),
 \quad \zeta_i(t) = \int_0^t \alpha_i^2(s)\,ds  \\ \\
 dW^\alpha_a\,dW^\beta_b &=& \rho^{\alpha\beta}_{ij}\,dt, \qquad \alpha, \beta \in \{z, x, I\}, \qquad a, b \text{
@@ -3363,7 +3367,8 @@ dW^\alpha_a\,dW^\beta_b &=& \rho^{\alpha\beta}_{ij}\,dt, \qquad \alpha, \beta \i
 %\beta_i(t) &=& \int_0^t \lambda_i(s)\,ds,
 %\qquad \alpha_i(t) = \sigma_i^{HW}(t)\,e^{\beta(t)} \\
 \end{eqnarray*}
-where we have dropped time dependencies for readability, and $f_i(0,t)$ is the instantaneous forward curve in currency $i$.
+where we have dropped time dependencies for readability, $f_i(0,t)$ is the instantaneous forward curve in currency $i$, 
+and $\epsilon_i$ is an indicator such that $\epsilon_i = 1 - \delta_{0i}$, where $\delta$ is the Kronecker delta.
 
 \medskip Parameters $H_i(t)$ and $\alpha_i(t)$ (or alternatively $\zeta_i(t)$) are LGM model parameters which determine,
 together with the stochastic factor $z_i(t)$, the evolution of numeraire and zero bond prices in the LGM model:
