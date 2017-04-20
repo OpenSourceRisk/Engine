@@ -1413,6 +1413,30 @@ and \ref{sec:fxoption}.
 \end{figure}
 
 %--------------------------------------------------------
+\subsection{Inflation Swaps}
+%--------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_17} computes the NPV of a CPI Swap and a Year on Year Swap. The terms of
+the two deals are as follows, CPI Swap:
+
+\begin{itemize}
+\item Start 2016-07-18, Maturity 2021-07-18
+\item GBP Libor 6M vs. $2\%$ x CPI-Factor (Act/Act), with
+\item CPI-Factor = UKRPI fixing with an observation lag of 2M divided by the base CPI value 210, inflation fixing is not
+  interpolated
+\end{itemize}
+
+Year on Year Swap:
+
+\begin{itemize}
+\item Start 2016-07-18, Maturity 2021-07-18
+\item EUR Euribor 6M vs. Year on Year payoff (Act/Act) on EUHICPXT, inflation fixings are observed with a lag of 2M,
+  include 2 fixing days, and are interpolated
+\end{itemize}
+
+After running the example, the results of the computation can be found in the output file {\tt npv.csv}.
+
+%--------------------------------------------------------
 
 \clearpage
 %========================================================
