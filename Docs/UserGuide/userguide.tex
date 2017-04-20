@@ -3341,8 +3341,13 @@ factor classes (Inflation, Credit, Equity, Commodity) will follow. \\
 The Cross Asset Model is based on the Linear Gauss Markov model (LGM) for interest rates, lognormal FX and equity 
 processes and the Dodgson-Kainth model for inflation. We identify a single {\em domestic} currency; its LGM process, 
 which is labelled $z_0$; and a set of $n$ foreign currencies with associated LGM processes that are labelled $z_i$, 
-$i=1,\dots,n$. We denote the equity spot price processes with state variables $s_j$ and the index of the denominating 
-currency for the equity process as $\phi(j)$. Following \cite{Lichters}, 13.27 - 13.29 we write the inflation processes 
+$i=1,\dots,n$. 
+
+We denote the equity spot price processes with state variables $s_j$ and the index of the denominating 
+currency for the equity process as $\phi(j)$. The dividend yield corresponding to each equity process $s_j$ is denoted 
+by $q_j$.
+
+Following \cite{Lichters}, 13.27 - 13.29 we write the inflation processes 
 in the domestic LGM measure with state variables $z_{I,k}$ and $y_{I,k}$ for $k=1,\ldots,K$.  If we consider $n$ 
 foreign exchange rates for converting foreign currency amounts into the single domestic currency by multiplication, 
 $x_i$, $i=1,\dots,n$, then the cross asset model is given by the system of SDEs
@@ -3436,6 +3441,8 @@ We follow \cite{Lichters}, chapter 16. The expectation of the interest rate proc
 
 where $\epsilon_i$ is zero for $i=0$ (domestic currency) and one otherwise.
 
+\bigskip
+
 The expectation of the FX process $x_i$ conditional on $\mathcal{F}_{t_0}$ at $t_0+\Delta t$ is
 
 \begin{eqnarray*}
@@ -3461,6 +3468,24 @@ with
 
 The expectation of the Inflation processes $z_{I,k}, y_{I,k}$ conditional on $\mathcal{F}_{t_0}$ at any time $t>t_0$ is
 equal to $z_{I,k}(t_0)$ resp. $y_{I,k}(t_0)$ since both processes are drift free.
+
+\bigskip
+
+The expectation of the equity processes $s_j$ conditional on $\mathcal{F}_{t_0}$ at $t_0+\Delta t$ is
+\begin{eqnarray*}
+\mathbb{E}_{t_0}[\ln s_j(t_0+\Delta t)] &=& \ln s_j(t_0) +  \mathbb{E}_{t_0}[\Delta \ln s_j],
+\qquad\mbox{with}\quad \Delta \ln s_j = \ln s_j(t_0+\Delta t) - \ln s_j(t_0) \\
+&=& \ln s_j(t_0) +  \ln \left[\frac{P_{\phi(j)}(0,s)}{P_{\phi(j)}(0,t)} \right] - \int_s^t 
+q_j(u) 
+du - \frac{1}{2} \int_s^t \sigma_{j}^{S}(u) \sigma_{j}^{S}(u) du\\
+&&
++\rho_{0j}^{zs} \int_s^t \alpha_0(u) H_0(u) \sigma_j^S(u) du
+- \epsilon_{\phi(j)} \rho_{j \phi(j)}^{sx} \int_s^t \sigma_j^S (u)\sigma_{\phi(j)}(u) du\\
+&&+\frac{1}{2} \left( H_{\phi(j)}^2(t) \zeta_{\phi(j)}(t) - H_{\phi(j)}^2(s) \zeta_{\phi(j)}(s)
+- \int_s^t H_{\phi(j)}^2(u) \alpha_{\phi(j)}^2(u) du \right)\\
+&&  + (H_{\phi(j)}(t) - H_{\phi(j)}(s)) z_{\phi(j)}(s) 
++\epsilon_{\phi(j)} \int_s^t \gamma_{\phi(j)} (u) (H_{\phi(j)}(t) - H_{\phi(j)}(u)) du\\
+\end{eqnarray*}
 
 The IR-IR covariance over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditional on $\mathcal{F}_{t_0}$) is
 
@@ -3525,8 +3550,37 @@ The INF-INF covariance over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditi
   \mathrm{Cov}[ \Delta y_{I,a}, \Delta y_{I,b} ] & = & \rho_{ab}^{II} \int_s^t H_{I,a}(s) \alpha_{I,a}(s) H_{I,b}(s) \alpha_{I,b}(s) ds
 \end{eqnarray*}
 
+The equity/equity covariance over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditional on $\mathcal{F}_{t_0}$) is
 \begin{eqnarray*}
+	Cov \left[\Delta ln[s_i], \Delta ln[s_j] \right] &=&
+	\rho_{\phi(i) \phi(j)}^{zz}\int_s^t (H_{\phi(i)} (t) - H_{\phi(i)} (u)) (H_{\phi(j)} (t)\\
+	&& - H_{\phi(j)} (u)) \alpha_{\phi(i)}(u) \alpha_{\phi(j)}(u) du\\
+	&&+ \rho_{\phi(i) j}^{zs} \int_s^t (H_{\phi(i)} (t) - H_{\phi(i)} (u)) \alpha_{\phi(i)}(u) \sigma_j^S(u) du\\
+	&&+ \rho_{\phi(j) i}^{zs} \int_s^t (H_{\phi(j)} (t) - H_{\phi(j)} (u)) \alpha_{\phi(j)}(u) \sigma_i^S(u) du\\
+	&&+ \rho_{ij}^{ss} \int_s^t \sigma_i^S(u) \sigma_j^S(u) du\\
 \end{eqnarray*}
+
+The equity/FX covariance over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditional on $\mathcal{F}_{t_0}$) is
+\begin{eqnarray*}
+	Cov \left[\Delta ln[s_i], \Delta ln[x_j] \right] &=&
+	\rho_{\phi(i)0}^{zz} \int_s^t (H_{\phi(i)} (t) - H_{\phi(i)} (u)) (H_0 (t) - H_0 (u)) \alpha_{\phi(i)}(u) 
+	\alpha_0(u) 
+	du\\
+	&& - \rho_{\phi(i)j}^{zz} \int_s^t (H_{\phi(i)} (t) - H_{\phi(i)} (u)) (H_j (t) - H_j (u)) \alpha_{\phi(i)} 
+	(u)\alpha_j(u) du\\
+	&& + \rho_{\phi(i)j}^{zx} \int_s^t (H_{\phi(i)} (t) - H_{\phi(i)} (u)) \alpha_{\phi(i)} (u) \sigma_j(u) du\\
+	&&+ \rho_{i0}^{sz} \int_s^t (H_0 (t) - H_0 (u)) \alpha_0 (u) \sigma_i^S(u) du\\
+	&&- \rho_{ij}^{sz} \int_s^t (H_j (t) - H_j (u)) \alpha_j (u) \sigma_i^S(u) du\\
+	&&+ \rho_{ij}^{sx} \int_s^t \sigma_i^S(u) \sigma_j(u) du\\
+\end{eqnarray*}
+
+The equity/IR covariance over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditional on $\mathcal{F}_{t_0}$) is
+\begin{eqnarray*}
+	Cov \left[\Delta ln[s_i], \Delta z_j \right] &=&
+	\rho_{\phi(i)j}^{zz} \int_s^t (H_{\phi(i)} (t) - H_{\phi(i)} (u)) \alpha_{\phi(i)} (u) \alpha_j (u) du\\
+	&&+ \rho_{ij}^{sz} \int_s^t \sigma_i^S (u) \alpha_j (u) du\\
+\end{eqnarray*}
+
 
 \subsection{Exposures}\label{sec:app_exposure}
 
