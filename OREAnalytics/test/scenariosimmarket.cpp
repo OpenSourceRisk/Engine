@@ -218,7 +218,6 @@ void ScenarioSimMarketTest::testScenarioSimMarket() {
 
     SavedSettings backup;
 
-    Date tmp = Settings::instance().evaluationDate(); // archive original value
     Date today(20, Jan, 2015);
     Settings::instance().evaluationDate() = today;
     boost::shared_ptr<ore::data::Market> initMarket = boost::make_shared<TestMarket>(today);
