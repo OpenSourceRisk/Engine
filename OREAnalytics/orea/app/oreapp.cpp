@@ -278,9 +278,21 @@ OREApp::buildScenarioGenerator(boost::shared_ptr<Market> market,
     LOG("Load simulation model data from file: " << simulationConfigFile);
     boost::shared_ptr<CrossAssetModelData> modelData = boost::make_shared<CrossAssetModelData>();
     modelData->fromFile(simulationConfigFile);
-    CrossAssetModelBuilder modelBuilder(market, params_->get("markets", "lgmcalibration"),
-                                        params_->get("markets", "fxcalibration"),
-                                        params_->get("markets", "simulation"));
+    string lgmCalibrationMarketStr = Market::defaultConfiguration;
+    if (params_->has("markets", "lgmcalibration"))
+        lgmCalibrationMarketStr = params_->get("markets", "lgmcalibration");
+    string fxCalibrationMarketStr = Market::defaultConfiguration;
+    if (params_->has("markets", "fxcalibration"))
+        fxCalibrationMarketStr = params_->get("markets", "fxcalibration");
+    string eqCalibrationMarketStr = Market::defaultConfiguration;
+    if (params_->has("markets", "eqcalibration"))
+        eqCalibrationMarketStr = params_->get("markets", "eqcalibration");
+    string simulationMarketStr = Market::defaultConfiguration;
+    if (params_->has("markets", "simulation"))
+        simulationMarketStr = params_->get("markets", "simulation");
+
+    CrossAssetModelBuilder modelBuilder(market, lgmCalibrationMarketStr, fxCalibrationMarketStr, eqCalibrationMarketStr,
+                                        simulationMarketStr);
     boost::shared_ptr<QuantExt::CrossAssetModel> model = modelBuilder.build(modelData);
 
     LOG("Load Simulation Parameters");

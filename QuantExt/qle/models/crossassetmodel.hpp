@@ -25,6 +25,7 @@
 #define quantext_crossasset_model_hpp
 
 #include <qle/models/fxbsparametrization.hpp>
+#include <qle/models/eqbsparametrization.hpp>
 #include <qle/models/lgm.hpp>
 #include <qle/processes/crossassetstateprocess.hpp>
 
@@ -42,7 +43,7 @@ namespace QuantExt {
 namespace CrossAssetModelTypes {
 //! Cross Asset Type
 //! \ingroup crossassetmodel
-enum AssetType { IR, FX };
+enum AssetType { IR, FX, INF, EQ };
 }
 
 using namespace CrossAssetModelTypes;
@@ -55,6 +56,7 @@ public:
     /*! Parametrizations must be given in the following order
         - IR  (first parametrization defines the domestic currency)
         - FX  (for all pairs domestic-ccy defined by the IR models)
+        - EQ  (for all names equity currency defined in Parametrization)
         If the correlation matrix is not given, it is initialized
         as the unit matrix (and can be customized after
         construction of the model).
@@ -95,6 +97,9 @@ public:
       foreign currency and so on) */
     Size ccyIndex(const Currency& ccy) const;
 
+    /*! return index for equity (0 = first equity) */
+    Size eqIndex(const std::string& eqName) const;
+
     /*! observer and linked calibrated model interface */
     void update();
     void generateArguments();
@@ -120,6 +125,9 @@ public:
         so it corresponds to ccy+1 if you want to get the corresponding
         irmgl1f component */
     const boost::shared_ptr<FxBsParametrization> fxbs(const Size ccy) const;
+
+    /*! EQBS components */
+    const boost::shared_ptr<EqBsParametrization> eqbs(const Size ccy) const;
 
     /* ... add more components here ...*/
 
@@ -178,20 +186,20 @@ public:
                                 const Constraint& constraint = Constraint(),
                                 const std::vector<Real>& weights = std::vector<Real>());
 
-    /*! calibrate fx volatilities to a sequence of fx options with
+    /*! calibrate eq or fx volatilities to a sequence of options with
             expiry times equal to step times in the parametrization */
-    void calibrateFxBsVolatilitiesIterative(const Size ccy,
-                                            const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers,
-                                            OptimizationMethod& method, const EndCriteria& endCriteria,
-                                            const Constraint& constraint = Constraint(),
-                                            const std::vector<Real>& weights = std::vector<Real>());
+    void calibrateBsVolatilitiesIterative(const AssetType& assetType, const Size aIdx,
+                                          const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers,
+                                          OptimizationMethod& method, const EndCriteria& endCriteria,
+                                          const Constraint& constraint = Constraint(),
+                                          const std::vector<Real>& weights = std::vector<Real>());
 
-    /*! calibrate fx volatilities globally to a set of fx options */
-    void calibrateFxBsVolatilitiesGlobal(const Size ccy,
-                                         const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers,
-                                         OptimizationMethod& method, const EndCriteria& endCriteria,
-                                         const Constraint& constraint = Constraint(),
-                                         const std::vector<Real>& weights = std::vector<Real>());
+    /*! calibrate eq/fx volatilities globally to a set of fx options */
+    void calibrateBsVolatilitiesGlobal(const AssetType& assetType, const Size aIdx,
+                                       const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers,
+                                       OptimizationMethod& method, const EndCriteria& endCriteria,
+                                       const Constraint& constraint = Constraint(),
+                                       const std::vector<Real>& weights = std::vector<Real>());
 
     /* ... add more calibration procedures here ... */
 
@@ -219,7 +227,7 @@ protected:
 
     /* members */
 
-    Size nIrLgm1f_, nFxBs_;
+    Size nIrLgm1f_, nFxBs_, nEqBs_, nInfl_;
     Size totalNumberOfParameters_;
     std::vector<boost::shared_ptr<Parametrization> > p_;
     std::vector<boost::shared_ptr<LinearGaussMarkovModel> > lgm_;
@@ -230,10 +238,18 @@ protected:
 
     /* calibration constraints */
 
-    Disposable<std::vector<bool> > MoveFxBsVolatility(const Size ccy, const Size i) {
-        QL_REQUIRE(i < fxbs(ccy)->parameter(0)->size(), "fxbs volatility index ("
-                                                            << i << ") for ccy " << ccy << " out of bounds 0..."
-                                                            << fxbs(ccy)->parameter(0)->size() - 1);
+    Disposable<std::vector<bool> > MoveBsVolatility(const AssetType& assetClass, const Size aIdx, const Size tIdx) {
+        bool isFx = (assetClass == FX);
+        bool isEq = (assetClass == EQ);
+        QL_REQUIRE(isFx || isEq, "Invalid AssetType for MoveBsVolatility");
+        std::string assetStr = isFx ? "FX" : "EQ";
+        Size volGridSize = 0;
+        if (isFx)
+            volGridSize = fxbs(aIdx)->parameter(0)->size();
+        else
+            volGridSize = eqbs(aIdx)->parameter(0)->size();
+        QL_REQUIRE(tIdx < volGridSize, "bs volatility index (" << tIdx << ") for " << assetStr << " asset " << aIdx
+                                                               << " out of bounds 0..." << volGridSize - 1);
         std::vector<bool> res(0);
         for (Size j = 0; j < nIrLgm1f_; ++j) {
             std::vector<bool> tmp1(p_[idx(IR, j)]->parameter(0)->size(), true);
@@ -243,15 +259,26 @@ protected:
         }
         for (Size j = 0; j < nFxBs_; ++j) {
             std::vector<bool> tmp(p_[idx(FX, j)]->parameter(0)->size(), true);
-            if (ccy == j) {
-                tmp[i] = false;
+            if (isFx && aIdx == j) {
+                tmp[tIdx] = false;
+            }
+            res.insert(res.end(), tmp.begin(), tmp.end());
+        }
+        for (Size j = 0; j < nEqBs_; ++j) {
+            std::vector<bool> tmp(p_[idx(EQ, j)]->parameter(0)->size(), true);
+            if (isEq && aIdx == j) {
+                tmp[tIdx] = false;
             }
             res.insert(res.end(), tmp.begin(), tmp.end());
         }
         return res;
     }
 
-    Disposable<std::vector<bool> > MoveFxBsVolatilities(const Size ccy) {
+    Disposable<std::vector<bool> > MoveBsVolatilities(const AssetType& assetClass, const Size& aIdx) {
+        bool isFx = (assetClass == FX);
+        bool isEq = (assetClass == EQ);
+        QL_REQUIRE(isFx || isEq, "Invalid AssetType for MoveBsVolatility");
+        std::string assetStr = isFx ? "FX" : "EQ";
         std::vector<bool> res(0);
         for (Size j = 0; j < nIrLgm1f_; ++j) {
             std::vector<bool> tmp1(p_[idx(IR, j)]->parameter(0)->size(), true);
@@ -260,7 +287,13 @@ protected:
             res.insert(res.end(), tmp2.begin(), tmp2.end());
         }
         for (Size j = 0; j < nFxBs_; ++j) {
-            std::vector<bool> tmp(p_[idx(FX, j)]->parameter(0)->size(), ccy != j);
+            bool fixFlag = !(isFx && aIdx == j);
+            std::vector<bool> tmp(p_[idx(FX, j)]->parameter(0)->size(), fixFlag);
+            res.insert(res.end(), tmp.begin(), tmp.end());
+        }
+        for (Size j = 0; j < nEqBs_; ++j) {
+            bool fixFlag = !(isEq && aIdx == j);
+            std::vector<bool> tmp(p_[idx(EQ, j)]->parameter(0)->size(), fixFlag);
             res.insert(res.end(), tmp.begin(), tmp.end());
         }
         return res;
@@ -274,9 +307,9 @@ CrossAssetModel::stateProcess(CrossAssetStateProcess::discretization disc) const
     return disc == CrossAssetStateProcess::exact ? stateProcessExact_ : stateProcessEuler_;
 }
 
-inline Size CrossAssetModel::dimension() const { return nIrLgm1f_ * 1 + nFxBs_ * 1; }
+inline Size CrossAssetModel::dimension() const { return nIrLgm1f_ * 1 + nFxBs_ * 1 + (nInfl_ * 1) + (nEqBs_ * 1); }
 
-inline Size CrossAssetModel::brownians() const { return nIrLgm1f_ * 1 + nFxBs_ * 1; }
+inline Size CrossAssetModel::brownians() const { return nIrLgm1f_ * 1 + nFxBs_ * 1 + (nInfl_ * 1) + (nEqBs_ * 1); }
 
 inline Size CrossAssetModel::totalNumberOfParameters() const { return totalNumberOfParameters_; }
 
@@ -311,6 +344,10 @@ inline Real CrossAssetModel::discountBondOption(const Size ccy, Option::Type typ
 
 inline const boost::shared_ptr<FxBsParametrization> CrossAssetModel::fxbs(const Size ccy) const {
     return boost::dynamic_pointer_cast<FxBsParametrization>(p_[idx(FX, ccy)]);
+}
+
+inline const boost::shared_ptr<EqBsParametrization> CrossAssetModel::eqbs(const Size name) const {
+    return boost::dynamic_pointer_cast<EqBsParametrization>(p_[idx(EQ, name)]);
 }
 
 inline const Matrix& CrossAssetModel::correlation() const { return rho_; }

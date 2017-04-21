@@ -35,6 +35,10 @@ std::ostream& operator<<(std::ostream& out, const RiskFactorKey::KeyType& type) 
         return out << "FXSpot";
     case RiskFactorKey::KeyType::FXVolatility:
         return out << "FXVolatility";
+    case RiskFactorKey::KeyType::EQSpot:
+        return out << "EQSpot";
+    case RiskFactorKey::KeyType::EQVolatility:
+        return out << "EQVolatility";
     default:
         return out << "?";
     }

@@ -18,7 +18,6 @@
 
 /*! \file test/yieldcurvemarketdata.hpp
     \brief structs containing yield curve market data that can be used in tests
-    \ingroup
 */
 
 #ifndef quantext_test_yieldcurvemarketdata_hpp
