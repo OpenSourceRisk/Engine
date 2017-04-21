@@ -435,6 +435,8 @@ void OREApp::generateNPVCube() {
 
     initCube();
     buildNPVCube();
+    writeCube();
+    writeScenarioData();
 }
 
 void OREApp::writeCube() {
