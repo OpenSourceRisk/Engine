@@ -26,6 +26,7 @@
 #include <ored/utilities/log.hpp>
 #include <ql/cashflows/cpicoupon.hpp>
 #include <ql/cashflows/cpicouponpricer.hpp>
+#include <ql/cashflows/iborcoupon.hpp>
 #include <ql/indexes/inflation/ukrpi.hpp>
 #include <ql/termstructures/inflation/inflationhelpers.hpp>
 #include <ql/termstructures/inflation/piecewisezeroinflationcurve.hpp>
@@ -131,7 +132,7 @@ public:
             intDiscCurve(datesGBP, dfsGBP, ActualActual(), UnitedKingdom());
 
         // build GBP Libor index
-        Handle<IborIndex> hGBP(
+        hGBP = Handle<IborIndex>(
             parseIborIndex("GBP-LIBOR-6M", intDiscCurve(datesGBP, dfsGBP, ActualActual(), UnitedKingdom())));
         iborIndices_[make_pair(Market::defaultConfiguration, "GBP-LIBOR-6M")] = hGBP;
 
@@ -145,7 +146,7 @@ public:
         bool interp = false;
         ii = boost::shared_ptr<UKRPI>(new UKRPI(interp, hcpi));
         for (Size i = 0; i < fixingDatesUKRPI.size(); i++) {
-            //std::cout << i << ", " << fixingDatesUKRPI[i] << ", " << fixingRatesUKRPI[i] << std::endl;
+            // std::cout << i << ", " << fixingDatesUKRPI[i] << ", " << fixingRatesUKRPI[i] << std::endl;
             ii->addFixing(fixingDatesUKRPI[i], fixingRatesUKRPI[i], true);
         };
         // now build the helpers ...
@@ -165,9 +166,13 @@ public:
             baseZeroRate, intDiscCurve(datesGBP, dfsGBP, ActualActual(), UnitedKingdom()), instruments));
         pCPIts->recalculate();
         cpiTS = boost::dynamic_pointer_cast<ZeroInflationTermStructure>(pCPIts);
-        zeroInflationIndices_[make_pair(Market::defaultConfiguration, std::make_pair("UKRPI", interp))] =
-            Handle<ZeroInflationIndex>(parseZeroInflationIndex("UKRPI", interp, Handle<ZeroInflationTermStructure>(cpiTS)));
+        hUKRPI = Handle<ZeroInflationIndex>(
+            parseZeroInflationIndex("UKRPI", interp, Handle<ZeroInflationTermStructure>(cpiTS)));
+        zeroInflationIndices_[make_pair(Market::defaultConfiguration, std::make_pair("UKRPI", interp))] = hUKRPI;
     }
+
+    Handle<IborIndex> hGBP;
+    Handle<ZeroInflationIndex> hUKRPI;
 
 private:
     Handle<YieldTermStructure> intDiscCurve(vector<Date> dates, vector<DiscountFactor> dfs, DayCounter dc,
@@ -194,11 +199,10 @@ void CPISwapTest::testCPISwapPrice() {
     // build market
     Date today(18, July, 2016);
     Settings::instance().evaluationDate() = today;
-    boost::shared_ptr<Market> market = boost::make_shared<TestMarket>();
+    boost::shared_ptr<TestMarket> market = boost::make_shared<TestMarket>();
     Date marketDate = market->asofDate();
     BOOST_CHECK_EQUAL(today, marketDate);
     Settings::instance().evaluationDate() = marketDate;
-
 
     // Test if GBP discount curve is empty
     Handle<YieldTermStructure> dts = market->discountCurve("GBP");
@@ -249,8 +253,8 @@ void CPISwapTest::testCPISwapPrice() {
     bool isPayerLibor = true;
     string indexLibor = "GBP-LIBOR-6M";
     vector<Real> spread(1, 0);
-    FloatingLegData legdataLibor(indexLibor, days, isInArrears, spread);
-    LegData legLibor(isPayerLibor, "GBP", legdataLibor, scheduleLibor, dc, notional, vector<string>(),
+    FloatingLegData legdataLibor(indexLibor, 0, isInArrears, spread);
+    LegData legLibor(isPayerLibor, "GBP", legdataLibor, scheduleLibor, "A365F", notional, vector<string>(),
                      paymentConvention);
 
     // GBP CPI Leg
@@ -258,7 +262,7 @@ void CPISwapTest::testCPISwapPrice() {
     string indexCPI = "UKRPI";
     Real baseCPI = 210.0;
     string CPIlag = "2M";
-    std::vector<double> fixedRate(1, 1.0);
+    std::vector<double> fixedRate(1, 0.02);
     bool interpolated = false;
     CPILegData legdataCPI(indexCPI, baseCPI, CPIlag, interpolated, fixedRate);
     LegData legCPI(isPayerCPI, "GBP", legdataCPI, scheduleCPI, dc, notional, vector<string>(), paymentConvention);
@@ -280,76 +284,29 @@ void CPISwapTest::testCPISwapPrice() {
     portfolio->add(CPIswap);
     portfolio->build(engineFactory);
 
-    // check CPI swap NPV
-    BOOST_TEST_MESSAGE("CPISwap: Price = " << CPIswap->instrument()->NPV() << " " << CPIswap->npvCurrency());
+    // check CPI swap NPV against pure QL pricing
+    Schedule floatSchedule(startDate, endDate, 6 * Months, UnitedKingdom(), ModifiedFollowing, ModifiedFollowing,
+                           DateGeneration::Forward, false);
+    Schedule cpiSchedule(startDate, endDate, 1 * Years, UnitedKingdom(), ModifiedFollowing, ModifiedFollowing,
+                         DateGeneration::Forward, false);
+    Leg floatLeg = IborLeg(floatSchedule, *market->hGBP).withNotionals(10000000.0);
+    Leg cpiLeg = CPILeg(cpiSchedule, *market->hUKRPI, baseCPI, 2 * Months)
+                     .withFixedRates(0.02)
+                     .withNotionals(10000000)
+                     .withObservationInterpolation(CPI::Flat)
+                     .withPaymentDayCounter(ActualActual())
+                     .withPaymentAdjustment(Following);
 
-    // print Cash Flows (taken from ore.cpp and slightly modified). Uncomment the below to get them printed.
-    /*
-    BOOST_TEST_MESSAGE("CPISwap " << "#ID" << "," << "Type" << "," << "LegNo" << "," << "PayDate" << "," <<
-    "Amount" << "," << "Currency" << "," << "Coupon" << "," << "Accrual" << "," << "fixingDate" << "," << "fixingValue"
-    << ",");
-    const vector<boost::shared_ptr<Trade>>& trades = portfolio->trades();
-    for (Size k = 0; k < trades.size(); k++) {
-        const vector<Leg>& legs = trades[k]->legs();
-        for (Size i = 0; i < legs.size(); i++) {
-            const QuantLib::Leg& leg = legs[i];
-            bool payer = trades[k]->legPayers()[i];
-            string ccy = trades[k]->legCurrencies()[i];
-            for (Size j = 0; j < leg.size(); j++) {
-                boost::shared_ptr<QuantLib::CashFlow> ptrFlow = leg[j];
-                Date payDate = ptrFlow->date();
-                if (payDate >= today) {
-                    Real amount = ptrFlow->amount();
-                    if (payer)
-                    amount *= -1.0;
-
-                    std::string ccy = trades[k]->legCurrencies()[i];
-
-                    boost::shared_ptr<QuantLib::Coupon> ptrCoupon =
-                    boost::dynamic_pointer_cast<QuantLib::Coupon>(ptrFlow);
-                    if (ptrCoupon) {
-                        Real coupon = ptrCoupon->rate();
-                        Real accrual = ptrCoupon->accrualPeriod();
-                        boost::shared_ptr<QuantLib::FloatingRateCoupon> ptrFloat =
-                        boost::dynamic_pointer_cast<QuantLib::FloatingRateCoupon>(ptrFlow);
-                        if (ptrFloat) {
-                            Date fixingDate = ptrFloat->fixingDate();
-                            Real fixingValue = ptrFloat->index()->fixing(fixingDate);
-                            BOOST_TEST_MESSAGE("CPISwap " << std::setprecision(0) << trades[k]->id() << "," <<
-                            trades[k]->tradeType() << "," << i << ","
-                            << QuantLib::io::iso_date(payDate) << "," << std::setprecision(4) << amount << "," <<
-                            ccy << "," << std::setprecision(10) << coupon << "," << std::setprecision(10) << accrual <<
-    "," <<
-                            QuantLib::io::iso_date(fixingDate) << "," << fixingValue);
-                        } else {
-                            BOOST_TEST_MESSAGE("CPISwap " << std::setprecision(0) << trades[k]->id() << "," <<
-                            trades[k]->tradeType() << "," << i << ","
-                            << QuantLib::io::iso_date(payDate) << "," << std::setprecision(4) << amount << "," <<
-                            ccy << "," << std::setprecision(10) << coupon << "," << std::setprecision(10) << accrual <<
-    "," << "," << ",");
-                        }
-                    } else {
-                        boost::shared_ptr<QuantLib::FloatingRateCoupon> ptrFloat =
-                        boost::dynamic_pointer_cast<QuantLib::FloatingRateCoupon>(ptrFlow);
-                        if (ptrFloat) {
-                            Date fixingDate = ptrFloat->fixingDate();
-                            Real fixingValue = ptrFloat->index()->fixing(fixingDate);
-                            BOOST_TEST_MESSAGE("CPISwap " << std::setprecision(0) << trades[k]->id() << "," <<
-                            trades[k]->tradeType() << "," << i << ","
-                            << QuantLib::io::iso_date(payDate) << "," << std::setprecision(4) << amount << "," <<
-                            ccy << "," << "," << "," << QuantLib::io::iso_date(fixingDate) << "," << fixingValue);
-                        } else {
-                            BOOST_TEST_MESSAGE("CPISwap " << std::setprecision(0) << trades[k]->id() << "," <<
-                            trades[k]->tradeType() << "," << i << ","
-                            << QuantLib::io::iso_date(payDate) << "," << std::setprecision(4) << amount << "," <<
-                            ccy << "," << "," << "," << ",");
-                        }
-                    }
-                }
-            }
-        }
-    }
-    */
+    QuantLib::Swap qlSwap(floatLeg, cpiLeg);
+    auto dscEngine = boost::make_shared<DiscountingSwapEngine>(market->hGBP->forwardingTermStructure());
+    qlSwap.setPricingEngine(dscEngine);
+    BOOST_TEST_MESSAGE("Leg 1 NPV: ORE = "
+                       << boost::static_pointer_cast<QuantLib::Swap>(CPIswap->instrument()->qlInstrument())->legNPV(0)
+                       << " QL = " << qlSwap.legNPV(0));
+    BOOST_TEST_MESSAGE("Leg 2 NPV: ORE = "
+                       << boost::static_pointer_cast<QuantLib::Swap>(CPIswap->instrument()->qlInstrument())->legNPV(1)
+                       << " QL = " << qlSwap.legNPV(1));
+    BOOST_CHECK_CLOSE(CPIswap->instrument()->NPV(), qlSwap.NPV(), 1E-8); // this is 1E-10 rel diff
 }
 
 test_suite* CPISwapTest::suite() {
