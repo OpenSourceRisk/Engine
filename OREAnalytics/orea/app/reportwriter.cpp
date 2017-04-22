@@ -21,6 +21,8 @@
 #include <orea/orea.hpp>
 #include <ored/ored.hpp>
 #include <ostream>
+#include <ql/cashflows/inflationcoupon.hpp>
+#include <ql/cashflows/indexedcashflow.hpp>
 #include <ql/errors.hpp>
 #include <stdio.h>
 
@@ -132,11 +134,21 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Po
                         }
                         boost::shared_ptr<QuantLib::FloatingRateCoupon> ptrFloat =
                             boost::dynamic_pointer_cast<QuantLib::FloatingRateCoupon>(ptrFlow);
+                        boost::shared_ptr<QuantLib::InflationCoupon> ptrInfl =
+                            boost::dynamic_pointer_cast<QuantLib::InflationCoupon>(ptrFlow);
+                        boost::shared_ptr<QuantLib::IndexedCashFlow> ptrIndCf =
+                            boost::dynamic_pointer_cast<QuantLib::IndexedCashFlow>(ptrFlow);
                         Date fixingDate;
                         Real fixingValue;
                         if (ptrFloat) {
                             fixingDate = ptrFloat->fixingDate();
                             fixingValue = ptrFloat->index()->fixing(fixingDate);
+                        } else if (ptrInfl) {
+                            fixingDate = ptrInfl->fixingDate();
+                            fixingValue = ptrInfl->index()->fixing(fixingDate);
+                        } else if (ptrIndCf) {
+                            fixingDate = ptrIndCf->fixingDate();
+                            fixingValue = ptrIndCf->index()->fixing(fixingDate);
                         } else {
                             fixingDate = Null<Date>();
                             fixingValue = Null<Real>();
