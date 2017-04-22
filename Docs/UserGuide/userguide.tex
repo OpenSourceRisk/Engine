@@ -3904,6 +3904,49 @@ $$
 This yields allocated exposures proportional to the netting set exposure, avoids spikes and negative $\EPE$, but does
 not distinguish the 'direction' of each trade's contribution to $\EPE$ and $\CVA$.
 
+\subsection{Sensitivity Analysis}\label{sec:app_sensi}
+
+ORE's sensitivity analysis framework uses ``bump and revalue'' to compute ``raw'' IR/FX sensitivities to
+\begin{itemize}
+\item discount curve zero rates
+\item index curve zero rates
+\item yield curve zero rates (used as bond benchmark yield curves)
+\item FX spot rates
+\item Caplet/floorlet volatility matrices
+\item at-the-money Swaption volatility structures
+\item at-the-money FX Option volatility structures 
+\end{itemize}
+Apart from first order sensitivities (deltas), ORE computes second order sensitivities (gammas and cross gammas) as well. Deltas are computed using up-shifts and base values as
+$$
+\delta = \frac{f(x+\Delta)-f(x)}{\Delta},
+$$ 
+gammas using up- and down-shifts
+$$
+\gamma = \frac{f(x+\Delta)+f(x-\Delta) - 2\,f(x)}{\Delta^2},
+$$ 
+cross gammas using up-shifts and base values as
+$$
+\gamma_{cross} = \frac{f(x+\Delta_x,y+\Delta_y)-f(x+\Delta_x,y) -f(x,y+\Delta_y) + f(x,y)}{\Delta_x\,\Delta_y}.
+$$ 
+
+From the above it is clear that this involves the application of 1-d shifts (e.g. to discount zero curves) and 2-d shifts (e.g. to Swaption volatility matrices). The structure of the shift curves/matrices does not have to match the structure of the underlying data to be shifted, in particular the shift ``curves/matrices'' can be less granular than the market to be shifted. 
+Figure \ref{fig_shiftcurve} illustrates for the one-dimensional case how shifts are applied.
+\begin{figure}[h]
+\begin{center}
+\includegraphics[scale=0.6]{shiftcurve.pdf}
+\end{center}
+\caption{1-d shift curve (bottom) applied to a more granular underlying curve (top). }
+\label{fig_shiftcurve}
+\end{figure} 
+
+Shifts at the left and right end of the shift curve are extrapolated flat, i.e. applied to all data of the original curve to the left and to the right of the shift curve ends. In between, all shifts are distributed linearly as indicated to the left and right up to the adjacent shift grid points. As a result, a parallel shift of the all points on the shift curve yields a parallel shift of all points on the underlying curve.   \\
+
+The two-dimensional case is covered in an analogous way, applying flat extrapolation at the boundaries and ``pyramidal-shaped'' linear interpolation for the bulk of the points. 
+
+
+
+
+ 
 \end{appendix}
 
 %========================================================
