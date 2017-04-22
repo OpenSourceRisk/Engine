@@ -238,8 +238,9 @@ Example:
 {\bf Property} & {\bf Allowable values} & {\bf Description} \\
 \hline
 Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}& Currency of the MM Future price\\ \hline
-Expiry & Alphanumeric string on the form MMMYY & Expiry month\\ \hline
-Contract & String & Contract name\\
+Expiry & Alphanumeric string of the form YYYY-MM & Expiry month and year\\ \hline
+Contract & String & Contract name\\ \hline
+Term & An integer followed by D, W, M or Y & Underlying Term\\
 % date rule & {\tt string} &  \\
 \hline
 \end{tabular}
@@ -254,7 +255,7 @@ defined in the futures contract.
 \medskip
 Example:
 \begin{itemize}
-\item {MM\_FUTURE/PRICE/EUR/JUN18/LIF3ME}
+\item {MM\_FUTURE/PRICE/EUR/2018-06/LIF3ME/3M}
 \end{itemize}
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
