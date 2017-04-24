@@ -555,9 +555,32 @@ Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & CDS Sp
 
 Example:
 \begin{itemize}
-\item {CDS/RECOVERY\_RATE/GE/SeniorUnsec/EUR}
+\item {RECOVERY\_RATE/RATE/GE/SeniorUnsec/EUR}
 \end{itemize}
 
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Security Recovery Rate}\label{md:sec_rec_rates}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Bond recovery rates can also be specified per security. This requires only one key, the security ID, no need to specify a seniority or currency as for CDS:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+\hline
+{\bf Property} & {\bf Allowable values} & {\bf Description} \\
+\hline
+ID & String &  Security ID \\ 
+\hline
+\end{tabular}
+  \caption{Security Recovery Rate}
+  \label{tab:secrecrate_quote}
+\end{table}
+
+Example:
+\begin{itemize}
+\item {RECOVERY\_RATE/RATE/SECURITY\_1}
+\end{itemize}
 
 % %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 % \subsection{Asset Swap Spread}

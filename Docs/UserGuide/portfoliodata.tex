@@ -503,7 +503,7 @@ specification.
 
 \subsubsection{Bond}
 
-A vanilla Bond is set up using a {\tt BondData} block as shown in listing \ref{lst:bonddata}. The bond specific elemnents
+A vanilla Bond is set up using a {\tt BondData} block as shown in listing \ref{lst:bonddata}. The bond specific elements
 are
 
 \begin{itemize}
@@ -526,23 +526,25 @@ A LegData block then defines the cashflow structure of the bond, this can be of 
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
     <BondData>
-	  <IssuerId>CPTY_C</IssuerId>
-	  <CreditCurveId>CPTY_C</CreditCurveId>
-	  <SecurityId>SECURITY_1</SecurityId>
-	  <ReferenceCurveId>EUR-EURIBOR-6M</ReferenceCurveId>
-	  <SettlementDays>2</SettlementDays>
-	  <Calendar>TARGET</Calendar>
-	  <IssueDate>20160203</IssueDate>
-      <LegData>
-        <LegType>Fixed</LegType>
-        <Payer>false</Payer>
-        ...
-      </LegData>
-     </BondData>
+        <IssuerId>CPTY_C</IssuerId>
+        <CreditCurveId>CPTY_C</CreditCurveId>
+        <SecurityId>SECURITY_1</SecurityId>
+        <ReferenceCurveId>EUR-EURIBOR-6M</ReferenceCurveId>
+        <SettlementDays>2</SettlementDays>
+        <Calendar>TARGET</Calendar>
+        <IssueDate>20160203</IssueDate>
+        <LegData>
+            <LegType>Fixed</LegType>
+            <Payer>false</Payer>
+            ...
+        </LegData>
+    </BondData>
 \end{minted}
 \caption{Bond Data}
 \label{lst:bonddata}
 \end{listing}
+
+The bond pricing requires a recovery rate that can be specified in ORE per SecurityId, see sections \ref{sssec:securityrecoveryrates} and \ref{md:sec_rec_rates}. 
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Trade Components}

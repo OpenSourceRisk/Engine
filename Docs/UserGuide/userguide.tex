@@ -1974,6 +1974,7 @@ and {\tt </TodaysMarket>}. The file then contains configuration blocks for
 \item Equity curves (to project forward prices)
 \item Equity volatility structures
 \item Security Spreads
+\item Security Recovery Rates
 \item Inflation index curves (to project zero or yoy inflation fixings)
 \item Inflation Cap/Floor price surfaces
 \end{itemize}
@@ -2218,6 +2219,25 @@ The following is an excerpt of the Security Spreads block with ID 'default' from
 The pricing of bonds includes (among other components) a security specific spread, which is defined in this block. The
 link to the specific security is established via the name in the security spread definition and the security id in the
 bond trade definition.
+
+\subsubsection{Security Recovery Rates}\label{sssec:securityrecoveryrates}
+
+The following is an excerpt of the Security Recovery Rates block with ID 'default' from the same example file:
+
+\begin{listing}[H]
+	%\hrule\medskip
+	\begin{minted}[fontsize=\footnotesize]{xml}
+<SecurityRecoveryRates id="default">
+    <SecurityRecoveryRates name="SECURITY_1">
+        SecurityRecoveryRate/SECURITY_1
+    </SecurityRecoveryRate>
+</SecurityRecoveryRates>
+	\end{minted}
+	\caption{Security recovery rates block with ID 'default'}
+	\label{lst:secrecrate_spec}
+\end{listing}
+
+The pricing of bonds includes (among other components) a recovery rate. This can be specified per security using this structure. The link to the specific security is established via the name in the security spread recovery rate definition and the security id in the bond trade definition.
 
 \subsubsection{Equity Curves}
 The following is an excerpt of the Equity curves block with ID 'default' from the same example file:
