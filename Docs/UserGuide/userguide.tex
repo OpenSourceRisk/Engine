@@ -83,7 +83,8 @@
 %\title{Open Source Risk Engine \\ User Guide  }
 \title{ORE User Guide}
 \author{Quaternion Risk Management}
-\date{7 October 2016}
+%\date{7 October 2016}
+\date{24 April 2017}
 \maketitle
 
 \newpage
@@ -92,12 +93,12 @@
 \section*{Document History}
 
 \begin{center}
-\begin{supertabular}{|l|l|l|p{7cm}|}
+\begin{supertabular}{|l|l|p{9cm}|}
 \hline
 Date & Author & Comment \\
 \hline
-7 October 2016 & Quaternion Risk Management & initial release\\
-6 April 2017 & Quaternion Risk Management & updates for release v2\\
+7 October 2016 & Quaternion & initial release\\
+24 April 2017 & Quaternion  & updates for release v2: Bonds, Inflation, Equity, Sensitivity \& Stress\\
 \hline
 \end{supertabular}
 \end{center}
@@ -2286,10 +2287,18 @@ The following is an excerpt of the Zero Inflation Index Curves block with ID 'de
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
 <ZeroInflationIndexCurves id="default">
-    <ZeroInflationIndexCurve name="EUHICPXT">Inflation/EUHICPXT/EUHICPXT_ZC_Swaps</ZeroInflationIndexCurve>
-    <ZeroInflationIndexCurve name="FRHICP">Inflation/FRHICP/FRHICP_ZC_Swaps</ZeroInflationIndexCurve>
-    <ZeroInflationIndexCurve name="UKRPI">Inflation/UKRPI/UKRPI_ZC_Swaps</ZeroInflationIndexCurve>
-    <ZeroInflationIndexCurve name="USCPI">Inflation/USCPI/USCPI_ZC_Swaps</ZeroInflationIndexCurve>
+    <ZeroInflationIndexCurve name="EUHICPXT">
+        Inflation/EUHICPXT/EUHICPXT_ZC_Swaps
+    </ZeroInflationIndexCurve>
+    <ZeroInflationIndexCurve name="FRHICP">
+        Inflation/FRHICP/FRHICP_ZC_Swaps
+    </ZeroInflationIndexCurve>
+    <ZeroInflationIndexCurve name="UKRPI">
+        Inflation/UKRPI/UKRPI_ZC_Swaps
+    </ZeroInflationIndexCurve>
+    <ZeroInflationIndexCurve name="USCPI">
+        Inflation/USCPI/USCPI_ZC_Swaps
+    </ZeroInflationIndexCurve>
     ...
 </ZeroInflationIndexCurves>
 \end{minted}
@@ -2307,7 +2316,9 @@ In a similar way, Year on Year index curves are specified:
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
   <YYInflationIndexCurves id="default">
-      <YYInflationIndexCurve name="EUHICPXT">Inflation/EUHICPXT/EUHICPXT_YY_Swaps</YYInflationIndexCurve>
+      <YYInflationIndexCurve name="EUHICPXT">
+          Inflation/EUHICPXT/EUHICPXT_YY_Swaps
+      </YYInflationIndexCurve>
       ...
   </YYInflationIndexCurves>
 \end{minted}
@@ -2328,9 +2339,15 @@ file:
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
 <InflationCapFloorPriceSurfaces id="default">
-    <InflationCapFloorPriceSurface name="EUHICPXT">InflationCapFloorPrice/EUHICPXT/EUHICPXT_ZC_CF</InflationCapFloorPriceSurface>
-    <InflationCapFloorPriceSurface name="USCPI">InflationCapFloorPrice/USCPI/USCPI_ZC_CF</InflationCapFloorPriceSurface>
-    <InflationCapFloorPriceSurface name="UKRPI">InflationCapFloorPrice/UKRPI/UKRPI_ZC_CF</InflationCapFloorPriceSurface>
+    <InflationCapFloorPriceSurface name="EUHICPXT">
+        InflationCapFloorPrice/EUHICPXT/EUHICPXT_ZC_CF
+    </InflationCapFloorPriceSurface>
+    <InflationCapFloorPriceSurface name="USCPI">
+        InflationCapFloorPrice/USCPI/USCPI_ZC_CF
+    </InflationCapFloorPriceSurface>
+    <InflationCapFloorPriceSurface name="UKRPI">
+        InflationCapFloorPrice/UKRPI/UKRPI_ZC_CF
+    </InflationCapFloorPriceSurface>
 </InflationCapFloorPriceSurfaces>
 \end{minted}
 \caption{Inflation Cap/Floor Price Surfaces block with ID 'default'}
