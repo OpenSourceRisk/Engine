@@ -25,7 +25,7 @@
 
 #include <boost/make_shared.hpp>
 
-/*! \file nadarayawatson.hpp
+/*! \file qle\math\nadarayawatson.hpp
     \brief Nadaraya-Watson regression
 */
 

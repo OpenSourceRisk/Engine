@@ -19,7 +19,7 @@
 /*!
   \file qlw/trades/equityforward.cpp
   \brief Equity Forward data model
-  \ingroup Wrap
+  \ingroup portfolio
 */
 
 #include <ored/portfolio/equityforward.hpp>
