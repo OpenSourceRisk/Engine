@@ -3920,7 +3920,7 @@ Apart from first order sensitivities (deltas), ORE computes second order sensiti
 $$
 \delta = \frac{f(x+\Delta)-f(x)}{\Delta},
 $$ 
-gammas using up- and down-shifts
+where the shift $\Delta$ can be absolute or expressed as a relative move $\Delta_r$ from the current level, $\Delta=x\,\Delta_r$. Gammas are computed using up- and down-shifts
 $$
 \gamma = \frac{f(x+\Delta)+f(x-\Delta) - 2\,f(x)}{\Delta^2},
 $$ 
