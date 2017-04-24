@@ -76,6 +76,8 @@
     <ClInclude Include="ored\model\all.hpp" />
     <ClInclude Include="ored\model\crossassetmodelbuilder.hpp" />
     <ClInclude Include="ored\model\crossassetmodeldata.hpp" />
+    <ClInclude Include="ored\model\eqbsbuilder.hpp" />
+    <ClInclude Include="ored\model\eqbsdata.hpp" />
     <ClInclude Include="ored\model\fxbsbuilder.hpp" />
     <ClInclude Include="ored\model\fxbsdata.hpp" />
     <ClInclude Include="ored\model\lgmbuilder.hpp" />
@@ -174,6 +176,8 @@
     <ClCompile Include="ored\marketdata\yieldcurve.cpp" />
     <ClCompile Include="ored\model\crossassetmodelbuilder.cpp" />
     <ClCompile Include="ored\model\crossassetmodeldata.cpp" />
+    <ClCompile Include="ored\model\eqbsbuilder.cpp" />
+    <ClCompile Include="ored\model\eqbsdata.cpp" />
     <ClCompile Include="ored\model\fxbsbuilder.cpp" />
     <ClCompile Include="ored\model\fxbsdata.cpp" />
     <ClCompile Include="ored\model\lgmbuilder.cpp" />

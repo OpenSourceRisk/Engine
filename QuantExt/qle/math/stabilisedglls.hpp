@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file stabilisedglls.hpp
+/*! \file qle\math\stabilisedglls.hpp
     \brief Numerically stabilised general linear least squares
     \ingroup termstructures
 */

@@ -321,6 +321,12 @@
     <ClInclude Include="ored\marketdata\inflationcurve.hpp">
       <Filter>marketdata</Filter>
     </ClInclude>
+    <ClInclude Include="ored\model\eqbsbuilder.hpp">
+      <Filter>model</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\model\eqbsdata.hpp">
+      <Filter>model</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp">
@@ -556,6 +562,12 @@
     </ClCompile>
     <ClCompile Include="ored\marketdata\inflationcurve.cpp">
       <Filter>marketdata</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\model\eqbsbuilder.cpp">
+      <Filter>model</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\model\eqbsdata.cpp">
+      <Filter>model</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

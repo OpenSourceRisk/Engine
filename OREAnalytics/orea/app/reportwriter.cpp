@@ -194,16 +194,19 @@ void ReportWriter::writeCurves(ore::data::Report& report, const std::string& con
     report.addColumn("Tenor", Period()).addColumn("Date", Date());
 
     for (auto it : discountCurves) {
+        DLOG("discount curve - " << it.first);
         report.addColumn(it.first, double(), 15);
-        yieldCurves.push_back(market->discountCurve(it.first));
+        yieldCurves.push_back(market->discountCurve(it.first,configID));
     }
     for (auto it : YieldCurves) {
+        DLOG("yield curve - " << it.first);
         report.addColumn(it.first, double(), 15);
-        yieldCurves.push_back(market->yieldCurve(it.first));
+        yieldCurves.push_back(market->yieldCurve(it.first,configID));
     }
     for (auto it : indexCurves) {
+        DLOG("index curve - " << it.first);
         report.addColumn(it.first, double(), 15);
-        yieldCurves.push_back(market->iborIndex(it.first)->forwardingTermStructure());
+        yieldCurves.push_back(market->iborIndex(it.first,configID)->forwardingTermStructure());
     }
     for (auto it : zeroInflationIndices) {
         report.addColumn(it.first, double(), 15);
