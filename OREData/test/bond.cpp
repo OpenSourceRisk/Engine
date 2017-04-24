@@ -52,9 +52,11 @@ public:
         // build discount
         yieldCurves_[make_pair(Market::defaultConfiguration, "BANK_EUR_LEND")] = flatRateYts(0.02);
         defaultCurves_[make_pair(Market::defaultConfiguration, "CreditCurve_A")] = flatRateDcs(0.0);
-        recoveryRates_[make_pair(Market::defaultConfiguration, "CreditCurve_A")] =
-            Handle<Quote>(boost::make_shared<SimpleQuote>(0.00));
+        // recoveryRates_[make_pair(Market::defaultConfiguration, "CreditCurve_A")] =
+        //     Handle<Quote>(boost::make_shared<SimpleQuote>(0.00));
         securitySpreads_[make_pair(Market::defaultConfiguration, "Security1")] =
+            Handle<Quote>(boost::make_shared<SimpleQuote>(0.00));
+        recoveryRates_[make_pair(Market::defaultConfiguration, "Security1")] =
             Handle<Quote>(boost::make_shared<SimpleQuote>(0.00));
     }
 
@@ -63,9 +65,11 @@ public:
         // build discount
         yieldCurves_[make_pair(Market::defaultConfiguration, "BANK_EUR_LEND")] = flatRateYts(0.02);
         defaultCurves_[make_pair(Market::defaultConfiguration, "CreditCurve_A")] = flatRateDcs(defaultFlatRate);
-        recoveryRates_[make_pair(Market::defaultConfiguration, "CreditCurve_A")] =
-            Handle<Quote>(boost::make_shared<SimpleQuote>(0.00));
+        // recoveryRates_[make_pair(Market::defaultConfiguration, "CreditCurve_A")] =
+        //     Handle<Quote>(boost::make_shared<SimpleQuote>(0.00));
         securitySpreads_[make_pair(Market::defaultConfiguration, "Security1")] =
+            Handle<Quote>(boost::make_shared<SimpleQuote>(0.00));
+        recoveryRates_[make_pair(Market::defaultConfiguration, "Security1")] =
             Handle<Quote>(boost::make_shared<SimpleQuote>(0.00));
     }
 
@@ -104,7 +108,6 @@ struct CommonVars {
     Real notional;
     vector<Real> notionals;
     vector<Real> spread;
-    Real LGD;
 
     // utilities
     boost::shared_ptr<ore::data::Bond> makeBond() {
@@ -117,7 +120,7 @@ struct CommonVars {
         Envelope env("CP1");
 
         boost::shared_ptr<ore::data::Bond> bond(new ore::data::Bond(
-            env, issuerId, creditCurveId, securityId, referenceCurveId, settledays, calStr, issue, fixedLegData, LGD));
+            env, issuerId, creditCurveId, securityId, referenceCurveId, settledays, calStr, issue, fixedLegData));
         return bond;
     }
 
@@ -126,7 +129,7 @@ struct CommonVars {
 
         boost::shared_ptr<ore::data::Bond> bond(new ore::data::Bond(env, issuerId, creditCurveId, securityId,
                                                                     referenceCurveId, settledays, calStr, notional, end,
-                                                                    ccy, issue, LGD));
+                                                                    ccy, issue));
         return bond;
     }
 
@@ -152,7 +155,6 @@ struct CommonVars {
         notional = 10000000;
         notionals.push_back(10000000);
         spread.push_back(0.0);
-	LGD = 1.0;
     }
 };
 }

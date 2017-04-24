@@ -41,13 +41,12 @@ namespace data {
 \ingroup portfolio
 */
 
-class BondEngineBuilder : public CachingPricingEngineBuilder<string, const Currency&, const string&, const string&,
-                                                             const string&, const Real&> {
+class BondEngineBuilder
+    : public CachingPricingEngineBuilder<string, const Currency&, const string&, const string&, const string&> {
 protected:
     BondEngineBuilder(const std::string& model, const std::string& engine) : CachingEngineBuilder(model, engine) {}
 
-    virtual string keyImpl(const Currency&, const string& securityId, const string&, const string&,
-                           const Real&) override {
+    virtual string keyImpl(const Currency&, const string& securityId, const string&, const string&) override {
         return securityId;
     }
 };
@@ -63,8 +62,8 @@ public:
 
 protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const string& creditCurveId,
-                                                        const string& securityId, const string& referenceCurveId,
-                                                        const Real& LGD = Null<Real>()) override {
+                                                        const string& securityId,
+                                                        const string& referenceCurveId) override {
 
         string tsperiodStr = engineParameters_.at("TimestepPeriod");
         Period tsperiod = parsePeriod(tsperiodStr);
@@ -72,10 +71,15 @@ protected:
         Handle<DefaultProbabilityTermStructure> dpts =
             market_->defaultCurve(creditCurveId, configuration(MarketContext::pricing));
         Handle<Quote> recovery;
-        if (LGD != Null<Real>())
-	  recovery = Handle<Quote>(boost::make_shared<SimpleQuote>(1.0 - LGD));
-        else
+        try {
+            // try security recovery first
+            recovery = market_->recoveryRate(securityId, configuration(MarketContext::pricing));
+        } catch (...) {
+            // otherwise fall back on curve recovery
+            ALOG("security specific recovery rate not found for security ID "
+                 << securityId << ", falling back on the recovery rate for credit curve Id " << creditCurveId);
             recovery = market_->recoveryRate(creditCurveId, configuration(MarketContext::pricing));
+        }
         Handle<Quote> spread = market_->securitySpread(securityId, configuration(MarketContext::pricing));
 
         return boost::make_shared<QuantExt::DiscountingRiskyBondEngine>(yts, dpts, recovery, spread, tsperiod);

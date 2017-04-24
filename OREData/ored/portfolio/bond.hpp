@@ -31,20 +31,20 @@ public:
 
     //! Constructor
     Bond(Envelope env, string issuerId, string creditCurveId, string securityId, string referenceCurveId,
-         string settlementDays, string calendar, string issueDate, LegData& coupons, Real lgd = Null<Real>())
+         string settlementDays, string calendar, string issueDate, LegData& coupons)
         : Trade("Bond", env), issuerId_(issuerId), creditCurveId_(creditCurveId), securityId_(securityId),
           referenceCurveId_(referenceCurveId), settlementDays_(settlementDays), calendar_(calendar),
           issueDate_(issueDate), coupons_(coupons), faceAmount_(0), maturityDate_(), currency_(),
-          zeroBond_(false), lgd_(lgd) {}
+          zeroBond_(false) {}
 
     //! Constructor
     Bond(Envelope env, string issuerId, string creditCurveId, string securityId, string referenceCurveId,
          string settlementDays, string calendar, Real faceAmount, string maturityDate, string currency,
-         string issueDate, Real lgd = Null<Real>())
+         string issueDate)
         : Trade("Bond", env), issuerId_(issuerId), creditCurveId_(creditCurveId), securityId_(securityId),
           referenceCurveId_(referenceCurveId), settlementDays_(settlementDays), calendar_(calendar),
           issueDate_(issueDate), coupons_(), faceAmount_(faceAmount), maturityDate_(maturityDate),
-          currency_(currency), zeroBond_(true), lgd_(lgd) {}
+          currency_(currency), zeroBond_(true) {}
 
     // Build QuantLib/QuantExt instrument, link pricing engine
     virtual void build(const boost::shared_ptr<EngineFactory>&);
@@ -63,7 +63,6 @@ public:
     const Real& faceAmount() const { return faceAmount_; }
     const string& maturityDate() const { return maturityDate_; }
     const string& currency() const { return currency_; }
-    const Real& lgd() const { return lgd_; }
 
 private:
     string issuerId_;
@@ -78,7 +77,6 @@ private:
     string maturityDate_;
     string currency_;
     bool zeroBond_;
-    Real lgd_;
 };
 }
 }

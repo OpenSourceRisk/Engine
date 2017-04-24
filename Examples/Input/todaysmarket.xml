@@ -157,4 +157,7 @@
   <SecuritySpreads id="default">
     <SecuritySpread name="SECURITY_1">SecuritySpread/SECURITY_1</SecuritySpread>
   </SecuritySpreads>
+  <SecurityRecoveryRates id="default">
+    <SecurityRecoveryRate name="SECURITY_1">SecurityRecoveryRate/SECURITY_1</SecurityRecoveryRate>
+  </SecurityRecoveryRates>
 </TodaysMarket>

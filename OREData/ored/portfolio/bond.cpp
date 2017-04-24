@@ -71,7 +71,7 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     Currency currency = parseCurrency(currency_);
     boost::shared_ptr<BondEngineBuilder> bondBuilder = boost::dynamic_pointer_cast<BondEngineBuilder>(builder);
     QL_REQUIRE(bondBuilder, "No Builder found for Bond: " << id());
-    bond->setPricingEngine(bondBuilder->engine(currency, creditCurveId_, securityId_, referenceCurveId_, lgd_));
+    bond->setPricingEngine(bondBuilder->engine(currency, creditCurveId_, securityId_, referenceCurveId_));
     DLOG("Bond::build(): Bond NPV = " << bond->NPV());
     DLOG("Bond::build(): Bond CleanPrice = " << bond->cleanPrice());
     DLOG("Bond::build(): Bond DirtyPrice = " << bond->dirtyPrice());
@@ -101,11 +101,6 @@ void Bond::fromXML(XMLNode* node) {
     issueDate_ = XMLUtils::getChildValue(bondNode, "IssueDate", true);
     XMLNode* legNode = XMLUtils::getChildNode(bondNode, "LegData");
     coupons_.fromXML(legNode);
-    XMLNode* lgdNode = XMLUtils::getChildNode(bondNode, "LGD");
-    if (lgdNode)
-        lgd_ = XMLUtils::getChildValueAsDouble(bondNode, "LGD", false);
-    else
-        lgd_ = Null<Real>();
 }
 
 XMLNode* Bond::toXML(XMLDocument& doc) {
@@ -120,8 +115,6 @@ XMLNode* Bond::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, bondNode, "Calendar", calendar_);
     XMLUtils::addChild(doc, bondNode, "IssueDate", issueDate_);
     XMLUtils::appendNode(bondNode, coupons_.toXML(doc));
-    if (lgd_ != Null<Real>())
-        XMLUtils::addChild(doc, bondNode, "LGD", lgd_);
     return node;
 }
 }
