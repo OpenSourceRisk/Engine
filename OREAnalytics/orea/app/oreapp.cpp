@@ -168,7 +168,7 @@ void OREApp::readSetup() {
     simulate_ = (params_->hasGroup("simulation") && params_->get("simulation", "active") == "Y") ? true : false;
     buildSimMarket_ = true;
     xva_ = (params_->hasGroup("xva") && params_->get("xva", "active") == "Y") ? true : false;
-    writeDIMReport_ = (params_->has("xva", "dim") && parseBool(params_->get("xva", "dim"))) ? true : false;
+    writeDIMReport_ = (params_->hasGroup("xva") && params_->has("xva", "dim") && parseBool(params_->get("xva", "dim"))) ? true : false;
 }
 
 void OREApp::setupLog() {
