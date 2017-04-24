@@ -598,8 +598,12 @@ void OREApp::writeDIMReport() {
     string nettingSet = params_->get("xva", "dimOutputNettingSet");
     std::vector<Size> dimOutputGridPoints =
         parseListOfValues<Size>(params_->get("xva", "dimOutputGridPoints"), &parseInteger);
-    postProcess_->exportDimEvolution(dimFile1, nettingSet);
-    postProcess_->exportDimRegression(dimFiles2, nettingSet, dimOutputGridPoints);
+    ore::data::CSVFileReport dimEvolutionReport(dimFile1);
+    postProcess_->exportDimEvolution(nettingSet,dimEvolutionReport);
+    vector<boost::shared_ptr<ore::data::Report> > reportVec;
+    for (Size i = 0; i < dimOutputGridPoints.size(); ++i)
+        reportVec.push_back(boost::make_shared<ore::data::CSVFileReport>(dimFiles2[i]));
+    postProcess_->exportDimRegression(nettingSet, dimOutputGridPoints, reportVec);
 }
 }
 }

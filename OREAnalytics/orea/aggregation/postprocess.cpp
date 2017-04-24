@@ -900,7 +900,7 @@ void PostProcess::dynamicInitialMargin() {
                 rx0[k] = rx[k][0];
                 ry1[k] = z;     // for local regression
                 ry2[k] = z * z; // for least squares regression
-                nettingSetDeltaNPV_[n][j][k] = std::abs(z * horizonScaling * confidenceLevel);
+                nettingSetDeltaNPV_[n][j][k] = z;
                 regressorArray_[n][j][k] = rx[k];
             }
             vector<Real> delNpvVec_copy = nettingSetDeltaNPV_[n][j];
@@ -1243,14 +1243,8 @@ void PostProcess::performT0DimCalc() {
     LOG("T0 IM Calculations Completed");
 }
 
-void PostProcess::exportDimEvolution(const std::string& fileName, const std::string& nettingSet) {
+void PostProcess::exportDimEvolution(const std::string& nettingSet, ore::data::Report& dimEvolutionReport) {
     LOG("Export DIM evolution for netting set " << nettingSet);
-
-    std::ofstream file;
-    file.open(fileName.c_str());
-    QL_REQUIRE(file.is_open(), "error opening file " << fileName);
-    file.setf(ios::fixed, ios::floatfield);
-    file.setf(ios::showpoint);
 
     Size dates = dimCube_->dates().size();
     Size samples = dimCube_->samples();
@@ -1265,7 +1259,14 @@ void PostProcess::exportDimEvolution(const std::string& fileName, const std::str
     }
     QL_REQUIRE(index >= 0, "netting set " << nettingSet << " not found in DIM cube");
 
-    file << "TimeStep,Date,DaysInPeriod,ZeroOrderDIM,AverageDIM,AverageFLOW,SimpleDIM" << endl;
+    dimEvolutionReport.addColumn("TimeStep", Size())
+        .addColumn("Date", Date())
+        .addColumn("DaysInPeriod", Size())
+        .addColumn("ZeroOrderDIM", Real(), 6)
+        .addColumn("AverageDIM", Real(), 6)
+        .addColumn("AverageFLOW", Real(), 6)
+        .addColumn("SimpleDIM", Real(), 6);
+
     for (Size i = 0; i < dates - 1; ++i) {
         Real expectedFlow = 0.0;
         for (Size j = 0; j < samples; ++j) {
@@ -1275,11 +1276,16 @@ void PostProcess::exportDimEvolution(const std::string& fileName, const std::str
         Date d1 = dimCube_->dates()[i];
         Date d2 = dimCube_->dates()[i + 1];
         Size days = d2 - d1;
-        file << i << "," << QuantLib::io::iso_date(d1) << "," << days << "," << setprecision(6)
-             << nettingSetZeroOrderDIM_[nettingSet][i] << "," << nettingSetExpectedDIM_[nettingSet][i] << ","
-             << expectedFlow << "," << nettingSetSimpleDIMh_[nettingSet][i] << endl;
+        dimEvolutionReport.next()
+            .add(i)
+            .add(d1)
+            .add(days)
+            .add(nettingSetZeroOrderDIM_[nettingSet][i])
+            .add(nettingSetExpectedDIM_[nettingSet][i])
+            .add(expectedFlow)
+            .add(nettingSetSimpleDIMh_[nettingSet][i]);
     }
-    file.close();
+    dimEvolutionReport.end();
     LOG("Exporting expected DIM through time done");
 }
 
@@ -1289,21 +1295,15 @@ bool lessThan(const Array& a, const Array& b) {
     return a[0] < b[0];
 }
 
-void PostProcess::exportDimRegression(const std::vector<string>& fileNames, const std::string& nettingSet,
-                                      const std::vector<Size>& timeSteps) {
+void PostProcess::exportDimRegression(const std::string& nettingSet, const std::vector<Size>& timeSteps,
+    const std::vector<boost::shared_ptr<ore::data::Report> >& dimRegReports) {
 
-    QL_REQUIRE(fileNames.size() == timeSteps.size(),
-               "number of file names (" << fileNames.size() << ") does not match number of time steps ("
+    QL_REQUIRE(dimRegReports.size() == timeSteps.size(),
+               "number of file names (" << dimRegReports.size() << ") does not match number of time steps ("
                                         << timeSteps.size() << ")");
     for (Size ii = 0; ii < timeSteps.size(); ++ii) {
         Size timeStep = timeSteps[ii];
         LOG("Export DIM by sample for netting set " << nettingSet << " and time step " << timeStep);
-
-        std::ofstream file;
-        file.open(fileNames[ii].c_str());
-        QL_REQUIRE(file.is_open(), "error opening file " << fileNames[ii]);
-        file.setf(ios::fixed, ios::floatfield);
-        file.setf(ios::showpoint);
 
         Size dates = dimCube_->dates().size();
         const std::vector<std::string>& ids = dimCube_->ids();
@@ -1331,26 +1331,38 @@ void PostProcess::exportDimRegression(const std::vector<string>& fileNames, cons
         vector<Real> delta = apply_permutation(nettingSetDeltaNPV_[nettingSet][timeStep], p);
         vector<Real> num = apply_permutation(numeraires, p);
 
-        file << "Sample,";
+        boost::shared_ptr<ore::data::Report> regReport = dimRegReports[ii];
+        regReport->addColumn("Sample", Size());
         for (Size k = 0; k < reg[0].size(); ++k) {
-            file << "Regressor_" << k << "_" << (dimRegressors_.empty() ? "NPV" : dimRegressors_[k]) << ",";
+            ostringstream o;
+            o << "Regressor_" << k << "_";
+            o << (dimRegressors_.empty() ? "NPV" : dimRegressors_[k]);
+            regReport->addColumn(o.str(), Real(), 6);
         }
-        file << "RegressionDIM,LocalDIM,ExpectedDIM,ZeroOrderDIM,DeltaNPV,SimpleDIM" << endl;
+        regReport->addColumn("RegressionDIM", Real(), 6)
+            .addColumn("LocalDIM", Real(), 6)
+            .addColumn("ExpectedDIM", Real(), 6)
+            .addColumn("ZeroOrderDIM", Real(), 6)
+            .addColumn("DeltaNPV", Real(), 6)
+            .addColumn("SimpleDIM", Real(), 6);
 
-        // Note that RegressionDIM, LocalDIM, ZeroOrderDim, DeltaNPV are _not_ reduced by the numeraire in this output,
-        // but ExpectedDIM _is_ reduced by the numeraire.
+        // Note that RegressionDIM, LocalDIM, DeltaNPV are _not_ reduced by the numeraire in this output,
+        // but ExpectedDIM, ZeroOrderDIM and SimpleDIM _are_ reduced by the numeraire.
+        // This is so that the regression formula can be manually validated
 
         for (Size j = 0; j < reg.size(); ++j) {
-            file << j << "," << setprecision(6);
-            for (Size k = 0; k < reg[j].size(); ++k) {
-                file << reg[j][k] << ",";
-            }
-            file << dim[j] * num[j] << "," << ldim[j] * num[j] << "," << nettingSetExpectedDIM_[nettingSet][timeStep]
-                 << "," << nettingSetZeroOrderDIM_[nettingSet][timeStep] << "," << delta[j] << ","
-                 << nettingSetSimpleDIMh_[nettingSet][timeStep] << endl;
+            regReport->next().add(j);
+            for (Size k = 0; k < reg[j].size(); ++k)
+                regReport->add(reg[j][k]);
+            regReport->add(dim[j] * num[j])
+                .add(ldim[j] * num[j])
+                .add(nettingSetExpectedDIM_[nettingSet][timeStep])
+                .add(nettingSetZeroOrderDIM_[nettingSet][timeStep])
+                .add(delta[j])
+                .add(nettingSetSimpleDIMh_[nettingSet][timeStep]);
         }
-        file.close();
-        LOG("Exporting DIM by Sample done");
+        regReport->end();
+        LOG("Exporting DIM by Sample done for");
     }
 }
 }
