@@ -377,7 +377,7 @@ void OREApp::buildNPVCube() {
     o.str("");
     o << "Build Cube " << simPortfolio_->size() << " x " << grid_->size() << " x " << samples_ << "... ";
 
-    auto progressBar = boost::make_shared<SimpleProgressBar>(o.str(), tab_);
+    auto progressBar = boost::make_shared<SimpleProgressBar>(o.str(), tab_, 72 - std::min<Size>(tab_, 67));
     auto progressLog = boost::make_shared<ProgressLog>("Building cube...");
     engine.registerProgressIndicator(progressBar);
     engine.registerProgressIndicator(progressLog);
