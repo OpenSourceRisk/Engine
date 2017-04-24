@@ -6,6 +6,7 @@ this_include_HEADERS = \
     all.hpp \
 	audbbsw.hpp \
 	chftois.hpp \
+	corra.hpp \
 	czkpribor.hpp \
     dkkcibor.hpp \
     hkdhibor.hpp \

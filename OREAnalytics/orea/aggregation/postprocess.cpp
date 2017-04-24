@@ -834,6 +834,9 @@ void PostProcess::dynamicInitialMargin() {
     for (auto n : nettingSets)
         nettingSetIds.push_back(n);
 
+    // Perform the T0 calculation
+    performT0DimCalc();
+
     // This is allocated here and not outside the post processor because we determine the dimension (netting sets) here
     dimCube_ = boost::make_shared<SinglePrecisionInMemoryCube>(today, nettingSetIds, cube_->dates(), samples);
 
@@ -1158,6 +1161,86 @@ Real PostProcess::nettingSetCollateralFloor(const string& nettingSetId) {
     QL_REQUIRE(nettingSetCollateralFloor_.find(nettingSetId) != nettingSetCollateralFloor_.end(),
                "NettingSetId " << nettingSetId << " not found in nettingSetCollateralFloor map");
     return nettingSetCollateralFloor_[nettingSetId];
+}
+
+void PostProcess::performT0DimCalc() {
+    // In this function we proxy the model-implied T0 IM by looking at the
+    // cube grid horizon lying closest to t0+mpor. We measure diffs relative
+    // to the mean of the distribution at this same time horizon, thus avoiding
+    // any cashflow-specific jumps
+
+    Date today = market_->asofDate();
+    Size relevantDateIdx = 0;
+    Real sqrtTimeScaling = 1.0;
+    for (Size i = 0; i < cube_->dates().size(); ++i) {
+        Size daysFromT0 = (cube_->dates()[i] - today);
+        if (daysFromT0 < dimHorizonCalendarDays_) {
+            // iterate until we straddle t0+mpor
+            continue;
+        }
+        else if (daysFromT0 == dimHorizonCalendarDays_) {
+            // this date corresponds to t0+mpor, so use it
+            relevantDateIdx = i;
+            sqrtTimeScaling = 1.0;
+            break;
+        }
+        else if (daysFromT0 > dimHorizonCalendarDays_) {
+            // the first date greater than t0+MPOR, check if it is closest
+            Size lastIdx = (i == 0) ? 0 : (i - 1);
+            Size lastDaysFromT0 = (cube_->dates()[lastIdx] - today);
+            if (std::fabs(daysFromT0 - dimHorizonCalendarDays_) <= std::fabs(lastDaysFromT0 - dimHorizonCalendarDays_)) {
+                relevantDateIdx = i;
+                sqrtTimeScaling = std::sqrt(Real(dimHorizonCalendarDays_) / Real(daysFromT0));
+            }
+            else {
+                relevantDateIdx = lastIdx;
+                sqrtTimeScaling = std::sqrt(Real(dimHorizonCalendarDays_) / Real(lastDaysFromT0));
+            }
+            break;
+        }
+    }
+    // set some reasonable bounds on the sqrt time scaling, so that we are not looking at a ridiculous time horizon
+    QL_REQUIRE((sqrtTimeScaling*sqrtTimeScaling >= 0.5) &&
+        (sqrtTimeScaling*sqrtTimeScaling <= 2.0),
+        "T0 IM Estimation - The estimation time horizon from grid " <<
+        "is not sufficiently close to t0+MPOR - " <<
+        QuantLib::io::iso_date(cube_->dates()[relevantDateIdx]));
+
+    // TODO: Ensure that the simulation containers read-from below are indeed populated
+
+    Real confidenceLevel = QuantLib::InverseCumulativeNormal()(dimQuantile_);
+    Size simple_dim_index_h = Size(floor(dimQuantile_ * (cube_->samples() - 1) + 0.5));
+    for (auto it_map = nettingSetNPV_.begin(); it_map != nettingSetNPV_.end(); ++it_map) {
+        string key = it_map->first;
+        boost::shared_ptr<NettingSetDefinition> nettingObj = nettingSetManager_->get(key);
+        vector<Real> t0_dist = it_map->second[relevantDateIdx];
+        Size dist_size = t0_dist.size();
+        QL_REQUIRE(dist_size == cube_->samples(),
+            "T0 IM - cube samples size mismatch - "
+            << dist_size << ", " << cube_->samples());
+        Real mean_t0_dist = std::accumulate(t0_dist.begin(), t0_dist.end(), 0.0);
+        mean_t0_dist /= dist_size;
+        vector<Real> t0_delMtM_dist(dist_size, 0.0);
+        accumulator_set<double, stats<tag::mean, tag::variance>> acc_delMtm;
+        accumulator_set<double, stats<tag::mean>> acc_OneOverNum;
+        for (Size i = 0; i < dist_size; ++i) {
+            Real numeraire = scenarioData_->get(relevantDateIdx, i, AggregationScenarioDataType::Numeraire);
+            Real deltaMtmFromMean = numeraire * (t0_dist[i] - mean_t0_dist) * sqrtTimeScaling;
+            t0_delMtM_dist[i] = deltaMtmFromMean;
+            acc_delMtm(deltaMtmFromMean);
+            acc_OneOverNum(1.0 / numeraire);
+        }
+        Real E_OneOverNumeraire = mean(acc_OneOverNum);
+        Real variance_t0 = variance(acc_delMtm);
+        Real sqrt_t0 = sqrt(variance_t0);
+        net_t0_im_reg_h_[key] = (sqrt_t0 * confidenceLevel * E_OneOverNumeraire);
+        std::sort(t0_delMtM_dist.begin(), t0_delMtM_dist.end());
+        net_t0_im_simple_h_[key] = (t0_delMtM_dist[simple_dim_index_h] * E_OneOverNumeraire);
+
+        LOG("T0 IM (Reg) - {" << key << "} = " << net_t0_im_reg_h_[key]);
+        LOG("T0 IM (Simple) - {" << key << "} = " << net_t0_im_simple_h_[key]);
+    }
+    LOG("T0 IM Calculations Completed");
 }
 
 void PostProcess::exportDimEvolution(const std::string& fileName, const std::string& nettingSet) {

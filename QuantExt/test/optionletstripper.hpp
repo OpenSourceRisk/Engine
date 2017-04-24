@@ -18,7 +18,6 @@
 
 /*! \file test/optionletstripper.hpp
     \brief tests for OptionletStripper
-    \ingroup
 */
 
 #ifndef quantext_test_optionletstripper_hpp

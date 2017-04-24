@@ -27,9 +27,6 @@
 #include <qle/models/irlgm1fpiecewiseconstanthullwhiteadaptor.hpp>
 #include <qle/models/fxbsconstantparametrization.hpp>
 #include <qle/models/fxbspiecewiseconstantparametrization.hpp>
-// #include <qle/pricingengines/analyticlgmswaptionengine.hpp>
-// #include <qle/pricingengines/analyticcclgmfxoptionengine.hpp>
-//#include <qle/models/fxoptionhelper.hpp>
 
 #include <ql/math/optimization/levenbergmarquardt.hpp>
 #include <ql/quotes/simplequote.hpp>
@@ -109,6 +106,11 @@ void CrossAssetModelData::fromXML(XMLNode* root) {
         LOG("CrossAssetModelData: ccy " << ccy);
     }
 
+    equities_ = XMLUtils::getChildrenValues(modelNode, "Equities", "Equity");
+    for (auto eq : equities_) {
+        LOG("CrossAssetModelData equity " << eq);
+    }
+
     bootstrapTolerance_ = XMLUtils::getChildValueAsDouble(modelNode, "BootstrapTolerance", true);
     LOG("CrossAssetModelData: bootstrap tolerance = " << bootstrapTolerance_);
 
@@ -170,6 +172,35 @@ void CrossAssetModelData::fromXML(XMLNode* root) {
 
     for (Size i = 0; i < fxConfigs_.size(); i++)
         LOG("CrossAssetModelData: FX config currency " << i << " = " << fxConfigs_[i]->foreignCcy());
+
+    // Configure EQ model components
+
+    std::map<std::string, boost::shared_ptr<EqBsData>> eqDataMap;
+    XMLNode* eqNode = XMLUtils::getChildNode(modelNode, "EquityModels");
+    if (eqNode) {
+        for (XMLNode* child = XMLUtils::getChildNode(eqNode, "CrossAssetLGM"); child;
+             child = XMLUtils::getNextSibling(child, "CrossAssetLGM")) {
+
+            boost::shared_ptr<EqBsData> config(new EqBsData());
+            config->fromXML(child);
+
+            for (Size i = 0; i < config->optionExpiries().size(); i++) {
+                LOG("Cross-Asset Equity calibration option " << config->optionExpiries()[i] << " "
+                                                             << config->optionStrikes()[i]);
+            }
+
+            eqDataMap[config->eqName()] = config;
+
+            LOG("CrossAssetModelData: Equity config built with key " << config->eqName());
+        }
+    } else {
+        LOG("No Equity Models section found");
+    }
+
+    buildEqConfigs(eqDataMap);
+
+    for (Size i = 0; i < eqConfigs_.size(); i++)
+        LOG("CrossAssetModelData: EQ config name " << i << " = " << eqConfigs_[i]->eqName());
 
     // Configure correlation structure
 
@@ -255,12 +286,40 @@ void CrossAssetModelData::buildFxConfigs(std::map<std::string, boost::shared_ptr
     }
 }
 
+void CrossAssetModelData::buildEqConfigs(std::map<std::string, boost::shared_ptr<EqBsData>>& eqDataMap) {
+    // Append Eq configurations into the eqConfigs vector in the order of the equity
+    // names in the equities) vector.
+    // If there is an Eq configuration for any of the names missing,
+    // then we will look up the configuration with key "default" and use this instead.
+    // If this is not provided either we will throw an exception.
+    for (Size i = 0; i < equities_.size(); i++) {
+        string name = equities_[i];
+        if (eqDataMap.find(name) != eqDataMap.end())
+            eqConfigs_.push_back(eqDataMap[name]);
+        else { // copy from default
+            LOG("Equity configuration missing for name " << name << ", using default");
+            if (eqDataMap.find("default") == eqDataMap.end()) {
+                ALOG("Both default EQ and " << name << " EQ configuration missing");
+                QL_FAIL("Both default EQ and " << name << " EQ configuration missing");
+            }
+            boost::shared_ptr<EqBsData> def = eqDataMap["default"];
+            boost::shared_ptr<EqBsData> eqData = boost::make_shared<EqBsData>(
+                name, def->currency(), def->calibrationType(), def->calibrateSigma(), def->sigmaParamType(),
+                def->sigmaTimes(), def->sigmaValues(), def->optionExpiries(), def->optionStrikes());
+
+            eqConfigs_.push_back(eqData);
+        }
+        LOG("CrossAssetModelData: EQ config added for name " << name);
+    }
+}
+
 XMLNode* CrossAssetModelData::toXML(XMLDocument& doc) {
 
     XMLNode* crossAssetModelNode = doc.allocNode("CrossAssetModel");
 
     XMLUtils::addChild(doc, crossAssetModelNode, "DomesticCcy", domesticCurrency_);
     XMLUtils::addChildren(doc, crossAssetModelNode, "Currencies", "Currency", currencies_);
+    XMLUtils::addChildren(doc, crossAssetModelNode, "Equities", "Equity", equities_);
     XMLUtils::addChild(doc, crossAssetModelNode, "BootstrapTolerance", bootstrapTolerance_);
 
     XMLNode* interestRateModelsNode = XMLUtils::addChild(doc, crossAssetModelNode, "InterestRateModels");
@@ -273,6 +332,12 @@ XMLNode* CrossAssetModelData::toXML(XMLDocument& doc) {
     for (Size fxConfigs_Iterator = 0; fxConfigs_Iterator < fxConfigs_.size(); fxConfigs_Iterator++) {
         XMLNode* crossCcyLgmNode = fxConfigs_[fxConfigs_Iterator]->toXML(doc);
         XMLUtils::appendNode(foreignExchangeModelsNode, crossCcyLgmNode);
+    }
+
+    XMLNode* eqModelsNode = XMLUtils::addChild(doc, crossAssetModelNode, "EquityModels");
+    for (Size eqConfigs_Iterator = 0; eqConfigs_Iterator < eqConfigs_.size(); eqConfigs_Iterator++) {
+        XMLNode* crossAssetEqNode = eqConfigs_[eqConfigs_Iterator]->toXML(doc);
+        XMLUtils::appendNode(eqModelsNode, crossAssetEqNode);
     }
 
     XMLNode* instantaneousCorrelationsNode = doc.allocNode("InstantaneousCorrelations");

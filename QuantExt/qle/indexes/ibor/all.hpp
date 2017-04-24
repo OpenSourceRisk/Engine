@@ -3,6 +3,7 @@
 
 #include <qle/indexes/ibor/audbbsw.hpp>
 #include <qle/indexes/ibor/chftois.hpp>
+#include <qle/indexes/ibor/corra.hpp>
 #include <qle/indexes/ibor/czkpribor.hpp>
 #include <qle/indexes/ibor/dkkcibor.hpp>
 #include <qle/indexes/ibor/hkdhibor.hpp>
