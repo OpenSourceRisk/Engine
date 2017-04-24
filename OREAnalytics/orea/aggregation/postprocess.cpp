@@ -1177,22 +1177,20 @@ void PostProcess::performT0DimCalc() {
         if (daysFromT0 < dimHorizonCalendarDays_) {
             // iterate until we straddle t0+mpor
             continue;
-        }
-        else if (daysFromT0 == dimHorizonCalendarDays_) {
+        } else if (daysFromT0 == dimHorizonCalendarDays_) {
             // this date corresponds to t0+mpor, so use it
             relevantDateIdx = i;
             sqrtTimeScaling = 1.0;
             break;
-        }
-        else if (daysFromT0 > dimHorizonCalendarDays_) {
+        } else if (daysFromT0 > dimHorizonCalendarDays_) {
             // the first date greater than t0+MPOR, check if it is closest
             Size lastIdx = (i == 0) ? 0 : (i - 1);
             Size lastDaysFromT0 = (cube_->dates()[lastIdx] - today);
-            if (std::fabs(daysFromT0 - dimHorizonCalendarDays_) <= std::fabs(lastDaysFromT0 - dimHorizonCalendarDays_)) {
+            if (std::fabs(daysFromT0 - dimHorizonCalendarDays_) <=
+                std::fabs(lastDaysFromT0 - dimHorizonCalendarDays_)) {
                 relevantDateIdx = i;
                 sqrtTimeScaling = std::sqrt(Real(dimHorizonCalendarDays_) / Real(daysFromT0));
-            }
-            else {
+            } else {
                 relevantDateIdx = lastIdx;
                 sqrtTimeScaling = std::sqrt(Real(dimHorizonCalendarDays_) / Real(lastDaysFromT0));
             }
@@ -1200,11 +1198,10 @@ void PostProcess::performT0DimCalc() {
         }
     }
     // set some reasonable bounds on the sqrt time scaling, so that we are not looking at a ridiculous time horizon
-    QL_REQUIRE((sqrtTimeScaling*sqrtTimeScaling >= 0.5) &&
-        (sqrtTimeScaling*sqrtTimeScaling <= 2.0),
-        "T0 IM Estimation - The estimation time horizon from grid " <<
-        "is not sufficiently close to t0+MPOR - " <<
-        QuantLib::io::iso_date(cube_->dates()[relevantDateIdx]));
+    QL_REQUIRE((sqrtTimeScaling * sqrtTimeScaling >= 0.5) && (sqrtTimeScaling * sqrtTimeScaling <= 2.0),
+               "T0 IM Estimation - The estimation time horizon from grid "
+                   << "is not sufficiently close to t0+MPOR - "
+                   << QuantLib::io::iso_date(cube_->dates()[relevantDateIdx]));
 
     // TODO: Ensure that the simulation containers read-from below are indeed populated
 
@@ -1215,9 +1212,8 @@ void PostProcess::performT0DimCalc() {
         boost::shared_ptr<NettingSetDefinition> nettingObj = nettingSetManager_->get(key);
         vector<Real> t0_dist = it_map->second[relevantDateIdx];
         Size dist_size = t0_dist.size();
-        QL_REQUIRE(dist_size == cube_->samples(),
-            "T0 IM - cube samples size mismatch - "
-            << dist_size << ", " << cube_->samples());
+        QL_REQUIRE(dist_size == cube_->samples(), "T0 IM - cube samples size mismatch - " << dist_size << ", "
+                                                                                          << cube_->samples());
         Real mean_t0_dist = std::accumulate(t0_dist.begin(), t0_dist.end(), 0.0);
         mean_t0_dist /= dist_size;
         vector<Real> t0_delMtM_dist(dist_size, 0.0);
