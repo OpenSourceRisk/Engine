@@ -193,39 +193,60 @@ void OREApp::setupLog() {
 }
 
 void OREApp::getConventions() {
-    string inputPath = params_->get("setup", "inputPath");
-    string conventionsFile = inputPath + "/" + params_->get("setup", "conventionsFile");
-    conventions_.fromFile(conventionsFile);
+    if (params_->has("setup", "conventionsFile") && params_->get("setup", "conventionsFile") != "") {
+        string inputPath = params_->get("setup", "inputPath");
+        string conventionsFile = inputPath + "/" + params_->get("setup", "conventionsFile");
+        conventions_.fromFile(conventionsFile);
+    }
+    else {
+        WLOG("No conventions file loaded");
+    }
 }
 
 void OREApp::buildMarket() {
-    /*******************************
-     * Market and fixing data loader
-     */
-    cout << endl << setw(tab_) << left << "Market data loader... " << flush;
-    string inputPath = params_->get("setup", "inputPath");
-    string marketFile = inputPath + "/" + params_->get("setup", "marketDataFile");
-    string fixingFile = inputPath + "/" + params_->get("setup", "fixingDataFile");
-    string implyTodaysFixingsString = params_->get("setup", "implyTodaysFixings");
-    bool implyTodaysFixings = parseBool(implyTodaysFixingsString);
-    CSVLoader loader(marketFile, fixingFile, implyTodaysFixings);
-    cout << "OK" << endl;
-    /**********************
-     * Curve configurations
-     */
-    cout << setw(tab_) << left << "Curve configuration... " << flush;
-    CurveConfigurations curveConfigs;
-    string curveConfigFile = inputPath + "/" + params_->get("setup", "curveConfigFile");
-    curveConfigs.fromFile(curveConfigFile);
-    cout << "OK" << endl;
 
-    market_ = boost::make_shared<TodaysMarket>(asof_, marketParameters_, loader, curveConfigs, conventions_);
+    if (params_->has("setup", "marketDataFile") && params_->get("setup", "marketDataFile") != "") {
+        /*******************************
+        * Market and fixing data loader
+        */
+        cout << endl << setw(tab_) << left << "Market data loader... " << flush;
+        string inputPath = params_->get("setup", "inputPath");
+        string marketFile = inputPath + "/" + params_->get("setup", "marketDataFile");
+        string fixingFile = inputPath + "/" + params_->get("setup", "fixingDataFile");
+        string implyTodaysFixingsString = params_->get("setup", "implyTodaysFixings");
+        bool implyTodaysFixings = parseBool(implyTodaysFixingsString);
+        CSVLoader loader(marketFile, fixingFile, implyTodaysFixings);
+        cout << "OK" << endl;
+
+        /**********************
+         * Curve configurations
+         */
+        CurveConfigurations curveConfigs;
+        if (params_->has("setup", "curveConfigFile") && params_->get("setup", "curveConfigFile") != "") {
+            cout << setw(tab_) << left << "Curve configuration... " << flush;
+            string curveConfigFile = inputPath + "/" + params_->get("setup", "curveConfigFile");
+            curveConfigs.fromFile(curveConfigFile);
+            cout << "OK" << endl;
+        }
+        else {
+            WLOG("No curve configurations loaded from file");
+        }
+        market_ = boost::make_shared<TodaysMarket>(asof_, marketParameters_, loader, curveConfigs, conventions_);
+    }
+    else {
+        WLOG("No market data loaded from file");
+    }
 }
 
 void OREApp::getMarketParameters() {
-    string inputPath = params_->get("setup", "inputPath");
-    string marketConfigFile = inputPath + "/" + params_->get("setup", "marketConfigFile");
-    marketParameters_.fromFile(marketConfigFile);
+    if (params_->has("setup", "marketConfigFile") && params_->get("setup", "marketConfigFile") != "") {
+        string inputPath = params_->get("setup", "inputPath");
+        string marketConfigFile = inputPath + "/" + params_->get("setup", "marketConfigFile");
+        marketParameters_.fromFile(marketConfigFile);
+    }
+    else {
+        WLOG("No market parameters loaded");
+    }
 }
 
 boost::shared_ptr<EngineFactory> OREApp::buildEngineFactory(const boost::shared_ptr<Market>& market) {
