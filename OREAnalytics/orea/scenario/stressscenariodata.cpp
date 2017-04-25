@@ -20,8 +20,6 @@
 #include <ored/utilities/xmlutils.hpp>
 #include <ored/utilities/log.hpp>
 
-#include <boost/lexical_cast.hpp>
-
 using namespace QuantLib;
 
 namespace ore {
