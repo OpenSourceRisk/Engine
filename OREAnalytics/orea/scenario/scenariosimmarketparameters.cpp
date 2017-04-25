@@ -37,13 +37,12 @@ bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& 
         swapVolDecayMode_ != rhs.swapVolDecayMode_ || capFloorVolSimulate_ != rhs.capFloorVolSimulate_ ||
         capFloorVolCcys_ != rhs.capFloorVolCcys_ || capFloorVolExpiries_ != rhs.capFloorVolExpiries_ ||
         capFloorVolStrikes_ != rhs.capFloorVolStrikes_ || capFloorVolDecayMode_ != rhs.capFloorVolDecayMode_ ||
-        defaultNames_ != rhs.defaultNames_ || defaultTenors_ != rhs.defaultTenors_ ||
-        fxVolSimulate_ != rhs.fxVolSimulate_ || fxVolExpiries_ != rhs.fxVolExpiries_ ||
+        defaultNames_ != rhs.defaultNames_ || defaultTenors_ != rhs.defaultTenors_ || eqNames_ != rhs.eqNames_ ||
+        eqTenors_ != rhs.eqTenors_ || fxVolSimulate_ != rhs.fxVolSimulate_ || fxVolExpiries_ != rhs.fxVolExpiries_ ||
         fxVolDecayMode_ != rhs.fxVolDecayMode_ || fxVolCcyPairs_ != rhs.fxVolCcyPairs_ ||
-        fxCcyPairs_ != rhs.fxCcyPairs_ || eqNames_ != rhs.eqNames_ || eqTenors_ != rhs.eqTenors_ || 
-        eqVolSimulate_ != rhs.eqVolSimulate_ || eqVolExpiries_ != rhs.eqVolExpiries_ || 
-        eqVolDecayMode_ != rhs.eqVolDecayMode_ || eqVolNames_ != rhs.eqVolNames_ || 
-        additionalScenarioDataIndices_ != rhs.additionalScenarioDataIndices_ ||
+        fxCcyPairs_ != rhs.fxCcyPairs_ || eqVolSimulate_ != rhs.eqVolSimulate_ ||
+        eqVolExpiries_ != rhs.eqVolExpiries_ || eqVolDecayMode_ != rhs.eqVolDecayMode_ ||
+        eqVolNames_ != rhs.eqVolNames_ || additionalScenarioDataIndices_ != rhs.additionalScenarioDataIndices_ ||
         additionalScenarioDataCcys_ != rhs.additionalScenarioDataCcys_ || securities_ != rhs.securities_) {
         return false;
     } else {
