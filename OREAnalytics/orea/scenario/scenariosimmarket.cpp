@@ -640,6 +640,10 @@ void ScenarioSimMarket::update(const Date& d) {
 
     if (d != Settings::instance().evaluationDate())
         Settings::instance().evaluationDate() = d;
+    else if (om == ObservationMode::Mode::Unregister) {
+        boost::shared_ptr<QuantLib::Observable> obs = QuantLib::Settings::instance().evaluationDate();
+        obs->notifyObservers();
+    }
 
     const vector<RiskFactorKey>& keys = scenario->keys();
 

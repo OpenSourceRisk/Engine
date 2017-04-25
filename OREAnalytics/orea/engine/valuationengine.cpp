@@ -135,10 +135,6 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
                 if (om == ObservationMode::Mode::Disable)
                     trade->instrument()->updateQlInstruments();
 
-                // if Unregister mode and only one date in grid, then ensure trade is updated
-                if ((om == ObservationMode::Mode::Unregister) && (dates.size() == 1))
-                    trade->instrument()->updateQlInstruments();
-
                 for (auto calc : calculators)
                     calc->calculate(trade, j, simMarket_, outputCube, d, i, sample);
             }
