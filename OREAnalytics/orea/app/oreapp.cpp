@@ -460,13 +460,16 @@ void OREApp::sensiOutputReports(const boost::shared_ptr<SensitivityAnalysis>& se
     string outputPath = params_->get("setup", "outputPath");
     string outputFile1 = outputPath + "/" + params_->get("sensitivity", "scenarioOutputFile");
     Real sensiThreshold = parseReal(params_->get("sensitivity", "outputSensitivityThreshold"));
-    sensiAnalysis->writeScenarioReport(outputFile1, sensiThreshold);
+    boost::shared_ptr<Report> scenReport = boost::make_shared<CSVFileReport>(outputFile1);
+    sensiAnalysis->writeScenarioReport(scenReport, sensiThreshold);
 
     string outputFile2 = outputPath + "/" + params_->get("sensitivity", "sensitivityOutputFile");
-    sensiAnalysis->writeSensitivityReport(outputFile2, sensiThreshold);
+    boost::shared_ptr<Report> sensiReport = boost::make_shared<CSVFileReport>(outputFile2);
+    sensiAnalysis->writeSensitivityReport(sensiReport, sensiThreshold);
 
     string outputFile3 = outputPath + "/" + params_->get("sensitivity", "crossGammaOutputFile");
-    sensiAnalysis->writeCrossGammaReport(outputFile3, sensiThreshold);
+    boost::shared_ptr<Report> cgReport = boost::make_shared<CSVFileReport>(outputFile3);
+    sensiAnalysis->writeCrossGammaReport(cgReport, sensiThreshold);
     return;
 }
 
@@ -506,7 +509,8 @@ void OREApp::runStressTest() {
     string outputPath = params_->get("setup", "outputPath");
     string outputFile = outputPath + "/" + params_->get("stress", "scenarioOutputFile");
     Real threshold = parseReal(params_->get("stress", "outputThreshold"));
-    stressTest->writeReport(outputFile, threshold);
+    boost::shared_ptr<Report> stressReport = boost::make_shared<CSVFileReport>(outputFile);
+    stressTest->writeReport(stressReport, threshold);
 
     cout << "OK" << endl;
 }

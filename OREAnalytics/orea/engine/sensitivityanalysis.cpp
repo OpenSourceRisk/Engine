@@ -23,7 +23,6 @@
 #include <orea/scenario/clonescenariofactory.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
-#include <ored/report/csvreport.hpp>
 #include <ql/errors.hpp>
 #include <ql/instruments/forwardrateagreement.hpp>
 #include <ql/instruments/makeois.hpp>
@@ -227,17 +226,16 @@ void SensitivityAnalysis::collectResultsFromCube(const boost::shared_ptr<NPVCube
     }
 }
 
-void SensitivityAnalysis::writeScenarioReport(string fileName, Real outputThreshold) {
+void SensitivityAnalysis::writeScenarioReport(const boost::shared_ptr<Report>& report, Real outputThreshold) {
 
     QL_REQUIRE(computed_, "Sensitivities have not been successfully computed");
-    CSVFileReport report(fileName);
 
-    report.addColumn("TradeId", string());
-    report.addColumn("Factor", string());
-    report.addColumn("Up/Down", string());
-    report.addColumn("Base NPV", double(), 2);
-    report.addColumn("Scenario NPV", double(), 2);
-    report.addColumn("Difference", double(), 2);
+    report->addColumn("TradeId", string());
+    report->addColumn("Factor", string());
+    report->addColumn("Up/Down", string());
+    report->addColumn("Base NPV", double(), 2);
+    report->addColumn("Scenario NPV", double(), 2);
+    report->addColumn("Difference", double(), 2);
 
     for (auto data : upNPV_) {
         string id = data.first.first;
@@ -246,13 +244,13 @@ void SensitivityAnalysis::writeScenarioReport(string fileName, Real outputThresh
         Real base = baseNPV_[id];
         Real sensi = npv - base;
         if (fabs(sensi) > outputThreshold) {
-            report.next();
-            report.add(id);
-            report.add(factor);
-            report.add("Up");
-            report.add(base);
-            report.add(npv);
-            report.add(sensi);
+            report->next();
+            report->add(id);
+            report->add(factor);
+            report->add("Up");
+            report->add(base);
+            report->add(npv);
+            report->add(sensi);
         }
     }
 
@@ -263,13 +261,13 @@ void SensitivityAnalysis::writeScenarioReport(string fileName, Real outputThresh
         Real base = baseNPV_[id];
         Real sensi = npv - base;
         if (fabs(sensi) > outputThreshold) {
-            report.next();
-            report.add(id);
-            report.add(factor);
-            report.add("Down");
-            report.add(base);
-            report.add(npv);
-            report.add(sensi);
+            report->next();
+            report->add(id);
+            report->add(factor);
+            report->add("Down");
+            report->add(base);
+            report->add(npv);
+            report->add(sensi);
         }
     }
 
@@ -284,30 +282,29 @@ void SensitivityAnalysis::writeScenarioReport(string fileName, Real outputThresh
         Real base = baseNPV_[id];
         Real sensi = npv - base;
         if (fabs(sensi) > outputThreshold) {
-            report.next();
-            report.add(id);
-            report.add(factor);
-            report.add("Cross");
-            report.add(base);
-            report.add(npv);
-            report.add(sensi);
+            report->next();
+            report->add(id);
+            report->add(factor);
+            report->add("Cross");
+            report->add(base);
+            report->add(npv);
+            report->add(sensi);
         }
     }
 
-    report.end();
+    report->end();
 }
 
-void SensitivityAnalysis::writeSensitivityReport(string fileName, Real outputThreshold) {
+void SensitivityAnalysis::writeSensitivityReport(const boost::shared_ptr<Report>& report, Real outputThreshold) {
 
     QL_REQUIRE(computed_, "Sensitivities have not been successfully computed");
-    CSVFileReport report(fileName);
 
-    report.addColumn("#TradeId", string());
-    report.addColumn("Factor", string());
-    report.addColumn("ShiftSize", double(), 6);
-    report.addColumn("Base NPV", double(), 2);
-    report.addColumn("Delta*Shift", double(), 2);
-    report.addColumn("Gamma*Shift^2", double(), 2);
+    report->addColumn("#TradeId", string());
+    report->addColumn("Factor", string());
+    report->addColumn("ShiftSize", double(), 6);
+    report->addColumn("Base NPV", double(), 2);
+    report->addColumn("Delta*Shift", double(), 2);
+    report->addColumn("Gamma*Shift^2", double(), 2);
 
     for (auto data : delta_) {
         pair<string, string> p = data.first;
@@ -318,30 +315,29 @@ void SensitivityAnalysis::writeSensitivityReport(string fileName, Real outputThr
         Real gamma = gamma_[p];
         Real base = baseNPV_[id];
         if (fabs(delta) > outputThreshold || fabs(gamma) > outputThreshold) {
-            report.next();
-            report.add(id);
-            report.add(factor);
-            report.add(shiftSize);
-            report.add(base);
-            report.add(delta);
-            report.add(gamma);
+            report->next();
+            report->add(id);
+            report->add(factor);
+            report->add(shiftSize);
+            report->add(base);
+            report->add(delta);
+            report->add(gamma);
         }
     }
-    report.end();
+    report->end();
 }
 
-void SensitivityAnalysis::writeCrossGammaReport(string fileName, Real outputThreshold) {
+void SensitivityAnalysis::writeCrossGammaReport(const boost::shared_ptr<Report>& report, Real outputThreshold) {
 
     QL_REQUIRE(computed_, "Sensitivities have not been successfully computed");
-    CSVFileReport report(fileName);
 
-    report.addColumn("#TradeId", string());
-    report.addColumn("Factor 1", string());
-    report.addColumn("ShiftSize1", double(), 6);
-    report.addColumn("Factor 2", string());
-    report.addColumn("ShiftSize2", double(), 6);
-    report.addColumn("Base NPV", double(), 2);
-    report.addColumn("CrossGamma*Shift^2", double(), 2);
+    report->addColumn("#TradeId", string());
+    report->addColumn("Factor 1", string());
+    report->addColumn("ShiftSize1", double(), 6);
+    report->addColumn("Factor 2", string());
+    report->addColumn("ShiftSize2", double(), 6);
+    report->addColumn("Base NPV", double(), 2);
+    report->addColumn("CrossGamma*Shift^2", double(), 2);
 
     for (auto data : crossGamma_) {
         string id = std::get<0>(data.first);
@@ -352,17 +348,17 @@ void SensitivityAnalysis::writeCrossGammaReport(string fileName, Real outputThre
         Real crossGamma = data.second;
         Real base = baseNPV_[id];
         if (fabs(crossGamma) > outputThreshold) {
-            report.next();
-            report.add(id);
-            report.add(factor1);
-            report.add(shiftSize1);
-            report.add(factor2);
-            report.add(shiftSize2);
-            report.add(base);
-            report.add(crossGamma);
+            report->next();
+            report->add(id);
+            report->add(factor1);
+            report->add(shiftSize1);
+            report->add(factor2);
+            report->add(shiftSize2);
+            report->add(base);
+            report->add(crossGamma);
         }
     }
-    report.end();
+    report->end();
 }
 
 void SensitivityAnalysis::storeFactorShifts(const ShiftScenarioGenerator::ScenarioDescription& desc) {

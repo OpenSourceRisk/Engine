@@ -23,7 +23,6 @@
 #include <orea/engine/stresstest.hpp>
 #include <orea/scenario/clonescenariofactory.hpp>
 #include <ored/utilities/log.hpp>
-#include <ored/report/csvreport.hpp>
 #include <ql/errors.hpp>
 #include <ql/instruments/forwardrateagreement.hpp>
 #include <ql/instruments/makeois.hpp>
@@ -127,15 +126,13 @@ StressTest::StressTest(
     LOG("Stress testing done");
 }
 
-void StressTest::writeReport(string fileName, Real outputThreshold) {
+void StressTest::writeReport(const boost::shared_ptr<ore::data::Report>& report, Real outputThreshold) {
 
-    CSVFileReport report(fileName);
-
-    report.addColumn("#TradeId", string());
-    report.addColumn("ScenarioLabel", string());
-    report.addColumn("Base NPV", double(), 2);
-    report.addColumn("Scenario NPV", double(), 2);
-    report.addColumn("Sensitivity", double(), 2);
+    report->addColumn("#TradeId", string());
+    report->addColumn("ScenarioLabel", string());
+    report->addColumn("Base NPV", double(), 2);
+    report->addColumn("Scenario NPV", double(), 2);
+    report->addColumn("Sensitivity", double(), 2);
 
     for (auto data : shiftedNPV_) {
         string id = data.first.first;
@@ -144,16 +141,16 @@ void StressTest::writeReport(string fileName, Real outputThreshold) {
         Real base = baseNPV_[id];
         Real sensi = npv - base;
         if (fabs(sensi) > outputThreshold) {
-            report.next();
-            report.add(id);
-            report.add(factor);
-            report.add(base);
-            report.add(npv);
-            report.add(sensi);
+            report->next();
+            report->add(id);
+            report->add(factor);
+            report->add(base);
+            report->add(npv);
+            report->add(sensi);
         }
     }
 
-    report.end();
+    report->end();
 }
 }
 }
