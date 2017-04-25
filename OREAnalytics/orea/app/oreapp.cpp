@@ -168,7 +168,7 @@ void OREApp::readSetup() {
     simulate_ = (params_->hasGroup("simulation") && params_->get("simulation", "active") == "Y") ? true : false;
     buildSimMarket_ = true;
     xva_ = (params_->hasGroup("xva") && params_->get("xva", "active") == "Y") ? true : false;
-    writeDIMReport_ = (params_->has("xva", "dim") && parseBool(params_->get("xva", "dim"))) ? true : false;
+    writeDIMReport_ = (params_->hasGroup("xva") && params_->has("xva", "dim") && parseBool(params_->get("xva", "dim"))) ? true : false;
 }
 
 void OREApp::setupLog() {
@@ -193,39 +193,60 @@ void OREApp::setupLog() {
 }
 
 void OREApp::getConventions() {
-    string inputPath = params_->get("setup", "inputPath");
-    string conventionsFile = inputPath + "/" + params_->get("setup", "conventionsFile");
-    conventions_.fromFile(conventionsFile);
+    if (params_->has("setup", "conventionsFile") && params_->get("setup", "conventionsFile") != "") {
+        string inputPath = params_->get("setup", "inputPath");
+        string conventionsFile = inputPath + "/" + params_->get("setup", "conventionsFile");
+        conventions_.fromFile(conventionsFile);
+    }
+    else {
+        WLOG("No conventions file loaded");
+    }
 }
 
 void OREApp::buildMarket() {
-    /*******************************
-     * Market and fixing data loader
-     */
-    cout << endl << setw(tab_) << left << "Market data loader... " << flush;
-    string inputPath = params_->get("setup", "inputPath");
-    string marketFile = inputPath + "/" + params_->get("setup", "marketDataFile");
-    string fixingFile = inputPath + "/" + params_->get("setup", "fixingDataFile");
-    string implyTodaysFixingsString = params_->get("setup", "implyTodaysFixings");
-    bool implyTodaysFixings = parseBool(implyTodaysFixingsString);
-    CSVLoader loader(marketFile, fixingFile, implyTodaysFixings);
-    cout << "OK" << endl;
-    /**********************
-     * Curve configurations
-     */
-    cout << setw(tab_) << left << "Curve configuration... " << flush;
-    CurveConfigurations curveConfigs;
-    string curveConfigFile = inputPath + "/" + params_->get("setup", "curveConfigFile");
-    curveConfigs.fromFile(curveConfigFile);
-    cout << "OK" << endl;
 
-    market_ = boost::make_shared<TodaysMarket>(asof_, marketParameters_, loader, curveConfigs, conventions_);
+    if (params_->has("setup", "marketDataFile") && params_->get("setup", "marketDataFile") != "") {
+        /*******************************
+        * Market and fixing data loader
+        */
+        cout << endl << setw(tab_) << left << "Market data loader... " << flush;
+        string inputPath = params_->get("setup", "inputPath");
+        string marketFile = inputPath + "/" + params_->get("setup", "marketDataFile");
+        string fixingFile = inputPath + "/" + params_->get("setup", "fixingDataFile");
+        string implyTodaysFixingsString = params_->get("setup", "implyTodaysFixings");
+        bool implyTodaysFixings = parseBool(implyTodaysFixingsString);
+        CSVLoader loader(marketFile, fixingFile, implyTodaysFixings);
+        cout << "OK" << endl;
+
+        /**********************
+         * Curve configurations
+         */
+        CurveConfigurations curveConfigs;
+        if (params_->has("setup", "curveConfigFile") && params_->get("setup", "curveConfigFile") != "") {
+            cout << setw(tab_) << left << "Curve configuration... " << flush;
+            string curveConfigFile = inputPath + "/" + params_->get("setup", "curveConfigFile");
+            curveConfigs.fromFile(curveConfigFile);
+            cout << "OK" << endl;
+        }
+        else {
+            WLOG("No curve configurations loaded from file");
+        }
+        market_ = boost::make_shared<TodaysMarket>(asof_, marketParameters_, loader, curveConfigs, conventions_);
+    }
+    else {
+        WLOG("No market data loaded from file");
+    }
 }
 
 void OREApp::getMarketParameters() {
-    string inputPath = params_->get("setup", "inputPath");
-    string marketConfigFile = inputPath + "/" + params_->get("setup", "marketConfigFile");
-    marketParameters_.fromFile(marketConfigFile);
+    if (params_->has("setup", "marketConfigFile") && params_->get("setup", "marketConfigFile") != "") {
+        string inputPath = params_->get("setup", "inputPath");
+        string marketConfigFile = inputPath + "/" + params_->get("setup", "marketConfigFile");
+        marketParameters_.fromFile(marketConfigFile);
+    }
+    else {
+        WLOG("No market parameters loaded");
+    }
 }
 
 boost::shared_ptr<EngineFactory> OREApp::buildEngineFactory(const boost::shared_ptr<Market>& market) {
@@ -598,8 +619,12 @@ void OREApp::writeDIMReport() {
     string nettingSet = params_->get("xva", "dimOutputNettingSet");
     std::vector<Size> dimOutputGridPoints =
         parseListOfValues<Size>(params_->get("xva", "dimOutputGridPoints"), &parseInteger);
-    postProcess_->exportDimEvolution(dimFile1, nettingSet);
-    postProcess_->exportDimRegression(dimFiles2, nettingSet, dimOutputGridPoints);
+    ore::data::CSVFileReport dimEvolutionReport(dimFile1);
+    postProcess_->exportDimEvolution(nettingSet,dimEvolutionReport);
+    vector<boost::shared_ptr<ore::data::Report> > reportVec;
+    for (Size i = 0; i < dimOutputGridPoints.size(); ++i)
+        reportVec.push_back(boost::make_shared<ore::data::CSVFileReport>(dimFiles2[i]));
+    postProcess_->exportDimRegression(nettingSet, dimOutputGridPoints, reportVec);
 }
 }
 }
