@@ -31,6 +31,7 @@
 #include <orea/aggregation/all.hpp>
 #include <ored/ored.hpp>
 #include <boost/make_shared.hpp>
+#include <iostream>
 
 using namespace ore::data;
 
@@ -39,7 +40,7 @@ namespace analytics {
 
 class OREApp {
 public:
-    OREApp(boost::shared_ptr<Parameters> params) : params_(params), cubeDepth_(0) {
+    OREApp(boost::shared_ptr<Parameters> params, std::ostream& out = std::cout) : params_(params), out_(out), cubeDepth_(0) {
         tab_ = 40;
         asof_ = parseDate(params->get("setup", "asofDate"));
         Settings::instance().evaluationDate() = asof_;
@@ -106,6 +107,7 @@ protected:
     Date asof_;
     //! ORE Input parameters
     boost::shared_ptr<Parameters> params_;
+    std::ostream& out_;
     bool writeInitialReports_;
     bool simulate_;
     bool buildSimMarket_;
