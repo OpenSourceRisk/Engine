@@ -1105,12 +1105,14 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
         boost::shared_ptr<QuantLib::VanillaOption> qlOpt =
             boost::dynamic_pointer_cast<QuantLib::VanillaOption>(trn->instrument()->qlInstrument());
         BOOST_CHECK(qlOpt);
-        info.qlNpv = qlOpt->NPV() * fxoTrn->boughtAmount();
-        info.delta = qlOpt->delta() * fxoTrn->boughtAmount();
-        info.gamma = qlOpt->gamma() * fxoTrn->boughtAmount();
-        info.vega = qlOpt->vega() * fxoTrn->boughtAmount();
-        info.rho = qlOpt->rho() * fxoTrn->boughtAmount();
-        info.divRho = qlOpt->dividendRho() * fxoTrn->boughtAmount();
+        Position::Type positionType = parsePositionType(fxoTrn->option().longShort());
+        Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
+        info.qlNpv = qlOpt->NPV() * fxoTrn->boughtAmount() * bsInd;
+        info.delta = qlOpt->delta() * fxoTrn->boughtAmount() * bsInd;
+        info.gamma = qlOpt->gamma() * fxoTrn->boughtAmount() * bsInd;
+        info.vega = qlOpt->vega() * fxoTrn->boughtAmount() * bsInd;
+        info.rho = qlOpt->rho() * fxoTrn->boughtAmount() * bsInd;
+        info.divRho = qlOpt->dividendRho() * fxoTrn->boughtAmount() * bsInd;
         BOOST_CHECK_CLOSE(info.fx, info.baseNpv / info.qlNpv, 0.01);
         qlInfoMap[info.id] = info;
     }
