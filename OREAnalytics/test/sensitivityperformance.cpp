@@ -489,12 +489,10 @@ boost::shared_ptr<Portfolio> buildPortfolio(Size portfolioSize, boost::shared_pt
     Size seed = 5; // keep this constant to ensure portfolio doesn't change
     MersenneTwisterUniformRng rng(seed);
 
-    Date today = Settings::instance().evaluationDate();
     Calendar cal = TARGET();
     string calStr = "TARGET";
     string conv = "MF";
     string rule = "Forward";
-    Size days = 2;
     string fixDC = "30/360";
     string floatDC = "ACT/365";
 
@@ -622,6 +620,8 @@ void test_performance(bool bigPortfolio, bool bigScenario, bool lotsOfSensis, bo
     Real avTime = (elapsed / ((Real)(numScenarios*portfolioSize)));
     BOOST_TEST_MESSAGE("Average pricing time =  " << avTime << " seconds");
     BOOST_TEST_MESSAGE("Memory usage - " << os::getMemoryUsage());
+
+    ObservationMode::instance().setMode(backupOm);
 }
 }
 

@@ -1276,8 +1276,6 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
                                      << ", gamma=" << qlInfo.gamma << ", vega=" << qlInfo.vega << ", rho=" << qlInfo.rho
                                      << ", divRho=" << qlInfo.divRho);
         Real bp = 1.e-4;
-        Real pc = 0.01;
-        Real unit = 1.0;
         Real tol = 0.5; // % relative tolerance
         // rate sensis are 1bp absolute shifts
         // fx vol sensis are 1bp relative shifts
@@ -1317,7 +1315,6 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
                 // perform the necessary conversion for cross quotes
                 Real y = 1.0 / qlInfo.fx;        // BASE/TrnDom
                 Real z = 1.0 / qlInfo.fxForBase; // BASE/TrnFor
-                Real s = qlInfo.trnFx;           // TrnFor/TrnDom
                 qlGamma = ((2.0 * y) / pow(z, 3)) * qlInfo.delta + (y / pow(z, 4)) * qlInfo.gamma;
             }
             BOOST_CHECK_CLOSE(res.fxSpotDeltaFor, qlInfo.delta * qlInfo.fx * (-bp * qlInfo.trnFx), tol);
@@ -1350,7 +1347,6 @@ void SensitivityAnalysisTest::testCrossGamma() {
 
     // sensitivity config
     boost::shared_ptr<SensitivityScenarioData> sensiData = setupSensitivityScenarioData5();
-    map<string, SensitivityScenarioData::FxVolShiftData>& fxvs = sensiData->fxVolShiftData();
     vector<pair<string, string> >& cgFilter = sensiData->crossGammaFilter();
     BOOST_CHECK_EQUAL(cgFilter.size(), 0);
     cgFilter.push_back(pair<string, string>("DiscountCurve/EUR", "DiscountCurve/EUR"));

@@ -232,7 +232,7 @@ void SensitivityAnalysis::writeScenarioReport(string fileName, Real outputThresh
     QL_REQUIRE(computed_, "Sensitivities have not been successfully computed");
     CSVFileReport report(fileName);
 
-    report.addColumn("#TradeId", string());
+    report.addColumn("TradeId", string());
     report.addColumn("Factor", string());
     report.addColumn("Up/Down", string());
     report.addColumn("Base NPV", double(), 2);
