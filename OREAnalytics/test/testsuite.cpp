@@ -87,6 +87,22 @@ void stopTimer() {
 
 test_suite* init_unit_test_suite(int, char* []) {
 
+    int argc = boost::unit_test::framework::master_test_suite().argc;
+    char** argv = boost::unit_test::framework::master_test_suite().argv;
+    bool enablePerformanceTests = false;
+    for (Size i = 1; i < argc; ++i) {
+        if (strcmp(argv[i], "--enable_performance_tests") == 0)
+            enablePerformanceTests = true;
+    }
+    string name(argv[0]);
+    string baseName = name.substr(name.find_last_of("/\\") + 1);
+    BOOST_TEST_MESSAGE("Enable performance tests:  " << baseName << " [Boost.Test arguments] -- --enable_performance_tests");
+
+    if (enablePerformanceTests)
+        BOOST_TEST_MESSAGE("Performance tests ENABLED");
+    else
+        BOOST_TEST_MESSAGE("Performance tests DISABLED");
+
     test_suite* test = BOOST_TEST_SUITE("OREAnalyticsTestSuite");
 
     test->add(BOOST_TEST_CASE(startTimer));
@@ -98,9 +114,13 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(testsuite::SensitivityAnalysis2Test::suite());
     test->add(testsuite::StressTestingTest::suite());
     test->add(testsuite::ObservationModeTest::suite());
-    test->add(testsuite::SensitivityPerformanceTest::suite());
-    test->add(testsuite::SwapPerformanceTest::suite());
-    //test->add(FXSwapTest::suite());
+    // test->add(FXSwapTest::suite());
+
+    if (enablePerformanceTests) {
+        test->add(testsuite::SensitivityPerformanceTest::suite());
+        test->add(testsuite::SwapPerformanceTest::suite());
+    }
+
     test->add(BOOST_TEST_CASE(stopTimer));
 
     return test;
