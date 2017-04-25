@@ -88,7 +88,7 @@ void OREApp::run() {
          */
         out_ << setw(tab_) << left << "Write Reports... " << flush;
         writeInitialReports();
-        cout << "OK" << endl;
+        out_ << "OK" << endl;
 
         /**********************
          * Sensitivity analysis
