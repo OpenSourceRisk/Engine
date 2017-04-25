@@ -28,7 +28,6 @@
 #include <ql/indexes/all.hpp>
 #include <ql/time/daycounters/all.hpp>
 #include <ql/time/calendars/target.hpp>
-#include <qle/indexes/fxindex.hpp>
 #include <qle/indexes/all.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/make_shared.hpp>
@@ -93,6 +92,7 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldT
         {"JPY-TONAR", boost::make_shared<IborIndexParserOIS<Tonar>>()},
         {"CHF-TOIS", boost::make_shared<IborIndexParserOIS<CHFTois>>()},
         {"USD-FedFunds", boost::make_shared<IborIndexParserOIS<FedFunds>>()},
+        {"CAD-CORRA", boost::make_shared<IborIndexParserOIS<CORRA>>()},
         {"AUD-BBSW", boost::make_shared<IborIndexParserWithPeriod<AUDbbsw>>()},
         {"AUD-LIBOR", boost::make_shared<IborIndexParserWithPeriod<AUDLibor>>()},
         {"EUR-EURIBOR", boost::make_shared<IborIndexParserWithPeriod<Euribor>>()},

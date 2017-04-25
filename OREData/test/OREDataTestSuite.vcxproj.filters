@@ -51,10 +51,10 @@
     <ClInclude Include="bond.hpp">
       <Filter>headers</Filter>
     </ClInclude>
-    <ClInclude Include="equitytrades.hpp">
+    <ClInclude Include="equitymarketdata.hpp">
       <Filter>headers</Filter>
     </ClInclude>
-    <ClInclude Include="equitymarketdata.hpp">
+    <ClInclude Include="equitytrades.hpp">
       <Filter>headers</Filter>
     </ClInclude>
   </ItemGroup>

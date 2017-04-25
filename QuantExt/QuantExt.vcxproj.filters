@@ -186,9 +186,6 @@
     <ClInclude Include="qle\models\fxbspiecewiseconstantparametrization.hpp">
       <Filter>models</Filter>
     </ClInclude>
-    <ClInclude Include="qle\models\fxoptionhelper.hpp">
-      <Filter>models</Filter>
-    </ClInclude>
     <ClInclude Include="qle\models\gaussian1dcrossassetadaptor.hpp">
       <Filter>models</Filter>
     </ClInclude>
@@ -355,6 +352,27 @@
     <ClInclude Include="qle\instruments\equityforward.hpp">
       <Filter>instruments</Filter>
     </ClInclude>
+    <ClInclude Include="qle\models\crossassetmodelimpliedeqvoltermstructure.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\eqbsconstantparametrization.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\eqbsparametrization.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\eqbspiecewiseconstantparametrization.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\analyticxassetlgmeqoptionengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\math\stabilisedglls.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\fxeqoptionhelper.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -485,9 +503,6 @@
     <ClCompile Include="qle\models\fxbspiecewiseconstantparametrization.cpp">
       <Filter>models</Filter>
     </ClCompile>
-    <ClCompile Include="qle\models\fxoptionhelper.cpp">
-      <Filter>models</Filter>
-    </ClCompile>
     <ClCompile Include="qle\models\gaussian1dcrossassetadaptor.cpp">
       <Filter>models</Filter>
     </ClCompile>
@@ -601,6 +616,24 @@
     </ClCompile>
     <ClCompile Include="qle\instruments\equityforward.cpp">
       <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\crossassetmodelimpliedeqvoltermstructure.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\eqbsconstantparametrization.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\eqbsparametrization.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\eqbspiecewiseconstantparametrization.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\analyticxassetlgmeqoptionengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\fxeqoptionhelper.cpp">
+      <Filter>models</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

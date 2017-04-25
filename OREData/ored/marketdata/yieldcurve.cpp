@@ -171,6 +171,7 @@ YieldCurve::piecewisecurve(const vector<boost::shared_ptr<RateHelper>>& instrume
                                                                     Cubic(CubicInterpolation::Kruger, true,
                                                                           CubicInterpolation::SecondDerivative, 0.0,
                                                                           CubicInterpolation::FirstDerivative)));
+            break;
         case InterpolationMethod::ConvexMonotone:
             yieldts.reset(
                 new PiecewiseYieldCurve<ZeroYield, ConvexMonotone>(asofDate_, instruments, zeroDayCounter_, accuracy_));
@@ -320,6 +321,7 @@ YieldCurve::discountcurve(const vector<Date>& dates, const vector<DiscountFactor
             dates, dfs, dayCounter,
             QuantLib::Cubic(CubicInterpolation::Kruger, true, CubicInterpolation::SecondDerivative, 0.0,
                             CubicInterpolation::FirstDerivative)));
+        break;
     case InterpolationMethod::ConvexMonotone:
         yieldts.reset(new InterpolatedDiscountCurve<QuantLib::ConvexMonotone>(dates, dfs, dayCounter));
         break;
