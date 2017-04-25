@@ -21,6 +21,12 @@ oreex.save_output_to_subdir(
     "case_A_eur_swap",
     ["log_2.txt", "dim_evolution_2.txt", "dim_regression_2.txt"]
 )
+oreex.print_headline("Run ORE (case A (swap eur), 2nd order (NPV) regression)")
+oreex.run("Input/ore_A3.xml")
+oreex.save_output_to_subdir(
+    "case_A_eur_swap",
+    ["log_3.txt", "dim_evolution_3.txt", "dim_regression_3.txt"]
+)
 
 oreex.print_headline("Plot results")
 
@@ -28,14 +34,18 @@ oreex.setup_plot("dim_evolution_A_swap_eur")
 oreex.plot(os.path.join("case_A_eur_swap", "dim_evolution_1.txt"), 0, 3, 'y', "Zero Order Regression")
 oreex.plot(os.path.join("case_A_eur_swap", "dim_evolution_1.txt"), 0, 4, 'c', "First Order Regression")
 oreex.plot(os.path.join("case_A_eur_swap", "dim_evolution_2.txt"), 0, 4, 'm', "Second Order Regression")
+oreex.plot(os.path.join("case_A_eur_swap", "dim_evolution_3.txt"), 0, 4, 'b', "Second Order NPV Regression")
+oreex.plot(os.path.join("case_A_eur_swap", "dim_evolution_2.txt"), 0, 6, 'r', "Simple DIM")
 oreex.decorate_plot(title="Example 13 (A) - DIM Evolution Swap EUR", xlabel="Timestep", ylabel="DIM")
 oreex.save_plot_to_file()
 
 oreex.setup_plot("dim_regression_A_swap_eur")
-oreex.plotSq(os.path.join("case_A_eur_swap", "dim_regression_1.txt"), 1, 6, 'k', "Delta NPV", marker='+', linestyle='', rescale=True, zoom=5)
-oreex.plotSq(os.path.join("case_A_eur_swap", "dim_regression_1.txt"), 1, 5, 'y', "Zero Order Regression")
-oreex.plotSq(os.path.join("case_A_eur_swap", "dim_regression_1.txt"), 1, 2, 'c', "First Order Regression")
-oreex.plotSq(os.path.join("case_A_eur_swap", "dim_regression_2.txt"), 1, 2, 'm', "Second Order Regression", title="Example 13 (A) - DIM Regression Swap EUR, Timestep 100", xlabel="Regressor", ylabel="Variance")
+oreex.plot(os.path.join("case_A_eur_swap", "dim_regression_1.txt"), 1, 6, 'k', "Delta NPV", marker='+', linestyle='')
+oreex.plot(os.path.join("case_A_eur_swap", "dim_regression_1.txt"), 1, 5, 'y', "Zero Order Regression")
+oreex.plot(os.path.join("case_A_eur_swap", "dim_regression_1.txt"), 1, 2, 'c', "First Order Regression")
+oreex.plot(os.path.join("case_A_eur_swap", "dim_regression_2.txt"), 1, 2, 'm', "Second Order Regression")
+oreex.plot(os.path.join("case_A_eur_swap", "dim_regression_2.txt"), 1, 7, 'r', "Simple DIM")
+oreex.decorate_plot(title="Example 13 (A) - DIM Regression Swap EUR, Timestep 100", xlabel="Regressor", ylabel="DIM")
 oreex.save_plot_to_file()
 
 # Case B
@@ -76,17 +86,19 @@ oreex.decorate_plot(title="Example 13 (B) - DIM Evolution Swaption (physical del
 oreex.save_plot_to_file()
 
 oreex.setup_plot("dim_regression_B_swaption_eur_t300")
-oreex.plotSq(os.path.join("case_B_eur_swaption", "dim_regression_1.txt"), 1, 6, 'k', "Delta NPV", marker='+', linestyle='')
-oreex.plotSq(os.path.join("case_B_eur_swaption", "dim_regression_1.txt"), 1, 5, 'y', "Zero Order Regression", marker='.', linestyle='')
-oreex.plotSq(os.path.join("case_B_eur_swaption", "dim_regression_1.txt"), 1, 2, 'c', "First Order Regression", marker='.', linestyle='')
-oreex.plotSq(os.path.join("case_B_eur_swaption", "dim_regression_2.txt"), 1, 2, 'm', "Second Order Regression", marker='.', linestyle='', title="Example 13 (B) - DIM Regression Swaption (physical delivery) EUR, Timestep 300", xlabel="Regressor", ylabel="Variance", rescale = True, zoom=2)
+oreex.plot(os.path.join("case_B_eur_swaption", "dim_regression_1.txt"), 1, 6, 'k', "Delta NPV", marker='+', linestyle='')
+oreex.plot(os.path.join("case_B_eur_swaption", "dim_regression_1.txt"), 1, 5, 'y', "Zero Order Regression", marker='.', linestyle='')
+oreex.plot(os.path.join("case_B_eur_swaption", "dim_regression_1.txt"), 1, 2, 'c', "First Order Regression", marker='.', linestyle='')
+oreex.plot(os.path.join("case_B_eur_swaption", "dim_regression_2.txt"), 1, 2, 'm', "Second Order Regression", marker='.', linestyle='')
+oreex.decorate_plot( title="Example 13 (B) - DIM Regression Swaption (physical delivery) EUR, Timestep 300", xlabel="Regressor", ylabel="DIM")
 oreex.save_plot_to_file()
 
 oreex.setup_plot("dim_regression_B_swaption_eur_t100")
-oreex.plotSq(os.path.join("case_B_eur_swaption", "dim_regression_1b.txt"), 1, 6, 'k', "Delta NPV", marker='+', linestyle='')
-oreex.plotSq(os.path.join("case_B_eur_swaption", "dim_regression_1b.txt"), 1, 5, 'y', "Zero Order Regression", marker='', linestyle='-')
-oreex.plotSq(os.path.join("case_B_eur_swaption", "dim_regression_1b.txt"), 1, 2, 'c', "First Order Regression", marker='', linestyle='-')
-oreex.plotSq(os.path.join("case_B_eur_swaption", "dim_regression_2b.txt"), 1, 2, 'm', "Second Order Regression", marker='', linestyle='-', title="Example 13 (B) - DIM Regression Swaption (physical delivery) EUR, Timestep 100", xlabel="Regressor", ylabel="Variance", rescale = True, zoom=2)
+oreex.plot(os.path.join("case_B_eur_swaption", "dim_regression_1b.txt"), 1, 6, 'k', "Delta NPV", marker='+', linestyle='')
+oreex.plot(os.path.join("case_B_eur_swaption", "dim_regression_1b.txt"), 1, 5, 'y', "Zero Order Regression", marker='.', linestyle='')
+oreex.plot(os.path.join("case_B_eur_swaption", "dim_regression_1b.txt"), 1, 2, 'c', "First Order Regression", marker='.', linestyle='')
+oreex.plot(os.path.join("case_B_eur_swaption", "dim_regression_2b.txt"), 1, 2, 'm', "Second Order Regression", marker='.', linestyle='')
+oreex.decorate_plot(title="Example 13 (B) - DIM Regression Swaption (physical delivery) EUR, Timestep 100", xlabel="Regressor", ylabel="DIM")
 oreex.save_plot_to_file()
 
 # Case C
