@@ -126,8 +126,8 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     }
 }
 
-std::vector<boost::shared_ptr<Scenario> > CrossAssetModelScenarioGenerator::nextPath() {
-    std::vector<boost::shared_ptr<Scenario> > scenarios(dates_.size());
+std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextPath() {
+    std::vector<boost::shared_ptr<Scenario>> scenarios(dates_.size());
     Sample<MultiPath> sample = pathGenerator_->next();
     Size n_ccy = model_->components(IR);
     Size n_eq = model_->components(EQ);
@@ -135,8 +135,8 @@ std::vector<boost::shared_ptr<Scenario> > CrossAssetModelScenarioGenerator::next
     Size n_curves = simMarketConfig_->yieldCurveNames().size();
     Size n_ten = simMarketConfig_->yieldCurveTenors().size();
     vector<string> ccyPairs(n_ccy - 1);
-    vector<boost::shared_ptr<QuantExt::LgmImpliedYieldTermStructure> > curves, fwdCurves, yieldCurves;
-    vector<boost::shared_ptr<IborIndex> > indices;
+    vector<boost::shared_ptr<QuantExt::LgmImpliedYieldTermStructure>> curves, fwdCurves, yieldCurves;
+    vector<boost::shared_ptr<IborIndex>> indices;
     vector<Currency> yieldCurveCurrency;
 
     DayCounter dc = model_->irlgm1f(0)->termStructure()->dayCounter();
