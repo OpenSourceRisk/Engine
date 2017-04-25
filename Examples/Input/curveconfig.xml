@@ -1770,13 +1770,13 @@
             <CurveId>SP5</CurveId>
             <CurveDescription>SP 500 equity price projection curve</CurveDescription>
             <Currency>USD</Currency>
-            <Type>ForwardPrice</Type> <!-- {DividendYield, ForwardPrice} -->
+            <Type>DividendYield</Type> <!-- {DividendYield, ForwardPrice} -->
             <SpotQuote>EQUITY/PRICE/SP5/USD</SpotQuote> <!--  the spot quote from the market data file -->
             <Quotes>
-                <Quote>EQUITY_FWD/PRICE/SP5/USD/2016-06-16</Quote>
-                <Quote>EQUITY_FWD/PRICE/SP5/USD/6M</Quote>
-                <Quote>EQUITY_FWD/PRICE/SP5/USD/2017-06-16</Quote>
-                <Quote>EQUITY_FWD/PRICE/SP5/USD/2Y</Quote>
+                <Quote>EQUITY_DIVIDEND/RATE/SP5/USD/3M</Quote>
+                <Quote>EQUITY_DIVIDEND/RATE/SP5/USD/20160915</Quote>
+                <Quote>EQUITY_DIVIDEND/RATE/SP5/USD/1Y</Quote>
+                <Quote>EQUITY_DIVIDEND/RATE/SP5/USD/20170915</Quote>
             </Quotes>
             <DayCounter>A365</DayCounter>
         </EquityCurve>
@@ -1784,13 +1784,13 @@
             <CurveId>Lufthansa</CurveId>
             <CurveDescription>Lufthansa equity price projection curve</CurveDescription>
             <Currency>EUR</Currency>
-            <Type>DividendYield</Type> <!-- {DividendYield, ForwardPrice} -->
+            <Type>ForwardPrice</Type> <!-- {DividendYield, ForwardPrice} -->
             <SpotQuote>EQUITY/PRICE/Lufthansa/EUR</SpotQuote> <!--  the spot quote from the market data file -->
             <Quotes>
-                <Quote>EQUITY_DIVIDEND/RATE/Lufthansa/EUR/3M</Quote>
-                <Quote>EQUITY_DIVIDEND/RATE/Lufthansa/EUR/20160915</Quote>
-                <Quote>EQUITY_DIVIDEND/RATE/Lufthansa/EUR/1Y</Quote>
-                <Quote>EQUITY_DIVIDEND/RATE/Lufthansa/EUR/20170915</Quote>
+                <Quote>EQUITY_FWD/PRICE/Lufthansa/EUR/2016-06-16</Quote>
+                <Quote>EQUITY_FWD/PRICE/Lufthansa/EUR/6M</Quote>
+                <Quote>EQUITY_FWD/PRICE/Lufthansa/EUR/2017-06-16</Quote>
+                <Quote>EQUITY_FWD/PRICE/Lufthansa/EUR/2Y</Quote>
             </Quotes>
             <DayCounter>A365</DayCounter>
         </EquityCurve> 

@@ -32,6 +32,7 @@ class RateHelpersTest {
 public:
     /*! Regression test case */
     static void testTenorBasisSwapHelperLastRelevantDate();
+    static void testTenorBasisSwapHelperDegenerateSchedule();
 
     static boost::unit_test_framework::test_suite* suite();
 };

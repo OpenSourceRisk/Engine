@@ -7,6 +7,7 @@ OREANALYTICS_TESTS = \
 	swapperformance.hpp swapperformance.cpp \
 	scenariogenerator.hpp scenariogenerator.cpp \
 	sensitivityanalysis.hpp sensitivityanalysis.cpp \
+	sensitivityanalysis2.hpp sensitivityanalysis2.cpp \
 	testmarket.hpp \
 	testportfolio.hpp testportfolio.cpp \
 	observationmode.hpp observationmode.cpp \

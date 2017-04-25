@@ -280,8 +280,11 @@ SwapResults test_performance(Size portfolioSize, ObservationMode::Mode om) {
     parameters->simulateFXVols() = false;
 
     parameters->fxVolCcyPairs() = {"USDEUR", "GBPEUR", "CHFEUR", "JPYEUR"};
-
     parameters->fxCcyPairs() = {"USDEUR", "GBPEUR", "CHFEUR", "JPYEUR"};
+
+    parameters->eqVolExpiries() = {1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years};
+    parameters->eqVolDecayMode() = "ConstantVariance";
+    parameters->simulateEQVols() = false;
 
     // Config
 

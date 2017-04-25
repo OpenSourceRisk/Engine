@@ -53,7 +53,9 @@ public:
         SwaptionVolatility,
         OptionletVolatility,
         FXSpot,
-        FXVolatility
+        FXVolatility,
+        EQSpot,
+        EQVolatility
     };
 
     //! Constructor

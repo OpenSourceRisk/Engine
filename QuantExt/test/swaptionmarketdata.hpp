@@ -18,7 +18,6 @@
 
 /*! \file test/swaptionmarketdata.hpp
     \brief structs containing swaption market data that can be used in tests
-    \ingroup
 */
 
 #ifndef quantext_test_swaptionmarketdata_hpp
