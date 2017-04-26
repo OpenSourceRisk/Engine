@@ -52,6 +52,8 @@ void SubPeriodsSwapHelper::initializeDates() {
     Date valuationDate = Settings::instance().evaluationDate();
     Calendar spotCalendar = iborIndex_->fixingCalendar();
     Natural spotDays = iborIndex_->fixingDays();
+    // move val date forward in case it is a holiday
+    valuationDate = spotCalendar.adjust(valuationDate);
     Date effectiveDate = spotCalendar.advance(valuationDate, spotDays * Days);
 
     swap_ = boost::shared_ptr<SubPeriodsSwap>(new SubPeriodsSwap(
