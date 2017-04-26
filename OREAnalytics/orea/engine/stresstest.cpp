@@ -128,7 +128,7 @@ StressTest::StressTest(
 
 void StressTest::writeReport(const boost::shared_ptr<ore::data::Report>& report, Real outputThreshold) {
 
-    report->addColumn("#TradeId", string());
+    report->addColumn("TradeId", string());
     report->addColumn("ScenarioLabel", string());
     report->addColumn("Base NPV", double(), 2);
     report->addColumn("Scenario NPV", double(), 2);
