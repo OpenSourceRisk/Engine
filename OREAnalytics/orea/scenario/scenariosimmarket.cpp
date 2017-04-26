@@ -641,6 +641,12 @@ void ScenarioSimMarket::update(const Date& d) {
     if (d != Settings::instance().evaluationDate())
         Settings::instance().evaluationDate() = d;
     else if (om == ObservationMode::Mode::Unregister) {
+        // Due to some of the notification chains having been unregistered,
+        // it is possible that some lazy objects might be missed in the case 
+        // that the evaluation date has not been updated. Therefore, we 
+        // manually kick off an observer notification from this level. 
+        // We have unit regression tests in OREAnalyticsTestSuite to ensure 
+        // the various ObservationMode settings return the anticipated results.
         boost::shared_ptr<QuantLib::Observable> obs = QuantLib::Settings::instance().evaluationDate();
         obs->notifyObservers();
     }
