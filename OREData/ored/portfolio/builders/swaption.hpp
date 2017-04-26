@@ -46,7 +46,8 @@ namespace data {
  */
 class EuropeanSwaptionEngineBuilder : public CachingPricingEngineBuilder<string, const Currency&> {
 public:
-    EuropeanSwaptionEngineBuilder() : CachingEngineBuilder("BlackBachelier", "BlackBachelierSwaptionEngine") {}
+    EuropeanSwaptionEngineBuilder()
+        : CachingEngineBuilder("BlackBachelier", "BlackBachelierSwaptionEngine", {"EuropeanSwaption"}) {}
 
 protected:
     virtual string keyImpl(const Currency& ccy) override { return ccy.code(); }
@@ -63,7 +64,8 @@ protected:
  */
 class BermudanSwaptionEngineBuilder : public EngineBuilder {
 public:
-    BermudanSwaptionEngineBuilder(const string& model, const string& engine) : EngineBuilder(model, engine) {}
+    BermudanSwaptionEngineBuilder(const string& model, const string& engine, const set<string>& tradeTypes)
+        : EngineBuilder(model, engine, tradeTypes) {}
 
     virtual boost::shared_ptr<PricingEngine> engine( //! a unique (trade) id, for caching
         const string& id,
@@ -81,7 +83,8 @@ public:
 
 class LGMBermudanSwaptionEngineBuilder : public BermudanSwaptionEngineBuilder {
 public:
-    LGMBermudanSwaptionEngineBuilder(const string& engine) : BermudanSwaptionEngineBuilder("LGM", engine) {}
+    LGMBermudanSwaptionEngineBuilder(const string& engine)
+        : BermudanSwaptionEngineBuilder("LGM", engine, {"BermudanSwaption"}) {}
 
     boost::shared_ptr<QuantExt::LGM> model(const string& id, bool isNonStandard, const string& ccy,
                                            const std::vector<Date>& dates, const Date& maturity);

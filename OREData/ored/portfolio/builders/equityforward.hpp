@@ -38,7 +38,8 @@ namespace data {
  */
 class EquityForwardEngineBuilder : public CachingPricingEngineBuilder<string, const string&, const Currency&> {
 public:
-    EquityForwardEngineBuilder() : CachingEngineBuilder("DiscountedCashflows", "DiscountingEquityForwardEngine") {}
+    EquityForwardEngineBuilder()
+        : CachingEngineBuilder("DiscountedCashflows", "DiscountingEquityForwardEngine", {"EquityForward"}) {}
 
 protected:
     virtual string keyImpl(const string& equityName, const Currency& ccy) override {

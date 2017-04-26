@@ -35,7 +35,7 @@ namespace data {
 */
 class CapFloorEngineBuilder : public CachingPricingEngineBuilder<string, const Currency&> {
 public:
-    CapFloorEngineBuilder() : CachingEngineBuilder("IborCapModel", "IborCapEngine") {}
+    CapFloorEngineBuilder() : CachingEngineBuilder("IborCapModel", "IborCapEngine", {"CapFloor"}) {}
 
 protected:
     virtual string keyImpl(const Currency& ccy) override { return ccy.code(); }

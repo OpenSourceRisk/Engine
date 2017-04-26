@@ -16,10 +16,15 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/builders/all.hpp>
+#include <ored/portfolio/enginefactory.hpp>
 #include <ored/utilities/log.hpp>
+
 #include <boost/make_shared.hpp>
+
+#include <tuple>
+
+using std::get;
 
 namespace ore {
 namespace data {
@@ -35,20 +40,29 @@ EngineFactory::EngineFactory(const boost::shared_ptr<EngineData>& engineData, co
 void EngineFactory::registerBuilder(const boost::shared_ptr<EngineBuilder>& builder) {
     const string& modelName = builder->model();
     const string& engineName = builder->engine();
-    LOG("EngineFactory regisering builder for model:" << modelName << " and engine:" << engineName);
-    builders_[make_pair(modelName, engineName)] = builder;
+    const set<string>& tradeTypes = builder->tradeTypes();
+    LOG("EngineFactory registering builder for model:" << modelName << " and engine:" << engineName);
+    for (auto const& t : tradeTypes) {
+        LOG("Possible Trade Type: " << t);
+    }
+    builders_[make_tuple(modelName, engineName, tradeTypes)] = builder;
 }
 
 boost::shared_ptr<EngineBuilder> EngineFactory::builder(const string& tradeType) {
     // Check that we have a model/engine for tradetype
-    QL_REQUIRE(engineData_->hasProduct(tradeType), "EngineFactory does not have a "
-                                                   "model/engine for trade type "
-                                                       << tradeType);
+    QL_REQUIRE(engineData_->hasProduct(tradeType),
+               "EngineFactory does not have a model/engine for trade type " << tradeType);
 
-    // Find a builder for the model/engine pair
-    auto key = make_pair(engineData_->model(tradeType), engineData_->engine(tradeType));
-    auto it = builders_.find(key);
-    QL_REQUIRE(it != builders_.end(), "No EngineBuilder for " << key.first << "/" << key.second);
+    // Find a builder for the model/engine/tradetype tuple (if there are several, the first is taken)
+    auto key = make_tuple(engineData_->model(tradeType), engineData_->engine(tradeType), tradeType);
+    auto it = std::find_if(builders_.begin(), builders_.end(),
+                           [&key](const pair<tuple<string, string, set<string>>, boost::shared_ptr<EngineBuilder>>& k) {
+                               return get<0>(k.first) == get<0>(key) && get<1>(k.first) == get<1>(key) &&
+                                      (std::find(get<2>(k.first).begin(), get<2>(k.first).end(), get<2>(key)) !=
+                                       get<2>(k.first).end());
+                           });
+    QL_REQUIRE(it != builders_.end(),
+               "No EngineBuilder for " << get<0>(key) << "/" << get<1>(key) << "/" << get<2>(key));
 
     boost::shared_ptr<EngineBuilder> builder = it->second;
 

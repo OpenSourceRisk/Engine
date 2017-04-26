@@ -31,11 +31,14 @@
 #include <boost/shared_ptr.hpp>
 
 #include <map>
+#include <set>
 #include <vector>
 
 using std::map;
+using std::set;
 using std::string;
 using std::pair;
+using std::tuple;
 using ore::data::Market;
 using QuantLib::PricingEngine;
 
@@ -89,7 +92,8 @@ public:
      *  @param model the model name
      *  @param engine the engine name
      */
-    EngineBuilder(const string& model, const string& engine) : model_(model), engine_(engine) {}
+    EngineBuilder(const string& model, const string& engine, const set<string>& tradeTypes)
+        : model_(model), engine_(engine), tradeTypes_(tradeTypes) {}
 
     //! Virtual destructor
     virtual ~EngineBuilder() {}
@@ -98,6 +102,8 @@ public:
     const string& model() const { return model_; }
     //! Return the engine name
     const string& engine() const { return engine_; }
+    //! Return the possible trade types
+    const set<string>& tradeTypes() const { return tradeTypes_; }
 
     //! Return a configuration (or the default one if key not found)
     const string& configuration(const MarketContext& key) {
@@ -123,6 +129,7 @@ public:
 protected:
     string model_;
     string engine_;
+    set<string> tradeTypes_;
     boost::shared_ptr<Market> market_;
     map<MarketContext, string> configurations_;
     map<string, string> modelParameters_;
@@ -180,7 +187,7 @@ private:
     boost::shared_ptr<Market> market_;
     boost::shared_ptr<EngineData> engineData_;
     map<MarketContext, string> configurations_;
-    map<pair<string, string>, boost::shared_ptr<EngineBuilder>> builders_;
+    map<tuple<string, string, set<string>>, boost::shared_ptr<EngineBuilder>> builders_;
 };
 
 } // namespace data
