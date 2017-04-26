@@ -98,8 +98,7 @@ public:
         RATE_LNVOL,
         RATE_NVOL,
         RATE_SLNVOL,
-        SHIFT,
-        SECURITY_SPREAD
+        SHIFT
     };
 
     //! Constructor
