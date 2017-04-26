@@ -73,17 +73,16 @@ void Swaption::buildEuropean(const boost::shared_ptr<EngineFactory>& engineFacto
 
     LOG("Building European Swaption " << id());
 
-    boost::shared_ptr<VanillaSwap> swap = buildVanillaSwap(engineFactory);
-
-    string ccy = swap_[0].currency();
-    Currency currency = parseCurrency(ccy);
-
     // Swaption details
     Settlement::Type settleType = parseSettlementType(option_.settlement());
-
     QL_REQUIRE(option_.exerciseDates().size() == 1, "Only one exercise date expected for European Option");
     Date exDate = parseDate(option_.exerciseDates().front());
     QL_REQUIRE(exDate >= Settings::instance().evaluationDate(), "Exercise date expected in the future.");
+
+    boost::shared_ptr<VanillaSwap> swap = buildVanillaSwap(engineFactory, exDate);
+
+    string ccy = swap_[0].currency();
+    Currency currency = parseCurrency(ccy);
 
     boost::shared_ptr<Exercise> exercise(new EuropeanExercise(exDate));
 
@@ -215,7 +214,8 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
     DLOG("Building Bermudan Swaption done");
 }
 
-boost::shared_ptr<VanillaSwap> Swaption::buildVanillaSwap(const boost::shared_ptr<EngineFactory>& engineFactory) {
+boost::shared_ptr<VanillaSwap> Swaption::buildVanillaSwap(const boost::shared_ptr<EngineFactory>& engineFactory,
+                                                          const Date& firstExerciseDate) {
     // Limitation to vanilla for now
     QL_REQUIRE(swap_.size() == 2 && swap_[0].currency() == swap_[1].currency() &&
                    swap_[0].isPayer() != swap_[1].isPayer() && swap_[0].notionals() == swap_[1].notionals() &&
@@ -261,6 +261,18 @@ boost::shared_ptr<VanillaSwap> Swaption::buildVanillaSwap(const boost::shared_pt
     BusinessDayConvention paymentConvention = parseBusinessDayConvention(swap_[floatingLegIndex].paymentConvention());
 
     VanillaSwap::Type type = swap_[fixedLegIndex].isPayer() ? VanillaSwap::Payer : VanillaSwap::Receiver;
+
+    // only take into account accrual periods with start date on or after first exercise date (if given)
+    if (firstExerciseDate != Null<Date>()) {
+        std::vector<Date> fixDates = fixedSchedule.dates();
+        auto it1 = std::lower_bound(fixDates.begin(), fixDates.end(), firstExerciseDate);
+        fixDates.erase(fixDates.begin(), it1);
+        fixedSchedule = Schedule(fixDates, fixedSchedule.calendar());
+        std::vector<Date> floatingDates = floatingSchedule.dates();
+        auto it2 = std::lower_bound(floatingDates.begin(), floatingDates.end(), firstExerciseDate);
+        floatingDates.erase(floatingDates.begin(), it2);
+        floatingSchedule = Schedule(floatingDates, floatingSchedule.calendar());
+    }
 
     // Build a vanilla (bullet) swap underlying
     boost::shared_ptr<VanillaSwap> swap(new VanillaSwap(type, nominal, fixedSchedule, rate, fixedDayCounter,
