@@ -27,4 +27,5 @@
 #include <qle/termstructures/spreadedsmilesection.hpp>
 #include <qle/termstructures/spreadedswaptionvolatility.hpp>
 #include <qle/termstructures/swaptionvolatilityconverter.hpp>
+#include <qle/termstructures/subperiodsswaphelper.hpp>
 
