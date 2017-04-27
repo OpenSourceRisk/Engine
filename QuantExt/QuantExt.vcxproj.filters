@@ -373,6 +373,12 @@
     <ClInclude Include="qle\models\fxeqoptionhelper.hpp">
       <Filter>models</Filter>
     </ClInclude>
+    <ClInclude Include="qle\instruments\subperiodsswap.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\subperiodsswaphelper.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -634,6 +640,12 @@
     </ClCompile>
     <ClCompile Include="qle\models\fxeqoptionhelper.cpp">
       <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\subperiodsswap.cpp">
+      <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\subperiodsswaphelper.cpp">
+      <Filter>termstructures</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

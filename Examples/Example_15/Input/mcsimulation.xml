@@ -253,7 +253,7 @@
     
     <CapFloorVolatilities>
       <Simulate>false</Simulate>
-      <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
+      <ReactionToTimeDecay>ConstantVariance</ReactionToTimeDecay>
       <Currencies>
         <Currency>EUR</Currency>
         <Currency>USD</Currency>

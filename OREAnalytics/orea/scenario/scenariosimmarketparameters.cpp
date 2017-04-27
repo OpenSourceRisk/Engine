@@ -91,8 +91,10 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         fxCcyPairs_ = XMLUtils::getChildrenValues(nodeChild, "CurrencyPairs", "CurrencyPair", true);
     else {
         fxCcyPairs_.resize(0);
-        for (auto ccy : ccys_)
-            fxCcyPairs_.push_back(ccy + baseCcy_);
+        for (auto ccy : ccys_) {
+            if (ccy != baseCcy_)
+                fxCcyPairs_.push_back(ccy + baseCcy_);
+        }
     }
 
     nodeChild = XMLUtils::getChildNode(node, "SwaptionVolatilities");
