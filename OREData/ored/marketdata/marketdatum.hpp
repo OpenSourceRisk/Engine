@@ -79,6 +79,10 @@ public:
         SWAPTION,
         CAPFLOOR,
         FX_OPTION,
+        ZC_INFLATIONSWAP,
+        ZC_INFLATIONCAPFLOOR,
+        YY_INFLATIONSWAP,
+        SEASONALITY,
         EQUITY_SPOT,
         EQUITY_FWD,
         EQUITY_DIVIDEND,
@@ -704,6 +708,98 @@ private:
     string ccy_;
     Period expiry_;
     string strike_; // TODO: either: ATM, 25RR, 25BF. Should be an enum?
+};
+
+//! ZC Inflation swap data class
+/*!
+ This class holds single market points of type
+ - ZC_INFLATIONSWAP
+ Specific data comprise index, term.
+
+ \ingroup marketdata
+ */
+class ZcInflationSwapQuote : public MarketDatum {
+public:
+    ZcInflationSwapQuote(Real value, Date asofDate, const string& name, const string& index, Period term)
+    : MarketDatum(value, asofDate, name, QuoteType::RATE, InstrumentType::ZC_INFLATIONSWAP), index_(index),
+    term_(term) {}
+    string index() { return index_; }
+    Period term() { return term_; }
+
+private:
+    string index_;
+    Period term_;
+};
+
+//! ZC Cap Floor data class
+/*!
+ This class holds single market points of type
+ - ZC_INFLATION_CAPFLOOR
+ Specific data comprise type (can be price or nvol or slnvol),
+ index, term, cap/floor, strike
+
+ \ingroup marketdata
+ */
+class ZcInflationCapFloorQuote : public MarketDatum {
+public:
+    ZcInflationCapFloorQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, const string& index,
+                             Period term, bool isCap, const string& strike)
+    : MarketDatum(value, asofDate, name, quoteType, InstrumentType::ZC_INFLATIONCAPFLOOR), index_(index),
+    term_(term), isCap_(isCap), strike_(strike) {}
+    string index() { return index_; }
+    Period term() { return term_; }
+    bool isCap() { return isCap_; }
+    string strike() { return strike_; }
+
+private:
+    string index_;
+    Period term_;
+    bool isCap_;
+    string strike_;
+};
+
+//! YoY Inflation swap data class
+/*!
+ This class holds single market points of type
+ - YOY_INFLATIONSWAP
+ Specific data comprise index, term.
+
+ \ingroup marketdata
+ */
+class YoYInflationSwapQuote : public MarketDatum {
+public:
+    YoYInflationSwapQuote(Real value, Date asofDate, const string& name, const string& index, Period term)
+    : MarketDatum(value, asofDate, name, QuoteType::RATE, InstrumentType::YY_INFLATIONSWAP), index_(index),
+    term_(term) {}
+    string index() { return index_; }
+    Period term() { return term_; }
+
+private:
+    string index_;
+    Period term_;
+};
+
+//! Inflation seasonality data class
+/*!
+ This class holds single market points of type
+ - SEASONALITY
+ Specific data comprise inflation index, factor type (ADD, MULT) and month (JAN to DEC).
+
+ \ingroup marketdata
+ */
+class SeasonalityQuote : public MarketDatum {
+public:
+    SeasonalityQuote(Real value, Date asofDate, const string& name, const string& index, const string& type, const string& month)
+    : MarketDatum(value, asofDate, name, QuoteType::RATE, InstrumentType::SEASONALITY), index_(index), type_(type), month_(month) {}
+    string index() { return index_; }
+    string type() { return type_; }
+    string month() { return month_; }
+    int applyMonth() const;
+
+private:
+    string index_;
+    string type_;
+    string month_;
 };
 
 //! Equity/Index spot price data class

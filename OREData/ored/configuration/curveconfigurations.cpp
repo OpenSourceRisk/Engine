@@ -58,6 +58,19 @@ const boost::shared_ptr<DefaultCurveConfig>& CurveConfigurations::defaultCurveCo
     return it->second;
 }
 
+
+const boost::shared_ptr<InflationCurveConfig>& CurveConfigurations::inflationCurveConfig(const string& curveID) const {
+    auto it = inflationCurveConfigs_.find(curveID);
+    QL_REQUIRE(it != inflationCurveConfigs_.end(), "No curve id for " << curveID);
+    return it->second;
+}
+
+const boost::shared_ptr<InflationCapFloorPriceSurfaceConfig>& CurveConfigurations::inflationCapFloorPriceSurfaceConfig(const string& curveID) const {
+    auto it = inflationCapFloorPriceSurfaceConfigs_.find(curveID);
+    QL_REQUIRE(it != inflationCapFloorPriceSurfaceConfigs_.end(), "No curve id for " << curveID);
+    return it->second;
+}
+
 const boost::shared_ptr<EquityCurveConfig>& CurveConfigurations::equityCurveConfig(const string& curveID) const {
     auto it = equityCurveConfigs_.find(curveID);
     QL_REQUIRE(it != equityCurveConfigs_.end(), "No curve id for " << curveID);
@@ -194,8 +207,44 @@ void CurveConfigurations::fromXML(XMLNode* node) {
             }
         }
     }
-}
 
+    // Load InflationCurves
+    XMLNode* inflationCurvesNode = XMLUtils::getChildNode(node, "InflationCurves");
+    if (inflationCurvesNode) {
+        for (XMLNode* child = XMLUtils::getChildNode(inflationCurvesNode, "InflationCurve"); child;
+             child = XMLUtils::getNextSibling(child, "InflationCurve")) {
+            boost::shared_ptr<InflationCurveConfig> inflationCurveConfig(new InflationCurveConfig());
+            try {
+                inflationCurveConfig->fromXML(child);
+                const string& id = inflationCurveConfig->curveID();
+                inflationCurveConfigs_[id] = inflationCurveConfig;
+                DLOG("Added inflation curve config with ID = " << id);
+            } catch (std::exception& ex) {
+                ALOG("Exception parsing inflation curve config: " << ex.what());
+            }
+        }
+    }
+    
+    // Load InflationCapFloorPriceSurfaces
+    XMLNode* inflationCapFloorPriceSurfaceNode = XMLUtils::getChildNode(node, "InflationCapFloorPriceSurfaces");
+    if (inflationCapFloorPriceSurfaceNode) {
+        for (XMLNode* child =
+             XMLUtils::getChildNode(inflationCapFloorPriceSurfaceNode, "InflationCapFloorPriceSurface");
+             child; child = XMLUtils::getNextSibling(child, "InflationCapFloorPriceSurface")) {
+            boost::shared_ptr<InflationCapFloorPriceSurfaceConfig> inflationCapFloorPriceSurfaceConfig(
+                                                                                                       new InflationCapFloorPriceSurfaceConfig());
+            try {
+                inflationCapFloorPriceSurfaceConfig->fromXML(child);
+                const string& id = inflationCapFloorPriceSurfaceConfig->curveID();
+                inflationCapFloorPriceSurfaceConfigs_[id] = inflationCapFloorPriceSurfaceConfig;
+                DLOG("Added inflation cap floor price surface config with ID = " << id);
+            } catch (std::exception& ex) {
+                ALOG("Exception parsing inflation cap floor price surface config: " << ex.what());
+            }
+        }
+    }
+}
+    
 XMLNode* CurveConfigurations::toXML(XMLDocument& doc) {
     XMLNode* parent = doc.allocNode("CurveConfiguration");
     doc.appendNode(parent);
@@ -223,6 +272,16 @@ XMLNode* CurveConfigurations::toXML(XMLDocument& doc) {
     node = doc.allocNode("DefaultCurves");
     XMLUtils::appendNode(parent, node);
     for (auto it : defaultCurveConfigs_)
+        XMLUtils::appendNode(node, it.second->toXML(doc));
+
+    node = doc.allocNode("InflationCurves");
+    XMLUtils::appendNode(parent, node);
+    for (auto it : inflationCurveConfigs_)
+        XMLUtils::appendNode(node, it.second->toXML(doc));
+    
+    node = doc.allocNode("InflationCapFloorPriceSurfaces");
+    XMLUtils::appendNode(parent, node);
+    for (auto it : inflationCapFloorPriceSurfaceConfigs_)
         XMLUtils::appendNode(node, it.second->toXML(doc));
 
     node = doc.allocNode("EquityCurves");

@@ -518,6 +518,7 @@
     <ClInclude Include="qle\indexes\ibor\skkbribor.hpp" />
     <ClInclude Include="qle\indexes\ibor\tonar.hpp" />
     <ClInclude Include="qle\indexes\ibor\twdtaibor.hpp" />
+    <ClInclude Include="qle\indexes\inflationindexwrapper.hpp" />
     <ClInclude Include="qle\instruments\all.hpp" />
     <ClInclude Include="qle\instruments\averageois.hpp" />
     <ClInclude Include="qle\instruments\crossccybasisswap.hpp" />
@@ -623,6 +624,7 @@
     <ClCompile Include="qle\currencies\america.cpp" />
     <ClCompile Include="qle\currencies\asia.cpp" />
     <ClCompile Include="qle\indexes\fxindex.cpp" />
+    <ClCompile Include="qle\indexes\inflationindexwrapper.cpp" />
     <ClCompile Include="qle\instruments\averageois.cpp" />
     <ClCompile Include="qle\instruments\crossccybasisswap.cpp" />
     <ClCompile Include="qle\instruments\crossccyswap.cpp" />
