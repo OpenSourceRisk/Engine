@@ -299,7 +299,7 @@ void SensitivityAnalysis::writeSensitivityReport(const boost::shared_ptr<Report>
 
     QL_REQUIRE(computed_, "Sensitivities have not been successfully computed");
 
-    report->addColumn("#TradeId", string());
+    report->addColumn("TradeId", string());
     report->addColumn("Factor", string());
     report->addColumn("ShiftSize", double(), 6);
     report->addColumn("Base NPV", double(), 2);
@@ -331,7 +331,7 @@ void SensitivityAnalysis::writeCrossGammaReport(const boost::shared_ptr<Report>&
 
     QL_REQUIRE(computed_, "Sensitivities have not been successfully computed");
 
-    report->addColumn("#TradeId", string());
+    report->addColumn("TradeId", string());
     report->addColumn("Factor 1", string());
     report->addColumn("ShiftSize1", double(), 6);
     report->addColumn("Factor 2", string());
