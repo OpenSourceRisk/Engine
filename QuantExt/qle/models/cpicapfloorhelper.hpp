@@ -52,6 +52,6 @@ private:
     boost::shared_ptr<CPICapFloor> instrument_;
 };
 
-} // namespace QuantExtPlus
+} // namespace QuantExt
 
 #endif

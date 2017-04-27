@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2016, 2017 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -25,6 +25,8 @@
 #define quantext_crossasset_analytics_base_hpp
 
 #include <ql/types.hpp>
+
+#include <qle/models/crossassetmodel.hpp>
 
 using namespace QuantLib;
 

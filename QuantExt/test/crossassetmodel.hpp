@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2016, 2017 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -74,9 +74,44 @@ public:
      * check whether the error estimates go to zero when the shift approaches T=50. */
     static void testLgmMcWithShift();
 
+    /*! Test martingale properties analogous to the test above, but with dynamic credit compenent. */
+    static void testIrFxCrMartingaleProperty();
+
+    /*! Test moments analogous to the test above, but with dynamic credit compenent. */
+    static void testIrFxCrMoments();
+
+    /*! Test martingale properties analogous to the test above, but with dynamic inflation and credit compenent. */
+    static void testIrFxInfCrMartingaleProperty();
+
+    /*! Test moments analogous to the test above, but with dynamic inflation and credit compenent. */
+    static void testIrFxInfCrMoments();
+
+    /*! TODO Test martingale properties analogous to the test above, but with dynamic inflation, credit, equity compenent. */
+    static void testIrFxInfCrEqMartingaleProperty();
+
+    /*! TODO Test moments analogous to the test above, but with dynamic inflation, credit, equity compenent. */
+    static void testIrFxInfCrEqMoments();
+
+    /*! Test DK component calibration in alpha against MC full repricing of calibration instruments. */
+    static void testCpiCalibrationByAlpha();
+    
+    /*! Test DK component calibration in H against MC full repricing of calibration instruments. */
+    static void testCpiCalibrationByH();
+
     /*! Test whether the input correlation matrix for a CrossAssetModel with 1 up to 100 currencies is recovered as the
      * analytical and Euler correlation matrix estimated over a small time step dt. */
     static void testCorrelationRecovery();
+
+    /*! Test correlation recovery analogous to the test above, but with dynamic credit compenent. */
+    static void testIrFxCrCorrelationRecovery();
+
+    /*! Test correlation recovery analogous to the test above, but with dynamic inflation and credit compenent. */
+    static void testIrFxInfCrCorrelationRecovery();
+    
+    /*! TODO Test correlation recovery analogous to the test above, but with dynamic inflation and credit compenent. */
+    static void testIrFxInfCrEqCorrelationRecovery();
+
+    /*! TODO, move equity tests here */
 
     static boost::unit_test_framework::test_suite* suite();
 };
