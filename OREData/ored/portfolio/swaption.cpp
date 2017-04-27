@@ -263,16 +263,18 @@ boost::shared_ptr<VanillaSwap> Swaption::buildVanillaSwap(const boost::shared_pt
     VanillaSwap::Type type = swap_[fixedLegIndex].isPayer() ? VanillaSwap::Payer : VanillaSwap::Receiver;
 
     // only take into account accrual periods with start date on or after first exercise date (if given)
-    // if (firstExerciseDate != Null<Date>()) {
-    //     std::vector<Date> fixDates = fixedSchedule.dates();
-    //     auto it1 = std::lower_bound(fixDates.begin(), fixDates.end(), firstExerciseDate);
-    //     fixDates.erase(fixDates.begin(), it1);
-    //     fixedSchedule = Schedule(fixDates, fixedSchedule.calendar());
-    //     std::vector<Date> floatingDates = floatingSchedule.dates();
-    //     auto it2 = std::lower_bound(floatingDates.begin(), floatingDates.end(), firstExerciseDate);
-    //     floatingDates.erase(floatingDates.begin(), it2);
-    //     floatingSchedule = Schedule(floatingDates, floatingSchedule.calendar());
-    // }
+    if (firstExerciseDate != Null<Date>()) {
+        std::vector<Date> fixDates = fixedSchedule.dates();
+        auto it1 = std::lower_bound(fixDates.begin(), fixDates.end(), firstExerciseDate);
+        fixDates.erase(fixDates.begin(), it1);
+        fixedSchedule = Schedule(fixDates, fixedSchedule.calendar(), Unadjusted, boost::none, boost::none, boost::none,
+                                 boost::none, std::vector<bool>(fixDates.size() - 1, true));
+        std::vector<Date> floatingDates = floatingSchedule.dates();
+        auto it2 = std::lower_bound(floatingDates.begin(), floatingDates.end(), firstExerciseDate);
+        floatingDates.erase(floatingDates.begin(), it2);
+        floatingSchedule = Schedule(floatingDates, floatingSchedule.calendar(), Unadjusted, boost::none, boost::none,
+                                    boost::none, boost::none, std::vector<bool>(floatingDates.size() - 1, true));
+    }
 
     // Build a vanilla (bullet) swap underlying
     boost::shared_ptr<VanillaSwap> swap(new VanillaSwap(type, nominal, fixedSchedule, rate, fixedDayCounter,
