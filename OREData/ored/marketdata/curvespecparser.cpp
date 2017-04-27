@@ -29,15 +29,18 @@ namespace ore {
 namespace data {
 
 static CurveSpec::CurveType parseCurveSpecType(const string& s) {
-    static map<string, CurveSpec::CurveType> b = {{"Yield", CurveSpec::CurveType::Yield},
-                                                  {"CapFloorVolatility", CurveSpec::CurveType::CapFloorVolatility},
-                                                  {"SwaptionVolatility", CurveSpec::CurveType::SwaptionVolatility},
-                                                  {"FX", CurveSpec::CurveType::FX},
-                                                  {"FXVolatility", CurveSpec::CurveType::FXVolatility},
-                                                  {"Default", CurveSpec::CurveType::Default},
-                                                  {"Equity", CurveSpec::CurveType::Equity},
-                                                  {"EquityVolatility", CurveSpec::CurveType::EquityVolatility},
-                                                  {"SecuritySpread", CurveSpec::CurveType::SecuritySpread}};
+    static map<string, CurveSpec::CurveType> b = {
+        { "Yield", CurveSpec::CurveType::Yield },
+        { "CapFloorVolatility", CurveSpec::CurveType::CapFloorVolatility },
+        { "SwaptionVolatility", CurveSpec::CurveType::SwaptionVolatility },
+        { "FX", CurveSpec::CurveType::FX },
+        { "FXVolatility", CurveSpec::CurveType::FXVolatility },
+        { "Default", CurveSpec::CurveType::Default },
+        { "Equity", CurveSpec::CurveType::Equity },
+        { "EquityVolatility", CurveSpec::CurveType::EquityVolatility },
+        { "SecuritySpread", CurveSpec::CurveType::SecuritySpread },
+        { "SecurityRecoveryRate", CurveSpec::CurveType::SecurityRecoveryRate }
+    };
 
     auto it = b.find(s);
     if (it != b.end()) {
@@ -149,6 +152,16 @@ boost::shared_ptr<CurveSpec> parseCurveSpec(const string& s) {
         const string& securityID = tokens[1];
         return boost::make_shared<SecuritySpreadSpec>(securityID);
     }
+
+    case CurveSpec::CurveType::SecurityRecoveryRate: {
+        // SecurityRecoveryRate/ISIN
+        QL_REQUIRE(tokens.size() == 2, "Unexpected number"
+                                       " of tokens in Security Recovery Rate spec "
+                                           << s);
+        const string& securityID = tokens[1];
+        return boost::make_shared<SecurityRecoveryRateSpec>(securityID);
+    }
+
         // TODO: the rest...
     }
 

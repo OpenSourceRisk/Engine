@@ -29,6 +29,7 @@
 #include <ored/marketdata/swaptionvolcurve.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
 #include <ored/marketdata/securityspread.hpp>
+#include <ored/marketdata/securityrecoveryrate.hpp>
 #include <ored/marketdata/curveloader.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/indexparser.hpp>
@@ -63,6 +64,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
     map<string, boost::shared_ptr<EquityCurve>> requiredEquityCurves;
     map<string, boost::shared_ptr<EquityVolCurve>> requiredEquityVolCurves;
     map<string, boost::shared_ptr<SecuritySpread>> requiredSecuritySpreads;
+    map<string, boost::shared_ptr<SecurityRecoveryRate>> requiredSecurityRecoveryRates;
 
     for (const auto& configuration : params.configurations()) {
 
@@ -371,6 +373,33 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                         LOG("Adding SecuritySpread (" << it.first << ") with spec " << *securityspreadspec
                                                       << " to configuration " << configuration.first);
                         securitySpreads_[make_pair(configuration.first, it.first)] = itr->second->spread();
+                    }
+                }
+                break;
+            }
+
+            case CurveSpec::CurveType::SecurityRecoveryRate: {
+                boost::shared_ptr<SecurityRecoveryRateSpec> securityrecoveryratespec =
+                    boost::dynamic_pointer_cast<SecurityRecoveryRateSpec>(spec);
+                QL_REQUIRE(securityrecoveryratespec, "Failed to convert spec " << *spec << " to security recovery rate spec");
+
+                // have we built the curve already?
+                auto itr = requiredSecurityRecoveryRates.find(securityrecoveryratespec->securityID());
+                if (itr == requiredSecurityRecoveryRates.end()) {
+                    // build the curve
+                    LOG("Building SecurityRecoveryRates for asof " << asof);
+                    boost::shared_ptr<SecurityRecoveryRate> securityRecoveryRate =
+                        boost::make_shared<SecurityRecoveryRate>(asof, *securityrecoveryratespec, loader);
+                    itr = requiredSecurityRecoveryRates.insert(make_pair(securityrecoveryratespec->securityID(), securityRecoveryRate))
+                              .first;
+                }
+
+                // add the handle to the Market Map for recovery rates 
+                for (const auto& it : params.securityRecoveryRates(configuration.first)) {
+                    if (it.second == spec->name()) {
+                        LOG("Adding SecurityRecoveryRate (" << it.first << ") with spec " << *spec
+                                                    << " to configuration " << configuration.first);
+                        recoveryRates_[make_pair(configuration.first, it.first)] = itr->second->recoveryRate();
                     }
                 }
                 break;

@@ -33,6 +33,14 @@
         1M,3M,6M,1Y,2Y,3Y,4Y,5Y,10Y
       </Expiries>
     </FXVolatility>
+    <FXVolatility>
+      <CurveId>GBPUSD</CurveId>
+      <CurveDescription/>
+      <Dimension>ATM</Dimension>
+      <Expiries>
+        1M,3M,6M,1Y,2Y,3Y,4Y,5Y,10Y
+      </Expiries>
+    </FXVolatility>
   </FXVolatilities>
   <SwaptionVolatilities>
     <SwaptionVolatility>
@@ -1702,6 +1710,23 @@
     </YieldCurve>
     -->
     <YieldCurve>
+      <CurveId>BENCHMARK_EUR</CurveId>
+      <CurveDescription>Bond benchmark curve in EUR</CurveDescription>
+      <Currency>EUR</Currency>
+      <DiscountCurve/>
+      <Segments>
+        <ZeroSpread>
+          <Type>Zero Spread</Type>
+          <Quotes>
+            <Quote>ZERO/YIELD_SPREAD/EUR/BENCHMARK_EUR/A365/5Y</Quote>
+            <Quote>ZERO/YIELD_SPREAD/EUR/BENCHMARK_EUR/A365/10Y</Quote>
+          </Quotes>
+          <Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+          <ReferenceCurve>EUR1D</ReferenceCurve>
+        </ZeroSpread>
+      </Segments>
+    </YieldCurve>
+    <YieldCurve>
       <CurveId>BANK_EUR_BORROW</CurveId>
       <CurveDescription>BANK's average borrowing spread in EUR</CurveDescription>
       <Currency>EUR</Currency>
@@ -1745,13 +1770,13 @@
             <CurveId>SP5</CurveId>
             <CurveDescription>SP 500 equity price projection curve</CurveDescription>
             <Currency>USD</Currency>
-            <Type>ForwardPrice</Type> <!-- {DividendYield, ForwardPrice} -->
+            <Type>DividendYield</Type> <!-- {DividendYield, ForwardPrice} -->
             <SpotQuote>EQUITY/PRICE/SP5/USD</SpotQuote> <!--  the spot quote from the market data file -->
             <Quotes>
-                <Quote>EQUITY_FWD/PRICE/SP5/USD/2016-06-16</Quote>
-                <Quote>EQUITY_FWD/PRICE/SP5/USD/6M</Quote>
-                <Quote>EQUITY_FWD/PRICE/SP5/USD/2017-06-16</Quote>
-                <Quote>EQUITY_FWD/PRICE/SP5/USD/2Y</Quote>
+                <Quote>EQUITY_DIVIDEND/RATE/SP5/USD/3M</Quote>
+                <Quote>EQUITY_DIVIDEND/RATE/SP5/USD/20160915</Quote>
+                <Quote>EQUITY_DIVIDEND/RATE/SP5/USD/1Y</Quote>
+                <Quote>EQUITY_DIVIDEND/RATE/SP5/USD/20170915</Quote>
             </Quotes>
             <DayCounter>A365</DayCounter>
         </EquityCurve>
@@ -1759,13 +1784,13 @@
             <CurveId>Lufthansa</CurveId>
             <CurveDescription>Lufthansa equity price projection curve</CurveDescription>
             <Currency>EUR</Currency>
-            <Type>DividendYield</Type> <!-- {DividendYield, ForwardPrice} -->
+            <Type>ForwardPrice</Type> <!-- {DividendYield, ForwardPrice} -->
             <SpotQuote>EQUITY/PRICE/Lufthansa/EUR</SpotQuote> <!--  the spot quote from the market data file -->
             <Quotes>
-                <Quote>EQUITY_DIVIDEND/RATE/Lufthansa/EUR/3M</Quote>
-                <Quote>EQUITY_DIVIDEND/RATE/Lufthansa/EUR/20160915</Quote>
-                <Quote>EQUITY_DIVIDEND/RATE/Lufthansa/EUR/1Y</Quote>
-                <Quote>EQUITY_DIVIDEND/RATE/Lufthansa/EUR/20170915</Quote>
+                <Quote>EQUITY_FWD/PRICE/Lufthansa/EUR/2016-06-16</Quote>
+                <Quote>EQUITY_FWD/PRICE/Lufthansa/EUR/6M</Quote>
+                <Quote>EQUITY_FWD/PRICE/Lufthansa/EUR/2017-06-16</Quote>
+                <Quote>EQUITY_FWD/PRICE/Lufthansa/EUR/2Y</Quote>
             </Quotes>
             <DayCounter>A365</DayCounter>
         </EquityCurve> 

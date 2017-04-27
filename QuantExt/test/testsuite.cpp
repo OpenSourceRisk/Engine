@@ -45,6 +45,7 @@ using boost::unit_test::test_suite;
 #include "analyticlgmswaptionengine.hpp"
 #include "crossassetmodel.hpp"
 #include "crossassetmodel2.hpp"
+#include "equitycrossassetmodel.hpp"
 #include "crossassetmodelparametrizations.hpp"
 #include "currency.hpp"
 #include "discountcurve.hpp"
@@ -57,6 +58,7 @@ using boost::unit_test::test_suite;
 #include "cashflow.hpp"
 #include "swaptionvolatilityconverter.hpp"
 #include "optionletstripper.hpp"
+#include "deposit.hpp"
 #include "ratehelpers.hpp"
 #include "stabilisedglls.hpp"
 
@@ -105,7 +107,9 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(testsuite::BlackVarianceCurveTest::suite());
     test->add(testsuite::SwaptionVolatilityConverterTest::suite());
     test->add(testsuite::OptionletStripperTest::suite());
+    test->add(testsuite::DepositTest::suite());
     test->add(testsuite::RateHelpersTest::suite());
+    test->add(testsuite::EquityCrossAssetModelTest::suite());
     test->add(testsuite::StabilisedGLLSTest::suite());
 
     test->add(BOOST_TEST_CASE(stopTimer));

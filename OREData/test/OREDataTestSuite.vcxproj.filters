@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="headers">
@@ -51,6 +51,12 @@
     <ClInclude Include="bond.hpp">
       <Filter>headers</Filter>
     </ClInclude>
+    <ClInclude Include="equitymarketdata.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="equitytrades.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="calendars.cpp">
@@ -94,6 +100,12 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="bond.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="equitymarketdata.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="equitytrades.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>

@@ -45,10 +45,21 @@ namespace analytics {
 class RiskFactorKey {
 public:
     //! Risk Factor types
-    enum class KeyType { DiscountCurve, YieldCurve, IndexCurve, SwaptionVolatility, FXSpot, FXVolatility };
+    enum class KeyType {
+        None,
+        DiscountCurve,
+        YieldCurve,
+        IndexCurve,
+        SwaptionVolatility,
+        OptionletVolatility,
+        FXSpot,
+        FXVolatility,
+        EQSpot,
+        EQVolatility
+    };
 
     //! Constructor
-    RiskFactorKey() {}
+    RiskFactorKey() : keytype(KeyType::None), name(""), index(0) {}
     //! Constructor
     RiskFactorKey(const KeyType& iKeytype, const string& iName, const Size& iIndex = 0)
         : keytype(iKeytype), name(iName), index(iIndex) {}
@@ -124,6 +135,9 @@ public:
     virtual void add(const RiskFactorKey& key, Real value) = 0;
     //! Get an element from the scenario
     virtual Real get(const RiskFactorKey& key) const = 0;
+
+    //! clones a scenario and returns a pointer to the new object
+    virtual boost::shared_ptr<Scenario> clone() const = 0;
 
 private:
     friend class boost::serialization::access;

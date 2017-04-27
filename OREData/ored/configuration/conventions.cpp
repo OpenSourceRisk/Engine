@@ -303,9 +303,12 @@ XMLNode* SwapIndexConvention::toXML(XMLDocument& doc) {
     return node;
 }
 IRSwapConvention::IRSwapConvention(const string& id, const string& fixedCalendar, const string& fixedFrequency,
-                                   const string& fixedConvention, const string& fixedDayCounter, const string& index)
+                                   const string& fixedConvention, const string& fixedDayCounter, const string& index,
+                                   bool hasSubPeriod, const string& floatFrequency, const string& subPeriodsCouponType)
+
     : Convention(id, Type::Swap), strFixedCalendar_(fixedCalendar), strFixedFrequency_(fixedFrequency),
-      strFixedConvention_(fixedConvention), strFixedDayCounter_(fixedDayCounter), strIndex_(index) {
+      strFixedConvention_(fixedConvention), strFixedDayCounter_(fixedDayCounter), strIndex_(index),
+      hasSubPeriod_(hasSubPeriod), strFloatFrequency_(floatFrequency), strSubPeriodsCouponType_(subPeriodsCouponType) {
     build();
 }
 
@@ -315,6 +318,14 @@ void IRSwapConvention::build() {
     fixedConvention_ = parseBusinessDayConvention(strFixedConvention_);
     fixedDayCounter_ = parseDayCounter(strFixedDayCounter_);
     index_ = parseIborIndex(strIndex_);
+
+    if (hasSubPeriod_) {
+        floatFrequency_ = parseFrequency(strFloatFrequency_);
+        subPeriodsCouponType_ = parseSubPeriodsCouponType(strSubPeriodsCouponType_);
+    } else {
+        floatFrequency_ = NoFrequency;
+        subPeriodsCouponType_ = QuantExt::SubPeriodsCoupon::Compounding;
+    }
 }
 
 void IRSwapConvention::fromXML(XMLNode* node) {
@@ -330,6 +341,11 @@ void IRSwapConvention::fromXML(XMLNode* node) {
     strFixedDayCounter_ = XMLUtils::getChildValue(node, "FixedDayCounter", true);
     strIndex_ = XMLUtils::getChildValue(node, "Index", true);
 
+    // optional
+    strFloatFrequency_ = XMLUtils::getChildValue(node, "FloatFrequency", false);
+    strSubPeriodsCouponType_ = XMLUtils::getChildValue(node, "SubPeriodsCouponType", false);
+    hasSubPeriod_ = (strFloatFrequency_ != "");
+
     build();
 }
 
@@ -342,6 +358,10 @@ XMLNode* IRSwapConvention::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "FixedConvention", strFixedConvention_);
     XMLUtils::addChild(doc, node, "FixedDayCounter", strFixedDayCounter_);
     XMLUtils::addChild(doc, node, "Index", strIndex_);
+    if (hasSubPeriod_) {
+        XMLUtils::addChild(doc, node, "FloatFrequency", strFloatFrequency_);
+        XMLUtils::addChild(doc, node, "SubPeriodsCouponType", strSubPeriodsCouponType_);
+    }
 
     return node;
 }
