@@ -43,7 +43,8 @@ class SensitivityAnalysis;
 
 class OREApp {
 public:
-    OREApp(boost::shared_ptr<Parameters> params, std::ostream& out = std::cout) : params_(params), out_(out), cubeDepth_(0) {
+    OREApp(boost::shared_ptr<Parameters> params, std::ostream& out = std::cout)
+        : params_(params), out_(out), cubeDepth_(0) {
         tab_ = 40;
         asof_ = parseDate(params->get("setup", "asofDate"));
         Settings::instance().evaluationDate() = asof_;
@@ -112,12 +113,10 @@ public:
 
 protected:
     //! Initialize input parameters to the sensitivities analysis
-    void sensiInputInitialize(
-        boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
-        boost::shared_ptr<SensitivityScenarioData>& sensiData,
-        boost::shared_ptr<EngineData>& engineData,
-        boost::shared_ptr<Portfolio>& sensiPortfolio,
-        string& marketConfiguration);
+    void sensiInputInitialize(boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+                              boost::shared_ptr<SensitivityScenarioData>& sensiData,
+                              boost::shared_ptr<EngineData>& engineData, boost::shared_ptr<Portfolio>& sensiPortfolio,
+                              string& marketConfiguration);
 
     //! Write out some standard sensitivities reports
     void sensiOutputReports(const boost::shared_ptr<SensitivityAnalysis>& sensiAnalysis);

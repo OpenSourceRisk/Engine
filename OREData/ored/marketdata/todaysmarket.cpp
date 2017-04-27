@@ -299,7 +299,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                 }
                 break;
             }
-            
+
             case CurveSpec::CurveType::Inflation: {
                 boost::shared_ptr<InflationCurveSpec> inflationspec =
                     boost::dynamic_pointer_cast<InflationCurveSpec>(spec);
@@ -317,8 +317,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                 map<string, string> zcInfMap;
                 try {
                     zcInfMap = params.zeroInflationIndexCurves(configuration.first);
-                }
-                catch (QuantLib::Error& e) {
+                } catch (QuantLib::Error& e) {
                     LOG(e.what());
                 }
                 for (const auto it : zcInfMap) {
@@ -331,8 +330,8 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                         bool indexInterpolated = itr->second->interpolatedIndex();
                         QL_REQUIRE(ts, "expected zero inflation term structure for index " << it.first
                                                                                            << ", but could not cast");
-                        auto tmp =
-                            parseZeroInflationIndex(it.first, indexInterpolated, Handle<ZeroInflationTermStructure>(ts));
+                        auto tmp = parseZeroInflationIndex(it.first, indexInterpolated,
+                                                           Handle<ZeroInflationTermStructure>(ts));
                         zeroInflationIndices_[make_pair(configuration.first, make_pair(it.first, indexInterpolated))] =
                             Handle<ZeroInflationIndex>(tmp);
                         zeroInflationIndices_[make_pair(configuration.first, make_pair(it.first, !indexInterpolated))] =
@@ -344,8 +343,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                 map<string, string> yyInfMap;
                 try {
                     yyInfMap = params.yoyInflationIndexCurves(configuration.first);
-                }
-                catch (QuantLib::Error& e) {
+                } catch (QuantLib::Error& e) {
                     LOG(e.what());
                 }
                 for (const auto it : yyInfMap) {
@@ -383,8 +381,8 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                     boost::shared_ptr<InflationCapFloorPriceSurface> inflationCapFloorPriceSurface =
                         boost::make_shared<InflationCapFloorPriceSurface>(asof, *infcapfloorspec, loader, curveConfigs,
                                                                           requiredYieldCurves, requiredInflationCurves);
-                    itr = requiredInflationCapFloorPriceSurfaces
-                              .insert(make_pair(infcapfloorspec->name(), inflationCapFloorPriceSurface))
+                    itr = requiredInflationCapFloorPriceSurfaces.insert(make_pair(infcapfloorspec->name(),
+                                                                                  inflationCapFloorPriceSurface))
                               .first;
                 }
                 for (const auto it : params.inflationCapFloorPriceSurfaces(configuration.first)) {
@@ -486,7 +484,8 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
             case CurveSpec::CurveType::SecurityRecoveryRate: {
                 boost::shared_ptr<SecurityRecoveryRateSpec> securityrecoveryratespec =
                     boost::dynamic_pointer_cast<SecurityRecoveryRateSpec>(spec);
-                QL_REQUIRE(securityrecoveryratespec, "Failed to convert spec " << *spec << " to security recovery rate spec");
+                QL_REQUIRE(securityrecoveryratespec, "Failed to convert spec " << *spec
+                                                                               << " to security recovery rate spec");
 
                 // have we built the curve already?
                 auto itr = requiredSecurityRecoveryRates.find(securityrecoveryratespec->securityID());
@@ -495,15 +494,16 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                     LOG("Building SecurityRecoveryRates for asof " << asof);
                     boost::shared_ptr<SecurityRecoveryRate> securityRecoveryRate =
                         boost::make_shared<SecurityRecoveryRate>(asof, *securityrecoveryratespec, loader);
-                    itr = requiredSecurityRecoveryRates.insert(make_pair(securityrecoveryratespec->securityID(), securityRecoveryRate))
+                    itr = requiredSecurityRecoveryRates.insert(make_pair(securityrecoveryratespec->securityID(),
+                                                                         securityRecoveryRate))
                               .first;
                 }
 
-                // add the handle to the Market Map for recovery rates 
+                // add the handle to the Market Map for recovery rates
                 for (const auto& it : params.securityRecoveryRates(configuration.first)) {
                     if (it.second == spec->name()) {
                         LOG("Adding SecurityRecoveryRate (" << it.first << ") with spec " << *spec
-                                                    << " to configuration " << configuration.first);
+                                                            << " to configuration " << configuration.first);
                         recoveryRates_[make_pair(configuration.first, it.first)] = itr->second->recoveryRate();
                     }
                 }

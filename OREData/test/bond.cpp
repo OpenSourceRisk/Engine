@@ -127,17 +127,16 @@ struct CommonVars {
     boost::shared_ptr<ore::data::Bond> makeZeroBond() {
         Envelope env("CP1");
 
-        boost::shared_ptr<ore::data::Bond> bond(new ore::data::Bond(env, issuerId, creditCurveId, securityId,
-                                                                    referenceCurveId, settledays, calStr, notional, end,
-                                                                    ccy, issue));
+        boost::shared_ptr<ore::data::Bond> bond(new ore::data::Bond(
+            env, issuerId, creditCurveId, securityId, referenceCurveId, settledays, calStr, notional, end, ccy, issue));
         return bond;
     }
 
     CommonVars() {
         ccy = "EUR";
         securityId = "Security1";
-	creditCurveId = "CreditCurve_A";
-	issuerId = "CPTY_A";
+        creditCurveId = "CreditCurve_A";
+        issuerId = "CPTY_A";
         referenceCurveId = "BANK_EUR_LEND";
         isPayer = false;
         start = "20160203";

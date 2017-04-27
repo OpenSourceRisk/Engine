@@ -60,9 +60,8 @@ bool TodaysMarketParameters::operator==(TodaysMarketParameters& rhs) {
         defaultCurves_ != rhs.defaultCurves_ || capFloorVolatilities_ != rhs.capFloorVolatilities_ ||
         zeroInflationIndexCurves_ != rhs.zeroInflationIndexCurves_ ||
         yoyInflationIndexCurves_ != rhs.yoyInflationIndexCurves_ ||
-        inflationCapFloorPriceSurfaces_ != rhs.inflationCapFloorPriceSurfaces_ ||
-        equityCurves_ != rhs.equityCurves_ || equityVolatilities_ != rhs.equityVolatilities_ ||
-        configurations_ != rhs.configurations_) {
+        inflationCapFloorPriceSurfaces_ != rhs.inflationCapFloorPriceSurfaces_ || equityCurves_ != rhs.equityCurves_ ||
+        equityVolatilities_ != rhs.equityVolatilities_ || configurations_ != rhs.configurations_) {
         return false;
     }
     return true;
@@ -299,7 +298,7 @@ XMLNode* TodaysMarketParameters::toXML(XMLDocument& doc) {
             }
             if (iterator->second.inflationCapFloorPriceSurfacesId != "") {
                 XMLUtils::addChild(doc, configurationsNode, "InflationCapFloorPriceSurfaceId",
-                    iterator->second.inflationCapFloorPriceSurfacesId);
+                                   iterator->second.inflationCapFloorPriceSurfacesId);
             }
             if (iterator->second.equityCurvesId != "") {
                 XMLUtils::addChild(doc, configurationsNode, "EquityCurvesId", iterator->second.equityCurvesId);
@@ -442,7 +441,7 @@ XMLNode* TodaysMarketParameters::toXML(XMLDocument& doc) {
             }
         }
     }
-    
+
     // zero inflation Curves
     if (zeroInflationIndexCurves_.size() > 0) {
 
@@ -589,7 +588,7 @@ XMLNode* TodaysMarketParameters::toXML(XMLDocument& doc) {
     return todaysMarketNode;
 }
 
-void TodaysMarketParameters::curveSpecs(const map<string, map<string, string> >& m, const string& id,
+void TodaysMarketParameters::curveSpecs(const map<string, map<string, string>>& m, const string& id,
                                         vector<string>& specs) const {
     // extract all the curve specs
     auto it = m.find(id);

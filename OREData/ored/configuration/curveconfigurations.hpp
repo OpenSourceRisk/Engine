@@ -74,16 +74,16 @@ public:
         return defaultCurveConfigs_[curveID];
     };
     const boost::shared_ptr<DefaultCurveConfig>& defaultCurveConfig(const string& curveID) const;
-    
+
     const boost::shared_ptr<InflationCurveConfig>& inflationCurveConfig(const string& curveID) const;
-    
+
     boost::shared_ptr<InflationCurveConfig>& inflationCurveConfig(const string& curveID) {
         return inflationCurveConfigs_[curveID];
     };
-    
+
     const boost::shared_ptr<InflationCapFloorPriceSurfaceConfig>&
     inflationCapFloorPriceSurfaceConfig(const string& curveID) const;
-    
+
     boost::shared_ptr<InflationCapFloorPriceSurfaceConfig>& inflationCapFloorPriceSurfaceConfig(const string& curveID) {
         return inflationCapFloorPriceSurfaceConfigs_[curveID];
     };

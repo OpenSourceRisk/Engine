@@ -50,15 +50,12 @@ using namespace ore::data;
 namespace ore {
 namespace analytics {
 
-StressTest::StressTest(
-    const boost::shared_ptr<ore::data::Portfolio>& portfolio,
-    boost::shared_ptr<ore::data::Market>& market,
-    const string& marketConfiguration,
-    const boost::shared_ptr<ore::data::EngineData>& engineData,
-    boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
-    const boost::shared_ptr<StressTestScenarioData>& stressData,
-    const Conventions& conventions,
-    boost::shared_ptr<ScenarioFactory> scenarioFactory) {
+StressTest::StressTest(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
+                       boost::shared_ptr<ore::data::Market>& market, const string& marketConfiguration,
+                       const boost::shared_ptr<ore::data::EngineData>& engineData,
+                       boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+                       const boost::shared_ptr<StressTestScenarioData>& stressData, const Conventions& conventions,
+                       boost::shared_ptr<ScenarioFactory> scenarioFactory) {
 
     LOG("Build Stress Scenario Generator");
     Date asof = market->asofDate();
@@ -88,14 +85,16 @@ StressTest::StressTest(
     boost::shared_ptr<NPVCube> cube = boost::make_shared<DoublePrecisionInMemoryCube>(
         asof, portfolio->ids(), vector<Date>(1, asof), scenarioGenerator->samples());
 
-    boost::shared_ptr<DateGrid> dg = boost::make_shared<DateGrid>("1,0W"); //TODO - extend the DateGrid interface so that it can actually take a vector of dates as input
-    vector<boost::shared_ptr<ValuationCalculator> > calculators;
+    boost::shared_ptr<DateGrid> dg = boost::make_shared<DateGrid>(
+        "1,0W"); // TODO - extend the DateGrid interface so that it can actually take a vector of dates as input
+    vector<boost::shared_ptr<ValuationCalculator>> calculators;
     calculators.push_back(boost::make_shared<NPVCalculator>(simMarketData->baseCcy()));
     ValuationEngine engine(asof, dg, simMarket);
     LOG("Run Stress Scenarios");
     /*ostringstream o;
     o.str("");
-    o << "Stress scenarios " << portfolio->size() << " x " << dg->size() << " x " << scenarioGenerator->samples() << "... ";
+    o << "Stress scenarios " << portfolio->size() << " x " << dg->size() << " x " << scenarioGenerator->samples() <<
+    "... ";
     auto progressBar = boost::make_shared<SimpleProgressBar>(o.str());
     auto progressLog = boost::make_shared<ProgressLog>("Building scenarios...");
     engine.registerProgressIndicator(progressBar);

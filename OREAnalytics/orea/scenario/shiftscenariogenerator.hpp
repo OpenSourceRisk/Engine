@@ -79,12 +79,10 @@ public:
     };
 
     //! Constructor
-    ShiftScenarioGenerator(
-        const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
-        const Date& today,
-        const boost::shared_ptr<ore::data::Market>& initMarket,
-        const std::string& configuration = Market::defaultConfiguration,
-        boost::shared_ptr<ScenarioFactory> baseScenarioFactory = {});
+    ShiftScenarioGenerator(const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData, const Date& today,
+                           const boost::shared_ptr<ore::data::Market>& initMarket,
+                           const std::string& configuration = Market::defaultConfiguration,
+                           boost::shared_ptr<ScenarioFactory> baseScenarioFactory = {});
     //! Default destructor
     ~ShiftScenarioGenerator(){};
 
@@ -101,7 +99,7 @@ public:
     //! Return the base scenario, i.e. cached initial values of all relevant market points
     const boost::shared_ptr<Scenario>& baseScenario() { return baseScenario_; }
     //! Return vector of sensitivity scenarios, scenario 0 is the base scenario
-    const std::vector<boost::shared_ptr<Scenario> >& scenarios() { return scenarios_; }
+    const std::vector<boost::shared_ptr<Scenario>>& scenarios() { return scenarios_; }
     //! Return vector of scenario descriptions
     std::vector<ScenarioDescription> scenarioDescriptions() { return scenarioDescriptions_; }
     //! Return map of RiskFactorKeys to factors, i.e. human readable text representations
@@ -166,9 +164,9 @@ public:
         //! Coordinate time in "term" or "strike" direction of the underlying data
         const vector<Time>& dataY,
         //! Matrix of input  data
-        const vector<vector<Real> >& data,
+        const vector<vector<Real>>& data,
         //! Matrix of shifted result data
-        vector<vector<Real> >& shiftedData,
+        vector<vector<Real>>& shiftedData,
         //! Initialise shiftedData vector before applying this shift j/k (yes for sensitivity, no for stress)
         bool initialise);
 
@@ -200,7 +198,7 @@ protected:
     std::map<RiskFactorKey, Real> discountCurveCache_, indexCurveCache_, yieldCurveCache_, fxCache_, swaptionVolCache_,
         fxVolCache_, optionletVolCache_;
     Real numeraireCache_;
-    std::vector<boost::shared_ptr<Scenario> > scenarios_;
+    std::vector<boost::shared_ptr<Scenario>> scenarios_;
     boost::shared_ptr<Scenario> baseScenario_;
     Size counter_;
 
@@ -216,7 +214,6 @@ protected:
 
 private:
     void addCacheTo(boost::shared_ptr<Scenario> scenario);
-
 };
 
 ShiftScenarioGenerator::ShiftType parseShiftType(const std::string& s);

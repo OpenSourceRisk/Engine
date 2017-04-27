@@ -56,9 +56,9 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s,
     \ingroup utilities
 */
 boost::shared_ptr<SwapIndex>
-    parseSwapIndex(const string& s, const Handle<YieldTermStructure>& forwarding = Handle<YieldTermStructure>(),
-                   const Handle<YieldTermStructure>& discounting = Handle<YieldTermStructure>(),
-                   boost::shared_ptr<data::IRSwapConvention> convention = boost::shared_ptr<data::IRSwapConvention>());
+parseSwapIndex(const string& s, const Handle<YieldTermStructure>& forwarding = Handle<YieldTermStructure>(),
+               const Handle<YieldTermStructure>& discounting = Handle<YieldTermStructure>(),
+               boost::shared_ptr<data::IRSwapConvention> convention = boost::shared_ptr<data::IRSwapConvention>());
 
 //! Convert std::string to QuantLib::ZeroInflationIndex
 /*!
@@ -67,7 +67,7 @@ boost::shared_ptr<SwapIndex>
 boost::shared_ptr<ZeroInflationIndex>
 parseZeroInflationIndex(const string& s, bool isInterpolated = false,
                         const Handle<ZeroInflationTermStructure>& h = Handle<ZeroInflationTermStructure>());
-    
+
 //! Convert std::string to QuantLib::Index
 /*!
     \ingroup utilities

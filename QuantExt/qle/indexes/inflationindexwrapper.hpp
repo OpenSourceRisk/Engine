@@ -60,8 +60,7 @@ private:
 */
 class YoYInflationIndexWrapper : public YoYInflationIndex {
 public:
-    YoYInflationIndexWrapper(const boost::shared_ptr<ZeroInflationIndex> zeroIndex,
-                             const bool interpolated,
+    YoYInflationIndexWrapper(const boost::shared_ptr<ZeroInflationIndex> zeroIndex, const bool interpolated,
                              const Handle<YoYInflationTermStructure>& ts = Handle<YoYInflationTermStructure>());
     /*! \warning the forecastTodaysFixing parameter (required by the Index interface) is currently ignored. */
     Rate fixing(const Date& fixingDate, bool forecastTodaysFixing = false) const;

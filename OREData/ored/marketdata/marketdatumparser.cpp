@@ -232,7 +232,7 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
     case MarketDatum::InstrumentType::RECOVERY_RATE: {
         QL_REQUIRE(tokens.size() == 3 || tokens.size() == 5, "3 or 5 tokens expected in " << datumName);
         const string& underlyingName = tokens[2]; // issuer name for CDS, security ID for bond specific RRs
-	string seniority = "";
+        string seniority = "";
         string ccy = "";
         if (tokens.size() == 5) {
             // CDS
@@ -312,26 +312,26 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         Period term = parsePeriod(tokens[3]);
         return boost::make_shared<ZcInflationSwapQuote>(value, asof, datumName, index, term);
     }
-        
+
     case MarketDatum::InstrumentType::YY_INFLATIONSWAP: {
         QL_REQUIRE(tokens.size() == 4, "4 tokens expected in " << datumName);
         const string& index = tokens[2];
         Period term = parsePeriod(tokens[3]);
         return boost::make_shared<YoYInflationSwapQuote>(value, asof, datumName, index, term);
     }
-        
+
     case MarketDatum::InstrumentType::ZC_INFLATIONCAPFLOOR: {
         QL_REQUIRE(tokens.size() == 6, "6 tokens expected in " << datumName);
         const string& index = tokens[2];
         Period term = parsePeriod(tokens[3]);
         QL_REQUIRE(tokens[4] == "C" || tokens[4] == "F", "excepted C or F for Cap or Floor at position 5 in "
-                   << datumName);
+                                                             << datumName);
         bool isCap = tokens[4] == "C";
         string strike = tokens[5];
         return boost::make_shared<ZcInflationCapFloorQuote>(value, asof, datumName, quoteType, index, term, isCap,
                                                             strike);
     }
-    
+
     case MarketDatum::InstrumentType::SEASONALITY: {
         QL_REQUIRE(tokens.size() == 5, "5 tokens expected in " << datumName);
         const string& index = tokens[3];

@@ -372,7 +372,7 @@ public:
 protected:
     string securityID_;
 };
-  
+
 //! SecurityRecoveryRate description
 class SecurityRecoveryRateSpec : public CurveSpec {
 public:

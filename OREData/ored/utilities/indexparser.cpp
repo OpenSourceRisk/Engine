@@ -187,18 +187,21 @@ boost::shared_ptr<SwapIndex> parseSwapIndex(const string& s, const Handle<YieldT
 // Zero Inflation Index Parser
 class ZeroInflationIndexParserBase {
 public:
-    virtual boost::shared_ptr<ZeroInflationIndex> build(bool isInterpolated, const Handle<ZeroInflationTermStructure>& h) const = 0;
+    virtual boost::shared_ptr<ZeroInflationIndex> build(bool isInterpolated,
+                                                        const Handle<ZeroInflationTermStructure>& h) const = 0;
 };
 
 template <class T> class ZeroInflationIndexParser : public ZeroInflationIndexParserBase {
 public:
-    boost::shared_ptr<ZeroInflationIndex> build(bool isInterpolated, const Handle<ZeroInflationTermStructure>& h) const override {
+    boost::shared_ptr<ZeroInflationIndex> build(bool isInterpolated,
+                                                const Handle<ZeroInflationTermStructure>& h) const override {
         return boost::make_shared<T>(isInterpolated, h);
     }
 };
 
-boost::shared_ptr<ZeroInflationIndex> parseZeroInflationIndex(const string& s, bool isInterpolated, const Handle<ZeroInflationTermStructure>& h) {
-    
+boost::shared_ptr<ZeroInflationIndex> parseZeroInflationIndex(const string& s, bool isInterpolated,
+                                                              const Handle<ZeroInflationTermStructure>& h) {
+
     static map<string, boost::shared_ptr<ZeroInflationIndexParserBase>> m = {
         //{"AUCPI", boost::make_shared<ZeroInflationIndexParser<AUCPI>>()},
         {"EUHICP", boost::make_shared<ZeroInflationIndexParser<EUHICP>>()},
@@ -207,7 +210,7 @@ boost::shared_ptr<ZeroInflationIndex> parseZeroInflationIndex(const string& s, b
         {"UKRPI", boost::make_shared<ZeroInflationIndexParser<UKRPI>>()},
         {"USCPI", boost::make_shared<ZeroInflationIndexParser<USCPI>>()},
         {"ZACPI", boost::make_shared<ZeroInflationIndexParser<ZACPI>>()}};
-    
+
     auto it = m.find(s);
     if (it != m.end()) {
         return it->second->build(isInterpolated, h);
@@ -219,33 +222,28 @@ boost::shared_ptr<Index> parseIndex(const string& s) {
     boost::shared_ptr<QuantLib::Index> ret_idx;
     try {
         ret_idx = parseIborIndex(s);
-    }
-    catch (...) {
+    } catch (...) {
     }
     if (!ret_idx) {
         try {
             ret_idx = parseSwapIndex(s);
-        }
-        catch (...) {
+        } catch (...) {
         }
     }
     if (!ret_idx) {
         try {
             ret_idx = parseZeroInflationIndex(s);
-        }
-        catch (...) {
+        } catch (...) {
         }
     }
     if (!ret_idx) {
         try {
             ret_idx = parseFxIndex(s);
-        }
-        catch (...) {
+        } catch (...) {
         }
     }
     QL_REQUIRE(ret_idx, "parseIndex \"" << s << "\" not recognized");
     return ret_idx;
 }
-
 }
 }

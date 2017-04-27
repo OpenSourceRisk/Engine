@@ -46,11 +46,9 @@ namespace analytics {
 class ScenarioSimMarketParameters : public XMLSerializable {
 public:
     //! Default constructor
-    ScenarioSimMarketParameters() : 
-        baseCcy_(""), interpolation_(""), extrapolate_(false), 
-        swapVolSimulate_(false), swapVolDecayMode_(""), 
-        capFloorVolSimulate_(false), capFloorVolDecayMode_(""), 
-        fxVolSimulate_(false), fxVolDecayMode_("") {}
+    ScenarioSimMarketParameters()
+        : baseCcy_(""), interpolation_(""), extrapolate_(false), swapVolSimulate_(false), swapVolDecayMode_(""),
+          capFloorVolSimulate_(false), capFloorVolDecayMode_(""), fxVolSimulate_(false), fxVolDecayMode_("") {}
 
     //! \name Inspectors
     //@{

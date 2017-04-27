@@ -96,7 +96,8 @@ test_suite* init_unit_test_suite(int, char* []) {
     }
     string name(argv[0]);
     string baseName = name.substr(name.find_last_of("/\\") + 1);
-    BOOST_TEST_MESSAGE("Enable performance tests:  " << baseName << " [Boost.Test arguments] -- --enable_performance_tests");
+    BOOST_TEST_MESSAGE("Enable performance tests:  " << baseName
+                                                     << " [Boost.Test arguments] -- --enable_performance_tests");
 
     if (enablePerformanceTests)
         BOOST_TEST_MESSAGE("Performance tests ENABLED");

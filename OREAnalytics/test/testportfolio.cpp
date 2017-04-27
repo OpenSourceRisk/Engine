@@ -74,10 +74,10 @@ boost::shared_ptr<Trade> buildSwap(string id, string ccy, bool isPayer, Real not
     return trade;
 }
 
-boost::shared_ptr<Trade> buildEuropeanSwaption(
-    string id, string longShort, string ccy, bool isPayer, Real notional,
-    int start, Size term, Real rate, Real spread, string fixedFreq,
-    string fixedDC, string floatFreq, string floatDC, string index, string cashPhysical) {
+boost::shared_ptr<Trade> buildEuropeanSwaption(string id, string longShort, string ccy, bool isPayer, Real notional,
+                                               int start, Size term, Real rate, Real spread, string fixedFreq,
+                                               string fixedDC, string floatFreq, string floatDC, string index,
+                                               string cashPhysical) {
 
     Date today = Settings::instance().evaluationDate();
     Calendar calendar = TARGET();

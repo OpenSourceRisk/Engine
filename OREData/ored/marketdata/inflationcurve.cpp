@@ -56,8 +56,8 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
             nominalTs = it->second->handle();
         } else {
             QL_FAIL("The nominal term structure, " << config->nominalTermStructure() << ", required in the building "
-                                                                                        "of the curve, "
-                                                   << spec.name() << ", was not found.");
+                                                                                        "of the curve, " << spec.name()
+                                                   << ", was not found.");
         }
 
         // We loop over all market data, looking for quotes that match the configuration

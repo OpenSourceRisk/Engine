@@ -50,8 +50,8 @@ void DepositEngine::calculate() const {
         valuationDate = refDate;
     } else {
         QL_REQUIRE(npvDate_ >= refDate, "npv date (" << npvDate_ << ") before "
-                                                                    "discount curve reference date ("
-                                                     << refDate << ")");
+                                                                    "discount curve reference date (" << refDate
+                                                     << ")");
     }
 
     bool includeRefDateFlows =

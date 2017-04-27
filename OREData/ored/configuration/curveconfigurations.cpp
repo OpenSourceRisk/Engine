@@ -58,14 +58,14 @@ const boost::shared_ptr<DefaultCurveConfig>& CurveConfigurations::defaultCurveCo
     return it->second;
 }
 
-
 const boost::shared_ptr<InflationCurveConfig>& CurveConfigurations::inflationCurveConfig(const string& curveID) const {
     auto it = inflationCurveConfigs_.find(curveID);
     QL_REQUIRE(it != inflationCurveConfigs_.end(), "No curve id for " << curveID);
     return it->second;
 }
 
-const boost::shared_ptr<InflationCapFloorPriceSurfaceConfig>& CurveConfigurations::inflationCapFloorPriceSurfaceConfig(const string& curveID) const {
+const boost::shared_ptr<InflationCapFloorPriceSurfaceConfig>&
+CurveConfigurations::inflationCapFloorPriceSurfaceConfig(const string& curveID) const {
     auto it = inflationCapFloorPriceSurfaceConfigs_.find(curveID);
     QL_REQUIRE(it != inflationCapFloorPriceSurfaceConfigs_.end(), "No curve id for " << curveID);
     return it->second;
@@ -224,15 +224,15 @@ void CurveConfigurations::fromXML(XMLNode* node) {
             }
         }
     }
-    
+
     // Load InflationCapFloorPriceSurfaces
     XMLNode* inflationCapFloorPriceSurfaceNode = XMLUtils::getChildNode(node, "InflationCapFloorPriceSurfaces");
     if (inflationCapFloorPriceSurfaceNode) {
         for (XMLNode* child =
-             XMLUtils::getChildNode(inflationCapFloorPriceSurfaceNode, "InflationCapFloorPriceSurface");
+                 XMLUtils::getChildNode(inflationCapFloorPriceSurfaceNode, "InflationCapFloorPriceSurface");
              child; child = XMLUtils::getNextSibling(child, "InflationCapFloorPriceSurface")) {
             boost::shared_ptr<InflationCapFloorPriceSurfaceConfig> inflationCapFloorPriceSurfaceConfig(
-                                                                                                       new InflationCapFloorPriceSurfaceConfig());
+                new InflationCapFloorPriceSurfaceConfig());
             try {
                 inflationCapFloorPriceSurfaceConfig->fromXML(child);
                 const string& id = inflationCapFloorPriceSurfaceConfig->curveID();
@@ -244,7 +244,7 @@ void CurveConfigurations::fromXML(XMLNode* node) {
         }
     }
 }
-    
+
 XMLNode* CurveConfigurations::toXML(XMLDocument& doc) {
     XMLNode* parent = doc.allocNode("CurveConfiguration");
     doc.appendNode(parent);
@@ -278,7 +278,7 @@ XMLNode* CurveConfigurations::toXML(XMLDocument& doc) {
     XMLUtils::appendNode(parent, node);
     for (auto it : inflationCurveConfigs_)
         XMLUtils::appendNode(node, it.second->toXML(doc));
-    
+
     node = doc.allocNode("InflationCapFloorPriceSurfaces");
     XMLUtils::appendNode(parent, node);
     for (auto it : inflationCapFloorPriceSurfaceConfigs_)

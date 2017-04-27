@@ -39,8 +39,6 @@ Real SimpleScenario::get(const RiskFactorKey& key) const {
     return it->second;
 }
 
-boost::shared_ptr<Scenario> SimpleScenario::clone() const {
-    return boost::make_shared<SimpleScenario>(*this);
-}
+boost::shared_ptr<Scenario> SimpleScenario::clone() const { return boost::make_shared<SimpleScenario>(*this); }
 }
 }

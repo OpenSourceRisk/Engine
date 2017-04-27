@@ -733,15 +733,15 @@ private:
     string strSettlesAccrual_;
     string strPaysAtDefaultTime_;
 };
-    
+
 class InflationSwapConvention : public Convention {
 public:
     InflationSwapConvention() {}
     InflationSwapConvention(const string& id, const string& strFixCalendar, const string& strFixConvention,
-                              const string& strDayCounter, const string& strIndex, const string& strInterpolated,
-                              const string& strObservationLag, const string& strAdjustInfObsDates,
-                              const string& strInfCalendar, const string& strInfConvention);
-    
+                            const string& strDayCounter, const string& strIndex, const string& strInterpolated,
+                            const string& strObservationLag, const string& strAdjustInfObsDates,
+                            const string& strInfCalendar, const string& strInfConvention);
+
     const Calendar& fixCalendar() const { return fixCalendar_; }
     BusinessDayConvention fixConvention() const { return fixConvention_; }
     const DayCounter& dayCounter() const { return dayCounter_; }
@@ -751,11 +751,11 @@ public:
     bool adjustInfObsDates() const { return adjustInfObsDates_; }
     const Calendar& infCalendar() const { return infCalendar_; }
     BusinessDayConvention infConvention() const { return infConvention_; }
-    
+
     virtual void fromXML(XMLNode* node);
     virtual XMLNode* toXML(XMLDocument& doc);
     virtual void build();
-    
+
 private:
     Calendar fixCalendar_;
     BusinessDayConvention fixConvention_;
@@ -766,7 +766,7 @@ private:
     bool adjustInfObsDates_;
     Calendar infCalendar_;
     BusinessDayConvention infConvention_;
-    
+
     // Strings to store the inputs
     string strFixCalendar_;
     string strFixConvention_;
@@ -804,7 +804,7 @@ public:
     //@}
 
 private:
-    map<string, boost::shared_ptr<Convention> > data_;
+    map<string, boost::shared_ptr<Convention>> data_;
 };
 
 //! Container for storing Bond Spread Rate conventions

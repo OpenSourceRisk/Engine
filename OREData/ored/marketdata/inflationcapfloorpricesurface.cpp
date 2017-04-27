@@ -53,8 +53,8 @@ InflationCapFloorPriceSurface::InflationCapFloorPriceSurface(
             yts = it->second->handle();
         } else {
             QL_FAIL("The nominal term structure, " << config->yieldTermStructure() << ", required in the building "
-                                                                                      "of the curve, "
-                                                   << spec.name() << ", was not found.");
+                                                                                      "of the curve, " << spec.name()
+                                                   << ", was not found.");
         }
 
         boost::shared_ptr<ZeroInflationIndex> index;

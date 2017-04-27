@@ -112,8 +112,8 @@ void FixingManager::initialise(const boost::shared_ptr<Portfolio>& portfolio) {
 void FixingManager::update(Date d) {
     if (!fixingMap_.empty()) {
         QL_REQUIRE(d >= fixingsEnd_, "Can't go back in time, fixings must be reset."
-                                    " Update date "
-                                        << d << " but current fixings go to " << fixingsEnd_);
+                                     " Update date "
+                                         << d << " but current fixings go to " << fixingsEnd_);
         applyFixings(fixingsEnd_, d);
     }
     fixingsEnd_ = d;

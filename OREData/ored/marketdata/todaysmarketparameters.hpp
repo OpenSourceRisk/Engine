@@ -310,18 +310,18 @@ inline const string& TodaysMarketParameters::securityRecoveryRatesId(const strin
 inline const map<string, string>& TodaysMarketParameters::discountingCurves(const string& configuration) const {
     QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
     auto it = discountingCurves_.find(discountingCurvesId(configuration));
-    QL_REQUIRE(it != discountingCurves_.end(),
-               "discounting curves with id " << discountingCurvesId(configuration) << " specified in configuration "
-                                             << configuration << " not found");
+    QL_REQUIRE(it != discountingCurves_.end(), "discounting curves with id " << discountingCurvesId(configuration)
+                                                                             << " specified in configuration "
+                                                                             << configuration << " not found");
     return it->second;
 }
 
 inline const map<string, string>& TodaysMarketParameters::yieldCurves(const string& configuration) const {
     QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
     auto it = yieldCurves_.find(yieldCurvesId(configuration));
-    QL_REQUIRE(it != yieldCurves_.end(),
-               "yield curves with id " << yieldCurvesId(configuration) << " specified in configuration "
-                                       << configuration << " not found");
+    QL_REQUIRE(it != yieldCurves_.end(), "yield curves with id " << yieldCurvesId(configuration)
+                                                                 << " specified in configuration " << configuration
+                                                                 << " not found");
     return it->second;
 }
 
@@ -337,27 +337,27 @@ inline const map<string, string>& TodaysMarketParameters::indexForwardingCurves(
 inline const map<string, string>& TodaysMarketParameters::swapIndices(const string& configuration) const {
     QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
     auto it = swapIndices_.find(swapIndexCurvesId(configuration));
-    QL_REQUIRE(it != swapIndices_.end(),
-               "swap index curves with id " << swapIndexCurvesId(configuration) << " specified in configuration "
-                                            << configuration << " not found");
+    QL_REQUIRE(it != swapIndices_.end(), "swap index curves with id " << swapIndexCurvesId(configuration)
+                                                                      << " specified in configuration " << configuration
+                                                                      << " not found");
     return it->second;
 }
 
 inline const map<string, string>& TodaysMarketParameters::fxSpots(const string& configuration) const {
     QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
     auto it = fxSpots_.find(fxSpotsId(configuration));
-    QL_REQUIRE(it != fxSpots_.end(),
-               "fx spots curves with id " << fxSpotsId(configuration) << " specified in configuration " << configuration
-                                          << " not found");
+    QL_REQUIRE(it != fxSpots_.end(), "fx spots curves with id " << fxSpotsId(configuration)
+                                                                << " specified in configuration " << configuration
+                                                                << " not found");
     return it->second;
 }
 
 inline const map<string, string>& TodaysMarketParameters::fxVolatilities(const string& configuration) const {
     QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
     auto it = fxVolatilities_.find(fxVolatilitiesId(configuration));
-    QL_REQUIRE(it != fxVolatilities_.end(),
-               "fx volatilities with id " << fxVolatilitiesId(configuration) << " specified in configuration "
-                                          << configuration << " not found");
+    QL_REQUIRE(it != fxVolatilities_.end(), "fx volatilities with id " << fxVolatilitiesId(configuration)
+                                                                       << " specified in configuration "
+                                                                       << configuration << " not found");
     return it->second;
 }
 
@@ -382,29 +382,29 @@ inline const map<string, string>& TodaysMarketParameters::capFloorVolatilities(c
 inline const map<string, string>& TodaysMarketParameters::defaultCurves(const string& configuration) const {
     QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
     auto it = defaultCurves_.find(defaultCurvesId(configuration));
-    QL_REQUIRE(it != defaultCurves_.end(),
-               "default curves with id " << defaultCurvesId(configuration) << " specified in configuration "
-                                         << configuration << " not found");
+    QL_REQUIRE(it != defaultCurves_.end(), "default curves with id " << defaultCurvesId(configuration)
+                                                                     << " specified in configuration " << configuration
+                                                                     << " not found");
     return it->second;
 }
 
 inline const map<string, string>& TodaysMarketParameters::zeroInflationIndexCurves(const string& configuration) const {
     QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
     auto it = zeroInflationIndexCurves_.find(zeroInflationIndexCurvesId(configuration));
-    QL_REQUIRE(it != zeroInflationIndexCurves_.end(),
-               "zero inflation index curves with id " << zeroInflationIndexCurvesId(configuration)
-                                                      << " specified in configuration " << configuration
-                                                      << " not found");
+    QL_REQUIRE(it != zeroInflationIndexCurves_.end(), "zero inflation index curves with id "
+                                                          << zeroInflationIndexCurvesId(configuration)
+                                                          << " specified in configuration " << configuration
+                                                          << " not found");
     return it->second;
 }
 
 inline const map<string, string>& TodaysMarketParameters::yoyInflationIndexCurves(const string& configuration) const {
     QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
     auto it = yoyInflationIndexCurves_.find(yoyInflationIndexCurvesId(configuration));
-    QL_REQUIRE(it != yoyInflationIndexCurves_.end(),
-               "yoy inflation index curves with id " << yoyInflationIndexCurvesId(configuration)
-                                                     << " specified in configuration " << configuration
-                                                     << " not found");
+    QL_REQUIRE(it != yoyInflationIndexCurves_.end(), "yoy inflation index curves with id "
+                                                         << yoyInflationIndexCurvesId(configuration)
+                                                         << " specified in configuration " << configuration
+                                                         << " not found");
     return it->second;
 }
 
@@ -412,37 +412,37 @@ inline const map<string, string>&
 TodaysMarketParameters::inflationCapFloorPriceSurfaces(const string& configuration) const {
     QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
     auto it = inflationCapFloorPriceSurfaces_.find(inflationCapFloorPriceSurfacesId(configuration));
-    QL_REQUIRE(it != inflationCapFloorPriceSurfaces_.end(),
-               "inflation cap floor price surface with id " << inflationCapFloorPriceSurfacesId(configuration)
-                                                            << " specified in configuration " << configuration
-                                                            << " not found");
+    QL_REQUIRE(it != inflationCapFloorPriceSurfaces_.end(), "inflation cap floor price surface with id "
+                                                                << inflationCapFloorPriceSurfacesId(configuration)
+                                                                << " specified in configuration " << configuration
+                                                                << " not found");
     return it->second;
 }
 
 inline const map<string, string>& TodaysMarketParameters::equityCurves(const string& configuration) const {
     QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
     auto it = equityCurves_.find(equityCurvesId(configuration));
-    QL_REQUIRE(it != equityCurves_.end(),
-               "equity curves with id " << equityCurvesId(configuration) << " specified in configuration "
-                                        << configuration << " not found");
+    QL_REQUIRE(it != equityCurves_.end(), "equity curves with id " << equityCurvesId(configuration)
+                                                                   << " specified in configuration " << configuration
+                                                                   << " not found");
     return it->second;
 }
 
 inline const map<string, string>& TodaysMarketParameters::equityVolatilities(const string& configuration) const {
     QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
     auto it = equityVolatilities_.find(equityVolatilitiesId(configuration));
-    QL_REQUIRE(it != equityVolatilities_.end(),
-               "equity volatilities with id " << equityVolatilitiesId(configuration) << " specified in configuration "
-                                              << configuration << " not found");
+    QL_REQUIRE(it != equityVolatilities_.end(), "equity volatilities with id " << equityVolatilitiesId(configuration)
+                                                                               << " specified in configuration "
+                                                                               << configuration << " not found");
     return it->second;
 }
 
 inline const map<string, string>& TodaysMarketParameters::securitySpreads(const string& configuration) const {
     QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
     auto it = securitySpreads_.find(securitySpreadsId(configuration));
-    QL_REQUIRE(it != securitySpreads_.end(),
-               "security spreads with id " << securitySpreadsId(configuration) << " specified in configuration "
-                                           << configuration << " not found");
+    QL_REQUIRE(it != securitySpreads_.end(), "security spreads with id " << securitySpreadsId(configuration)
+                                                                         << " specified in configuration "
+                                                                         << configuration << " not found");
     return it->second;
 }
 

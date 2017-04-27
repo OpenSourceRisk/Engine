@@ -36,8 +36,9 @@ public:
     //! Constructor
     CloneScenarioFactory(const boost::shared_ptr<Scenario>& baseScenario);
     //! returns a new scenario, using the base scenario as a starting point
-    const boost::shared_ptr<Scenario> buildScenario(
-        Date asof, const std::string& label = "", Real numeraire = 0.0) const;
+    const boost::shared_ptr<Scenario> buildScenario(Date asof, const std::string& label = "",
+                                                    Real numeraire = 0.0) const;
+
 private:
     boost::shared_ptr<Scenario> baseScenario_;
 };

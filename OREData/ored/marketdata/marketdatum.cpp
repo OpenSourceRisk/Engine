@@ -64,22 +64,20 @@ Month MMFutureQuote::expiryMonth() const {
     }
     return static_cast<Month>(expiryMonth);
 }
-    
+
 int SeasonalityQuote::applyMonth() const {
     QL_REQUIRE(month_.length() == 3, "The month string must be of "
                                      "the form MMM");
-    std::vector<std::string> allMonths = {"JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG",
-                                          "SEP", "OCT", "NOV", "DEC"};
+    std::vector<std::string> allMonths = {"JAN", "FEB", "MAR", "APR", "MAY", "JUN",
+                                          "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"};
     int applyMonth;
     auto it = std::find(allMonths.begin(), allMonths.end(), month_);
     if (it != allMonths.end()) {
         applyMonth = std::distance(allMonths.begin(), it) + 1;
-    }
-    else {
+    } else {
         QL_FAIL("Unknown month string: " << month_);
     }
     return applyMonth;
 }
-    
 }
 }

@@ -27,7 +27,7 @@
 
 namespace testsuite {
 
-/*! Sensitivity analysis versus analytic sensitivity engines tests 
+/*! Sensitivity analysis versus analytic sensitivity engines tests
     (computed externally by Quaternion and cached in file)
 */
 /*!

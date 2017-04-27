@@ -46,7 +46,7 @@ namespace data {
   \ingroup curves
 */
 class InflationCurve {
-public:    
+public:
     InflationCurve() {}
     InflationCurve(Date asof, InflationCurveSpec spec, const Loader& loader, const CurveConfigurations& curveConfigs,
                    const Conventions& conventions, map<string, boost::shared_ptr<YieldCurve>>& yieldCurves);
@@ -54,13 +54,9 @@ public:
     //! getters
     const InflationCurveSpec& spec() const { return spec_; }
 
-    const boost::shared_ptr<InflationTermStructure> inflationTermStructure() const {
-        return curve_;
-    }
+    const boost::shared_ptr<InflationTermStructure> inflationTermStructure() const { return curve_; }
 
-    const bool interpolatedIndex() const {
-        return interpolatedIndex_;
-    }
+    const bool interpolatedIndex() const { return interpolatedIndex_; }
 
 private:
     InflationCurveSpec spec_;

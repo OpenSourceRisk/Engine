@@ -720,8 +720,8 @@ private:
 class ZcInflationSwapQuote : public MarketDatum {
 public:
     ZcInflationSwapQuote(Real value, Date asofDate, const string& name, const string& index, Period term)
-    : MarketDatum(value, asofDate, name, QuoteType::RATE, InstrumentType::ZC_INFLATIONSWAP), index_(index),
-    term_(term) {}
+        : MarketDatum(value, asofDate, name, QuoteType::RATE, InstrumentType::ZC_INFLATIONSWAP), index_(index),
+          term_(term) {}
     string index() { return index_; }
     Period term() { return term_; }
 
@@ -743,8 +743,8 @@ class ZcInflationCapFloorQuote : public MarketDatum {
 public:
     ZcInflationCapFloorQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, const string& index,
                              Period term, bool isCap, const string& strike)
-    : MarketDatum(value, asofDate, name, quoteType, InstrumentType::ZC_INFLATIONCAPFLOOR), index_(index),
-    term_(term), isCap_(isCap), strike_(strike) {}
+        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::ZC_INFLATIONCAPFLOOR), index_(index),
+          term_(term), isCap_(isCap), strike_(strike) {}
     string index() { return index_; }
     Period term() { return term_; }
     bool isCap() { return isCap_; }
@@ -768,8 +768,8 @@ private:
 class YoYInflationSwapQuote : public MarketDatum {
 public:
     YoYInflationSwapQuote(Real value, Date asofDate, const string& name, const string& index, Period term)
-    : MarketDatum(value, asofDate, name, QuoteType::RATE, InstrumentType::YY_INFLATIONSWAP), index_(index),
-    term_(term) {}
+        : MarketDatum(value, asofDate, name, QuoteType::RATE, InstrumentType::YY_INFLATIONSWAP), index_(index),
+          term_(term) {}
     string index() { return index_; }
     Period term() { return term_; }
 
@@ -788,8 +788,10 @@ private:
  */
 class SeasonalityQuote : public MarketDatum {
 public:
-    SeasonalityQuote(Real value, Date asofDate, const string& name, const string& index, const string& type, const string& month)
-    : MarketDatum(value, asofDate, name, QuoteType::RATE, InstrumentType::SEASONALITY), index_(index), type_(type), month_(month) {}
+    SeasonalityQuote(Real value, Date asofDate, const string& name, const string& index, const string& type,
+                     const string& month)
+        : MarketDatum(value, asofDate, name, QuoteType::RATE, InstrumentType::SEASONALITY), index_(index), type_(type),
+          month_(month) {}
     string index() { return index_; }
     string type() { return type_; }
     string month() { return month_; }

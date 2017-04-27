@@ -58,28 +58,28 @@ boost::shared_ptr<data::Conventions> convs() {
 boost::shared_ptr<analytics::ScenarioSimMarketParameters> scenarioParameters() {
     boost::shared_ptr<analytics::ScenarioSimMarketParameters> parameters(new analytics::ScenarioSimMarketParameters());
     parameters->baseCcy() = "EUR";
-    parameters->ccys() = { "EUR", "USD" };
-    parameters->yieldCurveTenors() = { 6 * Months, 1 * Years, 2 * Years };
-    parameters->indices() = { "EUR-EURIBOR-6M", "USD-LIBOR-6M" };
+    parameters->ccys() = {"EUR", "USD"};
+    parameters->yieldCurveTenors() = {6 * Months, 1 * Years, 2 * Years};
+    parameters->indices() = {"EUR-EURIBOR-6M", "USD-LIBOR-6M"};
     parameters->interpolation() = "LogLinear";
     parameters->extrapolate() = true;
 
-    parameters->swapVolTerms() = { 6 * Months, 1 * Years };
-    parameters->swapVolExpiries() = { 1 * Years, 2 * Years };
-    parameters->swapVolCcys() = { "EUR", "USD" };
+    parameters->swapVolTerms() = {6 * Months, 1 * Years};
+    parameters->swapVolExpiries() = {1 * Years, 2 * Years};
+    parameters->swapVolCcys() = {"EUR", "USD"};
     parameters->swapVolDecayMode() = "ForwardVariance";
 
-    parameters->defaultNames() = { "dc2" };
-    parameters->defaultTenors() = { 6 * Months, 8 * Months, 1 * Years, 2 * Years };
+    parameters->defaultNames() = {"dc2"};
+    parameters->defaultTenors() = {6 * Months, 8 * Months, 1 * Years, 2 * Years};
 
     parameters->simulateFXVols() = false;
-    parameters->fxVolExpiries() = { 2 * Years, 3 * Years, 4 * Years };
+    parameters->fxVolExpiries() = {2 * Years, 3 * Years, 4 * Years};
     parameters->fxVolDecayMode() = "ConstantVariance";
     parameters->simulateEQVols() = false;
 
-    parameters->fxVolCcyPairs() = { "USDEUR" };
+    parameters->fxVolCcyPairs() = {"USDEUR"};
 
-    parameters->fxCcyPairs() = { "USDEUR" };
+    parameters->fxCcyPairs() = {"USDEUR"};
 
     return parameters;
 }
@@ -246,7 +246,8 @@ void ScenarioSimMarketTest::testScenarioSimMarket() {
 }
 
 test_suite* ScenarioSimMarketTest::suite() {
-    // boost::shared_ptr<ore::data::FileLogger> logger = boost::make_shared<ore::data::FileLogger>("simmarket_test.log");
+    // boost::shared_ptr<ore::data::FileLogger> logger =
+    // boost::make_shared<ore::data::FileLogger>("simmarket_test.log");
     // ore::data::Log::instance().removeAllLoggers();
     // ore::data::Log::instance().registerLogger(logger);
     // ore::data::Log::instance().switchOn();

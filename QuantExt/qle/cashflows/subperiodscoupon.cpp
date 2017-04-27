@@ -159,7 +159,7 @@ SubPeriodsLeg::operator Leg() const {
     }
 
     Size numPeriods = schedule_.size() - 1;
-    if(numPeriods == 0)
+    if (numPeriods == 0)
         return cashflows;
 
     startDate = schedule_.date(0);

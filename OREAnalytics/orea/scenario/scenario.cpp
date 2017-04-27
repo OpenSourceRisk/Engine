@@ -51,6 +51,5 @@ std::ostream& operator<<(std::ostream& out, const RiskFactorKey::KeyType& type) 
 std::ostream& operator<<(std::ostream& out, const RiskFactorKey& key) {
     return out << key.keytype << "/" << key.name << "/" << key.index;
 }
-
 }
 }

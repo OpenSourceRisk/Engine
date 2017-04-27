@@ -235,8 +235,8 @@ public:
     //! Write average (over samples) DIM evolution through time for given netting set
     void exportDimEvolution(const std::string& nettingSet, ore::data::Report& dimEvolutionReport);
     //! Write DIM as a function of sample netting set NPV for a given time step
-    void exportDimRegression(const std::string& nettingSet, const std::vector<Size>& timeSteps, 
-        const std::vector<boost::shared_ptr<ore::data::Report> >& dimRegReports);
+    void exportDimRegression(const std::string& nettingSet, const std::vector<Size>& timeSteps,
+                             const std::vector<boost::shared_ptr<ore::data::Report>>& dimRegReports);
 
 private:
     //! Helper function to return the collateral account evolution for a given netting set
