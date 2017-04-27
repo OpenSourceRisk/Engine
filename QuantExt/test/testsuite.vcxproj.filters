@@ -47,6 +47,9 @@
     <ClCompile Include="optionletstripper.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="deposit.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
     <ClCompile Include="ratehelpers.cpp">
       <Filter>source</Filter>
     </ClCompile>
@@ -118,6 +121,9 @@
       <Filter>headers</Filter>
     </ClInclude>
     <ClInclude Include="optionletstripper.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="deposit.hpp">
       <Filter>headers</Filter>
     </ClInclude>
     <ClInclude Include="ratehelpers.hpp">

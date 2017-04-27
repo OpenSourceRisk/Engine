@@ -337,6 +337,15 @@
     <ClInclude Include="qle\indexes\ibor\krwkoribor.hpp" />
     <ClInclude Include="qle\indexes\ibor\twdtaibor.hpp" />
     <ClInclude Include="qle\indexes\ibor\myrklibor.hpp" />
+    <ClInclude Include="qle\instruments\deposit.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\depositengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\strippedoptionletadapter2.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
     <ClInclude Include="qle\pricingengines\discountingequityforwardengine.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
@@ -363,6 +372,12 @@
     </ClInclude>
     <ClInclude Include="qle\models\fxeqoptionhelper.hpp">
       <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\instruments\subperiodsswap.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\subperiodsswaphelper.hpp">
+      <Filter>termstructures</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -590,7 +605,18 @@
     <ClCompile Include="qle\termstructures\spreadedswaptionvolatility.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
-    <ClCompile Include="qle\pricingengines\discountingriskybondengine.cpp" />
+    <ClCompile Include="qle\pricingengines\discountingriskybondengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\deposit.cpp">
+      <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\depositengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\strippedoptionletadapter2.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
     <ClCompile Include="qle\pricingengines\discountingequityforwardengine.cpp">
       <Filter>pricingengines</Filter>
     </ClCompile>
@@ -614,6 +640,12 @@
     </ClCompile>
     <ClCompile Include="qle\models\fxeqoptionhelper.cpp">
       <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\subperiodsswap.cpp">
+      <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\subperiodsswaphelper.cpp">
+      <Filter>termstructures</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
