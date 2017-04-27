@@ -625,6 +625,7 @@
     <BondData>
 	  <IssuerId>CPTY_C</IssuerId>
 	  <SecurityId>SECURITY_1</SecurityId>
+	  <CreditCurveId>CPTY_C</CreditCurveId>
 	  <ReferenceCurveId>BENCHMARK_EUR</ReferenceCurveId>
 	  <SettlementDays>2</SettlementDays>
 	  <Calendar>TARGET</Calendar>
