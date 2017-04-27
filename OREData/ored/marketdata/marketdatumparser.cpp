@@ -72,18 +72,17 @@ static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
 
 static MarketDatum::QuoteType parseQuoteType(const string& s) {
     static map<string, MarketDatum::QuoteType> b = {
-        { "BASIS_SPREAD", MarketDatum::QuoteType::BASIS_SPREAD },
-        { "CREDIT_SPREAD", MarketDatum::QuoteType::CREDIT_SPREAD },
-        { "YIELD_SPREAD", MarketDatum::QuoteType::YIELD_SPREAD },
-        { "RATE", MarketDatum::QuoteType::RATE },
-        { "RATIO", MarketDatum::QuoteType::RATIO },
-        { "PRICE", MarketDatum::QuoteType::PRICE },
-        { "RATE_LNVOL", MarketDatum::QuoteType::RATE_LNVOL },
-        { "RATE_GVOL", MarketDatum::QuoteType::RATE_LNVOL }, // deprecated
-        { "RATE_NVOL", MarketDatum::QuoteType::RATE_NVOL },
-        { "RATE_SLNVOL", MarketDatum::QuoteType::RATE_SLNVOL },
-        { "SHIFT", MarketDatum::QuoteType::SHIFT },
-        { "SECURITY_SPREAD", MarketDatum::QuoteType::SECURITY_SPREAD },
+        {"BASIS_SPREAD", MarketDatum::QuoteType::BASIS_SPREAD},
+        {"CREDIT_SPREAD", MarketDatum::QuoteType::CREDIT_SPREAD},
+        {"YIELD_SPREAD", MarketDatum::QuoteType::YIELD_SPREAD},
+        {"RATE", MarketDatum::QuoteType::RATE},
+        {"RATIO", MarketDatum::QuoteType::RATIO},
+        {"PRICE", MarketDatum::QuoteType::PRICE},
+        {"RATE_LNVOL", MarketDatum::QuoteType::RATE_LNVOL},
+        {"RATE_GVOL", MarketDatum::QuoteType::RATE_LNVOL}, // deprecated
+        {"RATE_NVOL", MarketDatum::QuoteType::RATE_NVOL},
+        {"RATE_SLNVOL", MarketDatum::QuoteType::RATE_SLNVOL},
+        {"SHIFT", MarketDatum::QuoteType::SHIFT},
     };
 
     if (s == "RATE_GVOL")
