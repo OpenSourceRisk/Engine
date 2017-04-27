@@ -21,6 +21,7 @@
         <xs:element type="equityCurvesType" name="EquityCurves" maxOccurs="unbounded" minOccurs="0"/>
         <xs:element type="equityVolatilitiesType" name="EquityVolatilities" maxOccurs="unbounded" minOccurs="0"/>
         <xs:element type="securitySpreadsType" name="SecuritySpreads" maxOccurs="unbounded" minOccurs="0"/>
+        <xs:element type="securityRecoveryRatesType" name="SecurityRecoveryRates" maxOccurs="unbounded" minOccurs="0"/>
      </xs:sequence>
     </xs:complexType>
   </xs:element>
@@ -42,6 +43,7 @@
       <xs:element type="xs:string" name="EquityCurvesId" minOccurs="0"/>
       <xs:element type="xs:string" name="EquityVolatilitiesId" minOccurs="0"/>
       <xs:element type="xs:string" name="SecuritySpreadsId" minOccurs="0"/>
+      <xs:element type="xs:string" name="SecurityRecoveryRatesId" minOccurs="0"/>
     </xs:all>
     <xs:attribute type="xs:string" name="id" use="required"/>
   </xs:complexType>
@@ -258,6 +260,21 @@
   <xs:complexType name="securitySpreadsType">
     <xs:sequence>
       <xs:element name="SecuritySpread" maxOccurs="unbounded" minOccurs="0">
+        <xs:complexType>
+          <xs:simpleContent>
+            <xs:extension base="xs:string">
+              <xs:attribute type="xs:string" name="name" use="required"/>
+            </xs:extension>
+          </xs:simpleContent>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="id"/>
+  </xs:complexType>
+
+  <xs:complexType name="securityRecoveryRatesType">
+    <xs:sequence>
+      <xs:element name="SecurityRecoveryRate" maxOccurs="unbounded" minOccurs="0">
         <xs:complexType>
           <xs:simpleContent>
             <xs:extension base="xs:string">

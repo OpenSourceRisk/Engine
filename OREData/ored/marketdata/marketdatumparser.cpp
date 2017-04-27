@@ -72,18 +72,18 @@ static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
 
 static MarketDatum::QuoteType parseQuoteType(const string& s) {
     static map<string, MarketDatum::QuoteType> b = {
-        {"BASIS_SPREAD", MarketDatum::QuoteType::BASIS_SPREAD},
-        {"CREDIT_SPREAD", MarketDatum::QuoteType::CREDIT_SPREAD},
-        {"YIELD_SPREAD", MarketDatum::QuoteType::YIELD_SPREAD},
-        {"RATE", MarketDatum::QuoteType::RATE},
-        {"RATIO", MarketDatum::QuoteType::RATIO},
-        {"PRICE", MarketDatum::QuoteType::PRICE},
-        {"RATE_LNVOL", MarketDatum::QuoteType::RATE_LNVOL},
-        {"RATE_GVOL", MarketDatum::QuoteType::RATE_LNVOL}, // deprecated
-        {"RATE_NVOL", MarketDatum::QuoteType::RATE_NVOL},
-        {"RATE_SLNVOL", MarketDatum::QuoteType::RATE_SLNVOL},
-        {"SHIFT", MarketDatum::QuoteType::SHIFT},
-        {"SECURITY_SPREAD", MarketDatum::QuoteType::SECURITY_SPREAD},
+        { "BASIS_SPREAD", MarketDatum::QuoteType::BASIS_SPREAD },
+        { "CREDIT_SPREAD", MarketDatum::QuoteType::CREDIT_SPREAD },
+        { "YIELD_SPREAD", MarketDatum::QuoteType::YIELD_SPREAD },
+        { "RATE", MarketDatum::QuoteType::RATE },
+        { "RATIO", MarketDatum::QuoteType::RATIO },
+        { "PRICE", MarketDatum::QuoteType::PRICE },
+        { "RATE_LNVOL", MarketDatum::QuoteType::RATE_LNVOL },
+        { "RATE_GVOL", MarketDatum::QuoteType::RATE_LNVOL }, // deprecated
+        { "RATE_NVOL", MarketDatum::QuoteType::RATE_NVOL },
+        { "RATE_SLNVOL", MarketDatum::QuoteType::RATE_SLNVOL },
+        { "SHIFT", MarketDatum::QuoteType::SHIFT },
+        { "SECURITY_SPREAD", MarketDatum::QuoteType::SECURITY_SPREAD },
     };
 
     if (s == "RATE_GVOL")
@@ -231,10 +231,15 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
     }
 
     case MarketDatum::InstrumentType::RECOVERY_RATE: {
-        QL_REQUIRE(tokens.size() == 5, "5 tokens expected in " << datumName);
-        const string& underlyingName = tokens[2];
-        const string& seniority = tokens[3];
-        const string& ccy = tokens[4];
+        QL_REQUIRE(tokens.size() == 3 || tokens.size() == 5, "3 or 5 tokens expected in " << datumName);
+        const string& underlyingName = tokens[2]; // issuer name for CDS, security ID for bond specific RRs
+	string seniority = "";
+        string ccy = "";
+        if (tokens.size() == 5) {
+            // CDS
+            seniority = tokens[3];
+            ccy = tokens[4];
+        }
         return boost::make_shared<RecoveryRateQuote>(value, asof, datumName, underlyingName, seniority, ccy);
     }
 

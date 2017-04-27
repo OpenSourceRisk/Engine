@@ -17,21 +17,25 @@
   </Configuration>
   <!-- yield curve definition (in ccy swap discounting) -->
   <YieldCurves id="default">
+    <YieldCurve name="BENCHMARK_EUR">Yield/EUR/BENCHMARK_EUR</YieldCurve>
     <YieldCurve name="BANK_EUR_LEND">Yield/EUR/BANK_EUR_LEND</YieldCurve>
     <YieldCurve name="BANK_EUR_BORROW">Yield/EUR/BANK_EUR_BORROW</YieldCurve>
   </YieldCurves>
   <!-- yield curve definition (in ccy ois discounting) -->
   <YieldCurves id="ois">
+    <YieldCurve name="BENCHMARK_EUR">Yield/EUR/BENCHMARK_EUR</YieldCurve>
     <YieldCurve name="BANK_EUR_LEND">Yield/EUR/BANK_EUR_LEND</YieldCurve>
     <YieldCurve name="BANK_EUR_BORROW">Yield/EUR/BANK_EUR_BORROW</YieldCurve>
   </YieldCurves>
   <!-- yield curve definition (xois discounting w.r.t. EUR collateral) -->
   <YieldCurves id="xois_eur">
+    <YieldCurve name="BENCHMARK_EUR">Yield/EUR/BENCHMARK_EUR</YieldCurve>
     <YieldCurve name="BANK_EUR_LEND">Yield/EUR/BANK_EUR_LEND</YieldCurve>
     <YieldCurve name="BANK_EUR_BORROW">Yield/EUR/BANK_EUR_BORROW</YieldCurve>
   </YieldCurves>
   <!-- yield curve definition (xois discounting w.r.t. EUR collateral) -->
   <YieldCurves id="inccy_swap">
+    <YieldCurve name="BENCHMARK_EUR">Yield/EUR/BENCHMARK_EUR</YieldCurve>
     <YieldCurve name="BANK_EUR_LEND">Yield/EUR/BANK_EUR_LEND</YieldCurve>
     <YieldCurve name="BANK_EUR_BORROW">Yield/EUR/BANK_EUR_BORROW</YieldCurve>
     <YieldCurve name="EUR-EURIBOR-6M">Yield/EUR/EUR6M</YieldCurve>
@@ -137,6 +141,7 @@
     <FxVolatility pair="EURGBP">FXVolatility/EUR/GBP/EURGBP</FxVolatility>
     <FxVolatility pair="EURCHF">FXVolatility/EUR/CHF/EURCHF</FxVolatility>
     <FxVolatility pair="EURJPY">FXVolatility/EUR/JPY/EURJPY</FxVolatility>
+    <FxVolatility pair="GBPUSD">FXVolatility/GBP/USD/GBPUSD</FxVolatility>
   </FxVolatilities>
   <!-- swaption volatility definition -->
   <SwaptionVolatilities id="default">
@@ -176,4 +181,7 @@
   <SecuritySpreads id="default">
     <SecuritySpread name="SECURITY_1">SecuritySpread/SECURITY_1</SecuritySpread>
   </SecuritySpreads>
+  <SecurityRecoveryRates id="default">
+    <SecurityRecoveryRate name="SECURITY_1">SecurityRecoveryRate/SECURITY_1</SecurityRecoveryRate>
+  </SecurityRecoveryRates>
 </TodaysMarket>

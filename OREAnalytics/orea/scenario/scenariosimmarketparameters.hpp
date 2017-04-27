@@ -46,24 +46,36 @@ namespace analytics {
 class ScenarioSimMarketParameters : public XMLSerializable {
 public:
     //! Default constructor
-    ScenarioSimMarketParameters(){};
+    ScenarioSimMarketParameters() : 
+        baseCcy_(""), interpolation_(""), extrapolate_(false), 
+        swapVolSimulate_(false), swapVolDecayMode_(""), 
+        capFloorVolSimulate_(false), capFloorVolDecayMode_(""), 
+        fxVolSimulate_(false), fxVolDecayMode_("") {}
 
     //! \name Inspectors
     //@{
     const string& baseCcy() const { return baseCcy_; }
     const vector<string>& ccys() const { return ccys_; }
+    const vector<string>& yieldCurveNames() const { return yieldCurveNames_; }
+    const vector<string>& yieldCurveCurrencies() const { return yieldCurveCurrencies_; }
     const vector<Period>& yieldCurveTenors() const { return yieldCurveTenors_; }
     const vector<string>& indices() const { return indices_; }
     const map<string, string>& swapIndices() const { return swapIndices_; }
     const string& interpolation() const { return interpolation_; }
     const bool& extrapolate() const { return extrapolate_; }
 
+    const vector<string>& fxCcyPairs() const { return fxCcyPairs_; }
+
+    bool simulateSwapVols() const { return swapVolSimulate_; }
     const vector<Period>& swapVolTerms() const { return swapVolTerms_; }
     const vector<Period>& swapVolExpiries() const { return swapVolExpiries_; }
     const vector<string>& swapVolCcys() const { return swapVolCcys_; }
     const string& swapVolDecayMode() const { return swapVolDecayMode_; }
 
+    const bool& simulateCapFloorVols() const { return capFloorVolSimulate_; }
     const vector<string>& capFloorVolCcys() const { return capFloorVolCcys_; }
+    const vector<Period>& capFloorVolExpiries() const { return capFloorVolExpiries_; }
+    const vector<Real>& capFloorVolStrikes() const { return capFloorVolStrikes_; }
     const string& capFloorVolDecayMode() const { return capFloorVolDecayMode_; }
 
     const vector<string>& defaultNames() const { return defaultNames_; }
@@ -75,8 +87,7 @@ public:
     bool simulateFXVols() const { return fxVolSimulate_; }
     const vector<Period>& fxVolExpiries() const { return fxVolExpiries_; }
     const string& fxVolDecayMode() const { return fxVolDecayMode_; }
-    // TODO: rename fxVolCurrencyPairs or something to indicate this is for FX vols
-    const vector<string>& ccyPairs() const { return ccyPairs_; }
+    const vector<string>& fxVolCcyPairs() const { return fxVolCcyPairs_; }
 
     bool simulateEQVols() const { return eqVolSimulate_; }
     const vector<Period>& eqVolExpiries() const { return eqVolExpiries_; }
@@ -85,24 +96,34 @@ public:
 
     const vector<string>& additionalScenarioDataIndices() const { return additionalScenarioDataIndices_; }
     const vector<string>& additionalScenarioDataCcys() const { return additionalScenarioDataCcys_; }
+
+    const vector<string>& securities() const { return securities_; }
     //@}
 
     //! \name Setters
     //@{
     string& baseCcy() { return baseCcy_; }
     vector<string>& ccys() { return ccys_; }
+    vector<string>& yieldCurveNames() { return yieldCurveNames_; }
+    vector<string>& yieldCurveCurrencies() { return yieldCurveCurrencies_; }
     vector<Period>& yieldCurveTenors() { return yieldCurveTenors_; }
     vector<string>& indices() { return indices_; }
     map<string, string>& swapIndices() { return swapIndices_; }
     string& interpolation() { return interpolation_; }
     bool& extrapolate() { return extrapolate_; }
 
+    vector<string>& fxCcyPairs() { return fxCcyPairs_; }
+
+    bool& simulateSwapVols() { return swapVolSimulate_; }
     vector<Period>& swapVolTerms() { return swapVolTerms_; }
     vector<string>& swapVolCcys() { return swapVolCcys_; }
     vector<Period>& swapVolExpiries() { return swapVolExpiries_; }
     string& swapVolDecayMode() { return swapVolDecayMode_; }
 
+    bool& simulateCapFloorVols() { return capFloorVolSimulate_; }
     vector<string>& capFloorVolCcys() { return capFloorVolCcys_; }
+    vector<Period>& capFloorVolExpiries() { return capFloorVolExpiries_; }
+    vector<Real>& capFloorVolStrikes() { return capFloorVolStrikes_; }
     string& capFloorVolDecayMode() { return capFloorVolDecayMode_; }
 
     vector<string>& defaultNames() { return defaultNames_; }
@@ -114,7 +135,7 @@ public:
     bool& simulateFXVols() { return fxVolSimulate_; }
     vector<Period>& fxVolExpiries() { return fxVolExpiries_; }
     string& fxVolDecayMode() { return fxVolDecayMode_; }
-    vector<string>& ccyPairs() { return ccyPairs_; }
+    vector<string>& fxVolCcyPairs() { return fxVolCcyPairs_; }
 
     bool& simulateEQVols() { return eqVolSimulate_; }
     vector<Period>& eqVolExpiries() { return eqVolExpiries_; }
@@ -123,6 +144,8 @@ public:
 
     vector<string>& additionalScenarioDataIndices() { return additionalScenarioDataIndices_; }
     vector<string>& additionalScenarioDataCcys() { return additionalScenarioDataCcys_; }
+
+    vector<string>& securities() { return securities_; }
     //@}
 
     //! \name Serialisation
@@ -140,18 +163,26 @@ public:
 private:
     string baseCcy_;
     vector<string> ccys_; // may or may not include baseCcy;
+    vector<string> yieldCurveNames_;
+    vector<string> yieldCurveCurrencies_;
     vector<Period> yieldCurveTenors_;
     vector<string> indices_;
     map<string, string> swapIndices_;
     string interpolation_;
     bool extrapolate_;
 
+    vector<string> fxCcyPairs_;
+
+    bool swapVolSimulate_;
     vector<Period> swapVolTerms_;
     vector<string> swapVolCcys_;
     vector<Period> swapVolExpiries_;
     string swapVolDecayMode_;
 
+    bool capFloorVolSimulate_;
     vector<string> capFloorVolCcys_;
+    vector<Period> capFloorVolExpiries_;
+    vector<Real> capFloorVolStrikes_;
     string capFloorVolDecayMode_;
 
     vector<string> defaultNames_;
@@ -163,7 +194,7 @@ private:
     bool fxVolSimulate_;
     vector<Period> fxVolExpiries_;
     string fxVolDecayMode_;
-    vector<string> ccyPairs_;
+    vector<string> fxVolCcyPairs_;
 
     bool eqVolSimulate_;
     vector<Period> eqVolExpiries_;
@@ -172,6 +203,8 @@ private:
 
     vector<string> additionalScenarioDataIndices_;
     vector<string> additionalScenarioDataCcys_;
+
+    vector<string> securities_;
 };
 }
 }

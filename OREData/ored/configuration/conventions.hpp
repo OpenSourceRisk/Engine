@@ -251,6 +251,7 @@ public:
     //! \name Inspectors
     //@{
     const boost::shared_ptr<IborIndex>& index() const { return index_; }
+    const string& indexName() const { return strIndex_; }
     //@}
 
     //! \name Serialisation
@@ -285,6 +286,7 @@ public:
     //! \name Inspectors
     //@{
     Natural spotLag() const { return spotLag_; }
+    const string& indexName() const { return strIndex_; }
     const boost::shared_ptr<OvernightIndex>& index() const { return index_; }
     const DayCounter& fixedDayCounter() const { return fixedDayCounter_; }
     Natural paymentLag() const { return paymentLag_; }
@@ -356,7 +358,9 @@ public:
     IRSwapConvention() {}
     //! Detailed constructor
     IRSwapConvention(const string& id, const string& fixedCalendar, const string& fixedFrequency,
-                     const string& fixedConvention, const string& fixedDayCounter, const string& index);
+                     const string& fixedConvention, const string& fixedDayCounter, const string& index,
+                     bool hasSubPeriod = false, const string& floatFrequency = "",
+                     const string& subPeriodsCouponType = "");
     //@}
 
     //! \name Inspectors
@@ -367,6 +371,10 @@ public:
     const DayCounter& fixedDayCounter() const { return fixedDayCounter_; }
     const string& indexName() const { return strIndex_; }
     const boost::shared_ptr<IborIndex>& index() const { return index_; }
+    // For sub period
+    bool hasSubPeriod() const { return hasSubPeriod_; }
+    Frequency floatFrequency() const { return floatFrequency_; } // returns NoFrequency for normal swaps
+    QuantExt::SubPeriodsCoupon::Type subPeriodsCouponType() const { return subPeriodsCouponType_; }
     //@}
 
     //! \name Serialisation
@@ -382,6 +390,9 @@ private:
     BusinessDayConvention fixedConvention_;
     DayCounter fixedDayCounter_;
     boost::shared_ptr<IborIndex> index_;
+    bool hasSubPeriod_;
+    Frequency floatFrequency_;
+    QuantExt::SubPeriodsCoupon::Type subPeriodsCouponType_;
 
     // Strings to store the inputs
     string strFixedCalendar_;
@@ -389,6 +400,8 @@ private:
     string strFixedConvention_;
     string strFixedDayCounter_;
     string strIndex_;
+    string strFloatFrequency_;
+    string strSubPeriodsCouponType_;
 };
 
 //! Container for storing Average OIS conventions
@@ -416,6 +429,7 @@ public:
     const Calendar& fixedCalendar() const { return fixedCalendar_; }
     BusinessDayConvention fixedConvention() const { return fixedConvention_; }
     BusinessDayConvention fixedPaymentConvention() const { return fixedPaymentConvention_; }
+    const string& indexName() const { return strIndex_; }
     const boost::shared_ptr<OvernightIndex>& index() const { return index_; }
     const Period& onTenor() const { return onTenor_; }
     Natural rateCutoff() const { return rateCutoff_; }
@@ -636,6 +650,9 @@ public:
     BusinessDayConvention rollConvention() const { return rollConvention_; }
     const boost::shared_ptr<IborIndex>& flatIndex() const { return flatIndex_; }
     const boost::shared_ptr<IborIndex>& spreadIndex() const { return spreadIndex_; }
+    const string& flatIndexName() const { return strFlatIndex_; }
+    const string& spreadIndexName() const { return strSpreadIndex_; }
+
     bool eom() const { return eom_; }
     //@}
 
@@ -787,7 +804,7 @@ public:
     //@}
 
 private:
-    map<string, boost::shared_ptr<Convention>> data_;
+    map<string, boost::shared_ptr<Convention> > data_;
 };
 
 //! Container for storing Bond Spread Rate conventions

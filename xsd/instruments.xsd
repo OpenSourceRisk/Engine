@@ -99,6 +99,7 @@
   <xs:complexType name="bondData">
     <xs:sequence>
       <xs:element type="xs:string" name="IssuerId" maxOccurs="unbounded" minOccurs="1"/>
+      <xs:element type="xs:string" name="CreditCurveId" maxOccurs="unbounded" minOccurs="1"/>
       <xs:element type="xs:string" name="SecurityId" maxOccurs="unbounded" minOccurs="1"/>
       <xs:element type="xs:string" name="ReferenceCurveId" maxOccurs="unbounded" minOccurs="1"/>
       <xs:element type="xs:string" name="SettlementDays" maxOccurs="unbounded" minOccurs="1"/>

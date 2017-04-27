@@ -33,7 +33,8 @@ bool operator==(const MarketConfiguration& lhs, const MarketConfiguration& rhs) 
         lhs.yoyInflationIndexCurvesId != rhs.yoyInflationIndexCurvesId ||
         lhs.inflationCapFloorPriceSurfacesId != rhs.inflationCapFloorPriceSurfacesId ||
         lhs.capFloorVolatilitiesId != rhs.capFloorVolatilitiesId || lhs.equityCurvesId != rhs.equityCurvesId ||
-        lhs.equityVolatilitiesId != rhs.equityVolatilitiesId || lhs.securitySpreadsId != rhs.securitySpreadsId) {
+        lhs.equityVolatilitiesId != rhs.equityVolatilitiesId || lhs.securitySpreadsId != rhs.securitySpreadsId ||
+        lhs.securityRecoveryRatesId != rhs.securityRecoveryRatesId) {
         return false;
     } else {
         return true;
@@ -88,6 +89,7 @@ void TodaysMarketParameters::fromXML(XMLNode* node) {
     equityCurves_.clear();
     equityVolatilities_.clear();
     securitySpreads_.clear();
+    securityRecoveryRates_.clear();
 
     // add default configuration (may be overwritten below)
     MarketConfiguration defaultConfig;
@@ -114,6 +116,7 @@ void TodaysMarketParameters::fromXML(XMLNode* node) {
             tmp.equityCurvesId = XMLUtils::getChildValue(n, "EquityCurvesId", false);
             tmp.equityVolatilitiesId = XMLUtils::getChildValue(n, "EquityVolatilitiesId", false);
             tmp.securitySpreadsId = XMLUtils::getChildValue(n, "SecuritySpreadsId", false);
+            tmp.securityRecoveryRatesId = XMLUtils::getChildValue(n, "SecurityRecoveryRatesId", false);
             if (tmp.discountingCurvesId == "")
                 tmp.discountingCurvesId = Market::defaultConfiguration;
             if (tmp.yieldCurvesId == "")
@@ -144,6 +147,8 @@ void TodaysMarketParameters::fromXML(XMLNode* node) {
                 tmp.equityVolatilitiesId = Market::defaultConfiguration;
             if (tmp.securitySpreadsId == "")
                 tmp.securitySpreadsId = Market::defaultConfiguration;
+            if (tmp.securityRecoveryRatesId == "")
+                tmp.securityRecoveryRatesId = Market::defaultConfiguration;
             addConfiguration(XMLUtils::getAttribute(n, "id"), tmp);
         } else if (XMLUtils::getNodeName(n) == "DiscountingCurves") {
             string id = XMLUtils::getAttribute(n, "id");
@@ -234,6 +239,12 @@ void TodaysMarketParameters::fromXML(XMLNode* node) {
             if (id == "")
                 id = Market::defaultConfiguration;
             addSecuritySpreads(id, XMLUtils::getChildrenAttributesAndValues(n, "SecuritySpread", "name", false));
+        } else if (XMLUtils::getNodeName(n) == "SecurityRecoveryRates") {
+            string id = XMLUtils::getAttribute(n, "id");
+            if (id == "")
+                id = Market::defaultConfiguration;
+            addSecurityRecoveryRates(
+                id, XMLUtils::getChildrenAttributesAndValues(n, "SecurityRecoveryRate", "name", false));
         } else
             QL_FAIL("TodaysMarketParameters::fromXML(): node not recognized: " << XMLUtils::getNodeName(n));
         n = XMLUtils::getNextSibling(n);
@@ -299,6 +310,10 @@ XMLNode* TodaysMarketParameters::toXML(XMLDocument& doc) {
             }
             if (iterator->second.securitySpreadsId != "") {
                 XMLUtils::addChild(doc, configurationsNode, "SecuritySpreadsId", iterator->second.securitySpreadsId);
+            }
+            if (iterator->second.securityRecoveryRatesId != "") {
+                XMLUtils::addChild(doc, configurationsNode, "SecurityRecoveryRatesId",
+                                   iterator->second.securityRecoveryRatesId);
             }
         }
     }
@@ -541,13 +556,31 @@ XMLNode* TodaysMarketParameters::toXML(XMLDocument& doc) {
         for (auto mappingSetIterator = securitySpreads_.begin(); mappingSetIterator != securitySpreads_.end();
              mappingSetIterator++) {
 
-            XMLNode* bondSpreadsNode = XMLUtils::addChild(doc, todaysMarketNode, "BondSpreads");
+            XMLNode* bondSpreadsNode = XMLUtils::addChild(doc, todaysMarketNode, "SecuritySpreads");
             XMLUtils::addAttribute(doc, bondSpreadsNode, "id", mappingSetIterator->first.c_str());
 
             for (auto singleMappingIterator = mappingSetIterator->second.begin();
                  singleMappingIterator != mappingSetIterator->second.end(); singleMappingIterator++) {
-                XMLNode* mappingNode = doc.allocNode("BondSpreads", singleMappingIterator->second);
+                XMLNode* mappingNode = doc.allocNode("SecuritySpreads", singleMappingIterator->second);
                 XMLUtils::appendNode(bondSpreadsNode, mappingNode);
+                XMLUtils::addAttribute(doc, mappingNode, "pair", singleMappingIterator->first);
+            }
+        }
+    }
+
+    // security Recovery Rates
+    if (securityRecoveryRates_.size() > 0) {
+
+        for (auto mappingSetIterator = securityRecoveryRates_.begin();
+             mappingSetIterator != securityRecoveryRates_.end(); mappingSetIterator++) {
+
+            XMLNode* bondRRNode = XMLUtils::addChild(doc, todaysMarketNode, "SecurityRecoveryRates");
+            XMLUtils::addAttribute(doc, bondRRNode, "id", mappingSetIterator->first.c_str());
+
+            for (auto singleMappingIterator = mappingSetIterator->second.begin();
+                 singleMappingIterator != mappingSetIterator->second.end(); singleMappingIterator++) {
+                XMLNode* mappingNode = doc.allocNode("SecurityRecoveryRates", singleMappingIterator->second);
+                XMLUtils::appendNode(bondRRNode, mappingNode);
                 XMLUtils::addAttribute(doc, mappingNode, "pair", singleMappingIterator->first);
             }
         }
@@ -556,7 +589,7 @@ XMLNode* TodaysMarketParameters::toXML(XMLDocument& doc) {
     return todaysMarketNode;
 }
 
-void TodaysMarketParameters::curveSpecs(const map<string, map<string, string>>& m, const string& id,
+void TodaysMarketParameters::curveSpecs(const map<string, map<string, string> >& m, const string& id,
                                         vector<string>& specs) const {
     // extract all the curve specs
     auto it = m.find(id);
@@ -584,6 +617,7 @@ vector<string> TodaysMarketParameters::curveSpecs(const string& configuration) c
     curveSpecs(equityCurves_, equityCurvesId(configuration), specs);
     curveSpecs(equityVolatilities_, equityVolatilitiesId(configuration), specs);
     curveSpecs(securitySpreads_, securitySpreadsId(configuration), specs);
+    curveSpecs(securityRecoveryRates_, securityRecoveryRatesId(configuration), specs);
     return specs;
 }
 } // namespace data
