@@ -51,10 +51,12 @@ public:
         asof_ = Date(3, Feb, 2016);
         // build discount
         yieldCurves_[make_pair(Market::defaultConfiguration, "BANK_EUR_LEND")] = flatRateYts(0.02);
-        defaultCurves_[make_pair(Market::defaultConfiguration, "CPTY_A")] = flatRateDcs(0.0);
-        recoveryRates_[make_pair(Market::defaultConfiguration, "CPTY_A")] =
-            Handle<Quote>(boost::make_shared<SimpleQuote>(0.00));
+        defaultCurves_[make_pair(Market::defaultConfiguration, "CreditCurve_A")] = flatRateDcs(0.0);
+        // recoveryRates_[make_pair(Market::defaultConfiguration, "CreditCurve_A")] =
+        //     Handle<Quote>(boost::make_shared<SimpleQuote>(0.00));
         securitySpreads_[make_pair(Market::defaultConfiguration, "Security1")] =
+            Handle<Quote>(boost::make_shared<SimpleQuote>(0.00));
+        recoveryRates_[make_pair(Market::defaultConfiguration, "Security1")] =
             Handle<Quote>(boost::make_shared<SimpleQuote>(0.00));
     }
 
@@ -62,10 +64,12 @@ public:
         asof_ = Date(3, Feb, 2016);
         // build discount
         yieldCurves_[make_pair(Market::defaultConfiguration, "BANK_EUR_LEND")] = flatRateYts(0.02);
-        defaultCurves_[make_pair(Market::defaultConfiguration, "CPTY_A")] = flatRateDcs(defaultFlatRate);
-        recoveryRates_[make_pair(Market::defaultConfiguration, "CPTY_A")] =
-            Handle<Quote>(boost::make_shared<SimpleQuote>(0.00));
+        defaultCurves_[make_pair(Market::defaultConfiguration, "CreditCurve_A")] = flatRateDcs(defaultFlatRate);
+        // recoveryRates_[make_pair(Market::defaultConfiguration, "CreditCurve_A")] =
+        //     Handle<Quote>(boost::make_shared<SimpleQuote>(0.00));
         securitySpreads_[make_pair(Market::defaultConfiguration, "Security1")] =
+            Handle<Quote>(boost::make_shared<SimpleQuote>(0.00));
+        recoveryRates_[make_pair(Market::defaultConfiguration, "Security1")] =
             Handle<Quote>(boost::make_shared<SimpleQuote>(0.00));
     }
 
@@ -84,6 +88,7 @@ struct CommonVars {
     // global data
     string ccy;
     string securityId;
+    string creditCurveId;
     string issuerId;
     string referenceCurveId;
     bool isPayer;
@@ -114,23 +119,25 @@ struct CommonVars {
 
         Envelope env("CP1");
 
-        boost::shared_ptr<ore::data::Bond> bond(
-            new ore::data::Bond(env, issuerId, securityId, referenceCurveId, settledays, calStr, issue, fixedLegData));
+        boost::shared_ptr<ore::data::Bond> bond(new ore::data::Bond(
+            env, issuerId, creditCurveId, securityId, referenceCurveId, settledays, calStr, issue, fixedLegData));
         return bond;
     }
 
     boost::shared_ptr<ore::data::Bond> makeZeroBond() {
         Envelope env("CP1");
 
-        boost::shared_ptr<ore::data::Bond> bond(new ore::data::Bond(env, issuerId, securityId, referenceCurveId,
-                                                                    settledays, calStr, notional, end, ccy, issue));
+        boost::shared_ptr<ore::data::Bond> bond(new ore::data::Bond(env, issuerId, creditCurveId, securityId,
+                                                                    referenceCurveId, settledays, calStr, notional, end,
+                                                                    ccy, issue));
         return bond;
     }
 
     CommonVars() {
         ccy = "EUR";
         securityId = "Security1";
-        issuerId = "CPTY_A";
+	creditCurveId = "CreditCurve_A";
+	issuerId = "CPTY_A";
         referenceCurveId = "BANK_EUR_LEND";
         isPayer = false;
         start = "20160203";

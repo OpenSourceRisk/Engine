@@ -31,15 +31,19 @@
 #include <orea/aggregation/all.hpp>
 #include <ored/ored.hpp>
 #include <boost/make_shared.hpp>
+#include <iostream>
 
 using namespace ore::data;
 
 namespace ore {
 namespace analytics {
 
+class SensitivityScenarioData;
+class SensitivityAnalysis;
+
 class OREApp {
 public:
-    OREApp(boost::shared_ptr<Parameters> params) : params_(params), cubeDepth_(0) {
+    OREApp(boost::shared_ptr<Parameters> params, std::ostream& out = std::cout) : params_(params), out_(out), cubeDepth_(0) {
         tab_ = 40;
         asof_ = parseDate(params->get("setup", "asofDate"));
         Settings::instance().evaluationDate() = asof_;
@@ -88,6 +92,11 @@ public:
     //! run postProcessor to generate reports from cube
     void runPostProcessor();
 
+    //! run sensitivity analysis and write out reports
+    virtual void runSensitivityAnalysis();
+    //! run stress tests and write out report
+    virtual void runStressTest();
+
     //! write out initial (pre-cube) reports
     void writeInitialReports();
     //! write out XVA reports
@@ -102,15 +111,29 @@ public:
     boost::shared_ptr<NettingSetManager> initNettingSetManager();
 
 protected:
+    //! Initialize input parameters to the sensitivities analysis
+    void sensiInputInitialize(
+        boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+        boost::shared_ptr<SensitivityScenarioData>& sensiData,
+        boost::shared_ptr<EngineData>& engineData,
+        boost::shared_ptr<Portfolio>& sensiPortfolio,
+        string& marketConfiguration);
+
+    //! Write out some standard sensitivities reports
+    void sensiOutputReports(const boost::shared_ptr<SensitivityAnalysis>& sensiAnalysis);
+
     Size tab_;
     Date asof_;
     //! ORE Input parameters
     boost::shared_ptr<Parameters> params_;
+    std::ostream& out_;
     bool writeInitialReports_;
     bool simulate_;
     bool buildSimMarket_;
     bool xva_;
     bool writeDIMReport_;
+    bool sensitivity_;
+    bool stress_;
 
     boost::shared_ptr<Market> market_;
     boost::shared_ptr<Portfolio> portfolio_;

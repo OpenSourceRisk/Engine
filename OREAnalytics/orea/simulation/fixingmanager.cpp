@@ -20,9 +20,9 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/flowanalysis.hpp>
-#include <ql/cashflows/iborcoupon.hpp>
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
+#include <ql/cashflows/floatingratecoupon.hpp>
 
 using namespace std;
 using namespace QuantLib;
@@ -43,11 +43,9 @@ void FixingManager::initialise(const boost::shared_ptr<Portfolio>& portfolio) {
         for (auto leg : trade->legs()) {
             flowList.push_back(data::flowAnalysis(leg));
             for (auto cf : leg) {
-
-                //
-                boost::shared_ptr<IborCoupon> ic = boost::dynamic_pointer_cast<IborCoupon>(cf);
-                if (ic)
-                    setIndices.insert(ic->iborIndex());
+                boost::shared_ptr<FloatingRateCoupon> frc = boost::dynamic_pointer_cast<FloatingRateCoupon>(cf);
+                if (frc)
+                    setIndices.insert(frc->index());
 
                 boost::shared_ptr<FloatingRateFXLinkedNotionalCoupon> fc =
                     boost::dynamic_pointer_cast<FloatingRateFXLinkedNotionalCoupon>(cf);
@@ -55,9 +53,12 @@ void FixingManager::initialise(const boost::shared_ptr<Portfolio>& portfolio) {
                     setIndices.insert(fc->index());
                     setIndices.insert(fc->fxLinkedCashFlow().index());
                 }
+
                 boost::shared_ptr<FXLinkedCashFlow> flcf = boost::dynamic_pointer_cast<FXLinkedCashFlow>(cf);
                 if (flcf)
                     setIndices.insert(flcf->index());
+
+                // add more coupon types here ...
             }
         }
     }
@@ -110,7 +111,7 @@ void FixingManager::initialise(const boost::shared_ptr<Portfolio>& portfolio) {
 //! Update fixings to date d
 void FixingManager::update(Date d) {
     if (!fixingMap_.empty()) {
-        QL_REQUIRE(d > fixingsEnd_, "Can't go back in time, fixings must be reset."
+        QL_REQUIRE(d >= fixingsEnd_, "Can't go back in time, fixings must be reset."
                                     " Update date "
                                         << d << " but current fixings go to " << fixingsEnd_);
         applyFixings(fixingsEnd_, d);
