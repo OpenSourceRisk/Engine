@@ -5,6 +5,7 @@
 #include <qle/instruments/crossccybasisswap.hpp>
 #include <qle/instruments/crossccyswap.hpp>
 #include <qle/instruments/currencyswap.hpp>
+#include <qle/instruments/deposit.hpp>
 #include <qle/instruments/equityforward.hpp>
 #include <qle/instruments/fxforward.hpp>
 #include <qle/instruments/makeaverageois.hpp>

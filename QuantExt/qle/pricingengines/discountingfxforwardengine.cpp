@@ -76,16 +76,21 @@ void DiscountingFxForwardEngine::calculate() const {
                "discount curve reference date.");
 
     results_.value = 0.0;
+    results_.fairForwardRate = ExchangeRate(ccy2_, ccy1_, tmpNominal1 / tmpNominal2); // strike rate
 
     if (!detail::simple_event(arguments_.maturityDate).hasOccurred(settlementDate, includeSettlementDateFlows_)) {
-        results_.value =
-            (tmpPayCurrency1 ? -1.0 : 1.0) * (tmpNominal1 * currency1Discountcurve_->discount(arguments_.maturityDate) /
-                                                  currency1Discountcurve_->discount(npvDate) -
-                                              tmpNominal2 * currency2Discountcurve_->discount(arguments_.maturityDate) /
-                                                  currency2Discountcurve_->discount(npvDate) * spotFX_->value());
+        Real disc1near = currency1Discountcurve_->discount(npvDate);
+        Real disc1far = currency1Discountcurve_->discount(arguments_.maturityDate);
+        Real disc2near = currency2Discountcurve_->discount(npvDate);
+        Real disc2far = currency2Discountcurve_->discount(arguments_.maturityDate);
+        Real fxfwd = disc1near / disc1far * disc2far / disc2near * spotFX_->value();
+        // results_.value =
+        //     (tmpPayCurrency1 ? -1.0 : 1.0) * (tmpNominal1 * disc1far / disc1near -
+        //                                       tmpNominal2 * disc2far / disc2near * spotFX_->value());
+        results_.value = (tmpPayCurrency1 ? -1.0 : 1.0) * disc1far / disc1near * (tmpNominal1 - tmpNominal2 * fxfwd);
+        results_.fairForwardRate = ExchangeRate(ccy2_, ccy1_, fxfwd);
     }
     results_.npv = Money(ccy1_, results_.value);
-    results_.fairForwardRate = ExchangeRate(ccy2_, ccy1_, tmpNominal1 / tmpNominal2);
 
 } // calculate
 

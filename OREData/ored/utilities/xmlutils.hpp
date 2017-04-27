@@ -33,6 +33,7 @@
 using std::string;
 using std::vector;
 using std::map;
+using std::pair;
 using QuantLib::Real;
 using QuantLib::Size;
 using QuantLib::Period;

@@ -218,6 +218,7 @@
 	   surfaces, so we need to specify here how we propagate the
 	   vol structure and what its composition will be -->
     <SwaptionVolatilities>
+      <Simulate>false</Simulate>
       <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
       <!-- Alternative: ConstantVariance -->
       <Currencies>
@@ -232,6 +233,7 @@
       <Strikes/>
     </SwaptionVolatilities>
     <CapFloorVolatilities>
+      <Simulate>false</Simulate>
       <!-- Alternative: ForwardVariance or ConstantVariance -->
       <ReactionToTimeDecay>ConstantVariance</ReactionToTimeDecay>
       <Currencies>
@@ -239,6 +241,8 @@
         <Currency>USD</Currency>
         <Currency>GBP</Currency>
       </Currencies>
+      <Expiries/>
+      <Strikes/>
     </CapFloorVolatilities>
     <FxVolatilities>
       <Simulate>false</Simulate>

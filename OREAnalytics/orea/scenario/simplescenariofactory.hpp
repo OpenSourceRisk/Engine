@@ -36,7 +36,7 @@ class SimpleScenarioFactory : public ScenarioFactory {
 public:
     const boost::shared_ptr<Scenario> buildScenario(Date asof, const std::string& label = "",
                                                     Real numeraire = 0.0) const {
-        return boost::make_shared<SimpleScenario>(asof, label, numeraire);
+      return boost::make_shared<SimpleScenario>(asof, label, numeraire);
     }
 };
 

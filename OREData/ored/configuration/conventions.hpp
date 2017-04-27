@@ -249,6 +249,7 @@ public:
     //! \name Inspectors
     //@{
     const boost::shared_ptr<IborIndex>& index() const { return index_; }
+    const string& indexName() const { return strIndex_; }
     //@}
 
     //! \name Serialisation
@@ -283,6 +284,7 @@ public:
     //! \name Inspectors
     //@{
     Natural spotLag() const { return spotLag_; }
+    const string& indexName() const { return strIndex_; }
     const boost::shared_ptr<OvernightIndex>& index() const { return index_; }
     const DayCounter& fixedDayCounter() const { return fixedDayCounter_; }
     Natural paymentLag() const { return paymentLag_; }
@@ -425,6 +427,7 @@ public:
     const Calendar& fixedCalendar() const { return fixedCalendar_; }
     BusinessDayConvention fixedConvention() const { return fixedConvention_; }
     BusinessDayConvention fixedPaymentConvention() const { return fixedPaymentConvention_; }
+    const string& indexName() const { return strIndex_; }
     const boost::shared_ptr<OvernightIndex>& index() const { return index_; }
     const Period& onTenor() const { return onTenor_; }
     Natural rateCutoff() const { return rateCutoff_; }
@@ -645,6 +648,9 @@ public:
     BusinessDayConvention rollConvention() const { return rollConvention_; }
     const boost::shared_ptr<IborIndex>& flatIndex() const { return flatIndex_; }
     const boost::shared_ptr<IborIndex>& spreadIndex() const { return spreadIndex_; }
+    const string& flatIndexName() const { return strFlatIndex_; }
+    const string& spreadIndexName() const { return strSpreadIndex_; }
+
     bool eom() const { return eom_; }
     //@}
 
@@ -751,7 +757,7 @@ public:
     //@}
 
 private:
-    map<string, boost::shared_ptr<Convention>> data_;
+    map<string, boost::shared_ptr<Convention> > data_;
 };
 
 //! Container for storing Bond Spread Rate conventions

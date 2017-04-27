@@ -30,6 +30,21 @@
     <ClInclude Include="observationmode.hpp">
       <Filter>headers</Filter>
     </ClInclude>
+    <ClInclude Include="sensitivityanalysis.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="stresstest.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="testportfolio.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="sensitivityperformance.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="sensitivityanalysis2.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="cube.cpp">
@@ -49,6 +64,21 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="observationmode.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="sensitivityanalysis.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="stresstest.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="testportfolio.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="sensitivityperformance.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="sensitivityanalysis2.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>

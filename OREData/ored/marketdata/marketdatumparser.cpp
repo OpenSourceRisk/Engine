@@ -32,30 +32,31 @@ namespace data {
 
 static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
     static map<string, MarketDatum::InstrumentType> b = {
-        {"ZERO", MarketDatum::InstrumentType::ZERO},
-        {"DISCOUNT", MarketDatum::InstrumentType::DISCOUNT},
-        {"MM", MarketDatum::InstrumentType::MM},
-        {"MM_FUTURE", MarketDatum::InstrumentType::MM_FUTURE},
-        {"FRA", MarketDatum::InstrumentType::FRA},
-        {"IR_SWAP", MarketDatum::InstrumentType::IR_SWAP},
-        {"BASIS_SWAP", MarketDatum::InstrumentType::BASIS_SWAP},
-        {"CC_BASIS_SWAP", MarketDatum::InstrumentType::CC_BASIS_SWAP},
-        {"CDS", MarketDatum::InstrumentType::CDS},
-        {"FX", MarketDatum::InstrumentType::FX_SPOT},
-        {"FX_SPOT", MarketDatum::InstrumentType::FX_SPOT},
-        {"FXFWD", MarketDatum::InstrumentType::FX_FWD},
-        {"FX_FWD", MarketDatum::InstrumentType::FX_FWD},
-        {"HAZARD_RATE", MarketDatum::InstrumentType::HAZARD_RATE},
-        {"RECOVERY_RATE", MarketDatum::InstrumentType::RECOVERY_RATE},
-        {"FX_FWD", MarketDatum::InstrumentType::FX_FWD},
-        {"SWAPTION", MarketDatum::InstrumentType::SWAPTION},
-        {"CAPFLOOR", MarketDatum::InstrumentType::CAPFLOOR},
-        {"FX_OPTION", MarketDatum::InstrumentType::FX_OPTION},
-        {"EQUITY", MarketDatum::InstrumentType::EQUITY_SPOT},
-        {"EQUITY_FWD", MarketDatum::InstrumentType::EQUITY_FWD},
-        {"EQUITY_DIVIDEND", MarketDatum::InstrumentType::EQUITY_DIVIDEND},
-        {"EQUITY_OPTION", MarketDatum::InstrumentType::EQUITY_OPTION},
-        {"BOND", MarketDatum::InstrumentType::BOND}};
+        { "ZERO", MarketDatum::InstrumentType::ZERO },
+        { "DISCOUNT", MarketDatum::InstrumentType::DISCOUNT },
+        { "MM", MarketDatum::InstrumentType::MM },
+        { "MM_FUTURE", MarketDatum::InstrumentType::MM_FUTURE },
+        { "FRA", MarketDatum::InstrumentType::FRA },
+        { "IR_SWAP", MarketDatum::InstrumentType::IR_SWAP },
+        { "BASIS_SWAP", MarketDatum::InstrumentType::BASIS_SWAP },
+        { "CC_BASIS_SWAP", MarketDatum::InstrumentType::CC_BASIS_SWAP },
+        { "CDS", MarketDatum::InstrumentType::CDS },
+        { "FX", MarketDatum::InstrumentType::FX_SPOT },
+        { "FX_SPOT", MarketDatum::InstrumentType::FX_SPOT },
+        { "FXFWD", MarketDatum::InstrumentType::FX_FWD },
+        { "FX_FWD", MarketDatum::InstrumentType::FX_FWD },
+        { "HAZARD_RATE", MarketDatum::InstrumentType::HAZARD_RATE },
+        { "RECOVERY_RATE", MarketDatum::InstrumentType::RECOVERY_RATE },
+        { "FX_FWD", MarketDatum::InstrumentType::FX_FWD },
+        { "SWAPTION", MarketDatum::InstrumentType::SWAPTION },
+        { "CAPFLOOR", MarketDatum::InstrumentType::CAPFLOOR },
+        { "FX_OPTION", MarketDatum::InstrumentType::FX_OPTION },
+        { "EQUITY", MarketDatum::InstrumentType::EQUITY_SPOT },
+        { "EQUITY_FWD", MarketDatum::InstrumentType::EQUITY_FWD },
+        { "EQUITY_DIVIDEND", MarketDatum::InstrumentType::EQUITY_DIVIDEND },
+        { "EQUITY_OPTION", MarketDatum::InstrumentType::EQUITY_OPTION },
+        { "BOND", MarketDatum::InstrumentType::BOND }
+    };
 
     auto it = b.find(s);
     if (it != b.end()) {
@@ -67,18 +68,18 @@ static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
 
 static MarketDatum::QuoteType parseQuoteType(const string& s) {
     static map<string, MarketDatum::QuoteType> b = {
-        {"BASIS_SPREAD", MarketDatum::QuoteType::BASIS_SPREAD},
-        {"CREDIT_SPREAD", MarketDatum::QuoteType::CREDIT_SPREAD},
-        {"YIELD_SPREAD", MarketDatum::QuoteType::YIELD_SPREAD},
-        {"RATE", MarketDatum::QuoteType::RATE},
-        {"RATIO", MarketDatum::QuoteType::RATIO},
-        {"PRICE", MarketDatum::QuoteType::PRICE},
-        {"RATE_LNVOL", MarketDatum::QuoteType::RATE_LNVOL},
-        {"RATE_GVOL", MarketDatum::QuoteType::RATE_LNVOL}, // deprecated
-        {"RATE_NVOL", MarketDatum::QuoteType::RATE_NVOL},
-        {"RATE_SLNVOL", MarketDatum::QuoteType::RATE_SLNVOL},
-        {"SHIFT", MarketDatum::QuoteType::SHIFT},
-        {"SECURITY_SPREAD", MarketDatum::QuoteType::SECURITY_SPREAD},
+        { "BASIS_SPREAD", MarketDatum::QuoteType::BASIS_SPREAD },
+        { "CREDIT_SPREAD", MarketDatum::QuoteType::CREDIT_SPREAD },
+        { "YIELD_SPREAD", MarketDatum::QuoteType::YIELD_SPREAD },
+        { "RATE", MarketDatum::QuoteType::RATE },
+        { "RATIO", MarketDatum::QuoteType::RATIO },
+        { "PRICE", MarketDatum::QuoteType::PRICE },
+        { "RATE_LNVOL", MarketDatum::QuoteType::RATE_LNVOL },
+        { "RATE_GVOL", MarketDatum::QuoteType::RATE_LNVOL }, // deprecated
+        { "RATE_NVOL", MarketDatum::QuoteType::RATE_NVOL },
+        { "RATE_SLNVOL", MarketDatum::QuoteType::RATE_SLNVOL },
+        { "SHIFT", MarketDatum::QuoteType::SHIFT },
+        { "SECURITY_SPREAD", MarketDatum::QuoteType::SECURITY_SPREAD },
     };
 
     if (s == "RATE_GVOL")
@@ -226,10 +227,15 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
     }
 
     case MarketDatum::InstrumentType::RECOVERY_RATE: {
-        QL_REQUIRE(tokens.size() == 5, "5 tokens expected in " << datumName);
-        const string& underlyingName = tokens[2];
-        const string& seniority = tokens[3];
-        const string& ccy = tokens[4];
+        QL_REQUIRE(tokens.size() == 3 || tokens.size() == 5, "3 or 5 tokens expected in " << datumName);
+        const string& underlyingName = tokens[2]; // issuer name for CDS, security ID for bond specific RRs
+	string seniority = "";
+        string ccy = "";
+        if (tokens.size() == 5) {
+            // CDS
+            seniority = tokens[3];
+            ccy = tokens[4];
+        }
         return boost::make_shared<RecoveryRateQuote>(value, asof, datumName, underlyingName, seniority, ccy);
     }
 

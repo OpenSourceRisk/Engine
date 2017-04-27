@@ -62,7 +62,8 @@ private:
     OptionData option_;
     vector<LegData> swap_;
 
-    boost::shared_ptr<VanillaSwap> buildVanillaSwap(const boost::shared_ptr<EngineFactory>&);
+    boost::shared_ptr<VanillaSwap> buildVanillaSwap(const boost::shared_ptr<EngineFactory>&,
+                                                    const Date& firstExerciseDate = Null<Date>());
     boost::shared_ptr<NonstandardSwap> buildNonStandardSwap(const boost::shared_ptr<EngineFactory>&);
     void buildEuropean(const boost::shared_ptr<EngineFactory>&);
     void buildBermudan(const boost::shared_ptr<EngineFactory>&);

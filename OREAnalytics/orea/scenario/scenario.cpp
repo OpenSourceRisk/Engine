@@ -17,6 +17,8 @@
 */
 
 #include <orea/scenario/scenario.hpp>
+#include <ored/utilities/parsers.hpp>
+#include <boost/algorithm/string/split.hpp>
 
 namespace ore {
 namespace analytics {
@@ -31,6 +33,8 @@ std::ostream& operator<<(std::ostream& out, const RiskFactorKey::KeyType& type) 
         return out << "IndexCurve";
     case RiskFactorKey::KeyType::SwaptionVolatility:
         return out << "SwaptionVolatility";
+    case RiskFactorKey::KeyType::OptionletVolatility:
+        return out << "OptionletVolatility";
     case RiskFactorKey::KeyType::FXSpot:
         return out << "FXSpot";
     case RiskFactorKey::KeyType::FXVolatility:
@@ -47,5 +51,6 @@ std::ostream& operator<<(std::ostream& out, const RiskFactorKey::KeyType& type) 
 std::ostream& operator<<(std::ostream& out, const RiskFactorKey& key) {
     return out << key.keytype << "/" << key.name << "/" << key.index;
 }
+
 }
 }
