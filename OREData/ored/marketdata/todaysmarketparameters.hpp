@@ -67,10 +67,11 @@ struct MarketConfiguration {
           fxVolatilitiesId(Market::defaultConfiguration), swaptionVolatilitiesId(Market::defaultConfiguration),
           defaultCurvesId(Market::defaultConfiguration), swapIndexCurvesId(Market::defaultConfiguration),
           capFloorVolatilitiesId(Market::defaultConfiguration), equityCurvesId(Market::defaultConfiguration),
-          equityVolatilitiesId(Market::defaultConfiguration), securitySpreadsId(Market::defaultConfiguration) {}
+          equityVolatilitiesId(Market::defaultConfiguration), securitySpreadsId(Market::defaultConfiguration),
+          securityRecoveryRatesId(Market::defaultConfiguration) {}
     string discountingCurvesId, yieldCurvesId, indexForwardingCurvesId, fxSpotsId, fxVolatilitiesId,
         swaptionVolatilitiesId, defaultCurvesId, swapIndexCurvesId, capFloorVolatilitiesId, equityCurvesId,
-        equityVolatilitiesId, securitySpreadsId;
+        equityVolatilitiesId, securitySpreadsId, securityRecoveryRatesId;
 };
 
 bool operator==(const MarketConfiguration& lhs, const MarketConfiguration& rhs);
@@ -127,8 +128,10 @@ public:
     const map<string, string>& equityCurves(const string& configuration) const;
     // SP5 => EquityVolatility/USD/SP5, Lufthansa => Equity/EUR/Lufthansa, etc.
     const map<string, string>& equityVolatilities(const string& configuration) const;
-    //! TODO: give an example
+    //! Example: SecuritySpread/ISIN
     const map<string, string>& securitySpreads(const string& configuration) const;
+    //! Example: SecurityRecoveryRate/ISIN
+    const map<string, string>& securityRecoveryRates(const string& configuration) const;
 
     //! Build a vector of all the curve specs (may contain duplicates)
     vector<string> curveSpecs(const string& configuration) const;
@@ -146,6 +149,7 @@ public:
     const string& equityCurvesId(const string& configuration) const;
     const string& equityVolatilitiesId(const string& configuration) const;
     const string& securitySpreadsId(const string& configuration) const;
+    const string& securityRecoveryRatesId(const string& configuration) const;
     //@}
 
     //! \name Setters
@@ -163,6 +167,7 @@ public:
     void addEquityCurves(const string& id, const map<string, string>& assignments);
     void addEquityVolatilities(const string& id, const map<string, string>& assignments);
     void addSecuritySpreads(const string& id, const map<string, string>& assignments);
+    void addSecurityRecoveryRates(const string& id, const map<string, string>& assignments);
     //@}
 
     //! \name Serialisation
@@ -181,13 +186,13 @@ private:
     // maps configuration name to id list
     map<string, MarketConfiguration> configurations_;
     // maps id to map (key,value)
-    map<string, map<string, string>> discountingCurves_, yieldCurves_, indexForwardingCurves_, fxSpots_,
+    map<string, map<string, string> > discountingCurves_, yieldCurves_, indexForwardingCurves_, fxSpots_,
         fxVolatilities_, swaptionVolatilities_, defaultCurves_, capFloorVolatilities_, equityCurves_,
-        equityVolatilities_, securitySpreads_;
+        equityVolatilities_, securitySpreads_, securityRecoveryRates_;
     ;
-    map<string, map<string, string>> swapIndices_;
+    map<string, map<string, string> > swapIndices_;
 
-    void curveSpecs(const map<string, map<string, string>>&, const string&, vector<string>&) const;
+    void curveSpecs(const map<string, map<string, string> >&, const string&, vector<string>&) const;
 };
 
 // inline
@@ -259,6 +264,11 @@ inline const string& TodaysMarketParameters::equityVolatilitiesId(const string& 
 inline const string& TodaysMarketParameters::securitySpreadsId(const string& configuration) const {
     QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
     return configurations_.at(configuration).securitySpreadsId;
+}
+
+inline const string& TodaysMarketParameters::securityRecoveryRatesId(const string& configuration) const {
+    QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
+    return configurations_.at(configuration).securityRecoveryRatesId;
 }
 
 inline const map<string, string>& TodaysMarketParameters::discountingCurves(const string& configuration) const {
@@ -443,6 +453,12 @@ inline void TodaysMarketParameters::addSecuritySpreads(const string& id, const m
     securitySpreads_[id] = assignments;
     for (auto s : assignments)
         DLOG("TodaysMarketParameters, add security spreads: " << id << " " << s.first << " " << s.second);
+}
+
+inline void TodaysMarketParameters::addSecurityRecoveryRates(const string& id, const map<string, string>& assignments) {
+    securityRecoveryRates_[id] = assignments;
+    for (auto s : assignments)
+        DLOG("TodaysMarketParameters, add security recovery rates: " << id << " " << s.first << " " << s.second);
 }
 
 } // namespace data

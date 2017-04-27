@@ -49,7 +49,8 @@ public:
         Default,
         Equity,
         EquityVolatility,
-        SecuritySpread
+        SecuritySpread,
+        SecurityRecoveryRate
     };
     //! Default destructor
     virtual ~CurveSpec() {}
@@ -76,6 +77,8 @@ public:
             return "FXVolatility";
         case CurveType::SecuritySpread:
             return "SecuritySpread";
+        case CurveType::SecurityRecoveryRate:
+            return "SecurityRecoveryRate";
         case CurveType::Default:
             return "Default";
         case CurveType::Equity:
@@ -316,6 +319,21 @@ public:
     //! Default constructor
     SecuritySpreadSpec() {}
     CurveType baseType() const { return CurveType::SecuritySpread; }
+    string subName() const { return securityID_; }
+    const string& securityID() const { return securityID_; }
+    //@}
+
+protected:
+    string securityID_;
+};
+  
+//! SecurityRecoveryRate description
+class SecurityRecoveryRateSpec : public CurveSpec {
+public:
+    SecurityRecoveryRateSpec(const string& securityID) : securityID_(securityID) {}
+    //! Default constructor
+    SecurityRecoveryRateSpec() {}
+    CurveType baseType() const { return CurveType::SecurityRecoveryRate; }
     string subName() const { return securityID_; }
     const string& securityID() const { return securityID_; }
     //@}
