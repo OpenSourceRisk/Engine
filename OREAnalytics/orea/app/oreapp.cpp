@@ -415,8 +415,12 @@ void OREApp::runSensitivityAnalysis() {
 
     sensiInputInitialize(simMarketData, sensiData, engineData, sensiPortfolio, marketConfiguration);
 
-    boost::shared_ptr<SensitivityAnalysis> sensiAnalysis = boost::make_shared<SensitivityAnalysis>(
-        sensiPortfolio, market_, marketConfiguration, engineData, simMarketData, sensiData, conventions_);
+    bool recalibrateModels =
+        params_->has("simulation", "recalibrateModels") && parseBool(params_->get("simulation", "recalibrateModels"));
+
+    boost::shared_ptr<SensitivityAnalysis> sensiAnalysis =
+        boost::make_shared<SensitivityAnalysis>(sensiPortfolio, market_, marketConfiguration, engineData, simMarketData,
+                                                sensiData, conventions_, recalibrateModels);
     sensiAnalysis->generateSensitivities();
 
     sensiOutputReports(sensiAnalysis);
@@ -539,7 +543,7 @@ void OREApp::buildNPVCube() {
     if (cubeDepth_ > 1)
         calculators.push_back(boost::make_shared<CashflowCalculator>(baseCurrency, asof_, grid_, 1));
     LOG("Build cube");
-    ValuationEngine engine(asof_, grid_, simMarket_);
+    ValuationEngine engine(asof_, grid_, simMarket_, modelBuilders_);
     ostringstream o;
     o.str("");
     o << "Build Cube " << simPortfolio_->size() << " x " << grid_->size() << " x " << samples_ << "... ";
@@ -571,6 +575,11 @@ void OREApp::generateNPVCube() {
         simPortfolio_ = buildPortfolio(simFactory);
         QL_REQUIRE(simPortfolio_->size() == portfolio_->size(),
                    "portfolio size mismatch, check simulation market setup");
+        if (params_->has("simulation", "recalibrateModels") &&
+            parseBool(params_->get("simulation", "recalibrateModels")))
+            modelBuilders_ = simFactory->modelBuilders();
+        else
+            modelBuilders_.clear();
         out_ << "OK" << endl;
     }
 

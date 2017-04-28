@@ -577,7 +577,7 @@ void test_performance(bool bigPortfolio, bool bigScenario, bool lotsOfSensis, bo
     boost::timer t2;
     t2.restart();
     boost::shared_ptr<SensitivityAnalysis> sa = boost::make_shared<SensitivityAnalysis>(
-        portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, conventions);
+        portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, conventions, false);
     sa->generateSensitivities();
     Real elapsed = t2.elapsed();
     Size numScenarios = sa->scenarioGenerator()->samples();
