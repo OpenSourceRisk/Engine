@@ -34,6 +34,10 @@
       <Discounting>GBP-SONIA</Discounting>
     </SwapIndex>
   </SwapIndexCurves>
+  <ZeroInflationIndexCurves id="default">
+  </ZeroInflationIndexCurves>
+  <YYInflationIndexCurves id="default">
+  </YYInflationIndexCurves>
   <!-- fx spot definition -->
   <FxSpots id="default">
     <FxSpot pair="EURGBP">FX/EUR/GBP</FxSpot>
