@@ -115,7 +115,7 @@ public:
     static void addChild(XMLDocument& doc, XMLNode* n, const string& name, int value);
     static void addChild(XMLDocument& doc, XMLNode* n, const string& name, bool value);
 
-    //! Adds <Name>p1,p2,p3</Name>
+    //! Adds <code>\<Name>p1,p2,p3\</Name></code>
     template <class T> static void addGenericChild(XMLDocument& doc, XMLNode* n, const char* name, const T& value) {
         std::ostringstream oss;
         oss << value;
@@ -140,7 +140,7 @@ public:
                             const vector<string>& values);
     static void addChildren(XMLDocument& doc, XMLNode* n, const string& names, const string& name,
                             const vector<Real>& values);
-    //! Adds "<name>v1,v2,v3</Name>" - the inverse of getChildrenValuesAsDoublesCompact
+    //! Adds <code>\<Name>v1,v2,v3</Name></code> - the inverse of getChildrenValuesAsDoublesCompact
     static void addChild(XMLDocument& doc, XMLNode* n, const string& name, const vector<Real>& values);
     static void addChildrenWithAttributes(XMLDocument& doc, XMLNode* n, const string& names, const string& name,
                                           const vector<Real>& values, const string& attrName,
