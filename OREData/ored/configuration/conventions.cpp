@@ -306,9 +306,9 @@ IRSwapConvention::IRSwapConvention(const string& id, const string& fixedCalendar
                                    const string& fixedConvention, const string& fixedDayCounter, const string& index,
                                    bool hasSubPeriod, const string& floatFrequency, const string& subPeriodsCouponType)
 
-    : Convention(id, Type::Swap), strFixedCalendar_(fixedCalendar), strFixedFrequency_(fixedFrequency),
-      strFixedConvention_(fixedConvention), strFixedDayCounter_(fixedDayCounter), strIndex_(index),
-      hasSubPeriod_(hasSubPeriod), strFloatFrequency_(floatFrequency), strSubPeriodsCouponType_(subPeriodsCouponType) {
+    : Convention(id, Type::Swap), hasSubPeriod_(hasSubPeriod), strFixedCalendar_(fixedCalendar),
+      strFixedFrequency_(fixedFrequency), strFixedConvention_(fixedConvention), strFixedDayCounter_(fixedDayCounter),
+      strIndex_(index), strFloatFrequency_(floatFrequency), strSubPeriodsCouponType_(subPeriodsCouponType) {
     build();
 }
 
