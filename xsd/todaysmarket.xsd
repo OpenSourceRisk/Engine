@@ -10,14 +10,14 @@
         <xs:element type="discountCurvesType" name="DiscountingCurves" maxOccurs="unbounded" minOccurs="1"/>
         <xs:element type="indexForwardingCurvesType" name="IndexForwardingCurves" maxOccurs="unbounded" minOccurs="1"/>
         <xs:element type="swapIndexCurvesType" name="SwapIndexCurves" maxOccurs="unbounded" minOccurs="1"/>
-        <xs:element type="zeroInflationIndexCurvesType" name="ZeroInflationIndexCurves" maxOccurs="unbounded" minOccurs="1"/>
-        <xs:element type="yyInflationIndexCurvesType" name="YYInflationIndexCurves" maxOccurs="unbounded" minOccurs="1"/>
+        <xs:element type="zeroInflationIndexCurvesType" name="ZeroInflationIndexCurves" maxOccurs="unbounded" minOccurs="0"/>
+        <xs:element type="yyInflationIndexCurvesType" name="YYInflationIndexCurves" maxOccurs="unbounded" minOccurs="0"/>
         <xs:element type="fxSpotsType" name="FxSpots" maxOccurs="unbounded" minOccurs="1"/>
         <xs:element type="fxVolatilitiesType" name="FxVolatilities" maxOccurs="unbounded" minOccurs="1"/>
         <xs:element type="swaptionVolatilitiesType" name="SwaptionVolatilities" maxOccurs="unbounded" minOccurs="1"/>
         <xs:element type="capFloorVolatilitiesType" name="CapFloorVolatilities" maxOccurs="unbounded" minOccurs="0"/>
         <xs:element type="defaultCurvesType" name="DefaultCurves" maxOccurs="unbounded" minOccurs="1"/>
-        <xs:element type="inflationCapFloorPriceSurfacesType" name="InflationCapFloorPriceSurfaces" maxOccurs="unbounded" minOccurs="1"/>
+        <xs:element type="inflationCapFloorPriceSurfacesType" name="InflationCapFloorPriceSurfaces" maxOccurs="unbounded" minOccurs="0"/>
         <xs:element type="equityCurvesType" name="EquityCurves" maxOccurs="unbounded" minOccurs="0"/>
         <xs:element type="equityVolatilitiesType" name="EquityVolatilities" maxOccurs="unbounded" minOccurs="0"/>
         <xs:element type="securitySpreadsType" name="SecuritySpreads" maxOccurs="unbounded" minOccurs="0"/>
