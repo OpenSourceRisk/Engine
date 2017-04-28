@@ -28,14 +28,9 @@
 #include <ored/portfolio/builders/fxoption.hpp>
 #include <ored/portfolio/builders/capfloor.hpp>
 #include <ql/time/calendars/all.hpp>
+#include <ored/utilities/to_string.hpp>
 
 namespace testsuite {
-
-string toString(Date d) {
-    ostringstream o;
-    o << io::iso_date(d);
-    return o.str();
-}
 
 boost::shared_ptr<Trade> buildSwap(string id, string ccy, bool isPayer, Real notional, int start, Size term, Real rate,
                                    Real spread, string fixedFreq, string fixedDC, string floatFreq, string floatDC,
@@ -53,8 +48,8 @@ boost::shared_ptr<Trade> buildSwap(string id, string ccy, bool isPayer, Real not
 
     Date qlStartDate = calendar.adjust(today + start * Years);
     Date qlEndDate = calendar.adjust(qlStartDate + term * Years);
-    string startDate = toString(qlStartDate);
-    string endDate = toString(qlEndDate);
+    string startDate = ore::data::to_string(qlStartDate);
+    string endDate = ore::data::to_string(qlEndDate);
 
     // envelope
     Envelope env("CP");
@@ -92,8 +87,8 @@ boost::shared_ptr<Trade> buildEuropeanSwaption(string id, string longShort, stri
 
     Date qlStartDate = calendar.adjust(today + start * Years);
     Date qlEndDate = calendar.adjust(qlStartDate + term * Years);
-    string startDate = toString(qlStartDate);
-    string endDate = toString(qlEndDate);
+    string startDate = ore::data::to_string(qlStartDate);
+    string endDate = ore::data::to_string(qlEndDate);
 
     // envelope
     Envelope env("CP");
@@ -128,7 +123,7 @@ boost::shared_ptr<Trade> buildFxOption(string id, string longShort, string putCa
     string rule = "Forward";
 
     Date qlExpiry = calendar.adjust(today + expiry * Years);
-    string expiryDate = toString(qlExpiry);
+    string expiryDate = ore::data::to_string(qlExpiry);
 
     // envelope
     Envelope env("CP");
@@ -168,8 +163,8 @@ boost::shared_ptr<Trade> buildCapFloor(string id, string ccy, string longShort, 
 
     Date qlStartDate = calendar.adjust(today + start * Years);
     Date qlEndDate = calendar.adjust(qlStartDate + term * Years);
-    string startDate = toString(qlStartDate);
-    string endDate = toString(qlEndDate);
+    string startDate = ore::data::to_string(qlStartDate);
+    string endDate = ore::data::to_string(qlEndDate);
 
     // envelope
     Envelope env("CP");
@@ -188,18 +183,20 @@ boost::shared_ptr<Trade> buildCapFloor(string id, string ccy, string longShort, 
 boost::shared_ptr<Trade> buildZeroBond(string id, string ccy, Real notional, Size term) {
     Date today = Settings::instance().evaluationDate();
     Date qlEndDate = today + term * Years;
-    string maturityDate = toString(qlEndDate);
-    string issueDate = toString(today);
+    string maturityDate = ore::data::to_string(qlEndDate);
+    string issueDate = ore::data::to_string(today);
 
     string settlementDays = "2";
     string calendar = "TARGET";
     string issuerId = "BondIssuer1";
+    string creditCurveId = "BondIssuer1";
     string securityId = "Bond1";
     string referenceCurveId = "BondCurve1";
     // envelope
     Envelope env("CP");
-    boost::shared_ptr<Trade> trade(new ore::data::Bond(env, issuerId, securityId, referenceCurveId, settlementDays,
-                                                       calendar, notional, maturityDate, ccy, issueDate));
+    boost::shared_ptr<Trade> trade(new ore::data::Bond(env, issuerId, creditCurveId, securityId, referenceCurveId,
+                                                       settlementDays, calendar, notional, maturityDate, ccy,
+                                                       issueDate));
     trade->id() = id;
 
     return trade;

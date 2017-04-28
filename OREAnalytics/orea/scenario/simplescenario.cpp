@@ -19,6 +19,7 @@
 #include <orea/scenario/simplescenario.hpp>
 #include <ored/utilities/log.hpp>
 #include <ql/errors.hpp>
+#include <boost/make_shared.hpp>
 
 namespace ore {
 namespace analytics {

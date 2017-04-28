@@ -622,7 +622,7 @@
     </Envelope>
     <BondData>
       <IssuerId>CPTY_C</IssuerId>
-      <CreditCurveId>SECURITY_1</CreditCurveId>
+      <CreditCurveId>CPTY_C</CreditCurveId>
       <SecurityId>SECURITY_1</SecurityId>
       <ReferenceCurveId>BENCHMARK_EUR</ReferenceCurveId>
       <SettlementDays>2</SettlementDays>
