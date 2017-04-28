@@ -308,7 +308,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                 // have we built the curve already ?
                 auto itr = requiredInflationCurves.find(inflationspec->name());
                 if (itr == requiredInflationCurves.end()) {
-                    LOG("Building InflationCurve for asof " << asof);
+                    LOG("Building InflationCurve " << inflationspec->name() << " for asof " << asof);
                     boost::shared_ptr<InflationCurve> inflationCurve = boost::make_shared<InflationCurve>(
                         asof, *inflationspec, loader, curveConfigs, conventions, requiredYieldCurves);
                     itr = requiredInflationCurves.insert(make_pair(inflationspec->name(), inflationCurve)).first;
