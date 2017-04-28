@@ -211,7 +211,6 @@ void CPISwapTest::testCPISwapPrice() {
 
     // Leg variables
     bool isInArrears = false;
-    int days = 0;
     string dc = "ACT/ACT";
     vector<Real> notional(1, 10000000);
     string paymentConvention = "F";
