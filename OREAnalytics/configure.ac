@@ -1,5 +1,5 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT([OREAnalytics], [1.8],
+AC_INIT([OREAnalytics], [1.8.2],
         [opensourcerisk.org/forum],
         [OREAnalytics])
 AC_PREREQ(2.62)
