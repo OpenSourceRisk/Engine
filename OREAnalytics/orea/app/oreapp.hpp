@@ -18,7 +18,7 @@
 
 /*! \file orea/app/oreapp.hpp
   \brief Open Risk Engine App
-  \ingroup
+  \ingroup app
  */
 
 #pragma once

@@ -111,7 +111,6 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
             std::vector<double> factors(strFactorIDs.size());
             for (Size i = 0; i < strFactorIDs.size(); i++) {
                 boost::shared_ptr<MarketDatum> marketQuote = loader.get(strFactorIDs[i], asof);
-
                 // Check that we have a valid seasonality factor
                 if (marketQuote) {
                     QL_REQUIRE(marketQuote->instrumentType() == MarketDatum::InstrumentType::SEASONALITY,
@@ -122,8 +121,8 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                                    << config->seasonalityFrequency() << " with " << strFactorIDs.size() << " factors.");
                     boost::shared_ptr<SeasonalityQuote> sq = boost::dynamic_pointer_cast<SeasonalityQuote>(marketQuote);
                     QL_REQUIRE(sq->type() == "MULT", "Market quote (" << sq->name() << ") not of multiplicative type.");
-                    int findex = config->seasonalityBaseDate().month() - sq->applyMonth() < 0
-                                     ? config->seasonalityBaseDate().month() - sq->applyMonth() + 12
+                    QuantLib::Size findex = (config->seasonalityBaseDate().month() < sq->applyMonth())
+                                     ? 12 + config->seasonalityBaseDate().month() - sq->applyMonth()
                                      : config->seasonalityBaseDate().month() - sq->applyMonth();
                     factors[findex] = sq->quote()->value();
                 } else {
@@ -135,14 +134,12 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
             seasonality = boost::make_shared<MultiplicativePriceSeasonality>(config->seasonalityBaseDate(),
                                                                              config->seasonalityFrequency(), factors);
         }
-
         // construct curve (ZC or YY depending on configuration)
 
         // base zero / yoy rate: if given, take it, otherwise set it to first quote
         Real baseRate = config->baseRate() != Null<Real>() ? config->baseRate() : quotes[0]->value();
 
         interpolatedIndex_ = conv->interpolated();
-
         boost::shared_ptr<YoYInflationIndex> zc_to_yoy_conversion_index;
         if (config->type() == InflationCurveConfig::Type::ZC || derive_yoy_from_zc) {
             // ZC Curve
@@ -167,7 +164,6 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                     interpolatedIndex_);
             }
         }
-
         if (config->type() == InflationCurveConfig::Type::YY) {
             // YOY Curve
             std::vector<boost::shared_ptr<YoYInflationTraits::helper>> instruments;
@@ -215,7 +211,6 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                 asof, config->calendar(), config->dayCounter(), config->lag(), config->frequency(), interpolatedIndex_,
                 baseRate, nominalTs, instruments, config->tolerance()));
         }
-
         if (seasonality != nullptr) {
             curve_->setSeasonality(seasonality);
         }

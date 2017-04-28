@@ -16,6 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#pragma once
+
 #include <ored/portfolio/trade.hpp>
 #include <boost/make_shared.hpp>
 

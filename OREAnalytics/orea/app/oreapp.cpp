@@ -93,32 +93,29 @@ void OREApp::run() {
         /**********************
          * Sensitivity analysis
          */
-        fflush(stdout);
         if (sensitivity_) {
             runSensitivityAnalysis();
         } else {
             LOG("skip sensitivity analysis");
-            cout << setw(tab_) << left << "Sensitivity... ";
-            cout << "SKIP" << endl;
+            out_ << setw(tab_) << left << "Sensitivity... ";
+            out_ << "SKIP" << endl;
         }
 
         /****************
          * Stress testing
          */
-        fflush(stdout);
         if (stress_) {
             runStressTest();
         } else {
             LOG("skip stress test");
-            cout << setw(tab_) << left << "Stress testing... ";
-            cout << "SKIP" << endl;
+            out_ << setw(tab_) << left << "Stress testing... ";
+            out_ << "SKIP" << endl;
         }
 
         /******************************************
          * Simulation: Scenario and Cube Generation
          */
 
-        fflush(stdout);
         if (simulate_) {
             generateNPVCube();
         } else {
@@ -405,7 +402,7 @@ void OREApp::writeInitialReports() {
 
 void OREApp::runSensitivityAnalysis() {
 
-    cout << setw(tab_) << left << "Sensitivity Report... " << flush;
+    out_ << setw(tab_) << left << "Sensitivity Report... " << flush;
 
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketData(new ScenarioSimMarketParameters);
     boost::shared_ptr<SensitivityScenarioData> sensiData(new SensitivityScenarioData);
@@ -425,7 +422,7 @@ void OREApp::runSensitivityAnalysis() {
 
     sensiOutputReports(sensiAnalysis);
 
-    cout << "OK" << endl;
+    out_ << "OK" << endl;
 }
 
 void OREApp::sensiInputInitialize(boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
@@ -479,7 +476,7 @@ void OREApp::sensiOutputReports(const boost::shared_ptr<SensitivityAnalysis>& se
 
 void OREApp::runStressTest() {
 
-    cout << setw(tab_) << left << "Stress Test Report... " << flush;
+    out_ << setw(tab_) << left << "Stress Test Report... " << flush;
     // We reset this here because the date grid building below depends on it.
     Settings::instance().evaluationDate() = asof_;
 
@@ -516,7 +513,7 @@ void OREApp::runStressTest() {
     boost::shared_ptr<Report> stressReport = boost::make_shared<CSVFileReport>(outputFile);
     stressTest->writeReport(stressReport, threshold);
 
-    cout << "OK" << endl;
+    out_ << "OK" << endl;
 }
 
 void OREApp::initAggregationScenarioData() {

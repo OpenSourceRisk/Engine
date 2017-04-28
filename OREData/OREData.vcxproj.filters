@@ -327,6 +327,9 @@
     <ClInclude Include="ored\model\eqbsdata.hpp">
       <Filter>model</Filter>
     </ClInclude>
+    <ClInclude Include="ored\marketdata\securityrecoveryrate.hpp">
+      <Filter>marketdata</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp">
@@ -568,6 +571,9 @@
     </ClCompile>
     <ClCompile Include="ored\model\eqbsdata.cpp">
       <Filter>model</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\marketdata\securityrecoveryrate.cpp">
+      <Filter>marketdata</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

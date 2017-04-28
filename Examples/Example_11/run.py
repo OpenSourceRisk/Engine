@@ -20,10 +20,11 @@ oreex.plot("exposure_trade_Swap.csv", 2, 8 ,'c', "BASEL EE")
 oreex.plot("exposure_trade_Swap.csv", 2, 9 ,'r', "BASEL EEE")
 
 epe = oreex.get_output_data_from_column("xva.csv", 12, 1)
-oreex.plot_hline(int(epe[0]), 'g', "BASEL EPE")
+from decimal import Decimal
+oreex.plot_hline(Decimal(epe[0]), 'g', "BaselEPE")
 
 eepe = oreex.get_output_data_from_column("xva.csv", 13, 1)
-oreex.plot_hline(int(eepe[0]), 'y', "BASEL EEPE")
+oreex.plot_hline(Decimal(eepe[0]), 'y', "BaselEEPE")
 
 oreex.decorate_plot(title="Example 11 - Basel Measures")
 oreex.save_plot_to_file()

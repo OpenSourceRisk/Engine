@@ -795,7 +795,7 @@ public:
     string index() { return index_; }
     string type() { return type_; }
     string month() { return month_; }
-    int applyMonth() const;
+    QuantLib::Size applyMonth() const;
 
 private:
     string index_;

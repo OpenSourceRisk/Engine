@@ -17,7 +17,7 @@
 */
 
 /*!
-  \file ored/configuration/inflationcpfloorpricesurfaceconfig.hpp
+  \file ored/configuration/inflationcapfloorpricesurfaceconfig.hpp
   \brief Inflation cap floor price surface config
   \ingroup configuration
 */
