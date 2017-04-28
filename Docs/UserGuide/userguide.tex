@@ -77,6 +77,7 @@
 \newcommand{\LGD}{\mathit{LGD}}
 \newcommand{\DIM}{\mathit{DIM}}
 \newcommand{\bs}{\textbackslash}
+\newcommand{\REDY}{\color{red}Y}
  
 \begin{document}
 
@@ -84,7 +85,7 @@
 \title{ORE User Guide}
 \author{Quaternion Risk Management}
 %\date{7 October 2016}
-\date{24 April 2017}
+\date{28 April 2017}
 \maketitle
 
 \newpage
@@ -98,7 +99,7 @@
 Date & Author & Comment \\
 \hline
 7 October 2016 & Quaternion & initial release\\
-24 April 2017 & Quaternion  & updates for release v2: Bonds, Inflation, Equity, Sensitivity \& Stress\\
+28 April 2017 & Quaternion  & updates for release v2: Bonds, Inflation, Equity, Sensitivity \& Stress\\
 \hline
 \end{supertabular}
 \end{center}
@@ -168,17 +169,55 @@ for portfolios with netting, variation and initial margin agreements.  Subsequen
 Carlo based market risk measures will be complemented by parametric methods, e.g. for benchmarking various initial
 margin calculation models applied in cleared and non-cleared derivatives business.
 
-\medskip The first release of ORE in October 2016 covers the simulation of interest rate and FX risk factors and
-portfolios of Interest Rate Swaps, Caps/Floors, Swaptions, FX Forwards, Cross Currency Swaps and FX Options. Subsequent
-releases from Q1 2017 onwards will extend the derivative product and the risk factor range to Inflation, Credit, Equity
-and Commodity. With the introduction of credit risk factors, the scope will also be extended to cover cash products
-(loans and bonds) and related portfolio analytics.
+\medskip 
+%The first release of ORE in October 2016 covers the simulation of interest rate and FX risk factors and
+%portfolios of Interest Rate Swaps, Caps/Floors, Swaptions, FX Forwards, Cross Currency Swaps and FX Options. Subsequent
+%releases from Q1 2017 onwards will extend the derivative product and the risk factor range to Inflation, Credit, Equity
+%and Commodity. With the introduction of credit risk factors, the scope will also be extended to cover cash products
+%(loans and bonds) and related portfolio analytics.
+The product coverage of the second release of ORE in May 2017 is sketched in the following table.
+\begin{table}[hbt]
+\scriptsize
+\begin{center}
+\begin{tabular}{|l|p{1.5cm}|p{2.6cm}|p{1.5cm}|}
+\hline
+Product & Pricing and Cashflows & Sensitivity Analysis \& Stress Testing & Exposure Simulation \& XVA\\
+\hline
+\hline
+{\color{red}Fixed and Floating Rate Bonds/Loans} & Y & Y & N \\
+\hline
+Interest Rate Swaps & Y & Y & Y \\
+\hline
+Caps/Floors & Y & Y & Y \\
+\hline
+Swaptions & Y & Y & Y \\
+\hline
+FX Forwards & Y & Y & Y \\
+\hline
+Cross Currency Swaps & Y & Y & Y \\
+\hline
+FX Options & Y & Y & Y \\
+\hline
+{\color{red}Equity Forwards} & Y & Y & Y \\
+\hline
+{\color{red}Equity Options} & Y & Y & Y \\
+\hline
+{\color{red}CPI Swaps} & Y & N & N \\
+\hline
+{\color{red}YY Inflation Swaps} & Y & N & N \\
+\hline
+\end{tabular}
+\caption{ORE product coverage, products highlighted in red were added in ORE release 2.}
+\label{tab_coverage}
+\end{center}
+\end{table}
+Future releases will further extend the product and the risk factor range to Credit and Commodity, complete the analytics scope indicated in the table above and expand on the market risk analytics, add integrated credit/market risk analytics. 
 
 \medskip The simulation models applied in ORE's risk factor evolution implement the models discussed in detail in {\em
-  Modern Derivatives Pricing and Credit Exposure Analysis} \cite{Lichters}: The IR/FX risk factor evolution is based on
+  Modern Derivatives Pricing and Credit Exposure Analysis} \cite{Lichters}: The IR/FX/EQ risk factor evolution is based on
 a cross currency model consisting of an arbitrage free combination of Linear Gauss Markov models for all interest rates
 and lognormal processes for the FX rates. The model components are calibrated to cross currency discounting and forward
-curves, Swaptions and FX Options.
+curves, Swaptions, FX Options and EQ Options.
 
 \subsubsection*{Further Resources}
 \begin{itemize}
@@ -276,10 +315,10 @@ cases and documentation. Release archives will be provided at \url{https://githu
 \medskip
 The release consists of a single archive in zip format
 \begin{itemize}
-\item {\tt ORE-1.8.zip}
+\item {\tt ORE-<VERSION>.zip}
 \end{itemize}
 
-When unpacked, it creates a directory {\tt ORE-1.8} with the following files respectively subdirectories
+When unpacked, it creates a directory {\tt ORE-<VERSION>} with the following files respectively subdirectories
 \begin{enumerate}
 %\item {\tt bin/win32/ore.exe}
 %\item {\tt bin/x64/ore.exe}
@@ -1921,7 +1960,7 @@ The parameters have the following interpretation:
   NPV, the shift size and the resulting first and (pure) second order finite differences
 \item {\tt crossGammaOutputFile:} File containing the results of the sensitivity calculation in terms of the base scenario
   NPV, two shift sizes and a (mixed) second order finite difference associated to a cross gamma calculation
-\item {\tt parRateSensitivityOutputFile:} File containing par sensitivities (only available in ORE+)
+%\item {\tt parRateSensitivityOutputFile:} File containing par sensitivities (only available in ORE+)
 \item {\tt outputSensitivityThreshold:} Only finite differences with absolute value greater than this number are written
   to the output files.
 \end{itemize}
@@ -3335,7 +3374,7 @@ applied.
 
 \subsubsection{Inflation Cap/Floor Price Surfaces}
 
-Listing \ref{lst:inflationcapfloorpricesurface_configuration} shows the configuration of an zero cuopon inflation cap
+Listing \ref{lst:inflationcapfloorpricesurface_configuration} shows the configuration of an zero coupon inflation cap
 floor price surface.
 
 \begin{listing}[H]
