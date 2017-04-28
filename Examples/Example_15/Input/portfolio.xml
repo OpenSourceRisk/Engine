@@ -74,7 +74,6 @@
   <Trade id="CC_SWAP_EUR_USD">
     <TradeType>Swap</TradeType>
     <Envelope>
-      <Type>Swap</Type>
       <CounterParty>CPTY_A</CounterParty>
       <NettingSetId>CPTY_A</NettingSetId>
     </Envelope>
@@ -158,7 +157,6 @@
   <Trade id="CC_SWAP_EUR_USD_RESET">
     <TradeType>Swap</TradeType>
     <Envelope>
-      <Type>Swap</Type>
       <CounterParty>CPTY_A</CounterParty>
       <NettingSetId>CPTY_A</NettingSetId>
     </Envelope>
@@ -624,6 +622,7 @@
     </Envelope>
     <BondData>
 	  <IssuerId>CPTY_C</IssuerId>
+      <CreditCurveId>SECURITY_1</CreditCurveId>
 	  <SecurityId>SECURITY_1</SecurityId>
 	  <ReferenceCurveId>BENCHMARK_EUR</ReferenceCurveId>
 	  <SettlementDays>2</SettlementDays>

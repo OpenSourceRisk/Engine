@@ -43,25 +43,39 @@
   <xs:complexType name="crossAssetModel">
     <xs:sequence>
       <xs:element type="currencyCode" name="DomesticCcy"/> <!-- FIXME: Currency not Ccy -->
-      <xs:element name="Currencies">
+      <xs:element name="Currencies" maxOccurs="1" minOccurs="1">
         <xs:complexType>
            <xs:sequence>
               <xs:element type="currencyCode" name="Currency" maxOccurs="unbounded" minOccurs="1"/>
            </xs:sequence>
          </xs:complexType>
       </xs:element>
-      <xs:element type="xs:float" name="BootstrapTolerance"/>
-      <xs:element name="InterestRateModels">
+      <xs:element name="Equities" maxOccurs="1" minOccurs="0">
+        <xs:complexType>
+           <xs:sequence>
+              <xs:element type="xs:string" name="Equity" maxOccurs="unbounded" minOccurs="0"/>
+           </xs:sequence>
+         </xs:complexType>
+      </xs:element>
+      <xs:element type="xs:float" name="BootstrapTolerance" maxOccurs="1" />
+      <xs:element name="InterestRateModels" maxOccurs="1" >
         <xs:complexType>
            <xs:sequence>
              <xs:element type="lgm" name="LGM" maxOccurs="unbounded" minOccurs="1"/> <!-- FIXME: poor name -->
            </xs:sequence>
          </xs:complexType>
       </xs:element>
-      <xs:element name="ForeignExchangeModels">
+      <xs:element name="ForeignExchangeModels" maxOccurs="1" >
         <xs:complexType>
           <xs:sequence>
              <xs:element type="crossCurrencyLGM" name="CrossCcyLGM" maxOccurs="unbounded" minOccurs="1"/> <!-- FIXME: poor name (Ccy & LGM) -->
+           </xs:sequence>
+         </xs:complexType>
+      </xs:element>
+      <xs:element name="EquityModels" maxOccurs="1" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+             <xs:element type="crossAssetLGM" name="CrossAssetLGM" maxOccurs="unbounded" minOccurs="0"/> <!-- FIXME: poor name -->
            </xs:sequence>
          </xs:complexType>
       </xs:element>
@@ -192,6 +206,33 @@
     <xs:attribute type="currencyCodeWithDefault" name="foreignCcy" use="required"/>
   </xs:complexType>
 
+  <xs:complexType name="crossAssetLGM">
+    <xs:sequence>
+      <!-- FIXME: Why is this here every time?? -->
+      <xs:element type="currencyCode" name="Currency"/> <!-- FIXME: Currency not Ccy -->
+      <xs:element type="xs:string" name="CalibrationType"/>
+      <xs:element name="Sigma">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="bool" name="Calibrate"/>
+            <xs:element type="xs:string" name="ParamType"/>
+            <xs:element type="xs:string" name="TimeGrid"/> <!-- FIXME: comma delimited lists -->
+            <xs:element type="xs:string" name="InitialValue"/> <!-- FIXME: comma delimited lists -->
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="CalibrationOptions">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="xs:string" name="Expiries"/> <!-- FIXME: comma delimited lists -->
+            <xs:element type="xs:string" name="Strikes"/> <!-- FIXME: comma delimited lists -->
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="name" use="required"/>
+  </xs:complexType>
+  
   <xs:simpleType name="default">
     <xs:restriction base="xs:string">
       <xs:enumeration value="default"/>
@@ -201,7 +242,7 @@
   <xs:simpleType name="currencyCodeWithDefault">
     <xs:union memberTypes="currencyCode default"/>
   </xs:simpleType>
-
+  
   <xs:complexType name="market">
     <xs:sequence>
       <xs:element type="currencyCode" name="BaseCurrency"/>
@@ -276,7 +317,21 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
-      <xs:element name="SwaptionVolatilities">
+      <xs:element name="Equities" maxOccurs="1" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="Names">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element type="xs:string" name="Name" maxOccurs="unbounded" minOccurs="0"/>
+                </xs:sequence>
+              </xs:complexType>
+            </xs:element>
+            <xs:element type="xs:string" name="Tenors"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="SwaptionVolatilities" maxOccurs="1">
         <xs:complexType>
           <xs:sequence>
             <xs:element type="bool" name="Simulate" maxOccurs="1" minOccurs="0"/>
@@ -294,7 +349,7 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
-      <xs:element name="CapFloorVolatilities" minOccurs="0">
+      <xs:element name="CapFloorVolatilities" minOccurs="0" maxOccurs="1">
         <xs:complexType>
           <xs:sequence>
             <xs:element type="bool" name="Simulate" maxOccurs="1" minOccurs="0"/>
@@ -311,7 +366,7 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
-      <xs:element name="FxVolatilities">
+      <xs:element name="FxVolatilities" maxOccurs="1">
         <xs:complexType>
           <xs:sequence>
             <xs:element type="bool" name="Simulate"  maxOccurs="1" minOccurs="0"/>
@@ -320,6 +375,23 @@
               <xs:complexType>
                 <xs:sequence>
                   <xs:element type="currencyPair" name="CurrencyPair" maxOccurs="unbounded" minOccurs="0"/>
+                </xs:sequence>
+              </xs:complexType>
+            </xs:element>
+            <xs:element type="xs:string" name="Expiries"/>
+            <xs:element type="xs:string" name="Strikes"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="EquityVolatilities" minOccurs="0" maxOccurs="1">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="bool" name="Simulate"  maxOccurs="1" minOccurs="0"/>
+            <xs:element type="timeDecayType" name="ReactionToTimeDecay"/>
+            <xs:element name="Names">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element type="xs:string" name="Name" maxOccurs="unbounded" minOccurs="0"/>
                 </xs:sequence>
               </xs:complexType>
             </xs:element>
