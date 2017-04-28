@@ -719,13 +719,11 @@ yields the exposure evolution in
 and shown in figure \ref{fig_1}. 
 \begin{figure}[h!]
 \begin{center}
-\includegraphics[scale=0.45]{mpl_swap_1_1m_sbb_100k.pdf}
+%\includegraphics[scale=0.45]{mpl_swap_1_1m_sbb_100k.pdf}
+\includegraphics[scale=0.45]{mpl_swap_1_1m_sbb_10k_flat.pdf}
 \end{center}
-\caption{Vanilla ATM Swap expected exposure in a flat market environment from both parties' perspectives. The symbols
-  are European Swaption prices. The simulation was run with monthly time steps. To demonstrate the convergence of EPE
-  and ENE profiles we have used an exceptionally large number of samples (100,000) to produce this graph. A similar
-  outcome can be obtained more quickly with 5,000 samples on a quarterly time grid which is the default setting of
-  Example\_1. }
+\caption{Vanilla ATM Swap expected exposure in a flat market environment from both parties' perspectives. The symbols are European Swaption prices. The simulation was run with monthly time steps and 10,000 Monte Carlo samples to demonstrate the convergence of EPE and ENE profiles. A similar
+outcome can be obtained more quickly with 5,000 samples on a quarterly time grid which is the default setting of Example\_1. }
 \label{fig_1}
 \end{figure}
 Both Swap simulation and Swaption pricing are run with calls to the ORE executable, essentially 
