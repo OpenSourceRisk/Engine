@@ -446,6 +446,15 @@ inline const map<string, string>& TodaysMarketParameters::securitySpreads(const 
     return it->second;
 }
 
+inline const map<string, string>& TodaysMarketParameters::securityRecoveryRates(const string& configuration) const {
+    QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
+    auto it = securityRecoveryRates_.find(securityRecoveryRatesId(configuration));
+    QL_REQUIRE(it != securityRecoveryRates_.end(), "security recovery rates with id " << securityRecoveryRatesId(configuration)
+        << " specified in configuration "
+        << configuration << " not found");
+    return it->second;
+}
+
 inline void TodaysMarketParameters::addConfiguration(const string& id, const MarketConfiguration& configuration) {
     configurations_[id] = configuration;
 }
