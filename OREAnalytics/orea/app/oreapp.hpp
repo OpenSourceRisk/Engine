@@ -141,7 +141,6 @@ protected:
 
     boost::shared_ptr<ScenarioSimMarket> simMarket_;
     boost::shared_ptr<Portfolio> simPortfolio_;
-    set<boost::shared_ptr<ModelBuilder>> modelBuilders_;
 
     boost::shared_ptr<DateGrid> grid_;
     Size samples_;

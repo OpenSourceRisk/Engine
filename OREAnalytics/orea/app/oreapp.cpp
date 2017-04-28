@@ -543,7 +543,7 @@ void OREApp::buildNPVCube() {
     if (cubeDepth_ > 1)
         calculators.push_back(boost::make_shared<CashflowCalculator>(baseCurrency, asof_, grid_, 1));
     LOG("Build cube");
-    ValuationEngine engine(asof_, grid_, simMarket_, modelBuilders_);
+    ValuationEngine engine(asof_, grid_, simMarket_);
     ostringstream o;
     o.str("");
     o << "Build Cube " << simPortfolio_->size() << " x " << grid_->size() << " x " << samples_ << "... ";
@@ -575,11 +575,6 @@ void OREApp::generateNPVCube() {
         simPortfolio_ = buildPortfolio(simFactory);
         QL_REQUIRE(simPortfolio_->size() == portfolio_->size(),
                    "portfolio size mismatch, check simulation market setup");
-        if (params_->has("simulation", "recalibrateModels") &&
-            parseBool(params_->get("simulation", "recalibrateModels")))
-            modelBuilders_ = simFactory->modelBuilders();
-        else
-            modelBuilders_.clear();
         out_ << "OK" << endl;
     }
 
