@@ -180,7 +180,7 @@ SubPeriodsLeg::operator Leg() const {
 
             cashflows.push_back(cashflow);
             startDate = endDate;
-        } catch (const QuantLib::Error& e) {
+        } catch (const QuantLib::Error&) {
         }
     }
 
