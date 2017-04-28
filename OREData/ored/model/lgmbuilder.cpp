@@ -131,7 +131,6 @@ LgmBuilder::LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const
 }
 
 void LgmBuilder::performCalculations() const {
-    LOG("PERFORM CALC");
 
     parametrization_->shift() = 0.0;
     parametrization_->scaling() = 1.0;
