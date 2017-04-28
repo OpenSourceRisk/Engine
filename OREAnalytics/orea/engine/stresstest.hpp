@@ -25,6 +25,7 @@
 
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/marketdata/market.hpp>
+#include <ored/report/report.hpp>
 #include <orea/cube/npvcube.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
@@ -54,15 +55,11 @@ namespace analytics {
 class StressTest {
 public:
     //! Constructor
-    StressTest(
-        const boost::shared_ptr<ore::data::Portfolio>& portfolio, 
-        boost::shared_ptr<ore::data::Market>& market,
-        const string& marketConfiguration, 
-        const boost::shared_ptr<ore::data::EngineData>& engineData,
-        boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
-        const boost::shared_ptr<StressTestScenarioData>& stressData, 
-        const Conventions& conventions,
-        boost::shared_ptr<ScenarioFactory> scenarioFactory = {});
+    StressTest(const boost::shared_ptr<ore::data::Portfolio>& portfolio, boost::shared_ptr<ore::data::Market>& market,
+               const string& marketConfiguration, const boost::shared_ptr<ore::data::EngineData>& engineData,
+               boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+               const boost::shared_ptr<StressTestScenarioData>& stressData, const Conventions& conventions,
+               boost::shared_ptr<ScenarioFactory> scenarioFactory = {});
 
     //! Return set of trades analysed
     const std::set<std::string>& trades() { return trades_; }
@@ -77,7 +74,7 @@ public:
     const std::map<std::pair<std::string, std::string>, Real>& shiftedNPV() { return shiftedNPV_; }
 
     //! Write NPV by trade/scenario to a file (base and shifted NPVs, delta)
-    void writeReport(string fileName, Real outputThreshold = 0.0);
+    void writeReport(const boost::shared_ptr<ore::data::Report>& report, Real outputThreshold = 0.0);
 
 private:
     // base NPV by trade

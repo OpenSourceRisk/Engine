@@ -51,9 +51,31 @@ void RateHelpersTest::testTenorBasisSwapHelperLastRelevantDate() {
     BOOST_CHECK_NO_THROW(curve.discount(1.0));
 }
 
+void RateHelpersTest::testTenorBasisSwapHelperDegenerateSchedule() {
+
+    BOOST_TEST_MESSAGE("Testing QuantExt::TenorBasisSwapHelper degenerate schedule (regression test case)...");
+
+    SavedSettings backup;
+    Settings::instance().evaluationDate() = Date(28, Dec, 2016);
+    Date today = Settings::instance().evaluationDate();
+
+    Handle<YieldTermStructure> flat6m(
+        boost::make_shared<FlatForward>(today, Handle<Quote>(boost::make_shared<SimpleQuote>(0.02)), Actual365Fixed()));
+    boost::shared_ptr<IborIndex> usdLibor6m = boost::make_shared<USDLibor>(6 * Months, flat6m);
+    boost::shared_ptr<IborIndex> usdLibor3m = boost::make_shared<USDLibor>(3 * Months);
+
+    boost::shared_ptr<RateHelper> helper = boost::make_shared<QuantExt::TenorBasisSwapHelper>(
+        Handle<Quote>(boost::make_shared<SimpleQuote>(0.0)), 18 * Months, usdLibor6m, usdLibor3m, 6 * Months);
+
+    PiecewiseYieldCurve<Discount, LogLinear> curve(today, std::vector<boost::shared_ptr<RateHelper> >(1, helper),
+                                                   Actual365Fixed());
+    BOOST_CHECK_NO_THROW(curve.discount(1.0));
+}
+
 test_suite* RateHelpersTest::suite() {
     test_suite* suite = BOOST_TEST_SUITE("RateHelpersTests");
     suite->add(BOOST_TEST_CASE(&RateHelpersTest::testTenorBasisSwapHelperLastRelevantDate));
+    suite->add(BOOST_TEST_CASE(&RateHelpersTest::testTenorBasisSwapHelperDegenerateSchedule));
     return suite;
 }
 }

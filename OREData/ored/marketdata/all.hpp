@@ -13,6 +13,8 @@
 #include <ored/marketdata/fxspot.hpp>
 #include <ored/marketdata/fxtriangulation.hpp>
 #include <ored/marketdata/fxvolcurve.hpp>
+#include <ored/marketdata/inflationcapfloorpricesurface.hpp>
+#include <ored/marketdata/inflationcurve.hpp>
 #include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/market.hpp>
 #include <ored/marketdata/marketdatum.hpp>
@@ -20,6 +22,7 @@
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/marketdata/swaptionvolcurve.hpp>
 #include <ored/marketdata/securityspread.hpp>
+#include <ored/marketdata/securityrecoveryrate.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
 #include <ored/marketdata/yieldcurve.hpp>

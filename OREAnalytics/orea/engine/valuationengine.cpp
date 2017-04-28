@@ -41,9 +41,9 @@ ValuationEngine::ValuationEngine(const Date& today, const boost::shared_ptr<Date
     : today_(today), dg_(dg), simMarket_(simMarket) {
 
     QL_REQUIRE(dg_->size() > 0, "Error, DateGrid size must be > 0");
-    QL_REQUIRE(today <= dg_->dates().front(), "ValuationEngine: Error today (" << today
-                                                                              << ") must not be later than first DateGrid date "
-                                                                              << dg_->dates().front());
+    QL_REQUIRE(today <= dg_->dates().front(), "ValuationEngine: Error today ("
+                                                  << today << ") must not be later than first DateGrid date "
+                                                  << dg_->dates().front());
     QL_REQUIRE(simMarket_, "ValuationEngine: Error, Null SimMarket");
 }
 
@@ -133,10 +133,6 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
 
                 // We can avoid checking mode here and always call updateQlInstruments()
                 if (om == ObservationMode::Mode::Disable)
-                    trade->instrument()->updateQlInstruments();
-
-                // if Unregister mode and only one date in grid, then ensure trade is updated
-                if ((om == ObservationMode::Mode::Unregister) && (dates.size() == 1))
                     trade->instrument()->updateQlInstruments();
 
                 for (auto calc : calculators)

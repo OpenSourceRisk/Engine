@@ -27,7 +27,7 @@
 
 namespace testsuite {
 
-//! Stress Testing test 
+//! Stress Testing test
 /*!
   \ingroup tests
 */

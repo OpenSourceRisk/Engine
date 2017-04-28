@@ -50,6 +50,22 @@ do
 done
 echo -------
 
+echo Sensitivities Files Examples:
+find Examples -name 'sensi*.xml' -print0 | while read -d $'\0' file
+do
+  /bin/echo -n "Checking ... "
+  xmllint --schema sensitivity.xsd --path xsd --noout $file
+done
+echo -------
+
+echo Stress Files Examples:
+find Examples -name 'stress*.xml' -print0 | while read -d $'\0' file
+do
+  /bin/echo -n "Checking ... "
+  xmllint --schema stress.xsd --path xsd --noout $file
+done
+echo -------
+
 echo ORE Examples:
 find Examples -name 'ore*.xml' -print0 | while read -d $'\0' file
 do

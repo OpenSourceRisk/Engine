@@ -303,9 +303,12 @@ XMLNode* SwapIndexConvention::toXML(XMLDocument& doc) {
     return node;
 }
 IRSwapConvention::IRSwapConvention(const string& id, const string& fixedCalendar, const string& fixedFrequency,
-                                   const string& fixedConvention, const string& fixedDayCounter, const string& index)
-    : Convention(id, Type::Swap), strFixedCalendar_(fixedCalendar), strFixedFrequency_(fixedFrequency),
-      strFixedConvention_(fixedConvention), strFixedDayCounter_(fixedDayCounter), strIndex_(index) {
+                                   const string& fixedConvention, const string& fixedDayCounter, const string& index,
+                                   bool hasSubPeriod, const string& floatFrequency, const string& subPeriodsCouponType)
+
+    : Convention(id, Type::Swap), hasSubPeriod_(hasSubPeriod), strFixedCalendar_(fixedCalendar),
+      strFixedFrequency_(fixedFrequency), strFixedConvention_(fixedConvention), strFixedDayCounter_(fixedDayCounter),
+      strIndex_(index), strFloatFrequency_(floatFrequency), strSubPeriodsCouponType_(subPeriodsCouponType) {
     build();
 }
 
@@ -315,6 +318,14 @@ void IRSwapConvention::build() {
     fixedConvention_ = parseBusinessDayConvention(strFixedConvention_);
     fixedDayCounter_ = parseDayCounter(strFixedDayCounter_);
     index_ = parseIborIndex(strIndex_);
+
+    if (hasSubPeriod_) {
+        floatFrequency_ = parseFrequency(strFloatFrequency_);
+        subPeriodsCouponType_ = parseSubPeriodsCouponType(strSubPeriodsCouponType_);
+    } else {
+        floatFrequency_ = NoFrequency;
+        subPeriodsCouponType_ = QuantExt::SubPeriodsCoupon::Compounding;
+    }
 }
 
 void IRSwapConvention::fromXML(XMLNode* node) {
@@ -330,6 +341,11 @@ void IRSwapConvention::fromXML(XMLNode* node) {
     strFixedDayCounter_ = XMLUtils::getChildValue(node, "FixedDayCounter", true);
     strIndex_ = XMLUtils::getChildValue(node, "Index", true);
 
+    // optional
+    strFloatFrequency_ = XMLUtils::getChildValue(node, "FloatFrequency", false);
+    strSubPeriodsCouponType_ = XMLUtils::getChildValue(node, "SubPeriodsCouponType", false);
+    hasSubPeriod_ = (strFloatFrequency_ != "");
+
     build();
 }
 
@@ -342,6 +358,10 @@ XMLNode* IRSwapConvention::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "FixedConvention", strFixedConvention_);
     XMLUtils::addChild(doc, node, "FixedDayCounter", strFixedDayCounter_);
     XMLUtils::addChild(doc, node, "Index", strIndex_);
+    if (hasSubPeriod_) {
+        XMLUtils::addChild(doc, node, "FloatFrequency", strFloatFrequency_);
+        XMLUtils::addChild(doc, node, "SubPeriodsCouponType", strSubPeriodsCouponType_);
+    }
 
     return node;
 }
@@ -678,6 +698,65 @@ XMLNode* CdsConvention::toXML(XMLDocument& doc) {
     return node;
 }
 
+InflationSwapConvention::InflationSwapConvention(const string& id, const string& strFixCalendar,
+                                                 const string& strFixConvention, const string& strDayCounter,
+                                                 const string& strIndex, const string& strInterpolated,
+                                                 const string& strObservationLag, const string& strAdjustInfObsDates,
+                                                 const string& strInfCalendar, const string& strInfConvention)
+    : Convention(id, Type::InflationSwap), strFixCalendar_(strFixCalendar), strFixConvention_(strFixConvention),
+      strDayCounter_(strDayCounter), strIndex_(strIndex), strInterpolated_(strInterpolated),
+      strObservationLag_(strObservationLag), strAdjustInfObsDates_(strAdjustInfObsDates),
+      strInfCalendar_(strInfCalendar), strInfConvention_(strInfConvention) {
+    build();
+}
+
+void InflationSwapConvention::build() {
+    fixCalendar_ = parseCalendar(strFixCalendar_);
+    fixConvention_ = parseBusinessDayConvention(strFixConvention_);
+    dayCounter_ = parseDayCounter(strDayCounter_);
+    interpolated_ = parseBool(strInterpolated_);
+    index_ = parseZeroInflationIndex(strIndex_, interpolated_);
+    observationLag_ = parsePeriod(strObservationLag_);
+    adjustInfObsDates_ = parseBool(strAdjustInfObsDates_);
+    infCalendar_ = parseCalendar(strInfCalendar_);
+    infConvention_ = parseBusinessDayConvention(strInfConvention_);
+}
+
+void InflationSwapConvention::fromXML(XMLNode* node) {
+
+    XMLUtils::checkNode(node, "InflationSwap");
+    type_ = Type::InflationSwap;
+    id_ = XMLUtils::getChildValue(node, "Id", true);
+
+    // Get string values from xml
+    strFixCalendar_ = XMLUtils::getChildValue(node, "FixCalendar", true);
+    strFixConvention_ = XMLUtils::getChildValue(node, "FixConvention", true);
+    strDayCounter_ = XMLUtils::getChildValue(node, "DayCounter", true);
+    strIndex_ = XMLUtils::getChildValue(node, "Index", true);
+    strInterpolated_ = XMLUtils::getChildValue(node, "Interpolated", true);
+    strObservationLag_ = XMLUtils::getChildValue(node, "ObservationLag", true);
+    strAdjustInfObsDates_ = XMLUtils::getChildValue(node, "AdjustInfObsDates", true);
+    strInfCalendar_ = XMLUtils::getChildValue(node, "InfCalendar", true);
+    strInfConvention_ = XMLUtils::getChildValue(node, "InfConvention", true);
+    build();
+}
+
+XMLNode* InflationSwapConvention::toXML(XMLDocument& doc) {
+
+    XMLNode* node = doc.allocNode("InflationSwap");
+    XMLUtils::addChild(doc, node, "Id", id_);
+    XMLUtils::addChild(doc, node, "FixCalendar", strFixCalendar_);
+    XMLUtils::addChild(doc, node, "FixConvention", strFixConvention_);
+    XMLUtils::addChild(doc, node, "DayCounter", strDayCounter_);
+    XMLUtils::addChild(doc, node, "Index", strIndex_);
+    XMLUtils::addChild(doc, node, "Interpolated", strInterpolated_);
+    XMLUtils::addChild(doc, node, "ObservationLag", strObservationLag_);
+    XMLUtils::addChild(doc, node, "AdjustInfObsDates", strAdjustInfObsDates_);
+    XMLUtils::addChild(doc, node, "InfCalendar", strInfCalendar_);
+    XMLUtils::addChild(doc, node, "InfConvention", strInfConvention_);
+    return node;
+}
+
 SecuritySpreadConvention::SecuritySpreadConvention(const string& id, const string& dayCounter,
                                                    const string& compounding, const string& compoundingFrequency)
     : Convention(id, Type::SecuritySpread), tenorBased_(false), strDayCounter_(dayCounter),
@@ -784,6 +863,8 @@ void Conventions::fromXML(XMLNode* node) {
             convention.reset(new CdsConvention());
         } else if (childName == "SwapIndex") {
             convention.reset(new SwapIndexConvention());
+        } else if (childName == "InflationSwap") {
+            convention.reset(new InflationSwapConvention());
         } else {
             QL_FAIL("Convention name, " << childName << ", not recognized.");
         }

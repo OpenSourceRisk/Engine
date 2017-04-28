@@ -26,15 +26,14 @@ using namespace std;
 namespace ore {
 namespace analytics {
 
-StressScenarioGenerator::StressScenarioGenerator(
-    const boost::shared_ptr<StressTestScenarioData>& stressData,
-    const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
-    const QuantLib::Date& today,
-    const boost::shared_ptr<ore::data::Market>& initMarket,
-    const std::string& configuration,
-    boost::shared_ptr<ScenarioFactory> baseScenarioFactory)
+StressScenarioGenerator::StressScenarioGenerator(const boost::shared_ptr<StressTestScenarioData>& stressData,
+                                                 const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+                                                 const QuantLib::Date& today,
+                                                 const boost::shared_ptr<ore::data::Market>& initMarket,
+                                                 const std::string& configuration,
+                                                 boost::shared_ptr<ScenarioFactory> baseScenarioFactory)
     : ShiftScenarioGenerator(simMarketData, today, initMarket, configuration, baseScenarioFactory),
-    stressData_(stressData) {
+      stressData_(stressData) {
     QL_REQUIRE(stressData_ != NULL, "StressScenarioGenerator: stressData is null");
 }
 
@@ -64,12 +63,30 @@ void StressScenarioGenerator::addFxShifts(StressTestScenarioData::StressTestData
                                           boost::shared_ptr<Scenario>& scenario) {
     for (auto d : std.fxShifts) {
         string ccypair = d.first; // foreign + domestic;
+
+        // Is this too strict?
+        // - implemented to avoid cases where input cross FX rates are not consistent
+        // - Consider an example (baseCcy = EUR) of a GBPUSD FX trade - two separate routes to pricing
+        // - (a) call GBPUSD FX rate from sim market
+        // - (b) call GBPEUR and EURUSD FX rates, manually join them to obtain GBPUSD
+        // - now, if GBPUSD is an explicit risk factor in sim market, consider what happens
+        // - if we bump GBPUSD value and leave other FX rates unchanged (for e.g. a sensitivity analysis)
+        // - (a) the value of the trade changes
+        // - (b) the value of the GBPUSD trade stays the same
+        // in light of the above we restrict the universe of FX pairs that we support here for the time being
+        string baseCcy = simMarketData_->baseCcy();
+        string foreign = ccypair.substr(0, 3);
+        string domestic = ccypair.substr(3);
+        QL_REQUIRE((domestic == baseCcy) || (foreign == baseCcy),
+                   "SensitivityScenarioGenerator does not support cross FX pairs("
+                       << ccypair << ", but base currency is " << baseCcy << ")");
+
         LOG("Apply stress scenario to fx " << ccypair);
 
         StressTestScenarioData::FxShiftData data = d.second;
         ShiftType type = parseShiftType(data.shiftType);
         bool relShift = (type == ShiftType::Relative);
-        //QL_REQUIRE(type == ShiftType::Relative, "FX scenario type must be relative");
+        // QL_REQUIRE(type == ShiftType::Relative, "FX scenario type must be relative");
         Real size = data.shiftSize;
 
         Real rate = initMarket_->fxSpot(ccypair, configuration_)->value();
@@ -114,7 +131,7 @@ void StressScenarioGenerator::addDiscountCurveShifts(StressTestScenarioData::Str
 
         // apply zero rate shift at tenor point j
         for (Size j = 0; j < shiftTenors.size(); ++j)
-	  applyShift(j, shifts[j], true, shiftType, shiftTimes, zeros, times, shiftedZeros, j == 0 ? true : false);
+            applyShift(j, shifts[j], true, shiftType, shiftTimes, zeros, times, shiftedZeros, j == 0 ? true : false);
 
         // store shifted discount curve in the scenario
         for (Size k = 0; k < n_ten; ++k) {
@@ -160,7 +177,7 @@ void StressScenarioGenerator::addIndexCurveShifts(StressTestScenarioData::Stress
             shiftTimes[j] = dc.yearFraction(today_, today_ + shiftTenors[j]);
 
         for (Size j = 0; j < shiftTenors.size(); ++j)
-	  applyShift(j, shifts[j], true, shiftType, shiftTimes, zeros, times, shiftedZeros, j == 0 ? true : false);
+            applyShift(j, shifts[j], true, shiftType, shiftTimes, zeros, times, shiftedZeros, j == 0 ? true : false);
 
         // store shifted discount curve for this index in the scenario
         for (Size k = 0; k < n_ten; ++k) {
@@ -194,7 +211,7 @@ void StressScenarioGenerator::addYieldCurveShifts(StressTestScenarioData::Stress
             Date date = today_ + simMarketData_->yieldCurveTenors()[j];
             zeros[j] = ts->zeroRate(date, dc, Continuous);
             times[j] = dc.yearFraction(today_, date);
-	    // DLOG("yield curve " << name << ": " << times[j] << " " << zeros[j]); 
+            // DLOG("yield curve " << name << ": " << times[j] << " " << zeros[j]);
         }
 
         std::vector<Period> shiftTenors = data.shiftTenors;
@@ -225,7 +242,6 @@ void StressScenarioGenerator::addYieldCurveShifts(StressTestScenarioData::Stress
 
 void StressScenarioGenerator::addFxVolShifts(StressTestScenarioData::StressTestData& std,
                                              boost::shared_ptr<Scenario>& scenario) {
-    string domestic = simMarketData_->baseCcy();
     Size n_fxvol_exp = simMarketData_->fxVolExpiries().size();
 
     std::vector<Real> values(n_fxvol_exp);
@@ -262,7 +278,7 @@ void StressScenarioGenerator::addFxVolShifts(StressTestScenarioData::StressTestD
         // FIXME: Apply same shifts to non-ATM vectors if present
         for (Size j = 0; j < shiftTenors.size(); ++j) {
             // apply shift at tenor point j
-	  applyShift(j, shifts[j], true, shiftType, shiftTimes, values, times, shiftedValues, j == 0 ? true : false);
+            applyShift(j, shifts[j], true, shiftType, shiftTimes, values, times, shiftedValues, j == 0 ? true : false);
         }
 
         for (Size k = 0; k < n_fxvol_exp; ++k)
@@ -276,10 +292,10 @@ void StressScenarioGenerator::addSwaptionVolShifts(StressTestScenarioData::Stres
     Size n_swvol_term = simMarketData_->swapVolTerms().size();
     Size n_swvol_exp = simMarketData_->swapVolExpiries().size();
 
-    vector<vector<Real> > volData(n_swvol_exp, vector<Real>(n_swvol_term, 0.0));
+    vector<vector<Real>> volData(n_swvol_exp, vector<Real>(n_swvol_term, 0.0));
     vector<Real> volExpiryTimes(n_swvol_exp, 0.0);
     vector<Real> volTermTimes(n_swvol_term, 0.0);
-    vector<vector<Real> > shiftedVolData(n_swvol_exp, vector<Real>(n_swvol_term, 0.0));
+    vector<vector<Real>> shiftedVolData(n_swvol_exp, vector<Real>(n_swvol_term, 0.0));
 
     for (auto d : std.swaptionVolShifts) {
         std::string ccy = d.first;
@@ -356,9 +372,9 @@ void StressScenarioGenerator::addCapFloorVolShifts(StressTestScenarioData::Stres
     Size n_cfvol_strikes = simMarketData_->capFloorVolStrikes().size();
     Size n_cfvol_exp = simMarketData_->capFloorVolExpiries().size();
 
-    vector<vector<Real> > volData(n_cfvol_exp, vector<Real>(n_cfvol_strikes, 0.0));
+    vector<vector<Real>> volData(n_cfvol_exp, vector<Real>(n_cfvol_strikes, 0.0));
     vector<Real> volExpiryTimes(n_cfvol_exp, 0.0);
-    vector<vector<Real> > shiftedVolData(n_cfvol_exp, vector<Real>(n_cfvol_strikes, 0.0));
+    vector<vector<Real>> shiftedVolData(n_cfvol_exp, vector<Real>(n_cfvol_strikes, 0.0));
     vector<Real> volStrikes = simMarketData_->capFloorVolStrikes();
 
     for (auto d : std.capVolShifts) {

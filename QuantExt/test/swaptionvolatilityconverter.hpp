@@ -18,7 +18,6 @@
 
 /*! \file test/swaptionvolatilityconverter.hpp
     \brief tests for SwaptionVolatilityConverter
-    \ingroup
 */
 
 #ifndef quantext_test_swaptionvolatilityconverter_hpp

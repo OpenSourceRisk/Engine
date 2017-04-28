@@ -15,7 +15,8 @@ libInstruments_la_SOURCES = \
 	makeaverageois.cpp \
 	oibasisswap.cpp \
 	oiccbasisswap.cpp \
-	tenorbasisswap.cpp
+	tenorbasisswap.cpp \
+	subperiodsswap.cpp
 
 this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \
@@ -30,7 +31,8 @@ this_include_HEADERS = \
 	makeaverageois.hpp \
 	oibasisswap.hpp \
 	oiccbasisswap.hpp \
-	tenorbasisswap.hpp
+	tenorbasisswap.hpp \
+	subperiodsswap.hpp
 
 noinst_LTLIBRARIES = libInstruments.la
 

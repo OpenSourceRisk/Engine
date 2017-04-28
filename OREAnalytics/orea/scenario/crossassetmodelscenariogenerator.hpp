@@ -32,6 +32,7 @@
 
 #include <qle/models/crossassetmodel.hpp>
 #include <qle/models/crossassetmodelimpliedfxvoltermstructure.hpp>
+#include <qle/models/crossassetmodelimpliedeqvoltermstructure.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
 
 namespace ore {
@@ -63,7 +64,7 @@ public:
                                      const std::string& configuration = Market::defaultConfiguration);
     //! Default destructor
     ~CrossAssetModelScenarioGenerator(){};
-    std::vector<boost::shared_ptr<Scenario> > nextPath();
+    std::vector<boost::shared_ptr<Scenario>> nextPath();
     void reset() { pathGenerator_->reset(); }
 
 private:
@@ -74,8 +75,9 @@ private:
     boost::shared_ptr<ore::data::Market> initMarket_;
     const std::string configuration_;
     std::vector<RiskFactorKey> discountCurveKeys_, indexCurveKeys_, yieldCurveKeys_;
-    std::vector<RiskFactorKey> fxKeys_;
-    std::vector<boost::shared_ptr<QuantExt::CrossAssetModelImpliedFxVolTermStructure> > fxVols_;
+    std::vector<RiskFactorKey> fxKeys_, eqKeys_;
+    std::vector<boost::shared_ptr<QuantExt::CrossAssetModelImpliedFxVolTermStructure>> fxVols_;
+    std::vector<boost::shared_ptr<QuantExt::CrossAssetModelImpliedEqVolTermStructure>> eqVols_;
 };
 }
 }

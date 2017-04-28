@@ -65,7 +65,11 @@ void FxOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     vanilla->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy));
 
-    instrument_ = boost::shared_ptr<InstrumentWrapper>(new VanillaInstrument(vanilla, boughtAmount_));
+    Position::Type positionType = parsePositionType(option_.longShort());
+    Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
+    Real mult = boughtAmount_ * bsInd;
+
+    instrument_ = boost::shared_ptr<InstrumentWrapper>(new VanillaInstrument(vanilla, mult));
 
     npvCurrency_ = soldCurrency_; // sold is the domestic
     notional_ = soldAmount_;

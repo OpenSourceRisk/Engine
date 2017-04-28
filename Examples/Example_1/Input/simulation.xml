@@ -213,14 +213,6 @@
       <Index>CHF-LIBOR-6M</Index>
       <Index>JPY-LIBOR-6M</Index>
     </Indices>
-    <FxRates>
-      <CurrencyPairs>
-        <CurrencyPair>USDEUR</CurrencyPair>
-        <CurrencyPair>GBPEUR</CurrencyPair>
-        <CurrencyPair>CHFEUR</CurrencyPair>
-        <CurrencyPair>JPYEUR</CurrencyPair>
-      </CurrencyPairs>      
-    </FxRates>
     <SwapIndices>
       <SwapIndex>
         <Name>EUR-CMS-1Y</Name>

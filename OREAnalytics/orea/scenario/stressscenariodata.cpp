@@ -20,8 +20,6 @@
 #include <ored/utilities/xmlutils.hpp>
 #include <ored/utilities/log.hpp>
 
-#include <boost/lexical_cast.hpp>
-
 using namespace QuantLib;
 
 namespace ore {
@@ -38,13 +36,13 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
 
         StressTestData test;
         test.label = XMLUtils::getAttribute(testCase, "id");
-	//XMLUtils::getChildValue(testCase, "Label", true);
+        // XMLUtils::getChildValue(testCase, "Label", true);
 
         LOG("Load stress test label " << test.label);
 
         LOG("Get discount curve shift parameters");
         XMLNode* discountCurves = XMLUtils::getChildNode(testCase, "DiscountCurves");
-	QL_REQUIRE(discountCurves, "DiscountCurves node not found");
+        QL_REQUIRE(discountCurves, "DiscountCurves node not found");
         test.discountCurveShifts.clear();
         for (XMLNode* child = XMLUtils::getChildNode(discountCurves, "DiscountCurve"); child;
              child = XMLUtils::getNextSibling(child)) {
@@ -62,12 +60,12 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
 
         LOG("Get index curve stress parameters");
         XMLNode* indexCurves = XMLUtils::getChildNode(testCase, "IndexCurves");
-	QL_REQUIRE(indexCurves, "IndexCurves node not found");
+        QL_REQUIRE(indexCurves, "IndexCurves node not found");
         test.indexCurveShifts.clear();
         for (XMLNode* child = XMLUtils::getChildNode(indexCurves, "IndexCurve"); child;
              child = XMLUtils::getNextSibling(child)) {
             string index = XMLUtils::getAttribute(child, "index");
-	    LOG("Loading stress parameters for index " << index);
+            LOG("Loading stress parameters for index " << index);
             // same as discount curve sensitivity loading from here ...
             CurveShiftData data;
             data.shiftType = XMLUtils::getChildValue(child, "ShiftType", true);
@@ -81,13 +79,13 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
 
         LOG("Get yield curve stress parameters");
         XMLNode* yieldCurves = XMLUtils::getChildNode(testCase, "YieldCurves");
-	QL_REQUIRE(yieldCurves, "YieldCurves node not found");
+        QL_REQUIRE(yieldCurves, "YieldCurves node not found");
         test.yieldCurveShifts.clear();
         for (XMLNode* child = XMLUtils::getChildNode(yieldCurves, "YieldCurve"); child;
              child = XMLUtils::getNextSibling(child)) {
             string name = XMLUtils::getAttribute(child, "name");
             LOG("Loading stress parameters for yield curve " << name);
-	    // same as discount curve sensitivity loading from here ...
+            // same as discount curve sensitivity loading from here ...
             CurveShiftData data;
             data.shiftType = XMLUtils::getChildValue(child, "ShiftType", true);
             data.shifts = XMLUtils::getChildrenValuesAsDoublesCompact(child, "Shifts", true);
@@ -100,13 +98,13 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
 
         LOG("Get FX spot stress parameters");
         XMLNode* fxSpots = XMLUtils::getChildNode(testCase, "FxSpots");
-	QL_REQUIRE(fxSpots, "FxSpots node not found");
+        QL_REQUIRE(fxSpots, "FxSpots node not found");
         test.fxShifts.clear();
         for (XMLNode* child = XMLUtils::getChildNode(fxSpots, "FxSpot"); child;
              child = XMLUtils::getNextSibling(child)) {
             string ccypair = XMLUtils::getAttribute(child, "ccypair");
             LOG("Loading stress parameters for FX " << ccypair);
-	    FxShiftData data;
+            FxShiftData data;
             data.shiftType = XMLUtils::getChildValue(child, "ShiftType", true);
             data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
             test.fxShifts[ccypair] = data;
@@ -115,12 +113,12 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
         LOG("Get fx vol stress parameters");
         XMLNode* fxVols = XMLUtils::getChildNode(testCase, "FxVolatilities");
         QL_REQUIRE(fxVols, "FxVols node not found");
-	test.fxVolShifts.clear();
+        test.fxVolShifts.clear();
         for (XMLNode* child = XMLUtils::getChildNode(fxVols, "FxVolatility"); child;
              child = XMLUtils::getNextSibling(child)) {
             string ccypair = XMLUtils::getAttribute(child, "ccypair");
             LOG("Loading stress parameters for FX vols " << ccypair);
-	    FxVolShiftData data;
+            FxVolShiftData data;
             data.shiftType = XMLUtils::getChildValue(child, "ShiftType");
             data.shifts = XMLUtils::getChildrenValuesAsDoublesCompact(child, "Shifts", true);
             data.shiftExpiries = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftExpiries", true);
@@ -129,19 +127,19 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
 
         LOG("Get swaption vol stress parameters");
         XMLNode* swaptionVols = XMLUtils::getChildNode(testCase, "SwaptionVolatilities");
-	QL_REQUIRE(swaptionVols, "SwaptionVols node not found");
+        QL_REQUIRE(swaptionVols, "SwaptionVols node not found");
         test.swaptionVolShifts.clear();
         for (XMLNode* child = XMLUtils::getChildNode(swaptionVols, "SwaptionVolatility"); child;
              child = XMLUtils::getNextSibling(child)) {
             string ccy = XMLUtils::getAttribute(child, "ccy");
             LOG("Loading stress parameters for swaption vols " << ccy);
-	    SwaptionVolShiftData data;
+            SwaptionVolShiftData data;
             data.shiftType = XMLUtils::getChildValue(child, "ShiftType", true);
             data.shiftTerms = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTerms", true);
             data.shiftExpiries = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftExpiries", true);
             XMLNode* shiftSizes = XMLUtils::getChildNode(child, "Shifts");
             data.parallelShiftSize = 0.0;
-	    for (XMLNode* child2 = XMLUtils::getChildNode(shiftSizes, "Shift"); child2;
+            for (XMLNode* child2 = XMLUtils::getChildNode(shiftSizes, "Shift"); child2;
                  child2 = XMLUtils::getNextSibling(child2)) {
                 string expiry = XMLUtils::getAttribute(child2, "expiry");
                 string term = XMLUtils::getAttribute(child2, "term");
@@ -161,14 +159,14 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
 
         LOG("Get cap/floor vol stress parameters");
         XMLNode* capVols = XMLUtils::getChildNode(testCase, "CapFloorVolatilities");
-	QL_REQUIRE(capVols, "CapVols node not found");
-         for (XMLNode* child = XMLUtils::getChildNode(capVols, "CapFloorVolatility"); child;
+        QL_REQUIRE(capVols, "CapVols node not found");
+        for (XMLNode* child = XMLUtils::getChildNode(capVols, "CapFloorVolatility"); child;
              child = XMLUtils::getNextSibling(child)) {
             string ccy = XMLUtils::getAttribute(child, "ccy");
             CapFloorVolShiftData data;
             data.shiftType = XMLUtils::getChildValue(child, "ShiftType", true);
             data.shiftExpiries = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftExpiries", true);
-	    data.shifts = XMLUtils::getChildrenValuesAsDoublesCompact(child, "Shifts", true);
+            data.shifts = XMLUtils::getChildrenValuesAsDoublesCompact(child, "Shifts", true);
             test.capVolShifts[ccy] = data;
         }
 

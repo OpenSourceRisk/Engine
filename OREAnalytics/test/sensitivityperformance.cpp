@@ -74,17 +74,17 @@ boost::shared_ptr<data::Conventions> conv() {
     // boost::shared_ptr<data::Convention> swapConv(
     //     new data::IRSwapConvention("EUR-6M-SWAP-CONVENTIONS", "TARGET", "Annual", "MF", "30/360", "EUR-EURIBOR-6M"));
     conventions->add(boost::make_shared<data::IRSwapConvention>("EUR-6M-SWAP-CONVENTIONS", "TARGET", "A", "MF",
-        "30/360", "EUR-EURIBOR-6M"));
+                                                                "30/360", "EUR-EURIBOR-6M"));
     conventions->add(boost::make_shared<data::IRSwapConvention>("USD-3M-SWAP-CONVENTIONS", "TARGET", "Q", "MF",
-        "30/360", "USD-LIBOR-3M"));
+                                                                "30/360", "USD-LIBOR-3M"));
     conventions->add(boost::make_shared<data::IRSwapConvention>("USD-6M-SWAP-CONVENTIONS", "TARGET", "Q", "MF",
-        "30/360", "USD-LIBOR-6M"));
+                                                                "30/360", "USD-LIBOR-6M"));
     conventions->add(boost::make_shared<data::IRSwapConvention>("GBP-6M-SWAP-CONVENTIONS", "TARGET", "A", "MF",
-        "30/360", "GBP-LIBOR-6M"));
+                                                                "30/360", "GBP-LIBOR-6M"));
     conventions->add(boost::make_shared<data::IRSwapConvention>("JPY-6M-SWAP-CONVENTIONS", "TARGET", "A", "MF",
-        "30/360", "JPY-LIBOR-6M"));
+                                                                "30/360", "JPY-LIBOR-6M"));
     conventions->add(boost::make_shared<data::IRSwapConvention>("CHF-6M-SWAP-CONVENTIONS", "TARGET", "A", "MF",
-        "30/360", "CHF-LIBOR-6M"));
+                                                                "30/360", "CHF-LIBOR-6M"));
 
     conventions->add(boost::make_shared<data::DepositConvention>("EUR-DEP-CONVENTIONS", "EUR-EURIBOR"));
     conventions->add(boost::make_shared<data::DepositConvention>("USD-DEP-CONVENTIONS", "USD-LIBOR"));
@@ -100,34 +100,34 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData5() 
         new analytics::ScenarioSimMarketParameters());
 
     simMarketData->baseCcy() = "EUR";
-    simMarketData->ccys() = { "EUR", "GBP", "USD", "CHF", "JPY" };
-    simMarketData->yieldCurveTenors() = { 1 * Months, 6 * Months, 1 * Years,  2 * Years,  3 * Years,  4 * Years,
-        5 * Years,  7 * Years,  10 * Years, 15 * Years, 20 * Years, 30 * Years };
-    simMarketData->indices() = { "EUR-EURIBOR-6M", "USD-LIBOR-3M", "USD-LIBOR-6M",
-        "GBP-LIBOR-6M",   "CHF-LIBOR-6M", "JPY-LIBOR-6M" };
+    simMarketData->ccys() = {"EUR", "GBP", "USD", "CHF", "JPY"};
+    simMarketData->yieldCurveTenors() = {1 * Months, 6 * Months, 1 * Years,  2 * Years,  3 * Years,  4 * Years,
+                                         5 * Years,  7 * Years,  10 * Years, 15 * Years, 20 * Years, 30 * Years};
+    simMarketData->indices() = {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "USD-LIBOR-6M",
+                                "GBP-LIBOR-6M",   "CHF-LIBOR-6M", "JPY-LIBOR-6M"};
     simMarketData->interpolation() = "LogLinear";
     simMarketData->extrapolate() = true;
 
-    simMarketData->swapVolTerms() = { 1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 20 * Years };
-    simMarketData->swapVolExpiries() = { 6 * Months, 1 * Years, 2 * Years,  3 * Years,
-        5 * Years,  7 * Years, 10 * Years, 20 * Years };
-    simMarketData->swapVolCcys() = { "EUR", "GBP", "USD", "CHF", "JPY" };
+    simMarketData->swapVolTerms() = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 20 * Years};
+    simMarketData->swapVolExpiries() = {6 * Months, 1 * Years, 2 * Years,  3 * Years,
+                                        5 * Years,  7 * Years, 10 * Years, 20 * Years};
+    simMarketData->swapVolCcys() = {"EUR", "GBP", "USD", "CHF", "JPY"};
     simMarketData->swapVolDecayMode() = "ForwardVariance";
     simMarketData->simulateSwapVols() = true; // false;
 
-    simMarketData->fxVolExpiries() = { 1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years };
+    simMarketData->fxVolExpiries() = {1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years};
     simMarketData->fxVolDecayMode() = "ConstantVariance";
     simMarketData->simulateFXVols() = true; // false;
-    simMarketData->fxVolCcyPairs() = { "EURUSD", "EURGBP", "EURCHF", "EURJPY", "GBPCHF" };
+    simMarketData->fxVolCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY", "GBPCHF"};
 
-    simMarketData->fxCcyPairs() = { "EURUSD", "EURGBP", "EURCHF", "EURJPY" };
+    simMarketData->fxCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY"};
 
     simMarketData->simulateCapFloorVols() = true;
     simMarketData->capFloorVolDecayMode() = "ForwardVariance";
-    simMarketData->capFloorVolCcys() = { "EUR", "USD" };
-    simMarketData->capFloorVolExpiries() = { 6 * Months, 1 * Years,  2 * Years,  3 * Years, 5 * Years,
-        7 * Years,  10 * Years, 15 * Years, 20 * Years };
-    simMarketData->capFloorVolStrikes() = { 0.00, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06 };
+    simMarketData->capFloorVolCcys() = {"EUR", "USD"};
+    simMarketData->capFloorVolExpiries() = {6 * Months, 1 * Years,  2 * Years,  3 * Years, 5 * Years,
+                                            7 * Years,  10 * Years, 15 * Years, 20 * Years};
+    simMarketData->capFloorVolStrikes() = {0.00, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06};
 
     return simMarketData;
 }
@@ -137,86 +137,74 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData5Big
         new analytics::ScenarioSimMarketParameters());
 
     simMarketData->baseCcy() = "EUR";
-    simMarketData->ccys() = { "EUR", "GBP", "USD", "CHF", "JPY" };
+    simMarketData->ccys() = {"EUR", "GBP", "USD", "CHF", "JPY"};
     simMarketData->yieldCurveTenors() = {
-        1*Weeks, 2*Weeks, 1*Months, 2*Months, 3*Months, 4*Months, 5*Months, 6*Months,
-        9 * Months, 10 * Months, 11 * Months, 1 * Years, 13 * Months, 14 * Months,
-        15 * Months, 16 * Months, 17 * Months, 18 * Months, 19 * Months, 20 * Months,
-        21 * Months, 22 * Months, 23 * Months, 2 * Years, 25 * Months, 26 * Months,
-        27 * Months, 28 * Months, 29 * Months, 30 * Months, 31 * Months, 32 * Months,
-        3 * Years, 40 * Months, 41 * Months, 42 * Months, 43 * Months, 44 * Months,
-        4 * Years, 52 * Months, 53 * Months, 54 * Months, 55 * Months, 56 * Months,
-        5 * Years, 64 * Months, 65 * Months, 66 * Months, 67 * Months, 68 * Months,
-        6 * Years, 76 * Months, 77 * Months, 78 * Months, 79 * Months, 80 * Months,
-        7 * Years, 88 * Months, 89 * Months, 90 * Months, 91 * Months, 92 * Months,
-        10 * Years,  15 * Years,  20 * Years, 25 * Years, 30 * Years, 50 * Years };
-    simMarketData->indices() = { "EUR-EURIBOR-6M", "USD-LIBOR-3M", "USD-LIBOR-6M",
-        "GBP-LIBOR-6M",   "CHF-LIBOR-6M", "JPY-LIBOR-6M" };
+        1 * Weeks,   2 * Weeks,   1 * Months,  2 * Months,  3 * Months,  4 * Months,  5 * Months,  6 * Months,
+        9 * Months,  10 * Months, 11 * Months, 1 * Years,   13 * Months, 14 * Months, 15 * Months, 16 * Months,
+        17 * Months, 18 * Months, 19 * Months, 20 * Months, 21 * Months, 22 * Months, 23 * Months, 2 * Years,
+        25 * Months, 26 * Months, 27 * Months, 28 * Months, 29 * Months, 30 * Months, 31 * Months, 32 * Months,
+        3 * Years,   40 * Months, 41 * Months, 42 * Months, 43 * Months, 44 * Months, 4 * Years,   52 * Months,
+        53 * Months, 54 * Months, 55 * Months, 56 * Months, 5 * Years,   64 * Months, 65 * Months, 66 * Months,
+        67 * Months, 68 * Months, 6 * Years,   76 * Months, 77 * Months, 78 * Months, 79 * Months, 80 * Months,
+        7 * Years,   88 * Months, 89 * Months, 90 * Months, 91 * Months, 92 * Months, 10 * Years,  15 * Years,
+        20 * Years,  25 * Years,  30 * Years,  50 * Years};
+    simMarketData->indices() = {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "USD-LIBOR-6M",
+                                "GBP-LIBOR-6M",   "CHF-LIBOR-6M", "JPY-LIBOR-6M"};
     simMarketData->interpolation() = "LogLinear";
     simMarketData->extrapolate() = true;
 
     simMarketData->swapVolTerms() = {
-        3 * Months, 4 * Months, 5 * Months, 6 * Months,
-        9 * Months, 10 * Months, 11 * Months, 1 * Years, 13 * Months, 14 * Months,
-        15 * Months, 16 * Months, 17 * Months, 18 * Months, 19 * Months, 20 * Months,
-        21 * Months, 22 * Months, 23 * Months, 2 * Years, 25 * Months, 26 * Months,
-        27 * Months, 28 * Months, 29 * Months, 30 * Months, 31 * Months, 32 * Months,
-        3 * Years, 40 * Months, 41 * Months, 42 * Months, 43 * Months, 44 * Months,
-        4 * Years, 52 * Months, 53 * Months, 54 * Months, 55 * Months, 56 * Months,
-        5 * Years, 64 * Months, 65 * Months, 66 * Months, 67 * Months, 68 * Months,
-        6 * Years, 76 * Months, 77 * Months, 78 * Months, 79 * Months, 80 * Months,
-        7 * Years, 88 * Months, 89 * Months, 90 * Months, 91 * Months, 92 * Months,
-        10 * Years,  15 * Years,  20 * Years, 25 * Years, 30 * Years, 50 * Years };
+        3 * Months,  4 * Months,  5 * Months,  6 * Months,  9 * Months,  10 * Months, 11 * Months, 1 * Years,
+        13 * Months, 14 * Months, 15 * Months, 16 * Months, 17 * Months, 18 * Months, 19 * Months, 20 * Months,
+        21 * Months, 22 * Months, 23 * Months, 2 * Years,   25 * Months, 26 * Months, 27 * Months, 28 * Months,
+        29 * Months, 30 * Months, 31 * Months, 32 * Months, 3 * Years,   40 * Months, 41 * Months, 42 * Months,
+        43 * Months, 44 * Months, 4 * Years,   52 * Months, 53 * Months, 54 * Months, 55 * Months, 56 * Months,
+        5 * Years,   64 * Months, 65 * Months, 66 * Months, 67 * Months, 68 * Months, 6 * Years,   76 * Months,
+        77 * Months, 78 * Months, 79 * Months, 80 * Months, 7 * Years,   88 * Months, 89 * Months, 90 * Months,
+        91 * Months, 92 * Months, 10 * Years,  15 * Years,  20 * Years,  25 * Years,  30 * Years,  50 * Years};
     simMarketData->swapVolExpiries() = {
-        1 * Weeks, 2 * Weeks, 1 * Months, 2 * Months, 3 * Months, 4 * Months, 5 * Months, 6 * Months,
-        9 * Months, 10 * Months, 11 * Months, 1 * Years, 13 * Months, 14 * Months,
-        15 * Months, 16 * Months, 17 * Months, 18 * Months, 19 * Months, 20 * Months,
-        21 * Months, 22 * Months, 23 * Months, 2 * Years, 25 * Months, 26 * Months,
-        27 * Months, 28 * Months, 29 * Months, 30 * Months, 31 * Months, 32 * Months,
-        3 * Years, 40 * Months, 41 * Months, 42 * Months, 43 * Months, 44 * Months,
-        4 * Years, 52 * Months, 53 * Months, 54 * Months, 55 * Months, 56 * Months,
-        5 * Years, 64 * Months, 65 * Months, 66 * Months, 67 * Months, 68 * Months,
-        6 * Years, 76 * Months, 77 * Months, 78 * Months, 79 * Months, 80 * Months,
-        7 * Years, 88 * Months, 89 * Months, 90 * Months, 91 * Months, 92 * Months,
-        10 * Years,  15 * Years,  20 * Years, 25 * Years, 30 * Years, 50 * Years };
-    simMarketData->swapVolCcys() = { "EUR", "GBP", "USD", "CHF", "JPY" };
+        1 * Weeks,   2 * Weeks,   1 * Months,  2 * Months,  3 * Months,  4 * Months,  5 * Months,  6 * Months,
+        9 * Months,  10 * Months, 11 * Months, 1 * Years,   13 * Months, 14 * Months, 15 * Months, 16 * Months,
+        17 * Months, 18 * Months, 19 * Months, 20 * Months, 21 * Months, 22 * Months, 23 * Months, 2 * Years,
+        25 * Months, 26 * Months, 27 * Months, 28 * Months, 29 * Months, 30 * Months, 31 * Months, 32 * Months,
+        3 * Years,   40 * Months, 41 * Months, 42 * Months, 43 * Months, 44 * Months, 4 * Years,   52 * Months,
+        53 * Months, 54 * Months, 55 * Months, 56 * Months, 5 * Years,   64 * Months, 65 * Months, 66 * Months,
+        67 * Months, 68 * Months, 6 * Years,   76 * Months, 77 * Months, 78 * Months, 79 * Months, 80 * Months,
+        7 * Years,   88 * Months, 89 * Months, 90 * Months, 91 * Months, 92 * Months, 10 * Years,  15 * Years,
+        20 * Years,  25 * Years,  30 * Years,  50 * Years};
+    simMarketData->swapVolCcys() = {"EUR", "GBP", "USD", "CHF", "JPY"};
     simMarketData->swapVolDecayMode() = "ForwardVariance";
     simMarketData->simulateSwapVols() = true; // false;
 
     simMarketData->fxVolExpiries() = {
-        1 * Weeks, 2 * Weeks, 1 * Months, 2 * Months, 3 * Months, 4 * Months, 5 * Months, 6 * Months,
-        9 * Months, 10 * Months, 11 * Months, 1 * Years, 13 * Months, 14 * Months,
-        15 * Months, 16 * Months, 17 * Months, 18 * Months, 19 * Months, 20 * Months,
-        21 * Months, 22 * Months, 23 * Months, 2 * Years, 25 * Months, 26 * Months,
-        27 * Months, 28 * Months, 29 * Months, 30 * Months, 31 * Months, 32 * Months,
-        3 * Years, 40 * Months, 41 * Months, 42 * Months, 43 * Months, 44 * Months,
-        4 * Years, 52 * Months, 53 * Months, 54 * Months, 55 * Months, 56 * Months,
-        5 * Years, 64 * Months, 65 * Months, 66 * Months, 67 * Months, 68 * Months,
-        6 * Years, 76 * Months, 77 * Months, 78 * Months, 79 * Months, 80 * Months,
-        7 * Years, 88 * Months, 89 * Months, 90 * Months, 91 * Months, 92 * Months,
-        10 * Years,  15 * Years,  20 * Years, 25 * Years, 30 * Years, 50 * Years };
+        1 * Weeks,   2 * Weeks,   1 * Months,  2 * Months,  3 * Months,  4 * Months,  5 * Months,  6 * Months,
+        9 * Months,  10 * Months, 11 * Months, 1 * Years,   13 * Months, 14 * Months, 15 * Months, 16 * Months,
+        17 * Months, 18 * Months, 19 * Months, 20 * Months, 21 * Months, 22 * Months, 23 * Months, 2 * Years,
+        25 * Months, 26 * Months, 27 * Months, 28 * Months, 29 * Months, 30 * Months, 31 * Months, 32 * Months,
+        3 * Years,   40 * Months, 41 * Months, 42 * Months, 43 * Months, 44 * Months, 4 * Years,   52 * Months,
+        53 * Months, 54 * Months, 55 * Months, 56 * Months, 5 * Years,   64 * Months, 65 * Months, 66 * Months,
+        67 * Months, 68 * Months, 6 * Years,   76 * Months, 77 * Months, 78 * Months, 79 * Months, 80 * Months,
+        7 * Years,   88 * Months, 89 * Months, 90 * Months, 91 * Months, 92 * Months, 10 * Years,  15 * Years,
+        20 * Years,  25 * Years,  30 * Years,  50 * Years};
     simMarketData->fxVolDecayMode() = "ConstantVariance";
     simMarketData->simulateFXVols() = true; // false;
-    simMarketData->fxVolCcyPairs() = { "EURUSD", "EURGBP", "EURCHF", "EURJPY", "GBPCHF" };
+    simMarketData->fxVolCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY", "GBPCHF"};
 
-    simMarketData->fxCcyPairs() = { "EURUSD", "EURGBP", "EURCHF", "EURJPY" };
+    simMarketData->fxCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY"};
 
     simMarketData->simulateCapFloorVols() = true;
     simMarketData->capFloorVolDecayMode() = "ForwardVariance";
-    simMarketData->capFloorVolCcys() = { "EUR", "USD" };
+    simMarketData->capFloorVolCcys() = {"EUR", "USD"};
     simMarketData->capFloorVolExpiries() = {
-        3 * Months, 4 * Months, 5 * Months, 6 * Months,
-        9 * Months, 10 * Months, 11 * Months, 1 * Years, 13 * Months, 14 * Months,
-        15 * Months, 16 * Months, 17 * Months, 18 * Months, 19 * Months, 20 * Months,
-        21 * Months, 22 * Months, 23 * Months, 2 * Years, 25 * Months, 26 * Months,
-        27 * Months, 28 * Months, 29 * Months, 30 * Months, 31 * Months, 32 * Months,
-        3 * Years, 40 * Months, 41 * Months, 42 * Months, 43 * Months, 44 * Months,
-        4 * Years, 52 * Months, 53 * Months, 54 * Months, 55 * Months, 56 * Months,
-        5 * Years, 64 * Months, 65 * Months, 66 * Months, 67 * Months, 68 * Months,
-        6 * Years, 76 * Months, 77 * Months, 78 * Months, 79 * Months, 80 * Months,
-        7 * Years, 88 * Months, 89 * Months, 90 * Months, 91 * Months, 92 * Months,
-        10 * Years,  15 * Years,  20 * Years, 25 * Years, 30 * Years, 50 * Years };
-    simMarketData->capFloorVolStrikes() = { 0.00, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06 };
+        3 * Months,  4 * Months,  5 * Months,  6 * Months,  9 * Months,  10 * Months, 11 * Months, 1 * Years,
+        13 * Months, 14 * Months, 15 * Months, 16 * Months, 17 * Months, 18 * Months, 19 * Months, 20 * Months,
+        21 * Months, 22 * Months, 23 * Months, 2 * Years,   25 * Months, 26 * Months, 27 * Months, 28 * Months,
+        29 * Months, 30 * Months, 31 * Months, 32 * Months, 3 * Years,   40 * Months, 41 * Months, 42 * Months,
+        43 * Months, 44 * Months, 4 * Years,   52 * Months, 53 * Months, 54 * Months, 55 * Months, 56 * Months,
+        5 * Years,   64 * Months, 65 * Months, 66 * Months, 67 * Months, 68 * Months, 6 * Years,   76 * Months,
+        77 * Months, 78 * Months, 79 * Months, 80 * Months, 7 * Years,   88 * Months, 89 * Months, 90 * Months,
+        91 * Months, 92 * Months, 10 * Years,  15 * Years,  20 * Years,  25 * Years,  30 * Years,  50 * Years};
+    simMarketData->capFloorVolStrikes() = {0.00, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06};
 
     return simMarketData;
 }
@@ -226,17 +214,15 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5Big() {
 
     SensitivityScenarioData::CurveShiftData cvsData;
     cvsData.shiftTenors = {
-        1 * Weeks, 2 * Weeks, 1 * Months, 2 * Months, 3 * Months, 4 * Months, 5 * Months, 6 * Months,
-        9 * Months, 10 * Months, 11 * Months, 1 * Years, 13 * Months, 14 * Months,
-        15 * Months, 16 * Months, 17 * Months, 18 * Months, 19 * Months, 20 * Months,
-        21 * Months, 22 * Months, 23 * Months, 2 * Years, 25 * Months, 26 * Months,
-        27 * Months, 28 * Months, 29 * Months, 30 * Months, 31 * Months, 32 * Months,
-        3 * Years, 40 * Months, 41 * Months, 42 * Months, 43 * Months, 44 * Months,
-        4 * Years, 52 * Months, 53 * Months, 54 * Months, 55 * Months, 56 * Months,
-        5 * Years, 64 * Months, 65 * Months, 66 * Months, 67 * Months, 68 * Months,
-        6 * Years, 76 * Months, 77 * Months, 78 * Months, 79 * Months, 80 * Months,
-        7 * Years, 88 * Months, 89 * Months, 90 * Months, 91 * Months, 92 * Months,
-        10 * Years,  15 * Years,  20 * Years, 25 * Years, 30 * Years, 50 * Years }; // multiple tenors: triangular shifts
+        1 * Weeks,   2 * Weeks,   1 * Months,  2 * Months,  3 * Months,  4 * Months,  5 * Months,  6 * Months,
+        9 * Months,  10 * Months, 11 * Months, 1 * Years,   13 * Months, 14 * Months, 15 * Months, 16 * Months,
+        17 * Months, 18 * Months, 19 * Months, 20 * Months, 21 * Months, 22 * Months, 23 * Months, 2 * Years,
+        25 * Months, 26 * Months, 27 * Months, 28 * Months, 29 * Months, 30 * Months, 31 * Months, 32 * Months,
+        3 * Years,   40 * Months, 41 * Months, 42 * Months, 43 * Months, 44 * Months, 4 * Years,   52 * Months,
+        53 * Months, 54 * Months, 55 * Months, 56 * Months, 5 * Years,   64 * Months, 65 * Months, 66 * Months,
+        67 * Months, 68 * Months, 6 * Years,   76 * Months, 77 * Months, 78 * Months, 79 * Months, 80 * Months,
+        7 * Years,   88 * Months, 89 * Months, 90 * Months, 91 * Months, 92 * Months, 10 * Years,  15 * Years,
+        20 * Years,  25 * Years,  30 * Years,  50 * Years}; // multiple tenors: triangular shifts
     cvsData.shiftType = "Absolute";
     cvsData.shiftSize = 0.0001;
 
@@ -247,65 +233,55 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5Big() {
     SensitivityScenarioData::FxVolShiftData fxvsData;
     fxvsData.shiftType = "Relative";
     fxvsData.shiftSize = 1.0;
-    fxvsData.shiftExpiries = {
-        1 * Weeks, 2 * Weeks, 1 * Months, 2 * Months, 3 * Months, 4 * Months, 5 * Months, 6 * Months,
-        9 * Months, 10 * Months, 11 * Months, 1 * Years, 13 * Months, 14 * Months,
-        15 * Months, 16 * Months, 17 * Months, 18 * Months, 19 * Months, 20 * Months,
-        21 * Months, 22 * Months, 23 * Months, 2 * Years, 25 * Months, 26 * Months,
-        27 * Months, 28 * Months, 29 * Months, 30 * Months, 31 * Months, 32 * Months,
-        3 * Years, 40 * Months, 41 * Months, 42 * Months, 43 * Months, 44 * Months,
-        4 * Years, 52 * Months, 53 * Months, 54 * Months, 55 * Months, 56 * Months,
-        5 * Years, 64 * Months, 65 * Months, 66 * Months, 67 * Months, 68 * Months,
-        6 * Years, 76 * Months, 77 * Months, 78 * Months, 79 * Months, 80 * Months,
-        7 * Years, 88 * Months, 89 * Months, 90 * Months, 91 * Months, 92 * Months,
-        10 * Years,  15 * Years,  20 * Years, 25 * Years, 30 * Years, 50 * Years };
+    fxvsData.shiftExpiries = {1 * Weeks,   2 * Weeks,   1 * Months,  2 * Months,  3 * Months,  4 * Months,  5 * Months,
+                              6 * Months,  9 * Months,  10 * Months, 11 * Months, 1 * Years,   13 * Months, 14 * Months,
+                              15 * Months, 16 * Months, 17 * Months, 18 * Months, 19 * Months, 20 * Months, 21 * Months,
+                              22 * Months, 23 * Months, 2 * Years,   25 * Months, 26 * Months, 27 * Months, 28 * Months,
+                              29 * Months, 30 * Months, 31 * Months, 32 * Months, 3 * Years,   40 * Months, 41 * Months,
+                              42 * Months, 43 * Months, 44 * Months, 4 * Years,   52 * Months, 53 * Months, 54 * Months,
+                              55 * Months, 56 * Months, 5 * Years,   64 * Months, 65 * Months, 66 * Months, 67 * Months,
+                              68 * Months, 6 * Years,   76 * Months, 77 * Months, 78 * Months, 79 * Months, 80 * Months,
+                              7 * Years,   88 * Months, 89 * Months, 90 * Months, 91 * Months, 92 * Months, 10 * Years,
+                              15 * Years,  20 * Years,  25 * Years,  30 * Years,  50 * Years};
 
     SensitivityScenarioData::CapFloorVolShiftData cfvsData;
     cfvsData.shiftType = "Absolute";
     cfvsData.shiftSize = 0.0001;
     cfvsData.shiftExpiries = {
-        3 * Months, 4 * Months, 5 * Months, 6 * Months,
-        9 * Months, 10 * Months, 11 * Months, 1 * Years, 13 * Months, 14 * Months,
-        15 * Months, 16 * Months, 17 * Months, 18 * Months, 19 * Months, 20 * Months,
-        21 * Months, 22 * Months, 23 * Months, 2 * Years, 25 * Months, 26 * Months,
-        27 * Months, 28 * Months, 29 * Months, 30 * Months, 31 * Months, 32 * Months,
-        3 * Years, 40 * Months, 41 * Months, 42 * Months, 43 * Months, 44 * Months,
-        4 * Years, 52 * Months, 53 * Months, 54 * Months, 55 * Months, 56 * Months,
-        5 * Years, 64 * Months, 65 * Months, 66 * Months, 67 * Months, 68 * Months,
-        6 * Years, 76 * Months, 77 * Months, 78 * Months, 79 * Months, 80 * Months,
-        7 * Years, 88 * Months, 89 * Months, 90 * Months, 91 * Months, 92 * Months,
-        10 * Years,  15 * Years,  20 * Years, 25 * Years, 30 * Years, 50 * Years };
-    cfvsData.shiftStrikes = { 0.01, 0.02, 0.03, 0.04, 0.05 };
+        3 * Months,  4 * Months,  5 * Months,  6 * Months,  9 * Months,  10 * Months, 11 * Months, 1 * Years,
+        13 * Months, 14 * Months, 15 * Months, 16 * Months, 17 * Months, 18 * Months, 19 * Months, 20 * Months,
+        21 * Months, 22 * Months, 23 * Months, 2 * Years,   25 * Months, 26 * Months, 27 * Months, 28 * Months,
+        29 * Months, 30 * Months, 31 * Months, 32 * Months, 3 * Years,   40 * Months, 41 * Months, 42 * Months,
+        43 * Months, 44 * Months, 4 * Years,   52 * Months, 53 * Months, 54 * Months, 55 * Months, 56 * Months,
+        5 * Years,   64 * Months, 65 * Months, 66 * Months, 67 * Months, 68 * Months, 6 * Years,   76 * Months,
+        77 * Months, 78 * Months, 79 * Months, 80 * Months, 7 * Years,   88 * Months, 89 * Months, 90 * Months,
+        91 * Months, 92 * Months, 10 * Years,  15 * Years,  20 * Years,  25 * Years,  30 * Years,  50 * Years};
+    cfvsData.shiftStrikes = {0.01, 0.02, 0.03, 0.04, 0.05};
 
     SensitivityScenarioData::SwaptionVolShiftData swvsData;
     swvsData.shiftType = "Relative";
     swvsData.shiftSize = 0.01;
-    swvsData.shiftExpiries = {
-        1 * Weeks, 2 * Weeks, 1 * Months, 2 * Months, 3 * Months, 4 * Months, 5 * Months, 6 * Months,
-        9 * Months, 10 * Months, 11 * Months, 1 * Years, 13 * Months, 14 * Months,
-        15 * Months, 16 * Months, 17 * Months, 18 * Months, 19 * Months, 20 * Months,
-        21 * Months, 22 * Months, 23 * Months, 2 * Years, 25 * Months, 26 * Months,
-        27 * Months, 28 * Months, 29 * Months, 30 * Months, 31 * Months, 32 * Months,
-        3 * Years, 40 * Months, 41 * Months, 42 * Months, 43 * Months, 44 * Months,
-        4 * Years, 52 * Months, 53 * Months, 54 * Months, 55 * Months, 56 * Months,
-        5 * Years, 64 * Months, 65 * Months, 66 * Months, 67 * Months, 68 * Months,
-        6 * Years, 76 * Months, 77 * Months, 78 * Months, 79 * Months, 80 * Months,
-        7 * Years, 88 * Months, 89 * Months, 90 * Months, 91 * Months, 92 * Months,
-        10 * Years,  15 * Years,  20 * Years, 25 * Years, 30 * Years, 50 * Years };
+    swvsData.shiftExpiries = {1 * Weeks,   2 * Weeks,   1 * Months,  2 * Months,  3 * Months,  4 * Months,  5 * Months,
+                              6 * Months,  9 * Months,  10 * Months, 11 * Months, 1 * Years,   13 * Months, 14 * Months,
+                              15 * Months, 16 * Months, 17 * Months, 18 * Months, 19 * Months, 20 * Months, 21 * Months,
+                              22 * Months, 23 * Months, 2 * Years,   25 * Months, 26 * Months, 27 * Months, 28 * Months,
+                              29 * Months, 30 * Months, 31 * Months, 32 * Months, 3 * Years,   40 * Months, 41 * Months,
+                              42 * Months, 43 * Months, 44 * Months, 4 * Years,   52 * Months, 53 * Months, 54 * Months,
+                              55 * Months, 56 * Months, 5 * Years,   64 * Months, 65 * Months, 66 * Months, 67 * Months,
+                              68 * Months, 6 * Years,   76 * Months, 77 * Months, 78 * Months, 79 * Months, 80 * Months,
+                              7 * Years,   88 * Months, 89 * Months, 90 * Months, 91 * Months, 92 * Months, 10 * Years,
+                              15 * Years,  20 * Years,  25 * Years,  30 * Years,  50 * Years};
     swvsData.shiftTerms = {
-        3 * Months, 4 * Months, 5 * Months, 6 * Months,
-        9 * Months, 10 * Months, 11 * Months, 1 * Years, 13 * Months, 14 * Months,
-        15 * Months, 16 * Months, 17 * Months, 18 * Months, 19 * Months, 20 * Months,
-        21 * Months, 22 * Months, 23 * Months, 2 * Years, 25 * Months, 26 * Months,
-        27 * Months, 28 * Months, 29 * Months, 30 * Months, 31 * Months, 32 * Months,
-        3 * Years, 40 * Months, 41 * Months, 42 * Months, 43 * Months, 44 * Months,
-        4 * Years, 52 * Months, 53 * Months, 54 * Months, 55 * Months, 56 * Months,
-        5 * Years, 64 * Months, 65 * Months, 66 * Months, 67 * Months, 68 * Months,
-        6 * Years, 76 * Months, 77 * Months, 78 * Months, 79 * Months, 80 * Months,
-        7 * Years, 88 * Months, 89 * Months, 90 * Months, 91 * Months, 92 * Months,
-        10 * Years,  15 * Years,  20 * Years, 25 * Years, 30 * Years, 50 * Years };
+        3 * Months,  4 * Months,  5 * Months,  6 * Months,  9 * Months,  10 * Months, 11 * Months, 1 * Years,
+        13 * Months, 14 * Months, 15 * Months, 16 * Months, 17 * Months, 18 * Months, 19 * Months, 20 * Months,
+        21 * Months, 22 * Months, 23 * Months, 2 * Years,   25 * Months, 26 * Months, 27 * Months, 28 * Months,
+        29 * Months, 30 * Months, 31 * Months, 32 * Months, 3 * Years,   40 * Months, 41 * Months, 42 * Months,
+        43 * Months, 44 * Months, 4 * Years,   52 * Months, 53 * Months, 54 * Months, 55 * Months, 56 * Months,
+        5 * Years,   64 * Months, 65 * Months, 66 * Months, 67 * Months, 68 * Months, 6 * Years,   76 * Months,
+        77 * Months, 78 * Months, 79 * Months, 80 * Months, 7 * Years,   88 * Months, 89 * Months, 90 * Months,
+        91 * Months, 92 * Months, 10 * Years,  15 * Years,  20 * Years,  25 * Years,  30 * Years,  50 * Years};
 
-    sensiData->discountCurrencies() = { "EUR", "USD", "GBP", "CHF", "JPY" };
+    sensiData->discountCurrencies() = {"EUR", "USD", "GBP", "CHF", "JPY"};
     sensiData->discountCurveShiftData()["EUR"] = cvsData;
 
     sensiData->discountCurveShiftData()["USD"] = cvsData;
@@ -316,8 +292,7 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5Big() {
 
     sensiData->discountCurveShiftData()["CHF"] = cvsData;
 
-
-    sensiData->indexNames() = { "EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M", "CHF-LIBOR-6M", "JPY-LIBOR-6M" };
+    sensiData->indexNames() = {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M", "CHF-LIBOR-6M", "JPY-LIBOR-6M"};
     sensiData->indexCurveShiftData()["EUR-EURIBOR-6M"] = cvsData;
 
     sensiData->indexCurveShiftData()["USD-LIBOR-3M"] = cvsData;
@@ -328,27 +303,27 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5Big() {
 
     sensiData->indexCurveShiftData()["CHF-LIBOR-6M"] = cvsData;
 
-    sensiData->fxCcyPairs() = { "EURUSD", "EURGBP", "EURCHF", "EURJPY" };
+    sensiData->fxCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY"};
     sensiData->fxShiftData()["EURUSD"] = fxsData;
     sensiData->fxShiftData()["EURGBP"] = fxsData;
     sensiData->fxShiftData()["EURJPY"] = fxsData;
     sensiData->fxShiftData()["EURCHF"] = fxsData;
 
-    sensiData->fxVolCcyPairs() = { "EURUSD", "EURGBP", "EURCHF", "EURJPY", "GBPCHF" };
+    sensiData->fxVolCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY", "GBPCHF"};
     sensiData->fxVolShiftData()["EURUSD"] = fxvsData;
     sensiData->fxVolShiftData()["EURGBP"] = fxvsData;
     sensiData->fxVolShiftData()["EURJPY"] = fxvsData;
     sensiData->fxVolShiftData()["EURCHF"] = fxvsData;
     sensiData->fxVolShiftData()["GBPCHF"] = fxvsData;
 
-    sensiData->swaptionVolCurrencies() = { "EUR", "USD", "GBP", "CHF", "JPY" };
+    sensiData->swaptionVolCurrencies() = {"EUR", "USD", "GBP", "CHF", "JPY"};
     sensiData->swaptionVolShiftData()["EUR"] = swvsData;
     sensiData->swaptionVolShiftData()["GBP"] = swvsData;
     sensiData->swaptionVolShiftData()["USD"] = swvsData;
     sensiData->swaptionVolShiftData()["JPY"] = swvsData;
     sensiData->swaptionVolShiftData()["CHF"] = swvsData;
 
-    sensiData->capFloorVolCurrencies() = { "EUR", "USD" };
+    sensiData->capFloorVolCurrencies() = {"EUR", "USD"};
     sensiData->capFloorVolShiftData()["EUR"] = cfvsData;
     sensiData->capFloorVolShiftData()["EUR"].indexName = "EUR-EURIBOR-6M";
     sensiData->capFloorVolShiftData()["USD"] = cfvsData;
@@ -361,8 +336,8 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5() {
     boost::shared_ptr<SensitivityScenarioData> sensiData = boost::make_shared<SensitivityScenarioData>();
 
     SensitivityScenarioData::CurveShiftData cvsData;
-    cvsData.shiftTenors = { 6 * Months, 1 * Years,  2 * Years,  3 * Years, 5 * Years,
-        7 * Years,  10 * Years, 15 * Years, 20 * Years }; // multiple tenors: triangular shifts
+    cvsData.shiftTenors = {6 * Months, 1 * Years,  2 * Years,  3 * Years, 5 * Years,
+                           7 * Years,  10 * Years, 15 * Years, 20 * Years}; // multiple tenors: triangular shifts
     cvsData.shiftType = "Absolute";
     cvsData.shiftSize = 0.0001;
 
@@ -373,22 +348,21 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5() {
     SensitivityScenarioData::FxVolShiftData fxvsData;
     fxvsData.shiftType = "Relative";
     fxvsData.shiftSize = 1.0;
-    fxvsData.shiftExpiries = { 5 * Years };
+    fxvsData.shiftExpiries = {5 * Years};
 
     SensitivityScenarioData::CapFloorVolShiftData cfvsData;
     cfvsData.shiftType = "Absolute";
     cfvsData.shiftSize = 0.0001;
-    cfvsData.shiftExpiries = { 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years };
-    cfvsData.shiftStrikes = { 0.01, 0.02, 0.03, 0.04, 0.05 };
+    cfvsData.shiftExpiries = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
+    cfvsData.shiftStrikes = {0.01, 0.02, 0.03, 0.04, 0.05};
 
     SensitivityScenarioData::SwaptionVolShiftData swvsData;
     swvsData.shiftType = "Relative";
     swvsData.shiftSize = 0.01;
-    swvsData.shiftExpiries = { 6 * Months, 1 * Years, 3 * Years,
-        5 * Years, 10 * Years};
-    swvsData.shiftTerms = { 1 * Years, 3 * Years, 5 * Years, 10 * Years, 20 * Years };
+    swvsData.shiftExpiries = {6 * Months, 1 * Years, 3 * Years, 5 * Years, 10 * Years};
+    swvsData.shiftTerms = {1 * Years, 3 * Years, 5 * Years, 10 * Years, 20 * Years};
 
-    sensiData->discountCurrencies() = { "EUR", "USD", "GBP", "CHF", "JPY" };
+    sensiData->discountCurrencies() = {"EUR", "USD", "GBP", "CHF", "JPY"};
     sensiData->discountCurveShiftData()["EUR"] = cvsData;
 
     sensiData->discountCurveShiftData()["USD"] = cvsData;
@@ -399,7 +373,7 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5() {
 
     sensiData->discountCurveShiftData()["CHF"] = cvsData;
 
-    sensiData->indexNames() = { "EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M", "CHF-LIBOR-6M", "JPY-LIBOR-6M" };
+    sensiData->indexNames() = {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M", "CHF-LIBOR-6M", "JPY-LIBOR-6M"};
     sensiData->indexCurveShiftData()["EUR-EURIBOR-6M"] = cvsData;
 
     sensiData->indexCurveShiftData()["USD-LIBOR-3M"] = cvsData;
@@ -410,28 +384,27 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5() {
 
     sensiData->indexCurveShiftData()["CHF-LIBOR-6M"] = cvsData;
 
-
-    sensiData->fxCcyPairs() = { "EURUSD", "EURGBP", "EURCHF", "EURJPY" };
+    sensiData->fxCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY"};
     sensiData->fxShiftData()["EURUSD"] = fxsData;
     sensiData->fxShiftData()["EURGBP"] = fxsData;
     sensiData->fxShiftData()["EURJPY"] = fxsData;
     sensiData->fxShiftData()["EURCHF"] = fxsData;
 
-    sensiData->fxVolCcyPairs() = { "EURUSD", "EURGBP", "EURCHF", "EURJPY", "GBPCHF" };
+    sensiData->fxVolCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY", "GBPCHF"};
     sensiData->fxVolShiftData()["EURUSD"] = fxvsData;
     sensiData->fxVolShiftData()["EURGBP"] = fxvsData;
     sensiData->fxVolShiftData()["EURJPY"] = fxvsData;
     sensiData->fxVolShiftData()["EURCHF"] = fxvsData;
     sensiData->fxVolShiftData()["GBPCHF"] = fxvsData;
 
-    sensiData->swaptionVolCurrencies() = { "EUR", "USD", "GBP", "CHF", "JPY" };
+    sensiData->swaptionVolCurrencies() = {"EUR", "USD", "GBP", "CHF", "JPY"};
     sensiData->swaptionVolShiftData()["EUR"] = swvsData;
     sensiData->swaptionVolShiftData()["GBP"] = swvsData;
     sensiData->swaptionVolShiftData()["USD"] = swvsData;
     sensiData->swaptionVolShiftData()["JPY"] = swvsData;
     sensiData->swaptionVolShiftData()["CHF"] = swvsData;
 
-    sensiData->capFloorVolCurrencies() = { "EUR", "USD" };
+    sensiData->capFloorVolCurrencies() = {"EUR", "USD"};
     sensiData->capFloorVolShiftData()["EUR"] = cfvsData;
     sensiData->capFloorVolShiftData()["EUR"].indexName = "EUR-EURIBOR-6M";
     sensiData->capFloorVolShiftData()["USD"] = cfvsData;
@@ -460,8 +433,8 @@ void addCrossGammas(vector<pair<string, string>>& cgFilter) {
     cgFilter.push_back(pair<string, string>("SwaptionVolatility/EUR", "SwaptionVolatility/EUR"));
     cgFilter.push_back(pair<string, string>("SwaptionVolatility/USD", "SwaptionVolatility/USD"));
     cgFilter.push_back(pair<string, string>("SwaptionVolatility/GBP", "SwaptionVolatility/GBP"));
-    //cgFilter.push_back(pair<string, string>("SwaptionVolatility/CHF", "SwaptionVolatility/CHF"));
-    //cgFilter.push_back(pair<string, string>("SwaptionVolatility/JPY", "SwaptionVolatility/JPY"));
+    // cgFilter.push_back(pair<string, string>("SwaptionVolatility/CHF", "SwaptionVolatility/CHF"));
+    // cgFilter.push_back(pair<string, string>("SwaptionVolatility/JPY", "SwaptionVolatility/JPY"));
 }
 
 boost::shared_ptr<Portfolio> buildPortfolio(Size portfolioSize, boost::shared_ptr<EngineFactory> factory = {}) {
@@ -489,12 +462,10 @@ boost::shared_ptr<Portfolio> buildPortfolio(Size portfolioSize, boost::shared_pt
     Size seed = 5; // keep this constant to ensure portfolio doesn't change
     MersenneTwisterUniformRng rng(seed);
 
-    Date today = Settings::instance().evaluationDate();
     Calendar cal = TARGET();
     string calStr = "TARGET";
     string conv = "MF";
     string rule = "Forward";
-    Size days = 2;
     string fixDC = "30/360";
     string floatDC = "ACT/365";
 
@@ -502,7 +473,6 @@ boost::shared_ptr<Portfolio> buildPortfolio(Size portfolioSize, boost::shared_pt
     Real spread = 0.0;
 
     for (Size i = 0; i < portfolioSize; i++) {
-
 
         // ccy + index
         string ccy = portfolioSize == 1 ? "EUR" : randString(rng, ccys);
@@ -527,55 +497,53 @@ boost::shared_ptr<Portfolio> buildPortfolio(Size portfolioSize, boost::shared_pt
             int start = randInt(rng, minTerm, maxTerm);
             Size term = portfolioSize == 1 ? 20 : randInt(rng, minTerm, maxTerm);
             string longShort = randBoolean(rng) ? "Long" : "Short";
-            portfolio->add(testsuite::buildEuropeanSwaption(
-                id, longShort, ccy, isPayer, notional, start, term, 
-                fixedRate, spread, fixFreq, fixDC, floatFreq, floatDC, index));
-        }
-        else {
+            portfolio->add(testsuite::buildEuropeanSwaption(id, longShort, ccy, isPayer, notional, start, term,
+                                                            fixedRate, spread, fixFreq, fixDC, floatFreq, floatDC,
+                                                            index));
+        } else {
             int start = randInt(rng, minStart, maxStart);
             Size end = randInt(rng, minTerm, maxTerm);
             Size term = portfolioSize == 1 ? 20 : randInt(rng, minTerm, maxTerm);
-            portfolio->add(testsuite::buildSwap(
-                id, ccy, isPayer, notional, start, end, 
-                fixedRate, spread, fixFreq, fixDC, floatFreq, floatDC, index));
+            portfolio->add(testsuite::buildSwap(id, ccy, isPayer, notional, start, end, fixedRate, spread, fixFreq,
+                                                fixDC, floatFreq, floatDC, index));
         }
     }
     if (factory)
         portfolio->build(factory);
 
     BOOST_CHECK_MESSAGE(portfolio->size() == portfolioSize,
-        "Failed to build portfolio (got " << portfolio->size() << " expected " << portfolioSize << ")");
+                        "Failed to build portfolio (got " << portfolio->size() << " expected " << portfolioSize << ")");
 
     return portfolio;
 }
 
-
-void test_performance(bool bigPortfolio, bool bigScenario, bool lotsOfSensis, bool crossGammas, ObservationMode::Mode om) {
+void test_performance(bool bigPortfolio, bool bigScenario, bool lotsOfSensis, bool crossGammas,
+                      ObservationMode::Mode om) {
     Size portfolioSize = bigPortfolio ? 100 : 1;
-    string om_str =
-        (om == ObservationMode::Mode::None) ? "None" :
-        (om == ObservationMode::Mode::Disable) ? "Disable" :
-        (om == ObservationMode::Mode::Defer) ? "Defer" :
-        (om == ObservationMode::Mode::Unregister) ? "Unregister" :
-        "???";
+    string om_str = (om == ObservationMode::Mode::None) ? "None" : (om == ObservationMode::Mode::Disable)
+                                                                       ? "Disable"
+                                                                       : (om == ObservationMode::Mode::Defer)
+                                                                             ? "Defer"
+                                                                             : (om == ObservationMode::Mode::Unregister)
+                                                                                   ? "Unregister"
+                                                                                   : "???";
     string bigPfolioStr = bigPortfolio ? "big" : "small";
     string bigScenarioStr = bigScenario ? "big" : "small";
     string lotsOfSensisStr = lotsOfSensis ? "lots" : "few";
     string crossGammasStr = crossGammas ? "included" : "excluded";
 
-    BOOST_TEST_MESSAGE(
-        "Testing Sensitivity Performance " <<
-        "(portfolio=" << bigPfolioStr << ")" <<
-        "(scenarioSize=" << bigScenarioStr << ")" << 
-        "(numSensis=" << lotsOfSensisStr << ")" << 
-        "(crossGammas=" << crossGammasStr << ")" <<
-        "(observation=" << om_str << ")...");
+    BOOST_TEST_MESSAGE("Testing Sensitivity Performance "
+                       << "(portfolio=" << bigPfolioStr << ")"
+                       << "(scenarioSize=" << bigScenarioStr << ")"
+                       << "(numSensis=" << lotsOfSensisStr << ")"
+                       << "(crossGammas=" << crossGammasStr << ")"
+                       << "(observation=" << om_str << ")...");
 
     SavedSettings backup;
     ObservationMode::Mode backupOm = ObservationMode::instance().mode();
     ObservationMode::instance().setMode(om);
 
-    Date today = Date(14, April, 2016); 
+    Date today = Date(14, April, 2016);
     Settings::instance().evaluationDate() = today;
 
     // Init market
@@ -608,10 +576,8 @@ void test_performance(bool bigPortfolio, bool bigScenario, bool lotsOfSensis, bo
 
     boost::timer t2;
     t2.restart();
-    boost::shared_ptr<SensitivityAnalysis> sa =
-        boost::make_shared<SensitivityAnalysis>(
-            portfolio, initMarket, Market::defaultConfiguration, data,
-            simMarketData, sensiData, conventions);
+    boost::shared_ptr<SensitivityAnalysis> sa = boost::make_shared<SensitivityAnalysis>(
+        portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, conventions);
     sa->generateSensitivities();
     Real elapsed = t2.elapsed();
     Size numScenarios = sa->scenarioGenerator()->samples();
@@ -619,9 +585,11 @@ void test_performance(bool bigPortfolio, bool bigScenario, bool lotsOfSensis, bo
     BOOST_TEST_MESSAGE("number of scenarios=" << numScenarios);
     BOOST_TEST_MESSAGE("Size of scenario = " << scenarioSize << " keys");
     BOOST_TEST_MESSAGE("time = " << elapsed << " seconds");
-    Real avTime = (elapsed / ((Real)(numScenarios*portfolioSize)));
+    Real avTime = (elapsed / ((Real)(numScenarios * portfolioSize)));
     BOOST_TEST_MESSAGE("Average pricing time =  " << avTime << " seconds");
     BOOST_TEST_MESSAGE("Memory usage - " << os::getMemoryUsage());
+
+    ObservationMode::instance().setMode(backupOm);
 }
 }
 
@@ -892,39 +860,40 @@ test_suite* SensitivityPerformanceTest::suite() {
     suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceUnregisterObs));
 
     suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceCrossGammaNoneObs));
-    //suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceCrossGammaDisableObs));
-    //suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceCrossGammaDeferObs));
-    //suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceCrossGammaUnregisterObs));
+    // suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceCrossGammaDisableObs));
+    // suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceCrossGammaDeferObs));
+    // suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceCrossGammaUnregisterObs));
 
     suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceBigScenarioNoneObs));
-    //suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceBigScenarioDisableObs));
-    //suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceBigScenarioDeferObs));
-    //suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceBigScenarioUnregisterObs));
+    // suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceBigScenarioDisableObs));
+    // suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceBigScenarioDeferObs));
+    // suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceBigScenarioUnregisterObs));
 
     suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceBigPortfolioNoneObs));
-    //suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceBigPortfolioDisableObs));
-    //suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceBigPortfolioDeferObs));
-    //suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceBigPortfolioUnregisterObs));
+    // suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceBigPortfolioDisableObs));
+    // suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceBigPortfolioDeferObs));
+    // suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceBigPortfolioUnregisterObs));
 
     suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceBigPortfolioBigScenarioNoneObs));
-    //suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceBigPortfolioBigScenarioDisableObs));
-    //suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceBigPortfolioBigScenarioDeferObs));
-    //suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceBigPortfolioBigScenarioUnregisterObs));
+    // suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceBigPortfolioBigScenarioDisableObs));
+    // suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceBigPortfolioBigScenarioDeferObs));
+    // suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceBigPortfolioBigScenarioUnregisterObs));
 
     suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceBigPortfolioCrossGammaNoneObs));
-    //suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceBigPortfolioCrossGammaDisableObs));
-    //suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceBigPortfolioCrossGammaDeferObs));
-    //suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceBigPortfolioCrossGammaUnregisterObs));
+    // suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceBigPortfolioCrossGammaDisableObs));
+    // suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceBigPortfolioCrossGammaDeferObs));
+    // suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceBigPortfolioCrossGammaUnregisterObs));
 
     suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceBigScenarioCrossGammaNoneObs));
-    //suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceBigScenarioCrossGammaDisableObs));
-    //suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceBigScenarioCrossGammaDeferObs));
-    //suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceBigScenarioCrossGammaUnregisterObs));
+    // suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceBigScenarioCrossGammaDisableObs));
+    // suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceBigScenarioCrossGammaDeferObs));
+    // suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceBigScenarioCrossGammaUnregisterObs));
 
-    suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceBigPortfolioBigScenarioCrossGammaNoneObs));
-    //suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceBigPortfolioBigScenarioCrossGammaDisableObs));
-    //suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceBigPortfolioBigScenarioCrossGammaDeferObs));
-    //suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceBigPortfolioBigScenarioCrossGammaUnregisterObs));
+    suite->add(
+        BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceBigPortfolioBigScenarioCrossGammaNoneObs));
+    // suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceBigPortfolioBigScenarioCrossGammaDisableObs));
+    // suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceBigPortfolioBigScenarioCrossGammaDeferObs));
+    // suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceBigPortfolioBigScenarioCrossGammaUnregisterObs));
     return suite;
 }
 }

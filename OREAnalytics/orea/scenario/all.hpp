@@ -20,4 +20,5 @@
 #include <orea/scenario/sensitivityscenariogenerator.hpp>
 #include <orea/scenario/stressscenariodata.hpp>
 #include <orea/scenario/stressscenariogenerator.hpp>
+#include <orea/scenario/clonescenariofactory.hpp>
 

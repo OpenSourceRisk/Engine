@@ -115,6 +115,19 @@
       <Discounting>JPY-TONAR</Discounting>
     </SwapIndex>
   </SwapIndexCurves>
+  <!-- inflation index definition -->
+  <ZeroInflationIndexCurves id="default">
+      <!--<InflationIndexCurve name="AUCPI">Inflation/AUCPI/AUCPI_ZC_Swaps</InflationIndexCurve> -->
+      <ZeroInflationIndexCurve name="EUHICP">Inflation/EUHICP/EUHICP_ZC_Swaps</ZeroInflationIndexCurve>
+      <ZeroInflationIndexCurve name="EUHICPXT">Inflation/EUHICPXT/EUHICPXT_ZC_Swaps</ZeroInflationIndexCurve>
+      <ZeroInflationIndexCurve name="FRHICP">Inflation/FRHICP/FRHICP_ZC_Swaps</ZeroInflationIndexCurve>
+      <ZeroInflationIndexCurve name="UKRPI">Inflation/UKRPI/UKRPI_ZC_Swaps</ZeroInflationIndexCurve>
+      <ZeroInflationIndexCurve name="USCPI">Inflation/USCPI/USCPI_ZC_Swaps</ZeroInflationIndexCurve>
+      <ZeroInflationIndexCurve name="ZACPI">Inflation/ZACPI/ZACPI_ZC_Swaps</ZeroInflationIndexCurve>
+  </ZeroInflationIndexCurves>
+  <YYInflationIndexCurves id="default">
+      <YYInflationIndexCurve name="EUHICPXT">Inflation/EUHICPXT/EUHICPXT_YY_Swaps</YYInflationIndexCurve>
+  </YYInflationIndexCurves>
   <!-- fx spot definition -->
   <FxSpots id="default">
     <FxSpot pair="EURUSD">FX/EUR/USD</FxSpot>
@@ -151,6 +164,12 @@
     <DefaultCurve name="CPTY_B">Default/USD/CPTY_A_SR_USD</DefaultCurve>
     <DefaultCurve name="CPTY_C">Default/EUR/CPTY_C_SR_EUR</DefaultCurve>
   </DefaultCurves>
+  <!-- inflation price surface definition -->
+  <InflationCapFloorPriceSurfaces id="default">
+      <InflationCapFloorPriceSurface name="EUHICPXT">InflationCapFloorPrice/EUHICPXT/EUHICPXT_ZC_CF</InflationCapFloorPriceSurface>
+      <InflationCapFloorPriceSurface name="USCPI">InflationCapFloorPrice/USCPI/USCPI_ZC_CF</InflationCapFloorPriceSurface>
+      <InflationCapFloorPriceSurface name="UKRPI">InflationCapFloorPrice/UKRPI/UKRPI_ZC_CF</InflationCapFloorPriceSurface>
+  </InflationCapFloorPriceSurfaces>
   <EquityCurves id="default">
       <EquityCurve name="SP5">Equity/USD/SP5</EquityCurve>
       <EquityCurve name="Lufthansa">Equity/EUR/Lufthansa</EquityCurve>
@@ -162,4 +181,7 @@
   <SecuritySpreads id="default">
     <SecuritySpread name="SECURITY_1">SecuritySpread/SECURITY_1</SecuritySpread>
   </SecuritySpreads>
+  <SecurityRecoveryRates id="default">
+    <SecurityRecoveryRate name="SECURITY_1">SecurityRecoveryRate/SECURITY_1</SecurityRecoveryRate>
+  </SecurityRecoveryRates>
 </TodaysMarket>

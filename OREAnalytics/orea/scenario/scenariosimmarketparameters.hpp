@@ -46,11 +46,9 @@ namespace analytics {
 class ScenarioSimMarketParameters : public XMLSerializable {
 public:
     //! Default constructor
-    ScenarioSimMarketParameters() : 
-        baseCcy_(""), interpolation_(""), extrapolate_(false), 
-        swapVolSimulate_(false), swapVolDecayMode_(""), 
-        capFloorVolSimulate_(false), capFloorVolDecayMode_(""), 
-        fxVolSimulate_(false), fxVolDecayMode_("") {}
+    ScenarioSimMarketParameters()
+        : baseCcy_(""), interpolation_(""), extrapolate_(false), swapVolSimulate_(false), swapVolDecayMode_(""),
+          capFloorVolSimulate_(false), capFloorVolDecayMode_(""), fxVolSimulate_(false), fxVolDecayMode_("") {}
 
     //! \name Inspectors
     //@{
@@ -81,10 +79,18 @@ public:
     const vector<string>& defaultNames() const { return defaultNames_; }
     const vector<Period>& defaultTenors() const { return defaultTenors_; }
 
+    const vector<string>& equityNames() const { return eqNames_; }
+    const vector<Period>& equityTenors() const { return eqTenors_; }
+
     bool simulateFXVols() const { return fxVolSimulate_; }
     const vector<Period>& fxVolExpiries() const { return fxVolExpiries_; }
     const string& fxVolDecayMode() const { return fxVolDecayMode_; }
     const vector<string>& fxVolCcyPairs() const { return fxVolCcyPairs_; }
+
+    bool simulateEQVols() const { return eqVolSimulate_; }
+    const vector<Period>& eqVolExpiries() const { return eqVolExpiries_; }
+    const string& eqVolDecayMode() const { return eqVolDecayMode_; }
+    const vector<string>& eqVolNames() const { return eqVolNames_; }
 
     const vector<string>& additionalScenarioDataIndices() const { return additionalScenarioDataIndices_; }
     const vector<string>& additionalScenarioDataCcys() const { return additionalScenarioDataCcys_; }
@@ -121,10 +127,18 @@ public:
     vector<string>& defaultNames() { return defaultNames_; }
     vector<Period>& defaultTenors() { return defaultTenors_; }
 
+    vector<string>& equityNames() { return eqNames_; }
+    vector<Period>& equityTenors() { return eqTenors_; }
+
     bool& simulateFXVols() { return fxVolSimulate_; }
     vector<Period>& fxVolExpiries() { return fxVolExpiries_; }
     string& fxVolDecayMode() { return fxVolDecayMode_; }
     vector<string>& fxVolCcyPairs() { return fxVolCcyPairs_; }
+
+    bool& simulateEQVols() { return eqVolSimulate_; }
+    vector<Period>& eqVolExpiries() { return eqVolExpiries_; }
+    string& eqVolDecayMode() { return eqVolDecayMode_; }
+    vector<string>& eqVolNames() { return eqVolNames_; }
 
     vector<string>& additionalScenarioDataIndices() { return additionalScenarioDataIndices_; }
     vector<string>& additionalScenarioDataCcys() { return additionalScenarioDataCcys_; }
@@ -172,10 +186,18 @@ private:
     vector<string> defaultNames_;
     vector<Period> defaultTenors_;
 
+    vector<string> eqNames_;
+    vector<Period> eqTenors_;
+
     bool fxVolSimulate_;
     vector<Period> fxVolExpiries_;
     string fxVolDecayMode_;
     vector<string> fxVolCcyPairs_;
+
+    bool eqVolSimulate_;
+    vector<Period> eqVolExpiries_;
+    string eqVolDecayMode_;
+    vector<string> eqVolNames_;
 
     vector<string> additionalScenarioDataIndices_;
     vector<string> additionalScenarioDataCcys_;

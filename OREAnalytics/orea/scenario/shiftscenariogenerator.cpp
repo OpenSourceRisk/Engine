@@ -27,7 +27,7 @@ using namespace std;
 namespace ore {
 namespace analytics {
 
-string ShiftScenarioGenerator::ScenarioDescription::typeString()  const {
+string ShiftScenarioGenerator::ScenarioDescription::typeString() const {
     if (type_ == ScenarioDescription::Type::Base)
         return "Base";
     else if (type_ == ScenarioDescription::Type::Up)
@@ -44,7 +44,7 @@ string ShiftScenarioGenerator::ScenarioDescription::factor1() const {
     if (key1_ != RiskFactorKey()) {
         o << key1_;
         // if (indexDesc1_ != "")
-	o << "/" << indexDesc1_;
+        o << "/" << indexDesc1_;
         return o.str();
     }
     return "";
@@ -53,30 +53,29 @@ string ShiftScenarioGenerator::ScenarioDescription::factor2() const {
     ostringstream o;
     if (key2_ != RiskFactorKey()) {
         o << key2_;
-        //if (indexDesc2_ != "")
-	o << "/" << indexDesc2_;
+        // if (indexDesc2_ != "")
+        o << "/" << indexDesc2_;
         return o.str();
     }
     return "";
 }
 string ShiftScenarioGenerator::ScenarioDescription::text() const {
-  string t = typeString();
-  string f1 = factor1();
-  string f2 = factor2();
-  string ret = t;
-  if (f1 != "")
-    ret += ":" + f1;
-  if (f2 != "")
-    ret += ":" + f2;
-  return ret;
+    string t = typeString();
+    string f1 = factor1();
+    string f2 = factor2();
+    string ret = t;
+    if (f1 != "")
+        ret += ":" + f1;
+    if (f2 != "")
+        ret += ":" + f2;
+    return ret;
 }
-  
-ShiftScenarioGenerator::ShiftScenarioGenerator(
-    const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData, 
-    const Date& today,
-    const boost::shared_ptr<ore::data::Market>& initMarket,
-    const std::string& configuration,
-    boost::shared_ptr<ScenarioFactory> baseScenarioFactory)
+
+ShiftScenarioGenerator::ShiftScenarioGenerator(const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+                                               const Date& today,
+                                               const boost::shared_ptr<ore::data::Market>& initMarket,
+                                               const std::string& configuration,
+                                               boost::shared_ptr<ScenarioFactory> baseScenarioFactory)
     : baseScenarioFactory_(baseScenarioFactory), simMarketData_(simMarketData), today_(today), initMarket_(initMarket),
       configuration_(configuration), counter_(0) {
     QL_REQUIRE(initMarket_ != NULL, "ShiftScenarioGenerator: initMarket is null");
@@ -245,9 +244,8 @@ boost::shared_ptr<Scenario> ShiftScenarioGenerator::next(const Date& d) {
 
 ShiftScenarioGenerator::ShiftType parseShiftType(const std::string& s) {
     static map<string, ShiftScenarioGenerator::ShiftType> m = {
-        { "Absolute", ShiftScenarioGenerator::ShiftType::Absolute },
-        { "Relative", ShiftScenarioGenerator::ShiftType::Relative }
-    };
+        {"Absolute", ShiftScenarioGenerator::ShiftType::Absolute},
+        {"Relative", ShiftScenarioGenerator::ShiftType::Relative}};
     auto it = m.find(s);
     if (it != m.end()) {
         return it->second;
@@ -297,7 +295,6 @@ void ShiftScenarioGenerator::addCacheTo(boost::shared_ptr<Scenario> scenario) {
 
 RiskFactorKey ShiftScenarioGenerator::getFxKey(const std::string& key) {
     for (Size i = 0; i < fxKeys_.size(); ++i) {
-        LOG("Check FX Key " << fxKeys_[i].name << " vs " << key);
         if (fxKeys_[i].name == key)
             return fxKeys_[i];
     }
@@ -373,13 +370,11 @@ void ShiftScenarioGenerator::applyShift(Size j, Real shiftSize, bool up, ShiftTy
         o_times << it_time << ",";
     o_times << "}";
     QL_REQUIRE(tenors.size() <= times.size(),
-        "shifted tenor vector " << o_tenors.str() << 
-        " cannot be more granular than the base curve tenor vector " 
-        << o_times.str());
+               "shifted tenor vector " << o_tenors.str() << " cannot be more granular than the base curve tenor vector "
+                                       << o_times.str());
     auto it = std::find(times.begin(), times.end(), t1);
-    QL_REQUIRE(it != times.end(), 
-        "shifted tenor node (" << t1 << ") not found in base curve tenor vector " 
-        << o_times.str());
+    QL_REQUIRE(it != times.end(), "shifted tenor node (" << t1 << ") not found in base curve tenor vector "
+                                                         << o_times.str());
 
     if (initialise) {
         for (Size i = 0; i < values.size(); ++i)
@@ -446,7 +441,7 @@ void ShiftScenarioGenerator::applyShift(Size j, Real shiftSize, bool up, ShiftTy
 void ShiftScenarioGenerator::applyShift(Size i, Size j, Real shiftSize, bool up, ShiftType shiftType,
                                         const vector<Time>& shiftX, const vector<Time>& shiftY,
                                         const vector<Time>& dataX, const vector<Time>& dataY,
-                                        const vector<vector<Real> >& data, vector<vector<Real> >& shiftedData,
+                                        const vector<vector<Real>>& data, vector<vector<Real>>& shiftedData,
                                         bool initialise) {
     QL_REQUIRE(shiftX.size() >= 1 && shiftY.size() >= 1, "shift vector size >= 1 reqired");
     QL_REQUIRE(i < shiftX.size(), "index i out of range");

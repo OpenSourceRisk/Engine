@@ -25,6 +25,7 @@
 
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/marketdata/market.hpp>
+#include <ored/report/report.hpp>
 #include <orea/cube/npvcube.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
@@ -64,8 +65,7 @@ public:
                         const boost::shared_ptr<ore::data::EngineData>& engineData,
                         const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
                         const boost::shared_ptr<SensitivityScenarioData>& sensitivityData,
-                        const Conventions& conventions,
-                        const bool nonShiftedBaseCurrencyConversion = false);
+                        const Conventions& conventions, const bool nonShiftedBaseCurrencyConversion = false);
 
     //! Generate the Sensitivities
     void generateSensitivities();
@@ -88,17 +88,17 @@ public:
     //! Return cross gamma (mixed second order sensitivity times shift^2) by trade/factor1/factor2
     const std::map<std::tuple<std::string, std::string, std::string>, Real>& crossGamma() const;
 
-    //! Write "raw" NPV by trade/scenario to a file (contains base, up and down shift scenarios)
-    void writeScenarioReport(string fileName, Real outputThreshold = 0.0);
+    //! Write "raw" NPV by trade/scenario (contains base, up and down shift scenarios)
+    void writeScenarioReport(const boost::shared_ptr<ore::data::Report>& report, Real outputThreshold = 0.0);
 
-    //! Write deltas and gammas by trade/factor pair to a file
-    void writeSensitivityReport(string fileName, Real outputThreshold = 0.0);
+    //! Write deltas and gammas by trade/factor pair
+    void writeSensitivityReport(const boost::shared_ptr<ore::data::Report>& report, Real outputThreshold = 0.0);
 
-    //! Write cross gammas by trade/factor1/factor2 to a file
-    void writeCrossGammaReport(string fileName, Real outputThreshold = 0.0);
+    //! Write cross gammas by trade/factor1/factor2
+    void writeCrossGammaReport(const boost::shared_ptr<ore::data::Report>& report, Real outputThreshold = 0.0);
 
     //! The ASOF date for the sensitivity analysis
-    virtual const QuantLib::Date asof() const { return asof_;  }
+    virtual const QuantLib::Date asof() const { return asof_; }
 
     //! The market configuration string
     virtual const std::string marketConfiguration() const { return marketConfiguration_; }
@@ -107,7 +107,9 @@ public:
     virtual const boost::shared_ptr<ScenarioSimMarket> simMarket() const { return simMarket_; }
 
     //! A getter for SensitivityScenarioGenerator
-    virtual const boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator() const { return scenarioGenerator_; }
+    virtual const boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator() const {
+        return scenarioGenerator_;
+    }
 
     //! A getter for ScenarioSimMarketParameters
     virtual const boost::shared_ptr<ScenarioSimMarketParameters> simMarketData() const { return simMarketData_; }
@@ -124,7 +126,8 @@ protected:
     //! initialize the cube with the appropriate dimensions
     virtual void initializeCube(boost::shared_ptr<NPVCube>& cube) const;
     //! build engine factory
-    virtual boost::shared_ptr<EngineFactory> buildFactory(const std::vector<boost::shared_ptr<EngineBuilder> > extraBuilders = {}) const;
+    virtual boost::shared_ptr<EngineFactory>
+    buildFactory(const std::vector<boost::shared_ptr<EngineBuilder>> extraBuilders = {}) const;
     //! reset and rebuild the portfolio to make use of the appropriate engine factory
     virtual void resetPortfolio(const boost::shared_ptr<EngineFactory>& factory);
     //! build the ScenarioSimMarket that will be used by ValuationEngine

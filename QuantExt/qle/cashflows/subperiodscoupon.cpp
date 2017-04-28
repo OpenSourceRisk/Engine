@@ -159,17 +159,29 @@ SubPeriodsLeg::operator Leg() const {
     }
 
     Size numPeriods = schedule_.size() - 1;
+    if (numPeriods == 0)
+        return cashflows;
+
+    startDate = schedule_.date(0);
     for (Size i = 0; i < numPeriods; ++i) {
-        startDate = schedule_.date(i);
         endDate = schedule_.date(i + 1);
         paymentDate = calendar.adjust(endDate, paymentAdjustment_);
+        // the sub periods coupon might produce degenerated schedules, in this
+        // case we just join the current period with the next one
+        // we catch all QL exceptions here, although we should only pick the one
+        // that is thrown in case of a degenerated schedule, but there is no way
+        // of identifying it except parsing the exception text, which isn't a
+        // clean solution either
+        try {
+            boost::shared_ptr<SubPeriodsCoupon> cashflow(
+                new SubPeriodsCoupon(paymentDate, detail::get(notionals_, i, notionals_.back()), startDate, endDate,
+                                     index_, type_, paymentAdjustment_, detail::get(spreads_, i, 0.0),
+                                     paymentDayCounter_, includeSpread_, detail::get(gearings_, i, 1.0)));
 
-        boost::shared_ptr<SubPeriodsCoupon> cashflow(
-            new SubPeriodsCoupon(paymentDate, detail::get(notionals_, i, notionals_.back()), startDate, endDate, index_,
-                                 type_, paymentAdjustment_, detail::get(spreads_, i, 0.0), paymentDayCounter_,
-                                 includeSpread_, detail::get(gearings_, i, 1.0)));
-
-        cashflows.push_back(cashflow);
+            cashflows.push_back(cashflow);
+            startDate = endDate;
+        } catch (const QuantLib::Error&) {
+        }
     }
 
     boost::shared_ptr<QuantExt::SubPeriodsCouponPricer> pricer(new SubPeriodsCouponPricer);

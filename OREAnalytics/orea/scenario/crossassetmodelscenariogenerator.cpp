@@ -100,18 +100,43 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
             LOG("Set up CrossAssetModelImpliedFxVolTermStructures for " << pair << " done");
         }
     }
+
+    // Cache EQ rate keys
+    Size n_eq = model_->components(EQ);
+    eqKeys_.reserve(n_eq);
+    for (Size k = 0; k < n_eq; k++) {
+        const string& eqName = model_->eqbs(k)->eqName();
+        eqKeys_.emplace_back(RiskFactorKey::KeyType::EQSpot, eqName);
+    }
+
+    // equity vols
+    if (simMarketConfig_->eqVolNames().size() > 0 && simMarketConfig_->simulateEQVols()) {
+        LOG("CrossAssetModel is simulating EQ vols");
+        for (Size k = 0; k < simMarketConfig_->eqVolNames().size(); k++) {
+            // Calculating the index is messy
+            const string& eqName = simMarketConfig_->eqVolNames()[k];
+            LOG("Set up CrossAssetModelImpliedEqVolTermStructures for " << eqName);
+            Size eqIndex = model->eqIndex(eqName);
+            // eqVols_ are indexed by ccyPairs
+            LOG("EQ Vol Name = " << eqName << ", index = " << eqIndex);
+            // index - 1 to convert "IR" index into an "FX" index
+            eqVols_.push_back(boost::make_shared<CrossAssetModelImpliedEqVolTermStructure>(model_, eqIndex));
+            LOG("Set up CrossAssetModelImpliedEqVolTermStructures for " << eqName << " done");
+        }
+    }
 }
 
-std::vector<boost::shared_ptr<Scenario> > CrossAssetModelScenarioGenerator::nextPath() {
-    std::vector<boost::shared_ptr<Scenario> > scenarios(dates_.size());
+std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextPath() {
+    std::vector<boost::shared_ptr<Scenario>> scenarios(dates_.size());
     Sample<MultiPath> sample = pathGenerator_->next();
     Size n_ccy = model_->components(IR);
+    Size n_eq = model_->components(EQ);
     Size n_indices = simMarketConfig_->indices().size();
     Size n_curves = simMarketConfig_->yieldCurveNames().size();
     Size n_ten = simMarketConfig_->yieldCurveTenors().size();
     vector<string> ccyPairs(n_ccy - 1);
-    vector<boost::shared_ptr<QuantExt::LgmImpliedYieldTermStructure> > curves, fwdCurves, yieldCurves;
-    vector<boost::shared_ptr<IborIndex> > indices;
+    vector<boost::shared_ptr<QuantExt::LgmImpliedYieldTermStructure>> curves, fwdCurves, yieldCurves;
+    vector<boost::shared_ptr<IborIndex>> indices;
     vector<Currency> yieldCurveCurrency;
 
     DayCounter dc = model_->irlgm1f(0)->termStructure()->dayCounter();
@@ -212,6 +237,31 @@ std::vector<boost::shared_ptr<Scenario> > CrossAssetModelScenarioGenerator::next
                 for (Size j = 0; j < expires.size(); j++) {
                     Real vol = fxVols_[k]->blackVol(dates_[i] + expires[j], Null<Real>(), true);
                     scenarios[i]->add(RiskFactorKey(RiskFactorKey::KeyType::FXVolatility, ccyPair, j), vol);
+                }
+            }
+        }
+
+        // Equity spots
+        for (Size k = 0; k < n_eq; k++) {
+            Real eqSpot = std::exp(sample.value[model_->pIdx(EQ, k)][i + 1]);
+            scenarios[i]->add(eqKeys_[k], eqSpot);
+        }
+
+        // Equity vols
+        if (simMarketConfig_->simulateEQVols()) {
+            const vector<Period>& expiries = simMarketConfig_->eqVolExpiries();
+            for (Size k = 0; k < simMarketConfig_->eqVolNames().size(); k++) {
+                const string& eqName = simMarketConfig_->eqVolNames()[k];
+
+                Size eqIndex = eqVols_[k]->equityIndex();
+                Size eqCcyIdx = eqVols_[k]->eqCcyIndex();
+                Real z_eqIr = sample.value[eqCcyIdx][i + 1];
+                Real logEq = sample.value[eqIndex][i + 1];
+                eqVols_[k]->move(dates_[i], z_eqIr, logEq);
+
+                for (Size j = 0; j < expiries.size(); j++) {
+                    Real vol = eqVols_[k]->blackVol(dates_[i] + expiries[j], Null<Real>(), true);
+                    scenarios[i]->add(RiskFactorKey(RiskFactorKey::KeyType::EQVolatility, eqName, j), vol);
                 }
             }
         }

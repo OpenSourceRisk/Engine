@@ -33,22 +33,26 @@ namespace testsuite {
 */
 class SwapPerformanceTest {
 public:
-    //! Test performance of simulating a single 20Y swap, 80 quatertly time steps, 1000 samples ("None" observation mode)
+    //! Test performance of simulating a single 20Y swap, 80 quatertly time steps, 1000 samples ("None" observation
+    //mode)
     static void testSingleSwapPerformanceNoneObs();
     //! Test performance of a portfolio of 100 swaps with 5 currencies and maturities between 2 and 30 years, 80
     // quatertly time steps, 1000 samples ("None" observation mode)
     static void testSwapPerformanceNoneObs();
-    //! Test performance of simulating a single 20Y swap, 80 quatertly time steps, 1000 samples ("Disable" observation mode)
+    //! Test performance of simulating a single 20Y swap, 80 quatertly time steps, 1000 samples ("Disable" observation
+    //mode)
     static void testSingleSwapPerformanceDisableObs();
     //! Test performance of a portfolio of 100 swaps with 5 currencies and maturities between 2 and 30 years, 80
     // quatertly time steps, 1000 samples ("Disable" observation mode)
     static void testSwapPerformanceDisableObs();
-    //! Test performance of simulating a single 20Y swap, 80 quatertly time steps, 1000 samples ("Defer" observation mode)
+    //! Test performance of simulating a single 20Y swap, 80 quatertly time steps, 1000 samples ("Defer" observation
+    //mode)
     static void testSingleSwapPerformanceDeferObs();
     //! Test performance of a portfolio of 100 swaps with 5 currencies and maturities between 2 and 30 years, 80
     // quatertly time steps, 1000 samples ("Defer" observation mode)
     static void testSwapPerformanceDeferObs();
-    //! Test performance of simulating a single 20Y swap, 80 quatertly time steps, 1000 samples ("Unregister" observation mode)
+    //! Test performance of simulating a single 20Y swap, 80 quatertly time steps, 1000 samples ("Unregister"
+    //observation mode)
     static void testSingleSwapPerformanceUnregisterObs();
     //! Test performance of a portfolio of 100 swaps with 5 currencies and maturities between 2 and 30 years, 80
     // quatertly time steps, 1000 samples ("Unregister" observation mode)

@@ -19,6 +19,7 @@
       <xs:element type="fxType" name="FX"/>
       <xs:element type="crossCurrencyBasisType" name="CrossCurrencyBasis"/>
       <xs:element type="swapIndexType" name="SwapIndex"/>
+      <xs:element type="inflationswapType" name="InflationSwap"/>
     </xs:choice>
   </xs:complexType>
 
@@ -175,6 +176,21 @@
     <xs:sequence>
       <xs:element type="xs:string" name="Id" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:string" name="Conventions" minOccurs="1" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="inflationswapType">
+    <xs:sequence>
+      <xs:element type="xs:string" name="Id" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="FixCalendar" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="businessDayConvention" name="FixConvention" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="dayCounter" name="DayCounter" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="Index" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="bool" name="Interpolated" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="ObservationLag" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="bool" name="AdjustInfObsDates" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="InfCalendar" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="businessDayConvention" name="InfConvention" minOccurs="1" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
  

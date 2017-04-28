@@ -1765,18 +1765,380 @@
       </Segments>
     </YieldCurve>
   </YieldCurves>
+  <InflationCurves>
+      <InflationCurve>
+          <CurveId>USCPI_ZC_Swaps</CurveId>
+          <CurveDescription>Estimation Curve for USCPI</CurveDescription>
+          <NominalTermStructure>Yield/USD/USD1D</NominalTermStructure>
+          <Type>ZC</Type>
+          <Quotes>
+              <Quote>ZC_INFLATIONSWAP/RATE/USCPI/1Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/USCPI/2Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/USCPI/3Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/USCPI/4Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/USCPI/5Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/USCPI/6Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/USCPI/7Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/USCPI/8Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/USCPI/9Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/USCPI/10Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/USCPI/12Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/USCPI/15Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/USCPI/20Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/USCPI/25Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/USCPI/30Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/USCPI/40Y</Quote>
+          </Quotes>
+          <Conventions>USCPI_INFLATIONSWAP</Conventions>
+          <Extrapolation>true</Extrapolation>
+          <Calendar>US</Calendar>
+          <DayCounter>A365</DayCounter>
+          <Lag>3M</Lag>
+          <Frequency>Monthly</Frequency>
+          <BaseRate>0.01</BaseRate>
+          <Tolerance>0.000000000001</Tolerance>
+          <Seasonality>
+              <BaseDate>20160101</BaseDate>
+              <Frequency>Monthly</Frequency>
+              <Factors>
+                  <Factor>SEASONALITY/RATE/MULT/USCPI/JAN</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/USCPI/FEB</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/USCPI/MAR</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/USCPI/APR</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/USCPI/MAY</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/USCPI/JUN</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/USCPI/JUL</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/USCPI/AUG</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/USCPI/SEP</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/USCPI/OCT</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/USCPI/NOV</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/USCPI/DEC</Factor>
+              </Factors>
+          </Seasonality>
+      </InflationCurve>
+      
+      <InflationCurve>
+          <CurveId>EUHICP_ZC_Swaps</CurveId>
+          <CurveDescription>Estimation Curve for EUHICP</CurveDescription>
+          <NominalTermStructure>Yield/EUR/EUR1D</NominalTermStructure>
+          <Type>ZC</Type>
+          <Quotes>
+              <Quote>ZC_INFLATIONSWAP/RATE/EUHICP/1Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/EUHICP/2Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/EUHICP/3Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/EUHICP/4Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/EUHICP/5Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/EUHICP/6Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/EUHICP/7Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/EUHICP/8Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/EUHICP/9Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/EUHICP/10Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/EUHICP/12Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/EUHICP/15Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/EUHICP/20Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/EUHICP/25Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/EUHICP/30Y</Quote>
+          </Quotes>
+          <Conventions>EUHICP_INFLATIONSWAP</Conventions>
+          <Extrapolation>true</Extrapolation>
+          <Calendar>TARGET</Calendar>
+          <DayCounter>A365</DayCounter>
+          <Lag>3M</Lag>
+          <Frequency>Monthly</Frequency>
+          <BaseRate>0.01</BaseRate>
+          <Tolerance>0.000000000001</Tolerance>
+      </InflationCurve>
+
+      <InflationCurve>
+          <CurveId>EUHICPXT_ZC_Swaps</CurveId>
+          <CurveDescription>Estimation Curve for EUCPI</CurveDescription>
+          <NominalTermStructure>Yield/EUR/EUR1D</NominalTermStructure>
+          <Type>ZC</Type>
+          <Quotes>
+              <Quote>ZC_INFLATIONSWAP/RATE/EUHICPXT/1Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/EUHICPXT/2Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/EUHICPXT/3Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/EUHICPXT/4Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/EUHICPXT/5Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/EUHICPXT/6Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/EUHICPXT/7Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/EUHICPXT/8Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/EUHICPXT/9Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/EUHICPXT/10Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/EUHICPXT/12Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/EUHICPXT/15Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/EUHICPXT/20Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/EUHICPXT/25Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/EUHICPXT/30Y</Quote>
+          </Quotes>
+          <Conventions>EUHICPXT_INFLATIONSWAP</Conventions>
+          <Extrapolation>true</Extrapolation>
+          <Calendar>TARGET</Calendar>
+          <DayCounter>A365</DayCounter>
+          <Lag>3M</Lag>
+          <Frequency>Monthly</Frequency>
+          <BaseRate>0.01</BaseRate>
+          <Tolerance>0.000000000001</Tolerance>
+          <Seasonality>
+              <BaseDate>20160101</BaseDate>
+              <Frequency>Monthly</Frequency>
+              <Factors>
+                  <Factor>SEASONALITY/RATE/MULT/EUHICPXT/JAN</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/EUHICPXT/FEB</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/EUHICPXT/MAR</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/EUHICPXT/APR</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/EUHICPXT/MAY</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/EUHICPXT/JUN</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/EUHICPXT/JUL</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/EUHICPXT/AUG</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/EUHICPXT/SEP</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/EUHICPXT/OCT</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/EUHICPXT/NOV</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/EUHICPXT/DEC</Factor>
+              </Factors>
+          </Seasonality>
+      </InflationCurve>
+
+      <InflationCurve>
+          <CurveId>EUHICPXT_YY_Swaps</CurveId>
+          <CurveDescription>Estimation Curve for EUCPI YoY</CurveDescription>
+          <NominalTermStructure>Yield/EUR/EUR1D</NominalTermStructure>
+          <Type>YY</Type>
+          <Quotes>
+              <Quote>YY_INFLATIONSWAP/RATE/EUHICPXT/1Y</Quote>
+              <Quote>YY_INFLATIONSWAP/RATE/EUHICPXT/2Y</Quote>
+              <Quote>YY_INFLATIONSWAP/RATE/EUHICPXT/3Y</Quote>
+              <Quote>YY_INFLATIONSWAP/RATE/EUHICPXT/4Y</Quote>
+              <Quote>YY_INFLATIONSWAP/RATE/EUHICPXT/5Y</Quote>
+              <Quote>YY_INFLATIONSWAP/RATE/EUHICPXT/6Y</Quote>
+              <Quote>YY_INFLATIONSWAP/RATE/EUHICPXT/7Y</Quote>
+              <Quote>YY_INFLATIONSWAP/RATE/EUHICPXT/8Y</Quote>
+              <Quote>YY_INFLATIONSWAP/RATE/EUHICPXT/9Y</Quote>
+              <Quote>YY_INFLATIONSWAP/RATE/EUHICPXT/10Y</Quote>
+              <Quote>YY_INFLATIONSWAP/RATE/EUHICPXT/12Y</Quote>
+              <Quote>YY_INFLATIONSWAP/RATE/EUHICPXT/15Y</Quote>
+              <Quote>YY_INFLATIONSWAP/RATE/EUHICPXT/20Y</Quote>
+              <Quote>YY_INFLATIONSWAP/RATE/EUHICPXT/25Y</Quote>
+              <Quote>YY_INFLATIONSWAP/RATE/EUHICPXT/30Y</Quote>
+          </Quotes>
+          <Conventions>EUHICPXT_INFLATIONSWAP</Conventions>
+          <Extrapolation>true</Extrapolation>
+          <Calendar>TARGET</Calendar>
+          <DayCounter>A365</DayCounter>
+          <Lag>3M</Lag>
+          <Frequency>Monthly</Frequency>
+          <BaseRate>0.01</BaseRate>
+          <Tolerance>0.000000000001</Tolerance>
+          <Seasonality>
+              <BaseDate>20160101</BaseDate>
+              <Frequency>Monthly</Frequency>
+              <Factors>
+                  <Factor>SEASONALITY/RATE/MULT/EUHICPXT/JAN</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/EUHICPXT/FEB</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/EUHICPXT/MAR</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/EUHICPXT/APR</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/EUHICPXT/MAY</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/EUHICPXT/JUN</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/EUHICPXT/JUL</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/EUHICPXT/AUG</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/EUHICPXT/SEP</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/EUHICPXT/OCT</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/EUHICPXT/NOV</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/EUHICPXT/DEC</Factor>
+              </Factors>
+          </Seasonality>
+      </InflationCurve>
+      
+      <InflationCurve>
+          <CurveId>FRHICP_ZC_Swaps</CurveId>
+          <CurveDescription>Estimation Curve for FRHICP</CurveDescription>
+          <NominalTermStructure>Yield/EUR/EUR1D</NominalTermStructure>
+          <Type>ZC</Type>
+          <Quotes>
+              <Quote>ZC_INFLATIONSWAP/RATE/FRHICP/1Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/FRHICP/2Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/FRHICP/3Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/FRHICP/4Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/FRHICP/5Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/FRHICP/6Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/FRHICP/7Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/FRHICP/8Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/FRHICP/9Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/FRHICP/10Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/FRHICP/12Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/FRHICP/15Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/FRHICP/20Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/FRHICP/25Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/FRHICP/30Y</Quote>
+          </Quotes>
+          <Conventions>FRHICP_INFLATIONSWAP</Conventions>
+          <Extrapolation>true</Extrapolation>
+          <Calendar>TARGET</Calendar>
+          <DayCounter>A365</DayCounter>
+          <Lag>3M</Lag>
+          <Frequency>Monthly</Frequency>
+          <BaseRate>0.01</BaseRate>
+          <Tolerance>0.000000000001</Tolerance>
+      </InflationCurve>
+      
+      <InflationCurve>
+          <CurveId>UKRPI_ZC_Swaps</CurveId>
+          <CurveDescription>Estimation Curve for UKRPI</CurveDescription>
+          <NominalTermStructure>Yield/GBP/GBP1D</NominalTermStructure>
+          <Type>ZC</Type>
+          <Quotes>
+              <Quote>ZC_INFLATIONSWAP/RATE/UKRPI/1Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/UKRPI/2Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/UKRPI/3Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/UKRPI/4Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/UKRPI/5Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/UKRPI/6Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/UKRPI/7Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/UKRPI/8Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/UKRPI/9Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/UKRPI/10Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/UKRPI/12Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/UKRPI/15Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/UKRPI/20Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/UKRPI/25Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/UKRPI/30Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/UKRPI/40Y</Quote>
+          </Quotes>
+          <Conventions>UKRPI_INFLATIONSWAP</Conventions>
+          <Extrapolation>true</Extrapolation>
+          <Calendar>UK</Calendar>
+          <DayCounter>A365</DayCounter>
+          <Lag>3M</Lag>
+          <Frequency>Monthly</Frequency>
+          <BaseRate>0.01</BaseRate>
+          <Tolerance>0.000000000001</Tolerance>
+          <Seasonality>
+              <BaseDate>20160101</BaseDate>
+              <Frequency>Monthly</Frequency>
+              <Factors>
+                  <Factor>SEASONALITY/RATE/MULT/UKRPI/JAN</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/UKRPI/FEB</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/UKRPI/MAR</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/UKRPI/APR</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/UKRPI/MAY</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/UKRPI/JUN</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/UKRPI/JUL</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/UKRPI/AUG</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/UKRPI/SEP</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/UKRPI/OCT</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/UKRPI/NOV</Factor>
+                  <Factor>SEASONALITY/RATE/MULT/UKRPI/DEC</Factor>
+              </Factors>
+          </Seasonality>
+      </InflationCurve>
+      
+      <InflationCurve>
+          <CurveId>ZACPI_ZC_Swaps</CurveId>
+          <CurveDescription>Estimation Curve for ZACPI</CurveDescription>
+          <!-- no ZAR currency setup at the moment -->
+          <NominalTermStructure>Yield/EUR/EUR1D</NominalTermStructure>
+          <Type>ZC</Type>
+          <Quotes>
+              <Quote>ZC_INFLATIONSWAP/RATE/ZACPI/1Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/ZACPI/2Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/ZACPI/3Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/ZACPI/4Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/ZACPI/5Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/ZACPI/6Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/ZACPI/7Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/ZACPI/8Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/ZACPI/9Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/ZACPI/10Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/ZACPI/12Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/ZACPI/15Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/ZACPI/20Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/ZACPI/25Y</Quote>
+              <Quote>ZC_INFLATIONSWAP/RATE/ZACPI/30Y</Quote>
+          </Quotes>
+          <Conventions>ZACPI_INFLATIONSWAP</Conventions>
+          <Extrapolation>true</Extrapolation>
+          <Calendar>ZAR</Calendar>
+          <DayCounter>A365</DayCounter>
+          <Lag>3M</Lag>
+          <Frequency>Monthly</Frequency>
+          <BaseRate>0.01</BaseRate>
+          <Tolerance>0.000000000001</Tolerance>
+      </InflationCurve>
+      
+  </InflationCurves>
+  <InflationCapFloorPriceSurfaces>
+      
+      <!-- EUHICPXT ZC CapFloor-->
+      <InflationCapFloorPriceSurface>
+          <CurveId>EUHICPXT_ZC_CF</CurveId>
+          <CurveDescription>Price Surface ZC CapFloor EUHICPXT</CurveDescription>
+          <Type>ZC</Type>
+          <StartRate>0.10</StartRate>
+          <ObservationLag>3M</ObservationLag>
+          <Calendar>TARGET</Calendar>
+          <BusinessDayConvention>MF</BusinessDayConvention>
+          <DayCounter>A365</DayCounter>
+          <Index>EUHICPXT</Index>
+          <IndexCurve>Inflation/EUHICPXT/EUHICPXT_ZC_Swaps</IndexCurve>
+          <IndexInterpolated>false</IndexInterpolated>
+          <YieldTermStructure>Yield/EUR/EUR1D</YieldTermStructure>
+          <CapStrikes>0.01,0.015,0.02,0.025,0.03</CapStrikes>
+          <FloorStrikes>-0.02,-0.01,-0.005,0.00,0.01,0.015,0.02,0.025,0.03</FloorStrikes>
+          <Maturities>1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y,30Y</Maturities>
+      </InflationCapFloorPriceSurface>
+      
+      <!-- USCPI ZC CapFloor-->
+      <InflationCapFloorPriceSurface>
+          <CurveId>USCPI_ZC_CF</CurveId>
+          <CurveDescription>Price Surface ZC CapFloor USCPI</CurveDescription>
+          <Type>ZC</Type>
+          <StartRate>0.00</StartRate>
+          <ObservationLag>3M</ObservationLag>
+          <Calendar>US</Calendar>
+          <BusinessDayConvention>MF</BusinessDayConvention>
+          <DayCounter>A365</DayCounter>
+          <Index>USCPI</Index>
+          <IndexCurve>Inflation/USCPI/USCPI_ZC_Swaps</IndexCurve>
+          <IndexInterpolated>false</IndexInterpolated>
+          <YieldTermStructure>Yield/USD/USD1D</YieldTermStructure>
+          <CapStrikes>0.01,0.015,0.02,0.025,0.03,0.035</CapStrikes>
+          <FloorStrikes>-0.02,-0.015,-0.01,-0.005,0.00,0.01,0.015,0.02,0.025,0.03</FloorStrikes>
+          <Maturities>1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y,30Y</Maturities>
+      </InflationCapFloorPriceSurface>
+      
+      <!-- UKRPI ZC CapFloor-->
+      <InflationCapFloorPriceSurface>
+          <CurveId>UKRPI_ZC_CF</CurveId>
+          <CurveDescription>Price Surface ZC CapFloor UKRPI</CurveDescription>
+          <Type>ZC</Type>
+          <StartRate>0.00</StartRate>
+          <ObservationLag>3M</ObservationLag>
+          <Calendar>GBP</Calendar>
+          <BusinessDayConvention>MF</BusinessDayConvention>
+          <DayCounter>A365</DayCounter>
+          <Index>UKRPI</Index>
+          <IndexCurve>Inflation/UKRPI/UKRPI_ZC_Swaps</IndexCurve>
+          <IndexInterpolated>false</IndexInterpolated>
+          <YieldTermStructure>Yield/GBP/GBP1D</YieldTermStructure>
+          <CapStrikes>0.01,0.015,0.02,0.025,0.03</CapStrikes>
+          <FloorStrikes>-0.03,-0.02,-0.015,-0.01,-0.005,0.00,0.005,0.01,0.015,0.02,0.025,0.03</FloorStrikes>
+          <Maturities>1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y</Maturities>
+      </InflationCapFloorPriceSurface>
+      
+  </InflationCapFloorPriceSurfaces>
+
   <EquityCurves>
         <EquityCurve>
             <CurveId>SP5</CurveId>
             <CurveDescription>SP 500 equity price projection curve</CurveDescription>
             <Currency>USD</Currency>
-            <Type>ForwardPrice</Type> <!-- {DividendYield, ForwardPrice} -->
+            <Type>DividendYield</Type> <!-- {DividendYield, ForwardPrice} -->
             <SpotQuote>EQUITY/PRICE/SP5/USD</SpotQuote> <!--  the spot quote from the market data file -->
             <Quotes>
-                <Quote>EQUITY_FWD/PRICE/SP5/USD/2016-06-16</Quote>
-                <Quote>EQUITY_FWD/PRICE/SP5/USD/6M</Quote>
-                <Quote>EQUITY_FWD/PRICE/SP5/USD/2017-06-16</Quote>
-                <Quote>EQUITY_FWD/PRICE/SP5/USD/2Y</Quote>
+                <Quote>EQUITY_DIVIDEND/RATE/SP5/USD/3M</Quote>
+                <Quote>EQUITY_DIVIDEND/RATE/SP5/USD/20160915</Quote>
+                <Quote>EQUITY_DIVIDEND/RATE/SP5/USD/1Y</Quote>
+                <Quote>EQUITY_DIVIDEND/RATE/SP5/USD/20170915</Quote>
             </Quotes>
             <DayCounter>A365</DayCounter>
         </EquityCurve>
@@ -1784,13 +2146,13 @@
             <CurveId>Lufthansa</CurveId>
             <CurveDescription>Lufthansa equity price projection curve</CurveDescription>
             <Currency>EUR</Currency>
-            <Type>DividendYield</Type> <!-- {DividendYield, ForwardPrice} -->
+            <Type>ForwardPrice</Type> <!-- {DividendYield, ForwardPrice} -->
             <SpotQuote>EQUITY/PRICE/Lufthansa/EUR</SpotQuote> <!--  the spot quote from the market data file -->
             <Quotes>
-                <Quote>EQUITY_DIVIDEND/RATE/Lufthansa/EUR/3M</Quote>
-                <Quote>EQUITY_DIVIDEND/RATE/Lufthansa/EUR/20160915</Quote>
-                <Quote>EQUITY_DIVIDEND/RATE/Lufthansa/EUR/1Y</Quote>
-                <Quote>EQUITY_DIVIDEND/RATE/Lufthansa/EUR/20170915</Quote>
+                <Quote>EQUITY_FWD/PRICE/Lufthansa/EUR/2016-06-16</Quote>
+                <Quote>EQUITY_FWD/PRICE/Lufthansa/EUR/6M</Quote>
+                <Quote>EQUITY_FWD/PRICE/Lufthansa/EUR/2017-06-16</Quote>
+                <Quote>EQUITY_FWD/PRICE/Lufthansa/EUR/2Y</Quote>
             </Quotes>
             <DayCounter>A365</DayCounter>
         </EquityCurve> 
@@ -1815,13 +2177,14 @@
             </Expiries>
         </EquityVolatility>
   </EquityVolatilities>
-    <SecuritySpreads>
-	<SecuritySpread>
-	  <CurveId>SECURITY_1</CurveId>
-	  <CurveDescription>Security Spread</CurveDescription>
-	  <Quotes>
+  <SecuritySpreads>
+    <SecuritySpread>
+      <CurveId>SECURITY_1</CurveId>
+      <CurveDescription>Security Spread</CurveDescription>
+      <Quotes>
         <Quote>BOND/YIELD_SPREAD/SECURITY_1</Quote>
       </Quotes>
-	</SecuritySpread>
+    </SecuritySpread>
   </SecuritySpreads>
 </CurveConfiguration>
+
