@@ -140,7 +140,7 @@ public:
                             const vector<string>& values);
     static void addChildren(XMLDocument& doc, XMLNode* n, const string& names, const string& name,
                             const vector<Real>& values);
-    //! Adds <code>\<Name>v1,v2,v3</Name></code> - the inverse of getChildrenValuesAsDoublesCompact
+    //! Adds <code>\<Name>v1,v2,v3\</Name></code> - the inverse of getChildrenValuesAsDoublesCompact
     static void addChild(XMLDocument& doc, XMLNode* n, const string& name, const vector<Real>& values);
     static void addChildrenWithAttributes(XMLDocument& doc, XMLNode* n, const string& names, const string& name,
                                           const vector<Real>& values, const string& attrName,
