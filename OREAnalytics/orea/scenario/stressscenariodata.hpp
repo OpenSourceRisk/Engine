@@ -107,7 +107,7 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc);
     //@}
 
-    //! \Equality Operators
+    //! \name Equality Operators
     //@{
     // bool operator==(const StressTestScenarioData& rhs);
     // bool operator!=(const StressTestScenarioData& rhs);
