@@ -122,7 +122,7 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                                    << config->seasonalityFrequency() << " with " << strFactorIDs.size() << " factors.");
                     boost::shared_ptr<SeasonalityQuote> sq = boost::dynamic_pointer_cast<SeasonalityQuote>(marketQuote);
                     QL_REQUIRE(sq->type() == "MULT", "Market quote (" << sq->name() << ") not of multiplicative type.");
-                    int findex = config->seasonalityBaseDate().month() - sq->applyMonth() < 0
+                    QuantLib::Size findex = config->seasonalityBaseDate().month() - sq->applyMonth() < 0
                                      ? config->seasonalityBaseDate().month() - sq->applyMonth() + 12
                                      : config->seasonalityBaseDate().month() - sq->applyMonth();
                     factors[findex] = sq->quote()->value();
