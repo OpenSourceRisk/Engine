@@ -503,7 +503,6 @@ boost::shared_ptr<Portfolio> buildPortfolio(Size portfolioSize, boost::shared_pt
         } else {
             int start = randInt(rng, minStart, maxStart);
             Size end = randInt(rng, minTerm, maxTerm);
-            Size term = portfolioSize == 1 ? 20 : randInt(rng, minTerm, maxTerm);
             portfolio->add(testsuite::buildSwap(id, ccy, isPayer, notional, start, end, fixedRate, spread, fixFreq,
                                                 fixDC, floatFreq, floatDC, index));
         }
