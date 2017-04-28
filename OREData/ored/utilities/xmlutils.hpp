@@ -115,7 +115,7 @@ public:
     static void addChild(XMLDocument& doc, XMLNode* n, const string& name, int value);
     static void addChild(XMLDocument& doc, XMLNode* n, const string& name, bool value);
 
-    //! Adds <Name>p1,p2,p3</Name>
+    //! Adds <code>\<Name>p1,p2,p3\</Name></code>
     template <class T> static void addGenericChild(XMLDocument& doc, XMLNode* n, const char* name, const T& value) {
         std::ostringstream oss;
         oss << value;
