@@ -621,13 +621,13 @@
       <AdditionalFields/>
     </Envelope>
     <BondData>
-	  <IssuerId>CPTY_C</IssuerId>
-	  <SecurityId>SECURITY_1</SecurityId>
-	  <CreditCurveId>CPTY_C</CreditCurveId>
-	  <ReferenceCurveId>BENCHMARK_EUR</ReferenceCurveId>
-	  <SettlementDays>2</SettlementDays>
-	  <Calendar>TARGET</Calendar>
-	  <IssueDate>20160203</IssueDate>
+      <IssuerId>CPTY_C</IssuerId>
+      <CreditCurveId>CPTY_C</CreditCurveId>
+      <SecurityId>SECURITY_1</SecurityId>
+      <ReferenceCurveId>BENCHMARK_EUR</ReferenceCurveId>
+      <SettlementDays>2</SettlementDays>
+      <Calendar>TARGET</Calendar>
+      <IssueDate>20160203</IssueDate>
       <LegData>
         <LegType>Fixed</LegType>
         <Payer>false</Payer>

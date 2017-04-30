@@ -1,5 +1,5 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT([OREData], [1.8],
+AC_INIT([OREData], [1.8.2],
         [opensourcerisk.org/forum],
         [OREData])
 AC_PREREQ(2.62)

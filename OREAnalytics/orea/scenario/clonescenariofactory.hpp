@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file clonecenariofactory.hpp
+/*! \file orea/scenario/clonescenariofactory.hpp
     \brief factory class for cloning a cached scenario
     \ingroup scenario
 */
