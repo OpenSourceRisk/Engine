@@ -132,6 +132,8 @@ LgmBuilder::LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const
 
 void LgmBuilder::performCalculations() const {
 
+    DLOG("Recalibrate LGM model for currency " << data_->ccy());
+
     parametrization_->shift() = 0.0;
     parametrization_->scaling() = 1.0;
 
@@ -159,8 +161,8 @@ void LgmBuilder::performCalculations() const {
         LOG("LGM " << data_->ccy() << " calibration errors:");
         error_ = logCalibrationErrors(swaptionBasket_, parametrization_);
         if (data_->calibrationType() == CalibrationType::Bootstrap && (data_->calibrateA() || data_->calibrateH())) {
-            QL_REQUIRE(fabs(error_) < bootstrapTolerance_,
-                       "calibration error " << error_ << " exceeds tolerance " << bootstrapTolerance_);
+            QL_REQUIRE(fabs(error_) < bootstrapTolerance_, "calibration error " << error_ << " exceeds tolerance "
+                                                                                << bootstrapTolerance_);
         }
     } else {
         LOG("skip LGM calibration (calibration type is none)");
@@ -292,7 +294,6 @@ void LgmBuilder::buildSwaptionBasket() const {
     swaptionMaturities_ = Array(maturityTimes.size());
     for (Size j = 0; j < maturityTimes.size(); j++)
         swaptionMaturities_[j] = maturityTimes[j];
-
 }
 }
 }

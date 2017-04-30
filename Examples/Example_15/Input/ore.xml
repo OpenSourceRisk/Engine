@@ -46,6 +46,7 @@
       <Parameter name="storeScenarios">N</Parameter>
       <Parameter name="cubeFile">cube.dat</Parameter>
       <Parameter name="additionalScenarioDataFileName">scenariodata.dat</Parameter>
+      <Parameter name="recalibrateModels">Y</Parameter>
     </Analytic>
     <Analytic type="xva">
       <Parameter name="active">N</Parameter>
