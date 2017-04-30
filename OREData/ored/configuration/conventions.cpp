@@ -735,9 +735,9 @@ void InflationSwapConvention::fromXML(XMLNode* node) {
     strIndex_ = XMLUtils::getChildValue(node, "Index", true);
     strInterpolated_ = XMLUtils::getChildValue(node, "Interpolated", true);
     strObservationLag_ = XMLUtils::getChildValue(node, "ObservationLag", true);
-    strAdjustInfObsDates_ = XMLUtils::getChildValue(node, "AdjustInfObsDates", true);
-    strInfCalendar_ = XMLUtils::getChildValue(node, "InfCalendar", true);
-    strInfConvention_ = XMLUtils::getChildValue(node, "InfConvention", true);
+    strAdjustInfObsDates_ = XMLUtils::getChildValue(node, "AdjustInflationObservationDates", true);
+    strInfCalendar_ = XMLUtils::getChildValue(node, "InflationCalendar", true);
+    strInfConvention_ = XMLUtils::getChildValue(node, "InflationConvention", true);
     build();
 }
 
@@ -751,9 +751,9 @@ XMLNode* InflationSwapConvention::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "Index", strIndex_);
     XMLUtils::addChild(doc, node, "Interpolated", strInterpolated_);
     XMLUtils::addChild(doc, node, "ObservationLag", strObservationLag_);
-    XMLUtils::addChild(doc, node, "AdjustInfObsDates", strAdjustInfObsDates_);
-    XMLUtils::addChild(doc, node, "InfCalendar", strInfCalendar_);
-    XMLUtils::addChild(doc, node, "InfConvention", strInfConvention_);
+    XMLUtils::addChild(doc, node, "AdjustInflationObservationDates", strAdjustInfObsDates_);
+    XMLUtils::addChild(doc, node, "InflationCalendar", strInfCalendar_);
+    XMLUtils::addChild(doc, node, "InflationConvention", strInfConvention_);
     return node;
 }
 
