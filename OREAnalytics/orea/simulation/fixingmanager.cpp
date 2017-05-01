@@ -124,9 +124,9 @@ void FixingManager::reset() {
     if (modifiedFixingHistory_) {
         for (auto& kv : fixingCache_)
             IndexManager::instance().setHistory(kv.first, kv.second);
-        fixingsEnd_ = today_;
         modifiedFixingHistory_ = false;
     }
+    fixingsEnd_ = today_;
 }
 
 void FixingManager::applyFixings(Date start, Date end) {
