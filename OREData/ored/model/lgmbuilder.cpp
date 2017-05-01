@@ -119,11 +119,14 @@ LgmBuilder::LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const
     LOG("lambda times size: " << hTimes.size());
 
     model_ = boost::make_shared<QuantExt::LGM>(parametrization_);
+    params_ = model_->params();
     swaptionEngine_ = boost::make_shared<QuantExt::AnalyticLgmSwaptionEngine>(model_);
 
     registerWith(svts_);
-    registerWith(swapIndex_);
-    registerWith(shortSwapIndex_);
+    registerWith(swapIndex_->forwardingTermStructure());
+    registerWith(swapIndex_->discountingTermStructure());
+    registerWith(shortSwapIndex_->forwardingTermStructure());
+    registerWith(shortSwapIndex_->discountingTermStructure());
     registerWith(discountCurve_);
 
     for (Size j = 0; j < swaptionBasket_.size(); j++)
@@ -140,6 +143,10 @@ void LgmBuilder::performCalculations() const {
     buildSwaptionBasket();
     for (Size j = 0; j < swaptionBasket_.size(); j++)
         swaptionBasket_[j]->setPricingEngine(swaptionEngine_);
+
+    // reset model parameters, this ensures that a calibration gives the same
+    // result if the input market data is the same
+    model_->setParams(params_);
 
     if (data_->calibrationType() != CalibrationType::None) {
         if (data_->calibrateA() && !data_->calibrateH()) {

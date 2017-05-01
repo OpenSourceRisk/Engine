@@ -121,10 +121,12 @@ void FixingManager::update(Date d) {
 
 //! Reset fixings to t0 (today)
 void FixingManager::reset() {
-    for (auto& kv : fixingCache_)
-        IndexManager::instance().setHistory(kv.first, kv.second);
-
-    fixingsEnd_ = today_;
+    if (modifiedFixingHistory_) {
+        for (auto& kv : fixingCache_)
+            IndexManager::instance().setHistory(kv.first, kv.second);
+        fixingsEnd_ = today_;
+        modifiedFixingHistory_ = false;
+    }
 }
 
 void FixingManager::applyFixings(Date start, Date end) {
@@ -150,8 +152,10 @@ void FixingManager::applyFixings(Date start, Date end) {
                 TimeSeries<Real> history;
                 vector<Date>& fixingDates = fixingMap_[qlIndexName];
                 for (Size i = 0; i < fixingDates.size(); i++) {
-                    if (fixingDates[i] >= start && fixingDates[i] < end)
+                    if (fixingDates[i] >= start && fixingDates[i] < end) {
                         history[fixingDates[i]] = currentFixing;
+                        modifiedFixingHistory_ = true;
+                    }
                     if (fixingDates[i] >= end)
                         break;
                 }

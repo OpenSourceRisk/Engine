@@ -73,6 +73,7 @@ private:
     Real bootstrapTolerance_;
     mutable Real error_;
     boost::shared_ptr<QuantExt::LGM> model_;
+    Array params_;
     boost::shared_ptr<QuantLib::PricingEngine> swaptionEngine_;
     boost::shared_ptr<QuantExt::IrLgm1fParametrization> parametrization_;
     RelinkableHandle<YieldTermStructure> discountCurve_;
