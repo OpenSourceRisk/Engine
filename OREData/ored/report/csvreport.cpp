@@ -33,7 +33,7 @@ public:
         if (i == QuantLib::Null<Size>()) {
             fprintNull();
         } else {
-            fprintf(fp_, "%lu", i);
+            fprintf(fp_, "%zu", i);
         }
     }
     void operator()(const Real d) const {
@@ -82,7 +82,7 @@ Report& CSVFileReport::addColumn(const string& name, const ReportType& rt, Size 
 }
 
 Report& CSVFileReport::next() {
-    QL_REQUIRE(i_ == columnTypes_.size(), "Cannot go to next line, only " << i_ << " entires filled");
+    QL_REQUIRE(i_ == columnTypes_.size(), "Cannot go to next line, only " << i_ << " entries filled");
     fprintf(fp_, "\n");
     i_ = 0;
     return *this;

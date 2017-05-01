@@ -26,6 +26,8 @@
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/indexes/iborindex.hpp>
 #include <ql/indexes/swapindex.hpp>
+#include <ql/indexes/inflationindex.hpp>
+#include <ql/experimental/inflation/cpicapfloortermpricesurface.hpp>
 #include <ql/termstructures/volatility/swaption/swaptionvolstructure.hpp>
 #include <ql/termstructures/volatility/optionlet/optionletvolatilitystructure.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
@@ -96,6 +98,33 @@ public:
     //@{
     virtual Handle<OptionletVolatilityStructure>
     capFloorVol(const string& ccy, const string& configuration = Market::defaultConfiguration) const = 0;
+    //@}
+
+    //! Inflation Indexes
+    virtual Handle<ZeroInflationIndex>
+    zeroInflationIndex(const string& indexName, const bool interpolated,
+                       const string& configuration = Market::defaultConfiguration) const = 0;
+    virtual Handle<YoYInflationIndex>
+    yoyInflationIndex(const string& indexName, const bool interpolated,
+                      const string& configuration = Market::defaultConfiguration) const = 0;
+
+    //! Inflation Cap Floor Price Surfaces
+    virtual Handle<CPICapFloorTermPriceSurface>
+    inflationCapFloorPriceSurface(const string& indexName,
+                                  const string& configuration = Market::defaultConfiguration) const = 0;
+
+    //! \name Equity curves
+    //@{
+    virtual Handle<Quote> equitySpot(const string& eqName,
+                                     const string& configuration = Market::defaultConfiguration) const = 0;
+    virtual Handle<YieldTermStructure>
+    equityDividendCurve(const string& eqName, const string& configuration = Market::defaultConfiguration) const = 0;
+    //@}
+
+    //! \name Equity volatilities
+    //@{
+    virtual Handle<BlackVolTermStructure>
+    equityVol(const string& eqName, const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 
     //! Refresh term structures for a given configuration

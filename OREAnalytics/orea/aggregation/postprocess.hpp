@@ -29,6 +29,7 @@
 
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/nettingsetmanager.hpp>
+#include <ored/report/report.hpp>
 
 #include <ql/time/date.hpp>
 
@@ -232,10 +233,10 @@ public:
     //! Return the dynamic initial margin cube (regression approach)
     const boost::shared_ptr<NPVCube>& dimCube() { return dimCube_; }
     //! Write average (over samples) DIM evolution through time for given netting set
-    void exportDimEvolution(const std::string& fileName, const std::string& nettingSet);
+    void exportDimEvolution(const std::string& nettingSet, ore::data::Report& dimEvolutionReport);
     //! Write DIM as a function of sample netting set NPV for a given time step
-    void exportDimRegression(const std::vector<string>& fileNames, const std::string& nettingSet,
-                             const std::vector<Size>& timeSteps);
+    void exportDimRegression(const std::string& nettingSet, const std::vector<Size>& timeSteps,
+                             const std::vector<boost::shared_ptr<ore::data::Report>>& dimRegReports);
 
 private:
     //! Helper function to return the collateral account evolution for a given netting set
@@ -251,8 +252,10 @@ private:
 
     //! Fill dynamic initial margin cube (per netting set, date and sample)
     void dynamicInitialMargin();
-    //! Compile the array of DIM regressors for the specified date and sample index
-    Disposable<Array> regressorArray(Size dateIndex, Size sampleIndex);
+    //! Compile the array of DIM regressors for the specified netting set, date and sample index
+    Disposable<Array> regressorArray(string nettingSet, Size dateIndex, Size sampleIndex);
+    //! Perform the calculation of IM as of t=t0
+    void performT0DimCalc();
 
     boost::shared_ptr<Portfolio> portfolio_;
     boost::shared_ptr<NettingSetManager> nettingSetManager_;
@@ -265,7 +268,8 @@ private:
     map<string, vector<vector<Real>>> nettingSetNPV_, nettingSetFLOW_, nettingSetDIM_, nettingSetLocalDIM_,
         nettingSetDeltaNPV_;
     map<string, vector<vector<Array>>> regressorArray_;
-    map<string, vector<Real>> nettingSetExpectedDIM_, nettingSetZeroOrderDIM_;
+    map<string, vector<Real>> nettingSetExpectedDIM_, nettingSetZeroOrderDIM_, nettingSetSimpleDIMh_,
+        nettingSetSimpleDIMp_;
     map<string, vector<Real>> tradeEPE_, tradeENE_, tradeEE_B_, tradeEEE_B_, tradePFE_, tradeVAR_;
     map<string, Real> tradeEPE_B_, tradeEEPE_B_;
     map<string, vector<Real>> allocatedTradeEPE_, allocatedTradeENE_;
@@ -280,6 +284,7 @@ private:
     map<string, Real> nettingSetFCA_, nettingSetFBA_;
     boost::shared_ptr<NPVCube> nettedCube_;
     boost::shared_ptr<NPVCube> dimCube_;
+    map<string, Real> net_t0_im_reg_h_, net_t0_im_simple_h_;
 
     vector<string> tradeIds_;
     vector<string> nettingSetIds_;

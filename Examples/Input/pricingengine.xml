@@ -62,7 +62,19 @@
     <Engine>BlackIborCouponPricer</Engine>
     <EngineParameters/>
   </Product>
-    <Product type="Bond">
+  <Product type="EquityForward">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingEquityForwardEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="EquityOption">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>AnalyticEuropeanEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="Bond">
     <Model>DiscountedCashflows</Model>
     <ModelParameters/>
     <Engine>DiscountingRiskyBondEngine</Engine>

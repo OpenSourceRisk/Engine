@@ -326,6 +326,13 @@
        <xs:enumeration value="Yield"/>
      </xs:restriction>
    </xs:simpleType>
+   
+   <xs:simpleType name="equityType">
+     <xs:restriction base="xs:string">
+       <xs:enumeration value="ForwardPrice"/>
+       <xs:enumeration value="DividendYield"/>
+     </xs:restriction>
+   </xs:simpleType>
 
    <xs:simpleType name="dimensionType">
      <xs:restriction base="xs:string">
@@ -353,6 +360,13 @@
      <xs:restriction base="xs:string">
        <xs:enumeration value="Long"/>
        <xs:enumeration value="Short"/>
+     </xs:restriction>
+   </xs:simpleType>
+
+   <xs:simpleType name="inflationType">
+     <xs:restriction base="xs:string">
+       <xs:enumeration value="ZC"/>
+       <xs:enumeration value="YY"/>
      </xs:restriction>
    </xs:simpleType>
 

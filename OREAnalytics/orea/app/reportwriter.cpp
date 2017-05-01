@@ -21,6 +21,8 @@
 #include <orea/orea.hpp>
 #include <ored/ored.hpp>
 #include <ostream>
+#include <ql/cashflows/inflationcoupon.hpp>
+#include <ql/cashflows/indexedcashflow.hpp>
 #include <ql/errors.hpp>
 #include <stdio.h>
 
@@ -132,11 +134,21 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Po
                         }
                         boost::shared_ptr<QuantLib::FloatingRateCoupon> ptrFloat =
                             boost::dynamic_pointer_cast<QuantLib::FloatingRateCoupon>(ptrFlow);
+                        boost::shared_ptr<QuantLib::InflationCoupon> ptrInfl =
+                            boost::dynamic_pointer_cast<QuantLib::InflationCoupon>(ptrFlow);
+                        boost::shared_ptr<QuantLib::IndexedCashFlow> ptrIndCf =
+                            boost::dynamic_pointer_cast<QuantLib::IndexedCashFlow>(ptrFlow);
                         Date fixingDate;
                         Real fixingValue;
                         if (ptrFloat) {
                             fixingDate = ptrFloat->fixingDate();
                             fixingValue = ptrFloat->index()->fixing(fixingDate);
+                        } else if (ptrInfl) {
+                            fixingDate = ptrInfl->fixingDate();
+                            fixingValue = ptrInfl->index()->fixing(fixingDate);
+                        } else if (ptrIndCf) {
+                            fixingDate = ptrIndCf->fixingDate();
+                            fixingValue = ptrIndCf->index()->fixing(fixingDate);
                         } else {
                             fixingDate = Null<Date>();
                             fixingValue = Null<Real>();
@@ -174,22 +186,31 @@ void ReportWriter::writeCurves(ore::data::Report& report, const std::string& con
     map<string, string> discountCurves = marketConfig.discountingCurves(configID);
     map<string, string> YieldCurves = marketConfig.yieldCurves(configID);
     map<string, string> indexCurves = marketConfig.indexForwardingCurves(configID);
+    map<string, string> zeroInflationIndices = marketConfig.zeroInflationIndexCurves(configID);
 
     vector<Handle<YieldTermStructure>> yieldCurves;
+    vector<Handle<ZeroInflationIndex>> zeroInflationFixings;
 
     report.addColumn("Tenor", Period()).addColumn("Date", Date());
 
     for (auto it : discountCurves) {
+        DLOG("discount curve - " << it.first);
         report.addColumn(it.first, double(), 15);
-        yieldCurves.push_back(market->discountCurve(it.first));
+        yieldCurves.push_back(market->discountCurve(it.first, configID));
     }
     for (auto it : YieldCurves) {
+        DLOG("yield curve - " << it.first);
         report.addColumn(it.first, double(), 15);
-        yieldCurves.push_back(market->yieldCurve(it.first));
+        yieldCurves.push_back(market->yieldCurve(it.first, configID));
     }
     for (auto it : indexCurves) {
+        DLOG("index curve - " << it.first);
         report.addColumn(it.first, double(), 15);
-        yieldCurves.push_back(market->iborIndex(it.first)->forwardingTermStructure());
+        yieldCurves.push_back(market->iborIndex(it.first, configID)->forwardingTermStructure());
+    }
+    for (auto it : zeroInflationIndices) {
+        report.addColumn(it.first, double(), 15);
+        zeroInflationFixings.push_back(market->zeroInflationIndex(it.first, true, configID));
     }
 
     // Output the discount factors for each tenor in turn
@@ -198,6 +219,8 @@ void ReportWriter::writeCurves(ore::data::Report& report, const std::string& con
         report.next().add(grid.tenors()[j]).add(date);
         for (Size i = 0; i < yieldCurves.size(); ++i)
             report.add(yieldCurves[i]->discount(date));
+        for (Size i = 0; i < zeroInflationFixings.size(); ++i)
+            report.add(zeroInflationFixings[i]->fixing(date));
     }
     report.end();
 }

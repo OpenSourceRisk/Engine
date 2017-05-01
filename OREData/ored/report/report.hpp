@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file ored/reports/report.hpp
+/*! \file ored/report/report.hpp
     \brief Report interface class
     \ingroup report
 */
@@ -59,6 +59,7 @@ namespace data {
  *   npv_report.next().add("t2").add(3.14).add("cp");
  *   npv_report.next().add("t3").add(100.0).add("cp2");
  *   npv_report.end();
+ *   </pre>
  */
 class Report {
 public:

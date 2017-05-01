@@ -93,6 +93,27 @@ public:
     Handle<OptionletVolatilityStructure> capFloorVol(const string& ccy,
                                                      const string& configuration = Market::defaultConfiguration) const;
 
+    //! Inflation Indexes
+    virtual Handle<ZeroInflationIndex>
+    zeroInflationIndex(const string& indexName, const bool interpoated,
+                       const string& configuration = Market::defaultConfiguration) const;
+    virtual Handle<YoYInflationIndex>
+    yoyInflationIndex(const string& indexName, const bool interpoated,
+                      const string& configuration = Market::defaultConfiguration) const;
+
+    //! Inflation Cap Floor Price Surfaces
+    virtual Handle<CPICapFloorTermPriceSurface>
+    inflationCapFloorPriceSurface(const string& indexName,
+                                  const string& configuration = Market::defaultConfiguration) const;
+
+    //! Equity curves
+    Handle<Quote> equitySpot(const string& eqName, const string& configuration = Market::defaultConfiguration) const;
+    Handle<YieldTermStructure> equityDividendCurve(const string& eqName,
+                                                   const string& configuration = Market::defaultConfiguration) const;
+
+    //! Equity volatilities
+    Handle<BlackVolTermStructure> equityVol(const string& eqName,
+                                            const string& configuration = Market::defaultConfiguration) const;
     //! Bond Spreads
     Handle<Quote> securitySpread(const string& securityID,
                                  const string& configuration = Market::defaultConfiguration) const;
@@ -121,6 +142,12 @@ protected:
     map<pair<string, string>, Handle<DefaultProbabilityTermStructure>> defaultCurves_;
     map<pair<string, string>, Handle<Quote>> recoveryRates_;
     map<pair<string, string>, Handle<OptionletVolatilityStructure>> capFloorCurves_;
+    map<pair<string, pair<string, bool>>, Handle<ZeroInflationIndex>> zeroInflationIndices_;
+    map<pair<string, pair<string, bool>>, Handle<YoYInflationIndex>> yoyInflationIndices_;
+    map<pair<string, string>, Handle<CPICapFloorTermPriceSurface>> inflationCapFloorPriceSurfaces_;
+    map<pair<string, string>, Handle<Quote>> equitySpots_;
+    map<pair<string, string>, Handle<YieldTermStructure>> equityDividendCurves_;
+    map<pair<string, string>, Handle<BlackVolTermStructure>> equityVols_;
     map<pair<string, string>, Handle<Quote>> securitySpreads_;
     Conventions conventions_;
 

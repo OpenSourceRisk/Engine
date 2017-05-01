@@ -9,10 +9,13 @@ dist_data_DATA =
 noinst_LTLIBRARIES = libPricingEngines.la
 
 libPricingEngines_la_SOURCES = \
+	analyticxassetlgmeqoptionengine.cpp \
 	analyticcclgmfxoptionengine.cpp \
 	analyticlgmswaptionengine.cpp \
 	crossccyswapengine.cpp \
+	depositengine.cpp \
 	discountingcurrencyswapengine.cpp \
+	discountingequityforwardengine.cpp \
 	discountingfxforwardengine.cpp \
 	discountingswapenginemulticurve.cpp \
 	oiccbasisswapengine.cpp \
@@ -22,10 +25,13 @@ libPricingEngines_la_SOURCES = \
 this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \
 	all.hpp \
+	analyticxassetlgmeqoptionengine.hpp \
 	analyticcclgmfxoptionengine.hpp \
 	analyticlgmswaptionengine.hpp \
 	crossccyswapengine.hpp \
+	depositengine.hpp \
 	discountingcurrencyswapengine.hpp \
+	discountingequityforwardengine.hpp \
 	discountingfxforwardengine.hpp \
 	discountingswapenginemulticurve.hpp \
 	oiccbasisswapengine.hpp \

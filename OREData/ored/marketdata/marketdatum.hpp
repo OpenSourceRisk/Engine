@@ -79,6 +79,14 @@ public:
         SWAPTION,
         CAPFLOOR,
         FX_OPTION,
+        ZC_INFLATIONSWAP,
+        ZC_INFLATIONCAPFLOOR,
+        YY_INFLATIONSWAP,
+        SEASONALITY,
+        EQUITY_SPOT,
+        EQUITY_FWD,
+        EQUITY_DIVIDEND,
+        EQUITY_OPTION,
         BOND
     };
 
@@ -94,8 +102,7 @@ public:
         RATE_LNVOL,
         RATE_NVOL,
         RATE_SLNVOL,
-        SHIFT,
-        SECURITY_SPREAD
+        SHIFT
     };
 
     //! Constructor
@@ -219,7 +226,7 @@ private:
   Zero rates are hardly quoted in the market, but derived from quoted
   yields such as deposits, swaps, as well as futures prices.
   This data type is included here nevertheless
-  to enable consistency checks between Wrap and reference systems.
+  to enable consistency checks between ORE and reference systems.
 
   \ingroup marketdata
 */
@@ -700,6 +707,224 @@ private:
     string ccy_;
     Period expiry_;
     string strike_; // TODO: either: ATM, 25RR, 25BF. Should be an enum?
+};
+
+//! ZC Inflation swap data class
+/*!
+ This class holds single market points of type
+ - ZC_INFLATIONSWAP
+ Specific data comprise index, term.
+
+ \ingroup marketdata
+ */
+class ZcInflationSwapQuote : public MarketDatum {
+public:
+    ZcInflationSwapQuote(Real value, Date asofDate, const string& name, const string& index, Period term)
+        : MarketDatum(value, asofDate, name, QuoteType::RATE, InstrumentType::ZC_INFLATIONSWAP), index_(index),
+          term_(term) {}
+    string index() { return index_; }
+    Period term() { return term_; }
+
+private:
+    string index_;
+    Period term_;
+};
+
+//! ZC Cap Floor data class
+/*!
+ This class holds single market points of type
+ - ZC_INFLATION_CAPFLOOR
+ Specific data comprise type (can be price or nvol or slnvol),
+ index, term, cap/floor, strike
+
+ \ingroup marketdata
+ */
+class ZcInflationCapFloorQuote : public MarketDatum {
+public:
+    ZcInflationCapFloorQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, const string& index,
+                             Period term, bool isCap, const string& strike)
+        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::ZC_INFLATIONCAPFLOOR), index_(index),
+          term_(term), isCap_(isCap), strike_(strike) {}
+    string index() { return index_; }
+    Period term() { return term_; }
+    bool isCap() { return isCap_; }
+    string strike() { return strike_; }
+
+private:
+    string index_;
+    Period term_;
+    bool isCap_;
+    string strike_;
+};
+
+//! YoY Inflation swap data class
+/*!
+ This class holds single market points of type
+ - YOY_INFLATIONSWAP
+ Specific data comprise index, term.
+
+ \ingroup marketdata
+ */
+class YoYInflationSwapQuote : public MarketDatum {
+public:
+    YoYInflationSwapQuote(Real value, Date asofDate, const string& name, const string& index, Period term)
+        : MarketDatum(value, asofDate, name, QuoteType::RATE, InstrumentType::YY_INFLATIONSWAP), index_(index),
+          term_(term) {}
+    string index() { return index_; }
+    Period term() { return term_; }
+
+private:
+    string index_;
+    Period term_;
+};
+
+//! Inflation seasonality data class
+/*!
+ This class holds single market points of type
+ - SEASONALITY
+ Specific data comprise inflation index, factor type (ADD, MULT) and month (JAN to DEC).
+
+ \ingroup marketdata
+ */
+class SeasonalityQuote : public MarketDatum {
+public:
+    SeasonalityQuote(Real value, Date asofDate, const string& name, const string& index, const string& type,
+                     const string& month)
+        : MarketDatum(value, asofDate, name, QuoteType::RATE, InstrumentType::SEASONALITY), index_(index), type_(type),
+          month_(month) {}
+    string index() { return index_; }
+    string type() { return type_; }
+    string month() { return month_; }
+    QuantLib::Size applyMonth() const;
+
+private:
+    string index_;
+    string type_;
+    string month_;
+};
+
+//! Equity/Index spot price data class
+/*!
+This class holds single market points of type
+- EQUITY_SPOT
+Specific data comprise
+- Equity/Index name
+- currency
+
+\ingroup marketdata
+*/
+class EquitySpotQuote : public MarketDatum {
+public:
+    //! Constructor
+    EquitySpotQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string equityName, string ccy)
+        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::EQUITY_SPOT), eqName_(equityName), ccy_(ccy) {}
+
+    //! \name Inspectors
+    //@{
+    const string& eqName() const { return eqName_; }
+    const string& ccy() const { return ccy_; }
+    //@}
+private:
+    string eqName_;
+    string ccy_;
+};
+
+//! Equity forward data class
+/*!
+This class holds single market points of type
+- EQUITY_FWD
+Specific data comprise
+- Equity/Index name
+- currency
+- expiry date
+
+The quote is expected as a forward price
+
+\ingroup marketdata
+*/
+class EquityForwardQuote : public MarketDatum {
+public:
+    //! Constructor
+    EquityForwardQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string equityName,
+                       string ccy, const Date& expiryDate)
+        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::EQUITY_FWD), eqName_(equityName), ccy_(ccy),
+          expiry_(expiryDate) {}
+
+    //! \name Inspectors
+    //@{
+    const string& eqName() const { return eqName_; }
+    const string& ccy() const { return ccy_; }
+    const Date& expiryDate() const { return expiry_; }
+    //@}
+private:
+    string eqName_;
+    string ccy_;
+    Date expiry_;
+};
+
+//! Equity/Index Dividend yield data class
+/*!
+This class holds single market points of type
+- EQUITY_DIVIDEND
+Specific data comprise
+- Equity/Index name
+- currency
+- yield tenor date
+
+The quote is expected as a forward price
+
+\ingroup marketdata
+*/
+class EquityDividendYieldQuote : public MarketDatum {
+public:
+    //! Constructor
+    EquityDividendYieldQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string equityName,
+                             string ccy, const Date& tenorDate)
+        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::EQUITY_DIVIDEND), eqName_(equityName),
+          ccy_(ccy), tenor_(tenorDate) {}
+
+    //! \name Inspectors
+    //@{
+    const string& eqName() const { return eqName_; }
+    const string& ccy() const { return ccy_; }
+    const Date& tenorDate() const { return tenor_; }
+    //@}
+private:
+    string eqName_;
+    string ccy_;
+    Date tenor_;
+};
+
+//! Equity/Index Option data class
+/*!
+This class holds single market points of type
+- EQUITY_OPTION
+Specific data comprise
+- Equity/Index name
+- currency
+- expiry
+- "strike" {ATMF} (in future we should support explicit strikes here)
+
+\ingroup marketdata
+*/
+class EquityOptionQuote : public MarketDatum {
+public:
+    //! Constructor
+    EquityOptionQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string equityName, string ccy,
+                      string expiry, string strike);
+
+    //! \name Inspectors
+    //@{
+    const string& eqName() const { return eqName_; }
+    const string& ccy() const { return ccy_; }
+    const string& expiry() const { return expiry_; }
+    const string& strike() const { return strike_; }
+    //@}
+private:
+    string eqName_;
+    string ccy_;
+    string expiry_;
+    string strike_; // ATMF only supported
 };
 
 //! Bond spread data class

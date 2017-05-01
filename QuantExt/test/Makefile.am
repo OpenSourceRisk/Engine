@@ -5,6 +5,7 @@ QLE_TESTS = \
 	staticallycorrectedyieldtermstructure.hpp staticallycorrectedyieldtermstructure.cpp \
 	crossassetmodel.hpp crossassetmodel.cpp \
 	crossassetmodel2.hpp crossassetmodel2.cpp \
+	equitycrossassetmodel.hpp equitycrossassetmodel.cpp \
 	crossassetmodelparametrizations.hpp crossassetmodelparametrizations.cpp \
 	currency.hpp currency.cpp \
 	discountcurve.hpp discountcurve.cpp \
@@ -16,6 +17,7 @@ QLE_TESTS = \
 	cashflow.hpp cashflow.cpp \
 	swaptionvolatilityconverter.hpp swaptionvolatilityconverter.cpp \
 	optionletstripper.hpp optionletstripper.cpp \
+	deposit.hpp deposit.cpp \
 	ratehelpers.hpp ratehelpers.cpp \
 	stabilisedglls.hpp stabilisedglls.cpp \
 	capfloormarketdata.hpp \

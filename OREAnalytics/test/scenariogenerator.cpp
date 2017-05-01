@@ -193,6 +193,7 @@ void test_lgm(bool sobol, bool antithetic, bool brownianBridge) {
                                            4 * Years,  5 * Years,  7 * Years,  10 * Years, 12 * Years,
                                            15 * Years, 20 * Years, 30 * Years, 40 * Years, 50 * Years};
     simMarketConfig->simulateFXVols() = false;
+    simMarketConfig->simulateEQVols() = false;
 
     // Multi path generator: Pseudo Random
     BigNatural seed = 42;
@@ -293,6 +294,7 @@ void test_crossasset(bool sobol, bool antithetic, bool brownianBridge) {
                                            4 * Years,  5 * Years,  7 * Years,  10 * Years, 12 * Years,
                                            15 * Years, 20 * Years, 30 * Years, 40 * Years, 50 * Years};
     simMarketConfig->simulateFXVols() = false;
+    simMarketConfig->simulateEQVols() = false;
 
     // Multi path generator
     BigNatural seed = 42;
@@ -434,6 +436,7 @@ void ScenarioGeneratorTest::testCrossAssetSimMarket() {
                                            4 * Years,  5 * Years,  7 * Years,  10 * Years, 12 * Years,
                                            15 * Years, 20 * Years, 30 * Years, 40 * Years, 50 * Years};
     simMarketConfig->simulateFXVols() = false;
+    simMarketConfig->simulateEQVols() = false;
 
     simMarketConfig->baseCcy() = "EUR";
     simMarketConfig->ccys() = {"EUR", "USD", "GBP"};
@@ -441,6 +444,7 @@ void ScenarioGeneratorTest::testCrossAssetSimMarket() {
     simMarketConfig->interpolation() = "LogLinear";
     simMarketConfig->swapVolExpiries() = {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
     simMarketConfig->swapVolTerms() = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years};
+    simMarketConfig->fxCcyPairs() = {"USDEUR", "GBPEUR"};
 
     BOOST_TEST_MESSAGE("set up scenario generator builder");
     boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
@@ -576,6 +580,7 @@ void ScenarioGeneratorTest::testCrossAssetSimMarket2() {
                                            4 * Years,  5 * Years,  7 * Years,  10 * Years, 12 * Years,
                                            15 * Years, 20 * Years, 30 * Years, 40 * Years, 50 * Years};
     simMarketConfig->simulateFXVols() = false;
+    simMarketConfig->simulateEQVols() = false;
 
     simMarketConfig->baseCcy() = "EUR";
     simMarketConfig->ccys() = {"EUR", "USD", "GBP"};
@@ -583,6 +588,7 @@ void ScenarioGeneratorTest::testCrossAssetSimMarket2() {
     simMarketConfig->interpolation() = "LogLinear";
     simMarketConfig->swapVolExpiries() = {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
     simMarketConfig->swapVolTerms() = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years};
+    simMarketConfig->fxCcyPairs() = {"USDEUR", "GBPEUR"};
 
     BOOST_TEST_MESSAGE("set up scenario generator builder");
     boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
@@ -715,6 +721,7 @@ void ScenarioGeneratorTest::testVanillaSwapExposure() {
                                            4 * Years,  5 * Years,  7 * Years,  10 * Years, 12 * Years,
                                            15 * Years, 20 * Years, 30 * Years, 40 * Years, 50 * Years};
     simMarketConfig->simulateFXVols() = false;
+    simMarketConfig->simulateEQVols() = false;
 
     simMarketConfig->baseCcy() = "EUR";
     simMarketConfig->ccys() = {"EUR", "USD", "GBP"};
@@ -722,6 +729,7 @@ void ScenarioGeneratorTest::testVanillaSwapExposure() {
     simMarketConfig->interpolation() = "LogLinear";
     simMarketConfig->swapVolExpiries() = {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
     simMarketConfig->swapVolTerms() = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years};
+    simMarketConfig->fxCcyPairs() = {"USDEUR", "GBPEUR"};
 
     BOOST_TEST_MESSAGE("set up scenario generator builder");
     boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
@@ -860,8 +868,10 @@ void ScenarioGeneratorTest::testFxForwardExposure() {
     simMarketConfig->swapVolTerms() = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years};
     simMarketConfig->fxVolExpiries() = {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
     simMarketConfig->fxVolDecayMode() = "ForwardVariance";
-    simMarketConfig->ccyPairs() = std::vector<string>(1, "USDEUR");
+    simMarketConfig->fxVolCcyPairs() = {"USDEUR"};
+    simMarketConfig->fxCcyPairs() = {"USDEUR", "GBPEUR"};
     simMarketConfig->simulateFXVols() = false;
+    simMarketConfig->simulateEQVols() = false;
 
     BOOST_TEST_MESSAGE("set up scenario generator builder");
     boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
@@ -980,12 +990,14 @@ void ScenarioGeneratorTest::testFxForwardExposureZeroIrVol() {
                                            4 * Years,  5 * Years,  7 * Years,  10 * Years, 12 * Years,
                                            15 * Years, 20 * Years, 30 * Years, 40 * Years, 50 * Years};
     simMarketConfig->simulateFXVols() = false;
+    simMarketConfig->simulateEQVols() = false;
 
     simMarketConfig->baseCcy() = "EUR";
     simMarketConfig->ccys() = {"EUR", "USD", "GBP"};
     simMarketConfig->indices() = {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M"};
     simMarketConfig->swapVolExpiries() = {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
     simMarketConfig->swapVolTerms() = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years};
+    simMarketConfig->fxCcyPairs() = {"USDEUR", "GBPEUR"};
 
     BOOST_TEST_MESSAGE("set up scenario generator builder");
     boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);

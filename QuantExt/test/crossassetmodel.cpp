@@ -759,11 +759,11 @@ void CrossAssetModelTest::testLgm5fFxCalibration() {
     // we calibrate to helpers with 0.15 and 0.2 target implied vol
     std::vector<boost::shared_ptr<CalibrationHelper> > helpersUsd, helpersGbp;
     for (Size i = 0; i <= d.volstepdatesFx.size(); ++i) {
-        boost::shared_ptr<CalibrationHelper> tmpUsd = boost::make_shared<FxOptionHelper>(
+        boost::shared_ptr<CalibrationHelper> tmpUsd = boost::make_shared<FxEqOptionHelper>(
             i < d.volstepdatesFx.size() ? d.volstepdatesFx[i] : d.volstepdatesFx.back() + 365, 0.90, d.fxEurUsd,
             Handle<Quote>(boost::make_shared<SimpleQuote>(0.15)), d.ccLgm->irlgm1f(0)->termStructure(),
             d.ccLgm->irlgm1f(1)->termStructure());
-        boost::shared_ptr<CalibrationHelper> tmpGbp = boost::make_shared<FxOptionHelper>(
+        boost::shared_ptr<CalibrationHelper> tmpGbp = boost::make_shared<FxEqOptionHelper>(
             i < d.volstepdatesFx.size() ? d.volstepdatesFx[i] : d.volstepdatesFx.back() + 365, 1.35, d.fxEurGbp,
             Handle<Quote>(boost::make_shared<SimpleQuote>(0.20)), d.ccLgm->irlgm1f(0)->termStructure(),
             d.ccLgm->irlgm1f(2)->termStructure());
@@ -777,9 +777,9 @@ void CrossAssetModelTest::testLgm5fFxCalibration() {
     EndCriteria ec(1000, 500, 1E-8, 1E-8, 1E-8);
 
     // calibrate USD-EUR FX volatility
-    d.ccLgm->calibrateFxBsVolatilitiesIterative(0, helpersUsd, lm, ec);
+    d.ccLgm->calibrateBsVolatilitiesIterative(CrossAssetModelTypes::FX, 0, helpersUsd, lm, ec);
     // calibrate GBP-EUR FX volatility
-    d.ccLgm->calibrateFxBsVolatilitiesIterative(1, helpersGbp, lm, ec);
+    d.ccLgm->calibrateBsVolatilitiesIterative(CrossAssetModelTypes::FX, 1, helpersGbp, lm, ec);
 
     Real tol = 1E-6;
     for (Size i = 0; i < helpersUsd.size(); ++i) {
@@ -818,7 +818,7 @@ void CrossAssetModelTest::testLgm5fFxCalibration() {
         helpersGbp[i]->setPricingEngine(ccLgmProjectedFxOptionEngineGbp);
     }
 
-    ccLgmProjected->calibrateFxBsVolatilitiesIterative(0, helpersGbp, lm, ec);
+    ccLgmProjected->calibrateBsVolatilitiesIterative(CrossAssetModelTypes::FX, 0, helpersGbp, lm, ec);
 
     for (Size i = 0; i < helpersGbp.size(); ++i) {
         Real fullModelVol = d.ccLgm->fxbs(1)->parameterValues(0)[i];
@@ -864,11 +864,11 @@ void CrossAssetModelTest::testLgm5fFullCalibration() {
     for (Size i = 0; i < d.volstepdatesFx.size(); ++i) {
         Date tmp = i < d.volstepdatesFx.size() ? d.volstepdatesFx[i] : d.volstepdatesFx.back() + 365;
         // EUR-USD: atm, 30% (lognormal) vol
-        basketEurUsd.push_back(boost::make_shared<FxOptionHelper>(
+        basketEurUsd.push_back(boost::make_shared<FxEqOptionHelper>(
             tmp, Null<Real>(), d.fxEurUsd, Handle<Quote>(boost::make_shared<SimpleQuote>(0.20)), d.eurYts, d.usdYts,
             CalibrationHelper::RelativePriceError));
         // EUR-GBP: atm, 10% (lognormal) vol
-        basketEurGbp.push_back(boost::make_shared<FxOptionHelper>(
+        basketEurGbp.push_back(boost::make_shared<FxEqOptionHelper>(
             tmp, Null<Real>(), d.fxEurGbp, Handle<Quote>(boost::make_shared<SimpleQuote>(0.20)), d.eurYts, d.gbpYts,
             CalibrationHelper::RelativePriceError));
     }
@@ -913,8 +913,8 @@ void CrossAssetModelTest::testLgm5fFullCalibration() {
     d.ccLgm->calibrateIrLgm1fVolatilitiesIterative(1, basketUsd, lm, ec);
     d.ccLgm->calibrateIrLgm1fVolatilitiesIterative(2, basketGbp, lm, ec);
 
-    d.ccLgm->calibrateFxBsVolatilitiesIterative(0, basketEurUsd, lm, ec);
-    d.ccLgm->calibrateFxBsVolatilitiesIterative(1, basketEurGbp, lm, ec);
+    d.ccLgm->calibrateBsVolatilitiesIterative(CrossAssetModelTypes::FX, 0, basketEurUsd, lm, ec);
+    d.ccLgm->calibrateBsVolatilitiesIterative(CrossAssetModelTypes::FX, 1, basketEurGbp, lm, ec);
 
     // check the results
 

@@ -19,6 +19,7 @@
 #include <test/scenariosimmarket.hpp>
 #include <test/testmarket.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
+#include <ored/utilities/log.hpp>
 #include <ored/marketdata/market.hpp>
 #include <ored/marketdata/marketimpl.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
@@ -74,8 +75,11 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> scenarioParameters() {
     parameters->simulateFXVols() = false;
     parameters->fxVolExpiries() = {2 * Years, 3 * Years, 4 * Years};
     parameters->fxVolDecayMode() = "ConstantVariance";
+    parameters->simulateEQVols() = false;
 
-    parameters->ccyPairs() = {"EURUSD"};
+    parameters->fxVolCcyPairs() = {"USDEUR"};
+
+    parameters->fxCcyPairs() = {"USDEUR"};
 
     return parameters;
 }
@@ -155,7 +159,7 @@ void testSwaptionVolCurve(boost::shared_ptr<ore::data::Market>& initMarket,
 void testFxVolCurve(boost::shared_ptr<data::Market>& initMarket,
                     boost::shared_ptr<analytics::ScenarioSimMarket>& simMarket,
                     boost::shared_ptr<analytics::ScenarioSimMarketParameters>& parameters) {
-    for (const auto& ccyPair : parameters->ccyPairs()) {
+    for (const auto& ccyPair : parameters->fxVolCcyPairs()) {
         Handle<BlackVolTermStructure> simCurve = simMarket->fxVol(ccyPair);
         Handle<BlackVolTermStructure> initCurve = initMarket->fxVol(ccyPair);
         vector<Date> dates;
@@ -242,6 +246,13 @@ void ScenarioSimMarketTest::testScenarioSimMarket() {
 }
 
 test_suite* ScenarioSimMarketTest::suite() {
+    // boost::shared_ptr<ore::data::FileLogger> logger =
+    // boost::make_shared<ore::data::FileLogger>("simmarket_test.log");
+    // ore::data::Log::instance().removeAllLoggers();
+    // ore::data::Log::instance().registerLogger(logger);
+    // ore::data::Log::instance().switchOn();
+    // ore::data::Log::instance().setMask(255);
+
     test_suite* suite = BOOST_TEST_SUITE("ScenarioSimMarketTests");
     suite->add(BOOST_TEST_CASE(&ScenarioSimMarketTest::testScenarioSimMarket));
     return suite;
