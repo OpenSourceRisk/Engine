@@ -738,7 +738,7 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
         {"13_Swaption_EUR", "Down:SwaptionVolatility/EUR/1/2Y/10Y/ATM", 5116.77, -17.2771},
         {"13_Swaption_EUR", "Down:SwaptionVolatility/EUR/3/5Y/10Y/ATM", 5116.77, -118.671},
         {"13_Swaption_EUR", "Down:SwaptionVolatility/EUR/5/10Y/10Y/ATM", 5116.77, -19.5463}};
-    
+
     std::map<pair<string, string>, Real> npvMap, sensiMap;
     for (Size i = 0; i < cachedResults.size(); ++i) {
         pair<string, string> p(cachedResults[i].id, cachedResults[i].label);
@@ -765,10 +765,8 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
                                                                     << ") not found in npv map");
                 QL_REQUIRE(sensiMap.find(p) != sensiMap.end(), "pair (" << p.first << ", " << p.second
                                                                         << ") not found in sensi map");
-                BOOST_CHECK_MESSAGE(fabs(npv0 - npvMap[p]) < tolerance || fabs((npv0 - npvMap[p]) / npv0) <
-                tolerance,
-                                    "npv regression failed for pair (" << p.first << ", " << p.second << "): " <<
-                                    npv0
+                BOOST_CHECK_MESSAGE(fabs(npv0 - npvMap[p]) < tolerance || fabs((npv0 - npvMap[p]) / npv0) < tolerance,
+                                    "npv regression failed for pair (" << p.first << ", " << p.second << "): " << npv0
                                                                        << " vs " << npvMap[p]);
                 BOOST_CHECK_MESSAGE(fabs(sensi - sensiMap[p]) < tolerance ||
                                         fabs((sensi - sensiMap[p]) / sensi) < tolerance,
@@ -1163,10 +1161,11 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
         qlInfoMap[info.id] = info;
     }
 
+    bool recalibrateModels = true;           // nothing to calibrate here
     bool useOriginalFxForBaseCcyConv = true; // convert sensi to EUR using original FX rate (not the shifted rate)
-    boost::shared_ptr<SensitivityAnalysis> sa =
-        boost::make_shared<SensitivityAnalysis>(portfolio, initMarket, Market::defaultConfiguration, data,
-                                                simMarketData, sensiData, conventions, useOriginalFxForBaseCcyConv);
+    boost::shared_ptr<SensitivityAnalysis> sa = boost::make_shared<SensitivityAnalysis>(
+        portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, conventions,
+        recalibrateModels, useOriginalFxForBaseCcyConv);
     sa->generateSensitivities();
 
     map<pair<string, string>, Real> deltaMap = sa->delta();
