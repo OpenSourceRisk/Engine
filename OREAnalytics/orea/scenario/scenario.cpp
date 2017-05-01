@@ -17,10 +17,10 @@
 */
 
 #include <orea/scenario/scenario.hpp>
+#include <ored/utilities/parsers.hpp>
 #include <ql/errors.hpp>
 #include <vector>
 #include <boost/algorithm/string/split.hpp>
-#include <ored/utilities/parsers.hpp>
 
 using namespace ore::data;
 
