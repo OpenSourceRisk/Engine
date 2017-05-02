@@ -76,31 +76,31 @@ public:
     //! Test performance of sensitivities run for a large portfolio, with lots of buckets  ("Defer" observation mode)
     static void testSensiPerformanceBigPortfolioBigScenarioDeferObs();
     //! Test performance of sensitivities run for a large portfolio, with lots of buckets  ("Unregister" observation
-    //mode)
+    // mode)
     static void testSensiPerformanceBigPortfolioBigScenarioUnregisterObs();
 
     //! Test performance of sensitivities run (including cross-gammas) for a large portfolio  ("None" observation mode)
     static void testSensiPerformanceBigPortfolioCrossGammaNoneObs();
     //! Test performance of sensitivities run (including cross-gammas) for a large portfolio  ("Disable" observation
-    //mode)
+    // mode)
     static void testSensiPerformanceBigPortfolioCrossGammaDisableObs();
     //! Test performance of sensitivities run (including cross-gammas) for a large portfolio  ("Defer" observation mode)
     static void testSensiPerformanceBigPortfolioCrossGammaDeferObs();
     //! Test performance of sensitivities run (including cross-gammas) for a large portfolio  ("Unregister" observation
-    //mode)
+    // mode)
     static void testSensiPerformanceBigPortfolioCrossGammaUnregisterObs();
 
     //! Test performance of sensitivities run (including cross-gammas) for a single-trade portfolio, with lots of
-    //buckets  ("None" observation mode)
+    // buckets  ("None" observation mode)
     static void testSensiPerformanceBigScenarioCrossGammaNoneObs();
     //! Test performance of sensitivities run (including cross-gammas) for a single-trade portfolio, with lots of
-    //buckets  ("Disable" observation mode)
+    // buckets  ("Disable" observation mode)
     static void testSensiPerformanceBigScenarioCrossGammaDisableObs();
     //! Test performance of sensitivities run (including cross-gammas) for a single-trade portfolio, with lots of
-    //buckets  ("Defer" observation mode)
+    // buckets  ("Defer" observation mode)
     static void testSensiPerformanceBigScenarioCrossGammaDeferObs();
     //! Test performance of sensitivities run (including cross-gammas) for a single-trade portfolio, with lots of
-    //buckets  ("Unregister" observation mode)
+    // buckets  ("Unregister" observation mode)
     static void testSensiPerformanceBigScenarioCrossGammaUnregisterObs();
 
     //! Test performance of sensitivities run (including cross-gammas) for a large portfolio, with lots of buckets
