@@ -34,10 +34,10 @@ namespace testsuite {
 class SensitivityAnalysisTest {
 public:
     //! Test that shifting all shift curve tenor points by DELTA yields DELTA shifts at all tenor points of the an
-    //underlying curve
+    // underlying curve
     static void test1dShifts();
     //! Test that shifting all 2-d shift tenor points by DELTA yields DELTA shifts at all 2-d grid points of the
-    //underlying data
+    // underlying data
     static void test2dShifts();
     //! Test that the portfolio shows the expected sensitivity (regression test - "None" observation mode)
     static void testPortfolioSensitivityNoneObs();

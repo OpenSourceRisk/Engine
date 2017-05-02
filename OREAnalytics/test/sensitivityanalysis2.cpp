@@ -1360,19 +1360,18 @@ void SensitivityAnalysis2Test::testSensitivities() {
         if (analyticalResultsDelta.count(key) > 0) {
             if (!check(analyticalResultsDelta.at(key), scaledResult))
                 BOOST_ERROR("Sensitivity analysis result " << key << " (" << scaledResult
-                                                                << ") could not be verified against analytic result ("
-                                                                << analyticalResultsDelta.at(key) << ")");
+                                                           << ") could not be verified against analytic result ("
+                                                           << analyticalResultsDelta.at(key) << ")");
             ++foundDeltas;
         } else {
             if (!close_enough(x.second, 0.0))
-                BOOST_ERROR("Sensitivity analysis result " << key << " (" << scaledResult
-                                                                << ") expected to be zero");
+                BOOST_ERROR("Sensitivity analysis result " << key << " (" << scaledResult << ") expected to be zero");
             ++zeroDeltas;
         }
     }
     if (foundDeltas != analyticalResultsDelta.size())
         BOOST_ERROR("Mismatch between number of analytical results for delta ("
-                         << analyticalResultsDelta.size() << ") and sensitivity results (" << foundDeltas << ")");
+                    << analyticalResultsDelta.size() << ") and sensitivity results (" << foundDeltas << ")");
     BOOST_TEST_MESSAGE("Checked " << foundDeltas << " deltas against analytical values (and " << zeroDeltas
                                   << " deal-unrelated deltas for zero).");
 
@@ -1385,22 +1384,21 @@ void SensitivityAnalysis2Test::testSensitivities() {
         if (analyticalResultsGamma.count(key) > 0) {
             if (!check(analyticalResultsGamma.at(key), scaledResult))
                 BOOST_ERROR("Sensitivity analysis result " << key << " (" << scaledResult
-                                                                << ") could not be verified against analytic result ("
-                                                                << analyticalResultsGamma.at(key) << ")");
+                                                           << ") could not be verified against analytic result ("
+                                                           << analyticalResultsGamma.at(key) << ")");
             ++foundGammas;
         } else {
             // the sensi framework produces a Vomma, which we don't check (it isn't produced by the analytic sensi
             // engine)
             if (!close_enough(x.second, 0.0) && key != "5_Swaption_EUR SwaptionVolatility/EUR/47/10Y/10Y/ATM" &&
                 key != "7_FxOption_EUR_USD FXVolatility/EURUSD/0/5Y/ATM")
-                BOOST_ERROR("Sensitivity analysis result " << key << " (" << scaledResult
-                                                                << ") expected to be zero");
+                BOOST_ERROR("Sensitivity analysis result " << key << " (" << scaledResult << ") expected to be zero");
             ++zeroGammas;
         }
     }
     if (foundGammas != analyticalResultsGamma.size())
         BOOST_ERROR("Mismatch between number of analytical results for gamma ("
-                         << analyticalResultsGamma.size() << ") and sensitivity results (" << foundGammas << ")");
+                    << analyticalResultsGamma.size() << ") and sensitivity results (" << foundGammas << ")");
     BOOST_TEST_MESSAGE("Checked " << foundGammas << " gammas against analytical values (and " << zeroGammas
                                   << " deal-unrelated gammas for zero).");
 
@@ -1414,20 +1412,18 @@ void SensitivityAnalysis2Test::testSensitivities() {
         if (analyticalResultsCrossGamma.count(key) > 0) {
             if (!check(analyticalResultsCrossGamma.at(key), scaledResult))
                 BOOST_ERROR("Sensitivity analysis result " << key << " (" << scaledResult
-                                                                << ") could not be verified against analytic result ("
-                                                                << analyticalResultsCrossGamma.at(key) << ")");
+                                                           << ") could not be verified against analytic result ("
+                                                           << analyticalResultsCrossGamma.at(key) << ")");
             ++foundCrossGammas;
         } else {
             if (!close_enough(x.second, 0.0))
-                BOOST_ERROR("Sensitivity analysis result " << key << " (" << scaledResult
-                                                                << ") expected to be zero");
+                BOOST_ERROR("Sensitivity analysis result " << key << " (" << scaledResult << ") expected to be zero");
             ++zeroCrossGammas;
         }
     }
     if (foundCrossGammas != analyticalResultsCrossGamma.size())
         BOOST_ERROR("Mismatch between number of analytical results for gamma ("
-                         << analyticalResultsCrossGamma.size() << ") and sensitivity results (" << foundCrossGammas
-                         << ")");
+                    << analyticalResultsCrossGamma.size() << ") and sensitivity results (" << foundCrossGammas << ")");
     BOOST_TEST_MESSAGE("Checked " << foundCrossGammas << " cross gammas against analytical values (and "
                                   << zeroCrossGammas << " deal-unrelated cross gammas for zero).");
 
