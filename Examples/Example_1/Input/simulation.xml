@@ -14,7 +14,7 @@
       <Sequence>SobolBrownianBridge</Sequence>
       <Scenario>Simple</Scenario>
       <Seed>42</Seed>
-      <Samples>1000</Samples>
+      <Samples>5000</Samples>
 
     </Parameters>
 

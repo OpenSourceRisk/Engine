@@ -197,7 +197,7 @@ public:
     XMLNode* toXML(XMLDocument& doc);
     //@}
 
-    //! \Equality Operators
+    //! \name Operators
     //@{
     bool operator==(TodaysMarketParameters& rhs);
     bool operator!=(TodaysMarketParameters& rhs);
@@ -443,6 +443,15 @@ inline const map<string, string>& TodaysMarketParameters::securitySpreads(const 
     QL_REQUIRE(it != securitySpreads_.end(), "security spreads with id " << securitySpreadsId(configuration)
                                                                          << " specified in configuration "
                                                                          << configuration << " not found");
+    return it->second;
+}
+
+inline const map<string, string>& TodaysMarketParameters::securityRecoveryRates(const string& configuration) const {
+    QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
+    auto it = securityRecoveryRates_.find(securityRecoveryRatesId(configuration));
+    QL_REQUIRE(it != securityRecoveryRates_.end(), "security spreads with id " << securityRecoveryRatesId(configuration)
+                                                                               << " specified in configuration "
+                                                                               << configuration << " not found");
     return it->second;
 }
 

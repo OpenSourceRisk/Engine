@@ -267,11 +267,13 @@ boost::shared_ptr<VanillaSwap> Swaption::buildVanillaSwap(const boost::shared_pt
         std::vector<Date> fixDates = fixedSchedule.dates();
         auto it1 = std::lower_bound(fixDates.begin(), fixDates.end(), firstExerciseDate);
         fixDates.erase(fixDates.begin(), it1);
-        fixedSchedule = Schedule(fixDates, fixedSchedule.calendar());
+        fixedSchedule = Schedule(fixDates, fixedSchedule.calendar(), Unadjusted, boost::none, boost::none, boost::none,
+                                 boost::none, std::vector<bool>(fixDates.size() - 1, true));
         std::vector<Date> floatingDates = floatingSchedule.dates();
         auto it2 = std::lower_bound(floatingDates.begin(), floatingDates.end(), firstExerciseDate);
         floatingDates.erase(floatingDates.begin(), it2);
-        floatingSchedule = Schedule(floatingDates, floatingSchedule.calendar());
+        floatingSchedule = Schedule(floatingDates, floatingSchedule.calendar(), Unadjusted, boost::none, boost::none,
+                                    boost::none, boost::none, std::vector<bool>(floatingDates.size() - 1, true));
     }
 
     // Build a vanilla (bullet) swap underlying

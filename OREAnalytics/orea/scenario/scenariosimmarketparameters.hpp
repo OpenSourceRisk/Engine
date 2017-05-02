@@ -152,7 +152,7 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc);
     //@}
 
-    //! \Equality Operators
+    //! \name Equality Operators
     //@{
     bool operator==(const ScenarioSimMarketParameters& rhs);
     bool operator!=(const ScenarioSimMarketParameters& rhs);

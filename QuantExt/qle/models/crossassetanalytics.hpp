@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file qle\models\crossassetanalytics.hpp
+/*! \file qle/models/crossassetanalytics.hpp
     \brief analytics for the cross asset model
     \ingroup crossassetmodel
 */
