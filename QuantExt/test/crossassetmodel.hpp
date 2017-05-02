@@ -86,10 +86,10 @@ public:
     /*! Test moments analogous to the test above, but with dynamic inflation and credit compenent. */
     static void testIrFxInfCrMoments();
 
-    /*! TODO Test martingale properties analogous to the test above, but with dynamic inflation, credit, equity compenent. */
+    /*! Test martingale properties analogous to the test above, but with dynamic inflation, credit, equity compenent. */
     static void testIrFxInfCrEqMartingaleProperty();
 
-    /*! TODO Test moments analogous to the test above, but with dynamic inflation, credit, equity compenent. */
+    /*! Test moments analogous to the test above, but with dynamic inflation, credit, equity compenent. */
     static void testIrFxInfCrEqMoments();
 
     /*! Test DK component calibration in alpha against MC full repricing of calibration instruments. */
@@ -97,6 +97,9 @@ public:
     
     /*! Test DK component calibration in H against MC full repricing of calibration instruments. */
     static void testCpiCalibrationByH();
+
+    /*! Test CR component calibration against MC full repricing of calibration instruments. */
+    static void testCrCalibration();
 
     /*! In a EUR-USD CrossAssetModel with two equities, test a Monte Carlo pricing of an equiy forward under the base
      *  currency numeraire against the analytical expectation. Perform similar checks for an equity option. */
@@ -121,10 +124,8 @@ public:
     /*! Test correlation recovery analogous to the test above, but with dynamic inflation and credit compenent. */
     static void testIrFxInfCrCorrelationRecovery();
     
-    /*! TODO Test correlation recovery analogous to the test above, but with dynamic inflation and credit compenent. */
+    /*! Test correlation recovery analogous to the test above, but with dynamic inflation, credit, equity compenent. */
     static void testIrFxInfCrEqCorrelationRecovery();
-
-    /*! TODO, move equity tests here */
 
     static boost::unit_test_framework::test_suite* suite();
 };
