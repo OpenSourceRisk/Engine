@@ -674,32 +674,14 @@ struct Lgm5fTestData {
         singleModels.push_back(fxUsd_p);
         singleModels.push_back(fxGbp_p);
 
+        // clang-format off
         //     EUR           USD           GBP         FX USD-EUR      FX GBP-EUR
-        c[0][0] = 1.0;
-        c[0][1] = 0.6;
-        c[0][2] = 0.3;
-        c[0][3] = 0.2;
-        c[0][4] = 0.3; // EUR
-        c[1][0] = 0.6;
-        c[1][1] = 1.0;
-        c[1][2] = 0.1;
-        c[1][3] = -0.2;
-        c[1][4] = -0.1; // USD
-        c[2][0] = 0.3;
-        c[2][1] = 0.1;
-        c[2][2] = 1.0;
-        c[2][3] = 0.0;
-        c[2][4] = 0.1; // GBP
-        c[3][0] = 0.2;
-        c[3][1] = -0.2;
-        c[3][2] = 0.0;
-        c[3][3] = 1.0;
-        c[3][4] = 0.3; // FX USD-EUR
-        c[4][0] = 0.3;
-        c[4][1] = -0.1;
-        c[4][2] = 0.1;
-        c[4][3] = 0.3;
-        c[4][4] = 1.0; // FX GBP-EUR
+        c[0][0] = 1.0; c[0][1] = 0.6;  c[0][2] = 0.3; c[0][3] = 0.2;  c[0][4] = 0.3;  // EUR
+        c[1][0] = 0.6; c[1][1] = 1.0;  c[1][2] = 0.1; c[1][3] = -0.2; c[1][4] = -0.1; // USD
+        c[2][0] = 0.3; c[2][1] = 0.1;  c[2][2] = 1.0; c[2][3] = 0.0;  c[2][4] = 0.1;  // GBP
+        c[3][0] = 0.2; c[3][1] = -0.2; c[3][2] = 0.0; c[3][3] = 1.0;  c[3][4] = 0.3;  // FX USD-EUR
+        c[4][0] = 0.3; c[4][1] = -0.1; c[4][2] = 0.1; c[4][3] = 0.3;  c[4][4] = 1.0;  // FX GBP-EUR
+        // clang-format on
 
         ccLgm = boost::make_shared<CrossAssetModel>(singleModels, c, SalvagingAlgorithm::None);
     }
@@ -718,7 +700,7 @@ struct Lgm5fTestData {
     std::vector<boost::shared_ptr<Parametrization> > singleModels;
     Matrix c;
     boost::shared_ptr<CrossAssetModel> ccLgm;
-};
+}; // LGM5FTestData
 
 struct IrFxCrModelTestData {
     IrFxCrModelTestData()
@@ -850,7 +832,7 @@ struct IrFxCrModelTestData {
     std::vector<boost::shared_ptr<Parametrization> > singleModels;
     Matrix c;
     boost::shared_ptr<CrossAssetModel> model;
-};
+}; // IrFxCrModelTestData
 
 } // anonymous namespace
 
@@ -1985,7 +1967,8 @@ struct IrFxInfCrModelTestData {
     std::vector<boost::shared_ptr<Parametrization> > singleModels;
     Matrix c;
     boost::shared_ptr<CrossAssetModel> model;
-};
+}; // IrFxInfCrModelTestData
+
 } // anonymous namespace
 
 void CrossAssetModelTest::testIrFxInfCrMartingaleProperty() {
@@ -2486,7 +2469,7 @@ struct IrFxEqModelTestData {
     boost::shared_ptr<CrossAssetModel> ccLgm;
     Size eurIdx, usdIdx, eurUsdIdx, eqSpIdx, eqLhIdx;
     std::vector<Date> volstepdatesEqSp, volstepdatesEqLh;
-};
+}; // IrFxEqModelTestData
 
 } // anonymous namespace
 
@@ -2754,15 +2737,16 @@ void CrossAssetModelTest::testEqLgm5fMoments() {
         if (std::fabs(mean(e_eu[i]) - e_an[i]) > errTol[i]) {
             BOOST_ERROR("analytical expectation for component #"
                         << i << " (" << e_an[i] << ") is inconsistent with numerical value (Euler "
-                                                   "discretization, " << mean(e_eu[i]) << "), error is "
-                        << e_an[i] - mean(e_eu[i]) << " tolerance is " << errTol[i]);
+                                                   "discretization, "
+                        << mean(e_eu[i]) << "), error is " << e_an[i] - mean(e_eu[i]) << " tolerance is " << errTol[i]);
         }
         // check expectation against analytical calculation (exact disc)
         if (std::fabs(mean(e_eu2[i]) - e_an[i]) > errTol[i]) {
             BOOST_ERROR("analytical expectation for component #"
                         << i << " (" << e_an[i] << ") is inconsistent with numerical value (Exact "
-                                                   "discretization, " << mean(e_eu2[i]) << "), error is "
-                        << e_an[i] - mean(e_eu2[i]) << " tolerance is " << errTol[i]);
+                                                   "discretization, "
+                        << mean(e_eu2[i]) << "), error is " << e_an[i] - mean(e_eu2[i]) << " tolerance is "
+                        << errTol[i]);
         }
     }
 
@@ -2789,18 +2773,18 @@ void CrossAssetModelTest::testEqLgm5fMoments() {
                 }
             }
             if (std::fabs(covariance(v_eu[i][j]) - v_an[i][j]) > tol) {
-                BOOST_ERROR("analytical covariance at (" << i << "," << j << ") (" << v_an[i][j]
-                                                         << ") is inconsistent with numerical "
-                                                            "value (Euler discretization, " << covariance(v_eu[i][j])
-                                                         << "), error is " << v_an[i][j] - covariance(v_eu[i][j])
-                                                         << " tolerance is " << tol);
+                BOOST_ERROR("analytical covariance at ("
+                            << i << "," << j << ") (" << v_an[i][j] << ") is inconsistent with numerical "
+                                                                       "value (Euler discretization, "
+                            << covariance(v_eu[i][j]) << "), error is " << v_an[i][j] - covariance(v_eu[i][j])
+                            << " tolerance is " << tol);
             }
             if (std::fabs(covariance(v_eu2[i][j]) - v_an[i][j]) > tol) {
-                BOOST_ERROR("analytical covariance at (" << i << "," << j << ") (" << v_an[i][j]
-                                                         << ") is inconsistent with numerical "
-                                                            "value (Exact discretization, " << covariance(v_eu2[i][j])
-                                                         << "), error is " << v_an[i][j] - covariance(v_eu2[i][j])
-                                                         << " tolerance is " << tol);
+                BOOST_ERROR("analytical covariance at ("
+                            << i << "," << j << ") (" << v_an[i][j] << ") is inconsistent with numerical "
+                                                                       "value (Exact discretization, "
+                            << covariance(v_eu2[i][j]) << "), error is " << v_an[i][j] - covariance(v_eu2[i][j])
+                            << " tolerance is " << tol);
             }
         }
     }
@@ -2857,7 +2841,6 @@ void CrossAssetModelTest::testEqLgm5fMoments() {
     }
     */
 } // testEqLgm5fMoments
-    
 
 void CrossAssetModelTest::testCorrelationRecovery() {
 
@@ -3289,7 +3272,7 @@ void CrossAssetModelTest::testCpiCalibrationByAlpha() {
                     << mcPrice << "), analytical model price is " << cpiHelpers[4]->modelValue() << ", difference is "
                     << mcPrice - cpiHelpers[4]->modelValue() << ", tolerance is " << tol);
     }
-}
+} // testCpiCalibrationByAlpha
 
 void CrossAssetModelTest::testCpiCalibrationByH() {
 
@@ -3428,7 +3411,7 @@ void CrossAssetModelTest::testCpiCalibrationByH() {
                     << mcPrice << "), analytical model price is " << cpiHelpers[4]->modelValue() << ", difference is "
                     << mcPrice - cpiHelpers[nMat - 1]->modelValue() << ", tolerance is " << tol);
     }
-}
+} // testCpiCalibrationByH
 
 test_suite* CrossAssetModelTest::suite() {
     test_suite* suite = BOOST_TEST_SUITE("CrossAsset model tests");
