@@ -99,8 +99,8 @@ inline bool operator!=(const RiskFactorKey& lhs, const RiskFactorKey& rhs) { ret
 std::ostream& operator<<(std::ostream& out, const RiskFactorKey::KeyType& type);
 std::ostream& operator<<(std::ostream& out, const RiskFactorKey& key);
 
-RiskFactorKey::KeyType parseRiskFactorKeyType(const string &string_type);
-RiskFactorKey parseRiskFactorKey(const string &string_key);
+RiskFactorKey::KeyType parseRiskFactorKeyType(const string &str);
+RiskFactorKey parseRiskFactorKey(const string &str);
 
 //-----------------------------------------------------------------------------------------------
 //! Scenario Base Class

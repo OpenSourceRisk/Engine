@@ -56,26 +56,30 @@ std::ostream& operator<<(std::ostream& out, const RiskFactorKey& key) {
     return out << key.keytype << "/" << key.name << "/" << key.index;
 }
 
-RiskFactorKey::KeyType parseRiskFactorKeyType(const string &string_type) {
-    if (string_type == "DiscountCurve")
+RiskFactorKey::KeyType parseRiskFactorKeyType(const string &str) {
+    if (str == "DiscountCurve")
         return RiskFactorKey::KeyType::DiscountCurve;
-    else if (string_type == "YieldCurve")
+    else if (str == "YieldCurve")
         return RiskFactorKey::KeyType::YieldCurve;
-    else if (string_type == "IndexCurve")
+    else if (str == "IndexCurve")
         return RiskFactorKey::KeyType::IndexCurve;
-    else if (string_type == "SwaptionVolatility")
+    else if (str == "SwaptionVolatility")
         return RiskFactorKey::KeyType::SwaptionVolatility;
-    else if (string_type == "FXSpot")
+    else if (str == "FXSpot")
         return RiskFactorKey::KeyType::FXSpot;
-    else if (string_type == "FXVolatility")
+    else if (str == "FXVolatility")
         return RiskFactorKey::KeyType::FXVolatility;
-    QL_FAIL("RiskFactorKey " << string_type << " does not exist.");
+    else if (str == "EQSpot")
+        return RiskFactorKey::KeyType::EQSpot;
+    else if (str == "EQVolatility")
+        return RiskFactorKey::KeyType::EQVolatility;
+    QL_FAIL("RiskFactorKey " << str << " does not exist.");
 }
 
-RiskFactorKey parseRiskFactorKey(const string &string_key) {
+RiskFactorKey parseRiskFactorKey(const string &str) {
     std::vector<string> tokens;
-    boost::split(tokens, string_key, boost::is_any_of("/"), boost::token_compress_on);
-    QL_REQUIRE(tokens.size() == 3, "Could not parse key " << string_key);
+    boost::split(tokens, str, boost::is_any_of("/"), boost::token_compress_on);
+    QL_REQUIRE(tokens.size() == 3, "Could not parse key " << str);
     RiskFactorKey rfk(parseRiskFactorKeyType(tokens[0]), tokens[1], parseInteger(tokens[2]));
     return rfk;
 }
