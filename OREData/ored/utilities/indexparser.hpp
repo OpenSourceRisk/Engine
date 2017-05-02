@@ -43,11 +43,16 @@ using ore::data::Convention;
 namespace ore {
 namespace data {
 
-//! Convert std::string to QuantLib::IborIndex
+//! Convert std::string to QuantExt::FxIndex
 /*!
     \ingroup utilities
 */
 boost::shared_ptr<QuantExt::FxIndex> parseFxIndex(const string& s);
+
+//! Convert std::string to QuantLib::IborIndex
+/*!
+    \ingroup utilities
+*/
 boost::shared_ptr<IborIndex> parseIborIndex(const string& s,
                                             const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>());
 
