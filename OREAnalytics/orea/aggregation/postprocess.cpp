@@ -1292,7 +1292,7 @@ bool lessThan(const Array& a, const Array& b) {
 }
 
 void PostProcess::exportDimRegression(const std::string& nettingSet, const std::vector<Size>& timeSteps,
-    const std::vector<boost::shared_ptr<ore::data::Report> >& dimRegReports) {
+                                      const std::vector<boost::shared_ptr<ore::data::Report>>& dimRegReports) {
 
     QL_REQUIRE(dimRegReports.size() == timeSteps.size(),
                "number of file names (" << dimRegReports.size() << ") does not match number of time steps ("

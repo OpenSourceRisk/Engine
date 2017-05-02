@@ -13,6 +13,8 @@
 #include <ored/marketdata/fxspot.hpp>
 #include <ored/marketdata/fxtriangulation.hpp>
 #include <ored/marketdata/fxvolcurve.hpp>
+#include <ored/marketdata/inflationcapfloorpricesurface.hpp>
+#include <ored/marketdata/inflationcurve.hpp>
 #include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/market.hpp>
 #include <ored/marketdata/marketdatum.hpp>

@@ -114,20 +114,21 @@ void CashflowCalculator::calculate(const boost::shared_ptr<Trade>& trade, Size t
 }
 
 void NPVCalculatorFXT0::calculate(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
-    const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube,
-    const Date& date, Size dateIndex, Size sample) {
+                                  const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube,
+                                  const Date& date, Size dateIndex, Size sample) {
     outputCube->set(npv(trade, simMarket), tradeIndex, dateIndex, sample, index_);
 }
 
 void NPVCalculatorFXT0::calculateT0(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
-    const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube) {
+                                    const boost::shared_ptr<SimMarket>& simMarket,
+                                    boost::shared_ptr<NPVCube>& outputCube) {
     outputCube->setT0(npv(trade, simMarket), tradeIndex, index_);
 }
 
 Real NPVCalculatorFXT0::npv(const boost::shared_ptr<Trade>& trade, const boost::shared_ptr<SimMarket>& simMarket) {
     Real npv = 0;
     try {
-        //Real fx = simMarket->fxSpot(trade->npvCurrency() + baseCcyCode_)->value();
+        // Real fx = simMarket->fxSpot(trade->npvCurrency() + baseCcyCode_)->value();
         Real fx = 1.0;
         if (trade->npvCurrency() != baseCcyCode_)
             fx = t0Market_->fxSpot(trade->npvCurrency() + baseCcyCode_)->value();
@@ -135,12 +136,10 @@ Real NPVCalculatorFXT0::npv(const boost::shared_ptr<Trade>& trade, const boost::
 
         npv = trade->instrument()->NPV() * fx / numeraire;
 
-    }
-    catch (std::exception& e) {
+    } catch (std::exception& e) {
         ALOG("Failed to price trade " << trade->id() << " : " << e.what());
         npv = 0;
-    }
-    catch (...) {
+    } catch (...) {
         ALOG("Failed to price trade " << trade->id() << " : Unhandled Exception");
         npv = 0;
     }

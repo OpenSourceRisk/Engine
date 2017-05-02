@@ -34,8 +34,7 @@ public:
          string settlementDays, string calendar, string issueDate, LegData& coupons)
         : Trade("Bond", env), issuerId_(issuerId), creditCurveId_(creditCurveId), securityId_(securityId),
           referenceCurveId_(referenceCurveId), settlementDays_(settlementDays), calendar_(calendar),
-          issueDate_(issueDate), coupons_(coupons), faceAmount_(0), maturityDate_(), currency_(),
-          zeroBond_(false) {}
+          issueDate_(issueDate), coupons_(coupons), faceAmount_(0), maturityDate_(), currency_(), zeroBond_(false) {}
 
     //! Constructor
     Bond(Envelope env, string issuerId, string creditCurveId, string securityId, string referenceCurveId,
@@ -43,8 +42,8 @@ public:
          string issueDate)
         : Trade("Bond", env), issuerId_(issuerId), creditCurveId_(creditCurveId), securityId_(securityId),
           referenceCurveId_(referenceCurveId), settlementDays_(settlementDays), calendar_(calendar),
-          issueDate_(issueDate), coupons_(), faceAmount_(faceAmount), maturityDate_(maturityDate),
-          currency_(currency), zeroBond_(true) {}
+          issueDate_(issueDate), coupons_(), faceAmount_(faceAmount), maturityDate_(maturityDate), currency_(currency),
+          zeroBond_(true) {}
 
     // Build QuantLib/QuantExt instrument, link pricing engine
     virtual void build(const boost::shared_ptr<EngineFactory>&);

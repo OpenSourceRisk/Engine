@@ -5,7 +5,7 @@
 Market data in the {\tt market.txt} file is given in three columns; Date, Quote and Quote value.
 
 \begin{itemize}
-\item {\bf Date}: The as of date of the market quote value.  
+\item {\bf Date}: The as of date of the market quote value.
 
 Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
 
@@ -13,13 +13,13 @@ Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
   and Quote Type, followed by instrument specific descriptions (See \S
   \ref{ss:zero_rate} ff.). The base of a quote consists of
   InstType/QuoteType followed by instrument specific information
-  separated by slashes "/".  
+  separated by slashes "/".
 
   Allowable values for Instrument Types and Quote Types are given in Table \ref{tab:allow_market_data}.
 
 \item {\bf Quote Value}: The market quote value in decimal form for
   the given quote on the given as of date. Quote values are assumed to
-  be mid-market. 
+  be mid-market.
 
 Allowable values: Any real number.
 \end{itemize}
@@ -32,10 +32,14 @@ Allowable values: Any real number.
     \hline
  Instrument Type & \emph{ZERO, DISCOUNT, MM, MM\_FUTURE, FRA,
   IR\_SWAP,  BASIS\_SWAP, CC\_BASIS\_SWAP, CDS, FX\_SPOT, FX\_FWD,
-   SWAPTION, CAPFLOOR, FX\_OPTION, HAZARD\_RATE, RECOVERY\_RATE }     \\ \hline
-    Quote Type & \emph{BASIS\_SPREAD, CREDIT\_SPREAD, YIELD\_SPREAD,
-      RATE, RATIO, PRICE, RATE\_LNVOL, RATE\_NVOL,
-      RATE\_SLNVOL, SHIFT }    \\ \hline
+  SWAPTION, CAPFLOOR, FX\_OPTION, HAZARD\_RATE, RECOVERY\_RATE,
+  ZC\_INFLATIONSWAP, YY\_INFLATIONSWAP, ZC\_INFLATIONCAPFLOOR,
+  SEASONALITY, EQUITY\_SPOT, EQUITY\_FWD, EQUITY\_DIVIDEND, 
+  EQUITY\_OPTION, BOND} \\
+\hline
+  Quote Type & \emph{BASIS\_SPREAD, CREDIT\_SPREAD, YIELD\_SPREAD,
+  RATE, RATIO, PRICE, RATE\_LNVOL, RATE\_NVOL, RATE\_SLNVOL, SHIFT} \\
+\hline
   \end{tabu}
   \caption{Allowable values for Instrument and Quote type market data.}
   \label{tab:allow_market_data}
@@ -103,7 +107,7 @@ The instrument specific information to be captured for quotes representing Zero 
 
 
 \medskip
-Examples with a Tenor and with a ZeroDate: 
+Examples with a Tenor and with a ZeroDate:
 \begin{itemize}
 \item {ZERO/RATE/USD/USD6M/A365F/6M}
 \item {ZERO/RATE/USD/USD6M/A365F/12-05-2018}
@@ -135,7 +139,7 @@ The instrument specific information to be captured for quotes representing Disco
 If a Term is given in the last element of the quote, it is converted to a maturity date using a weekend only calendar.
 
 \medskip
-Examples with a Term and with a DiscountDate: 
+Examples with a Term and with a DiscountDate:
 \begin{itemize}
 \item {DISCOUNT/RATE/EUR/EUR3M/3Y}
 \item {DISCOUNT/RATE/EUR/EUR3M/A365F/12-05-2018}
@@ -185,13 +189,13 @@ Term & An integer followed by D, W, M or Y. & Period from start to maturity\\ \h
 
 Deposits are usually quoted as ON (Overnight), TN (Tomorrow Next), SN
 (Spot Next), SW (Spot Week), 3W (3 Weeks), 6M (6 Months), etc. \\
- 
+
 Forward start for ON is today (i.e. forward start = 0D), for TN tomorrow (forward start = 1D), for SN two days from
 today (forward start = 2D). For longer term Deposits, forward start is derived from conventions, see \S
 \ref{sec:conventions}, and is between 0D and 2D, i.e. "spot days" are between 0 and 2.
 
 \medskip
-Example: 
+Example:
 \begin{itemize}
 \item {MM/RATE/EUR/2D/3M}
 \end{itemize}
@@ -218,7 +222,7 @@ FRAs are typically quoted as e.g. 6x9 which means forward start 6M from today, m
 adjustment of dates.
 
 \medskip
-Example: 
+Example:
 \begin{itemize}
 \item {FRA/RATE/EUR/9M/3M}
 \end{itemize}
@@ -234,8 +238,9 @@ Example:
 {\bf Property} & {\bf Allowable values} & {\bf Description} \\
 \hline
 Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}& Currency of the MM Future price\\ \hline
-Expiry & Alphanumeric string on the form MMMYY & Expiry month\\ \hline
-Contract & String & Contract name\\
+Expiry & Alphanumeric string of the form YYYY-MM & Expiry month and year\\ \hline
+Contract & String & Contract name\\ \hline
+Term & An integer followed by D, W, M or Y & Underlying Term\\
 % date rule & {\tt string} &  \\
 \hline
 \end{tabular}
@@ -248,9 +253,9 @@ Wednesday of the specified month, adjusted to the following business day. The da
 defined in the futures contract.
 
 \medskip
-Example: 
+Example:
 \begin{itemize}
-\item {MM\_FUTURE/PRICE/EUR/JUN18/LIF3ME}
+\item {MM\_FUTURE/PRICE/EUR/2018-06/LIF3ME/3M}
 \end{itemize}
 
 %%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -278,7 +283,7 @@ Example:
 % but defined in the futures contract.
 %
 %\medskip
-%Example: 
+%Example:
 %\begin{itemize}
 %\item {EQUITY\_FUTURE/PRICE/GE/JUN17/USD/LIF3ME}
 %\end{itemize}
@@ -303,7 +308,7 @@ Example:
 %
 %
 %\medskip
-%Example: 
+%Example:
 %\begin{itemize}
 %\item {EQUITY/PRICE/GE/USD}
 %\end{itemize}
@@ -330,7 +335,7 @@ Example:
 %If a Term is given in the last element of the quote, it is converted to a maturity date using a weekend only calendar.
 %
 %\medskip
-%Example: 
+%Example:
 %\begin{itemize}
 %\item {EQUITY\_FORWARD/PRICE/GE/USD/05-01-2019}
 %\end{itemize}
@@ -348,7 +353,7 @@ Example:
 %Name & String & Name of the equity \\ \hline
 %Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}& Currency of the Equity price\\ \hline
 %Term & An integer followed by D, W, M or Y & The frequency of dividend payments\\ \hline
-%DayCounter & See \lstinline!DayCount Convention! in Table \ref{tab:daycount} & The day count basis used to determine dividend period length  \\ 
+%DayCounter & See \lstinline!DayCount Convention! in Table \ref{tab:daycount} & The day count basis used to determine dividend period length  \\
 %\hline
 %\end{tabular}
 %  \caption{Equity Forward Price}
@@ -357,7 +362,7 @@ Example:
 %
 %
 %\medskip
-%Example: 
+%Example:
 %\begin{itemize}
 %\item {EQUITY\_DIVIDEND/RATE/GE/USD/3M/A360}
 %\end{itemize}
@@ -375,7 +380,7 @@ Example:
 %Name & String & Name of the equity \\
 %Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}& Currency of the Equity price\\
 %Term or ExpiryDate & Term: An integer followed by D, W, M or Y, ExpiryDate: See \lstinline!Date! in Table \ref{tab:allow_stand_data} & Either a Term is used to determine the maturity date, or an explicit maturity date (Expiry Date) is given.\\
-%Strike & A real number & The equity option strike price  \\ 
+%Strike & A real number & The equity option strike price  \\
 %\hline
 %\end{tabular}
 %  \caption{Equity Forward Price}
@@ -386,7 +391,7 @@ Example:
 
 
 %\medskip
-%Example: 
+%Example:
 %\begin{itemize}
 %\item {EQUITY\_OPTION/PRICE/GE/USD/10Y/300}
 %\end{itemize}
@@ -412,7 +417,7 @@ Term & An integer followed by D, W, M or Y & Swap length from start to maturity\
 \end{table}
 
 
-Forward start is usually not quoted, but needs to be derived from conventions. 
+Forward start is usually not quoted, but needs to be derived from conventions.
 
 \medskip
 Example:
@@ -442,10 +447,10 @@ Example:
 %   \caption{BMA Swap Ratio}
 %   \label{tab:bmasratio_quote}
 % \end{table}
-% Forward start is usually not quoted, but needs to be derived from conventions. 
+% Forward start is usually not quoted, but needs to be derived from conventions.
 
 % \medskip
-% Example: 
+% Example:
 % \begin{itemize}
 % \item {BMA/RATIO/USD/2D/10Y}
 % \end{itemize}
@@ -462,7 +467,7 @@ Example:
 \hline
 Flat tenor & An integer followed by D, W, M or Y & Zero spread leg's index tenor\\ \hline
 Tenor & An integer followed by D, W, M or Y & Non-zero spread leg's index tenor\\ \hline
-Term & An integer followed by D, W, M or Y & Swap length from start to maturity\\ 
+Term & An integer followed by D, W, M or Y & Swap length from start to maturity\\
 \hline
 \end{tabular}
   \caption{Basis Swap Spread}
@@ -471,7 +476,7 @@ Term & An integer followed by D, W, M or Y & Swap length from start to maturity\
 
 
 \medskip
-Example: 
+Example:
 \begin{itemize}
 \item {BASIS\_SWAP/BASIS\_SPREAD/6M/3M/10Y}
 \end{itemize}
@@ -499,7 +504,7 @@ Example:
 
 
 \medskip
-Example: 
+Example:
 \begin{itemize}
 \item {CC\_BASIS\_SWAP/BASIS\_SPREAD/USD/3M/JPY/6M/10Y}
 \end{itemize}
@@ -523,8 +528,8 @@ Example:
   \caption{CDS Spread}
   \label{tab:cdsspread_quote}
 \end{table}
- 
-Example: 
+
+Example:
 \begin{itemize}
 \item {CDS/CREDIT\_SPREAD/GE/SeniorUnsec/EUR/5Y}
 \end{itemize}
@@ -547,12 +552,35 @@ Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & CDS Sp
   \caption{CDS Recovery Rate}
   \label{tab:cdsrecovery_quote}
 \end{table}
- 
-Example: 
+
+Example:
 \begin{itemize}
-\item {CDS/RECOVERY\_RATE/GE/SeniorUnsec/EUR}
+\item {RECOVERY\_RATE/RATE/GE/SeniorUnsec/EUR}
 \end{itemize}
 
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Security Recovery Rate}\label{md:sec_rec_rates}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Bond recovery rates can also be specified per security. This requires only one key, the security ID, no need to specify a seniority or currency as for CDS:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+\hline
+{\bf Property} & {\bf Allowable values} & {\bf Description} \\
+\hline
+ID & String &  Security ID \\ 
+\hline
+\end{tabular}
+  \caption{Security Recovery Rate}
+  \label{tab:secrecrate_quote}
+\end{table}
+
+Example:
+\begin{itemize}
+\item {RECOVERY\_RATE/RATE/SECURITY\_1}
+\end{itemize}
 
 % %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 % \subsection{Asset Swap Spread}
@@ -560,7 +588,7 @@ Example:
 
 % Credit spread information expressed on an asset swap basis for a given issuer/seniority and term rather than for a
 % specific asset.
- 
+
 % \begin{table}[H]
 % \centering
 % \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
@@ -576,7 +604,7 @@ Example:
 %   \label{tab:aswapspread_quote}
 % \end{table}
 
-% Example: 
+% Example:
 % \begin{itemize}
 % \item {ASW/CREDIT\_SPREAD/GE/SeniorUnsec/EUR/10Y}
 % \end{itemize}
@@ -607,7 +635,7 @@ Example:
 %
 %
 %\medskip
-%Example: 
+%Example:
 %\begin{itemize}
 %\item {ZERO/CREDIT\_SPREAD/GE/SeniorUnsec/EUR/5Y}
 %\end{itemize}
@@ -637,7 +665,7 @@ Example:
 %
 %
 %\medskip
-%Example: 
+%Example:
 %\begin{itemize}
 %\item {IR\_SWAP/CREDIT\_SPREAD/Issuer/SeniorUnsec/10Y}
 %\end{itemize}
@@ -669,58 +697,6 @@ Example:
 \item{NAME/LGD/Baa3}
 \end{itemize}
 
-
-
-% %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-% \subsection{Year-on-Year Inflation Swap Rate} \label{ss:yoy_inflation_swap_rate}
-% %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-
-% \begin{table}[H]
-% \centering
-% \begin{supertabular}{|p{3cm}|p{5cm}|p{7cm}|}
-%   \hline
-%   {\bf Property} & {\bf Allowable values} & {\bf Description} \\
-%   \hline Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Currency of inflation swap rate\\
-%   \hline Region & A string that matches inflation Region codes in the {\tt config-scenario.xml} file & Region code for
-%   the inflation index \\ \hline
-%   Term & An integer followed by D, W, M or Y & Generic period from start to maturity\\
-%   \hline
-% \end{supertabular}
-%   \caption{Year-on-Year Inflation Swap Rate}
-%   \label{tab:yoyinflation_quote}
-% \end{table}
-
-% Example:
-% \begin{itemize}
-% \item {YY\_INFLATIONSWAP/RATE/EUR/FRANCE/10Y}
-% \end{itemize}
-
-% %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-% \subsection{Zero-Coupon Inflation Swap Rate}
-% %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-
-% \begin{table}[H]
-% \centering
-% \begin{tabular}{|p{3cm}|p{5cm}|p{7cm}|}
-% \hline
-% {\bf Property} & {\bf Allowable values} & {\bf Description} \\
-% \hline
-% Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Currency of inflation swap rate\\ \hline
-% Region & A string that matches inflation Region codes in the {\tt config-scenario.xml} file & Region code for the inflation index \\ \hline
-% Term & An integer followed by D, W, M or Y & Generic period from start to maturity\\
-% \hline
-% \end{tabular}
-%   \caption{Zero Coupon Inflation Swap Rate}
-%   \label{tab:zinflation_quote}
-% \end{table}
-
-% Example: 
-% \begin{itemize}
-% \item {ZC\_INFLATIONSWAP/RATE/GBP/UK/10Y}
-% \end{itemize}
-
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{FX Option Implied Volatility}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -735,17 +711,17 @@ Unit currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}& Un
 Target currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Target currency\\ \hline
 Expiry & An integer followed by D, W, M or Y & Period from today to expiry \\ \hline
 Strike & \emph{ATM, RR, BF} & ATM (Straddle), RR (Risk Reversal), BF (Butterfly) \\
-%strike & {\tt Real} & strike forward exchange rate \\ 
+%strike & {\tt Real} & strike forward exchange rate \\
 \hline
 \end{tabular}
   \caption{FX Option Implied Volatility}
   \label{tab:fximplvol_quote}
 \end{table}
 
-Volatilities are quoted in terms of strategies - at-the-money straddle, risk reversal and butterfly. 
+Volatilities are quoted in terms of strategies - at-the-money straddle, risk reversal and butterfly.
 
 \medskip
-Example: 
+Example:
 \begin{itemize}
 \item {FX\_OPTION/RATE\_LNVOL/EUR/USD/3M/ATM}
 \end{itemize}
@@ -765,7 +741,7 @@ Term & An integer followed by D, W, M or Y & Period from start to expiry \\ \hli
 IndexTenor & An integer followed by D, W, M or Y & Underlying index tenor \\ \hline
 Atm & \emph{1, 0} & ATM volatility quote if true (1), otherwise (0) smile quote\\ \hline
 Relative & \emph{1, 0} & Relative quote (to be added to atm vol) if true (1), otherwise (0) absolute quote\\ \hline
-Strike & Real number & Strike rate\\ 
+Strike & Real number & Strike rate\\
 \hline
 \end{tabular}
   \caption{Cap/Floor Implied Volatility}
@@ -774,7 +750,7 @@ Strike & Real number & Strike rate\\
 
 
 \medskip
-Examples: 
+Examples:
 \begin{itemize}
 \item {CAPFLOOR/RATE\_LNVOL/EUR/10Y/6M/0/0/0.0350} (smile, absolute, strike 3.5\%)
 \item {CAPFLOOR/RATE\_LNVOL/EUR/10Y/6M/1/0/0.0000} (atm, absolute, irrelevant strike)
@@ -794,7 +770,7 @@ Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}&  Curren
 Term & An integer followed by D, W, M or Y & Period from start to expiry \\ \hline
 %IndexTenor & An integer followed by D, W, M or Y & Underlying index tenor \\
 Dimension & \emph{Smile, ATM}  & Whether volatility quote is a Smile or ATM \\ \hline
-Strike & Real number & Strike rate - (not required for ATM), as deviation from the ATM strike\\ 
+Strike & Real number & Strike rate - (not required for ATM), as deviation from the ATM strike\\
 \hline
 \end{tabular}
   \caption{Swaption Implied Volatility}
@@ -808,8 +784,261 @@ at-the-money volatility (the latter is e.g. the quotation convention used by BGC
 \medskip
 Examples:
 \begin{itemize}
-\item { SWAPTION/RATE\_LNVOL/EUR/5Y/10Y/ATM} (absolute ATM vol quote) 
+\item { SWAPTION/RATE\_LNVOL/EUR/5Y/10Y/ATM} (absolute ATM vol quote)
 \item { SWAPTION/RATE\_LNVOL/EUR/5Y/10Y/SMILE/0.0050} (absolute vol quote for ATM strike plus 50bp)
+\end{itemize}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Equity Spot Price}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+        \hline
+        {\bf Property} & {\bf Allowable values} & {\bf Description} \\
+        \hline
+        Name & String & Identifying name of the equity \\
+        \hline
+        Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}&  Currency of the equity \\
+        \hline
+    \end{tabular}
+    \caption{Equity Spot Price}
+    \label{tab:eqspot_quote}
+\end{table}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Equity Forward Price}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+        \hline
+        {\bf Property} & {\bf Allowable values} & {\bf Description} \\
+        \hline
+        Name & String & Identifying name of the equity \\
+        \hline
+        Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}&  Currency of the equity \\
+        \hline
+        Maturity & Date string, or integer followed by D, W, M or Y & Maturity of the forward quote \\
+        \hline
+    \end{tabular}
+    \caption{Equity Forward Price}
+    \label{tab:eqfwd_quote}
+\end{table}
+
+\medskip
+Examples:
+\begin{itemize}
+    \item {EQUITY\_FWD/PRICE/SP5/USD/2016-06-16}
+    \item {EQUITY\_FWD/PRICE/SP5/USD/2Y}
+\end{itemize}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Equity Dividend Yield}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+        \hline
+        {\bf Property} & {\bf Allowable values} & {\bf Description} \\
+        \hline
+        Name & String & Identifying name of the equity \\
+        \hline
+        Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}&  Currency of the equity \\
+        \hline
+        Maturity & Date string, or integer followed by D, W, M or Y & Maturity of the forward quote \\
+        \hline
+    \end{tabular}
+    \caption{Equity Dividend Yield Rate}
+    \label{tab:eqdiv_quote}
+\end{table}
+
+\medskip
+Examples:
+\begin{itemize}
+    \item {EQUITY\_DIVIDEND/RATE/SP5/USD/2016-06-16}
+    \item {EQUITY\_DIVIDEND/RATE/PRICE/SP5/USD/2Y}
+\end{itemize}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Equity Option Implied Volatility}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\begin{table}[H]
+	\centering
+	\begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+		\hline
+		{\bf Property} & {\bf Allowable values} & {\bf Description} \\
+		\hline
+        Name & String & Identifying name of the equity \\
+        \hline
+        Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}&  Currency of the equity \\
+        \hline
+        Expiry & Date string, or integer followed by D, W, M or Y & Maturity of the forward quote \\
+		\hline
+		Strike & {\tt ATMF}, or else any {\tt Real} & strike price \\
+		\hline
+	\end{tabular}
+	\caption{Equity Option Implied Volatility}
+	\label{tab:eqimplvol_quote}
+\end{table}
+
+Volatilities are quoted as a function of strike price - either at-the-money forward ({\tt ATMF}) or else a specified 
+real number, corresponding to the absolute strike value.Only log-normal implied volatilities ({\tt RATE\_LNVOL}) are 
+supported.
+
+\medskip
+Example:
+\begin{itemize}
+	\item {EQUITY\_OPTION/RATE\_LNVOL/SP5/USD/6M/ATMF}
+	\item {EQUITY\_OPTION/RATE\_LNVOL/SP5/USD/2018-06-30/ATMF}
+\end{itemize}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Zero Coupon Inflation Swap Rate}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+      \hline
+      {\bf Property} & {\bf Allowable values} & {\bf Description} \\
+      \hline
+      Index & String & Identifying name of the inflation index \\
+      \hline
+      Maturity & integer followed by D, W, M or Y & Maturity of the swap quote \\
+      \hline
+    \end{tabular}
+    \caption{Zero Coupon Inflation Swap Rate}
+    \label{tab:zcinflationswap_quote}
+\end{table}
+
+\medskip
+Examples:
+\begin{itemize}
+\item {ZC\_INFLATIONSWAP/RATE/EUHICPXT/1Y}
+\item {ZC\_INFLATIONSWAP/RATE/EUHICPXT/2Y}
+\end{itemize}
+
+Examples for inflation index names include EUHICP, EUHICPXT,FRHICP, UKRPI, USCPI, ZACPI.
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Year on Year Inflation Swap Rate}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+      \hline
+      {\bf Property} & {\bf Allowable values} & {\bf Description} \\
+      \hline
+      Index & String & Identifying name of the inflation index \\
+      \hline
+      Maturity & integer followed by D, W, M or Y & Maturity of the swap quote \\
+      \hline
+    \end{tabular}
+    \caption{Year on Year Inflation Swap Rate}
+    \label{tab:yyinflationswap_quote}
+\end{table}
+
+\medskip
+Examples:
+\begin{itemize}
+\item {YY\_INFLATIONSWAP/RATE/EUHICPXT/1Y}
+\item {YY\_INFLATIONSWAP/RATE/EUHICPXT/2Y}
+\end{itemize}
+
+Examples for inflation index names include EUHICP, EUHICPXT,FRHICP, UKRPI, USCPI, ZACPI.
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Zero Coupon Inflation Cap Floor Price}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+      \hline
+      {\bf Property} & {\bf Allowable values} & {\bf Description} \\
+      \hline
+      Index & String & Identifying name of the inflation index \\
+      \hline
+      Maturity & integer followed by D, W, M or Y & Maturity of the swap quote \\
+      \hline
+      Cap/Floor & C or F & Cap or Floor tag \\
+      \hline
+      Strike & Real number & Strike \\
+      \hline
+    \end{tabular}
+    \caption{Zero Coupon Inflation Cap Floor Price}
+    \label{tab:zcinflationcapfloorprice_quote}
+\end{table}
+
+\medskip
+Examples:
+\begin{itemize}
+\item {ZC\_INFLATIONCAPFLOOR/PRICE/EUHICPXT/1Y/F/-0.02}
+\item {ZC\_INFLATIONCAPFLOOR/PRICE/EUHICPXT/2Y/C/0.01}
+\end{itemize}
+
+Examples for inflation index names include EUHICP, EUHICPXT,FRHICP, UKRPI, USCPI, ZACPI.
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Inflation Seasonality Correction Factors}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+      \hline
+      {\bf Property} & {\bf Allowable values} & {\bf Description} \\
+      \hline
+      Type & MULT & Type of the correction factor \\
+      \hline
+      Index & String & Identifying name of the inflation index \\
+      \hline
+      Month & JAN, ..., DEC & Month of the correction factor \\
+      \hline
+    \end{tabular}
+    \caption{Inflation Seasonality Correction Factors}
+    \label{tab:inflationseasonality_quote}
+\end{table}
+
+\medskip
+Examples:
+\begin{itemize}
+\item SEASONALITY/RATE/MULT/EUHICPXT/JAN
+\item SEASONALITY/RATE/MULT/EUHICPXT/FEB
+\item SEASONALITY/RATE/MULT/EUHICPXT/NOV
+\end{itemize}
+
+Examples for inflation index names include EUHICP, EUHICPXT,FRHICP, UKRPI, USCPI, ZACPI.
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Bond Yield Spreads}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\begin{table}[H]
+	\centering
+	\begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+		\hline
+		{\bf Property} & {\bf Allowable values} & {\bf Description} \\
+		\hline
+		Name & String & Identifying name of the bond \\
+		\hline
+	\end{tabular}
+	\caption{Bond Yield Spreads}
+	\label{tab:bondyieldspread_quote}
+\end{table}
+
+This quote provides the spread for a specified bond over the benchmark rate.
+
+\medskip
+Examples:
+\begin{itemize}
+	\item {\tt BOND/YIELD\_SPREAD/SECURITY\_1}
 \end{itemize}
 
 % %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -825,14 +1054,14 @@ Examples:
 % Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}&  Currency of the Inflation Cap/Floor volatility\\ \hline
 % Region & A string that matches inflation Region codes in the {\tt config-scenario.xml} file & Region code for the inflation index\\  \hline
 % Expiry & An integer followed by D, W, M or Y & Period from today to expiry \\ \hline
-% Strike & Real number & Absolute Strike rate\\ 
+% Strike & Real number & Absolute Strike rate\\
 % \hline
 % \end{tabular}
 %   \caption{Year-on-Year Inflation Cap/Floor Volatility}
 %   \label{tab:yoyinflvol_quote}
 % \end{table}
 
-% Examples: 
+% Examples:
 % \begin{itemize}
 % \item YY\_INFLATION\_CAP/PRICE/GBP/UK/5Y/0.0450
 % \item YY\_INFLATION\_FLOOR/PRICE/GBP/UK/5Y/0.0450

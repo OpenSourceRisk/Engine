@@ -631,6 +631,7 @@
     <ClInclude Include="bond.hpp" />
     <ClInclude Include="calendars.hpp" />
     <ClInclude Include="ccyswapwithresets.hpp" />
+    <ClInclude Include="cpiswap.hpp" />
     <ClInclude Include="crossassetmodeldata.hpp" />
     <ClInclude Include="equitymarketdata.hpp" />
     <ClInclude Include="equitytrades.hpp" />
@@ -649,6 +650,7 @@
     <ClCompile Include="bond.cpp" />
     <ClCompile Include="calendars.cpp" />
     <ClCompile Include="ccyswapwithresets.cpp" />
+    <ClCompile Include="cpiswap.cpp" />
     <ClCompile Include="crossassetmodeldata.cpp" />
     <ClCompile Include="equitymarketdata.cpp" />
     <ClCompile Include="equitytrades.cpp" />

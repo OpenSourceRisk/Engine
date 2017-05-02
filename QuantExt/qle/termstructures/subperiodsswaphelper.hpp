@@ -60,6 +60,7 @@ public:
 
 protected:
     void initializeDates();
+
 private:
     boost::shared_ptr<SubPeriodsSwap> swap_;
     boost::shared_ptr<IborIndex> iborIndex_;

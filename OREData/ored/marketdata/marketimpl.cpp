@@ -16,13 +16,13 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/algorithm/string.hpp>
+#include <boost/make_shared.hpp>
 #include <ored/configuration/conventions.hpp>
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/utilities/indexparser.hpp>
-#include <qle/termstructures/blackinvertedvoltermstructure.hpp>
-#include <boost/algorithm/string.hpp>
-#include <boost/make_shared.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <qle/termstructures/blackinvertedvoltermstructure.hpp>
 
 using namespace QuantLib;
 using namespace std;
@@ -34,7 +34,13 @@ namespace ore {
 namespace data {
 
 namespace {
-template <class A, class B> A lookup(const B& map, const string& key, const string& configuration, const string& type) {
+
+inline std::ostream& operator<<(std::ostream& out, pair<string, bool> p) {
+    return out << p.first << " (" << (p.second ? "true" : "false") << ")";
+}
+
+template <class A, class B, class C>
+A lookup(const B& map, const C& key, const string& configuration, const string& type) {
     auto it = map.find(make_pair(configuration, key));
     if (it == map.end()) {
         // fall back to default configuration
@@ -117,6 +123,24 @@ Handle<Quote> MarketImpl::recoveryRate(const string& key, const string& configur
 
 Handle<OptionletVolatilityStructure> MarketImpl::capFloorVol(const string& key, const string& configuration) const {
     return lookup<Handle<OptionletVolatilityStructure>>(capFloorCurves_, key, configuration, "capfloor curve");
+}
+
+Handle<ZeroInflationIndex> MarketImpl::zeroInflationIndex(const string& indexName, const bool interpolated,
+                                                          const string& configuration) const {
+    return lookup<Handle<ZeroInflationIndex>>(zeroInflationIndices_, std::make_pair(indexName, interpolated),
+                                              configuration, "zero inflation index");
+}
+
+Handle<YoYInflationIndex> MarketImpl::yoyInflationIndex(const string& indexName, const bool interpolated,
+                                                        const string& configuration) const {
+    return lookup<Handle<YoYInflationIndex>>(yoyInflationIndices_, std::make_pair(indexName, interpolated),
+                                             configuration, "yoy inflation index");
+}
+
+Handle<CPICapFloorTermPriceSurface> MarketImpl::inflationCapFloorPriceSurface(const string& indexName,
+                                                                              const string& configuration) const {
+    return lookup<Handle<CPICapFloorTermPriceSurface>>(inflationCapFloorPriceSurfaces_, indexName, configuration,
+                                                       "inflation cap floor price surface");
 }
 
 Handle<Quote> MarketImpl::equitySpot(const string& key, const string& configuration) const {
@@ -212,6 +236,20 @@ void MarketImpl::refresh(const string& configuration) {
             if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
                 it->second.insert(*x.second);
         }
+        for (auto& x : zeroInflationIndices_) {
+            if (x.first.first == configuration || x.first.first == Market::defaultConfiguration) {
+                it->second.insert(*x.second->zeroInflationTermStructure());
+            }
+        }
+        for (auto& x : yoyInflationIndices_) {
+            if (x.first.first == configuration || x.first.first == Market::defaultConfiguration) {
+                it->second.insert(*x.second->yoyInflationTermStructure());
+            }
+        }
+        for (auto& x : inflationCapFloorPriceSurfaces_) {
+            if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
+                it->second.insert(*x.second);
+        }
         for (auto& x : equityDividendCurves_) {
             if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
                 it->second.insert(*x.second);
@@ -220,7 +258,6 @@ void MarketImpl::refresh(const string& configuration) {
             if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
                 it->second.insert(*x.second);
         }
-        // why no fx spot? - why no equity spot?
     }
 
     for (auto& x : it->second)

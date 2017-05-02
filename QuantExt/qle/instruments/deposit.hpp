@@ -63,7 +63,8 @@ public:
     Date fixingDate() const { return fixingDate_; }
     Date startDate() const { return startDate_; }
     Date maturityDate() const { return maturityDate_; }
-    Real fairRate() const { calculate();
+    Real fairRate() const {
+        calculate();
         return fairRate_;
     }
     const Leg& leg() const { return leg_; }

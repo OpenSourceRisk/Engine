@@ -68,7 +68,7 @@ void RateHelpersTest::testTenorBasisSwapHelperDegenerateSchedule() {
         Handle<Quote>(boost::make_shared<SimpleQuote>(0.0)), 18 * Months, usdLibor6m, usdLibor3m, 6 * Months);
 
     PiecewiseYieldCurve<Discount, LogLinear> curve(today, std::vector<boost::shared_ptr<RateHelper> >(1, helper),
-                                                          Actual365Fixed());
+                                                   Actual365Fixed());
     BOOST_CHECK_NO_THROW(curve.discount(1.0));
 }
 

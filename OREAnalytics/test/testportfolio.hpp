@@ -38,11 +38,10 @@ boost::shared_ptr<Trade> buildSwap(string id, string ccy, bool isPayer, Real not
                                    Real spread, string fixedFreq, string fixedDC, string floatFreq, string floatDC,
                                    string index);
 
-boost::shared_ptr<Trade> buildEuropeanSwaption(
-    string id, string longShort, string ccy, bool isPayer, Real notional,
-    int start, Size term, Real rate, Real spread, string fixedFreq,
-    string fixedDC, string floatFreq, string floatDC, string index, 
-    string cashPhysical = "Cash");
+boost::shared_ptr<Trade> buildEuropeanSwaption(string id, string longShort, string ccy, bool isPayer, Real notional,
+                                               int start, Size term, Real rate, Real spread, string fixedFreq,
+                                               string fixedDC, string floatFreq, string floatDC, string index,
+                                               string cashPhysical = "Cash");
 
 boost::shared_ptr<Trade> buildFxOption(string id, string longShort, string putCall, Size expiry, string boughtCcy,
                                        Real boughtAmount, string soldCcy, Real soldAmount);

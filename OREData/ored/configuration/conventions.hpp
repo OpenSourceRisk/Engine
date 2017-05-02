@@ -25,6 +25,7 @@
 
 #include <ql/indexes/swapindex.hpp>
 #include <ql/indexes/iborindex.hpp>
+#include <ql/indexes/inflationindex.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp> // SubPeriodsCouponType
 #include <ored/utilities/xmlutils.hpp>
 
@@ -58,6 +59,7 @@ public:
         CrossCcyBasis,
         CDS,
         SwapIndex,
+        InflationSwap,
         SecuritySpread
     };
 
@@ -732,6 +734,51 @@ private:
     string strPaysAtDefaultTime_;
 };
 
+class InflationSwapConvention : public Convention {
+public:
+    InflationSwapConvention() {}
+    InflationSwapConvention(const string& id, const string& strFixCalendar, const string& strFixConvention,
+                            const string& strDayCounter, const string& strIndex, const string& strInterpolated,
+                            const string& strObservationLag, const string& strAdjustInfObsDates,
+                            const string& strInfCalendar, const string& strInfConvention);
+
+    const Calendar& fixCalendar() const { return fixCalendar_; }
+    BusinessDayConvention fixConvention() const { return fixConvention_; }
+    const DayCounter& dayCounter() const { return dayCounter_; }
+    const boost::shared_ptr<ZeroInflationIndex> index() const { return index_; }
+    bool interpolated() const { return interpolated_; }
+    Period observationLag() const { return observationLag_; }
+    bool adjustInfObsDates() const { return adjustInfObsDates_; }
+    const Calendar& infCalendar() const { return infCalendar_; }
+    BusinessDayConvention infConvention() const { return infConvention_; }
+
+    virtual void fromXML(XMLNode* node);
+    virtual XMLNode* toXML(XMLDocument& doc);
+    virtual void build();
+
+private:
+    Calendar fixCalendar_;
+    BusinessDayConvention fixConvention_;
+    DayCounter dayCounter_;
+    boost::shared_ptr<ZeroInflationIndex> index_;
+    bool interpolated_;
+    Period observationLag_;
+    bool adjustInfObsDates_;
+    Calendar infCalendar_;
+    BusinessDayConvention infConvention_;
+
+    // Strings to store the inputs
+    string strFixCalendar_;
+    string strFixConvention_;
+    string strDayCounter_;
+    string strIndex_;
+    string strInterpolated_;
+    string strObservationLag_;
+    string strAdjustInfObsDates_;
+    string strInfCalendar_;
+    string strInfConvention_;
+};
+
 //! Repository for currency dependent market conventions
 /*!
   \ingroup market
@@ -757,7 +804,7 @@ public:
     //@}
 
 private:
-    map<string, boost::shared_ptr<Convention> > data_;
+    map<string, boost::shared_ptr<Convention>> data_;
 };
 
 //! Container for storing Bond Spread Rate conventions

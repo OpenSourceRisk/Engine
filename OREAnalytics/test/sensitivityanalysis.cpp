@@ -91,34 +91,34 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData2() 
     boost::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData(
         new analytics::ScenarioSimMarketParameters());
     simMarketData->baseCcy() = "EUR";
-    simMarketData->ccys() = { "EUR", "GBP" };
-    simMarketData->yieldCurveNames() = { "BondCurve1" };
-    simMarketData->yieldCurveTenors() = { 1 * Months, 6 * Months, 1 * Years,  2 * Years,  3 * Years, 4 * Years,
-                                          5 * Years,  6 * Years,  7 * Years,  8 * Years,  9 * Years, 10 * Years,
-                                          12 * Years, 15 * Years, 20 * Years, 25 * Years, 30 * Years };
-    simMarketData->indices() = { "EUR-EURIBOR-6M", "GBP-LIBOR-6M" };
-    simMarketData->defaultNames() = { "BondIssuer1" };
-    simMarketData->defaultTenors() = { 1 * Months, 6 * Months, 1 * Years,  2 * Years,  3 * Years, 4 * Years,
-                                       5 * Years,  7 * Years,  10 * Years, 20 * Years, 30 * Years };
-    simMarketData->securities() = { "Bond1" };
+    simMarketData->ccys() = {"EUR", "GBP"};
+    simMarketData->yieldCurveNames() = {"BondCurve1"};
+    simMarketData->yieldCurveTenors() = {1 * Months, 6 * Months, 1 * Years,  2 * Years,  3 * Years, 4 * Years,
+                                         5 * Years,  6 * Years,  7 * Years,  8 * Years,  9 * Years, 10 * Years,
+                                         12 * Years, 15 * Years, 20 * Years, 25 * Years, 30 * Years};
+    simMarketData->indices() = {"EUR-EURIBOR-6M", "GBP-LIBOR-6M"};
+    simMarketData->defaultNames() = {"BondIssuer1"};
+    simMarketData->defaultTenors() = {1 * Months, 6 * Months, 1 * Years,  2 * Years,  3 * Years, 4 * Years,
+                                      5 * Years,  7 * Years,  10 * Years, 20 * Years, 30 * Years};
+    simMarketData->securities() = {"Bond1"};
 
     simMarketData->interpolation() = "LogLinear";
     simMarketData->extrapolate() = true;
 
-    simMarketData->swapVolTerms() = { 1 * Years, 2 * Years, 3 * Years,  4 * Years,
-                                      5 * Years, 7 * Years, 10 * Years, 20 * Years };
-    simMarketData->swapVolExpiries() = { 6 * Months, 1 * Years, 2 * Years,  3 * Years,
-                                         5 * Years,  7 * Years, 10 * Years, 20 * Years };
-    simMarketData->swapVolCcys() = { "EUR", "GBP" };
+    simMarketData->swapVolTerms() = {1 * Years, 2 * Years, 3 * Years,  4 * Years,
+                                     5 * Years, 7 * Years, 10 * Years, 20 * Years};
+    simMarketData->swapVolExpiries() = {6 * Months, 1 * Years, 2 * Years,  3 * Years,
+                                        5 * Years,  7 * Years, 10 * Years, 20 * Years};
+    simMarketData->swapVolCcys() = {"EUR", "GBP"};
     simMarketData->swapVolDecayMode() = "ForwardVariance";
     simMarketData->simulateSwapVols() = true;
 
-    simMarketData->fxVolExpiries() = { 1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years };
+    simMarketData->fxVolExpiries() = {1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years};
     simMarketData->fxVolDecayMode() = "ConstantVariance";
     simMarketData->simulateFXVols() = true;
-    simMarketData->fxVolCcyPairs() = { "EURGBP" };
+    simMarketData->fxVolCcyPairs() = {"EURGBP"};
 
-    simMarketData->fxCcyPairs() = { "EURGBP" };
+    simMarketData->fxCcyPairs() = {"EURGBP"};
 
     simMarketData->simulateCapFloorVols() = false;
 
@@ -130,40 +130,40 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData5() 
         new analytics::ScenarioSimMarketParameters());
 
     simMarketData->baseCcy() = "EUR";
-    simMarketData->ccys() = { "EUR", "GBP", "USD", "CHF", "JPY" };
-    simMarketData->yieldCurveTenors() = { 1 * Months, 6 * Months, 1 * Years,  2 * Years,  3 * Years,  4 * Years,
-                                          5 * Years,  7 * Years,  10 * Years, 15 * Years, 20 * Years, 30 * Years };
-    simMarketData->indices() = { "EUR-EURIBOR-6M", "USD-LIBOR-3M", "USD-LIBOR-6M",
-                                 "GBP-LIBOR-6M",   "CHF-LIBOR-6M", "JPY-LIBOR-6M" };
-    simMarketData->yieldCurveNames() = { "BondCurve1" };
+    simMarketData->ccys() = {"EUR", "GBP", "USD", "CHF", "JPY"};
+    simMarketData->yieldCurveTenors() = {1 * Months, 6 * Months, 1 * Years,  2 * Years,  3 * Years,  4 * Years,
+                                         5 * Years,  7 * Years,  10 * Years, 15 * Years, 20 * Years, 30 * Years};
+    simMarketData->indices() = {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "USD-LIBOR-6M",
+                                "GBP-LIBOR-6M",   "CHF-LIBOR-6M", "JPY-LIBOR-6M"};
+    simMarketData->yieldCurveNames() = {"BondCurve1"};
     simMarketData->interpolation() = "LogLinear";
     simMarketData->extrapolate() = true;
 
-    simMarketData->swapVolTerms() = { 1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 20 * Years };
-    simMarketData->swapVolExpiries() = { 6 * Months, 1 * Years, 2 * Years,  3 * Years,
-                                         5 * Years,  7 * Years, 10 * Years, 20 * Years };
-    simMarketData->swapVolCcys() = { "EUR", "GBP", "USD", "CHF", "JPY" };
+    simMarketData->swapVolTerms() = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 20 * Years};
+    simMarketData->swapVolExpiries() = {6 * Months, 1 * Years, 2 * Years,  3 * Years,
+                                        5 * Years,  7 * Years, 10 * Years, 20 * Years};
+    simMarketData->swapVolCcys() = {"EUR", "GBP", "USD", "CHF", "JPY"};
     simMarketData->swapVolDecayMode() = "ForwardVariance";
     simMarketData->simulateSwapVols() = true; // false;
 
-    simMarketData->fxVolExpiries() = { 1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years };
+    simMarketData->fxVolExpiries() = {1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years};
     simMarketData->fxVolDecayMode() = "ConstantVariance";
     simMarketData->simulateFXVols() = true; // false;
-    simMarketData->fxVolCcyPairs() = { "EURUSD", "EURGBP", "EURCHF", "EURJPY", "GBPCHF" };
+    simMarketData->fxVolCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY", "GBPCHF"};
 
-    simMarketData->fxCcyPairs() = { "EURUSD", "EURGBP", "EURCHF", "EURJPY" };
+    simMarketData->fxCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY"};
 
     simMarketData->simulateCapFloorVols() = true;
     simMarketData->capFloorVolDecayMode() = "ForwardVariance";
-    simMarketData->capFloorVolCcys() = { "EUR", "USD" };
-    simMarketData->capFloorVolExpiries() = { 6 * Months, 1 * Years,  2 * Years,  3 * Years, 5 * Years,
-                                             7 * Years,  10 * Years, 15 * Years, 20 * Years };
-    simMarketData->capFloorVolStrikes() = { 0.00, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06 };
+    simMarketData->capFloorVolCcys() = {"EUR", "USD"};
+    simMarketData->capFloorVolExpiries() = {6 * Months, 1 * Years,  2 * Years,  3 * Years, 5 * Years,
+                                            7 * Years,  10 * Years, 15 * Years, 20 * Years};
+    simMarketData->capFloorVolStrikes() = {0.00, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06};
 
-    simMarketData->defaultNames() = { "BondIssuer1" };
-    simMarketData->defaultTenors() = { 1 * Months, 6 * Months, 1 * Years,  2 * Years,  3 * Years, 4 * Years,
-                                       5 * Years,  7 * Years,  10 * Years, 20 * Years, 30 * Years };
-    simMarketData->securities() = { "Bond1" };
+    simMarketData->defaultNames() = {"BondIssuer1"};
+    simMarketData->defaultTenors() = {1 * Months, 6 * Months, 1 * Years,  2 * Years,  3 * Years, 4 * Years,
+                                      5 * Years,  7 * Years,  10 * Years, 20 * Years, 30 * Years};
+    simMarketData->securities() = {"Bond1"};
 
     return simMarketData;
 }
@@ -172,9 +172,8 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData2() {
     boost::shared_ptr<SensitivityScenarioData> sensiData = boost::make_shared<SensitivityScenarioData>();
 
     SensitivityScenarioData::CurveShiftData cvsData;
-    cvsData.shiftTenors = {
-        1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 15 * Years, 20 * Years
-    }; // multiple tenors: triangular shifts
+    cvsData.shiftTenors = {1 * Years, 2 * Years,  3 * Years,  5 * Years,
+                           7 * Years, 10 * Years, 15 * Years, 20 * Years}; // multiple tenors: triangular shifts
     cvsData.shiftType = "Absolute";
     cvsData.shiftSize = 0.0001;
 
@@ -185,39 +184,39 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData2() {
     SensitivityScenarioData::FxVolShiftData fxvsData;
     fxvsData.shiftType = "Relative";
     fxvsData.shiftSize = 1.0;
-    fxvsData.shiftExpiries = { 2 * Years, 5 * Years };
+    fxvsData.shiftExpiries = {2 * Years, 5 * Years};
 
     SensitivityScenarioData::CapFloorVolShiftData cfvsData;
     cfvsData.shiftType = "Absolute";
     cfvsData.shiftSize = 0.0001;
-    cfvsData.shiftExpiries = { 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years };
-    cfvsData.shiftStrikes = { 0.05 };
+    cfvsData.shiftExpiries = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
+    cfvsData.shiftStrikes = {0.05};
 
     SensitivityScenarioData::SwaptionVolShiftData swvsData;
     swvsData.shiftType = "Relative";
     swvsData.shiftSize = 0.01;
-    swvsData.shiftExpiries = { 3 * Years, 5 * Years, 10 * Years };
-    swvsData.shiftTerms = { 2 * Years, 5 * Years, 10 * Years };
+    swvsData.shiftExpiries = {3 * Years, 5 * Years, 10 * Years};
+    swvsData.shiftTerms = {2 * Years, 5 * Years, 10 * Years};
 
-    sensiData->discountCurrencies() = { "EUR", "GBP" };
+    sensiData->discountCurrencies() = {"EUR", "GBP"};
     sensiData->discountCurveShiftData()["EUR"] = cvsData;
 
     sensiData->discountCurveShiftData()["GBP"] = cvsData;
 
-    sensiData->indexNames() = { "EUR-EURIBOR-6M", "GBP-LIBOR-6M" };
+    sensiData->indexNames() = {"EUR-EURIBOR-6M", "GBP-LIBOR-6M"};
     sensiData->indexCurveShiftData()["EUR-EURIBOR-6M"] = cvsData;
     sensiData->indexCurveShiftData()["GBP-LIBOR-6M"] = cvsData;
 
-    sensiData->yieldCurveNames() = { "BondCurve1" };
+    sensiData->yieldCurveNames() = {"BondCurve1"};
     sensiData->yieldCurveShiftData()["BondCurve1"] = cvsData;
 
-    sensiData->fxCcyPairs() = { "EURGBP" };
+    sensiData->fxCcyPairs() = {"EURGBP"};
     sensiData->fxShiftData()["EURGBP"] = fxsData;
 
-    sensiData->fxVolCcyPairs() = { "EURGBP" };
+    sensiData->fxVolCcyPairs() = {"EURGBP"};
     sensiData->fxVolShiftData()["EURGBP"] = fxvsData;
 
-    sensiData->swaptionVolCurrencies() = { "EUR", "GBP" };
+    sensiData->swaptionVolCurrencies() = {"EUR", "GBP"};
     sensiData->swaptionVolShiftData()["EUR"] = swvsData;
     sensiData->swaptionVolShiftData()["GBP"] = swvsData;
 
@@ -235,8 +234,8 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5() {
     boost::shared_ptr<SensitivityScenarioData> sensiData = boost::make_shared<SensitivityScenarioData>();
 
     SensitivityScenarioData::CurveShiftData cvsData;
-    cvsData.shiftTenors = { 6 * Months, 1 * Years,  2 * Years,  3 * Years, 5 * Years,
-                            7 * Years,  10 * Years, 15 * Years, 20 * Years }; // multiple tenors: triangular shifts
+    cvsData.shiftTenors = {6 * Months, 1 * Years,  2 * Years,  3 * Years, 5 * Years,
+                           7 * Years,  10 * Years, 15 * Years, 20 * Years}; // multiple tenors: triangular shifts
     cvsData.shiftType = "Absolute";
     cvsData.shiftSize = 0.0001;
 
@@ -247,21 +246,21 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5() {
     SensitivityScenarioData::FxVolShiftData fxvsData;
     fxvsData.shiftType = "Relative";
     fxvsData.shiftSize = 1.0;
-    fxvsData.shiftExpiries = { 5 * Years };
+    fxvsData.shiftExpiries = {5 * Years};
 
     SensitivityScenarioData::CapFloorVolShiftData cfvsData;
     cfvsData.shiftType = "Absolute";
     cfvsData.shiftSize = 0.0001;
-    cfvsData.shiftExpiries = { 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years };
-    cfvsData.shiftStrikes = { 0.01, 0.02, 0.03, 0.04, 0.05 };
+    cfvsData.shiftExpiries = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
+    cfvsData.shiftStrikes = {0.01, 0.02, 0.03, 0.04, 0.05};
 
     SensitivityScenarioData::SwaptionVolShiftData swvsData;
     swvsData.shiftType = "Relative";
     swvsData.shiftSize = 0.01;
-    swvsData.shiftExpiries = { 2 * Years, 5 * Years, 10 * Years };
-    swvsData.shiftTerms = { 5 * Years, 10 * Years };
+    swvsData.shiftExpiries = {2 * Years, 5 * Years, 10 * Years};
+    swvsData.shiftTerms = {5 * Years, 10 * Years};
 
-    sensiData->discountCurrencies() = { "EUR", "USD", "GBP", "CHF", "JPY" };
+    sensiData->discountCurrencies() = {"EUR", "USD", "GBP", "CHF", "JPY"};
     sensiData->discountCurveShiftData()["EUR"] = cvsData;
 
     sensiData->discountCurveShiftData()["USD"] = cvsData;
@@ -272,7 +271,7 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5() {
 
     sensiData->discountCurveShiftData()["CHF"] = cvsData;
 
-    sensiData->indexNames() = { "EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M", "CHF-LIBOR-6M", "JPY-LIBOR-6M" };
+    sensiData->indexNames() = {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M", "CHF-LIBOR-6M", "JPY-LIBOR-6M"};
     sensiData->indexCurveShiftData()["EUR-EURIBOR-6M"] = cvsData;
 
     sensiData->indexCurveShiftData()["USD-LIBOR-3M"] = cvsData;
@@ -283,30 +282,30 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5() {
 
     sensiData->indexCurveShiftData()["CHF-LIBOR-6M"] = cvsData;
 
-    sensiData->yieldCurveNames() = { "BondCurve1" };
+    sensiData->yieldCurveNames() = {"BondCurve1"};
     sensiData->yieldCurveShiftData()["BondCurve1"] = cvsData;
 
-    sensiData->fxCcyPairs() = { "EURUSD", "EURGBP", "EURCHF", "EURJPY" };
+    sensiData->fxCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY"};
     sensiData->fxShiftData()["EURUSD"] = fxsData;
     sensiData->fxShiftData()["EURGBP"] = fxsData;
     sensiData->fxShiftData()["EURJPY"] = fxsData;
     sensiData->fxShiftData()["EURCHF"] = fxsData;
 
-    sensiData->fxVolCcyPairs() = { "EURUSD", "EURGBP", "EURCHF", "EURJPY", "GBPCHF" };
+    sensiData->fxVolCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY", "GBPCHF"};
     sensiData->fxVolShiftData()["EURUSD"] = fxvsData;
     sensiData->fxVolShiftData()["EURGBP"] = fxvsData;
     sensiData->fxVolShiftData()["EURJPY"] = fxvsData;
     sensiData->fxVolShiftData()["EURCHF"] = fxvsData;
     sensiData->fxVolShiftData()["GBPCHF"] = fxvsData;
 
-    sensiData->swaptionVolCurrencies() = { "EUR", "USD", "GBP", "CHF", "JPY" };
+    sensiData->swaptionVolCurrencies() = {"EUR", "USD", "GBP", "CHF", "JPY"};
     sensiData->swaptionVolShiftData()["EUR"] = swvsData;
     sensiData->swaptionVolShiftData()["GBP"] = swvsData;
     sensiData->swaptionVolShiftData()["USD"] = swvsData;
     sensiData->swaptionVolShiftData()["JPY"] = swvsData;
     sensiData->swaptionVolShiftData()["CHF"] = swvsData;
 
-    sensiData->capFloorVolCurrencies() = { "EUR", "USD" };
+    sensiData->capFloorVolCurrencies() = {"EUR", "USD"};
     sensiData->capFloorVolShiftData()["EUR"] = cfvsData;
     sensiData->capFloorVolShiftData()["EUR"].indexName = "EUR-EURIBOR-6M";
     sensiData->capFloorVolShiftData()["USD"] = cfvsData;
@@ -342,7 +341,7 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     boost::shared_ptr<Scenario> baseScen = scenarioGenerator->baseScenario();
     boost::shared_ptr<ScenarioFactory> scenarioFactory(new CloneScenarioFactory(baseScen));
     scenarioGenerator->generateScenarios(scenarioFactory);
-    
+
     boost::shared_ptr<ScenarioGenerator> sgen(scenarioGenerator);
 
     // build scenario sim market
@@ -401,7 +400,7 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     // build the scenario valuation engine
     boost::shared_ptr<DateGrid> dg = boost::make_shared<DateGrid>(
         "1,0W"); // TODO - extend the DateGrid interface so that it can actually take a vector of dates as input
-    vector<boost::shared_ptr<ValuationCalculator> > calculators;
+    vector<boost::shared_ptr<ValuationCalculator>> calculators;
     calculators.push_back(boost::make_shared<NPVCalculator>(simMarketData->baseCcy()));
     ValuationEngine engine(today, dg, simMarket);
     // run scenarios and fill the cube
@@ -419,279 +418,279 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     };
 
     std::vector<Results> cachedResults = {
-        { "1_Swap_EUR", "Up:DiscountCurve/EUR/0/6M", -928826, -2.51631 },
-        { "1_Swap_EUR", "Up:DiscountCurve/EUR/1/1Y", -928826, 14.6846 },
-        { "1_Swap_EUR", "Up:DiscountCurve/EUR/2/2Y", -928826, 19.0081 },
-        { "1_Swap_EUR", "Up:DiscountCurve/EUR/3/3Y", -928826, 46.1186 },
-        { "1_Swap_EUR", "Up:DiscountCurve/EUR/4/5Y", -928826, 85.1033 },
-        { "1_Swap_EUR", "Up:DiscountCurve/EUR/5/7Y", -928826, 149.43 },
-        { "1_Swap_EUR", "Up:DiscountCurve/EUR/6/10Y", -928826, 205.064 },
-        { "1_Swap_EUR", "Down:DiscountCurve/EUR/0/6M", -928826, 2.51644 },
-        { "1_Swap_EUR", "Down:DiscountCurve/EUR/1/1Y", -928826, -14.6863 },
-        { "1_Swap_EUR", "Down:DiscountCurve/EUR/2/2Y", -928826, -19.0137 },
-        { "1_Swap_EUR", "Down:DiscountCurve/EUR/3/3Y", -928826, -46.1338 },
-        { "1_Swap_EUR", "Down:DiscountCurve/EUR/4/5Y", -928826, -85.1406 },
-        { "1_Swap_EUR", "Down:DiscountCurve/EUR/5/7Y", -928826, -149.515 },
-        { "1_Swap_EUR", "Down:DiscountCurve/EUR/6/10Y", -928826, -205.239 },
-        { "1_Swap_EUR", "Up:IndexCurve/EUR-EURIBOR-6M/0/6M", -928826, -495.013 },
-        { "1_Swap_EUR", "Up:IndexCurve/EUR-EURIBOR-6M/1/1Y", -928826, 14.7304 },
-        { "1_Swap_EUR", "Up:IndexCurve/EUR-EURIBOR-6M/2/2Y", -928826, 38.7816 },
-        { "1_Swap_EUR", "Up:IndexCurve/EUR-EURIBOR-6M/3/3Y", -928826, 94.186 },
-        { "1_Swap_EUR", "Up:IndexCurve/EUR-EURIBOR-6M/4/5Y", -928826, 173.125 },
-        { "1_Swap_EUR", "Up:IndexCurve/EUR-EURIBOR-6M/5/7Y", -928826, 304.648 },
-        { "1_Swap_EUR", "Up:IndexCurve/EUR-EURIBOR-6M/6/10Y", -928826, 8479.55 },
-        { "1_Swap_EUR", "Down:IndexCurve/EUR-EURIBOR-6M/0/6M", -928826, 495.037 },
-        { "1_Swap_EUR", "Down:IndexCurve/EUR-EURIBOR-6M/1/1Y", -928826, -14.5864 },
-        { "1_Swap_EUR", "Down:IndexCurve/EUR-EURIBOR-6M/2/2Y", -928826, -38.4045 },
-        { "1_Swap_EUR", "Down:IndexCurve/EUR-EURIBOR-6M/3/3Y", -928826, -93.532 },
-        { "1_Swap_EUR", "Down:IndexCurve/EUR-EURIBOR-6M/4/5Y", -928826, -171.969 },
-        { "1_Swap_EUR", "Down:IndexCurve/EUR-EURIBOR-6M/5/7Y", -928826, -302.864 },
-        { "1_Swap_EUR", "Down:IndexCurve/EUR-EURIBOR-6M/6/10Y", -928826, -8478.14 },
-        { "2_Swap_USD", "Up:DiscountCurve/USD/0/6M", 980404, -1.04797 },
-        { "2_Swap_USD", "Up:DiscountCurve/USD/1/1Y", 980404, -6.06931 },
-        { "2_Swap_USD", "Up:DiscountCurve/USD/2/2Y", 980404, -15.8605 },
-        { "2_Swap_USD", "Up:DiscountCurve/USD/3/3Y", 980404, -38.0708 },
-        { "2_Swap_USD", "Up:DiscountCurve/USD/4/5Y", 980404, -68.7288 },
-        { "2_Swap_USD", "Up:DiscountCurve/USD/5/7Y", 980404, -118.405 },
-        { "2_Swap_USD", "Up:DiscountCurve/USD/6/10Y", 980404, -244.946 },
-        { "2_Swap_USD", "Up:DiscountCurve/USD/7/15Y", 980404, -202.226 },
-        { "2_Swap_USD", "Up:DiscountCurve/USD/8/20Y", 980404, 0.0148314 },
-        { "2_Swap_USD", "Down:DiscountCurve/USD/0/6M", 980404, 1.04797 },
-        { "2_Swap_USD", "Down:DiscountCurve/USD/1/1Y", 980404, 6.06959 },
-        { "2_Swap_USD", "Down:DiscountCurve/USD/2/2Y", 980404, 15.8623 },
-        { "2_Swap_USD", "Down:DiscountCurve/USD/3/3Y", 980404, 38.0784 },
-        { "2_Swap_USD", "Down:DiscountCurve/USD/4/5Y", 980404, 68.7502 },
-        { "2_Swap_USD", "Down:DiscountCurve/USD/5/7Y", 980404, 118.458 },
-        { "2_Swap_USD", "Down:DiscountCurve/USD/6/10Y", 980404, 245.108 },
-        { "2_Swap_USD", "Down:DiscountCurve/USD/7/15Y", 980404, 202.42 },
-        { "2_Swap_USD", "Down:DiscountCurve/USD/8/20Y", 980404, -0.0148314 },
-        { "2_Swap_USD", "Up:IndexCurve/USD-LIBOR-3M/0/6M", 980404, -201.015 },
-        { "2_Swap_USD", "Up:IndexCurve/USD-LIBOR-3M/1/1Y", 980404, 18.134 },
-        { "2_Swap_USD", "Up:IndexCurve/USD-LIBOR-3M/2/2Y", 980404, 47.3066 },
-        { "2_Swap_USD", "Up:IndexCurve/USD-LIBOR-3M/3/3Y", 980404, 113.4 },
-        { "2_Swap_USD", "Up:IndexCurve/USD-LIBOR-3M/4/5Y", 980404, 205.068 },
-        { "2_Swap_USD", "Up:IndexCurve/USD-LIBOR-3M/5/7Y", 980404, 352.859 },
-        { "2_Swap_USD", "Up:IndexCurve/USD-LIBOR-3M/6/10Y", 980404, 730.076 },
-        { "2_Swap_USD", "Up:IndexCurve/USD-LIBOR-3M/7/15Y", 980404, 8626.78 },
-        { "2_Swap_USD", "Up:IndexCurve/USD-LIBOR-3M/8/20Y", 980404, 5.86437 },
-        { "2_Swap_USD", "Down:IndexCurve/USD-LIBOR-3M/0/6M", 980404, 201.03 },
-        { "2_Swap_USD", "Down:IndexCurve/USD-LIBOR-3M/1/1Y", 980404, -18.0746 },
-        { "2_Swap_USD", "Down:IndexCurve/USD-LIBOR-3M/2/2Y", 980404, -47.1526 },
-        { "2_Swap_USD", "Down:IndexCurve/USD-LIBOR-3M/3/3Y", 980404, -113.136 },
-        { "2_Swap_USD", "Down:IndexCurve/USD-LIBOR-3M/4/5Y", 980404, -204.611 },
-        { "2_Swap_USD", "Down:IndexCurve/USD-LIBOR-3M/5/7Y", 980404, -352.166 },
-        { "2_Swap_USD", "Down:IndexCurve/USD-LIBOR-3M/6/10Y", 980404, -729.248 },
-        { "2_Swap_USD", "Down:IndexCurve/USD-LIBOR-3M/7/15Y", 980404, -8626.13 },
-        { "2_Swap_USD", "Down:IndexCurve/USD-LIBOR-3M/8/20Y", 980404, -5.86436 },
-        { "2_Swap_USD", "Up:FXSpot/EURUSD/0/spot", 980404, -9706.97 },
-        { "2_Swap_USD", "Down:FXSpot/EURUSD/0/spot", 980404, 9903.07 },
-        { "3_Swap_GBP", "Up:DiscountCurve/GBP/0/6M", 69795.3, 2.12392 },
-        { "3_Swap_GBP", "Up:DiscountCurve/GBP/1/1Y", 69795.3, -0.646097 },
-        { "3_Swap_GBP", "Up:DiscountCurve/GBP/2/2Y", 69795.3, -1.75066 },
-        { "3_Swap_GBP", "Up:DiscountCurve/GBP/3/3Y", 69795.3, -4.24827 },
-        { "3_Swap_GBP", "Up:DiscountCurve/GBP/4/5Y", 69795.3, -7.2252 },
-        { "3_Swap_GBP", "Up:DiscountCurve/GBP/5/7Y", 69795.3, -12.5287 },
-        { "3_Swap_GBP", "Up:DiscountCurve/GBP/6/10Y", 69795.3, -24.7828 },
-        { "3_Swap_GBP", "Up:DiscountCurve/GBP/7/15Y", 69795.3, -39.2456 },
-        { "3_Swap_GBP", "Up:DiscountCurve/GBP/8/20Y", 69795.3, 31.2081 },
-        { "3_Swap_GBP", "Down:DiscountCurve/GBP/0/6M", 69795.3, -2.12413 },
-        { "3_Swap_GBP", "Down:DiscountCurve/GBP/1/1Y", 69795.3, 0.645698 },
-        { "3_Swap_GBP", "Down:DiscountCurve/GBP/2/2Y", 69795.3, 1.74981 },
-        { "3_Swap_GBP", "Down:DiscountCurve/GBP/3/3Y", 69795.3, 4.2473 },
-        { "3_Swap_GBP", "Down:DiscountCurve/GBP/4/5Y", 69795.3, 7.22426 },
-        { "3_Swap_GBP", "Down:DiscountCurve/GBP/5/7Y", 69795.3, 12.5298 },
-        { "3_Swap_GBP", "Down:DiscountCurve/GBP/6/10Y", 69795.3, 24.7939 },
-        { "3_Swap_GBP", "Down:DiscountCurve/GBP/7/15Y", 69795.3, 39.2773 },
-        { "3_Swap_GBP", "Down:DiscountCurve/GBP/8/20Y", 69795.3, -31.2925 },
-        { "3_Swap_GBP", "Up:IndexCurve/GBP-LIBOR-6M/0/6M", 69795.3, -308.49 },
-        { "3_Swap_GBP", "Up:IndexCurve/GBP-LIBOR-6M/1/1Y", 69795.3, 68.819 },
-        { "3_Swap_GBP", "Up:IndexCurve/GBP-LIBOR-6M/2/2Y", 69795.3, 81.3735 },
-        { "3_Swap_GBP", "Up:IndexCurve/GBP-LIBOR-6M/3/3Y", 69795.3, 239.034 },
-        { "3_Swap_GBP", "Up:IndexCurve/GBP-LIBOR-6M/4/5Y", 69795.3, 372.209 },
-        { "3_Swap_GBP", "Up:IndexCurve/GBP-LIBOR-6M/5/7Y", 69795.3, 654.949 },
-        { "3_Swap_GBP", "Up:IndexCurve/GBP-LIBOR-6M/6/10Y", 69795.3, 1343.01 },
-        { "3_Swap_GBP", "Up:IndexCurve/GBP-LIBOR-6M/7/15Y", 69795.3, 2139.68 },
-        { "3_Swap_GBP", "Up:IndexCurve/GBP-LIBOR-6M/8/20Y", 69795.3, 12633.8 },
-        { "3_Swap_GBP", "Down:IndexCurve/GBP-LIBOR-6M/0/6M", 69795.3, 308.513 },
-        { "3_Swap_GBP", "Down:IndexCurve/GBP-LIBOR-6M/1/1Y", 69795.3, -68.7287 },
-        { "3_Swap_GBP", "Down:IndexCurve/GBP-LIBOR-6M/2/2Y", 69795.3, -81.1438 },
-        { "3_Swap_GBP", "Down:IndexCurve/GBP-LIBOR-6M/3/3Y", 69795.3, -238.649 },
-        { "3_Swap_GBP", "Down:IndexCurve/GBP-LIBOR-6M/4/5Y", 69795.3, -371.553 },
-        { "3_Swap_GBP", "Down:IndexCurve/GBP-LIBOR-6M/5/7Y", 69795.3, -653.972 },
-        { "3_Swap_GBP", "Down:IndexCurve/GBP-LIBOR-6M/6/10Y", 69795.3, -1341.88 },
-        { "3_Swap_GBP", "Down:IndexCurve/GBP-LIBOR-6M/7/15Y", 69795.3, -2138.11 },
-        { "3_Swap_GBP", "Down:IndexCurve/GBP-LIBOR-6M/8/20Y", 69795.3, -12632.5 },
-        { "3_Swap_GBP", "Up:FXSpot/EURGBP/0/spot", 69795.3, -691.043 },
-        { "3_Swap_GBP", "Down:FXSpot/EURGBP/0/spot", 69795.3, 705.003 },
-        { "4_Swap_JPY", "Up:DiscountCurve/JPY/0/6M", 871.03, -0.00750246 },
-        { "4_Swap_JPY", "Up:DiscountCurve/JPY/1/1Y", 871.03, -0.00147994 },
-        { "4_Swap_JPY", "Up:DiscountCurve/JPY/2/2Y", 871.03, -0.020079 },
-        { "4_Swap_JPY", "Up:DiscountCurve/JPY/3/3Y", 871.03, -0.0667249 },
-        { "4_Swap_JPY", "Up:DiscountCurve/JPY/4/5Y", 871.03, 4.75708 },
-        { "4_Swap_JPY", "Down:DiscountCurve/JPY/0/6M", 871.03, 0.00747801 },
-        { "4_Swap_JPY", "Down:DiscountCurve/JPY/1/1Y", 871.03, 0.00140807 },
-        { "4_Swap_JPY", "Down:DiscountCurve/JPY/2/2Y", 871.03, 0.0199001 },
-        { "4_Swap_JPY", "Down:DiscountCurve/JPY/3/3Y", 871.03, 0.0664106 },
-        { "4_Swap_JPY", "Down:DiscountCurve/JPY/4/5Y", 871.03, -4.75978 },
-        { "4_Swap_JPY", "Up:IndexCurve/JPY-LIBOR-6M/0/6M", 871.03, -193.514 },
-        { "4_Swap_JPY", "Up:IndexCurve/JPY-LIBOR-6M/1/1Y", 871.03, 2.95767 },
-        { "4_Swap_JPY", "Up:IndexCurve/JPY-LIBOR-6M/2/2Y", 871.03, 7.81453 },
-        { "4_Swap_JPY", "Up:IndexCurve/JPY-LIBOR-6M/3/3Y", 871.03, 19.3576 },
-        { "4_Swap_JPY", "Up:IndexCurve/JPY-LIBOR-6M/4/5Y", 871.03, 3832.83 },
-        { "4_Swap_JPY", "Down:IndexCurve/JPY-LIBOR-6M/0/6M", 871.03, 193.528 },
-        { "4_Swap_JPY", "Down:IndexCurve/JPY-LIBOR-6M/1/1Y", 871.03, -2.90067 },
-        { "4_Swap_JPY", "Down:IndexCurve/JPY-LIBOR-6M/2/2Y", 871.03, -7.6631 },
-        { "4_Swap_JPY", "Down:IndexCurve/JPY-LIBOR-6M/3/3Y", 871.03, -19.0907 },
-        { "4_Swap_JPY", "Down:IndexCurve/JPY-LIBOR-6M/4/5Y", 871.03, -3832.59 },
-        { "4_Swap_JPY", "Up:FXSpot/EURJPY/0/spot", 871.03, -8.62406 },
-        { "4_Swap_JPY", "Down:FXSpot/EURJPY/0/spot", 871.03, 8.79829 },
-        { "5_Swaption_EUR", "Up:DiscountCurve/EUR/6/10Y", 18027.1, -1.33793 },
-        { "5_Swaption_EUR", "Up:DiscountCurve/EUR/7/15Y", 18027.1, 0.197251 },
-        { "5_Swaption_EUR", "Up:DiscountCurve/EUR/8/20Y", 18027.1, 2.41317 },
-        { "5_Swaption_EUR", "Down:DiscountCurve/EUR/6/10Y", 18027.1, 1.33862 },
-        { "5_Swaption_EUR", "Down:DiscountCurve/EUR/7/15Y", 18027.1, -0.197718 },
-        { "5_Swaption_EUR", "Down:DiscountCurve/EUR/8/20Y", 18027.1, -2.41555 },
-        { "5_Swaption_EUR", "Up:IndexCurve/EUR-EURIBOR-6M/6/10Y", 18027.1, -266.802 },
-        { "5_Swaption_EUR", "Up:IndexCurve/EUR-EURIBOR-6M/7/15Y", 18027.1, 38.2821 },
-        { "5_Swaption_EUR", "Up:IndexCurve/EUR-EURIBOR-6M/8/20Y", 18027.1, 487.065 },
-        { "5_Swaption_EUR", "Down:IndexCurve/EUR-EURIBOR-6M/6/10Y", 18027.1, 268.413 },
-        { "5_Swaption_EUR", "Down:IndexCurve/EUR-EURIBOR-6M/7/15Y", 18027.1, -38.1352 },
-        { "5_Swaption_EUR", "Down:IndexCurve/EUR-EURIBOR-6M/8/20Y", 18027.1, -481.778 },
-        { "5_Swaption_EUR", "Up:SwaptionVolatility/EUR/5/10Y/10Y/ATM", 18027.1, 357.634 },
-        { "5_Swaption_EUR", "Down:SwaptionVolatility/EUR/5/10Y/10Y/ATM", 18027.1, -356.596 },
-        { "6_Swaption_EUR", "Up:DiscountCurve/EUR/2/2Y", 1156.84, -0.0976825 },
-        { "6_Swaption_EUR", "Up:DiscountCurve/EUR/3/3Y", 1156.84, 0.00251532 },
-        { "6_Swaption_EUR", "Up:DiscountCurve/EUR/4/5Y", 1156.84, 0.00988176 },
-        { "6_Swaption_EUR", "Up:DiscountCurve/EUR/5/7Y", 1156.84, 0.320953 },
-        { "6_Swaption_EUR", "Up:DiscountCurve/EUR/6/10Y", 1156.84, 0.00247921 },
-        { "6_Swaption_EUR", "Down:DiscountCurve/EUR/2/2Y", 1156.84, 0.0976982 },
-        { "6_Swaption_EUR", "Down:DiscountCurve/EUR/3/3Y", 1156.84, -0.00254931 },
-        { "6_Swaption_EUR", "Down:DiscountCurve/EUR/4/5Y", 1156.84, -0.00993997 },
-        { "6_Swaption_EUR", "Down:DiscountCurve/EUR/5/7Y", 1156.84, -0.321034 },
-        { "6_Swaption_EUR", "Down:DiscountCurve/EUR/6/10Y", 1156.84, -0.00247921 },
-        { "6_Swaption_EUR", "Up:IndexCurve/EUR-EURIBOR-6M/2/2Y", 1156.84, -19.525 },
-        { "6_Swaption_EUR", "Up:IndexCurve/EUR-EURIBOR-6M/3/3Y", 1156.84, 0.809505 },
-        { "6_Swaption_EUR", "Up:IndexCurve/EUR-EURIBOR-6M/4/5Y", 1156.84, 1.79161 },
-        { "6_Swaption_EUR", "Up:IndexCurve/EUR-EURIBOR-6M/5/7Y", 1156.84, 65.6802 },
-        { "6_Swaption_EUR", "Up:IndexCurve/EUR-EURIBOR-6M/6/10Y", 1156.84, 0.248765 },
-        { "6_Swaption_EUR", "Down:IndexCurve/EUR-EURIBOR-6M/2/2Y", 1156.84, 19.7717 },
-        { "6_Swaption_EUR", "Down:IndexCurve/EUR-EURIBOR-6M/3/3Y", 1156.84, -0.80235 },
-        { "6_Swaption_EUR", "Down:IndexCurve/EUR-EURIBOR-6M/4/5Y", 1156.84, -1.77773 },
-        { "6_Swaption_EUR", "Down:IndexCurve/EUR-EURIBOR-6M/5/7Y", 1156.84, -63.0435 },
-        { "6_Swaption_EUR", "Down:IndexCurve/EUR-EURIBOR-6M/6/10Y", 1156.84, -0.248725 },
-        { "6_Swaption_EUR", "Up:SwaptionVolatility/EUR/0/2Y/5Y/ATM", 1156.84, 47.3455 },
-        { "6_Swaption_EUR", "Up:SwaptionVolatility/EUR/2/5Y/5Y/ATM", 1156.84, 0.0858115 },
-        { "6_Swaption_EUR", "Down:SwaptionVolatility/EUR/0/2Y/5Y/ATM", 1156.84, -46.4415 },
-        { "6_Swaption_EUR", "Down:SwaptionVolatility/EUR/2/5Y/5Y/ATM", 1156.84, -0.0858084 },
-        { "7_FxOption_EUR_USD", "Up:DiscountCurve/EUR/3/3Y", 1.36968e+06, -2107.81 },
-        { "7_FxOption_EUR_USD", "Up:DiscountCurve/EUR/4/5Y", 1.36968e+06, -3.85768 },
-        { "7_FxOption_EUR_USD", "Up:DiscountCurve/USD/3/3Y", 1.36968e+06, 1698.91 },
-        { "7_FxOption_EUR_USD", "Up:DiscountCurve/USD/4/5Y", 1.36968e+06, 3.10717 },
-        { "7_FxOption_EUR_USD", "Down:DiscountCurve/EUR/3/3Y", 1.36968e+06, 2109.74 },
-        { "7_FxOption_EUR_USD", "Down:DiscountCurve/EUR/4/5Y", 1.36968e+06, 3.85768 },
-        { "7_FxOption_EUR_USD", "Down:DiscountCurve/USD/3/3Y", 1.36968e+06, -1698.12 },
-        { "7_FxOption_EUR_USD", "Down:DiscountCurve/USD/4/5Y", 1.36968e+06, -3.10717 },
-        { "7_FxOption_EUR_USD", "Up:FXSpot/EURUSD/0/spot", 1.36968e+06, 56850.7 },
-        { "7_FxOption_EUR_USD", "Down:FXSpot/EURUSD/0/spot", 1.36968e+06, -56537.6 },
-        { "7_FxOption_EUR_USD", "Up:FXVolatility/EURUSD/0/5Y/ATM", 1.36968e+06, 672236 },
-        { "7_FxOption_EUR_USD", "Down:FXVolatility/EURUSD/0/5Y/ATM", 1.36968e+06, -329688 },
-        { "8_FxOption_EUR_GBP", "Up:DiscountCurve/EUR/5/7Y", 798336, -2435.22 },
-        { "8_FxOption_EUR_GBP", "Up:DiscountCurve/GBP/5/7Y", 798336, 1880.89 },
-        { "8_FxOption_EUR_GBP", "Down:DiscountCurve/EUR/5/7Y", 798336, 2441.08 },
-        { "8_FxOption_EUR_GBP", "Down:DiscountCurve/GBP/5/7Y", 798336, -1878.05 },
-        { "8_FxOption_EUR_GBP", "Up:FXSpot/EURGBP/0/spot", 798336, 27009.9 },
-        { "8_FxOption_EUR_GBP", "Down:FXSpot/EURGBP/0/spot", 798336, -26700.2 },
-        { "8_FxOption_EUR_GBP", "Up:FXVolatility/EURGBP/0/5Y/ATM", 798336, 1.36635e+06 },
-        { "8_FxOption_EUR_GBP", "Down:FXVolatility/EURGBP/0/5Y/ATM", 798336, -798336 },
-        { "9_Cap_EUR", "Up:DiscountCurve/EUR/2/2Y", 289.105, -7.28588e-07 },
-        { "9_Cap_EUR", "Up:DiscountCurve/EUR/3/3Y", 289.105, -0.000381869 },
-        { "9_Cap_EUR", "Up:DiscountCurve/EUR/4/5Y", 289.105, -0.00790528 },
-        { "9_Cap_EUR", "Up:DiscountCurve/EUR/5/7Y", 289.105, -0.0764893 },
-        { "9_Cap_EUR", "Up:DiscountCurve/EUR/6/10Y", 289.105, -0.162697 },
-        { "9_Cap_EUR", "Down:DiscountCurve/EUR/2/2Y", 289.105, 7.28664e-07 },
-        { "9_Cap_EUR", "Down:DiscountCurve/EUR/3/3Y", 289.105, 0.000381934 },
-        { "9_Cap_EUR", "Down:DiscountCurve/EUR/4/5Y", 289.105, 0.00790776 },
-        { "9_Cap_EUR", "Down:DiscountCurve/EUR/5/7Y", 289.105, 0.0765231 },
-        { "9_Cap_EUR", "Down:DiscountCurve/EUR/6/10Y", 289.105, 0.162824 },
-        { "9_Cap_EUR", "Up:IndexCurve/EUR-EURIBOR-6M/1/1Y", 289.105, -1.81582e-05 },
-        { "9_Cap_EUR", "Up:IndexCurve/EUR-EURIBOR-6M/2/2Y", 289.105, -0.00670729 },
-        { "9_Cap_EUR", "Up:IndexCurve/EUR-EURIBOR-6M/3/3Y", 289.105, -0.330895 },
-        { "9_Cap_EUR", "Up:IndexCurve/EUR-EURIBOR-6M/4/5Y", 289.105, -2.03937 },
-        { "9_Cap_EUR", "Up:IndexCurve/EUR-EURIBOR-6M/5/7Y", 289.105, -6.42991 },
-        { "9_Cap_EUR", "Up:IndexCurve/EUR-EURIBOR-6M/6/10Y", 289.105, 15.5182 },
-        { "9_Cap_EUR", "Down:IndexCurve/EUR-EURIBOR-6M/1/1Y", 289.105, 1.97218e-05 },
-        { "9_Cap_EUR", "Down:IndexCurve/EUR-EURIBOR-6M/2/2Y", 289.105, 0.00746096 },
-        { "9_Cap_EUR", "Down:IndexCurve/EUR-EURIBOR-6M/3/3Y", 289.105, 0.353405 },
-        { "9_Cap_EUR", "Down:IndexCurve/EUR-EURIBOR-6M/4/5Y", 289.105, 2.24481 },
-        { "9_Cap_EUR", "Down:IndexCurve/EUR-EURIBOR-6M/5/7Y", 289.105, 7.1522 },
-        { "9_Cap_EUR", "Down:IndexCurve/EUR-EURIBOR-6M/6/10Y", 289.105, -14.6675 },
-        { "9_Cap_EUR", "Up:OptionletVolatility/EUR/4/1Y/0.05", 289.105, 8.49293e-05 },
-        { "9_Cap_EUR", "Up:OptionletVolatility/EUR/9/2Y/0.05", 289.105, 0.0150901 },
-        { "9_Cap_EUR", "Up:OptionletVolatility/EUR/14/3Y/0.05", 289.105, 0.620393 },
-        { "9_Cap_EUR", "Up:OptionletVolatility/EUR/19/5Y/0.05", 289.105, 17.2057 },
-        { "9_Cap_EUR", "Up:OptionletVolatility/EUR/24/10Y/0.05", 289.105, 24.4267 },
-        { "9_Cap_EUR", "Down:OptionletVolatility/EUR/4/1Y/0.05", 289.105, -6.97789e-05 },
-        { "9_Cap_EUR", "Down:OptionletVolatility/EUR/9/2Y/0.05", 289.105, -0.0125099 },
-        { "9_Cap_EUR", "Down:OptionletVolatility/EUR/14/3Y/0.05", 289.105, -0.554344 },
-        { "9_Cap_EUR", "Down:OptionletVolatility/EUR/19/5Y/0.05", 289.105, -16.1212 },
-        { "9_Cap_EUR", "Down:OptionletVolatility/EUR/24/10Y/0.05", 289.105, -23.0264 },
-        { "10_Floor_USD", "Up:DiscountCurve/USD/0/6M", 3406.46, -7.03494e-09 },
-        { "10_Floor_USD", "Up:DiscountCurve/USD/1/1Y", 3406.46, -8.41429e-05 },
-        { "10_Floor_USD", "Up:DiscountCurve/USD/2/2Y", 3406.46, -0.00329744 },
-        { "10_Floor_USD", "Up:DiscountCurve/USD/3/3Y", 3406.46, -0.053884 },
-        { "10_Floor_USD", "Up:DiscountCurve/USD/4/5Y", 3406.46, -0.269714 },
-        { "10_Floor_USD", "Up:DiscountCurve/USD/5/7Y", 3406.46, -0.989583 },
-        { "10_Floor_USD", "Up:DiscountCurve/USD/6/10Y", 3406.46, -1.26544 },
-        { "10_Floor_USD", "Down:DiscountCurve/USD/0/6M", 3406.46, 7.0354e-09 },
-        { "10_Floor_USD", "Down:DiscountCurve/USD/1/1Y", 3406.46, 8.41464e-05 },
-        { "10_Floor_USD", "Down:DiscountCurve/USD/2/2Y", 3406.46, 0.00329786 },
-        { "10_Floor_USD", "Down:DiscountCurve/USD/3/3Y", 3406.46, 0.0538949 },
-        { "10_Floor_USD", "Down:DiscountCurve/USD/4/5Y", 3406.46, 0.269802 },
-        { "10_Floor_USD", "Down:DiscountCurve/USD/5/7Y", 3406.46, 0.990038 },
-        { "10_Floor_USD", "Down:DiscountCurve/USD/6/10Y", 3406.46, 1.26635 },
-        { "10_Floor_USD", "Up:IndexCurve/USD-LIBOR-3M/0/6M", 3406.46, 0.00150733 },
-        { "10_Floor_USD", "Up:IndexCurve/USD-LIBOR-3M/1/1Y", 3406.46, 0.240284 },
-        { "10_Floor_USD", "Up:IndexCurve/USD-LIBOR-3M/2/2Y", 3406.46, 2.17175 },
-        { "10_Floor_USD", "Up:IndexCurve/USD-LIBOR-3M/3/3Y", 3406.46, 7.77249 },
-        { "10_Floor_USD", "Up:IndexCurve/USD-LIBOR-3M/4/5Y", 3406.46, 12.9642 },
-        { "10_Floor_USD", "Up:IndexCurve/USD-LIBOR-3M/5/7Y", 3406.46, 16.8269 },
-        { "10_Floor_USD", "Up:IndexCurve/USD-LIBOR-3M/6/10Y", 3406.46, -81.4363 },
-        { "10_Floor_USD", "Down:IndexCurve/USD-LIBOR-3M/0/6M", 3406.46, -0.00139804 },
-        { "10_Floor_USD", "Down:IndexCurve/USD-LIBOR-3M/1/1Y", 3406.46, -0.230558 },
-        { "10_Floor_USD", "Down:IndexCurve/USD-LIBOR-3M/2/2Y", 3406.46, -2.00123 },
-        { "10_Floor_USD", "Down:IndexCurve/USD-LIBOR-3M/3/3Y", 3406.46, -7.14862 },
-        { "10_Floor_USD", "Down:IndexCurve/USD-LIBOR-3M/4/5Y", 3406.46, -11.2003 },
-        { "10_Floor_USD", "Down:IndexCurve/USD-LIBOR-3M/5/7Y", 3406.46, -13.7183 },
-        { "10_Floor_USD", "Down:IndexCurve/USD-LIBOR-3M/6/10Y", 3406.46, 84.0113 },
-        { "10_Floor_USD", "Up:FXSpot/EURUSD/0/spot", 3406.46, -33.7273 },
-        { "10_Floor_USD", "Down:FXSpot/EURUSD/0/spot", 3406.46, 34.4087 },
-        { "10_Floor_USD", "Up:OptionletVolatility/USD/0/1Y/0.01", 3406.46, 0.402913 },
-        { "10_Floor_USD", "Up:OptionletVolatility/USD/5/2Y/0.01", 3406.46, 3.32861 },
-        { "10_Floor_USD", "Up:OptionletVolatility/USD/10/3Y/0.01", 3406.46, 16.8798 },
-        { "10_Floor_USD", "Up:OptionletVolatility/USD/15/5Y/0.01", 3406.46, 96.415 },
-        { "10_Floor_USD", "Up:OptionletVolatility/USD/20/10Y/0.01", 3406.46, 92.2212 },
-        { "10_Floor_USD", "Down:OptionletVolatility/USD/0/1Y/0.01", 3406.46, -0.37428 },
-        { "10_Floor_USD", "Down:OptionletVolatility/USD/5/2Y/0.01", 3406.46, -3.14445 },
-        { "10_Floor_USD", "Down:OptionletVolatility/USD/10/3Y/0.01", 3406.46, -16.3074 },
-        { "10_Floor_USD", "Down:OptionletVolatility/USD/15/5Y/0.01", 3406.46, -94.5309 },
-        { "10_Floor_USD", "Down:OptionletVolatility/USD/20/10Y/0.01", 3406.46, -90.9303 },
+        {"1_Swap_EUR", "Up:DiscountCurve/EUR/0/6M", -928826, -2.51631},
+        {"1_Swap_EUR", "Up:DiscountCurve/EUR/1/1Y", -928826, 14.6846},
+        {"1_Swap_EUR", "Up:DiscountCurve/EUR/2/2Y", -928826, 19.0081},
+        {"1_Swap_EUR", "Up:DiscountCurve/EUR/3/3Y", -928826, 46.1186},
+        {"1_Swap_EUR", "Up:DiscountCurve/EUR/4/5Y", -928826, 85.1033},
+        {"1_Swap_EUR", "Up:DiscountCurve/EUR/5/7Y", -928826, 149.43},
+        {"1_Swap_EUR", "Up:DiscountCurve/EUR/6/10Y", -928826, 205.064},
+        {"1_Swap_EUR", "Down:DiscountCurve/EUR/0/6M", -928826, 2.51644},
+        {"1_Swap_EUR", "Down:DiscountCurve/EUR/1/1Y", -928826, -14.6863},
+        {"1_Swap_EUR", "Down:DiscountCurve/EUR/2/2Y", -928826, -19.0137},
+        {"1_Swap_EUR", "Down:DiscountCurve/EUR/3/3Y", -928826, -46.1338},
+        {"1_Swap_EUR", "Down:DiscountCurve/EUR/4/5Y", -928826, -85.1406},
+        {"1_Swap_EUR", "Down:DiscountCurve/EUR/5/7Y", -928826, -149.515},
+        {"1_Swap_EUR", "Down:DiscountCurve/EUR/6/10Y", -928826, -205.239},
+        {"1_Swap_EUR", "Up:IndexCurve/EUR-EURIBOR-6M/0/6M", -928826, -495.013},
+        {"1_Swap_EUR", "Up:IndexCurve/EUR-EURIBOR-6M/1/1Y", -928826, 14.7304},
+        {"1_Swap_EUR", "Up:IndexCurve/EUR-EURIBOR-6M/2/2Y", -928826, 38.7816},
+        {"1_Swap_EUR", "Up:IndexCurve/EUR-EURIBOR-6M/3/3Y", -928826, 94.186},
+        {"1_Swap_EUR", "Up:IndexCurve/EUR-EURIBOR-6M/4/5Y", -928826, 173.125},
+        {"1_Swap_EUR", "Up:IndexCurve/EUR-EURIBOR-6M/5/7Y", -928826, 304.648},
+        {"1_Swap_EUR", "Up:IndexCurve/EUR-EURIBOR-6M/6/10Y", -928826, 8479.55},
+        {"1_Swap_EUR", "Down:IndexCurve/EUR-EURIBOR-6M/0/6M", -928826, 495.037},
+        {"1_Swap_EUR", "Down:IndexCurve/EUR-EURIBOR-6M/1/1Y", -928826, -14.5864},
+        {"1_Swap_EUR", "Down:IndexCurve/EUR-EURIBOR-6M/2/2Y", -928826, -38.4045},
+        {"1_Swap_EUR", "Down:IndexCurve/EUR-EURIBOR-6M/3/3Y", -928826, -93.532},
+        {"1_Swap_EUR", "Down:IndexCurve/EUR-EURIBOR-6M/4/5Y", -928826, -171.969},
+        {"1_Swap_EUR", "Down:IndexCurve/EUR-EURIBOR-6M/5/7Y", -928826, -302.864},
+        {"1_Swap_EUR", "Down:IndexCurve/EUR-EURIBOR-6M/6/10Y", -928826, -8478.14},
+        {"2_Swap_USD", "Up:DiscountCurve/USD/0/6M", 980404, -1.04797},
+        {"2_Swap_USD", "Up:DiscountCurve/USD/1/1Y", 980404, -6.06931},
+        {"2_Swap_USD", "Up:DiscountCurve/USD/2/2Y", 980404, -15.8605},
+        {"2_Swap_USD", "Up:DiscountCurve/USD/3/3Y", 980404, -38.0708},
+        {"2_Swap_USD", "Up:DiscountCurve/USD/4/5Y", 980404, -68.7288},
+        {"2_Swap_USD", "Up:DiscountCurve/USD/5/7Y", 980404, -118.405},
+        {"2_Swap_USD", "Up:DiscountCurve/USD/6/10Y", 980404, -244.946},
+        {"2_Swap_USD", "Up:DiscountCurve/USD/7/15Y", 980404, -202.226},
+        {"2_Swap_USD", "Up:DiscountCurve/USD/8/20Y", 980404, 0.0148314},
+        {"2_Swap_USD", "Down:DiscountCurve/USD/0/6M", 980404, 1.04797},
+        {"2_Swap_USD", "Down:DiscountCurve/USD/1/1Y", 980404, 6.06959},
+        {"2_Swap_USD", "Down:DiscountCurve/USD/2/2Y", 980404, 15.8623},
+        {"2_Swap_USD", "Down:DiscountCurve/USD/3/3Y", 980404, 38.0784},
+        {"2_Swap_USD", "Down:DiscountCurve/USD/4/5Y", 980404, 68.7502},
+        {"2_Swap_USD", "Down:DiscountCurve/USD/5/7Y", 980404, 118.458},
+        {"2_Swap_USD", "Down:DiscountCurve/USD/6/10Y", 980404, 245.108},
+        {"2_Swap_USD", "Down:DiscountCurve/USD/7/15Y", 980404, 202.42},
+        {"2_Swap_USD", "Down:DiscountCurve/USD/8/20Y", 980404, -0.0148314},
+        {"2_Swap_USD", "Up:IndexCurve/USD-LIBOR-3M/0/6M", 980404, -201.015},
+        {"2_Swap_USD", "Up:IndexCurve/USD-LIBOR-3M/1/1Y", 980404, 18.134},
+        {"2_Swap_USD", "Up:IndexCurve/USD-LIBOR-3M/2/2Y", 980404, 47.3066},
+        {"2_Swap_USD", "Up:IndexCurve/USD-LIBOR-3M/3/3Y", 980404, 113.4},
+        {"2_Swap_USD", "Up:IndexCurve/USD-LIBOR-3M/4/5Y", 980404, 205.068},
+        {"2_Swap_USD", "Up:IndexCurve/USD-LIBOR-3M/5/7Y", 980404, 352.859},
+        {"2_Swap_USD", "Up:IndexCurve/USD-LIBOR-3M/6/10Y", 980404, 730.076},
+        {"2_Swap_USD", "Up:IndexCurve/USD-LIBOR-3M/7/15Y", 980404, 8626.78},
+        {"2_Swap_USD", "Up:IndexCurve/USD-LIBOR-3M/8/20Y", 980404, 5.86437},
+        {"2_Swap_USD", "Down:IndexCurve/USD-LIBOR-3M/0/6M", 980404, 201.03},
+        {"2_Swap_USD", "Down:IndexCurve/USD-LIBOR-3M/1/1Y", 980404, -18.0746},
+        {"2_Swap_USD", "Down:IndexCurve/USD-LIBOR-3M/2/2Y", 980404, -47.1526},
+        {"2_Swap_USD", "Down:IndexCurve/USD-LIBOR-3M/3/3Y", 980404, -113.136},
+        {"2_Swap_USD", "Down:IndexCurve/USD-LIBOR-3M/4/5Y", 980404, -204.611},
+        {"2_Swap_USD", "Down:IndexCurve/USD-LIBOR-3M/5/7Y", 980404, -352.166},
+        {"2_Swap_USD", "Down:IndexCurve/USD-LIBOR-3M/6/10Y", 980404, -729.248},
+        {"2_Swap_USD", "Down:IndexCurve/USD-LIBOR-3M/7/15Y", 980404, -8626.13},
+        {"2_Swap_USD", "Down:IndexCurve/USD-LIBOR-3M/8/20Y", 980404, -5.86436},
+        {"2_Swap_USD", "Up:FXSpot/EURUSD/0/spot", 980404, -9706.97},
+        {"2_Swap_USD", "Down:FXSpot/EURUSD/0/spot", 980404, 9903.07},
+        {"3_Swap_GBP", "Up:DiscountCurve/GBP/0/6M", 69795.3, 2.12392},
+        {"3_Swap_GBP", "Up:DiscountCurve/GBP/1/1Y", 69795.3, -0.646097},
+        {"3_Swap_GBP", "Up:DiscountCurve/GBP/2/2Y", 69795.3, -1.75066},
+        {"3_Swap_GBP", "Up:DiscountCurve/GBP/3/3Y", 69795.3, -4.24827},
+        {"3_Swap_GBP", "Up:DiscountCurve/GBP/4/5Y", 69795.3, -7.2252},
+        {"3_Swap_GBP", "Up:DiscountCurve/GBP/5/7Y", 69795.3, -12.5287},
+        {"3_Swap_GBP", "Up:DiscountCurve/GBP/6/10Y", 69795.3, -24.7828},
+        {"3_Swap_GBP", "Up:DiscountCurve/GBP/7/15Y", 69795.3, -39.2456},
+        {"3_Swap_GBP", "Up:DiscountCurve/GBP/8/20Y", 69795.3, 31.2081},
+        {"3_Swap_GBP", "Down:DiscountCurve/GBP/0/6M", 69795.3, -2.12413},
+        {"3_Swap_GBP", "Down:DiscountCurve/GBP/1/1Y", 69795.3, 0.645698},
+        {"3_Swap_GBP", "Down:DiscountCurve/GBP/2/2Y", 69795.3, 1.74981},
+        {"3_Swap_GBP", "Down:DiscountCurve/GBP/3/3Y", 69795.3, 4.2473},
+        {"3_Swap_GBP", "Down:DiscountCurve/GBP/4/5Y", 69795.3, 7.22426},
+        {"3_Swap_GBP", "Down:DiscountCurve/GBP/5/7Y", 69795.3, 12.5298},
+        {"3_Swap_GBP", "Down:DiscountCurve/GBP/6/10Y", 69795.3, 24.7939},
+        {"3_Swap_GBP", "Down:DiscountCurve/GBP/7/15Y", 69795.3, 39.2773},
+        {"3_Swap_GBP", "Down:DiscountCurve/GBP/8/20Y", 69795.3, -31.2925},
+        {"3_Swap_GBP", "Up:IndexCurve/GBP-LIBOR-6M/0/6M", 69795.3, -308.49},
+        {"3_Swap_GBP", "Up:IndexCurve/GBP-LIBOR-6M/1/1Y", 69795.3, 68.819},
+        {"3_Swap_GBP", "Up:IndexCurve/GBP-LIBOR-6M/2/2Y", 69795.3, 81.3735},
+        {"3_Swap_GBP", "Up:IndexCurve/GBP-LIBOR-6M/3/3Y", 69795.3, 239.034},
+        {"3_Swap_GBP", "Up:IndexCurve/GBP-LIBOR-6M/4/5Y", 69795.3, 372.209},
+        {"3_Swap_GBP", "Up:IndexCurve/GBP-LIBOR-6M/5/7Y", 69795.3, 654.949},
+        {"3_Swap_GBP", "Up:IndexCurve/GBP-LIBOR-6M/6/10Y", 69795.3, 1343.01},
+        {"3_Swap_GBP", "Up:IndexCurve/GBP-LIBOR-6M/7/15Y", 69795.3, 2139.68},
+        {"3_Swap_GBP", "Up:IndexCurve/GBP-LIBOR-6M/8/20Y", 69795.3, 12633.8},
+        {"3_Swap_GBP", "Down:IndexCurve/GBP-LIBOR-6M/0/6M", 69795.3, 308.513},
+        {"3_Swap_GBP", "Down:IndexCurve/GBP-LIBOR-6M/1/1Y", 69795.3, -68.7287},
+        {"3_Swap_GBP", "Down:IndexCurve/GBP-LIBOR-6M/2/2Y", 69795.3, -81.1438},
+        {"3_Swap_GBP", "Down:IndexCurve/GBP-LIBOR-6M/3/3Y", 69795.3, -238.649},
+        {"3_Swap_GBP", "Down:IndexCurve/GBP-LIBOR-6M/4/5Y", 69795.3, -371.553},
+        {"3_Swap_GBP", "Down:IndexCurve/GBP-LIBOR-6M/5/7Y", 69795.3, -653.972},
+        {"3_Swap_GBP", "Down:IndexCurve/GBP-LIBOR-6M/6/10Y", 69795.3, -1341.88},
+        {"3_Swap_GBP", "Down:IndexCurve/GBP-LIBOR-6M/7/15Y", 69795.3, -2138.11},
+        {"3_Swap_GBP", "Down:IndexCurve/GBP-LIBOR-6M/8/20Y", 69795.3, -12632.5},
+        {"3_Swap_GBP", "Up:FXSpot/EURGBP/0/spot", 69795.3, -691.043},
+        {"3_Swap_GBP", "Down:FXSpot/EURGBP/0/spot", 69795.3, 705.003},
+        {"4_Swap_JPY", "Up:DiscountCurve/JPY/0/6M", 871.03, -0.00750246},
+        {"4_Swap_JPY", "Up:DiscountCurve/JPY/1/1Y", 871.03, -0.00147994},
+        {"4_Swap_JPY", "Up:DiscountCurve/JPY/2/2Y", 871.03, -0.020079},
+        {"4_Swap_JPY", "Up:DiscountCurve/JPY/3/3Y", 871.03, -0.0667249},
+        {"4_Swap_JPY", "Up:DiscountCurve/JPY/4/5Y", 871.03, 4.75708},
+        {"4_Swap_JPY", "Down:DiscountCurve/JPY/0/6M", 871.03, 0.00747801},
+        {"4_Swap_JPY", "Down:DiscountCurve/JPY/1/1Y", 871.03, 0.00140807},
+        {"4_Swap_JPY", "Down:DiscountCurve/JPY/2/2Y", 871.03, 0.0199001},
+        {"4_Swap_JPY", "Down:DiscountCurve/JPY/3/3Y", 871.03, 0.0664106},
+        {"4_Swap_JPY", "Down:DiscountCurve/JPY/4/5Y", 871.03, -4.75978},
+        {"4_Swap_JPY", "Up:IndexCurve/JPY-LIBOR-6M/0/6M", 871.03, -193.514},
+        {"4_Swap_JPY", "Up:IndexCurve/JPY-LIBOR-6M/1/1Y", 871.03, 2.95767},
+        {"4_Swap_JPY", "Up:IndexCurve/JPY-LIBOR-6M/2/2Y", 871.03, 7.81453},
+        {"4_Swap_JPY", "Up:IndexCurve/JPY-LIBOR-6M/3/3Y", 871.03, 19.3576},
+        {"4_Swap_JPY", "Up:IndexCurve/JPY-LIBOR-6M/4/5Y", 871.03, 3832.83},
+        {"4_Swap_JPY", "Down:IndexCurve/JPY-LIBOR-6M/0/6M", 871.03, 193.528},
+        {"4_Swap_JPY", "Down:IndexCurve/JPY-LIBOR-6M/1/1Y", 871.03, -2.90067},
+        {"4_Swap_JPY", "Down:IndexCurve/JPY-LIBOR-6M/2/2Y", 871.03, -7.6631},
+        {"4_Swap_JPY", "Down:IndexCurve/JPY-LIBOR-6M/3/3Y", 871.03, -19.0907},
+        {"4_Swap_JPY", "Down:IndexCurve/JPY-LIBOR-6M/4/5Y", 871.03, -3832.59},
+        {"4_Swap_JPY", "Up:FXSpot/EURJPY/0/spot", 871.03, -8.62406},
+        {"4_Swap_JPY", "Down:FXSpot/EURJPY/0/spot", 871.03, 8.79829},
+        {"5_Swaption_EUR", "Up:DiscountCurve/EUR/6/10Y", 18027.1, -1.33793},
+        {"5_Swaption_EUR", "Up:DiscountCurve/EUR/7/15Y", 18027.1, 0.197251},
+        {"5_Swaption_EUR", "Up:DiscountCurve/EUR/8/20Y", 18027.1, 2.41317},
+        {"5_Swaption_EUR", "Down:DiscountCurve/EUR/6/10Y", 18027.1, 1.33862},
+        {"5_Swaption_EUR", "Down:DiscountCurve/EUR/7/15Y", 18027.1, -0.197718},
+        {"5_Swaption_EUR", "Down:DiscountCurve/EUR/8/20Y", 18027.1, -2.41555},
+        {"5_Swaption_EUR", "Up:IndexCurve/EUR-EURIBOR-6M/6/10Y", 18027.1, -266.802},
+        {"5_Swaption_EUR", "Up:IndexCurve/EUR-EURIBOR-6M/7/15Y", 18027.1, 38.2821},
+        {"5_Swaption_EUR", "Up:IndexCurve/EUR-EURIBOR-6M/8/20Y", 18027.1, 487.065},
+        {"5_Swaption_EUR", "Down:IndexCurve/EUR-EURIBOR-6M/6/10Y", 18027.1, 268.413},
+        {"5_Swaption_EUR", "Down:IndexCurve/EUR-EURIBOR-6M/7/15Y", 18027.1, -38.1352},
+        {"5_Swaption_EUR", "Down:IndexCurve/EUR-EURIBOR-6M/8/20Y", 18027.1, -481.778},
+        {"5_Swaption_EUR", "Up:SwaptionVolatility/EUR/5/10Y/10Y/ATM", 18027.1, 357.634},
+        {"5_Swaption_EUR", "Down:SwaptionVolatility/EUR/5/10Y/10Y/ATM", 18027.1, -356.596},
+        {"6_Swaption_EUR", "Up:DiscountCurve/EUR/2/2Y", 1156.84, -0.0976825},
+        {"6_Swaption_EUR", "Up:DiscountCurve/EUR/3/3Y", 1156.84, 0.00251532},
+        {"6_Swaption_EUR", "Up:DiscountCurve/EUR/4/5Y", 1156.84, 0.00988176},
+        {"6_Swaption_EUR", "Up:DiscountCurve/EUR/5/7Y", 1156.84, 0.320953},
+        {"6_Swaption_EUR", "Up:DiscountCurve/EUR/6/10Y", 1156.84, 0.00247921},
+        {"6_Swaption_EUR", "Down:DiscountCurve/EUR/2/2Y", 1156.84, 0.0976982},
+        {"6_Swaption_EUR", "Down:DiscountCurve/EUR/3/3Y", 1156.84, -0.00254931},
+        {"6_Swaption_EUR", "Down:DiscountCurve/EUR/4/5Y", 1156.84, -0.00993997},
+        {"6_Swaption_EUR", "Down:DiscountCurve/EUR/5/7Y", 1156.84, -0.321034},
+        {"6_Swaption_EUR", "Down:DiscountCurve/EUR/6/10Y", 1156.84, -0.00247921},
+        {"6_Swaption_EUR", "Up:IndexCurve/EUR-EURIBOR-6M/2/2Y", 1156.84, -19.525},
+        {"6_Swaption_EUR", "Up:IndexCurve/EUR-EURIBOR-6M/3/3Y", 1156.84, 0.809505},
+        {"6_Swaption_EUR", "Up:IndexCurve/EUR-EURIBOR-6M/4/5Y", 1156.84, 1.79161},
+        {"6_Swaption_EUR", "Up:IndexCurve/EUR-EURIBOR-6M/5/7Y", 1156.84, 65.6802},
+        {"6_Swaption_EUR", "Up:IndexCurve/EUR-EURIBOR-6M/6/10Y", 1156.84, 0.248765},
+        {"6_Swaption_EUR", "Down:IndexCurve/EUR-EURIBOR-6M/2/2Y", 1156.84, 19.7717},
+        {"6_Swaption_EUR", "Down:IndexCurve/EUR-EURIBOR-6M/3/3Y", 1156.84, -0.80235},
+        {"6_Swaption_EUR", "Down:IndexCurve/EUR-EURIBOR-6M/4/5Y", 1156.84, -1.77773},
+        {"6_Swaption_EUR", "Down:IndexCurve/EUR-EURIBOR-6M/5/7Y", 1156.84, -63.0435},
+        {"6_Swaption_EUR", "Down:IndexCurve/EUR-EURIBOR-6M/6/10Y", 1156.84, -0.248725},
+        {"6_Swaption_EUR", "Up:SwaptionVolatility/EUR/0/2Y/5Y/ATM", 1156.84, 47.3455},
+        {"6_Swaption_EUR", "Up:SwaptionVolatility/EUR/2/5Y/5Y/ATM", 1156.84, 0.0858115},
+        {"6_Swaption_EUR", "Down:SwaptionVolatility/EUR/0/2Y/5Y/ATM", 1156.84, -46.4415},
+        {"6_Swaption_EUR", "Down:SwaptionVolatility/EUR/2/5Y/5Y/ATM", 1156.84, -0.0858084},
+        {"7_FxOption_EUR_USD", "Up:DiscountCurve/EUR/3/3Y", 1.36968e+06, -2107.81},
+        {"7_FxOption_EUR_USD", "Up:DiscountCurve/EUR/4/5Y", 1.36968e+06, -3.85768},
+        {"7_FxOption_EUR_USD", "Up:DiscountCurve/USD/3/3Y", 1.36968e+06, 1698.91},
+        {"7_FxOption_EUR_USD", "Up:DiscountCurve/USD/4/5Y", 1.36968e+06, 3.10717},
+        {"7_FxOption_EUR_USD", "Down:DiscountCurve/EUR/3/3Y", 1.36968e+06, 2109.74},
+        {"7_FxOption_EUR_USD", "Down:DiscountCurve/EUR/4/5Y", 1.36968e+06, 3.85768},
+        {"7_FxOption_EUR_USD", "Down:DiscountCurve/USD/3/3Y", 1.36968e+06, -1698.12},
+        {"7_FxOption_EUR_USD", "Down:DiscountCurve/USD/4/5Y", 1.36968e+06, -3.10717},
+        {"7_FxOption_EUR_USD", "Up:FXSpot/EURUSD/0/spot", 1.36968e+06, 56850.7},
+        {"7_FxOption_EUR_USD", "Down:FXSpot/EURUSD/0/spot", 1.36968e+06, -56537.6},
+        {"7_FxOption_EUR_USD", "Up:FXVolatility/EURUSD/0/5Y/ATM", 1.36968e+06, 672236},
+        {"7_FxOption_EUR_USD", "Down:FXVolatility/EURUSD/0/5Y/ATM", 1.36968e+06, -329688},
+        {"8_FxOption_EUR_GBP", "Up:DiscountCurve/EUR/5/7Y", 798336, -2435.22},
+        {"8_FxOption_EUR_GBP", "Up:DiscountCurve/GBP/5/7Y", 798336, 1880.89},
+        {"8_FxOption_EUR_GBP", "Down:DiscountCurve/EUR/5/7Y", 798336, 2441.08},
+        {"8_FxOption_EUR_GBP", "Down:DiscountCurve/GBP/5/7Y", 798336, -1878.05},
+        {"8_FxOption_EUR_GBP", "Up:FXSpot/EURGBP/0/spot", 798336, 27009.9},
+        {"8_FxOption_EUR_GBP", "Down:FXSpot/EURGBP/0/spot", 798336, -26700.2},
+        {"8_FxOption_EUR_GBP", "Up:FXVolatility/EURGBP/0/5Y/ATM", 798336, 1.36635e+06},
+        {"8_FxOption_EUR_GBP", "Down:FXVolatility/EURGBP/0/5Y/ATM", 798336, -798336},
+        {"9_Cap_EUR", "Up:DiscountCurve/EUR/2/2Y", 289.105, -7.28588e-07},
+        {"9_Cap_EUR", "Up:DiscountCurve/EUR/3/3Y", 289.105, -0.000381869},
+        {"9_Cap_EUR", "Up:DiscountCurve/EUR/4/5Y", 289.105, -0.00790528},
+        {"9_Cap_EUR", "Up:DiscountCurve/EUR/5/7Y", 289.105, -0.0764893},
+        {"9_Cap_EUR", "Up:DiscountCurve/EUR/6/10Y", 289.105, -0.162697},
+        {"9_Cap_EUR", "Down:DiscountCurve/EUR/2/2Y", 289.105, 7.28664e-07},
+        {"9_Cap_EUR", "Down:DiscountCurve/EUR/3/3Y", 289.105, 0.000381934},
+        {"9_Cap_EUR", "Down:DiscountCurve/EUR/4/5Y", 289.105, 0.00790776},
+        {"9_Cap_EUR", "Down:DiscountCurve/EUR/5/7Y", 289.105, 0.0765231},
+        {"9_Cap_EUR", "Down:DiscountCurve/EUR/6/10Y", 289.105, 0.162824},
+        {"9_Cap_EUR", "Up:IndexCurve/EUR-EURIBOR-6M/1/1Y", 289.105, -1.81582e-05},
+        {"9_Cap_EUR", "Up:IndexCurve/EUR-EURIBOR-6M/2/2Y", 289.105, -0.00670729},
+        {"9_Cap_EUR", "Up:IndexCurve/EUR-EURIBOR-6M/3/3Y", 289.105, -0.330895},
+        {"9_Cap_EUR", "Up:IndexCurve/EUR-EURIBOR-6M/4/5Y", 289.105, -2.03937},
+        {"9_Cap_EUR", "Up:IndexCurve/EUR-EURIBOR-6M/5/7Y", 289.105, -6.42991},
+        {"9_Cap_EUR", "Up:IndexCurve/EUR-EURIBOR-6M/6/10Y", 289.105, 15.5182},
+        {"9_Cap_EUR", "Down:IndexCurve/EUR-EURIBOR-6M/1/1Y", 289.105, 1.97218e-05},
+        {"9_Cap_EUR", "Down:IndexCurve/EUR-EURIBOR-6M/2/2Y", 289.105, 0.00746096},
+        {"9_Cap_EUR", "Down:IndexCurve/EUR-EURIBOR-6M/3/3Y", 289.105, 0.353405},
+        {"9_Cap_EUR", "Down:IndexCurve/EUR-EURIBOR-6M/4/5Y", 289.105, 2.24481},
+        {"9_Cap_EUR", "Down:IndexCurve/EUR-EURIBOR-6M/5/7Y", 289.105, 7.1522},
+        {"9_Cap_EUR", "Down:IndexCurve/EUR-EURIBOR-6M/6/10Y", 289.105, -14.6675},
+        {"9_Cap_EUR", "Up:OptionletVolatility/EUR/4/1Y/0.05", 289.105, 8.49293e-05},
+        {"9_Cap_EUR", "Up:OptionletVolatility/EUR/9/2Y/0.05", 289.105, 0.0150901},
+        {"9_Cap_EUR", "Up:OptionletVolatility/EUR/14/3Y/0.05", 289.105, 0.620393},
+        {"9_Cap_EUR", "Up:OptionletVolatility/EUR/19/5Y/0.05", 289.105, 17.2057},
+        {"9_Cap_EUR", "Up:OptionletVolatility/EUR/24/10Y/0.05", 289.105, 24.4267},
+        {"9_Cap_EUR", "Down:OptionletVolatility/EUR/4/1Y/0.05", 289.105, -6.97789e-05},
+        {"9_Cap_EUR", "Down:OptionletVolatility/EUR/9/2Y/0.05", 289.105, -0.0125099},
+        {"9_Cap_EUR", "Down:OptionletVolatility/EUR/14/3Y/0.05", 289.105, -0.554344},
+        {"9_Cap_EUR", "Down:OptionletVolatility/EUR/19/5Y/0.05", 289.105, -16.1212},
+        {"9_Cap_EUR", "Down:OptionletVolatility/EUR/24/10Y/0.05", 289.105, -23.0264},
+        {"10_Floor_USD", "Up:DiscountCurve/USD/0/6M", 3406.46, -7.03494e-09},
+        {"10_Floor_USD", "Up:DiscountCurve/USD/1/1Y", 3406.46, -8.41429e-05},
+        {"10_Floor_USD", "Up:DiscountCurve/USD/2/2Y", 3406.46, -0.00329744},
+        {"10_Floor_USD", "Up:DiscountCurve/USD/3/3Y", 3406.46, -0.053884},
+        {"10_Floor_USD", "Up:DiscountCurve/USD/4/5Y", 3406.46, -0.269714},
+        {"10_Floor_USD", "Up:DiscountCurve/USD/5/7Y", 3406.46, -0.989583},
+        {"10_Floor_USD", "Up:DiscountCurve/USD/6/10Y", 3406.46, -1.26544},
+        {"10_Floor_USD", "Down:DiscountCurve/USD/0/6M", 3406.46, 7.0354e-09},
+        {"10_Floor_USD", "Down:DiscountCurve/USD/1/1Y", 3406.46, 8.41464e-05},
+        {"10_Floor_USD", "Down:DiscountCurve/USD/2/2Y", 3406.46, 0.00329786},
+        {"10_Floor_USD", "Down:DiscountCurve/USD/3/3Y", 3406.46, 0.0538949},
+        {"10_Floor_USD", "Down:DiscountCurve/USD/4/5Y", 3406.46, 0.269802},
+        {"10_Floor_USD", "Down:DiscountCurve/USD/5/7Y", 3406.46, 0.990038},
+        {"10_Floor_USD", "Down:DiscountCurve/USD/6/10Y", 3406.46, 1.26635},
+        {"10_Floor_USD", "Up:IndexCurve/USD-LIBOR-3M/0/6M", 3406.46, 0.00150733},
+        {"10_Floor_USD", "Up:IndexCurve/USD-LIBOR-3M/1/1Y", 3406.46, 0.240284},
+        {"10_Floor_USD", "Up:IndexCurve/USD-LIBOR-3M/2/2Y", 3406.46, 2.17175},
+        {"10_Floor_USD", "Up:IndexCurve/USD-LIBOR-3M/3/3Y", 3406.46, 7.77249},
+        {"10_Floor_USD", "Up:IndexCurve/USD-LIBOR-3M/4/5Y", 3406.46, 12.9642},
+        {"10_Floor_USD", "Up:IndexCurve/USD-LIBOR-3M/5/7Y", 3406.46, 16.8269},
+        {"10_Floor_USD", "Up:IndexCurve/USD-LIBOR-3M/6/10Y", 3406.46, -81.4363},
+        {"10_Floor_USD", "Down:IndexCurve/USD-LIBOR-3M/0/6M", 3406.46, -0.00139804},
+        {"10_Floor_USD", "Down:IndexCurve/USD-LIBOR-3M/1/1Y", 3406.46, -0.230558},
+        {"10_Floor_USD", "Down:IndexCurve/USD-LIBOR-3M/2/2Y", 3406.46, -2.00123},
+        {"10_Floor_USD", "Down:IndexCurve/USD-LIBOR-3M/3/3Y", 3406.46, -7.14862},
+        {"10_Floor_USD", "Down:IndexCurve/USD-LIBOR-3M/4/5Y", 3406.46, -11.2003},
+        {"10_Floor_USD", "Down:IndexCurve/USD-LIBOR-3M/5/7Y", 3406.46, -13.7183},
+        {"10_Floor_USD", "Down:IndexCurve/USD-LIBOR-3M/6/10Y", 3406.46, 84.0113},
+        {"10_Floor_USD", "Up:FXSpot/EURUSD/0/spot", 3406.46, -33.7273},
+        {"10_Floor_USD", "Down:FXSpot/EURUSD/0/spot", 3406.46, 34.4087},
+        {"10_Floor_USD", "Up:OptionletVolatility/USD/0/1Y/0.01", 3406.46, 0.402913},
+        {"10_Floor_USD", "Up:OptionletVolatility/USD/5/2Y/0.01", 3406.46, 3.32861},
+        {"10_Floor_USD", "Up:OptionletVolatility/USD/10/3Y/0.01", 3406.46, 16.8798},
+        {"10_Floor_USD", "Up:OptionletVolatility/USD/15/5Y/0.01", 3406.46, 96.415},
+        {"10_Floor_USD", "Up:OptionletVolatility/USD/20/10Y/0.01", 3406.46, 92.2212},
+        {"10_Floor_USD", "Down:OptionletVolatility/USD/0/1Y/0.01", 3406.46, -0.37428},
+        {"10_Floor_USD", "Down:OptionletVolatility/USD/5/2Y/0.01", 3406.46, -3.14445},
+        {"10_Floor_USD", "Down:OptionletVolatility/USD/10/3Y/0.01", 3406.46, -16.3074},
+        {"10_Floor_USD", "Down:OptionletVolatility/USD/15/5Y/0.01", 3406.46, -94.5309},
+        {"10_Floor_USD", "Down:OptionletVolatility/USD/20/10Y/0.01", 3406.46, -90.9303},
         // Excel calculation with z=5% flat rate, term structure day counter ActAct,
         // time to maturity T = YEARFRAC(14/4/16, 14/4/26, 1) = 9.99800896, yields
         // sensi to up shift d=1bp: exp(-(z+d)*T)-exp(z*T)
         // = -0.00060616719559925
-        { "11_ZeroBond_EUR", "Up:YieldCurve/BondCurve1/6/10Y", 0.60659, -0.000606168 }, // OK, diff 1e-9
+        {"11_ZeroBond_EUR", "Up:YieldCurve/BondCurve1/6/10Y", 0.60659, -0.000606168}, // OK, diff 1e-9
         // sensi to down shift d=-1bp: 0.00060677354516836
-        { "11_ZeroBond_EUR", "Down:YieldCurve/BondCurve1/6/10Y", 0.60659, 0.000606774 }, // OK, diff < 1e-9
+        {"11_ZeroBond_EUR", "Down:YieldCurve/BondCurve1/6/10Y", 0.60659, 0.000606774}, // OK, diff < 1e-9
         // sensi to up shift d=+1bp: exp(-(z+d)*T)*USDEUR - exp(-z*T)*USDEUR
         // = -0.000505139329666004
-        { "12_ZeroBond_USD", "Up:YieldCurve/BondCurve1/6/10Y", 0.505492, -0.00050514 }, // OK, diff < 1e-8
+        {"12_ZeroBond_USD", "Up:YieldCurve/BondCurve1/6/10Y", 0.505492, -0.00050514}, // OK, diff < 1e-8
         // sensi to down shit d=-1bp: 0.000505644620973689
-        { "12_ZeroBond_USD", "Down:YieldCurve/BondCurve1/6/10Y", 0.505492, 0.000505645 }, // OK, diff < 1e-9
+        {"12_ZeroBond_USD", "Down:YieldCurve/BondCurve1/6/10Y", 0.505492, 0.000505645}, // OK, diff < 1e-9
         // sensi to EURUSD upshift d=+1%: exp(-z*T)*USDEUR/(1+d) - exp(-z*T)*USDEUR
         // = -0.00500487660122262
-        { "12_ZeroBond_USD", "Up:FXSpot/EURUSD/0/spot", 0.505492, -0.00500487 }, // OK, diff < 1e-8
+        {"12_ZeroBond_USD", "Up:FXSpot/EURUSD/0/spot", 0.505492, -0.00500487}, // OK, diff < 1e-8
         // sensi to EURUSD down shift d=-1%: 0.00510598521942907
-        { "12_ZeroBond_USD", "Down:FXSpot/EURUSD/0/spot", 0.505492, 0.00510598 } // OK, diff < 1e-8
+        {"12_ZeroBond_USD", "Down:FXSpot/EURUSD/0/spot", 0.505492, 0.00510598} // OK, diff < 1e-8
     };
 
     std::map<pair<string, string>, Real> npvMap, sensiMap;
@@ -744,9 +743,9 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
 
     std::vector<Results> cachedResults2 = {
         // trade, factor, delta, gamma
-        { "11_ZeroBond_EUR", "YieldCurve/BondCurve1/6/10Y", -0.000606168, 6.06352e-07 }, // gamma OK see case 1 below
-        { "12_ZeroBond_USD", "YieldCurve/BondCurve1/6/10Y", -0.00050514, 5.05294e-07 },  // gamma OK, see case 2 below
-        { "12_ZeroBond_USD", "FXSpot/EURUSD/0/spot", -0.00500487, 0.000101108 }          // gamma OK, see case 3
+        {"11_ZeroBond_EUR", "YieldCurve/BondCurve1/6/10Y", -0.000606168, 6.06352e-07}, // gamma OK see case 1 below
+        {"12_ZeroBond_USD", "YieldCurve/BondCurve1/6/10Y", -0.00050514, 5.05294e-07},  // gamma OK, see case 2 below
+        {"12_ZeroBond_USD", "FXSpot/EURUSD/0/spot", -0.00500487, 0.000101108}          // gamma OK, see case 3
     };
 
     // Validation of cached gammas:
@@ -769,12 +768,12 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
         pair<string, string> p(cachedResults2[i].id, cachedResults2[i].label);
         Real delta = cachedResults2[i].npv;   // is delta
         Real gamma = cachedResults2[i].sensi; // is gamma
-        BOOST_CHECK_MESSAGE(fabs((delta - deltaMap[p]) / delta) < tolerance, 
-            "delta regression failed for trade " << p.first << " factor " << p.second
-            << ", cached=" << delta << ", computed=" << deltaMap[p]);
-        BOOST_CHECK_MESSAGE(fabs((gamma - gammaMap[p]) / gamma) < tolerance, 
-            "gamma regression failed for trade " << p.first << " factor " << p.second
-            << ", cached=" << gamma << ", computed=" << gammaMap[p]);
+        BOOST_CHECK_MESSAGE(fabs((delta - deltaMap[p]) / delta) < tolerance,
+                            "delta regression failed for trade " << p.first << " factor " << p.second << ", cached="
+                                                                 << delta << ", computed=" << deltaMap[p]);
+        BOOST_CHECK_MESSAGE(fabs((gamma - gammaMap[p]) / gamma) < tolerance,
+                            "gamma regression failed for trade " << p.first << " factor " << p.second << ", cached="
+                                                                 << gamma << ", computed=" << gammaMap[p]);
     }
 
     BOOST_TEST_MESSAGE("Cube generated in " << elapsed << " seconds");
@@ -926,7 +925,7 @@ void SensitivityAnalysisTest::test2dShifts() {
     // cache initial zero rates
     vector<Period> expiries = simMarketData->swapVolExpiries();
     vector<Period> terms = simMarketData->swapVolTerms();
-    vector<vector<Real> > initialData(expiries.size(), vector<Real>(terms.size(), 0.0));
+    vector<vector<Real>> initialData(expiries.size(), vector<Real>(terms.size(), 0.0));
     vector<Real> expiryTimes(expiries.size());
     vector<Real> termTimes(terms.size());
     string ccy = simMarketData->ccys()[0];
@@ -955,9 +954,9 @@ void SensitivityAnalysisTest::test2dShifts() {
     for (Size j = 0; j < termShiftTenors.size(); ++j)
         shiftTermTimes[j] = dc.yearFraction(today, today + termShiftTenors[j]);
 
-    vector<vector<Real> > shiftedData(expiries.size(), vector<Real>(terms.size(), 0.0));
-    vector<vector<Real> > diffAbsolute(expiries.size(), vector<Real>(terms.size(), 0.0));
-    vector<vector<Real> > diffRelative(expiries.size(), vector<Real>(terms.size(), 0.0));
+    vector<vector<Real>> shiftedData(expiries.size(), vector<Real>(terms.size(), 0.0));
+    vector<vector<Real>> diffAbsolute(expiries.size(), vector<Real>(terms.size(), 0.0));
+    vector<vector<Real>> diffRelative(expiries.size(), vector<Real>(terms.size(), 0.0));
     Real shiftSize = 0.01; // arbitrary
     SensitivityScenarioGenerator::ShiftType shiftTypeAbsolute = SensitivityScenarioGenerator::ShiftType::Absolute;
     SensitivityScenarioGenerator::ShiftType shiftTypeRelative = SensitivityScenarioGenerator::ShiftType::Relative;
@@ -1118,10 +1117,9 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
     }
 
     bool useOriginalFxForBaseCcyConv = true; // convert sensi to EUR using original FX rate (not the shifted rate)
-    boost::shared_ptr<SensitivityAnalysis> sa = 
-        boost::make_shared<SensitivityAnalysis>(
-            portfolio, initMarket, Market::defaultConfiguration, data, 
-            simMarketData, sensiData, conventions, useOriginalFxForBaseCcyConv);
+    boost::shared_ptr<SensitivityAnalysis> sa =
+        boost::make_shared<SensitivityAnalysis>(portfolio, initMarket, Market::defaultConfiguration, data,
+                                                simMarketData, sensiData, conventions, useOriginalFxForBaseCcyConv);
     sa->generateSensitivities();
 
     map<pair<string, string>, Real> deltaMap = sa->delta();
@@ -1163,8 +1161,8 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
         string id = it.first;
         BOOST_CHECK(sensiTrades.find(id) != sensiTrades.end());
         AnalyticInfo qlInfo = it.second;
-        SensiResults res = { string(""), 0.0, 0.0, 0.0, 0.0, 0.0,   0.0,   0.0,        0.0,       0.0,
-                             0.0,        0.0, 0.0, 0.0, 0.0, false, false, string(""), string("") };
+        SensiResults res = {string(""), 0.0, 0.0, 0.0, 0.0, 0.0,   0.0,   0.0,        0.0,       0.0,
+                            0.0,        0.0, 0.0, 0.0, 0.0, false, false, string(""), string("")};
         for (auto it2 : deltaMap) {
             pair<string, string> sensiKey = it2.first;
             string sensiTrnId = it2.first.first;
@@ -1349,7 +1347,7 @@ void SensitivityAnalysisTest::testCrossGamma() {
 
     // sensitivity config
     boost::shared_ptr<SensitivityScenarioData> sensiData = setupSensitivityScenarioData5();
-    vector<pair<string, string> >& cgFilter = sensiData->crossGammaFilter();
+    vector<pair<string, string>>& cgFilter = sensiData->crossGammaFilter();
     BOOST_CHECK_EQUAL(cgFilter.size(), 0);
     cgFilter.push_back(pair<string, string>("DiscountCurve/EUR", "DiscountCurve/EUR"));
     cgFilter.push_back(pair<string, string>("DiscountCurve/EUR", "IndexCurve/EUR"));
@@ -1437,9 +1435,8 @@ void SensitivityAnalysisTest::testCrossGamma() {
 
     bool useOriginalFxForBaseCcyConv = false;
     boost::shared_ptr<SensitivityAnalysis> sa =
-        boost::make_shared<SensitivityAnalysis>(
-            portfolio, initMarket, Market::defaultConfiguration, data,
-            simMarketData, sensiData, conventions, useOriginalFxForBaseCcyConv);
+        boost::make_shared<SensitivityAnalysis>(portfolio, initMarket, Market::defaultConfiguration, data,
+                                                simMarketData, sensiData, conventions, useOriginalFxForBaseCcyConv);
     sa->generateSensitivities();
 
     map<pair<string, string>, Real> deltaMap = sa->delta();
@@ -1456,222 +1453,221 @@ void SensitivityAnalysisTest::testCrossGamma() {
     };
 
     vector<GammaResult> cachedResults = {
-        { "10_Floor_USD", "DiscountCurve/USD/1/1Y", "OptionletVolatility/USD/0/1Y/0.01", -1.14292006e-05 },
-        { "10_Floor_USD", "DiscountCurve/USD/1/1Y", "OptionletVolatility/USD/5/2Y/0.01", -4.75325714e-06 },
-        { "10_Floor_USD", "DiscountCurve/USD/2/2Y", "OptionletVolatility/USD/0/1Y/0.01", -5.72627955e-05 },
-        { "10_Floor_USD", "DiscountCurve/USD/2/2Y", "OptionletVolatility/USD/10/3Y/0.01", -6.0423848e-05 },
-        { "10_Floor_USD", "DiscountCurve/USD/2/2Y", "OptionletVolatility/USD/5/2Y/0.01", -0.0003282313 },
-        { "10_Floor_USD", "DiscountCurve/USD/3/3Y", "DiscountCurve/USD/4/5Y", 2.38844859e-06 },
-        { "10_Floor_USD", "DiscountCurve/USD/3/3Y", "OptionletVolatility/USD/10/3Y/0.01", -0.0032767365 },
-        { "10_Floor_USD", "DiscountCurve/USD/3/3Y", "OptionletVolatility/USD/15/5Y/0.01", -0.00124021334 },
-        { "10_Floor_USD", "DiscountCurve/USD/3/3Y", "OptionletVolatility/USD/5/2Y/0.01", -0.000490482465 },
-        { "10_Floor_USD", "DiscountCurve/USD/4/5Y", "DiscountCurve/USD/5/7Y", 4.56303869e-05 },
-        { "10_Floor_USD", "DiscountCurve/USD/4/5Y", "OptionletVolatility/USD/10/3Y/0.01", -0.00309734116 },
-        { "10_Floor_USD", "DiscountCurve/USD/4/5Y", "OptionletVolatility/USD/15/5Y/0.01", -0.0154732663 },
-        { "10_Floor_USD", "DiscountCurve/USD/4/5Y", "OptionletVolatility/USD/20/10Y/0.01", -0.0011774169 },
-        { "10_Floor_USD", "DiscountCurve/USD/4/5Y", "OptionletVolatility/USD/5/2Y/0.01", -1.15352532e-06 },
-        { "10_Floor_USD", "DiscountCurve/USD/5/7Y", "DiscountCurve/USD/6/10Y", 0.00024726356 },
-        { "10_Floor_USD", "DiscountCurve/USD/5/7Y", "OptionletVolatility/USD/10/3Y/0.01", -1.30253466e-06 },
-        { "10_Floor_USD", "DiscountCurve/USD/5/7Y", "OptionletVolatility/USD/15/5Y/0.01", -0.0325565983 },
-        { "10_Floor_USD", "DiscountCurve/USD/5/7Y", "OptionletVolatility/USD/20/10Y/0.01", -0.026175823 },
-        { "10_Floor_USD", "DiscountCurve/USD/6/10Y", "OptionletVolatility/USD/15/5Y/0.01", -0.0151532607 },
-        { "10_Floor_USD", "DiscountCurve/USD/6/10Y", "OptionletVolatility/USD/20/10Y/0.01", -0.0524224726 },
-        { "10_Floor_USD", "IndexCurve/USD-LIBOR-3M/0/6M", "IndexCurve/USD-LIBOR-3M/1/1Y", -0.000206363102 },
-        { "10_Floor_USD", "IndexCurve/USD-LIBOR-3M/0/6M", "IndexCurve/USD-LIBOR-3M/2/2Y", -9.83482187e-06 },
-        { "10_Floor_USD", "IndexCurve/USD-LIBOR-3M/1/1Y", "IndexCurve/USD-LIBOR-3M/2/2Y", -0.0181056744 },
-        { "10_Floor_USD", "IndexCurve/USD-LIBOR-3M/1/1Y", "IndexCurve/USD-LIBOR-3M/3/3Y", -0.000292001105 },
-        { "10_Floor_USD", "IndexCurve/USD-LIBOR-3M/2/2Y", "IndexCurve/USD-LIBOR-3M/3/3Y", -0.197980608 },
-        { "10_Floor_USD", "IndexCurve/USD-LIBOR-3M/2/2Y", "IndexCurve/USD-LIBOR-3M/4/5Y", -0.000472459871 },
-        { "10_Floor_USD", "IndexCurve/USD-LIBOR-3M/3/3Y", "IndexCurve/USD-LIBOR-3M/4/5Y", -0.506924993 },
-        { "10_Floor_USD", "IndexCurve/USD-LIBOR-3M/4/5Y", "IndexCurve/USD-LIBOR-3M/5/7Y", -1.31308851 },
-        { "10_Floor_USD", "IndexCurve/USD-LIBOR-3M/5/7Y", "IndexCurve/USD-LIBOR-3M/6/10Y", -1.79643202 },
-        { "10_Floor_USD", "OptionletVolatility/USD/0/1Y/0.01", "OptionletVolatility/USD/5/2Y/0.01", 0.0214845769 },
-        { "10_Floor_USD", "OptionletVolatility/USD/10/3Y/0.01", "OptionletVolatility/USD/15/5Y/0.01", 0.224709734 },
-        { "10_Floor_USD", "OptionletVolatility/USD/15/5Y/0.01", "OptionletVolatility/USD/20/10Y/0.01", 0.693920762 },
-        { "10_Floor_USD", "OptionletVolatility/USD/5/2Y/0.01", "OptionletVolatility/USD/10/3Y/0.01", 0.0649121282 },
-        { "1_Swap_EUR", "DiscountCurve/EUR/1/1Y", "DiscountCurve/EUR/2/2Y", 0.000439456664 },
-        { "1_Swap_EUR", "DiscountCurve/EUR/1/1Y", "IndexCurve/EUR-EURIBOR-6M/0/6M", 0.0488603441 },
-        { "1_Swap_EUR", "DiscountCurve/EUR/1/1Y", "IndexCurve/EUR-EURIBOR-6M/1/1Y", -0.0725961695 },
-        { "1_Swap_EUR", "DiscountCurve/EUR/1/1Y", "IndexCurve/EUR-EURIBOR-6M/2/2Y", -0.0499326873 },
-        { "1_Swap_EUR", "DiscountCurve/EUR/2/2Y", "DiscountCurve/EUR/3/3Y", 0.00136525929 },
-        { "1_Swap_EUR", "DiscountCurve/EUR/2/2Y", "IndexCurve/EUR-EURIBOR-6M/0/6M", 0.00108389393 },
-        { "1_Swap_EUR", "DiscountCurve/EUR/2/2Y", "IndexCurve/EUR-EURIBOR-6M/1/1Y", 0.141865394 },
-        { "1_Swap_EUR", "DiscountCurve/EUR/2/2Y", "IndexCurve/EUR-EURIBOR-6M/2/2Y", -0.191425738 },
-        { "1_Swap_EUR", "DiscountCurve/EUR/2/2Y", "IndexCurve/EUR-EURIBOR-6M/3/3Y", -0.1454702 },
-        { "1_Swap_EUR", "DiscountCurve/EUR/3/3Y", "DiscountCurve/EUR/4/5Y", 0.00183080882 },
-        { "1_Swap_EUR", "DiscountCurve/EUR/3/3Y", "IndexCurve/EUR-EURIBOR-6M/1/1Y", 0.000784549396 },
-        { "1_Swap_EUR", "DiscountCurve/EUR/3/3Y", "IndexCurve/EUR-EURIBOR-6M/2/2Y", 0.425320865 },
-        { "1_Swap_EUR", "DiscountCurve/EUR/3/3Y", "IndexCurve/EUR-EURIBOR-6M/3/3Y", -0.337527203 },
-        { "1_Swap_EUR", "DiscountCurve/EUR/3/3Y", "IndexCurve/EUR-EURIBOR-6M/4/5Y", -0.560276813 },
-        { "1_Swap_EUR", "DiscountCurve/EUR/4/5Y", "DiscountCurve/EUR/5/7Y", -0.00376823638 },
-        { "1_Swap_EUR", "DiscountCurve/EUR/4/5Y", "IndexCurve/EUR-EURIBOR-6M/2/2Y", 0.000516382745 },
-        { "1_Swap_EUR", "DiscountCurve/EUR/4/5Y", "IndexCurve/EUR-EURIBOR-6M/3/3Y", 0.91807051 },
-        { "1_Swap_EUR", "DiscountCurve/EUR/4/5Y", "IndexCurve/EUR-EURIBOR-6M/4/5Y", -0.606871969 },
-        { "1_Swap_EUR", "DiscountCurve/EUR/4/5Y", "IndexCurve/EUR-EURIBOR-6M/5/7Y", -1.1789221 },
-        { "1_Swap_EUR", "DiscountCurve/EUR/5/7Y", "DiscountCurve/EUR/6/10Y", -0.0210602414 },
-        { "1_Swap_EUR", "DiscountCurve/EUR/5/7Y", "IndexCurve/EUR-EURIBOR-6M/4/5Y", 1.93838247 },
-        { "1_Swap_EUR", "DiscountCurve/EUR/5/7Y", "IndexCurve/EUR-EURIBOR-6M/5/7Y", -0.964284878 },
-        { "1_Swap_EUR", "DiscountCurve/EUR/5/7Y", "IndexCurve/EUR-EURIBOR-6M/6/10Y", -2.50079601 },
-        { "1_Swap_EUR", "DiscountCurve/EUR/6/10Y", "IndexCurve/EUR-EURIBOR-6M/5/7Y", 3.43097423 },
-        { "1_Swap_EUR", "DiscountCurve/EUR/6/10Y", "IndexCurve/EUR-EURIBOR-6M/6/10Y", -4.9024972 },
-        { "1_Swap_EUR", "IndexCurve/EUR-EURIBOR-6M/0/6M", "IndexCurve/EUR-EURIBOR-6M/1/1Y", -0.048865166 },
-        { "1_Swap_EUR", "IndexCurve/EUR-EURIBOR-6M/0/6M", "IndexCurve/EUR-EURIBOR-6M/2/2Y", -0.00108389556 },
-        { "1_Swap_EUR", "IndexCurve/EUR-EURIBOR-6M/1/1Y", "IndexCurve/EUR-EURIBOR-6M/2/2Y", -0.0924553103 },
-        { "1_Swap_EUR", "IndexCurve/EUR-EURIBOR-6M/1/1Y", "IndexCurve/EUR-EURIBOR-6M/3/3Y", -0.000784546835 },
-        { "1_Swap_EUR", "IndexCurve/EUR-EURIBOR-6M/2/2Y", "IndexCurve/EUR-EURIBOR-6M/3/3Y", -0.281394335 },
-        { "1_Swap_EUR", "IndexCurve/EUR-EURIBOR-6M/2/2Y", "IndexCurve/EUR-EURIBOR-6M/4/5Y", -0.000516386237 },
-        { "1_Swap_EUR", "IndexCurve/EUR-EURIBOR-6M/3/3Y", "IndexCurve/EUR-EURIBOR-6M/4/5Y", -0.359848329 },
-        { "1_Swap_EUR", "IndexCurve/EUR-EURIBOR-6M/4/5Y", "IndexCurve/EUR-EURIBOR-6M/5/7Y", -0.779536431 },
-        { "1_Swap_EUR", "IndexCurve/EUR-EURIBOR-6M/5/7Y", "IndexCurve/EUR-EURIBOR-6M/6/10Y", -0.989040876 },
-        { "2_Swap_USD", "DiscountCurve/USD/0/6M", "DiscountCurve/USD/1/1Y", 7.85577577e-05 },
-        { "2_Swap_USD", "DiscountCurve/USD/1/1Y", "DiscountCurve/USD/2/2Y", 0.00034391915 },
-        { "2_Swap_USD", "DiscountCurve/USD/2/2Y", "DiscountCurve/USD/3/3Y", 0.00101750751 },
-        { "2_Swap_USD", "DiscountCurve/USD/3/3Y", "DiscountCurve/USD/4/5Y", 0.00129107304 },
-        { "2_Swap_USD", "DiscountCurve/USD/4/5Y", "DiscountCurve/USD/5/7Y", 0.00885138742 },
-        { "2_Swap_USD", "DiscountCurve/USD/5/7Y", "DiscountCurve/USD/6/10Y", 0.0236235501 },
-        { "2_Swap_USD", "DiscountCurve/USD/6/10Y", "DiscountCurve/USD/7/15Y", 0.07325946 },
-        { "2_Swap_USD", "DiscountCurve/USD/7/15Y", "DiscountCurve/USD/8/20Y", -2.22151866e-05 },
-        { "2_Swap_USD", "IndexCurve/USD-LIBOR-3M/0/6M", "IndexCurve/USD-LIBOR-3M/1/1Y", -0.0202145245 },
-        { "2_Swap_USD", "IndexCurve/USD-LIBOR-3M/0/6M", "IndexCurve/USD-LIBOR-3M/2/2Y", -0.000431735534 },
-        { "2_Swap_USD", "IndexCurve/USD-LIBOR-3M/1/1Y", "IndexCurve/USD-LIBOR-3M/2/2Y", -0.0379707172 },
-        { "2_Swap_USD", "IndexCurve/USD-LIBOR-3M/1/1Y", "IndexCurve/USD-LIBOR-3M/3/3Y", -0.000316063757 },
-        { "2_Swap_USD", "IndexCurve/USD-LIBOR-3M/2/2Y", "IndexCurve/USD-LIBOR-3M/3/3Y", -0.11422779 },
-        { "2_Swap_USD", "IndexCurve/USD-LIBOR-3M/2/2Y", "IndexCurve/USD-LIBOR-3M/4/5Y", -0.000207132776 },
-        { "2_Swap_USD", "IndexCurve/USD-LIBOR-3M/3/3Y", "IndexCurve/USD-LIBOR-3M/4/5Y", -0.137591099 },
-        { "2_Swap_USD", "IndexCurve/USD-LIBOR-3M/4/5Y", "IndexCurve/USD-LIBOR-3M/5/7Y", -0.305644142 },
-        { "2_Swap_USD", "IndexCurve/USD-LIBOR-3M/5/7Y", "IndexCurve/USD-LIBOR-3M/6/10Y", -0.37816313 },
-        { "2_Swap_USD", "IndexCurve/USD-LIBOR-3M/6/10Y", "IndexCurve/USD-LIBOR-3M/7/15Y", -0.431405343 },
-        { "2_Swap_USD", "IndexCurve/USD-LIBOR-3M/6/10Y", "IndexCurve/USD-LIBOR-3M/8/20Y", -0.000289136427 },
-        { "2_Swap_USD", "IndexCurve/USD-LIBOR-3M/7/15Y", "IndexCurve/USD-LIBOR-3M/8/20Y", 0.00042894634 },
-        { "3_Swap_GBP", "DiscountCurve/GBP/0/6M", "FXSpot/EURGBP/0/spot", -0.0210289143 },
-        { "3_Swap_GBP", "DiscountCurve/GBP/1/1Y", "FXSpot/EURGBP/0/spot", 0.00639700286 },
-        { "3_Swap_GBP", "DiscountCurve/GBP/2/2Y", "FXSpot/EURGBP/0/spot", 0.0173332273 },
-        { "3_Swap_GBP", "DiscountCurve/GBP/3/3Y", "FXSpot/EURGBP/0/spot", 0.0420620699 },
-        { "3_Swap_GBP", "DiscountCurve/GBP/4/5Y", "FXSpot/EURGBP/0/spot", 0.0715365904 },
-        { "3_Swap_GBP", "DiscountCurve/GBP/5/7Y", "FXSpot/EURGBP/0/spot", 0.124046364 },
-        { "3_Swap_GBP", "DiscountCurve/GBP/6/10Y", "FXSpot/EURGBP/0/spot", 0.245374591 },
-        { "3_Swap_GBP", "DiscountCurve/GBP/7/15Y", "FXSpot/EURGBP/0/spot", 0.388570486 },
-        { "3_Swap_GBP", "DiscountCurve/GBP/8/20Y", "FXSpot/EURGBP/0/spot", -0.308991311 },
-        { "5_Swaption_EUR", "DiscountCurve/EUR/6/10Y", "DiscountCurve/EUR/7/15Y", -0.000812667564 },
-        { "5_Swaption_EUR", "DiscountCurve/EUR/6/10Y", "DiscountCurve/EUR/8/20Y", -0.000307592545 },
-        { "5_Swaption_EUR", "DiscountCurve/EUR/6/10Y", "IndexCurve/EUR-EURIBOR-6M/6/10Y", 0.0728828434 },
-        { "5_Swaption_EUR", "DiscountCurve/EUR/6/10Y", "IndexCurve/EUR-EURIBOR-6M/7/15Y", -0.177001389 },
-        { "5_Swaption_EUR", "DiscountCurve/EUR/6/10Y", "IndexCurve/EUR-EURIBOR-6M/8/20Y", 0.0905885823 },
-        { "5_Swaption_EUR", "DiscountCurve/EUR/6/10Y", "SwaptionVolatility/EUR/5/10Y/10Y/ATM", -0.0110764697 },
-        { "5_Swaption_EUR", "DiscountCurve/EUR/7/15Y", "DiscountCurve/EUR/8/20Y", 0.00224833752 },
-        { "5_Swaption_EUR", "DiscountCurve/EUR/7/15Y", "IndexCurve/EUR-EURIBOR-6M/6/10Y", 0.0136493384 },
-        { "5_Swaption_EUR", "DiscountCurve/EUR/7/15Y", "IndexCurve/EUR-EURIBOR-6M/7/15Y", -0.0474343306 },
-        { "5_Swaption_EUR", "DiscountCurve/EUR/7/15Y", "IndexCurve/EUR-EURIBOR-6M/8/20Y", 0.0360955216 },
-        { "5_Swaption_EUR", "DiscountCurve/EUR/7/15Y", "SwaptionVolatility/EUR/5/10Y/10Y/ATM", 0.0016329258 },
-        { "5_Swaption_EUR", "DiscountCurve/EUR/8/20Y", "IndexCurve/EUR-EURIBOR-6M/6/10Y", -0.164000375 },
-        { "5_Swaption_EUR", "DiscountCurve/EUR/8/20Y", "IndexCurve/EUR-EURIBOR-6M/7/15Y", 0.417352238 },
-        { "5_Swaption_EUR", "DiscountCurve/EUR/8/20Y", "IndexCurve/EUR-EURIBOR-6M/8/20Y", -0.229366568 },
-        { "5_Swaption_EUR", "DiscountCurve/EUR/8/20Y", "SwaptionVolatility/EUR/5/10Y/10Y/ATM", 0.0199757638 },
-        { "5_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/6/10Y", "IndexCurve/EUR-EURIBOR-6M/7/15Y", -0.26738619 },
-        { "5_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/6/10Y", "IndexCurve/EUR-EURIBOR-6M/8/20Y", -2.85552727 },
-        { "5_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/6/10Y", "SwaptionVolatility/EUR/5/10Y/10Y/ATM", -2.22802017 },
-        { "5_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/7/15Y", "IndexCurve/EUR-EURIBOR-6M/8/20Y", 0.332563403 },
-        { "5_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/7/15Y", "SwaptionVolatility/EUR/5/10Y/10Y/ATM", 0.316522049 },
-        { "5_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/8/20Y", "SwaptionVolatility/EUR/5/10Y/10Y/ATM", 3.96890127 },
-        { "6_Swaption_EUR", "DiscountCurve/EUR/2/2Y", "DiscountCurve/EUR/3/3Y", 4.65581502e-06 },
-        { "6_Swaption_EUR", "DiscountCurve/EUR/2/2Y", "DiscountCurve/EUR/4/5Y", -1.91397435e-05 },
-        { "6_Swaption_EUR", "DiscountCurve/EUR/2/2Y", "DiscountCurve/EUR/5/7Y", -3.97715846e-05 },
-        { "6_Swaption_EUR", "DiscountCurve/EUR/2/2Y", "IndexCurve/EUR-EURIBOR-6M/2/2Y", 0.0021812065 },
-        { "6_Swaption_EUR", "DiscountCurve/EUR/2/2Y", "IndexCurve/EUR-EURIBOR-6M/3/3Y", -0.00152258186 },
-        { "6_Swaption_EUR", "DiscountCurve/EUR/2/2Y", "IndexCurve/EUR-EURIBOR-6M/4/5Y", -0.000110931094 },
-        { "6_Swaption_EUR", "DiscountCurve/EUR/2/2Y", "IndexCurve/EUR-EURIBOR-6M/5/7Y", -0.00402972821 },
-        { "6_Swaption_EUR", "DiscountCurve/EUR/2/2Y", "IndexCurve/EUR-EURIBOR-6M/6/10Y", -1.54062514e-05 },
-        { "6_Swaption_EUR", "DiscountCurve/EUR/2/2Y", "SwaptionVolatility/EUR/0/2Y/5Y/ATM", -0.00258447059 },
-        { "6_Swaption_EUR", "DiscountCurve/EUR/2/2Y", "SwaptionVolatility/EUR/2/5Y/5Y/ATM", -4.72749957e-06 },
-        { "6_Swaption_EUR", "DiscountCurve/EUR/3/3Y", "DiscountCurve/EUR/4/5Y", 2.01546663e-05 },
-        { "6_Swaption_EUR", "DiscountCurve/EUR/3/3Y", "DiscountCurve/EUR/5/7Y", 3.39962985e-05 },
-        { "6_Swaption_EUR", "DiscountCurve/EUR/3/3Y", "IndexCurve/EUR-EURIBOR-6M/2/2Y", 0.00233445946 },
-        { "6_Swaption_EUR", "DiscountCurve/EUR/3/3Y", "IndexCurve/EUR-EURIBOR-6M/3/3Y", -0.00339824401 },
-        { "6_Swaption_EUR", "DiscountCurve/EUR/3/3Y", "IndexCurve/EUR-EURIBOR-6M/4/5Y", -0.00562310815 },
-        { "6_Swaption_EUR", "DiscountCurve/EUR/3/3Y", "IndexCurve/EUR-EURIBOR-6M/5/7Y", 0.00698599517 },
-        { "6_Swaption_EUR", "DiscountCurve/EUR/3/3Y", "IndexCurve/EUR-EURIBOR-6M/6/10Y", 2.59470628e-05 },
-        { "6_Swaption_EUR", "DiscountCurve/EUR/3/3Y", "SwaptionVolatility/EUR/0/2Y/5Y/ATM", 6.65486464e-05 },
-        { "6_Swaption_EUR", "DiscountCurve/EUR/4/5Y", "DiscountCurve/EUR/5/7Y", 0.000102988368 },
-        { "6_Swaption_EUR", "DiscountCurve/EUR/4/5Y", "IndexCurve/EUR-EURIBOR-6M/2/2Y", -0.00379254633 },
-        { "6_Swaption_EUR", "DiscountCurve/EUR/4/5Y", "IndexCurve/EUR-EURIBOR-6M/3/3Y", 0.00963019417 },
-        { "6_Swaption_EUR", "DiscountCurve/EUR/4/5Y", "IndexCurve/EUR-EURIBOR-6M/4/5Y", -0.00588629799 },
-        { "6_Swaption_EUR", "DiscountCurve/EUR/4/5Y", "IndexCurve/EUR-EURIBOR-6M/5/7Y", 0.000396238503 },
-        { "6_Swaption_EUR", "DiscountCurve/EUR/4/5Y", "IndexCurve/EUR-EURIBOR-6M/6/10Y", 4.87477412e-05 },
-        { "6_Swaption_EUR", "DiscountCurve/EUR/4/5Y", "SwaptionVolatility/EUR/0/2Y/5Y/ATM", 0.000261444328 },
-        { "6_Swaption_EUR", "DiscountCurve/EUR/5/7Y", "IndexCurve/EUR-EURIBOR-6M/2/2Y", -0.00793621904 },
-        { "6_Swaption_EUR", "DiscountCurve/EUR/5/7Y", "IndexCurve/EUR-EURIBOR-6M/3/3Y", 0.000347485427 },
-        { "6_Swaption_EUR", "DiscountCurve/EUR/5/7Y", "IndexCurve/EUR-EURIBOR-6M/4/5Y", 0.0207397881 },
-        { "6_Swaption_EUR", "DiscountCurve/EUR/5/7Y", "IndexCurve/EUR-EURIBOR-6M/5/7Y", -0.00216833219 },
-        { "6_Swaption_EUR", "DiscountCurve/EUR/5/7Y", "IndexCurve/EUR-EURIBOR-6M/6/10Y", -7.23455626e-05 },
-        { "6_Swaption_EUR", "DiscountCurve/EUR/5/7Y", "SwaptionVolatility/EUR/0/2Y/5Y/ATM", 0.00849096973 },
-        { "6_Swaption_EUR", "DiscountCurve/EUR/5/7Y", "SwaptionVolatility/EUR/2/5Y/5Y/ATM", 1.55316409e-05 },
-        { "6_Swaption_EUR", "DiscountCurve/EUR/6/10Y", "IndexCurve/EUR-EURIBOR-6M/2/2Y", -4.09244039e-05 },
-        { "6_Swaption_EUR", "DiscountCurve/EUR/6/10Y", "IndexCurve/EUR-EURIBOR-6M/3/3Y", 1.69568852e-06 },
-        { "6_Swaption_EUR", "DiscountCurve/EUR/6/10Y", "IndexCurve/EUR-EURIBOR-6M/4/5Y", 3.42704752e-05 },
-        { "6_Swaption_EUR", "DiscountCurve/EUR/6/10Y", "IndexCurve/EUR-EURIBOR-6M/5/7Y", 9.33648726e-05 },
-        { "6_Swaption_EUR", "DiscountCurve/EUR/6/10Y", "SwaptionVolatility/EUR/0/2Y/5Y/ATM", 6.55931062e-05 },
-        { "6_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/2/2Y", "IndexCurve/EUR-EURIBOR-6M/3/3Y", -0.0129378053 },
-        { "6_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/2/2Y", "IndexCurve/EUR-EURIBOR-6M/4/5Y", -0.0222466371 },
-        { "6_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/2/2Y", "IndexCurve/EUR-EURIBOR-6M/5/7Y", -0.807803513 },
-        { "6_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/2/2Y", "IndexCurve/EUR-EURIBOR-6M/6/10Y", -0.00308817849 },
-        { "6_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/2/2Y", "SwaptionVolatility/EUR/0/2Y/5Y/ATM", -0.518759384 },
-        { "6_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/2/2Y", "SwaptionVolatility/EUR/2/5Y/5Y/ATM", -0.000948864704 },
-        { "6_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/3/3Y", "IndexCurve/EUR-EURIBOR-6M/4/5Y", -0.00277042464 },
-        { "6_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/3/3Y", "IndexCurve/EUR-EURIBOR-6M/5/7Y", 0.0333716971 },
-        { "6_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/3/3Y", "IndexCurve/EUR-EURIBOR-6M/6/10Y", 0.000127656373 },
-        { "6_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/3/3Y", "SwaptionVolatility/EUR/0/2Y/5Y/ATM", 0.0214136069 },
-        { "6_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/3/3Y", "SwaptionVolatility/EUR/2/5Y/5Y/ATM", 3.91697083e-05 },
-        { "6_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/4/5Y", "IndexCurve/EUR-EURIBOR-6M/5/7Y", 0.0655785376 },
-        { "6_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/4/5Y", "IndexCurve/EUR-EURIBOR-6M/6/10Y", 0.000251968412 },
-        { "6_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/4/5Y", "SwaptionVolatility/EUR/0/2Y/5Y/ATM", 0.0473829647 },
-        { "6_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/4/5Y", "SwaptionVolatility/EUR/2/5Y/5Y/ATM", 8.66729658e-05 },
-        { "6_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/5/7Y", "IndexCurve/EUR-EURIBOR-6M/6/10Y", 0.0103058335 },
-        { "6_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/5/7Y", "SwaptionVolatility/EUR/0/2Y/5Y/ATM", 1.71370377 },
-        { "6_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/5/7Y", "SwaptionVolatility/EUR/2/5Y/5Y/ATM", 0.00313519435 },
-        { "6_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/6/10Y", "SwaptionVolatility/EUR/0/2Y/5Y/ATM", 0.00658131276 },
-        { "6_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/6/10Y", "SwaptionVolatility/EUR/2/5Y/5Y/ATM", 1.20384966e-05 },
-        { "6_Swaption_EUR", "SwaptionVolatility/EUR/0/2Y/5Y/ATM", "SwaptionVolatility/EUR/2/5Y/5Y/ATM", 0.00164491931 },
-        { "7_FxOption_EUR_USD", "DiscountCurve/EUR/3/3Y", "DiscountCurve/EUR/4/5Y", 0.0027612336 },
-        { "7_FxOption_EUR_USD", "DiscountCurve/EUR/3/3Y", "FXSpot/EURUSD/0/spot", -42.4452352 },
-        { "7_FxOption_EUR_USD", "DiscountCurve/EUR/3/3Y", "FXVolatility/EURUSD/0/5Y/ATM", 168.577072 },
-        { "7_FxOption_EUR_USD", "DiscountCurve/EUR/4/5Y", "FXSpot/EURUSD/0/spot", -0.0776202832 },
-        { "7_FxOption_EUR_USD", "DiscountCurve/EUR/4/5Y", "FXVolatility/EURUSD/0/5Y/ATM", 0.308961544 },
-        { "7_FxOption_EUR_USD", "DiscountCurve/USD/3/3Y", "DiscountCurve/USD/4/5Y", 0.00206353236 },
-        { "8_FxOption_EUR_GBP", "DiscountCurve/GBP/5/7Y", "FXSpot/EURGBP/0/spot", 40.247185 },
-        { "9_Cap_EUR", "DiscountCurve/EUR/3/3Y", "IndexCurve/EUR-EURIBOR-6M/2/2Y", 1.89362237e-06 },
-        { "9_Cap_EUR", "DiscountCurve/EUR/3/3Y", "IndexCurve/EUR-EURIBOR-6M/3/3Y", 1.60204674e-05 },
-        { "9_Cap_EUR", "DiscountCurve/EUR/3/3Y", "IndexCurve/EUR-EURIBOR-6M/4/5Y", -3.54807444e-05 },
-        { "9_Cap_EUR", "DiscountCurve/EUR/3/3Y", "OptionletVolatility/EUR/14/3Y/0.05", -7.41440071e-05 },
-        { "9_Cap_EUR", "DiscountCurve/EUR/3/3Y", "OptionletVolatility/EUR/19/5Y/0.05", -2.8717396e-05 },
-        { "9_Cap_EUR", "DiscountCurve/EUR/3/3Y", "OptionletVolatility/EUR/9/2Y/0.05", -3.95373826e-06 },
-        { "9_Cap_EUR", "DiscountCurve/EUR/4/5Y", "DiscountCurve/EUR/5/7Y", 1.87918619e-06 },
-        { "9_Cap_EUR", "DiscountCurve/EUR/4/5Y", "IndexCurve/EUR-EURIBOR-6M/3/3Y", 0.000141954676 },
-        { "9_Cap_EUR", "DiscountCurve/EUR/4/5Y", "IndexCurve/EUR-EURIBOR-6M/4/5Y", 0.000136532169 },
-        { "9_Cap_EUR", "DiscountCurve/EUR/4/5Y", "IndexCurve/EUR-EURIBOR-6M/5/7Y", -0.000558091084 },
-        { "9_Cap_EUR", "DiscountCurve/EUR/4/5Y", "OptionletVolatility/EUR/14/3Y/0.05", -0.000195855626 },
-        { "9_Cap_EUR", "DiscountCurve/EUR/4/5Y", "OptionletVolatility/EUR/19/5Y/0.05", -0.0013501175 },
-        { "9_Cap_EUR", "DiscountCurve/EUR/4/5Y", "OptionletVolatility/EUR/24/10Y/0.05", -9.03819837e-05 },
-        { "9_Cap_EUR", "DiscountCurve/EUR/5/7Y", "DiscountCurve/EUR/6/10Y", 2.44087892e-05 },
-        { "9_Cap_EUR", "DiscountCurve/EUR/5/7Y", "IndexCurve/EUR-EURIBOR-6M/4/5Y", 0.00131097735 },
-        { "9_Cap_EUR", "DiscountCurve/EUR/5/7Y", "IndexCurve/EUR-EURIBOR-6M/5/7Y", 0.000537751659 },
-        { "9_Cap_EUR", "DiscountCurve/EUR/5/7Y", "IndexCurve/EUR-EURIBOR-6M/6/10Y", -0.00376190752 },
-        { "9_Cap_EUR", "DiscountCurve/EUR/5/7Y", "OptionletVolatility/EUR/19/5Y/0.05", -0.00650057233 },
-        { "9_Cap_EUR", "DiscountCurve/EUR/5/7Y", "OptionletVolatility/EUR/24/10Y/0.05", -0.00529335126 },
-        { "9_Cap_EUR", "DiscountCurve/EUR/6/10Y", "IndexCurve/EUR-EURIBOR-6M/5/7Y", 0.00677440175 },
-        { "9_Cap_EUR", "DiscountCurve/EUR/6/10Y", "IndexCurve/EUR-EURIBOR-6M/6/10Y", -0.0101355366 },
-        { "9_Cap_EUR", "DiscountCurve/EUR/6/10Y", "OptionletVolatility/EUR/19/5Y/0.05", -0.00512368197 },
-        { "9_Cap_EUR", "DiscountCurve/EUR/6/10Y", "OptionletVolatility/EUR/24/10Y/0.05", -0.0166702108 },
-        { "9_Cap_EUR", "IndexCurve/EUR-EURIBOR-6M/1/1Y", "IndexCurve/EUR-EURIBOR-6M/2/2Y", -3.22099407e-06 },
-        { "9_Cap_EUR", "IndexCurve/EUR-EURIBOR-6M/2/2Y", "IndexCurve/EUR-EURIBOR-6M/3/3Y", -0.00114858136 },
-        { "9_Cap_EUR", "IndexCurve/EUR-EURIBOR-6M/2/2Y", "IndexCurve/EUR-EURIBOR-6M/4/5Y", -3.32910605e-06 },
-        { "9_Cap_EUR", "IndexCurve/EUR-EURIBOR-6M/3/3Y", "IndexCurve/EUR-EURIBOR-6M/4/5Y", -0.0325351415 },
-        { "9_Cap_EUR", "IndexCurve/EUR-EURIBOR-6M/4/5Y", "IndexCurve/EUR-EURIBOR-6M/5/7Y", -0.22049032 },
-        { "9_Cap_EUR", "IndexCurve/EUR-EURIBOR-6M/5/7Y", "IndexCurve/EUR-EURIBOR-6M/6/10Y", -0.599739496 },
-        { "9_Cap_EUR", "OptionletVolatility/EUR/14/3Y/0.05", "OptionletVolatility/EUR/19/5Y/0.05", 0.0480747768 },
-        { "9_Cap_EUR", "OptionletVolatility/EUR/19/5Y/0.05", "OptionletVolatility/EUR/24/10Y/0.05", 0.670249341 },
-        { "9_Cap_EUR", "OptionletVolatility/EUR/4/1Y/0.05", "OptionletVolatility/EUR/9/2Y/0.05", 2.49049523e-05 },
-        { "9_Cap_EUR", "OptionletVolatility/EUR/9/2Y/0.05", "OptionletVolatility/EUR/14/3Y/0.05", 0.00180372518 }
-    };
+        {"10_Floor_USD", "DiscountCurve/USD/1/1Y", "OptionletVolatility/USD/0/1Y/0.01", -1.14292006e-05},
+        {"10_Floor_USD", "DiscountCurve/USD/1/1Y", "OptionletVolatility/USD/5/2Y/0.01", -4.75325714e-06},
+        {"10_Floor_USD", "DiscountCurve/USD/2/2Y", "OptionletVolatility/USD/0/1Y/0.01", -5.72627955e-05},
+        {"10_Floor_USD", "DiscountCurve/USD/2/2Y", "OptionletVolatility/USD/10/3Y/0.01", -6.0423848e-05},
+        {"10_Floor_USD", "DiscountCurve/USD/2/2Y", "OptionletVolatility/USD/5/2Y/0.01", -0.0003282313},
+        {"10_Floor_USD", "DiscountCurve/USD/3/3Y", "DiscountCurve/USD/4/5Y", 2.38844859e-06},
+        {"10_Floor_USD", "DiscountCurve/USD/3/3Y", "OptionletVolatility/USD/10/3Y/0.01", -0.0032767365},
+        {"10_Floor_USD", "DiscountCurve/USD/3/3Y", "OptionletVolatility/USD/15/5Y/0.01", -0.00124021334},
+        {"10_Floor_USD", "DiscountCurve/USD/3/3Y", "OptionletVolatility/USD/5/2Y/0.01", -0.000490482465},
+        {"10_Floor_USD", "DiscountCurve/USD/4/5Y", "DiscountCurve/USD/5/7Y", 4.56303869e-05},
+        {"10_Floor_USD", "DiscountCurve/USD/4/5Y", "OptionletVolatility/USD/10/3Y/0.01", -0.00309734116},
+        {"10_Floor_USD", "DiscountCurve/USD/4/5Y", "OptionletVolatility/USD/15/5Y/0.01", -0.0154732663},
+        {"10_Floor_USD", "DiscountCurve/USD/4/5Y", "OptionletVolatility/USD/20/10Y/0.01", -0.0011774169},
+        {"10_Floor_USD", "DiscountCurve/USD/4/5Y", "OptionletVolatility/USD/5/2Y/0.01", -1.15352532e-06},
+        {"10_Floor_USD", "DiscountCurve/USD/5/7Y", "DiscountCurve/USD/6/10Y", 0.00024726356},
+        {"10_Floor_USD", "DiscountCurve/USD/5/7Y", "OptionletVolatility/USD/10/3Y/0.01", -1.30253466e-06},
+        {"10_Floor_USD", "DiscountCurve/USD/5/7Y", "OptionletVolatility/USD/15/5Y/0.01", -0.0325565983},
+        {"10_Floor_USD", "DiscountCurve/USD/5/7Y", "OptionletVolatility/USD/20/10Y/0.01", -0.026175823},
+        {"10_Floor_USD", "DiscountCurve/USD/6/10Y", "OptionletVolatility/USD/15/5Y/0.01", -0.0151532607},
+        {"10_Floor_USD", "DiscountCurve/USD/6/10Y", "OptionletVolatility/USD/20/10Y/0.01", -0.0524224726},
+        {"10_Floor_USD", "IndexCurve/USD-LIBOR-3M/0/6M", "IndexCurve/USD-LIBOR-3M/1/1Y", -0.000206363102},
+        {"10_Floor_USD", "IndexCurve/USD-LIBOR-3M/0/6M", "IndexCurve/USD-LIBOR-3M/2/2Y", -9.83482187e-06},
+        {"10_Floor_USD", "IndexCurve/USD-LIBOR-3M/1/1Y", "IndexCurve/USD-LIBOR-3M/2/2Y", -0.0181056744},
+        {"10_Floor_USD", "IndexCurve/USD-LIBOR-3M/1/1Y", "IndexCurve/USD-LIBOR-3M/3/3Y", -0.000292001105},
+        {"10_Floor_USD", "IndexCurve/USD-LIBOR-3M/2/2Y", "IndexCurve/USD-LIBOR-3M/3/3Y", -0.197980608},
+        {"10_Floor_USD", "IndexCurve/USD-LIBOR-3M/2/2Y", "IndexCurve/USD-LIBOR-3M/4/5Y", -0.000472459871},
+        {"10_Floor_USD", "IndexCurve/USD-LIBOR-3M/3/3Y", "IndexCurve/USD-LIBOR-3M/4/5Y", -0.506924993},
+        {"10_Floor_USD", "IndexCurve/USD-LIBOR-3M/4/5Y", "IndexCurve/USD-LIBOR-3M/5/7Y", -1.31308851},
+        {"10_Floor_USD", "IndexCurve/USD-LIBOR-3M/5/7Y", "IndexCurve/USD-LIBOR-3M/6/10Y", -1.79643202},
+        {"10_Floor_USD", "OptionletVolatility/USD/0/1Y/0.01", "OptionletVolatility/USD/5/2Y/0.01", 0.0214845769},
+        {"10_Floor_USD", "OptionletVolatility/USD/10/3Y/0.01", "OptionletVolatility/USD/15/5Y/0.01", 0.224709734},
+        {"10_Floor_USD", "OptionletVolatility/USD/15/5Y/0.01", "OptionletVolatility/USD/20/10Y/0.01", 0.693920762},
+        {"10_Floor_USD", "OptionletVolatility/USD/5/2Y/0.01", "OptionletVolatility/USD/10/3Y/0.01", 0.0649121282},
+        {"1_Swap_EUR", "DiscountCurve/EUR/1/1Y", "DiscountCurve/EUR/2/2Y", 0.000439456664},
+        {"1_Swap_EUR", "DiscountCurve/EUR/1/1Y", "IndexCurve/EUR-EURIBOR-6M/0/6M", 0.0488603441},
+        {"1_Swap_EUR", "DiscountCurve/EUR/1/1Y", "IndexCurve/EUR-EURIBOR-6M/1/1Y", -0.0725961695},
+        {"1_Swap_EUR", "DiscountCurve/EUR/1/1Y", "IndexCurve/EUR-EURIBOR-6M/2/2Y", -0.0499326873},
+        {"1_Swap_EUR", "DiscountCurve/EUR/2/2Y", "DiscountCurve/EUR/3/3Y", 0.00136525929},
+        {"1_Swap_EUR", "DiscountCurve/EUR/2/2Y", "IndexCurve/EUR-EURIBOR-6M/0/6M", 0.00108389393},
+        {"1_Swap_EUR", "DiscountCurve/EUR/2/2Y", "IndexCurve/EUR-EURIBOR-6M/1/1Y", 0.141865394},
+        {"1_Swap_EUR", "DiscountCurve/EUR/2/2Y", "IndexCurve/EUR-EURIBOR-6M/2/2Y", -0.191425738},
+        {"1_Swap_EUR", "DiscountCurve/EUR/2/2Y", "IndexCurve/EUR-EURIBOR-6M/3/3Y", -0.1454702},
+        {"1_Swap_EUR", "DiscountCurve/EUR/3/3Y", "DiscountCurve/EUR/4/5Y", 0.00183080882},
+        {"1_Swap_EUR", "DiscountCurve/EUR/3/3Y", "IndexCurve/EUR-EURIBOR-6M/1/1Y", 0.000784549396},
+        {"1_Swap_EUR", "DiscountCurve/EUR/3/3Y", "IndexCurve/EUR-EURIBOR-6M/2/2Y", 0.425320865},
+        {"1_Swap_EUR", "DiscountCurve/EUR/3/3Y", "IndexCurve/EUR-EURIBOR-6M/3/3Y", -0.337527203},
+        {"1_Swap_EUR", "DiscountCurve/EUR/3/3Y", "IndexCurve/EUR-EURIBOR-6M/4/5Y", -0.560276813},
+        {"1_Swap_EUR", "DiscountCurve/EUR/4/5Y", "DiscountCurve/EUR/5/7Y", -0.00376823638},
+        {"1_Swap_EUR", "DiscountCurve/EUR/4/5Y", "IndexCurve/EUR-EURIBOR-6M/2/2Y", 0.000516382745},
+        {"1_Swap_EUR", "DiscountCurve/EUR/4/5Y", "IndexCurve/EUR-EURIBOR-6M/3/3Y", 0.91807051},
+        {"1_Swap_EUR", "DiscountCurve/EUR/4/5Y", "IndexCurve/EUR-EURIBOR-6M/4/5Y", -0.606871969},
+        {"1_Swap_EUR", "DiscountCurve/EUR/4/5Y", "IndexCurve/EUR-EURIBOR-6M/5/7Y", -1.1789221},
+        {"1_Swap_EUR", "DiscountCurve/EUR/5/7Y", "DiscountCurve/EUR/6/10Y", -0.0210602414},
+        {"1_Swap_EUR", "DiscountCurve/EUR/5/7Y", "IndexCurve/EUR-EURIBOR-6M/4/5Y", 1.93838247},
+        {"1_Swap_EUR", "DiscountCurve/EUR/5/7Y", "IndexCurve/EUR-EURIBOR-6M/5/7Y", -0.964284878},
+        {"1_Swap_EUR", "DiscountCurve/EUR/5/7Y", "IndexCurve/EUR-EURIBOR-6M/6/10Y", -2.50079601},
+        {"1_Swap_EUR", "DiscountCurve/EUR/6/10Y", "IndexCurve/EUR-EURIBOR-6M/5/7Y", 3.43097423},
+        {"1_Swap_EUR", "DiscountCurve/EUR/6/10Y", "IndexCurve/EUR-EURIBOR-6M/6/10Y", -4.9024972},
+        {"1_Swap_EUR", "IndexCurve/EUR-EURIBOR-6M/0/6M", "IndexCurve/EUR-EURIBOR-6M/1/1Y", -0.048865166},
+        {"1_Swap_EUR", "IndexCurve/EUR-EURIBOR-6M/0/6M", "IndexCurve/EUR-EURIBOR-6M/2/2Y", -0.00108389556},
+        {"1_Swap_EUR", "IndexCurve/EUR-EURIBOR-6M/1/1Y", "IndexCurve/EUR-EURIBOR-6M/2/2Y", -0.0924553103},
+        {"1_Swap_EUR", "IndexCurve/EUR-EURIBOR-6M/1/1Y", "IndexCurve/EUR-EURIBOR-6M/3/3Y", -0.000784546835},
+        {"1_Swap_EUR", "IndexCurve/EUR-EURIBOR-6M/2/2Y", "IndexCurve/EUR-EURIBOR-6M/3/3Y", -0.281394335},
+        {"1_Swap_EUR", "IndexCurve/EUR-EURIBOR-6M/2/2Y", "IndexCurve/EUR-EURIBOR-6M/4/5Y", -0.000516386237},
+        {"1_Swap_EUR", "IndexCurve/EUR-EURIBOR-6M/3/3Y", "IndexCurve/EUR-EURIBOR-6M/4/5Y", -0.359848329},
+        {"1_Swap_EUR", "IndexCurve/EUR-EURIBOR-6M/4/5Y", "IndexCurve/EUR-EURIBOR-6M/5/7Y", -0.779536431},
+        {"1_Swap_EUR", "IndexCurve/EUR-EURIBOR-6M/5/7Y", "IndexCurve/EUR-EURIBOR-6M/6/10Y", -0.989040876},
+        {"2_Swap_USD", "DiscountCurve/USD/0/6M", "DiscountCurve/USD/1/1Y", 7.85577577e-05},
+        {"2_Swap_USD", "DiscountCurve/USD/1/1Y", "DiscountCurve/USD/2/2Y", 0.00034391915},
+        {"2_Swap_USD", "DiscountCurve/USD/2/2Y", "DiscountCurve/USD/3/3Y", 0.00101750751},
+        {"2_Swap_USD", "DiscountCurve/USD/3/3Y", "DiscountCurve/USD/4/5Y", 0.00129107304},
+        {"2_Swap_USD", "DiscountCurve/USD/4/5Y", "DiscountCurve/USD/5/7Y", 0.00885138742},
+        {"2_Swap_USD", "DiscountCurve/USD/5/7Y", "DiscountCurve/USD/6/10Y", 0.0236235501},
+        {"2_Swap_USD", "DiscountCurve/USD/6/10Y", "DiscountCurve/USD/7/15Y", 0.07325946},
+        {"2_Swap_USD", "DiscountCurve/USD/7/15Y", "DiscountCurve/USD/8/20Y", -2.22151866e-05},
+        {"2_Swap_USD", "IndexCurve/USD-LIBOR-3M/0/6M", "IndexCurve/USD-LIBOR-3M/1/1Y", -0.0202145245},
+        {"2_Swap_USD", "IndexCurve/USD-LIBOR-3M/0/6M", "IndexCurve/USD-LIBOR-3M/2/2Y", -0.000431735534},
+        {"2_Swap_USD", "IndexCurve/USD-LIBOR-3M/1/1Y", "IndexCurve/USD-LIBOR-3M/2/2Y", -0.0379707172},
+        {"2_Swap_USD", "IndexCurve/USD-LIBOR-3M/1/1Y", "IndexCurve/USD-LIBOR-3M/3/3Y", -0.000316063757},
+        {"2_Swap_USD", "IndexCurve/USD-LIBOR-3M/2/2Y", "IndexCurve/USD-LIBOR-3M/3/3Y", -0.11422779},
+        {"2_Swap_USD", "IndexCurve/USD-LIBOR-3M/2/2Y", "IndexCurve/USD-LIBOR-3M/4/5Y", -0.000207132776},
+        {"2_Swap_USD", "IndexCurve/USD-LIBOR-3M/3/3Y", "IndexCurve/USD-LIBOR-3M/4/5Y", -0.137591099},
+        {"2_Swap_USD", "IndexCurve/USD-LIBOR-3M/4/5Y", "IndexCurve/USD-LIBOR-3M/5/7Y", -0.305644142},
+        {"2_Swap_USD", "IndexCurve/USD-LIBOR-3M/5/7Y", "IndexCurve/USD-LIBOR-3M/6/10Y", -0.37816313},
+        {"2_Swap_USD", "IndexCurve/USD-LIBOR-3M/6/10Y", "IndexCurve/USD-LIBOR-3M/7/15Y", -0.431405343},
+        {"2_Swap_USD", "IndexCurve/USD-LIBOR-3M/6/10Y", "IndexCurve/USD-LIBOR-3M/8/20Y", -0.000289136427},
+        {"2_Swap_USD", "IndexCurve/USD-LIBOR-3M/7/15Y", "IndexCurve/USD-LIBOR-3M/8/20Y", 0.00042894634},
+        {"3_Swap_GBP", "DiscountCurve/GBP/0/6M", "FXSpot/EURGBP/0/spot", -0.0210289143},
+        {"3_Swap_GBP", "DiscountCurve/GBP/1/1Y", "FXSpot/EURGBP/0/spot", 0.00639700286},
+        {"3_Swap_GBP", "DiscountCurve/GBP/2/2Y", "FXSpot/EURGBP/0/spot", 0.0173332273},
+        {"3_Swap_GBP", "DiscountCurve/GBP/3/3Y", "FXSpot/EURGBP/0/spot", 0.0420620699},
+        {"3_Swap_GBP", "DiscountCurve/GBP/4/5Y", "FXSpot/EURGBP/0/spot", 0.0715365904},
+        {"3_Swap_GBP", "DiscountCurve/GBP/5/7Y", "FXSpot/EURGBP/0/spot", 0.124046364},
+        {"3_Swap_GBP", "DiscountCurve/GBP/6/10Y", "FXSpot/EURGBP/0/spot", 0.245374591},
+        {"3_Swap_GBP", "DiscountCurve/GBP/7/15Y", "FXSpot/EURGBP/0/spot", 0.388570486},
+        {"3_Swap_GBP", "DiscountCurve/GBP/8/20Y", "FXSpot/EURGBP/0/spot", -0.308991311},
+        {"5_Swaption_EUR", "DiscountCurve/EUR/6/10Y", "DiscountCurve/EUR/7/15Y", -0.000812667564},
+        {"5_Swaption_EUR", "DiscountCurve/EUR/6/10Y", "DiscountCurve/EUR/8/20Y", -0.000307592545},
+        {"5_Swaption_EUR", "DiscountCurve/EUR/6/10Y", "IndexCurve/EUR-EURIBOR-6M/6/10Y", 0.0728828434},
+        {"5_Swaption_EUR", "DiscountCurve/EUR/6/10Y", "IndexCurve/EUR-EURIBOR-6M/7/15Y", -0.177001389},
+        {"5_Swaption_EUR", "DiscountCurve/EUR/6/10Y", "IndexCurve/EUR-EURIBOR-6M/8/20Y", 0.0905885823},
+        {"5_Swaption_EUR", "DiscountCurve/EUR/6/10Y", "SwaptionVolatility/EUR/5/10Y/10Y/ATM", -0.0110764697},
+        {"5_Swaption_EUR", "DiscountCurve/EUR/7/15Y", "DiscountCurve/EUR/8/20Y", 0.00224833752},
+        {"5_Swaption_EUR", "DiscountCurve/EUR/7/15Y", "IndexCurve/EUR-EURIBOR-6M/6/10Y", 0.0136493384},
+        {"5_Swaption_EUR", "DiscountCurve/EUR/7/15Y", "IndexCurve/EUR-EURIBOR-6M/7/15Y", -0.0474343306},
+        {"5_Swaption_EUR", "DiscountCurve/EUR/7/15Y", "IndexCurve/EUR-EURIBOR-6M/8/20Y", 0.0360955216},
+        {"5_Swaption_EUR", "DiscountCurve/EUR/7/15Y", "SwaptionVolatility/EUR/5/10Y/10Y/ATM", 0.0016329258},
+        {"5_Swaption_EUR", "DiscountCurve/EUR/8/20Y", "IndexCurve/EUR-EURIBOR-6M/6/10Y", -0.164000375},
+        {"5_Swaption_EUR", "DiscountCurve/EUR/8/20Y", "IndexCurve/EUR-EURIBOR-6M/7/15Y", 0.417352238},
+        {"5_Swaption_EUR", "DiscountCurve/EUR/8/20Y", "IndexCurve/EUR-EURIBOR-6M/8/20Y", -0.229366568},
+        {"5_Swaption_EUR", "DiscountCurve/EUR/8/20Y", "SwaptionVolatility/EUR/5/10Y/10Y/ATM", 0.0199757638},
+        {"5_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/6/10Y", "IndexCurve/EUR-EURIBOR-6M/7/15Y", -0.26738619},
+        {"5_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/6/10Y", "IndexCurve/EUR-EURIBOR-6M/8/20Y", -2.85552727},
+        {"5_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/6/10Y", "SwaptionVolatility/EUR/5/10Y/10Y/ATM", -2.22802017},
+        {"5_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/7/15Y", "IndexCurve/EUR-EURIBOR-6M/8/20Y", 0.332563403},
+        {"5_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/7/15Y", "SwaptionVolatility/EUR/5/10Y/10Y/ATM", 0.316522049},
+        {"5_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/8/20Y", "SwaptionVolatility/EUR/5/10Y/10Y/ATM", 3.96890127},
+        {"6_Swaption_EUR", "DiscountCurve/EUR/2/2Y", "DiscountCurve/EUR/3/3Y", 4.65581502e-06},
+        {"6_Swaption_EUR", "DiscountCurve/EUR/2/2Y", "DiscountCurve/EUR/4/5Y", -1.91397435e-05},
+        {"6_Swaption_EUR", "DiscountCurve/EUR/2/2Y", "DiscountCurve/EUR/5/7Y", -3.97715846e-05},
+        {"6_Swaption_EUR", "DiscountCurve/EUR/2/2Y", "IndexCurve/EUR-EURIBOR-6M/2/2Y", 0.0021812065},
+        {"6_Swaption_EUR", "DiscountCurve/EUR/2/2Y", "IndexCurve/EUR-EURIBOR-6M/3/3Y", -0.00152258186},
+        {"6_Swaption_EUR", "DiscountCurve/EUR/2/2Y", "IndexCurve/EUR-EURIBOR-6M/4/5Y", -0.000110931094},
+        {"6_Swaption_EUR", "DiscountCurve/EUR/2/2Y", "IndexCurve/EUR-EURIBOR-6M/5/7Y", -0.00402972821},
+        {"6_Swaption_EUR", "DiscountCurve/EUR/2/2Y", "IndexCurve/EUR-EURIBOR-6M/6/10Y", -1.54062514e-05},
+        {"6_Swaption_EUR", "DiscountCurve/EUR/2/2Y", "SwaptionVolatility/EUR/0/2Y/5Y/ATM", -0.00258447059},
+        {"6_Swaption_EUR", "DiscountCurve/EUR/2/2Y", "SwaptionVolatility/EUR/2/5Y/5Y/ATM", -4.72749957e-06},
+        {"6_Swaption_EUR", "DiscountCurve/EUR/3/3Y", "DiscountCurve/EUR/4/5Y", 2.01546663e-05},
+        {"6_Swaption_EUR", "DiscountCurve/EUR/3/3Y", "DiscountCurve/EUR/5/7Y", 3.39962985e-05},
+        {"6_Swaption_EUR", "DiscountCurve/EUR/3/3Y", "IndexCurve/EUR-EURIBOR-6M/2/2Y", 0.00233445946},
+        {"6_Swaption_EUR", "DiscountCurve/EUR/3/3Y", "IndexCurve/EUR-EURIBOR-6M/3/3Y", -0.00339824401},
+        {"6_Swaption_EUR", "DiscountCurve/EUR/3/3Y", "IndexCurve/EUR-EURIBOR-6M/4/5Y", -0.00562310815},
+        {"6_Swaption_EUR", "DiscountCurve/EUR/3/3Y", "IndexCurve/EUR-EURIBOR-6M/5/7Y", 0.00698599517},
+        {"6_Swaption_EUR", "DiscountCurve/EUR/3/3Y", "IndexCurve/EUR-EURIBOR-6M/6/10Y", 2.59470628e-05},
+        {"6_Swaption_EUR", "DiscountCurve/EUR/3/3Y", "SwaptionVolatility/EUR/0/2Y/5Y/ATM", 6.65486464e-05},
+        {"6_Swaption_EUR", "DiscountCurve/EUR/4/5Y", "DiscountCurve/EUR/5/7Y", 0.000102988368},
+        {"6_Swaption_EUR", "DiscountCurve/EUR/4/5Y", "IndexCurve/EUR-EURIBOR-6M/2/2Y", -0.00379254633},
+        {"6_Swaption_EUR", "DiscountCurve/EUR/4/5Y", "IndexCurve/EUR-EURIBOR-6M/3/3Y", 0.00963019417},
+        {"6_Swaption_EUR", "DiscountCurve/EUR/4/5Y", "IndexCurve/EUR-EURIBOR-6M/4/5Y", -0.00588629799},
+        {"6_Swaption_EUR", "DiscountCurve/EUR/4/5Y", "IndexCurve/EUR-EURIBOR-6M/5/7Y", 0.000396238503},
+        {"6_Swaption_EUR", "DiscountCurve/EUR/4/5Y", "IndexCurve/EUR-EURIBOR-6M/6/10Y", 4.87477412e-05},
+        {"6_Swaption_EUR", "DiscountCurve/EUR/4/5Y", "SwaptionVolatility/EUR/0/2Y/5Y/ATM", 0.000261444328},
+        {"6_Swaption_EUR", "DiscountCurve/EUR/5/7Y", "IndexCurve/EUR-EURIBOR-6M/2/2Y", -0.00793621904},
+        {"6_Swaption_EUR", "DiscountCurve/EUR/5/7Y", "IndexCurve/EUR-EURIBOR-6M/3/3Y", 0.000347485427},
+        {"6_Swaption_EUR", "DiscountCurve/EUR/5/7Y", "IndexCurve/EUR-EURIBOR-6M/4/5Y", 0.0207397881},
+        {"6_Swaption_EUR", "DiscountCurve/EUR/5/7Y", "IndexCurve/EUR-EURIBOR-6M/5/7Y", -0.00216833219},
+        {"6_Swaption_EUR", "DiscountCurve/EUR/5/7Y", "IndexCurve/EUR-EURIBOR-6M/6/10Y", -7.23455626e-05},
+        {"6_Swaption_EUR", "DiscountCurve/EUR/5/7Y", "SwaptionVolatility/EUR/0/2Y/5Y/ATM", 0.00849096973},
+        {"6_Swaption_EUR", "DiscountCurve/EUR/5/7Y", "SwaptionVolatility/EUR/2/5Y/5Y/ATM", 1.55316409e-05},
+        {"6_Swaption_EUR", "DiscountCurve/EUR/6/10Y", "IndexCurve/EUR-EURIBOR-6M/2/2Y", -4.09244039e-05},
+        {"6_Swaption_EUR", "DiscountCurve/EUR/6/10Y", "IndexCurve/EUR-EURIBOR-6M/3/3Y", 1.69568852e-06},
+        {"6_Swaption_EUR", "DiscountCurve/EUR/6/10Y", "IndexCurve/EUR-EURIBOR-6M/4/5Y", 3.42704752e-05},
+        {"6_Swaption_EUR", "DiscountCurve/EUR/6/10Y", "IndexCurve/EUR-EURIBOR-6M/5/7Y", 9.33648726e-05},
+        {"6_Swaption_EUR", "DiscountCurve/EUR/6/10Y", "SwaptionVolatility/EUR/0/2Y/5Y/ATM", 6.55931062e-05},
+        {"6_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/2/2Y", "IndexCurve/EUR-EURIBOR-6M/3/3Y", -0.0129378053},
+        {"6_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/2/2Y", "IndexCurve/EUR-EURIBOR-6M/4/5Y", -0.0222466371},
+        {"6_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/2/2Y", "IndexCurve/EUR-EURIBOR-6M/5/7Y", -0.807803513},
+        {"6_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/2/2Y", "IndexCurve/EUR-EURIBOR-6M/6/10Y", -0.00308817849},
+        {"6_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/2/2Y", "SwaptionVolatility/EUR/0/2Y/5Y/ATM", -0.518759384},
+        {"6_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/2/2Y", "SwaptionVolatility/EUR/2/5Y/5Y/ATM", -0.000948864704},
+        {"6_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/3/3Y", "IndexCurve/EUR-EURIBOR-6M/4/5Y", -0.00277042464},
+        {"6_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/3/3Y", "IndexCurve/EUR-EURIBOR-6M/5/7Y", 0.0333716971},
+        {"6_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/3/3Y", "IndexCurve/EUR-EURIBOR-6M/6/10Y", 0.000127656373},
+        {"6_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/3/3Y", "SwaptionVolatility/EUR/0/2Y/5Y/ATM", 0.0214136069},
+        {"6_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/3/3Y", "SwaptionVolatility/EUR/2/5Y/5Y/ATM", 3.91697083e-05},
+        {"6_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/4/5Y", "IndexCurve/EUR-EURIBOR-6M/5/7Y", 0.0655785376},
+        {"6_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/4/5Y", "IndexCurve/EUR-EURIBOR-6M/6/10Y", 0.000251968412},
+        {"6_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/4/5Y", "SwaptionVolatility/EUR/0/2Y/5Y/ATM", 0.0473829647},
+        {"6_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/4/5Y", "SwaptionVolatility/EUR/2/5Y/5Y/ATM", 8.66729658e-05},
+        {"6_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/5/7Y", "IndexCurve/EUR-EURIBOR-6M/6/10Y", 0.0103058335},
+        {"6_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/5/7Y", "SwaptionVolatility/EUR/0/2Y/5Y/ATM", 1.71370377},
+        {"6_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/5/7Y", "SwaptionVolatility/EUR/2/5Y/5Y/ATM", 0.00313519435},
+        {"6_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/6/10Y", "SwaptionVolatility/EUR/0/2Y/5Y/ATM", 0.00658131276},
+        {"6_Swaption_EUR", "IndexCurve/EUR-EURIBOR-6M/6/10Y", "SwaptionVolatility/EUR/2/5Y/5Y/ATM", 1.20384966e-05},
+        {"6_Swaption_EUR", "SwaptionVolatility/EUR/0/2Y/5Y/ATM", "SwaptionVolatility/EUR/2/5Y/5Y/ATM", 0.00164491931},
+        {"7_FxOption_EUR_USD", "DiscountCurve/EUR/3/3Y", "DiscountCurve/EUR/4/5Y", 0.0027612336},
+        {"7_FxOption_EUR_USD", "DiscountCurve/EUR/3/3Y", "FXSpot/EURUSD/0/spot", -42.4452352},
+        {"7_FxOption_EUR_USD", "DiscountCurve/EUR/3/3Y", "FXVolatility/EURUSD/0/5Y/ATM", 168.577072},
+        {"7_FxOption_EUR_USD", "DiscountCurve/EUR/4/5Y", "FXSpot/EURUSD/0/spot", -0.0776202832},
+        {"7_FxOption_EUR_USD", "DiscountCurve/EUR/4/5Y", "FXVolatility/EURUSD/0/5Y/ATM", 0.308961544},
+        {"7_FxOption_EUR_USD", "DiscountCurve/USD/3/3Y", "DiscountCurve/USD/4/5Y", 0.00206353236},
+        {"8_FxOption_EUR_GBP", "DiscountCurve/GBP/5/7Y", "FXSpot/EURGBP/0/spot", 40.247185},
+        {"9_Cap_EUR", "DiscountCurve/EUR/3/3Y", "IndexCurve/EUR-EURIBOR-6M/2/2Y", 1.89362237e-06},
+        {"9_Cap_EUR", "DiscountCurve/EUR/3/3Y", "IndexCurve/EUR-EURIBOR-6M/3/3Y", 1.60204674e-05},
+        {"9_Cap_EUR", "DiscountCurve/EUR/3/3Y", "IndexCurve/EUR-EURIBOR-6M/4/5Y", -3.54807444e-05},
+        {"9_Cap_EUR", "DiscountCurve/EUR/3/3Y", "OptionletVolatility/EUR/14/3Y/0.05", -7.41440071e-05},
+        {"9_Cap_EUR", "DiscountCurve/EUR/3/3Y", "OptionletVolatility/EUR/19/5Y/0.05", -2.8717396e-05},
+        {"9_Cap_EUR", "DiscountCurve/EUR/3/3Y", "OptionletVolatility/EUR/9/2Y/0.05", -3.95373826e-06},
+        {"9_Cap_EUR", "DiscountCurve/EUR/4/5Y", "DiscountCurve/EUR/5/7Y", 1.87918619e-06},
+        {"9_Cap_EUR", "DiscountCurve/EUR/4/5Y", "IndexCurve/EUR-EURIBOR-6M/3/3Y", 0.000141954676},
+        {"9_Cap_EUR", "DiscountCurve/EUR/4/5Y", "IndexCurve/EUR-EURIBOR-6M/4/5Y", 0.000136532169},
+        {"9_Cap_EUR", "DiscountCurve/EUR/4/5Y", "IndexCurve/EUR-EURIBOR-6M/5/7Y", -0.000558091084},
+        {"9_Cap_EUR", "DiscountCurve/EUR/4/5Y", "OptionletVolatility/EUR/14/3Y/0.05", -0.000195855626},
+        {"9_Cap_EUR", "DiscountCurve/EUR/4/5Y", "OptionletVolatility/EUR/19/5Y/0.05", -0.0013501175},
+        {"9_Cap_EUR", "DiscountCurve/EUR/4/5Y", "OptionletVolatility/EUR/24/10Y/0.05", -9.03819837e-05},
+        {"9_Cap_EUR", "DiscountCurve/EUR/5/7Y", "DiscountCurve/EUR/6/10Y", 2.44087892e-05},
+        {"9_Cap_EUR", "DiscountCurve/EUR/5/7Y", "IndexCurve/EUR-EURIBOR-6M/4/5Y", 0.00131097735},
+        {"9_Cap_EUR", "DiscountCurve/EUR/5/7Y", "IndexCurve/EUR-EURIBOR-6M/5/7Y", 0.000537751659},
+        {"9_Cap_EUR", "DiscountCurve/EUR/5/7Y", "IndexCurve/EUR-EURIBOR-6M/6/10Y", -0.00376190752},
+        {"9_Cap_EUR", "DiscountCurve/EUR/5/7Y", "OptionletVolatility/EUR/19/5Y/0.05", -0.00650057233},
+        {"9_Cap_EUR", "DiscountCurve/EUR/5/7Y", "OptionletVolatility/EUR/24/10Y/0.05", -0.00529335126},
+        {"9_Cap_EUR", "DiscountCurve/EUR/6/10Y", "IndexCurve/EUR-EURIBOR-6M/5/7Y", 0.00677440175},
+        {"9_Cap_EUR", "DiscountCurve/EUR/6/10Y", "IndexCurve/EUR-EURIBOR-6M/6/10Y", -0.0101355366},
+        {"9_Cap_EUR", "DiscountCurve/EUR/6/10Y", "OptionletVolatility/EUR/19/5Y/0.05", -0.00512368197},
+        {"9_Cap_EUR", "DiscountCurve/EUR/6/10Y", "OptionletVolatility/EUR/24/10Y/0.05", -0.0166702108},
+        {"9_Cap_EUR", "IndexCurve/EUR-EURIBOR-6M/1/1Y", "IndexCurve/EUR-EURIBOR-6M/2/2Y", -3.22099407e-06},
+        {"9_Cap_EUR", "IndexCurve/EUR-EURIBOR-6M/2/2Y", "IndexCurve/EUR-EURIBOR-6M/3/3Y", -0.00114858136},
+        {"9_Cap_EUR", "IndexCurve/EUR-EURIBOR-6M/2/2Y", "IndexCurve/EUR-EURIBOR-6M/4/5Y", -3.32910605e-06},
+        {"9_Cap_EUR", "IndexCurve/EUR-EURIBOR-6M/3/3Y", "IndexCurve/EUR-EURIBOR-6M/4/5Y", -0.0325351415},
+        {"9_Cap_EUR", "IndexCurve/EUR-EURIBOR-6M/4/5Y", "IndexCurve/EUR-EURIBOR-6M/5/7Y", -0.22049032},
+        {"9_Cap_EUR", "IndexCurve/EUR-EURIBOR-6M/5/7Y", "IndexCurve/EUR-EURIBOR-6M/6/10Y", -0.599739496},
+        {"9_Cap_EUR", "OptionletVolatility/EUR/14/3Y/0.05", "OptionletVolatility/EUR/19/5Y/0.05", 0.0480747768},
+        {"9_Cap_EUR", "OptionletVolatility/EUR/19/5Y/0.05", "OptionletVolatility/EUR/24/10Y/0.05", 0.670249341},
+        {"9_Cap_EUR", "OptionletVolatility/EUR/4/1Y/0.05", "OptionletVolatility/EUR/9/2Y/0.05", 2.49049523e-05},
+        {"9_Cap_EUR", "OptionletVolatility/EUR/9/2Y/0.05", "OptionletVolatility/EUR/14/3Y/0.05", 0.00180372518}};
 
     map<tuple<string, string, string>, Real> cachedMap;
     for (Size i = 0; i < cachedResults.size(); ++i) {

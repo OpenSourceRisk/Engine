@@ -74,13 +74,11 @@ namespace analytics {
 class SensitivityScenarioGenerator : public ShiftScenarioGenerator {
 public:
     //! Constructor
-    SensitivityScenarioGenerator(
-        const boost::shared_ptr<SensitivityScenarioData>& sensitivityData,
-        const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
-        const Date& today,
-        const boost::shared_ptr<ore::data::Market>& initMarket,
-        const std::string& configuration = Market::defaultConfiguration,
-        boost::shared_ptr<ScenarioFactory> baseScenarioFactory = {});
+    SensitivityScenarioGenerator(const boost::shared_ptr<SensitivityScenarioData>& sensitivityData,
+                                 const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData, const Date& today,
+                                 const boost::shared_ptr<ore::data::Market>& initMarket,
+                                 const std::string& configuration = Market::defaultConfiguration,
+                                 boost::shared_ptr<ScenarioFactory> baseScenarioFactory = {});
     //! Default destructor
     ~SensitivityScenarioGenerator(){};
 

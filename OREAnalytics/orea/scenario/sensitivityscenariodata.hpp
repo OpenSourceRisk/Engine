@@ -86,7 +86,7 @@ public:
     };
 
     //! Default constructor
-    SensitivityScenarioData() : parConversion_(false) {};
+    SensitivityScenarioData() : parConversion_(false){};
 
     //! \name Inspectors
     //@{
@@ -121,7 +121,7 @@ public:
     // const vector<string>& creditNames() const { return creditNames_; }
     // const map<string, CreditCurveShiftData> creditCurveShiftData() const { return creditCurveShiftData_; }
 
-    const vector<pair<string, string> >& crossGammaFilter() const { return crossGammaFilter_; }
+    const vector<pair<string, string>>& crossGammaFilter() const { return crossGammaFilter_; }
 
     //@}
 
@@ -158,7 +158,7 @@ public:
     // vector<string>& creditNames() { return creditNames_; }
     // map<string, CreditCurveShiftData> creditCurveShiftData() { return creditCurveShiftData_; }
 
-    vector<pair<string, string> >& crossGammaFilter() { return crossGammaFilter_; }
+    vector<pair<string, string>>& crossGammaFilter() { return crossGammaFilter_; }
 
     //@}
 
@@ -180,7 +180,6 @@ public:
     //@}
 
 private:
-
     bool parConversion_;
 
     vector<string> discountCurrencies_;
@@ -212,7 +211,7 @@ private:
     vector<string> creditNames_;
     map<string, CurveShiftData> creditCurveShiftData_; // key: credit name
 
-    vector<pair<string, string> > crossGammaFilter_;
+    vector<pair<string, string>> crossGammaFilter_;
 };
 }
 }

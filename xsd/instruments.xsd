@@ -143,6 +143,33 @@
       </xs:choice>
     </xs:complexType>
   </xs:element>
+  <xs:element name="CPILegData" substitutionGroup="legDataType">
+    <xs:complexType>
+      <xs:choice maxOccurs="unbounded" minOccurs="0">
+        <xs:element type="xs:string" name="Index"/>
+        <xs:element name="Rates">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:float" name="Rate" maxOccurs="unbounded"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      <xs:element type="xs:float" name="BaseCPI" maxOccurs="1"/>
+      <xs:element type="xs:string" name="ObservationLag" maxOccurs="1"/>
+      <xs:element type="bool" name="Interpolated" maxOccurs="1"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="YYLegData" substitutionGroup="legDataType">
+    <xs:complexType>
+      <xs:choice maxOccurs="unbounded" minOccurs="0">
+        <xs:element type="xs:string" name="Index"/>
+      <xs:element type="xs:integer" name="FixingDays" maxOccurs="1"/>
+      <xs:element type="xs:string" name="ObservationLag" maxOccurs="1"/>
+      <xs:element type="bool" name="Interpolated" maxOccurs="1"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
 
   <xs:complexType name="legData">
     <xs:all>
@@ -231,6 +258,8 @@
     <xs:restriction base="xs:string">
       <xs:enumeration value="Fixed"/>
       <xs:enumeration value="Floating"/>
+      <xs:enumeration value="CPI"/>
+      <xs:enumeration value="YY"/>
     </xs:restriction>
   </xs:simpleType>
 

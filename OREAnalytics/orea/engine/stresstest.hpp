@@ -55,15 +55,11 @@ namespace analytics {
 class StressTest {
 public:
     //! Constructor
-    StressTest(
-        const boost::shared_ptr<ore::data::Portfolio>& portfolio, 
-        boost::shared_ptr<ore::data::Market>& market,
-        const string& marketConfiguration, 
-        const boost::shared_ptr<ore::data::EngineData>& engineData,
-        boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
-        const boost::shared_ptr<StressTestScenarioData>& stressData, 
-        const Conventions& conventions,
-        boost::shared_ptr<ScenarioFactory> scenarioFactory = {});
+    StressTest(const boost::shared_ptr<ore::data::Portfolio>& portfolio, boost::shared_ptr<ore::data::Market>& market,
+               const string& marketConfiguration, const boost::shared_ptr<ore::data::EngineData>& engineData,
+               boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+               const boost::shared_ptr<StressTestScenarioData>& stressData, const Conventions& conventions,
+               boost::shared_ptr<ScenarioFactory> scenarioFactory = {});
 
     //! Return set of trades analysed
     const std::set<std::string>& trades() { return trades_; }
