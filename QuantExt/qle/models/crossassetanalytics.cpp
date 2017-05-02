@@ -313,24 +313,40 @@ Real fx_eq_covariance(const CrossAssetModel* x, const Size j, const Size k, cons
     return res;
 }
 
-// TODO
-Real infz_eq_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt) {
-    return 0.0;
+Real infz_eq_covariance(const CrossAssetModel* x, const Size i, const Size j, const Time t0, const Time dt) {
+    Size k = x->ccyIndex(x->eqbs(i)->currency());
+    Real Hi_b = Hz(k).eval(x, t0 + dt);
+    Real res = Hi_b * integral(x, P(rzy(k, j), az(k), ay(i)), t0, t0 + dt) -
+               integral(x, P(rzy(k, j), Hz(k), az(k), ay(i)), t0, t0 + dt) +
+               integral(x, P(rys(i, j), ay(i), ss(j)), t0, t0 + dt);
+    return res;
 }
 
-// TODO
-Real infy_eq_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt) {
-    return 0.0;
+Real infy_eq_covariance(const CrossAssetModel* x, const Size i, const Size j, const Time t0, const Time dt) {
+    Size k = x->ccyIndex(x->eqbs(i)->currency());
+    Real Hi_b = Hz(k).eval(x, t0 + dt);
+    Real res = Hi_b * integral(x, P(rzy(k, j), az(k), Hy(i), ay(i)), t0, t0 + dt) -
+               integral(x, P(rzy(k, j), Hz(k), az(k), Hy(i), ay(i)), t0, t0 + dt) +
+               integral(x, P(rys(i, j), Hy(i), ay(i), ss(j)), t0, t0 + dt);
+    return res;
 }
 
-// TODO
-Real crz_eq_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt) {
-    return 0.0;
+Real crz_eq_covariance(const CrossAssetModel* x, const Size i, const Size j, const Time t0, const Time dt) {
+    Size k = x->ccyIndex(x->eqbs(i)->currency());
+    Real Hi_b = Hz(k).eval(x, t0 + dt);
+    Real res = Hi_b * integral(x, P(rzy(k, j), az(k), al(i)), t0, t0 + dt) -
+               integral(x, P(rzy(k, j), Hz(k), az(k), al(i)), t0, t0 + dt) +
+               integral(x, P(rys(i, j), al(i), ss(j)), t0, t0 + dt);
+    return res;
 }
 
-// TODO
-Real cry_eq_covariance(const CrossAssetModel* model, const Size i, const Size j, const Time t0, const Time dt) {
-    return 0.0;
+Real cry_eq_covariance(const CrossAssetModel* x, const Size i, const Size j, const Time t0, const Time dt) {
+    Size k = x->ccyIndex(x->eqbs(i)->currency());
+    Real Hi_b = Hz(k).eval(x, t0 + dt);
+    Real res = Hi_b * integral(x, P(rzy(k, j), az(k), Hl(i), al(i)), t0, t0 + dt) -
+               integral(x, P(rzy(k, j), Hz(k), az(k), Hl(i), al(i)), t0, t0 + dt) +
+               integral(x, P(rys(i, j), Hl(i), al(i), ss(j)), t0, t0 + dt);
+    return res;
 }
 
 Real eq_eq_covariance(const CrossAssetModel* x, const Size k, const Size l, const Time t0, const Time dt) {

@@ -294,10 +294,22 @@ Disposable<Matrix> CrossAssetStateProcess::diffusionImpl(Time t, const Array&) c
             Real value = sigmai * sigmaj * rhoxs;
             setValue(res, value, model_, FX, i, EQ, j, 0, 0);
         }
-        // TODO inf-eq
-
-        // TODO cr-eq
-
+        // inf-eq
+        for (Size i = 0; i < d; ++i) {
+            Real alphai = model_->infdk(i)->alpha(t);
+            Real Hi = model_->infdk(i)->H(t);
+            Real rhoys = model_->correlation(INF, i, EQ, j, 0, 0);
+            setValue(res, alphai * sigmaj * rhoys, model_, INF, i, EQ, j, 0, 0);
+            setValue(res, Hi * alphai * sigmaj * rhoys, model_, INF, i, EQ, j, 1, 0);
+        }
+        // cr-eq
+        for (Size i = 0; i < c; ++i) {
+            Real alphai = model_->crlgm1f(i)->alpha(t);
+            Real Hi = model_->crlgm1f(i)->H(t);
+            Real rhols = model_->correlation(CR, i, EQ, j, 0, 0);
+            setValue(res, alphai * sigmaj * rhols, model_, CR, i, EQ, j, 0, 0);
+            setValue(res, Hi * alphai * sigmaj * rhols, model_, CR, i, EQ, j, 1, 0);
+        }
         // eq-eq
         for (Size i = 0; i <= j; ++i) {
             Real sigmai = model_->eqbs(i)->sigma(t);
