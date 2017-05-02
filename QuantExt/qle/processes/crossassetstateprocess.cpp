@@ -521,7 +521,7 @@ Disposable<Matrix> CrossAssetStateProcess::ExactDiscretization::covarianceImpl(c
             setValue(res, infz_eq_covariance(model_, i, j, t0, dt), model_, INF, i, EQ, j, 0, 0);
             setValue(res, infy_eq_covariance(model_, i, j, t0, dt), model_, INF, i, EQ, j, 1, 0);
         }
-        for (Size i = 0; i < d; ++i) {
+        for (Size i = 0; i < c; ++i) {
             // cr-eq
             setValue(res, crz_eq_covariance(model_, i, j, t0, dt), model_, CR, i, EQ, j, 0, 0);
             setValue(res, cry_eq_covariance(model_, i, j, t0, dt), model_, CR, i, EQ, j, 1, 0);
