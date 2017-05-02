@@ -18,7 +18,11 @@
 
 #include <orea/scenario/scenario.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ql/errors.hpp>
+#include <vector>
 #include <boost/algorithm/string/split.hpp>
+
+using namespace ore::data;
 
 namespace ore {
 namespace analytics {
@@ -51,5 +55,30 @@ std::ostream& operator<<(std::ostream& out, const RiskFactorKey::KeyType& type) 
 std::ostream& operator<<(std::ostream& out, const RiskFactorKey& key) {
     return out << key.keytype << "/" << key.name << "/" << key.index;
 }
+
+RiskFactorKey::KeyType parseRiskFactorKeyType(const string &string_type) {
+    if (string_type == "DiscountCurve")
+        return RiskFactorKey::KeyType::DiscountCurve;
+    else if (string_type == "YieldCurve")
+        return RiskFactorKey::KeyType::YieldCurve;
+    else if (string_type == "IndexCurve")
+        return RiskFactorKey::KeyType::IndexCurve;
+    else if (string_type == "SwaptionVolatility")
+        return RiskFactorKey::KeyType::SwaptionVolatility;
+    else if (string_type == "FXSpot")
+        return RiskFactorKey::KeyType::FXSpot;
+    else if (string_type == "FXVolatility")
+        return RiskFactorKey::KeyType::FXVolatility;
+    QL_FAIL("RiskFactorKey " << string_type << " does not exist.");
+}
+
+RiskFactorKey parseRiskFactorKey(const string &string_key) {
+    std::vector<string> tokens;
+    boost::split(tokens, string_key, boost::is_any_of("/"), boost::token_compress_on);
+    QL_REQUIRE(tokens.size() == 3, "Could not parse key " << string_key);
+    RiskFactorKey rfk(parseRiskFactorKeyType(tokens[0]), tokens[1], parseInteger(tokens[2]));
+    return rfk;
+}
+
 }
 }

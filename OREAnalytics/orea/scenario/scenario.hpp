@@ -99,6 +99,9 @@ inline bool operator!=(const RiskFactorKey& lhs, const RiskFactorKey& rhs) { ret
 std::ostream& operator<<(std::ostream& out, const RiskFactorKey::KeyType& type);
 std::ostream& operator<<(std::ostream& out, const RiskFactorKey& key);
 
+RiskFactorKey::KeyType parseRiskFactorKeyType(const string &string_type);
+RiskFactorKey parseRiskFactorKey(const string &string_key);
+
 //-----------------------------------------------------------------------------------------------
 //! Scenario Base Class
 /*! A scenario contains a single cross asset model sample in terms of
