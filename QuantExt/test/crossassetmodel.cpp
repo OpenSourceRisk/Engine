@@ -4124,10 +4124,133 @@ void CrossAssetModelTest::testCpiCalibrationByH() {
     Real mcPrice = mean(floor);
     if (std::abs(mcPrice - cpiHelpers[nMat - 1]->modelValue()) > tol) {
         BOOST_ERROR("Failed to reprice last ZC CPI Floor with MC ("
-                    << mcPrice << "), analytical model price is " << cpiHelpers[4]->modelValue() << ", difference is "
-                    << mcPrice - cpiHelpers[nMat - 1]->modelValue() << ", tolerance is " << tol);
+                    << mcPrice << "), analytical model price is " << cpiHelpers[nMat - 1]->modelValue()
+                    << ", difference is " << mcPrice - cpiHelpers[nMat - 1]->modelValue() << ", tolerance is " << tol);
     }
 } // testCpiCalibrationByH
+
+void CrossAssetModelTest::testCrCalibration() {
+
+    BOOST_TEST_MESSAGE("Testing calibration to CDS Options and repricing via MC...");
+
+    // set up IR-CR model, calibrate to given CDS Options and check
+    // the result with a MC simulation
+
+    SavedSettings backup;
+    Date refDate(30, July, 2015);
+    Settings::instance().evaluationDate() = Date(30, July, 2015);
+
+    // IR
+    Handle<YieldTermStructure> eurYts(boost::make_shared<FlatForward>(refDate, 0.01, Actual365Fixed()));
+    boost::shared_ptr<Parametrization> ireur_p =
+        boost::make_shared<IrLgm1fConstantParametrization>(EURCurrency(), eurYts, 0.01, 0.01);
+
+    // CR
+    Handle<DefaultProbabilityTermStructure> prob(boost::make_shared<FlatHazardRate>(refDate, 0.01, Actual365Fixed()));
+
+    Size nMat = 10;
+    Real impliedVols[] = { 0.10, 0.12, 0.14, 0.16, 0.18, 0.2, 0.21, 0.215, 0.22, 0.225 };
+    Period maturity[] = { 1 * Years, 2 * Years, 3 * Years, 4 * Years, 5 * Years,
+                          6 * Years, 7 * Years, 8 * Years, 9 * Years, 10 * Years };
+
+    std::vector<boost::shared_ptr<CalibrationHelper> > cdsoHelpers;
+    Array volStepTimes(13), noTimes(0);
+    Array crVols(14, 0.0030), crRev(14, 0.01); // init vol and rev
+
+    Time T;
+    for (Size i = 1; i <= nMat; ++i) {
+        Date mat = refDate + maturity[i - 1];
+        Schedule schedule(mat, mat + 10 * Years, 3 * Months, TARGET(), Following, Following, DateGeneration::CDS,
+                          false);
+        boost::shared_ptr<CdsOptionHelper> h(
+            new CdsOptionHelper(mat, Handle<Quote>(boost::make_shared<SimpleQuote>(impliedVols[i - 1])), schedule,
+                                Following, Actual360(), prob, 0.4, eurYts));
+        Real t = eurYts->timeFromReference(mat);
+        cdsoHelpers.push_back(h);
+        if (i <= nMat - 1)
+            volStepTimes[i - 1] = t;
+        T = t;
+    }
+
+    boost::shared_ptr<CrLgm1fPiecewiseLinearParametrization> infeur_p =
+        boost::make_shared<InfDkPiecewiseLinearParametrization>(EURCurrency(), prob, volStepTimes, crVols, volStepTimes,
+                                                                crRev);
+
+    std::vector<boost::shared_ptr<Parametrization> > parametrizations;
+    parametrizations.push_back(ireur_p);
+    parametrizations.push_back(infeur_p);
+
+    boost::shared_ptr<CrossAssetModel> model =
+        boost::make_shared<CrossAssetModel>(parametrizations, Matrix(), SalvagingAlgorithm::None);
+
+    model->correlation(IR, 0, CR, 0, 0.33);
+
+    // pricing engine
+    boost::shared_ptr<AnalyticLgmCdsOptionEngine> engine =
+        boost::make_shared<AnalyticLgmCdsOptionEngine>(model, 0, 0, 0.4);
+
+    for (Size i = 0; i < cdsoHelpers.size(); ++i) {
+        cdsoHelpers[i]->setPricingEngine(engine);
+    }
+
+    // calibration
+    LevenbergMarquardt lm;
+    EndCriteria ec(1000, 500, 1E-8, 1E-8, 1E-8);
+    model->calibrateCrLgmVolatilitiesIterative(0, cdsoHelpers, lm, ec);
+
+    for (Size i = 0; i < cdsoHelpers.size(); ++i) {
+        BOOST_TEST_MESSAGE("i=" << i << " modelvol=" << model->crlgm1f(0)->parameterValues(0)[i]
+                                << " modelrev=" << model->crlgm1f(0)->parameterValues(1)[i] << " market="
+                                << cdsoHelpers[i]->marketValue() << " model=" << cdsoHelpers[i]->modelValue()
+                                << " diff=" << (cdsoHelpers[i]->marketValue() - cdsoHelpers[i]->modelValue()));
+    }
+
+    // reprice last CDSO with Monte Carlo
+    Size n = 100000; // number of paths
+    Size seed = 18;  // rng seed
+    Size steps = 1;  // number of discretization steps
+
+    boost::shared_ptr<StochasticProcess> process = model->stateProcess(CrossAssetStateProcess::exact);
+    LowDiscrepancy::rsg_type sg = LowDiscrepancy::make_sequence_generator(model->dimension() * steps, seed);
+    TimeGrid grid(T, steps);
+    MultiPathGenerator<LowDiscrepancy::rsg_type> pg(process, grid, sg, false);
+
+    accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > > cdso;
+
+    Real K = cdsoHelpers.back()->underlying()->fairSpread();
+    BOOST_TEST_MESSAGE("Last CDSO fair spread is " << K);
+
+    for (Size i = 0; i < n; ++i) {
+        Sample<MultiPath> path = pg.next();
+        Size l = path.value[0].length() - 1;
+        Real irz = path.value[0][l];
+        Real crz = path.value[1][l];
+        Real cry = path.value[2][l];
+        std::pair<Real, Real> S = model->crlgm1fS(0, T, T, crz, cry);
+        cdso(std::max(S - K, 0.0) / model->numeraire(0, T, irz)); // TODO ....
+    }
+
+    BOOST_TEST_MESSAGE("mc cdso last = " << mean(cdso) << " +- " << error_of<tag::mean>(cdso));
+
+    // check model calibration
+    Real tol = 1.0E-12;
+    for (Size i = 0; i < cdsoHelpers.size(); ++i) {
+        if (std::abs(cdsoHelpers[i]->modelValue() - cdsoHelpers[i]->marketValue()) > tol) {
+            BOOST_ERROR("Model calibration for CDSO #"
+                        << i << " failed, market premium is " << cdsoHelpers[i]->marketValue() << ", model value is "
+                        << cdsoHelpers[i]->modelValue() << ", difference is "
+                        << (cdsoHelpers[i]->marketValue() - cdsoHelpers[i]->modelValue()) << ", tolerance is " << tol);
+        }
+    }
+    // check repricing with MC
+    tol = 2.0E-4;
+    Real mcPrice = mean(cdso);
+    if (std::abs(mcPrice - cdsoHelpers[nMat - 1]->modelValue()) > tol) {
+        BOOST_ERROR("Failed to reprice last CDSO with MC ("
+                    << mcPrice << "), analytical model price is " << cdsoHelpers.back()->modelValue()
+                    << ", difference is " << mcPrice - cdsoHelpers.back()->modelValue() << ", tolerance is " << tol);
+    }
+} // testCrCalibration
 
 test_suite* CrossAssetModelTest::suite() {
     test_suite* suite = BOOST_TEST_SUITE("CrossAsset model tests");
@@ -4154,6 +4277,7 @@ test_suite* CrossAssetModelTest::suite() {
 
     suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testCpiCalibrationByAlpha));
     suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testCpiCalibrationByH));
+    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testCrCalibration));
 
     suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testEqLgm5fPayouts));
     suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testEqLgm5fCalibration));
