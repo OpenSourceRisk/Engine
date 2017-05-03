@@ -53,15 +53,24 @@ public:
     LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const boost::shared_ptr<LgmData>& data,
                const std::string& configuration = Market::defaultConfiguration, Real bootstrapTolerance = 0.001);
     //! Return calibration error
-    Real error() { calculate(); return error_; }
+    Real error() {
+        calculate();
+        return error_;
+    }
 
     //! \name Inspectors
     //@{
     std::string currency() { return data_->ccy(); }
-    boost::shared_ptr<QuantExt::LGM>& model() { calculate(); return model_; }
+    boost::shared_ptr<QuantExt::LGM>& model() {
+        calculate();
+        return model_;
+    }
     boost::shared_ptr<QuantExt::IrLgm1fParametrization>& parametrization() { return parametrization_; }
     RelinkableHandle<YieldTermStructure> discountCurve() { return discountCurve_; }
-    std::vector<boost::shared_ptr<CalibrationHelper>> swaptionBasket() { calculate(); return swaptionBasket_; }
+    std::vector<boost::shared_ptr<CalibrationHelper>> swaptionBasket() {
+        calculate();
+        return swaptionBasket_;
+    }
     //@}
 private:
     void performCalculations() const override;

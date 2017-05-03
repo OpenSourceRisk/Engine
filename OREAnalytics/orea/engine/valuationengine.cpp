@@ -129,7 +129,7 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
 
             // recalibrate models
             for (auto const& b : modelBuilders_) {
-                if(om == ObservationMode::Mode::Disable)
+                if (om == ObservationMode::Mode::Disable)
                     b->recalculate();
                 b->recalibrate();
             }

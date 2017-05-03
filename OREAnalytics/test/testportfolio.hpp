@@ -46,9 +46,9 @@ boost::shared_ptr<Trade> buildEuropeanSwaption(string id, string longShort, stri
                                                string cashPhysical = "Cash");
 
 boost::shared_ptr<Trade> buildBermudanSwaption(string id, string longShort, string ccy, bool isPayer, Real notional,
-                                               Size exercises, int start, Size term, Real rate, Real spread, string fixedFreq,
-                                               string fixedDC, string floatFreq, string floatDC, string index,
-                                               string cashPhysical = "Cash");
+                                               Size exercises, int start, Size term, Real rate, Real spread,
+                                               string fixedFreq, string fixedDC, string floatFreq, string floatDC,
+                                               string index, string cashPhysical = "Cash");
 
 boost::shared_ptr<Trade> buildFxOption(string id, string longShort, string putCall, Size expiry, string boughtCcy,
                                        Real boughtAmount, string soldCcy, Real soldAmount);

@@ -79,7 +79,7 @@ void SensitivityAnalysis::initialize(boost::shared_ptr<NPVCube>& cube) {
     LOG("Build Engine Factory and rebuild portfolio");
     boost::shared_ptr<EngineFactory> factory = buildFactory();
     resetPortfolio(factory);
-    if(recalibrateModels_)
+    if (recalibrateModels_)
         modelBuilders_ = factory->modelBuilders();
     else
         modelBuilders_.clear();
