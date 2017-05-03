@@ -25,19 +25,24 @@
 
 #include <ored/marketdata/market.hpp>
 #include <ored/portfolio/enginedata.hpp>
+#include <ored/model/modelbuilder.hpp>
 
 #include <ql/pricingengine.hpp>
+#include <ql/utilities/disposable.hpp>
 
 #include <boost/shared_ptr.hpp>
 
 #include <map>
+#include <set>
 #include <vector>
 
 using std::map;
+using std::set;
 using std::string;
 using std::pair;
 using ore::data::Market;
 using QuantLib::PricingEngine;
+using QuantLib::Disposable;
 
 namespace ore {
 namespace data {
@@ -120,6 +125,9 @@ public:
         engineParameters_ = engineParameters;
     }
 
+    //! return model builders
+    const set<boost::shared_ptr<ModelBuilder>>& modelBuilders() const { return modelBuilders_; }
+
 protected:
     string model_;
     string engine_;
@@ -127,6 +135,7 @@ protected:
     map<MarketContext, string> configurations_;
     map<string, string> modelParameters_;
     map<string, string> engineParameters_;
+    set<boost::shared_ptr<ModelBuilder>> modelBuilders_;
 };
 
 //! Pricing Engine Factory class
@@ -175,6 +184,9 @@ public:
 
     //! Clear all builders
     void clear() { builders_.clear(); }
+
+    //! return model builders
+    Disposable<set<boost::shared_ptr<ModelBuilder>>> modelBuilders() const;
 
 private:
     boost::shared_ptr<Market> market_;

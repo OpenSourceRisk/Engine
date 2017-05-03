@@ -95,7 +95,10 @@ public:
         return npv_;
     }
     //! Return the fair FX forward rate.
-    const ExchangeRate& fairForwardRate() const { return fairForwardRate_; }
+    const ExchangeRate& fairForwardRate() const {
+        calculate();
+        return fairForwardRate_;
+    }
     //@}
 
     //! \name Instrument interface

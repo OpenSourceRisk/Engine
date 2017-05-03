@@ -19,12 +19,15 @@ libOREDataMarketData_la_SOURCES = \
 	fxspot.cpp \
 	fxtriangulation.cpp \
 	fxvolcurve.cpp \
+    inflationcapfloorpricesurface.cpp \
+    inflationcurve.cpp \
 	market.cpp \
 	marketdatum.cpp \
 	marketdatumparser.cpp \
 	marketimpl.cpp \
 	swaptionvolcurve.cpp \
 	securityspread.cpp \
+	securityrecoveryrate.cpp \
 	todaysmarket.cpp \
 	todaysmarketparameters.cpp \
 	yieldcurve.cpp
@@ -44,6 +47,8 @@ this_include_HEADERS = \
 	fxspot.hpp \
 	fxtriangulation.hpp \
 	fxvolcurve.hpp \
+    inflationcapfloorpricesurface.hpp \
+    inflationcurve.hpp \
 	loader.hpp \
 	market.hpp \
 	marketdatum.hpp \
@@ -51,6 +56,7 @@ this_include_HEADERS = \
 	marketimpl.hpp \
 	swaptionvolcurve.hpp \
 	securityspread.hpp \
+	securityrecoveryrate.hpp \
 	todaysmarket.hpp \
 	todaysmarketparameters.hpp \
 	yieldcurve.hpp

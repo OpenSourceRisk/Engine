@@ -16,10 +16,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file qle\pricingengines\analyticxassetlgmeqoptionengine.hpp
+/*! \file qle/pricingengines/analyticxassetlgmeqoptionengine.hpp
     \brief analytic cross-asset lgm eq option engine
-
-        \ingroup engines
+    \ingroup engines
 */
 
 #ifndef quantext_xassetlgm_eqoptionengine_hpp

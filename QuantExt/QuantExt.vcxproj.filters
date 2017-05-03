@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClInclude Include="qle\quantext.hpp" />
@@ -337,11 +337,35 @@
     <ClInclude Include="qle\indexes\ibor\krwkoribor.hpp" />
     <ClInclude Include="qle\indexes\ibor\twdtaibor.hpp" />
     <ClInclude Include="qle\indexes\ibor\myrklibor.hpp" />
+    <ClInclude Include="qle\instruments\deposit.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\depositengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\strippedoptionletadapter2.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
     <ClInclude Include="qle\pricingengines\discountingequityforwardengine.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
     <ClInclude Include="qle\instruments\equityforward.hpp">
       <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\inflationindexwrapper.hpp">
+      <Filter>indexes</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\twdtaibor.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\myrklibor.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\krwkoribor.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\discountingriskybondengine.hpp">
+      <Filter>pricingengines</Filter>
     </ClInclude>
     <ClInclude Include="qle\models\crossassetmodelimpliedeqvoltermstructure.hpp">
       <Filter>models</Filter>
@@ -363,6 +387,12 @@
     </ClInclude>
     <ClInclude Include="qle\models\fxeqoptionhelper.hpp">
       <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\instruments\subperiodsswap.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\subperiodsswaphelper.hpp">
+      <Filter>termstructures</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -590,12 +620,29 @@
     <ClCompile Include="qle\termstructures\spreadedswaptionvolatility.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
-    <ClCompile Include="qle\pricingengines\discountingriskybondengine.cpp" />
+    <ClCompile Include="qle\pricingengines\discountingriskybondengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\deposit.cpp">
+      <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\depositengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\strippedoptionletadapter2.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
     <ClCompile Include="qle\pricingengines\discountingequityforwardengine.cpp">
       <Filter>pricingengines</Filter>
     </ClCompile>
     <ClCompile Include="qle\instruments\equityforward.cpp">
       <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\indexes\inflationindexwrapper.cpp">
+      <Filter>indexes</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\discountingriskybondengine.cpp">
+      <Filter>pricingengines</Filter>
     </ClCompile>
     <ClCompile Include="qle\models\crossassetmodelimpliedeqvoltermstructure.cpp">
       <Filter>models</Filter>
@@ -614,6 +661,12 @@
     </ClCompile>
     <ClCompile Include="qle\models\fxeqoptionhelper.cpp">
       <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\subperiodsswap.cpp">
+      <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\subperiodsswaphelper.cpp">
+      <Filter>termstructures</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

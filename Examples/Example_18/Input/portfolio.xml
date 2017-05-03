@@ -9,6 +9,7 @@
     </Envelope>
     <BondData>
 	  <IssuerId>CPTY_C</IssuerId>
+	  <CreditCurveId>CPTY_C</CreditCurveId>
 	  <SecurityId>SECURITY_1</SecurityId>
 	  <ReferenceCurveId>EUR-EURIBOR-6M</ReferenceCurveId>
 	  <SettlementDays>2</SettlementDays>
@@ -54,6 +55,7 @@
     </Envelope>
     <BondData>
 	  <IssuerId>CPTY_C</IssuerId>
+	  <CreditCurveId>CPTY_C</CreditCurveId>
 	  <SecurityId>SECURITY_1</SecurityId>
 	  <ReferenceCurveId>EUR-EURIBOR-6M</ReferenceCurveId>
 	  <SettlementDays>2</SettlementDays>

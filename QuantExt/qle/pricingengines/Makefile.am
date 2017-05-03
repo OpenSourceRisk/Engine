@@ -13,6 +13,7 @@ libPricingEngines_la_SOURCES = \
 	analyticcclgmfxoptionengine.cpp \
 	analyticlgmswaptionengine.cpp \
 	crossccyswapengine.cpp \
+	depositengine.cpp \
 	discountingcurrencyswapengine.cpp \
 	discountingequityforwardengine.cpp \
 	discountingfxforwardengine.cpp \
@@ -28,6 +29,7 @@ this_include_HEADERS = \
 	analyticcclgmfxoptionengine.hpp \
 	analyticlgmswaptionengine.hpp \
 	crossccyswapengine.hpp \
+	depositengine.hpp \
 	discountingcurrencyswapengine.hpp \
 	discountingequityforwardengine.hpp \
 	discountingfxforwardengine.hpp \

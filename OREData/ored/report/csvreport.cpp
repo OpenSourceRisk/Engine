@@ -82,7 +82,7 @@ Report& CSVFileReport::addColumn(const string& name, const ReportType& rt, Size 
 }
 
 Report& CSVFileReport::next() {
-    QL_REQUIRE(i_ == columnTypes_.size(), "Cannot go to next line, only " << i_ << " entires filled");
+    QL_REQUIRE(i_ == columnTypes_.size(), "Cannot go to next line, only " << i_ << " entries filled");
     fprintf(fp_, "\n");
     i_ = 0;
     return *this;

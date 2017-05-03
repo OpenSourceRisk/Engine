@@ -46,7 +46,7 @@ class InterpolatedDiscountCurve2 : public YieldTermStructure, public LazyObject 
 public:
     //! \name Constructors
     //@{
-    //! default constructor
+    //! times based constructor, note that times should be consistent with day counter dc passed
     InterpolatedDiscountCurve2(const std::vector<Time>& times, const std::vector<Handle<Quote> >& quotes,
                                const DayCounter& dc)
         : YieldTermStructure(dc), times_(times), quotes_(quotes), data_(times_.size(), 1.0),
@@ -56,13 +56,27 @@ public:
             QL_REQUIRE(times_.size() == quotes.size(), "size of time and quote vectors do not match");
             QL_REQUIRE(times_[0] == 0.0, "First time must be 0, got " << times_[0]);
             QL_REQUIRE(!quotes[i].empty(), "quote at index " << i << " is empty");
-            registerWith(quotes[i]);
+            registerWith(quotes_[i]);
         }
         interpolation_ = boost::make_shared<LogLinearInterpolation>(times_.begin(), times_.end(), data_.begin());
         registerWith(Settings::instance().evaluationDate());
+    }
+    //! date based constructor
+    InterpolatedDiscountCurve2(const std::vector<Date>& dates, const std::vector<Handle<Quote> >& quotes,
+                               const DayCounter& dc)
+        : YieldTermStructure(dc), times_(dates.size(), 0.0), quotes_(quotes), data_(dates.size(), 1.0),
+          today_(Settings::instance().evaluationDate()) {
+        for (Size i = 0; i < dates.size(); ++i)
+            times_[i] = dc.yearFraction(today_, dates[i]);
         for (Size i = 0; i < quotes.size(); ++i) {
-            registerWith(quotes[i]);
+            QL_REQUIRE(times_.size() > 1, "at least two times required");
+            QL_REQUIRE(times_.size() == quotes.size(), "size of time and quote vectors do not match");
+            QL_REQUIRE(times_[0] == 0.0, "First time must be 0, got " << times_[0]);
+            QL_REQUIRE(!quotes[i].empty(), "quote at index " << i << " is empty");
+            registerWith(quotes_[i]);
         }
+        interpolation_ = boost::make_shared<LogLinearInterpolation>(times_.begin(), times_.end(), data_.begin());
+        registerWith(Settings::instance().evaluationDate());
     }
     //@}
 

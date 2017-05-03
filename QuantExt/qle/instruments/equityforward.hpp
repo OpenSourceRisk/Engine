@@ -52,7 +52,7 @@ public:
         const Currency& currency,
         //! if true, we are long the forward
         const Position::Type& longShort,
-        //! Quantity (number of lots \times lot size)
+        //! Quantity (number of lots \f$times\f$ lot size)
         const Real& quantity,
         //! Maturity date
         const Date& maturityDate,

@@ -26,6 +26,8 @@
 #include <ql/cashflows/iborcoupon.hpp>
 #include <ql/cashflows/fixedratecoupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
+#include <ql/cashflows/cpicoupon.hpp>
+#include <ql/cashflows/cpicouponpricer.hpp>
 #include <ql/cashflows/capflooredcoupon.hpp>
 
 #include <boost/make_shared.hpp>
@@ -86,6 +88,46 @@ XMLNode* FloatingLegData::toXML(XMLDocument& doc) {
     return node;
 }
 
+void CPILegData::fromXML(XMLNode* node) {
+    XMLUtils::checkNode(node, "CPILegData");
+    index_ = XMLUtils::getChildValue(node, "Index", true);
+    baseCPI_ = XMLUtils::getChildValueAsDouble(node, "BaseCPI", true);
+    observationLag_ = XMLUtils::getChildValue(node, "ObservationLag", true);
+    interpolated_ = XMLUtils::getChildValueAsBool(node, "Interpolated", true);
+    rates_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Rates", "Rate", "startDate", rateDates_, true);
+}
+
+XMLNode* CPILegData::toXML(XMLDocument& doc) {
+    XMLNode* node = doc.allocNode("CPILegData");
+    XMLUtils::addChild(doc, node, "Index", index_);
+    XMLUtils::addChildrenWithAttributes(doc, node, "Rates", "Rate", rates_, "startDate", rateDates_);
+    XMLUtils::addChild(doc, node, "BaseCPI", baseCPI_);
+    XMLUtils::addChild(doc, node, "ObservationLag", observationLag_);
+    XMLUtils::addChild(doc, node, "Interpolated", interpolated_);
+    return node;
+}
+
+void YoYLegData::fromXML(XMLNode* node) {
+    XMLUtils::checkNode(node, "YYLegData");
+    index_ = XMLUtils::getChildValue(node, "Index", true);
+    fixingDays_ = XMLUtils::getChildValueAsInt(node, "FixingDays", true);
+    observationLag_ = XMLUtils::getChildValue(node, "ObservationLag", true);
+    interpolated_ = XMLUtils::getChildValueAsBool(node, "Interpolated", true);
+    gearings_ =
+        XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Gearings", "Gearing", "startDate", gearingDates_);
+    spreads_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Spreads", "Spread", "startDate", spreadDates_);
+}
+
+XMLNode* YoYLegData::toXML(XMLDocument& doc) {
+    XMLNode* node = doc.allocNode("CPILegData");
+    XMLUtils::addChild(doc, node, "Index", index_);
+    XMLUtils::addChild(doc, node, "ObservationLag", observationLag_);
+    XMLUtils::addChild(doc, node, "FixingDays", static_cast<int>(fixingDays_));
+    XMLUtils::addChildrenWithAttributes(doc, node, "Gearings", "Gearing", gearings_, "startDate", gearingDates_);
+    XMLUtils::addChildrenWithAttributes(doc, node, "Spreads", "Spread", spreads_, "startDate", spreadDates_);
+    return node;
+}
+
 void LegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "LegData");
     legType_ = XMLUtils::getChildValue(node, "LegType", true);
@@ -119,21 +161,24 @@ void LegData::fromXML(XMLNode* node) {
                 notionalAmortizingExchange_ = XMLUtils::getChildValueAsBool(exchangeNode, "NotionalAmortizingExchange");
         }
     }
+    fixedLegData_ = FixedLegData();
+    floatingLegData_ = FloatingLegData();
+    cashflowData_ = CashflowData();
+    cpiLegData_ = CPILegData();
+    yoyLegData_ = YoYLegData();
     tmp = XMLUtils::getChildNode(node, "ScheduleData");
     if (tmp)
         schedule_.fromXML(tmp);
     if (legType_ == "Fixed") {
         fixedLegData_.fromXML(XMLUtils::getChildNode(node, "FixedLegData"));
-        floatingLegData_ = FloatingLegData();
-        cashflowData_ = CashflowData();
     } else if (legType_ == "Floating") {
         floatingLegData_.fromXML(XMLUtils::getChildNode(node, "FloatingLegData"));
-        fixedLegData_ = FixedLegData();
-        cashflowData_ = CashflowData();
     } else if (legType_ == "Cashflow") {
         cashflowData_.fromXML(XMLUtils::getChildNode(node, "CashflowData"));
-        fixedLegData_ = FixedLegData();
-        floatingLegData_ = FloatingLegData();
+    } else if (legType_ == "CPI") {
+        cpiLegData_.fromXML(XMLUtils::getChildNode(node, "CPILegData"));
+    } else if (legType_ == "YY") {
+        yoyLegData_.fromXML(XMLUtils::getChildNode(node, "YYLegData"));
     } else {
         QL_FAIL("Unknown legType :" << legType_);
     }
@@ -306,6 +351,48 @@ Leg makeNotionalLeg(const Leg& refLeg, bool initNomFlow, bool finalNomFlow, bool
     return leg;
 }
 
+Leg makeCPILeg(LegData& data, boost::shared_ptr<ZeroInflationIndex> index) {
+    Schedule schedule = makeSchedule(data.schedule());
+    DayCounter dc = parseDayCounter(data.dayCounter());
+    BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
+    Period observationLag = parsePeriod(data.cpiLegData().observationLag());
+    CPI::InterpolationType interpolationMethod = CPI::Flat;
+    if (data.cpiLegData().interpolated())
+        interpolationMethod = CPI::Linear;
+    vector<double> rates = buildScheduledVector(data.cpiLegData().rates(), data.cpiLegData().rateDates(), schedule);
+
+    Leg leg = CPILeg(schedule, index, data.cpiLegData().baseCPI(), observationLag)
+                  .withNotionals(data.notionals())
+                  .withPaymentDayCounter(dc)
+                  .withPaymentAdjustment(bdc)
+                  .withPaymentCalendar(schedule.calendar())
+                  .withFixedRates(rates)
+                  .withObservationInterpolation(interpolationMethod);
+    QL_REQUIRE(leg.size() > 0, "Empty CPI Leg");
+    return leg;
+}
+
+Leg makeYoYLeg(LegData& data, boost::shared_ptr<YoYInflationIndex> index) {
+    Schedule schedule = makeSchedule(data.schedule());
+    DayCounter dc = parseDayCounter(data.dayCounter());
+    BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
+    Period observationLag = parsePeriod(data.yoyLegData().observationLag());
+    vector<double> gearings =
+        buildScheduledVector(data.yoyLegData().gearings(), data.yoyLegData().gearingDates(), schedule);
+    vector<double> spreads =
+        buildScheduledVector(data.yoyLegData().spreads(), data.yoyLegData().spreadDates(), schedule);
+
+    // floors and caps not suported yet by QL yoy coupon pricer...
+    Leg leg = yoyInflationLeg(schedule, schedule.calendar(), index, observationLag)
+                  .withNotionals(data.notionals())
+                  .withPaymentDayCounter(dc)
+                  .withPaymentAdjustment(bdc)
+                  .withFixingDays(data.yoyLegData().fixingDays())
+                  .withGearings(gearings)
+                  .withSpreads(spreads);
+    QL_REQUIRE(leg.size() > 0, "Empty YoY Leg");
+    return leg;
+}
 Real currentNotional(const Leg& leg) {
     Date today = Settings::instance().evaluationDate();
     // assume the leg is sorted

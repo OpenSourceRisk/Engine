@@ -1,5 +1,3 @@
-/* -*- mode: c++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
  All rights reserved.
@@ -25,8 +23,9 @@
 
 #include <boost/make_shared.hpp>
 
-/*! \file qle\math\nadarayawatson.hpp
+/*! \file qle/math/nadarayawatson.hpp
     \brief Nadaraya-Watson regression
+    \ingroup math
 */
 
 using QuantLib::Real;

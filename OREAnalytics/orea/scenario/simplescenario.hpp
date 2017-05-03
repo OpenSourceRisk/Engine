@@ -69,6 +69,8 @@ public:
     void add(const RiskFactorKey& key, Real value) override;
     Real get(const RiskFactorKey& key) const override;
 
+    boost::shared_ptr<Scenario> clone() const override;
+
 private:
     friend class boost::serialization::access;
     template <class Archive> void serialize(Archive& ar, const unsigned int) {

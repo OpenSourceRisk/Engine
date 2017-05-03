@@ -46,10 +46,12 @@ class RiskFactorKey {
 public:
     //! Risk Factor types
     enum class KeyType {
+        None,
         DiscountCurve,
         YieldCurve,
         IndexCurve,
         SwaptionVolatility,
+        OptionletVolatility,
         FXSpot,
         FXVolatility,
         EQSpot,
@@ -57,7 +59,7 @@ public:
     };
 
     //! Constructor
-    RiskFactorKey() {}
+    RiskFactorKey() : keytype(KeyType::None), name(""), index(0) {}
     //! Constructor
     RiskFactorKey(const KeyType& iKeytype, const string& iName, const Size& iIndex = 0)
         : keytype(iKeytype), name(iName), index(iIndex) {}
@@ -97,6 +99,9 @@ inline bool operator!=(const RiskFactorKey& lhs, const RiskFactorKey& rhs) { ret
 std::ostream& operator<<(std::ostream& out, const RiskFactorKey::KeyType& type);
 std::ostream& operator<<(std::ostream& out, const RiskFactorKey& key);
 
+RiskFactorKey::KeyType parseRiskFactorKeyType(const string& str);
+RiskFactorKey parseRiskFactorKey(const string& str);
+
 //-----------------------------------------------------------------------------------------------
 //! Scenario Base Class
 /*! A scenario contains a single cross asset model sample in terms of
@@ -133,6 +138,9 @@ public:
     virtual void add(const RiskFactorKey& key, Real value) = 0;
     //! Get an element from the scenario
     virtual Real get(const RiskFactorKey& key) const = 0;
+
+    //! clones a scenario and returns a pointer to the new object
+    virtual boost::shared_ptr<Scenario> clone() const = 0;
 
 private:
     friend class boost::serialization::access;

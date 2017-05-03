@@ -31,6 +31,7 @@ namespace ore {
 namespace data {
 
 static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
+
     static map<string, MarketDatum::InstrumentType> b = {
         {"ZERO", MarketDatum::InstrumentType::ZERO},
         {"DISCOUNT", MarketDatum::InstrumentType::DISCOUNT},
@@ -55,7 +56,11 @@ static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
         {"EQUITY_FWD", MarketDatum::InstrumentType::EQUITY_FWD},
         {"EQUITY_DIVIDEND", MarketDatum::InstrumentType::EQUITY_DIVIDEND},
         {"EQUITY_OPTION", MarketDatum::InstrumentType::EQUITY_OPTION},
-        {"BOND", MarketDatum::InstrumentType::BOND}};
+        {"BOND", MarketDatum::InstrumentType::BOND},
+        {"ZC_INFLATIONSWAP", MarketDatum::InstrumentType::ZC_INFLATIONSWAP},
+        {"ZC_INFLATIONCAPFLOOR", MarketDatum::InstrumentType::ZC_INFLATIONCAPFLOOR},
+        {"YY_INFLATIONSWAP", MarketDatum::InstrumentType::YY_INFLATIONSWAP},
+        {"SEASONALITY", MarketDatum::InstrumentType::SEASONALITY}};
 
     auto it = b.find(s);
     if (it != b.end()) {
@@ -78,7 +83,6 @@ static MarketDatum::QuoteType parseQuoteType(const string& s) {
         {"RATE_NVOL", MarketDatum::QuoteType::RATE_NVOL},
         {"RATE_SLNVOL", MarketDatum::QuoteType::RATE_SLNVOL},
         {"SHIFT", MarketDatum::QuoteType::SHIFT},
-        {"SECURITY_SPREAD", MarketDatum::QuoteType::SECURITY_SPREAD},
     };
 
     if (s == "RATE_GVOL")
@@ -226,10 +230,15 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
     }
 
     case MarketDatum::InstrumentType::RECOVERY_RATE: {
-        QL_REQUIRE(tokens.size() == 5, "5 tokens expected in " << datumName);
-        const string& underlyingName = tokens[2];
-        const string& seniority = tokens[3];
-        const string& ccy = tokens[4];
+        QL_REQUIRE(tokens.size() == 3 || tokens.size() == 5, "3 or 5 tokens expected in " << datumName);
+        const string& underlyingName = tokens[2]; // issuer name for CDS, security ID for bond specific RRs
+        string seniority = "";
+        string ccy = "";
+        if (tokens.size() == 5) {
+            // CDS
+            seniority = tokens[3];
+            ccy = tokens[4];
+        }
         return boost::make_shared<RecoveryRateQuote>(value, asof, datumName, underlyingName, seniority, ccy);
     }
 
@@ -297,6 +306,39 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         return boost::make_shared<FXOptionQuote>(value, asof, datumName, quoteType, unitCcy, ccy, expiry, strike);
     }
 
+    case MarketDatum::InstrumentType::ZC_INFLATIONSWAP: {
+        QL_REQUIRE(tokens.size() == 4, "4 tokens expected in " << datumName);
+        const string& index = tokens[2];
+        Period term = parsePeriod(tokens[3]);
+        return boost::make_shared<ZcInflationSwapQuote>(value, asof, datumName, index, term);
+    }
+
+    case MarketDatum::InstrumentType::YY_INFLATIONSWAP: {
+        QL_REQUIRE(tokens.size() == 4, "4 tokens expected in " << datumName);
+        const string& index = tokens[2];
+        Period term = parsePeriod(tokens[3]);
+        return boost::make_shared<YoYInflationSwapQuote>(value, asof, datumName, index, term);
+    }
+
+    case MarketDatum::InstrumentType::ZC_INFLATIONCAPFLOOR: {
+        QL_REQUIRE(tokens.size() == 6, "6 tokens expected in " << datumName);
+        const string& index = tokens[2];
+        Period term = parsePeriod(tokens[3]);
+        QL_REQUIRE(tokens[4] == "C" || tokens[4] == "F", "excepted C or F for Cap or Floor at position 5 in "
+                                                             << datumName);
+        bool isCap = tokens[4] == "C";
+        string strike = tokens[5];
+        return boost::make_shared<ZcInflationCapFloorQuote>(value, asof, datumName, quoteType, index, term, isCap,
+                                                            strike);
+    }
+
+    case MarketDatum::InstrumentType::SEASONALITY: {
+        QL_REQUIRE(tokens.size() == 5, "5 tokens expected in " << datumName);
+        const string& index = tokens[3];
+        const string& type = tokens[2];
+        const string& month = tokens[4];
+        return boost::make_shared<SeasonalityQuote>(value, asof, datumName, index, type, month);
+    }
     case MarketDatum::InstrumentType::EQUITY_SPOT: {
         QL_REQUIRE(tokens.size() == 4, "4 tokens expected in " << datumName);
         QL_REQUIRE(quoteType == MarketDatum::QuoteType::PRICE, "Invalid quote type for " << datumName);
