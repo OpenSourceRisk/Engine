@@ -227,6 +227,8 @@ this node is shown in Listing \ref{lst:swap_conventions}.
   <FixedConvention> </FixedConvention>
   <FixedDayCounter> </FixedDayCounter>
   <Index> </Index>
+  <FloatFrequency> </FloatFrequency>
+  <SubPeriodsCouponType> </SubPeriodsCouponType>
 </Swap>
 \end{minted}
 \caption{Swap conventions}
@@ -240,6 +242,8 @@ The meanings of the various elements in this node are as follows:
 \item FixedConvention: The roll convention on the fixed leg.
 \item FixedDayCounter: The day count basis on the fixed leg.
 \item Index: The Ibor index on the floating leg.
+\item FloatFrequency [Optional]: The frequency of payments on the floating leg, to be used if the frequency is different to the tenor of the index (e.g. CAD swaps for BA-3M have a 6M or 1Y payment frequency with a Compounding coupon)
+\item SubPeriodsCouponType [Optional]: Defines how coupon rates should be calculated when the float frequency is different to that of the index. Possible values are "Compounding" and "Averaging".
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
