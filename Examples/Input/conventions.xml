@@ -363,6 +363,7 @@
     <Index>CAD-CDOR-3M</Index>
     <FloatFrequency>Annual</FloatFrequency>
     <SubPeriodsCouponType>Compounding</SubPeriodsCouponType>
+  </Swap>
   <Swap>
     <!-- for tenor >= 2Y -->
     <Id>CAD-3M-SWAP-CONVENTIONS</Id>
