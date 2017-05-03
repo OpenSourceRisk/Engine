@@ -37,12 +37,12 @@ class CdsOptionHelper : public CalibrationHelper {
 public:
     CdsOptionHelper(const Date& exerciseDate, const Handle<Quote>& volatility, const Schedule& schedule,
                     const BusinessDayConvention paymentConvention, const DayCounter& dayCounter,
-                    const Handle<DefaultProbabilityTermStructure>& defaultTermStructure, const Real recoveryRate,
-                    const Handle<YieldTermStructure>& yieldTermStructure, const Rate spread = Null<Rate>(),
-                    const Rate upfront = Null<Rate>(), bool settlesAccrual = true, bool paysAtDefaultTime = true,
-                    const Date protectionStart = Date(), const Date upfrontDate = Date(),
-                    const boost::shared_ptr<Claim>& claim = boost::shared_ptr<Claim>(),
-                    CalibrationHelper::CalibrationErrorType errorType = CalibrationHelper::RelativePriceError);
+                    const Handle<DefaultProbabilityTermStructure>& probability, const Real recoveryRate,
+                    const Handle<YieldTermStructure>& termStructure, const Rate spread = Null<Rate>(),
+                    const Rate upfront = Null<Rate>(), const bool settlesAccrual = true,
+                    const bool paysAtDefaultTime = true, const Date protectionStart = Date(),
+                    const Date upfrontDate = Date(), const boost::shared_ptr<Claim>& claim = boost::shared_ptr<Claim>(),
+                    const CalibrationHelper::CalibrationErrorType errorType = CalibrationHelper::RelativePriceError);
 
     virtual Real modelValue() const;
     virtual Real blackPrice(Volatility volatility) const;

@@ -5,6 +5,7 @@
 #include <qle/pricingengines/analyticcclgmfxoptionengine.hpp>
 #include <qle/pricingengines/analyticlgmswaptionengine.hpp>
 #include <qle/pricingengines/analyticdkcpicapfloorengine.hpp>
+#include <qle/pricingengines/analyticlgmcdsoptionengine.hpp>
 #include <qle/pricingengines/crossccyswapengine.hpp>
 #include <qle/pricingengines/depositengine.hpp>
 #include <qle/pricingengines/discountingcurrencyswapengine.hpp>
@@ -14,3 +15,4 @@
 #include <qle/pricingengines/oiccbasisswapengine.hpp>
 #include <qle/pricingengines/numericlgmswaptionengine.hpp>
 #include <qle/pricingengines/discountingriskybondengine.hpp>
+

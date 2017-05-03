@@ -30,16 +30,15 @@ namespace QuantExt {
 
 CdsOptionHelper::CdsOptionHelper(const Date& exerciseDate, const Handle<Quote>& volatility, const Schedule& schedule,
                                  const BusinessDayConvention paymentConvention, const DayCounter& dayCounter,
-                                 const Handle<DefaultProbabilityTermStructure>& defaultTermStructure,
-                                 const Real recoveryRate, const Handle<YieldTermStructure>& yieldTermStructure,
-                                 const Rate spread, const Rate upfront, bool settlesAccrual, bool paysAtDefaultTime,
-                                 const Date protectionStart, const Date upfrontDate,
-                                 const boost::shared_ptr<Claim>& claim,
-                                 CalibrationHelper::CalibrationErrorType errorType)
-    : CalibrationHelper(volatility, yieldTermStructure, errorType), blackVol_(boost::make_shared<SimpleQuote>(0.0)) {
+                                 const Handle<DefaultProbabilityTermStructure>& probability, const Real recoveryRate,
+                                 const Handle<YieldTermStructure>& termStructure, const Rate spread, const Rate upfront,
+                                 const bool settlesAccrual, const bool paysAtDefaultTime, const Date protectionStart,
+                                 const Date upfrontDate, const boost::shared_ptr<Claim>& claim,
+                                 const CalibrationHelper::CalibrationErrorType errorType)
+    : CalibrationHelper(volatility, termStructure, errorType), blackVol_(boost::make_shared<SimpleQuote>(0.0)) {
 
     boost::shared_ptr<PricingEngine> cdsEngine =
-        boost::make_shared<MidPointCdsEngine>(defaultTermStructure, recoveryRate, yieldTermStructure);
+        boost::make_shared<MidPointCdsEngine>(probability, recoveryRate, termStructure);
 
     boost::shared_ptr<CreditDefaultSwap> tmp;
     if (upfront == Null<Real>())
@@ -66,8 +65,8 @@ CdsOptionHelper::CdsOptionHelper(const Date& exerciseDate, const Handle<Quote>& 
 
     option_ = boost::make_shared<CdsOption>(cds_, exercise);
 
-    blackEngine_ = boost::make_shared<BlackCdsOptionEngine>(defaultTermStructure, recoveryRate, yieldTermStructure,
-                                                            Handle<Quote>(blackVol_));
+    blackEngine_ =
+        boost::make_shared<BlackCdsOptionEngine>(probability, recoveryRate, termStructure, Handle<Quote>(blackVol_));
 }
 
 Real CdsOptionHelper::modelValue() const {
