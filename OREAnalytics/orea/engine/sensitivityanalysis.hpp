@@ -65,7 +65,8 @@ public:
                         const boost::shared_ptr<ore::data::EngineData>& engineData,
                         const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
                         const boost::shared_ptr<SensitivityScenarioData>& sensitivityData,
-                        const Conventions& conventions, const bool nonShiftedBaseCurrencyConversion = false);
+                        const Conventions& conventions, const bool recalibrateModels,
+                        const bool nonShiftedBaseCurrencyConversion = false);
 
     //! Generate the Sensitivities
     void generateSensitivities();
@@ -153,6 +154,7 @@ protected:
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketData_;
     boost::shared_ptr<SensitivityScenarioData> sensitivityData_;
     Conventions conventions_;
+    bool recalibrateModels_;
 
     // base NPV by trade
     std::map<std::string, Real> baseNPV_;
@@ -172,6 +174,8 @@ protected:
     boost::shared_ptr<Portfolio> portfolio_;
     //! initializationFlag
     bool initialized_, computed_;
+    //! model builders
+    std::set<boost::shared_ptr<ModelBuilder>> modelBuilders_;
 };
 }
 }

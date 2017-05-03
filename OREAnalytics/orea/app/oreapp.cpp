@@ -412,8 +412,12 @@ void OREApp::runSensitivityAnalysis() {
 
     sensiInputInitialize(simMarketData, sensiData, engineData, sensiPortfolio, marketConfiguration);
 
-    boost::shared_ptr<SensitivityAnalysis> sensiAnalysis = boost::make_shared<SensitivityAnalysis>(
-        sensiPortfolio, market_, marketConfiguration, engineData, simMarketData, sensiData, conventions_);
+    bool recalibrateModels =
+        params_->has("sensitivity", "recalibrateModels") && parseBool(params_->get("sensitivity", "recalibrateModels"));
+
+    boost::shared_ptr<SensitivityAnalysis> sensiAnalysis =
+        boost::make_shared<SensitivityAnalysis>(sensiPortfolio, market_, marketConfiguration, engineData, simMarketData,
+                                                sensiData, conventions_, recalibrateModels);
     sensiAnalysis->generateSensitivities();
 
     sensiOutputReports(sensiAnalysis);

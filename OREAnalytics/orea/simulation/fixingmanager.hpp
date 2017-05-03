@@ -45,7 +45,7 @@ namespace analytics {
  */
 class FixingManager {
 public:
-    FixingManager(Date today) : today_(today), fixingsEnd_(today) {}
+    FixingManager(Date today) : today_(today), fixingsEnd_(today), modifiedFixingHistory_(false) {}
 
     //! Initialise the manager with these flows and indices from the given portfolio
     void initialise(const boost::shared_ptr<Portfolio>& portfolio);
@@ -60,6 +60,7 @@ private:
     void applyFixings(Date start, Date end);
 
     Date today_, fixingsEnd_;
+    bool modifiedFixingHistory_;
     std::map<std::string, TimeSeries<Real>> fixingCache_;
     std::vector<boost::shared_ptr<Index>> indices_;
     std::map<std::string, std::vector<Date>> fixingMap_;

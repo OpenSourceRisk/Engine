@@ -30,6 +30,7 @@
 #include <qle/models/lgm.hpp>
 
 #include <ored/model/lgmdata.hpp>
+#include <ored/model/modelbuilder.hpp>
 
 using namespace QuantLib;
 
@@ -44,40 +45,44 @@ namespace data {
 
   \ingroup models
  */
-class LgmBuilder {
+class LgmBuilder : public ModelBuilder {
 public:
     /*! The configuration should refer to the calibration configuration here,
       alternative discounting curves are then usually set in the pricing
       engines for swaptions etc. */
     LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const boost::shared_ptr<LgmData>& data,
                const std::string& configuration = Market::defaultConfiguration, Real bootstrapTolerance = 0.001);
-    //! Re-calibrate model component
-    void update();
     //! Return calibration error
-    Real error() { return error_; }
+    Real error() { calculate(); return error_; }
 
     //! \name Inspectors
     //@{
     std::string currency() { return data_->ccy(); }
-    boost::shared_ptr<QuantExt::LGM>& model() { return model_; }
+    boost::shared_ptr<QuantExt::LGM>& model() { calculate(); return model_; }
     boost::shared_ptr<QuantExt::IrLgm1fParametrization>& parametrization() { return parametrization_; }
     RelinkableHandle<YieldTermStructure> discountCurve() { return discountCurve_; }
-    std::vector<boost::shared_ptr<CalibrationHelper>> swaptionBasket() { return swaptionBasket_; }
+    std::vector<boost::shared_ptr<CalibrationHelper>> swaptionBasket() { calculate(); return swaptionBasket_; }
     //@}
 private:
-    void buildSwaptionBasket();
+    void performCalculations() const override;
+    void buildSwaptionBasket() const;
 
     boost::shared_ptr<ore::data::Market> market_;
     const std::string configuration_;
     boost::shared_ptr<LgmData> data_;
     Real bootstrapTolerance_;
-    Real error_;
+    mutable Real error_;
     boost::shared_ptr<QuantExt::LGM> model_;
+    Array params_;
+    boost::shared_ptr<QuantLib::PricingEngine> swaptionEngine_;
     boost::shared_ptr<QuantExt::IrLgm1fParametrization> parametrization_;
     RelinkableHandle<YieldTermStructure> discountCurve_;
-    std::vector<boost::shared_ptr<CalibrationHelper>> swaptionBasket_;
-    Array swaptionExpiries_;
-    Array swaptionMaturities_;
+    mutable std::vector<boost::shared_ptr<CalibrationHelper>> swaptionBasket_;
+    mutable Array swaptionExpiries_;
+    mutable Array swaptionMaturities_;
+
+    Handle<QuantLib::SwaptionVolatilityStructure> svts_;
+    Handle<SwapIndex> swapIndex_, shortSwapIndex_;
 
     // TODO: Move CalibrationErrorType, optimizer and end criteria parameters to data
     boost::shared_ptr<OptimizationMethod> optimizationMethod_;

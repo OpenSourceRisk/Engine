@@ -53,11 +53,12 @@ SensitivityAnalysis::SensitivityAnalysis(const boost::shared_ptr<ore::data::Port
                                          const boost::shared_ptr<ore::data::EngineData>& engineData,
                                          const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
                                          const boost::shared_ptr<SensitivityScenarioData>& sensitivityData,
-                                         const Conventions& conventions, const bool nonShiftedBaseCurrencyConversion)
+                                         const Conventions& conventions, const bool recalibrateModels,
+                                         const bool nonShiftedBaseCurrencyConversion)
     : market_(market), marketConfiguration_(marketConfiguration), asof_(market->asofDate()),
       simMarketData_(simMarketData), sensitivityData_(sensitivityData), conventions_(conventions),
-      nonShiftedBaseCurrencyConversion_(nonShiftedBaseCurrencyConversion), engineData_(engineData),
-      portfolio_(portfolio), initialized_(false), computed_(false) {}
+      recalibrateModels_(recalibrateModels), nonShiftedBaseCurrencyConversion_(nonShiftedBaseCurrencyConversion),
+      engineData_(engineData), portfolio_(portfolio), initialized_(false), computed_(false) {}
 
 std::vector<boost::shared_ptr<ValuationCalculator>> SensitivityAnalysis::buildValuationCalculators() const {
     vector<boost::shared_ptr<ValuationCalculator>> calculators;
@@ -78,6 +79,10 @@ void SensitivityAnalysis::initialize(boost::shared_ptr<NPVCube>& cube) {
     LOG("Build Engine Factory and rebuild portfolio");
     boost::shared_ptr<EngineFactory> factory = buildFactory();
     resetPortfolio(factory);
+    if(recalibrateModels_)
+        modelBuilders_ = factory->modelBuilders();
+    else
+        modelBuilders_.clear();
 
     if (!cube) {
         LOG("Build the cube object to store sensitivities");
@@ -96,7 +101,7 @@ void SensitivityAnalysis::generateSensitivities() {
 
     boost::shared_ptr<DateGrid> dg = boost::make_shared<DateGrid>("1,0W");
     vector<boost::shared_ptr<ValuationCalculator>> calculators = buildValuationCalculators();
-    ValuationEngine engine(asof_, dg, simMarket_);
+    ValuationEngine engine(asof_, dg, simMarket_, modelBuilders_);
     LOG("Run Sensitivity Scenarios");
     engine.buildCube(portfolio_, cube, calculators);
 
