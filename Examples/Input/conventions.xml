@@ -720,9 +720,9 @@
       <Index>EUHICP</Index>
       <Interpolated>false</Interpolated>
       <ObservationLag>3M</ObservationLag>
-      <AdjustInfObsDates>false</AdjustInfObsDates>
-      <InfCalendar>TARGET</InfCalendar>
-      <InfConvention>MF</InfConvention>
+      <AdjustInflationObservationDates>false</AdjustInflationObservationDates>
+      <InflationCalendar>TARGET</InflationCalendar>
+      <InflationConvention>MF</InflationConvention>
   </InflationSwap>
   <InflationSwap>
       <Id>EUHICPXT_INFLATIONSWAP</Id>
@@ -732,9 +732,9 @@
       <Index>EUHICPXT</Index>
       <Interpolated>false</Interpolated>
       <ObservationLag>3M</ObservationLag>
-      <AdjustInfObsDates>false</AdjustInfObsDates>
-      <InfCalendar>TARGET</InfCalendar>
-      <InfConvention>MF</InfConvention>
+      <AdjustInflationObservationDates>false</AdjustInflationObservationDates>
+      <InflationCalendar>TARGET</InflationCalendar>
+      <InflationConvention>MF</InflationConvention>
   </InflationSwap>
   <InflationSwap>
       <Id>FRHICP_INFLATIONSWAP</Id>
@@ -744,9 +744,9 @@
       <Index>FRHICP</Index>
       <Interpolated>false</Interpolated>
       <ObservationLag>3M</ObservationLag>
-      <AdjustInfObsDates>false</AdjustInfObsDates>
-      <InfCalendar>TARGET</InfCalendar>
-      <InfConvention>MF</InfConvention>
+      <AdjustInflationObservationDates>false</AdjustInflationObservationDates>
+      <InflationCalendar>TARGET</InflationCalendar>
+      <InflationConvention>MF</InflationConvention>
   </InflationSwap>
   <InflationSwap>
       <Id>UKRPI_INFLATIONSWAP</Id>
@@ -756,9 +756,9 @@
       <Index>UKRPI</Index>
       <Interpolated>false</Interpolated>
       <ObservationLag>3M</ObservationLag>
-      <AdjustInfObsDates>false</AdjustInfObsDates>
-      <InfCalendar>UK</InfCalendar>
-      <InfConvention>MF</InfConvention>
+      <AdjustInflationObservationDates>false</AdjustInflationObservationDates>
+      <InflationCalendar>UK</InflationCalendar>
+      <InflationConvention>MF</InflationConvention>
   </InflationSwap>
   <InflationSwap>
       <Id>USCPI_INFLATIONSWAP</Id>
@@ -768,9 +768,9 @@
       <Index>USCPI</Index>
       <Interpolated>false</Interpolated>
       <ObservationLag>3M</ObservationLag>
-      <AdjustInfObsDates>false</AdjustInfObsDates>
-      <InfCalendar>US</InfCalendar>
-      <InfConvention>MF</InfConvention>
+      <AdjustInflationObservationDates>false</AdjustInflationObservationDates>
+      <InflationCalendar>US</InflationCalendar>
+      <InflationConvention>MF</InflationConvention>
   </InflationSwap>
   <InflationSwap>
       <Id>ZACPI_INFLATIONSWAP</Id>
@@ -780,8 +780,8 @@
       <Index>ZACPI</Index>
       <Interpolated>false</Interpolated>
       <ObservationLag>3M</ObservationLag>
-      <AdjustInfObsDates>false</AdjustInfObsDates>
-      <InfCalendar>ZAR</InfCalendar>
-      <InfConvention>MF</InfConvention>
+      <AdjustInflationObservationDates>false</AdjustInflationObservationDates>
+      <InflationCalendar>ZAR</InflationCalendar>
+      <InflationConvention>MF</InflationConvention>
   </InflationSwap>
 </Conventions>
