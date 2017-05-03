@@ -201,6 +201,10 @@
     <Index>USD-LIBOR-3M</Index>
   </FRA>
   <FRA>
+    <Id>CAD-FRA-3M</Id>
+    <Index>CAD-BA-3M</Index>
+  </FRA>
+  <FRA>
     <Id>CZK-6M-FRA</Id>
     <Index>CZK-PRIBOR-6M</Index>
   </FRA>
@@ -350,12 +354,25 @@
     <Index>AUD-BBSW-3M</Index>
   </Swap>
   <Swap>
-    <Id>CAD-6M-SWAP-CONVENTIONS</Id>
+    <!-- for tenor = 1Y -->
+    <Id>CAD-3M-SWAP-CONVENTIONS-1Y</Id>
     <FixedCalendar>CA</FixedCalendar>
     <FixedFrequency>Annual</FixedFrequency>
     <FixedConvention>MF</FixedConvention>
-    <FixedDayCounter>30/360</FixedDayCounter>
-    <Index>CAD-BA-6M</Index>
+    <FixedDayCounter>ACT/365</FixedDayCounter>
+    <Index>CAD-BA-3M</Index>
+    <FloatFrequency>Annual</FloatFrequency>
+    <SubPeriodsCouponType>Compounding</SubPeriodsCouponType>
+  <Swap>
+    <!-- for tenor >= 2Y -->
+    <Id>CAD-3M-SWAP-CONVENTIONS</Id>
+    <FixedCalendar>CA</FixedCalendar>
+    <FixedFrequency>Semiannual</FixedFrequency>
+    <FixedConvention>MF</FixedConvention>
+    <FixedDayCounter>ACT/365</FixedDayCounter>
+    <Index>CAD-BA-3M</Index>
+    <FloatFrequency>Semiannual</FloatFrequency>
+    <SubPeriodsCouponType>Compounding</SubPeriodsCouponType>
   </Swap>
   <Swap>
     <Id>DKK-6M-SWAP-CONVENTIONS</Id>
