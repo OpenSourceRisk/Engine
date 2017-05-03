@@ -202,8 +202,7 @@ if __name__ == "__main__":
         "Example_15",
         "Example_16",
         "Example_17",
-        "Example_18",
-        "Example_19"
+        "Example_18"
     ]
 
     for example in examples:
