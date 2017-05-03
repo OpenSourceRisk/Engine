@@ -4172,13 +4172,13 @@ void CrossAssetModelTest::testCrCalibration() {
         T = t;
     }
 
-    boost::shared_ptr<CrLgm1fPiecewiseLinearParametrization> infeur_p =
-        boost::make_shared<InfDkPiecewiseLinearParametrization>(EURCurrency(), prob, volStepTimes, crVols, volStepTimes,
+    boost::shared_ptr<CrLgm1fPiecewiseLinearParametrization> creur_p =
+        boost::make_shared<CrLgm1fPiecewiseLinearParametrization>(EURCurrency(), prob, volStepTimes, crVols, volStepTimes,
                                                                 crRev);
 
     std::vector<boost::shared_ptr<Parametrization> > parametrizations;
     parametrizations.push_back(ireur_p);
-    parametrizations.push_back(infeur_p);
+    parametrizations.push_back(creur_p);
 
     boost::shared_ptr<CrossAssetModel> model =
         boost::make_shared<CrossAssetModel>(parametrizations, Matrix(), SalvagingAlgorithm::None);
@@ -4196,7 +4196,7 @@ void CrossAssetModelTest::testCrCalibration() {
     // calibration
     LevenbergMarquardt lm;
     EndCriteria ec(1000, 500, 1E-8, 1E-8, 1E-8);
-    model->calibrateCrLgmVolatilitiesIterative(0, cdsoHelpers, lm, ec);
+    model->calibrateCrLgm1fVolatilitiesIterative(0, cdsoHelpers, lm, ec);
 
     for (Size i = 0; i < cdsoHelpers.size(); ++i) {
         BOOST_TEST_MESSAGE("i=" << i << " modelvol=" << model->crlgm1f(0)->parameterValues(0)[i]
@@ -4217,7 +4217,7 @@ void CrossAssetModelTest::testCrCalibration() {
 
     accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > > cdso;
 
-    Real K = cdsoHelpers.back()->underlying()->fairSpread();
+    Real K = boost::static_pointer_cast<CdsOptionHelper>(cdsoHelpers.back())->underlying()->fairSpread();
     BOOST_TEST_MESSAGE("Last CDSO fair spread is " << K);
 
     for (Size i = 0; i < n; ++i) {
@@ -4226,8 +4226,8 @@ void CrossAssetModelTest::testCrCalibration() {
         Real irz = path.value[0][l];
         Real crz = path.value[1][l];
         Real cry = path.value[2][l];
-        std::pair<Real, Real> S = model->crlgm1fS(0, T, T, crz, cry);
-        cdso(std::max(S - K, 0.0) / model->numeraire(0, T, irz)); // TODO ....
+        std::pair<Real, Real> S = model->crlgm1fS(0, 0, T, T, crz, cry);
+        cdso(std::max(S.first - K, 0.0) / model->numeraire(0, T, irz)); // TODO ....
     }
 
     BOOST_TEST_MESSAGE("mc cdso last = " << mean(cdso) << " +- " << error_of<tag::mean>(cdso));
