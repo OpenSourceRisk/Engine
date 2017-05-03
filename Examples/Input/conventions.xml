@@ -81,7 +81,7 @@
   <Deposit>
     <Id>CAD-DEPOSIT</Id>
     <IndexBased>true</IndexBased>
-    <Index>CAD-BA</Index>
+    <Index>CAD-CDOR</Index>
   </Deposit>
   <Deposit>
     <Id>CZK-DEPOSIT</Id>
@@ -202,7 +202,7 @@
   </FRA>
   <FRA>
     <Id>CAD-FRA-3M</Id>
-    <Index>CAD-BA-3M</Index>
+    <Index>CAD-CDOR-3M</Index>
   </FRA>
   <FRA>
     <Id>CZK-6M-FRA</Id>
@@ -360,7 +360,7 @@
     <FixedFrequency>Annual</FixedFrequency>
     <FixedConvention>MF</FixedConvention>
     <FixedDayCounter>ACT/365</FixedDayCounter>
-    <Index>CAD-BA-3M</Index>
+    <Index>CAD-CDOR-3M</Index>
     <FloatFrequency>Annual</FloatFrequency>
     <SubPeriodsCouponType>Compounding</SubPeriodsCouponType>
   <Swap>
@@ -370,7 +370,7 @@
     <FixedFrequency>Semiannual</FixedFrequency>
     <FixedConvention>MF</FixedConvention>
     <FixedDayCounter>ACT/365</FixedDayCounter>
-    <Index>CAD-BA-3M</Index>
+    <Index>CAD-CDOR-3M</Index>
     <FloatFrequency>Semiannual</FloatFrequency>
     <SubPeriodsCouponType>Compounding</SubPeriodsCouponType>
   </Swap>
