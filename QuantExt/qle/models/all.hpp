@@ -16,6 +16,7 @@
 #include <qle/models/crlgm1fparametrization.hpp>
 #include <qle/models/fxeqoptionhelper.hpp>
 #include <qle/models/cpicapfloorhelper.hpp>
+#include <qle/models/cdsoptionhelper.hpp>
 #include <qle/models/gaussian1dcrossassetadaptor.hpp>
 #include <qle/models/irlgm1fconstantparametrization.hpp>
 #include <qle/models/irlgm1fpiecewiseconstanthullwhiteadaptor.hpp>
