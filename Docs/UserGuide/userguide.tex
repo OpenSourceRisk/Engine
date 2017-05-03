@@ -77,13 +77,15 @@
 \newcommand{\LGD}{\mathit{LGD}}
 \newcommand{\DIM}{\mathit{DIM}}
 \newcommand{\bs}{\textbackslash}
+\newcommand{\REDY}{\color{red}Y}
  
 \begin{document}
 
 %\title{Open Source Risk Engine \\ User Guide  }
 \title{ORE User Guide}
 \author{Quaternion Risk Management}
-\date{7 October 2016}
+%\date{7 October 2016}
+\date{28 April 2017}
 \maketitle
 
 \newpage
@@ -92,11 +94,12 @@
 \section*{Document History}
 
 \begin{center}
-\begin{supertabular}{|l|l|l|p{7cm}|}
+\begin{supertabular}{|l|l|p{9cm}|}
 \hline
 Date & Author & Comment \\
 \hline
-7 October 2016 & Quaternion Risk Management & initial release\\
+7 October 2016 & Quaternion & initial release\\
+28 April 2017 & Quaternion  & updates for release v2: Bonds, Inflation, Equity, Sensitivity \& Stress\\
 \hline
 \end{supertabular}
 \end{center}
@@ -143,9 +146,9 @@ enhancements in the form of source code. See the FAQ section on the ORE site \ci
 
 \subsubsection*{Scope and Roadmap}
 
-ORE currently provides portfolio pricing, cash flow generation, and a range of contemporary derivative portfolio
-analytics. The latter are based on a Monte Carlo simulation framework which yields the evolution of various {\bf credit
-  exposure} and {\bf market risk measures}:
+ORE currently provides portfolio pricing, cash flow generation, sensitivity analysis, stress testing, and a range of 
+contemporary derivative portfolio analytics. The latter are based on a Monte Carlo simulation framework which yields 
+the evolution of various {\bf credit exposure} and {\bf market risk measures}:
 \begin{itemize}
 \item EE aka EPE (Expected Exposure or Expected Positive Exposure)
 \item ENE (Expected Negative Exposure, i.e. the counterparty's perspective)
@@ -166,17 +169,55 @@ for portfolios with netting, variation and initial margin agreements.  Subsequen
 Carlo based market risk measures will be complemented by parametric methods, e.g. for benchmarking various initial
 margin calculation models applied in cleared and non-cleared derivatives business.
 
-\medskip The first release of ORE in October 2016 covers the simulation of interest rate and FX risk factors and
-portfolios of Interest Rate Swaps, Caps/Floors, Swaptions, FX Forwards, Cross Currency Swaps and FX Options. Subsequent
-releases from Q1 2017 onwards will extend the derivative product and the risk factor range to Inflation, Credit, Equity
-and Commodity. With the introduction of credit risk factors, the scope will also be extended to cover cash products
-(loans and bonds) and related portfolio analytics.
+\medskip 
+%The first release of ORE in October 2016 covers the simulation of interest rate and FX risk factors and
+%portfolios of Interest Rate Swaps, Caps/Floors, Swaptions, FX Forwards, Cross Currency Swaps and FX Options. Subsequent
+%releases from Q1 2017 onwards will extend the derivative product and the risk factor range to Inflation, Credit, Equity
+%and Commodity. With the introduction of credit risk factors, the scope will also be extended to cover cash products
+%(loans and bonds) and related portfolio analytics.
+The product coverage of the second release of ORE in May 2017 is sketched in the following table.
+\begin{table}[hbt]
+\scriptsize
+\begin{center}
+\begin{tabular}{|l|p{1.5cm}|p{2.6cm}|p{1.5cm}|}
+\hline
+Product & Pricing and Cashflows & Sensitivity Analysis \& Stress Testing & Exposure Simulation \& XVA\\
+\hline
+\hline
+{\color{red}Fixed and Floating Rate Bonds/Loans} & Y & Y & N \\
+\hline
+Interest Rate Swaps & Y & Y & Y \\
+\hline
+Caps/Floors & Y & Y & Y \\
+\hline
+Swaptions & Y & Y & Y \\
+\hline
+FX Forwards & Y & Y & Y \\
+\hline
+Cross Currency Swaps & Y & Y & Y \\
+\hline
+FX Options & Y & Y & Y \\
+\hline
+{\color{red}Equity Forwards} & Y & Y & Y \\
+\hline
+{\color{red}Equity Options} & Y & Y & Y \\
+\hline
+{\color{red}CPI Swaps} & Y & N & N \\
+\hline
+{\color{red}YY Inflation Swaps} & Y & N & N \\
+\hline
+\end{tabular}
+\caption{ORE product coverage, products highlighted in red were added in ORE release 2.}
+\label{tab_coverage}
+\end{center}
+\end{table}
+Future releases will further extend the product and the risk factor range to Credit and Commodity, complete the analytics scope indicated in the table above and expand on the market risk analytics, add integrated credit/market risk analytics. 
 
 \medskip The simulation models applied in ORE's risk factor evolution implement the models discussed in detail in {\em
-  Modern Derivatives Pricing and Credit Exposure Analysis} \cite{Lichters}: The IR/FX risk factor evolution is based on
+  Modern Derivatives Pricing and Credit Exposure Analysis} \cite{Lichters}: The IR/FX/EQ risk factor evolution is based on
 a cross currency model consisting of an arbitrage free combination of Linear Gauss Markov models for all interest rates
 and lognormal processes for the FX rates. The model components are calibrated to cross currency discounting and forward
-curves, Swaptions and FX Options.
+curves, Swaptions, FX Options and EQ Options.
 
 \subsubsection*{Further Resources}
 \begin{itemize}
@@ -274,10 +315,10 @@ cases and documentation. Release archives will be provided at \url{https://githu
 \medskip
 The release consists of a single archive in zip format
 \begin{itemize}
-\item {\tt ORE-1.8.zip}
+\item {\tt ORE-<VERSION>.zip}
 \end{itemize}
 
-When unpacked, it creates a directory {\tt ORE-1.8} with the following files respectively subdirectories
+When unpacked, it creates a directory {\tt ORE-<VERSION>} with the following files respectively subdirectories
 \begin{enumerate}
 %\item {\tt bin/win32/ore.exe}
 %\item {\tt bin/x64/ore.exe}
@@ -296,7 +337,7 @@ The first three items and {\tt userguide.pdf} are sufficient to run the compiled
 on the list of examples described in the user guide (this works on Windows only). The Windows executables are located in {\tt App/bin/Win32/Release/} respectively {\tt App/bin/x64/Release/}. To continue with the compiled
 executables:
 \begin{itemize}
-\item Ensure that the scripting language Python is installed on your computer, see also section \ref{sec:python} 
+\item Ensure that the scripting language Python is installed on your computer, see also section \ref{sec:python}
   below;
 \item Move on to the examples in section \ref{sec:examples}.
 \end{itemize}
@@ -372,19 +413,19 @@ Alternatively, compile all Boost libraries directly from the source code:
 \item Open a Visual Studio Tools Command Prompt
 \begin{itemize}
 \item 32-bit: VS2015/VS2013 x86 Native Tools Command Prompt
-\item 64-bit: VS2015/VS2013 x86 x64 Cross Tools Command Prompt
+\item 64-bit: VS2015/VS2013 x64 Native Tools Command Prompt
 \end{itemize}
 \item Navigate to the boost root directory
 \item Run bootstrap.bat
 \item Build the libraries from the source code
 \begin{itemize}
 \item 32-bit: \\
-	{\footnotesize\tt .{\bs}b2 --stagedir=.{\bs}lib{\bs}Win32{\bs}lib --build-type=complete toolset=msvc-14.0 \bs \\ 
-	--address-model=32 --with-test --with-system --with-filesystem  \bs \\
+  {\footnotesize\tt .{\bs}b2 --stagedir=.{\bs}lib{\bs}Win32{\bs}lib --build-type=complete toolset=msvc-14.0 \bs \\
+    address-model=32 --with-test --with-system --with-filesystem  \bs \\
     --with-serialization --with-regex --with-date\_time stage}
 \item 64-bit: \\
-	{\footnotesize\tt .{\bs}b2 --stagedir=.{\bs}lib{\bs}x64{\bs}lib --build-type=complete toolset=msvc-14.0 \bs \\ 
-    --address-model=64 --with-test --with-system --with-filesystem \bs \\ 
+  {\footnotesize\tt .{\bs}b2 --stagedir=.{\bs}lib{\bs}x64{\bs}lib --build-type=complete toolset=msvc-14.0 \bs \\
+    address-model=64 --with-test --with-system --with-filesystem \bs \\
     --with-serialization --with-regex --with-date\_time stage}
 \end{itemize}
 \end{enumerate}
@@ -539,7 +580,7 @@ Windows\footnote{With Windows, after a fresh installation of Python the user may
 
 With Linux and OS X, the following environment variable settings are required
 \begin{itemize}
-\item set {\tt LANG} and {\tt LC\_ALL } to {\tt en\_US.UTF-8} or {\tt en\_GB.UTF-8}
+\item set {\tt LANG} and {\tt LC\_ALL } to {\tt en\_US.UTF-8} or {\tt en\_GB.UTF-8}
 \item set {\tt LC\_NUMERIC} to {\tt C}. 
 \end{itemize}
 The former is required for both running the Python scripts in the examples section, as well as successful installation
@@ -606,6 +647,16 @@ Example & Description \\
 \hline
 13 & Dynamic Initial Margin and MVA \\
 \hline
+14 & Minimal Market Data Setup \\
+\hline
+15 & Sensitivity and Stress Scenario Computation \\
+\hline
+16 & Equity Derivatives \\
+\hline
+17 & Inflation Swaps \\
+\hline
+18 & Bonds \\
+\hline
 \end{tabular}
 \caption{ORE examples.}
 \label{tab_0}
@@ -635,7 +686,7 @@ examples. The particular selection of input files is determined by the 'master' 
   \hline
   File Name & Description \\
   \hline
-  {\tt ore.xml} &   Master input file, selection of further inputs below and selection of analytics \\
+  {\tt ore.xml}&   Master input file, selection of further inputs below and selection of analytics \\
   {\tt portfolio.xml} & Trade data \\
   {\tt netting.xml} &  Collateral (CSA) data \\
   {\tt simulation.xml} & Configuration of simulation model and market\\
@@ -664,7 +715,7 @@ through the master input file {\tt ore.xml}. Whether these reports are generated
 \hline
 File Name & Description \\
 \hline
-{\tt npv.csv} &   NPV report \\
+{\tt npv.csv}&   NPV report \\
 {\tt flows.csv} & Cashflow report \\
 {\tt curves.csv} & Generated yield (discount) curves report \\
 {\tt xva.csv} & XVA report, value adjustments at netting set and trade level \\
@@ -707,13 +758,11 @@ yields the exposure evolution in
 and shown in figure \ref{fig_1}. 
 \begin{figure}[h!]
 \begin{center}
-\includegraphics[scale=0.45]{mpl_swap_1_1m_sbb_100k.pdf}
+%\includegraphics[scale=0.45]{mpl_swap_1_1m_sbb_100k.pdf}
+\includegraphics[scale=0.45]{mpl_swap_1_1m_sbb_10k_flat.pdf}
 \end{center}
-\caption{Vanilla ATM Swap expected exposure in a flat market environment from both parties' perspectives. The symbols
-  are European Swaption prices. The simulation was run with monthly time steps. To demonstrate the convergence of EPE
-  and ENE profiles we have used an exceptionally large number of samples (100,000) to produce this graph. A similar
-  outcome can be obtained more quickly with 5,000 samples on a quarterly time grid which is the default setting of
-  Example\_1. }
+\caption{Vanilla ATM Swap expected exposure in a flat market environment from both parties' perspectives. The symbols are European Swaption prices. The simulation was run with monthly time steps and 10,000 Monte Carlo samples to demonstrate the convergence of EPE and ENE profiles. A similar
+outcome can be obtained more quickly with 5,000 samples on a quarterly time grid which is the default setting of Example\_1. }
 \label{fig_1}
 \end{figure}
 Both Swap simulation and Swaption pricing are run with calls to the ORE executable, essentially 
@@ -847,27 +896,28 @@ exercise.
 %--------------------------------------------------------
 
 The example in folder {\tt Examples/Example\_6} generates exposure evolutions of several Swaps, caps and floors. The
-example shown in figure \ref{fig_capfloor_1} ('portfolio 1') consists of a 20y Swap receiving 1\% fixed and a 20y Collar
-with both cap and floor at 2.5\% so that the net exposure corresponds to a Swap receiving 0.5\% fixed. \\
+example shown in figure \ref{fig_capfloor_1} ('portfolio 1') consists of a 20y Swap receiving 3\% fixed and paying
+Euribor 6M plus a long 20y Collar
+with both cap and floor at 4\% so that the net exposure corresponds to a Swap paying 1\% fixed. \\
 
 \begin{figure}[h!]
 \begin{center}
 \includegraphics[scale=0.45]{mpl_capfloor_1.pdf}
 \end{center}
-\caption{Swap+Collar, portfolio 1. The Collar has identical cap and floor rates at 2.5\% so that it corresponds to a
+\caption{Swap+Collar, portfolio 1. The Collar has identical cap and floor rates at 4\% so that it corresponds to a
   fixed leg which reduces the exposure of the Swap, which receives 3\% fixed. Simulation with 1000 paths and quarterly
   time steps.}
 \label{fig_capfloor_1}
 \end{figure}
 
 The second example in this folder shown in figure \ref{fig_capfloor_2} ('portfolio 2') consists of a short Cap, long
-Floor and a Collar that corresponds to the netted Cap and Floor.
+Floor and a long Collar that exactly offsets the netted Cap and Floor.
 
 \begin{figure}[h!]
 \begin{center}
 \includegraphics[scale=0.45]{mpl_capfloor_2.pdf}
 \end{center}
-\caption{Short Cap and long Floor vs Collar, portfolio 2. Simulation with 1000 paths and quarterly time steps.}
+\caption{Short Cap and long Floor vs long Collar, portfolio 2. Simulation with 1000 paths and quarterly time steps.}
 \label{fig_capfloor_2}
 \end{figure}
 
@@ -894,7 +944,7 @@ trade's value date must match corresponding Vanilla FX Option prices, as shown i
 \end{figure}
 
 %--------------------------------------------------------
-\subsection{FX Option Exposure}
+\subsection{FX Option Exposure}\label{sec:fxoption}
 %--------------------------------------------------------
 
 This example (in folder {\tt Examples/Example\_7}, as the FX Forward example) illustrates the exposure evolution for an
@@ -1057,16 +1107,16 @@ in folder \\
 \hline
 TradeId & Date & Time & EPE & ENE & AllocEPE & AllocENE & PFE & BaselEE & BaselEEE \\
 \hline
-Swap\_1 & 05/02/16 & 0.0000 & 0  & 1,711,850  & 0  & 0  & 0  & 0  & 0 \\
-Swap\_1 & 19/02/16 & 0.0383 & 40,219  & 1,744,080  & -1,190,830  & 513,032  & 263,973  & 40,217  & 40,217 \\
-Swap\_1 & 04/03/16 & 0.0765 & 137,552  & 1,840,760  & -914,468  & 788,739  & 1,053,940  & 137,535  & 137,535 \\
-Swap\_1 & 18/03/16 & 0.1148 & 299,155  & 1,742,450  & -650,225  & 793,067  & 1,914,150  & 299,091  & 299,091 \\
-Swap\_1 & 01/04/16 & 0.1530 & 390,178  & 1,834,810  & -552,029  & 892,604  & 2,373,560  & 390,058  & 390,058 \\
-Swap\_1 & 15/04/16 & 0.1913 & 471,849  & 1,918,600  & -465,580  & 981,171  & 2,765,710  & 471,659  & 471,659 \\
-Swap\_1 & 29/04/16 & 0.2295 & 550,301  & 2,000,640  & -330,578  & 1,119,760  & 3,106,810  & 550,016  & 550,016 \\
-Swap\_1 & 13/05/16 & 0.2678 & 620,279  & 2,074,880  & -266,042  & 1,188,560  & 3,427,080  & 619,888  & 619,888 \\
-Swap\_1 & 27/05/16 & 0.3060 & 690,018  & 2,140,320  & -190,419  & 1,259,880  & 3,778,570  & 689,509  & 689,509 \\
-Swap\_1 & 10/06/16 & 0.3443 & 763,207  & 2,206,020  & -137,681  & 1,305,130  & 4,052,870  & 762,560  & 762,560 \\
+Swap\_1 & 05/02/16 & 0.0000 & 0  & 1,711,748  & 0  & 0  & 0  & 0  & 0 \\
+Swap\_1 & 19/02/16 & 0.0383 & 38,203   & 1,749,913  & -1,200,677 & 511,033 & 239,504 & 38,202 & 38,202 \\
+Swap\_1 & 04/03/16 & 0.0765 & 132,862  & 1,843,837 & -927,499 & 783,476 & 1,021,715 & 132,845 & 132,845 \\
+%Swap\_1 & 18/03/16 & 0.1148 & 299,155  & 1,742,450  & -650,225  & 793,067  & 1,914,150  & 299,091  & 299,091 \\
+%Swap\_1 & 01/04/16 & 0.1530 & 390,178  & 1,834,810  & -552,029  & 892,604  & 2,373,560  & 390,058  & 390,058 \\
+%Swap\_1 & 15/04/16 & 0.1913 & 471,849  & 1,918,600  & -465,580  & 981,171  & 2,765,710  & 471,659  & 471,659 \\
+%Swap\_1 & 29/04/16 & 0.2295 & 550,301  & 2,000,640  & -330,578  & 1,119,760  & 3,106,810  & 550,016  & 550,016 \\
+%Swap\_1 & 13/05/16 & 0.2678 & 620,279  & 2,074,880  & -266,042  & 1,188,560  & 3,427,080  & 619,888  & 619,888 \\
+%Swap\_1 & 27/05/16 & 0.3060 & 690,018  & 2,140,320  & -190,419  & 1,259,880  & 3,778,570  & 689,509  & 689,509 \\
+%Swap\_1 & 10/06/16 & 0.3443 & 763,207  & 2,206,020  & -137,681  & 1,305,130  & 4,052,870  & 762,560  & 762,560 \\
 Swap\_1 & ... & ...& ... & ... & ... & ... & ... & ... & ... \\
 \hline
 \end{tabular}
@@ -1086,29 +1136,29 @@ folder as above is:
 \hline
 NettingSet & Date & Time & EPE & ENE & PFE & ExpectedCollateral & BaselEE & BaselEEE \\
 \hline
-CPTY\_A & 05/02/16 & 0.0000 & 1,211,770 & 0 & 1,211,770 & 0 & 1,211,770 & 1,211,770\\
-CPTY\_A & 19/02/16 & 0.0383 & 1,344,220 & 137,776 & 3,414,000 & 0 & 1,344,160 & 1,344,160\\
-CPTY\_A & 04/03/16 & 0.0765 & 1,518,610 & 308,381 & 4,354,060 & 0 & 1,518,410 & 1,518,410\\
-CPTY\_A & 18/03/16 & 0.1148 & 1,846,900 & 382,068 & 5,200,730 & 0 & 1,846,500 & 1,846,500\\
-CPTY\_A & 01/04/16 & 0.1530 & 1,961,290 & 494,416 & 5,869,470 & 0 & 1,960,690 & 1,960,690\\
-CPTY\_A & 15/04/16 & 0.1913 & 2,067,240 & 598,283 & 6,384,140 & 0 & 2,066,400 & 2,066,400\\
-CPTY\_A & 29/04/16 & 0.2295 & 2,053,670 & 745,960 & 6,740,070 & 0 & 2,052,610 & 2,066,400\\
-CPTY\_A & 13/05/16 & 0.2678 & 2,149,190 & 845,507 & 6,930,230 & 0 & 2,147,840 & 2,147,840\\
-CPTY\_A & 27/05/16 & 0.3060 & 2,235,630 & 930,218 & 7,295,440 & 0 & 2,233,980 & 2,233,980\\
-CPTY\_A & 10/06/16 & 0.3443 & 2,314,470 & 1,014,690 & 7,753,190 & 0 & 2,312,510 & 2,312,510\\
+CPTY\_A & 05/02/16 & 0.0000 & 1,203,836 & 0 & 1,203,836 & 0 & 1,203,836 & 1,203,836 \\%1,211,770 & 0 & 1,211,770 & 0 & 1,211,770 & 1,211,770\\
+CPTY\_A & 19/02/16 & 0.0383 & 1,337,713 & 137,326 & 3,403,460 & 0 & 1,337,651 & 1,337,651 \\ %0.0383 & 1,344,220 & 137,776 & 3,414,000 & 0 & 1,344,160 & 1,344,160\\
+%CPTY\_A & 04/03/16 & 0.0765 & 1,518,610 & 308,381 & 4,354,060 & 0 & 1,518,410 & 1,518,410\\
+%CPTY\_A & 18/03/16 & 0.1148 & 1,846,900 & 382,068 & 5,200,730 & 0 & 1,846,500 & 1,846,500\\
+%CPTY\_A & 01/04/16 & 0.1530 & 1,961,290 & 494,416 & 5,869,470 & 0 & 1,960,690 & 1,960,690\\
+%CPTY\_A & 15/04/16 & 0.1913 & 2,067,240 & 598,283 & 6,384,140 & 0 & 2,066,400 & 2,066,400\\
+%CPTY\_A & 29/04/16 & 0.2295 & 2,053,670 & 745,960 & 6,740,070 & 0 & 2,052,610 & 2,066,400\\
+%CPTY\_A & 13/05/16 & 0.2678 & 2,149,190 & 845,507 & 6,930,230 & 0 & 2,147,840 & 2,147,840\\
+%CPTY\_A & 27/05/16 & 0.3060 & 2,235,630 & 930,218 & 7,295,440 & 0 & 2,233,980 & 2,233,980\\
+%CPTY\_A & 10/06/16 & 0.3443 & 2,314,470 & 1,014,690 & 7,753,190 & 0 & 2,312,510 & 2,312,510\\
 CPTY\_A & ... & ...& ... & ... & ... & ... & ... & ...\\
-CPTY\_A & 07/07/17 & 1.4167 & 3,320,430 & 2,423,890 & 12,787,900 & 0 & 3,304,650 & 3,304,650\\
-CPTY\_A & 21/07/17 & 1.4551 & 3,351,780 & 2,452,640 & 12,964,200 & 0 & 3,335,420 & 3,335,420\\
-CPTY\_A & 04/08/17 & 1.4934 & 3,302,820 & 2,511,500 & 12,796,100 & 0 & 3,286,260 & 3,335,420\\
-CPTY\_A & 18/08/17 & 1.5318 & 3,339,840 & 2,545,850 & 13,120,000 & 0 & 3,322,640 & 3,335,420\\
-CPTY\_A & 01/09/17 & 1.5701 & 3,371,300 & 2,576,100 & 13,238,700 & 0 & 3,353,480 & 3,353,480\\
-CPTY\_A & 15/09/17 & 1.6085 & 3,279,670 & 2,555,370 & 13,041,300 & 0 & 3,261,880 & 3,353,480\\
-CPTY\_A & 29/09/17 & 1.6468 & 3,305,060 & 2,579,200 & 13,072,800 & 0 & 3,286,680 & 3,353,480\\
-CPTY\_A & 13/10/17 & 1.6852 & 3,332,830 & 2,604,200 & 13,225,600 & 0 & 3,313,850 & 3,353,480\\
-CPTY\_A & 27/10/17 & 1.7236 & 3,280,280 & 2,661,770 & 13,034,600 & 0 & 3,261,150 & 3,353,480\\
-CPTY\_A & 13/11/17 & 1.7701 & 3,316,800 & 2,701,060 & 13,331,600 & 0 & 3,296,880 & 3,353,480\\
-CPTY\_A & 24/11/17 & 1.8003 & 3,337,760 & 2,720,870 & 13,402,400 & 0 & 3,317,280 & 3,353,480\\
-CPTY\_A & ... & ...& ... & ... & ... & ... & ... & ...\\
+%CPTY\_A & 07/07/17 & 1.4167 & 3,320,430 & 2,423,890 & 12,787,900 & 0 & 3,304,650 & 3,304,650\\
+%CPTY\_A & 21/07/17 & 1.4551 & 3,351,780 & 2,452,640 & 12,964,200 & 0 & 3,335,420 & 3,335,420\\
+%CPTY\_A & 04/08/17 & 1.4934 & 3,302,820 & 2,511,500 & 12,796,100 & 0 & 3,286,260 & 3,335,420\\
+%CPTY\_A & 18/08/17 & 1.5318 & 3,339,840 & 2,545,850 & 13,120,000 & 0 & 3,322,640 & 3,335,420\\
+%CPTY\_A & 01/09/17 & 1.5701 & 3,371,300 & 2,576,100 & 13,238,700 & 0 & 3,353,480 & 3,353,480\\
+%CPTY\_A & 15/09/17 & 1.6085 & 3,279,670 & 2,555,370 & 13,041,300 & 0 & 3,261,880 & 3,353,480\\
+%CPTY\_A & 29/09/17 & 1.6468 & 3,305,060 & 2,579,200 & 13,072,800 & 0 & 3,286,680 & 3,353,480\\
+%CPTY\_A & 13/10/17 & 1.6852 & 3,332,830 & 2,604,200 & 13,225,600 & 0 & 3,313,850 & 3,353,480\\
+%CPTY\_A & 27/10/17 & 1.7236 & 3,280,280 & 2,661,770 & 13,034,600 & 0 & 3,261,150 & 3,353,480\\
+%CPTY\_A & 13/11/17 & 1.7701 & 3,316,800 & 2,701,060 & 13,331,600 & 0 & 3,296,880 & 3,353,480\\
+%CPTY\_A & 24/11/17 & 1.8003 & 3,337,760 & 2,720,870 & 13,402,400 & 0 & 3,317,280 & 3,353,480\\
+%CPTY\_A & ... & ...& ... & ... & ... & ... & ... & ...\\
 \hline
 \end{tabular}
 }
@@ -1293,6 +1343,151 @@ and second order polynomial choice makes a difference before option expiry.
 \label{fig_ex13b_regression}
 \end{figure}
 
+%--------------------------------------------------------
+\subsection{Minimal Market Data Setup}
+%--------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_14} demonstrates using a minimal market data setup in order to rerun the vanilla Swap exposure simulation shown in {\tt Examples/Example\_1}. The minimal market data uses single points per curve where possible.
+
+%--------------------------------------------------------
+\subsection{Sensitivity and Stress Scenario Computation}\label{ex:sensitivity_stress}
+%--------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_15} demonstrates the calculation of sensitivities and stress scenarios. The
+portfolio used in this example consists of
+
+\begin{itemize}
+\item a vanilla swap in EUR
+\item a cross currency swap EUR-USD
+\item a resettable cross currency swap EUR-USD
+\item a FX forward EUR-USD
+\item a FX call option
+\item a FX put option
+\item an European swaption
+\item a cap in USD
+\item a floor in USD
+\item a cap in EUR
+\item a floor in UER
+\item a fixed rate bond
+\end{itemize}
+
+The sensitivity configuration in {\tt sensitivity.xml} aims at computing the following sensitivities
+
+\begin{itemize}
+\item discount curve sensitivities in EUR, USD; GBP, CHF, JPY, on pillars 6M, 1Y, 2Y, 3Y, 5Y, 7Y, 10Y, 15Y, 20Y (absolute shift of 0.0001)
+\item forward curve sensitivities for EUR-EURIBOR 6M and 3M indices, EUR-EONIA, USD-LIBOR 3M and 6M, GBP-LIBOR 3M and
+  6M, CHF-LIBOR-6M and JPY-LIBOR-6M indices (absolute shift of 0.0001)
+\item yield curve shifts for a bond benchmark curve in EUR (absolute shift of 0.0001)
+\item FX spot sensitivities for USD, GBP, CHF, JPY against EUR as the base currency (relative shift of 0.01)
+\item FX vegas for USDEUR, GBPEUR, JPYEUR volatility surfaces (relative shift of 0.01)
+\item swaption vegas for the EUR surface on expiries 1Y, 5Y, 7Y, 10Y and underlying terms 1Y, 5Y, 10Y (relative shift of 0.01)
+\item caplet vegas for EUR and USD on an expiry grid 1Y, 2Y, 3Y, 5Y, 7Y, 10Y and strikes 0.01, 0.02, 0.03, 0.04,
+  0.05. (absolute shift of 0.0001)
+\end{itemize}
+
+Furthermore, mixed second order derivatives (``cross gammas'') are computed for discount-discount, discount-forward and
+forward-forward curves in EUR.
+
+By definition the sensitivities are zero rate sensitivities and optionlet sensitivities, no par sensitivities are
+provided. The sensitivity analysis produces three output files.
+
+The first, {\tt scenario.csv}, contains the shift
+direction ({\tt UP}, {\tt DOWN}, {\tt CROSS}), the base NPV, the scenario NPV and the difference of these two for each
+trade and sensitivity key. For an overview over the possible scenario keys see \ref{sec:sensitivity}.
+
+The second file, {\tt sensitivity.csv}, contains the shift size (in absolute terms always) and first (``Delta'') and second
+(``Gamma'') order finite differences computed from the scenario results. Note that the Delta and Gamma results pure
+differences, i.e. they are not divided by the shift size.
+
+The third file, {\tt crossgamma.csv} contains second order mixed differences according to the specified cross gamma
+filter, along with the shift sizes for the two factors involved. Again the reported result is not divided by the shift
+sizes.
+
+The stress scenario definition in {\tt stresstest.xml} defines two stress tests:
+
+\begin{itemize}
+\item {\tt parallel\_rates}: Rates are shifted in parallel by 0.01 (absolute). The EUR bond benchmark curve is shifted by
+  increasing amounts 0.001, ..., 0.009 on the pillars 6M, ..., 20Y. FX Spots are shifted by 0.01 (relative), FX vols by
+  0.1 (relative), swaption and cap floor vols by 0.0010 (absolute)
+\item {\tt twist}: The EUR bond benchmark curve is shifted by amounts -0.0050, -0.0040, -0.0030, -0.0020, 0.0020,
+  0.0040, 0.0060, 0.0080, 0.0100 on pillars 6M, 1Y, 2Y, 3Y, 5Y, 7Y, 10Y, 15Y, 20Y.
+\end{itemize}
+
+The corresponding output file {\tt stresstest.csv} contains the base NPV, the NPV under the scenario shifts and the
+difference of the two for each trade and scenario label.
+
+%--------------------------------------------------------
+\subsection{Equity Derivatives}\label{ex:equityderivatives}
+%--------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_16} demonstrates the computation of NPV, exposures and XVA for a portfolio 
+of OTC equity derivatives. The portfolio used in this example consists of:
+
+\begin{itemize}
+	\item an equity call option denominated in EUR (``Luft'')
+	\item an equity put option denominated in EUR (``Luft'')
+	\item an equity forward denominated in EUR (``Luft'')
+	\item an equity call option denominated in USD (``SP5'')
+	\item an equity put option denominated in USD (``SP5'')
+	\item an equity forward denominated in USD (``SP5'')
+\end{itemize}
+
+The step-by-step procedure for running ORE is identicaly for equities as for other asset classes; the same market and 
+portfolio data files are used to store the equity market data and trade details, respectively. For the exposure 
+simulation, the calibration parameters for the equity risk factors can be set in the usual {\tt simulation.xml} file.
+
+Looking at the MtM results in the output file {\tt npv.csv} we observe that put-call parity ($V_{Fwd} = V_{Call} - 
+V_{Put}$) is observed as expected. Looking at Figure \ref{fig_eq_call} we observe that the Expected Exposure profile of 
+the equity call option trade is relatively smooth over time, while for the equity forward trade the Expected Exposure 
+tends to increase as we approach maturity. This behaviour is similar to what we observe in sections \ref{sec:fxfwd} 
+and \ref{sec:fxoption}. 
+
+\begin{figure}[h!]
+	\begin{center}
+		\includegraphics[scale=0.45]{mpl_eq_call.pdf}
+	\end{center}
+	\caption{Equity (``Luft'') call option and OTC forward exposure evolution, maturity in approximately 2.5 years. 
+	Simulation with 
+	10000 paths and quarterly time steps.}
+	\label{fig_eq_call}
+\end{figure}
+
+%--------------------------------------------------------
+\subsection{Inflation Swaps}
+%--------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_17} computes the NPV of a CPI Swap and a Year on Year Swap. The terms of
+the two deals are as follows, CPI Swap:
+
+\begin{itemize}
+\item Start 2016-07-18, Maturity 2021-07-18
+\item GBP Libor 6M vs. $2\%$ x CPI-Factor (Act/Act), with
+\item CPI-Factor = UKRPI fixing with an observation lag of 2M divided by the base CPI value 210, inflation fixing is not
+  interpolated
+\end{itemize}
+
+Year on Year Swap:
+
+\begin{itemize}
+\item Start 2016-07-18, Maturity 2021-07-18
+\item EUR Euribor 6M vs. Year on Year payoff (Act/Act) on EUHICPXT, inflation fixings are observed with a lag of 2M,
+  include 2 fixing days, and are interpolated
+\end{itemize}
+
+After running the example, the results of the computation can be found in the output file {\tt npv.csv}.
+
+%--------------------------------------------------------
+\subsection{Bonds}
+%--------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_18} computes NPVs and flow projections for a vanilla bond portfolio
+consisting of a fixed rate bond and a Euribor-6M floater.
+
+After running the example, the results of the computation can be found in the output files {\tt npv.csv} and {\tt
+  flows.csv}, respectively.
+
+%--------------------------------------------------------
+
 \clearpage
 %========================================================
 \section{Launchers and Visualisation}\label{sec:visualisation}
@@ -1412,6 +1607,7 @@ This subset of data is easiest explained using an example, see listing \ref{lst:
   <Parameter name="inputPath">Input</Parameter>
   <Parameter name="outputPath">Output</Parameter>
   <Parameter name="logFile">log.txt</Parameter>
+  <Parameter name="logMask">255</Parameter>
   <Parameter name="marketDataFile">../../Input/market_20160205.txt</Parameter>
   <Parameter name="fixingDataFile">../../Input/fixings_20160205.txt</Parameter>
   <Parameter name="implyTodaysFixings">Y</Parameter>
@@ -1432,8 +1628,12 @@ This subset of data is easiest explained using an example, see listing \ref{lst:
 Parameter names are self explanatory: Input and output path are interpreted relative from the directory where the ORE
 script is started, but can also be specified using absolute paths. All file names are then interpreted relative to the
 'inputPath' and 'outputPath', respectively. The files starting with {\tt ../../Input/} then point to files in the global
-Example input directory {\tt Example/Input/*}, whereas files such as {\tt portfolio.xml} are local inputs in {\tt
-  Example/Example\_\#/Input/}. \\
+Example input directory {\tt Example/Input/*}, whereas files such as {\tt portfolio.xml} are local inputs in {\tt 
+Example/Example\_\#/Input/}. 
+
+Parameter {\tt logMask} determines the verbosity of log file output. Log messages are 
+internally labelled as Alert, Critical, Error, Warning, Notice, Debug, associated with logMask values 1, 2, 4, 8, ..., 64. 
+The logMask allows filtering subsets of these categories and controlling the verbosity of log file output\footnote{by bitwise comparison of the the external logMask value with each message's log level}. LogMask 255 ensures maximum verbosity. \\
 
 When ORE starts, it will initialise today's market, i.e. load market data and fixings, and build all term structures as
 specified in {\tt todaysmarket.xml}.  Moreover, ORE will load the trades in {\tt portfolio.xml} and link them with
@@ -1442,7 +1642,7 @@ fixings would not be loaded but implied, relevant when pricing/bootstrapping off
 scenario analysis and stress testing.
 
 \medskip The last parameter {\tt observationModel} can be used to control ORE performance during simulation. The choices
-{\em Disable } and {\em Unregister } yield similarly improved performance relative to choice {\em None}. For users
+{\em Disable } and {\em Unregister } yield similarly improved performance relative to choice {\em None}. For users
 familiar with the QuantLib design - the parameter controls to which extent {\em QuantLib observer notifications} are
 used when market and fixing data is updated and the evaluation date is shifted:
 \begin{itemize}
@@ -1460,7 +1660,8 @@ and kicks off updates afterwards when enabled again
 \subsubsection{Markets}\label{sec:master_input_markets}
 
 The {\tt Markets} section (see listing \ref{lst:ore_markets}) is used to choose market configurations for calibrating
-the IR and FX simulation model components, pricing and simulation, respectively. These configurations have to be defined
+the IR, FX and EQ simulation model components, pricing and simulation, respectively. These configurations have to be 
+defined
 in {\tt todaysmarket.xml} (see section \ref{sec:market}).
 
 \begin{listing}[H]
@@ -1469,6 +1670,7 @@ in {\tt todaysmarket.xml} (see section \ref{sec:market}).
 <Markets>
   <Parameter name="lgmcalibration">collateral_inccy</Parameter>
   <Parameter name="fxcalibration">collateral_eur</Parameter>
+  <Parameter name="eqcalibration">collateral_inccy</Parameter>
   <Parameter name="pricing">collateral_eur</Parameter>
   <Parameter name="simulation">collateral_eur</Parameter>
 </Markets>
@@ -1493,7 +1695,8 @@ type can be (so far) in
 \item curves
 \item simulation
 \item xva
-\item initialMargin
+\item sensitivity
+\item stress
 \end{itemize}
 
 Each {\tt Analytic} section contains a list of key/value pairs to parameterise the analysis of the form {\tt <Parameter
@@ -1529,6 +1732,36 @@ the list above.
 \label{lst:ore_analytics}
 \end{listing}
 
+The cashflow analytic writes a report containing all future cashflows of the portfolio. Table \ref{cashflowreport} shows
+a typical output for a vanilla swap.
+
+\begin{table}[hbt]
+\scriptsize
+\begin{center}
+  \begin{tabular}{l|l|l|l|r|l|r|r|l|r}
+\hline
+\#ID & Type & LegNo & PayDate & Amount & Currency & Coupon & Accrual & fixingDate & fixingValue \\
+\hline
+\hline
+tr123 & Swap & 0 & 13/03/17 & -76212.5 & EUR & -0.00201 & 0.50556 & 08/09/16 & -0.00201 \\
+tr123 & Swap & 0 & 12/09/17 & -90683.9212 & EUR & -0.002379 & 0.50833 & 09/03/17 & -0.002381 \\
+\ldots
+\end{tabular}
+\caption{Cashflow Report}
+\label{cashflowreport}
+\end{center}
+\end{table}
+
+The amount column contains the projected amount including embedded caps and floors and convexity (if applicable), the
+coupon column displays the corresponding rate estimation. The fixing value on the other hand is the plain fixing
+projection as given by the forward value, i.e. without embedded caps and floors or convexity.
+
+Note that the fixing value might deviate from the coupon value even for a vanilla coupon, if the QuantLib library was
+compiled {\em without} the flag \verb+QL_USE_INDEXED_COUPON+ (which is the default case). In this case the coupon value
+uses a par approximation for the forward rate assuming the index estimation period to be identical to the accrual
+period, while the fixing value is the actual forward rate for the index estimation period, i.e. whenever the index estimation
+period differs from the accrual period the values will be slightly different.
+
 The curves analytic exports all yield curves that have been built according to the specification in {\tt
   todaysmarket.xml}. Key {\tt configuration} selects the curve set to be used (see explanation in the previous Markets
 section).  Key {\tt grid} defines the time grid on which the yield curves are evaluated, in the example above a grid of
@@ -1551,7 +1784,6 @@ needed for subsequent XVA analytics.
     <Parameter name="simulationConfigFile">simulation.xml</Parameter>
     <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
     <Parameter name="baseCurrency">EUR</Parameter>
-    <Parameter name="storeScenarios">N</Parameter>
     <Parameter name="storeFlows">Y</Parameter>
     <Parameter name="cubeFile">cube_A.dat</Parameter>
     <Parameter name="additionalScenarioDataFileName">scenariodata.dat</Parameter>
@@ -1616,10 +1848,10 @@ details and analyse their impact on XVAs quickly without re-generating the NPV c
     <Parameter name="dimLocalRegressionEvaluations">100</Parameter>
     <Parameter name="dimLocalRegressionBandwidth">0.25</Parameter>
     <Parameter name="dimScaling">1.0</Parameter>
-    <Parameter name="dimEvolutionFile">dim_evolution.txt</Parameter>      
-    <Parameter name="dimRegressionFile">dim_regression.txt</Parameter>      
+    <Parameter name="dimEvolutionFile">dim_evolution.txt</Parameter>
+    <Parameter name="dimRegressionFiles">dim_regression.txt</Parameter>
     <Parameter name="dimOutputNettingSet">CPTY_A</Parameter>      
-    <Parameter name="dimOutputGridPoint">0</Parameter>
+    <Parameter name="dimOutputGridPoints">0</Parameter>
     <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>
     <Parameter name="netCubeOutputFile">netcube.csv</Parameter>     
   </Analytic>
@@ -1635,7 +1867,7 @@ Parameters:
 transfer amounts, margin period of risk
 \item {\tt cubeFile:} NPV cube file previously generated and to be post-processed here
 \item {\tt hyperCube:} If set to N, the cube file is expected to have depth 1 (storing NPV data only), if set to Y it is
-expected to have depth > 1 (e.g. storing NPVs and cumulative flows)
+expected to have depth $>$ 1 (e.g. storing NPVs and cumulative flows)
 \item {\tt scenarioFile:} Scenario data previously generated and used in the post-processor (simulated index fixings and
 FX rates)
 \item {\tt baseCurrency:} Expression currency for all NPVs, value adjustments, exposures
@@ -1664,8 +1896,9 @@ the collateral model file (netting.xml)}
 \item {\tt dimRegressionOrder:} Order of the regression polynomial (netting set clean NPV move over the simulation
 period versus netting set NPV at period start)
 \item {\tt dimRegressors:} Variables used as regressors in a single- or multi-dimensional regression; these variable
-names need to match entries in the {\tt simulation.xml}'s AggregationScenarioDataCurrencies and
-AggregationScenarioDataIndices sections (only these scenario data are passed on to the post processor)
+  names need to match entries in the {\tt simulation.xml}'s AggregationScenarioDataCurrencies and
+  AggregationScenarioDataIndices sections (only these scenario data are passed on to the post processor); if the list is
+  empty, the NPV will be used as a single regressor
 \item {\tt dimLocalRegressionEvaluations:} Nadaraya-Watson local regression evaluated at the given number of points to
 validate polynomial regression. Note that Nadaraya-Watson needs a large number of samples for meaningful
 results. Evaluating the local regression at many points (samples) has a significant performance impact, hence the option
@@ -1676,9 +1909,9 @@ independent variable (NPV)
 $t_0$
 \item {\tt dimEvolutionFile:} Output file name to store the evolution of zero order DIM and average of nth order DIM
 through time
-\item {\tt dimRegressionFile:} Output file name for a DIM regression snapshot
+\item {\tt dimRegressionFiles:} Output file name(s) for a DIM regression snapshot, comma separated list
 \item {\tt dimOutputNettingSet:} Netting set for the DIM regression snapshot
-\item {\tt dimOutputGridPoint:} Grid point (in time) for the DIM regression snapshot
+\item {\tt dimOutputGridPoints:} Grid point(s) (in time) for the DIM regression snapshot, comma separated list
 \item {\tt rawCubeOutputFile:} File name for the trade NPV cube in human readable csv file format (per trade, date,
 sample)
 \item {\tt netCubeOutputFile:} File name for the aggregated NPV cube in human readable csv file format (per netting set,
@@ -1687,6 +1920,74 @@ date, sample) {\em after} taking collateral into account
 
 The latter two cube file outputs are provided for interactive analysis and visualisation purposes, see section
 \ref{sec:visualisation}.
+
+\medskip The {\tt sensitivity} and {\tt stress} 'analytics' provide computation of bump and revalue (zero rate
+resp. optionlet) sensitivities and NPV changes under user defined stress scenarios. Listing \ref{lst:ore_sensitivity}
+shows a typical configuration for sensitvity calculation.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Analytics>
+ <Analytic type="sensitivity">
+   <Parameter name="active">Y</Parameter>
+   <Parameter name="marketConfigFile">simulation.xml</Parameter>
+   <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
+   <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
+   <Parameter name="scenarioOutputFile">scenario.csv</Parameter>
+   <Parameter name="sensitivityOutputFile">sensitivity.csv</Parameter>
+   <Parameter name="crossGammaOutputFile">crossgamma.csv</Parameter>
+   <Parameter name="outputSensitivityThreshold">0.000001</Parameter>
+ </Analytic>
+</Analytics>
+\end{minted}
+\caption{ORE analytic: sensitivity}
+\label{lst:ore_sensitivity}
+\end{listing}
+%   <Parameter name="parRateSensitivityOutputFile">parsensi.csv</Parameter>
+
+The parameters have the following interpretation:
+
+\begin{itemize}
+\item {\tt marketConfigFile:} Configuration file defining the simulation market under which sensitivities are computed,
+  see \ref{sec:simulation}. Only a subset of the specification is needed (the one given under {\tt Market}, see
+  \ref{sec:sim_market} for a defailled description).
+\item {\tt sensitivityConfigFile:} Configuration file  for the sensitivity calculation, see section \ref{sec:sensitivity}.
+\item {\tt pricingEnginesFile:} Configuration file for the pricing engines to be used for sensitivity calculation.
+\item {\tt scenarioOutputFile:} File containing the results of the sensitivity calculation in terms of the base scenario
+  NPV, the scenario NPV and their difference.
+\item {\tt sensitivityOutputFile:} File containing the results of the sensitivity calculation in terms of the base scenario
+  NPV, the shift size and the resulting first and (pure) second order finite differences
+\item {\tt crossGammaOutputFile:} File containing the results of the sensitivity calculation in terms of the base scenario
+  NPV, two shift sizes and a (mixed) second order finite difference associated to a cross gamma calculation
+%\item {\tt parRateSensitivityOutputFile:} File containing par sensitivities (only available in ORE+)
+\item {\tt outputSensitivityThreshold:} Only finite differences with absolute value greater than this number are written
+  to the output files.
+\end{itemize}
+
+The stress analytics configuration is similar to the one of the sensitivity calculation. Listing \ref{lst:ore_stress}
+shows an example.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Analytics>
+ <Analytic type="stress">
+   <Parameter name="active">Y</Parameter>
+   <Parameter name="marketConfigFile">simulation.xml</Parameter>
+   <Parameter name="stressConfigFile">stresstest.xml</Parameter>
+   <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
+   <Parameter name="scenarioOutputFile">stresstest.csv</Parameter>
+   <Parameter name="outputThreshold">0.000001</Parameter>
+ </Analytic>
+</Analytics>
+\end{minted}
+\caption{ORE analytic: stress}
+\label{lst:ore_stress}
+\end{listing}
+
+The parameters have the same interpretation as for the sensitivity analytic. The configuration file for the stress
+scenarios is described in more detail in section \ref{sec:stress}.
 
 %--------------------------------------------------------
 \subsection{Market: {\tt todaysmarket.xml}}\label{sec:market}
@@ -1700,17 +2001,25 @@ the application will complain at run time and exit.
 be chosen by the user. The file name needs to be entered into the master configuration file {\tt ore.xml}, see section
 \ref{sec:master_input}.
 
-\medskip The file starts and ends with the opening and closing tags {\tt <TodaysMarket>} and {\tt </TodaysMarket>}. The
-file then contains configuration blocks for
+\medskip 
+The file starts and ends with the opening and closing tags {\tt <TodaysMarket>} 
+and {\tt </TodaysMarket>}. The file then contains configuration blocks for
 \begin{itemize}
 \item Discounting curves
 \item Index curves (to project index fixings)
+\item Yield curves (for other purposes, e.g. as benchmark curve for bond pricing)
 \item Swap index curves (to project Swap rates)
 \item FX spot rates
-\item FX Volatility structures
+\item FX volatility structures
 \item Swaption volatility structures
 \item Cap/Floor volatility structures
 \item Default curves
+\item Equity curves (to project forward prices)
+\item Equity volatility structures
+\item Security Spreads
+\item Security Recovery Rates
+\item Inflation index curves (to project zero or yoy inflation fixings)
+\item Inflation Cap/Floor price surfaces
 \end{itemize}
 
 There can be alternative versions of each block each labeled with a unique identifier (e.g. Discount curve block with ID
@@ -1767,6 +2076,33 @@ This block of curve specifications instructs ORE to build another set of yield c
 (e.g. Yield/EUR/EUR6M etc.) point to the {\tt curveconfig.xml} file where these curves are defined. Each curve is then
 associated with an index name (of format Ccy-IndexName-Tenor, e.g. EUR-EURIBOR-6M) so that ORE will project the
 respective index using the selected curve (e.g. Yield/EUR/EUR6M).
+
+\subsubsection{Yield Curves}
+
+See an excerpt of the yield curve block with ID 'default' from the same example file:
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<YieldCurves id="default">
+  <YieldCurve name="BANK_EUR_LEND">Yield/EUR/BANK_EUR_LEND</YieldCurve>
+  <YieldCurve name="BANK_EUR_BORROW">Yield/EUR/BANK_EUR_BORROW</YieldCurve>
+  <!-- ... -->
+</YieldCurves>
+\end{minted}
+\caption{Yield curve block with ID 'default'}
+\label{lst:indexcurve_spec}
+\end{listing}
+
+This block of curve specifications instructs ORE to build another set of yield curves, unique strings
+(e.g. Yield/EUR/EUR6M etc.) point to the {\tt curveconfig.xml} file where these curves are defined. Other than
+discounting and index curves the yield curves in this block are not tied to a particular purpose. The curves defined in
+this block typically include
+
+\begin{itemize}
+\item additional curves needed in the XVA post processor, e.g. for the FVA calculation
+\item benchmark curves used for bond pricing
+\end{itemize}
 
 \subsubsection{Swap Index Curves}
 
@@ -1904,22 +2240,179 @@ The following is an excerpt of the Default Curves block with ID 'default' from t
 \label{lst:defaultcurve_spec}
 \end{listing}
 
-
 This instructs ORE to build a set of default probability curves, again defined in the curve configuration file. Each
 curve is then associated with a name (BANK, CUST\_A) for subsequent lookup.  As before, the last token
 (e.g. BANK\_SR\_USD) is user defined and will be found in the curve configuration's CurveId tag.
 
-\subsubsection{Market Configurations}
+\subsubsection{Security Spreads}\label{sssec:securityspreads}
 
-Finally, representatives of each type of block (Discount Curves, Index Curves, Volatility structures, etc, up to Default
-curves) can be bundled into a market configuration. This is done by adding the following to the {\tt todaysmarket.xml}
+The following is an excerpt of the Security Spreads block with ID 'default' from the same example file:
+
+\begin{listing}[H]
+	%\hrule\medskip
+	\begin{minted}[fontsize=\footnotesize]{xml}
+<SecuritySpreads id="default">
+  <SecuritySpread name="SECURITY_1">SecuritySpread/SECURITY_1</SecuritySpread>
+</SecuritySpreads>
+	\end{minted}
+	\caption{Security spreads block with ID 'default'}
+	\label{lst:secspread_spec}
+\end{listing}
+
+The pricing of bonds includes (among other components) a security specific spread, which is defined in this block. The
+link to the specific security is established via the name in the security spread definition and the security id in the
+bond trade definition.
+
+\subsubsection{Security Recovery Rates}\label{sssec:securityrecoveryrates}
+
+The following is an excerpt of the Security Recovery Rates block with ID 'default' from the same example file:
+
+\begin{listing}[H]
+	%\hrule\medskip
+	\begin{minted}[fontsize=\footnotesize]{xml}
+<SecurityRecoveryRates id="default">
+    <SecurityRecoveryRates name="SECURITY_1">
+        SecurityRecoveryRate/SECURITY_1
+    </SecurityRecoveryRate>
+</SecurityRecoveryRates>
+	\end{minted}
+	\caption{Security recovery rates block with ID 'default'}
+	\label{lst:secrecrate_spec}
+\end{listing}
+
+The pricing of bonds includes (among other components) a recovery rate. This can be specified per security using this structure. The link to the specific security is established via the name in the security spread recovery rate definition and the security id in the bond trade definition.
+
+\subsubsection{Equity Curves}
+The following is an excerpt of the Equity curves block with ID 'default' from the same example file:
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<EquityCurves id="default">
+  <EquityCurve name="SP5">Equity/USD/SP5</EquityCurve>
+  <EquityCurve name="Lufthansa">Equity/EUR/Lufthansa</EquityCurve>
+</EquityCurves>
+\end{minted}
+\caption{Equity curves block with ID 'default'}
+\label{lst:eqcurve_spec}
+\end{listing}
+
+This instructs ORE to build a set of equity curves, again defined in the curve configuration file. Each equity curve 
+after construction will consist of a spot equity price, as well as a term structure of dividend yields, which can be 
+used to determine forward prices. This object is then associated with a name (e.g. SP5) for subsequent lookup. 
+
+\subsubsection{Equity Volatilities}
+
+The following is an excerpt of the equity volatilities block with ID 'default' from the same example file:
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<EquityVolatilities id="default">
+  <EquityVolatility name="SP5">EquityVolatility/USD/SP5</EquityVolatility>
+  <EquityVolatility name="Lufthansa">EquityVolatility/EUR/Lufthansa</EquityVolatility>
+</EquityVolatilities>
+\end{minted}
+\caption{EQ volatility block with ID 'default'}
+\label{lst:eqvol_spec}
+\end{listing}
+
+This instructs ORE to build two equity volatility structures for SP5 and Lufthansa, respectively. See the curve
+configuration file for the definition of the equity volatility structure.
+
+
+\subsubsection{Inflation Index Curves}
+
+The following is an excerpt of the Zero Inflation Index Curves block with ID 'default' from the sample example file:
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<ZeroInflationIndexCurves id="default">
+    <ZeroInflationIndexCurve name="EUHICPXT">
+        Inflation/EUHICPXT/EUHICPXT_ZC_Swaps
+    </ZeroInflationIndexCurve>
+    <ZeroInflationIndexCurve name="FRHICP">
+        Inflation/FRHICP/FRHICP_ZC_Swaps
+    </ZeroInflationIndexCurve>
+    <ZeroInflationIndexCurve name="UKRPI">
+        Inflation/UKRPI/UKRPI_ZC_Swaps
+    </ZeroInflationIndexCurve>
+    <ZeroInflationIndexCurve name="USCPI">
+        Inflation/USCPI/USCPI_ZC_Swaps
+    </ZeroInflationIndexCurve>
+    ...
+</ZeroInflationIndexCurves>
+\end{minted}
+\caption{Zero Inflation Index Curves block with ID 'default'}
+\label{lst:zeroinflationindexcurve_spec}
+\end{listing}
+
+This instructs ORE to build a set of zero inflation index curves, which are defined in the curve configuration
+file. Each curve is then associated with an index name (like e.g. EUHICPXT or UKRPI). The last token
+(e.g. EUHICPXT\_ZC\_Swap) is user defined and will be found in the curve configuration's CurveId tag.
+
+In a similar way, Year on Year index curves are specified:
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <YYInflationIndexCurves id="default">
+      <YYInflationIndexCurve name="EUHICPXT">
+          Inflation/EUHICPXT/EUHICPXT_YY_Swaps
+      </YYInflationIndexCurve>
+      ...
+  </YYInflationIndexCurves>
+\end{minted}
+\caption{YoY Inflation Index Curves block with ID 'default'}
+\label{lst:yoyinflationindexcurve_spec}
+\end{listing}
+
+Note that the index name is the same as in the corresponding zero index curve definition, but the token corresponding to
+the CurveId tag is different. This is because the actual underlying index (and in particular its fixings) are shared
+between the two index types, while different projection curves are used to forecast future index realisations.
+
+\subsubsection{Inflation Cap/Floor Price Surfaces}
+
+The following is an excerpt of the Inflation Cap/Floor Price Surfaces block with ID 'default' from the sample example
 file:
 
 \begin{listing}[H]
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
+<InflationCapFloorPriceSurfaces id="default">
+    <InflationCapFloorPriceSurface name="EUHICPXT">
+        InflationCapFloorPrice/EUHICPXT/EUHICPXT_ZC_CF
+    </InflationCapFloorPriceSurface>
+    <InflationCapFloorPriceSurface name="USCPI">
+        InflationCapFloorPrice/USCPI/USCPI_ZC_CF
+    </InflationCapFloorPriceSurface>
+    <InflationCapFloorPriceSurface name="UKRPI">
+        InflationCapFloorPrice/UKRPI/UKRPI_ZC_CF
+    </InflationCapFloorPriceSurface>
+</InflationCapFloorPriceSurfaces>
+\end{minted}
+\caption{Inflation Cap/Floor Price Surfaces block with ID 'default'}
+\label{lst:yoyinflationindexcurve_spec}
+\end{listing}
+
+This instructs ORE to build a set of zero inflation cap floor price surfaces, which are defined in the curve
+configuration file. Each surface is associated with an idnex name. The last token (e.g. EUHICPXT\_ZC\_CF) is user defined
+and will be found in the curve configuration's CurveId tag.
+
+Currently only zero coupon surfaces are supported, year on year surfaces are not supported.
+
+\subsubsection{Market Configurations}
+
+Finally, representatives of each type of block (Discount Curves, Index Curves, Volatility structures, etc, up to
+Inflation Cap/Floor Price Surfaces) can be bundled into a market configuration. This is done by adding the following to
+the {\tt todaysmarket.xml} file:
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
 <Configuration Id="default">
-  <DiscountingCurvesId> xois_eur </DiscountingCurvesId>
+  <DiscountingCurvesId>xois_eur</DiscountingCurvesId>
 </Configuration>
 <Configuration Id="collateral_inccy">
   <DiscountingCurvesId>ois</DiscountingCurvesId>
@@ -1990,6 +2483,14 @@ following excerpt of the Example section's {\tt pricingengine.xml} shows the sel
     <Engine>BlackBachelierSwaptionEngine</Engine>
     <EngineParameters/>
   </Product>
+  <Product type="Bond">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingRiskyBondEngine</Engine>
+    <EngineParameters>
+      <Parameter name="TimestepPeriod">6M</Parameter>
+    </EngineParameters>
+  </Product>
   <Product type="BermudanSwaption">
     <Model>LGM</Model>
     <ModelParameters>
@@ -2036,7 +2537,7 @@ This file is relevant in particular for structured products which are in scope o
 intended to allow the selection of optimised pricing engines for vanilla products such as Interest Rate Swaps.
  
 %--------------------------------------------------------
-\subsection{Simulation: {\tt simulation.xml}}
+\subsection{Simulation: {\tt simulation.xml}}\label{sec:simulation}
 %--------------------------------------------------------
 
 This file determines the behaviour of the risk factor simulation (scenario generation) module.
@@ -2082,10 +2583,10 @@ Let us discuss this section using the following example
 exploiting the analytcal tractability of the model to avoid any time discretization error. {\em Euler} uses a naive time
 discretization scheme which has numerical error and requires small time steps for accurate results (useful for testing
 purposes)
-\item {\tt Grid: } Specifies the simulation time grid, here 80 quarterly steps.
+\item {\tt Grid:} Specifies the simulation time grid, here 80 quarterly steps.
 \item {\tt Calendar:} Calendar or combination of calendars used to adjust the dates of the grid. Date adjustment is
 required because the simulation must step over 'good' dates on which index fixings can be stored.
-%\item {\tt Scenario: } Choose between {\em Simple } and {\em Complex } implementations, the latter optimized for
+%\item {\tt Scenario: } Choose between {\em Simple } and {\em Complex } implementations, the latter optimized for
 more efficient memory usage. \todo[inline]{Remove Scenario choice}
 \item {\tt Sequence:} Choose random sequence generator ({\em MersenneTwister, MersenneTwisterAntithetic, Sobol,
 SobolBrownianBridge}).
@@ -2262,6 +2763,61 @@ the default, ATMF options), or explicitly specified (in terms of FX rates as abs
 such as $\pm 25D$, $ATMF$ for at the money)
 \end{itemize}
 
+
+\medskip
+
+Each equity model is specified by a block as follows
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CrossAssetModel>	
+  <!-- ... -->
+  <EquityModels>
+    <CrossAssetLGM name="default">
+      <Currency>EUR</Currency>
+      <CalibrationType>Bootstrap</CalibrationType>
+      <Sigma>
+        <Calibrate>Y</Calibrate>
+        <ParamType>Piecewise</ParamType>
+        <TimeGrid>1.0,2.0,3.0,4.0,5.0,7.0,10.0</TimeGrid>
+        <InitialValue>0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1</InitialValue>
+      </Sigma>
+      <CalibrationOptions>
+        <Expiries>1Y,2Y,3Y,4Y,5Y,10Y</Expiries>
+        <Strikes/>
+      </CalibrationOptions>
+    </CrossAssetLGM>
+    <CrossAssetLGM name="SP5">
+      <!-- ... -->
+    </CrossAssetLGM>
+    <CrossAssetLGM name="Lufthansa">
+      <!-- ... -->
+    </CrossAssetLGM>
+      <!-- ... -->
+  </EquityModels>
+  <!-- ... -->
+<CrossAssetModel>	
+\end{minted}
+\caption{Simulation model equity configuration}
+\label{lst:simulation_model_eq_configuration}
+\end{listing}
+
+CrossAssetLGM sections are defined by equity name, but we also support a default configuration as above for the IR and 
+FX model parametrisations.  Within each CrossAssetLGM section, the interpretation of elements is as follows:
+
+\begin{itemize}
+	\item {\tt Currency: } Currency of denomination
+	\item {\tt CalibrationType: } Choose between {\em Bootstrap} and {\em BestFit} as in the IR section
+	\item {\tt Sigma/Calibrate: } Flag to enable/disable calibration of this particular parameter
+	\item {\tt Sigma/ParamType: } Choose between {\em Constant} and {\em Piecewise}
+	\item {\tt Sigma/TimeGrid: } Initial time grid for this parameter, can be left empty if ParamType is Constant
+	\item {\tt Sigma/InitialValue: } Vector of initial values, matching number of entries in time, or single value if 
+	the time grid is empty
+	\item {\tt CalibrationOptions: } Choice of calibration instruments by expiry and strike, strikes can be empty 
+	(implying the default, ATMF options), or explicitly specified (in terms of equity prices as absolute strike values)
+\end{itemize}
+
 \medskip
 Finally, the instantaneous correlation structure is specified as follows.
 
@@ -2295,10 +2851,11 @@ Any risk factor pair not specified explicitly here will be assumed to have zero 
 
 The last part of the simulation configuration file covers the specification of the simulated market.  Note that the
 simulation model will yield the evolution of risk factors such as short rates which need to be translated into entire
-yield curves that can be 'understood' by the instruments which we want to price under scenarios.  Moreover we need to
-specify how volatility structures evolve even if we do not explicitly simulate volatility. This translation happens
-based on the information in the {\em simulation market} object, which is configured in the section within the enclosing
-tags {\tt <Market>} and {\tt </Market}, as shown in the following small two-currency example.
+yield curves that can be 'understood' by the instruments which we want to price under scenarios.  
+
+Moreover we need to specify how volatility structures evolve even if we do not explicitly simulate volatility. This 
+translation happens based on the information in the {\em simulation market} object, which is configured in the section 
+within the enclosing tags {\tt <Market>} and {\tt </Market}, as shown in the following small example.
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -2371,6 +2928,209 @@ tags {\tt <Market>} and {\tt </Market}, as shown in the following small two-curr
 
 \todo[inline]{Comment on cap/floor surface structure and reaction to time decay}
 \todo[inline]{Remove DefaultCurves from SimMarket constructor and configuration section}
+
+%--------------------------------------------------------
+\subsection{Sensitivity Analysis: {\tt sensitivity.xml}}\label{sec:sensitivity}
+%--------------------------------------------------------
+
+This file specifies how sensitivities are computed. The general structure is shown in listing
+\ref{lst:sensitivity_config}. For each market component, a set of parameters is defined determining how sensitvities
+are computed with regards to the component:
+
+\begin{itemize}
+\item {\tt ShiftType} Both absolute or relative shifts can be used to compute a sensitivity, specified by the key words
+  {\tt Absolute} resp. {\tt Relative}.
+\item {\tt ShiftSize} The size of the shift to apply.
+\item {\tt ShiftTenors} For curves, the tenor buckets to apply shifts to, given as a comma separated list of periods.
+\item {\tt ShiftExpiries} For volatility surfaces, the option expiry buckets to apply shifts to, given as a comma
+  separated list of periods.
+\item {\tt ShiftTemrs} For swaption volatility surfaces, the underlying terms to apply shifts to, given as a comma
+  separated list of periods.
+\item {\tt ShiftStrikes} For cap / floor volatility surfaces, the strikes to apply shifts to, given as a comma separated
+  list of absolute strikes
+\item {\tt Index} For cap / floor volatility surfaces, the index which together wit the currency defines the surface.
+  list of absolute strikes
+\end{itemize}
+
+The cross gamma filter section contains a list of pairs of sensitivity keys. For each possible pair of sensitivity keys
+matching the given strings, a cross gamma sensitivity is computed. The given pair of keys can be (and usually are)
+shorter than the actual sensitivity keys, in this case only the prefix of the actual key is matched. For example, the
+pair {\tt DiscountCurve/EUR,DiscountCurve/EUR} matches all actual sensitivity pairs belonging to a cross sensitivity by
+one pillar of the EUR discount curve and another (different) pillar of the same curve. We list the possible keys by
+giving an example in each category:
+
+\begin{itemize}
+\item {\tt DiscountCurve/EUR/5/7Y}: 7y pillar of discounting curve in EUR, the pillar is at position 5 in the list of
+  all pillars (counting starts with zero)
+\item {\tt YieldCurve/BENCHMARK\_EUR/0/6M}: 6M pillar of yield curve ``BENCHMARK\_EUR'', the index of the 6M pillar is
+  zero (i.e. it is the first pillar)
+\item {\tt IndexCurve/EUR-EURIBOR-6M/2/2Y}: 2Y pillar of index forwarding curve for the Ibor index ``EUR-EURIBOR-6M'',
+  the pillar index is 2 in this case
+\item {\tt OptionletVolatility/EUR/18/5Y/0.04}: EUR caplet volatility surface, at 5Y option expiry and $4\%$ strike, the
+  running index for this expiry - strike pair is 18; the index counts the points in the surface in lexical order
+  w.r.t. the dimensions option expiry, strike
+\item {\tt FXSpot/USDEUR/0/spot}: FX spot USD vs EUR (with EUR as base ccy), the index is always zero for FX spots, the
+  pillar is labelled as ``spot'' always
+\item {\tt SwaptionVolatility/EUR/11/10Y/10Y/ATM}: EUR Swaption volatility surface at 10Y option expiry and 10Y
+  underlying term, ATM level, the running index for this expiry, term, strike triple has running index 11; the index
+  counts the points in the surface in lexical order w.r.t. the dimensions option expiry, underlying term and strike
+\end{itemize}
+
+\begin{listing}[H]
+%\hrule\medskip
+  \begin{minted}[fontsize=\scriptsize]{xml}
+<SensitivityAnalysis>
+  <DiscountCurves>
+    <DiscountCurve ccy="EUR">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </DiscountCurve>
+    ...
+  </DiscountCurves>
+  ...
+  <IndexCurves>
+    <IndexCurve index="EUR-EURIBOR-6M">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </IndexCurve>
+  </IndexCurves>
+  ...
+  <YieldCurves>
+    <YieldCurve name="BENCHMARK_EUR">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </YieldCurve>
+  </YieldCurves>
+  ...
+  <FxSpots>
+    <FxSpot ccypair="USDEUR">
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.01</ShiftSize>
+    </FxSpot>
+  </FxSpots>
+  ...
+  <FxVolatilities>
+    <FxVolatility ccypair="USDEUR">
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.01</ShiftSize>
+      <ShiftExpiries>1Y,2Y,3Y,5Y</ShiftExpiries>
+      <ShiftStrikes/>
+    </FxVolatility>
+  </FxVolatilities>
+  ...
+  <SwaptionVolatilities>
+    <SwaptionVolatility ccy="EUR">
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.01</ShiftSize>
+      <ShiftExpiries>1Y,5Y,7Y,10Y</ShiftExpiries>
+      <ShiftTerms>1Y,5Y,10Y</ShiftTerms>
+      <ShiftStrikes/>
+    </SwaptionVolatility>
+  </SwaptionVolatilities>
+  ...
+  <CapFloorVolatilities>
+    <CapFloorVolatility ccy="EUR">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftExpiries>1Y,2Y,3Y,5Y,7Y,10Y</ShiftExpiries>
+      <ShiftStrikes>0.01,0.02,0.03,0.04,0.05</ShiftStrikes>
+      <Index>EUR-EURIBOR-6M</Index>
+    </CapFloorVolatility>
+  </CapFloorVolatilities>
+  ...
+  <CrossGammaFilter>
+    <Pair>DiscountCurve/EUR,DiscountCurve/EUR</Pair>
+    <Pair>IndexCurve/EUR,IndexCurve/EUR</Pair>
+    <Pair>DiscountCurve/EUR,IndexCurve/EUR</Pair>
+  </CrossGammaFilter>
+</SensitivityAnalysis>
+\end{minted}
+\caption{Sensitivity configuration}
+\label{lst:sensitivity_config}
+\end{listing}
+
+%--------------------------------------------------------
+\subsection{Stress Scenario Analysis: {\tt stressconfig.xml}}\label{sec:stress}
+%--------------------------------------------------------
+
+This file specifies how sensitivities are computed. The general structure is shown in listing
+\ref{lst:stress_config}.
+
+In this example, two stress scenarios ``parallel\_rates'' and ``twist'' are defined. Each scenario definition contains
+the market components to be shifted in this scenario in a similar syntax that is also used for the sensitivity
+configuration, see \ref{sec:sensitivity}. Components that should not be shifted, can just be omitted in the definition
+of the scenario.
+
+However, instead of specifying one shift size per market component, here a whole vector of shifts can be given, with
+different shift sizes applied to each point of the curve (or surface / cube).
+
+In case of the swaption volatility shifts, the single value given as {\tt Shift} (without the attributes {\tt expiry}
+and {\tt term}) represents a default value that is used whenever no explicit value is given for a expiry / term pair.
+
+\begin{listing}[H]
+%\hrule\medskip
+  \begin{minted}[fontsize=\scriptsize]{xml}
+<StressTesting>
+  <StressTest id="parallel_rates">
+    <DiscountCurves>
+      <DiscountCurve ccy="EUR">
+        <ShiftType>Absolute</ShiftType>
+        <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+        <Shifts>0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01</Shifts>
+      </DiscountCurve>
+      ...
+    </DiscountCurves>
+    <IndexCurves>
+      ...
+    </IndexCurves>
+    <YieldCurves>
+      ...
+    </YieldCurves>
+    <FxSpots>
+      <FxSpot ccypair="USDEUR">
+        <ShiftType>Relative</ShiftType>
+        <ShiftSize>0.01</ShiftSize>
+      </FxSpot>
+    </FxSpots>
+    <FxVolatilities>
+      ...
+    </FxVolatilities>
+    <SwaptionVolatilities>
+      <SwaptionVolatility ccy="EUR">
+        <ShiftType>Absolute</ShiftType>
+        <ShiftExpiries>1Y,10Y</ShiftExpiries>
+        <ShiftTerms>5Y</ShiftTerms>
+        <Shifts>
+          <Shift>0.0010</Shift>
+          <Shift expiry="1Y" term="5Y">0.0010</Shift>
+          <Shift expiry="1Y" term="5Y">0.0010</Shift>
+          <Shift expiry="1Y" term="5Y">0.0010</Shift>
+          <Shift expiry="10Y" term="5Y">0.0010</Shift>
+          <Shift expiry="10Y" term="5Y">0.0010</Shift>
+          <Shift expiry="10Y" term="5Y">0.0010</Shift>
+        </Shifts>
+      </SwaptionVolatility>
+    </SwaptionVolatilities>
+    <CapFloorVolatilities>
+      <CapFloorVolatility ccy="EUR">
+        <ShiftType>Absolute</ShiftType>
+        <ShiftExpiries>6M,1Y,2Y,3Y,5Y,10Y</ShiftExpiries>
+        <Shifts>0.001,0.001,0.001,0.001,0.001,0.001</Shifts>
+      </CapFloorVolatility>
+    </CapFloorVolatilities>
+  </StressTest>
+  <StressTest id="twist">
+    ...
+  </StressTest>
+</StressTesting>
+  \end{minted}
+\caption{Stress configuration}
+\label{lst:stress_config}
+\end{listing}
+
 
 %--------------------------------------------------------
 \subsection{Curves: {\tt curveconfig.xml}}\label{sec:curveconfig}
@@ -2477,6 +3237,189 @@ configuration determines the composition of yield curves, default curves, Swapti
 \label{lst:fxoptionvol_configuration}
 \end{listing}
 
+\subsubsection{Equity Curve Structures}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<EquityCurves>
+  <EquityCurve>
+    <CurveId>SP5</CurveId>
+    <CurveDescription>SP 500 equity price projection curve</CurveDescription>
+    <Currency>USD</Currency>
+    <Type>DividendYield</Type> <!-- {DividendYield, ForwardPrice} -->
+    <SpotQuote>EQUITY/PRICE/SP5/USD</SpotQuote> <!--  the spot quote from the market data file -->
+    <Quotes>
+      <Quote>EQUITY_DIVIDEND/RATE/SP5/USD/3M</Quote>
+      <Quote>EQUITY_DIVIDEND/RATE/SP5/USD/20160915</Quote>
+      <Quote>EQUITY_DIVIDEND/RATE/SP5/USD/1Y</Quote>
+      <Quote>EQUITY_DIVIDEND/RATE/SP5/USD/20170915</Quote>
+    </Quotes>
+    <DayCounter>A365</DayCounter>
+  </EquityCurve>
+  <EquityCurve>
+    <!-- ... -->
+  </EquityCurve> 
+  </EquityCurves>
+\end{minted}
+\caption{Equity curve configuration}
+\label{lst:eqcurve_configuration}
+\end{listing}
+
+The equity curves here consists of a spot equity price, as well as a set of either forward prices or else dividend 
+yields. Upon construction, ORE stores internally an equity spot price quote and a dividend yield term structure, which 
+are then used together for projection of forward prices.
+
+\subsubsection{Equity Volatility Structures}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<EquityVolatilities>
+  <EquityVolatility>
+    <CurveId>SP5</CurveId>
+    <CurveDescription>Lognormal option implied vols for SP 500</CurveDescription>
+    <Currency>USD</Currency>
+    <Dimension>ATM</Dimension>
+    <Expiries>
+      6M
+    </Expiries>
+  </EquityVolatility>
+  <EquityVolatility>
+    <!-- ... -->
+  </EquityVolatility>
+</EquityVolatilities>
+\end{minted}
+\caption{Equity option volatility configuration}
+\label{lst:eqoptionvol_configuration}
+\end{listing}
+
+\subsubsection{Inflation Curves}
+
+Listing \ref{lst:inflationcurve_configuration} shows the configuration of an inflation curve. The inflation curve specific
+elements are the following:
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<InflationCurves>
+   <InflationCurve>
+       <CurveId>USCPI_ZC_Swaps</CurveId>
+       <CurveDescription>Estimation Curve for USCPI</CurveDescription>
+       <NominalTermStructure>Yield/USD/USD1D</NominalTermStructure>
+       <Type>ZC</Type>
+       <Quotes>
+           <Quote>ZC_INFLATIONSWAP/RATE/USCPI/1Y</Quote>
+           <Quote>ZC_INFLATIONSWAP/RATE/USCPI/2Y</Quote>
+           ...
+           <Quote>ZC_INFLATIONSWAP/RATE/USCPI/30Y</Quote>
+           <Quote>ZC_INFLATIONSWAP/RATE/USCPI/40Y</Quote>
+       </Quotes>
+       <Conventions>USCPI_INFLATIONSWAP</Conventions>
+       <Extrapolation>true</Extrapolation>
+       <Calendar>US</Calendar>
+       <DayCounter>A365</DayCounter>
+       <Lag>3M</Lag>
+       <Frequency>Monthly</Frequency>
+       <BaseRate>0.01</BaseRate>
+       <Tolerance>0.000000000001</Tolerance>
+       <Seasonality>
+           <BaseDate>20160101</BaseDate>
+           <Frequency>Monthly</Frequency>
+           <Factors>
+               <Factor>SEASONALITY/RATE/MULT/USCPI/JAN</Factor>
+               <Factor>SEASONALITY/RATE/MULT/USCPI/FEB</Factor>
+               <Factor>SEASONALITY/RATE/MULT/USCPI/MAR</Factor>
+               <Factor>SEASONALITY/RATE/MULT/USCPI/APR</Factor>
+               <Factor>SEASONALITY/RATE/MULT/USCPI/MAY</Factor>
+               <Factor>SEASONALITY/RATE/MULT/USCPI/JUN</Factor>
+               <Factor>SEASONALITY/RATE/MULT/USCPI/JUL</Factor>
+               <Factor>SEASONALITY/RATE/MULT/USCPI/AUG</Factor>
+               <Factor>SEASONALITY/RATE/MULT/USCPI/SEP</Factor>
+               <Factor>SEASONALITY/RATE/MULT/USCPI/OCT</Factor>
+               <Factor>SEASONALITY/RATE/MULT/USCPI/NOV</Factor>
+               <Factor>SEASONALITY/RATE/MULT/USCPI/DEC</Factor>
+           </Factors>
+       </Seasonality>
+   </InflationCurve>
+</InflationCurves>
+\end{minted}
+\caption{Inflation Curve Configuration}
+\label{lst:inflationcurve_configuration}
+\end{listing}
+
+\begin{itemize}
+\item {\tt NominalTermStructure}: The interest rate curve to be used to strip the inflation curve.
+\item {\tt Type}: The type of the curve, {\tt ZC} for zero coupon, {\tt YY} for year on year.
+\item {\tt Quotes}: The instruments' market quotes from which to bootstrap the curve.
+\item {\tt Conventions}: The conventions applicable to the curve instruments.
+\item {\tt Lag}: The observation lag used in the term structure.
+\item {\tt Frequency}: The frequency of index fixings.
+\item {\tt BaseRate}: The rate at $t=0$, this introduces an additional degree of freedom to get a smoother curve. If not
+  given, it is defaulted to the first market rate.
+\end{itemize}
+
+The optional seasonality block defines a multiplicative seasonality and contains the following elements:
+
+\begin{itemize}
+\item {\tt BaseDate}: Defines the first inflation period to which to apply the seasonality correction, only day and
+  month matters, the year is ignored.
+\item {\tt Frequency:} Defines the frequency of the factors (usually identical to the index's fixing frequency).
+\item {\tt Factors:} Multiplicative seasonality correction factors, must be part of the market data.
+\end{itemize}
+
+We note that if zero coupon swap market quotes are given, but the type is set to YY, the zero coupon swap quotes will be
+converted to year on year swap quotes on the fly, using the plain forward rates, i.e. no convexity adjustment is
+applied.
+
+\subsubsection{Inflation Cap/Floor Price Surfaces}
+
+Listing \ref{lst:inflationcapfloorpricesurface_configuration} shows the configuration of an zero coupon inflation cap
+floor price surface.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<InflationCapFloorPriceSurfaces>
+  <InflationCapFloorPriceSurface>
+      <CurveId>EUHICPXT_ZC_CF</CurveId>
+      <CurveDescription>Price Surface ZC CapFloor EUHICPXT</CurveDescription>
+      <Type>ZC</Type>
+      <StartRate>0.10</StartRate>
+      <ObservationLag>3M</ObservationLag>
+      <Calendar>TARGET</Calendar>
+      <BusinessDayConvention>MF</BusinessDayConvention>
+      <DayCounter>A365</DayCounter>
+      <Index>EUHICPXT</Index>
+      <IndexCurve>Inflation/EUHICPXT/EUHICPXT_ZC_Swaps</IndexCurve>
+      <IndexInterpolated>false</IndexInterpolated>
+      <YieldTermStructure>Yield/EUR/EUR1D</YieldTermStructure>
+      <CapStrikes>0.01,0.015,0.02,0.025,0.03</CapStrikes>
+      <FloorStrikes>-0.02,-0.01,-0.005,0.00,0.01,0.015,0.02,0.025,0.03</FloorStrikes>
+      <Maturities>1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y,30Y</Maturities>
+  </InflationCapFloorPriceSurface>
+</InflationCapFloorPriceSurfaces>
+\end{minted}
+\caption{Inflation zc cap floor price surface configuration}
+\label{lst:inflationcapfloorpricesurface_configuration}
+\end{listing}
+
+\begin{itemize}
+\item {\tt Type}: The type of the surface, {\tt ZC} for zero coupon, {\tt YY} for year on year. Only zero coupon
+  surfaces are supported currently.
+\item {\tt StartRate}: A fall back value used in case the inflation index does not have a term structure
+  attached. Should not be relevant.
+\item {\tt Observation Lag}: The observation lag applicable to the term structure.
+\item {\tt Index}: The underlying zero inflation index.
+\item {\tt IndexCurve}: The curve id of the index's projection curve used to determine the ATM levels for the surface.
+\item {\tt IndexInterpolated}: Flag indicating whether the index should be interpolating.
+\item {\tt YieldTermStructure}: The nominal term structure.
+\item {\tt CapStrikes}: The strikes for which cap prices are quoted (may (and will usually) overlap with the floor
+  strike region).
+\item {\tt FloorStrikes}: The strikes for which floor prices are quoted (may (and will usually) overlap with the cap
+  strike region).
+\item {\tt Maturities:} The maturities for which cap and floor prices are quoted
+\end{itemize}
 
 %--------------------------------------------------------
 %\subsection{Conventions: {\tt conventions.xml}}
@@ -2516,40 +3459,250 @@ configuration determines the composition of yield curves, default curves, Swapti
 ORE applies the cross asset model described in detail in \cite{Lichters} to evolve  the market through time. So far the
 evolution model in ORE is limited to IR and FX risk factors for any number of currencies, extensions to further risk
 factor classes (Inflation, Credit, Equity, Commodity) will follow. \\
-  
-The Cross Asset Model is based on the Linear Gauss Markov model (LGM) for interest rates and lognormal FX processes. We
-identify a single {\em domestic} currency; its LGM process, which is labelled $z_0$; and a set of $n$ foreign currencies
-with associated LGM processes that are labelled $z_i$, $i=1,\dots,n$.  If we consider $n$ foreign exchange rates for
-converting foreign currency amounts into the single domestic currency by multiplication, $x_i$, $i=1,\dots,n$, then the
-cross asset model is given by the system of SDEs
+
+The Cross Asset Model is based on the Linear Gauss Markov model (LGM) for interest rates, lognormal FX and equity 
+processes and the Dodgson-Kainth model for inflation. We identify a single {\em domestic} currency; its LGM process, 
+which is labelled $z_0$; and a set of $n$ foreign currencies with associated LGM processes that are labelled $z_i$, 
+$i=1,\dots,n$. 
+
+We denote the equity spot price processes with state variables $s_j$ and the index of the denominating 
+currency for the equity process as $\phi(j)$. The dividend yield corresponding to each equity process $s_j$ is denoted 
+by $q_j$.
+
+Following \cite{Lichters}, 13.27 - 13.29 we write the inflation processes 
+in the domestic LGM measure with state variables $z_{I,k}$ and $y_{I,k}$ for $k=1,\ldots,K$.  If we consider $n$ 
+foreign exchange rates for converting foreign currency amounts into the single domestic currency by multiplication, 
+$x_i$, $i=1,\dots,n$, then the cross asset model is given by the system of SDEs
 \begin{eqnarray*}
 dz_0 &=& \alpha_0\,dW_0^z \\
 dz_i &=& \gamma_i\,dt + \alpha_i\,dW_i^z,  \qquad i>0 \\
-\frac{d x_i}{x_i} &=& \mu_i\, dt + \sigma_i\,dW_i^x, \qquad i > 0 \\ \\
-\gamma_i &=& 
--\alpha_i^2\,H_i -\rho_{ii}^{zx}\,\sigma_i\,\alpha_i + \rho_{i0}^{zz}\,\alpha_i\,\alpha_0\,H_0\\ 
+\frac{d x_i}{x_i} &=& \mu_i\, dt + \sigma_i\,dW_i^x, \qquad i > 0 \\
+\frac{d s_j}{s_j} &=& \mu_j^S\, dt + \sigma_j^S\,dW_j^S \\
+dz_{I,k} &=& \alpha_{I,k}(t)dW_k^I \\
+dy_{I,k} &=& \alpha_{I,k}(t)H_{I,k}(t)dW_k^I \\ \\
+\gamma_i &=&
+-\alpha_i^2\,H_i -\rho_{ii}^{zx}\,\sigma_i\,\alpha_i + \rho_{i0}^{zz}\,\alpha_i\,\alpha_0\,H_0\\
 \mu_i &=& r_0 - r_i + \rho_{0i}^{zx}\,\alpha_0\,H_0\,\sigma_i\\
+\mu_j^S &=& (r_{\phi(j)}(t) - q_j(t) + \rho_{0j}^{zs} \alpha_0 H_0 \sigma_j^S - \epsilon_{\phi(j)}
+\rho_{j \phi(j)}^{sx}\sigma_j^S \sigma_{\phi(j)}) \\
 r_i &=& f_i(0,t) + z_i(t)\,H'_i(t) + \zeta_i(t)\,H_i(t)\,H'_i(t),
-\quad \zeta_i(t) = \int_0^t \alpha_i^2(s)\,ds  \\ \\ 
-  dW^a_i\,dW^b_j &=& \rho^{ab}_{ij}\,dt, \qquad a, b \in \{z, x\} 
-%\zeta_i(t) &=& \int_0^t \alpha_i^2(s)\,ds, 
+\quad \zeta_i(t) = \int_0^t \alpha_i^2(s)\,ds  \\ \\
+dW^\alpha_a\,dW^\beta_b &=& \rho^{\alpha\beta}_{ij}\,dt, \qquad \alpha, \beta \in \{z, x, I\}, \qquad a, b \text{
+                              suitable indices }
+%\zeta_i(t) &=& \int_0^t \alpha_i^2(s)\,ds,
 %\qquad H_i(t) = \int_0^t e^{-\beta_i(s)} \,ds \\
-%\beta_i(t) &=& \int_0^t \lambda_i(s)\,ds, 
+%\beta_i(t) &=& \int_0^t \lambda_i(s)\,ds,
 %\qquad \alpha_i(t) = \sigma_i^{HW}(t)\,e^{\beta(t)} \\
 \end{eqnarray*}
-where we have dropped time dependencies for readability, and $f_i(0,t)$ is the instantaneous forward curve in currency $i$. 
+where we have dropped time dependencies for readability, $f_i(0,t)$ is the instantaneous forward curve in currency $i$, 
+and $\epsilon_i$ is an indicator such that $\epsilon_i = 1 - \delta_{0i}$, where $\delta$ is the Kronecker delta.
 
 \medskip Parameters $H_i(t)$ and $\alpha_i(t)$ (or alternatively $\zeta_i(t)$) are LGM model parameters which determine,
 together with the stochastic factor $z_i(t)$, the evolution of numeraire and zero bond prices in the LGM model:
 \begin{align}
 N(t) &= \frac{1}{P(0,t)}\exp\left\{H_t\, z_t + \frac{1}{2}H^2_t\,\zeta_t \right\}
 \label{lgm1f_numeraire} \\
-P(t,T,z_t)  
-&= \frac{P(0,T)}{P(0,t)}\:\exp\left\{ -(H_T-H_t)\,z_t - \frac{1}{2} \left(H^2_T-H^2_t\right)\,\zeta_t\right\}. 
+P(t,T,z_t)
+&= \frac{P(0,T)}{P(0,t)}\:\exp\left\{ -(H_T-H_t)\,z_t - \frac{1}{2} \left(H^2_T-H^2_t\right)\,\zeta_t\right\}.
 \label{lgm1f_zerobond}
 \end{align}
 
 Note that the LGM model is closely related to the Hull-White model in T-forward measure \cite{Lichters}.
+
+\medskip The parameters $H_{I,k}(t)$ and $\alpha_{I,k}(t)$ determine together with the factors $z_{I,k}(t), y_{I,k}(t)$
+the evolution of the spot Index $I(t)$ and the forward index $\hat{I}(t,T) = P_I(t,T) / P_n(t,T)$ defined as the ratio
+of the inflation linked zero bond and the nominal zero bond,
+
+\begin{eqnarray*}
+  \hat{I}(t,T) &=& \frac{\hat{I}(0,T)}{\hat{I}(0,t)} e^{(H_{I,k}(T)-H_{I,k}(t))z_{I,k}(t)+\tilde{V}(t,T)} \\
+  I(t) &=& I(0) \hat{I}(0,t)e^{H_{I,k}(t)z_{I,k}(t)-y_{I,k}(t)-V(0,t)}
+\end{eqnarray*}
+
+with, in case of domestic currency inflation,
+
+\begin{eqnarray*}
+  V(t,T) &=& \frac{1}{2} \int_t^T (H_{I,k}(T)-H_{I,k}(s))^2 \alpha_{I,k}^2(s) ds \\
+         & & - \rho^{zI}_{0,k} H_0(T) \int_t^T (H_{I,k}(t)-H_{I,k}(s))\alpha_0(s)\alpha_{I,k}(s)ds \\
+  \tilde{V}(t,T) &=& V(t,T) - V(0,T) -V(0,t) \\
+         &=& -\frac{1}{2}(H_{I,k}^2(T)-H_{I,k}^2(t))\zeta_{I,k}(t,0) \\
+         & & +(H_{I,k}(T)-H_{I,k}(t)) \zeta_{I,k}(t,1) \\
+         & & +(H_0(T)H_{I,k}(T) - H_0(t)H_{I,k}(t))\zeta_{0I}(t,0) \\
+         & & -(H_0(T)-H_0(t))\zeta_{0I}(t,1) \\
+  V(0,t) &=& \frac{1}{2}H_{I,k}^2(t)\zeta_{I,k}(t,0)-H_{I,k}(t)\zeta_{I,k}(t,1)+\frac{1}{2}\zeta_{I,k}(t,2) \\
+         & & -H_0(t)H_{I,k}(t)\zeta_{0I}(t,0)+H_0(t)\zeta_{0I}(t,1) \\
+  \zeta_{I,k}(t,k) &=& \int_0^t H_{I,k}^k(s)\alpha_{I,k}^2(s) ds \\
+  \zeta_{0I}(t,k) &=& \rho^{zI}_{0,k}\int_0^t H_{I,k}^k(t) \alpha_0(s) \alpha_{I,k}(s) ds
+\end{eqnarray*}
+
+and for foreign currency inflation in currency $i>0$, with
+
+\begin{eqnarray*}
+  \tilde{V}(t,T) &=& V(t,T) -V(0,T) + V(0,T)
+\end{eqnarray*}
+
+and
+
+\begin{eqnarray*}
+  V(t,T) &=& \frac{1}{2}\int_t^T (H_{I,k}(T)-H_{I,k}(s))^2 \alpha_{I,k}(s) ds \\
+  & & -\rho^{zI}_{0,k} \int_t^T H_0(s)\alpha_0(s)(H_{I,k}(T)-H_{I,k}(s)\alpha_{I,k}(s)) ds \\
+  & & -\rho^{zI}_{i,k} \int_t^T (H_i(T)-H_i(s))\alpha_i(s)(H_{I,k}(T)-H_{I,k}(s))\alpha_{I,k}(s) ds \\
+  & & +\rho^{xI}_{i,k} \int_t^T \sigma_i(s)(H_{I,k}(T)-H_{I,k}(s))\alpha_{I,k}(s) ds
+\end{eqnarray*}
+
+\subsection{Analytical Moments of the Risk Factor Evolution Model}\label{sec:app_analytical_moments}
+
+We follow \cite{Lichters}, chapter 16. The expectation of the interest rate process $z_i$ conditional on $\mathcal{F}_{t_0}$ at $t_0+\Delta t$ is
+
+\begin{eqnarray*}
+  \mathbb{E}_{t_0}[z_i(t_0+\Delta t)] &=& z_i(t_0) + \mathbb{E}_{t_0}[\Delta z_i],
+  \qquad\mbox{with}\quad \Delta z_i = z_i(t_0+\Delta t) - z_i(t_0) \\
+  &=& z_i(t_0) -\int_{t_0}^{t_0+\Delta t} H^z_i\,(\alpha^z_i)^2\,du + \rho^{zz}_{0i} \int_{t_0}^{t_0+\Delta t}
+  H^z_0\,\alpha^z_0\,\alpha^z_i\,du \\
+  & & - \epsilon_i  \rho^{zx}_{ii}\int_{t_0}^{t_0+\Delta t} \sigma_i^x\,\alpha^z_i\,du
+\end{eqnarray*}
+
+where $\epsilon_i$ is zero for $i=0$ (domestic currency) and one otherwise.
+
+\bigskip
+
+The expectation of the FX process $x_i$ conditional on $\mathcal{F}_{t_0}$ at $t_0+\Delta t$ is
+
+\begin{eqnarray*}
+  \mathbb{E}_{t_0}[\ln x_i(t_0+\Delta t)] &=& \ln x_i(t_0) +  \mathbb{E}_{t_0}[\Delta \ln x_i],
+  \qquad\mbox{with}\quad \Delta \ln x_i = \ln x_i(t_0+\Delta t) - \ln x_i(t_0) \\
+  &=& \ln x_i(t_0) + \left(H^z_0(t)-H^z_0(s)\right) z_0(s) -\left(H^z_i(t)-H^z_i(s)\right)z_i(s)\\
+  &&+ \ln \left( \frac{P^n_0(0,s)}{P^n_0(0,t)} \frac{P^n_i(0,t)}{P^n_i(0,s)}\right) \\
+  && - \frac12 \int_s^t (\sigma^x_i)^2\,du \\
+  &&+\frac12 \left((H^z_0(t))^2 \zeta^z_0(t) -  (H^z_0(s))^2 \zeta^z_0(s)- \int_s^t (H^z_0)^2
+  (\alpha^z_0)^2\,du\right)\\
+  &&-\frac12 \left((H^z_i(t))^2 \zeta^z_i(t) -  (H^z_i(s))^2 \zeta^z_i(s)-\int_s^t (H^z_i)^2 (\alpha^z_i)^2\,du
+  \right)\\
+  && + \rho^{zx}_{0i} \int_s^t H^z_0\, \alpha^z_0\, \sigma^x_i\,du \\
+  &&  - \int_s^t \left(H^z_i(t)-H^z_i\right)\gamma_i \,du, \qquad\mbox{with}\quad s = t_0, \quad t = t_0+\Delta t
+\end{eqnarray*}
+
+with
+
+\begin{eqnarray*}
+  \gamma_i = -H^z_i\,(\alpha^z_i)^2  + H^z_0\,\alpha^z_0\,\alpha^z_i\,\rho^{zz}_{0i} - \sigma_i^x\,\alpha^z_i\,
+  \rho^{zx}_{ii}
+\end{eqnarray*}
+
+The expectation of the Inflation processes $z_{I,k}, y_{I,k}$ conditional on $\mathcal{F}_{t_0}$ at any time $t>t_0$ is
+equal to $z_{I,k}(t_0)$ resp. $y_{I,k}(t_0)$ since both processes are drift free.
+
+\bigskip
+
+The expectation of the equity processes $s_j$ conditional on $\mathcal{F}_{t_0}$ at $t_0+\Delta t$ is
+\begin{eqnarray*}
+\mathbb{E}_{t_0}[\ln s_j(t_0+\Delta t)] &=& \ln s_j(t_0) +  \mathbb{E}_{t_0}[\Delta \ln s_j],
+\qquad\mbox{with}\quad \Delta \ln s_j = \ln s_j(t_0+\Delta t) - \ln s_j(t_0) \\
+&=& \ln s_j(t_0) +  \ln \left[\frac{P_{\phi(j)}(0,s)}{P_{\phi(j)}(0,t)} \right] - \int_s^t 
+q_j(u) 
+du - \frac{1}{2} \int_s^t \sigma_{j}^{S}(u) \sigma_{j}^{S}(u) du\\
+&&
++\rho_{0j}^{zs} \int_s^t \alpha_0(u) H_0(u) \sigma_j^S(u) du
+- \epsilon_{\phi(j)} \rho_{j \phi(j)}^{sx} \int_s^t \sigma_j^S (u)\sigma_{\phi(j)}(u) du\\
+&&+\frac{1}{2} \left( H_{\phi(j)}^2(t) \zeta_{\phi(j)}(t) - H_{\phi(j)}^2(s) \zeta_{\phi(j)}(s)
+- \int_s^t H_{\phi(j)}^2(u) \alpha_{\phi(j)}^2(u) du \right)\\
+&&  + (H_{\phi(j)}(t) - H_{\phi(j)}(s)) z_{\phi(j)}(s) 
++\epsilon_{\phi(j)} \int_s^t \gamma_{\phi(j)} (u) (H_{\phi(j)}(t) - H_{\phi(j)}(u)) du\\
+\end{eqnarray*}
+
+The IR-IR covariance over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditional on $\mathcal{F}_{t_0}$) is
+
+\begin{eqnarray*}
+      \mathrm{Cov} [\Delta z_a, \Delta \ln x_b] &=& \rho^{zz}_{0a}\int_s^t \left(H^z_0(t)-H^z_0\right)
+  \alpha^z_0\,\alpha^z_a\,du \nonumber\\
+      &&- \rho^{zz}_{ab}\int_s^t \alpha^z_a \left(H^z_b(t)-H^z_b\right) \alpha^z_b \,du \nonumber\\
+      &&+\rho^{zx}_{ab}\int_s^t \alpha^z_a \, \sigma^x_b \,du.
+\end{eqnarray*}
+
+The IR-FX covariance over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditional on $\mathcal{F}_{t_0}$) is
+
+\begin{eqnarray*}
+      \mathrm{Cov} [\Delta z_a, \Delta \ln x_b] &=& \rho^{zz}_{0a}\int_s^t \left(H^z_0(t)-H^z_0\right)
+  \alpha^z_0\,\alpha^z_a\,du \nonumber\\
+      &&- \rho^{zz}_{ab}\int_s^t \alpha^z_a \left(H^z_b(t)-H^z_b\right) \alpha^z_b \,du \nonumber\\
+      &&+\rho^{zx}_{ab}\int_s^t \alpha^z_a \, \sigma^x_b \,du.
+\end{eqnarray*}
+
+The FX-FX covariance over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditional on $\mathcal{F}_{t_0}$) is
+
+\begin{eqnarray*}
+      \mathrm{Cov}[\Delta \ln x_a, \Delta \ln x_b] &=&
+      \int_s^t \left(H^z_0(t)-H^z_0\right)^2 (\alpha_0^z)^2\,du \nonumber\\
+      && -\rho^{zz}_{0a} \int_s^t \left(H^z_a(t)-H^z_a\right) \alpha_a^z\left(H^z_0(t)-H^z_0\right) \alpha_0^z\,du
+  \nonumber\\
+      &&- \rho^{zz}_{0b}\int_s^t \left(H^z_0(t)-H^z_0\right)\alpha_0^z \left(H^z_b(t)-H^z_b\right)\alpha_b^z\,du
+  \nonumber\\
+      &&+ \rho^{zx}_{0b}\int_s^t \left(H^z_0(t)-H^z_0\right)\alpha_0^z \sigma^x_b\,du \nonumber\\
+      &&+ \rho^{zx}_{0a}\int_s^t \left(H^z_0(t)-H^z_0\right)\alpha_0^z\,\sigma^x_a\,du \nonumber\\
+      &&- \rho^{zx}_{ab}\int_s^t \left(H^z_a(t)-H^z_a\right)\alpha_a^z \sigma^x_b,du\nonumber\\
+      &&- \rho^{zx}_{ba}\int_s^t \left(H^z_b(t)-H^z_b\right)\alpha_b^z\,\sigma^x_a\, du \nonumber\\
+      &&+ \rho^{zz}_{ab}\int_s^t \left(H^z_a(t)-H^z_a\right)\alpha_a^z \left(H^z_b(t)-H^z_b\right)\alpha_b^z\,du
+  \nonumber\\
+      &&+ \rho^{xx}_{ab}\int_s^t\sigma^x_a\,\sigma^x_b \,du
+\end{eqnarray*}
+
+The IR-INF covariance over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditional on $\mathcal{F}_{t_0}$) is
+
+\begin{eqnarray*}
+  \mathrm{Cov}[ \Delta z_a, \Delta z_{I,b} ] & = & \rho_{ab}^{zI} \int_s^t \alpha_a(s) \alpha_{I,b}(s) ds \\
+  \mathrm{Cov}[ \Delta z_a, \Delta y_{I,b} ] & = & \rho_{ab}^{zI} \int_s^t \alpha_a(s) H_{I,b}(s) \alpha_{I,b}(s) ds
+\end{eqnarray*}
+
+The FX-INF covariance over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditional on $\mathcal{F}_{t_0}$) is
+
+\begin{eqnarray*}
+  \mathrm{Cov}[ \Delta x_a, \Delta z_{I,b} ] & = & \rho_{0b}^{zI} \int_s^t \alpha_0(s) (H_0(t)-H_0(s)) \alpha_{I,b}(s) ds \\
+                                             & & -\rho_{ab}^{zI} \int_s^t \alpha_a(s)(H_a(t)-H_a(s))\alpha_{I,b}(s) ds \\
+                                             & & +\rho_{ab}^{xI}\int_s^t \sigma_a(s) \alpha_{I,b}(s) ds \\
+  \mathrm{Cov}[ \Delta x_a, \Delta y_{I,b} ] & = & \rho_{0b}^{zI} \int_s^t \alpha_0(s) (H_0(t)-H_0(s)) H_{I,b}(s)\alpha_{I,b}(s) ds \\
+                                             & & -\rho_{ab}^{zI} \int_s^t \alpha_a(s)(H_a(t)-H_a(s))H_{I,b}(s)\alpha_{I,b}(s) ds \\
+                                             & & +\rho_{ab}^{xI}\int_s^t \sigma_a(s) H_{I,b}(s)\alpha_{I,b}(s) ds
+\end{eqnarray*}
+
+The INF-INF covariance over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditional on $\mathcal{F}_{t_0}$) is
+
+\begin{eqnarray*}
+  \mathrm{Cov}[ \Delta z_{I,a}, \Delta z_{I,b} ] & = & \rho_{ab}^{II} \int_s^t \alpha_{I,a}(s) \alpha_{I,b}(s) ds \\
+  \mathrm{Cov}[ \Delta z_{I,a}, \Delta y_{I,b} ] & = & \rho_{ab}^{II} \int_s^t \alpha_{I,a}(s) H_{I,b}(s)
+                                                       \alpha_{I,b}(s) ds \\
+  \mathrm{Cov}[ \Delta y_{I,a}, \Delta y_{I,b} ] & = & \rho_{ab}^{II} \int_s^t H_{I,a}(s) \alpha_{I,a}(s) H_{I,b}(s) \alpha_{I,b}(s) ds
+\end{eqnarray*}
+
+The equity/equity covariance over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditional on $\mathcal{F}_{t_0}$) is
+\begin{eqnarray*}
+	Cov \left[\Delta ln[s_i], \Delta ln[s_j] \right] &=&
+	\rho_{\phi(i) \phi(j)}^{zz}\int_s^t (H_{\phi(i)} (t) - H_{\phi(i)} (u)) (H_{\phi(j)} (t)\\
+	&& - H_{\phi(j)} (u)) \alpha_{\phi(i)}(u) \alpha_{\phi(j)}(u) du\\
+	&&+ \rho_{\phi(i) j}^{zs} \int_s^t (H_{\phi(i)} (t) - H_{\phi(i)} (u)) \alpha_{\phi(i)}(u) \sigma_j^S(u) du\\
+	&&+ \rho_{\phi(j) i}^{zs} \int_s^t (H_{\phi(j)} (t) - H_{\phi(j)} (u)) \alpha_{\phi(j)}(u) \sigma_i^S(u) du\\
+	&&+ \rho_{ij}^{ss} \int_s^t \sigma_i^S(u) \sigma_j^S(u) du\\
+\end{eqnarray*}
+
+The equity/FX covariance over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditional on $\mathcal{F}_{t_0}$) is
+\begin{eqnarray*}
+	Cov \left[\Delta ln[s_i], \Delta ln[x_j] \right] &=&
+	\rho_{\phi(i)0}^{zz} \int_s^t (H_{\phi(i)} (t) - H_{\phi(i)} (u)) (H_0 (t) - H_0 (u)) \alpha_{\phi(i)}(u) 
+	\alpha_0(u) 
+	du\\
+	&& - \rho_{\phi(i)j}^{zz} \int_s^t (H_{\phi(i)} (t) - H_{\phi(i)} (u)) (H_j (t) - H_j (u)) \alpha_{\phi(i)} 
+	(u)\alpha_j(u) du\\
+	&& + \rho_{\phi(i)j}^{zx} \int_s^t (H_{\phi(i)} (t) - H_{\phi(i)} (u)) \alpha_{\phi(i)} (u) \sigma_j(u) du\\
+	&&+ \rho_{i0}^{sz} \int_s^t (H_0 (t) - H_0 (u)) \alpha_0 (u) \sigma_i^S(u) du\\
+	&&- \rho_{ij}^{sz} \int_s^t (H_j (t) - H_j (u)) \alpha_j (u) \sigma_i^S(u) du\\
+	&&+ \rho_{ij}^{sx} \int_s^t \sigma_i^S(u) \sigma_j(u) du\\
+\end{eqnarray*}
+
+The equity/IR covariance over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditional on $\mathcal{F}_{t_0}$) is
+\begin{eqnarray*}
+	Cov \left[\Delta ln[s_i], \Delta z_j \right] &=&
+	\rho_{\phi(i)j}^{zz} \int_s^t (H_{\phi(i)} (t) - H_{\phi(i)} (u)) \alpha_{\phi(i)} (u) \alpha_j (u) du\\
+	&&+ \rho_{ij}^{sz} \int_s^t \sigma_i^S (u) \alpha_j (u) du\\
+\end{eqnarray*}
+
 
 \subsection{Exposures}\label{sec:app_exposure}
 
@@ -2558,11 +3711,12 @@ In ORE we use the following exposure definitions
 \EE(t) = \EPE(t) &= \E^N\left[ \frac{(NPV(t)-C(t))^+}{N(t)} \right] \label{EE}\\
 \ENE(t) &= \E^N\left[ \frac{(-NPV(t)+C(t))^+}{N(t)} \right] \label{ENE}
 \end{align}
-where $\NPV(t)$ stands for the netting set NPV and $C$ is the posted collateral. Note that these exposures are
-expectations of values discounted with numeraire $N$ (in ORE the Linear Gauss Markov model's numeraire) to today, and
-expectations are taken in the measure associated with numeraire $N$. These are the exposures which enter into unilateral
-CVA and DVA calculation, respectively, see next section. Note that we sometimes label the expected exposure (\ref{EE})
-EPE, not to be confused with the Basel III Expected Positive Exposure below.
+where $\NPV(t)$ stands for the netting set NPV and $C(t)$ is the collateral balance\footnote{$C(t)>0$ means that we have
+  {\em received} collateral from the counterparty} at time $t$. Note that these exposures are expectations of values
+discounted with numeraire $N$ (in ORE the Linear Gauss Markov model's numeraire) to today, and expectations are taken in
+the measure associated with numeraire $N$. These are the exposures which enter into unilateral CVA and DVA calculation,
+respectively, see next section. Note that we sometimes label the expected exposure (\ref{EE}) EPE, not to be confused
+with the Basel III Expected Positive Exposure below.
 
 \medskip
 Basel III defines a number of exposures each of which is a 'derivative' of Basel's Expected Exposure:
@@ -2650,10 +3804,12 @@ When the CSA defines a collateral compounding rate that deviates from the overni
 value adjustment labeled COLVA \cite{Lichters}. In the simplest case the deviation is just given by a constant spread
 $\Delta$:
 \begin{align}
-\COLVA &= \E^N\left[ \sum_i C(t_i)\cdot \Delta \cdot \delta_i \cdot D(t_{i+1}) \right]
+\COLVA &= \E^N\left[ \sum_i -C(t_i)\cdot \Delta \cdot \delta_i \cdot D(t_{i+1}) \right]
 \label{COLVA}
 \end{align}
-where $C(t)$ is the collateral posted and $D(t)$ is the stochastic discount factor $1/N(t)$ in LGM. Both $C(t)$ and
+where $C(t)$ is the collateral balance\footnote{see \ref{sec:app_exposure}, $C(t)>0$ means that we have {\em received}
+  collateral from the counterparty} at time $t$ and $D(t)$ is the stochastic discount factor $1/N(t)$ in LGM. Both
+$C(t)$ and
 $N(t)$ are computed in ORE's Monte Carlo framework, and the expectation yields the desired adjustment. \\
  
 Replacing the constant spread by a time-dependent deterministic function in ORE is straight forward. 
@@ -2666,14 +3822,14 @@ rate is the overnight rate {\em floored at zero}. To work out the value of this 
 of discounted margin cash flows with and without the floor feature. It is shown in \cite{Lichters} that the following
 formula is a good approximation to the collateral floor value
 \begin{align}
-\Pi_{Floor} &= \E^N\left[ \sum_i C(t_i)\cdot (-r(t_i))^+\cdot\delta_i \cdot D(t_{i+1}) \right]
+\Pi_{Floor} &= \E^N\left[ \sum_i -C(t_i)\cdot (-r(t_i))^+\cdot\delta_i \cdot D(t_{i+1}) \right]
 \label{CSA_floor_value_approx}
 \end{align}
 where $r$ is the stochastic overnight rate and $(-r)^+ = r^+ - r$ is the difference between floored and 'un-floored' compounding rate. \\
 
 Taking both collateral spread and floor into account, the value adjustment is 
 \begin{align}
-\Pi_{Floor,\Delta} &= \E^N\left[ \sum_i C(t_i)\cdot ((r(t_i)-\Delta)^+-r(t_i))\cdot\delta_i \cdot D(t_{i+1}) \right] 
+\Pi_{Floor,\Delta} &= \E^N\left[ \sum_i -C(t_i)\cdot ((r(t_i)-\Delta)^+-r(t_i))\cdot\delta_i \cdot D(t_{i+1}) \right] 
 \label{CSA_floor_value_approx_2}
 \end{align}
 
@@ -2776,7 +3932,7 @@ D(t_m) &=
 \end{align}
 where $MTA$ is the minimum transfer amount.
 
-\medskip Finally, the {\em Delivery Amount } is settled with a delay specified by the {\em Margin Period of Risk}
+\medskip Finally, the {\em Delivery Amount } is settled with a delay specified by the {\em Margin Period of Risk}
 (MPoR) which leads to residual exposure and XVA even for daily margining, zero thresholds and minimum transfer amounts,
 see for example \cite{Pykhtin2010}. A more detailed framework for collateralised exposure modelling is introduced in the
 2016 article \cite{Andersen2016}, indicating a potential route for extending ORE.
@@ -2827,6 +3983,49 @@ $$
 This yields allocated exposures proportional to the netting set exposure, avoids spikes and negative $\EPE$, but does
 not distinguish the 'direction' of each trade's contribution to $\EPE$ and $\CVA$.
 
+\subsection{Sensitivity Analysis}\label{sec:app_sensi}
+
+ORE's sensitivity analysis framework uses ``bump and revalue'' to compute ``raw'' IR/FX sensitivities to
+\begin{itemize}
+\item discount curve zero rates
+\item index curve zero rates
+\item yield curve zero rates (used as bond benchmark yield curves)
+\item FX spot rates
+\item Caplet/floorlet volatility matrices
+\item at-the-money Swaption volatility structures
+\item at-the-money FX Option volatility structures 
+\end{itemize}
+Apart from first order sensitivities (deltas), ORE computes second order sensitivities (gammas and cross gammas) as well. Deltas are computed using up-shifts and base values as
+$$
+\delta = \frac{f(x+\Delta)-f(x)}{\Delta},
+$$ 
+where the shift $\Delta$ can be absolute or expressed as a relative move $\Delta_r$ from the current level, $\Delta=x\,\Delta_r$. Gammas are computed using up- and down-shifts
+$$
+\gamma = \frac{f(x+\Delta)+f(x-\Delta) - 2\,f(x)}{\Delta^2},
+$$ 
+cross gammas using up-shifts and base values as
+$$
+\gamma_{cross} = \frac{f(x+\Delta_x,y+\Delta_y)-f(x+\Delta_x,y) -f(x,y+\Delta_y) + f(x,y)}{\Delta_x\,\Delta_y}.
+$$ 
+
+From the above it is clear that this involves the application of 1-d shifts (e.g. to discount zero curves) and 2-d shifts (e.g. to Swaption volatility matrices). The structure of the shift curves/matrices does not have to match the structure of the underlying data to be shifted, in particular the shift ``curves/matrices'' can be less granular than the market to be shifted. 
+Figure \ref{fig_shiftcurve} illustrates for the one-dimensional case how shifts are applied.
+\begin{figure}[h]
+\begin{center}
+\includegraphics[scale=0.6]{shiftcurve.pdf}
+\end{center}
+\caption{1-d shift curve (bottom) applied to a more granular underlying curve (top). }
+\label{fig_shiftcurve}
+\end{figure} 
+
+Shifts at the left and right end of the shift curve are extrapolated flat, i.e. applied to all data of the original curve to the left and to the right of the shift curve ends. In between, all shifts are distributed linearly as indicated to the left and right up to the adjacent shift grid points. As a result, a parallel shift of the all points on the shift curve yields a parallel shift of all points on the underlying curve.   \\
+
+The two-dimensional case is covered in an analogous way, applying flat extrapolation at the boundaries and ``pyramidal-shaped'' linear interpolation for the bulk of the points. 
+
+
+
+
+ 
 \end{appendix}
 
 %========================================================
