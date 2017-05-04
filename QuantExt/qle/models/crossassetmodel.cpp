@@ -650,6 +650,7 @@ void CrossAssetModel::calibrateCrLgm1fReversionsIterative(
 
 std::pair<Real, Real> CrossAssetModel::infdkI(const Size i, const Time t, const Time T, const Real z, const Real y) {
     Size ccy = ccyIndex(infdk(i)->currency());
+    QL_REQUIRE(t < T || close_enough(t, T), "infdkI: t (" << t << ") <= T (" << T << ") required");
     cache_key k = { i, ccy, t, T };
     boost::unordered_map<cache_key, std::pair<Real, Real> >::const_iterator it = cache_infdkI_.find(k);
     Real V0, V_tilde;
@@ -703,8 +704,8 @@ std::pair<Real, Real> CrossAssetModel::infdkI(const Size i, const Time t, const 
 
 std::pair<Real, Real> CrossAssetModel::crlgm1fS(const Size i, const Size ccy, const Time t, const Time T, const Real z,
                                                 const Real y) const {
-
     QL_REQUIRE(ccy < nIrLgm1f_, "ccy index (" << ccy << ") must be in 0..." << (nIrLgm1f_ - 1));
+    QL_REQUIRE(t < T || close_enough(t, T), "crlgm1fS: t (" << t << ") <= T (" << T << ") required");
     cache_key k = { i, ccy, t, T };
     boost::unordered_map<cache_key, std::pair<Real, Real> >::const_iterator it = cache_crlgm1fS_.find(k);
     Real V0, V_tilde;
