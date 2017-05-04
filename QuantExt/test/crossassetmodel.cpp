@@ -4248,6 +4248,8 @@ void CrossAssetModelTest::testCrCalibration() {
         Handle<DefaultProbabilityTermStructure>(probMc), 0.4, Handle<YieldTermStructure>(ytsMc));
     underlying->setPricingEngine(dynamicEngine);
 
+    Real tProt = eurYts->timeFromReference(underlying->protectionStartDate());
+
     for (Size i = 0; i < n; ++i) {
         Sample<MultiPath> path = pg.next();
         Size l = path.value[0].length() - 1;
@@ -4257,7 +4259,12 @@ void CrossAssetModelTest::testCrCalibration() {
         probMc->move(lastMat, crz, cry);
         ytsMc->move(lastMat, irz);
         Real surv = model->crlgm1fS(0, 0, T, T, crz, cry).first;
-        cdso(surv * std::max(underlying->NPV(), 0.0) / model->numeraire(0, T, irz));
+        Real npv = surv * std::max(underlying->NPV(), 0.0) / model->numeraire(0, T, irz);
+        if (tProt < T) {
+            Real survProt = model->crlgm1fS(0, 0, tProt, tProt, crz, cry).first;
+            npv += ((1.0 - surv) - (1.0 - survProt)) * 0.6; // LGD payment in case of default between tProt and T
+        }
+        cdso(npv);
     }
 
     BOOST_TEST_MESSAGE("mc (low disc) cdso last = " << mean(cdso) << " +- " << error_of<tag::mean>(cdso));
