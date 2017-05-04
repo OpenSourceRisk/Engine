@@ -64,6 +64,7 @@ void AnalyticLgmCdsOptionEngine::calculate() const {
         Real mid = (t_[i] + t_[i + 1]) / 2.0;
         if (arguments_.swap->settlesAccrual()) {
             Real accStartTime = i == 0 ? yts->timeFromReference(cpn->accrualStartDate()) : t_[i];
+            // mid > accStartTime practically always the case?
             accrualSettlementAmount =
                 mid > accStartTime
                     ? swapSpread * cpn->accrualPeriod() * (mid - accStartTime) / (t_[i + 1] - accStartTime)
