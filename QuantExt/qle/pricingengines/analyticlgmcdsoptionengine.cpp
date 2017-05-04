@@ -61,9 +61,9 @@ void AnalyticLgmCdsOptionEngine::calculate() const {
         Real mid = (t_[i] + t_[i + 1]) / 2.0;
         if (mid >= 0.0) {
             C[i] = ((1.0 - recoveryRate_) - swapSpread * cpn->accrualPeriod() / 2.0) *
-                   yts->discount((t_[i] + t_[i + 1]) / 2.0) / yts->discount(t_[0]);
+                   yts->discount((t_[i] + t_[i + 1]) / 2.0) / yts->discount(tex_);
         }
-        D[i] = swapSpread * cpn->accrualPeriod() * yts->discount(t_[i + 1]) / yts->discount(t_[0]);
+        D[i] = swapSpread * cpn->accrualPeriod() * yts->discount(t_[i + 1]) / yts->discount(tex_);
     }
     G_[0] = -C[0];
     for (Size i = 0; i < n - 1; ++i) {
