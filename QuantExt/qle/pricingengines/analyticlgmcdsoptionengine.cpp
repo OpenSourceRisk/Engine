@@ -107,8 +107,7 @@ Real AnalyticLgmCdsOptionEngine::Ei(const Real w, const Real strike, const Size 
     Real pS = model_->crlgm1f(index_)->termStructure()->survivalProbability(t_[0]);
     Real pT = model_->crlgm1f(index_)->termStructure()->survivalProbability(t_[i]);
     // slight generalization of Lichters, Stamm, Gallagher 11.2.1
-    // with t < S only resulting in a different time at which zeta
-    // has to be taken
+    // with t < S, SSRN: https://ssrn.com/abstract=2246054
     Real sigma = sqrt(model_->crlgm1f(index_)->zeta(tex_)) *
                  (model_->crlgm1f(index_)->H(t_[i]) - model_->crlgm1f(index_)->H(t_[0]));
     Real dp = (std::log(pT / (strike * pS)) / sigma + 0.5 * sigma);
