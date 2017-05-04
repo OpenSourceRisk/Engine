@@ -35,6 +35,8 @@ AnalyticLgmCdsOptionEngine::AnalyticLgmCdsOptionEngine(const boost::shared_ptr<C
 
 void AnalyticLgmCdsOptionEngine::calculate() const {
 
+    QL_REQUIRE(arguments_.swap->paysAtDefaultTime(), "AnalyticLgmCdsOptionEngine: pays at default time must be true");
+
     Real w = (arguments_.side == Protection::Buyer) ? 1.0 : -1.0;
     Rate swapSpread = arguments_.swap->runningSpread();
     const Handle<YieldTermStructure>& yts =
@@ -49,18 +51,25 @@ void AnalyticLgmCdsOptionEngine::calculate() const {
         results_.value = 0.0;
         return;
     }
-    tex_ = yts->timeFromReference(arguments_.exercise->date(0));
 
+    tex_ = yts->timeFromReference(arguments_.exercise->date(0));
+    t_[0] = std::max(tex_, yts->timeFromReference(arguments_.swap->protectionStartDate()));
+
+    Real accrualSettlementAmount = 0.0;
     for (Size i = 0; i < n; ++i) {
         boost::shared_ptr<FixedRateCoupon> cpn =
             boost::dynamic_pointer_cast<FixedRateCoupon>(arguments_.swap->coupons()[i]);
         QL_REQUIRE(cpn != NULL, "AnalyticLgmCdsOptionEngine: expected fixed rate coupon");
-        if (i == 0)
-            t_[0] = yts->timeFromReference(cpn->accrualStartDate());
         t_[i + 1] = yts->timeFromReference(cpn->date());
-        Real mid = ((i == 0 ? std::max(tex_, t_[0]) : t_[i]) + t_[i + 1]) / 2.0;
-        C[i] = ((1.0 - recoveryRate_) - swapSpread * cpn->accrualPeriod() * (mid - t_[i]) / (t_[i + 1] - t_[i])) *
-               yts->discount(mid) / yts->discount(tex_);
+        Real mid = (t_[i] + t_[i + 1]) / 2.0;
+        if (arguments_.swap->settlesAccrual()) {
+            Real accStartTime = i == 0 ? yts->timeFromReference(cpn->accrualStartDate()) : t_[i];
+            accrualSettlementAmount =
+                mid > accStartTime
+                    ? swapSpread * cpn->accrualPeriod() * (mid - accStartTime) / (t_[i + 1] - accStartTime)
+                    : 0.0;
+        }
+        C[i] = ((1.0 - recoveryRate_) - accrualSettlementAmount) * yts->discount(mid) / yts->discount(tex_);
         D[i] = swapSpread * cpn->accrualPeriod() * yts->discount(t_[i + 1]) / yts->discount(tex_);
     }
     G_[0] = -C[0];
@@ -74,7 +83,6 @@ void AnalyticLgmCdsOptionEngine::calculate() const {
     if (arguments_.side == Protection::Buyer && !arguments_.knocksOut) {
         frontEndProtection = w * arguments_.swap->notional() * (1. - recoveryRate_) *
                              model_->crlgm1f(index_)->termStructure()->defaultProbability(tex_) * yts->discount(tex_);
-        results_.value = frontEndProtection;
     }
 
     Brent b;
@@ -87,7 +95,7 @@ void AnalyticLgmCdsOptionEngine::calculate() const {
 
     Real sum = 0.0;
     for (Size i = 1; i < G_.size(); ++i) {
-        Real strike = model_->crlgm1fS(index_, ccy_, tex_, t_[i], lambdaStar, 0.0).second;
+        Real strike = model_->crlgm1fS(index_, ccy_, t_[0], t_[i], lambdaStar, 0.0).second;
         sum += G_[i] * Ei(w, strike, i) * yts->discount(tex_);
     }
 
@@ -96,10 +104,13 @@ void AnalyticLgmCdsOptionEngine::calculate() const {
 } // calculate
 
 Real AnalyticLgmCdsOptionEngine::Ei(const Real w, const Real strike, const Size i) const {
-    Real pS = model_->crlgm1f(index_)->termStructure()->survivalProbability(tex_);
+    Real pS = model_->crlgm1f(index_)->termStructure()->survivalProbability(t_[0]);
     Real pT = model_->crlgm1f(index_)->termStructure()->survivalProbability(t_[i]);
+    // slight generalization of Lichters, Stamm, Gallagher 11.2.1
+    // with t < S only resulting in a different time at which zeta
+    // has to be taken
     Real sigma = sqrt(model_->crlgm1f(index_)->zeta(tex_)) *
-                 (model_->crlgm1f(index_)->H(t_[i]) - model_->crlgm1f(index_)->H(tex_));
+                 (model_->crlgm1f(index_)->H(t_[i]) - model_->crlgm1f(index_)->H(t_[0]));
     Real dp = (std::log(pT / (strike * pS)) / sigma + 0.5 * sigma);
     Real dm = dp - sigma;
     CumulativeNormalDistribution N;
@@ -109,7 +120,8 @@ Real AnalyticLgmCdsOptionEngine::Ei(const Real w, const Real strike, const Size 
 Real AnalyticLgmCdsOptionEngine::lambdaStarHelper(const Real lambda) const {
     Real sum = 0.0;
     for (Size i = 0; i < G_.size(); ++i) {
-        Real S = model_->crlgm1fS(index_, ccy_, tex_, t_[i], lambda, 0.0).second;
+        Real S = model_->crlgm1fS(index_, ccy_, tex_, t_[i], lambda, 0.0).second /
+                 model_->crlgm1fS(index_, ccy_, tex_, t_[0], lambda, 0.0).second;
         sum += G_[i] * S;
     }
     return sum;

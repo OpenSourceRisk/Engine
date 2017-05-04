@@ -42,8 +42,8 @@ private:
     const Size index_, ccy_;
     const Real recoveryRate_;
     const Handle<YieldTermStructure> termStructure_;
-    mutable Real tex_;
     mutable Array G_, t_;
+    mutable Real tex_;
 };
 
 } // namespace QuantExt
