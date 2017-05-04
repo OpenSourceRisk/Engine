@@ -26,6 +26,7 @@
 #include <qle/models/linkablecalibratedmodel.hpp>
 #include <qle/models/lgm.hpp>
 #include <qle/models/lgmimpliedyieldtermstructure.hpp>
+#include <qle/models/lgmimplieddefaulttermstructure.hpp>
 #include <qle/models/parametrization.hpp>
 #include <qle/models/piecewiseconstanthelper.hpp>
 #include <qle/models/pseudoparameter.hpp>

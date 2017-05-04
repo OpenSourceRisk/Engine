@@ -24,6 +24,7 @@ libModels_la_SOURCES = \
 	linkablecalibratedmodel.cpp \
 	lgm.cpp \
 	lgmimpliedyieldtermstructure.cpp \
+	lgmimplieddefaulttermstructure.cpp \
 	parametrization.cpp \
 	piecewiseconstanthelper.cpp
 
@@ -55,6 +56,7 @@ this_include_HEADERS = \
 	linkablecalibratedmodel.hpp \
 	lgm.hpp \
 	lgmimpliedyieldtermstructure.hpp \
+	lgmimplieddefaulttermstructure.hpp \
 	parametrization.hpp \
 	piecewiseconstanthelper.hpp \
 	pseudoparameter.hpp
