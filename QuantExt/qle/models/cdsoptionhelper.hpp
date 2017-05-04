@@ -44,7 +44,7 @@ public:
                     const Date upfrontDate = Date(), const boost::shared_ptr<Claim>& claim = boost::shared_ptr<Claim>(),
                     const CalibrationHelper::CalibrationErrorType errorType = CalibrationHelper::RelativePriceError);
 
-    virtual void addTimesTo(std::list<Time>& times) const;
+    virtual void addTimesTo(std::list<Time>& times) const {}
     virtual Real modelValue() const;
     virtual Real blackPrice(Volatility volatility) const;
 

@@ -29,8 +29,9 @@ void checkTimes(const Array& t) {
         return;
     QL_REQUIRE(t.front() > 0.0, "first time (" << t.front() << ") must be positive");
     for (Size i = 0; i < t.size() - 1; ++i) {
-        QL_REQUIRE(t[i] < t[i + 1], "times must be strictly increasing, entries at (" << i << "," << i + 1 << ") are ("
-                                                                                      << t[i] << "," << t[i + 1]);
+        QL_REQUIRE(t[i] < t[i + 1],
+                   "times must be strictly increasing, entries at (" << i << "," << i + 1 << ") are (" << t[i] << ","
+                                                                     << t[i + 1] << ")");
     }
 }
 

@@ -67,7 +67,7 @@ void AnalyticLgmCdsOptionEngine::calculate() const {
     if (arguments_.side == Protection::Buyer && !arguments_.knocksOut) {
         Real frontEndProtection = w * arguments_.swap->notional() * (1. - recoveryRate_) *
                                   model_->crlgm1f(index_)->termStructure()->defaultProbability(tex_) *
-                                  termStructure_->discount(tex_);
+                                  yts->discount(tex_);
         results_.value = frontEndProtection;
     }
 
@@ -82,7 +82,7 @@ void AnalyticLgmCdsOptionEngine::calculate() const {
     Real sum = 0.0;
     for (Size i = 1; i < G_.size(); ++i) {
         Real strike = model_->crlgm1fS(index_, ccy_, t_[0], t_[i], lambdaStar, 0.0).second;
-        sum += G_[i] * Ei(w, strike, i) * termStructure_->discount(tex_);
+        sum += G_[i] * Ei(w, strike, i) * yts->discount(tex_);
     }
 
     results_.value += sum;

@@ -4154,8 +4154,8 @@ void CrossAssetModelTest::testCrCalibration() {
                           6 * Years, 7 * Years, 8 * Years, 9 * Years, 10 * Years };
 
     std::vector<boost::shared_ptr<CalibrationHelper> > cdsoHelpers;
-    Array volStepTimes(13), noTimes(0);
-    Array crVols(14, 0.0030), crRev(14, 0.01); // init vol and rev
+    Array volStepTimes(nMat - 1), noTimes(0);
+    Array crVols(nMat, 0.0030), crRev(nMat, 0.01); // init vol and rev
 
     Time T;
     for (Size i = 1; i <= nMat; ++i) {
@@ -4173,8 +4173,8 @@ void CrossAssetModelTest::testCrCalibration() {
     }
 
     boost::shared_ptr<CrLgm1fPiecewiseLinearParametrization> creur_p =
-        boost::make_shared<CrLgm1fPiecewiseLinearParametrization>(EURCurrency(), prob, volStepTimes, crVols, volStepTimes,
-                                                                crRev);
+        boost::make_shared<CrLgm1fPiecewiseLinearParametrization>(EURCurrency(), prob, volStepTimes, crVols,
+                                                                  volStepTimes, crRev);
 
     std::vector<boost::shared_ptr<Parametrization> > parametrizations;
     parametrizations.push_back(ireur_p);

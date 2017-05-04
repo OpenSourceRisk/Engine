@@ -61,6 +61,8 @@ CdsOptionHelper::CdsOptionHelper(const Date& exerciseDate, const Handle<Quote>& 
                                                      dayCounter, settlesAccrual, paysAtDefaultTime, protectionStart,
                                                      upfrontDate, claim);
 
+    cds_->setPricingEngine(cdsEngine);
+
     boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(exerciseDate);
 
     option_ = boost::make_shared<CdsOption>(cds_, exercise);
