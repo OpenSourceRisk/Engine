@@ -83,10 +83,10 @@ public:
         vector<Date> datesZCII = {asof_, asof_ + 1 * Years, asof_ + 2 * Years, asof_ + 3 * Years, asof_ + 4 * Years,
                                   asof_ + 5 * Years, asof_ + 6 * Years, asof_ + 7 * Years, asof_ + 8 * Years,
                                   asof_ + 9 * Years, asof_ + 10 * Years, asof_ + 12 * Years, asof_ + 15 * Years,
-                                  asof_ + 20 * Years}; //, asof_ + 25 * Years, asof_ + 30 * Years, asof_ + 40 * Years};
+                                  asof_ + 20 * Years};
 
         vector<Rate> ratesZCII = {2.825, 2.9425, 2.975,  2.983, 3.0,  3.01, 3.008,
-                                  3.009, 3.013,  3.0445, 3.044, 3.09, 3.109}; //, 3.108, 3.048, 2.965};
+                                  3.009, 3.013,  3.0445, 3.044, 3.09, 3.109, 3.108 };
 
         // build UKRPI fixing history
         Schedule fixingDatesUKRPI =
