@@ -58,11 +58,9 @@ void AnalyticLgmCdsOptionEngine::calculate() const {
         if (i == 0)
             t_[0] = yts->timeFromReference(cpn->accrualStartDate());
         t_[i + 1] = yts->timeFromReference(cpn->date());
-        Real mid = (t_[i] + t_[i + 1]) / 2.0;
-        if (mid >= 0.0) {
-            C[i] = ((1.0 - recoveryRate_) - swapSpread * cpn->accrualPeriod() / 2.0) *
-                   yts->discount((t_[i] + t_[i + 1]) / 2.0) / yts->discount(tex_);
-        }
+        Real mid = ((i == 0 ? std::max(tex_, t_[0]) : t_[i]) + t_[i + 1]) / 2.0;
+        C[i] = ((1.0 - recoveryRate_) - swapSpread * cpn->accrualPeriod() * (mid - t_[i]) / (t_[i + 1] - t_[i])) *
+               yts->discount(mid) / yts->discount(tex_);
         D[i] = swapSpread * cpn->accrualPeriod() * yts->discount(t_[i + 1]) / yts->discount(tex_);
     }
     G_[0] = -C[0];
