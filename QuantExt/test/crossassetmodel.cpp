@@ -4172,8 +4172,8 @@ void CrossAssetModelTest::testCrCalibration() {
         T = t;
     }
 
-    boost::shared_ptr<CrLgm1fPiecewiseLinearParametrization> creur_p =
-        boost::make_shared<CrLgm1fPiecewiseLinearParametrization>(EURCurrency(), prob, volStepTimes, crVols,
+    boost::shared_ptr<CrLgm1fPiecewiseConstantParametrization> creur_p =
+        boost::make_shared<CrLgm1fPiecewiseConstantParametrization>(EURCurrency(), prob, volStepTimes, crVols,
                                                                   volStepTimes, crRev);
 
     std::vector<boost::shared_ptr<Parametrization> > parametrizations;
