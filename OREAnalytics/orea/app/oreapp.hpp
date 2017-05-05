@@ -111,6 +111,9 @@ public:
     //! load in nettingSet data
     boost::shared_ptr<NettingSetManager> initNettingSetManager();
 
+    //! write out additional reports
+    virtual void writeAdditionalReports() {}
+
 protected:
     //! Initialize input parameters to the sensitivities analysis
     void sensiInputInitialize(boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
