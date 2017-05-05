@@ -24,7 +24,8 @@
 #ifndef quantext_cdsoptionhelper_hpp
 #define quantext_cdsoptionhelper_hpp
 
-#include <ql/experimental/credit/cdsoption.hpp>
+#include <qle/instruments/cdsoption.hpp>
+
 #include <ql/instruments/creditdefaultswap.hpp>
 #include <ql/models/calibrationhelper.hpp>
 #include <ql/quotes/simplequote.hpp>
@@ -35,13 +36,14 @@ namespace QuantExt {
 
 class CdsOptionHelper : public CalibrationHelper {
 public:
-    CdsOptionHelper(const Date& exerciseDate, const Handle<Quote>& volatility, const Schedule& schedule,
-                    const BusinessDayConvention paymentConvention, const DayCounter& dayCounter,
-                    const Handle<DefaultProbabilityTermStructure>& probability, const Real recoveryRate,
-                    const Handle<YieldTermStructure>& termStructure, const Rate spread = Null<Rate>(),
-                    const Rate upfront = Null<Rate>(), const bool settlesAccrual = true,
-                    const bool paysAtDefaultTime = true, const Date protectionStart = Date(),
-                    const Date upfrontDate = Date(), const boost::shared_ptr<Claim>& claim = boost::shared_ptr<Claim>(),
+    CdsOptionHelper(const Date& exerciseDate, const Handle<Quote>& volatility, const Protection::Side side,
+                    const Schedule& schedule, const BusinessDayConvention paymentConvention,
+                    const DayCounter& dayCounter, const Handle<DefaultProbabilityTermStructure>& probability,
+                    const Real recoveryRate, const Handle<YieldTermStructure>& termStructure,
+                    const Rate spread = Null<Rate>(), const Rate upfront = Null<Rate>(),
+                    const bool settlesAccrual = true, const bool paysAtDefaultTime = true,
+                    const Date protectionStart = Date(), const Date upfrontDate = Date(),
+                    const boost::shared_ptr<Claim>& claim = boost::shared_ptr<Claim>(),
                     const CalibrationHelper::CalibrationErrorType errorType = CalibrationHelper::RelativePriceError);
 
     virtual void addTimesTo(std::list<Time>& times) const {}
@@ -49,11 +51,11 @@ public:
     virtual Real blackPrice(Volatility volatility) const;
 
     boost::shared_ptr<CreditDefaultSwap> underlying() const { return cds_; }
-    boost::shared_ptr<CdsOption> option() const { return option_; }
+    boost::shared_ptr<QuantExt::CdsOption> option() const { return option_; }
 
 private:
     boost::shared_ptr<CreditDefaultSwap> cds_;
-    boost::shared_ptr<CdsOption> option_;
+    boost::shared_ptr<QuantExt::CdsOption> option_;
     boost::shared_ptr<SimpleQuote> blackVol_;
     boost::shared_ptr<PricingEngine> blackEngine_;
 };

@@ -15,4 +15,5 @@
 #include <qle/pricingengines/oiccbasisswapengine.hpp>
 #include <qle/pricingengines/numericlgmswaptionengine.hpp>
 #include <qle/pricingengines/discountingriskybondengine.hpp>
+#include <qle/pricingengines/blackcdsoptionengine.hpp>
 

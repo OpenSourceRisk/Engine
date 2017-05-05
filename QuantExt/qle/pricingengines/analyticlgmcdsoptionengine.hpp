@@ -23,12 +23,13 @@
 #ifndef quantext_lgm_cdsoptionengine_hpp
 #define quantext_lgm_cdsoptionengine_hpp
 
-#include <ql/experimental/credit/cdsoption.hpp>
+#include <qle/instruments/cdsoption.hpp>
 #include <qle/models/crossassetmodel.hpp>
 
 namespace QuantExt {
 
-class AnalyticLgmCdsOptionEngine : public CdsOption::engine {
+/*! Reference: Modern Derivatives Pricing and Credit Exposure Analysis by Lichters, Stamm and Gallagher, 15.1 */
+class AnalyticLgmCdsOptionEngine : public QuantExt::CdsOption::engine {
 public:
     AnalyticLgmCdsOptionEngine(const boost::shared_ptr<CrossAssetModel>& model, const Size index, const Size ccy,
                                const Real recoveryRate,

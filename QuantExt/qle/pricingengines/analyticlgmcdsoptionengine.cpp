@@ -26,7 +26,7 @@ namespace QuantExt {
 AnalyticLgmCdsOptionEngine::AnalyticLgmCdsOptionEngine(const boost::shared_ptr<CrossAssetModel>& model,
                                                        const Size index, const Size ccy, const Real recoveryRate,
                                                        const Handle<YieldTermStructure>& termStructure)
-    : CdsOption::engine(), model_(model), index_(index), ccy_(ccy), recoveryRate_(recoveryRate),
+    : QuantExt::CdsOption::engine(), model_(model), index_(index), ccy_(ccy), recoveryRate_(recoveryRate),
       termStructure_(termStructure) {
     registerWith(model);
     if (!termStructure.empty())
@@ -36,12 +36,18 @@ AnalyticLgmCdsOptionEngine::AnalyticLgmCdsOptionEngine(const boost::shared_ptr<C
 void AnalyticLgmCdsOptionEngine::calculate() const {
 
     QL_REQUIRE(arguments_.swap->paysAtDefaultTime(), "AnalyticLgmCdsOptionEngine: pays at default time must be true");
-    QL_REQUIRE(arguments_.swap->upfront() == boost::none, "AnalyticLgmCdsOptionEngine: upfront payment not allowed");
 
-    Real w = (arguments_.side == Protection::Buyer) ? 1.0 : -1.0;
+    Real w = (arguments_.side == Protection::Buyer) ? -1.0 : 1.0;
     Rate swapSpread = arguments_.swap->runningSpread();
     const Handle<YieldTermStructure>& yts =
         termStructure_.empty() ? model_->irlgm1f(0)->termStructure() : termStructure_;
+
+    Real riskyAnnuity = std::fabs(arguments_.swap->couponLegNPV() / swapSpread);
+    results_.riskyAnnuity = riskyAnnuity;
+
+    // incorporate upfront amount
+
+    swapSpread -= w * arguments_.swap->upfrontNPV() / riskyAnnuity;
 
     Size n = arguments_.swap->coupons().size();
     t_ = Array(n + 1, 0.0);
@@ -83,7 +89,7 @@ void AnalyticLgmCdsOptionEngine::calculate() const {
     // if a non knock-out payer option, add front end protection value
     Real frontEndProtection = 0.0;
     if (arguments_.side == Protection::Buyer && !arguments_.knocksOut) {
-        frontEndProtection = w * arguments_.swap->notional() * (1. - recoveryRate_) *
+        frontEndProtection = arguments_.swap->notional() * (1. - recoveryRate_) *
                              model_->crlgm1f(index_)->termStructure()->defaultProbability(tex_) * yts->discount(tex_);
     }
 
@@ -97,11 +103,12 @@ void AnalyticLgmCdsOptionEngine::calculate() const {
 
     Real sum = 0.0;
     for (Size i = 1; i < G_.size(); ++i) {
-        Real strike = model_->crlgm1fS(index_, ccy_, t_[0], t_[i], lambdaStar, 0.0).second;
+        Real strike = model_->crlgm1fS(index_, ccy_, tex_, t_[i], lambdaStar, 0.0).second /
+                      model_->crlgm1fS(index_, ccy_, tex_, t_[0], lambdaStar, 0.0).second;
         sum += G_[i] * Ei(w, strike, i) * yts->discount(tex_);
     }
 
-    results_.value = sum + frontEndProtection;
+    results_.value = arguments_.swap->notional() * sum + frontEndProtection;
 
 } // calculate
 

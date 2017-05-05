@@ -4164,9 +4164,15 @@ void CrossAssetModelTest::testCrCalibration() {
         Date mat = refDate + maturity[i - 1];
         Schedule schedule(mat, mat + 10 * Years, 3 * Months, TARGET(), Following, Following, DateGeneration::CDS,
                           false);
+        // ensure that cds starts after option expiry
+        if (schedule.date(0) < mat)
+            schedule = Schedule(schedule.date(1), mat + 10 * Years, 3 * Months, TARGET(), Following, Following,
+                                DateGeneration::CDS, false);
+        QL_REQUIRE(schedule.date(0) >= mat,
+                   "CDS start (" << schedule.date(0) << ") should be on or after option maturity (" << mat << ")");
         boost::shared_ptr<CdsOptionHelper> h(
-            new CdsOptionHelper(mat, Handle<Quote>(boost::make_shared<SimpleQuote>(impliedVols[i - 1])), schedule,
-                                Following, Actual360(), prob, 0.4, eurYts));
+            new CdsOptionHelper(mat, Handle<Quote>(boost::make_shared<SimpleQuote>(impliedVols[i - 1])),
+                                Protection::Buyer, schedule, Following, Actual360(), prob, 0.4, eurYts));
         Real t = eurYts->timeFromReference(mat);
         cdsoHelpers.push_back(h);
         if (i <= nMat - 1)
@@ -4248,8 +4254,6 @@ void CrossAssetModelTest::testCrCalibration() {
         Handle<DefaultProbabilityTermStructure>(probMc), 0.4, Handle<YieldTermStructure>(ytsMc));
     underlying->setPricingEngine(dynamicEngine);
 
-    Real tProt = eurYts->timeFromReference(underlying->protectionStartDate());
-
     for (Size i = 0; i < n; ++i) {
         Sample<MultiPath> path = pg.next();
         Size l = path.value[0].length() - 1;
@@ -4260,10 +4264,6 @@ void CrossAssetModelTest::testCrCalibration() {
         ytsMc->move(lastMat, irz);
         Real surv = model->crlgm1fS(0, 0, T, T, crz, cry).first;
         Real npv = surv * std::max(underlying->NPV(), 0.0) / model->numeraire(0, T, irz);
-        if (tProt < T) {
-            Real survProt = model->crlgm1fS(0, 0, tProt, tProt, crz, cry).first;
-            npv += ((1.0 - surv) - (1.0 - survProt)) * 0.6; // LGD payment in case of default between tProt and T
-        }
         cdso(npv);
     }
 

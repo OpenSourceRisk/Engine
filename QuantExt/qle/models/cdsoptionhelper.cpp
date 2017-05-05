@@ -17,9 +17,9 @@
 */
 
 #include <qle/models/cdsoptionhelper.hpp>
+#include <qle/pricingengines/blackcdsoptionengine.hpp>
 
 #include <ql/exercise.hpp>
-#include <ql/experimental/credit/blackcdsoptionengine.hpp>
 #include <ql/pricingengines/credit/midpointcdsengine.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <ql/time/schedule.hpp>
@@ -28,8 +28,9 @@
 
 namespace QuantExt {
 
-CdsOptionHelper::CdsOptionHelper(const Date& exerciseDate, const Handle<Quote>& volatility, const Schedule& schedule,
-                                 const BusinessDayConvention paymentConvention, const DayCounter& dayCounter,
+CdsOptionHelper::CdsOptionHelper(const Date& exerciseDate, const Handle<Quote>& volatility, const Protection::Side side,
+                                 const Schedule& schedule, const BusinessDayConvention paymentConvention,
+                                 const DayCounter& dayCounter,
                                  const Handle<DefaultProbabilityTermStructure>& probability, const Real recoveryRate,
                                  const Handle<YieldTermStructure>& termStructure, const Rate spread, const Rate upfront,
                                  const bool settlesAccrual, const bool paysAtDefaultTime, const Date protectionStart,
@@ -42,17 +43,15 @@ CdsOptionHelper::CdsOptionHelper(const Date& exerciseDate, const Handle<Quote>& 
 
     boost::shared_ptr<CreditDefaultSwap> tmp;
     if (upfront == Null<Real>())
-        tmp =
-            boost::make_shared<CreditDefaultSwap>(Protection::Buyer, 1.0, 0.02, schedule, paymentConvention, dayCounter,
-                                                  settlesAccrual, paysAtDefaultTime, protectionStart, claim);
+        tmp = boost::make_shared<CreditDefaultSwap>(side, 1.0, 0.02, schedule, paymentConvention, dayCounter,
+                                                    settlesAccrual, paysAtDefaultTime, protectionStart, claim);
     else
-        tmp = boost::make_shared<CreditDefaultSwap>(Protection::Buyer, 1.0, upfront, 0.02, schedule, paymentConvention,
-                                                    dayCounter, settlesAccrual, paysAtDefaultTime, protectionStart,
-                                                    upfrontDate, claim);
+        tmp = boost::make_shared<CreditDefaultSwap>(side, 1.0, upfront, 0.02, schedule, paymentConvention, dayCounter,
+                                                    settlesAccrual, paysAtDefaultTime, protectionStart, upfrontDate,
+                                                    claim);
     tmp->setPricingEngine(cdsEngine);
 
     Real strike = spread == Null<Real>() ? tmp->fairSpread() : spread;
-    Protection::Side side = strike >= tmp->fairSpread() ? Protection::Buyer : Protection::Seller;
     if (upfront == Null<Real>())
         cds_ = boost::make_shared<CreditDefaultSwap>(side, 1.0, strike, schedule, paymentConvention, dayCounter,
                                                      settlesAccrual, paysAtDefaultTime, protectionStart, claim);
@@ -65,10 +64,10 @@ CdsOptionHelper::CdsOptionHelper(const Date& exerciseDate, const Handle<Quote>& 
 
     boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(exerciseDate);
 
-    option_ = boost::make_shared<CdsOption>(cds_, exercise);
+    option_ = boost::make_shared<QuantExt::CdsOption>(cds_, exercise, true);
 
-    blackEngine_ =
-        boost::make_shared<BlackCdsOptionEngine>(probability, recoveryRate, termStructure, Handle<Quote>(blackVol_));
+    blackEngine_ = boost::make_shared<QuantExt::BlackCdsOptionEngine>(probability, recoveryRate, termStructure,
+                                                                      Handle<Quote>(blackVol_));
 }
 
 Real CdsOptionHelper::modelValue() const {
