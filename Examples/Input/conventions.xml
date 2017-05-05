@@ -81,7 +81,7 @@
   <Deposit>
     <Id>CAD-DEPOSIT</Id>
     <IndexBased>true</IndexBased>
-    <Index>CAD-BA</Index>
+    <Index>CAD-CDOR</Index>
   </Deposit>
   <Deposit>
     <Id>CZK-DEPOSIT</Id>
@@ -199,6 +199,10 @@
   <FRA>
     <Id>USD-3M-FRA-CONVENTIONS</Id>
     <Index>USD-LIBOR-3M</Index>
+  </FRA>
+  <FRA>
+    <Id>CAD-FRA-3M</Id>
+    <Index>CAD-CDOR-3M</Index>
   </FRA>
   <FRA>
     <Id>CZK-6M-FRA</Id>
@@ -350,12 +354,26 @@
     <Index>AUD-BBSW-3M</Index>
   </Swap>
   <Swap>
-    <Id>CAD-6M-SWAP-CONVENTIONS</Id>
+    <!-- for tenor = 1Y -->
+    <Id>CAD-3M-SWAP-CONVENTIONS-1Y</Id>
     <FixedCalendar>CA</FixedCalendar>
     <FixedFrequency>Annual</FixedFrequency>
     <FixedConvention>MF</FixedConvention>
-    <FixedDayCounter>30/360</FixedDayCounter>
-    <Index>CAD-BA-6M</Index>
+    <FixedDayCounter>ACT/365</FixedDayCounter>
+    <Index>CAD-CDOR-3M</Index>
+    <FloatFrequency>Annual</FloatFrequency>
+    <SubPeriodsCouponType>Compounding</SubPeriodsCouponType>
+  </Swap>
+  <Swap>
+    <!-- for tenor >= 2Y -->
+    <Id>CAD-3M-SWAP-CONVENTIONS</Id>
+    <FixedCalendar>CA</FixedCalendar>
+    <FixedFrequency>Semiannual</FixedFrequency>
+    <FixedConvention>MF</FixedConvention>
+    <FixedDayCounter>ACT/365</FixedDayCounter>
+    <Index>CAD-CDOR-3M</Index>
+    <FloatFrequency>Semiannual</FloatFrequency>
+    <SubPeriodsCouponType>Compounding</SubPeriodsCouponType>
   </Swap>
   <Swap>
     <Id>DKK-6M-SWAP-CONVENTIONS</Id>
@@ -720,9 +738,9 @@
       <Index>EUHICP</Index>
       <Interpolated>false</Interpolated>
       <ObservationLag>3M</ObservationLag>
-      <AdjustInfObsDates>false</AdjustInfObsDates>
-      <InfCalendar>TARGET</InfCalendar>
-      <InfConvention>MF</InfConvention>
+      <AdjustInflationObservationDates>false</AdjustInflationObservationDates>
+      <InflationCalendar>TARGET</InflationCalendar>
+      <InflationConvention>MF</InflationConvention>
   </InflationSwap>
   <InflationSwap>
       <Id>EUHICPXT_INFLATIONSWAP</Id>
@@ -732,9 +750,9 @@
       <Index>EUHICPXT</Index>
       <Interpolated>false</Interpolated>
       <ObservationLag>3M</ObservationLag>
-      <AdjustInfObsDates>false</AdjustInfObsDates>
-      <InfCalendar>TARGET</InfCalendar>
-      <InfConvention>MF</InfConvention>
+      <AdjustInflationObservationDates>false</AdjustInflationObservationDates>
+      <InflationCalendar>TARGET</InflationCalendar>
+      <InflationConvention>MF</InflationConvention>
   </InflationSwap>
   <InflationSwap>
       <Id>FRHICP_INFLATIONSWAP</Id>
@@ -744,9 +762,9 @@
       <Index>FRHICP</Index>
       <Interpolated>false</Interpolated>
       <ObservationLag>3M</ObservationLag>
-      <AdjustInfObsDates>false</AdjustInfObsDates>
-      <InfCalendar>TARGET</InfCalendar>
-      <InfConvention>MF</InfConvention>
+      <AdjustInflationObservationDates>false</AdjustInflationObservationDates>
+      <InflationCalendar>TARGET</InflationCalendar>
+      <InflationConvention>MF</InflationConvention>
   </InflationSwap>
   <InflationSwap>
       <Id>UKRPI_INFLATIONSWAP</Id>
@@ -756,9 +774,9 @@
       <Index>UKRPI</Index>
       <Interpolated>false</Interpolated>
       <ObservationLag>3M</ObservationLag>
-      <AdjustInfObsDates>false</AdjustInfObsDates>
-      <InfCalendar>UK</InfCalendar>
-      <InfConvention>MF</InfConvention>
+      <AdjustInflationObservationDates>false</AdjustInflationObservationDates>
+      <InflationCalendar>UK</InflationCalendar>
+      <InflationConvention>MF</InflationConvention>
   </InflationSwap>
   <InflationSwap>
       <Id>USCPI_INFLATIONSWAP</Id>
@@ -768,9 +786,9 @@
       <Index>USCPI</Index>
       <Interpolated>false</Interpolated>
       <ObservationLag>3M</ObservationLag>
-      <AdjustInfObsDates>false</AdjustInfObsDates>
-      <InfCalendar>US</InfCalendar>
-      <InfConvention>MF</InfConvention>
+      <AdjustInflationObservationDates>false</AdjustInflationObservationDates>
+      <InflationCalendar>US</InflationCalendar>
+      <InflationConvention>MF</InflationConvention>
   </InflationSwap>
   <InflationSwap>
       <Id>ZACPI_INFLATIONSWAP</Id>
@@ -780,8 +798,8 @@
       <Index>ZACPI</Index>
       <Interpolated>false</Interpolated>
       <ObservationLag>3M</ObservationLag>
-      <AdjustInfObsDates>false</AdjustInfObsDates>
-      <InfCalendar>ZAR</InfCalendar>
-      <InfConvention>MF</InfConvention>
+      <AdjustInflationObservationDates>false</AdjustInflationObservationDates>
+      <InflationCalendar>ZAR</InflationCalendar>
+      <InflationConvention>MF</InflationConvention>
   </InflationSwap>
 </Conventions>

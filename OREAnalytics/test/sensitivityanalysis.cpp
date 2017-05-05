@@ -59,9 +59,8 @@ namespace testsuite {
 boost::shared_ptr<data::Conventions> conv() {
     boost::shared_ptr<data::Conventions> conventions(new data::Conventions());
 
-    boost::shared_ptr<data::Convention> swapIndexConv(
-        new data::SwapIndexConvention("EUR-CMS-2Y", "EUR-6M-SWAP-CONVENTIONS"));
-    conventions->add(swapIndexConv);
+    conventions->add(boost::make_shared<data::SwapIndexConvention>("EUR-CMS-2Y", "EUR-6M-SWAP-CONVENTIONS"));
+    conventions->add(boost::make_shared<data::SwapIndexConvention>("EUR-CMS-30Y", "EUR-6M-SWAP-CONVENTIONS"));
 
     // boost::shared_ptr<data::Convention> swapConv(
     //     new data::IRSwapConvention("EUR-6M-SWAP-CONVENTIONS", "TARGET", "Annual", "MF", "30/360", "EUR-EURIBOR-6M"));
@@ -135,6 +134,7 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData5() 
                                          5 * Years,  7 * Years,  10 * Years, 15 * Years, 20 * Years, 30 * Years};
     simMarketData->indices() = {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "USD-LIBOR-6M",
                                 "GBP-LIBOR-6M",   "CHF-LIBOR-6M", "JPY-LIBOR-6M"};
+    simMarketData->swapIndices() = {{"EUR-CMS-2Y", "EUR-EURIBOR-6M"}, {"EUR-CMS-30Y", "EUR-EURIBOR-6M"}};
     simMarketData->yieldCurveNames() = {"BondCurve1"};
     simMarketData->interpolation() = "LogLinear";
     simMarketData->extrapolate() = true;
@@ -357,6 +357,19 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     data->engine("CrossCurrencySwap") = "DiscountingCrossCurrencySwapEngine";
     data->model("EuropeanSwaption") = "BlackBachelier";
     data->engine("EuropeanSwaption") = "BlackBachelierSwaptionEngine";
+    data->model("BermudanSwaption") = "LGM";
+    data->modelParameters("BermudanSwaption")["Calibration"] = "Bootstrap";
+    data->modelParameters("BermudanSwaption")["CalibrationStrategy"] = "CoterminalATM";
+    data->modelParameters("BermudanSwaption")["Reversion"] = "0.03";
+    data->modelParameters("BermudanSwaption")["ReversionType"] = "HullWhite";
+    data->modelParameters("BermudanSwaption")["Volatility"] = "0.01";
+    data->modelParameters("BermudanSwaption")["VolatilityType"] = "Hagan";
+    data->modelParameters("BermudanSwaption")["Tolerance"] = "0.0001";
+    data->engine("BermudanSwaption") = "Grid";
+    data->engineParameters("BermudanSwaption")["sy"] = "3.0";
+    data->engineParameters("BermudanSwaption")["ny"] = "10";
+    data->engineParameters("BermudanSwaption")["sx"] = "3.0";
+    data->engineParameters("BermudanSwaption")["nx"] = "10";
     data->model("FxForward") = "DiscountedCashflows";
     data->engine("FxForward") = "DiscountingFxForwardEngine";
     data->model("FxOption") = "GarmanKohlhagen";
@@ -369,6 +382,7 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(data, simMarket);
     factory->registerBuilder(boost::make_shared<SwapEngineBuilder>());
     factory->registerBuilder(boost::make_shared<EuropeanSwaptionEngineBuilder>());
+    factory->registerBuilder(boost::make_shared<LGMGridBermudanSwaptionEngineBuilder>());
     factory->registerBuilder(boost::make_shared<FxOptionEngineBuilder>());
     factory->registerBuilder(boost::make_shared<FxForwardEngineBuilder>());
     factory->registerBuilder(boost::make_shared<CapFloorEngineBuilder>());
@@ -387,6 +401,8 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
                                          "30/360", "6M", "A360", "EUR-EURIBOR-6M"));
     portfolio->add(buildEuropeanSwaption("6_Swaption_EUR", "Long", "EUR", true, 1000000.0, 2, 5, 0.03, 0.00, "1Y",
                                          "30/360", "6M", "A360", "EUR-EURIBOR-6M"));
+    portfolio->add(buildBermudanSwaption("13_Swaption_EUR", "Long", "EUR", true, 1000000.0, 5, 2, 10, 0.03, 0.00, "1Y",
+                                         "30/360", "6M", "A360", "EUR-EURIBOR-6M"));
     portfolio->add(buildFxOption("7_FxOption_EUR_USD", "Long", "Call", 3, "EUR", 10000000.0, "USD", 11000000.0));
     portfolio->add(buildFxOption("8_FxOption_EUR_GBP", "Long", "Call", 7, "EUR", 10000000.0, "GBP", 11000000.0));
     portfolio->add(buildCap("9_Cap_EUR", "EUR", "Long", 0.05, 1000000.0, 0, 10, "6M", "A360", "EUR-EURIBOR-6M"));
@@ -402,7 +418,8 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
         "1,0W"); // TODO - extend the DateGrid interface so that it can actually take a vector of dates as input
     vector<boost::shared_ptr<ValuationCalculator>> calculators;
     calculators.push_back(boost::make_shared<NPVCalculator>(simMarketData->baseCcy()));
-    ValuationEngine engine(today, dg, simMarket);
+    ValuationEngine engine(today, dg, simMarket,
+                           factory->modelBuilders()); // last argument required for model recalibration
     // run scenarios and fill the cube
     boost::timer t;
     boost::shared_ptr<NPVCube> cube = boost::make_shared<DoublePrecisionInMemoryCube>(
@@ -690,8 +707,37 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
         // = -0.00500487660122262
         {"12_ZeroBond_USD", "Up:FXSpot/EURUSD/0/spot", 0.505492, -0.00500487}, // OK, diff < 1e-8
         // sensi to EURUSD down shift d=-1%: 0.00510598521942907
-        {"12_ZeroBond_USD", "Down:FXSpot/EURUSD/0/spot", 0.505492, 0.00510598} // OK, diff < 1e-8
-    };
+        {"12_ZeroBond_USD", "Down:FXSpot/EURUSD/0/spot", 0.505492, 0.00510598}, // OK, diff < 1e-8
+        {"13_Swaption_EUR", "Up:DiscountCurve/EUR/2/2Y", 5116.77, -0.00777827},
+        {"13_Swaption_EUR", "Up:DiscountCurve/EUR/3/3Y", 5116.77, -0.109264},
+        {"13_Swaption_EUR", "Up:DiscountCurve/EUR/4/5Y", 5116.77, -0.358774},
+        {"13_Swaption_EUR", "Up:DiscountCurve/EUR/5/7Y", 5116.77, -1.03456},
+        {"13_Swaption_EUR", "Up:DiscountCurve/EUR/6/10Y", 5116.77, -2.21212},
+        {"13_Swaption_EUR", "Up:DiscountCurve/EUR/7/15Y", 5116.77, -0.487164},
+        {"13_Swaption_EUR", "Down:DiscountCurve/EUR/2/2Y", 5116.77, 0.00777596},
+        {"13_Swaption_EUR", "Down:DiscountCurve/EUR/3/3Y", 5116.77, 0.109257},
+        {"13_Swaption_EUR", "Down:DiscountCurve/EUR/4/5Y", 5116.77, 0.358764},
+        {"13_Swaption_EUR", "Down:DiscountCurve/EUR/5/7Y", 5116.77, 1.03475},
+        {"13_Swaption_EUR", "Down:DiscountCurve/EUR/6/10Y", 5116.77, 2.21335},
+        {"13_Swaption_EUR", "Down:DiscountCurve/EUR/7/15Y", 5116.77, 0.487249},
+        {"13_Swaption_EUR", "Up:IndexCurve/EUR-EURIBOR-6M/2/2Y", 5116.77, -1.86557},
+        {"13_Swaption_EUR", "Up:IndexCurve/EUR-EURIBOR-6M/3/3Y", 5116.77, -15.6393},
+        {"13_Swaption_EUR", "Up:IndexCurve/EUR-EURIBOR-6M/4/5Y", 5116.77, -74.4684},
+        {"13_Swaption_EUR", "Up:IndexCurve/EUR-EURIBOR-6M/5/7Y", 5116.77, -47.13},
+        {"13_Swaption_EUR", "Up:IndexCurve/EUR-EURIBOR-6M/6/10Y", 5116.77, 170.477},
+        {"13_Swaption_EUR", "Up:IndexCurve/EUR-EURIBOR-6M/7/15Y", 5116.77, 159.22},
+        {"13_Swaption_EUR", "Down:IndexCurve/EUR-EURIBOR-6M/2/2Y", 5116.77, 1.85756},
+        {"13_Swaption_EUR", "Down:IndexCurve/EUR-EURIBOR-6M/3/3Y", 5116.77, 15.6087},
+        {"13_Swaption_EUR", "Down:IndexCurve/EUR-EURIBOR-6M/4/5Y", 5116.77, 75.1195},
+        {"13_Swaption_EUR", "Down:IndexCurve/EUR-EURIBOR-6M/5/7Y", 5116.77, 47.2293},
+        {"13_Swaption_EUR", "Down:IndexCurve/EUR-EURIBOR-6M/6/10Y", 5116.77, -170.339},
+        {"13_Swaption_EUR", "Down:IndexCurve/EUR-EURIBOR-6M/7/15Y", 5116.77, -159.115},
+        {"13_Swaption_EUR", "Up:SwaptionVolatility/EUR/1/2Y/10Y/ATM", 5116.77, 17.1282},
+        {"13_Swaption_EUR", "Up:SwaptionVolatility/EUR/3/5Y/10Y/ATM", 5116.77, 118.487},
+        {"13_Swaption_EUR", "Up:SwaptionVolatility/EUR/5/10Y/10Y/ATM", 5116.77, 19.5026},
+        {"13_Swaption_EUR", "Down:SwaptionVolatility/EUR/1/2Y/10Y/ATM", 5116.77, -17.2771},
+        {"13_Swaption_EUR", "Down:SwaptionVolatility/EUR/3/5Y/10Y/ATM", 5116.77, -118.671},
+        {"13_Swaption_EUR", "Down:SwaptionVolatility/EUR/5/10Y/10Y/ATM", 5116.77, -19.5463}};
 
     std::map<pair<string, string>, Real> npvMap, sensiMap;
     for (Size i = 0; i < cachedResults.size(); ++i) {
@@ -713,8 +759,7 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
             string label = desc[j].text();
             if (fabs(sensi) > tiny) {
                 count++;
-                // BOOST_TEST_MESSAGE("{ \"" << id << "\", \"" << label << "\", " << npv0 << ", " << sensi
-                //                        << " },");
+                // BOOST_TEST_MESSAGE("{ \"" << id << "\", \"" << label << "\", " << npv0 << ", " << sensi << " },");
                 pair<string, string> p(id, label);
                 QL_REQUIRE(npvMap.find(p) != npvMap.end(), "pair (" << p.first << ", " << p.second
                                                                     << ") not found in npv map");
@@ -736,7 +781,7 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
 
     // Repeat analysis using the SensitivityAnalysis class and spot check a few deltas and gammas
     boost::shared_ptr<SensitivityAnalysis> sa = boost::make_shared<SensitivityAnalysis>(
-        portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, conventions);
+        portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, conventions, false);
     sa->generateSensitivities();
     map<pair<string, string>, Real> deltaMap = sa->delta();
     map<pair<string, string>, Real> gammaMap = sa->gamma();
@@ -1116,10 +1161,11 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
         qlInfoMap[info.id] = info;
     }
 
+    bool recalibrateModels = true;           // nothing to calibrate here
     bool useOriginalFxForBaseCcyConv = true; // convert sensi to EUR using original FX rate (not the shifted rate)
-    boost::shared_ptr<SensitivityAnalysis> sa =
-        boost::make_shared<SensitivityAnalysis>(portfolio, initMarket, Market::defaultConfiguration, data,
-                                                simMarketData, sensiData, conventions, useOriginalFxForBaseCcyConv);
+    boost::shared_ptr<SensitivityAnalysis> sa = boost::make_shared<SensitivityAnalysis>(
+        portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, conventions,
+        recalibrateModels, useOriginalFxForBaseCcyConv);
     sa->generateSensitivities();
 
     map<pair<string, string>, Real> deltaMap = sa->delta();
@@ -1388,6 +1434,23 @@ void SensitivityAnalysisTest::testCrossGamma() {
     data->engine("CrossCurrencySwap") = "DiscountingCrossCurrencySwapEngine";
     data->model("EuropeanSwaption") = "BlackBachelier";
     data->engine("EuropeanSwaption") = "BlackBachelierSwaptionEngine";
+    data->model("BermudanSwaption") = "LGM";
+    data->engine("BermudanSwaption") = "Grid";
+    map<string, string> bermudanModelParams;
+    bermudanModelParams["Calibration"] = "Bootstrap";
+    bermudanModelParams["CalibrationStrategy"] = "Coterminal";
+    bermudanModelParams["Reversion"] = "0.03";
+    bermudanModelParams["ReversionType"] = "HullWhite";
+    bermudanModelParams["Volatility"] = "0.01";
+    bermudanModelParams["CalibrationType"] = "Hagan";
+    bermudanModelParams["Tolerance"] = "0.0001";
+    data->modelParameters("BermudanSwaption") = bermudanModelParams;
+    map<string, string> bermudanEngineParams;
+    bermudanEngineParams["sy"] = "3.0";
+    bermudanEngineParams["ny"] = "10";
+    bermudanEngineParams["sx"] = "3.0";
+    bermudanEngineParams["nx"] = "10";
+    data->engineParameters("BermudanSwaption") = bermudanEngineParams;
     data->model("FxForward") = "DiscountedCashflows";
     data->engine("FxForward") = "DiscountingFxForwardEngine";
     data->model("FxOption") = "GarmanKohlhagen";
@@ -1397,6 +1460,7 @@ void SensitivityAnalysisTest::testCrossGamma() {
     boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(data, simMarket);
     factory->registerBuilder(boost::make_shared<SwapEngineBuilder>());
     factory->registerBuilder(boost::make_shared<EuropeanSwaptionEngineBuilder>());
+    factory->registerBuilder(boost::make_shared<LGMGridBermudanSwaptionEngineBuilder>());
     factory->registerBuilder(boost::make_shared<FxOptionEngineBuilder>());
     factory->registerBuilder(boost::make_shared<FxForwardEngineBuilder>());
     factory->registerBuilder(boost::make_shared<CapFloorEngineBuilder>());
@@ -1710,13 +1774,13 @@ void SensitivityAnalysisTest::testCrossGamma() {
 
 test_suite* SensitivityAnalysisTest::suite() {
     // Uncomment the below to get detailed output TODO: custom logger that uses BOOST_MESSAGE
-    /*
-      boost::shared_ptr<ore::data::FileLogger> logger = boost::make_shared<ore::data::FileLogger>("sensitivity.log");
-      ore::data::Log::instance().removeAllLoggers();
-      ore::data::Log::instance().registerLogger(logger);
-      ore::data::Log::instance().switchOn();
-      ore::data::Log::instance().setMask(255);
-    */
+
+    boost::shared_ptr<ore::data::FileLogger> logger = boost::make_shared<ore::data::FileLogger>("sensitivity.log");
+    ore::data::Log::instance().removeAllLoggers();
+    ore::data::Log::instance().registerLogger(logger);
+    ore::data::Log::instance().switchOn();
+    ore::data::Log::instance().setMask(255);
+
     test_suite* suite = BOOST_TEST_SUITE("SensitivityAnalysisTest");
     // Set the Observation mode here
     suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::test1dShifts));

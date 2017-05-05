@@ -48,7 +48,8 @@ public:
     //! Default constructor
     ScenarioSimMarketParameters()
         : baseCcy_(""), interpolation_(""), extrapolate_(false), swapVolSimulate_(false), swapVolDecayMode_(""),
-          capFloorVolSimulate_(false), capFloorVolDecayMode_(""), fxVolSimulate_(false), fxVolDecayMode_("") {}
+          capFloorVolSimulate_(false), capFloorVolDecayMode_(""), fxVolSimulate_(false), fxVolDecayMode_(""),
+          eqVolSimulate_(false), eqVolDecayMode_("") {}
 
     //! \name Inspectors
     //@{

@@ -28,9 +28,13 @@
 #include <orea/cube/npvcube.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/utilities/progressbar.hpp>
+#include <ored/model/modelbuilder.hpp>
 #include <orea/engine/valuationcalculator.hpp>
 
 #include <map>
+#include <set>
+
+using std::set;
 
 namespace ore {
 namespace analytics {
@@ -60,7 +64,9 @@ public:
         //! Simulation date grid
         const boost::shared_ptr<analytics::DateGrid>& dg,
         //! Simulated market object
-        const boost::shared_ptr<analytics::SimMarket>& simMarket);
+        const boost::shared_ptr<analytics::SimMarket>& simMarket,
+        //! model builders to be updated
+        const set<boost::shared_ptr<data::ModelBuilder>>& modelBuilders = set<boost::shared_ptr<data::ModelBuilder>>());
 
     //! Build NPV cube
     void buildCube(
@@ -75,6 +81,7 @@ private:
     QuantLib::Date today_;
     boost::shared_ptr<analytics::DateGrid> dg_;
     boost::shared_ptr<analytics::SimMarket> simMarket_;
+    set<boost::shared_ptr<data::ModelBuilder>> modelBuilders_;
 };
 }
 }
