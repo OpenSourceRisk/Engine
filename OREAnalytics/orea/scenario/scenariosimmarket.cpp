@@ -92,17 +92,6 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
     LOG("FX triangulation done");
 
     // constructing discount yield curves
-    LOG("building discount yield curve times...");
-    DayCounter dc = ActualActual();       // used to convert YieldCurve Periods to Times
-    vector<Time> yieldCurveTimes(1, 0.0); // include today
-    vector<Date> yieldCurveDates(1, asof_);
-    QL_REQUIRE(parameters->yieldCurveTenors().front() > 0 * Days, "yield curve tenors must not include t=0");
-    for (auto& tenor : parameters->yieldCurveTenors()) {
-        LOG("Yield curve tenor " << tenor);
-        yieldCurveTimes.push_back(dc.yearFraction(asof_, asof_ + tenor));
-        yieldCurveDates.push_back(asof_ + tenor);
-    }
-
     LOG("building discount yield curves...");
     for (const auto& ccy : parameters->ccys()) {
         LOG("building " << ccy << " discount yield curve..");
@@ -537,17 +526,6 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
     }
     LOG("equity spots done");
 
-    vector<Time> equityCurveTimes(1, 0.0);
-    vector<Date> equityCurveDates(1, asof_);
-    if (parameters->equityNames().size() > 0) {
-        QL_REQUIRE(parameters->equityTenors().size() > 0, "Equity curve tenor grid not defined");
-        QL_REQUIRE(parameters->equityTenors().front() > 0 * Days, "equity curve tenors must not include t=0");
-    }
-    for (auto& tenor : parameters->equityTenors()) {
-        equityCurveTimes.push_back(dc.yearFraction(asof_, asof_ + tenor));
-        equityCurveDates.push_back(asof_ + tenor);
-    }
-
     // building equity dividend yield curves
     LOG("building equity dividend yield curves...");
     for (const auto& eqName : parameters->equityNames()) {
@@ -556,6 +534,18 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         vector<Handle<Quote>> quotes;
         boost::shared_ptr<SimpleQuote> q(new SimpleQuote(1.0));
         quotes.push_back(Handle<Quote>(q));
+
+        DayCounter dc = wrapper->dayCounter();
+        vector<Time> equityCurveTimes(1, 0.0);
+        vector<Date> equityCurveDates(1, asof_);
+        if (parameters->equityNames().size() > 0) {
+            QL_REQUIRE(parameters->equityTenors().size() > 0, "Equity curve tenor grid not defined");
+            QL_REQUIRE(parameters->equityTenors().front() > 0 * Days, "equity curve tenors must not include t=0");
+        }
+        for (auto& tenor : parameters->equityTenors()) {
+            equityCurveTimes.push_back(dc.yearFraction(asof_, asof_ + tenor));
+            equityCurveDates.push_back(asof_ + tenor);
+        }
 
         for (Size i = 0; i < equityCurveTimes.size() - 1; i++) {
             boost::shared_ptr<SimpleQuote> q(new SimpleQuote(wrapper->discount(equityCurveTimes[i + 1])));
