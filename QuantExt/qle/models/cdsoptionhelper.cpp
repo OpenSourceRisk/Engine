@@ -43,22 +43,24 @@ CdsOptionHelper::CdsOptionHelper(const Date& exerciseDate, const Handle<Quote>& 
 
     boost::shared_ptr<CreditDefaultSwap> tmp;
     if (upfront == Null<Real>())
-        tmp = boost::make_shared<CreditDefaultSwap>(side, 1.0, 0.02, schedule, paymentConvention, dayCounter,
-                                                    settlesAccrual, paysAtDefaultTime, protectionStart, claim);
+        tmp = boost::shared_ptr<CreditDefaultSwap>(new CreditDefaultSwap(side, 1.0, 0.02, schedule, paymentConvention,
+                                                                         dayCounter, settlesAccrual, paysAtDefaultTime,
+                                                                         protectionStart, claim));
     else
-        tmp = boost::make_shared<CreditDefaultSwap>(side, 1.0, upfront, 0.02, schedule, paymentConvention, dayCounter,
-                                                    settlesAccrual, paysAtDefaultTime, protectionStart, upfrontDate,
-                                                    claim);
+        tmp = boost::shared_ptr<CreditDefaultSwap>(
+            new CreditDefaultSwap(side, 1.0, upfront, 0.02, schedule, paymentConvention, dayCounter, settlesAccrual,
+                                  paysAtDefaultTime, protectionStart, upfrontDate, claim));
     tmp->setPricingEngine(cdsEngine);
 
     Real strike = spread == Null<Real>() ? tmp->fairSpread() : spread;
     if (upfront == Null<Real>())
-        cds_ = boost::make_shared<CreditDefaultSwap>(side, 1.0, strike, schedule, paymentConvention, dayCounter,
-                                                     settlesAccrual, paysAtDefaultTime, protectionStart, claim);
+        cds_ = boost::shared_ptr<CreditDefaultSwap>(new CreditDefaultSwap(side, 1.0, strike, schedule,
+                                                                          paymentConvention, dayCounter, settlesAccrual,
+                                                                          paysAtDefaultTime, protectionStart, claim));
     else
-        cds_ = boost::make_shared<CreditDefaultSwap>(side, 1.0, upfront, strike, schedule, paymentConvention,
-                                                     dayCounter, settlesAccrual, paysAtDefaultTime, protectionStart,
-                                                     upfrontDate, claim);
+        cds_ = boost::shared_ptr<CreditDefaultSwap>(
+            new CreditDefaultSwap(side, 1.0, upfront, strike, schedule, paymentConvention, dayCounter, settlesAccrual,
+                                  paysAtDefaultTime, protectionStart, upfrontDate, claim));
 
     cds_->setPricingEngine(cdsEngine);
 
