@@ -44,6 +44,8 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     QL_REQUIRE(initMarket != NULL, "CrossAssetScenarioGenerator: initMarket is null");
     QL_REQUIRE(timeGrid_.size() == dates_.size() + 1, "date/time grid size mismatch");
 
+    // TODO, curve tenors might be overwritten by dates in simMarketConfig_, here we just take the tenors
+
     // Cache yield curve keys
     Size n_ccy = model_->components(IR);
     Size n_ten = simMarketConfig_->yieldCurveTenors().size();

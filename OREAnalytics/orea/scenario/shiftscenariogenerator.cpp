@@ -111,11 +111,15 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
     discountCurveKeys_.reserve(n_ccy * n_ten);
     for (Size j = 0; j < n_ccy; j++) {
         std::string ccy = simMarketData_->ccys()[j];
+        std::vector<Date> ycDates;
+        if (simMarketData_->yieldCurveDates().count(ccy) > 0) {
+            ycDates = simMarketData_->yieldCurveDates().at(ccy);
+            n_ten = ycDates.size();
+        }
         Handle<YieldTermStructure> ts = market->discountCurve(ccy, configuration_);
         for (Size k = 0; k < n_ten; k++) {
             discountCurveKeys_.emplace_back(RiskFactorKey::KeyType::DiscountCurve, ccy, k); // j * n_ten + k
-            Period tenor = simMarketData_->yieldCurveTenors()[k];
-            Real disc = ts->discount(today_ + tenor);
+            Real disc = ts->discount(!ycDates.empty() ? ycDates[k] : today_ + simMarketData_->yieldCurveTenors()[k]);
             discountCurveCache_[discountCurveKeys_[j * n_ten + k]] = disc;
             LOG("cache discount " << disc << " for key " << discountCurveKeys_[j * n_ten + k]);
         }
@@ -125,13 +129,18 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
     Size n_indices = simMarketData_->indices().size();
     indexCurveKeys_.reserve(n_indices * n_ten);
     for (Size j = 0; j < n_indices; ++j) {
-        Handle<IborIndex> index = market->iborIndex(simMarketData_->indices()[j], configuration_);
+        std::string indexName = simMarketData_->indices()[j];
+        Handle<IborIndex> index = market->iborIndex(indexName, configuration_);
+        std::vector<Date> ycDates;
+        if (simMarketData_->yieldCurveDates().count(indexName) > 0) {
+            ycDates = simMarketData_->yieldCurveDates().at(indexName);
+            n_ten = ycDates.size();
+        }
         Handle<YieldTermStructure> ts = index->forwardingTermStructure();
         for (Size k = 0; k < n_ten; ++k) {
             indexCurveKeys_.emplace_back(RiskFactorKey::KeyType::IndexCurve, simMarketData_->indices()[j], k);
-            Period tenor = simMarketData_->yieldCurveTenors()[k];
-            Real disc = ts->discount(today_ + tenor);
-            indexCurveCache_[indexCurveKeys_[j * n_ten + k]] = ts->discount(today_ + tenor);
+            Real disc = ts->discount(!ycDates.empty() ? ycDates[k] : today_ + simMarketData_->yieldCurveTenors()[k]);
+            indexCurveCache_[indexCurveKeys_[j * n_ten + k]] = disc;
             LOG("cache discount " << disc << " for key " << indexCurveKeys_[j * n_ten + k]);
         }
     }
@@ -141,12 +150,16 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
     yieldCurveKeys_.reserve(n_ycnames * n_ten);
     for (Size j = 0; j < n_ycnames; ++j) {
         std::string ycname = simMarketData_->yieldCurveNames()[j];
+        std::vector<Date> ycDates;
+        if (simMarketData_->yieldCurveDates().count(ycname) > 0) {
+            ycDates = simMarketData_->yieldCurveDates().at(ycname);
+            n_ten = ycDates.size();
+        }
         Handle<YieldTermStructure> ts = market->yieldCurve(ycname, configuration_);
         for (Size k = 0; k < n_ten; ++k) {
             yieldCurveKeys_.emplace_back(RiskFactorKey::KeyType::YieldCurve, ycname, k);
-            Period tenor = simMarketData_->yieldCurveTenors()[k];
-            Real disc = ts->discount(today_ + tenor);
-            yieldCurveCache_[yieldCurveKeys_[j * n_ten + k]] = ts->discount(today_ + tenor);
+            Real disc = ts->discount(!ycDates.empty() ? ycDates[k] : today_ + simMarketData_->yieldCurveTenors()[k]);
+            yieldCurveCache_[yieldCurveKeys_[j * n_ten + k]] = disc;
             LOG("cache discount " << disc << " for key " << yieldCurveKeys_[j * n_ten + k]);
         }
     }
@@ -213,9 +226,15 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
     count = 0;
     for (Size i = 0; i < n_cfvol_ccy; ++i) {
         std::string ccy = simMarketData_->capFloorVolCcys()[i];
+        std::vector<Date> cfDates;
+        if (simMarketData_->capFloorVolDates().count(ccy) > 0) {
+            cfDates = simMarketData_->capFloorVolDates().at(ccy);
+            n_cfvol_exp = cfDates.size();
+        }
         Handle<OptionletVolatilityStructure> ts = market->capFloorVol(ccy, configuration_);
         for (Size j = 0; j < n_cfvol_exp; ++j) {
-            Period expiry = simMarketData_->capFloorVolExpiries()[j];
+            Date expiry =
+                !cfDates.empty() ? cfDates[j] : ts->optionDateFromTenor(simMarketData_->capFloorVolExpiries()[j]);
             for (Size k = 0; k < n_cfvol_strikes; ++k) {
                 optionletVolKeys_.emplace_back(RiskFactorKey::KeyType::OptionletVolatility, ccy,
                                                j * n_cfvol_strikes + k);
@@ -373,8 +392,8 @@ void ShiftScenarioGenerator::applyShift(Size j, Real shiftSize, bool up, ShiftTy
                "shifted tenor vector " << o_tenors.str() << " cannot be more granular than the base curve tenor vector "
                                        << o_times.str());
     auto it = std::find(times.begin(), times.end(), t1);
-    QL_REQUIRE(it != times.end(), "shifted tenor node (" << t1 << ") not found in base curve tenor vector "
-                                                         << o_times.str());
+    QL_REQUIRE(it != times.end(),
+               "shifted tenor node (" << t1 << ") not found in base curve tenor vector " << o_times.str());
 
     if (initialise) {
         for (Size i = 0; i < values.size(); ++i)

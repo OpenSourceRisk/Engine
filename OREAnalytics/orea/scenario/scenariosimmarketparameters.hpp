@@ -23,11 +23,12 @@
 
 #pragma once
 
-#include <ored/utilities/xmlutils.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/xmlutils.hpp>
 #include <qle/termstructures/dynamicstype.hpp>
 
 using QuantLib::Period;
+using QuantLib::Date;
 using QuantLib::Rate;
 using std::vector;
 using std::string;
@@ -58,6 +59,8 @@ public:
     const vector<string>& yieldCurveNames() const { return yieldCurveNames_; }
     const vector<string>& yieldCurveCurrencies() const { return yieldCurveCurrencies_; }
     const vector<Period>& yieldCurveTenors() const { return yieldCurveTenors_; }
+    // TODO, currently not in toXML(), fromXML()
+    const map<string, vector<Date>>& yieldCurveDates() const { return yieldCurveDates_; }
     const vector<string>& indices() const { return indices_; }
     const map<string, string>& swapIndices() const { return swapIndices_; }
     const string& interpolation() const { return interpolation_; }
@@ -74,14 +77,20 @@ public:
     const bool& simulateCapFloorVols() const { return capFloorVolSimulate_; }
     const vector<string>& capFloorVolCcys() const { return capFloorVolCcys_; }
     const vector<Period>& capFloorVolExpiries() const { return capFloorVolExpiries_; }
+    // TODO, currently not in toXML(), fromXML()
+    const map<string, vector<Date>>& capFloorVolDates() const { return capFloorDates_; }
     const vector<Real>& capFloorVolStrikes() const { return capFloorVolStrikes_; }
     const string& capFloorVolDecayMode() const { return capFloorVolDecayMode_; }
 
     const vector<string>& defaultNames() const { return defaultNames_; }
     const vector<Period>& defaultTenors() const { return defaultTenors_; }
+    // TODO, currently not in toXML(), fromXML()
+    const map<string, vector<Date>>& defaultDates() const { return defaultDates_; }
 
     const vector<string>& equityNames() const { return eqNames_; }
     const vector<Period>& equityTenors() const { return eqTenors_; }
+    // TODO, currently not in toXML(), fromXML()
+    const map<string, vector<Date>>& equityDates() const { return eqDates_; }
 
     bool simulateFXVols() const { return fxVolSimulate_; }
     const vector<Period>& fxVolExpiries() const { return fxVolExpiries_; }
@@ -106,6 +115,7 @@ public:
     vector<string>& yieldCurveNames() { return yieldCurveNames_; }
     vector<string>& yieldCurveCurrencies() { return yieldCurveCurrencies_; }
     vector<Period>& yieldCurveTenors() { return yieldCurveTenors_; }
+    map<string, vector<Date>>& yieldCurveDates() { return yieldCurveDates_; }
     vector<string>& indices() { return indices_; }
     map<string, string>& swapIndices() { return swapIndices_; }
     string& interpolation() { return interpolation_; }
@@ -122,14 +132,17 @@ public:
     bool& simulateCapFloorVols() { return capFloorVolSimulate_; }
     vector<string>& capFloorVolCcys() { return capFloorVolCcys_; }
     vector<Period>& capFloorVolExpiries() { return capFloorVolExpiries_; }
+    map<string, vector<Date>>& capFloorVolDates() { return capFloorDates_; }
     vector<Real>& capFloorVolStrikes() { return capFloorVolStrikes_; }
     string& capFloorVolDecayMode() { return capFloorVolDecayMode_; }
 
     vector<string>& defaultNames() { return defaultNames_; }
     vector<Period>& defaultTenors() { return defaultTenors_; }
+    map<string, vector<Date>>& defaultDates() { return defaultDates_; }
 
     vector<string>& equityNames() { return eqNames_; }
     vector<Period>& equityTenors() { return eqTenors_; }
+    map<string, vector<Date>>& equityDates() { return eqDates_; }
 
     bool& simulateFXVols() { return fxVolSimulate_; }
     vector<Period>& fxVolExpiries() { return fxVolExpiries_; }
@@ -165,6 +178,7 @@ private:
     vector<string> yieldCurveNames_;
     vector<string> yieldCurveCurrencies_;
     vector<Period> yieldCurveTenors_;
+    map<string, vector<Date>> yieldCurveDates_;
     vector<string> indices_;
     map<string, string> swapIndices_;
     string interpolation_;
@@ -181,14 +195,17 @@ private:
     bool capFloorVolSimulate_;
     vector<string> capFloorVolCcys_;
     vector<Period> capFloorVolExpiries_;
+    map<string, vector<Date>> capFloorDates_;
     vector<Real> capFloorVolStrikes_;
     string capFloorVolDecayMode_;
 
     vector<string> defaultNames_;
     vector<Period> defaultTenors_;
+    map<string, vector<Date>> defaultDates_;
 
     vector<string> eqNames_;
     vector<Period> eqTenors_;
+    map<string, vector<Date>> eqDates_;
 
     bool fxVolSimulate_;
     vector<Period> fxVolExpiries_;

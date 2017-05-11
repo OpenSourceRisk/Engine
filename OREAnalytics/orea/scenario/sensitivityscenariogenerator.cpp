@@ -204,12 +204,17 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(
 
     for (Size i = 0; i < n_ccy; ++i) {
         string ccy = discountCurrencies_[i];
+        std::vector<Date> ycDates;
+        if (simMarketData_->yieldCurveDates().count(ccy) > 0) {
+            ycDates = simMarketData_->yieldCurveDates().at(ccy);
+            n_ten = ycDates.size();
+        }
         SensitivityScenarioData::CurveShiftData data = sensitivityData_->discountCurveShiftData()[ccy];
         ShiftType shiftType = parseShiftType(data.shiftType);
         Handle<YieldTermStructure> ts = initMarket_->discountCurve(ccy, configuration_);
         DayCounter dc = ts->dayCounter();
         for (Size j = 0; j < n_ten; ++j) {
-            Date d = today_ + simMarketData_->yieldCurveTenors()[j];
+            Date d = !ycDates.empty() ? ycDates[j] : today_ + simMarketData_->yieldCurveTenors()[j];
             zeros[j] = ts->zeroRate(d, dc, Continuous);
             times[j] = dc.yearFraction(today_, d);
         }
@@ -217,7 +222,7 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(
         std::vector<Period> shiftTenors = data.shiftTenors;
         std::vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j)
-            shiftTimes[j] = dc.yearFraction(today_, today_ + shiftTenors[j]);
+            shiftTimes[j] = dc.yearFraction(today_, !ycDates.empty() ? ycDates[j] : today_ + shiftTenors[j]);
         Real shiftSize = data.shiftSize;
         QL_REQUIRE(shiftTenors.size() > 0, "Discount shift tenors not specified");
 
@@ -272,13 +277,18 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(
 
     for (Size i = 0; i < n_indices; ++i) {
         string indexName = indexNames_[i];
+        std::vector<Date> ycDates;
+        if (simMarketData_->yieldCurveDates().count(indexName) > 0) {
+            ycDates = simMarketData_->yieldCurveDates().at(indexName);
+            n_ten = ycDates.size();
+        }
         SensitivityScenarioData::CurveShiftData data = sensitivityData_->indexCurveShiftData()[indexName];
         ShiftType shiftType = parseShiftType(data.shiftType);
         Handle<IborIndex> iborIndex = initMarket_->iborIndex(indexName, configuration_);
         Handle<YieldTermStructure> ts = iborIndex->forwardingTermStructure();
         DayCounter dc = ts->dayCounter();
         for (Size j = 0; j < n_ten; ++j) {
-            Date d = today_ + simMarketData_->yieldCurveTenors()[j];
+            Date d = !ycDates.empty() ? ycDates[j] : today_ + simMarketData_->yieldCurveTenors()[j];
             zeros[j] = ts->zeroRate(d, dc, Continuous);
             times[j] = dc.yearFraction(today_, d);
         }
@@ -286,7 +296,7 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(
         std::vector<Period> shiftTenors = data.shiftTenors;
         std::vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j)
-            shiftTimes[j] = dc.yearFraction(today_, today_ + shiftTenors[j]);
+            shiftTimes[j] = dc.yearFraction(today_, !ycDates.empty() ? ycDates[j] : today_ + shiftTenors[j]);
         Real shiftSize = data.shiftSize;
         QL_REQUIRE(shiftTenors.size() > 0, "Index shift tenors not specified");
 
@@ -341,12 +351,17 @@ void SensitivityScenarioGenerator::generateYieldCurveScenarios(
 
     for (Size i = 0; i < n_curves; ++i) {
         string name = yieldCurveNames_[i];
+        std::vector<Date> ycDates;
+        if (simMarketData_->yieldCurveDates().count(name) > 0) {
+            ycDates = simMarketData_->yieldCurveDates().at(name);
+            n_ten = ycDates.size();
+        }
         SensitivityScenarioData::CurveShiftData data = sensitivityData_->yieldCurveShiftData()[name];
         ShiftType shiftType = parseShiftType(data.shiftType);
         Handle<YieldTermStructure> ts = initMarket_->yieldCurve(name, configuration_);
         DayCounter dc = ts->dayCounter();
         for (Size j = 0; j < n_ten; ++j) {
-            Date d = today_ + simMarketData_->yieldCurveTenors()[j];
+            Date d = !ycDates.empty() ? ycDates[j] : today_ + simMarketData_->yieldCurveTenors()[j];
             zeros[j] = ts->zeroRate(d, dc, Continuous);
             times[j] = dc.yearFraction(today_, d);
         }
@@ -354,7 +369,7 @@ void SensitivityScenarioGenerator::generateYieldCurveScenarios(
         std::vector<Period> shiftTenors = data.shiftTenors;
         std::vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j)
-            shiftTimes[j] = dc.yearFraction(today_, today_ + shiftTenors[j]);
+            shiftTimes[j] = dc.yearFraction(today_, !ycDates.empty() ? ycDates[j] : today_ + shiftTenors[j]);
         Real shiftSize = data.shiftSize;
         QL_REQUIRE(shiftTenors.size() > 0, "Discount shift tenors not specified");
 
@@ -410,8 +425,8 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(
     map<string, SensitivityScenarioData::FxVolShiftData> shiftDataMap = sensitivityData_->fxVolShiftData();
     for (Size i = 0; i < n_fxvol_pairs; ++i) {
         string ccypair = fxVolCcyPairs_[i];
-        QL_REQUIRE(shiftDataMap.find(ccypair) != shiftDataMap.end(), "ccy pair " << ccypair
-                                                                                 << " not found in FxVolShiftData");
+        QL_REQUIRE(shiftDataMap.find(ccypair) != shiftDataMap.end(),
+                   "ccy pair " << ccypair << " not found in FxVolShiftData");
         SensitivityScenarioData::FxVolShiftData data = shiftDataMap[ccypair];
         ShiftType shiftType = parseShiftType(data.shiftType);
         std::vector<Period> shiftTenors = data.shiftExpiries;
@@ -564,6 +579,11 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(
 
     for (Size i = 0; i < n_cfvol_ccy; ++i) {
         std::string ccy = capFloorVolCurrencies_[i];
+        std::vector<Date> cfDates;
+        if (simMarketData_->capFloorVolDates().count(ccy) > 0) {
+            cfDates = simMarketData_->capFloorVolDates().at(ccy);
+            n_cfvol_exp = cfDates.size();
+        }
         SensitivityScenarioData::CapFloorVolShiftData data = sensitivityData_->capFloorVolShiftData()[ccy];
 
         ShiftType shiftType = parseShiftType(data.shiftType);
@@ -576,11 +596,8 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(
 
         // cache original vol data
         for (Size j = 0; j < n_cfvol_exp; ++j) {
-            Date expiry = today_ + simMarketData_->capFloorVolExpiries()[j];
+            Date expiry = !cfDates.empty() ? cfDates[j] : today_ + simMarketData_->capFloorVolExpiries()[j];
             volExpiryTimes[j] = dc.yearFraction(today_, expiry);
-        }
-        for (Size j = 0; j < n_cfvol_exp; ++j) {
-            Period expiry = simMarketData_->capFloorVolExpiries()[j];
             for (Size k = 0; k < n_cfvol_strikes; ++k) {
                 Real strike = simMarketData_->capFloorVolStrikes()[k];
                 Real vol = ts->volatility(expiry, strike);
@@ -590,7 +607,8 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(
 
         // cache tenor times
         for (Size j = 0; j < shiftExpiryTimes.size(); ++j)
-            shiftExpiryTimes[j] = dc.yearFraction(today_, today_ + data.shiftExpiries[j]);
+            shiftExpiryTimes[j] =
+                dc.yearFraction(today_, !cfDates.empty() ? cfDates[j] : today_ + data.shiftExpiries[j]);
 
         // loop over shift expiries and terms
         for (Size j = 0; j < shiftExpiryTimes.size(); ++j) {
@@ -660,8 +678,8 @@ SensitivityScenarioGenerator::ScenarioDescription
 SensitivityScenarioGenerator::yieldScenarioDescription(string name, Size bucket, bool up) {
     QL_REQUIRE(sensitivityData_->yieldCurveShiftData().find(name) != sensitivityData_->yieldCurveShiftData().end(),
                "currency " << name << " not found in index shift data");
-    QL_REQUIRE(bucket < sensitivityData_->yieldCurveShiftData()[name].shiftTenors.size(), "bucket " << bucket
-                                                                                                    << " out of range");
+    QL_REQUIRE(bucket < sensitivityData_->yieldCurveShiftData()[name].shiftTenors.size(),
+               "bucket " << bucket << " out of range");
     RiskFactorKey key(RiskFactorKey::KeyType::YieldCurve, name, bucket);
     std::ostringstream o;
     o << sensitivityData_->yieldCurveShiftData()[name].shiftTenors[bucket];

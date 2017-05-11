@@ -21,27 +21,27 @@
     \ingroup
 */
 
-#include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/engine/observationmode.hpp>
-#include <ql/termstructures/volatility/swaption/swaptionvolstructure.hpp>
-#include <ql/termstructures/volatility/swaption/swaptionvolmatrix.hpp>
+#include <orea/scenario/scenariosimmarket.hpp>
+#include <ql/math/interpolations/loginterpolation.hpp>
+#include <ql/termstructures/credit/interpolatedsurvivalprobabilitycurve.hpp>
+#include <ql/termstructures/defaulttermstructure.hpp>
 #include <ql/termstructures/volatility/capfloor/capfloortermvolatilitystructure.hpp>
 #include <ql/termstructures/volatility/capfloor/capfloortermvolsurface.hpp>
+#include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
+#include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 #include <ql/termstructures/volatility/optionlet/strippedoptionlet.hpp>
 #include <ql/termstructures/volatility/optionlet/strippedoptionletadapter.hpp>
-#include <ql/termstructures/defaulttermstructure.hpp>
+#include <ql/termstructures/volatility/swaption/swaptionvolmatrix.hpp>
+#include <ql/termstructures/volatility/swaption/swaptionvolstructure.hpp>
 #include <ql/termstructures/yield/discountcurve.hpp>
-#include <ql/termstructures/credit/interpolatedsurvivalprobabilitycurve.hpp>
-#include <ql/math/interpolations/loginterpolation.hpp>
-#include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
-#include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
-#include <ql/time/daycounters/actualactual.hpp>
 #include <ql/time/calendars/target.hpp>
+#include <ql/time/daycounters/actualactual.hpp>
 
-#include <qle/termstructures/dynamicswaptionvolmatrix.hpp>
 #include <qle/termstructures/dynamicblackvoltermstructure.hpp>
-#include <qle/termstructures/swaptionvolatilityconverter.hpp>
+#include <qle/termstructures/dynamicswaptionvolmatrix.hpp>
 #include <qle/termstructures/strippedoptionletadapter2.hpp>
+#include <qle/termstructures/swaptionvolatilityconverter.hpp>
 
 #include <boost/timer.hpp>
 
@@ -103,10 +103,17 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         DayCounter dc = wrapper->dayCounter(); // used to convert YieldCurve Periods to Times
         vector<Time> yieldCurveTimes(1, 0.0);  // include today
         vector<Date> yieldCurveDates(1, asof_);
-        QL_REQUIRE(parameters->yieldCurveTenors().front() > 0 * Days, "yield curve tenors must not include t=0");
-        for (auto& tenor : parameters->yieldCurveTenors()) {
-            yieldCurveTimes.push_back(dc.yearFraction(asof_, asof_ + tenor));
-            yieldCurveDates.push_back(asof_ + tenor);
+        if (parameters->yieldCurveDates().count(ccy) > 0) {
+            for (auto& date : parameters->yieldCurveDates().at(ccy)) {
+                yieldCurveTimes.push_back(dc.yearFraction(asof_, date));
+                yieldCurveDates.push_back(date);
+            }
+        } else {
+            QL_REQUIRE(parameters->yieldCurveTenors().front() > 0 * Days, "yield curve tenors must not include t=0");
+            for (auto& tenor : parameters->yieldCurveTenors()) {
+                yieldCurveTimes.push_back(dc.yearFraction(asof_, asof_ + tenor));
+                yieldCurveDates.push_back(asof_ + tenor);
+            }
         }
 
         vector<Handle<Quote>> quotes;
@@ -153,10 +160,17 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         DayCounter dc = wrapper->dayCounter(); // used to convert YieldCurve Periods to Times
         vector<Time> yieldCurveTimes(1, 0.0);  // include today
         vector<Date> yieldCurveDates(1, asof_);
-        QL_REQUIRE(parameters->yieldCurveTenors().front() > 0 * Days, "yield curve tenors must not include t=0");
-        for (auto& tenor : parameters->yieldCurveTenors()) {
-            yieldCurveTimes.push_back(dc.yearFraction(asof_, asof_ + tenor));
-            yieldCurveDates.push_back(asof_ + tenor);
+        if (parameters->yieldCurveDates().count(name) > 0) {
+            for (auto& date : parameters->yieldCurveDates().at(name)) {
+                yieldCurveTimes.push_back(dc.yearFraction(asof_, date));
+                yieldCurveDates.push_back(date);
+            }
+        } else {
+            QL_REQUIRE(parameters->yieldCurveTenors().front() > 0 * Days, "yield curve tenors must not include t=0");
+            for (auto& tenor : parameters->yieldCurveTenors()) {
+                yieldCurveTimes.push_back(dc.yearFraction(asof_, asof_ + tenor));
+                yieldCurveDates.push_back(asof_ + tenor);
+            }
         }
 
         // include today
@@ -216,10 +230,17 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         DayCounter dc = wrapperIndex->dayCounter(); // used to convert YieldCurve Periods to Times
         vector<Time> yieldCurveTimes(1, 0.0);       // include today
         vector<Date> yieldCurveDates(1, asof_);
-        QL_REQUIRE(parameters->yieldCurveTenors().front() > 0 * Days, "yield curve tenors must not include t=0");
-        for (auto& tenor : parameters->yieldCurveTenors()) {
-            yieldCurveTimes.push_back(dc.yearFraction(asof_, asof_ + tenor));
-            yieldCurveDates.push_back(asof_ + tenor);
+        if (parameters->yieldCurveDates().count(ind) > 0) {
+            for (auto& date : parameters->yieldCurveDates().at(ind)) {
+                yieldCurveTimes.push_back(dc.yearFraction(asof_, date));
+                yieldCurveDates.push_back(date);
+            }
+        } else {
+            QL_REQUIRE(parameters->yieldCurveTenors().front() > 0 * Days, "yield curve tenors must not include t=0");
+            for (auto& tenor : parameters->yieldCurveTenors()) {
+                yieldCurveTimes.push_back(dc.yearFraction(asof_, asof_ + tenor));
+                yieldCurveDates.push_back(asof_ + tenor);
+            }
         }
 
         // include today
@@ -372,14 +393,16 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         if (parameters->simulateCapFloorVols()) {
             LOG("Simulating Cap/Floor Optionlet vols for ccy " << ccy);
             vector<Period> optionTenors = parameters->capFloorVolExpiries();
-            vector<Date> optionDates(optionTenors.size());
+            vector<Date> endDates =
+                parameters->capFloorVolDates().count(ccy) > 0 ? parameters->capFloorVolDates().at(ccy) : vector<Date>();
+            Size n = !endDates.empty() ? endDates.size() : optionTenors.size();
+            vector<Date> optionDates(n);
             vector<Real> strikes = parameters->capFloorVolStrikes();
-            vector<vector<Handle<Quote>>> quotes(optionTenors.size(),
-                                                 vector<Handle<Quote>>(strikes.size(), Handle<Quote>()));
-            for (Size i = 0; i < optionTenors.size(); ++i) {
-                optionDates[i] = asof_ + optionTenors[i];
+            vector<vector<Handle<Quote>>> quotes(n, vector<Handle<Quote>>(strikes.size(), Handle<Quote>()));
+            for (Size i = 0; i < n; ++i) {
+                optionDates[i] = !endDates.empty() ? endDates[i] : wrapper->optionDateFromTenor(optionTenors[i]);
                 for (Size j = 0; j < strikes.size(); ++j) {
-                    Real vol = wrapper->volatility(optionTenors[i], strikes[j], wrapper->allowsExtrapolation());
+                    Real vol = wrapper->volatility(optionDates[i], strikes[j], wrapper->allowsExtrapolation());
                     boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
                     Size index = i * strikes.size() + j;
                     simData_.emplace(std::piecewise_construct,
@@ -426,8 +449,15 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         QL_REQUIRE(parameters->defaultTenors().front() > 0 * Days, "default curve tenors must not include t=0");
 
         vector<Date> dates(1, asof_);
-        for (Size i = 0; i < parameters->defaultTenors().size(); i++) {
-            dates.push_back(asof_ + parameters->defaultTenors()[i]);
+        if (parameters->defaultDates().count(name) > 0) {
+            for (auto& date : parameters->defaultDates().at(name)) {
+                dates.push_back(date);
+            }
+        } else {
+
+            for (Size i = 0; i < parameters->defaultTenors().size(); i++) {
+                dates.push_back(asof_ + parameters->defaultTenors()[i]);
+            }
         }
 
         for (const auto& date : dates) {
@@ -539,12 +569,19 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         vector<Time> equityCurveTimes(1, 0.0);
         vector<Date> equityCurveDates(1, asof_);
         if (parameters->equityNames().size() > 0) {
-            QL_REQUIRE(parameters->equityTenors().size() > 0, "Equity curve tenor grid not defined");
-            QL_REQUIRE(parameters->equityTenors().front() > 0 * Days, "equity curve tenors must not include t=0");
-        }
-        for (auto& tenor : parameters->equityTenors()) {
-            equityCurveTimes.push_back(dc.yearFraction(asof_, asof_ + tenor));
-            equityCurveDates.push_back(asof_ + tenor);
+            if (parameters->equityDates().count(eqName) > 0) {
+                for (auto& date : parameters->equityDates().at(eqName)) {
+                    equityCurveTimes.push_back(dc.yearFraction(asof_, date));
+                    equityCurveDates.push_back(date);
+                }
+            } else {
+                QL_REQUIRE(parameters->equityTenors().size() > 0, "Equity curve tenor grid not defined");
+                QL_REQUIRE(parameters->equityTenors().front() > 0 * Days, "equity curve tenors must not include t=0");
+                for (auto& tenor : parameters->equityTenors()) {
+                    equityCurveTimes.push_back(dc.yearFraction(asof_, asof_ + tenor));
+                    equityCurveDates.push_back(asof_ + tenor);
+                }
+            }
         }
 
         for (Size i = 0; i < equityCurveTimes.size() - 1; i++) {
@@ -582,7 +619,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
             vector<Handle<Quote>> quotes;
             vector<Time> times;
             for (Size i = 0; i < parameters->eqVolExpiries().size(); i++) {
-                Date date = asof_ + parameters->eqVolExpiries()[i];
+                Date date = wrapper->optionDateFromTenor(parameters->eqVolExpiries()[i]);
                 Volatility vol = wrapper->blackVol(date, Null<Real>(), true);
                 times.push_back(wrapper->timeFromReference(date));
                 boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
