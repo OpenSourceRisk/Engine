@@ -54,80 +54,68 @@ class YieldTermStructure;
 
 namespace QuantExt {
 
-    //! CDS option
-    /*! The side of the swaption is set by choosing the side of the CDS.
-        A receiver CDS option is a right to buy an underlying CDS
-        selling protection and receiving a coupon. A payer CDS option
-        is a right to buy an underlying CDS buying protection and
-        paying coupon.
-    */
-    class CdsOption : public Option {
-      public:
-        class arguments;
-        class results;
-        class engine;
-        CdsOption(const boost::shared_ptr<CreditDefaultSwap>& swap,
-                  const boost::shared_ptr<Exercise>& exercise,
-                  bool knocksOut = true);
+//! CDS option
+/*! The side of the swaption is set by choosing the side of the CDS.
+    A receiver CDS option is a right to buy an underlying CDS
+    selling protection and receiving a coupon. A payer CDS option
+    is a right to buy an underlying CDS buying protection and
+    paying coupon.
+*/
+class CdsOption : public Option {
+public:
+    class arguments;
+    class results;
+    class engine;
+    CdsOption(const boost::shared_ptr<CreditDefaultSwap>& swap, const boost::shared_ptr<Exercise>& exercise,
+              bool knocksOut = true);
 
-        //! \name Instrument interface
-        //@{
-        bool isExpired() const;
-        void setupArguments(PricingEngine::arguments*) const;
-        //@}
-        //! \name Inspectors
-        //@{
-        const boost::shared_ptr<CreditDefaultSwap>& underlyingSwap() const {
-            return swap_;
-        }
-        //@}
-        //! \name Calculations
-        //@{
-        Rate atmRate() const;
-        Real riskyAnnuity() const;
-        Volatility impliedVolatility(
-                              Real price,
-                              const Handle<QuantLib::YieldTermStructure>& termStructure,
-                              const Handle<DefaultProbabilityTermStructure>&,
-                              Real recoveryRate,
-                              Real accuracy = 1.e-4,
-                              Size maxEvaluations = 100,
-                              Volatility minVol = 1.0e-7,
-                              Volatility maxVol = 4.0) const;
-        //@}
+    //! \name Instrument interface
+    //@{
+    bool isExpired() const;
+    void setupArguments(PricingEngine::arguments*) const;
+    //@}
+    //! \name Inspectors
+    //@{
+    const boost::shared_ptr<CreditDefaultSwap>& underlyingSwap() const { return swap_; }
+    //@}
+    //! \name Calculations
+    //@{
+    Rate atmRate() const;
+    Real riskyAnnuity() const;
+    Volatility impliedVolatility(Real price, const Handle<QuantLib::YieldTermStructure>& termStructure,
+                                 const Handle<DefaultProbabilityTermStructure>&, Real recoveryRate,
+                                 Real accuracy = 1.e-4, Size maxEvaluations = 100, Volatility minVol = 1.0e-7,
+                                 Volatility maxVol = 4.0) const;
+    //@}
 
-    private:
-        boost::shared_ptr<CreditDefaultSwap> swap_;
-        bool knocksOut_;
+private:
+    boost::shared_ptr<CreditDefaultSwap> swap_;
+    bool knocksOut_;
 
-        mutable Real riskyAnnuity_;
-        void setupExpired() const;
-        void fetchResults(const PricingEngine::results*) const;
-    };
+    mutable Real riskyAnnuity_;
+    void setupExpired() const;
+    void fetchResults(const PricingEngine::results*) const;
+};
 
+//! %Arguments for CDS-option calculation
+class CdsOption::arguments : public CreditDefaultSwap::arguments, public Option::arguments {
+public:
+    arguments() {}
 
-    //! %Arguments for CDS-option calculation
-    class CdsOption::arguments : public CreditDefaultSwap::arguments,
-                                 public Option::arguments {
-      public:
-        arguments() {}
+    boost::shared_ptr<CreditDefaultSwap> swap;
+    bool knocksOut;
+    void validate() const;
+};
 
-        boost::shared_ptr<CreditDefaultSwap> swap;
-        bool knocksOut;
-        void validate() const;
-    };
+//! %Results from CDS-option calculation
+class CdsOption::results : public Option::results {
+public:
+    Real riskyAnnuity;
+    void reset();
+};
 
-    //! %Results from CDS-option calculation
-    class CdsOption::results : public Option::results {
-      public:
-        Real riskyAnnuity;
-        void reset();
-    };
-
-    //! base class for swaption engines
-    class CdsOption::engine
-        : public GenericEngine<CdsOption::arguments, CdsOption::results> {};
-
+//! base class for swaption engines
+class CdsOption::engine : public GenericEngine<CdsOption::arguments, CdsOption::results> {};
 }
 
 #endif

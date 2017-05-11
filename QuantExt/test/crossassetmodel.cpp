@@ -1135,17 +1135,15 @@ void CrossAssetModelTest::testLgm5fMoments() {
         if (std::fabs(mean(e_eu[i]) - e_an[i]) > errTolLd[i]) {
             BOOST_ERROR("analytical expectation for component #"
                         << i << " (" << e_an[i] << ") is inconsistent with numerical value (Euler "
-                                                   "discretization, "
-                        << mean(e_eu[i]) << "), error is " << e_an[i] - mean(e_eu[i]) << " tolerance is "
-                        << errTolLd[i]);
+                                                   "discretization, " << mean(e_eu[i]) << "), error is "
+                        << e_an[i] - mean(e_eu[i]) << " tolerance is " << errTolLd[i]);
         }
         // check expectation against analytical calculation (exact disc)
         if (std::fabs(mean(e_eu2[i]) - e_an[i]) > errTolLd[i]) {
             BOOST_ERROR("analytical expectation for component #"
                         << i << " (" << e_an[i] << ") is inconsistent with numerical value (Exact "
-                                                   "discretization, "
-                        << mean(e_eu2[i]) << "), error is " << e_an[i] - mean(e_eu2[i]) << " tolerance is "
-                        << errTolLd[i]);
+                                                   "discretization, " << mean(e_eu2[i]) << "), error is "
+                        << e_an[i] - mean(e_eu2[i]) << " tolerance is " << errTolLd[i]);
         }
     }
 
@@ -1169,18 +1167,18 @@ void CrossAssetModelTest::testLgm5fMoments() {
                 }
             }
             if (std::fabs(covariance(v_eu[i][j]) - v_an[i][j]) > tol) {
-                BOOST_ERROR("analytical covariance at ("
-                            << i << "," << j << ") (" << v_an[i][j] << ") is inconsistent with numerical "
-                                                                       "value (Euler discretization, "
-                            << covariance(v_eu[i][j]) << "), error is " << v_an[i][j] - covariance(v_eu[i][j])
-                            << " tolerance is " << tol);
+                BOOST_ERROR("analytical covariance at (" << i << "," << j << ") (" << v_an[i][j]
+                                                         << ") is inconsistent with numerical "
+                                                            "value (Euler discretization, " << covariance(v_eu[i][j])
+                                                         << "), error is " << v_an[i][j] - covariance(v_eu[i][j])
+                                                         << " tolerance is " << tol);
             }
             if (std::fabs(covariance(v_eu2[i][j]) - v_an[i][j]) > tol) {
-                BOOST_ERROR("analytical covariance at ("
-                            << i << "," << j << ") (" << v_an[i][j] << ") is inconsistent with numerical "
-                                                                       "value (Exact discretization, "
-                            << covariance(v_eu2[i][j]) << "), error is " << v_an[i][j] - covariance(v_eu2[i][j])
-                            << " tolerance is " << tol);
+                BOOST_ERROR("analytical covariance at (" << i << "," << j << ") (" << v_an[i][j]
+                                                         << ") is inconsistent with numerical "
+                                                            "value (Exact discretization, " << covariance(v_eu2[i][j])
+                                                         << "), error is " << v_an[i][j] - covariance(v_eu2[i][j])
+                                                         << " tolerance is " << tol);
             }
         }
     }
@@ -1326,10 +1324,9 @@ void CrossAssetModelTest::testLgmMcWithShift() {
         }
 
         if (std::fabs(mean(e_eu) / discount - 1.0) > eom_tol[ii]) {
-            BOOST_ERROR("estimated error for shifted mc simulation with shift " << T_shift[ii] << " can not "
-                                                                                                  "be verified ("
-                                                                                << mean(e_eu) / discount - 1.0
-                                                                                << "), tolerance is 1E-8");
+            BOOST_ERROR("estimated error for shifted mc simulation with shift "
+                        << T_shift[ii] << " can not "
+                                          "be verified (" << mean(e_eu) / discount - 1.0 << "), tolerance is 1E-8");
         }
     }
 
@@ -1603,17 +1600,15 @@ void CrossAssetModelTest::testIrFxCrMoments() {
         if (std::fabs(mean(e_eu[i]) - e_an[i]) > errTolLd[i]) {
             BOOST_ERROR("analytical expectation for component #"
                         << i << " (" << e_an[i] << ") is inconsistent with numerical value (Euler "
-                                                   "discretization, "
-                        << mean(e_eu[i]) << "), error is " << e_an[i] - mean(e_eu[i]) << " tolerance is "
-                        << errTolLd[i]);
+                                                   "discretization, " << mean(e_eu[i]) << "), error is "
+                        << e_an[i] - mean(e_eu[i]) << " tolerance is " << errTolLd[i]);
         }
         // check expectation against analytical calculation (exact disc)
         if (std::fabs(mean(e_eu2[i]) - e_an[i]) > errTolLd[i]) {
             BOOST_ERROR("analytical expectation for component #"
                         << i << " (" << e_an[i] << ") is inconsistent with numerical value (exact "
-                                                   "discretization, "
-                        << mean(e_eu2[i]) << "), error is " << e_an[i] - mean(e_eu2[i]) << " tolerance is "
-                        << errTolLd[i]);
+                                                   "discretization, " << mean(e_eu2[i]) << "), error is "
+                        << e_an[i] - mean(e_eu2[i]) << " tolerance is " << errTolLd[i]);
         }
     }
 
@@ -1624,18 +1619,18 @@ void CrossAssetModelTest::testIrFxCrMoments() {
     for (Size i = 0; i < 11; ++i) {
         for (Size j = 0; j <= i; ++j) {
             if (std::fabs(covariance(v_eu[i][j]) - v_an[i][j]) > tol) {
-                BOOST_ERROR("analytical covariance at ("
-                            << i << "," << j << ") (" << v_an[i][j] << ") is inconsistent with numerical "
-                                                                       "value (Euler discretization, "
-                            << covariance(v_eu[i][j]) << "), error is " << v_an[i][j] - covariance(v_eu[i][j])
-                            << " tolerance is " << tol);
+                BOOST_ERROR("analytical covariance at (" << i << "," << j << ") (" << v_an[i][j]
+                                                         << ") is inconsistent with numerical "
+                                                            "value (Euler discretization, " << covariance(v_eu[i][j])
+                                                         << "), error is " << v_an[i][j] - covariance(v_eu[i][j])
+                                                         << " tolerance is " << tol);
             }
             if (std::fabs(covariance(v_eu2[i][j]) - v_an[i][j]) > tol) {
-                BOOST_ERROR("analytical covariance at ("
-                            << i << "," << j << ") (" << v_an[i][j] << ") is inconsistent with numerical "
-                                                                       "value (exact discretization, "
-                            << covariance(v_eu2[i][j]) << "), error is " << v_an[i][j] - covariance(v_eu2[i][j])
-                            << " tolerance is " << tol);
+                BOOST_ERROR("analytical covariance at (" << i << "," << j << ") (" << v_an[i][j]
+                                                         << ") is inconsistent with numerical "
+                                                            "value (exact discretization, " << covariance(v_eu2[i][j])
+                                                         << "), error is " << v_an[i][j] - covariance(v_eu2[i][j])
+                                                         << " tolerance is " << tol);
             }
         }
     }
@@ -1756,12 +1751,10 @@ void CrossAssetModelTest::testIrFxCrCorrelationRecovery() {
                     Size subj = j < 2 * currencies[ii] - 1 ? 1 : 2;
                     for (Size k1 = 0; k1 < subi; ++k1) {
                         for (Size k2 = 0; k2 < subj; ++k2) {
-                            Size i0 = i < 2 * currencies[ii] - 1
-                                          ? i
-                                          : 2 * currencies[ii] - 1 + 2 * (i - (2 * currencies[ii] - 1)) + k1;
-                            Size j0 = j < 2 * currencies[ii] - 1
-                                          ? j
-                                          : 2 * currencies[ii] - 1 + 2 * (j - (2 * currencies[ii] - 1)) + k2;
+                            Size i0 = i < 2 * currencies[ii] - 1 ? i : 2 * currencies[ii] - 1 +
+                                                                           2 * (i - (2 * currencies[ii] - 1)) + k1;
+                            Size j0 = j < 2 * currencies[ii] - 1 ? j : 2 * currencies[ii] - 1 +
+                                                                           2 * (j - (2 * currencies[ii] - 1)) + k2;
                             r1[i][j] = r1[j][i] = c1[i0][j0] / std::sqrt(c1[i0][i0] * c1[j0][j0]);
                             r2[i][j] = r2[j][i] = c2[i0][j0] / std::sqrt(c2[i0][i0] * c2[j0][j0]);
                             if (std::fabs(r1[i][j] - c[i][j]) > tol) {
@@ -2239,17 +2232,15 @@ void CrossAssetModelTest::testIrFxInfCrMoments() {
         if (std::fabs(mean(e_eu[i]) - e_an[i]) > errTolLd[i]) {
             BOOST_ERROR("analytical expectation for component #"
                         << i << " (" << e_an[i] << ") is inconsistent with numerical value (Euler "
-                                                   "discretization, "
-                        << mean(e_eu[i]) << "), error is " << e_an[i] - mean(e_eu[i]) << " tolerance is "
-                        << errTolLd[i]);
+                                                   "discretization, " << mean(e_eu[i]) << "), error is "
+                        << e_an[i] - mean(e_eu[i]) << " tolerance is " << errTolLd[i]);
         }
         // check expectation against analytical calculation (exact disc)
         if (std::fabs(mean(e_eu2[i]) - e_an[i]) > errTolLd[i]) {
             BOOST_ERROR("analytical expectation for component #"
                         << i << " (" << e_an[i] << ") is inconsistent with numerical value (exact "
-                                                   "discretization, "
-                        << mean(e_eu2[i]) << "), error is " << e_an[i] - mean(e_eu2[i]) << " tolerance is "
-                        << errTolLd[i]);
+                                                   "discretization, " << mean(e_eu2[i]) << "), error is "
+                        << e_an[i] - mean(e_eu2[i]) << " tolerance is " << errTolLd[i]);
         }
     }
 
@@ -2260,18 +2251,18 @@ void CrossAssetModelTest::testIrFxInfCrMoments() {
     for (Size i = 0; i < n; ++i) {
         for (Size j = 0; j <= i; ++j) {
             if (std::fabs(covariance(v_eu[i][j]) - v_an[i][j]) > tol) {
-                BOOST_ERROR("analytical covariance at ("
-                            << i << "," << j << ") (" << v_an[i][j] << ") is inconsistent with numerical "
-                                                                       "value (Euler discretization, "
-                            << covariance(v_eu[i][j]) << "), error is " << v_an[i][j] - covariance(v_eu[i][j])
-                            << " tolerance is " << tol);
+                BOOST_ERROR("analytical covariance at (" << i << "," << j << ") (" << v_an[i][j]
+                                                         << ") is inconsistent with numerical "
+                                                            "value (Euler discretization, " << covariance(v_eu[i][j])
+                                                         << "), error is " << v_an[i][j] - covariance(v_eu[i][j])
+                                                         << " tolerance is " << tol);
             }
             if (std::fabs(covariance(v_eu2[i][j]) - v_an[i][j]) > tol) {
-                BOOST_ERROR("analytical covariance at ("
-                            << i << "," << j << ") (" << v_an[i][j] << ") is inconsistent with numerical "
-                                                                       "value (exact discretization, "
-                            << covariance(v_eu2[i][j]) << "), error is " << v_an[i][j] - covariance(v_eu2[i][j])
-                            << " tolerance is " << tol);
+                BOOST_ERROR("analytical covariance at (" << i << "," << j << ") (" << v_an[i][j]
+                                                         << ") is inconsistent with numerical "
+                                                            "value (exact discretization, " << covariance(v_eu2[i][j])
+                                                         << "), error is " << v_an[i][j] - covariance(v_eu2[i][j])
+                                                         << " tolerance is " << tol);
             }
         }
     }
@@ -2815,17 +2806,15 @@ void CrossAssetModelTest::testIrFxInfCrEqMoments() {
         if (std::fabs(mean(e_eu[i]) - e_an[i]) > errTolLdEuler[i]) {
             BOOST_ERROR("analytical expectation for component #"
                         << i << " (" << e_an[i] << ") is inconsistent with numerical value (Euler "
-                                                   "discretization, "
-                        << mean(e_eu[i]) << "), error is " << e_an[i] - mean(e_eu[i]) << " tolerance is "
-                        << errTolLdEuler[i]);
+                                                   "discretization, " << mean(e_eu[i]) << "), error is "
+                        << e_an[i] - mean(e_eu[i]) << " tolerance is " << errTolLdEuler[i]);
         }
         // check expectation against analytical calculation (exact disc)
         if (std::fabs(mean(e_eu2[i]) - e_an[i]) > errTolLd[i]) {
             BOOST_ERROR("analytical expectation for component #"
                         << i << " (" << e_an[i] << ") is inconsistent with numerical value (exact "
-                                                   "discretization, "
-                        << mean(e_eu2[i]) << "), error is " << e_an[i] - mean(e_eu2[i]) << " tolerance is "
-                        << errTolLd[i]);
+                                                   "discretization, " << mean(e_eu2[i]) << "), error is "
+                        << e_an[i] - mean(e_eu2[i]) << " tolerance is " << errTolLd[i]);
         }
     }
 
@@ -2836,18 +2825,18 @@ void CrossAssetModelTest::testIrFxInfCrEqMoments() {
     for (Size i = 0; i < n; ++i) {
         for (Size j = 0; j <= i; ++j) {
             if (std::fabs(covariance(v_eu[i][j]) - v_an[i][j]) > tolEuler) {
-                BOOST_ERROR("analytical covariance at ("
-                            << i << "," << j << ") (" << v_an[i][j] << ") is inconsistent with numerical "
-                                                                       "value (Euler discretization, "
-                            << covariance(v_eu[i][j]) << "), error is " << v_an[i][j] - covariance(v_eu[i][j])
-                            << " tolerance is " << tolEuler);
+                BOOST_ERROR("analytical covariance at (" << i << "," << j << ") (" << v_an[i][j]
+                                                         << ") is inconsistent with numerical "
+                                                            "value (Euler discretization, " << covariance(v_eu[i][j])
+                                                         << "), error is " << v_an[i][j] - covariance(v_eu[i][j])
+                                                         << " tolerance is " << tolEuler);
             }
             if (std::fabs(covariance(v_eu2[i][j]) - v_an[i][j]) > tol) {
-                BOOST_ERROR("analytical covariance at ("
-                            << i << "," << j << ") (" << v_an[i][j] << ") is inconsistent with numerical "
-                                                                       "value (exact discretization, "
-                            << covariance(v_eu2[i][j]) << "), error is " << v_an[i][j] - covariance(v_eu2[i][j])
-                            << " tolerance is " << tol);
+                BOOST_ERROR("analytical covariance at (" << i << "," << j << ") (" << v_an[i][j]
+                                                         << ") is inconsistent with numerical "
+                                                            "value (exact discretization, " << covariance(v_eu2[i][j])
+                                                         << "), error is " << v_an[i][j] - covariance(v_eu2[i][j])
+                                                         << " tolerance is " << tol);
             }
         }
     }
@@ -3271,16 +3260,15 @@ void CrossAssetModelTest::testEqLgm5fMoments() {
         if (std::fabs(mean(e_eu[i]) - e_an[i]) > errTol[i]) {
             BOOST_ERROR("analytical expectation for component #"
                         << i << " (" << e_an[i] << ") is inconsistent with numerical value (Euler "
-                                                   "discretization, "
-                        << mean(e_eu[i]) << "), error is " << e_an[i] - mean(e_eu[i]) << " tolerance is " << errTol[i]);
+                                                   "discretization, " << mean(e_eu[i]) << "), error is "
+                        << e_an[i] - mean(e_eu[i]) << " tolerance is " << errTol[i]);
         }
         // check expectation against analytical calculation (exact disc)
         if (std::fabs(mean(e_eu2[i]) - e_an[i]) > errTol[i]) {
             BOOST_ERROR("analytical expectation for component #"
                         << i << " (" << e_an[i] << ") is inconsistent with numerical value (Exact "
-                                                   "discretization, "
-                        << mean(e_eu2[i]) << "), error is " << e_an[i] - mean(e_eu2[i]) << " tolerance is "
-                        << errTol[i]);
+                                                   "discretization, " << mean(e_eu2[i]) << "), error is "
+                        << e_an[i] - mean(e_eu2[i]) << " tolerance is " << errTol[i]);
         }
     }
 
@@ -3307,18 +3295,18 @@ void CrossAssetModelTest::testEqLgm5fMoments() {
                 }
             }
             if (std::fabs(covariance(v_eu[i][j]) - v_an[i][j]) > tol) {
-                BOOST_ERROR("analytical covariance at ("
-                            << i << "," << j << ") (" << v_an[i][j] << ") is inconsistent with numerical "
-                                                                       "value (Euler discretization, "
-                            << covariance(v_eu[i][j]) << "), error is " << v_an[i][j] - covariance(v_eu[i][j])
-                            << " tolerance is " << tol);
+                BOOST_ERROR("analytical covariance at (" << i << "," << j << ") (" << v_an[i][j]
+                                                         << ") is inconsistent with numerical "
+                                                            "value (Euler discretization, " << covariance(v_eu[i][j])
+                                                         << "), error is " << v_an[i][j] - covariance(v_eu[i][j])
+                                                         << " tolerance is " << tol);
             }
             if (std::fabs(covariance(v_eu2[i][j]) - v_an[i][j]) > tol) {
-                BOOST_ERROR("analytical covariance at ("
-                            << i << "," << j << ") (" << v_an[i][j] << ") is inconsistent with numerical "
-                                                                       "value (Exact discretization, "
-                            << covariance(v_eu2[i][j]) << "), error is " << v_an[i][j] - covariance(v_eu2[i][j])
-                            << " tolerance is " << tol);
+                BOOST_ERROR("analytical covariance at (" << i << "," << j << ") (" << v_an[i][j]
+                                                         << ") is inconsistent with numerical "
+                                                            "value (Exact discretization, " << covariance(v_eu2[i][j])
+                                                         << "), error is " << v_an[i][j] - covariance(v_eu2[i][j])
+                                                         << " tolerance is " << tol);
             }
         }
     }
@@ -3632,12 +3620,10 @@ void CrossAssetModelTest::testIrFxInfCrCorrelationRecovery() {
                         Size subj = j < 2 * currencies[ii] - 1 ? 1 : 2;
                         for (Size k1 = 0; k1 < subi; ++k1) {
                             for (Size k2 = 0; k2 < subj; ++k2) {
-                                Size i0 = i < 2 * currencies[ii] - 1
-                                              ? i
-                                              : 2 * currencies[ii] - 1 + 2 * (i - (2 * currencies[ii] - 1)) + k1;
-                                Size j0 = j < 2 * currencies[ii] - 1
-                                              ? j
-                                              : 2 * currencies[ii] - 1 + 2 * (j - (2 * currencies[ii] - 1)) + k2;
+                                Size i0 = i < 2 * currencies[ii] - 1 ? i : 2 * currencies[ii] - 1 +
+                                                                               2 * (i - (2 * currencies[ii] - 1)) + k1;
+                                Size j0 = j < 2 * currencies[ii] - 1 ? j : 2 * currencies[ii] - 1 +
+                                                                               2 * (j - (2 * currencies[ii] - 1)) + k2;
                                 r1[i][j] = r1[j][i] = c1[i0][j0] / std::sqrt(c1[i0][i0] * c1[j0][j0]);
                                 r2[i][j] = r2[j][i] = c2[i0][j0] / std::sqrt(c2[i0][i0] * c2[j0][j0]);
                                 if (std::fabs(r1[i][j] - c[i][j]) > tol) {
@@ -4168,8 +4154,8 @@ void CrossAssetModelTest::testCrCalibration() {
         if (schedule.date(0) < mat)
             schedule = Schedule(schedule.date(1), mat + 10 * Years, 3 * Months, TARGET(), Following, Following,
                                 DateGeneration::CDS, false);
-        QL_REQUIRE(schedule.date(0) >= mat,
-                   "CDS start (" << schedule.date(0) << ") should be on or after option maturity (" << mat << ")");
+        QL_REQUIRE(schedule.date(0) >= mat, "CDS start (" << schedule.date(0)
+                                                          << ") should be on or after option maturity (" << mat << ")");
         boost::shared_ptr<CdsOptionHelper> h(
             new CdsOptionHelper(mat, Handle<Quote>(boost::make_shared<SimpleQuote>(impliedVols[i - 1])),
                                 Protection::Buyer, schedule, Following, Actual360(), prob, 0.4, eurYts));

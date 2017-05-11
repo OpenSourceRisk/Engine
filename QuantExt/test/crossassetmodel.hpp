@@ -94,7 +94,7 @@ public:
 
     /*! Test DK component calibration in alpha against MC full repricing of calibration instruments. */
     static void testCpiCalibrationByAlpha();
-    
+
     /*! Test DK component calibration in H against MC full repricing of calibration instruments. */
     static void testCpiCalibrationByH();
 
@@ -123,7 +123,7 @@ public:
 
     /*! Test correlation recovery analogous to the test above, but with dynamic inflation and credit compenent. */
     static void testIrFxInfCrCorrelationRecovery();
-    
+
     /*! Test correlation recovery analogous to the test above, but with dynamic inflation, credit, equity compenent. */
     static void testIrFxInfCrEqCorrelationRecovery();
 

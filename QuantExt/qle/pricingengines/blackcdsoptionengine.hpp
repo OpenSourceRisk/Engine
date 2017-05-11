@@ -48,23 +48,21 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-    //! Black-formula CDS-option engine
-    class BlackCdsOptionEngine : public QuantExt::CdsOption::engine {
-      public:
-        BlackCdsOptionEngine(const Handle<DefaultProbabilityTermStructure>&,
-                             Real recoveryRate,
-                             const Handle<YieldTermStructure>& termStructure,
-                             const Handle<Quote>& vol);
-        void calculate() const;
-        Handle<YieldTermStructure> termStructure();
-        Handle<Quote> volatility();
-      private:
-        Handle<DefaultProbabilityTermStructure> probability_;
-        Real recoveryRate_;
-        Handle<YieldTermStructure> termStructure_;
-        Handle<Quote> volatility_;
-    };
+//! Black-formula CDS-option engine
+class BlackCdsOptionEngine : public QuantExt::CdsOption::engine {
+public:
+    BlackCdsOptionEngine(const Handle<DefaultProbabilityTermStructure>&, Real recoveryRate,
+                         const Handle<YieldTermStructure>& termStructure, const Handle<Quote>& vol);
+    void calculate() const;
+    Handle<YieldTermStructure> termStructure();
+    Handle<Quote> volatility();
 
+private:
+    Handle<DefaultProbabilityTermStructure> probability_;
+    Real recoveryRate_;
+    Handle<YieldTermStructure> termStructure_;
+    Handle<Quote> volatility_;
+};
 }
 
 #endif

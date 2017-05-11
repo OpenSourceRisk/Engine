@@ -36,20 +36,15 @@ using namespace QuantExt;
 
 namespace QuantExt {
 
-typedef Lgm1fParametrization<ZeroInflationTermStructure>
-    InfDkParametrization;
+typedef Lgm1fParametrization<ZeroInflationTermStructure> InfDkParametrization;
 
-typedef Lgm1fConstantParametrization<ZeroInflationTermStructure>
-    InfDkConstantParametrization;
+typedef Lgm1fConstantParametrization<ZeroInflationTermStructure> InfDkConstantParametrization;
 
-typedef Lgm1fPiecewiseConstantHullWhiteAdaptor<ZeroInflationTermStructure>
-    InfDkPiecewiseConstantHullWhiteAdaptor;
+typedef Lgm1fPiecewiseConstantHullWhiteAdaptor<ZeroInflationTermStructure> InfDkPiecewiseConstantHullWhiteAdaptor;
 
-typedef Lgm1fPiecewiseConstantParametrization<ZeroInflationTermStructure>
-    InfDkPiecewiseConstantParametrization;
+typedef Lgm1fPiecewiseConstantParametrization<ZeroInflationTermStructure> InfDkPiecewiseConstantParametrization;
 
-typedef Lgm1fPiecewiseLinearParametrization<ZeroInflationTermStructure>
-    InfDkPiecewiseLinearParametrization;
+typedef Lgm1fPiecewiseLinearParametrization<ZeroInflationTermStructure> InfDkPiecewiseLinearParametrization;
 
 } // namespace QuantExtPlus
 

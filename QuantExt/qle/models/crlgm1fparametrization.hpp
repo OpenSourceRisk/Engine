@@ -36,20 +36,16 @@ using namespace QuantExt;
 
 namespace QuantExt {
 
-typedef Lgm1fParametrization<DefaultProbabilityTermStructure>
-    CrLgm1fParametrization;
+typedef Lgm1fParametrization<DefaultProbabilityTermStructure> CrLgm1fParametrization;
 
-typedef Lgm1fConstantParametrization<DefaultProbabilityTermStructure>
-    CrLgm1fConstantParametrization;
+typedef Lgm1fConstantParametrization<DefaultProbabilityTermStructure> CrLgm1fConstantParametrization;
 
 typedef Lgm1fPiecewiseConstantHullWhiteAdaptor<DefaultProbabilityTermStructure>
     CrLgm1fPiecewiseConstantHullWhiteADaptor;
 
-typedef Lgm1fPiecewiseConstantParametrization<DefaultProbabilityTermStructure>
-    CrLgm1fPiecewiseConstantParametrization;
+typedef Lgm1fPiecewiseConstantParametrization<DefaultProbabilityTermStructure> CrLgm1fPiecewiseConstantParametrization;
 
-typedef Lgm1fPiecewiseLinearParametrization<DefaultProbabilityTermStructure>
-    CrLgm1fPiecewiseLinearParametrization;
+typedef Lgm1fPiecewiseLinearParametrization<DefaultProbabilityTermStructure> CrLgm1fPiecewiseLinearParametrization;
 
 } // namespace QuantExtPlus
 
