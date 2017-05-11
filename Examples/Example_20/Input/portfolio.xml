@@ -208,7 +208,6 @@
       <AdditionalFields/>
     </Envelope>
     <CDOData>
-      <CreditCurveId>CREDIT_CURVE_Index</CreditCurveId>
       <ProtectionStart>20170410</ProtectionStart>
       <UpfrontDate/>
       <UpfrontFee>0.0324</UpfrontFee>
