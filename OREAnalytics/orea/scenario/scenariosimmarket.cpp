@@ -379,7 +379,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
             for (Size i = 0; i < optionTenors.size(); ++i) {
                 optionDates[i] = asof_ + optionTenors[i]; // wrapper->optionDateFromTenor(optionTenors[i]);
                 for (Size j = 0; j < strikes.size(); ++j) {
-                    Real vol = wrapper->volatility(optionDates[i], strikes[j], wrapper->allowsExtrapolation());
+                    Real vol = wrapper->volatility(optionTenors[i], strikes[j], wrapper->allowsExtrapolation());
                     boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
                     Size index = i * strikes.size() + j;
                     simData_.emplace(std::piecewise_construct,
