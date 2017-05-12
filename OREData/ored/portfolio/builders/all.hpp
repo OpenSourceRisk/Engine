@@ -11,3 +11,4 @@
 #include <ored/portfolio/builders/equityforward.hpp>
 #include <ored/portfolio/builders/equityoption.hpp>
 #include <ored/portfolio/builders/bond.hpp>
+#include <ored/portfolio/builders/cms.hpp>

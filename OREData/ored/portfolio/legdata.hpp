@@ -204,6 +204,39 @@ private:
     vector<string> spreadDates_;
 };
 
+class CMSLegData : public XMLSerializable {
+public:
+    //! Default constructor
+    CMSLegData() : fixingDays_(0), isInArrears_(true) {}
+    //! Constructor
+    CMSLegData(const string& swapIndex, int fixingDays, bool isInArrears, const vector<double>& spreads,
+        const vector<string>& spreadDates = vector<string>())
+        : swapIndex_(swapIndex), fixingDays_(fixingDays), isInArrears_(isInArrears), spreads_(spreads),
+        spreadDates_(spreadDates) {}
+
+    //! \name Inspectors
+    //@{
+    const string& swapIndex() const { return swapIndex_; }
+    int fixingDays() const { return fixingDays_; }
+    bool isInArrears() const { return isInArrears_; }
+    const vector<double>& spreads() const { return spreads_; }
+    const vector<string>& spreadDates() const { return spreadDates_; }
+    //@}
+
+    //! \name Serialisation
+    //@{
+    virtual void fromXML(XMLNode* node);
+    virtual XMLNode* toXML(XMLDocument& doc);
+    //@}
+private:
+    string swapIndex_;
+    int fixingDays_;
+    bool isInArrears_;
+    vector<double> spreads_;
+    vector<string> spreadDates_;
+};
+
+
 //! Serializable object holding leg data
 class LegData : public XMLSerializable {
 public:
@@ -272,6 +305,18 @@ public:
           notionalFinalExchange_(notionalFinalExchange), notionalAmortizingExchange_(notionalAmortizingExchange),
           isNotResetXCCY_(isNotResetXCCY) {}
 
+    //! Constructor with CMSLegData
+    LegData(bool isPayer, const string& currency, CMSLegData& data, ScheduleData& schedule,
+        const string& dayCounter, const vector<double> notionals, const vector<string>& notionalDates = vector<string>(),
+        const string& paymentConvention = "F", bool notionalInitialExchange = false, bool notionalFinalExchange = false,
+        bool notionalAmortizingExchange = false, bool isNotResetXCCY = true, const string& foreignCurrency = "",
+        double foreignAmount = 0, const string& fxIndex = "", int fixingDays = 0)
+        : isPayer_(isPayer), currency_(currency), legType_("CMS"), cmsLegData_(data), schedule_(schedule),
+        dayCounter_(dayCounter), notionals_(notionals), paymentConvention_(paymentConvention), notionalInitialExchange_(notionalInitialExchange),
+        notionalFinalExchange_(notionalFinalExchange), notionalAmortizingExchange_(notionalAmortizingExchange),
+        isNotResetXCCY_(isNotResetXCCY), foreignCurrency_(foreignCurrency), foreignAmount_(foreignAmount),
+        fxIndex_(fxIndex), fixingDays_(fixingDays) {}
+
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node);
@@ -296,6 +341,7 @@ public:
     const FixedLegData& fixedLegData() const { return fixedLegData_; }
     const CPILegData& cpiLegData() const { return cpiLegData_; }
     const YoYLegData& yoyLegData() const { return yoyLegData_; }
+    const CMSLegData& cmsLegData() const { return cmsLegData_; }
     bool isNotResetXCCY() const { return isNotResetXCCY_; }
     const string& foreignCurrency() const { return foreignCurrency_; }
     double foreignAmount() const { return foreignAmount_; }
@@ -311,6 +357,7 @@ private:
     FixedLegData fixedLegData_;
     CPILegData cpiLegData_;
     YoYLegData yoyLegData_;
+    CMSLegData cmsLegData_;
     ScheduleData schedule_;
     string dayCounter_;
     vector<double> notionals_;
@@ -336,6 +383,8 @@ Leg makeSimpleLeg(LegData& data);
 Leg makeNotionalLeg(const Leg& refLeg, bool initNomFlow, bool finalNomFlow, bool amortNomFlow = true);
 Leg makeCPILeg(LegData& data, boost::shared_ptr<ZeroInflationIndex> index);
 Leg makeYoYLeg(LegData& data, boost::shared_ptr<YoYInflationIndex> index);
+Leg makeCMSLeg(LegData& data, boost::shared_ptr<QuantLib::SwapIndex> swapindex, 
+               const boost::shared_ptr<EngineFactory>& engineFactory);
 Real currentNotional(const Leg& leg);
 
 //@}

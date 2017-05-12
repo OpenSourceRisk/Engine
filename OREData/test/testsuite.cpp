@@ -66,6 +66,7 @@ using boost::unit_test::test_suite;
 #include "equitymarketdata.hpp"
 #include "equitytrades.hpp"
 #include "bond.hpp"
+#include "cms.hpp"
 
 namespace {
 
@@ -110,6 +111,7 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(testsuite::EquityMarketDataTest::suite());
     test->add(testsuite::EquityTradesTest::suite());
     test->add(testsuite::BondTest::suite());
+    test->add(testsuite::CmsTest::suite());
 
     // test->add(FXSwapTest::suite());
     test->add(BOOST_TEST_CASE(stopTimer));

@@ -19,6 +19,7 @@
 #include <ored/portfolio/legdata.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/portfolio/builders/capfloorediborleg.hpp>
+#include <ored/portfolio/builders/cms.hpp>
 
 #include <ql/errors.hpp>
 #include <ql/cashflow.hpp>
@@ -128,6 +129,24 @@ XMLNode* YoYLegData::toXML(XMLDocument& doc) {
     return node;
 }
 
+XMLNode* CMSLegData::toXML(XMLDocument& doc) {
+    XMLNode* node = doc.allocNode("CmsLegData");
+    XMLUtils::addChild(doc, node, "Index", swapIndex_);
+    XMLUtils::addChildren(doc, node, "Spreads", "Spread", spreads_);
+    XMLUtils::addChild(doc, node, "IsInArrears", isInArrears_);
+    XMLUtils::addChild(doc, node, "FixingDays", fixingDays_);
+    return node;
+}
+
+void CMSLegData::fromXML(XMLNode* node) {
+    XMLUtils::checkNode(node, "CMSLegData");
+    swapIndex_ = XMLUtils::getChildValue(node, "Index", true);
+    spreads_ = XMLUtils::getChildrenValuesAsDoubles(node, "Spreads", "Spread", true);
+    // These are all optional
+    isInArrears_ = XMLUtils::getChildValueAsBool(node, "IsInArrears"); // defaults to true
+    fixingDays_ = XMLUtils::getChildValueAsInt(node, "FixingDays");    // defaults to 0
+}
+
 void LegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "LegData");
     legType_ = XMLUtils::getChildValue(node, "LegType", true);
@@ -166,6 +185,7 @@ void LegData::fromXML(XMLNode* node) {
     cashflowData_ = CashflowData();
     cpiLegData_ = CPILegData();
     yoyLegData_ = YoYLegData();
+    cmsLegData_ = CMSLegData();
     tmp = XMLUtils::getChildNode(node, "ScheduleData");
     if (tmp)
         schedule_.fromXML(tmp);
@@ -179,6 +199,8 @@ void LegData::fromXML(XMLNode* node) {
         cpiLegData_.fromXML(XMLUtils::getChildNode(node, "CPILegData"));
     } else if (legType_ == "YY") {
         yoyLegData_.fromXML(XMLUtils::getChildNode(node, "YYLegData"));
+    } else if (legType_ == "CMS") {
+        yoyLegData_.fromXML(XMLUtils::getChildNode(node, "CMSLegData"));
     } else {
         QL_FAIL("Unknown legType :" << legType_);
     }
@@ -393,6 +415,42 @@ Leg makeYoYLeg(LegData& data, boost::shared_ptr<YoYInflationIndex> index) {
     QL_REQUIRE(leg.size() > 0, "Empty YoY Leg");
     return leg;
 }
+
+Leg makeCMSLeg(LegData& data, boost::shared_ptr<SwapIndex> swapIndex,
+               const boost::shared_ptr<EngineFactory>& engineFactory) {
+    Schedule schedule = makeSchedule(data.schedule());
+    DayCounter dc = parseDayCounter(data.dayCounter());
+    BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
+    CMSLegData cmsData = data.cmsLegData();
+
+    vector<double> spreads = ore::data::buildScheduledVector(cmsData.spreads(), cmsData.spreadDates(), schedule);
+
+    CmsLeg cmsLeg = CmsLeg(schedule, swapIndex)
+        .withNotionals(data.notionals())
+        .withSpreads(spreads)
+        .withPaymentDayCounter(dc)
+        .withPaymentAdjustment(bdc)
+        .withFixingDays(cmsData.fixingDays());
+
+    // Get a coupon pricer for the leg
+    boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("CMS");
+    QL_REQUIRE(builder, "No builder found for CapFlooredCmsLeg");
+    boost::shared_ptr<CmsCouponPricerBuilder> cmsSwapBuilder =
+        boost::dynamic_pointer_cast<CmsCouponPricerBuilder>(builder);
+    boost::shared_ptr<FloatingRateCouponPricer> couponPricer = cmsSwapBuilder->engine(swapIndex->currency());
+
+    // Loop over the coupons in the leg and set pricer
+    Leg leg = cmsLeg;
+    for (const auto& cashflow : leg) {
+        boost::shared_ptr<CmsCoupon> coupon = boost::dynamic_pointer_cast<CmsCoupon>(cashflow);
+        QL_REQUIRE(coupon, "Expected a leg of coupons of type CappedFlooredCmsCoupon");
+        coupon->setPricer(couponPricer);
+    }
+
+    return leg;
+}
+
+
 Real currentNotional(const Leg& leg) {
     Date today = Settings::instance().evaluationDate();
     // assume the leg is sorted
