@@ -569,22 +569,22 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(
 
     for (Size i = 0; i < n_cfvol_ccy; ++i) {
         std::string ccy = capFloorVolCurrencies_[i];
+        Size n_cfvol_exp = simMarketData_->capFloorVolExpiries(ccy).size();
         SensitivityScenarioData::CapFloorVolShiftData data = sensitivityData_->capFloorVolShiftData()[ccy];
 
         ShiftType shiftType = parseShiftType(data.shiftType);
         Real shiftSize = data.shiftSize;
+        vector<vector<Real>> volData(n_cfvol_exp, vector<Real>(n_cfvol_strikes, 0.0));
+        vector<Real> volExpiryTimes(n_cfvol_exp, 0.0);
+        vector<vector<Real>> shiftedVolData(n_cfvol_exp, vector<Real>(n_cfvol_strikes, 0.0));
+
         std::vector<Period> expiries = overrideTenors_ && simMarketData_->hasCapFloorVolExpiries(ccy)
                                            ? simMarketData_->capFloorVolExpiries(ccy)
                                            : data.shiftExpiries;
         QL_REQUIRE(expiries.size() == data.shiftExpiries.size(),
                    "mismatch between effective shift expiries (" << expiries.size() << ") and shift tenors ("
                                                                  << data.shiftExpiries.size());
-        Size n_cfvol_exp = expiries.size();
-        vector<vector<Real>> volData(n_cfvol_exp, vector<Real>(n_cfvol_strikes, 0.0));
-        vector<Real> volExpiryTimes(n_cfvol_exp, 0.0);
-        vector<vector<Real>> shiftedVolData(n_cfvol_exp, vector<Real>(n_cfvol_strikes, 0.0));
-
-        vector<Real> shiftExpiryTimes(n_cfvol_exp, 0.0);
+        vector<Real> shiftExpiryTimes(expiries.size(), 0.0);
         vector<Real> shiftStrikes = data.shiftStrikes;
 
         Handle<OptionletVolatilityStructure> ts = initMarket_->capFloorVol(ccy, configuration_);
@@ -592,7 +592,7 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(
 
         // cache original vol data
         for (Size j = 0; j < n_cfvol_exp; ++j) {
-            Date expiry = today_ + expiries[j];
+            Date expiry = today_ + simMarketData_->capFloorVolExpiries(ccy).size();
             volExpiryTimes[j] = dc.yearFraction(today_, expiry);
             for (Size k = 0; k < n_cfvol_strikes; ++k) {
                 Real strike = simMarketData_->capFloorVolStrikes()[k];
