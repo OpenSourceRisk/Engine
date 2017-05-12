@@ -20,6 +20,10 @@
                 <xs:element type="equityOptionData" name="EquityOptionData"/>
                 <xs:element type="equityForwardData" name="EquityForwardData"/>
                 <xs:element type="bondData" name="BondData"/>
+                <xs:element type="creditDefaultSwapData" name="CreditDefaultSwapData"/>
+                <xs:element type="indexCreditDefaultSwapData" name="IndexCreditDefaultSwapData"/>
+                <xs:element type="indexCreditDefaultSwapOptionData" name="IndexCreditDefaultSwapOptionData"/>
+                <xs:element type="cdoData" name="CDOData"/>
               </xs:choice>
             </xs:sequence>
             <xs:attribute type="xs:string" name="id" use="required"/>
@@ -251,6 +255,10 @@
       <xs:enumeration value="EquityOption"/>
       <xs:enumeration value="EquityForward"/>
       <xs:enumeration value="Bond"/>
+      <xs:enumeration value="CreditDefaultSwap"/>
+      <xs:enumeration value="IndexCreditDefaultSwap"/>
+      <xs:enumeration value="IndexCreditDefaultSwapOption"/>
+      <xs:enumeration value="SyntheticCDO"/>
     </xs:restriction>
   </xs:simpleType>
 
@@ -323,6 +331,67 @@
       <xs:element type="xs:float" name="Strike"/>
       <xs:element type="xs:float" name="Quantity"/>
     </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="creditDefaultSwapData">
+    <xs:all>
+      <xs:element type="xs:string" name="IssuerId"/>
+      <xs:element type="xs:string" name="CreditCurveId"/>
+      <xs:element type="bool" name="SettlesAccrual"/>
+      <xs:element type="bool" name="PaysAtDefaultTime"/>
+      <xs:element type="date" name="ProtectionStart"/>
+      <xs:element type="date" name="UpfrontDate"/>
+      <xs:element type="xs:float" name="UpfrontFee"/>
+      <xs:element type="legData" name="LegData" maxOccurs="1" minOccurs="1"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="nameData">
+    <xs:all>
+      <xs:element type="xs:string" name="IssuerId"/>
+      <xs:element type="xs:string" name="CreditCurveId"/>
+      <xs:element type="xs:float" name="Notional"/>
+      <xs:element type="currencyCode" name="Currency"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="basketData">
+    <xs:sequence>
+      <xs:element type="nameData" name="Name" maxOccurs="unbounded" minOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="indexCreditDefaultSwapData">
+    <xs:all>
+      <xs:element type="xs:string" name="CreditCurveId"/>
+      <xs:element type="bool" name="SettlesAccrual"/>
+      <xs:element type="bool" name="PaysAtDefaultTime"/>
+      <xs:element type="date" name="ProtectionStart"/>
+      <xs:element type="date" name="UpfrontDate"/>
+      <xs:element type="xs:float" name="UpfrontFee"/>
+      <xs:element type="legData" name="LegData"/>
+      <xs:element type="basketData" name="Basket"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="indexCreditDefaultSwapOptionData">
+    <xs:all>
+      <xs:element type="bool" name="KnockOut"/>
+      <xs:element type="optionData" name="OptionData"/>
+      <xs:element type="indexCreditDefaultSwapData" name="IndexCreditDefaultSwapData"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="cdoData">
+    <xs:all>
+      <xs:element type="date" name="ProtectionStart"/>
+      <xs:element type="date" name="UpfrontDate"/>
+      <xs:element type="xs:float" name="UpfrontFee"/>
+      <xs:element type="xs:float" name="AttachmentPoint"/>
+      <xs:element type="xs:float" name="DetachmentPoint"/>
+      <xs:element type="legData" name="LegData"/>
+      <xs:element type="basketData" name="Basket"/>
+    </xs:all>
   </xs:complexType>
 
   <xs:simpleType name="tradeActionType">
