@@ -18,8 +18,8 @@
 
 #include <boost/timer.hpp>
 #include <orea/cube/inmemorycube.hpp>
-#include <orea/engine/valuationengine.hpp>
 #include <orea/engine/sensitivityanalysis.hpp>
+#include <orea/engine/valuationengine.hpp>
 #include <orea/scenario/clonescenariofactory.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
@@ -32,11 +32,11 @@
 #include <ql/pricingengines/capfloor/blackcapfloorengine.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
 #include <ql/termstructures/yield/oisratehelper.hpp>
-#include <qle/instruments/deposit.hpp>
-#include <qle/pricingengines/depositengine.hpp>
 #include <qle/instruments/crossccybasisswap.hpp>
-#include <qle/pricingengines/crossccyswapengine.hpp>
+#include <qle/instruments/deposit.hpp>
 #include <qle/instruments/fxforward.hpp>
+#include <qle/pricingengines/crossccyswapengine.hpp>
+#include <qle/pricingengines/depositengine.hpp>
 #include <qle/pricingengines/discountingfxforwardengine.hpp>
 
 using namespace QuantLib;
@@ -58,7 +58,7 @@ SensitivityAnalysis::SensitivityAnalysis(const boost::shared_ptr<ore::data::Port
     : market_(market), marketConfiguration_(marketConfiguration), asof_(market->asofDate()),
       simMarketData_(simMarketData), sensitivityData_(sensitivityData), conventions_(conventions),
       recalibrateModels_(recalibrateModels), nonShiftedBaseCurrencyConversion_(nonShiftedBaseCurrencyConversion),
-      engineData_(engineData), portfolio_(portfolio), initialized_(false), computed_(false) {}
+      engineData_(engineData), portfolio_(portfolio), initialized_(false), computed_(false), overrideTenors_(false) {}
 
 std::vector<boost::shared_ptr<ValuationCalculator>> SensitivityAnalysis::buildValuationCalculators() const {
     vector<boost::shared_ptr<ValuationCalculator>> calculators;
@@ -112,7 +112,7 @@ void SensitivityAnalysis::generateSensitivities() {
 
 void SensitivityAnalysis::initializeSensitivityScenarioGenerator(boost::shared_ptr<ScenarioFactory> scenFact) {
     scenarioGenerator_ =
-        boost::make_shared<SensitivityScenarioGenerator>(sensitivityData_, simMarketData_, asof_, market_);
+        boost::make_shared<SensitivityScenarioGenerator>(sensitivityData_, simMarketData_, asof_, market_, overrideTenors_);
     boost::shared_ptr<Scenario> baseScen = scenarioGenerator_->baseScenario();
     boost::shared_ptr<ScenarioFactory> scenFactory =
         (scenFact != NULL) ? scenFact
@@ -221,8 +221,8 @@ void SensitivityAnalysis::collectResultsFromCube(const boost::shared_ptr<NPVCube
         string factor = p.second;
         QL_REQUIRE(baseNPV_.find(id) != baseNPV_.end(), "base NPV not found for trade " << id);
         Real b = baseNPV_[id];
-        QL_REQUIRE(downNPV_.find(p) != downNPV_.end(), "down shift result not found for trade " << id << ", factor "
-                                                                                                << factor);
+        QL_REQUIRE(downNPV_.find(p) != downNPV_.end(),
+                   "down shift result not found for trade " << id << ", factor " << factor);
         Real d = downNPV_[p];
         // f_x(x) = (f(x+u) - f(x)) / u
         delta_[p] = u - b;           // = f_x(x) * u

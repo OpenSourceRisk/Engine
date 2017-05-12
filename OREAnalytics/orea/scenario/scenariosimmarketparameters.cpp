@@ -27,20 +27,61 @@ using namespace QuantLib;
 namespace ore {
 namespace analytics {
 
+namespace {
+const vector<Period>& returnTenors(const map<string, vector<Period>>& m, const string& k) {
+    if (m.count(k) > 0) {
+        return m.at(k);
+    } else if (m.count("") > 0) {
+        return m.at("");
+    } else
+        QL_FAIL("no period vector for key " << k << " found.");
+}
+} // namespace
+
+const vector<Period>& ScenarioSimMarketParameters::yieldCurveTenors(const string& key) const {
+    return returnTenors(yieldCurveTenors_, key);
+}
+
+const vector<Period>& ScenarioSimMarketParameters::capFloorVolExpiries(const string& key) const {
+    return returnTenors(capFloorVolExpiries_, key);
+}
+
+const vector<Period>& ScenarioSimMarketParameters::defaultTenors(const string& key) const {
+    return returnTenors(defaultTenors_, key);
+}
+
+const vector<Period>& ScenarioSimMarketParameters::equityTenors(const string& key) const {
+    return returnTenors(eqTenors_, key);
+}
+
+void ScenarioSimMarketParameters::setYieldCurveTenors(const string& key, const std::vector<Period>& p) {
+    yieldCurveTenors_[key] = p;
+}
+
+void ScenarioSimMarketParameters::setCapFloorVolExpiries(const string& key, const std::vector<Period>& p) {
+    capFloorVolExpiries_[key] = p;
+}
+
+void ScenarioSimMarketParameters::setDefaultTenors(const string& key, const std::vector<Period>& p) {
+    defaultTenors_[key] = p;
+}
+
+void ScenarioSimMarketParameters::setEquityTenors(const string& key, const std::vector<Period>& p) {
+    eqTenors_[key] = p;
+}
+
 bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& rhs) {
 
     if (baseCcy_ != rhs.baseCcy_ || ccys_ != rhs.ccys_ || yieldCurveNames_ != rhs.yieldCurveNames_ ||
         yieldCurveCurrencies_ != rhs.yieldCurveCurrencies_ || yieldCurveTenors_ != rhs.yieldCurveTenors_ ||
-        yieldCurveDates_ != rhs.yieldCurveDates_ || indices_ != rhs.indices_ || swapIndices_ != rhs.swapIndices_ ||
-        interpolation_ != rhs.interpolation_ || extrapolate_ != rhs.extrapolate_ ||
-        swapVolTerms_ != rhs.swapVolTerms_ || swapVolCcys_ != rhs.swapVolCcys_ ||
+        indices_ != rhs.indices_ || swapIndices_ != rhs.swapIndices_ || interpolation_ != rhs.interpolation_ ||
+        extrapolate_ != rhs.extrapolate_ || swapVolTerms_ != rhs.swapVolTerms_ || swapVolCcys_ != rhs.swapVolCcys_ ||
         swapVolSimulate_ != rhs.swapVolSimulate_ || swapVolExpiries_ != rhs.swapVolExpiries_ ||
         swapVolDecayMode_ != rhs.swapVolDecayMode_ || capFloorVolSimulate_ != rhs.capFloorVolSimulate_ ||
         capFloorVolCcys_ != rhs.capFloorVolCcys_ || capFloorVolExpiries_ != rhs.capFloorVolExpiries_ ||
         capFloorVolStrikes_ != rhs.capFloorVolStrikes_ || capFloorVolDecayMode_ != rhs.capFloorVolDecayMode_ ||
-        defaultNames_ != rhs.defaultNames_ || defaultTenors_ != rhs.defaultTenors_ ||
-        defaultDates_ != rhs.defaultDates_ || eqNames_ != rhs.eqNames_ || eqTenors_ != rhs.eqTenors_ ||
-        fxVolSimulate_ != rhs.fxVolSimulate_ || fxVolExpiries_ != rhs.fxVolExpiries_ ||
+        defaultNames_ != rhs.defaultNames_ || defaultTenors_ != rhs.defaultTenors_ || eqNames_ != rhs.eqNames_ ||
+        eqTenors_ != rhs.eqTenors_ || fxVolSimulate_ != rhs.fxVolSimulate_ || fxVolExpiries_ != rhs.fxVolExpiries_ ||
         fxVolDecayMode_ != rhs.fxVolDecayMode_ || fxVolCcyPairs_ != rhs.fxVolCcyPairs_ ||
         fxCcyPairs_ != rhs.fxCcyPairs_ || eqVolSimulate_ != rhs.eqVolSimulate_ ||
         eqVolExpiries_ != rhs.eqVolExpiries_ || eqVolDecayMode_ != rhs.eqVolDecayMode_ ||
@@ -72,7 +113,8 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
 
     nodeChild = XMLUtils::getChildNode(node, "YieldCurves");
     nodeChild = XMLUtils::getChildNode(nodeChild, "Configuration");
-    yieldCurveTenors_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Tenors", true);
+    yieldCurveTenors_[""] = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Tenors", true);
+    // TODO read other keys
     interpolation_ = XMLUtils::getChildValue(nodeChild, "Interpolation", true);
     extrapolate_ = XMLUtils::getChildValueAsBool(nodeChild, "Extrapolate");
 
@@ -115,7 +157,8 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         XMLNode* capVolSimNode = XMLUtils::getChildNode(nodeChild, "Simulate");
         if (capVolSimNode)
             capFloorVolSimulate_ = ore::data::parseBool(XMLUtils::getNodeValue(capVolSimNode));
-        capFloorVolExpiries_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Expiries", true);
+        capFloorVolExpiries_[""] = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Expiries", true);
+        // read other keys
         capFloorVolStrikes_ = XMLUtils::getChildrenValuesAsDoublesCompact(nodeChild, "Strikes", true);
         capFloorVolCcys_ = XMLUtils::getChildrenValues(nodeChild, "Currencies", "Currency", true);
         capFloorVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
@@ -123,12 +166,14 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
 
     nodeChild = XMLUtils::getChildNode(node, "DefaultCurves");
     defaultNames_ = XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true);
-    defaultTenors_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Tenors", true);
+    defaultTenors_[""] = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Tenors", true);
+    // TODO read other keys
 
     nodeChild = XMLUtils::getChildNode(node, "Equities");
     if (nodeChild) {
         eqNames_ = XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true);
-        eqTenors_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Tenors", true);
+        eqTenors_[""] = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Tenors", true);
+        // TODO read other keys
     } else {
         eqNames_.clear();
         eqTenors_.clear();
@@ -183,7 +228,8 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
     // yield curves
     XMLNode* yieldCurvesNode = XMLUtils::addChild(doc, marketNode, "YieldCurves");
     XMLNode* configurationNode = XMLUtils::addChild(doc, yieldCurvesNode, "Configuration");
-    XMLUtils::addGenericChildAsList(doc, configurationNode, "Tenors", yieldCurveTenors_);
+    XMLUtils::addGenericChildAsList(doc, configurationNode, "Tenors", returnTenors(yieldCurveTenors_, ""));
+    // TODO write other keys
     XMLUtils::addChild(doc, configurationNode, "Interpolation", interpolation_);
     XMLUtils::addChild(doc, configurationNode, "Extrapolation", extrapolate_);
 
@@ -201,12 +247,14 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
     // default curves
     XMLNode* defaultCurvesNode = XMLUtils::addChild(doc, marketNode, "DefaultCurves");
     XMLUtils::addChildren(doc, defaultCurvesNode, "Names", "Name", defaultNames_);
-    XMLUtils::addGenericChildAsList(doc, defaultCurvesNode, "Tenors", defaultTenors_);
+    XMLUtils::addGenericChildAsList(doc, defaultCurvesNode, "Tenors", returnTenors(defaultTenors_, ""));
+    // TODO write other keys
 
     // equities
     XMLNode* equitiesNode = XMLUtils::addChild(doc, marketNode, "Equities");
     XMLUtils::addChildren(doc, equitiesNode, "Names", "Name", eqNames_);
-    XMLUtils::addGenericChildAsList(doc, equitiesNode, "Tenors", eqTenors_);
+    XMLUtils::addGenericChildAsList(doc, equitiesNode, "Tenors", returnTenors(eqTenors_, ""));
+    // TODO write other keys
 
     // swaption volatilities
     XMLNode* swaptionVolatilitiesNode = XMLUtils::addChild(doc, marketNode, "SwaptionVolatilities");
@@ -221,7 +269,8 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, capFloorVolatilitiesNode, "Simulate", capFloorVolSimulate_);
     XMLUtils::addChild(doc, capFloorVolatilitiesNode, "ReactionToTimeDecay", capFloorVolDecayMode_);
     XMLUtils::addChildren(doc, capFloorVolatilitiesNode, "Currencies", "Currency", capFloorVolCcys_);
-    XMLUtils::addGenericChildAsList(doc, capFloorVolatilitiesNode, "Expiries", capFloorVolExpiries_);
+    XMLUtils::addGenericChildAsList(doc, capFloorVolatilitiesNode, "Expiries", returnTenors(capFloorVolExpiries_, ""));
+    // TODO write other keys
     XMLUtils::addGenericChildAsList(doc, capFloorVolatilitiesNode, "Strikes", capFloorVolStrikes_);
 
     // fx volatilities

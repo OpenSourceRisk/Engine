@@ -16,35 +16,35 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/timer.hpp>
+#include <orea/cube/inmemorycube.hpp>
+#include <orea/cube/npvcube.hpp>
+#include <orea/engine/all.hpp>
+#include <orea/engine/observationmode.hpp>
+#include <orea/engine/sensitivityanalysis.hpp>
+#include <orea/scenario/clonescenariofactory.hpp>
+#include <orea/scenario/scenariosimmarket.hpp>
+#include <orea/scenario/scenariosimmarketparameters.hpp>
+#include <orea/scenario/sensitivityscenariogenerator.hpp>
+#include <ored/model/lgmdata.hpp>
+#include <ored/portfolio/builders/capfloor.hpp>
+#include <ored/portfolio/builders/fxforward.hpp>
+#include <ored/portfolio/builders/fxoption.hpp>
+#include <ored/portfolio/builders/swap.hpp>
+#include <ored/portfolio/builders/swaption.hpp>
+#include <ored/portfolio/fxoption.hpp>
+#include <ored/portfolio/portfolio.hpp>
+#include <ored/portfolio/swap.hpp>
+#include <ored/portfolio/swaption.hpp>
+#include <ored/utilities/log.hpp>
+#include <ored/utilities/osutils.hpp>
+#include <ql/math/randomnumbers/mt19937uniformrng.hpp>
+#include <ql/time/calendars/target.hpp>
+#include <ql/time/date.hpp>
+#include <ql/time/daycounters/actualactual.hpp>
 #include <test/sensitivityanalysis.hpp>
 #include <test/testmarket.hpp>
 #include <test/testportfolio.hpp>
-#include <ored/utilities/osutils.hpp>
-#include <ored/utilities/log.hpp>
-#include <orea/cube/npvcube.hpp>
-#include <orea/cube/inmemorycube.hpp>
-#include <ored/model/lgmdata.hpp>
-#include <orea/scenario/scenariosimmarketparameters.hpp>
-#include <orea/scenario/scenariosimmarket.hpp>
-#include <orea/scenario/clonescenariofactory.hpp>
-#include <orea/scenario/sensitivityscenariogenerator.hpp>
-#include <orea/engine/observationmode.hpp>
-#include <orea/engine/sensitivityanalysis.hpp>
-#include <orea/engine/all.hpp>
-#include <ored/portfolio/swap.hpp>
-#include <ored/portfolio/swaption.hpp>
-#include <ored/portfolio/fxoption.hpp>
-#include <ored/portfolio/builders/swap.hpp>
-#include <ored/portfolio/builders/swaption.hpp>
-#include <ored/portfolio/builders/fxforward.hpp>
-#include <ored/portfolio/builders/fxoption.hpp>
-#include <ored/portfolio/builders/capfloor.hpp>
-#include <ored/portfolio/portfolio.hpp>
-#include <ql/time/date.hpp>
-#include <ql/math/randomnumbers/mt19937uniformrng.hpp>
-#include <ql/time/calendars/target.hpp>
-#include <ql/time/daycounters/actualactual.hpp>
-#include <boost/timer.hpp>
 
 using namespace std;
 using namespace QuantLib;
@@ -92,13 +92,15 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData2() 
     simMarketData->baseCcy() = "EUR";
     simMarketData->ccys() = {"EUR", "GBP"};
     simMarketData->yieldCurveNames() = {"BondCurve1"};
-    simMarketData->yieldCurveTenors() = {1 * Months, 6 * Months, 1 * Years,  2 * Years,  3 * Years, 4 * Years,
-                                         5 * Years,  6 * Years,  7 * Years,  8 * Years,  9 * Years, 10 * Years,
-                                         12 * Years, 15 * Years, 20 * Years, 25 * Years, 30 * Years};
+    simMarketData->setYieldCurveTenors("",
+                                       {1 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years, 5 * Years,
+                                        6 * Years, 7 * Years, 8 * Years, 9 * Years, 10 * Years, 12 * Years, 15 * Years,
+                                        20 * Years, 25 * Years, 30 * Years});
     simMarketData->indices() = {"EUR-EURIBOR-6M", "GBP-LIBOR-6M"};
     simMarketData->defaultNames() = {"BondIssuer1"};
-    simMarketData->defaultTenors() = {1 * Months, 6 * Months, 1 * Years,  2 * Years,  3 * Years, 4 * Years,
-                                      5 * Years,  7 * Years,  10 * Years, 20 * Years, 30 * Years};
+    simMarketData->setDefaultTenors("",
+                                    {1 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years, 5 * Years,
+                                     7 * Years, 10 * Years, 20 * Years, 30 * Years});
     simMarketData->securities() = {"Bond1"};
 
     simMarketData->interpolation() = "LogLinear";
@@ -130,8 +132,9 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData5() 
 
     simMarketData->baseCcy() = "EUR";
     simMarketData->ccys() = {"EUR", "GBP", "USD", "CHF", "JPY"};
-    simMarketData->yieldCurveTenors() = {1 * Months, 6 * Months, 1 * Years,  2 * Years,  3 * Years,  4 * Years,
-                                         5 * Years,  7 * Years,  10 * Years, 15 * Years, 20 * Years, 30 * Years};
+    simMarketData->setYieldCurveTenors("",
+                                       {1 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years, 5 * Years,
+                                        7 * Years, 10 * Years, 15 * Years, 20 * Years, 30 * Years});
     simMarketData->indices() = {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "USD-LIBOR-6M",
                                 "GBP-LIBOR-6M",   "CHF-LIBOR-6M", "JPY-LIBOR-6M"};
     simMarketData->swapIndices() = {{"EUR-CMS-2Y", "EUR-EURIBOR-6M"}, {"EUR-CMS-30Y", "EUR-EURIBOR-6M"}};
@@ -156,13 +159,14 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData5() 
     simMarketData->simulateCapFloorVols() = true;
     simMarketData->capFloorVolDecayMode() = "ForwardVariance";
     simMarketData->capFloorVolCcys() = {"EUR", "USD"};
-    simMarketData->capFloorVolExpiries() = {6 * Months, 1 * Years,  2 * Years,  3 * Years, 5 * Years,
-                                            7 * Years,  10 * Years, 15 * Years, 20 * Years};
+    simMarketData->setCapFloorVolExpiries(
+        "", {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 15 * Years, 20 * Years});
     simMarketData->capFloorVolStrikes() = {0.00, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06};
 
     simMarketData->defaultNames() = {"BondIssuer1"};
-    simMarketData->defaultTenors() = {1 * Months, 6 * Months, 1 * Years,  2 * Years,  3 * Years, 4 * Years,
-                                      5 * Years,  7 * Years,  10 * Years, 20 * Years, 30 * Years};
+    simMarketData->setDefaultTenors("",
+                                    {1 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years, 5 * Years,
+                                     7 * Years, 10 * Years, 20 * Years, 30 * Years});
     simMarketData->securities() = {"Bond1"};
 
     return simMarketData;
@@ -337,7 +341,7 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
 
     // build scenario generator
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(
-        new SensitivityScenarioGenerator(sensiData, simMarketData, today, initMarket));
+        new SensitivityScenarioGenerator(sensiData, simMarketData, today, initMarket, false));
     boost::shared_ptr<Scenario> baseScen = scenarioGenerator->baseScenario();
     boost::shared_ptr<ScenarioFactory> scenarioFactory(new CloneScenarioFactory(baseScen));
     scenarioGenerator->generateScenarios(scenarioFactory);
@@ -761,10 +765,10 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
                 count++;
                 // BOOST_TEST_MESSAGE("{ \"" << id << "\", \"" << label << "\", " << npv0 << ", " << sensi << " },");
                 pair<string, string> p(id, label);
-                QL_REQUIRE(npvMap.find(p) != npvMap.end(), "pair (" << p.first << ", " << p.second
-                                                                    << ") not found in npv map");
-                QL_REQUIRE(sensiMap.find(p) != sensiMap.end(), "pair (" << p.first << ", " << p.second
-                                                                        << ") not found in sensi map");
+                QL_REQUIRE(npvMap.find(p) != npvMap.end(),
+                           "pair (" << p.first << ", " << p.second << ") not found in npv map");
+                QL_REQUIRE(sensiMap.find(p) != sensiMap.end(),
+                           "pair (" << p.first << ", " << p.second << ") not found in sensi map");
                 BOOST_CHECK_MESSAGE(fabs(npv0 - npvMap[p]) < tolerance || fabs((npv0 - npvMap[p]) / npv0) < tolerance,
                                     "npv regression failed for pair (" << p.first << ", " << p.second << "): " << npv0
                                                                        << " vs " << npvMap[p]);
@@ -775,9 +779,9 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
             }
         }
     }
-    BOOST_CHECK_MESSAGE(count == cachedResults.size(), "number of non-zero sensitivities ("
-                                                           << count << ") do not match regression data ("
-                                                           << cachedResults.size() << ")");
+    BOOST_CHECK_MESSAGE(count == cachedResults.size(),
+                        "number of non-zero sensitivities (" << count << ") do not match regression data ("
+                                                             << cachedResults.size() << ")");
 
     // Repeat analysis using the SensitivityAnalysis class and spot check a few deltas and gammas
     boost::shared_ptr<SensitivityAnalysis> sa = boost::make_shared<SensitivityAnalysis>(
@@ -876,20 +880,20 @@ void SensitivityAnalysisTest::test1dShifts() {
 
     // build scenario generator
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(
-        new SensitivityScenarioGenerator(sensiData, simMarketData, today, initMarket));
+        new SensitivityScenarioGenerator(sensiData, simMarketData, today, initMarket, false));
     boost::shared_ptr<Scenario> baseScen = scenarioGenerator->baseScenario();
     boost::shared_ptr<ScenarioFactory> scenarioFactory(new CloneScenarioFactory(baseScen));
     scenarioGenerator->generateScenarios(scenarioFactory);
 
     // cache initial zero rates
-    vector<Period> tenors = simMarketData->yieldCurveTenors();
+    vector<Period> tenors = simMarketData->yieldCurveTenors("");
     vector<Real> initialZeros(tenors.size());
     vector<Real> times(tenors.size());
     string ccy = simMarketData->ccys()[0];
     Handle<YieldTermStructure> ts = initMarket->discountCurve(ccy);
     DayCounter dc = ts->dayCounter();
     for (Size j = 0; j < tenors.size(); ++j) {
-        Date d = today + simMarketData->yieldCurveTenors()[j];
+        Date d = today + simMarketData->yieldCurveTenors("")[j];
         initialZeros[j] = ts->zeroRate(d, dc, Continuous);
         times[j] = dc.yearFraction(today, d);
     }
@@ -962,7 +966,7 @@ void SensitivityAnalysisTest::test2dShifts() {
 
     // build scenario generator
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(
-        new SensitivityScenarioGenerator(sensiData, simMarketData, today, initMarket));
+        new SensitivityScenarioGenerator(sensiData, simMarketData, today, initMarket, false));
     boost::shared_ptr<Scenario> baseScen = scenarioGenerator->baseScenario();
     boost::shared_ptr<ScenarioFactory> scenarioFactory(new CloneScenarioFactory(baseScen));
     scenarioGenerator->generateScenarios(scenarioFactory);
@@ -1072,7 +1076,7 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
     }
     // build scenario generator
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(
-        new SensitivityScenarioGenerator(sensiData, simMarketData, today, initMarket));
+        new SensitivityScenarioGenerator(sensiData, simMarketData, today, initMarket, false));
     boost::shared_ptr<Scenario> baseScen = scenarioGenerator->baseScenario();
     boost::shared_ptr<ScenarioFactory> scenarioFactory(new CloneScenarioFactory(baseScen));
     scenarioGenerator->generateScenarios(scenarioFactory);
@@ -1414,7 +1418,7 @@ void SensitivityAnalysisTest::testCrossGamma() {
     cgFilter.push_back(pair<string, string>("FXSpot/EURGBP", "DiscountCurve/GBP"));
     // build scenario generator
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(
-        new SensitivityScenarioGenerator(sensiData, simMarketData, today, initMarket));
+        new SensitivityScenarioGenerator(sensiData, simMarketData, today, initMarket, false));
     boost::shared_ptr<Scenario> baseScen = scenarioGenerator->baseScenario();
     boost::shared_ptr<ScenarioFactory> scenarioFactory(new CloneScenarioFactory(baseScen));
     scenarioGenerator->generateScenarios(scenarioFactory);
@@ -1765,9 +1769,9 @@ void SensitivityAnalysisTest::testCrossGamma() {
         }
     }
     BOOST_TEST_MESSAGE("number of cross-gammas checked = " << count);
-    BOOST_CHECK_MESSAGE(count == cachedResults.size(), "number of non-zero sensitivities ("
-                                                           << count << ") do not match regression data ("
-                                                           << cachedResults.size() << ")");
+    BOOST_CHECK_MESSAGE(count == cachedResults.size(),
+                        "number of non-zero sensitivities (" << count << ") do not match regression data ("
+                                                             << cachedResults.size() << ")");
     ObservationMode::instance().setMode(backupMode);
     IndexManager::instance().clearHistories();
 }

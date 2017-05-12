@@ -25,10 +25,10 @@
 #include <orea/engine/all.hpp>
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/sensitivityanalysis.hpp>
+#include <orea/scenario/clonescenariofactory.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/scenario/sensitivityscenariogenerator.hpp>
-#include <orea/scenario/clonescenariofactory.hpp>
 
 #include <ored/model/lgmdata.hpp>
 #include <ored/portfolio/builders/capfloor.hpp>
@@ -98,8 +98,9 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData5() 
 
     simMarketData->baseCcy() = "EUR";
     simMarketData->ccys() = {"EUR", "GBP", "USD", "CHF", "JPY"};
-    simMarketData->yieldCurveTenors() = {1 * Months, 6 * Months, 1 * Years,  2 * Years,  3 * Years,  4 * Years,
-                                         5 * Years,  7 * Years,  10 * Years, 15 * Years, 20 * Years, 30 * Years};
+    simMarketData->setYieldCurveTenors("",
+                                       {1 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years, 5 * Years,
+                                        7 * Years, 10 * Years, 15 * Years, 20 * Years, 30 * Years});
     simMarketData->indices() = {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "USD-LIBOR-6M",
                                 "GBP-LIBOR-6M",   "CHF-LIBOR-6M", "JPY-LIBOR-6M"};
     simMarketData->interpolation() = "LogLinear";
@@ -123,8 +124,8 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData5() 
     simMarketData->simulateCapFloorVols() = true;
     simMarketData->capFloorVolDecayMode() = "ForwardVariance";
     simMarketData->capFloorVolCcys() = {"EUR", "USD"};
-    simMarketData->capFloorVolExpiries() = {6 * Months, 1 * Years,  2 * Years,  3 * Years, 5 * Years,
-                                            7 * Years,  10 * Years, 15 * Years, 20 * Years};
+    simMarketData->setCapFloorVolExpiries(
+        "", {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 15 * Years, 20 * Years});
     simMarketData->capFloorVolStrikes() = {0.00, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06};
 
     return simMarketData;

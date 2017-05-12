@@ -103,17 +103,10 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         DayCounter dc = wrapper->dayCounter(); // used to convert YieldCurve Periods to Times
         vector<Time> yieldCurveTimes(1, 0.0);  // include today
         vector<Date> yieldCurveDates(1, asof_);
-        if (parameters->yieldCurveDates().count(ccy) > 0) {
-            for (auto& date : parameters->yieldCurveDates().at(ccy)) {
-                yieldCurveTimes.push_back(dc.yearFraction(asof_, date));
-                yieldCurveDates.push_back(date);
-            }
-        } else {
-            QL_REQUIRE(parameters->yieldCurveTenors().front() > 0 * Days, "yield curve tenors must not include t=0");
-            for (auto& tenor : parameters->yieldCurveTenors()) {
-                yieldCurveTimes.push_back(dc.yearFraction(asof_, asof_ + tenor));
-                yieldCurveDates.push_back(asof_ + tenor);
-            }
+        QL_REQUIRE(parameters->yieldCurveTenors(ccy).front() > 0 * Days, "yield curve tenors must not include t=0");
+        for (auto& tenor : parameters->yieldCurveTenors(ccy)) {
+            yieldCurveTimes.push_back(dc.yearFraction(asof_, asof_ + tenor));
+            yieldCurveDates.push_back(asof_ + tenor);
         }
 
         vector<Handle<Quote>> quotes;
@@ -160,17 +153,10 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         DayCounter dc = wrapper->dayCounter(); // used to convert YieldCurve Periods to Times
         vector<Time> yieldCurveTimes(1, 0.0);  // include today
         vector<Date> yieldCurveDates(1, asof_);
-        if (parameters->yieldCurveDates().count(name) > 0) {
-            for (auto& date : parameters->yieldCurveDates().at(name)) {
-                yieldCurveTimes.push_back(dc.yearFraction(asof_, date));
-                yieldCurveDates.push_back(date);
-            }
-        } else {
-            QL_REQUIRE(parameters->yieldCurveTenors().front() > 0 * Days, "yield curve tenors must not include t=0");
-            for (auto& tenor : parameters->yieldCurveTenors()) {
-                yieldCurveTimes.push_back(dc.yearFraction(asof_, asof_ + tenor));
-                yieldCurveDates.push_back(asof_ + tenor);
-            }
+        QL_REQUIRE(parameters->yieldCurveTenors(name).front() > 0 * Days, "yield curve tenors must not include t=0");
+        for (auto& tenor : parameters->yieldCurveTenors(name)) {
+            yieldCurveTimes.push_back(dc.yearFraction(asof_, asof_ + tenor));
+            yieldCurveDates.push_back(asof_ + tenor);
         }
 
         // include today
@@ -225,22 +211,15 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         QL_REQUIRE(!index.empty(), "index object for " << ind << " not provided");
         Handle<YieldTermStructure> wrapperIndex = index->forwardingTermStructure();
         QL_REQUIRE(!wrapperIndex.empty(), "no termstructure for index " << ind);
-        vector<string> keys(parameters->yieldCurveTenors().size());
+        vector<string> keys(parameters->yieldCurveTenors(ind).size());
 
         DayCounter dc = wrapperIndex->dayCounter(); // used to convert YieldCurve Periods to Times
         vector<Time> yieldCurveTimes(1, 0.0);       // include today
         vector<Date> yieldCurveDates(1, asof_);
-        if (parameters->yieldCurveDates().count(ind) > 0) {
-            for (auto& date : parameters->yieldCurveDates().at(ind)) {
-                yieldCurveTimes.push_back(dc.yearFraction(asof_, date));
-                yieldCurveDates.push_back(date);
-            }
-        } else {
-            QL_REQUIRE(parameters->yieldCurveTenors().front() > 0 * Days, "yield curve tenors must not include t=0");
-            for (auto& tenor : parameters->yieldCurveTenors()) {
-                yieldCurveTimes.push_back(dc.yearFraction(asof_, asof_ + tenor));
-                yieldCurveDates.push_back(asof_ + tenor);
-            }
+        QL_REQUIRE(parameters->yieldCurveTenors(ind).front() > 0 * Days, "yield curve tenors must not include t=0");
+        for (auto& tenor : parameters->yieldCurveTenors(ind)) {
+            yieldCurveTimes.push_back(dc.yearFraction(asof_, asof_ + tenor));
+            yieldCurveDates.push_back(asof_ + tenor);
         }
 
         // include today
@@ -392,15 +371,13 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
 
         if (parameters->simulateCapFloorVols()) {
             LOG("Simulating Cap/Floor Optionlet vols for ccy " << ccy);
-            vector<Period> optionTenors = parameters->capFloorVolExpiries();
-            vector<Date> endDates =
-                parameters->capFloorVolDates().count(ccy) > 0 ? parameters->capFloorVolDates().at(ccy) : vector<Date>();
-            Size n = !endDates.empty() ? endDates.size() : optionTenors.size();
-            vector<Date> optionDates(n);
+            vector<Period> optionTenors = parameters->capFloorVolExpiries(ccy);
+            vector<Date> optionDates(optionTenors.size());
             vector<Real> strikes = parameters->capFloorVolStrikes();
-            vector<vector<Handle<Quote>>> quotes(n, vector<Handle<Quote>>(strikes.size(), Handle<Quote>()));
-            for (Size i = 0; i < n; ++i) {
-                optionDates[i] = !endDates.empty() ? endDates[i] : wrapper->optionDateFromTenor(optionTenors[i]);
+            vector<vector<Handle<Quote>>> quotes(optionTenors.size(),
+                                                 vector<Handle<Quote>>(strikes.size(), Handle<Quote>()));
+            for (Size i = 0; i < optionTenors.size(); ++i) {
+                optionDates[i] = asof_ + optionTenors[i]; // wrapper->optionDateFromTenor(optionTenors[i]);
                 for (Size j = 0; j < strikes.size(); ++j) {
                     Real vol = wrapper->volatility(optionDates[i], strikes[j], wrapper->allowsExtrapolation());
                     boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
@@ -446,18 +423,12 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         vector<Handle<Quote>> quotes;
         vector<Probability> probs;
 
-        QL_REQUIRE(parameters->defaultTenors().front() > 0 * Days, "default curve tenors must not include t=0");
+        QL_REQUIRE(parameters->defaultTenors(name).front() > 0 * Days, "default curve tenors must not include t=0");
 
         vector<Date> dates(1, asof_);
-        if (parameters->defaultDates().count(name) > 0) {
-            for (auto& date : parameters->defaultDates().at(name)) {
-                dates.push_back(date);
-            }
-        } else {
 
-            for (Size i = 0; i < parameters->defaultTenors().size(); i++) {
-                dates.push_back(asof_ + parameters->defaultTenors()[i]);
-            }
+        for (Size i = 0; i < parameters->defaultTenors(name).size(); i++) {
+            dates.push_back(asof_ + parameters->defaultTenors(name)[i]);
         }
 
         for (const auto& date : dates) {
@@ -569,18 +540,11 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         vector<Time> equityCurveTimes(1, 0.0);
         vector<Date> equityCurveDates(1, asof_);
         if (parameters->equityNames().size() > 0) {
-            if (parameters->equityDates().count(eqName) > 0) {
-                for (auto& date : parameters->equityDates().at(eqName)) {
-                    equityCurveTimes.push_back(dc.yearFraction(asof_, date));
-                    equityCurveDates.push_back(date);
-                }
-            } else {
-                QL_REQUIRE(parameters->equityTenors().size() > 0, "Equity curve tenor grid not defined");
-                QL_REQUIRE(parameters->equityTenors().front() > 0 * Days, "equity curve tenors must not include t=0");
-                for (auto& tenor : parameters->equityTenors()) {
-                    equityCurveTimes.push_back(dc.yearFraction(asof_, asof_ + tenor));
-                    equityCurveDates.push_back(asof_ + tenor);
-                }
+            QL_REQUIRE(parameters->equityTenors(eqName).size() > 0, "Equity curve tenor grid not defined");
+            QL_REQUIRE(parameters->equityTenors(eqName).front() > 0 * Days, "equity curve tenors must not include t=0");
+            for (auto& tenor : parameters->equityTenors(eqName)) {
+                equityCurveTimes.push_back(dc.yearFraction(asof_, asof_ + tenor));
+                equityCurveDates.push_back(asof_ + tenor);
             }
         }
 
@@ -619,7 +583,9 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
             vector<Handle<Quote>> quotes;
             vector<Time> times;
             for (Size i = 0; i < parameters->eqVolExpiries().size(); i++) {
-                Date date = wrapper->optionDateFromTenor(parameters->eqVolExpiries()[i]);
+                Date date =
+                    asof_ +
+                    parameters->eqVolExpiries()[i]; // wrapper->optionDateFromTenor(parameters->eqVolExpiries()[i]);
                 Volatility vol = wrapper->blackVol(date, Null<Real>(), true);
                 times.push_back(wrapper->timeFromReference(date));
                 boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));

@@ -1,20 +1,20 @@
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
- All rights reserved.
+  Copyright (C) 2016 Quaternion Risk Management Ltd
+  All rights reserved.
 
- This file is part of ORE, a free-software/open-source library
- for transparent pricing and risk analysis - http://opensourcerisk.org
+  This file is part of ORE, a free-software/open-source library
+  for transparent pricing and risk analysis - http://opensourcerisk.org
 
- ORE is free software: you can redistribute it and/or modify it
- under the terms of the Modified BSD License.  You should have received a
- copy of the license along with this program.
- The license is also available online at <http://opensourcerisk.org>
+  ORE is free software: you can redistribute it and/or modify it
+  under the terms of the Modified BSD License.  You should have received a
+  copy of the license along with this program.
+  The license is also available online at <http://opensourcerisk.org>
 
- This program is distributed on the basis that it will form a useful
- contribution to risk analytics and model standardisation, but WITHOUT
- ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
-*/
+  This program is distributed on the basis that it will form a useful
+  contribution to risk analytics and model standardisation, but WITHOUT
+  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
+ */
 
 /*! \file scenario/scenariosimmarketparameters.hpp
     \brief A class to hold Scenario parameters for scenarioSimMarket
@@ -27,8 +27,8 @@
 #include <ored/utilities/xmlutils.hpp>
 #include <qle/termstructures/dynamicstype.hpp>
 
-using QuantLib::Period;
 using QuantLib::Date;
+using QuantLib::Period;
 using QuantLib::Rate;
 using std::vector;
 using std::string;
@@ -58,9 +58,8 @@ public:
     const vector<string>& ccys() const { return ccys_; }
     const vector<string>& yieldCurveNames() const { return yieldCurveNames_; }
     const vector<string>& yieldCurveCurrencies() const { return yieldCurveCurrencies_; }
-    const vector<Period>& yieldCurveTenors() const { return yieldCurveTenors_; }
-    // TODO, currently not in toXML(), fromXML()
-    const map<string, vector<Date>>& yieldCurveDates() const { return yieldCurveDates_; }
+    const vector<Period>& yieldCurveTenors(const string& key) const;
+    bool hasYieldCurveTenors(const string& key) const { return yieldCurveTenors_.count(key) > 0; }
     const vector<string>& indices() const { return indices_; }
     const map<string, string>& swapIndices() const { return swapIndices_; }
     const string& interpolation() const { return interpolation_; }
@@ -76,21 +75,20 @@ public:
 
     const bool& simulateCapFloorVols() const { return capFloorVolSimulate_; }
     const vector<string>& capFloorVolCcys() const { return capFloorVolCcys_; }
-    const vector<Period>& capFloorVolExpiries() const { return capFloorVolExpiries_; }
-    // TODO, currently not in toXML(), fromXML()
-    const map<string, vector<Date>>& capFloorVolDates() const { return capFloorDates_; }
+    const vector<Period>& capFloorVolExpiries(const string& key) const;
+    bool hasCapFloorVolExpiries(const string& key) const {
+        return capFloorVolExpiries_.count(key) > 0;
+    }
     const vector<Real>& capFloorVolStrikes() const { return capFloorVolStrikes_; }
     const string& capFloorVolDecayMode() const { return capFloorVolDecayMode_; }
 
     const vector<string>& defaultNames() const { return defaultNames_; }
-    const vector<Period>& defaultTenors() const { return defaultTenors_; }
-    // TODO, currently not in toXML(), fromXML()
-    const map<string, vector<Date>>& defaultDates() const { return defaultDates_; }
+    const vector<Period>& defaultTenors(const string& key) const;
+    bool hasDefaultTenors(const string& key) const { return defaultTenors_.count(key) > 0; }
 
     const vector<string>& equityNames() const { return eqNames_; }
-    const vector<Period>& equityTenors() const { return eqTenors_; }
-    // TODO, currently not in toXML(), fromXML()
-    const map<string, vector<Date>>& equityDates() const { return eqDates_; }
+    const vector<Period>& equityTenors(const string& key) const;
+    bool hasEquityTenors(const string& key) const { return eqTenors_.count(key) > 0; }
 
     bool simulateFXVols() const { return fxVolSimulate_; }
     const vector<Period>& fxVolExpiries() const { return fxVolExpiries_; }
@@ -114,8 +112,7 @@ public:
     vector<string>& ccys() { return ccys_; }
     vector<string>& yieldCurveNames() { return yieldCurveNames_; }
     vector<string>& yieldCurveCurrencies() { return yieldCurveCurrencies_; }
-    vector<Period>& yieldCurveTenors() { return yieldCurveTenors_; }
-    map<string, vector<Date>>& yieldCurveDates() { return yieldCurveDates_; }
+    void setYieldCurveTenors(const string& key, const vector<Period>& p);
     vector<string>& indices() { return indices_; }
     map<string, string>& swapIndices() { return swapIndices_; }
     string& interpolation() { return interpolation_; }
@@ -131,18 +128,15 @@ public:
 
     bool& simulateCapFloorVols() { return capFloorVolSimulate_; }
     vector<string>& capFloorVolCcys() { return capFloorVolCcys_; }
-    vector<Period>& capFloorVolExpiries() { return capFloorVolExpiries_; }
-    map<string, vector<Date>>& capFloorVolDates() { return capFloorDates_; }
+    void setCapFloorVolExpiries(const string& key, const vector<Period>& p);
     vector<Real>& capFloorVolStrikes() { return capFloorVolStrikes_; }
     string& capFloorVolDecayMode() { return capFloorVolDecayMode_; }
 
     vector<string>& defaultNames() { return defaultNames_; }
-    vector<Period>& defaultTenors() { return defaultTenors_; }
-    map<string, vector<Date>>& defaultDates() { return defaultDates_; }
+    void setDefaultTenors(const string& key, const vector<Period>& p);
 
     vector<string>& equityNames() { return eqNames_; }
-    vector<Period>& equityTenors() { return eqTenors_; }
-    map<string, vector<Date>>& equityDates() { return eqDates_; }
+    void setEquityTenors(const string& key, const vector<Period>& p);
 
     bool& simulateFXVols() { return fxVolSimulate_; }
     vector<Period>& fxVolExpiries() { return fxVolExpiries_; }
@@ -177,8 +171,7 @@ private:
     vector<string> ccys_; // may or may not include baseCcy;
     vector<string> yieldCurveNames_;
     vector<string> yieldCurveCurrencies_;
-    vector<Period> yieldCurveTenors_;
-    map<string, vector<Date>> yieldCurveDates_;
+    map<string, vector<Period>> yieldCurveTenors_;
     vector<string> indices_;
     map<string, string> swapIndices_;
     string interpolation_;
@@ -194,18 +187,15 @@ private:
 
     bool capFloorVolSimulate_;
     vector<string> capFloorVolCcys_;
-    vector<Period> capFloorVolExpiries_;
-    map<string, vector<Date>> capFloorDates_;
+    map<string, vector<Period>> capFloorVolExpiries_;
     vector<Real> capFloorVolStrikes_;
     string capFloorVolDecayMode_;
 
     vector<string> defaultNames_;
-    vector<Period> defaultTenors_;
-    map<string, vector<Date>> defaultDates_;
+    map<string, vector<Period>> defaultTenors_;
 
     vector<string> eqNames_;
-    vector<Period> eqTenors_;
-    map<string, vector<Date>> eqDates_;
+    map<string, vector<Period>> eqTenors_;
 
     bool fxVolSimulate_;
     vector<Period> fxVolExpiries_;
