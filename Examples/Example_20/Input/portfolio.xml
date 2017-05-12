@@ -13,9 +13,9 @@
       <CreditCurveId>CREDIT_CURVE_A</CreditCurveId>
       <SettlesAccrual>Y</SettlesAccrual>
       <PaysAtDefaultTime>Y</PaysAtDefaultTime>
-      <ProtectionStart>20170410</ProtectionStart>
-      <UpfrontDate/>
-      <UpfrontFee>0.0324</UpfrontFee>
+      <ProtectionStart>20160203</ProtectionStart>
+      <UpfrontDate>20160203</UpfrontDate>
+      <UpfrontFee>0.0324</UpfrontFee><!-- expressed as a rate, to be multiplied by notional amount -->
       <LegData>
         <LegType>Fixed</LegType>
         <Payer>true</Payer>
@@ -27,8 +27,7 @@
         <PaymentConvention>F</PaymentConvention>
         <FixedLegData>
           <Rates>
-            <Rate>0.01</Rate>
-            <!-- running premium, in addition to the upfront -->
+            <Rate>0.01</Rate><!-- running premium, in addition to the upfront fee -->
           </Rates>
         </FixedLegData>
         <ScheduleData>
@@ -60,8 +59,8 @@
       <CreditCurveId>CREDIT_CURVE_Index</CreditCurveId>
       <SettlesAccrual>Y</SettlesAccrual>
       <PaysAtDefaultTime>Y</PaysAtDefaultTime>
-      <ProtectionStart>20170410</ProtectionStart>
-      <UpfrontDate/>
+      <ProtectionStart>20160203</ProtectionStart>
+      <UpfrontDate>20160203</UpfrontDate>
       <UpfrontFee>0.0324</UpfrontFee>
       <LegData>
         <LegType>Fixed</LegType>

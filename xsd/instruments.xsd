@@ -348,10 +348,10 @@
 
   <xs:complexType name="nameData">
     <xs:all>
-      <xs:element type="xs:string" name="IssuerId" maxOccurs="1" minOccurs="1"/>
-      <xs:element type="xs:string" name="CreditCurveId" maxOccurs="1" minOccurs="1"/>
-      <xs:element type="xs:float" name="Notional" maxOccurs="1" minOccurs="1"/>
-      <xs:element type="currencyCode" name="Currency" maxOccurs="1" minOccurs="1"/>
+      <xs:element type="xs:string" name="IssuerId"/>
+      <xs:element type="xs:string" name="CreditCurveId"/>
+      <xs:element type="xs:float" name="Notional"/>
+      <xs:element type="currencyCode" name="Currency"/>
     </xs:all>
   </xs:complexType>
 
@@ -369,16 +369,16 @@
       <xs:element type="date" name="ProtectionStart"/>
       <xs:element type="date" name="UpfrontDate"/>
       <xs:element type="xs:float" name="UpfrontFee"/>
-      <xs:element type="legData" name="LegData" maxOccurs="1" minOccurs="1"/>
-      <xs:element type="basketData" name="Basket" maxOccurs="1" minOccurs="1"/>
+      <xs:element type="legData" name="LegData"/>
+      <xs:element type="basketData" name="Basket"/>
     </xs:all>
   </xs:complexType>
 
   <xs:complexType name="indexCreditDefaultSwapOptionData">
     <xs:all>
       <xs:element type="bool" name="KnockOut"/>
-      <xs:element type="optionData" name="OptionData" maxOccurs="1" minOccurs="1"/>
-      <xs:element type="indexCreditDefaultSwapData" name="IndexCreditDefaultSwapData" maxOccurs="1" minOccurs="1"/>
+      <xs:element type="optionData" name="OptionData"/>
+      <xs:element type="indexCreditDefaultSwapData" name="IndexCreditDefaultSwapData"/>
     </xs:all>
   </xs:complexType>
 
@@ -389,8 +389,8 @@
       <xs:element type="xs:float" name="UpfrontFee"/>
       <xs:element type="xs:float" name="AttachmentPoint"/>
       <xs:element type="xs:float" name="DetachmentPoint"/>
-      <xs:element type="legData" name="LegData" maxOccurs="1" minOccurs="1"/>
-      <xs:element type="basketData" name="Basket" maxOccurs="1" minOccurs="1"/>
+      <xs:element type="legData" name="LegData"/>
+      <xs:element type="basketData" name="Basket"/>
     </xs:all>
   </xs:complexType>
 
