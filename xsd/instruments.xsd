@@ -174,6 +174,22 @@
       </xs:choice>
     </xs:complexType>
   </xs:element>
+  <xs:element name="CMSLegData" substitutionGroup="legDataType">
+    <xs:complexType>
+      <xs:choice maxOccurs="unbounded" minOccurs="0">
+        <xs:element type="indexNameType" name="Index"/>
+        <xs:element type="xs:boolean" name="IsInArrears"/>
+        <xs:element type="xs:integer" name="FixingDays"/>
+        <xs:element name="Spreads">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:float" name="Spread" maxOccurs="unbounded"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
 
   <xs:complexType name="legData">
     <xs:all>
@@ -259,6 +275,7 @@
       <xs:enumeration value="IndexCreditDefaultSwap"/>
       <xs:enumeration value="IndexCreditDefaultSwapOption"/>
       <xs:enumeration value="SyntheticCDO"/>
+	  <xs:enumeration value="CMS"/>
     </xs:restriction>
   </xs:simpleType>
 
@@ -268,6 +285,7 @@
       <xs:enumeration value="Floating"/>
       <xs:enumeration value="CPI"/>
       <xs:enumeration value="YY"/>
+	  <xs:enumeration value="CMS"/>
     </xs:restriction>
   </xs:simpleType>
 
