@@ -592,8 +592,11 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(
 
         // cache original vol data
         for (Size j = 0; j < n_cfvol_exp; ++j) {
-            Date expiry = today_ + simMarketData_->capFloorVolExpiries(ccy).size();
+            Date expiry = today_ + simMarketData_->capFloorVolExpiries(ccy)[j];
             volExpiryTimes[j] = dc.yearFraction(today_, expiry);
+        }
+        for (Size j = 0; j < n_cfvol_exp; ++j) {
+            Period expiry = simMarketData_->capFloorVolExpiries(ccy)[j];
             for (Size k = 0; k < n_cfvol_strikes; ++k) {
                 Real strike = simMarketData_->capFloorVolStrikes()[k];
                 Real vol = ts->volatility(expiry, strike);
