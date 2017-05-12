@@ -122,7 +122,7 @@ public:
     virtual const Conventions& conventions() const { return conventions_; }
 
     //! override shift tenors with sim market tenors
-    void overrideTenors(const bool override) { overrideTenors_ = override; }
+    void overrideTenors(const bool b) { overrideTenors_ = b; }
 
 protected:
     //! initialize the various components that will be passed to the sensitivities valuation engine
