@@ -130,7 +130,7 @@ XMLNode* YoYLegData::toXML(XMLDocument& doc) {
 }
 
 XMLNode* CMSLegData::toXML(XMLDocument& doc) {
-    XMLNode* node = doc.allocNode("CmsLegData");
+    XMLNode* node = doc.allocNode("CMSLegData");
     XMLUtils::addChild(doc, node, "Index", swapIndex_);
     XMLUtils::addChildren(doc, node, "Spreads", "Spread", spreads_);
     XMLUtils::addChild(doc, node, "IsInArrears", isInArrears_);
@@ -200,7 +200,7 @@ void LegData::fromXML(XMLNode* node) {
     } else if (legType_ == "YY") {
         yoyLegData_.fromXML(XMLUtils::getChildNode(node, "YYLegData"));
     } else if (legType_ == "CMS") {
-        yoyLegData_.fromXML(XMLUtils::getChildNode(node, "CMSLegData"));
+        cmsLegData_.fromXML(XMLUtils::getChildNode(node, "CMSLegData"));
     } else {
         QL_FAIL("Unknown legType :" << legType_);
     }
