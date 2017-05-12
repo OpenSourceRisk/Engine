@@ -34,7 +34,7 @@ const vector<Period>& returnTenors(const map<string, vector<Period>>& m, const s
     } else if (m.count("") > 0) {
         return m.at("");
     } else
-        QL_FAIL("no period vector for key " << k << " found.");
+        QL_FAIL("no period vector for key \"" << k << "\" found.");
 }
 } // namespace
 
