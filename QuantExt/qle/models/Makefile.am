@@ -18,10 +18,13 @@ libModels_la_SOURCES = \
 	eqbspiecewiseconstantparametrization.cpp \
 	fxbspiecewiseconstantparametrization.cpp \
 	fxeqoptionhelper.cpp \
+	cpicapfloorhelper.cpp \
+	cdsoptionhelper.cpp \
 	gaussian1dcrossassetadaptor.cpp \
 	linkablecalibratedmodel.cpp \
 	lgm.cpp \
 	lgmimpliedyieldtermstructure.cpp \
+	lgmimplieddefaulttermstructure.cpp \
 	parametrization.cpp \
 	piecewiseconstanthelper.cpp
 
@@ -39,7 +42,11 @@ this_include_HEADERS = \
 	fxbsparametrization.hpp \
 	eqbspiecewiseconstantparametrization.hpp \
 	fxbspiecewiseconstantparametrization.hpp \
+	infdkparametrization.hpp \
+	crlgm1fparametrization.hpp \
 	fxeqoptionhelper.hpp \
+	cpicapfloorhelper.hpp \
+	cdsoptionhelper.hpp \
 	gaussian1dcrossassetadaptor.hpp \
 	irlgm1fconstantparametrization.hpp \
 	irlgm1fpiecewiseconstanthullwhiteadaptor.hpp \
@@ -49,6 +56,7 @@ this_include_HEADERS = \
 	linkablecalibratedmodel.hpp \
 	lgm.hpp \
 	lgmimpliedyieldtermstructure.hpp \
+	lgmimplieddefaulttermstructure.hpp \
 	parametrization.hpp \
 	piecewiseconstanthelper.hpp \
 	pseudoparameter.hpp
