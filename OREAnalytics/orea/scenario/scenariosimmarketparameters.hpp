@@ -50,7 +50,12 @@ public:
     ScenarioSimMarketParameters()
         : baseCcy_(""), interpolation_(""), extrapolate_(false), swapVolSimulate_(false), swapVolDecayMode_(""),
           capFloorVolSimulate_(false), capFloorVolDecayMode_(""), fxVolSimulate_(false), fxVolDecayMode_(""),
-          eqVolSimulate_(false), eqVolDecayMode_("") {}
+          eqVolSimulate_(false), eqVolDecayMode_("") {
+        // init default values
+        capFloorVolExpiries_[""];
+        defaultTenors_[""];
+        eqTenors_[""];
+    }
 
     //! \name Inspectors
     //@{
@@ -76,9 +81,7 @@ public:
     const bool& simulateCapFloorVols() const { return capFloorVolSimulate_; }
     const vector<string>& capFloorVolCcys() const { return capFloorVolCcys_; }
     const vector<Period>& capFloorVolExpiries(const string& key) const;
-    bool hasCapFloorVolExpiries(const string& key) const {
-        return capFloorVolExpiries_.count(key) > 0;
-    }
+    bool hasCapFloorVolExpiries(const string& key) const { return capFloorVolExpiries_.count(key) > 0; }
     const vector<Real>& capFloorVolStrikes() const { return capFloorVolStrikes_; }
     const string& capFloorVolDecayMode() const { return capFloorVolDecayMode_; }
 
