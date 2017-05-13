@@ -8,7 +8,7 @@ OREANALYTICS_TESTS = \
 	scenariogenerator.hpp scenariogenerator.cpp \
 	sensitivityanalysis.hpp sensitivityanalysis.cpp \
 	sensitivityanalysis2.hpp sensitivityanalysis2.cpp \
-	testmarket.hpp \
+	testmarket.hpp testmarket.cpp \
 	testportfolio.hpp testportfolio.cpp \
 	observationmode.hpp observationmode.cpp \
 	stresstest.hpp stresstest.cpp \
