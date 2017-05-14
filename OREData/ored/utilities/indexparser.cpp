@@ -45,6 +45,7 @@ namespace data {
 
 class IborIndexParser {
 public:
+    virtual ~IborIndexParser() {}
     virtual boost::shared_ptr<IborIndex> build(Period p, const Handle<YieldTermStructure>& h) const = 0;
 };
 
@@ -138,6 +139,7 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldT
 // Swap Index Parser base
 class SwapIndexParser {
 public:
+    virtual ~SwapIndexParser() {}
     virtual boost::shared_ptr<SwapIndex> build(Period p, const Handle<YieldTermStructure>& f,
                                                const Handle<YieldTermStructure>& d) const = 0;
 };
@@ -187,6 +189,7 @@ boost::shared_ptr<SwapIndex> parseSwapIndex(const string& s, const Handle<YieldT
 // Zero Inflation Index Parser
 class ZeroInflationIndexParserBase {
 public:
+    virtual ~ZeroInflationIndexParserBase() {}
     virtual boost::shared_ptr<ZeroInflationIndex> build(bool isInterpolated,
                                                         const Handle<ZeroInflationTermStructure>& h) const = 0;
 };
