@@ -84,7 +84,10 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<EquityOptionEngineBuilder>());
 
     registerBuilder(boost::make_shared<BondDiscountingEngineBuilder>());
-}
+
+    registerBuilder(boost::make_shared<MidPointCdsEngineBuilder>());
+    registerBuilder(boost::make_shared<MidPointIndexCdsEngineBuilder>());
+    registerBuilder(boost::make_shared<BlackIndexCdsOptionEngineBuilder>());
 
 } // namespace data
 } // namespace ore

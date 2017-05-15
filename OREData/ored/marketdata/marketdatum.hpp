@@ -23,12 +23,12 @@
 
 #pragma once
 
-#include <string>
-#include <ql/types.hpp>
+#include <boost/make_shared.hpp>
+#include <ql/quotes/simplequote.hpp>
 #include <ql/time/date.hpp>
 #include <ql/time/daycounter.hpp>
-#include <ql/quotes/simplequote.hpp>
-#include <boost/make_shared.hpp>
+#include <ql/types.hpp>
+#include <string>
 
 using std::string;
 using QuantLib::Real;
@@ -87,7 +87,8 @@ public:
         EQUITY_FWD,
         EQUITY_DIVIDEND,
         EQUITY_OPTION,
-        BOND
+        BOND,
+        INDEX_CDS_OPTION
     };
 
     //! Supported market quote types
@@ -691,8 +692,8 @@ public:
                   Period expiry, string strike)
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::FX_OPTION), unitCcy_(unitCcy), ccy_(ccy),
           expiry_(expiry), strike_(strike) {
-        QL_REQUIRE(strike == "ATM" || strike == "25BF" || strike == "25RR", "Invalid FXOptionQuote strike (" << strike
-                                                                                                             << ")");
+        QL_REQUIRE(strike == "ATM" || strike == "25BF" || strike == "25RR",
+                   "Invalid FXOptionQuote strike (" << strike << ")");
     }
 
     //! \name Inspectors
@@ -945,6 +946,33 @@ public:
     //@}
 private:
     string securityID_;
+};
+
+//! CDS Index Option data class
+/*!
+This class holds single market points of type
+- INDEX_CDS_OPTION
+Specific data comprise
+- index name
+- option term (either a date or a period)
+
+\ingroup marketdata
+*/
+class IndexCDSOptionQuote : public MarketDatum {
+public:
+    //! Constructor
+    IndexCDSOptionQuote(Real value, Date asofDate, const string& name, const string& indexName, const string& term)
+        : MarketDatum(value, asofDate, name, QuoteType::RATE_LNVOL, InstrumentType::INDEX_CDS_OPTION),
+          indexName_(indexName), term_(term) {}
+
+    //! \name Inspectors
+    //@{
+    const string& indexName() const { return indexName_; }
+    const string& term() const { return term_; }
+    //@}
+private:
+    string indexName_;
+    string term_;
 };
 }
 }

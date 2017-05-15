@@ -82,4 +82,26 @@
         <Parameter name="TimestepPeriod">6M</Parameter>
     </EngineParameters>
   </Product>
+  <Product type="CreditDefaultSwap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>MidPointCdsEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="IndexCreditDefaultSwap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>MidPointIndexCdsEngine</Engine>
+    <EngineParameters>
+      <Parameter name="Curve">Underlying</Parameter> <!-- Underlying or Index -->
+    </EngineParameters>
+  </Product>
+  <Product type="IndexCreditDefaultSwapOption">
+    <Model>Black</Model>
+    <ModelParameters/>
+    <Engine>BlackIndexCdsOptionEngine</Engine>
+    <EngineParameters>
+      <Parameter name="Curve">Underlying</Parameter> <!-- Underlying or Index -->
+    </EngineParameters>
+  </Product>
 </PricingEngines>
