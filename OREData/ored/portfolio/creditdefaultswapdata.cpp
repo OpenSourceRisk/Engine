@@ -29,49 +29,48 @@ namespace ore {
 namespace data {
 
 void CreditDefaultSwapData::fromXML(XMLNode* node) {
-    XMLUtils::cehckNode(node, "CreditDefaultSwapData");
-    issuerId_ = XMLUtils::getChildValue(cdsNode, "IssuerId", true);
-    creditCurveId_ = XMLUtils::getChildValue(cdsNode, "CreditCurveId", true);
-    settlesAccrual_ = XMLUtils::getChildValueAsBool(cdsNode, "SettlesAccrual", false);       // default = Y
-    paysAtDefaultTime_ = XMLUtils::getChildValueAsBool(cdsNode, "PaysAtDefaultTime", false); // default = Y
-    XMLNode* tmp = XMLUtils::getChildNode(cdsNode, "ProtectionStart");
+    XMLUtils::checkNode(node, "CreditDefaultSwapData");
+    issuerId_ = XMLUtils::getChildValue(node, "IssuerId", true);
+    creditCurveId_ = XMLUtils::getChildValue(node, "CreditCurveId", true);
+    settlesAccrual_ = XMLUtils::getChildValueAsBool(node, "SettlesAccrual", false);       // default = Y
+    paysAtDefaultTime_ = XMLUtils::getChildValueAsBool(node, "PaysAtDefaultTime", false); // default = Y
+    XMLNode* tmp = XMLUtils::getChildNode(node, "ProtectionStart");
     if (tmp)
         protectionStart_ = parseDate(XMLUtils::getNodeValue(tmp)); // null date if empty
     else
         protectionStart_ = Date();
-    tmp = XMLUtils::getChildNode(cdsNode, "UpfrontDate");
+    tmp = XMLUtils::getChildNode(node, "UpfrontDate");
     if (tmp)
         upfrontDate_ = parseDate(XMLUtils::getNodeValue(tmp)); // null date if empty
     else
         upfrontDate_ = Date();
     if (upfrontDate_ != Date())
-        upfrontFee_ = boost::lexical_cast<Real>(XMLUtils::getChildValue(cdsNode, "UpfrontFee")); // throw if empty
+        upfrontFee_ = boost::lexical_cast<Real>(XMLUtils::getChildValue(node, "UpfrontFee")); // throw if empty
     else
         upfrontFee_ = Null<Real>();
-    leg_.fromXML(XMLUtils::getChildNode(cdsNode, "LegData"));
+    leg_.fromXML(XMLUtils::getChildNode(node, "LegData"));
 }
 
 XMLNode* CreditDefaultSwapData::toXML(XMLDocument& doc) {
-    XMLNode* node = Trade::toXML(doc);
-    XMLNode* cdsNode = doc.allocNode("CreditDefaultSwapData");
-    XMLUtils::appendNode(node, cdsNode);
-    XMLUtils::addChild(doc, cdsNode, "IssuerId", issuerId_);
-    XMLUtils::addChild(doc, cdsNode, "CreditCurveId", creditCurveId_);
-    XMLUtils::addChild(doc, cdsNode, "SettlesAccrual", settlesAccrual_);
-    XMLUtils::addChild(doc, cdsNode, "PaysAtDefaultTime", paysAtDefaultTime_);
+    XMLNode* node = doc.allocNode("CreditDefaultSwapData");
+    XMLUtils::appendNode(node, node);
+    XMLUtils::addChild(doc, node, "IssuerId", issuerId_);
+    XMLUtils::addChild(doc, node, "CreditCurveId", creditCurveId_);
+    XMLUtils::addChild(doc, node, "SettlesAccrual", settlesAccrual_);
+    XMLUtils::addChild(doc, node, "PaysAtDefaultTime", paysAtDefaultTime_);
     if (protectionStart_ != Date()) {
         std::ostringstream tmp;
         tmp << QuantLib::io::iso_date(protectionStart_);
-        XMLUtils::addChild(doc, cdsNode, "ProtectionStart", tmp.str());
+        XMLUtils::addChild(doc, node, "ProtectionStart", tmp.str());
     }
     if (upfrontDate_ != Date()) {
         std::ostringstream tmp;
         tmp << QuantLib::io::iso_date(upfrontDate_);
-        XMLUtils::addChild(doc, cdsNode, "UpfrontDate", tmp.str());
+        XMLUtils::addChild(doc, node, "UpfrontDate", tmp.str());
     }
     if (upfrontFee_ != Null<Real>())
-        XMLUtils::addChild(doc, cdsNode, "UpfrontFee", upfrontFee_);
-    XMLUtils::appendNode(cdsNode, leg_.toXML(doc));
+        XMLUtils::addChild(doc, node, "UpfrontFee", upfrontFee_);
+    XMLUtils::appendNode(node, leg_.toXML(doc));
     return node;
 }
 } // namespace data

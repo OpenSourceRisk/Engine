@@ -54,21 +54,34 @@ BlackIndexCdsOptionEngine::BlackIndexCdsOptionEngine(const Handle<DefaultProbabi
 }
 
 BlackIndexCdsOptionEngine::BlackIndexIndexCdsOptionEngine(
-    const std::vector<Handle<DefaultProbabilityTermStructure> >& underlyingProbability, Real recoveryRate,
-    const Handle<YieldTermStructure>& termStructure, const Handle<Quote>& vol)
-    : underlyingProbability_(underlyingProbability), recoveryRate_(recoveryRate), termStructure_(termStructure),
-      volatility_(volatility), useUnderlyingCurves_(true) {
+    const std::vector<Handle<DefaultProbabilityTermStructure> >& underlyingProbability,
+    const std::vector<Real>& underlyingRecoveryRate, const Handle<YieldTermStructure>& termStructure,
+    const Handle<Quote>& vol)
+    : underlyingProbability_(underlyingProbability), underlyingRecoveryRate_(recoveryRate),
+      termStructure_(termStructure), volatility_(volatility), useUnderlyingCurves_(true) {
     for (Size i = 0; i < underlyingProbability.size(); ++i)
         registerWith(underlyingProbability_[i]);
     registerWith(termStructure_);
     registerWith(volatility_);
 }
 
-void BlackIndexCdsOptionEngine::defaultProbability(const Date& d1, const Date& d2) const {
+Real BlackIndexCdsOptionEngine::defaultProbability(const Date& d1, const Date& d2) const {
     if (!useUnderlyingCurves_)
         return probability_->defaultProbability(d1, d2);
+    Real sum = 0.0;
     for (Size i = 0; i < underlyingProbability_.size(); ++i) {
         sum += underlyingProbability_->defaultProbability(d1, d2) * arguments_->underlyingNotionals_[i];
+        sumNotional += arguments_->underlyingNotionals_[i];
+    }
+    return sum / sumNotional;
+}
+
+Real MidPointIndexEngine::recoveryRate() const {
+    if (!useUnderlyingCurves_)
+        return recoveryRate_;
+    Real sum = 0.0;
+    for (Size i = 0; i < underlyingProbability_.size(); ++i) {
+        sum += underlyingRecoveryRate_[i];
         sumNotional += arguments_->underlyingNotionals_[i];
     }
     return sum / sumNotional;

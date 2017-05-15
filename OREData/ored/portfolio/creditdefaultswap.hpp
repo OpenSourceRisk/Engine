@@ -38,7 +38,7 @@ public:
     virtual void fromXML(XMLNode* node);
     virtual XMLNode* toXML(XMLDocument& doc);
 
-    const CreditDefaultSwapData& data() const { return creditDefaultSwap_; }
+    const CreditDefaultSwapData& swap() const { return swap_; }
 
 private:
     CreditDefaultSwapData swap_;

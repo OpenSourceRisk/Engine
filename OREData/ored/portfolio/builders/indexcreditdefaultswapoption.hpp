@@ -58,9 +58,10 @@ protected:
     \ingroup portfolio
 */
 
-class MidPointIndexCdsOptionEngineBuilder : public IndexCreditDefaultSwapOptionEngineBuilder {
+class BlackIndexCdsOptionEngineBuilder : public IndexCreditDefaultSwapOptionEngineBuilder {
 public:
-    MidPointCdsEngineBuilder() : CreditDefaultSwapEngineBuilder("Black", "BlackIndexCdsOptionEngine") {}
+    BlackIndexCdsOptionEngineBuilder()
+        : IndexCreditDefaultSwapOptionEngineBuilder("Black", "BlackIndexCdsOptionEngine") {}
 
 protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const string& creditCurveId,
@@ -78,11 +79,11 @@ protected:
             std::vector<Real> recovery;
             for (auto& c : creditCurveIds) {
                 dpts.push_back(market_->defaultCurve(c, configuration(MarketContext::pricing)));
-                recovery.push_back(market_->recoveryRate(c, configuration(MarketContext::pricing)));
-                return boost::make_shared<QuantExt::BlackIndexCdsOptionEngine>(dpty, recovery, yts, vol);
+                recovery.push_back(market_->recoveryRate(c, configuration(MarketContext::pricing))->value());
             }
+            return boost::make_shared<QuantExt::BlackIndexCdsOptionEngine>(dpts, recovery, yts, vol);
         } else {
-            QL_FAIL("MidPointIndexCdsEngineBuilder: Curve Parameter value \""
+            QL_FAIL("BlackIndexCdsEngineBuilder: Curve Parameter value \""
                     << engineParameters_.at("Curve") << "\" not recognised, expected Underlying or Index");
         }
     }

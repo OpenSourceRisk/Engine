@@ -19,6 +19,7 @@
 #pragma once
 
 #include <ored/portfolio/indexcreditdefaultswapdata.hpp>
+#include <ored/portfolio/optiondata.hpp>
 #include <ored/portfolio/trade.hpp>
 
 namespace ore {
@@ -30,8 +31,8 @@ public:
     IndexCreditDefaultSwapOption() : Trade("IndexCreditDefaultSwapOption") {}
 
     //! Constructor
-    IndexCreditDefaultSwap(const Envelope& env, const IndexCreditDefaultSwapData& swap, const OptionData& option,
-                           const bool knockOut)
+    IndexCreditDefaultSwapOption(const Envelope& env, const IndexCreditDefaultSwapData& swap, const OptionData& option,
+                                 const bool knockOut)
         : Trade("IndexCreditDefaultSwapOption", env), swap_(swap), option_(option), knockOut_(knockOut) {}
 
     virtual void build(const boost::shared_ptr<EngineFactory>&);
@@ -39,7 +40,7 @@ public:
     virtual void fromXML(XMLNode* node);
     virtual XMLNode* toXML(XMLDocument& doc);
 
-    const IndexCreditdefaultSwapData& swap() const { return swap_; }
+    const IndexCreditDefaultSwapData& swap() const { return swap_; }
     const OptionData& option() const { return option_; }
     bool knockOut() const { return knockOut_; }
 

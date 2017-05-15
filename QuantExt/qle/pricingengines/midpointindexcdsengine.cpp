@@ -64,9 +64,10 @@ MidPointIndexEngine::MidPointIndexCdsEngine(
     registerWith(discountCurve_);
 }
 
-void MidPointIndexEngine::survivalProbability(const Date& d) const {
+Real MidPointIndexEngine::survivalProbability(const Date& d) const {
     if (!useUnderlyingCurves_)
         return probability_->survivialProbability(d);
+    Real sum = 0.0;
     for (Size i = 0; i < underlyingProbability_.size(); ++i) {
         sum += underlyingProbability_->survivalProbability(d) * arguments_->underlyingNotionals_[i];
         sumNotional += arguments_->underlyingNotionals_[i];
@@ -74,11 +75,23 @@ void MidPointIndexEngine::survivalProbability(const Date& d) const {
     return sum / sumNotional;
 }
 
-void MidPointIndexEngine::defaultProbability(const Date& d1, const Date& d2) const {
+Real MidPointIndexEngine::defaultProbability(const Date& d1, const Date& d2) const {
     if (!useUnderlyingCurves_)
         return probability_->defaultProbability(d1, d2);
+    Real sum = 0.0;
     for (Size i = 0; i < underlyingProbability_.size(); ++i) {
         sum += underlyingProbability_->defaultProbability(d1, d2) * arguments_->underlyingNotionals_[i];
+        sumNotional += arguments_->underlyingNotionals_[i];
+    }
+    return sum / sumNotional;
+}
+
+Real MidPointIndexEngine::recoveryRate() const {
+    if (!useUnderlyingCurves_)
+        return recoveryRate_;
+    Real sum = 0.0;
+    for (Size i = 0; i < underlyingProbability_.size(); ++i) {
+        sum += underlyingRecoveryRate_[i];
         sumNotional += arguments_->underlyingNotionals_[i];
     }
     return sum / sumNotional;
@@ -152,7 +165,7 @@ void MidPointIndexEngine::calculate() const {
         }
 
         // on the other side, we add the payment in case of default.
-        Real claim = arguments_.claim->amount(defaultDate, arguments_.notional, recoveryRate_);
+        Real claim = arguments_.claim->amount(defaultDate, arguments_.notional, recoveryRate());
         if (arguments_.paysAtDefaultTime) {
             results_.defaultLegNPV += P * claim * discountCurve_->discount(defaultDate);
         } else {

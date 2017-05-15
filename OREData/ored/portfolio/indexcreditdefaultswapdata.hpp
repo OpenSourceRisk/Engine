@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <ored/portfolio/basketdata.hpp>
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/trade.hpp>
 
@@ -30,11 +31,10 @@ public:
     IndexCreditDefaultSwapData() {}
 
     //! Constructor
-    IndexCreditDefaultSwapData(const string& creditCurveId, const LegData& leg, 
-                          const bool settlesAccrual = true, const bool paysAtDefaultTime = true,
-                          const Date& protectionStart = Date(), const Date& upfrontDate = Date(),
-                          const Real upfrontFee = Null<Real>())
-        : issuerId_(issuerId), creditCurveId_(creditCurveId), leg_(leg), settlesAccrual_(settlesAccrual),
+    IndexCreditDefaultSwapData(const string& creditCurveId, const LegData& leg, const bool settlesAccrual = true,
+                               const bool paysAtDefaultTime = true, const Date& protectionStart = Date(),
+                               const Date& upfrontDate = Date(), const Real upfrontFee = Null<Real>())
+        : creditCurveId_(creditCurveId), leg_(leg), settlesAccrual_(settlesAccrual),
           paysAtDefaultTime_(paysAtDefaultTime), protectionStart_(protectionStart), upfrontDate_(upfrontDate),
           upfrontFee_(upfrontFee) {}
 
@@ -42,8 +42,8 @@ public:
     XMLNode* toXML(XMLDocument& doc);
 
     const string& creditCurveId() const { return creditCurveId_; }
-    const LegData& legData() const { return leg_; }
-    const BasketData& basketData() const { return basket_; }
+    const LegData& leg() const { return leg_; }
+    const BasketData& basket() const { return basket_; }
     bool settlesAccrual() const { return settlesAccrual_; }
     bool paysAtDefaultTime() const { return paysAtDefaultTime_; }
     const Date& protectionStart() const { return protectionStart_; }
@@ -51,7 +51,6 @@ public:
     Real upfrontFee() const { return upfrontFee_; }
 
 private:
-    string issuerId_;
     string creditCurveId_;
     LegData leg_;
     BasketData basket_;

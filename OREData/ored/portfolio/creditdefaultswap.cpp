@@ -35,33 +35,33 @@ void CreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engineFact
     const boost::shared_ptr<Market> market = engineFactory->market();
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("CreditDefaultSwap");
 
-    QL_REQUIRE(swap_.data().legType() == "Fixed", "CreditDefaultSwap requires Fixed leg");
-    Schedule schedule = makeSchedule(swap_.data().schedule());
-    Calendar calendar = parseCalendar(swap_.data().schedule().rules().front().calendar());
-    BusinessDayConvention payConvention = parseBusinessDayConvention(swap_.data().paymentConvention());
-    Protection::Side prot = swap_.data().isPayer() ? Protection::Side::Buyer : Protection::Side::Seller;
-    QL_REQUIRE(swap_.data().notionals().size() == 1, "CreditDefaultSwap requires single notional");
-    notional_ = swap_.data().notionals().front();
-    DayCounter dc = parseDayCounter(swap_.data().dayCounter());
-    QL_REQUIRE(swap_.data().fixedLegData().rates().size() == 1, "CreditDefaultSwap requires single rate");
+    QL_REQUIRE(swap_.leg().legType() == "Fixed", "CreditDefaultSwap requires Fixed leg");
+    Schedule schedule = makeSchedule(swap_.leg().schedule());
+    Calendar calendar = parseCalendar(swap_.leg().schedule().rules().front().calendar());
+    BusinessDayConvention payConvention = parseBusinessDayConvention(swap_.leg().paymentConvention());
+    Protection::Side prot = swap_.leg().isPayer() ? Protection::Side::Buyer : Protection::Side::Seller;
+    QL_REQUIRE(swap_.leg().notionals().size() == 1, "CreditDefaultSwap requires single notional");
+    notional_ = swap_.leg().notionals().front();
+    DayCounter dc = parseDayCounter(swap_.leg().dayCounter());
+    QL_REQUIRE(swap_.leg().fixedLegData().rates().size() == 1, "CreditDefaultSwap requires single rate");
 
     boost::shared_ptr<QuantExt::CreditDefaultSwap> cds;
 
-    if (upfrontDate_ == Null<Date>())
+    if (swap_.upfrontDate() == Null<Date>())
         cds = boost::make_shared<QuantExt::CreditDefaultSwap>(
-            prot, swap_.data().notionals().front(), swap_.data().fixedLegData().rates().front(), schedule,
-            payConvention, dc, swap_.settlesAccrual(), swap_.paysAtDefaultTime(), swap_.protectionStart());
+            prot, swap_.leg().notionals().front(), swap_.leg().fixedLegData().rates().front(), schedule, payConvention,
+            dc, swap_.settlesAccrual(), swap_.paysAtDefaultTime(), swap_.protectionStart());
     else {
-        QL_REQUIRE(upfrontFee_ != Null<Real>(), "CreditDefaultSwap: upfront date given, but no upfront fee");
+        QL_REQUIRE(swap_.upfrontFee() != Null<Real>(), "CreditDefaultSwap: upfront date given, but no upfront fee");
         cds = boost::make_shared<QuantExt::CreditDefaultSwap>(
-            prot, notional_, upfrontFee_, swap_.data().fixedLegData().rates().front(), schedule, payConvention, dc,
-            swap_.settlesAccrual(), swap_.paysAtDefaultTime(), swap_.protectionStart(), upfrontDate_);
+            prot, notional_, swap_.upfrontFee(), swap_.leg().fixedLegData().rates().front(), schedule, payConvention,
+            dc, swap_.settlesAccrual(), swap_.paysAtDefaultTime(), swap_.protectionStart(), swap_.upfrontDate());
     }
 
     boost::shared_ptr<CreditDefaultSwapEngineBuilder> cdsBuilder =
         boost::dynamic_pointer_cast<CreditDefaultSwapEngineBuilder>(builder);
 
-    npvCurrency_ = swap_.data().currency();
+    npvCurrency_ = swap_.leg().currency();
 
     QL_REQUIRE(cdsBuilder, "No Builder found for CreditDefaultSwap: " << id());
     cds->setPricingEngine(cdsBuilder->engine(parseCurrency(npvCurrency_), swap_.creditCurveId()));
@@ -72,7 +72,7 @@ void CreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engineFact
 
     legs_ = {cds->coupons()};
     legCurrencies_ = {npvCurrency_};
-    legPayers_ = {swap_.data().isPayer()};
+    legPayers_ = {swap_.leg().isPayer()};
 }
 
 void CreditDefaultSwap::fromXML(XMLNode* node) {
@@ -84,7 +84,7 @@ void CreditDefaultSwap::fromXML(XMLNode* node) {
 
 XMLNode* CreditDefaultSwap::toXML(XMLDocument& doc) {
     XMLNode* node = Trade::toXML(doc);
-    XMLUtils::appendNode(node, creditDefaultSwapData_.toXML(doc));
+    XMLUtils::appendNode(node, swap_.toXML(doc));
     return node;
 }
 } // namespace data

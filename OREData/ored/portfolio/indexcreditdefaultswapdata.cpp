@@ -16,11 +16,13 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/lexical_cast.hpp>
-#include <ored/portfolio/creditdefaultswapdata.hpp>
+#include <ored/portfolio/indexcreditdefaultswapdata.hpp>
+
 #include <ored/portfolio/legdata.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+
+#include <boost/lexical_cast.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -29,50 +31,48 @@ namespace ore {
 namespace data {
 
 void IndexCreditDefaultSwapData::fromXML(XMLNode* node) {
-    XMLUtils::cehckNode(node, "IndexCreditDefaultSwapData");
-    issuerId_ = XMLUtils::getChildValue(cdsNode, "IssuerId", true);
-    creditCurveId_ = XMLUtils::getChildValue(cdsNode, "CreditCurveId", true);
-    settlesAccrual_ = XMLUtils::getChildValueAsBool(cdsNode, "SettlesAccrual", false);       // default = Y
-    paysAtDefaultTime_ = XMLUtils::getChildValueAsBool(cdsNode, "PaysAtDefaultTime", false); // default = Y
-    XMLNode* tmp = XMLUtils::getChildNode(cdsNode, "ProtectionStart");
+    XMLUtils::checkNode(node, "IndexCreditDefaultSwapData");
+    creditCurveId_ = XMLUtils::getChildValue(node, "CreditCurveId", true);
+    settlesAccrual_ = XMLUtils::getChildValueAsBool(node, "SettlesAccrual", false);       // default = Y
+    paysAtDefaultTime_ = XMLUtils::getChildValueAsBool(node, "PaysAtDefaultTime", false); // default = Y
+    XMLNode* tmp = XMLUtils::getChildNode(node, "ProtectionStart");
     if (tmp)
         protectionStart_ = parseDate(XMLUtils::getNodeValue(tmp)); // null date if empty
     else
         protectionStart_ = Date();
-    tmp = XMLUtils::getChildNode(cdsNode, "UpfrontDate");
+    tmp = XMLUtils::getChildNode(node, "UpfrontDate");
     if (tmp)
         upfrontDate_ = parseDate(XMLUtils::getNodeValue(tmp)); // null date if empty
     else
         upfrontDate_ = Date();
     if (upfrontDate_ != Date())
-        upfrontFee_ = boost::lexical_cast<Real>(XMLUtils::getChildValue(cdsNode, "UpfrontFee")); // throw if empty
+        upfrontFee_ = boost::lexical_cast<Real>(XMLUtils::getChildValue(node, "UpfrontFee")); // throw if empty
     else
         upfrontFee_ = Null<Real>();
-    leg_.fromXML(XMLUtils::getChildNode(cdsNode, "LegData"));
-    basket_.fromXML(XMLUtils::getChildNode(cdsNode, "BasketData"));
+    leg_.fromXML(XMLUtils::getChildNode(node, "LegData"));
+    basket_.fromXML(XMLUtils::getChildNode(node, "BasketData"));
 }
 
 XMLNode* IndexCreditDefaultSwapData::toXML(XMLDocument& doc) {
-    XMLNode* node = Trade::toXML(doc);
-    XMLNode* cdsNode = doc.allocNode("IndexCreditDefaultSwapData");
-    XMLUtils::appendNode(node, cdsNode);
-    XMLUtils::addChild(doc, cdsNode, "CreditCurveId", creditCurveId_);
-    XMLUtils::addChild(doc, cdsNode, "SettlesAccrual", settlesAccrual_);
-    XMLUtils::addChild(doc, cdsNode, "PaysAtDefaultTime", paysAtDefaultTime_);
+    XMLNode* node = doc.allocNode("IndexCreditDefaultSwapData");
+    XMLUtils::appendNode(node, node);
+    XMLUtils::addChild(doc, node, "CreditCurveId", creditCurveId_);
+    XMLUtils::addChild(doc, node, "SettlesAccrual", settlesAccrual_);
+    XMLUtils::addChild(doc, node, "PaysAtDefaultTime", paysAtDefaultTime_);
     if (protectionStart_ != Date()) {
         std::ostringstream tmp;
         tmp << QuantLib::io::iso_date(protectionStart_);
-        XMLUtils::addChild(doc, cdsNode, "ProtectionStart", tmp.str());
+        XMLUtils::addChild(doc, node, "ProtectionStart", tmp.str());
     }
     if (upfrontDate_ != Date()) {
         std::ostringstream tmp;
         tmp << QuantLib::io::iso_date(upfrontDate_);
-        XMLUtils::addChild(doc, cdsNode, "UpfrontDate", tmp.str());
+        XMLUtils::addChild(doc, node, "UpfrontDate", tmp.str());
     }
     if (upfrontFee_ != Null<Real>())
-        XMLUtils::addChild(doc, cdsNode, "UpfrontFee", upfrontFee_);
-    XMLUtils::appendNode(cdsNode, leg_.toXML(doc));
-    XMLUtils::appendNode(cdsNode, basket_.toXML(doc));
+        XMLUtils::addChild(doc, node, "UpfrontFee", upfrontFee_);
+    XMLUtils::appendNode(node, leg_.toXML(doc));
+    XMLUtils::appendNode(node, basket_.toXML(doc));
     return node;
 }
 } // namespace data

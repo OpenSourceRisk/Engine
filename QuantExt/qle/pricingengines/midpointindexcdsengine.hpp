@@ -55,14 +55,16 @@ public:
                            const Handle<YieldTermStructure>& discountCurve,
                            boost::optional<bool> includeSettlementDateFlows = boost::none);
     // use underlying curves
-    MidPointIndexCdsEngine(std::vector<const Handle<DefaultProbabilityTermStructure> >&,
-                           std::vector<Real> underlyingRecoveryRate, const Handle<YieldTermStructure>& discountCurve,
+    MidPointIndexCdsEngine(const std::vector<Handle<DefaultProbabilityTermStructure> >&,
+                           const std::vector<Real> underlyingRecoveryRate,
+                           const Handle<YieldTermStructure>& discountCurve,
                            boost::optional<bool> includeSettlementDateFlows = boost::none);
     void calculate() const;
 
 private:
-    void survivalProbability(const Date& d) const;
-    void defaultProbability(const Date& d1, const Date& d2) const;
+    Real survivalProbability(const Date& d) const;
+    Real defaultProbability(const Date& d1, const Date& d2) const;
+    Real recoveryRate() const;
 
     const Handle<DefaultProbabilityTermStructure> probability_;
     const std::vector<Handle<DefaultProbabilityTermStructure> > underlyingProbability_;

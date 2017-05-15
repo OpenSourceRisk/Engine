@@ -44,31 +44,31 @@ void IndexCreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engin
     QL_REQUIRE(swap_.leg().notionals().size() == 1, "CreditDefaultSwap requires single notional");
     notional_ = swap_.leg().notionals().front();
     DayCounter dc = parseDayCounter(swap_.leg().dayCounter());
-    QL_REQUIRE(swap_.leg().fixedLegleg().rates().size() == 1, "CreditDefaultSwap requires single rate");
+    QL_REQUIRE(swap_.leg().fixedLegData().rates().size() == 1, "CreditDefaultSwap requires single rate");
 
     boost::shared_ptr<QuantExt::IndexCreditDefaultSwap> cds;
 
-    if (upfrontDate_ == Null<Date>())
+    if (swap_.upfrontDate() == Null<Date>())
         cds = boost::make_shared<QuantExt::IndexCreditDefaultSwap>(
             prot, swap_.leg().notionals().front(), swap_.basket().notionals(),
-            swap_.leg().fixedLegleg().rates().front(), schedule, payConvention, dc, swap_.settlesAccrual(),
+            swap_.leg().fixedLegData().rates().front(), schedule, payConvention, dc, swap_.settlesAccrual(),
             swap_.paysAtDefaultTime(), swap_.protectionStart());
     else {
-        QL_REQUIRE(upfrontFee_ != Null<Real>(), "CreditDefaultSwap: upfront date given, but no upfront fee");
+        QL_REQUIRE(swap_.upfrontFee() != Null<Real>(), "CreditDefaultSwap: upfront date given, but no upfront fee");
         cds = boost::make_shared<QuantExt::IndexCreditDefaultSwap>(
-            prot, notional_, swap_.basket().notional(), upfrontFee_, swap_.leg().fixedLegleg().rates().front(),
+            prot, notional_, swap_.basket().notionals(), swap_.upfrontFee(), swap_.leg().fixedLegData().rates().front(),
             schedule, payConvention, dc, swap_.settlesAccrual(), swap_.paysAtDefaultTime(), swap_.protectionStart(),
-            upfrontDate_);
+            swap_.upfrontDate());
     }
 
-    boost::shared_ptr<CreditDefaultSwapEngineBuilder> cdsBuilder =
-        boost::dynamic_pointer_cast<CreditDefaultSwapEngineBuilder>(builder);
+    boost::shared_ptr<IndexCreditDefaultSwapEngineBuilder> cdsBuilder =
+        boost::dynamic_pointer_cast<IndexCreditDefaultSwapEngineBuilder>(builder);
 
     npvCurrency_ = swap_.leg().currency();
 
     QL_REQUIRE(cdsBuilder, "No Builder found for CreditDefaultSwap: " << id());
     cds->setPricingEngine(
-        cdsBuilder->engine(parseCurrency(npvCurrency_), swap_.creditCurveId(), swap_.basket().creditCurveIds()));
+        cdsBuilder->engine(parseCurrency(npvCurrency_), swap_.creditCurveId(), swap_.basket().creditCurves()));
 
     instrument_.reset(new VanillaInstrument(cds));
 

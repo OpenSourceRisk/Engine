@@ -34,7 +34,7 @@
  FOR A PARTICULAR PURPOSE.  See the license for more details.
 */
 
-/*! \file blackcdsoptionengine.hpp
+/*! \file blackindexcdsoptionengine.hpp
     \brief Black credit default swap option engine, with handling
     of upfront amount and exercise before CDS start
 */
@@ -42,7 +42,7 @@
 #ifndef quantext_black_index_cds_option_engine_hpp
 #define quantext_black_index_cds_option_engine_hpp
 
-#include <qle/instruments/cdsoption.hpp>
+#include <qle/instruments/indexcdsoption.hpp>
 
 using namespace QuantLib;
 
@@ -55,18 +55,21 @@ public:
     BlackIndexCdsOptionEngine(const Handle<DefaultProbabilityTermStructure>&, Real recoveryRate,
                               const Handle<YieldTermStructure>& termStructure, const Handle<Quote>& vol);
     // use underlying curves for front end protection calculation
-    BlackIndexCdsOptionEngine(const std::vector<Handle<DefaultProbabilityTermStructure> >&, Real recoveryRate,
-                              const Handle<YieldTermStructure>& termStructure, const Handle<Quote>& vol);
+    BlackIndexCdsOptionEngine(const std::vector<Handle<DefaultProbabilityTermStructure> >&,
+                              const std::vector<Real> recoveryRate, const Handle<YieldTermStructure>& termStructure,
+                              const Handle<Quote>& vol);
     void calculate() const;
     Handle<YieldTermStructure> termStructure();
     Handle<Quote> volatility();
 
 private:
-    void defaultProbability(const Date& d1, const Date& d2) const;
+    Real defaultProbability(const Date& d1, const Date& d2) const;
+    Real recoveryRate() const;
 
     const Handle<DefaultProbabilityTermStructure> probability_;
     const std::vector<Handle<DefaultProbabilityTermStructure> > underlyingProbability_;
     const Real recoveryRate_;
+    const std::vector<Real> underlyingRecoveryRate_;
     const Handle<YieldTermStructure> termStructure_;
     const Handle<Quote> volatility_;
     const bool useUnderlyingCurves_;

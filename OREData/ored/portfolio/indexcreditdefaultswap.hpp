@@ -38,10 +38,11 @@ public:
     virtual void fromXML(XMLNode* node);
     virtual XMLNode* toXML(XMLDocument& doc);
 
-    const IndexCreditDefaultSwapData& data() const { return data_; }
+    const IndexCreditDefaultSwapData& swap() const { return swap_; }
 
 private:
     IndexCreditDefaultSwapData swap_;
+    BasketData basket_;
 };
 
 } // namespace data
