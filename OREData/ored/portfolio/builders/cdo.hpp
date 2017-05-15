@@ -38,12 +38,18 @@ namespace data {
 /*! Pricing engines are cached by currency
     \ingroup portfolio
 */
-class CdoEngineBuilder : public CachingPricingEngineBuilder<string, const Currency&> {
+class CdoEngineBuilder : public EngineBuilder {
 public:
-    CdoEngineBuilder(const std::string& model, const std::string& engine) : CachingEngineBuilder(model, engine) {}
+    CdoEngineBuilder(const std::string& model, const std::string& engine) : EngineBuilder(model, engine) {}
 
-protected:
-    virtual string keyImpl(const Currency& ccy) override { return ccy.code(); }
+    virtual boost::shared_ptr<PricingEngine> engine(const string& id) = 0;
+};
+
+class GaussCopulaBucketingCdoEngineBuilder : public CdoEngineBuilder {
+public:
+    GaussCopulaBucketingCdoEngineBuilder() : CdoEngineBuilder("GaussCopula", "Bucketing") {}
+
+    boost::shared_ptr<PricingEngine> engine(const string& id) override { return boost::shared_ptr<PricingEngine>(); }
 };
 
 } // namespace data

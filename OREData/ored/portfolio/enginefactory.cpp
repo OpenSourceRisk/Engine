@@ -84,6 +84,8 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<EquityOptionEngineBuilder>());
 
     registerBuilder(boost::make_shared<BondDiscountingEngineBuilder>());
+
+    registerBuilder(boost::make_shared<GaussCopulaBucketingCdoEngineBuilder>());
 }
 
 } // namespace data

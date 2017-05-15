@@ -26,6 +26,7 @@
 #include <ored/portfolio/equityoption.hpp>
 #include <ored/portfolio/equityforward.hpp>
 #include <ored/portfolio/bond.hpp>
+#include <ored/portfolio/cdo.hpp>
 
 using namespace std;
 
@@ -42,6 +43,7 @@ TradeFactory::TradeFactory() {
     addBuilder("EquityOption", boost::make_shared<TradeBuilder<EquityOption>>());
     addBuilder("EquityForward", boost::make_shared<TradeBuilder<EquityForward>>());
     addBuilder("Bond", boost::make_shared<TradeBuilder<Bond>>());
+    addBuilder("SyntheticCDO", boost::make_shared<TradeBuilder<SyntheticCDO>>());
 }
 
 void TradeFactory::addBuilder(const string& className, const boost::shared_ptr<AbstractTradeBuilder>& b) {
