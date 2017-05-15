@@ -68,7 +68,7 @@ protected:
                                                         const vector<string>& creditCurveIds) override {
 
         Handle<YieldTermStructure> yts = market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
-        Handle<BlackVolatilityTermStructure> vol =
+        Handle<BlackVolTermStructure> vol =
             market_->cdsVol(creditCurveId, configuration(MarketContext::pricing));
         if (engineParameters_.at("Curve") == "Underlying") {
             Handle<DefaultProbabilityTermStructure> dpts =
