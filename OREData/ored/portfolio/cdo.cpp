@@ -49,7 +49,7 @@ void SyntheticCDO::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
     boost::shared_ptr<CdoEngineBuilder> cdoEngineBuilder = boost::dynamic_pointer_cast<CdoEngineBuilder>(builder);
 
     // not used
-    // Date protectionStartQL = parseDate(protectionStart_);
+    Date protectionStartDate = parseDate(protectionStart_);
     // Date upfrontDateQL = parseDate(upfrontDate_);
 
     Leg leg = makeFixedLeg(legData_);
@@ -57,7 +57,8 @@ void SyntheticCDO::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
     Protection::Side side = legData_.isPayer() ? Protection::Buyer : Protection::Seller;
     Schedule schedule = makeSchedule(legData_.schedule());
     Real upfrontRate = upfrontFee_;
-    Real runningRate = legData_.fixedLegData().rates().front(); // FIXME: QL CDO supports a single rate only
+    // FIXME: QL CDO supports a single rate only
+    Real runningRate = legData_.fixedLegData().rates().front(); 
     DayCounter dayCounter = parseDayCounter(legData_.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(legData_.paymentConvention());
 
@@ -69,14 +70,16 @@ void SyntheticCDO::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
         string issuerId = basketData_.issuers()[i];
         string creditCurveId = basketData_.creditCurves()[i];
         QL_REQUIRE(basketData_.currencies()[i] == legData_.currency(), "currency not unique across basket");
-        DefaultProbKey key = NorthAmericaCorpDefaultKey(ccy, SeniorSec, Period(), 1.0); // FIXME
+	// FIXME: dummy default key 
+	DefaultProbKey key = NorthAmericaCorpDefaultKey(ccy, SeniorSec, Period(), 1.0);
         Handle<DefaultProbabilityTermStructure> defaultCurve =
             market->defaultCurve(creditCurveId, builder->configuration(MarketContext::pricing));
         recoveryRates.push_back(
             market->recoveryRate(creditCurveId, builder->configuration(MarketContext::pricing))->value());
         pair<DefaultProbKey, Handle<DefaultProbabilityTermStructure>> p(key, defaultCurve);
         vector<pair<DefaultProbKey, Handle<DefaultProbabilityTermStructure>>> probabilities(1, p);
-        DefaultEventSet eventSet; // FIXME: empty default event set, introduce new market data source
+	// FIXME: empty default event set, assuming no default until schedule start date
+        DefaultEventSet eventSet;
         Issuer issuer(probabilities, eventSet);
         pool->add(issuerId, issuer, key);
         DLOG("Issuer " << issuerId << " added to the pool");
@@ -86,9 +89,7 @@ void SyntheticCDO::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
                                                 attachmentPoint_,
                                                 detachmentPoint_)); // assume face value claim
 
-    boost::shared_ptr<DefaultLossModel> lossModel = cdoEngineBuilder->lossModel(pool->size(), recoveryRates);
-    
-    basket->setLossModel(lossModel);
+    basket->setLossModel(cdoEngineBuilder->lossModel(pool->size(), recoveryRates));
 
     boost::shared_ptr<QuantLib::SyntheticCDO> cdo(
         new QuantLib::SyntheticCDO(basket, side, schedule, upfrontRate, runningRate, dayCounter, bdc));

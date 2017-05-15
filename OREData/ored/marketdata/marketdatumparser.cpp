@@ -42,6 +42,7 @@ static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
         {"BASIS_SWAP", MarketDatum::InstrumentType::BASIS_SWAP},
         {"CC_BASIS_SWAP", MarketDatum::InstrumentType::CC_BASIS_SWAP},
         {"CDS", MarketDatum::InstrumentType::CDS},
+        {"CDS_INDEX", MarketDatum::InstrumentType::CDS_INDEX},
         {"FX", MarketDatum::InstrumentType::FX_SPOT},
         {"FX_SPOT", MarketDatum::InstrumentType::FX_SPOT},
         {"FXFWD", MarketDatum::InstrumentType::FX_FWD},
@@ -82,6 +83,7 @@ static MarketDatum::QuoteType parseQuoteType(const string& s) {
         {"RATE_GVOL", MarketDatum::QuoteType::RATE_LNVOL}, // deprecated
         {"RATE_NVOL", MarketDatum::QuoteType::RATE_NVOL},
         {"RATE_SLNVOL", MarketDatum::QuoteType::RATE_SLNVOL},
+        {"BASE_CORRELATION", MarketDatum::QuoteType::BASE_CORRELATION},
         {"SHIFT", MarketDatum::QuoteType::SHIFT},
     };
 
@@ -383,6 +385,16 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         QL_REQUIRE(tokens.size() == 3, "3 tokens expected in " << datumName);
         const string& securityID = tokens[2];
         return boost::make_shared<SecuritySpreadQuote>(value, asof, datumName, securityID);
+    }
+
+    case MarketDatum::InstrumentType::CDS_INDEX: {
+        QL_REQUIRE(tokens.size() == 5, "5 tokens expected in " << datumName);
+        QL_REQUIRE(quoteType == MarketDatum::QuoteType::BASE_CORRELATION, "Invalid quote type for " << datumName);
+        const string& cdsIndexName = tokens[2];
+        Real detachmentPoint = parseReal(tokens[3]);
+        Period term = parsePeriod(tokens[4]);
+        return boost::make_shared<BaseCorrelationQuote>(value, asof, datumName, quoteType, cdsIndexName,
+                                                        detachmentPoint, term);
     }
 
     default:

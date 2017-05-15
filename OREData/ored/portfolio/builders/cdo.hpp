@@ -54,23 +54,26 @@ public:
 
     boost::shared_ptr<DefaultLossModel> lossModel(Size poolSize, const vector<Real>& recoveryRates) override {
 
-        // FIXME --> market data
+        QL_REQUIRE(poolSize == recoveryRates.size(), "unexpected size of recovery rate vector");
+	
+        // FIXME
+        // - add base correlations to market data
+        // - build base correlation term structure (see ql/experimental/credit) for a term structure by time and lossLevel
+        // - store in today's market by CDS Index name / qualifier
         Real c = parseReal(modelParameters_.at("correlation"));
-        boost::shared_ptr<SimpleQuote> correlation(new SimpleQuote(c));
-        Handle<Quote> hCorrelation(correlation);
+        boost::shared_ptr<SimpleQuote> correlationQuote(new SimpleQuote(c));
+        Handle<Quote> correlation(correlationQuote);
 
-        // FIXME --> engine parametrisation ?
-        boost::shared_ptr<GaussianConstantLossLM> gaussKtLossLM(
-            new GaussianConstantLossLM(hCorrelation, recoveryRates, LatentModelIntegrationType::GaussianQuadrature,
+        boost::shared_ptr<GaussianConstantLossLM> gaussLM(
+            new GaussianConstantLossLM(correlation, recoveryRates, LatentModelIntegrationType::GaussianQuadrature,
                                        poolSize, GaussianCopulaPolicy::initTraits()));
-
         Real gaussCopulaMin = parseReal(modelParameters_.at("min"));
         Real gaussCopulaMax = parseReal(modelParameters_.at("max"));
         Size gaussCopulaSteps = parseInteger(modelParameters_.at("steps"));
         Size nBuckets = parseInteger(engineParameters_.at("buckets"));
 
         return boost::shared_ptr<DefaultLossModel>(
-            new IHGaussPoolLossModel(gaussKtLossLM, nBuckets, gaussCopulaMax, gaussCopulaMin, gaussCopulaSteps));
+            new IHGaussPoolLossModel(gaussLM, nBuckets, gaussCopulaMax, gaussCopulaMin, gaussCopulaSteps));
     }
 
 protected:
