@@ -26,6 +26,8 @@
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/utilities/log.hpp>
+#include <ql/experimental/credit/inhomogeneouspooldef.hpp>
+#include <ql/experimental/credit/midpointcdoengine.hpp>
 #include <qle/pricingengines/midpointcdoengine.hpp>
 #include <boost/make_shared.hpp>
 
@@ -40,6 +42,8 @@ class CdoEngineBuilder : public CachingPricingEngineBuilder<string, const Curren
 public:
     CdoEngineBuilder(const std::string& model, const std::string& engine) : CachingEngineBuilder(model, engine) {}
 
+    virtual boost::shared_ptr<DefaultLossModel> lossModel(Size poolSize, const vector<Real>& recoveryRates) = 0;
+
 protected:
     virtual string keyImpl(const Currency& ccy) override { return ccy.code(); }
 };
@@ -47,6 +51,27 @@ protected:
 class GaussCopulaBucketingCdoEngineBuilder : public CdoEngineBuilder {
 public:
     GaussCopulaBucketingCdoEngineBuilder() : CdoEngineBuilder("GaussCopula", "Bucketing") {}
+
+    boost::shared_ptr<DefaultLossModel> lossModel(Size poolSize, const vector<Real>& recoveryRates) override {
+
+        // FIXME --> market data
+        Real c = parseReal(modelParameters_.at("correlation"));
+        boost::shared_ptr<SimpleQuote> correlation(new SimpleQuote(c));
+        Handle<Quote> hCorrelation(correlation);
+
+        // FIXME --> engine parametrisation ?
+        boost::shared_ptr<GaussianConstantLossLM> gaussKtLossLM(
+            new GaussianConstantLossLM(hCorrelation, recoveryRates, LatentModelIntegrationType::GaussianQuadrature,
+                                       poolSize, GaussianCopulaPolicy::initTraits()));
+
+        Real gaussCopulaMin = parseReal(modelParameters_.at("min"));
+        Real gaussCopulaMax = parseReal(modelParameters_.at("max"));
+        Size gaussCopulaSteps = parseInteger(modelParameters_.at("steps"));
+        Size nBuckets = parseInteger(engineParameters_.at("buckets"));
+
+        return boost::shared_ptr<DefaultLossModel>(
+            new IHGaussPoolLossModel(gaussKtLossLM, nBuckets, gaussCopulaMax, gaussCopulaMin, gaussCopulaSteps));
+    }
 
 protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& ccy) override {

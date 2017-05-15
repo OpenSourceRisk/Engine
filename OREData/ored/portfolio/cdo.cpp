@@ -86,24 +86,8 @@ void SyntheticCDO::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
                                                 attachmentPoint_,
                                                 detachmentPoint_)); // assume face value claim
 
-    // FIXME -> market data
-    Real c = 0.0; //parseReal(cdoEngineBuilder->modelParameters().at("correlation")); 
-    boost::shared_ptr<SimpleQuote> correlation(new SimpleQuote(c));
-    Handle<Quote> hCorrelation(correlation);
-
-    // FIXME --> engine parametrisation ?
-    boost::shared_ptr<GaussianConstantLossLM> gaussKtLossLM(
-        new GaussianConstantLossLM(hCorrelation, recoveryRates, LatentModelIntegrationType::GaussianQuadrature,
-                                   pool->size(), GaussianCopulaPolicy::initTraits()));
-
-    Real gaussCopulaMin = -5.0; //parseReal(modelParameters_.at("min"));
-    Real gaussCopulaMax = +5.0; //parseReal(modelParameters_.at("max"));
-    Size gaussCopulaSteps = 15; //parseInteger(modelParameters_.at("steps"));
-    Size nBuckets = 200; //parseInteger(engineParameters_.at("buckets"));
-
-    boost::shared_ptr<DefaultLossModel> lossModel(
-        new IHGaussPoolLossModel(gaussKtLossLM, nBuckets, gaussCopulaMax, gaussCopulaMin, gaussCopulaSteps));
-
+    boost::shared_ptr<DefaultLossModel> lossModel = cdoEngineBuilder->lossModel(pool->size(), recoveryRates);
+    
     basket->setLossModel(lossModel);
 
     boost::shared_ptr<QuantLib::SyntheticCDO> cdo(
@@ -111,14 +95,7 @@ void SyntheticCDO::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
 
     cdo->setPricingEngine(cdoEngineBuilder->engine(ccy));
 
-    // Handle<YieldTermStructure> discountCurve =
-    //     market->discountCurve(legData_.currency(), builder->configuration(MarketContext::pricing));
-
-    // boost::shared_ptr<PricingEngine> engine(new QuantExt::MidPointCDOEngine(discountCurve));
-
-    // cdo->setPricingEngine(engine);
-
-    DLOG("CDO instrument ok");
+    DLOG("CDO instrument built");
 
     DLOG("CDO NPV " << cdo->NPV());
 
