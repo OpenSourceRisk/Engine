@@ -81,5 +81,8 @@
     <ClCompile Include="sensitivityanalysis2.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="testmarket.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

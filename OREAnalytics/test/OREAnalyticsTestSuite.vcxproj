@@ -59,6 +59,7 @@
     <ClCompile Include="sensitivityperformance.cpp" />
     <ClCompile Include="stresstest.cpp" />
     <ClCompile Include="swapperformance.cpp" />
+    <ClCompile Include="testmarket.cpp" />
     <ClCompile Include="testportfolio.cpp" />
     <ClCompile Include="testsuite.cpp" />
   </ItemGroup>
