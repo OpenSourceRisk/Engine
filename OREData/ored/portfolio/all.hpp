@@ -24,5 +24,7 @@
 #include <ored/portfolio/nettingsetmanager.hpp>
 #include <ored/portfolio/capfloor.hpp>
 #include <ored/portfolio/bond.hpp>
+#include <ored/portfolio/basketdata.hpp>
+#include <ored/portfolio/cdo.hpp>
 
 #include <ored/portfolio/builders/all.hpp>
