@@ -36,7 +36,7 @@ libOREDataPortfolio_la_SOURCES = \
 	creditdefaultswapdata.cpp \
 	indexcreditdefaultswap.cpp \
 	indexcreditdefaultswapdata.cpp \
-	indexcreditdefaultswapoption.cpp
+	indexcreditdefaultswapoption.cpp \
 	basketdata.cpp \
 	cdo.cpp
 
