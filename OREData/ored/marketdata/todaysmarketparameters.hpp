@@ -523,7 +523,7 @@ inline void TodaysMarketParameters::addDefaultCurves(const string& id, const map
         DLOG("TodaysMarketParameters, add default curves: " << id << " " << s.first << " " << s.second);
 }
 
-inline void TodaysMarketParameters::addCdsVolatilities(const string& id, const map<string, string>& assignments) {
+inline void TodaysMarketParameters::addCDSVolatilities(const string& id, const map<string, string>& assignments) {
     cdsVolatilities_[id] = assignments;
     for (auto s : assignments)
         DLOG("TodaysMarketParameters, add cds volatilities: " << id << " " << s.first << " " << s.second);
