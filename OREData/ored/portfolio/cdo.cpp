@@ -46,6 +46,7 @@ void SyntheticCDO::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
     const boost::shared_ptr<Market> market = engineFactory->market();
 
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("SyntheticCDO");
+    boost::shared_ptr<CdoEngineBuilder> cdoEngineBuilder = boost::dynamic_pointer_cast<CdoEngineBuilder>(builder);
 
     // not used
     // Date protectionStartQL = parseDate(protectionStart_);
@@ -81,45 +82,46 @@ void SyntheticCDO::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
         DLOG("Issuer " << issuerId << " added to the pool");
     }
 
-    
     boost::shared_ptr<Basket> basket(new Basket(schedule[0], basketData_.issuers(), basketData_.notionals(), pool,
                                                 attachmentPoint_,
                                                 detachmentPoint_)); // assume face value claim
 
-    DLOG("Basket ok");
-
-    // FIXME --> engine parametrisation
-    Size nBuckets = 200;
-
-    boost::shared_ptr<SimpleQuote> correlation(new SimpleQuote(0.0)); // FIXME -> market data
+    // FIXME -> market data
+    Real c = 0.0; //parseReal(cdoEngineBuilder->modelParameters().at("correlation")); 
+    boost::shared_ptr<SimpleQuote> correlation(new SimpleQuote(c));
     Handle<Quote> hCorrelation(correlation);
 
-    // FIXME --> engine parametrisation
+    // FIXME --> engine parametrisation ?
     boost::shared_ptr<GaussianConstantLossLM> gaussKtLossLM(
         new GaussianConstantLossLM(hCorrelation, recoveryRates, LatentModelIntegrationType::GaussianQuadrature,
                                    pool->size(), GaussianCopulaPolicy::initTraits()));
 
-    // FIXME --> engine parametrisation
-    boost::shared_ptr<DefaultLossModel> lossModel(new IHGaussPoolLossModel(gaussKtLossLM, nBuckets, 5., -5, 15));
+    Real gaussCopulaMin = -5.0; //parseReal(modelParameters_.at("min"));
+    Real gaussCopulaMax = +5.0; //parseReal(modelParameters_.at("max"));
+    Size gaussCopulaSteps = 15; //parseInteger(modelParameters_.at("steps"));
+    Size nBuckets = 200; //parseInteger(engineParameters_.at("buckets"));
 
-    DLOG("Loss model ok");
+    boost::shared_ptr<DefaultLossModel> lossModel(
+        new IHGaussPoolLossModel(gaussKtLossLM, nBuckets, gaussCopulaMax, gaussCopulaMin, gaussCopulaSteps));
 
     basket->setLossModel(lossModel);
 
     boost::shared_ptr<QuantLib::SyntheticCDO> cdo(
         new QuantLib::SyntheticCDO(basket, side, schedule, upfrontRate, runningRate, dayCounter, bdc));
 
-    Handle<YieldTermStructure> discountCurve =
-        market->discountCurve(legData_.currency(), builder->configuration(MarketContext::pricing));
+    cdo->setPricingEngine(cdoEngineBuilder->engine(ccy));
 
-    boost::shared_ptr<PricingEngine> engine(new QuantExt::MidPointCDOEngine(discountCurve));
+    // Handle<YieldTermStructure> discountCurve =
+    //     market->discountCurve(legData_.currency(), builder->configuration(MarketContext::pricing));
 
-    cdo->setPricingEngine(engine);
-    
+    // boost::shared_ptr<PricingEngine> engine(new QuantExt::MidPointCDOEngine(discountCurve));
+
+    // cdo->setPricingEngine(engine);
+
     DLOG("CDO instrument ok");
 
     DLOG("CDO NPV " << cdo->NPV());
-    
+
     instrument_.reset(new VanillaInstrument(cdo));
 
     npvCurrency_ = legData_.currency();

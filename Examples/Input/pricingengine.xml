@@ -82,4 +82,17 @@
         <Parameter name="TimestepPeriod">6M</Parameter>
     </EngineParameters>
   </Product>
+  <Product type="SyntheticCDO">
+    <Model>GaussCopula</Model>
+    <ModelParameters>
+      <Parameter name="correlation">0.0</Parameter>
+      <Parameter name="min">-5.0</Parameter>
+      <Parameter name="max">5.0</Parameter>
+      <Parameter name="steps">15</Parameter>
+    </ModelParameters>
+    <Engine>Bucketing</Engine>
+    <EngineParameters>
+      <Parameter name="buckets">200</Parameter>
+    </EngineParameters>
+  </Product>
 </PricingEngines>

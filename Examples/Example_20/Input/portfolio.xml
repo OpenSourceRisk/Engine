@@ -213,7 +213,7 @@
       <AdditionalFields/>
     </Envelope>
     <CdoData>
-      <ProtectionStart>20170410</ProtectionStart>
+      <ProtectionStart>20160203</ProtectionStart>
       <UpfrontDate/>
       <UpfrontFee>0.0324</UpfrontFee>
       <AttachmentPoint>0.03</AttachmentPoint>
@@ -225,7 +225,7 @@
         <!-- protection buyer pays premium -->
         <Currency>USD</Currency>
         <Notionals>
-          <Notional>10000000.000000</Notional>
+          <Notional>90000.00</Notional>
         </Notionals>
         <DayCounter>A360</DayCounter>
         <PaymentConvention>F</PaymentConvention>
@@ -256,22 +256,22 @@
         <Name>
           <IssuerId>CPTY_1</IssuerId>
           <Qualifier>SECURITY_1</Qualifier>
-          <CreditCurveId>CREDIT_CURVE_1</CreditCurveId>
-          <Notional>100000.0</Notional>
+          <CreditCurveId>CPTY_A</CreditCurveId>
+          <Notional>1000000.0</Notional>
           <Currency>USD</Currency>
         </Name>
         <Name>
           <IssuerId>CPTY_2</IssuerId>
           <Qualifier>SECURITY_2</Qualifier>
-          <CreditCurveId>CREDIT_CURVE_2</CreditCurveId>
-          <Notional>100000.0</Notional>
+          <CreditCurveId>CPTY_A</CreditCurveId>
+          <Notional>1000000.0</Notional>
           <Currency>USD</Currency>
         </Name>
         <Name>
           <IssuerId>CPTY_3</IssuerId>
           <Qualifier>SECURITY_3</Qualifier>
-          <CreditCurveId>CREDIT_CURVE_3</CreditCurveId>
-          <Notional>100000.0</Notional>
+          <CreditCurveId>CPTY_A</CreditCurveId>
+          <Notional>1000000.0</Notional>
           <Currency>USD</Currency>
         </Name>
        <!-- ... -->
