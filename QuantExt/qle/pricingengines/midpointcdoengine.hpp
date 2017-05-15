@@ -61,7 +61,7 @@ namespace QuantExt {
 
     \todo non tested under realized defaults. JTD metrics might be invalid
     */
-    class MidPointCDOEngine : public SyntheticCDO::engine {
+    class MidPointCDOEngine : public QuantLib::SyntheticCDO::engine {
     public:
         MidPointCDOEngine(
             const Handle<YieldTermStructure>& discountCurve)
