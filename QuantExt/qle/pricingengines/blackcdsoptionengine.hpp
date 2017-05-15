@@ -44,6 +44,8 @@
 
 #include <qle/instruments/cdsoption.hpp>
 
+#include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
+
 using namespace QuantLib;
 
 namespace QuantExt {
@@ -52,16 +54,17 @@ namespace QuantExt {
 class BlackCdsOptionEngine : public QuantExt::CdsOption::engine {
 public:
     BlackCdsOptionEngine(const Handle<DefaultProbabilityTermStructure>&, Real recoveryRate,
-                         const Handle<YieldTermStructure>& termStructure, const Handle<Quote>& vol);
+                         const Handle<YieldTermStructure>& termStructure,
+                         const Handle<BlackVolTermStructure>& vol);
     void calculate() const;
     Handle<YieldTermStructure> termStructure();
-    Handle<Quote> volatility();
+    Handle<BlackVolTermStructure> volatility();
 
 private:
     const Handle<DefaultProbabilityTermStructure> probability_;
     const Real recoveryRate_;
     const Handle<YieldTermStructure> termStructure_;
-    const Handle<Quote> volatility_;
+    const Handle<BlackVolTermStructure> volatility_;
 };
 }
 

@@ -36,16 +36,16 @@
 
 #include <qle/pricingengines/blackcdsoptionengine.hpp>
 
-#include <ql/pricingengines/blackformula.hpp>
-#include <ql/termstructures/yieldtermstructure.hpp>
-#include <ql/quote.hpp>
 #include <ql/exercise.hpp>
+#include <ql/pricingengines/blackformula.hpp>
+#include <ql/quote.hpp>
+#include <ql/termstructures/yieldtermstructure.hpp>
 
 namespace QuantExt {
 
 BlackCdsOptionEngine::BlackCdsOptionEngine(const Handle<DefaultProbabilityTermStructure>& probability,
                                            Real recoveryRate, const Handle<YieldTermStructure>& termStructure,
-                                           const Handle<Quote>& volatility)
+                                           const Handle<BlackVolTermStructure>& volatility)
     : probability_(probability), recoveryRate_(recoveryRate), termStructure_(termStructure), volatility_(volatility) {
 
     registerWith(probability_);
@@ -76,7 +76,7 @@ void BlackCdsOptionEngine::calculate() const {
 
     Time T = tSDc.yearFraction(settlement, exerciseDate);
 
-    Real stdDev = volatility_->value() * std::sqrt(T);
+    Real stdDev = volatility_->blackVol(exerciseDate, 1.0, true) * std::sqrt(T);
     Option::Type callPut = (arguments_.side == Protection::Buyer) ? Option::Call : Option::Put;
 
     results_.value = blackFormula(callPut, swapSpread, spotFwdSpread, stdDev, riskyAnnuity);
@@ -92,5 +92,5 @@ void BlackCdsOptionEngine::calculate() const {
 
 Handle<YieldTermStructure> BlackCdsOptionEngine::termStructure() { return termStructure_; }
 
-Handle<Quote> BlackCdsOptionEngine::volatility() { return volatility_; }
+Handle<BlackVolTermStructure> BlackCdsOptionEngine::volatility() { return volatility_; }
 }

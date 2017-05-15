@@ -87,6 +87,8 @@ public:
                                  const Handle<DefaultProbabilityTermStructure>&, Real recoveryRate,
                                  Real accuracy = 1.e-4, Size maxEvaluations = 100, Volatility minVol = 1.0e-7,
                                  Volatility maxVol = 4.0) const;
+    // TODO add impliedVolatility with probability term structures and recovery rates on underlying level
+    // ...
     //@}
 
 private:

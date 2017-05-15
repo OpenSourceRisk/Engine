@@ -44,6 +44,8 @@
 
 #include <qle/instruments/indexcdsoption.hpp>
 
+#include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
+
 using namespace QuantLib;
 
 namespace QuantExt {
@@ -53,14 +55,15 @@ class BlackIndexCdsOptionEngine : public QuantExt::IndexCdsOption::engine {
 public:
     // use index curve for front end protection calculation
     BlackIndexCdsOptionEngine(const Handle<DefaultProbabilityTermStructure>&, Real recoveryRate,
-                              const Handle<YieldTermStructure>& termStructure, const Handle<Quote>& vol);
+                              const Handle<YieldTermStructure>& termStructure,
+                              const Handle<BlackVolTermStructure>& vol);
     // use underlying curves for front end protection calculation
     BlackIndexCdsOptionEngine(const std::vector<Handle<DefaultProbabilityTermStructure> >&,
                               const std::vector<Real> recoveryRate, const Handle<YieldTermStructure>& termStructure,
-                              const Handle<Quote>& vol);
+                              const Handle<BlackVolTermStructure>& vol);
     void calculate() const;
     Handle<YieldTermStructure> termStructure();
-    Handle<Quote> volatility();
+    Handle<BlackVolTermStructure> volatility();
 
 private:
     Real defaultProbability(const Date& d1, const Date& d2) const;
@@ -71,7 +74,7 @@ private:
     const Real recoveryRate_;
     const std::vector<Real> underlyingRecoveryRate_;
     const Handle<YieldTermStructure> termStructure_;
-    const Handle<Quote> volatility_;
+    const Handle<BlackVolTermStructure> volatility_;
     const bool useUnderlyingCurves_;
 };
 } // namespace QuantExt

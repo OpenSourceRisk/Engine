@@ -68,7 +68,8 @@ protected:
                                                         const vector<string>& creditCurveIds) override {
 
         Handle<YieldTermStructure> yts = market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
-        Handle<Quote> vol(boost::make_shared<SimpleQuote>(0.10)); // FIXME use market vol !!!!!!!!!!!!!!!!!!!!!!!!!
+        Handle<BlackVolatilityTermStructure> vol =
+            market_->cdsVol(creditCurveId, configuration(MarketContext::pricing));
         if (engineParameters_.at("Curve") == "Underlying") {
             Handle<DefaultProbabilityTermStructure> dpts =
                 market_->defaultCurve(creditCurveId, configuration(MarketContext::pricing));

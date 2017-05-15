@@ -39,13 +39,14 @@
 #include <ql/exercise.hpp>
 #include <ql/pricingengines/blackformula.hpp>
 #include <ql/quote.hpp>
+#include <ql/termstructures/volatility/blackvoltermstructure.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 
 namespace QuantExt {
 
 BlackIndexCdsOptionEngine::BlackIndexCdsOptionEngine(const Handle<DefaultProbabilityTermStructure>& probability,
                                                      Real recoveryRate, const Handle<YieldTermStructure>& termStructure,
-                                                     const Handle<Quote>& volatility)
+                                                     const Handle<BlackVolTermStructure>& volatility)
     : probability_(probability), recoveryRate_(recoveryRate), termStructure_(termStructure), volatility_(volatility),
       useUnderlyingCurves_(false) {
     registerWith(probability_);
@@ -56,7 +57,7 @@ BlackIndexCdsOptionEngine::BlackIndexCdsOptionEngine(const Handle<DefaultProbabi
 BlackIndexCdsOptionEngine::BlackIndexIndexCdsOptionEngine(
     const std::vector<Handle<DefaultProbabilityTermStructure> >& underlyingProbability,
     const std::vector<Real>& underlyingRecoveryRate, const Handle<YieldTermStructure>& termStructure,
-    const Handle<Quote>& vol)
+    const Handle<BlackVolTermStructure>& volatility)
     : underlyingProbability_(underlyingProbability), underlyingRecoveryRate_(recoveryRate),
       termStructure_(termStructure), volatility_(volatility), useUnderlyingCurves_(true) {
     for (Size i = 0; i < underlyingProbability.size(); ++i)
@@ -110,7 +111,7 @@ void BlackIndexCdsOptionEngine::calculate() const {
 
     Time T = tSDc.yearFraction(settlement, exerciseDate);
 
-    Real stdDev = volatility_->value() * std::sqrt(T);
+    Real stdDev = volatility_->volatility(exerciseDate, 1.0) * std::sqrt(T);
     Option::Type callPut = (arguments_.side == Protection::Buyer) ? Option::Call : Option::Put;
 
     results_.value = blackFormula(callPut, swapSpread, spotFwdSpread, stdDev, riskyAnnuity);
@@ -126,6 +127,6 @@ void BlackIndexCdsOptionEngine::calculate() const {
 
 Handle<YieldTermStructure> BlackIndexCdsOptionEngine::termStructure() { return termStructure_; }
 
-Handle<Quote> BlackIndexCdsOptionEngine::volatility() { return volatility_; }
+Handle<BlackVolTermStructure> BlackIndexCdsOptionEngine::volatility() { return volatility_; }
 
 } // namespace QuantExt
