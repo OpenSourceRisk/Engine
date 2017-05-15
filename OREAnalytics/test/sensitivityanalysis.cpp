@@ -492,7 +492,7 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
             string label = desc[j].text();
             if (fabs(sensi) > tiny) {
                 count++;
-                 BOOST_TEST_MESSAGE("{ \"" << id << "\", \"" << label << "\", " << npv0 << ", " << sensi << " },");
+                 // BOOST_TEST_MESSAGE("{ \"" << id << "\", \"" << label << "\", " << npv0 << ", " << sensi << " },");
                 pair<string, string> p(id, label);
                 QL_REQUIRE(npvMap.find(p) != npvMap.end(), "pair (" << p.first << ", " << p.second
                                                                     << ") not found in npv map");
