@@ -38,6 +38,7 @@ namespace QuantExt {
 class Parametrization {
 public:
     Parametrization(const Currency& currency);
+    virtual ~Parametrization() {}
 
     virtual const Currency currency() const;
 
