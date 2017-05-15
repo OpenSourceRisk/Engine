@@ -89,6 +89,7 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<MidPointCdsEngineBuilder>());
     registerBuilder(boost::make_shared<MidPointIndexCdsEngineBuilder>());
     registerBuilder(boost::make_shared<BlackIndexCdsOptionEngineBuilder>());
+    registerBuilder(boost::make_shared<GaussCopulaBucketingCdoEngineBuilder>());
 }
 
 } // namespace data

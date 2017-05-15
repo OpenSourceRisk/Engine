@@ -30,11 +30,11 @@ void BasketData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "BasketData");
 
     for (XMLNode* child = XMLUtils::getChildNode(node, "Name"); child; child = XMLUtils::getNextSibling(child)) {
-        issuers_.push_back(XMLUtils::getChildValue(node, "IssuerId", true));
-	qualifiers_.push_back(XMLUtils::getChildValue(node, "Qualifier", true));
-        creditCurves_.push_back(XMLUtils::getChildValue(node, "CreditCurveId", true));
-	notionals_.push_back(XMLUtils::getChildValueAsDouble(node, "Notional", true));
-        currencies_.push_back(XMLUtils::getChildValue(node, "Currency", true));
+        issuers_.push_back(XMLUtils::getChildValue(child, "IssuerId", true));
+	qualifiers_.push_back(XMLUtils::getChildValue(child, "Qualifier", true));
+        creditCurves_.push_back(XMLUtils::getChildValue(child, "CreditCurveId", true));
+	notionals_.push_back(XMLUtils::getChildValueAsDouble(child, "Notional", true));
+        currencies_.push_back(XMLUtils::getChildValue(child, "Currency", true));
     }
 }
 
