@@ -954,25 +954,25 @@ This class holds single market points of type
 - INDEX_CDS_OPTION
 Specific data comprise
 - index name
-- option term (either a date or a period)
+- option expiry (either a date or a period)
 
 \ingroup marketdata
 */
 class IndexCDSOptionQuote : public MarketDatum {
 public:
     //! Constructor
-    IndexCDSOptionQuote(Real value, Date asofDate, const string& name, const string& indexName, const string& term)
+    IndexCDSOptionQuote(Real value, Date asofDate, const string& name, const string& indexName, const string& expiry)
         : MarketDatum(value, asofDate, name, QuoteType::RATE_LNVOL, InstrumentType::INDEX_CDS_OPTION),
-          indexName_(indexName), term_(term) {}
+          indexName_(indexName), expiry_(expiry) {}
 
     //! \name Inspectors
     //@{
     const string& indexName() const { return indexName_; }
-    const string& term() const { return term_; }
+    const string& expiry() const { return expiry_; }
     //@}
 private:
     string indexName_;
-    string term_;
+    string expiry_;
 };
 }
 }

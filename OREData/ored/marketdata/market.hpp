@@ -94,6 +94,12 @@ public:
                                        const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 
+    //! \name (Index) CDS Option volatilities
+    //@{
+    virtual Handle<BlackVolTermStructure>
+    cdsVol(const string&, const string& configuration = Market::defaultConfiguration) const = 0;
+    //@}
+
     //! \name Stripped Cap/Floor volatilities i.e. caplet/floorlet volatilities
     //@{
     virtual Handle<OptionletVolatilityStructure>

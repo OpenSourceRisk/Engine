@@ -47,6 +47,7 @@ public:
         FX,
         FXVolatility,
         Default,
+        CDSVolatility,
         Inflation,
         InflationCapFloorPrice,
         Equity,
@@ -83,6 +84,8 @@ public:
             return "SecurityRecoveryRate";
         case CurveType::Default:
             return "Default";
+        case CurveType::CDSVolatility:
+            return "CDSVolatility";
         case CurveType::Inflation:
             return "Inflation";
         case CurveType::InflationCapFloorPrice:
@@ -156,6 +159,31 @@ public:
     string subName() const { return ccy_ + "/" + curveConfigID_; }
     //@}
 
+private:
+    string ccy_;
+    string curveConfigID_;
+};
+
+//! CDS Volatility curve description
+/*! \ingroup curves
+*/
+class CDSVolatilityCurveSpec : public CurveSpec {
+public:
+    //! \name Constructors
+    //@{
+    //! Default constructor
+    CDSVolatilityCurveSpec() {}
+    //! Detailed constructor
+    CDSVolatilityCurveSpec(const string& curveConfigID)
+        : curveConfigID_(curveConfigID) {}
+    //@}
+
+    //! \name Inspectors
+    //@{
+    CurveType baseType() const { return CurveType::CDSVolatility; }
+    const string& curveConfigID() const { return curveConfigID_; }
+    string subName() const { return curveConfigID(); }
+    //@}
 private:
     string ccy_;
     string curveConfigID_;
