@@ -63,14 +63,15 @@ namespace QuantExt {
         // compute expected loss at the beginning of first relevant period
         Real e1 = 0;
         // todo add includeSettlement date flows variable to engine.
-        if (!arguments_.normalizedLeg[0]->hasOccurred(today))
-            // Notice that since there might be a gap between the end of 
-            // acrrual and payment dates and today be in between
-            // the tranche loss on that date might not be contingent but 
-            // realized:
-            e1 = arguments_.basket->expectedTrancheLoss(
-                boost::dynamic_pointer_cast<Coupon>(
-                    arguments_.normalizedLeg[0])->accrualStartDate());
+        // RL: comment the following out, thows a negative time error
+        // if (!arguments_.normalizedLeg[0]->hasOccurred(today))
+        //     // Notice that since there might be a gap between the end of 
+        //     // acrrual and payment dates and today be in between
+        //     // the tranche loss on that date might not be contingent but 
+        //     // realized:
+        //     e1 = arguments_.basket->expectedTrancheLoss(
+        //         boost::dynamic_pointer_cast<Coupon>(
+        //             arguments_.normalizedLeg[0])->accrualStartDate());
         results_.expectedTrancheLoss.push_back(e1);
         //'e1'  should contain the existing loses.....? use remaining amounts?
         for (Size i = 0; i < arguments_.normalizedLeg.size(); i++) {
@@ -108,14 +109,17 @@ namespace QuantExt {
             e1 = e2;
         }
         
-        //\todo treat upfron tnow as in the new CDS (see March 2014)
+        //\todo treat upfront now as in the new CDS (see March 2014)
         // add includeSettlement date flows variable to engine ?
+        // RL: don't discount, throws negative time error
         if (!arguments_.normalizedLeg[0]->hasOccurred(today))
+            // results_.upfrontPremiumValue 
+            //     = inceptionTrancheNotional * arguments_.upfrontRate 
+            //         * discountCurve_->discount(
+            //             boost::dynamic_pointer_cast<Coupon>(
+            //                 arguments_.normalizedLeg[0])->accrualStartDate());
             results_.upfrontPremiumValue 
-                = inceptionTrancheNotional * arguments_.upfrontRate 
-                    * discountCurve_->discount(
-                        boost::dynamic_pointer_cast<Coupon>(
-                            arguments_.normalizedLeg[0])->accrualStartDate());
+                = inceptionTrancheNotional * arguments_.upfrontRate; 
             /* use it in a future version for coherence with the integral engine
                 arguments_.leverageFactor * ;
             */
