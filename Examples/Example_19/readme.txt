@@ -1,1 +1,1 @@
-Placeholder for dim regression example
+Empty placeholder

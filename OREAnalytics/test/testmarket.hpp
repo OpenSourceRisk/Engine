@@ -18,6 +18,8 @@
 
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/utilities/indexparser.hpp>
+#include <orea/scenario/scenariosimmarketparameters.hpp>
+#include <orea/scenario/sensitivityscenariodata.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 #include <ql/quotes/simplequote.hpp>
@@ -228,5 +230,20 @@ private:
                                                       ModifiedFollowing, vol, ActualActual(), type, shift));
         return Handle<OptionletVolatilityStructure>(ts);
     }
+};
+
+//! Static class to allow for easy construction of configuration objects for use within tests
+class TestConfigurationObjects {
+public:
+    //! ScenarioSimMarketParameters instance, 2 currencies
+    static boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> setupSimMarketData2();
+    //! ScenarioSimMarketParameters instance, 5 currencies
+    static boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> setupSimMarketData5();
+    //! SensitivityScenarioData instance, 2 currencies
+    static boost::shared_ptr<ore::analytics::SensitivityScenarioData> setupSensitivityScenarioData2();
+    //! SensitivityScenarioData instance, 5 currencies
+    static boost::shared_ptr<ore::analytics::SensitivityScenarioData> setupSensitivityScenarioData5();
+    //! Conventions instance
+    static boost::shared_ptr<ore::data::Conventions> conv();
 };
 }

@@ -21,15 +21,10 @@
 #include <test/testportfolio.hpp>
 #include <ored/utilities/osutils.hpp>
 #include <ored/utilities/log.hpp>
-#include <orea/cube/npvcube.hpp>
 #include <orea/cube/inmemorycube.hpp>
-#include <ored/model/lgmdata.hpp>
-#include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/clonescenariofactory.hpp>
 #include <orea/scenario/sensitivityscenariogenerator.hpp>
-#include <orea/engine/observationmode.hpp>
-#include <orea/engine/sensitivityanalysis.hpp>
 #include <orea/engine/all.hpp>
 #include <ored/portfolio/swap.hpp>
 #include <ored/portfolio/swaption.hpp>
@@ -40,10 +35,6 @@
 #include <ored/portfolio/builders/fxoption.hpp>
 #include <ored/portfolio/builders/capfloor.hpp>
 #include <ored/portfolio/portfolio.hpp>
-#include <ql/time/date.hpp>
-#include <ql/math/randomnumbers/mt19937uniformrng.hpp>
-#include <ql/time/calendars/target.hpp>
-#include <ql/time/daycounters/actualactual.hpp>
 #include <boost/timer.hpp>
 
 using namespace std;
@@ -55,264 +46,6 @@ using namespace ore::data;
 using namespace ore::analytics;
 
 namespace testsuite {
-
-boost::shared_ptr<data::Conventions> conv() {
-    boost::shared_ptr<data::Conventions> conventions(new data::Conventions());
-
-    conventions->add(boost::make_shared<data::SwapIndexConvention>("EUR-CMS-2Y", "EUR-6M-SWAP-CONVENTIONS"));
-    conventions->add(boost::make_shared<data::SwapIndexConvention>("EUR-CMS-30Y", "EUR-6M-SWAP-CONVENTIONS"));
-
-    // boost::shared_ptr<data::Convention> swapConv(
-    //     new data::IRSwapConvention("EUR-6M-SWAP-CONVENTIONS", "TARGET", "Annual", "MF", "30/360", "EUR-EURIBOR-6M"));
-    conventions->add(boost::make_shared<data::IRSwapConvention>("EUR-6M-SWAP-CONVENTIONS", "TARGET", "A", "MF",
-                                                                "30/360", "EUR-EURIBOR-6M"));
-    conventions->add(boost::make_shared<data::IRSwapConvention>("USD-3M-SWAP-CONVENTIONS", "TARGET", "Q", "MF",
-                                                                "30/360", "USD-LIBOR-3M"));
-    conventions->add(boost::make_shared<data::IRSwapConvention>("USD-6M-SWAP-CONVENTIONS", "TARGET", "Q", "MF",
-                                                                "30/360", "USD-LIBOR-6M"));
-    conventions->add(boost::make_shared<data::IRSwapConvention>("GBP-6M-SWAP-CONVENTIONS", "TARGET", "A", "MF",
-                                                                "30/360", "GBP-LIBOR-6M"));
-    conventions->add(boost::make_shared<data::IRSwapConvention>("JPY-6M-SWAP-CONVENTIONS", "TARGET", "A", "MF",
-                                                                "30/360", "JPY-LIBOR-6M"));
-    conventions->add(boost::make_shared<data::IRSwapConvention>("CHF-6M-SWAP-CONVENTIONS", "TARGET", "A", "MF",
-                                                                "30/360", "CHF-LIBOR-6M"));
-
-    conventions->add(boost::make_shared<data::DepositConvention>("EUR-DEP-CONVENTIONS", "EUR-EURIBOR"));
-    conventions->add(boost::make_shared<data::DepositConvention>("USD-DEP-CONVENTIONS", "USD-LIBOR"));
-    conventions->add(boost::make_shared<data::DepositConvention>("GBP-DEP-CONVENTIONS", "GBP-LIBOR"));
-    conventions->add(boost::make_shared<data::DepositConvention>("JPY-DEP-CONVENTIONS", "JPY-LIBOR"));
-    conventions->add(boost::make_shared<data::DepositConvention>("CHF-DEP-CONVENTIONS", "CHF-LIBOR"));
-
-    return conventions;
-}
-
-boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData2() {
-    boost::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData(
-        new analytics::ScenarioSimMarketParameters());
-    simMarketData->baseCcy() = "EUR";
-    simMarketData->ccys() = {"EUR", "GBP"};
-    simMarketData->yieldCurveNames() = {"BondCurve1"};
-    simMarketData->yieldCurveTenors() = {1 * Months, 6 * Months, 1 * Years,  2 * Years,  3 * Years, 4 * Years,
-                                         5 * Years,  6 * Years,  7 * Years,  8 * Years,  9 * Years, 10 * Years,
-                                         12 * Years, 15 * Years, 20 * Years, 25 * Years, 30 * Years};
-    simMarketData->indices() = {"EUR-EURIBOR-6M", "GBP-LIBOR-6M"};
-    simMarketData->defaultNames() = {"BondIssuer1"};
-    simMarketData->defaultTenors() = {1 * Months, 6 * Months, 1 * Years,  2 * Years,  3 * Years, 4 * Years,
-                                      5 * Years,  7 * Years,  10 * Years, 20 * Years, 30 * Years};
-    simMarketData->securities() = {"Bond1"};
-
-    simMarketData->interpolation() = "LogLinear";
-    simMarketData->extrapolate() = true;
-
-    simMarketData->swapVolTerms() = {1 * Years, 2 * Years, 3 * Years,  4 * Years,
-                                     5 * Years, 7 * Years, 10 * Years, 20 * Years};
-    simMarketData->swapVolExpiries() = {6 * Months, 1 * Years, 2 * Years,  3 * Years,
-                                        5 * Years,  7 * Years, 10 * Years, 20 * Years};
-    simMarketData->swapVolCcys() = {"EUR", "GBP"};
-    simMarketData->swapVolDecayMode() = "ForwardVariance";
-    simMarketData->simulateSwapVols() = true;
-
-    simMarketData->fxVolExpiries() = {1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years};
-    simMarketData->fxVolDecayMode() = "ConstantVariance";
-    simMarketData->simulateFXVols() = true;
-    simMarketData->fxVolCcyPairs() = {"EURGBP"};
-
-    simMarketData->fxCcyPairs() = {"EURGBP"};
-
-    simMarketData->simulateCapFloorVols() = false;
-
-    return simMarketData;
-}
-
-boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData5() {
-    boost::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData(
-        new analytics::ScenarioSimMarketParameters());
-
-    simMarketData->baseCcy() = "EUR";
-    simMarketData->ccys() = {"EUR", "GBP", "USD", "CHF", "JPY"};
-    simMarketData->yieldCurveTenors() = {1 * Months, 6 * Months, 1 * Years,  2 * Years,  3 * Years,  4 * Years,
-                                         5 * Years,  7 * Years,  10 * Years, 15 * Years, 20 * Years, 30 * Years};
-    simMarketData->indices() = {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "USD-LIBOR-6M",
-                                "GBP-LIBOR-6M",   "CHF-LIBOR-6M", "JPY-LIBOR-6M"};
-    simMarketData->swapIndices() = {{"EUR-CMS-2Y", "EUR-EURIBOR-6M"}, {"EUR-CMS-30Y", "EUR-EURIBOR-6M"}};
-    simMarketData->yieldCurveNames() = {"BondCurve1"};
-    simMarketData->interpolation() = "LogLinear";
-    simMarketData->extrapolate() = true;
-
-    simMarketData->swapVolTerms() = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 20 * Years};
-    simMarketData->swapVolExpiries() = {6 * Months, 1 * Years, 2 * Years,  3 * Years,
-                                        5 * Years,  7 * Years, 10 * Years, 20 * Years};
-    simMarketData->swapVolCcys() = {"EUR", "GBP", "USD", "CHF", "JPY"};
-    simMarketData->swapVolDecayMode() = "ForwardVariance";
-    simMarketData->simulateSwapVols() = true; // false;
-
-    simMarketData->fxVolExpiries() = {1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years};
-    simMarketData->fxVolDecayMode() = "ConstantVariance";
-    simMarketData->simulateFXVols() = true; // false;
-    simMarketData->fxVolCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY", "GBPCHF"};
-
-    simMarketData->fxCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY"};
-
-    simMarketData->simulateCapFloorVols() = true;
-    simMarketData->capFloorVolDecayMode() = "ForwardVariance";
-    simMarketData->capFloorVolCcys() = {"EUR", "USD"};
-    simMarketData->capFloorVolExpiries() = {6 * Months, 1 * Years,  2 * Years,  3 * Years, 5 * Years,
-                                            7 * Years,  10 * Years, 15 * Years, 20 * Years};
-    simMarketData->capFloorVolStrikes() = {0.00, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06};
-
-    simMarketData->defaultNames() = {"BondIssuer1"};
-    simMarketData->defaultTenors() = {1 * Months, 6 * Months, 1 * Years,  2 * Years,  3 * Years, 4 * Years,
-                                      5 * Years,  7 * Years,  10 * Years, 20 * Years, 30 * Years};
-    simMarketData->securities() = {"Bond1"};
-
-    return simMarketData;
-}
-
-boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData2() {
-    boost::shared_ptr<SensitivityScenarioData> sensiData = boost::make_shared<SensitivityScenarioData>();
-
-    SensitivityScenarioData::CurveShiftData cvsData;
-    cvsData.shiftTenors = {1 * Years, 2 * Years,  3 * Years,  5 * Years,
-                           7 * Years, 10 * Years, 15 * Years, 20 * Years}; // multiple tenors: triangular shifts
-    cvsData.shiftType = "Absolute";
-    cvsData.shiftSize = 0.0001;
-
-    SensitivityScenarioData::FxShiftData fxsData;
-    fxsData.shiftType = "Relative";
-    fxsData.shiftSize = 0.01;
-
-    SensitivityScenarioData::FxVolShiftData fxvsData;
-    fxvsData.shiftType = "Relative";
-    fxvsData.shiftSize = 1.0;
-    fxvsData.shiftExpiries = {2 * Years, 5 * Years};
-
-    SensitivityScenarioData::CapFloorVolShiftData cfvsData;
-    cfvsData.shiftType = "Absolute";
-    cfvsData.shiftSize = 0.0001;
-    cfvsData.shiftExpiries = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
-    cfvsData.shiftStrikes = {0.05};
-
-    SensitivityScenarioData::SwaptionVolShiftData swvsData;
-    swvsData.shiftType = "Relative";
-    swvsData.shiftSize = 0.01;
-    swvsData.shiftExpiries = {3 * Years, 5 * Years, 10 * Years};
-    swvsData.shiftTerms = {2 * Years, 5 * Years, 10 * Years};
-
-    sensiData->discountCurrencies() = {"EUR", "GBP"};
-    sensiData->discountCurveShiftData()["EUR"] = cvsData;
-
-    sensiData->discountCurveShiftData()["GBP"] = cvsData;
-
-    sensiData->indexNames() = {"EUR-EURIBOR-6M", "GBP-LIBOR-6M"};
-    sensiData->indexCurveShiftData()["EUR-EURIBOR-6M"] = cvsData;
-    sensiData->indexCurveShiftData()["GBP-LIBOR-6M"] = cvsData;
-
-    sensiData->yieldCurveNames() = {"BondCurve1"};
-    sensiData->yieldCurveShiftData()["BondCurve1"] = cvsData;
-
-    sensiData->fxCcyPairs() = {"EURGBP"};
-    sensiData->fxShiftData()["EURGBP"] = fxsData;
-
-    sensiData->fxVolCcyPairs() = {"EURGBP"};
-    sensiData->fxVolShiftData()["EURGBP"] = fxvsData;
-
-    sensiData->swaptionVolCurrencies() = {"EUR", "GBP"};
-    sensiData->swaptionVolShiftData()["EUR"] = swvsData;
-    sensiData->swaptionVolShiftData()["GBP"] = swvsData;
-
-    // sensiData->capFloorVolLabel() = "VOL_CAPFLOOR";
-    // sensiData->capFloorVolCurrencies() = { "EUR", "GBP" };
-    // sensiData->capFloorVolShiftData()["EUR"] = cfvsData;
-    // sensiData->capFloorVolShiftData()["EUR"].indexName = "EUR-EURIBOR-6M";
-    // sensiData->capFloorVolShiftData()["GBP"] = cfvsData;
-    // sensiData->capFloorVolShiftData()["GBP"].indexName = "GBP-LIBOR-6M";
-
-    return sensiData;
-}
-
-boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5() {
-    boost::shared_ptr<SensitivityScenarioData> sensiData = boost::make_shared<SensitivityScenarioData>();
-
-    SensitivityScenarioData::CurveShiftData cvsData;
-    cvsData.shiftTenors = {6 * Months, 1 * Years,  2 * Years,  3 * Years, 5 * Years,
-                           7 * Years,  10 * Years, 15 * Years, 20 * Years}; // multiple tenors: triangular shifts
-    cvsData.shiftType = "Absolute";
-    cvsData.shiftSize = 0.0001;
-
-    SensitivityScenarioData::FxShiftData fxsData;
-    fxsData.shiftType = "Relative";
-    fxsData.shiftSize = 0.01;
-
-    SensitivityScenarioData::FxVolShiftData fxvsData;
-    fxvsData.shiftType = "Relative";
-    fxvsData.shiftSize = 1.0;
-    fxvsData.shiftExpiries = {5 * Years};
-
-    SensitivityScenarioData::CapFloorVolShiftData cfvsData;
-    cfvsData.shiftType = "Absolute";
-    cfvsData.shiftSize = 0.0001;
-    cfvsData.shiftExpiries = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
-    cfvsData.shiftStrikes = {0.01, 0.02, 0.03, 0.04, 0.05};
-
-    SensitivityScenarioData::SwaptionVolShiftData swvsData;
-    swvsData.shiftType = "Relative";
-    swvsData.shiftSize = 0.01;
-    swvsData.shiftExpiries = {2 * Years, 5 * Years, 10 * Years};
-    swvsData.shiftTerms = {5 * Years, 10 * Years};
-
-    sensiData->discountCurrencies() = {"EUR", "USD", "GBP", "CHF", "JPY"};
-    sensiData->discountCurveShiftData()["EUR"] = cvsData;
-
-    sensiData->discountCurveShiftData()["USD"] = cvsData;
-
-    sensiData->discountCurveShiftData()["GBP"] = cvsData;
-
-    sensiData->discountCurveShiftData()["JPY"] = cvsData;
-
-    sensiData->discountCurveShiftData()["CHF"] = cvsData;
-
-    sensiData->indexNames() = {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M", "CHF-LIBOR-6M", "JPY-LIBOR-6M"};
-    sensiData->indexCurveShiftData()["EUR-EURIBOR-6M"] = cvsData;
-
-    sensiData->indexCurveShiftData()["USD-LIBOR-3M"] = cvsData;
-
-    sensiData->indexCurveShiftData()["GBP-LIBOR-6M"] = cvsData;
-
-    sensiData->indexCurveShiftData()["JPY-LIBOR-6M"] = cvsData;
-
-    sensiData->indexCurveShiftData()["CHF-LIBOR-6M"] = cvsData;
-
-    sensiData->yieldCurveNames() = {"BondCurve1"};
-    sensiData->yieldCurveShiftData()["BondCurve1"] = cvsData;
-
-    sensiData->fxCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY"};
-    sensiData->fxShiftData()["EURUSD"] = fxsData;
-    sensiData->fxShiftData()["EURGBP"] = fxsData;
-    sensiData->fxShiftData()["EURJPY"] = fxsData;
-    sensiData->fxShiftData()["EURCHF"] = fxsData;
-
-    sensiData->fxVolCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY", "GBPCHF"};
-    sensiData->fxVolShiftData()["EURUSD"] = fxvsData;
-    sensiData->fxVolShiftData()["EURGBP"] = fxvsData;
-    sensiData->fxVolShiftData()["EURJPY"] = fxvsData;
-    sensiData->fxVolShiftData()["EURCHF"] = fxvsData;
-    sensiData->fxVolShiftData()["GBPCHF"] = fxvsData;
-
-    sensiData->swaptionVolCurrencies() = {"EUR", "USD", "GBP", "CHF", "JPY"};
-    sensiData->swaptionVolShiftData()["EUR"] = swvsData;
-    sensiData->swaptionVolShiftData()["GBP"] = swvsData;
-    sensiData->swaptionVolShiftData()["USD"] = swvsData;
-    sensiData->swaptionVolShiftData()["JPY"] = swvsData;
-    sensiData->swaptionVolShiftData()["CHF"] = swvsData;
-
-    sensiData->capFloorVolCurrencies() = {"EUR", "USD"};
-    sensiData->capFloorVolShiftData()["EUR"] = cfvsData;
-    sensiData->capFloorVolShiftData()["EUR"].indexName = "EUR-EURIBOR-6M";
-    sensiData->capFloorVolShiftData()["USD"] = cfvsData;
-    sensiData->capFloorVolShiftData()["USD"].indexName = "USD-LIBOR-3M";
-
-    return sensiData;
-}
 
 void testPortfolioSensitivity(ObservationMode::Mode om) {
 
@@ -330,10 +63,10 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     boost::shared_ptr<Market> initMarket = boost::make_shared<TestMarket>(today);
 
     // build scenario sim market parameters
-    boost::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData = setupSimMarketData5();
+    boost::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData = TestConfigurationObjects::setupSimMarketData5();
 
     // sensitivity config
-    boost::shared_ptr<SensitivityScenarioData> sensiData = setupSensitivityScenarioData5();
+    boost::shared_ptr<SensitivityScenarioData> sensiData = TestConfigurationObjects::setupSensitivityScenarioData5();
 
     // build scenario generator
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(
@@ -345,7 +78,7 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     boost::shared_ptr<ScenarioGenerator> sgen(scenarioGenerator);
 
     // build scenario sim market
-    Conventions conventions = *conv();
+    Conventions conventions = *TestConfigurationObjects::conv();
     boost::shared_ptr<analytics::ScenarioSimMarket> simMarket =
         boost::make_shared<analytics::ScenarioSimMarket>(sgen, initMarket, simMarketData, conventions);
 
@@ -869,10 +602,10 @@ void SensitivityAnalysisTest::test1dShifts() {
     boost::shared_ptr<Market> initMarket = boost::make_shared<TestMarket>(today);
 
     // build scenario sim market parameters
-    boost::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData = setupSimMarketData2();
+    boost::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData = TestConfigurationObjects::setupSimMarketData2();
 
     // sensitivity config
-    boost::shared_ptr<SensitivityScenarioData> sensiData = setupSensitivityScenarioData2();
+    boost::shared_ptr<SensitivityScenarioData> sensiData = TestConfigurationObjects::setupSensitivityScenarioData2();
 
     // build scenario generator
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(
@@ -955,10 +688,10 @@ void SensitivityAnalysisTest::test2dShifts() {
     boost::shared_ptr<Market> initMarket = boost::make_shared<TestMarket>(today);
 
     // build scenario sim market parameters
-    boost::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData = setupSimMarketData2();
+    boost::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData = TestConfigurationObjects::setupSimMarketData2();
 
     // sensitivity config
-    boost::shared_ptr<SensitivityScenarioData> sensiData = setupSensitivityScenarioData2();
+    boost::shared_ptr<SensitivityScenarioData> sensiData = TestConfigurationObjects::setupSensitivityScenarioData2();
 
     // build scenario generator
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(
@@ -1057,10 +790,10 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
     boost::shared_ptr<Market> initMarket = boost::make_shared<TestMarket>(today);
 
     // build scenario sim market parameters
-    boost::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData = setupSimMarketData5();
+    boost::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData = TestConfigurationObjects::setupSimMarketData5();
 
     // sensitivity config
-    boost::shared_ptr<SensitivityScenarioData> sensiData = setupSensitivityScenarioData5();
+    boost::shared_ptr<SensitivityScenarioData> sensiData = TestConfigurationObjects::setupSensitivityScenarioData5();
 
     map<string, SensitivityScenarioData::FxVolShiftData>& fxvs = sensiData->fxVolShiftData();
     for (auto& it : fxvs) {
@@ -1080,7 +813,7 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
     boost::shared_ptr<ScenarioGenerator> sgen(scenarioGenerator);
 
     // build scenario sim market
-    Conventions conventions = *conv();
+    Conventions conventions = *TestConfigurationObjects::conv();
     boost::shared_ptr<analytics::ScenarioSimMarket> simMarket =
         boost::make_shared<analytics::ScenarioSimMarket>(sgen, initMarket, simMarketData, conventions);
 
@@ -1389,10 +1122,10 @@ void SensitivityAnalysisTest::testCrossGamma() {
     boost::shared_ptr<Market> initMarket = boost::make_shared<TestMarket>(today);
 
     // build scenario sim market parameters
-    boost::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData = setupSimMarketData5();
+    boost::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData = TestConfigurationObjects::setupSimMarketData5();
 
     // sensitivity config
-    boost::shared_ptr<SensitivityScenarioData> sensiData = setupSensitivityScenarioData5();
+    boost::shared_ptr<SensitivityScenarioData> sensiData = TestConfigurationObjects::setupSensitivityScenarioData5();
     vector<pair<string, string>>& cgFilter = sensiData->crossGammaFilter();
     BOOST_CHECK_EQUAL(cgFilter.size(), 0);
     cgFilter.push_back(pair<string, string>("DiscountCurve/EUR", "DiscountCurve/EUR"));
@@ -1420,9 +1153,9 @@ void SensitivityAnalysisTest::testCrossGamma() {
     scenarioGenerator->generateScenarios(scenarioFactory);
 
     boost::shared_ptr<ScenarioGenerator> sgen(scenarioGenerator);
-
+    
     // build scenario sim market
-    Conventions conventions = *conv();
+    Conventions conventions = *TestConfigurationObjects::conv();
     boost::shared_ptr<analytics::ScenarioSimMarket> simMarket =
         boost::make_shared<analytics::ScenarioSimMarket>(sgen, initMarket, simMarketData, conventions);
 
