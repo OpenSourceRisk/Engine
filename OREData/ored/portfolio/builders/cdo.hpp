@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file portfolio/builders/swap.hpp
-    \brief
+/*! \file portfolio/builders/cdo.hpp
+    \brief Mid point CDO engines cached by currency
     \ingroup portfolio
 */
 
@@ -26,9 +26,7 @@
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/utilities/log.hpp>
-#include <qle/pricingengines/discountingswapenginemulticurve.hpp>
-#include <qle/pricingengines/discountingcurrencyswapengine.hpp>
-#include <ql/pricingengines/swap/discountingswapengine.hpp>
+#include <qle/pricingengines/midpointcdoengine.hpp>
 #include <boost/make_shared.hpp>
 
 namespace ore {
@@ -38,18 +36,23 @@ namespace data {
 /*! Pricing engines are cached by currency
     \ingroup portfolio
 */
-class CdoEngineBuilder : public EngineBuilder {
+class CdoEngineBuilder : public CachingPricingEngineBuilder<string, const Currency&> {
 public:
-    CdoEngineBuilder(const std::string& model, const std::string& engine) : EngineBuilder(model, engine) {}
+    CdoEngineBuilder(const std::string& model, const std::string& engine) : CachingEngineBuilder(model, engine) {}
 
-    virtual boost::shared_ptr<PricingEngine> engine(const string& id) = 0;
+protected:
+    virtual string keyImpl(const Currency& ccy) override { return ccy.code(); }
 };
 
 class GaussCopulaBucketingCdoEngineBuilder : public CdoEngineBuilder {
 public:
     GaussCopulaBucketingCdoEngineBuilder() : CdoEngineBuilder("GaussCopula", "Bucketing") {}
 
-    boost::shared_ptr<PricingEngine> engine(const string& id) override { return boost::shared_ptr<PricingEngine>(); }
+protected:
+    virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& ccy) override {
+        Handle<YieldTermStructure> yts = market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
+        return boost::shared_ptr<PricingEngine>(new QuantExt::MidPointCDOEngine(yts));
+    }
 };
 
 } // namespace data
