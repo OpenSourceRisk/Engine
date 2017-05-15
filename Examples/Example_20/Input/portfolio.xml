@@ -93,27 +93,30 @@
       </LegData>
       <!-- Index constituents notionals sum must match premium leg
 	   notional -->
-      <Basket>
+      <BasketData>
         <Name>
           <IssuerId>CPTY_1</IssuerId>
+          <Qualifier>SECURITY_1</Qualifier>
           <CreditCurveId>CREDIT_CURVE_1</CreditCurveId>
           <Notional>100000.0</Notional>
           <Currency>USD</Currency>
         </Name>
         <Name>
           <IssuerId>CPTY_2</IssuerId>
+          <Qualifier>SECURITY_2</Qualifier>
           <CreditCurveId>CREDIT_CURVE_2</CreditCurveId>
           <Notional>100000.0</Notional>
           <Currency>USD</Currency>
         </Name>
         <Name>
           <IssuerId>CPTY_3</IssuerId>
+          <Qualifier>SECURITY_3</Qualifier>
           <CreditCurveId>CREDIT_CURVE_3</CreditCurveId>
           <Notional>100000.0</Notional>
           <Currency>USD</Currency>
         </Name>
         <!-- ... -->
-      </Basket>
+      </BasketData>
     </IndexCreditDefaultSwapData>
   </Trade>
   <!-- 6M expiry option on 5Y Index CDS -->
@@ -174,27 +177,30 @@
         </LegData>
         <!-- Index constituents notionals sum must match premium leg
 	     notional -->
-        <Basket>
-          <Name>
-            <IssuerId>CPTY_1</IssuerId>
-            <CreditCurveId>CREDIT_CURVE_1</CreditCurveId>
-            <Notional>100000.0</Notional>
-            <Currency>USD</Currency>
-          </Name>
-          <Name>
-            <IssuerId>CPTY_2</IssuerId>
-            <CreditCurveId>CREDIT_CURVE_2</CreditCurveId>
-            <Notional>100000.0</Notional>
-            <Currency>USD</Currency>
-          </Name>
-          <Name>
-            <IssuerId>CPTY_3</IssuerId>
-            <CreditCurveId>CREDIT_CURVE_3</CreditCurveId>
-            <Notional>100000.0</Notional>
-            <Currency>USD</Currency>
-          </Name>
+        <BasketData>
+        <Name>
+          <IssuerId>CPTY_1</IssuerId>
+          <Qualifier>SECURITY_1</Qualifier>
+          <CreditCurveId>CREDIT_CURVE_1</CreditCurveId>
+          <Notional>100000.0</Notional>
+          <Currency>USD</Currency>
+        </Name>
+        <Name>
+          <IssuerId>CPTY_2</IssuerId>
+          <Qualifier>SECURITY_2</Qualifier>
+          <CreditCurveId>CREDIT_CURVE_2</CreditCurveId>
+          <Notional>100000.0</Notional>
+          <Currency>USD</Currency>
+        </Name>
+        <Name>
+          <IssuerId>CPTY_3</IssuerId>
+          <Qualifier>SECURITY_3</Qualifier>
+          <CreditCurveId>CREDIT_CURVE_3</CreditCurveId>
+          <Notional>100000.0</Notional>
+          <Currency>USD</Currency>
+        </Name>
           <!-- ... -->
-        </Basket>
+        </BasketData>
       </IndexCreditDefaultSwapData>
     </IndexCreditDefaultSwapOptionData>
   </Trade>
@@ -206,7 +212,7 @@
       <NettingSetId>CPTY_A</NettingSetId>
       <AdditionalFields/>
     </Envelope>
-    <CDOData>
+    <CdoData>
       <ProtectionStart>20170410</ProtectionStart>
       <UpfrontDate/>
       <UpfrontFee>0.0324</UpfrontFee>
@@ -246,27 +252,30 @@
       <!-- Index constituents notional sum times tranche
 	   width must match the premium leg notional
       -->
-      <Basket>
+      <BasketData>
         <Name>
           <IssuerId>CPTY_1</IssuerId>
+          <Qualifier>SECURITY_1</Qualifier>
           <CreditCurveId>CREDIT_CURVE_1</CreditCurveId>
           <Notional>100000.0</Notional>
           <Currency>USD</Currency>
         </Name>
         <Name>
           <IssuerId>CPTY_2</IssuerId>
+          <Qualifier>SECURITY_2</Qualifier>
           <CreditCurveId>CREDIT_CURVE_2</CreditCurveId>
           <Notional>100000.0</Notional>
           <Currency>USD</Currency>
         </Name>
         <Name>
           <IssuerId>CPTY_3</IssuerId>
+          <Qualifier>SECURITY_3</Qualifier>
           <CreditCurveId>CREDIT_CURVE_3</CreditCurveId>
           <Notional>100000.0</Notional>
           <Currency>USD</Currency>
         </Name>
-        <!-- ... -->
-      </Basket>
-    </CDOData>
+       <!-- ... -->
+      </BasketData>
+    </CdoData>
   </Trade>
 </Portfolio>

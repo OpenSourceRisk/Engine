@@ -26,5 +26,7 @@
 #include <ored/portfolio/bond.hpp>
 #include <ored/portfolio/creditdefaultswap.hpp>
 #include <ored/portfolio/indexcreditdefaultswap.hpp>
+#include <ored/portfolio/basketdata.hpp>
+#include <ored/portfolio/cdo.hpp>
 
 #include <ored/portfolio/builders/all.hpp>
