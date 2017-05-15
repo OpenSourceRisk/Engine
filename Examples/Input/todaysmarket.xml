@@ -166,7 +166,7 @@
   </DefaultCurves>
   <!-- cds vol definition -->
   <CDSVolatilities id="default">
-   <CDSVolatility name="CDXIG">CDSVolatility/CDXIG</CDSVolatility>
+   <CDSVolatility name="CPTY_A">CDSVolatility/CDXIG</CDSVolatility>
   </CDSVolatilities>
   <!-- inflation price surface definition -->
   <InflationCapFloorPriceSurfaces id="default">
