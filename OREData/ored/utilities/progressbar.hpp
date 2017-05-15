@@ -39,6 +39,7 @@ namespace data {
 class ProgressIndicator {
 public:
     ProgressIndicator() {}
+    virtual ~ProgressIndicator() {}
     virtual void updateProgress(const unsigned long progress, const unsigned long total) = 0;
 };
 
