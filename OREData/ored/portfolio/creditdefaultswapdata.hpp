@@ -43,6 +43,7 @@ public:
 
     const string& issuerId() const { return issuerId_; }
     const string& creditCurveId() const { return creditCurveId_; }
+    const string& qualifier() const { return qualifier_; }
     const LegData& leg() const { return leg_; }
     bool settlesAccrual() const { return settlesAccrual_; }
     bool paysAtDefaultTime() const { return paysAtDefaultTime_; }
@@ -53,6 +54,7 @@ public:
 private:
     string issuerId_;
     string creditCurveId_;
+    string qualifier_;
     LegData leg_;
     bool settlesAccrual_, paysAtDefaultTime_;
     Date protectionStart_, upfrontDate_;

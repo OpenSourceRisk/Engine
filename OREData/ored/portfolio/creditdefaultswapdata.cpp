@@ -32,6 +32,7 @@ void CreditDefaultSwapData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "CreditDefaultSwapData");
     issuerId_ = XMLUtils::getChildValue(node, "IssuerId", true);
     creditCurveId_ = XMLUtils::getChildValue(node, "CreditCurveId", true);
+    qualifier_ = XMLUtils::getChildValue(node, "Qualifier", true);
     settlesAccrual_ = XMLUtils::getChildValueAsBool(node, "SettlesAccrual", false);       // default = Y
     paysAtDefaultTime_ = XMLUtils::getChildValueAsBool(node, "PaysAtDefaultTime", false); // default = Y
     XMLNode* tmp = XMLUtils::getChildNode(node, "ProtectionStart");
