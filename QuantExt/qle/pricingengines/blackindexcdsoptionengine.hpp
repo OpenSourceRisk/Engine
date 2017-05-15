@@ -39,8 +39,8 @@
     of upfront amount and exercise before CDS start
 */
 
-#ifndef quantext_black_cds_option_engine_hpp
-#define quantext_black_cds_option_engine_hpp
+#ifndef quantext_black_index_cds_option_engine_hpp
+#define quantext_black_index_cds_option_engine_hpp
 
 #include <qle/instruments/cdsoption.hpp>
 
@@ -49,20 +49,28 @@ using namespace QuantLib;
 namespace QuantExt {
 
 //! Black-formula CDS-option engine
-class BlackCdsOptionEngine : public QuantExt::CdsOption::engine {
+class BlackIndexCdsOptionEngine : public QuantExt::IndexCdsOption::engine {
 public:
-    BlackCdsOptionEngine(const Handle<DefaultProbabilityTermStructure>&, Real recoveryRate,
-                         const Handle<YieldTermStructure>& termStructure, const Handle<Quote>& vol);
+    // use index curve for front end protection calculation
+    BlackIndexCdsOptionEngine(const Handle<DefaultProbabilityTermStructure>&, Real recoveryRate,
+                              const Handle<YieldTermStructure>& termStructure, const Handle<Quote>& vol);
+    // use underlying curves for front end protection calculation
+    BlackIndexCdsOptionEngine(const std::vector<Handle<DefaultProbabilityTermStructure> >&, Real recoveryRate,
+                              const Handle<YieldTermStructure>& termStructure, const Handle<Quote>& vol);
     void calculate() const;
     Handle<YieldTermStructure> termStructure();
     Handle<Quote> volatility();
 
 private:
+    void defaultProbability(const Date& d1, const Date& d2) const;
+
     const Handle<DefaultProbabilityTermStructure> probability_;
+    const std::vector<Handle<DefaultProbabilityTermStructure> > underlyingProbability_;
     const Real recoveryRate_;
     const Handle<YieldTermStructure> termStructure_;
     const Handle<Quote> volatility_;
+    const bool useUnderlyingCurves_;
 };
-}
+} // namespace QuantExt
 
 #endif

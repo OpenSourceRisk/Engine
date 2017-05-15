@@ -39,10 +39,10 @@
     no upfront amount), that should be taken care of in pricing engines
 */
 
-#ifndef quantext_cds_option_hpp
-#define quantext_cds_option_hpp
+#ifndef quantext_index_cds_option_hpp
+#define quantext_index_cds_option_hpp
 
-#include <qle/instruments/creditdefaultswap.hpp>
+#include <qle/instruments/indexcreditdefaultswap.hpp>
 
 #include <ql/option.hpp>
 
@@ -62,13 +62,13 @@ namespace QuantExt {
     is a right to buy an underlying CDS buying protection and
     paying coupon.
 */
-class CdsOption : public Option {
+class IndexCdsOption : public Option {
 public:
     class arguments;
     class results;
     class engine;
-    CdsOption(const boost::shared_ptr<CreditDefaultSwap>& swap, const boost::shared_ptr<Exercise>& exercise,
-              bool knocksOut = true);
+    IndexCdsOption(const boost::shared_ptr<IndexCreditDefaultSwap>& swap, const boost::shared_ptr<Exercise>& exercise,
+                   bool knocksOut = true);
 
     //! \name Instrument interface
     //@{
@@ -77,7 +77,7 @@ public:
     //@}
     //! \name Inspectors
     //@{
-    const boost::shared_ptr<CreditDefaultSwap>& underlyingSwap() const { return swap_; }
+    const boost::shared_ptr<IndexCreditDefaultSwap>& underlyingSwap() const { return swap_; }
     //@}
     //! \name Calculations
     //@{
@@ -90,7 +90,7 @@ public:
     //@}
 
 private:
-    boost::shared_ptr<CreditDefaultSwap> swap_;
+    boost::shared_ptr<IndexCreditDefaultSwap> swap_;
     bool knocksOut_;
 
     mutable Real riskyAnnuity_;
@@ -99,24 +99,24 @@ private:
 };
 
 //! %Arguments for CDS-option calculation
-class CdsOption::arguments : public CreditDefaultSwap::arguments, public Option::arguments {
+class IndexCdsOption::arguments : public IndexCreditDefaultSwap::arguments, public Option::arguments {
 public:
     arguments() {}
 
-    boost::shared_ptr<CreditDefaultSwap> swap;
+    boost::shared_ptr<IndexCreditDefaultSwap> swap;
     bool knocksOut;
     void validate() const;
 };
 
 //! %Results from CDS-option calculation
-class CdsOption::results : public Option::results {
+class IndexCdsOption::results : public Option::results {
 public:
     Real riskyAnnuity;
     void reset();
 };
 
 //! base class for swaption engines
-class CdsOption::engine : public GenericEngine<CdsOption::arguments, CdsOption::results> {};
+class IndexCdsOption::engine : public GenericEngine<IndexCdsOption::arguments, IndexCdsOption::results> {};
 }
 
 #endif

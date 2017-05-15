@@ -13,5 +13,8 @@
 #include <qle/instruments/oiccbasisswap.hpp>
 #include <qle/instruments/tenorbasisswap.hpp>
 #include <qle/instruments/subperiodsswap.hpp>
+#include <qle/instruments/creditdefaultswap.hpp>
+#include <qle/instruments/indexcreditdefaultswap.hpp>
 #include <qle/instruments/cdsoption.hpp>
+#include <qle/instruments/indexcdsoption.hpp>
 
