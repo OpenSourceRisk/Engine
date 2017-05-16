@@ -36,16 +36,18 @@ namespace data {
 class SyntheticCDO : public Trade {
 public:
     SyntheticCDO() : Trade("SyntheticCDO") {}
-    SyntheticCDO(const Envelope& env, const LegData& leg, const BasketData& basketData, const string& protectionStart,
-                 const string& upfrontDate, double upfrontFee, double attachmentPoint, double detachmentPoint)
-        : Trade("SyntheticCDO", env), legData_(leg), basketData_(basketData), protectionStart_(protectionStart),
-          upfrontDate_(upfrontDate), upfrontFee_(upfrontFee), attachmentPoint_(attachmentPoint),
-          detachmentPoint_(detachmentPoint) {}
+    SyntheticCDO(const Envelope& env, const LegData& leg, const string& qualifier, const BasketData& basketData,
+                 const string& protectionStart, const string& upfrontDate, double upfrontFee, double attachmentPoint,
+                 double detachmentPoint)
+        : Trade("SyntheticCDO", env), qualifier_(qualifier), legData_(leg), basketData_(basketData),
+          protectionStart_(protectionStart), upfrontDate_(upfrontDate), upfrontFee_(upfrontFee),
+          attachmentPoint_(attachmentPoint), detachmentPoint_(detachmentPoint) {}
 
     virtual void build(const boost::shared_ptr<EngineFactory>&);
 
     //! Inspectors
     //@{
+    const string& qualifier() const { return qualifier_; }
     const LegData& leg() const { return legData_; }
     const BasketData& basketData() const { return basketData_; }
     const string& protectionStart() const { return protectionStart_; }
@@ -59,6 +61,7 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc);
 
 private:
+    string qualifier_;
     LegData legData_;
     BasketData basketData_;
     string protectionStart_;

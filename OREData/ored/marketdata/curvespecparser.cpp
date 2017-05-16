@@ -40,6 +40,7 @@ static CurveSpec::CurveType parseCurveSpecType(const string& s) {
         {"FXVolatility", CurveSpec::CurveType::FXVolatility},
         {"Default", CurveSpec::CurveType::Default},
         {"CDSVolatility", CurveSpec::CurveType::CDSVolatility},
+        {"BaseCorrelation", CurveSpec::CurveType::BaseCorrelation},
         {"Inflation", CurveSpec::CurveType::Inflation},
         {"InflationCapFloorPrice", CurveSpec::CurveType::InflationCapFloorPrice},
         {"Equity", CurveSpec::CurveType::Equity},
@@ -95,6 +96,15 @@ boost::shared_ptr<CurveSpec> parseCurveSpec(const string& s) {
                                            << s);
         const string& curveConfigID = tokens[1];
         return boost::make_shared<CDSVolatilityCurveSpec>(curveConfigID);
+    }
+
+    case CurveSpec::CurveType::BaseCorrelation: {
+        // BaseCorrelation/CDX/CurveConfigID
+        QL_REQUIRE(tokens.size() == 2, "Unexpected number"
+                                       " of tokens in cds vol spec "
+                                           << s);
+        const string& curveConfigID = tokens[1];
+        return boost::make_shared<BaseCorrelationCurveSpec>(curveConfigID);
     }
 
     case CurveSpec::CurveType::FX: {

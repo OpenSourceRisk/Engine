@@ -385,6 +385,7 @@
 
   <xs:complexType name="cdoData">
     <xs:all>
+      <xs:element type="xs:string" name="Qualifier"/>
       <xs:element type="date" name="ProtectionStart"/>
       <xs:element type="date" name="UpfrontDate"/>
       <xs:element type="xs:float" name="UpfrontFee"/>

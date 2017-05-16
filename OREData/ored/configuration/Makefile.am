@@ -12,6 +12,7 @@ libOREDataConfiguration_la_SOURCES = \
 	conventions.cpp \
 	defaultcurveconfig.cpp \
 	cdsvolcurveconfig.cpp \
+	basecorrelationcurveconfig.cpp \
 	equitycurveconfig.cpp \
 	equityvolcurveconfig.cpp \
 	fxvolcurveconfig.cpp \
@@ -29,6 +30,7 @@ this_include_HEADERS = \
 	conventions.hpp \
 	defaultcurveconfig.hpp \
 	cdsvolcurveconfig.hpp \
+	basecorrelationcurveconfig.hpp \
 	equitycurveconfig.hpp \
 	equityvolcurveconfig.hpp \
 	fxvolcurveconfig.hpp \

@@ -42,7 +42,8 @@ class CdoEngineBuilder : public CachingPricingEngineBuilder<string, const Curren
 public:
     CdoEngineBuilder(const std::string& model, const std::string& engine) : CachingEngineBuilder(model, engine) {}
 
-    virtual boost::shared_ptr<DefaultLossModel> lossModel(Size poolSize, const vector<Real>& recoveryRates) = 0;
+    virtual boost::shared_ptr<DefaultLossModel> lossModel(const string& qualifier, const vector<Real>& recoveryRates,
+                                                          const Real& detachmentPoint) = 0;
 
 protected:
     virtual string keyImpl(const Currency& ccy) override { return ccy.code(); }
@@ -52,16 +53,18 @@ class GaussCopulaBucketingCdoEngineBuilder : public CdoEngineBuilder {
 public:
     GaussCopulaBucketingCdoEngineBuilder() : CdoEngineBuilder("GaussCopula", "Bucketing") {}
 
-    boost::shared_ptr<DefaultLossModel> lossModel(Size poolSize, const vector<Real>& recoveryRates) override {
+    boost::shared_ptr<DefaultLossModel> lossModel(const string& qualifier, const vector<Real>& recoveryRates,
+                                                  const Real& detachmentPoint) override {
 
-        QL_REQUIRE(poolSize == recoveryRates.size(), "unexpected size of recovery rate vector");
-	
-        // FIXME
-        // - add base correlations to market data
-        // - build base correlation term structure (see ql/experimental/credit) for a term structure by time and lossLevel
-        // - store in today's market by CDS Index name / qualifier
-        Real c = parseReal(modelParameters_.at("correlation"));
-        boost::shared_ptr<SimpleQuote> correlationQuote(new SimpleQuote(c));
+        Size poolSize = recoveryRates.size();
+
+        Handle<BaseCorrelationTermStructure<BilinearInterpolation>> bcts =
+            market_->baseCorrelation(qualifier, configuration(MarketContext::pricing));
+
+	// FIXME: using "instantaneous" base correlation
+        Real c = bcts->correlation(0.0, detachmentPoint, true);
+	DLOG("Use base correlation " << c << " for qualifier " << qualifier << " and lossLevel " << detachmentPoint);
+	boost::shared_ptr<SimpleQuote> correlationQuote(new SimpleQuote(c));
         Handle<Quote> correlation(correlationQuote);
 
         boost::shared_ptr<GaussianConstantLossLM> gaussLM(
