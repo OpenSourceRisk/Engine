@@ -45,8 +45,8 @@ A lookup(const B& map, const C& key, const string& configuration, const string& 
     if (it == map.end()) {
         // fall back to default configuration
         it = map.find(make_pair(Market::defaultConfiguration, key));
-        QL_REQUIRE(it != map.end(),
-                   "did not find object " << key << " of type " << type << " under configuration " << configuration);
+        QL_REQUIRE(it != map.end(), "did not find object " << key << " of type " << type << " under configuration "
+                                                           << configuration);
     }
     return it->second;
 }
@@ -85,8 +85,8 @@ Handle<Quote> MarketImpl::fxSpot(const string& ccypair, const string& configurat
     auto it = fxSpots_.find(configuration);
     if (it == fxSpots_.end())
         it = fxSpots_.find(Market::defaultConfiguration);
-    QL_REQUIRE(it != fxSpots_.end(),
-               "did not find object " << ccypair << " of type fx spot under configuration " << configuration);
+    QL_REQUIRE(it != fxSpots_.end(), "did not find object " << ccypair << " of type fx spot under configuration "
+                                                            << configuration);
     return it->second.getQuote(ccypair); // will throw if not found
 }
 
@@ -123,6 +123,12 @@ Handle<Quote> MarketImpl::recoveryRate(const string& key, const string& configur
 
 Handle<BlackVolTermStructure> MarketImpl::cdsVol(const string& key, const string& configuration) const {
     return lookup<Handle<BlackVolTermStructure>>(cdsVols_, key, configuration, "cds vol curve");
+}
+
+Handle<BaseCorrelationTermStructure<BilinearInterpolation>>
+MarketImpl::baseCorrelation(const string& key, const string& configuration) const {
+    return lookup<Handle<BaseCorrelationTermStructure<BilinearInterpolation>>>(baseCorrelations_, key, configuration,
+                                                                               "base correlation curve");
 }
 
 Handle<OptionletVolatilityStructure> MarketImpl::capFloorVol(const string& key, const string& configuration) const {

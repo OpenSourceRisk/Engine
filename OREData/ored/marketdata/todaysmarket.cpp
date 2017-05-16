@@ -26,6 +26,7 @@
 #include <ored/marketdata/curvespecparser.hpp>
 #include <ored/marketdata/defaultcurve.hpp>
 #include <ored/marketdata/cdsvolcurve.hpp>
+#include <ored/marketdata/basecorrelationcurve.hpp>
 #include <ored/marketdata/fxspot.hpp>
 #include <ored/marketdata/fxvolcurve.hpp>
 #include <ored/marketdata/inflationcapfloorpricesurface.hpp>
@@ -68,6 +69,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
     map<string, boost::shared_ptr<CapFloorVolCurve>> requiredCapFloorVolCurves;
     map<string, boost::shared_ptr<DefaultCurve>> requiredDefaultCurves;
     map<string, boost::shared_ptr<CDSVolCurve>> requiredCDSVolCurves;
+    map<string, boost::shared_ptr<BaseCorrelationCurve>> requiredBaseCorrelationCurves;
     map<string, boost::shared_ptr<InflationCurve>> requiredInflationCurves;
     map<string, boost::shared_ptr<InflationCapFloorPriceSurface>> requiredInflationCapFloorPriceSurfaces;
     map<string, boost::shared_ptr<EquityCurve>> requiredEquityCurves;
@@ -322,9 +324,40 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                 for (const auto& it : params.cdsVolatilities(configuration.first)) {
                     if (it.second == spec->name()) {
                         LOG("Adding CDSVol (" << it.first << ") with spec " << *cdsvolspec << " to configuration "
-                                                 << configuration.first);
+                                              << configuration.first);
                         cdsVols_[make_pair(configuration.first, it.first)] =
                             Handle<BlackVolTermStructure>(itr->second->volTermStructure());
+                    }
+                }
+                break;
+            }
+
+            case CurveSpec::CurveType::BaseCorrelation: {
+                // convert to base correlation spec
+                boost::shared_ptr<BaseCorrelationCurveSpec> baseCorrelationSpec =
+                    boost::dynamic_pointer_cast<BaseCorrelationCurveSpec>(spec);
+                QL_REQUIRE(baseCorrelationSpec, "Failed to convert spec " << *spec);
+
+                // have we built the curve already ?
+                auto itr = requiredBaseCorrelationCurves.find(baseCorrelationSpec->name());
+                if (itr == requiredBaseCorrelationCurves.end()) {
+                    // build the curve
+                    LOG("Building BaseCorrelation for asof " << asof);
+                    boost::shared_ptr<BaseCorrelationCurve> baseCorrelationCurve =
+                        boost::make_shared<BaseCorrelationCurve>(asof, *baseCorrelationSpec, loader, curveConfigs);
+                    itr = requiredBaseCorrelationCurves.insert(
+                                                           make_pair(baseCorrelationSpec->name(), baseCorrelationCurve))
+                              .first;
+                }
+
+                // add the handle to the Market Map (possible lots of times for proxies)
+                for (const auto& it : params.baseCorrelations(configuration.first)) {
+                    if (it.second == spec->name()) {
+                        LOG("Adding Base Correlatin (" << it.first << ") with spec " << *baseCorrelationSpec
+                                                       << " to configuration " << configuration.first);
+                        baseCorrelations_[make_pair(configuration.first, it.first)] =
+                            Handle<BaseCorrelationTermStructure<BilinearInterpolation>>(
+                                itr->second->baseCorrelationTermStructure());
                     }
                 }
                 break;

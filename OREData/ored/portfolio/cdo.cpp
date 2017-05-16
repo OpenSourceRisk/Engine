@@ -85,11 +85,12 @@ void SyntheticCDO::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
         DLOG("Issuer " << issuerId << " added to the pool");
     }
 
+    // FIXME: use schedule[0] or protectionStart ?
     boost::shared_ptr<Basket> basket(new Basket(schedule[0], basketData_.issuers(), basketData_.notionals(), pool,
                                                 attachmentPoint_,
                                                 detachmentPoint_)); // assume face value claim
 
-    basket->setLossModel(cdoEngineBuilder->lossModel(pool->size(), recoveryRates));
+    basket->setLossModel(cdoEngineBuilder->lossModel(qualifier_, recoveryRates, detachmentPoint_));
 
     boost::shared_ptr<QuantLib::SyntheticCDO> cdo(
         new QuantLib::SyntheticCDO(basket, side, schedule, upfrontRate, runningRate, dayCounter, bdc));
@@ -114,6 +115,7 @@ void SyntheticCDO::fromXML(XMLNode* node) {
     Trade::fromXML(node);
     XMLNode* cdoNode = XMLUtils::getChildNode(node, "CdoData");
     QL_REQUIRE(cdoNode, "No CdoData Node");
+    qualifier_ = XMLUtils::getChildValue(cdoNode, "Qualifier", true);
     protectionStart_ = XMLUtils::getChildValue(cdoNode, "ProtectionStart", true);
     upfrontDate_ = XMLUtils::getChildValue(cdoNode, "UpfrontDate", true);
     upfrontFee_ = XMLUtils::getChildValueAsDouble(cdoNode, "UpfrontFee", true);
@@ -129,6 +131,7 @@ XMLNode* SyntheticCDO::toXML(XMLDocument& doc) {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* cdoNode = doc.allocNode("CdoData");
     XMLUtils::appendNode(node, cdoNode);
+    XMLUtils::addChild(doc, cdoNode, "Qualifier", qualifier_);
     XMLUtils::addChild(doc, cdoNode, "ProtectionStart", protectionStart_);
     XMLUtils::addChild(doc, cdoNode, "UpfrontDate", upfrontDate_);
     XMLUtils::addChild(doc, cdoNode, "UpfrontFee", upfrontFee_);
