@@ -27,7 +27,7 @@ my_ore = MyOreExampleRunner.from_folders(
 )
 
 # kick off a run
-my_ore.run(ore_exe='ore', delete_output_folder_before_run=False)
+my_ore.run(ore_exe=r'D:\Apps\ORE-1.8\App\bin\x64\Release\ore.exe', delete_output_folder_before_run=False)
 
 # inspect the output files
 my_ore.parse_output()
