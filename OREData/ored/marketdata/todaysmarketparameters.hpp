@@ -398,6 +398,15 @@ inline const map<string, string>& TodaysMarketParameters::defaultCurves(const st
     return it->second;
 }
 
+inline const map<string, string>& TodaysMarketParameters::cdsVolatilities(const string& configuration) const {
+    QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
+    auto it = cdsVolatilities_.find(defaultCurvesId(configuration));
+    QL_REQUIRE(it != cdsVolatilities_.end(), "cds volatilities with id " << cdsVolatilitiesId(configuration)
+                                                                     << " specified in configuration " << configuration
+                                                                     << " not found");
+    return it->second;
+}
+
 inline const map<string, string>& TodaysMarketParameters::zeroInflationIndexCurves(const string& configuration) const {
     QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
     auto it = zeroInflationIndexCurves_.find(zeroInflationIndexCurvesId(configuration));

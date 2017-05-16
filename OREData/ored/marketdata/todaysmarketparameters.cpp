@@ -80,6 +80,7 @@ void TodaysMarketParameters::fromXML(XMLNode* node) {
     fxVolatilities_.clear();
     swaptionVolatilities_.clear();
     defaultCurves_.clear();
+    cdsVolatilities_.clear();
     swapIndices_.clear();
     capFloorVolatilities_.clear();
     zeroInflationIndexCurves_.clear();
@@ -108,6 +109,7 @@ void TodaysMarketParameters::fromXML(XMLNode* node) {
             tmp.fxVolatilitiesId = XMLUtils::getChildValue(n, "FxVolatilitiesId", false);
             tmp.swaptionVolatilitiesId = XMLUtils::getChildValue(n, "SwaptionVolatilitiesId", false);
             tmp.defaultCurvesId = XMLUtils::getChildValue(n, "DefaultCurvesId", false);
+            tmp.cdsVolatilitiesId = XMLUtils::getChildValue(n, "CDSVolatilitiesId", false);
             tmp.capFloorVolatilitiesId = XMLUtils::getChildValue(n, "CapFloorVolatilitiesId", false);
             tmp.zeroInflationIndexCurvesId = XMLUtils::getChildValue(n, "ZeroInflationIndexCurvesId", false);
             tmp.yoyInflationIndexCurvesId = XMLUtils::getChildValue(n, "YYInflationIndexCurvesId", false);
@@ -134,6 +136,8 @@ void TodaysMarketParameters::fromXML(XMLNode* node) {
                 tmp.capFloorVolatilitiesId = Market::defaultConfiguration;
             if (tmp.defaultCurvesId == "")
                 tmp.defaultCurvesId = Market::defaultConfiguration;
+            if (tmp.cdsVolatilitiesId == "")
+                tmp.cdsVolatilitiesId = Market::defaultConfiguration;
             if (tmp.zeroInflationIndexCurvesId == "")
                 tmp.zeroInflationIndexCurvesId = Market::defaultConfiguration;
             if (tmp.yoyInflationIndexCurvesId == "")
@@ -205,6 +209,11 @@ void TodaysMarketParameters::fromXML(XMLNode* node) {
             if (id == "")
                 id = Market::defaultConfiguration;
             addDefaultCurves(id, XMLUtils::getChildrenAttributesAndValues(n, "DefaultCurve", "name", false));
+        } else if (XMLUtils::getNodeName(n) == "CDSVolatilities") {
+            string id = XMLUtils::getAttribute(n, "id");
+            if (id == "")
+                id = Market::defaultConfiguration;
+            addCDSVolatilities(id, XMLUtils::getChildrenAttributesAndValues(n, "CDSVolatilities", "name", false));
         } else if (XMLUtils::getNodeName(n) == "ZeroInflationIndexCurves") {
             string id = XMLUtils::getAttribute(n, "id");
             if (id == "")
@@ -442,6 +451,24 @@ XMLNode* TodaysMarketParameters::toXML(XMLDocument& doc) {
         }
     }
 
+    // cds volatilitiess
+    if (cdsVolatilities_.size() > 0) {
+
+        for (auto mappingSetIterator = cdsVolatilities_.begin(); mappingSetIterator != cdsVolatilities_.end();
+             mappingSetIterator++) {
+
+            XMLNode* cdsVolatilitiesNode = XMLUtils::addChild(doc, todaysMarketNode, "CDSVolatilities");
+            XMLUtils::addAttribute(doc, cdsVolatilitiesNode, "id", mappingSetIterator->first.c_str());
+
+            for (auto singleMappingIterator = mappingSetIterator->second.begin();
+                 singleMappingIterator != mappingSetIterator->second.end(); singleMappingIterator++) {
+                XMLNode* mappingNode = doc.allocNode("CDSVolatility", singleMappingIterator->second);
+                XMLUtils::appendNode(cdsVolatilitiesNode, mappingNode);
+                XMLUtils::addAttribute(doc, mappingNode, "name", singleMappingIterator->first);
+            }
+        }
+    }
+
     // zero inflation Curves
     if (zeroInflationIndexCurves_.size() > 0) {
 
@@ -497,6 +524,8 @@ XMLNode* TodaysMarketParameters::toXML(XMLDocument& doc) {
             }
         }
     }
+
+    // euity curves
     if (equityCurves_.size() > 0) {
 
         for (auto mappingSetIterator = equityCurves_.begin(); mappingSetIterator != equityCurves_.end();
