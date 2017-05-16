@@ -55,7 +55,9 @@ public:
         FXSpot,
         FXVolatility,
         EQSpot,
-        EQVolatility
+        EQVolatility,
+        SurvivalProbability,
+        RecoveryRate
     };
 
     //! Constructor
