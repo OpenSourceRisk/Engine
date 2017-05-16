@@ -247,6 +247,7 @@ protected:
 class CreditDefaultSwap::arguments : public virtual PricingEngine::arguments {
 public:
     arguments();
+    virtual ~arguments() {}
     Protection::Side side;
     Real notional;
     boost::optional<Rate> upfront;
@@ -262,6 +263,7 @@ public:
 
 class CreditDefaultSwap::results : public Instrument::results {
 public:
+    virtual ~results() {}
     Rate fairSpread;
     Rate fairUpfront;
     Real couponLegBPS;
