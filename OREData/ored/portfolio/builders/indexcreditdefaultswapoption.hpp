@@ -70,12 +70,12 @@ protected:
         Handle<YieldTermStructure> yts = market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
         Handle<BlackVolTermStructure> vol =
             market_->cdsVol(creditCurveId, configuration(MarketContext::pricing));
-        if (engineParameters_.at("Curve") == "Underlying") {
+        if (engineParameters_.at("Curve") == "Index") {
             Handle<DefaultProbabilityTermStructure> dpts =
                 market_->defaultCurve(creditCurveId, configuration(MarketContext::pricing));
             Handle<Quote> recovery = market_->recoveryRate(creditCurveId, configuration(MarketContext::pricing));
             return boost::make_shared<QuantExt::BlackIndexCdsOptionEngine>(dpts, recovery->value(), yts, vol);
-        } else if (engineParameters_.at("Curve") == "Index") {
+        } else if (engineParameters_.at("Curve") == "Underlying") {
             std::vector<Handle<DefaultProbabilityTermStructure>> dpts;
             std::vector<Real> recovery;
             for (auto& c : creditCurveIds) {
