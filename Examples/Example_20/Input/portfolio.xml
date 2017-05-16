@@ -10,7 +10,7 @@
     </Envelope>
     <CreditDefaultSwapData>
       <IssuerId>CPTY_A</IssuerId>
-      <CreditCurveId>CPTY_A</CreditCurveId>
+      <CreditCurveId>BANK</CreditCurveId>
       <Qualifier>SECURITY_1</Qualifier>
       <SettlesAccrual>Y</SettlesAccrual>
       <PaysAtDefaultTime>Y</PaysAtDefaultTime>
@@ -57,7 +57,7 @@
       <AdditionalFields/>
     </Envelope>
     <IndexCreditDefaultSwapData>
-      <CreditCurveId>CPTY_A</CreditCurveId>
+      <CreditCurveId>BANK</CreditCurveId>
       <SettlesAccrual>Y</SettlesAccrual>
       <PaysAtDefaultTime>Y</PaysAtDefaultTime>
       <ProtectionStart>20160206</ProtectionStart>
@@ -98,21 +98,21 @@
         <Name>
           <IssuerId>CPTY_1</IssuerId>
           <Qualifier>SECURITY_1</Qualifier>
-          <CreditCurveId>CPTY_A</CreditCurveId>
+          <CreditCurveId>BANK</CreditCurveId>
           <Notional>100000.0</Notional>
           <Currency>USD</Currency>
         </Name>
         <Name>
           <IssuerId>CPTY_2</IssuerId>
           <Qualifier>SECURITY_2</Qualifier>
-          <CreditCurveId>CPTY_A</CreditCurveId>
+          <CreditCurveId>BANK</CreditCurveId>
           <Notional>100000.0</Notional>
           <Currency>USD</Currency>
         </Name>
         <Name>
           <IssuerId>CPTY_3</IssuerId>
           <Qualifier>SECURITY_3</Qualifier>
-          <CreditCurveId>CPTY_A</CreditCurveId>
+          <CreditCurveId>BANK</CreditCurveId>
           <Notional>100000.0</Notional>
           <Currency>USD</Currency>
         </Name>
@@ -141,7 +141,7 @@
         </ExerciseDates>
       </OptionData>
       <IndexCreditDefaultSwapData>
-        <CreditCurveId>CPTY_A</CreditCurveId>
+        <CreditCurveId>BANK</CreditCurveId>
         <SettlesAccrual>Y</SettlesAccrual>
         <PaysAtDefaultTime>Y</PaysAtDefaultTime>
         <ProtectionStart>20160804</ProtectionStart>
@@ -182,21 +182,21 @@
         <Name>
           <IssuerId>CPTY_1</IssuerId>
           <Qualifier>SECURITY_1</Qualifier>
-          <CreditCurveId>CPTY_A</CreditCurveId>
+          <CreditCurveId>BANK</CreditCurveId>
           <Notional>100000.0</Notional>
           <Currency>USD</Currency>
         </Name>
         <Name>
           <IssuerId>CPTY_2</IssuerId>
           <Qualifier>SECURITY_2</Qualifier>
-          <CreditCurveId>CPTY_A</CreditCurveId>
+          <CreditCurveId>BANK</CreditCurveId>
           <Notional>100000.0</Notional>
           <Currency>USD</Currency>
         </Name>
         <Name>
           <IssuerId>CPTY_3</IssuerId>
           <Qualifier>SECURITY_3</Qualifier>
-          <CreditCurveId>CPTY_A</CreditCurveId>
+          <CreditCurveId>BANK</CreditCurveId>
           <Notional>100000.0</Notional>
           <Currency>USD</Currency>
         </Name>
