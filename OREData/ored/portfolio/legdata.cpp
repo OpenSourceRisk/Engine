@@ -135,16 +135,26 @@ XMLNode* CMSLegData::toXML(XMLDocument& doc) {
     XMLUtils::addChildren(doc, node, "Spreads", "Spread", spreads_);
     XMLUtils::addChild(doc, node, "IsInArrears", isInArrears_);
     XMLUtils::addChild(doc, node, "FixingDays", fixingDays_);
+    XMLUtils::addChildrenWithAttributes(doc, node, "Caps", "Cap", caps_, "startDate", capDates_);
+    XMLUtils::addChildrenWithAttributes(doc, node, "Floors", "Floor", floors_, "startDate", floorDates_);
+    XMLUtils::addChildrenWithAttributes(doc, node, "Gearings", "Gearing", gearings_, "startDate", gearingDates_);
     return node;
 }
 
 void CMSLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "CMSLegData");
     swapIndex_ = XMLUtils::getChildValue(node, "Index", true);
-    spreads_ = XMLUtils::getChildrenValuesAsDoubles(node, "Spreads", "Spread", true);
+    spreads_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Spreads", "Spread", "startDate", spreadDates_, true);
     // These are all optional
-    isInArrears_ = XMLUtils::getChildValueAsBool(node, "IsInArrears"); // defaults to true
+    XMLNode* arrNode = XMLUtils::getChildNode(node, "IsInArrears");
+    if (arrNode)
+        isInArrears_ = XMLUtils::getChildValueAsBool(node, "IsInArrears", true);
+    else
+        isInArrears_ = false;                                          // default to fixing-in-advance
     fixingDays_ = XMLUtils::getChildValueAsInt(node, "FixingDays");    // defaults to 0
+    caps_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Caps", "Cap", "startDate", capDates_);
+    floors_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Floors", "Floor", "startDate", floorDates_);
+    gearings_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Gearings", "Gearing", "startDate", gearingDates_);
 }
 
 void LegData::fromXML(XMLNode* node) {
@@ -416,12 +426,14 @@ Leg makeYoYLeg(LegData& data, boost::shared_ptr<YoYInflationIndex> index) {
     return leg;
 }
 
-Leg makeCMSLeg(LegData& data, boost::shared_ptr<SwapIndex> swapIndex,
-               const boost::shared_ptr<EngineFactory>& engineFactory) {
+Leg makeCMSLeg(LegData& data, boost::shared_ptr<QuantLib::SwapIndex> swapIndex,
+               const boost::shared_ptr<EngineFactory>& engineFactory, const vector<double>& caps,
+               const vector<double>& floors) {
     Schedule schedule = makeSchedule(data.schedule());
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
     CMSLegData cmsData = data.cmsLegData();
+    bool hasCapsFloors = caps.size() > 0 || floors.size() > 0;
 
     vector<double> spreads = ore::data::buildScheduledVector(cmsData.spreads(), cmsData.spreadDates(), schedule);
 
@@ -432,19 +444,40 @@ Leg makeCMSLeg(LegData& data, boost::shared_ptr<SwapIndex> swapIndex,
         .withPaymentAdjustment(bdc)
         .withFixingDays(cmsData.fixingDays());
 
+    if (cmsData.gearings().size() > 0)
+        cmsLeg.withGearings(buildScheduledVector(cmsData.gearings(), cmsData.gearingDates(), schedule));
+
+    vector<string> capFloorDates;
+    // If there are caps or floors or in arrears fixing, add them and set pricer
+    if (caps.size() > 0)
+        cmsLeg.withCaps(buildScheduledVector(caps, capFloorDates, schedule));
+
+    if (floors.size() > 0)
+        cmsLeg.withFloors(buildScheduledVector(floors, capFloorDates, schedule));
+
     // Get a coupon pricer for the leg
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("CMS");
-    QL_REQUIRE(builder, "No builder found for CapFlooredCmsLeg");
+    QL_REQUIRE(builder, "No builder found for CmsLeg");
     boost::shared_ptr<CmsCouponPricerBuilder> cmsSwapBuilder =
         boost::dynamic_pointer_cast<CmsCouponPricerBuilder>(builder);
     boost::shared_ptr<FloatingRateCouponPricer> couponPricer = cmsSwapBuilder->engine(swapIndex->currency());
 
+
     // Loop over the coupons in the leg and set pricer
     Leg leg = cmsLeg;
     for (const auto& cashflow : leg) {
-        boost::shared_ptr<CmsCoupon> coupon = boost::dynamic_pointer_cast<CmsCoupon>(cashflow);
-        QL_REQUIRE(coupon, "Expected a leg of coupons of type CappedFlooredCmsCoupon");
-        coupon->setPricer(couponPricer);
+        if (!hasCapsFloors && !cmsData.isInArrears()) {
+            boost::shared_ptr<CmsCoupon> coupon = boost::dynamic_pointer_cast<CmsCoupon>(cashflow);
+            QL_REQUIRE(coupon, "Expected a leg of coupons of type CmsCoupon");
+            coupon->setPricer(couponPricer);
+        }
+        else {
+            boost::shared_ptr<CappedFlooredCmsCoupon> coupon = boost::dynamic_pointer_cast<CappedFlooredCmsCoupon>(cashflow);
+            QL_REQUIRE(coupon, "Expected a leg of coupons of type CappedFlooredCmsCoupon");
+            coupon->setPricer(couponPricer);
+        }
+        
+        
     }
 
     return leg;
