@@ -17,8 +17,9 @@
 */
 
 /*
- Copyright (C) 2008 Roland Stamm
- Copyright (C) 2009 Jose Aparicio
+ Copyright (C) 2008 Jose Aparicio
+ Copyright (C) 2008 Roland Lichters
+ Copyright (C) 2008, 2009 StatPro Italia srl
 
  This file is part of QuantLib, a free-software/open-source library
  for financial quantitative analysts and developers - http://quantlib.org/
@@ -34,38 +35,45 @@
  FOR A PARTICULAR PURPOSE.  See the license for more details.
 */
 
-/*! \file blackcdsoptionengine.hpp
-    \brief Black credit default swap option engine, with handling
-    of upfront amount and exercise before CDS start
+/*! \file midpointcdsengine.hpp
+    \brief Mid-point engine for credit default swaps
 */
 
-#ifndef quantext_black_cds_option_engine_hpp
-#define quantext_black_cds_option_engine_hpp
+#ifndef quantext_mid_point_index_cds_engine_hpp
+#define quantext_mid_point_index_cds_engine_hpp
 
-#include <qle/instruments/cdsoption.hpp>
-
-#include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
+#include <qle/instruments/indexcreditdefaultswap.hpp>
 
 using namespace QuantLib;
 
 namespace QuantExt {
 
-//! Black-formula CDS-option engine
-class BlackCdsOptionEngine : public QuantExt::CdsOption::engine {
+class MidPointIndexCdsEngine : public IndexCreditDefaultSwap::engine {
 public:
-    BlackCdsOptionEngine(const Handle<DefaultProbabilityTermStructure>&, Real recoveryRate,
-                         const Handle<YieldTermStructure>& termStructure,
-                         const Handle<BlackVolTermStructure>& vol);
+    // use index curve
+    MidPointIndexCdsEngine(const Handle<DefaultProbabilityTermStructure>&, Real recoveryRate,
+                           const Handle<YieldTermStructure>& discountCurve,
+                           boost::optional<bool> includeSettlementDateFlows = boost::none);
+    // use underlying curves
+    MidPointIndexCdsEngine(const std::vector<Handle<DefaultProbabilityTermStructure> >&,
+                           const std::vector<Real> underlyingRecoveryRate,
+                           const Handle<YieldTermStructure>& discountCurve,
+                           boost::optional<bool> includeSettlementDateFlows = boost::none);
     void calculate() const;
-    Handle<YieldTermStructure> termStructure();
-    Handle<BlackVolTermStructure> volatility();
 
 private:
+    Real survivalProbability(const Date& d) const;
+    Real defaultProbability(const Date& d1, const Date& d2) const;
+    Real recoveryRate() const;
+
     const Handle<DefaultProbabilityTermStructure> probability_;
+    const std::vector<Handle<DefaultProbabilityTermStructure> > underlyingProbability_;
     const Real recoveryRate_;
-    const Handle<YieldTermStructure> termStructure_;
-    const Handle<BlackVolTermStructure> volatility_;
+    const std::vector<Real> underlyingRecoveryRate_;
+    const Handle<YieldTermStructure> discountCurve_;
+    boost::optional<bool> includeSettlementDateFlows_;
+    const bool useUnderlyingCurves_;
 };
-}
+} // namespace QuantExt
 
 #endif

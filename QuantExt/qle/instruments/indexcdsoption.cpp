@@ -34,8 +34,9 @@
  FOR A PARTICULAR PURPOSE.  See the license for more details.
 */
 
-#include <qle/instruments/cdsoption.hpp>
-#include <qle/pricingengines/blackcdsoptionengine.hpp>
+#include <qle/instruments/indexcdsoption.hpp>
+
+#include <qle/pricingengines/blackindexcdsoptionengine.hpp>
 
 #include <ql/exercise.hpp>
 #include <ql/instruments/payoffs.hpp>
@@ -53,7 +54,7 @@ namespace {
 
 class ImpliedVolHelper {
 public:
-    ImpliedVolHelper(const CdsOption& cdsoption, const Handle<DefaultProbabilityTermStructure>& probability,
+    ImpliedVolHelper(const IndexCdsOption& cdsoption, const Handle<DefaultProbabilityTermStructure>& probability,
                      Real recoveryRate, const Handle<YieldTermStructure>& termStructure, Real targetValue)
         : targetValue_(targetValue) {
 
@@ -61,7 +62,7 @@ public:
         Handle<BlackVolTermStructure> h(
             boost::make_shared<BlackConstantVol>(0, NullCalendar(), Handle<Quote>(vol_), Actual365Fixed()));
         engine_ = boost::shared_ptr<PricingEngine>(
-            new QuantExt::BlackCdsOptionEngine(probability, recoveryRate, termStructure, h));
+            new QuantExt::BlackIndexCdsOptionEngine(probability, recoveryRate, termStructure, h));
         cdsoption.setupArguments(engine_->getArguments());
 
         results_ = dynamic_cast<const Instrument::results*>(engine_->getResults());
@@ -80,24 +81,24 @@ private:
 };
 }
 
-CdsOption::CdsOption(const boost::shared_ptr<CreditDefaultSwap>& swap, const boost::shared_ptr<Exercise>& exercise,
-                     bool knocksOut)
+IndexCdsOption::IndexCdsOption(const boost::shared_ptr<IndexCreditDefaultSwap>& swap,
+                               const boost::shared_ptr<Exercise>& exercise, bool knocksOut)
     : Option(boost::shared_ptr<Payoff>(new NullPayoff), exercise), swap_(swap), knocksOut_(knocksOut) {
     registerWith(swap_);
 }
 
-bool CdsOption::isExpired() const { return detail::simple_event(exercise_->dates().back()).hasOccurred(); }
+bool IndexCdsOption::isExpired() const { return detail::simple_event(exercise_->dates().back()).hasOccurred(); }
 
-void CdsOption::setupExpired() const {
+void IndexCdsOption::setupExpired() const {
     Instrument::setupExpired();
     riskyAnnuity_ = 0.0;
 }
 
-void CdsOption::setupArguments(PricingEngine::arguments* args) const {
+void IndexCdsOption::setupArguments(PricingEngine::arguments* args) const {
     swap_->setupArguments(args);
     Option::setupArguments(args);
 
-    CdsOption::arguments* arguments = dynamic_cast<CdsOption::arguments*>(args);
+    IndexCdsOption::arguments* arguments = dynamic_cast<IndexCdsOption::arguments*>(args);
 
     QL_REQUIRE(arguments != 0, "wrong argument type");
 
@@ -105,25 +106,25 @@ void CdsOption::setupArguments(PricingEngine::arguments* args) const {
     arguments->knocksOut = knocksOut_;
 }
 
-void CdsOption::fetchResults(const PricingEngine::results* r) const {
+void IndexCdsOption::fetchResults(const PricingEngine::results* r) const {
     Option::fetchResults(r);
-    const CdsOption::results* results = dynamic_cast<const CdsOption::results*>(r);
+    const IndexCdsOption::results* results = dynamic_cast<const IndexCdsOption::results*>(r);
     QL_ENSURE(results != 0, "wrong results type");
     riskyAnnuity_ = results->riskyAnnuity;
 }
 
-Rate CdsOption::atmRate() const { return swap_->fairSpread(); }
+Rate IndexCdsOption::atmRate() const { return swap_->fairSpread(); }
 
-Real CdsOption::riskyAnnuity() const {
+Real IndexCdsOption::riskyAnnuity() const {
     calculate();
     QL_REQUIRE(riskyAnnuity_ != Null<Real>(), "risky annuity not provided");
     return riskyAnnuity_;
 }
 
-Volatility CdsOption::impliedVolatility(Real targetValue, const Handle<YieldTermStructure>& termStructure,
-                                        const Handle<DefaultProbabilityTermStructure>& probability, Real recoveryRate,
-                                        Real accuracy, Size maxEvaluations, Volatility minVol,
-                                        Volatility maxVol) const {
+Volatility IndexCdsOption::impliedVolatility(Real targetValue, const Handle<YieldTermStructure>& termStructure,
+                                             const Handle<DefaultProbabilityTermStructure>& probability,
+                                             Real recoveryRate, Real accuracy, Size maxEvaluations, Volatility minVol,
+                                             Volatility maxVol) const {
     calculate();
     QL_REQUIRE(!isExpired(), "instrument expired");
 
@@ -135,14 +136,14 @@ Volatility CdsOption::impliedVolatility(Real targetValue, const Handle<YieldTerm
     return solver.solve(f, accuracy, guess, minVol, maxVol);
 }
 
-void CdsOption::arguments::validate() const {
-    CreditDefaultSwap::arguments::validate();
+void IndexCdsOption::arguments::validate() const {
+    IndexCreditDefaultSwap::arguments::validate();
     Option::arguments::validate();
     QL_REQUIRE(swap, "CDS not set");
     QL_REQUIRE(exercise, "exercise not set");
 }
 
-void CdsOption::results::reset() {
+void IndexCdsOption::results::reset() {
     Option::results::reset();
     riskyAnnuity = Null<Real>();
 }

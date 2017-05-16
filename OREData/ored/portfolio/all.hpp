@@ -24,7 +24,10 @@
 #include <ored/portfolio/nettingsetmanager.hpp>
 #include <ored/portfolio/capfloor.hpp>
 #include <ored/portfolio/bond.hpp>
-#include <ored/portfolio/basketdata.hpp>
-#include <ored/portfolio/cdo.hpp>
+#include <ored/portfolio/creditdefaultswap.hpp>
+#include <ored/portfolio/creditdefaultswapdata.hpp>
+#include <ored/portfolio/indexcreditdefaultswap.hpp>
+#include <ored/portfolio/indexcreditdefaultswapdata.hpp>
+#include <ored/portfolio/indexcreditdefaultswapoption.hpp>
 
 #include <ored/portfolio/builders/all.hpp>

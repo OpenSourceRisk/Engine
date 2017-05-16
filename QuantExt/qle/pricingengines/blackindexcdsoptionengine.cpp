@@ -39,21 +39,56 @@
 #include <ql/exercise.hpp>
 #include <ql/pricingengines/blackformula.hpp>
 #include <ql/quote.hpp>
+#include <ql/termstructures/volatility/blackvoltermstructure.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 
 namespace QuantExt {
 
-BlackCdsOptionEngine::BlackCdsOptionEngine(const Handle<DefaultProbabilityTermStructure>& probability,
-                                           Real recoveryRate, const Handle<YieldTermStructure>& termStructure,
-                                           const Handle<BlackVolTermStructure>& volatility)
-    : probability_(probability), recoveryRate_(recoveryRate), termStructure_(termStructure), volatility_(volatility) {
-
+BlackIndexCdsOptionEngine::BlackIndexCdsOptionEngine(const Handle<DefaultProbabilityTermStructure>& probability,
+                                                     Real recoveryRate, const Handle<YieldTermStructure>& termStructure,
+                                                     const Handle<BlackVolTermStructure>& volatility)
+    : probability_(probability), recoveryRate_(recoveryRate), termStructure_(termStructure), volatility_(volatility),
+      useUnderlyingCurves_(false) {
     registerWith(probability_);
     registerWith(termStructure_);
     registerWith(volatility_);
 }
 
-void BlackCdsOptionEngine::calculate() const {
+BlackIndexCdsOptionEngine::BlackIndexIndexCdsOptionEngine(
+    const std::vector<Handle<DefaultProbabilityTermStructure> >& underlyingProbability,
+    const std::vector<Real>& underlyingRecoveryRate, const Handle<YieldTermStructure>& termStructure,
+    const Handle<BlackVolTermStructure>& volatility)
+    : underlyingProbability_(underlyingProbability), underlyingRecoveryRate_(recoveryRate),
+      termStructure_(termStructure), volatility_(volatility), useUnderlyingCurves_(true) {
+    for (Size i = 0; i < underlyingProbability.size(); ++i)
+        registerWith(underlyingProbability_[i]);
+    registerWith(termStructure_);
+    registerWith(volatility_);
+}
+
+Real BlackIndexCdsOptionEngine::defaultProbability(const Date& d1, const Date& d2) const {
+    if (!useUnderlyingCurves_)
+        return probability_->defaultProbability(d1, d2);
+    Real sum = 0.0;
+    for (Size i = 0; i < underlyingProbability_.size(); ++i) {
+        sum += underlyingProbability_->defaultProbability(d1, d2) * arguments_->underlyingNotionals_[i];
+        sumNotional += arguments_->underlyingNotionals_[i];
+    }
+    return sum / sumNotional;
+}
+
+Real MidPointIndexEngine::recoveryRate() const {
+    if (!useUnderlyingCurves_)
+        return recoveryRate_;
+    Real sum = 0.0;
+    for (Size i = 0; i < underlyingProbability_.size(); ++i) {
+        sum += underlyingRecoveryRate_[i];
+        sumNotional += arguments_->underlyingNotionals_[i];
+    }
+    return sum / sumNotional;
+}
+
+void BlackIndexCdsOptionEngine::calculate() const {
 
     Date maturityDate = arguments_.swap->coupons().front()->date();
     Date exerciseDate = arguments_.exercise->date(0);
@@ -76,7 +111,7 @@ void BlackCdsOptionEngine::calculate() const {
 
     Time T = tSDc.yearFraction(settlement, exerciseDate);
 
-    Real stdDev = volatility_->blackVol(exerciseDate, 1.0, true) * std::sqrt(T);
+    Real stdDev = volatility_->volatility(exerciseDate, 1.0) * std::sqrt(T);
     Option::Type callPut = (arguments_.side == Protection::Buyer) ? Option::Call : Option::Put;
 
     results_.value = blackFormula(callPut, swapSpread, spotFwdSpread, stdDev, riskyAnnuity);
@@ -90,7 +125,8 @@ void BlackCdsOptionEngine::calculate() const {
     }
 }
 
-Handle<YieldTermStructure> BlackCdsOptionEngine::termStructure() { return termStructure_; }
+Handle<YieldTermStructure> BlackIndexCdsOptionEngine::termStructure() { return termStructure_; }
 
-Handle<BlackVolTermStructure> BlackCdsOptionEngine::volatility() { return volatility_; }
-}
+Handle<BlackVolTermStructure> BlackIndexCdsOptionEngine::volatility() { return volatility_; }
+
+} // namespace QuantExt

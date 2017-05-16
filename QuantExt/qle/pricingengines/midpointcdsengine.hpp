@@ -17,8 +17,9 @@
 */
 
 /*
- Copyright (C) 2008 Roland Stamm
- Copyright (C) 2009 Jose Aparicio
+ Copyright (C) 2008 Jose Aparicio
+ Copyright (C) 2008 Roland Lichters
+ Copyright (C) 2008, 2009 StatPro Italia srl
 
  This file is part of QuantLib, a free-software/open-source library
  for financial quantitative analysts and developers - http://quantlib.org/
@@ -34,38 +35,32 @@
  FOR A PARTICULAR PURPOSE.  See the license for more details.
 */
 
-/*! \file blackcdsoptionengine.hpp
-    \brief Black credit default swap option engine, with handling
-    of upfront amount and exercise before CDS start
+/*! \file midpointcdsengine.hpp
+    \brief Mid-point engine for credit default swaps
 */
 
-#ifndef quantext_black_cds_option_engine_hpp
-#define quantext_black_cds_option_engine_hpp
+#ifndef quantext_mid_point_cds_engine_hpp
+#define quantext_mid_point_cds_engine_hpp
 
-#include <qle/instruments/cdsoption.hpp>
-
-#include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
+#include <qle/instruments/creditdefaultswap.hpp>
 
 using namespace QuantLib;
 
 namespace QuantExt {
 
-//! Black-formula CDS-option engine
-class BlackCdsOptionEngine : public QuantExt::CdsOption::engine {
+class MidPointCdsEngine : public CreditDefaultSwap::engine {
 public:
-    BlackCdsOptionEngine(const Handle<DefaultProbabilityTermStructure>&, Real recoveryRate,
-                         const Handle<YieldTermStructure>& termStructure,
-                         const Handle<BlackVolTermStructure>& vol);
+    MidPointCdsEngine(const Handle<DefaultProbabilityTermStructure>&, Real recoveryRate,
+                      const Handle<YieldTermStructure>& discountCurve,
+                      boost::optional<bool> includeSettlementDateFlows = boost::none);
     void calculate() const;
-    Handle<YieldTermStructure> termStructure();
-    Handle<BlackVolTermStructure> volatility();
 
 private:
-    const Handle<DefaultProbabilityTermStructure> probability_;
-    const Real recoveryRate_;
-    const Handle<YieldTermStructure> termStructure_;
-    const Handle<BlackVolTermStructure> volatility_;
+    Handle<DefaultProbabilityTermStructure> probability_;
+    Real recoveryRate_;
+    Handle<YieldTermStructure> discountCurve_;
+    boost::optional<bool> includeSettlementDateFlows_;
 };
-}
+} // namespace QuantExt
 
 #endif

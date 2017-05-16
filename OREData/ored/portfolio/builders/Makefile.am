@@ -24,6 +24,9 @@ this_include_HEADERS = \
 	fxoption.hpp \
 	swap.hpp \
 	swaption.hpp \
+	creditdefaultswap.hpp \
+	indexcreditdefaultswap.hpp \
+	indexcreditdefaultswapoption.hpp \
 	cdo.hpp
 
 all.hpp: Makefile.am

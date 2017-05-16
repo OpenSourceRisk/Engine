@@ -4226,7 +4226,7 @@ void CrossAssetModelTest::testCrCalibration() {
 
     accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > > cdso;
 
-    boost::shared_ptr<CreditDefaultSwap> underlying =
+    boost::shared_ptr<QuantExt::CreditDefaultSwap> underlying =
         boost::static_pointer_cast<CdsOptionHelper>(cdsoHelpers.back())->underlying();
     Real K = underlying->fairSpread();
     BOOST_TEST_MESSAGE("Last CDSO fair spread is " << K);
