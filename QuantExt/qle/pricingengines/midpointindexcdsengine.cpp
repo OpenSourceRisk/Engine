@@ -35,186 +35,79 @@
  FOR A PARTICULAR PURPOSE.  See the license for more details.
 */
 
-#include <qle/pricingengines/midpointcdsengine.hpp>
-
-#include <ql/cashflows/fixedratecoupon.hpp>
-#include <ql/instruments/claim.hpp>
-#include <ql/termstructures/yieldtermstructure.hpp>
+#include <qle/pricingengines/midpointindexcdsengine.hpp>
 
 namespace QuantExt {
 
-MidPointIndexEngine::MidPointIndexEngine(const Handle<DefaultProbabilityTermStructure>& probability, Real recoveryRate,
-                                         const Handle<YieldTermStructure>& discountCurve,
-                                         boost::optional<bool> includeSettlementDateFlows)
-    : probability_(probability), recoveryRate_(recoveryRate), discountCurve_(discountCurve),
-      includeSettlementDateFlows_(includeSettlementDateFlows), useUnderlyingCurves_(false) {
-    registerWith(probability_);
+MidPointIndexCdsEngine::MidPointIndexCdsEngine(const Handle<DefaultProbabilityTermStructure>& probability,
+                                               Real recoveryRate, const Handle<YieldTermStructure>& discountCurve,
+                                               boost::optional<bool> includeSettlementDateFlows)
+    : MidPointCdsEngineBase(discountCurve, includeSettlementDateFlows), probability_(probability),
+      recoveryRate_(recoveryRate), useUnderlyingCurves_(false) {
     registerWith(discountCurve_);
+    registerWith(probability_);
 }
 
-MidPointIndexEngine::MidPointIndexCdsEngine(
-    std::vector<const Handle<DefaultProbabilityTermStructure> >& underlyingProbability,
-    std::vector<Real> underlyingRecoveryRate, const Handle<YieldTermStructure>& discountCurve,
-    boost::optional<bool> includeSettlementDateFlows = boost::none)
-    : underlyingProbability_(underlyingProbability), underlyingRecoveryRate_(underlyingRecoveryRate),
-      discountCurve_(discountCurve), includeSettlementDateFlows_(includeSettlementDateFlows),
-      useUnderlyingCurves_(true) {
+MidPointIndexCdsEngine::MidPointIndexCdsEngine(
+    const std::vector<Handle<DefaultProbabilityTermStructure> >& underlyingProbability,
+    const std::vector<Real>& underlyingRecoveryRate, const Handle<YieldTermStructure>& discountCurve,
+    boost::optional<bool> includeSettlementDateFlows)
+    : MidPointCdsEngineBase(discountCurve, includeSettlementDateFlows), underlyingRecoveryRate_(underlyingRecoveryRate),
+      underlyingProbability_(underlyingProbability), useUnderlyingCurves_(true) {
+    registerWith(discountCurve_);
     for (Size i = 0; i < underlyingProbability_.size(); ++i)
         registerWith(underlyingProbability_[i]);
-    registerWith(discountCurve_);
 }
 
-Real MidPointIndexEngine::survivalProbability(const Date& d) const {
+Real MidPointIndexCdsEngine::survivalProbability(const Date& d) const {
     if (!useUnderlyingCurves_)
-        return probability_->survivialProbability(d);
-    Real sum = 0.0;
+        return probability_->survivalProbability(d);
+    Real sum = 0.0, sumNotional = 0.0;
     for (Size i = 0; i < underlyingProbability_.size(); ++i) {
-        sum += underlyingProbability_->survivalProbability(d) * arguments_->underlyingNotionals_[i];
-        sumNotional += arguments_->underlyingNotionals_[i];
+        sum += underlyingProbability_[i]->survivalProbability(d) * arguments_.underlyingNotionals[i];
+        sumNotional += arguments_.underlyingNotionals[i];
     }
     return sum / sumNotional;
 }
 
-Real MidPointIndexEngine::defaultProbability(const Date& d1, const Date& d2) const {
+Real MidPointIndexCdsEngine::defaultProbability(const Date& d1, const Date& d2) const {
     if (!useUnderlyingCurves_)
         return probability_->defaultProbability(d1, d2);
-    Real sum = 0.0;
+    Real sum = 0.0, sumNotional = 0.0;
     for (Size i = 0; i < underlyingProbability_.size(); ++i) {
-        sum += underlyingProbability_->defaultProbability(d1, d2) * arguments_->underlyingNotionals_[i];
-        sumNotional += arguments_->underlyingNotionals_[i];
+        sum += underlyingProbability_[i]->defaultProbability(d1, d2) * arguments_.underlyingNotionals[i];
+        sumNotional += arguments_.underlyingNotionals[i];
     }
     return sum / sumNotional;
 }
 
-Real MidPointIndexEngine::recoveryRate() const {
+Real MidPointIndexCdsEngine::recoveryRate() const {
     if (!useUnderlyingCurves_)
         return recoveryRate_;
-    Real sum = 0.0;
+    Real sum = 0.0, sumNotional = 0.0;
     for (Size i = 0; i < underlyingProbability_.size(); ++i) {
         sum += underlyingRecoveryRate_[i];
-        sumNotional += arguments_->underlyingNotionals_[i];
+        sumNotional += arguments_.underlyingNotionals[i];
     }
     return sum / sumNotional;
 }
 
-void MidPointIndexEngine::calculate() const {
+void MidPointIndexCdsEngine::calculate() const {
     QL_REQUIRE(!discountCurve_.empty(), "no discount term structure set");
     Date refDate;
     if (useUnderlyingCurves_) {
-        QL_REQUIRE(underlyingProbability_.size() == arguments_.underlyingNotionals_.size(),
-                   "number of underlyings (" << arguments_.underlyingNotionals_.size()
+        QL_REQUIRE(underlyingProbability_.size() == arguments_.underlyingNotionals.size(),
+                   "number of underlyings (" << arguments_.underlyingNotionals.size()
                                              << ") does not match number of curves (" << underlyingProbability_.size()
                                              << ")");
-        for (Size i = 0; i < underlyingProbabilities.size(); ++i)
+        for (Size i = 0; i < underlyingProbability_.size(); ++i)
             QL_REQUIRE(!underlyingProbability_.empty(), "no probability term structure set for underlying " << i);
-        refDate = underlyingProbability_.front().referenceDate();
+        refDate = underlyingProbability_.front()->referenceDate();
     } else {
         QL_REQUIRE(!probability_.empty(), "no probability term structure set");
         refDate = probability_->referenceDate();
     }
 
-    Date today = Settings::instance().evaluationDate();
-    Date settlementDate = discountCurve_->referenceDate();
-
-    // Upfront Flow NPV. Either we are on-the-run (no flow)
-    // or we are forward start
-    Real upfPVO1 = 0.0;
-    if (!arguments_.upfrontPayment->hasOccurred(settlementDate, includeSettlementDateFlows_)) {
-        // date determining the probability survival so we have to pay
-        //   the upfront (did not knock out)
-        Date effectiveUpfrontDate = arguments_.protectionStart > refDate ? arguments_.protectionStart : refDate;
-        upfPVO1 =
-            survivalProbability(effectiveUpfrontDate) * discountCurve_->discount(arguments_.upfrontPayment->date());
-    }
-    results_.upfrontNPV = upfPVO1 * arguments_.upfrontPayment->amount();
-
-    results_.couponLegNPV = 0.0;
-    results_.defaultLegNPV = 0.0;
-    for (Size i = 0; i < arguments_.leg.size(); ++i) {
-        if (arguments_.leg[i]->hasOccurred(settlementDate, includeSettlementDateFlows_))
-            continue;
-
-        boost::shared_ptr<FixedRateCoupon> coupon = boost::dynamic_pointer_cast<FixedRateCoupon>(arguments_.leg[i]);
-
-        // In order to avoid a few switches, we calculate the NPV
-        // of both legs as a positive quantity. We'll give them
-        // the right sign at the end.
-
-        Date paymentDate = coupon->date(), startDate = coupon->accrualStartDate(), endDate = coupon->accrualEndDate();
-        // this is the only point where it might not coincide
-        if (i == 0)
-            startDate = arguments_.protectionStart;
-        Date effectiveStartDate = (startDate <= today && today <= endDate) ? today : startDate;
-        Date defaultDate = // mid-point
-            effectiveStartDate + (endDate - effectiveStartDate) / 2;
-
-        Probability S = survivalProbability(paymentDate);
-        Probability P = defaultProbability(effectiveStartDate, endDate);
-
-        // on one side, we add the fixed rate payments in case of
-        // survival...
-        results_.couponLegNPV += S * coupon->amount() * discountCurve_->discount(paymentDate);
-        // ...possibly including accrual in case of default.
-        if (arguments_.settlesAccrual) {
-            if (arguments_.paysAtDefaultTime) {
-                results_.couponLegNPV += P * coupon->accruedAmount(defaultDate) * discountCurve_->discount(defaultDate);
-            } else {
-                // pays at the end
-                results_.couponLegNPV += P * coupon->amount() * discountCurve_->discount(paymentDate);
-            }
-        }
-
-        // on the other side, we add the payment in case of default.
-        Real claim = arguments_.claim->amount(defaultDate, arguments_.notional, recoveryRate());
-        if (arguments_.paysAtDefaultTime) {
-            results_.defaultLegNPV += P * claim * discountCurve_->discount(defaultDate);
-        } else {
-            results_.defaultLegNPV += P * claim * discountCurve_->discount(paymentDate);
-        }
-    }
-
-    Real upfrontSign = 1.0;
-    switch (arguments_.side) {
-    case Protection::Seller:
-        results_.defaultLegNPV *= -1.0;
-        break;
-    case Protection::Buyer:
-        results_.couponLegNPV *= -1.0;
-        results_.upfrontNPV *= -1.0;
-        upfrontSign = -1.0;
-        break;
-    default:
-        QL_FAIL("unknown protection side");
-    }
-
-    results_.value = results_.defaultLegNPV + results_.couponLegNPV + results_.upfrontNPV;
-    results_.errorEstimate = Null<Real>();
-
-    if (results_.couponLegNPV != 0.0) {
-        results_.fairSpread = -results_.defaultLegNPV * arguments_.spread / results_.couponLegNPV;
-    } else {
-        results_.fairSpread = Null<Rate>();
-    }
-
-    Real upfrontSensitivity = upfPVO1 * arguments_.notional;
-    if (upfrontSensitivity != 0.0) {
-        results_.fairUpfront = -upfrontSign * (results_.defaultLegNPV + results_.couponLegNPV) / upfrontSensitivity;
-    } else {
-        results_.fairUpfront = Null<Rate>();
-    }
-
-    static const Rate basisPoint = 1.0e-4;
-
-    if (arguments_.spread != 0.0) {
-        results_.couponLegBPS = results_.couponLegNPV * basisPoint / arguments_.spread;
-    } else {
-        results_.couponLegBPS = Null<Rate>();
-    }
-
-    if (arguments_.upfront && *arguments_.upfront != 0.0) {
-        results_.upfrontBPS = results_.upfrontNPV * basisPoint / (*arguments_.upfront);
-    } else {
-        results_.upfrontBPS = Null<Rate>();
-    }
+    MidPointCdsEngineBase::calculate(refDate, arguments_, results_);
 }
-}
+} // namespace QuantExt

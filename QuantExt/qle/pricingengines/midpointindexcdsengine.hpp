@@ -43,12 +43,13 @@
 #define quantext_mid_point_index_cds_engine_hpp
 
 #include <qle/instruments/indexcreditdefaultswap.hpp>
+#include <qle/pricingengines/midpointcdsengine.hpp>
 
 using namespace QuantLib;
 
 namespace QuantExt {
 
-class MidPointIndexCdsEngine : public IndexCreditDefaultSwap::engine {
+class MidPointIndexCdsEngine : public IndexCreditDefaultSwap::engine, public MidPointCdsEngineBase {
 public:
     // use index curve
     MidPointIndexCdsEngine(const Handle<DefaultProbabilityTermStructure>&, Real recoveryRate,
@@ -56,7 +57,7 @@ public:
                            boost::optional<bool> includeSettlementDateFlows = boost::none);
     // use underlying curves
     MidPointIndexCdsEngine(const std::vector<Handle<DefaultProbabilityTermStructure> >&,
-                           const std::vector<Real> underlyingRecoveryRate,
+                           const std::vector<Real>& underlyingRecoveryRate,
                            const Handle<YieldTermStructure>& discountCurve,
                            boost::optional<bool> includeSettlementDateFlows = boost::none);
     void calculate() const;
@@ -66,12 +67,12 @@ private:
     Real defaultProbability(const Date& d1, const Date& d2) const;
     Real recoveryRate() const;
 
-    const Handle<DefaultProbabilityTermStructure> probability_;
+    Handle<DefaultProbabilityTermStructure> probability_;
+    Real recoveryRate_;
+
     const std::vector<Handle<DefaultProbabilityTermStructure> > underlyingProbability_;
-    const Real recoveryRate_;
     const std::vector<Real> underlyingRecoveryRate_;
-    const Handle<YieldTermStructure> discountCurve_;
-    boost::optional<bool> includeSettlementDateFlows_;
+
     const bool useUnderlyingCurves_;
 };
 } // namespace QuantExt
