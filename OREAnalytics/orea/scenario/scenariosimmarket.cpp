@@ -21,27 +21,28 @@
     \ingroup
 */
 
-#include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/engine/observationmode.hpp>
-#include <ql/termstructures/volatility/swaption/swaptionvolstructure.hpp>
-#include <ql/termstructures/volatility/swaption/swaptionvolmatrix.hpp>
+#include <orea/scenario/scenariosimmarket.hpp>
+#include <ql/math/interpolations/loginterpolation.hpp>
+#include <ql/termstructures/credit/interpolatedsurvivalprobabilitycurve.hpp>
+#include <ql/termstructures/defaulttermstructure.hpp>
 #include <ql/termstructures/volatility/capfloor/capfloortermvolatilitystructure.hpp>
 #include <ql/termstructures/volatility/capfloor/capfloortermvolsurface.hpp>
+#include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
+#include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 #include <ql/termstructures/volatility/optionlet/strippedoptionlet.hpp>
 #include <ql/termstructures/volatility/optionlet/strippedoptionletadapter.hpp>
-#include <ql/termstructures/defaulttermstructure.hpp>
+#include <ql/termstructures/volatility/swaption/swaptionvolmatrix.hpp>
+#include <ql/termstructures/volatility/swaption/swaptionvolstructure.hpp>
 #include <ql/termstructures/yield/discountcurve.hpp>
-#include <ql/termstructures/credit/interpolatedsurvivalprobabilitycurve.hpp>
-#include <ql/math/interpolations/loginterpolation.hpp>
-#include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
-#include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
-#include <ql/time/daycounters/actualactual.hpp>
 #include <ql/time/calendars/target.hpp>
+#include <ql/time/daycounters/actualactual.hpp>
 
-#include <qle/termstructures/dynamicswaptionvolmatrix.hpp>
 #include <qle/termstructures/dynamicblackvoltermstructure.hpp>
-#include <qle/termstructures/swaptionvolatilityconverter.hpp>
+#include <qle/termstructures/dynamicswaptionvolmatrix.hpp>
 #include <qle/termstructures/strippedoptionletadapter2.hpp>
+#include <qle/termstructures/survivalprobabilitycurve.hpp>
+#include <qle/termstructures/swaptionvolatilityconverter.hpp>
 
 #include <boost/timer.hpp>
 
@@ -432,7 +433,6 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         LOG("building " << name << " default curve..");
         Handle<DefaultProbabilityTermStructure> wrapper = initMarket->defaultCurve(name, configuration);
         vector<Handle<Quote>> quotes;
-        vector<Probability> probs;
 
         QL_REQUIRE(parameters->defaultTenors().front() > 0 * Days, "default curve tenors must not include t=0");
 
@@ -445,16 +445,15 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
             Probability prob = wrapper->survivalProbability(dates[i], true);
             boost::shared_ptr<SimpleQuote> q(new SimpleQuote(prob));
             simData_.emplace(std::piecewise_construct,
-                               std::forward_as_tuple(RiskFactorKey::KeyType::SurvivalProbability, name, i),
-                               std::forward_as_tuple(q));
+                             std::forward_as_tuple(RiskFactorKey::KeyType::SurvivalProbability, name, i),
+                             std::forward_as_tuple(q));
             Handle<Quote> qh(q);
             quotes.push_back(qh);
-            probs.push_back(prob);
         }
 
         // FIXME riskmarket uses SurvivalProbabilityCurve but this isn't added to ore
         boost::shared_ptr<DefaultProbabilityTermStructure> defaultCurve(
-            new InterpolatedSurvivalProbabilityCurve<Linear>(dates, probs, wrapper->dayCounter(), wrapper->calendar()));
+            new QuantExt::SurvivalProbabilityCurve<Linear>(dates, quotes, wrapper->dayCounter(), wrapper->calendar()));
         Handle<DefaultProbabilityTermStructure> dch(defaultCurve);
         if (wrapper->allowsExtrapolation())
             dch->enableExtrapolation();
@@ -464,13 +463,11 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
 
         // add recovery rate
         boost::shared_ptr<SimpleQuote> rrQuote(new SimpleQuote(initMarket->recoveryRate(name, configuration)->value()));
-        simData_.emplace(std::piecewise_construct,
-                               std::forward_as_tuple(RiskFactorKey::KeyType::RecoveryRate, name),
-                               std::forward_as_tuple(rrQuote));
+        simData_.emplace(std::piecewise_construct, std::forward_as_tuple(RiskFactorKey::KeyType::RecoveryRate, name),
+                         std::forward_as_tuple(rrQuote));
 
         recoveryRates_.insert(pair<pair<string, string>, Handle<Quote>>(make_pair(Market::defaultConfiguration, name),
                                                                         Handle<Quote>(rrQuote)));
-
     }
     LOG("default curves done");
 
