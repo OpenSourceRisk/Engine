@@ -21,8 +21,8 @@
     \ingroup
 */
 
-#include <iostream>
 #include <iomanip>
+#include <iostream>
 using namespace std;
 
 // Boost
@@ -30,36 +30,37 @@ using namespace std;
 using namespace boost;
 
 // Boost.Test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/parameterized_test.hpp>
 #include <boost/test/test_tools.hpp>
 #include <boost/test/unit_test.hpp>
-#include <boost/test/parameterized_test.hpp>
+#include <boost/test/unit_test.hpp>
 using boost::unit_test::test_suite;
 
 #ifdef BOOST_MSVC
-#include <qle/auto_link.hpp>
 #include <ql/auto_link.hpp>
+#include <qle/auto_link.hpp>
 #endif
 
 // Lib test suites
 #include "analyticlgmswaptionengine.hpp"
+#include "blackvariancecurve.hpp"
+#include "cashflow.hpp"
 #include "crossassetmodel.hpp"
 #include "crossassetmodel2.hpp"
 #include "crossassetmodelparametrizations.hpp"
 #include "currency.hpp"
+#include "deposit.hpp"
 #include "discountcurve.hpp"
 #include "dynamicblackvoltermstructure.hpp"
 #include "dynamicswaptionvolmatrix.hpp"
 #include "index.hpp"
 #include "logquote.hpp"
-#include "staticallycorrectedyieldtermstructure.hpp"
-#include "blackvariancecurve.hpp"
-#include "cashflow.hpp"
-#include "swaptionvolatilityconverter.hpp"
 #include "optionletstripper.hpp"
-#include "deposit.hpp"
 #include "ratehelpers.hpp"
 #include "stabilisedglls.hpp"
+#include "staticallycorrectedyieldtermstructure.hpp"
+#include "survivalprobabilitycurve.hpp"
+#include "swaptionvolatilityconverter.hpp"
 
 namespace {
 
@@ -91,24 +92,25 @@ test_suite* init_unit_test_suite(int, char* []) {
 
     test->add(BOOST_TEST_CASE(startTimer));
 
-    test->add(testsuite::CashFlowTest::suite());
-    test->add(testsuite::AnalyticLgmSwaptionEngineTest::suite());
-    test->add(testsuite::CrossAssetModelTest::suite());
-    test->add(testsuite::CrossAssetModelTest2::suite());
-    test->add(testsuite::CrossAssetModelParametrizationsTest::suite());
-    test->add(testsuite::DiscountCurveTest::suite());
-    test->add(testsuite::DynamicBlackVolTermStructureTest::suite());
-    test->add(testsuite::DynamicSwaptionVolMatrixTest::suite());
-    test->add(testsuite::CurrencyTest::suite());
-    test->add(testsuite::IndexTest::suite());
-    test->add(testsuite::LogQuoteTest::suite());
-    test->add(testsuite::StaticallyCorrectedYieldTermStructureTest::suite());
-    test->add(testsuite::BlackVarianceCurveTest::suite());
-    test->add(testsuite::SwaptionVolatilityConverterTest::suite());
-    test->add(testsuite::OptionletStripperTest::suite());
-    test->add(testsuite::DepositTest::suite());
-    test->add(testsuite::RateHelpersTest::suite());
-    test->add(testsuite::StabilisedGLLSTest::suite());
+    /*   test->add(testsuite::CashFlowTest::suite());
+       test->add(testsuite::AnalyticLgmSwaptionEngineTest::suite());
+       test->add(testsuite::CrossAssetModelTest::suite());
+       test->add(testsuite::CrossAssetModelTest2::suite());
+       test->add(testsuite::CrossAssetModelParametrizationsTest::suite());
+       test->add(testsuite::DiscountCurveTest::suite());
+       test->add(testsuite::DynamicBlackVolTermStructureTest::suite());
+       test->add(testsuite::DynamicSwaptionVolMatrixTest::suite());
+       test->add(testsuite::CurrencyTest::suite());
+       test->add(testsuite::IndexTest::suite());
+       test->add(testsuite::LogQuoteTest::suite());
+       test->add(testsuite::StaticallyCorrectedYieldTermStructureTest::suite());
+       test->add(testsuite::BlackVarianceCurveTest::suite());
+       test->add(testsuite::SwaptionVolatilityConverterTest::suite());
+       test->add(testsuite::OptionletStripperTest::suite());
+       test->add(testsuite::DepositTest::suite());
+       test->add(testsuite::RateHelpersTest::suite());
+       test->add(testsuite::StabilisedGLLSTest::suite());*/
+    test->add(testsuite::SurvivalProbabilityCurveTest::suite());
 
     test->add(BOOST_TEST_CASE(stopTimer));
 
