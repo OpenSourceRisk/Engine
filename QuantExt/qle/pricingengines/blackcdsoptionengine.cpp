@@ -83,7 +83,8 @@ void BlackCdsOptionEngineBase::calculate(const CreditDefaultSwap& swap, const Da
     results.riskyAnnuity = riskyAnnuity;
 
     // incorporate upfront amount
-    swapSpread -= (swap.side() == Protection::Buyer ? -1.0 : 1.0) * swap.upfrontNPV() / riskyAnnuity;
+    swapSpread -=
+        (swap.side() == Protection::Buyer ? -1.0 : 1.0) * (swap.upfrontNPV() - swap.accrualRebateNPV()) / riskyAnnuity;
 
     Time T = tSDc.yearFraction(settlement, exerciseDate);
 
