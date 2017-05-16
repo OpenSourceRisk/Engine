@@ -46,40 +46,50 @@ namespace QuantExt {
 MidPointCdsEngine::MidPointCdsEngine(const Handle<DefaultProbabilityTermStructure>& probability, Real recoveryRate,
                                      const Handle<YieldTermStructure>& discountCurve,
                                      boost::optional<bool> includeSettlementDateFlows)
-    : probability_(probability), recoveryRate_(recoveryRate), discountCurve_(discountCurve),
-      includeSettlementDateFlows_(includeSettlementDateFlows) {
-    registerWith(probability_);
+    : MidPointCdsEngineBase(discountCurve, includeSettlementDateFlows), probability_(probability),
+      recoveryRate_(recoveryRate) {
     registerWith(discountCurve_);
+    registerWith(probability_);
 }
+
+Real MidPointCdsEngine::survivalProbability(const Date& d) const { return probability_->survivalProbability(d); }
+
+Real MidPointCdsEngine::defaultProbability(const Date& d1, const Date& d2) const {
+    return probability_->defaultProbability(d1, d2);
+}
+
+Real MidPointCdsEngine::recoveryRate() const { return recoveryRate_; }
 
 void MidPointCdsEngine::calculate() const {
     QL_REQUIRE(!discountCurve_.empty(), "no discount term structure set");
     QL_REQUIRE(!probability_.empty(), "no probability term structure set");
+    MidPointCdsEngineBase::calculate(probability_->referenceDate(), arguments_, results_);
+}
 
+void MidPointCdsEngineBase::calculate(const Date& refDate, const CreditDefaultSwap::arguments& arguments,
+                                      CreditDefaultSwap::results results) const {
     Date today = Settings::instance().evaluationDate();
     Date settlementDate = discountCurve_->referenceDate();
 
     // Upfront Flow NPV. Either we are on-the-run (no flow)
     // or we are forward start
     Real upfPVO1 = 0.0;
-    if (!arguments_.upfrontPayment->hasOccurred(settlementDate, includeSettlementDateFlows_)) {
+    if (!arguments.upfrontPayment->hasOccurred(settlementDate, includeSettlementDateFlows_)) {
         // date determining the probability survival so we have to pay
         //   the upfront (did not knock out)
-        Date effectiveUpfrontDate = arguments_.protectionStart > probability_->referenceDate()
-                                        ? arguments_.protectionStart
-                                        : probability_->referenceDate();
-        upfPVO1 = probability_->survivalProbability(effectiveUpfrontDate) *
-                  discountCurve_->discount(arguments_.upfrontPayment->date());
+        Date effectiveUpfrontDate = arguments.protectionStart > refDate ? arguments.protectionStart : refDate;
+        upfPVO1 =
+            survivalProbability(effectiveUpfrontDate) * discountCurve_->discount(arguments.upfrontPayment->date());
     }
-    results_.upfrontNPV = upfPVO1 * arguments_.upfrontPayment->amount();
+    results.upfrontNPV = upfPVO1 * arguments.upfrontPayment->amount();
 
-    results_.couponLegNPV = 0.0;
-    results_.defaultLegNPV = 0.0;
-    for (Size i = 0; i < arguments_.leg.size(); ++i) {
-        if (arguments_.leg[i]->hasOccurred(settlementDate, includeSettlementDateFlows_))
+    results.couponLegNPV = 0.0;
+    results.defaultLegNPV = 0.0;
+    for (Size i = 0; i < arguments.leg.size(); ++i) {
+        if (arguments.leg[i]->hasOccurred(settlementDate, includeSettlementDateFlows_))
             continue;
 
-        boost::shared_ptr<FixedRateCoupon> coupon = boost::dynamic_pointer_cast<FixedRateCoupon>(arguments_.leg[i]);
+        boost::shared_ptr<FixedRateCoupon> coupon = boost::dynamic_pointer_cast<FixedRateCoupon>(arguments.leg[i]);
 
         // In order to avoid a few switches, we calculate the NPV
         // of both legs as a positive quantity. We'll give them
@@ -88,78 +98,80 @@ void MidPointCdsEngine::calculate() const {
         Date paymentDate = coupon->date(), startDate = coupon->accrualStartDate(), endDate = coupon->accrualEndDate();
         // this is the only point where it might not coincide
         if (i == 0)
-            startDate = arguments_.protectionStart;
+            startDate = arguments.protectionStart;
         Date effectiveStartDate = (startDate <= today && today <= endDate) ? today : startDate;
         Date defaultDate = // mid-point
             effectiveStartDate + (endDate - effectiveStartDate) / 2;
 
-        Probability S = probability_->survivalProbability(paymentDate);
-        Probability P = probability_->defaultProbability(effectiveStartDate, endDate);
+        Probability S = survivalProbability(paymentDate);
+        Probability P = defaultProbability(effectiveStartDate, endDate);
 
         // on one side, we add the fixed rate payments in case of
         // survival...
-        results_.couponLegNPV += S * coupon->amount() * discountCurve_->discount(paymentDate);
+        results.couponLegNPV += S * coupon->amount() * discountCurve_->discount(paymentDate);
         // ...possibly including accrual in case of default.
-        if (arguments_.settlesAccrual) {
-            if (arguments_.paysAtDefaultTime) {
-                results_.couponLegNPV += P * coupon->accruedAmount(defaultDate) * discountCurve_->discount(defaultDate);
+        if (arguments.settlesAccrual) {
+            if (arguments.paysAtDefaultTime) {
+                results.couponLegNPV += P * coupon->accruedAmount(defaultDate) * discountCurve_->discount(defaultDate);
             } else {
                 // pays at the end
-                results_.couponLegNPV += P * coupon->amount() * discountCurve_->discount(paymentDate);
+                results.couponLegNPV += P * coupon->amount() * discountCurve_->discount(paymentDate);
             }
         }
 
         // on the other side, we add the payment in case of default.
-        Real claim = arguments_.claim->amount(defaultDate, arguments_.notional, recoveryRate_);
-        if (arguments_.paysAtDefaultTime) {
-            results_.defaultLegNPV += P * claim * discountCurve_->discount(defaultDate);
+        Real claim = arguments.claim->amount(defaultDate, arguments.notional, recoveryRate());
+        if (arguments.paysAtDefaultTime) {
+            results.defaultLegNPV += P * claim * discountCurve_->discount(defaultDate);
         } else {
-            results_.defaultLegNPV += P * claim * discountCurve_->discount(paymentDate);
+            results.defaultLegNPV += P * claim * discountCurve_->discount(paymentDate);
         }
     }
 
     Real upfrontSign = 1.0;
-    switch (arguments_.side) {
+    switch (arguments.side) {
     case Protection::Seller:
-        results_.defaultLegNPV *= -1.0;
+        results.defaultLegNPV *= -1.0;
         break;
     case Protection::Buyer:
-        results_.couponLegNPV *= -1.0;
-        results_.upfrontNPV *= -1.0;
+        results.couponLegNPV *= -1.0;
+        results.upfrontNPV *= -1.0;
         upfrontSign = -1.0;
         break;
     default:
         QL_FAIL("unknown protection side");
     }
 
-    results_.value = results_.defaultLegNPV + results_.couponLegNPV + results_.upfrontNPV;
-    results_.errorEstimate = Null<Real>();
+    results.value = results.defaultLegNPV + results.couponLegNPV + results.upfrontNPV;
+    results.errorEstimate = Null<Real>();
 
-    if (results_.couponLegNPV != 0.0) {
-        results_.fairSpread = -results_.defaultLegNPV * arguments_.spread / results_.couponLegNPV;
+    if (results.couponLegNPV != 0.0) {
+        results.fairSpread = -results.defaultLegNPV * arguments.spread / results.couponLegNPV;
     } else {
-        results_.fairSpread = Null<Rate>();
+        results.fairSpread = Null<Rate>();
     }
 
-    Real upfrontSensitivity = upfPVO1 * arguments_.notional;
+    Real upfrontSensitivity = upfPVO1 * arguments.notional;
     if (upfrontSensitivity != 0.0) {
-        results_.fairUpfront = -upfrontSign * (results_.defaultLegNPV + results_.couponLegNPV) / upfrontSensitivity;
+        results.fairUpfront = -upfrontSign * (results.defaultLegNPV + results.couponLegNPV) / upfrontSensitivity;
     } else {
-        results_.fairUpfront = Null<Rate>();
+        results.fairUpfront = Null<Rate>();
     }
 
     static const Rate basisPoint = 1.0e-4;
 
-    if (arguments_.spread != 0.0) {
-        results_.couponLegBPS = results_.couponLegNPV * basisPoint / arguments_.spread;
+    if (arguments.spread != 0.0) {
+        results.couponLegBPS = results.couponLegNPV * basisPoint / arguments.spread;
     } else {
-        results_.couponLegBPS = Null<Rate>();
+        results.couponLegBPS = Null<Rate>();
     }
 
-    if (arguments_.upfront && *arguments_.upfront != 0.0) {
-        results_.upfrontBPS = results_.upfrontNPV * basisPoint / (*arguments_.upfront);
+    if (arguments.upfront && *arguments.upfront != 0.0) {
+        results.upfrontBPS = results.upfrontNPV * basisPoint / (*arguments.upfront);
     } else {
-        results_.upfrontBPS = Null<Rate>();
+        results.upfrontBPS = Null<Rate>();
     }
-}
-}
+
+} // MidPointCdsEngineBase::calculate()
+
+} // namespace QuantExt

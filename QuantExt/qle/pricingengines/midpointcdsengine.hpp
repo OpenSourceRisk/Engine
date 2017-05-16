@@ -48,18 +48,37 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-class MidPointCdsEngine : public CreditDefaultSwap::engine {
+class MidPointCdsEngineBase {
+public:
+    MidPointCdsEngineBase(const Handle<YieldTermStructure>& discountCurve,
+                          boost::optional<bool> includeSettlementDateFlows)
+        : discountCurve_(discountCurve), includeSettlementDateFlows_(includeSettlementDateFlows) {}
+
+protected:
+    virtual Real survivalProbability(const Date& d) const = 0;
+    virtual Real defaultProbability(const Date& d1, const Date& d2) const = 0;
+    virtual Real recoveryRate() const = 0;
+    void calculate(const Date& refDate, const CreditDefaultSwap::arguments& arguments,
+                   CreditDefaultSwap::results results) const;
+
+    Handle<YieldTermStructure> discountCurve_;
+    boost::optional<bool> includeSettlementDateFlows_;
+};
+
+class MidPointCdsEngine : public CreditDefaultSwap::engine, public MidPointCdsEngineBase {
 public:
     MidPointCdsEngine(const Handle<DefaultProbabilityTermStructure>&, Real recoveryRate,
                       const Handle<YieldTermStructure>& discountCurve,
                       boost::optional<bool> includeSettlementDateFlows = boost::none);
     void calculate() const;
 
-private:
+protected:
+    virtual Real survivalProbability(const Date& d) const;
+    virtual Real defaultProbability(const Date& d1, const Date& d2) const;
+    virtual Real recoveryRate() const;
+
     Handle<DefaultProbabilityTermStructure> probability_;
     Real recoveryRate_;
-    Handle<YieldTermStructure> discountCurve_;
-    boost::optional<bool> includeSettlementDateFlows_;
 };
 } // namespace QuantExt
 

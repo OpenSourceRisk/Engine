@@ -4236,7 +4236,7 @@ void CrossAssetModelTest::testCrCalibration() {
         boost::make_shared<LgmImpliedDefaultTermStructure>(model, 0, 0);
     boost::shared_ptr<LgmImpliedYieldTermStructure> ytsMc =
         boost::make_shared<LgmImpliedYieldTermStructure>(model->lgm(0));
-    boost::shared_ptr<MidPointCdsEngine> dynamicEngine = boost::make_shared<MidPointCdsEngine>(
+    boost::shared_ptr<QuantExt::MidPointCdsEngine> dynamicEngine = boost::make_shared<QuantExt::MidPointCdsEngine>(
         Handle<DefaultProbabilityTermStructure>(probMc), 0.4, Handle<YieldTermStructure>(ytsMc));
     underlying->setPricingEngine(dynamicEngine);
 

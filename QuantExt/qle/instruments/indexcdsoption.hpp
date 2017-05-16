@@ -43,6 +43,7 @@
 #define quantext_index_cds_option_hpp
 
 #include <qle/instruments/indexcreditdefaultswap.hpp>
+#include <qle/instruments/cdsoption.hpp>
 
 #include <ql/option.hpp>
 
@@ -111,7 +112,7 @@ public:
 };
 
 //! %Results from CDS-option calculation
-class IndexCdsOption::results : public Option::results {
+class IndexCdsOption::results : public CdsOption::results {
 public:
     Real riskyAnnuity;
     void reset();

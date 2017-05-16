@@ -65,7 +65,7 @@ void IndexCreditDefaultSwapOption::build(const boost::shared_ptr<EngineFactory>&
             swap_.paysAtDefaultTime(), swap_.protectionStart());
     else {
         QL_REQUIRE(swap_.upfrontFee() != Null<Real>(),
-                   "IndexCreditDefaultSwap: upfront date given, but no upfront fee");
+                   "IndexCreditDefaultSwapOption: upfront date given, but no upfront fee");
         cds = boost::make_shared<QuantExt::IndexCreditDefaultSwap>(
             prot, notional_, swap_.basket().notionals(), swap_.upfrontFee(), swap_.leg().fixedLegData().rates().front(),
             schedule, payConvention, dc, swap_.settlesAccrual(), swap_.paysAtDefaultTime(), swap_.protectionStart(),
@@ -126,11 +126,11 @@ void IndexCreditDefaultSwapOption::fromXML(XMLNode* node) {
     XMLNode* node2 = XMLUtils::getChildNode(node, "IndexCreditDefaultSwapOptionData");
     QL_REQUIRE(node2, "No IndexCreditDefaultSwapOptionData Node");
     knockOut_ = XMLUtils::getChildValueAsBool(node2, "KnockOut");
-    XMLNode* node3 = XMLUtils::getChildNode(node, "IndexCreditDefaultSwapData");
+    XMLNode* node3 = XMLUtils::getChildNode(node2, "IndexCreditDefaultSwapData");
     QL_REQUIRE(node3, "No IndexCreditDefaultSwapData Node");
     swap_.fromXML(node3);
-    XMLNode* node4 = XMLUtils::getChildNode(node, "OptionData");
-    QL_REQUIRE(node4, "No IndexCreditDefaultSwapData Node");
+    XMLNode* node4 = XMLUtils::getChildNode(node2, "OptionData");
+    QL_REQUIRE(node4, "No OptionData Node");
     option_.fromXML(node4);
 }
 

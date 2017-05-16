@@ -43,6 +43,7 @@
 #define quantext_black_index_cds_option_engine_hpp
 
 #include <qle/instruments/indexcdsoption.hpp>
+#include <qle/pricingengines/blackcdsoptionengine.hpp>
 
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 
@@ -51,7 +52,7 @@ using namespace QuantLib;
 namespace QuantExt {
 
 //! Black-formula CDS-option engine
-class BlackIndexCdsOptionEngine : public QuantExt::IndexCdsOption::engine {
+class BlackIndexCdsOptionEngine : public QuantExt::IndexCdsOption::engine, public BlackCdsOptionEngineBase {
 public:
     // use index curve for front end protection calculation
     BlackIndexCdsOptionEngine(const Handle<DefaultProbabilityTermStructure>&, Real recoveryRate,
@@ -59,22 +60,20 @@ public:
                               const Handle<BlackVolTermStructure>& vol);
     // use underlying curves for front end protection calculation
     BlackIndexCdsOptionEngine(const std::vector<Handle<DefaultProbabilityTermStructure> >&,
-                              const std::vector<Real> recoveryRate, const Handle<YieldTermStructure>& termStructure,
+                              const std::vector<Real>& recoveryRate, const Handle<YieldTermStructure>& termStructure,
                               const Handle<BlackVolTermStructure>& vol);
     void calculate() const;
-    Handle<YieldTermStructure> termStructure();
-    Handle<BlackVolTermStructure> volatility();
 
 private:
-    Real defaultProbability(const Date& d1, const Date& d2) const;
     Real recoveryRate() const;
+    Real defaultProbability(const Date& d) const;
 
-    const Handle<DefaultProbabilityTermStructure> probability_;
+    Handle<DefaultProbabilityTermStructure> probability_;
+    Real recoveryRate_;
+
     const std::vector<Handle<DefaultProbabilityTermStructure> > underlyingProbability_;
-    const Real recoveryRate_;
     const std::vector<Real> underlyingRecoveryRate_;
-    const Handle<YieldTermStructure> termStructure_;
-    const Handle<BlackVolTermStructure> volatility_;
+
     const bool useUnderlyingCurves_;
 };
 } // namespace QuantExt
