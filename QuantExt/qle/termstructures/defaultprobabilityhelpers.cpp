@@ -48,13 +48,12 @@ namespace QuantExt {
 
 CdsHelper::CdsHelper(const Handle<Quote>& quote, const Period& tenor, Integer settlementDays, const Calendar& calendar,
                      Frequency frequency, BusinessDayConvention paymentConvention, DateGeneration::Rule rule,
-                     const DayCounter& dayCounter, Real recoveryRate,
-                     const Handle<YieldTermStructure>& discountCurve, const Date& startDate,
-                     bool settlesAccrual, bool paysAtDefaultTime)
+                     const DayCounter& dayCounter, Real recoveryRate, const Handle<YieldTermStructure>& discountCurve,
+                     const Date& startDate, bool settlesAccrual, bool paysAtDefaultTime)
     : RelativeDateDefaultProbabilityHelper(quote), tenor_(tenor), settlementDays_(settlementDays), calendar_(calendar),
       frequency_(frequency), paymentConvention_(paymentConvention), rule_(rule), dayCounter_(dayCounter),
-      recoveryRate_(recoveryRate), discountCurve_(discountCurve), startDate_(startDate),
-      settlesAccrual_(settlesAccrual), paysAtDefaultTime_(paysAtDefaultTime) {
+      recoveryRate_(recoveryRate), discountCurve_(discountCurve), settlesAccrual_(settlesAccrual),
+      paysAtDefaultTime_(paysAtDefaultTime), startDate_(startDate) {
 
     initializeDates();
 
@@ -63,13 +62,12 @@ CdsHelper::CdsHelper(const Handle<Quote>& quote, const Period& tenor, Integer se
 
 CdsHelper::CdsHelper(Rate quote, const Period& tenor, Integer settlementDays, const Calendar& calendar,
                      Frequency frequency, BusinessDayConvention paymentConvention, DateGeneration::Rule rule,
-                     const DayCounter& dayCounter, Real recoveryRate,
-                     const Handle<YieldTermStructure>& discountCurve, const Date& startDate,
-                     bool settlesAccrual, bool paysAtDefaultTime)
+                     const DayCounter& dayCounter, Real recoveryRate, const Handle<YieldTermStructure>& discountCurve,
+                     const Date& startDate, bool settlesAccrual, bool paysAtDefaultTime)
     : RelativeDateDefaultProbabilityHelper(quote), tenor_(tenor), settlementDays_(settlementDays), calendar_(calendar),
       frequency_(frequency), paymentConvention_(paymentConvention), rule_(rule), dayCounter_(dayCounter),
-      recoveryRate_(recoveryRate), discountCurve_(discountCurve), startDate_(startDate),
-      settlesAccrual_(settlesAccrual), paysAtDefaultTime_(paysAtDefaultTime) {
+      recoveryRate_(recoveryRate), discountCurve_(discountCurve), settlesAccrual_(settlesAccrual),
+      paysAtDefaultTime_(paysAtDefaultTime), startDate_(startDate) {
 
     initializeDates();
 
@@ -185,9 +183,9 @@ Real UpfrontCdsHelper::impliedQuote() const {
 }
 
 void UpfrontCdsHelper::resetEngine() {
-    swap_ = boost::make_shared<CreditDefaultSwap>(Protection::Buyer, 100.0, 0.01, runningSpread_, schedule_,
-                                                  paymentConvention_, dayCounter_, settlesAccrual_, paysAtDefaultTime_,
-                                                  protectionStart_, upfrontDate_, boost::shared_ptr<Claim>());
+    swap_ = boost::shared_ptr<CreditDefaultSwap>(new CreditDefaultSwap(
+        Protection::Buyer, 100.0, 0.01, runningSpread_, schedule_, paymentConvention_, dayCounter_, settlesAccrual_,
+        paysAtDefaultTime_, protectionStart_, upfrontDate_, boost::shared_ptr<Claim>()));
     swap_->setPricingEngine(
         boost::make_shared<QuantExt::MidPointCdsEngine>(probability_, recoveryRate_, discountCurve_, true));
 }

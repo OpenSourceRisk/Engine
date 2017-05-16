@@ -52,8 +52,8 @@ MidPointIndexCdsEngine::MidPointIndexCdsEngine(
     const std::vector<Handle<DefaultProbabilityTermStructure> >& underlyingProbability,
     const std::vector<Real>& underlyingRecoveryRate, const Handle<YieldTermStructure>& discountCurve,
     boost::optional<bool> includeSettlementDateFlows)
-    : MidPointCdsEngineBase(discountCurve, includeSettlementDateFlows), underlyingRecoveryRate_(underlyingRecoveryRate),
-      underlyingProbability_(underlyingProbability), useUnderlyingCurves_(true) {
+    : MidPointCdsEngineBase(discountCurve, includeSettlementDateFlows), underlyingProbability_(underlyingProbability),
+      underlyingRecoveryRate_(underlyingRecoveryRate), useUnderlyingCurves_(true) {
     registerWith(discountCurve_);
     for (Size i = 0; i < underlyingProbability_.size(); ++i)
         registerWith(underlyingProbability_[i]);

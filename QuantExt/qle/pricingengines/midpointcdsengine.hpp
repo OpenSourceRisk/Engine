@@ -53,6 +53,7 @@ public:
     MidPointCdsEngineBase(const Handle<YieldTermStructure>& discountCurve,
                           boost::optional<bool> includeSettlementDateFlows)
         : discountCurve_(discountCurve), includeSettlementDateFlows_(includeSettlementDateFlows) {}
+    virtual ~MidPointCdsEngineBase() {}
 
 protected:
     virtual Real survivalProbability(const Date& d) const = 0;
