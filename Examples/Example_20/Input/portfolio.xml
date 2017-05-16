@@ -14,9 +14,9 @@
       <Qualifier>SECURITY_1</Qualifier>
       <SettlesAccrual>Y</SettlesAccrual>
       <PaysAtDefaultTime>Y</PaysAtDefaultTime>
-      <ProtectionStart>20160203</ProtectionStart>
-      <UpfrontDate>20160203</UpfrontDate>
-      <UpfrontFee>0.0324</UpfrontFee><!-- expressed as a rate, to be multiplied by notional amount -->
+      <ProtectionStart>20160206</ProtectionStart>
+      <UpfrontDate>20160208</UpfrontDate>
+      <UpfrontFee>0.0</UpfrontFee><!-- expressed as a rate, to be multiplied by notional amount -->
       <LegData>
         <LegType>Fixed</LegType>
         <Payer>true</Payer>
@@ -33,13 +33,13 @@
         </FixedLegData>
         <ScheduleData>
           <Rules>
-            <StartDate>20160203</StartDate>
-            <EndDate>20260203</EndDate>
+            <StartDate>20160205</StartDate>
+            <EndDate>20260205</EndDate>
             <Tenor>3M</Tenor>
             <Calendar>US</Calendar>
             <Convention>F</Convention>
             <TermConvention>F</TermConvention>
-            <Rule>CDS</Rule>
+            <Rule>CDS2015</Rule>
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
@@ -60,9 +60,9 @@
       <CreditCurveId>CPTY_A</CreditCurveId>
       <SettlesAccrual>Y</SettlesAccrual>
       <PaysAtDefaultTime>Y</PaysAtDefaultTime>
-      <ProtectionStart>20160203</ProtectionStart>
-      <UpfrontDate>20160203</UpfrontDate>
-      <UpfrontFee>0.0324</UpfrontFee>
+      <ProtectionStart>20160206</ProtectionStart>
+      <UpfrontDate>20160208</UpfrontDate>
+      <UpfrontFee>0.0</UpfrontFee>
       <LegData>
         <LegType>Fixed</LegType>
         <Payer>true</Payer>
@@ -79,13 +79,13 @@
         </FixedLegData>
         <ScheduleData>
           <Rules>
-            <StartDate>20160203</StartDate>
-            <EndDate>20260203</EndDate>
+            <StartDate>20160205</StartDate>
+            <EndDate>20260205</EndDate>
             <Tenor>3M</Tenor>
             <Calendar>US</Calendar>
             <Convention>F</Convention>
             <TermConvention>F</TermConvention>
-            <Rule>CDS</Rule>
+            <Rule>CDS2015</Rule>
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
@@ -144,9 +144,9 @@
         <CreditCurveId>CPTY_A</CreditCurveId>
         <SettlesAccrual>Y</SettlesAccrual>
         <PaysAtDefaultTime>Y</PaysAtDefaultTime>
-        <ProtectionStart>20170410</ProtectionStart>
+        <ProtectionStart>20160804</ProtectionStart>
         <UpfrontDate/>
-        <UpfrontFee>0.0324</UpfrontFee>
+        <UpfrontFee>0.0</UpfrontFee>
         <LegData>
           <LegType>Fixed</LegType>
           <Payer>true</Payer>
@@ -163,13 +163,13 @@
           </FixedLegData>
           <ScheduleData>
             <Rules>
-              <StartDate>20160803</StartDate>
+              <StartDate>20160804</StartDate>
               <EndDate>20210803</EndDate>
               <Tenor>3M</Tenor>
               <Calendar>US</Calendar>
               <Convention>F</Convention>
               <TermConvention>F</TermConvention>
-              <Rule>CDS</Rule>
+              <Rule>CDS2015</Rule>
               <EndOfMonth/>
               <FirstDate/>
               <LastDate/>
@@ -244,7 +244,7 @@
             <Calendar>TARGET</Calendar>
             <Convention>F</Convention>
             <TermConvention>F</TermConvention>
-            <Rule>CDS</Rule>
+            <Rule>CDS2015</Rule>
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
