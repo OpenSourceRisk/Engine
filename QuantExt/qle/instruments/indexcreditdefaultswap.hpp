@@ -88,7 +88,7 @@ public:
     //@{
     const std::vector<Real>& underlyingNotionals() const;
     //@}
-    
+
     //@}
     //! \name Instrument interface
     //@{
