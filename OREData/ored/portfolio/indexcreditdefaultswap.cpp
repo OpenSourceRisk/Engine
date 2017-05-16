@@ -36,15 +36,15 @@ void IndexCreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engin
     const boost::shared_ptr<Market> market = engineFactory->market();
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("IndexCreditDefaultSwap");
 
-    QL_REQUIRE(swap_.leg().legType() == "Fixed", "CreditDefaultSwap requires Fixed leg");
+    QL_REQUIRE(swap_.leg().legType() == "Fixed", "IndexCreditDefaultSwap requires Fixed leg");
     Schedule schedule = makeSchedule(swap_.leg().schedule());
     Calendar calendar = parseCalendar(swap_.leg().schedule().rules().front().calendar());
     BusinessDayConvention payConvention = parseBusinessDayConvention(swap_.leg().paymentConvention());
     Protection::Side prot = swap_.leg().isPayer() ? Protection::Side::Buyer : Protection::Side::Seller;
-    QL_REQUIRE(swap_.leg().notionals().size() == 1, "CreditDefaultSwap requires single notional");
+    QL_REQUIRE(swap_.leg().notionals().size() == 1, "IndexCreditDefaultSwap requires single notional");
     notional_ = swap_.leg().notionals().front();
     DayCounter dc = parseDayCounter(swap_.leg().dayCounter());
-    QL_REQUIRE(swap_.leg().fixedLegData().rates().size() == 1, "CreditDefaultSwap requires single rate");
+    QL_REQUIRE(swap_.leg().fixedLegData().rates().size() == 1, "IndexCreditDefaultSwap requires single rate");
 
     boost::shared_ptr<QuantExt::IndexCreditDefaultSwap> cds;
 
@@ -54,7 +54,7 @@ void IndexCreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engin
             swap_.leg().fixedLegData().rates().front(), schedule, payConvention, dc, swap_.settlesAccrual(),
             swap_.paysAtDefaultTime(), swap_.protectionStart());
     else {
-        QL_REQUIRE(swap_.upfrontFee() != Null<Real>(), "CreditDefaultSwap: upfront date given, but no upfront fee");
+        QL_REQUIRE(swap_.upfrontFee() != Null<Real>(), "IndexCreditDefaultSwap: upfront date given, but no upfront fee");
         cds = boost::make_shared<QuantExt::IndexCreditDefaultSwap>(
             prot, notional_, swap_.basket().notionals(), swap_.upfrontFee(), swap_.leg().fixedLegData().rates().front(),
             schedule, payConvention, dc, swap_.settlesAccrual(), swap_.paysAtDefaultTime(), swap_.protectionStart(),
@@ -66,7 +66,7 @@ void IndexCreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engin
 
     npvCurrency_ = swap_.leg().currency();
 
-    QL_REQUIRE(cdsBuilder, "No Builder found for CreditDefaultSwap: " << id());
+    QL_REQUIRE(cdsBuilder, "No Builder found for IndexCreditDefaultSwap: " << id());
     cds->setPricingEngine(
         cdsBuilder->engine(parseCurrency(npvCurrency_), swap_.creditCurveId(), swap_.basket().creditCurves()));
 
@@ -82,7 +82,7 @@ void IndexCreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engin
 void IndexCreditDefaultSwap::fromXML(XMLNode* node) {
     Trade::fromXML(node);
     XMLNode* cdsNode = XMLUtils::getChildNode(node, "IndexCreditDefaultSwapData");
-    QL_REQUIRE(cdsNode, "No CreditDefaultSwapData Node");
+    QL_REQUIRE(cdsNode, "No IndexCreditDefaultSwapData Node");
     swap_.fromXML(cdsNode);
 }
 

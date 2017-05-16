@@ -65,7 +65,7 @@ void IndexCreditDefaultSwapOption::build(const boost::shared_ptr<EngineFactory>&
             swap_.paysAtDefaultTime(), swap_.protectionStart());
     else {
         QL_REQUIRE(swap_.upfrontFee() != Null<Real>(),
-                   "IndexCreditDefaultSwap: upfront date given, but no upfront fee");
+                   "IndexCreditDefaultSwapOption: upfront date given, but no upfront fee");
         cds = boost::make_shared<QuantExt::IndexCreditDefaultSwap>(
             prot, notional_, swap_.basket().notionals(), swap_.upfrontFee(), swap_.leg().fixedLegData().rates().front(),
             schedule, payConvention, dc, swap_.settlesAccrual(), swap_.paysAtDefaultTime(), swap_.protectionStart(),
