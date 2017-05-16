@@ -59,7 +59,7 @@ protected:
     virtual Real defaultProbability(const Date& d1, const Date& d2) const = 0;
     virtual Real recoveryRate() const = 0;
     void calculate(const Date& refDate, const CreditDefaultSwap::arguments& arguments,
-                   CreditDefaultSwap::results results) const;
+                   CreditDefaultSwap::results& results) const;
 
     Handle<YieldTermStructure> discountCurve_;
     boost::optional<bool> includeSettlementDateFlows_;

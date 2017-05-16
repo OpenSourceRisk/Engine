@@ -67,21 +67,31 @@ void MidPointCdsEngine::calculate() const {
 }
 
 void MidPointCdsEngineBase::calculate(const Date& refDate, const CreditDefaultSwap::arguments& arguments,
-                                      CreditDefaultSwap::results results) const {
+                                      CreditDefaultSwap::results& results) const {
     Date today = Settings::instance().evaluationDate();
     Date settlementDate = discountCurve_->referenceDate();
 
-    // Upfront Flow NPV. Either we are on-the-run (no flow)
+    // Upfront Flow NPV and accrual rebate NPV. Either we are on-the-run (no flow)
     // or we are forward start
+
+    // date determining the probability survival so we have to pay
+    // the upfront flows (did not knock out)
+    Date effectiveProtectionStart = arguments.protectionStart > refDate ? arguments.protectionStart : refDate;
+    Probability nonKnockOut = survivalProbability(effectiveProtectionStart);
+
     Real upfPVO1 = 0.0;
-    if (!arguments.upfrontPayment->hasOccurred(settlementDate, includeSettlementDateFlows_)) {
-        // date determining the probability survival so we have to pay
-        //   the upfront (did not knock out)
-        Date effectiveUpfrontDate = arguments.protectionStart > refDate ? arguments.protectionStart : refDate;
-        upfPVO1 =
-            survivalProbability(effectiveUpfrontDate) * discountCurve_->discount(arguments.upfrontPayment->date());
+    results.upfrontNPV = 0.0;
+    if (arguments.upfrontPayment &&
+        !arguments.upfrontPayment->hasOccurred(settlementDate, includeSettlementDateFlows_)) {
+        upfPVO1 = nonKnockOut * discountCurve_->discount(arguments.upfrontPayment->date());
+        results.upfrontNPV = upfPVO1 * arguments.upfrontPayment->amount();
     }
-    results.upfrontNPV = upfPVO1 * arguments.upfrontPayment->amount();
+
+    results.accrualRebateNPV = 0.;
+    if (arguments.accrualRebate && !arguments.accrualRebate->hasOccurred(settlementDate, includeSettlementDateFlows_)) {
+        results.accrualRebateNPV =
+            nonKnockOut * discountCurve_->discount(arguments.accrualRebate->date()) * arguments.accrualRebate->amount();
+    }
 
     results.couponLegNPV = 0.0;
     results.defaultLegNPV = 0.0;
@@ -132,6 +142,7 @@ void MidPointCdsEngineBase::calculate(const Date& refDate, const CreditDefaultSw
     switch (arguments.side) {
     case Protection::Seller:
         results.defaultLegNPV *= -1.0;
+        results.accrualRebateNPV *= -1.0;
         break;
     case Protection::Buyer:
         results.couponLegNPV *= -1.0;
@@ -142,18 +153,20 @@ void MidPointCdsEngineBase::calculate(const Date& refDate, const CreditDefaultSw
         QL_FAIL("unknown protection side");
     }
 
-    results.value = results.defaultLegNPV + results.couponLegNPV + results.upfrontNPV;
+    results.value = results.defaultLegNPV + results.couponLegNPV + results.upfrontNPV + results.accrualRebateNPV;
     results.errorEstimate = Null<Real>();
 
     if (results.couponLegNPV != 0.0) {
-        results.fairSpread = -results.defaultLegNPV * arguments.spread / results.couponLegNPV;
+        results.fairSpread =
+            -results.defaultLegNPV * arguments.spread / (results.couponLegNPV + results.accrualRebateNPV);
     } else {
         results.fairSpread = Null<Rate>();
     }
 
     Real upfrontSensitivity = upfPVO1 * arguments.notional;
     if (upfrontSensitivity != 0.0) {
-        results.fairUpfront = -upfrontSign * (results.defaultLegNPV + results.couponLegNPV) / upfrontSensitivity;
+        results.fairUpfront = -upfrontSign * (results.defaultLegNPV + results.couponLegNPV + results.accrualRebateNPV) /
+                              upfrontSensitivity;
     } else {
         results.fairUpfront = Null<Rate>();
     }

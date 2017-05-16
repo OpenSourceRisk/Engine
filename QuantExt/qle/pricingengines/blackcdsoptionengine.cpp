@@ -61,6 +61,10 @@ void BlackCdsOptionEngine::calculate() const {
                                         results_);
 }
 
+BlackCdsOptionEngineBase::BlackCdsOptionEngineBase(const Handle<YieldTermStructure>& termStructure,
+                                                   const Handle<BlackVolTermStructure>& vol)
+    : termStructure_(termStructure), volatility_(vol) {}
+
 void BlackCdsOptionEngineBase::calculate(const CreditDefaultSwap& swap, const Date& exerciseDate, const bool knocksOut,
                                          CdsOption::results& results) const {
 

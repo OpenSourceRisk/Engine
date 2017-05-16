@@ -29,4 +29,5 @@
 #include <qle/termstructures/strippedoptionletadapter2.hpp>
 #include <qle/termstructures/swaptionvolatilityconverter.hpp>
 #include <qle/termstructures/subperiodsswaphelper.hpp>
+#include <qle/termstructures/defaultprobabilityhelpers.hpp>
 

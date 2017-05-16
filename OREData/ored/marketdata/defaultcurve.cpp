@@ -19,9 +19,10 @@
 #include <ored/marketdata/defaultcurve.hpp>
 #include <ored/utilities/log.hpp>
 
-#include <ql/math/interpolations/loginterpolation.hpp>
+#include <qle/termstructures/defaultprobabilityhelpers.hpp>
+
 #include <ql/math/interpolations/backwardflatinterpolation.hpp>
-#include <ql/termstructures/credit/defaultprobabilityhelpers.hpp>
+#include <ql/math/interpolations/loginterpolation.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 
 #include <algorithm>
@@ -62,8 +63,8 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                 discountCurve = it->second->handle();
             } else {
                 QL_FAIL("The discount curve, " << config->discountCurveID() << ", required in the building "
-                                                                               "of the curve, " << spec.name()
-                                               << ", was not found.");
+                                                                               "of the curve, "
+                                               << spec.name() << ", was not found.");
             }
         }
 
@@ -74,8 +75,8 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                 benchmarkCurve = it->second->handle();
             } else {
                 QL_FAIL("The benchmark curve, " << config->benchmarkCurveID() << ", required in the building "
-                                                                                 "of the curve, " << spec.name()
-                                                << ", was not found.");
+                                                                                 "of the curve, "
+                                                << spec.name() << ", was not found.");
             }
         }
 
@@ -94,8 +95,8 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                 boost::shared_ptr<RecoveryRateQuote> q = boost::dynamic_pointer_cast<RecoveryRateQuote>(md);
 
                 if (q->name() == config->recoveryRateQuote()) {
-                    QL_REQUIRE(recoveryRate_ == Null<Real>(), "duplicate recovery rate quote " << q->name()
-                                                                                               << " found.");
+                    QL_REQUIRE(recoveryRate_ == Null<Real>(),
+                               "duplicate recovery rate quote " << q->name() << " found.");
                     recoveryRate_ = q->quote()->value();
                 }
             }
@@ -113,9 +114,9 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                 if (it1 != config->quotes().end()) {
 
                     vector<Period>::const_iterator it2 = std::find(terms.begin(), terms.end(), q->term());
-                    QL_REQUIRE(it2 == terms.end(), "duplicate term in quotes found ("
-                                                       << q->term() << ") while loading default curve "
-                                                       << config->curveID());
+                    QL_REQUIRE(it2 == terms.end(),
+                               "duplicate term in quotes found (" << q->term() << ") while loading default curve "
+                                                                  << config->curveID());
                     terms.push_back(q->term());
                     quotes.push_back(q->quote()->value());
                 }
@@ -132,9 +133,9 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                 if (it1 != config->quotes().end()) {
 
                     vector<Period>::const_iterator it2 = std::find(terms.begin(), terms.end(), q->term());
-                    QL_REQUIRE(it2 == terms.end(), "duplicate term in quotes found ("
-                                                       << q->term() << ") while loading default curve "
-                                                       << config->curveID());
+                    QL_REQUIRE(it2 == terms.end(),
+                               "duplicate term in quotes found (" << q->term() << ") while loading default curve "
+                                                                  << config->curveID());
                     terms.push_back(q->term());
                     quotes.push_back(q->quote()->value());
                 }
@@ -154,9 +155,9 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                                                 "curves, date based "
                                                 "not allowed");
                     vector<Period>::const_iterator it2 = std::find(terms.begin(), terms.end(), q->tenor());
-                    QL_REQUIRE(it2 == terms.end(), "duplicate term in quotes found ("
-                                                       << q->tenor() << ") while loading default curve "
-                                                       << config->curveID());
+                    QL_REQUIRE(it2 == terms.end(),
+                               "duplicate term in quotes found (" << q->tenor() << ") while loading default curve "
+                                                                  << config->curveID());
                     terms.push_back(q->tenor());
                     quotes.push_back(q->quote()->value());
                 }
@@ -165,18 +166,18 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
 
         LOG("DefaultCurve: read " << quotes.size() << " default quotes");
 
-        QL_REQUIRE(quotes.size() == config->quotes().size(), "read " << quotes.size() << ", but "
-                                                                     << config->quotes().size() << " required.");
+        QL_REQUIRE(quotes.size() == config->quotes().size(),
+                   "read " << quotes.size() << ", but " << config->quotes().size() << " required.");
 
         if (config->type() == DefaultCurveConfig::Type::SpreadCDS) {
             QL_REQUIRE(recoveryRate_ != Null<Real>(), "DefaultCurve: no recovery rate given for type "
                                                       "SpreadCDS");
             std::vector<boost::shared_ptr<DefaultProbabilityHelper>> helper;
             for (Size i = 0; i < quotes.size(); ++i) {
-                helper.push_back(boost::make_shared<SpreadCdsHelper>(
+                helper.push_back(boost::make_shared<QuantExt::SpreadCdsHelper>(
                     quotes[i], terms[i], cdsConv->settlementDays(), cdsConv->calendar(), cdsConv->frequency(),
                     cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(), recoveryRate_, discountCurve,
-                    cdsConv->settlesAccrual(), cdsConv->paysAtDefaultTime()));
+                    asof + cdsConv->settlementDays(), cdsConv->settlesAccrual(), cdsConv->paysAtDefaultTime()));
             }
             boost::shared_ptr<DefaultProbabilityTermStructure> tmp =
                 boost::make_shared<PiecewiseDefaultCurve<SurvivalProbability, LogLinear>>(asof, helper,

@@ -67,6 +67,8 @@ namespace QuantExt {
              NPV and therefore affect the fair-spread
              calculation. This might not be what you want.
 
+    \bug last period dc should be A360 including both start and end date
+
      \ingroup instruments
 */
 class CreditDefaultSwap : public Instrument {
@@ -166,6 +168,7 @@ public:
     Real couponLegNPV() const;
     Real defaultLegNPV() const;
     Real upfrontNPV() const;
+    Real accrualRebateNPV() const;
 
     //! Implied hazard rate calculation
     /*! \note This method performs the calculation with the
@@ -217,6 +220,8 @@ public:
               - The CDS should pay accrued and mature on standard
                 IMM dates, settle on trade date +1 and upfront
                 settle on trade date +3.
+
+        \bug this should use the ISDA standard pricing engine
     */
     Rate conventionalSpread(Real conventionalRecovery, const Handle<YieldTermStructure>& discountCurve,
                             const DayCounter& dayCounter) const;
@@ -234,14 +239,14 @@ protected:
     bool settlesAccrual_, paysAtDefaultTime_;
     boost::shared_ptr<Claim> claim_;
     Leg leg_;
-    boost::shared_ptr<CashFlow> upfrontPayment_;
-    Date protectionStart_;
+    boost::shared_ptr<CashFlow> upfrontPayment_, accrualRebate_;
+    Date protectionStart_, maturity_;
     // results
     mutable Rate fairUpfront_;
     mutable Rate fairSpread_;
     mutable Real couponLegBPS_, couponLegNPV_;
     mutable Real upfrontBPS_, upfrontNPV_;
-    mutable Real defaultLegNPV_;
+    mutable Real defaultLegNPV_, accrualRebateNPV_;
 };
 
 class CreditDefaultSwap::arguments : public virtual PricingEngine::arguments {
@@ -253,11 +258,11 @@ public:
     boost::optional<Rate> upfront;
     Rate spread;
     Leg leg;
-    boost::shared_ptr<CashFlow> upfrontPayment;
+    boost::shared_ptr<CashFlow> upfrontPayment, accrualRebate;
     bool settlesAccrual;
     bool paysAtDefaultTime;
     boost::shared_ptr<Claim> claim;
-    Date protectionStart;
+    Date protectionStart, maturity;
     void validate() const;
 };
 
@@ -271,6 +276,7 @@ public:
     Real defaultLegNPV;
     Real upfrontBPS;
     Real upfrontNPV;
+    Real accrualRebateNPV;
     void reset();
 };
 

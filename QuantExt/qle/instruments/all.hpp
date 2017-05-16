@@ -17,4 +17,5 @@
 #include <qle/instruments/indexcreditdefaultswap.hpp>
 #include <qle/instruments/cdsoption.hpp>
 #include <qle/instruments/indexcdsoption.hpp>
+#include <qle/instruments/makecds.hpp>
 

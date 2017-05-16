@@ -56,16 +56,32 @@ CreditDefaultSwap::CreditDefaultSwap(Protection::Side side, Real notional, Rate 
     : side_(side), notional_(notional), upfront_(boost::none), runningSpread_(spread), settlesAccrual_(settlesAccrual),
       paysAtDefaultTime_(paysAtDefaultTime), claim_(claim),
       protectionStart_(protectionStart == Null<Date>() ? schedule[0] : protectionStart) {
-    QL_REQUIRE(protectionStart_ <= schedule[0], "protection can not start after accrual");
+    QL_REQUIRE((schedule.rule() == DateGeneration::CDS || schedule.rule() == DateGeneration::CDS2015) ||
+                   protectionStart_ <= schedule[0],
+               "protection can not start after accrual for (pre big bang-) CDS");
     leg_ = FixedRateLeg(schedule)
                .withNotionals(notional)
                .withCouponRates(spread, dayCounter)
                .withPaymentAdjustment(convention);
-    upfrontPayment_.reset(new SimpleCashFlow(0.0, schedule[0]));
+
+    // acrual rebate
+    if (schedule.rule() == DateGeneration::CDS || schedule.rule() == DateGeneration::CDS2015) {
+        boost::shared_ptr<FixedRateCoupon> firstCoupon = boost::dynamic_pointer_cast<FixedRateCoupon>(leg_[0]);
+        // adjust to T+3 standard settlement, assuming that protection start
+        // is set to T+1 for standard CDS
+        Date rebateDate =
+            schedule.calendar().advance(schedule.calendar().adjust(protectionStart_, convention), 2, Days, convention);
+        accrualRebate_.reset(new SimpleCashFlow(firstCoupon->accruedAmount(protectionStart_), rebateDate));
+    }
 
     if (!claim_)
         claim_ = boost::shared_ptr<Claim>(new FaceValueClaim);
     registerWith(claim_);
+
+    // the upfront payment left intentionally unitialized to indicate
+    // this CDS has none.
+
+    maturity_ = schedule.dates().back();
 }
 
 CreditDefaultSwap::CreditDefaultSwap(Protection::Side side, Real notional, Rate upfront, Rate runningSpread,
@@ -76,7 +92,9 @@ CreditDefaultSwap::CreditDefaultSwap(Protection::Side side, Real notional, Rate 
     : side_(side), notional_(notional), upfront_(upfront), runningSpread_(runningSpread),
       settlesAccrual_(settlesAccrual), paysAtDefaultTime_(paysAtDefaultTime), claim_(claim),
       protectionStart_(protectionStart == Null<Date>() ? schedule[0] : protectionStart) {
-    QL_REQUIRE(protectionStart_ <= schedule[0], "protection can not start after accrual");
+    QL_REQUIRE((schedule.rule() == DateGeneration::CDS || schedule.rule() == DateGeneration::CDS2015) ||
+                   protectionStart_ <= schedule[0],
+               "protection can not start after accrual for (pre big bang-) CDS");
     leg_ = FixedRateLeg(schedule)
                .withNotionals(notional)
                .withCouponRates(runningSpread, dayCounter)
@@ -85,9 +103,29 @@ CreditDefaultSwap::CreditDefaultSwap(Protection::Side side, Real notional, Rate 
     upfrontPayment_.reset(new SimpleCashFlow(notional * upfront, d));
     QL_REQUIRE(upfrontPayment_->date() >= protectionStart_, "upfront can not be due before contract start");
 
+    // If empty, adjust to T+3 standard settlement
+    Date effectiveUpfrontDate =
+        upfrontDate == Null<Date>()
+            ? schedule.calendar().advance(schedule.calendar().adjust(protectionStart_, convention), 2, Days, convention)
+            : upfrontDate;
+    // '2' is used above since the protection start is assumed to be
+    // on trade_date + 1
+    upfrontPayment_.reset(new SimpleCashFlow(notional * upfront, effectiveUpfrontDate));
+
+    if (schedule.rule() == DateGeneration::CDS || schedule.rule() == DateGeneration::CDS2015) {
+        QL_REQUIRE(effectiveUpfrontDate >= protectionStart_, "upfront can not be due before contract start");
+
+        boost::shared_ptr<FixedRateCoupon> firstCoupon = boost::dynamic_pointer_cast<FixedRateCoupon>(leg_[0]);
+        // adjust to T+3 standard settlement
+        const Date& rebateDate = effectiveUpfrontDate;
+        accrualRebate_.reset(new SimpleCashFlow(firstCoupon->accruedAmount(protectionStart_), rebateDate));
+    }
+
     if (!claim_)
         claim_ = boost::shared_ptr<Claim>(new FaceValueClaim);
     registerWith(claim_);
+
+    maturity_ = schedule.dates().back();
 }
 
 Protection::Side CreditDefaultSwap::side() const { return side_; }
@@ -127,12 +165,14 @@ void CreditDefaultSwap::setupArguments(PricingEngine::arguments* args) const {
     arguments->notional = notional_;
     arguments->leg = leg_;
     arguments->upfrontPayment = upfrontPayment_;
+    arguments->accrualRebate = accrualRebate_;
     arguments->settlesAccrual = settlesAccrual_;
     arguments->paysAtDefaultTime = paysAtDefaultTime_;
     arguments->claim = claim_;
     arguments->upfront = upfront_;
     arguments->spread = runningSpread_;
     arguments->protectionStart = protectionStart_;
+    arguments->maturity = maturity_;
 }
 
 void CreditDefaultSwap::fetchResults(const PricingEngine::results* r) const {
@@ -148,6 +188,7 @@ void CreditDefaultSwap::fetchResults(const PricingEngine::results* r) const {
     defaultLegNPV_ = results->defaultLegNPV;
     upfrontNPV_ = results->upfrontNPV;
     upfrontBPS_ = results->upfrontBPS;
+    accrualRebateNPV_ = results->accrualRebateNPV;
 }
 
 Rate CreditDefaultSwap::fairUpfront() const {
@@ -260,9 +301,10 @@ void CreditDefaultSwap::arguments::validate() const {
     QL_REQUIRE(notional != 0.0, "null notional set");
     QL_REQUIRE(spread != Null<Rate>(), "spread not set");
     QL_REQUIRE(!leg.empty(), "coupons not set");
-    QL_REQUIRE(upfrontPayment, "upfront payment not set");
+    // upfront and accrual rebate can be empty to indicate there is no flow
     QL_REQUIRE(claim, "claim not set");
     QL_REQUIRE(protectionStart != Null<Date>(), "protection start date not set");
+    QL_REQUIRE(maturity != Null<Date>(), "maturity date not set");
 }
 
 void CreditDefaultSwap::results::reset() {
@@ -274,5 +316,6 @@ void CreditDefaultSwap::results::reset() {
     defaultLegNPV = Null<Real>();
     upfrontBPS = Null<Real>();
     upfrontNPV = Null<Real>();
+    accrualRebateNPV = Null<Real>();
 }
 }

@@ -213,7 +213,7 @@ void TodaysMarketParameters::fromXML(XMLNode* node) {
             string id = XMLUtils::getAttribute(n, "id");
             if (id == "")
                 id = Market::defaultConfiguration;
-            addCDSVolatilities(id, XMLUtils::getChildrenAttributesAndValues(n, "CDSVolatilities", "name", false));
+            addCDSVolatilities(id, XMLUtils::getChildrenAttributesAndValues(n, "CDSVolatility", "name", false));
         } else if (XMLUtils::getNodeName(n) == "ZeroInflationIndexCurves") {
             string id = XMLUtils::getAttribute(n, "id");
             if (id == "")
@@ -639,6 +639,7 @@ vector<string> TodaysMarketParameters::curveSpecs(const string& configuration) c
     curveSpecs(swaptionVolatilities_, swaptionVolatilitiesId(configuration), specs);
     curveSpecs(capFloorVolatilities_, capFloorVolatilitiesId(configuration), specs);
     curveSpecs(defaultCurves_, defaultCurvesId(configuration), specs);
+    curveSpecs(cdsVolatilities_, cdsVolatilitiesId(configuration), specs);
     curveSpecs(zeroInflationIndexCurves_, zeroInflationIndexCurvesId(configuration), specs);
     curveSpecs(yoyInflationIndexCurves_, yoyInflationIndexCurvesId(configuration), specs);
     curveSpecs(inflationCapFloorPriceSurfaces_, inflationCapFloorPriceSurfacesId(configuration), specs);

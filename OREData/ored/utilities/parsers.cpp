@@ -22,6 +22,7 @@
 */
 
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/log.hpp>
 #include <boost/algorithm/string.hpp>
 #include <ql/utilities/dataparsers.hpp>
 #include <ql/errors.hpp>
@@ -403,6 +404,11 @@ DateGeneration::Rule parseDateGenerationRule(const string& s) {
     if (it != m.end()) {
         return it->second;
     } else {
+        // fall back for CDS2015
+        if(s == "CDS2015") {
+            ALOG("Date Generation Rule CDS2015 replaced with CDS because QuantLib Version is < 1.10");
+            return DateGeneration::CDS;
+        }
         QL_FAIL("Date Generation Rule " << s << " not recognized");
     }
 }
