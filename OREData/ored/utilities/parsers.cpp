@@ -30,6 +30,7 @@
 #include <qle/currencies/all.hpp>
 #include <ql/currencies/all.hpp>
 #include <ql/indexes/all.hpp>
+#include <ql/version.hpp>
 #include <map>
 
 using namespace QuantLib;
@@ -393,7 +394,7 @@ DateGeneration::Rule parseDateGenerationRule(const string& s) {
         {"TwentiethIMM", DateGeneration::TwentiethIMM},
         {"OldCDS", DateGeneration::OldCDS},
 #if QL_HEX_VERSION >= 0x011000f0
-        {"CDS2015", DateGeneration : CDS2015},
+        {"CDS2015", DateGeneration::CDS2015},
 #endif
         {"CDS", DateGeneration::CDS}
     };
