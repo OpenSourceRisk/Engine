@@ -214,7 +214,7 @@
       <AdditionalFields/>
     </Envelope>
     <CdoData>
-      <Qualifier>CDX</Qualifier>
+      <Qualifier>CDXIG</Qualifier>
       <ProtectionStart>20160203</ProtectionStart>
       <UpfrontDate/>
       <UpfrontFee>0.0324</UpfrontFee>

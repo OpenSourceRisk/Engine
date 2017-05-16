@@ -30,6 +30,7 @@ namespace data {
 
 BaseCorrelationCurve::BaseCorrelationCurve(Date asof, BaseCorrelationCurveSpec spec, const Loader& loader,
                                            const CurveConfigurations& curveConfigs) {
+    DLOG("base correlation curve called for " << spec.curveConfigID());
     try {
 
         const boost::shared_ptr<BaseCorrelationCurveConfig>& config =
@@ -40,8 +41,8 @@ BaseCorrelationCurve::BaseCorrelationCurve(Date asof, BaseCorrelationCurveSpec s
         vector<double> detachmentPoints = config->detachmentPoints();
         QL_REQUIRE(!terms.empty(), "At least one term > 0*Days expected");
         QL_REQUIRE(!detachmentPoints.empty(), "At least one detachment point expected");
-        vector<vector<Handle<Quote>>> data(terms.size(), vector<Handle<Quote>>(detachmentPoints.size()));
-        vector<vector<bool>> found(terms.size(), vector<bool>(detachmentPoints.size()));
+        vector<vector<Handle<Quote>>> data(detachmentPoints.size(), vector<Handle<Quote>>(terms.size()));
+        vector<vector<bool>> found(detachmentPoints.size(), vector<bool>(terms.size()));
         Size remainingQuotes = terms.size() * detachmentPoints.size();
         Size quotesRead = 0;
 
@@ -51,11 +52,11 @@ BaseCorrelationCurve::BaseCorrelationCurve(Date asof, BaseCorrelationCurveSpec s
                 boost::shared_ptr<BaseCorrelationQuote> q = boost::dynamic_pointer_cast<BaseCorrelationQuote>(md);
                 if (q != NULL && q->cdsIndexName() == spec.curveConfigID()) {
                     quotesRead++;
-                    Size i = std::find(terms.begin(), terms.end(), q->term()) - terms.begin();
-                    Size j = std::find_if(detachmentPoints.begin(), detachmentPoints.end(), [&q](const double& s) {
+                    Size i = std::find_if(detachmentPoints.begin(), detachmentPoints.end(), [&q](const double& s) {
                                  return close_enough(s, q->detachmentPoint());
                              }) - detachmentPoints.begin();
-                    if (i < terms.size() && j < detachmentPoints.size()) {
+                    Size j = std::find(terms.begin(), terms.end(), q->term()) - terms.begin();
+                    if (i < detachmentPoints.size() && j < terms.size()) {
                         data[i][j] = q->quote();
                         if (!found[i][j]) {
                             found[i][j] = true;
@@ -66,22 +67,29 @@ BaseCorrelationCurve::BaseCorrelationCurve(Date asof, BaseCorrelationCurveSpec s
             }
         }
 
-        LOG("BaseCorrelation curve: read " << quotesRead << " vols");
+        LOG("BaseCorrelation curve: read " << quotesRead << " quotes");
 
         // Check that we have all the data we need
         if (remainingQuotes != 0) {
             ostringstream m;
             m << "Not all quotes found for spec " << spec << endl;
             m << "Found base correlation data (*) and missing data (.):" << std::endl;
-            for (Size i = 0; i < terms.size(); ++i) {
-                for (Size j = 0; j < detachmentPoints.size(); ++j) {
+            for (Size i = 0; i < detachmentPoints.size(); ++i) {
+                for (Size j = 0; j < terms.size(); ++j) {
                     m << (found[i][j] ? "*" : ".");
                 }
-                if (i < terms.size() - 1)
+                if (i < detachmentPoints.size() - 1)
                     m << endl;
             }
             LOG(m.str());
             QL_FAIL("could not build base correlation curve");
+        }
+
+	// FIXME: The QuantLib interpolator expects at least two terms, so add a second column, copying the first 
+        if (terms.size() == 1) {
+	  terms.push_back(terms[0] + 1 * Days); // arbitrary, but larger than the first term
+            for (Size i = 0; i < detachmentPoints.size(); ++i)
+                data[i].push_back(data[i][0]);
         }
 
         baseCorrelation_ = boost::make_shared<BilinearBaseCorrelationTermStructure>(

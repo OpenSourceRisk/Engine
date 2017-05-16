@@ -207,7 +207,7 @@ public:
 
     //! \name Inspectors
     //@{
-    CurveType baseType() const { return CurveType::CDSVolatility; }
+    CurveType baseType() const { return CurveType::BaseCorrelation; }
     const string& curveConfigID() const { return curveConfigID_; }
     string subName() const { return curveConfigID(); }
     //@}
