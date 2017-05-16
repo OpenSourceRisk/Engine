@@ -99,7 +99,7 @@ boost::shared_ptr<CurveSpec> parseCurveSpec(const string& s) {
     }
 
     case CurveSpec::CurveType::BaseCorrelation: {
-        // BaseCorrelation/CDX/CurveConfigID
+        // BaseCorrelation/CurveConfigID
         QL_REQUIRE(tokens.size() == 2, "Unexpected number"
                                        " of tokens in cds vol spec "
                                            << s);
