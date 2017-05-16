@@ -960,9 +960,9 @@ class BaseCorrelationQuote : public MarketDatum {
 public:
     //! Constructor
     BaseCorrelationQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, const string& cdsIndexName,
-                         Real detachmentPoint, Period term = Period())
+                         Period term, Real detachmentPoint)
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::CDS_INDEX), cdsIndexName_(cdsIndexName),
-          detachmentPoint_(detachmentPoint), term_(term) {}
+          term_(term), detachmentPoint_(detachmentPoint) {}
 
     //! \name Inspectors
     //@{
@@ -972,8 +972,8 @@ public:
     //@}
 private:
     string cdsIndexName_;
-    Real detachmentPoint_;
     Period term_;
+    Real detachmentPoint_;
 };
 
 //! CDS Index Option data class
