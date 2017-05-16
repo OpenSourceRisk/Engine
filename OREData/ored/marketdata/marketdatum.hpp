@@ -72,6 +72,7 @@ public:
         BASIS_SWAP,
         CC_BASIS_SWAP,
         CDS,
+        CDS_INDEX,
         FX_SPOT,
         FX_FWD,
         HAZARD_RATE,
@@ -103,6 +104,7 @@ public:
         RATE_LNVOL,
         RATE_NVOL,
         RATE_SLNVOL,
+        BASE_CORRELATION,
         SHIFT
     };
 
@@ -692,8 +694,8 @@ public:
                   Period expiry, string strike)
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::FX_OPTION), unitCcy_(unitCcy), ccy_(ccy),
           expiry_(expiry), strike_(strike) {
-        QL_REQUIRE(strike == "ATM" || strike == "25BF" || strike == "25RR",
-                   "Invalid FXOptionQuote strike (" << strike << ")");
+        QL_REQUIRE(strike == "ATM" || strike == "25BF" || strike == "25RR", "Invalid FXOptionQuote strike (" << strike
+                                                                                                             << ")");
     }
 
     //! \name Inspectors
@@ -946,6 +948,32 @@ public:
     //@}
 private:
     string securityID_;
+};
+
+//! Base correlation data class
+/*!
+This class holds single market points of type
+- CDS_INDEX BASE_CORRELATION
+\ingroup marketdata
+*/
+class BaseCorrelationQuote : public MarketDatum {
+public:
+    //! Constructor
+    BaseCorrelationQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, const string& cdsIndexName,
+                         Real detachmentPoint, Period term = Period())
+        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::CDS_INDEX), cdsIndexName_(cdsIndexName),
+          detachmentPoint_(detachmentPoint), term_(term) {}
+
+    //! \name Inspectors
+    //@{
+    const string& cdsIndexName() const { return cdsIndexName_; }
+    Real detachmentPoint() const { return detachmentPoint_; }
+    Period term() const { return term_; }
+    //@}
+private:
+    string cdsIndexName_;
+    Real detachmentPoint_;
+    Period term_;
 };
 
 //! CDS Index Option data class
