@@ -17,8 +17,8 @@
 */
 
 #include <ql/cashflows/iborcoupon.hpp>
-#include <ql/pricingengines/swap/discountingswapengine.hpp>
 #include <ql/math/solvers1d/brent.hpp>
+#include <ql/pricingengines/swap/discountingswapengine.hpp>
 
 #include <qle/instruments/tenorbasisswap.hpp>
 
@@ -59,7 +59,7 @@ private:
     Size shortNo_;
     Leg shortLeg_;
 };
-}
+} // namespace
 
 TenorBasisSwap::TenorBasisSwap(const Date& effectiveDate, Real nominal, const Period& swapTenor, bool payLongIndex,
                                const boost::shared_ptr<IborIndex>& longIndex, Spread longSpread,
@@ -285,4 +285,4 @@ void TenorBasisSwap::results::reset() {
     fairLongSpread = Null<Spread>();
     fairShortSpread = Null<Spread>();
 }
-}
+} // namespace QuantExt

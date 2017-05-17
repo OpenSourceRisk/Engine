@@ -16,9 +16,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/algorithm/string/split.hpp>
 #include <orea/scenario/scenario.hpp>
 #include <ored/utilities/parsers.hpp>
-#include <boost/algorithm/string/split.hpp>
 
 namespace ore {
 namespace analytics {
@@ -51,5 +51,5 @@ std::ostream& operator<<(std::ostream& out, const RiskFactorKey::KeyType& type) 
 std::ostream& operator<<(std::ostream& out, const RiskFactorKey& key) {
     return out << key.keytype << "/" << key.name << "/" << key.index;
 }
-}
-}
+} // namespace analytics
+} // namespace ore

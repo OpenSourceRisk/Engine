@@ -16,21 +16,21 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <test/bond.hpp>
-#include <ored/marketdata/marketimpl.hpp>
-#include <ored/portfolio/envelope.hpp>
-#include <ored/portfolio/bond.hpp>
-#include <ored/portfolio/legdata.hpp>
-#include <ored/portfolio/builders/bond.hpp>
-#include <ored/portfolio/schedule.hpp>
-#include <ored/portfolio/enginedata.hpp>
-#include <ql/time/daycounters/actualactual.hpp>
-#include <ql/time/calendars/target.hpp>
-#include <ql/termstructures/yield/flatforward.hpp>
-#include <ql/termstructures/volatility/swaption/swaptionconstantvol.hpp>
 #include <boost/make_shared.hpp>
+#include <ored/marketdata/marketimpl.hpp>
+#include <ored/portfolio/bond.hpp>
+#include <ored/portfolio/builders/bond.hpp>
+#include <ored/portfolio/enginedata.hpp>
+#include <ored/portfolio/envelope.hpp>
+#include <ored/portfolio/legdata.hpp>
+#include <ored/portfolio/schedule.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ql/termstructures/credit/flathazardrate.hpp>
+#include <ql/termstructures/volatility/swaption/swaptionconstantvol.hpp>
+#include <ql/termstructures/yield/flatforward.hpp>
+#include <ql/time/calendars/target.hpp>
+#include <ql/time/daycounters/actualactual.hpp>
+#include <test/bond.hpp>
 
 #include <iostream>
 
@@ -156,7 +156,7 @@ struct CommonVars {
         spread.push_back(0.0);
     }
 };
-}
+} // namespace
 
 namespace testsuite {
 
@@ -262,4 +262,4 @@ test_suite* BondTest::suite() {
     suite->add(BOOST_TEST_CASE(&BondTest::testBondCompareDefault));
     return suite;
 }
-}
+} // namespace testsuite

@@ -16,12 +16,12 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <test/parser.hpp>
+#include <iostream>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/strike.hpp>
 #include <ql/math/comparison.hpp>
 #include <ql/time/daycounters/all.hpp>
-#include <iostream>
+#include <test/parser.hpp>
 
 using namespace QuantLib;
 using namespace boost::unit_test_framework;
@@ -176,7 +176,7 @@ void checkStrikeParser(const std::string& s, const ore::data::Strike::Type expec
     }
     return;
 }
-}
+} // namespace
 
 void ParseTest::testStrikeParsing() {
     BOOST_TEST_MESSAGE("Testing Strike parsing...");
@@ -223,4 +223,4 @@ test_suite* ParseTest::suite() {
     suite->add(BOOST_TEST_CASE(&ParseTest::testStrikeParsing));
     return suite;
 }
-}
+} // namespace testsuite

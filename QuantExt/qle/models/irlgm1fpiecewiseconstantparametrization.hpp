@@ -31,7 +31,7 @@ namespace QuantExt {
 
 //! LGM 1F Piecewise Constant Parametrization
 /*! \ingroup models
-*/
+ */
 template <class TS>
 class Lgm1fPiecewiseConstantParametrization : public Lgm1fParametrization<TS>,
                                               private PiecewiseConstantHelper1,

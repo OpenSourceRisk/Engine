@@ -23,17 +23,17 @@
 
 #pragma once
 
-#include <orea/cube/npvcube.hpp>
 #include <boost/shared_ptr.hpp>
-#include <string>
 #include <map>
+#include <orea/cube/npvcube.hpp>
+#include <string>
 
 namespace ore {
 namespace analytics {
 
 //! Write an NPV cube to a human readable text file
 /*! \ingroup cube
-*/
+ */
 class CubeWriter {
 public:
     //! ctor
@@ -49,5 +49,5 @@ public:
 private:
     std::string filename_;
 };
-}
-}
+} // namespace analytics
+} // namespace ore

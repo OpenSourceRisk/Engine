@@ -25,17 +25,17 @@
 
 #include <vector>
 
-#include <ql/types.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
+#include <ql/types.hpp>
 
 #include <qle/models/crossassetmodel.hpp>
 
-#include <ored/marketdata/market.hpp>
 #include <ored/configuration/conventions.hpp>
-#include <ored/utilities/xmlutils.hpp>
-#include <ored/model/lgmdata.hpp>
-#include <ored/model/fxbsdata.hpp>
+#include <ored/marketdata/market.hpp>
 #include <ored/model/eqbsdata.hpp>
+#include <ored/model/fxbsdata.hpp>
+#include <ored/model/lgmdata.hpp>
+#include <ored/utilities/xmlutils.hpp>
 
 using namespace QuantLib;
 using std::string;
@@ -131,7 +131,7 @@ public:
 
     //! \name Serialisation
     //@{
-    //!Populate members from XML
+    //! Populate members from XML
     virtual void fromXML(XMLNode* node);
     //! Write class mambers to XML
     virtual XMLNode* toXML(XMLDocument& doc);
@@ -160,5 +160,5 @@ private:
     map<pair<string, string>, Real> correlations_;
     Real bootstrapTolerance_;
 };
-}
-}
+} // namespace data
+} // namespace ore

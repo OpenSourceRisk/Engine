@@ -560,4 +560,4 @@ inline void TodaysMarketParameters::addSecurityRecoveryRates(const string& id, c
 }
 
 } // namespace data
-} // namesapce ore
+} // namespace ore

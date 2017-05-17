@@ -16,10 +16,10 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ored/portfolio/enginefactory.hpp>
-#include <ored/portfolio/builders/all.hpp>
-#include <ored/utilities/log.hpp>
 #include <boost/make_shared.hpp>
+#include <ored/portfolio/builders/all.hpp>
+#include <ored/portfolio/enginefactory.hpp>
+#include <ored/utilities/log.hpp>
 
 namespace ore {
 namespace data {

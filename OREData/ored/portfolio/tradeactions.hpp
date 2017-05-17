@@ -23,8 +23,8 @@
 
 #pragma once
 
-#include <ored/utilities/xmlutils.hpp>
 #include <ored/portfolio/schedule.hpp>
+#include <ored/utilities/xmlutils.hpp>
 
 #include <vector>
 
@@ -91,5 +91,5 @@ public:
 private:
     vector<TradeAction> actions_;
 };
-}
-}
+} // namespace data
+} // namespace ore

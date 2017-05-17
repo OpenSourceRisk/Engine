@@ -52,4 +52,4 @@ Volatility SpreadedSwaptionVolatility::volatilityImpl(Time t, Time l, Rate strik
     Volatility spreadedVol = QuantLib::SpreadedSwaptionVolatility::volatilityImpl(t, l, strike);
     return std::max(spreadedVol, 0.0);
 }
-}
+} // namespace QuantExt

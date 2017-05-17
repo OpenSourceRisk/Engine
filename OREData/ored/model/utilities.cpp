@@ -163,5 +163,5 @@ Real logCalibrationErrors(const std::vector<boost::shared_ptr<CalibrationHelper>
     LOG("rmse = " << rmse);
     return rmse;
 }
-}
-}
+} // namespace data
+} // namespace ore

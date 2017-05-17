@@ -23,11 +23,11 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #ifndef quantext_stripped_optionlet_adapter2_h
 #define quantext_stripped_optionlet_adapter2_h
 
-#include <ql/termstructures/volatility/optionlet/strippedoptionletbase.hpp>
-#include <ql/termstructures/volatility/optionlet/optionletstripper.hpp>
-#include <ql/termstructures/volatility/optionlet/optionletvolatilitystructure.hpp>
 #include <ql/math/interpolation.hpp>
 #include <ql/math/interpolations/sabrinterpolation.hpp>
+#include <ql/termstructures/volatility/optionlet/optionletstripper.hpp>
+#include <ql/termstructures/volatility/optionlet/optionletvolatilitystructure.hpp>
+#include <ql/termstructures/volatility/optionlet/strippedoptionletbase.hpp>
 
 namespace QuantExt {
 
@@ -78,6 +78,6 @@ inline void StrippedOptionletAdapter2::update() {
 inline boost::shared_ptr<QuantLib::OptionletStripper> StrippedOptionletAdapter2::optionletStripper() const {
     return boost::dynamic_pointer_cast<QuantLib::OptionletStripper>(optionletStripper_);
 }
-}
+} // namespace QuantExt
 
 #endif

@@ -24,8 +24,8 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #ifndef quantext_twdtaibor_hpp
 #define quantext_twdtaibor_hpp
 
-#include <ql/indexes/iborindex.hpp>
 #include <ql/currencies/asia.hpp>
+#include <ql/indexes/iborindex.hpp>
 #include <ql/time/calendars/taiwan.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 
@@ -45,6 +45,6 @@ public:
     TWDTaibor(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
         : IborIndex("TWD-TAIBOR", tenor, 2, TWDCurrency(), Taiwan(), ModifiedFollowing, false, Actual365Fixed(), h) {}
 };
-}
+} // namespace QuantExt
 
 #endif

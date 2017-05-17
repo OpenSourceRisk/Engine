@@ -232,8 +232,8 @@ void OREApp::buildMarket() {
 
     if (params_->has("setup", "marketDataFile") && params_->get("setup", "marketDataFile") != "") {
         /*******************************
-        * Market and fixing data loader
-        */
+         * Market and fixing data loader
+         */
         out_ << endl << setw(tab_) << left << "Market data loader... " << flush;
         string inputPath = params_->get("setup", "inputPath");
         string marketFile = inputPath + "/" + params_->get("setup", "marketDataFile");
@@ -760,5 +760,5 @@ void OREApp::writeDIMReport() {
         reportVec.push_back(boost::make_shared<ore::data::CSVFileReport>(dimFiles2[i]));
     postProcess_->exportDimRegression(nettingSet, dimOutputGridPoints, reportVec);
 }
-}
-}
+} // namespace analytics
+} // namespace ore

@@ -71,5 +71,5 @@ XMLNode* NettingSetManager::toXML(XMLDocument& doc) {
         XMLUtils::appendNode(node, it->second->toXML(doc));
     return node;
 }
-}
-}
+} // namespace data
+} // namespace ore

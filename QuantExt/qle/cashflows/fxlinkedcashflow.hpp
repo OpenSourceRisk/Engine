@@ -27,9 +27,9 @@
 
 #include <ql/cashflow.hpp>
 #include <ql/handle.hpp>
+#include <ql/patterns/visitor.hpp>
 #include <ql/quote.hpp>
 #include <ql/time/date.hpp>
-#include <ql/patterns/visitor.hpp>
 #include <qle/indexes/fxindex.hpp>
 
 using namespace QuantLib;
@@ -97,6 +97,6 @@ inline void FXLinkedCashFlow::accept(AcyclicVisitor& v) {
     else
         CashFlow::accept(v);
 }
-}
+} // namespace QuantExt
 
 #endif

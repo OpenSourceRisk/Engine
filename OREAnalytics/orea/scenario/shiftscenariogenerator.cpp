@@ -373,8 +373,8 @@ void ShiftScenarioGenerator::applyShift(Size j, Real shiftSize, bool up, ShiftTy
                "shifted tenor vector " << o_tenors.str() << " cannot be more granular than the base curve tenor vector "
                                        << o_times.str());
     auto it = std::find(times.begin(), times.end(), t1);
-    QL_REQUIRE(it != times.end(), "shifted tenor node (" << t1 << ") not found in base curve tenor vector "
-                                                         << o_times.str());
+    QL_REQUIRE(it != times.end(),
+               "shifted tenor node (" << t1 << ") not found in base curve tenor vector " << o_times.str());
 
     if (initialise) {
         for (Size i = 0; i < values.size(); ++i)
@@ -524,5 +524,5 @@ void ShiftScenarioGenerator::applyShift(Size i, Size j, Real shiftSize, bool up,
         }
     }
 }
-}
-}
+} // namespace analytics
+} // namespace ore

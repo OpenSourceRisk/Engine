@@ -66,13 +66,36 @@ public:
         asof_ = Date(18, July, 2016);
 
         // build vectors with dates and discount factors for GBP
-        vector<Date> datesGBP = {
-            asof_, asof_ + 6 * Months, asof_ + 7 * Months, asof_ + 8 * Months, asof_ + 9 * Months, asof_ + 10 * Months,
-            asof_ + 11 * Months, asof_ + 12 * Months, asof_ + 13 * Months, asof_ + 14 * Months, asof_ + 15 * Months,
-            asof_ + 16 * Months, asof_ + 17 * Months, asof_ + 18 * Months, asof_ + 19 * Months, asof_ + 20 * Months,
-            asof_ + 21 * Months, asof_ + 22 * Months, asof_ + 23 * Months, asof_ + 2 * Years, asof_ + 3 * Years,
-            asof_ + 4 * Years, asof_ + 5 * Years, asof_ + 6 * Years, asof_ + 7 * Years, asof_ + 8 * Years,
-            asof_ + 9 * Years, asof_ + 10 * Years, asof_ + 15 * Years, asof_ + 20 * Years};
+        vector<Date> datesGBP = {asof_,
+                                 asof_ + 6 * Months,
+                                 asof_ + 7 * Months,
+                                 asof_ + 8 * Months,
+                                 asof_ + 9 * Months,
+                                 asof_ + 10 * Months,
+                                 asof_ + 11 * Months,
+                                 asof_ + 12 * Months,
+                                 asof_ + 13 * Months,
+                                 asof_ + 14 * Months,
+                                 asof_ + 15 * Months,
+                                 asof_ + 16 * Months,
+                                 asof_ + 17 * Months,
+                                 asof_ + 18 * Months,
+                                 asof_ + 19 * Months,
+                                 asof_ + 20 * Months,
+                                 asof_ + 21 * Months,
+                                 asof_ + 22 * Months,
+                                 asof_ + 23 * Months,
+                                 asof_ + 2 * Years,
+                                 asof_ + 3 * Years,
+                                 asof_ + 4 * Years,
+                                 asof_ + 5 * Years,
+                                 asof_ + 6 * Years,
+                                 asof_ + 7 * Years,
+                                 asof_ + 8 * Years,
+                                 asof_ + 9 * Years,
+                                 asof_ + 10 * Years,
+                                 asof_ + 15 * Years,
+                                 asof_ + 20 * Years};
 
         vector<DiscountFactor> dfsGBP = {1,      0.9955, 0.9953, 0.9947, 0.9941, 0.9933, 0.9924, 0.9914,
                                          0.9908, 0.9901, 0.9895, 0.9888, 0.9881, 0.9874, 0.9868, 0.9862,
@@ -80,9 +103,19 @@ public:
                                          0.9192, 0.9011, 0.8822, 0.8637, 0.7792, 0.7079};
 
         // build vectors with dates and inflation zc swap rates for UKRPI
-        vector<Date> datesZCII = {asof_, asof_ + 1 * Years, asof_ + 2 * Years, asof_ + 3 * Years, asof_ + 4 * Years,
-                                  asof_ + 5 * Years, asof_ + 6 * Years, asof_ + 7 * Years, asof_ + 8 * Years,
-                                  asof_ + 9 * Years, asof_ + 10 * Years, asof_ + 12 * Years, asof_ + 15 * Years,
+        vector<Date> datesZCII = {asof_,
+                                  asof_ + 1 * Years,
+                                  asof_ + 2 * Years,
+                                  asof_ + 3 * Years,
+                                  asof_ + 4 * Years,
+                                  asof_ + 5 * Years,
+                                  asof_ + 6 * Years,
+                                  asof_ + 7 * Years,
+                                  asof_ + 8 * Years,
+                                  asof_ + 9 * Years,
+                                  asof_ + 10 * Years,
+                                  asof_ + 12 * Years,
+                                  asof_ + 15 * Years,
                                   asof_ + 20 * Years}; //, asof_ + 25 * Years, asof_ + 30 * Years, asof_ + 40 * Years};
 
         vector<Rate> ratesZCII = {2.825, 2.9425, 2.975,  2.983, 3.0,  3.01, 3.008,
@@ -149,7 +182,7 @@ private:
         return Handle<YieldTermStructure>(idc);
     }
 };
-}
+} // namespace
 
 namespace testsuite {
 
@@ -289,4 +322,4 @@ test_suite* CPISwapTest::suite() {
     suite->add(BOOST_TEST_CASE(&CPISwapTest::testCPISwapPrice));
     return suite;
 }
-}
+} // namespace testsuite

@@ -219,5 +219,5 @@ Real eq_expectation_2(const CrossAssetModel* x, const Size k, const Time t0, con
     return res;
 }
 
-} // namesapce crossassetanalytics
+} // namespace CrossAssetAnalytics
 } // namespace QuantExt

@@ -17,14 +17,14 @@
 */
 
 #include "cashflow.hpp"
-#include <ql/quotes/simplequote.hpp>
-#include <ql/indexes/indexmanager.hpp>
-#include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <boost/make_shared.hpp>
-#include <ql/time/daycounters/actualactual.hpp>
-#include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/currencies/all.hpp>
+#include <ql/indexes/indexmanager.hpp>
+#include <ql/quotes/simplequote.hpp>
+#include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/target.hpp>
+#include <ql/time/daycounters/actualactual.hpp>
+#include <qle/cashflows/fxlinkedcashflow.hpp>
 using namespace QuantLib;
 using namespace QuantExt;
 using namespace boost::unit_test_framework;
@@ -92,4 +92,4 @@ test_suite* CashFlowTest::suite() {
     suite->add(BOOST_TEST_CASE(&CashFlowTest::testFXLinkedCashFlow));
     return suite;
 }
-}
+} // namespace testsuite

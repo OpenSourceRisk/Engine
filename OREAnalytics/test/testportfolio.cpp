@@ -16,19 +16,19 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <test/testportfolio.hpp>
 #include <ored/portfolio/bond.hpp>
-#include <ored/portfolio/swap.hpp>
-#include <ored/portfolio/swaption.hpp>
-#include <ored/portfolio/fxoption.hpp>
-#include <ored/portfolio/capfloor.hpp>
 #include <ored/portfolio/builders/bond.hpp>
+#include <ored/portfolio/builders/capfloor.hpp>
+#include <ored/portfolio/builders/fxoption.hpp>
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/builders/swaption.hpp>
-#include <ored/portfolio/builders/fxoption.hpp>
-#include <ored/portfolio/builders/capfloor.hpp>
-#include <ql/time/calendars/all.hpp>
+#include <ored/portfolio/capfloor.hpp>
+#include <ored/portfolio/fxoption.hpp>
+#include <ored/portfolio/swap.hpp>
+#include <ored/portfolio/swaption.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ql/time/calendars/all.hpp>
+#include <test/testportfolio.hpp>
 
 namespace testsuite {
 
@@ -201,4 +201,4 @@ boost::shared_ptr<Trade> buildZeroBond(string id, string ccy, Real notional, Siz
 
     return trade;
 }
-}
+} // namespace testsuite

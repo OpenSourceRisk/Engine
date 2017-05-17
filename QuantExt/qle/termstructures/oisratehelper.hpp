@@ -24,8 +24,8 @@
 #ifndef quantext_oisratehelper_hpp
 #define quantext_oisratehelper_hpp
 
-#include <ql/termstructures/yield/ratehelpers.hpp>
 #include <ql/instruments/overnightindexedswap.hpp>
+#include <ql/termstructures/yield/ratehelpers.hpp>
 
 using namespace QuantLib;
 
@@ -33,7 +33,7 @@ namespace QuantExt {
 
 //! Rate helper for bootstrapping using Overnight Indexed Swaps
 /*! \ingroup termstructures
-*/
+ */
 class OISRateHelper : public RelativeDateRateHelper {
 public:
     OISRateHelper(Natural settlementDays, const Period& swapTenor, const Handle<Quote>& fixedRate,
@@ -78,7 +78,7 @@ protected:
 
 //! Rate helper for bootstrapping using Overnight Indexed Swaps
 /*! \ingroup termstructures
-*/
+ */
 class DatedOISRateHelper : public RateHelper {
 public:
     DatedOISRateHelper(const Date& startDate, const Date& endDate, const Handle<Quote>& fixedRate,
@@ -111,6 +111,6 @@ protected:
     Handle<YieldTermStructure> discountHandle_;
     RelinkableHandle<YieldTermStructure> discountRelinkableHandle_;
 };
-}
+} // namespace QuantExt
 
 #endif

@@ -16,17 +16,17 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <orea/engine/valuationengine.hpp>
 #include <orea/engine/observationmode.hpp>
+#include <orea/engine/valuationengine.hpp>
 #include <orea/simulation/simmarket.hpp>
-#include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/optionwrapper.hpp>
+#include <ored/portfolio/portfolio.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/progressbar.hpp>
 
-#include <ql/errors.hpp>
 #include <boost/timer.hpp>
+#include <ql/errors.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -152,5 +152,5 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
                                            << "update " << updateTime << " sec "
                                            << "fixing " << fixingTime);
 }
-}
-}
+} // namespace analytics
+} // namespace ore

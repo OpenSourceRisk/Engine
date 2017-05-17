@@ -18,8 +18,8 @@
 
 #include <ql/cashflows/fixedratecoupon.hpp>
 
-#include <qle/instruments/averageois.hpp>
 #include <qle/cashflows/couponpricer.hpp>
+#include <qle/instruments/averageois.hpp>
 
 namespace QuantExt {
 

@@ -36,4 +36,4 @@ void LogQuote::update() {
     QL_REQUIRE(v > 0.0, "Invalid quote, cannot take log of non-postive number");
     logValue_ = std::log(v);
 }
-}
+} // namespace QuantExt
