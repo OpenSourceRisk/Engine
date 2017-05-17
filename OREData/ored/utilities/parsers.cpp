@@ -210,8 +210,10 @@ Calendar parseCalendar(const string& s) {
         vector<string> calendarNames;
         split(calendarNames, s, boost::is_any_of(",()")); // , is delimiter, the brackets may arise if joint calendar
         // now remove any leading strings indicating a joint calendar
-        calendarNames.erase(std::remove(calendarNames.begin(), calendarNames.end(), "JoinHolidays"), calendarNames.end());
-        calendarNames.erase(std::remove(calendarNames.begin(), calendarNames.end(), "JoinBusinessDays"), calendarNames.end());
+        calendarNames.erase(std::remove(calendarNames.begin(), calendarNames.end(), "JoinHolidays"),
+                            calendarNames.end());
+        calendarNames.erase(std::remove(calendarNames.begin(), calendarNames.end(), "JoinBusinessDays"),
+                            calendarNames.end());
         calendarNames.erase(std::remove(calendarNames.begin(), calendarNames.end(), ""), calendarNames.end());
         QL_REQUIRE(calendarNames.size() > 1 && calendarNames.size() <= 4, "Cannot convert " << s << " to Calendar");
         // Populate a vector of calendars.
