@@ -49,7 +49,7 @@ public:
     ScenarioSimMarketParameters()
         : baseCcy_(""), interpolation_(""), extrapolate_(false), swapVolSimulate_(false), swapVolDecayMode_(""),
           capFloorVolSimulate_(false), capFloorVolDecayMode_(""), fxVolSimulate_(false), fxVolDecayMode_(""),
-          eqVolSimulate_(false), eqVolDecayMode_("") {}
+          eqVolSimulate_(false), eqVolDecayMode_(""), survivalProbabilitySimulate_(false), recoveryRateSimulate_(false) {}
 
     //! \name Inspectors
     //@{
@@ -125,6 +125,8 @@ public:
     vector<Real>& capFloorVolStrikes() { return capFloorVolStrikes_; }
     string& capFloorVolDecayMode() { return capFloorVolDecayMode_; }
 
+    bool& simulateSurvivalProbabilities() { return survivalProbabilitySimulate_; }
+    bool& simulateRecoveryRates() { return recoveryRateSimulate_; }
     vector<string>& defaultNames() { return defaultNames_; }
     vector<Period>& defaultTenors() { return defaultTenors_; }
 
@@ -184,6 +186,8 @@ private:
     vector<Real> capFloorVolStrikes_;
     string capFloorVolDecayMode_;
 
+    bool survivalProbabilitySimulate_;
+    bool recoveryRateSimulate_;
     vector<string> defaultNames_;
     vector<Period> defaultTenors_;
 
