@@ -23,11 +23,11 @@
 
 #pragma once
 
-#include <string>
 #include <boost/variant.hpp>
-#include <ql/types.hpp>
 #include <ql/time/date.hpp>
 #include <ql/time/period.hpp>
+#include <ql/types.hpp>
+#include <string>
 
 using std::string;
 using QuantLib::Size;

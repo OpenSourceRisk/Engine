@@ -24,9 +24,9 @@
 #pragma once
 
 #include <orea/aggregation/collateralaccount.hpp>
-#include <ql/time/date.hpp>
 #include <ql/handle.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
+#include <ql/time/date.hpp>
 
 using namespace QuantLib;
 

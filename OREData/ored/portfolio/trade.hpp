@@ -23,14 +23,14 @@
 
 #pragma once
 
-#include <ored/utilities/parsers.hpp>
-#include <ored/portfolio/envelope.hpp>
 #include <ored/portfolio/enginefactory.hpp>
+#include <ored/portfolio/envelope.hpp>
 #include <ored/portfolio/instrumentwrapper.hpp>
 #include <ored/portfolio/tradeactions.hpp>
-#include <ql/time/date.hpp>
-#include <ql/instrument.hpp>
+#include <ored/utilities/parsers.hpp>
 #include <ql/cashflow.hpp>
+#include <ql/instrument.hpp>
+#include <ql/time/date.hpp>
 
 using std::string;
 using ore::data::XMLSerializable;

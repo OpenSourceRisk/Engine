@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ql/time/calendars/weekendsonly.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
+#include <ql/time/calendars/weekendsonly.hpp>
 
 #include <qle/instruments/makeaverageois.hpp>
 

@@ -16,12 +16,12 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <algorithm>
 #include <ored/marketdata/fxvolcurve.hpp>
 #include <ored/utilities/log.hpp>
-#include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
+#include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
-#include <algorithm>
 
 using namespace QuantLib;
 using namespace std;

@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/models/crossassetmodel.hpp>
 #include <qle/models/crossassetanalytics.hpp>
+#include <qle/models/crossassetmodel.hpp>
 
 #include <ql/math/matrixutilities/pseudosqrt.hpp>
 #include <ql/processes/eulerdiscretization.hpp>

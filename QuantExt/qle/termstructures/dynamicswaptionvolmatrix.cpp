@@ -79,9 +79,9 @@ Date DynamicSwaptionVolatilityMatrix::maxDate() const {
         return source_->maxDate();
     }
     if (decayMode_ == ConstantVariance) {
-        return Date(std::min(Date::maxDate().serialNumber(), referenceDate().serialNumber() -
-                                                                 originalReferenceDate_.serialNumber() +
-                                                                 source_->maxDate().serialNumber()));
+        return Date(std::min(Date::maxDate().serialNumber(),
+                             referenceDate().serialNumber() - originalReferenceDate_.serialNumber() +
+                                 source_->maxDate().serialNumber()));
     }
     QL_FAIL("unexpected decay mode (" << decayMode_ << ")");
 }

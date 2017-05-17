@@ -19,8 +19,8 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/timer.hpp>
 #include <orea/cube/inmemorycube.hpp>
-#include <orea/engine/valuationengine.hpp>
 #include <orea/engine/stresstest.hpp>
+#include <orea/engine/valuationengine.hpp>
 #include <orea/scenario/clonescenariofactory.hpp>
 #include <ored/utilities/log.hpp>
 #include <ql/errors.hpp>
@@ -32,11 +32,11 @@
 #include <ql/pricingengines/capfloor/blackcapfloorengine.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
 #include <ql/termstructures/yield/oisratehelper.hpp>
-#include <qle/instruments/deposit.hpp>
-#include <qle/pricingengines/depositengine.hpp>
 #include <qle/instruments/crossccybasisswap.hpp>
-#include <qle/pricingengines/crossccyswapengine.hpp>
+#include <qle/instruments/deposit.hpp>
 #include <qle/instruments/fxforward.hpp>
+#include <qle/pricingengines/crossccyswapengine.hpp>
+#include <qle/pricingengines/depositengine.hpp>
 #include <qle/pricingengines/discountingfxforwardengine.hpp>
 
 #include <iomanip>

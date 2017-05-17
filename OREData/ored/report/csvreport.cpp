@@ -90,9 +90,9 @@ Report& CSVFileReport::next() {
 
 Report& CSVFileReport::add(const ReportType& rt) {
     QL_REQUIRE(i_ < columnTypes_.size(), "No column to add [" << rt << "] to.");
-    QL_REQUIRE(rt.which() == columnTypes_[i_].which(), "Cannot add value " << rt << " of type " << rt.which()
-                                                                           << " to column " << i_ << " of type "
-                                                                           << columnTypes_[i_].which());
+    QL_REQUIRE(rt.which() == columnTypes_[i_].which(),
+               "Cannot add value " << rt << " of type " << rt.which() << " to column " << i_ << " of type "
+                                   << columnTypes_[i_].which());
 
     if (i_ != 0)
         fprintf(fp_, "%c", sep_);

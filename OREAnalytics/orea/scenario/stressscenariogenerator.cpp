@@ -346,9 +346,9 @@ void StressScenarioGenerator::addSwaptionVolShifts(StressTestScenarioData::Stres
                 if (shifts.size() == 0)
                     shift = data.parallelShiftSize;
                 else {
-                    QL_REQUIRE(shifts.find(key) != shifts.end(), "swaption vol shift not found for expiry "
-                                                                     << data.shiftExpiries[j] << " and term "
-                                                                     << data.shiftTerms[k]);
+                    QL_REQUIRE(shifts.find(key) != shifts.end(),
+                               "swaption vol shift not found for expiry " << data.shiftExpiries[j] << " and term "
+                                                                          << data.shiftTerms[k]);
                     shift = shifts[key];
                 }
                 applyShift(j, k, shift, true, shiftType, shiftExpiryTimes, shiftTermTimes, volExpiryTimes, volTermTimes,

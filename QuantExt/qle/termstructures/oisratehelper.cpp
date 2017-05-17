@@ -16,9 +16,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <ql/cashflows/cashflows.hpp>
 #include <ql/instruments/makeois.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
-#include <ql/cashflows/cashflows.hpp>
 
 #include <qle/termstructures/oisratehelper.hpp>
 

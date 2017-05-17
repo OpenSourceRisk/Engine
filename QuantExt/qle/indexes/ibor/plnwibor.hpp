@@ -24,8 +24,8 @@
 #ifndef quantext_plnwibor_hpp
 #define quantext_plnwibor_hpp
 
-#include <ql/indexes/iborindex.hpp>
 #include <ql/currencies/europe.hpp>
+#include <ql/indexes/iborindex.hpp>
 #include <ql/time/calendars/poland.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 

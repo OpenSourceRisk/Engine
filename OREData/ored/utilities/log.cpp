@@ -21,10 +21,10 @@
     \ingroup
 */
 
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include <iomanip>
 #include <ored/utilities/log.hpp>
 #include <ql/errors.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
 
 using namespace boost::posix_time;
 using namespace std;
@@ -76,8 +76,8 @@ Log::Log() : loggers_(), enabled_(false), mask_(255), ls_() {
 }
 
 void Log::registerLogger(const boost::shared_ptr<Logger>& logger) {
-    QL_REQUIRE(loggers_.find(logger->name()) == loggers_.end(), "Logger with name " << logger->name()
-                                                                                    << " already registered");
+    QL_REQUIRE(loggers_.find(logger->name()) == loggers_.end(),
+               "Logger with name " << logger->name() << " already registered");
     loggers_[logger->name()] = logger;
 }
 

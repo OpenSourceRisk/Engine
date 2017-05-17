@@ -18,8 +18,8 @@
 
 #pragma once
 
-#include <ored/portfolio/trade.hpp>
 #include <boost/make_shared.hpp>
+#include <ored/portfolio/trade.hpp>
 
 using namespace QuantLib;
 using namespace ore::data;

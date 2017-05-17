@@ -30,8 +30,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/indexes/fxindex.hpp>
 #include <ql/currencies/exchangeratemanager.hpp>
+#include <qle/indexes/fxindex.hpp>
 namespace QuantExt {
 
 FxIndex::FxIndex(const std::string& familyName, Natural fixingDays, const Currency& source, const Currency& target,
@@ -119,10 +119,10 @@ Real FxIndex::forecastFixing(const Date& fixingDate) const {
     Date fixingValueDate = valueDate(fixingDate);
 
     // we can assume fixingValueDate >= valueDate
-    QL_REQUIRE(fixingValueDate >= refValueDate, "value date for requested fixing as of "
-                                                    << fixingDate << " (" << fixingValueDate
-                                                    << ") must be greater or equal to today's fixing value date ("
-                                                    << refValueDate << ")");
+    QL_REQUIRE(fixingValueDate >= refValueDate,
+               "value date for requested fixing as of " << fixingDate << " (" << fixingValueDate
+                                                        << ") must be greater or equal to today's fixing value date ("
+                                                        << refValueDate << ")");
 
     // compute the forecast applying the usual no arbitrage principle
     Real forward = rate * sourceYts_->discount(fixingValueDate) * targetYts_->discount(refValueDate) /

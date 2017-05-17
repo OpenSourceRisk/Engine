@@ -16,16 +16,16 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <test/fxswap.hpp>
-#include <ored/portfolio/fxforward.hpp>
-#include <ored/portfolio/fxswap.hpp>
-#include <ored/marketdata/marketimpl.hpp>
-#include <ored/portfolio/fxoption.hpp>
-#include <ored/portfolio/enginedata.hpp>
-#include <ql/time/daycounters/actualactual.hpp>
-#include <ql/termstructures/yield/flatforward.hpp>
-#include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
 #include <boost/make_shared.hpp>
+#include <ored/marketdata/marketimpl.hpp>
+#include <ored/portfolio/enginedata.hpp>
+#include <ored/portfolio/fxforward.hpp>
+#include <ored/portfolio/fxoption.hpp>
+#include <ored/portfolio/fxswap.hpp>
+#include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
+#include <ql/termstructures/yield/flatforward.hpp>
+#include <ql/time/daycounters/actualactual.hpp>
+#include <test/fxswap.hpp>
 using namespace QuantLib;
 using namespace boost::unit_test_framework;
 using namespace std;

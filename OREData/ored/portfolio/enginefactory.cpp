@@ -41,9 +41,10 @@ void EngineFactory::registerBuilder(const boost::shared_ptr<EngineBuilder>& buil
 
 boost::shared_ptr<EngineBuilder> EngineFactory::builder(const string& tradeType) {
     // Check that we have a model/engine for tradetype
-    QL_REQUIRE(engineData_->hasProduct(tradeType), "EngineFactory does not have a "
-                                                   "model/engine for trade type "
-                                                       << tradeType);
+    QL_REQUIRE(engineData_->hasProduct(tradeType),
+               "EngineFactory does not have a "
+               "model/engine for trade type "
+                   << tradeType);
 
     // Find a builder for the model/engine pair
     auto key = make_pair(engineData_->model(tradeType), engineData_->engine(tradeType));

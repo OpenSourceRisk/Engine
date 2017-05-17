@@ -118,10 +118,12 @@ Real CollateralExposureHelper::estimateUncollatValue(const Date& simulationDate,
         npv2 = scenPvProfiles[0][scenIndex];
     } else {
         vector<Date>::const_iterator it = lower_bound(dateGrid.begin(), dateGrid.end(), simulationDate);
-        QL_REQUIRE(it != dateGrid.end(), "CollatExposureHelper error; "
-                                             << "date interpolation points not found (it.end())");
-        QL_REQUIRE(it != dateGrid.begin(), "CollatExposureHelper error; "
-                                               << "date interpolation points not found (it.begin())");
+        QL_REQUIRE(it != dateGrid.end(),
+                   "CollatExposureHelper error; "
+                       << "date interpolation points not found (it.end())");
+        QL_REQUIRE(it != dateGrid.begin(),
+                   "CollatExposureHelper error; "
+                       << "date interpolation points not found (it.begin())");
         Size pos1 = (it - 1) - dateGrid.begin();
         Size pos2 = it - dateGrid.begin();
         t1 = dateGrid[pos1];

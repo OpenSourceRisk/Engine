@@ -159,8 +159,8 @@ private:
     void check(Size dateIndex, Size sampleIndex, const AggregationScenarioDataType& type,
                const string& qualifier) const {
         QL_REQUIRE(dateIndex < dimDates_, "dateIndex (" << dateIndex << ") out of range 0..." << dimDates_ - 1);
-        QL_REQUIRE(sampleIndex < dimSamples_, "sampleIndex (" << sampleIndex << ") out of range 0..."
-                                                              << dimSamples_ - 1);
+        QL_REQUIRE(sampleIndex < dimSamples_,
+                   "sampleIndex (" << sampleIndex << ") out of range 0..." << dimSamples_ - 1);
         return;
     }
     Size dimDates_, dimSamples_;

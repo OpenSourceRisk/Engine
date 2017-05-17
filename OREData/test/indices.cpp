@@ -17,8 +17,8 @@
 */
 
 #include "indices.hpp"
-#include <ored/utilities/indexparser.hpp>
 #include <ored/configuration/conventions.hpp>
+#include <ored/utilities/indexparser.hpp>
 
 using namespace QuantLib;
 using namespace boost::unit_test_framework;

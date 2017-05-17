@@ -23,9 +23,9 @@
 
 #pragma once
 
-#include <vector>
-#include <ored/marketdata/curvespec.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
+#include <ored/marketdata/curvespec.hpp>
+#include <vector>
 
 using ore::data::CurveConfigurations;
 

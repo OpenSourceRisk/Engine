@@ -48,10 +48,10 @@ void DiscountingFxForwardEngine::calculate() const {
     Real tmpNominal1, tmpNominal2;
     bool tmpPayCurrency1;
     if (ccy1_ == arguments_.currency1) {
-        QL_REQUIRE(ccy2_ == arguments_.currency2, "mismatched currency pairs ("
-                                                      << ccy1_ << "," << ccy2_ << ") in the egine and ("
-                                                      << arguments_.currency1 << "," << arguments_.currency2
-                                                      << ") in the instrument");
+        QL_REQUIRE(ccy2_ == arguments_.currency2,
+                   "mismatched currency pairs (" << ccy1_ << "," << ccy2_ << ") in the egine and ("
+                                                 << arguments_.currency1 << "," << arguments_.currency2
+                                                 << ") in the instrument");
         tmpNominal1 = arguments_.nominal1;
         tmpNominal2 = arguments_.nominal2;
         tmpPayCurrency1 = arguments_.payCurrency1;

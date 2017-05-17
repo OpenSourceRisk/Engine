@@ -16,35 +16,35 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/timer.hpp>
+#include <orea/cube/inmemorycube.hpp>
+#include <orea/cube/npvcube.hpp>
+#include <orea/engine/all.hpp>
+#include <orea/engine/observationmode.hpp>
+#include <orea/engine/sensitivityanalysis.hpp>
+#include <orea/scenario/clonescenariofactory.hpp>
+#include <orea/scenario/scenariosimmarket.hpp>
+#include <orea/scenario/scenariosimmarketparameters.hpp>
+#include <orea/scenario/sensitivityscenariogenerator.hpp>
+#include <ored/model/lgmdata.hpp>
+#include <ored/portfolio/builders/capfloor.hpp>
+#include <ored/portfolio/builders/fxforward.hpp>
+#include <ored/portfolio/builders/fxoption.hpp>
+#include <ored/portfolio/builders/swap.hpp>
+#include <ored/portfolio/builders/swaption.hpp>
+#include <ored/portfolio/fxoption.hpp>
+#include <ored/portfolio/portfolio.hpp>
+#include <ored/portfolio/swap.hpp>
+#include <ored/portfolio/swaption.hpp>
+#include <ored/utilities/log.hpp>
+#include <ored/utilities/osutils.hpp>
+#include <ql/math/randomnumbers/mt19937uniformrng.hpp>
+#include <ql/time/calendars/target.hpp>
+#include <ql/time/date.hpp>
+#include <ql/time/daycounters/actualactual.hpp>
 #include <test/sensitivityanalysis.hpp>
 #include <test/testmarket.hpp>
 #include <test/testportfolio.hpp>
-#include <ored/utilities/osutils.hpp>
-#include <ored/utilities/log.hpp>
-#include <orea/cube/npvcube.hpp>
-#include <orea/cube/inmemorycube.hpp>
-#include <ored/model/lgmdata.hpp>
-#include <orea/scenario/scenariosimmarketparameters.hpp>
-#include <orea/scenario/scenariosimmarket.hpp>
-#include <orea/scenario/clonescenariofactory.hpp>
-#include <orea/scenario/sensitivityscenariogenerator.hpp>
-#include <orea/engine/observationmode.hpp>
-#include <orea/engine/sensitivityanalysis.hpp>
-#include <orea/engine/all.hpp>
-#include <ored/portfolio/swap.hpp>
-#include <ored/portfolio/swaption.hpp>
-#include <ored/portfolio/fxoption.hpp>
-#include <ored/portfolio/builders/swap.hpp>
-#include <ored/portfolio/builders/swaption.hpp>
-#include <ored/portfolio/builders/fxforward.hpp>
-#include <ored/portfolio/builders/fxoption.hpp>
-#include <ored/portfolio/builders/capfloor.hpp>
-#include <ored/portfolio/portfolio.hpp>
-#include <ql/time/date.hpp>
-#include <ql/math/randomnumbers/mt19937uniformrng.hpp>
-#include <ql/time/calendars/target.hpp>
-#include <ql/time/daycounters/actualactual.hpp>
-#include <boost/timer.hpp>
 
 using namespace std;
 using namespace QuantLib;
@@ -761,10 +761,10 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
                 count++;
                 // BOOST_TEST_MESSAGE("{ \"" << id << "\", \"" << label << "\", " << npv0 << ", " << sensi << " },");
                 pair<string, string> p(id, label);
-                QL_REQUIRE(npvMap.find(p) != npvMap.end(), "pair (" << p.first << ", " << p.second
-                                                                    << ") not found in npv map");
-                QL_REQUIRE(sensiMap.find(p) != sensiMap.end(), "pair (" << p.first << ", " << p.second
-                                                                        << ") not found in sensi map");
+                QL_REQUIRE(npvMap.find(p) != npvMap.end(),
+                           "pair (" << p.first << ", " << p.second << ") not found in npv map");
+                QL_REQUIRE(sensiMap.find(p) != sensiMap.end(),
+                           "pair (" << p.first << ", " << p.second << ") not found in sensi map");
                 BOOST_CHECK_MESSAGE(fabs(npv0 - npvMap[p]) < tolerance || fabs((npv0 - npvMap[p]) / npv0) < tolerance,
                                     "npv regression failed for pair (" << p.first << ", " << p.second << "): " << npv0
                                                                        << " vs " << npvMap[p]);
@@ -775,9 +775,9 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
             }
         }
     }
-    BOOST_CHECK_MESSAGE(count == cachedResults.size(), "number of non-zero sensitivities ("
-                                                           << count << ") do not match regression data ("
-                                                           << cachedResults.size() << ")");
+    BOOST_CHECK_MESSAGE(count == cachedResults.size(),
+                        "number of non-zero sensitivities (" << count << ") do not match regression data ("
+                                                             << cachedResults.size() << ")");
 
     // Repeat analysis using the SensitivityAnalysis class and spot check a few deltas and gammas
     boost::shared_ptr<SensitivityAnalysis> sa = boost::make_shared<SensitivityAnalysis>(
@@ -1765,9 +1765,9 @@ void SensitivityAnalysisTest::testCrossGamma() {
         }
     }
     BOOST_TEST_MESSAGE("number of cross-gammas checked = " << count);
-    BOOST_CHECK_MESSAGE(count == cachedResults.size(), "number of non-zero sensitivities ("
-                                                           << count << ") do not match regression data ("
-                                                           << cachedResults.size() << ")");
+    BOOST_CHECK_MESSAGE(count == cachedResults.size(),
+                        "number of non-zero sensitivities (" << count << ") do not match regression data ("
+                                                             << cachedResults.size() << ")");
     ObservationMode::instance().setMode(backupMode);
     IndexManager::instance().clearHistories();
 }

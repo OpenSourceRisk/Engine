@@ -16,13 +16,13 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/algorithm/string.hpp>
+#include <boost/make_shared.hpp>
+#include <map>
 #include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
-#include <boost/make_shared.hpp>
-#include <boost/algorithm/string.hpp>
-#include <map>
 
 using namespace std;
 using QuantLib::WeekendsOnly;
@@ -260,8 +260,8 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
     }
 
     case MarketDatum::InstrumentType::SWAPTION: {
-        QL_REQUIRE(tokens.size() == 4 || tokens.size() == 6 || tokens.size() == 7, "4, 6 or 7 tokens expected in "
-                                                                                       << datumName);
+        QL_REQUIRE(tokens.size() == 4 || tokens.size() == 6 || tokens.size() == 7,
+                   "4, 6 or 7 tokens expected in " << datumName);
         const string& ccy = tokens[2];
         Period expiry = tokens.size() >= 6 ? parsePeriod(tokens[3]) : Period(0 * QuantLib::Days);
         Period term = tokens.size() >= 6 ? parsePeriod(tokens[4]) : parsePeriod(tokens[3]);
@@ -324,8 +324,8 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         QL_REQUIRE(tokens.size() == 6, "6 tokens expected in " << datumName);
         const string& index = tokens[2];
         Period term = parsePeriod(tokens[3]);
-        QL_REQUIRE(tokens[4] == "C" || tokens[4] == "F", "excepted C or F for Cap or Floor at position 5 in "
-                                                             << datumName);
+        QL_REQUIRE(tokens[4] == "C" || tokens[4] == "F",
+                   "excepted C or F for Cap or Floor at position 5 in " << datumName);
         bool isCap = tokens[4] == "C";
         string strike = tokens[5];
         return boost::make_shared<ZcInflationCapFloorQuote>(value, asof, datumName, quoteType, index, term, isCap,

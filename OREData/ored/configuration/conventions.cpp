@@ -25,10 +25,10 @@
 #include <boost/make_shared.hpp>
 
 #include <ored/configuration/conventions.hpp>
-#include <ored/utilities/parsers.hpp>
-#include <ored/utilities/log.hpp>
-#include <ored/utilities/xmlutils.hpp>
 #include <ored/utilities/indexparser.hpp>
+#include <ored/utilities/log.hpp>
+#include <ored/utilities/parsers.hpp>
+#include <ored/utilities/xmlutils.hpp>
 
 using namespace QuantLib;
 using namespace std;

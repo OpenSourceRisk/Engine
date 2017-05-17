@@ -21,8 +21,8 @@
     \ingroup
 */
 
-#include <iostream>
 #include <iomanip>
+#include <iostream>
 using namespace std;
 
 // Boost
@@ -30,17 +30,16 @@ using namespace std;
 using namespace boost;
 
 // Boost.Test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/parameterized_test.hpp>
 #include <boost/test/test_tools.hpp>
 #include <boost/test/unit_test.hpp>
-#include <boost/test/parameterized_test.hpp>
 using boost::unit_test::test_suite;
 
 #ifdef BOOST_MSVC
-#include <ql/auto_link.hpp>
-#include <qle/auto_link.hpp>
 #include <orea/auto_link.hpp>
 #include <ored/auto_link.hpp>
+#include <ql/auto_link.hpp>
+#include <qle/auto_link.hpp>
 #define BOOST_LIB_NAME boost_date_time
 #include <boost/config/auto_link.hpp>
 #define BOOST_LIB_NAME boost_serialization
@@ -56,14 +55,14 @@ using boost::unit_test::test_suite;
 // Lib test suites
 #include "aggregationscenariodata.hpp"
 #include "cube.hpp"
-#include "scenariosimmarket.hpp"
+#include "observationmode.hpp"
 #include "scenariogenerator.hpp"
-#include "swapperformance.hpp"
+#include "scenariosimmarket.hpp"
 #include "sensitivityanalysis.hpp"
 #include "sensitivityanalysis2.hpp"
 #include "sensitivityperformance.hpp"
 #include "stresstest.hpp"
-#include "observationmode.hpp"
+#include "swapperformance.hpp"
 
 namespace {
 

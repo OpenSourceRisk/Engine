@@ -18,7 +18,6 @@
 
 #include "crossassetmodelparametrizations.hpp"
 
-#include <qle/models/all.hpp>
 #include <ql/currencies/america.hpp>
 #include <ql/currencies/europe.hpp>
 #include <ql/math/array.hpp>
@@ -26,6 +25,7 @@
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
+#include <qle/models/all.hpp>
 
 #include <test-suite/utilities.hpp>
 

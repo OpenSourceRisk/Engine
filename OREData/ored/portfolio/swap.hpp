@@ -23,8 +23,8 @@
 
 #pragma once
 
-#include <ored/portfolio/trade.hpp>
 #include <ored/portfolio/legdata.hpp>
+#include <ored/portfolio/trade.hpp>
 
 namespace ore {
 namespace data {

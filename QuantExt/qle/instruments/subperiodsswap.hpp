@@ -25,8 +25,8 @@
 #ifndef quantext_sub_periods_swap_hpp
 #define quantext_sub_periods_swap_hpp
 
-#include <ql/instruments/swap.hpp>
 #include <ql/indexes/iborindex.hpp>
+#include <ql/instruments/swap.hpp>
 
 #include <qle/cashflows/subperiodscoupon.hpp>
 

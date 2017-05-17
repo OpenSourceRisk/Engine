@@ -23,8 +23,8 @@
 
 #pragma once
 
-#include <ored/utilities/xmlutils.hpp>
 #include <map>
+#include <ored/utilities/xmlutils.hpp>
 
 using std::string;
 using std::map;

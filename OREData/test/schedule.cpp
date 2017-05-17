@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <test/schedule.hpp>
 #include <ored/portfolio/schedule.hpp>
+#include <test/schedule.hpp>
 
 using namespace boost::unit_test_framework;
 using namespace ore::data;
@@ -30,10 +30,11 @@ void ScheduleDataTest::testScheduleData() {
 
     ScheduleDates dates1("TARGET", {"2015-01-09", "2015-02-09", "2015-03-09", "2015-04-09"});
 
-    ScheduleDates dates2("TARGET", {"2015-04-09",
-                                    "2016-04-11", // 9th = Saturday
-                                    "2017-04-10", // 9th = Sunday
-                                    "2018-04-09"});
+    ScheduleDates dates2("TARGET",
+                         {"2015-04-09",
+                          "2016-04-11", // 9th = Saturday
+                          "2017-04-10", // 9th = Sunday
+                          "2018-04-09"});
 
     ScheduleRules rules1("2015-01-09", "2015-04-09", "1M", "TARGET", "MF", "MF", "Forward");
 

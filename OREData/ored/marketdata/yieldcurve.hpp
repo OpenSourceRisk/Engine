@@ -23,12 +23,12 @@
 
 #pragma once
 
-#include <ored/marketdata/market.hpp>
-#include <ored/marketdata/curvespec.hpp>
-#include <ored/marketdata/loader.hpp>
-#include <ored/configuration/yieldcurveconfig.hpp>
 #include <ored/configuration/conventions.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
+#include <ored/configuration/yieldcurveconfig.hpp>
+#include <ored/marketdata/curvespec.hpp>
+#include <ored/marketdata/loader.hpp>
+#include <ored/marketdata/market.hpp>
 //#include <ql/termstructures/yield/zeroyieldstructure.hpp>
 #include <ql/termstructures/yield/ratehelpers.hpp>
 

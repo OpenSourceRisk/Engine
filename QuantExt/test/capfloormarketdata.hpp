@@ -23,12 +23,12 @@
 #ifndef quantext_test_capfloormarketdata_hpp
 #define quantext_test_capfloormarketdata_hpp
 
-#include <ql/math/matrix.hpp>
+#include <boost/make_shared.hpp>
 #include <ql/indexes/ibor/euribor.hpp>
+#include <ql/math/matrix.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/thirty360.hpp>
 #include <ql/time/period.hpp>
-#include <boost/make_shared.hpp>
 
 #include <vector>
 

@@ -23,12 +23,12 @@
 
 #pragma once
 
-#include <vector>
 #include <map>
-#include <string>
-#include <sstream> // std::ostringstream
-#include <ql/types.hpp>
 #include <ql/time/period.hpp>
+#include <ql/types.hpp>
+#include <sstream> // std::ostringstream
+#include <string>
+#include <vector>
 
 using std::string;
 using std::vector;

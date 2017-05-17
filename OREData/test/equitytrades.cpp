@@ -16,18 +16,18 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <test/equitytrades.hpp>
-#include <ored/marketdata/marketimpl.hpp>
-#include <ored/portfolio/equityoption.hpp>
-#include <ored/portfolio/builders/equityoption.hpp>
-#include <ored/portfolio/equityforward.hpp>
-#include <ored/portfolio/builders/equityforward.hpp>
-#include <ored/portfolio/enginedata.hpp>
-#include <ql/time/daycounters/actualactual.hpp>
-#include <ql/termstructures/yield/flatforward.hpp>
-#include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
-#include <ql/math/distributions/normaldistribution.hpp>
 #include <boost/make_shared.hpp>
+#include <ored/marketdata/marketimpl.hpp>
+#include <ored/portfolio/builders/equityforward.hpp>
+#include <ored/portfolio/builders/equityoption.hpp>
+#include <ored/portfolio/enginedata.hpp>
+#include <ored/portfolio/equityforward.hpp>
+#include <ored/portfolio/equityoption.hpp>
+#include <ql/math/distributions/normaldistribution.hpp>
+#include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
+#include <ql/termstructures/yield/flatforward.hpp>
+#include <ql/time/daycounters/actualactual.hpp>
+#include <test/equitytrades.hpp>
 
 using namespace QuantLib;
 using namespace boost::unit_test_framework;

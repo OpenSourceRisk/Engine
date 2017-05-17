@@ -23,11 +23,11 @@
 
 #pragma once
 
-#include <ql/termstructures/volatility/swaption/swaptionvolmatrix.hpp>
-#include <ored/marketdata/loader.hpp>
-#include <ored/marketdata/curvespec.hpp>
 #include <ored/configuration/conventions.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
+#include <ored/marketdata/curvespec.hpp>
+#include <ored/marketdata/loader.hpp>
+#include <ql/termstructures/volatility/swaption/swaptionvolmatrix.hpp>
 
 using QuantLib::Date;
 using QuantLib::SwaptionVolatilityMatrix;

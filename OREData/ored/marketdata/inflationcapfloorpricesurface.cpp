@@ -53,8 +53,8 @@ InflationCapFloorPriceSurface::InflationCapFloorPriceSurface(
             yts = it->second->handle();
         } else {
             QL_FAIL("The nominal term structure, " << config->yieldTermStructure() << ", required in the building "
-                                                                                      "of the curve, " << spec.name()
-                                                   << ", was not found.");
+                                                                                      "of the curve, "
+                                                   << spec.name() << ", was not found.");
         }
 
         boost::shared_ptr<ZeroInflationIndex> index;
@@ -62,8 +62,8 @@ InflationCapFloorPriceSurface::InflationCapFloorPriceSurface(
         if (it2 != inflationCurves.end()) {
             boost::shared_ptr<ZeroInflationTermStructure> ts =
                 boost::dynamic_pointer_cast<ZeroInflationTermStructure>(it2->second->inflationTermStructure());
-            QL_REQUIRE(ts, "inflation term structure " << config->indexCurve()
-                                                       << " was expected to be zero, but is not");
+            QL_REQUIRE(ts,
+                       "inflation term structure " << config->indexCurve() << " was expected to be zero, but is not");
             index = parseZeroInflationIndex(config->index(), it2->second->interpolatedIndex(),
                                             Handle<ZeroInflationTermStructure>(ts));
         } else {
@@ -116,13 +116,13 @@ InflationCapFloorPriceSurface::InflationCapFloorPriceSurface(
 
         for (Size j = 0; j < terms.size(); ++j) {
             for (Size i = 0; i < capStrikes.size(); ++i)
-                QL_REQUIRE(cPrice[i][j] != Null<Real>(), "quote for cap floor price surface, type cap, strike "
-                                                             << capStrikes[i] << ", term " << terms[j]
-                                                             << ", not found.");
+                QL_REQUIRE(cPrice[i][j] != Null<Real>(),
+                           "quote for cap floor price surface, type cap, strike " << capStrikes[i] << ", term "
+                                                                                  << terms[j] << ", not found.");
             for (Size i = 0; i < floorStrikes.size(); ++i)
-                QL_REQUIRE(fPrice[i][j] != Null<Real>(), "quote for cap floor price surface, type floor, strike "
-                                                             << floorStrikes[i] << ", term " << terms[j]
-                                                             << ", not found.");
+                QL_REQUIRE(fPrice[i][j] != Null<Real>(),
+                           "quote for cap floor price surface, type floor, strike " << floorStrikes[i] << ", term "
+                                                                                    << terms[j] << ", not found.");
         }
 
         // The strike grids have some minimum requirements which we fulfill here at

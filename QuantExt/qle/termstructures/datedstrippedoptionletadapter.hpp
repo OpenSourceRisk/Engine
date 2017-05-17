@@ -25,8 +25,8 @@
 
 #include <qle/termstructures/datedstrippedoptionletbase.hpp>
 
-#include <ql/termstructures/volatility/optionlet/optionletvolatilitystructure.hpp>
 #include <ql/math/interpolation.hpp>
+#include <ql/termstructures/volatility/optionlet/optionletvolatilitystructure.hpp>
 
 using namespace QuantLib;
 

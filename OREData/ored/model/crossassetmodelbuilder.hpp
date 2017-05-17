@@ -25,14 +25,14 @@
 
 #include <vector>
 
-#include <ql/types.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
+#include <ql/types.hpp>
 
 #include <qle/models/crossassetmodel.hpp>
 
 #include <ored/marketdata/market.hpp>
-#include <ored/utilities/xmlutils.hpp>
 #include <ored/model/crossassetmodeldata.hpp>
+#include <ored/utilities/xmlutils.hpp>
 
 using namespace QuantLib;
 

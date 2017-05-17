@@ -23,8 +23,8 @@
 
 #pragma once
 
-#include <ored/utilities/xmlutils.hpp>
 #include <ored/portfolio/schedule.hpp>
+#include <ored/utilities/xmlutils.hpp>
 
 #include <vector>
 

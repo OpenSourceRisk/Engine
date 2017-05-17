@@ -17,8 +17,8 @@
 */
 
 #include "cube.hpp"
-#include <orea/cube/inmemorycube.hpp>
 #include <boost/filesystem.hpp>
+#include <orea/cube/inmemorycube.hpp>
 
 using namespace ore::analytics;
 using namespace boost::unit_test_framework;

@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ored/utilities/strike.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/strike.hpp>
 
 #include <ql/errors.hpp>
 

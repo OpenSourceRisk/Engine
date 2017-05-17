@@ -64,12 +64,12 @@ void DatedStrippedOptionlet::checkInputs() const {
     QL_REQUIRE(nOptionletDates_ == optionletVolatilities_.size(),
                "Mismatch between number of option tenors (" << nOptionletDates_ << ") and number of volatility rows ("
                                                             << optionletVolatilities_.size() << ")");
-    QL_REQUIRE(nOptionletDates_ == optionletStrikes_.size(), "Mismatch between number of option tenors ("
-                                                                 << nOptionletDates_ << ") and number of strike rows ("
-                                                                 << optionletStrikes_.size() << ")");
-    QL_REQUIRE(nOptionletDates_ == optionletAtmRates_.size(), "Mismatch between number of option tenors ("
-                                                                  << nOptionletDates_ << ") and number of ATM rates ("
-                                                                  << optionletAtmRates_.size() << ")");
+    QL_REQUIRE(nOptionletDates_ == optionletStrikes_.size(),
+               "Mismatch between number of option tenors (" << nOptionletDates_ << ") and number of strike rows ("
+                                                            << optionletStrikes_.size() << ")");
+    QL_REQUIRE(nOptionletDates_ == optionletAtmRates_.size(),
+               "Mismatch between number of option tenors (" << nOptionletDates_ << ") and number of ATM rates ("
+                                                            << optionletAtmRates_.size() << ")");
     QL_REQUIRE(optionletDates_[0] > referenceDate_,
                "First option date (" << optionletDates_[0] << ") must be greater than the reference date");
     QL_REQUIRE(is_strictly_increasing(optionletDates_.begin(), optionletDates_.end()),
@@ -85,14 +85,15 @@ void DatedStrippedOptionlet::checkInputs() const {
 }
 
 const vector<Rate>& DatedStrippedOptionlet::optionletStrikes(Size i) const {
-    QL_REQUIRE(i < optionletStrikes_.size(), "index (" << i << ") must be less than optionletStrikes size ("
-                                                       << optionletStrikes_.size() << ")");
+    QL_REQUIRE(i < optionletStrikes_.size(),
+               "index (" << i << ") must be less than optionletStrikes size (" << optionletStrikes_.size() << ")");
     return optionletStrikes_[i];
 }
 
 const vector<Volatility>& DatedStrippedOptionlet::optionletVolatilities(Size i) const {
-    QL_REQUIRE(i < optionletVolatilities_.size(), "index (" << i << ") must be less than optionletVolatilities size ("
-                                                            << optionletVolatilities_.size() << ")");
+    QL_REQUIRE(i < optionletVolatilities_.size(),
+               "index (" << i << ") must be less than optionletVolatilities size (" << optionletVolatilities_.size()
+                         << ")");
     return optionletVolatilities_[i];
 }
 

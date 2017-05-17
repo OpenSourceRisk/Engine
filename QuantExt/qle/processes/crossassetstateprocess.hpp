@@ -24,8 +24,8 @@
 #ifndef quantext_crossasset_stateprocess_hpp
 #define quantext_crossasset_stateprocess_hpp
 
-#include <ql/stochasticprocess.hpp>
 #include <ql/math/matrixutilities/pseudosqrt.hpp>
+#include <ql/stochasticprocess.hpp>
 
 #include <boost/unordered_map.hpp>
 

@@ -17,12 +17,12 @@
 */
 
 #include <orea/simulation/fixingmanager.hpp>
-#include <ored/utilities/parsers.hpp>
-#include <ored/utilities/log.hpp>
 #include <ored/utilities/flowanalysis.hpp>
+#include <ored/utilities/log.hpp>
+#include <ored/utilities/parsers.hpp>
+#include <ql/cashflows/floatingratecoupon.hpp>
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
-#include <ql/cashflows/floatingratecoupon.hpp>
 
 using namespace std;
 using namespace QuantLib;
@@ -111,9 +111,10 @@ void FixingManager::initialise(const boost::shared_ptr<Portfolio>& portfolio) {
 //! Update fixings to date d
 void FixingManager::update(Date d) {
     if (!fixingMap_.empty()) {
-        QL_REQUIRE(d >= fixingsEnd_, "Can't go back in time, fixings must be reset."
-                                     " Update date "
-                                         << d << " but current fixings go to " << fixingsEnd_);
+        QL_REQUIRE(d >= fixingsEnd_,
+                   "Can't go back in time, fixings must be reset."
+                   " Update date "
+                       << d << " but current fixings go to " << fixingsEnd_);
         applyFixings(fixingsEnd_, d);
     }
     fixingsEnd_ = d;

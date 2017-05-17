@@ -25,22 +25,20 @@
 #include <ored/marketdata/curveloader.hpp>
 #include <ored/marketdata/curvespecparser.hpp>
 #include <ored/marketdata/defaultcurve.hpp>
+#include <ored/marketdata/equitycurve.hpp>
+#include <ored/marketdata/equityvolcurve.hpp>
 #include <ored/marketdata/fxspot.hpp>
 #include <ored/marketdata/fxvolcurve.hpp>
 #include <ored/marketdata/inflationcapfloorpricesurface.hpp>
 #include <ored/marketdata/inflationcurve.hpp>
+#include <ored/marketdata/securityrecoveryrate.hpp>
+#include <ored/marketdata/securityspread.hpp>
 #include <ored/marketdata/swaptionvolcurve.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
-#include <qle/indexes/inflationindexwrapper.hpp>
-#include <ored/marketdata/securityspread.hpp>
-#include <ored/marketdata/securityrecoveryrate.hpp>
-#include <ored/marketdata/curveloader.hpp>
-#include <ored/utilities/log.hpp>
 #include <ored/utilities/indexparser.hpp>
-#include <ored/marketdata/capfloorvolcurve.hpp>
-#include <ored/marketdata/equitycurve.hpp>
-#include <ored/marketdata/equityvolcurve.hpp>
+#include <ored/utilities/log.hpp>
+#include <qle/indexes/inflationindexwrapper.hpp>
 
 using namespace std;
 using namespace QuantLib;
@@ -250,9 +248,9 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                     Handle<IborIndex> iborIndex = MarketImpl::iborIndex(cfg->iborIndex(), configuration.first);
                     // Discount curve
                     auto it = requiredYieldCurves.find(cfg->discountCurve());
-                    QL_REQUIRE(it != requiredYieldCurves.end(), "Discount curve with spec, "
-                                                                    << cfg->discountCurve()
-                                                                    << ", not found in loaded yield curves");
+                    QL_REQUIRE(it != requiredYieldCurves.end(),
+                               "Discount curve with spec, " << cfg->discountCurve()
+                                                            << ", not found in loaded yield curves");
                     Handle<YieldTermStructure> discountCurve = it->second->handle();
 
                     // Now create cap/floor vol curve
@@ -328,8 +326,9 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                             boost::dynamic_pointer_cast<ZeroInflationTermStructure>(
                                 itr->second->inflationTermStructure());
                         bool indexInterpolated = itr->second->interpolatedIndex();
-                        QL_REQUIRE(ts, "expected zero inflation term structure for index " << it.first
-                                                                                           << ", but could not cast");
+                        QL_REQUIRE(ts,
+                                   "expected zero inflation term structure for index " << it.first
+                                                                                       << ", but could not cast");
                         auto tmp = parseZeroInflationIndex(it.first, indexInterpolated,
                                                            Handle<ZeroInflationTermStructure>(ts));
                         zeroInflationIndices_[make_pair(configuration.first, make_pair(it.first, indexInterpolated))] =
@@ -354,8 +353,9 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                             boost::dynamic_pointer_cast<YoYInflationTermStructure>(
                                 itr->second->inflationTermStructure());
                         bool indexInterpolated = itr->second->interpolatedIndex();
-                        QL_REQUIRE(ts, "expected yoy inflation term structure for index " << it.first
-                                                                                          << ", but could not cast");
+                        QL_REQUIRE(ts,
+                                   "expected yoy inflation term structure for index " << it.first
+                                                                                      << ", but could not cast");
                         yoyInflationIndices_[make_pair(configuration.first, make_pair(it.first, false))] =
                             Handle<YoYInflationIndex>(boost::make_shared<QuantExt::YoYInflationIndexWrapper>(
                                 parseZeroInflationIndex(it.first, indexInterpolated), false,
@@ -381,8 +381,8 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                     boost::shared_ptr<InflationCapFloorPriceSurface> inflationCapFloorPriceSurface =
                         boost::make_shared<InflationCapFloorPriceSurface>(asof, *infcapfloorspec, loader, curveConfigs,
                                                                           requiredYieldCurves, requiredInflationCurves);
-                    itr = requiredInflationCapFloorPriceSurfaces.insert(make_pair(infcapfloorspec->name(),
-                                                                                  inflationCapFloorPriceSurface))
+                    itr = requiredInflationCapFloorPriceSurfaces
+                              .insert(make_pair(infcapfloorspec->name(), inflationCapFloorPriceSurface))
                               .first;
                 }
                 for (const auto it : params.inflationCapFloorPriceSurfaces(configuration.first)) {
@@ -484,8 +484,8 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
             case CurveSpec::CurveType::SecurityRecoveryRate: {
                 boost::shared_ptr<SecurityRecoveryRateSpec> securityrecoveryratespec =
                     boost::dynamic_pointer_cast<SecurityRecoveryRateSpec>(spec);
-                QL_REQUIRE(securityrecoveryratespec, "Failed to convert spec " << *spec
-                                                                               << " to security recovery rate spec");
+                QL_REQUIRE(securityrecoveryratespec,
+                           "Failed to convert spec " << *spec << " to security recovery rate spec");
 
                 // have we built the curve already?
                 auto itr = requiredSecurityRecoveryRates.find(securityrecoveryratespec->securityID());
@@ -494,8 +494,8 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                     LOG("Building SecurityRecoveryRates for asof " << asof);
                     boost::shared_ptr<SecurityRecoveryRate> securityRecoveryRate =
                         boost::make_shared<SecurityRecoveryRate>(asof, *securityrecoveryratespec, loader);
-                    itr = requiredSecurityRecoveryRates.insert(make_pair(securityrecoveryratespec->securityID(),
-                                                                         securityRecoveryRate))
+                    itr = requiredSecurityRecoveryRates
+                              .insert(make_pair(securityrecoveryratespec->securityID(), securityRecoveryRate))
                               .first;
                 }
 

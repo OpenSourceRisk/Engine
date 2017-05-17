@@ -21,8 +21,8 @@
 #include <orea/orea.hpp>
 #include <ored/ored.hpp>
 #include <ostream>
-#include <ql/cashflows/inflationcoupon.hpp>
 #include <ql/cashflows/indexedcashflow.hpp>
+#include <ql/cashflows/inflationcoupon.hpp>
 #include <ql/errors.hpp>
 #include <stdio.h>
 

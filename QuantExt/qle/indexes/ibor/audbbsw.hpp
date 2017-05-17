@@ -24,8 +24,8 @@
 #ifndef quantext_audbbsw_hpp
 #define quantext_audbbsw_hpp
 
-#include <ql/indexes/iborindex.hpp>
 #include <ql/currencies/oceania.hpp>
+#include <ql/indexes/iborindex.hpp>
 #include <ql/time/calendars/australia.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 

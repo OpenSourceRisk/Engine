@@ -16,10 +16,10 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/models/linkablecalibratedmodel.hpp>
 #include <ql/math/optimization/problem.hpp>
-#include <ql/math/optimization/projection.hpp>
 #include <ql/math/optimization/projectedconstraint.hpp>
+#include <ql/math/optimization/projection.hpp>
+#include <qle/models/linkablecalibratedmodel.hpp>
 
 using std::vector;
 using boost::shared_ptr;
@@ -74,9 +74,9 @@ void LinkableCalibratedModel::calibrate(const vector<shared_ptr<CalibrationHelpe
                                         const Constraint& additionalConstraint, const vector<Real>& weights,
                                         const vector<bool>& fixParameters) {
 
-    QL_REQUIRE(weights.empty() || weights.size() == instruments.size(), "mismatch between number of instruments ("
-                                                                            << instruments.size() << ") and weights("
-                                                                            << weights.size() << ")");
+    QL_REQUIRE(weights.empty() || weights.size() == instruments.size(),
+               "mismatch between number of instruments (" << instruments.size() << ") and weights(" << weights.size()
+                                                          << ")");
 
     Constraint c;
     if (additionalConstraint.empty())

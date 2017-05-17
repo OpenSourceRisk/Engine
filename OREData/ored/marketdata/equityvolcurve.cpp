@@ -16,14 +16,14 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <algorithm>
 #include <ored/marketdata/equityvolcurve.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
-#include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
-#include <ql/time/daycounters/actual365fixed.hpp>
+#include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
-#include <algorithm>
+#include <ql/time/daycounters/actual365fixed.hpp>
 
 using namespace QuantLib;
 using namespace std;
@@ -95,8 +95,9 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
                 parseDateOrPeriod(quotes[i]->expiry(), tmpDate, tmpPer, tmpIsDate);
                 if (!tmpIsDate)
                     tmpDate = WeekendsOnly().adjust(asof + tmpPer);
-                QL_REQUIRE(tmpDate > asof, "Equity Vol Curve cannot contain a vol quote for a past date ("
-                                               << io::iso_date(tmpDate) << ")");
+                QL_REQUIRE(tmpDate > asof,
+                           "Equity Vol Curve cannot contain a vol quote for a past date (" << io::iso_date(tmpDate)
+                                                                                           << ")");
                 dates[i] = tmpDate;
                 atmVols[i] = quotes[i]->quote()->value();
             }

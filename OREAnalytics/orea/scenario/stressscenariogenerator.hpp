@@ -23,12 +23,12 @@
 
 #pragma once
 
-#include <ored/marketdata/market.hpp>
-#include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariofactory.hpp>
+#include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
-#include <orea/scenario/stressscenariodata.hpp>
 #include <orea/scenario/shiftscenariogenerator.hpp>
+#include <orea/scenario/stressscenariodata.hpp>
+#include <ored/marketdata/market.hpp>
 
 namespace ore {
 using namespace data;

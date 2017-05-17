@@ -50,10 +50,10 @@ NettingSetDefinition::NettingSetDefinition(const string& nettingSetId, const str
       mprStr_(mpr), collatSpreadPay_(collatSpreadPay), collatSpreadRcv_(collatSpreadRcv),
       eligCollatCcys_(eligCollatCcys) {
 
-    QL_REQUIRE(activeCsaFlag_, "NettingSetDefinition construction error... "
-                                   << nettingSetId_ << "; this constructor is intended for "
-                                   << "collateralised netting sets, or uncollateralised sets "
-                                   << "use alternative constructor.");
+    QL_REQUIRE(activeCsaFlag_,
+               "NettingSetDefinition construction error... " << nettingSetId_ << "; this constructor is intended for "
+                                                             << "collateralised netting sets, or uncollateralised sets "
+                                                             << "use alternative constructor.");
 
     isLoaded_ = true;
     isBuilt_ = false; // gets overwritten after invocation of build()
@@ -163,15 +163,17 @@ void NettingSetDefinition::build() {
             QL_FAIL("NettingSetDefinition build error;"
                     << " unsupported csa-type");
 
-        QL_REQUIRE(csaCurrency_.size() == 3, "NettingSetDefinition build error;"
-                                                 << " csa currency should be a three-letter ISO code");
+        QL_REQUIRE(csaCurrency_.size() == 3,
+                   "NettingSetDefinition build error;"
+                       << " csa currency should be a three-letter ISO code");
 
         QL_REQUIRE(thresholdPay_ >= 0, "NettingSetDefinition build error; negative thresholdPay");
         QL_REQUIRE(thresholdRcv_ >= 0, "NettingSetDefinition build error; negative thresholdRcv");
         QL_REQUIRE(mtaPay_ >= 0, "NettingSetDefinition build error; negative mtaPay");
         QL_REQUIRE(mtaRcv_ >= 0, "NettingSetDefinition build error; negative mtaRcv");
-        QL_REQUIRE(iaType_ == "FIXED", "NettingSetDefinition build error;"
-                                           << " unsupported independent amount type; " << iaType_);
+        QL_REQUIRE(iaType_ == "FIXED",
+                   "NettingSetDefinition build error;"
+                       << " unsupported independent amount type; " << iaType_);
 
         // assumption - input defined as string (e.g. 10d, 3W, 6M, 4Y)
         marginCallFreq_ = QuantLib::PeriodParser::parse(marginCallFreqStr_);
@@ -181,16 +183,18 @@ void NettingSetDefinition::build() {
         QL_REQUIRE(marginCallFreq_ > Period(0, Days) && marginPostFreq_ > Period(0, Days),
                    "NettingSetDefinition build error;"
                        << " non-positive margining frequency");
-        QL_REQUIRE(mpr_ >= Period(0, Days), "NettingSetDefinition build error;"
-                                                << " negative margin period of risk");
+        QL_REQUIRE(mpr_ >= Period(0, Days),
+                   "NettingSetDefinition build error;"
+                       << " negative margin period of risk");
         if (mpr_ < marginCallFreq_ || mpr_ < marginPostFreq_) {
             LOG("NettingSet " << nettingSetId_ << " has CSA margining frequency (" << marginCallFreq_ << ", "
                               << marginPostFreq_ << ") longer than assumed margin period of risk " << mpr_);
         }
 
         for (unsigned i = 0; i < eligCollatCcys_.size(); i++) {
-            QL_REQUIRE(eligCollatCcys_[i].size() == 3, "NettingSetDefinition build error;"
-                                                           << " three-letter ISO code expected");
+            QL_REQUIRE(eligCollatCcys_[i].size() == 3,
+                       "NettingSetDefinition build error;"
+                           << " three-letter ISO code expected");
         }
 
         // unilateral CSA - set threshold near infinity to disable margining

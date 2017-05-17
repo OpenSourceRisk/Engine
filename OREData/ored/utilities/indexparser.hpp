@@ -23,11 +23,11 @@
 
 #pragma once
 
+#include <ored/configuration/conventions.hpp>
 #include <ql/index.hpp>
 #include <ql/indexes/iborindex.hpp>
 #include <ql/indexes/inflationindex.hpp>
 #include <ql/indexes/swapindex.hpp>
-#include <ored/configuration/conventions.hpp>
 #include <qle/indexes/fxindex.hpp>
 
 using std::string;

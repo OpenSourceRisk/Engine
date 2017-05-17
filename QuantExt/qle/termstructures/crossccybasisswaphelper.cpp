@@ -20,8 +20,8 @@
 #include <ql/cashflows/floatingratecoupon.hpp>
 #endif
 
-#include <qle/termstructures/crossccybasisswaphelper.hpp>
 #include <qle/pricingengines/crossccyswapengine.hpp>
+#include <qle/termstructures/crossccybasisswaphelper.hpp>
 
 namespace QuantExt {
 

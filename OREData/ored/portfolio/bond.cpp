@@ -16,17 +16,17 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ored/portfolio/swap.hpp>
-#include <ored/portfolio/legdata.hpp>
+#include <boost/lexical_cast.hpp>
 #include <ored/portfolio/bond.hpp>
 #include <ored/portfolio/builders/bond.hpp>
+#include <ored/portfolio/legdata.hpp>
+#include <ored/portfolio/swap.hpp>
+#include <ored/utilities/indexparser.hpp>
+#include <ored/utilities/log.hpp>
+#include <ored/utilities/parsers.hpp>
+#include <ql/cashflows/simplecashflow.hpp>
 #include <ql/instruments/bond.hpp>
 #include <ql/instruments/bonds/zerocouponbond.hpp>
-#include <ored/utilities/parsers.hpp>
-#include <ored/utilities/log.hpp>
-#include <ql/cashflows/simplecashflow.hpp>
-#include <ored/utilities/indexparser.hpp>
-#include <boost/lexical_cast.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;

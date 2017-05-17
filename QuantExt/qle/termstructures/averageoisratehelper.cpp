@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/termstructures/averageoisratehelper.hpp>
 #include <qle/instruments/makeaverageois.hpp>
+#include <qle/termstructures/averageoisratehelper.hpp>
 
 namespace QuantExt {
 

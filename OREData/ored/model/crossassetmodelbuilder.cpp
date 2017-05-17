@@ -16,29 +16,29 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ored/model/lgmbuilder.hpp>
-#include <ored/model/fxbsbuilder.hpp>
-#include <ored/model/eqbsbuilder.hpp>
 #include <ored/model/crossassetmodelbuilder.hpp>
+#include <ored/model/eqbsbuilder.hpp>
+#include <ored/model/fxbsbuilder.hpp>
+#include <ored/model/lgmbuilder.hpp>
 #include <ored/model/utilities.hpp>
-#include <ored/utilities/parsers.hpp>
 #include <ored/utilities/correlationmatrix.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/parsers.hpp>
 
-#include <qle/models/irlgm1fpiecewiseconstantparametrization.hpp>
-#include <qle/models/irlgm1fpiecewiselinearparametrization.hpp>
-#include <qle/models/irlgm1fconstantparametrization.hpp>
-#include <qle/models/irlgm1fpiecewiseconstanthullwhiteadaptor.hpp>
 #include <qle/models/fxbsconstantparametrization.hpp>
 #include <qle/models/fxbspiecewiseconstantparametrization.hpp>
-#include <qle/pricingengines/analyticlgmswaptionengine.hpp>
-#include <qle/pricingengines/analyticcclgmfxoptionengine.hpp>
-#include <qle/pricingengines/analyticxassetlgmeqoptionengine.hpp>
 #include <qle/models/fxeqoptionhelper.hpp>
+#include <qle/models/irlgm1fconstantparametrization.hpp>
+#include <qle/models/irlgm1fpiecewiseconstanthullwhiteadaptor.hpp>
+#include <qle/models/irlgm1fpiecewiseconstantparametrization.hpp>
+#include <qle/models/irlgm1fpiecewiselinearparametrization.hpp>
+#include <qle/pricingengines/analyticcclgmfxoptionengine.hpp>
+#include <qle/pricingengines/analyticlgmswaptionengine.hpp>
+#include <qle/pricingengines/analyticxassetlgmeqoptionengine.hpp>
 
 #include <ql/math/optimization/levenbergmarquardt.hpp>
-#include <ql/quotes/simplequote.hpp>
 #include <ql/models/shortrate/calibrationhelpers/swaptionhelper.hpp>
+#include <ql/quotes/simplequote.hpp>
 #include <ql/utilities/dataformatters.hpp>
 
 #include <boost/algorithm/string/case_conv.hpp>
@@ -122,8 +122,9 @@ CrossAssetModelBuilder::build(const boost::shared_ptr<CrossAssetModelData>& conf
                    "FX parametrization currency[" << i << "]=" << ccy << " does not match IR currrency[" << i + 1
                                                   << "]=" << irParametrizations[i + 1]->currency().code());
 
-        QL_REQUIRE(domCcy == domesticCcy, "FX parametrization [" << i << "]=" << ccy << "/" << domCcy
-                                                                 << " does not match domestic ccy " << domesticCcy);
+        QL_REQUIRE(domCcy == domesticCcy,
+                   "FX parametrization [" << i << "]=" << ccy << "/" << domCcy << " does not match domestic ccy "
+                                          << domesticCcy);
 
         boost::shared_ptr<FxBsBuilder> builder =
             boost::make_shared<FxBsBuilder>(market_, fx, configurationFxCalibration_);

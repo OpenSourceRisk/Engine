@@ -17,8 +17,8 @@
 */
 
 #include <ored/model/fxbsdata.hpp>
-#include <ored/utilities/parsers.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/parsers.hpp>
 
 namespace ore {
 namespace data {

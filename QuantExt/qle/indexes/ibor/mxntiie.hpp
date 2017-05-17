@@ -24,8 +24,8 @@
 #ifndef quantext_mxntiie_hpp
 #define quantext_mxntiie_hpp
 
-#include <ql/indexes/iborindex.hpp>
 #include <ql/currencies/america.hpp>
+#include <ql/indexes/iborindex.hpp>
 #include <ql/time/calendars/mexico.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 

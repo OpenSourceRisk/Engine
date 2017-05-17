@@ -25,8 +25,8 @@
 
 #include <ql/time/date.hpp>
 
-#include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
 
 namespace boost {
 namespace serialization {

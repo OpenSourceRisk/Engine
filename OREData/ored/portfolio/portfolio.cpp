@@ -16,14 +16,14 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/fxforward.hpp>
+#include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/swap.hpp>
 #include <ored/portfolio/swaption.hpp>
-#include <ql/time/date.hpp>
-#include <ql/errors.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/xmlutils.hpp>
+#include <ql/errors.hpp>
+#include <ql/time/date.hpp>
 
 using namespace QuantLib;
 using namespace std;
@@ -68,8 +68,8 @@ void Portfolio::load(const string& fileName, const boost::shared_ptr<TradeFactor
                                         << " class:" << tradeType);
                 } catch (std::exception& ex) {
                     ALOG("Exception parsing Trade XML Node (id=" << id << ") "
-                                                                          "(class=" << tradeType
-                                                                 << ") : " << ex.what());
+                                                                          "(class="
+                                                                 << tradeType << ") : " << ex.what());
                 }
             } else {
                 WLOG("Unable to build Trade for tradeType=" << tradeType);

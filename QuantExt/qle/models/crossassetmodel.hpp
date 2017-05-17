@@ -24,15 +24,15 @@
 #ifndef quantext_crossasset_model_hpp
 #define quantext_crossasset_model_hpp
 
-#include <qle/models/fxbsparametrization.hpp>
 #include <qle/models/eqbsparametrization.hpp>
+#include <qle/models/fxbsparametrization.hpp>
 #include <qle/models/lgm.hpp>
 #include <qle/processes/crossassetstateprocess.hpp>
 
-#include <ql/models/model.hpp>
-#include <ql/math/matrix.hpp>
 #include <ql/math/distributions/normaldistribution.hpp>
 #include <ql/math/integrals/integral.hpp>
+#include <ql/math/matrix.hpp>
+#include <ql/models/model.hpp>
 
 #include <boost/bind.hpp>
 
@@ -248,8 +248,9 @@ protected:
             volGridSize = fxbs(aIdx)->parameter(0)->size();
         else
             volGridSize = eqbs(aIdx)->parameter(0)->size();
-        QL_REQUIRE(tIdx < volGridSize, "bs volatility index (" << tIdx << ") for " << assetStr << " asset " << aIdx
-                                                               << " out of bounds 0..." << volGridSize - 1);
+        QL_REQUIRE(tIdx < volGridSize,
+                   "bs volatility index (" << tIdx << ") for " << assetStr << " asset " << aIdx << " out of bounds 0..."
+                                           << volGridSize - 1);
         std::vector<bool> res(0);
         for (Size j = 0; j < nIrLgm1f_; ++j) {
             std::vector<bool> tmp1(p_[idx(IR, j)]->parameter(0)->size(), true);

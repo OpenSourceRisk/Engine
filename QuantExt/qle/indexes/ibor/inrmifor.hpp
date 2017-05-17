@@ -24,8 +24,8 @@
 #ifndef quantext_inrmifor_hpp
 #define quantext_inrmifor_hpp
 
-#include <ql/indexes/iborindex.hpp>
 #include <ql/currencies/asia.hpp>
+#include <ql/indexes/iborindex.hpp>
 #include <ql/time/calendars/india.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 

@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/termstructures/blackvariancecurve3.hpp>
 #include <ql/math/interpolations/linearinterpolation.hpp>
+#include <qle/termstructures/blackvariancecurve3.hpp>
 
 namespace QuantExt {
 

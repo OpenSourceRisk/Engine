@@ -23,12 +23,12 @@
 
 #pragma once
 
-#include <string>
-#include <ql/types.hpp>
+#include <boost/make_shared.hpp>
+#include <ql/quotes/simplequote.hpp>
 #include <ql/time/date.hpp>
 #include <ql/time/daycounter.hpp>
-#include <ql/quotes/simplequote.hpp>
-#include <boost/make_shared.hpp>
+#include <ql/types.hpp>
+#include <string>
 
 using std::string;
 using QuantLib::Real;
@@ -691,8 +691,8 @@ public:
                   Period expiry, string strike)
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::FX_OPTION), unitCcy_(unitCcy), ccy_(ccy),
           expiry_(expiry), strike_(strike) {
-        QL_REQUIRE(strike == "ATM" || strike == "25BF" || strike == "25RR", "Invalid FXOptionQuote strike (" << strike
-                                                                                                             << ")");
+        QL_REQUIRE(strike == "ATM" || strike == "25BF" || strike == "25RR",
+                   "Invalid FXOptionQuote strike (" << strike << ")");
     }
 
     //! \name Inspectors

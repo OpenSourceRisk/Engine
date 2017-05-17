@@ -23,10 +23,10 @@
 
 #pragma once
 
-#include <ored/marketdata/marketdatum.hpp>
-#include <ored/marketdata/fixings.hpp>
-#include <ql/time/date.hpp>
 #include <boost/shared_ptr.hpp>
+#include <ored/marketdata/fixings.hpp>
+#include <ored/marketdata/marketdatum.hpp>
+#include <ql/time/date.hpp>
 #include <vector>
 
 namespace ore {

@@ -16,34 +16,34 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/timer.hpp>
+#include <orea/cube/inmemorycube.hpp>
+#include <orea/cube/npvcube.hpp>
+#include <orea/engine/all.hpp>
+#include <orea/engine/observationmode.hpp>
+#include <orea/engine/sensitivityanalysis.hpp>
+#include <orea/scenario/clonescenariofactory.hpp>
+#include <orea/scenario/scenariosimmarket.hpp>
+#include <orea/scenario/scenariosimmarketparameters.hpp>
+#include <orea/scenario/stressscenariogenerator.hpp>
+#include <ored/model/lgmdata.hpp>
+#include <ored/portfolio/builders/capfloor.hpp>
+#include <ored/portfolio/builders/fxforward.hpp>
+#include <ored/portfolio/builders/fxoption.hpp>
+#include <ored/portfolio/builders/swap.hpp>
+#include <ored/portfolio/builders/swaption.hpp>
+#include <ored/portfolio/portfolio.hpp>
+#include <ored/portfolio/swap.hpp>
+#include <ored/portfolio/swaption.hpp>
+#include <ored/utilities/log.hpp>
+#include <ored/utilities/osutils.hpp>
+#include <ql/math/randomnumbers/mt19937uniformrng.hpp>
+#include <ql/time/calendars/target.hpp>
+#include <ql/time/date.hpp>
+#include <ql/time/daycounters/actualactual.hpp>
 #include <test/stresstest.hpp>
 #include <test/testmarket.hpp>
 #include <test/testportfolio.hpp>
-#include <ored/utilities/osutils.hpp>
-#include <ored/utilities/log.hpp>
-#include <orea/cube/npvcube.hpp>
-#include <orea/cube/inmemorycube.hpp>
-#include <ored/model/lgmdata.hpp>
-#include <orea/scenario/scenariosimmarketparameters.hpp>
-#include <orea/scenario/scenariosimmarket.hpp>
-#include <orea/scenario/clonescenariofactory.hpp>
-#include <orea/scenario/stressscenariogenerator.hpp>
-#include <orea/engine/observationmode.hpp>
-#include <orea/engine/sensitivityanalysis.hpp>
-#include <orea/engine/all.hpp>
-#include <ored/portfolio/swap.hpp>
-#include <ored/portfolio/swaption.hpp>
-#include <ored/portfolio/builders/swap.hpp>
-#include <ored/portfolio/builders/swaption.hpp>
-#include <ored/portfolio/builders/fxforward.hpp>
-#include <ored/portfolio/builders/fxoption.hpp>
-#include <ored/portfolio/builders/capfloor.hpp>
-#include <ored/portfolio/portfolio.hpp>
-#include <ql/time/date.hpp>
-#include <ql/math/randomnumbers/mt19937uniformrng.hpp>
-#include <ql/time/calendars/target.hpp>
-#include <ql/time/daycounters/actualactual.hpp>
-#include <boost/timer.hpp>
 
 using namespace std;
 using namespace QuantLib;
@@ -346,17 +346,17 @@ void StressTestingTest::regression() {
         if (fabs(delta) > 0.0) {
             count++;
             // BOOST_TEST_MESSAGE("{ \"" << id << "\", \"" << label << "\", " << delta << " },");
-            QL_REQUIRE(stressMap.find(p) != stressMap.end(), "pair (" << p.first << ", " << p.second
-                                                                      << ") not found in sensi map");
+            QL_REQUIRE(stressMap.find(p) != stressMap.end(),
+                       "pair (" << p.first << ", " << p.second << ") not found in sensi map");
             BOOST_CHECK_MESSAGE(fabs(delta - stressMap[p]) < tolerance ||
                                     fabs((delta - stressMap[p]) / delta) < tolerance,
                                 "stress test regression failed for pair (" << p.first << ", " << p.second
                                                                            << "): " << delta << " vs " << stressMap[p]);
         }
     }
-    BOOST_CHECK_MESSAGE(count == cachedResults.size(), "number of non-zero stress impacts ("
-                                                           << count << ") do not match regression data ("
-                                                           << cachedResults.size() << ")");
+    BOOST_CHECK_MESSAGE(count == cachedResults.size(),
+                        "number of non-zero stress impacts (" << count << ") do not match regression data ("
+                                                              << cachedResults.size() << ")");
     IndexManager::instance().clearHistories();
 }
 

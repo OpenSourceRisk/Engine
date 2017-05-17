@@ -23,10 +23,10 @@
 
 #pragma once
 
-#include <orea/cube/npvcube.hpp>
 #include <boost/shared_ptr.hpp>
-#include <string>
 #include <map>
+#include <orea/cube/npvcube.hpp>
+#include <string>
 
 namespace ore {
 namespace analytics {

@@ -121,8 +121,8 @@ DynamicBlackVolTermStructure<mode>::DynamicBlackVolTermStructure(const Handle<Bl
       atmKnown_(!riskfree.empty() && !dividend.empty() && !spot.empty()),
       forwardCurveSampleGrid_(forwardCurveSampleGrid) {
 
-    QL_REQUIRE(stickyness == StickyStrike || stickyness == StickyLogMoneyness, "stickyness (" << stickyness
-                                                                                              << ") not supported");
+    QL_REQUIRE(stickyness == StickyStrike || stickyness == StickyLogMoneyness,
+               "stickyness (" << stickyness << ") not supported");
     QL_REQUIRE(decayMode == ConstantVariance || decayMode == ForwardForwardVariance,
                "reaction to time decay (" << decayMode << ") not supported");
 
@@ -153,8 +153,8 @@ DynamicBlackVolTermStructure<mode>::DynamicBlackVolTermStructure(const Handle<Bl
                            8.0, 9.0,  10.0, 12.0, 15.0, 20.0, 25.0, 30.0, 40.0, 50.0, 60.0 };
             forwardCurveSampleGrid_ = std::vector<Real>(tmp, tmp + sizeof(tmp) / sizeof(tmp[0]));
         }
-        QL_REQUIRE(close_enough(forwardCurveSampleGrid_[0], 0.0), "forward curve sample grid must start at 0 ("
-                                                                      << forwardCurveSampleGrid_[0]);
+        QL_REQUIRE(close_enough(forwardCurveSampleGrid_[0], 0.0),
+                   "forward curve sample grid must start at 0 (" << forwardCurveSampleGrid_[0]);
         initialForwards_.resize(forwardCurveSampleGrid_.size());
         for (Size i = 1; i < forwardCurveSampleGrid_.size(); ++i) {
             QL_REQUIRE(forwardCurveSampleGrid_[i] > forwardCurveSampleGrid_[i - 1],
@@ -179,9 +179,9 @@ template <typename mode> Date DynamicBlackVolTermStructure<mode>::maxDate() cons
         return source_->maxDate();
     }
     if (decayMode_ == ConstantVariance) {
-        return Date(std::min(Date::maxDate().serialNumber(), referenceDate().serialNumber() -
-                                                                 originalReferenceDate_.serialNumber() +
-                                                                 source_->maxDate().serialNumber()));
+        return Date(std::min(Date::maxDate().serialNumber(),
+                             referenceDate().serialNumber() - originalReferenceDate_.serialNumber() +
+                                 source_->maxDate().serialNumber()));
     }
     QL_FAIL("unexpected decay mode (" << decayMode_ << ")");
 }

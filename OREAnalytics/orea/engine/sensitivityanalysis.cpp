@@ -18,8 +18,8 @@
 
 #include <boost/timer.hpp>
 #include <orea/cube/inmemorycube.hpp>
-#include <orea/engine/valuationengine.hpp>
 #include <orea/engine/sensitivityanalysis.hpp>
+#include <orea/engine/valuationengine.hpp>
 #include <orea/scenario/clonescenariofactory.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
@@ -32,11 +32,11 @@
 #include <ql/pricingengines/capfloor/blackcapfloorengine.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
 #include <ql/termstructures/yield/oisratehelper.hpp>
-#include <qle/instruments/deposit.hpp>
-#include <qle/pricingengines/depositengine.hpp>
 #include <qle/instruments/crossccybasisswap.hpp>
-#include <qle/pricingengines/crossccyswapengine.hpp>
+#include <qle/instruments/deposit.hpp>
 #include <qle/instruments/fxforward.hpp>
+#include <qle/pricingengines/crossccyswapengine.hpp>
+#include <qle/pricingengines/depositengine.hpp>
 #include <qle/pricingengines/discountingfxforwardengine.hpp>
 
 using namespace QuantLib;
@@ -221,8 +221,8 @@ void SensitivityAnalysis::collectResultsFromCube(const boost::shared_ptr<NPVCube
         string factor = p.second;
         QL_REQUIRE(baseNPV_.find(id) != baseNPV_.end(), "base NPV not found for trade " << id);
         Real b = baseNPV_[id];
-        QL_REQUIRE(downNPV_.find(p) != downNPV_.end(), "down shift result not found for trade " << id << ", factor "
-                                                                                                << factor);
+        QL_REQUIRE(downNPV_.find(p) != downNPV_.end(),
+                   "down shift result not found for trade " << id << ", factor " << factor);
         Real d = downNPV_[p];
         // f_x(x) = (f(x+u) - f(x)) / u
         delta_[p] = u - b;           // = f_x(x) * u

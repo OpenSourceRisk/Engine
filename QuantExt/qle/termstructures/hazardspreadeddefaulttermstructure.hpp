@@ -24,8 +24,8 @@
 #ifndef quantext_hazard_spreaded__defaulttermstructure_hpp
 #define quantext_hazard_spreaded__defaulttermstructure_hpp
 
-#include <ql/termstructures/credit/hazardratestructure.hpp>
 #include <ql/quote.hpp>
+#include <ql/termstructures/credit/hazardratestructure.hpp>
 
 using namespace QuantLib;
 

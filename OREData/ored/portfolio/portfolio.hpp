@@ -23,12 +23,12 @@
 
 #pragma once
 
-#include <ql/types.hpp>
-#include <ql/time/date.hpp>
-#include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/shared_ptr.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/tradefactory.hpp>
+#include <ql/time/date.hpp>
+#include <ql/types.hpp>
 #include <vector>
 
 namespace ore {

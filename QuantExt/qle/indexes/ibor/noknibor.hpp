@@ -24,8 +24,8 @@
 #ifndef quantext_noknibor_hpp
 #define quantext_noknibor_hpp
 
-#include <ql/indexes/iborindex.hpp>
 #include <ql/currencies/europe.hpp>
+#include <ql/indexes/iborindex.hpp>
 #include <ql/time/calendars/norway.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 

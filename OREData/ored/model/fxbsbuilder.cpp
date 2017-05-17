@@ -21,8 +21,8 @@
 
 #include <qle/models/fxbsconstantparametrization.hpp>
 #include <qle/models/fxbspiecewiseconstantparametrization.hpp>
-#include <qle/pricingengines/analyticcclgmfxoptionengine.hpp>
 #include <qle/models/fxeqoptionhelper.hpp>
+#include <qle/pricingengines/analyticcclgmfxoptionengine.hpp>
 
 #include <ored/model/fxbsbuilder.hpp>
 #include <ored/utilities/log.hpp>

@@ -23,8 +23,8 @@
 
 #pragma once
 
-#include <ored/portfolio/trade.hpp>
 #include <ored/portfolio/optiondata.hpp>
+#include <ored/portfolio/trade.hpp>
 
 using std::string;
 

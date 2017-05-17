@@ -18,8 +18,8 @@
 
 #include <orea/cube/cubewriter.hpp>
 #include <ostream>
-#include <stdio.h>
 #include <ql/errors.hpp>
+#include <stdio.h>
 
 using std::string;
 using std::vector;

@@ -21,8 +21,8 @@
     \ingroup
 */
 
-#include <ored/marketdata/securityspread.hpp>
 #include <ored/marketdata/marketdatum.hpp>
+#include <ored/marketdata/securityspread.hpp>
 
 namespace ore {
 namespace data {

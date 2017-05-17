@@ -31,8 +31,8 @@ CloneScenarioFactory::CloneScenarioFactory(const boost::shared_ptr<Scenario>& ba
 const boost::shared_ptr<Scenario> CloneScenarioFactory::buildScenario(Date asof, const std::string& label,
                                                                       Real numeraire) const {
     boost::shared_ptr<Scenario> newScen = baseScenario_->clone();
-    QL_REQUIRE(asof == newScen->asof(), "unexpected asof date (" << asof << "), does not match base - "
-                                                                 << baseScenario_->asof());
+    QL_REQUIRE(asof == newScen->asof(),
+               "unexpected asof date (" << asof << "), does not match base - " << baseScenario_->asof());
     newScen->label(label);
     QL_REQUIRE((label == newScen->label()) || (label == ""), "CloneScenarioFactory has not updated scenario label");
     if (numeraire != 0.0)

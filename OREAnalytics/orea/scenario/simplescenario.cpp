@@ -16,10 +16,10 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/make_shared.hpp>
 #include <orea/scenario/simplescenario.hpp>
 #include <ored/utilities/log.hpp>
 #include <ql/errors.hpp>
-#include <boost/make_shared.hpp>
 
 namespace ore {
 namespace analytics {

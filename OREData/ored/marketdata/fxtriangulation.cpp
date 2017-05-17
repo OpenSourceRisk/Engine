@@ -16,12 +16,12 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/make_shared.hpp>
 #include <ored/marketdata/fxtriangulation.hpp>
-#include <ql/quotes/simplequote.hpp>
+#include <ql/errors.hpp>
 #include <ql/quotes/compositequote.hpp>
 #include <ql/quotes/derivedquote.hpp>
-#include <ql/errors.hpp>
-#include <boost/make_shared.hpp>
+#include <ql/quotes/simplequote.hpp>
 
 using namespace QuantLib;
 using std::string;

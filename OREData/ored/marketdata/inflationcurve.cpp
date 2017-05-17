@@ -56,8 +56,8 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
             nominalTs = it->second->handle();
         } else {
             QL_FAIL("The nominal term structure, " << config->nominalTermStructure() << ", required in the building "
-                                                                                        "of the curve, " << spec.name()
-                                                   << ", was not found.");
+                                                                                        "of the curve, "
+                                                   << spec.name() << ", was not found.");
         }
 
         // We loop over all market data, looking for quotes that match the configuration
@@ -123,7 +123,8 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                     QL_REQUIRE(sq->type() == "MULT", "Market quote (" << sq->name() << ") not of multiplicative type.");
                     Size seasBaseDateMonth = ((Size)config->seasonalityBaseDate().month());
                     QuantLib::Size findex = (seasBaseDateMonth < sq->applyMonth())
-                        ? 12 + seasBaseDateMonth - sq->applyMonth() : seasBaseDateMonth - sq->applyMonth();
+                                                ? 12 + seasBaseDateMonth - sq->applyMonth()
+                                                : seasBaseDateMonth - sq->applyMonth();
                     factors[findex] = sq->quote()->value();
                 } else {
                     QL_FAIL("Could not find quote for ID " << strFactorIDs[i] << " with as of date "

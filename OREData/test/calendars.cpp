@@ -16,9 +16,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <test/calendars.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ql/time/calendars/all.hpp>
+#include <test/calendars.hpp>
 
 using namespace QuantLib;
 using namespace boost::unit_test_framework;

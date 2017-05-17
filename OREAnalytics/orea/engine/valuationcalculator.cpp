@@ -64,8 +64,8 @@ void CashflowCalculator::calculate(const boost::shared_ptr<Trade>& trade, Size t
 
     Real netFlow = 0;
 
-    QL_REQUIRE(dateGrid_->dates()[dateIndex] == date, "Date mixup, date is " << date << " but grid index is "
-                                                                             << dateIndex);
+    QL_REQUIRE(dateGrid_->dates()[dateIndex] == date,
+               "Date mixup, date is " << date << " but grid index is " << dateIndex);
     // Date startDate = dateIndex == 0 ? t0Date_ : dateGrid_->dates()[dateIndex - 1];
     Date startDate = date;
     Date endDate = date == dateGrid_->dates().back() ? date : dateGrid_->dates()[dateIndex + 1];

@@ -24,8 +24,8 @@
 #ifndef quantext_dkkcibor_hpp
 #define quantext_dkkcibor_hpp
 
-#include <ql/indexes/iborindex.hpp>
 #include <ql/currencies/europe.hpp>
+#include <ql/indexes/iborindex.hpp>
 #include <ql/time/calendars/denmark.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 

@@ -17,11 +17,11 @@
 */
 
 #include <ql/cashflows/cashflows.hpp>
-#include <ql/cashflows/simplecashflow.hpp>
 #include <ql/cashflows/fixedratecoupon.hpp>
 #include <ql/cashflows/floatingratecoupon.hpp>
 #include <ql/cashflows/iborcoupon.hpp>
 #include <ql/cashflows/inflationcoupon.hpp>
+#include <ql/cashflows/simplecashflow.hpp>
 #include <ql/utilities/dataformatters.hpp>
 
 #include <qle/pricingengines/discountingswapenginemulticurve.hpp>
@@ -144,7 +144,8 @@ void DiscountingSwapEngineMultiCurve::calculate() const {
     } else {
         QL_REQUIRE(settlementDate >= referenceDate,
                    "settlement date (" << settlementDate << ") before "
-                                                            "discount curve reference date (" << referenceDate << ")");
+                                                            "discount curve reference date ("
+                                       << referenceDate << ")");
     }
 
     // - Instrument::results
@@ -154,9 +155,10 @@ void DiscountingSwapEngineMultiCurve::calculate() const {
     if (npvDate_ == Date()) {
         results_.valuationDate = referenceDate;
     } else {
-        QL_REQUIRE(npvDate_ >= referenceDate, "npv date (" << npvDate_ << ") before "
-                                                                          "discount curve reference date ("
-                                                           << referenceDate << ")");
+        QL_REQUIRE(npvDate_ >= referenceDate,
+                   "npv date (" << npvDate_ << ") before "
+                                               "discount curve reference date ("
+                                << referenceDate << ")");
     }
 
     // - Swap::results

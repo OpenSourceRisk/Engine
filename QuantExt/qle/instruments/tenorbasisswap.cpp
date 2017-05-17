@@ -17,8 +17,8 @@
 */
 
 #include <ql/cashflows/iborcoupon.hpp>
-#include <ql/pricingengines/swap/discountingswapengine.hpp>
 #include <ql/math/solvers1d/brent.hpp>
+#include <ql/pricingengines/swap/discountingswapengine.hpp>
 
 #include <qle/instruments/tenorbasisswap.hpp>
 

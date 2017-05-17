@@ -17,10 +17,10 @@
 */
 
 #include "xmlmanipulation.hpp"
-#include <ored/utilities/xmlutils.hpp>
-#include <ql/types.hpp>
-#include <ql/errors.hpp>
 #include <boost/lexical_cast.hpp>
+#include <ored/utilities/xmlutils.hpp>
+#include <ql/errors.hpp>
+#include <ql/types.hpp>
 
 using namespace ore::data;
 using namespace boost::unit_test_framework;

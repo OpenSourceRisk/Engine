@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/models/fxbsconstantparametrization.hpp>
 #include <ql/math/comparison.hpp>
+#include <qle/models/fxbsconstantparametrization.hpp>
 
 namespace QuantExt {
 

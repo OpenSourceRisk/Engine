@@ -18,9 +18,9 @@
 
 #include <ql/errors.hpp>
 
+#include <boost/algorithm/string/predicate.hpp>
 #include <ored/configuration/yieldcurveconfig.hpp>
 #include <ored/utilities/log.hpp>
-#include <boost/algorithm/string/predicate.hpp>
 
 using QuantLib::Visitor;
 using QuantLib::Size;

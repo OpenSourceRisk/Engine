@@ -29,8 +29,8 @@
 
 #include <qle/models/crossassetmodel.hpp>
 
-#include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/scenario/crossassetmodelscenariogenerator.hpp>
+#include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <ored/utilities/xmlutils.hpp>
 
 using namespace QuantLib;

@@ -23,9 +23,9 @@
 
 #pragma once
 
-#include <vector>
 #include <map>
 #include <ostream>
+#include <vector>
 
 #include <qle/models/lgm.hpp>
 

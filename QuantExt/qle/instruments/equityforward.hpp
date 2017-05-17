@@ -26,11 +26,11 @@
 #define quantext_equity_forward_hpp
 
 #include <ql/currency.hpp>
-#include <ql/money.hpp>
 #include <ql/exchangerate.hpp>
 #include <ql/instrument.hpp>
-#include <ql/quote.hpp>
+#include <ql/money.hpp>
 #include <ql/position.hpp>
+#include <ql/quote.hpp>
 
 using namespace QuantLib;
 

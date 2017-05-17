@@ -23,8 +23,8 @@
 
 #pragma once
 
-#include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
+#include <ored/portfolio/enginefactory.hpp>
 
 #include <ql/cashflows/couponpricer.hpp>
 

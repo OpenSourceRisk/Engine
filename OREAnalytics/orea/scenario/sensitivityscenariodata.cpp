@@ -17,8 +17,8 @@
 */
 
 #include <orea/scenario/sensitivityscenariodata.hpp>
-#include <ored/utilities/xmlutils.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/xmlutils.hpp>
 
 using namespace QuantLib;
 

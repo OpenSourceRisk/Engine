@@ -25,8 +25,8 @@
 #ifndef quantext_oiccbs_engine_hpp
 #define quantext_oiccbs_engine_hpp
 
-#include <qle/instruments/oiccbasisswap.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
+#include <qle/instruments/oiccbasisswap.hpp>
 
 namespace QuantExt {
 

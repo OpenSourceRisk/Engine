@@ -16,13 +16,13 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/termstructures/strippedoptionletadapter2.hpp>
-#include <ql/termstructures/volatility/optionlet/optionletstripper.hpp>
-#include <ql/termstructures/volatility/capfloor/capfloortermvolsurface.hpp>
+#include <ql/math/interpolations/cubicinterpolation.hpp>
 #include <ql/math/interpolations/linearinterpolation.hpp>
 #include <ql/math/interpolations/sabrinterpolation.hpp>
+#include <ql/termstructures/volatility/capfloor/capfloortermvolsurface.hpp>
 #include <ql/termstructures/volatility/interpolatedsmilesection.hpp>
-#include <ql/math/interpolations/cubicinterpolation.hpp>
+#include <ql/termstructures/volatility/optionlet/optionletstripper.hpp>
+#include <qle/termstructures/strippedoptionletadapter2.hpp>
 
 using namespace QuantLib;
 

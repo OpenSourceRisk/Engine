@@ -16,14 +16,14 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ored/portfolio/equityoption.hpp>
+#include <boost/make_shared.hpp>
 #include <ored/portfolio/builders/equityoption.hpp>
 #include <ored/portfolio/enginefactory.hpp>
-#include <ql/exercise.hpp>
-#include <ql/instruments/vanillaoption.hpp>
-#include <ql/instruments/compositeinstrument.hpp>
+#include <ored/portfolio/equityoption.hpp>
 #include <ql/errors.hpp>
-#include <boost/make_shared.hpp>
+#include <ql/exercise.hpp>
+#include <ql/instruments/compositeinstrument.hpp>
+#include <ql/instruments/vanillaoption.hpp>
 
 using namespace QuantLib;
 

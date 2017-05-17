@@ -24,8 +24,8 @@
 #ifndef quantlib_oisbasisswaphelper_hpp
 #define quantlib_oisbasisswaphelper_hpp
 
-#include <ql/termstructures/yield/ratehelpers.hpp>
 #include <ql/instruments/overnightindexedswap.hpp>
+#include <ql/termstructures/yield/ratehelpers.hpp>
 #include <qle/instruments/oibasisswap.hpp>
 
 namespace QuantExt {

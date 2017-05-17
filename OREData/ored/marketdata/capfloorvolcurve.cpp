@@ -98,9 +98,9 @@ CapFloorVolCurve::CapFloorVolCurve(Date asof, CapFloorVolatilityCurveSpec spec, 
 
                     if (!q->atm()) {
                         Size i = std::find(tenors.begin(), tenors.end(), q->term()) - tenors.begin();
-                        Size j = std::find_if(strikes.begin(), strikes.end(), [&q](const double& s) {
-                            return close_enough(s, q->strike());
-                        }) - strikes.begin();
+                        Size j = std::find_if(strikes.begin(), strikes.end(),
+                                              [&q](const double& s) { return close_enough(s, q->strike()); }) -
+                                 strikes.begin();
 
                         if (i < tenors.size() && j < strikes.size()) {
                             vols[i][j] = q->quote()->value();

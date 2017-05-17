@@ -24,8 +24,8 @@
 #ifndef quantext_hufbubor_hpp
 #define quantext_hufbubor_hpp
 
-#include <ql/indexes/iborindex.hpp>
 #include <ql/currencies/europe.hpp>
+#include <ql/indexes/iborindex.hpp>
 #include <ql/time/calendars/hungary.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 

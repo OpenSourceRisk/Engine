@@ -16,17 +16,17 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <orea/engine/valuationengine.hpp>
 #include <orea/engine/observationmode.hpp>
+#include <orea/engine/valuationengine.hpp>
 #include <orea/simulation/simmarket.hpp>
-#include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/optionwrapper.hpp>
+#include <ored/portfolio/portfolio.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/progressbar.hpp>
 
-#include <ql/errors.hpp>
 #include <boost/timer.hpp>
+#include <ql/errors.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -42,9 +42,9 @@ ValuationEngine::ValuationEngine(const Date& today, const boost::shared_ptr<Date
     : today_(today), dg_(dg), simMarket_(simMarket), modelBuilders_(modelBuilders) {
 
     QL_REQUIRE(dg_->size() > 0, "Error, DateGrid size must be > 0");
-    QL_REQUIRE(today <= dg_->dates().front(), "ValuationEngine: Error today ("
-                                                  << today << ") must not be later than first DateGrid date "
-                                                  << dg_->dates().front());
+    QL_REQUIRE(today <= dg_->dates().front(),
+               "ValuationEngine: Error today (" << today << ") must not be later than first DateGrid date "
+                                                << dg_->dates().front());
     QL_REQUIRE(simMarket_, "ValuationEngine: Error, Null SimMarket");
 }
 

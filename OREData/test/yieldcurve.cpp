@@ -16,11 +16,11 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <test/yieldcurve.hpp>
-#include <ored/marketdata/yieldcurve.hpp>
 #include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/marketdatumparser.hpp>
+#include <ored/marketdata/yieldcurve.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <test/yieldcurve.hpp>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/make_shared.hpp>

@@ -24,8 +24,8 @@
 #ifndef quantext_irlgm1f_stateprocess_hpp
 #define quantext_irlgm1f_stateprocess_hpp
 
-#include <qle/models/irlgm1fparametrization.hpp>
 #include <ql/stochasticprocess.hpp>
+#include <qle/models/irlgm1fparametrization.hpp>
 
 using namespace QuantLib;
 

@@ -25,9 +25,9 @@
 #define quantext_idridrfix_hpp
 
 #include <ql/indexes/iborindex.hpp>
-#include <qle/currencies/asia.hpp>
 #include <ql/time/calendars/indonesia.hpp>
 #include <ql/time/daycounters/actual360.hpp>
+#include <qle/currencies/asia.hpp>
 
 using namespace QuantLib;
 

@@ -18,10 +18,10 @@
 
 #include <ored/marketdata/equitycurve.hpp>
 #include <ored/utilities/log.hpp>
+#include <ql/math/interpolations/backwardflatinterpolation.hpp>
+#include <ql/math/interpolations/loginterpolation.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/termstructures/yield/zerocurve.hpp>
-#include <ql/math/interpolations/loginterpolation.hpp>
-#include <ql/math/interpolations/backwardflatinterpolation.hpp>
 
 #include <ored/utilities/parsers.hpp>
 
@@ -83,8 +83,8 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                 // is the quote one of the list in the config ?
                 if (it1 != config->quotes().end()) {
                     Size pos = it1 - config->quotes().begin();
-                    QL_REQUIRE(terms_[pos] == Null<Date>(), "duplicate market datum found for "
-                                                                << config->quotes()[pos]);
+                    QL_REQUIRE(terms_[pos] == Null<Date>(),
+                               "duplicate market datum found for " << config->quotes()[pos]);
                     terms_[pos] = q->expiryDate();
                     quotes_[pos] = q->quote()->value();
                     quotesRead++;
@@ -104,8 +104,8 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                 // is the quote one of the list in the config ?
                 if (it1 != config->quotes().end()) {
                     Size pos = it1 - config->quotes().begin();
-                    QL_REQUIRE(terms_[pos] == Null<Date>(), "duplicate market datum found for "
-                                                                << config->quotes()[pos]);
+                    QL_REQUIRE(terms_[pos] == Null<Date>(),
+                               "duplicate market datum found for " << config->quotes()[pos]);
                     terms_[pos] = q->tenorDate();
                     quotes_[pos] = q->quote()->value();
                     quotesRead++;
@@ -116,8 +116,8 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
             (config->type() == EquityCurveConfig::Type::ForwardPrice) ? "EQUITY_FWD" : "EQUITY_DIVIDEND";
 
         LOG("EquityCurve: read " << quotesRead << " quotes of type " << curveTypeStr);
-        QL_REQUIRE(quotesRead == config->quotes().size(), "read " << quotesRead << ", but " << config->quotes().size()
-                                                                  << " required.");
+        QL_REQUIRE(quotesRead == config->quotes().size(),
+                   "read " << quotesRead << ", but " << config->quotes().size() << " required.");
         QL_REQUIRE(equitySpot_ != Null<Real>(), "Equity spot quote not found for " << config->curveID());
 
         for (Size i = 0; i < terms_.size(); i++) {
@@ -155,9 +155,9 @@ EquityCurve::divYieldTermStructure(const Date& asof, const Handle<YieldTermStruc
             QL_FAIL("Invalid Equity curve configuration type for " << spec_.name());
 
         QL_REQUIRE(dividendRates.size() > 0, "No dividend yield rates extracted for " << spec_.name());
-        QL_REQUIRE(dividendRates.size() == terms_.size(), "vector size mismatch - dividend rates ("
-                                                              << dividendRates.size() << ") vs terms (" << terms_.size()
-                                                              << ")");
+        QL_REQUIRE(dividendRates.size() == terms_.size(),
+                   "vector size mismatch - dividend rates (" << dividendRates.size() << ") vs terms (" << terms_.size()
+                                                             << ")");
 
         boost::shared_ptr<YieldTermStructure> divCurve;
         // Build Dividend Term Structure

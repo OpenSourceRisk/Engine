@@ -24,8 +24,8 @@
 #ifndef quantext_calibrationhelper_fxeqoption_hpp
 #define quantext_calibrationhelper_fxeqoption_hpp
 
-#include <ql/models/calibrationhelper.hpp>
 #include <ql/instruments/vanillaoption.hpp>
+#include <ql/models/calibrationhelper.hpp>
 
 using namespace QuantLib;
 

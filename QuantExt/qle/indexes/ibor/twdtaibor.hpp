@@ -24,8 +24,8 @@
 #ifndef quantext_twdtaibor_hpp
 #define quantext_twdtaibor_hpp
 
-#include <ql/indexes/iborindex.hpp>
 #include <ql/currencies/asia.hpp>
+#include <ql/indexes/iborindex.hpp>
 #include <ql/time/calendars/taiwan.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 

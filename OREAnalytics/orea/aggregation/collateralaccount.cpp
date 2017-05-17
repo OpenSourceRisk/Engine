@@ -50,8 +50,9 @@ CollateralAccount::CollateralAccount(const boost::shared_ptr<NettingSetDefinitio
 
 void CollateralAccount::updateAccountBalance(const Date& simulationDate, const Real& annualisedZeroRate) {
     for (unsigned i = 0; i < marginCalls_.size(); i++) {
-        QL_REQUIRE(marginCalls_[i].openMarginRequest(), "CollateralAccount error, expired margin call found"
-                                                            << " (should have been purged after expiry)");
+        QL_REQUIRE(marginCalls_[i].openMarginRequest(),
+                   "CollateralAccount error, expired margin call found"
+                       << " (should have been purged after expiry)");
         if (i != marginCalls_.size() - 1) {
             QL_REQUIRE(marginCalls_[i].marginPayDate() <= marginCalls_[i + 1].marginPayDate(),
                        "CollateralAccount error; vector of margin calls not sorted correctly");
@@ -89,8 +90,9 @@ void CollateralAccount::updateAccountBalance(const Date& simulationDate, const R
 }
 
 void CollateralAccount::updateMarginCall(const MarginCall& newMarginCall) {
-    QL_REQUIRE(newMarginCall.openMarginRequest() == true, "CollateralAccount error, "
-                                                              << "attempting to load expired margin call");
+    QL_REQUIRE(newMarginCall.openMarginRequest() == true,
+               "CollateralAccount error, "
+                   << "attempting to load expired margin call");
     if (marginCalls_.size() > 0) {
         QL_REQUIRE(marginCalls_.back().marginRequestDate() < newMarginCall.marginRequestDate(),
                    "CollateralAccount error, attempting to issue an old margin call");
@@ -129,8 +131,9 @@ Real CollateralAccount::accountBalance(const Date& date) const {
 Real CollateralAccount::outstandingMarginAmount(const Date& simulationDate) const {
     Real outstandingMarginCallAmounts = 0.0;
     for (unsigned i = 0; i < marginCalls_.size(); i++) {
-        QL_REQUIRE(marginCalls_[i].openMarginRequest(), "CollateralAccount error, expired margin call found"
-                                                            << " (should have been purged after expiry)");
+        QL_REQUIRE(marginCalls_[i].openMarginRequest(),
+                   "CollateralAccount error, expired margin call found"
+                       << " (should have been purged after expiry)");
         QL_REQUIRE(marginCalls_[i].marginPayDate() > simulationDate,
                    "CollateralAccount error, old margin call pay date,"
                        << " (should have been settled before now)");
@@ -140,8 +143,9 @@ Real CollateralAccount::outstandingMarginAmount(const Date& simulationDate) cons
 }
 
 void CollateralAccount::closeAccount(const Date& closeDate) {
-    QL_REQUIRE(closeDate > accountDates_.back(), "CollateralAccount error, invalid date "
-                                                     << " for closure of Collateral Account");
+    QL_REQUIRE(closeDate > accountDates_.back(),
+               "CollateralAccount error, invalid date "
+                   << " for closure of Collateral Account");
     marginCalls_.clear();
     accountBalances_.push_back(0.0);
     accountDates_.push_back(closeDate);

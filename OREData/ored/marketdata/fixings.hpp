@@ -23,9 +23,9 @@
 
 #pragma once
 
+#include <boost/shared_ptr.hpp>
 #include <ored/marketdata/marketdatum.hpp>
 #include <ql/time/date.hpp>
-#include <boost/shared_ptr.hpp>
 #include <vector>
 
 namespace ore {

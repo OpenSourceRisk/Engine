@@ -24,9 +24,9 @@
 #ifndef quantext_interpolated_discount_curve_hpp
 #define quantext_interpolated_discount_curve_hpp
 
+#include <boost/make_shared.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <qle/quotes/logquote.hpp>
-#include <boost/make_shared.hpp>
 
 using namespace QuantLib;
 

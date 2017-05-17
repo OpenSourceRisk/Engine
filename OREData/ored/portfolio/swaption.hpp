@@ -23,9 +23,9 @@
 
 #pragma once
 
-#include <ored/portfolio/trade.hpp>
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/optiondata.hpp>
+#include <ored/portfolio/trade.hpp>
 
 #include <ql/instruments/nonstandardswap.hpp>
 

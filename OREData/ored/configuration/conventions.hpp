@@ -23,11 +23,11 @@
 
 #pragma once
 
-#include <ql/indexes/swapindex.hpp>
+#include <ored/utilities/xmlutils.hpp>
 #include <ql/indexes/iborindex.hpp>
 #include <ql/indexes/inflationindex.hpp>
+#include <ql/indexes/swapindex.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp> // SubPeriodsCouponType
-#include <ored/utilities/xmlutils.hpp>
 
 using std::string;
 using std::map;

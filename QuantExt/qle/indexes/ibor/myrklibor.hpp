@@ -24,8 +24,8 @@
 #ifndef quantext_myrklibor_hpp
 #define quantext_myrklibor_hpp
 
-#include <ql/indexes/iborindex.hpp>
 #include <ql/currencies/asia.hpp>
+#include <ql/indexes/iborindex.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 

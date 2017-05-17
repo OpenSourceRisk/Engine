@@ -23,8 +23,8 @@
 
 #pragma once
 
-#include <ql/types.hpp>
 #include <ored/utilities/xmlutils.hpp>
+#include <ql/types.hpp>
 
 using std::string;
 using std::vector;

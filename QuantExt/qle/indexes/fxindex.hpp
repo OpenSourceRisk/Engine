@@ -38,12 +38,12 @@
 #ifndef quantext_fxindex_hpp
 #define quantext_fxindex_hpp
 
-#include <ql/index.hpp>
-#include <ql/time/calendar.hpp>
 #include <ql/currency.hpp>
-#include <ql/handle.hpp>
-#include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/exchangerate.hpp>
+#include <ql/handle.hpp>
+#include <ql/index.hpp>
+#include <ql/termstructures/yieldtermstructure.hpp>
+#include <ql/time/calendar.hpp>
 using namespace QuantLib;
 namespace QuantExt {
 

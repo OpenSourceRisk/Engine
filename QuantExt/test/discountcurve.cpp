@@ -17,11 +17,11 @@
 */
 
 #include "discountcurve.hpp"
-#include <qle/termstructures/interpolateddiscountcurve2.hpp>
-#include <ql/termstructures/yield/discountcurve.hpp>
 #include <ql/quotes/simplequote.hpp>
+#include <ql/termstructures/yield/discountcurve.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
+#include <qle/termstructures/interpolateddiscountcurve2.hpp>
 
 using namespace boost::unit_test_framework;
 using std::vector;

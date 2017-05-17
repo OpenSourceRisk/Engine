@@ -29,8 +29,8 @@
 #include <qle/models/lgmimpliedyieldtermstructure.hpp>
 
 #include <ql/indexes/iborindex.hpp>
-#include <ql/instruments/swaption.hpp>
 #include <ql/instruments/nonstandardswaption.hpp>
+#include <ql/instruments/swaption.hpp>
 #include <ql/math/distributions/normaldistribution.hpp>
 #include <ql/pricingengines/genericmodelengine.hpp>
 

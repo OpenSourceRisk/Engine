@@ -24,8 +24,8 @@
 #ifndef quantext_czkpribor_hpp
 #define quantext_czkpribor_hpp
 
-#include <ql/indexes/iborindex.hpp>
 #include <ql/currencies/europe.hpp>
+#include <ql/indexes/iborindex.hpp>
 #include <ql/time/calendars/czechrepublic.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 

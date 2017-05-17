@@ -21,8 +21,8 @@
 #include <ql/math/interpolations/linearinterpolation.hpp>
 #include <ql/termstructures/volatility/interpolatedsmilesection.hpp>
 
-#include <boost/make_shared.hpp>
 #include <algorithm>
+#include <boost/make_shared.hpp>
 
 using std::min;
 using std::max;

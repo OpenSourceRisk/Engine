@@ -21,8 +21,8 @@
     \ingroup
 */
 
-#include <iostream>
 #include <iomanip>
+#include <iostream>
 using namespace std;
 
 // Boost
@@ -30,37 +30,36 @@ using namespace std;
 using namespace boost;
 
 // Boost.Test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/parameterized_test.hpp>
 #include <boost/test/test_tools.hpp>
 #include <boost/test/unit_test.hpp>
-#include <boost/test/parameterized_test.hpp>
 using boost::unit_test::test_suite;
 
 #ifdef BOOST_MSVC
-#include <qle/auto_link.hpp>
 #include <ql/auto_link.hpp>
+#include <qle/auto_link.hpp>
 #endif
 
 // Lib test suites
 #include "analyticlgmswaptionengine.hpp"
+#include "blackvariancecurve.hpp"
+#include "cashflow.hpp"
 #include "crossassetmodel.hpp"
 #include "crossassetmodel2.hpp"
-#include "equitycrossassetmodel.hpp"
 #include "crossassetmodelparametrizations.hpp"
 #include "currency.hpp"
+#include "deposit.hpp"
 #include "discountcurve.hpp"
 #include "dynamicblackvoltermstructure.hpp"
 #include "dynamicswaptionvolmatrix.hpp"
+#include "equitycrossassetmodel.hpp"
 #include "index.hpp"
 #include "logquote.hpp"
-#include "staticallycorrectedyieldtermstructure.hpp"
-#include "blackvariancecurve.hpp"
-#include "cashflow.hpp"
-#include "swaptionvolatilityconverter.hpp"
 #include "optionletstripper.hpp"
-#include "deposit.hpp"
 #include "ratehelpers.hpp"
 #include "stabilisedglls.hpp"
+#include "staticallycorrectedyieldtermstructure.hpp"
+#include "swaptionvolatilityconverter.hpp"
 
 namespace {
 

@@ -24,8 +24,8 @@
 #ifndef quantext_sgdsor_hpp
 #define quantext_sgdsor_hpp
 
-#include <ql/indexes/iborindex.hpp>
 #include <ql/currencies/asia.hpp>
+#include <ql/indexes/iborindex.hpp>
 #include <ql/time/calendars/singapore.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 

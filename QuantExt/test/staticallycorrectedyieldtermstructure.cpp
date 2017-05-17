@@ -20,9 +20,9 @@
 
 #include <qle/termstructures/staticallycorrectedyieldtermstructure.hpp>
 
+#include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
-#include <ql/quotes/simplequote.hpp>
 
 #include <test-suite/utilities.hpp>
 
@@ -110,11 +110,12 @@ void StaticallyCorrectedYieldTermStructureTest::testCorrectedYts() {
                         "can not verify corrected2 df ("
                             << corrected2->discount(1.0) << ") against expected df ("
                             << floating->discount(1.0) * target->discount(t + 1.0) * source->discount(t) /
-                                   (target->discount(t) * source->discount(t + 1.0)) << ") on eval date "
-                            << Settings::instance().evaluationDate() << ", difference is "
+                                   (target->discount(t) * source->discount(t + 1.0))
+                            << ") on eval date " << Settings::instance().evaluationDate() << ", difference is "
                             << floating->discount(1.0) * target->discount(t + 1.0) * source->discount(t) /
                                        (target->discount(t) * source->discount(t + 1.0)) -
-                                   corrected2->discount(1.0) << ", tolerance is " << tol);
+                                   corrected2->discount(1.0)
+                            << ", tolerance is " << tol);
 }
 
 test_suite* StaticallyCorrectedYieldTermStructureTest::suite() {

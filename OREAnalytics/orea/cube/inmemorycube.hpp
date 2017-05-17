@@ -23,15 +23,15 @@
 
 #pragma once
 
-#include <vector>
 #include <fstream>
+#include <vector>
 
 #include <ql/errors.hpp>
 
+#include <boost/make_shared.hpp>
+#include <boost/serialization/vector.hpp>
 #include <orea/cube/npvcube.hpp>
 #include <ored/utilities/serializationdate.hpp>
-#include <boost/serialization/vector.hpp>
-#include <boost/make_shared.hpp>
 
 using QuantLib::Size;
 using QuantLib::Real;

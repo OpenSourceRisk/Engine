@@ -23,10 +23,10 @@
 
 #pragma once
 
-#include <string>
-#include <ql/types.hpp>
-#include <ql/time/date.hpp>
 #include <ored/marketdata/marketdatum.hpp>
+#include <ql/time/date.hpp>
+#include <ql/types.hpp>
+#include <string>
 
 using std::string;
 using QuantLib::Real;

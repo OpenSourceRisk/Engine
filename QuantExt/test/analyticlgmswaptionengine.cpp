@@ -22,8 +22,8 @@
 #include <qle/pricingengines/all.hpp>
 
 #include <ql/currencies/europe.hpp>
-#include <ql/instruments/makeswaption.hpp>
 #include <ql/indexes/swap/euriborswap.hpp>
+#include <ql/instruments/makeswaption.hpp>
 #include <ql/math/array.hpp>
 #include <ql/math/comparison.hpp>
 #include <ql/models/shortrate/onefactormodels/gsr.hpp>

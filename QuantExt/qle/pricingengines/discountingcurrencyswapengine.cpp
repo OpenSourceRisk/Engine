@@ -20,11 +20,11 @@
 
 #include <ql/cashflows/cashflows.hpp>
 #include <ql/cashflows/floatingratecoupon.hpp>
-#include <ql/utilities/dataformatters.hpp>
 #include <ql/exchangerate.hpp>
+#include <ql/utilities/dataformatters.hpp>
 
-#include <ql/errors.hpp>
 #include <ql/cashflows/cashflows.hpp>
+#include <ql/errors.hpp>
 
 namespace QuantExt {
 
@@ -67,13 +67,15 @@ void DiscountingCurrencySwapEngine::calculate() const {
     for (Size i = 0; i < arguments_.currency.size(); i++) {
         Currency ccy = arguments_.currency[i];
         Handle<YieldTermStructure> yts = fetchTS(ccy);
-        QL_REQUIRE(!yts.empty(), "Discounting term structure is "
-                                 "empty for "
-                                     << ccy.name());
+        QL_REQUIRE(!yts.empty(),
+                   "Discounting term structure is "
+                   "empty for "
+                       << ccy.name());
         Handle<Quote> fxQuote = fetchFX(ccy);
-        QL_REQUIRE(!fxQuote.empty(), "FX quote is empty "
-                                     "for "
-                                         << ccy.name());
+        QL_REQUIRE(!fxQuote.empty(),
+                   "FX quote is empty "
+                   "for "
+                       << ccy.name());
     }
 
     Handle<YieldTermStructure> npvCcyYts = fetchTS(npvCurrency_);
@@ -84,9 +86,10 @@ void DiscountingCurrencySwapEngine::calculate() const {
     if (settlementDate_ == Date()) {
         settlementDate = referenceDate;
     } else {
-        QL_REQUIRE(settlementDate >= referenceDate, "Settlement date (" << settlementDate
-                                                                        << ") cannot be before discount curve "
-                                                                           "reference date (" << referenceDate << ")");
+        QL_REQUIRE(settlementDate >= referenceDate,
+                   "Settlement date (" << settlementDate << ") cannot be before discount curve "
+                                                            "reference date ("
+                                       << referenceDate << ")");
     }
 
     // Prepare the results containers
@@ -96,9 +99,10 @@ void DiscountingCurrencySwapEngine::calculate() const {
     if (npvDate_ == Date()) {
         results_.valuationDate = referenceDate;
     } else {
-        QL_REQUIRE(npvDate_ >= referenceDate, "NPV date (" << npvDate_ << ") cannot be before "
-                                                                          "discount curve reference date ("
-                                                           << referenceDate << ")");
+        QL_REQUIRE(npvDate_ >= referenceDate,
+                   "NPV date (" << npvDate_ << ") cannot be before "
+                                               "discount curve reference date ("
+                                << referenceDate << ")");
         results_.valuationDate = npvDate_;
     }
     results_.value = 0.0;

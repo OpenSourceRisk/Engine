@@ -23,8 +23,8 @@
 
 #pragma once
 
-#include <ored/marketdata/loader.hpp>
 #include <map>
+#include <ored/marketdata/loader.hpp>
 
 namespace ore {
 namespace data {

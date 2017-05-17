@@ -17,9 +17,9 @@
 */
 
 #include "fxtriangulation.hpp"
+#include <boost/make_shared.hpp>
 #include <ored/marketdata/fxtriangulation.hpp>
 #include <ql/quotes/simplequote.hpp>
-#include <boost/make_shared.hpp>
 
 using namespace ore::data;
 using namespace boost::unit_test_framework;
@@ -32,19 +32,10 @@ void FXTriangulationTest::testFXTriangulation() {
 
     // ECB asof 8 Jan 2016
     vector<pair<string, Real>> testData = {
-        {"EURUSD", 1.0861},
-        {"EURJPY", 128.51},
-        {"EURCZK", 27.022},
-        {"EURDKK", 7.4598},
-        {"EURGBP", 0.74519},
-        {"EURHUF", 315.53},
-        {"EURPLN", 4.3523},
-        {"EURSEK", 9.2640},
-        {"EURCHF", 1.0860},
-        {"EURNOK", 9.6810},
-        {"EURAUD", 1.5495},
-        {"ZZZEUR", 3.141},       // just to test reverse quotes
-        {"AUDNZD", 1.0616327848} // Should be enough for USDNZD (value = 1.645 / 1.5495)
+        {"EURUSD", 1.0861},      {"EURJPY", 128.51}, {"EURCZK", 27.022}, {"EURDKK", 7.4598}, {"EURGBP", 0.74519},
+        {"EURHUF", 315.53},      {"EURPLN", 4.3523}, {"EURSEK", 9.2640}, {"EURCHF", 1.0860}, {"EURNOK", 9.6810},
+        {"EURAUD", 1.5495},      {"ZZZEUR", 3.141}, // just to test reverse quotes
+        {"AUDNZD", 1.0616327848}                    // Should be enough for USDNZD (value = 1.645 / 1.5495)
     };
 
     // Initialise FX data

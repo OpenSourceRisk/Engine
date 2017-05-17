@@ -17,13 +17,13 @@
 */
 
 #include <ql/math/optimization/levenbergmarquardt.hpp>
-#include <ql/quotes/simplequote.hpp>
 #include <ql/models/shortrate/calibrationhelpers/swaptionhelper.hpp>
+#include <ql/quotes/simplequote.hpp>
 
-#include <qle/models/irlgm1fpiecewiseconstantparametrization.hpp>
-#include <qle/models/irlgm1fpiecewiselinearparametrization.hpp>
 #include <qle/models/irlgm1fconstantparametrization.hpp>
 #include <qle/models/irlgm1fpiecewiseconstanthullwhiteadaptor.hpp>
+#include <qle/models/irlgm1fpiecewiseconstantparametrization.hpp>
+#include <qle/models/irlgm1fpiecewiselinearparametrization.hpp>
 #include <qle/pricingengines/analyticlgmswaptionengine.hpp>
 
 #include <ored/model/lgmbuilder.hpp>
@@ -168,8 +168,8 @@ void LgmBuilder::performCalculations() const {
         LOG("LGM " << data_->ccy() << " calibration errors:");
         error_ = logCalibrationErrors(swaptionBasket_, parametrization_);
         if (data_->calibrationType() == CalibrationType::Bootstrap && (data_->calibrateA() || data_->calibrateH())) {
-            QL_REQUIRE(fabs(error_) < bootstrapTolerance_, "calibration error " << error_ << " exceeds tolerance "
-                                                                                << bootstrapTolerance_);
+            QL_REQUIRE(fabs(error_) < bootstrapTolerance_,
+                       "calibration error " << error_ << " exceeds tolerance " << bootstrapTolerance_);
         }
     } else {
         LOG("skip LGM calibration (calibration type is none)");

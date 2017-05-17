@@ -51,9 +51,10 @@ void CrossCcySwapEngine::calculate() const {
     if (settlementDate_ == Date()) {
         settlementDate = referenceDate;
     } else {
-        QL_REQUIRE(settlementDate >= referenceDate, "Settlement date (" << settlementDate
-                                                                        << ") cannot be before discount curve "
-                                                                           "reference date (" << referenceDate << ")");
+        QL_REQUIRE(settlementDate >= referenceDate,
+                   "Settlement date (" << settlementDate << ") cannot be before discount curve "
+                                                            "reference date ("
+                                       << referenceDate << ")");
     }
 
     Size numLegs = arguments_.legs.size();
@@ -61,9 +62,10 @@ void CrossCcySwapEngine::calculate() const {
     if (npvDate_ == Date()) {
         results_.valuationDate = referenceDate;
     } else {
-        QL_REQUIRE(npvDate_ >= referenceDate, "NPV date (" << npvDate_ << ") cannot be before "
-                                                                          "discount curve reference date ("
-                                                           << referenceDate << ")");
+        QL_REQUIRE(npvDate_ >= referenceDate,
+                   "NPV date (" << npvDate_ << ") cannot be before "
+                                               "discount curve reference date ("
+                                << referenceDate << ")");
         results_.valuationDate = npvDate_;
     }
     results_.value = 0.0;
@@ -88,9 +90,9 @@ void CrossCcySwapEngine::calculate() const {
             if (arguments_.currencies[legNo] == ccy1_) {
                 legDiscountCurve = currency1Discountcurve_;
             } else {
-                QL_REQUIRE(arguments_.currencies[legNo] == ccy2_, "leg ccy (" << arguments_.currencies[legNo]
-                                                                              << ") must be ccy1 (" << ccy1_
-                                                                              << ") or ccy2 (" << ccy2_ << ")");
+                QL_REQUIRE(arguments_.currencies[legNo] == ccy2_,
+                           "leg ccy (" << arguments_.currencies[legNo] << ") must be ccy1 (" << ccy1_ << ") or ccy2 ("
+                                       << ccy2_ << ")");
                 legDiscountCurve = currency2Discountcurve_;
             }
             results_.npvDateDiscounts[legNo] = legDiscountCurve->discount(results_.valuationDate);

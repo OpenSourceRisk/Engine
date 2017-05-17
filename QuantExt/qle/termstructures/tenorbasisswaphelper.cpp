@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ql/pricingengines/swap/discountingswapengine.hpp>
 #include <ql/cashflows/floatingratecoupon.hpp>
+#include <ql/pricingengines/swap/discountingswapengine.hpp>
 
 #include <qle/termstructures/tenorbasisswaphelper.hpp>
 

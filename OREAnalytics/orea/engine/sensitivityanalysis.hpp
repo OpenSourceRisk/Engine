@@ -23,14 +23,14 @@
 
 #pragma once
 
-#include <ored/portfolio/portfolio.hpp>
-#include <ored/marketdata/market.hpp>
-#include <ored/report/report.hpp>
 #include <orea/cube/npvcube.hpp>
-#include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
+#include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/scenario/sensitivityscenariodata.hpp>
 #include <orea/scenario/sensitivityscenariogenerator.hpp>
+#include <ored/marketdata/market.hpp>
+#include <ored/portfolio/portfolio.hpp>
+#include <ored/report/report.hpp>
 
 #include <map>
 #include <set>

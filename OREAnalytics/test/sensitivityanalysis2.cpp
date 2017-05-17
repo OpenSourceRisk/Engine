@@ -25,10 +25,10 @@
 #include <orea/engine/all.hpp>
 #include <orea/engine/observationmode.hpp>
 #include <orea/engine/sensitivityanalysis.hpp>
+#include <orea/scenario/clonescenariofactory.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/scenario/sensitivityscenariogenerator.hpp>
-#include <orea/scenario/clonescenariofactory.hpp>
 
 #include <ored/model/lgmdata.hpp>
 #include <ored/portfolio/builders/capfloor.hpp>

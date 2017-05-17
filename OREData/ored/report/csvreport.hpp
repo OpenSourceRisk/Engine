@@ -24,8 +24,8 @@
 #pragma once
 
 #include <ored/report/report.hpp>
-#include <vector>
 #include <stdio.h>
+#include <vector>
 
 namespace ore {
 namespace data {
