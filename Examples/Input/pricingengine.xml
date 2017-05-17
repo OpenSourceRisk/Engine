@@ -88,35 +88,4 @@
     <Engine>MidPointCdsEngine</Engine>
     <EngineParameters/>
   </Product>
-  <Product type="IndexCreditDefaultSwap">
-    <Model>DiscountedCashflows</Model>
-    <ModelParameters/>
-    <Engine>MidPointIndexCdsEngine</Engine>
-    <EngineParameters>
-      <Parameter name="Curve">Underlying</Parameter> <!-- Underlying or Index -->
-    </EngineParameters>
-  </Product>
-  <Product type="IndexCreditDefaultSwapOption">
-    <Model>Black</Model>
-    <ModelParameters/>
-    <Engine>BlackIndexCdsOptionEngine</Engine>
-    <EngineParameters>
-      <!-- this is only affecting the FE protection, for the underlying the Curve -->
-      <!-- parameter of the IndexCreditDefaultSwap is used -->
-      <Parameter name="Curve">Underlying</Parameter> <!-- Underlying or Index -->
-    </EngineParameters>
-  </Product>
-  <Product type="SyntheticCDO">
-    <Model>GaussCopula</Model>
-    <ModelParameters>
-      <Parameter name="correlation">0.0</Parameter>
-      <Parameter name="min">-5.0</Parameter>
-      <Parameter name="max">5.0</Parameter>
-      <Parameter name="steps">15</Parameter>
-    </ModelParameters>
-    <Engine>Bucketing</Engine>
-    <EngineParameters>
-      <Parameter name="buckets">200</Parameter>
-    </EngineParameters>
-  </Product>
 </PricingEngines>

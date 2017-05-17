@@ -16,8 +16,5 @@
 #include <qle/pricingengines/numericlgmswaptionengine.hpp>
 #include <qle/pricingengines/discountingriskybondengine.hpp>
 #include <qle/pricingengines/midpointcdsengine.hpp>
-#include <qle/pricingengines/midpointindexcdsengine.hpp>
-#include <qle/pricingengines/midpointcdoengine.hpp>
 #include <qle/pricingengines/blackcdsoptionengine.hpp>
-#include <qle/pricingengines/blackindexcdsoptionengine.hpp>
 

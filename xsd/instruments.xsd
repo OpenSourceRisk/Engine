@@ -337,6 +337,7 @@
     <xs:all>
       <xs:element type="xs:string" name="IssuerId"/>
       <xs:element type="xs:string" name="CreditCurveId"/>
+      <xs:element type="xs:string" name="Qualifier"/>
       <xs:element type="bool" name="SettlesAccrual"/>
       <xs:element type="bool" name="PaysAtDefaultTime"/>
       <xs:element type="date" name="ProtectionStart"/>

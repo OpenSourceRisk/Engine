@@ -18,10 +18,8 @@ libInstruments_la_SOURCES = \
 	tenorbasisswap.cpp \
 	subperiodsswap.cpp \
 	creditdefaultswap.cpp \
-	indexcreditdefaultswap.cpp \
-	cdsoption.cpp \
-	indexcdsoption.cpp \
-	makecds.cpp
+	makecds.cpp \
+	cdsoption.cpp
 
 this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \
@@ -39,10 +37,8 @@ this_include_HEADERS = \
 	tenorbasisswap.hpp \
 	subperiodsswap.hpp \
 	creditdefaultswap.hpp \
-	indexcreditdefaultswap.hpp \
-	cdsoption.hpp \
-	indexcdsoption.hpp \
-	makecds.hpp
+	makecds.hpp \
+	cdsoption.hpp
 
 noinst_LTLIBRARIES = libInstruments.la
 

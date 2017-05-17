@@ -18,15 +18,12 @@
 
 #include <ored/portfolio/bond.hpp>
 #include <ored/portfolio/capfloor.hpp>
-#include <ored/portfolio/cdo.hpp>
 #include <ored/portfolio/creditdefaultswap.hpp>
 #include <ored/portfolio/equityforward.hpp>
 #include <ored/portfolio/equityoption.hpp>
 #include <ored/portfolio/fxforward.hpp>
 #include <ored/portfolio/fxoption.hpp>
 #include <ored/portfolio/fxswap.hpp>
-#include <ored/portfolio/indexcreditdefaultswap.hpp>
-#include <ored/portfolio/indexcreditdefaultswapoption.hpp>
 #include <ored/portfolio/swap.hpp>
 #include <ored/portfolio/swaption.hpp>
 #include <ored/portfolio/tradefactory.hpp>
@@ -47,9 +44,6 @@ TradeFactory::TradeFactory() {
     addBuilder("EquityForward", boost::make_shared<TradeBuilder<EquityForward>>());
     addBuilder("Bond", boost::make_shared<TradeBuilder<Bond>>());
     addBuilder("CreditDefaultSwap", boost::make_shared<TradeBuilder<CreditDefaultSwap>>());
-    addBuilder("IndexCreditDefaultSwap", boost::make_shared<TradeBuilder<IndexCreditDefaultSwap>>());
-    addBuilder("IndexCreditDefaultSwapOption", boost::make_shared<TradeBuilder<IndexCreditDefaultSwapOption>>());
-    addBuilder("SyntheticCDO", boost::make_shared<TradeBuilder<SyntheticCDO>>());
 }
 
 void TradeFactory::addBuilder(const string& className, const boost::shared_ptr<AbstractTradeBuilder>& b) {

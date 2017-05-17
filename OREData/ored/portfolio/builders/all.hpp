@@ -12,7 +12,4 @@
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/builders/swaption.hpp>
 #include <ored/portfolio/builders/creditdefaultswap.hpp>
-#include <ored/portfolio/builders/indexcreditdefaultswap.hpp>
-#include <ored/portfolio/builders/indexcreditdefaultswapoption.hpp>
-#include <ored/portfolio/builders/cdo.hpp>
 
