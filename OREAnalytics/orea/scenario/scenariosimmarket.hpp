@@ -68,5 +68,5 @@ private:
 
     std::map<RiskFactorKey, boost::shared_ptr<SimpleQuote>> simData_;
 };
-}
-}
+} // namespace analytics
+} // namespace ore

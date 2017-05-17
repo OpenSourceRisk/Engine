@@ -17,8 +17,8 @@
 */
 
 #include <orea/scenario/sensitivityscenariodata.hpp>
-#include <ored/utilities/xmlutils.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/xmlutils.hpp>
 
 using namespace QuantLib;
 
@@ -186,5 +186,5 @@ string SensitivityScenarioData::getIndexCurrency(string indexName) {
     QL_REQUIRE(tokens.size() > 1, "expected 2 or 3 tokens, found " << tokens.size() << " in " << indexName);
     return tokens[0];
 }
-}
-}
+} // namespace analytics
+} // namespace ore

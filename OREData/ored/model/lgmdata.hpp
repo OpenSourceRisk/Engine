@@ -25,13 +25,13 @@
 
 #include <vector>
 
-#include <ql/types.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
+#include <ql/types.hpp>
 
 #include <qle/models/lgm.hpp>
 
-#include <ored/marketdata/market.hpp>
 #include <ored/configuration/conventions.hpp>
+#include <ored/marketdata/market.hpp>
 #include <ored/utilities/xmlutils.hpp>
 
 using namespace QuantLib;
@@ -194,5 +194,5 @@ LgmData::CalibrationStrategy parseCalibrationStrategy(const string& s);
 std::ostream& operator<<(std::ostream& oss, const LgmData::ReversionType& type);
 std::ostream& operator<<(std::ostream& oss, const LgmData::VolatilityType& type);
 std::ostream& operator<<(std::ostream& oss, const LgmData::CalibrationStrategy& type);
-}
-}
+} // namespace data
+} // namespace ore

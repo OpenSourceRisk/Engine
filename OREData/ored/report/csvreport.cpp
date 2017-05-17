@@ -107,5 +107,5 @@ void CSVFileReport::end() {
         fp_ = NULL;
     }
 }
-}
-}
+} // namespace data
+} // namespace ore

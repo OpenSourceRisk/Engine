@@ -25,9 +25,9 @@
 #define quantext_hkd_hibor_hpp
 
 #include <ql/currencies/asia.hpp>
-#include <ql/time/daycounters/actual365fixed.hpp>
-#include <ql/time/calendars/hongkong.hpp>
 #include <ql/indexes/iborindex.hpp>
+#include <ql/time/calendars/hongkong.hpp>
+#include <ql/time/daycounters/actual365fixed.hpp>
 
 using namespace QuantLib;
 
@@ -47,6 +47,6 @@ public:
     HKDHibor(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
         : IborIndex("HKD-HIBOR", tenor, 0, HKDCurrency(), HongKong(), ModifiedFollowing, false, Actual365Fixed(), h) {}
 };
-}
+} // namespace QuantExt
 
 #endif

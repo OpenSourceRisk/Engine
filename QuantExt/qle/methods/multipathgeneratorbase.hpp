@@ -38,7 +38,7 @@ namespace QuantExt {
 
 //! Multi Path Generator Base
 /*! \ingroup methods
-*/
+ */
 class MultiPathGeneratorBase {
 public:
     virtual const Sample<MultiPath>& next() const = 0;
@@ -47,7 +47,7 @@ public:
 
 //! Instantiation of MultiPathGenerator with standard PseudoRandom traits
 /*! \ingroup methods
-*/
+ */
 class MultiPathGeneratorMersenneTwister : public MultiPathGeneratorBase {
 public:
     MultiPathGeneratorMersenneTwister(const boost::shared_ptr<StochasticProcess>&, const TimeGrid&, BigNatural seed = 0,
@@ -87,7 +87,7 @@ private:
 
 //! Instantiation using SobolBrownianGenerator from  models/marketmodels/browniangenerators
 /*! \ingroup methods
-*/
+ */
 class MultiPathGeneratorSobolBrownianBridge : public MultiPathGeneratorBase {
 public:
     MultiPathGeneratorSobolBrownianBridge(const boost::shared_ptr<StochasticProcess>&, const TimeGrid&,
@@ -120,6 +120,6 @@ inline const Sample<MultiPath>& MultiPathGeneratorMersenneTwister::next() const 
 
 inline const Sample<MultiPath>& MultiPathGeneratorSobol::next() const { return pg_->next(); }
 
-} // namesapce QuantExt
+} // namespace QuantExt
 
 #endif

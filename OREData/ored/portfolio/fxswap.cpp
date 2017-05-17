@@ -16,13 +16,13 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ql/instruments/compositeinstrument.hpp>
-#include <ql/cashflows/simplecashflow.hpp>
-#include <qle/instruments/fxforward.hpp>
-#include <ored/portfolio/fxswap.hpp>
 #include <ored/portfolio/builders/fxforward.hpp>
 #include <ored/portfolio/enginefactory.hpp>
+#include <ored/portfolio/fxswap.hpp>
 #include <ored/utilities/log.hpp>
+#include <ql/cashflows/simplecashflow.hpp>
+#include <ql/instruments/compositeinstrument.hpp>
+#include <qle/instruments/fxforward.hpp>
 
 using ore::data::XMLUtils;
 using namespace QuantLib;
@@ -124,5 +124,5 @@ XMLNode* FxSwap::toXML(XMLDocument& doc) {
 
     return node;
 }
-}
-}
+} // namespace data
+} // namespace ore

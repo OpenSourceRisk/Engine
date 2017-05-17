@@ -17,8 +17,8 @@
 */
 
 #include "cube.hpp"
-#include <orea/cube/inmemorycube.hpp>
 #include <boost/filesystem.hpp>
+#include <orea/cube/inmemorycube.hpp>
 
 using namespace ore::analytics;
 using namespace boost::unit_test_framework;
@@ -103,7 +103,7 @@ template <class T> void testCubeFileIO(NPVCube& cube, const std::string& cubeNam
     // All done
     delete cube2;
 }
-}
+} // namespace
 
 namespace testsuite {
 
@@ -173,4 +173,4 @@ test_suite* CubeTest::suite() {
 
     return suite;
 }
-}
+} // namespace testsuite

@@ -17,12 +17,12 @@
 */
 
 #include <orea/simulation/fixingmanager.hpp>
-#include <ored/utilities/parsers.hpp>
-#include <ored/utilities/log.hpp>
 #include <ored/utilities/flowanalysis.hpp>
+#include <ored/utilities/log.hpp>
+#include <ored/utilities/parsers.hpp>
+#include <ql/cashflows/floatingratecoupon.hpp>
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
-#include <ql/cashflows/floatingratecoupon.hpp>
 
 using namespace std;
 using namespace QuantLib;
@@ -164,5 +164,5 @@ void FixingManager::applyFixings(Date start, Date end) {
         }
     }
 }
-}
-}
+} // namespace analytics
+} // namespace ore

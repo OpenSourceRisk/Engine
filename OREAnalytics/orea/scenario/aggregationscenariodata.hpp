@@ -102,7 +102,7 @@ private:
 
 //! A concrete in memory implementation of AggregationScenarioData
 /*! \ingroup scenario
-*/
+ */
 class InMemoryAggregationScenarioData : public AggregationScenarioData {
 public:
     InMemoryAggregationScenarioData() : AggregationScenarioData(), dimDates_(0), dimSamples_(0) {}
@@ -159,8 +159,8 @@ private:
     void check(Size dateIndex, Size sampleIndex, const AggregationScenarioDataType& type,
                const string& qualifier) const {
         QL_REQUIRE(dateIndex < dimDates_, "dateIndex (" << dateIndex << ") out of range 0..." << dimDates_ - 1);
-        QL_REQUIRE(sampleIndex < dimSamples_, "sampleIndex (" << sampleIndex << ") out of range 0..."
-                                                              << dimSamples_ - 1);
+        QL_REQUIRE(sampleIndex < dimSamples_,
+                   "sampleIndex (" << sampleIndex << ") out of range 0..." << dimSamples_ - 1);
         return;
     }
     Size dimDates_, dimSamples_;
@@ -168,4 +168,4 @@ private:
 };
 
 } // namespace analytics
-} // namesapce openva
+} // namespace ore

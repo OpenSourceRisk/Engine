@@ -24,15 +24,15 @@
 #ifndef quantext_piecewiseconstant_irlgm1f_hwadaptor_hpp
 #define quantext_piecewiseconstant_irlgm1f_hwadaptor_hpp
 
+#include <ql/math/comparison.hpp>
 #include <qle/models/irlgm1fparametrization.hpp>
 #include <qle/models/piecewiseconstanthelper.hpp>
-#include <ql/math/comparison.hpp>
 
 namespace QuantExt {
 
 //! LGM 1f Piecewise Constant Hull White Adaptor
 /*! \ingroup models
-*/
+ */
 template <class TS>
 class Lgm1fPiecewiseConstantHullWhiteAdaptor : public Lgm1fParametrization<TS>,
                                                private PiecewiseConstantHelper3,

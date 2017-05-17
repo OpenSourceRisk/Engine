@@ -216,9 +216,9 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(
         std::vector<Period> shiftTenors = overrideTenors_ && simMarketData_->hasYieldCurveTenors(ccy)
                                               ? simMarketData_->yieldCurveTenors(ccy)
                                               : data.shiftTenors;
-        QL_REQUIRE(shiftTenors.size() == data.shiftTenors.size(),
-                   "mismatch between effective shift tenors (" << shiftTenors.size() << ") and shift tenors ("
-                                                               << data.shiftTenors.size() << ")");
+        QL_REQUIRE(shiftTenors.size() == data.shiftTenors.size(), "mismatch between effective shift tenors ("
+                                                                      << shiftTenors.size() << ") and shift tenors ("
+                                                                      << data.shiftTenors.size() << ")");
         std::vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j)
             shiftTimes[j] = dc.yearFraction(today_, today_ + shiftTenors[j]);
@@ -288,9 +288,9 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(
         std::vector<Period> shiftTenors = overrideTenors_ && simMarketData_->hasYieldCurveTenors(indexName)
                                               ? simMarketData_->yieldCurveTenors(indexName)
                                               : data.shiftTenors;
-        QL_REQUIRE(shiftTenors.size() == data.shiftTenors.size(),
-                   "mismatch between effective shift tenors (" << shiftTenors.size() << ") and shift tenors ("
-                                                               << data.shiftTenors.size() << ")");
+        QL_REQUIRE(shiftTenors.size() == data.shiftTenors.size(), "mismatch between effective shift tenors ("
+                                                                      << shiftTenors.size() << ") and shift tenors ("
+                                                                      << data.shiftTenors.size() << ")");
         std::vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j)
             shiftTimes[j] = dc.yearFraction(today_, today_ + shiftTenors[j]);
@@ -359,9 +359,9 @@ void SensitivityScenarioGenerator::generateYieldCurveScenarios(
         const std::vector<Period>& shiftTenors = overrideTenors_ && simMarketData_->hasYieldCurveTenors(name)
                                                      ? simMarketData_->yieldCurveTenors(name)
                                                      : data.shiftTenors;
-        QL_REQUIRE(shiftTenors.size() == data.shiftTenors.size(),
-                   "mismatch between effective shift tenors (" << shiftTenors.size() << ") and shift tenors ("
-                                                               << data.shiftTenors.size() << ")");
+        QL_REQUIRE(shiftTenors.size() == data.shiftTenors.size(), "mismatch between effective shift tenors ("
+                                                                      << shiftTenors.size() << ") and shift tenors ("
+                                                                      << data.shiftTenors.size() << ")");
         std::vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j)
             shiftTimes[j] = dc.yearFraction(today_, today_ + shiftTenors[j]);
@@ -581,9 +581,9 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(
         std::vector<Period> expiries = overrideTenors_ && simMarketData_->hasCapFloorVolExpiries(ccy)
                                            ? simMarketData_->capFloorVolExpiries(ccy)
                                            : data.shiftExpiries;
-        QL_REQUIRE(expiries.size() == data.shiftExpiries.size(),
-                   "mismatch between effective shift expiries (" << expiries.size() << ") and shift tenors ("
-                                                                 << data.shiftExpiries.size());
+        QL_REQUIRE(expiries.size() == data.shiftExpiries.size(), "mismatch between effective shift expiries ("
+                                                                     << expiries.size() << ") and shift tenors ("
+                                                                     << data.shiftExpiries.size());
         vector<Real> shiftExpiryTimes(expiries.size(), 0.0);
         vector<Real> shiftStrikes = data.shiftStrikes;
 
@@ -755,5 +755,5 @@ SensitivityScenarioGenerator::capFloorVolScenarioDescription(string ccy, Size ex
     ScenarioDescription desc(type, key, text);
     return desc;
 }
-}
-}
+} // namespace analytics
+} // namespace ore

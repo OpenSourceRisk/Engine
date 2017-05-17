@@ -24,8 +24,8 @@
 #ifndef quantext_mxntiie_hpp
 #define quantext_mxntiie_hpp
 
-#include <ql/indexes/iborindex.hpp>
 #include <ql/currencies/america.hpp>
+#include <ql/indexes/iborindex.hpp>
 #include <ql/time/calendars/mexico.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 
@@ -49,6 +49,6 @@ public:
     MXNTiie(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
         : IborIndex("MXN-TIIE", tenor, 1, MXNCurrency(), Mexico(), Following, false, Actual360(), h) {}
 };
-}
+} // namespace QuantExt
 
 #endif

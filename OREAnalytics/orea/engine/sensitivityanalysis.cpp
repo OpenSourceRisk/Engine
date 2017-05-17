@@ -111,8 +111,8 @@ void SensitivityAnalysis::generateSensitivities() {
 }
 
 void SensitivityAnalysis::initializeSensitivityScenarioGenerator(boost::shared_ptr<ScenarioFactory> scenFact) {
-    scenarioGenerator_ =
-        boost::make_shared<SensitivityScenarioGenerator>(sensitivityData_, simMarketData_, asof_, market_, overrideTenors_);
+    scenarioGenerator_ = boost::make_shared<SensitivityScenarioGenerator>(sensitivityData_, simMarketData_, asof_,
+                                                                          market_, overrideTenors_);
     boost::shared_ptr<Scenario> baseScen = scenarioGenerator_->baseScenario();
     boost::shared_ptr<ScenarioFactory> scenFactory =
         (scenFact != NULL) ? scenFact
@@ -154,12 +154,12 @@ void SensitivityAnalysis::initializeCube(boost::shared_ptr<NPVCube>& cube) const
 void SensitivityAnalysis::collectResultsFromCube(const boost::shared_ptr<NPVCube>& cube) {
 
     /***********************************************
-    * Collect results
-    * - base NPVs,
-    * - NPVs after single factor up shifts,
-    * - NPVs after single factor down shifts
-    * - deltas, gammas and cross gammas
-    */
+     * Collect results
+     * - base NPVs,
+     * - NPVs after single factor up shifts,
+     * - NPVs after single factor down shifts
+     * - deltas, gammas and cross gammas
+     */
     baseNPV_.clear();
     vector<ShiftScenarioGenerator::ScenarioDescription> desc = scenarioGenerator_->scenarioDescriptions();
     QL_REQUIRE(desc.size() == scenarioGenerator_->samples(),
@@ -515,5 +515,5 @@ const std::map<std::tuple<std::string, std::string, std::string>, Real>& Sensiti
     QL_REQUIRE(computed_, "Sensitivities have not been successfully computed");
     return crossGamma_;
 }
-}
-}
+} // namespace analytics
+} // namespace ore

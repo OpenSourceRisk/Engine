@@ -697,5 +697,5 @@ void ScenarioSimMarket::update(const Date& d) {
 
     // DLOG("ScenarioSimMarket::update done");
 }
-}
-}
+} // namespace analytics
+} // namespace ore

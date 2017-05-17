@@ -80,5 +80,5 @@ private:
     double farBoughtAmount_;
     double farSoldAmount_;
 };
-}
-}
+} // namespace data
+} // namespace ore

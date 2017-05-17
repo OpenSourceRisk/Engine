@@ -424,4 +424,4 @@ test_suite* ObservationModeTest::suite() {
     suite->add(BOOST_TEST_CASE(&ObservationModeTest::testDisableLong));
     return suite;
 }
-}
+} // namespace testsuite

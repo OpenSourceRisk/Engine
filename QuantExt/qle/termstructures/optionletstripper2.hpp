@@ -24,8 +24,8 @@
 #ifndef quantext_optionletstripper2_hpp
 #define quantext_optionletstripper2_hpp
 
-#include <qle/termstructures/optionletstripper1.hpp>
 #include <ql/termstructures/volatility/capfloor/capfloortermvolcurve.hpp>
+#include <qle/termstructures/optionletstripper1.hpp>
 
 using namespace QuantLib;
 using std::vector;
@@ -83,6 +83,6 @@ private:
     const VolatilityType inputVolatilityType_;
     const Real inputDisplacement_;
 };
-}
+} // namespace QuantExt
 
 #endif

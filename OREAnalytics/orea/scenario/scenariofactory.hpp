@@ -30,7 +30,7 @@ namespace analytics {
 
 //! Scenario factory base class
 /*! \ingroup scenario
-*/
+ */
 class ScenarioFactory {
 public:
     //! Default destructor
@@ -40,5 +40,5 @@ public:
                                                             Real numeraire = 0.0) const = 0;
 };
 
-} // namespace scenario
+} // namespace analytics
 } // namespace ore

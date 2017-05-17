@@ -303,5 +303,5 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
 
     return marketNode;
 }
-}
-}
+} // namespace analytics
+} // namespace ore

@@ -180,5 +180,5 @@ protected:
     //! model builders
     std::set<boost::shared_ptr<ModelBuilder>> modelBuilders_;
 };
-}
-}
+} // namespace analytics
+} // namespace ore

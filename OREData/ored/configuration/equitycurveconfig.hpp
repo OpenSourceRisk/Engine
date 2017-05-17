@@ -23,11 +23,11 @@
 
 #pragma once
 
-#include <ql/types.hpp>
+#include <ored/utilities/xmlutils.hpp>
+#include <ql/time/calendar.hpp>
 #include <ql/time/daycounter.hpp>
 #include <ql/time/period.hpp>
-#include <ql/time/calendar.hpp>
-#include <ored/utilities/xmlutils.hpp>
+#include <ql/types.hpp>
 
 using std::string;
 using std::vector;
@@ -102,5 +102,5 @@ private:
     string dayCountID_;
     bool extrapolation_;
 };
-}
-}
+} // namespace data
+} // namespace ore

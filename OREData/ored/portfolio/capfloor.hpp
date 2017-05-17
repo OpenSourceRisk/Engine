@@ -23,15 +23,15 @@
 
 #pragma once
 
-#include <ored/portfolio/trade.hpp>
 #include <ored/portfolio/legdata.hpp>
+#include <ored/portfolio/trade.hpp>
 
 namespace ore {
 namespace data {
 
 //! Serializable cap, floor, collar
 /*! \ingroup tradedata
-*/
+ */
 class CapFloor : public Trade {
 public:
     CapFloor() : Trade("CapFloor") {}
@@ -58,5 +58,5 @@ private:
     vector<double> caps_;
     vector<double> floors_;
 };
-}
-}
+} // namespace data
+} // namespace ore

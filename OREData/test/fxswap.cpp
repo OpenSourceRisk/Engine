@@ -16,16 +16,16 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <test/fxswap.hpp>
-#include <ored/portfolio/fxforward.hpp>
-#include <ored/portfolio/fxswap.hpp>
-#include <ored/marketdata/marketimpl.hpp>
-#include <ored/portfolio/fxoption.hpp>
-#include <ored/portfolio/enginedata.hpp>
-#include <ql/time/daycounters/actualactual.hpp>
-#include <ql/termstructures/yield/flatforward.hpp>
-#include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
 #include <boost/make_shared.hpp>
+#include <ored/marketdata/marketimpl.hpp>
+#include <ored/portfolio/enginedata.hpp>
+#include <ored/portfolio/fxforward.hpp>
+#include <ored/portfolio/fxoption.hpp>
+#include <ored/portfolio/fxswap.hpp>
+#include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
+#include <ql/termstructures/yield/flatforward.hpp>
+#include <ql/time/daycounters/actualactual.hpp>
+#include <test/fxswap.hpp>
 using namespace QuantLib;
 using namespace boost::unit_test_framework;
 using namespace std;
@@ -68,7 +68,7 @@ private:
         return Handle<BlackVolTermStructure>(fxv);
     }
 };
-}
+} // namespace
 
 namespace {
 
@@ -112,7 +112,7 @@ void test(string nearDate, string farDate, string nearBoughtCurrency, double nea
         BOOST_FAIL("The FxSwap has NPV: " << fxswap.instrument()->NPV()
                                           << ", which does not equal the sum of two Fxforwards: " << npvForward);
 }
-}
+} // namespace
 
 namespace testsuite {
 
@@ -159,4 +159,4 @@ test_suite* FXSwapTest::suite() {
     suite->add(BOOST_TEST_CASE(&FXSwapTest::testFXSwap));
     return suite;
 }
-}
+} // namespace testsuite

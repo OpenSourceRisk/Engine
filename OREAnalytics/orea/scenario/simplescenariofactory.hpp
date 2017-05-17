@@ -31,7 +31,7 @@ namespace analytics {
 
 //! Factory class for building simple scenario objects
 /*! \ingroup scenario
-*/
+ */
 class SimpleScenarioFactory : public ScenarioFactory {
 public:
     const boost::shared_ptr<Scenario> buildScenario(Date asof, const std::string& label = "",
@@ -40,5 +40,5 @@ public:
     }
 };
 
-} // namesapce scenario
+} // namespace analytics
 } // namespace ore

@@ -18,8 +18,8 @@
 
 #include <orea/cube/cubewriter.hpp>
 #include <ostream>
-#include <stdio.h>
 #include <ql/errors.hpp>
+#include <stdio.h>
 
 using std::string;
 using std::vector;
@@ -77,5 +77,5 @@ void CubeWriter::write(const boost::shared_ptr<NPVCube>& cube, const std::map<st
     }
     fclose(fp);
 }
-}
-}
+} // namespace analytics
+} // namespace ore

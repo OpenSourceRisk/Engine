@@ -220,7 +220,7 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
         Size n_cfvol_exp = simMarketData_->capFloorVolExpiries(ccy).size();
         Handle<OptionletVolatilityStructure> ts = market->capFloorVol(ccy, configuration_);
         for (Size j = 0; j < n_cfvol_exp; ++j) {
-            //Date expiry = ts->optionDateFromTenor(simMarketData_->capFloorVolExpiries(ccy)[j]);
+            // Date expiry = ts->optionDateFromTenor(simMarketData_->capFloorVolExpiries(ccy)[j]);
             for (Size k = 0; k < n_cfvol_strikes; ++k) {
                 optionletVolKeys_.emplace_back(RiskFactorKey::KeyType::OptionletVolatility, ccy,
                                                j * n_cfvol_strikes + k);
@@ -529,5 +529,5 @@ void ShiftScenarioGenerator::applyShift(Size i, Size j, Real shiftSize, bool up,
         }
     }
 }
-}
-}
+} // namespace analytics
+} // namespace ore

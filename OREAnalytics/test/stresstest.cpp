@@ -92,9 +92,8 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupStressSimMarketDa
 
     simMarketData->baseCcy() = "EUR";
     simMarketData->ccys() = {"EUR", "GBP", "USD", "CHF", "JPY"};
-    simMarketData->setYieldCurveTenors("",
-                                       {1 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years, 5 * Years,
-                                        7 * Years, 10 * Years, 15 * Years, 20 * Years, 30 * Years});
+    simMarketData->setYieldCurveTenors("", {1 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
+                                            5 * Years, 7 * Years, 10 * Years, 15 * Years, 20 * Years, 30 * Years});
     simMarketData->indices() = {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "USD-LIBOR-6M",
                                 "GBP-LIBOR-6M",   "CHF-LIBOR-6M", "JPY-LIBOR-6M"};
     simMarketData->interpolation() = "LogLinear";
@@ -117,8 +116,8 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupStressSimMarketDa
     simMarketData->simulateCapFloorVols() = true;
     simMarketData->capFloorVolDecayMode() = "ForwardVariance";
     simMarketData->capFloorVolCcys() = {"EUR", "USD"};
-    simMarketData->setCapFloorVolExpiries("",{6 * Months, 1 * Years,  2 * Years,  3 * Years, 5 * Years,
-                7 * Years,  10 * Years, 15 * Years, 20 * Years});
+    simMarketData->setCapFloorVolExpiries(
+        "", {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 15 * Years, 20 * Years});
     simMarketData->capFloorVolStrikes() = {0.00, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06};
 
     return simMarketData;
@@ -355,9 +354,9 @@ void StressTestingTest::regression() {
                                                                            << "): " << delta << " vs " << stressMap[p]);
         }
     }
-    BOOST_CHECK_MESSAGE(count == cachedResults.size(),
-                        "number of non-zero stress impacts (" << count << ") do not match regression data ("
-                                                              << cachedResults.size() << ")");
+    BOOST_CHECK_MESSAGE(count == cachedResults.size(), "number of non-zero stress impacts ("
+                                                           << count << ") do not match regression data ("
+                                                           << cachedResults.size() << ")");
     IndexManager::instance().clearHistories();
 }
 
@@ -376,4 +375,4 @@ test_suite* StressTestingTest::suite() {
     suite->add(BOOST_TEST_CASE(&StressTestingTest::regression));
     return suite;
 }
-}
+} // namespace testsuite

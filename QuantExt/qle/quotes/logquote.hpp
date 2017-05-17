@@ -59,6 +59,6 @@ protected:
     Handle<Quote> q_;
     Real logValue_;
 };
-}
+} // namespace QuantExt
 
 #endif

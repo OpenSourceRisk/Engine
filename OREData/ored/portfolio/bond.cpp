@@ -16,17 +16,17 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ored/portfolio/swap.hpp>
-#include <ored/portfolio/legdata.hpp>
+#include <boost/lexical_cast.hpp>
 #include <ored/portfolio/bond.hpp>
 #include <ored/portfolio/builders/bond.hpp>
+#include <ored/portfolio/legdata.hpp>
+#include <ored/portfolio/swap.hpp>
+#include <ored/utilities/indexparser.hpp>
+#include <ored/utilities/log.hpp>
+#include <ored/utilities/parsers.hpp>
+#include <ql/cashflows/simplecashflow.hpp>
 #include <ql/instruments/bond.hpp>
 #include <ql/instruments/bonds/zerocouponbond.hpp>
-#include <ored/utilities/parsers.hpp>
-#include <ored/utilities/log.hpp>
-#include <ql/cashflows/simplecashflow.hpp>
-#include <ored/utilities/indexparser.hpp>
-#include <boost/lexical_cast.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -57,8 +57,7 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             leg = makeFixedLeg(coupons_);
         else if (coupons_.legType() == "Floating") {
             string indexName = coupons_.floatingLegData().index();
-            hIndex =
-                engineFactory->market()->iborIndex(indexName, builder->configuration(MarketContext::pricing));
+            hIndex = engineFactory->market()->iborIndex(indexName, builder->configuration(MarketContext::pricing));
             QL_REQUIRE(!hIndex.empty(), "Could not find ibor index " << indexName << " in market.");
             boost::shared_ptr<IborIndex> index = hIndex.currentLink();
             leg = makeIborLeg(coupons_, index, engineFactory);
@@ -69,7 +68,7 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         bond.reset(new QuantLib::Bond(settlementDays, calendar, issueDate, leg));
 
         // workaround, QL doesn't register a bond with its leg's cashflows
-        if(!hIndex.empty())
+        if (!hIndex.empty())
             bond->registerWith(hIndex);
     }
 
@@ -122,5 +121,5 @@ XMLNode* Bond::toXML(XMLDocument& doc) {
     XMLUtils::appendNode(bondNode, coupons_.toXML(doc));
     return node;
 }
-}
-}
+} // namespace data
+} // namespace ore

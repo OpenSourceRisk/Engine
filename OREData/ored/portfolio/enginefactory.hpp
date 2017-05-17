@@ -24,8 +24,8 @@
 #pragma once
 
 #include <ored/marketdata/market.hpp>
-#include <ored/portfolio/enginedata.hpp>
 #include <ored/model/modelbuilder.hpp>
+#include <ored/portfolio/enginedata.hpp>
 
 #include <ql/pricingengine.hpp>
 #include <ql/utilities/disposable.hpp>

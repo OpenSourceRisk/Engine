@@ -20,11 +20,11 @@
 
 #include <ql/cashflows/cashflows.hpp>
 #include <ql/cashflows/floatingratecoupon.hpp>
-#include <ql/utilities/dataformatters.hpp>
 #include <ql/exchangerate.hpp>
+#include <ql/utilities/dataformatters.hpp>
 
-#include <ql/errors.hpp>
 #include <ql/cashflows/cashflows.hpp>
+#include <ql/errors.hpp>
 
 namespace QuantExt {
 
@@ -86,7 +86,8 @@ void DiscountingCurrencySwapEngine::calculate() const {
     } else {
         QL_REQUIRE(settlementDate >= referenceDate, "Settlement date (" << settlementDate
                                                                         << ") cannot be before discount curve "
-                                                                           "reference date (" << referenceDate << ")");
+                                                                           "reference date ("
+                                                                        << referenceDate << ")");
     }
 
     // Prepare the results containers
@@ -96,8 +97,9 @@ void DiscountingCurrencySwapEngine::calculate() const {
     if (npvDate_ == Date()) {
         results_.valuationDate = referenceDate;
     } else {
-        QL_REQUIRE(npvDate_ >= referenceDate, "NPV date (" << npvDate_ << ") cannot be before "
-                                                                          "discount curve reference date ("
+        QL_REQUIRE(npvDate_ >= referenceDate, "NPV date (" << npvDate_
+                                                           << ") cannot be before "
+                                                              "discount curve reference date ("
                                                            << referenceDate << ")");
         results_.valuationDate = npvDate_;
     }
@@ -163,4 +165,4 @@ void DiscountingCurrencySwapEngine::calculate() const {
         }
     }
 }
-}
+} // namespace QuantExt

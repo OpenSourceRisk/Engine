@@ -83,7 +83,7 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> scenarioParameters() {
 
     return parameters;
 }
-}
+} // namespace
 
 namespace testsuite {
 
@@ -257,4 +257,4 @@ test_suite* ScenarioSimMarketTest::suite() {
     suite->add(BOOST_TEST_CASE(&ScenarioSimMarketTest::testScenarioSimMarket));
     return suite;
 }
-}
+} // namespace testsuite
