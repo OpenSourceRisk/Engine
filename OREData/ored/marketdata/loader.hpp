@@ -37,6 +37,8 @@ namespace data {
  */
 class Loader {
 public:
+    virtual ~Loader() {}
+
     //! \name Interface
     //@{
     virtual const std::vector<boost::shared_ptr<MarketDatum>>& loadQuotes(const QuantLib::Date&) const = 0;
