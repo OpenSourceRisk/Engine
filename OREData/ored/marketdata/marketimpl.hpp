@@ -23,10 +23,10 @@
 
 #pragma once
 
-#include <ored/marketdata/market.hpp>
-#include <ored/marketdata/fxtriangulation.hpp>
-#include <ored/marketdata/marketimpl.hpp>
 #include <ored/configuration/conventions.hpp>
+#include <ored/marketdata/fxtriangulation.hpp>
+#include <ored/marketdata/market.hpp>
+#include <ored/marketdata/marketimpl.hpp>
 
 #include <map>
 

@@ -21,14 +21,14 @@
     \ingroup
 */
 
+#include <algorithm>
 #include <boost/algorithm/string.hpp>
+#include <fstream>
+#include <map>
 #include <ored/marketdata/csvloader.hpp>
 #include <ored/marketdata/marketdatumparser.hpp>
-#include <ored/utilities/parsers.hpp>
 #include <ored/utilities/log.hpp>
-#include <fstream>
-#include <algorithm>
-#include <map>
+#include <ored/utilities/parsers.hpp>
 
 using namespace std;
 
@@ -110,5 +110,5 @@ const boost::shared_ptr<MarketDatum>& CSVLoader::get(const string& name, const Q
     }
     QL_FAIL("No MarketDatum for name " << name << " and date " << d);
 }
-}
-}
+} // namespace data
+} // namespace ore

@@ -16,15 +16,15 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ored/portfolio/fxforward.hpp>
+#include <boost/make_shared.hpp>
 #include <ored/portfolio/builders/fxforward.hpp>
 #include <ored/portfolio/enginefactory.hpp>
+#include <ored/portfolio/fxforward.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/xmlutils.hpp>
-#include <qle/instruments/fxforward.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
-#include <boost/make_shared.hpp>
+#include <qle/instruments/fxforward.hpp>
 
 namespace ore {
 namespace data {
@@ -94,5 +94,5 @@ XMLNode* FxForward::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, fxNode, "SoldAmount", soldAmount_);
     return node;
 }
-}
-}
+} // namespace data
+} // namespace ore

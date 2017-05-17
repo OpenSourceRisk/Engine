@@ -76,5 +76,5 @@ private:
     map<string, const boost::shared_ptr<NettingSetDefinition>> data_;
     vector<string> uniqueKeys_;
 };
-}
-}
+} // namespace data
+} // namespace ore

@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <test/schedule.hpp>
 #include <ored/portfolio/schedule.hpp>
+#include <test/schedule.hpp>
 
 using namespace boost::unit_test_framework;
 using namespace ore::data;
@@ -69,4 +69,4 @@ test_suite* ScheduleDataTest::suite() {
     suite->add(BOOST_TEST_CASE(&ScheduleDataTest::testScheduleData));
     return suite;
 }
-}
+} // namespace testsuite

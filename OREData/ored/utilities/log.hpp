@@ -32,24 +32,24 @@
 #define ORE_DEBUG 32   // 00100000  63 = 2^6-1
 #define ORE_DATA 64    // 01000000  127
 
-#include <string>
-#include <iostream>
 #include <fstream>
+#include <iostream>
+#include <string>
 #include <time.h>
 
-#include <ql/qldefines.hpp>
-#include <boost/shared_ptr.hpp>
 #include <boost/algorithm/string.hpp>
-#include <queue>
+#include <boost/shared_ptr.hpp>
 #include <map>
+#include <ql/qldefines.hpp>
+#include <queue>
 
 #ifndef BOOST_MSVC
 #include <unistd.h>
 #endif
 
+#include <iomanip>
 #include <ql/patterns/singleton.hpp>
 #include <sstream>
-#include <iomanip>
 
 using std::string;
 
@@ -356,5 +356,5 @@ private:
 
 #define LOGGERSTREAM ((std::ostream&)ore::data::LoggerStream(ORE_NOTICE, __FILE__, __LINE__))
 #define DLOGGERSTREAM ((std::ostream&)ore::data::LoggerStream(ORE_DEBUG, __FILE__, __LINE__))
-}
-}
+} // namespace data
+} // namespace ore

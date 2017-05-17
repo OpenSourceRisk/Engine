@@ -16,16 +16,16 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ored/portfolio/tradefactory.hpp>
+#include <ored/portfolio/bond.hpp>
+#include <ored/portfolio/capfloor.hpp>
+#include <ored/portfolio/equityforward.hpp>
+#include <ored/portfolio/equityoption.hpp>
+#include <ored/portfolio/fxforward.hpp>
+#include <ored/portfolio/fxoption.hpp>
+#include <ored/portfolio/fxswap.hpp>
 #include <ored/portfolio/swap.hpp>
 #include <ored/portfolio/swaption.hpp>
-#include <ored/portfolio/fxforward.hpp>
-#include <ored/portfolio/fxswap.hpp>
-#include <ored/portfolio/fxoption.hpp>
-#include <ored/portfolio/capfloor.hpp>
-#include <ored/portfolio/equityoption.hpp>
-#include <ored/portfolio/equityforward.hpp>
-#include <ored/portfolio/bond.hpp>
+#include <ored/portfolio/tradefactory.hpp>
 
 using namespace std;
 
@@ -55,5 +55,5 @@ boost::shared_ptr<Trade> TradeFactory::build(const string& className) const {
     else
         return it->second->build();
 }
-}
-}
+} // namespace data
+} // namespace ore
