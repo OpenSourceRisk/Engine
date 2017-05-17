@@ -39,5 +39,5 @@ const boost::shared_ptr<Scenario> CloneScenarioFactory::buildScenario(Date asof,
         newScen->setNumeraire(numeraire);
     return newScen;
 }
-}
-}
+} // namespace analytics
+} // namespace ore

@@ -59,9 +59,9 @@ boost::shared_ptr<QuantExt::LGM> LGMBermudanSwaptionEngineBuilder::model(const s
     vector<Real> sigmaTimes(0);
     if (modelParameters_.count("VolatilityTimes") > 0)
         sigmaTimes = parseListOfValues<Real>(modelParameters_.at("VolatilityTimes"), &parseReal);
-    QL_REQUIRE(sigma.size() == sigmaTimes.size() + 1,
-               "there must be n+1 volatilities (" << sigma.size() << ") for n volatility times (" << sigmaTimes.size()
-                                                  << ")");
+    QL_REQUIRE(sigma.size() == sigmaTimes.size() + 1, "there must be n+1 volatilities (" << sigma.size()
+                                                                                         << ") for n volatility times ("
+                                                                                         << sigmaTimes.size() << ")");
     Real tolerance = parseReal(modelParameters_.at("Tolerance"));
     auto reversionType = parseReversionType(modelParameters_.at("ReversionType"));
     auto volatilityType = parseVolatilityType(modelParameters_.at("VolatilityType"));

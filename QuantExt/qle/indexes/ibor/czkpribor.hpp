@@ -49,6 +49,6 @@ public:
     CZKPribor(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
         : IborIndex("CZK-PRIBOR", tenor, 2, CZKCurrency(), CzechRepublic(), ModifiedFollowing, false, Actual360(), h) {}
 };
-}
+} // namespace QuantExt
 
 #endif

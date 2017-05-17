@@ -302,5 +302,5 @@ void LgmBuilder::buildSwaptionBasket() const {
     for (Size j = 0; j < maturityTimes.size(); j++)
         swaptionMaturities_[j] = maturityTimes[j];
 }
-}
-}
+} // namespace data
+} // namespace ore

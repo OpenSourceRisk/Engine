@@ -98,5 +98,5 @@ class PHPCurrency : public Currency {
 public:
     PHPCurrency();
 };
-}
+} // namespace QuantExt
 #endif

@@ -61,8 +61,9 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
             if (it != yieldCurves.end()) {
                 discountCurve = it->second->handle();
             } else {
-                QL_FAIL("The discount curve, " << config->discountCurveID() << ", required in the building "
-                                                                               "of the curve, "
+                QL_FAIL("The discount curve, " << config->discountCurveID()
+                                               << ", required in the building "
+                                                  "of the curve, "
                                                << spec.name() << ", was not found.");
             }
         }
@@ -73,8 +74,9 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
             if (it != yieldCurves.end()) {
                 benchmarkCurve = it->second->handle();
             } else {
-                QL_FAIL("The benchmark curve, " << config->benchmarkCurveID() << ", required in the building "
-                                                                                 "of the curve, "
+                QL_FAIL("The benchmark curve, " << config->benchmarkCurveID()
+                                                << ", required in the building "
+                                                   "of the curve, "
                                                 << spec.name() << ", was not found.");
             }
         }
@@ -113,9 +115,9 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                 if (it1 != config->quotes().end()) {
 
                     vector<Period>::const_iterator it2 = std::find(terms.begin(), terms.end(), q->term());
-                    QL_REQUIRE(it2 == terms.end(),
-                               "duplicate term in quotes found (" << q->term() << ") while loading default curve "
-                                                                  << config->curveID());
+                    QL_REQUIRE(it2 == terms.end(), "duplicate term in quotes found ("
+                                                       << q->term() << ") while loading default curve "
+                                                       << config->curveID());
                     terms.push_back(q->term());
                     quotes.push_back(q->quote()->value());
                 }
@@ -132,9 +134,9 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                 if (it1 != config->quotes().end()) {
 
                     vector<Period>::const_iterator it2 = std::find(terms.begin(), terms.end(), q->term());
-                    QL_REQUIRE(it2 == terms.end(),
-                               "duplicate term in quotes found (" << q->term() << ") while loading default curve "
-                                                                  << config->curveID());
+                    QL_REQUIRE(it2 == terms.end(), "duplicate term in quotes found ("
+                                                       << q->term() << ") while loading default curve "
+                                                       << config->curveID());
                     terms.push_back(q->term());
                     quotes.push_back(q->quote()->value());
                 }
@@ -154,9 +156,9 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                                                 "curves, date based "
                                                 "not allowed");
                     vector<Period>::const_iterator it2 = std::find(terms.begin(), terms.end(), q->tenor());
-                    QL_REQUIRE(it2 == terms.end(),
-                               "duplicate term in quotes found (" << q->tenor() << ") while loading default curve "
-                                                                  << config->curveID());
+                    QL_REQUIRE(it2 == terms.end(), "duplicate term in quotes found ("
+                                                       << q->tenor() << ") while loading default curve "
+                                                       << config->curveID());
                     terms.push_back(q->tenor());
                     quotes.push_back(q->quote()->value());
                 }
@@ -279,5 +281,5 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
         QL_FAIL("default curve building failed: unknown error");
     }
 }
-}
-}
+} // namespace data
+} // namespace ore

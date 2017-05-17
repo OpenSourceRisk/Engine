@@ -43,5 +43,5 @@ SecurityRecoveryRate::SecurityRecoveryRate(const Date& asof, SecurityRecoveryRat
     }
     QL_FAIL("Failed to find a quote for " << spec);
 }
-}
-}
+} // namespace data
+} // namespace ore

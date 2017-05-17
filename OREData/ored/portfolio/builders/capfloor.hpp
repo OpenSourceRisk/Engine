@@ -42,5 +42,5 @@ protected:
 
     virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& ccy) override;
 };
-}
-}
+} // namespace data
+} // namespace ore

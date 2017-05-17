@@ -123,4 +123,4 @@ test_suite* StaticallyCorrectedYieldTermStructureTest::suite() {
     suite->add(QUANTLIB_TEST_CASE(&StaticallyCorrectedYieldTermStructureTest::testCorrectedYts));
     return suite;
 }
-}
+} // namespace testsuite

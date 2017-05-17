@@ -128,6 +128,6 @@ private:
     DayCounter onDayCounter_;
     boost::shared_ptr<AverageONIndexedCouponPricer> onCouponPricer_;
 };
-}
+} // namespace QuantExt
 
 #endif

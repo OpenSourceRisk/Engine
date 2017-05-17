@@ -245,5 +245,5 @@ boost::shared_ptr<Index> parseIndex(const string& s) {
     QL_REQUIRE(ret_idx, "parseIndex \"" << s << "\" not recognized");
     return ret_idx;
 }
-}
-}
+} // namespace data
+} // namespace ore

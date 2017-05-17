@@ -48,5 +48,5 @@ boost::shared_ptr<PricingEngine> CapFloorEngineBuilder::engineImpl(const Currenc
         break;
     }
 }
-}
-}
+} // namespace data
+} // namespace ore

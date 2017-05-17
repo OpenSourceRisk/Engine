@@ -30,7 +30,7 @@ namespace QuantExt {
 
 namespace {
 void no_deletion(YieldTermStructure*) {}
-}
+} // namespace
 
 OICCBSHelper::OICCBSHelper(Natural settlementDays,
                            const Period& term, // swap maturity
@@ -102,4 +102,4 @@ void OICCBSHelper::accept(AcyclicVisitor& v) {
     else
         RateHelper::accept(v);
 }
-}
+} // namespace QuantExt

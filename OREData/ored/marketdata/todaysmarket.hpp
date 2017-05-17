@@ -64,5 +64,5 @@ public:
         //! Repository of market conventions
         const Conventions& conventions);
 };
-}
-}
+} // namespace data
+} // namespace ore

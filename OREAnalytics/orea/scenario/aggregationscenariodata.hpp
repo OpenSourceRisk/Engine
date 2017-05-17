@@ -102,7 +102,7 @@ private:
 
 //! A concrete in memory implementation of AggregationScenarioData
 /*! \ingroup scenario
-*/
+ */
 class InMemoryAggregationScenarioData : public AggregationScenarioData {
 public:
     InMemoryAggregationScenarioData() : AggregationScenarioData(), dimDates_(0), dimSamples_(0) {}
@@ -168,4 +168,4 @@ private:
 };
 
 } // namespace analytics
-} // namesapce openva
+} // namespace ore

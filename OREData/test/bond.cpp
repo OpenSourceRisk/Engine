@@ -156,7 +156,7 @@ struct CommonVars {
         spread.push_back(0.0);
     }
 };
-}
+} // namespace
 
 namespace testsuite {
 
@@ -262,4 +262,4 @@ test_suite* BondTest::suite() {
     suite->add(BOOST_TEST_CASE(&BondTest::testBondCompareDefault));
     return suite;
 }
-}
+} // namespace testsuite

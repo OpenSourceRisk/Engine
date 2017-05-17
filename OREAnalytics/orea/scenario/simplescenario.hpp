@@ -87,5 +87,5 @@ private:
     std::vector<RiskFactorKey> keys_;
     std::string label_;
 };
-}
-}
+} // namespace analytics
+} // namespace ore

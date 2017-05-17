@@ -99,4 +99,4 @@ test_suite* BlackVarianceCurveTest::suite() {
     suite->add(BOOST_TEST_CASE(&BlackVarianceCurveTest::testBlackVarianceCurve));
     return suite;
 }
-}
+} // namespace testsuite

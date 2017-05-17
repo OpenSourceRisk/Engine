@@ -60,7 +60,7 @@ void PricerSetter::visit(SubPeriodsCoupon& c) {
     QL_REQUIRE(subPeriodsCouponPricer, "Pricer not compatible with sub-periods coupon");
     c.setPricer(subPeriodsCouponPricer);
 }
-}
+} // namespace
 
 void setCouponPricer(const Leg& leg, const boost::shared_ptr<FloatingRateCouponPricer>& pricer) {
     PricerSetter setter(pricer);
@@ -83,4 +83,4 @@ void setCouponPricers(const Leg& leg, const std::vector<boost::shared_ptr<Floati
         leg[i]->accept(setter);
     }
 }
-}
+} // namespace QuantExt

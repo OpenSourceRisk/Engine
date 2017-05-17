@@ -49,6 +49,6 @@ public:
     INRMifor(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
         : IborIndex("INR-MIFOR", tenor, 2, INRCurrency(), India(), ModifiedFollowing, false, Actual365Fixed(), h) {}
 };
-}
+} // namespace QuantExt
 
 #endif

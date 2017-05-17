@@ -46,6 +46,6 @@ public:
         : IborIndex("KRW-KORIBOR", tenor, 2, KRWCurrency(), SouthKorea(), ModifiedFollowing, false, Actual365Fixed(),
                     h) {}
 };
-}
+} // namespace QuantExt
 
 #endif

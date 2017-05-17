@@ -68,7 +68,7 @@ private:
         return Handle<BlackVolTermStructure>(fxv);
     }
 };
-}
+} // namespace
 
 namespace {
 
@@ -112,7 +112,7 @@ void test(string nearDate, string farDate, string nearBoughtCurrency, double nea
         BOOST_FAIL("The FxSwap has NPV: " << fxswap.instrument()->NPV()
                                           << ", which does not equal the sum of two Fxforwards: " << npvForward);
 }
-}
+} // namespace
 
 namespace testsuite {
 
@@ -159,4 +159,4 @@ test_suite* FXSwapTest::suite() {
     suite->add(BOOST_TEST_CASE(&FXSwapTest::testFXSwap));
     return suite;
 }
-}
+} // namespace testsuite

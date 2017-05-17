@@ -28,7 +28,7 @@ namespace QuantExt {
 
 namespace {
 void no_deletion(void*) {}
-}
+} // namespace
 
 LinkableCalibratedModel::LinkableCalibratedModel()
     : constraint_(new PrivateConstraint(arguments_)), endCriteria_(EndCriteria::None) {}
@@ -74,9 +74,9 @@ void LinkableCalibratedModel::calibrate(const vector<shared_ptr<CalibrationHelpe
                                         const Constraint& additionalConstraint, const vector<Real>& weights,
                                         const vector<bool>& fixParameters) {
 
-    QL_REQUIRE(weights.empty() || weights.size() == instruments.size(),
-               "mismatch between number of instruments (" << instruments.size() << ") and weights(" << weights.size()
-                                                          << ")");
+    QL_REQUIRE(weights.empty() || weights.size() == instruments.size(), "mismatch between number of instruments ("
+                                                                            << instruments.size() << ") and weights("
+                                                                            << weights.size() << ")");
 
     Constraint c;
     if (additionalConstraint.empty())
@@ -132,4 +132,4 @@ void LinkableCalibratedModel::setParams(const Array& params) {
     generateArguments();
     notifyObservers();
 }
-}
+} // namespace QuantExt

@@ -50,7 +50,7 @@ string yieldCurveKey(const Currency& curveCcy, const string& curveID, const Date
     ore::data::YieldCurveSpec tempSpec(curveCcy.code(), curveID);
     return tempSpec.name();
 }
-}
+} // namespace
 
 namespace ore {
 namespace data {
@@ -92,10 +92,9 @@ YieldCurve::YieldCurve(Date asof, YieldCurveSpec curveSpec, const CurveConfigura
     try {
 
         curveConfig_ = curveConfigs.yieldCurveConfig(curveSpec_.curveConfigID());
-        QL_REQUIRE(curveConfig_,
-                   "No yield curve configuration found "
-                   "for config ID "
-                       << curveSpec_.curveConfigID());
+        QL_REQUIRE(curveConfig_, "No yield curve configuration found "
+                                 "for config ID "
+                                     << curveSpec_.curveConfigID());
         currency_ = parseCurrency(curveConfig_->currency());
 
         /* If discount curve is not the curve being built, look for it in the map that is passed in. */
@@ -107,8 +106,9 @@ YieldCurve::YieldCurve(Date asof, YieldCurveSpec curveSpec, const CurveConfigura
             if (it != requiredYieldCurves_.end()) {
                 discountCurve_ = it->second;
             } else {
-                QL_FAIL("The discount curve, " << discountCurveID << ", required in the building "
-                                                                     "of the curve, "
+                QL_FAIL("The discount curve, " << discountCurveID
+                                               << ", required in the building "
+                                                  "of the curve, "
                                                << curveSpec_.name() << ", was not found.");
             }
         }
@@ -415,9 +415,8 @@ void YieldCurve::buildZeroCurve() {
         }
     }
 
-    QL_REQUIRE(data.size() > 0,
-               "No market data found for curve spec " << curveSpec_.name() << " with as of date "
-                                                      << io::iso_date(asofDate_));
+    QL_REQUIRE(data.size() > 0, "No market data found for curve spec " << curveSpec_.name() << " with as of date "
+                                                                       << io::iso_date(asofDate_));
 
     // \todo review - more flexible (flat vs. linear extrap)?
     if (data.begin()->first > asofDate_) {
@@ -522,8 +521,9 @@ void YieldCurve::buildZeroSpreadedCurve() {
         if (it != requiredYieldCurves_.end()) {
             referenceCurve = it->second;
         } else {
-            QL_FAIL("The reference curve, " << referenceCurveID << ", required in the building "
-                                                                   "of the curve, "
+            QL_FAIL("The reference curve, " << referenceCurveID
+                                            << ", required in the building "
+                                               "of the curve, "
                                             << curveSpec_.name() << ", was not found.");
         }
     }
@@ -566,9 +566,8 @@ void YieldCurve::buildDiscountCurve() {
         }
     }
 
-    QL_REQUIRE(data.size() > 0,
-               "No market data found for curve spec " << curveSpec_.name() << " with as of date "
-                                                      << io::iso_date(asofDate_));
+    QL_REQUIRE(data.size() > 0, "No market data found for curve spec " << curveSpec_.name() << " with as of date "
+                                                                       << io::iso_date(asofDate_));
 
     if (data.begin()->first > asofDate_) {
         LOG("Insert discount curve point at time zero for " << curveSpec_.name());
@@ -832,8 +831,9 @@ void YieldCurve::addOISs(const boost::shared_ptr<YieldCurveSegment>& segment,
         if (it != requiredYieldCurves_.end()) {
             projectionCurve = it->second;
         } else {
-            QL_FAIL("The projection curve, " << projectionCurveID << ", required in the building "
-                                                                     "of the curve, "
+            QL_FAIL("The projection curve, " << projectionCurveID
+                                             << ", required in the building "
+                                                "of the curve, "
                                              << curveSpec_.name() << ", was not found.");
         }
         onIndex = boost::dynamic_pointer_cast<OvernightIndex>(onIndex->clone(projectionCurve->handle()));
@@ -948,8 +948,9 @@ void YieldCurve::addAverageOISs(const boost::shared_ptr<YieldCurveSegment>& segm
         if (it != requiredYieldCurves_.end()) {
             projectionCurve = it->second;
         } else {
-            QL_FAIL("The projection curve, " << projectionCurveID << ", required in the building "
-                                                                     "of the curve, "
+            QL_FAIL("The projection curve, " << projectionCurveID
+                                             << ", required in the building "
+                                                "of the curve, "
                                              << curveSpec_.name() << ", was not found.");
         }
         onIndex = boost::dynamic_pointer_cast<OvernightIndex>(onIndex->clone(projectionCurve->handle()));
@@ -1026,8 +1027,9 @@ void YieldCurve::addTenorBasisSwaps(const boost::shared_ptr<YieldCurveSegment>& 
         if (it != requiredYieldCurves_.end()) {
             shortCurve = it->second;
         } else {
-            QL_FAIL("The short side projection curve, " << shortCurveID << ", required in the building "
-                                                                           "of the curve, "
+            QL_FAIL("The short side projection curve, " << shortCurveID
+                                                        << ", required in the building "
+                                                           "of the curve, "
                                                         << curveSpec_.name() << ", was not found.");
         }
         shortIndex = shortIndex->clone(shortCurve->handle());
@@ -1044,8 +1046,9 @@ void YieldCurve::addTenorBasisSwaps(const boost::shared_ptr<YieldCurveSegment>& 
         if (it != requiredYieldCurves_.end()) {
             longCurve = it->second;
         } else {
-            QL_FAIL("The long side projection curve, " << longCurveID << ", required in the building "
-                                                                         "of the curve, "
+            QL_FAIL("The long side projection curve, " << longCurveID
+                                                       << ", required in the building "
+                                                          "of the curve, "
                                                        << curveSpec_.name() << ", was not found.");
         }
         longIndex = longIndex->clone(longCurve->handle());
@@ -1105,8 +1108,9 @@ void YieldCurve::addTenorBasisTwoSwaps(const boost::shared_ptr<YieldCurveSegment
         if (it != requiredYieldCurves_.end()) {
             shortCurve = it->second;
         } else {
-            QL_FAIL("The short side projection curve, " << shortCurveID << ", required in the building "
-                                                                           "of the curve, "
+            QL_FAIL("The short side projection curve, " << shortCurveID
+                                                        << ", required in the building "
+                                                           "of the curve, "
                                                         << curveSpec_.name() << ", was not found.");
         }
         shortIndex = shortIndex->clone(shortCurve->handle());
@@ -1123,8 +1127,9 @@ void YieldCurve::addTenorBasisTwoSwaps(const boost::shared_ptr<YieldCurveSegment
         if (it != requiredYieldCurves_.end()) {
             longCurve = it->second;
         } else {
-            QL_FAIL("The projection curve, " << longCurveID << ", required in the building "
-                                                               "of the curve, "
+            QL_FAIL("The projection curve, " << longCurveID
+                                             << ", required in the building "
+                                                "of the curve, "
                                              << curveSpec_.name() << ", was not found.");
         }
         longIndex = longIndex->clone(longCurve->handle());
@@ -1197,8 +1202,9 @@ void YieldCurve::addFXForwards(const boost::shared_ptr<YieldCurveSegment>& segme
     if (it != requiredYieldCurves_.end()) {
         knownDiscountCurve = it->second;
     } else {
-        QL_FAIL("The foreign discount curve, " << knownDiscountID << ", required in the building "
-                                                                     "of the curve, "
+        QL_FAIL("The foreign discount curve, " << knownDiscountID
+                                               << ", required in the building "
+                                                  "of the curve, "
                                                << curveSpec_.name() << ", was not found.");
     }
 
@@ -1304,8 +1310,9 @@ void YieldCurve::addCrossCcyBasisSwaps(const boost::shared_ptr<YieldCurveSegment
     if (it != requiredYieldCurves_.end()) {
         foreignDiscountCurve = it->second;
     } else {
-        QL_FAIL("The foreign discount curve, " << foreignDiscountID << ", required in the building "
-                                                                       "of the curve, "
+        QL_FAIL("The foreign discount curve, " << foreignDiscountID
+                                               << ", required in the building "
+                                                  "of the curve, "
                                                << curveSpec_.name() << ", was not found.");
     }
 
@@ -1324,8 +1331,9 @@ void YieldCurve::addCrossCcyBasisSwaps(const boost::shared_ptr<YieldCurveSegment
         if (it != requiredYieldCurves_.end()) {
             foreignProjectionCurve = it->second;
         } else {
-            QL_FAIL("The foreign projection curve, " << foreignProjectionCurveID << ", required in the building "
-                                                                                    "of the curve, "
+            QL_FAIL("The foreign projection curve, " << foreignProjectionCurveID
+                                                     << ", required in the building "
+                                                        "of the curve, "
                                                      << curveSpec_.name() << ", was not found.");
         }
         foreignIndex = foreignIndex->clone(foreignProjectionCurve->handle());
@@ -1343,8 +1351,9 @@ void YieldCurve::addCrossCcyBasisSwaps(const boost::shared_ptr<YieldCurveSegment
         if (it != requiredYieldCurves_.end()) {
             domesticProjectionCurve = it->second;
         } else {
-            QL_FAIL("The domestic projection curve, " << domesticProjectionCurveID << ", required in the"
-                                                                                      " building of the curve, "
+            QL_FAIL("The domestic projection curve, " << domesticProjectionCurveID
+                                                      << ", required in the"
+                                                         " building of the curve, "
                                                       << curveSpec_.name() << ", was not found.");
         }
         domesticIndex = domesticIndex->clone(domesticProjectionCurve->handle());
@@ -1398,5 +1407,5 @@ void YieldCurve::addCrossCcyBasisSwaps(const boost::shared_ptr<YieldCurveSegment
         instruments.push_back(basisSwapHelper);
     }
 }
-}
-}
+} // namespace data
+} // namespace ore

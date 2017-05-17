@@ -91,6 +91,6 @@ private:
     std::vector<Time> timeDiffs_;
     std::vector<boost::shared_ptr<Quote> > quotes_;
 };
-}
+} // namespace QuantExt
 
 #endif

@@ -46,5 +46,5 @@ public:
 private:
     Handle<Quote> spot_;
 };
-}
-}
+} // namespace data
+} // namespace ore

@@ -396,4 +396,4 @@ test_suite* IndexTest::suite() {
     suite->add(BOOST_TEST_CASE(&IndexTest::testSwapIndexParsing));
     return suite;
 }
-}
+} // namespace testsuite

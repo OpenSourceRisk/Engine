@@ -128,6 +128,6 @@ inline Real FxIndex::pastFixing(const Date& fixingDate) const {
     QL_REQUIRE(isValidFixingDate(fixingDate), fixingDate << " is not a valid fixing date");
     return timeSeries()[fixingDate];
 }
-}
+} // namespace QuantExt
 
 #endif

@@ -122,4 +122,4 @@ void OvernightIndexedCrossCcyBasisSwap::results::reset() {
     fairPayLegSpread = Null<Real>();
     fairRecLegSpread = Null<Real>();
 }
-}
+} // namespace QuantExt

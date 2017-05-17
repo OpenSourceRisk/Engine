@@ -522,4 +522,4 @@ test_suite* AnalyticLgmSwaptionEngineTest::suite() {
     suite->add(QUANTLIB_TEST_CASE(&AnalyticLgmSwaptionEngineTest::testLgmInvariances));
     return suite;
 }
-}
+} // namespace testsuite

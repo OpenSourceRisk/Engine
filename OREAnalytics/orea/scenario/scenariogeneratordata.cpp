@@ -133,5 +133,5 @@ XMLNode* ScenarioGeneratorData::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("Simlation");
     return node;
 }
-}
-}
+} // namespace analytics
+} // namespace ore

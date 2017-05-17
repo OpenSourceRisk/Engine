@@ -30,4 +30,4 @@ Real FXLinkedCashFlow::fxRate() const {
     Real fixing = fxIndex_->fixing(fxFixingDate_);
     return invertIndex_ ? 1.0 / fixing : fixing;
 }
-}
+} // namespace QuantExt

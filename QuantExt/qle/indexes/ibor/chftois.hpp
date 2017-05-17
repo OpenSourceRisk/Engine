@@ -46,6 +46,6 @@ public:
     CHFTois(const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
         : OvernightIndex("CHF-TOIS", 1, CHFCurrency(), Switzerland(), Actual360(), h) {}
 };
-}
+} // namespace QuantExt
 
 #endif

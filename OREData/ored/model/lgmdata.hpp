@@ -194,5 +194,5 @@ LgmData::CalibrationStrategy parseCalibrationStrategy(const string& s);
 std::ostream& operator<<(std::ostream& oss, const LgmData::ReversionType& type);
 std::ostream& operator<<(std::ostream& oss, const LgmData::VolatilityType& type);
 std::ostream& operator<<(std::ostream& oss, const LgmData::CalibrationStrategy& type);
-}
-}
+} // namespace data
+} // namespace ore

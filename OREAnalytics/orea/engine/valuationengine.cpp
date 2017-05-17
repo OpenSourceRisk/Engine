@@ -42,9 +42,9 @@ ValuationEngine::ValuationEngine(const Date& today, const boost::shared_ptr<Date
     : today_(today), dg_(dg), simMarket_(simMarket), modelBuilders_(modelBuilders) {
 
     QL_REQUIRE(dg_->size() > 0, "Error, DateGrid size must be > 0");
-    QL_REQUIRE(today <= dg_->dates().front(),
-               "ValuationEngine: Error today (" << today << ") must not be later than first DateGrid date "
-                                                << dg_->dates().front());
+    QL_REQUIRE(today <= dg_->dates().front(), "ValuationEngine: Error today ("
+                                                  << today << ") must not be later than first DateGrid date "
+                                                  << dg_->dates().front());
     QL_REQUIRE(simMarket_, "ValuationEngine: Error, Null SimMarket");
 }
 
@@ -162,5 +162,5 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
                                            << "update " << updateTime << " sec "
                                            << "fixing " << fixingTime);
 }
-}
-}
+} // namespace analytics
+} // namespace ore

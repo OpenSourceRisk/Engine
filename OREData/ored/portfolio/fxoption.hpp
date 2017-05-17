@@ -69,5 +69,5 @@ private:
     string soldCurrency_;
     double soldAmount_;
 };
-}
-}
+} // namespace data
+} // namespace ore

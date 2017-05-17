@@ -46,5 +46,5 @@ public:
 private:
     Handle<Quote> spread_;
 };
-}
-}
+} // namespace data
+} // namespace ore

@@ -100,5 +100,5 @@ private:
     boost::shared_ptr<OptimizationMethod> optimizationMethod_;
     EndCriteria endCriteria_;
 };
-}
-}
+} // namespace data
+} // namespace ore

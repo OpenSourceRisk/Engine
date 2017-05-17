@@ -53,5 +53,5 @@ private:
     Size i_;
     FILE* fp_;
 };
-}
-}
+} // namespace data
+} // namespace ore

@@ -83,5 +83,5 @@ private:
     boost::shared_ptr<analytics::SimMarket> simMarket_;
     set<boost::shared_ptr<data::ModelBuilder>> modelBuilders_;
 };
-}
-}
+} // namespace analytics
+} // namespace ore

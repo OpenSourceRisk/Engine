@@ -71,6 +71,6 @@ private:
     Period timestepPeriod_;
     boost::optional<bool> includeSettlementDateFlows_;
 };
-}
+} // namespace QuantExt
 
 #endif

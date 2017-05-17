@@ -182,4 +182,4 @@ Rate OptionletStripper1::switchStrike() const {
         calculate();
     return switchStrike_;
 }
-}
+} // namespace QuantExt

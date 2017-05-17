@@ -102,5 +102,5 @@ private:
     string dayCountID_;
     bool extrapolation_;
 };
-}
-}
+} // namespace data
+} // namespace ore

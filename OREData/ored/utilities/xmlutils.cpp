@@ -384,5 +384,5 @@ XMLNode* XMLUtils::getNextSibling(XMLNode* node, const string& name) {
 }
 
 string XMLUtils::getNodeValue(XMLNode* node) { return node->value(); }
-}
-}
+} // namespace data
+} // namespace ore

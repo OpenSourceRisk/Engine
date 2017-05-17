@@ -66,5 +66,5 @@ public:
 private:
     mutable std::map<std::string, Handle<Quote>> map_;
 };
-}
-}
+} // namespace data
+} // namespace ore

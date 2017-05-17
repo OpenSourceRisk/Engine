@@ -112,7 +112,7 @@ protected:
 
 //! Engine for Swaption instrument
 /*! \ingroup engines
-*/
+ */
 class NumericLgmSwaptionEngine : public GenericEngine<Swaption::arguments, Swaption::results>,
                                  public NumericLgmSwaptionEngineBase {
 public:

@@ -57,7 +57,7 @@ string memoryString(unsigned long long m) {
         oss << m / (double)(1024 * 1024 * 1024) << "GB";
     return oss.str();
 }
-}
+} // namespace
 
 namespace ore {
 namespace data {

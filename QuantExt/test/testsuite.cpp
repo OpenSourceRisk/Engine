@@ -83,7 +83,7 @@ void stopTimer() {
         cout << minutes << " m ";
     cout << fixed << setprecision(0) << seconds << " s" << endl << endl;
 }
-}
+} // namespace
 
 test_suite* init_unit_test_suite(int, char* []) {
 

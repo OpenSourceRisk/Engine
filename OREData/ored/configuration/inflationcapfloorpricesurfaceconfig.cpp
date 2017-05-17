@@ -111,5 +111,5 @@ XMLNode* InflationCapFloorPriceSurfaceConfig::toXML(XMLDocument& doc) {
 
     return node;
 }
-}
-}
+} // namespace data
+} // namespace ore

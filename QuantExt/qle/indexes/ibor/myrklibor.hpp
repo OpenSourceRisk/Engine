@@ -47,6 +47,6 @@ public:
     MYRKlibor(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
         : IborIndex("MYR-KLIBOR", tenor, 2, MYRCurrency(), TARGET(), ModifiedFollowing, false, Actual365Fixed(), h) {}
 };
-}
+} // namespace QuantExt
 
 #endif

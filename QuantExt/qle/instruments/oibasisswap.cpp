@@ -107,4 +107,4 @@ Real OvernightIndexedBasisSwap::overnightLegNPV() const {
     QL_REQUIRE(legNPV_[1] != Null<Real>(), "result not available");
     return legNPV_[1];
 }
-}
+} // namespace QuantExt

@@ -151,5 +151,5 @@ void StressTest::writeReport(const boost::shared_ptr<ore::data::Report>& report,
 
     report->end();
 }
-}
-}
+} // namespace analytics
+} // namespace ore

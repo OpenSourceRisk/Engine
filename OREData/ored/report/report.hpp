@@ -71,5 +71,5 @@ public:
     virtual Report& add(const ReportType& rt) = 0;
     virtual void end() = 0;
 };
-}
-}
+} // namespace data
+} // namespace ore

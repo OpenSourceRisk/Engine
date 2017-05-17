@@ -63,5 +63,5 @@ private:
     string maturityDate_;
     double strike_;
 };
-}
-}
+} // namespace data
+} // namespace ore

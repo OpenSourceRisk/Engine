@@ -84,5 +84,5 @@ private:
     // scenario labels
     std::set<std::string> labels_, trades_;
 };
-}
-}
+} // namespace analytics
+} // namespace ore

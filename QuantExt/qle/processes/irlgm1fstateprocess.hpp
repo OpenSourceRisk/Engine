@@ -33,7 +33,7 @@ namespace QuantExt {
 
 //! Ir Lgm 1f State Process
 /*! \ingroup processes
-*/
+ */
 class IrLgm1fStateProcess : public StochasticProcess1D {
 public:
     IrLgm1fStateProcess(const boost::shared_ptr<IrLgm1fParametrization>& parametrization);

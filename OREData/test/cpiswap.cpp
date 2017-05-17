@@ -182,7 +182,7 @@ private:
         return Handle<YieldTermStructure>(idc);
     }
 };
-}
+} // namespace
 
 namespace testsuite {
 
@@ -322,4 +322,4 @@ test_suite* CPISwapTest::suite() {
     suite->add(BOOST_TEST_CASE(&CPISwapTest::testCPISwapPrice));
     return suite;
 }
-}
+} // namespace testsuite

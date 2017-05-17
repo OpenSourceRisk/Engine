@@ -41,7 +41,7 @@ namespace QuantExt {
 
 //! Basis swap: compounded overnight rate in ccy 1 vs. compounded overnight rate in ccy 2
 /*! \ingroup instruments
-*/
+ */
 class OvernightIndexedCrossCcyBasisSwap : public Swap {
 public:
     class arguments;
@@ -126,6 +126,6 @@ public:
 
 class OvernightIndexedCrossCcyBasisSwap::engine
     : public GenericEngine<OvernightIndexedCrossCcyBasisSwap::arguments, OvernightIndexedCrossCcyBasisSwap::results> {};
-}
+} // namespace QuantExt
 
 #endif

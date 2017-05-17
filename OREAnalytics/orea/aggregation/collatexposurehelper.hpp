@@ -104,5 +104,5 @@ public:
 
 //! Convert text representation to CollateralExposureHelper::CalculationType
 CollateralExposureHelper::CalculationType parseCollateralCalculationType(const string& s);
-}
-}
+} // namespace analytics
+} // namespace ore

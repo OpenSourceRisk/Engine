@@ -119,5 +119,5 @@ private:
 
     std::map<key, Real> data_;
 };
-}
-}
+} // namespace data
+} // namespace ore

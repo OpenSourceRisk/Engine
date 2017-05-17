@@ -47,6 +47,6 @@ public:
     NZDBKBM(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
         : IborIndex("NZD-BKBM", tenor, 2, NZDCurrency(), NewZealand(), ModifiedFollowing, false, ActualActual(), h) {}
 };
-}
+} // namespace QuantExt
 
 #endif

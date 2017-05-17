@@ -56,5 +56,5 @@ void applyFixings(const vector<Fixing>& fixings) {
     }
     DLOG("Added " << count << " of " << fixings.size() << " fixings in " << timer.elapsed() << " seconds");
 }
-}
-}
+} // namespace data
+} // namespace ore

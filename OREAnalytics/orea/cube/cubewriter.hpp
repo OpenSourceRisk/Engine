@@ -33,7 +33,7 @@ namespace analytics {
 
 //! Write an NPV cube to a human readable text file
 /*! \ingroup cube
-*/
+ */
 class CubeWriter {
 public:
     //! ctor
@@ -49,5 +49,5 @@ public:
 private:
     std::string filename_;
 };
-}
-}
+} // namespace analytics
+} // namespace ore

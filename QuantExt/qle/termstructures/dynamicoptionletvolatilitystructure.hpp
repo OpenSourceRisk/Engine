@@ -85,4 +85,4 @@ private:
 inline VolatilityType DynamicOptionletVolatilityStructure::volatilityType() const { return volatilityType_; }
 
 inline Real DynamicOptionletVolatilityStructure::displacement() const { return displacement_; }
-}
+} // namespace QuantExt

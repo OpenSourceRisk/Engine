@@ -42,7 +42,7 @@ namespace analytics {
 
 //! ScenarioSimMarket description
 /*! \ingroup scenario
-*/
+ */
 class ScenarioSimMarketParameters : public XMLSerializable {
 public:
     //! Default constructor
@@ -205,5 +205,5 @@ private:
 
     vector<string> securities_;
 };
-}
-}
+} // namespace analytics
+} // namespace ore

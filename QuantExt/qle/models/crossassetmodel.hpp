@@ -44,13 +44,13 @@ namespace CrossAssetModelTypes {
 //! Cross Asset Type
 //! \ingroup crossassetmodel
 enum AssetType { IR, FX, INF, EQ };
-}
+} // namespace CrossAssetModelTypes
 
 using namespace CrossAssetModelTypes;
 
 //! Cross Asset Model
 /*! \ingroup crossassetmodel
-*/
+ */
 class CrossAssetModel : public LinkableCalibratedModel {
 public:
     /*! Parametrizations must be given in the following order
@@ -248,9 +248,8 @@ protected:
             volGridSize = fxbs(aIdx)->parameter(0)->size();
         else
             volGridSize = eqbs(aIdx)->parameter(0)->size();
-        QL_REQUIRE(tIdx < volGridSize,
-                   "bs volatility index (" << tIdx << ") for " << assetStr << " asset " << aIdx << " out of bounds 0..."
-                                           << volGridSize - 1);
+        QL_REQUIRE(tIdx < volGridSize, "bs volatility index (" << tIdx << ") for " << assetStr << " asset " << aIdx
+                                                               << " out of bounds 0..." << volGridSize - 1);
         std::vector<bool> res(0);
         for (Size j = 0; j < nIrLgm1f_; ++j) {
             std::vector<bool> tmp1(p_[idx(IR, j)]->parameter(0)->size(), true);

@@ -47,6 +47,6 @@ public:
     HKDHibor(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
         : IborIndex("HKD-HIBOR", tenor, 0, HKDCurrency(), HongKong(), ModifiedFollowing, false, Actual365Fixed(), h) {}
 };
-}
+} // namespace QuantExt
 
 #endif

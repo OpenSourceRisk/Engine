@@ -194,6 +194,6 @@ public:
                       const boost::shared_ptr<IborIndex>& iborIndex2, std::vector<Rate> spreads2,
                       boost::optional<BusinessDayConvention> paymentConvention = boost::none);
 };
-}
+} // namespace QuantExt
 
 #endif

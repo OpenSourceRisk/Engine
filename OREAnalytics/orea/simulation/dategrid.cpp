@@ -156,5 +156,5 @@ void DateGrid::truncate(Size len) {
         DLOG("DateGrid size now " << dates_.size());
     }
 }
-}
-}
+} // namespace analytics
+} // namespace ore

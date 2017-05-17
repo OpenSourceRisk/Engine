@@ -118,4 +118,4 @@ Real DiscountingRiskyBondEngine::calculateNpv(Date npvDate) const {
 
     return npvValue;
 }
-}
+} // namespace QuantExt

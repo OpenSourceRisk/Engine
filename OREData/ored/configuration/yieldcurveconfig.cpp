@@ -504,5 +504,5 @@ void ZeroSpreadedYieldCurveSegment::accept(AcyclicVisitor& v) {
     else
         YieldCurveSegment::accept(v);
 }
-}
-}
+} // namespace data
+} // namespace ore

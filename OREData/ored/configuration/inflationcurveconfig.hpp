@@ -116,5 +116,5 @@ private:
     Frequency seasonalityFrequency_;
     vector<string> seasonalityFactors_;
 };
-}
-}
+} // namespace data
+} // namespace ore

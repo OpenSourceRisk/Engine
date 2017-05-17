@@ -139,5 +139,5 @@ public:
                                          const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 };
-}
-}
+} // namespace data
+} // namespace ore

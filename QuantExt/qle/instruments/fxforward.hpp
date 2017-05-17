@@ -156,6 +156,6 @@ public:
 };
 
 class FxForward::engine : public GenericEngine<FxForward::arguments, FxForward::results> {};
-}
+} // namespace QuantExt
 
 #endif

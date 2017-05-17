@@ -92,5 +92,5 @@ std::ostream& operator<<(std::ostream& out, const Strike& s) {
     }
     return out;
 }
-}
-}
+} // namespace data
+} // namespace ore

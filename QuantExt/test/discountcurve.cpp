@@ -82,4 +82,4 @@ test_suite* DiscountCurveTest::suite() {
     suite->add(BOOST_TEST_CASE(&DiscountCurveTest::testDiscountCurve));
     return suite;
 }
-}
+} // namespace testsuite

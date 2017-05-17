@@ -354,9 +354,9 @@ void StressTestingTest::regression() {
                                                                            << "): " << delta << " vs " << stressMap[p]);
         }
     }
-    BOOST_CHECK_MESSAGE(count == cachedResults.size(),
-                        "number of non-zero stress impacts (" << count << ") do not match regression data ("
-                                                              << cachedResults.size() << ")");
+    BOOST_CHECK_MESSAGE(count == cachedResults.size(), "number of non-zero stress impacts ("
+                                                           << count << ") do not match regression data ("
+                                                           << cachedResults.size() << ")");
     IndexManager::instance().clearHistories();
 }
 
@@ -375,4 +375,4 @@ test_suite* StressTestingTest::suite() {
     suite->add(BOOST_TEST_CASE(&StressTestingTest::regression));
     return suite;
 }
-}
+} // namespace testsuite

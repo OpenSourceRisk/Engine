@@ -116,7 +116,7 @@ private:
         return Handle<YieldTermStructure>(idc);
     }
 };
-}
+} // namespace
 
 namespace testsuite {
 
@@ -332,4 +332,4 @@ test_suite* CcySwapWithResetsTest::suite() {
     suite->add(BOOST_TEST_CASE(&CcySwapWithResetsTest::testCcySwapWithResetsPrice));
     return suite;
 }
-}
+} // namespace testsuite

@@ -79,6 +79,6 @@ inline void StrippedOptionletAdapter2::update() {
 inline boost::shared_ptr<QuantLib::OptionletStripper> StrippedOptionletAdapter2::optionletStripper() const {
     return boost::dynamic_pointer_cast<QuantLib::OptionletStripper>(optionletStripper_);
 }
-}
+} // namespace QuantExt
 
 #endif

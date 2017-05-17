@@ -108,7 +108,7 @@ void AdditionalAmountGetter::visit(IborCoupon& c) {
     AmountGetter::visit(c);
     bpsFactor_ = c.accrualPeriod() * c.nominal();
 }
-}
+} // namespace
 
 class DiscountingSwapEngineMultiCurve::AmountImpl {
 public:
@@ -142,10 +142,10 @@ void DiscountingSwapEngineMultiCurve::calculate() const {
     if (settlementDate_ == Date()) {
         settlementDate = referenceDate;
     } else {
-        QL_REQUIRE(settlementDate >= referenceDate,
-                   "settlement date (" << settlementDate << ") before "
-                                                            "discount curve reference date ("
-                                       << referenceDate << ")");
+        QL_REQUIRE(settlementDate >= referenceDate, "settlement date (" << settlementDate
+                                                                        << ") before "
+                                                                           "discount curve reference date ("
+                                                                        << referenceDate << ")");
     }
 
     // - Instrument::results
@@ -155,10 +155,10 @@ void DiscountingSwapEngineMultiCurve::calculate() const {
     if (npvDate_ == Date()) {
         results_.valuationDate = referenceDate;
     } else {
-        QL_REQUIRE(npvDate_ >= referenceDate,
-                   "npv date (" << npvDate_ << ") before "
-                                               "discount curve reference date ("
-                                << referenceDate << ")");
+        QL_REQUIRE(npvDate_ >= referenceDate, "npv date (" << npvDate_
+                                                           << ") before "
+                                                              "discount curve reference date ("
+                                                           << referenceDate << ")");
     }
 
     // - Swap::results
@@ -209,4 +209,4 @@ void DiscountingSwapEngineMultiCurve::calculate() const {
         results_.value += results_.legNPV[i];
     }
 }
-}
+} // namespace QuantExt

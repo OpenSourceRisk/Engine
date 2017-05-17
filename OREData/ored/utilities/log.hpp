@@ -356,5 +356,5 @@ private:
 
 #define LOGGERSTREAM ((std::ostream&)ore::data::LoggerStream(ORE_NOTICE, __FILE__, __LINE__))
 #define DLOGGERSTREAM ((std::ostream&)ore::data::LoggerStream(ORE_DEBUG, __FILE__, __LINE__))
-}
-}
+} // namespace data
+} // namespace ore

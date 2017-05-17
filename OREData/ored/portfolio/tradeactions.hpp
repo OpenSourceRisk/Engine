@@ -91,5 +91,5 @@ public:
 private:
     vector<TradeAction> actions_;
 };
-}
-}
+} // namespace data
+} // namespace ore

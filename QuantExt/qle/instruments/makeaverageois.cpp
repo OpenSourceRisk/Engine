@@ -248,4 +248,4 @@ MakeAverageOIS& MakeAverageOIS::withPricingEngine(const boost::shared_ptr<Pricin
     engine_ = engine;
     return *this;
 }
-}
+} // namespace QuantExt

@@ -92,4 +92,4 @@ test_suite* CashFlowTest::suite() {
     suite->add(BOOST_TEST_CASE(&CashFlowTest::testFXLinkedCashFlow));
     return suite;
 }
-}
+} // namespace testsuite

@@ -946,5 +946,5 @@ public:
 private:
     string securityID_;
 };
-}
-}
+} // namespace data
+} // namespace ore

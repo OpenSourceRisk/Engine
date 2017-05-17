@@ -63,5 +63,5 @@ private:
     boost::shared_ptr<DefaultProbabilityTermStructure> curve_;
     Real recoveryRate_;
 };
-}
-}
+} // namespace data
+} // namespace ore

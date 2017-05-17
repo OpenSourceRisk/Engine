@@ -83,6 +83,6 @@ private:
     const VolatilityType inputVolatilityType_;
     const Real inputDisplacement_;
 };
-}
+} // namespace QuantExt
 
 #endif

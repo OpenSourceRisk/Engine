@@ -48,6 +48,6 @@ public:
     Tonar(const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
         : OvernightIndex("TONAR", 0, JPYCurrency(), Japan(), Actual365Fixed(), h) {}
 };
-}
+} // namespace QuantExt
 
 #endif

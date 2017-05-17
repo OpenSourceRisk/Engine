@@ -34,7 +34,7 @@ namespace QuantExt {
 // FIXME: why do we need this?
 //! HazardS preaded Default Term Structure
 /*! \ingroup termstructues
-*/
+ */
 class HazardSpreadedDefaultTermStructure : public HazardRateStructure {
 public:
     //! \name Constructors

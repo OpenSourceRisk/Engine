@@ -42,5 +42,5 @@ protected:
     virtual string keyImpl(const Currency& ccy) override { return ccy.code(); }
     virtual boost::shared_ptr<FloatingRateCouponPricer> engineImpl(const Currency& ccy) override;
 };
-}
-}
+} // namespace data
+} // namespace ore

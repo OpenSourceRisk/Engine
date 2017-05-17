@@ -110,5 +110,5 @@ const boost::shared_ptr<MarketDatum>& CSVLoader::get(const string& name, const Q
     }
     QL_FAIL("No MarketDatum for name " << name << " and date " << d);
 }
-}
-}
+} // namespace data
+} // namespace ore

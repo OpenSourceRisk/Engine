@@ -90,4 +90,4 @@ test_suite* FXTriangulationTest::suite() {
 
     return suite;
 }
-}
+} // namespace testsuite

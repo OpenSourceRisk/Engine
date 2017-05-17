@@ -497,4 +497,4 @@ test_suite* CrossAssetModelParametrizationsTest::suite() {
     suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelParametrizationsTest::testFxBsParametrizations));
     return suite;
 }
-}
+} // namespace testsuite

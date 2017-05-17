@@ -32,7 +32,7 @@ namespace QuantExt {
 
 //! Rate helper for bootstrapping over Overnight Indexed Basis Swap Spreads
 /*! \ingroup termstructures
-*/
+ */
 class OIBSHelper : public RelativeDateRateHelper {
 public:
     OIBSHelper(Natural settlementDays,
@@ -63,6 +63,6 @@ protected:
     boost::shared_ptr<OvernightIndexedBasisSwap> swap_;
     RelinkableHandle<YieldTermStructure> termStructureHandle_;
 };
-}
+} // namespace QuantExt
 
 #endif

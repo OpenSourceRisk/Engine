@@ -89,7 +89,7 @@ public:
 
 //! Implementation of BermudanSwaptionEngineBuilder using LGM Grid pricer
 /*! \ingroup portfolio
-*/
+ */
 class LGMGridBermudanSwaptionEngineBuilder : public LGMBermudanSwaptionEngineBuilder {
 public:
     LGMGridBermudanSwaptionEngineBuilder() : LGMBermudanSwaptionEngineBuilder("Grid") {}

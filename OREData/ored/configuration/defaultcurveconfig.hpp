@@ -111,5 +111,5 @@ private:
     vector<string> quotes_;
     bool extrapolation_;
 };
-}
-}
+} // namespace data
+} // namespace ore

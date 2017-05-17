@@ -46,7 +46,7 @@ namespace data {
 
 //! CapFloor volatility curve configuration class
 /*! \ingroup configuration
-*/
+ */
 class CapFloorVolatilityCurveConfig : public XMLSerializable {
 public:
     enum class VolatilityType { Lognormal, Normal, ShiftedLognormal };
@@ -113,5 +113,5 @@ private:
     string iborIndex_;
     string discountCurve_;
 };
-}
-}
+} // namespace data
+} // namespace ore

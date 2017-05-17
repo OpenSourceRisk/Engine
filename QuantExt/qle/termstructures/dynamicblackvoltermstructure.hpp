@@ -37,7 +37,7 @@ namespace QuantExt {
 namespace tag {
 struct curve {};
 struct surface {};
-}
+} // namespace tag
 
 //! Takes a BlackVolTermStructure with fixed reference date and turns it into a floating reference date term structure.
 /*! This class takes a BlackVolTermStructure with fixed reference date
@@ -179,9 +179,9 @@ template <typename mode> Date DynamicBlackVolTermStructure<mode>::maxDate() cons
         return source_->maxDate();
     }
     if (decayMode_ == ConstantVariance) {
-        return Date(std::min(Date::maxDate().serialNumber(),
-                             referenceDate().serialNumber() - originalReferenceDate_.serialNumber() +
-                                 source_->maxDate().serialNumber()));
+        return Date(std::min(Date::maxDate().serialNumber(), referenceDate().serialNumber() -
+                                                                 originalReferenceDate_.serialNumber() +
+                                                                 source_->maxDate().serialNumber()));
     }
     QL_FAIL("unexpected decay mode (" << decayMode_ << ")");
 }

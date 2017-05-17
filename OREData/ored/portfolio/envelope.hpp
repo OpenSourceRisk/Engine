@@ -79,5 +79,5 @@ private:
     string nettingSetId_;
     map<string, string> additionalFields_;
 };
-}
-}
+} // namespace data
+} // namespace ore

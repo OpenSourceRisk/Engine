@@ -1444,4 +1444,4 @@ test_suite* SensitivityAnalysis2Test::suite() {
     suite->add(BOOST_TEST_CASE(&SensitivityAnalysis2Test::testSensitivities));
     return suite;
 }
-}
+} // namespace testsuite

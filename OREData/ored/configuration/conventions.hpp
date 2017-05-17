@@ -875,5 +875,5 @@ private:
     string strRollConvention_;
     string strEom_;
 };
-}
-}
+} // namespace data
+} // namespace ore

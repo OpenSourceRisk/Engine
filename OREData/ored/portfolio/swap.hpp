@@ -60,5 +60,5 @@ public:
 private:
     vector<LegData> legData_;
 };
-}
-}
+} // namespace data
+} // namespace ore

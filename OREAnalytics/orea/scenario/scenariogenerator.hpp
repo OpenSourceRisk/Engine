@@ -39,7 +39,7 @@ namespace analytics {
 
 //! Scenario generator base class
 /*! \ingroup scenario
-*/
+ */
 class ScenarioGenerator {
 public:
     //! Default destructor
@@ -55,7 +55,7 @@ public:
 
 //! Scenario generator that generates an entire path
 /*! \ingroup scenario
-*/
+ */
 class ScenarioPathGenerator : public ScenarioGenerator {
 public:
     // TODO: Why dates AND timegrid, why not DateGrid???
@@ -90,5 +90,5 @@ protected:
     TimeGrid timeGrid_;
     std::vector<boost::shared_ptr<Scenario>> path_;
 };
-}
-}
+} // namespace analytics
+} // namespace ore

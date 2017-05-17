@@ -98,5 +98,5 @@ private:
     std::vector<std::string> optionExpiries_;
     std::vector<std::string> optionStrikes_;
 };
-}
-}
+} // namespace data
+} // namespace ore

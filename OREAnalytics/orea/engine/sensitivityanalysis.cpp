@@ -154,12 +154,12 @@ void SensitivityAnalysis::initializeCube(boost::shared_ptr<NPVCube>& cube) const
 void SensitivityAnalysis::collectResultsFromCube(const boost::shared_ptr<NPVCube>& cube) {
 
     /***********************************************
-    * Collect results
-    * - base NPVs,
-    * - NPVs after single factor up shifts,
-    * - NPVs after single factor down shifts
-    * - deltas, gammas and cross gammas
-    */
+     * Collect results
+     * - base NPVs,
+     * - NPVs after single factor up shifts,
+     * - NPVs after single factor down shifts
+     * - deltas, gammas and cross gammas
+     */
     baseNPV_.clear();
     vector<ShiftScenarioGenerator::ScenarioDescription> desc = scenarioGenerator_->scenarioDescriptions();
     QL_REQUIRE(desc.size() == scenarioGenerator_->samples(),
@@ -515,5 +515,5 @@ const std::map<std::tuple<std::string, std::string, std::string>, Real>& Sensiti
     QL_REQUIRE(computed_, "Sensitivities have not been successfully computed");
     return crossGamma_;
 }
-}
-}
+} // namespace analytics
+} // namespace ore

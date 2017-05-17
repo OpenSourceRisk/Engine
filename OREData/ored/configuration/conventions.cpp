@@ -46,7 +46,7 @@ QuantExt::SubPeriodsCoupon::Type parseSubPeriodsCouponType(const string& s) {
     else
         QL_FAIL("SubPeriodsCoupon type " << s << " not recognized");
 };
-}
+} // namespace
 
 namespace ore {
 namespace data {
@@ -907,5 +907,5 @@ void Conventions::add(const boost::shared_ptr<Convention>& convention) {
     QL_REQUIRE(data_.find(id) == data_.end(), "Convention already exists for id " << id);
     data_[id] = convention;
 }
-}
-}
+} // namespace data
+} // namespace ore

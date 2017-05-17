@@ -32,7 +32,7 @@ namespace QuantExt {
 
 //! LGM 1f Piecewise Constant Hull White Adaptor
 /*! \ingroup models
-*/
+ */
 template <class TS>
 class Lgm1fPiecewiseConstantHullWhiteAdaptor : public Lgm1fParametrization<TS>,
                                                private PiecewiseConstantHelper3,

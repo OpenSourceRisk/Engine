@@ -80,5 +80,5 @@ private:
     std::vector<boost::shared_ptr<CalibrationHelper>> optionBasket_;
     Array optionExpiries_;
 };
-}
-}
+} // namespace data
+} // namespace ore

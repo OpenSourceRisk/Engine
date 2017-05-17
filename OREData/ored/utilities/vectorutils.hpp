@@ -62,5 +62,5 @@ template <typename T> void apply_permutation_in_place(std::vector<T>& vec, const
 }
 
 //! @}
-}
-}
+} // namespace data
+} // namespace ore

@@ -181,5 +181,5 @@ SwaptionVolCurve::SwaptionVolCurve(Date asof, SwaptionVolatilityCurveSpec spec, 
         QL_FAIL("swaption vol curve building failed: unknown error");
     }
 }
-}
-}
+} // namespace data
+} // namespace ore

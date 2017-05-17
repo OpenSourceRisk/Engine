@@ -221,5 +221,5 @@ using SinglePrecisionInMemoryCubeN = InMemoryCubeN<float>;
 
 //! InMemoryCube of depth N with double precision floating point numbers.
 using DoublePrecisionInMemoryCubeN = InMemoryCubeN<double>;
-}
-}
+} // namespace analytics
+} // namespace ore

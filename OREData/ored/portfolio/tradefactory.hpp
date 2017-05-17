@@ -66,5 +66,5 @@ public:
 private:
     map<string, boost::shared_ptr<AbstractTradeBuilder>> builders_;
 };
-}
-}
+} // namespace data
+} // namespace ore

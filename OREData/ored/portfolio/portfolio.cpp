@@ -67,8 +67,9 @@ void Portfolio::load(const string& fileName, const boost::shared_ptr<TradeFactor
                     DLOG("Added Trade " << id << " (" << trade->id() << ")"
                                         << " class:" << tradeType);
                 } catch (std::exception& ex) {
-                    ALOG("Exception parsing Trade XML Node (id=" << id << ") "
-                                                                          "(class="
+                    ALOG("Exception parsing Trade XML Node (id=" << id
+                                                                 << ") "
+                                                                    "(class="
                                                                  << tradeType << ") : " << ex.what());
                 }
             } else {
@@ -139,5 +140,5 @@ map<string, string> Portfolio::nettingSetMap() const {
         nettingSetMap[t->id()] = t->envelope().nettingSetId();
     return nettingSetMap;
 }
-}
-}
+} // namespace data
+} // namespace ore

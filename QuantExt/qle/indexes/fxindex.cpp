@@ -119,10 +119,10 @@ Real FxIndex::forecastFixing(const Date& fixingDate) const {
     Date fixingValueDate = valueDate(fixingDate);
 
     // we can assume fixingValueDate >= valueDate
-    QL_REQUIRE(fixingValueDate >= refValueDate,
-               "value date for requested fixing as of " << fixingDate << " (" << fixingValueDate
-                                                        << ") must be greater or equal to today's fixing value date ("
-                                                        << refValueDate << ")");
+    QL_REQUIRE(fixingValueDate >= refValueDate, "value date for requested fixing as of "
+                                                    << fixingDate << " (" << fixingValueDate
+                                                    << ") must be greater or equal to today's fixing value date ("
+                                                    << refValueDate << ")");
 
     // compute the forecast applying the usual no arbitrage principle
     Real forward = rate * sourceYts_->discount(fixingValueDate) * targetYts_->discount(refValueDate) /
@@ -131,4 +131,4 @@ Real FxIndex::forecastFixing(const Date& fixingDate) const {
     return forward;
 }
 
-} // namespace QuantLib
+} // namespace QuantExt

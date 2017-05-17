@@ -47,6 +47,6 @@ public:
     SGDSor(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
         : IborIndex("SGD-SOR", tenor, 2, SGDCurrency(), Singapore(), ModifiedFollowing, false, Actual365Fixed(), h) {}
 };
-}
+} // namespace QuantExt
 
 #endif

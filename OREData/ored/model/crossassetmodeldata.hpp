@@ -160,5 +160,5 @@ private:
     map<pair<string, string>, Real> correlations_;
     Real bootstrapTolerance_;
 };
-}
-}
+} // namespace data
+} // namespace ore

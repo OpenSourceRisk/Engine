@@ -78,5 +78,5 @@ parseZeroInflationIndex(const string& s, bool isInterpolated = false,
     \ingroup utilities
 */
 boost::shared_ptr<Index> parseIndex(const string& s);
-}
-}
+} // namespace data
+} // namespace ore

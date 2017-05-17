@@ -113,6 +113,6 @@ public:
 };
 
 class CrossCcySwap::engine : public GenericEngine<CrossCcySwap::arguments, CrossCcySwap::results> {};
-}
+} // namespace QuantExt
 
 #endif

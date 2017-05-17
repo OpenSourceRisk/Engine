@@ -69,4 +69,4 @@ Real BlackVarianceCurve3::blackVarianceImpl(Time t, Real) const {
         return varianceCurve_(times_.back(), true) * t / times_.back();
     }
 }
-}
+} // namespace QuantExt

@@ -99,5 +99,5 @@ XMLNode* EngineData::toXML(XMLDocument& doc) {
     }
     return pricingEnginesNode;
 }
-}
-}
+} // namespace data
+} // namespace ore

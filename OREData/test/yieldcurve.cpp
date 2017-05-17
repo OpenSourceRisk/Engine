@@ -76,7 +76,7 @@ MarketDataLoader::MarketDataLoader() {
         data_[date].push_back(parseMarketDatum(date, key, value));
     }
 }
-}
+} // namespace
 
 namespace testsuite {
 
@@ -134,4 +134,4 @@ test_suite* YieldCurveTest::suite() {
     suite->add(BOOST_TEST_CASE(&YieldCurveTest::testBootstrapAndFixings));
     return suite;
 }
-}
+} // namespace testsuite

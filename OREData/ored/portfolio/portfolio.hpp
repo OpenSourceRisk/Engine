@@ -77,5 +77,5 @@ public:
 private:
     std::vector<boost::shared_ptr<Trade>> trades_;
 };
-}
-}
+} // namespace data
+} // namespace ore

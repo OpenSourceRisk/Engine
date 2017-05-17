@@ -221,4 +221,4 @@ private:
         return Handle<OptionletVolatilityStructure>(ts);
     }
 };
-}
+} // namespace testsuite

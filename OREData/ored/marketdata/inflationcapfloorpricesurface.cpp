@@ -52,8 +52,9 @@ InflationCapFloorPriceSurface::InflationCapFloorPriceSurface(
         if (it != yieldCurves.end()) {
             yts = it->second->handle();
         } else {
-            QL_FAIL("The nominal term structure, " << config->yieldTermStructure() << ", required in the building "
-                                                                                      "of the curve, "
+            QL_FAIL("The nominal term structure, " << config->yieldTermStructure()
+                                                   << ", required in the building "
+                                                      "of the curve, "
                                                    << spec.name() << ", was not found.");
         }
 
@@ -116,13 +117,13 @@ InflationCapFloorPriceSurface::InflationCapFloorPriceSurface(
 
         for (Size j = 0; j < terms.size(); ++j) {
             for (Size i = 0; i < capStrikes.size(); ++i)
-                QL_REQUIRE(cPrice[i][j] != Null<Real>(),
-                           "quote for cap floor price surface, type cap, strike " << capStrikes[i] << ", term "
-                                                                                  << terms[j] << ", not found.");
+                QL_REQUIRE(cPrice[i][j] != Null<Real>(), "quote for cap floor price surface, type cap, strike "
+                                                             << capStrikes[i] << ", term " << terms[j]
+                                                             << ", not found.");
             for (Size i = 0; i < floorStrikes.size(); ++i)
-                QL_REQUIRE(fPrice[i][j] != Null<Real>(),
-                           "quote for cap floor price surface, type floor, strike " << floorStrikes[i] << ", term "
-                                                                                    << terms[j] << ", not found.");
+                QL_REQUIRE(fPrice[i][j] != Null<Real>(), "quote for cap floor price surface, type floor, strike "
+                                                             << floorStrikes[i] << ", term " << terms[j]
+                                                             << ", not found.");
         }
 
         // The strike grids have some minimum requirements which we fulfill here at
@@ -193,5 +194,5 @@ InflationCapFloorPriceSurface::InflationCapFloorPriceSurface(
         QL_FAIL("inflation cap floor price surface building failed: unknown error");
     }
 }
-}
-}
+} // namespace data
+} // namespace ore

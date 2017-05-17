@@ -31,7 +31,7 @@ namespace data {
 
 //! Serializable cap, floor, collar
 /*! \ingroup tradedata
-*/
+ */
 class CapFloor : public Trade {
 public:
     CapFloor() : Trade("CapFloor") {}
@@ -58,5 +58,5 @@ private:
     vector<double> caps_;
     vector<double> floors_;
 };
-}
-}
+} // namespace data
+} // namespace ore

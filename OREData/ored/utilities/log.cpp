@@ -176,5 +176,5 @@ LoggerStream::~LoggerStream() {
         }
     }
 }
-}
-}
+} // namespace data
+} // namespace ore

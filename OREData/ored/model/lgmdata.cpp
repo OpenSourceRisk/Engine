@@ -337,5 +337,5 @@ XMLNode* LgmData::toXML(XMLDocument& doc) {
 
     return lgmNode;
 }
-}
-}
+} // namespace data
+} // namespace ore

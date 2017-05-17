@@ -41,5 +41,5 @@ Real SimpleScenario::get(const RiskFactorKey& key) const {
 }
 
 boost::shared_ptr<Scenario> SimpleScenario::clone() const { return boost::make_shared<SimpleScenario>(*this); }
-}
-}
+} // namespace analytics
+} // namespace ore

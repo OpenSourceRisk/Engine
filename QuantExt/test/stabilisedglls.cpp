@@ -1166,4 +1166,4 @@ test_suite* StabilisedGLLSTest::suite() {
     suite->add(BOOST_TEST_CASE(&StabilisedGLLSTest::test2DRegression));
     return suite;
 }
-}
+} // namespace testsuite

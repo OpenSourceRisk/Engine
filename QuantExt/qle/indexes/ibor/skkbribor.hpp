@@ -49,6 +49,6 @@ public:
     SKKBribor(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
         : IborIndex("SKK-BRIBOR", tenor, 2, SKKCurrency(), Slovakia(), ModifiedFollowing, false, Actual360(), h) {}
 };
-}
+} // namespace QuantExt
 
 #endif

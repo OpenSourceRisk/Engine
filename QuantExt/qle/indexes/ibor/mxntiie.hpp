@@ -49,6 +49,6 @@ public:
     MXNTiie(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
         : IborIndex("MXN-TIIE", tenor, 1, MXNCurrency(), Mexico(), Following, false, Actual360(), h) {}
 };
-}
+} // namespace QuantExt
 
 #endif

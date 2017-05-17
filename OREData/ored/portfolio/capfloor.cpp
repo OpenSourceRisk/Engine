@@ -122,5 +122,5 @@ XMLNode* CapFloor::toXML(XMLDocument& doc) {
     XMLUtils::addChildren(doc, capFloorNode, "FloorRates", "Rate", floors_);
     return node;
 }
-}
-}
+} // namespace data
+} // namespace ore

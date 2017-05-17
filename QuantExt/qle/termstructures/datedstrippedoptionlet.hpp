@@ -88,4 +88,4 @@ private:
     VolatilityType type_;
     Real displacement_;
 };
-}
+} // namespace QuantExt

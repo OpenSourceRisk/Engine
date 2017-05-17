@@ -142,5 +142,5 @@ private:
 QuantLib::Schedule makeSchedule(const ScheduleData& data);
 QuantLib::Schedule makeSchedule(const ScheduleDates& dates);
 QuantLib::Schedule makeSchedule(const ScheduleRules& rules);
-}
-}
+} // namespace data
+} // namespace ore

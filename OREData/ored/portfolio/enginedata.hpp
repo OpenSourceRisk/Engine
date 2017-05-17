@@ -39,7 +39,7 @@ namespace data {
 
 //! Pricing engine description
 /*! \ingroup tradedata
-*/
+ */
 class EngineData : public XMLSerializable {
 public:
     //! Default constructor
@@ -79,5 +79,5 @@ private:
     map<string, string> engine_;
     map<string, map<string, string>> engineParams_;
 };
-}
-}
+} // namespace data
+} // namespace ore

@@ -215,9 +215,8 @@ XMLNode* LegData::toXML(XMLDocument& doc) {
 Leg makeSimpleLeg(LegData& data) {
     const vector<double>& amounts = data.cashflowData().amounts();
     const vector<string>& dates = data.cashflowData().dates();
-    QL_REQUIRE(amounts.size() == dates.size(),
-               "Amounts / Date size mismatch in makeSimpleLeg."
-                   << "Amounts:" << amounts.size() << ", Dates:" << dates.size());
+    QL_REQUIRE(amounts.size() == dates.size(), "Amounts / Date size mismatch in makeSimpleLeg."
+                                                   << "Amounts:" << amounts.size() << ", Dates:" << dates.size());
     Leg leg;
     for (Size i = 0; i < dates.size(); i++) {
         Date d = parseDate(dates[i]);
@@ -414,9 +413,8 @@ vector<double> buildScheduledVector(const vector<double>& values, const vector<s
     if (values.size() < 2 || dates.size() == 0)
         return values;
 
-    QL_REQUIRE(values.size() == dates.size(),
-               "Value / Date size mismatch in buildScheduledVector."
-                   << "Value:" << values.size() << ", Dates:" << dates.size());
+    QL_REQUIRE(values.size() == dates.size(), "Value / Date size mismatch in buildScheduledVector."
+                                                  << "Value:" << values.size() << ", Dates:" << dates.size());
 
     // Need to use schedule logic
     // Length of data will be 1 less than schedule
@@ -436,9 +434,8 @@ vector<double> buildScheduledVector(const vector<double>& values, const vector<s
     if (dates[1] == "") {
         // They must all be empty and then we return values
         for (Size i = 2; i < dates.size(); i++) {
-            QL_REQUIRE(dates[i] == "",
-                       "Invalid date " << dates[i] << " for node " << i
-                                       << ". Cannot mix dates and non-dates attributes");
+            QL_REQUIRE(dates[i] == "", "Invalid date " << dates[i] << " for node " << i
+                                                       << ". Cannot mix dates and non-dates attributes");
         }
         return values;
     }

@@ -118,5 +118,5 @@ vector<vector<string>> flowAnalysis(const QuantLib::Leg& leg) {
         leg[i]->accept(generator);
     return generator.analysis();
 }
-}
-}
+} // namespace data
+} // namespace ore

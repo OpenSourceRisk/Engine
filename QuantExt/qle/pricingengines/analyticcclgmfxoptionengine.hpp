@@ -32,7 +32,7 @@ namespace QuantExt {
 
 //! Analytic cc lgm fx option engine
 /*! \ingroup engines
-*/
+ */
 class AnalyticCcLgmFxOptionEngine : public VanillaOption::engine {
 public:
     AnalyticCcLgmFxOptionEngine(const boost::shared_ptr<CrossAssetModel>& model, const Size foreignCurrency);

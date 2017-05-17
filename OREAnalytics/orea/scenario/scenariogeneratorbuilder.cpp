@@ -72,5 +72,5 @@ ScenarioGeneratorBuilder::build(boost::shared_ptr<QuantExt::CrossAssetModel> mod
 
     return scenGen;
 }
-}
-}
+} // namespace analytics
+} // namespace ore

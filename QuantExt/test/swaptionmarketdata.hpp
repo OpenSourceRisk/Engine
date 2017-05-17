@@ -186,6 +186,6 @@ struct SwaptionConventionsEUR {
     DayCounter fixedDayCounter;
     boost::shared_ptr<IborIndex> floatIndex;
 };
-}
+} // namespace QuantExt
 
 #endif

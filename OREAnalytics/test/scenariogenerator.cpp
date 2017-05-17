@@ -1108,4 +1108,4 @@ test_suite* ScenarioGeneratorTest::suite() {
     suite->add(BOOST_TEST_CASE(&ScenarioGeneratorTest::testFxForwardExposureZeroIrVol));
     return suite;
 }
-}
+} // namespace testsuite

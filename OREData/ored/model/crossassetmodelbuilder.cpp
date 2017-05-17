@@ -122,9 +122,8 @@ CrossAssetModelBuilder::build(const boost::shared_ptr<CrossAssetModelData>& conf
                    "FX parametrization currency[" << i << "]=" << ccy << " does not match IR currrency[" << i + 1
                                                   << "]=" << irParametrizations[i + 1]->currency().code());
 
-        QL_REQUIRE(domCcy == domesticCcy,
-                   "FX parametrization [" << i << "]=" << ccy << "/" << domCcy << " does not match domestic ccy "
-                                          << domesticCcy);
+        QL_REQUIRE(domCcy == domesticCcy, "FX parametrization [" << i << "]=" << ccy << "/" << domCcy
+                                                                 << " does not match domestic ccy " << domesticCcy);
 
         boost::shared_ptr<FxBsBuilder> builder =
             boost::make_shared<FxBsBuilder>(market_, fx, configurationFxCalibration_);
@@ -136,8 +135,8 @@ CrossAssetModelBuilder::build(const boost::shared_ptr<CrossAssetModelData>& conf
     }
 
     /*******************************************************
-    * Build the EQ parametrizations and calibration baskets
-    */
+     * Build the EQ parametrizations and calibration baskets
+     */
     std::vector<boost::shared_ptr<QuantExt::EqBsParametrization>> eqParametrizations;
     for (Size i = 0; i < config->eqConfigs().size(); i++) {
         LOG("EQ Parametrization " << i);
@@ -250,8 +249,8 @@ CrossAssetModelBuilder::build(const boost::shared_ptr<CrossAssetModelData>& conf
     }
 
     /*************************
-    * Relink LGM discount curves to curves used for EQ calibration
-    */
+     * Relink LGM discount curves to curves used for EQ calibration
+     */
 
     for (Size i = 0; i < irParametrizations.size(); i++) {
         auto p = irParametrizations[i];
@@ -260,8 +259,8 @@ CrossAssetModelBuilder::build(const boost::shared_ptr<CrossAssetModelData>& conf
     }
 
     /*************************
-    * Calibrate EQ components
-    */
+     * Calibrate EQ components
+     */
 
     for (Size i = 0; i < eqParametrizations.size(); i++) {
         boost::shared_ptr<EqBsData> eq = config->eqConfigs()[i];
@@ -313,5 +312,5 @@ CrossAssetModelBuilder::build(const boost::shared_ptr<CrossAssetModelData>& conf
 
     return model;
 }
-}
-}
+} // namespace data
+} // namespace ore

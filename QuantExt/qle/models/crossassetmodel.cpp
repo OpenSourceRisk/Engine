@@ -168,9 +168,8 @@ Size CrossAssetModel::idx(const AssetType t, const Size i) const {
 }
 
 Size CrossAssetModel::cIdx(const AssetType t, const Size i, const Size offset) const {
-    QL_REQUIRE(offset < brownians(t, i),
-               "c-offset (" << offset << ") for asset class " << t << " and index " << i << " must be in 0..."
-                            << brownians(t, i) - 1);
+    QL_REQUIRE(offset < brownians(t, i), "c-offset (" << offset << ") for asset class " << t << " and index " << i
+                                                      << " must be in 0..." << brownians(t, i) - 1);
     // the return values below assume specific models and have to be
     // generalized when other model types are added
     switch (t) {
@@ -195,9 +194,8 @@ Size CrossAssetModel::cIdx(const AssetType t, const Size i, const Size offset) c
 }
 
 Size CrossAssetModel::pIdx(const AssetType t, const Size i, const Size offset) const {
-    QL_REQUIRE(offset < stateVariables(t, i),
-               "p-offset (" << offset << ") for asset class " << t << " and index " << i << " must be in 0..."
-                            << stateVariables(t, i) - 1);
+    QL_REQUIRE(offset < stateVariables(t, i), "p-offset (" << offset << ") for asset class " << t << " and index " << i
+                                                           << " must be in 0..." << stateVariables(t, i) - 1);
     // the return values below assume specific models and have to be
     // generalized when other model types are added
     switch (t) {
@@ -222,9 +220,8 @@ Size CrossAssetModel::pIdx(const AssetType t, const Size i, const Size offset) c
 }
 
 Size CrossAssetModel::aIdx(const AssetType t, const Size i, const Size offset) const {
-    QL_REQUIRE(offset < arguments(t, i),
-               "a-offset (" << offset << ") for asset class " << t << " and index " << i << " must be in 0..."
-                            << arguments(t, i) - 1);
+    QL_REQUIRE(offset < arguments(t, i), "a-offset (" << offset << ") for asset class " << t << " and index " << i
+                                                      << " must be in 0..." << arguments(t, i) - 1);
     // the return values below assume specific models and have to be
     // generalized when other model types are added
     Size tmp_infl_args_count = 1; // TODO : update this when inflation being implemented
@@ -359,10 +356,9 @@ void CrossAssetModel::initializeParametrizations() {
 
     QL_REQUIRE(nIrLgm1f_ > 0, "at least one ir parametrization must be given");
 
-    QL_REQUIRE(nFxBs_ == nIrLgm1f_ - 1,
-               "there must be n-1 fx "
-               "for n ir parametrizations, found "
-                   << nIrLgm1f_ << " ir and " << nFxBs_ << " fx parametrizations");
+    QL_REQUIRE(nFxBs_ == nIrLgm1f_ - 1, "there must be n-1 fx "
+                                        "for n ir parametrizations, found "
+                                            << nIrLgm1f_ << " ir and " << nFxBs_ << " fx parametrizations");
 
     QL_REQUIRE(nIrLgm1f_ + nFxBs_ + nInfl_ + nEqBs_ == p_.size(),
                "problem initializing CrossAssetModel parametrizations");
@@ -411,9 +407,9 @@ void CrossAssetModel::initializeCorrelation() {
             rho_(i, i) = 1.0;
         return;
     }
-    QL_REQUIRE(rho_.rows() == n && rho_.columns() == n,
-               "correlation matrix is " << rho_.rows() << " x " << rho_.columns() << " but should be " << n << " x "
-                                        << n);
+    QL_REQUIRE(rho_.rows() == n && rho_.columns() == n, "correlation matrix is " << rho_.rows() << " x "
+                                                                                 << rho_.columns() << " but should be "
+                                                                                 << n << " x " << n);
     checkCorrelationMatrix();
 }
 
@@ -423,17 +419,15 @@ void CrossAssetModel::checkCorrelationMatrix() const {
     QL_REQUIRE(rho_.columns() == n, "correlation matrix (" << n << " x " << m << " must be square");
     for (Size i = 0; i < n; ++i) {
         for (Size j = 0; j < m; ++j) {
-            QL_REQUIRE(close_enough(rho_[i][j], rho_[j][i]),
-                       "correlation matrix is no symmetric, for (i,j)=(" << i << "," << j << ") rho(i,j)=" << rho_[i][j]
-                                                                         << " but rho(j,i)=" << rho_[j][i]);
-            QL_REQUIRE(rho_[i][j] >= -1.0 && rho_[i][j] <= 1.0,
-                       "correlation matrix has invalid entry at (i,j)=(" << i << "," << j << ") equal to "
-                                                                         << rho_[i][j]);
+            QL_REQUIRE(close_enough(rho_[i][j], rho_[j][i]), "correlation matrix is no symmetric, for (i,j)=("
+                                                                 << i << "," << j << ") rho(i,j)=" << rho_[i][j]
+                                                                 << " but rho(j,i)=" << rho_[j][i]);
+            QL_REQUIRE(rho_[i][j] >= -1.0 && rho_[i][j] <= 1.0, "correlation matrix has invalid entry at (i,j)=("
+                                                                    << i << "," << j << ") equal to " << rho_[i][j]);
         }
-        QL_REQUIRE(close_enough(rho_[i][i], 1.0),
-                   "correlation matrix must have unit diagonal elements, "
-                   "but rho(i,i)="
-                       << rho_[i][i] << " for i=" << i);
+        QL_REQUIRE(close_enough(rho_[i][i], 1.0), "correlation matrix must have unit diagonal elements, "
+                                                  "but rho(i,i)="
+                                                      << rho_[i][i] << " for i=" << i);
     }
 
     SymmetricSchurDecomposition ssd(rho_);

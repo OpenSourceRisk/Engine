@@ -124,6 +124,6 @@ public:
     Spread fairRecSpread;
     void reset();
 };
-}
+} // namespace QuantExt
 
 #endif

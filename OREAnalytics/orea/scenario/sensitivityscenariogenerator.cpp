@@ -739,5 +739,5 @@ SensitivityScenarioGenerator::capFloorVolScenarioDescription(string ccy, Size ex
     ScenarioDescription desc(type, key, text);
     return desc;
 }
-}
-}
+} // namespace analytics
+} // namespace ore

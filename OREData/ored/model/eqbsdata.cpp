@@ -94,5 +94,5 @@ XMLNode* EqBsData::toXML(XMLDocument& doc) {
 
     return crossCcyLGMNode;
 }
-}
-}
+} // namespace data
+} // namespace ore

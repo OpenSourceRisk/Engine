@@ -117,5 +117,5 @@ XMLNode* Bond::toXML(XMLDocument& doc) {
     XMLUtils::appendNode(bondNode, coupons_.toXML(doc));
     return node;
 }
-}
-}
+} // namespace data
+} // namespace ore

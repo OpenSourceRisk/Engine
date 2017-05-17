@@ -444,5 +444,5 @@ private:
 
 // Map form curveID to YieldCurveConfig
 using YieldCurveConfigMap = std::map<string, boost::shared_ptr<YieldCurveConfig>>;
-}
-}
+} // namespace data
+} // namespace ore

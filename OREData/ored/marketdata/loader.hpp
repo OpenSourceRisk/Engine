@@ -34,7 +34,7 @@ namespace data {
 
 //! Market data loader base class
 /*! \ingroup marketdata
-*/
+ */
 class Loader {
 public:
     //! \name Interface
@@ -46,5 +46,5 @@ public:
     virtual const std::vector<Fixing>& loadFixings() const = 0;
     //@}
 };
-}
-}
+} // namespace data
+} // namespace ore

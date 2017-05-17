@@ -217,5 +217,5 @@ private:
 };
 
 ShiftScenarioGenerator::ShiftType parseShiftType(const std::string& s);
-}
-}
+} // namespace analytics
+} // namespace ore

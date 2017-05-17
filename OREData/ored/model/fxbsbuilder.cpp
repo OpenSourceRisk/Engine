@@ -126,5 +126,5 @@ void FxBsBuilder::buildOptionBasket() {
     for (Size j = 0; j < expiryTimes.size(); j++)
         optionExpiries_[j] = expiryTimes[j];
 }
-}
-}
+} // namespace data
+} // namespace ore

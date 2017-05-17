@@ -77,5 +77,5 @@ void CubeWriter::write(const boost::shared_ptr<NPVCube>& cube, const std::map<st
     }
     fclose(fp);
 }
-}
-}
+} // namespace analytics
+} // namespace ore

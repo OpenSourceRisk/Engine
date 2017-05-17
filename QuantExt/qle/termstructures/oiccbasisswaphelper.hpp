@@ -73,6 +73,6 @@ protected:
     boost::shared_ptr<OvernightIndexedCrossCcyBasisSwap> swap_;
     RelinkableHandle<YieldTermStructure> termStructureHandle_;
 };
-}
+} // namespace QuantExt
 
 #endif

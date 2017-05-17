@@ -67,5 +67,5 @@ private:
     boost::shared_ptr<ScenarioFactory> scenarioFactory_;
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketConfig_;
 };
-}
-}
+} // namespace analytics
+} // namespace ore

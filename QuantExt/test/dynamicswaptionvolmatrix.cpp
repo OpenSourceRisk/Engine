@@ -154,4 +154,4 @@ test_suite* DynamicSwaptionVolMatrixTest::suite() {
     suite->add(QUANTLIB_TEST_CASE(&DynamicSwaptionVolMatrixTest::testForwardForwardVariance));
     return suite;
 }
-}
+} // namespace testsuite

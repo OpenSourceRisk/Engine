@@ -422,5 +422,5 @@ XMLNode* Swaption::toXML(XMLDocument& doc) {
 
     return node;
 }
-}
-}
+} // namespace data
+} // namespace ore

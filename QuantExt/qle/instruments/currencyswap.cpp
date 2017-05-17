@@ -422,4 +422,4 @@ CrossCurrencySwap::CrossCurrencySwap(bool pay1, Currency ccy1, std::vector<Real>
         legs_[3].push_back(boost::shared_ptr<CashFlow>(
             new SimpleCashFlow(nominals2.back(), schedule2.calendar().adjust(schedule2.dates().back(), convention))));
 }
-}
+} // namespace QuantExt

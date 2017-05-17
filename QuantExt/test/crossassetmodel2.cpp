@@ -990,7 +990,7 @@ struct Lgm31fTestData {
     boost::shared_ptr<CrossAssetModel> xmodel;
 };
 
-} // namespace detail
+} // namespace
 
 namespace testsuite {
 
@@ -1123,10 +1123,11 @@ void CrossAssetModelTest2::testLgm31fMoments() {
             tol = tol2;
         }
         if (std::fabs(mean(e_eu[i]) - e_an[i]) > tol) {
-            BOOST_ERROR("analytical expectation at "
-                        << i << " (" << e_an[i] << ") is inconsistent with numerical value (Euler "
-                                                   "discretization, "
-                        << mean(e_eu[i]) << ") error is " << e_an[i] - mean(e_eu[i]) << " tolerance is " << tol);
+            BOOST_ERROR("analytical expectation at " << i << " (" << e_an[i]
+                                                     << ") is inconsistent with numerical value (Euler "
+                                                        "discretization, "
+                                                     << mean(e_eu[i]) << ") error is " << e_an[i] - mean(e_eu[i])
+                                                     << " tolerance is " << tol);
         }
         for (Size j = 0; j <= i; ++j) {
             if (i < 16) {
@@ -1139,11 +1140,12 @@ void CrossAssetModelTest2::testLgm31fMoments() {
                 }
             }
             if (std::fabs(covariance(v_eu[i][j]) - v_an[i][j]) > tol) {
-                BOOST_ERROR("analytical covariance at ("
-                            << i << "," << j << ") (" << v_an[i][j] << ") is inconsistent with numerical "
-                                                                       "value (Euler discretization, "
-                            << covariance(v_eu[i][j]) << "), error is " << v_an[i][j] - covariance(v_eu[i][j])
-                            << " tolerance is " << tol);
+                BOOST_ERROR("analytical covariance at (" << i << "," << j << ") (" << v_an[i][j]
+                                                         << ") is inconsistent with numerical "
+                                                            "value (Euler discretization, "
+                                                         << covariance(v_eu[i][j]) << "), error is "
+                                                         << v_an[i][j] - covariance(v_eu[i][j]) << " tolerance is "
+                                                         << tol);
             }
         }
     }
@@ -1242,4 +1244,4 @@ test_suite* CrossAssetModelTest2::suite() {
     suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest2::testLgm31fMartingaleProperty));
     return suite;
 }
-}
+} // namespace testsuite

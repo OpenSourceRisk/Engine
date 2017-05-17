@@ -252,4 +252,4 @@ boost::shared_ptr<Trade> buildZeroBond(string id, string ccy, Real notional, Siz
 
     return trade;
 }
-}
+} // namespace testsuite

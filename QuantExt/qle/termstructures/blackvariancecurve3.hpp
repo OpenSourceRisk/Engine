@@ -95,6 +95,6 @@ inline void BlackVarianceCurve3::accept(AcyclicVisitor& v) {
     else
         BlackVarianceTermStructure::accept(v);
 }
-}
+} // namespace QuantExt
 
 #endif

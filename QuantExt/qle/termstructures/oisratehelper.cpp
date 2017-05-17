@@ -26,7 +26,7 @@ namespace QuantExt {
 
 namespace {
 void no_deletion(YieldTermStructure*) {}
-}
+} // namespace
 
 OISRateHelper::OISRateHelper(Natural settlementDays, const Period& swapTenor, const Handle<Quote>& fixedRate,
                              const boost::shared_ptr<OvernightIndex>& overnightIndex, const DayCounter& fixedDayCounter,
@@ -179,4 +179,4 @@ void DatedOISRateHelper::accept(AcyclicVisitor& v) {
     else
         RateHelper::accept(v);
 }
-}
+} // namespace QuantExt

@@ -97,6 +97,6 @@ inline void FXLinkedCashFlow::accept(AcyclicVisitor& v) {
     else
         CashFlow::accept(v);
 }
-}
+} // namespace QuantExt
 
 #endif

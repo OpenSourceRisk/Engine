@@ -79,5 +79,5 @@ private:
     std::vector<boost::shared_ptr<QuantExt::CrossAssetModelImpliedFxVolTermStructure>> fxVols_;
     std::vector<boost::shared_ptr<QuantExt::CrossAssetModelImpliedEqVolTermStructure>> eqVols_;
 };
-}
-}
+} // namespace analytics
+} // namespace ore

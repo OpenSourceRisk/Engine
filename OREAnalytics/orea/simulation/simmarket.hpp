@@ -56,5 +56,5 @@ public:
 protected:
     Real numeraire_;
 };
-}
-}
+} // namespace analytics
+} // namespace ore

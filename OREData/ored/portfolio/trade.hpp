@@ -128,5 +128,5 @@ private:
     Envelope envelope_;
     TradeActions tradeActions_;
 };
-}
-}
+} // namespace data
+} // namespace ore

@@ -68,5 +68,5 @@ private:
     double strike_;
     double quantity_;
 };
-}
-}
+} // namespace data
+} // namespace ore

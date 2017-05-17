@@ -53,7 +53,7 @@ public:
     Inverse() {}
     Real operator()(Real a) const { return 1.0 / a; }
 };
-}
+} // namespace
 
 namespace ore {
 namespace data {
@@ -139,5 +139,5 @@ Handle<Quote> FXTriangulation::getQuote(const string& pair) const {
 
     QL_FAIL("Unable to build FXQuote for ccy pair " << pair);
 }
-}
-}
+} // namespace data
+} // namespace ore

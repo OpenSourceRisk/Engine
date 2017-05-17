@@ -186,5 +186,5 @@ string SensitivityScenarioData::getIndexCurrency(string indexName) {
     QL_REQUIRE(tokens.size() > 1, "expected 2 or 3 tokens, found " << tokens.size() << " in " << indexName);
     return tokens[0];
 }
-}
-}
+} // namespace analytics
+} // namespace ore

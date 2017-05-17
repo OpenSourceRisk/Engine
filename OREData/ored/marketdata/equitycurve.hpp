@@ -65,5 +65,5 @@ private:
     vector<Date> terms_;
     DayCounter dc_;
 };
-}
-}
+} // namespace data
+} // namespace ore

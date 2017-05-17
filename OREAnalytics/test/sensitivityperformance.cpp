@@ -590,7 +590,7 @@ void test_performance(bool bigPortfolio, bool bigScenario, bool lotsOfSensis, bo
 
     ObservationMode::instance().setMode(backupOm);
 }
-}
+} // namespace
 
 namespace testsuite {
 
@@ -895,4 +895,4 @@ test_suite* SensitivityPerformanceTest::suite() {
     // suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceBigPortfolioBigScenarioCrossGammaUnregisterObs));
     return suite;
 }
-}
+} // namespace testsuite

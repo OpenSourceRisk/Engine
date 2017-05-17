@@ -79,5 +79,5 @@ private:
     vector<Size> columnPrecision_;
     vector<vector<ReportType>> data_;
 };
-}
-}
+} // namespace data
+} // namespace ore

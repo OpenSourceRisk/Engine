@@ -84,5 +84,5 @@ XMLNode* EquityForward::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, eNode, "Strike", strike_);
     return node;
 }
-}
-}
+} // namespace data
+} // namespace ore

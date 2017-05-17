@@ -78,7 +78,7 @@ struct CommonVars {
     boost::shared_ptr<SwaptionVolatilityStructure> atmShiftedLogNormalVolMatrix_2;
     SavedSettings backup;
 };
-}
+} // namespace
 
 namespace testsuite {
 
@@ -341,4 +341,4 @@ test_suite* SwaptionVolatilityConverterTest::suite() {
 
     return suite;
 }
-}
+} // namespace testsuite

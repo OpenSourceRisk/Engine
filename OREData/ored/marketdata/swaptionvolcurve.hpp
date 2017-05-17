@@ -61,5 +61,5 @@ private:
     SwaptionVolatilityCurveSpec spec_;
     boost::shared_ptr<SwaptionVolatilityStructure> vol_;
 };
-}
-}
+} // namespace data
+} // namespace ore

@@ -77,5 +77,5 @@ private:
     string currency_;
     bool zeroBond_;
 };
-}
-}
+} // namespace data
+} // namespace ore

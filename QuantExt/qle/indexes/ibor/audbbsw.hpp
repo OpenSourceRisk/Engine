@@ -50,6 +50,6 @@ public:
     AUDbbsw(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
         : IborIndex("AUD-BBSW", tenor, 0, AUDCurrency(), Australia(), ModifiedFollowing, false, Actual365Fixed(), h) {}
 };
-}
+} // namespace QuantExt
 
 #endif

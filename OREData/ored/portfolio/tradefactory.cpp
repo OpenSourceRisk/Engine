@@ -55,5 +55,5 @@ boost::shared_ptr<Trade> TradeFactory::build(const string& className) const {
     else
         return it->second->build();
 }
-}
-}
+} // namespace data
+} // namespace ore

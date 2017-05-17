@@ -389,5 +389,5 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         QL_FAIL("Cannot convert \"" << datumName << "\" to MarketDatum");
     }
 }
-}
-}
+} // namespace data
+} // namespace ore

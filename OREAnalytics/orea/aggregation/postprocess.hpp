@@ -304,5 +304,5 @@ private:
     Real dimLocalRegressionBandwidth_;
     Real dimScaling_;
 };
-}
-}
+} // namespace analytics
+} // namespace ore

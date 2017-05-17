@@ -193,6 +193,6 @@ struct CapFloorVolatilityEUR {
     vector<Volatility> slnAtmVols_1;
     vector<Volatility> slnAtmVols_2;
 };
-}
+} // namespace QuantExt
 
 #endif

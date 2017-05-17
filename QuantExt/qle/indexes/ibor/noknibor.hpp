@@ -49,6 +49,6 @@ public:
     NOKNibor(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
         : IborIndex("NOK-NIBOR", tenor, 2, NOKCurrency(), Norway(), ModifiedFollowing, false, Actual360(), h) {}
 };
-}
+} // namespace QuantExt
 
 #endif

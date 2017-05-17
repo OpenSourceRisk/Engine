@@ -43,13 +43,13 @@ using QuantLib::Period;
 namespace rapidxml {
 //! XML Node
 /*! \ingroup utilities
-*/
+ */
 template <class Ch> class xml_node;
 //! XML Document
 /*! \ingroup utilities
-*/
+ */
 template <class Ch> class xml_document;
-}
+} // namespace rapidxml
 
 namespace ore {
 namespace data {
@@ -58,7 +58,7 @@ typedef rapidxml::xml_node<char> XMLNode;
 
 //! Small XML Document wrapper class.
 /*! \ingroup utilities
-*/
+ */
 class XMLDocument {
 public:
     //! create an empty doc.
@@ -91,7 +91,7 @@ private:
 
 //! Base class for all serializable classes
 /*! \ingroup utilities
-*/
+ */
 class XMLSerializable {
 public:
     virtual ~XMLSerializable() {}
@@ -104,7 +104,7 @@ public:
 
 //! XML Utilities Class
 /*! \ingroup utilities
-*/
+ */
 class XMLUtils {
 public:
     static void checkNode(XMLNode* n, const string& expectedName);
@@ -198,5 +198,5 @@ public:
     //! Get a node's value
     static string getNodeValue(XMLNode* node);
 };
-}
-}
+} // namespace data
+} // namespace ore

@@ -80,5 +80,5 @@ public:
     //! Persist cube contents to disk
     virtual void save(const std::string& fileName) const = 0;
 };
-}
-}
+} // namespace analytics
+} // namespace ore

@@ -37,7 +37,7 @@ namespace data {
 
 //! Function to parse a market datum
 /*! \ingroup marketdata
-*/
+ */
 boost::shared_ptr<MarketDatum> parseMarketDatum(const Date&, const string&, const Real&);
-}
-}
+} // namespace data
+} // namespace ore

@@ -65,5 +65,5 @@ private:
     std::map<QuantLib::Date, std::vector<boost::shared_ptr<MarketDatum>>> data_;
     std::vector<Fixing> fixings_;
 };
-}
-}
+} // namespace data
+} // namespace ore

@@ -155,9 +155,9 @@ EquityCurve::divYieldTermStructure(const Date& asof, const Handle<YieldTermStruc
             QL_FAIL("Invalid Equity curve configuration type for " << spec_.name());
 
         QL_REQUIRE(dividendRates.size() > 0, "No dividend yield rates extracted for " << spec_.name());
-        QL_REQUIRE(dividendRates.size() == terms_.size(),
-                   "vector size mismatch - dividend rates (" << dividendRates.size() << ") vs terms (" << terms_.size()
-                                                             << ")");
+        QL_REQUIRE(dividendRates.size() == terms_.size(), "vector size mismatch - dividend rates ("
+                                                              << dividendRates.size() << ") vs terms (" << terms_.size()
+                                                              << ")");
 
         boost::shared_ptr<YieldTermStructure> divCurve;
         // Build Dividend Term Structure
@@ -190,5 +190,5 @@ EquityCurve::divYieldTermStructure(const Date& asof, const Handle<YieldTermStruc
         QL_FAIL("equity curve building failed: unknown error");
     }
 }
-}
-}
+} // namespace data
+} // namespace ore

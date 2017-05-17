@@ -115,5 +115,5 @@ private:
     std::map<std::string, boost::shared_ptr<EquityCurveConfig>> equityCurveConfigs_;
     std::map<std::string, boost::shared_ptr<EquityVolatilityCurveConfig>> equityVolCurveConfigs_;
 };
-}
-}
+} // namespace data
+} // namespace ore

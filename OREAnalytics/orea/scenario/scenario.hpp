@@ -41,7 +41,7 @@ namespace analytics {
 
 //! Data types stored in the scenario class
 /*! \ingroup scenario
-*/
+ */
 class RiskFactorKey {
 public:
     //! Risk Factor types
@@ -146,5 +146,5 @@ private:
     friend class boost::serialization::access;
     template <class Archive> void serialize(Archive&, const unsigned int) {}
 };
-}
-}
+} // namespace analytics
+} // namespace ore

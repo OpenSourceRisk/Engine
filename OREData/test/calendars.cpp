@@ -125,4 +125,4 @@ test_suite* CalendarNameTest::suite() {
     suite->add(BOOST_TEST_CASE(&CalendarNameTest::testCalendarNameParsing));
     return suite;
 }
-}
+} // namespace testsuite

@@ -189,4 +189,4 @@ SubPeriodsLeg::operator Leg() const {
 
     return cashflows;
 }
-}
+} // namespace QuantExt

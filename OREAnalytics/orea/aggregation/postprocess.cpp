@@ -1361,5 +1361,5 @@ void PostProcess::exportDimRegression(const std::string& nettingSet, const std::
         LOG("Exporting DIM by Sample done for");
     }
 }
-}
-}
+} // namespace analytics
+} // namespace ore

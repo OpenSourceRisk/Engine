@@ -118,5 +118,5 @@ private:
     BusinessDayConvention businessDayConvention_;
     string shortSwapIndexBase_, swapIndexBase_;
 };
-}
-}
+} // namespace data
+} // namespace ore

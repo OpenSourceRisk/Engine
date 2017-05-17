@@ -354,5 +354,5 @@ XMLNode* CrossAssetModelData::toXML(XMLDocument& doc) {
 
     return crossAssetModelNode;
 }
-}
-}
+} // namespace data
+} // namespace ore

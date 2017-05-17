@@ -106,5 +106,5 @@ FXVolCurve::FXVolCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& load
         QL_FAIL("fx vol curve building failed: unknown error");
     }
 }
-}
-}
+} // namespace data
+} // namespace ore

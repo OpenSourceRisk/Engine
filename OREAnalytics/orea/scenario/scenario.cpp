@@ -83,5 +83,5 @@ RiskFactorKey parseRiskFactorKey(const string& str) {
     RiskFactorKey rfk(parseRiskFactorKeyType(tokens[0]), tokens[1], parseInteger(tokens[2]));
     return rfk;
 }
-}
-}
+} // namespace analytics
+} // namespace ore

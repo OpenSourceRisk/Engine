@@ -91,5 +91,5 @@ private:
 
     boost::shared_ptr<StressTestScenarioData> stressData_;
 };
-}
-}
+} // namespace analytics
+} // namespace ore

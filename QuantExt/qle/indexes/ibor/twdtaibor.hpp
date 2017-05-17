@@ -45,6 +45,6 @@ public:
     TWDTaibor(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
         : IborIndex("TWD-TAIBOR", tenor, 2, TWDCurrency(), Taiwan(), ModifiedFollowing, false, Actual365Fixed(), h) {}
 };
-}
+} // namespace QuantExt
 
 #endif

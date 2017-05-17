@@ -62,7 +62,7 @@ private:
         return Handle<BlackVolTermStructure>(fxv);
     }
 };
-}
+} // namespace
 
 namespace testsuite {
 
@@ -113,4 +113,4 @@ test_suite* FXOptionTest::suite() {
     suite->add(BOOST_TEST_CASE(&FXOptionTest::testFXOptionPrice));
     return suite;
 }
-}
+} // namespace testsuite

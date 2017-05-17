@@ -96,6 +96,6 @@ public:
 };
 
 class EquityForward::engine : public GenericEngine<EquityForward::arguments, Instrument::results> {};
-}
+} // namespace QuantExt
 
 #endif

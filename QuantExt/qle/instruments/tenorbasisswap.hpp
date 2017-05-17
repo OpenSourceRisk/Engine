@@ -35,7 +35,7 @@ using namespace QuantLib;
 namespace QuantExt {
 //! Single currency tenor basis swap
 /*! \ingroup instruments
-*/
+ */
 class TenorBasisSwap : public Swap {
 public:
     class results;
@@ -143,6 +143,6 @@ inline bool TenorBasisSwap::includeSpread() const { return includeSpread_; }
 inline SubPeriodsCoupon::Type TenorBasisSwap::type() const { return type_; }
 
 inline const Leg& TenorBasisSwap::shortLeg() const { return payLongIndex_ ? legs_[1] : legs_[0]; }
-}
+} // namespace QuantExt
 
 #endif

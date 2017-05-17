@@ -33,7 +33,7 @@ namespace serialization {
 
 //! Allow for serialization of QuantLib::Date without amending its class (non-intrusive)
 /*! \ingroup cube
-*/
+ */
 template <class Archive> void serialize(Archive& ar, QuantLib::Date& d, const unsigned int) {
     QuantLib::BigInteger big;
     if (Archive::is_saving::value) {
@@ -46,5 +46,5 @@ template <class Archive> void serialize(Archive& ar, QuantLib::Date& d, const un
         d = QuantLib::Date(big);
     }
 }
-}
-}
+} // namespace serialization
+} // namespace boost

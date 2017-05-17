@@ -35,7 +35,7 @@ using namespace QuantLib;
 namespace QuantExt {
 //! Single currency sub periods swap
 /*! \ingroup instruments
-*/
+ */
 class SubPeriodsSwap : public Swap {
 public:
     //! \name Constructors
@@ -116,6 +116,6 @@ inline const Leg& SubPeriodsSwap::floatLeg() const { return legs_[1]; }
 inline Rate SubPeriodsSwap::floatLegBPS() const { return legBPS(1); }
 
 inline Rate SubPeriodsSwap::floatLegNPV() const { return legNPV(1); }
-}
+} // namespace QuantExt
 
 #endif

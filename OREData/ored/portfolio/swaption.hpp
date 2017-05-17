@@ -71,5 +71,5 @@ private:
                                                                     const boost::shared_ptr<Swap>&,
                                                                     const std::vector<Date>&);
 };
-}
-}
+} // namespace data
+} // namespace ore

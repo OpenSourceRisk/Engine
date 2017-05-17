@@ -100,5 +100,5 @@ XMLNode* FxOption::toXML(XMLDocument& doc) {
 
     return node;
 }
-}
-}
+} // namespace data
+} // namespace ore

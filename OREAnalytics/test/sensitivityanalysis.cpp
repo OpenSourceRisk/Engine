@@ -775,9 +775,9 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
             }
         }
     }
-    BOOST_CHECK_MESSAGE(count == cachedResults.size(),
-                        "number of non-zero sensitivities (" << count << ") do not match regression data ("
-                                                             << cachedResults.size() << ")");
+    BOOST_CHECK_MESSAGE(count == cachedResults.size(), "number of non-zero sensitivities ("
+                                                           << count << ") do not match regression data ("
+                                                           << cachedResults.size() << ")");
 
     // Repeat analysis using the SensitivityAnalysis class and spot check a few deltas and gammas
     boost::shared_ptr<SensitivityAnalysis> sa = boost::make_shared<SensitivityAnalysis>(
@@ -1765,9 +1765,9 @@ void SensitivityAnalysisTest::testCrossGamma() {
         }
     }
     BOOST_TEST_MESSAGE("number of cross-gammas checked = " << count);
-    BOOST_CHECK_MESSAGE(count == cachedResults.size(),
-                        "number of non-zero sensitivities (" << count << ") do not match regression data ("
-                                                             << cachedResults.size() << ")");
+    BOOST_CHECK_MESSAGE(count == cachedResults.size(), "number of non-zero sensitivities ("
+                                                           << count << ") do not match regression data ("
+                                                           << cachedResults.size() << ")");
     ObservationMode::instance().setMode(backupMode);
     IndexManager::instance().clearHistories();
 }
@@ -1793,4 +1793,4 @@ test_suite* SensitivityAnalysisTest::suite() {
     suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testCrossGamma));
     return suite;
 }
-}
+} // namespace testsuite

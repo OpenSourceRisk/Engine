@@ -37,7 +37,7 @@ namespace QuantExt {
 
 //! Calibrated model class with linkable parameters
 /*! \ingroup models
-*/
+ */
 class LinkableCalibratedModel : public virtual Observer, public virtual Observable {
 public:
     LinkableCalibratedModel();
@@ -88,7 +88,7 @@ private:
 
 //! Linkable Calibrated Model
 /*! \ingroup models
-*/
+ */
 class LinkableCalibratedModel::PrivateConstraint : public Constraint {
 private:
     class Impl : public Constraint::Impl {

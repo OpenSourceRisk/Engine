@@ -53,7 +53,7 @@ void loadXMLDocument(XMLDocument& testDoc) {
     testDoc.fromXMLString(testXML);
     return;
 }
-}
+} // namespace
 
 namespace testsuite {
 
@@ -194,4 +194,4 @@ test_suite* XMLManipulationTest::suite() {
 
     return suite;
 }
-}
+} // namespace testsuite

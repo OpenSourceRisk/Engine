@@ -94,5 +94,5 @@ XMLNode* FxForward::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, fxNode, "SoldAmount", soldAmount_);
     return node;
 }
-}
-}
+} // namespace data
+} // namespace ore

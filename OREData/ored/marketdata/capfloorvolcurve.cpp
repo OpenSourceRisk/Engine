@@ -181,5 +181,5 @@ CapFloorVolCurve::CapFloorVolCurve(Date asof, CapFloorVolatilityCurveSpec spec, 
         QL_FAIL("cap/floor vol curve building failed: unknown error");
     }
 }
-}
-}
+} // namespace data
+} // namespace ore

@@ -77,4 +77,4 @@ inline void DatedStrippedOptionletAdapter::update() {
     TermStructure::update();
     LazyObject::update();
 }
-}
+} // namespace QuantExt

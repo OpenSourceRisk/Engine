@@ -64,5 +64,5 @@ public:
 private:
     Mode mode_;
 };
-}
-}
+} // namespace analytics
+} // namespace ore

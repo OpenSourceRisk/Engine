@@ -61,4 +61,4 @@ public:
     virtual VolatilityType volatilityType() const = 0;
     virtual Real displacement() const = 0;
 };
-}
+} // namespace QuantExt

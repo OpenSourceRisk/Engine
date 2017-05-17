@@ -183,5 +183,5 @@ XMLNode* StressTestScenarioData::toXML(XMLDocument& doc) {
     QL_FAIL("toXML not implemented for stress testing data");
     return node;
 }
-}
-}
+} // namespace analytics
+} // namespace ore

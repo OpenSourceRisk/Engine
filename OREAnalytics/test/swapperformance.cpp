@@ -744,4 +744,4 @@ test_suite* SwapPerformanceTest::suite() {
     suite->add(BOOST_TEST_CASE(&SwapPerformanceTest::testSwapPerformanceUnregisterObs));
     return suite;
 }
-}
+} // namespace testsuite

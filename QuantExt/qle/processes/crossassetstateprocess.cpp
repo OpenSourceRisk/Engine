@@ -33,7 +33,7 @@ static inline void setValue(Matrix& m, const Real& value, const QuantExt::CrossA
     Size j = model->pIdx(t2, i2, offset2);
     m[i][j] = m[j][i] = value;
 }
-}
+} // namespace
 
 namespace QuantExt {
 

@@ -49,5 +49,5 @@ struct Fixing {
 
 //! Utility to write a vector of fixings in the QuantLib index manager's fixing history
 void applyFixings(const std::vector<Fixing>& fixings);
-}
-}
+} // namespace data
+} // namespace ore

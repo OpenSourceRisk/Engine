@@ -61,5 +61,5 @@ private:
     EquityVolatilityCurveSpec spec_;
     boost::shared_ptr<BlackVolTermStructure> vol_;
 };
-}
-}
+} // namespace data
+} // namespace ore

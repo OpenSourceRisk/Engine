@@ -78,4 +78,4 @@ test_suite* RateHelpersTest::suite() {
     suite->add(BOOST_TEST_CASE(&RateHelpersTest::testTenorBasisSwapHelperDegenerateSchedule));
     return suite;
 }
-}
+} // namespace testsuite

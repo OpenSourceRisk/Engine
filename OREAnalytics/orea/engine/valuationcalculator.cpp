@@ -145,5 +145,5 @@ Real NPVCalculatorFXT0::npv(const boost::shared_ptr<Trade>& trade, const boost::
     }
     return npv;
 }
-}
-}
+} // namespace analytics
+} // namespace ore

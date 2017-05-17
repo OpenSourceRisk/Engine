@@ -248,9 +248,9 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                     Handle<IborIndex> iborIndex = MarketImpl::iborIndex(cfg->iborIndex(), configuration.first);
                     // Discount curve
                     auto it = requiredYieldCurves.find(cfg->discountCurve());
-                    QL_REQUIRE(it != requiredYieldCurves.end(),
-                               "Discount curve with spec, " << cfg->discountCurve()
-                                                            << ", not found in loaded yield curves");
+                    QL_REQUIRE(it != requiredYieldCurves.end(), "Discount curve with spec, "
+                                                                    << cfg->discountCurve()
+                                                                    << ", not found in loaded yield curves");
                     Handle<YieldTermStructure> discountCurve = it->second->handle();
 
                     // Now create cap/floor vol curve
@@ -326,9 +326,8 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                             boost::dynamic_pointer_cast<ZeroInflationTermStructure>(
                                 itr->second->inflationTermStructure());
                         bool indexInterpolated = itr->second->interpolatedIndex();
-                        QL_REQUIRE(ts,
-                                   "expected zero inflation term structure for index " << it.first
-                                                                                       << ", but could not cast");
+                        QL_REQUIRE(ts, "expected zero inflation term structure for index " << it.first
+                                                                                           << ", but could not cast");
                         auto tmp = parseZeroInflationIndex(it.first, indexInterpolated,
                                                            Handle<ZeroInflationTermStructure>(ts));
                         zeroInflationIndices_[make_pair(configuration.first, make_pair(it.first, indexInterpolated))] =
@@ -353,9 +352,8 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                             boost::dynamic_pointer_cast<YoYInflationTermStructure>(
                                 itr->second->inflationTermStructure());
                         bool indexInterpolated = itr->second->interpolatedIndex();
-                        QL_REQUIRE(ts,
-                                   "expected yoy inflation term structure for index " << it.first
-                                                                                      << ", but could not cast");
+                        QL_REQUIRE(ts, "expected yoy inflation term structure for index " << it.first
+                                                                                          << ", but could not cast");
                         yoyInflationIndices_[make_pair(configuration.first, make_pair(it.first, false))] =
                             Handle<YoYInflationIndex>(boost::make_shared<QuantExt::YoYInflationIndexWrapper>(
                                 parseZeroInflationIndex(it.first, indexInterpolated), false,
@@ -531,5 +529,5 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
     } // loop over configurations
 
 } // CTOR
-} // namesapce marketdata
+} // namespace data
 } // namespace ore

@@ -53,4 +53,4 @@ test_suite* LogQuoteTest::suite() {
     suite->add(BOOST_TEST_CASE(&LogQuoteTest::testLogQuote));
     return suite;
 }
-}
+} // namespace testsuite

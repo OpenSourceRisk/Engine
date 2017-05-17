@@ -67,4 +67,4 @@ test_suite* DepositTest::suite() {
     suite->add(BOOST_TEST_CASE(&DepositTest::testRepricing));
     return suite;
 }
-}
+} // namespace testsuite

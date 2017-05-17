@@ -49,6 +49,6 @@ public:
     SEKStibor(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
         : IborIndex("SEK-STIBOR", tenor, 2, SEKCurrency(), Sweden(), ModifiedFollowing, false, Actual360(), h) {}
 };
-}
+} // namespace QuantExt
 
 #endif

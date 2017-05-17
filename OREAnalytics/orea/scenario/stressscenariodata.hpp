@@ -42,7 +42,7 @@ namespace analytics {
 
 //! Description of sensitivity shift scenarios
 /*! \ingroup scenario
-*/
+ */
 class StressTestScenarioData : public XMLSerializable {
 public:
     struct CurveShiftData {
@@ -116,5 +116,5 @@ public:
 private:
     vector<StressTestData> data_;
 };
-}
-}
+} // namespace analytics
+} // namespace ore

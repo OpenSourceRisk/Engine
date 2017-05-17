@@ -69,5 +69,5 @@ public:
 private:
     boost::shared_ptr<ScenarioGeneratorData> data_;
 };
-}
-}
+} // namespace analytics
+} // namespace ore

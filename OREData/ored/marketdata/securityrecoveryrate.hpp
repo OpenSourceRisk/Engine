@@ -46,5 +46,5 @@ public:
 private:
     Handle<Quote> recoveryRate_;
 };
-}
-}
+} // namespace data
+} // namespace ore

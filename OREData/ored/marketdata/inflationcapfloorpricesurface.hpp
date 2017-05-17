@@ -64,5 +64,5 @@ private:
     InflationCapFloorPriceSurfaceSpec spec_;
     boost::shared_ptr<CPICapFloorTermPriceSurface> surface_;
 };
-}
-}
+} // namespace data
+} // namespace ore

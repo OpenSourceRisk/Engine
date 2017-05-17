@@ -79,5 +79,5 @@ QuantLib::Size SeasonalityQuote::applyMonth() const {
     }
     return applyMonth;
 }
-}
-}
+} // namespace data
+} // namespace ore

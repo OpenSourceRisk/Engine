@@ -84,5 +84,5 @@ private:
     Dimension dimension_;
     vector<Period> expiries_;
 };
-}
-}
+} // namespace data
+} // namespace ore

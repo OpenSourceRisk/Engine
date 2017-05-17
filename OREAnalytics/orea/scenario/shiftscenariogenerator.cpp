@@ -524,5 +524,5 @@ void ShiftScenarioGenerator::applyShift(Size i, Size j, Real shiftSize, bool up,
         }
     }
 }
-}
-}
+} // namespace analytics
+} // namespace ore

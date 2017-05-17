@@ -33,7 +33,7 @@ namespace QuantExt {
 
 //! FxEq Option Helper
 /*! \ingroup models
-*/
+ */
 class FxEqOptionHelper : public CalibrationHelper {
 public:
     /*! the spot is interpreted as of today (or discounted spot)
@@ -70,6 +70,6 @@ private:
     mutable Real effStrike_;
 };
 
-} // namespace QuantLib
+} // namespace QuantExt
 
 #endif

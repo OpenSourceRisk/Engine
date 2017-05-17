@@ -32,7 +32,7 @@ namespace QuantExt {
 
 //! Gaussian 1d Cross Asset adaptor
 /*! \ingroup models
-*/
+ */
 class Gaussian1dCrossAssetAdaptor : public Gaussian1dModel {
 public:
     Gaussian1dCrossAssetAdaptor(const boost::shared_ptr<LinearGaussMarkovModel>& model);
@@ -98,6 +98,6 @@ inline Real Gaussian1dCrossAssetAdaptor::zerobondImpl(const Time T, const Time t
 //     return d * x_->reducedDiscountBond(t, T, x);
 // }
 
-} // QuantExt
+} // namespace QuantExt
 
 #endif

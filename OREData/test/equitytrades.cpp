@@ -75,7 +75,7 @@ private:
         return Handle<BlackVolTermStructure>(fxv);
     }
 };
-}
+} // namespace
 
 namespace testsuite {
 
@@ -133,4 +133,4 @@ test_suite* EquityTradesTest::suite() {
     suite->add(BOOST_TEST_CASE(&EquityTradesTest::testEquityTradePrices));
     return suite;
 }
-}
+} // namespace testsuite

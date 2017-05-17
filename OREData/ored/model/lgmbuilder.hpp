@@ -98,5 +98,5 @@ private:
     EndCriteria endCriteria_;
     CalibrationHelper::CalibrationErrorType calibrationErrorType_;
 };
-}
-}
+} // namespace data
+} // namespace ore

@@ -52,6 +52,6 @@ private:
     Currency ccy2_;
     Handle<Quote> fx_;
 };
-}
+} // namespace QuantExt
 
 #endif

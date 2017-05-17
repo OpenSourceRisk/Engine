@@ -343,5 +343,5 @@ Real CorrelationMatrixBuilder::lookup(const string& f1, const string& f2) {
     // default.
     return 0.0;
 }
-}
-}
+} // namespace data
+} // namespace ore

@@ -176,7 +176,7 @@ void checkStrikeParser(const std::string& s, const ore::data::Strike::Type expec
     }
     return;
 }
-}
+} // namespace
 
 void ParseTest::testStrikeParsing() {
     BOOST_TEST_MESSAGE("Testing Strike parsing...");
@@ -223,4 +223,4 @@ test_suite* ParseTest::suite() {
     suite->add(BOOST_TEST_CASE(&ParseTest::testStrikeParsing));
     return suite;
 }
-}
+} // namespace testsuite
