@@ -53,5 +53,5 @@ public:
 private:
     map<string, map<string, string>> data_;
 };
-}
-}
+} // namespace analytics
+} // namespace ore

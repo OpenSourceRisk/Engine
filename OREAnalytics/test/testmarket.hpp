@@ -16,21 +16,20 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ored/marketdata/marketimpl.hpp>
-#include <ored/utilities/indexparser.hpp>
+#include <boost/make_shared.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/scenario/sensitivityscenariodata.hpp>
-#include <ql/termstructures/yield/flatforward.hpp>
-#include <ql/time/daycounters/actualactual.hpp>
+#include <ored/marketdata/marketimpl.hpp>
+#include <ored/utilities/indexparser.hpp>
 #include <ql/quotes/simplequote.hpp>
-#include <ql/termstructures/yield/flatforward.hpp>
-#include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
-#include <ql/termstructures/volatility/swaption/swaptionconstantvol.hpp>
-#include <ql/termstructures/volatility/optionlet/constantoptionletvol.hpp>
-#include <ql/termstructures/voltermstructure.hpp>
-#include <ql/time/calendars/nullcalendar.hpp>
 #include <ql/termstructures/credit/flathazardrate.hpp>
-#include <boost/make_shared.hpp>
+#include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
+#include <ql/termstructures/volatility/optionlet/constantoptionletvol.hpp>
+#include <ql/termstructures/volatility/swaption/swaptionconstantvol.hpp>
+#include <ql/termstructures/voltermstructure.hpp>
+#include <ql/termstructures/yield/flatforward.hpp>
+#include <ql/time/calendars/nullcalendar.hpp>
+#include <ql/time/daycounters/actualactual.hpp>
 
 using namespace QuantLib;
 using namespace ore::data;
@@ -112,17 +111,10 @@ public:
         discountCurves_[make_pair(Market::defaultConfiguration, "JPY")] = flatRateYts(0.005);
 
         // build ibor indices
-        vector<pair<string, Real>> indexData = {{"EUR-EONIA", 0.01},
-                                                {"EUR-EURIBOR-6M", 0.02},
-                                                {"USD-FedFunds", 0.01},
-                                                {"USD-LIBOR-3M", 0.03},
-                                                {"USD-LIBOR-6M", 0.05},
-                                                {"GBP-SONIA", 0.01},
-                                                {"GBP-LIBOR-3M", 0.03},
-                                                {"GBP-LIBOR-6M", 0.04},
-                                                {"CHF-LIBOR-3M", 0.01},
-                                                {"CHF-LIBOR-6M", 0.02},
-                                                {"JPY-LIBOR-6M", 0.01}};
+        vector<pair<string, Real>> indexData = {
+            {"EUR-EONIA", 0.01},    {"EUR-EURIBOR-6M", 0.02}, {"USD-FedFunds", 0.01}, {"USD-LIBOR-3M", 0.03},
+            {"USD-LIBOR-6M", 0.05}, {"GBP-SONIA", 0.01},      {"GBP-LIBOR-3M", 0.03}, {"GBP-LIBOR-6M", 0.04},
+            {"CHF-LIBOR-3M", 0.01}, {"CHF-LIBOR-6M", 0.02},   {"JPY-LIBOR-6M", 0.01}};
         for (auto id : indexData) {
             Handle<IborIndex> h(parseIborIndex(id.first, flatRateYts(id.second)));
             iborIndices_[make_pair(Market::defaultConfiguration, id.first)] = h;
@@ -246,4 +238,4 @@ public:
     //! Conventions instance
     static boost::shared_ptr<ore::data::Conventions> conv();
 };
-}
+} // namespace testsuite

@@ -29,7 +29,7 @@ bool isMarginPayDateLessThan(ore::analytics::CollateralAccount::MarginCall mc1,
                              ore::analytics::CollateralAccount::MarginCall mc2) {
     return mc1.marginPayDate() < mc2.marginPayDate();
 }
-}
+} // namespace
 
 namespace ore {
 using namespace data;
@@ -146,5 +146,5 @@ void CollateralAccount::closeAccount(const Date& closeDate) {
     accountBalances_.push_back(0.0);
     accountDates_.push_back(closeDate);
 }
-}
-}
+} // namespace analytics
+} // namespace ore

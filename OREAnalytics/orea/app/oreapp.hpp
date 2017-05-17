@@ -23,15 +23,15 @@
 
 #pragma once
 
-#include <orea/app/parameters.hpp>
-#include <orea/scenario/scenariogeneratorbuilder.hpp>
-#include <orea/scenario/scenariogenerator.hpp>
-#include <orea/scenario/scenariosimmarket.hpp>
-#include <orea/scenario/scenariosimmarketparameters.hpp>
-#include <orea/aggregation/all.hpp>
-#include <ored/ored.hpp>
 #include <boost/make_shared.hpp>
 #include <iostream>
+#include <orea/aggregation/all.hpp>
+#include <orea/app/parameters.hpp>
+#include <orea/scenario/scenariogenerator.hpp>
+#include <orea/scenario/scenariogeneratorbuilder.hpp>
+#include <orea/scenario/scenariosimmarket.hpp>
+#include <orea/scenario/scenariosimmarketparameters.hpp>
+#include <ored/ored.hpp>
 
 using namespace ore::data;
 
@@ -151,5 +151,5 @@ protected:
     boost::shared_ptr<AggregationScenarioData> scenarioData_;
     boost::shared_ptr<PostProcess> postProcess_;
 };
-}
-}
+} // namespace analytics
+} // namespace ore
