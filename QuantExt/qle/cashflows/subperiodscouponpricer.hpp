@@ -34,7 +34,7 @@ using namespace QuantLib;
 namespace QuantExt {
 //! Pricer for sub-period coupons
 /*! \ingroup cashflows
-*/
+ */
 class SubPeriodsCouponPricer : public FloatingRateCouponPricer {
 public:
     SubPeriodsCouponPricer() {}
@@ -58,6 +58,6 @@ protected:
 
     const SubPeriodsCoupon* coupon_;
 };
-}
+} // namespace QuantExt
 
 #endif

@@ -23,10 +23,10 @@
 
 #pragma once
 
+#include <ored/configuration/conventions.hpp>
 #include <ql/index.hpp>
 #include <ql/indexes/iborindex.hpp>
 #include <ql/indexes/swapindex.hpp>
-#include <ored/configuration/conventions.hpp>
 #include <qle/indexes/fxindex.hpp>
 using std::string;
 using QuantLib::IborIndex;
@@ -62,5 +62,5 @@ parseSwapIndex(const string& s, const Handle<YieldTermStructure>& forwarding,
 */
 boost::shared_ptr<Index> parseIndex(const string& s,
                                     const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>());
-}
-}
+} // namespace data
+} // namespace ore

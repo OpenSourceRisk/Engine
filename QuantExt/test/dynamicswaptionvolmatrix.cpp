@@ -20,9 +20,9 @@
 
 #include <qle/termstructures/dynamicswaptionvolmatrix.hpp>
 
+#include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/volatility/swaption/swaptionvolmatrix.hpp>
 #include <ql/time/calendars/target.hpp>
-#include <ql/quotes/simplequote.hpp>
 
 #include <test-suite/utilities.hpp>
 
@@ -154,4 +154,4 @@ test_suite* DynamicSwaptionVolMatrixTest::suite() {
     suite->add(QUANTLIB_TEST_CASE(&DynamicSwaptionVolMatrixTest::testForwardForwardVariance));
     return suite;
 }
-}
+} // namespace testsuite

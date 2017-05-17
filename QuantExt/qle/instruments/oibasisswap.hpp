@@ -25,10 +25,10 @@
 #ifndef quantlib_overnight_indexed_basis_swap_hpp
 #define quantlib_overnight_indexed_basis_swap_hpp
 
+#include <ql/indexes/iborindex.hpp>
 #include <ql/instruments/swap.hpp>
 #include <ql/time/daycounter.hpp>
 #include <ql/time/schedule.hpp>
-#include <ql/indexes/iborindex.hpp>
 
 using namespace QuantLib;
 
@@ -40,7 +40,7 @@ namespace QuantExt {
 
 //! Overnight indexed basis swap: floating vs compounded overnight rate
 /*! \ingroup instruments
-*/
+ */
 class OvernightIndexedBasisSwap : public Swap {
 public:
     enum Type { Receiver = -1, Payer = 1 };
@@ -98,6 +98,6 @@ inline Real OvernightIndexedBasisSwap::nominal() const {
     QL_REQUIRE(nominals_.size() == 1, "varying nominals");
     return nominals_[0];
 }
-}
+} // namespace QuantExt
 
 #endif

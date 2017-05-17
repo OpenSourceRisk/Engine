@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/termstructures/blackvariancecurve3.hpp>
 #include <ql/math/interpolations/linearinterpolation.hpp>
+#include <qle/termstructures/blackvariancecurve3.hpp>
 
 namespace QuantExt {
 
@@ -69,4 +69,4 @@ Real BlackVarianceCurve3::blackVarianceImpl(Time t, Real) const {
         return varianceCurve_(times_.back(), true) * t / times_.back();
     }
 }
-}
+} // namespace QuantExt

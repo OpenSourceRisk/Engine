@@ -23,10 +23,10 @@
 
 #pragma once
 
-#include <ored/portfolio/enginefactory.hpp>
-#include <ored/portfolio/builders/cachingenginebuilder.hpp>
-#include <ored/utilities/log.hpp>
 #include <boost/make_shared.hpp>
+#include <ored/portfolio/builders/cachingenginebuilder.hpp>
+#include <ored/portfolio/enginefactory.hpp>
+#include <ored/utilities/log.hpp>
 
 namespace ore {
 namespace data {
@@ -78,7 +78,7 @@ public:
 
 //! Implementation of BermudanSwaptionEngineBuilder using LGM Grid pricer
 /*! \ingroup portfolio
-*/
+ */
 class LGMGridBermudanSwaptionEngineBuilder : public BermudanSwaptionEngineBuilder {
 public:
     LGMGridBermudanSwaptionEngineBuilder() : BermudanSwaptionEngineBuilder("LGM", "Grid") {}

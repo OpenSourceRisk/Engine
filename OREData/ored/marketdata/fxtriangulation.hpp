@@ -23,10 +23,10 @@
 
 #pragma once
 
-#include <ql/types.hpp>
+#include <map>
 #include <ql/handle.hpp>
 #include <ql/quote.hpp>
-#include <map>
+#include <ql/types.hpp>
 
 using QuantLib::Quote;
 using QuantLib::Handle;
@@ -66,5 +66,5 @@ public:
 private:
     mutable std::map<std::string, Handle<Quote>> map_;
 };
-}
-}
+} // namespace data
+} // namespace ore

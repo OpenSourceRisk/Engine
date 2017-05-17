@@ -23,12 +23,12 @@
 
 #pragma once
 
-#include <ored/utilities/parsers.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/schedule.hpp>
+#include <ored/utilities/parsers.hpp>
 
-#include <ql/indexes/iborindex.hpp>
 #include <ql/cashflow.hpp>
+#include <ql/indexes/iborindex.hpp>
 
 #include <vector>
 
@@ -258,5 +258,5 @@ Leg makeNotionalLeg(const Leg& refLeg, bool initNomFlow, bool finalNomFlow, bool
 //  In all cases we can expand the vector to take the given schedule into account
 vector<double> buildScheduledVector(const vector<double>& values, const vector<string>& dates,
                                     const Schedule& schedule);
-}
-}
+} // namespace data
+} // namespace ore

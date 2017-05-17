@@ -16,14 +16,14 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/termstructures/averageoisratehelper.hpp>
 #include <qle/instruments/makeaverageois.hpp>
+#include <qle/termstructures/averageoisratehelper.hpp>
 
 namespace QuantExt {
 
 namespace {
 void no_deletion(YieldTermStructure*) {}
-}
+} // namespace
 
 AverageOISRateHelper::AverageOISRateHelper(const Handle<Quote>& fixedRate, const Period& spotLagTenor,
                                            const Period& swapTenor,
@@ -115,4 +115,4 @@ void AverageOISRateHelper::accept(AcyclicVisitor& v) {
     else
         RateHelper::accept(v);
 }
-}
+} // namespace QuantExt

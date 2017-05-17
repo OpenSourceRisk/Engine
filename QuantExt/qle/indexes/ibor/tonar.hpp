@@ -24,10 +24,10 @@
 #ifndef quantext_tonar_hpp
 #define quantext_tonar_hpp
 
-#include <ql/indexes/iborindex.hpp>
 #include <ql/currencies/asia.hpp>
-#include <ql/time/daycounters/actual365fixed.hpp>
+#include <ql/indexes/iborindex.hpp>
 #include <ql/time/calendars/japan.hpp>
+#include <ql/time/daycounters/actual365fixed.hpp>
 
 using namespace QuantLib;
 
@@ -48,6 +48,6 @@ public:
     Tonar(const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
         : OvernightIndex("TONAR", 0, JPYCurrency(), Japan(), Actual365Fixed(), h) {}
 };
-}
+} // namespace QuantExt
 
 #endif

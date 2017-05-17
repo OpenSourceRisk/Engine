@@ -137,7 +137,7 @@ protected:
 //! Bermudan Option Wrapper
 /*! A Bermudan Option Wrapper will exercise when the relevant underlying's NPV exceeds the
  *  option NPV. If only one exercise date is remaining, an analytic European pricing engine is used.
-*/
+ */
 class BermudanOptionWrapper : public OptionWrapper {
 public:
     BermudanOptionWrapper(const boost::shared_ptr<QuantLib::Instrument>& inst, const bool isLongOption,
@@ -160,5 +160,5 @@ private:
     bool convertToEuropean() const;
     boost::shared_ptr<QuantLib::Instrument> getUnderlying() const;
 };
-}
-}
+} // namespace data
+} // namespace ore

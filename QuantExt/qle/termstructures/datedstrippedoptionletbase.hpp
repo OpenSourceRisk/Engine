@@ -24,12 +24,12 @@
 #pragma once
 
 #include <ql/patterns/lazyobject.hpp>
-#include <ql/time/businessdayconvention.hpp>
-#include <ql/types.hpp>
 #include <ql/termstructures/volatility/volatilitytype.hpp>
+#include <ql/time/businessdayconvention.hpp>
+#include <ql/time/calendar.hpp>
 #include <ql/time/date.hpp>
 #include <ql/time/daycounter.hpp>
-#include <ql/time/calendar.hpp>
+#include <ql/types.hpp>
 
 #include <vector>
 
@@ -61,4 +61,4 @@ public:
     virtual VolatilityType volatilityType() const = 0;
     virtual Real displacement() const = 0;
 };
-}
+} // namespace QuantExt

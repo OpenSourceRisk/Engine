@@ -23,8 +23,8 @@
 
 #pragma once
 
-#include <ored/utilities/xmlutils.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/xmlutils.hpp>
 #include <qle/termstructures/dynamicstype.hpp>
 
 using QuantLib::Period;
@@ -42,7 +42,7 @@ namespace analytics {
 
 //! ScenarioSimMarket description
 /*! \ingroup scenario
-*/
+ */
 class ScenarioSimMarketParameters : public XMLSerializable {
 public:
     //! Default constructor
@@ -149,5 +149,5 @@ private:
     vector<string> additionalScenarioDataIndices_;
     vector<string> additionalScenarioDataCcys_;
 };
-}
-}
+} // namespace analytics
+} // namespace ore

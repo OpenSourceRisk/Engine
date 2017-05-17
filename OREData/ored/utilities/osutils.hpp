@@ -63,6 +63,6 @@ std::string getHostname();
 std::string getSystemDetails();
 
 //! @}
-};
-}
-}
+}; // namespace os
+} // namespace data
+} // namespace ore

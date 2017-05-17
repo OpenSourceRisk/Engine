@@ -16,20 +16,20 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ored/portfolio/swap.hpp>
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/legdata.hpp>
-#include <ored/utilities/log.hpp>
+#include <ored/portfolio/swap.hpp>
 #include <ored/utilities/indexparser.hpp>
+#include <ored/utilities/log.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
 
-#include <qle/instruments/currencyswap.hpp>
-#include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <ql/time/calendars/target.hpp>
+#include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/indexes/fxindex.hpp>
+#include <qle/instruments/currencyswap.hpp>
 
-#include <ql/time/daycounters/actualactual.hpp>
 #include <ql/instruments/swap.hpp>
+#include <ql/time/daycounters/actualactual.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -259,5 +259,5 @@ XMLNode* Swap::toXML(XMLDocument& doc) {
         XMLUtils::appendNode(swapNode, legData_[i].toXML(doc));
     return node;
 }
-}
-}
+} // namespace data
+} // namespace ore

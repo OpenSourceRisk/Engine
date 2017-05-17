@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ored/marketdata/marketdatum.hpp>
 #include <boost/lexical_cast.hpp>
+#include <ored/marketdata/marketdatum.hpp>
 
 using boost::lexical_cast;
 using boost::bad_lexical_cast;
@@ -50,5 +50,5 @@ Month MMFutureQuote::expiryMonth() const {
     }
     return static_cast<Month>(expiryMonth);
 }
-}
-}
+} // namespace data
+} // namespace ore

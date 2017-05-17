@@ -20,14 +20,14 @@
 #include <ql/cashflows/floatingratecoupon.hpp>
 #endif
 
-#include <qle/termstructures/crossccybasisswaphelper.hpp>
 #include <qle/pricingengines/crossccyswapengine.hpp>
+#include <qle/termstructures/crossccybasisswaphelper.hpp>
 
 namespace QuantExt {
 
 namespace {
 void no_deletion(YieldTermStructure*) {}
-}
+} // namespace
 
 CrossCcyBasisSwapHelper::CrossCcyBasisSwapHelper(const Handle<Quote>& spreadQuote, const Handle<Quote>& spotFX,
                                                  Natural settlementDays, const Calendar& settlementCalendar,
@@ -189,4 +189,4 @@ void CrossCcyBasisSwapHelper::accept(AcyclicVisitor& v) {
     else
         RateHelper::accept(v);
 }
-}
+} // namespace QuantExt

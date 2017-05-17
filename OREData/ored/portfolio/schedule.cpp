@@ -163,5 +163,5 @@ Schedule makeSchedule(const ScheduleData& data) {
         return Schedule(dates, cal);
     }
 }
-}
-}
+} // namespace data
+} // namespace ore

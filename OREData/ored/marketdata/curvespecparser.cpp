@@ -16,12 +16,12 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/make_shared.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/make_shared.hpp>
+#include <map>
 #include <ored/marketdata/curvespecparser.hpp>
 #include <ql/errors.hpp>
 #include <vector>
-#include <map>
 
 using namespace std;
 
@@ -123,5 +123,5 @@ boost::shared_ptr<CurveSpec> parseCurveSpec(const string& s) {
 
     QL_FAIL("Unable to convert \"" << s << "\" into CurveSpec");
 }
-}
-}
+} // namespace data
+} // namespace ore

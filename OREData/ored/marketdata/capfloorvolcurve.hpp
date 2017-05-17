@@ -57,5 +57,5 @@ private:
     CapFloorVolatilityCurveSpec spec_;
     boost::shared_ptr<OptionletVolatilityStructure> capletVol_;
 };
-}
-}
+} // namespace data
+} // namespace ore

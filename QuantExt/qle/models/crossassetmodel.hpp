@@ -28,10 +28,10 @@
 #include <qle/models/lgm.hpp>
 #include <qle/processes/crossassetstateprocess.hpp>
 
-#include <ql/models/model.hpp>
-#include <ql/math/matrix.hpp>
 #include <ql/math/distributions/normaldistribution.hpp>
 #include <ql/math/integrals/integral.hpp>
+#include <ql/math/matrix.hpp>
+#include <ql/models/model.hpp>
 
 #include <boost/bind.hpp>
 
@@ -43,13 +43,13 @@ namespace CrossAssetModelTypes {
 //! Cross Asset Type
 //! \ingroup crossassetmodel
 enum AssetType { IR, FX };
-}
+} // namespace CrossAssetModelTypes
 
 using namespace CrossAssetModelTypes;
 
 //! Cross Asset Model
 /*! \ingroup crossassetmodel
-*/
+ */
 class CrossAssetModel : public LinkableCalibratedModel {
 public:
     /*! Parametrizations must be given in the following order

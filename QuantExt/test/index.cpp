@@ -34,7 +34,7 @@ struct IndTestData {
     string calName;
     string ccyName;
 };
-}
+} // namespace
 
 namespace testsuite {
 
@@ -80,4 +80,4 @@ test_suite* IndexTest::suite() {
     suite->add(BOOST_TEST_CASE(&IndexTest::testIborIndex));
     return suite;
 }
-}
+} // namespace testsuite

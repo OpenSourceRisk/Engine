@@ -30,7 +30,7 @@ namespace QuantExt {
 
 //! LGM 1F Constant Parametrization
 /*! \ingroup models
-*/
+ */
 template <class TS> class Lgm1fConstantParametrization : public Lgm1fParametrization<TS> {
 public:
     Lgm1fConstantParametrization(const Currency& currency, const Handle<TS>& termStructure, const Real alpha,

@@ -19,7 +19,6 @@
 #include <ored/marketdata/defaultcurve.hpp>
 #include <ored/utilities/log.hpp>
 
-#include <ql/math/interpolations/loginterpolation.hpp>
 #include <ql/math/interpolations/backwardflatinterpolation.hpp>
 #include <ql/math/interpolations/loginterpolation.hpp>
 #include <ql/termstructures/credit/defaultprobabilityhelpers.hpp>
@@ -56,8 +55,9 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
             if (it != yieldCurves.end()) {
                 discountCurve = it->second->handle();
             } else {
-                QL_FAIL("The discount curve, " << config->discountCurveID() << ", required in the building "
-                                                                               "of the curve, "
+                QL_FAIL("The discount curve, " << config->discountCurveID()
+                                               << ", required in the building "
+                                                  "of the curve, "
                                                << spec.name() << ", was not found.");
             }
         }
@@ -68,16 +68,18 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
             if (it != yieldCurves.end()) {
                 benchmarkCurve = it->second;
             } else {
-                QL_FAIL("The benchmark curve, " << config->benchmarkCurveID() << ", required in the building "
-                                                                                 "of the curve, "
+                QL_FAIL("The benchmark curve, " << config->benchmarkCurveID()
+                                                << ", required in the building "
+                                                   "of the curve, "
                                                 << spec.name() << ", was not found.");
             }
             auto it2 = yieldCurves.find(config->sourceCurveID());
             if (it2 != yieldCurves.end()) {
                 sourceCurve = it2->second;
             } else {
-                QL_FAIL("The source curve, " << config->sourceCurveID() << ", required in the building "
-                                                                           "of the curve, "
+                QL_FAIL("The source curve, " << config->sourceCurveID()
+                                             << ", required in the building "
+                                                "of the curve, "
                                              << spec.name() << ", was not found.");
             }
         }
@@ -97,8 +99,8 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                 boost::shared_ptr<RecoveryRateQuote> q = boost::dynamic_pointer_cast<RecoveryRateQuote>(md);
 
                 if (q->name() == config->recoveryRateQuote()) {
-                    QL_REQUIRE(recoveryRate_ == Null<Real>(), "duplicate recovery rate quote " << q->name()
-                                                                                               << " found.");
+                    QL_REQUIRE(recoveryRate_ == Null<Real>(),
+                               "duplicate recovery rate quote " << q->name() << " found.");
                     recoveryRate_ = q->quote()->value();
                 }
             }
@@ -146,8 +148,8 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
 
         LOG("DefaultCurve: read " << quotes.size() << " default quotes");
 
-        QL_REQUIRE(quotes.size() == config->quotes().size(), "read " << quotes.size() << ", but "
-                                                                     << config->quotes().size() << " required.");
+        QL_REQUIRE(quotes.size() == config->quotes().size(),
+                   "read " << quotes.size() << ", but " << config->quotes().size() << " required.");
 
         if (config->type() == DefaultCurveConfig::Type::SpreadCDS) {
             QL_REQUIRE(recoveryRate_ != Null<Real>(), "DefaultCurve: no recovery rate given for type "

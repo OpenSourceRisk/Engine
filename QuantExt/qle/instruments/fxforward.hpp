@@ -26,9 +26,9 @@
 #define quantext_fxforward_hpp
 
 #include <ql/currency.hpp>
-#include <ql/money.hpp>
 #include <ql/exchangerate.hpp>
 #include <ql/instrument.hpp>
+#include <ql/money.hpp>
 #include <ql/quote.hpp>
 
 using namespace QuantLib;
@@ -153,6 +153,6 @@ public:
 };
 
 class FxForward::engine : public GenericEngine<FxForward::arguments, FxForward::results> {};
-}
+} // namespace QuantExt
 
 #endif

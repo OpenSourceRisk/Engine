@@ -23,9 +23,9 @@
 
 #pragma once
 
-#include <ored/marketdata/marketimpl.hpp>
 #include <orea/scenario/aggregationscenariodata.hpp>
 #include <ored/configuration/conventions.hpp>
+#include <ored/marketdata/marketimpl.hpp>
 
 namespace ore {
 namespace analytics {
@@ -52,5 +52,5 @@ public:
 protected:
     Real numeraire_;
 };
-}
-}
+} // namespace analytics
+} // namespace ore

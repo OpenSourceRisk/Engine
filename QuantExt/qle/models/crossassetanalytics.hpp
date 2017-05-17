@@ -24,8 +24,8 @@
 #ifndef quantext_crossasset_analytics_hpp
 #define quantext_crossasset_analytics_hpp
 
-#include <qle/models/crossassetmodel.hpp>
 #include <qle/models/crossassetanalyticsbase.hpp>
+#include <qle/models/crossassetmodel.hpp>
 
 using namespace QuantLib;
 
@@ -278,6 +278,6 @@ struct rxx {
 
 } // namespace CrossAssetAnalytics
 
-} // namesapce QuantExt
+} // namespace QuantExt
 
 #endif

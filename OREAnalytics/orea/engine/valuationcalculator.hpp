@@ -117,5 +117,5 @@ private:
     boost::shared_ptr<DateGrid> dateGrid_;
     Size index_;
 };
-}
-}
+} // namespace analytics
+} // namespace ore

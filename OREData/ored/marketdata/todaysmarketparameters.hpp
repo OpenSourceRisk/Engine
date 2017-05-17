@@ -24,9 +24,9 @@
 #pragma once
 
 #include <ored/marketdata/market.hpp>
-#include <ored/utilities/xmlutils.hpp>
-#include <ored/utilities/parsers.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/parsers.hpp>
+#include <ored/utilities/xmlutils.hpp>
 
 using std::vector;
 using std::string;
@@ -369,4 +369,4 @@ inline void TodaysMarketParameters::addDefaultCurves(const string& id, const map
 }
 
 } // namespace data
-} // namesapce ore
+} // namespace ore

@@ -25,9 +25,9 @@
 
 #include <vector>
 
-#include <qle/models/irlgm1fparametrization.hpp>
-#include <qle/models/fxbsparametrization.hpp>
 #include <ql/models/calibrationhelper.hpp>
+#include <qle/models/fxbsparametrization.hpp>
+#include <qle/models/irlgm1fparametrization.hpp>
 
 using namespace QuantExt;
 using namespace QuantLib;
@@ -43,5 +43,5 @@ Real logCalibrationErrors(
     const std::vector<boost::shared_ptr<CalibrationHelper>>& basket,
     const boost::shared_ptr<FxBsParametrization>& parametrization = boost::shared_ptr<FxBsParametrization>(),
     const boost::shared_ptr<IrLgm1fParametrization>& domesticLgm = boost::shared_ptr<IrLgm1fParametrization>());
-}
-}
+} // namespace data
+} // namespace ore

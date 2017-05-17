@@ -118,5 +118,5 @@ bool BermudanOptionWrapper::exercise() const {
     else
         return activeUnderlyingInstrument_->NPV() * undMultiplier_ > instrument_->NPV() * multiplier_;
 }
-}
-}
+} // namespace data
+} // namespace ore

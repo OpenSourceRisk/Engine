@@ -91,6 +91,6 @@ struct YieldCurveEUR {
     Handle<YieldTermStructure> forward6M;
     DayCounter dayCounter;
 };
-}
+} // namespace QuantExt
 
 #endif

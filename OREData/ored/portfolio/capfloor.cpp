@@ -16,10 +16,10 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ored/portfolio/capfloor.hpp>
-#include <ored/utilities/log.hpp>
-#include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/builders/capfloor.hpp>
+#include <ored/portfolio/capfloor.hpp>
+#include <ored/portfolio/legdata.hpp>
+#include <ored/utilities/log.hpp>
 
 #include <ql/instruments/capfloor.hpp>
 
@@ -121,5 +121,5 @@ XMLNode* CapFloor::toXML(XMLDocument& doc) {
     XMLUtils::addChildren(doc, capFloorNode, "FloorRates", "Rate", floors_);
     return node;
 }
-}
-}
+} // namespace data
+} // namespace ore

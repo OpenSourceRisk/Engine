@@ -27,8 +27,8 @@
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/scenario/aggregationscenariodata.hpp>
 
-#include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/nettingsetmanager.hpp>
+#include <ored/portfolio/portfolio.hpp>
 
 #include <ql/time/date.hpp>
 
@@ -298,5 +298,5 @@ private:
     Real dimLocalRegressionBandwidth_;
     Real dimScaling_;
 };
-}
-}
+} // namespace analytics
+} // namespace ore

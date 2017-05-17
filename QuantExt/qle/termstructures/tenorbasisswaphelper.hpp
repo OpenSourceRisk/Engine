@@ -34,7 +34,7 @@ namespace QuantExt {
 
 //! Rate helper for bootstrapping using Libor tenor basis swaps
 /*! \ingroup termstructures
-*/
+ */
 class TenorBasisSwapHelper : public RelativeDateRateHelper {
 public:
     TenorBasisSwapHelper(Handle<Quote> spread, const Period& swapTenor, const boost::shared_ptr<IborIndex> longIndex,
@@ -73,6 +73,6 @@ protected:
     Handle<YieldTermStructure> discountHandle_;
     RelinkableHandle<YieldTermStructure> discountRelinkableHandle_;
 };
-}
+} // namespace QuantExt
 
 #endif

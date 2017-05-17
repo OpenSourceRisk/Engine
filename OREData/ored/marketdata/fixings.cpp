@@ -21,11 +21,11 @@
     \ingroup
 */
 
+#include <boost/timer.hpp>
 #include <ored/marketdata/fixings.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ql/index.hpp>
-#include <boost/timer.hpp>
 
 using namespace std;
 using namespace QuantLib;
@@ -55,5 +55,5 @@ void applyFixings(const vector<Fixing>& fixings) {
     }
     DLOG("Added " << count << " of " << fixings.size() << " fixings in " << timer.elapsed() << " seconds");
 }
-}
-}
+} // namespace data
+} // namespace ore

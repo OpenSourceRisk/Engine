@@ -102,4 +102,4 @@ void CrossCcySwap::results::reset() {
     inCcyLegBPS.clear();
     npvDateDiscounts.clear();
 }
-}
+} // namespace QuantExt

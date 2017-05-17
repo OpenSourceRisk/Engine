@@ -65,5 +65,5 @@ std::vector<boost::shared_ptr<Scenario>> LgmScenarioGenerator::nextPath() {
     }
     return scenarios;
 }
-}
-}
+} // namespace analytics
+} // namespace ore

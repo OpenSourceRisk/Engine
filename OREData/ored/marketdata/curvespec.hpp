@@ -24,8 +24,8 @@
 #pragma once
 
 #include <boost/shared_ptr.hpp>
-#include <string>
 #include <ostream>
+#include <string>
 
 using std::string;
 
@@ -238,5 +238,5 @@ private:
     string ccy_;
     string curveConfigID_;
 };
-}
-}
+} // namespace data
+} // namespace ore

@@ -17,11 +17,11 @@
 */
 
 #include <ql/cashflows/cashflows.hpp>
-#include <ql/cashflows/simplecashflow.hpp>
 #include <ql/cashflows/fixedratecoupon.hpp>
 #include <ql/cashflows/floatingratecoupon.hpp>
 #include <ql/cashflows/iborcoupon.hpp>
 #include <ql/cashflows/inflationcoupon.hpp>
+#include <ql/cashflows/simplecashflow.hpp>
 #include <ql/utilities/dataformatters.hpp>
 
 #include <qle/pricingengines/discountingswapenginemulticurve.hpp>
@@ -108,7 +108,7 @@ void AdditionalAmountGetter::visit(IborCoupon& c) {
     AmountGetter::visit(c);
     bpsFactor_ = c.accrualPeriod() * c.nominal();
 }
-}
+} // namespace
 
 class DiscountingSwapEngineMultiCurve::AmountImpl {
 public:
@@ -142,9 +142,10 @@ void DiscountingSwapEngineMultiCurve::calculate() const {
     if (settlementDate_ == Date()) {
         settlementDate = referenceDate;
     } else {
-        QL_REQUIRE(settlementDate >= referenceDate,
-                   "settlement date (" << settlementDate << ") before "
-                                                            "discount curve reference date (" << referenceDate << ")");
+        QL_REQUIRE(settlementDate >= referenceDate, "settlement date (" << settlementDate
+                                                                        << ") before "
+                                                                           "discount curve reference date ("
+                                                                        << referenceDate << ")");
     }
 
     // - Instrument::results
@@ -154,8 +155,9 @@ void DiscountingSwapEngineMultiCurve::calculate() const {
     if (npvDate_ == Date()) {
         results_.valuationDate = referenceDate;
     } else {
-        QL_REQUIRE(npvDate_ >= referenceDate, "npv date (" << npvDate_ << ") before "
-                                                                          "discount curve reference date ("
+        QL_REQUIRE(npvDate_ >= referenceDate, "npv date (" << npvDate_
+                                                           << ") before "
+                                                              "discount curve reference date ("
                                                            << referenceDate << ")");
     }
 
@@ -205,4 +207,4 @@ void DiscountingSwapEngineMultiCurve::calculate() const {
         results_.value += results_.legNPV[i];
     }
 }
-}
+} // namespace QuantExt

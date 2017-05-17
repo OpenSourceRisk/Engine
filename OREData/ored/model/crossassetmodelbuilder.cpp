@@ -16,27 +16,27 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ored/model/lgmbuilder.hpp>
-#include <ored/model/fxbsbuilder.hpp>
 #include <ored/model/crossassetmodelbuilder.hpp>
+#include <ored/model/fxbsbuilder.hpp>
+#include <ored/model/lgmbuilder.hpp>
 #include <ored/model/utilities.hpp>
-#include <ored/utilities/parsers.hpp>
 #include <ored/utilities/correlationmatrix.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/parsers.hpp>
 
-#include <qle/models/irlgm1fpiecewiseconstantparametrization.hpp>
-#include <qle/models/irlgm1fpiecewiselinearparametrization.hpp>
-#include <qle/models/irlgm1fconstantparametrization.hpp>
-#include <qle/models/irlgm1fpiecewiseconstanthullwhiteadaptor.hpp>
 #include <qle/models/fxbsconstantparametrization.hpp>
 #include <qle/models/fxbspiecewiseconstantparametrization.hpp>
-#include <qle/pricingengines/analyticlgmswaptionengine.hpp>
-#include <qle/pricingengines/analyticcclgmfxoptionengine.hpp>
 #include <qle/models/fxoptionhelper.hpp>
+#include <qle/models/irlgm1fconstantparametrization.hpp>
+#include <qle/models/irlgm1fpiecewiseconstanthullwhiteadaptor.hpp>
+#include <qle/models/irlgm1fpiecewiseconstantparametrization.hpp>
+#include <qle/models/irlgm1fpiecewiselinearparametrization.hpp>
+#include <qle/pricingengines/analyticcclgmfxoptionengine.hpp>
+#include <qle/pricingengines/analyticlgmswaptionengine.hpp>
 
 #include <ql/math/optimization/levenbergmarquardt.hpp>
-#include <ql/quotes/simplequote.hpp>
 #include <ql/models/shortrate/calibrationhelpers/swaptionhelper.hpp>
+#include <ql/quotes/simplequote.hpp>
 #include <ql/utilities/dataformatters.hpp>
 
 #include <boost/algorithm/string/case_conv.hpp>
@@ -234,5 +234,5 @@ CrossAssetModelBuilder::build(const boost::shared_ptr<CrossAssetModelData>& conf
 
     return model;
 }
-}
-}
+} // namespace data
+} // namespace ore

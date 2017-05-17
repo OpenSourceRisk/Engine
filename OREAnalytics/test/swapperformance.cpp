@@ -16,29 +16,29 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <test/swapperformance.hpp>
-#include <test/testmarket.hpp>
-#include <ored/utilities/osutils.hpp>
-#include <ored/utilities/log.hpp>
-#include <orea/cube/npvcube.hpp>
+#include <boost/timer.hpp>
 #include <orea/cube/inmemorycube.hpp>
-#include <ored/model/lgmdata.hpp>
-#include <orea/scenario/scenariosimmarketparameters.hpp>
-#include <ored/model/crossassetmodelbuilder.hpp>
-#include <orea/scenario/scenariosimmarket.hpp>
-#include <orea/scenario/simplescenariofactory.hpp>
-#include <orea/scenario/crossassetmodelscenariogenerator.hpp>
-#include <qle/methods/multipathgeneratorbase.hpp>
-#include <ql/time/date.hpp>
-#include <ql/math/randomnumbers/mt19937uniformrng.hpp>
-#include <ql/time/calendars/target.hpp>
-#include <ql/time/daycounters/actualactual.hpp>
+#include <orea/cube/npvcube.hpp>
 #include <orea/engine/all.hpp>
-#include <ored/portfolio/swap.hpp>
+#include <orea/engine/observationmode.hpp>
+#include <orea/scenario/crossassetmodelscenariogenerator.hpp>
+#include <orea/scenario/scenariosimmarket.hpp>
+#include <orea/scenario/scenariosimmarketparameters.hpp>
+#include <orea/scenario/simplescenariofactory.hpp>
+#include <ored/model/crossassetmodelbuilder.hpp>
+#include <ored/model/lgmdata.hpp>
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/portfolio.hpp>
-#include <orea/engine/observationmode.hpp>
-#include <boost/timer.hpp>
+#include <ored/portfolio/swap.hpp>
+#include <ored/utilities/log.hpp>
+#include <ored/utilities/osutils.hpp>
+#include <ql/math/randomnumbers/mt19937uniformrng.hpp>
+#include <ql/time/calendars/target.hpp>
+#include <ql/time/date.hpp>
+#include <ql/time/daycounters/actualactual.hpp>
+#include <qle/methods/multipathgeneratorbase.hpp>
+#include <test/swapperformance.hpp>
+#include <test/testmarket.hpp>
 
 using namespace std;
 using namespace QuantLib;
@@ -452,4 +452,4 @@ test_suite* SwapPerformanceTest::suite() {
     suite->add(BOOST_TEST_CASE(&SwapPerformanceTest::testSwapPerformance));
     return suite;
 }
-}
+} // namespace testsuite

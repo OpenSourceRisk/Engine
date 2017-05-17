@@ -24,9 +24,9 @@
 #pragma once
 
 #include <orea/aggregation/collateralaccount.hpp>
-#include <ql/time/date.hpp>
 #include <ql/handle.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
+#include <ql/time/date.hpp>
 
 using namespace QuantLib;
 
@@ -104,5 +104,5 @@ public:
 
 //! Convert text representation to CollateralExposureHelper::CalculationType
 CollateralExposureHelper::CalculationType parseCollateralCalculationType(const string& s);
-}
-}
+} // namespace analytics
+} // namespace ore

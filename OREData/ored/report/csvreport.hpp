@@ -24,8 +24,8 @@
 #pragma once
 
 #include <ored/report/report.hpp>
-#include <vector>
 #include <stdio.h>
+#include <vector>
 
 namespace ore {
 namespace data {
@@ -54,5 +54,5 @@ private:
     FILE* fp_;
 };
 
-}
-}
+} // namespace data
+} // namespace ore

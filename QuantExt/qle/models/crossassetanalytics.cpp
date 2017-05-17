@@ -123,5 +123,5 @@ Real fx_fx_covariance(const CrossAssetModel* x, const Size i, const Size j, cons
     return res;
 }
 
-} // namesapce crossassetanalytics
+} // namespace CrossAssetAnalytics
 } // namespace QuantExt

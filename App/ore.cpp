@@ -540,7 +540,7 @@ void writeNpv(const Parameters& params, boost::shared_ptr<Market> market, const 
              << dc.yearFraction(today, trade->maturity()) << sep;
         try {
             Real npv = trade->instrument()->NPV();
-            file << npv << sep << npvCcy << sep << npv* fx << sep << baseCurrency << endl;
+            file << npv << sep << npvCcy << sep << npv * fx << sep << baseCurrency << endl;
         } catch (std::exception& e) {
             ALOG("Exception during pricing trade " << trade->id() << ": " << e.what());
             file << "#NA" << sep << "#NA" << sep << "#NA" << sep << "#NA" << endl;
@@ -744,7 +744,8 @@ void writeXVA(const Parameters& params, boost::shared_ptr<Portfolio> portfolio,
     QL_REQUIRE(file.is_open(), "Error opening file " << fileName);
     file
         << "#TradeId,NettingSetId,CVA,DVA,FBA,FCA,COLVA,MVA,CollateralFloor,AllocatedCVA,AllocatedDVA,AllocationMethod,"
-           "BaselEPE,BaselEEPE" << endl;
+           "BaselEPE,BaselEEPE"
+        << endl;
     for (auto n : postProcess->nettingSetIds()) {
         file << "," << n << "," << postProcess->nettingSetCVA(n) << "," << postProcess->nettingSetDVA(n) << ","
              << postProcess->nettingSetFBA(n) << "," << postProcess->nettingSetFCA(n) << ","
