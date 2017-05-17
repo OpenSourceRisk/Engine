@@ -39,5 +39,5 @@ Real SimpleScenario::get(const RiskFactorKey& key) const {
     QL_REQUIRE(it != data_.end(), "Scenario does not provide data for key " << key);
     return it->second;
 }
-}
-}
+} // namespace analytics
+} // namespace ore

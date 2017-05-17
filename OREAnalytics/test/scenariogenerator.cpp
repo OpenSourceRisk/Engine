@@ -19,44 +19,43 @@
 #include <test/scenariogenerator.hpp>
 #include <test/testmarket.hpp>
 
+#include <orea/scenario/crossassetmodelscenariogenerator.hpp>
+#include <orea/scenario/lgmscenariogenerator.hpp>
+#include <orea/scenario/scenariogeneratorbuilder.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/simplescenario.hpp>
 #include <orea/scenario/simplescenariofactory.hpp>
-#include <orea/scenario/lgmscenariogenerator.hpp>
-#include <ored/model/crossassetmodelbuilder.hpp>
-#include <orea/scenario/crossassetmodelscenariogenerator.hpp>
-#include <orea/scenario/scenariogeneratorbuilder.hpp>
 #include <ored/marketdata/market.hpp>
 #include <ored/marketdata/marketimpl.hpp>
+#include <ored/model/crossassetmodelbuilder.hpp>
 #include <ored/utilities/log.hpp>
 
 #include <qle/instruments/fxforward.hpp>
-#include <qle/models/lgm.hpp>
 #include <qle/models/crossassetmodel.hpp>
 #include <qle/models/fxbspiecewiseconstantparametrization.hpp>
 #include <qle/models/irlgm1fpiecewiseconstantparametrization.hpp>
-#include <qle/pricingengines/discountingswapenginemulticurve.hpp>
-#include <qle/pricingengines/discountingfxforwardengine.hpp>
+#include <qle/models/lgm.hpp>
 #include <qle/pricingengines/analyticcclgmfxoptionengine.hpp>
 #include <qle/pricingengines/analyticlgmswaptionengine.hpp>
+#include <qle/pricingengines/discountingfxforwardengine.hpp>
+#include <qle/pricingengines/discountingswapenginemulticurve.hpp>
 
-#include <ql/currencies/europe.hpp>
 #include <ql/currencies/america.hpp>
+#include <ql/currencies/europe.hpp>
+#include <ql/indexes/ibor/all.hpp>
 #include <ql/indexes/swap/euriborswap.hpp>
 #include <ql/indexes/swap/usdliborswap.hpp>
-#include <ql/instruments/makevanillaswap.hpp>
 #include <ql/instruments/makeswaption.hpp>
+#include <ql/instruments/makevanillaswap.hpp>
 #include <ql/math/statistics/incrementalstatistics.hpp>
 #include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
+#include <ql/quotes/simplequote.hpp>
+#include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
+#include <ql/termstructures/volatility/swaption/swaptionconstantvol.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 #include <ql/time/daycounters/thirty360.hpp>
-#include <ql/quotes/simplequote.hpp>
-#include <ql/termstructures/yield/flatforward.hpp>
-#include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
-#include <ql/termstructures/volatility/swaption/swaptionconstantvol.hpp>
-#include <ql/indexes/ibor/all.hpp>
 
 #include <boost/timer.hpp>
 
@@ -1104,4 +1103,4 @@ test_suite* ScenarioGeneratorTest::suite() {
     suite->add(BOOST_TEST_CASE(&ScenarioGeneratorTest::testFxForwardExposureZeroIrVol));
     return suite;
 }
-}
+} // namespace testsuite

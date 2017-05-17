@@ -1142,7 +1142,7 @@ void StabilisedGLLSTest::test2DRegression() {
             p[1] = x1;
             Real yn = 0.0;
             for (Size i = 0; i < basis.size(); ++i) {
-                yn += basis[i](p)*m2.coefficients()[i];
+                yn += basis[i](p) * m2.coefficients()[i];
             }
             Real ys = m.eval(p, basis);
             if (std::abs((ys - yn) / yn) > tol)
@@ -1166,4 +1166,4 @@ test_suite* StabilisedGLLSTest::suite() {
     suite->add(BOOST_TEST_CASE(&StabilisedGLLSTest::test2DRegression));
     return suite;
 }
-}
+} // namespace testsuite

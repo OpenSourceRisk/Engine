@@ -411,5 +411,5 @@ void ReportWriter::writeNettingSetColva(ore::data::Report& report, boost::shared
     }
     report.end();
 }
-}
-}
+} // namespace analytics
+} // namespace ore

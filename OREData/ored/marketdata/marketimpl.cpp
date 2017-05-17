@@ -16,13 +16,13 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/algorithm/string.hpp>
+#include <boost/make_shared.hpp>
 #include <ored/configuration/conventions.hpp>
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/utilities/indexparser.hpp>
-#include <qle/termstructures/blackinvertedvoltermstructure.hpp>
-#include <boost/algorithm/string.hpp>
-#include <boost/make_shared.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <qle/termstructures/blackinvertedvoltermstructure.hpp>
 
 using namespace QuantLib;
 using namespace std;
@@ -39,8 +39,8 @@ template <class A, class B> A lookup(const B& map, const string& key, const stri
     if (it == map.end()) {
         // fall back to default configuration
         it = map.find(make_pair(Market::defaultConfiguration, key));
-        QL_REQUIRE(it != map.end(), "did not find object " << key << " of type " << type << " under configuration "
-                                                           << configuration);
+        QL_REQUIRE(it != map.end(),
+                   "did not find object " << key << " of type " << type << " under configuration " << configuration);
     }
     return it->second;
 }
@@ -79,8 +79,8 @@ Handle<Quote> MarketImpl::fxSpot(const string& ccypair, const string& configurat
     auto it = fxSpots_.find(configuration);
     if (it == fxSpots_.end())
         it = fxSpots_.find(Market::defaultConfiguration);
-    QL_REQUIRE(it != fxSpots_.end(), "did not find object " << ccypair << " of type fx spot under configuration "
-                                                            << configuration);
+    QL_REQUIRE(it != fxSpots_.end(),
+               "did not find object " << ccypair << " of type fx spot under configuration " << configuration);
     return it->second.getQuote(ccypair); // will throw if not found
 }
 

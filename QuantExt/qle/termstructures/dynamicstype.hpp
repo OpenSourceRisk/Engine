@@ -78,6 +78,6 @@ inline std::ostream& operator<<(std::ostream& out, const YieldCurveRollDown& t) 
     }
 }
 
-} // namesapce QuantExt
+} // namespace QuantExt
 
 #endif

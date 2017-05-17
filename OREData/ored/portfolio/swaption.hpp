@@ -23,9 +23,9 @@
 
 #pragma once
 
-#include <ored/portfolio/trade.hpp>
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/optiondata.hpp>
+#include <ored/portfolio/trade.hpp>
 
 #include <ql/instruments/nonstandardswap.hpp>
 
@@ -70,5 +70,5 @@ private:
                                                                     const boost::shared_ptr<Swap>&,
                                                                     const std::vector<Date>&);
 };
-}
-}
+} // namespace data
+} // namespace ore

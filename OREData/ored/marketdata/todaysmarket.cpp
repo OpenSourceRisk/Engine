@@ -21,20 +21,20 @@
     \ingroup
 */
 
-#include <ored/marketdata/todaysmarket.hpp>
+#include <ored/marketdata/capfloorvolcurve.hpp>
+#include <ored/marketdata/curveloader.hpp>
 #include <ored/marketdata/curvespecparser.hpp>
 #include <ored/marketdata/defaultcurve.hpp>
-#include <ored/marketdata/fxspot.hpp>
-#include <ored/marketdata/fxvolcurve.hpp>
-#include <ored/marketdata/swaptionvolcurve.hpp>
-#include <ored/marketdata/yieldcurve.hpp>
-#include <ored/marketdata/securityspread.hpp>
-#include <ored/marketdata/curveloader.hpp>
-#include <ored/utilities/log.hpp>
-#include <ored/utilities/indexparser.hpp>
-#include <ored/marketdata/capfloorvolcurve.hpp>
 #include <ored/marketdata/equitycurve.hpp>
 #include <ored/marketdata/equityvolcurve.hpp>
+#include <ored/marketdata/fxspot.hpp>
+#include <ored/marketdata/fxvolcurve.hpp>
+#include <ored/marketdata/securityspread.hpp>
+#include <ored/marketdata/swaptionvolcurve.hpp>
+#include <ored/marketdata/todaysmarket.hpp>
+#include <ored/marketdata/yieldcurve.hpp>
+#include <ored/utilities/indexparser.hpp>
+#include <ored/utilities/log.hpp>
 
 using namespace std;
 using namespace QuantLib;
@@ -397,5 +397,5 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
     } // loop over configurations
 
 } // CTOR
-} // namesapce marketdata
+} // namespace data
 } // namespace ore

@@ -54,5 +54,5 @@ class CLFCurrency : public Currency {
 public:
     CLFCurrency();
 };
-}
+} // namespace QuantExt
 #endif

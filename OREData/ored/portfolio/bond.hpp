@@ -18,15 +18,15 @@
 
 #pragma once
 
-#include <ored/portfolio/trade.hpp>
 #include <ored/portfolio/legdata.hpp>
+#include <ored/portfolio/trade.hpp>
 
 namespace ore {
 namespace data {
 
 class Bond : public Trade {
 public:
-    //!Default constructor
+    //! Default constructor
     Bond() : Trade("Bond"), zeroBond_(false) {}
 
     //! Constructor
@@ -73,5 +73,5 @@ private:
     string currency_;
     bool zeroBond_;
 };
-}
-}
+} // namespace data
+} // namespace ore

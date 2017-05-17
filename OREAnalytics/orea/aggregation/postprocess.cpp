@@ -28,8 +28,8 @@
 #include <ql/methods/montecarlo/lsmbasissystem.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 
-#include <qle/math/stabilisedglls.hpp>
 #include <qle/math/nadarayawatson.hpp>
+#include <qle/math/stabilisedglls.hpp>
 
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/error_of_mean.hpp>
@@ -1013,44 +1013,44 @@ const vector<Real>& PostProcess::tradePFE(const string& tradeId) {
 }
 
 const vector<Real>& PostProcess::netEPE(const string& nettingSetId) {
-    QL_REQUIRE(netEPE_.find(nettingSetId) != netEPE_.end(), "Netting set " << nettingSetId
-                                                                           << " not found in exposure map");
+    QL_REQUIRE(netEPE_.find(nettingSetId) != netEPE_.end(),
+               "Netting set " << nettingSetId << " not found in exposure map");
     return netEPE_[nettingSetId];
 }
 
 const vector<Real>& PostProcess::netENE(const string& nettingSetId) {
-    QL_REQUIRE(netENE_.find(nettingSetId) != netENE_.end(), "Netting set " << nettingSetId
-                                                                           << " not found in exposure map");
+    QL_REQUIRE(netENE_.find(nettingSetId) != netENE_.end(),
+               "Netting set " << nettingSetId << " not found in exposure map");
     return netENE_[nettingSetId];
 }
 
 const vector<Real>& PostProcess::netEE_B(const string& nettingSetId) {
-    QL_REQUIRE(netEE_B_.find(nettingSetId) != netEE_B_.end(), "Netting set " << nettingSetId
-                                                                             << " not found in exposure map");
+    QL_REQUIRE(netEE_B_.find(nettingSetId) != netEE_B_.end(),
+               "Netting set " << nettingSetId << " not found in exposure map");
     return netEE_B_[nettingSetId];
 }
 
 const Real& PostProcess::netEPE_B(const string& nettingSetId) {
-    QL_REQUIRE(netEPE_B_.find(nettingSetId) != netEPE_B_.end(), "Netting set " << nettingSetId
-                                                                               << " not found in exposure map");
+    QL_REQUIRE(netEPE_B_.find(nettingSetId) != netEPE_B_.end(),
+               "Netting set " << nettingSetId << " not found in exposure map");
     return netEPE_B_[nettingSetId];
 }
 
 const vector<Real>& PostProcess::netEEE_B(const string& nettingSetId) {
-    QL_REQUIRE(netEEE_B_.find(nettingSetId) != netEEE_B_.end(), "Netting set " << nettingSetId
-                                                                               << " not found in exposure map");
+    QL_REQUIRE(netEEE_B_.find(nettingSetId) != netEEE_B_.end(),
+               "Netting set " << nettingSetId << " not found in exposure map");
     return netEEE_B_[nettingSetId];
 }
 
 const Real& PostProcess::netEEPE_B(const string& nettingSetId) {
-    QL_REQUIRE(netEEPE_B_.find(nettingSetId) != netEEPE_B_.end(), "Netting set " << nettingSetId
-                                                                                 << " not found in exposure map");
+    QL_REQUIRE(netEEPE_B_.find(nettingSetId) != netEEPE_B_.end(),
+               "Netting set " << nettingSetId << " not found in exposure map");
     return netEEPE_B_[nettingSetId];
 }
 
 const vector<Real>& PostProcess::netPFE(const string& nettingSetId) {
-    QL_REQUIRE(netPFE_.find(nettingSetId) != netPFE_.end(), "Netting set " << nettingSetId
-                                                                           << " not found in net PFE map");
+    QL_REQUIRE(netPFE_.find(nettingSetId) != netPFE_.end(),
+               "Netting set " << nettingSetId << " not found in net PFE map");
     return netPFE_[nettingSetId];
 }
 
@@ -1061,8 +1061,8 @@ const vector<Real>& PostProcess::expectedCollateral(const string& nettingSetId) 
 }
 
 const vector<Real>& PostProcess::colvaIncrements(const string& nettingSetId) {
-    QL_REQUIRE(colvaInc_.find(nettingSetId) != colvaInc_.end(), "Netting set " << nettingSetId
-                                                                               << " not found in colvaInc map");
+    QL_REQUIRE(colvaInc_.find(nettingSetId) != colvaInc_.end(),
+               "Netting set " << nettingSetId << " not found in colvaInc map");
     return colvaInc_[nettingSetId];
 }
 
@@ -1073,14 +1073,14 @@ const vector<Real>& PostProcess::collateralFloorIncrements(const string& netting
 }
 
 const vector<Real>& PostProcess::allocatedTradeEPE(const string& tradeId) {
-    QL_REQUIRE(allocatedTradeEPE_.find(tradeId) != allocatedTradeEPE_.end(), "Trade " << tradeId
-                                                                                      << " not found in exposure map");
+    QL_REQUIRE(allocatedTradeEPE_.find(tradeId) != allocatedTradeEPE_.end(),
+               "Trade " << tradeId << " not found in exposure map");
     return allocatedTradeEPE_[tradeId];
 }
 
 const vector<Real>& PostProcess::allocatedTradeENE(const string& tradeId) {
-    QL_REQUIRE(allocatedTradeENE_.find(tradeId) != allocatedTradeENE_.end(), "Trade " << tradeId
-                                                                                      << " not found in exposure map");
+    QL_REQUIRE(allocatedTradeENE_.find(tradeId) != allocatedTradeENE_.end(),
+               "Trade " << tradeId << " not found in exposure map");
     return allocatedTradeENE_[tradeId];
 }
 
@@ -1212,8 +1212,8 @@ void PostProcess::performT0DimCalc() {
         boost::shared_ptr<NettingSetDefinition> nettingObj = nettingSetManager_->get(key);
         vector<Real> t0_dist = it_map->second[relevantDateIdx];
         Size dist_size = t0_dist.size();
-        QL_REQUIRE(dist_size == cube_->samples(), "T0 IM - cube samples size mismatch - " << dist_size << ", "
-                                                                                          << cube_->samples());
+        QL_REQUIRE(dist_size == cube_->samples(),
+                   "T0 IM - cube samples size mismatch - " << dist_size << ", " << cube_->samples());
         Real mean_t0_dist = std::accumulate(t0_dist.begin(), t0_dist.end(), 0.0);
         mean_t0_dist /= dist_size;
         vector<Real> t0_delMtM_dist(dist_size, 0.0);
@@ -1292,7 +1292,7 @@ bool lessThan(const Array& a, const Array& b) {
 }
 
 void PostProcess::exportDimRegression(const std::string& nettingSet, const std::vector<Size>& timeSteps,
-    const std::vector<boost::shared_ptr<ore::data::Report> >& dimRegReports) {
+                                      const std::vector<boost::shared_ptr<ore::data::Report>>& dimRegReports) {
 
     QL_REQUIRE(dimRegReports.size() == timeSteps.size(),
                "number of file names (" << dimRegReports.size() << ") does not match number of time steps ("
@@ -1361,5 +1361,5 @@ void PostProcess::exportDimRegression(const std::string& nettingSet, const std::
         LOG("Exporting DIM by Sample done for");
     }
 }
-}
-}
+} // namespace analytics
+} // namespace ore

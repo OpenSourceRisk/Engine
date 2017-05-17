@@ -23,12 +23,12 @@
 
 #pragma once
 
-#include <ored/utilities/parsers.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/schedule.hpp>
+#include <ored/utilities/parsers.hpp>
 
-#include <ql/indexes/iborindex.hpp>
 #include <ql/cashflow.hpp>
+#include <ql/indexes/iborindex.hpp>
 
 #include <vector>
 
@@ -267,5 +267,5 @@ vector<double> normaliseToSchedule(const vector<double>& values, const Schedule&
 // normaliseToSchedule concat buildScheduledVector
 vector<double> buildScheduledVectorNormalised(const vector<double>& values, const vector<string>& dates,
                                               const Schedule& schedule, const Real defaultValue = Null<Real>());
-}
-}
+} // namespace data
+} // namespace ore

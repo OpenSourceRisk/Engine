@@ -53,5 +53,5 @@ private:
     Size i_;
     const char sep_;
 };
-}
-}
+} // namespace analytics
+} // namespace ore

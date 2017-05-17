@@ -24,9 +24,9 @@
 #pragma once
 
 #include <ored/marketdata/market.hpp>
-#include <ored/utilities/xmlutils.hpp>
-#include <ored/utilities/parsers.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/parsers.hpp>
+#include <ored/utilities/xmlutils.hpp>
 
 using std::vector;
 using std::string;
@@ -446,4 +446,4 @@ inline void TodaysMarketParameters::addSecuritySpreads(const string& id, const m
 }
 
 } // namespace data
-} // namesapce ore
+} // namespace ore

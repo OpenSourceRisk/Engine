@@ -33,7 +33,7 @@ struct CcyTestData {
     string code;
     int numCode;
 };
-}
+} // namespace
 
 namespace testsuite {
 
@@ -77,4 +77,4 @@ test_suite* CurrencyTest::suite() {
     suite->add(BOOST_TEST_CASE(&CurrencyTest::testCurrency));
     return suite;
 }
-}
+} // namespace testsuite

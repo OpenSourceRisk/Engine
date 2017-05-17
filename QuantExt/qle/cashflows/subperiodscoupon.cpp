@@ -16,13 +16,13 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ql/time/schedule.hpp>
 #include <ql/indexes/interestrateindex.hpp>
+#include <ql/time/schedule.hpp>
 #include <ql/utilities/vectors.hpp>
 
+#include <qle/cashflows/couponpricer.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp>
 #include <qle/cashflows/subperiodscouponpricer.hpp>
-#include <qle/cashflows/couponpricer.hpp>
 
 using namespace QuantLib;
 
@@ -159,7 +159,7 @@ SubPeriodsLeg::operator Leg() const {
     }
 
     Size numPeriods = schedule_.size() - 1;
-    if(numPeriods == 0)
+    if (numPeriods == 0)
         return cashflows;
 
     startDate = schedule_.date(0);
@@ -189,4 +189,4 @@ SubPeriodsLeg::operator Leg() const {
 
     return cashflows;
 }
-}
+} // namespace QuantExt

@@ -21,8 +21,8 @@
 #include <ql/math/interpolations/linearinterpolation.hpp>
 #include <ql/termstructures/volatility/interpolatedsmilesection.hpp>
 
-#include <boost/make_shared.hpp>
 #include <algorithm>
+#include <boost/make_shared.hpp>
 
 using std::min;
 using std::max;
@@ -96,4 +96,4 @@ Date DatedStrippedOptionletAdapter::maxDate() const { return optionletStripper_-
 VolatilityType DatedStrippedOptionletAdapter::volatilityType() const { return optionletStripper_->volatilityType(); }
 
 Real DatedStrippedOptionletAdapter::displacement() const { return optionletStripper_->displacement(); }
-}
+} // namespace QuantExt

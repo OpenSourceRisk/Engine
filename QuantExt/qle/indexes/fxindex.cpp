@@ -30,8 +30,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/indexes/fxindex.hpp>
 #include <ql/currencies/exchangeratemanager.hpp>
+#include <qle/indexes/fxindex.hpp>
 namespace QuantExt {
 
 FxIndex::FxIndex(const std::string& familyName, Natural fixingDays, const Currency& source, const Currency& target,
@@ -131,4 +131,4 @@ Real FxIndex::forecastFixing(const Date& fixingDate) const {
     return forward;
 }
 
-} // namespace QuantLib
+} // namespace QuantExt

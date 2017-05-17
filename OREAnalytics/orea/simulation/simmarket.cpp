@@ -20,4 +20,4 @@
 
 namespace ore {
 namespace analytics {}
-}
+} // namespace ore

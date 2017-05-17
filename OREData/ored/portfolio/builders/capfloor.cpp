@@ -19,8 +19,8 @@
 #include <ored/portfolio/builders/capfloor.hpp>
 #include <ored/utilities/log.hpp>
 
-#include <ql/pricingengines/capfloor/blackcapfloorengine.hpp>
 #include <ql/pricingengines/capfloor/bacheliercapfloorengine.hpp>
+#include <ql/pricingengines/capfloor/blackcapfloorengine.hpp>
 
 #include <boost/make_shared.hpp>
 
@@ -48,5 +48,5 @@ boost::shared_ptr<PricingEngine> CapFloorEngineBuilder::engineImpl(const Currenc
         break;
     }
 }
-}
-}
+} // namespace data
+} // namespace ore

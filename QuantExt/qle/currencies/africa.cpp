@@ -48,4 +48,4 @@ MADCurrency::MADCurrency() {
         new Data("Moroccan dirham", "MAD", 504, "MAD", "", 100, Rounding(), "1$.2f %3%"));
     data_ = madData;
 }
-}
+} // namespace QuantExt

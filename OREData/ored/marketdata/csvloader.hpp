@@ -23,8 +23,8 @@
 
 #pragma once
 
-#include <ored/marketdata/loader.hpp>
 #include <map>
+#include <ored/marketdata/loader.hpp>
 
 namespace ore {
 namespace data {
@@ -65,5 +65,5 @@ private:
     std::map<QuantLib::Date, std::vector<boost::shared_ptr<MarketDatum>>> data_;
     std::vector<Fixing> fixings_;
 };
-}
-}
+} // namespace data
+} // namespace ore

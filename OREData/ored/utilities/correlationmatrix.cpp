@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ored/utilities/correlationmatrix.hpp>
 #include <boost/algorithm/string.hpp>
+#include <ored/utilities/correlationmatrix.hpp>
 
 using namespace std;
 
@@ -233,8 +233,8 @@ void CorrelationMatrixBuilder::checkMatrix(const Matrix& m) {
     for (Size i = 0; i < m.rows(); i++) {
         for (Size j = 0; j < i; j++) {
             QL_REQUIRE(m[i][j] == m[j][i], "Error, matrix is not symmetric at [" << i << "," << j << "]");
-            QL_REQUIRE(m[i][j] >= -1.0 && m[i][j] <= 1.0, "Error, invalid correlation value" << m[i][j] << " at [" << i
-                                                                                             << "," << j << "]");
+            QL_REQUIRE(m[i][j] >= -1.0 && m[i][j] <= 1.0,
+                       "Error, invalid correlation value" << m[i][j] << " at [" << i << "," << j << "]");
         }
     }
 }
@@ -343,5 +343,5 @@ Real CorrelationMatrixBuilder::lookup(const string& f1, const string& f2) {
     // default.
     return 0.0;
 }
-}
-}
+} // namespace data
+} // namespace ore

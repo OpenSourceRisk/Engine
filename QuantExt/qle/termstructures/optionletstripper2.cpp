@@ -183,4 +183,4 @@ Real OptionletStripper2::ObjectiveFunction::operator()(Volatility s) const {
         spreadQuote_->setValue(s);
     return cap_->NPV() - targetValue_;
 }
-}
+} // namespace QuantExt

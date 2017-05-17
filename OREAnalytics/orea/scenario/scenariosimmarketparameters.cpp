@@ -17,8 +17,8 @@
 */
 
 #include <orea/scenario/scenariosimmarketparameters.hpp>
-#include <ored/utilities/xmlutils.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/xmlutils.hpp>
 
 #include <boost/lexical_cast.hpp>
 
@@ -190,5 +190,5 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
 
     return marketNode;
 }
-}
-}
+} // namespace analytics
+} // namespace ore

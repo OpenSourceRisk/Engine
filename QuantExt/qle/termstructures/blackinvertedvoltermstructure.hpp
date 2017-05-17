@@ -101,6 +101,6 @@ inline void BlackInvertedVolTermStructure::accept(AcyclicVisitor& v) {
     else
         BlackInvertedVolTermStructure::accept(v);
 }
-}
+} // namespace QuantExt
 
 #endif

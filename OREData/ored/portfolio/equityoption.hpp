@@ -23,8 +23,8 @@
 
 #pragma once
 
-#include <ored/portfolio/trade.hpp>
 #include <ored/portfolio/optiondata.hpp>
+#include <ored/portfolio/trade.hpp>
 
 using std::string;
 
@@ -68,5 +68,5 @@ private:
     double strike_;
     double quantity_;
 };
-}
-}
+} // namespace data
+} // namespace ore

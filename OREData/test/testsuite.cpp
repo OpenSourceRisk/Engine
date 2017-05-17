@@ -21,8 +21,8 @@
     \ingroup
 */
 
-#include <iostream>
 #include <iomanip>
+#include <iostream>
 using namespace std;
 
 // Boost
@@ -30,16 +30,15 @@ using namespace std;
 using namespace boost;
 
 // Boost.Test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/parameterized_test.hpp>
 #include <boost/test/test_tools.hpp>
 #include <boost/test/unit_test.hpp>
-#include <boost/test/parameterized_test.hpp>
 using boost::unit_test::test_suite;
 
 #ifdef BOOST_MSVC
+#include <ored/auto_link.hpp>
 #include <ql/auto_link.hpp>
 #include <qle/auto_link.hpp>
-#include <ored/auto_link.hpp>
 #define BOOST_LIB_NAME boost_date_time
 #include <boost/config/auto_link.hpp>
 #define BOOST_LIB_NAME boost_serialization
@@ -49,22 +48,22 @@ using boost::unit_test::test_suite;
 #endif
 
 // Lib test suites
+#include "bond.hpp"
 #include "calendars.hpp"
-#include "fxoption.hpp"
 #include "ccyswapwithresets.hpp"
-#include "fxtriangulation.hpp"
-#include "indices.hpp"
-#include "parser.hpp"
-#include "xmlmanipulation.hpp"
-#include "schedule.hpp"
-#include "legdata.hpp"
-#include "todaysmarket.hpp"
-#include "fxswap.hpp"
-#include "yieldcurve.hpp"
 #include "crossassetmodeldata.hpp"
 #include "equitymarketdata.hpp"
 #include "equitytrades.hpp"
-#include "bond.hpp"
+#include "fxoption.hpp"
+#include "fxswap.hpp"
+#include "fxtriangulation.hpp"
+#include "indices.hpp"
+#include "legdata.hpp"
+#include "parser.hpp"
+#include "schedule.hpp"
+#include "todaysmarket.hpp"
+#include "xmlmanipulation.hpp"
+#include "yieldcurve.hpp"
 
 namespace {
 
@@ -84,7 +83,7 @@ void stopTimer() {
         cout << minutes << " m ";
     cout << fixed << setprecision(0) << seconds << " s" << endl << endl;
 }
-}
+} // namespace
 
 test_suite* init_unit_test_suite(int, char* []) {
 

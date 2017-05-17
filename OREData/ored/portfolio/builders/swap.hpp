@@ -23,13 +23,13 @@
 
 #pragma once
 
-#include <ored/portfolio/enginefactory.hpp>
-#include <ored/portfolio/builders/cachingenginebuilder.hpp>
-#include <ored/utilities/log.hpp>
-#include <qle/pricingengines/discountingswapenginemulticurve.hpp>
-#include <qle/pricingengines/discountingcurrencyswapengine.hpp>
-#include <ql/pricingengines/swap/discountingswapengine.hpp>
 #include <boost/make_shared.hpp>
+#include <ored/portfolio/builders/cachingenginebuilder.hpp>
+#include <ored/portfolio/enginefactory.hpp>
+#include <ored/utilities/log.hpp>
+#include <ql/pricingengines/swap/discountingswapengine.hpp>
+#include <qle/pricingengines/discountingcurrencyswapengine.hpp>
+#include <qle/pricingengines/discountingswapenginemulticurve.hpp>
 
 namespace ore {
 namespace data {
@@ -69,8 +69,7 @@ protected:
 */
 class SwapEngineBuilderOptimised : public SwapEngineBuilderBase {
 public:
-    SwapEngineBuilderOptimised()
-        : SwapEngineBuilderBase("DiscountedCashflows", "DiscountingSwapEngineOptimised") {}
+    SwapEngineBuilderOptimised() : SwapEngineBuilderBase("DiscountedCashflows", "DiscountingSwapEngineOptimised") {}
 
 protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& ccy) override {

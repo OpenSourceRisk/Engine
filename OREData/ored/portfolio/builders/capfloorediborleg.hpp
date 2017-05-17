@@ -23,8 +23,8 @@
 
 #pragma once
 
-#include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
+#include <ored/portfolio/enginefactory.hpp>
 
 #include <ql/cashflows/couponpricer.hpp>
 
@@ -43,5 +43,5 @@ protected:
     virtual string keyImpl(const Currency& ccy) override { return ccy.code(); }
     virtual boost::shared_ptr<FloatingRateCouponPricer> engineImpl(const Currency& ccy) override;
 };
-}
-}
+} // namespace data
+} // namespace ore

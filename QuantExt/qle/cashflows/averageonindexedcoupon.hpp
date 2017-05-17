@@ -35,7 +35,7 @@ namespace QuantExt {
 
 //! average overnight coupon pricer
 /*! \ingroup cashflows
-*/
+ */
 class AverageONIndexedCouponPricer;
 
 //! average overnight coupon
@@ -83,7 +83,7 @@ private:
 
 //! helper class building a sequence of overnight coupons
 /*! \ingroup cashflows
-*/
+ */
 class AverageONLeg {
 public:
     AverageONLeg(const Schedule& schedule, const boost::shared_ptr<OvernightIndex>& overnightIndex);

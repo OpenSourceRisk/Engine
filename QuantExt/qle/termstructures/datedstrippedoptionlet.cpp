@@ -85,8 +85,8 @@ void DatedStrippedOptionlet::checkInputs() const {
 }
 
 const vector<Rate>& DatedStrippedOptionlet::optionletStrikes(Size i) const {
-    QL_REQUIRE(i < optionletStrikes_.size(), "index (" << i << ") must be less than optionletStrikes size ("
-                                                       << optionletStrikes_.size() << ")");
+    QL_REQUIRE(i < optionletStrikes_.size(),
+               "index (" << i << ") must be less than optionletStrikes size (" << optionletStrikes_.size() << ")");
     return optionletStrikes_[i];
 }
 
@@ -115,4 +115,4 @@ BusinessDayConvention DatedStrippedOptionlet::businessDayConvention() const { re
 VolatilityType DatedStrippedOptionlet::volatilityType() const { return type_; }
 
 Real DatedStrippedOptionlet::displacement() const { return displacement_; }
-}
+} // namespace QuantExt

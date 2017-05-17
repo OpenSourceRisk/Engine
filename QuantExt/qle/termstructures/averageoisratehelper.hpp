@@ -87,6 +87,6 @@ protected:
     Handle<YieldTermStructure> discountHandle_;
     RelinkableHandle<YieldTermStructure> discountRelinkableHandle_;
 };
-}
+} // namespace QuantExt
 
 #endif

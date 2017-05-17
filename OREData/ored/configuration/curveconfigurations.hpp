@@ -23,14 +23,14 @@
 
 #pragma once
 
-#include <ored/utilities/xmlutils.hpp>
-#include <ored/configuration/defaultcurveconfig.hpp>
-#include <ored/configuration/yieldcurveconfig.hpp>
-#include <ored/configuration/fxvolcurveconfig.hpp>
-#include <ored/configuration/swaptionvolcurveconfig.hpp>
 #include <ored/configuration/capfloorvolcurveconfig.hpp>
+#include <ored/configuration/defaultcurveconfig.hpp>
 #include <ored/configuration/equitycurveconfig.hpp>
 #include <ored/configuration/equityvolcurveconfig.hpp>
+#include <ored/configuration/fxvolcurveconfig.hpp>
+#include <ored/configuration/swaptionvolcurveconfig.hpp>
+#include <ored/configuration/yieldcurveconfig.hpp>
+#include <ored/utilities/xmlutils.hpp>
 
 using ore::data::XMLSerializable;
 using ore::data::XMLNode;
@@ -98,5 +98,5 @@ private:
     std::map<std::string, boost::shared_ptr<EquityCurveConfig>> equityCurveConfigs_;
     std::map<std::string, boost::shared_ptr<EquityVolatilityCurveConfig>> equityVolCurveConfigs_;
 };
-}
-}
+} // namespace data
+} // namespace ore

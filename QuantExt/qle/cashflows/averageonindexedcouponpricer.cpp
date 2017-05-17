@@ -60,8 +60,8 @@ Rate AverageONIndexedCouponPricer::swapletRate() const {
         // Use Takada approximation (2011) for forecasting.
         if (i < numPeriods) {
             Handle<YieldTermStructure> projectionCurve = overnightIndex_->forwardingTermStructure();
-            QL_REQUIRE(!projectionCurve.empty(), "Null term structure set to this instance of "
-                                                     << overnightIndex_->name());
+            QL_REQUIRE(!projectionCurve.empty(),
+                       "Null term structure set to this instance of " << overnightIndex_->name());
 
             Date startForecast = coupon_->valueDates()[i];
             Date endForecast = coupon_->valueDates()[numPeriods];

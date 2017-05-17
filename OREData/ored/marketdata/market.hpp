@@ -23,14 +23,14 @@
 
 #pragma once
 
-#include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/indexes/iborindex.hpp>
 #include <ql/indexes/swapindex.hpp>
-#include <ql/termstructures/volatility/swaption/swaptionvolstructure.hpp>
-#include <ql/termstructures/volatility/optionlet/optionletvolatilitystructure.hpp>
-#include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
-#include <ql/termstructures/defaulttermstructure.hpp>
 #include <ql/quote.hpp>
+#include <ql/termstructures/defaulttermstructure.hpp>
+#include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
+#include <ql/termstructures/volatility/optionlet/optionletvolatilitystructure.hpp>
+#include <ql/termstructures/volatility/swaption/swaptionvolstructure.hpp>
+#include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/time/date.hpp>
 
 using namespace QuantLib;
@@ -124,5 +124,5 @@ public:
                                          const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 };
-}
-}
+} // namespace data
+} // namespace ore

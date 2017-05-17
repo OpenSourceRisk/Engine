@@ -236,5 +236,5 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
     }
     return scenarios;
 }
-}
-}
+} // namespace analytics
+} // namespace ore

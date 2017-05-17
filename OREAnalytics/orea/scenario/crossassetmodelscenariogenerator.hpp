@@ -23,17 +23,17 @@
 
 #pragma once
 
-#include <ored/marketdata/market.hpp>
-#include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariofactory.hpp>
+#include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/simulation/dategrid.hpp>
+#include <ored/marketdata/market.hpp>
 
-#include <qle/models/crossassetmodel.hpp>
-#include <qle/models/crossassetmodelimpliedfxvoltermstructure.hpp>
-#include <qle/models/crossassetmodelimpliedeqvoltermstructure.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
+#include <qle/models/crossassetmodel.hpp>
+#include <qle/models/crossassetmodelimpliedeqvoltermstructure.hpp>
+#include <qle/models/crossassetmodelimpliedfxvoltermstructure.hpp>
 
 namespace ore {
 using namespace data;
@@ -79,5 +79,5 @@ private:
     std::vector<boost::shared_ptr<QuantExt::CrossAssetModelImpliedFxVolTermStructure>> fxVols_;
     std::vector<boost::shared_ptr<QuantExt::CrossAssetModelImpliedEqVolTermStructure>> eqVols_;
 };
-}
-}
+} // namespace analytics
+} // namespace ore

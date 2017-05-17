@@ -23,8 +23,8 @@
 
 #pragma once
 
-#include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
+#include <ored/portfolio/enginefactory.hpp>
 
 namespace ore {
 namespace data {
@@ -42,5 +42,5 @@ protected:
 
     virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& ccy) override;
 };
-}
-}
+} // namespace data
+} // namespace ore

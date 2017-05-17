@@ -64,5 +64,5 @@ private:
     std::vector<boost::shared_ptr<Index>> indices_;
     std::map<std::string, std::vector<Date>> fixingMap_;
 };
-}
-}
+} // namespace analytics
+} // namespace ore

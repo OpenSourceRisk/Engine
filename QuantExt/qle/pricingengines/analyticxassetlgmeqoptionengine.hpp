@@ -25,8 +25,8 @@
 #ifndef quantext_xassetlgm_eqoptionengine_hpp
 #define quantext_xassetlgm_eqoptionengine_hpp
 
-#include <qle/models/crossassetmodel.hpp>
 #include <ql/instruments/vanillaoption.hpp>
+#include <qle/models/crossassetmodel.hpp>
 
 namespace QuantExt {
 

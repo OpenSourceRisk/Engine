@@ -48,5 +48,5 @@ template <class T> std::string to_string(const T& t) {
     oss << t;
     return oss.str();
 }
-}
-}
+} // namespace data
+} // namespace ore
