@@ -86,7 +86,7 @@ public:
     //@}
     //! \name Inspectors
     //@{
-    const std::vector<Real>& underlyingNotionals() const;
+    const std::vector<Real>& underlyingNotionals() const { return underlyingNotionals_; }
     //@}
 
     //@}

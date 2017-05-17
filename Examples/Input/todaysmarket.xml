@@ -166,7 +166,7 @@
   </DefaultCurves>
   <!-- cds vol definition -->
   <CDSVolatilities id="default">
-   <CDSVolatility name="CPTY_A">CDSVolatility/CDXIG</CDSVolatility>
+   <CDSVolatility name="BANK">CDSVolatility/CDXIG</CDSVolatility>
   </CDSVolatilities>
   <!-- base correlation definition -->
   <BaseCorrelations id="default">

@@ -101,6 +101,8 @@
     <ModelParameters/>
     <Engine>BlackIndexCdsOptionEngine</Engine>
     <EngineParameters>
+      <!-- this is only affecting the FE protection, for the underlying the Curve -->
+      <!-- parameter of the IndexCreditDefaultSwap is used -->
       <Parameter name="Curve">Underlying</Parameter> <!-- Underlying or Index -->
     </EngineParameters>
   </Product>

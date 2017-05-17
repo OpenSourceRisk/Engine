@@ -86,7 +86,7 @@ Real MidPointIndexCdsEngine::recoveryRate() const {
         return recoveryRate_;
     Real sum = 0.0, sumNotional = 0.0;
     for (Size i = 0; i < underlyingProbability_.size(); ++i) {
-        sum += underlyingRecoveryRate_[i];
+        sum += underlyingRecoveryRate_[i] * arguments_.underlyingNotionals[i];
         sumNotional += arguments_.underlyingNotionals[i];
     }
     return sum / sumNotional;

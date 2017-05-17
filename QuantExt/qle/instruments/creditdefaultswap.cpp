@@ -227,6 +227,12 @@ Real CreditDefaultSwap::upfrontNPV() const {
     return upfrontNPV_;
 }
 
+Real CreditDefaultSwap::accrualRebateNPV() const {
+    calculate();
+    QL_REQUIRE(accrualRebateNPV_ != Null<Real>(), "accrual rebate NPV not available");
+    return accrualRebateNPV_;
+}
+
 Real CreditDefaultSwap::upfrontBPS() const {
     calculate();
     QL_REQUIRE(upfrontBPS_ != Null<Real>(), "upfront BPS not available");
