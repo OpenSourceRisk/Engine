@@ -92,24 +92,24 @@ test_suite* init_unit_test_suite(int, char* []) {
 
     test->add(BOOST_TEST_CASE(startTimer));
 
-    /*   test->add(testsuite::CashFlowTest::suite());
-       test->add(testsuite::AnalyticLgmSwaptionEngineTest::suite());
-       test->add(testsuite::CrossAssetModelTest::suite());
-       test->add(testsuite::CrossAssetModelTest2::suite());
-       test->add(testsuite::CrossAssetModelParametrizationsTest::suite());
-       test->add(testsuite::DiscountCurveTest::suite());
-       test->add(testsuite::DynamicBlackVolTermStructureTest::suite());
-       test->add(testsuite::DynamicSwaptionVolMatrixTest::suite());
-       test->add(testsuite::CurrencyTest::suite());
-       test->add(testsuite::IndexTest::suite());
-       test->add(testsuite::LogQuoteTest::suite());
-       test->add(testsuite::StaticallyCorrectedYieldTermStructureTest::suite());
-       test->add(testsuite::BlackVarianceCurveTest::suite());
-       test->add(testsuite::SwaptionVolatilityConverterTest::suite());
-       test->add(testsuite::OptionletStripperTest::suite());
-       test->add(testsuite::DepositTest::suite());
-       test->add(testsuite::RateHelpersTest::suite());
-       test->add(testsuite::StabilisedGLLSTest::suite());*/
+    test->add(testsuite::CashFlowTest::suite());
+    test->add(testsuite::AnalyticLgmSwaptionEngineTest::suite());
+    test->add(testsuite::CrossAssetModelTest::suite());
+    test->add(testsuite::CrossAssetModelTest2::suite());
+    test->add(testsuite::CrossAssetModelParametrizationsTest::suite());
+    test->add(testsuite::DiscountCurveTest::suite());
+    test->add(testsuite::DynamicBlackVolTermStructureTest::suite());
+    test->add(testsuite::DynamicSwaptionVolMatrixTest::suite());
+    test->add(testsuite::CurrencyTest::suite());
+    test->add(testsuite::IndexTest::suite());
+    test->add(testsuite::LogQuoteTest::suite());
+    test->add(testsuite::StaticallyCorrectedYieldTermStructureTest::suite());
+    test->add(testsuite::BlackVarianceCurveTest::suite());
+    test->add(testsuite::SwaptionVolatilityConverterTest::suite());
+    test->add(testsuite::OptionletStripperTest::suite());
+    test->add(testsuite::DepositTest::suite());
+    test->add(testsuite::RateHelpersTest::suite());
+    test->add(testsuite::StabilisedGLLSTest::suite());
     test->add(testsuite::SurvivalProbabilityCurveTest::suite());
 
     test->add(BOOST_TEST_CASE(stopTimer));
