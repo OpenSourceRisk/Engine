@@ -19,11 +19,8 @@
 #include <ored/portfolio/cdo.hpp>
 #include <ored/portfolio/swap.hpp>
 #include <ored/portfolio/legdata.hpp>
-#include <ored/portfolio/bond.hpp>
-#include <ored/portfolio/builders/bond.hpp>
 #include <ored/portfolio/builders/cdo.hpp>
-#include <ql/instruments/bond.hpp>
-#include <ql/instruments/bonds/zerocouponbond.hpp>
+#include <ql/instruments/compositeinstrument.hpp>
 #include <ql/experimental/credit/syntheticcdo.hpp>
 #include <ql/experimental/credit/inhomogeneouspooldef.hpp>
 //#include <ql/experimental/credit/midpointcdoengine.hpp>
@@ -58,7 +55,7 @@ void SyntheticCDO::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
     Schedule schedule = makeSchedule(legData_.schedule());
     Real upfrontRate = upfrontFee_;
     // FIXME: QL CDO supports a single rate only
-    Real runningRate = legData_.fixedLegData().rates().front(); 
+    Real runningRate = legData_.fixedLegData().rates().front();
     DayCounter dayCounter = parseDayCounter(legData_.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(legData_.paymentConvention());
 
@@ -70,15 +67,15 @@ void SyntheticCDO::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
         string issuerId = basketData_.issuers()[i];
         string creditCurveId = basketData_.creditCurves()[i];
         QL_REQUIRE(basketData_.currencies()[i] == legData_.currency(), "currency not unique across basket");
-	// FIXME: dummy default key 
-	DefaultProbKey key = NorthAmericaCorpDefaultKey(ccy, SeniorSec, Period(), 1.0);
+        // FIXME: dummy default key
+        DefaultProbKey key = NorthAmericaCorpDefaultKey(ccy, SeniorSec, Period(), 1.0);
         Handle<DefaultProbabilityTermStructure> defaultCurve =
             market->defaultCurve(creditCurveId, builder->configuration(MarketContext::pricing));
         recoveryRates.push_back(
             market->recoveryRate(creditCurveId, builder->configuration(MarketContext::pricing))->value());
         pair<DefaultProbKey, Handle<DefaultProbabilityTermStructure>> p(key, defaultCurve);
         vector<pair<DefaultProbKey, Handle<DefaultProbabilityTermStructure>>> probabilities(1, p);
-	// FIXME: empty default event set, assuming no default until schedule start date
+        // FIXME: empty default event set, assuming no default until schedule start date
         DefaultEventSet eventSet;
         Issuer issuer(probabilities, eventSet);
         pool->add(issuerId, issuer, key);
@@ -86,22 +83,46 @@ void SyntheticCDO::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
     }
 
     // FIXME: use schedule[0] or protectionStart ?
-    boost::shared_ptr<Basket> basket(new Basket(schedule[0], basketData_.issuers(), basketData_.notionals(), pool,
-                                                attachmentPoint_,
-                                                detachmentPoint_)); // assume face value claim
+    boost::shared_ptr<Basket> basketD(new Basket(schedule[0], basketData_.issuers(), basketData_.notionals(), pool, 0.0,
+                                                 detachmentPoint_)); // assume face value claim
 
-    basket->setLossModel(cdoEngineBuilder->lossModel(qualifier_, recoveryRates, detachmentPoint_));
+    basketD->setLossModel(cdoEngineBuilder->lossModel(qualifier_, recoveryRates, detachmentPoint_));
 
-    boost::shared_ptr<QuantLib::SyntheticCDO> cdo(
-        new QuantLib::SyntheticCDO(basket, side, schedule, upfrontRate, runningRate, dayCounter, bdc));
+    boost::shared_ptr<QuantLib::SyntheticCDO> cdoD(
+        new QuantLib::SyntheticCDO(basketD, side, schedule, upfrontRate, runningRate, dayCounter, bdc));
 
-    cdo->setPricingEngine(cdoEngineBuilder->engine(ccy));
+    cdoD->setPricingEngine(cdoEngineBuilder->engine(ccy));
+    DLOG("Equity tranche to detachment point: CDO NPV " << cdoD->NPV());
+    
+    if (attachmentPoint_ < QL_EPSILON)
+        instrument_.reset(new VanillaInstrument(cdoD));
+    else { // price the tranche as spread of two equity tranches with different base correlations
+
+        // FIXME: use schedule[0] or protectionStart ?
+        // note attachment point here
+        boost::shared_ptr<Basket> basketA(new Basket(schedule[0], basketData_.issuers(), basketData_.notionals(), pool,
+                                                     0.0,
+                                                     attachmentPoint_)); // assume face value claim
+
+        // note attachment point here
+        basketA->setLossModel(cdoEngineBuilder->lossModel(qualifier_, recoveryRates, attachmentPoint_));
+
+        // note upfront rate set to zero here
+        boost::shared_ptr<QuantLib::SyntheticCDO> cdoA(
+            new QuantLib::SyntheticCDO(basketA, side, schedule, 0.0, runningRate, dayCounter, bdc));
+
+        cdoA->setPricingEngine(cdoEngineBuilder->engine(ccy));
+	DLOG("Equity tranche to attachment point: CDO NPV " << cdoA->NPV());
+
+        boost::shared_ptr<CompositeInstrument> composite(new CompositeInstrument());
+        composite->add(cdoD);
+        composite->subtract(cdoA);
+        instrument_.reset(new VanillaInstrument(composite));
+
+	DLOG("Composite CDO NPV " << composite->NPV());
+    }
 
     DLOG("CDO instrument built");
-
-    DLOG("CDO NPV " << cdo->NPV());
-
-    instrument_.reset(new VanillaInstrument(cdo));
 
     npvCurrency_ = legData_.currency();
     maturity_ = leg.back()->date();
