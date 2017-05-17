@@ -87,7 +87,7 @@ private:
 
 //! helper class building a sequence of sub-period coupons
 /*! \ingroup cashflows
-*/
+ */
 class SubPeriodsLeg {
 public:
     SubPeriodsLeg(const Schedule& schedule, const boost::shared_ptr<InterestRateIndex>& index);
@@ -116,6 +116,6 @@ private:
     SubPeriodsCoupon::Type type_;
     bool includeSpread_;
 };
-}
+} // namespace QuantExt
 
 #endif

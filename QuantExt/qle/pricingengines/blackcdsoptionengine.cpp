@@ -36,10 +36,10 @@
 
 #include <qle/pricingengines/blackcdsoptionengine.hpp>
 
-#include <ql/pricingengines/blackformula.hpp>
-#include <ql/termstructures/yieldtermstructure.hpp>
-#include <ql/quote.hpp>
 #include <ql/exercise.hpp>
+#include <ql/pricingengines/blackformula.hpp>
+#include <ql/quote.hpp>
+#include <ql/termstructures/yieldtermstructure.hpp>
 
 namespace QuantExt {
 
@@ -93,4 +93,4 @@ void BlackCdsOptionEngine::calculate() const {
 Handle<YieldTermStructure> BlackCdsOptionEngine::termStructure() { return termStructure_; }
 
 Handle<Quote> BlackCdsOptionEngine::volatility() { return volatility_; }
-}
+} // namespace QuantExt

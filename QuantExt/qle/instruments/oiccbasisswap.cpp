@@ -16,9 +16,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/instruments/oiccbasisswap.hpp>
 #include <ql/cashflows/overnightindexedcoupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
+#include <qle/instruments/oiccbasisswap.hpp>
 
 namespace QuantExt {
 
@@ -122,4 +122,4 @@ void OvernightIndexedCrossCcyBasisSwap::results::reset() {
     fairPayLegSpread = Null<Real>();
     fairRecLegSpread = Null<Real>();
 }
-}
+} // namespace QuantExt

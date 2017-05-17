@@ -63,6 +63,6 @@ private:
     Handle<YieldTermStructure> termStructure_;
     Handle<Quote> volatility_;
 };
-}
+} // namespace QuantExt
 
 #endif

@@ -25,8 +25,8 @@
 #ifndef quantext_cross_ccy_swap_hpp
 #define quantext_cross_ccy_swap_hpp
 
-#include <ql/instruments/swap.hpp>
 #include <ql/currency.hpp>
+#include <ql/instruments/swap.hpp>
 
 using namespace QuantLib;
 
@@ -113,6 +113,6 @@ public:
 };
 
 class CrossCcySwap::engine : public GenericEngine<CrossCcySwap::arguments, CrossCcySwap::results> {};
-}
+} // namespace QuantExt
 
 #endif

@@ -37,7 +37,7 @@ namespace QuantExt {
 
 //! Piecewise Constant Helper 1
 /*! \ingroup models
-*/
+ */
 class PiecewiseConstantHelper1 {
 public:
     PiecewiseConstantHelper1(const Array& t);
@@ -81,7 +81,7 @@ private:
 
 //! Piecewise Constant Helper2
 /*! \ingroup models
-*/
+ */
 class PiecewiseConstantHelper2 {
 public:
     PiecewiseConstantHelper2(const Array& t);
@@ -113,7 +113,7 @@ private:
 
 //! Piecewise Constant Helper 3
 /*! \ingroup models
-*/
+ */
 class PiecewiseConstantHelper3 {
 public:
     PiecewiseConstantHelper3(const Array& t1, const Array& t2);

@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <ql/indexes/indexmanager.hpp>
+#include <qle/cashflows/fxlinkedcashflow.hpp>
 
 namespace QuantExt {
 
@@ -30,4 +30,4 @@ Real FXLinkedCashFlow::fxRate() const {
     Real fixing = fxIndex_->fixing(fxFixingDate_);
     return invertIndex_ ? 1.0 / fixing : fixing;
 }
-}
+} // namespace QuantExt

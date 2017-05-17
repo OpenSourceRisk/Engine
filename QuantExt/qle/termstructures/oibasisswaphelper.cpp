@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/termstructures/oibasisswaphelper.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
+#include <qle/termstructures/oibasisswaphelper.hpp>
 
 using boost::shared_ptr;
 
@@ -27,7 +27,7 @@ namespace QuantExt {
 
 namespace {
 void no_deletion(YieldTermStructure*) {}
-}
+} // namespace
 
 OIBSHelper::OIBSHelper(Natural settlementDays,
                        const Period& tenor, // swap maturity
@@ -84,4 +84,4 @@ void OIBSHelper::accept(AcyclicVisitor& v) {
     else
         RateHelper::accept(v);
 }
-}
+} // namespace QuantExt
