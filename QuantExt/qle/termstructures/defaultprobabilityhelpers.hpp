@@ -52,7 +52,7 @@ using namespace QuantExt;
 namespace QuantLib {
 class YieldTermStructure;
 class CreditDefaultSwap;
-}
+} // namespace QuantLib
 
 namespace QuantExt {
 
@@ -157,6 +157,6 @@ private:
     Rate runningSpread_;
     void resetEngine();
 };
-}
+} // namespace QuantExt
 
 #endif

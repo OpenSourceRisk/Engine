@@ -40,8 +40,9 @@ void DepositEngine::calculate() const {
     if (settlementDate_ == Date()) {
         settlementDate = refDate;
     } else {
-        QL_REQUIRE(settlementDate >= refDate, "settlement date (" << settlementDate << ") before "
-                                                                                       "discount curve reference date ("
+        QL_REQUIRE(settlementDate >= refDate, "settlement date (" << settlementDate
+                                                                  << ") before "
+                                                                     "discount curve reference date ("
                                                                   << refDate << ")");
     }
 
@@ -49,9 +50,10 @@ void DepositEngine::calculate() const {
     if (npvDate_ == Date()) {
         valuationDate = refDate;
     } else {
-        QL_REQUIRE(npvDate_ >= refDate, "npv date (" << npvDate_ << ") before "
-                                                                    "discount curve reference date (" << refDate
-                                                     << ")");
+        QL_REQUIRE(npvDate_ >= refDate, "npv date (" << npvDate_
+                                                     << ") before "
+                                                        "discount curve reference date ("
+                                                     << refDate << ")");
     }
 
     bool includeRefDateFlows =

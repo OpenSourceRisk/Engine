@@ -394,10 +394,10 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         const string& cdsIndexName = tokens[2];
         Period term = parsePeriod(tokens[3]);
         Real detachmentPoint = parseReal(tokens[4]);
-        return boost::make_shared<BaseCorrelationQuote>(value, asof, datumName, quoteType, cdsIndexName,
-                                                        term, detachmentPoint);
+        return boost::make_shared<BaseCorrelationQuote>(value, asof, datumName, quoteType, cdsIndexName, term,
+                                                        detachmentPoint);
     }
-      
+
     case MarketDatum::InstrumentType::INDEX_CDS_OPTION: {
         QL_REQUIRE(tokens.size() == 4, "4 tokens expected in " << datumName);
         QL_REQUIRE(quoteType == MarketDatum::QuoteType::RATE_LNVOL, "Invalid quote type for " << datumName);
@@ -410,5 +410,5 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         QL_FAIL("Cannot convert \"" << datumName << "\" to MarketDatum");
     }
 }
-}
-}
+} // namespace data
+} // namespace ore

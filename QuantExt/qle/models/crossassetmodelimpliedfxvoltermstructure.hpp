@@ -34,7 +34,7 @@ namespace QuantExt {
 
 //! Analytic Cross Currency CC LGM FX Option Enfine
 /*! \ingroup crossassetmodel
-*/
+ */
 class AnalyticCcLgmFxOptionEngine;
 
 //! Cross Asset Model Implied FX Term Structure

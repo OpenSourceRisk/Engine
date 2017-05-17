@@ -31,7 +31,7 @@ namespace data {
 
 //! function to convert a string into a curve spec
 /*! \ingroup curves
-*/
+ */
 boost::shared_ptr<CurveSpec> parseCurveSpec(const std::string&);
-}
-}
+} // namespace data
+} // namespace ore

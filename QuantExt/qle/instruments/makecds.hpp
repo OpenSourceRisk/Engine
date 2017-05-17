@@ -83,6 +83,6 @@ private:
 
     boost::shared_ptr<PricingEngine> engine_;
 };
-}
+} // namespace QuantExt
 
 #endif

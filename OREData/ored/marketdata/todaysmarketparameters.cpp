@@ -333,8 +333,7 @@ XMLNode* TodaysMarketParameters::toXML(XMLDocument& doc) {
                                    iterator->second.securityRecoveryRatesId);
             }
             if (iterator->second.baseCorrelationsId != "") {
-                XMLUtils::addChild(doc, configurationsNode, "BaseCorrelationsId",
-                                   iterator->second.baseCorrelationsId);
+                XMLUtils::addChild(doc, configurationsNode, "BaseCorrelationsId", iterator->second.baseCorrelationsId);
             }
         }
     }

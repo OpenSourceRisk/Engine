@@ -63,4 +63,4 @@ Rate SubPeriodsCouponPricer::swapletRate() const {
 
     return rate;
 }
-}
+} // namespace QuantExt

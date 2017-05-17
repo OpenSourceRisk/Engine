@@ -169,7 +169,7 @@ private:
 
 //! CDS Volatility curve description
 /*! \ingroup curves
-*/
+ */
 class CDSVolatilityCurveSpec : public CurveSpec {
 public:
     //! \name Constructors
@@ -193,7 +193,7 @@ private:
 
 //! Base Correlation surface description
 /*! \ingroup curves
-*/
+ */
 class BaseCorrelationCurveSpec : public CurveSpec {
 public:
     //! \name Constructors
@@ -201,8 +201,7 @@ public:
     //! Default constructor
     BaseCorrelationCurveSpec() {}
     //! Detailed constructor
-    BaseCorrelationCurveSpec(const string& curveConfigID)
-        : curveConfigID_(curveConfigID) {}
+    BaseCorrelationCurveSpec(const string& curveConfigID) : curveConfigID_(curveConfigID) {}
     //@}
 
     //! \name Inspectors
@@ -360,7 +359,7 @@ private:
 
 //! Equity curve description
 /*!  \ingroup curves
-*/
+ */
 class EquityCurveSpec : public CurveSpec {
 
 public:
@@ -388,7 +387,7 @@ private:
 
 //! Equity Volatility curve description
 /*! \ingroup curves
-*/
+ */
 class EquityVolatilityCurveSpec : public CurveSpec {
 public:
     //! \name Constructors
@@ -441,5 +440,5 @@ public:
 protected:
     string securityID_;
 };
-}
-}
+} // namespace data
+} // namespace ore

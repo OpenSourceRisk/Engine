@@ -63,4 +63,4 @@ PHPCurrency::PHPCurrency() {
         new Data("Philippine peso", "PHP", 608, "PHP", "", 100, Rounding(), "1$.2f %3%"));
     data_ = phpData;
 }
-}
+} // namespace QuantExt

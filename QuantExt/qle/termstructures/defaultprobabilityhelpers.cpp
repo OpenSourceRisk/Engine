@@ -189,4 +189,4 @@ void UpfrontCdsHelper::resetEngine() {
     swap_->setPricingEngine(
         boost::make_shared<QuantExt::MidPointCdsEngine>(probability_, recoveryRate_, discountCurve_, true));
 }
-}
+} // namespace QuantExt

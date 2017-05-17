@@ -82,6 +82,6 @@ private:
     const Handle<DefaultProbabilityTermStructure> probability_;
     const Real recoveryRate_;
 };
-}
+} // namespace QuantExt
 
 #endif

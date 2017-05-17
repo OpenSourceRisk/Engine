@@ -52,9 +52,9 @@ BaseCorrelationCurve::BaseCorrelationCurve(Date asof, BaseCorrelationCurveSpec s
                 boost::shared_ptr<BaseCorrelationQuote> q = boost::dynamic_pointer_cast<BaseCorrelationQuote>(md);
                 if (q != NULL && q->cdsIndexName() == spec.curveConfigID()) {
                     quotesRead++;
-                    Size i = std::find_if(detachmentPoints.begin(), detachmentPoints.end(), [&q](const double& s) {
-                                 return close_enough(s, q->detachmentPoint());
-                             }) - detachmentPoints.begin();
+                    Size i = std::find_if(detachmentPoints.begin(), detachmentPoints.end(),
+                                          [&q](const double& s) { return close_enough(s, q->detachmentPoint()); }) -
+                             detachmentPoints.begin();
                     Size j = std::find(terms.begin(), terms.end(), q->term()) - terms.begin();
                     if (i < detachmentPoints.size() && j < terms.size()) {
                         data[i][j] = q->quote();
@@ -85,9 +85,9 @@ BaseCorrelationCurve::BaseCorrelationCurve(Date asof, BaseCorrelationCurveSpec s
             QL_FAIL("could not build base correlation curve");
         }
 
-	// FIXME: The QuantLib interpolator expects at least two terms, so add a second column, copying the first 
+        // FIXME: The QuantLib interpolator expects at least two terms, so add a second column, copying the first
         if (terms.size() == 1) {
-	  terms.push_back(terms[0] + 1 * Days); // arbitrary, but larger than the first term
+            terms.push_back(terms[0] + 1 * Days); // arbitrary, but larger than the first term
             for (Size i = 0; i < detachmentPoints.size(); ++i)
                 data[i].push_back(data[i][0]);
         }
@@ -105,5 +105,5 @@ BaseCorrelationCurve::BaseCorrelationCurve(Date asof, BaseCorrelationCurveSpec s
     }
     DLOG("base correlation curve built for " << spec.curveConfigID());
 }
-}
-}
+} // namespace data
+} // namespace ore

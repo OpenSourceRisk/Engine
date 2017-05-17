@@ -425,5 +425,5 @@ void StressScenarioGenerator::addCapFloorVolShifts(StressTestScenarioData::Stres
     }
     LOG("Optionlet vol scenarios done");
 }
-}
-}
+} // namespace analytics
+} // namespace ore

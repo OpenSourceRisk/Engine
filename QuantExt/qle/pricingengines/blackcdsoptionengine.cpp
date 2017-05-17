@@ -104,4 +104,4 @@ void BlackCdsOptionEngineBase::calculate(const CreditDefaultSwap& swap, const Da
 Handle<YieldTermStructure> BlackCdsOptionEngineBase::termStructure() { return termStructure_; }
 
 Handle<BlackVolTermStructure> BlackCdsOptionEngineBase::volatility() { return volatility_; }
-}
+} // namespace QuantExt

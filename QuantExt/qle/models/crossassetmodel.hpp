@@ -47,13 +47,13 @@ namespace CrossAssetModelTypes {
 //! Cross Asset Type
 //! \ingroup crossassetmodel
 enum AssetType { IR, FX, INF, CR, EQ };
-}
+} // namespace CrossAssetModelTypes
 
 using namespace CrossAssetModelTypes;
 
 //! Cross Asset Model
 /*! \ingroup crossassetmodel
-*/
+ */
 class CrossAssetModel : public LinkableCalibratedModel {
 public:
     /*! Parametrizations must be given in the following order

@@ -353,4 +353,4 @@ test_suite* DynamicBlackVolTermStructureTest::suite() {
     suite->add(QUANTLIB_TEST_CASE(&DynamicBlackVolTermStructureTest::testForwardVarianceStickyLogMoneyness));
     return suite;
 }
-}
+} // namespace testsuite

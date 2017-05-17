@@ -87,6 +87,6 @@ protected:
     const Handle<YieldTermStructure> nominalTs_;
 };
 
-} // namesapce QuantExt
+} // namespace QuantExt
 
 #endif

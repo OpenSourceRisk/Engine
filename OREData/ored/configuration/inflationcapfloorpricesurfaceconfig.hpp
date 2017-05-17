@@ -107,5 +107,5 @@ private:
     vector<Real> floorStrikes_;
     vector<Period> maturities_;
 };
-}
-}
+} // namespace data
+} // namespace ore

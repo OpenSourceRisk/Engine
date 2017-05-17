@@ -42,5 +42,5 @@ boost::shared_ptr<FloatingRateCouponPricer> CapFlooredIborLegEngineBuilder::engi
     // Return the cached pricer
     return engines_[ccyCode];
 }
-}
-}
+} // namespace data
+} // namespace ore

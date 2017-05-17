@@ -27,8 +27,9 @@ namespace ore {
 namespace data {
 
 BaseCorrelationCurveConfig::BaseCorrelationCurveConfig(const string& curveID, const string& curveDescription,
-						       const vector<Real>& detachmentPoints, const vector<Period>& terms)
-  : curveID_(curveID), curveDescription_(curveDescription), detachmentPoints_(detachmentPoints), terms_(terms) {}
+                                                       const vector<Real>& detachmentPoints,
+                                                       const vector<Period>& terms)
+    : curveID_(curveID), curveDescription_(curveDescription), detachmentPoints_(detachmentPoints), terms_(terms) {}
 
 void BaseCorrelationCurveConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "BaseCorrelation");
@@ -58,5 +59,5 @@ XMLNode* BaseCorrelationCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "Extrapolate", extrapolate_);
     return node;
 }
-}
-}
+} // namespace data
+} // namespace ore

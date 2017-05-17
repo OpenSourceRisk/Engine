@@ -81,4 +81,4 @@ const Sample<MultiPath>& MultiPathGeneratorSobolBrownianBridge::next() const {
     return next_;
 }
 
-} // namesapce QuantExt
+} // namespace QuantExt

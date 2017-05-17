@@ -53,7 +53,7 @@ using namespace QuantLib;
 namespace QuantLib {
 class YieldTermStructure;
 class Claim;
-}
+} // namespace QuantLib
 
 namespace QuantExt {
 

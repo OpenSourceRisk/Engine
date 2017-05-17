@@ -35,7 +35,7 @@ namespace data {
 
 //! Abstract Base class for a Progress Indicator
 /*! \ingroup utilities
-*/
+ */
 class ProgressIndicator {
 public:
     ProgressIndicator() {}
@@ -45,7 +45,7 @@ public:
 
 //! Base class for a Progress Reporter
 /*! \ingroup utilities
-*/
+ */
 class ProgressReporter {
 public:
     ProgressReporter() {}
@@ -86,7 +86,7 @@ private:
 
 //! Progress Logger that writes the progress using the LOG macro
 /*! \ingroup utilities
-*/
+ */
 class ProgressLog : public ProgressIndicator {
 public:
     ProgressLog(const std::string& message, const unsigned int numberOfMessages = 100);

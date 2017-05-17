@@ -258,7 +258,7 @@ private:
     PricingEngine& engine_;
     const CreditDefaultSwap::results* results_;
 };
-}
+} // namespace
 
 Rate CreditDefaultSwap::impliedHazardRate(Real targetNPV, const Handle<YieldTermStructure>& discountCurve,
                                           const DayCounter& dayCounter, Real recoveryRate, Real accuracy) const {
@@ -324,4 +324,4 @@ void CreditDefaultSwap::results::reset() {
     upfrontNPV = Null<Real>();
     accrualRebateNPV = Null<Real>();
 }
-}
+} // namespace QuantExt

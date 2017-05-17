@@ -57,5 +57,5 @@ private:
     BaseCorrelationCurveSpec spec_;
     boost::shared_ptr<BilinearBaseCorrelationTermStructure> baseCorrelation_;
 };
-}
-}
+} // namespace data
+} // namespace ore

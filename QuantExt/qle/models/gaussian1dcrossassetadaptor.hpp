@@ -24,15 +24,15 @@
 #ifndef quantext_gaussian1d_crossasset_adaptor_hpp
 #define quantext_gaussian1d_crossasset_adaptor_hpp
 
-#include <qle/models/gaussian1dcrossassetadaptor.hpp>
-#include <qle/models/crossassetmodel.hpp>
 #include <ql/models/shortrate/onefactormodels/gaussian1dmodel.hpp>
+#include <qle/models/crossassetmodel.hpp>
+#include <qle/models/gaussian1dcrossassetadaptor.hpp>
 
 namespace QuantExt {
 
 //! Gaussian 1d Cross Asset adaptor
 /*! \ingroup models
-*/
+ */
 class Gaussian1dCrossAssetAdaptor : public Gaussian1dModel {
 public:
     Gaussian1dCrossAssetAdaptor(const boost::shared_ptr<LinearGaussMarkovModel>& model);
@@ -73,9 +73,10 @@ inline Real Gaussian1dCrossAssetAdaptor::numeraireImpl(const Time t, const Real 
 
 inline Real Gaussian1dCrossAssetAdaptor::zerobondImpl(const Time T, const Time t, const Real y,
                                                       const Handle<YieldTermStructure>& yts) const {
-    Real d = yts.empty() ? 1.0 : x_->parametrization()->termStructure()->discount(t) /
-                                     x_->parametrization()->termStructure()->discount(T) * yts->discount(T) /
-                                     yts->discount(t);
+    Real d = yts.empty()
+                 ? 1.0
+                 : x_->parametrization()->termStructure()->discount(t) /
+                       x_->parametrization()->termStructure()->discount(T) * yts->discount(T) / yts->discount(t);
     Real x = y * std::sqrt(x_->parametrization()->zeta(t));
     return d * x_->discountBond(t, T, x);
 }
@@ -97,6 +98,6 @@ inline Real Gaussian1dCrossAssetAdaptor::zerobondImpl(const Time T, const Time t
 //     return d * x_->reducedDiscountBond(t, T, x);
 // }
 
-} // QuantExt
+} // namespace QuantExt
 
 #endif

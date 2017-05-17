@@ -111,4 +111,4 @@ MakeCreditDefaultSwap& MakeCreditDefaultSwap::withPricingEngine(const boost::sha
     engine_ = engine;
     return *this;
 }
-}
+} // namespace QuantExt

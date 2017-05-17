@@ -53,7 +53,8 @@ void CrossCcySwapEngine::calculate() const {
     } else {
         QL_REQUIRE(settlementDate >= referenceDate, "Settlement date (" << settlementDate
                                                                         << ") cannot be before discount curve "
-                                                                           "reference date (" << referenceDate << ")");
+                                                                           "reference date ("
+                                                                        << referenceDate << ")");
     }
 
     Size numLegs = arguments_.legs.size();
@@ -61,8 +62,9 @@ void CrossCcySwapEngine::calculate() const {
     if (npvDate_ == Date()) {
         results_.valuationDate = referenceDate;
     } else {
-        QL_REQUIRE(npvDate_ >= referenceDate, "NPV date (" << npvDate_ << ") cannot be before "
-                                                                          "discount curve reference date ("
+        QL_REQUIRE(npvDate_ >= referenceDate, "NPV date (" << npvDate_
+                                                           << ") cannot be before "
+                                                              "discount curve reference date ("
                                                            << referenceDate << ")");
         results_.valuationDate = npvDate_;
     }
@@ -132,4 +134,4 @@ void CrossCcySwapEngine::calculate() const {
         results_.value += results_.legNPV[legNo];
     }
 }
-}
+} // namespace QuantExt

@@ -43,5 +43,5 @@ FXSpot::FXSpot(const Date& asof, FXSpotSpec spec, const Loader& loader) {
     }
     QL_FAIL("Failed to find a quote for " << spec);
 }
-}
-}
+} // namespace data
+} // namespace ore

@@ -116,6 +116,6 @@ private:
     static const Volatility minVol_;
     static const Volatility maxVol_;
 };
-}
+} // namespace QuantExt
 
 #endif

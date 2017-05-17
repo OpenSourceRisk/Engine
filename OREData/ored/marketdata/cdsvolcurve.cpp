@@ -75,19 +75,20 @@ CDSVolCurve::CDSVolCurve(Date asof, CDSVolatilityCurveSpec spec, const Loader& l
         } else {
             vector<Date> dates(quotes.size());
             vector<Volatility> atmVols(quotes.size());
-            std::sort(quotes.begin(), quotes.end(), [asof](const boost::shared_ptr<IndexCDSOptionQuote>& a,
-                                                           const boost::shared_ptr<IndexCDSOptionQuote>& b) -> bool {
-                Date a_tmp_date, b_tmp_date;
-                Period a_tmp_per, b_tmp_per;
-                bool a_tmp_isDate, b_tmp_isDate;
-                parseDateOrPeriod(a->expiry(), a_tmp_date, a_tmp_per, a_tmp_isDate);
-                if (!a_tmp_isDate)
-                    a_tmp_date = WeekendsOnly().adjust(asof + a_tmp_per);
-                parseDateOrPeriod(b->expiry(), b_tmp_date, b_tmp_per, b_tmp_isDate);
-                if (!b_tmp_isDate)
-                    b_tmp_date = WeekendsOnly().adjust(asof + b_tmp_per);
-                return a_tmp_date < b_tmp_date;
-            });
+            std::sort(quotes.begin(), quotes.end(),
+                      [asof](const boost::shared_ptr<IndexCDSOptionQuote>& a,
+                             const boost::shared_ptr<IndexCDSOptionQuote>& b) -> bool {
+                          Date a_tmp_date, b_tmp_date;
+                          Period a_tmp_per, b_tmp_per;
+                          bool a_tmp_isDate, b_tmp_isDate;
+                          parseDateOrPeriod(a->expiry(), a_tmp_date, a_tmp_per, a_tmp_isDate);
+                          if (!a_tmp_isDate)
+                              a_tmp_date = WeekendsOnly().adjust(asof + a_tmp_per);
+                          parseDateOrPeriod(b->expiry(), b_tmp_date, b_tmp_per, b_tmp_isDate);
+                          if (!b_tmp_isDate)
+                              b_tmp_date = WeekendsOnly().adjust(asof + b_tmp_per);
+                          return a_tmp_date < b_tmp_date;
+                      });
             for (Size i = 0; i < quotes.size(); i++) {
                 Date tmpDate;
                 Period tmpPer;
@@ -97,9 +98,8 @@ CDSVolCurve::CDSVolCurve(Date asof, CDSVolatilityCurveSpec spec, const Loader& l
                 // the standard CDS date schedule
                 if (!tmpIsDate)
                     tmpDate = WeekendsOnly().adjust(asof + tmpPer);
-                QL_REQUIRE(tmpDate > asof,
-                           "Credit Vol Curve cannot contain a vol quote for a past date (" << io::iso_date(tmpDate)
-                                                                                           << ")");
+                QL_REQUIRE(tmpDate > asof, "Credit Vol Curve cannot contain a vol quote for a past date ("
+                                               << io::iso_date(tmpDate) << ")");
                 dates[i] = tmpDate;
                 atmVols[i] = quotes[i]->quote()->value();
             }
@@ -112,5 +112,5 @@ CDSVolCurve::CDSVolCurve(Date asof, CDSVolatilityCurveSpec spec, const Loader& l
         QL_FAIL("cds vol curve building failed: unknown error");
     }
 }
-}
-}
+} // namespace data
+} // namespace ore

@@ -60,5 +60,5 @@ private:
     CDSVolatilityCurveSpec spec_;
     boost::shared_ptr<BlackVolTermStructure> vol_;
 };
-}
-}
+} // namespace data
+} // namespace ore

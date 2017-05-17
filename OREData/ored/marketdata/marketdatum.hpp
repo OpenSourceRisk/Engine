@@ -694,8 +694,8 @@ public:
                   Period expiry, string strike)
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::FX_OPTION), unitCcy_(unitCcy), ccy_(ccy),
           expiry_(expiry), strike_(strike) {
-        QL_REQUIRE(strike == "ATM" || strike == "25BF" || strike == "25RR", "Invalid FXOptionQuote strike (" << strike
-                                                                                                             << ")");
+        QL_REQUIRE(strike == "ATM" || strike == "25BF" || strike == "25RR",
+                   "Invalid FXOptionQuote strike (" << strike << ")");
     }
 
     //! \name Inspectors
@@ -1002,5 +1002,5 @@ private:
     string indexName_;
     string expiry_;
 };
-}
-}
+} // namespace data
+} // namespace ore

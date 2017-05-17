@@ -76,5 +76,5 @@ private:
     string curveDescription_;
     vector<string> expiries_;
 };
-}
-}
+} // namespace data
+} // namespace ore

@@ -30,7 +30,7 @@ namespace analytics {
 
 //! Factory class for cloning scenario objects
 /*! \ingroup scenario
-*/
+ */
 class CloneScenarioFactory : public ScenarioFactory {
 public:
     //! Constructor
@@ -43,5 +43,5 @@ private:
     boost::shared_ptr<Scenario> baseScenario_;
 };
 
-} // namesapce scenario
+} // namespace analytics
 } // namespace ore

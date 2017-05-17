@@ -17,12 +17,12 @@
 */
 
 #include <ql/instruments/makecapfloor.hpp>
-#include <ql/pricingengines/blackformula.hpp>
 #include <ql/option.hpp>
+#include <ql/pricingengines/blackformula.hpp>
 #include <ql/pricingengines/capfloor/bacheliercapfloorengine.hpp>
 #include <ql/pricingengines/capfloor/blackcapfloorengine.hpp>
-#include <qle/termstructures/optionletstripper1.hpp>
 #include <ql/utilities/dataformatters.hpp>
+#include <qle/termstructures/optionletstripper1.hpp>
 
 #include <boost/make_shared.hpp>
 
@@ -182,4 +182,4 @@ Rate OptionletStripper1::switchStrike() const {
         calculate();
     return switchStrike_;
 }
-}
+} // namespace QuantExt

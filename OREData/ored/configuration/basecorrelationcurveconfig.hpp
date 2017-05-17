@@ -24,10 +24,10 @@
 #pragma once
 
 #include <ored/utilities/xmlutils.hpp>
-#include <ql/types.hpp>
+#include <ql/time/calendar.hpp>
 #include <ql/time/daycounter.hpp>
 #include <ql/time/period.hpp>
-#include <ql/time/calendar.hpp>
+#include <ql/types.hpp>
 
 using std::string;
 using std::vector;
@@ -102,5 +102,5 @@ private:
     DayCounter dayCounter_;
     bool extrapolate_;
 };
-}
-}
+} // namespace data
+} // namespace ore

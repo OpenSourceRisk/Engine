@@ -90,4 +90,4 @@ Real SubPeriodsSwap::fairRate() const {
     QL_REQUIRE(legBPS_[0] != Null<Real>(), "result not available");
     return fixedRate_ - NPV_ / (legBPS_[0] / basisPoint);
 }
-}
+} // namespace QuantExt

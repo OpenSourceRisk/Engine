@@ -24,8 +24,8 @@
 #ifndef quantext_irlgm1f_stateprocess_hpp
 #define quantext_irlgm1f_stateprocess_hpp
 
-#include <qle/models/irlgm1fparametrization.hpp>
 #include <ql/stochasticprocess.hpp>
+#include <qle/models/irlgm1fparametrization.hpp>
 
 using namespace QuantLib;
 
@@ -33,7 +33,7 @@ namespace QuantExt {
 
 //! Ir Lgm 1f State Process
 /*! \ingroup processes
-*/
+ */
 class IrLgm1fStateProcess : public StochasticProcess1D {
 public:
     IrLgm1fStateProcess(const boost::shared_ptr<IrLgm1fParametrization>& parametrization);

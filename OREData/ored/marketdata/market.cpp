@@ -22,4 +22,4 @@ namespace ore {
 namespace data {
 const string Market::defaultConfiguration = "default";
 }
-}
+} // namespace ore

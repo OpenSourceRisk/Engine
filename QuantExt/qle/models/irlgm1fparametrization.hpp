@@ -24,15 +24,15 @@
 #ifndef quantext_irlgm1f_parametrization_hpp
 #define quantext_irlgm1f_parametrization_hpp
 
-#include <qle/models/parametrization.hpp>
 #include <ql/handle.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
+#include <qle/models/parametrization.hpp>
 
 namespace QuantExt {
 
 //! LGM 1F Parametrization
 /*! \ingroup models
-*/
+ */
 template <class TS> class Lgm1fParametrization : public Parametrization {
 public:
     Lgm1fParametrization(const Currency& currency, const Handle<TS>& termStructure);

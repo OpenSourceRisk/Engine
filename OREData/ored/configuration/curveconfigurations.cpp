@@ -348,5 +348,5 @@ XMLNode* CurveConfigurations::toXML(XMLDocument& doc) {
 
     return parent;
 }
-}
-}
+} // namespace data
+} // namespace ore

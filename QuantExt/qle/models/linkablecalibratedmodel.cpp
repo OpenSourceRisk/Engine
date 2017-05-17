@@ -16,10 +16,10 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/models/linkablecalibratedmodel.hpp>
 #include <ql/math/optimization/problem.hpp>
-#include <ql/math/optimization/projection.hpp>
 #include <ql/math/optimization/projectedconstraint.hpp>
+#include <ql/math/optimization/projection.hpp>
+#include <qle/models/linkablecalibratedmodel.hpp>
 
 using std::vector;
 using boost::shared_ptr;
@@ -28,7 +28,7 @@ namespace QuantExt {
 
 namespace {
 void no_deletion(void*) {}
-}
+} // namespace
 
 LinkableCalibratedModel::LinkableCalibratedModel()
     : constraint_(new PrivateConstraint(arguments_)), endCriteria_(EndCriteria::None) {}
@@ -132,4 +132,4 @@ void LinkableCalibratedModel::setParams(const Array& params) {
     generateArguments();
     notifyObservers();
 }
-}
+} // namespace QuantExt

@@ -51,7 +51,7 @@ using namespace QuantLib;
 namespace QuantLib {
 class Quote;
 class YieldTermStructure;
-}
+} // namespace QuantLib
 
 namespace QuantExt {
 
@@ -117,6 +117,6 @@ public:
 
 //! base class for swaption engines
 class CdsOption::engine : public GenericEngine<CdsOption::arguments, CdsOption::results> {};
-}
+} // namespace QuantExt
 
 #endif
