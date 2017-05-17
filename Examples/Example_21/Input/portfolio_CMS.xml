@@ -113,11 +113,8 @@
         </ScheduleData>
       </LegData>
 	  <CapRates>
-        <Rate>0.04</Rate>
+        <Rate>0.40</Rate>
       </CapRates>
-      <FloorRates>
-        <Rate>0.04</Rate>
-      </FloorRates>
     </CapFloorData>
   </Trade>
 </Portfolio>

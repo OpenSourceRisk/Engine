@@ -37,6 +37,7 @@ namespace testsuite {
         static void testCMSAnalyticHagan();
         static void testCMSNumericalHagan();
         static void testCMSLinearTsr();
+        static void cmsCapFloor();
         static boost::unit_test_framework::test_suite* suite();
     };
 }

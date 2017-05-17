@@ -433,7 +433,8 @@ Leg makeCMSLeg(LegData& data, boost::shared_ptr<QuantLib::SwapIndex> swapIndex,
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
     CMSLegData cmsData = data.cmsLegData();
-    bool hasCapsFloors = caps.size() > 0 || floors.size() > 0;
+    bool couponCapFloor = cmsData.caps().size() > 0 || cmsData.floors().size() > 0;
+    bool nakedCapFloor = caps.size() > 0 || floors.size() > 0;
 
     vector<double> spreads = ore::data::buildScheduledVector(cmsData.spreads(), cmsData.spreadDates(), schedule);
 
@@ -447,14 +448,23 @@ Leg makeCMSLeg(LegData& data, boost::shared_ptr<QuantLib::SwapIndex> swapIndex,
     if (cmsData.gearings().size() > 0)
         cmsLeg.withGearings(buildScheduledVector(cmsData.gearings(), cmsData.gearingDates(), schedule));
 
-    vector<string> capFloorDates;
-    // If there are caps or floors or in arrears fixing, add them and set pricer
-    if (caps.size() > 0)
-        cmsLeg.withCaps(buildScheduledVector(caps, capFloorDates, schedule));
+    if (nakedCapFloor) {
+        vector<string> capFloorDates;
 
-    if (floors.size() > 0)
-        cmsLeg.withFloors(buildScheduledVector(floors, capFloorDates, schedule));
+        if (caps.size() > 0)
+            cmsLeg.withCaps(buildScheduledVector(caps, capFloorDates, schedule));
 
+        if (floors.size() > 0)
+            cmsLeg.withFloors(buildScheduledVector(floors, capFloorDates, schedule));
+    }
+    else if(couponCapFloor){
+        if (cmsData.caps().size() > 0)
+            cmsLeg.withCaps(buildScheduledVector(cmsData.caps(), cmsData.capDates(), schedule));
+
+        if (cmsData.floors().size() > 0)
+            cmsLeg.withFloors(buildScheduledVector(cmsData.floors(), cmsData.floorDates(), schedule));
+    }
+    
     // Get a coupon pricer for the leg
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("CMS");
     QL_REQUIRE(builder, "No builder found for CmsLeg");
@@ -462,11 +472,10 @@ Leg makeCMSLeg(LegData& data, boost::shared_ptr<QuantLib::SwapIndex> swapIndex,
         boost::dynamic_pointer_cast<CmsCouponPricerBuilder>(builder);
     boost::shared_ptr<FloatingRateCouponPricer> couponPricer = cmsSwapBuilder->engine(swapIndex->currency());
 
-
     // Loop over the coupons in the leg and set pricer
     Leg leg = cmsLeg;
     for (const auto& cashflow : leg) {
-        if (!hasCapsFloors && !cmsData.isInArrears()) {
+        if (!couponCapFloor && !nakedCapFloor) {
             boost::shared_ptr<CmsCoupon> coupon = boost::dynamic_pointer_cast<CmsCoupon>(cashflow);
             QL_REQUIRE(coupon, "Expected a leg of coupons of type CmsCoupon");
             coupon->setPricer(couponPricer);
@@ -476,10 +485,7 @@ Leg makeCMSLeg(LegData& data, boost::shared_ptr<QuantLib::SwapIndex> swapIndex,
             QL_REQUIRE(coupon, "Expected a leg of coupons of type CappedFlooredCmsCoupon");
             coupon->setPricer(couponPricer);
         }
-        
-        
     }
-
     return leg;
 }
 

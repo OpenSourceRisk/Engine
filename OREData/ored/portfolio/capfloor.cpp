@@ -98,12 +98,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         Real multiplier = (parsePositionType(longShort_) == Position::Long ? 1.0 : -1.0);
         instrument_ = boost::make_shared<VanillaInstrument>(capFloor, multiplier);
 
-        // Fill in remaining Trade member data
-        legCurrencies_.push_back(legData_.currency());
-        legPayers_.push_back(legData_.isPayer());
-        npvCurrency_ = legData_.currency();
         maturity_ = capFloor->maturityDate();
-        notional_ = currentNotional(legs_[0]);
 
     } else if (legData_.legType() == "CMS") {
         builder = engineFactory->builder("Swap");
@@ -115,33 +110,31 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
         boost::shared_ptr<SwapIndex> index = hIndex.currentLink();
 
-        legs_.push_back(makeCMSLeg(legData_, index, engineFactory, caps_, floors_));
-
+        bool payer = (parsePositionType(longShort_) == Position::Long ? false : true);
         vector<bool> legPayers_;
-        legPayers_.push_back(true);
-
+        legs_.push_back(makeCMSLeg(legData_, index, engineFactory, caps_, floors_));
+        legPayers_.push_back(!payer);
+        legs_.push_back(makeCMSLeg(legData_, index, engineFactory));
+        legPayers_.push_back(payer);
+        
         boost::shared_ptr<QuantLib::Swap> capFloor(new QuantLib::Swap(legs_, legPayers_));
         boost::shared_ptr<SwapEngineBuilderBase> cmsCapFloorBuilder =
             boost::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
         capFloor->setPricingEngine(cmsCapFloorBuilder->engine(parseCurrency(legData_.currency())));
-
-
-        // Wrap the QL instrument in a vanilla instrument
-        Real multiplier = (parsePositionType(longShort_) == Position::Long ? 1.0 : -1.0);
-        instrument_ = boost::make_shared<VanillaInstrument>(capFloor, multiplier);
-
-        // Fill in remaining Trade member data
-        legCurrencies_.push_back(legData_.currency());
-        legPayers_.push_back(legData_.isPayer());
-        npvCurrency_ = legData_.currency();
+        
+        instrument_.reset(new VanillaInstrument(capFloor));
         maturity_ = capFloor->maturityDate();
-        notional_ = currentNotional(legs_[0]);
 
     }
     else {
         QL_FAIL("Invalid legType for CapFloor");
     }
-     
+
+    // Fill in remaining Trade member data
+    legCurrencies_.push_back(legData_.currency());
+    legPayers_.push_back(legData_.isPayer());
+    npvCurrency_ = legData_.currency();
+    notional_ = currentNotional(legs_[0]);
 
 }
 

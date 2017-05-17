@@ -22,6 +22,7 @@
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/schedule.hpp>
 #include <ored/portfolio/swap.hpp>
+#include <ored/portfolio/capfloor.hpp>
 #include <ored/portfolio/builders/cms.hpp>
 #include <ored/portfolio/enginedata.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
@@ -101,8 +102,10 @@ namespace {
         int fixingdays;
         bool isinarrears;
         double notional;
+        string longShort;
         vector<double> notionals;
         vector<double> spread;
+        vector<string> spreadDates;
 
         // utilities
         boost::shared_ptr<ore::data::Swap> makeSwap() {
@@ -111,23 +114,101 @@ namespace {
 
             // build CMSSwap
             FixedLegData fixedLegRateData(vector<double>(1, fixedRate));
-            LegData fixedLegData(isPayer, ccy, fixedLegRateData, fixedSchedule, fixDC, notionals);
+            LegData fixedLegData(!isPayer, ccy, fixedLegRateData, fixedSchedule, fixDC, notionals);
 
             CMSLegData cmsLegRateData(index, fixingdays, isinarrears, spread);
-            LegData cmsLegData(!isPayer, ccy, cmsLegRateData, cmsSchedule, fixDC, notionals);
+            LegData cmsLegData(isPayer, ccy, cmsLegRateData, cmsSchedule, fixDC, notionals);
 
             Envelope env("CP1");
-
             boost::shared_ptr<ore::data::Swap> swap(new ore::data::Swap(env, fixedLegData, cmsLegData));
             return swap;
+        }
+
+        boost::shared_ptr<ore::data::Swap> makeSwap(Real fixedRate_) {
+            ScheduleData fixedSchedule(ScheduleRules(start, end, fixtenor, calStr, conv, conv, rule));
+            ScheduleData cmsSchedule(ScheduleRules(start, end, cmstenor, calStr, conv, conv, rule));
+
+            // build CMSSwap
+            FixedLegData fixedLegRateData(vector<double>(1, fixedRate_));
+            LegData fixedLegData(!isPayer, ccy, fixedLegRateData, fixedSchedule, fixDC, notionals);
+
+            CMSLegData cmsLegRateData(index, fixingdays, isinarrears, spread);
+            LegData cmsLegData(isPayer, ccy, cmsLegRateData, cmsSchedule, fixDC, notionals);
+
+            Envelope env("CP1");
+            boost::shared_ptr<ore::data::Swap> swap(new ore::data::Swap(env, fixedLegData, cmsLegData));
+            return swap;
+        }
+
+        boost::shared_ptr<ore::data::Swap> makeCmsLegSwap() {
+            ScheduleData cmsSchedule(ScheduleRules(start, end, cmstenor, calStr, conv, conv, rule));
+
+            vector<LegData> legData;
+            CMSLegData cmsLegRateData(index, fixingdays, isinarrears, spread);
+            LegData cmsLegData(isPayer, ccy, cmsLegRateData, cmsSchedule, fixDC, notionals);
+            legData.push_back(cmsLegData);
+
+            Envelope env("CP1");
+            boost::shared_ptr<ore::data::Swap> swap(new ore::data::Swap(env, legData));
+            return swap;
+        }
+
+        boost::shared_ptr<ore::data::Swap> makeCappedCmsLegSwap(vector<double> caps, vector<string> capDates = vector<string>()) {
+            ScheduleData cmsSchedule(ScheduleRules(start, end, cmstenor, calStr, conv, conv, rule));
+            
+            vector<LegData> legData;
+            CMSLegData cmsLegRateData(index, fixingdays, isinarrears, spread, spreadDates, caps, capDates);
+            LegData cmsLegData(isPayer, ccy, cmsLegRateData, cmsSchedule, fixDC, notionals);
+            legData.push_back(cmsLegData);
+
+            Envelope env("CP1");
+            boost::shared_ptr<ore::data::Swap> swap(new ore::data::Swap(env, legData));
+            return swap;
+        }
+
+        boost::shared_ptr<ore::data::CapFloor> makeCap(vector<double> caps) {
+            ScheduleData cmsSchedule(ScheduleRules(start, end, cmstenor, calStr, conv, conv, rule));
+
+            CMSLegData cmsLegRateData(index, fixingdays, isinarrears, spread, spreadDates);
+            LegData cmsLegData(isPayer, ccy, cmsLegRateData, cmsSchedule, fixDC, notionals);
+
+            Envelope env("CP1");
+            boost::shared_ptr<ore::data::CapFloor> capfloor(new ore::data::CapFloor(env, longShort, cmsLegData, caps, vector<double>()));
+            return capfloor;
+        }
+
+
+        boost::shared_ptr<ore::data::Swap> makeFlooredCmsLegSwap(vector<double> floors, vector<string> floorDates = vector<string>()) {
+            ScheduleData cmsSchedule(ScheduleRules(start, end, cmstenor, calStr, conv, conv, rule));
+
+            vector<LegData> legData;
+            CMSLegData cmsLegRateData(index, fixingdays, isinarrears, spread, spreadDates, vector<double>(), vector<string>(), floors, floorDates);
+            LegData cmsLegData(isPayer, ccy, cmsLegRateData, cmsSchedule, fixDC, notionals);
+            legData.push_back(cmsLegData);
+
+            Envelope env("CP1");
+            boost::shared_ptr<ore::data::Swap> swap(new ore::data::Swap(env, legData));
+            return swap;
+        }
+
+        boost::shared_ptr<ore::data::CapFloor> makeFloor(vector<double> floors) {
+            ScheduleData cmsSchedule(ScheduleRules(start, end, cmstenor, calStr, conv, conv, rule));
+
+            CMSLegData cmsLegRateData(index, fixingdays, isinarrears, spread, spreadDates);
+            LegData cmsLegData(isPayer, ccy, cmsLegRateData, cmsSchedule, fixDC, notionals);
+            
+            Envelope env("CP1");
+            boost::shared_ptr<ore::data::CapFloor> capfloor(new ore::data::CapFloor(env, longShort, cmsLegData, vector<double>(), floors));
+            return capfloor;
         }
 
         CommonVars() {
             ccy = "EUR";
             isPayer = false;
+            longShort = isPayer ? "Short" : "Long";
             start = "20160301";
             end = "20360301";
-            fixtenor = "1Y";
+            fixtenor = "6M";
             cmstenor = "6M";
             cal = TARGET();
             calStr = "TARGET";
@@ -268,11 +349,104 @@ namespace testsuite {
         BOOST_CHECK_CLOSE(npv, expectedNPV, 1.0);
     }
 
+    void CmsTest::cmsCapFloor() {
+        BOOST_TEST_MESSAGE("Testing CMS CapFloor price...");
+
+        // build market
+        boost::shared_ptr<Market> market = boost::make_shared<TestMarket>();
+        Settings::instance().evaluationDate() = market->asofDate();
+
+        CommonVars vars;     
+        boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+        engineData->model("CMS") = "Hagan";
+        engineData->engine("CMS") = "Analytic";
+        map<string, string> engineparams;
+        engineparams["YieldCurveModel"] = "Standard";
+        engineparams["MeanReversion"] = "0.0";
+        engineData->engineParameters("CMS") = engineparams;
+
+        engineData->model("Swap") = "DiscountedCashflows";
+        engineData->engine("Swap") = "DiscountingSwapEngineOptimised";
+
+        boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+        engineFactory->registerBuilder(boost::make_shared<AnalyticHaganCmsCouponPricerBuilder>());
+
+        BOOST_TEST_MESSAGE("Comparing CMS Cap price to replication by a Single Legged CMS Swap and a Single Leg Capped CMS Swap...");
+        vector<double> capRate(1, 0.021);
+        boost::shared_ptr<ore::data::Swap> cmsLegSwap = vars.makeCmsLegSwap();
+        boost::shared_ptr<ore::data::Swap> cappedCmsLegSwap = vars.makeCappedCmsLegSwap(capRate);
+        boost::shared_ptr<ore::data::CapFloor> cap = vars.makeCap(capRate);
+
+        cmsLegSwap->build(engineFactory);
+        cappedCmsLegSwap->build(engineFactory);
+        cap->build(engineFactory);
+
+        Real cmsLegNpv = cmsLegSwap->instrument()->NPV();
+        Real cappedCmsLegNpv = cappedCmsLegSwap->instrument()->NPV();
+        Real capNpv = cap->instrument()->NPV();
+
+        Real capBySwaps = cmsLegNpv - cappedCmsLegNpv;
+
+        BOOST_TEST_MESSAGE("CMS Leg swap NPV is " << cmsLegNpv);
+        BOOST_TEST_MESSAGE("CMS Capped Leg swap NPV is " << cappedCmsLegNpv);
+        BOOST_TEST_MESSAGE("CMS Cap NPV is " << capNpv);
+        BOOST_TEST_MESSAGE("CMS Cap NPV from Swap replication is " << capBySwaps);
+        BOOST_CHECK_CLOSE(capNpv, capBySwaps, 1.0);
+
+        BOOST_TEST_MESSAGE("Checking CMS Cap with high Cap is zero...");
+        vector<double> capHigh(1, 1.0);
+
+        cap = vars.makeCap(capHigh);
+        cap->build(engineFactory);
+        capNpv = cap->instrument()->NPV();
+        BOOST_TEST_MESSAGE("CMS Cap (Cap of 100%) NPV is " << capNpv);
+        BOOST_CHECK_SMALL(capNpv, 0.01);
+
+        BOOST_TEST_MESSAGE("Checking CMS Cap with low Cap is equal to single leg swap...");
+        vector<double> capLow(1, -1.0);
+
+        cap = vars.makeCap(capLow);
+        cap->build(engineFactory);
+        capNpv = cap->instrument()->NPV();
+        BOOST_TEST_MESSAGE("CMS Cap (Cap of -100%) NPV is " << capNpv);
+        BOOST_CHECK_CLOSE(capNpv, cmsLegNpv, 1.0);
+
+        BOOST_TEST_MESSAGE("Checking CMS Floor with low Cap is equal to zero...");
+        vector<double> floorLow(1, -1.0);
+
+        boost::shared_ptr<ore::data::CapFloor> floor = vars.makeFloor(floorLow);
+        floor->build(engineFactory);
+        Real floorNpv = floor->instrument()->NPV();
+        BOOST_TEST_MESSAGE("CMS Floor (Flooe of -100%) NPV is " << floorNpv);
+        BOOST_CHECK_SMALL(floorNpv, 0.01);
+
+        BOOST_TEST_MESSAGE("Checking CMS Cap + CMS Floor = Swap...");
+        vector<double> floorRate(1, 0.021);
+
+        cap = vars.makeCap(capRate);
+        floor = vars.makeFloor(floorRate);
+        boost::shared_ptr<ore::data::Swap> swap = vars.makeSwap(0.021);
+        cap->build(engineFactory);
+        floor->build(engineFactory);
+        swap->build(engineFactory);
+        capNpv = cap->instrument()->NPV();
+        floorNpv = floor->instrument()->NPV();
+        Real swapNpv = swap->instrument()->NPV();
+        Real capFloorNpv = capNpv + floorNpv;
+        BOOST_TEST_MESSAGE("CMS Cap NPV is " << capNpv);
+        BOOST_TEST_MESSAGE("CMS Floor NPV is " << floorNpv);
+        BOOST_TEST_MESSAGE("CMS Cap + Floor NPV is " << capFloorNpv);
+        BOOST_TEST_MESSAGE("CMS Swap NPV is " << swapNpv);
+        BOOST_CHECK_CLOSE(capFloorNpv, swapNpv, 1.0);
+
+    }
+
     test_suite* CmsTest::suite() {
         test_suite* suite = BOOST_TEST_SUITE("CmsTest");
         suite->add(BOOST_TEST_CASE(&CmsTest::testCMSAnalyticHagan));
         suite->add(BOOST_TEST_CASE(&CmsTest::testCMSNumericalHagan));
         suite->add(BOOST_TEST_CASE(&CmsTest::testCMSLinearTsr));
+        suite->add(BOOST_TEST_CASE(&CmsTest::cmsCapFloor));
         return suite;
     }
 }
