@@ -21,7 +21,8 @@ QLE_TESTS = \
 	stabilisedglls.hpp stabilisedglls.cpp \
 	capfloormarketdata.hpp \
 	swaptionmarketdata.hpp \
-	yieldcurvemarketdata.hpp
+	yieldcurvemarketdata.hpp \
+    survivalprobabilitycurve.hpp survivalprobabilitycurve.cpp
 
 dist-hook:
 	mkdir -p $(distdir)/build
