@@ -1,0 +1,37 @@
+
+Changes for the second ORE release (1.8.2.0):
+=============================================
+
+ORE 1.8.2.0 includes the following notable changes, details can be
+found in the commits between 22 March and 4 May.
+
+INSTRUMENTS
+
+- Fixed and floating rate Bonds added
+
+- CPI and Year on Year Inflation Swaps added
+
+- Equity Forwards and Options added
+
+MONTE CARLO FRAMEWORK
+
+- Simulation of equity factors added to the cross asset model and
+  scenario generation
+
+ANALYTICS
+
+- Sensitivity analysis and stress testing framework added covering all
+  IR and FX products in ORE
+
+UNIT TESTS
+
+- Unit test suites extended to 139 cases vs 108 in the initial release
+
+EXAMPLES
+
+- ORE has 18 examples now vs 13 in the initial release
+
+USER GUIDE
+
+- Extended accordingly, 148 pages
+

@@ -227,6 +227,8 @@ this node is shown in Listing \ref{lst:swap_conventions}.
   <FixedConvention> </FixedConvention>
   <FixedDayCounter> </FixedDayCounter>
   <Index> </Index>
+  <FloatFrequency> </FloatFrequency>
+  <SubPeriodsCouponType> </SubPeriodsCouponType>
 </Swap>
 \end{minted}
 \caption{Swap conventions}
@@ -240,6 +242,8 @@ The meanings of the various elements in this node are as follows:
 \item FixedConvention: The roll convention on the fixed leg.
 \item FixedDayCounter: The day count basis on the fixed leg.
 \item Index: The Ibor index on the floating leg.
+\item FloatFrequency [Optional]: The frequency of payments on the floating leg, to be used if the frequency is different to the tenor of the index (e.g. CAD swaps for BA-3M have a 6M or 1Y payment frequency with a Compounding coupon)
+\item SubPeriodsCouponType [Optional]: Defines how coupon rates should be calculated when the float frequency is different to that of the index. Possible values are "Compounding" and "Averaging".
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -454,4 +458,45 @@ SettlementDays above.
 \item SpreadIndex: The name of the index on the leg that has the cross currency basis spread.
 \item EOM [Optional]: \emph{True} if the end of month convention is to be used when generating the schedule on both legs
 and \emph{False} if not. If not provided, it defaults to \emph{False}.
+\end{itemize}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsubsection{Inflation Conventions}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+A node with name \emph{InflationSwap} is used to store conventions for zero or year on year inflation swap quotes. The
+structure of this node is shown in Listing \ref{lst:inflation_conventions}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <InflationSwap>
+      <Id>EUHICPXT_INFLATIONSWAP</Id>
+      <FixCalendar>TARGET</FixCalendar>
+      <FixConvention>MF</FixConvention>
+      <DayCounter>30/360</DayCounter>
+      <Index>EUHICPXT</Index>
+      <Interpolated>false</Interpolated>
+      <ObservationLag>3M</ObservationLag>
+      <AdjustInflationObservationDates>false</AdjustInflationObservationDates>
+      <InflationCalendar>TARGET</InflationCalendar>
+      <InflationConvention>MF</InflationConvention>
+  </InflationSwap>
+\end{minted}
+\caption{Inflation swap conventions}
+\label{lst:inflation_conventions}
+\end{listing}
+
+The meaning of the elements is as follows:
+
+\begin{itemize}
+\item FixCalendar: The calendar for the fixed rate leg of the swap.
+\item FixConvention: The rolling convention for the fixed rate leg of the swap.
+\item DayCounter: The payoff / coupon day counter (applied to both legs).
+\item Index: The underlying inflation index.
+\item Interpolated: Flag indicating interpolation of the index in the swap's payoff calculation.
+\item ObservationLag: The index observation lag to be applied.
+\item AdjustInfObsDates: Flag indicating whether index observation dates should be adjusted or not.
+\item InfCalendar: The calendar for the inflation leg of the swap.
+\item InfConvention: The rolling convention for the inflation leg of the swap.
 \end{itemize}

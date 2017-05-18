@@ -62,7 +62,7 @@ public:
     BondDiscountingEngineBuilder() : BondEngineBuilder("DiscountedCashflows", "DiscountingRiskyBondEngine") {}
 
 protected:
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const string& issuerId,
+    virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const string& creditCurveId,
                                                         const string& securityId,
                                                         const string& referenceCurveId) override {
 
@@ -70,8 +70,17 @@ protected:
         Period tsperiod = parsePeriod(tsperiodStr);
         Handle<YieldTermStructure> yts = market_->yieldCurve(referenceCurveId, configuration(MarketContext::pricing));
         Handle<DefaultProbabilityTermStructure> dpts =
-            market_->defaultCurve(issuerId, configuration(MarketContext::pricing));
-        Handle<Quote> recovery = market_->recoveryRate(issuerId, configuration(MarketContext::pricing));
+            market_->defaultCurve(creditCurveId, configuration(MarketContext::pricing));
+        Handle<Quote> recovery;
+        try {
+            // try security recovery first
+            recovery = market_->recoveryRate(securityId, configuration(MarketContext::pricing));
+        } catch (...) {
+            // otherwise fall back on curve recovery
+            ALOG("security specific recovery rate not found for security ID "
+                 << securityId << ", falling back on the recovery rate for credit curve Id " << creditCurveId);
+            recovery = market_->recoveryRate(creditCurveId, configuration(MarketContext::pricing));
+        }
         Handle<Quote> spread = market_->securitySpread(securityId, configuration(MarketContext::pricing));
 
         return boost::make_shared<QuantExt::DiscountingRiskyBondEngine>(yts, dpts, recovery, spread, tsperiod);

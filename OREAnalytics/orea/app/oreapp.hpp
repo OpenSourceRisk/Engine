@@ -18,7 +18,7 @@
 
 /*! \file orea/app/oreapp.hpp
   \brief Open Risk Engine App
-  \ingroup
+  \ingroup app
  */
 
 #pragma once
@@ -38,6 +38,9 @@ using namespace ore::data;
 namespace ore {
 namespace analytics {
 
+class SensitivityScenarioData;
+class SensitivityAnalysis;
+
 class OREApp {
 public:
     OREApp(boost::shared_ptr<Parameters> params, std::ostream& out = std::cout)
@@ -46,6 +49,7 @@ public:
         asof_ = parseDate(params->get("setup", "asofDate"));
         Settings::instance().evaluationDate() = asof_;
     }
+    virtual ~OREApp() {}
     //! generates XVA reports for a given portfolio and market
     void run();
     //! read setup from params_
@@ -90,6 +94,11 @@ public:
     //! run postProcessor to generate reports from cube
     void runPostProcessor();
 
+    //! run sensitivity analysis and write out reports
+    virtual void runSensitivityAnalysis();
+    //! run stress tests and write out report
+    virtual void runStressTest();
+
     //! write out initial (pre-cube) reports
     void writeInitialReports();
     //! write out XVA reports
@@ -104,6 +113,15 @@ public:
     boost::shared_ptr<NettingSetManager> initNettingSetManager();
 
 protected:
+    //! Initialize input parameters to the sensitivities analysis
+    void sensiInputInitialize(boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+                              boost::shared_ptr<SensitivityScenarioData>& sensiData,
+                              boost::shared_ptr<EngineData>& engineData, boost::shared_ptr<Portfolio>& sensiPortfolio,
+                              string& marketConfiguration);
+
+    //! Write out some standard sensitivities reports
+    void sensiOutputReports(const boost::shared_ptr<SensitivityAnalysis>& sensiAnalysis);
+
     Size tab_;
     Date asof_;
     //! ORE Input parameters
@@ -114,6 +132,8 @@ protected:
     bool buildSimMarket_;
     bool xva_;
     bool writeDIMReport_;
+    bool sensitivity_;
+    bool stress_;
 
     boost::shared_ptr<Market> market_;
     boost::shared_ptr<Portfolio> portfolio_;

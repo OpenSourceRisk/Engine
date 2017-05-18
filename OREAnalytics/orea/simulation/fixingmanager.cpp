@@ -111,9 +111,9 @@ void FixingManager::initialise(const boost::shared_ptr<Portfolio>& portfolio) {
 //! Update fixings to date d
 void FixingManager::update(Date d) {
     if (!fixingMap_.empty()) {
-        QL_REQUIRE(d > fixingsEnd_, "Can't go back in time, fixings must be reset."
-                                    " Update date "
-                                        << d << " but current fixings go to " << fixingsEnd_);
+        QL_REQUIRE(d >= fixingsEnd_, "Can't go back in time, fixings must be reset."
+                                     " Update date "
+                                         << d << " but current fixings go to " << fixingsEnd_);
         applyFixings(fixingsEnd_, d);
     }
     fixingsEnd_ = d;
@@ -121,9 +121,11 @@ void FixingManager::update(Date d) {
 
 //! Reset fixings to t0 (today)
 void FixingManager::reset() {
-    for (auto& kv : fixingCache_)
-        IndexManager::instance().setHistory(kv.first, kv.second);
-
+    if (modifiedFixingHistory_) {
+        for (auto& kv : fixingCache_)
+            IndexManager::instance().setHistory(kv.first, kv.second);
+        modifiedFixingHistory_ = false;
+    }
     fixingsEnd_ = today_;
 }
 
@@ -150,8 +152,10 @@ void FixingManager::applyFixings(Date start, Date end) {
                 TimeSeries<Real> history;
                 vector<Date>& fixingDates = fixingMap_[qlIndexName];
                 for (Size i = 0; i < fixingDates.size(); i++) {
-                    if (fixingDates[i] >= start && fixingDates[i] < end)
+                    if (fixingDates[i] >= start && fixingDates[i] < end) {
                         history[fixingDates[i]] = currentFixing;
+                        modifiedFixingHistory_ = true;
+                    }
                     if (fixingDates[i] >= end)
                         break;
                 }

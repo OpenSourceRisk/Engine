@@ -117,5 +117,33 @@ private:
     boost::shared_ptr<DateGrid> dateGrid_;
     Size index_;
 };
+
+//! NPVCalculatorFXT0
+/*! Calculate the NPV of the given trade, convert to base currency USING T0 RATES and divide by the numeraire
+ *  This can sometimes be useful for finite difference ("bump-revalue") sensitivities
+ *    (for FX spot sensis, if we wish to bump the spot in the pricing model, but still convert to base using static FX)
+ *  If the NPV() call throws, we log an exception and write 0 to the cube
+ *
+ */
+class NPVCalculatorFXT0 : public ValuationCalculator {
+public:
+    //! base ccy and index to write to
+    NPVCalculatorFXT0(const std::string& baseCcyCode, const boost::shared_ptr<Market>& t0Market, Size index = 0)
+        : baseCcyCode_(baseCcyCode), t0Market_(t0Market), index_(index) {}
+
+    virtual void calculate(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
+                           const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube,
+                           const Date& date, Size dateIndex, Size sample);
+
+    virtual void calculateT0(const boost::shared_ptr<Trade>& trade, Size tradeIndex,
+                             const boost::shared_ptr<SimMarket>& simMarket, boost::shared_ptr<NPVCube>& outputCube);
+
+private:
+    Real npv(const boost::shared_ptr<Trade>& trade, const boost::shared_ptr<SimMarket>& simMarket);
+
+    std::string baseCcyCode_;
+    boost::shared_ptr<Market> t0Market_;
+    Size index_;
+};
 } // namespace analytics
 } // namespace ore

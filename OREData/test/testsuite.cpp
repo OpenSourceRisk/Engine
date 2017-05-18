@@ -51,6 +51,7 @@ using boost::unit_test::test_suite;
 #include "bond.hpp"
 #include "calendars.hpp"
 #include "ccyswapwithresets.hpp"
+#include "cpiswap.hpp"
 #include "crossassetmodeldata.hpp"
 #include "equitymarketdata.hpp"
 #include "equitytrades.hpp"
@@ -94,6 +95,7 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(testsuite::FXSwapTest::suite());
     test->add(testsuite::FXOptionTest::suite());
     test->add(testsuite::CcySwapWithResetsTest::suite());
+    test->add(testsuite::CPISwapTest::suite());
     test->add(testsuite::FXTriangulationTest::suite());
     test->add(testsuite::CalendarNameTest::suite());
     test->add(testsuite::IndexTest::suite());

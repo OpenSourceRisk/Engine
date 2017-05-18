@@ -159,7 +159,7 @@ public:
     CalibrationStrategy& calibrationStrategy() { return calibrationStrategy_; }
     //@}
 
-    //! \Equality Operators
+    //! \name Operators
     //@{
     bool operator==(const LgmData& rhs);
     bool operator!=(const LgmData& rhs);

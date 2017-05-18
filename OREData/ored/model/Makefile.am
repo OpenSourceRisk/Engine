@@ -28,6 +28,7 @@ this_include_HEADERS = \
 	fxbsbuilder.hpp \
 	lgmdata.hpp \
 	lgmbuilder.hpp \
+	modelbuilder.hpp \
 	utilities.hpp
 
 all.hpp: Makefile.am

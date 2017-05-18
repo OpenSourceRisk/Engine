@@ -16,9 +16,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file App/ore.hpp
+/*! \file orea/app/parameters.hpp
     \brief Open Risk Engine setup and analytics choice
-    \ingroup
+    \ingroup app
 */
 
 #pragma once

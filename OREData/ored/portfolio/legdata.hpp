@@ -146,6 +146,64 @@ private:
     vector<string> gearingDates_;
 };
 
+class CPILegData : public XMLSerializable {
+public:
+    CPILegData() {}
+    CPILegData(string index, double baseCPI, string observationLag, bool interpolated, const vector<double>& rates,
+               const vector<string>& rateDates = std::vector<string>())
+        : index_(index), baseCPI_(baseCPI), observationLag_(observationLag), interpolated_(interpolated), rates_(rates),
+          rateDates_(rateDates) {}
+
+    const string index() const { return index_; }
+    double baseCPI() const { return baseCPI_; }
+    const string observationLag() const { return observationLag_; }
+    bool interpolated() const { return interpolated_; }
+    const std::vector<double>& rates() const { return rates_; }
+    const std::vector<string>& rateDates() const { return rateDates_; }
+
+    virtual void fromXML(XMLNode* node);
+    virtual XMLNode* toXML(XMLDocument& doc);
+
+private:
+    string index_;
+    double baseCPI_;
+    string observationLag_;
+    bool interpolated_;
+    vector<double> rates_;
+    vector<string> rateDates_;
+};
+
+class YoYLegData : public XMLSerializable {
+public:
+    YoYLegData() {}
+    YoYLegData(string index, string observationLag, bool interpolated, Size fixingDays, const vector<double>& gearings,
+               const vector<string>& gearingDates, const vector<double>& spreads, const vector<string>& spreadDates)
+        : index_(index), interpolated_(interpolated), fixingDays_(fixingDays), gearings_(gearings),
+          gearingDates_(gearingDates), spreads_(spreads), spreadDates_(spreadDates) {}
+
+    const string index() const { return index_; }
+    const string observationLag() const { return observationLag_; }
+    bool interpolated() const { return interpolated_; }
+    Size fixingDays() const { return fixingDays_; }
+    const std::vector<double>& gearings() const { return gearings_; }
+    const std::vector<string>& gearingDates() const { return gearingDates_; }
+    const std::vector<double>& spreads() const { return spreads_; }
+    const std::vector<string>& spreadDates() const { return spreadDates_; }
+
+    virtual void fromXML(XMLNode* node);
+    virtual XMLNode* toXML(XMLDocument& doc);
+
+private:
+    string index_;
+    string observationLag_;
+    bool interpolated_;
+    Size fixingDays_;
+    vector<double> gearings_;
+    vector<string> gearingDates_;
+    vector<double> spreads_;
+    vector<string> spreadDates_;
+};
+
 //! Serializable object holding leg data
 class LegData : public XMLSerializable {
 public:
@@ -192,6 +250,28 @@ public:
           isNotResetXCCY_(isNotResetXCCY), foreignCurrency_(foreignCurrency), foreignAmount_(foreignAmount),
           fxIndex_(fxIndex), fixingDays_(fixingDays) {}
 
+    //! Constructor with CPILegData
+    LegData(bool isPayer, const string& currency, CPILegData& data, ScheduleData& schedule, const string dayCounter,
+            const vector<double> notionals, const vector<string>& notionalDates = vector<string>(),
+            const string& paymentConvention = "F", bool notionalInitialExchange = false,
+            bool notionalFinalExchange = false, bool notionalAmortizingExchange = false, bool isNotResetXCCY = true)
+        : isPayer_(isPayer), currency_(currency), legType_("CPI"), cpiLegData_(data), schedule_(schedule),
+          dayCounter_(dayCounter), notionals_(notionals), notionalDates_(notionalDates),
+          paymentConvention_(paymentConvention), notionalInitialExchange_(notionalInitialExchange),
+          notionalFinalExchange_(notionalFinalExchange), notionalAmortizingExchange_(notionalAmortizingExchange),
+          isNotResetXCCY_(isNotResetXCCY) {}
+
+    //! Constructor with YoYLegData
+    LegData(bool isPayer, const string& currency, YoYLegData& data, ScheduleData& schedule, const string dayCounter,
+            const vector<double> notionals, const vector<string>& notionalDates = vector<string>(),
+            const string& paymentConvention = "F", bool notionalInitialExchange = false,
+            bool notionalFinalExchange = false, bool notionalAmortizingExchange = false, bool isNotResetXCCY = true)
+        : isPayer_(isPayer), currency_(currency), legType_("YoY"), yoyLegData_(data), schedule_(schedule),
+          dayCounter_(dayCounter), notionals_(notionals), notionalDates_(notionalDates),
+          paymentConvention_(paymentConvention), notionalInitialExchange_(notionalInitialExchange),
+          notionalFinalExchange_(notionalFinalExchange), notionalAmortizingExchange_(notionalAmortizingExchange),
+          isNotResetXCCY_(isNotResetXCCY) {}
+
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node);
@@ -214,6 +294,8 @@ public:
     const CashflowData& cashflowData() const { return cashflowData_; }
     const FloatingLegData& floatingLegData() const { return floatingLegData_; }
     const FixedLegData& fixedLegData() const { return fixedLegData_; }
+    const CPILegData& cpiLegData() const { return cpiLegData_; }
+    const YoYLegData& yoyLegData() const { return yoyLegData_; }
     bool isNotResetXCCY() const { return isNotResetXCCY_; }
     const string& foreignCurrency() const { return foreignCurrency_; }
     double foreignAmount() const { return foreignAmount_; }
@@ -227,6 +309,8 @@ private:
     CashflowData cashflowData_;
     FloatingLegData floatingLegData_;
     FixedLegData fixedLegData_;
+    CPILegData cpiLegData_;
+    YoYLegData yoyLegData_;
     ScheduleData schedule_;
     string dayCounter_;
     vector<double> notionals_;
@@ -250,6 +334,8 @@ Leg makeIborLeg(LegData& data, boost::shared_ptr<IborIndex> index,
 Leg makeOISLeg(LegData& data, boost::shared_ptr<OvernightIndex> index);
 Leg makeSimpleLeg(LegData& data);
 Leg makeNotionalLeg(const Leg& refLeg, bool initNomFlow, bool finalNomFlow, bool amortNomFlow = true);
+Leg makeCPILeg(LegData& data, boost::shared_ptr<ZeroInflationIndex> index);
+Leg makeYoYLeg(LegData& data, boost::shared_ptr<YoYInflationIndex> index);
 Real currentNotional(const Leg& leg);
 
 //@}

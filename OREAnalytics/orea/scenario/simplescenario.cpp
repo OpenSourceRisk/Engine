@@ -16,6 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/make_shared.hpp>
 #include <orea/scenario/simplescenario.hpp>
 #include <ored/utilities/log.hpp>
 #include <ql/errors.hpp>
@@ -28,10 +29,9 @@ namespace analytics {
 bool SimpleScenario::has(const RiskFactorKey& key) const { return data_.find(key) != data_.end(); }
 
 void SimpleScenario::add(const RiskFactorKey& key, Real value) {
-    // TODO: why can we not overwrite??
-    QL_REQUIRE(!has(key), "key " << key << " already used, we do not overwrite");
-    data_.emplace(key, value);
-    keys_.emplace_back(key);
+    data_[key] = value; // key might already exist, so we cannot use insert/emplace
+    if (std::find(keys_.begin(), keys_.end(), key) == keys_.end())
+        keys_.emplace_back(key);
 }
 
 Real SimpleScenario::get(const RiskFactorKey& key) const {
@@ -39,5 +39,7 @@ Real SimpleScenario::get(const RiskFactorKey& key) const {
     QL_REQUIRE(it != data_.end(), "Scenario does not provide data for key " << key);
     return it->second;
 }
+
+boost::shared_ptr<Scenario> SimpleScenario::clone() const { return boost::make_shared<SimpleScenario>(*this); }
 } // namespace analytics
 } // namespace ore

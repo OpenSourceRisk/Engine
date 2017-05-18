@@ -32,6 +32,7 @@
 #include <qle/termstructures/basistwoswaphelper.hpp>
 #include <qle/termstructures/crossccybasisswaphelper.hpp>
 #include <qle/termstructures/oisratehelper.hpp>
+#include <qle/termstructures/subperiodsswaphelper.hpp>
 #include <qle/termstructures/tenorbasisswaphelper.hpp>
 
 #include <ored/marketdata/yieldcurve.hpp>
@@ -900,10 +901,21 @@ void YieldCurve::addSwaps(const boost::shared_ptr<YieldCurveSegment>& segment,
 
         // Create a swap helper if we do.
         Period swapTenor = swapQuote->term();
-        boost::shared_ptr<RateHelper> swapHelper(new SwapRateHelper(
-            swapQuote->quote(), swapTenor, swapConvention->fixedCalendar(), swapConvention->fixedFrequency(),
-            swapConvention->fixedConvention(), swapConvention->fixedDayCounter(), swapConvention->index(),
-            Handle<Quote>(), 0 * Days, discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>()));
+        boost::shared_ptr<RateHelper> swapHelper;
+        if (swapConvention->hasSubPeriod()) {
+            swapHelper = boost::make_shared<SubPeriodsSwapHelper>(
+                swapQuote->quote(), swapTenor, Period(swapConvention->fixedFrequency()),
+                swapConvention->fixedCalendar(), swapConvention->fixedDayCounter(), swapConvention->fixedConvention(),
+                Period(swapConvention->floatFrequency()), swapConvention->index(),
+                swapConvention->index()->dayCounter(),
+                discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(),
+                swapConvention->subPeriodsCouponType());
+        } else {
+            swapHelper = boost::make_shared<SwapRateHelper>(
+                swapQuote->quote(), swapTenor, swapConvention->fixedCalendar(), swapConvention->fixedFrequency(),
+                swapConvention->fixedConvention(), swapConvention->fixedDayCounter(), swapConvention->index(),
+                Handle<Quote>(), 0 * Days, discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>());
+        }
 
         instruments.push_back(swapHelper);
     }

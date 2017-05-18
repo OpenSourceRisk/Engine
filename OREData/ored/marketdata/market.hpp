@@ -23,7 +23,9 @@
 
 #pragma once
 
+#include <ql/experimental/inflation/cpicapfloortermpricesurface.hpp>
 #include <ql/indexes/iborindex.hpp>
+#include <ql/indexes/inflationindex.hpp>
 #include <ql/indexes/swapindex.hpp>
 #include <ql/quote.hpp>
 #include <ql/termstructures/defaulttermstructure.hpp>
@@ -97,6 +99,19 @@ public:
     virtual Handle<OptionletVolatilityStructure>
     capFloorVol(const string& ccy, const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
+
+    //! Inflation Indexes
+    virtual Handle<ZeroInflationIndex>
+    zeroInflationIndex(const string& indexName, const bool interpolated,
+                       const string& configuration = Market::defaultConfiguration) const = 0;
+    virtual Handle<YoYInflationIndex>
+    yoyInflationIndex(const string& indexName, const bool interpolated,
+                      const string& configuration = Market::defaultConfiguration) const = 0;
+
+    //! Inflation Cap Floor Price Surfaces
+    virtual Handle<CPICapFloorTermPriceSurface>
+    inflationCapFloorPriceSurface(const string& indexName,
+                                  const string& configuration = Market::defaultConfiguration) const = 0;
 
     //! \name Equity curves
     //@{

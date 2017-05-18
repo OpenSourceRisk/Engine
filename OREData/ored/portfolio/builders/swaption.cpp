@@ -134,7 +134,7 @@ boost::shared_ptr<QuantExt::LGM> LGMBermudanSwaptionEngineBuilder::model(const s
     boost::shared_ptr<LgmBuilder> calib =
         boost::make_shared<LgmBuilder>(market_, data, configuration(MarketContext::irCalibration), tolerance);
     DLOG("Calibrate model (configuration " << configuration(MarketContext::irCalibration) << ")");
-    calib->update();
+    modelBuilders_.insert(calib);
     return calib->model();
 }
 

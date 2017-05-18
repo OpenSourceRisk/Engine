@@ -90,11 +90,32 @@ void OREApp::run() {
         writeInitialReports();
         out_ << "OK" << endl;
 
+        /**********************
+         * Sensitivity analysis
+         */
+        if (sensitivity_) {
+            runSensitivityAnalysis();
+        } else {
+            LOG("skip sensitivity analysis");
+            out_ << setw(tab_) << left << "Sensitivity... ";
+            out_ << "SKIP" << endl;
+        }
+
+        /****************
+         * Stress testing
+         */
+        if (stress_) {
+            runStressTest();
+        } else {
+            LOG("skip stress test");
+            out_ << setw(tab_) << left << "Stress testing... ";
+            out_ << "SKIP" << endl;
+        }
+
         /******************************************
          * Simulation: Scenario and Cube Generation
          */
 
-        fflush(stdout);
         if (simulate_) {
             generateNPVCube();
         } else {
@@ -169,6 +190,8 @@ void OREApp::readSetup() {
     writeDIMReport_ = (params_->hasGroup("xva") && params_->has("xva", "dim") && parseBool(params_->get("xva", "dim")))
                           ? true
                           : false;
+    sensitivity_ = (params_->hasGroup("sensitivity") && params_->get("sensitivity", "active") == "Y") ? true : false;
+    stress_ = (params_->hasGroup("stress") && params_->get("stress", "active") == "Y") ? true : false;
 }
 
 void OREApp::setupLog() {
@@ -377,6 +400,122 @@ void OREApp::writeInitialReports() {
     }
 }
 
+void OREApp::runSensitivityAnalysis() {
+
+    out_ << setw(tab_) << left << "Sensitivity Report... " << flush;
+
+    boost::shared_ptr<ScenarioSimMarketParameters> simMarketData(new ScenarioSimMarketParameters);
+    boost::shared_ptr<SensitivityScenarioData> sensiData(new SensitivityScenarioData);
+    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+    boost::shared_ptr<Portfolio> sensiPortfolio = boost::make_shared<Portfolio>();
+    string marketConfiguration;
+
+    sensiInputInitialize(simMarketData, sensiData, engineData, sensiPortfolio, marketConfiguration);
+
+    bool recalibrateModels =
+        params_->has("sensitivity", "recalibrateModels") && parseBool(params_->get("sensitivity", "recalibrateModels"));
+
+    boost::shared_ptr<SensitivityAnalysis> sensiAnalysis =
+        boost::make_shared<SensitivityAnalysis>(sensiPortfolio, market_, marketConfiguration, engineData, simMarketData,
+                                                sensiData, conventions_, recalibrateModels);
+    sensiAnalysis->generateSensitivities();
+
+    sensiOutputReports(sensiAnalysis);
+
+    out_ << "OK" << endl;
+}
+
+void OREApp::sensiInputInitialize(boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+                                  boost::shared_ptr<SensitivityScenarioData>& sensiData,
+                                  boost::shared_ptr<EngineData>& engineData,
+                                  boost::shared_ptr<Portfolio>& sensiPortfolio, string& marketConfiguration) {
+
+    // We reset this here because the date grid building below depends on it.
+    Settings::instance().evaluationDate() = asof_;
+
+    LOG("Get Simulation Market Parameters");
+    string inputPath = params_->get("setup", "inputPath");
+    string marketConfigFile = inputPath + "/" + params_->get("sensitivity", "marketConfigFile");
+    simMarketData->fromFile(marketConfigFile);
+
+    LOG("Get Sensitivity Parameters");
+    string sensitivityConfigFile = inputPath + "/" + params_->get("sensitivity", "sensitivityConfigFile");
+    sensiData->fromFile(sensitivityConfigFile);
+
+    LOG("Get Engine Data");
+    string sensiPricingEnginesFile = inputPath + "/" + params_->get("sensitivity", "pricingEnginesFile");
+    engineData->fromFile(sensiPricingEnginesFile);
+
+    LOG("Get Portfolio");
+    string portfolioFile = inputPath + "/" + params_->get("setup", "portfolioFile");
+    // Just load here. We build the portfolio in SensitivityAnalysis, after building SimMarket.
+    sensiPortfolio->load(portfolioFile);
+
+    LOG("Build Sensitivity Analysis");
+    marketConfiguration = params_->get("markets", "pricing");
+    return;
+}
+
+void OREApp::sensiOutputReports(const boost::shared_ptr<SensitivityAnalysis>& sensiAnalysis) {
+
+    string outputPath = params_->get("setup", "outputPath");
+    string outputFile1 = outputPath + "/" + params_->get("sensitivity", "scenarioOutputFile");
+    Real sensiThreshold = parseReal(params_->get("sensitivity", "outputSensitivityThreshold"));
+    boost::shared_ptr<Report> scenReport = boost::make_shared<CSVFileReport>(outputFile1);
+    sensiAnalysis->writeScenarioReport(scenReport, sensiThreshold);
+
+    string outputFile2 = outputPath + "/" + params_->get("sensitivity", "sensitivityOutputFile");
+    boost::shared_ptr<Report> sensiReport = boost::make_shared<CSVFileReport>(outputFile2);
+    sensiAnalysis->writeSensitivityReport(sensiReport, sensiThreshold);
+
+    string outputFile3 = outputPath + "/" + params_->get("sensitivity", "crossGammaOutputFile");
+    boost::shared_ptr<Report> cgReport = boost::make_shared<CSVFileReport>(outputFile3);
+    sensiAnalysis->writeCrossGammaReport(cgReport, sensiThreshold);
+    return;
+}
+
+void OREApp::runStressTest() {
+
+    out_ << setw(tab_) << left << "Stress Test Report... " << flush;
+    // We reset this here because the date grid building below depends on it.
+    Settings::instance().evaluationDate() = asof_;
+
+    LOG("Get Simulation Market Parameters");
+    string inputPath = params_->get("setup", "inputPath");
+    string marketConfigFile = inputPath + "/" + params_->get("stress", "marketConfigFile");
+    boost::shared_ptr<ScenarioSimMarketParameters> simMarketData(new ScenarioSimMarketParameters);
+    simMarketData->fromFile(marketConfigFile);
+
+    LOG("Get Stress Test Parameters");
+    string stressConfigFile = inputPath + "/" + params_->get("stress", "stressConfigFile");
+    boost::shared_ptr<StressTestScenarioData> stressData(new StressTestScenarioData);
+    stressData->fromFile(stressConfigFile);
+
+    LOG("Get Engine Data");
+    string pricingEnginesFile = inputPath + "/" + params_->get("stress", "pricingEnginesFile");
+    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+    engineData->fromFile(pricingEnginesFile);
+
+    LOG("Get Portfolio");
+    string portfolioFile = inputPath + "/" + params_->get("setup", "portfolioFile");
+    boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
+    // Just load here. We build the portfolio in SensitivityAnalysis, after building SimMarket.
+    portfolio->load(portfolioFile);
+
+    LOG("Build Stress Test");
+    string marketConfiguration = params_->get("markets", "pricing");
+    boost::shared_ptr<StressTest> stressTest = boost::make_shared<StressTest>(
+        portfolio, market_, marketConfiguration, engineData, simMarketData, stressData, conventions_);
+
+    string outputPath = params_->get("setup", "outputPath");
+    string outputFile = outputPath + "/" + params_->get("stress", "scenarioOutputFile");
+    Real threshold = parseReal(params_->get("stress", "outputThreshold"));
+    boost::shared_ptr<Report> stressReport = boost::make_shared<CSVFileReport>(outputFile);
+    stressTest->writeReport(stressReport, threshold);
+
+    out_ << "OK" << endl;
+}
+
 void OREApp::initAggregationScenarioData() {
     scenarioData_ = boost::make_shared<InMemoryAggregationScenarioData>(grid_->size(), samples_);
 }
@@ -406,7 +545,7 @@ void OREApp::buildNPVCube() {
     o.str("");
     o << "Build Cube " << simPortfolio_->size() << " x " << grid_->size() << " x " << samples_ << "... ";
 
-    auto progressBar = boost::make_shared<SimpleProgressBar>(o.str(), tab_);
+    auto progressBar = boost::make_shared<SimpleProgressBar>(o.str(), tab_, 72 - std::min<Size>(tab_, 67));
     auto progressLog = boost::make_shared<ProgressLog>("Building cube...");
     engine.registerProgressIndicator(progressBar);
     engine.registerProgressIndicator(progressLog);

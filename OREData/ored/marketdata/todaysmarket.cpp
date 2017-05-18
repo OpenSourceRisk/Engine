@@ -29,12 +29,16 @@
 #include <ored/marketdata/equityvolcurve.hpp>
 #include <ored/marketdata/fxspot.hpp>
 #include <ored/marketdata/fxvolcurve.hpp>
+#include <ored/marketdata/inflationcapfloorpricesurface.hpp>
+#include <ored/marketdata/inflationcurve.hpp>
+#include <ored/marketdata/securityrecoveryrate.hpp>
 #include <ored/marketdata/securityspread.hpp>
 #include <ored/marketdata/swaptionvolcurve.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
+#include <qle/indexes/inflationindexwrapper.hpp>
 
 using namespace std;
 using namespace QuantLib;
@@ -60,9 +64,12 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
     map<string, boost::shared_ptr<SwaptionVolCurve>> requiredSwaptionVolCurves;
     map<string, boost::shared_ptr<CapFloorVolCurve>> requiredCapFloorVolCurves;
     map<string, boost::shared_ptr<DefaultCurve>> requiredDefaultCurves;
+    map<string, boost::shared_ptr<InflationCurve>> requiredInflationCurves;
+    map<string, boost::shared_ptr<InflationCapFloorPriceSurface>> requiredInflationCapFloorPriceSurfaces;
     map<string, boost::shared_ptr<EquityCurve>> requiredEquityCurves;
     map<string, boost::shared_ptr<EquityVolCurve>> requiredEquityVolCurves;
     map<string, boost::shared_ptr<SecuritySpread>> requiredSecuritySpreads;
+    map<string, boost::shared_ptr<SecurityRecoveryRate>> requiredSecurityRecoveryRates;
 
     for (const auto& configuration : params.configurations()) {
 
@@ -291,6 +298,102 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                 break;
             }
 
+            case CurveSpec::CurveType::Inflation: {
+                boost::shared_ptr<InflationCurveSpec> inflationspec =
+                    boost::dynamic_pointer_cast<InflationCurveSpec>(spec);
+                QL_REQUIRE(inflationspec, "Failed to convert spec " << *spec << " to inflation curve spec");
+
+                // have we built the curve already ?
+                auto itr = requiredInflationCurves.find(inflationspec->name());
+                if (itr == requiredInflationCurves.end()) {
+                    LOG("Building InflationCurve " << inflationspec->name() << " for asof " << asof);
+                    boost::shared_ptr<InflationCurve> inflationCurve = boost::make_shared<InflationCurve>(
+                        asof, *inflationspec, loader, curveConfigs, conventions, requiredYieldCurves);
+                    itr = requiredInflationCurves.insert(make_pair(inflationspec->name(), inflationCurve)).first;
+                }
+                // this try-catch is necessary to handle cases where no ZC inflation index curves exist in scope
+                map<string, string> zcInfMap;
+                try {
+                    zcInfMap = params.zeroInflationIndexCurves(configuration.first);
+                } catch (QuantLib::Error& e) {
+                    LOG(e.what());
+                }
+                for (const auto it : zcInfMap) {
+                    if (it.second == spec->name()) {
+                        LOG("Adding ZeroInflationIndex (" << it.first << ") with spec " << *inflationspec
+                                                          << " to configuration " << configuration.first);
+                        boost::shared_ptr<ZeroInflationTermStructure> ts =
+                            boost::dynamic_pointer_cast<ZeroInflationTermStructure>(
+                                itr->second->inflationTermStructure());
+                        bool indexInterpolated = itr->second->interpolatedIndex();
+                        QL_REQUIRE(ts, "expected zero inflation term structure for index " << it.first
+                                                                                           << ", but could not cast");
+                        auto tmp = parseZeroInflationIndex(it.first, indexInterpolated,
+                                                           Handle<ZeroInflationTermStructure>(ts));
+                        zeroInflationIndices_[make_pair(configuration.first, make_pair(it.first, indexInterpolated))] =
+                            Handle<ZeroInflationIndex>(tmp);
+                        zeroInflationIndices_[make_pair(configuration.first, make_pair(it.first, !indexInterpolated))] =
+                            Handle<ZeroInflationIndex>(boost::make_shared<QuantExt::ZeroInflationIndexWrapper>(
+                                tmp, indexInterpolated ? CPI::Flat : CPI::Linear));
+                    }
+                }
+                // this try-catch is necessary to handle cases where no YoY inflation index curves exist in scope
+                map<string, string> yyInfMap;
+                try {
+                    yyInfMap = params.yoyInflationIndexCurves(configuration.first);
+                } catch (QuantLib::Error& e) {
+                    LOG(e.what());
+                }
+                for (const auto it : yyInfMap) {
+                    if (it.second == spec->name()) {
+                        LOG("Adding YoYInflationIndex (" << it.first << ") with spec " << *inflationspec
+                                                         << " to configuration " << configuration.first);
+                        boost::shared_ptr<YoYInflationTermStructure> ts =
+                            boost::dynamic_pointer_cast<YoYInflationTermStructure>(
+                                itr->second->inflationTermStructure());
+                        bool indexInterpolated = itr->second->interpolatedIndex();
+                        QL_REQUIRE(ts, "expected yoy inflation term structure for index " << it.first
+                                                                                          << ", but could not cast");
+                        yoyInflationIndices_[make_pair(configuration.first, make_pair(it.first, false))] =
+                            Handle<YoYInflationIndex>(boost::make_shared<QuantExt::YoYInflationIndexWrapper>(
+                                parseZeroInflationIndex(it.first, indexInterpolated), false,
+                                Handle<YoYInflationTermStructure>(ts)));
+                        yoyInflationIndices_[make_pair(configuration.first, make_pair(it.first, true))] =
+                            Handle<YoYInflationIndex>(boost::make_shared<QuantExt::YoYInflationIndexWrapper>(
+                                parseZeroInflationIndex(it.first, indexInterpolated), true,
+                                Handle<YoYInflationTermStructure>(ts)));
+                    }
+                }
+                break;
+            }
+
+            case CurveSpec::CurveType::InflationCapFloorPrice: {
+                boost::shared_ptr<InflationCapFloorPriceSurfaceSpec> infcapfloorspec =
+                    boost::dynamic_pointer_cast<InflationCapFloorPriceSurfaceSpec>(spec);
+                QL_REQUIRE(infcapfloorspec, "Failed to convert spec " << *spec << " to inf cap floor spec");
+
+                // have we built the curve already ?
+                auto itr = requiredInflationCapFloorPriceSurfaces.find(infcapfloorspec->name());
+                if (itr == requiredInflationCapFloorPriceSurfaces.end()) {
+                    LOG("Building InflationCapFloorPriceSurface for asof " << asof);
+                    boost::shared_ptr<InflationCapFloorPriceSurface> inflationCapFloorPriceSurface =
+                        boost::make_shared<InflationCapFloorPriceSurface>(asof, *infcapfloorspec, loader, curveConfigs,
+                                                                          requiredYieldCurves, requiredInflationCurves);
+                    itr = requiredInflationCapFloorPriceSurfaces
+                              .insert(make_pair(infcapfloorspec->name(), inflationCapFloorPriceSurface))
+                              .first;
+                }
+                for (const auto it : params.inflationCapFloorPriceSurfaces(configuration.first)) {
+                    if (it.second == spec->name()) {
+                        LOG("Adding InflationCapFloorPriceSurface (" << it.first << ") with spec " << *infcapfloorspec
+                                                                     << " to configuration " << configuration.first);
+                        inflationCapFloorPriceSurfaces_[make_pair(configuration.first, it.first)] =
+                            Handle<CPICapFloorTermPriceSurface>(itr->second->inflationCapFloorPriceSurface());
+                    }
+                }
+                break;
+            }
+
             case CurveSpec::CurveType::Equity: {
                 boost::shared_ptr<EquityCurveSpec> equityspec = boost::dynamic_pointer_cast<EquityCurveSpec>(spec);
                 QL_REQUIRE(equityspec, "Failed to convert spec " << *spec);
@@ -371,6 +474,35 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                         LOG("Adding SecuritySpread (" << it.first << ") with spec " << *securityspreadspec
                                                       << " to configuration " << configuration.first);
                         securitySpreads_[make_pair(configuration.first, it.first)] = itr->second->spread();
+                    }
+                }
+                break;
+            }
+
+            case CurveSpec::CurveType::SecurityRecoveryRate: {
+                boost::shared_ptr<SecurityRecoveryRateSpec> securityrecoveryratespec =
+                    boost::dynamic_pointer_cast<SecurityRecoveryRateSpec>(spec);
+                QL_REQUIRE(securityrecoveryratespec,
+                           "Failed to convert spec " << *spec << " to security recovery rate spec");
+
+                // have we built the curve already?
+                auto itr = requiredSecurityRecoveryRates.find(securityrecoveryratespec->securityID());
+                if (itr == requiredSecurityRecoveryRates.end()) {
+                    // build the curve
+                    LOG("Building SecurityRecoveryRates for asof " << asof);
+                    boost::shared_ptr<SecurityRecoveryRate> securityRecoveryRate =
+                        boost::make_shared<SecurityRecoveryRate>(asof, *securityrecoveryratespec, loader);
+                    itr = requiredSecurityRecoveryRates
+                              .insert(make_pair(securityrecoveryratespec->securityID(), securityRecoveryRate))
+                              .first;
+                }
+
+                // add the handle to the Market Map for recovery rates
+                for (const auto& it : params.securityRecoveryRates(configuration.first)) {
+                    if (it.second == spec->name()) {
+                        LOG("Adding SecurityRecoveryRate (" << it.first << ") with spec " << *spec
+                                                            << " to configuration " << configuration.first);
+                        recoveryRates_[make_pair(configuration.first, it.first)] = itr->second->recoveryRate();
                     }
                 }
                 break;

@@ -9,5 +9,6 @@
 #include <ored/model/fxbsbuilder.hpp>
 #include <ored/model/lgmdata.hpp>
 #include <ored/model/lgmbuilder.hpp>
+#include <ored/model/modelbuilder.hpp>
 #include <ored/model/utilities.hpp>
 
