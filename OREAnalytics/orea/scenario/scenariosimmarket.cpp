@@ -441,8 +441,10 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
             dates.push_back(asof_ + parameters->defaultTenors()[i]);
         }
 
-        for (Size i = 0; i < dates.size(); i++) {
-            Probability prob = wrapper->survivalProbability(dates[i], true);
+        boost::shared_ptr<SimpleQuote> q(new SimpleQuote(1.0));
+        quotes.push_back(Handle<Quote>(q));
+        for (Size i = 0; i < dates.size() - 1; i++) {
+            Probability prob = wrapper->survivalProbability(dates[i + 1], true);
             boost::shared_ptr<SimpleQuote> q(new SimpleQuote(prob));
             if (parameters->simulateSurvivalProbabilities()) {
                 simData_.emplace(std::piecewise_construct,
@@ -465,9 +467,10 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
 
         // add recovery rate
         boost::shared_ptr<SimpleQuote> rrQuote(new SimpleQuote(initMarket->recoveryRate(name, configuration)->value()));
-        if( parameters->simulateRecoveryRates()) {
-        simData_.emplace(std::piecewise_construct, std::forward_as_tuple(RiskFactorKey::KeyType::RecoveryRate, name),
-                         std::forward_as_tuple(rrQuote));
+        if (parameters->simulateRecoveryRates()) {
+            simData_.emplace(std::piecewise_construct,
+                             std::forward_as_tuple(RiskFactorKey::KeyType::RecoveryRate, name),
+                             std::forward_as_tuple(rrQuote));
         }
         recoveryRates_.insert(pair<pair<string, string>, Handle<Quote>>(make_pair(Market::defaultConfiguration, name),
                                                                         Handle<Quote>(rrQuote)));
