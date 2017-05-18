@@ -23,14 +23,14 @@
 
 #pragma once
 
-#include <set>
-#include <map>
-#include <boost/optional.hpp>
 #include <boost/none.hpp>
+#include <boost/optional.hpp>
 #include <boost/shared_ptr.hpp>
+#include <map>
+#include <ored/utilities/xmlutils.hpp>
 #include <ql/patterns/visitor.hpp>
 #include <ql/types.hpp>
-#include <ored/utilities/xmlutils.hpp>
+#include <set>
 
 using std::string;
 using std::vector;
@@ -444,5 +444,5 @@ private:
 
 // Map form curveID to YieldCurveConfig
 using YieldCurveConfigMap = std::map<string, boost::shared_ptr<YieldCurveConfig>>;
-}
-}
+} // namespace data
+} // namespace ore

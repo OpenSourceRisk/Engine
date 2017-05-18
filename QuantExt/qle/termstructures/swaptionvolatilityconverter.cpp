@@ -204,4 +204,4 @@ Real SwaptionVolatilityConverter::convert(const Date& expiry, const Period& swap
 #ifdef BOOST_MSVC
 #pragma warning(pop)
 #endif
-}
+} // namespace QuantExt

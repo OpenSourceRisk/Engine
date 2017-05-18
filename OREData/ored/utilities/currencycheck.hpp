@@ -34,5 +34,5 @@ namespace data {
     \ingroup utilities
 */
 bool checkCurrency(const string& s);
-}
-}
+} // namespace data
+} // namespace ore

@@ -18,8 +18,8 @@
 
 #pragma once
 
-#include <ored/portfolio/trade.hpp>
 #include <boost/make_shared.hpp>
+#include <ored/portfolio/trade.hpp>
 
 using namespace QuantLib;
 using namespace ore::data;
@@ -64,4 +64,4 @@ boost::shared_ptr<Trade> buildCapFloor(string id, string ccy, string longShort, 
                                        string floatDC, string index);
 
 boost::shared_ptr<Trade> buildZeroBond(string id, string ccy, Real notional, Size term);
-}
+} // namespace testsuite

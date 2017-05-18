@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/pricingengines/analyticxassetlgmeqoptionengine.hpp>
 #include <qle/models/crossassetanalytics.hpp>
+#include <qle/pricingengines/analyticxassetlgmeqoptionengine.hpp>
 
 #include <ql/pricingengines/blackcalculator.hpp>
 

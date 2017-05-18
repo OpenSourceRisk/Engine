@@ -183,7 +183,7 @@ boost::shared_ptr<data::CrossAssetModelData> crossAssetData() {
 
     return crossAssetData;
 }
-}
+} // namespace
 
 namespace testsuite {
 
@@ -216,4 +216,4 @@ test_suite* CrossAssetModelDataTest::suite() {
     suite->add(BOOST_TEST_CASE(&CrossAssetModelDataTest::testToXMLFromXML));
     return suite;
 }
-}
+} // namespace testsuite

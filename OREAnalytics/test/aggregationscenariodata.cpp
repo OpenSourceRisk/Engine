@@ -67,4 +67,4 @@ test_suite* AggregationScenarioDataTest::suite() {
 
     return suite;
 }
-}
+} // namespace testsuite

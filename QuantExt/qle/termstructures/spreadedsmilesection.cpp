@@ -31,4 +31,4 @@ Volatility SpreadedSmileSection::volatilityImpl(Rate k) const {
     Volatility spreadedVol = QuantLib::SpreadedSmileSection::volatilityImpl(k);
     return std::max(spreadedVol, 0.0);
 }
-}
+} // namespace QuantExt

@@ -282,5 +282,5 @@ XMLNode* Swap::toXML(XMLDocument& doc) {
         XMLUtils::appendNode(swapNode, legData_[i].toXML(doc));
     return node;
 }
-}
-}
+} // namespace data
+} // namespace ore

@@ -24,8 +24,8 @@
 #ifndef quantext_krwkoribor_hpp
 #define quantext_krwkoribor_hpp
 
-#include <ql/indexes/iborindex.hpp>
 #include <ql/currencies/asia.hpp>
+#include <ql/indexes/iborindex.hpp>
 #include <ql/time/calendars/southkorea.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 
@@ -46,6 +46,6 @@ public:
         : IborIndex("KRW-KORIBOR", tenor, 2, KRWCurrency(), SouthKorea(), ModifiedFollowing, false, Actual365Fixed(),
                     h) {}
 };
-}
+} // namespace QuantExt
 
 #endif

@@ -24,12 +24,12 @@
 #ifndef quantext_calibrated_model_hpp
 #define quantext_calibrated_model_hpp
 
-#include <ql/models/calibrationhelper.hpp>
-#include <ql/patterns/observable.hpp>
-#include <ql/option.hpp>
-#include <ql/math/optimization/method.hpp>
-#include <ql/models/parameter.hpp>
 #include <ql/math/optimization/endcriteria.hpp>
+#include <ql/math/optimization/method.hpp>
+#include <ql/models/calibrationhelper.hpp>
+#include <ql/models/parameter.hpp>
+#include <ql/option.hpp>
+#include <ql/patterns/observable.hpp>
 
 using namespace QuantLib;
 
@@ -37,7 +37,7 @@ namespace QuantExt {
 
 //! Calibrated model class with linkable parameters
 /*! \ingroup models
-*/
+ */
 class LinkableCalibratedModel : public virtual Observer, public virtual Observable {
 public:
     LinkableCalibratedModel();
@@ -88,7 +88,7 @@ private:
 
 //! Linkable Calibrated Model
 /*! \ingroup models
-*/
+ */
 class LinkableCalibratedModel::PrivateConstraint : public Constraint {
 private:
     class Impl : public Constraint::Impl {

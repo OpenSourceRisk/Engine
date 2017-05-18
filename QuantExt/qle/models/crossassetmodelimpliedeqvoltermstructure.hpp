@@ -34,7 +34,7 @@ namespace QuantExt {
 
 //! Analytic Cross-Asset LGM Equity Option Engine
 /*! \ingroup crossassetmodel
-*/
+ */
 class AnalyticXAssetLgmEquityOptionEngine;
 
 //! Cross Asset Model Implied EQ Term Structure

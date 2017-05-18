@@ -23,13 +23,13 @@
 
 #pragma once
 
+#include <orea/scenario/scenario.hpp>
+#include <orea/scenario/scenariogenerator.hpp>
+#include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/simulation/simmarket.hpp>
+#include <ored/configuration/conventions.hpp>
 #include <ql/quotes/all.hpp>
 #include <qle/termstructures/all.hpp>
-#include <orea/scenario/scenariosimmarketparameters.hpp>
-#include <orea/scenario/scenariogenerator.hpp>
-#include <orea/scenario/scenario.hpp>
-#include <ored/configuration/conventions.hpp>
 
 #include <map>
 
@@ -68,5 +68,5 @@ private:
 
     std::map<RiskFactorKey, boost::shared_ptr<SimpleQuote>> simData_;
 };
-}
-}
+} // namespace analytics
+} // namespace ore

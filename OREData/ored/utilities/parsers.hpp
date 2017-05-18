@@ -23,19 +23,19 @@
 
 #pragma once
 
-#include <ql/types.hpp>
-#include <ql/time/date.hpp>
-#include <ql/time/calendar.hpp>
-#include <ql/time/period.hpp>
-#include <ql/time/businessdayconvention.hpp>
-#include <ql/time/daycounter.hpp>
-#include <ql/time/dategenerationrule.hpp>
-#include <ql/currency.hpp>
 #include <ql/compounding.hpp>
-#include <ql/position.hpp>
+#include <ql/currency.hpp>
 #include <ql/exercise.hpp>
 #include <ql/instruments/swaption.hpp>
 #include <ql/methods/montecarlo/lsmbasissystem.hpp>
+#include <ql/position.hpp>
+#include <ql/time/businessdayconvention.hpp>
+#include <ql/time/calendar.hpp>
+#include <ql/time/date.hpp>
+#include <ql/time/dategenerationrule.hpp>
+#include <ql/time/daycounter.hpp>
+#include <ql/time/period.hpp>
+#include <ql/types.hpp>
 
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/tokenizer.hpp>

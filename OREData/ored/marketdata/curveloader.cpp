@@ -100,5 +100,5 @@ void order(vector<boost::shared_ptr<CurveSpec>>& curveSpecs, const CurveConfigur
     for (Size i = 0; i < curveSpecs.size(); ++i)
         DLOG(std::setw(2) << i << " " << curveSpecs[i]->name());
 }
-}
-}
+} // namespace data
+} // namespace ore

@@ -45,4 +45,4 @@ Volatility SpreadedOptionletVolatility::volatilityImpl(Time t, Rate s) const {
     Volatility spreadedVol = QuantLib::SpreadedOptionletVolatility::volatilityImpl(t, s);
     return std::max(spreadedVol, 0.0);
 }
-}
+} // namespace QuantExt

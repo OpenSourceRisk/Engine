@@ -551,6 +551,6 @@ struct rls {
 
 } // namespace CrossAssetAnalytics
 
-} // namesapce QuantExt
+} // namespace QuantExt
 
 #endif

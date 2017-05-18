@@ -71,4 +71,4 @@ Volatility DynamicOptionletVolatilityStructure::volatilityImpl(Time optionTime, 
 
     QL_FAIL("Unexpected decay mode (" << decayMode_ << ")");
 }
-}
+} // namespace QuantExt

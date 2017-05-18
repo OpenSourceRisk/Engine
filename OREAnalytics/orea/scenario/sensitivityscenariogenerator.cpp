@@ -410,8 +410,8 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(
     map<string, SensitivityScenarioData::FxVolShiftData> shiftDataMap = sensitivityData_->fxVolShiftData();
     for (Size i = 0; i < n_fxvol_pairs; ++i) {
         string ccypair = fxVolCcyPairs_[i];
-        QL_REQUIRE(shiftDataMap.find(ccypair) != shiftDataMap.end(), "ccy pair " << ccypair
-                                                                                 << " not found in FxVolShiftData");
+        QL_REQUIRE(shiftDataMap.find(ccypair) != shiftDataMap.end(),
+                   "ccy pair " << ccypair << " not found in FxVolShiftData");
         SensitivityScenarioData::FxVolShiftData data = shiftDataMap[ccypair];
         ShiftType shiftType = parseShiftType(data.shiftType);
         std::vector<Period> shiftTenors = data.shiftExpiries;
@@ -660,8 +660,8 @@ SensitivityScenarioGenerator::ScenarioDescription
 SensitivityScenarioGenerator::yieldScenarioDescription(string name, Size bucket, bool up) {
     QL_REQUIRE(sensitivityData_->yieldCurveShiftData().find(name) != sensitivityData_->yieldCurveShiftData().end(),
                "currency " << name << " not found in index shift data");
-    QL_REQUIRE(bucket < sensitivityData_->yieldCurveShiftData()[name].shiftTenors.size(), "bucket " << bucket
-                                                                                                    << " out of range");
+    QL_REQUIRE(bucket < sensitivityData_->yieldCurveShiftData()[name].shiftTenors.size(),
+               "bucket " << bucket << " out of range");
     RiskFactorKey key(RiskFactorKey::KeyType::YieldCurve, name, bucket);
     std::ostringstream o;
     o << sensitivityData_->yieldCurveShiftData()[name].shiftTenors[bucket];
@@ -739,5 +739,5 @@ SensitivityScenarioGenerator::capFloorVolScenarioDescription(string ccy, Size ex
     ScenarioDescription desc(type, key, text);
     return desc;
 }
-}
-}
+} // namespace analytics
+} // namespace ore

@@ -34,7 +34,7 @@ namespace QuantExt {
 
 //! Rate helper for bootstrapping using Sub Periods Swaps
 /*! \ingroup termstructures
-*/
+ */
 class SubPeriodsSwapHelper : public RelativeDateRateHelper {
 public:
     SubPeriodsSwapHelper(Handle<Quote> spread, const Period& swapTenor, const Period& fixedTenor,
@@ -77,6 +77,6 @@ private:
     Handle<YieldTermStructure> discountHandle_;
     RelinkableHandle<YieldTermStructure> discountRelinkableHandle_;
 };
-}
+} // namespace QuantExt
 
 #endif

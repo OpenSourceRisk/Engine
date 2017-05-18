@@ -23,10 +23,10 @@
 
 #pragma once
 
-#include <ored/marketdata/marketdatum.hpp>
-#include <ored/marketdata/fixings.hpp>
-#include <ql/time/date.hpp>
 #include <boost/shared_ptr.hpp>
+#include <ored/marketdata/fixings.hpp>
+#include <ored/marketdata/marketdatum.hpp>
+#include <ql/time/date.hpp>
 #include <vector>
 
 namespace ore {
@@ -34,7 +34,7 @@ namespace data {
 
 //! Market data loader base class
 /*! \ingroup marketdata
-*/
+ */
 class Loader {
 public:
     virtual ~Loader() {}
@@ -48,5 +48,5 @@ public:
     virtual const std::vector<Fixing>& loadFixings() const = 0;
     //@}
 };
-}
-}
+} // namespace data
+} // namespace ore

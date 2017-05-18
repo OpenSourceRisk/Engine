@@ -33,7 +33,6 @@ using namespace boost;
 #include <boost/test/parameterized_test.hpp>
 #include <boost/test/test_tools.hpp>
 #include <boost/test/unit_test.hpp>
-#include <boost/test/unit_test.hpp>
 using boost::unit_test::test_suite;
 
 #ifdef BOOST_MSVC
@@ -84,7 +83,7 @@ void stopTimer() {
         cout << minutes << " m ";
     cout << fixed << setprecision(0) << seconds << " s" << endl << endl;
 }
-}
+} // namespace
 
 test_suite* init_unit_test_suite(int, char* []) {
 

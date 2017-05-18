@@ -29,11 +29,11 @@ namespace testsuite {
 
 //! Test FX quote triangulation
 /*! \ingroup tests
-*/
+ */
 class FXTriangulationTest {
 public:
     //! Test FX triangulation using ECB FX rates, check reverse quotes, check quote caching
     static void testFXTriangulation();
     static boost::unit_test_framework::test_suite* suite();
 };
-}
+} // namespace testsuite

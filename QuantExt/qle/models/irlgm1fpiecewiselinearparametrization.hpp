@@ -93,8 +93,8 @@ Lgm1fPiecewiseLinearParametrization<TS>::Lgm1fPiecewiseLinearParametrization(
 template <class TS> void Lgm1fPiecewiseLinearParametrization<TS>::initialize(const Array& alpha, const Array& h) {
     QL_REQUIRE(helper1().t().size() + 1 == alpha.size(),
                "alpha size (" << alpha.size() << ") inconsistent to times size (" << helper1().t().size() << ")");
-    QL_REQUIRE(helper2().t().size() + 1 == h.size(), "h size (" << h.size() << ") inconsistent to times size ("
-                                                                << helper1().t().size() << ")");
+    QL_REQUIRE(helper2().t().size() + 1 == h.size(),
+               "h size (" << h.size() << ") inconsistent to times size (" << helper1().t().size() << ")");
     // store raw parameter values
     for (Size i = 0; i < helper1().p()->size(); ++i) {
         helper1().p()->setParam(i, inverse(0, alpha[i]));

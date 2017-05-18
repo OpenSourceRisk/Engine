@@ -17,8 +17,8 @@
 */
 
 #include <orea/scenario/stressscenariodata.hpp>
-#include <ored/utilities/xmlutils.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/xmlutils.hpp>
 
 using namespace QuantLib;
 
@@ -183,5 +183,5 @@ XMLNode* StressTestScenarioData::toXML(XMLDocument& doc) {
     QL_FAIL("toXML not implemented for stress testing data");
     return node;
 }
-}
-}
+} // namespace analytics
+} // namespace ore

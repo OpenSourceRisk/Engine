@@ -86,5 +86,5 @@ private:
     std::vector<QuantLib::Time> times_;
     QuantLib::TimeGrid timeGrid_;
 };
-}
-}
+} // namespace analytics
+} // namespace ore

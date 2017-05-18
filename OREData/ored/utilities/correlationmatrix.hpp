@@ -23,8 +23,8 @@
 
 #pragma once
 
-#include <ql/math/matrix.hpp>
 #include <map>
+#include <ql/math/matrix.hpp>
 
 using namespace QuantLib;
 
@@ -119,5 +119,5 @@ private:
 
     std::map<key, Real> data_;
 };
-}
-}
+} // namespace data
+} // namespace ore

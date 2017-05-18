@@ -55,9 +55,10 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
         if (it != yieldCurves.end()) {
             nominalTs = it->second->handle();
         } else {
-            QL_FAIL("The nominal term structure, " << config->nominalTermStructure() << ", required in the building "
-                                                                                        "of the curve, " << spec.name()
-                                                   << ", was not found.");
+            QL_FAIL("The nominal term structure, " << config->nominalTermStructure()
+                                                   << ", required in the building "
+                                                      "of the curve, "
+                                                   << spec.name() << ", was not found.");
         }
 
         // We loop over all market data, looking for quotes that match the configuration
@@ -223,5 +224,5 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
         QL_FAIL("inflation curve building failed: unknown error");
     }
 }
-}
-}
+} // namespace data
+} // namespace ore
