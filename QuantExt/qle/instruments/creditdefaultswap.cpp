@@ -99,15 +99,13 @@ CreditDefaultSwap::CreditDefaultSwap(Protection::Side side, Real notional, Rate 
                .withNotionals(notional)
                .withCouponRates(runningSpread, dayCounter)
                .withPaymentAdjustment(convention);
-    Date d = upfrontDate == Null<Date>() ? schedule[0] : upfrontDate;
-    upfrontPayment_.reset(new SimpleCashFlow(notional * upfront, d));
-    QL_REQUIRE(upfrontPayment_->date() >= protectionStart_, "upfront can not be due before contract start");
 
     // If empty, adjust to T+3 standard settlement
     Date effectiveUpfrontDate =
         upfrontDate == Null<Date>()
             ? schedule.calendar().advance(schedule.calendar().adjust(protectionStart_, convention), 2, Days, convention)
             : upfrontDate;
+    QL_REQUIRE(upfrontPayment_->date() >= protectionStart_, "upfront can not be due before contract start");
     // '2' is used above since the protection start is assumed to be
     // on trade_date + 1
     upfrontPayment_.reset(new SimpleCashFlow(notional * upfront, effectiveUpfrontDate));
