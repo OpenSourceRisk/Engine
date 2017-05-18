@@ -30,12 +30,12 @@ namespace testsuite {
 
 //! CashFlow test
 /*! \ingroup tests
-*/
+ */
 class CashFlowTest {
 public:
     static void testFXLinkedCashFlow();
     static boost::unit_test_framework::test_suite* suite();
 };
-}
+} // namespace testsuite
 
 #endif

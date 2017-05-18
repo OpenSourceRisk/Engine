@@ -23,14 +23,14 @@
 
 #pragma once
 
-#include <ored/marketdata/marketimpl.hpp>
-#include <ored/marketdata/curvespec.hpp>
-#include <ored/marketdata/loader.hpp>
-#include <ored/marketdata/todaysmarketparameters.hpp>
-#include <ored/configuration/curveconfigurations.hpp>
-#include <ored/configuration/conventions.hpp>
 #include <boost/shared_ptr.hpp>
 #include <map>
+#include <ored/configuration/conventions.hpp>
+#include <ored/configuration/curveconfigurations.hpp>
+#include <ored/marketdata/curvespec.hpp>
+#include <ored/marketdata/loader.hpp>
+#include <ored/marketdata/marketimpl.hpp>
+#include <ored/marketdata/todaysmarketparameters.hpp>
 
 namespace ore {
 namespace data {
@@ -64,5 +64,5 @@ public:
         //! Repository of market conventions
         const Conventions& conventions);
 };
-}
-}
+} // namespace data
+} // namespace ore

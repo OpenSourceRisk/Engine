@@ -35,4 +35,4 @@ CLFCurrency::CLFCurrency() {
         new Data("Unidad de Fomento (funds code)", "CLF", 990, "CLF", "", 1, Rounding(), "1$.2f %3%"));
     data_ = clfData;
 }
-}
+} // namespace QuantExt

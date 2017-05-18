@@ -53,5 +53,5 @@ XMLNode* TradeActions::toXML(XMLDocument& doc) {
         XMLUtils::appendNode(node, action.toXML(doc));
     return node;
 }
-}
-}
+} // namespace data
+} // namespace ore

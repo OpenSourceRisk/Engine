@@ -23,13 +23,13 @@
 
 #pragma once
 
+#include <orea/cube/npvcube.hpp>
+#include <orea/engine/valuationcalculator.hpp>
 #include <orea/simulation/dategrid.hpp>
 #include <orea/simulation/simmarket.hpp>
-#include <orea/cube/npvcube.hpp>
+#include <ored/model/modelbuilder.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/utilities/progressbar.hpp>
-#include <ored/model/modelbuilder.hpp>
-#include <orea/engine/valuationcalculator.hpp>
 
 #include <map>
 #include <set>
@@ -83,5 +83,5 @@ private:
     boost::shared_ptr<analytics::SimMarket> simMarket_;
     set<boost::shared_ptr<data::ModelBuilder>> modelBuilders_;
 };
-}
-}
+} // namespace analytics
+} // namespace ore

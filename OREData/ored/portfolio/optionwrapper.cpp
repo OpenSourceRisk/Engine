@@ -118,4 +118,4 @@ bool BermudanOptionWrapper::exercise() const {
     return exercise;
 }
 } // namespace data
-} // namespace ored
+} // namespace ore

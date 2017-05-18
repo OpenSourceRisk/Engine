@@ -76,5 +76,5 @@ boost::shared_ptr<Scenario> ScenarioWriter::next(const Date& d) {
     }
     return s;
 }
-}
-}
+} // namespace analytics
+} // namespace ore

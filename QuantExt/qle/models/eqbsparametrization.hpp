@@ -24,9 +24,9 @@
 #ifndef quantext_eqbs_parametrization_hpp
 #define quantext_eqbs_parametrization_hpp
 
-#include <qle/models/parametrization.hpp>
 #include <ql/handle.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
+#include <qle/models/parametrization.hpp>
 
 using namespace QuantLib;
 

@@ -82,5 +82,5 @@ private:
     vector<double> exerciseFees_;
     vector<double> exercisePrices_;
 };
-}
-}
+} // namespace data
+} // namespace ore

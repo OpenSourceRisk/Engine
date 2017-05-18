@@ -25,8 +25,8 @@
 
 #include <ored/marketdata/curvespec.hpp>
 #include <ored/marketdata/loader.hpp>
-#include <ql/quote.hpp>
 #include <ql/handle.hpp>
+#include <ql/quote.hpp>
 
 namespace ore {
 namespace data {
@@ -46,5 +46,5 @@ public:
 private:
     Handle<Quote> recoveryRate_;
 };
-}
-}
+} // namespace data
+} // namespace ore

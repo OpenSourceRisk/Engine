@@ -38,11 +38,11 @@
 #include <qle/pricingengines/blackcdsoptionengine.hpp>
 
 #include <ql/exercise.hpp>
-#include <ql/quotes/simplequote.hpp>
 #include <ql/instruments/payoffs.hpp>
-#include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/math/distributions/normaldistribution.hpp>
 #include <ql/math/solvers1d/brent.hpp>
+#include <ql/quotes/simplequote.hpp>
+#include <ql/termstructures/yieldtermstructure.hpp>
 
 namespace QuantExt {
 
@@ -74,7 +74,7 @@ private:
     boost::shared_ptr<SimpleQuote> vol_;
     const Instrument::results* results_;
 };
-}
+} // namespace
 
 CdsOption::CdsOption(const boost::shared_ptr<CreditDefaultSwap>& swap, const boost::shared_ptr<Exercise>& exercise,
                      bool knocksOut)
@@ -142,4 +142,4 @@ void CdsOption::results::reset() {
     Option::results::reset();
     riskyAnnuity = Null<Real>();
 }
-}
+} // namespace QuantExt

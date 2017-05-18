@@ -24,8 +24,8 @@
 #ifndef quantext_hufbubor_hpp
 #define quantext_hufbubor_hpp
 
-#include <ql/indexes/iborindex.hpp>
 #include <ql/currencies/europe.hpp>
+#include <ql/indexes/iborindex.hpp>
 #include <ql/time/calendars/hungary.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 
@@ -50,6 +50,6 @@ public:
     HUFBubor(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
         : IborIndex("HUF-BUBOR", tenor, 2, HUFCurrency(), Hungary(), ModifiedFollowing, false, Actual360(), h) {}
 };
-}
+} // namespace QuantExt
 
 #endif

@@ -89,4 +89,4 @@ test_suite* LegDataTest::suite() {
     suite->add(BOOST_TEST_CASE(&LegDataTest::testLegDataCashflows));
     return suite;
 }
-}
+} // namespace testsuite

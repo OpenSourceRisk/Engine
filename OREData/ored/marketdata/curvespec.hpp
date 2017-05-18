@@ -306,7 +306,7 @@ private:
 
 //! Equity curve description
 /*!  \ingroup curves
-*/
+ */
 class EquityCurveSpec : public CurveSpec {
 
 public:
@@ -334,7 +334,7 @@ private:
 
 //! Equity Volatility curve description
 /*! \ingroup curves
-*/
+ */
 class EquityVolatilityCurveSpec : public CurveSpec {
 public:
     //! \name Constructors
@@ -387,5 +387,5 @@ public:
 protected:
     string securityID_;
 };
-}
-}
+} // namespace data
+} // namespace ore

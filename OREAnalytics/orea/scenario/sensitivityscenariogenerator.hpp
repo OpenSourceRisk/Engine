@@ -128,5 +128,5 @@ private:
 
     boost::shared_ptr<SensitivityScenarioData> sensitivityData_;
 };
-}
-}
+} // namespace analytics
+} // namespace ore

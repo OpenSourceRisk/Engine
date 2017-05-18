@@ -134,4 +134,4 @@ void CrossCcyBasisSwap::results::reset() {
     fairPaySpread = Null<Spread>();
     fairRecSpread = Null<Spread>();
 }
-}
+} // namespace QuantExt

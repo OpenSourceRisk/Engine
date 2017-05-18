@@ -26,8 +26,8 @@
 #define quantext_discounting_currencyswap_engine_hpp
 
 #include <ql/currency.hpp>
-#include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/handle.hpp>
+#include <ql/termstructures/yieldtermstructure.hpp>
 
 #include <qle/instruments/currencyswap.hpp>
 
@@ -70,6 +70,6 @@ private:
     Date settlementDate_;
     Date npvDate_;
 };
-}
+} // namespace QuantExt
 
 #endif

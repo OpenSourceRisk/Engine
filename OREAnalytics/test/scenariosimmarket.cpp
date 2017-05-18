@@ -16,20 +16,20 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <test/scenariosimmarket.hpp>
-#include <test/testmarket.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
-#include <ored/utilities/log.hpp>
-#include <ored/marketdata/market.hpp>
-#include <ored/marketdata/marketimpl.hpp>
-#include <ql/time/daycounters/actualactual.hpp>
-#include <ql/termstructures/yield/flatforward.hpp>
-#include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
-#include <ql/termstructures/volatility/swaption/swaptionconstantvol.hpp>
-#include <ql/termstructures/volatility/capfloor/constantcapfloortermvol.hpp>
-#include <ql/termstructures/credit/flathazardrate.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <ored/configuration/conventions.hpp>
+#include <ored/marketdata/market.hpp>
+#include <ored/marketdata/marketimpl.hpp>
+#include <ored/utilities/log.hpp>
+#include <ql/termstructures/credit/flathazardrate.hpp>
+#include <ql/termstructures/volatility/capfloor/constantcapfloortermvol.hpp>
+#include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
+#include <ql/termstructures/volatility/swaption/swaptionconstantvol.hpp>
+#include <ql/termstructures/yield/flatforward.hpp>
+#include <ql/time/daycounters/actualactual.hpp>
+#include <test/scenariosimmarket.hpp>
+#include <test/testmarket.hpp>
 
 #include <ql/indexes/ibor/all.hpp>
 
@@ -83,7 +83,7 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> scenarioParameters() {
 
     return parameters;
 }
-}
+} // namespace
 
 namespace testsuite {
 
@@ -257,4 +257,4 @@ test_suite* ScenarioSimMarketTest::suite() {
     suite->add(BOOST_TEST_CASE(&ScenarioSimMarketTest::testScenarioSimMarket));
     return suite;
 }
-}
+} // namespace testsuite

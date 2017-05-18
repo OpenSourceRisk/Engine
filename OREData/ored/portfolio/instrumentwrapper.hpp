@@ -94,5 +94,5 @@ public:
 
     QuantLib::Real NPV() const override { return instrument_->NPV() * multiplier_; }
 };
-}
-}
+} // namespace data
+} // namespace ore

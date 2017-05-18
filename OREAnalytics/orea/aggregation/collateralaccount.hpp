@@ -143,5 +143,5 @@ private:
     vector<Date> accountDates_;
     vector<MarginCall> marginCalls_;
 };
-}
-}
+} // namespace analytics
+} // namespace ore

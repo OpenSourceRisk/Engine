@@ -24,8 +24,8 @@
 #ifndef quantext_nzdbkbm_hpp
 #define quantext_nzdbkbm_hpp
 
-#include <ql/indexes/iborindex.hpp>
 #include <ql/currencies/oceania.hpp>
+#include <ql/indexes/iborindex.hpp>
 #include <ql/time/calendars/newzealand.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 
@@ -47,6 +47,6 @@ public:
     NZDBKBM(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
         : IborIndex("NZD-BKBM", tenor, 2, NZDCurrency(), NewZealand(), ModifiedFollowing, false, ActualActual(), h) {}
 };
-}
+} // namespace QuantExt
 
 #endif

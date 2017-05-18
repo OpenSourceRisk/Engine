@@ -16,17 +16,17 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <iomanip>
 #include <ored/utilities/flowanalysis.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ostream>
 #include <ql/cashflows/coupon.hpp>
 #include <ql/cashflows/cpicoupon.hpp>
-#include <ql/cashflows/yoyinflationcoupon.hpp>
 #include <ql/cashflows/floatingratecoupon.hpp>
+#include <ql/cashflows/yoyinflationcoupon.hpp>
 #include <ql/indexes/interestrateindex.hpp>
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
-#include <iomanip>
-#include <ostream>
 
 using namespace std;
 using QuantLib::Real;
@@ -118,5 +118,5 @@ vector<vector<string>> flowAnalysis(const QuantLib::Leg& leg) {
         leg[i]->accept(generator);
     return generator.analysis();
 }
-}
-}
+} // namespace data
+} // namespace ore

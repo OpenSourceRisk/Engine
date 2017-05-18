@@ -24,8 +24,8 @@
 #ifndef quantext_sekstibor_hpp
 #define quantext_sekstibor_hpp
 
-#include <ql/indexes/iborindex.hpp>
 #include <ql/currencies/europe.hpp>
+#include <ql/indexes/iborindex.hpp>
 #include <ql/time/calendars/sweden.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 
@@ -49,6 +49,6 @@ public:
     SEKStibor(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
         : IborIndex("SEK-STIBOR", tenor, 2, SEKCurrency(), Sweden(), ModifiedFollowing, false, Actual360(), h) {}
 };
-}
+} // namespace QuantExt
 
 #endif

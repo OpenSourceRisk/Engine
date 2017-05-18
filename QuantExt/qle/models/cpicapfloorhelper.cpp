@@ -38,8 +38,8 @@ CpiCapFloorHelper::CpiCapFloorHelper(Option::Type type, Real baseCPI, const Date
     QL_REQUIRE(errorType == CalibrationHelper::PriceError || errorType == CalibrationHelper::RelativePriceError,
                "CpiCapFloorHelper supports only PriceError and "
                "RelativePriceError error types");
-    QL_REQUIRE(marketPremium > 0.0 && !close_enough(marketPremium, 0.0), "can not calibrate to market premium "
-                                                                             << marketPremium);
+    QL_REQUIRE(marketPremium > 0.0 && !close_enough(marketPremium, 0.0),
+               "can not calibrate to market premium " << marketPremium);
     marketValue_ = marketPremium;
 }
 
@@ -54,4 +54,4 @@ Real CpiCapFloorHelper::blackPrice(Volatility) const {
     return marketValue_;
 }
 
-} // QuantExt
+} // namespace QuantExt

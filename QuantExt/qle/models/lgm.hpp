@@ -154,8 +154,8 @@ inline Real LinearGaussMarkovModel::reducedDiscountBond(const Time t, const Time
 inline Real LinearGaussMarkovModel::discountBondOption(Option::Type type, const Real K, const Time t, const Time S,
                                                        const Time T,
                                                        const Handle<YieldTermStructure> discountCurve) const {
-    QL_REQUIRE(T > S && S >= t && t >= 0.0, "T(" << T << ") > S(" << S << ") >= t(" << t
-                                                 << ") >= 0 required in LGM::discountBondOption");
+    QL_REQUIRE(T > S && S >= t && t >= 0.0,
+               "T(" << T << ") > S(" << S << ") >= t(" << t << ") >= 0 required in LGM::discountBondOption");
     Real w = (type == Option::Call ? 1.0 : -1.0);
     Real pS = discountCurve.empty() ? parametrization_->termStructure()->discount(S) : discountCurve->discount(S);
     Real pT = discountCurve.empty() ? parametrization_->termStructure()->discount(T) : discountCurve->discount(T);

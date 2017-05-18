@@ -23,13 +23,13 @@
 
 #pragma once
 
-#include <ql/termstructures/credit/interpolatedhazardratecurve.hpp>
-#include <ql/termstructures/credit/piecewisedefaultcurve.hpp>
-#include <ored/marketdata/loader.hpp>
-#include <ored/marketdata/curvespec.hpp>
-#include <ored/marketdata/yieldcurve.hpp>
 #include <ored/configuration/conventions.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
+#include <ored/marketdata/curvespec.hpp>
+#include <ored/marketdata/loader.hpp>
+#include <ored/marketdata/yieldcurve.hpp>
+#include <ql/termstructures/credit/interpolatedhazardratecurve.hpp>
+#include <ql/termstructures/credit/piecewisedefaultcurve.hpp>
 
 using QuantLib::Date;
 using ore::data::CurveConfigurations;
@@ -63,5 +63,5 @@ private:
     boost::shared_ptr<DefaultProbabilityTermStructure> curve_;
     Real recoveryRate_;
 };
-}
-}
+} // namespace data
+} // namespace ore

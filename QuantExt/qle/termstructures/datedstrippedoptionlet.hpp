@@ -25,9 +25,9 @@
 
 #include <qle/termstructures/datedstrippedoptionletbase.hpp>
 
-#include <ql/termstructures/volatility/optionlet/strippedoptionletbase.hpp>
 #include <ql/indexes/iborindex.hpp>
 #include <ql/quote.hpp>
+#include <ql/termstructures/volatility/optionlet/strippedoptionletbase.hpp>
 
 namespace QuantExt {
 //! Stripped Optionlet Surface
@@ -88,4 +88,4 @@ private:
     VolatilityType type_;
     Real displacement_;
 };
-}
+} // namespace QuantExt

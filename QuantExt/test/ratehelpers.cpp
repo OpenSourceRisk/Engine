@@ -19,8 +19,8 @@
 #include "ratehelpers.hpp"
 
 #include <ql/indexes/ibor/usdlibor.hpp>
-#include <ql/termstructures/yield/piecewiseyieldcurve.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
+#include <ql/termstructures/yield/piecewiseyieldcurve.hpp>
 
 #include <qle/termstructures/tenorbasisswaphelper.hpp>
 
@@ -78,4 +78,4 @@ test_suite* RateHelpersTest::suite() {
     suite->add(BOOST_TEST_CASE(&RateHelpersTest::testTenorBasisSwapHelperDegenerateSchedule));
     return suite;
 }
-}
+} // namespace testsuite

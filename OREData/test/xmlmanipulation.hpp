@@ -43,4 +43,4 @@ public:
     static void testXMLAttributes();
     static boost::unit_test_framework::test_suite* suite();
 };
-}
+} // namespace testsuite

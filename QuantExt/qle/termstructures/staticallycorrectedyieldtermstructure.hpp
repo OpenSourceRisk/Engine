@@ -119,6 +119,6 @@ inline Real StaticallyCorrectedYieldTermStructure::discountImpl(Time t) const {
     return x_->discount(t) * c;
 }
 
-} // namesapce QuantExt
+} // namespace QuantExt
 
 #endif

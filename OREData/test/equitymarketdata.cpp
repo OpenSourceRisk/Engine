@@ -17,8 +17,8 @@
 */
 
 #include "equitymarketdata.hpp"
-#include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
+#include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/xmlutils.hpp>
 

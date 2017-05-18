@@ -46,5 +46,5 @@ bool operator==(const boost::shared_ptr<CurveSpec>& lhs, const boost::shared_ptr
 }
 
 std::ostream& operator<<(std::ostream& os, const CurveSpec& spec) { return os << spec.name(); }
-}
-}
+} // namespace data
+} // namespace ore

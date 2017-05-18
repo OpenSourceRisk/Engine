@@ -153,5 +153,5 @@ private:
     bool isLoaded_;
     bool isBuilt_;
 };
-}
-}
+} // namespace data
+} // namespace ore

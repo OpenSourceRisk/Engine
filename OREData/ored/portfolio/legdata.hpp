@@ -353,5 +353,5 @@ vector<double> normaliseToSchedule(const vector<double>& values, const Schedule&
 // normaliseToSchedule concat buildScheduledVector
 vector<double> buildScheduledVectorNormalised(const vector<double>& values, const vector<string>& dates,
                                               const Schedule& schedule, const Real defaultValue = Null<Real>());
-}
-}
+} // namespace data
+} // namespace ore
