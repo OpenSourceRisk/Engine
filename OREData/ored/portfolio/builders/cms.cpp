@@ -19,7 +19,6 @@
 #include <ored/portfolio/builders/cms.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
-#include <oredp/portfolio/builders/cmsbuilder.hpp>
 
 #include <boost/make_shared.hpp>
 
