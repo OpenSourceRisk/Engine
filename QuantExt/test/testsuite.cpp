@@ -52,7 +52,6 @@ using boost::unit_test::test_suite;
 #include "discountcurve.hpp"
 #include "dynamicblackvoltermstructure.hpp"
 #include "dynamicswaptionvolmatrix.hpp"
-#include "equitycrossassetmodel.hpp"
 #include "index.hpp"
 #include "logquote.hpp"
 #include "optionletstripper.hpp"
