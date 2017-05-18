@@ -18,12 +18,26 @@
 
 #include <boost/lexical_cast.hpp>
 #include <ored/marketdata/marketdatum.hpp>
+#include <ored/utilities/parsers.hpp>
 
 using boost::lexical_cast;
 using boost::bad_lexical_cast;
 
 namespace ore {
 namespace data {
+
+EquityOptionQuote::EquityOptionQuote(Real value, Date asofDate, const string& name, QuoteType quoteType,
+                                     string equityName, string ccy, string expiry, string strike)
+    : MarketDatum(value, asofDate, name, quoteType, InstrumentType::EQUITY_OPTION), eqName_(equityName), ccy_(ccy),
+      expiry_(expiry), strike_(strike) {
+
+    QL_REQUIRE(strike == "ATMF", "Invalid EquityOptionQuote strike (" << strike << ")");
+    // we will call a parser on the expiry string, to ensure it is a correctly-formatted date or tenor
+    Date tmpDate;
+    Period tmpPeriod;
+    bool tmpBool;
+    parseDateOrPeriod(expiry, tmpDate, tmpPeriod, tmpBool);
+}
 
 Natural MMFutureQuote::expiryYear() const {
     QL_REQUIRE(expiry_.length() == 7, "The expiry string must be of "
@@ -49,6 +63,21 @@ Month MMFutureQuote::expiryMonth() const {
         QL_FAIL("Could not convert month string, " << strExpiryMonth << ", to number.");
     }
     return static_cast<Month>(expiryMonth);
+}
+
+QuantLib::Size SeasonalityQuote::applyMonth() const {
+    QL_REQUIRE(month_.length() == 3, "The month string must be of "
+                                     "the form MMM");
+    std::vector<std::string> allMonths = {"JAN", "FEB", "MAR", "APR", "MAY", "JUN",
+                                          "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"};
+    QuantLib::Size applyMonth;
+    auto it = std::find(allMonths.begin(), allMonths.end(), month_);
+    if (it != allMonths.end()) {
+        applyMonth = std::distance(allMonths.begin(), it) + 1;
+    } else {
+        QL_FAIL("Unknown month string: " << month_);
+    }
+    return applyMonth;
 }
 } // namespace data
 } // namespace ore

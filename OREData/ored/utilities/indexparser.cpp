@@ -32,7 +32,6 @@
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/all.hpp>
 #include <qle/indexes/all.hpp>
-#include <qle/indexes/fxindex.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -46,6 +45,7 @@ namespace data {
 
 class IborIndexParser {
 public:
+    virtual ~IborIndexParser() {}
     virtual boost::shared_ptr<IborIndex> build(Period p, const Handle<YieldTermStructure>& h) const = 0;
 };
 
@@ -93,6 +93,7 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldT
         {"JPY-TONAR", boost::make_shared<IborIndexParserOIS<Tonar>>()},
         {"CHF-TOIS", boost::make_shared<IborIndexParserOIS<CHFTois>>()},
         {"USD-FedFunds", boost::make_shared<IborIndexParserOIS<FedFunds>>()},
+        {"CAD-CORRA", boost::make_shared<IborIndexParserOIS<CORRA>>()},
         {"AUD-BBSW", boost::make_shared<IborIndexParserWithPeriod<AUDbbsw>>()},
         {"AUD-LIBOR", boost::make_shared<IborIndexParserWithPeriod<AUDLibor>>()},
         {"EUR-EURIBOR", boost::make_shared<IborIndexParserWithPeriod<Euribor>>()},
@@ -121,7 +122,11 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldT
         {"MXN-TIIE", boost::make_shared<IborIndexParserWithPeriod<MXNTiie>>()},
         {"PLN-WIBOR", boost::make_shared<IborIndexParserWithPeriod<PLNWibor>>()},
         {"SKK-BRIBOR", boost::make_shared<IborIndexParserWithPeriod<SKKBribor>>()},
-        {"NZD-BKBM", boost::make_shared<IborIndexParserWithPeriod<NZDBKBM>>()}};
+        {"NZD-BKBM", boost::make_shared<IborIndexParserWithPeriod<NZDBKBM>>()},
+        {"TWD-TAIBOR", boost::make_shared<IborIndexParserWithPeriod<TWDTaibor>>()},
+        {"MYR-KLIBOR", boost::make_shared<IborIndexParserWithPeriod<MYRKlibor>>()},
+        {"KRW-KORIBOR", boost::make_shared<IborIndexParserWithPeriod<KRWKoribor>>()},
+        {"ZAR-JIBAR", boost::make_shared<IborIndexParserWithPeriod<Jibar>>()}};
 
     auto it = m.find(tokens[0] + "-" + tokens[1]);
     if (it != m.end()) {
@@ -134,6 +139,7 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldT
 // Swap Index Parser base
 class SwapIndexParser {
 public:
+    virtual ~SwapIndexParser() {}
     virtual boost::shared_ptr<SwapIndex> build(Period p, const Handle<YieldTermStructure>& f,
                                                const Handle<YieldTermStructure>& d) const = 0;
 };
@@ -180,17 +186,67 @@ boost::shared_ptr<SwapIndex> parseSwapIndex(const string& s, const Handle<YieldT
                                              d);
 }
 
-boost::shared_ptr<Index> parseIndex(const string& s, const Handle<YieldTermStructure>& h) {
-    try {
-        // TODO: Added non Ibor checks first (Inflation, etc)
-        if (s.size() > 2 && s.substr(0, 2) == "FX") {
-            return parseFxIndex(s);
-        } else {
-            return parseIborIndex(s, h);
-        }
-    } catch (...) {
-        QL_FAIL("parseIndex \"" << s << "\" not recognized");
+// Zero Inflation Index Parser
+class ZeroInflationIndexParserBase {
+public:
+    virtual ~ZeroInflationIndexParserBase() {}
+    virtual boost::shared_ptr<ZeroInflationIndex> build(bool isInterpolated,
+                                                        const Handle<ZeroInflationTermStructure>& h) const = 0;
+};
+
+template <class T> class ZeroInflationIndexParser : public ZeroInflationIndexParserBase {
+public:
+    boost::shared_ptr<ZeroInflationIndex> build(bool isInterpolated,
+                                                const Handle<ZeroInflationTermStructure>& h) const override {
+        return boost::make_shared<T>(isInterpolated, h);
     }
+};
+
+boost::shared_ptr<ZeroInflationIndex> parseZeroInflationIndex(const string& s, bool isInterpolated,
+                                                              const Handle<ZeroInflationTermStructure>& h) {
+
+    static map<string, boost::shared_ptr<ZeroInflationIndexParserBase>> m = {
+        //{"AUCPI", boost::make_shared<ZeroInflationIndexParser<AUCPI>>()},
+        {"EUHICP", boost::make_shared<ZeroInflationIndexParser<EUHICP>>()},
+        {"EUHICPXT", boost::make_shared<ZeroInflationIndexParser<EUHICPXT>>()},
+        {"FRHICP", boost::make_shared<ZeroInflationIndexParser<FRHICP>>()},
+        {"UKRPI", boost::make_shared<ZeroInflationIndexParser<UKRPI>>()},
+        {"USCPI", boost::make_shared<ZeroInflationIndexParser<USCPI>>()},
+        {"ZACPI", boost::make_shared<ZeroInflationIndexParser<ZACPI>>()}};
+
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second->build(isInterpolated, h);
+    } else {
+        QL_FAIL("parseZeroInflationIndex: \"" << s << "\" not recognized");
+    }
+}
+boost::shared_ptr<Index> parseIndex(const string& s) {
+    boost::shared_ptr<QuantLib::Index> ret_idx;
+    try {
+        ret_idx = parseIborIndex(s);
+    } catch (...) {
+    }
+    if (!ret_idx) {
+        try {
+            ret_idx = parseSwapIndex(s);
+        } catch (...) {
+        }
+    }
+    if (!ret_idx) {
+        try {
+            ret_idx = parseZeroInflationIndex(s);
+        } catch (...) {
+        }
+    }
+    if (!ret_idx) {
+        try {
+            ret_idx = parseFxIndex(s);
+        } catch (...) {
+        }
+    }
+    QL_REQUIRE(ret_idx, "parseIndex \"" << s << "\" not recognized");
+    return ret_idx;
 }
 } // namespace data
 } // namespace ore

@@ -37,6 +37,10 @@ public:
     static void testZeroSpreadedYieldCurve();
     //! Test normal optionlet volatilities
     static void testNormalOptionletVolatility();
+    //! Test equity curve
+    static void testEquityCurve();
+    //! Test equity vol curve
+    static void testEquityVolCurve();
 
     static boost::unit_test_framework::test_suite* suite();
 };

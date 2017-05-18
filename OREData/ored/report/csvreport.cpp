@@ -27,14 +27,30 @@ namespace data {
 // Local class for printing each report type via fprintf
 class ReportTypePrinter : public boost::static_visitor<> {
 public:
-    ReportTypePrinter(FILE* fp, int prec) : fp_(fp), prec_(prec) {}
+    ReportTypePrinter(FILE* fp, int prec) : fp_(fp), prec_(prec), null_("#N/A") {}
 
-    void operator()(const Size i) const { fprintf(fp_, "%lu", i); }
-    void operator()(const Real d) const { fprintf(fp_, "%.*f", prec_, d); }
+    void operator()(const Size i) const {
+        if (i == QuantLib::Null<Size>()) {
+            fprintNull();
+        } else {
+            fprintf(fp_, "%zu", i);
+        }
+    }
+    void operator()(const Real d) const {
+        if (d == QuantLib::Null<Real>()) {
+            fprintNull();
+        } else {
+            fprintf(fp_, "%.*f", prec_, d);
+        }
+    }
     void operator()(const string& s) const { fprintf(fp_, "%s", s.c_str()); }
     void operator()(const Date& d) const {
-        string s = to_string(d);
-        fprintf(fp_, "%s", s.c_str());
+        if (d == QuantLib::Null<Date>()) {
+            fprintNull();
+        } else {
+            string s = to_string(d);
+            fprintf(fp_, "%s", s.c_str());
+        }
     }
     void operator()(const Period& p) const {
         string s = to_string(p);
@@ -42,8 +58,11 @@ public:
     }
 
 private:
+    void fprintNull() const { fprintf(fp_, "%s", null_.c_str()); }
+
     FILE* fp_;
     int prec_;
+    const string null_;
 };
 
 CSVFileReport::CSVFileReport(const string& filename, const char sep)
@@ -63,7 +82,7 @@ Report& CSVFileReport::addColumn(const string& name, const ReportType& rt, Size 
 }
 
 Report& CSVFileReport::next() {
-    QL_REQUIRE(i_ == columnTypes_.size(), "Cannot go to next line, only " << i_ << " entires filled");
+    QL_REQUIRE(i_ == columnTypes_.size(), "Cannot go to next line, only " << i_ << " entries filled");
     fprintf(fp_, "\n");
     i_ = 0;
     return *this;

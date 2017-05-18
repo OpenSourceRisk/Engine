@@ -27,5 +27,3 @@ EXTRA_DIST = \
 	ore.props
 
 ore_SOURCES = ore.cpp
-
-include_HEADERS = ore.hpp

@@ -160,7 +160,8 @@ Schedule makeSchedule(const ScheduleData& data) {
             dates.insert(dates.end(), s.dates().begin() + 1, s.dates().end());
         }
         // 3) Build schedule
-        return Schedule(dates, cal);
+        return Schedule(dates, cal, Unadjusted, boost::none, boost::none, boost::none, boost::none,
+                        std::vector<bool>(dates.size() - 1, true));
     }
 }
 } // namespace data

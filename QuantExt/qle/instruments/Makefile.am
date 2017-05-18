@@ -9,11 +9,15 @@ libInstruments_la_SOURCES = \
 	crossccybasisswap.cpp \
 	crossccyswap.cpp \
 	currencyswap.cpp \
+	deposit.cpp \
+	equityforward.cpp \
 	fxforward.cpp \
 	makeaverageois.cpp \
 	oibasisswap.cpp \
 	oiccbasisswap.cpp \
-	tenorbasisswap.cpp
+	tenorbasisswap.cpp \
+	subperiodsswap.cpp \
+	cdsoption.cpp
 
 this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \
@@ -22,11 +26,15 @@ this_include_HEADERS = \
 	crossccybasisswap.hpp \
 	crossccyswap.hpp \
 	currencyswap.hpp \
+	deposit.hpp \
+	equityforward.hpp \
 	fxforward.hpp \
 	makeaverageois.hpp \
 	oibasisswap.hpp \
 	oiccbasisswap.hpp \
-	tenorbasisswap.hpp
+	tenorbasisswap.hpp \
+	subperiodsswap.hpp \
+	cdsoption.hpp
 
 noinst_LTLIBRARIES = libInstruments.la
 

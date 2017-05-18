@@ -82,9 +82,9 @@ void CSVLoader::loadFile(const string& filename, bool isMarket) {
                 // build market datum and add to map
                 try {
                     data_[date].push_back(parseMarketDatum(date, key, value));
-                    DLOG("Added MarketDatum " << data_[date].back()->name());
+                    TLOG("Added MarketDatum " << data_[date].back()->name());
                 } catch (std::exception& e) {
-                    LOG("Failed to parse MarketDatum " << key << ": " << e.what());
+                    WLOG("Failed to parse MarketDatum " << key << ": " << e.what());
                 }
             } else {
                 // process fixings

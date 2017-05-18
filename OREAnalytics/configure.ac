@@ -1,5 +1,5 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT([OREAnalytics], [1.8],
+AC_INIT([OREAnalytics], [1.8.2],
         [opensourcerisk.org/forum],
         [OREAnalytics])
 AC_PREREQ(2.62)
@@ -132,6 +132,7 @@ AC_CONFIG_FILES([
     orea/Makefile
     orea/aggregation/Makefile
     orea/cube/Makefile
+    orea/app/Makefile
     orea/engine/Makefile
     orea/scenario/Makefile
     orea/simulation/Makefile

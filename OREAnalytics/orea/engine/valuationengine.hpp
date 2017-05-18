@@ -27,10 +27,14 @@
 #include <orea/engine/valuationcalculator.hpp>
 #include <orea/simulation/dategrid.hpp>
 #include <orea/simulation/simmarket.hpp>
+#include <ored/model/modelbuilder.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/utilities/progressbar.hpp>
 
 #include <map>
+#include <set>
+
+using std::set;
 
 namespace ore {
 namespace analytics {
@@ -60,7 +64,9 @@ public:
         //! Simulation date grid
         const boost::shared_ptr<analytics::DateGrid>& dg,
         //! Simulated market object
-        const boost::shared_ptr<analytics::SimMarket>& simMarket);
+        const boost::shared_ptr<analytics::SimMarket>& simMarket,
+        //! model builders to be updated
+        const set<boost::shared_ptr<data::ModelBuilder>>& modelBuilders = set<boost::shared_ptr<data::ModelBuilder>>());
 
     //! Build NPV cube
     void buildCube(
@@ -71,15 +77,11 @@ public:
         //! Calculators to use
         std::vector<boost::shared_ptr<ValuationCalculator>> calculators);
 
-    using FixingsMap = std::map<std::string, std::vector<QuantLib::Date>>;
-
 private:
-    typedef std::vector<std::vector<std::string>> FlowList;
-    static FixingsMap getFixingDates(const std::vector<FlowList>& flowList);
-
     QuantLib::Date today_;
     boost::shared_ptr<analytics::DateGrid> dg_;
     boost::shared_ptr<analytics::SimMarket> simMarket_;
+    set<boost::shared_ptr<data::ModelBuilder>> modelBuilders_;
 };
 } // namespace analytics
 } // namespace ore

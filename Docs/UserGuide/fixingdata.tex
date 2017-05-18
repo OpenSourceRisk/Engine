@@ -49,6 +49,10 @@ used (Table \ref{tab:IR_indices}).
 20150202 USD-LIBOR-12M 0.006194
 20150202 USD-LIBOR-1M 0.001695
 20150202 USD-LIBOR-1W 0.00136
+20150202 USD-CMS-10Y 0.01500
+20150202 EUR-CMS-20Y 0.01700
+20150202 FX-ECB-EUR-USD 1.0919
+20150801 FRHICP 100.36
 \end{minted}
 \caption{Excerpt of a fixings file}
 \label{lst:fixings_file}  
@@ -72,10 +76,17 @@ used (Table \ref{tab:IR_indices}).
 \centering
 \begin{tabular}{|l|l|}
 \hline
-\multicolumn{2}{|l|}{\textbf{IR Index on form CCY-INDEX-TENOR:}}                                                                                                                                                                                                                                               \\ \hline
-\textbf{Index Component} & \textbf{Allowable Values}                                                                                                                                                                                                                                                           \\ \hline
-CCY-INDEX                & \textit{\begin{tabular}[c]{@{}l@{}}EUR-EONIA\\ EUR-EURIBOR\\ EUR-LIBOR\\ USD-FedFunds\\ USD-LIBOR\\ GBP-SONIA\\ GBP-LIBOR\\ JPY-TONAR\\ JPY-LIBOR\\ CHF-LIBOR\\ AUD-LIBOR\\ AUD-BBSW\\ CAD-CDOR\\ CAD-BA\\ SEK-STIBOR\\ SEK-LIBOR\\ DKK-LIBOR\\ SGD-SIBOR\\ HKD-HIBOR\end{tabular}} \\ \hline
-TENOR                    & An integer followed by \emph{D, W, M or Y}                                                                                                                                                                                                                                                 \\ \hline
+\multicolumn{2}{|l|}{\textbf{IR Index of form CCY-INDEX-TENOR:}} \\
+\hline
+\textbf{Index Component} & \textbf{Allowable Values} \\
+\hline
+CCY-INDEX                & \textit{\begin{tabular}[c]{@{}l@{}}EUR-EONIA\\ EUR-EURIBOR\\ EUR-LIBOR\\ USD-FedFunds\\ 
+USD-LIBOR\\ GBP-SONIA\\ GBP-LIBOR\\ JPY-TONAR\\ JPY-LIBOR\\ CHF-LIBOR\\ CHF-TOIS\\ AUD-LIBOR\\ AUD-BBSW\\ CAD-CDOR\\ 
+CAD-BA\\ CAD-LIBOR\\ SEK-STIBOR\\ SEK-LIBOR\\ DKK-LIBOR\\ DKK-CIBOR\\ SGD-SIBOR\\ HKD-HIBOR \\CZK-PRIBOR\\ HUF-BUBOR\\ 
+IDR-IDRFIX\\ INR-MIFOR\\ JPY-TIBOR\\ KRW-KORIBOR\\ MXN-TIIE\\ MYR-KLIBOR\\ NOK-NIBOR\\ NZD-BKBM\\ PLN-WIBOR\\ 
+SEK-STIBOR\\ SGD-SOR\\ SKK-BRIBOR\\ TWD-TAIBOR\\ ZAR-JIBAR \end{tabular}} \\ \hline
+TENOR                    & An integer followed by \emph{D, W, M or Y} \\
+\hline
 % \multicolumn{2}{|l|}{\textbf{IR Index on alternative IndexTenor form:}}                                                                                                                                                                                                                                        \\ \hline
 % \textbf{Index Component} & \textbf{Allowable Values}                                                                                                                                                                                                                                                           \\ \hline
 % Index                    & \textit{\begin{tabular}[c]{@{}l@{}}Eonia\\ Euribor\\ EURLibor\\ FedFunds\\ USDLibor\\ Sonia\\ GBPLibor\\ TONAR\\ JPYLibor\\ CHFLibor\\ AUDLibor\\ AUD-BBSW \\ CDOR\\ SEK-STIBOR\\ SEKLibor\\ DKKLibor\\ SGD-SIBOR\\ HKD-HIBOR\end{tabular}}                                                     \\ \hline
@@ -83,6 +94,64 @@ TENOR                    & An integer followed by \emph{D, W, M or Y}           
 \end{tabular}
   \caption{Allowable values for IR indices.}
   \label{tab:IR_indices}
+\end{table}
+
+If the interest rate index is for an overnight rate (e.g. EONIA), then the third token (i.e. the tenor) is not needed.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|}
+\hline
+\multicolumn{2}{|l|}{\textbf{IR Swap Index of form CCY-CMS-TENOR:}} \\ 
+\hline
+\textbf{Index Component} & \textbf{Allowable Values} \\
+\hline
+CCY               & Any supported currency code \\ 
+\hline
+CMS				  & Must be ``CMS'' (to denote a swap index) \\
+\hline
+TENOR             & An integer followed by \emph{D, W, M or Y} \\
+\hline
+\end{tabular}
+\caption{Allowable values for IR swap indices.}
+\label{tab:swap_indices}
+\end{table}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|}
+\hline
+\multicolumn{2}{|l|}{\textbf{FX fixings of form FX-SOURCE-FOR-DOM:}} \\ 
+\hline
+\textbf{Index Component} & \textbf{Allowable Values} \\ 
+\hline
+FX               & Must be ``FX'' (to denote an FX fixing) \\ 
+\hline
+SOURCE		     & Any string \\
+\hline
+FOR             & Any supported currency code \\
+\hline
+DOM             & Any supported currency code \\
+\hline
+\end{tabular}
+\caption{Allowable values for FX fixings.}
+\label{tab:fx_indices}
+\end{table}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|}
+\hline
+\multicolumn{2}{|l|}{\textbf{Zero Inflation Indices of form NAME:}} \\
+\hline
+\textbf{Index Component} & \textbf{Allowable Values} \\
+\hline
+NAME           & \textit{\begin{tabular}[c]{@{}l@{}}EUHICP\\ EUHICPXT\\ FRHICP\\ UKRPI\\ 
+		USCPI\\ ZACPI \end{tabular}} \\ 
+\hline
+\end{tabular}
+\caption{Allowable values for zero inflation indices.}
+\label{tab:infl_indices}
 \end{table}
 
 % \begin{table}[H]

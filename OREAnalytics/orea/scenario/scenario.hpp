@@ -45,10 +45,21 @@ namespace analytics {
 class RiskFactorKey {
 public:
     //! Risk Factor types
-    enum class KeyType { DiscountCurve, YieldCurve, IndexCurve, SwaptionVolatility, FXSpot, FXVolatility };
+    enum class KeyType {
+        None,
+        DiscountCurve,
+        YieldCurve,
+        IndexCurve,
+        SwaptionVolatility,
+        OptionletVolatility,
+        FXSpot,
+        FXVolatility,
+        EQSpot,
+        EQVolatility
+    };
 
     //! Constructor
-    RiskFactorKey() {}
+    RiskFactorKey() : keytype(KeyType::None), name(""), index(0) {}
     //! Constructor
     RiskFactorKey(const KeyType& iKeytype, const string& iName, const Size& iIndex = 0)
         : keytype(iKeytype), name(iName), index(iIndex) {}
@@ -73,13 +84,7 @@ private:
 };
 
 inline bool operator<(const RiskFactorKey& lhs, const RiskFactorKey& rhs) {
-    if (lhs.keytype == rhs.keytype) {
-        if (lhs.name == rhs.name)
-            return lhs.index < rhs.index;
-        else
-            return lhs.name < rhs.name;
-    }
-    return lhs.keytype < rhs.keytype;
+    return std::tie(lhs.keytype, lhs.name, lhs.index) < std::tie(rhs.keytype, rhs.name, rhs.index);
 }
 
 inline bool operator==(const RiskFactorKey& lhs, const RiskFactorKey& rhs) {
@@ -93,6 +98,9 @@ inline bool operator!=(const RiskFactorKey& lhs, const RiskFactorKey& rhs) { ret
 
 std::ostream& operator<<(std::ostream& out, const RiskFactorKey::KeyType& type);
 std::ostream& operator<<(std::ostream& out, const RiskFactorKey& key);
+
+RiskFactorKey::KeyType parseRiskFactorKeyType(const string& str);
+RiskFactorKey parseRiskFactorKey(const string& str);
 
 //-----------------------------------------------------------------------------------------------
 //! Scenario Base Class
@@ -130,6 +138,9 @@ public:
     virtual void add(const RiskFactorKey& key, Real value) = 0;
     //! Get an element from the scenario
     virtual Real get(const RiskFactorKey& key) const = 0;
+
+    //! clones a scenario and returns a pointer to the new object
+    virtual boost::shared_ptr<Scenario> clone() const = 0;
 
 private:
     friend class boost::serialization::access;

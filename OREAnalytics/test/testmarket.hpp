@@ -17,11 +17,14 @@
 */
 
 #include <boost/make_shared.hpp>
+#include <orea/scenario/scenariosimmarketparameters.hpp>
+#include <orea/scenario/sensitivityscenariodata.hpp>
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/credit/flathazardrate.hpp>
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
+#include <ql/termstructures/volatility/optionlet/constantoptionletvol.hpp>
 #include <ql/termstructures/volatility/swaption/swaptionconstantvol.hpp>
 #include <ql/termstructures/voltermstructure.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
@@ -147,6 +150,7 @@ public:
         fxVols_[make_pair(Market::defaultConfiguration, "EURGBP")] = flatRateFxv(0.15);
         fxVols_[make_pair(Market::defaultConfiguration, "EURCHF")] = flatRateFxv(0.15);
         fxVols_[make_pair(Market::defaultConfiguration, "EURJPY")] = flatRateFxv(0.15);
+        fxVols_[make_pair(Market::defaultConfiguration, "GBPCHF")] = flatRateFxv(0.15);
 
         // build swaption vols
         swaptionCurves_[make_pair(Market::defaultConfiguration, "EUR")] = flatRateSvs(0.20);
@@ -165,9 +169,29 @@ public:
         swaptionIndexBases_[make_pair(Market::defaultConfiguration, "JPY")] =
             std::make_pair("JPY-CMS-2Y", "JPY-CMS-30Y");
 
+        // build cap/floor vol structures
+        capFloorCurves_[make_pair(Market::defaultConfiguration, "EUR")] = flatRateCvs(0.0050, Normal);
+        capFloorCurves_[make_pair(Market::defaultConfiguration, "USD")] = flatRateCvs(0.0060, Normal);
+        capFloorCurves_[make_pair(Market::defaultConfiguration, "GBP")] = flatRateCvs(0.0055, Normal);
+        capFloorCurves_[make_pair(Market::defaultConfiguration, "CHF")] = flatRateCvs(0.0045, Normal);
+        capFloorCurves_[make_pair(Market::defaultConfiguration, "JPY")] = flatRateCvs(0.0040, Normal);
+
         // build default curves
         defaultCurves_[make_pair(Market::defaultConfiguration, "dc")] = flatRateDcs(0.1);
         defaultCurves_[make_pair(Market::defaultConfiguration, "dc2")] = flatRateDcs(0.2);
+        defaultCurves_[make_pair(Market::defaultConfiguration, "BondIssuer1")] = flatRateDcs(0.0);
+
+        recoveryRates_[make_pair(Market::defaultConfiguration, "dc")] =
+            Handle<Quote>(boost::make_shared<SimpleQuote>(0.4));
+        recoveryRates_[make_pair(Market::defaultConfiguration, "dc2")] =
+            Handle<Quote>(boost::make_shared<SimpleQuote>(0.4));
+        recoveryRates_[make_pair(Market::defaultConfiguration, "BondIssuer1")] =
+            Handle<Quote>(boost::make_shared<SimpleQuote>(0.0));
+
+        yieldCurves_[make_pair(Market::defaultConfiguration, "BondCurve1")] = flatRateYts(0.05);
+
+        securitySpreads_[make_pair(Market::defaultConfiguration, "Bond1")] =
+            Handle<Quote>(boost::make_shared<SimpleQuote>(0.0));
     }
 
 private:
@@ -192,5 +216,26 @@ private:
         boost::shared_ptr<DefaultProbabilityTermStructure> dcs(new FlatHazardRate(asof_, forward, ActualActual()));
         return Handle<DefaultProbabilityTermStructure>(dcs);
     }
+    Handle<OptionletVolatilityStructure> flatRateCvs(Volatility vol, VolatilityType type = Normal, Real shift = 0.0) {
+        boost::shared_ptr<OptionletVolatilityStructure> ts(
+            new QuantLib::ConstantOptionletVolatility(Settings::instance().evaluationDate(), NullCalendar(),
+                                                      ModifiedFollowing, vol, ActualActual(), type, shift));
+        return Handle<OptionletVolatilityStructure>(ts);
+    }
+};
+
+//! Static class to allow for easy construction of configuration objects for use within tests
+class TestConfigurationObjects {
+public:
+    //! ScenarioSimMarketParameters instance, 2 currencies
+    static boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> setupSimMarketData2();
+    //! ScenarioSimMarketParameters instance, 5 currencies
+    static boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> setupSimMarketData5();
+    //! SensitivityScenarioData instance, 2 currencies
+    static boost::shared_ptr<ore::analytics::SensitivityScenarioData> setupSensitivityScenarioData2();
+    //! SensitivityScenarioData instance, 5 currencies
+    static boost::shared_ptr<ore::analytics::SensitivityScenarioData> setupSensitivityScenarioData5();
+    //! Conventions instance
+    static boost::shared_ptr<ore::data::Conventions> conv();
 };
 } // namespace testsuite

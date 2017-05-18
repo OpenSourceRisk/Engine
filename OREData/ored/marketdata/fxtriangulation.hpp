@@ -35,22 +35,22 @@ namespace ore {
 namespace data {
 
 //! Intelligent FX price repository
-/*! FX Triangulation is an intelligent price repository that will attempt to calcualte FX spot values
+/*! FX Triangulation is an intelligent price repository that will attempt to calculate FX spot values
  *
- *  As quotes for currency pairs are added to the repoitory they are stored in an interal map
- *  If the repository is asked for the fx spot price for a given pair it will attempt the following:
+ *  As quotes for currency pairs are added to the repository they are stored in an internal map
+ *  If the repository is asked for the FX spot price for a given pair it will attempt the following:
  *  1) Look in the map for the pair
  *  2) Look for the reverse quote (EURUSD -> USDEUR), if found it will return an inverse quote.
- *  3) Look through the map and atempt to find a bridging pair (e.g EURUSD and EURJPY for USDJPY)
+ *  3) Look through the map and attempt to find a bridging pair (e.g EURUSD and EURJPY for USDJPY)
  *     and return the required composite quote.
  *
- *  In cases (2) and (3) the constructed quote is then stored in the map so subsiquent calls will hit (1).
+ *  In cases (2) and (3) the constructed quote is then stored in the map so subsequent calls will hit (1).
  *
  *  The constructed quotes all reference the original quotes which are added by the addQuote() method
- *  and so if these original quotes change in the future, the constructed quotes will refelect the new
+ *  and so if these original quotes change in the future, the constructed quotes will reflect the new
  *  value
-
- \ingroup marketdata
+ *
+ *  \ingroup marketdata
  */
 class FXTriangulation {
 public:

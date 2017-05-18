@@ -72,6 +72,7 @@ boost::shared_ptr<Scenario> ScenarioWriter::next(const Date& d) {
         for (auto k : keys_)
             fprintf(fp_, "%c%.8f", sep_, s->get(k));
         fprintf(fp_, "\n");
+        fflush(fp_);
     }
     return s;
 }

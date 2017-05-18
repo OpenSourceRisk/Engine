@@ -206,7 +206,7 @@ Disposable<Matrix> CorrelationMatrixBuilder::correlationMatrixImpl(const vector<
     // build extra factors
     // { "GOOGLE", "AMAZON" } -> { "EQ:GOOGLE", "EQ:AMAZON" }
     for (Size i = 0; i < q; i++)
-        factors.push_back("EQ:" + names[i]);
+        factors.push_back("EQ:" + equities[i]);
 
     // Build extended matrix. 2n-1+2m+p => 2n-1+2m+p+q
     Matrix mat = extendMatrix(mat3, q);
@@ -279,6 +279,9 @@ void CorrelationMatrixBuilder::checkFactor(const string& f) {
         parseInflationName(f, s1, s2, b); // this will throw if bad
     } else if (f.substr(0, 3) == "CR:") {
         // credit name, just check it's at leasr 1 character
+        QL_REQUIRE(f.size() > 3, "Invalid factor name " << f);
+    } else if (f.substr(0, 3) == "EQ:") {
+        // equity name, just check it's at leasr 1 character
         QL_REQUIRE(f.size() > 3, "Invalid factor name " << f);
     } else {
         QL_FAIL("Invalid factor name " << f);

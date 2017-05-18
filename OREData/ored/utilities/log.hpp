@@ -301,6 +301,8 @@ private:
 #define LOG(text) MLOG(ORE_NOTICE, text)
 //! Logging Macro (Level = Debug)
 #define DLOG(text) MLOG(ORE_DEBUG, text)
+//! Logging Macro (Level = Data)
+#define TLOG(text) MLOG(ORE_DATA, text)
 
 //! LoggerStream class that is a std::ostream replacment that will log each line
 /*! LoggerStream is a simple wrapper around a string stream, it has an explicit

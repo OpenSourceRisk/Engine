@@ -100,6 +100,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     legPayers_.push_back(legData_.isPayer());
     npvCurrency_ = legData_.currency();
     maturity_ = capFloor->maturityDate();
+    notional_ = currentNotional(legs_[0]);
 }
 
 void CapFloor::fromXML(XMLNode* node) {

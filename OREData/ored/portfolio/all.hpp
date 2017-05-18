@@ -3,6 +3,8 @@
 
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/envelope.hpp>
+#include <ored/portfolio/equityforward.hpp>
+#include <ored/portfolio/equityoption.hpp>
 #include <ored/portfolio/fxforward.hpp>
 #include <ored/portfolio/fxoption.hpp>
 #include <ored/portfolio/fxswap.hpp>
@@ -21,5 +23,6 @@
 #include <ored/portfolio/nettingsetdefinition.hpp>
 #include <ored/portfolio/nettingsetmanager.hpp>
 #include <ored/portfolio/capfloor.hpp>
+#include <ored/portfolio/bond.hpp>
 
 #include <ored/portfolio/builders/all.hpp>

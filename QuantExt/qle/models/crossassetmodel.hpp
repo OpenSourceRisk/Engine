@@ -24,8 +24,12 @@
 #ifndef quantext_crossasset_model_hpp
 #define quantext_crossasset_model_hpp
 
+#include <qle/models/crlgm1fparametrization.hpp>
+#include <qle/models/eqbsparametrization.hpp>
 #include <qle/models/fxbsparametrization.hpp>
+#include <qle/models/infdkparametrization.hpp>
 #include <qle/models/lgm.hpp>
+
 #include <qle/processes/crossassetstateprocess.hpp>
 
 #include <ql/math/distributions/normaldistribution.hpp>
@@ -42,7 +46,7 @@ namespace QuantExt {
 namespace CrossAssetModelTypes {
 //! Cross Asset Type
 //! \ingroup crossassetmodel
-enum AssetType { IR, FX };
+enum AssetType { IR, FX, INF, CR, EQ };
 } // namespace CrossAssetModelTypes
 
 using namespace CrossAssetModelTypes;
@@ -55,6 +59,9 @@ public:
     /*! Parametrizations must be given in the following order
         - IR  (first parametrization defines the domestic currency)
         - FX  (for all pairs domestic-ccy defined by the IR models)
+        - INF (optionally, ccy must be a subset of the IR ccys)
+        - CR  (optionally, ccy must be a subset of the IR ccys)
+        - EQ  (for all names equity currency defined in Parametrization)
         If the correlation matrix is not given, it is initialized
         as the unit matrix (and can be customized after
         construction of the model).
@@ -95,6 +102,9 @@ public:
       foreign currency and so on) */
     Size ccyIndex(const Currency& ccy) const;
 
+    /*! return index for equity (0 = first equity) */
+    Size eqIndex(const std::string& eqName) const;
+
     /*! observer and linked calibrated model interface */
     void update();
     void generateArguments();
@@ -120,6 +130,15 @@ public:
         so it corresponds to ccy+1 if you want to get the corresponding
         irmgl1f component */
     const boost::shared_ptr<FxBsParametrization> fxbs(const Size ccy) const;
+
+    /*! INF DK components */
+    const boost::shared_ptr<InfDkParametrization> infdk(const Size i) const;
+
+    /*! CR LGM 1F components */
+    const boost::shared_ptr<CrLgm1fParametrization> crlgm1f(const Size i) const;
+
+    /*! EQBS components */
+    const boost::shared_ptr<EqBsParametrization> eqbs(const Size ccy) const;
 
     /* ... add more components here ...*/
 
@@ -153,6 +172,15 @@ public:
                               const bool usePiecewiseIntegration = true) const;
     const boost::shared_ptr<Integrator> integrator() const;
 
+    /*! return (I(t), I^tilde(t,T)) in the notation of the book, note that
+      I(0) is normalized to 1 here, i.e. you have to multiply the result
+      with the index value (as of the base date of the inflation ts) */
+    std::pair<Real, Real> infdkI(const Size i, const Time t, const Time T, const Real z, const Real y);
+
+    /*! returns (S(t), S^tilde(t,T)) in the notation of the book */
+    std::pair<Real, Real> crlgm1fS(const Size i, const Size ccy, const Time t, const Time T, const Real z,
+                                   const Real y) const;
+
     /*! calibration procedures */
 
     /*! calibrate irlgm1f volatilities to a sequence of ir options with
@@ -178,13 +206,52 @@ public:
                                 const Constraint& constraint = Constraint(),
                                 const std::vector<Real>& weights = std::vector<Real>());
 
-    /*! calibrate fx volatilities to a sequence of fx options with
+    /*! calibrate eq or fx volatilities to a sequence of options with
             expiry times equal to step times in the parametrization */
-    void calibrateFxBsVolatilitiesIterative(const Size ccy,
-                                            const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers,
-                                            OptimizationMethod& method, const EndCriteria& endCriteria,
-                                            const Constraint& constraint = Constraint(),
-                                            const std::vector<Real>& weights = std::vector<Real>());
+    void calibrateBsVolatilitiesIterative(const AssetType& assetType, const Size aIdx,
+                                          const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers,
+                                          OptimizationMethod& method, const EndCriteria& endCriteria,
+                                          const Constraint& constraint = Constraint(),
+                                          const std::vector<Real>& weights = std::vector<Real>());
+
+    /*! calibrate eq/fx volatilities globally to a set of fx options */
+    void calibrateBsVolatilitiesGlobal(const AssetType& assetType, const Size aIdx,
+                                       const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers,
+                                       OptimizationMethod& method, const EndCriteria& endCriteria,
+                                       const Constraint& constraint = Constraint(),
+                                       const std::vector<Real>& weights = std::vector<Real>());
+
+    /*! calibrate infdk volatilities to a sequence of cpi options with
+        expiry times equal to step times in the parametrization */
+    void calibrateInfDkVolatilitiesIterative(const Size index,
+                                             const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers,
+                                             OptimizationMethod& method, const EndCriteria& endCriteria,
+                                             const Constraint& constraint = Constraint(),
+                                             const std::vector<Real>& weights = std::vector<Real>());
+
+    /*! calibrate infdk reversions to a sequence of cpi options with
+        maturity times equal to step times in the parametrization */
+    void calibrateInfDkReversionsIterative(const Size index,
+                                           const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers,
+                                           OptimizationMethod& method, const EndCriteria& endCriteria,
+                                           const Constraint& constraint = Constraint(),
+                                           const std::vector<Real>& weights = std::vector<Real>());
+
+    /*! calibrate crlgm1f volatilities to a sequence of cds options with
+        expiry times equal to step times in the parametrization */
+    void calibrateCrLgm1fVolatilitiesIterative(const Size index,
+                                               const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers,
+                                               OptimizationMethod& method, const EndCriteria& endCriteria,
+                                               const Constraint& constraint = Constraint(),
+                                               const std::vector<Real>& weights = std::vector<Real>());
+
+    /*! calibrate crlgm1f reversions to a sequence of cds options with
+        maturity times equal to step times in the parametrization */
+    void calibrateCrLgm1fReversionsIterative(const Size index,
+                                             const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers,
+                                             OptimizationMethod& method, const EndCriteria& endCriteria,
+                                             const Constraint& constraint = Constraint(),
+                                             const std::vector<Real>& weights = std::vector<Real>());
 
     /* ... add more calibration procedures here ... */
 
@@ -210,9 +277,33 @@ protected:
     virtual void initDefaultIntegrator();
     virtual void initStateProcess();
 
+    /* helper function for infdkI, crlgm1fS */
+    Real infV(const Size idx, const Size ccy, const Time t, const Time T) const;
+    Real crV(const Size idx, const Size ccy, const Time t, const Time T) const;
+
+    // cache for infdkI, crlgm1fS method
+    struct cache_key {
+        Size i, ccy;
+        double t, T;
+        bool operator==(const cache_key& o) const { return (i == o.i) && (ccy == o.ccy) && (t == o.t) && (T == o.T); }
+    };
+
+    struct cache_hasher : std::unary_function<cache_key, std::size_t> {
+        std::size_t operator()(cache_key const& x) const {
+            std::size_t seed = 0;
+            boost::hash_combine(seed, x.i);
+            boost::hash_combine(seed, x.ccy);
+            boost::hash_combine(seed, x.t);
+            boost::hash_combine(seed, x.T);
+            return seed;
+        }
+    };
+
+    mutable boost::unordered_map<cache_key, std::pair<Real, Real>, cache_hasher> cache_crlgm1fS_, cache_infdkI_;
+
     /* members */
 
-    Size nIrLgm1f_, nFxBs_;
+    Size nIrLgm1f_, nFxBs_, nInfDk_, nCrLgm1f_, nEqBs_;
     Size totalNumberOfParameters_;
     std::vector<boost::shared_ptr<Parametrization> > p_;
     std::vector<boost::shared_ptr<LinearGaussMarkovModel> > lgm_;
@@ -223,21 +314,111 @@ protected:
 
     /* calibration constraints */
 
-    Disposable<std::vector<bool> > MoveFxBsVolatility(const Size ccy, const Size i) {
-        QL_REQUIRE(i < fxbs(ccy)->parameter(0)->size(), "fxbs volatility index ("
-                                                            << i << ") for ccy " << ccy << " out of bounds 0..."
-                                                            << fxbs(ccy)->parameter(0)->size() - 1);
+    // move parameter param (e.g. vol, reversion) of asset type component t / index
+    // at step i (or at all steps if i is null)
+    Disposable<std::vector<bool> > MoveParameter(const AssetType t, const Size param, const Size index, const Size i) {
+        switch (t) {
+        case IR:
+            QL_REQUIRE(param <= 1, "irlgm1f parameter " << param << " out of bounds 0...1");
+            QL_REQUIRE(i < irlgm1f(index)->parameter(param)->size(),
+                       "irlgm1f parameter (" << param << ") index (" << i << ") for ccy " << index
+                                             << " out of bounds 0..." << irlgm1f(index)->parameter(param)->size() - 1);
+            break;
+        case FX:
+            QL_REQUIRE(param == 0, "fxbs parameter " << param << " out of bounds 0...0");
+            QL_REQUIRE(i < fxbs(index)->parameter(param)->size(),
+                       "fxbs volatility index (" << i << ") for ccy " << index << " out of bounds 0..."
+                                                 << fxbs(index)->parameter(param)->size() - 1);
+            break;
+        case INF:
+            QL_REQUIRE(param <= 1, "infdk parameter " << param << " out of bounds 0...1");
+            QL_REQUIRE(i < infdk(index)->parameter(param)->size(),
+                       "infdk parameter (" << param << ") index (" << i << ") for inflation component " << index
+                                           << " out of bounds 0..." << infdk(index)->parameter(param)->size() - 1);
+            break;
+        case CR:
+            QL_REQUIRE(param <= 1, "crlgm1f parameter " << param << " out of bounds 0...1");
+            QL_REQUIRE(i < crlgm1f(index)->parameter(param)->size(),
+                       "crlgm1f parameter (" << param << ") index (" << i << ") for credit component " << index
+                                             << " out of bounds 0..." << crlgm1f(index)->parameter(param)->size() - 1);
+            break;
+        case EQ:
+            QL_REQUIRE(param == 0, "eqbs parameter " << param << " out of bounds 0...0");
+            QL_REQUIRE(i < eqbs(index)->parameter(param)->size(),
+                       "eqbs volatility index (" << i << ") for index " << index << " out of bounds 0..."
+                                                 << eqbs(index)->parameter(param)->size() - 1);
+            break;
+        default:
+            QL_FAIL("asset type not recognised");
+        }
         std::vector<bool> res(0);
         for (Size j = 0; j < nIrLgm1f_; ++j) {
             std::vector<bool> tmp1(p_[idx(IR, j)]->parameter(0)->size(), true);
             std::vector<bool> tmp2(p_[idx(IR, j)]->parameter(1)->size(), true);
-            res.insert(res.end(), tmp1.begin(), tmp1.end());
-            res.insert(res.end(), tmp2.begin(), tmp2.end());
+            std::vector<std::vector<bool> > tmp;
+            tmp.push_back(tmp1);
+            tmp.push_back(tmp2);
+            if (t == IR && index == j) {
+                for (Size ii = 0; ii < tmp[param].size(); ++ii) {
+                    if (i == Null<Size>() || i == ii) {
+                        tmp[param][ii] = false;
+                    }
+                }
+            }
+            res.insert(res.end(), tmp[0].begin(), tmp[0].end());
+            res.insert(res.end(), tmp[1].begin(), tmp[1].end());
         }
         for (Size j = 0; j < nFxBs_; ++j) {
             std::vector<bool> tmp(p_[idx(FX, j)]->parameter(0)->size(), true);
-            if (ccy == j) {
-                tmp[i] = false;
+            if (t == FX && index == j) {
+                for (Size ii = 0; ii < tmp.size(); ++ii) {
+                    if (i == Null<Size>() || i == ii) {
+                        tmp[i] = false;
+                    }
+                }
+            }
+            res.insert(res.end(), tmp.begin(), tmp.end());
+        }
+        for (Size j = 0; j < nInfDk_; ++j) {
+            std::vector<bool> tmp1(p_[idx(INF, j)]->parameter(0)->size(), true);
+            std::vector<bool> tmp2(p_[idx(INF, j)]->parameter(1)->size(), true);
+            std::vector<std::vector<bool> > tmp;
+            tmp.push_back(tmp1);
+            tmp.push_back(tmp2);
+            if (t == INF && index == j) {
+                for (Size ii = 0; ii < tmp[param].size(); ++ii) {
+                    if (i == Null<Size>() || i == ii) {
+                        tmp[param][ii] = false;
+                    }
+                }
+            }
+            res.insert(res.end(), tmp[0].begin(), tmp[0].end());
+            res.insert(res.end(), tmp[1].begin(), tmp[1].end());
+        }
+        for (Size j = 0; j < nCrLgm1f_; ++j) {
+            std::vector<bool> tmp1(p_[idx(CR, j)]->parameter(0)->size(), true);
+            std::vector<bool> tmp2(p_[idx(CR, j)]->parameter(1)->size(), true);
+            std::vector<std::vector<bool> > tmp;
+            tmp.push_back(tmp1);
+            tmp.push_back(tmp2);
+            if (t == CR && index == j) {
+                for (Size ii = 0; ii < tmp[param].size(); ++ii) {
+                    if (i == Null<Size>() || i == ii) {
+                        tmp[param][ii] = false;
+                    }
+                }
+            }
+            res.insert(res.end(), tmp[0].begin(), tmp[0].end());
+            res.insert(res.end(), tmp[1].begin(), tmp[1].end());
+        }
+        for (Size j = 0; j < nEqBs_; ++j) {
+            std::vector<bool> tmp(p_[idx(EQ, j)]->parameter(0)->size(), true);
+            if (t == EQ && index == j) {
+                for (Size ii = 0; ii < tmp.size(); ++ii) {
+                    if (i == Null<Size>() || i == ii) {
+                        tmp[i] = false;
+                    }
+                }
             }
             res.insert(res.end(), tmp.begin(), tmp.end());
         }
@@ -252,9 +433,17 @@ CrossAssetModel::stateProcess(CrossAssetStateProcess::discretization disc) const
     return disc == CrossAssetStateProcess::exact ? stateProcessExact_ : stateProcessEuler_;
 }
 
-inline Size CrossAssetModel::dimension() const { return nIrLgm1f_ * 1 + nFxBs_ * 1; }
+inline Size CrossAssetModel::dimension() const {
+    // this assumes specific models, as soon as other model types are added
+    // this formula has to be generalized as well
+    return nIrLgm1f_ * 1 + nFxBs_ * 1 + nInfDk_ * 2 + nCrLgm1f_ * 2 + nEqBs_ * 1;
+}
 
-inline Size CrossAssetModel::brownians() const { return nIrLgm1f_ * 1 + nFxBs_ * 1; }
+inline Size CrossAssetModel::brownians() const {
+    // this assumes specific models, as soon as other model types are added
+    // this formula has to be generalized as well
+    return nIrLgm1f_ * 1 + nFxBs_ * 1 + nInfDk_ * 1 + nCrLgm1f_ * 1 + nEqBs_ * 1;
+}
 
 inline Size CrossAssetModel::totalNumberOfParameters() const { return totalNumberOfParameters_; }
 
@@ -264,6 +453,18 @@ inline const boost::shared_ptr<LinearGaussMarkovModel> CrossAssetModel::lgm(cons
 
 inline const boost::shared_ptr<IrLgm1fParametrization> CrossAssetModel::irlgm1f(const Size ccy) const {
     return lgm(ccy)->parametrization();
+}
+
+inline const boost::shared_ptr<InfDkParametrization> CrossAssetModel::infdk(const Size i) const {
+    return boost::static_pointer_cast<InfDkParametrization>(p_[idx(INF, i)]);
+}
+
+inline const boost::shared_ptr<CrLgm1fParametrization> CrossAssetModel::crlgm1f(const Size i) const {
+    return boost::static_pointer_cast<CrLgm1fParametrization>(p_[idx(CR, i)]);
+}
+
+inline const boost::shared_ptr<EqBsParametrization> CrossAssetModel::eqbs(const Size name) const {
+    return boost::dynamic_pointer_cast<EqBsParametrization>(p_[idx(EQ, name)]);
 }
 
 inline Real CrossAssetModel::numeraire(const Size ccy, const Time t, const Real x,

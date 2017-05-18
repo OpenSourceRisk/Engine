@@ -19,6 +19,7 @@
   <Markets>
     <Parameter name="lgmcalibration">libor</Parameter>
     <Parameter name="fxcalibration">libor</Parameter>
+    <Parameter name="eqcalibration">libor</Parameter>
     <Parameter name="pricing">libor</Parameter>
     <Parameter name="simulation">libor</Parameter>
   </Markets>
@@ -43,7 +44,7 @@
       <Parameter name="simulationConfigFile">simulation.xml</Parameter>
       <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
-      <Parameter name="storeScenarios">N</Parameter>
+      <!-- Parameter name="scenariodump">scenariodump.csv</Parameter> -->
       <Parameter name="cubeFile">cube.dat</Parameter>
       <Parameter name="additionalScenarioDataFileName">scenariodata.dat</Parameter>
     </Analytic>

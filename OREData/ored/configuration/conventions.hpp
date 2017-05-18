@@ -25,6 +25,7 @@
 
 #include <ored/utilities/xmlutils.hpp>
 #include <ql/indexes/iborindex.hpp>
+#include <ql/indexes/inflationindex.hpp>
 #include <ql/indexes/swapindex.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp> // SubPeriodsCouponType
 
@@ -57,7 +58,9 @@ public:
         FX,
         CrossCcyBasis,
         CDS,
-        SwapIndex
+        SwapIndex,
+        InflationSwap,
+        SecuritySpread
     };
 
     //! Default destructor
@@ -248,6 +251,7 @@ public:
     //! \name Inspectors
     //@{
     const boost::shared_ptr<IborIndex>& index() const { return index_; }
+    const string& indexName() const { return strIndex_; }
     //@}
 
     //! \name Serialisation
@@ -282,6 +286,7 @@ public:
     //! \name Inspectors
     //@{
     Natural spotLag() const { return spotLag_; }
+    const string& indexName() const { return strIndex_; }
     const boost::shared_ptr<OvernightIndex>& index() const { return index_; }
     const DayCounter& fixedDayCounter() const { return fixedDayCounter_; }
     Natural paymentLag() const { return paymentLag_; }
@@ -353,7 +358,9 @@ public:
     IRSwapConvention() {}
     //! Detailed constructor
     IRSwapConvention(const string& id, const string& fixedCalendar, const string& fixedFrequency,
-                     const string& fixedConvention, const string& fixedDayCounter, const string& index);
+                     const string& fixedConvention, const string& fixedDayCounter, const string& index,
+                     bool hasSubPeriod = false, const string& floatFrequency = "",
+                     const string& subPeriodsCouponType = "");
     //@}
 
     //! \name Inspectors
@@ -364,6 +371,10 @@ public:
     const DayCounter& fixedDayCounter() const { return fixedDayCounter_; }
     const string& indexName() const { return strIndex_; }
     const boost::shared_ptr<IborIndex>& index() const { return index_; }
+    // For sub period
+    bool hasSubPeriod() const { return hasSubPeriod_; }
+    Frequency floatFrequency() const { return floatFrequency_; } // returns NoFrequency for normal swaps
+    QuantExt::SubPeriodsCoupon::Type subPeriodsCouponType() const { return subPeriodsCouponType_; }
     //@}
 
     //! \name Serialisation
@@ -379,6 +390,9 @@ private:
     BusinessDayConvention fixedConvention_;
     DayCounter fixedDayCounter_;
     boost::shared_ptr<IborIndex> index_;
+    bool hasSubPeriod_;
+    Frequency floatFrequency_;
+    QuantExt::SubPeriodsCoupon::Type subPeriodsCouponType_;
 
     // Strings to store the inputs
     string strFixedCalendar_;
@@ -386,6 +400,8 @@ private:
     string strFixedConvention_;
     string strFixedDayCounter_;
     string strIndex_;
+    string strFloatFrequency_;
+    string strSubPeriodsCouponType_;
 };
 
 //! Container for storing Average OIS conventions
@@ -413,6 +429,7 @@ public:
     const Calendar& fixedCalendar() const { return fixedCalendar_; }
     BusinessDayConvention fixedConvention() const { return fixedConvention_; }
     BusinessDayConvention fixedPaymentConvention() const { return fixedPaymentConvention_; }
+    const string& indexName() const { return strIndex_; }
     const boost::shared_ptr<OvernightIndex>& index() const { return index_; }
     const Period& onTenor() const { return onTenor_; }
     Natural rateCutoff() const { return rateCutoff_; }
@@ -633,6 +650,9 @@ public:
     BusinessDayConvention rollConvention() const { return rollConvention_; }
     const boost::shared_ptr<IborIndex>& flatIndex() const { return flatIndex_; }
     const boost::shared_ptr<IborIndex>& spreadIndex() const { return spreadIndex_; }
+    const string& flatIndexName() const { return strFlatIndex_; }
+    const string& spreadIndexName() const { return strSpreadIndex_; }
+
     bool eom() const { return eom_; }
     //@}
 
@@ -714,6 +734,51 @@ private:
     string strPaysAtDefaultTime_;
 };
 
+class InflationSwapConvention : public Convention {
+public:
+    InflationSwapConvention() {}
+    InflationSwapConvention(const string& id, const string& strFixCalendar, const string& strFixConvention,
+                            const string& strDayCounter, const string& strIndex, const string& strInterpolated,
+                            const string& strObservationLag, const string& strAdjustInfObsDates,
+                            const string& strInfCalendar, const string& strInfConvention);
+
+    const Calendar& fixCalendar() const { return fixCalendar_; }
+    BusinessDayConvention fixConvention() const { return fixConvention_; }
+    const DayCounter& dayCounter() const { return dayCounter_; }
+    const boost::shared_ptr<ZeroInflationIndex> index() const { return index_; }
+    bool interpolated() const { return interpolated_; }
+    Period observationLag() const { return observationLag_; }
+    bool adjustInfObsDates() const { return adjustInfObsDates_; }
+    const Calendar& infCalendar() const { return infCalendar_; }
+    BusinessDayConvention infConvention() const { return infConvention_; }
+
+    virtual void fromXML(XMLNode* node);
+    virtual XMLNode* toXML(XMLDocument& doc);
+    virtual void build();
+
+private:
+    Calendar fixCalendar_;
+    BusinessDayConvention fixConvention_;
+    DayCounter dayCounter_;
+    boost::shared_ptr<ZeroInflationIndex> index_;
+    bool interpolated_;
+    Period observationLag_;
+    bool adjustInfObsDates_;
+    Calendar infCalendar_;
+    BusinessDayConvention infConvention_;
+
+    // Strings to store the inputs
+    string strFixCalendar_;
+    string strFixConvention_;
+    string strDayCounter_;
+    string strIndex_;
+    string strInterpolated_;
+    string strObservationLag_;
+    string strAdjustInfObsDates_;
+    string strInfCalendar_;
+    string strInfConvention_;
+};
+
 //! Repository for currency dependent market conventions
 /*!
   \ingroup market
@@ -740,6 +805,75 @@ public:
 
 private:
     map<string, boost::shared_ptr<Convention>> data_;
+};
+
+//! Container for storing Bond Spread Rate conventions
+/*!
+\ingroup marketdata
+*/
+class SecuritySpreadConvention : public Convention {
+public:
+    //! \name Constructors
+    //@{
+    //! Default constructor
+    SecuritySpreadConvention() {}
+    SecuritySpreadConvention(const string& id, const string& dayCounter, const string& compounding,
+                             const string& compoundingFrequency);
+    SecuritySpreadConvention(const string& id, const string& dayCounter, const string& tenorCalendar,
+                             const string& compounding = "Continuous", const string& compoundingFrequency = "Annual",
+                             const string& spotLag = "", const string& spotCalendar = "",
+                             const string& rollConvention = "", const string& eom = "");
+    //@}
+
+    //! \name Inspectors
+    //@{
+    //! Zero rate day counter
+    const DayCounter& dayCounter() const { return dayCounter_; }
+    //! Return the calendar used for converting tenor points into dates
+    const Calendar& tenorCalendar() const { return tenorCalendar_; }
+    //! Zero rate compounding
+    Compounding compounding() const { return compounding_; }
+    //! Zero rate compounding frequency
+    Frequency compoundingFrequency() const { return compoundingFrequency_; }
+    //! Zero rate spot lag
+    Natural spotLag() const { return spotLag_; }
+    //! Calendar used for spot date adjustment
+    const Calendar& spotCalendar() const { return spotCalendar_; }
+    //! Business day convention used in converting tenor points into dates
+    BusinessDayConvention rollConvention() const { return rollConvention_; }
+    //! End of month adjustment
+    bool eom() { return eom_; }
+    //! Flag to indicate whether the Zero Rate convention is based on a tenor input
+    bool tenorBased() { return tenorBased_; }
+    //@}
+
+    //! \name Serialisation
+    //@{
+    virtual void fromXML(XMLNode* node);
+    virtual XMLNode* toXML(XMLDocument& doc);
+    virtual void build();
+    //@}
+
+private:
+    DayCounter dayCounter_;
+    Calendar tenorCalendar_;
+    Compounding compounding_;
+    Frequency compoundingFrequency_;
+    Natural spotLag_;
+    Calendar spotCalendar_;
+    BusinessDayConvention rollConvention_;
+    bool eom_;
+    bool tenorBased_;
+
+    // Strings to store the inputs
+    string strDayCounter_;
+    string strTenorCalendar_;
+    string strCompounding_;
+    string strCompoundingFrequency_;
+    string strSpotLag_;
+    string strSpotCalendar_;
+    string strRollConvention_;
+    string strEom_;
 };
 } // namespace data
 } // namespace ore

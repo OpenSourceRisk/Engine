@@ -16,9 +16,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file App/ore.hpp
+/*! \file orea/app/parameters.hpp
     \brief Open Risk Engine setup and analytics choice
-    \ingroup
+    \ingroup app
 */
 
 #pragma once
@@ -28,8 +28,12 @@
 
 #include <ored/utilities/xmlutils.hpp>
 
-using namespace std;
 using namespace ore::data;
+using std::map;
+using std::string;
+
+namespace ore {
+namespace analytics {
 
 class Parameters : public XMLSerializable {
 public:
@@ -49,3 +53,5 @@ public:
 private:
     map<string, map<string, string>> data_;
 };
+} // namespace analytics
+} // namespace ore

@@ -16,14 +16,14 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file ored/reports/inmemoryreport.hpp
+/*! \file ored/report/inmemoryreport.hpp
     \brief In memory report class
     \ingroup report
 */
 
 #pragma once
 
-#include <ored/reports/report.hpp>
+#include <ored/report/report.hpp>
 #include <ql/errors.hpp>
 
 namespace ore {

@@ -48,9 +48,13 @@ using boost::unit_test::test_suite;
 #endif
 
 // Lib test suites
+#include "bond.hpp"
 #include "calendars.hpp"
 #include "ccyswapwithresets.hpp"
+#include "cpiswap.hpp"
 #include "crossassetmodeldata.hpp"
+#include "equitymarketdata.hpp"
+#include "equitytrades.hpp"
 #include "fxoption.hpp"
 #include "fxswap.hpp"
 #include "fxtriangulation.hpp"
@@ -91,6 +95,7 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(testsuite::FXSwapTest::suite());
     test->add(testsuite::FXOptionTest::suite());
     test->add(testsuite::CcySwapWithResetsTest::suite());
+    test->add(testsuite::CPISwapTest::suite());
     test->add(testsuite::FXTriangulationTest::suite());
     test->add(testsuite::CalendarNameTest::suite());
     test->add(testsuite::IndexTest::suite());
@@ -101,6 +106,9 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(testsuite::TodaysMarketTest::suite());
     test->add(testsuite::CrossAssetModelDataTest::suite());
     test->add(testsuite::YieldCurveTest::suite());
+    test->add(testsuite::EquityMarketDataTest::suite());
+    test->add(testsuite::EquityTradesTest::suite());
+    test->add(testsuite::BondTest::suite());
 
     // test->add(FXSwapTest::suite());
     test->add(BOOST_TEST_CASE(stopTimer));

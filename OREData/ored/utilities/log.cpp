@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file wrap/data/log.cpp
+/*! \file ored/data/log.cpp
     \brief Classes and functions for log message handling.
     \ingroup
 */

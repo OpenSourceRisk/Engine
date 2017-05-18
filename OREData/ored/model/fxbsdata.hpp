@@ -81,7 +81,7 @@ public:
     XMLNode* toXML(XMLDocument& doc);
     //@}
 
-    //! \Equality Operators
+    //! \name Operators
     //@{
     bool operator==(const FxBsData& rhs);
     bool operator!=(const FxBsData& rhs);

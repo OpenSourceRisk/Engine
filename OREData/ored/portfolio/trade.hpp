@@ -53,7 +53,9 @@ class Trade : public XMLSerializable {
 public:
     //! Base class constructor
     Trade(const string& tradeType, const Envelope& env = Envelope(), const TradeActions& ta = TradeActions())
-        : tradeType_(tradeType), envelope_(env), tradeActions_(ta) {}
+        : tradeType_(tradeType), envelope_(env), tradeActions_(ta) {
+        reset();
+    }
 
     //! Default destructor
     virtual ~Trade() {}
@@ -75,6 +77,7 @@ public:
         legCurrencies_.clear();
         legPayers_.clear();
         npvCurrency_ = "";
+        notional_ = 0.0;
         maturity_ = Date();
         tradeActions_.clear();
     }
@@ -102,6 +105,10 @@ public:
 
     const string& npvCurrency() { return npvCurrency_; }
 
+    //! Return the current notional in npvCurrency. See individual sub-classes for the precise definition
+    // of notional, for exotic trades this may not be what you expect.
+    QuantLib::Real notional() { return notional_; }
+
     const Date& maturity() { return maturity_; }
     //@}
 
@@ -113,6 +120,7 @@ protected:
     std::vector<string> legCurrencies_;
     std::vector<bool> legPayers_;
     string npvCurrency_;
+    QuantLib::Real notional_;
     Date maturity_;
 
 private:

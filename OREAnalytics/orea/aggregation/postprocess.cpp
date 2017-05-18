@@ -25,11 +25,11 @@
 #include <ql/math/distributions/normaldistribution.hpp>
 #include <ql/math/generallinearleastsquares.hpp>
 #include <ql/math/kernelfunctions.hpp>
-#include <ql/math/linearleastsquaresregression.hpp>
 #include <ql/methods/montecarlo/lsmbasissystem.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 
 #include <qle/math/nadarayawatson.hpp>
+#include <qle/math/stabilisedglls.hpp>
 
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/error_of_mean.hpp>
@@ -337,9 +337,11 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
         Handle<IborIndex> csaIndex;
         if (netting->activeCsaFlag()) {
             csaIndexName = netting->index();
-            csaIndex = market->iborIndex(csaIndexName);
-            QL_REQUIRE(scenarioData->has(AggregationScenarioDataType::IndexFixing, csaIndexName),
-                       "scenario data does not provide index values for " << csaIndexName);
+            if (csaIndexName != "") {
+                csaIndex = market->iborIndex(csaIndexName);
+                QL_REQUIRE(scenarioData->has(AggregationScenarioDataType::IndexFixing, csaIndexName),
+                           "scenario data does not provide index values for " << csaIndexName);
+            }
         }
 
         Handle<YieldTermStructure> curve = market_->discountCurve(baseCurrency_, configuration_);
@@ -391,8 +393,13 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
                 nettedCube_->set(exposure, nettingSetCount, j, k);
 
                 if (netting->activeCsaFlag()) {
-                    Real indexValue = scenarioData->get(j, k, AggregationScenarioDataType::IndexFixing, csaIndexName);
-                    Real dcf = csaIndex->dayCounter().yearFraction(prevDate, date);
+                    Real indexValue = 0.0;
+                    DayCounter dc = ActualActual();
+                    if (csaIndexName != "") {
+                        indexValue = scenarioData->get(j, k, AggregationScenarioDataType::IndexFixing, csaIndexName);
+                        dc = csaIndex->dayCounter();
+                    }
+                    Real dcf = dc.yearFraction(prevDate, date);
                     Real colvaDelta = -balance * collateralSpread_ * dcf / samples;
                     Real floorDelta = -balance * std::max(-indexValue, 0.0) * dcf / samples;
                     colvaInc[j + 1] += colvaDelta;
@@ -555,18 +562,23 @@ PostProcess::collateralPaths(const string& nettingSetId, const boost::shared_ptr
     vector<vector<Real>> csaScenFxRates(dates, vector<Real>(samples, 0.0));
     vector<vector<Real>> csaScenRates(dates, vector<Real>(samples, 0.0));
     if (netting->csaCurrency() != baseCurrency_) {
-        QL_REQUIRE(scenarioData_->has(AggregationScenarioDataType::FXSpot, csaFxPair),
+        QL_REQUIRE(scenarioData_->has(AggregationScenarioDataType::FXSpot, netting->csaCurrency()),
                    "scenario data does not provide FX rates for " << csaFxPair);
     }
-    QL_REQUIRE(scenarioData_->has(AggregationScenarioDataType::IndexFixing, csaIndexName),
-               "scenario data does not provide index values for " << csaIndexName);
+    if (csaIndexName != "") {
+        QL_REQUIRE(scenarioData_->has(AggregationScenarioDataType::IndexFixing, csaIndexName),
+                   "scenario data does not provide index values for " << csaIndexName);
+    }
     for (Size j = 0; j < dates; ++j) {
         for (Size k = 0; k < samples; ++k) {
             if (netting->csaCurrency() != baseCurrency_)
-                csaScenFxRates[j][k] = scenarioData_->get(j, k, AggregationScenarioDataType::FXSpot, csaFxPair);
+                csaScenFxRates[j][k] =
+                    scenarioData_->get(j, k, AggregationScenarioDataType::FXSpot, netting->csaCurrency());
             else
                 csaScenFxRates[j][k] = 1.0;
-            csaScenRates[j][k] = scenarioData_->get(j, k, AggregationScenarioDataType::IndexFixing, csaIndexName);
+            if (csaIndexName != "") {
+                csaScenRates[j][k] = scenarioData_->get(j, k, AggregationScenarioDataType::IndexFixing, csaIndexName);
+            }
         }
     }
 
@@ -758,14 +770,19 @@ void PostProcess::updateAllocatedXVA() {
     }
 }
 
-Array PostProcess::regressorArray(Size dateIndex, Size sampleIndex) {
+Disposable<Array> PostProcess::regressorArray(string nettingSet, Size dateIndex, Size sampleIndex) {
     Array a(dimRegressors_.size());
     for (Size i = 0; i < dimRegressors_.size(); ++i) {
         string variable = dimRegressors_[i];
-        if (scenarioData_->has(AggregationScenarioDataType::IndexFixing, variable))
+        if (boost::to_upper_copy(variable) ==
+            "NPV") // this allows possibility to include NPV as a regressor alongside more fundamental risk factors
+            a[i] = nettingSetNPV_[nettingSet][dateIndex][sampleIndex];
+        else if (scenarioData_->has(AggregationScenarioDataType::IndexFixing, variable))
             a[i] = scenarioData_->get(dateIndex, sampleIndex, AggregationScenarioDataType::IndexFixing, variable);
         else if (scenarioData_->has(AggregationScenarioDataType::FXSpot, variable))
             a[i] = scenarioData_->get(dateIndex, sampleIndex, AggregationScenarioDataType::FXSpot, variable);
+        else if (scenarioData_->has(AggregationScenarioDataType::Generic, variable))
+            a[i] = scenarioData_->get(dateIndex, sampleIndex, AggregationScenarioDataType::Generic, variable);
         else
             QL_FAIL("scenario data does not provide data for " << variable);
     }
@@ -795,6 +812,8 @@ void PostProcess::dynamicInitialMargin() {
             nettingSetLocalDIM_[nettingSetId] = vector<vector<Real>>(dates, vector<Real>(samples, 0.0));
             nettingSetExpectedDIM_[nettingSetId] = vector<Real>(dates, 0.0);
             nettingSetZeroOrderDIM_[nettingSetId] = vector<Real>(dates, 0.0);
+            nettingSetSimpleDIMh_[nettingSetId] = vector<Real>(dates, 0.0);
+            nettingSetSimpleDIMp_[nettingSetId] = vector<Real>(dates, 0.0);
             nettingSets.insert(nettingSetId);
             nettingSetSize[nettingSetId] = 0;
         }
@@ -815,18 +834,24 @@ void PostProcess::dynamicInitialMargin() {
     for (auto n : nettingSets)
         nettingSetIds.push_back(n);
 
+    // Perform the T0 calculation
+    performT0DimCalc();
+
     // This is allocated here and not outside the post processor because we determine the dimension (netting sets) here
     dimCube_ = boost::make_shared<SinglePrecisionInMemoryCube>(today, nettingSetIds, cube_->dates(), samples);
 
     Size polynomOrder = dimRegressionOrder_;
     LOG("DIM regression polynom order = " << dimRegressionOrder_);
     LsmBasisSystem::PolynomType polynomType = LsmBasisSystem::Monomial;
-    Size regressionDimension = dimRegressors_.size() == 0 ? 1 : dimRegressors_.size();
+    Size regressionDimension = dimRegressors_.empty() ? 1 : dimRegressors_.size();
     LOG("DIM regression dimension = " << regressionDimension);
     std::vector<boost::function1<Real, Array>> v(
         LsmBasisSystem::multiPathBasisSystem(regressionDimension, polynomOrder, polynomType));
     Real confidenceLevel = QuantLib::InverseCumulativeNormal()(dimQuantile_);
     LOG("DIM confidence level " << confidenceLevel);
+
+    Size simple_dim_index_h = Size(floor(dimQuantile_ * (samples - 1) + 0.5));
+    Size simple_dim_index_p = Size(floor((1.0 - dimQuantile_) * (samples - 1) + 0.5));
 
     Size nettingSetCount = 0;
     for (auto n : nettingSets) {
@@ -839,6 +864,7 @@ void PostProcess::dynamicInitialMargin() {
         }
         for (Size j = 0; j < dates - 1; ++j) {
             accumulator_set<double, stats<tag::mean, tag::variance>> accDiff;
+            accumulator_set<double, stats<tag::mean>> accOneOverNumeraire;
             for (Size k = 0; k < samples; ++k) {
                 Real num1 = scenarioData_->get(j, k, AggregationScenarioDataType::Numeraire);
                 Real num2 = scenarioData_->get(j + 1, k, AggregationScenarioDataType::Numeraire);
@@ -846,14 +872,18 @@ void PostProcess::dynamicInitialMargin() {
                 Real flow = nettingSetFLOW_[n][j][k];
                 Real npv2 = nettingSetNPV_[n][j + 1][k];
                 accDiff(npv2 * num2 + flow * num1 - npv1 * num1);
+                accOneOverNumeraire(1.0 / num1);
             }
 
             Date d1 = cube_->dates()[j];
             Date d2 = cube_->dates()[j + 1];
             Real horizonScaling = sqrt(1.0 * dimHorizonCalendarDays_ / (d2 - d1));
             Real stdevDiff = sqrt(variance(accDiff));
+            Real E_OneOverNumeraire =
+                mean(accOneOverNumeraire); // "re-discount" (the stdev is calculated on non-discounted deltaNPVs)
 
             nettingSetZeroOrderDIM_[n][j] = stdevDiff * horizonScaling * confidenceLevel;
+            nettingSetZeroOrderDIM_[n][j] *= E_OneOverNumeraire;
 
             vector<Real> rx0(samples, 0.0);
             vector<Array> rx(samples, Array());
@@ -866,13 +896,21 @@ void PostProcess::dynamicInitialMargin() {
                 Real f = nettingSetFLOW_[n][j][k] * num1;
                 Real y = nettingSetNPV_[n][j + 1][k] * num2;
                 Real z = (y + f - x);
-                rx[k] = regressorArray(j, k);
+                rx[k] = dimRegressors_.empty() ? Array(1, nettingSetNPV_[n][j][k]) : regressorArray(n, j, k);
                 rx0[k] = rx[k][0];
                 ry1[k] = z;     // for local regression
                 ry2[k] = z * z; // for least squares regression
-                nettingSetDeltaNPV_[n][j][k] = std::abs(z * horizonScaling * confidenceLevel);
+                nettingSetDeltaNPV_[n][j][k] = z;
                 regressorArray_[n][j][k] = rx[k];
             }
+            vector<Real> delNpvVec_copy = nettingSetDeltaNPV_[n][j];
+            sort(delNpvVec_copy.begin(), delNpvVec_copy.end());
+            Real simpleDim_h = delNpvVec_copy[simple_dim_index_h];
+            Real simpleDim_p = delNpvVec_copy[simple_dim_index_p];
+            simpleDim_h *= horizonScaling;                                  // the usual scaling factors
+            simpleDim_p *= horizonScaling;                                  // the usual scaling factors
+            nettingSetSimpleDIMh_[n][j] = simpleDim_h * E_OneOverNumeraire; // discounted DIM
+            nettingSetSimpleDIMp_[n][j] = simpleDim_p * E_OneOverNumeraire; // discounted DIM
 
             QL_REQUIRE(rx.size() > v.size(), "not enough points for regression with polynom order " << polynomOrder);
             if (close_enough(stdevDiff, 0.0)) {
@@ -884,9 +922,12 @@ void PostProcess::dynamicInitialMargin() {
                 }
             } else {
                 // Least squares polynomial regression with specified polynom order
-                GeneralLinearLeastSquares ls(rx, ry2, v);
-                Array coeff = ls.coefficients();
-                LOG("DIM regression coefficients at time step " << j << ": " << setprecision(6) << coeff);
+                QuantExt::StabilisedGLLS ls(rx, ry2, v, QuantExt::StabilisedGLLS::MeanStdDev);
+                LOG("DIM data normalisation at time step "
+                    << j << ": " << scientific << setprecision(6) << " x-shift = " << ls.xShift() << " x-multiplier = "
+                    << ls.xMultiplier() << " y-shift = " << ls.yShift() << " y-multiplier = " << ls.yMultiplier());
+                LOG("DIM regression coefficients at time step " << j << ": " << fixed << setprecision(6)
+                                                                << ls.transformedCoefficients());
 
                 // Local regression versus first regression variable (i.e. we do not perform a
                 // multidimensional local regression):
@@ -902,10 +943,9 @@ void PostProcess::dynamicInitialMargin() {
                 // Evaluate regression function to compute DIM for each scenario
                 for (Size k = 0; k < samples; ++k) {
                     Real num1 = scenarioData_->get(j, k, AggregationScenarioDataType::Numeraire);
-                    Array regressor = regressorArray(j, k);
-                    Real e = 0.0;
-                    for (Size l = 0; l < v.size(); l++)
-                        e += coeff[l] * v[l](regressor);
+                    Array regressor =
+                        dimRegressors_.empty() ? Array(1, nettingSetNPV_[n][j][k]) : regressorArray(n, j, k);
+                    Real e = ls.eval(regressor, v);
                     if (e < 0.0)
                         LOG("Negative variance regression for date " << j << ", sample " << k
                                                                      << ", regressor = " << regressor);
@@ -1123,14 +1163,84 @@ Real PostProcess::nettingSetCollateralFloor(const string& nettingSetId) {
     return nettingSetCollateralFloor_[nettingSetId];
 }
 
-void PostProcess::exportDimEvolution(const std::string& fileName, const std::string& nettingSet) {
-    LOG("Export DIM evolution for netting set " << nettingSet);
+void PostProcess::performT0DimCalc() {
+    // In this function we proxy the model-implied T0 IM by looking at the
+    // cube grid horizon lying closest to t0+mpor. We measure diffs relative
+    // to the mean of the distribution at this same time horizon, thus avoiding
+    // any cashflow-specific jumps
 
-    std::ofstream file;
-    file.open(fileName.c_str());
-    QL_REQUIRE(file.is_open(), "error opening file " << fileName);
-    file.setf(ios::fixed, ios::floatfield);
-    file.setf(ios::showpoint);
+    Date today = market_->asofDate();
+    Size relevantDateIdx = 0;
+    Real sqrtTimeScaling = 1.0;
+    for (Size i = 0; i < cube_->dates().size(); ++i) {
+        Size daysFromT0 = (cube_->dates()[i] - today);
+        if (daysFromT0 < dimHorizonCalendarDays_) {
+            // iterate until we straddle t0+mpor
+            continue;
+        } else if (daysFromT0 == dimHorizonCalendarDays_) {
+            // this date corresponds to t0+mpor, so use it
+            relevantDateIdx = i;
+            sqrtTimeScaling = 1.0;
+            break;
+        } else if (daysFromT0 > dimHorizonCalendarDays_) {
+            // the first date greater than t0+MPOR, check if it is closest
+            Size lastIdx = (i == 0) ? 0 : (i - 1);
+            Size lastDaysFromT0 = (cube_->dates()[lastIdx] - today);
+            if (std::fabs(daysFromT0 - dimHorizonCalendarDays_) <=
+                std::fabs(lastDaysFromT0 - dimHorizonCalendarDays_)) {
+                relevantDateIdx = i;
+                sqrtTimeScaling = std::sqrt(Real(dimHorizonCalendarDays_) / Real(daysFromT0));
+            } else {
+                relevantDateIdx = lastIdx;
+                sqrtTimeScaling = std::sqrt(Real(dimHorizonCalendarDays_) / Real(lastDaysFromT0));
+            }
+            break;
+        }
+    }
+    // set some reasonable bounds on the sqrt time scaling, so that we are not looking at a ridiculous time horizon
+    QL_REQUIRE((sqrtTimeScaling * sqrtTimeScaling >= 0.5) && (sqrtTimeScaling * sqrtTimeScaling <= 2.0),
+               "T0 IM Estimation - The estimation time horizon from grid "
+                   << "is not sufficiently close to t0+MPOR - "
+                   << QuantLib::io::iso_date(cube_->dates()[relevantDateIdx]));
+
+    // TODO: Ensure that the simulation containers read-from below are indeed populated
+
+    Real confidenceLevel = QuantLib::InverseCumulativeNormal()(dimQuantile_);
+    Size simple_dim_index_h = Size(floor(dimQuantile_ * (cube_->samples() - 1) + 0.5));
+    for (auto it_map = nettingSetNPV_.begin(); it_map != nettingSetNPV_.end(); ++it_map) {
+        string key = it_map->first;
+        boost::shared_ptr<NettingSetDefinition> nettingObj = nettingSetManager_->get(key);
+        vector<Real> t0_dist = it_map->second[relevantDateIdx];
+        Size dist_size = t0_dist.size();
+        QL_REQUIRE(dist_size == cube_->samples(),
+                   "T0 IM - cube samples size mismatch - " << dist_size << ", " << cube_->samples());
+        Real mean_t0_dist = std::accumulate(t0_dist.begin(), t0_dist.end(), 0.0);
+        mean_t0_dist /= dist_size;
+        vector<Real> t0_delMtM_dist(dist_size, 0.0);
+        accumulator_set<double, stats<tag::mean, tag::variance>> acc_delMtm;
+        accumulator_set<double, stats<tag::mean>> acc_OneOverNum;
+        for (Size i = 0; i < dist_size; ++i) {
+            Real numeraire = scenarioData_->get(relevantDateIdx, i, AggregationScenarioDataType::Numeraire);
+            Real deltaMtmFromMean = numeraire * (t0_dist[i] - mean_t0_dist) * sqrtTimeScaling;
+            t0_delMtM_dist[i] = deltaMtmFromMean;
+            acc_delMtm(deltaMtmFromMean);
+            acc_OneOverNum(1.0 / numeraire);
+        }
+        Real E_OneOverNumeraire = mean(acc_OneOverNum);
+        Real variance_t0 = variance(acc_delMtm);
+        Real sqrt_t0 = sqrt(variance_t0);
+        net_t0_im_reg_h_[key] = (sqrt_t0 * confidenceLevel * E_OneOverNumeraire);
+        std::sort(t0_delMtM_dist.begin(), t0_delMtM_dist.end());
+        net_t0_im_simple_h_[key] = (t0_delMtM_dist[simple_dim_index_h] * E_OneOverNumeraire);
+
+        LOG("T0 IM (Reg) - {" << key << "} = " << net_t0_im_reg_h_[key]);
+        LOG("T0 IM (Simple) - {" << key << "} = " << net_t0_im_simple_h_[key]);
+    }
+    LOG("T0 IM Calculations Completed");
+}
+
+void PostProcess::exportDimEvolution(const std::string& nettingSet, ore::data::Report& dimEvolutionReport) {
+    LOG("Export DIM evolution for netting set " << nettingSet);
 
     Size dates = dimCube_->dates().size();
     Size samples = dimCube_->samples();
@@ -1145,7 +1255,14 @@ void PostProcess::exportDimEvolution(const std::string& fileName, const std::str
     }
     QL_REQUIRE(index >= 0, "netting set " << nettingSet << " not found in DIM cube");
 
-    file << "TimeStep,Date,DaysInPeriod,ZeroOrderDIM,AverageDIM,AverageFLOW" << endl;
+    dimEvolutionReport.addColumn("TimeStep", Size())
+        .addColumn("Date", Date())
+        .addColumn("DaysInPeriod", Size())
+        .addColumn("ZeroOrderDIM", Real(), 6)
+        .addColumn("AverageDIM", Real(), 6)
+        .addColumn("AverageFLOW", Real(), 6)
+        .addColumn("SimpleDIM", Real(), 6);
+
     for (Size i = 0; i < dates - 1; ++i) {
         Real expectedFlow = 0.0;
         for (Size j = 0; j < samples; ++j) {
@@ -1155,70 +1272,94 @@ void PostProcess::exportDimEvolution(const std::string& fileName, const std::str
         Date d1 = dimCube_->dates()[i];
         Date d2 = dimCube_->dates()[i + 1];
         Size days = d2 - d1;
-        file << i << "," << QuantLib::io::iso_date(d1) << "," << days << "," << setprecision(6)
-             << nettingSetZeroOrderDIM_[nettingSet][i] << "," << nettingSetExpectedDIM_[nettingSet][i] << ","
-             << expectedFlow << endl;
+        dimEvolutionReport.next()
+            .add(i)
+            .add(d1)
+            .add(days)
+            .add(nettingSetZeroOrderDIM_[nettingSet][i])
+            .add(nettingSetExpectedDIM_[nettingSet][i])
+            .add(expectedFlow)
+            .add(nettingSetSimpleDIMh_[nettingSet][i]);
     }
-    file.close();
+    dimEvolutionReport.end();
     LOG("Exporting expected DIM through time done");
 }
 
-bool lessThan(const Array& a, const Array& b) { return a[0] < b[0]; }
+bool lessThan(const Array& a, const Array& b) {
+    QL_REQUIRE(a.size() > 0, "array a is empty");
+    QL_REQUIRE(b.size() > 0, "array a is empty");
+    return a[0] < b[0];
+}
 
-void PostProcess::exportDimRegression(const std::string& fileName, const std::string& nettingSet, Size timeStep) {
-    LOG("Export DIM by sample for netting set " << nettingSet << " and time step " << timeStep);
+void PostProcess::exportDimRegression(const std::string& nettingSet, const std::vector<Size>& timeSteps,
+                                      const std::vector<boost::shared_ptr<ore::data::Report>>& dimRegReports) {
 
-    std::ofstream file;
-    file.open(fileName.c_str());
-    QL_REQUIRE(file.is_open(), "error opening file " << fileName);
-    file.setf(ios::fixed, ios::floatfield);
-    file.setf(ios::showpoint);
+    QL_REQUIRE(dimRegReports.size() == timeSteps.size(),
+               "number of file names (" << dimRegReports.size() << ") does not match number of time steps ("
+                                        << timeSteps.size() << ")");
+    for (Size ii = 0; ii < timeSteps.size(); ++ii) {
+        Size timeStep = timeSteps[ii];
+        LOG("Export DIM by sample for netting set " << nettingSet << " and time step " << timeStep);
 
-    Size dates = dimCube_->dates().size();
-    const std::vector<std::string>& ids = dimCube_->ids();
+        Size dates = dimCube_->dates().size();
+        const std::vector<std::string>& ids = dimCube_->ids();
 
-    int index = -1;
-    for (Size i = 0; i < ids.size(); ++i) {
-        if (ids[i] == nettingSet) {
-            index = i;
-            break;
+        int index = -1;
+        for (Size i = 0; i < ids.size(); ++i) {
+            if (ids[i] == nettingSet) {
+                index = i;
+                break;
+            }
         }
-    }
-    QL_REQUIRE(index >= 0, "netting set " << nettingSet << " not found in DIM cube");
+        QL_REQUIRE(index >= 0, "netting set " << nettingSet << " not found in DIM cube");
 
-    QL_REQUIRE(timeStep < dates - 1, "selected time step " << timeStep << " out of range [0, " << dates - 1 << "]");
+        QL_REQUIRE(timeStep < dates - 1, "selected time step " << timeStep << " out of range [0, " << dates - 1 << "]");
 
-    Size samples = cube_->samples();
-    vector<Real> numeraires(samples, 0.0);
-    for (Size k = 0; k < samples; ++k)
-        numeraires[k] = scenarioData_->get(timeStep, k, AggregationScenarioDataType::Numeraire);
+        Size samples = cube_->samples();
+        vector<Real> numeraires(samples, 0.0);
+        for (Size k = 0; k < samples; ++k)
+            numeraires[k] = scenarioData_->get(timeStep, k, AggregationScenarioDataType::Numeraire);
 
-    auto p = sort_permutation(regressorArray_[nettingSet][timeStep], lessThan);
-    vector<Array> reg = apply_permutation(regressorArray_[nettingSet][timeStep], p);
-    vector<Real> dim = apply_permutation(nettingSetDIM_[nettingSet][timeStep], p);
-    vector<Real> ldim = apply_permutation(nettingSetLocalDIM_[nettingSet][timeStep], p);
-    vector<Real> delta = apply_permutation(nettingSetDeltaNPV_[nettingSet][timeStep], p);
-    vector<Real> num = apply_permutation(numeraires, p);
+        auto p = sort_permutation(regressorArray_[nettingSet][timeStep], lessThan);
+        vector<Array> reg = apply_permutation(regressorArray_[nettingSet][timeStep], p);
+        vector<Real> dim = apply_permutation(nettingSetDIM_[nettingSet][timeStep], p);
+        vector<Real> ldim = apply_permutation(nettingSetLocalDIM_[nettingSet][timeStep], p);
+        vector<Real> delta = apply_permutation(nettingSetDeltaNPV_[nettingSet][timeStep], p);
+        vector<Real> num = apply_permutation(numeraires, p);
 
-    file << "Sample,";
-    for (Size k = 0; k < reg[0].size(); ++k) {
-        file << "Regressor_" << k << "_" << dimRegressors_[k] << ",";
-    }
-    file << "RegressionDIM,LocalDIM,ExpectedDIM,ZeroOrderDIM,DeltaNPV" << endl;
-
-    // Note that RegressionDIM, LocalDIM, ZeroOrderDim, DeltaNPV are _not_ reduced by the numeraire in this output,
-    // but ExpectedDIM _is_ reduced by the numeraire.
-
-    for (Size j = 0; j < reg.size(); ++j) {
-        file << j << "," << setprecision(6);
-        for (Size k = 0; k < reg[j].size(); ++k) {
-            file << reg[j][k] << ",";
+        boost::shared_ptr<ore::data::Report> regReport = dimRegReports[ii];
+        regReport->addColumn("Sample", Size());
+        for (Size k = 0; k < reg[0].size(); ++k) {
+            ostringstream o;
+            o << "Regressor_" << k << "_";
+            o << (dimRegressors_.empty() ? "NPV" : dimRegressors_[k]);
+            regReport->addColumn(o.str(), Real(), 6);
         }
-        file << dim[j] * num[j] << "," << ldim[j] * num[j] << "," << nettingSetExpectedDIM_[nettingSet][timeStep] << ","
-             << nettingSetZeroOrderDIM_[nettingSet][timeStep] << "," << delta[j] << endl;
+        regReport->addColumn("RegressionDIM", Real(), 6)
+            .addColumn("LocalDIM", Real(), 6)
+            .addColumn("ExpectedDIM", Real(), 6)
+            .addColumn("ZeroOrderDIM", Real(), 6)
+            .addColumn("DeltaNPV", Real(), 6)
+            .addColumn("SimpleDIM", Real(), 6);
+
+        // Note that RegressionDIM, LocalDIM, DeltaNPV are _not_ reduced by the numeraire in this output,
+        // but ExpectedDIM, ZeroOrderDIM and SimpleDIM _are_ reduced by the numeraire.
+        // This is so that the regression formula can be manually validated
+
+        for (Size j = 0; j < reg.size(); ++j) {
+            regReport->next().add(j);
+            for (Size k = 0; k < reg[j].size(); ++k)
+                regReport->add(reg[j][k]);
+            regReport->add(dim[j] * num[j])
+                .add(ldim[j] * num[j])
+                .add(nettingSetExpectedDIM_[nettingSet][timeStep])
+                .add(nettingSetZeroOrderDIM_[nettingSet][timeStep])
+                .add(delta[j])
+                .add(nettingSetSimpleDIMh_[nettingSet][timeStep]);
+        }
+        regReport->end();
+        LOG("Exporting DIM by Sample done for");
     }
-    file.close();
-    LOG("Exporting DIM by Sample done");
 }
 } // namespace analytics
 } // namespace ore

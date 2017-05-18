@@ -73,11 +73,11 @@ void Portfolio::load(const string& fileName, const boost::shared_ptr<TradeFactor
                                                                  << tradeType << ") : " << ex.what());
                 }
             } else {
-                LOG("Unable to build Trade for tradeType=" << tradeType);
+                WLOG("Unable to build Trade for tradeType=" << tradeType);
             }
         }
     } else {
-        LOG("No Portfolio Node in XML doc");
+        WLOG("No Portfolio Node in XML doc");
     }
     LOG("Finished Parsing XML doc");
 }

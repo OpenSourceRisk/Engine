@@ -27,6 +27,7 @@
 #include <ql/currency.hpp>
 #include <ql/exercise.hpp>
 #include <ql/instruments/swaption.hpp>
+#include <ql/methods/montecarlo/lsmbasissystem.hpp>
 #include <ql/position.hpp>
 #include <ql/time/businessdayconvention.hpp>
 #include <ql/time/calendar.hpp>
@@ -131,17 +132,29 @@ QuantLib::Position::Type parsePositionType(const string& s);
 */
 QuantLib::Settlement::Type parseSettlementType(const string& s);
 
-//! Convert text to QuantLib::Settlement::Type
+//! Convert text to QuantLib::Exercise::Type
 /*!
 \ingroup utilities
 */
 QuantLib::Exercise::Type parseExerciseType(const string& s);
+
+//! Convert text to QuantLib::Option::Type
+/*!
+\ingroup utilities
+*/
+QuantLib::Option::Type parseOptionType(const string& s);
 
 //! Convert text to QuantLib::Period or QuantLib::Date
 /*!
 \ingroup utilities
 */
 void parseDateOrPeriod(const string& s, QuantLib::Date& d, QuantLib::Period& p, bool& isDate);
+
+//! Convert text to QuantLib::LsmBasisSystem::PolynomType
+/*!
+\ingroup utilities
+*/
+QuantLib::LsmBasisSystem::PolynomType parsePolynomType(const std::string& s);
 
 //! Convert comma separated list of values to vector of values
 /*!

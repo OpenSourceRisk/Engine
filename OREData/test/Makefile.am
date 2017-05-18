@@ -1,9 +1,11 @@
 
 OREDATA_TESTS = \
 	testsuite.cpp \
+	bond.hpp bond.cpp \
 	calendars.hpp calendars.cpp \
 	fxoption.hpp fxoption.cpp \
 	ccyswapwithresets.hpp ccyswapwithresets.cpp \
+    cpiswap.hpp cpiswap.cpp \
 	fxtriangulation.hpp fxtriangulation.cpp \
 	indices.hpp indices.cpp \
 	parser.hpp parser.cpp \
@@ -13,7 +15,9 @@ OREDATA_TESTS = \
 	todaysmarket.hpp todaysmarket.cpp \
 	fxswap.hpp fxswap.cpp \
 	yieldcurve.hpp yieldcurve.cpp \
-	crossassetmodeldata.hpp crossassetmodeldata.cpp
+	crossassetmodeldata.hpp crossassetmodeldata.cpp \
+	equitymarketdata.hpp equitymarketdata.cpp \
+	equitytrades.hpp equitytrades.cpp
 
 dist-hook:
 	mkdir -p $(distdir)/build

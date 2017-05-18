@@ -63,6 +63,7 @@ static struct test_data cal_data[] = {
     {"TWD", Taiwan()},
     {"TRY", Turkey()},
     {"UAH", Ukraine()},
+    {"HUF", Hungary()},
     // Emerging currencies that default to TARGET
     {"AED", TARGET()},
     {"BHD", TARGET()},
@@ -70,7 +71,6 @@ static struct test_data cal_data[] = {
     {"CLP", TARGET()},
     {"COP", TARGET()},
     {"EGP", TARGET()},
-    {"HUF", TARGET()},
     {"ILS", TARGET()},
     {"KWD", TARGET()},
     {"KZT", TARGET()},

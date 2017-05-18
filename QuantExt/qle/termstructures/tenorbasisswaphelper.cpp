@@ -16,10 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ql/pricingengines/swap/discountingswapengine.hpp>
-#ifdef QL_USE_INDEXED_COUPON
 #include <ql/cashflows/floatingratecoupon.hpp>
-#endif
+#include <ql/pricingengines/swap/discountingswapengine.hpp>
 
 #include <qle/termstructures/tenorbasisswaphelper.hpp>
 
@@ -78,21 +76,20 @@ void TenorBasisSwapHelper::initializeDates() {
     earliestDate_ = swap_->startDate();
     latestDate_ = swap_->maturityDate();
 
-/* May need to adjust latestDate_ if you are projecting libor based
-   on tenor length rather than from accrual date to accrual date. */
+    boost::shared_ptr<FloatingRateCoupon> lastFloating = boost::dynamic_pointer_cast<FloatingRateCoupon>(
+        termStructureHandle_ == shortIndex_->forwardingTermStructure() ? swap_->shortLeg().back()
+                                                                       : swap_->longLeg().back());
 #ifdef QL_USE_INDEXED_COUPON
-    if (termStructureHandle_ == shortIndex_->forwardingTermStructure()) {
-        boost::shared_ptr<FloatingRateCoupon> lastFloating =
-            boost::dynamic_pointer_cast<FloatingRateCoupon>(swap_->shortLeg().back());
+    /* May need to adjust latestDate_ if you are projecting libor based
+   on tenor length rather than from accrual date to accrual date. */
+    Date fixingValueDate = shortIndex_->valueDate(lastFloating->fixingDate());
+    Date endValueDate = shortIndex_->maturityDate(fixingValueDate);
+    latestDate_ = std::max(latestDate_, endValueDate);
+#else
+    /* Subperiods coupons do not have a par approximation either... */
+    if (boost::dynamic_pointer_cast<SubPeriodsCoupon>(lastFloating)) {
         Date fixingValueDate = shortIndex_->valueDate(lastFloating->fixingDate());
         Date endValueDate = shortIndex_->maturityDate(fixingValueDate);
-        latestDate_ = std::max(latestDate_, endValueDate);
-    }
-    if (termStructureHandle_ == longIndex_->forwardingTermStructure()) {
-        boost::shared_ptr<FloatingRateCoupon> lastFloating =
-            boost::dynamic_pointer_cast<FloatingRateCoupon>(swap_->longLeg().back());
-        Date fixingValueDate = longIndex_->valueDate(lastFloating->fixingDate());
-        Date endValueDate = longIndex_->maturityDate(fixingValueDate);
         latestDate_ = std::max(latestDate_, endValueDate);
     }
 #endif

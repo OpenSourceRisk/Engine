@@ -18,7 +18,6 @@
 
 /*! \file test/capfloormarketdata.hpp
     \brief structs containing capfloor market data that can be used in tests
-    \ingroup
 */
 
 #ifndef quantext_test_capfloormarketdata_hpp

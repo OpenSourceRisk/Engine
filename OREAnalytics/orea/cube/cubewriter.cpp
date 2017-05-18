@@ -49,8 +49,8 @@ void CubeWriter::write(const boost::shared_ptr<NPVCube>& cube, const std::map<st
     FILE* fp = fopen(filename_.c_str(), append ? "a" : "w");
     QL_REQUIRE(fp, "error opening file " << filename_);
     if (!append)
-        fprintf(fp, "Id,NettingSet,DateIndex,Date,Sample,Value\n");
-    const char* fmt = "%s,%s,%lu,%s,%lu,%.4f\n";
+        fprintf(fp, "Id,NettingSet,DateIndex,Date,Sample,Depth,Value\n");
+    const char* fmt = "%s,%s,%lu,%s,%lu,%lu,%.4f\n";
 
     // Get netting Set Ids (or "" if not there)
     vector<const char*> nettingSetIds(ids.size());
@@ -62,14 +62,16 @@ void CubeWriter::write(const boost::shared_ptr<NPVCube>& cube, const std::map<st
             nettingSetIds[i] = "";
 
         fprintf(fp, fmt, ids[i].c_str(), nettingSetIds[i], static_cast<Size>(0), asofString.c_str(),
-                static_cast<Size>(0), cube->getT0(i));
+                static_cast<Size>(0), static_cast<Size>(0), cube->getT0(i));
     }
     // Cube
     for (Size i = 0; i < ids.size(); i++) {
         for (Size j = 0; j < cube->numDates(); j++) {
             for (Size k = 0; k < cube->samples(); k++) {
-                fprintf(fp, fmt, ids[i].c_str(), nettingSetIds[i], j + 1, dateStrings[j].c_str(), k + 1,
-                        cube->get(i, j, k));
+                for (Size l = 0; l < cube->depth(); l++) {
+                    fprintf(fp, fmt, ids[i].c_str(), nettingSetIds[i], j + 1, dateStrings[j].c_str(), k + 1, l,
+                            cube->get(i, j, k, l));
+                }
             }
         }
     }

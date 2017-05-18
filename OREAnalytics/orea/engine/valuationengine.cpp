@@ -21,15 +21,11 @@
 #include <orea/simulation/simmarket.hpp>
 #include <ored/portfolio/optionwrapper.hpp>
 #include <ored/portfolio/portfolio.hpp>
-#include <ored/utilities/flowanalysis.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/progressbar.hpp>
-#include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
-#include <qle/cashflows/fxlinkedcashflow.hpp>
 
 #include <boost/timer.hpp>
-#include <ql/cashflows/iborcoupon.hpp>
 #include <ql/errors.hpp>
 
 using namespace QuantLib;
@@ -40,106 +36,15 @@ using namespace ore::data;
 namespace ore {
 namespace analytics {
 
-void applyFixings(Date start, Date end, map<string, vector<Date>>& fixingMap,
-                  const vector<boost::shared_ptr<Index>>& indices) {
-    // Loop over all indices
-    for (const boost::shared_ptr<Index>& index : indices) {
-        string qlIndexName = index->name();
-        // Only need to apply fixings if the index is in fixingMap
-        if (fixingMap.find(qlIndexName) != fixingMap.end()) {
-
-            // Add we have a coupon between start and asof.
-            bool needFixings = false;
-            vector<Date>& fixingDates = fixingMap[qlIndexName];
-            for (Size i = 0; i < fixingDates.size(); i++) {
-                if (fixingDates[i] >= start && fixingDates[i] < end) {
-                    needFixings = true;
-                    break;
-                }
-            }
-
-            if (needFixings) {
-                Date currentFixingDate = index->fixingCalendar().adjust(end, Following);
-                Rate currentFixing = index->fixing(currentFixingDate);
-                TimeSeries<Real> history;
-                vector<Date>& fixingDates = fixingMap[qlIndexName];
-                for (Size i = 0; i < fixingDates.size(); i++) {
-                    if (fixingDates[i] >= start && fixingDates[i] < end)
-                        history[fixingDates[i]] = currentFixing;
-                    if (fixingDates[i] >= end)
-                        break;
-                }
-                index->addFixings(history, true);
-            }
-        }
-    }
-}
-
-void buildCache(const map<string, vector<Date>>& fixingMap, const vector<boost::shared_ptr<Index>>& indices,
-                map<string, TimeSeries<Real>>& fixingCache) {
-
-    for (const boost::shared_ptr<Index>& index : indices) {
-        string qlIndexName = index->name();
-        if (fixingMap.find(qlIndexName) != fixingMap.end()) {
-            fixingCache[qlIndexName] = IndexManager::instance().getHistory(qlIndexName);
-        }
-    }
-}
-
-void resetFixings(const map<string, TimeSeries<Real>>& fixingCache) {
-    for (auto& kv : fixingCache)
-        IndexManager::instance().setHistory(kv.first, kv.second);
-}
-
-ValuationEngine::FixingsMap ValuationEngine::getFixingDates(const vector<FlowList>& flowList) {
-
-    std::map<std::string, std::vector<Date>> fixings;
-    // first pass: init date vectors
-    for (Size j = 0; j < flowList.size(); j++) {
-        FlowList flow = flowList[j];
-        QL_REQUIRE(flow.size() > 0, "flowList " << j << " is empty");
-        for (Size i = 1; i < flow.size(); i++) { // skip header
-            std::string indexName = flow[i][4];
-            if (indexName != "#N/A" && fixings.find(indexName) == fixings.end()) {
-                LOG("add index name for fixing history: " << indexName);
-                fixings[indexName] = vector<Date>();
-            }
-        }
-    }
-
-    // second pass: Add to date vectors
-    for (Size j = 0; j < flowList.size(); j++) {
-        FlowList flow = flowList[j];
-        QL_REQUIRE(flow.size() > 0, "flowList " << j << " is empty");
-        for (Size i = 1; i < flow.size(); i++) { // skip header
-            std::string indexName = flow[i][4];
-            if (indexName != "#N/A") {
-                Date fixingDate = ore::data::parseDate(flow[i][3]);
-                fixings[indexName].push_back(fixingDate);
-            }
-        }
-    }
-
-    // third pass: sort date vectors and remove duplicates
-    std::map<std::string, std::vector<Date>>::iterator it;
-    for (it = fixings.begin(); it != fixings.end(); ++it) {
-        std::sort(it->second.begin(), it->second.end());
-        // using default comparison:
-        vector<Date>::iterator it2 = std::unique(it->second.begin(), it->second.end());
-        it->second.resize(it2 - it->second.begin());
-    }
-
-    return fixings;
-}
-
 ValuationEngine::ValuationEngine(const Date& today, const boost::shared_ptr<DateGrid>& dg,
-                                 const boost::shared_ptr<SimMarket>& simMarket)
-    : today_(today), dg_(dg), simMarket_(simMarket) {
+                                 const boost::shared_ptr<SimMarket>& simMarket,
+                                 const set<boost::shared_ptr<ModelBuilder>>& modelBuilders)
+    : today_(today), dg_(dg), simMarket_(simMarket), modelBuilders_(modelBuilders) {
 
     QL_REQUIRE(dg_->size() > 0, "Error, DateGrid size must be > 0");
-    QL_REQUIRE(today < dg_->dates().front(), "ValuationEngine: Error today (" << today
-                                                                              << ") must be before first DateGrid date "
-                                                                              << dg_->dates().front());
+    QL_REQUIRE(today <= dg_->dates().front(), "ValuationEngine: Error today ("
+                                                  << today << ") must not be later than first DateGrid date "
+                                                  << dg_->dates().front());
     QL_REQUIRE(simMarket_, "ValuationEngine: Error, Null SimMarket");
 }
 
@@ -168,9 +73,6 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
     // Loop is Samples, Dates, Trades
     const auto& dates = dg_->dates();
     const auto& trades = portfolio->trades();
-    vector<FlowList> flowList;
-
-    set<boost::shared_ptr<Index>> setIndices; // for fixing
 
     LOG("Initialise state objects...");
     Size numFRC = 0;
@@ -181,21 +83,15 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
         DLOG("Initialise wrapper for trade " << trades[i]->id());
         trades[i]->instrument()->initialise(dates);
 
-        if (om == ObservationMode::Mode::Disable)
-            trades[i]->instrument()->updateQlInstruments();
-
         // T0 values
         for (auto calc : calculators)
             calc->calculateT0(trades[i], i, simMarket_, outputCube);
 
-        for (const Leg& leg : trades[i]->legs()) {
-            // fixings
-            flowList.push_back(data::flowAnalysis(leg));
-
-            for (Size n = 0; n < leg.size(); n++) {
-                boost::shared_ptr<FloatingRateCoupon> frc = boost::dynamic_pointer_cast<FloatingRateCoupon>(leg[n]);
-                if (frc) {
-                    if (om == ObservationMode::Mode::Unregister) {
+        if (om == ObservationMode::Mode::Unregister) {
+            for (const Leg& leg : trades[i]->legs()) {
+                for (Size n = 0; n < leg.size(); n++) {
+                    boost::shared_ptr<FloatingRateCoupon> frc = boost::dynamic_pointer_cast<FloatingRateCoupon>(leg[n]);
+                    if (frc) {
                         frc->unregisterWith(frc->index());
                         trades[i]->instrument()->qlInstrument()->unregisterWith(frc);
                         // Unregister with eval dates
@@ -203,21 +99,6 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
                         frc->index()->unregisterWith(Settings::instance().evaluationDate());
                         trades[i]->instrument()->qlInstrument()->unregisterWith(Settings::instance().evaluationDate());
                     }
-
-                    boost::shared_ptr<IborCoupon> ic = boost::dynamic_pointer_cast<IborCoupon>(frc);
-                    if (ic) {
-                        setIndices.insert(ic->iborIndex());
-                    }
-                    boost::shared_ptr<FloatingRateFXLinkedNotionalCoupon> fc =
-                        boost::dynamic_pointer_cast<FloatingRateFXLinkedNotionalCoupon>(frc);
-                    if (fc) {
-                        setIndices.insert(fc->index());
-                        setIndices.insert(fc->fxLinkedCashFlow().index());
-                    }
-                } else {
-                    boost::shared_ptr<FXLinkedCashFlow> flcf = boost::dynamic_pointer_cast<FXLinkedCashFlow>(leg[n]);
-                    if (flcf)
-                        setIndices.insert(flcf->index());
                 }
             }
         }
@@ -225,10 +106,7 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
     LOG("Total number of swaps = " << portfolio->size());
     LOG("Total number of FRC = " << numFRC);
 
-    vector<boost::shared_ptr<Index>> indices(setIndices.begin(), setIndices.end());
-    FixingsMap fixings = getFixingDates(flowList);
-    map<string, TimeSeries<Real>> fixingCache;
-    buildCache(fixings, indices, fixingCache);
+    simMarket_->fixingManager()->initialise(portfolio);
 
     boost::timer timer;
     boost::timer loopTimer;
@@ -246,35 +124,24 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
             Date d = dates[i];
 
             timer.restart();
-            if (om == ObservationMode::Mode::Disable)
-                ObservableSettings::instance().disableUpdates(false);
-            else if (om == ObservationMode::Mode::Defer)
-                ObservableSettings::instance().disableUpdates(true);
 
             simMarket_->update(d);
-            updateTime += timer.elapsed();
 
-            Date prev = i == 0 ? today_ : dates[i - 1];
-            timer.restart();
-
-            if (om == ObservationMode::Mode::Disable) {
-                simMarket_->refresh();
-                applyFixings(prev, d, fixings, indices);
-                ObservableSettings::instance().enableUpdates();
-            } else if (om == ObservationMode::Mode::Defer) {
-                ObservableSettings::instance().enableUpdates();
-                applyFixings(prev, d, fixings, indices);
-            } else {
-                applyFixings(prev, d, fixings, indices);
+            // recalibrate models
+            for (auto const& b : modelBuilders_) {
+                if (om == ObservationMode::Mode::Disable)
+                    b->recalculate();
+                b->recalibrate();
             }
 
-            fixingTime += timer.elapsed(); // Note fixing time includes defered observation
+            updateTime += timer.elapsed();
 
             // loop over trades
             timer.restart();
             for (Size j = 0; j < trades.size(); ++j) {
                 auto trade = trades[j];
 
+                // We can avoid checking mode here and always call updateQlInstruments()
                 if (om == ObservationMode::Mode::Disable)
                     trade->instrument()->updateQlInstruments();
 
@@ -285,7 +152,7 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
         }
 
         timer.restart();
-        resetFixings(fixingCache);
+        simMarket_->fixingManager()->reset();
         fixingTime += timer.elapsed();
     }
 

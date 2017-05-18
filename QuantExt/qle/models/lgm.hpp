@@ -160,8 +160,7 @@ inline Real LinearGaussMarkovModel::discountBondOption(Option::Type type, const 
     Real pS = discountCurve.empty() ? parametrization_->termStructure()->discount(S) : discountCurve->discount(S);
     Real pT = discountCurve.empty() ? parametrization_->termStructure()->discount(T) : discountCurve->discount(T);
     // slight generalization of Lichters, Stamm, Gallagher 11.2.1
-    // with t < S only resulting in a different time at which zeta
-    // has to be taken
+    // with t < S, SSRN: https://ssrn.com/abstract=2246054
     Real sigma = sqrt(parametrization_->zeta(t)) * (parametrization_->H(T) - parametrization_->H(S));
     Real dp = (std::log(pT / (K * pS)) / sigma + 0.5 * sigma);
     Real dm = dp - sigma;

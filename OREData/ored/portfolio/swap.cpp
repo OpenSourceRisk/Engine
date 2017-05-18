@@ -143,6 +143,25 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             } else {
                 legs_[i] = makeIborLeg(legData_[i], index, engineFactory);
             }
+        } else if (legData_[i].legType() == "CPI") {
+            string inflationIndexName = legData_[i].cpiLegData().index();
+            bool inflationIndexInterpolated = legData_[i].cpiLegData().interpolated();
+            boost::shared_ptr<ZeroInflationIndex> index =
+                *market->zeroInflationIndex(inflationIndexName, inflationIndexInterpolated);
+            QL_REQUIRE(index, "zero inflation index not found for index " << legData_[i].cpiLegData().index());
+            legs_[i] = makeCPILeg(legData_[i], index);
+            // legTypes[i] = Inflation;
+            // legTypes_[i] = "INFLATION";
+        } else if (legData_[i].legType() == "YY") {
+            string inflationIndexName = legData_[i].yoyLegData().index();
+            bool inflationIndexInterpolated = legData_[i].yoyLegData().interpolated();
+            boost::shared_ptr<YoYInflationIndex> index =
+                *market->yoyInflationIndex(inflationIndexName, inflationIndexInterpolated);
+            legs_[i] = makeYoYLeg(legData_[i], index);
+            // legTypes[i] = Inflation;
+            // legTypes_[i] = "INFLATION_YOY";
+        } else if (legData_[i].legType() == "Cashflow") {
+            legs_[i] = makeSimpleLeg(legData_[i]);
         } else {
             QL_FAIL("Unknown leg type " << legData_[i].legType());
         }
@@ -202,7 +221,11 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         }
     } // for legs
 
+    // NPV currency is just taken from the first leg, so for XCCY this is just the first one
+    // that appears in the XML
     npvCurrency_ = ccy_str;
+    notional_ = currentNotional(legs_[0]); // match npvCurrency_
+
     if (isXCCY) {
         boost::shared_ptr<QuantExt::CurrencySwap> swap(new QuantExt::CurrencySwap(legs_, legPayers_, currencies));
         boost::shared_ptr<CrossCurrencySwapEngineBuilder> swapBuilder =

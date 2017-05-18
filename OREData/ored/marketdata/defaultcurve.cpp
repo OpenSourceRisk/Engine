@@ -249,6 +249,5 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
         QL_FAIL("default curve building failed: unknown error");
     }
 }
-
 } // namespace data
 } // namespace ore

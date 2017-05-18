@@ -113,7 +113,7 @@ boost::shared_ptr<Portfolio> buildPortfolio(boost::shared_ptr<EngineFactory>& fa
 
     // float Leg
     vector<double> spreads(1, 0);
-    FloatingLegData floatingLegData(index, days, true, spread);
+    FloatingLegData floatingLegData(index, days, false, spread);
     LegData floatingLeg(!isPayer, ccy, floatingLegData, floatSchedule, floatDC, notional);
 
     boost::shared_ptr<Trade> swap(new data::Swap(env, floatingLeg, fixedLeg));
@@ -167,12 +167,15 @@ void simulation(string dateGridString, bool checkFixings) {
     parameters->swapVolExpiries() = {1 * Years, 2 * Years};
     parameters->swapVolCcys() = ccys;
     parameters->swapVolDecayMode() = "ForwardVariance";
+    parameters->simulateSwapVols() = false;
 
     parameters->fxVolExpiries() = {1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years};
     parameters->fxVolDecayMode() = "ConstantVariance";
     parameters->simulateFXVols() = false;
 
-    parameters->ccyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY"};
+    parameters->fxVolCcyPairs() = {"USDEUR", "GBPEUR", "CHFEUR", "JPYEUR"};
+
+    parameters->fxCcyPairs() = {"USDEUR", "GBPEUR", "CHFEUR", "JPYEUR"};
 
     parameters->additionalScenarioDataIndices() = {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M", "CHF-LIBOR-6M",
                                                    "JPY-LIBOR-6M"};

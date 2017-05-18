@@ -54,6 +54,7 @@ the element is omitted or left blank, then it defaults to \emph{True}.
     \hline
     Zero & The continuously compounded zero rate \\ \hline
     Discount & The discount factor \\ \hline
+    Forward & The instantaneous forward rate \\ \hline
   \end{tabu}
   \caption{Allowable interpolation variables.}
   \label{tab:allow_interp_variables}
@@ -70,6 +71,7 @@ the element is omitted or left blank, then it defaults to \emph{True}.
     NaturalCubic & Monotonic Kruger cubic interpolation with second derivative at left and right \\ \hline
     FinancialCubic & Monotonic Kruger cubic interpolation with second derivative at left and 
                      first derivative at right \\ \hline
+    ConvexMonotone & Convex Monotone Interpolation (Hagan, West) \\ \hline
   \end{tabu}
   \caption{Allowable interpolation methods.}
   \label{tab:allow_interp_methods}

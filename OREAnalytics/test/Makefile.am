@@ -6,8 +6,13 @@ OREANALYTICS_TESTS = \
 	scenariosimmarket.hpp scenariosimmarket.cpp \
 	swapperformance.hpp swapperformance.cpp \
 	scenariogenerator.hpp scenariogenerator.cpp \
-	testmarket.hpp \
-	observationmode.hpp observationmode.cpp
+	sensitivityanalysis.hpp sensitivityanalysis.cpp \
+	sensitivityanalysis2.hpp sensitivityanalysis2.cpp \
+	testmarket.hpp testmarket.cpp \
+	testportfolio.hpp testportfolio.cpp \
+	observationmode.hpp observationmode.cpp \
+	stresstest.hpp stresstest.cpp \
+	sensitivityperformance.hpp sensitivityperformance.cpp
 
 dist-hook:
 	mkdir -p $(distdir)/build

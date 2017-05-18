@@ -39,14 +39,8 @@ void FxOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     // Payoff
     Real strike = soldAmount_ / boughtAmount_;
-    boost::shared_ptr<StrikedTypePayoff> payoff;
-    if (option_.callPut() == "Call") {
-        payoff.reset(new PlainVanillaPayoff(Option::Call, strike));
-    } else if (option_.callPut() == "Put") {
-        payoff.reset(new PlainVanillaPayoff(Option::Put, strike));
-    } else {
-        QL_FAIL("Option Type unknown: " << option_.callPut());
-    }
+    Option::Type type = parseOptionType(option_.callPut());
+    boost::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(type, strike));
 
     // Only European Vanilla supported for now
     QL_REQUIRE(option_.style() == "European", "Option Style unknown: " << option_.style());
@@ -71,9 +65,14 @@ void FxOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     vanilla->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy));
 
-    instrument_ = boost::shared_ptr<InstrumentWrapper>(new VanillaInstrument(vanilla, boughtAmount_));
+    Position::Type positionType = parsePositionType(option_.longShort());
+    Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
+    Real mult = boughtAmount_ * bsInd;
+
+    instrument_ = boost::shared_ptr<InstrumentWrapper>(new VanillaInstrument(vanilla, mult));
 
     npvCurrency_ = soldCurrency_; // sold is the domestic
+    notional_ = soldAmount_;
     maturity_ = expiryDate;
 }
 

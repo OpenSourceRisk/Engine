@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file ored/reports/csvreport.hpp
+/*! \file ored/report/csvreport.hpp
     \brief CSV Report class
     \ingroup report
 */
@@ -53,6 +53,5 @@ private:
     Size i_;
     FILE* fp_;
 };
-
 } // namespace data
 } // namespace ore
