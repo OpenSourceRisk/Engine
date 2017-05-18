@@ -658,11 +658,11 @@ void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(
     Size n_ten = simMarketData_->defaultTenors().size();
 
     // original curves' buffer
-    std::vector<Real> probs(n_ten);
+    std::vector<Real> hazardRates(n_ten); //integrated hazard rates
     std::vector<Real> times(n_ten);
 
     // buffer for shifted survival prob curves
-    std::vector<Real> shiftedProbs(n_ten);
+    std::vector<Real> shiftedHazardRates(n_ten);
     for (Size i = 0; i < n_names; ++i) {
         string name = crNames_[i];
         SensitivityScenarioData::CurveShiftData data = sensitivityData_->creditCurveShiftData()[name];
@@ -672,7 +672,8 @@ void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(
         for (Size j = 0; j < n_ten; ++j) {
             Date d = today_ + simMarketData_->defaultTenors()[j];
             times[j] = dc.yearFraction(today_, d);
-            probs[j] = ts->survivalProbability(times[j], true); // do we extrapolate or not?
+            Real s_t = ts->survivalProbability(times[j], true); // do we extrapolate or not?
+            hazardRates[j] = -std::log(s_t)/times[j];
         }
 
         std::vector<Period> shiftTenors = data.shiftTenors;
@@ -689,13 +690,13 @@ void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(
             LOG("generate survival probability scenario, name " << name << ", bucket " << j << ", up " << up
                                                                 << ", desc " << scenarioDescriptions_.back().text());
 
-            // apply zero rate shift at tenor point j
-            applyShift(j, shiftSize, up, shiftType, shiftTimes, probs, times, shiftedProbs, true);
+            // apply integrated hazard rate shift at tenor point j
+            applyShift(j, shiftSize, up, shiftType, shiftTimes, hazardRates, times, shiftedHazardRates, true);
 
             // store shifted survival Prob in the scenario
             for (Size k = 0; k < n_ten; ++k) {
-                // Real shiftedProb = exp(-shiftedProbs[k] * times[k]);
-                scenario->add(getSurvivalProbabilityKey(name, k), shiftedProbs[k]);
+                Real shiftedProb = exp(-shiftedHazardRates[k] * times[k]);
+                scenario->add(getSurvivalProbabilityKey(name, k), shiftedProb);
             }
 
             // add this scenario to the scenario vector
