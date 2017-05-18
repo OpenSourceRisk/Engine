@@ -119,9 +119,17 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         capFloorVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
     }
 
+    survivalProbabilitySimulate_ = false;
+    recoveryRateSimulate_ = false;
     nodeChild = XMLUtils::getChildNode(node, "DefaultCurves");
     defaultNames_ = XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true);
     defaultTenors_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Tenors", true);
+    XMLNode* survivalProbabilitySimNode = XMLUtils::getChildNode(nodeChild, "SimulateSurvivalProbabilities");
+    if (survivalProbabilitySimNode)
+        survivalProbabilitySimulate_ = ore::data::parseBool(XMLUtils::getNodeValue(survivalProbabilitySimNode));
+    XMLNode* recoveryRateSimNode = XMLUtils::getChildNode(nodeChild, "SimulateRecoveryRates");
+    if (recoveryRateSimNode)
+        recoveryRateSimulate_ = ore::data::parseBool(XMLUtils::getNodeValue(recoveryRateSimNode));
 
     nodeChild = XMLUtils::getChildNode(node, "Equities");
     if (nodeChild) {
@@ -197,9 +205,12 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
     }
 
     // default curves
+
     XMLNode* defaultCurvesNode = XMLUtils::addChild(doc, marketNode, "DefaultCurves");
     XMLUtils::addChildren(doc, defaultCurvesNode, "Names", "Name", defaultNames_);
     XMLUtils::addGenericChildAsList(doc, defaultCurvesNode, "Tenors", defaultTenors_);
+    XMLUtils::addChild(doc, defaultCurvesNode, "SimulateSurvivalProbabilities", survivalProbabilitySimulate_);
+    XMLUtils::addChild(doc, defaultCurvesNode, "SimulateRecoveryRates", recoveryRateSimulate_);
 
     // equities
     XMLNode* equitiesNode = XMLUtils::addChild(doc, marketNode, "Equities");
