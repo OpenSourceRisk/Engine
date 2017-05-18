@@ -92,31 +92,27 @@ CreditDefaultSwap::CreditDefaultSwap(Protection::Side side, Real notional, Rate 
     : side_(side), notional_(notional), upfront_(upfront), runningSpread_(runningSpread),
       settlesAccrual_(settlesAccrual), paysAtDefaultTime_(paysAtDefaultTime), claim_(claim),
       protectionStart_(protectionStart == Null<Date>() ? schedule[0] : protectionStart) {
+
     QL_REQUIRE((schedule.rule() == DateGeneration::CDS || schedule.rule() == DateGeneration::CDS2015) ||
                    protectionStart_ <= schedule[0],
                "protection can not start after accrual for (pre big bang-) CDS");
+
     leg_ = FixedRateLeg(schedule)
                .withNotionals(notional)
                .withCouponRates(runningSpread, dayCounter)
                .withPaymentAdjustment(convention);
 
-    Date d = upfrontDate == Null<Date>() ? schedule[0] : upfrontDate; 
-    upfrontPayment_.reset(new SimpleCashFlow(notional * upfront, d)); 
-    QL_REQUIRE(upfrontPayment_->date() >= protectionStart_, "upfront can not be due before contract start");
-    
     // If empty, adjust to T+3 standard settlement
     Date effectiveUpfrontDate =
         upfrontDate == Null<Date>()
             ? schedule.calendar().advance(schedule.calendar().adjust(protectionStart_, convention), 2, Days, convention)
             : upfrontDate;
-    QL_REQUIRE(upfrontPayment_->date() >= protectionStart_, "upfront can not be due before contract start");
     // '2' is used above since the protection start is assumed to be
     // on trade_date + 1
     upfrontPayment_.reset(new SimpleCashFlow(notional * upfront, effectiveUpfrontDate));
+    QL_REQUIRE(upfrontPayment_->date() >= protectionStart_, "upfront can not be due before contract start");
 
     if (schedule.rule() == DateGeneration::CDS || schedule.rule() == DateGeneration::CDS2015) {
-        QL_REQUIRE(effectiveUpfrontDate >= protectionStart_, "upfront can not be due before contract start");
-
         boost::shared_ptr<FixedRateCoupon> firstCoupon = boost::dynamic_pointer_cast<FixedRateCoupon>(leg_[0]);
         // adjust to T+3 standard settlement
         const Date& rebateDate = effectiveUpfrontDate;
