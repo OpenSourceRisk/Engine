@@ -390,6 +390,8 @@
       <xs:element type="date" name="ProtectionStart"/>
       <xs:element type="date" name="UpfrontDate"/>
       <xs:element type="xs:float" name="UpfrontFee"/>
+      <xs:element type="bool" name="SettlesAccrual"/>
+      <xs:element type="bool" name="PaysAtDefaultTime"/>
       <xs:element type="xs:float" name="AttachmentPoint"/>
       <xs:element type="xs:float" name="DetachmentPoint"/>
       <xs:element type="legData" name="LegData"/>
