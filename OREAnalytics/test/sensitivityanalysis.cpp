@@ -18,15 +18,10 @@
 
 #include <boost/timer.hpp>
 #include <orea/cube/inmemorycube.hpp>
-#include <orea/cube/npvcube.hpp>
 #include <orea/engine/all.hpp>
-#include <orea/engine/observationmode.hpp>
-#include <orea/engine/sensitivityanalysis.hpp>
 #include <orea/scenario/clonescenariofactory.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
-#include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/scenario/sensitivityscenariogenerator.hpp>
-#include <ored/model/lgmdata.hpp>
 #include <ored/portfolio/builders/capfloor.hpp>
 #include <ored/portfolio/builders/fxforward.hpp>
 #include <ored/portfolio/builders/fxoption.hpp>
@@ -38,10 +33,6 @@
 #include <ored/portfolio/swaption.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/osutils.hpp>
-#include <ql/math/randomnumbers/mt19937uniformrng.hpp>
-#include <ql/time/calendars/target.hpp>
-#include <ql/time/date.hpp>
-#include <ql/time/daycounters/actualactual.hpp>
 #include <test/sensitivityanalysis.hpp>
 #include <test/testmarket.hpp>
 #include <test/testportfolio.hpp>
