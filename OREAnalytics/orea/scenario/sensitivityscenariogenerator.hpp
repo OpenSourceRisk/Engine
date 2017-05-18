@@ -23,12 +23,12 @@
 
 #pragma once
 
-#include <ored/marketdata/market.hpp>
-#include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariofactory.hpp>
+#include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/sensitivityscenariodata.hpp>
 #include <orea/scenario/shiftscenariogenerator.hpp>
+#include <ored/marketdata/market.hpp>
 
 namespace ore {
 using namespace data;
@@ -92,6 +92,7 @@ private:
     void generateSwaptionVolScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
     void generateFxVolScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
     void generateCapFloorVolScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
+    void generateSurvivalProbabilityScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
 
     ScenarioDescription discountScenarioDescription(string ccy, Size bucket, bool up);
     ScenarioDescription indexScenarioDescription(string index, Size bucket, bool up);
@@ -101,6 +102,7 @@ private:
     ScenarioDescription swaptionVolScenarioDescription(string ccy, Size expiryBucket, Size termBucket,
                                                        Size strikeBucket, bool up);
     ScenarioDescription capFloorVolScenarioDescription(string ccy, Size expiryBucket, Size strikeBucket, bool up);
+    ScenarioDescription survivalProbabilityScenarioDescription(string name, Size bucket, bool up);
 
     boost::shared_ptr<SensitivityScenarioData> sensitivityData_;
 };

@@ -18,8 +18,8 @@
 
 #include <boost/timer.hpp>
 #include <orea/cube/inmemorycube.hpp>
-#include <orea/engine/valuationengine.hpp>
 #include <orea/engine/sensitivityanalysis.hpp>
+#include <orea/engine/valuationengine.hpp>
 #include <orea/scenario/clonescenariofactory.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
@@ -32,11 +32,11 @@
 #include <ql/pricingengines/capfloor/blackcapfloorengine.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
 #include <ql/termstructures/yield/oisratehelper.hpp>
-#include <qle/instruments/deposit.hpp>
-#include <qle/pricingengines/depositengine.hpp>
 #include <qle/instruments/crossccybasisswap.hpp>
-#include <qle/pricingengines/crossccyswapengine.hpp>
+#include <qle/instruments/deposit.hpp>
 #include <qle/instruments/fxforward.hpp>
+#include <qle/pricingengines/crossccyswapengine.hpp>
+#include <qle/pricingengines/depositengine.hpp>
 #include <qle/pricingengines/discountingfxforwardengine.hpp>
 
 using namespace QuantLib;
@@ -478,6 +478,17 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
             Time t_exp = vts->dayCounter().yearFraction(asof_, asof_ + p_exp);
             Real vol = vts->volatility(t_exp, strike);
             shiftMult = vol;
+        }
+    } else if (keytype == RiskFactorKey::KeyType::SurvivalProbability) {
+        string name = keylabel;
+        shiftSize = sensitivityData_->creditCurveShiftData()[name].shiftSize;
+        if (boost::to_upper_copy(sensitivityData_->creditCurveShiftData()[name].shiftType) == "RELATIVE") {
+            Size keyIdx = key.index;
+            Period p = sensitivityData_->creditCurveShiftData()[name].shiftTenors[keyIdx];
+            Handle<DefaultProbabilityTermStructure> ts = simMarket_->defaultCurve(name, marketConfiguration_);
+            Time t = ts->dayCounter().yearFraction(asof_, asof_ + p);
+            Real prob = ts->survivalProbability(t);
+            shiftMult = prob;
         }
     } else {
         QL_FAIL("KeyType not supported yet - " << keytype);
