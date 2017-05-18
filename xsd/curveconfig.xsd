@@ -206,7 +206,6 @@
       <xs:element type="xs:string" name="Maturities" minOccurs="1" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
->>>>>>> origin/master
 
   <xs:complexType name="yieldCurves">
     <xs:sequence>
