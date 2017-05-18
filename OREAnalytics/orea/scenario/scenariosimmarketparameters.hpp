@@ -72,14 +72,14 @@ public:
     const vector<string>& swapVolCcys() const { return swapVolCcys_; }
     const string& swapVolDecayMode() const { return swapVolDecayMode_; }
 
-    const bool& simulateCapFloorVols() const { return capFloorVolSimulate_; }
+    bool simulateCapFloorVols() const { return capFloorVolSimulate_; }
     const vector<string>& capFloorVolCcys() const { return capFloorVolCcys_; }
     const vector<Period>& capFloorVolExpiries() const { return capFloorVolExpiries_; }
     const vector<Real>& capFloorVolStrikes() const { return capFloorVolStrikes_; }
     const string& capFloorVolDecayMode() const { return capFloorVolDecayMode_; }
 
-    const bool& simulateSurvivalProbabilities() const { return survivalProbabilitySimulate_; }
-    const bool& simulateRecoveryRates() const { return recoveryRateSimulate_; }
+    bool simulateSurvivalProbabilities() const { return survivalProbabilitySimulate_; }
+    bool simulateRecoveryRates() const { return recoveryRateSimulate_; }
     const vector<string>& defaultNames() const { return defaultNames_; }
     const vector<Period>& defaultTenors() const { return defaultTenors_; }
 
