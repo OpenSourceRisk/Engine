@@ -58,7 +58,10 @@ Real MidPointCdsEngine::defaultProbability(const Date& d1, const Date& d2) const
     return probability_->defaultProbability(d1, d2);
 }
 
-Real MidPointCdsEngine::recoveryRate() const { return recoveryRate_; }
+Real MidPointCdsEngine::expectedLoss(const Date& defaultDate, const Date& d1, const Date& d2,
+                                     const Real notional) const {
+    return arguments_.claim->amount(defaultDate, notional, recoveryRate_) * probability_->defaultProbability(d1, d2);
+}
 
 void MidPointCdsEngine::calculate() const {
     QL_REQUIRE(!discountCurve_.empty(), "no discount term structure set");
@@ -130,12 +133,8 @@ void MidPointCdsEngineBase::calculate(const Date& refDate, const CreditDefaultSw
         }
 
         // on the other side, we add the payment in case of default.
-        Real claim = arguments.claim->amount(defaultDate, arguments.notional, recoveryRate());
-        if (arguments.paysAtDefaultTime) {
-            results.defaultLegNPV += P * claim * discountCurve_->discount(defaultDate);
-        } else {
-            results.defaultLegNPV += P * claim * discountCurve_->discount(paymentDate);
-        }
+        results.defaultLegNPV += expectedLoss(defaultDate, effectiveStartDate, endDate, arguments.notional) *
+                                 discountCurve_->discount(arguments.paysAtDefaultTime ? defaultDate : paymentDate);
     }
 
     Real upfrontSign = 1.0;

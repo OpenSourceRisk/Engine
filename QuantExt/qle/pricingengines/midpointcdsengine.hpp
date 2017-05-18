@@ -58,7 +58,7 @@ public:
 protected:
     virtual Real survivalProbability(const Date& d) const = 0;
     virtual Real defaultProbability(const Date& d1, const Date& d2) const = 0;
-    virtual Real recoveryRate() const = 0;
+    virtual Real expectedLoss(const Date& defaultDate, const Date& d1, const Date& d2, const Real notional) const = 0;
     void calculate(const Date& refDate, const CreditDefaultSwap::arguments& arguments,
                    CreditDefaultSwap::results& results) const;
 
@@ -76,7 +76,7 @@ public:
 protected:
     virtual Real survivalProbability(const Date& d) const;
     virtual Real defaultProbability(const Date& d1, const Date& d2) const;
-    virtual Real recoveryRate() const;
+    virtual Real expectedLoss(const Date& defaultDate, const Date& d1, const Date& d2, const Real notional) const;
 
     Handle<DefaultProbabilityTermStructure> probability_;
     Real recoveryRate_;
