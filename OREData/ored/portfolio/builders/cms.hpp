@@ -71,4 +71,3 @@ protected:
 };
 } // namespace data
 } // namespace ore
-#pragma once
