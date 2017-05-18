@@ -27,8 +27,8 @@
 #include <ql/version.hpp>
 
 #if defined(_WIN32) || defined(_WIN64)
-#include <psapi.h>
 #include <windows.h>
+#include <psapi.h>
 #elif __APPLE__
 #include <sys/sysctl.h>
 #include <unistd.h>
