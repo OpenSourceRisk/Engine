@@ -177,6 +177,6 @@ template <class T> void SurvivalProbabilityCurve<T>::initialize() {
         //            " (t=" << this->times_[i-1] << ")");
     }
 }
-}
+} // namespace QuantExt
 
 #endif

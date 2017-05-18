@@ -100,4 +100,4 @@ test_suite* SurvivalProbabilityCurveTest::suite() {
     suite->add(BOOST_TEST_CASE(&SurvivalProbabilityCurveTest::testSurvivalProbabilityCurve));
     return suite;
 }
-}
+} // namespace testsuite
