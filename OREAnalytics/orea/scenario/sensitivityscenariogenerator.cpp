@@ -65,6 +65,11 @@ void SensitivityScenarioGenerator::generateScenarios(const boost::shared_ptr<Sce
         generateCapFloorVolScenarios(sensiScenarioFactory, false);
     }
 
+    if (simMarketData_->simulateSurvivalProbabilities()) {
+        generateSurvivalProbabilityScenarios(sensiScenarioFactory, true);
+        generateSurvivalProbabilityScenarios(sensiScenarioFactory, false);
+    }
+
     // add simultaneous up-moves in two risk factors for cross gamma calculation
     vector<RiskFactorKey> keys = baseScenario_->keys();
     Size index = scenarios_.size();
@@ -617,6 +622,76 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(
     LOG("Optionlet vol scenarios done");
 }
 
+void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(
+    const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up) {
+    // We can choose to shift fewer credit curves than listed in the market
+    std::vector<string> simMarketNames = simMarketData_->defaultNames();
+
+    if (sensitivityData_->creditNames().size() > 0)
+        crNames_ = sensitivityData_->creditNames();
+    else
+        crNames_ = simMarketNames;
+    // Log an ALERT if some names in simmarket are excluded from the list
+    for (auto sim_name : simMarketNames) {
+        if (std::find(crNames_.begin(), crNames_.end(), sim_name) == crNames_.end()) {
+            ALOG("Credit Name " << sim_name << " in simmarket is not included in sensitivities analysis");
+        }
+    }
+
+    Size n_names = crNames_.size();
+    Size n_ten = simMarketData_->defaultTenors().size();
+
+    // original curves' buffer
+    std::vector<Real> hazardRates(n_ten); //integrated hazard rates
+    std::vector<Real> times(n_ten);
+
+    // buffer for shifted survival prob curves
+    std::vector<Real> shiftedHazardRates(n_ten);
+    for (Size i = 0; i < n_names; ++i) {
+        string name = crNames_[i];
+        SensitivityScenarioData::CurveShiftData data = sensitivityData_->creditCurveShiftData()[name];
+        ShiftType shiftType = parseShiftType(data.shiftType);
+        Handle<DefaultProbabilityTermStructure> ts = initMarket_->defaultCurve(name, configuration_);
+        DayCounter dc = ts->dayCounter();
+        for (Size j = 0; j < n_ten; ++j) {
+            Date d = today_ + simMarketData_->defaultTenors()[j];
+            times[j] = dc.yearFraction(today_, d);
+            Real s_t = ts->survivalProbability(times[j], true); // do we extrapolate or not?
+            hazardRates[j] = -std::log(s_t)/times[j];
+        }
+
+        std::vector<Period> shiftTenors = data.shiftTenors;
+        std::vector<Time> shiftTimes(shiftTenors.size());
+        for (Size j = 0; j < shiftTenors.size(); ++j)
+            shiftTimes[j] = dc.yearFraction(today_, today_ + shiftTenors[j]);
+        Real shiftSize = data.shiftSize;
+        QL_REQUIRE(shiftTenors.size() > 0, "Discount shift tenors not specified");
+
+        for (Size j = 0; j < shiftTenors.size(); ++j) {
+
+            boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(today_);
+            scenarioDescriptions_.push_back(survivalProbabilityScenarioDescription(name, j, up));
+            LOG("generate survival probability scenario, name " << name << ", bucket " << j << ", up " << up
+                                                                << ", desc " << scenarioDescriptions_.back().text());
+
+            // apply integrated hazard rate shift at tenor point j
+            applyShift(j, shiftSize, up, shiftType, shiftTimes, hazardRates, times, shiftedHazardRates, true);
+
+            // store shifted survival Prob in the scenario
+            for (Size k = 0; k < n_ten; ++k) {
+                Real shiftedProb = exp(-shiftedHazardRates[k] * times[k]);
+                scenario->add(getSurvivalProbabilityKey(name, k), shiftedProb);
+            }
+
+            // add this scenario to the scenario vector
+            scenarios_.push_back(scenario);
+            DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
+
+        } // end of shift curve tenors
+    }
+    LOG("Discount curve scenarios done");
+}
+
 SensitivityScenarioGenerator::ScenarioDescription SensitivityScenarioGenerator::fxScenarioDescription(string ccypair,
                                                                                                       bool up) {
     RiskFactorKey key(RiskFactorKey::KeyType::FXSpot, ccypair);
@@ -734,6 +809,21 @@ SensitivityScenarioGenerator::capFloorVolScenarioDescription(string ccy, Size ex
     } else {
         o << data.shiftExpiries[expiryBucket] << "/" << std::setprecision(4) << data.shiftStrikes[strikeBucket];
     }
+    string text = o.str();
+    ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
+    ScenarioDescription desc(type, key, text);
+    return desc;
+}
+
+SensitivityScenarioGenerator::ScenarioDescription
+SensitivityScenarioGenerator::survivalProbabilityScenarioDescription(string name, Size bucket, bool up) {
+    QL_REQUIRE(sensitivityData_->creditCurveShiftData().find(name) != sensitivityData_->creditCurveShiftData().end(),
+               "Name " << name << " not found in credit shift data");
+    QL_REQUIRE(bucket < sensitivityData_->creditCurveShiftData()[name].shiftTenors.size(),
+               "bucket " << bucket << " out of range");
+    RiskFactorKey key(RiskFactorKey::KeyType::SurvivalProbability, name, bucket);
+    std::ostringstream o;
+    o << sensitivityData_->creditCurveShiftData()[name].shiftTenors[bucket];
     string text = o.str();
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
     ScenarioDescription desc(type, key, text);

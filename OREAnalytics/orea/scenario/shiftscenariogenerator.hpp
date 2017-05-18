@@ -187,6 +187,7 @@ protected:
     RiskFactorKey getSwaptionVolKey(const std::string& ccy, Size index);
     RiskFactorKey getOptionletVolKey(const std::string& ccy, Size index);
     RiskFactorKey getFxVolKey(const std::string& ccypair, Size index);
+    RiskFactorKey getSurvivalProbabilityKey(const std::string& curveName, Size index);
 
     boost::shared_ptr<ScenarioFactory> baseScenarioFactory_;
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketData_;
@@ -194,9 +195,9 @@ protected:
     boost::shared_ptr<ore::data::Market> initMarket_;
     const std::string configuration_;
     std::vector<RiskFactorKey> discountCurveKeys_, indexCurveKeys_, yieldCurveKeys_, fxKeys_, swaptionVolKeys_,
-        fxVolKeys_, optionletVolKeys_;
+        fxVolKeys_, optionletVolKeys_, survivalProbabilityKeys_;
     std::map<RiskFactorKey, Real> discountCurveCache_, indexCurveCache_, yieldCurveCache_, fxCache_, swaptionVolCache_,
-        fxVolCache_, optionletVolCache_;
+        fxVolCache_, optionletVolCache_, survivalProbabilityCache_;
     Real numeraireCache_;
     std::vector<boost::shared_ptr<Scenario>> scenarios_;
     boost::shared_ptr<Scenario> baseScenario_;
