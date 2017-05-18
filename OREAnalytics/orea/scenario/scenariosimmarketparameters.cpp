@@ -104,6 +104,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     capFloorVolExpiries_.clear();
     defaultTenors_.clear();
     eqTenors_.clear();
+    swapIndices_.clear();
 
     // TODO: add in checks (checkNode or QL_REQUIRE) on mandatory nodes
 
