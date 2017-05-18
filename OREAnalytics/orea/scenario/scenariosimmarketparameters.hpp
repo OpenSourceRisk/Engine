@@ -23,8 +23,8 @@
 
 #pragma once
 
-#include <ored/utilities/xmlutils.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/xmlutils.hpp>
 #include <qle/termstructures/dynamicstype.hpp>
 
 using QuantLib::Period;
@@ -49,7 +49,8 @@ public:
     ScenarioSimMarketParameters()
         : baseCcy_(""), interpolation_(""), extrapolate_(false), swapVolSimulate_(false), swapVolDecayMode_(""),
           capFloorVolSimulate_(false), capFloorVolDecayMode_(""), fxVolSimulate_(false), fxVolDecayMode_(""),
-          eqVolSimulate_(false), eqVolDecayMode_(""), survivalProbabilitySimulate_(false), recoveryRateSimulate_(false) {}
+          eqVolSimulate_(false), eqVolDecayMode_(""), survivalProbabilitySimulate_(false),
+          recoveryRateSimulate_(false) {}
 
     //! \name Inspectors
     //@{
@@ -77,6 +78,8 @@ public:
     const vector<Real>& capFloorVolStrikes() const { return capFloorVolStrikes_; }
     const string& capFloorVolDecayMode() const { return capFloorVolDecayMode_; }
 
+    const bool& simulateSurvivalProbabilities() const { return survivalProbabilitySimulate_; }
+    const bool& simulateRecoveryRates() const { return recoveryRateSimulate_; }
     const vector<string>& defaultNames() const { return defaultNames_; }
     const vector<Period>& defaultTenors() const { return defaultTenors_; }
 
