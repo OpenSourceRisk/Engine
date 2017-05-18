@@ -100,6 +100,11 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     XMLNode* node = XMLUtils::getChildNode(sim, "Market");
     XMLUtils::checkNode(node, "Market");
 
+    yieldCurveTenors_.clear();
+    capFloorVolExpiries_.clear();
+    defaultTenors_.clear();
+    eqTenors_.clear();
+
     // TODO: add in checks (checkNode or QL_REQUIRE) on mandatory nodes
 
     baseCcy_ = XMLUtils::getChildValue(node, "BaseCurrency");
