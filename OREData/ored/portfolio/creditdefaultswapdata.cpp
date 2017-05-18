@@ -57,6 +57,7 @@ XMLNode* CreditDefaultSwapData::toXML(XMLDocument& doc) {
     XMLUtils::appendNode(node, node);
     XMLUtils::addChild(doc, node, "IssuerId", issuerId_);
     XMLUtils::addChild(doc, node, "CreditCurveId", creditCurveId_);
+    XMLUtils::addChild(doc, node, "Qualifier", qualifier_);
     XMLUtils::addChild(doc, node, "SettlesAccrual", settlesAccrual_);
     XMLUtils::addChild(doc, node, "PaysAtDefaultTime", paysAtDefaultTime_);
     if (protectionStart_ != Date()) {
