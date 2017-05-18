@@ -47,10 +47,9 @@ class ScenarioSimMarketParameters : public XMLSerializable {
 public:
     //! Default constructor
     ScenarioSimMarketParameters()
-        : baseCcy_(""), interpolation_(""), extrapolate_(false), swapVolSimulate_(false), swapVolDecayMode_(""),
-          capFloorVolSimulate_(false), capFloorVolDecayMode_(""), fxVolSimulate_(false), fxVolDecayMode_(""),
-          eqVolSimulate_(false), eqVolDecayMode_(""), survivalProbabilitySimulate_(false),
-          recoveryRateSimulate_(false) {}
+        : extrapolate_(false), swapVolSimulate_(false), capFloorVolSimulate_(false),
+          survivalProbabilitySimulate_(false), recoveryRateSimulate_(false), fxVolSimulate_(false),
+          eqVolSimulate_(false) {}
 
     //! \name Inspectors
     //@{
