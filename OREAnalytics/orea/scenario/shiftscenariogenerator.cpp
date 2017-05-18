@@ -99,6 +99,8 @@ void ShiftScenarioGenerator::clear() {
     fxVolCache_.clear();
     optionletVolKeys_.clear();
     optionletVolCache_.clear();
+    survivalProbabilityKeys_.clear();
+    survivalProbabilityCache_.clear();
 }
 
 void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
@@ -233,6 +235,22 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
         }
     }
 
+    // Cache survival probability keys
+    Size n_spnames = simMarketData_->defaultNames().size();
+    Size n_spten = simMarketData_->defaultTenors().size();
+    survivalProbabilityKeys_.reserve(n_spnames * n_spten);
+    for (Size j = 0; j < n_spnames; ++j) {
+        std::string spname = simMarketData_->defaultNames()[j];
+        Handle<DefaultProbabilityTermStructure> ts = market->defaultCurve(spname, configuration_);
+        for (Size k = 0; k < n_spten; ++k) {
+            survivalProbabilityKeys_.emplace_back(RiskFactorKey::KeyType::SurvivalProbability, spname, k);
+            Period tenor = simMarketData_->defaultTenors()[k];
+            Real prob = ts->survivalProbability(today_ + tenor);
+            survivalProbabilityCache_[survivalProbabilityKeys_[j * n_spten + k]] = prob;
+            LOG("cache survival probability " << prob << " for key " << survivalProbabilityKeys_[j * n_spten + k]);
+        }
+    }
+
     LOG("generate base scenario");
     baseScenario_ = baseScenarioFactory_->buildScenario(today_, "BASE");
     addCacheTo(baseScenario_);
@@ -296,6 +314,12 @@ void ShiftScenarioGenerator::addCacheTo(boost::shared_ptr<Scenario> scenario) {
                 scenario->add(key, optionletVolCache_[key]);
         }
     }
+    if (simMarketData_->simulateSurvivalProbabilities()) {
+        for (auto key : survivalProbabilityKeys_) {
+            if (!scenario->has(key))
+                scenario->add(key, survivalProbabilityCache_[key]);
+        }
+    }
 }
 
 RiskFactorKey ShiftScenarioGenerator::getFxKey(const std::string& key) {
@@ -352,6 +376,14 @@ RiskFactorKey ShiftScenarioGenerator::getFxVolKey(const std::string& ccypair, Si
             return fxVolKeys_[i];
     }
     QL_FAIL("error locating FxVol RiskFactorKey for " << ccypair << ", index " << index);
+}
+
+RiskFactorKey ShiftScenarioGenerator::getSurvivalProbabilityKey(const std::string& name, Size index) {
+    for (Size i = 0; i < survivalProbabilityKeys_.size(); ++i) {
+        if (survivalProbabilityKeys_[i].name == name && survivalProbabilityKeys_[i].index == index)
+            return survivalProbabilityKeys_[i];
+    }
+    QL_FAIL("error locating SurvivalProbability RiskFactorKey for " << name << ", index " << index);
 }
 
 void ShiftScenarioGenerator::applyShift(Size j, Real shiftSize, bool up, ShiftType shiftType,

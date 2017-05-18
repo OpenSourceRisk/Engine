@@ -118,8 +118,8 @@ public:
     // const map<string, InflationCurveShiftData> inflationCurveShiftData() const { return inflationCurveShiftData_; }
 
     // todo
-    // const vector<string>& creditNames() const { return creditNames_; }
-    // const map<string, CreditCurveShiftData> creditCurveShiftData() const { return creditCurveShiftData_; }
+    const vector<string>& creditNames() const { return creditNames_; }
+    const map<string, CurveShiftData> creditCurveShiftData() const { return creditCurveShiftData_; }
 
     const vector<pair<string, string>>& crossGammaFilter() const { return crossGammaFilter_; }
 
@@ -155,8 +155,8 @@ public:
     // map<string, InflationCurveShiftData> inflationCurveShiftData() { return inflationCurveShiftData_; }
 
     // todo
-    // vector<string>& creditNames() { return creditNames_; }
-    // map<string, CreditCurveShiftData> creditCurveShiftData() { return creditCurveShiftData_; }
+    vector<string>& creditNames() { return creditNames_; }
+    map<string, CurveShiftData> creditCurveShiftData() { return creditCurveShiftData_; }
 
     vector<pair<string, string>>& crossGammaFilter() { return crossGammaFilter_; }
 
