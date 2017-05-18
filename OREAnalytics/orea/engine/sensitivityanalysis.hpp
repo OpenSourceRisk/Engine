@@ -68,6 +68,8 @@ public:
                         const Conventions& conventions, const bool recalibrateModels,
                         const bool nonShiftedBaseCurrencyConversion = false);
 
+    virtual ~SensitivityAnalysis() {}
+
     //! Generate the Sensitivities
     void generateSensitivities();
 
