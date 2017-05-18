@@ -84,6 +84,10 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<EquityOptionEngineBuilder>());
 
     registerBuilder(boost::make_shared<BondDiscountingEngineBuilder>());
+
+    registerBuilder(boost::make_shared<AnalyticHaganCmsCouponPricerBuilder>());
+    registerBuilder(boost::make_shared<NumericalHaganCmsCouponPricerBuilder>());
+    registerBuilder(boost::make_shared<LinearTSRCmsCouponPricerBuilder>());
 }
 
 } // namespace data
