@@ -1341,7 +1341,7 @@ void SensitivityAnalysis2Test::testSensitivities() {
         {"7_FxOption_EUR_USD DiscountCurve/USD/9/15Y DiscountCurve/USD/11/30Y", 0}};
     // sensitivity analysis
     boost::shared_ptr<SensitivityAnalysis> sa = boost::make_shared<SensitivityAnalysis>(
-        portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, conventions);
+        portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, conventions, false);
     sa->generateSensitivities();
     map<pair<string, string>, Real> deltaMap = sa->delta();
     map<pair<string, string>, Real> gammaMap = sa->gamma();

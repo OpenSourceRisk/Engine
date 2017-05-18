@@ -137,7 +137,7 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc);
     //@}
 
-    //! \Equality Operators
+    //! \name Operators
     //@{
     bool operator==(const CrossAssetModelData& rhs);
     bool operator!=(const CrossAssetModelData& rhs);

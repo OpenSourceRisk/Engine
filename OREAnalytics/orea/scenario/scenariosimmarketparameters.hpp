@@ -48,7 +48,8 @@ public:
     //! Default constructor
     ScenarioSimMarketParameters()
         : baseCcy_(""), interpolation_(""), extrapolate_(false), swapVolSimulate_(false), swapVolDecayMode_(""),
-          capFloorVolSimulate_(false), capFloorVolDecayMode_(""), fxVolSimulate_(false), fxVolDecayMode_("") {}
+          capFloorVolSimulate_(false), capFloorVolDecayMode_(""), fxVolSimulate_(false), fxVolDecayMode_(""),
+          eqVolSimulate_(false), eqVolDecayMode_("") {}
 
     //! \name Inspectors
     //@{
@@ -152,7 +153,7 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc);
     //@}
 
-    //! \Equality Operators
+    //! \name Equality Operators
     //@{
     bool operator==(const ScenarioSimMarketParameters& rhs);
     bool operator!=(const ScenarioSimMarketParameters& rhs);

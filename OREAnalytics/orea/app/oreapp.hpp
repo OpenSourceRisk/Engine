@@ -18,7 +18,7 @@
 
 /*! \file orea/app/oreapp.hpp
   \brief Open Risk Engine App
-  \ingroup
+  \ingroup app
  */
 
 #pragma once
@@ -49,6 +49,7 @@ public:
         asof_ = parseDate(params->get("setup", "asofDate"));
         Settings::instance().evaluationDate() = asof_;
     }
+    virtual ~OREApp() {}
     //! generates XVA reports for a given portfolio and market
     void run();
     //! read setup from params_

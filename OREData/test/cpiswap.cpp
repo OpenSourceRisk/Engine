@@ -116,10 +116,10 @@ public:
                                   asof_ + 10 * Years,
                                   asof_ + 12 * Years,
                                   asof_ + 15 * Years,
-                                  asof_ + 20 * Years}; //, asof_ + 25 * Years, asof_ + 30 * Years, asof_ + 40 * Years};
+                                  asof_ + 20 * Years};
 
-        vector<Rate> ratesZCII = {2.825, 2.9425, 2.975,  2.983, 3.0,  3.01, 3.008,
-                                  3.009, 3.013,  3.0445, 3.044, 3.09, 3.109}; //, 3.108, 3.048, 2.965};
+        vector<Rate> ratesZCII = {2.825, 2.9425, 2.975,  2.983, 3.0,  3.01,  3.008,
+                                  3.009, 3.013,  3.0445, 3.044, 3.09, 3.109, 3.108};
 
         // build UKRPI fixing history
         Schedule fixingDatesUKRPI =

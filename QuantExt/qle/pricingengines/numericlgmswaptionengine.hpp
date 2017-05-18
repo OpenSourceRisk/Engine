@@ -96,6 +96,8 @@ protected:
         }
     }
 
+    virtual ~NumericLgmSwaptionEngineBase() {}
+
     Real calculate() const;
 
     virtual Real conditionalSwapValue(Real x, Real t, const Date expiry0) const = 0;

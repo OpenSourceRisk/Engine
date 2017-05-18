@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file ored/marketdata/bondspreadspot.hpp
+/*! \file ored/marketdata/securityspread.hpp
     \brief
     \ingroup marketdata
 */

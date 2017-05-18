@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2016, 2017 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -74,9 +74,58 @@ public:
      * check whether the error estimates go to zero when the shift approaches T=50. */
     static void testLgmMcWithShift();
 
+    /*! Test martingale properties analogous to the test above, but with dynamic credit compenent. */
+    static void testIrFxCrMartingaleProperty();
+
+    /*! Test moments analogous to the test above, but with dynamic credit compenent. */
+    static void testIrFxCrMoments();
+
+    /*! Test martingale properties analogous to the test above, but with dynamic inflation and credit compenent. */
+    static void testIrFxInfCrMartingaleProperty();
+
+    /*! Test moments analogous to the test above, but with dynamic inflation and credit compenent. */
+    static void testIrFxInfCrMoments();
+
+    /*! Test martingale properties analogous to the test above, but with dynamic inflation, credit, equity compenent. */
+    static void testIrFxInfCrEqMartingaleProperty();
+
+    /*! Test moments analogous to the test above, but with dynamic inflation, credit, equity compenent. */
+    static void testIrFxInfCrEqMoments();
+
+    /*! Test DK component calibration in alpha against MC full repricing of calibration instruments. */
+    static void testCpiCalibrationByAlpha();
+
+    /*! Test DK component calibration in H against MC full repricing of calibration instruments. */
+    static void testCpiCalibrationByH();
+
+    /*! Test CR component calibration against MC full repricing of calibration instruments. */
+    static void testCrCalibration();
+
+    /*! In a EUR-USD CrossAssetModel with two equities, test a Monte Carlo pricing of an equiy forward under the base
+     *  currency numeraire against the analytical expectation. Perform similar checks for an equity option. */
+    static void testEqLgm5fPayouts();
+
+    /*! Test the calibration of all components of a full CrossAssetModel (3 IR LGM models and 2 FX Black Scholes
+     * models and 2 equities) by comparing the model prices and market prices of the calibration instruments. */
+    static void testEqLgm5fCalibration();
+
+    /*! Compare the analytical (unconditional) expectation and covariance matrix of the 7 dimensional stochastic process
+     * of a CrossAssetModel at t=10 against Monte Carlo estimates using both an exact and an Euler
+     * discretisation. Special attention paid to the equity components of the process. */
+    static void testEqLgm5fMoments();
+
     /*! Test whether the input correlation matrix for a CrossAssetModel with 1 up to 100 currencies is recovered as the
      * analytical and Euler correlation matrix estimated over a small time step dt. */
     static void testCorrelationRecovery();
+
+    /*! Test correlation recovery analogous to the test above, but with dynamic credit compenent. */
+    static void testIrFxCrCorrelationRecovery();
+
+    /*! Test correlation recovery analogous to the test above, but with dynamic inflation and credit compenent. */
+    static void testIrFxInfCrCorrelationRecovery();
+
+    /*! Test correlation recovery analogous to the test above, but with dynamic inflation, credit, equity compenent. */
+    static void testIrFxInfCrEqCorrelationRecovery();
 
     static boost::unit_test_framework::test_suite* suite();
 };

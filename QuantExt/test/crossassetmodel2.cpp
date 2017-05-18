@@ -40,13 +40,17 @@
 
 #include <test-suite/utilities.hpp>
 
+#include <boost/make_shared.hpp>
+// fix for boost 1.64, see https://lists.boost.org/Archives/boost/2016/11/231756.php
+#if BOOST_VERSION >= 106400
+#include <boost/serialization/array_wrapper.hpp>
+#endif
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/covariance.hpp>
 #include <boost/accumulators/statistics/error_of_mean.hpp>
 #include <boost/accumulators/statistics/mean.hpp>
 #include <boost/accumulators/statistics/stats.hpp>
 #include <boost/accumulators/statistics/variates/covariate.hpp>
-#include <boost/make_shared.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;

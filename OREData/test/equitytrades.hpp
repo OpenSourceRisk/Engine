@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file test/equityoption.hpp
+/*! \file test/equitytrades.hpp
     \brief EquityOption test
     \ingroup tests
 */

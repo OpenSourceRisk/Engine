@@ -197,7 +197,7 @@ public:
     XMLNode* toXML(XMLDocument& doc);
     //@}
 
-    //! \Equality Operators
+    //! \name Operators
     //@{
     bool operator==(TodaysMarketParameters& rhs);
     bool operator!=(TodaysMarketParameters& rhs);

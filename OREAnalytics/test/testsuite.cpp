@@ -89,7 +89,7 @@ test_suite* init_unit_test_suite(int, char* []) {
     int argc = boost::unit_test::framework::master_test_suite().argc;
     char** argv = boost::unit_test::framework::master_test_suite().argv;
     bool enablePerformanceTests = false;
-    for (Size i = 1; i < argc; ++i) {
+    for (int i = 1; i < argc; ++i) {
         if (strcmp(argv[i], "--enable_performance_tests") == 0)
             enablePerformanceTests = true;
     }

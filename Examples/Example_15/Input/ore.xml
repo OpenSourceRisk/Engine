@@ -85,6 +85,7 @@
       <Parameter name="crossGammaOutputFile">crossgamma.csv</Parameter>
       <Parameter name="parRateSensitivityOutputFile">parsensi.csv</Parameter>
       <Parameter name="outputSensitivityThreshold">0.000001</Parameter>
+      <Parameter name="recalibrateModels">Y</Parameter>
     </Analytic>
     <Analytic type="stress">
       <Parameter name="active">Y</Parameter>

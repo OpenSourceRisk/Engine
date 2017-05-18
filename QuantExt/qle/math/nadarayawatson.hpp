@@ -23,8 +23,9 @@
 
 #include <boost/make_shared.hpp>
 
-/*! \file qle\math\nadarayawatson.hpp
+/*! \file qle/math/nadarayawatson.hpp
     \brief Nadaraya-Watson regression
+    \ingroup math
 */
 
 using QuantLib::Real;

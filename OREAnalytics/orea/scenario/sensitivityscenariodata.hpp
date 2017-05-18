@@ -168,7 +168,7 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc);
     //@}
 
-    //! \Equality Operators
+    //! \name Equality Operators
     //@{
     // bool operator==(const SensitivityScenarioData& rhs);
     // bool operator!=(const SensitivityScenarioData& rhs);

@@ -114,6 +114,57 @@ boost::shared_ptr<Trade> buildEuropeanSwaption(string id, string longShort, stri
     return trade;
 }
 
+boost::shared_ptr<Trade> buildBermudanSwaption(string id, string longShort, string ccy, bool isPayer, Real notional,
+                                               Size exercises, int start, Size term, Real rate, Real spread,
+                                               string fixedFreq, string fixedDC, string floatFreq, string floatDC,
+                                               string index, string cashPhysical) {
+
+    Date today = Settings::instance().evaluationDate();
+    Calendar calendar = TARGET();
+    Size days = 2;
+    string cal = "TARGET";
+    string conv = "MF";
+    string rule = "Forward";
+
+    vector<Real> notionals(1, notional);
+    vector<Real> rates(1, rate);
+    vector<Real> spreads(1, spread);
+
+    Date qlStartDate = calendar.adjust(today + start * Years);
+    Date qlEndDate = calendar.adjust(qlStartDate + term * Years);
+    string startDate = ore::data::to_string(qlStartDate);
+    string endDate = ore::data::to_string(qlEndDate);
+
+    vector<string> exerciseDates;
+    for (Size i = 0; i < exercises; ++i) {
+        Date exerciseDate = qlStartDate + i * Years;
+        exerciseDates.push_back(ore::data::to_string(exerciseDate));
+    }
+
+    // envelope
+    Envelope env("CP");
+    // schedules
+    ScheduleData floatSchedule(ScheduleRules(startDate, endDate, floatFreq, cal, conv, conv, rule));
+    ScheduleData fixedSchedule(ScheduleRules(startDate, endDate, fixedFreq, cal, conv, conv, rule));
+    // fixed leg
+    FixedLegData fixedLegData(rates);
+    LegData fixedLeg(isPayer, ccy, fixedLegData, fixedSchedule, fixedDC, notionals);
+    // float leg
+    FloatingLegData floatingLegData(index, days, false, spreads);
+    LegData floatingLeg(!isPayer, ccy, floatingLegData, floatSchedule, floatDC, notionals);
+    // leg vector
+    vector<LegData> legs;
+    legs.push_back(fixedLeg);
+    legs.push_back(floatingLeg);
+    // option data
+    OptionData option(longShort, "Call", "Bermudan", false, exerciseDates, cashPhysical);
+    // trade
+    boost::shared_ptr<Trade> trade(new ore::data::Swaption(env, option, legs));
+    trade->id() = id;
+
+    return trade;
+}
+
 boost::shared_ptr<Trade> buildFxOption(string id, string longShort, string putCall, Size expiry, string boughtCcy,
                                        Real boughtAmount, string soldCcy, Real soldAmount) {
     Date today = Settings::instance().evaluationDate();

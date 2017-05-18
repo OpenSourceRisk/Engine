@@ -26,6 +26,8 @@
 
 #include <ql/types.hpp>
 
+#include <qle/models/crossassetmodel.hpp>
+
 using namespace QuantLib;
 
 namespace QuantExt {
