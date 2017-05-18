@@ -52,9 +52,10 @@ InflationCapFloorPriceSurface::InflationCapFloorPriceSurface(
         if (it != yieldCurves.end()) {
             yts = it->second->handle();
         } else {
-            QL_FAIL("The nominal term structure, " << config->yieldTermStructure() << ", required in the building "
-                                                                                      "of the curve, " << spec.name()
-                                                   << ", was not found.");
+            QL_FAIL("The nominal term structure, " << config->yieldTermStructure()
+                                                   << ", required in the building "
+                                                      "of the curve, "
+                                                   << spec.name() << ", was not found.");
         }
 
         boost::shared_ptr<ZeroInflationIndex> index;
@@ -62,8 +63,8 @@ InflationCapFloorPriceSurface::InflationCapFloorPriceSurface(
         if (it2 != inflationCurves.end()) {
             boost::shared_ptr<ZeroInflationTermStructure> ts =
                 boost::dynamic_pointer_cast<ZeroInflationTermStructure>(it2->second->inflationTermStructure());
-            QL_REQUIRE(ts, "inflation term structure " << config->indexCurve()
-                                                       << " was expected to be zero, but is not");
+            QL_REQUIRE(ts,
+                       "inflation term structure " << config->indexCurve() << " was expected to be zero, but is not");
             index = parseZeroInflationIndex(config->index(), it2->second->interpolatedIndex(),
                                             Handle<ZeroInflationTermStructure>(ts));
         } else {
@@ -193,5 +194,5 @@ InflationCapFloorPriceSurface::InflationCapFloorPriceSurface(
         QL_FAIL("inflation cap floor price surface building failed: unknown error");
     }
 }
-}
-}
+} // namespace data
+} // namespace ore

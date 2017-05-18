@@ -51,6 +51,6 @@ protected:
     Volatility volatilityImpl(Time optionTime, Time swapLength, Rate strike) const;
     //@}
 };
-}
+} // namespace QuantExt
 
 #endif

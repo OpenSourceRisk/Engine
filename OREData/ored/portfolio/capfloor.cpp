@@ -16,11 +16,11 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ored/portfolio/capfloor.hpp>
-#include <ored/utilities/log.hpp>
-#include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/builders/capfloor.hpp>
 #include <ored/portfolio/builders/swap.hpp>
+#include <ored/portfolio/capfloor.hpp>
+#include <ored/portfolio/legdata.hpp>
+#include <ored/utilities/log.hpp>
 
 #include <ql/instruments/capfloor.hpp>
 
@@ -33,30 +33,28 @@ namespace data {
 void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     // Make sure the leg is floating or CMS
-    QL_REQUIRE((legData_.legType() == "Floating") || (legData_.legType() == "CMS"), "CapFloor build error, LegType must be Floating or CMS");
-
+    QL_REQUIRE((legData_.legType() == "Floating") || (legData_.legType() == "CMS"),
+               "CapFloor build error, LegType must be Floating or CMS");
 
     // Determine if we have a cap, a floor or a collar
     QL_REQUIRE(caps_.size() > 0 || floors_.size() > 0, "CapFloor build error, no cap rates or floor rates provided");
     QuantLib::CapFloor::Type capFloorType;
     if (floors_.size() == 0) {
         capFloorType = QuantLib::CapFloor::Cap;
-    }
-    else if (caps_.size() == 0) {
+    } else if (caps_.size() == 0) {
         capFloorType = QuantLib::CapFloor::Floor;
-    }
-    else {
+    } else {
         capFloorType = QuantLib::CapFloor::Collar;
     }
-    
+
     // Make sure that the floating leg section does not have caps or floors
     boost::shared_ptr<EngineBuilder> builder;
 
     if (legData_.legType() == "Floating") {
         builder = engineFactory->builder(tradeType_);
         QL_REQUIRE(legData_.floatingLegData().caps().empty() && legData_.floatingLegData().floors().empty(),
-            "CapFloor build error, Floating leg section must not have caps and floors");
-       
+                   "CapFloor build error, Floating leg section must not have caps and floors");
+
         string indexName = legData_.floatingLegData().index();
         Handle<IborIndex> hIndex =
             engineFactory->market()->iborIndex(indexName, builder->configuration(MarketContext::pricing));
@@ -71,12 +69,12 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         // If a vector of cap/floor rates are provided, ensure they align with the number of schedule periods
         if (floors_.size() > 1) {
             QL_REQUIRE(floors_.size() == legs_[0].size(),
-                "The number of floor rates provided does not match the number of schedule periods");
+                       "The number of floor rates provided does not match the number of schedule periods");
         }
 
         if (caps_.size() > 1) {
             QL_REQUIRE(caps_.size() == legs_[0].size(),
-                "The number of cap rates provided does not match the number of schedule periods");
+                       "The number of cap rates provided does not match the number of schedule periods");
         }
 
         // If one cap/floor rate is given, extend the vector to align with the number of schedule periods
@@ -116,17 +114,16 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         legPayers_.push_back(!payer);
         legs_.push_back(makeCMSLeg(legData_, index, engineFactory));
         legPayers_.push_back(payer);
-        
+
         boost::shared_ptr<QuantLib::Swap> capFloor(new QuantLib::Swap(legs_, legPayers_));
         boost::shared_ptr<SwapEngineBuilderBase> cmsCapFloorBuilder =
             boost::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
         capFloor->setPricingEngine(cmsCapFloorBuilder->engine(parseCurrency(legData_.currency())));
-        
+
         instrument_.reset(new VanillaInstrument(capFloor));
         maturity_ = capFloor->maturityDate();
 
-    }
-    else {
+    } else {
         QL_FAIL("Invalid legType for CapFloor");
     }
 
@@ -135,7 +132,6 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     legPayers_.push_back(legData_.isPayer());
     npvCurrency_ = legData_.currency();
     notional_ = currentNotional(legs_[0]);
-
 }
 
 void CapFloor::fromXML(XMLNode* node) {
@@ -157,5 +153,5 @@ XMLNode* CapFloor::toXML(XMLDocument& doc) {
     XMLUtils::addChildren(doc, capFloorNode, "FloorRates", "Rate", floors_);
     return node;
 }
-}
-}
+} // namespace data
+} // namespace ore

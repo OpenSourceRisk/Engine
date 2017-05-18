@@ -43,6 +43,6 @@ void setCouponPricer(const Leg& leg, const boost::shared_ptr<FloatingRateCouponP
 void setCouponPricers(const Leg& leg, const std::vector<boost::shared_ptr<FloatingRateCouponPricer> >&);
 
 // @}
-}
+} // namespace QuantExt
 
 #endif

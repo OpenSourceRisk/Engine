@@ -4,7 +4,7 @@
 
  This file is part of ORE, a free-software/open-source library
  for transparent pricing and risk analysis - http://opensourcerisk.org
-  
+
  ORE is free software: you can redistribute it and/or modify it
  under the terms of the Modified BSD License.  You should have received a
  copy of the license along with this program.
@@ -23,52 +23,52 @@
 
 #pragma once
 
-#include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
+#include <ored/portfolio/enginefactory.hpp>
 
-#include <ql/cashflows/couponpricer.hpp>
 #include <ql/cashflows/conundrumpricer.hpp>
+#include <ql/cashflows/couponpricer.hpp>
 #include <ql/cashflows/lineartsrpricer.hpp>
 
 using namespace ore::data;
 
 namespace ore {
-    namespace data {
+namespace data {
 
-        //! CouponPricer Builder for CmsLeg
-        /*! The coupon pricers are cached by currency
-        */
-        class CmsCouponPricerBuilder : public CachingCouponPricerBuilder<string, const Currency&> {
-        public:
-            CmsCouponPricerBuilder(const string& model, const string& engine) : CachingEngineBuilder(model, engine) {}
+//! CouponPricer Builder for CmsLeg
+/*! The coupon pricers are cached by currency
+ */
+class CmsCouponPricerBuilder : public CachingCouponPricerBuilder<string, const Currency&> {
+public:
+    CmsCouponPricerBuilder(const string& model, const string& engine) : CachingEngineBuilder(model, engine) {}
 
-        protected:
-            virtual string keyImpl(const Currency& ccy) override { return ccy.code(); }
-        };
+protected:
+    virtual string keyImpl(const Currency& ccy) override { return ccy.code(); }
+};
 
-        class AnalyticHaganCmsCouponPricerBuilder : public CmsCouponPricerBuilder {
-        public:
-            AnalyticHaganCmsCouponPricerBuilder() : CmsCouponPricerBuilder("Hagan", "Analytic") {}
+class AnalyticHaganCmsCouponPricerBuilder : public CmsCouponPricerBuilder {
+public:
+    AnalyticHaganCmsCouponPricerBuilder() : CmsCouponPricerBuilder("Hagan", "Analytic") {}
 
-        protected:
-            virtual boost::shared_ptr<FloatingRateCouponPricer> engineImpl(const Currency& ccy) override;
-        };
+protected:
+    virtual boost::shared_ptr<FloatingRateCouponPricer> engineImpl(const Currency& ccy) override;
+};
 
-        class NumericalHaganCmsCouponPricerBuilder : public CmsCouponPricerBuilder {
-        public:
-            NumericalHaganCmsCouponPricerBuilder() : CmsCouponPricerBuilder("Hagan", "Numerical") {}
+class NumericalHaganCmsCouponPricerBuilder : public CmsCouponPricerBuilder {
+public:
+    NumericalHaganCmsCouponPricerBuilder() : CmsCouponPricerBuilder("Hagan", "Numerical") {}
 
-        protected:
-            virtual boost::shared_ptr<FloatingRateCouponPricer> engineImpl(const Currency& ccy) override;
-        };
+protected:
+    virtual boost::shared_ptr<FloatingRateCouponPricer> engineImpl(const Currency& ccy) override;
+};
 
-        class LinearTSRCmsCouponPricerBuilder : public CmsCouponPricerBuilder {
-        public:
-            LinearTSRCmsCouponPricerBuilder() : CmsCouponPricerBuilder("LinearTSR", "LinearTSRPricer") {}
+class LinearTSRCmsCouponPricerBuilder : public CmsCouponPricerBuilder {
+public:
+    LinearTSRCmsCouponPricerBuilder() : CmsCouponPricerBuilder("LinearTSR", "LinearTSRPricer") {}
 
-        protected:
-            virtual boost::shared_ptr<FloatingRateCouponPricer> engineImpl(const Currency& ccy) override;
-        };
-    }
-}
+protected:
+    virtual boost::shared_ptr<FloatingRateCouponPricer> engineImpl(const Currency& ccy) override;
+};
+} // namespace data
+} // namespace ore
 #pragma once

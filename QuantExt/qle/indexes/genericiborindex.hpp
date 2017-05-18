@@ -46,6 +46,6 @@ public:
                      const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
         : IborIndex(ccy.code() + "-GENERIC", tenor, 2, ccy, TARGET(), Following, false, Actual360(), h) {}
 };
-}
+} // namespace QuantExt
 
 #endif

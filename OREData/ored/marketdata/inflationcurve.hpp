@@ -63,5 +63,5 @@ private:
     boost::shared_ptr<InflationTermStructure> curve_;
     bool interpolatedIndex_;
 };
-}
-}
+} // namespace data
+} // namespace ore

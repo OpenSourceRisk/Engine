@@ -720,7 +720,7 @@ struct CommonVars {
     CommonVars() { setup(); }
     ~CommonVars() { teardown(); }
 };
-}
+} // namespace
 
 namespace testsuite {
 
@@ -862,4 +862,4 @@ test_suite* TodaysMarketTest::suite() {
     suite->add(BOOST_TEST_CASE(&TodaysMarketTest::testEquityVolCurve));
     return suite;
 }
-}
+} // namespace testsuite

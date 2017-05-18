@@ -27,17 +27,17 @@
 
 namespace testsuite {
 
+//! Test CMS Swap pricing
+/*!
+\ingroup tests
+*/
+class CmsTest {
+public:
     //! Test CMS Swap pricing
-    /*!
-    \ingroup tests
-    */
-    class CmsTest {
-    public:
-        //! Test CMS Swap pricing
-        static void testCMSAnalyticHagan();
-        static void testCMSNumericalHagan();
-        static void testCMSLinearTsr();
-        static void cmsCapFloor();
-        static boost::unit_test_framework::test_suite* suite();
-    };
-}
+    static void testCMSAnalyticHagan();
+    static void testCMSNumericalHagan();
+    static void testCMSLinearTsr();
+    static void cmsCapFloor();
+    static boost::unit_test_framework::test_suite* suite();
+};
+} // namespace testsuite

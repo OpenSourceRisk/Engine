@@ -191,5 +191,5 @@ boost::shared_ptr<CurveSpec> parseCurveSpec(const string& s) {
 
     QL_FAIL("Unable to convert \"" << s << "\" into CurveSpec");
 }
-}
-}
+} // namespace data
+} // namespace ore

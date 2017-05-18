@@ -23,8 +23,8 @@
 
 #pragma once
 
-#include <ored/portfolio/trade.hpp>
 #include <boost/make_shared.hpp>
+#include <ored/portfolio/trade.hpp>
 
 namespace ore {
 namespace data {
@@ -66,5 +66,5 @@ public:
 private:
     map<string, boost::shared_ptr<AbstractTradeBuilder>> builders_;
 };
-}
-}
+} // namespace data
+} // namespace ore

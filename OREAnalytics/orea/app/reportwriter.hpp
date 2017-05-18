@@ -68,5 +68,5 @@ private:
     ReportWriter(const ReportWriter&);
     ReportWriter& operator=(const ReportWriter&);
 };
-}
-}
+} // namespace analytics
+} // namespace ore

@@ -23,9 +23,9 @@
 
 #pragma once
 
-#include <ql/types.hpp>
-#include <ql/time/date.hpp>
 #include <boost/shared_ptr.hpp>
+#include <ql/time/date.hpp>
+#include <ql/types.hpp>
 #include <vector>
 
 using QuantLib::Size;
@@ -80,5 +80,5 @@ public:
     //! Persist cube contents to disk
     virtual void save(const std::string& fileName) const = 0;
 };
-}
-}
+} // namespace analytics
+} // namespace ore

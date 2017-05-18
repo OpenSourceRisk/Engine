@@ -16,20 +16,20 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ored/portfolio/legdata.hpp>
-#include <ored/utilities/log.hpp>
 #include <ored/portfolio/builders/capfloorediborleg.hpp>
 #include <ored/portfolio/builders/cms.hpp>
+#include <ored/portfolio/legdata.hpp>
+#include <ored/utilities/log.hpp>
 
-#include <ql/errors.hpp>
 #include <ql/cashflow.hpp>
-#include <ql/cashflows/overnightindexedcoupon.hpp>
-#include <ql/cashflows/iborcoupon.hpp>
-#include <ql/cashflows/fixedratecoupon.hpp>
-#include <ql/cashflows/simplecashflow.hpp>
+#include <ql/cashflows/capflooredcoupon.hpp>
 #include <ql/cashflows/cpicoupon.hpp>
 #include <ql/cashflows/cpicouponpricer.hpp>
-#include <ql/cashflows/capflooredcoupon.hpp>
+#include <ql/cashflows/fixedratecoupon.hpp>
+#include <ql/cashflows/iborcoupon.hpp>
+#include <ql/cashflows/overnightindexedcoupon.hpp>
+#include <ql/cashflows/simplecashflow.hpp>
+#include <ql/errors.hpp>
 
 #include <boost/make_shared.hpp>
 
@@ -144,17 +144,19 @@ XMLNode* CMSLegData::toXML(XMLDocument& doc) {
 void CMSLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "CMSLegData");
     swapIndex_ = XMLUtils::getChildValue(node, "Index", true);
-    spreads_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Spreads", "Spread", "startDate", spreadDates_, true);
+    spreads_ =
+        XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Spreads", "Spread", "startDate", spreadDates_, true);
     // These are all optional
     XMLNode* arrNode = XMLUtils::getChildNode(node, "IsInArrears");
     if (arrNode)
         isInArrears_ = XMLUtils::getChildValueAsBool(node, "IsInArrears", true);
     else
-        isInArrears_ = false;                                          // default to fixing-in-advance
-    fixingDays_ = XMLUtils::getChildValueAsInt(node, "FixingDays");    // defaults to 0
+        isInArrears_ = false;                                       // default to fixing-in-advance
+    fixingDays_ = XMLUtils::getChildValueAsInt(node, "FixingDays"); // defaults to 0
     caps_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Caps", "Cap", "startDate", capDates_);
     floors_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Floors", "Floor", "startDate", floorDates_);
-    gearings_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Gearings", "Gearing", "startDate", gearingDates_);
+    gearings_ =
+        XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Gearings", "Gearing", "startDate", gearingDates_);
 }
 
 void LegData::fromXML(XMLNode* node) {
@@ -439,11 +441,11 @@ Leg makeCMSLeg(LegData& data, boost::shared_ptr<QuantLib::SwapIndex> swapIndex,
     vector<double> spreads = ore::data::buildScheduledVector(cmsData.spreads(), cmsData.spreadDates(), schedule);
 
     CmsLeg cmsLeg = CmsLeg(schedule, swapIndex)
-        .withNotionals(data.notionals())
-        .withSpreads(spreads)
-        .withPaymentDayCounter(dc)
-        .withPaymentAdjustment(bdc)
-        .withFixingDays(cmsData.fixingDays());
+                        .withNotionals(data.notionals())
+                        .withSpreads(spreads)
+                        .withPaymentDayCounter(dc)
+                        .withPaymentAdjustment(bdc)
+                        .withFixingDays(cmsData.fixingDays());
 
     if (cmsData.gearings().size() > 0)
         cmsLeg.withGearings(buildScheduledVector(cmsData.gearings(), cmsData.gearingDates(), schedule));
@@ -456,15 +458,14 @@ Leg makeCMSLeg(LegData& data, boost::shared_ptr<QuantLib::SwapIndex> swapIndex,
 
         if (floors.size() > 0)
             cmsLeg.withFloors(buildScheduledVector(floors, capFloorDates, schedule));
-    }
-    else if(couponCapFloor){
+    } else if (couponCapFloor) {
         if (cmsData.caps().size() > 0)
             cmsLeg.withCaps(buildScheduledVector(cmsData.caps(), cmsData.capDates(), schedule));
 
         if (cmsData.floors().size() > 0)
             cmsLeg.withFloors(buildScheduledVector(cmsData.floors(), cmsData.floorDates(), schedule));
     }
-    
+
     // Get a coupon pricer for the leg
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("CMS");
     QL_REQUIRE(builder, "No builder found for CmsLeg");
@@ -479,16 +480,15 @@ Leg makeCMSLeg(LegData& data, boost::shared_ptr<QuantLib::SwapIndex> swapIndex,
             boost::shared_ptr<CmsCoupon> coupon = boost::dynamic_pointer_cast<CmsCoupon>(cashflow);
             QL_REQUIRE(coupon, "Expected a leg of coupons of type CmsCoupon");
             coupon->setPricer(couponPricer);
-        }
-        else {
-            boost::shared_ptr<CappedFlooredCmsCoupon> coupon = boost::dynamic_pointer_cast<CappedFlooredCmsCoupon>(cashflow);
+        } else {
+            boost::shared_ptr<CappedFlooredCmsCoupon> coupon =
+                boost::dynamic_pointer_cast<CappedFlooredCmsCoupon>(cashflow);
             QL_REQUIRE(coupon, "Expected a leg of coupons of type CappedFlooredCmsCoupon");
             coupon->setPricer(couponPricer);
         }
     }
     return leg;
 }
-
 
 Real currentNotional(const Leg& leg) {
     Date today = Settings::instance().evaluationDate();

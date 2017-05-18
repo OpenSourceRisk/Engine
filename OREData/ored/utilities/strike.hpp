@@ -47,5 +47,5 @@ Strike parseStrike(const std::string& s);
 \ingroup utilities
 */
 std::ostream& operator<<(std::ostream& out, const Strike& s);
-}
-}
+} // namespace data
+} // namespace ore

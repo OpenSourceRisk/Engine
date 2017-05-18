@@ -210,13 +210,13 @@ public:
     CMSLegData() : fixingDays_(0), isInArrears_(true) {}
     //! Constructor
     CMSLegData(const string& swapIndex, int fixingDays, bool isInArrears, const vector<double>& spreads,
-        const vector<string>& spreadDates = vector<string>(), const vector<double>& caps = vector<double>(),
-        const vector<string>& capDates = vector<string>(), const vector<double>& floors = vector<double>(),
-        const vector<string>& floorDates = vector<string>(), const vector<double>& gearings = vector<double>(),
-        const vector<string>& gearingDates = vector<string>())
+               const vector<string>& spreadDates = vector<string>(), const vector<double>& caps = vector<double>(),
+               const vector<string>& capDates = vector<string>(), const vector<double>& floors = vector<double>(),
+               const vector<string>& floorDates = vector<string>(), const vector<double>& gearings = vector<double>(),
+               const vector<string>& gearingDates = vector<string>())
         : swapIndex_(swapIndex), fixingDays_(fixingDays), isInArrears_(isInArrears), spreads_(spreads),
-        spreadDates_(spreadDates), caps_(caps), capDates_(capDates), floors_(floors), floorDates_(floorDates),
-        gearings_(gearings), gearingDates_(gearingDates) {}
+          spreadDates_(spreadDates), caps_(caps), capDates_(capDates), floors_(floors), floorDates_(floorDates),
+          gearings_(gearings), gearingDates_(gearingDates) {}
 
     //! \name Inspectors
     //@{
@@ -251,7 +251,6 @@ private:
     vector<double> gearings_;
     vector<string> gearingDates_;
 };
-
 
 //! Serializable object holding leg data
 class LegData : public XMLSerializable {
@@ -322,16 +321,18 @@ public:
           isNotResetXCCY_(isNotResetXCCY) {}
 
     //! Constructor with CMSLegData
-    LegData(bool isPayer, const string& currency, CMSLegData& data, ScheduleData& schedule,
-        const string& dayCounter, const vector<double> notionals, const vector<string>& notionalDates = vector<string>(),
-        const string& paymentConvention = "F", bool notionalInitialExchange = false, bool notionalFinalExchange = false,
-        bool notionalAmortizingExchange = false, bool isNotResetXCCY = true, const string& foreignCurrency = "",
-        double foreignAmount = 0, const string& fxIndex = "", int fixingDays = 0)
+    LegData(bool isPayer, const string& currency, CMSLegData& data, ScheduleData& schedule, const string& dayCounter,
+            const vector<double> notionals, const vector<string>& notionalDates = vector<string>(),
+            const string& paymentConvention = "F", bool notionalInitialExchange = false,
+            bool notionalFinalExchange = false, bool notionalAmortizingExchange = false, bool isNotResetXCCY = true,
+            const string& foreignCurrency = "", double foreignAmount = 0, const string& fxIndex = "",
+            int fixingDays = 0)
         : isPayer_(isPayer), currency_(currency), legType_("CMS"), cmsLegData_(data), schedule_(schedule),
-        dayCounter_(dayCounter), notionals_(notionals), paymentConvention_(paymentConvention), notionalInitialExchange_(notionalInitialExchange),
-        notionalFinalExchange_(notionalFinalExchange), notionalAmortizingExchange_(notionalAmortizingExchange),
-        isNotResetXCCY_(isNotResetXCCY), foreignCurrency_(foreignCurrency), foreignAmount_(foreignAmount),
-        fxIndex_(fxIndex), fixingDays_(fixingDays) {}
+          dayCounter_(dayCounter), notionals_(notionals), paymentConvention_(paymentConvention),
+          notionalInitialExchange_(notionalInitialExchange), notionalFinalExchange_(notionalFinalExchange),
+          notionalAmortizingExchange_(notionalAmortizingExchange), isNotResetXCCY_(isNotResetXCCY),
+          foreignCurrency_(foreignCurrency), foreignAmount_(foreignAmount), fxIndex_(fxIndex), fixingDays_(fixingDays) {
+    }
 
     //! \name Serialisation
     //@{
@@ -399,7 +400,7 @@ Leg makeSimpleLeg(LegData& data);
 Leg makeNotionalLeg(const Leg& refLeg, bool initNomFlow, bool finalNomFlow, bool amortNomFlow = true);
 Leg makeCPILeg(LegData& data, boost::shared_ptr<ZeroInflationIndex> index);
 Leg makeYoYLeg(LegData& data, boost::shared_ptr<YoYInflationIndex> index);
-Leg makeCMSLeg(LegData& data, boost::shared_ptr<QuantLib::SwapIndex> swapindex, 
+Leg makeCMSLeg(LegData& data, boost::shared_ptr<QuantLib::SwapIndex> swapindex,
                const boost::shared_ptr<EngineFactory>& engineFactory, const vector<double>& caps = vector<double>(),
                const vector<double>& floors = vector<double>());
 Real currentNotional(const Leg& leg);
@@ -419,5 +420,5 @@ vector<double> normaliseToSchedule(const vector<double>& values, const Schedule&
 // normaliseToSchedule concat buildScheduledVector
 vector<double> buildScheduledVectorNormalised(const vector<double>& values, const vector<string>& dates,
                                               const Schedule& schedule, const Real defaultValue = Null<Real>());
-}
-}
+} // namespace data
+} // namespace ore

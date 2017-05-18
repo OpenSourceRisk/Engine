@@ -42,10 +42,9 @@ Rate ZeroInflationIndexWrapper::fixing(const Date& fixingDate, bool /*forecastTo
         if (interpolation_ == CPI::Linear) {
             Real indexEnd = source_->fixing(dd.second + Period(1, Days));
             // linear interpolation
-            return indexStart +
-                   (indexEnd - indexStart) * (fixingDate - dd.first) /
-                       ((dd.second + Period(1, Days)) -
-                        dd.first); // can't get to next period's value within current period
+            return indexStart + (indexEnd - indexStart) * (fixingDate - dd.first) /
+                                    ((dd.second + Period(1, Days)) -
+                                     dd.first); // can't get to next period's value within current period
         } else {
             // no interpolation, i.e. flat = constant, so use start-of-period value
             return indexStart;
@@ -112,4 +111,4 @@ void YoYInflationCouponPricer2::initialize(const InflationCoupon& coupon) {
     spreadLegValue_ = spread_ * coupon_->accrualPeriod() * discount_;
 }
 
-} // namesapce QuantExt
+} // namespace QuantExt

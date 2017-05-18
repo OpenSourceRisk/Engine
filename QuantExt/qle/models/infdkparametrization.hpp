@@ -23,13 +23,13 @@
 #ifndef quantextplus_infdklgm1f_parametrization_hpp
 #define quantextplus_infdklgm1f_parametrization_hpp
 
-#include <qle/models/irlgm1fparametrization.hpp>
+#include <ql/handle.hpp>
+#include <ql/termstructures/inflationtermstructure.hpp>
 #include <qle/models/irlgm1fconstantparametrization.hpp>
+#include <qle/models/irlgm1fparametrization.hpp>
 #include <qle/models/irlgm1fpiecewiseconstanthullwhiteadaptor.hpp>
 #include <qle/models/irlgm1fpiecewiseconstantparametrization.hpp>
 #include <qle/models/irlgm1fpiecewiselinearparametrization.hpp>
-#include <ql/handle.hpp>
-#include <ql/termstructures/inflationtermstructure.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -46,6 +46,6 @@ typedef Lgm1fPiecewiseConstantParametrization<ZeroInflationTermStructure> InfDkP
 
 typedef Lgm1fPiecewiseLinearParametrization<ZeroInflationTermStructure> InfDkPiecewiseLinearParametrization;
 
-} // namespace QuantExtPlus
+} // namespace QuantExt
 
 #endif

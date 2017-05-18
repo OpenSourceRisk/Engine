@@ -66,7 +66,7 @@ struct CommonVars {
 
     SavedSettings backup;
 };
-}
+} // namespace
 
 namespace testsuite {
 
@@ -882,4 +882,4 @@ test_suite* OptionletStripperTest::suite() {
 
     return suite;
 }
-}
+} // namespace testsuite
