@@ -697,7 +697,7 @@
       </FloorRates>
     </CapFloorData>
   </Trade>
-  <Trade id="Bond">
+  <Trade id="BOND">
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
@@ -742,5 +742,133 @@
         </ScheduleData>
       </LegData>
      </BondData>
+  </Trade>
+  <Trade id="EQ_CALL_SP5">
+    <TradeType>EquityOption</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <EquityOptionData>
+      <OptionData>
+        <LongShort>Long</LongShort>
+        <OptionType>Call</OptionType>
+        <Style>European</Style>
+        <Settlement>Cash</Settlement>
+        <PayOffAtExpiry>false</PayOffAtExpiry>
+        <ExerciseDates>
+          <ExerciseDate>2018-02-05</ExerciseDate>
+        </ExerciseDates>
+      </OptionData>
+      <Name>SP5</Name>
+      <Currency>USD</Currency>
+      <Strike>2147.56</Strike>
+      <Quantity>775</Quantity>
+    </EquityOptionData>
+  </Trade>
+  <Trade id="EQ_PUT_SP5">
+    <TradeType>EquityOption</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <EquityOptionData>
+      <OptionData>
+        <LongShort>Short</LongShort>
+        <OptionType>Put</OptionType>
+        <Style>European</Style>
+        <Settlement>Cash</Settlement>
+        <PayOffAtExpiry>false</PayOffAtExpiry>
+        <ExerciseDates>
+          <ExerciseDate>2018-02-05</ExerciseDate>
+        </ExerciseDates>
+      </OptionData>
+      <Name>SP5</Name>
+      <Currency>USD</Currency>
+      <Strike>2147.56</Strike>
+      <Quantity>775</Quantity>
+    </EquityOptionData>
+  </Trade>
+  <Trade id="EQ_FWD_SP5">
+    <TradeType>EquityForward</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <EquityForwardData>
+      <LongShort>Short</LongShort>
+      <Maturity>2018-02-05</Maturity>
+      <Name>SP5</Name>
+      <Currency>USD</Currency>
+      <Strike>2147.56</Strike>
+      <Quantity>775</Quantity>
+    </EquityForwardData>
+  </Trade>
+  <Trade id="EQ_CALL_LUFT">
+    <TradeType>EquityOption</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <EquityOptionData>
+      <OptionData>
+        <LongShort>Long</LongShort>
+        <OptionType>Call</OptionType>
+        <Style>European</Style>
+        <Settlement>Cash</Settlement>
+        <PayOffAtExpiry>false</PayOffAtExpiry>
+        <ExerciseDates>
+          <ExerciseDate>2018-03-01</ExerciseDate>
+        </ExerciseDates>
+      </OptionData>
+      <Name>Lufthansa</Name>
+      <Currency>EUR</Currency>
+      <Strike>12.24</Strike>
+      <Quantity>775</Quantity>
+    </EquityOptionData>
+  </Trade>
+  <Trade id="EQ_PUT_LUFT">
+    <TradeType>EquityOption</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <EquityOptionData>
+      <OptionData>
+        <LongShort>Long</LongShort>
+        <OptionType>Put</OptionType>
+        <Style>European</Style>
+        <Settlement>Cash</Settlement>
+        <PayOffAtExpiry>false</PayOffAtExpiry>
+        <ExerciseDates>
+          <ExerciseDate>2018-03-01</ExerciseDate>
+        </ExerciseDates>
+      </OptionData>
+      <Name>Lufthansa</Name>
+      <Currency>EUR</Currency>
+      <Strike>12.24</Strike>
+      <Quantity>775</Quantity>
+    </EquityOptionData>
+  </Trade>
+  <Trade id="EQ_FWD_LUFT">
+    <TradeType>EquityForward</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <EquityForwardData>
+      <LongShort>Long</LongShort>
+      <Maturity>2018-03-01</Maturity>
+      <Name>Lufthansa</Name>
+      <Currency>EUR</Currency>
+      <Strike>12.24</Strike>
+      <Quantity>775</Quantity>
+    </EquityForwardData>
   </Trade>
 </Portfolio>

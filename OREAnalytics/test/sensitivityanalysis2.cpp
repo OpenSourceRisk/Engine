@@ -120,6 +120,8 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData5() 
 
     simMarketData->fxCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY"};
 
+    simMarketData->equityNames() = { "SP5", "Lufthansa" };
+
     simMarketData->simulateCapFloorVols() = true;
     simMarketData->capFloorVolDecayMode() = "ForwardVariance";
     simMarketData->capFloorVolCcys() = {"EUR", "USD"};
@@ -147,23 +149,32 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5() {
     cvsData.shiftSize = 1E-5;
     cvsData.parInstruments = {"DEP", "IRS", "IRS", "IRS", "IRS", "IRS", "IRS", "IRS", "IRS"};
 
-    SensitivityScenarioData::FxShiftData fxsData;
-    fxsData.shiftType = "Absolute";
+    SensitivityScenarioData::SpotShiftData fxsData;
+    fxsData.shiftType = "Relative";
     fxsData.shiftSize = 1E-5;
 
-    SensitivityScenarioData::FxVolShiftData fxvsData;
-    fxvsData.shiftType = "Absolute";
+    SensitivityScenarioData::VolShiftData fxvsData;
+    fxvsData.shiftType = "Relative";
     fxvsData.shiftSize = 1E-5;
     fxvsData.shiftExpiries = {5 * Years};
 
+    SensitivityScenarioData::SpotShiftData eqsData;
+    eqsData.shiftType = "Relative";
+    eqsData.shiftSize = 1E-5;
+
+    SensitivityScenarioData::VolShiftData eqvsData;
+    eqvsData.shiftType = "Relative";
+    eqvsData.shiftSize = 1E-5;
+    eqvsData.shiftExpiries = { 5 * Years };
+
     SensitivityScenarioData::CapFloorVolShiftData cfvsData;
-    cfvsData.shiftType = "Absolute";
-    cfvsData.shiftSize = 1E-5;
-    cfvsData.shiftExpiries = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
-    cfvsData.shiftStrikes = {0.01, 0.02, 0.03, 0.04, 0.05};
+    eqvsData.shiftType = "Absolute";
+    eqvsData.shiftSize = 1E-5;
+    eqvsData.shiftExpiries = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
+    eqvsData.shiftStrikes = {0.01, 0.02, 0.03, 0.04, 0.05};
 
     SensitivityScenarioData::SwaptionVolShiftData swvsData;
-    swvsData.shiftType = "Absolute";
+    swvsData.shiftType = "Relative";
     swvsData.shiftSize = 1E-5;
     swvsData.shiftExpiries = {6 * Months, 1 * Years, 2 * Years,  3 * Years,
                               5 * Years,  7 * Years, 10 * Years, 20 * Years};
@@ -218,6 +229,10 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5() {
     sensiData->fxShiftData()["EURGBP"] = fxsData;
     sensiData->fxShiftData()["EURJPY"] = fxsData;
     sensiData->fxShiftData()["EURCHF"] = fxsData;
+
+    sensiData->equityNames() = { "SP5", "Lufthansa" };
+    sensiData->equityShiftData()["SP5"] = eqsData;
+    sensiData->equityShiftData()["Lufthansa"] = eqsData;
 
     sensiData->fxVolCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY", "GBPCHF"};
     sensiData->fxVolShiftData()["EURUSD"] = fxvsData;
@@ -295,6 +310,10 @@ void SensitivityAnalysis2Test::testSensitivities() {
     data->engine("EuropeanSwaption") = "BlackBachelierSwaptionEngine";
     data->model("FxOption") = "GarmanKohlhagen";
     data->engine("FxOption") = "AnalyticEuropeanEngine";
+    data->model("EquityForward") = "DiscountedCashflows";
+    data->engine("EquityForward") = "DiscountingEquityForwardEngine";
+    data->model("EquityOption") = "BlackScholesMerton";
+    data->engine("EquityOption") = "AnalyticEuropeanEngine";
 
     // boost::shared_ptr<Portfolio> portfolio = buildSwapPortfolio(portfolioSize, factory);
     boost::shared_ptr<Portfolio> portfolio(new Portfolio());
@@ -303,6 +322,8 @@ void SensitivityAnalysis2Test::testSensitivities() {
     portfolio->add(buildEuropeanSwaption("5_Swaption_EUR", "Long", "EUR", true, 10.0, 10, 10, 0.03, 0.00, "1Y",
                                          "30/360", "6M", "A360", "EUR-EURIBOR-6M", "Physical"));
     portfolio->add(buildFxOption("7_FxOption_EUR_USD", "Long", "Call", 3, "EUR", 10.0, "USD", 11.0));
+
+    portfolio->add(buildEquityOption("2_Eq_Option_SP5", "Long", "Call", 2, "SP5", "USD", 2147.56, 775));
 
     // analytic results
     map<string, Real> analyticalResultsDelta = {{"1_Swap_EUR DiscountCurve/EUR/0/1M", 0},

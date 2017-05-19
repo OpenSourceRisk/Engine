@@ -143,11 +143,11 @@ boost::shared_ptr<ore::analytics::SensitivityScenarioData> TestConfigurationObje
     cvsData.shiftType = "Absolute";
     cvsData.shiftSize = 0.0001;
 
-    ore::analytics::SensitivityScenarioData::FxShiftData fxsData;
+    ore::analytics::SensitivityScenarioData::SpotShiftData fxsData;
     fxsData.shiftType = "Relative";
     fxsData.shiftSize = 0.01;
 
-    ore::analytics::SensitivityScenarioData::FxVolShiftData fxvsData;
+    ore::analytics::SensitivityScenarioData::VolShiftData fxvsData;
     fxvsData.shiftType = "Relative";
     fxvsData.shiftSize = 1.0;
     fxvsData.shiftExpiries = {2 * Years, 5 * Years};
@@ -206,11 +206,11 @@ boost::shared_ptr<ore::analytics::SensitivityScenarioData> TestConfigurationObje
     cvsData.shiftType = "Absolute";
     cvsData.shiftSize = 0.0001;
 
-    ore::analytics::SensitivityScenarioData::FxShiftData fxsData;
+    ore::analytics::SensitivityScenarioData::SpotShiftData fxsData;
     fxsData.shiftType = "Relative";
     fxsData.shiftSize = 0.01;
 
-    ore::analytics::SensitivityScenarioData::FxVolShiftData fxvsData;
+    ore::analytics::SensitivityScenarioData::VolShiftData fxvsData;
     fxvsData.shiftType = "Relative";
     fxvsData.shiftSize = 1.0;
     fxvsData.shiftExpiries = {5 * Years};

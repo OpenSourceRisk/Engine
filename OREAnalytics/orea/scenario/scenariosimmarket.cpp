@@ -584,22 +584,22 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
 
     // building eq volatilities
     LOG("building eq volatilities...");
-    for (const auto& eqName : parameters->eqVolNames()) {
-        Handle<BlackVolTermStructure> wrapper = initMarket->equityVol(eqName, configuration);
+    for (const auto& equityName : parameters->equityVolNames()) {
+        Handle<BlackVolTermStructure> wrapper = initMarket->equityVol(equityName, configuration);
 
         Handle<BlackVolTermStructure> evh;
 
         if (parameters->simulateEQVols()) {
-            LOG("Simulating EQ Vols (BlackVarianceCurve3) for " << eqName);
+            LOG("Simulating EQ Vols (BlackVarianceCurve3) for " << equityName);
             vector<Handle<Quote>> quotes;
             vector<Time> times;
-            for (Size i = 0; i < parameters->eqVolExpiries().size(); i++) {
-                Date date = asof_ + parameters->eqVolExpiries()[i];
+            for (Size i = 0; i < parameters->equityVolExpiries().size(); i++) {
+                Date date = asof_ + parameters->equityVolExpiries()[i];
                 Volatility vol = wrapper->blackVol(date, Null<Real>(), true);
                 times.push_back(wrapper->timeFromReference(date));
                 boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
                 simData_.emplace(std::piecewise_construct,
-                                 std::forward_as_tuple(RiskFactorKey::KeyType::EQVolatility, eqName, i),
+                                 std::forward_as_tuple(RiskFactorKey::KeyType::EQVolatility, equityName, i),
                                  std::forward_as_tuple(q));
                 quotes.emplace_back(q);
             }
@@ -607,8 +607,8 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
                 0, NullCalendar(), wrapper->businessDayConvention(), wrapper->dayCounter(), times, quotes));
             evh = Handle<BlackVolTermStructure>(eqVolCurve);
         } else {
-            string decayModeString = parameters->eqVolDecayMode();
-            DLOG("Deterministic EQ Vols with decay mode " << decayModeString << " for " << eqName);
+            string decayModeString = parameters->equityVolDecayMode();
+            DLOG("Deterministic EQ Vols with decay mode " << decayModeString << " for " << equityName);
             ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);
 
             // currently only curves (i.e. strike indepdendent) EQ volatility structures are
@@ -621,8 +621,8 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         if (wrapper->allowsExtrapolation())
             evh->enableExtrapolation();
         equityVols_.insert(pair<pair<string, string>, Handle<BlackVolTermStructure>>(
-            make_pair(Market::defaultConfiguration, eqName), evh));
-        DLOG("EQ volatility curve built for " << eqName);
+            make_pair(Market::defaultConfiguration, equityName), evh));
+        DLOG("EQ volatility curve built for " << equityName);
     }
     LOG("equity volatilities done");
 }
