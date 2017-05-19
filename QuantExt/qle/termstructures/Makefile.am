@@ -17,6 +17,7 @@ libTermStructures_la_SOURCES = \
 	oisratehelper.cpp \
 	tenorbasisswaphelper.cpp \
 	blackvariancecurve3.cpp \
+	blackvariancesurface2.cpp \
 	datedstrippedoptionlet.cpp \
 	datedstrippedoptionletadapter.cpp \
 	dynamicoptionletvolatilitystructure.cpp \
@@ -47,6 +48,7 @@ this_include_HEADERS = \
 	staticallycorrectedyieldtermstructure.hpp \
 	tenorbasisswaphelper.hpp \
 	blackvariancecurve3.hpp \
+	blackvariancesurface2.hpp \
 	datedstrippedoptionlet.hpp \
 	datedstrippedoptionletadapter.hpp \
 	datedstrippedoptionletbase.hpp \
