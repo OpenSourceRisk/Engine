@@ -2,6 +2,7 @@
 /* Add the files to be included into Makefile.am instead. */
 
 #include <ored/marketdata/capfloorvolcurve.hpp>
+#include <ored/marketdata/cdsvolcurve.hpp>
 #include <ored/marketdata/csvloader.hpp>
 #include <ored/marketdata/curveloader.hpp>
 #include <ored/marketdata/curvespec.hpp>

@@ -22,6 +22,7 @@
 */
 
 #include <ored/marketdata/capfloorvolcurve.hpp>
+#include <ored/marketdata/cdsvolcurve.hpp>
 #include <ored/marketdata/curveloader.hpp>
 #include <ored/marketdata/curvespecparser.hpp>
 #include <ored/marketdata/defaultcurve.hpp>
@@ -66,6 +67,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
     map<string, boost::shared_ptr<SwaptionVolCurve>> requiredSwaptionVolCurves;
     map<string, boost::shared_ptr<CapFloorVolCurve>> requiredCapFloorVolCurves;
     map<string, boost::shared_ptr<DefaultCurve>> requiredDefaultCurves;
+    map<string, boost::shared_ptr<CDSVolCurve>> requiredCDSVolCurves;
     map<string, boost::shared_ptr<InflationCurve>> requiredInflationCurves;
     map<string, boost::shared_ptr<InflationCapFloorPriceSurface>> requiredInflationCapFloorPriceSurfaces;
     map<string, boost::shared_ptr<EquityCurve>> requiredEquityCurves;
@@ -295,6 +297,34 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                             Handle<DefaultProbabilityTermStructure>(itr->second->defaultTermStructure());
                         recoveryRates_[make_pair(configuration.first, it.first)] =
                             Handle<Quote>(boost::make_shared<SimpleQuote>(itr->second->recoveryRate()));
+                    }
+                }
+                break;
+            }
+
+                        case CurveSpec::CurveType::CDSVolatility: {
+                // convert to cds vol spec
+                boost::shared_ptr<CDSVolatilityCurveSpec> cdsvolspec =
+                    boost::dynamic_pointer_cast<CDSVolatilityCurveSpec>(spec);
+                QL_REQUIRE(cdsvolspec, "Failed to convert spec " << *spec);
+
+                // have we built the curve already ?
+                auto itr = requiredCDSVolCurves.find(cdsvolspec->name());
+                if (itr == requiredCDSVolCurves.end()) {
+                    // build the curve
+                    LOG("Building CDSVol for asof " << asof);
+                    boost::shared_ptr<CDSVolCurve> cdsVolCurve =
+                        boost::make_shared<CDSVolCurve>(asof, *cdsvolspec, loader, curveConfigs);
+                    itr = requiredCDSVolCurves.insert(make_pair(cdsvolspec->name(), cdsVolCurve)).first;
+                }
+
+                // add the handle to the Market Map (possible lots of times for proxies)
+                for (const auto& it : params.cdsVolatilities(configuration.first)) {
+                    if (it.second == spec->name()) {
+                        LOG("Adding CDSVol (" << it.first << ") with spec " << *cdsvolspec << " to configuration "
+                                              << configuration.first);
+                        cdsVols_[make_pair(configuration.first, it.first)] =
+                            Handle<BlackVolTermStructure>(itr->second->volTermStructure());
                     }
                 }
                 break;

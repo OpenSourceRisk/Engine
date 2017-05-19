@@ -60,7 +60,8 @@ static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
         {"ZC_INFLATIONSWAP", MarketDatum::InstrumentType::ZC_INFLATIONSWAP},
         {"ZC_INFLATIONCAPFLOOR", MarketDatum::InstrumentType::ZC_INFLATIONCAPFLOOR},
         {"YY_INFLATIONSWAP", MarketDatum::InstrumentType::YY_INFLATIONSWAP},
-        {"SEASONALITY", MarketDatum::InstrumentType::SEASONALITY}};
+        {"SEASONALITY", MarketDatum::InstrumentType::SEASONALITY},
+        {"INDEX_CDS_OPTION", MarketDatum::InstrumentType::INDEX_CDS_OPTION}};
 
     auto it = b.find(s);
     if (it != b.end()) {
@@ -385,6 +386,13 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         return boost::make_shared<SecuritySpreadQuote>(value, asof, datumName, securityID);
     }
 
+    case MarketDatum::InstrumentType::INDEX_CDS_OPTION: {
+        QL_REQUIRE(tokens.size() == 4, "4 tokens expected in " << datumName);
+        QL_REQUIRE(quoteType == MarketDatum::QuoteType::RATE_LNVOL, "Invalid quote type for " << datumName);
+        const string& indexName = tokens[2];
+        const string& expiry = tokens[3];
+        return boost::make_shared<IndexCDSOptionQuote>(value, asof, datumName, indexName, expiry);
+    }
     default:
         QL_FAIL("Cannot convert \"" << datumName << "\" to MarketDatum");
     }

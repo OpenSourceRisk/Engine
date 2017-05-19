@@ -89,6 +89,10 @@ public:
     defaultCurve(const string&, const string& configuration = Market::defaultConfiguration) const;
     Handle<Quote> recoveryRate(const string&, const string& configuration = Market::defaultConfiguration) const;
 
+    //! CDS volatilities
+    Handle<BlackVolTermStructure> cdsVol(const string& name,
+                                         const string& configuration = Market::defaultConfiguration) const;
+
     //! CapFloor volatilities
     Handle<OptionletVolatilityStructure> capFloorVol(const string& ccy,
                                                      const string& configuration = Market::defaultConfiguration) const;
@@ -140,6 +144,7 @@ protected:
     map<string, FXTriangulation> fxSpots_;
     mutable map<pair<string, string>, Handle<BlackVolTermStructure>> fxVols_;
     map<pair<string, string>, Handle<DefaultProbabilityTermStructure>> defaultCurves_;
+    map<pair<string, string>, Handle<BlackVolTermStructure>> cdsVols_;
     map<pair<string, string>, Handle<Quote>> recoveryRates_;
     map<pair<string, string>, Handle<OptionletVolatilityStructure>> capFloorCurves_;
     map<pair<string, pair<string, bool>>, Handle<ZeroInflationIndex>> zeroInflationIndices_;

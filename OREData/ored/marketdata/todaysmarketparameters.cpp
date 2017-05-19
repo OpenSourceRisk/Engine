@@ -28,7 +28,7 @@ bool operator==(const MarketConfiguration& lhs, const MarketConfiguration& rhs) 
     if (lhs.discountingCurvesId != rhs.discountingCurvesId || lhs.yieldCurvesId != rhs.yieldCurvesId ||
         lhs.indexForwardingCurvesId != rhs.indexForwardingCurvesId || lhs.fxSpotsId != rhs.fxSpotsId ||
         lhs.fxVolatilitiesId != rhs.fxVolatilitiesId || lhs.swaptionVolatilitiesId != rhs.swaptionVolatilitiesId ||
-        lhs.defaultCurvesId != rhs.defaultCurvesId || lhs.swapIndexCurvesId != rhs.swapIndexCurvesId ||
+        lhs.defaultCurvesId != rhs.defaultCurvesId || lhs.cdsVolatilitiesId != rhs.cdsVolatilitiesId || lhs.swapIndexCurvesId != rhs.swapIndexCurvesId ||
         lhs.zeroInflationIndexCurvesId != rhs.zeroInflationIndexCurvesId ||
         lhs.yoyInflationIndexCurvesId != rhs.yoyInflationIndexCurvesId ||
         lhs.inflationCapFloorPriceSurfacesId != rhs.inflationCapFloorPriceSurfacesId ||
@@ -57,7 +57,7 @@ bool TodaysMarketParameters::operator==(TodaysMarketParameters& rhs) {
     if (discountingCurves_ != rhs.discountingCurves_ || yieldCurves_ != rhs.yieldCurves_ ||
         indexForwardingCurves_ != rhs.indexForwardingCurves_ || fxSpots_ != rhs.fxSpots_ ||
         fxVolatilities_ != rhs.fxVolatilities_ || swaptionVolatilities_ != rhs.swaptionVolatilities_ ||
-        defaultCurves_ != rhs.defaultCurves_ || capFloorVolatilities_ != rhs.capFloorVolatilities_ ||
+        defaultCurves_ != rhs.defaultCurves_ || cdsVolatilities_ != rhs.cdsVolatilities_ || capFloorVolatilities_ != rhs.capFloorVolatilities_ ||
         zeroInflationIndexCurves_ != rhs.zeroInflationIndexCurves_ ||
         yoyInflationIndexCurves_ != rhs.yoyInflationIndexCurves_ ||
         inflationCapFloorPriceSurfaces_ != rhs.inflationCapFloorPriceSurfaces_ || equityCurves_ != rhs.equityCurves_ ||
@@ -80,6 +80,7 @@ void TodaysMarketParameters::fromXML(XMLNode* node) {
     fxVolatilities_.clear();
     swaptionVolatilities_.clear();
     defaultCurves_.clear();
+    cdsVolatilities_.clear();
     swapIndices_.clear();
     capFloorVolatilities_.clear();
     zeroInflationIndexCurves_.clear();
@@ -108,6 +109,7 @@ void TodaysMarketParameters::fromXML(XMLNode* node) {
             tmp.fxVolatilitiesId = XMLUtils::getChildValue(n, "FxVolatilitiesId", false);
             tmp.swaptionVolatilitiesId = XMLUtils::getChildValue(n, "SwaptionVolatilitiesId", false);
             tmp.defaultCurvesId = XMLUtils::getChildValue(n, "DefaultCurvesId", false);
+            tmp.cdsVolatilitiesId = XMLUtils::getChildValue(n, "CDSVolatilitiesId", false);
             tmp.capFloorVolatilitiesId = XMLUtils::getChildValue(n, "CapFloorVolatilitiesId", false);
             tmp.zeroInflationIndexCurvesId = XMLUtils::getChildValue(n, "ZeroInflationIndexCurvesId", false);
             tmp.yoyInflationIndexCurvesId = XMLUtils::getChildValue(n, "YYInflationIndexCurvesId", false);
@@ -134,6 +136,8 @@ void TodaysMarketParameters::fromXML(XMLNode* node) {
                 tmp.capFloorVolatilitiesId = Market::defaultConfiguration;
             if (tmp.defaultCurvesId == "")
                 tmp.defaultCurvesId = Market::defaultConfiguration;
+            if (tmp.cdsVolatilitiesId == "")
+                tmp.cdsVolatilitiesId = Market::defaultConfiguration;
             if (tmp.zeroInflationIndexCurvesId == "")
                 tmp.zeroInflationIndexCurvesId = Market::defaultConfiguration;
             if (tmp.yoyInflationIndexCurvesId == "")
@@ -205,6 +209,11 @@ void TodaysMarketParameters::fromXML(XMLNode* node) {
             if (id == "")
                 id = Market::defaultConfiguration;
             addDefaultCurves(id, XMLUtils::getChildrenAttributesAndValues(n, "DefaultCurve", "name", false));
+        } else if (XMLUtils::getNodeName(n) == "CDSVolatilities") {
+            string id = XMLUtils::getAttribute(n, "id");
+            if (id == "")
+                id = Market::defaultConfiguration;
+            addCDSVolatilities(id, XMLUtils::getChildrenAttributesAndValues(n, "CDSVolatility", "name", false));
         } else if (XMLUtils::getNodeName(n) == "ZeroInflationIndexCurves") {
             string id = XMLUtils::getAttribute(n, "id");
             if (id == "")
@@ -287,6 +296,9 @@ XMLNode* TodaysMarketParameters::toXML(XMLDocument& doc) {
             }
             if (iterator->second.defaultCurvesId != "") {
                 XMLUtils::addChild(doc, configurationsNode, "DefaultCurvesId", iterator->second.defaultCurvesId);
+            }
+            if (iterator->second.cdsVolatilitiesId != "") {
+                XMLUtils::addChild(doc, configurationsNode, "CdsVolatilitiesId", iterator->second.cdsVolatilitiesId);
             }
             if (iterator->second.zeroInflationIndexCurvesId != "") {
                 XMLUtils::addChild(doc, configurationsNode, "ZeroInflationIndexCurvesId",
@@ -610,6 +622,7 @@ vector<string> TodaysMarketParameters::curveSpecs(const string& configuration) c
     curveSpecs(swaptionVolatilities_, swaptionVolatilitiesId(configuration), specs);
     curveSpecs(capFloorVolatilities_, capFloorVolatilitiesId(configuration), specs);
     curveSpecs(defaultCurves_, defaultCurvesId(configuration), specs);
+    curveSpecs(cdsVolatilities_, cdsVolatilitiesId(configuration), specs);
     curveSpecs(zeroInflationIndexCurves_, zeroInflationIndexCurvesId(configuration), specs);
     curveSpecs(yoyInflationIndexCurves_, yoyInflationIndexCurvesId(configuration), specs);
     curveSpecs(inflationCapFloorPriceSurfaces_, inflationCapFloorPriceSurfacesId(configuration), specs);

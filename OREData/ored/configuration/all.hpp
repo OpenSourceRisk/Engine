@@ -4,6 +4,7 @@
 #include <ored/configuration/capfloorvolcurveconfig.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/configuration/conventions.hpp>
+#include <ored/configuration/cdsvolcurveconfig.hpp>
 #include <ored/configuration/defaultcurveconfig.hpp>
 #include <ored/configuration/equitycurveconfig.hpp>
 #include <ored/configuration/equityvolcurveconfig.hpp>

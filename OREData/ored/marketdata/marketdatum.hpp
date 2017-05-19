@@ -87,7 +87,8 @@ public:
         EQUITY_FWD,
         EQUITY_DIVIDEND,
         EQUITY_OPTION,
-        BOND
+        BOND,
+        INDEX_CDS_OPTION
     };
 
     //! Supported market quote types
@@ -945,6 +946,33 @@ public:
     //@}
 private:
     string securityID_;
+};
+
+//! CDS Index Option data class
+/*!
+This class holds single market points of type
+- INDEX_CDS_OPTION
+Specific data comprise
+- index name
+- option expiry (either a date or a period)
+
+\ingroup marketdata
+*/
+class IndexCDSOptionQuote : public MarketDatum {
+public:
+    //! Constructor
+    IndexCDSOptionQuote(Real value, Date asofDate, const string& name, const string& indexName, const string& expiry)
+        : MarketDatum(value, asofDate, name, QuoteType::RATE_LNVOL, InstrumentType::INDEX_CDS_OPTION),
+          indexName_(indexName), expiry_(expiry) {}
+
+    //! \name Inspectors
+    //@{
+    const string& indexName() const { return indexName_; }
+    const string& expiry() const { return expiry_; }
+    //@}
+private:
+    string indexName_;
+    string expiry_;
 };
 }
 }

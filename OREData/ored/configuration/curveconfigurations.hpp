@@ -24,6 +24,7 @@
 #pragma once
 
 #include <ored/utilities/xmlutils.hpp>
+#include <ored/configuration/cdsvolcurveconfig.hpp>
 #include <ored/configuration/defaultcurveconfig.hpp>
 #include <ored/configuration/yieldcurveconfig.hpp>
 #include <ored/configuration/fxvolcurveconfig.hpp>
@@ -75,6 +76,8 @@ public:
     };
     const boost::shared_ptr<DefaultCurveConfig>& defaultCurveConfig(const string& curveID) const;
 
+    const boost::shared_ptr<CDSVolatilityCurveConfig>& cdsVolCurveConfig(const string& curveID) const;
+
     const boost::shared_ptr<InflationCurveConfig>& inflationCurveConfig(const string& curveID) const;
 
     boost::shared_ptr<InflationCurveConfig>& inflationCurveConfig(const string& curveID) {
@@ -110,6 +113,7 @@ private:
     std::map<std::string, boost::shared_ptr<SwaptionVolatilityCurveConfig>> swaptionVolCurveConfigs_;
     std::map<std::string, boost::shared_ptr<CapFloorVolatilityCurveConfig>> capFloorVolCurveConfigs_;
     std::map<std::string, boost::shared_ptr<DefaultCurveConfig>> defaultCurveConfigs_;
+    std::map<std::string, boost::shared_ptr<CDSVolatilityCurveConfig>> cdsVolCurveConfigs_;
     std::map<std::string, boost::shared_ptr<InflationCurveConfig>> inflationCurveConfigs_;
     std::map<std::string, boost::shared_ptr<InflationCapFloorPriceSurfaceConfig>> inflationCapFloorPriceSurfaceConfigs_;
     std::map<std::string, boost::shared_ptr<EquityCurveConfig>> equityCurveConfigs_;

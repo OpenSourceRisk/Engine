@@ -58,6 +58,12 @@ const boost::shared_ptr<DefaultCurveConfig>& CurveConfigurations::defaultCurveCo
     return it->second;
 }
 
+const boost::shared_ptr<CDSVolatilityCurveConfig>& CurveConfigurations::cdsVolCurveConfig(const string& curveID) const {
+    auto it = cdsVolCurveConfigs_.find(curveID);
+    QL_REQUIRE(it != cdsVolCurveConfigs_.end(), "No curve id for " << curveID);
+    return it->second;
+}
+
 const boost::shared_ptr<InflationCurveConfig>& CurveConfigurations::inflationCurveConfig(const string& curveID) const {
     auto it = inflationCurveConfigs_.find(curveID);
     QL_REQUIRE(it != inflationCurveConfigs_.end(), "No curve id for " << curveID);
