@@ -125,9 +125,8 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     defaultNames_ = XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true);
     defaultTenors_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Tenors", true);
     XMLNode* survivalProbabilitySimNode = XMLUtils::getChildNode(nodeChild, "SimulateSurvivalProbabilities");
-    if (survivalProbabilitySimNode) {
+    if (survivalProbabilitySimNode)
         survivalProbabilitySimulate_ = ore::data::parseBool(XMLUtils::getNodeValue(survivalProbabilitySimNode));
-    }
     XMLNode* recoveryRateSimNode = XMLUtils::getChildNode(nodeChild, "SimulateRecoveryRates");
     if (recoveryRateSimNode)
         recoveryRateSimulate_ = ore::data::parseBool(XMLUtils::getNodeValue(recoveryRateSimNode));

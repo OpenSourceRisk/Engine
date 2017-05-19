@@ -421,6 +421,9 @@
     <ClInclude Include="qle\pricingengines\blackcdsoptionengine.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\survivalprobabilitycurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">

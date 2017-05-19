@@ -34,7 +34,7 @@ namespace analytics {
   \ingroup utilities
  */
 class ObservationMode : public QuantLib::Singleton<ObservationMode> {
-    friend class Singleton<ObservationMode>;
+    friend class QuantLib::Singleton<ObservationMode>;
 
 private:
     ObservationMode() : mode_(Mode::None) {}

@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2017 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,25 +16,28 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file test/survivalprobabilitycurve.hpp
-    \brief interpolated survival probability curve test
+/*! \file test/cms.hpp
+    \brief cms test
+    \ingroup tests
 */
 
-#ifndef quantext_test_survivalprobabilitycurve_hpp
-#define quantext_test_survivalprobabilitycurve_hpp
+#pragma once
 
 #include <boost/test/unit_test.hpp>
 
 namespace testsuite {
 
-//! InterpolatedSurvivalProbabilityCurve tests
-class SurvivalProbabilityCurveTest {
+//! Test CMS Swap pricing
+/*!
+\ingroup tests
+*/
+class CmsTest {
 public:
-    /*! Test the survival probability curve against a corresponding QuantLib curve. */
-    static void testSurvivalProbabilityCurve();
-
+    //! Test CMS Swap pricing
+    static void testCMSAnalyticHagan();
+    static void testCMSNumericalHagan();
+    static void testCMSLinearTsr();
+    static void cmsCapFloor();
     static boost::unit_test_framework::test_suite* suite();
 };
 } // namespace testsuite
-
-#endif
