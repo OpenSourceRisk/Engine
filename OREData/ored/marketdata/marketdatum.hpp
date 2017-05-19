@@ -1002,10 +1002,5 @@ private:
     string indexName_;
     string expiry_;
 };
-<<<<<<< HEAD
-}
-}
-=======
 } // namespace data
 } // namespace ore
->>>>>>> origin/peter_credit
