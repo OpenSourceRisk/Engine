@@ -42,7 +42,7 @@ namespace analytics {
 
 //! Description of sensitivity shift scenarios
 /*! \ingroup scenario
-*/
+ */
 class SensitivityScenarioData : public XMLSerializable {
 public:
     enum class ShiftType { Absolute, Relative };
@@ -213,5 +213,5 @@ private:
 
     vector<pair<string, string>> crossGammaFilter_;
 };
-}
-}
+} // namespace analytics
+} // namespace ore

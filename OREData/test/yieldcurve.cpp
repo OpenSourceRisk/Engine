@@ -16,11 +16,11 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <test/yieldcurve.hpp>
-#include <ored/marketdata/yieldcurve.hpp>
 #include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/marketdatumparser.hpp>
+#include <ored/marketdata/yieldcurve.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <test/yieldcurve.hpp>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/make_shared.hpp>
@@ -76,7 +76,7 @@ MarketDataLoader::MarketDataLoader() {
         data_[date].push_back(parseMarketDatum(date, key, value));
     }
 }
-}
+} // namespace
 
 namespace testsuite {
 
@@ -134,4 +134,4 @@ test_suite* YieldCurveTest::suite() {
     suite->add(BOOST_TEST_CASE(&YieldCurveTest::testBootstrapAndFixings));
     return suite;
 }
-}
+} // namespace testsuite

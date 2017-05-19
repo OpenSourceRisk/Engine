@@ -16,12 +16,12 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <algorithm>
 #include <ored/marketdata/swaptionvolcurve.hpp>
 #include <ored/utilities/log.hpp>
-#include <ql/termstructures/volatility/swaption/swaptionvolmatrix.hpp>
 #include <ql/termstructures/volatility/swaption/swaptionconstantvol.hpp>
+#include <ql/termstructures/volatility/swaption/swaptionvolmatrix.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
-#include <algorithm>
 
 using namespace QuantLib;
 using namespace std;
@@ -181,5 +181,5 @@ SwaptionVolCurve::SwaptionVolCurve(Date asof, SwaptionVolatilityCurveSpec spec, 
         QL_FAIL("swaption vol curve building failed: unknown error");
     }
 }
-}
-}
+} // namespace data
+} // namespace ore

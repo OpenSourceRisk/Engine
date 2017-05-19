@@ -64,6 +64,13 @@ const boost::shared_ptr<CDSVolatilityCurveConfig>& CurveConfigurations::cdsVolCu
     return it->second;
 }
 
+const boost::shared_ptr<BaseCorrelationCurveConfig>&
+CurveConfigurations::baseCorrelationCurveConfig(const string& curveID) const {
+    auto it = baseCorrelationCurveConfigs_.find(curveID);
+    QL_REQUIRE(it != baseCorrelationCurveConfigs_.end(), "No curve id for " << curveID);
+    return it->second;
+}
+
 const boost::shared_ptr<InflationCurveConfig>& CurveConfigurations::inflationCurveConfig(const string& curveID) const {
     auto it = inflationCurveConfigs_.find(curveID);
     QL_REQUIRE(it != inflationCurveConfigs_.end(), "No curve id for " << curveID);
@@ -180,6 +187,40 @@ void CurveConfigurations::fromXML(XMLNode* node) {
         }
     }
 
+    // Load CDSVolCurves
+    XMLNode* cdsVolsNode = XMLUtils::getChildNode(node, "CDSVolatilities");
+    if (cdsVolsNode) {
+        for (XMLNode* child = XMLUtils::getChildNode(cdsVolsNode, "CDSVolatility"); child;
+             child = XMLUtils::getNextSibling(child, "CDSVolatility")) {
+            boost::shared_ptr<CDSVolatilityCurveConfig> cdsVolConfig(new CDSVolatilityCurveConfig());
+            try {
+                cdsVolConfig->fromXML(child);
+                const string& id = cdsVolConfig->curveID();
+                cdsVolCurveConfigs_[id] = cdsVolConfig;
+                DLOG("Added CDS volatility config with ID = " << id);
+            } catch (std::exception& ex) {
+                ALOG("Exception parsing CDS volatility config: " << ex.what());
+            }
+        }
+    }
+
+    // Load BaseCorrelationCurves
+    XMLNode* bcNode = XMLUtils::getChildNode(node, "BaseCorrelations");
+    if (bcNode) {
+        for (XMLNode* child = XMLUtils::getChildNode(bcNode, "BaseCorrelation"); child;
+             child = XMLUtils::getNextSibling(child, "BaseCorrelation")) {
+            boost::shared_ptr<BaseCorrelationCurveConfig> bcConfig(new BaseCorrelationCurveConfig());
+            try {
+                bcConfig->fromXML(child);
+                const string& id = bcConfig->curveID();
+                baseCorrelationCurveConfigs_[id] = bcConfig;
+                DLOG("Added Base Correlation config with ID = " << id);
+            } catch (std::exception& ex) {
+                ALOG("Exception parsing Base Correlation config: " << ex.what());
+            }
+        }
+    }
+
     // Load EquityCurves
     XMLNode* equityCurvesNode = XMLUtils::getChildNode(node, "EquityCurves");
     if (equityCurvesNode) {
@@ -280,6 +321,11 @@ XMLNode* CurveConfigurations::toXML(XMLDocument& doc) {
     for (auto it : defaultCurveConfigs_)
         XMLUtils::appendNode(node, it.second->toXML(doc));
 
+    node = doc.allocNode("CDSVolatilities");
+    XMLUtils::appendNode(parent, node);
+    for (auto it : cdsVolCurveConfigs_)
+        XMLUtils::appendNode(node, it.second->toXML(doc));
+
     node = doc.allocNode("InflationCurves");
     XMLUtils::appendNode(parent, node);
     for (auto it : inflationCurveConfigs_)
@@ -302,5 +348,5 @@ XMLNode* CurveConfigurations::toXML(XMLDocument& doc) {
 
     return parent;
 }
-}
-}
+} // namespace data
+} // namespace ore

@@ -55,8 +55,8 @@ void DepositTest::testRepricing() {
     depo.setPricingEngine(engine);
 
     Real tol = 1.0E-8;
-    BOOST_CHECK_MESSAGE(std::abs(depo.NPV()) <= tol, "Deposit NPV(" << depo.NPV()
-                                                                    << ") could not be verified, expected 0.0");
+    BOOST_CHECK_MESSAGE(std::abs(depo.NPV()) <= tol,
+                        "Deposit NPV(" << depo.NPV() << ") could not be verified, expected 0.0");
 
     BOOST_CHECK_MESSAGE(std::abs(depo.fairRate() - 0.02) <= tol,
                         "Deposit fair rate (" << depo.fairRate() << ") could not be verified, expected 0.02");
@@ -67,4 +67,4 @@ test_suite* DepositTest::suite() {
     suite->add(BOOST_TEST_CASE(&DepositTest::testRepricing));
     return suite;
 }
-}
+} // namespace testsuite

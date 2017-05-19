@@ -23,13 +23,13 @@
 
 #pragma once
 
-#include <vector>
 #include <map>
 #include <ostream>
+#include <vector>
 
-#include <qle/models/crossassetmodel.hpp>
 #include <ored/marketdata/market.hpp>
 #include <ored/model/fxbsdata.hpp>
+#include <qle/models/crossassetmodel.hpp>
 
 using namespace QuantLib;
 
@@ -77,5 +77,5 @@ private:
     std::vector<boost::shared_ptr<CalibrationHelper>> optionBasket_;
     Array optionExpiries_;
 };
-}
-}
+} // namespace data
+} // namespace ore

@@ -16,10 +16,10 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/instruments/oibasisswap.hpp>
-#include <ql/cashflows/overnightindexedcoupon.hpp>
 #include <ql/cashflows/fixedratecoupon.hpp>
 #include <ql/cashflows/iborcoupon.hpp>
+#include <ql/cashflows/overnightindexedcoupon.hpp>
+#include <qle/instruments/oibasisswap.hpp>
 
 using namespace QuantLib;
 
@@ -107,4 +107,4 @@ Real OvernightIndexedBasisSwap::overnightLegNPV() const {
     QL_REQUIRE(legNPV_[1] != Null<Real>(), "result not available");
     return legNPV_[1];
 }
-}
+} // namespace QuantExt

@@ -79,7 +79,13 @@
     <ModelParameters/>
     <Engine>DiscountingRiskyBondEngine</Engine>
     <EngineParameters>
-        <Parameter name="TimestepPeriod">6M</Parameter>
+      <Parameter name="TimestepPeriod">6M</Parameter>
     </EngineParameters>
+  </Product>
+  <Product type="CreditDefaultSwap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>MidPointCdsEngine</Engine>
+    <EngineParameters/>
   </Product>
 </PricingEngines>

@@ -32,8 +32,8 @@
 #include <boost/accumulators/statistics/mean.hpp>
 #include <boost/accumulators/statistics/stats.hpp>
 #include <boost/accumulators/statistics/variance.hpp>
-#include <boost/type_traits.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/type_traits.hpp>
 
 #include <vector>
 
@@ -246,8 +246,8 @@ void StabilisedGLLS::calculate(
 template <class xType, class vContainer>
 Real StabilisedGLLS::eval(xType x, vContainer& v,
                           typename boost::enable_if<typename boost::is_arithmetic<xType>::type>::type*) {
-    QL_REQUIRE(v.size() == glls_->dim(), "StabilisedGLLS::eval(): v size (" << v.size() << ") must be equal to dim ("
-                                                                            << glls_->dim());
+    QL_REQUIRE(v.size() == glls_->dim(),
+               "StabilisedGLLS::eval(): v size (" << v.size() << ") must be equal to dim (" << glls_->dim());
     Real tmp = 0.0;
     for (Size i = 0; i < v.size(); ++i) {
         tmp += glls_->coefficients()[i] * v[i]((x + xShift_[0]) * xMultiplier_[0]);
@@ -258,8 +258,8 @@ Real StabilisedGLLS::eval(xType x, vContainer& v,
 template <class xType, class vContainer>
 Real StabilisedGLLS::eval(xType x, vContainer& v,
                           typename boost::disable_if<typename boost::is_arithmetic<xType>::type>::type*) {
-    QL_REQUIRE(v.size() == glls_->dim(), "StabilisedGLLS::eval(): v size (" << v.size() << ") must be equal to dim ("
-                                                                            << glls_->dim());
+    QL_REQUIRE(v.size() == glls_->dim(),
+               "StabilisedGLLS::eval(): v size (" << v.size() << ") must be equal to dim (" << glls_->dim());
     Real tmp = 0.0;
     for (Size i = 0; i < v.size(); ++i) {
         xType xNew(x.end() - x.begin());

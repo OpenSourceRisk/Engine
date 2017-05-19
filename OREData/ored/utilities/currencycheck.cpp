@@ -41,5 +41,5 @@ bool checkCurrency(const string& s) {
     auto it = std::find(codes.begin(), codes.end(), s);
     return it != codes.end();
 }
-}
-}
+} // namespace data
+} // namespace ore

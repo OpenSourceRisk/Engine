@@ -23,8 +23,8 @@
 
 #pragma once
 
-#include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
+#include <ored/portfolio/enginefactory.hpp>
 #include <ored/utilities/log.hpp>
 
 #include <qle/models/lgm.hpp>
@@ -89,7 +89,7 @@ public:
 
 //! Implementation of BermudanSwaptionEngineBuilder using LGM Grid pricer
 /*! \ingroup portfolio
-*/
+ */
 class LGMGridBermudanSwaptionEngineBuilder : public LGMBermudanSwaptionEngineBuilder {
 public:
     LGMGridBermudanSwaptionEngineBuilder() : LGMBermudanSwaptionEngineBuilder("Grid") {}

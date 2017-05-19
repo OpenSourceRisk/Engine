@@ -25,15 +25,15 @@
 
 #include <vector>
 
-#include <ql/types.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
+#include <ql/types.hpp>
 
 #include <qle/models/crossassetmodel.hpp>
 
-#include <ored/marketdata/market.hpp>
 #include <ored/configuration/conventions.hpp>
-#include <ored/utilities/xmlutils.hpp>
+#include <ored/marketdata/market.hpp>
 #include <ored/model/lgmdata.hpp>
+#include <ored/utilities/xmlutils.hpp>
 
 using namespace QuantLib;
 
@@ -98,5 +98,5 @@ private:
     std::vector<std::string> optionExpiries_;
     std::vector<std::string> optionStrikes_;
 };
-}
-}
+} // namespace data
+} // namespace ore

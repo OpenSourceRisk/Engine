@@ -24,10 +24,10 @@
 #ifndef quantext_black_variance_curve_3_hpp
 #define quantext_black_variance_curve_3_hpp
 
-#include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 #include <ql/math/interpolation.hpp>
 #include <ql/patterns/lazyobject.hpp>
 #include <ql/quote.hpp>
+#include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 
 using namespace QuantLib;
 
@@ -95,6 +95,6 @@ inline void BlackVarianceCurve3::accept(AcyclicVisitor& v) {
     else
         BlackVarianceTermStructure::accept(v);
 }
-}
+} // namespace QuantExt
 
 #endif

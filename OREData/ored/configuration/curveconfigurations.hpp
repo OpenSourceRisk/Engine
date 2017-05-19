@@ -24,16 +24,18 @@
 #pragma once
 
 #include <ored/utilities/xmlutils.hpp>
+#include <ored/configuration/basecorrelationcurveconfig.hpp>
+#include <ored/configuration/capfloorvolcurveconfig.hpp>
 #include <ored/configuration/cdsvolcurveconfig.hpp>
 #include <ored/configuration/defaultcurveconfig.hpp>
-#include <ored/configuration/yieldcurveconfig.hpp>
+#include <ored/configuration/equitycurveconfig.hpp>
+#include <ored/configuration/equityvolcurveconfig.hpp>
 #include <ored/configuration/fxvolcurveconfig.hpp>
 #include <ored/configuration/inflationcapfloorpricesurfaceconfig.hpp>
 #include <ored/configuration/inflationcurveconfig.hpp>
 #include <ored/configuration/swaptionvolcurveconfig.hpp>
-#include <ored/configuration/capfloorvolcurveconfig.hpp>
-#include <ored/configuration/equitycurveconfig.hpp>
-#include <ored/configuration/equityvolcurveconfig.hpp>
+#include <ored/configuration/yieldcurveconfig.hpp>
+#include <ored/utilities/xmlutils.hpp>
 
 using ore::data::XMLSerializable;
 using ore::data::XMLNode;
@@ -75,6 +77,8 @@ public:
         return defaultCurveConfigs_[curveID];
     };
     const boost::shared_ptr<DefaultCurveConfig>& defaultCurveConfig(const string& curveID) const;
+    const boost::shared_ptr<CDSVolatilityCurveConfig>& cdsVolCurveConfig(const string& curveID) const;
+    const boost::shared_ptr<BaseCorrelationCurveConfig>& baseCorrelationCurveConfig(const string& curveID) const;
 
     const boost::shared_ptr<CDSVolatilityCurveConfig>& cdsVolCurveConfig(const string& curveID) const;
 
@@ -114,10 +118,11 @@ private:
     std::map<std::string, boost::shared_ptr<CapFloorVolatilityCurveConfig>> capFloorVolCurveConfigs_;
     std::map<std::string, boost::shared_ptr<DefaultCurveConfig>> defaultCurveConfigs_;
     std::map<std::string, boost::shared_ptr<CDSVolatilityCurveConfig>> cdsVolCurveConfigs_;
+    std::map<std::string, boost::shared_ptr<BaseCorrelationCurveConfig>> baseCorrelationCurveConfigs_;
     std::map<std::string, boost::shared_ptr<InflationCurveConfig>> inflationCurveConfigs_;
     std::map<std::string, boost::shared_ptr<InflationCapFloorPriceSurfaceConfig>> inflationCapFloorPriceSurfaceConfigs_;
     std::map<std::string, boost::shared_ptr<EquityCurveConfig>> equityCurveConfigs_;
     std::map<std::string, boost::shared_ptr<EquityVolatilityCurveConfig>> equityVolCurveConfigs_;
 };
-}
-}
+} // namespace data
+} // namespace ore

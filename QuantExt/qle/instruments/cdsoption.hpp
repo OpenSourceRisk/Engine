@@ -3,7 +3,7 @@
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
-# for transparent pricing and risk analysis - http://opensourcerisk.org
+ for transparent pricing and risk analysis - http://opensourcerisk.org
 
  ORE is free software: you can redistribute it and/or modify it
  under the terms of the Modified BSD License.  You should have received a
@@ -42,15 +42,16 @@
 #ifndef quantext_cds_option_hpp
 #define quantext_cds_option_hpp
 
+#include <qle/instruments/creditdefaultswap.hpp>
+
 #include <ql/option.hpp>
-#include <ql/instruments/creditdefaultswap.hpp>
 
 using namespace QuantLib;
 
 namespace QuantLib {
 class Quote;
 class YieldTermStructure;
-}
+} // namespace QuantLib
 
 namespace QuantExt {
 
@@ -116,6 +117,6 @@ public:
 
 //! base class for swaption engines
 class CdsOption::engine : public GenericEngine<CdsOption::arguments, CdsOption::results> {};
-}
+} // namespace QuantExt
 
 #endif

@@ -16,12 +16,12 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/make_shared.hpp>
 #include <ored/marketdata/fxtriangulation.hpp>
-#include <ql/quotes/simplequote.hpp>
+#include <ql/errors.hpp>
 #include <ql/quotes/compositequote.hpp>
 #include <ql/quotes/derivedquote.hpp>
-#include <ql/errors.hpp>
-#include <boost/make_shared.hpp>
+#include <ql/quotes/simplequote.hpp>
 
 using namespace QuantLib;
 using std::string;
@@ -53,7 +53,7 @@ public:
     Inverse() {}
     Real operator()(Real a) const { return 1.0 / a; }
 };
-}
+} // namespace
 
 namespace ore {
 namespace data {
@@ -139,5 +139,5 @@ Handle<Quote> FXTriangulation::getQuote(const string& pair) const {
 
     QL_FAIL("Unable to build FXQuote for ccy pair " << pair);
 }
-}
-}
+} // namespace data
+} // namespace ore

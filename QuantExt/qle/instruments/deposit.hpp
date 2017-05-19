@@ -96,6 +96,6 @@ public:
 };
 
 class Deposit::engine : public GenericEngine<Deposit::arguments, Deposit::results> {};
-}
+} // namespace QuantExt
 
 #endif

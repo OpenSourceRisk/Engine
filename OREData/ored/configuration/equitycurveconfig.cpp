@@ -73,5 +73,5 @@ XMLNode* EquityCurveConfig::toXML(XMLDocument& doc) {
 
     return node;
 }
-}
-}
+} // namespace data
+} // namespace ore

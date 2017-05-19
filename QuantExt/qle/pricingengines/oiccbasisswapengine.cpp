@@ -21,10 +21,10 @@
     \ingroup
 */
 
-#include <qle/pricingengines/oiccbasisswapengine.hpp>
+#include <iostream>
 #include <ql/cashflows/cashflows.hpp>
 #include <ql/utilities/dataformatters.hpp>
-#include <iostream>
+#include <qle/pricingengines/oiccbasisswapengine.hpp>
 
 using namespace QuantLib;
 
@@ -85,4 +85,4 @@ void OvernightIndexedCrossCcyBasisSwapEngine::calculate() const {
     results_.fairPayLegSpread = arguments_.paySpread - results_.value / (results_.legBPS[0] / basisPoint);
     results_.fairRecLegSpread = arguments_.recSpread - results_.value / (results_.legBPS[1] / basisPoint);
 }
-}
+} // namespace QuantExt

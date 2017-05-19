@@ -21,27 +21,26 @@
     \ingroup
 */
 
+#include <ored/marketdata/basecorrelationcurve.hpp>
 #include <ored/marketdata/capfloorvolcurve.hpp>
 #include <ored/marketdata/cdsvolcurve.hpp>
 #include <ored/marketdata/curveloader.hpp>
 #include <ored/marketdata/curvespecparser.hpp>
 #include <ored/marketdata/defaultcurve.hpp>
+#include <ored/marketdata/equitycurve.hpp>
+#include <ored/marketdata/equityvolcurve.hpp>
 #include <ored/marketdata/fxspot.hpp>
 #include <ored/marketdata/fxvolcurve.hpp>
 #include <ored/marketdata/inflationcapfloorpricesurface.hpp>
 #include <ored/marketdata/inflationcurve.hpp>
+#include <ored/marketdata/securityrecoveryrate.hpp>
+#include <ored/marketdata/securityspread.hpp>
 #include <ored/marketdata/swaptionvolcurve.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
-#include <qle/indexes/inflationindexwrapper.hpp>
-#include <ored/marketdata/securityspread.hpp>
-#include <ored/marketdata/securityrecoveryrate.hpp>
-#include <ored/marketdata/curveloader.hpp>
-#include <ored/utilities/log.hpp>
 #include <ored/utilities/indexparser.hpp>
-#include <ored/marketdata/capfloorvolcurve.hpp>
-#include <ored/marketdata/equitycurve.hpp>
-#include <ored/marketdata/equityvolcurve.hpp>
+#include <ored/utilities/log.hpp>
+#include <qle/indexes/inflationindexwrapper.hpp>
 
 using namespace std;
 using namespace QuantLib;
@@ -68,6 +67,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
     map<string, boost::shared_ptr<CapFloorVolCurve>> requiredCapFloorVolCurves;
     map<string, boost::shared_ptr<DefaultCurve>> requiredDefaultCurves;
     map<string, boost::shared_ptr<CDSVolCurve>> requiredCDSVolCurves;
+    map<string, boost::shared_ptr<BaseCorrelationCurve>> requiredBaseCorrelationCurves;
     map<string, boost::shared_ptr<InflationCurve>> requiredInflationCurves;
     map<string, boost::shared_ptr<InflationCapFloorPriceSurface>> requiredInflationCapFloorPriceSurfaces;
     map<string, boost::shared_ptr<EquityCurve>> requiredEquityCurves;
@@ -302,7 +302,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                 break;
             }
 
-                        case CurveSpec::CurveType::CDSVolatility: {
+            case CurveSpec::CurveType::CDSVolatility: {
                 // convert to cds vol spec
                 boost::shared_ptr<CDSVolatilityCurveSpec> cdsvolspec =
                     boost::dynamic_pointer_cast<CDSVolatilityCurveSpec>(spec);
@@ -325,6 +325,37 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                                               << configuration.first);
                         cdsVols_[make_pair(configuration.first, it.first)] =
                             Handle<BlackVolTermStructure>(itr->second->volTermStructure());
+                    }
+                }
+                break;
+            }
+
+            case CurveSpec::CurveType::BaseCorrelation: {
+                // convert to base correlation spec
+                boost::shared_ptr<BaseCorrelationCurveSpec> baseCorrelationSpec =
+                    boost::dynamic_pointer_cast<BaseCorrelationCurveSpec>(spec);
+                QL_REQUIRE(baseCorrelationSpec, "Failed to convert spec " << *spec);
+
+                // have we built the curve already ?
+                auto itr = requiredBaseCorrelationCurves.find(baseCorrelationSpec->name());
+                if (itr == requiredBaseCorrelationCurves.end()) {
+                    // build the curve
+                    LOG("Building BaseCorrelation for asof " << asof);
+                    boost::shared_ptr<BaseCorrelationCurve> baseCorrelationCurve =
+                        boost::make_shared<BaseCorrelationCurve>(asof, *baseCorrelationSpec, loader, curveConfigs);
+                    itr = requiredBaseCorrelationCurves
+                              .insert(make_pair(baseCorrelationSpec->name(), baseCorrelationCurve))
+                              .first;
+                }
+
+                // add the handle to the Market Map (possible lots of times for proxies)
+                for (const auto& it : params.baseCorrelations(configuration.first)) {
+                    if (it.second == spec->name()) {
+                        LOG("Adding Base Correlatin (" << it.first << ") with spec " << *baseCorrelationSpec
+                                                       << " to configuration " << configuration.first);
+                        baseCorrelations_[make_pair(configuration.first, it.first)] =
+                            Handle<BaseCorrelationTermStructure<BilinearInterpolation>>(
+                                itr->second->baseCorrelationTermStructure());
                     }
                 }
                 break;
@@ -411,8 +442,8 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                     boost::shared_ptr<InflationCapFloorPriceSurface> inflationCapFloorPriceSurface =
                         boost::make_shared<InflationCapFloorPriceSurface>(asof, *infcapfloorspec, loader, curveConfigs,
                                                                           requiredYieldCurves, requiredInflationCurves);
-                    itr = requiredInflationCapFloorPriceSurfaces.insert(make_pair(infcapfloorspec->name(),
-                                                                                  inflationCapFloorPriceSurface))
+                    itr = requiredInflationCapFloorPriceSurfaces
+                              .insert(make_pair(infcapfloorspec->name(), inflationCapFloorPriceSurface))
                               .first;
                 }
                 for (const auto it : params.inflationCapFloorPriceSurfaces(configuration.first)) {
@@ -514,8 +545,8 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
             case CurveSpec::CurveType::SecurityRecoveryRate: {
                 boost::shared_ptr<SecurityRecoveryRateSpec> securityrecoveryratespec =
                     boost::dynamic_pointer_cast<SecurityRecoveryRateSpec>(spec);
-                QL_REQUIRE(securityrecoveryratespec, "Failed to convert spec " << *spec
-                                                                               << " to security recovery rate spec");
+                QL_REQUIRE(securityrecoveryratespec,
+                           "Failed to convert spec " << *spec << " to security recovery rate spec");
 
                 // have we built the curve already?
                 auto itr = requiredSecurityRecoveryRates.find(securityrecoveryratespec->securityID());
@@ -524,8 +555,8 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                     LOG("Building SecurityRecoveryRates for asof " << asof);
                     boost::shared_ptr<SecurityRecoveryRate> securityRecoveryRate =
                         boost::make_shared<SecurityRecoveryRate>(asof, *securityrecoveryratespec, loader);
-                    itr = requiredSecurityRecoveryRates.insert(make_pair(securityrecoveryratespec->securityID(),
-                                                                         securityRecoveryRate))
+                    itr = requiredSecurityRecoveryRates
+                              .insert(make_pair(securityrecoveryratespec->securityID(), securityRecoveryRate))
                               .first;
                 }
 
@@ -561,5 +592,5 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
     } // loop over configurations
 
 } // CTOR
-} // namesapce marketdata
+} // namespace data
 } // namespace ore

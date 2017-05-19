@@ -14,6 +14,8 @@ libOREDataMarketData_la_SOURCES = \
 	curvespec.cpp \
 	curvespecparser.cpp \
 	defaultcurve.cpp \
+	cdsvolcurve.cpp \
+	basecorrelationcurve.cpp \
 	equitycurve.cpp \
 	equityvolcurve.cpp \
 	fixings.cpp \
@@ -43,6 +45,8 @@ this_include_HEADERS = \
 	curvespec.hpp \
 	curvespecparser.hpp \
 	defaultcurve.hpp \
+	cdsvolcurve.hpp \
+	basecorrelationcurve.hpp \
 	equitycurve.hpp \
 	equityvolcurve.hpp \
 	fixings.hpp \

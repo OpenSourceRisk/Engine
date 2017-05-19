@@ -16,14 +16,14 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <algorithm>
 #include <ored/marketdata/equityvolcurve.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
-#include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
-#include <ql/time/daycounters/actual365fixed.hpp>
+#include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
-#include <algorithm>
+#include <ql/time/daycounters/actual365fixed.hpp>
 
 using namespace QuantLib;
 using namespace std;
@@ -75,19 +75,20 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
         } else {
             vector<Date> dates(quotes.size());
             vector<Volatility> atmVols(quotes.size());
-            std::sort(quotes.begin(), quotes.end(), [asof](const boost::shared_ptr<EquityOptionQuote>& a,
-                                                           const boost::shared_ptr<EquityOptionQuote>& b) -> bool {
-                Date a_tmp_date, b_tmp_date;
-                Period a_tmp_per, b_tmp_per;
-                bool a_tmp_isDate, b_tmp_isDate;
-                parseDateOrPeriod(a->expiry(), a_tmp_date, a_tmp_per, a_tmp_isDate);
-                if (!a_tmp_isDate)
-                    a_tmp_date = WeekendsOnly().adjust(asof + a_tmp_per);
-                parseDateOrPeriod(b->expiry(), b_tmp_date, b_tmp_per, b_tmp_isDate);
-                if (!b_tmp_isDate)
-                    b_tmp_date = WeekendsOnly().adjust(asof + b_tmp_per);
-                return a_tmp_date < b_tmp_date;
-            });
+            std::sort(quotes.begin(), quotes.end(),
+                      [asof](const boost::shared_ptr<EquityOptionQuote>& a,
+                             const boost::shared_ptr<EquityOptionQuote>& b) -> bool {
+                          Date a_tmp_date, b_tmp_date;
+                          Period a_tmp_per, b_tmp_per;
+                          bool a_tmp_isDate, b_tmp_isDate;
+                          parseDateOrPeriod(a->expiry(), a_tmp_date, a_tmp_per, a_tmp_isDate);
+                          if (!a_tmp_isDate)
+                              a_tmp_date = WeekendsOnly().adjust(asof + a_tmp_per);
+                          parseDateOrPeriod(b->expiry(), b_tmp_date, b_tmp_per, b_tmp_isDate);
+                          if (!b_tmp_isDate)
+                              b_tmp_date = WeekendsOnly().adjust(asof + b_tmp_per);
+                          return a_tmp_date < b_tmp_date;
+                      });
             for (Size i = 0; i < quotes.size(); i++) {
                 Date tmpDate;
                 Period tmpPer;
@@ -109,5 +110,5 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
         QL_FAIL("equity vol curve building failed: unknown error");
     }
 }
-}
-}
+} // namespace data
+} // namespace ore

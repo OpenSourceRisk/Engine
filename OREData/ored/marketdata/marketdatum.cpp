@@ -16,9 +16,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/lexical_cast.hpp>
 #include <ored/marketdata/marketdatum.hpp>
 #include <ored/utilities/parsers.hpp>
-#include <boost/lexical_cast.hpp>
 
 using boost::lexical_cast;
 using boost::bad_lexical_cast;
@@ -79,5 +79,5 @@ QuantLib::Size SeasonalityQuote::applyMonth() const {
     }
     return applyMonth;
 }
-}
-}
+} // namespace data
+} // namespace ore

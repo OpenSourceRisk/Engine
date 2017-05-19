@@ -8,6 +8,8 @@
 #include <ored/marketdata/curvespec.hpp>
 #include <ored/marketdata/curvespecparser.hpp>
 #include <ored/marketdata/defaultcurve.hpp>
+#include <ored/marketdata/cdsvolcurve.hpp>
+#include <ored/marketdata/basecorrelationcurve.hpp>
 #include <ored/marketdata/equitycurve.hpp>
 #include <ored/marketdata/equityvolcurve.hpp>
 #include <ored/marketdata/fixings.hpp>

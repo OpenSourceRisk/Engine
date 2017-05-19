@@ -129,6 +129,6 @@ private:
     boost::shared_ptr<PricingEngine> engine_;
     boost::shared_ptr<AverageONIndexedCouponPricer> onCouponPricer_;
 };
-}
+} // namespace QuantExt
 
 #endif

@@ -16,13 +16,13 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ql/time/schedule.hpp>
 #include <ql/indexes/interestrateindex.hpp>
+#include <ql/time/schedule.hpp>
 #include <ql/utilities/vectors.hpp>
 
+#include <qle/cashflows/couponpricer.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp>
 #include <qle/cashflows/subperiodscouponpricer.hpp>
-#include <qle/cashflows/couponpricer.hpp>
 
 using namespace QuantLib;
 
@@ -189,4 +189,4 @@ SubPeriodsLeg::operator Leg() const {
 
     return cashflows;
 }
-}
+} // namespace QuantExt

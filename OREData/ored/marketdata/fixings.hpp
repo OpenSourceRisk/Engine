@@ -23,9 +23,9 @@
 
 #pragma once
 
+#include <boost/shared_ptr.hpp>
 #include <ored/marketdata/marketdatum.hpp>
 #include <ql/time/date.hpp>
-#include <boost/shared_ptr.hpp>
 #include <vector>
 
 namespace ore {
@@ -49,5 +49,5 @@ struct Fixing {
 
 //! Utility to write a vector of fixings in the QuantLib index manager's fixing history
 void applyFixings(const std::vector<Fixing>& fixings);
-}
-}
+} // namespace data
+} // namespace ore

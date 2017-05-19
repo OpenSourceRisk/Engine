@@ -19,10 +19,10 @@
 #include <qle/instruments/currencyswap.hpp>
 
 #include <ql/cashflows/cashflows.hpp>
+#include <ql/cashflows/cashflowvectors.hpp>
 #include <ql/cashflows/coupon.hpp>
 #include <ql/cashflows/iborcoupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
-#include <ql/cashflows/cashflowvectors.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 
 using namespace QuantLib;
@@ -46,10 +46,10 @@ CurrencySwap::CurrencySwap(const std::vector<Leg>& legs, const std::vector<bool>
     : legs_(legs), payer_(legs.size(), 1.0), currency_(currency), legNPV_(legs.size(), 0.0),
       inCcyLegNPV_(legs.size(), 0.0), legBPS_(legs.size(), 0.0), inCcyLegBPS_(legs.size(), 0.0),
       startDiscounts_(legs.size(), 0.0), endDiscounts_(legs.size(), 0.0), npvDateDiscount_(0.0) {
-    QL_REQUIRE(payer.size() == legs_.size(), "size mismatch between payer (" << payer.size() << ") and legs ("
-                                                                             << legs_.size() << ")");
-    QL_REQUIRE(currency.size() == legs_.size(), "size mismatch between currency (" << currency.size() << ") and legs ("
-                                                                                   << legs_.size() << ")");
+    QL_REQUIRE(payer.size() == legs_.size(),
+               "size mismatch between payer (" << payer.size() << ") and legs (" << legs_.size() << ")");
+    QL_REQUIRE(currency.size() == legs_.size(),
+               "size mismatch between currency (" << currency.size() << ") and legs (" << legs_.size() << ")");
     for (Size j = 0; j < legs_.size(); ++j) {
         if (payer[j])
             payer_[j] = -1.0;
@@ -422,4 +422,4 @@ CrossCurrencySwap::CrossCurrencySwap(bool pay1, Currency ccy1, std::vector<Real>
         legs_[3].push_back(boost::shared_ptr<CashFlow>(
             new SimpleCashFlow(nominals2.back(), schedule2.calendar().adjust(schedule2.dates().back(), convention))));
 }
-}
+} // namespace QuantExt

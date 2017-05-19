@@ -23,16 +23,17 @@
 
 #pragma once
 
-#include <ql/termstructures/yieldtermstructure.hpp>
-#include <ql/indexes/iborindex.hpp>
-#include <ql/indexes/swapindex.hpp>
-#include <ql/indexes/inflationindex.hpp>
+#include <ql/experimental/credit/basecorrelationstructure.hpp>
 #include <ql/experimental/inflation/cpicapfloortermpricesurface.hpp>
-#include <ql/termstructures/volatility/swaption/swaptionvolstructure.hpp>
-#include <ql/termstructures/volatility/optionlet/optionletvolatilitystructure.hpp>
-#include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
-#include <ql/termstructures/defaulttermstructure.hpp>
+#include <ql/indexes/iborindex.hpp>
+#include <ql/indexes/inflationindex.hpp>
+#include <ql/indexes/swapindex.hpp>
 #include <ql/quote.hpp>
+#include <ql/termstructures/defaulttermstructure.hpp>
+#include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
+#include <ql/termstructures/volatility/optionlet/optionletvolatilitystructure.hpp>
+#include <ql/termstructures/volatility/swaption/swaptionvolstructure.hpp>
+#include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/time/date.hpp>
 
 using namespace QuantLib;
@@ -100,6 +101,12 @@ public:
                                                  const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 
+    //! \name Base Correlation term structures
+    //@{
+    virtual Handle<BaseCorrelationTermStructure<BilinearInterpolation>>
+    baseCorrelation(const string&, const string& configuration = Market::defaultConfiguration) const = 0;
+    //@}
+
     //! \name Stripped Cap/Floor volatilities i.e. caplet/floorlet volatilities
     //@{
     virtual Handle<OptionletVolatilityStructure>
@@ -145,5 +152,5 @@ public:
                                          const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 };
-}
-}
+} // namespace data
+} // namespace ore

@@ -23,10 +23,10 @@
 
 #pragma once
 
-#include <ored/portfolio/enginefactory.hpp>
-#include <ored/portfolio/builders/cachingenginebuilder.hpp>
-#include <qle/pricingengines/discountingfxforwardengine.hpp>
 #include <boost/make_shared.hpp>
+#include <ored/portfolio/builders/cachingenginebuilder.hpp>
+#include <ored/portfolio/enginefactory.hpp>
+#include <qle/pricingengines/discountingfxforwardengine.hpp>
 
 namespace ore {
 namespace data {

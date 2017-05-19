@@ -16,11 +16,11 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/algorithm/string/split.hpp>
 #include <orea/scenario/scenario.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ql/errors.hpp>
 #include <vector>
-#include <boost/algorithm/string/split.hpp>
 
 using namespace ore::data;
 
@@ -91,5 +91,5 @@ RiskFactorKey parseRiskFactorKey(const string& str) {
     RiskFactorKey rfk(parseRiskFactorKeyType(tokens[0]), tokens[1], parseInteger(tokens[2]));
     return rfk;
 }
-}
-}
+} // namespace analytics
+} // namespace ore

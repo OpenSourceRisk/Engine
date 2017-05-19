@@ -23,7 +23,7 @@
                 <xs:element type="creditDefaultSwapData" name="CreditDefaultSwapData"/>
                 <xs:element type="indexCreditDefaultSwapData" name="IndexCreditDefaultSwapData"/>
                 <xs:element type="indexCreditDefaultSwapOptionData" name="IndexCreditDefaultSwapOptionData"/>
-                <xs:element type="cdoData" name="CDOData"/>
+                <xs:element type="cdoData" name="CdoData"/>
               </xs:choice>
             </xs:sequence>
             <xs:attribute type="xs:string" name="id" use="required"/>
@@ -337,6 +337,7 @@
     <xs:all>
       <xs:element type="xs:string" name="IssuerId"/>
       <xs:element type="xs:string" name="CreditCurveId"/>
+      <xs:element type="xs:string" name="Qualifier"/>
       <xs:element type="bool" name="SettlesAccrual"/>
       <xs:element type="bool" name="PaysAtDefaultTime"/>
       <xs:element type="date" name="ProtectionStart"/>
@@ -349,6 +350,7 @@
   <xs:complexType name="nameData">
     <xs:all>
       <xs:element type="xs:string" name="IssuerId"/>
+      <xs:element type="xs:string" name="Qualifier"/>
       <xs:element type="xs:string" name="CreditCurveId"/>
       <xs:element type="xs:float" name="Notional"/>
       <xs:element type="currencyCode" name="Currency"/>
@@ -370,7 +372,7 @@
       <xs:element type="date" name="UpfrontDate"/>
       <xs:element type="xs:float" name="UpfrontFee"/>
       <xs:element type="legData" name="LegData"/>
-      <xs:element type="basketData" name="Basket"/>
+      <xs:element type="basketData" name="BasketData"/>
     </xs:all>
   </xs:complexType>
 
@@ -384,13 +386,16 @@
 
   <xs:complexType name="cdoData">
     <xs:all>
+      <xs:element type="xs:string" name="Qualifier"/>
       <xs:element type="date" name="ProtectionStart"/>
       <xs:element type="date" name="UpfrontDate"/>
       <xs:element type="xs:float" name="UpfrontFee"/>
+      <xs:element type="bool" name="SettlesAccrual"/>
+      <xs:element type="bool" name="PaysAtDefaultTime"/>
       <xs:element type="xs:float" name="AttachmentPoint"/>
       <xs:element type="xs:float" name="DetachmentPoint"/>
       <xs:element type="legData" name="LegData"/>
-      <xs:element type="basketData" name="Basket"/>
+      <xs:element type="basketData" name="BasketData"/>
     </xs:all>
   </xs:complexType>
 

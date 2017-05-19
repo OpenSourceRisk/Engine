@@ -16,19 +16,19 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <ored/portfolio/builders/capfloorediborleg.hpp>
 #include <ored/portfolio/legdata.hpp>
 #include <ored/utilities/log.hpp>
-#include <ored/portfolio/builders/capfloorediborleg.hpp>
 
-#include <ql/errors.hpp>
 #include <ql/cashflow.hpp>
-#include <ql/cashflows/overnightindexedcoupon.hpp>
-#include <ql/cashflows/iborcoupon.hpp>
-#include <ql/cashflows/fixedratecoupon.hpp>
-#include <ql/cashflows/simplecashflow.hpp>
+#include <ql/cashflows/capflooredcoupon.hpp>
 #include <ql/cashflows/cpicoupon.hpp>
 #include <ql/cashflows/cpicouponpricer.hpp>
-#include <ql/cashflows/capflooredcoupon.hpp>
+#include <ql/cashflows/fixedratecoupon.hpp>
+#include <ql/cashflows/iborcoupon.hpp>
+#include <ql/cashflows/overnightindexedcoupon.hpp>
+#include <ql/cashflows/simplecashflow.hpp>
+#include <ql/errors.hpp>
 
 #include <boost/make_shared.hpp>
 

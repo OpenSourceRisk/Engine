@@ -154,12 +154,12 @@ void SensitivityAnalysis::initializeCube(boost::shared_ptr<NPVCube>& cube) const
 void SensitivityAnalysis::collectResultsFromCube(const boost::shared_ptr<NPVCube>& cube) {
 
     /***********************************************
-    * Collect results
-    * - base NPVs,
-    * - NPVs after single factor up shifts,
-    * - NPVs after single factor down shifts
-    * - deltas, gammas and cross gammas
-    */
+     * Collect results
+     * - base NPVs,
+     * - NPVs after single factor up shifts,
+     * - NPVs after single factor down shifts
+     * - deltas, gammas and cross gammas
+     */
     baseNPV_.clear();
     vector<ShiftScenarioGenerator::ScenarioDescription> desc = scenarioGenerator_->scenarioDescriptions();
     QL_REQUIRE(desc.size() == scenarioGenerator_->samples(),
@@ -221,8 +221,8 @@ void SensitivityAnalysis::collectResultsFromCube(const boost::shared_ptr<NPVCube
         string factor = p.second;
         QL_REQUIRE(baseNPV_.find(id) != baseNPV_.end(), "base NPV not found for trade " << id);
         Real b = baseNPV_[id];
-        QL_REQUIRE(downNPV_.find(p) != downNPV_.end(), "down shift result not found for trade " << id << ", factor "
-                                                                                                << factor);
+        QL_REQUIRE(downNPV_.find(p) != downNPV_.end(),
+                   "down shift result not found for trade " << id << ", factor " << factor);
         Real d = downNPV_[p];
         // f_x(x) = (f(x+u) - f(x)) / u
         delta_[p] = u - b;           // = f_x(x) * u
@@ -526,5 +526,5 @@ const std::map<std::tuple<std::string, std::string, std::string>, Real>& Sensiti
     QL_REQUIRE(computed_, "Sensitivities have not been successfully computed");
     return crossGamma_;
 }
-}
-}
+} // namespace analytics
+} // namespace ore

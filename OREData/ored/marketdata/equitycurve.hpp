@@ -23,11 +23,11 @@
 
 #pragma once
 
-#include <ored/marketdata/loader.hpp>
-#include <ored/marketdata/curvespec.hpp>
-#include <ored/marketdata/yieldcurve.hpp>
 #include <ored/configuration/conventions.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
+#include <ored/marketdata/curvespec.hpp>
+#include <ored/marketdata/loader.hpp>
+#include <ored/marketdata/yieldcurve.hpp>
 
 using QuantLib::Date;
 using ore::data::CurveConfigurations;
@@ -65,5 +65,5 @@ private:
     vector<Date> terms_;
     DayCounter dc_;
 };
-}
-}
+} // namespace data
+} // namespace ore
