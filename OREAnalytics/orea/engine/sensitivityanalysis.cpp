@@ -394,6 +394,11 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
         if (boost::to_upper_copy(sensitivityData_->fxShiftData()[keylabel].shiftType) == "RELATIVE") {
             shiftMult = simMarket_->fxSpot(keylabel, marketConfiguration_)->value();
         }
+    } else if (keytype == RiskFactorKey::KeyType::EQSpot) {
+            shiftSize = sensitivityData_->equityShiftData()[keylabel].shiftSize;
+            if (boost::to_upper_copy(sensitivityData_->equityShiftData()[keylabel].shiftType) == "RELATIVE") {
+                shiftMult = simMarket_->equitySpot(keylabel, marketConfiguration_)->value();
+            }
     } else if (keytype == RiskFactorKey::KeyType::DiscountCurve) {
         string ccy = keylabel;
         shiftSize = sensitivityData_->discountCurveShiftData()[ccy].shiftSize;
@@ -438,6 +443,21 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
             Size keyIdx = key.index;
             Period p = sensitivityData_->fxVolShiftData()[pair].shiftExpiries[keyIdx];
             Handle<BlackVolTermStructure> vts = simMarket_->fxVol(pair, marketConfiguration_);
+            Time t = vts->dayCounter().yearFraction(asof_, asof_ + p);
+            Real atmVol = vts->blackVol(t, atmFwd);
+            shiftMult = atmVol;
+        }
+    }
+    else if (keytype == RiskFactorKey::KeyType::EQVolatility) {
+        string pair = keylabel;
+        shiftSize = sensitivityData_->equityVolShiftData()[pair].shiftSize;
+        if (boost::to_upper_copy(sensitivityData_->equityVolShiftData()[pair].shiftType) == "RELATIVE") {
+            vector<Real> strikes = sensitivityData_->equityVolShiftData()[pair].shiftStrikes;
+            QL_REQUIRE(strikes.size() == 0, "Only ATM FX vols supported");
+            Real atmFwd = 0.0; // hardcoded, since only ATM supported
+            Size keyIdx = key.index;
+            Period p = sensitivityData_->equityVolShiftData()[pair].shiftExpiries[keyIdx];
+            Handle<BlackVolTermStructure> vts = simMarket_->equityVol(pair, marketConfiguration_);
             Time t = vts->dayCounter().yearFraction(asof_, asof_ + p);
             Real atmVol = vts->blackVol(t, atmFwd);
             shiftMult = atmVol;

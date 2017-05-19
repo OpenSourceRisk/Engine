@@ -49,7 +49,7 @@ public:
     ScenarioSimMarketParameters()
         : extrapolate_(false), swapVolSimulate_(false), capFloorVolSimulate_(false),
           survivalProbabilitySimulate_(false), recoveryRateSimulate_(false), fxVolSimulate_(false),
-          eqVolSimulate_(false) {}
+          equityVolSimulate_(false) {}
 
     //! \name Inspectors
     //@{
@@ -82,18 +82,18 @@ public:
     const vector<string>& defaultNames() const { return defaultNames_; }
     const vector<Period>& defaultTenors() const { return defaultTenors_; }
 
-    const vector<string>& equityNames() const { return eqNames_; }
-    const vector<Period>& equityTenors() const { return eqTenors_; }
+    const vector<string>& equityNames() const { return equityNames_; }
+    const vector<Period>& equityTenors() const { return equityTenors_; }
 
     bool simulateFXVols() const { return fxVolSimulate_; }
     const vector<Period>& fxVolExpiries() const { return fxVolExpiries_; }
     const string& fxVolDecayMode() const { return fxVolDecayMode_; }
     const vector<string>& fxVolCcyPairs() const { return fxVolCcyPairs_; }
 
-    bool simulateEQVols() const { return eqVolSimulate_; }
-    const vector<Period>& eqVolExpiries() const { return eqVolExpiries_; }
-    const string& eqVolDecayMode() const { return eqVolDecayMode_; }
-    const vector<string>& eqVolNames() const { return eqVolNames_; }
+    bool simulateEquityVols() const { return equityVolSimulate_; }
+    const vector<Period>& equityVolExpiries() const { return equityVolExpiries_; }
+    const string& equityVolDecayMode() const { return equityVolDecayMode_; }
+    const vector<string>& equityVolNames() const { return equityVolNames_; }
 
     const vector<string>& additionalScenarioDataIndices() const { return additionalScenarioDataIndices_; }
     const vector<string>& additionalScenarioDataCcys() const { return additionalScenarioDataCcys_; }
@@ -132,18 +132,18 @@ public:
     vector<string>& defaultNames() { return defaultNames_; }
     vector<Period>& defaultTenors() { return defaultTenors_; }
 
-    vector<string>& equityNames() { return eqNames_; }
-    vector<Period>& equityTenors() { return eqTenors_; }
+    vector<string>& equityNames() { return equityNames_; }
+    vector<Period>& equityTenors() { return equityTenors_; }
 
     bool& simulateFXVols() { return fxVolSimulate_; }
     vector<Period>& fxVolExpiries() { return fxVolExpiries_; }
     string& fxVolDecayMode() { return fxVolDecayMode_; }
     vector<string>& fxVolCcyPairs() { return fxVolCcyPairs_; }
 
-    bool& simulateEQVols() { return eqVolSimulate_; }
-    vector<Period>& eqVolExpiries() { return eqVolExpiries_; }
-    string& eqVolDecayMode() { return eqVolDecayMode_; }
-    vector<string>& eqVolNames() { return eqVolNames_; }
+    bool& simulateEQVols() { return equityVolSimulate_; }
+    vector<Period>& equityVolExpiries() { return equityVolExpiries_; }
+    string& equityVolDecayMode() { return equityVolDecayMode_; }
+    vector<string>& equityVolNames() { return equityVolNames_; }
 
     vector<string>& additionalScenarioDataIndices() { return additionalScenarioDataIndices_; }
     vector<string>& additionalScenarioDataCcys() { return additionalScenarioDataCcys_; }
@@ -193,18 +193,18 @@ private:
     vector<string> defaultNames_;
     vector<Period> defaultTenors_;
 
-    vector<string> eqNames_;
-    vector<Period> eqTenors_;
+    vector<string> equityNames_;
+    vector<Period> equityTenors_;
 
     bool fxVolSimulate_;
     vector<Period> fxVolExpiries_;
     string fxVolDecayMode_;
     vector<string> fxVolCcyPairs_;
 
-    bool eqVolSimulate_;
-    vector<Period> eqVolExpiries_;
-    string eqVolDecayMode_;
-    vector<string> eqVolNames_;
+    bool equityVolSimulate_;
+    vector<Period> equityVolExpiries_;
+    string equityVolDecayMode_;
+    vector<string> equityVolNames_;
 
     vector<string> additionalScenarioDataIndices_;
     vector<string> additionalScenarioDataCcys_;

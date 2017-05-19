@@ -49,7 +49,15 @@
         <DiscountingIndex>EUR-EONIA</DiscountingIndex>
       </SwapIndex>
     </SwapIndices>
-
+		
+	<Equities>
+      <Names>
+        <Name>SP5</Name>
+        <Name>Lufthansa</Name>
+      </Names>
+      <Tenors>6M,1Y,2Y</Tenors> <!-- for dividend only -->
+    </Equities>   
+	
     <DefaultCurves>
       <Names>
 	<Name>CPTY_C</Name>
@@ -100,7 +108,19 @@
       <Expiries>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</Expiries>
       <Strikes/>
     </FxVolatilities>
-    
+ 	
+	<EquityVolatilities>
+      <Simulate>false</Simulate>
+      <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
+      <!-- Alternative: ConstantVariance -->
+      <Names>
+        <Name>SP5</Name>
+        <Name>Lufthansa</Name>
+      </Names>
+      <Expiries>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</Expiries>
+      <Strikes/>
+    </EquityVolatilities>     
+	
     <BenchmarkCurves>
       <BenchmarkCurve>
         <Currency>EUR</Currency>
@@ -111,6 +131,7 @@
     <Securities>
       <Security>SECURITY_1</Security>
     </Securities>
+  
     <!-- Additional data that is recorded during simulation for later
 	   use in the post processor -->
     <AggregationScenarioDataCurrencies>

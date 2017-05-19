@@ -27,8 +27,10 @@
 #include <ql/version.hpp>
 
 #if defined(_WIN32) || defined(_WIN64)
+// clang-format off
 #include <windows.h>
 #include <psapi.h>
+// clang-format on
 #elif __APPLE__
 #include <sys/sysctl.h>
 #include <unistd.h>

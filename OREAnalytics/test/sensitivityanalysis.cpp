@@ -799,11 +799,11 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
     // sensitivity config
     boost::shared_ptr<SensitivityScenarioData> sensiData = TestConfigurationObjects::setupSensitivityScenarioData5();
 
-    map<string, SensitivityScenarioData::FxVolShiftData>& fxvs = sensiData->fxVolShiftData();
+    map<string, SensitivityScenarioData::VolShiftData>& fxvs = sensiData->fxVolShiftData();
     for (auto& it : fxvs) {
         it.second.shiftSize = 0.0001; // want a smaller shift size than 1.0 to test the analytic sensitivities
     }
-    map<string, SensitivityScenarioData::FxShiftData>& fxs = sensiData->fxShiftData();
+    map<string, SensitivityScenarioData::SpotShiftData>& fxs = sensiData->fxShiftData();
     for (auto& it : fxs) {
         it.second.shiftSize = 0.0001; // want a smaller shift size to test the analytic sensitivities
     }

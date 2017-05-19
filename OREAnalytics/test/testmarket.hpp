@@ -152,6 +152,10 @@ public:
         fxVols_[make_pair(Market::defaultConfiguration, "EURJPY")] = flatRateFxv(0.15);
         fxVols_[make_pair(Market::defaultConfiguration, "GBPCHF")] = flatRateFxv(0.15);
 
+        // Add Equity Spots
+        equitySpots_[make_pair(Market::defaultConfiguration,"SP5")] = Handle<Quote>(boost::make_shared<SimpleQuote>(2147.56));
+        equitySpots_[make_pair(Market::defaultConfiguration, "Lufthansa")] = Handle<Quote>(boost::make_shared<SimpleQuote>(12.75));
+
         // build swaption vols
         swaptionCurves_[make_pair(Market::defaultConfiguration, "EUR")] = flatRateSvs(0.20);
         swaptionCurves_[make_pair(Market::defaultConfiguration, "USD")] = flatRateSvs(0.30);
