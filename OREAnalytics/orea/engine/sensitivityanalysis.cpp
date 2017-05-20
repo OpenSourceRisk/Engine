@@ -125,7 +125,8 @@ void SensitivityAnalysis::initializeSensitivityScenarioGenerator(boost::shared_p
 void SensitivityAnalysis::initializeSimMarket() {
     boost::shared_ptr<ScenarioGenerator> sgen =
         boost::static_pointer_cast<ScenarioGenerator, SensitivityScenarioGenerator>(scenarioGenerator_);
-    simMarket_ = boost::make_shared<ScenarioSimMarket>(sgen, market_, simMarketData_, conventions_);
+    simMarket_ =
+        boost::make_shared<ScenarioSimMarket>(sgen, market_, simMarketData_, conventions_, marketConfiguration_);
 }
 
 boost::shared_ptr<EngineFactory>
