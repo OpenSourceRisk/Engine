@@ -1252,13 +1252,19 @@ void YieldCurve::addFXForwards(const boost::shared_ptr<YieldCurveSegment>& segme
         // Create an FX forward helper
         Period fxForwardTenor = fxForwardQuote->term();
         bool endOfMonth = false;
-        bool isFxBaseCurrencyCollateralCurrency = knownCurrency == fxConvention->sourceCurrency(); // TODO 50/50 guess
+        bool isFxBaseCurrencyCollateralCurrency = knownCurrency == fxSpotSourceCcy;
 
         // TODO: spotRelative
-        boost::shared_ptr<RateHelper> fxForwardHelper(
-            new FxSwapRateHelper(qlFXForwardQuote, fxSpotQuote->quote(), fxForwardTenor, fxConvention->spotDays(),
-                                 fxConvention->advanceCalendar(), Following, endOfMonth,
-                                 isFxBaseCurrencyCollateralCurrency, knownDiscountCurve->handle()));
+
+        // the fx swap rate helper interprets the fxSpot as of the spot date, our fx spot here
+        // is as of today, therefore we set up the fx spot helper with zero settlement days
+        // and compute the tenor such that the correct maturity date is still matched
+        Date spotDate = fxConvention->advanceCalendar().advance(asofDate_, fxConvention->spotDays()*Days);
+        Date endDate = fxConvention->advanceCalendar().advance(spotDate, fxForwardTenor);
+
+        boost::shared_ptr<RateHelper> fxForwardHelper(new FxSwapRateHelper(
+            qlFXForwardQuote, fxSpotQuote->quote(), (endDate - asofDate_) * Days, 0, NullCalendar(), Unadjusted,
+            endOfMonth, isFxBaseCurrencyCollateralCurrency, knownDiscountCurve->handle()));
 
         instruments.push_back(fxForwardHelper);
     }
