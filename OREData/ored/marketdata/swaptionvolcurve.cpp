@@ -20,6 +20,7 @@
 #include <ored/marketdata/swaptionvolcurve.hpp>
 #include <ored/utilities/log.hpp>
 #include <ql/termstructures/volatility/swaption/swaptionconstantvol.hpp>
+#include <ql/termstructures/volatility/swaption/swaptionvolcube2.hpp>
 #include <ql/termstructures/volatility/swaption/swaptionvolmatrix.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 
@@ -30,14 +31,16 @@ namespace ore {
 namespace data {
 
 SwaptionVolCurve::SwaptionVolCurve(Date asof, SwaptionVolatilityCurveSpec spec, const Loader& loader,
-                                   const CurveConfigurations& curveConfigs) {
+                                   const CurveConfigurations& curveConfigs,
+                                   const map<string, boost::shared_ptr<SwapIndex>>& requiredSwapIndices) {
 
     try {
 
         const boost::shared_ptr<SwaptionVolatilityCurveConfig>& config =
             curveConfigs.swaptionVolCurveConfig(spec.curveConfigID());
 
-        QL_REQUIRE(config->dimension() == SwaptionVolatilityCurveConfig::Dimension::ATM,
+        QL_REQUIRE(config->dimension() == SwaptionVolatilityCurveConfig::Dimension::ATM ||
+                       config->dimension() == SwaptionVolatilityCurveConfig::Dimension::Smile,
                    "Unsupported Swaption vol curve building dimension");
 
         // We loop over all market data, looking for quotes that match the configuration
@@ -155,8 +158,10 @@ SwaptionVolCurve::SwaptionVolCurve(Date asof, SwaptionVolatilityCurveSpec spec, 
             QL_FAIL("could not build swaption vol curve");
         }
 
+        boost::shared_ptr<SwaptionVolatilityStructure> atm;
+
         if (quotesRead != 1) {
-            vol_ = boost::shared_ptr<SwaptionVolatilityStructure>(new SwaptionVolatilityMatrix(
+            atm = boost::shared_ptr<SwaptionVolatilityStructure>(new SwaptionVolatilityMatrix(
                 asof, config->calendar(), config->businessDayConvention(), optionTenors, swapTenors, vols,
                 config->dayCounter(), config->flatExtrapolation(),
                 config->volatilityType() == SwaptionVolatilityCurveConfig::VolatilityType::Normal
@@ -164,15 +169,86 @@ SwaptionVolCurve::SwaptionVolCurve(Date asof, SwaptionVolatilityCurveSpec spec, 
                     : QuantLib::ShiftedLognormal,
                 shifts));
 
-            vol_->enableExtrapolation(config->extrapolate());
+            atm->enableExtrapolation(config->extrapolate());
         } else {
             // Constant volatility
-            vol_ = boost::shared_ptr<SwaptionVolatilityStructure>(new ConstantSwaptionVolatility(
+            atm = boost::shared_ptr<SwaptionVolatilityStructure>(new ConstantSwaptionVolatility(
                 asof, config->calendar(), config->businessDayConvention(), vols[0][0], config->dayCounter(),
                 config->volatilityType() == SwaptionVolatilityCurveConfig::VolatilityType::Normal
                     ? QuantLib::Normal
                     : QuantLib::ShiftedLognormal,
                 !shifts.empty() ? shifts[0][0] : 0.0));
+        }
+
+        if (config->dimension() == SwaptionVolatilityCurveConfig::Dimension::ATM) {
+            // Nothing more to do
+            LOG("Returning ATM surface for config " << spec);
+            vol_ = atm;
+        } else {
+            LOG("Building Cube for config " << spec);
+            vector<Period> smileOptionTenors = config->smileOptionTenors();
+            vector<Period> smileSwapTenors = config->smileSwapTenors();
+            vector<Spread> spreads = config->smileSpreads();
+
+            if (smileOptionTenors.size() == 0)
+                smileOptionTenors = optionTenors;
+            if (smileSwapTenors.size() == 0)
+                smileSwapTenors = swapTenors;
+            QL_REQUIRE(spreads.size() > 0, "Need at least 1 strike spread for a SwaptionVolCube");
+
+            Size n = smileOptionTenors.size() * smileSwapTenors.size();
+            vector<vector<Handle<Quote>>> volSpreadHandles(n, vector<Handle<Quote>>(spreads.size()));
+
+            LOG("vol cube smile option tenors " << smileOptionTenors.size());
+            LOG("vol cube smile swap tenors " << smileSwapTenors.size());
+            LOG("vol cube strike spreads " << spreads.size());
+
+            Size spreadQuotesRead = 0;
+            Size expectedSpreadQuotes = n * spreads.size();
+            for (auto& md : loader.loadQuotes(asof)) {
+                if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::SWAPTION) {
+
+                    boost::shared_ptr<SwaptionQuote> q = boost::dynamic_pointer_cast<SwaptionQuote>(md);
+                    if (q != NULL && q->ccy() == spec.ccy() && q->quoteType() == volatilityType &&
+                        q->dimension() == "Smile") {
+
+                        spreadQuotesRead++;
+
+                        Size i = std::find(smileOptionTenors.begin(), smileOptionTenors.end(), q->expiry()) -
+                                 smileOptionTenors.begin();
+                        Size j = std::find(smileSwapTenors.begin(), smileSwapTenors.end(), q->term()) -
+                                 smileSwapTenors.begin();
+                        // In the MarketDatum we call it a strike, but it's really a spread
+                        Size k = std::find(spreads.begin(), spreads.end(), q->strike()) - spreads.begin();
+
+                        if (i < smileOptionTenors.size() && j < smileSwapTenors.size() && k < spreads.size()) {
+                            QL_REQUIRE(volSpreadHandles[i * smileSwapTenors.size() + j][k].empty(),
+                                       "VolSpreadQuote already found for " << smileOptionTenors[i] << ", "
+                                                                           << smileSwapTenors[j] << ", " << spreads[k]);
+                            volSpreadHandles[i * smileSwapTenors.size() + j][k] = Handle<Quote>(q->quote());
+                        }
+                    }
+                }
+            }
+            LOG("Read " << spreadQuotesRead << " quotes for VolCube. Expected " << expectedSpreadQuotes);
+            QL_REQUIRE(spreadQuotesRead == expectedSpreadQuotes, "Missing quotes for vol cube");
+
+            // build swap indices
+            auto it = requiredSwapIndices.find(config->swapIndexBase());
+            QL_REQUIRE(it != requiredSwapIndices.end(), "Unable to find SwapIndex " << config->swapIndexBase());
+            boost::shared_ptr<SwapIndex> swapIndexBase = it->second;
+
+            it = requiredSwapIndices.find(config->shortSwapIndexBase());
+            QL_REQUIRE(it != requiredSwapIndices.end(), "Unable to find SwapIndex " << config->shortSwapIndexBase());
+            boost::shared_ptr<SwapIndex> shortSwapIndexBase = it->second;
+
+            bool vegaWeighedSmileFit = false; // TODO
+
+            Handle<SwaptionVolatilityStructure> hATM(atm);
+            vol_ = boost::make_shared<SwaptionVolCube2>(hATM, smileOptionTenors, smileSwapTenors, spreads,
+                                                        volSpreadHandles, swapIndexBase, shortSwapIndexBase,
+                                                        vegaWeighedSmileFit);
+            vol_->enableExtrapolation();
         }
 
     } catch (std::exception& e) {
