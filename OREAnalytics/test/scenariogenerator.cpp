@@ -188,9 +188,9 @@ void test_lgm(bool sobol, bool antithetic, bool brownianBridge) {
     // Simulation market parameters, we just need the yield curve structure here
     BOOST_TEST_MESSAGE("set up sim market parameters");
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketConfig(new ScenarioSimMarketParameters);
-    simMarketConfig->yieldCurveTenors() = {3 * Months, 6 * Months, 1 * Years,  2 * Years,  3 * Years,
-                                           4 * Years,  5 * Years,  7 * Years,  10 * Years, 12 * Years,
-                                           15 * Years, 20 * Years, 30 * Years, 40 * Years, 50 * Years};
+    simMarketConfig->setYieldCurveTenors("", {3 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
+                                              5 * Years, 7 * Years, 10 * Years, 12 * Years, 15 * Years, 20 * Years,
+                                              30 * Years, 40 * Years, 50 * Years});
     simMarketConfig->simulateFXVols() = false;
     simMarketConfig->simulateEQVols() = false;
 
@@ -289,9 +289,9 @@ void test_crossasset(bool sobol, bool antithetic, bool brownianBridge) {
     // Simulation market parameters, we just need the yield curve structure here
     BOOST_TEST_MESSAGE("set up sim market parameters");
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketConfig(new ScenarioSimMarketParameters);
-    simMarketConfig->yieldCurveTenors() = {3 * Months, 6 * Months, 1 * Years,  2 * Years,  3 * Years,
-                                           4 * Years,  5 * Years,  7 * Years,  10 * Years, 12 * Years,
-                                           15 * Years, 20 * Years, 30 * Years, 40 * Years, 50 * Years};
+    simMarketConfig->setYieldCurveTenors("", {3 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
+                                              5 * Years, 7 * Years, 10 * Years, 12 * Years, 15 * Years, 20 * Years,
+                                              30 * Years, 40 * Years, 50 * Years});
     simMarketConfig->simulateFXVols() = false;
     simMarketConfig->simulateEQVols() = false;
 
@@ -431,9 +431,9 @@ void ScenarioGeneratorTest::testCrossAssetSimMarket() {
     // Simulation market parameters, we just need the yield curve structure here
     BOOST_TEST_MESSAGE("set up sim market parameters");
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketConfig(new ScenarioSimMarketParameters);
-    simMarketConfig->yieldCurveTenors() = {3 * Months, 6 * Months, 1 * Years,  2 * Years,  3 * Years,
-                                           4 * Years,  5 * Years,  7 * Years,  10 * Years, 12 * Years,
-                                           15 * Years, 20 * Years, 30 * Years, 40 * Years, 50 * Years};
+    simMarketConfig->setYieldCurveTenors("", {3 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
+                                              5 * Years, 7 * Years, 10 * Years, 12 * Years, 15 * Years, 20 * Years,
+                                              30 * Years, 40 * Years, 50 * Years});
     simMarketConfig->simulateFXVols() = false;
     simMarketConfig->simulateEQVols() = false;
 
@@ -575,9 +575,9 @@ void ScenarioGeneratorTest::testCrossAssetSimMarket2() {
     // Simulation market parameters, we just need the yield curve structure here
     BOOST_TEST_MESSAGE("set up sim market parameters");
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketConfig(new ScenarioSimMarketParameters);
-    simMarketConfig->yieldCurveTenors() = {3 * Months, 6 * Months, 1 * Years,  2 * Years,  3 * Years,
-                                           4 * Years,  5 * Years,  7 * Years,  10 * Years, 12 * Years,
-                                           15 * Years, 20 * Years, 30 * Years, 40 * Years, 50 * Years};
+    simMarketConfig->setYieldCurveTenors("", {3 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
+                                              5 * Years, 7 * Years, 10 * Years, 12 * Years, 15 * Years, 20 * Years,
+                                              30 * Years, 40 * Years, 50 * Years});
     simMarketConfig->simulateFXVols() = false;
     simMarketConfig->simulateEQVols() = false;
 
@@ -716,9 +716,9 @@ void ScenarioGeneratorTest::testVanillaSwapExposure() {
     // Simulation market parameters, we just need the yield curve structure here
     BOOST_TEST_MESSAGE("set up sim market parameters");
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketConfig(new ScenarioSimMarketParameters);
-    simMarketConfig->yieldCurveTenors() = {3 * Months, 6 * Months, 1 * Years,  2 * Years,  3 * Years,
-                                           4 * Years,  5 * Years,  7 * Years,  10 * Years, 12 * Years,
-                                           15 * Years, 20 * Years, 30 * Years, 40 * Years, 50 * Years};
+    simMarketConfig->setYieldCurveTenors("", {3 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
+                                              5 * Years, 7 * Years, 10 * Years, 12 * Years, 15 * Years, 20 * Years,
+                                              30 * Years, 40 * Years, 50 * Years});
     simMarketConfig->simulateFXVols() = false;
     simMarketConfig->simulateEQVols() = false;
 
@@ -856,9 +856,9 @@ void ScenarioGeneratorTest::testFxForwardExposure() {
     // Simulation market parameters
     BOOST_TEST_MESSAGE("set up sim market parameters");
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketConfig(new ScenarioSimMarketParameters);
-    simMarketConfig->yieldCurveTenors() = {3 * Months, 6 * Months, 1 * Years,  2 * Years,  3 * Years,
-                                           4 * Years,  5 * Years,  7 * Years,  10 * Years, 12 * Years,
-                                           15 * Years, 20 * Years, 30 * Years, 40 * Years, 50 * Years};
+    simMarketConfig->setYieldCurveTenors("", {3 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
+                                              5 * Years, 7 * Years, 10 * Years, 12 * Years, 15 * Years, 20 * Years,
+                                              30 * Years, 40 * Years, 50 * Years});
 
     simMarketConfig->baseCcy() = "EUR";
     simMarketConfig->ccys() = {"EUR", "USD", "GBP"};
@@ -985,9 +985,9 @@ void ScenarioGeneratorTest::testFxForwardExposureZeroIrVol() {
     // Simulation market parameters
     BOOST_TEST_MESSAGE("set up sim market parameters");
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketConfig(new ScenarioSimMarketParameters);
-    simMarketConfig->yieldCurveTenors() = {3 * Months, 6 * Months, 1 * Years,  2 * Years,  3 * Years,
-                                           4 * Years,  5 * Years,  7 * Years,  10 * Years, 12 * Years,
-                                           15 * Years, 20 * Years, 30 * Years, 40 * Years, 50 * Years};
+    simMarketConfig->setYieldCurveTenors("", {3 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
+                                              5 * Years, 7 * Years, 10 * Years, 12 * Years, 15 * Years, 20 * Years,
+                                              30 * Years, 40 * Years, 50 * Years});
     simMarketConfig->simulateFXVols() = false;
     simMarketConfig->simulateEQVols() = false;
 

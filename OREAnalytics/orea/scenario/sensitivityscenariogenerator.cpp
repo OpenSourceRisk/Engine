@@ -30,10 +30,10 @@ namespace analytics {
 SensitivityScenarioGenerator::SensitivityScenarioGenerator(
     const boost::shared_ptr<SensitivityScenarioData>& sensitivityData,
     const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData, const Date& today,
-    const boost::shared_ptr<ore::data::Market>& initMarket, const std::string& configuration,
+    const boost::shared_ptr<ore::data::Market>& initMarket, const bool overrideTenors, const std::string& configuration,
     boost::shared_ptr<ScenarioFactory> baseScenarioFactory)
     : ShiftScenarioGenerator(simMarketData, today, initMarket, configuration, baseScenarioFactory),
-      sensitivityData_(sensitivityData) {
+      sensitivityData_(sensitivityData), overrideTenors_(overrideTenors) {
     QL_REQUIRE(sensitivityData_ != NULL, "SensitivityScenarioGenerator: sensitivityData is null");
 }
 
@@ -198,28 +198,32 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(
     }
 
     Size n_ccy = discountCurrencies_.size();
-    Size n_ten = simMarketData_->yieldCurveTenors().size();
-
-    // original curves' buffer
-    std::vector<Real> zeros(n_ten);
-    std::vector<Real> times(n_ten);
-
-    // buffer for shifted zero curves
-    std::vector<Real> shiftedZeros(n_ten);
 
     for (Size i = 0; i < n_ccy; ++i) {
         string ccy = discountCurrencies_[i];
+        Size n_ten = simMarketData_->yieldCurveTenors(ccy).size();
+        // original curves' buffer
+        std::vector<Real> zeros(n_ten);
+        std::vector<Real> times(n_ten);
+        // buffer for shifted zero curves
+        std::vector<Real> shiftedZeros(n_ten);
+
         SensitivityScenarioData::CurveShiftData data = sensitivityData_->discountCurveShiftData()[ccy];
         ShiftType shiftType = parseShiftType(data.shiftType);
         Handle<YieldTermStructure> ts = initMarket_->discountCurve(ccy, configuration_);
         DayCounter dc = ts->dayCounter();
         for (Size j = 0; j < n_ten; ++j) {
-            Date d = today_ + simMarketData_->yieldCurveTenors()[j];
+            Date d = today_ + simMarketData_->yieldCurveTenors(ccy)[j];
             zeros[j] = ts->zeroRate(d, dc, Continuous);
             times[j] = dc.yearFraction(today_, d);
         }
 
-        std::vector<Period> shiftTenors = data.shiftTenors;
+        std::vector<Period> shiftTenors = overrideTenors_ && simMarketData_->hasYieldCurveTenors(ccy)
+                                              ? simMarketData_->yieldCurveTenors(ccy)
+                                              : data.shiftTenors;
+        QL_REQUIRE(shiftTenors.size() == data.shiftTenors.size(), "mismatch between effective shift tenors ("
+                                                                      << shiftTenors.size() << ") and shift tenors ("
+                                                                      << data.shiftTenors.size() << ")");
         std::vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j)
             shiftTimes[j] = dc.yearFraction(today_, today_ + shiftTenors[j]);
@@ -266,29 +270,32 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(
     }
 
     Size n_indices = indexNames_.size();
-    Size n_ten = simMarketData_->yieldCurveTenors().size();
-
-    // original curves' buffer
-    std::vector<Real> zeros(n_ten);
-    std::vector<Real> times(n_ten);
-
-    // buffer for shifted zero curves
-    std::vector<Real> shiftedZeros(n_ten);
 
     for (Size i = 0; i < n_indices; ++i) {
         string indexName = indexNames_[i];
+        Size n_ten = simMarketData_->yieldCurveTenors(indexName).size();
+        // original curves' buffer
+        std::vector<Real> zeros(n_ten);
+        std::vector<Real> times(n_ten);
+        // buffer for shifted zero curves
+        std::vector<Real> shiftedZeros(n_ten);
         SensitivityScenarioData::CurveShiftData data = sensitivityData_->indexCurveShiftData()[indexName];
         ShiftType shiftType = parseShiftType(data.shiftType);
         Handle<IborIndex> iborIndex = initMarket_->iborIndex(indexName, configuration_);
         Handle<YieldTermStructure> ts = iborIndex->forwardingTermStructure();
         DayCounter dc = ts->dayCounter();
         for (Size j = 0; j < n_ten; ++j) {
-            Date d = today_ + simMarketData_->yieldCurveTenors()[j];
+            Date d = today_ + simMarketData_->yieldCurveTenors(indexName)[j];
             zeros[j] = ts->zeroRate(d, dc, Continuous);
             times[j] = dc.yearFraction(today_, d);
         }
 
-        std::vector<Period> shiftTenors = data.shiftTenors;
+        std::vector<Period> shiftTenors = overrideTenors_ && simMarketData_->hasYieldCurveTenors(indexName)
+                                              ? simMarketData_->yieldCurveTenors(indexName)
+                                              : data.shiftTenors;
+        QL_REQUIRE(shiftTenors.size() == data.shiftTenors.size(), "mismatch between effective shift tenors ("
+                                                                      << shiftTenors.size() << ") and shift tenors ("
+                                                                      << data.shiftTenors.size() << ")");
         std::vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j)
             shiftTimes[j] = dc.yearFraction(today_, today_ + shiftTenors[j]);
@@ -335,28 +342,31 @@ void SensitivityScenarioGenerator::generateYieldCurveScenarios(
     }
 
     Size n_curves = yieldCurveNames_.size();
-    Size n_ten = simMarketData_->yieldCurveTenors().size();
-
-    // original curves' buffer
-    std::vector<Real> zeros(n_ten);
-    std::vector<Real> times(n_ten);
-
-    // buffer for shifted zero curves
-    std::vector<Real> shiftedZeros(n_ten);
 
     for (Size i = 0; i < n_curves; ++i) {
         string name = yieldCurveNames_[i];
+        Size n_ten = simMarketData_->yieldCurveTenors(name).size();
+        // original curves' buffer
+        std::vector<Real> zeros(n_ten);
+        std::vector<Real> times(n_ten);
+        // buffer for shifted zero curves
+        std::vector<Real> shiftedZeros(n_ten);
         SensitivityScenarioData::CurveShiftData data = sensitivityData_->yieldCurveShiftData()[name];
         ShiftType shiftType = parseShiftType(data.shiftType);
         Handle<YieldTermStructure> ts = initMarket_->yieldCurve(name, configuration_);
         DayCounter dc = ts->dayCounter();
         for (Size j = 0; j < n_ten; ++j) {
-            Date d = today_ + simMarketData_->yieldCurveTenors()[j];
+            Date d = today_ + simMarketData_->yieldCurveTenors(name)[j];
             zeros[j] = ts->zeroRate(d, dc, Continuous);
             times[j] = dc.yearFraction(today_, d);
         }
 
-        std::vector<Period> shiftTenors = data.shiftTenors;
+        const std::vector<Period>& shiftTenors = overrideTenors_ && simMarketData_->hasYieldCurveTenors(name)
+                                                     ? simMarketData_->yieldCurveTenors(name)
+                                                     : data.shiftTenors;
+        QL_REQUIRE(shiftTenors.size() == data.shiftTenors.size(), "mismatch between effective shift tenors ("
+                                                                      << shiftTenors.size() << ") and shift tenors ("
+                                                                      << data.shiftTenors.size() << ")");
         std::vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j)
             shiftTimes[j] = dc.yearFraction(today_, today_ + shiftTenors[j]);
@@ -560,20 +570,26 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(
 
     Size n_cfvol_ccy = capFloorVolCurrencies_.size();
     Size n_cfvol_strikes = simMarketData_->capFloorVolStrikes().size();
-    Size n_cfvol_exp = simMarketData_->capFloorVolExpiries().size();
-
-    vector<vector<Real>> volData(n_cfvol_exp, vector<Real>(n_cfvol_strikes, 0.0));
-    vector<Real> volExpiryTimes(n_cfvol_exp, 0.0);
     vector<Real> volStrikes = simMarketData_->capFloorVolStrikes();
-    vector<vector<Real>> shiftedVolData(n_cfvol_exp, vector<Real>(n_cfvol_strikes, 0.0));
 
     for (Size i = 0; i < n_cfvol_ccy; ++i) {
         std::string ccy = capFloorVolCurrencies_[i];
+        Size n_cfvol_exp = simMarketData_->capFloorVolExpiries(ccy).size();
         SensitivityScenarioData::CapFloorVolShiftData data = sensitivityData_->capFloorVolShiftData()[ccy];
 
         ShiftType shiftType = parseShiftType(data.shiftType);
         Real shiftSize = data.shiftSize;
-        vector<Real> shiftExpiryTimes(data.shiftExpiries.size(), 0.0);
+        vector<vector<Real>> volData(n_cfvol_exp, vector<Real>(n_cfvol_strikes, 0.0));
+        vector<Real> volExpiryTimes(n_cfvol_exp, 0.0);
+        vector<vector<Real>> shiftedVolData(n_cfvol_exp, vector<Real>(n_cfvol_strikes, 0.0));
+
+        std::vector<Period> expiries = overrideTenors_ && simMarketData_->hasCapFloorVolExpiries(ccy)
+                                           ? simMarketData_->capFloorVolExpiries(ccy)
+                                           : data.shiftExpiries;
+        QL_REQUIRE(expiries.size() == data.shiftExpiries.size(), "mismatch between effective shift expiries ("
+                                                                     << expiries.size() << ") and shift tenors ("
+                                                                     << data.shiftExpiries.size());
+        vector<Real> shiftExpiryTimes(expiries.size(), 0.0);
         vector<Real> shiftStrikes = data.shiftStrikes;
 
         Handle<OptionletVolatilityStructure> ts = initMarket_->capFloorVol(ccy, configuration_);
@@ -581,11 +597,11 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(
 
         // cache original vol data
         for (Size j = 0; j < n_cfvol_exp; ++j) {
-            Date expiry = today_ + simMarketData_->capFloorVolExpiries()[j];
+            Date expiry = today_ + simMarketData_->capFloorVolExpiries(ccy)[j];
             volExpiryTimes[j] = dc.yearFraction(today_, expiry);
         }
         for (Size j = 0; j < n_cfvol_exp; ++j) {
-            Period expiry = simMarketData_->capFloorVolExpiries()[j];
+            Period expiry = simMarketData_->capFloorVolExpiries(ccy)[j];
             for (Size k = 0; k < n_cfvol_strikes; ++k) {
                 Real strike = simMarketData_->capFloorVolStrikes()[k];
                 Real vol = ts->volatility(expiry, strike);
@@ -595,7 +611,7 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(
 
         // cache tenor times
         for (Size j = 0; j < shiftExpiryTimes.size(); ++j)
-            shiftExpiryTimes[j] = dc.yearFraction(today_, today_ + data.shiftExpiries[j]);
+            shiftExpiryTimes[j] = dc.yearFraction(today_, today_ + expiries[j]);
 
         // loop over shift expiries and terms
         for (Size j = 0; j < shiftExpiryTimes.size(); ++j) {

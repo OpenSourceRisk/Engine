@@ -124,8 +124,8 @@ struct CommonVars {
         return swap;
     }
 
-    boost::shared_ptr<ore::data::Swap> makeSwap(Real fixedRate_) {
-        ScheduleData fixedSchedule(ScheduleRules(start, end, fixtenor, calStr, conv, conv, rule));
+    boost::shared_ptr<ore::data::Swap> makeSwap(Real fixedRate_, string fixtenor_) {
+        ScheduleData fixedSchedule(ScheduleRules(start, end, fixtenor_, calStr, conv, conv, rule));
         ScheduleData cmsSchedule(ScheduleRules(start, end, cmstenor, calStr, conv, conv, rule));
 
         // build CMSSwap
@@ -212,7 +212,7 @@ struct CommonVars {
         longShort = isPayer ? "Short" : "Long";
         start = "20160301";
         end = "20360301";
-        fixtenor = "6M";
+        fixtenor = "1Y";
         cmstenor = "6M";
         cal = TARGET();
         calStr = "TARGET";
@@ -267,7 +267,7 @@ void CmsTest::testCMSAnalyticHagan() {
 
     cmsSwap->build(engineFactory);
 
-    Real expectedNPV = -3440673.46;
+    Real expectedNPV = 3440673.46;
     Real npv = cmsSwap->instrument()->NPV();
 
     BOOST_TEST_MESSAGE("Hagan Analytic price is " << npv);
@@ -306,7 +306,7 @@ void CmsTest::testCMSNumericalHagan() {
 
     cmsSwap->build(engineFactory);
 
-    Real expectedNPV = -3440673.46;
+    Real expectedNPV = 3440673.46;
     Real npv = cmsSwap->instrument()->NPV();
 
     BOOST_TEST_MESSAGE("Hagan Numerical price is " << npv);
@@ -344,7 +344,7 @@ void CmsTest::testCMSLinearTsr() {
 
     cmsSwap->build(engineFactory);
 
-    Real expectedNPV = -3440673.46;
+    Real expectedNPV = 3440673.46;
     Real npv = cmsSwap->instrument()->NPV();
 
     BOOST_TEST_MESSAGE("Linear TSR price is " << npv);
@@ -430,7 +430,7 @@ void CmsTest::cmsCapFloor() {
 
     cap = vars.makeCap(capRate);
     floor = vars.makeFloor(floorRate);
-    boost::shared_ptr<ore::data::Swap> swap = vars.makeSwap(0.021);
+    boost::shared_ptr<ore::data::Swap> swap = vars.makeSwap(0.021, "6M");
     cap->build(engineFactory);
     floor->build(engineFactory);
     swap->build(engineFactory);

@@ -109,47 +109,52 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
     numeraireCache_ = 1.0; // assumption that the init numeraire is 1.0
     // Cache discount curve keys and discount factors
     Size n_ccy = simMarketData_->ccys().size();
-    Size n_ten = simMarketData_->yieldCurveTenors().size();
-    discountCurveKeys_.reserve(n_ccy * n_ten);
+    discountCurveKeys_.reserve(n_ccy * simMarketData_->yieldCurveTenors("").size());
+    Size count = 0;
     for (Size j = 0; j < n_ccy; j++) {
         std::string ccy = simMarketData_->ccys()[j];
+        Size n_ten = simMarketData_->yieldCurveTenors(ccy).size();
         Handle<YieldTermStructure> ts = market->discountCurve(ccy, configuration_);
         for (Size k = 0; k < n_ten; k++) {
-            discountCurveKeys_.emplace_back(RiskFactorKey::KeyType::DiscountCurve, ccy, k); // j * n_ten + k
-            Period tenor = simMarketData_->yieldCurveTenors()[k];
-            Real disc = ts->discount(today_ + tenor);
-            discountCurveCache_[discountCurveKeys_[j * n_ten + k]] = disc;
-            LOG("cache discount " << disc << " for key " << discountCurveKeys_[j * n_ten + k]);
+            discountCurveKeys_.emplace_back(RiskFactorKey::KeyType::DiscountCurve, ccy, k);
+            Real disc = ts->discount(today_ + simMarketData_->yieldCurveTenors(ccy)[k]);
+            discountCurveCache_[discountCurveKeys_[count]] = disc;
+            LOG("cache discount " << disc << " for key " << discountCurveKeys_[count]);
+            count++;
         }
     }
 
-    // Cache index curve keys
     Size n_indices = simMarketData_->indices().size();
-    indexCurveKeys_.reserve(n_indices * n_ten);
+    indexCurveKeys_.reserve(n_indices * simMarketData_->yieldCurveTenors("").size());
+    count = 0;
     for (Size j = 0; j < n_indices; ++j) {
-        Handle<IborIndex> index = market->iborIndex(simMarketData_->indices()[j], configuration_);
+        std::string indexName = simMarketData_->indices()[j];
+        Size n_ten = simMarketData_->yieldCurveTenors(indexName).size();
+        Handle<IborIndex> index = market->iborIndex(indexName, configuration_);
         Handle<YieldTermStructure> ts = index->forwardingTermStructure();
         for (Size k = 0; k < n_ten; ++k) {
             indexCurveKeys_.emplace_back(RiskFactorKey::KeyType::IndexCurve, simMarketData_->indices()[j], k);
-            Period tenor = simMarketData_->yieldCurveTenors()[k];
-            Real disc = ts->discount(today_ + tenor);
-            indexCurveCache_[indexCurveKeys_[j * n_ten + k]] = ts->discount(today_ + tenor);
-            LOG("cache discount " << disc << " for key " << indexCurveKeys_[j * n_ten + k]);
+            Real disc = ts->discount(today_ + simMarketData_->yieldCurveTenors(indexName)[k]);
+            indexCurveCache_[indexCurveKeys_[count]] = disc;
+            LOG("cache discount " << disc << " for key " << indexCurveKeys_[count]);
+            count++;
         }
     }
 
     // Cache yield curve keys
     Size n_ycnames = simMarketData_->yieldCurveNames().size();
-    yieldCurveKeys_.reserve(n_ycnames * n_ten);
+    yieldCurveKeys_.reserve(n_ycnames * simMarketData_->yieldCurveTenors("").size());
+    count = 0;
     for (Size j = 0; j < n_ycnames; ++j) {
         std::string ycname = simMarketData_->yieldCurveNames()[j];
+        Size n_ten = simMarketData_->yieldCurveTenors(ycname).size();
         Handle<YieldTermStructure> ts = market->yieldCurve(ycname, configuration_);
         for (Size k = 0; k < n_ten; ++k) {
             yieldCurveKeys_.emplace_back(RiskFactorKey::KeyType::YieldCurve, ycname, k);
-            Period tenor = simMarketData_->yieldCurveTenors()[k];
-            Real disc = ts->discount(today_ + tenor);
-            yieldCurveCache_[yieldCurveKeys_[j * n_ten + k]] = ts->discount(today_ + tenor);
-            LOG("cache discount " << disc << " for key " << yieldCurveKeys_[j * n_ten + k]);
+            Real disc = ts->discount(today_ + simMarketData_->yieldCurveTenors(ycname)[k]);
+            yieldCurveCache_[yieldCurveKeys_[count]] = disc;
+            LOG("cache discount " << disc << " for key " << yieldCurveKeys_[count]);
+            count++;
         }
     }
 
@@ -170,7 +175,7 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
     Size n_swvol_term = simMarketData_->swapVolTerms().size();
     Size n_swvol_exp = simMarketData_->swapVolExpiries().size();
     fxKeys_.reserve(n_swvol_ccy * n_swvol_term * n_swvol_exp);
-    Size count = 0;
+    count = 0;
     for (Size i = 0; i < n_swvol_ccy; ++i) {
         std::string ccy = simMarketData_->swapVolCcys()[i];
         Handle<SwaptionVolatilityStructure> ts = market->swaptionVol(ccy, configuration_);
@@ -209,20 +214,20 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
 
     // Cache CapFloor (Optionlet) vol keys
     Size n_cfvol_ccy = simMarketData_->capFloorVolCcys().size();
-    Size n_cfvol_exp = simMarketData_->capFloorVolExpiries().size();
     Size n_cfvol_strikes = simMarketData_->capFloorVolStrikes().size();
-    optionletVolKeys_.reserve(n_cfvol_ccy * n_cfvol_strikes * n_cfvol_exp);
+    optionletVolKeys_.reserve(n_cfvol_ccy * n_cfvol_strikes * simMarketData_->capFloorVolExpiries("").size());
     count = 0;
     for (Size i = 0; i < n_cfvol_ccy; ++i) {
         std::string ccy = simMarketData_->capFloorVolCcys()[i];
+        Size n_cfvol_exp = simMarketData_->capFloorVolExpiries(ccy).size();
         Handle<OptionletVolatilityStructure> ts = market->capFloorVol(ccy, configuration_);
         for (Size j = 0; j < n_cfvol_exp; ++j) {
-            Period expiry = simMarketData_->capFloorVolExpiries()[j];
+            // Date expiry = ts->optionDateFromTenor(simMarketData_->capFloorVolExpiries(ccy)[j]);
             for (Size k = 0; k < n_cfvol_strikes; ++k) {
                 optionletVolKeys_.emplace_back(RiskFactorKey::KeyType::OptionletVolatility, ccy,
                                                j * n_cfvol_strikes + k);
                 Real strike = simMarketData_->capFloorVolStrikes()[k];
-                Real vol = ts->volatility(expiry, strike);
+                Real vol = ts->volatility(simMarketData_->capFloorVolExpiries(ccy)[j], strike);
                 optionletVolCache_[optionletVolKeys_[count]] = vol;
                 LOG("cache optionlet vol " << vol << " for key " << optionletVolKeys_[count]);
                 count++;
