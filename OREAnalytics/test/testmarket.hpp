@@ -156,6 +156,9 @@ public:
         equitySpots_[make_pair(Market::defaultConfiguration,"SP5")] = Handle<Quote>(boost::make_shared<SimpleQuote>(2147.56));
         equitySpots_[make_pair(Market::defaultConfiguration, "Lufthansa")] = Handle<Quote>(boost::make_shared<SimpleQuote>(12.75));
 
+        equityDividendCurves_[make_pair(Market::defaultConfiguration, "SP5")] = flatRateDiv(0.01);
+        equityDividendCurves_[make_pair(Market::defaultConfiguration, "Lufthansa")] = flatRateDiv(0.0);
+
         // build swaption vols
         swaptionCurves_[make_pair(Market::defaultConfiguration, "EUR")] = flatRateSvs(0.20);
         swaptionCurves_[make_pair(Market::defaultConfiguration, "USD")] = flatRateSvs(0.30);
@@ -208,6 +211,11 @@ private:
         boost::shared_ptr<BlackVolTermStructure> fxv(
             new BlackConstantVol(Settings::instance().evaluationDate(), NullCalendar(), forward, ActualActual()));
         return Handle<BlackVolTermStructure>(fxv);
+    }
+    Handle<YieldTermStructure> flatRateDiv(Real dividend) {
+        boost::shared_ptr<YieldTermStructure> yts(
+            new FlatForward(Settings::instance().evaluationDate(), dividend, ActualActual()));
+        return Handle<YieldTermStructure>(yts);
     }
     Handle<QuantLib::SwaptionVolatilityStructure>
     flatRateSvs(Volatility forward, VolatilityType type = ShiftedLognormal, Real shift = 0.0) {
