@@ -41,6 +41,7 @@
 #include <qle/termstructures/dynamicblackvoltermstructure.hpp>
 #include <qle/termstructures/dynamicswaptionvolmatrix.hpp>
 #include <qle/termstructures/strippedoptionletadapter2.hpp>
+#include <qle/termstructures/survivalprobabilitycurve.hpp>
 #include <qle/termstructures/swaptionvolatilityconverter.hpp>
 
 #include <boost/timer.hpp>
@@ -421,7 +422,6 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         LOG("building " << name << " default curve..");
         Handle<DefaultProbabilityTermStructure> wrapper = initMarket->defaultCurve(name, configuration);
         vector<Handle<Quote>> quotes;
-        vector<Probability> probs;
 
         QL_REQUIRE(parameters->defaultTenors(name).front() > 0 * Days, "default curve tenors must not include t=0");
 
@@ -431,17 +431,23 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
             dates.push_back(asof_ + parameters->defaultTenors(name)[i]);
         }
 
-        for (const auto& date : dates) {
-            Probability prob = wrapper->survivalProbability(date, true);
+        boost::shared_ptr<SimpleQuote> q(new SimpleQuote(1.0));
+        quotes.push_back(Handle<Quote>(q));
+        for (Size i = 0; i < dates.size() - 1; i++) {
+            Probability prob = wrapper->survivalProbability(dates[i + 1], true);
             boost::shared_ptr<SimpleQuote> q(new SimpleQuote(prob));
+            if (parameters->simulateSurvivalProbabilities()) {
+                simData_.emplace(std::piecewise_construct,
+                                 std::forward_as_tuple(RiskFactorKey::KeyType::SurvivalProbability, name, i),
+                                 std::forward_as_tuple(q));
+            }
             Handle<Quote> qh(q);
             quotes.push_back(qh);
-            probs.push_back(prob);
         }
 
         // FIXME riskmarket uses SurvivalProbabilityCurve but this isn't added to ore
         boost::shared_ptr<DefaultProbabilityTermStructure> defaultCurve(
-            new InterpolatedSurvivalProbabilityCurve<Linear>(dates, probs, wrapper->dayCounter(), wrapper->calendar()));
+            new QuantExt::SurvivalProbabilityCurve<Linear>(dates, quotes, wrapper->dayCounter(), wrapper->calendar()));
         Handle<DefaultProbabilityTermStructure> dch(defaultCurve);
         if (wrapper->allowsExtrapolation())
             dch->enableExtrapolation();
@@ -450,7 +456,12 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
             make_pair(Market::defaultConfiguration, name), dch));
 
         // add recovery rate
-        boost::shared_ptr<Quote> rrQuote(new SimpleQuote(initMarket->recoveryRate(name, configuration)->value()));
+        boost::shared_ptr<SimpleQuote> rrQuote(new SimpleQuote(initMarket->recoveryRate(name, configuration)->value()));
+        if (parameters->simulateRecoveryRates()) {
+            simData_.emplace(std::piecewise_construct,
+                             std::forward_as_tuple(RiskFactorKey::KeyType::RecoveryRate, name),
+                             std::forward_as_tuple(rrQuote));
+        }
         recoveryRates_.insert(pair<pair<string, string>, Handle<Quote>>(make_pair(Market::defaultConfiguration, name),
                                                                         Handle<Quote>(rrQuote)));
     }

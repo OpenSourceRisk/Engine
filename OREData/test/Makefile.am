@@ -5,7 +5,8 @@ OREDATA_TESTS = \
 	calendars.hpp calendars.cpp \
 	fxoption.hpp fxoption.cpp \
 	ccyswapwithresets.hpp ccyswapwithresets.cpp \
-    cpiswap.hpp cpiswap.cpp \
+        cpiswap.hpp cpiswap.cpp \
+        cms.hpp cms.cpp \
 	fxtriangulation.hpp fxtriangulation.cpp \
 	indices.hpp indices.cpp \
 	parser.hpp parser.cpp \

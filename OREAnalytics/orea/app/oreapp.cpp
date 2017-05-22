@@ -162,6 +162,11 @@ void OREApp::run() {
             out_ << "SKIP" << endl;
         }
 
+        /*****************************
+         * Additional reports
+         */
+        writeAdditionalReports();
+
     } catch (std::exception& e) {
         ALOG("Error: " << e.what());
         out_ << "Error: " << e.what() << endl;
@@ -272,7 +277,8 @@ boost::shared_ptr<EngineFactory> OREApp::buildEngineFactory(const boost::shared_
     string inputPath = params_->get("setup", "inputPath");
     string pricingEnginesFile = inputPath + "/" + params_->get("setup", "pricingEnginesFile");
     boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
-    engineData->fromFile(pricingEnginesFile);
+    if (params_->get("setup", "pricingEnginesFile") != "")
+        engineData->fromFile(pricingEnginesFile);
 
     map<MarketContext, string> configurations;
     configurations[MarketContext::irCalibration] = params_->get("markets", "lgmcalibration");
@@ -288,6 +294,8 @@ boost::shared_ptr<Portfolio> OREApp::buildPortfolio(const boost::shared_ptr<Engi
     string inputPath = params_->get("setup", "inputPath");
     string portfolioFile = inputPath + "/" + params_->get("setup", "portfolioFile");
     boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
+    if (params_->get("setup", "portfolioFile") == "")
+        return portfolio;
     portfolio->load(portfolioFile, buildTradeFactory());
     portfolio->build(factory);
     return portfolio;

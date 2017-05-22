@@ -48,10 +48,10 @@ class ScenarioSimMarketParameters : public XMLSerializable {
 public:
     //! Default constructor
     ScenarioSimMarketParameters()
-        : baseCcy_(""), interpolation_(""), extrapolate_(false), swapVolSimulate_(false), swapVolDecayMode_(""),
-          capFloorVolSimulate_(false), capFloorVolDecayMode_(""), fxVolSimulate_(false), fxVolDecayMode_(""),
-          eqVolSimulate_(false), eqVolDecayMode_("") {
-        // init default values
+        : extrapolate_(false), swapVolSimulate_(false), capFloorVolSimulate_(false),
+          survivalProbabilitySimulate_(false), recoveryRateSimulate_(false), fxVolSimulate_(false),
+          eqVolSimulate_(false) {
+        // set default tenors
         capFloorVolExpiries_[""];
         defaultTenors_[""];
         eqTenors_[""];
@@ -78,13 +78,15 @@ public:
     const vector<string>& swapVolCcys() const { return swapVolCcys_; }
     const string& swapVolDecayMode() const { return swapVolDecayMode_; }
 
-    const bool& simulateCapFloorVols() const { return capFloorVolSimulate_; }
+    bool simulateCapFloorVols() const { return capFloorVolSimulate_; }
     const vector<string>& capFloorVolCcys() const { return capFloorVolCcys_; }
     const vector<Period>& capFloorVolExpiries(const string& key) const;
     bool hasCapFloorVolExpiries(const string& key) const { return capFloorVolExpiries_.count(key) > 0; }
     const vector<Real>& capFloorVolStrikes() const { return capFloorVolStrikes_; }
     const string& capFloorVolDecayMode() const { return capFloorVolDecayMode_; }
 
+    bool simulateSurvivalProbabilities() const { return survivalProbabilitySimulate_; }
+    bool simulateRecoveryRates() const { return recoveryRateSimulate_; }
     const vector<string>& defaultNames() const { return defaultNames_; }
     const vector<Period>& defaultTenors(const string& key) const;
     bool hasDefaultTenors(const string& key) const { return defaultTenors_.count(key) > 0; }
@@ -135,6 +137,8 @@ public:
     vector<Real>& capFloorVolStrikes() { return capFloorVolStrikes_; }
     string& capFloorVolDecayMode() { return capFloorVolDecayMode_; }
 
+    bool& simulateSurvivalProbabilities() { return survivalProbabilitySimulate_; }
+    bool& simulateRecoveryRates() { return recoveryRateSimulate_; }
     vector<string>& defaultNames() { return defaultNames_; }
     void setDefaultTenors(const string& key, const vector<Period>& p);
 
@@ -194,6 +198,8 @@ private:
     vector<Real> capFloorVolStrikes_;
     string capFloorVolDecayMode_;
 
+    bool survivalProbabilitySimulate_;
+    bool recoveryRateSimulate_;
     vector<string> defaultNames_;
     map<string, vector<Period>> defaultTenors_;
 
