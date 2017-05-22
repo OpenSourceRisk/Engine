@@ -479,7 +479,22 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
             Real vol = vts->volatility(t_exp, strike);
             shiftMult = vol;
         }
-    } else if (keytype == RiskFactorKey::KeyType::SurvivalProbability) {
+    } else if (keytype == RiskFactorKey::KeyType::CDSVolatility) {
+        string name = keylabel;
+        shiftSize = sensitivityData_->cdsVolShiftData()[name].shiftSize;
+        if (boost::to_upper_copy(sensitivityData_->cdsVolShiftData()[name].shiftType) == "RELATIVE") {
+            vector<Period> expiries = sensitivityData_->cdsVolShiftData()[name].shiftExpiries;
+            Real atmFwd = 0.0; // hardcoded, since only ATM supported
+            Size keyIdx = key.index;
+            Size expIdx = keyIdx;
+            Period p_exp = expiries[expIdx];
+            Handle<BlackVolTermStructure> vts = simMarket_->cdsVol(name, marketConfiguration_);
+            Time t_exp = vts->dayCounter().yearFraction(asof_, asof_ + p_exp);
+            Real strike = 0.0; // FIXME
+            Real atmVol = vts->blackVol(t_exp, strike);
+            shiftMult = atmVol;
+        }
+    }  else if (keytype == RiskFactorKey::KeyType::SurvivalProbability) {
         string name = keylabel;
         shiftSize = sensitivityData_->creditCurveShiftData()[name].shiftSize;
         if (boost::to_upper_copy(sensitivityData_->creditCurveShiftData()[name].shiftType) == "RELATIVE") {

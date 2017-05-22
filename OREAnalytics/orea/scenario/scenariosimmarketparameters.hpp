@@ -50,7 +50,7 @@ public:
         : baseCcy_(""), interpolation_(""), extrapolate_(false), swapVolSimulate_(false), swapVolDecayMode_(""),
           capFloorVolSimulate_(false), capFloorVolDecayMode_(""), fxVolSimulate_(false), fxVolDecayMode_(""),
           eqVolSimulate_(false), eqVolDecayMode_(""), survivalProbabilitySimulate_(false),
-          recoveryRateSimulate_(false) {}
+          recoveryRateSimulate_(false), cdsVolSimulate_(false),  cdsVolDecayMode_("") {}
 
     //! \name Inspectors
     //@{
@@ -82,6 +82,11 @@ public:
     const bool& simulateRecoveryRates() const { return recoveryRateSimulate_; }
     const vector<string>& defaultNames() const { return defaultNames_; }
     const vector<Period>& defaultTenors() const { return defaultTenors_; }
+
+    bool simulateCdsVols() const { return cdsVolSimulate_; }
+    const vector<Period>& cdsVolExpiries() const { return cdsVolExpiries_; }
+    const vector<string>& cdsVolNames() const { return cdsVolNames_; }
+    const string& cdsVolDecayMode() const { return cdsVolDecayMode_; }
 
     const vector<string>& equityNames() const { return eqNames_; }
     const vector<Period>& equityTenors() const { return eqTenors_; }
@@ -193,6 +198,11 @@ private:
     bool recoveryRateSimulate_;
     vector<string> defaultNames_;
     vector<Period> defaultTenors_;
+    
+    bool cdsVolSimulate_;
+    vector<string> cdsVolNames_;
+    vector<Period> cdsVolExpiries_;
+    string cdsVolDecayMode_;
 
     vector<string> eqNames_;
     vector<Period> eqTenors_;

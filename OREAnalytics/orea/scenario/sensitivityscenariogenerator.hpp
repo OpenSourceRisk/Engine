@@ -115,6 +115,8 @@ private:
     void generateFxVolScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
     void generateCapFloorVolScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
     void generateSurvivalProbabilityScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
+    void generateCdsVolScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
+
 
     ScenarioDescription discountScenarioDescription(string ccy, Size bucket, bool up);
     ScenarioDescription indexScenarioDescription(string index, Size bucket, bool up);
@@ -125,6 +127,8 @@ private:
                                                        Size strikeBucket, bool up);
     ScenarioDescription capFloorVolScenarioDescription(string ccy, Size expiryBucket, Size strikeBucket, bool up);
     ScenarioDescription survivalProbabilityScenarioDescription(string name, Size bucket, bool up);
+    ScenarioDescription CdsVolScenarioDescription(string name, Size expiryBucket, Size strikeBucket, bool up);
+
 
     boost::shared_ptr<SensitivityScenarioData> sensitivityData_;
 };

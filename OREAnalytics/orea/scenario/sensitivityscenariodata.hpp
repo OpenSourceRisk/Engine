@@ -85,6 +85,13 @@ public:
         Real shiftSize;
     };
 
+    struct CdsVolShiftData {
+        string shiftType;
+        Real shiftSize;
+        vector<Period> shiftExpiries;
+    };
+
+
     //! Default constructor
     SensitivityScenarioData() : parConversion_(false){};
 
@@ -112,6 +119,9 @@ public:
 
     const vector<string>& fxVolCcyPairs() const { return fxVolCcyPairs_; }
     const map<string, FxVolShiftData>& fxVolShiftData() const { return fxVolShiftData_; }
+
+    const vector<string>& cdsVolNames() const { return cdsVolNames_; }
+    const map<string, CdsVolShiftData>& cdsVolShiftData() const { return cdsVolShiftData_; }
 
     // todo
     // const vector<string>& infIndices() const { return inflationIndices_; }
@@ -149,6 +159,10 @@ public:
 
     vector<string>& fxVolCcyPairs() { return fxVolCcyPairs_; }
     map<string, FxVolShiftData>& fxVolShiftData() { return fxVolShiftData_; }
+
+    vector<string>& cdsVolNames() { return cdsVolNames_; }
+    map<string, CdsVolShiftData>& cdsVolShiftData() { return cdsVolShiftData_; }
+
 
     // todo
     // vector<string>& infIndices() { return inflationIndices_; }
@@ -203,11 +217,13 @@ private:
     vector<string> fxCcyPairs_;
     map<string, FxShiftData> fxShiftData_; // key: ccy pair
 
+    vector<string> cdsVolNames_;
+    map<string, CdsVolShiftData> cdsVolShiftData_; // key: ccy pair
+
     // todo
     vector<string> inflationIndices_;
     map<string, CurveShiftData> inflationCurveShiftData_; // key: inflation index name
 
-    // todo
     vector<string> creditNames_;
     map<string, CurveShiftData> creditCurveShiftData_; // key: credit name
 

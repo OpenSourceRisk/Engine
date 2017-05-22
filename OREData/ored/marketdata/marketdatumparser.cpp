@@ -388,6 +388,16 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         return boost::make_shared<SecuritySpreadQuote>(value, asof, datumName, securityID);
     }
 
+    case MarketDatum::InstrumentType::CDS_INDEX: {
+        QL_REQUIRE(tokens.size() == 5, "5 tokens expected in " << datumName);
+        QL_REQUIRE(quoteType == MarketDatum::QuoteType::BASE_CORRELATION, "Invalid quote type for " << datumName);
+        const string& cdsIndexName = tokens[2];
+        Period term = parsePeriod(tokens[3]);
+        Real detachmentPoint = parseReal(tokens[4]);
+        return boost::make_shared<BaseCorrelationQuote>(value, asof, datumName, quoteType, cdsIndexName, term,
+                                                        detachmentPoint);
+    }
+            
     case MarketDatum::InstrumentType::INDEX_CDS_OPTION: {
         QL_REQUIRE(tokens.size() == 4, "4 tokens expected in " << datumName);
         QL_REQUIRE(quoteType == MarketDatum::QuoteType::RATE_LNVOL, "Invalid quote type for " << datumName);

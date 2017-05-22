@@ -37,7 +37,8 @@ bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& 
         swapVolDecayMode_ != rhs.swapVolDecayMode_ || capFloorVolSimulate_ != rhs.capFloorVolSimulate_ ||
         capFloorVolCcys_ != rhs.capFloorVolCcys_ || capFloorVolExpiries_ != rhs.capFloorVolExpiries_ ||
         capFloorVolStrikes_ != rhs.capFloorVolStrikes_ || capFloorVolDecayMode_ != rhs.capFloorVolDecayMode_ ||
-        defaultNames_ != rhs.defaultNames_ || defaultTenors_ != rhs.defaultTenors_ || eqNames_ != rhs.eqNames_ ||
+        defaultNames_ != rhs.defaultNames_ || defaultTenors_ != rhs.defaultTenors_ || cdsVolSimulate_ != rhs.cdsVolSimulate_
+        || cdsVolNames_ != rhs.cdsVolNames_ || cdsVolExpiries_ != rhs.cdsVolExpiries_ || cdsVolDecayMode_ != rhs.cdsVolDecayMode_|| eqNames_ != rhs.eqNames_ ||
         eqTenors_ != rhs.eqTenors_ || fxVolSimulate_ != rhs.fxVolSimulate_ || fxVolExpiries_ != rhs.fxVolExpiries_ ||
         fxVolDecayMode_ != rhs.fxVolDecayMode_ || fxVolCcyPairs_ != rhs.fxVolCcyPairs_ ||
         fxCcyPairs_ != rhs.fxCcyPairs_ || eqVolSimulate_ != rhs.eqVolSimulate_ ||
@@ -141,6 +142,17 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         eqTenors_.clear();
     }
 
+    nodeChild = XMLUtils::getChildNode(node, "CDSVolatilities");
+    if (nodeChild) {
+        cdsVolSimulate_ = false;
+        XMLNode* cdsVolSimNode = XMLUtils::getChildNode(nodeChild, "Simulate");
+        if (cdsVolSimNode)
+            cdsVolSimulate_ = ore::data::parseBool(XMLUtils::getNodeValue(cdsVolSimNode));
+        cdsVolExpiries_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Expiries", true);
+        cdsVolNames_ = XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true);
+        cdsVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
+    }
+    
     nodeChild = XMLUtils::getChildNode(node, "FxVolatilities");
     fxVolSimulate_ = false;
     XMLNode* fxVolSimNode = XMLUtils::getChildNode(nodeChild, "Simulate");

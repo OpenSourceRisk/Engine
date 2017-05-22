@@ -101,6 +101,8 @@ void ShiftScenarioGenerator::clear() {
     optionletVolCache_.clear();
     survivalProbabilityKeys_.clear();
     survivalProbabilityCache_.clear();
+    cdsVolKeys_.clear();
+    cdsVolCache_.clear();
 }
 
 void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
@@ -246,6 +248,26 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
         }
     }
 
+    // Cache CDS vol keys
+    Size n_cdsvol_names = simMarketData_->cdsVolNames().size();
+    Size n_cdsvol_exp = simMarketData_->cdsVolExpiries().size();
+    cdsVolKeys_.reserve(n_cdsvol_names * n_cdsvol_exp);
+    count = 0;
+    for (Size i = 0; i < n_cdsvol_names; ++i) {
+        std::string name = simMarketData_->cdsVolNames()[i];
+        Handle<BlackVolTermStructure> ts = market->cdsVol(name, configuration_);
+        Real strike = 0.0; // FIXME
+        for (Size j = 0; j < n_cdsvol_exp; ++j) {
+            Period expiry = simMarketData_->cdsVolExpiries()[j];
+            cdsVolKeys_.emplace_back(RiskFactorKey::KeyType::CDSVolatility, name, j );
+            Real cdsvol = ts->blackVol(today_ + expiry, strike);
+            cdsVolCache_[cdsVolKeys_[count]] = cdsvol;
+            LOG("cache swaption vol " << cdsvol << " for key " << cdsVolKeys_[count]);
+            count++;
+        }
+    }
+
+
     LOG("generate base scenario");
     baseScenario_ = baseScenarioFactory_->buildScenario(today_, "BASE");
     addCacheTo(baseScenario_);
@@ -315,6 +337,13 @@ void ShiftScenarioGenerator::addCacheTo(boost::shared_ptr<Scenario> scenario) {
                 scenario->add(key, survivalProbabilityCache_[key]);
         }
     }
+    if (simMarketData_->simulateCdsVols()) {
+        for (auto key : cdsVolKeys_) {
+            if (!scenario->has(key))
+                scenario->add(key, cdsVolCache_[key]);
+        }
+    }
+
 }
 
 RiskFactorKey ShiftScenarioGenerator::getFxKey(const std::string& key) {
@@ -379,6 +408,14 @@ RiskFactorKey ShiftScenarioGenerator::getSurvivalProbabilityKey(const std::strin
             return survivalProbabilityKeys_[i];
     }
     QL_FAIL("error locating SurvivalProbability RiskFactorKey for " << name << ", index " << index);
+}
+
+RiskFactorKey ShiftScenarioGenerator::getCdsVolKey(const std::string& name, Size index) {
+    for (Size i = 0; i < cdsVolKeys_.size(); ++i) {
+        if (cdsVolKeys_[i].name == name && cdsVolKeys_[i].index == index)
+            return cdsVolKeys_[i];
+    }
+    QL_FAIL("error locating CDSVol RiskFactorKey for " << name << ", index " << index);
 }
 
 void ShiftScenarioGenerator::applyShift(Size j, Real shiftSize, bool up, ShiftType shiftType,
