@@ -416,7 +416,7 @@ void OREApp::runSensitivityAnalysis() {
     boost::shared_ptr<SensitivityScenarioData> sensiData(new SensitivityScenarioData);
     boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
     boost::shared_ptr<Portfolio> sensiPortfolio = boost::make_shared<Portfolio>();
-    string marketConfiguration;
+    string marketConfiguration = params_->get("markets", "sensitivity");
 
     sensiInputInitialize(simMarketData, sensiData, engineData, sensiPortfolio, marketConfiguration);
 

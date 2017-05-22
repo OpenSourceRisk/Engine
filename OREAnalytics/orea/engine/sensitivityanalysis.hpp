@@ -123,6 +123,9 @@ public:
     //! A getter for Conventions
     virtual const Conventions& conventions() const { return conventions_; }
 
+    //! override shift tenors with sim market tenors
+    void overrideTenors(const bool b) { overrideTenors_ = b; }
+
 protected:
     //! initialize the various components that will be passed to the sensitivities valuation engine
     void initialize(boost::shared_ptr<NPVCube>& cube);
@@ -156,7 +159,7 @@ protected:
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketData_;
     boost::shared_ptr<SensitivityScenarioData> sensitivityData_;
     Conventions conventions_;
-    bool recalibrateModels_;
+    bool recalibrateModels_, overrideTenors_;
 
     // base NPV by trade
     std::map<std::string, Real> baseNPV_;

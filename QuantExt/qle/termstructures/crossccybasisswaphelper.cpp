@@ -23,6 +23,8 @@
 #include <qle/pricingengines/crossccyswapengine.hpp>
 #include <qle/termstructures/crossccybasisswaphelper.hpp>
 
+#include <boost/make_shared.hpp>
+
 namespace QuantExt {
 
 namespace {
@@ -116,14 +118,13 @@ void CrossCcyBasisSwapHelper::initializeDates() {
         new CrossCcyBasisSwap(spreadLegNominal, spreadLegCurrency_, spreadLegSchedule, spreadIndex_, 0.0,
                               flatLegNominal, flatLegCurrency_, flatLegSchedule, flatIndex_, 0.0));
 
-    Handle<Quote> spotFX(*spotFX_);
     boost::shared_ptr<PricingEngine> engine;
     if (flatIsDomestic_) {
         engine.reset(new CrossCcySwapEngine(flatLegCurrency_, flatDiscountRLH_, spreadLegCurrency_, spreadDiscountRLH_,
-                                            spotFX, boost::none, settlementDate, settlementDate));
+                                            spotFX_));
     } else {
         engine.reset(new CrossCcySwapEngine(spreadLegCurrency_, spreadDiscountRLH_, flatLegCurrency_, flatDiscountRLH_,
-                                            spotFX, boost::none, settlementDate, settlementDate));
+                                            spotFX_));
     }
     swap_->setPricingEngine(engine);
 

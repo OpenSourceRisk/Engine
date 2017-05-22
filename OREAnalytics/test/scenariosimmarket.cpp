@@ -59,7 +59,7 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> scenarioParameters() {
     boost::shared_ptr<analytics::ScenarioSimMarketParameters> parameters(new analytics::ScenarioSimMarketParameters());
     parameters->baseCcy() = "EUR";
     parameters->ccys() = {"EUR", "USD"};
-    parameters->yieldCurveTenors() = {6 * Months, 1 * Years, 2 * Years};
+    parameters->setYieldCurveTenors("", {6 * Months, 1 * Years, 2 * Years});
     parameters->indices() = {"EUR-EURIBOR-6M", "USD-LIBOR-6M"};
     parameters->interpolation() = "LogLinear";
     parameters->extrapolate() = true;
@@ -70,7 +70,7 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> scenarioParameters() {
     parameters->swapVolDecayMode() = "ForwardVariance";
 
     parameters->defaultNames() = {"dc2"};
-    parameters->defaultTenors() = {6 * Months, 8 * Months, 1 * Years, 2 * Years};
+    parameters->setDefaultTenors("", {6 * Months, 8 * Months, 1 * Years, 2 * Years});
 
     parameters->simulateFXVols() = false;
     parameters->fxVolExpiries() = {2 * Years, 3 * Years, 4 * Years};
@@ -184,8 +184,8 @@ void testDefaultCurve(boost::shared_ptr<ore::data::Market>& initMarket,
         BOOST_CHECK_EQUAL(initCurve->referenceDate(), simCurve->referenceDate());
         vector<Date> dates;
         Date asof = initMarket->asofDate();
-        for (Size i = 0; i < parameters->defaultTenors().size(); i++) {
-            dates.push_back(asof + parameters->defaultTenors()[i]);
+        for (Size i = 0; i < parameters->defaultTenors("").size(); i++) {
+            dates.push_back(asof + parameters->defaultTenors("")[i]);
         }
 
         for (const auto& date : dates) {
