@@ -674,7 +674,7 @@ void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(
             LOG("generate survival probability scenario, name " << name << ", bucket " << j << ", up " << up
                                                                 << ", desc " << scenarioDescriptions_.back().text());
 
-            // apply integrated hazard rate shift at tenor point j
+            // apply averaged hazard rate shift at tenor point j
             applyShift(j, shiftSize, up, shiftType, shiftTimes, hazardRates, times, shiftedHazardRates, true);
 
             // store shifted survival Prob in the scenario

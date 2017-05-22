@@ -488,7 +488,7 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
             Handle<DefaultProbabilityTermStructure> ts = simMarket_->defaultCurve(name, marketConfiguration_);
             Time t = ts->dayCounter().yearFraction(asof_, asof_ + p);
             Real prob = ts->survivalProbability(t);
-            shiftMult = prob;
+            shiftMult = -std::ln(prob)/t;
         }
     } else {
         QL_FAIL("KeyType not supported yet - " << keytype);
