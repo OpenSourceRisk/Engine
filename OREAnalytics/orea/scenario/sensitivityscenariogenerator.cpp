@@ -58,7 +58,7 @@ void SensitivityScenarioGenerator::generateScenarios(const boost::shared_ptr<Sce
         generateFxVolScenarios(sensiScenarioFactory, false);
     }
 
-    if (simMarketData_->simulateEquityVols()) {
+    if (simMarketData_->simulateEQVols()) {
         generateEquityVolScenarios(sensiScenarioFactory, true);
         generateEquityVolScenarios(sensiScenarioFactory, false);
     }
@@ -768,22 +768,25 @@ void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(
     }
 
     Size n_names = crNames_.size();
-    Size n_ten = simMarketData_->defaultTenors().size();
+    Size n_ten;
 
     // original curves' buffer
     std::vector<Real> hazardRates(n_ten); //integrated hazard rates
-    std::vector<Real> times(n_ten);
+    std::vector<Real> times;
 
-    // buffer for shifted survival prob curves
-    std::vector<Real> shiftedHazardRates(n_ten);
     for (Size i = 0; i < n_names; ++i) {
         string name = crNames_[i];
+        n_ten = simMarketData_->defaultTenors(crNames_[i]).size();
+        times.clear();
+        times.resize(n_ten);
+        // buffer for shifted survival prob curves
+        std::vector<Real> shiftedHazardRates(n_ten);
         SensitivityScenarioData::CurveShiftData data = sensitivityData_->creditCurveShiftData()[name];
         ShiftType shiftType = parseShiftType(data.shiftType);
         Handle<DefaultProbabilityTermStructure> ts = initMarket_->defaultCurve(name, configuration_);
         DayCounter dc = ts->dayCounter();
         for (Size j = 0; j < n_ten; ++j) {
-            Date d = today_ + simMarketData_->defaultTenors()[j];
+            Date d = today_ + simMarketData_->defaultTenors(crNames_[i])[j];
             times[j] = dc.yearFraction(today_, d);
             Real s_t = ts->survivalProbability(times[j], true); // do we extrapolate or not?
             hazardRates[j] = -std::log(s_t)/times[j];

@@ -21,6 +21,7 @@
     <Parameter name="fxcalibration">collateral_eur</Parameter>
     <Parameter name="pricing">collateral_eur</Parameter>
     <Parameter name="simulation">collateral_eur</Parameter>
+    <Parameter name="sensitivity">collateral_eur</Parameter>
   </Markets>
   <Analytics>
     <Analytic type="npv">

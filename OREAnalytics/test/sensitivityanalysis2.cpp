@@ -121,6 +121,8 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData5() 
     simMarketData->fxCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY"};
 
     simMarketData->equityNames() = { "SP5", "Lufthansa" };
+    simMarketData->setEquityTenors("SP5", { 6 * Months, 1 * Years, 2 * Years });
+    simMarketData->setEquityTenors("Lufthansa", { 6 * Months, 1 * Years, 2 * Years });
 
     simMarketData->simulateCapFloorVols() = true;
     simMarketData->capFloorVolDecayMode() = "ForwardVariance";
@@ -168,10 +170,10 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5() {
     eqvsData.shiftExpiries = { 5 * Years };
 
     SensitivityScenarioData::CapFloorVolShiftData cfvsData;
-    eqvsData.shiftType = "Absolute";
-    eqvsData.shiftSize = 1E-5;
-    eqvsData.shiftExpiries = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
-    eqvsData.shiftStrikes = {0.01, 0.02, 0.03, 0.04, 0.05};
+    cfvsData.shiftType = "Absolute";
+    cfvsData.shiftSize = 1E-5;
+    cfvsData.shiftExpiries = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
+    cfvsData.shiftStrikes = {0.01, 0.02, 0.03, 0.04, 0.05};
 
     SensitivityScenarioData::SwaptionVolShiftData swvsData;
     swvsData.shiftType = "Relative";
