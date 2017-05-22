@@ -330,7 +330,9 @@
     <ClInclude Include="ored\marketdata\securityrecoveryrate.hpp">
       <Filter>marketdata</Filter>
     </ClInclude>
-    <ClInclude Include="ored\portfolio\builders\cms.hpp" />
+    <ClInclude Include="ored\portfolio\builders\cms.hpp">
+      <Filter>portfolio\builders</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp">
@@ -576,6 +578,8 @@
     <ClCompile Include="ored\marketdata\securityrecoveryrate.cpp">
       <Filter>marketdata</Filter>
     </ClCompile>
-    <ClCompile Include="ored\portfolio\builders\cms.cpp" />
+    <ClCompile Include="ored\portfolio\builders\cms.cpp">
+      <Filter>portfolio\builders</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
