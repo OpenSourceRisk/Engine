@@ -27,6 +27,7 @@
 #include <ored/utilities/xmlutils.hpp>
 #include <qle/termstructures/dynamicstype.hpp>
 
+using QuantLib::Date;
 using QuantLib::Period;
 using QuantLib::Rate;
 using std::vector;
@@ -49,7 +50,12 @@ public:
     ScenarioSimMarketParameters()
         : extrapolate_(false), swapVolSimulate_(false), capFloorVolSimulate_(false),
           survivalProbabilitySimulate_(false), recoveryRateSimulate_(false), fxVolSimulate_(false),
-          equityVolSimulate_(false) {}
+          equityVolSimulate_(false), eqVolSimulate_(false) {
+        // set default tenors
+        capFloorVolExpiries_[""];
+        defaultTenors_[""];
+        eqTenors_[""];
+    }
 
     //! \name Inspectors
     //@{
@@ -57,7 +63,8 @@ public:
     const vector<string>& ccys() const { return ccys_; }
     const vector<string>& yieldCurveNames() const { return yieldCurveNames_; }
     const vector<string>& yieldCurveCurrencies() const { return yieldCurveCurrencies_; }
-    const vector<Period>& yieldCurveTenors() const { return yieldCurveTenors_; }
+    const vector<Period>& yieldCurveTenors(const string& key) const;
+    bool hasYieldCurveTenors(const string& key) const { return yieldCurveTenors_.count(key) > 0; }
     const vector<string>& indices() const { return indices_; }
     const map<string, string>& swapIndices() const { return swapIndices_; }
     const string& interpolation() const { return interpolation_; }
@@ -73,17 +80,20 @@ public:
 
     bool simulateCapFloorVols() const { return capFloorVolSimulate_; }
     const vector<string>& capFloorVolCcys() const { return capFloorVolCcys_; }
-    const vector<Period>& capFloorVolExpiries() const { return capFloorVolExpiries_; }
+    const vector<Period>& capFloorVolExpiries(const string& key) const;
+    bool hasCapFloorVolExpiries(const string& key) const { return capFloorVolExpiries_.count(key) > 0; }
     const vector<Real>& capFloorVolStrikes() const { return capFloorVolStrikes_; }
     const string& capFloorVolDecayMode() const { return capFloorVolDecayMode_; }
 
     bool simulateSurvivalProbabilities() const { return survivalProbabilitySimulate_; }
     bool simulateRecoveryRates() const { return recoveryRateSimulate_; }
     const vector<string>& defaultNames() const { return defaultNames_; }
-    const vector<Period>& defaultTenors() const { return defaultTenors_; }
+    const vector<Period>& defaultTenors(const string& key) const;
+    bool hasDefaultTenors(const string& key) const { return defaultTenors_.count(key) > 0; }
 
     const vector<string>& equityNames() const { return equityNames_; }
     const vector<Period>& equityTenors() const { return equityTenors_; }
+    bool hasEquityTenors(const string& key) const { return eqTenors_.count(key) > 0; }
 
     bool simulateFXVols() const { return fxVolSimulate_; }
     const vector<Period>& fxVolExpiries() const { return fxVolExpiries_; }
@@ -107,7 +117,7 @@ public:
     vector<string>& ccys() { return ccys_; }
     vector<string>& yieldCurveNames() { return yieldCurveNames_; }
     vector<string>& yieldCurveCurrencies() { return yieldCurveCurrencies_; }
-    vector<Period>& yieldCurveTenors() { return yieldCurveTenors_; }
+    void setYieldCurveTenors(const string& key, const vector<Period>& p);
     vector<string>& indices() { return indices_; }
     map<string, string>& swapIndices() { return swapIndices_; }
     string& interpolation() { return interpolation_; }
@@ -123,17 +133,17 @@ public:
 
     bool& simulateCapFloorVols() { return capFloorVolSimulate_; }
     vector<string>& capFloorVolCcys() { return capFloorVolCcys_; }
-    vector<Period>& capFloorVolExpiries() { return capFloorVolExpiries_; }
+    void setCapFloorVolExpiries(const string& key, const vector<Period>& p);
     vector<Real>& capFloorVolStrikes() { return capFloorVolStrikes_; }
     string& capFloorVolDecayMode() { return capFloorVolDecayMode_; }
 
     bool& simulateSurvivalProbabilities() { return survivalProbabilitySimulate_; }
     bool& simulateRecoveryRates() { return recoveryRateSimulate_; }
     vector<string>& defaultNames() { return defaultNames_; }
-    vector<Period>& defaultTenors() { return defaultTenors_; }
+    void setDefaultTenors(const string& key, const vector<Period>& p);
 
     vector<string>& equityNames() { return equityNames_; }
-    vector<Period>& equityTenors() { return equityTenors_; }
+    void setEquityTenors(const string& key, const vector<Period>& p);
 
     bool& simulateFXVols() { return fxVolSimulate_; }
     vector<Period>& fxVolExpiries() { return fxVolExpiries_; }
@@ -168,7 +178,7 @@ private:
     vector<string> ccys_; // may or may not include baseCcy;
     vector<string> yieldCurveNames_;
     vector<string> yieldCurveCurrencies_;
-    vector<Period> yieldCurveTenors_;
+    map<string, vector<Period>> yieldCurveTenors_;
     vector<string> indices_;
     map<string, string> swapIndices_;
     string interpolation_;
@@ -184,14 +194,14 @@ private:
 
     bool capFloorVolSimulate_;
     vector<string> capFloorVolCcys_;
-    vector<Period> capFloorVolExpiries_;
+    map<string, vector<Period>> capFloorVolExpiries_;
     vector<Real> capFloorVolStrikes_;
     string capFloorVolDecayMode_;
 
     bool survivalProbabilitySimulate_;
     bool recoveryRateSimulate_;
     vector<string> defaultNames_;
-    vector<Period> defaultTenors_;
+    map<string, vector<Period>> defaultTenors_;
 
     vector<string> equityNames_;
     vector<Period> equityTenors_;
