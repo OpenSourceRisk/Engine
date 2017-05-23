@@ -128,7 +128,7 @@ public:
 
 protected:
     //! initialize the various components that will be passed to the sensitivities valuation engine
-    void initialize(boost::shared_ptr<NPVCube>& cube);
+    virtual void initialize(boost::shared_ptr<NPVCube>& cube);
     //! initialize the cube with the appropriate dimensions
     virtual void initializeCube(boost::shared_ptr<NPVCube>& cube) const;
     //! build engine factory
