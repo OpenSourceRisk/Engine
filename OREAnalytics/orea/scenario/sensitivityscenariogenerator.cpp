@@ -190,8 +190,8 @@ void SensitivityScenarioGenerator::generateFxScenarios(const boost::shared_ptr<S
     LOG("FX scenarios done");
 }
 
-void SensitivityScenarioGenerator::generateEquityScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory,
-    bool up) {
+void SensitivityScenarioGenerator::generateEquityScenarios(
+    const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up) {
     // We can choose to shift fewer discount curves than listed in the market
     std::vector<string> simMarketEquities = simMarketData_->equityNames();
     if (sensitivityData_->equityNames().size() > 0)
@@ -206,7 +206,7 @@ void SensitivityScenarioGenerator::generateEquityScenarios(const boost::shared_p
         }
     }
     for (Size k = 0; k < equityNames_.size(); k++) {
-        string equity = equityNames_[k]; 
+        string equity = equityNames_[k];
         SensitivityScenarioData::SpotShiftData data = sensitivityData_->equityShiftData()[equity];
         ShiftType type = parseShiftType(data.shiftType);
         Real size = up ? data.shiftSize : -1.0 * data.shiftSize;
@@ -222,7 +222,7 @@ void SensitivityScenarioGenerator::generateEquityScenarios(const boost::shared_p
         scenario->add(getEquityKey(equity), newRate);
         scenarios_.push_back(scenario);
         DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label()
-            << " created: " << newRate);
+                                       << " created: " << newRate);
     }
     LOG("Equity scenarios done");
 }
@@ -539,7 +539,7 @@ void SensitivityScenarioGenerator::generateEquityVolScenarios(
     for (Size i = 0; i < n_eqvol_names; ++i) {
         string equity = equityVolNames_[i];
         QL_REQUIRE(shiftDataMap.find(equity) != shiftDataMap.end(),
-            "equity " << equity << " not found in VolShiftData");
+                   "equity " << equity << " not found in VolShiftData");
         SensitivityScenarioData::VolShiftData data = shiftDataMap[equity];
         ShiftType shiftType = parseShiftType(data.shiftType);
         std::vector<Period> shiftTenors = data.shiftExpiries;
@@ -771,12 +771,14 @@ void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(
     Size n_ten;
 
     // original curves' buffer
-    std::vector<Real> hazardRates(n_ten); //integrated hazard rates
+    std::vector<Real> hazardRates; // integrated hazard rates
     std::vector<Real> times;
 
     for (Size i = 0; i < n_names; ++i) {
         string name = crNames_[i];
         n_ten = simMarketData_->defaultTenors(crNames_[i]).size();
+        hazardRates.clear();
+        hazardRates.resize(n_ten);
         times.clear();
         times.resize(n_ten);
         // buffer for shifted survival prob curves
@@ -789,7 +791,7 @@ void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(
             Date d = today_ + simMarketData_->defaultTenors(crNames_[i])[j];
             times[j] = dc.yearFraction(today_, d);
             Real s_t = ts->survivalProbability(times[j], true); // do we extrapolate or not?
-            hazardRates[j] = -std::log(s_t)/times[j];
+            hazardRates[j] = -std::log(s_t) / times[j];
         }
 
         std::vector<Period> shiftTenors = data.shiftTenors;
@@ -824,8 +826,8 @@ void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(
     LOG("Discount curve scenarios done");
 }
 
-SensitivityScenarioGenerator::ScenarioDescription 
-SensitivityScenarioGenerator::fxScenarioDescription(string ccypair, bool up) {
+SensitivityScenarioGenerator::ScenarioDescription SensitivityScenarioGenerator::fxScenarioDescription(string ccypair,
+                                                                                                      bool up) {
     RiskFactorKey key(RiskFactorKey::KeyType::FXSpot, ccypair);
     std::ostringstream o;
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
@@ -833,8 +835,8 @@ SensitivityScenarioGenerator::fxScenarioDescription(string ccypair, bool up) {
     return desc;
 }
 
-SensitivityScenarioGenerator::ScenarioDescription 
-SensitivityScenarioGenerator::equityScenarioDescription(string equity, bool up) {
+SensitivityScenarioGenerator::ScenarioDescription SensitivityScenarioGenerator::equityScenarioDescription(string equity,
+                                                                                                          bool up) {
     RiskFactorKey key(RiskFactorKey::KeyType::EQSpot, equity);
     std::ostringstream o;
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
@@ -909,9 +911,10 @@ SensitivityScenarioGenerator::fxVolScenarioDescription(string ccypair, Size expi
 }
 
 SensitivityScenarioGenerator::ScenarioDescription
-SensitivityScenarioGenerator::equityVolScenarioDescription(string equity, Size expiryBucket, Size strikeBucket, bool up) {
+SensitivityScenarioGenerator::equityVolScenarioDescription(string equity, Size expiryBucket, Size strikeBucket,
+                                                           bool up) {
     QL_REQUIRE(sensitivityData_->equityVolShiftData().find(equity) != sensitivityData_->equityVolShiftData().end(),
-        "currency pair " << equity << " not found in fx vol shift data");
+               "currency pair " << equity << " not found in fx vol shift data");
     SensitivityScenarioData::VolShiftData data = sensitivityData_->equityVolShiftData()[equity];
     QL_REQUIRE(expiryBucket < data.shiftExpiries.size(), "expiry bucket " << expiryBucket << " out of range");
     Size index = strikeBucket * data.shiftExpiries.size() + expiryBucket;
@@ -919,8 +922,7 @@ SensitivityScenarioGenerator::equityVolScenarioDescription(string equity, Size e
     std::ostringstream o;
     if (data.shiftStrikes.size() == 0) {
         o << data.shiftExpiries[expiryBucket] << "/ATM";
-    }
-    else {
+    } else {
         QL_REQUIRE(strikeBucket < data.shiftStrikes.size(), "strike bucket " << strikeBucket << " out of range");
         o << data.shiftExpiries[expiryBucket] << "/" << data.shiftStrikes[strikeBucket];
     }
