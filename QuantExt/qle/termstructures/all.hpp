@@ -30,4 +30,5 @@
 #include <qle/termstructures/swaptionvolatilityconverter.hpp>
 #include <qle/termstructures/subperiodsswaphelper.hpp>
 #include <qle/termstructures/survivalprobabilitycurve.hpp>
+#include <qle/termstructures/swaptionvolcubewithatm.hpp>
 

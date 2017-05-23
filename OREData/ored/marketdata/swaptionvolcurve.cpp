@@ -23,6 +23,7 @@
 #include <ql/termstructures/volatility/swaption/swaptionvolcube2.hpp>
 #include <ql/termstructures/volatility/swaption/swaptionvolmatrix.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
+#include <qle/termstructures/swaptionvolcubewithatm.hpp>
 
 using namespace QuantLib;
 using namespace std;
@@ -249,10 +250,13 @@ SwaptionVolCurve::SwaptionVolCurve(Date asof, SwaptionVolatilityCurveSpec spec, 
             bool vegaWeighedSmileFit = false; // TODO
 
             Handle<SwaptionVolatilityStructure> hATM(atm);
-            vol_ = boost::make_shared<SwaptionVolCube2>(hATM, smileOptionTenors, smileSwapTenors, spreads,
-                                                        volSpreadHandles, swapIndexBase, shortSwapIndexBase,
-                                                        vegaWeighedSmileFit);
-            vol_->enableExtrapolation();
+            boost::shared_ptr<SwaptionVolCube2> cube = boost::make_shared<SwaptionVolCube2>(
+                hATM, smileOptionTenors, smileSwapTenors, spreads, volSpreadHandles, swapIndexBase, shortSwapIndexBase,
+                vegaWeighedSmileFit);
+            cube->enableExtrapolation();
+
+            // Wrap it in a SwaptionVolCubeWithATM
+            vol_ = boost::make_shared<QuantExt::SwaptionVolCubeWithATM>(cube);
         }
 
     } catch (std::exception& e) {
