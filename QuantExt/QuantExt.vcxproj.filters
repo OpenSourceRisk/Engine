@@ -333,10 +333,6 @@
     <ClInclude Include="qle\termstructures\dynamicstype.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
-    <ClInclude Include="qle\pricingengines\discountingriskybondengine.hpp" />
-    <ClInclude Include="qle\indexes\ibor\krwkoribor.hpp" />
-    <ClInclude Include="qle\indexes\ibor\twdtaibor.hpp" />
-    <ClInclude Include="qle\indexes\ibor\myrklibor.hpp" />
     <ClInclude Include="qle\instruments\deposit.hpp">
       <Filter>instruments</Filter>
     </ClInclude>
@@ -423,6 +419,18 @@
     </ClInclude>
     <ClInclude Include="qle\termstructures\survivalprobabilitycurve.hpp">
       <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\krwkoribor.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\myrklibor.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\twdtaibor.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\discountingriskybondengine.hpp">
+      <Filter>pricingengines</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
