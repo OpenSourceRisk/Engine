@@ -563,7 +563,7 @@ void SensitivityScenarioGenerator::generateEquityVolScenarios(
             Size strikeBucket = 0; // FIXME
             boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(today_);
 
-            scenarioDescriptions_.push_back(fxVolScenarioDescription(equity, j, strikeBucket, up));
+            scenarioDescriptions_.push_back(equityVolScenarioDescription(equity, j, strikeBucket, up));
 
             // apply shift at tenor point j
             applyShift(j, shiftSize, up, shiftType, shiftTimes, values, times, shiftedValues, true);
@@ -918,7 +918,7 @@ SensitivityScenarioGenerator::equityVolScenarioDescription(string equity, Size e
     SensitivityScenarioData::VolShiftData data = sensitivityData_->equityVolShiftData()[equity];
     QL_REQUIRE(expiryBucket < data.shiftExpiries.size(), "expiry bucket " << expiryBucket << " out of range");
     Size index = strikeBucket * data.shiftExpiries.size() + expiryBucket;
-    RiskFactorKey key(RiskFactorKey::KeyType::FXVolatility, equity, index);
+    RiskFactorKey key(RiskFactorKey::KeyType::EQVolatility, equity, index);
     std::ostringstream o;
     if (data.shiftStrikes.size() == 0) {
         o << data.shiftExpiries[expiryBucket] << "/ATM";

@@ -567,7 +567,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         boost::shared_ptr<YieldTermStructure> eqdivCurve;
         if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister) {
             eqdivCurve = boost::shared_ptr<YieldTermStructure>(new QuantExt::InterpolatedDiscountCurve(
-                equityCurveTimes, quotes, 0, wrapper->calendar(), wrapper->dayCounter()));
+                equityCurveTimes, quotes, 0, TARGET(), wrapper->dayCounter()));
         } else {
             eqdivCurve = boost::shared_ptr<YieldTermStructure>(
                 new QuantExt::InterpolatedDiscountCurve2(equityCurveTimes, quotes, wrapper->dayCounter()));
