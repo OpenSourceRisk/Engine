@@ -195,8 +195,8 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     }
 
     nodeChild = XMLUtils::getChildNode(node, "CDSVolatilities");
+    cdsVolSimulate_ = false;
     if (nodeChild) {
-        cdsVolSimulate_ = false;
         XMLNode* cdsVolSimNode = XMLUtils::getChildNode(nodeChild, "Simulate");
         if (cdsVolSimNode)
             cdsVolSimulate_ = ore::data::parseBool(XMLUtils::getNodeValue(cdsVolSimNode));
