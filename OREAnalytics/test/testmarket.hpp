@@ -156,6 +156,9 @@ public:
         equitySpots_[make_pair(Market::defaultConfiguration,"SP5")] = Handle<Quote>(boost::make_shared<SimpleQuote>(2147.56));
         equitySpots_[make_pair(Market::defaultConfiguration, "Lufthansa")] = Handle<Quote>(boost::make_shared<SimpleQuote>(12.75));
 
+        equityVols_[make_pair(Market::defaultConfiguration, "SP5")] = flatRateFxv(0.2514);
+        equityVols_[make_pair(Market::defaultConfiguration, "Lufthansa")] = flatRateFxv(0.30);
+
         equityDividendCurves_[make_pair(Market::defaultConfiguration, "SP5")] = flatRateDiv(0.01);
         equityDividendCurves_[make_pair(Market::defaultConfiguration, "Lufthansa")] = flatRateDiv(0.0);
 
