@@ -619,6 +619,7 @@
     <ClInclude Include="qle\termstructures\staticallycorrectedyieldtermstructure.hpp" />
     <ClInclude Include="qle\termstructures\strippedoptionletadapter2.hpp" />
     <ClInclude Include="qle\termstructures\subperiodsswaphelper.hpp" />
+    <ClInclude Include="qle\termstructures\survivalprobabilitycurve.hpp" />
     <ClInclude Include="qle\termstructures\swaptionvolatilityconverter.hpp" />
     <ClInclude Include="qle\termstructures\tenorbasisswaphelper.hpp" />
   </ItemGroup>
