@@ -45,7 +45,9 @@ public:
     //! QuantLib::SwaptionVolatilityCube
     SwaptionVolCubeWithATM(const boost::shared_ptr<SwaptionVolatilityCube>& cube)
         : SwaptionVolatilityStructure(0, cube->calendar(), cube->businessDayConvention(), cube->dayCounter()),
-          cube_(cube) {}
+          cube_(cube) {
+        registerWith(cube);
+    }
 
     //! \name TermStructure interface
     //@{
