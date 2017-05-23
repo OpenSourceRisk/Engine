@@ -63,6 +63,7 @@ public:
     //! \name SwaptionVolatilityStructure interface
     //@{
     const Period& maxSwapTenor() const { return cube_->maxSwapTenor(); }
+    VolatilityType volatilityType() const { return cube_->volatilityType(); }
     //@}
 
 protected:
