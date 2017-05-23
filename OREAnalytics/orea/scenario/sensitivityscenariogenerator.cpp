@@ -771,12 +771,14 @@ void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(
     Size n_ten;
 
     // original curves' buffer
-    std::vector<Real> hazardRates(n_ten); // integrated hazard rates
+    std::vector<Real> hazardRates; // integrated hazard rates
     std::vector<Real> times;
 
     for (Size i = 0; i < n_names; ++i) {
         string name = crNames_[i];
         n_ten = simMarketData_->defaultTenors(crNames_[i]).size();
+        hazardRates.clear();
+        hazardRates.resize(n_ten);
         times.clear();
         times.resize(n_ten);
         // buffer for shifted survival prob curves
