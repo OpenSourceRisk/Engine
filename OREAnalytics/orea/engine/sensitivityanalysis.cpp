@@ -58,7 +58,7 @@ SensitivityAnalysis::SensitivityAnalysis(const boost::shared_ptr<ore::data::Port
     : market_(market), marketConfiguration_(marketConfiguration), asof_(market->asofDate()),
       simMarketData_(simMarketData), sensitivityData_(sensitivityData), conventions_(conventions),
       recalibrateModels_(recalibrateModels), nonShiftedBaseCurrencyConversion_(nonShiftedBaseCurrencyConversion),
-      engineData_(engineData), portfolio_(portfolio), initialized_(false), computed_(false) {}
+      engineData_(engineData), portfolio_(portfolio), initialized_(false), computed_(false), overrideTenors_(false) {}
 
 std::vector<boost::shared_ptr<ValuationCalculator>> SensitivityAnalysis::buildValuationCalculators() const {
     vector<boost::shared_ptr<ValuationCalculator>> calculators;
@@ -111,8 +111,8 @@ void SensitivityAnalysis::generateSensitivities() {
 }
 
 void SensitivityAnalysis::initializeSensitivityScenarioGenerator(boost::shared_ptr<ScenarioFactory> scenFact) {
-    scenarioGenerator_ =
-        boost::make_shared<SensitivityScenarioGenerator>(sensitivityData_, simMarketData_, asof_, market_);
+    scenarioGenerator_ = boost::make_shared<SensitivityScenarioGenerator>(sensitivityData_, simMarketData_, asof_,
+                                                                          market_, overrideTenors_);
     boost::shared_ptr<Scenario> baseScen = scenarioGenerator_->baseScenario();
     boost::shared_ptr<ScenarioFactory> scenFactory =
         (scenFact != NULL) ? scenFact
@@ -125,7 +125,8 @@ void SensitivityAnalysis::initializeSensitivityScenarioGenerator(boost::shared_p
 void SensitivityAnalysis::initializeSimMarket() {
     boost::shared_ptr<ScenarioGenerator> sgen =
         boost::static_pointer_cast<ScenarioGenerator, SensitivityScenarioGenerator>(scenarioGenerator_);
-    simMarket_ = boost::make_shared<ScenarioSimMarket>(sgen, market_, simMarketData_, conventions_);
+    simMarket_ =
+        boost::make_shared<ScenarioSimMarket>(sgen, market_, simMarketData_, conventions_, marketConfiguration_);
 }
 
 boost::shared_ptr<EngineFactory>

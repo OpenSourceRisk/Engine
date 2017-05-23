@@ -44,20 +44,25 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     QL_REQUIRE(initMarket != NULL, "CrossAssetScenarioGenerator: initMarket is null");
     QL_REQUIRE(timeGrid_.size() == dates_.size() + 1, "date/time grid size mismatch");
 
+    // TODO, curve tenors might be overwritten by dates in simMarketConfig_, here we just take the tenors
+
     // Cache yield curve keys
     Size n_ccy = model_->components(IR);
-    Size n_ten = simMarketConfig_->yieldCurveTenors().size();
-    discountCurveKeys_.reserve(n_ccy * n_ten);
+    discountCurveKeys_.reserve(n_ccy * simMarketConfig_->yieldCurveTenors("").size());
     for (Size j = 0; j < model_->components(IR); j++) {
         std::string ccy = model_->irlgm1f(j)->currency().code();
+        ten_dsc_.push_back(simMarketConfig_->yieldCurveTenors(ccy));
+        Size n_ten = ten_dsc_.back().size();
         for (Size k = 0; k < n_ten; k++)
             discountCurveKeys_.emplace_back(RiskFactorKey::KeyType::DiscountCurve, ccy, k); // j * n_ten + k
     }
 
     // Cache index curve keys
     Size n_indices = simMarketConfig_->indices().size();
-    indexCurveKeys_.reserve(n_indices * n_ten);
+    indexCurveKeys_.reserve(n_indices * simMarketConfig_->yieldCurveTenors("").size());
     for (Size j = 0; j < n_indices; ++j) {
+        ten_idx_.push_back(simMarketConfig_->yieldCurveTenors(simMarketConfig_->indices()[j]));
+        Size n_ten = ten_idx_.back().size();
         for (Size k = 0; k < n_ten; ++k) {
             indexCurveKeys_.emplace_back(RiskFactorKey::KeyType::IndexCurve, simMarketConfig_->indices()[j], k);
         }
@@ -65,8 +70,10 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
 
     // Cache yield curve keys
     Size n_curves = simMarketConfig_->yieldCurveNames().size();
-    yieldCurveKeys_.reserve(n_curves * n_ten);
+    yieldCurveKeys_.reserve(n_curves * simMarketConfig_->yieldCurveTenors("").size());
     for (Size j = 0; j < n_curves; ++j) {
+        ten_yc_.push_back(simMarketConfig_->yieldCurveTenors(simMarketConfig_->yieldCurveNames()[j]));
+        Size n_ten = ten_yc_.back().size();
         for (Size k = 0; k < n_ten; ++k) {
             yieldCurveKeys_.emplace_back(RiskFactorKey::KeyType::YieldCurve, simMarketConfig_->yieldCurveNames()[j], k);
         }
@@ -133,7 +140,6 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
     Size n_eq = model_->components(EQ);
     Size n_indices = simMarketConfig_->indices().size();
     Size n_curves = simMarketConfig_->yieldCurveNames().size();
-    Size n_ten = simMarketConfig_->yieldCurveTenors().size();
     vector<string> ccyPairs(n_ccy - 1);
     vector<boost::shared_ptr<QuantExt::LgmImpliedYieldTermStructure>> curves, fwdCurves, yieldCurves;
     vector<boost::shared_ptr<IborIndex>> indices;
@@ -180,11 +186,11 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
             // LGM factor value, second index = 0 holds initial values
             Real z = sample.value[model_->pIdx(IR, j)][i + 1];
             curves[j]->move(t, z);
-            for (Size k = 0; k < n_ten; k++) {
-                Date d = dates_[i] + simMarketConfig_->yieldCurveTenors()[k];
+            for (Size k = 0; k < ten_dsc_[j].size(); k++) {
+                Date d = dates_[i] + ten_dsc_[j][k];
                 Time T = dc.yearFraction(dates_[i], d);
                 Real discount = curves[j]->discount(T);
-                scenarios[i]->add(discountCurveKeys_[j * n_ten + k], discount);
+                scenarios[i]->add(discountCurveKeys_[j * ten_dsc_[j].size() + k], discount);
             }
         }
 
@@ -192,11 +198,11 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
         for (Size j = 0; j < n_indices; ++j) {
             Real z = sample.value[model_->pIdx(IR, model_->ccyIndex(indices[j]->currency()))][i + 1];
             fwdCurves[j]->move(dates_[i], z);
-            for (Size k = 0; k < n_ten; ++k) {
-                Date d = dates_[i] + simMarketConfig_->yieldCurveTenors()[k];
+            for (Size k = 0; k < ten_idx_[j].size(); ++k) {
+                Date d = dates_[i] + ten_idx_[j][k];
                 Time T = dc.yearFraction(dates_[i], d);
                 Real discount = fwdCurves[j]->discount(T);
-                scenarios[i]->add(indexCurveKeys_[j * n_ten + k], discount);
+                scenarios[i]->add(indexCurveKeys_[j * ten_idx_[j].size() + k], discount);
             }
         }
 
@@ -204,11 +210,11 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
         for (Size j = 0; j < n_curves; ++j) {
             Real z = sample.value[model_->pIdx(IR, model_->ccyIndex(yieldCurveCurrency[j]))][i + 1];
             yieldCurves[j]->move(dates_[i], z);
-            for (Size k = 0; k < n_ten; ++k) {
-                Date d = dates_[i] + simMarketConfig_->yieldCurveTenors()[k];
+            for (Size k = 0; k < ten_yc_[j].size(); ++k) {
+                Date d = dates_[i] + ten_yc_[j][k];
                 Time T = dc.yearFraction(dates_[i], d);
                 Real discount = yieldCurves[j]->discount(T);
-                scenarios[i]->add(yieldCurveKeys_[j * n_ten + k], discount);
+                scenarios[i]->add(yieldCurveKeys_[j * ten_yc_[j].size() + k], discount);
             }
         }
 

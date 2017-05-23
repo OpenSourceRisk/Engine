@@ -1402,7 +1402,7 @@ void YieldCurve::addCrossCcyBasisSwaps(const boost::shared_ptr<YieldCurveSegment
             basisSwapQuote->quote(), fxSpotQuote->quote(), basisSwapConvention->settlementDays(),
             basisSwapConvention->settlementCalendar(), basisSwapTenor, basisSwapConvention->rollConvention(), flatIndex,
             spreadIndex, flatDiscountCurve, spreadDiscountCurve, basisSwapConvention->eom(),
-            flatIndex->currency().code() == fxSpotQuote->unitCcy()));
+            flatIndex->currency().code() != fxSpotQuote->unitCcy()));
 
         instruments.push_back(basisSwapHelper);
     }
