@@ -765,7 +765,7 @@ void SensitivityScenarioGenerator::generateCdsVolScenarios(
                 LOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
             }
     }
-    LOG("Swaption vol scenarios done");
+    LOG("CDS vol scenarios done");
 }
 
 SensitivityScenarioGenerator::ScenarioDescription SensitivityScenarioGenerator::fxScenarioDescription(string ccypair,
@@ -917,7 +917,7 @@ SensitivityScenarioGenerator::CdsVolScenarioDescription(string name, Size expiry
                  expiryBucket;
     RiskFactorKey key(RiskFactorKey::KeyType::CDSVolatility, name, index);
     std::ostringstream o;
-        o << data.shiftExpiries[expiryBucket] << "/" << "/ATM";
+        o << data.shiftExpiries[expiryBucket] << "/" << "ATM";
     string text = o.str();
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
     ScenarioDescription desc(type, key, text);

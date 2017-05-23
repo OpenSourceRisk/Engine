@@ -521,6 +521,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         cdsVols_.insert(pair<pair<string, string>, Handle<BlackVolTermStructure>>(
             make_pair(Market::defaultConfiguration, name), cvh));
     }
+    LOG("cds volatilities done");
     // building fx volatilities
     LOG("building fx volatilities...");
     for (const auto& ccyPair : parameters->fxVolCcyPairs()) {

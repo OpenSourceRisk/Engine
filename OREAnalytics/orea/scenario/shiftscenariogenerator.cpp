@@ -262,7 +262,7 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
             cdsVolKeys_.emplace_back(RiskFactorKey::KeyType::CDSVolatility, name, j );
             Real cdsvol = ts->blackVol(today_ + expiry, strike);
             cdsVolCache_[cdsVolKeys_[count]] = cdsvol;
-            LOG("cache swaption vol " << cdsvol << " for key " << cdsVolKeys_[count]);
+            LOG("cache cds vol " << cdsvol << " for key " << cdsVolKeys_[count]);
             count++;
         }
     }
