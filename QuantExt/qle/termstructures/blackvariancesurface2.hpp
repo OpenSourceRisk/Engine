@@ -49,7 +49,7 @@ namespace QuantExt {
     Extrapolation is enabled by default on both sets of interpolators, and hence maxDate, minStrike and maxStrike
     are all set to numeric limits.
 
-    \note This is potentially slow with a large number of expires as we are calculating volatilities 
+    \note This is potentially slow with a large number of expires as we are calculating volatilities
           for each expiry even though we are only using 1 or 2 of them (due to linear interpolation).
 
     \todo Make the second interpolator configurable (requires templating)
