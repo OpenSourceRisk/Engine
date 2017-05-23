@@ -23,8 +23,8 @@
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/builders/swaption.hpp>
 #include <ored/portfolio/capfloor.hpp>
-#include <ored/portfolio/fxoption.hpp>
 #include <ored/portfolio/equityoption.hpp>
+#include <ored/portfolio/fxoption.hpp>
 #include <ored/portfolio/swap.hpp>
 #include <ored/portfolio/swaption.hpp>
 #include <ored/utilities/to_string.hpp>
@@ -189,7 +189,7 @@ boost::shared_ptr<Trade> buildFxOption(string id, string longShort, string putCa
 }
 
 boost::shared_ptr<Trade> buildEquityOption(string id, string longShort, string putCall, Size expiry, string equityName,
-                                           string currency, Real strike, Real quantity ) {
+                                           string currency, Real strike, Real quantity) {
     Date today = Settings::instance().evaluationDate();
     Calendar calendar = TARGET();
     string cal = "TARGET";

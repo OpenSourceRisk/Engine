@@ -153,8 +153,10 @@ public:
         fxVols_[make_pair(Market::defaultConfiguration, "GBPCHF")] = flatRateFxv(0.15);
 
         // Add Equity Spots
-        equitySpots_[make_pair(Market::defaultConfiguration,"SP5")] = Handle<Quote>(boost::make_shared<SimpleQuote>(2147.56));
-        equitySpots_[make_pair(Market::defaultConfiguration, "Lufthansa")] = Handle<Quote>(boost::make_shared<SimpleQuote>(12.75));
+        equitySpots_[make_pair(Market::defaultConfiguration, "SP5")] =
+            Handle<Quote>(boost::make_shared<SimpleQuote>(2147.56));
+        equitySpots_[make_pair(Market::defaultConfiguration, "Lufthansa")] =
+            Handle<Quote>(boost::make_shared<SimpleQuote>(12.75));
 
         equityVols_[make_pair(Market::defaultConfiguration, "SP5")] = flatRateFxv(0.2514);
         equityVols_[make_pair(Market::defaultConfiguration, "Lufthansa")] = flatRateFxv(0.30);

@@ -67,10 +67,10 @@ namespace analytics {
 
   To apply shifts to the integrated hazard rates let:
   - S(t) be the survival probability at time t
-  - &lambda(t) be the "instaneous" hazard rate at time t 
+  - &lambda(t) be the "instaneous" hazard rate at time t
   - &Lambda(t) be the “integrated” hazard rate at time t
 
-  The relationship between these three can be expressed as: 
+  The relationship between these three can be expressed as:
   \f[
     S(t) = e^{-&Lambda t}
   \f]

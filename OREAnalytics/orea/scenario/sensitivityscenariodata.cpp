@@ -190,7 +190,8 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
 
     LOG("Get Equity spot sensitivity parameters");
     XMLNode* equitySpots = XMLUtils::getChildNode(node, "EquitySpots");
-    for (XMLNode* child = XMLUtils::getChildNode(equitySpots, "EquitySpot"); child; child = XMLUtils::getNextSibling(child)) {
+    for (XMLNode* child = XMLUtils::getChildNode(equitySpots, "EquitySpot"); child;
+         child = XMLUtils::getNextSibling(child)) {
         string equity = XMLUtils::getAttribute(child, "equity");
         SpotShiftData data;
         data.shiftType = XMLUtils::getChildValue(child, "ShiftType", true);
@@ -202,7 +203,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
     LOG("Get Equity vol sensitivity parameters");
     XMLNode* equityVols = XMLUtils::getChildNode(node, "EquityVolatilities");
     for (XMLNode* child = XMLUtils::getChildNode(fxVols, "EquityVolatility"); child;
-        child = XMLUtils::getNextSibling(child)) {
+         child = XMLUtils::getNextSibling(child)) {
         string equity = XMLUtils::getAttribute(child, "equity");
         VolShiftData data;
         data.shiftType = XMLUtils::getChildValue(child, "ShiftType");

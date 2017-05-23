@@ -85,7 +85,6 @@ public:
         Real shiftSize;
     };
 
-
     //! Default constructor
     SensitivityScenarioData() : parConversion_(false){};
 
@@ -225,10 +224,10 @@ private:
     map<string, CurveShiftData> creditCurveShiftData_; // key: credit name
 
     vector<string> equityVolNames_;
-    map<string, VolShiftData> equityVolShiftData_; 
+    map<string, VolShiftData> equityVolShiftData_;
 
     vector<string> equityNames_;
-    map<string, SpotShiftData> equityShiftData_; 
+    map<string, SpotShiftData> equityShiftData_;
 
     vector<pair<string, string>> crossGammaFilter_;
 };
