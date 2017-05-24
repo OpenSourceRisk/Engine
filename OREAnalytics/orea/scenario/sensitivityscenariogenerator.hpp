@@ -62,6 +62,28 @@ namespace analytics {
   - Swaption ATM volatility matrices
   - Cap/Floor volatility matrices (by expiry and strike)
 
+  For Credit the generator covers shifts to the following termstructure types:
+  - Default curve integrated hazard rates.
+
+  To apply shifts to the integrated hazard rates let:
+  - S(t) be the survival probability at time t
+  - &lambda(t) be the "instaneous" hazard rate at time t 
+  - &Lambda(t) be the averaged hazard rate at time t
+
+  The relationship between these three can be expressed as: 
+  \f[
+    S(t) = e^{-&Lambda(t) t}
+  \f]
+  \f[
+    &Lambda(t) = \frac{ \int_{0}^t  &lambda(t) du}{t}
+  \f]
+
+  The survival probability quotes from the scenarioSimMarket default curves are then converted as follows:
+  \f[
+    &Lambda(t) = - \frac{ ln( S(t) )}{t}
+  \f]
+
+
   Note:
   - For yield curves, the class generates sensitivites in the Zero rate domain only.
   Conversion into par rate sensivities has to be implemented as a postprocessor step.
@@ -92,6 +114,7 @@ private:
     void generateSwaptionVolScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
     void generateFxVolScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
     void generateCapFloorVolScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
+    void generateSurvivalProbabilityScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
 
     ScenarioDescription discountScenarioDescription(string ccy, Size bucket, bool up);
     ScenarioDescription indexScenarioDescription(string index, Size bucket, bool up);
@@ -101,6 +124,7 @@ private:
     ScenarioDescription swaptionVolScenarioDescription(string ccy, Size expiryBucket, Size termBucket,
                                                        Size strikeBucket, bool up);
     ScenarioDescription capFloorVolScenarioDescription(string ccy, Size expiryBucket, Size strikeBucket, bool up);
+    ScenarioDescription survivalProbabilityScenarioDescription(string name, Size bucket, bool up);
 
     boost::shared_ptr<SensitivityScenarioData> sensitivityData_;
     const bool overrideTenors_;

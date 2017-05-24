@@ -480,6 +480,17 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
             Real vol = vts->volatility(t_exp, strike);
             shiftMult = vol;
         }
+    } else if (keytype == RiskFactorKey::KeyType::SurvivalProbability) {
+        string name = keylabel;
+        shiftSize = sensitivityData_->creditCurveShiftData()[name].shiftSize;
+        if (boost::to_upper_copy(sensitivityData_->creditCurveShiftData()[name].shiftType) == "RELATIVE") {
+            Size keyIdx = key.index;
+            Period p = sensitivityData_->creditCurveShiftData()[name].shiftTenors[keyIdx];
+            Handle<DefaultProbabilityTermStructure> ts = simMarket_->defaultCurve(name, marketConfiguration_);
+            Time t = ts->dayCounter().yearFraction(asof_, asof_ + p);
+            Real prob = ts->survivalProbability(t);
+            shiftMult = -std::log(prob)/t;
+        }
     } else {
         QL_FAIL("KeyType not supported yet - " << keytype);
     }
