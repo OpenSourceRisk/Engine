@@ -2,7 +2,7 @@ AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir}
 
 SUBDIRS =
 
-LDFLAGS = 
+LDFLAGS =
 
 dist_data_DATA =
 
@@ -23,6 +23,7 @@ libPricingEngines_la_SOURCES = \
 	oiccbasisswapengine.cpp \
 	numericlgmswaptionengine.cpp \
 	discountingriskybondengine.cpp \
+	midpointcdsengine.cpp \
 	blackcdsoptionengine.cpp
 
 this_includedir=${includedir}/${subdir}
@@ -42,6 +43,7 @@ this_include_HEADERS = \
 	oiccbasisswapengine.hpp \
 	numericlgmswaptionengine.hpp \
 	discountingriskybondengine.hpp \
+	midpointcdsengine.hpp \
 	blackcdsoptionengine.hpp
 
 all.hpp: Makefile.am

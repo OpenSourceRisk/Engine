@@ -4261,7 +4261,7 @@ void CrossAssetModelTest::testCrCalibration() {
 
     accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > > cdso;
 
-    boost::shared_ptr<CreditDefaultSwap> underlying =
+    boost::shared_ptr<QuantExt::CreditDefaultSwap> underlying =
         boost::static_pointer_cast<CdsOptionHelper>(cdsoHelpers.back())->underlying();
     Real K = underlying->fairSpread();
     BOOST_TEST_MESSAGE("Last CDSO fair spread is " << K);
@@ -4271,7 +4271,7 @@ void CrossAssetModelTest::testCrCalibration() {
         boost::make_shared<LgmImpliedDefaultTermStructure>(model, 0, 0);
     boost::shared_ptr<LgmImpliedYieldTermStructure> ytsMc =
         boost::make_shared<LgmImpliedYieldTermStructure>(model->lgm(0));
-    boost::shared_ptr<MidPointCdsEngine> dynamicEngine = boost::make_shared<MidPointCdsEngine>(
+    boost::shared_ptr<QuantExt::MidPointCdsEngine> dynamicEngine = boost::make_shared<QuantExt::MidPointCdsEngine>(
         Handle<DefaultProbabilityTermStructure>(probMc), 0.4, Handle<YieldTermStructure>(ytsMc));
     underlying->setPricingEngine(dynamicEngine);
 

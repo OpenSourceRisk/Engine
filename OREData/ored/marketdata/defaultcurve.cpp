@@ -19,9 +19,10 @@
 #include <ored/marketdata/defaultcurve.hpp>
 #include <ored/utilities/log.hpp>
 
+#include <qle/termstructures/defaultprobabilityhelpers.hpp>
+
 #include <ql/math/interpolations/backwardflatinterpolation.hpp>
 #include <ql/math/interpolations/loginterpolation.hpp>
-#include <ql/termstructures/credit/defaultprobabilityhelpers.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 
 #include <algorithm>
@@ -175,10 +176,10 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                                                       "SpreadCDS");
             std::vector<boost::shared_ptr<DefaultProbabilityHelper>> helper;
             for (Size i = 0; i < quotes.size(); ++i) {
-                helper.push_back(boost::make_shared<SpreadCdsHelper>(
+                helper.push_back(boost::make_shared<QuantExt::SpreadCdsHelper>(
                     quotes[i], terms[i], cdsConv->settlementDays(), cdsConv->calendar(), cdsConv->frequency(),
                     cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(), recoveryRate_, discountCurve,
-                    cdsConv->settlesAccrual(), cdsConv->paysAtDefaultTime()));
+                    asof + cdsConv->settlementDays(), cdsConv->settlesAccrual(), cdsConv->paysAtDefaultTime()));
             }
             boost::shared_ptr<DefaultProbabilityTermStructure> tmp =
                 boost::make_shared<PiecewiseDefaultCurve<SurvivalProbability, LogLinear>>(asof, helper,
