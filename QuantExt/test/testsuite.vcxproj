@@ -645,6 +645,7 @@
     <ClCompile Include="ratehelpers.cpp" />
     <ClCompile Include="stabilisedglls.cpp" />
     <ClCompile Include="staticallycorrectedyieldtermstructure.cpp" />
+    <ClCompile Include="survivalprobabilitycurve.cpp" />
     <ClCompile Include="swaptionvolatilityconverter.cpp" />
     <ClCompile Include="testsuite.cpp" />
   </ItemGroup>
@@ -667,6 +668,7 @@
     <ClInclude Include="ratehelpers.hpp" />
     <ClInclude Include="stabilisedglls.hpp" />
     <ClInclude Include="staticallycorrectedyieldtermstructure.hpp" />
+    <ClInclude Include="survivalprobabilitycurve.hpp" />
     <ClInclude Include="swaptionmarketdata.hpp" />
     <ClInclude Include="swaptionvolatilityconverter.hpp" />
     <ClInclude Include="yieldcurvemarketdata.hpp" />
