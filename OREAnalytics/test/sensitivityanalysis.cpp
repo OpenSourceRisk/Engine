@@ -71,7 +71,7 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
 
     // build scenario generator
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(
-        new SensitivityScenarioGenerator(sensiData, simMarketData, today, initMarket));
+        new SensitivityScenarioGenerator(sensiData, simMarketData, today, initMarket, false));
     boost::shared_ptr<Scenario> baseScen = scenarioGenerator->baseScenario();
     boost::shared_ptr<ScenarioFactory> scenarioFactory(new CloneScenarioFactory(baseScen));
     scenarioGenerator->generateScenarios(scenarioFactory);
@@ -611,20 +611,20 @@ void SensitivityAnalysisTest::test1dShifts() {
 
     // build scenario generator
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(
-        new SensitivityScenarioGenerator(sensiData, simMarketData, today, initMarket));
+        new SensitivityScenarioGenerator(sensiData, simMarketData, today, initMarket, false));
     boost::shared_ptr<Scenario> baseScen = scenarioGenerator->baseScenario();
     boost::shared_ptr<ScenarioFactory> scenarioFactory(new CloneScenarioFactory(baseScen));
     scenarioGenerator->generateScenarios(scenarioFactory);
 
     // cache initial zero rates
-    vector<Period> tenors = simMarketData->yieldCurveTenors();
+    vector<Period> tenors = simMarketData->yieldCurveTenors("");
     vector<Real> initialZeros(tenors.size());
     vector<Real> times(tenors.size());
     string ccy = simMarketData->ccys()[0];
     Handle<YieldTermStructure> ts = initMarket->discountCurve(ccy);
     DayCounter dc = ts->dayCounter();
     for (Size j = 0; j < tenors.size(); ++j) {
-        Date d = today + simMarketData->yieldCurveTenors()[j];
+        Date d = today + simMarketData->yieldCurveTenors("")[j];
         initialZeros[j] = ts->zeroRate(d, dc, Continuous);
         times[j] = dc.yearFraction(today, d);
     }
@@ -698,7 +698,7 @@ void SensitivityAnalysisTest::test2dShifts() {
 
     // build scenario generator
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(
-        new SensitivityScenarioGenerator(sensiData, simMarketData, today, initMarket));
+        new SensitivityScenarioGenerator(sensiData, simMarketData, today, initMarket, false));
     boost::shared_ptr<Scenario> baseScen = scenarioGenerator->baseScenario();
     boost::shared_ptr<ScenarioFactory> scenarioFactory(new CloneScenarioFactory(baseScen));
     scenarioGenerator->generateScenarios(scenarioFactory);
@@ -809,7 +809,7 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
     }
     // build scenario generator
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(
-        new SensitivityScenarioGenerator(sensiData, simMarketData, today, initMarket));
+        new SensitivityScenarioGenerator(sensiData, simMarketData, today, initMarket, false));
     boost::shared_ptr<Scenario> baseScen = scenarioGenerator->baseScenario();
     boost::shared_ptr<ScenarioFactory> scenarioFactory(new CloneScenarioFactory(baseScen));
     scenarioGenerator->generateScenarios(scenarioFactory);
@@ -1152,7 +1152,7 @@ void SensitivityAnalysisTest::testCrossGamma() {
     cgFilter.push_back(pair<string, string>("FXSpot/EURGBP", "DiscountCurve/GBP"));
     // build scenario generator
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(
-        new SensitivityScenarioGenerator(sensiData, simMarketData, today, initMarket));
+        new SensitivityScenarioGenerator(sensiData, simMarketData, today, initMarket, false));
     boost::shared_ptr<Scenario> baseScen = scenarioGenerator->baseScenario();
     boost::shared_ptr<ScenarioFactory> scenarioFactory(new CloneScenarioFactory(baseScen));
     scenarioGenerator->generateScenarios(scenarioFactory);
@@ -1511,12 +1511,11 @@ void SensitivityAnalysisTest::testCrossGamma() {
 
 test_suite* SensitivityAnalysisTest::suite() {
     // Uncomment the below to get detailed output TODO: custom logger that uses BOOST_MESSAGE
-
-    boost::shared_ptr<ore::data::FileLogger> logger = boost::make_shared<ore::data::FileLogger>("sensitivity.log");
-    ore::data::Log::instance().removeAllLoggers();
-    ore::data::Log::instance().registerLogger(logger);
-    ore::data::Log::instance().switchOn();
-    ore::data::Log::instance().setMask(255);
+    // boost::shared_ptr<ore::data::FileLogger> logger = boost::make_shared<ore::data::FileLogger>("sensitivity.log");
+    // ore::data::Log::instance().removeAllLoggers();
+    // ore::data::Log::instance().registerLogger(logger);
+    // ore::data::Log::instance().switchOn();
+    // ore::data::Log::instance().setMask(255);
 
     test_suite* suite = BOOST_TEST_SUITE("SensitivityAnalysisTest");
     // Set the Observation mode here

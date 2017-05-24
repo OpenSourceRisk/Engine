@@ -76,7 +76,7 @@ public:
     //! Constructor
     SensitivityScenarioGenerator(const boost::shared_ptr<SensitivityScenarioData>& sensitivityData,
                                  const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData, const Date& today,
-                                 const boost::shared_ptr<ore::data::Market>& initMarket,
+                                 const boost::shared_ptr<ore::data::Market>& initMarket, const bool overrideTenors,
                                  const std::string& configuration = Market::defaultConfiguration,
                                  boost::shared_ptr<ScenarioFactory> baseScenarioFactory = {});
     //! Default destructor
@@ -103,6 +103,7 @@ private:
     ScenarioDescription capFloorVolScenarioDescription(string ccy, Size expiryBucket, Size strikeBucket, bool up);
 
     boost::shared_ptr<SensitivityScenarioData> sensitivityData_;
+    const bool overrideTenors_;
 };
 } // namespace analytics
 } // namespace ore
