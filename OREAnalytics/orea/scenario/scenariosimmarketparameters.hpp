@@ -100,7 +100,7 @@ public:
     const string& fxVolDecayMode() const { return fxVolDecayMode_; }
     const vector<string>& fxVolCcyPairs() const { return fxVolCcyPairs_; }
 
-    bool simulateEQVols() const { return eqVolSimulate_; }
+    bool simulateEQVols() const { return equityVolSimulate_; }
     const vector<Period>& eqVolExpiries() const { return equityVolExpiries_; }
     const string& eqVolDecayMode() const { return equityVolDecayMode_; }
     const vector<string>& eqVolNames() const { return equityVolNames_; }
@@ -150,7 +150,7 @@ public:
     string& fxVolDecayMode() { return fxVolDecayMode_; }
     vector<string>& fxVolCcyPairs() { return fxVolCcyPairs_; }
 
-    bool& simulateEQVols() { return eqVolSimulate_; }
+    bool& simulateEQVols() { return equityVolSimulate_; }
     vector<Period>& equityVolExpiries() { return equityVolExpiries_; }
     string& equityVolDecayMode() { return equityVolDecayMode_; }
     vector<string>& equityVolNames() { return equityVolNames_; }
@@ -211,7 +211,7 @@ private:
     string fxVolDecayMode_;
     vector<string> fxVolCcyPairs_;
 
-    bool eqVolSimulate_;
+    bool equityVolSimulate_;
     vector<Period> equityVolExpiries_;
     string equityVolDecayMode_;
     vector<string> equityVolNames_;

@@ -84,7 +84,7 @@ bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& 
         equityNames_ != rhs.equityNames_ || equityTenors_ != rhs.equityTenors_ ||
         fxVolSimulate_ != rhs.fxVolSimulate_ || fxVolExpiries_ != rhs.fxVolExpiries_ ||
         fxVolDecayMode_ != rhs.fxVolDecayMode_ || fxVolCcyPairs_ != rhs.fxVolCcyPairs_ ||
-        fxCcyPairs_ != rhs.fxCcyPairs_ || eqVolSimulate_ != rhs.eqVolSimulate_ ||
+        fxCcyPairs_ != rhs.fxCcyPairs_ || equityVolSimulate_ != rhs.equityVolSimulate_ ||
         equityVolExpiries_ != rhs.equityVolExpiries_ || equityVolDecayMode_ != rhs.equityVolDecayMode_ ||
         equityVolNames_ != rhs.equityVolNames_ ||
         additionalScenarioDataIndices_ != rhs.additionalScenarioDataIndices_ ||
@@ -205,12 +205,12 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
 
     nodeChild = XMLUtils::getChildNode(node, "EquityVolatilities");
     if (nodeChild) {
-        eqVolSimulate_ = XMLUtils::getChildValueAsBool(nodeChild, "Simulate", true);
+        equityVolSimulate_ = XMLUtils::getChildValueAsBool(nodeChild, "Simulate", true);
         equityVolExpiries_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Expiries", true);
         equityVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
         equityVolNames_ = XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true);
     } else {
-        eqVolSimulate_ = false;
+        equityVolSimulate_ = false;
         equityVolExpiries_.clear();
         equityVolNames_.clear();
     }
@@ -303,7 +303,7 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
 
     // eq volatilities
     XMLNode* eqVolatilitiesNode = XMLUtils::addChild(doc, marketNode, "EquityVolatilities");
-    XMLUtils::addChild(doc, eqVolatilitiesNode, "Simulate", eqVolSimulate_);
+    XMLUtils::addChild(doc, eqVolatilitiesNode, "Simulate", equityVolSimulate_);
     XMLUtils::addChild(doc, eqVolatilitiesNode, "ReactionToTimeDecay", equityVolDecayMode_);
     XMLUtils::addChildren(doc, eqVolatilitiesNode, "Names", "Name", equityVolNames_);
     XMLUtils::addGenericChildAsList(doc, eqVolatilitiesNode, "Expiries", equityVolExpiries_);
