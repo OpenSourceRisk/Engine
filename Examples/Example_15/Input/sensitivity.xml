@@ -116,6 +116,7 @@
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
     </CreditCurve>
   </CreditCurves>
+  
   <!-- FX spot shifts -->
   <FxSpots>
     <FxSpot ccypair="USDEUR">

@@ -127,6 +127,7 @@ Calendar parseCalendar(const string& s) {
                                       {"EUR", TARGET()},
                                       {"ZUB", Switzerland()},
                                       {"CHF", Switzerland()},
+                                      {"Switzerland", Switzerland()},
                                       {"US", UnitedStates()},
                                       {"USD", UnitedStates()},
                                       {"NYB", UnitedStates()},
@@ -143,12 +144,15 @@ Calendar parseCalendar(const string& s) {
                                       {"CA", Canada()},
                                       {"TRB", Canada()},
                                       {"CAD", Canada()},
+                                      {"Canada", Canada()},
                                       {"SYB", Australia()},
                                       {"AU", Australia()},
                                       {"AUD", Australia()},
+                                      {"Australia", Australia()},
                                       {"TKB", Japan()},
                                       {"JP", Japan()},
                                       {"JPY", Japan()},
+                                      {"Japan", Japan()},
                                       {"ZAR", SouthAfrica()},
                                       {"SA", SouthAfrica()},
                                       {"SS", Sweden()},
@@ -206,9 +210,14 @@ Calendar parseCalendar(const string& s) {
     } else {
         // Try to split them up
         vector<string> calendarNames;
-        split(calendarNames, s, boost::is_any_of(","));
+        split(calendarNames, s, boost::is_any_of(",()")); // , is delimiter, the brackets may arise if joint calendar
+        // now remove any leading strings indicating a joint calendar
+        calendarNames.erase(std::remove(calendarNames.begin(), calendarNames.end(), "JoinHolidays"),
+                            calendarNames.end());
+        calendarNames.erase(std::remove(calendarNames.begin(), calendarNames.end(), "JoinBusinessDays"),
+                            calendarNames.end());
+        calendarNames.erase(std::remove(calendarNames.begin(), calendarNames.end(), ""), calendarNames.end());
         QL_REQUIRE(calendarNames.size() > 1 && calendarNames.size() <= 4, "Cannot convert " << s << " to Calendar");
-
         // Populate a vector of calendars.
         vector<Calendar> calendars;
         for (Size i = 0; i < calendarNames.size(); i++) {
