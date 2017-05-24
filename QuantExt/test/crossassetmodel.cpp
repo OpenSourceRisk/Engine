@@ -21,6 +21,7 @@
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/models/all.hpp>
 #include <qle/pricingengines/all.hpp>
+#include <qle/pricingengines/midpointcdsengine.hpp>
 #include <qle/processes/all.hpp>
 
 #include <ql/currencies/america.hpp>
@@ -38,7 +39,6 @@
 #include <ql/methods/montecarlo/pathgenerator.hpp>
 #include <ql/models/shortrate/calibrationhelpers/swaptionhelper.hpp>
 #include <ql/models/shortrate/onefactormodels/gsr.hpp>
-#include <ql/pricingengines/credit/midpointcdsengine.hpp>
 #include <ql/pricingengines/swaption/gaussian1dswaptionengine.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/credit/flathazardrate.hpp>
