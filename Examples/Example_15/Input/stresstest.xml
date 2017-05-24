@@ -19,26 +19,26 @@
 	<Shifts>0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01</Shifts>
       </DiscountCurve>
       <DiscountCurve ccy="JPY">
-	<ShiftType>Absolute</ShiftType>
-	<ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
-	<Shifts>0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01</Shifts>
+    <ShiftType>Absolute</ShiftType>
+    <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    <Shifts>0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01</Shifts>
       </DiscountCurve>
     </DiscountCurves>
     
     <IndexCurves>
       <IndexCurve index="EUR-EURIBOR-6M">
-	<ShiftType>Absolute</ShiftType>
-	<ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
-	<Shifts>0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01</Shifts>
+    <ShiftType>Absolute</ShiftType>
+    <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    <Shifts>0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01</Shifts>
       </IndexCurve>
       <IndexCurve index="EUR-EURIBOR-3M">
-	<ShiftType>Absolute</ShiftType>
-	<ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
-	<Shifts>0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01</Shifts>
+    <ShiftType>Absolute</ShiftType>
+    <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    <Shifts>0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01</Shifts>
       </IndexCurve>
       <IndexCurve index="EUR-EONIA">
-	<ShiftType>Absolute</ShiftType>
-	<ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    <ShiftType>Absolute</ShiftType>
+    <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
 	<Shifts>0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01</Shifts>
       </IndexCurve>
       <IndexCurve index="USD-LIBOR-3M">
