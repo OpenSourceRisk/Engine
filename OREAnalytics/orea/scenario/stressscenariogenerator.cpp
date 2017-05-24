@@ -43,11 +43,14 @@ void StressScenarioGenerator::generateScenarios(const boost::shared_ptr<Scenario
         boost::shared_ptr<Scenario> scenario = stressScenarioFactory->buildScenario(today_, data.label);
 
         addFxShifts(data, scenario);
+        addEquityShifts(data, scenario);
         addDiscountCurveShifts(data, scenario);
         addIndexCurveShifts(data, scenario);
         addYieldCurveShifts(data, scenario);
         if (simMarketData_->simulateFXVols())
             addFxVolShifts(data, scenario);
+        if (simMarketData_->simulateEQVols())
+            addEquityVolShifts(data, scenario);
         if (simMarketData_->simulateSwapVols())
             addSwaptionVolShifts(data, scenario);
         if (simMarketData_->simulateCapFloorVols())
@@ -312,9 +315,9 @@ void StressScenarioGenerator::addEquityVolShifts(StressTestScenarioData::StressT
     // buffer for shifted zero curves
     std::vector<Real> shiftedValues(n_eqvol_exp);
 
-    for (auto d : std.fxVolShifts) {
+    for (auto d : std.equityVolShifts) {
         string equity = d.first;
-        LOG("Apply stress scenario to fx vol structure " << equity);
+        LOG("Apply stress scenario to equity vol structure " << equity);
 
         StressTestScenarioData::VolShiftData data = d.second;
 

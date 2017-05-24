@@ -207,5 +207,35 @@
     <CapFloorVolatilities>
     </CapFloorVolatilities>
   </StressTest>
+  
+  <StressTest id="equity">
+
+    <DiscountCurves>
+    </DiscountCurves>
+    <IndexCurves>
+    </IndexCurves>
+    <YieldCurves>
+    </YieldCurves>
+    <FxSpots>
+    </FxSpots>
+    <FxVolatilities>
+    </FxVolatilities>
+    <EquitySpots>
+      <EquitySpot equity="SP5">
+    <ShiftType>Relative</ShiftType>
+    <ShiftSize>0.01</ShiftSize>
+      </EquitySpot>
+      <EquitySpot equity="Lufthansa">
+    <ShiftType>Relative</ShiftType>
+    <ShiftSize>0.01</ShiftSize>
+      </EquitySpot>
+    </EquitySpots>
+	<EquityVolatilities>
+	</EquityVolatilities>
+    <SwaptionVolatilities>
+    </SwaptionVolatilities>
+    <CapFloorVolatilities>
+    </CapFloorVolatilities>
+  </StressTest>
     
 </StressTesting>
