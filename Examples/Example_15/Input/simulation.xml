@@ -110,7 +110,7 @@
     </FxVolatilities>
  	
 	<EquityVolatilities>
-      <Simulate>false</Simulate>
+      <Simulate>true</Simulate>
       <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
       <!-- Alternative: ConstantVariance -->
       <Names>

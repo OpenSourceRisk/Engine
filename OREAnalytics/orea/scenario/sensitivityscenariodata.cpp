@@ -202,7 +202,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
 
     LOG("Get Equity vol sensitivity parameters");
     XMLNode* equityVols = XMLUtils::getChildNode(node, "EquityVolatilities");
-    for (XMLNode* child = XMLUtils::getChildNode(fxVols, "EquityVolatility"); child;
+    for (XMLNode* child = XMLUtils::getChildNode(equityVols, "EquityVolatility"); child;
          child = XMLUtils::getNextSibling(child)) {
         string equity = XMLUtils::getAttribute(child, "equity");
         VolShiftData data;
