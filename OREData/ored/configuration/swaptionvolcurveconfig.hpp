@@ -38,6 +38,7 @@ using QuantLib::Period;
 using QuantLib::DayCounter;
 using QuantLib::Calendar;
 using QuantLib::BusinessDayConvention;
+using QuantLib::Spread;
 
 namespace ore {
 namespace data {
@@ -63,7 +64,11 @@ public:
                                   const bool flatExtrapolation, const vector<Period>& optionTenors,
                                   const vector<Period>& swapTenors, const DayCounter& dayCounter,
                                   const Calendar& calendar, const BusinessDayConvention& businessDayConvention,
-                                  const string& shortSwapIndexBase, const string& swapIndexBase);
+                                  const string& shortSwapIndexBase, const string& swapIndexBase,
+                                  // Only required for smile
+                                  const vector<Period>& smileOptionTenors = vector<Period>(),
+                                  const vector<Period>& smileSwapTenors = vector<Period>(),
+                                  const vector<Spread>& smileSpreads = vector<Spread>());
     //! Default destructor
     virtual ~SwaptionVolatilityCurveConfig() {}
     //@}
@@ -89,6 +94,10 @@ public:
     const BusinessDayConvention& businessDayConvention() const { return businessDayConvention_; }
     const string& shortSwapIndexBase() const { return shortSwapIndexBase_; }
     const string& swapIndexBase() const { return swapIndexBase_; }
+    const vector<Period>& smileOptionTenors() const { return smileOptionTenors_; }
+    const vector<Period>& smileSwapTenors() const { return smileSwapTenors_; }
+    const vector<Spread>& smileSpreads() const { return smileSpreads_; }
+
     //@}
 
     //! \name Setters
@@ -104,6 +113,9 @@ public:
     Calendar& calendar() { return calendar_; }
     string& shortSwapIndexBase() { return shortSwapIndexBase_; }
     string& swapIndexBase() { return swapIndexBase_; }
+    vector<Period>& smileOptionTenors() { return smileOptionTenors_; }
+    vector<Period>& smileSwapTenors() { return smileSwapTenors_; }
+    vector<Spread>& smileSpreads() { return smileSpreads_; }
     //@}
 
 private:
@@ -117,6 +129,9 @@ private:
     Calendar calendar_;
     BusinessDayConvention businessDayConvention_;
     string shortSwapIndexBase_, swapIndexBase_;
+    vector<Period> smileOptionTenors_;
+    vector<Period> smileSwapTenors_;
+    vector<Spread> smileSpreads_;
 };
 } // namespace data
 } // namespace ore

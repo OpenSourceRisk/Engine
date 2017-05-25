@@ -61,6 +61,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
     // store all curves built, since they might appear in several configurations
     // and might therefore be reused
     map<string, boost::shared_ptr<YieldCurve>> requiredYieldCurves;
+    map<string, boost::shared_ptr<SwapIndex>> requiredSwapIndices;
     map<string, boost::shared_ptr<FXSpot>> requiredFxSpots;
     map<string, boost::shared_ptr<FXVolCurve>> requiredFxVolCurves;
     map<string, boost::shared_ptr<SwaptionVolCurve>> requiredSwaptionVolCurves;
@@ -92,9 +93,26 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
 
         // order them
         order(specs, curveConfigs);
+        bool swapIndicesBuilt = false;
 
         // Loop over each spec, build the curve and add it to the MarketImpl container.
         for (const auto& spec : specs) {
+
+            // Swap Indices
+            // Assumes we build all yield curves before anything else (which order() does)
+            // Once we have a non-Yield curve spec, we make sure to build all swap indices
+            // add add them to requiredSwapIndices for later.
+            if (swapIndicesBuilt == false && spec->baseType() != CurveSpec::CurveType::Yield) {
+                for (const auto& it : params.swapIndices(configuration.first)) {
+                    const string& swapIndexName = it.first;
+                    const string& discountIndex = it.second;
+
+                    addSwapIndex(swapIndexName, discountIndex, configuration.first);
+                    LOG("Added SwapIndex " << swapIndexName << " with DiscountingIndex " << discountIndex);
+                    requiredSwapIndices[swapIndexName] = swapIndex(swapIndexName, configuration.first).currentLink();
+                }
+                swapIndicesBuilt = true;
+            }
 
             LOG("Loading spec " << *spec);
 
@@ -210,8 +228,8 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                 if (itr == requiredSwaptionVolCurves.end()) {
                     // build the curve
                     LOG("Building Swaption Volatility for asof " << asof);
-                    boost::shared_ptr<SwaptionVolCurve> swaptionVolCurve =
-                        boost::make_shared<SwaptionVolCurve>(asof, *swvolspec, loader, curveConfigs);
+                    boost::shared_ptr<SwaptionVolCurve> swaptionVolCurve = boost::make_shared<SwaptionVolCurve>(
+                        asof, *swvolspec, loader, curveConfigs, requiredSwapIndices);
                     itr = requiredSwaptionVolCurves.insert(make_pair(swvolspec->name(), swaptionVolCurve)).first;
                 }
 
@@ -581,14 +599,6 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
         }
         LOG("Loading " << count << " CurveSpecs done.");
 
-        // Swap Indices
-        for (const auto& it : params.swapIndices(configuration.first)) {
-            const string& swapIndex = it.first;
-            const string& discountIndex = it.second;
-
-            addSwapIndex(swapIndex, discountIndex, configuration.first);
-            LOG("Added SwapIndex " << swapIndex << " with DiscountingIndex " << discountIndex);
-        }
     } // loop over configurations
 
 } // CTOR

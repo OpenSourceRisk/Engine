@@ -417,7 +417,7 @@ void StressScenarioGenerator::addSwaptionVolShifts(StressTestScenarioData::Stres
                     shift = shifts[key];
                 }
                 applyShift(j, k, shift, true, shiftType, shiftExpiryTimes, shiftTermTimes, volExpiryTimes, volTermTimes,
-                           volData, shiftedVolData, j == k == 0 ? true : false);
+                           volData, shiftedVolData, j == 0 && k == 0);
             }
         }
 
@@ -478,7 +478,7 @@ void StressScenarioGenerator::addCapFloorVolShifts(StressTestScenarioData::Stres
         for (Size j = 0; j < shiftExpiryTimes.size(); ++j)
             for (Size k = 0; k < shiftStrikes.size(); ++k)
                 applyShift(j, k, shifts[j], true, shiftType, shiftExpiryTimes, shiftStrikes, volExpiryTimes, volStrikes,
-                           volData, shiftedVolData, j == k == 0 ? true : false);
+                           volData, shiftedVolData, j == 0 && k == 0);
 
         // add shifted vol data to the scenario
         for (Size jj = 0; jj < n_cfvol_exp; ++jj) {
