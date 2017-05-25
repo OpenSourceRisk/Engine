@@ -101,15 +101,6 @@
     </YieldCurve>
   </YieldCurves>
   
-  <!-- Yield curve shifts -->
-  <CreditCurves>
-    <!--CreditCurve name="CPTY_C">
-      <ShiftType>Absolute</ShiftType>
-      <ShiftSize>0.0001</ShiftSize>
-      <ShiftTenors>6M,1Y,2Y</ShiftTenors>
-    </CreditCurve-->
-  </CreditCurves>
-  
   <!-- FX spot shifts -->
   <FxSpots>
     <FxSpot ccypair="USDEUR">

@@ -63,7 +63,7 @@
 	<Name>CPTY_C</Name>
       </Names>
       <Tenors>6M,1Y,2Y</Tenors>
-      <!--SimulateSurvivalProbabilities>true</SimulateSurivalProbabilities-->
+      <SimulateSurvivalProbabilities>true</SimulateSurivalProbabilities>
     </DefaultCurves>
 
     <!-- Even if we do not simulate them - option pricing needs vol
