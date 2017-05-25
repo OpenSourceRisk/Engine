@@ -88,6 +88,8 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<AnalyticHaganCmsCouponPricerBuilder>());
     registerBuilder(boost::make_shared<NumericalHaganCmsCouponPricerBuilder>());
     registerBuilder(boost::make_shared<LinearTSRCmsCouponPricerBuilder>());
+
+    registerBuilder(boost::make_shared<MidPointCdsEngineBuilder>());
 }
 
 } // namespace data

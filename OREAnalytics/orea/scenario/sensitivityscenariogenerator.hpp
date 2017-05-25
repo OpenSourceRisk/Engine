@@ -67,12 +67,12 @@ namespace analytics {
 
   To apply shifts to the integrated hazard rates let:
   - S(t) be the survival probability at time t
-  - &lambda(t) be the "instaneous" hazard rate at time t
-  - &Lambda(t) be the “integrated” hazard rate at time t
+  - &lambda(t) be the "instaneous" hazard rate at time t 
+  - &Lambda(t) be the averaged hazard rate at time t
 
   The relationship between these three can be expressed as:
   \f[
-    S(t) = e^{-&Lambda t}
+    S(t) = e^{-&Lambda(t) t}
   \f]
   \f[
     &Lambda(t) = \frac{ \int_{0}^t  &lambda(t) du}{t}
@@ -80,7 +80,7 @@ namespace analytics {
 
   The survival probability quotes from the scenarioSimMarket default curves are then converted as follows:
   \f[
-    &Lambda(t) = \frac{ ln( &lambda(t) )}{t}
+    &Lambda(t) = - \frac{ ln( S(t) )}{t}
   \f]
 
 

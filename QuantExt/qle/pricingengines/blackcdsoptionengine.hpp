@@ -44,24 +44,43 @@
 
 #include <qle/instruments/cdsoption.hpp>
 
+#include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
+
 using namespace QuantLib;
 
 namespace QuantExt {
 
+//! Black-formula CDS-option engine base class
+class BlackCdsOptionEngineBase {
+public:
+    BlackCdsOptionEngineBase(const Handle<YieldTermStructure>& termStructure, const Handle<BlackVolTermStructure>& vol);
+    virtual ~BlackCdsOptionEngineBase() {}
+    void calculate(const CreditDefaultSwap& swap, const Date& exerciseDate, const bool knocksOut,
+                   CdsOption::results& results) const;
+    Handle<YieldTermStructure> termStructure();
+    Handle<BlackVolTermStructure> volatility();
+
+protected:
+    virtual Real recoveryRate() const = 0;
+    virtual Real defaultProbability(const Date& d) const = 0;
+
+    const Handle<YieldTermStructure> termStructure_;
+    const Handle<BlackVolTermStructure> volatility_;
+};
+
 //! Black-formula CDS-option engine
-class BlackCdsOptionEngine : public QuantExt::CdsOption::engine {
+class BlackCdsOptionEngine : public QuantExt::CdsOption::engine, public BlackCdsOptionEngineBase {
 public:
     BlackCdsOptionEngine(const Handle<DefaultProbabilityTermStructure>&, Real recoveryRate,
-                         const Handle<YieldTermStructure>& termStructure, const Handle<Quote>& vol);
+                         const Handle<YieldTermStructure>& termStructure, const Handle<BlackVolTermStructure>& vol);
     void calculate() const;
-    Handle<YieldTermStructure> termStructure();
-    Handle<Quote> volatility();
 
 private:
-    Handle<DefaultProbabilityTermStructure> probability_;
-    Real recoveryRate_;
-    Handle<YieldTermStructure> termStructure_;
-    Handle<Quote> volatility_;
+    virtual Real recoveryRate() const;
+    virtual Real defaultProbability(const Date& d) const;
+
+    const Handle<DefaultProbabilityTermStructure> probability_;
+    const Real recoveryRate_;
 };
 } // namespace QuantExt
 

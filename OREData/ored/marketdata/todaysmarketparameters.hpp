@@ -68,7 +68,8 @@ struct MarketConfiguration {
         : discountingCurvesId(Market::defaultConfiguration), yieldCurvesId(Market::defaultConfiguration),
           indexForwardingCurvesId(Market::defaultConfiguration), fxSpotsId(Market::defaultConfiguration),
           fxVolatilitiesId(Market::defaultConfiguration), swaptionVolatilitiesId(Market::defaultConfiguration),
-          defaultCurvesId(Market::defaultConfiguration), swapIndexCurvesId(Market::defaultConfiguration),
+          defaultCurvesId(Market::defaultConfiguration), cdsVolatilitiesId(Market::defaultConfiguration),
+          baseCorrelationsId(Market::defaultConfiguration), swapIndexCurvesId(Market::defaultConfiguration),
           capFloorVolatilitiesId(Market::defaultConfiguration),
           zeroInflationIndexCurvesId(Market::defaultConfiguration),
           yoyInflationIndexCurvesId(Market::defaultConfiguration),
@@ -76,9 +77,9 @@ struct MarketConfiguration {
           equityVolatilitiesId(Market::defaultConfiguration), securitySpreadsId(Market::defaultConfiguration),
           securityRecoveryRatesId(Market::defaultConfiguration) {}
     string discountingCurvesId, yieldCurvesId, indexForwardingCurvesId, fxSpotsId, fxVolatilitiesId,
-        swaptionVolatilitiesId, defaultCurvesId, swapIndexCurvesId, capFloorVolatilitiesId, zeroInflationIndexCurvesId,
-        yoyInflationIndexCurvesId, inflationCapFloorPriceSurfacesId, equityCurvesId, equityVolatilitiesId,
-        securitySpreadsId, securityRecoveryRatesId;
+        swaptionVolatilitiesId, defaultCurvesId, cdsVolatilitiesId, baseCorrelationsId, swapIndexCurvesId,
+        capFloorVolatilitiesId, zeroInflationIndexCurvesId, yoyInflationIndexCurvesId, inflationCapFloorPriceSurfacesId,
+        equityCurvesId, equityVolatilitiesId, securitySpreadsId, securityRecoveryRatesId;
 };
 
 bool operator==(const MarketConfiguration& lhs, const MarketConfiguration& rhs);
@@ -127,6 +128,12 @@ public:
     //! ENT_1 => Default/USD/ENT_1_SR_USD, ENT_2 => Default/USD/ENT_2_SR_USD etc.
     const map<string, string>& defaultCurves(const string& configuration) const;
 
+    // ENT_1 => CDSVolatility/CDXIG etc.
+    const map<string, string>& cdsVolatilities(const string& configuration) const;
+
+    // ENT_1 => BaseCorrelation/CDXIG etc.
+    const map<string, string>& baseCorrelations(const string& configuration) const;
+
     // EUR => CapFloorVolatility/EUR/EUR_CF_N,
     // GBP => CapFloorVolatility/GBP/GBP_CF_LN etc.
     const map<string, string>& capFloorVolatilities(const string& configuration) const;
@@ -160,6 +167,8 @@ public:
     const string& fxVolatilitiesId(const string& configuration) const;
     const string& swaptionVolatilitiesId(const string& configuration) const;
     const string& defaultCurvesId(const string& configuration) const;
+    const string& cdsVolatilitiesId(const string& configuration) const;
+    const string& baseCorrelationsId(const string& configuration) const;
     const string& capFloorVolatilitiesId(const string& configuration) const;
     const string& zeroInflationIndexCurvesId(const string& configuration) const;
     const string& yoyInflationIndexCurvesId(const string& configuration) const;
@@ -181,6 +190,8 @@ public:
     void addFxVolatilities(const string& id, const map<string, string>& assignemnts);
     void addSwaptionVolatilities(const string& id, const map<string, string>& assignments);
     void addDefaultCurves(const string& id, const map<string, string>& assignments);
+    void addCDSVolatilities(const string& id, const map<string, string>& assignments);
+    void addBaseCorrelations(const string& id, const map<string, string>& assignments);
     void addCapFloorVolatilities(const string& id, const map<string, string>& assignments);
     void addZeroInflationIndexCurves(const string& id, const map<string, string>& assignments);
     void addYoYInflationIndexCurves(const string& id, const map<string, string>& assignments);
@@ -208,9 +219,9 @@ private:
     map<string, MarketConfiguration> configurations_;
     // maps id to map (key,value)
     map<string, map<string, string>> discountingCurves_, yieldCurves_, indexForwardingCurves_, fxSpots_,
-        fxVolatilities_, swaptionVolatilities_, defaultCurves_, capFloorVolatilities_, zeroInflationIndexCurves_,
-        yoyInflationIndexCurves_, inflationCapFloorPriceSurfaces_, equityCurves_, equityVolatilities_, securitySpreads_,
-        securityRecoveryRates_;
+        fxVolatilities_, swaptionVolatilities_, defaultCurves_, cdsVolatilities_, baseCorrelations_,
+        capFloorVolatilities_, zeroInflationIndexCurves_, yoyInflationIndexCurves_, inflationCapFloorPriceSurfaces_,
+        equityCurves_, equityVolatilities_, securitySpreads_, securityRecoveryRates_;
     map<string, map<string, string>> swapIndices_;
 
     void curveSpecs(const map<string, map<string, string>>&, const string&, vector<string>&) const;
@@ -265,6 +276,16 @@ inline const string& TodaysMarketParameters::swaptionVolatilitiesId(const string
 inline const string& TodaysMarketParameters::defaultCurvesId(const string& configuration) const {
     QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
     return configurations_.at(configuration).defaultCurvesId;
+}
+
+inline const string& TodaysMarketParameters::cdsVolatilitiesId(const string& configuration) const {
+    QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
+    return configurations_.at(configuration).cdsVolatilitiesId;
+}
+
+inline const string& TodaysMarketParameters::baseCorrelationsId(const string& configuration) const {
+    QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
+    return configurations_.at(configuration).baseCorrelationsId;
 }
 
 inline const string& TodaysMarketParameters::capFloorVolatilitiesId(const string& configuration) const {
@@ -385,6 +406,24 @@ inline const map<string, string>& TodaysMarketParameters::defaultCurves(const st
     QL_REQUIRE(it != defaultCurves_.end(), "default curves with id " << defaultCurvesId(configuration)
                                                                      << " specified in configuration " << configuration
                                                                      << " not found");
+    return it->second;
+}
+
+inline const map<string, string>& TodaysMarketParameters::cdsVolatilities(const string& configuration) const {
+    QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
+    auto it = cdsVolatilities_.find(cdsVolatilitiesId(configuration));
+    QL_REQUIRE(it != cdsVolatilities_.end(), "base correlations with id " << cdsVolatilitiesId(configuration)
+                                                                          << " specified in configuration "
+                                                                          << configuration << " not found");
+    return it->second;
+}
+
+inline const map<string, string>& TodaysMarketParameters::baseCorrelations(const string& configuration) const {
+    QL_REQUIRE(hasConfiguration(configuration), "configuration " << configuration << " not found");
+    auto it = baseCorrelations_.find(baseCorrelationsId(configuration));
+    QL_REQUIRE(it != baseCorrelations_.end(), "base correlations with id " << baseCorrelationsId(configuration)
+                                                                           << " specified in configuration "
+                                                                           << configuration << " not found");
     return it->second;
 }
 
@@ -511,6 +550,18 @@ inline void TodaysMarketParameters::addDefaultCurves(const string& id, const map
     defaultCurves_[id] = assignments;
     for (auto s : assignments)
         DLOG("TodaysMarketParameters, add default curves: " << id << " " << s.first << " " << s.second);
+}
+
+inline void TodaysMarketParameters::addCDSVolatilities(const string& id, const map<string, string>& assignments) {
+    cdsVolatilities_[id] = assignments;
+    for (auto s : assignments)
+        DLOG("TodaysMarketParameters, add cds volatilities: " << id << " " << s.first << " " << s.second);
+}
+
+inline void TodaysMarketParameters::addBaseCorrelations(const string& id, const map<string, string>& assignments) {
+    baseCorrelations_[id] = assignments;
+    for (auto s : assignments)
+        DLOG("TodaysMarketParameters, add base correlations: " << id << " " << s.first << " " << s.second);
 }
 
 inline void TodaysMarketParameters::addZeroInflationIndexCurves(const string& id,

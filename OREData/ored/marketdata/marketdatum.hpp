@@ -72,6 +72,7 @@ public:
         BASIS_SWAP,
         CC_BASIS_SWAP,
         CDS,
+        CDS_INDEX,
         FX_SPOT,
         FX_FWD,
         HAZARD_RATE,
@@ -87,7 +88,8 @@ public:
         EQUITY_FWD,
         EQUITY_DIVIDEND,
         EQUITY_OPTION,
-        BOND
+        BOND,
+        INDEX_CDS_OPTION
     };
 
     //! Supported market quote types
@@ -102,6 +104,7 @@ public:
         RATE_LNVOL,
         RATE_NVOL,
         RATE_SLNVOL,
+        BASE_CORRELATION,
         SHIFT
     };
 
@@ -945,6 +948,59 @@ public:
     //@}
 private:
     string securityID_;
+};
+
+//! Base correlation data class
+/*!
+This class holds single market points of type
+- CDS_INDEX BASE_CORRELATION
+\ingroup marketdata
+*/
+class BaseCorrelationQuote : public MarketDatum {
+public:
+    //! Constructor
+    BaseCorrelationQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, const string& cdsIndexName,
+                         Period term, Real detachmentPoint)
+        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::CDS_INDEX), cdsIndexName_(cdsIndexName),
+          term_(term), detachmentPoint_(detachmentPoint) {}
+
+    //! \name Inspectors
+    //@{
+    const string& cdsIndexName() const { return cdsIndexName_; }
+    Real detachmentPoint() const { return detachmentPoint_; }
+    Period term() const { return term_; }
+    //@}
+private:
+    string cdsIndexName_;
+    Period term_;
+    Real detachmentPoint_;
+};
+
+//! CDS Index Option data class
+/*!
+This class holds single market points of type
+- INDEX_CDS_OPTION
+Specific data comprise
+- index name
+- option expiry (either a date or a period)
+
+\ingroup marketdata
+*/
+class IndexCDSOptionQuote : public MarketDatum {
+public:
+    //! Constructor
+    IndexCDSOptionQuote(Real value, Date asofDate, const string& name, const string& indexName, const string& expiry)
+        : MarketDatum(value, asofDate, name, QuoteType::RATE_LNVOL, InstrumentType::INDEX_CDS_OPTION),
+          indexName_(indexName), expiry_(expiry) {}
+
+    //! \name Inspectors
+    //@{
+    const string& indexName() const { return indexName_; }
+    const string& expiry() const { return expiry_; }
+    //@}
+private:
+    string indexName_;
+    string expiry_;
 };
 } // namespace data
 } // namespace ore

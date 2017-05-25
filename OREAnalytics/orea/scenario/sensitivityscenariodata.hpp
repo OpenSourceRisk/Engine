@@ -119,7 +119,7 @@ public:
 
     // todo
     const vector<string>& creditNames() const { return creditNames_; }
-    const map<string, CurveShiftData> creditCurveShiftData() const { return creditCurveShiftData_; }
+    const map<string, CurveShiftData>& creditCurveShiftData() const { return creditCurveShiftData_; }
 
     const vector<string>& equityNames() const { return equityNames_; }
     const map<string, SpotShiftData>& equityShiftData() const { return equityShiftData_; }
@@ -162,7 +162,7 @@ public:
 
     // todo
     vector<string>& creditNames() { return creditNames_; }
-    map<string, CurveShiftData> creditCurveShiftData() { return creditCurveShiftData_; }
+    map<string, CurveShiftData>& creditCurveShiftData() { return creditCurveShiftData_; }
 
     vector<string>& equityNames() { return equityNames_; }
     map<string, SpotShiftData>& equityShiftData() { return equityShiftData_; }

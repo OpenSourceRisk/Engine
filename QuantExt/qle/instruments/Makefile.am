@@ -17,6 +17,8 @@ libInstruments_la_SOURCES = \
 	oiccbasisswap.cpp \
 	tenorbasisswap.cpp \
 	subperiodsswap.cpp \
+	creditdefaultswap.cpp \
+	makecds.cpp \
 	cdsoption.cpp
 
 this_includedir=${includedir}/${subdir}
@@ -34,6 +36,8 @@ this_include_HEADERS = \
 	oiccbasisswap.hpp \
 	tenorbasisswap.hpp \
 	subperiodsswap.hpp \
+	creditdefaultswap.hpp \
+	makecds.hpp \
 	cdsoption.hpp
 
 noinst_LTLIBRARIES = libInstruments.la

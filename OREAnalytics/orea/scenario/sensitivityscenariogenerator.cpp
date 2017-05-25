@@ -771,18 +771,16 @@ void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(
     Size n_ten;
 
     // original curves' buffer
-    std::vector<Real> hazardRates; // integrated hazard rates
     std::vector<Real> times;
 
-    for (Size i = 0; i < n_names; ++i) {
+     for (Size i = 0; i < n_names; ++i) {
         string name = crNames_[i];
-        n_ten = simMarketData_->defaultTenors(crNames_[i]).size();
-        hazardRates.clear();
-        hazardRates.resize(n_ten);
-        times.clear();
-        times.resize(n_ten);
-        // buffer for shifted survival prob curves
-        std::vector<Real> shiftedHazardRates(n_ten);
+        n_ten = simMarketData_->defaultTenors(crNames_[i]).size(); 
+        std::vector<Real> hazardRates(n_ten); //integrated hazard rates
+        times.clear(); 
+	    times.resize(n_ten); 
+	    // buffer for shifted survival prob curves 
+	    std::vector<Real> shiftedHazardRates(n_ten); 
         SensitivityScenarioData::CurveShiftData data = sensitivityData_->creditCurveShiftData()[name];
         ShiftType shiftType = parseShiftType(data.shiftType);
         Handle<DefaultProbabilityTermStructure> ts = initMarket_->defaultCurve(name, configuration_);
@@ -808,7 +806,7 @@ void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(
             LOG("generate survival probability scenario, name " << name << ", bucket " << j << ", up " << up
                                                                 << ", desc " << scenarioDescriptions_.back().text());
 
-            // apply integrated hazard rate shift at tenor point j
+            // apply averaged hazard rate shift at tenor point j
             applyShift(j, shiftSize, up, shiftType, shiftTimes, hazardRates, times, shiftedHazardRates, true);
 
             // store shifted survival Prob in the scenario

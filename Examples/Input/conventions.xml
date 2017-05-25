@@ -28,11 +28,11 @@
   <!-- CDS -->
   <CDS>
     <Id>CDS-STANDARD-CONVENTIONS</Id>
-    <SettlementDays>0</SettlementDays>
+    <SettlementDays>1</SettlementDays>
     <Calendar>WeekendsOnly</Calendar>
     <Frequency>Quarterly</Frequency>
-    <PaymentConvention>ModifiedFollowing</PaymentConvention>
-    <Rule>TwentiethIMM</Rule>
+    <PaymentConvention>Following</PaymentConvention>
+    <Rule>CDS2015</Rule>
     <DayCounter>A360</DayCounter>
     <SettlesAccrual>true</SettlesAccrual>
     <PaysAtDefaultTime>true</PaysAtDefaultTime>
