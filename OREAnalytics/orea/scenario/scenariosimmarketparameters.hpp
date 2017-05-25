@@ -147,6 +147,11 @@ public:
     bool& simulateRecoveryRates() { return recoveryRateSimulate_; }
     vector<string>& defaultNames() { return defaultNames_; }
     void setDefaultTenors(const string& key, const vector<Period>& p);
+    
+    bool& simulateCdsVols() { return cdsVolSimulate_; }
+    vector<Period>& cdsVolExpiries() { return cdsVolExpiries_; }
+    vector<string>& cdsVolNames() { return cdsVolNames_; }
+    string& cdsVolDecayMode() { return cdsVolDecayMode_; }
 
     vector<string>& equityNames() { return eqNames_; }
     void setEquityTenors(const string& key, const vector<Period>& p);
