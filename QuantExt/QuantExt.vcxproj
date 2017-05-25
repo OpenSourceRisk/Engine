@@ -522,6 +522,7 @@
     <ClInclude Include="qle\instruments\all.hpp" />
     <ClInclude Include="qle\instruments\averageois.hpp" />
     <ClInclude Include="qle\instruments\cdsoption.hpp" />
+    <ClInclude Include="qle\instruments\creditdefaultswap.hpp" />
     <ClInclude Include="qle\instruments\crossccybasisswap.hpp" />
     <ClInclude Include="qle\instruments\crossccyswap.hpp" />
     <ClInclude Include="qle\instruments\currencyswap.hpp" />
@@ -529,6 +530,7 @@
     <ClInclude Include="qle\instruments\equityforward.hpp" />
     <ClInclude Include="qle\instruments\fxforward.hpp" />
     <ClInclude Include="qle\instruments\makeaverageois.hpp" />
+    <ClInclude Include="qle\instruments\makecds.hpp" />
     <ClInclude Include="qle\instruments\oibasisswap.hpp" />
     <ClInclude Include="qle\instruments\oiccbasisswap.hpp" />
     <ClInclude Include="qle\instruments\subperiodsswap.hpp" />
@@ -579,11 +581,13 @@
     <ClInclude Include="qle\pricingengines\blackcdsoptionengine.hpp" />
     <ClInclude Include="qle\pricingengines\crossccyswapengine.hpp" />
     <ClInclude Include="qle\pricingengines\depositengine.hpp" />
+    <ClInclude Include="qle\pricingengines\discountingcapfloorengine.hpp" />
     <ClInclude Include="qle\pricingengines\discountingcurrencyswapengine.hpp" />
     <ClInclude Include="qle\pricingengines\discountingequityforwardengine.hpp" />
     <ClInclude Include="qle\pricingengines\discountingfxforwardengine.hpp" />
     <ClInclude Include="qle\pricingengines\discountingriskybondengine.hpp" />
     <ClInclude Include="qle\pricingengines\discountingswapenginemulticurve.hpp" />
+    <ClInclude Include="qle\pricingengines\midpointcdsengine.hpp" />
     <ClInclude Include="qle\pricingengines\numericlgmswaptionengine.hpp" />
     <ClInclude Include="qle\pricingengines\oiccbasisswapengine.hpp" />
     <ClInclude Include="qle\processes\all.hpp" />
@@ -601,6 +605,7 @@
     <ClInclude Include="qle\termstructures\datedstrippedoptionlet.hpp" />
     <ClInclude Include="qle\termstructures\datedstrippedoptionletadapter.hpp" />
     <ClInclude Include="qle\termstructures\datedstrippedoptionletbase.hpp" />
+    <ClInclude Include="qle\termstructures\defaultprobabilityhelpers.hpp" />
     <ClInclude Include="qle\termstructures\dynamicblackvoltermstructure.hpp" />
     <ClInclude Include="qle\termstructures\dynamicoptionletvolatilitystructure.hpp" />
     <ClInclude Include="qle\termstructures\dynamicstype.hpp" />
@@ -637,6 +642,7 @@
     <ClCompile Include="qle\indexes\inflationindexwrapper.cpp" />
     <ClCompile Include="qle\instruments\averageois.cpp" />
     <ClCompile Include="qle\instruments\cdsoption.cpp" />
+    <ClCompile Include="qle\instruments\creditdefaultswap.cpp" />
     <ClCompile Include="qle\instruments\crossccybasisswap.cpp" />
     <ClCompile Include="qle\instruments\crossccyswap.cpp" />
     <ClCompile Include="qle\instruments\currencyswap.cpp" />
@@ -644,6 +650,7 @@
     <ClCompile Include="qle\instruments\equityforward.cpp" />
     <ClCompile Include="qle\instruments\fxforward.cpp" />
     <ClCompile Include="qle\instruments\makeaverageois.cpp" />
+    <ClCompile Include="qle\instruments\makecds.cpp" />
     <ClCompile Include="qle\instruments\oibasisswap.cpp" />
     <ClCompile Include="qle\instruments\oiccbasisswap.cpp" />
     <ClCompile Include="qle\instruments\subperiodsswap.cpp" />
@@ -677,11 +684,13 @@
     <ClCompile Include="qle\pricingengines\blackcdsoptionengine.cpp" />
     <ClCompile Include="qle\pricingengines\crossccyswapengine.cpp" />
     <ClCompile Include="qle\pricingengines\depositengine.cpp" />
+    <ClCompile Include="qle\pricingengines\discountingcapfloorengine.cpp" />
     <ClCompile Include="qle\pricingengines\discountingcurrencyswapengine.cpp" />
     <ClCompile Include="qle\pricingengines\discountingequityforwardengine.cpp" />
     <ClCompile Include="qle\pricingengines\discountingfxforwardengine.cpp" />
     <ClCompile Include="qle\pricingengines\discountingriskybondengine.cpp" />
     <ClCompile Include="qle\pricingengines\discountingswapenginemulticurve.cpp" />
+    <ClCompile Include="qle\pricingengines\midpointcdsengine.cpp" />
     <ClCompile Include="qle\pricingengines\numericlgmswaptionengine.cpp" />
     <ClCompile Include="qle\pricingengines\oiccbasisswapengine.cpp" />
     <ClCompile Include="qle\processes\crossassetstateprocess.cpp" />
@@ -693,6 +702,7 @@
     <ClCompile Include="qle\termstructures\crossccybasisswaphelper.cpp" />
     <ClCompile Include="qle\termstructures\datedstrippedoptionlet.cpp" />
     <ClCompile Include="qle\termstructures\datedstrippedoptionletadapter.cpp" />
+    <ClCompile Include="qle\termstructures\defaultprobabilityhelpers.cpp" />
     <ClCompile Include="qle\termstructures\dynamicoptionletvolatilitystructure.cpp" />
     <ClCompile Include="qle\termstructures\dynamicswaptionvolmatrix.cpp" />
     <ClCompile Include="qle\termstructures\hazardspreadeddefaulttermstructure.cpp" />
