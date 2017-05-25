@@ -21,6 +21,7 @@
     <Parameter name="fxcalibration">collateral_eur</Parameter>
     <Parameter name="pricing">collateral_eur</Parameter>
     <Parameter name="simulation">collateral_eur</Parameter>
+    <Parameter name="sensitivity">collateral_eur</Parameter>
   </Markets>
   <Analytics>
     <Analytic type="npv">
@@ -83,7 +84,6 @@
       <Parameter name="scenarioOutputFile">scenario.csv</Parameter>
       <Parameter name="sensitivityOutputFile">sensitivity.csv</Parameter>
       <Parameter name="crossGammaOutputFile">crossgamma.csv</Parameter>
-      <Parameter name="parRateSensitivityOutputFile">parsensi.csv</Parameter>
       <Parameter name="outputSensitivityThreshold">0.000001</Parameter>
       <Parameter name="recalibrateModels">Y</Parameter>
     </Analytic>

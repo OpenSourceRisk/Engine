@@ -129,7 +129,7 @@ public:
 
     // todo
     const vector<string>& creditNames() const { return creditNames_; }
-    const map<string, CurveShiftData> creditCurveShiftData() const { return creditCurveShiftData_; }
+    const map<string, CurveShiftData>& creditCurveShiftData() const { return creditCurveShiftData_; }
 
     const vector<pair<string, string>>& crossGammaFilter() const { return crossGammaFilter_; }
 
@@ -170,7 +170,7 @@ public:
 
     // todo
     vector<string>& creditNames() { return creditNames_; }
-    map<string, CurveShiftData> creditCurveShiftData() { return creditCurveShiftData_; }
+    map<string, CurveShiftData>& creditCurveShiftData() { return creditCurveShiftData_; }
 
     vector<pair<string, string>>& crossGammaFilter() { return crossGammaFilter_; }
 
