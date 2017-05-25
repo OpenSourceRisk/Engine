@@ -64,4 +64,6 @@ boost::shared_ptr<Trade> buildCapFloor(string id, string ccy, string longShort, 
                                        string floatDC, string index);
 
 boost::shared_ptr<Trade> buildZeroBond(string id, string ccy, Real notional, Size term);
+
+boost::shared_ptr<Trade> buildCdsOption(string id, string ccy, Real notional, Size term);
 } // namespace testsuite
