@@ -43,11 +43,14 @@ void StressScenarioGenerator::generateScenarios(const boost::shared_ptr<Scenario
         boost::shared_ptr<Scenario> scenario = stressScenarioFactory->buildScenario(today_, data.label);
 
         addFxShifts(data, scenario);
+        addEquityShifts(data, scenario);
         addDiscountCurveShifts(data, scenario);
         addIndexCurveShifts(data, scenario);
         addYieldCurveShifts(data, scenario);
         if (simMarketData_->simulateFXVols())
             addFxVolShifts(data, scenario);
+        if (simMarketData_->simulateEQVols())
+            addEquityVolShifts(data, scenario);
         if (simMarketData_->simulateSwapVols())
             addSwaptionVolShifts(data, scenario);
         if (simMarketData_->simulateCapFloorVols())
@@ -83,7 +86,7 @@ void StressScenarioGenerator::addFxShifts(StressTestScenarioData::StressTestData
 
         LOG("Apply stress scenario to fx " << ccypair);
 
-        StressTestScenarioData::FxShiftData data = d.second;
+        StressTestScenarioData::SpotShiftData data = d.second;
         ShiftType type = parseShiftType(data.shiftType);
         bool relShift = (type == ShiftType::Relative);
         // QL_REQUIRE(type == ShiftType::Relative, "FX scenario type must be relative");
@@ -94,6 +97,23 @@ void StressScenarioGenerator::addFxShifts(StressTestScenarioData::StressTestData
         scenario->add(getFxKey(ccypair), newRate);
     }
     LOG("FX scenarios done");
+}
+
+void StressScenarioGenerator::addEquityShifts(StressTestScenarioData::StressTestData& std,
+    boost::shared_ptr<Scenario>& scenario) {
+    for (auto d : std.equityShifts) {
+        string equity = d.first;
+        StressTestScenarioData::SpotShiftData data = d.second;
+        ShiftType type = parseShiftType(data.shiftType);
+        bool relShift = (type == ShiftType::Relative);
+        // QL_REQUIRE(type == ShiftType::Relative, "FX scenario type must be relative");
+        Real size = data.shiftSize;
+
+        Real rate = initMarket_->equitySpot(equity, configuration_)->value();
+        Real newRate = relShift ? rate * (1.0 + size) : (rate + size);
+        scenario->add(getEquityKey(equity), newRate);
+    }
+    LOG("Equity scenarios done");
 }
 
 void StressScenarioGenerator::addDiscountCurveShifts(StressTestScenarioData::StressTestData& std,
@@ -252,7 +272,7 @@ void StressScenarioGenerator::addFxVolShifts(StressTestScenarioData::StressTestD
         string ccypair = d.first;
         LOG("Apply stress scenario to fx vol structure " << ccypair);
 
-        StressTestScenarioData::FxVolShiftData data = d.second;
+        StressTestScenarioData::VolShiftData data = d.second;
 
         Handle<BlackVolTermStructure> ts = initMarket_->fxVol(ccypair, configuration_);
         DayCounter dc = ts->dayCounter();
@@ -283,6 +303,53 @@ void StressScenarioGenerator::addFxVolShifts(StressTestScenarioData::StressTestD
             scenario->add(getFxVolKey(ccypair, k), shiftedValues[k]);
     }
     LOG("FX vol scenarios done");
+}
+
+void StressScenarioGenerator::addEquityVolShifts(StressTestScenarioData::StressTestData& std,
+    boost::shared_ptr<Scenario>& scenario) {
+    Size n_eqvol_exp = simMarketData_->equityVolExpiries().size();
+
+    std::vector<Real> values(n_eqvol_exp);
+    std::vector<Real> times(n_eqvol_exp);
+
+    // buffer for shifted zero curves
+    std::vector<Real> shiftedValues(n_eqvol_exp);
+
+    for (auto d : std.equityVolShifts) {
+        string equity = d.first;
+        LOG("Apply stress scenario to equity vol structure " << equity);
+
+        StressTestScenarioData::VolShiftData data = d.second;
+
+        Handle<BlackVolTermStructure> ts = initMarket_->equityVol(equity, configuration_);
+        DayCounter dc = ts->dayCounter();
+        Real strike = 0.0; // FIXME
+        for (Size j = 0; j < n_eqvol_exp; ++j) {
+            Date d = today_ + simMarketData_->equityVolExpiries()[j];
+            values[j] = ts->blackVol(d, strike);
+            times[j] = dc.yearFraction(today_, d);
+        }
+
+        ShiftType shiftType = parseShiftType(data.shiftType);
+        std::vector<Period> shiftTenors = data.shiftExpiries;
+        std::vector<Time> shiftTimes(shiftTenors.size());
+        vector<Real> shifts = data.shifts;
+        QL_REQUIRE(shiftTenors.size() > 0, "Equity vol shift tenors not specified");
+        QL_REQUIRE(shiftTenors.size() == shifts.size(), "shift tenor and shift size vectors do not match");
+
+        for (Size j = 0; j < shiftTenors.size(); ++j)
+            shiftTimes[j] = dc.yearFraction(today_, today_ + shiftTenors[j]);
+
+        // FIXME: Apply same shifts to non-ATM vectors if present
+        for (Size j = 0; j < shiftTenors.size(); ++j) {
+            // apply shift at tenor point j
+            applyShift(j, shifts[j], true, shiftType, shiftTimes, values, times, shiftedValues, j == 0 ? true : false);
+        }
+
+        for (Size k = 0; k < n_eqvol_exp; ++k)
+            scenario->add(getEquityVolKey(equity, k), shiftedValues[k]);
+    }
+    LOG("Equity vol scenarios done");
 }
 
 void StressScenarioGenerator::addSwaptionVolShifts(StressTestScenarioData::StressTestData& std,

@@ -117,18 +117,18 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     }
 
     // equity vols
-    if (simMarketConfig_->eqVolNames().size() > 0 && simMarketConfig_->simulateEQVols()) {
+    if (simMarketConfig_->equityVolNames().size() > 0 && simMarketConfig_->simulateEQVols()) {
         LOG("CrossAssetModel is simulating EQ vols");
-        for (Size k = 0; k < simMarketConfig_->eqVolNames().size(); k++) {
+        for (Size k = 0; k < simMarketConfig_->equityVolNames().size(); k++) {
             // Calculating the index is messy
-            const string& eqName = simMarketConfig_->eqVolNames()[k];
-            LOG("Set up CrossAssetModelImpliedEqVolTermStructures for " << eqName);
-            Size eqIndex = model->eqIndex(eqName);
+            const string& equityName = simMarketConfig_->equityVolNames()[k];
+            LOG("Set up CrossAssetModelImpliedEqVolTermStructures for " << equityName);
+            Size eqIndex = model->eqIndex(equityName);
             // eqVols_ are indexed by ccyPairs
-            LOG("EQ Vol Name = " << eqName << ", index = " << eqIndex);
+            LOG("EQ Vol Name = " << equityName << ", index = " << eqIndex);
             // index - 1 to convert "IR" index into an "FX" index
             eqVols_.push_back(boost::make_shared<CrossAssetModelImpliedEqVolTermStructure>(model_, eqIndex));
-            LOG("Set up CrossAssetModelImpliedEqVolTermStructures for " << eqName << " done");
+            LOG("Set up CrossAssetModelImpliedEqVolTermStructures for " << equityName << " done");
         }
     }
 }
@@ -255,9 +255,9 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
 
         // Equity vols
         if (simMarketConfig_->simulateEQVols()) {
-            const vector<Period>& expiries = simMarketConfig_->eqVolExpiries();
-            for (Size k = 0; k < simMarketConfig_->eqVolNames().size(); k++) {
-                const string& eqName = simMarketConfig_->eqVolNames()[k];
+            const vector<Period>& expiries = simMarketConfig_->equityVolExpiries();
+            for (Size k = 0; k < simMarketConfig_->equityVolNames().size(); k++) {
+                const string& equityName = simMarketConfig_->equityVolNames()[k];
 
                 Size eqIndex = eqVols_[k]->equityIndex();
                 Size eqCcyIdx = eqVols_[k]->eqCcyIndex();
@@ -267,7 +267,7 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
 
                 for (Size j = 0; j < expiries.size(); j++) {
                     Real vol = eqVols_[k]->blackVol(dates_[i] + expiries[j], Null<Real>(), true);
-                    scenarios[i]->add(RiskFactorKey(RiskFactorKey::KeyType::EQVolatility, eqName, j), vol);
+                    scenarios[i]->add(RiskFactorKey(RiskFactorKey::KeyType::EQVolatility, equityName, j), vol);
                 }
             }
         }

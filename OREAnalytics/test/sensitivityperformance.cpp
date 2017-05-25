@@ -226,11 +226,11 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5Big() {
     cvsData.shiftType = "Absolute";
     cvsData.shiftSize = 0.0001;
 
-    SensitivityScenarioData::FxShiftData fxsData;
+    SensitivityScenarioData::SpotShiftData fxsData;
     fxsData.shiftType = "Relative";
     fxsData.shiftSize = 0.01;
 
-    SensitivityScenarioData::FxVolShiftData fxvsData;
+    SensitivityScenarioData::VolShiftData fxvsData;
     fxvsData.shiftType = "Relative";
     fxvsData.shiftSize = 1.0;
     fxvsData.shiftExpiries = {1 * Weeks,   2 * Weeks,   1 * Months,  2 * Months,  3 * Months,  4 * Months,  5 * Months,
@@ -341,11 +341,11 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5() {
     cvsData.shiftType = "Absolute";
     cvsData.shiftSize = 0.0001;
 
-    SensitivityScenarioData::FxShiftData fxsData;
+    SensitivityScenarioData::SpotShiftData fxsData;
     fxsData.shiftType = "Relative";
     fxsData.shiftSize = 0.01;
 
-    SensitivityScenarioData::FxVolShiftData fxvsData;
+    SensitivityScenarioData::VolShiftData fxvsData;
     fxvsData.shiftType = "Relative";
     fxvsData.shiftSize = 1.0;
     fxvsData.shiftExpiries = {5 * Years};
