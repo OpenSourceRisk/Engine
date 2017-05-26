@@ -18,10 +18,11 @@
 
 #include <qle/models/cdsoptionhelper.hpp>
 #include <qle/pricingengines/blackcdsoptionengine.hpp>
+#include <qle/pricingengines/midpointcdsengine.hpp>
 
 #include <ql/exercise.hpp>
-#include <ql/pricingengines/credit/midpointcdsengine.hpp>
 #include <ql/quotes/simplequote.hpp>
+#include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
 #include <ql/time/schedule.hpp>
 
 #include <boost/make_shared.hpp>
@@ -66,10 +67,11 @@ CdsOptionHelper::CdsOptionHelper(const Date& exerciseDate, const Handle<Quote>& 
 
     boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(exerciseDate);
 
-    option_ = boost::make_shared<QuantExt::CdsOption>(cds_, exercise, true);
+    option_ = boost::make_shared<CdsOption>(cds_, exercise, true);
+    Handle<BlackVolTermStructure> h(
+        boost::make_shared<BlackConstantVol>(0, NullCalendar(), Handle<Quote>(blackVol_), Actual365Fixed()));
 
-    blackEngine_ = boost::make_shared<QuantExt::BlackCdsOptionEngine>(probability, recoveryRate, termStructure,
-                                                                      Handle<Quote>(blackVol_));
+    blackEngine_ = boost::make_shared<BlackCdsOptionEngine>(probability, recoveryRate, termStructure, h);
 }
 
 Real CdsOptionHelper::modelValue() const {

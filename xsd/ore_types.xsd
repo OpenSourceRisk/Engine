@@ -284,6 +284,7 @@
       <xs:enumeration value="TwentiethIMM"/>
       <xs:enumeration value="OldCDS"/>
       <xs:enumeration value="CDS"/>
+      <xs:enumeration value="CDS2015"/>
     </xs:restriction>
   </xs:simpleType>
 

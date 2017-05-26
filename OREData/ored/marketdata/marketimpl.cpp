@@ -121,6 +121,16 @@ Handle<Quote> MarketImpl::recoveryRate(const string& key, const string& configur
     return lookup<Handle<Quote>>(recoveryRates_, key, configuration, "recovery rate");
 }
 
+Handle<BlackVolTermStructure> MarketImpl::cdsVol(const string& key, const string& configuration) const {
+    return lookup<Handle<BlackVolTermStructure>>(cdsVols_, key, configuration, "cds vol curve");
+}
+
+Handle<BaseCorrelationTermStructure<BilinearInterpolation>>
+MarketImpl::baseCorrelation(const string& key, const string& configuration) const {
+    return lookup<Handle<BaseCorrelationTermStructure<BilinearInterpolation>>>(baseCorrelations_, key, configuration,
+                                                                               "base correlation curve");
+}
+
 Handle<OptionletVolatilityStructure> MarketImpl::capFloorVol(const string& key, const string& configuration) const {
     return lookup<Handle<OptionletVolatilityStructure>>(capFloorCurves_, key, configuration, "capfloor curve");
 }
@@ -233,6 +243,10 @@ void MarketImpl::refresh(const string& configuration) {
                 it->second.insert(*x.second);
         }
         for (auto& x : defaultCurves_) {
+            if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
+                it->second.insert(*x.second);
+        }
+        for (auto& x : cdsVols_) {
             if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
                 it->second.insert(*x.second);
         }

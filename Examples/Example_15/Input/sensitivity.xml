@@ -171,7 +171,44 @@
       <Index>USD-LIBOR-3M</Index>
     </CapFloorVolatility>
   </CapFloorVolatilities>
-
+  
+  <!-- Credit Curve shifts -->
+  <CreditCurves>
+    <CreditCurve name="CPTY_C">
+        <ShiftType>Absolute</ShiftType>
+        <ShiftSize>0.0001</ShiftSize>
+        <ShiftTenors>6M,1Y,2Y</ShiftTenors>
+    </CreditCurve>
+  </CreditCurves>
+  
+  <!-- Equity spot shifts -->
+  <EquitySpots>
+    <EquitySpot equity="SP5">
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.01</ShiftSize>
+    </EquitySpot>
+    <EquitySpot equity="Lufthansa">
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.01</ShiftSize>
+    </EquitySpot>
+  </EquitySpots>
+  
+  <!-- Equity ATM vol shifts -->
+  <EquityVolatilities>
+    <EquityVolatility equity="SP5">
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.01</ShiftSize>
+      <ShiftExpiries>6M,1Y,2Y,3Y,5Y</ShiftExpiries>
+      <ShiftStrikes/>
+    </EquityVolatility>
+    <EquityVolatility equity="Lufthansa">
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.01</ShiftSize>
+      <ShiftExpiries>6M,1Y,2Y,3Y,5Y</ShiftExpiries>
+      <ShiftStrikes/>
+    </EquityVolatility>
+  </EquityVolatilities>
+  
   <!-- Cross Gamma filter: Pairs of factor sub-strings -->
   <CrossGammaFilter>
     <Pair>DiscountCurve/EUR,DiscountCurve/EUR</Pair>
