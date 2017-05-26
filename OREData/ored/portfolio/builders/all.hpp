@@ -12,5 +12,7 @@
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/builders/swaption.hpp>
 #include <ored/portfolio/builders/creditdefaultswap.hpp>
+#include <ored/portfolio/builders/equityforward.hpp>
+#include <ored/portfolio/builders/equityoption.hpp>
+#include <ored/portfolio/builders/bond.hpp>
 #include <ored/portfolio/builders/cms.hpp>
-

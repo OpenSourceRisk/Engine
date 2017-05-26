@@ -147,11 +147,11 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5() {
     cvsData.shiftSize = 1E-5;
     cvsData.parInstruments = {"DEP", "IRS", "IRS", "IRS", "IRS", "IRS", "IRS", "IRS", "IRS"};
 
-    SensitivityScenarioData::FxShiftData fxsData;
+    SensitivityScenarioData::SpotShiftData fxsData;
     fxsData.shiftType = "Absolute";
     fxsData.shiftSize = 1E-5;
 
-    SensitivityScenarioData::FxVolShiftData fxvsData;
+    SensitivityScenarioData::VolShiftData fxvsData;
     fxvsData.shiftType = "Absolute";
     fxvsData.shiftSize = 1E-5;
     fxvsData.shiftExpiries = {5 * Years};

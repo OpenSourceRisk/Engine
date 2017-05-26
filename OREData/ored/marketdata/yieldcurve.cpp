@@ -1259,7 +1259,7 @@ void YieldCurve::addFXForwards(const boost::shared_ptr<YieldCurveSegment>& segme
         // the fx swap rate helper interprets the fxSpot as of the spot date, our fx spot here
         // is as of today, therefore we set up the fx spot helper with zero settlement days
         // and compute the tenor such that the correct maturity date is still matched
-        Date spotDate = fxConvention->advanceCalendar().advance(asofDate_, fxConvention->spotDays()*Days);
+        Date spotDate = fxConvention->advanceCalendar().advance(asofDate_, fxConvention->spotDays() * Days);
         Date endDate = fxConvention->advanceCalendar().advance(spotDate, fxForwardTenor);
 
         boost::shared_ptr<RateHelper> fxForwardHelper(new FxSwapRateHelper(

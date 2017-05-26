@@ -27,6 +27,8 @@
 #include <ored/portfolio/builders/fxoption.hpp>
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/builders/swaption.hpp>
+#include <ored/portfolio/builders/equityoption.hpp>
+#include <ored/portfolio/builders/equityforward.hpp>
 #include <ored/portfolio/fxoption.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/swap.hpp>
@@ -112,6 +114,10 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     data->model("Bond") = "DiscountedCashflows";
     data->engine("Bond") = "DiscountingRiskyBondEngine";
     data->engineParameters("Bond")["TimestepPeriod"] = "6M";
+    data->model("EquityForward") = "DiscountedCashflows";
+    data->engine("EquityForward") = "DiscountingEquityForwardEngine";
+    data->model("EquityOption") = "BlackScholesMerton";
+    data->engine("EquityOption") = "AnalyticEuropeanEngine";
     boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(data, simMarket);
     factory->registerBuilder(boost::make_shared<SwapEngineBuilder>());
     factory->registerBuilder(boost::make_shared<EuropeanSwaptionEngineBuilder>());
@@ -119,6 +125,8 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     factory->registerBuilder(boost::make_shared<FxOptionEngineBuilder>());
     factory->registerBuilder(boost::make_shared<FxForwardEngineBuilder>());
     factory->registerBuilder(boost::make_shared<CapFloorEngineBuilder>());
+    factory->registerBuilder(boost::make_shared<EquityOptionEngineBuilder>());
+    factory->registerBuilder(boost::make_shared<EquityForwardEngineBuilder>());
 
     // boost::shared_ptr<Portfolio> portfolio = buildSwapPortfolio(portfolioSize, factory);
     boost::shared_ptr<Portfolio> portfolio(new Portfolio());
@@ -142,6 +150,7 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     portfolio->add(buildFloor("10_Floor_USD", "USD", "Long", 0.01, 1000000.0, 0, 10, "3M", "A360", "USD-LIBOR-3M"));
     portfolio->add(buildZeroBond("11_ZeroBond_EUR", "EUR", 1.0, 10));
     portfolio->add(buildZeroBond("12_ZeroBond_USD", "USD", 1.0, 10));
+    portfolio->add(buildEquityOption("14_EquityOption_SP5", "Long", "Call", 2, "SP5", "USD", 2147.56, 775));    
     portfolio->build(factory);
 
     BOOST_TEST_MESSAGE("Portfolio size after build: " << portfolio->size());
@@ -476,7 +485,15 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
         {"13_Swaption_EUR", "Up:SwaptionVolatility/EUR/5/10Y/10Y/ATM", 5116.77, 19.5026},
         {"13_Swaption_EUR", "Down:SwaptionVolatility/EUR/1/2Y/10Y/ATM", 5116.77, -17.2771},
         {"13_Swaption_EUR", "Down:SwaptionVolatility/EUR/3/5Y/10Y/ATM", 5116.77, -118.671},
-        {"13_Swaption_EUR", "Down:SwaptionVolatility/EUR/5/10Y/10Y/ATM", 5116.77, -19.5463}};
+        {"13_Swaption_EUR", "Down:SwaptionVolatility/EUR/5/10Y/10Y/ATM", 5116.77, -19.5463},
+        {"14_EquityOption_SP5", "Up:DiscountCurve/USD/2/2Y", 216085, 123.022 },
+        {"14_EquityOption_SP5", "Up:DiscountCurve/USD/3/3Y", 216085, 1.0169 },
+        {"14_EquityOption_SP5", "Down:DiscountCurve/USD/2/2Y", 216085, -122.988 },
+        {"14_EquityOption_SP5", "Down:DiscountCurve/USD/3/3Y", 216085, -1.0169 },
+        {"14_EquityOption_SP5", "Up:EQSpot/SP5/0/spot", 216085, 8.35112 },
+        {"14_EquityOption_SP5", "Down:EQSpot/SP5/0/spot", 216085, -8.35098 },
+        {"14_EquityOption_SP5", "Up:FXSpot/EURUSD/0/spot", 216085, -2139.45 },
+        {"14_EquityOption_SP5", "Down:FXSpot/EURUSD/0/spot", 216085, 2182.67 } };
 
     std::map<pair<string, string>, Real> npvMap, sensiMap;
     for (Size i = 0; i < cachedResults.size(); ++i) {
@@ -804,11 +821,11 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
     // sensitivity config
     boost::shared_ptr<SensitivityScenarioData> sensiData = TestConfigurationObjects::setupSensitivityScenarioData5();
 
-    map<string, SensitivityScenarioData::FxVolShiftData>& fxvs = sensiData->fxVolShiftData();
+    map<string, SensitivityScenarioData::VolShiftData>& fxvs = sensiData->fxVolShiftData();
     for (auto& it : fxvs) {
         it.second.shiftSize = 0.0001; // want a smaller shift size than 1.0 to test the analytic sensitivities
     }
-    map<string, SensitivityScenarioData::FxShiftData>& fxs = sensiData->fxShiftData();
+    map<string, SensitivityScenarioData::SpotShiftData>& fxs = sensiData->fxShiftData();
     for (auto& it : fxs) {
         it.second.shiftSize = 0.0001; // want a smaller shift size to test the analytic sensitivities
     }
