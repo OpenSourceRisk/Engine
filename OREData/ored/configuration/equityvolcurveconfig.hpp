@@ -51,7 +51,8 @@ public:
     EquityVolatilityCurveConfig() {}
     //! Detailed constructor
     EquityVolatilityCurveConfig(const string& curveID, const string& curveDescription, const string& currency,
-                                const Dimension& dimension, const vector<string>& expiries);
+                                const Dimension& dimension, const vector<string>& expiries,
+                                const vector<string>& strikes = vector<string>());
     //! Default destructor
     virtual ~EquityVolatilityCurveConfig() {}
     //@}
@@ -69,6 +70,8 @@ public:
     const string& ccy() const { return ccy_; }
     const Dimension& dimension() const { return dimension_; }
     const vector<string>& expiries() const { return expiries_; }
+    const vector<string>& strikes() const { return strikes_; } // Really these should be Reals, but we want to match the type of
+                                                               // The equity option market datum (which is string for "ATMF"
     //@}
 
     //! \name Setters
@@ -78,6 +81,7 @@ public:
     string& ccy() { return ccy_; }
     Dimension& dimension() { return dimension_; }
     vector<string>& expiries() { return expiries_; }
+    vector<string>& strikes() { return strikes_; }
     //@}
 private:
     string curveID_;
@@ -85,6 +89,7 @@ private:
     string ccy_;
     Dimension dimension_;
     vector<string> expiries_;
+    vector<string> strikes_;
 };
 } // namespace data
 } // namespace ore
