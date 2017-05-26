@@ -73,14 +73,14 @@ public:
         string indexName;
     };
 
-    struct FxVolShiftData {
+    struct VolShiftData {
         string shiftType;
         Real shiftSize;
         vector<Period> shiftExpiries;
         vector<Real> shiftStrikes; // FIXME: absolute or relative to ATM ?
     };
 
-    struct FxShiftData {
+    struct SpotShiftData {
         string shiftType;
         Real shiftSize;
     };
@@ -109,7 +109,7 @@ public:
     const map<string, CurveShiftData>& yieldCurveShiftData() const { return yieldCurveShiftData_; }
 
     const vector<string>& fxCcyPairs() const { return fxCcyPairs_; }
-    const map<string, FxShiftData>& fxShiftData() const { return fxShiftData_; }
+    const map<string, SpotShiftData>& fxShiftData() const { return fxShiftData_; }
 
     const vector<string>& swaptionVolCurrencies() const { return swaptionVolCurrencies_; }
     const map<string, SwaptionVolShiftData>& swaptionVolShiftData() const { return swaptionVolShiftData_; }
@@ -118,7 +118,7 @@ public:
     const map<string, CapFloorVolShiftData>& capFloorVolShiftData() const { return capFloorVolShiftData_; }
 
     const vector<string>& fxVolCcyPairs() const { return fxVolCcyPairs_; }
-    const map<string, FxVolShiftData>& fxVolShiftData() const { return fxVolShiftData_; }
+    const map<string, VolShiftData>& fxVolShiftData() const { return fxVolShiftData_; }
 
     const vector<string>& cdsVolNames() const { return cdsVolNames_; }
     const map<string, CdsVolShiftData>& cdsVolShiftData() const { return cdsVolShiftData_; }
@@ -129,7 +129,13 @@ public:
 
     // todo
     const vector<string>& creditNames() const { return creditNames_; }
-    const map<string, CurveShiftData> creditCurveShiftData() const { return creditCurveShiftData_; }
+    const map<string, CurveShiftData>& creditCurveShiftData() const { return creditCurveShiftData_; }
+
+    const vector<string>& equityNames() const { return equityNames_; }
+    const map<string, SpotShiftData>& equityShiftData() const { return equityShiftData_; }
+
+    const vector<string>& equityVolNames() const { return equityVolNames_; }
+    const map<string, VolShiftData>& equityVolShiftData() const { return equityVolShiftData_; }
 
     const vector<pair<string, string>>& crossGammaFilter() const { return crossGammaFilter_; }
 
@@ -149,7 +155,7 @@ public:
     map<string, CurveShiftData>& yieldCurveShiftData() { return yieldCurveShiftData_; }
 
     vector<string>& fxCcyPairs() { return fxCcyPairs_; }
-    map<string, FxShiftData>& fxShiftData() { return fxShiftData_; }
+    map<string, SpotShiftData>& fxShiftData() { return fxShiftData_; }
 
     vector<string>& swaptionVolCurrencies() { return swaptionVolCurrencies_; }
     map<string, SwaptionVolShiftData>& swaptionVolShiftData() { return swaptionVolShiftData_; }
@@ -158,7 +164,7 @@ public:
     map<string, CapFloorVolShiftData>& capFloorVolShiftData() { return capFloorVolShiftData_; }
 
     vector<string>& fxVolCcyPairs() { return fxVolCcyPairs_; }
-    map<string, FxVolShiftData>& fxVolShiftData() { return fxVolShiftData_; }
+    map<string, VolShiftData>& fxVolShiftData() { return fxVolShiftData_; }
 
     vector<string>& cdsVolNames() { return cdsVolNames_; }
     map<string, CdsVolShiftData>& cdsVolShiftData() { return cdsVolShiftData_; }
@@ -170,7 +176,13 @@ public:
 
     // todo
     vector<string>& creditNames() { return creditNames_; }
-    map<string, CurveShiftData> creditCurveShiftData() { return creditCurveShiftData_; }
+    map<string, CurveShiftData>& creditCurveShiftData() { return creditCurveShiftData_; }
+
+    vector<string>& equityNames() { return equityNames_; }
+    map<string, SpotShiftData>& equityShiftData() { return equityShiftData_; }
+
+    vector<string>& equityVolNames() { return equityVolNames_; }
+    map<string, VolShiftData>& equityVolShiftData() { return equityVolShiftData_; }
 
     vector<pair<string, string>>& crossGammaFilter() { return crossGammaFilter_; }
 
@@ -212,10 +224,10 @@ private:
     map<string, SwaptionVolShiftData> swaptionVolShiftData_; // key: ccy
 
     vector<string> fxVolCcyPairs_;
-    map<string, FxVolShiftData> fxVolShiftData_; // key: ccy pair
+    map<string, VolShiftData> fxVolShiftData_; // key: ccy pair
 
     vector<string> fxCcyPairs_;
-    map<string, FxShiftData> fxShiftData_; // key: ccy pair
+    map<string, SpotShiftData> fxShiftData_; // key: ccy pair
 
     vector<string> cdsVolNames_;
     map<string, CdsVolShiftData> cdsVolShiftData_; // key: ccy pair
@@ -226,6 +238,12 @@ private:
 
     vector<string> creditNames_;
     map<string, CurveShiftData> creditCurveShiftData_; // key: credit name
+
+    vector<string> equityVolNames_;
+    map<string, VolShiftData> equityVolShiftData_;
+
+    vector<string> equityNames_;
+    map<string, SpotShiftData> equityShiftData_;
 
     vector<pair<string, string>> crossGammaFilter_;
 };

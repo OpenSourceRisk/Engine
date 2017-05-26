@@ -70,6 +70,9 @@
       <xs:element type="xs:string" name="SwapTenors"/>
       <xs:element type="xs:string" name="ShortSwapIndexBase"/>
       <xs:element type="xs:string" name="SwapIndexBase"/>
+      <xs:element type="xs:string" name="SmileOptionTenors" minOccurs="0"/>
+      <xs:element type="xs:string" name="SmileSwapTenors" minOccurs="0"/>
+      <xs:element type="xs:string" name="SmileStrikes" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 
