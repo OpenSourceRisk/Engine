@@ -69,13 +69,12 @@ MakeCreditDefaultSwap::operator boost::shared_ptr<CreditDefaultSwap>() const {
     }
 
     Schedule schedule(start, end, couponTenor_, WeekendsOnly(), Following, Unadjusted,
-                      DateGeneration::OldCDS, false);
+                      evaluation >= Date(21, Dec, 2015) ? DateGeneration::CDS2015 : DateGeneration::CDS, false, Date(),
+                      Date());
 
     boost::shared_ptr<CreditDefaultSwap> cds = boost::shared_ptr<CreditDefaultSwap>(
         new CreditDefaultSwap(side_, nominal_, upfrontRate_, couponRate_, schedule, Following, dayCounter_, true, true,
                               start, upfrontDate, boost::shared_ptr<Claim>() /*, lastPeriodDayCounter_*/));
-    
-
 
     cds->setPricingEngine(engine_);
     return cds;
