@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<TodaysMarket>
+  <Configuration id="default">
+    <DiscountingCurvesId>default</DiscountingCurvesId>
+    <YieldCurvesId>default</YieldCurvesId>
+  </Configuration>
+  <YieldCurves>
+  </YieldCurves>
+  <DiscountingCurves>
+    <DiscountingCurve currency="EUR">Yield/EUR/EUR1D</DiscountingCurve>
+  </DiscountingCurves>
+  <!-- index forwarding curve definition -->
+  <IndexForwardingCurves>
+    <Index name="EUR-EURIBOR-3M">Yield/EUR/EUR3M</Index>
+    <Index name="EUR-EURIBOR-6M">Yield/EUR/EUR6M</Index>
+    <Index name="EUR-EONIA">Yield/EUR/EUR1D</Index>
+  </IndexForwardingCurves>
+  <SwapIndexCurves>
+    <SwapIndex name="EUR-CMS-1Y">
+      <Discounting>EUR-EONIA</Discounting>
+    </SwapIndex>
+    <SwapIndex name="EUR-CMS-30Y">
+      <Discounting>EUR-EONIA</Discounting>
+    </SwapIndex>
+  </SwapIndexCurves>
+  <FxSpots/>
+  <FxVolatilities/>
+
+  <SwaptionVolatilities>
+    <SwaptionVolatility currency="EUR">SwaptionVolatility/EUR/EUR_SW_ATM</SwaptionVolatility>
+  </SwaptionVolatilities>
+
+  <DefaultCurves/>
+</TodaysMarket>

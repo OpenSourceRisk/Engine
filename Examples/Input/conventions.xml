@@ -28,11 +28,11 @@
   <!-- CDS -->
   <CDS>
     <Id>CDS-STANDARD-CONVENTIONS</Id>
-    <SettlementDays>0</SettlementDays>
+    <SettlementDays>1</SettlementDays>
     <Calendar>WeekendsOnly</Calendar>
     <Frequency>Quarterly</Frequency>
-    <PaymentConvention>ModifiedFollowing</PaymentConvention>
-    <Rule>TwentiethIMM</Rule>
+    <PaymentConvention>Following</PaymentConvention>
+    <Rule>CDS2015</Rule>
     <DayCounter>A360</DayCounter>
     <SettlesAccrual>true</SettlesAccrual>
     <PaysAtDefaultTime>true</PaysAtDefaultTime>
@@ -685,6 +685,36 @@
     <TargetCurrency>CHF</TargetCurrency>
     <PointsFactor>10000</PointsFactor>
     <AdvanceCalendar>TARGET,ZUB</AdvanceCalendar>
+    <SpotRelative>true</SpotRelative>
+    <AdditionalSettleCalendar/>
+  </FX>
+  <FX>
+    <Id>USD-NOK-FX-CONVENTIONS</Id>
+    <SpotDays>2</SpotDays>
+    <SourceCurrency>USD</SourceCurrency>
+    <TargetCurrency>NOK</TargetCurrency>
+    <PointsFactor>10000</PointsFactor>
+    <AdvanceCalendar>US,NOK</AdvanceCalendar>
+    <SpotRelative>true</SpotRelative>
+    <AdditionalSettleCalendar/>
+  </FX>
+  <FX>
+    <Id>USD-SEK-FX-CONVENTIONS</Id>
+    <SpotDays>2</SpotDays>
+    <SourceCurrency>USD</SourceCurrency>
+    <TargetCurrency>SEK</TargetCurrency>
+    <PointsFactor>10000</PointsFactor>
+    <AdvanceCalendar>US,SEK</AdvanceCalendar>
+    <SpotRelative>true</SpotRelative>
+    <AdditionalSettleCalendar/>
+  </FX>
+   <FX>
+    <Id>USD-MXN-FX-CONVENTIONS</Id>
+    <SpotDays>2</SpotDays>
+    <SourceCurrency>USD</SourceCurrency>
+    <TargetCurrency>MXN</TargetCurrency>
+    <PointsFactor>1</PointsFactor>
+    <AdvanceCalendar>US</AdvanceCalendar>
     <SpotRelative>true</SpotRelative>
     <AdditionalSettleCalendar/>
   </FX>

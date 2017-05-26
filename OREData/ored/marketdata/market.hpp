@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <ql/experimental/credit/basecorrelationstructure.hpp>
 #include <ql/experimental/inflation/cpicapfloortermpricesurface.hpp>
 #include <ql/indexes/iborindex.hpp>
 #include <ql/indexes/inflationindex.hpp>
@@ -92,6 +93,18 @@ public:
     defaultCurve(const string&, const string& configuration = Market::defaultConfiguration) const = 0;
     virtual Handle<Quote> recoveryRate(const string&,
                                        const string& configuration = Market::defaultConfiguration) const = 0;
+    //@}
+
+    //! \name (Index) CDS Option volatilities
+    //@{
+    virtual Handle<BlackVolTermStructure> cdsVol(const string&,
+                                                 const string& configuration = Market::defaultConfiguration) const = 0;
+    //@}
+
+    //! \name Base Correlation term structures
+    //@{
+    virtual Handle<BaseCorrelationTermStructure<BilinearInterpolation>>
+    baseCorrelation(const string&, const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 
     //! \name Stripped Cap/Floor volatilities i.e. caplet/floorlet volatilities

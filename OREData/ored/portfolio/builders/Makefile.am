@@ -25,6 +25,7 @@ this_include_HEADERS = \
 	fxoption.hpp \
 	swap.hpp \
 	swaption.hpp \
+	creditdefaultswap.hpp \
     cms.hpp
 
 all.hpp: Makefile.am

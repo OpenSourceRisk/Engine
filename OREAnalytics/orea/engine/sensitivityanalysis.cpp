@@ -395,6 +395,11 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
         if (boost::to_upper_copy(sensitivityData_->fxShiftData()[keylabel].shiftType) == "RELATIVE") {
             shiftMult = simMarket_->fxSpot(keylabel, marketConfiguration_)->value();
         }
+    } else if (keytype == RiskFactorKey::KeyType::EQSpot) {
+        shiftSize = sensitivityData_->equityShiftData()[keylabel].shiftSize;
+        if (boost::to_upper_copy(sensitivityData_->equityShiftData()[keylabel].shiftType) == "RELATIVE") {
+            shiftMult = simMarket_->equitySpot(keylabel, marketConfiguration_)->value();
+        }
     } else if (keytype == RiskFactorKey::KeyType::DiscountCurve) {
         string ccy = keylabel;
         shiftSize = sensitivityData_->discountCurveShiftData()[ccy].shiftSize;
@@ -443,6 +448,20 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
             Real atmVol = vts->blackVol(t, atmFwd);
             shiftMult = atmVol;
         }
+    } else if (keytype == RiskFactorKey::KeyType::EQVolatility) {
+        string pair = keylabel;
+        shiftSize = sensitivityData_->equityVolShiftData()[pair].shiftSize;
+        if (boost::to_upper_copy(sensitivityData_->equityVolShiftData()[pair].shiftType) == "RELATIVE") {
+            vector<Real> strikes = sensitivityData_->equityVolShiftData()[pair].shiftStrikes;
+            QL_REQUIRE(strikes.size() == 0, "Only ATM FX vols supported");
+            Real atmFwd = 0.0; // hardcoded, since only ATM supported
+            Size keyIdx = key.index;
+            Period p = sensitivityData_->equityVolShiftData()[pair].shiftExpiries[keyIdx];
+            Handle<BlackVolTermStructure> vts = simMarket_->equityVol(pair, marketConfiguration_);
+            Time t = vts->dayCounter().yearFraction(asof_, asof_ + p);
+            Real atmVol = vts->blackVol(t, atmFwd);
+            shiftMult = atmVol;
+        }
     } else if (keytype == RiskFactorKey::KeyType::SwaptionVolatility) {
         string ccy = keylabel;
         shiftSize = sensitivityData_->swaptionVolShiftData()[ccy].shiftSize;
@@ -479,6 +498,17 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
             Time t_exp = vts->dayCounter().yearFraction(asof_, asof_ + p_exp);
             Real vol = vts->volatility(t_exp, strike);
             shiftMult = vol;
+        }
+    } else if (keytype == RiskFactorKey::KeyType::SurvivalProbability) {
+        string name = keylabel;
+        shiftSize = sensitivityData_->creditCurveShiftData()[name].shiftSize;
+        if (boost::to_upper_copy(sensitivityData_->creditCurveShiftData()[name].shiftType) == "RELATIVE") {
+            Size keyIdx = key.index;
+            Period p = sensitivityData_->creditCurveShiftData()[name].shiftTenors[keyIdx];
+            Handle<DefaultProbabilityTermStructure> ts = simMarket_->defaultCurve(name, marketConfiguration_);
+            Time t = ts->dayCounter().yearFraction(asof_, asof_ + p);
+            Real prob = ts->survivalProbability(t);
+            shiftMult = -std::log(prob)/t;
         }
     } else {
         QL_FAIL("KeyType not supported yet - " << keytype);

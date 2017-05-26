@@ -23,6 +23,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <map>
+#include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ql/currencies/all.hpp>
 #include <ql/errors.hpp>
@@ -30,6 +31,7 @@
 #include <ql/time/calendars/all.hpp>
 #include <ql/time/daycounters/all.hpp>
 #include <ql/utilities/dataparsers.hpp>
+#include <ql/version.hpp>
 #include <qle/currencies/all.hpp>
 
 using namespace QuantLib;
@@ -125,6 +127,7 @@ Calendar parseCalendar(const string& s) {
                                       {"EUR", TARGET()},
                                       {"ZUB", Switzerland()},
                                       {"CHF", Switzerland()},
+                                      {"Switzerland", Switzerland()},
                                       {"US", UnitedStates()},
                                       {"USD", UnitedStates()},
                                       {"NYB", UnitedStates()},
@@ -141,12 +144,15 @@ Calendar parseCalendar(const string& s) {
                                       {"CA", Canada()},
                                       {"TRB", Canada()},
                                       {"CAD", Canada()},
+                                      {"Canada", Canada()},
                                       {"SYB", Australia()},
                                       {"AU", Australia()},
                                       {"AUD", Australia()},
+                                      {"Australia", Australia()},
                                       {"TKB", Japan()},
                                       {"JP", Japan()},
                                       {"JPY", Japan()},
+                                      {"Japan", Japan()},
                                       {"ZAR", SouthAfrica()},
                                       {"SA", SouthAfrica()},
                                       {"SS", Sweden()},
@@ -204,9 +210,14 @@ Calendar parseCalendar(const string& s) {
     } else {
         // Try to split them up
         vector<string> calendarNames;
-        split(calendarNames, s, boost::is_any_of(","));
+        split(calendarNames, s, boost::is_any_of(",()")); // , is delimiter, the brackets may arise if joint calendar
+        // now remove any leading strings indicating a joint calendar
+        calendarNames.erase(std::remove(calendarNames.begin(), calendarNames.end(), "JoinHolidays"),
+                            calendarNames.end());
+        calendarNames.erase(std::remove(calendarNames.begin(), calendarNames.end(), "JoinBusinessDays"),
+                            calendarNames.end());
+        calendarNames.erase(std::remove(calendarNames.begin(), calendarNames.end(), ""), calendarNames.end());
         QL_REQUIRE(calendarNames.size() > 1 && calendarNames.size() <= 4, "Cannot convert " << s << " to Calendar");
-
         // Populate a vector of calendars.
         vector<Calendar> calendars;
         for (Size i = 0; i < calendarNames.size(); i++) {
@@ -331,15 +342,28 @@ Currency parseCurrency(const string& s) {
 
 DateGeneration::Rule parseDateGenerationRule(const string& s) {
     static map<string, DateGeneration::Rule> m = {
-        {"Backward", DateGeneration::Backward},   {"Forward", DateGeneration::Forward},
-        {"Zero", DateGeneration::Zero},           {"ThirdWednesday", DateGeneration::ThirdWednesday},
-        {"Twentieth", DateGeneration::Twentieth}, {"TwentiethIMM", DateGeneration::TwentiethIMM},
-        {"OldCDS", DateGeneration::OldCDS},       {"CDS", DateGeneration::CDS}};
+        {"Backward", DateGeneration::Backward},
+        {"Forward", DateGeneration::Forward},
+        {"Zero", DateGeneration::Zero},
+        {"ThirdWednesday", DateGeneration::ThirdWednesday},
+        {"Twentieth", DateGeneration::Twentieth},
+        {"TwentiethIMM", DateGeneration::TwentiethIMM},
+        {"OldCDS", DateGeneration::OldCDS},
+#if QL_HEX_VERSION >= 0x011000f0
+        {"CDS2015", DateGeneration::CDS2015},
+#endif
+        {"CDS", DateGeneration::CDS}
+    };
 
     auto it = m.find(s);
     if (it != m.end()) {
         return it->second;
     } else {
+        // fall back for CDS2015
+        if (s == "CDS2015") {
+            ALOG("Date Generation Rule CDS2015 replaced with CDS because QuantLib Version is < 1.10");
+            return DateGeneration::CDS;
+        }
         QL_FAIL("Date Generation Rule " << s << " not recognized");
     }
 }

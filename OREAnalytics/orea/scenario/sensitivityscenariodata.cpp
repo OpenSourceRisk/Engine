@@ -112,7 +112,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
     XMLNode* fxSpots = XMLUtils::getChildNode(node, "FxSpots");
     for (XMLNode* child = XMLUtils::getChildNode(fxSpots, "FxSpot"); child; child = XMLUtils::getNextSibling(child)) {
         string ccypair = XMLUtils::getAttribute(child, "ccypair");
-        FxShiftData data;
+        SpotShiftData data;
         data.shiftType = XMLUtils::getChildValue(child, "ShiftType", true);
         data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
         fxShiftData_[ccypair] = data;
@@ -154,13 +154,64 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
     for (XMLNode* child = XMLUtils::getChildNode(fxVols, "FxVolatility"); child;
          child = XMLUtils::getNextSibling(child)) {
         string ccypair = XMLUtils::getAttribute(child, "ccypair");
-        FxVolShiftData data;
+        VolShiftData data;
         data.shiftType = XMLUtils::getChildValue(child, "ShiftType");
         data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
         data.shiftExpiries = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftExpiries", true);
         data.shiftStrikes = XMLUtils::getChildrenValuesAsDoubles(child, "ShiftStrikes", "Strike", true);
         fxVolShiftData_[ccypair] = data;
         fxVolCcyPairs_.push_back(ccypair);
+    }
+
+    LOG("Get credit curve sensitivity parameters");
+    XMLNode* creditCurves = XMLUtils::getChildNode(node, "CreditCurves");
+    for (XMLNode* child = XMLUtils::getChildNode(creditCurves, "CreditCurve"); child;
+         child = XMLUtils::getNextSibling(child)) {
+        string name = XMLUtils::getAttribute(child, "name");
+        // same as discount curve sensitivity loading from here ...
+        CurveShiftData data;
+        data.shiftType = XMLUtils::getChildValue(child, "ShiftType", true);
+        data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
+        data.shiftTenors = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
+        XMLNode* par = XMLUtils::getChildNode(child, "ParConversion");
+        if (par) {
+            data.parInstruments = XMLUtils::getChildrenValuesAsStrings(par, "Instruments", true);
+            data.parInstrumentSingleCurve = XMLUtils::getChildValueAsBool(par, "SingleCurve", true);
+            XMLNode* conventionsNode = XMLUtils::getChildNode(par, "Conventions");
+            data.parInstrumentConventions =
+                XMLUtils::getChildrenAttributesAndValues(conventionsNode, "Convention", "id", true);
+        } else if (parConversion_) {
+            QL_FAIL("par conversion data not provided for credit curve " << name);
+        }
+        // ... to here
+        creditCurveShiftData_[name] = data;
+        creditNames_.push_back(name);
+    }
+
+    LOG("Get Equity spot sensitivity parameters");
+    XMLNode* equitySpots = XMLUtils::getChildNode(node, "EquitySpots");
+    for (XMLNode* child = XMLUtils::getChildNode(equitySpots, "EquitySpot"); child;
+         child = XMLUtils::getNextSibling(child)) {
+        string equity = XMLUtils::getAttribute(child, "equity");
+        SpotShiftData data;
+        data.shiftType = XMLUtils::getChildValue(child, "ShiftType", true);
+        data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
+        equityShiftData_[equity] = data;
+        equityNames_.push_back(equity);
+    }
+
+    LOG("Get Equity vol sensitivity parameters");
+    XMLNode* equityVols = XMLUtils::getChildNode(node, "EquityVolatilities");
+    for (XMLNode* child = XMLUtils::getChildNode(equityVols, "EquityVolatility"); child;
+         child = XMLUtils::getNextSibling(child)) {
+        string equity = XMLUtils::getAttribute(child, "equity");
+        VolShiftData data;
+        data.shiftType = XMLUtils::getChildValue(child, "ShiftType");
+        data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
+        data.shiftExpiries = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftExpiries", true);
+        data.shiftStrikes = XMLUtils::getChildrenValuesAsDoubles(child, "ShiftStrikes", "Strike", true);
+        equityVolShiftData_[equity] = data;
+        equityVolNames_.push_back(equity);
     }
 
     LOG("Get cross gamma parameters");

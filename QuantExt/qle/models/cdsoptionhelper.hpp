@@ -25,8 +25,8 @@
 #define quantext_cdsoptionhelper_hpp
 
 #include <qle/instruments/cdsoption.hpp>
+#include <qle/instruments/creditdefaultswap.hpp>
 
-#include <ql/instruments/creditdefaultswap.hpp>
 #include <ql/models/calibrationhelper.hpp>
 #include <ql/quotes/simplequote.hpp>
 
