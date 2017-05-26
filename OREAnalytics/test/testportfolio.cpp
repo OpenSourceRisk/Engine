@@ -24,6 +24,7 @@
 #include <ored/portfolio/builders/swaption.hpp>
 #include <ored/portfolio/capfloor.hpp>
 #include <ored/portfolio/equityoption.hpp>
+#include <ored/portfolio/equityforward.hpp>
 #include <ored/portfolio/fxoption.hpp>
 #include <ored/portfolio/swap.hpp>
 #include <ored/portfolio/swaption.hpp>
@@ -205,6 +206,23 @@ boost::shared_ptr<Trade> buildEquityOption(string id, string longShort, string p
     OptionData option(longShort, putCall, "European", false, vector<string>(1, expiryDate), "Cash");
     // trade
     boost::shared_ptr<Trade> trade(new ore::data::EquityOption(env, option, equityName, currency, strike, quantity));
+    trade->id() = id;
+
+    return trade;
+}
+
+boost::shared_ptr<Trade> buildEquityForward(string id, string longShort, Size expiry, string equityName, string currency, 
+                                            Real strike, Real quantity) {
+    Date today = Settings::instance().evaluationDate();
+    Calendar calendar = TARGET();
+
+    Date qlExpiry = calendar.adjust(today + expiry * Years);
+    string expiryDate = ore::data::to_string(qlExpiry);
+
+    // envelope
+    Envelope env("CP");
+    // trade
+    boost::shared_ptr<Trade> trade(new ore::data::EquityForward(env, longShort, equityName, currency, quantity, expiryDate, strike));
     trade->id() = id;
 
     return trade;
