@@ -16,7 +16,6 @@
 #include <qle/termstructures/staticallycorrectedyieldtermstructure.hpp>
 #include <qle/termstructures/tenorbasisswaphelper.hpp>
 #include <qle/termstructures/blackvariancecurve3.hpp>
-#include <qle/termstructures/blackvariancesurface2.hpp>
 #include <qle/termstructures/datedstrippedoptionlet.hpp>
 #include <qle/termstructures/datedstrippedoptionletadapter.hpp>
 #include <qle/termstructures/datedstrippedoptionletbase.hpp>
@@ -30,8 +29,6 @@
 #include <qle/termstructures/strippedoptionletadapter2.hpp>
 #include <qle/termstructures/swaptionvolatilityconverter.hpp>
 #include <qle/termstructures/subperiodsswaphelper.hpp>
-#include <qle/termstructures/defaultprobabilityhelpers.hpp>
 #include <qle/termstructures/survivalprobabilitycurve.hpp>
 #include <qle/termstructures/blackvolsurfacewithatm.hpp>
-#include <qle/termstructures/swaptionvolcubewithatm.hpp>
 

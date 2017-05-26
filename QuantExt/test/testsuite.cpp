@@ -60,7 +60,6 @@ using boost::unit_test::test_suite;
 #include "staticallycorrectedyieldtermstructure.hpp"
 #include "survivalprobabilitycurve.hpp"
 #include "swaptionvolatilityconverter.hpp"
-#include "volsmile.hpp"
 
 namespace {
 
@@ -111,7 +110,6 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(testsuite::RateHelpersTest::suite());
     test->add(testsuite::StabilisedGLLSTest::suite());
     test->add(testsuite::SurvivalProbabilityCurveTest::suite());
-    test->add(testsuite::VolSmileTest::suite());
 
     test->add(BOOST_TEST_CASE(stopTimer));
 

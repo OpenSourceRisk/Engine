@@ -22,8 +22,7 @@ QLE_TESTS = \
 	capfloormarketdata.hpp \
 	swaptionmarketdata.hpp \
 	yieldcurvemarketdata.hpp \
-    survivalprobabilitycurve.hpp survivalprobabilitycurve.cpp \
-	volsmile.hpp volsmile.cpp
+    survivalprobabilitycurve.hpp survivalprobabilitycurve.cpp
 
 dist-hook:
 	mkdir -p $(distdir)/build
