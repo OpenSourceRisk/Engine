@@ -42,7 +42,7 @@
 #define quantext_makecds_hpp
 
 #include <boost/optional.hpp>
-#include <ql/instruments/creditdefaultswap.hpp>
+#include <qle/instruments/creditdefaultswap.hpp>
 
 using namespace QuantLib;
 
@@ -73,8 +73,8 @@ public:
 private:
     Protection::Side side_;
     Real nominal_;
-    boost::optional<Period> tenor_ = boost::none;
-    boost::optional<Date> termDate_ = boost::none;
+    boost::optional<Period> tenor_;
+    boost::optional<Date> termDate_;
     Period couponTenor_;
     Real couponRate_;
     Real upfrontRate_;

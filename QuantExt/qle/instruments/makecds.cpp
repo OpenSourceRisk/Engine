@@ -43,11 +43,13 @@
 namespace QuantExt {
 
 MakeCreditDefaultSwap::MakeCreditDefaultSwap(const Period& tenor, const Real couponRate)
-    : side_(Protection::Buyer), nominal_(1.0), tenor_(tenor), couponTenor_(3 * Months), couponRate_(couponRate),
-      upfrontRate_(0.0), dayCounter_(Actual360()) /*, lastPeriodDayCounter_(Actual360(true))*/ {}
+    : side_(Protection::Buyer), nominal_(1.0), tenor_(tenor), termDate_(boost::none), couponTenor_(3 * Months),
+      couponRate_(couponRate), upfrontRate_(0.0),
+      dayCounter_(Actual360()) /*, lastPeriodDayCounter_(Actual360(tshellrue))*/ {}
 MakeCreditDefaultSwap::MakeCreditDefaultSwap(const Date& termDate, const Real couponRate)
-    : side_(Protection::Buyer), nominal_(1.0), termDate_(termDate), couponTenor_(3 * Months), couponRate_(couponRate),
-      upfrontRate_(0.0), dayCounter_(Actual360()) /*, lastPeriodDayCounter_(Actual360(true))*/ {}
+    : side_(Protection::Buyer), nominal_(1.0), tenor_(boost::none), termDate_(termDate), couponTenor_(3 * Months),
+      couponRate_(couponRate), upfrontRate_(0.0),
+      dayCounter_(Actual360()) /*, lastPeriodDayCounter_(Actual360(true))*/ {}
 MakeCreditDefaultSwap::operator CreditDefaultSwap() const {
     boost::shared_ptr<CreditDefaultSwap> swap = *this;
     return *swap;
