@@ -18,6 +18,7 @@
 
 #include <qle/models/cdsoptionhelper.hpp>
 #include <qle/pricingengines/blackcdsoptionengine.hpp>
+#include <qle/pricingengines/midpointcdsengine.hpp>
 
 #include <ql/exercise.hpp>
 #include <ql/pricingengines/credit/midpointcdsengine.hpp>
