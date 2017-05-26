@@ -93,10 +93,14 @@ void ShiftScenarioGenerator::clear() {
     yieldCurveCache_.clear();
     fxKeys_.clear();
     fxCache_.clear();
+    equityKeys_.clear();
+    equityCache_.clear();
     swaptionVolKeys_.clear();
     swaptionVolCache_.clear();
     fxVolKeys_.clear();
     fxVolCache_.clear();
+    equityVolKeys_.clear();
+    equityVolCache_.clear();
     optionletVolKeys_.clear();
     optionletVolCache_.clear();
     survivalProbabilityKeys_.clear();
@@ -172,6 +176,18 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
         LOG("cache FX spot " << fx << " for key " << fxKeys_[k]);
     }
 
+    // Cache Equity rate keys
+    equityKeys_.reserve(simMarketData_->equityNames().size());
+    for (Size k = 0; k < simMarketData_->equityNames().size(); k++) {
+        // const string& foreign = simMarketData_->ccys()[k + 1];
+        // const string& domestic = simMarketData_->ccys()[0];
+        string equity = simMarketData_->equityNames()[k];
+        equityKeys_.emplace_back(RiskFactorKey::KeyType::EQSpot, equity); // k
+        Real eq = market->equitySpot(equity, configuration_)->value();
+        equityCache_[equityKeys_[k]] = eq;
+        LOG("cache Equity spot " << eq << " for key " << equityKeys_[k]);
+    }
+
     // Cache Swaption (ATM) vol keys
     Size n_swvol_ccy = simMarketData_->swapVolCcys().size();
     Size n_swvol_term = simMarketData_->swapVolTerms().size();
@@ -214,6 +230,25 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
         }
     }
 
+    // Cache Equtiy vol keys
+    Size n_equityvol_pairs = simMarketData_->equityVolNames().size();
+    Size n_equityvol_exp = simMarketData_->equityVolExpiries().size();
+    equityVolKeys_.reserve(n_equityvol_pairs * n_equityvol_exp);
+    count = 0;
+    for (Size j = 0; j < n_equityvol_pairs; ++j) {
+        string equity = simMarketData_->equityVolNames()[j];
+        Real strike = 0.0; // FIXME
+        Handle<BlackVolTermStructure> ts = market->equityVol(equity, configuration_);
+        for (Size k = 0; k < n_equityvol_exp; ++k) {
+            equityVolKeys_.emplace_back(RiskFactorKey::KeyType::EQVolatility, equity, k);
+            Period expiry = simMarketData_->equityVolExpiries()[k];
+            Real equityvol = ts->blackVol(today_ + expiry, strike);
+            equityVolCache_[equityVolKeys_[count]] = equityvol;
+            LOG("cache Equity vol " << equityvol << " for key " << equityVolKeys_[count]);
+            count++;
+        }
+    }
+
     // Cache CapFloor (Optionlet) vol keys
     Size n_cfvol_ccy = simMarketData_->capFloorVolCcys().size();
     Size n_cfvol_strikes = simMarketData_->capFloorVolStrikes().size();
@@ -239,19 +274,19 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
 
     // Cache survival probability keys
     Size n_spnames = simMarketData_->defaultNames().size();
-    Size n_spten; 
-	if (n_spnames > 0) { 
-        n_spten = simMarketData_->defaultTenors(simMarketData_->defaultNames()[0]).size(); 
-    } else { 
-        n_spten = 0; 
-    } 
+    Size n_spten;
+    if (n_spnames > 0) {
+        n_spten = simMarketData_->defaultTenors(simMarketData_->defaultNames()[0]).size();
+    } else {
+        n_spten = 0;
+    }
     survivalProbabilityKeys_.reserve(n_spnames * n_spten);
     for (Size j = 0; j < n_spnames; ++j) {
         std::string spname = simMarketData_->defaultNames()[j];
         Handle<DefaultProbabilityTermStructure> ts = market->defaultCurve(spname, configuration_);
         for (Size k = 0; k < n_spten; ++k) {
             survivalProbabilityKeys_.emplace_back(RiskFactorKey::KeyType::SurvivalProbability, spname, k);
-            Period tenor = simMarketData_->defaultTenors(simMarketData_->defaultNames()[j])[k]; 
+            Period tenor = simMarketData_->defaultTenors(simMarketData_->defaultNames()[j])[k];
             Real prob = ts->survivalProbability(today_ + tenor);
             survivalProbabilityCache_[survivalProbabilityKeys_[j * n_spten + k]] = prob;
             LOG("cache survival probability " << prob << " for key " << survivalProbabilityKeys_[j * n_spten + k]);
@@ -323,10 +358,20 @@ void ShiftScenarioGenerator::addCacheTo(boost::shared_ptr<Scenario> scenario) {
         if (!scenario->has(key))
             scenario->add(key, fxCache_[key]);
     }
+    for (auto key : equityKeys_) {
+        if (!scenario->has(key))
+            scenario->add(key, equityCache_[key]);
+    }
     if (simMarketData_->simulateFXVols()) {
         for (auto key : fxVolKeys_) {
             if (!scenario->has(key))
                 scenario->add(key, fxVolCache_[key]);
+        }
+    }
+    if (simMarketData_->simulateEQVols()) {
+        for (auto key : equityVolKeys_) {
+            if (!scenario->has(key))
+                scenario->add(key, equityVolCache_[key]);
         }
     }
     if (simMarketData_->simulateSwapVols()) {
@@ -362,6 +407,14 @@ RiskFactorKey ShiftScenarioGenerator::getFxKey(const std::string& key) {
             return fxKeys_[i];
     }
     QL_FAIL("error locating FX RiskFactorKey for ccy pair " << key);
+}
+
+RiskFactorKey ShiftScenarioGenerator::getEquityKey(const std::string& key) {
+    for (Size i = 0; i < equityKeys_.size(); ++i) {
+        if (equityKeys_[i].name == key)
+            return equityKeys_[i];
+    }
+    QL_FAIL("error locating Equity RiskFactorKey for equity " << key);
 }
 
 RiskFactorKey ShiftScenarioGenerator::getDiscountKey(const std::string& ccy, Size index) {
@@ -410,6 +463,14 @@ RiskFactorKey ShiftScenarioGenerator::getFxVolKey(const std::string& ccypair, Si
             return fxVolKeys_[i];
     }
     QL_FAIL("error locating FxVol RiskFactorKey for " << ccypair << ", index " << index);
+}
+
+RiskFactorKey ShiftScenarioGenerator::getEquityVolKey(const std::string& equity, Size index) {
+    for (Size i = 0; i < equityVolKeys_.size(); ++i) {
+        if (equityVolKeys_[i].name == equity && equityVolKeys_[i].index == index)
+            return equityVolKeys_[i];
+    }
+    QL_FAIL("error locating EquityVol RiskFactorKey for " << equity << ", index " << index);
 }
 
 RiskFactorKey ShiftScenarioGenerator::getSurvivalProbabilityKey(const std::string& name, Size index) {

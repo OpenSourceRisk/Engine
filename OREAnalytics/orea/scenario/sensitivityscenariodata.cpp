@@ -112,7 +112,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
     XMLNode* fxSpots = XMLUtils::getChildNode(node, "FxSpots");
     for (XMLNode* child = XMLUtils::getChildNode(fxSpots, "FxSpot"); child; child = XMLUtils::getNextSibling(child)) {
         string ccypair = XMLUtils::getAttribute(child, "ccypair");
-        FxShiftData data;
+        SpotShiftData data;
         data.shiftType = XMLUtils::getChildValue(child, "ShiftType", true);
         data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
         fxShiftData_[ccypair] = data;
@@ -154,7 +154,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
     for (XMLNode* child = XMLUtils::getChildNode(fxVols, "FxVolatility"); child;
          child = XMLUtils::getNextSibling(child)) {
         string ccypair = XMLUtils::getAttribute(child, "ccypair");
-        FxVolShiftData data;
+        VolShiftData data;
         data.shiftType = XMLUtils::getChildValue(child, "ShiftType");
         data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
         data.shiftExpiries = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftExpiries", true);
@@ -201,6 +201,31 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
         cdsVolNames_.push_back(name);
     }
 
+    LOG("Get Equity spot sensitivity parameters");
+    XMLNode* equitySpots = XMLUtils::getChildNode(node, "EquitySpots");
+    for (XMLNode* child = XMLUtils::getChildNode(equitySpots, "EquitySpot"); child;
+         child = XMLUtils::getNextSibling(child)) {
+        string equity = XMLUtils::getAttribute(child, "equity");
+        SpotShiftData data;
+        data.shiftType = XMLUtils::getChildValue(child, "ShiftType", true);
+        data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
+        equityShiftData_[equity] = data;
+        equityNames_.push_back(equity);
+    }
+
+    LOG("Get Equity vol sensitivity parameters");
+    XMLNode* equityVols = XMLUtils::getChildNode(node, "EquityVolatilities");
+    for (XMLNode* child = XMLUtils::getChildNode(equityVols, "EquityVolatility"); child;
+         child = XMLUtils::getNextSibling(child)) {
+        string equity = XMLUtils::getAttribute(child, "equity");
+        VolShiftData data;
+        data.shiftType = XMLUtils::getChildValue(child, "ShiftType");
+        data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
+        data.shiftExpiries = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftExpiries", true);
+        data.shiftStrikes = XMLUtils::getChildrenValuesAsDoubles(child, "ShiftStrikes", "Strike", true);
+        equityVolShiftData_[equity] = data;
+        equityVolNames_.push_back(equity);
+    }
 
     LOG("Get cross gamma parameters");
     vector<string> filter = XMLUtils::getChildrenValues(node, "CrossGammaFilter", "Pair", true);

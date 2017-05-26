@@ -181,12 +181,14 @@ protected:
     void init(boost::shared_ptr<Market> market);
 
     RiskFactorKey getFxKey(const std::string& ccypair);
+    RiskFactorKey getEquityKey(const std::string& equity);
     RiskFactorKey getDiscountKey(const std::string& ccy, Size index);
     RiskFactorKey getIndexKey(const std::string& indexName, Size index);
     RiskFactorKey getYieldKey(const std::string& curveName, Size index);
     RiskFactorKey getSwaptionVolKey(const std::string& ccy, Size index);
     RiskFactorKey getOptionletVolKey(const std::string& ccy, Size index);
     RiskFactorKey getFxVolKey(const std::string& ccypair, Size index);
+    RiskFactorKey getEquityVolKey(const std::string& equity, Size index);
     RiskFactorKey getSurvivalProbabilityKey(const std::string& curveName, Size index);
     RiskFactorKey getCdsVolKey(const std::string& issuerName, Size index);
 
@@ -196,16 +198,16 @@ protected:
     boost::shared_ptr<ore::data::Market> initMarket_;
     const std::string configuration_;
     std::vector<RiskFactorKey> discountCurveKeys_, indexCurveKeys_, yieldCurveKeys_, fxKeys_, swaptionVolKeys_,
-        fxVolKeys_, optionletVolKeys_, survivalProbabilityKeys_, cdsVolKeys_;
+        fxVolKeys_, optionletVolKeys_, survivalProbabilityKeys_, cdsVolKeys_, equityKeys_, equityVolKeys_;
     std::map<RiskFactorKey, Real> discountCurveCache_, indexCurveCache_, yieldCurveCache_, fxCache_, swaptionVolCache_,
-        fxVolCache_, optionletVolCache_, survivalProbabilityCache_, cdsVolCache_;
+        fxVolCache_, optionletVolCache_, survivalProbabilityCache_, cdsVolCache_, equityCache_, equityVolCache_;
     Real numeraireCache_;
     std::vector<boost::shared_ptr<Scenario>> scenarios_;
     boost::shared_ptr<Scenario> baseScenario_;
     Size counter_;
 
     vector<string> discountCurrencies_, indexNames_, yieldCurveNames_, fxCcyPairs_, fxVolCcyPairs_,
-        swaptionVolCurrencies_, capFloorVolCurrencies_, crNames_, infIndexNames_, cdsVolNames_;
+        swaptionVolCurrencies_, capFloorVolCurrencies_, crNames_, infIndexNames_, cdsVolNames_, equityNames_, equityVolNames_;
 
     std::vector<ScenarioDescription> scenarioDescriptions_;
 
