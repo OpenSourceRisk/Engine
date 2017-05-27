@@ -50,7 +50,7 @@ public:
     ScenarioSimMarketParameters()
         : extrapolate_(false), swapVolSimulate_(false), capFloorVolSimulate_(false),
           survivalProbabilitySimulate_(false), recoveryRateSimulate_(false), fxVolSimulate_(false),
-          equityVolSimulate_(false), cdsVolSimulate_(false),  cdsVolDecayMode_("") {
+          equityVolSimulate_(false), cdsVolSimulate_(false), cdsVolDecayMode_("") {
         // set default tenors
         capFloorVolExpiries_[""];
         defaultTenors_[""];
@@ -114,6 +114,8 @@ public:
     const vector<string>& additionalScenarioDataCcys() const { return additionalScenarioDataCcys_; }
 
     const vector<string>& securities() const { return securities_; }
+
+    const vector<string>& baseCorrelations() const { return baseCorrelations_; }
     //@}
 
     //! \name Setters
@@ -146,7 +148,7 @@ public:
     bool& simulateRecoveryRates() { return recoveryRateSimulate_; }
     vector<string>& defaultNames() { return defaultNames_; }
     void setDefaultTenors(const string& key, const vector<Period>& p);
-    
+
     bool& simulateCdsVols() { return cdsVolSimulate_; }
     vector<Period>& cdsVolExpiries() { return cdsVolExpiries_; }
     vector<string>& cdsVolNames() { return cdsVolNames_; }
@@ -169,6 +171,9 @@ public:
     vector<string>& additionalScenarioDataCcys() { return additionalScenarioDataCcys_; }
 
     vector<string>& securities() { return securities_; }
+
+    vector<string>& baseCorrelations() { return baseCorrelations_; }
+
     //@}
 
     //! \name Serialisation
@@ -212,7 +217,7 @@ private:
     bool recoveryRateSimulate_;
     vector<string> defaultNames_;
     map<string, vector<Period>> defaultTenors_;
-    
+
     bool cdsVolSimulate_;
     vector<string> cdsVolNames_;
     vector<Period> cdsVolExpiries_;
@@ -235,6 +240,8 @@ private:
     vector<string> additionalScenarioDataCcys_;
 
     vector<string> securities_;
+
+    vector<string> baseCorrelations_;
 };
 } // namespace analytics
 } // namespace ore
