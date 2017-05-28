@@ -467,6 +467,51 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
     }
     LOG("default curves done");
 
+    // building cds volatilities
+    LOG("building cds volatilities...");
+    for (const auto& name : parameters->cdsVolNames()) {
+        LOG("building " << name << "  cds vols..");
+        Handle<BlackVolTermStructure> wrapper = initMarket->cdsVol(name, configuration);
+        Handle<BlackVolTermStructure> cvh;
+        if (parameters->simulateCdsVols()) {
+            LOG("Simulating CDS Vols for " << name);
+            vector<Handle<Quote>> quotes;
+            vector<Time> times;
+            for (Size i = 0; i < parameters->cdsVolExpiries().size(); i++) {
+                Date date = asof_ + parameters->cdsVolExpiries()[i];
+                Volatility vol = wrapper->blackVol(date, Null<Real>(), true);
+                times.push_back(wrapper->timeFromReference(date));
+                boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
+                if (parameters->simulateCdsVols()) {
+                    simData_.emplace(std::piecewise_construct,
+                        std::forward_as_tuple(RiskFactorKey::KeyType::CDSVolatility, name, i),
+                                 std::forward_as_tuple(q));
+                }
+                quotes.emplace_back(q);
+            }
+            boost::shared_ptr<BlackVolTermStructure> cdsVolCurve(new BlackVarianceCurve3(
+                0, NullCalendar(), wrapper->businessDayConvention(), wrapper->dayCounter(), times, quotes));
+
+            cvh = Handle<BlackVolTermStructure>(cdsVolCurve);
+        } else {
+            string decayModeString = parameters->cdsVolDecayMode();
+            LOG("Deterministic CDS Vols with decay mode " << decayModeString << " for " << name);
+            ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);
+
+            // currently only curves (i.e. strike indepdendent) CDS volatility structures are
+            // supported, so we use a) the more efficient curve tag and b) a hard coded sticky
+            // strike stickyness, since then no yield term structures and no fx spot are required
+            // that define the ATM level 
+            cvh = Handle<BlackVolTermStructure>(boost::make_shared<QuantExt::DynamicBlackVolTermStructure<tag::curve>>(
+                wrapper, 0, NullCalendar(), decayMode, StickyStrike));
+        }
+
+        if (wrapper->allowsExtrapolation())
+            cvh->enableExtrapolation();
+        cdsVols_.insert(pair<pair<string, string>, Handle<BlackVolTermStructure>>(
+            make_pair(Market::defaultConfiguration, name), cvh));
+    }
+    LOG("cds volatilities done");
     // building fx volatilities
     LOG("building fx volatilities...");
     for (const auto& ccyPair : parameters->fxVolCcyPairs()) {

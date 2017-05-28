@@ -188,6 +188,19 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
         creditNames_.push_back(name);
     }
 
+    LOG("Get cds vol sensitivity parameters");
+    XMLNode* cdsVols = XMLUtils::getChildNode(node, "CDSVolatilities");
+    for (XMLNode* child = XMLUtils::getChildNode(cdsVols, "CDSVolatility"); child;
+         child = XMLUtils::getNextSibling(child)) {
+        string name = XMLUtils::getAttribute(child, "name");
+        CdsVolShiftData data;
+        data.shiftType = XMLUtils::getChildValue(child, "ShiftType", true);
+        data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
+        data.shiftExpiries = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftExpiries", true);
+        cdsVolShiftData_[name] = data;
+        cdsVolNames_.push_back(name);
+    }
+
     LOG("Get Equity spot sensitivity parameters");
     XMLNode* equitySpots = XMLUtils::getChildNode(node, "EquitySpots");
     for (XMLNode* child = XMLUtils::getChildNode(equitySpots, "EquitySpot"); child;

@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <ored/utilities/xmlutils.hpp>
 #include <ored/configuration/basecorrelationcurveconfig.hpp>
 #include <ored/configuration/capfloorvolcurveconfig.hpp>
 #include <ored/configuration/cdsvolcurveconfig.hpp>
