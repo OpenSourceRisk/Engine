@@ -450,8 +450,8 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         boost::shared_ptr<DefaultProbabilityTermStructure> defaultCurve(
             new QuantExt::SurvivalProbabilityCurve<Linear>(dates, quotes, wrapper->dayCounter(), wrapper->calendar()));
         Handle<DefaultProbabilityTermStructure> dch(defaultCurve);
-        if (wrapper->allowsExtrapolation())
-            dch->enableExtrapolation();
+            
+        dch->enableExtrapolation();
 
         defaultCurves_.insert(pair<pair<string, string>, Handle<DefaultProbabilityTermStructure>>(
             make_pair(Market::defaultConfiguration, name), dch));
