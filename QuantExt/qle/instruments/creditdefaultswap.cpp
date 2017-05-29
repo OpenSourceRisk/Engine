@@ -266,7 +266,7 @@ Rate CreditDefaultSwap::impliedHazardRate(Real targetNPV, const Handle<YieldTerm
     Handle<DefaultProbabilityTermStructure> probability(boost::shared_ptr<DefaultProbabilityTermStructure>(
         new FlatHazardRate(0, WeekendsOnly(), Handle<Quote>(flatRate), dayCounter)));
 
-    MidPointCdsEngine engine(probability, recoveryRate, discountCurve);
+    QuantExt::MidPointCdsEngine engine(probability, recoveryRate, discountCurve);
     setupArguments(engine.getArguments());
     const CreditDefaultSwap::results* results = dynamic_cast<const CreditDefaultSwap::results*>(engine.getResults());
 
@@ -284,7 +284,7 @@ Rate CreditDefaultSwap::conventionalSpread(Real conventionalRecovery, const Hand
     Handle<DefaultProbabilityTermStructure> probability(boost::shared_ptr<DefaultProbabilityTermStructure>(
         new FlatHazardRate(0, WeekendsOnly(), flatHazardRate, dayCounter)));
 
-    MidPointCdsEngine engine(probability, conventionalRecovery, discountCurve, true);
+    QuantExt::MidPointCdsEngine engine(probability, conventionalRecovery, discountCurve, true);
     setupArguments(engine.getArguments());
     engine.calculate();
     const CreditDefaultSwap::results* results = dynamic_cast<const CreditDefaultSwap::results*>(engine.getResults());
