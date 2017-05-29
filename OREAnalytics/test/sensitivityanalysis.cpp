@@ -30,6 +30,8 @@
 #include <ored/portfolio/builders/equityoption.hpp>
 #include <ored/portfolio/builders/equityforward.hpp>
 #include <ored/portfolio/fxoption.hpp>
+#include <ored/portfolio/equityoption.hpp>
+#include <ored/portfolio/equityforward.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/swap.hpp>
 #include <ored/portfolio/swaption.hpp>
@@ -490,10 +492,12 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
         {"14_EquityOption_SP5", "Up:DiscountCurve/USD/3/3Y", 216085, 1.0169 },
         {"14_EquityOption_SP5", "Down:DiscountCurve/USD/2/2Y", 216085, -122.988 },
         {"14_EquityOption_SP5", "Down:DiscountCurve/USD/3/3Y", 216085, -1.0169 },
-        {"14_EquityOption_SP5", "Up:EQSpot/SP5/0/spot", 216085, 8.35112 },
-        {"14_EquityOption_SP5", "Down:EQSpot/SP5/0/spot", 216085, -8.35098 },
+        {"14_EquityOption_SP5", "Up:EQSpot/SP5/0/spot", 216085, 8423.66 },
+        {"14_EquityOption_SP5", "Down:EQSpot/SP5/0/spot", 216085, -8277.55 },
         {"14_EquityOption_SP5", "Up:FXSpot/EURUSD/0/spot", 216085, -2139.45 },
-        {"14_EquityOption_SP5", "Down:FXSpot/EURUSD/0/spot", 216085, 2182.67 } };
+        {"14_EquityOption_SP5", "Down:FXSpot/EURUSD/0/spot", 216085, 2182.67 },
+        {"14_EquityOption_SP5", "Up:EQVolatility/SP5/0/5Y/ATM", 216085, 1849.98 },
+        {"14_EquityOption_SP5", "Down:EQVolatility/SP5/0/5Y/ATM", 216085, -1850.33 } };
 
     std::map<pair<string, string>, Real> npvMap, sensiMap;
     for (Size i = 0; i < cachedResults.size(); ++i) {
@@ -795,6 +799,211 @@ void SensitivityAnalysisTest::test2dShifts() {
     }
     ObservationMode::instance().setMode(backupMode);
     IndexManager::instance().clearHistories();
+}
+
+void SensitivityAnalysisTest::testEquityOptionDeltaGamma() {
+
+    BOOST_TEST_MESSAGE("Testing Equity option sensitivities against QL analytic greeks");
+
+    ObservationMode::Mode backupMode = ObservationMode::instance().mode();
+    ObservationMode::instance().setMode(ObservationMode::Mode::None);
+
+    Date today = Date(14, April, 2016);
+    Settings::instance().evaluationDate() = today;
+
+    BOOST_TEST_MESSAGE("Today is " << today);
+    // Init market
+    boost::shared_ptr<Market> initMarket = boost::make_shared<TestMarket>(today);
+
+    // build scenario sim market parameters
+    boost::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData =
+        TestConfigurationObjects::setupSimMarketData5();
+
+    // sensitivity config
+    boost::shared_ptr<SensitivityScenarioData> sensiData = TestConfigurationObjects::setupSensitivityScenarioData5();
+
+    map<string, SensitivityScenarioData::VolShiftData>& eqvs = sensiData->equityVolShiftData();
+    for (auto& it : eqvs) {
+        it.second.shiftSize = 0.0001; // want a smaller shift size than 1.0 to test the analytic sensitivities
+    }
+    map<string, SensitivityScenarioData::SpotShiftData>& eqs = sensiData->equityShiftData();
+    for (auto& it : eqs) {
+        it.second.shiftSize = 0.0001; // want a smaller shift size to test the analytic sensitivities
+    }
+    // build scenario generator
+    boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(
+        new SensitivityScenarioGenerator(sensiData, simMarketData, today, initMarket, false));
+    boost::shared_ptr<Scenario> baseScen = scenarioGenerator->baseScenario();
+    boost::shared_ptr<ScenarioFactory> scenarioFactory(new CloneScenarioFactory(baseScen));
+    scenarioGenerator->generateScenarios(scenarioFactory);
+
+    boost::shared_ptr<ScenarioGenerator> sgen(scenarioGenerator);
+
+    // build scenario sim market
+    Conventions conventions = *TestConfigurationObjects::conv();
+    boost::shared_ptr<analytics::ScenarioSimMarket> simMarket =
+        boost::make_shared<analytics::ScenarioSimMarket>(sgen, initMarket, simMarketData, conventions);
+
+    // build porfolio
+    boost::shared_ptr<EngineData> data = boost::make_shared<EngineData>();
+    data->model("EquityForward") = "DiscountedCashflows";
+    data->engine("EquityForward") = "DiscountingEquityForwardEngine";
+    data->model("EquityOption") = "BlackScholesMerton";
+    data->engine("EquityOption") = "AnalyticEuropeanEngine";
+    boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(data, simMarket);
+    factory->registerBuilder(boost::make_shared<EquityOptionEngineBuilder>());
+    factory->registerBuilder(boost::make_shared<EquityForwardEngineBuilder>());
+
+    boost::shared_ptr<Portfolio> portfolio(new Portfolio());
+    Size trnCount = 0;
+    portfolio->add(buildEquityOption("Call_SP5", "Long", "Call", 2, "SP5", "USD", 2147.56, 1000));
+    trnCount++;
+    portfolio->add(buildEquityOption("Put_SP5", "Long", "Put", 2, "SP5", "USD", 2147.56, 1000));
+    trnCount++;
+    //portfolio->add(buildEquityForward("Fwd_SP5", "Long", 2, "SP5", "USD", 2147.56, 1000));
+    //trnCount++;
+    portfolio->add(buildEquityOption("Call_Luft", "Short", "Call", 2, "Lufthansa", "EUR", 12.75, 1000));
+    trnCount++;
+    portfolio->add(buildEquityOption("Put_Luft", "Short", "Put", 2, "Lufthansa", "EUR", 12.75, 1000));
+    trnCount++;
+    //portfolio->add(buildEquityForward("Fwd_Luft", "Short", 2, "Lufthansa", "EUR", 12.75, 1000));
+    //trnCount++;
+    portfolio->build(factory);
+    BOOST_CHECK_EQUAL(portfolio->size(), trnCount);
+
+    struct AnalyticInfo {
+        string id;
+        string name;
+        string npvCcy;
+        Real spot;
+        Real fx;
+        Real baseNpv;
+        Real qlNpv;
+        Real delta;
+        Real gamma;
+        Real vega;
+        Real rho;
+        Real divRho;
+    };
+    map<string, AnalyticInfo> qlInfoMap;
+    for (Size i = 0; i < portfolio->size(); ++i) {
+        AnalyticInfo info;
+        boost::shared_ptr<Trade> trn = portfolio->trades()[i];
+        boost::shared_ptr<ore::data::EquityOption> eqoTrn = boost::dynamic_pointer_cast<ore::data::EquityOption>(trn);
+        BOOST_CHECK(eqoTrn);
+        info.id = trn->id();
+        info.name = eqoTrn->equityName();
+        info.npvCcy = trn->npvCurrency();
+
+        info.spot = initMarket->equitySpot(info.name)->value();
+        string pair = info.npvCcy + simMarketData->baseCcy();
+        info.fx = initMarket->fxSpot(pair)->value();
+        info.baseNpv = trn->instrument()->NPV() * info.fx;
+        boost::shared_ptr<QuantLib::VanillaOption> qlOpt =
+            boost::dynamic_pointer_cast<QuantLib::VanillaOption>(trn->instrument()->qlInstrument());
+        BOOST_CHECK(qlOpt);
+        Position::Type positionType = parsePositionType(eqoTrn->option().longShort());
+        Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
+        info.qlNpv = qlOpt->NPV() * eqoTrn->quantity() * bsInd;
+        info.delta = qlOpt->delta() * eqoTrn->quantity() * bsInd;
+        info.gamma = qlOpt->gamma() * eqoTrn->quantity() * bsInd;
+        info.vega = qlOpt->vega() * eqoTrn->quantity() * bsInd;
+        info.rho = qlOpt->rho() * eqoTrn->quantity() * bsInd;
+        info.divRho = qlOpt->dividendRho() * eqoTrn->quantity() * bsInd;
+        qlInfoMap[info.id] = info;
+    }
+
+    bool recalibrateModels = true;           // nothing to calibrate here
+    boost::shared_ptr<SensitivityAnalysis> sa = boost::make_shared<SensitivityAnalysis>(
+        portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, conventions,
+        recalibrateModels);
+    sa->generateSensitivities();
+
+    map<pair<string, string>, Real> deltaMap = sa->delta();
+    map<pair<string, string>, Real> gammaMap = sa->gamma();
+    map<std::string, Real> baseNpvMap = sa->baseNPV();
+    std::set<string> sensiTrades = sa->trades();
+
+    struct SensiResults {
+        string id;
+        Real baseNpv;
+        Real discountDelta;
+        Real ycDelta; 
+        Real equitySpotDelta;
+        Real equityVolDelta;
+        Real equitySpotGamma;
+    };
+
+    Real epsilon = 1.e-15; // a small number
+    string discountCurveStr = "DiscountCurve";
+    string yieldCurveStr = "YieldCurve";
+    string equitySpotStr = "EQSpot";
+    string equityVolStr = "EQVolatility";
+
+    for (auto it : qlInfoMap) {
+        string id = it.first;
+        BOOST_CHECK(sensiTrades.find(id) != sensiTrades.end());
+        AnalyticInfo qlInfo = it.second;
+        SensiResults res = { string(""), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+        for (auto it2 : deltaMap) {
+            pair<string, string> sensiKey = it2.first;
+            string sensiTrnId = it2.first.first;
+            if (sensiTrnId != id)
+                continue;
+            res.id = sensiTrnId;
+            res.baseNpv = baseNpvMap[sensiTrnId];
+            string sensiId = it2.first.second;
+            Real sensiVal = it2.second;
+            if (std::fabs(sensiVal) < epsilon) // not interested in zero sensis
+                continue;
+            vector<string> tokens;
+            boost::split(tokens, sensiId, boost::is_any_of("/-"));
+            BOOST_CHECK(tokens.size() > 0);
+            bool isDiscountCurve = (tokens[0] == discountCurveStr);
+            bool isYieldCurve = (tokens[0] == yieldCurveStr);
+            bool isEquitySpot = (tokens[0] == equitySpotStr);
+            bool isEquityVol = (tokens[0] == equityVolStr);
+            if (isEquitySpot) {
+                BOOST_CHECK(tokens.size() > 2);
+                string equity = tokens[1];
+                Real equitySensi = initMarket->equitySpot(equity)->value();
+                bool hasGamma = (gammaMap.find(sensiKey) != gammaMap.end());
+                BOOST_CHECK(hasGamma);
+                Real gammaVal = 0.0;
+                if (hasGamma) {
+                    gammaVal = gammaMap[sensiKey];
+                }
+                res.equitySpotDelta += sensiVal;
+                res.equitySpotGamma += gammaVal;
+                continue;
+            }
+            else if (isEquityVol) {
+                BOOST_CHECK(tokens.size() > 2);
+                string equity = tokens[1];
+                res.equityVolDelta += sensiVal;
+                continue;
+            }
+            else {
+                continue;
+            }
+        }
+
+        Real bp = 1.e-4;
+        Real tol = 0.5; // % relative tolerance
+
+        BOOST_TEST_MESSAGE("SA: id=" << res.id << ", npv=" << res.baseNpv << ", equitySpotDelta=" << res.equitySpotDelta
+            << ", equityVolDelta=" << res.equityVolDelta << ", equitySpotGamma=" << res.equitySpotGamma);
+        BOOST_TEST_MESSAGE("QL: id=" << qlInfo.id  << ", fx=" << qlInfo.fx << ", npv=" << qlInfo.baseNpv
+            << ", ccyNpv=" << qlInfo.qlNpv << ", delta=" << qlInfo.delta << ", gamma=" << qlInfo.gamma 
+            << ", vega=" << qlInfo.vega << ", spotDelta=" << (qlInfo.delta * qlInfo.fx * bp * qlInfo.spot));
+        
+        Real eqVol = initMarket->equityVol(qlInfo.name)->blackVol(1.0, 1.0, true); // TO-DO more appropriate vol extraction
+        BOOST_CHECK_CLOSE(res.equityVolDelta, qlInfo.vega * qlInfo.fx * (bp * eqVol), tol);
+
+        BOOST_CHECK_CLOSE(res.equitySpotDelta, qlInfo.delta * qlInfo.fx * (bp * qlInfo.spot) , tol);
+        BOOST_CHECK_CLOSE(res.equitySpotGamma, qlInfo.gamma * qlInfo.fx * (pow(bp * qlInfo.spot, 2)), tol);
+
+    }
 }
 
 void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
@@ -1548,6 +1757,7 @@ test_suite* SensitivityAnalysisTest::suite() {
     suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testPortfolioSensitivityDeferObs));
     suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testPortfolioSensitivityUnregisterObs));
     suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testFxOptionDeltaGamma));
+    suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testEquityOptionDeltaGamma));
     suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testCrossGamma));
     return suite;
 }

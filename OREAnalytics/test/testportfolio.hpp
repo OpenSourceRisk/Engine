@@ -56,6 +56,9 @@ boost::shared_ptr<Trade> buildFxOption(string id, string longShort, string putCa
 boost::shared_ptr<Trade> buildEquityOption(string id, string longShort, string putCall, Size expiry, string equityName,
                                            string currency, Real strike, Real quantity);
 
+boost::shared_ptr<Trade> buildEquityForward(string id, string longShort, Size expiry, string equityName, string currency, 
+                                            Real strike, Real quantity);
+
 boost::shared_ptr<Trade> buildCap(string id, string ccy, string longShort, Real capRate, Real notional, int start,
                                   Size term, string floatFreq, string floatDC, string index);
 
