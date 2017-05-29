@@ -276,8 +276,8 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
     Size n_spnames = simMarketData_->defaultNames().size();
     Size n_spten;
     for (Size j = 0; j < n_spnames; ++j) {
-        n_spten = simMarketData_->defaultTenors(simMarketData_->defaultNames()[0]).size();
         std::string spname = simMarketData_->defaultNames()[j];
+        n_spten = simMarketData_->defaultTenors(spname).size();
         Handle<DefaultProbabilityTermStructure> ts = market->defaultCurve(spname, configuration_);
         for (Size k = 0; k < n_spten; ++k) {
             survivalProbabilityKeys_.emplace_back(RiskFactorKey::KeyType::SurvivalProbability, spname, k);
