@@ -797,7 +797,15 @@ void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(
             hazardRates[j] = -std::log(s_t) / times[j];
         }
 
-        std::vector<Period> shiftTenors = data.shiftTenors;
+        
+         std::vector<Period> shiftTenors = overrideTenors_ && simMarketData_->hasDefaultTenors(name)
+         ? simMarketData_->defaultTenors(name)
+         : data.shiftTenors;
+         
+         QL_REQUIRE(shiftTenors.size() == data.shiftTenors.size(), "mismatch between effective shift tenors ("
+                    << shiftTenors.size() << ") and shift tenors ("
+                    << data.shiftTenors.size() << ")");
+         
         std::vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j)
             shiftTimes[j] = dc.yearFraction(today_, today_ + shiftTenors[j]);
