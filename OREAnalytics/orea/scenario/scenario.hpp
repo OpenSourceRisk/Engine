@@ -57,7 +57,8 @@ public:
         EQSpot,
         EQVolatility,
         SurvivalProbability,
-        RecoveryRate
+        RecoveryRate,
+        CDSVolatility
     };
 
     //! Constructor
