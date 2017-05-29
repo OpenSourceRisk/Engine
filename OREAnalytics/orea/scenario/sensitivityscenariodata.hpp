@@ -86,6 +86,7 @@ public:
     };
 
     struct CdsVolShiftData {
+        string ccy;
         string shiftType;
         Real shiftSize;
         vector<Period> shiftExpiries;
@@ -129,6 +130,7 @@ public:
 
     // todo
     const vector<string>& creditNames() const { return creditNames_; }
+    const map<string, string>& creditCcys() const {return creditCcys_; }
     const map<string, CurveShiftData>& creditCurveShiftData() const { return creditCurveShiftData_; }
 
     const vector<string>& equityNames() const { return equityNames_; }
@@ -176,6 +178,7 @@ public:
 
     // todo
     vector<string>& creditNames() { return creditNames_; }
+    map<string, string>& creditCcys() {return creditCcys_; }
     map<string, CurveShiftData>& creditCurveShiftData() { return creditCurveShiftData_; }
 
     vector<string>& equityNames() { return equityNames_; }
@@ -237,6 +240,7 @@ private:
     map<string, CurveShiftData> inflationCurveShiftData_; // key: inflation index name
 
     vector<string> creditNames_;
+    map<string, string> creditCcys_;
     map<string, CurveShiftData> creditCurveShiftData_; // key: credit name
 
     vector<string> equityVolNames_;
