@@ -23,6 +23,7 @@
 
 #include <orea/engine/observationmode.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
+#include <ql/experimental/credit/basecorrelationstructure.hpp>
 #include <ql/math/interpolations/loginterpolation.hpp>
 #include <ql/termstructures/credit/interpolatedsurvivalprobabilitycurve.hpp>
 #include <ql/termstructures/defaulttermstructure.hpp>
@@ -467,6 +468,51 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
     }
     LOG("default curves done");
 
+    // building cds volatilities
+    LOG("building cds volatilities...");
+    for (const auto& name : parameters->cdsVolNames()) {
+        LOG("building " << name << "  cds vols..");
+        Handle<BlackVolTermStructure> wrapper = initMarket->cdsVol(name, configuration);
+        Handle<BlackVolTermStructure> cvh;
+        if (parameters->simulateCdsVols()) {
+            LOG("Simulating CDS Vols for " << name);
+            vector<Handle<Quote>> quotes;
+            vector<Time> times;
+            for (Size i = 0; i < parameters->cdsVolExpiries().size(); i++) {
+                Date date = asof_ + parameters->cdsVolExpiries()[i];
+                Volatility vol = wrapper->blackVol(date, Null<Real>(), true);
+                times.push_back(wrapper->timeFromReference(date));
+                boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
+                if (parameters->simulateCdsVols()) {
+                    simData_.emplace(std::piecewise_construct,
+                                     std::forward_as_tuple(RiskFactorKey::KeyType::CDSVolatility, name, i),
+                                     std::forward_as_tuple(q));
+                }
+                quotes.emplace_back(q);
+            }
+            boost::shared_ptr<BlackVolTermStructure> cdsVolCurve(new BlackVarianceCurve3(
+                0, NullCalendar(), wrapper->businessDayConvention(), wrapper->dayCounter(), times, quotes));
+
+            cvh = Handle<BlackVolTermStructure>(cdsVolCurve);
+        } else {
+            string decayModeString = parameters->cdsVolDecayMode();
+            LOG("Deterministic CDS Vols with decay mode " << decayModeString << " for " << name);
+            ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);
+
+            // currently only curves (i.e. strike indepdendent) CDS volatility structures are
+            // supported, so we use a) the more efficient curve tag and b) a hard coded sticky
+            // strike stickyness, since then no yield term structures and no fx spot are required
+            // that define the ATM level
+            cvh = Handle<BlackVolTermStructure>(boost::make_shared<QuantExt::DynamicBlackVolTermStructure<tag::curve>>(
+                wrapper, 0, NullCalendar(), decayMode, StickyStrike));
+        }
+
+        if (wrapper->allowsExtrapolation())
+            cvh->enableExtrapolation();
+        cdsVols_.insert(pair<pair<string, string>, Handle<BlackVolTermStructure>>(
+            make_pair(Market::defaultConfiguration, name), cvh));
+    }
+    LOG("cds volatilities done");
     // building fx volatilities
     LOG("building fx volatilities...");
     for (const auto& ccyPair : parameters->fxVolCcyPairs()) {
@@ -566,8 +612,8 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         }
         boost::shared_ptr<YieldTermStructure> eqdivCurve;
         if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister) {
-            eqdivCurve = boost::shared_ptr<YieldTermStructure>(new QuantExt::InterpolatedDiscountCurve(
-                equityCurveTimes, quotes, 0, TARGET(), wrapper->dayCounter()));
+            eqdivCurve = boost::shared_ptr<YieldTermStructure>(
+                new QuantExt::InterpolatedDiscountCurve(equityCurveTimes, quotes, 0, TARGET(), wrapper->dayCounter()));
         } else {
             eqdivCurve = boost::shared_ptr<YieldTermStructure>(
                 new QuantExt::InterpolatedDiscountCurve2(equityCurveTimes, quotes, wrapper->dayCounter()));
@@ -625,6 +671,19 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         DLOG("EQ volatility curve built for " << equityName);
     }
     LOG("equity volatilities done");
+
+    // building base correlations, passing through from todays market
+    LOG("building base correlations...");
+    for (const auto& bcName : parameters->baseCorrelations()) {
+        Handle<BaseCorrelationTermStructure<BilinearInterpolation>> wrapper =
+            initMarket->baseCorrelation(bcName, configuration);
+
+        baseCorrelations_.insert(
+            pair<pair<string, string>, Handle<BaseCorrelationTermStructure<BilinearInterpolation>>>(
+                make_pair(Market::defaultConfiguration, bcName), wrapper));
+        DLOG("Base correlations built for " << bcName);
+    }
+    LOG("base correlations done");
 }
 
 void ScenarioSimMarket::update(const Date& d) {

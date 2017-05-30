@@ -25,6 +25,7 @@
 
 #include <orea/scenario/scenariofactory.hpp>
 #include <orea/scenario/simplescenario.hpp>
+#include <boost/make_shared.hpp>
 
 namespace ore {
 namespace analytics {

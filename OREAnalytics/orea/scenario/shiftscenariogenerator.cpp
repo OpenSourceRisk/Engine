@@ -105,6 +105,8 @@ void ShiftScenarioGenerator::clear() {
     optionletVolCache_.clear();
     survivalProbabilityKeys_.clear();
     survivalProbabilityCache_.clear();
+    cdsVolKeys_.clear();
+    cdsVolCache_.clear();
 }
 
 void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
@@ -273,23 +275,38 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
     // Cache survival probability keys
     Size n_spnames = simMarketData_->defaultNames().size();
     Size n_spten;
-    if (n_spnames > 0) {
-        n_spten = simMarketData_->defaultTenors(simMarketData_->defaultNames()[0]).size();
-    } else {
-        n_spten = 0;
-    }
-    survivalProbabilityKeys_.reserve(n_spnames * n_spten);
     for (Size j = 0; j < n_spnames; ++j) {
         std::string spname = simMarketData_->defaultNames()[j];
+        n_spten = simMarketData_->defaultTenors(spname).size();
         Handle<DefaultProbabilityTermStructure> ts = market->defaultCurve(spname, configuration_);
         for (Size k = 0; k < n_spten; ++k) {
             survivalProbabilityKeys_.emplace_back(RiskFactorKey::KeyType::SurvivalProbability, spname, k);
             Period tenor = simMarketData_->defaultTenors(simMarketData_->defaultNames()[j])[k];
             Real prob = ts->survivalProbability(today_ + tenor);
-            survivalProbabilityCache_[survivalProbabilityKeys_[j * n_spten + k]] = prob;
-            LOG("cache survival probability " << prob << " for key " << survivalProbabilityKeys_[j * n_spten + k]);
+            survivalProbabilityCache_[survivalProbabilityKeys_.back()] = prob;
+            LOG("cache survival probability " << prob << " for key " << survivalProbabilityKeys_.back());
         }
     }
+
+    // Cache CDS vol keys
+    Size n_cdsvol_names = simMarketData_->cdsVolNames().size();
+    Size n_cdsvol_exp = simMarketData_->cdsVolExpiries().size();
+    cdsVolKeys_.reserve(n_cdsvol_names * n_cdsvol_exp);
+    count = 0;
+    for (Size i = 0; i < n_cdsvol_names; ++i) {
+        std::string name = simMarketData_->cdsVolNames()[i];
+        Handle<BlackVolTermStructure> ts = market->cdsVol(name, configuration_);
+        Real strike = 0.0; // FIXME
+        for (Size j = 0; j < n_cdsvol_exp; ++j) {
+            Period expiry = simMarketData_->cdsVolExpiries()[j];
+            cdsVolKeys_.emplace_back(RiskFactorKey::KeyType::CDSVolatility, name, j );
+            Real cdsvol = ts->blackVol(today_ + expiry, strike);
+            cdsVolCache_[cdsVolKeys_[count]] = cdsvol;
+            LOG("cache cds vol " << cdsvol << " for key " << cdsVolKeys_[count]);
+            count++;
+        }
+    }
+
 
     LOG("generate base scenario");
     baseScenario_ = baseScenarioFactory_->buildScenario(today_, "BASE");
@@ -370,6 +387,13 @@ void ShiftScenarioGenerator::addCacheTo(boost::shared_ptr<Scenario> scenario) {
                 scenario->add(key, survivalProbabilityCache_[key]);
         }
     }
+    if (simMarketData_->simulateCdsVols()) {
+        for (auto key : cdsVolKeys_) {
+            if (!scenario->has(key))
+                scenario->add(key, cdsVolCache_[key]);
+        }
+    }
+
 }
 
 RiskFactorKey ShiftScenarioGenerator::getFxKey(const std::string& key) {
@@ -450,6 +474,14 @@ RiskFactorKey ShiftScenarioGenerator::getSurvivalProbabilityKey(const std::strin
             return survivalProbabilityKeys_[i];
     }
     QL_FAIL("error locating SurvivalProbability RiskFactorKey for " << name << ", index " << index);
+}
+
+RiskFactorKey ShiftScenarioGenerator::getCdsVolKey(const std::string& name, Size index) {
+    for (Size i = 0; i < cdsVolKeys_.size(); ++i) {
+        if (cdsVolKeys_[i].name == name && cdsVolKeys_[i].index == index)
+            return cdsVolKeys_[i];
+    }
+    QL_FAIL("error locating CDSVol RiskFactorKey for " << name << ", index " << index);
 }
 
 void ShiftScenarioGenerator::applyShift(Size j, Real shiftSize, bool up, ShiftType shiftType,

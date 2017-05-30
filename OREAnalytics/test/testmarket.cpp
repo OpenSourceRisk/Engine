@@ -134,7 +134,7 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
     simMarketData->setEquityTenors("SP5", { 6 * Months, 1 * Years, 2 * Years });
     simMarketData->setEquityTenors("Lufthansa", { 6 * Months, 1 * Years, 2 * Years });
 
-    simMarketData->simulateEQVols() = false;
+    simMarketData->simulateEQVols() = true;
     simMarketData->equityVolDecayMode() = "ForwardVariance";
     simMarketData->equityVolNames() = { "SP5", "Lufthansa" };
     simMarketData->equityVolExpiries() = { 6 * Months, 1 * Years, 2 * Years,  3 * Years,
@@ -239,11 +239,11 @@ boost::shared_ptr<ore::analytics::SensitivityScenarioData> TestConfigurationObje
 
     ore::analytics::SensitivityScenarioData::SpotShiftData eqsData;
     eqsData.shiftType = "Relative";
-    eqsData.shiftSize = 1E-5;
+    eqsData.shiftSize = 0.01;
 
     ore::analytics::SensitivityScenarioData::VolShiftData eqvsData;
     eqvsData.shiftType = "Relative";
-    eqvsData.shiftSize = 1E-5;
+    eqvsData.shiftSize = 0.01;
     eqvsData.shiftExpiries = { 5 * Years };
 
     sensiData->discountCurrencies() = {"EUR", "USD", "GBP", "CHF", "JPY"};
@@ -300,6 +300,10 @@ boost::shared_ptr<ore::analytics::SensitivityScenarioData> TestConfigurationObje
     sensiData->equityNames() = { "SP5", "Lufthansa" };
     sensiData->equityShiftData()["SP5"] = eqsData;
     sensiData->equityShiftData()["Lufthansa"] = eqsData;
+
+    sensiData->equityVolNames() = { "SP5", "Lufthansa" };
+    sensiData->equityVolShiftData()["SP5"] = eqvsData;
+    sensiData->equityVolShiftData()["Lufthansa"] = eqvsData;
 
     return sensiData;
 }

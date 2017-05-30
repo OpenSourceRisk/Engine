@@ -51,6 +51,7 @@ namespace data {
   - swaption volatilities
   - cap/floor volatilities
   - default curves
+  - CDS volatilities
   - swap index forwarding curves
   - zero inflation index curves
   - yoy inflation index curves

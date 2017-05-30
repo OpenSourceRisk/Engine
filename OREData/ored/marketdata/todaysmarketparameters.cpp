@@ -28,7 +28,7 @@ bool operator==(const MarketConfiguration& lhs, const MarketConfiguration& rhs) 
     if (lhs.discountingCurvesId != rhs.discountingCurvesId || lhs.yieldCurvesId != rhs.yieldCurvesId ||
         lhs.indexForwardingCurvesId != rhs.indexForwardingCurvesId || lhs.fxSpotsId != rhs.fxSpotsId ||
         lhs.fxVolatilitiesId != rhs.fxVolatilitiesId || lhs.swaptionVolatilitiesId != rhs.swaptionVolatilitiesId ||
-        lhs.defaultCurvesId != rhs.defaultCurvesId || lhs.swapIndexCurvesId != rhs.swapIndexCurvesId ||
+        lhs.defaultCurvesId != rhs.defaultCurvesId || lhs.cdsVolatilitiesId != rhs.cdsVolatilitiesId || lhs.swapIndexCurvesId != rhs.swapIndexCurvesId ||
         lhs.zeroInflationIndexCurvesId != rhs.zeroInflationIndexCurvesId ||
         lhs.yoyInflationIndexCurvesId != rhs.yoyInflationIndexCurvesId ||
         lhs.inflationCapFloorPriceSurfacesId != rhs.inflationCapFloorPriceSurfacesId ||
@@ -57,7 +57,7 @@ bool TodaysMarketParameters::operator==(TodaysMarketParameters& rhs) {
     if (discountingCurves_ != rhs.discountingCurves_ || yieldCurves_ != rhs.yieldCurves_ ||
         indexForwardingCurves_ != rhs.indexForwardingCurves_ || fxSpots_ != rhs.fxSpots_ ||
         fxVolatilities_ != rhs.fxVolatilities_ || swaptionVolatilities_ != rhs.swaptionVolatilities_ ||
-        defaultCurves_ != rhs.defaultCurves_ || capFloorVolatilities_ != rhs.capFloorVolatilities_ ||
+        defaultCurves_ != rhs.defaultCurves_ || cdsVolatilities_ != rhs.cdsVolatilities_ || capFloorVolatilities_ != rhs.capFloorVolatilities_ ||
         zeroInflationIndexCurves_ != rhs.zeroInflationIndexCurves_ ||
         yoyInflationIndexCurves_ != rhs.yoyInflationIndexCurves_ ||
         inflationCapFloorPriceSurfaces_ != rhs.inflationCapFloorPriceSurfaces_ || equityCurves_ != rhs.equityCurves_ ||
@@ -305,6 +305,9 @@ XMLNode* TodaysMarketParameters::toXML(XMLDocument& doc) {
             }
             if (iterator->second.defaultCurvesId != "") {
                 XMLUtils::addChild(doc, configurationsNode, "DefaultCurvesId", iterator->second.defaultCurvesId);
+            }
+            if (iterator->second.cdsVolatilitiesId != "") {
+                XMLUtils::addChild(doc, configurationsNode, "CdsVolatilitiesId", iterator->second.cdsVolatilitiesId);
             }
             if (iterator->second.zeroInflationIndexCurvesId != "") {
                 XMLUtils::addChild(doc, configurationsNode, "ZeroInflationIndexCurvesId",
