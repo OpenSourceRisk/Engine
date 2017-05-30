@@ -83,6 +83,11 @@ void SensitivityScenarioGenerator::generateScenarios(const boost::shared_ptr<Sce
         generateCdsVolScenarios(sensiScenarioFactory, false);
     }
 
+    if (simMarketData_->simulateBaseCorrelations()) {
+        generateBaseCorrelationScenarios(sensiScenarioFactory, true);
+        generateBaseCorrelationScenarios(sensiScenarioFactory, false);
+    }
+
     // add simultaneous up-moves in two risk factors for cross gamma calculation
     vector<RiskFactorKey> keys = baseScenario_->keys();
     Size index = scenarios_.size();
@@ -778,14 +783,14 @@ void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(
     // original curves' buffer
     std::vector<Real> times;
 
-     for (Size i = 0; i < n_names; ++i) {
+    for (Size i = 0; i < n_names; ++i) {
         string name = crNames_[i];
-        n_ten = simMarketData_->defaultTenors(crNames_[i]).size(); 
-        std::vector<Real> hazardRates(n_ten); //integrated hazard rates
-        times.clear(); 
-	    times.resize(n_ten); 
-	    // buffer for shifted survival prob curves 
-	    std::vector<Real> shiftedHazardRates(n_ten); 
+        n_ten = simMarketData_->defaultTenors(crNames_[i]).size();
+        std::vector<Real> hazardRates(n_ten); // integrated hazard rates
+        times.clear();
+        times.resize(n_ten);
+        // buffer for shifted survival prob curves
+        std::vector<Real> shiftedHazardRates(n_ten);
         SensitivityScenarioData::CurveShiftData data = sensitivityData_->creditCurveShiftData()[name];
         ShiftType shiftType = parseShiftType(data.shiftType);
         Handle<DefaultProbabilityTermStructure> ts = initMarket_->defaultCurve(name, configuration_);
@@ -797,15 +802,14 @@ void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(
             hazardRates[j] = -std::log(s_t) / times[j];
         }
 
-        
-         std::vector<Period> shiftTenors = overrideTenors_ && simMarketData_->hasDefaultTenors(name)
-         ? simMarketData_->defaultTenors(name)
-         : data.shiftTenors;
-         
-         QL_REQUIRE(shiftTenors.size() == data.shiftTenors.size(), "mismatch between effective shift tenors ("
-                    << shiftTenors.size() << ") and shift tenors ("
-                    << data.shiftTenors.size() << ")");
-         
+        std::vector<Period> shiftTenors = overrideTenors_ && simMarketData_->hasDefaultTenors(name)
+                                              ? simMarketData_->defaultTenors(name)
+                                              : data.shiftTenors;
+
+        QL_REQUIRE(shiftTenors.size() == data.shiftTenors.size(), "mismatch between effective shift tenors ("
+                                                                      << shiftTenors.size() << ") and shift tenors ("
+                                                                      << data.shiftTenors.size() << ")");
+
         std::vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j)
             shiftTimes[j] = dc.yearFraction(today_, today_ + shiftTenors[j]);
@@ -847,8 +851,7 @@ void SensitivityScenarioGenerator::generateCdsVolScenarios(
         cdsVolNames_ = simMarketNames;
     // Log an ALERT if some swaption currencies in simmarket are excluded from the list
     for (auto sim_name : simMarketNames) {
-        if (std::find(cdsVolNames_.begin(), cdsVolNames_.end(), sim_name) ==
-            cdsVolNames_.end()) {
+        if (std::find(cdsVolNames_.begin(), cdsVolNames_.end(), sim_name) == cdsVolNames_.end()) {
             ALOG("CDS name " << sim_name << " in simmarket is not included in sensitivities analysis");
         }
     }
@@ -885,27 +888,107 @@ void SensitivityScenarioGenerator::generateCdsVolScenarios(
         // cache tenor times
         for (Size j = 0; j < shiftExpiryTimes.size(); ++j)
             shiftExpiryTimes[j] = dc.yearFraction(today_, today_ + data.shiftExpiries[j]);
-        
+
         // loop over shift expiries and terms
         for (Size j = 0; j < shiftExpiryTimes.size(); ++j) {
-                Size strikeBucket = 0; // FIXME
+            Size strikeBucket = 0; // FIXME
+            boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(today_);
+
+            scenarioDescriptions_.push_back(CdsVolScenarioDescription(name, j, strikeBucket, up));
+
+            applyShift(j, shiftSize, up, shiftType, shiftExpiryTimes, volData, volExpiryTimes, shiftedVolData, true);
+            // add shifted vol data to the scenario
+            for (Size jj = 0; jj < n_cdsvol_exp; ++jj) {
+                Size idx = jj;
+                scenario->add(getCdsVolKey(name, idx), shiftedVolData[jj]);
+            }
+            // add this scenario to the scenario vector
+            scenarios_.push_back(scenario);
+            LOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
+        }
+    }
+    LOG("CDS vol scenarios done");
+}
+
+void SensitivityScenarioGenerator::generateBaseCorrelationScenarios(
+    const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up) {
+    // We can choose to shift fewer discount curves than listed in the market
+    std::vector<string> simMarketNames = simMarketData_->baseCorrelationNames();
+    if (sensitivityData_->baseCorrelationNames().size() > 0)
+        baseCorrelationNames_ = sensitivityData_->baseCorrelationNames();
+    else
+        baseCorrelationNames_ = simMarketNames;
+    // Log an ALERT if some names in simmarket are excluded from the list
+    for (auto name : simMarketNames) {
+        if (std::find(baseCorrelationNames_.begin(), baseCorrelationNames_.end(), name) ==
+            baseCorrelationNames_.end()) {
+            ALOG("Base Correlation " << name << " in simmarket is not included in sensitivities analysis");
+        }
+    }
+
+    Size n_bc_names = baseCorrelationNames_.size();
+    Size n_bc_terms = simMarketData_->baseCorrelationTerms().size();
+    Size n_bc_levels = simMarketData_->baseCorrelationDetachmentPoints().size();
+
+    vector<vector<Real>> bcData(n_bc_levels, vector<Real>(n_bc_terms, 0.0));
+    vector<vector<Real>> shiftedBcData(n_bc_levels, vector<Real>(n_bc_levels, 0.0));
+    vector<Real> termTimes(n_bc_terms, 0.0);
+    vector<Real> levels = simMarketData_->baseCorrelationDetachmentPoints();
+
+    for (Size i = 0; i < n_bc_names; ++i) {
+        std::string name = baseCorrelationNames_[i];
+        SensitivityScenarioData::BaseCorrelationShiftData data = sensitivityData_->baseCorrelationShiftData()[name];
+        ShiftType shiftType = parseShiftType(data.shiftType);
+        Real shiftSize = data.shiftSize;
+
+        vector<Real> shiftLevels = data.shiftLossLevels;
+        vector<Real> shiftTermTimes(data.shiftTerms.size(), 0.0);
+
+        Handle<BilinearBaseCorrelationTermStructure> ts = initMarket_->baseCorrelation(name, configuration_);
+        DayCounter dc = ts->dayCounter();
+
+        // cache original base correlation data
+        for (Size j = 0; j < n_bc_terms; ++j) {
+            Date term = today_ + simMarketData_->baseCorrelationTerms()[j];
+            termTimes[j] = dc.yearFraction(today_, term);
+        }
+        for (Size j = 0; j < n_bc_levels; ++j) {
+            Real level = levels[j];
+            for (Size k = 0; k < n_bc_terms; ++k) {
+                Date term = today_ + simMarketData_->baseCorrelationTerms()[k];
+                Real bc = ts->correlation(term, level, true); // extrapolation
+                bcData[j][k] = bc;
+            }
+        }
+
+        // cache tenor times
+        for (Size j = 0; j < shiftTermTimes.size(); ++j)
+            shiftTermTimes[j] = dc.yearFraction(today_, today_ + data.shiftTerms[j]);
+
+        // loop over shift levels and terms
+        for (Size j = 0; j < shiftLevels.size(); ++j) {
+            for (Size k = 0; k < shiftTermTimes.size(); ++k) {
                 boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(today_);
 
-                scenarioDescriptions_.push_back(CdsVolScenarioDescription(name, j, strikeBucket, up));
+                scenarioDescriptions_.push_back(baseCorrelationScenarioDescription(name, j, k, up));
 
-                applyShift(j, shiftSize, up, shiftType, shiftExpiryTimes, volData, volExpiryTimes,
-                          shiftedVolData, true);
+                applyShift(j, k, shiftSize, up, shiftType, shiftLevels, shiftTermTimes, levels,
+                           termTimes, bcData, shiftedBcData, true);
+
                 // add shifted vol data to the scenario
-                for (Size jj = 0; jj < n_cdsvol_exp; ++jj) {
-                        Size idx = jj ;
-                        scenario->add(getCdsVolKey(name, idx), shiftedVolData[jj]);
+                for (Size jj = 0; jj < n_bc_levels; ++jj) {
+                    for (Size kk = 0; kk < n_bc_terms; ++kk) {
+                        Size idx = jj * n_bc_terms + kk;
+                        scenario->add(getBaseCorrelationKey(name, idx), shiftedBcData[jj][kk]);
+                    }
                 }
                 // add this scenario to the scenario vector
                 scenarios_.push_back(scenario);
-                LOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
+                DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
             }
+        }
     }
-    LOG("CDS vol scenarios done");
+    LOG("Base correlation scenarios done");
 }
 
 SensitivityScenarioGenerator::ScenarioDescription SensitivityScenarioGenerator::fxScenarioDescription(string ccypair,
@@ -1078,17 +1161,36 @@ SensitivityScenarioGenerator::survivalProbabilityScenarioDescription(string name
 }
 
 SensitivityScenarioGenerator::ScenarioDescription
-SensitivityScenarioGenerator::CdsVolScenarioDescription(string name, Size expiryBucket, 
-                                                             Size strikeBucket, bool up) {
+SensitivityScenarioGenerator::CdsVolScenarioDescription(string name, Size expiryBucket, Size strikeBucket, bool up) {
     QL_REQUIRE(sensitivityData_->cdsVolShiftData().find(name) != sensitivityData_->cdsVolShiftData().end(),
                "name " << name << " not found in swaption name shift data");
     SensitivityScenarioData::CdsVolShiftData data = sensitivityData_->cdsVolShiftData()[name];
     QL_REQUIRE(expiryBucket < data.shiftExpiries.size(), "expiry bucket " << expiryBucket << " out of range");
-    Size index = strikeBucket * data.shiftExpiries.size()  +
-                 expiryBucket;
+    Size index = strikeBucket * data.shiftExpiries.size() + expiryBucket;
     RiskFactorKey key(RiskFactorKey::KeyType::CDSVolatility, name, index);
     std::ostringstream o;
-        o << data.shiftExpiries[expiryBucket] << "/" << "ATM";
+    o << data.shiftExpiries[expiryBucket] << "/"
+      << "ATM";
+    string text = o.str();
+    ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
+    ScenarioDescription desc(type, key, text);
+    return desc;
+}
+
+SensitivityScenarioGenerator::ScenarioDescription
+SensitivityScenarioGenerator::baseCorrelationScenarioDescription(string indexName, Size lossLevelBucket,
+                                                                 Size termBucket, bool up) {
+    QL_REQUIRE(sensitivityData_->baseCorrelationShiftData().find(indexName) !=
+                   sensitivityData_->baseCorrelationShiftData().end(),
+               "name " << indexName << " not found in base correlation shift data");
+    SensitivityScenarioData::BaseCorrelationShiftData data = sensitivityData_->baseCorrelationShiftData()[indexName];
+    QL_REQUIRE(termBucket < data.shiftTerms.size(), "term bucket " << termBucket << " out of range");
+    QL_REQUIRE(lossLevelBucket < data.shiftLossLevels.size(),
+               "loss level bucket " << lossLevelBucket << " out of range");
+    Size index = lossLevelBucket * data.shiftTerms.size() + termBucket;
+    RiskFactorKey key(RiskFactorKey::KeyType::BaseCorrelation, indexName, index);
+    std::ostringstream o;
+    o << data.shiftLossLevels[lossLevelBucket] << "/" << data.shiftTerms[termBucket];
     string text = o.str();
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
     ScenarioDescription desc(type, key, text);

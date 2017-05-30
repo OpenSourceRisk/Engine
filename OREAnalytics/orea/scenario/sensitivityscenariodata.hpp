@@ -92,6 +92,13 @@ public:
         vector<Period> shiftExpiries;
     };
 
+    struct BaseCorrelationShiftData {
+        string indexName;
+        string shiftType;
+        Real shiftSize;
+        vector<Period> shiftTerms;
+        vector<Real> shiftLossLevels;
+    };
 
     //! Default constructor
     SensitivityScenarioData() : parConversion_(false){};
@@ -124,13 +131,16 @@ public:
     const vector<string>& cdsVolNames() const { return cdsVolNames_; }
     const map<string, CdsVolShiftData>& cdsVolShiftData() const { return cdsVolShiftData_; }
 
+    const vector<string>& baseCorrelationNames() const { return baseCorrelationNames_; }
+    const map<string, BaseCorrelationShiftData>& baseCorrelationShiftData() const { return baseCorrelationShiftData_; }
+
     // todo
     // const vector<string>& infIndices() const { return inflationIndices_; }
     // const map<string, InflationCurveShiftData> inflationCurveShiftData() const { return inflationCurveShiftData_; }
 
     // todo
     const vector<string>& creditNames() const { return creditNames_; }
-    const map<string, string>& creditCcys() const {return creditCcys_; }
+    const map<string, string>& creditCcys() const { return creditCcys_; }
     const map<string, CurveShiftData>& creditCurveShiftData() const { return creditCurveShiftData_; }
 
     const vector<string>& equityNames() const { return equityNames_; }
@@ -171,6 +181,8 @@ public:
     vector<string>& cdsVolNames() { return cdsVolNames_; }
     map<string, CdsVolShiftData>& cdsVolShiftData() { return cdsVolShiftData_; }
 
+    vector<string>& baseCorrelationNames() { return baseCorrelationNames_; }
+    map<string, BaseCorrelationShiftData>& baseCorrelationShiftData() { return baseCorrelationShiftData_; }
 
     // todo
     // vector<string>& infIndices() { return inflationIndices_; }
@@ -178,7 +190,7 @@ public:
 
     // todo
     vector<string>& creditNames() { return creditNames_; }
-    map<string, string>& creditCcys() {return creditCcys_; }
+    map<string, string>& creditCcys() { return creditCcys_; }
     map<string, CurveShiftData>& creditCurveShiftData() { return creditCurveShiftData_; }
 
     vector<string>& equityNames() { return equityNames_; }
@@ -248,6 +260,9 @@ private:
 
     vector<string> equityNames_;
     map<string, SpotShiftData> equityShiftData_;
+
+    vector<string> baseCorrelationNames_;
+    map<string, BaseCorrelationShiftData> baseCorrelationShiftData_;
 
     vector<pair<string, string>> crossGammaFilter_;
 };
