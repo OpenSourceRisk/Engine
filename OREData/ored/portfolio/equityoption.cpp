@@ -20,6 +20,7 @@
 #include <ored/portfolio/builders/equityoption.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/equityoption.hpp>
+#include <ored/utilities/log.hpp>
 #include <ql/errors.hpp>
 #include <ql/exercise.hpp>
 #include <ql/instruments/compositeinstrument.hpp>
@@ -76,6 +77,9 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
     // Notional - we really need todays spot to get the correct notional.
     // But rather than having it move around we use strike * quantity
     notional_ = strike_ * quantity_;
+
+    Handle<BlackVolTermStructure> blackVol = engineFactory->market()->equityVol(eqName_);
+    LOG("Implied vol for EquityOption on " << eqName_ << " with maturity " << maturity_ << " and strike " << strike_ << " is " << blackVol->blackVol(maturity_, strike_));
 }
 
 void EquityOption::fromXML(XMLNode* node) {
