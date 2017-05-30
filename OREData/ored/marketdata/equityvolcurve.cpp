@@ -71,7 +71,7 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
                     Size j = std::find(expiries.begin(), expiries.end(), q->expiry()) - expiries.begin();
 
                     if (i < strikes.size() && j < expiries.size()) {
-                        QL_REQUIRE(vols[i][j] < 0, "Error vol for " << strikes[i] <<", " << expiries[j] << " already set");
+                        QL_REQUIRE(vols[i][j] < 0, "Error vol (" << spec << ") for " << strikes[i] <<", " << expiries[j] << " already set");
                         vols[i][j] = q->quote()->value();
                     }
                 }
@@ -80,7 +80,7 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
         // Check that we have all the quotes we need
         for (Size i = 0; i < strikes.size(); i++) {
             for (Size j = 0; j < strikes.size(); j++) {
-                QL_REQUIRE(vols[i][j] >= 0, "Error vol for " << strikes[i] <<", " << expiries[j] << " not set");
+                QL_REQUIRE(vols[i][j] >= 0, "Error vol (" << spec << ") for " << strikes[i] <<", " << expiries[j] << " not set");
             }
         }
 
@@ -118,9 +118,9 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
 
                 Calendar cal = NullCalendar(); // why do we need this?
 
-                vol_ = boost::make_shared<BlackVarianceSurface>(asof, cal, dates, strikesReal, vols, dc);
+                // This can get wrapped in a QuantExt::BlackVolatilityWithATM later on
+                vol_ = boost::make_shared<BlackVarianceSurface> (asof, cal, dates, strikesReal, vols, dc);
             }
-
         }
         vol_->enableExtrapolation();
     } catch (std::exception& e) {
