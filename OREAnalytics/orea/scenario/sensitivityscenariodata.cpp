@@ -168,6 +168,8 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
     for (XMLNode* child = XMLUtils::getChildNode(creditCurves, "CreditCurve"); child;
          child = XMLUtils::getNextSibling(child)) {
         string name = XMLUtils::getAttribute(child, "name");
+        string ccy = XMLUtils::getChildValue(child, "ShiftType", true);
+        creditCcys_[name] = ccy;
         // same as discount curve sensitivity loading from here ...
         CurveShiftData data;
         data.shiftType = XMLUtils::getChildValue(child, "ShiftType", true);
@@ -186,6 +188,19 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
         // ... to here
         creditCurveShiftData_[name] = data;
         creditNames_.push_back(name);
+    }
+
+    LOG("Get cds vol sensitivity parameters");
+    XMLNode* cdsVols = XMLUtils::getChildNode(node, "CDSVolatilities");
+    for (XMLNode* child = XMLUtils::getChildNode(cdsVols, "CDSVolatility"); child;
+         child = XMLUtils::getNextSibling(child)) {
+        string name = XMLUtils::getAttribute(child, "name");
+        CdsVolShiftData data;
+        data.shiftType = XMLUtils::getChildValue(child, "ShiftType", true);
+        data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
+        data.shiftExpiries = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftExpiries", true);
+        cdsVolShiftData_[name] = data;
+        cdsVolNames_.push_back(name);
     }
 
     LOG("Get Equity spot sensitivity parameters");

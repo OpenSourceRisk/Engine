@@ -292,19 +292,6 @@
       </Expiries>
     </CDSVolatility>
   </CDSVolatilities>
-  <BaseCorrelations>
-    <BaseCorrelation>
-      <CurveId>CDXIG</CurveId>
-      <CurveDescription>CDX IG Bbase correlations</CurveDescription>
-      <Terms>1D</Terms>
-      <DetachmentPoints>0.03, 0.06, 0.10, 0.20, 1.0</DetachmentPoints>
-      <SettlementDays>0</SettlementDays>
-      <Calendar>US</Calendar>
-      <BusinessDayConvention>F</BusinessDayConvention>
-      <DayCounter>A365</DayCounter>
-      <Extrapolate>Y</Extrapolate>
-    </BaseCorrelation>
-  </BaseCorrelations>
   <YieldCurves>
     <YieldCurve>
       <CurveId>CHF6M</CurveId>

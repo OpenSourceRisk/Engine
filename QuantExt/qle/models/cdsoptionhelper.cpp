@@ -40,7 +40,7 @@ CdsOptionHelper::CdsOptionHelper(const Date& exerciseDate, const Handle<Quote>& 
     : CalibrationHelper(volatility, termStructure, errorType), blackVol_(boost::make_shared<SimpleQuote>(0.0)) {
 
     boost::shared_ptr<PricingEngine> cdsEngine =
-        boost::make_shared<MidPointCdsEngine>(probability, recoveryRate, termStructure);
+        boost::make_shared<QuantExt::MidPointCdsEngine>(probability, recoveryRate, termStructure);
 
     boost::shared_ptr<CreditDefaultSwap> tmp;
     if (upfront == Null<Real>())

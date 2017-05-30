@@ -74,6 +74,16 @@
     <Index>EUR-EURIBOR</Index>
   </Deposit>
   <Deposit>
+    <Id>GBP-SONIA-CONVENTIONS</Id>
+    <IndexBased>true</IndexBased>
+    <Index>GBP-SONIA</Index>
+  </Deposit>
+  <Deposit>
+    <Id>GBP-LIBOR-CONVENTIONS</Id>
+    <IndexBased>true</IndexBased>
+    <Index>GBP-LIBOR</Index>
+  </Deposit>
+  <Deposit>
     <Id>GBP-DEPOSIT</Id>
     <IndexBased>true</IndexBased>
     <Index>GBP-LIBOR</Index>
@@ -442,7 +452,7 @@
   <Swap>
     <Id>GBP-3M-SWAP-CONVENTIONS</Id>
     <FixedCalendar>UK</FixedCalendar>
-    <FixedFrequency>Semiannual</FixedFrequency>
+    <FixedFrequency>Annual</FixedFrequency>
     <FixedConvention>MF</FixedConvention>
     <FixedDayCounter>A365</FixedDayCounter>
     <Index>GBP-LIBOR-3M</Index>

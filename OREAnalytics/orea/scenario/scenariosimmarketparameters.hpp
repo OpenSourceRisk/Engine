@@ -50,7 +50,7 @@ public:
     ScenarioSimMarketParameters()
         : extrapolate_(false), swapVolSimulate_(false), capFloorVolSimulate_(false),
           survivalProbabilitySimulate_(false), recoveryRateSimulate_(false), fxVolSimulate_(false),
-          equityVolSimulate_(false) {
+          equityVolSimulate_(false), cdsVolSimulate_(false) {
         // set default tenors
         capFloorVolExpiries_[""];
         defaultTenors_[""];
@@ -91,6 +91,11 @@ public:
     const vector<Period>& defaultTenors(const string& key) const;
     bool hasDefaultTenors(const string& key) const { return defaultTenors_.count(key) > 0; }
 
+    bool simulateCdsVols() const { return cdsVolSimulate_; }
+    const vector<Period>& cdsVolExpiries() const { return cdsVolExpiries_; }
+    const vector<string>& cdsVolNames() const { return cdsVolNames_; }
+    const string& cdsVolDecayMode() const { return cdsVolDecayMode_; }
+
     const vector<string>& equityNames() const { return equityNames_; }
     const vector<Period>& equityTenors(const string& key) const;
     bool hasEquityTenors(const string& key) const { return equityTenors_.count(key) > 0; }
@@ -109,6 +114,8 @@ public:
     const vector<string>& additionalScenarioDataCcys() const { return additionalScenarioDataCcys_; }
 
     const vector<string>& securities() const { return securities_; }
+
+    const vector<string>& baseCorrelations() const { return baseCorrelations_; }
     //@}
 
     //! \name Setters
@@ -142,6 +149,11 @@ public:
     vector<string>& defaultNames() { return defaultNames_; }
     void setDefaultTenors(const string& key, const vector<Period>& p);
 
+    bool& simulateCdsVols() { return cdsVolSimulate_; }
+    vector<Period>& cdsVolExpiries() { return cdsVolExpiries_; }
+    vector<string>& cdsVolNames() { return cdsVolNames_; }
+    string& cdsVolDecayMode() { return cdsVolDecayMode_; }
+
     vector<string>& equityNames() { return equityNames_; }
     void setEquityTenors(const string& key, const vector<Period>& p);
 
@@ -159,6 +171,9 @@ public:
     vector<string>& additionalScenarioDataCcys() { return additionalScenarioDataCcys_; }
 
     vector<string>& securities() { return securities_; }
+
+    vector<string>& baseCorrelations() { return baseCorrelations_; }
+
     //@}
 
     //! \name Serialisation
@@ -203,6 +218,11 @@ private:
     vector<string> defaultNames_;
     map<string, vector<Period>> defaultTenors_;
 
+    bool cdsVolSimulate_;
+    vector<string> cdsVolNames_;
+    vector<Period> cdsVolExpiries_;
+    string cdsVolDecayMode_;
+
     vector<string> equityNames_;
     map<string, vector<Period>> equityTenors_;
 
@@ -220,6 +240,8 @@ private:
     vector<string> additionalScenarioDataCcys_;
 
     vector<string> securities_;
+
+    vector<string> baseCorrelations_;
 };
 } // namespace analytics
 } // namespace ore

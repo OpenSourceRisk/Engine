@@ -85,6 +85,14 @@ public:
         Real shiftSize;
     };
 
+    struct CdsVolShiftData {
+        string ccy;
+        string shiftType;
+        Real shiftSize;
+        vector<Period> shiftExpiries;
+    };
+
+
     //! Default constructor
     SensitivityScenarioData() : parConversion_(false){};
 
@@ -113,12 +121,16 @@ public:
     const vector<string>& fxVolCcyPairs() const { return fxVolCcyPairs_; }
     const map<string, VolShiftData>& fxVolShiftData() const { return fxVolShiftData_; }
 
+    const vector<string>& cdsVolNames() const { return cdsVolNames_; }
+    const map<string, CdsVolShiftData>& cdsVolShiftData() const { return cdsVolShiftData_; }
+
     // todo
     // const vector<string>& infIndices() const { return inflationIndices_; }
     // const map<string, InflationCurveShiftData> inflationCurveShiftData() const { return inflationCurveShiftData_; }
 
     // todo
     const vector<string>& creditNames() const { return creditNames_; }
+    const map<string, string>& creditCcys() const {return creditCcys_; }
     const map<string, CurveShiftData>& creditCurveShiftData() const { return creditCurveShiftData_; }
 
     const vector<string>& equityNames() const { return equityNames_; }
@@ -156,12 +168,17 @@ public:
     vector<string>& fxVolCcyPairs() { return fxVolCcyPairs_; }
     map<string, VolShiftData>& fxVolShiftData() { return fxVolShiftData_; }
 
+    vector<string>& cdsVolNames() { return cdsVolNames_; }
+    map<string, CdsVolShiftData>& cdsVolShiftData() { return cdsVolShiftData_; }
+
+
     // todo
     // vector<string>& infIndices() { return inflationIndices_; }
     // map<string, InflationCurveShiftData> inflationCurveShiftData() { return inflationCurveShiftData_; }
 
     // todo
     vector<string>& creditNames() { return creditNames_; }
+    map<string, string>& creditCcys() {return creditCcys_; }
     map<string, CurveShiftData>& creditCurveShiftData() { return creditCurveShiftData_; }
 
     vector<string>& equityNames() { return equityNames_; }
@@ -215,12 +232,15 @@ private:
     vector<string> fxCcyPairs_;
     map<string, SpotShiftData> fxShiftData_; // key: ccy pair
 
+    vector<string> cdsVolNames_;
+    map<string, CdsVolShiftData> cdsVolShiftData_; // key: ccy pair
+
     // todo
     vector<string> inflationIndices_;
     map<string, CurveShiftData> inflationCurveShiftData_; // key: inflation index name
 
-    // todo
     vector<string> creditNames_;
+    map<string, string> creditCcys_;
     map<string, CurveShiftData> creditCurveShiftData_; // key: credit name
 
     vector<string> equityVolNames_;
