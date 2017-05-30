@@ -138,6 +138,11 @@
     <IndexBased>true</IndexBased>
     <Index>SEK-STIBOR</Index>
   </Deposit>
+  <Deposit>
+    <Id>MXN-TIIE-CONVENTIONS</Id>
+    <IndexBased>true</IndexBased>
+    <Index>MXN-TIIE</Index>
+  </Deposit>
   <!-- Money Market Futures -->
   <Future>
     <Id>USD-LIBOR-3M-FUTURES-CONVENTIONS</Id>
@@ -502,6 +507,14 @@
     <FixedConvention>MF</FixedConvention>
     <FixedDayCounter>A365</FixedDayCounter>
     <Index>NZD-BKBM-3M</Index>
+  </Swap>
+  <Swap>
+    <Id>MXN-28D-SWAP-CONVENTIONS</Id>
+    <FixedCalendar>MXN</FixedCalendar>
+    <FixedFrequency>Monthly</FixedFrequency>
+    <FixedConvention>MF</FixedConvention>
+    <FixedDayCounter>ACT/360</FixedDayCounter>
+    <Index>MXN-TIIE-28D</Index>
   </Swap>
   <!-- Overnight Index linked Swap Legs -->
   <OIS>
