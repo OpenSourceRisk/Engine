@@ -972,13 +972,25 @@ void SensitivityScenarioGenerator::generateBaseCorrelationScenarios(
 
                 scenarioDescriptions_.push_back(baseCorrelationScenarioDescription(name, j, k, up));
 
-                applyShift(j, k, shiftSize, up, shiftType, shiftLevels, shiftTermTimes, levels,
-                           termTimes, bcData, shiftedBcData, true);
+                applyShift(j, k, shiftSize, up, shiftType, shiftLevels, shiftTermTimes, levels, termTimes, bcData,
+                           shiftedBcData, true);
 
                 // add shifted vol data to the scenario
                 for (Size jj = 0; jj < n_bc_levels; ++jj) {
                     for (Size kk = 0; kk < n_bc_terms; ++kk) {
                         Size idx = jj * n_bc_terms + kk;
+                        if (shiftedBcData[jj][kk] < 0.0) {
+                            ALOG("invalid shifted base correlation " << shiftedBcData[jj][kk] << " at lossLevelIndex "
+                                                                     << jj << " and termIndex " << kk
+                                                                     << " set to zero");
+                            shiftedBcData[jj][kk] = 0.0;
+                        }
+			else if (shiftedBcData[jj][kk] > 1.0) {
+                            ALOG("invalid shifted base correlation " << shiftedBcData[jj][kk] << " at lossLevelIndex "
+                                                                     << jj << " and termIndex " << kk
+                                                                     << " set to 1 - epsilon");
+                            shiftedBcData[jj][kk] = 1.0 - QL_EPSILON;
+			}
                         scenario->add(getBaseCorrelationKey(name, idx), shiftedBcData[jj][kk]);
                     }
                 }
