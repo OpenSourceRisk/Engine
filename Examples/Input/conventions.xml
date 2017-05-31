@@ -416,6 +416,14 @@
     <Index>DKK-CIBOR-6M</Index>
   </Swap>
   <Swap>
+    <Id>NOK-3M-SWAP-CONVENTIONS</Id>
+    <FixedCalendar>NOK</FixedCalendar>
+    <FixedFrequency>Annual</FixedFrequency>
+    <FixedConvention>MF</FixedConvention>
+    <FixedDayCounter>30/360</FixedDayCounter>
+    <Index>NOK-NIBOR-3M</Index>
+  </Swap>
+  <Swap>
     <Id>NOK-6M-SWAP-CONVENTIONS</Id>
     <FixedCalendar>NOK</FixedCalendar>
     <FixedFrequency>Annual</FixedFrequency>
