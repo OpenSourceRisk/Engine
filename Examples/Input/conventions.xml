@@ -221,6 +221,10 @@
     <Index>USD-LIBOR-3M</Index>
   </FRA>
   <FRA>
+    <Id>USD-1M-FRA-CONVENTIONS</Id>
+    <Index>USD-LIBOR-1M</Index>
+  </FRA>
+  <FRA>
     <Id>CAD-FRA-3M</Id>
     <Index>CAD-CDOR-3M</Index>
   </FRA>
@@ -324,6 +328,14 @@
     <FixedConvention>MF</FixedConvention>
     <FixedDayCounter>30/360</FixedDayCounter>
     <Index>EUR-EURIBOR-12M</Index>
+  </Swap>  
+  <Swap>
+    <Id>USD-1M-SWAP-CONVENTIONS</Id>
+    <FixedCalendar>US,UK</FixedCalendar>
+    <FixedFrequency>Annual</FixedFrequency>
+    <FixedConvention>MF</FixedConvention>
+    <FixedDayCounter>30/360</FixedDayCounter>
+    <Index>USD-LIBOR-1M</Index>
   </Swap>
   <Swap>
     <Id>USD-3M-SWAP-CONVENTIONS</Id>
