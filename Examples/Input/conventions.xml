@@ -109,6 +109,11 @@
     <Index>NOK-NIBOR</Index>
   </Deposit>
   <Deposit>
+    <Id>SEK-DEPOSIT</Id>
+    <IndexBased>true</IndexBased>
+    <Index>SEK-STIBOR</Index>
+  </Deposit>
+  <Deposit>
     <Id>HUF-DEPOSIT</Id>
     <IndexBased>true</IndexBased>
     <Index>HUF-BUBOR</Index>
@@ -781,6 +786,30 @@
     <RollConvention>MF</RollConvention>
     <FlatIndex>USD-LIBOR-3M</FlatIndex>
     <SpreadIndex>CHF-LIBOR-3M</SpreadIndex>
+  </CrossCurrencyBasis>
+  <CrossCurrencyBasis>
+    <Id>USD-NOK-XCCY-BASIS-CONVENTIONS</Id>
+    <SettlementDays>2</SettlementDays>
+    <SettlementCalendar>NOK,US,UK</SettlementCalendar>
+    <RollConvention>MF</RollConvention>
+    <FlatIndex>USD-LIBOR-3M</FlatIndex>
+    <SpreadIndex>NOK-NIBOR-3M</SpreadIndex>
+  </CrossCurrencyBasis>
+  <CrossCurrencyBasis>
+    <Id>USD-SEK-XCCY-BASIS-CONVENTIONS</Id>
+    <SettlementDays>2</SettlementDays>
+    <SettlementCalendar>SEK,US,UK</SettlementCalendar>
+    <RollConvention>MF</RollConvention>
+    <FlatIndex>USD-LIBOR-3M</FlatIndex>
+    <SpreadIndex>SEK-STIBOR-3M</SpreadIndex>
+  </CrossCurrencyBasis>
+  <CrossCurrencyBasis>
+    <Id>USD-MXN-XCCY-BASIS-CONVENTIONS</Id>
+    <SettlementDays>2</SettlementDays>
+    <SettlementCalendar>MXN,US,UK</SettlementCalendar>
+    <RollConvention>MF</RollConvention>
+    <FlatIndex>MXN-TIIE-28D</FlatIndex>
+    <SpreadIndex>USD-LIBOR-1M</SpreadIndex>
   </CrossCurrencyBasis>
   <!-- Inflation Swaps -->
   <InflationSwap>
