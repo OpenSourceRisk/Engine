@@ -56,7 +56,7 @@ CdsHelper::CdsHelper(const Handle<Quote>& quote, const Period& tenor, Integer se
       paysAtDefaultTime_(paysAtDefaultTime), startDate_(startDate) {
 
     initializeDates();
-        
+
     registerWith(discountCurve);
 }
 
@@ -70,7 +70,7 @@ CdsHelper::CdsHelper(Rate quote, const Period& tenor, Integer settlementDays, co
       paysAtDefaultTime_(paysAtDefaultTime), startDate_(startDate) {
 
     initializeDates();
-    
+
     registerWith(discountCurve);
 }
 
@@ -112,7 +112,7 @@ void CdsHelper::initializeDates() {
                     .withCalendar(calendar_)
                     .withConvention(paymentConvention_)
                     .withTerminationDateConvention(Unadjusted)
-                    .withRule(evaluationDate_ >= Date(21, Dec, 2015) ? DateGeneration::CDS2015 : DateGeneration::CDS);
+                    .withRule(rule_);
     earliestDate_ = schedule_.dates().front();
     latestDate_ = calendar_.adjust(schedule_.dates().back(), paymentConvention_);
 }
