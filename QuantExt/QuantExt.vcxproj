@@ -600,6 +600,7 @@
     <ClInclude Include="qle\termstructures\basistwoswaphelper.hpp" />
     <ClInclude Include="qle\termstructures\blackinvertedvoltermstructure.hpp" />
     <ClInclude Include="qle\termstructures\blackvariancecurve3.hpp" />
+    <ClInclude Include="qle\termstructures\blackvolsurfacewithatm.hpp" />
     <ClInclude Include="qle\termstructures\crossccybasisswaphelper.hpp" />
     <ClInclude Include="qle\termstructures\datedstrippedoptionlet.hpp" />
     <ClInclude Include="qle\termstructures\datedstrippedoptionletadapter.hpp" />
@@ -697,6 +698,7 @@
     <ClCompile Include="qle\termstructures\averageoisratehelper.cpp" />
     <ClCompile Include="qle\termstructures\basistwoswaphelper.cpp" />
     <ClCompile Include="qle\termstructures\blackvariancecurve3.cpp" />
+    <ClCompile Include="qle\termstructures\blackvolsurfacewithatm.cpp" />
     <ClCompile Include="qle\termstructures\crossccybasisswaphelper.cpp" />
     <ClCompile Include="qle\termstructures\datedstrippedoptionlet.cpp" />
     <ClCompile Include="qle\termstructures\datedstrippedoptionletadapter.cpp" />
