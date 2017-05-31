@@ -426,7 +426,6 @@
     </ClInclude>
     <ClInclude Include="qle\instruments\creditdefaultswap.hpp" />
     <ClInclude Include="qle\instruments\makecds.hpp" />
-    <ClInclude Include="qle\pricingengines\discountingcapfloorengine.hpp" />
     <ClInclude Include="qle\pricingengines\midpointcdsengine.hpp" />
     <ClInclude Include="qle\termstructures\defaultprobabilityhelpers.hpp" />
   </ItemGroup>
@@ -726,7 +725,6 @@
     </ClCompile>
     <ClCompile Include="qle\instruments\creditdefaultswap.cpp" />
     <ClCompile Include="qle\instruments\makecds.cpp" />
-    <ClCompile Include="qle\pricingengines\discountingcapfloorengine.cpp" />
     <ClCompile Include="qle\pricingengines\midpointcdsengine.cpp" />
     <ClCompile Include="qle\termstructures\defaultprobabilityhelpers.cpp" />
   </ItemGroup>
