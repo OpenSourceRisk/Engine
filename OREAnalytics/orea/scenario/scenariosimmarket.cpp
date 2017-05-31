@@ -39,6 +39,7 @@
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 
+#include <ql/experimental/credit/basecorrelationstructure.hpp>
 #include <qle/termstructures/dynamicblackvoltermstructure.hpp>
 #include <qle/termstructures/dynamicswaptionvolmatrix.hpp>
 #include <qle/termstructures/strippedoptionletadapter2.hpp>
@@ -52,6 +53,8 @@
 using namespace QuantLib;
 using namespace QuantExt;
 using namespace std;
+
+typedef QuantLib::BaseCorrelationTermStructure<QuantLib::BilinearInterpolation> BilinearBaseCorrelationTermStructure;
 
 namespace ore {
 namespace analytics {
@@ -672,15 +675,54 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
     }
     LOG("equity volatilities done");
 
-    // building base correlations, passing through from todays market
+    // building base correlation structures
     LOG("building base correlations...");
-    for (const auto& bcName : parameters->baseCorrelations()) {
+    for (const auto& bcName : parameters->baseCorrelationNames()) {
         Handle<BaseCorrelationTermStructure<BilinearInterpolation>> wrapper =
             initMarket->baseCorrelation(bcName, configuration);
+        if (!parameters->simulateBaseCorrelations())
+            baseCorrelations_.insert(
+                pair<pair<string, string>, Handle<BaseCorrelationTermStructure<BilinearInterpolation>>>(
+                    make_pair(Market::defaultConfiguration, bcName), wrapper));
+        else {
+            Size nd = parameters->baseCorrelationDetachmentPoints().size();
+            Size nt = parameters->baseCorrelationTerms().size();
+            vector<vector<Handle<Quote>>> quotes(nd, vector<Handle<Quote>>(nt));
+            vector<Period> terms(nt);
+            for (Size i = 0; i < nd; ++i) {
+                Real lossLevel = parameters->baseCorrelationDetachmentPoints()[i];
+                for (Size j = 0; j < nt; ++j) {
+                    Period term = parameters->baseCorrelationTerms()[j];
+                    if (i == 0)
+                        terms[j] = term;
+                    Real bc = wrapper->correlation(asof_ + term, lossLevel, true); // extrapolate
+                    boost::shared_ptr<SimpleQuote> q(new SimpleQuote(bc));
+                    simData_.emplace(std::piecewise_construct,
+                                     std::forward_as_tuple(RiskFactorKey::KeyType::BaseCorrelation, bcName, i * nt + j),
+                                     std::forward_as_tuple(q));
+                    quotes[i][j] = Handle<Quote>(q);
+                }
+            }
 
-        baseCorrelations_.insert(
-            pair<pair<string, string>, Handle<BaseCorrelationTermStructure<BilinearInterpolation>>>(
-                make_pair(Market::defaultConfiguration, bcName), wrapper));
+            // FIXME: Same change as in ored/market/basecorrelationcurve.cpp
+            if (nt == 1) {
+                terms.push_back(terms[0] + 1 * Days); // arbitrary, but larger than the first term
+                for (Size i = 0; i < nd; ++i)
+                    quotes[i].push_back(quotes[i][0]);
+            }
+
+            boost::shared_ptr<BilinearBaseCorrelationTermStructure> bcp =
+                boost::make_shared<BilinearBaseCorrelationTermStructure>(
+                    wrapper->settlementDays(), wrapper->calendar(), wrapper->businessDayConvention(),
+                    terms, parameters->baseCorrelationDetachmentPoints(), quotes,
+                    wrapper->dayCounter());
+
+            bcp->enableExtrapolation(wrapper->allowsExtrapolation());
+            Handle<BilinearBaseCorrelationTermStructure> bch(bcp);
+            baseCorrelations_.insert(
+                pair<pair<string, string>, Handle<BaseCorrelationTermStructure<BilinearInterpolation>>>(
+                    make_pair(Market::defaultConfiguration, bcName), bch));
+        }
         DLOG("Base correlations built for " << bcName);
     }
     LOG("base correlations done");
