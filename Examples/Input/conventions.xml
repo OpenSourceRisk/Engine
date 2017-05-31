@@ -823,6 +823,14 @@
     <FlatIndex>MXN-TIIE-28D</FlatIndex>
     <SpreadIndex>USD-LIBOR-1M</SpreadIndex>
   </CrossCurrencyBasis>
+  <CrossCurrencyBasis>
+    <Id>USD-MXN-3M-XCCY-BASIS-CONVENTIONS</Id>
+    <SettlementDays>2</SettlementDays>
+    <SettlementCalendar>MXN,US,UK</SettlementCalendar>
+    <RollConvention>MF</RollConvention>
+    <FlatIndex>MXN-TIIE-3M</FlatIndex>
+    <SpreadIndex>USD-LIBOR-3M</SpreadIndex>
+  </CrossCurrencyBasis>
   <!-- Inflation Swaps -->
   <InflationSwap>
       <Id>EUHICP_INFLATIONSWAP</Id>
