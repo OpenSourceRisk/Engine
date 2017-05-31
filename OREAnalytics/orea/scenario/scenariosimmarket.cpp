@@ -23,6 +23,7 @@
 
 #include <orea/engine/observationmode.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
+#include <ql/experimental/credit/basecorrelationstructure.hpp>
 #include <ql/math/interpolations/loginterpolation.hpp>
 #include <ql/termstructures/credit/interpolatedsurvivalprobabilitycurve.hpp>
 #include <ql/termstructures/defaulttermstructure.hpp>
@@ -484,8 +485,8 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
                 boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
                 if (parameters->simulateCdsVols()) {
                     simData_.emplace(std::piecewise_construct,
-                        std::forward_as_tuple(RiskFactorKey::KeyType::CDSVolatility, name, i),
-                                 std::forward_as_tuple(q));
+                                     std::forward_as_tuple(RiskFactorKey::KeyType::CDSVolatility, name, i),
+                                     std::forward_as_tuple(q));
                 }
                 quotes.emplace_back(q);
             }
@@ -501,7 +502,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
             // currently only curves (i.e. strike indepdendent) CDS volatility structures are
             // supported, so we use a) the more efficient curve tag and b) a hard coded sticky
             // strike stickyness, since then no yield term structures and no fx spot are required
-            // that define the ATM level 
+            // that define the ATM level
             cvh = Handle<BlackVolTermStructure>(boost::make_shared<QuantExt::DynamicBlackVolTermStructure<tag::curve>>(
                 wrapper, 0, NullCalendar(), decayMode, StickyStrike));
         }
@@ -611,8 +612,8 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         }
         boost::shared_ptr<YieldTermStructure> eqdivCurve;
         if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister) {
-            eqdivCurve = boost::shared_ptr<YieldTermStructure>(new QuantExt::InterpolatedDiscountCurve(
-                equityCurveTimes, quotes, 0, TARGET(), wrapper->dayCounter()));
+            eqdivCurve = boost::shared_ptr<YieldTermStructure>(
+                new QuantExt::InterpolatedDiscountCurve(equityCurveTimes, quotes, 0, TARGET(), wrapper->dayCounter()));
         } else {
             eqdivCurve = boost::shared_ptr<YieldTermStructure>(
                 new QuantExt::InterpolatedDiscountCurve2(equityCurveTimes, quotes, wrapper->dayCounter()));
@@ -670,6 +671,19 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         DLOG("EQ volatility curve built for " << equityName);
     }
     LOG("equity volatilities done");
+
+    // building base correlations, passing through from todays market
+    LOG("building base correlations...");
+    for (const auto& bcName : parameters->baseCorrelations()) {
+        Handle<BaseCorrelationTermStructure<BilinearInterpolation>> wrapper =
+            initMarket->baseCorrelation(bcName, configuration);
+
+        baseCorrelations_.insert(
+            pair<pair<string, string>, Handle<BaseCorrelationTermStructure<BilinearInterpolation>>>(
+                make_pair(Market::defaultConfiguration, bcName), wrapper));
+        DLOG("Base correlations built for " << bcName);
+    }
+    LOG("base correlations done");
 }
 
 void ScenarioSimMarket::update(const Date& d) {

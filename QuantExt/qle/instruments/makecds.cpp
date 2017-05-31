@@ -37,6 +37,7 @@
 #include <ql/time/calendars/weekendsonly.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 #include <qle/instruments/makecds.hpp>
+#include <iostream>
 
 #include <boost/make_shared.hpp>
 

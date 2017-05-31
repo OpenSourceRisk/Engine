@@ -169,6 +169,8 @@ public:
     Real defaultLegNPV() const;
     Real upfrontNPV() const;
     Real accrualRebateNPV() const;
+    
+    Date maturity() const { return maturity_; }
 
     //! Implied hazard rate calculation
     /*! \note This method performs the calculation with the
