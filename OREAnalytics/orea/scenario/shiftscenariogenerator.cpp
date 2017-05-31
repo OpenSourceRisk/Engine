@@ -275,21 +275,16 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
     // Cache survival probability keys
     Size n_spnames = simMarketData_->defaultNames().size();
     Size n_spten;
-    if (n_spnames > 0) {
-        n_spten = simMarketData_->defaultTenors(simMarketData_->defaultNames()[0]).size();
-    } else {
-        n_spten = 0;
-    }
-    survivalProbabilityKeys_.reserve(n_spnames * n_spten);
     for (Size j = 0; j < n_spnames; ++j) {
         std::string spname = simMarketData_->defaultNames()[j];
+        n_spten = simMarketData_->defaultTenors(spname).size();
         Handle<DefaultProbabilityTermStructure> ts = market->defaultCurve(spname, configuration_);
         for (Size k = 0; k < n_spten; ++k) {
             survivalProbabilityKeys_.emplace_back(RiskFactorKey::KeyType::SurvivalProbability, spname, k);
             Period tenor = simMarketData_->defaultTenors(simMarketData_->defaultNames()[j])[k];
             Real prob = ts->survivalProbability(today_ + tenor);
-            survivalProbabilityCache_[survivalProbabilityKeys_[j * n_spten + k]] = prob;
-            LOG("cache survival probability " << prob << " for key " << survivalProbabilityKeys_[j * n_spten + k]);
+            survivalProbabilityCache_[survivalProbabilityKeys_.back()] = prob;
+            LOG("cache survival probability " << prob << " for key " << survivalProbabilityKeys_.back());
         }
     }
 
