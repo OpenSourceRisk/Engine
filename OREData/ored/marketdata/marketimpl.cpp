@@ -250,6 +250,10 @@ void MarketImpl::refresh(const string& configuration) {
             if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
                 it->second.insert(*x.second);
         }
+        for (auto& x : baseCorrelations_) {
+            if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
+                it->second.insert(*x.second);
+        }
         for (auto& x : zeroInflationIndices_) {
             if (x.first.first == configuration || x.first.first == Market::defaultConfiguration) {
                 it->second.insert(*x.second->zeroInflationTermStructure());
