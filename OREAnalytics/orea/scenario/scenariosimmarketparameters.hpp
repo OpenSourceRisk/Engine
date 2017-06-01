@@ -109,6 +109,8 @@ public:
     const vector<Period>& eqVolExpiries() const { return equityVolExpiries_; }
     const string& eqVolDecayMode() const { return equityVolDecayMode_; }
     const vector<string>& eqVolNames() const { return equityVolNames_; }
+    bool eqVolIsSurface() const { return equityIsSurface_; }
+    const vector<Real>& eqVolMoneyness() const { return equityMoneyness_; }
 
     const vector<string>& additionalScenarioDataIndices() const { return additionalScenarioDataIndices_; }
     const vector<string>& additionalScenarioDataCcys() const { return additionalScenarioDataCcys_; }
@@ -166,6 +168,8 @@ public:
     vector<Period>& equityVolExpiries() { return equityVolExpiries_; }
     string& equityVolDecayMode() { return equityVolDecayMode_; }
     vector<string>& equityVolNames() { return equityVolNames_; }
+    bool& eqVolIsSurface() { return equityIsSurface_; }
+    vector<Real>& eqVolMoneyness() { return equityMoneyness_; }
 
     vector<string>& additionalScenarioDataIndices() { return additionalScenarioDataIndices_; }
     vector<string>& additionalScenarioDataCcys() { return additionalScenarioDataCcys_; }
@@ -235,6 +239,8 @@ private:
     vector<Period> equityVolExpiries_;
     string equityVolDecayMode_;
     vector<string> equityVolNames_;
+    bool equityIsSurface_;
+    vector<Real> equityMoneyness_;
 
     vector<string> additionalScenarioDataIndices_;
     vector<string> additionalScenarioDataCcys_;
