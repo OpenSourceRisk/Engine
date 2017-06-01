@@ -67,10 +67,7 @@ std::vector<std::string> getBadMarketDataStrings() {
         ("20160226 EQUITY_DIVIDEND/RATE/SP5/USD/zzz 1678.54") // incorrect expiry
         ("20160226 EQUITY_OPTION_VOL/RATE_LNVOL/SP5/USD/12M/ATMF 0.25") // incorrect instrument type
         ("20160226 EQUITY_OPTION/RATE_NVOL/SP5/USD/2017-02-26/ATMF 0.25") // normal vols not supported for equity
-        ("20160226 EQUITY_OPTION/RATE_LNVOL/SP5/USD/zzz/ATMF 0.25") // invalid tenor/date input
-        ("20160226 EQUITY_OPTION/RATE_LNVOL/SP5/USD/365D/ATM 0.25") // strike should be ATM-forward as opposed to "ATM"
-        ("20160226 EQUITY_OPTION/RATE_LNVOL/SP5/USD/1678W5D/37.75 0.25") // explicit strike axis not supported yet
-        ("20160226 EQUITY_OPTION/RATE_LNVOL/Lufthansa/EUR/1Y1M/-0.05 0.13"); // sticky-delta strike axis not supported yet
+        ("20160226 EQUITY_OPTION/RATE_LNVOL/SP5/USD/zzz/ATMF 0.25"); // invalid tenor/date input
 }
 
 std::string divYieldCurveConfigString =
