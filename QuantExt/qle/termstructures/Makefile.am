@@ -65,7 +65,6 @@ this_include_HEADERS = \
 	survivalprobabilitycurve.hpp \
 	blackvolsurfacewithatm.hpp
 	defaultprobabilityhelpers.hpp \
-    survivalprobabilitycurve.hpp \
 	swaptionvolcubewithatm.hpp
 
 all.hpp: Makefile.am
