@@ -39,6 +39,8 @@
 using namespace QuantLib;
 using std::string;
 
+typedef BaseCorrelationTermStructure<BilinearInterpolation> BilinearBaseCorrelationTermStructure;
+
 namespace ore {
 namespace data {
 
@@ -103,7 +105,7 @@ public:
 
     //! \name Base Correlation term structures
     //@{
-    virtual Handle<BaseCorrelationTermStructure<BilinearInterpolation>>
+    virtual Handle<BilinearBaseCorrelationTermStructure>
     baseCorrelation(const string&, const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 

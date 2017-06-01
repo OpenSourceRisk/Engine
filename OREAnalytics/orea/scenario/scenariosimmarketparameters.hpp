@@ -49,8 +49,8 @@ public:
     //! Default constructor
     ScenarioSimMarketParameters()
         : extrapolate_(false), swapVolSimulate_(false), capFloorVolSimulate_(false),
-          survivalProbabilitySimulate_(false), recoveryRateSimulate_(false), fxVolSimulate_(false),
-          equityVolSimulate_(false), cdsVolSimulate_(false) {
+          survivalProbabilitySimulate_(false), recoveryRateSimulate_(false), cdsVolSimulate_(false),
+          fxVolSimulate_(false), equityVolSimulate_(false), baseCorrelationSimulate_(false) {
         // set default tenors
         capFloorVolExpiries_[""];
         defaultTenors_[""];
@@ -115,7 +115,10 @@ public:
 
     const vector<string>& securities() const { return securities_; }
 
-    const vector<string>& baseCorrelations() const { return baseCorrelations_; }
+    bool simulateBaseCorrelations() const { return baseCorrelationSimulate_; }
+    const vector<Period>& baseCorrelationTerms() const { return baseCorrelationTerms_; }
+    const vector<Real>& baseCorrelationDetachmentPoints() const { return baseCorrelationDetachmentPoints_; }
+    const vector<string>& baseCorrelationNames() const { return baseCorrelationNames_; }
     //@}
 
     //! \name Setters
@@ -172,7 +175,10 @@ public:
 
     vector<string>& securities() { return securities_; }
 
-    vector<string>& baseCorrelations() { return baseCorrelations_; }
+    bool& simulateBaseCorrelations() { return baseCorrelationSimulate_; }
+    vector<Period>& baseCorrelationTerms() { return baseCorrelationTerms_; }
+    vector<Real>& baseCorrelationDetachmentPoints() { return baseCorrelationDetachmentPoints_; }
+    vector<string>& baseCorrelationNames() { return baseCorrelationNames_; }
 
     //@}
 
@@ -241,7 +247,10 @@ private:
 
     vector<string> securities_;
 
-    vector<string> baseCorrelations_;
+    bool baseCorrelationSimulate_;
+    vector<string> baseCorrelationNames_;
+    vector<Period> baseCorrelationTerms_;
+    vector<Real> baseCorrelationDetachmentPoints_;
 };
 } // namespace analytics
 } // namespace ore

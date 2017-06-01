@@ -203,6 +203,20 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
         cdsVolNames_.push_back(name);
     }
 
+    LOG("Get Base Correlation sensitivity parameters");
+    XMLNode* bcNode = XMLUtils::getChildNode(node, "BaseCorrelations");
+    for (XMLNode* child = XMLUtils::getChildNode(bcNode, "BaseCorrelation"); child;
+         child = XMLUtils::getNextSibling(child)) {
+        string name = XMLUtils::getAttribute(child, "indexName");
+        BaseCorrelationShiftData data;
+        data.shiftType = XMLUtils::getChildValue(child, "ShiftType");
+        data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
+        data.shiftTerms = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTerms", true);
+        data.shiftLossLevels = XMLUtils::getChildrenValuesAsDoublesCompact(child, "ShiftLossLevels", true);
+        baseCorrelationShiftData_[name] = data;
+        baseCorrelationNames_.push_back(name);
+    }
+
     LOG("Get Equity spot sensitivity parameters");
     XMLNode* equitySpots = XMLUtils::getChildNode(node, "EquitySpots");
     for (XMLNode* child = XMLUtils::getChildNode(equitySpots, "EquitySpot"); child;
