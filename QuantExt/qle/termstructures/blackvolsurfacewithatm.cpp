@@ -23,13 +23,16 @@ namespace QuantExt {
 BlackVolatilityWithATM::BlackVolatilityWithATM(const boost::shared_ptr<BlackVolTermStructure>& surface,
                                                const Handle<Quote>& spot, const Handle<YieldTermStructure>& yield1,
                                                const Handle<YieldTermStructure>& yield2)
-    : BlackVolatilityTermStructure(0, surface->calendar(), surface->businessDayConvention(), surface->dayCounter()),
+  : BlackVolatilityTermStructure(0, surface->calendar(), surface->businessDayConvention(), surface->dayCounter()),
       surface_(surface), spot_(spot), yield1_(yield1), yield2_(yield2) {
 
     QL_REQUIRE(!spot.empty(), "No spot handle provided");
     QL_REQUIRE(!yield1.empty(), "No yield1 handle provided");
     QL_REQUIRE(!yield2.empty(), "No yield2 handle provided");
 
+    if (surface->allowsExtrapolation())
+        this->enableExtrapolation();
+    
     registerWith(surface);
     registerWith(spot);
     registerWith(yield1);
