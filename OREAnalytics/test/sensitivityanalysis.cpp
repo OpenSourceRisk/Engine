@@ -954,14 +954,10 @@ void SensitivityAnalysisTest::testEquityOptionDeltaGamma() {
             vector<string> tokens;
             boost::split(tokens, sensiId, boost::is_any_of("/-"));
             BOOST_CHECK(tokens.size() > 0);
-            bool isDiscountCurve = (tokens[0] == discountCurveStr);
-            bool isYieldCurve = (tokens[0] == yieldCurveStr);
             bool isEquitySpot = (tokens[0] == equitySpotStr);
             bool isEquityVol = (tokens[0] == equityVolStr);
             if (isEquitySpot) {
                 BOOST_CHECK(tokens.size() > 2);
-                string equity = tokens[1];
-                Real equitySensi = initMarket->equitySpot(equity)->value();
                 bool hasGamma = (gammaMap.find(sensiKey) != gammaMap.end());
                 BOOST_CHECK(hasGamma);
                 Real gammaVal = 0.0;
