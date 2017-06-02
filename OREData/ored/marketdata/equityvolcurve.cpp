@@ -79,7 +79,7 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
         }
         // Check that we have all the quotes we need
         for (Size i = 0; i < strikes.size(); i++) {
-            for (Size j = 0; j < strikes.size(); j++) {
+            for (Size j = 0; j < expiries.size(); j++) {
                 QL_REQUIRE(vols[i][j] >= 0, "Error vol (" << spec << ") for " << strikes[i] <<", " << expiries[j] << " not set");
             }
         }
