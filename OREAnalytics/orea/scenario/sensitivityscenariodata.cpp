@@ -168,7 +168,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
     for (XMLNode* child = XMLUtils::getChildNode(creditCurves, "CreditCurve"); child;
          child = XMLUtils::getNextSibling(child)) {
         string name = XMLUtils::getAttribute(child, "name");
-        string ccy = XMLUtils::getChildValue(child, "ShiftType", true);
+        string ccy = XMLUtils::getChildValue(child, "Currency", true);
         creditCcys_[name] = ccy;
         // same as discount curve sensitivity loading from here ...
         CurveShiftData data;
