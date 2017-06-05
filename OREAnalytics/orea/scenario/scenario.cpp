@@ -73,6 +73,8 @@ RiskFactorKey::KeyType parseRiskFactorKeyType(const string& str) {
         return RiskFactorKey::KeyType::IndexCurve;
     else if (str == "SwaptionVolatility")
         return RiskFactorKey::KeyType::SwaptionVolatility;
+    else if (str == "OptionletVolatility")
+        return RiskFactorKey::KeyType::OptionletVolatility;
     else if (str == "FXSpot")
         return RiskFactorKey::KeyType::FXSpot;
     else if (str == "FXVolatility")
