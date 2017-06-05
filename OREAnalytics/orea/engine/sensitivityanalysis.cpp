@@ -102,6 +102,8 @@ void SensitivityAnalysis::generateSensitivities() {
     boost::shared_ptr<DateGrid> dg = boost::make_shared<DateGrid>("1,0W");
     vector<boost::shared_ptr<ValuationCalculator>> calculators = buildValuationCalculators();
     ValuationEngine engine(asof_, dg, simMarket_, modelBuilders_);
+    for(auto const &i:this->progressIndicators())
+        engine.registerProgressIndicator(i);
     LOG("Run Sensitivity Scenarios");
     engine.buildCube(portfolio_, cube, calculators);
 

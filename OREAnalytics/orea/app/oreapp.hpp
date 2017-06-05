@@ -46,6 +46,8 @@ public:
     OREApp(boost::shared_ptr<Parameters> params, std::ostream& out = std::cout)
         : params_(params), out_(out), cubeDepth_(0) {
         tab_ = 40;
+        progressBarWidth_ = 72 - std::min<Size>(tab_, 67);
+
         asof_ = parseDate(params->get("setup", "asofDate"));
         Settings::instance().evaluationDate() = asof_;
     }
@@ -125,7 +127,7 @@ protected:
     //! Write out some standard sensitivities reports
     void sensiOutputReports(const boost::shared_ptr<SensitivityAnalysis>& sensiAnalysis);
 
-    Size tab_;
+    Size tab_, progressBarWidth_;
     Date asof_;
     //! ORE Input parameters
     boost::shared_ptr<Parameters> params_;
