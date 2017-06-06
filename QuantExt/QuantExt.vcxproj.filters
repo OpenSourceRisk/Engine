@@ -449,7 +449,7 @@
     </ClInclude>
     <ClInclude Include="qle\termstructures\swaptionvolcubewithatm.hpp">
       <Filter>termstructures</Filters>
-    <ClInclude/>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
