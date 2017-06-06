@@ -447,6 +447,9 @@
     <ClInclude Include="qle\pricingengines\discountingriskybondengine.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\swaptionvolcubewithatm.hpp">
+      <Filter>termstructures</Filters>
+    <ClInclude/>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -661,7 +664,7 @@
     <ClCompile Include="qle\termstructures\optionletstripper2.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
-    <ClCompile Include="qle\termstructures\swaptionvolatilityconverter.cpp">
+    <ClCompile Include="qle\termstructureswaptionvolatilityconverter.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
     <ClCompile Include="qle\termstructures\spreadedoptionletvolatility.cpp">
