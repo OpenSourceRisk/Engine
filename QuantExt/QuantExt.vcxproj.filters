@@ -664,7 +664,7 @@
     <ClCompile Include="qle\termstructures\optionletstripper2.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
-    <ClCompile Include="qle\termstructureswaptionvolatilityconverter.cpp">
+    <ClCompile Include="qle\termstructures\swaptionvolatilityconverter.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
     <ClCompile Include="qle\termstructures\spreadedoptionletvolatility.cpp">
