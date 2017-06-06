@@ -59,6 +59,11 @@ public:
     //! update progress
     void updateProgress(const unsigned long progress, const unsigned long total);
 
+    //! return progress indicators
+    const boost::unordered_set<boost::shared_ptr<ProgressIndicator>>& progressIndicators() const {
+        return indicators_;
+    }
+
 private:
     boost::unordered_set<boost::shared_ptr<ProgressIndicator>> indicators_;
 };

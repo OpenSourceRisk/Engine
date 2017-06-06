@@ -58,8 +58,8 @@ public:
         EQVolatility,
         SurvivalProbability,
         RecoveryRate,
-	  CDSVolatility,
-	  BaseCorrelation
+        CDSVolatility,
+        BaseCorrelation
     };
 
     //! Constructor
