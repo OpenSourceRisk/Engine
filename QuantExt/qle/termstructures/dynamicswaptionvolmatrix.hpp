@@ -35,13 +35,12 @@ using namespace QuantLib;
 namespace QuantExt {
 //! Takes a SwaptionVolatilityMatrix with fixed reference date and turns it into a floating reference date term
 // structure.
-/*! This class takes a SwaptionVolatilityMatrix with fixed
-    reference date and turns it into a floating reference date
-    term structure.
-    There are different ways of reacting to time decay that can be
-    specified.
+/*! This class takes a SwaptionVolatilityMatrix with fixed reference date and turns it into a floating reference date
+    term structure. There are different ways of reacting to time decay that can be specified.
 
-        \ingroup termstructures
+    \warning the behaviour of this class is only meaningful if the source TS is strike independent, this is not checked
+
+    \ingroup termstructures
 */
 
 class DynamicSwaptionVolatilityMatrix : public SwaptionVolatilityStructure {
