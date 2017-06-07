@@ -38,7 +38,7 @@ namespace QuantExt {
 /*! This class takes a SwaptionVolatilityMatrix with fixed reference date and turns it into a floating reference date
     term structure. There are different ways of reacting to time decay that can be specified.
 
-    \warning the behaviour of this class is only meaningful if the source TS is strike independent, this is not checked
+    \warning the vols from the source ts are read using strike null (indicating atm)
 
     \ingroup termstructures
 */

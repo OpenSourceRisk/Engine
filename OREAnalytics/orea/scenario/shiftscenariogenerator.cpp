@@ -199,13 +199,12 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
     for (Size i = 0; i < n_swvol_ccy; ++i) {
         std::string ccy = simMarketData_->swapVolCcys()[i];
         Handle<SwaptionVolatilityStructure> ts = market->swaptionVol(ccy, configuration_);
-        Real strike = 0.0; // FIXME
         for (Size j = 0; j < n_swvol_exp; ++j) {
             Period expiry = simMarketData_->swapVolExpiries()[j];
             for (Size k = 0; k < n_swvol_term; ++k) {
                 swaptionVolKeys_.emplace_back(RiskFactorKey::KeyType::SwaptionVolatility, ccy, j * n_swvol_term + k);
                 Period term = simMarketData_->swapVolTerms()[k];
-                Real swvol = ts->volatility(expiry, term, strike);
+                Real swvol = ts->volatility(expiry, term, Null<Real>()); // ATM
                 swaptionVolCache_[swaptionVolKeys_[count]] = swvol;
                 LOG("cache swaption vol " << swvol << " for key " << swaptionVolKeys_[count]);
                 count++;
@@ -313,7 +312,8 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
     Size n_bc_names = simMarketData_->baseCorrelationNames().size();
     Size n_bc_levels = simMarketData_->baseCorrelationDetachmentPoints().size();
     Size n_bc_terms = simMarketData_->baseCorrelationTerms().size();
-    DLOG("Cache base correlations: " << n_bc_names << " names, " << n_bc_levels << " levels, " << n_bc_terms << " terms");
+    DLOG("Cache base correlations: " << n_bc_names << " names, " << n_bc_levels << " levels, " << n_bc_terms
+                                     << " terms");
     baseCorrelationKeys_.reserve(n_bc_names * n_bc_levels * n_bc_terms);
     count = 0;
     for (Size i = 0; i < n_bc_names; ++i) {

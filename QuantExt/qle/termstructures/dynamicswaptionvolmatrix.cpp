@@ -33,8 +33,8 @@ const Period& DynamicSwaptionVolatilityMatrix::maxSwapTenor() const { return sou
 
 boost::shared_ptr<SmileSection> DynamicSwaptionVolatilityMatrix::smileSectionImpl(Time optionTime,
                                                                                   Time swapLength) const {
-    // dummy strike, just as in SwaptionVolatilityMatrix
-    return boost::make_shared<FlatSmileSection>(optionTime, volatilityImpl(optionTime, swapLength, 0.05),
+    // null strike to indicate ATM
+    return boost::make_shared<FlatSmileSection>(optionTime, volatilityImpl(optionTime, swapLength, Null<Real>()),
                                                 source_->dayCounter(), Null<Real>(), source_->volatilityType(),
                                                 shiftImpl(optionTime, swapLength));
 }

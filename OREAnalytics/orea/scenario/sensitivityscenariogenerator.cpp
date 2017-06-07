@@ -623,7 +623,6 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(
 
         Handle<SwaptionVolatilityStructure> ts = initMarket_->swaptionVol(ccy, configuration_);
         DayCounter dc = ts->dayCounter();
-        Real strike = 0.0; // FIXME
 
         // cache original vol data
         for (Size j = 0; j < n_swvol_exp; ++j) {
@@ -638,7 +637,7 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(
             Period expiry = simMarketData_->swapVolExpiries()[j];
             for (Size k = 0; k < n_swvol_term; ++k) {
                 Period term = simMarketData_->swapVolTerms()[k];
-                Real swvol = ts->volatility(expiry, term, strike);
+                Real swvol = ts->volatility(expiry, term, Null<Real>()); // ATM
                 volData[j][k] = swvol;
             }
         }
@@ -985,12 +984,12 @@ void SensitivityScenarioGenerator::generateBaseCorrelationScenarios(
                                                                      << " set to zero");
                             shiftedBcData[jj][kk] = 0.0;
                         }
-			else if (shiftedBcData[jj][kk] > 1.0) {
+            else if (shiftedBcData[jj][kk] > 1.0) {
                             ALOG("invalid shifted base correlation " << shiftedBcData[jj][kk] << " at lossLevelIndex "
                                                                      << jj << " and termIndex " << kk
                                                                      << " set to 1 - epsilon");
                             shiftedBcData[jj][kk] = 1.0 - QL_EPSILON;
-			}
+            }
                         scenario->add(getBaseCorrelationKey(name, idx), shiftedBcData[jj][kk]);
                     }
                 }

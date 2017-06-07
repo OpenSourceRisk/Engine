@@ -21,12 +21,14 @@
     \ingroup termstructures
 */
 
-#ifndef quantext_swaptionvolcubewithatm_hpp
-#define quantext_swaptionvolcubewithatm_hpp
+#ifndef quantext_swaptionvolcubeconstantspread_hpp
+#define quantext_swaptionvolcubeconstantspread_hpp
 
 #include <ql/termstructures/volatility/swaption/swaptionvolcube.hpp>
 
 #include <boost/shared_ptr.hpp>
+
+#include <iostream>
 
 using namespace QuantLib;
 
@@ -36,10 +38,12 @@ namespace {
 class ConstantSpreadSmileSection : public SmileSection {
 public:
     ConstantSpreadSmileSection(const Handle<SwaptionVolatilityStructure>& atm,
-                               const Handle<SwaptionVolatilityCube>& cube, const Real optionTime, const Real swapLength)
+                               const Handle<SwaptionVolatilityStructure>& cube, const Real optionTime,
+                               const Real swapLength)
         : SmileSection(optionTime, DayCounter(), atm->volatilityType(),
                        atm->volatilityType() == ShiftedLognormal ? atm->shift(optionTime, swapLength) : 0.0),
-          atm_(atm), cube_(cube), swapLength_(swapLength) {}
+          atm_(atm), cube_(cube), swapLength_(swapLength), section_(cube_->smileSection(optionTime, swapLength_)),
+          atmStrike_(section_->atmLevel()) {}
     Rate minStrike() const { return cube_->minStrike(); }
     Rate maxStrike() const { return cube_->maxStrike(); }
     Rate atmLevel() const { return Null<Real>(); }
@@ -47,15 +51,16 @@ public:
 protected:
     Volatility volatilityImpl(Rate strike) const {
         Real t = exerciseTime();
-        Real s = cube_->volatility(t, swapLength_, strike) - cube_->atmVol()->volatility(t, swapLength_, strike);
+        Real s = section_->volatility(strike) - section_->volatility(atmStrike_);
         Real v = atm_->volatility(t, swapLength_, strike);
         return v + s;
     }
 
 private:
-    const Handle<SwaptionVolatilityStructure> atm_;
-    const Handle<SwaptionVolatilityCube> cube_;
+    const Handle<SwaptionVolatilityStructure> atm_, cube_;
     const Real swapLength_;
+    const boost::shared_ptr<SmileSection> section_;
+    const Real atmStrike_;
 };
 } // anonymous namespace
 
@@ -64,13 +69,15 @@ private:
  their time-based volatility methods.
 
  \warning the given atm vol structure should be strike independent, this is not checked
+ \warning the given cube must provide smile sections that provide an ATM level
 */
 class SwaptionVolatilityConstantSpread : public SwaptionVolatilityStructure {
 public:
     SwaptionVolatilityConstantSpread(const Handle<SwaptionVolatilityStructure>& atm,
-                                     const Handle<SwaptionVolatilityCube>& cube)
+                                     const Handle<SwaptionVolatilityStructure>& cube)
         : SwaptionVolatilityStructure(0, atm->calendar(), atm->businessDayConvention(), atm->dayCounter()), atm_(atm),
           cube_(cube) {
+        enableExtrapolation(atm->allowsExtrapolation());
         registerWith(atm_);
         registerWith(cube_);
     }
@@ -96,16 +103,16 @@ public:
 
 protected:
     boost::shared_ptr<SmileSection> smileSectionImpl(Time optionTime, Time swapLength) const {
-        return boost::make_shared<ConstantSpreadSmileSection>(atm_, cube_, optionTime, swapLength);
+        auto res = boost::make_shared<ConstantSpreadSmileSection>(atm_, cube_, optionTime, swapLength);
+        return res;
     }
 
     Volatility volatilityImpl(Time optionTime, Time swapLength, Rate strike) const {
-        return smileSection(optionTime, swapLength)->volatility(strike);
+        return smileSectionImpl(optionTime, swapLength)->volatility(strike);
     }
 
 private:
-    Handle<SwaptionVolatilityStructure> atm_;
-    Handle<SwaptionVolatilityCube> cube_;
+    Handle<SwaptionVolatilityStructure> atm_, cube_;
 };
 
 } // namespace QuantExt
