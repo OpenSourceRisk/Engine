@@ -738,14 +738,13 @@ void SensitivityAnalysisTest::test2dShifts() {
     string ccy = simMarketData->ccys()[0];
     Handle<SwaptionVolatilityStructure> ts = initMarket->swaptionVol(ccy);
     DayCounter dc = ts->dayCounter();
-    Real strike = 0.0; // FIXME
     for (Size i = 0; i < expiries.size(); ++i)
         expiryTimes[i] = dc.yearFraction(today, today + expiries[i]);
     for (Size j = 0; j < terms.size(); ++j)
         termTimes[j] = dc.yearFraction(today, today + terms[j]);
     for (Size i = 0; i < expiries.size(); ++i) {
         for (Size j = 0; j < terms.size(); ++j)
-            initialData[i][j] = ts->volatility(expiries[i], terms[j], strike);
+            initialData[i][j] = ts->volatility(expiries[i], terms[j], Null<Real>()); // ATM
     }
 
     // apply shifts for tenors on the 2d shift grid
