@@ -533,12 +533,14 @@ void SensitivityScenarioGenerator::generateEquityVolScenarios(
 
     Size n_eqvol_names = equityVolNames_.size();
     Size n_eqvol_exp = simMarketData_->equityVolExpiries().size();
+    Size n_eqvol_strikes = simMarketData_->eqVolIsSurface() ? simMarketData_->eqVolMoneyness().size() : 1;
 
-    std::vector<Real> values(n_eqvol_exp);
-    std::vector<Real> times(n_eqvol_exp);
+    // [strike] x [expiry]
+    vector<vector<Real>> values(n_eqvol_strikes, vector<Real>(n_eqvol_exp, 0.0));
+    vector<Real> times(n_eqvol_exp);
 
-    // buffer for shifted zero curves
-    std::vector<Real> shiftedValues(n_eqvol_exp);
+    // buffer for shifted vols
+    vector<vector<Real>> shiftedValues(n_eqvol_strikes, vector<Real>(n_eqvol_exp, 0.0));
 
     map<string, SensitivityScenarioData::VolShiftData> shiftDataMap = sensitivityData_->equityVolShiftData();
     for (Size i = 0; i < n_eqvol_names; ++i) {
@@ -547,33 +549,47 @@ void SensitivityScenarioGenerator::generateEquityVolScenarios(
                    "equity " << equity << " not found in VolShiftData");
         SensitivityScenarioData::VolShiftData data = shiftDataMap[equity];
         ShiftType shiftType = parseShiftType(data.shiftType);
-        std::vector<Period> shiftTenors = data.shiftExpiries;
-        std::vector<Time> shiftTimes(shiftTenors.size());
+        vector<Period> shiftTenors = data.shiftExpiries;
+        vector<Time> shiftTimes(shiftTenors.size());
         Real shiftSize = data.shiftSize;
         QL_REQUIRE(shiftTenors.size() > 0, "Equity vol shift tenors not specified");
 
         Handle<BlackVolTermStructure> ts = initMarket_->equityVol(equity, configuration_);
+        Real spot = initMarket_->equitySpot(equity, configuration_)->value();
         DayCounter dc = ts->dayCounter();
-        Real strike = 0.0; // FIXME
         for (Size j = 0; j < n_eqvol_exp; ++j) {
             Date d = today_ + simMarketData_->equityVolExpiries()[j];
-            values[j] = ts->blackVol(d, strike);
             times[j] = dc.yearFraction(today_, d);
+            for (Size k = 0; k < n_eqvol_strikes; k++) {
+                Real strike;
+                if (simMarketData_->eqVolIsSurface()) {
+                    strike = spot * simMarketData_->eqVolMoneyness()[k];
+                } else {
+                    strike = Null<Real>();
+                }
+                values[k][j] = ts->blackVol(d, strike);
+            }
         }
-
-        for (Size j = 0; j < shiftTenors.size(); ++j)
+        for (Size j = 0; j < shiftTenors.size(); ++j) {
             shiftTimes[j] = dc.yearFraction(today_, today_ + shiftTenors[j]);
 
-        for (Size j = 0; j < shiftTenors.size(); ++j) {
             Size strikeBucket = 0; // FIXME
             boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(today_);
 
             scenarioDescriptions_.push_back(equityVolScenarioDescription(equity, j, strikeBucket, up));
 
-            // apply shift at tenor point j
-            applyShift(j, shiftSize, up, shiftType, shiftTimes, values, times, shiftedValues, true);
-            for (Size k = 0; k < n_eqvol_exp; ++k)
-                scenario->add(getEquityVolKey(equity, k), shiftedValues[k]);
+            // apply shift at tenor point j for each strike
+            for (Size k = 0; k < n_eqvol_strikes; ++k) {
+                applyShift(j, shiftSize, up, shiftType, shiftTimes, values[k], times, shiftedValues[k], true);
+            }
+
+            // update the scenario
+            for (Size k = 0; k < n_eqvol_strikes; ++k) {
+                for (Size l = 0; l < n_eqvol_exp; l++) {
+                    Size idx = k * n_eqvol_strikes + l;
+                    scenario->add(getEquityVolKey(equity, idx), shiftedValues[k][l]);
+                }
+            }
             // add this scenario to the scenario vector
             scenarios_.push_back(scenario);
             DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");

@@ -218,7 +218,7 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
     count = 0;
     for (Size j = 0; j < n_fxvol_pairs; ++j) {
         string ccypair = simMarketData_->fxVolCcyPairs()[j];
-        Real strike = 0.0; // FIXME
+        Real strike = Null<Real>(); // ATM
         Handle<BlackVolTermStructure> ts = market->fxVol(ccypair, configuration_);
         for (Size k = 0; k < n_fxvol_exp; ++k) {
             fxVolKeys_.emplace_back(RiskFactorKey::KeyType::FXVolatility, ccypair, k);
@@ -230,22 +230,28 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
         }
     }
 
-    // Cache Equtiy vol keys
+    // Cache Equity vol keys
     Size n_equityvol_pairs = simMarketData_->equityVolNames().size();
     Size n_equityvol_exp = simMarketData_->equityVolExpiries().size();
-    equityVolKeys_.reserve(n_equityvol_pairs * n_equityvol_exp);
+    Size n_equityvol_strikes = simMarketData_->eqVolIsSurface() ? simMarketData_->eqVolMoneyness().size() : 1;
+    equityVolKeys_.reserve(n_equityvol_pairs * n_equityvol_exp * n_equityvol_strikes);
     count = 0;
     for (Size j = 0; j < n_equityvol_pairs; ++j) {
         string equity = simMarketData_->equityVolNames()[j];
-        Real strike = 0.0; // FIXME
         Handle<BlackVolTermStructure> ts = market->equityVol(equity, configuration_);
-        for (Size k = 0; k < n_equityvol_exp; ++k) {
-            equityVolKeys_.emplace_back(RiskFactorKey::KeyType::EQVolatility, equity, k);
-            Period expiry = simMarketData_->equityVolExpiries()[k];
-            Real equityvol = ts->blackVol(today_ + expiry, strike);
-            equityVolCache_[equityVolKeys_[count]] = equityvol;
-            LOG("cache Equity vol " << equityvol << " for key " << equityVolKeys_[count]);
-            count++;
+        Real spot = market->equitySpot(equity, configuration_)->value();
+        for (Size k = 0; k < n_equityvol_strikes; ++k) {
+            Real strike = spot * simMarketData_->eqVolMoneyness()[k];
+            for (Size l = 0; l < n_equityvol_exp; ++l) {
+                // Index is expires then moneyness. TODO: is this the best?
+                Size idx = k * n_equityvol_strikes + l;
+                equityVolKeys_.emplace_back(RiskFactorKey::KeyType::EQVolatility, equity, idx);
+                Period expiry = simMarketData_->equityVolExpiries()[l];
+                Real equityvol = ts->blackVol(today_ + expiry, strike);
+                equityVolCache_[equityVolKeys_[count]] = equityvol;
+                LOG("cache Equity vol " << equityvol << " for key " << equityVolKeys_[count]);
+                count++;
+            }
         }
     }
 
