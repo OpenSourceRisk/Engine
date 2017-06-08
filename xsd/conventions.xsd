@@ -61,6 +61,7 @@
       <xs:element type="businessDayConvention" name="Convention" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="EOM" minOccurs="0" maxOccurs="1"/>
       <xs:element type="dayCounter" name="DayCounter" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:unsignedLong" name="SettlementDays" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
   

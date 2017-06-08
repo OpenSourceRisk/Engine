@@ -37,7 +37,7 @@ public:
     /*! Create a report with the given filename, will throw if it cannot open the file.
      *  sep is the separator which defaults to a comma
      */
-    CSVFileReport(const string& filename, const char sep = ',');
+    CSVFileReport(const string& filename, const char sep = ',', const bool commentCharacter = true);
     ~CSVFileReport();
 
     Report& addColumn(const string& name, const ReportType& rt, Size precision = 0) override;
@@ -50,6 +50,7 @@ private:
     std::vector<ReportTypePrinter> printers_;
     string filename_;
     char sep_;
+    bool commentCharacter_;
     Size i_;
     FILE* fp_;
 };

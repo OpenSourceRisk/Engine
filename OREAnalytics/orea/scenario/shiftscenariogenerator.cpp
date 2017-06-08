@@ -107,6 +107,8 @@ void ShiftScenarioGenerator::clear() {
     survivalProbabilityCache_.clear();
     cdsVolKeys_.clear();
     cdsVolCache_.clear();
+    baseCorrelationKeys_.clear();
+    baseCorrelationCache_.clear();
 }
 
 void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
@@ -192,18 +194,17 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
     Size n_swvol_ccy = simMarketData_->swapVolCcys().size();
     Size n_swvol_term = simMarketData_->swapVolTerms().size();
     Size n_swvol_exp = simMarketData_->swapVolExpiries().size();
-    fxKeys_.reserve(n_swvol_ccy * n_swvol_term * n_swvol_exp);
+    swaptionVolKeys_.reserve(n_swvol_ccy * n_swvol_term * n_swvol_exp);
     count = 0;
     for (Size i = 0; i < n_swvol_ccy; ++i) {
         std::string ccy = simMarketData_->swapVolCcys()[i];
         Handle<SwaptionVolatilityStructure> ts = market->swaptionVol(ccy, configuration_);
-        Real strike = 0.0; // FIXME
         for (Size j = 0; j < n_swvol_exp; ++j) {
             Period expiry = simMarketData_->swapVolExpiries()[j];
             for (Size k = 0; k < n_swvol_term; ++k) {
                 swaptionVolKeys_.emplace_back(RiskFactorKey::KeyType::SwaptionVolatility, ccy, j * n_swvol_term + k);
                 Period term = simMarketData_->swapVolTerms()[k];
-                Real swvol = ts->volatility(expiry, term, strike);
+                Real swvol = ts->volatility(expiry, term, Null<Real>()); // ATM
                 swaptionVolCache_[swaptionVolKeys_[count]] = swvol;
                 LOG("cache swaption vol " << swvol << " for key " << swaptionVolKeys_[count]);
                 count++;
@@ -305,7 +306,7 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
         Real strike = 0.0; // FIXME
         for (Size j = 0; j < n_cdsvol_exp; ++j) {
             Period expiry = simMarketData_->cdsVolExpiries()[j];
-            cdsVolKeys_.emplace_back(RiskFactorKey::KeyType::CDSVolatility, name, j );
+            cdsVolKeys_.emplace_back(RiskFactorKey::KeyType::CDSVolatility, name, j);
             Real cdsvol = ts->blackVol(today_ + expiry, strike);
             cdsVolCache_[cdsVolKeys_[count]] = cdsvol;
             LOG("cache cds vol " << cdsvol << " for key " << cdsVolKeys_[count]);
@@ -313,6 +314,29 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
         }
     }
 
+    // Cache Base Correlation keys
+    Size n_bc_names = simMarketData_->baseCorrelationNames().size();
+    Size n_bc_levels = simMarketData_->baseCorrelationDetachmentPoints().size();
+    Size n_bc_terms = simMarketData_->baseCorrelationTerms().size();
+    DLOG("Cache base correlations: " << n_bc_names << " names, " << n_bc_levels << " levels, " << n_bc_terms
+                                     << " terms");
+    baseCorrelationKeys_.reserve(n_bc_names * n_bc_levels * n_bc_terms);
+    count = 0;
+    for (Size i = 0; i < n_bc_names; ++i) {
+        std::string name = simMarketData_->baseCorrelationNames()[i];
+        Handle<BilinearBaseCorrelationTermStructure> ts = market->baseCorrelation(name, configuration_);
+        for (Size j = 0; j < n_bc_levels; ++j) {
+            Real lossLevel = simMarketData_->baseCorrelationDetachmentPoints()[j];
+            for (Size k = 0; k < n_bc_terms; ++k) {
+                baseCorrelationKeys_.emplace_back(RiskFactorKey::KeyType::BaseCorrelation, name, j * n_bc_terms + k);
+                Period term = simMarketData_->baseCorrelationTerms()[k];
+                Real bc = ts->correlation(today_ + term, lossLevel);
+                baseCorrelationCache_[baseCorrelationKeys_[count]] = bc;
+                LOG("cache base correlation " << bc << " for key " << baseCorrelationKeys_[count]);
+                count++;
+            }
+        }
+    }
 
     LOG("generate base scenario");
     baseScenario_ = baseScenarioFactory_->buildScenario(today_, "BASE");
@@ -399,7 +423,12 @@ void ShiftScenarioGenerator::addCacheTo(boost::shared_ptr<Scenario> scenario) {
                 scenario->add(key, cdsVolCache_[key]);
         }
     }
-
+    if (simMarketData_->simulateBaseCorrelations()) {
+        for (auto key : baseCorrelationKeys_) {
+            if (!scenario->has(key))
+                scenario->add(key, baseCorrelationCache_[key]);
+        }
+    }
 }
 
 RiskFactorKey ShiftScenarioGenerator::getFxKey(const std::string& key) {
@@ -488,6 +517,14 @@ RiskFactorKey ShiftScenarioGenerator::getCdsVolKey(const std::string& name, Size
             return cdsVolKeys_[i];
     }
     QL_FAIL("error locating CDSVol RiskFactorKey for " << name << ", index " << index);
+}
+
+RiskFactorKey ShiftScenarioGenerator::getBaseCorrelationKey(const std::string& indexName, Size index) {
+    for (Size i = 0; i < baseCorrelationKeys_.size(); ++i) {
+        if (baseCorrelationKeys_[i].name == indexName && baseCorrelationKeys_[i].index == index)
+            return baseCorrelationKeys_[i];
+    }
+    QL_FAIL("error locating BaseCorrelation RiskFactorKey for " << indexName << ", index " << index);
 }
 
 void ShiftScenarioGenerator::applyShift(Size j, Real shiftSize, bool up, ShiftType shiftType,

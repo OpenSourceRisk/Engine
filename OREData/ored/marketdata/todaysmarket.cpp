@@ -41,6 +41,7 @@
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <qle/indexes/inflationindexwrapper.hpp>
+#include <qle/termstructures/blackvolsurfacewithatm.hpp>
 
 using namespace std;
 using namespace QuantLib;
@@ -506,7 +507,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
             }
 
             case CurveSpec::CurveType::EquityVolatility: {
-                // convert to fxspec
+                // convert to eqvolspec
                 boost::shared_ptr<EquityVolatilityCurveSpec> eqvolspec =
                     boost::dynamic_pointer_cast<EquityVolatilityCurveSpec>(spec);
                 QL_REQUIRE(eqvolspec, "Failed to convert spec " << *spec);
@@ -516,6 +517,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                 if (itr == requiredEquityVolCurves.end()) {
                     // build the curve
                     LOG("Building EquityVol for asof " << asof);
+
                     boost::shared_ptr<EquityVolCurve> eqVolCurve =
                         boost::make_shared<EquityVolCurve>(asof, *eqvolspec, loader, curveConfigs);
                     itr = requiredEquityVolCurves.insert(make_pair(eqvolspec->name(), eqVolCurve)).first;
@@ -524,10 +526,23 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                 // add the handle to the Market Map (possible lots of times for proxies)
                 for (const auto& it : params.equityVolatilities(configuration.first)) {
                     if (it.second == spec->name()) {
-                        LOG("Adding EquityVol (" << it.first << ") with spec " << *eqvolspec << " to configuration "
+                        string eqName = it.first;
+                        LOG("Adding EquityVol (" << eqName << ") with spec " << *eqvolspec << " to configuration "
                                                  << configuration.first);
-                        equityVols_[make_pair(configuration.first, it.first)] =
-                            Handle<BlackVolTermStructure>(itr->second->volTermStructure());
+
+                        boost::shared_ptr<BlackVolTermStructure> bvts (itr->second->volTermStructure());
+                        // Wrap it in QuantExt::BlackVolatilityWithATM as TodaysMarket might be used
+                        // for model calibration. This is not the ideal place to put this logic but
+                        // it can't be in EquityVolCurve as there are implicit, configuration dependent,
+                        // choices made already (e.g. what discount curve to use).
+                        // We do this even if it is an ATM curve, it does no harm.
+                        Handle<Quote> spot = equitySpot(eqName, configuration.first);
+                        Handle<YieldTermStructure> yts = discountCurve(eqvolspec->ccy(), configuration.first);
+                        Handle<YieldTermStructure> divYts = equityDividendCurve(eqName, configuration.first);
+                        bvts = boost::make_shared<QuantExt::BlackVolatilityWithATM>(bvts, spot, yts, divYts);
+
+                        equityVols_[make_pair(configuration.first, it.first)] = 
+                            Handle<BlackVolTermStructure> (bvts);
                     }
                 }
                 break;

@@ -52,7 +52,12 @@ static bool canBuild(boost::shared_ptr<YieldCurveSpec>& ycs, vector<boost::share
 
 void order(vector<boost::shared_ptr<CurveSpec>>& curveSpecs, const CurveConfigurations& curveConfigs) {
 
-    /* Order the curve specs and remove duplicates (i.e. those with same name). */
+    /* Order the curve specs and remove duplicates (i.e. those with same name).
+     * The sort() call relies on CurveSpec::operator< which ensures a few properties:
+     * - FX loaded before FXVol
+     * - Eq loaded before EqVol
+     * - Inf loaded before InfVol
+     */
     sort(curveSpecs.begin(), curveSpecs.end());
     auto itSpec = unique(curveSpecs.begin(), curveSpecs.end());
     curveSpecs.resize(distance(curveSpecs.begin(), itSpec));

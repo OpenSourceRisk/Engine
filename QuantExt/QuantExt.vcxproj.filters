@@ -333,10 +333,6 @@
     <ClInclude Include="qle\termstructures\dynamicstype.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
-    <ClInclude Include="qle\pricingengines\discountingriskybondengine.hpp" />
-    <ClInclude Include="qle\indexes\ibor\krwkoribor.hpp" />
-    <ClInclude Include="qle\indexes\ibor\twdtaibor.hpp" />
-    <ClInclude Include="qle\indexes\ibor\myrklibor.hpp" />
     <ClInclude Include="qle\instruments\deposit.hpp">
       <Filter>instruments</Filter>
     </ClInclude>
@@ -424,11 +420,42 @@
     <ClInclude Include="qle\termstructures\survivalprobabilitycurve.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
-    <ClInclude Include="qle\instruments\creditdefaultswap.hpp" />
-    <ClInclude Include="qle\instruments\makecds.hpp" />
-    <ClInclude Include="qle\pricingengines\discountingcapfloorengine.hpp" />
-    <ClInclude Include="qle\pricingengines\midpointcdsengine.hpp" />
-    <ClInclude Include="qle\termstructures\defaultprobabilityhelpers.hpp" />
+    <ClInclude Include="qle\termstructures\blackvolsurfacewithatm.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\midpointcdsengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\twdtaibor.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\myrklibor.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\krwkoribor.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\instruments\makecds.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\instruments\creditdefaultswap.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\defaultprobabilityhelpers.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\discountingriskybondengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\swaptionvolcubewithatm.hpp">
+      <Filter>termstructures</Filters>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\swaptionvolcube2.hpp">
+      <Filter>termstructures</Filters>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\swaptionvolconstantspread.hpp">
+      <Filter>termstructures</Filters>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -646,6 +673,9 @@
     <ClCompile Include="qle\termstructures\swaptionvolatilityconverter.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
+    <ClCompile Include="qle\termstructures\swaptionvolcube2.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
     <ClCompile Include="qle\termstructures\spreadedoptionletvolatility.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
@@ -724,10 +754,20 @@
     <ClCompile Include="qle\pricingengines\blackcdsoptionengine.cpp">
       <Filter>pricingengines</Filter>
     </ClCompile>
-    <ClCompile Include="qle\instruments\creditdefaultswap.cpp" />
-    <ClCompile Include="qle\instruments\makecds.cpp" />
-    <ClCompile Include="qle\pricingengines\discountingcapfloorengine.cpp" />
-    <ClCompile Include="qle\pricingengines\midpointcdsengine.cpp" />
-    <ClCompile Include="qle\termstructures\defaultprobabilityhelpers.cpp" />
+    <ClCompile Include="qle\termstructures\blackvolsurfacewithatm.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\midpointcdsengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\makecds.cpp">
+      <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\creditdefaultswap.cpp">
+      <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\defaultprobabilityhelpers.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

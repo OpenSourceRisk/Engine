@@ -102,6 +102,8 @@ void SensitivityAnalysis::generateSensitivities() {
     boost::shared_ptr<DateGrid> dg = boost::make_shared<DateGrid>("1,0W");
     vector<boost::shared_ptr<ValuationCalculator>> calculators = buildValuationCalculators();
     ValuationEngine engine(asof_, dg, simMarket_, modelBuilders_);
+    for (auto const& i : this->progressIndicators())
+        engine.registerProgressIndicator(i);
     LOG("Run Sensitivity Scenarios");
     engine.buildCube(portfolio_, cube, calculators);
 
@@ -470,16 +472,16 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
             vector<Period> tenors = sensitivityData_->swaptionVolShiftData()[ccy].shiftTerms;
             vector<Period> expiries = sensitivityData_->swaptionVolShiftData()[ccy].shiftExpiries;
             QL_REQUIRE(strikes.size() == 0, "Only ATM Swaption vols supported");
-            Real atmFwd = 0.0; // hardcoded, since only ATM supported
             Size keyIdx = key.index;
             Size expIdx = keyIdx / tenors.size();
             Period p_exp = expiries[expIdx];
             Size tenIdx = keyIdx % tenors.size();
             Period p_ten = tenors[tenIdx];
             Handle<SwaptionVolatilityStructure> vts = simMarket_->swaptionVol(ccy, marketConfiguration_);
-            Time t_exp = vts->dayCounter().yearFraction(asof_, asof_ + p_exp);
-            Time t_ten = vts->dayCounter().yearFraction(asof_, asof_ + p_ten);
-            Real atmVol = vts->volatility(t_exp, t_ten, atmFwd);
+            // Time t_exp = vts->dayCounter().yearFraction(asof_, asof_ + p_exp);
+            // Time t_ten = vts->dayCounter().yearFraction(asof_, asof_ + p_ten);
+            // Real atmVol = vts->volatility(t_exp, t_ten, Null<Real>());
+            Real atmVol = vts->volatility(p_exp, p_ten, Null<Real>());
             shiftMult = atmVol;
         }
     } else if (keytype == RiskFactorKey::KeyType::OptionletVolatility) {
@@ -504,7 +506,6 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
         shiftSize = sensitivityData_->cdsVolShiftData()[name].shiftSize;
         if (boost::to_upper_copy(sensitivityData_->cdsVolShiftData()[name].shiftType) == "RELATIVE") {
             vector<Period> expiries = sensitivityData_->cdsVolShiftData()[name].shiftExpiries;
-            Real atmFwd = 0.0; // hardcoded, since only ATM supported
             Size keyIdx = key.index;
             Size expIdx = keyIdx;
             Period p_exp = expiries[expIdx];
@@ -514,7 +515,7 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
             Real atmVol = vts->blackVol(t_exp, strike);
             shiftMult = atmVol;
         }
-    }  else if (keytype == RiskFactorKey::KeyType::SurvivalProbability) {
+    } else if (keytype == RiskFactorKey::KeyType::SurvivalProbability) {
         string name = keylabel;
         shiftSize = sensitivityData_->creditCurveShiftData()[name].shiftSize;
         if (boost::to_upper_copy(sensitivityData_->creditCurveShiftData()[name].shiftType) == "RELATIVE") {
@@ -523,7 +524,22 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
             Handle<DefaultProbabilityTermStructure> ts = simMarket_->defaultCurve(name, marketConfiguration_);
             Time t = ts->dayCounter().yearFraction(asof_, asof_ + p);
             Real prob = ts->survivalProbability(t);
-            shiftMult = -std::log(prob)/t;
+            shiftMult = -std::log(prob) / t;
+        }
+    } else if (keytype == RiskFactorKey::KeyType::BaseCorrelation) {
+        string name = keylabel;
+        shiftSize = sensitivityData_->baseCorrelationShiftData()[name].shiftSize;
+        if (boost::to_upper_copy(sensitivityData_->baseCorrelationShiftData()[name].shiftType) == "RELATIVE") {
+            vector<Real> lossLevels = sensitivityData_->baseCorrelationShiftData()[name].shiftLossLevels;
+            vector<Period> terms = sensitivityData_->baseCorrelationShiftData()[name].shiftTerms;
+            Size keyIdx = key.index;
+            Size lossLevelIdx = keyIdx / terms.size();
+            Real lossLevel = lossLevels[lossLevelIdx];
+            Size termIdx = keyIdx % terms.size();
+            Period term = terms[termIdx];
+            Handle<BilinearBaseCorrelationTermStructure> ts = simMarket_->baseCorrelation(name, marketConfiguration_);
+            Real bc = ts->correlation(asof_ + term, lossLevel, true); // extrapolate
+            shiftMult = bc;
         }
     } else {
         QL_FAIL("KeyType not supported yet - " << keytype);

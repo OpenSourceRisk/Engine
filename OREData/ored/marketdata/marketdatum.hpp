@@ -906,7 +906,7 @@ Specific data comprise
 - Equity/Index name
 - currency
 - expiry
-- "strike" {ATMF} (in future we should support explicit strikes here)
+- strike - can be "ATMF" or an actual strike
 
 \ingroup marketdata
 */
@@ -927,7 +927,7 @@ private:
     string eqName_;
     string ccy_;
     string expiry_;
-    string strike_; // ATMF only supported
+    string strike_;
 };
 
 //! Bond spread data class

@@ -45,14 +45,10 @@
 
 #include <ql/termstructures/bootstraphelper.hpp>
 #include <ql/termstructures/defaulttermstructure.hpp>
+#include <qle/instruments/creditdefaultswap.hpp>
 #include <ql/time/schedule.hpp>
 
 using namespace QuantExt;
-
-namespace QuantLib {
-class YieldTermStructure;
-class CreditDefaultSwap;
-} // namespace QuantLib
 
 namespace QuantExt {
 
@@ -88,7 +84,7 @@ public:
               Real recoveryRate, const Handle<YieldTermStructure>& discountCurve, const Date& startDate = Date(),
               bool settlesAccrual = true, bool paysAtDefaultTime = true);
     void setTermStructure(DefaultProbabilityTermStructure*);
-    boost::shared_ptr<CreditDefaultSwap> swap() const { return swap_; }
+    boost::shared_ptr<QuantExt::CreditDefaultSwap> swap() const { return swap_; }
 
 protected:
     void update();
@@ -107,7 +103,7 @@ protected:
     bool paysAtDefaultTime_;
 
     Schedule schedule_;
-    boost::shared_ptr<CreditDefaultSwap> swap_;
+    boost::shared_ptr<QuantExt::CreditDefaultSwap> swap_;
     RelinkableHandle<DefaultProbabilityTermStructure> probability_;
     //! protection effective date.
     Date protectionStart_, startDate_;

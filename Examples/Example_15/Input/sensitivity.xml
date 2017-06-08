@@ -218,4 +218,6 @@
     <Pair>DiscountCurve/EUR,IndexCurve/EUR</Pair>
   </CrossGammaFilter>
   
+  <BaseCorrelations/>
+  
 </SensitivityAnalysis>

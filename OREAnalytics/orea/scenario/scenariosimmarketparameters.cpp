@@ -92,7 +92,9 @@ bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& 
         equityMoneyness_ != rhs.equityMoneyness_ ||
         additionalScenarioDataIndices_ != rhs.additionalScenarioDataIndices_ ||
         additionalScenarioDataCcys_ != rhs.additionalScenarioDataCcys_ || securities_ != rhs.securities_ ||
-        baseCorrelations_ != rhs.baseCorrelations_) {
+        baseCorrelationSimulate_ != rhs.baseCorrelationSimulate_ ||
+        baseCorrelationNames_ != rhs.baseCorrelationNames_ || baseCorrelationTerms_ != rhs.baseCorrelationTerms_ ||
+        baseCorrelationDetachmentPoints_ != rhs.baseCorrelationDetachmentPoints_) {
         return false;
     } else {
         return true;
@@ -246,8 +248,18 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         securities_ = XMLUtils::getChildrenValues(node, "Securities", "Security");
 
     nodeChild = XMLUtils::getChildNode(node, "BaseCorrelations");
-    if (nodeChild)
-        baseCorrelations_ = XMLUtils::getChildrenValues(node, "BaseCorrelations", "BaseCorrelation");
+    if (nodeChild) {
+        baseCorrelationSimulate_ = XMLUtils::getChildValueAsBool(nodeChild, "Simulate", true);
+        baseCorrelationNames_ = XMLUtils::getChildrenValues(nodeChild, "IndexNames", "IndexName", true);
+        baseCorrelationTerms_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Terms", true);
+        baseCorrelationDetachmentPoints_ =
+            XMLUtils::getChildrenValuesAsDoublesCompact(nodeChild, "DetachmentPoints", true);
+    } else {
+        baseCorrelationSimulate_ = false;
+        baseCorrelationNames_.clear();
+        baseCorrelationTerms_.clear();
+        baseCorrelationDetachmentPoints_.clear();
+    }
 }
 
 XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
@@ -345,11 +357,15 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
     // additional scenario data indices
     XMLUtils::addChildren(doc, marketNode, "AggregationScenarioDataIndices", "Index", additionalScenarioDataIndices_);
 
-    // additional scenario data indices
+    // securities
     XMLUtils::addChildren(doc, marketNode, "Securities", "Security", securities_);
 
-    // additional scenario data indices
-    XMLUtils::addChildren(doc, marketNode, "BaseCorrelations", "BaseCorrelation", baseCorrelations_);
+    // base correlations
+    XMLNode* bcNode = XMLUtils::addChild(doc, marketNode, "BaseCorrelations");
+    XMLUtils::addChild(doc, bcNode, "Simulate", baseCorrelationSimulate_);
+    XMLUtils::addChildren(doc, bcNode, "IndexNames", "IndexName", baseCorrelationNames_);
+    XMLUtils::addGenericChildAsList(doc, bcNode, "Terms", baseCorrelationTerms_);
+    XMLUtils::addGenericChildAsList(doc, bcNode, "DetachmentPoints", baseCorrelationDetachmentPoints_);
 
     return marketNode;
 }

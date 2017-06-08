@@ -67,7 +67,7 @@ namespace analytics {
 
   To apply shifts to the integrated hazard rates let:
   - S(t) be the survival probability at time t
-  - &lambda(t) be the "instaneous" hazard rate at time t 
+  - &lambda(t) be the "instaneous" hazard rate at time t
   - &Lambda(t) be the averaged hazard rate at time t
 
   The relationship between these three can be expressed as:
@@ -118,7 +118,7 @@ private:
     void generateCapFloorVolScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
     void generateSurvivalProbabilityScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
     void generateCdsVolScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
-
+    void generateBaseCorrelationScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
 
     ScenarioDescription discountScenarioDescription(string ccy, Size bucket, bool up);
     ScenarioDescription indexScenarioDescription(string index, Size bucket, bool up);
@@ -132,7 +132,8 @@ private:
     ScenarioDescription capFloorVolScenarioDescription(string ccy, Size expiryBucket, Size strikeBucket, bool up);
     ScenarioDescription survivalProbabilityScenarioDescription(string name, Size bucket, bool up);
     ScenarioDescription CdsVolScenarioDescription(string name, Size expiryBucket, Size strikeBucket, bool up);
-
+    ScenarioDescription baseCorrelationScenarioDescription(string indexName, Size lossLevelBucket, Size termBucket,
+                                                           bool up);
 
     boost::shared_ptr<SensitivityScenarioData> sensitivityData_;
     const bool overrideTenors_;

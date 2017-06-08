@@ -18,7 +18,7 @@
 
 #include <boost/make_shared.hpp>
 #include <test/testmarket.hpp>
-
+#include <iostream>
 namespace testsuite {
 
 boost::shared_ptr<ore::data::Conventions> TestConfigurationObjects::conv() {
@@ -62,9 +62,10 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
                                             12 * Years, 15 * Years, 20 * Years, 25 * Years, 30 * Years});
     simMarketData->indices() = {"EUR-EURIBOR-6M", "GBP-LIBOR-6M"};
     simMarketData->defaultNames() = {"BondIssuer1"};
-    simMarketData->setDefaultTenors("", {1 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years, 5 * Years,
-                                         7 * Years, 10 * Years, 20 * Years, 30 * Years});
+    simMarketData->setDefaultTenors("", {6 * Months, 1 * Years,  2 * Years,  3 * Years, 5 * Years,
+                           7 * Years,  10 * Years, 15 * Years, 20 * Years});
     simMarketData->securities() = {"Bond1"};
+    simMarketData->simulateSurvivalProbabilities() = true;
 
     simMarketData->interpolation() = "LogLinear";
     simMarketData->extrapolate() = true;
@@ -126,8 +127,9 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
     simMarketData->capFloorVolStrikes() = {0.00, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06};
 
     simMarketData->defaultNames() = {"BondIssuer1"};
-    simMarketData->setDefaultTenors("", {1 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years, 5 * Years,
-                                         7 * Years, 10 * Years, 20 * Years, 30 * Years});
+    simMarketData->setDefaultTenors("", {6 * Months, 1 * Years,  2 * Years,  3 * Years, 5 * Years,
+                           7 * Years,  10 * Years, 15 * Years, 20 * Years});
+    simMarketData->simulateSurvivalProbabilities() = true;
     simMarketData->securities() = {"Bond1"};
 
     simMarketData->equityNames() = { "SP5", "Lufthansa" };
@@ -195,6 +197,9 @@ boost::shared_ptr<ore::analytics::SensitivityScenarioData> TestConfigurationObje
     sensiData->swaptionVolCurrencies() = {"EUR", "GBP"};
     sensiData->swaptionVolShiftData()["EUR"] = swvsData;
     sensiData->swaptionVolShiftData()["GBP"] = swvsData;
+
+    sensiData->creditNames() = {"BondIssuer1"};
+    sensiData->creditCurveShiftData()["BondIssuer1"] = cvsData;
 
     // sensiData->capFloorVolLabel() = "VOL_CAPFLOOR";
     // sensiData->capFloorVolCurrencies() = { "EUR", "GBP" };
@@ -270,6 +275,10 @@ boost::shared_ptr<ore::analytics::SensitivityScenarioData> TestConfigurationObje
 
     sensiData->yieldCurveNames() = {"BondCurve1"};
     sensiData->yieldCurveShiftData()["BondCurve1"] = cvsData;
+
+
+    sensiData->creditNames() = {"BondIssuer1"};
+    sensiData->creditCurveShiftData()["BondIssuer1"] = cvsData;
 
     sensiData->fxCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY"};
     sensiData->fxShiftData()["EURUSD"] = fxsData;
