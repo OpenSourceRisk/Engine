@@ -103,8 +103,7 @@ public:
 
 protected:
     boost::shared_ptr<SmileSection> smileSectionImpl(Time optionTime, Time swapLength) const {
-        auto res = boost::make_shared<ConstantSpreadSmileSection>(atm_, cube_, optionTime, swapLength);
-        return res;
+        return boost::make_shared<ConstantSpreadSmileSection>(atm_, cube_, optionTime, swapLength);
     }
 
     Volatility volatilityImpl(Time optionTime, Time swapLength, Rate strike) const {
