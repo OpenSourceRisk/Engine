@@ -30,7 +30,10 @@
 #include <qle/termstructures/swaptionvolatilityconverter.hpp>
 #include <qle/termstructures/subperiodsswaphelper.hpp>
 #include <qle/termstructures/survivalprobabilitycurve.hpp>
+#include <qle/termstructures/blackvolsurfacewithatm.hpp>
+#include <qle/termstructures/defaultprobabilityhelpers.hpp>
+#include <qle/termstructures/survivalprobabilitycurve.hpp>
 #include <qle/termstructures/swaptionvolcubewithatm.hpp>
 #include <qle/termstructures/blackvariancesurfacemoneyness.hpp>
-#include <qle/termstructures/blackvolsurfacewithatm.hpp>
+#include <qle/termstructures/swaptionvolcube2.hpp>
 
