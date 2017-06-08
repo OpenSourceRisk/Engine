@@ -626,6 +626,8 @@
     <ClInclude Include="qle\termstructures\subperiodsswaphelper.hpp" />
     <ClInclude Include="qle\termstructures\survivalprobabilitycurve.hpp" />
     <ClInclude Include="qle\termstructures\swaptionvolatilityconverter.hpp" />
+    <ClInclude Include="qle\termstructures\swaptionvolconstantspread.hpp" />
+    <ClInclude Include="qle\termstructures\swaptionvolcube2.hpp" />
     <ClInclude Include="qle\termstructures\swaptionvolcubewithatm.hpp" />
     <ClInclude Include="qle\termstructures\tenorbasisswaphelper.hpp" />
   </ItemGroup>
@@ -718,6 +720,7 @@
     <ClCompile Include="qle\termstructures\strippedoptionletadapter2.cpp" />
     <ClCompile Include="qle\termstructures\subperiodsswaphelper.cpp" />
     <ClCompile Include="qle\termstructures\swaptionvolatilityconverter.cpp" />
+    <ClCompile Include="qle\termstructures\swaptionvolcube2.cpp" />
     <ClCompile Include="qle\termstructures\tenorbasisswaphelper.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
