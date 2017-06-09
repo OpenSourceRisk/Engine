@@ -199,6 +199,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         equityTenors_.clear();
     }
 
+
     nodeChild = XMLUtils::getChildNode(node, "CDSVolatilities");
     cdsVolSimulate_ = false;
     if (nodeChild) {
@@ -225,6 +226,13 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         equityVolExpiries_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Expiries", true);
         equityVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
         equityVolNames_ = XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true);
+        XMLNode* eqSurfaceNode = XMLUtils::getChildNode(nodeChild, "Surface");
+	    if (eqSurfaceNode) {
+            equityIsSurface_ = true;
+	    } else {
+            equityIsSurface_ = false;
+        }
+
     } else {
         equityVolSimulate_ = false;
         equityVolExpiries_.clear();

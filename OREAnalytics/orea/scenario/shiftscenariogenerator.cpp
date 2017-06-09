@@ -238,12 +238,11 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
     count = 0;
     for (Size j = 0; j < n_equityvol_pairs; ++j) {
         string equity = simMarketData_->equityVolNames()[j];
-        Real strike = 0.0; // FIXME
         Handle<BlackVolTermStructure> ts = market->equityVol(equity, configuration_);
         for (Size k = 0; k < n_equityvol_exp; ++k) {
             equityVolKeys_.emplace_back(RiskFactorKey::KeyType::EQVolatility, equity, k);
             Period expiry = simMarketData_->equityVolExpiries()[k];
-            Real equityvol = ts->blackVol(today_ + expiry, strike);
+            Real equityvol = ts->blackVol(today_ + expiry, 0.0); //ATM
             equityVolCache_[equityVolKeys_[count]] = equityvol;
             LOG("cache Equity vol " << equityvol << " for key " << equityVolKeys_[count]);
             count++;

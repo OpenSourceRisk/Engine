@@ -559,10 +559,9 @@ void SensitivityScenarioGenerator::generateEquityVolScenarios(
 
         Handle<BlackVolTermStructure> ts = initMarket_->equityVol(equity, configuration_);
         DayCounter dc = ts->dayCounter();
-        Real strike = 0.0; // FIXME
         for (Size j = 0; j < n_eqvol_exp; ++j) {
             Date d = today_ + simMarketData_->equityVolExpiries()[j];
-            values[j] = ts->blackVol(d, strike);
+            values[j] = ts->blackVol(d, 0.0, true);
             times[j] = dc.yearFraction(today_, d);
         }
 
