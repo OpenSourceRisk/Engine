@@ -25,11 +25,11 @@ libTermStructures_la_SOURCES = \
 	spreadedoptionletvolatility.cpp \
 	spreadedsmilesection.cpp \
 	spreadedswaptionvolatility.cpp \
-    strippedoptionletadapter2.cpp \
+	strippedoptionletadapter2.cpp \
 	swaptionvolatilityconverter.cpp \
 	subperiodsswaphelper.cpp \
 	defaultprobabilityhelpers.cpp \
-    blackvariancesurfacemoneyness.cpp \
+	blackvariancesurfacemoneyness.cpp \
 	blackvolsurfacewithatm.cpp \
 	swaptionvolcube2.cpp
 
@@ -61,15 +61,15 @@ this_include_HEADERS = \
 	spreadedoptionletvolatility.hpp \
 	spreadedsmilesection.hpp \
 	spreadedswaptionvolatility.hpp \
-    strippedoptionletadapter2.hpp \
+	strippedoptionletadapter2.hpp \
 	swaptionvolatilityconverter.hpp \
 	subperiodsswaphelper.hpp \
 	survivalprobabilitycurve.hpp \
 	blackvolsurfacewithatm.hpp \
 	defaultprobabilityhelpers.hpp \
-    survivalprobabilitycurve.hpp \
+	survivalprobabilitycurve.hpp \
 	swaptionvolcubewithatm.hpp \
-    blackvariancesurfacemoneyness.hpp \
+	blackvariancesurfacemoneyness.hpp \
 	swaptionvolcube2.hpp
 
 all.hpp: Makefile.am
