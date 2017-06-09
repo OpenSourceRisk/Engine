@@ -226,10 +226,10 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         equityVolExpiries_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Expiries", true);
         equityVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
         equityVolNames_ = XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true);
-        XMLNode* eqSurfaceNode = XMLUtils::getChildNode(node, "Surface");
+        XMLNode* eqSurfaceNode = XMLUtils::getChildNode(nodeChild, "Surface");
         if (eqSurfaceNode) {
             equityIsSurface_ = true;
-            equityMoneyness_ = XMLUtils::getChildrenValuesAsDoublesCompact(nodeChild, "Moneyness", true);
+            equityMoneyness_ = XMLUtils::getChildrenValuesAsDoublesCompact(eqSurfaceNode, "Moneyness", true);
         } else {
             equityIsSurface_ = false;
         }

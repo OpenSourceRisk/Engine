@@ -27,8 +27,8 @@ BlackVarianceSurfaceMoneyness::BlackVarianceSurfaceMoneyness(
     : BlackVarianceTermStructure(0, cal), spot_(spot), dayCounter_(dayCounter), moneyness_(moneyness),
       quotes_(blackVolMatrix) {
 
-    QL_REQUIRE(times.size() == blackVolMatrix.size(), "mismatch between times vector and vol matrix colums");
-    QL_REQUIRE(moneyness_.size() == blackVolMatrix.front().size(),
+    QL_REQUIRE(times.size() == blackVolMatrix.front().size(), "mismatch between times vector and vol matrix colums");
+    QL_REQUIRE(moneyness_.size() == blackVolMatrix.size(),
                "mismatch between moneyness vector and vol matrix rows");
 
     QL_REQUIRE(times[0] >= 0, "cannot have times[0] < 0");
@@ -61,7 +61,7 @@ void BlackVarianceSurfaceMoneyness::update() {
 }
 
 void BlackVarianceSurfaceMoneyness::performCalculations() const {
-    for (Size j = 1; j <= variances_.columns(); j++) {
+    for (Size j = 1; j < variances_.columns(); j++) {
         for (Size i = 0; i < variances_.rows(); i++) {
             Real vol = quotes_[i][j - 1]->value();
             variances_[i][j] = times_[j] * vol * vol;
