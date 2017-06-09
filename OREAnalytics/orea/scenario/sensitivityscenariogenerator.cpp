@@ -53,6 +53,9 @@ void SensitivityScenarioGenerator::generateScenarios(const boost::shared_ptr<Sce
     generateEquityScenarios(sensiScenarioFactory, true);
     generateEquityScenarios(sensiScenarioFactory, false);
 
+    generateDividendYieldScenarios(sensiScenarioFactory, true);
+    generateDividendYieldScenarios(sensiScenarioFactory, false);
+
     if (simMarketData_->simulateFXVols()) {
         generateFxVolScenarios(sensiScenarioFactory, true);
         generateFxVolScenarios(sensiScenarioFactory, false);
@@ -451,6 +454,75 @@ void SensitivityScenarioGenerator::generateYieldCurveScenarios(
     LOG("Yield curve scenarios done");
 }
 
+void SensitivityScenarioGenerator::generateDividendYieldScenarios(
+    const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up) {
+    // We can choose to shift fewer yield curves than listed in the market
+    vector<string> simMarketEquityNames = simMarketData_->equityNames();
+    if (sensitivityData_->equityNames().size() > 0)
+        dividendYieldNames_ = sensitivityData_->dividendYieldNames();
+    else
+        dividendYieldNames_ = simMarketEquityNames;
+    // Log an ALERT if some yield curves in simmarket are excluded from the list
+    for (auto sim : simMarketEquityNames) {
+        if (std::find(dividendYieldNames_.begin(), dividendYieldNames_.end(), sim) == dividendYieldNames_.end()) {
+            ALOG("Equity " << sim << " in simmarket is not included in dividend yield sensitivity analysis");
+        }
+    }
+    
+    Size n_curves = dividendYieldNames_.size();
+    for (Size i = 0; i < n_curves; ++i) {
+        string name = dividendYieldNames_[i];
+        Size n_ten = simMarketData_->equityTenors(name).size();
+        // original curves' buffer
+        std::vector<Real> zeros(n_ten);
+        std::vector<Real> times(n_ten);
+        // buffer for shifted zero curves
+        std::vector<Real> shiftedZeros(n_ten);
+        SensitivityScenarioData::CurveShiftData data = sensitivityData_->dividendYieldShiftData()[name];
+        ShiftType shiftType = parseShiftType(data.shiftType);
+        Handle<YieldTermStructure> ts = initMarket_->equityDividendCurve(name, configuration_);
+        DayCounter dc = ts->dayCounter();
+        for (Size j = 0; j < n_ten; ++j) {
+            Date d = today_ + simMarketData_->equityTenors(name)[j];
+            zeros[j] = ts->zeroRate(d, dc, Continuous);
+            times[j] = dc.yearFraction(today_, d);
+        }
+
+        const std::vector<Period>& shiftTenors = overrideTenors_ && simMarketData_->hasEquityTenors(name)
+                                                     ? simMarketData_->equityTenors(name)
+                                                     : data.shiftTenors;
+        QL_REQUIRE(shiftTenors.size() == data.shiftTenors.size(), "mismatch between effective shift tenors ("
+                                                                      << shiftTenors.size() << ") and shift tenors ("
+                                                                      << data.shiftTenors.size() << ")");
+        std::vector<Time> shiftTimes(shiftTenors.size());
+        for (Size j = 0; j < shiftTenors.size(); ++j)
+            shiftTimes[j] = dc.yearFraction(today_, today_ + shiftTenors[j]);
+        Real shiftSize = data.shiftSize;
+        QL_REQUIRE(shiftTenors.size() > 0, "Discount shift tenors not specified");
+
+        for (Size j = 0; j < shiftTenors.size(); ++j) {
+
+            boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(today_);
+
+            scenarioDescriptions_.push_back(dividendYieldScenarioDescription(name, j, up));
+
+            // apply zero rate shift at tenor point j
+            applyShift(j, shiftSize, up, shiftType, shiftTimes, zeros, times, shiftedZeros, true);
+
+            // store shifted discount curve in the scenario
+            for (Size k = 0; k < n_ten; ++k) {
+                Real shiftedDiscount = exp(-shiftedZeros[k] * times[k]);
+                scenario->add(getDividendYieldKey(name, k), shiftedDiscount);
+            }
+            // add this scenario to the scenario vector
+            scenarios_.push_back(scenario);
+            DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
+
+        } // end of shift curve tenors
+    }
+    LOG("Dividend yield curve scenarios done");
+}
+  
 void SensitivityScenarioGenerator::generateFxVolScenarios(
     const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up) {
     // We can choose to shift fewer discount curves than listed in the market
@@ -1017,6 +1089,21 @@ SensitivityScenarioGenerator::ScenarioDescription SensitivityScenarioGenerator::
     std::ostringstream o;
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
     ScenarioDescription desc(type, key, "spot");
+    return desc;
+}
+
+SensitivityScenarioGenerator::ScenarioDescription
+SensitivityScenarioGenerator::dividendYieldScenarioDescription(string name, Size bucket, bool up) {
+    QL_REQUIRE(sensitivityData_->dividendYieldShiftData().find(name) != sensitivityData_->dividendYieldShiftData().end(),
+               "equity " << name << " not found in dividend yield shift data");
+    QL_REQUIRE(bucket < sensitivityData_->dividendYieldShiftData()[name].shiftTenors.size(),
+               "bucket " << bucket << " out of range");
+    RiskFactorKey key(RiskFactorKey::KeyType::DividendYield, name, bucket);
+    std::ostringstream o;
+    o << sensitivityData_->dividendYieldShiftData()[name].shiftTenors[bucket];
+    string text = o.str();
+    ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
+    ScenarioDescription desc(type, key, text);
     return desc;
 }
 

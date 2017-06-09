@@ -198,17 +198,17 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
     dividendYieldKeys_.reserve(n_eq_terms * n_eq_names);
     count = 0;
     for (Size j = 0; j < n_eq_names; j++) {
-      std::string name = simMarketData_->equityNames()[j];
-      Handle<YieldTermStructure> ts = market->equityDividendCurve(name, configuration_);
-      for (Size k = 0; k < n_eq_terms; ++k) {
+        std::string name = simMarketData_->equityNames()[j];
+        Handle<YieldTermStructure> ts = market->equityDividendCurve(name, configuration_);
+        for (Size k = 0; k < n_eq_terms; ++k) {
             dividendYieldKeys_.emplace_back(RiskFactorKey::KeyType::DividendYield, name, k);
             Real disc = ts->discount(today_ + simMarketData_->equityTenors("")[k]);
             dividendYieldCache_[dividendYieldKeys_[count]] = disc;
             LOG("cache discount " << disc << " for key " << dividendYieldKeys_[count]);
             count++;
-        }      
+        }
     }
-    
+
     // Cache Swaption (ATM) vol keys
     Size n_swvol_ccy = simMarketData_->swapVolCcys().size();
     Size n_swvol_term = simMarketData_->swapVolTerms().size();
@@ -518,6 +518,14 @@ RiskFactorKey ShiftScenarioGenerator::getEquityVolKey(const std::string& equity,
             return equityVolKeys_[i];
     }
     QL_FAIL("error locating EquityVol RiskFactorKey for " << equity << ", index " << index);
+}
+
+RiskFactorKey ShiftScenarioGenerator::getDividendYieldKey(const std::string& equity, Size index) {
+    for (Size i = 0; i < dividendYieldKeys_.size(); ++i) {
+        if (dividendYieldKeys_[i].name == equity && dividendYieldKeys_[i].index == index)
+            return dividendYieldKeys_[i];
+    }
+    QL_FAIL("error locating DividendYield RiskFactorKey for " << equity << ", index " << index);
 }
 
 RiskFactorKey ShiftScenarioGenerator::getSurvivalProbabilityKey(const std::string& name, Size index) {

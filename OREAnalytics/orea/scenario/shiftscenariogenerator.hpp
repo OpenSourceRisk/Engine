@@ -189,6 +189,7 @@ protected:
     RiskFactorKey getOptionletVolKey(const std::string& ccy, Size index);
     RiskFactorKey getFxVolKey(const std::string& ccypair, Size index);
     RiskFactorKey getEquityVolKey(const std::string& equity, Size index);
+    RiskFactorKey getDividendYieldKey(const std::string& equity, Size index);
     RiskFactorKey getSurvivalProbabilityKey(const std::string& curveName, Size index);
     RiskFactorKey getCdsVolKey(const std::string& issuerName, Size index);
     RiskFactorKey getBaseCorrelationKey(const std::string& indexName, Size index);
@@ -211,7 +212,7 @@ protected:
 
     vector<string> discountCurrencies_, indexNames_, yieldCurveNames_, fxCcyPairs_, fxVolCcyPairs_,
         swaptionVolCurrencies_, capFloorVolCurrencies_, crNames_, infIndexNames_, cdsVolNames_, baseCorrelationNames_,
-        equityNames_, equityVolNames_;
+      equityNames_, equityVolNames_, dividendYieldNames_;
 
     std::vector<ScenarioDescription> scenarioDescriptions_;
 
