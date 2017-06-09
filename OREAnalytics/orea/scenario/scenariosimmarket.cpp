@@ -698,7 +698,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
                         Period p = parameters->eqVolExpiries()[j];
 
                         // Index is expires then moneyness. TODO: is this the best?
-                        Size idx = i * n + j;
+                        Size idx = i * m + j;
 
                         Volatility vol = wrapper->blackVol(asof_ + p, k);
                         boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));

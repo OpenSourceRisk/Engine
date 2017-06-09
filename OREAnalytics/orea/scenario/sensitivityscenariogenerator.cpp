@@ -591,7 +591,7 @@ void SensitivityScenarioGenerator::generateEquityVolScenarios(
             // update the scenario
             for (Size k = 0; k < n_eqvol_strikes; ++k) {
                 for (Size l = 0; l < n_eqvol_exp; l++) {
-                    Size idx = k * n_eqvol_strikes + l;
+                    Size idx = k * n_eqvol_exp + l;
                     scenario->add(getEquityVolKey(equity, idx), shiftedValues[k][l]);
                 }
             }

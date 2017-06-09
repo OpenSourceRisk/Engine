@@ -235,17 +235,24 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
     Size n_equityvol_pairs = simMarketData_->equityVolNames().size();
     Size n_equityvol_exp = simMarketData_->equityVolExpiries().size();
     Size n_equityvol_strikes = simMarketData_->eqVolIsSurface() ? simMarketData_->eqVolMoneyness().size() : 1;
+    QL_REQUIRE(n_equityvol_strikes > 0, "No strikes defined for equity vol");
     equityVolKeys_.reserve(n_equityvol_pairs * n_equityvol_exp * n_equityvol_strikes);
     count = 0;
     for (Size j = 0; j < n_equityvol_pairs; ++j) {
         string equity = simMarketData_->equityVolNames()[j];
         Handle<BlackVolTermStructure> ts = market->equityVol(equity, configuration_);
         Real spot = market->equitySpot(equity, configuration_)->value();
+        LOG("Eq spot for " << equity << " " << spot);
         for (Size k = 0; k < n_equityvol_strikes; ++k) {
-            Real strike = spot * simMarketData_->eqVolMoneyness()[k];
+            Real strike;
+            if (simMarketData_->eqVolIsSurface())
+                strike = spot * simMarketData_->eqVolMoneyness()[k];
+            else
+                strike = Null<Real>();
+            LOG("Eq strike for " << equity << " " << strike);
             for (Size l = 0; l < n_equityvol_exp; ++l) {
                 // Index is expires then moneyness. TODO: is this the best?
-                Size idx = k * n_equityvol_strikes + l;
+                Size idx = k * n_equityvol_exp + l;
                 equityVolKeys_.emplace_back(RiskFactorKey::KeyType::EQVolatility, equity, idx);
                 Period expiry = simMarketData_->equityVolExpiries()[l];
                 Real equityvol = ts->blackVol(today_ + expiry, strike);
