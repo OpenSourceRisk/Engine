@@ -47,6 +47,8 @@ std::ostream& operator<<(std::ostream& out, const RiskFactorKey::KeyType& type) 
         return out << "EQSpot";
     case RiskFactorKey::KeyType::EQVolatility:
         return out << "EQVolatility";
+    case RiskFactorKey::KeyType::DividendYield:
+        return out << "DividendYield";
     case RiskFactorKey::KeyType::SurvivalProbability:
         return out << "SurvivalProbability";
     case RiskFactorKey::KeyType::RecoveryRate:
@@ -83,6 +85,8 @@ RiskFactorKey::KeyType parseRiskFactorKeyType(const string& str) {
         return RiskFactorKey::KeyType::EQSpot;
     else if (str == "EQVolatility")
         return RiskFactorKey::KeyType::EQVolatility;
+    else if (str == "DividendYield")
+        return RiskFactorKey::KeyType::DividendYield;
     else if (str == "SurvivalProbability")
         return RiskFactorKey::KeyType::SurvivalProbability;
     else if (str == "RecoveryRate")

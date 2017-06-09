@@ -200,10 +200,10 @@ protected:
     const std::string configuration_;
     std::vector<RiskFactorKey> discountCurveKeys_, indexCurveKeys_, yieldCurveKeys_, fxKeys_, swaptionVolKeys_,
         fxVolKeys_, optionletVolKeys_, survivalProbabilityKeys_, cdsVolKeys_, baseCorrelationKeys_, equityKeys_,
-        equityVolKeys_;
+      equityVolKeys_, dividendYieldKeys_;
     std::map<RiskFactorKey, Real> discountCurveCache_, indexCurveCache_, yieldCurveCache_, fxCache_, swaptionVolCache_,
         fxVolCache_, optionletVolCache_, survivalProbabilityCache_, cdsVolCache_, baseCorrelationCache_, equityCache_,
-        equityVolCache_;
+      equityVolCache_, dividendYieldCache_;
     Real numeraireCache_;
     std::vector<boost::shared_ptr<Scenario>> scenarios_;
     boost::shared_ptr<Scenario> baseScenario_;

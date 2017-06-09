@@ -95,6 +95,8 @@ void ShiftScenarioGenerator::clear() {
     fxCache_.clear();
     equityKeys_.clear();
     equityCache_.clear();
+    dividendYieldKeys_.clear();
+    dividendYieldCache_.clear();
     swaptionVolKeys_.clear();
     swaptionVolCache_.clear();
     fxVolKeys_.clear();
@@ -178,7 +180,7 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
         LOG("cache FX spot " << fx << " for key " << fxKeys_[k]);
     }
 
-    // Cache Equity rate keys
+    // Cache Equity spot keys
     equityKeys_.reserve(simMarketData_->equityNames().size());
     for (Size k = 0; k < simMarketData_->equityNames().size(); k++) {
         // const string& foreign = simMarketData_->ccys()[k + 1];
@@ -190,6 +192,23 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
         LOG("cache Equity spot " << eq << " for key " << equityKeys_[k]);
     }
 
+    // Cache Dividend Yields
+    Size n_eq_names = simMarketData_->equityNames().size();
+    Size n_eq_terms = simMarketData_->equityTenors("").size();
+    dividendYieldKeys_.reserve(n_eq_terms * n_eq_names);
+    count = 0;
+    for (Size j = 0; j < n_eq_names; j++) {
+      std::string name = simMarketData_->equityNames()[j];
+      Handle<YieldTermStructure> ts = market->equityDividendCurve(name, configuration_);
+      for (Size k = 0; k < n_eq_terms; ++k) {
+            dividendYieldKeys_.emplace_back(RiskFactorKey::KeyType::DividendYield, name, k);
+            Real disc = ts->discount(today_ + simMarketData_->equityTenors("")[k]);
+            dividendYieldCache_[dividendYieldKeys_[count]] = disc;
+            LOG("cache discount " << disc << " for key " << dividendYieldKeys_[count]);
+            count++;
+        }      
+    }
+    
     // Cache Swaption (ATM) vol keys
     Size n_swvol_ccy = simMarketData_->swapVolCcys().size();
     Size n_swvol_term = simMarketData_->swapVolTerms().size();
@@ -380,6 +399,10 @@ void ShiftScenarioGenerator::addCacheTo(boost::shared_ptr<Scenario> scenario) {
     for (auto key : equityKeys_) {
         if (!scenario->has(key))
             scenario->add(key, equityCache_[key]);
+    }
+    for (auto key : dividendYieldKeys_) {
+        if (!scenario->has(key))
+            scenario->add(key, dividendYieldCache_[key]);
     }
     if (simMarketData_->simulateFXVols()) {
         for (auto key : fxVolKeys_) {

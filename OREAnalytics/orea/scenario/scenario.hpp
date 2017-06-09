@@ -56,6 +56,7 @@ public:
         FXVolatility,
         EQSpot,
         EQVolatility,
+        DividendYield,
         SurvivalProbability,
         RecoveryRate,
         CDSVolatility,
