@@ -715,8 +715,11 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
                 for (Period p : parameters->equityVolExpiries())
                     times.push_back(dc.yearFraction(asof_, asof_ + p));
 
+                // If true, the strikes are fixed, if false they move with the spot handle
+                bool stickyStrike = false;
+
                 boost::shared_ptr<BlackVolTermStructure> eqVolCurve(
-                    new BlackVarianceSurfaceMoneyness(cal, spot, times, parameters->eqVolMoneyness(), quotes, dc));
+                    new BlackVarianceSurfaceMoneyness(cal, spot, times, parameters->eqVolMoneyness(), quotes, dc, stickyStrike));
                 eqVolCurve->enableExtrapolation();
                 evh = Handle<BlackVolTermStructure>(eqVolCurve);
             }

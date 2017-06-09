@@ -17,13 +17,15 @@
 */
 
 #include <ql/math/interpolations/bilinearinterpolation.hpp>
+#include <ql/quotes/simplequote.hpp>
 #include <qle/termstructures/blackvariancesurfacemoneyness.hpp>
+#include <boost/make_shared.hpp>
 
 namespace QuantExt {
 
 BlackVarianceSurfaceMoneyness::BlackVarianceSurfaceMoneyness(
     const Calendar& cal, const Handle<Quote>& spot, const std::vector<Time>& times, const std::vector<Real>& moneyness,
-    const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix, const DayCounter& dayCounter)
+    const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix, const DayCounter& dayCounter, bool sticyStrike)
     : BlackVarianceTermStructure(0, cal), spot_(spot), dayCounter_(dayCounter), moneyness_(moneyness),
       quotes_(blackVolMatrix) {
 
@@ -32,6 +34,13 @@ BlackVarianceSurfaceMoneyness::BlackVarianceSurfaceMoneyness(
                "mismatch between moneyness vector and vol matrix rows");
 
     QL_REQUIRE(times[0] >= 0, "cannot have times[0] < 0");
+
+    if (sticyStrike) {
+        // we don't want to know if the spot has changed - we take a copy here
+        spot_ = Handle<Quote>(boost::make_shared<SimpleQuote>(spot->value()));
+    } else {
+        registerWith(spot_);
+    }
 
     Size j, i;
     // internally times_ is one bigger than the input "times"

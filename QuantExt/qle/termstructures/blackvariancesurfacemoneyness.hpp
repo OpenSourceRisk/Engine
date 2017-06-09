@@ -38,7 +38,7 @@ public:
     BlackVarianceSurfaceMoneyness(const Calendar& cal, const Handle<Quote>& spot, const std::vector<Time>& times,
                                   const std::vector<Real>& moneyness,
                                   const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix,
-                                  const DayCounter& dayCounter);
+                                  const DayCounter& dayCounter, bool stickyStrike = false);
     //! \name TermStructure interface
     //@{
     DayCounter dayCounter() const { return dayCounter_; }
