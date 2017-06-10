@@ -1,4 +1,3 @@
-
 /*
  Copyright (C) 2017 Quaternion Risk Management Ltd
  All rights reserved.
@@ -179,7 +178,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Po
 
 void ReportWriter::writeCurves(ore::data::Report& report, const std::string& configID, const DateGrid& grid,
                                const TodaysMarketParameters& marketConfig, const boost::shared_ptr<Market>& market) {
-    LOG("Write yield curve discount factors... ");
+    LOG("Write curves... ");
 
     QL_REQUIRE(marketConfig.hasConfiguration(configID), "curve configuration " << configID << " not found");
 
@@ -187,9 +186,11 @@ void ReportWriter::writeCurves(ore::data::Report& report, const std::string& con
     map<string, string> YieldCurves = marketConfig.yieldCurves(configID);
     map<string, string> indexCurves = marketConfig.indexForwardingCurves(configID);
     map<string, string> zeroInflationIndices = marketConfig.zeroInflationIndexCurves(configID);
+    map<string, string> defaultCurves = marketConfig.defaultCurves(configID);
 
     vector<Handle<YieldTermStructure>> yieldCurves;
     vector<Handle<ZeroInflationIndex>> zeroInflationFixings;
+    vector<Handle<DefaultProbabilityTermStructure>> probabilityCurves;
 
     report.addColumn("Tenor", Period()).addColumn("Date", Date());
 
@@ -209,11 +210,16 @@ void ReportWriter::writeCurves(ore::data::Report& report, const std::string& con
         yieldCurves.push_back(market->iborIndex(it.first, configID)->forwardingTermStructure());
     }
     for (auto it : zeroInflationIndices) {
+        DLOG("inflation curve - " << it.first);
         report.addColumn(it.first, double(), 15);
         zeroInflationFixings.push_back(market->zeroInflationIndex(it.first, true, configID));
     }
+    for (auto it : defaultCurves) {
+        DLOG("default curve - " << it.first);
+        report.addColumn(it.first, double(), 15);
+        probabilityCurves.push_back(market->defaultCurve(it.first, configID));
+    }
 
-    // Output the discount factors for each tenor in turn
     for (Size j = 0; j < grid.size(); ++j) {
         Date date = grid[j];
         report.next().add(grid.tenors()[j]).add(date);
@@ -221,6 +227,8 @@ void ReportWriter::writeCurves(ore::data::Report& report, const std::string& con
             report.add(yieldCurves[i]->discount(date));
         for (Size i = 0; i < zeroInflationFixings.size(); ++i)
             report.add(zeroInflationFixings[i]->fixing(date));
+        for (Size i = 0; i < probabilityCurves.size(); ++i)
+            report.add(probabilityCurves[i]->survivalProbability(date));
     }
     report.end();
 }
