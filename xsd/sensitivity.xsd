@@ -16,6 +16,7 @@
       <xs:element type="capfloorvolatilities" name="CapFloorVolatilities"/>
       <xs:element type="discountcurves" name="DiscountCurves"/>
       <xs:element type="dividendyields" name="DividendYieldCurves"/>
+      <xs:element type="crossgammafilter" name="CrossGammaFilter"/>
     </xs:sequence>
   </xs:complexType>
 
