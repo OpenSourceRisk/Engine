@@ -716,7 +716,8 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
                     times.push_back(dc.yearFraction(asof_, asof_ + p));
 
                 // If true, the strikes are fixed, if false they move with the spot handle
-                bool stickyStrike = false;
+                // Should probably be false, but some people like true for sensi runs.
+                bool stickyStrike = true;
 
                 boost::shared_ptr<BlackVolTermStructure> eqVolCurve(
                     new BlackVarianceSurfaceMoneyness(cal, spot, times, parameters->eqVolMoneyness(), quotes, dc, stickyStrike));
