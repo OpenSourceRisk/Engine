@@ -113,13 +113,13 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
     for (XMLNode* child = XMLUtils::getChildNode(dividendYieldCurves, "DividendYieldCurve"); child;
          child = XMLUtils::getNextSibling(child)) {
         string curveName = XMLUtils::getAttribute(child, "equity");
-	LOG("Add dividend yield curve data for equity " << curveName);
-	// same as discount curve sensitivity loading from here ...
+        LOG("Add dividend yield curve data for equity " << curveName);
+        // same as discount curve sensitivity loading from here ...
         CurveShiftData data;
         data.shiftType = XMLUtils::getChildValue(child, "ShiftType", true);
         data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
         data.shiftTenors = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
-	dividendYieldShiftData_[curveName] = data;
+        dividendYieldShiftData_[curveName] = data;
         dividendYieldNames_.push_back(curveName);
     }
 

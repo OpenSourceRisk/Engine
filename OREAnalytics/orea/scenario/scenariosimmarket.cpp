@@ -638,8 +638,9 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
             boost::shared_ptr<SimpleQuote> q(new SimpleQuote(wrapper->discount(equityCurveTimes[i + 1])));
             Handle<Quote> qh(q);
             quotes.push_back(qh);
-	    simData_.emplace(std::piecewise_construct, std::forward_as_tuple(RiskFactorKey::KeyType::DividendYield, eqName, i),
-			     std::forward_as_tuple(q));
+            simData_.emplace(std::piecewise_construct,
+                             std::forward_as_tuple(RiskFactorKey::KeyType::DividendYield, eqName, i),
+                             std::forward_as_tuple(q));
         }
         boost::shared_ptr<YieldTermStructure> eqdivCurve;
         if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister) {

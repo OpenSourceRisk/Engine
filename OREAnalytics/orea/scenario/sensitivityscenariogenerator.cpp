@@ -468,7 +468,7 @@ void SensitivityScenarioGenerator::generateDividendYieldScenarios(
             ALOG("Equity " << sim << " in simmarket is not included in dividend yield sensitivity analysis");
         }
     }
-    
+
     Size n_curves = dividendYieldNames_.size();
     for (Size i = 0; i < n_curves; ++i) {
         string name = dividendYieldNames_[i];
@@ -522,7 +522,7 @@ void SensitivityScenarioGenerator::generateDividendYieldScenarios(
     }
     LOG("Dividend yield curve scenarios done");
 }
-  
+
 void SensitivityScenarioGenerator::generateFxVolScenarios(
     const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up) {
     // We can choose to shift fewer discount curves than listed in the market
@@ -1055,13 +1055,12 @@ void SensitivityScenarioGenerator::generateBaseCorrelationScenarios(
                                                                      << jj << " and termIndex " << kk
                                                                      << " set to zero");
                             shiftedBcData[jj][kk] = 0.0;
-                        }
-            else if (shiftedBcData[jj][kk] > 1.0) {
+                        } else if (shiftedBcData[jj][kk] > 1.0) {
                             ALOG("invalid shifted base correlation " << shiftedBcData[jj][kk] << " at lossLevelIndex "
                                                                      << jj << " and termIndex " << kk
                                                                      << " set to 1 - epsilon");
                             shiftedBcData[jj][kk] = 1.0 - QL_EPSILON;
-            }
+                        }
                         scenario->add(getBaseCorrelationKey(name, idx), shiftedBcData[jj][kk]);
                     }
                 }
@@ -1094,7 +1093,8 @@ SensitivityScenarioGenerator::ScenarioDescription SensitivityScenarioGenerator::
 
 SensitivityScenarioGenerator::ScenarioDescription
 SensitivityScenarioGenerator::dividendYieldScenarioDescription(string name, Size bucket, bool up) {
-    QL_REQUIRE(sensitivityData_->dividendYieldShiftData().find(name) != sensitivityData_->dividendYieldShiftData().end(),
+    QL_REQUIRE(sensitivityData_->dividendYieldShiftData().find(name) !=
+                   sensitivityData_->dividendYieldShiftData().end(),
                "equity " << name << " not found in dividend yield shift data");
     QL_REQUIRE(bucket < sensitivityData_->dividendYieldShiftData()[name].shiftTenors.size(),
                "bucket " << bucket << " out of range");

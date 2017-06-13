@@ -127,7 +127,7 @@ private:
     ScenarioDescription fxScenarioDescription(string ccypair, bool up);
     ScenarioDescription fxVolScenarioDescription(string ccypair, Size expiryBucket, Size strikeBucket, bool up);
     ScenarioDescription equityScenarioDescription(string equity, bool up);
-  ScenarioDescription dividendYieldScenarioDescription(string equity, Size bucket, bool up);
+    ScenarioDescription dividendYieldScenarioDescription(string equity, Size bucket, bool up);
     ScenarioDescription equityVolScenarioDescription(string equity, Size expiryBucket, Size strikeBucket, bool up);
     ScenarioDescription swaptionVolScenarioDescription(string ccy, Size expiryBucket, Size termBucket,
                                                        Size strikeBucket, bool up);
