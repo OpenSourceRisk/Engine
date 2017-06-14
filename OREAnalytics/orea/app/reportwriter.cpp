@@ -183,10 +183,10 @@ void ReportWriter::writeCurves(ore::data::Report& report, const std::string& con
 
     QL_REQUIRE(marketConfig.hasConfiguration(configID), "curve configuration " << configID << " not found");
 
-    map<string, string> discountCurves = marketConfig.discountingCurves(configID);
-    map<string, string> YieldCurves = marketConfig.yieldCurves(configID);
-    map<string, string> indexCurves = marketConfig.indexForwardingCurves(configID);
-    map<string, string> zeroInflationIndices = marketConfig.zeroInflationIndexCurves(configID);
+    map<string, string> discountCurves = marketConfig.mapping(MarketObject::DiscountCurve, configID);
+    map<string, string> YieldCurves = marketConfig.mapping(MarketObject::YieldCurve, configID);
+    map<string, string> indexCurves = marketConfig.mapping(MarketObject::IndexCurve, configID);
+    map<string, string> zeroInflationIndices = marketConfig.mapping(MarketObject::ZeroInflationCurve, configID);
 
     vector<Handle<YieldTermStructure>> yieldCurves;
     vector<Handle<ZeroInflationIndex>> zeroInflationFixings;
