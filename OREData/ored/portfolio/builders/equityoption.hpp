@@ -28,6 +28,7 @@
 #include <ored/portfolio/enginefactory.hpp>
 #include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
 #include <ql/processes/blackscholesprocess.hpp>
+#include <ored/utilities/log.hpp>
 
 namespace ore {
 namespace data {
@@ -48,20 +49,27 @@ protected:
 
     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& equityName, const Currency& ccy) override {
         string key = keyImpl(equityName, ccy);
+        Handle<YieldTermStructure> forecastingCurve;
+
+        if(market_->equityForecastingCurve(equityName) != "") {
+            LOG("Building Equity option with forecasting curve "<< market_->equityForecastingCurve(equityName));
+            forecastingCurve = market_->yieldCurve(market_->equityForecastingCurve(equityName),configuration(MarketContext::pricing));
+        } else {
+            LOG("Building Equity option with discount curve used for forecasting");
+            forecastingCurve = market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
+        }
+        
         boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = boost::make_shared<GeneralizedBlackScholesProcess>(
             market_->equitySpot(equityName, configuration(MarketContext::pricing)),
             market_->equityDividendCurve(equityName,
                                          configuration(MarketContext::pricing)), // dividend yield ~ foreign yield
-            market_->discountCurve(ccy.code(), configuration(MarketContext::pricing)),
+            forecastingCurve,
             market_->equityVol(equityName, configuration(MarketContext::pricing)));
         // separate IR curves required for "discounting" and "forward price estimation"
         Handle<YieldTermStructure> discountCurve =
             market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
-        //! TODO: This pricing engine only takes a single rate curve as input - hence multi-curve discounting is not
-        // supported.
-        //! - for now we pass the curve required to retrieve equity forward quotes. This means the specified CSA
-        // discount curve is not used in pricing.
-        return boost::make_shared<QuantLib::AnalyticEuropeanEngine>(gbsp);
+        
+        return boost::make_shared<QuantLib::AnalyticEuropeanEngine>(gbsp, discountCurve);
     }
 };
 

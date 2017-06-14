@@ -617,6 +617,10 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
     LOG("building equity dividend yield curves...");
     for (const auto& eqName : parameters->equityNames()) {
         DLOG("building " << eqName << " equity dividend yield curve..");
+        if(initMarket->equityForecastingCurve(eqName) != "") {
+            LOG("adding equity forecasting curve "<<initMarket->equityForecastingCurve(eqName));
+            equityForecastingCurves_[eqName] = initMarket->equityForecastingCurve(eqName);
+        }
         Handle<YieldTermStructure> wrapper = initMarket->equityDividendCurve(eqName, configuration);
         vector<Handle<Quote>> quotes;
         boost::shared_ptr<SimpleQuote> q(new SimpleQuote(1.0));
@@ -700,6 +704,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         DLOG("EQ volatility curve built for " << equityName);
     }
     LOG("equity volatilities done");
+
 
     // building base correlation structures
     LOG("building base correlations...");

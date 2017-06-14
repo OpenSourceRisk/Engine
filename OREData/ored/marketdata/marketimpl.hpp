@@ -122,6 +122,10 @@ public:
     //! Equity volatilities
     Handle<BlackVolTermStructure> equityVol(const string& eqName,
                                             const string& configuration = Market::defaultConfiguration) const;
+    
+    //! Equity forecasting curves
+    string equityForecastingCurve(const string& eqName) const;
+
     //! Bond Spreads
     Handle<Quote> securitySpread(const string& securityID,
                                  const string& configuration = Market::defaultConfiguration) const;
@@ -158,6 +162,7 @@ protected:
     map<pair<string, string>, Handle<Quote>> equitySpots_;
     map<pair<string, string>, Handle<YieldTermStructure>> equityDividendCurves_;
     map<pair<string, string>, Handle<BlackVolTermStructure>> equityVols_;
+    map<string, string> equityForecastingCurves_;
     map<pair<string, string>, Handle<Quote>> securitySpreads_;
     Conventions conventions_;
 

@@ -165,6 +165,14 @@ Handle<BlackVolTermStructure> MarketImpl::equityVol(const string& key, const str
     return lookup<Handle<BlackVolTermStructure>>(equityVols_, key, configuration, "equity vol curve");
 }
 
+string MarketImpl::equityForecastingCurve(const string& eqName) const {
+    string curve = "";
+    auto it = equityForecastingCurves_.find(eqName);
+    if(it != equityForecastingCurves_.end()) curve = it->second;
+
+    return curve;
+}
+
 Handle<Quote> MarketImpl::securitySpread(const string& key, const string& configuration) const {
     return lookup<Handle<Quote>>(securitySpreads_, key, configuration, "security spread");
 }

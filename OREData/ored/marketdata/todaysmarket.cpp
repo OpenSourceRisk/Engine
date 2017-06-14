@@ -494,9 +494,19 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                     if (it.second == spec->name()) {
                         LOG("Adding EquityCurve (" << it.first << ") with spec " << *equityspec << " to configuration "
                                                    << configuration.first);
-                        Handle<YieldTermStructure> discYts = discountCurve(equityspec->ccy(), configuration.first);
+                        Handle<YieldTermStructure> yts;
+                        boost::shared_ptr<EquityCurveConfig> equityConfig = curveConfigs.equityCurveConfig(equityspec->curveConfigID());
+                        string fc = equityConfig->forecastingCurve();
+                        if(fc != "") {
+                            LOG("Using "<<fc<<" for Equity forecasting for "<<equityspec->name());
+                            equityForecastingCurves_[it.first] = fc;
+                            yts = yieldCurve(fc, configuration.first);
+                        } else {
+                            LOG("Using discount curve for Equity forecasting");
+                            yts = discountCurve(equityspec->ccy(), configuration.first);
+                        }
                         boost::shared_ptr<YieldTermStructure> divYield =
-                            itr->second->divYieldTermStructure(asof, discYts);
+                            itr->second->divYieldTermStructure(asof, yts);
                         Handle<YieldTermStructure> div_h(divYield);
                         equityDividendCurves_[make_pair(configuration.first, it.first)] = div_h;
                         equitySpots_[make_pair(configuration.first, it.first)] =

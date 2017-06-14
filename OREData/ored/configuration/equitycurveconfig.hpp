@@ -53,7 +53,7 @@ public:
     //! \name Constructors/Destructors
     //@{
     //! Detailed constructor
-    EquityCurveConfig(const string& curveID, const string& curveDescription, const string& currency, const Type& type,
+    EquityCurveConfig(const string& curveID, const string& curveDescription, const string& forecastingCurve, const string& currency, const Type& type,
                       const string& equitySpotQuote, const vector<string>& quotes, const string& dayCountID = "",
                       bool extrapolation = true);
     //! Default constructor
@@ -72,6 +72,7 @@ public:
     //@{
     const string& curveID() const { return curveID_; }
     const string& curveDescription() const { return curveDescription_; }
+    const string& forecastingCurve() const { return forecastingCurve_; }
     const string& currency() const { return currency_; }
     const Type& type() const { return type_; }
     const string& equitySpotQuoteID() const { return equitySpotQuoteID_; }
@@ -84,6 +85,7 @@ public:
     //@{
     string& curveID() { return curveID_; }
     string& curveDescription() { return curveDescription_; }
+    string& forecastingCurve() { return forecastingCurve_; }
     string& currency() { return currency_; }
     Type& type() { return type_; }
     string& equitySpotQuoteID() { return equitySpotQuoteID_; }
@@ -95,6 +97,7 @@ public:
 private:
     string curveID_;
     string curveDescription_;
+    string forecastingCurve_;
     string currency_;
     Type type_;
     string equitySpotQuoteID_;
