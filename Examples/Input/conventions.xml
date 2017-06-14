@@ -836,8 +836,8 @@
     <SettlementDays>2</SettlementDays>
     <SettlementCalendar>MXN,US,UK</SettlementCalendar>
     <RollConvention>MF</RollConvention>
-    <FlatIndex>MXN-TIIE-3M</FlatIndex>
-    <SpreadIndex>USD-LIBOR-3M</SpreadIndex>
+    <FlatIndex>USD-LIBOR-3M</FlatIndex>
+    <SpreadIndex>MXN-TIIE-3M</SpreadIndex>
   </CrossCurrencyBasis>
   <!-- Inflation Swaps -->
   <InflationSwap>
