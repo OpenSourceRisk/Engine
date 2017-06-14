@@ -647,6 +647,7 @@
     <ClCompile Include="staticallycorrectedyieldtermstructure.cpp" />
     <ClCompile Include="survivalprobabilitycurve.cpp" />
     <ClCompile Include="swaptionvolatilityconverter.cpp" />
+    <ClCompile Include="swaptionvolconstantspread.cpp" />
     <ClCompile Include="testsuite.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -671,6 +672,7 @@
     <ClInclude Include="survivalprobabilitycurve.hpp" />
     <ClInclude Include="swaptionmarketdata.hpp" />
     <ClInclude Include="swaptionvolatilityconverter.hpp" />
+    <ClInclude Include="swaptionvolconstantspread.hpp" />
     <ClInclude Include="yieldcurvemarketdata.hpp" />
   </ItemGroup>
   <ItemGroup>

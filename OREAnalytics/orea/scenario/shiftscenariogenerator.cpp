@@ -199,13 +199,12 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
     for (Size i = 0; i < n_swvol_ccy; ++i) {
         std::string ccy = simMarketData_->swapVolCcys()[i];
         Handle<SwaptionVolatilityStructure> ts = market->swaptionVol(ccy, configuration_);
-        Real strike = 0.0; // FIXME
         for (Size j = 0; j < n_swvol_exp; ++j) {
             Period expiry = simMarketData_->swapVolExpiries()[j];
             for (Size k = 0; k < n_swvol_term; ++k) {
                 swaptionVolKeys_.emplace_back(RiskFactorKey::KeyType::SwaptionVolatility, ccy, j * n_swvol_term + k);
                 Period term = simMarketData_->swapVolTerms()[k];
-                Real swvol = ts->volatility(expiry, term, strike);
+                Real swvol = ts->volatility(expiry, term, Null<Real>()); // ATM
                 swaptionVolCache_[swaptionVolKeys_[count]] = swvol;
                 LOG("cache swaption vol " << swvol << " for key " << swaptionVolKeys_[count]);
                 count++;
@@ -220,7 +219,7 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
     count = 0;
     for (Size j = 0; j < n_fxvol_pairs; ++j) {
         string ccypair = simMarketData_->fxVolCcyPairs()[j];
-        Real strike = 0.0; // FIXME
+        Real strike = Null<Real>(); // ATM
         Handle<BlackVolTermStructure> ts = market->fxVol(ccypair, configuration_);
         for (Size k = 0; k < n_fxvol_exp; ++k) {
             fxVolKeys_.emplace_back(RiskFactorKey::KeyType::FXVolatility, ccypair, k);
@@ -232,22 +231,35 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
         }
     }
 
-    // Cache Equtiy vol keys
+    // Cache Equity vol keys
     Size n_equityvol_pairs = simMarketData_->equityVolNames().size();
     Size n_equityvol_exp = simMarketData_->equityVolExpiries().size();
-    equityVolKeys_.reserve(n_equityvol_pairs * n_equityvol_exp);
+    Size n_equityvol_strikes = simMarketData_->eqVolIsSurface() ? simMarketData_->eqVolMoneyness().size() : 1;
+    QL_REQUIRE(n_equityvol_strikes > 0, "No strikes defined for equity vol");
+    equityVolKeys_.reserve(n_equityvol_pairs * n_equityvol_exp * n_equityvol_strikes);
     count = 0;
     for (Size j = 0; j < n_equityvol_pairs; ++j) {
         string equity = simMarketData_->equityVolNames()[j];
-        Real strike = 0.0; // FIXME
         Handle<BlackVolTermStructure> ts = market->equityVol(equity, configuration_);
-        for (Size k = 0; k < n_equityvol_exp; ++k) {
-            equityVolKeys_.emplace_back(RiskFactorKey::KeyType::EQVolatility, equity, k);
-            Period expiry = simMarketData_->equityVolExpiries()[k];
-            Real equityvol = ts->blackVol(today_ + expiry, strike);
-            equityVolCache_[equityVolKeys_[count]] = equityvol;
-            LOG("cache Equity vol " << equityvol << " for key " << equityVolKeys_[count]);
-            count++;
+        Real spot = market->equitySpot(equity, configuration_)->value();
+        LOG("Eq spot for " << equity << " " << spot);
+        for (Size k = 0; k < n_equityvol_strikes; ++k) {
+            Real strike;
+            if (simMarketData_->eqVolIsSurface())
+                strike = spot * simMarketData_->eqVolMoneyness()[k];
+            else
+                strike = Null<Real>();
+            LOG("Eq strike for " << equity << " " << strike);
+            for (Size l = 0; l < n_equityvol_exp; ++l) {
+                // Index is expires then moneyness. TODO: is this the best?
+                Size idx = k * n_equityvol_exp + l;
+                equityVolKeys_.emplace_back(RiskFactorKey::KeyType::EQVolatility, equity, idx);
+                Period expiry = simMarketData_->equityVolExpiries()[l];
+                Real equityvol = ts->blackVol(today_ + expiry, strike);
+                equityVolCache_[equityVolKeys_[count]] = equityvol;
+                LOG("cache Equity vol " << equityvol << " for key " << equityVolKeys_[count]);
+                count++;
+            }
         }
     }
 
@@ -313,7 +325,8 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
     Size n_bc_names = simMarketData_->baseCorrelationNames().size();
     Size n_bc_levels = simMarketData_->baseCorrelationDetachmentPoints().size();
     Size n_bc_terms = simMarketData_->baseCorrelationTerms().size();
-    DLOG("Cache base correlations: " << n_bc_names << " names, " << n_bc_levels << " levels, " << n_bc_terms << " terms");
+    DLOG("Cache base correlations: " << n_bc_names << " names, " << n_bc_levels << " levels, " << n_bc_terms
+                                     << " terms");
     baseCorrelationKeys_.reserve(n_bc_names * n_bc_levels * n_bc_terms);
     count = 0;
     for (Size i = 0; i < n_bc_names; ++i) {

@@ -20,9 +20,9 @@
 #include <ored/marketdata/swaptionvolcurve.hpp>
 #include <ored/utilities/log.hpp>
 #include <ql/termstructures/volatility/swaption/swaptionconstantvol.hpp>
-#include <ql/termstructures/volatility/swaption/swaptionvolcube2.hpp>
 #include <ql/termstructures/volatility/swaption/swaptionvolmatrix.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
+#include <qle/termstructures/swaptionvolcube2.hpp>
 #include <qle/termstructures/swaptionvolcubewithatm.hpp>
 
 using namespace QuantLib;
@@ -206,14 +206,15 @@ SwaptionVolCurve::SwaptionVolCurve(Date asof, SwaptionVolatilityCurveSpec spec, 
 
             Size spreadQuotesRead = 0;
             Size expectedSpreadQuotes = n * spreads.size();
+            vector<vector<bool>> found(smileOptionTenors.size() * smileSwapTenors.size(),
+                                       std::vector<bool>(spreads.size(), false)),
+                zero(smileOptionTenors.size() * smileSwapTenors.size(), std::vector<bool>(spreads.size(), false));
             for (auto& md : loader.loadQuotes(asof)) {
                 if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::SWAPTION) {
 
                     boost::shared_ptr<SwaptionQuote> q = boost::dynamic_pointer_cast<SwaptionQuote>(md);
                     if (q != NULL && q->ccy() == spec.ccy() && q->quoteType() == volatilityType &&
                         q->dimension() == "Smile") {
-
-                        spreadQuotesRead++;
 
                         Size i = std::find(smileOptionTenors.begin(), smileOptionTenors.end(), q->expiry()) -
                                  smileOptionTenors.begin();
@@ -227,16 +228,64 @@ SwaptionVolCurve::SwaptionVolCurve(Date asof, SwaptionVolatilityCurveSpec spec, 
                                        "VolSpreadQuote already found for " << smileOptionTenors[i] << ", "
                                                                            << smileSwapTenors[j] << ", " << spreads[k]);
 
+                            spreadQuotesRead++;
                             // Assume quotes are absolute vols by strike so construct the vol spreads here
                             Volatility atmVol = atm->volatility(smileOptionTenors[i], smileSwapTenors[j], 0.0);
                             boost::shared_ptr<Quote> spreadQuote(new SimpleQuote(q->quote()->value() - atmVol));
                             volSpreadHandles[i * smileSwapTenors.size() + j][k] = Handle<Quote>(spreadQuote);
+                            found[i * smileSwapTenors.size() + j][k] = true;
+                            zero[i * smileSwapTenors.size() + j][k] = close_enough(q->quote()->value(), 0.0);
                         }
                     }
                 }
             }
             LOG("Read " << spreadQuotesRead << " quotes for VolCube. Expected " << expectedSpreadQuotes);
-            QL_REQUIRE(spreadQuotesRead == expectedSpreadQuotes, "Missing quotes for vol cube");
+            if (spreadQuotesRead < expectedSpreadQuotes) {
+                for (Size i = 0; i < smileOptionTenors.size(); ++i) {
+                    for (Size j = 0; j < smileSwapTenors.size(); ++j) {
+                        for (Size k = 0; k < spreads.size(); ++k) {
+                            if (!found[i * smileSwapTenors.size() + j][k]) {
+                                WLOG("Missing market quote for " << smileOptionTenors[i] << "/" << smileSwapTenors[j]
+                                                                 << "/" << spreads[k]);
+                            }
+                        }
+                    }
+                }
+                QL_FAIL("Missing quotes for vol cube");
+            }
+
+            // post processing: extrapolate leftmost non-zero value flat to the left and overwrite
+            // zero values
+            for (Size i = 0; i < smileOptionTenors.size(); ++i) {
+                for (Size j = 0; j < smileSwapTenors.size(); ++j) {
+                    Real lastNonZeroValue = 0.0;
+                    for (Size k = 0; k < spreads.size(); ++k) {
+                        boost::shared_ptr<SimpleQuote> q = boost::static_pointer_cast<SimpleQuote>(
+                            *volSpreadHandles[i * smileSwapTenors.size() + j][spreads.size() - 1 - k]);
+                        if (zero[i * smileSwapTenors.size() + j][spreads.size() - 1 - k]) {
+                            q->setValue(lastNonZeroValue);
+                            WLOG("Overwrite vol spread for " << smileOptionTenors[i] << "/" << smileSwapTenors[j] << "/"
+                                                             << spreads[spreads.size() - 1 - k] << " with "
+                                                             << lastNonZeroValue << " since market quote is zero");
+                        } else {
+                            lastNonZeroValue = q->value();
+                        }
+                    }
+                }
+            }
+
+            // log vols
+            for (Size i = 0; i < smileOptionTenors.size(); ++i) {
+                for (Size j = 0; j < smileSwapTenors.size(); ++j) {
+                    ostringstream o;
+                    for (Size k = 0; k < spreads.size(); ++k) {
+                        o << volSpreadHandles[i * smileSwapTenors.size() + j][k]->value() +
+                                 atm->volatility(smileOptionTenors[i], smileSwapTenors[j], 0.0)
+                          << " ";
+                    }
+                    DLOG("Vols for " << smileOptionTenors[i] << "/" << smileSwapTenors[j] << ": " << o.str());
+                }
+            }
 
             // build swap indices
             auto it = requiredSwapIndices.find(config->swapIndexBase());
@@ -250,9 +299,9 @@ SwaptionVolCurve::SwaptionVolCurve(Date asof, SwaptionVolatilityCurveSpec spec, 
             bool vegaWeighedSmileFit = false; // TODO
 
             Handle<SwaptionVolatilityStructure> hATM(atm);
-            boost::shared_ptr<SwaptionVolCube2> cube = boost::make_shared<SwaptionVolCube2>(
+            boost::shared_ptr<QuantExt::SwaptionVolCube2> cube = boost::make_shared<QuantExt::SwaptionVolCube2>(
                 hATM, smileOptionTenors, smileSwapTenors, spreads, volSpreadHandles, swapIndexBase, shortSwapIndexBase,
-                vegaWeighedSmileFit);
+                vegaWeighedSmileFit, config->flatExtrapolation());
             cube->enableExtrapolation();
 
             // Wrap it in a SwaptionVolCubeWithATM

@@ -46,6 +46,7 @@ public:
     SwaptionVolCubeWithATM(const boost::shared_ptr<SwaptionVolatilityCube>& cube)
         : SwaptionVolatilityStructure(0, cube->calendar(), cube->businessDayConvention(), cube->dayCounter()),
           cube_(cube) {
+        enableExtrapolation(cube_->allowsExtrapolation());
         registerWith(cube);
     }
 

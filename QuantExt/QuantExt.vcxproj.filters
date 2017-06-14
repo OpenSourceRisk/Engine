@@ -450,6 +450,12 @@
     <ClInclude Include="qle\termstructures\swaptionvolcubewithatm.hpp">
       <Filter>termstructures</Filters>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\swaptionvolcube2.hpp">
+      <Filter>termstructures</Filters>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\swaptionvolconstantspread.hpp">
+      <Filter>termstructures</Filters>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -665,6 +671,9 @@
       <Filter>termstructures</Filter>
     </ClCompile>
     <ClCompile Include="qle\termstructures\swaptionvolatilityconverter.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\swaptionvolcube2.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
     <ClCompile Include="qle\termstructures\spreadedoptionletvolatility.cpp">

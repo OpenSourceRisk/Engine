@@ -102,7 +102,7 @@ void SensitivityAnalysis::generateSensitivities() {
     boost::shared_ptr<DateGrid> dg = boost::make_shared<DateGrid>("1,0W");
     vector<boost::shared_ptr<ValuationCalculator>> calculators = buildValuationCalculators();
     ValuationEngine engine(asof_, dg, simMarket_, modelBuilders_);
-    for(auto const &i:this->progressIndicators())
+    for (auto const& i : this->progressIndicators())
         engine.registerProgressIndicator(i);
     LOG("Run Sensitivity Scenarios");
     engine.buildCube(portfolio_, cube, calculators);
@@ -472,16 +472,16 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
             vector<Period> tenors = sensitivityData_->swaptionVolShiftData()[ccy].shiftTerms;
             vector<Period> expiries = sensitivityData_->swaptionVolShiftData()[ccy].shiftExpiries;
             QL_REQUIRE(strikes.size() == 0, "Only ATM Swaption vols supported");
-            Real atmFwd = 0.0; // hardcoded, since only ATM supported
             Size keyIdx = key.index;
             Size expIdx = keyIdx / tenors.size();
             Period p_exp = expiries[expIdx];
             Size tenIdx = keyIdx % tenors.size();
             Period p_ten = tenors[tenIdx];
             Handle<SwaptionVolatilityStructure> vts = simMarket_->swaptionVol(ccy, marketConfiguration_);
-            Time t_exp = vts->dayCounter().yearFraction(asof_, asof_ + p_exp);
-            Time t_ten = vts->dayCounter().yearFraction(asof_, asof_ + p_ten);
-            Real atmVol = vts->volatility(t_exp, t_ten, atmFwd);
+            // Time t_exp = vts->dayCounter().yearFraction(asof_, asof_ + p_exp);
+            // Time t_ten = vts->dayCounter().yearFraction(asof_, asof_ + p_ten);
+            // Real atmVol = vts->volatility(t_exp, t_ten, Null<Real>());
+            Real atmVol = vts->volatility(p_exp, p_ten, Null<Real>());
             shiftMult = atmVol;
         }
     } else if (keytype == RiskFactorKey::KeyType::OptionletVolatility) {
@@ -506,7 +506,6 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
         shiftSize = sensitivityData_->cdsVolShiftData()[name].shiftSize;
         if (boost::to_upper_copy(sensitivityData_->cdsVolShiftData()[name].shiftType) == "RELATIVE") {
             vector<Period> expiries = sensitivityData_->cdsVolShiftData()[name].shiftExpiries;
-            Real atmFwd = 0.0; // hardcoded, since only ATM supported
             Size keyIdx = key.index;
             Size expIdx = keyIdx;
             Period p_exp = expiries[expIdx];

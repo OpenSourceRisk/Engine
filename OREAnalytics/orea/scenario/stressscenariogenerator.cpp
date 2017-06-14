@@ -375,7 +375,6 @@ void StressScenarioGenerator::addSwaptionVolShifts(StressTestScenarioData::Stres
 
         Handle<SwaptionVolatilityStructure> ts = initMarket_->swaptionVol(ccy, configuration_);
         DayCounter dc = ts->dayCounter();
-        Real strike = 0.0; // FIXME
 
         // cache original vol data
         for (Size j = 0; j < n_swvol_exp; ++j) {
@@ -390,7 +389,7 @@ void StressScenarioGenerator::addSwaptionVolShifts(StressTestScenarioData::Stres
             Period expiry = simMarketData_->swapVolExpiries()[j];
             for (Size k = 0; k < n_swvol_term; ++k) {
                 Period term = simMarketData_->swapVolTerms()[k];
-                Real swvol = ts->volatility(expiry, term, strike);
+                Real swvol = ts->volatility(expiry, term, Null<Real>()); // ATM
                 volData[j][k] = swvol;
             }
         }
