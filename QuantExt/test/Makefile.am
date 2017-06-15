@@ -23,7 +23,8 @@ QLE_TESTS = \
 	swaptionmarketdata.hpp \
 	yieldcurvemarketdata.hpp \
 	survivalprobabilitycurve.hpp survivalprobabilitycurve.cpp \
-	swaptionvolconstantspread.hpp swaptionvolconstantspread.cpp
+	swaptionvolconstantspread.hpp swaptionvolconstantspread.cpp \
+    fxvolsmile.hpp fxvolsmile.cpp
 
 dist-hook:
 	mkdir -p $(distdir)/build

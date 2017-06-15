@@ -30,7 +30,7 @@
   \ingroup tests
 */
 class FxVolSmileTest {
-  public:
+public:
     static void testSurface2();
     static void testStickyDeltaSurfaceWithCurve();
     static void testStickyDeltaSurfaceWithSurface();

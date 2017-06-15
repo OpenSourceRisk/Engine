@@ -29,33 +29,31 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-    class VannaVolgaSmileSection : public FxSmileSection {
-      public:
-        VannaVolgaSmileSection
-        (Real spot, Real rd, Real rf, Time t, Volatility atmVol, Volatility rr25d, Volatility bf25d);
+class VannaVolgaSmileSection : public FxSmileSection {
+public:
+    VannaVolgaSmileSection(Real spot, Real rd, Real rf, Time t, Volatility atmVol, Volatility rr25d, Volatility bf25d);
 
-        //! getters for unit test
-        Real k_atm() const { return k_atm_; }
-        Real k_25c() const { return k_25c_; }
-        Real k_25p() const { return k_25p_; }
-        Volatility vol_atm() const { return atmVol_; }
-        Volatility vol_25c() const { return vol_25c_; }
-        Volatility vol_25p() const { return vol_25p_; }
-  
-        //! \name FxSmileSection interface
-        //@{
-        Volatility volatility(Real strike) const;
-        //}@
+    //! getters for unit test
+    Real k_atm() const { return k_atm_; }
+    Real k_25c() const { return k_25c_; }
+    Real k_25p() const { return k_25p_; }
+    Volatility vol_atm() const { return atmVol_; }
+    Volatility vol_25c() const { return vol_25c_; }
+    Volatility vol_25p() const { return vol_25p_; }
 
-      private:
-        Real d1(Real x) const;
-        Real d2(Real x) const;
+    //! \name FxSmileSection interface
+    //@{
+    Volatility volatility(Real strike) const;
+    //}@
 
-        Real k_atm_, k_25c_, k_25p_;
-        Volatility vol_25c_, vol_25p_;
-    };
+private:
+    Real d1(Real x) const;
+    Real d2(Real x) const;
 
-}
+    Real k_atm_, k_25c_, k_25p_;
+    Volatility vol_25c_, vol_25p_;
+};
 
+} // namespace QuantExt
 
 #endif
