@@ -680,7 +680,7 @@ boost::shared_ptr<data::CurveConfigurations> curveConfigurations() {
         "EQUITY_FWD/PRICE/SP5/USD/1Y",
         "EQUITY_FWD/PRICE/SP5/USD/20180226"
     };
-    vector<string> eqVolExpiries{
+    vector<string> equityVolExpiries{
         "1Y",
         "2018-02-26"
     };
@@ -690,7 +690,7 @@ boost::shared_ptr<data::CurveConfigurations> curveConfigurations() {
         "SP5", "", "USD", EquityCurveConfig::Type::ForwardPrice, "EQUITY/PRICE/SP5/USD", eqFwdQuotes);
 
     configs->equityVolCurveConfig("SP5") = boost::make_shared<EquityVolatilityCurveConfig>(
-        "SP5", "", "USD", EquityVolatilityCurveConfig::Dimension::ATM, eqVolExpiries);
+        "SP5", "", "USD", EquityVolatilityCurveConfig::Dimension::ATM, equityVolExpiries);
 
     return configs;
 }

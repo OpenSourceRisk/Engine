@@ -492,12 +492,12 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
         {"14_EquityOption_SP5", "Up:DiscountCurve/USD/3/3Y", 216085, 1.0169 },
         {"14_EquityOption_SP5", "Down:DiscountCurve/USD/2/2Y", 216085, -122.988 },
         {"14_EquityOption_SP5", "Down:DiscountCurve/USD/3/3Y", 216085, -1.0169 },
-        {"14_EquityOption_SP5", "Up:EQSpot/SP5/0/spot", 216085, 8423.66 },
-        {"14_EquityOption_SP5", "Down:EQSpot/SP5/0/spot", 216085, -8277.55 },
+        {"14_EquityOption_SP5", "Up:EquitySpot/SP5/0/spot", 216085, 8423.66 },
+        {"14_EquityOption_SP5", "Down:EquitySpot/SP5/0/spot", 216085, -8277.55 },
         {"14_EquityOption_SP5", "Up:FXSpot/EURUSD/0/spot", 216085, -2139.45 },
         {"14_EquityOption_SP5", "Down:FXSpot/EURUSD/0/spot", 216085, 2182.67 },
-        {"14_EquityOption_SP5", "Up:EQVolatility/SP5/0/5Y/ATM", 216085, 1849.98 },
-        {"14_EquityOption_SP5", "Down:EQVolatility/SP5/0/5Y/ATM", 216085, -1850.33 } };
+        {"14_EquityOption_SP5", "Up:EquityVolatility/SP5/0/5Y/ATM", 216085, 1849.98 },
+        {"14_EquityOption_SP5", "Down:EquityVolatility/SP5/0/5Y/ATM", 216085, -1850.33 } };
 
     std::map<pair<string, string>, Real> npvMap, sensiMap;
     for (Size i = 0; i < cachedResults.size(); ++i) {
@@ -936,8 +936,8 @@ void SensitivityAnalysisTest::testEquityOptionDeltaGamma() {
     Real epsilon = 1.e-15; // a small number
     string discountCurveStr = "DiscountCurve";
     string yieldCurveStr = "YieldCurve";
-    string equitySpotStr = "EQSpot";
-    string equityVolStr = "EQVolatility";
+    string equitySpotStr = "EquitySpot";
+    string equityVolStr = "EquityVolatility";
 
     for (auto it : qlInfoMap) {
         string id = it.first;
