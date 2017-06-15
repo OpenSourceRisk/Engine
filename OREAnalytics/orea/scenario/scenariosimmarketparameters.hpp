@@ -50,7 +50,7 @@ public:
     ScenarioSimMarketParameters()
         : extrapolate_(false), swapVolSimulate_(false), capFloorVolSimulate_(false),
           survivalProbabilitySimulate_(false), recoveryRateSimulate_(false), cdsVolSimulate_(false),
-          fxVolSimulate_(false), equityVolSimulate_(false), baseCorrelationSimulate_(false) {
+          fxVolSimulate_(false), equityVolSimulate_(false), equityIsSurface_(false), baseCorrelationSimulate_(false) {
         // set default tenors
         capFloorVolExpiries_[""];
         defaultTenors_[""];
