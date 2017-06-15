@@ -608,7 +608,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         Handle<Quote> qh(q);
         equitySpots_.insert(
             pair<pair<string, string>, Handle<Quote>>(make_pair(Market::defaultConfiguration, eqName), qh));
-        simData_.emplace(std::piecewise_construct, std::forward_as_tuple(RiskFactorKey::KeyType::EQSpot, eqName),
+        simData_.emplace(std::piecewise_construct, std::forward_as_tuple(RiskFactorKey::KeyType::EquitySpot, eqName),
                          std::forward_as_tuple(q));
     }
     LOG("equity spots done");
@@ -675,7 +675,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
                     times.push_back(wrapper->timeFromReference(date));
                     boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
                     simData_.emplace(std::piecewise_construct,
-                                     std::forward_as_tuple(RiskFactorKey::KeyType::EQVolatility, equityName, i),
+                                     std::forward_as_tuple(RiskFactorKey::KeyType::EquityVolatility, equityName, i),
                                      std::forward_as_tuple(q));
                     quotes.emplace_back(q);
                 }
@@ -703,7 +703,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
                         Volatility vol = wrapper->blackVol(asof_ + p, k);
                         boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
                         simData_.emplace(std::piecewise_construct,
-                                         std::forward_as_tuple(RiskFactorKey::KeyType::EQVolatility, equityName, idx),
+                                         std::forward_as_tuple(RiskFactorKey::KeyType::EquityVolatility, equityName, idx),
                                          std::forward_as_tuple(q));
                         quotes[i][j] = Handle<Quote>(q);
                     }

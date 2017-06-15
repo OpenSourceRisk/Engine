@@ -184,7 +184,7 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
         // const string& foreign = simMarketData_->ccys()[k + 1];
         // const string& domestic = simMarketData_->ccys()[0];
         string equity = simMarketData_->equityNames()[k];
-        equityKeys_.emplace_back(RiskFactorKey::KeyType::EQSpot, equity); // k
+        equityKeys_.emplace_back(RiskFactorKey::KeyType::EquitySpot, equity); // k
         Real eq = market->equitySpot(equity, configuration_)->value();
         equityCache_[equityKeys_[k]] = eq;
         LOG("cache Equity spot " << eq << " for key " << equityKeys_[k]);
@@ -253,7 +253,7 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
             for (Size l = 0; l < n_equityvol_exp; ++l) {
                 // Index is expires then moneyness. TODO: is this the best?
                 Size idx = k * n_equityvol_exp + l;
-                equityVolKeys_.emplace_back(RiskFactorKey::KeyType::EQVolatility, equity, idx);
+                equityVolKeys_.emplace_back(RiskFactorKey::KeyType::EquityVolatility, equity, idx);
                 Period expiry = simMarketData_->equityVolExpiries()[l];
                 Real equityvol = ts->blackVol(today_ + expiry, strike);
                 equityVolCache_[equityVolKeys_[count]] = equityvol;

@@ -113,7 +113,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     eqKeys_.reserve(n_eq);
     for (Size k = 0; k < n_eq; k++) {
         const string& eqName = model_->eqbs(k)->eqName();
-        eqKeys_.emplace_back(RiskFactorKey::KeyType::EQSpot, eqName);
+        eqKeys_.emplace_back(RiskFactorKey::KeyType::EquitySpot, eqName);
     }
 
     // equity vols
@@ -267,7 +267,7 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
 
                 for (Size j = 0; j < expiries.size(); j++) {
                     Real vol = eqVols_[k]->blackVol(dates_[i] + expiries[j], Null<Real>(), true);
-                    scenarios[i]->add(RiskFactorKey(RiskFactorKey::KeyType::EQVolatility, equityName, j), vol);
+                    scenarios[i]->add(RiskFactorKey(RiskFactorKey::KeyType::EquityVolatility, equityName, j), vol);
                 }
             }
         }

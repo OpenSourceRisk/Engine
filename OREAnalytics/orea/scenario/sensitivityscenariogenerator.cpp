@@ -1029,7 +1029,7 @@ SensitivityScenarioGenerator::ScenarioDescription SensitivityScenarioGenerator::
 
 SensitivityScenarioGenerator::ScenarioDescription SensitivityScenarioGenerator::equityScenarioDescription(string equity,
                                                                                                           bool up) {
-    RiskFactorKey key(RiskFactorKey::KeyType::EQSpot, equity);
+    RiskFactorKey key(RiskFactorKey::KeyType::EquitySpot, equity);
     std::ostringstream o;
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
     ScenarioDescription desc(type, key, "spot");
@@ -1110,7 +1110,7 @@ SensitivityScenarioGenerator::equityVolScenarioDescription(string equity, Size e
     SensitivityScenarioData::VolShiftData data = sensitivityData_->equityVolShiftData()[equity];
     QL_REQUIRE(expiryBucket < data.shiftExpiries.size(), "expiry bucket " << expiryBucket << " out of range");
     Size index = strikeBucket * data.shiftExpiries.size() + expiryBucket;
-    RiskFactorKey key(RiskFactorKey::KeyType::EQVolatility, equity, index);
+    RiskFactorKey key(RiskFactorKey::KeyType::EquityVolatility, equity, index);
     std::ostringstream o;
     if (data.shiftStrikes.size() == 0) {
         o << data.shiftExpiries[expiryBucket] << "/ATM";
