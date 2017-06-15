@@ -184,7 +184,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                     if (it.second == spec->name()) {
                         LOG("Adding FXSpot (" << it.first << ") with spec " << *fxspec << " to configuration "
                                               << configuration.first);
-                        fxSpots_[configuration.first].addQuote(it.first, itr->second->spot());
+                        fxSpots_[configuration.first].addQuote(it.first, itr->second->handle());
                     }
                 }
                 break;
@@ -202,7 +202,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                     // build the curve
                     LOG("Building FXVolatility for asof " << asof);
                     boost::shared_ptr<FXVolCurve> fxVolCurve =
-                        boost::make_shared<FXVolCurve>(asof, *fxvolspec, loader, curveConfigs);
+                        boost::make_shared<FXVolCurve>(asof, *fxvolspec, loader, curveConfigs, requiredFxSpots, requiredYieldCurves);
                     itr = requiredFxVolCurves.insert(make_pair(fxvolspec->name(), fxVolCurve)).first;
                 }
 
