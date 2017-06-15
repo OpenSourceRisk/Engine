@@ -49,7 +49,7 @@ void StressScenarioGenerator::generateScenarios(const boost::shared_ptr<Scenario
         addYieldCurveShifts(data, scenario);
         if (simMarketData_->simulateFXVols())
             addFxVolShifts(data, scenario);
-        if (simMarketData_->simulateEQVols())
+        if (simMarketData_->simulateEquityVols())
             addEquityVolShifts(data, scenario);
         if (simMarketData_->simulateSwapVols())
             addSwaptionVolShifts(data, scenario);

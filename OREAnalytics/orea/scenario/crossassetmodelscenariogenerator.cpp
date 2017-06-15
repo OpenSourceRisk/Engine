@@ -117,7 +117,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     }
 
     // equity vols
-    if (simMarketConfig_->equityVolNames().size() > 0 && simMarketConfig_->simulateEQVols()) {
+    if (simMarketConfig_->equityVolNames().size() > 0 && simMarketConfig_->simulateEquityVols()) {
         LOG("CrossAssetModel is simulating EQ vols");
         for (Size k = 0; k < simMarketConfig_->equityVolNames().size(); k++) {
             // Calculating the index is messy
@@ -254,7 +254,7 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
         }
 
         // Equity vols
-        if (simMarketConfig_->simulateEQVols()) {
+        if (simMarketConfig_->simulateEquityVols()) {
             const vector<Period>& expiries = simMarketConfig_->equityVolExpiries();
             for (Size k = 0; k < simMarketConfig_->equityVolNames().size(); k++) {
                 const string& equityName = simMarketConfig_->equityVolNames()[k];

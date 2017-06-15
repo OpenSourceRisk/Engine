@@ -105,12 +105,12 @@ public:
     const string& fxVolDecayMode() const { return fxVolDecayMode_; }
     const vector<string>& fxVolCcyPairs() const { return fxVolCcyPairs_; }
 
-    bool simulateEQVols() const { return equityVolSimulate_; }
-    const vector<Period>& eqVolExpiries() const { return equityVolExpiries_; }
-    const string& eqVolDecayMode() const { return equityVolDecayMode_; }
-    const vector<string>& eqVolNames() const { return equityVolNames_; }
-    bool eqVolIsSurface() const { return equityIsSurface_; }
-    const vector<Real>& eqVolMoneyness() const { return equityMoneyness_; }
+    bool simulateEquityVols() const { return equityVolSimulate_; }
+    const vector<Period>& equityVolExpiries() const { return equityVolExpiries_; }
+    const string& equityVolDecayMode() const { return equityVolDecayMode_; }
+    const vector<string>& equityVolNames() const { return equityVolNames_; }
+    bool equityVolIsSurface() const { return equityIsSurface_; }
+    const vector<Real>& equityVolMoneyness() const { return equityMoneyness_; }
 
     const vector<string>& additionalScenarioDataIndices() const { return additionalScenarioDataIndices_; }
     const vector<string>& additionalScenarioDataCcys() const { return additionalScenarioDataCcys_; }
@@ -167,12 +167,12 @@ public:
     string& fxVolDecayMode() { return fxVolDecayMode_; }
     vector<string>& fxVolCcyPairs() { return fxVolCcyPairs_; }
 
-    bool& simulateEQVols() { return equityVolSimulate_; }
+    bool& simulateEquityVols() { return equityVolSimulate_; }
     vector<Period>& equityVolExpiries() { return equityVolExpiries_; }
     string& equityVolDecayMode() { return equityVolDecayMode_; }
     vector<string>& equityVolNames() { return equityVolNames_; }
-    bool& eqVolIsSurface() { return equityIsSurface_; }
-    vector<Real>& eqVolMoneyness() { return equityMoneyness_; }
+    bool& equityVolIsSurface() { return equityIsSurface_; }
+    vector<Real>& equityVolMoneyness() { return equityMoneyness_; }
 
     vector<string>& additionalScenarioDataIndices() { return additionalScenarioDataIndices_; }
     vector<string>& additionalScenarioDataCcys() { return additionalScenarioDataCcys_; }

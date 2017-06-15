@@ -58,7 +58,7 @@ void SensitivityScenarioGenerator::generateScenarios(const boost::shared_ptr<Sce
         generateFxVolScenarios(sensiScenarioFactory, false);
     }
 
-    if (simMarketData_->simulateEQVols()) {
+    if (simMarketData_->simulateEquityVols()) {
         generateEquityVolScenarios(sensiScenarioFactory, true);
         generateEquityVolScenarios(sensiScenarioFactory, false);
     }
@@ -538,7 +538,7 @@ void SensitivityScenarioGenerator::generateEquityVolScenarios(
 
     Size n_eqvol_names = equityVolNames_.size();
     Size n_eqvol_exp = simMarketData_->equityVolExpiries().size();
-    Size n_eqvol_strikes = simMarketData_->eqVolIsSurface() ? simMarketData_->eqVolMoneyness().size() : 1;
+    Size n_eqvol_strikes = simMarketData_->equityVolIsSurface() ? simMarketData_->equityVolMoneyness().size() : 1;
 
     // [strike] x [expiry]
     vector<vector<Real>> values(n_eqvol_strikes, vector<Real>(n_eqvol_exp, 0.0));
@@ -567,8 +567,8 @@ void SensitivityScenarioGenerator::generateEquityVolScenarios(
             times[j] = dc.yearFraction(today_, d);
             for (Size k = 0; k < n_eqvol_strikes; k++) {
                 Real strike;
-                if (simMarketData_->eqVolIsSurface()) {
-                    strike = spot * simMarketData_->eqVolMoneyness()[k];
+                if (simMarketData_->equityVolIsSurface()) {
+                    strike = spot * simMarketData_->equityVolMoneyness()[k];
                 } else {
                     strike = Null<Real>();
                 }

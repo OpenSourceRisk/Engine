@@ -664,8 +664,8 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
 
         Handle<BlackVolTermStructure> evh;
 
-        if (parameters->simulateEQVols()) {
-            if (parameters->eqVolIsSurface() == false) {
+        if (parameters->simulateEquityVols()) {
+            if (parameters->equityVolIsSurface() == false) {
                 LOG("Simulating EQ Vols (BlackVarianceCurve3) for " << equityName);
                 vector<Handle<Quote>> quotes;
                 vector<Time> times;
@@ -685,17 +685,17 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
             } else {
                 LOG("Simulating EQ Vols (BlackVarianceSurfaceMoneyness) for " << equityName);
                 Handle<Quote> spot = equitySpots_[make_pair(Market::defaultConfiguration, equityName)];
-                Size n = parameters->eqVolMoneyness().size();
-                Size m = parameters->eqVolExpiries().size();
+                Size n = parameters->equityVolMoneyness().size();
+                Size m = parameters->equityVolExpiries().size();
                 vector<vector<Handle<Quote>>> quotes(n, vector<Handle<Quote>>(m, Handle<Quote>()));
                 for (Size i = 0; i < n; i++) {
-                    Real mon = parameters->eqVolMoneyness()[i];
+                    Real mon = parameters->equityVolMoneyness()[i];
 
                     // strike
                     Real k = spot->value() * mon;
 
                     for (Size j = 0; j < m; j++) {
-                        Period p = parameters->eqVolExpiries()[j];
+                        Period p = parameters->equityVolExpiries()[j];
 
                         // Index is expires then moneyness. TODO: is this the best?
                         Size idx = i * m + j;
@@ -720,7 +720,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
                 bool stickyStrike = true;
 
                 boost::shared_ptr<BlackVolTermStructure> eqVolCurve(
-                    new BlackVarianceSurfaceMoneyness(cal, spot, times, parameters->eqVolMoneyness(), quotes, dc, stickyStrike));
+                    new BlackVarianceSurfaceMoneyness(cal, spot, times, parameters->equityVolMoneyness(), quotes, dc, stickyStrike));
                 eqVolCurve->enableExtrapolation();
                 evh = Handle<BlackVolTermStructure>(eqVolCurve);
             }

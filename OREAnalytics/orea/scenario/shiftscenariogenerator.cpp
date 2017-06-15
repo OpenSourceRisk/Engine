@@ -234,7 +234,7 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
     // Cache Equity vol keys
     Size n_equityvol_pairs = simMarketData_->equityVolNames().size();
     Size n_equityvol_exp = simMarketData_->equityVolExpiries().size();
-    Size n_equityvol_strikes = simMarketData_->eqVolIsSurface() ? simMarketData_->eqVolMoneyness().size() : 1;
+    Size n_equityvol_strikes = simMarketData_->equityVolIsSurface() ? simMarketData_->equityVolMoneyness().size() : 1;
     QL_REQUIRE(n_equityvol_strikes > 0, "No strikes defined for equity vol");
     equityVolKeys_.reserve(n_equityvol_pairs * n_equityvol_exp * n_equityvol_strikes);
     count = 0;
@@ -245,8 +245,8 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
         LOG("Eq spot for " << equity << " " << spot);
         for (Size k = 0; k < n_equityvol_strikes; ++k) {
             Real strike;
-            if (simMarketData_->eqVolIsSurface())
-                strike = spot * simMarketData_->eqVolMoneyness()[k];
+            if (simMarketData_->equityVolIsSurface())
+                strike = spot * simMarketData_->equityVolMoneyness()[k];
             else
                 strike = Null<Real>();
             LOG("Eq strike for " << equity << " " << strike);
@@ -400,7 +400,7 @@ void ShiftScenarioGenerator::addCacheTo(boost::shared_ptr<Scenario> scenario) {
                 scenario->add(key, fxVolCache_[key]);
         }
     }
-    if (simMarketData_->simulateEQVols()) {
+    if (simMarketData_->simulateEquityVols()) {
         for (auto key : equityVolKeys_) {
             if (!scenario->has(key))
                 scenario->add(key, equityVolCache_[key]);
