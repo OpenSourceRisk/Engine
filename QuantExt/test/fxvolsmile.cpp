@@ -21,14 +21,17 @@
 */
 
 #include "fxvolsmile.hpp"
-#include "utilities.hpp"
 
-#include <iostream>
-
+#include <boost/make_shared.hpp>
+#include <ql/math/matrix.hpp>
+#include <ql/quotes/simplequote.hpp>
+#include <ql/termstructures/volatility/equityfx/blackvariancesurface.hpp>
+#include <ql/termstructures/yield/discountcurve.hpp>
+#include <ql/termstructures/yield/flatforward.hpp>
+#include <ql/time/calendars/target.hpp>
+#include <ql/time/daycounters/actualactual.hpp>
+#include <ql/utilities/dataparsers.hpp>
 #include <qle/termstructures/blackinvertedvoltermstructure.hpp>
-#include <qle/termstructures/blackstickydeltasurface.hpp>
-#include <qle/termstructures/blackvariancecurve2.hpp>
-#include <qle/termstructures/blackvariancesurface2.hpp>
 #include <qle/termstructures/fxblackvolsurface.hpp>
 #include <qle/termstructures/fxvannavolgasmilesection.hpp>
 
@@ -53,11 +56,8 @@ struct CommonVars {
     vector<Volatility> bfs;
 
     Handle<Quote> baseSpot;
-    Handle<Quote> shiftedSpot;
     Handle<YieldTermStructure> baseDomesticYield;
     Handle<YieldTermStructure> baseForeignYield;
-    Handle<YieldTermStructure> shiftedDomesticYield;
-    Handle<YieldTermStructure> shiftedForeignYield;
 
     CommonVars() {
 
@@ -98,129 +98,21 @@ struct CommonVars {
         bfs = vector<Volatility>(atmVols.size(), 0.001);
 
         baseSpot = Handle<Quote>(boost::shared_ptr<Quote>(new SimpleQuote(100)));
-        shiftedSpot = Handle<Quote>(boost::shared_ptr<Quote>(new SimpleQuote(110)));
 
-        baseDomesticYield = Handle<YieldTermStructure>(QuantExt::flatRate(today, 0.03, dc));
-        shiftedDomesticYield = Handle<YieldTermStructure>(QuantExt::flatRate(today, 0.032, dc));
-        baseForeignYield = Handle<YieldTermStructure>(QuantExt::flatRate(today, 0.01, dc));
-        shiftedForeignYield = Handle<YieldTermStructure>(QuantExt::flatRate(today, 0.011, dc));
+        baseDomesticYield = Handle<YieldTermStructure>(
+            boost::make_shared<FlatForward>(today, Handle<Quote>(boost::make_shared<SimpleQuote>(0.03)), dc));
+        baseForeignYield = Handle<YieldTermStructure>(
+            boost::make_shared<FlatForward>(today, Handle<Quote>(boost::make_shared<SimpleQuote>(0.01)), dc));
     }
 };
 
-Real fwdDelta(bool isCall, Time t, Handle<YieldTermStructure> domYTS, Handle<YieldTermStructure> forYTS, Real spot,
-              Real strike, Real sigma) {
-
-    Real r_d = domYTS->zeroRate(t, Continuous);
-    Real r_f = forYTS->zeroRate(t, Continuous);
-    Real fwd = spot * exp((r_d - r_f) * t);
-    Real tmp = sigma * ::sqrt(t);
-    Real d_plus = (::log(fwd / strike) + 0.5 * tmp * tmp) / tmp;
-    Real phi = isCall ? 1 : -1;
-    CumulativeNormalDistribution cnd;
-    return phi * cnd(d_plus);
-}
-
 } // namespace
 
-void FxVolSmileTest::testSurface2() {
-
-    BOOST_MESSAGE("Testing fx black vol surface 2");
-
-    SavedSettings backup;
-
-    CommonVars vars;
-
-    BlackVarianceSurface2 surface(vars.dates, vars.strikes, vars.vols, vars.dc);
-
-    Time t = vars.dc.yearFraction(vars.today, Date(1, Apr, 2014));
-
-    if (surface.blackVol(Date(1, Apr, 2014), 90) != vars.vols[0][2])
-        BOOST_FAIL("Invalid vol returned by date");
-    if (surface.blackVol(Date(1, Mar, 2014), 110) != vars.vols[2][1])
-        BOOST_FAIL("Invalid vol returned by date");
-    if (surface.blackVol(t, 90) != vars.vols[0][2])
-        BOOST_FAIL("Invalid vol returned by time");
-
-    // Now bump the eval date by 2 years
-    Settings::instance().evaluationDate() = Date(1, Jan, 2016);
-    if (surface.blackVol(t, 90) != vars.vols[0][2])
-        BOOST_FAIL("Invalid vol returned by time (when shifted)");
-}
-
-void FxVolSmileTest::testStickyDeltaSurfaceWithCurve() {
-
-    BOOST_MESSAGE("Testing fx sticky delta surface with underlying ATM curve");
-
-    SavedSettings backup;
-
-    CommonVars vars;
-
-    Handle<BlackVolTermStructure> base(
-        boost::shared_ptr<BlackVolTermStructure>(new BlackVarianceCurve2(vars.dates, vars.atmVols, vars.dc)));
-
-    Real vol_6m_50 = base->blackVol(0.5, 50);
-    Real vol_6m_100 = base->blackVol(0.5, 100);
-    if (vol_6m_50 != vol_6m_100)
-        BOOST_FAIL("ATM Vol Curve is exhibiting a smile");
-
-    BlackStickyDeltaSurface bsd(base, vars.baseSpot, vars.baseDomesticYield, vars.baseForeignYield, vars.shiftedSpot,
-                                vars.shiftedDomesticYield, vars.shiftedForeignYield);
-
-    // Now ask the sticky delta surface for vols at the same expiry
-    if (bsd.blackVol(0.5, 50) != vol_6m_50)
-        BOOST_FAIL("BlackStickyDeltaSurface should return the same vol with an ATM Curve");
-    if (bsd.blackVol(0.2, 100) != base->blackVol(0.2, 80))
-        BOOST_FAIL("BlackStickyDeltaSurface should return the same vol with an ATM Curve");
-}
-
-void FxVolSmileTest::testStickyDeltaSurfaceWithSurface() {
-
-    BOOST_MESSAGE("Testing fx sticky delta surface with underlying VOL surface");
-
-    SavedSettings backup;
-
-    CommonVars vars;
-
-    Handle<BlackVolTermStructure> base(boost::shared_ptr<BlackVolTermStructure>(
-        new BlackVarianceSurface2(vars.dates, vars.strikes, vars.vols, vars.dc)));
-
-    BlackStickyDeltaSurface bsd(base, vars.baseSpot, vars.baseDomesticYield, vars.baseForeignYield, vars.shiftedSpot,
-                                vars.shiftedDomesticYield, vars.shiftedForeignYield);
-
-    // Get the base Vol for time = 0.4 and strike = 105
-    Real t = 0.4;
-    Real baseStrike = 109;
-    Real baseVol = base->blackVol(t, baseStrike);
-
-    // Calculate delta.
-    Real baseDelta =
-        fwdDelta(true, t, vars.baseDomesticYield, vars.baseForeignYield, vars.baseSpot->value(), baseStrike, baseVol);
-
-    // cout << " S " << vars.baseSpot->value() << " K " << baseStrike << " Vol "
-    //     << baseVol << " D " << baseDelta << endl;
-
-    // Shifted strike
-    Real baseFwd = vars.baseSpot->value() * vars.baseForeignYield->discount(t) / vars.baseDomesticYield->discount(t);
-    Real shiftedFwd =
-        vars.shiftedSpot->value() * vars.shiftedForeignYield->discount(t) / vars.shiftedDomesticYield->discount(t);
-
-    Real shiftedStrike = baseStrike * shiftedFwd / baseFwd;
-    Real shiftedVol = bsd.blackVol(t, shiftedStrike);
-
-    // Calculate delta.
-    Real shiftedDelta = fwdDelta(true, t, vars.shiftedDomesticYield, vars.shiftedForeignYield,
-                                 vars.shiftedSpot->value(), shiftedStrike, shiftedVol);
-
-    // cout << " S " << vars.shiftedSpot->value() << " K " << shiftedStrike << " Vol "
-    //     << shiftedVol << " D " << shiftedDelta << endl;
-
-    if (fabs(baseDelta - shiftedDelta) > 0.00001)
-        BOOST_FAIL("BlackStickyDeltaSurface failed to preserve delta.");
-}
+namespace testsuite {
 
 void FxVolSmileTest::testVannaVolgaFxSmileSection() {
 
-    BOOST_MESSAGE("Testing fx vanna volga smile");
+    BOOST_TEST_MESSAGE("Testing fx vanna volga smile");
 
     SavedSettings backup;
 
@@ -288,7 +180,7 @@ struct VolData {
 
 void FxVolSmileTest::testVannaVolgaFxVolSurface() {
 
-    BOOST_MESSAGE("Testing fx vanna volga surface");
+    BOOST_TEST_MESSAGE("Testing fx vanna volga surface");
 
     SavedSettings backup;
 
@@ -356,7 +248,7 @@ void FxVolSmileTest::testVannaVolgaFxVolSurface() {
         boost::shared_ptr<YieldTermStructure>(new DiscountCurve(discountDates, dfFor, dc)));
 
     // build surface
-    FxBlackVannaVolgaVolatilitySurface volSurface(dates, atm, rr, bf, dc, fxSpot, domYTS, forYTS);
+    FxBlackVannaVolgaVolatilitySurface volSurface(asof, dates, atm, rr, bf, dc, fxSpot, domYTS, forYTS);
 
     // 1.55,1.75,0.121507
     Real vol = volSurface.blackVol(1.75, 1.55);
@@ -373,7 +265,7 @@ void FxVolSmileTest::testVannaVolgaFxVolSurface() {
 
 void FxVolSmileTest::testInvertedVolTermStructure() {
 
-    BOOST_MESSAGE("Testing inverted vol term structure");
+    BOOST_TEST_MESSAGE("Testing inverted vol term structure");
 
     SavedSettings backup;
 
@@ -408,58 +300,12 @@ void FxVolSmileTest::testInvertedVolTermStructure() {
     }
 }
 
-void FxVolSmileTest::testATMvolFromSurface() {
-
-    BOOST_MESSAGE("Testing getting ATM vols from a surface with strike = 0");
-
-    SavedSettings backup;
-
-    CommonVars vars;
-
-    Handle<BlackVolTermStructure> curve(
-        boost::shared_ptr<BlackVolTermStructure>(new BlackVarianceCurve2(vars.dates, vars.atmVols, vars.dc)));
-
-    Handle<YieldTermStructure> domYTS(
-        boost::shared_ptr<YieldTermStructure>(new FlatForward(vars.today, 0.01, vars.dc)));
-    Handle<YieldTermStructure> forYTS(
-        boost::shared_ptr<YieldTermStructure>(new FlatForward(vars.today, 0.02, vars.dc)));
-    Handle<BlackVolTermStructure> surface(
-        boost::shared_ptr<BlackVolTermStructure>(new FxBlackVannaVolgaVolatilitySurface(
-            vars.dates, vars.atmVols, vars.rrs, vars.bfs, vars.dc, vars.baseSpot, domYTS, forYTS)));
-
-    Handle<BlackVolTermStructure> invCurve(
-        boost::shared_ptr<BlackVolTermStructure>(new BlackInvertedVolTermStructure(curve)));
-
-    Handle<BlackVolTermStructure> invSurface(
-        boost::shared_ptr<BlackVolTermStructure>(new BlackInvertedVolTermStructure(surface)));
-
-    // test we get the same vol (the ATM vol from the surface when we set strike = 0)
-    Time times[] = { 0.1, 0.14, 0.2, 0.45, 0.55, 0.77 };
-
-    for (Size i = 0; i < sizeof(times) / sizeof(times[0]); i++) {
-        Time t = times[i];
-        Volatility vol1 = curve->blackVol(t, 100);
-        Volatility vol2 = surface->blackVol(t, 0);
-        Volatility vol3 = invCurve->blackVol(t, 0);
-        Volatility vol4 = invSurface->blackVol(t, 0);
-        if (fabs(vol1 - vol2) > 0.0000001)
-            BOOST_FAIL("Failed to get expected ATM vol (" << vol1 << ") from vol surface, got (" << vol2 << ")");
-        if (fabs(vol1 - vol3) > 0.0000001)
-            BOOST_FAIL("Failed to get expected ATM vol (" << vol1 << ") from inverted vol curve, got (" << vol3 << ")");
-        if (fabs(vol1 - vol4) > 0.0000001)
-            BOOST_FAIL("Failed to get expected ATM vol (" << vol1 << ") from inverted vol surface, got (" << vol4
-                                                          << ")");
-    }
-}
-
 test_suite* FxVolSmileTest::suite() {
     test_suite* suite = BOOST_TEST_SUITE("FxVolSmileTests");
-    suite->add(QUANTEXT_TEST_CASE(&FxVolSmileTest::testSurface2));
-    suite->add(QUANTEXT_TEST_CASE(&FxVolSmileTest::testStickyDeltaSurfaceWithCurve));
-    suite->add(QUANTEXT_TEST_CASE(&FxVolSmileTest::testStickyDeltaSurfaceWithSurface));
-    suite->add(QUANTEXT_TEST_CASE(&FxVolSmileTest::testVannaVolgaFxSmileSection));
-    suite->add(QUANTEXT_TEST_CASE(&FxVolSmileTest::testVannaVolgaFxVolSurface));
-    suite->add(QUANTEXT_TEST_CASE(&FxVolSmileTest::testInvertedVolTermStructure));
-    suite->add(QUANTEXT_TEST_CASE(&FxVolSmileTest::testATMvolFromSurface));
+    suite->add(BOOST_TEST_CASE(&FxVolSmileTest::testVannaVolgaFxSmileSection));
+    suite->add(BOOST_TEST_CASE(&FxVolSmileTest::testVannaVolgaFxVolSurface));
+    suite->add(BOOST_TEST_CASE(&FxVolSmileTest::testInvertedVolTermStructure));
     return suite;
 }
+
+} // namespace testsuite

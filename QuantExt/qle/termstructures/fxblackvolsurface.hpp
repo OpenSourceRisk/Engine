@@ -24,9 +24,9 @@
 #define quantext_fx_black_vol_surface_hpp
 
 #include <ql/math/interpolation.hpp>
+#include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
-#include <qle/termstructures/blackvariancecurve2.hpp>
 #include <qle/termstructures/fxvannavolgasmilesection.hpp>
 
 using namespace QuantLib;
@@ -39,14 +39,15 @@ namespace QuantExt {
 */
 class FxBlackVolatilitySurface : public BlackVolatilityTermStructure {
 public:
-    FxBlackVolatilitySurface(const std::vector<Date>& dates, const std::vector<Volatility>& atmVols,
-                             const std::vector<Volatility>& rr25d, const std::vector<Volatility>& bf25d,
-                             const DayCounter& dayCounter, const Handle<Quote>& fxSpot,
-                             const Handle<YieldTermStructure>& domesticTS, const Handle<YieldTermStructure>& foreignTS);
+    FxBlackVolatilitySurface(const Date& referenceDate, const std::vector<Date>& dates,
+                             const std::vector<Volatility>& atmVols, const std::vector<Volatility>& rr25d,
+                             const std::vector<Volatility>& bf25d, const DayCounter& dayCounter,
+                             const Handle<Quote>& fxSpot, const Handle<YieldTermStructure>& domesticTS,
+                             const Handle<YieldTermStructure>& foreignTS);
     //! \name TermStructure interface
     //@{
     DayCounter dayCounter() const { return dayCounter_; }
-    Date maxDate() const;
+    Date maxDate() const { return maxDate_; }
     //@}
     //! \name VolatilityTermStructure interface
     //@{
@@ -72,12 +73,12 @@ protected:
 
 private:
     std::vector<Time> times_;
-    Size maxDays_;
     DayCounter dayCounter_;
+    Date maxDate_;
     Handle<Quote> fxSpot_;
     Handle<YieldTermStructure> domesticTS_;
     Handle<YieldTermStructure> foreignTS_;
-    BlackVarianceCurve2 atmCurve_;
+    BlackVarianceCurve atmCurve_;
     std::vector<Volatility> rr25d_;
     std::vector<Volatility> bf25d_;
     Interpolation rrCurve_;
@@ -95,11 +96,12 @@ inline void FxBlackVolatilitySurface::accept(AcyclicVisitor& v) {
 
 class FxBlackVannaVolgaVolatilitySurface : public FxBlackVolatilitySurface {
 public:
-    FxBlackVannaVolgaVolatilitySurface(const std::vector<Date>& dates, const std::vector<Volatility>& atmVols,
-                                       const std::vector<Volatility>& rr25d, const std::vector<Volatility>& bf25d,
-                                       const DayCounter& dc, const Handle<Quote>& fx,
-                                       const Handle<YieldTermStructure>& dom, const Handle<YieldTermStructure>& fore)
-        : FxBlackVolatilitySurface(dates, atmVols, rr25d, bf25d, dc, fx, dom, fore) {}
+    FxBlackVannaVolgaVolatilitySurface(const Date& refDate, const std::vector<Date>& dates,
+                                       const std::vector<Volatility>& atmVols, const std::vector<Volatility>& rr25d,
+                                       const std::vector<Volatility>& bf25d, const DayCounter& dc,
+                                       const Handle<Quote>& fx, const Handle<YieldTermStructure>& dom,
+                                       const Handle<YieldTermStructure>& fore)
+        : FxBlackVolatilitySurface(refDate, dates, atmVols, rr25d, bf25d, dc, fx, dom, fore) {}
 
 protected:
     virtual boost::shared_ptr<FxSmileSection> blackVolSmileImpl(Real spot, Real rd, Real rf, Time t, Volatility atm,

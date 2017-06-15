@@ -24,36 +24,42 @@ using namespace std;
 
 namespace QuantExt {
 
-FxBlackVolatilitySurface::FxBlackVolatilitySurface(
-    const std::vector<Date>& dates, const std::vector<Volatility>& atmVols, const std::vector<Volatility>& rr25d,
-    const std::vector<Volatility>& bf25d, const DayCounter& dayCounter, const Handle<Quote>& fxSpot,
-    const Handle<YieldTermStructure>& domesticTS, const Handle<YieldTermStructure>& foreignTS)
-    : BlackVolatilityTermStructure(0, NullCalendar()), times_(dates.size()), dayCounter_(dayCounter), fxSpot_(fxSpot),
-      domesticTS_(domesticTS), foreignTS_(foreignTS), atmCurve_(dates, atmVols, dayCounter), rr25d_(rr25d),
-      bf25d_(bf25d) {
+FxBlackVolatilitySurface::FxBlackVolatilitySurface(const Date& referenceDate, const std::vector<Date>& dates,
+                                                   const std::vector<Volatility>& atmVols,
+                                                   const std::vector<Volatility>& rr25d,
+                                                   const std::vector<Volatility>& bf25d, const DayCounter& dayCounter,
+                                                   const Handle<Quote>& fxSpot,
+                                                   const Handle<YieldTermStructure>& domesticTS,
+                                                   const Handle<YieldTermStructure>& foreignTS)
+    : BlackVolatilityTermStructure(referenceDate), times_(dates.size()), dayCounter_(dayCounter), fxSpot_(fxSpot),
+      domesticTS_(domesticTS), foreignTS_(foreignTS), atmCurve_(referenceDate, dates, atmVols, dayCounter),
+      rr25d_(rr25d), bf25d_(bf25d) {
+
+    QL_REQUIRE(dates.size() > 1, "at least 1 date required");
+    maxDate_ = dates.back();
 
     QL_REQUIRE(dates.size() == rr25d.size(), "mismatch between date vector and 25D RR vector");
     QL_REQUIRE(dates.size() == bf25d.size(), "mismatch between date vector and 25D BF vector");
 
     // this has already been done for dates
     for (Size i = 0; i < dates.size(); i++) {
+        QL_REQUIRE(referenceDate < dates[i], "Dates must be greater than reference date");
         times_[i] = timeFromReference(dates[i]);
         if (i > 0) {
             QL_REQUIRE(times_[i] > times_[i - 1], "dates must be sorted unique!");
         }
     }
 
-    // for floating maxDate() calculation
-    maxDays_ = dates.back() - referenceDate();
-
     // set up the 3 interpolators
     rrCurve_ = LinearInterpolation(times_.begin(), times_.end(), rr25d_.begin());
     bfCurve_ = LinearInterpolation(times_.begin(), times_.end(), bf25d_.begin());
 
     atmCurve_.enableExtrapolation();
-}
 
-Date FxBlackVolatilitySurface::maxDate() const { return referenceDate() + maxDays_; }
+    registerWith(domesticTS_);
+    registerWith(foreignTS_);
+    registerWith(fxSpot_);
+}
 
 boost::shared_ptr<FxSmileSection> FxBlackVolatilitySurface::blackVolSmile(Time t) const {
     // we interpolate on the 3 curves independently
@@ -82,7 +88,7 @@ boost::shared_ptr<FxSmileSection> FxBlackVolatilitySurface::blackVolSmile(Time t
 
 Volatility FxBlackVolatilitySurface::blackVolImpl(Time t, Real strike) const {
     // If asked for strike == 0, just return the ATM value.
-    if (strike == 0)
+    if (strike == 0 || strike == Null<Real>())
         return atmCurve_.blackVol(t, 0);
     else
         return blackVolSmile(t)->volatility(strike);

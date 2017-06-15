@@ -25,20 +25,20 @@
 
 #include <boost/test/unit_test.hpp>
 
+namespace testsuite {
+
 //! FX vol smile tests
 /*!
   \ingroup tests
 */
 class FxVolSmileTest {
 public:
-    static void testSurface2();
-    static void testStickyDeltaSurfaceWithCurve();
-    static void testStickyDeltaSurfaceWithSurface();
     static void testVannaVolgaFxSmileSection();
     static void testVannaVolgaFxVolSurface();
     static void testInvertedVolTermStructure();
-    static void testATMvolFromSurface();
     static boost::unit_test_framework::test_suite* suite();
 };
+
+} // namespace testsuite
 
 #endif
