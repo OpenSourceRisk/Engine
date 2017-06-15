@@ -29,6 +29,12 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
+/*! Vanna Volga Smile section
+ *
+ *  Consistent Pricing of FX Options
+ *  Castagna & Mercurio (2006)
+ *  http://papers.ssrn.com/sol3/papers.cfm?abstract_id=873788
+ */
 class VannaVolgaSmileSection : public FxSmileSection {
 public:
     VannaVolgaSmileSection(Real spot, Real rd, Real rf, Time t, Volatility atmVol, Volatility rr25d, Volatility bf25d);

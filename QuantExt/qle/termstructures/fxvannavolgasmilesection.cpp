@@ -27,8 +27,8 @@ VannaVolgaSmileSection::VannaVolgaSmileSection(Real spot, Real rd, Real rf, Time
                                                Volatility bf25d)
     : FxSmileSection(spot, rd, rf, t, atmVol, rr25d, bf25d) {
 
-    //   Real k_atm_, k_25c_, k_25p_;
-    //   Volatility vol_25c_, vol_25p_;
+    // Consistent Pricing of FX Options
+    // Castagna & Mercurio (2006)
 
     // eq(1). Assumes Delta is unadjusted spot delta which is probably wrong
     k_atm_ = spot * exp((rd - rf + 0.5 * atmVol * atmVol) * t);
@@ -78,7 +78,7 @@ Volatility VannaVolgaSmileSection::volatility(Real k) const {
     Real d1d2k = d1(k) * d2(k);
 
     Real tmp = atmVol_ * atmVol_ + d1d2k * (2 * atmVol_ * D1 + D2);
-    QL_REQUIRE(tmp >= 0, "VannaVolga attempting to take sqaure root of negative number");
+    QL_REQUIRE(tmp >= 0, "VannaVolga attempting to take square root of negative number");
 
     return atmVol_ + (-atmVol_ + sqrt(tmp)) / d1d2k;
 }
