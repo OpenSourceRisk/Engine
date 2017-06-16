@@ -50,7 +50,8 @@ public:
     ScenarioSimMarketParameters()
         : extrapolate_(false), swapVolSimulate_(false), capFloorVolSimulate_(false),
           survivalProbabilitySimulate_(false), recoveryRateSimulate_(false), cdsVolSimulate_(false),
-          fxVolSimulate_(false), equityVolSimulate_(false), equityIsSurface_(false), baseCorrelationSimulate_(false) {
+          fxVolSimulate_(false), equityVolSimulate_(false), equityIsSurface_(false), equityVolSimulateATMOnly_(true),
+          baseCorrelationSimulate_(false) {
         // set default tenors
         capFloorVolExpiries_[""];
         defaultTenors_[""];
@@ -106,10 +107,11 @@ public:
     const vector<string>& fxVolCcyPairs() const { return fxVolCcyPairs_; }
 
     bool simulateEquityVols() const { return equityVolSimulate_; }
+    bool equityVolIsSurface() const { return equityIsSurface_; }
+    bool simulateEquityVolATMOnly() const { return equityVolSimulateATMOnly_; }
     const vector<Period>& equityVolExpiries() const { return equityVolExpiries_; }
     const string& equityVolDecayMode() const { return equityVolDecayMode_; }
     const vector<string>& equityVolNames() const { return equityVolNames_; }
-    bool equityVolIsSurface() const { return equityIsSurface_; }
     const vector<Real>& equityVolMoneyness() const { return equityMoneyness_; }
 
     const vector<string>& additionalScenarioDataIndices() const { return additionalScenarioDataIndices_; }
@@ -168,10 +170,11 @@ public:
     vector<string>& fxVolCcyPairs() { return fxVolCcyPairs_; }
 
     bool& simulateEquityVols() { return equityVolSimulate_; }
+    bool& equityVolIsSurface() { return equityIsSurface_; }
+    bool& simulateEquityVolATMOnly() { return equityVolSimulateATMOnly_; }
     vector<Period>& equityVolExpiries() { return equityVolExpiries_; }
     string& equityVolDecayMode() { return equityVolDecayMode_; }
     vector<string>& equityVolNames() { return equityVolNames_; }
-    bool& equityVolIsSurface() { return equityIsSurface_; }
     vector<Real>& equityVolMoneyness() { return equityMoneyness_; }
 
     vector<string>& additionalScenarioDataIndices() { return additionalScenarioDataIndices_; }
@@ -242,10 +245,11 @@ private:
     vector<string> fxVolCcyPairs_;
 
     bool equityVolSimulate_;
+    bool equityIsSurface_;
+    bool equityVolSimulateATMOnly_;
     vector<Period> equityVolExpiries_;
     string equityVolDecayMode_;
     vector<string> equityVolNames_;
-    bool equityIsSurface_;
     vector<Real> equityMoneyness_;
 
     vector<string> additionalScenarioDataIndices_;

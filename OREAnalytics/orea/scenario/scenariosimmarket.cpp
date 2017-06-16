@@ -42,7 +42,6 @@
 #include <ql/time/daycounters/actualactual.hpp>
 
 #include <ql/experimental/credit/basecorrelationstructure.hpp>
-
 #include <qle/termstructures/dynamicblackvoltermstructure.hpp>
 #include <qle/termstructures/dynamicswaptionvolmatrix.hpp>
 #include <qle/termstructures/strippedoptionletadapter2.hpp>
@@ -361,7 +360,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
             } else {
                 svp = Handle<SwaptionVolatilityStructure>(svolp);
             }
-
+            
         } else {
             string decayModeString = parameters->swapVolDecayMode();
             ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);
@@ -661,9 +660,11 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
     LOG("building eq volatilities...");
     for (const auto& equityName : parameters->equityVolNames()) {
         Handle<BlackVolTermStructure> wrapper = initMarket->equityVol(equityName, configuration);
+        bool isSurface = parameters->eqVolIsSurface();
 
         Handle<BlackVolTermStructure> evh;
 
+<<<<<<< HEAD
         if (parameters->simulateEquityVols()) {
             if (parameters->equityVolIsSurface() == false) {
                 LOG("Simulating EQ Vols (BlackVarianceCurve3) for " << equityName);
@@ -724,6 +725,30 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
                 eqVolCurve->enableExtrapolation();
                 evh = Handle<BlackVolTermStructure>(eqVolCurve);
             }
+=======
+        if (parameters->simulateEQVols()) {
+            LOG("Simulating EQ Vols (BlackVarianceCurve3) for " << equityName);
+            vector<Handle<Quote>> quotes;
+            vector<Time> times;
+            for (Size i = 0; i < parameters->equityVolExpiries().size(); i++) {
+                Date date = asof_ + parameters->equityVolExpiries()[i];
+                Volatility vol = wrapper->blackVol(date, 0.0, true); //ATM
+                times.push_back(wrapper->timeFromReference(date));
+                boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
+                simData_.emplace(std::piecewise_construct,
+                                 std::forward_as_tuple(RiskFactorKey::KeyType::EQVolatility, equityName, i),
+                                 std::forward_as_tuple(q));
+                quotes.emplace_back(q);
+            }
+            boost::shared_ptr<BlackVolTermStructure> eqVolCurve(new BlackVarianceCurve3(
+                0, NullCalendar(), wrapper->businessDayConvention(), wrapper->dayCounter(), times, quotes));
+
+            if(isSurface) {
+                evh = Handle<BlackVolTermStructure>(boost::make_shared<EquityVolatilityConstantSpread>(Handle<BlackVolTermStructure>(eqVolCurve), wrapper) );
+            } else {
+                evh = Handle<BlackVolTermStructure>(eqVolCurve);
+            }
+>>>>>>> sinead_equityVolSmile
         } else {
             string decayModeString = parameters->equityVolDecayMode();
             DLOG("Deterministic EQ Vols with decay mode " << decayModeString << " for " << equityName);
