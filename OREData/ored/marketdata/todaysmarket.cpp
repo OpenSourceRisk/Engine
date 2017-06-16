@@ -104,7 +104,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
             // Once we have a non-Yield curve spec, we make sure to build all swap indices
             // add add them to requiredSwapIndices for later.
             if (swapIndicesBuilt == false && spec->baseType() != CurveSpec::CurveType::Yield) {
-                for (const auto& it : params.swapIndices(configuration.first)) {
+                for (const auto& it : params.mapping(MarketObject::SwapIndexCurve, configuration.first)) {
                     const string& swapIndexName = it.first;
                     const string& discountIndex = it.second;
 
@@ -141,21 +141,21 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                 }
 
                 // We may have to add this spec multiple times (for discounting, yield and forwarding curves)
-                for (auto& it : params.discountingCurves(configuration.first)) {
+                for (auto& it : params.mapping(MarketObject::DiscountCurve, configuration.first)) {
                     if (it.second == spec->name()) {
                         LOG("Adding DiscountCurve(" << it.first << ") with spec " << *ycspec << " to configuration "
                                                     << configuration.first);
                         discountCurves_[make_pair(configuration.first, it.first)] = itr->second->handle();
                     }
                 }
-                for (auto& it : params.yieldCurves(configuration.first)) {
+                for (auto& it : params.mapping(MarketObject::YieldCurve, configuration.first)) {
                     if (it.second == spec->name()) {
                         LOG("Adding YieldCurve(" << it.first << ") with spec " << *ycspec << " to configuration "
                                                  << configuration.first);
                         yieldCurves_[make_pair(configuration.first, it.first)] = itr->second->handle();
                     }
                 }
-                for (const auto& it : params.indexForwardingCurves(configuration.first)) {
+                for (const auto& it : params.mapping(MarketObject::IndexCurve, configuration.first)) {
                     if (it.second == spec->name()) {
                         LOG("Adding Index(" << it.first << ") with spec " << *ycspec << " to configuration "
                                             << configuration.first);
@@ -180,7 +180,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                 }
 
                 // add the handle to the Market Map (possible lots of times for proxies)
-                for (const auto& it : params.fxSpots(configuration.first)) {
+                for (const auto& it : params.mapping(MarketObject::FXSpot, configuration.first)) {
                     if (it.second == spec->name()) {
                         LOG("Adding FXSpot (" << it.first << ") with spec " << *fxspec << " to configuration "
                                               << configuration.first);
@@ -207,7 +207,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                 }
 
                 // add the handle to the Market Map (possible lots of times for proxies)
-                for (const auto& it : params.fxVolatilities(configuration.first)) {
+                for (const auto& it : params.mapping(MarketObject::FXVol, configuration.first)) {
                     if (it.second == spec->name()) {
                         LOG("Adding FXVol (" << it.first << ") with spec " << *fxvolspec << " to configuration "
                                              << configuration.first);
@@ -238,7 +238,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                     curveConfigs.swaptionVolCurveConfig(swvolspec->curveConfigID());
 
                 // add the handle to the Market Map (possible lots of times for proxies)
-                for (const auto& it : params.swaptionVolatilities(configuration.first)) {
+                for (const auto& it : params.mapping(MarketObject::SwaptionVol, configuration.first)) {
                     if (it.second == spec->name()) {
                         LOG("Adding SwaptionVol (" << it.first << ") with spec " << *swvolspec << " to configuration "
                                                    << configuration.first);
@@ -283,7 +283,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                 }
 
                 // add the handle to the Market Map (possible lots of times for proxies)
-                for (const auto& it : params.capFloorVolatilities(configuration.first)) {
+                for (const auto& it : params.mapping(MarketObject::CapFloorVol, configuration.first)) {
                     if (it.second == spec->name()) {
                         LOG("Adding CapFloorVol (" << it.first << ") with spec " << *cfVolSpec << " to configuration "
                                                    << configuration.first);
@@ -308,7 +308,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                     itr = requiredDefaultCurves.insert(make_pair(defaultspec->name(), defaultCurve)).first;
                 }
 
-                for (const auto it : params.defaultCurves(configuration.first)) {
+                for (const auto it : params.mapping(MarketObject::DefaultCurve, configuration.first)) {
                     if (it.second == spec->name()) {
                         LOG("Adding DefaultCurve (" << it.first << ") with spec " << *defaultspec
                                                     << " to configuration " << configuration.first);
@@ -338,7 +338,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                 }
 
                 // add the handle to the Market Map (possible lots of times for proxies)
-                for (const auto& it : params.cdsVolatilities(configuration.first)) {
+                for (const auto& it : params.mapping(MarketObject::CDSVol, configuration.first)) {
                     if (it.second == spec->name()) {
                         LOG("Adding CDSVol (" << it.first << ") with spec " << *cdsvolspec << " to configuration "
                                               << configuration.first);
@@ -368,7 +368,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                 }
 
                 // add the handle to the Market Map (possible lots of times for proxies)
-                for (const auto& it : params.baseCorrelations(configuration.first)) {
+                for (const auto& it : params.mapping(MarketObject::BaseCorrelation, configuration.first)) {
                     if (it.second == spec->name()) {
                         LOG("Adding Base Correlatin (" << it.first << ") with spec " << *baseCorrelationSpec
                                                        << " to configuration " << configuration.first);
@@ -396,7 +396,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                 // this try-catch is necessary to handle cases where no ZC inflation index curves exist in scope
                 map<string, string> zcInfMap;
                 try {
-                    zcInfMap = params.zeroInflationIndexCurves(configuration.first);
+                    zcInfMap = params.mapping(MarketObject::ZeroInflationCurve, configuration.first);
                 } catch (QuantLib::Error& e) {
                     LOG(e.what());
                 }
@@ -422,7 +422,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                 // this try-catch is necessary to handle cases where no YoY inflation index curves exist in scope
                 map<string, string> yyInfMap;
                 try {
-                    yyInfMap = params.yoyInflationIndexCurves(configuration.first);
+                    yyInfMap = params.mapping(MarketObject::YoYInflationCurve, configuration.first);
                 } catch (QuantLib::Error& e) {
                     LOG(e.what());
                 }
@@ -465,7 +465,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                               .insert(make_pair(infcapfloorspec->name(), inflationCapFloorPriceSurface))
                               .first;
                 }
-                for (const auto it : params.inflationCapFloorPriceSurfaces(configuration.first)) {
+                for (const auto it : params.mapping(MarketObject::InflationCapFloorPriceSurface, configuration.first)) {
                     if (it.second == spec->name()) {
                         LOG("Adding InflationCapFloorPriceSurface (" << it.first << ") with spec " << *infcapfloorspec
                                                                      << " to configuration " << configuration.first);
@@ -490,7 +490,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                     itr = requiredEquityCurves.insert(make_pair(equityspec->name(), equityCurve)).first;
                 }
 
-                for (const auto it : params.equityCurves(configuration.first)) {
+                for (const auto it : params.mapping(MarketObject::EquityCurve, configuration.first)) {
                     if (it.second == spec->name()) {
                         LOG("Adding EquityCurve (" << it.first << ") with spec " << *equityspec << " to configuration "
                                                    << configuration.first);
@@ -534,13 +534,13 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                 }
 
                 // add the handle to the Market Map (possible lots of times for proxies)
-                for (const auto& it : params.equityVolatilities(configuration.first)) {
+                for (const auto& it : params.mapping(MarketObject::EquityVol, configuration.first)) {
                     if (it.second == spec->name()) {
                         string eqName = it.first;
                         LOG("Adding EquityVol (" << eqName << ") with spec " << *eqvolspec << " to configuration "
                                                  << configuration.first);
 
-                        boost::shared_ptr<BlackVolTermStructure> bvts (itr->second->volTermStructure());
+                        boost::shared_ptr<BlackVolTermStructure> bvts(itr->second->volTermStructure());
                         // Wrap it in QuantExt::BlackVolatilityWithATM as TodaysMarket might be used
                         // for model calibration. This is not the ideal place to put this logic but
                         // it can't be in EquityVolCurve as there are implicit, configuration dependent,
@@ -551,8 +551,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                         Handle<YieldTermStructure> divYts = equityDividendCurve(eqName, configuration.first);
                         bvts = boost::make_shared<QuantExt::BlackVolatilityWithATM>(bvts, spot, yts, divYts);
 
-                        equityVols_[make_pair(configuration.first, it.first)] = 
-                            Handle<BlackVolTermStructure> (bvts);
+                        equityVols_[make_pair(configuration.first, it.first)] = Handle<BlackVolTermStructure>(bvts);
                     }
                 }
                 break;
@@ -575,7 +574,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                 }
 
                 // add the handle to the Market Map (possible lots of times for proxies)
-                for (const auto& it : params.securitySpreads(configuration.first)) {
+                for (const auto& it : params.mapping(MarketObject::SecuritySpread, configuration.first)) {
                     if (it.second == spec->name()) {
                         LOG("Adding SecuritySpread (" << it.first << ") with spec " << *securityspreadspec
                                                       << " to configuration " << configuration.first);
@@ -604,7 +603,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                 }
 
                 // add the handle to the Market Map for recovery rates
-                for (const auto& it : params.securityRecoveryRates(configuration.first)) {
+                for (const auto& it : params.mapping(MarketObject::SecurityRecoveryRate, configuration.first)) {
                     if (it.second == spec->name()) {
                         LOG("Adding SecurityRecoveryRate (" << it.first << ") with spec " << *spec
                                                             << " to configuration " << configuration.first);

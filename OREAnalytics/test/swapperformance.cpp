@@ -285,7 +285,7 @@ SwapResults test_performance(Size portfolioSize, ObservationMode::Mode om) {
 
     parameters->equityVolExpiries() = {1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years};
     parameters->equityVolDecayMode() = "ConstantVariance";
-    parameters->simulateEQVols() = false;
+    parameters->simulateEquityVols() = false;
 
     // Config
 

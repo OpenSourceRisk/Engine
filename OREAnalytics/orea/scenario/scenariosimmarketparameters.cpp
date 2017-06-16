@@ -88,7 +88,8 @@ bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& 
         fxVolDecayMode_ != rhs.fxVolDecayMode_ || fxVolCcyPairs_ != rhs.fxVolCcyPairs_ ||
         fxCcyPairs_ != rhs.fxCcyPairs_ || equityVolSimulate_ != rhs.equityVolSimulate_ ||
         equityVolExpiries_ != rhs.equityVolExpiries_ || equityVolDecayMode_ != rhs.equityVolDecayMode_ ||
-        equityVolNames_ != rhs.equityVolNames_ ||
+        equityVolNames_ != rhs.equityVolNames_ || equityIsSurface_ != rhs.equityIsSurface_ ||
+        equityMoneyness_ != rhs.equityMoneyness_ ||
         additionalScenarioDataIndices_ != rhs.additionalScenarioDataIndices_ ||
         additionalScenarioDataCcys_ != rhs.additionalScenarioDataCcys_ || securities_ != rhs.securities_ ||
         baseCorrelationSimulate_ != rhs.baseCorrelationSimulate_ ||
@@ -230,6 +231,13 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         equityVolExpiries_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Expiries", true);
         equityVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
         equityVolNames_ = XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true);
+        XMLNode* eqSurfaceNode = XMLUtils::getChildNode(nodeChild, "Surface");
+        if (eqSurfaceNode) {
+            equityIsSurface_ = true;
+            equityMoneyness_ = XMLUtils::getChildrenValuesAsDoublesCompact(eqSurfaceNode, "Moneyness", true);
+        } else {
+            equityIsSurface_ = false;
+        }
     } else {
         equityVolSimulate_ = false;
         equityVolExpiries_.clear();
@@ -342,6 +350,10 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, eqVolatilitiesNode, "ReactionToTimeDecay", equityVolDecayMode_);
     XMLUtils::addChildren(doc, eqVolatilitiesNode, "Names", "Name", equityVolNames_);
     XMLUtils::addGenericChildAsList(doc, eqVolatilitiesNode, "Expiries", equityVolExpiries_);
+    if (equityIsSurface_) {
+        XMLNode* eqSurfaceNode = XMLUtils::addChild(doc, eqVolatilitiesNode, "Surface");
+        XMLUtils::addGenericChildAsList(doc, eqSurfaceNode, "Moneyness", equityMoneyness_);
+    }
 
     // additional scenario data currencies
     XMLUtils::addChildren(doc, marketNode, "AggregationScenarioDataCurrencies", "Currency",
