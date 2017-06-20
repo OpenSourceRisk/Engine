@@ -67,15 +67,14 @@ public:
 
 protected:
     Volatility blackVolImpl(Time t, Rate strike) const {
-        Real s = surface_->blackVol(t, strike, true) - surface_->blackVol(t, 0.0, true);
+        Real s = surface_->blackVol(t, strike, true) - surface_->blackVol(t, Null<Real>(), true);
         Real v = atm_->blackVol(t, strike, true);
         return v + s;
     }
 
     Real blackVarianceImpl(Time t, Real strike) const {
-        Real s = surface_->blackVariance(t, strike) - surface_->blackVariance(t, 0.0);
-        Real v = atm_->blackVariance(t, strike);
-        return v + s;
+        Real vol = blackVolImpl(t, strike);
+        return vol*vol*t;
     }
 
 private:
