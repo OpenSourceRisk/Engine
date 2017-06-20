@@ -24,21 +24,25 @@
 #include <ql/quote.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
+#include <ql/termstructures/yieldtermstructure.hpp>
 
 using namespace QuantLib;
 
 namespace QuantExt {
 
 //! Black volatility surface based on moneyness
-/*! Moneyness is defined here as spot moneyness, i.e. K/S
- *  A Moneyness of 1.0 is the ATMSpot
- */
 class BlackVarianceSurfaceMoneyness : public LazyObject, public BlackVarianceTermStructure {
 public:
+    /*! Moneyness is defined here as spot moneyness, i.e. K/S
+    *  A Moneyness of 1.0 is the ATMSpot
+    */
     BlackVarianceSurfaceMoneyness(const Calendar& cal, const Handle<Quote>& spot, const std::vector<Time>& times,
                                   const std::vector<Real>& moneyness,
                                   const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix,
-                                  const DayCounter& dayCounter, bool stickyStrike = false);
+                                  const DayCounter& dayCounter, bool stickyStrike = false,  bool atmf = false,
+                                  const Handle<YieldTermStructure>& forTS = Handle<YieldTermStructure>(),
+                                  const Handle<YieldTermStructure>& domTS = Handle<YieldTermStructure>());
+
     //! \name TermStructure interface
     //@{
     DayCounter dayCounter() const { return dayCounter_; }
@@ -75,6 +79,9 @@ private:
     std::vector<std::vector<Handle<Quote> > > quotes_;
     mutable Matrix variances_;
     mutable Interpolation2D varianceSurface_;
+    bool atmf_;
+    Handle<YieldTermStructure> forTS_;
+    Handle<YieldTermStructure> domTS_;
 };
 
 // inline definitions

@@ -25,9 +25,10 @@ namespace QuantExt {
 
 BlackVarianceSurfaceMoneyness::BlackVarianceSurfaceMoneyness(
     const Calendar& cal, const Handle<Quote>& spot, const std::vector<Time>& times, const std::vector<Real>& moneyness,
-    const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix, const DayCounter& dayCounter, bool sticyStrike)
+    const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix, const DayCounter& dayCounter, bool stickyStrike, 
+    bool atmf, const Handle<YieldTermStructure>& forTS, const Handle<YieldTermStructure>& domTS)
     : BlackVarianceTermStructure(0, cal), spot_(spot), dayCounter_(dayCounter), moneyness_(moneyness),
-      quotes_(blackVolMatrix) {
+      quotes_(blackVolMatrix), atmf_(atmf), forTS_(forTS), domTS_(domTS) {
 
     QL_REQUIRE(times.size() == blackVolMatrix.front().size(), "mismatch between times vector and vol matrix colums");
     QL_REQUIRE(moneyness_.size() == blackVolMatrix.size(),
@@ -35,7 +36,14 @@ BlackVarianceSurfaceMoneyness::BlackVarianceSurfaceMoneyness(
 
     QL_REQUIRE(times[0] >= 0, "cannot have times[0] < 0");
 
-    if (sticyStrike) {
+    if(atmf_) {
+        QL_REQUIRE(!forTS_.empty(), "foreign discount curve required for atmf surface");
+        QL_REQUIRE(!domTS_.empty(), "foreign discount curve required for atmf surface");
+        registerWith(forTS_);
+        registerWith(domTS_);
+    }
+
+    if (stickyStrike) {
         // we don't want to know if the spot has changed - we take a copy here
         spot_ = Handle<Quote>(boost::make_shared<SimpleQuote>(spot->value()));
     } else {
@@ -62,6 +70,7 @@ BlackVarianceSurfaceMoneyness::BlackVarianceSurfaceMoneyness(
     varianceSurface_ =
         Bilinear().interpolate(times_.begin(), times_.end(), moneyness_.begin(), moneyness_.end(), variances_);
     notifyObservers();
+
 }
 
 void BlackVarianceSurfaceMoneyness::update() {
@@ -89,8 +98,12 @@ Real BlackVarianceSurfaceMoneyness::blackVarianceImpl(Time t, Real strike) const
     Real moneyness;
     if (strike == Null<Real>() || strike == 0)
         moneyness = 1.0;
-    else
+    else if ( !atmf_ )
         moneyness = strike / spot_->value();
+    else {
+        Real fwd = spot_->value()*forTS_->discount(t)/domTS_->discount(t);
+        moneyness = strike / fwd;
+    }   
     return blackVarianceMoneyness(t, moneyness);
 }
 

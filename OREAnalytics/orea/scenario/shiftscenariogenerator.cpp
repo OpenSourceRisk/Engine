@@ -212,22 +212,37 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
         }
     }
 
-    // Cache FX (ATM) vol keys
+    // Cache FX (ATMF) vol keys
     Size n_fxvol_pairs = simMarketData_->fxVolCcyPairs().size();
     Size n_fxvol_exp = simMarketData_->fxVolExpiries().size();
-    fxVolKeys_.reserve(n_fxvol_pairs * n_fxvol_exp);
+    Size n_fxvol_strikes = simMarketData_->fxVolMoneyness().size();
+    fxVolKeys_.reserve(n_fxvol_pairs * n_fxvol_exp* n_fxvol_strikes);
     count = 0;
     for (Size j = 0; j < n_fxvol_pairs; ++j) {
-        string ccypair = simMarketData_->fxVolCcyPairs()[j];
-        Real strike = Null<Real>(); // ATM
-        Handle<BlackVolTermStructure> ts = market->fxVol(ccypair, configuration_);
-        for (Size k = 0; k < n_fxvol_exp; ++k) {
-            fxVolKeys_.emplace_back(RiskFactorKey::KeyType::FXVolatility, ccypair, k);
-            Period expiry = simMarketData_->fxVolExpiries()[k];
-            Real fxvol = ts->blackVol(today_ + expiry, strike);
-            fxVolCache_[fxVolKeys_[count]] = fxvol;
-            LOG("cache FX vol " << fxvol << " for key " << fxVolKeys_[count]);
-            count++;
+        string ccyPair = simMarketData_->fxVolCcyPairs()[j];
+        LOG(ccyPair);
+        Real spot = market->fxSpot(ccyPair, configuration_)->value();
+        QL_REQUIRE(ccyPair.length() == 6, "invalid ccy pair length");
+        string forCcy = ccyPair.substr(0, 3);
+        string domCcy = ccyPair.substr(3, 3);
+        Handle<YieldTermStructure> forTS = market->discountCurve(forCcy, configuration_); 
+        Handle<YieldTermStructure> domTS = market->discountCurve(domCcy, configuration_); 
+        Handle<BlackVolTermStructure> ts = market->fxVol(ccyPair, configuration_);
+        for (Size k = 0; k < n_fxvol_strikes; ++k) {
+            Real strike;
+            for (Size l = 0; l < n_fxvol_exp; ++l) {
+                Size idx = k * n_fxvol_exp + l;
+                fxVolKeys_.emplace_back(RiskFactorKey::KeyType::FXVolatility, ccyPair, idx);
+                Period expiry = simMarketData_->fxVolExpiries()[l];
+                if (simMarketData_->fxVolIsSurface())
+                    strike = spot * simMarketData_->fxVolMoneyness()[k]*forTS->discount(today_+expiry)/domTS->discount(today_+expiry);
+                else
+                    strike = Null<Real>();
+                Real fxvol = ts->blackVol(today_ + expiry, strike);
+                fxVolCache_[fxVolKeys_[count]] = fxvol;
+                count++;
+            }
+            LOG("fx strike for " << ccyPair << " " << strike);
         }
     }
 

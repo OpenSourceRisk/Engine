@@ -23,6 +23,7 @@
 #include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <qle/termstructures/fxblackvolsurface.hpp>
+#include <ql/time/calendars/target.hpp>
 
 using namespace QuantLib;
 using namespace std;
@@ -116,6 +117,7 @@ FXVolCurve::FXVolCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& load
         // daycounter used for interpolation in time.
         // TODO: push into conventions or config
         DayCounter dc = Actual365Fixed();
+        Calendar cal = TARGET();
 
         // sort all quotes
         for (Size i = 0; i < n; i++) {
@@ -152,7 +154,7 @@ FXVolCurve::FXVolCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& load
 
                 vol_ = boost::shared_ptr<BlackVolTermStructure>(
                     new QuantExt::FxBlackVannaVolgaVolatilitySurface(
-                        asof, dates, vols[0], vols[1], vols[2], dc, fxSpot, domYTS, forYTS));
+                        asof, dates, vols[0], vols[1], vols[2], dc, cal, fxSpot, domYTS, forYTS));
 
             }
         }
