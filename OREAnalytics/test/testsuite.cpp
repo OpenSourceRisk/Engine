@@ -95,6 +95,10 @@ test_suite* init_unit_test_suite(int, char* []) {
     }
     string name(argv[0]);
     string baseName = name.substr(name.find_last_of("/\\") + 1);
+
+    test_suite* test = BOOST_TEST_SUITE("OREAnalyticsTestSuite");
+
+    // Don't use BOOST_TEST_MESSAGE until *after* BOOST_TEST_SUITE
     BOOST_TEST_MESSAGE("Enable performance tests:  " << baseName
                                                      << " [Boost.Test arguments] enable_performance_tests");
 
@@ -102,8 +106,6 @@ test_suite* init_unit_test_suite(int, char* []) {
         BOOST_TEST_MESSAGE("Performance tests ENABLED");
     else
         BOOST_TEST_MESSAGE("Performance tests DISABLED");
-
-    test_suite* test = BOOST_TEST_SUITE("OREAnalyticsTestSuite");
 
     test->add(BOOST_TEST_CASE(startTimer));
     test->add(testsuite::AggregationScenarioDataTest::suite());
