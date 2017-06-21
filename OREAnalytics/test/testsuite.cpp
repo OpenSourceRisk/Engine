@@ -98,15 +98,6 @@ test_suite* init_unit_test_suite(int, char* []) {
 
     test_suite* test = BOOST_TEST_SUITE("OREAnalyticsTestSuite");
 
-    // Don't use BOOST_TEST_MESSAGE until *after* BOOST_TEST_SUITE
-    BOOST_TEST_MESSAGE("Enable performance tests:  " << baseName
-                                                     << " [Boost.Test arguments] enable_performance_tests");
-
-    if (enablePerformanceTests)
-        BOOST_TEST_MESSAGE("Performance tests ENABLED");
-    else
-        BOOST_TEST_MESSAGE("Performance tests DISABLED");
-
     test->add(BOOST_TEST_CASE(startTimer));
     test->add(testsuite::AggregationScenarioDataTest::suite());
     test->add(testsuite::CubeTest::suite());
@@ -117,6 +108,15 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(testsuite::StressTestingTest::suite());
     test->add(testsuite::ObservationModeTest::suite());
     // test->add(FXSwapTest::suite());
+
+    // Don't use BOOST_TEST_MESSAGE until *after* the test log has started
+    BOOST_TEST_MESSAGE("Enable performance tests:  " << baseName
+                                                     << " [Boost.Test arguments] enable_performance_tests");
+
+    if (enablePerformanceTests)
+        BOOST_TEST_MESSAGE("Performance tests ENABLED");
+    else
+        BOOST_TEST_MESSAGE("Performance tests DISABLED");
 
     if (enablePerformanceTests) {
         test->add(testsuite::SensitivityPerformanceTest::suite());
