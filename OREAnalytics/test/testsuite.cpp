@@ -109,15 +109,6 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(testsuite::ObservationModeTest::suite());
     // test->add(FXSwapTest::suite());
 
-    // Don't use BOOST_TEST_MESSAGE until *after* the test log has started
-    BOOST_TEST_MESSAGE("Enable performance tests:  " << baseName
-                                                     << " [Boost.Test arguments] enable_performance_tests");
-
-    if (enablePerformanceTests)
-        BOOST_TEST_MESSAGE("Performance tests ENABLED");
-    else
-        BOOST_TEST_MESSAGE("Performance tests DISABLED");
-
     if (enablePerformanceTests) {
         test->add(testsuite::SensitivityPerformanceTest::suite());
         test->add(testsuite::SwapPerformanceTest::suite());
