@@ -136,12 +136,12 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
     simMarketData->setEquityTenors("SP5", { 6 * Months, 1 * Years, 2 * Years });
     simMarketData->setEquityTenors("Lufthansa", { 6 * Months, 1 * Years, 2 * Years });
 
-    simMarketData->simulateEQVols() = true;
+    simMarketData->simulateEquityVols() = true;
     simMarketData->equityVolDecayMode() = "ForwardVariance";
     simMarketData->equityVolNames() = { "SP5", "Lufthansa" };
     simMarketData->equityVolExpiries() = { 6 * Months, 1 * Years, 2 * Years,  3 * Years,
                                            5 * Years,  7 * Years, 10 * Years, 20 * Years };
-    simMarketData->eqVolIsSurface() = false;
+    simMarketData->equityVolIsSurface() = false;
 
     return simMarketData;
 }
