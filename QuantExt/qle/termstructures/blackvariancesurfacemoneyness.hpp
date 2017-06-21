@@ -33,15 +33,13 @@ namespace QuantExt {
 //! Black volatility surface based on moneyness
 class BlackVarianceSurfaceMoneyness : public LazyObject, public BlackVarianceTermStructure {
 public:
-    /*! Moneyness is defined here as spot moneyness, i.e. K/S
-    *  A Moneyness of 1.0 is the ATMSpot
+    /*! Moneyness can be defined here as spot moneyness, i.e. K/S
+    * or forward moneyness, ie F/S
     */
     BlackVarianceSurfaceMoneyness(const Calendar& cal, const Handle<Quote>& spot, const std::vector<Time>& times,
                                   const std::vector<Real>& moneyness,
                                   const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix,
-                                  const DayCounter& dayCounter, bool stickyStrike = false,  bool atmf = false,
-                                  const Handle<YieldTermStructure>& forTS = Handle<YieldTermStructure>(),
-                                  const Handle<YieldTermStructure>& domTS = Handle<YieldTermStructure>());
+                                  const DayCounter& dayCounter, bool stickyStrike = false);
 
     //! \name TermStructure interface
     //@{
@@ -67,21 +65,16 @@ public:
     //@}
 protected:
     virtual Real blackVarianceImpl(Time t, Real strike) const;
-
-private:
     Real blackVarianceMoneyness(Time t, Real moneyness) const;
-
     Handle<Quote> spot_;
+    std::vector<Time> times_;
     DayCounter dayCounter_;
     Date maxDate_;
     std::vector<Real> moneyness_;
-    std::vector<Time> times_;
     std::vector<std::vector<Handle<Quote> > > quotes_;
+    bool stickyStrike_;
     mutable Matrix variances_;
     mutable Interpolation2D varianceSurface_;
-    bool atmf_;
-    Handle<YieldTermStructure> forTS_;
-    Handle<YieldTermStructure> domTS_;
 };
 
 // inline definitions
@@ -93,6 +86,30 @@ inline void BlackVarianceSurfaceMoneyness::accept(AcyclicVisitor& v) {
     else
         BlackVarianceTermStructure::accept(v);
 }
+
+
+//! Black volatility surface based on moneyness
+class BlackVarianceSurfaceMoneynessForward : public BlackVarianceSurfaceMoneyness {
+public:
+    /*! Moneyness can be defined here as spot moneyness, i.e. K/S
+    * or forward moneyness, ie F/S
+    */
+    BlackVarianceSurfaceMoneynessForward(const Calendar& cal, const Handle<Quote>& spot, const std::vector<Time>& times,
+                                  const std::vector<Real>& moneyness,
+                                  const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix,
+                                  const DayCounter& dayCounter,
+                                  const Handle<YieldTermStructure>& forTS,
+                                  const Handle<YieldTermStructure>& domTS,
+                                  bool stickyStrike = false);
+    
+    virtual Real blackVarianceImpl(Time t, Real strike) const;
+
+private:
+    std::vector<Real> forwards_;
+    Handle<YieldTermStructure> forTS_;
+    Handle<YieldTermStructure> domTS_;
+    mutable Interpolation forwardCurve_;
+};
 
 } // namespace QuantExt
 

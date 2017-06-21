@@ -587,8 +587,8 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
             if( parameters->fxVolIsSurface() ) {
                 bool stickyStrike = true;
                 bool atmf = true;
-                fxVolCurve = boost::shared_ptr<BlackVolTermStructure>(new BlackVarianceSurfaceMoneyness(cal, spot, times, 
-                    parameters->fxVolMoneyness(), quotes, dc, stickyStrike, atmf, forTS, domTS));
+                fxVolCurve = boost::shared_ptr<BlackVolTermStructure>(new BlackVarianceSurfaceMoneynessForward(cal, spot, 
+                    times, parameters->fxVolMoneyness(), quotes, dc, forTS, domTS, stickyStrike));
             } else {
                 fxVolCurve = boost::shared_ptr<BlackVolTermStructure>(new BlackVarianceCurve3(
                     0, NullCalendar(), wrapper->businessDayConvention(), wrapper->dayCounter(), times, quotes[0]));
