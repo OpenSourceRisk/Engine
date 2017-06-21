@@ -397,7 +397,7 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
         if (boost::to_upper_copy(sensitivityData_->fxShiftData()[keylabel].shiftType) == "RELATIVE") {
             shiftMult = simMarket_->fxSpot(keylabel, marketConfiguration_)->value();
         }
-    } else if (keytype == RiskFactorKey::KeyType::EQSpot) {
+    } else if (keytype == RiskFactorKey::KeyType::EquitySpot) {
         shiftSize = sensitivityData_->equityShiftData()[keylabel].shiftSize;
         if (boost::to_upper_copy(sensitivityData_->equityShiftData()[keylabel].shiftType) == "RELATIVE") {
             shiftMult = simMarket_->equitySpot(keylabel, marketConfiguration_)->value();
@@ -461,7 +461,7 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
             Real atmVol = vts->blackVol(t, atmFwd);
             shiftMult = atmVol;
         }
-    } else if (keytype == RiskFactorKey::KeyType::EQVolatility) {
+    } else if (keytype == RiskFactorKey::KeyType::EquityVolatility) {
         string pair = keylabel;
         shiftSize = sensitivityData_->equityVolShiftData()[pair].shiftSize;
         if (boost::to_upper_copy(sensitivityData_->equityVolShiftData()[pair].shiftType) == "RELATIVE") {

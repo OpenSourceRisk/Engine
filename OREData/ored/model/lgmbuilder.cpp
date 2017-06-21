@@ -228,7 +228,8 @@ void LgmBuilder::buildSwaptionBasket() const {
         Real termT = Null<Real>();
         Period termTmp;
         if (termDateBased) {
-            termT = svts_->timeFromReference(termDb);
+            Date tmpExpiry = expiryDateBased ? expiryDb : svts_->optionDateFromTenor(expiryPb);
+            termT = svts_->dayCounter().yearFraction(tmpExpiry, termDb);
             // rounded to whole years, only used to distinguish between short and long
             // swap tenors, which in practice always are multiples of whole years
             termTmp = static_cast<Size>(termT + 0.5) * Years;
