@@ -473,7 +473,7 @@ void SensitivityScenarioGenerator::generateEquityForecastCurveScenarios(
 
     for (Size i = 0; i < n_curves; ++i) {
         string name = equityForecastNames_[i];
-        Size n_ten = simMarketData_->equityForecastCurveTenors(name).size();
+        Size n_ten = simMarketData_->equityForecastTenors(name).size();
         // original curves' buffer
         std::vector<Real> zeros(n_ten);
         std::vector<Real> times(n_ten);
@@ -484,13 +484,13 @@ void SensitivityScenarioGenerator::generateEquityForecastCurveScenarios(
         Handle<YieldTermStructure> ts = initMarket_->equityForecastCurve(name, configuration_);
         DayCounter dc = ts->dayCounter();
         for (Size j = 0; j < n_ten; ++j) {
-            Date d = today_ + simMarketData_->equityForecastCurveTenors(name)[j];
+            Date d = today_ + simMarketData_->equityForecastTenors(name)[j];
             zeros[j] = ts->zeroRate(d, dc, Continuous);
             times[j] = dc.yearFraction(today_, d);
         }
 
-        const std::vector<Period>& shiftTenors = overrideTenors_ && simMarketData_->hasEquityForecastCurveTenors(name)
-                                                     ? simMarketData_->equityForecastCurveTenors(name)
+        const std::vector<Period>& shiftTenors = overrideTenors_ && simMarketData_->hasEquityForecastTenors(name)
+                                                     ? simMarketData_->equityForecastTenors(name)
                                                      : data.shiftTenors;
         QL_REQUIRE(shiftTenors.size() == data.shiftTenors.size(), "mismatch between effective shift tenors ("
                                                                       << shiftTenors.size() << ") and shift tenors ("

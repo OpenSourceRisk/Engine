@@ -102,7 +102,7 @@ public:
     const vector<Period>& equityDividendTenors(const string& key) const;
     bool hasEquityDividendTenors(const string& key) const { return equityDividendTenors_.count(key) > 0; }
     const vector<Period>& equityForecastTenors(const string& key) const;
-    bool hasEquityForecastTenors(const string& key) const { return equityForecastCurveTenors_.count(key) > 0; }
+    bool hasEquityForecastTenors(const string& key) const { return equityForecastTenors_.count(key) > 0; }
 
     bool simulateFXVols() const { return fxVolSimulate_; }
     const vector<Period>& fxVolExpiries() const { return fxVolExpiries_; }

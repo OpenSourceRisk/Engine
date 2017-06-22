@@ -170,15 +170,15 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
 
     // Cache equity forecast curve keys
     Size n_ecnames = simMarketData_->equityNames().size();
-    equityForecastKeys_.reserve(n_ecnames * simMarketData_->equityForecastCurveTenors("").size());
+    equityForecastKeys_.reserve(n_ecnames * simMarketData_->equityForecastTenors("").size());
     count = 0;
     for (Size j = 0; j < n_ecnames; ++j) {
         std::string ecname = simMarketData_->equityNames()[j];
-        Size n_ten = simMarketData_->equityForecastCurveTenors(ecname).size();
+        Size n_ten = simMarketData_->equityForecastTenors(ecname).size();
         Handle<YieldTermStructure> ts = market->equityForecastCurve(ecname, configuration_);
         for (Size k = 0; k < n_ten; ++k) {
             equityForecastKeys_.emplace_back(RiskFactorKey::KeyType::EquityForecastCurve, ecname, k);
-            Real disc = ts->discount(today_ + simMarketData_->equityForecastCurveTenors(ecname)[k]);
+            Real disc = ts->discount(today_ + simMarketData_->equityForecastTenors(ecname)[k]);
             equityForecastCache_[equityForecastKeys_[count]] = disc;
             LOG("cache discount " << disc << " for key " << equityForecastKeys_[count]);
             count++;

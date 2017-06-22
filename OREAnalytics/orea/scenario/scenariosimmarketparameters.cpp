@@ -55,7 +55,7 @@ const vector<Period>& ScenarioSimMarketParameters::equityDividendTenors(const st
 }
     
 const vector<Period>& ScenarioSimMarketParameters::equityForecastTenors(const string& key) const {
-        return returnTenors(equityForecastCurveTenors_, key);
+        return returnTenors(equityForecastTenors_, key);
 }
 
 void ScenarioSimMarketParameters::setYieldCurveTenors(const string& key, const std::vector<Period>& p) {
@@ -120,7 +120,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     capFloorVolExpiries_.clear();
     defaultTenors_.clear();
     equityDividendTenors_.clear();
-    equityForecastCurveTenors_.clear();
+    equityForecastTenors_.clear();
     swapIndices_.clear();
 
     // TODO: add in checks (checkNode or QL_REQUIRE) on mandatory nodes
