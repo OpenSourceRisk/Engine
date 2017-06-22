@@ -54,7 +54,8 @@ public:
         // set default tenors
         capFloorVolExpiries_[""];
         defaultTenors_[""];
-        equityTenors_[""];
+        equityDividendTenors_[""];
+        equityForecastTenors_[""];
     }
 
     //! \name Inspectors
@@ -97,8 +98,11 @@ public:
     const string& cdsVolDecayMode() const { return cdsVolDecayMode_; }
 
     const vector<string>& equityNames() const { return equityNames_; }
-    const vector<Period>& equityTenors(const string& key) const;
-    bool hasEquityTenors(const string& key) const { return equityTenors_.count(key) > 0; }
+    const vector<string>& equityCurrencies() const { return equityCurrencies_; }
+    const vector<Period>& equityDividendTenors(const string& key) const;
+    bool hasEquityDividendTenors(const string& key) const { return equityDividendTenors_.count(key) > 0; }
+    const vector<Period>& equityForecastTenors(const string& key) const;
+    bool hasEquityForecastTenors(const string& key) const { return equityForecastCurveTenors_.count(key) > 0; }
 
     bool simulateFXVols() const { return fxVolSimulate_; }
     const vector<Period>& fxVolExpiries() const { return fxVolExpiries_; }
@@ -160,8 +164,10 @@ public:
     string& cdsVolDecayMode() { return cdsVolDecayMode_; }
 
     vector<string>& equityNames() { return equityNames_; }
-    void setEquityTenors(const string& key, const vector<Period>& p);
-
+    vector<string>& equityCurrencies() { return equityCurrencies_; }
+    void setEquityDividendTenors(const string& key, const vector<Period>& p);
+    void setEquityForecastTenors(const string& key, const vector<Period>& p);
+    
     bool& simulateFXVols() { return fxVolSimulate_; }
     vector<Period>& fxVolExpiries() { return fxVolExpiries_; }
     string& fxVolDecayMode() { return fxVolDecayMode_; }
@@ -234,7 +240,9 @@ private:
     string cdsVolDecayMode_;
 
     vector<string> equityNames_;
-    map<string, vector<Period>> equityTenors_;
+    vector<string> equityCurrencies_;
+    map<string, vector<Period>> equityDividendTenors_;
+    map<string, vector<Period>> equityForecastTenors_;
 
     bool fxVolSimulate_;
     vector<Period> fxVolExpiries_;

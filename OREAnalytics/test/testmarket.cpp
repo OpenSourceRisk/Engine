@@ -133,8 +133,9 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
     simMarketData->securities() = {"Bond1"};
 
     simMarketData->equityNames() = { "SP5", "Lufthansa" };
-    simMarketData->setEquityTenors("SP5", { 6 * Months, 1 * Years, 2 * Years });
-    simMarketData->setEquityTenors("Lufthansa", { 6 * Months, 1 * Years, 2 * Years });
+    simMarketData->setEquityDividendTenors("SP5", { 6 * Months, 1 * Years, 2 * Years });
+    simMarketData->setEquityForecastTenors("SP5", { 6 * Months, 1 * Years, 2 * Years });
+    simMarketData->setEquityForecastTenors("Lufthansa", { 6 * Months, 1 * Years, 2 * Years });
 
     simMarketData->simulateEquityVols() = true;
     simMarketData->equityVolDecayMode() = "ForwardVariance";

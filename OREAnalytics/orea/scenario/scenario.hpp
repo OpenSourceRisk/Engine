@@ -55,6 +55,7 @@ public:
         FXSpot,
         FXVolatility,
         EquitySpot,
+        EquityForecastCurve,
         EquityVolatility,
         SurvivalProbability,
         RecoveryRate,

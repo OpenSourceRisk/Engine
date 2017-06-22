@@ -115,6 +115,7 @@ private:
     void generateSwaptionVolScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
     void generateFxVolScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
     void generateEquityVolScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
+    void generateEquityForecastCurveScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
     void generateCapFloorVolScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
     void generateSurvivalProbabilityScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
     void generateCdsVolScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
@@ -127,6 +128,7 @@ private:
     ScenarioDescription fxVolScenarioDescription(string ccypair, Size expiryBucket, Size strikeBucket, bool up);
     ScenarioDescription equityScenarioDescription(string equity, bool up);
     ScenarioDescription equityVolScenarioDescription(string equity, Size expiryBucket, Size strikeBucket, bool up);
+    ScenarioDescription equityForecastCurveScenarioDescription(string equity, Size bucket, bool up); 
     ScenarioDescription swaptionVolScenarioDescription(string ccy, Size expiryBucket, Size termBucket,
                                                        Size strikeBucket, bool up);
     ScenarioDescription capFloorVolScenarioDescription(string ccy, Size expiryBucket, Size strikeBucket, bool up);

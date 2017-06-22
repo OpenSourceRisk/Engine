@@ -101,6 +101,8 @@ void ShiftScenarioGenerator::clear() {
     fxVolCache_.clear();
     equityVolKeys_.clear();
     equityVolCache_.clear();
+    equityForecastKeys_.clear();
+    equityForecastCache_.clear();
     optionletVolKeys_.clear();
     optionletVolCache_.clear();
     survivalProbabilityKeys_.clear();
@@ -166,6 +168,23 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
         }
     }
 
+    // Cache equity forecast curve keys
+    Size n_ecnames = simMarketData_->equityNames().size();
+    equityForecastKeys_.reserve(n_ecnames * simMarketData_->equityForecastCurveTenors("").size());
+    count = 0;
+    for (Size j = 0; j < n_ecnames; ++j) {
+        std::string ecname = simMarketData_->equityNames()[j];
+        Size n_ten = simMarketData_->equityForecastCurveTenors(ecname).size();
+        Handle<YieldTermStructure> ts = market->equityForecastCurve(ecname, configuration_);
+        for (Size k = 0; k < n_ten; ++k) {
+            equityForecastKeys_.emplace_back(RiskFactorKey::KeyType::EquityForecastCurve, ecname, k);
+            Real disc = ts->discount(today_ + simMarketData_->equityForecastCurveTenors(ecname)[k]);
+            equityForecastCache_[equityForecastKeys_[count]] = disc;
+            LOG("cache discount " << disc << " for key " << equityForecastKeys_[count]);
+            count++;
+        }
+    }
+    
     // Cache FX rate keys
     fxKeys_.reserve(simMarketData_->fxCcyPairs().size());
     for (Size k = 0; k < simMarketData_->fxCcyPairs().size(); k++) {
@@ -386,6 +405,10 @@ void ShiftScenarioGenerator::addCacheTo(boost::shared_ptr<Scenario> scenario) {
         if (!scenario->has(key))
             scenario->add(key, yieldCurveCache_[key]);
     }
+    for (auto key : equityForecastKeys_) {
+        if (!scenario->has(key))
+            scenario->add(key, equityForecastCache_[key]);
+    }
     for (auto key : fxKeys_) {
         if (!scenario->has(key))
             scenario->add(key, fxCache_[key]);
@@ -452,6 +475,14 @@ RiskFactorKey ShiftScenarioGenerator::getEquityKey(const std::string& key) {
             return equityKeys_[i];
     }
     QL_FAIL("error locating Equity RiskFactorKey for equity " << key);
+}
+
+RiskFactorKey ShiftScenarioGenerator::getEquityForecastKey(const std::string& curveName, Size index) {
+    for (Size i = 0; i < equityForecastKeys_.size(); ++i) {
+        if (equityForecastKeys_[i].name == curveName && equityForecastKeys_[i].index == index)
+            return equityForecastKeys_[i];
+    }
+    QL_FAIL("error locating EquityForecastCurve RiskFactorKey for " << curveName << ", index " << index);
 }
 
 RiskFactorKey ShiftScenarioGenerator::getDiscountKey(const std::string& ccy, Size index) {

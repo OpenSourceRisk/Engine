@@ -436,6 +436,17 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
             Real zeroRate = yts->zeroRate(t, Continuous);
             shiftMult = zeroRate;
         }
+    } else if (keytype == RiskFactorKey::KeyType::EquityForecastCurve) {
+        string ec = keylabel;
+        shiftSize = sensitivityData_->equityForecastCurveShiftData()[ec].shiftSize;
+        if (boost::to_upper_copy(sensitivityData_->equityForecastCurveShiftData()[ec].shiftType) == "RELATIVE") {
+            Size keyIdx = key.index;
+            Period p = sensitivityData_->equityForecastCurveShiftData()[ec].shiftTenors[keyIdx];
+            Handle<YieldTermStructure> yts = simMarket_->equityForecastCurve(ec, marketConfiguration_);
+            Time t = yts->dayCounter().yearFraction(asof_, asof_ + p);
+            Real zeroRate = yts->zeroRate(t, Continuous);
+            shiftMult = zeroRate;
+        }
     } else if (keytype == RiskFactorKey::KeyType::FXVolatility) {
         string pair = keylabel;
         shiftSize = sensitivityData_->fxVolShiftData()[pair].shiftSize;

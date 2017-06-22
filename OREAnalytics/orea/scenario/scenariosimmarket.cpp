@@ -617,10 +617,6 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
     LOG("building equity dividend yield curves...");
     for (const auto& eqName : parameters->equityNames()) {
         DLOG("building " << eqName << " equity dividend yield curve..");
-        if(initMarket->equityForecastingCurve(eqName) != "") {
-            LOG("adding equity forecasting curve "<<initMarket->equityForecastingCurve(eqName));
-            equityForecastingCurves_[eqName] = initMarket->equityForecastingCurve(eqName);
-        }
         Handle<YieldTermStructure> wrapper = initMarket->equityDividendCurve(eqName, configuration);
         vector<Handle<Quote>> quotes;
         boost::shared_ptr<SimpleQuote> q(new SimpleQuote(1.0));
@@ -630,9 +626,9 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         vector<Time> equityCurveTimes(1, 0.0);
         vector<Date> equityCurveDates(1, asof_);
         if (parameters->equityNames().size() > 0) {
-            QL_REQUIRE(parameters->equityTenors(eqName).size() > 0, "Equity curve tenor grid not defined");
-            QL_REQUIRE(parameters->equityTenors(eqName).front() > 0 * Days, "equity curve tenors must not include t=0");
-            for (auto& tenor : parameters->equityTenors(eqName)) {
+            QL_REQUIRE(parameters->equityDividendTenors(eqName).size() > 0, "Equity curve tenor grid not defined");
+            QL_REQUIRE(parameters->equityDividendTenors(eqName).front() > 0 * Days, "equity curve tenors must not include t=0");
+            for (auto& tenor : parameters->equityDividendTenors(eqName)) {
                 equityCurveTimes.push_back(dc.yearFraction(asof_, asof_ + tenor));
                 equityCurveDates.push_back(asof_ + tenor);
             }
@@ -660,6 +656,58 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         DLOG("building " << eqName << " equity dividend yield curve done");
     }
     LOG("equity dividend yield curves done");
+    
+    // building equity forecast curves
+    LOG("building equity forecast curves...");
+    for (const auto& eqName : parameters->equityNames()) {
+        LOG("building " << eqName << " equity forecast curve..");
+        Handle<YieldTermStructure> wrapper = initMarket->equityForecastCurve(eqName, configuration);
+        QL_REQUIRE(!wrapper.empty(), "forecast curve for equity " << eqName << " not provided");
+        // include today
+        // constructing discount yield curves
+        DayCounter dc = wrapper->dayCounter(); // used to convert YieldCurve Periods to Times
+        vector<Time> curveTimes(1, 0.0);  // include today
+        vector<Date> curveDates(1, asof_);
+        QL_REQUIRE(parameters->equityForecastTenors(eqName).front() > 0 * Days, "yield curve tenors must not include t=0");
+        for (auto& tenor : parameters->equityForecastTenors(eqName)) {
+            curveTimes.push_back(dc.yearFraction(asof_, asof_ + tenor));
+            curveDates.push_back(asof_ + tenor);
+        }
+
+        vector<Handle<Quote>> quotes;
+        boost::shared_ptr<SimpleQuote> q(new SimpleQuote(1.0));
+        quotes.push_back(Handle<Quote>(q));
+        vector<Real> discounts(curveTimes.size());
+        for (Size i = 0; i < curveTimes.size() - 1; i++) {
+            boost::shared_ptr<SimpleQuote> q(new SimpleQuote(wrapper->discount(curveDates[i + 1])));
+            Handle<Quote> qh(q);
+            quotes.push_back(qh);
+
+            simData_.emplace(std::piecewise_construct,
+                             std::forward_as_tuple(RiskFactorKey::KeyType::EquityForecastCurve, eqName, i),
+                             std::forward_as_tuple(q));
+
+            LOG("SimMarket forecast curve " << eqName << " discount[" << i << "]=" << q->value());
+        }
+
+        boost::shared_ptr<YieldTermStructure> discountCurve;
+
+        if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister) {
+            discountCurve = boost::shared_ptr<YieldTermStructure>(
+                new QuantExt::InterpolatedDiscountCurve(curveTimes, quotes, 0, TARGET(), wrapper->dayCounter()));
+        } else {
+            discountCurve = boost::shared_ptr<YieldTermStructure>(
+                new QuantExt::InterpolatedDiscountCurve2(curveTimes, quotes, wrapper->dayCounter()));
+        }
+
+        Handle<YieldTermStructure> dch(discountCurve);
+        if (wrapper->allowsExtrapolation())
+            dch->enableExtrapolation();
+        equityForecastCurves_.insert(
+            pair<pair<string, string>, Handle<YieldTermStructure>>(make_pair(Market::defaultConfiguration, eqName), dch));
+        LOG("building " << eqName << " forecast curve done");
+    }
+    LOG("equity forecast curves done");
 
     // building eq volatilities
     LOG("building eq volatilities...");

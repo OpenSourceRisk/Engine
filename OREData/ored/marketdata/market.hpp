@@ -144,7 +144,8 @@ public:
 
     //! \name Equity volatilities
     //@{
-    virtual string equityForecastingCurve(const string& eqName) const = 0;
+    virtual Handle<YieldTermStructure>
+    equityForecastCurve(const string& eqName, const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 
     //! Refresh term structures for a given configuration

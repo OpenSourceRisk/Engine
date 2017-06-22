@@ -165,12 +165,8 @@ Handle<BlackVolTermStructure> MarketImpl::equityVol(const string& key, const str
     return lookup<Handle<BlackVolTermStructure>>(equityVols_, key, configuration, "equity vol curve");
 }
 
-string MarketImpl::equityForecastingCurve(const string& eqName) const {
-    string curve = "";
-    auto it = equityForecastingCurves_.find(eqName);
-    if(it != equityForecastingCurves_.end()) curve = it->second;
-
-    return curve;
+Handle<YieldTermStructure> MarketImpl::equityForecastCurve(const string& eqName, const string& configuration) const {
+    return lookup<Handle<YieldTermStructure>>(equityForecastCurves_, eqName, configuration, "equity forecast yield curve");
 }
 
 Handle<Quote> MarketImpl::securitySpread(const string& key, const string& configuration) const {
@@ -284,6 +280,11 @@ void MarketImpl::refresh(const string& configuration) {
             if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
                 it->second.insert(*x.second);
         }
+        for (auto& x : equityForecastCurves_) {
+            if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
+                it->second.insert(*x.second);
+        }
+
     }
 
     for (auto& x : it->second)

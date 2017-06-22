@@ -104,8 +104,14 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             QL_FAIL("par conversion data not provided for yield curve " << curveName);
         }
         // ... to here
-        yieldCurveShiftData_[curveName] = data;
-        yieldCurveNames_.push_back(curveName);
+        string curveType =  XMLUtils::getChildValue(child, "CurveType", false);
+        if( curveType == "EquityForecast") {
+            equityForecastCurveShiftData_[curveName] = data;
+            equityForecastCurveNames_.push_back(curveName);
+        } else {
+            yieldCurveShiftData_[curveName] = data;
+            yieldCurveNames_.push_back(curveName);
+        }
     }
 
     LOG("Get FX spot sensitivity parameters");

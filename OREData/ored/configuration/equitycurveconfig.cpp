@@ -35,7 +35,7 @@ void EquityCurveConfig::fromXML(XMLNode* node) {
 
     curveID_ = XMLUtils::getChildValue(node, "CurveId", true);
     curveDescription_ = XMLUtils::getChildValue(node, "CurveDescription", true);
-    forecastingCurve_ = XMLUtils::getChildValue(node, "ForecastingCurve", false);
+    forecastingCurve_ = XMLUtils::getChildValue(node, "ForecastingCurve", true);
     currency_ = XMLUtils::getChildValue(node, "Currency", true);
 
     string type = XMLUtils::getChildValue(node, "Type", true);
@@ -58,7 +58,7 @@ XMLNode* EquityCurveConfig::toXML(XMLDocument& doc) {
 
     XMLUtils::addChild(doc, node, "CurveId", curveID_);
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
-    if(forecastingCurve_ != "" ) XMLUtils::addChild(doc, node, "ForecastingCurve", forecastingCurve_);
+    XMLUtils::addChild(doc, node, "ForecastingCurve", forecastingCurve_);
     XMLUtils::addChild(doc, node, "Currency", currency_);
 
     if (type_ == Type::DividendYield)

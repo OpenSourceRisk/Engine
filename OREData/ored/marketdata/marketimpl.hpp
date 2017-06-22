@@ -124,7 +124,8 @@ public:
                                             const string& configuration = Market::defaultConfiguration) const;
     
     //! Equity forecasting curves
-    string equityForecastingCurve(const string& eqName) const;
+    Handle<YieldTermStructure> equityForecastCurve(const string& eqName, 
+                                                   const string& configuration = Market::defaultConfiguration) const;
 
     //! Bond Spreads
     Handle<Quote> securitySpread(const string& securityID,
@@ -161,8 +162,8 @@ protected:
     map<pair<string, string>, Handle<CPICapFloorTermPriceSurface>> inflationCapFloorPriceSurfaces_;
     map<pair<string, string>, Handle<Quote>> equitySpots_;
     map<pair<string, string>, Handle<YieldTermStructure>> equityDividendCurves_;
+    map<pair<string, string>, Handle<YieldTermStructure>> equityForecastCurves_;
     map<pair<string, string>, Handle<BlackVolTermStructure>> equityVols_;
-    map<string, string> equityForecastingCurves_;
     map<pair<string, string>, Handle<Quote>> securitySpreads_;
     Conventions conventions_;
 
