@@ -135,10 +135,8 @@ Handle<OptionletVolatilityStructure> MarketImpl::capFloorVol(const string& key, 
     return lookup<Handle<OptionletVolatilityStructure>>(capFloorCurves_, key, configuration, "capfloor curve");
 }
 
-Handle<ZeroInflationIndex> MarketImpl::zeroInflationIndex(const string& indexName, const bool interpolated,
-                                                          const string& configuration) const {
-    return lookup<Handle<ZeroInflationIndex>>(zeroInflationIndices_, std::make_pair(indexName, interpolated),
-                                              configuration, "zero inflation index");
+Handle<ZeroInflationIndex> MarketImpl::zeroInflationIndex(const string& indexName, const string& configuration) const {
+    return lookup<Handle<ZeroInflationIndex>>(zeroInflationIndices_, indexName, configuration, "zero inflation index");
 }
 
 Handle<YoYInflationIndex> MarketImpl::yoyInflationIndex(const string& indexName, const bool interpolated,

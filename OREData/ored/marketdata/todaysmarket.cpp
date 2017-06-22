@@ -407,16 +407,12 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                         boost::shared_ptr<ZeroInflationTermStructure> ts =
                             boost::dynamic_pointer_cast<ZeroInflationTermStructure>(
                                 itr->second->inflationTermStructure());
-                        bool indexInterpolated = itr->second->interpolatedIndex();
                         QL_REQUIRE(ts, "expected zero inflation term structure for index " << it.first
                                                                                            << ", but could not cast");
-                        auto tmp = parseZeroInflationIndex(it.first, indexInterpolated,
+                        // index is not interpolated
+                        auto tmp = parseZeroInflationIndex(it.first, false,
                                                            Handle<ZeroInflationTermStructure>(ts));
-                        zeroInflationIndices_[make_pair(configuration.first, make_pair(it.first, indexInterpolated))] =
-                            Handle<ZeroInflationIndex>(tmp);
-                        zeroInflationIndices_[make_pair(configuration.first, make_pair(it.first, !indexInterpolated))] =
-                            Handle<ZeroInflationIndex>(boost::make_shared<QuantExt::ZeroInflationIndexWrapper>(
-                                tmp, indexInterpolated ? CPI::Flat : CPI::Linear));
+                        zeroInflationIndices_[make_pair(configuration.first, it.first)] = Handle<ZeroInflationIndex>(tmp);
                     }
                 }
                 // this try-catch is necessary to handle cases where no YoY inflation index curves exist in scope

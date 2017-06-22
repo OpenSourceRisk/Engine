@@ -18,8 +18,38 @@
 
 #include <boost/make_shared.hpp>
 #include <test/testmarket.hpp>
+#include <ql/termstructures/inflation/inflationhelpers.hpp>
+#include <ql/termstructures/inflation/piecewisezeroinflationcurve.hpp>
+#include <ql/time/calendars/target.hpp>
 #include <iostream>
 namespace testsuite {
+
+Handle<ZeroInflationIndex>  TestMarket::makeInflationIndex(string index, vector<Date> dates, vector<Rate> rates, 
+                                                           boost::shared_ptr<ZeroInflationIndex> ii, Handle<YieldTermStructure> yts) {
+    // build UKRPI index
+
+    boost::shared_ptr<ZeroInflationTermStructure> cpiTS;
+    // now build the helpers ...
+    vector<boost::shared_ptr<BootstrapHelper<ZeroInflationTermStructure>>> instruments;
+    for (Size i = 0; i < dates.size(); i++) {
+        Handle<Quote> quote(boost::shared_ptr<Quote>(new SimpleQuote(rates[i] / 100.0)));
+        boost::shared_ptr<BootstrapHelper<ZeroInflationTermStructure>> anInstrument(
+            new ZeroCouponInflationSwapHelper(quote, Period(2, Months), dates[i], TARGET(),
+                ModifiedFollowing, ActualActual(), ii));
+        instruments.push_back(anInstrument);
+    };
+    // we can use historical or first ZCIIS for this
+    // we know historical is WAY off market-implied, so use market implied flat.
+    Rate baseZeroRate = rates[0] / 100.0;
+    boost::shared_ptr<PiecewiseZeroInflationCurve<Linear>> pCPIts(new PiecewiseZeroInflationCurve<Linear>(
+        asof_, TARGET(), ActualActual(), Period(2, Months), ii->frequency(), ii->interpolated(),
+        baseZeroRate, yts, instruments));
+    pCPIts->recalculate();
+    cpiTS = boost::dynamic_pointer_cast<ZeroInflationTermStructure>(pCPIts);
+    return Handle<ZeroInflationIndex>(
+        parseZeroInflationIndex(index, false, Handle<ZeroInflationTermStructure>(cpiTS)));
+}
+
 
 boost::shared_ptr<ore::data::Conventions> TestConfigurationObjects::conv() {
     boost::shared_ptr<ore::data::Conventions> conventions(new ore::data::Conventions());
@@ -143,6 +173,10 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
                                            5 * Years,  7 * Years, 10 * Years, 20 * Years };
     simMarketData->equityVolIsSurface() = false;
 
+    simMarketData->zeroInflationIndices() = { "UKRPI" };
+    simMarketData->setZeroInflationTenors("UKRPI", {6 * Months, 1 * Years,  2 * Years,  3 * Years, 5 * Years,
+        7 * Years,  10 * Years, 15 * Years, 20 * Years });
+
     return simMarketData;
 }
 
@@ -252,6 +286,12 @@ boost::shared_ptr<ore::analytics::SensitivityScenarioData> TestConfigurationObje
     eqvsData.shiftSize = 0.01;
     eqvsData.shiftExpiries = { 5 * Years };
 
+    ore::analytics::SensitivityScenarioData::CurveShiftData zinfData;
+    zinfData.shiftType = "Absolute";
+    zinfData.shiftSize = 0.0001;
+    zinfData.shiftTenors = { 6 * Months, 1 * Years,  2 * Years,  3 * Years, 5 * Years,
+        7 * Years,  10 * Years, 15 * Years, 20 * Years };
+
     sensiData->discountCurrencies() = {"EUR", "USD", "GBP", "CHF", "JPY"};
     sensiData->discountCurveShiftData()["EUR"] = cvsData;
 
@@ -314,6 +354,9 @@ boost::shared_ptr<ore::analytics::SensitivityScenarioData> TestConfigurationObje
     sensiData->equityVolNames() = { "SP5", "Lufthansa" };
     sensiData->equityVolShiftData()["SP5"] = eqvsData;
     sensiData->equityVolShiftData()["Lufthansa"] = eqvsData;
+
+    sensiData->zeroInflationIndices() = { "UKRPI" };
+    sensiData->zeroInflationCurveShiftData()["UKRPI"] = zinfData;
 
     return sensiData;
 }

@@ -118,6 +118,7 @@ private:
     void generateCapFloorVolScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
     void generateSurvivalProbabilityScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
     void generateCdsVolScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
+    void generateZeroInflationScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
     void generateBaseCorrelationScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
 
     ScenarioDescription discountScenarioDescription(string ccy, Size bucket, bool up);
@@ -132,6 +133,7 @@ private:
     ScenarioDescription capFloorVolScenarioDescription(string ccy, Size expiryBucket, Size strikeBucket, bool up);
     ScenarioDescription survivalProbabilityScenarioDescription(string name, Size bucket, bool up);
     ScenarioDescription CdsVolScenarioDescription(string name, Size expiryBucket, Size strikeBucket, bool up);
+    ScenarioDescription zeroInflationScenarioDescription(string index, Size bucket, bool up);
     ScenarioDescription baseCorrelationScenarioDescription(string indexName, Size lossLevelBucket, Size termBucket,
                                                            bool up);
 

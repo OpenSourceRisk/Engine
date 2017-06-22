@@ -37,6 +37,9 @@
 #include <ql/termstructures/volatility/swaption/swaptionvolcube.hpp>
 #include <ql/termstructures/volatility/swaption/swaptionvolmatrix.hpp>
 #include <ql/termstructures/volatility/swaption/swaptionvolstructure.hpp>
+#include <ql/termstructures/inflation/piecewiseyoyinflationcurve.hpp>
+#include <ql/termstructures/inflation/piecewisezeroinflationcurve.hpp>
+#include <ql/termstructures/inflation/inflationhelpers.hpp>
 #include <ql/termstructures/yield/discountcurve.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
@@ -50,9 +53,11 @@
 #include <qle/termstructures/swaptionvolatilityconverter.hpp>
 #include <qle/termstructures/swaptionvolconstantspread.hpp>
 #include <qle/termstructures/swaptionvolcubewithatm.hpp>
+#include <qle/indexes/inflationindexwrapper.hpp>
 
 #include <boost/timer.hpp>
 
+#include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 
 using namespace QuantLib;
@@ -794,6 +799,80 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         DLOG("Base correlations built for " << bcName);
     }
     LOG("base correlations done");
+
+    LOG("building CPI Indices...");
+    //for (const auto& inflationName : parameters->cpiIndices()) {
+    //    Real indexVal = initMarket->equitySpot(inflationName, configuration)->value();
+    //    DLOG("adding " << inflationName << " equity spot price");
+    //    boost::shared_ptr<SimpleQuote> q(new SimpleQuote(indexVal));
+    //    Handle<Quote> qh(q);
+    //    equitySpots_.insert(
+    //        pair<pair<string, string>, Handle<Quote>>(make_pair(Market::defaultConfiguration, inflationName), qh));
+    //    simData_.emplace(std::piecewise_construct, std::forward_as_tuple(RiskFactorKey::KeyType::CPIIndex, inflationName),
+    //        std::forward_as_tuple(q));
+    //}
+
+    LOG("CPI Indices done");
+
+    LOG("building zero inflation curves...");
+    for (const auto& zic : parameters->zeroInflationIndices()) {
+        LOG("building " << zic << " zero inflation curve");
+
+        Handle<ZeroInflationIndex> inflationIndex = initMarket->zeroInflationIndex(zic, configuration);
+        Handle<ZeroInflationTermStructure> inflationTs = inflationIndex->zeroInflationTermStructure();
+        vector<string> keys(parameters->zeroInflationTenors(zic).size());
+
+        bool indexInterpolated = inflationTs->indexIsInterpolated();
+        DayCounter dc = inflationTs->dayCounter();
+        Calendar cal = inflationIndex->fixingCalendar();
+        BusinessDayConvention bdc = ModifiedFollowing;
+        Period lag = inflationTs->observationLag();
+        Frequency freq = inflationTs->frequency();
+        Rate baseRate = inflationTs->baseRate();
+        Handle<YieldTermStructure> nominalTs = inflationTs->nominalTermStructure();
+        boost::shared_ptr<ZeroInflationIndex> index = ore::data::parseZeroInflationIndex(zic, indexInterpolated);
+
+        vector<Time> zeroCurveTimes(1, 0.0);       // include today
+        vector<Date> zeroCurveDates(1, asof_);
+        QL_REQUIRE(parameters->zeroInflationTenors(zic).front() > 0 * Days, "zero inflation tenors must not include t=0");
+        for (auto& tenor : parameters->zeroInflationTenors(zic)) {
+            zeroCurveTimes.push_back(dc.yearFraction(asof_, asof_ + tenor));
+            zeroCurveDates.push_back(asof_ + tenor);
+        }
+        
+        std::vector<boost::shared_ptr<ZeroInflationTraits::helper>> instruments;
+        for (Size i = 0; i < zeroCurveTimes.size() - 1; i++) {
+            boost::shared_ptr<SimpleQuote> q(new SimpleQuote(inflationTs->zeroRate(zeroCurveDates[i + 1])));
+            Handle<Quote> qh(q);
+
+            simData_.emplace(std::piecewise_construct,
+                std::forward_as_tuple(RiskFactorKey::KeyType::ZeroInflationCurve, zic, i),
+                std::forward_as_tuple(q));
+
+            instruments.push_back(boost::make_shared<ZeroCouponInflationSwapHelper>(qh, lag, zeroCurveDates[i + 1], cal, bdc, dc, index));
+            LOG("SimMarket index curve " << zic << " zeroRate[" << i << "]=" << q->value());
+        }
+
+        boost::shared_ptr<ZeroInflationTermStructure> zeroCurve;
+        zeroCurve = boost::shared_ptr<PiecewiseZeroInflationCurve<Linear>>(new PiecewiseZeroInflationCurve<Linear>(
+                asof_, cal, dc, lag, freq, indexInterpolated, baseRate, nominalTs, instruments));
+
+        Handle<ZeroInflationTermStructure> its(zeroCurve);
+        boost::shared_ptr<ZeroInflationIndex> i(inflationIndex->clone(its));
+        Handle<ZeroInflationIndex> zh(i);
+        zeroInflationIndices_.insert(pair<pair<string, string>, Handle<ZeroInflationIndex>>
+            (make_pair(Market::defaultConfiguration, zic), zh));
+
+        LOG("building " << zic << " zero inflation curve done");   
+    }
+    LOG("zero inflation curves done");
+
+    LOG("building yoy inflation curves...");
+    for (const auto& zic : parameters->yoyInflationIndices()) {
+
+    }
+
+    LOG("yoy inflation curves done");
 }
 
 void ScenarioSimMarket::update(const Date& d) {

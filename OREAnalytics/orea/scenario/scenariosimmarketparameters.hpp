@@ -55,6 +55,8 @@ public:
         capFloorVolExpiries_[""];
         defaultTenors_[""];
         equityTenors_[""];
+        zeroInflationTenors_[""];
+        yoyInflationTenors_[""];
     }
 
     //! \name Inspectors
@@ -121,6 +123,15 @@ public:
     const vector<Period>& baseCorrelationTerms() const { return baseCorrelationTerms_; }
     const vector<Real>& baseCorrelationDetachmentPoints() const { return baseCorrelationDetachmentPoints_; }
     const vector<string>& baseCorrelationNames() const { return baseCorrelationNames_; }
+
+    const vector<string>& cpiIndices() const { return cpiIndices_; }
+    const vector<string>& zeroInflationIndices() const { return zeroInflationIndices_; }
+    const vector<Period>& zeroInflationTenors(const string& key) const;
+    bool hasZeroInflationTenors(const string& key) const { return zeroInflationTenors_.count(key) > 0; }
+    const vector<string>& yoyInflationIndices() const { return yoyInflationIndices_; }
+    const vector<Period>& yoyInflationTenors(const string& key) const;
+    bool hasYoyInflationTenors(const string& key) const { return yoyInflationTenors_.count(key) > 0; }
+
     //@}
 
     //! \name Setters
@@ -183,6 +194,13 @@ public:
     vector<Period>& baseCorrelationTerms() { return baseCorrelationTerms_; }
     vector<Real>& baseCorrelationDetachmentPoints() { return baseCorrelationDetachmentPoints_; }
     vector<string>& baseCorrelationNames() { return baseCorrelationNames_; }
+
+    vector<string>& cpiIndices() { return cpiIndices_; }
+    vector<string>& zeroInflationIndices() { return zeroInflationIndices_; }
+    void setZeroInflationTenors(const string& key, const vector<Period>& p);
+    vector<string>& yoyInflationIndices() { return yoyInflationIndices_; }
+    void setYoyInflationTenors(const string& key, const vector<Period>& p);
+
 
     //@}
 
@@ -257,6 +275,12 @@ private:
     vector<string> baseCorrelationNames_;
     vector<Period> baseCorrelationTerms_;
     vector<Real> baseCorrelationDetachmentPoints_;
+    
+    vector<string> cpiIndices_;
+    vector<string> zeroInflationIndices_;
+    map<string, vector<Period>> zeroInflationTenors_;
+    vector<string> yoyInflationIndices_;
+    map<string, vector<Period>> yoyInflationTenors_;
 };
 } // namespace analytics
 } // namespace ore

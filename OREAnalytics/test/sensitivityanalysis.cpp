@@ -152,7 +152,9 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     portfolio->add(buildFloor("10_Floor_USD", "USD", "Long", 0.01, 1000000.0, 0, 10, "3M", "A360", "USD-LIBOR-3M"));
     portfolio->add(buildZeroBond("11_ZeroBond_EUR", "EUR", 1.0, 10));
     portfolio->add(buildZeroBond("12_ZeroBond_USD", "USD", 1.0, 10));
-    portfolio->add(buildEquityOption("14_EquityOption_SP5", "Long", "Call", 2, "SP5", "USD", 2147.56, 775));    
+    portfolio->add(buildEquityOption("14_EquityOption_SP5", "Long", "Call", 2, "SP5", "USD", 2147.56, 775));  
+    portfolio->add(buildCPIInflationSwap("15_CPIInflationSwap_UKRPI", "GBP", true, 100000.0, 0, 10, 0.0, "6M", "ACT/ACT", 
+                                         "GBP-LIBOR-6M", "1Y", "ACT/ACT", "UKRPI", 201.0, "2M", false, 0.005));
     portfolio->build(factory);
 
     BOOST_TEST_MESSAGE("Portfolio size after build: " << portfolio->size());
@@ -497,7 +499,52 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
         {"14_EquityOption_SP5", "Up:FXSpot/EURUSD/0/spot", 216085, -2139.45 },
         {"14_EquityOption_SP5", "Down:FXSpot/EURUSD/0/spot", 216085, 2182.67 },
         {"14_EquityOption_SP5", "Up:EquityVolatility/SP5/0/5Y/ATM", 216085, 1849.98 },
-        {"14_EquityOption_SP5", "Down:EquityVolatility/SP5/0/5Y/ATM", 216085, -1850.33 } };
+        {"14_EquityOption_SP5", "Down:EquityVolatility/SP5/0/5Y/ATM", 216085, -1850.33 },
+        {"15_CPIInflationSwap_UKRPI", "Up:DiscountCurve/GBP/0/6M", -32068.5, -0.0306304 },
+        {"15_CPIInflationSwap_UKRPI", "Up:DiscountCurve/GBP/1/1Y", -32068.5, -0.279201 },
+        {"15_CPIInflationSwap_UKRPI", "Up:DiscountCurve/GBP/2/2Y", -32068.5, -0.772336 },
+        {"15_CPIInflationSwap_UKRPI", "Up:DiscountCurve/GBP/3/3Y", -32068.5, -1.80941 },
+        {"15_CPIInflationSwap_UKRPI", "Up:DiscountCurve/GBP/4/5Y", -32068.5, -3.18149 },
+        {"15_CPIInflationSwap_UKRPI", "Up:DiscountCurve/GBP/5/7Y", -32068.5, -5.26791 },
+        {"15_CPIInflationSwap_UKRPI", "Up:DiscountCurve/GBP/6/10Y", -32068.5, 58.9998 },
+        {"15_CPIInflationSwap_UKRPI", "Down:DiscountCurve/GBP/0/6M", -32068.5, 0.030632 },
+        {"15_CPIInflationSwap_UKRPI", "Down:DiscountCurve/GBP/1/1Y", -32068.5, 0.279223 },
+        {"15_CPIInflationSwap_UKRPI", "Down:DiscountCurve/GBP/2/2Y", -32068.5, 0.772443 },
+        {"15_CPIInflationSwap_UKRPI", "Down:DiscountCurve/GBP/3/3Y", -32068.5, 1.8098 },
+        {"15_CPIInflationSwap_UKRPI", "Down:DiscountCurve/GBP/4/5Y", -32068.5, 3.18254 },
+        {"15_CPIInflationSwap_UKRPI", "Down:DiscountCurve/GBP/5/7Y", -32068.5, 5.27039 },
+        {"15_CPIInflationSwap_UKRPI", "Down:DiscountCurve/GBP/6/10Y", -32068.5, -59.0602 },
+        {"15_CPIInflationSwap_UKRPI", "Up:IndexCurve/GBP-LIBOR-6M/0/6M", -32068.5, -6.17897 },
+        {"15_CPIInflationSwap_UKRPI", "Up:IndexCurve/GBP-LIBOR-6M/1/1Y", -32068.5, 0.672814 },
+        {"15_CPIInflationSwap_UKRPI", "Up:IndexCurve/GBP-LIBOR-6M/2/2Y", -32068.5, 0.804723 },
+        {"15_CPIInflationSwap_UKRPI", "Up:IndexCurve/GBP-LIBOR-6M/3/3Y", -32068.5, 2.4176 },
+        {"15_CPIInflationSwap_UKRPI", "Up:IndexCurve/GBP-LIBOR-6M/4/5Y", -32068.5, 3.61554 },
+        {"15_CPIInflationSwap_UKRPI", "Up:IndexCurve/GBP-LIBOR-6M/5/7Y", -32068.5, 6.77412 },
+        {"15_CPIInflationSwap_UKRPI", "Up:IndexCurve/GBP-LIBOR-6M/6/10Y", -32068.5, 89.6542 },
+        {"15_CPIInflationSwap_UKRPI", "Down:IndexCurve/GBP-LIBOR-6M/0/6M", -32068.5, 6.17927 },
+        {"15_CPIInflationSwap_UKRPI", "Down:IndexCurve/GBP-LIBOR-6M/1/1Y", -32068.5, -0.671026 },
+        {"15_CPIInflationSwap_UKRPI", "Down:IndexCurve/GBP-LIBOR-6M/2/2Y", -32068.5, -0.80017 },
+        {"15_CPIInflationSwap_UKRPI", "Down:IndexCurve/GBP-LIBOR-6M/3/3Y", -32068.5, -2.40996 },
+        {"15_CPIInflationSwap_UKRPI", "Down:IndexCurve/GBP-LIBOR-6M/4/5Y", -32068.5, -3.60255 },
+        {"15_CPIInflationSwap_UKRPI", "Down:IndexCurve/GBP-LIBOR-6M/5/7Y", -32068.5, -6.75478 },
+        {"15_CPIInflationSwap_UKRPI", "Down:IndexCurve/GBP-LIBOR-6M/6/10Y", -32068.5, -89.6393 },
+        {"15_CPIInflationSwap_UKRPI", "Up:FXSpot/EURGBP/0/spot", -32068.5, 317.51 },
+        {"15_CPIInflationSwap_UKRPI", "Down:FXSpot/EURGBP/0/spot", -32068.5, -323.924 },
+        {"15_CPIInflationSwap_UKRPI", "Up:ZeroInflationCurve/UKRPI/1/1Y", -32068.5, -0.0789981 },
+        {"15_CPIInflationSwap_UKRPI", "Up:ZeroInflationCurve/UKRPI/2/2Y", -32068.5, -0.154098 },
+        {"15_CPIInflationSwap_UKRPI", "Up:ZeroInflationCurve/UKRPI/3/3Y", -32068.5, -0.381073 },
+        {"15_CPIInflationSwap_UKRPI", "Up:ZeroInflationCurve/UKRPI/4/5Y", -32068.5, -0.749769 },
+        {"15_CPIInflationSwap_UKRPI", "Up:ZeroInflationCurve/UKRPI/5/7Y", -32068.5, -1.34474 },
+        {"15_CPIInflationSwap_UKRPI", "Up:ZeroInflationCurve/UKRPI/6/10Y", -32068.5, -144.53 },
+        {"15_CPIInflationSwap_UKRPI", "Up:ZeroInflationCurve/UKRPI/7/15Y", -32068.5, 2.91038e-10 },
+        {"15_CPIInflationSwap_UKRPI", "Up:ZeroInflationCurve/UKRPI/8/20Y", -32068.5, 2.91038e-10 },
+        {"15_CPIInflationSwap_UKRPI", "Down:ZeroInflationCurve/UKRPI/0/6M", -32068.5, 2.91038e-10 },
+        {"15_CPIInflationSwap_UKRPI", "Down:ZeroInflationCurve/UKRPI/1/1Y", -32068.5, 0.0789981 },
+        {"15_CPIInflationSwap_UKRPI", "Down:ZeroInflationCurve/UKRPI/2/2Y", -32068.5, 0.154083 },
+        {"15_CPIInflationSwap_UKRPI", "Down:ZeroInflationCurve/UKRPI/3/3Y", -32068.5, 0.381006 },
+        {"15_CPIInflationSwap_UKRPI", "Down:ZeroInflationCurve/UKRPI/4/5Y", -32068.5, 0.749547 },
+        {"15_CPIInflationSwap_UKRPI", "Down:ZeroInflationCurve/UKRPI/5/7Y", -32068.5, 1.34416 },
+        {"15_CPIInflationSwap_UKRPI", "Down:ZeroInflationCurve/UKRPI/6/10Y", -32068.5, 144.404 } };
 
     std::map<pair<string, string>, Real> npvMap, sensiMap;
     for (Size i = 0; i < cachedResults.size(); ++i) {

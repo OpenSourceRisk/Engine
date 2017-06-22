@@ -132,7 +132,26 @@
     <Securities>
       <Security>SECURITY_1</Security>
     </Securities>
-  
+
+    <ZeroInflationIndices>
+        <Names>
+			<Name>EUHICP</Name>
+			<Name>EUHICPXT</Name>
+			<Name>FRHICP</Name>
+			<Name>UKRPI</Name>
+			<Name>USCPI</Name>
+			<Name>ZACPI</Name>
+		</Names>
+		<Tenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</Tenors>
+    </ZeroInflationIndices>
+
+	<YoYInflationIndices>
+	    <Names>
+		    <Name>EUHICPXT</Name>
+		</Names>
+		<Tenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</Tenors>
+	</YoYInflationIndices>
+	
     <!-- Additional data that is recorded during simulation for later
 	   use in the post processor -->
     <AggregationScenarioDataCurrencies>

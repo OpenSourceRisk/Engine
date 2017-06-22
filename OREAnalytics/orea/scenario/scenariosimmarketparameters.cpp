@@ -54,6 +54,14 @@ const vector<Period>& ScenarioSimMarketParameters::equityTenors(const string& ke
     return returnTenors(equityTenors_, key);
 }
 
+const vector<Period>& ScenarioSimMarketParameters::zeroInflationTenors(const string& key) const {
+    return returnTenors(zeroInflationTenors_, key);
+}
+
+const vector<Period>& ScenarioSimMarketParameters::yoyInflationTenors(const string& key) const {
+    return returnTenors(yoyInflationTenors_, key);
+}
+
 void ScenarioSimMarketParameters::setYieldCurveTenors(const string& key, const std::vector<Period>& p) {
     yieldCurveTenors_[key] = p;
 }
@@ -68,6 +76,14 @@ void ScenarioSimMarketParameters::setDefaultTenors(const string& key, const std:
 
 void ScenarioSimMarketParameters::setEquityTenors(const string& key, const std::vector<Period>& p) {
     equityTenors_[key] = p;
+}
+
+void ScenarioSimMarketParameters::setZeroInflationTenors(const string& key, const std::vector<Period>& p) {
+    zeroInflationTenors_[key] = p;
+}
+
+void ScenarioSimMarketParameters::setYoyInflationTenors(const string& key, const std::vector<Period>& p) {
+    yoyInflationTenors_[key] = p;
 }
 
 bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& rhs) {
@@ -237,6 +253,26 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         equityVolSimulate_ = false;
         equityVolExpiries_.clear();
         equityVolNames_.clear();
+    }
+
+    nodeChild = XMLUtils::getChildNode(node, "ZeroInflationIndices");
+    if (nodeChild) {
+        zeroInflationIndices_ = XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true);
+        zeroInflationTenors_[""] = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Tenors", true);
+    }
+    else {
+        zeroInflationIndices_.clear();
+        zeroInflationTenors_.clear();
+    }
+
+    nodeChild = XMLUtils::getChildNode(node, "YoYInflationIndices");
+    if (nodeChild) {
+        yoyInflationIndices_ = XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true);
+        yoyInflationTenors_[""] = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Tenors", true);
+    }
+    else {
+        yoyInflationIndices_.clear();
+        yoyInflationTenors_.clear();
     }
 
     additionalScenarioDataIndices_ = XMLUtils::getChildrenValues(node, "AggregationScenarioDataIndices", "Index");

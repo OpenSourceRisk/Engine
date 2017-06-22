@@ -345,6 +345,23 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
         }
     }
 
+    Size n_zeroindices = simMarketData_->zeroInflationIndices().size();
+    zeroInfIndexKeys_.reserve(n_zeroindices * simMarketData_->zeroInflationTenors("").size());
+    count = 0;
+    for (Size j = 0; j < n_zeroindices; ++j) {
+        std::string zeroIndexName = simMarketData_->zeroInflationIndices()[j];
+        Size n_ten = simMarketData_->zeroInflationTenors(zeroIndexName).size();
+        Handle<ZeroInflationIndex> index = market->zeroInflationIndex(zeroIndexName, configuration_);
+        Handle<ZeroInflationTermStructure> ts = index->zeroInflationTermStructure();
+        for (Size k = 0; k < n_ten; ++k) {
+            zeroInfIndexKeys_.emplace_back(RiskFactorKey::KeyType::ZeroInflationCurve, simMarketData_->zeroInflationIndices()[j], k);
+            Real disc = ts->zeroRate(today_ + simMarketData_->zeroInflationTenors(zeroIndexName)[k]);
+            zeroInfIndexCache_[zeroInfIndexKeys_[count]] = disc;
+            LOG("cache zero rate " << disc << " for key " << zeroInfIndexKeys_[count]);
+            count++;
+        }
+    }
+
     LOG("generate base scenario");
     baseScenario_ = baseScenarioFactory_->buildScenario(today_, "BASE");
     addCacheTo(baseScenario_);
@@ -393,6 +410,10 @@ void ShiftScenarioGenerator::addCacheTo(boost::shared_ptr<Scenario> scenario) {
     for (auto key : equityKeys_) {
         if (!scenario->has(key))
             scenario->add(key, equityCache_[key]);
+    }
+    for (auto key : zeroInfIndexKeys_) {
+        if (!scenario->has(key))
+            scenario->add(key, zeroInfIndexCache_[key]);
     }
     if (simMarketData_->simulateFXVols()) {
         for (auto key : fxVolKeys_) {
@@ -516,6 +537,14 @@ RiskFactorKey ShiftScenarioGenerator::getSurvivalProbabilityKey(const std::strin
             return survivalProbabilityKeys_[i];
     }
     QL_FAIL("error locating SurvivalProbability RiskFactorKey for " << name << ", index " << index);
+}
+
+RiskFactorKey ShiftScenarioGenerator::getZeroInfIndexKey(const std::string& indexName, Size index) {
+    for (Size i = 0; i < zeroInfIndexKeys_.size(); ++i) {
+        if (zeroInfIndexKeys_[i].name == indexName && zeroInfIndexKeys_[i].index == index)
+            return zeroInfIndexKeys_[i];
+    }
+    QL_FAIL("error locating ZeroInflationIndex RiskFactorKey for " << indexName << ", index " << index);
 }
 
 RiskFactorKey ShiftScenarioGenerator::getCdsVolKey(const std::string& name, Size index) {

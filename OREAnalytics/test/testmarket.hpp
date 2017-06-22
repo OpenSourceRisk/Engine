@@ -30,6 +30,7 @@
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
+#include <ql/indexes/inflation/ukrpi.hpp>
 
 using namespace QuantLib;
 using namespace ore::data;
@@ -204,6 +205,48 @@ public:
 
         securitySpreads_[make_pair(Market::defaultConfiguration, "Bond1")] =
             Handle<Quote>(boost::make_shared<SimpleQuote>(0.0));
+
+        Handle<IborIndex> hGBP(ore::data::parseIborIndex(
+            "GBP-LIBOR-6M", discountCurves_[make_pair(Market::defaultConfiguration, "GBP")]));
+        iborIndices_[make_pair(Market::defaultConfiguration, "GBP-LIBOR-6M")] = hGBP;
+
+        // build UKRPI fixing history
+        Date cpiFixingEnd(1, asof_.month(), asof_.year());
+        Date cpiFixingStart = cpiFixingEnd - Period(14, Months);
+        Schedule fixingDatesUKRPI =
+            MakeSchedule().from(cpiFixingStart).to(cpiFixingEnd).withTenor(1 * Months);
+        Real fixingRatesUKRPI[] = { 258.5, 258.9, 258.6, 259.8, 259.6, 259.5,  259.8, 260.6,
+            258.8, 260.0, 261.1, 261.4, 262.1, -999.0, -999.0 };
+
+        // build UKRPI index
+        boost::shared_ptr<ZeroInflationIndex> ii = parseZeroInflationIndex("UKRPI");
+        RelinkableHandle<ZeroInflationTermStructure> hcpi;
+        bool interp = false;
+        ii = boost::shared_ptr<UKRPI>(new UKRPI(interp, hcpi));
+        for (Size i = 0; i < fixingDatesUKRPI.size(); i++) {
+            // std::cout << i << ", " << fixingDatesUKRPI[i] << ", " << fixingRatesUKRPI[i] << std::endl;
+            ii->addFixing(fixingDatesUKRPI[i], fixingRatesUKRPI[i], true);
+        };
+
+        vector<Date> datesZCII = { asof_,
+            asof_ + 1 * Years,
+            asof_ + 2 * Years,
+            asof_ + 3 * Years,
+            asof_ + 4 * Years,
+            asof_ + 5 * Years,
+            asof_ + 6 * Years,
+            asof_ + 7 * Years,
+            asof_ + 8 * Years,
+            asof_ + 9 * Years,
+            asof_ + 10 * Years,
+            asof_ + 12 * Years,
+            asof_ + 15 * Years,
+            asof_ + 20 * Years };
+
+        vector<Rate> ratesZCII = { 2.825, 2.9425, 2.975,  2.983, 3.0,  3.01,  3.008,
+            3.009, 3.013,  3.0445, 3.044, 3.09, 3.109, 3.108 };
+
+        zeroInflationIndices_[make_pair(Market::defaultConfiguration, "UKRPI")] = makeInflationIndex("UKRPI", datesZCII, ratesZCII, ii, discountCurves_[make_pair(Market::defaultConfiguration, "GBP")]);
     }
 
 private:
@@ -239,6 +282,7 @@ private:
                                                       ModifiedFollowing, vol, ActualActual(), type, shift));
         return Handle<OptionletVolatilityStructure>(ts);
     }
+    Handle<ZeroInflationIndex>  makeInflationIndex(string index, vector<Date> dates, vector<Rate> rates, boost::shared_ptr<ZeroInflationIndex> ii, Handle<YieldTermStructure> yts);
 };
 
 //! Static class to allow for easy construction of configuration objects for use within tests

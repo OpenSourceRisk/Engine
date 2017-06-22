@@ -243,6 +243,22 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
         equityVolNames_.push_back(equity);
     }
 
+
+    LOG("Get Zero Inflation sensitivity parameters");
+    XMLNode* zeroInflation = XMLUtils::getChildNode(node, "ZeroInflationIndices");
+    if (zeroInflation) {
+        for (XMLNode* child = XMLUtils::getChildNode(zeroInflation, "ZeroInflationIndex"); child;
+            child = XMLUtils::getNextSibling(child)) {
+            string index = XMLUtils::getAttribute(child, "index");
+            CurveShiftData data;
+            data.shiftType = XMLUtils::getChildValue(child, "ShiftType");
+            data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
+            data.shiftTenors = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
+            zeroInflationCurveShiftData_[index] = data;
+            zeroInflationIndices_.push_back(index);
+        }
+    }
+
     LOG("Get cross gamma parameters");
     vector<string> filter = XMLUtils::getChildrenValues(node, "CrossGammaFilter", "Pair", true);
     for (Size i = 0; i < filter.size(); ++i) {

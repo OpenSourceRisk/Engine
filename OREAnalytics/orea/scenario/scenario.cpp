@@ -55,6 +55,12 @@ std::ostream& operator<<(std::ostream& out, const RiskFactorKey::KeyType& type) 
         return out << "CDSVolatility";
     case RiskFactorKey::KeyType::BaseCorrelation:
         return out << "BaseCorrelation";
+    case RiskFactorKey::KeyType::CPIIndex:
+        return out << "CPIIndex";
+    case RiskFactorKey::KeyType::ZeroInflationCurve:
+        return out << "ZeroInflationCurve";
+    case RiskFactorKey::KeyType::YoYInflationCurve:
+        return out << "YoYInflationCurve";
     default:
         return out << "?";
     }
@@ -91,6 +97,12 @@ RiskFactorKey::KeyType parseRiskFactorKeyType(const string& str) {
         return RiskFactorKey::KeyType::CDSVolatility;
     else if (str == "BaseCorrelation")
         return RiskFactorKey::KeyType::BaseCorrelation;
+    else if (str == "CPIIndex")
+        return RiskFactorKey::KeyType::CPIIndex;
+    else if (str == "ZeroInflationCurve")
+        return RiskFactorKey::KeyType::ZeroInflationCurve;
+    else if (str == "YoYInflationCurve")
+        return RiskFactorKey::KeyType::YoYInflationCurve;
     QL_FAIL("RiskFactorKey " << str << " does not exist.");
 }
 
