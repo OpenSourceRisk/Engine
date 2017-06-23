@@ -189,6 +189,7 @@ protected:
     RiskFactorKey getOptionletVolKey(const std::string& ccy, Size index);
     RiskFactorKey getFxVolKey(const std::string& ccypair, Size index);
     RiskFactorKey getEquityVolKey(const std::string& equity, Size index);
+    RiskFactorKey getDividendYieldKey(const std::string& equity, Size index);
     RiskFactorKey getSurvivalProbabilityKey(const std::string& curveName, Size index);
     RiskFactorKey getZeroInfIndexKey(const std::string& indexName, Size index);
     RiskFactorKey getYoYInfIndexKey(const std::string& indexName, Size index);
@@ -202,10 +203,11 @@ protected:
     const std::string configuration_;
     std::vector<RiskFactorKey> discountCurveKeys_, indexCurveKeys_, yieldCurveKeys_, fxKeys_, swaptionVolKeys_,
         fxVolKeys_, optionletVolKeys_, survivalProbabilityKeys_, zeroInfIndexKeys_, yoyInfIndexKeys_, cdsVolKeys_, baseCorrelationKeys_, 
-        equityKeys_, equityVolKeys_;
+        equityKeys_, equityVolKeys_, dividendYieldKeys_;
     std::map<RiskFactorKey, Real> discountCurveCache_, indexCurveCache_, yieldCurveCache_, fxCache_, swaptionVolCache_, fxVolCache_,
         optionletVolCache_, survivalProbabilityCache_, zeroInfIndexCache_, yoyInfIndexCache_, cdsVolCache_, baseCorrelationCache_, 
-        equityCache_, equityVolCache_;
+        equityCache_, equityVolCache_, dividendYieldCache_;
+
     Real numeraireCache_;
     std::vector<boost::shared_ptr<Scenario>> scenarios_;
     boost::shared_ptr<Scenario> baseScenario_;
@@ -213,7 +215,7 @@ protected:
 
     vector<string> discountCurrencies_, indexNames_, yieldCurveNames_, fxCcyPairs_, fxVolCcyPairs_, swaptionVolCurrencies_, 
         capFloorVolCurrencies_, crNames_, zeroInfIndexNames_, yoyInfIndexNames_, cdsVolNames_, baseCorrelationNames_,
-        equityNames_, equityVolNames_;
+        equityNames_, equityVolNames_, dividendYieldNames_;
 
     std::vector<ScenarioDescription> scenarioDescriptions_;
 
