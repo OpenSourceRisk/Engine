@@ -687,7 +687,7 @@ boost::shared_ptr<data::CurveConfigurations> curveConfigurations() {
     // clang-format on
 
     configs->equityCurveConfig("SP5") = boost::make_shared<EquityCurveConfig>(
-        "SP5", "", "USD-FedFunds", "USD", EquityCurveConfig::Type::ForwardPrice, "EQUITY/PRICE/SP5/USD", eqFwdQuotes);
+        "SP5", "", "USD1D", "USD", EquityCurveConfig::Type::ForwardPrice, "EQUITY/PRICE/SP5/USD", eqFwdQuotes);
 
     configs->equityVolCurveConfig("SP5") = boost::make_shared<EquityVolatilityCurveConfig>(
         "SP5", "", "USD", EquityVolatilityCurveConfig::Dimension::ATM, equityVolExpiries);
