@@ -112,6 +112,7 @@ private:
     void generateIndexCurveScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
     void generateFxScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
     void generateEquityScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
+    void generateDividendYieldScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
     void generateSwaptionVolScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
     void generateFxVolScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
     void generateEquityVolScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
@@ -126,6 +127,7 @@ private:
     ScenarioDescription fxScenarioDescription(string ccypair, bool up);
     ScenarioDescription fxVolScenarioDescription(string ccypair, Size expiryBucket, Size strikeBucket, bool up);
     ScenarioDescription equityScenarioDescription(string equity, bool up);
+    ScenarioDescription dividendYieldScenarioDescription(string equity, Size bucket, bool up);
     ScenarioDescription equityVolScenarioDescription(string equity, Size expiryBucket, Size strikeBucket, bool up);
     ScenarioDescription swaptionVolScenarioDescription(string ccy, Size expiryBucket, Size termBucket,
                                                        Size strikeBucket, bool up);
