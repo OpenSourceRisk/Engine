@@ -170,7 +170,8 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
 
     // Cache equity forecast curve keys
     Size n_ecnames = simMarketData_->equityNames().size();
-    equityForecastKeys_.reserve(n_ecnames * simMarketData_->equityForecastTenors("").size());
+    if (n_ecnames > 0 )
+        equityForecastKeys_.reserve(n_ecnames * simMarketData_->equityForecastTenors("").size());
     count = 0;
     for (Size j = 0; j < n_ecnames; ++j) {
         std::string ecname = simMarketData_->equityNames()[j];

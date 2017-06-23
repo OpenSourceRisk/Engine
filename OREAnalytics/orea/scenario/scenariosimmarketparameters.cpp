@@ -206,8 +206,8 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         recoveryRateSimulate_ = ore::data::parseBool(XMLUtils::getNodeValue(recoveryRateSimNode));
 
     nodeChild = XMLUtils::getChildNode(node, "Equities");
-    yieldCurveNames_.clear();
-    yieldCurveCurrencies_.clear();
+    equityNames_.clear();
+    equityCurrencies_.clear();
     if (nodeChild) {
         for (XMLNode* n = XMLUtils::getChildNode(nodeChild, "Equity"); n != nullptr;
              n = XMLUtils::getNextSibling(n, "Equity")) {

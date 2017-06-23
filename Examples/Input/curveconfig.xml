@@ -2141,6 +2141,7 @@
             <CurveId>SP5</CurveId>
             <CurveDescription>SP 500 equity price projection curve</CurveDescription>
             <Currency>USD</Currency>
+            <ForecastingCurve>USD1D</ForecastingCurve>
             <Type>DividendYield</Type> <!-- {DividendYield, ForwardPrice} -->
             <SpotQuote>EQUITY/PRICE/SP5/USD</SpotQuote> <!--  the spot quote from the market data file -->
             <Quotes>
@@ -2155,6 +2156,7 @@
             <CurveId>Lufthansa</CurveId>
             <CurveDescription>Lufthansa equity price projection curve</CurveDescription>
             <Currency>EUR</Currency>
+            <ForecastingCurve>EUR1D</ForecastingCurve>
             <Type>ForwardPrice</Type> <!-- {DividendYield, ForwardPrice} -->
             <SpotQuote>EQUITY/PRICE/Lufthansa/EUR</SpotQuote> <!--  the spot quote from the market data file -->
             <Quotes>
