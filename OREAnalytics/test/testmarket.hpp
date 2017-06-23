@@ -164,6 +164,8 @@ public:
         equityDividendCurves_[make_pair(Market::defaultConfiguration, "SP5")] = flatRateDiv(0.01);
         equityDividendCurves_[make_pair(Market::defaultConfiguration, "Lufthansa")] = flatRateDiv(0.0);
 
+        equityForecastCurves_[make_pair(Market::defaultConfiguration, "SP5")] = flatRateYts(0.03);
+        equityForecastCurves_[make_pair(Market::defaultConfiguration, "Lufthansa")] = flatRateYts(0.02);
         // build swaption vols
         swaptionCurves_[make_pair(Market::defaultConfiguration, "EUR")] = flatRateSvs(0.20);
         swaptionCurves_[make_pair(Market::defaultConfiguration, "USD")] = flatRateSvs(0.30);

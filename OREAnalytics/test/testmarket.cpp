@@ -134,8 +134,11 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
 
     simMarketData->equityNames() = { "SP5", "Lufthansa" };
     simMarketData->setEquityDividendTenors("SP5", { 6 * Months, 1 * Years, 2 * Years });
-    simMarketData->setEquityForecastTenors("SP5", { 6 * Months, 1 * Years, 2 * Years });
-    simMarketData->setEquityForecastTenors("Lufthansa", { 6 * Months, 1 * Years, 2 * Years });
+    simMarketData->setEquityDividendTenors("Lufthansa", { 6 * Months, 1 * Years, 2 * Years });
+    simMarketData->setEquityForecastTenors("SP5", {1 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
+                                            5 * Years, 7 * Years, 10 * Years, 15 * Years, 20 * Years, 30 * Years });
+    simMarketData->setEquityForecastTenors("Lufthansa", {1 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 
+                                        4 * Years, 5 * Years, 7 * Years, 10 * Years, 15 * Years, 20 * Years, 30 * Years});
 
     simMarketData->simulateEquityVols() = true;
     simMarketData->equityVolDecayMode() = "ForwardVariance";
@@ -315,6 +318,10 @@ boost::shared_ptr<ore::analytics::SensitivityScenarioData> TestConfigurationObje
     sensiData->equityVolNames() = { "SP5", "Lufthansa" };
     sensiData->equityVolShiftData()["SP5"] = eqvsData;
     sensiData->equityVolShiftData()["Lufthansa"] = eqvsData;
+
+    sensiData->equityForecastCurveNames() = { "SP5", "Lufthansa" };
+    sensiData->equityForecastCurveShiftData()["SP5"] = cvsData;
+    sensiData->equityForecastCurveShiftData()["Lufthansa"] = cvsData;
 
     return sensiData;
 }
