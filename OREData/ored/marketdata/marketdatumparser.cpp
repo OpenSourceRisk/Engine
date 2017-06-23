@@ -130,7 +130,10 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         // token 5 can be a date, or tenor
         Date zeroDate = Date();
         Period tenor = Period();
-        if (tokens[5].size() < 6) { // e.g. 3M, 50Y, 1Y6M
+        //if (tokens[5].size() < 6) { // e.g. 3M, 50Y, 1Y6M
+	if (tokens[5].find("D") != std::string::npos ||
+	    tokens[5].find("M") != std::string::npos ||
+	    tokens[5].find("Y") != std::string::npos) {
             tenor = parsePeriod(tokens[5]);
         } else {
             zeroDate = parseDate(tokens[5]);
