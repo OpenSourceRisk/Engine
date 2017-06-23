@@ -493,6 +493,7 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
         {"13_Swaption_EUR", "Down:SwaptionVolatility/EUR/2/5Y/5Y/ATM", 5116.77, -82.6745},
         {"13_Swaption_EUR", "Down:SwaptionVolatility/EUR/3/5Y/10Y/ATM", 5116.77, -36.0078},
         {"13_Swaption_EUR", "Down:SwaptionVolatility/EUR/4/10Y/5Y/ATM", 5116.77, -15.602},
+        {"13_Swaption_EUR", "Down:SwaptionVolatility/EUR/5/10Y/10Y/ATM", 5116.77, -3.94141},
         {"14_EquityOption_SP5", "Up:DiscountCurve/USD/2/2Y", 216085, 123.022 },
         {"14_EquityOption_SP5", "Up:DiscountCurve/USD/3/3Y", 216085, 1.0169 },
         {"14_EquityOption_SP5", "Down:DiscountCurve/USD/2/2Y", 216085, -122.988 },
