@@ -139,10 +139,8 @@ Handle<ZeroInflationIndex> MarketImpl::zeroInflationIndex(const string& indexNam
     return lookup<Handle<ZeroInflationIndex>>(zeroInflationIndices_, indexName, configuration, "zero inflation index");
 }
 
-Handle<YoYInflationIndex> MarketImpl::yoyInflationIndex(const string& indexName, const bool interpolated,
-                                                        const string& configuration) const {
-    return lookup<Handle<YoYInflationIndex>>(yoyInflationIndices_, std::make_pair(indexName, interpolated),
-                                             configuration, "yoy inflation index");
+Handle<YoYInflationIndex> MarketImpl::yoyInflationIndex(const string& indexName, const string& configuration) const {
+    return lookup<Handle<YoYInflationIndex>>(yoyInflationIndices_, indexName, configuration, "yoy inflation index");
 }
 
 Handle<CPICapFloorTermPriceSurface> MarketImpl::inflationCapFloorPriceSurface(const string& indexName,

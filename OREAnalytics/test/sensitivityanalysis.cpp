@@ -155,6 +155,8 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     portfolio->add(buildEquityOption("14_EquityOption_SP5", "Long", "Call", 2, "SP5", "USD", 2147.56, 775));  
     portfolio->add(buildCPIInflationSwap("15_CPIInflationSwap_UKRPI", "GBP", true, 100000.0, 0, 10, 0.0, "6M", "ACT/ACT", 
                                          "GBP-LIBOR-6M", "1Y", "ACT/ACT", "UKRPI", 201.0, "2M", false, 0.005));
+    portfolio->add(buildYYInflationSwap("16_YoYInflationSwap_EUHICPXT", "EUR", true, 100000.0, 0, 10, 0.0, "1Y", "ACT/ACT",
+                                         "EUR-EURIBOR-6M", "1Y", "ACT/ACT", "EUHICPXT", "2M", true, 2));
     portfolio->build(factory);
 
     BOOST_TEST_MESSAGE("Portfolio size after build: " << portfolio->size());

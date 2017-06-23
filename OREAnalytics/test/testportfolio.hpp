@@ -76,4 +76,7 @@ boost::shared_ptr<Trade> buildCPIInflationSwap(string id, string ccy, bool isPay
                                                string cpiDC, string cpiIndex, Real baseRate, string observationLag, bool interpolated, 
                                                Real cpiRate);
 
+boost::shared_ptr<Trade> buildYYInflationSwap(string id, string ccy, bool isPayer, Real notional, int start, Size term, Real spread,
+                                              string floatFreq, string floatDC, string index, string yyFreq, string yyDC, string yyIndex,
+                                              string observationLag, bool interpolated, Size fixDays);
 } // namespace testsuite

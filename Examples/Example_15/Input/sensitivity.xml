@@ -211,38 +211,46 @@
     </EquityVolatility>
   </EquityVolatilities>
  
-  <ZeroInflationIndices>
-    <ZeroInflationIndex index="EUHICP">
+  <ZeroInflationIndexCurves>
+    <ZeroInflationIndexCurve index="EUHICP">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
-    </ZeroInflationIndex>
-	<ZeroInflationIndex index="EUHICPXT">
+    </ZeroInflationIndexCurve>
+	<ZeroInflationIndexCurve index="EUHICPXT">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
-    </ZeroInflationIndex>
-	<ZeroInflationIndex index="FRHICP">
+    </ZeroInflationIndexCurve>
+	<ZeroInflationIndexCurve index="FRHICP">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
-    </ZeroInflationIndex>
-	<ZeroInflationIndex index="UKRPI">
+    </ZeroInflationIndexCurve>
+	<ZeroInflationIndexCurve index="UKRPI">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
-    </ZeroInflationIndex>
-	<ZeroInflationIndex index="USCPI">
+    </ZeroInflationIndexCurve>
+	<ZeroInflationIndexCurve index="USCPI">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
-    </ZeroInflationIndex>
-	<ZeroInflationIndex index="ZACPI">
+    </ZeroInflationIndexCurve>
+	<ZeroInflationIndexCurve index="ZACPI">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
-    </ZeroInflationIndex>
-  </ZeroInflationIndices>
+    </ZeroInflationIndexCurve>
+  </ZeroInflationIndexCurves>
+  
+  <YYInflationIndexCurves>
+    <YYInflationIndexCurve index="EUHICPXT">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </YYInflationIndexCurve>
+  </YYInflationIndexCurves>
   
   <!-- Cross Gamma filter: Pairs of factor sub-strings -->
   <CrossGammaFilter>

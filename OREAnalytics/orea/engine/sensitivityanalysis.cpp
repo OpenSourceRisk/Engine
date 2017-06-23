@@ -553,6 +553,18 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
             Real zeroRate = yts->zeroRate(t);
             shiftMult = zeroRate;
         }
+    } else if (keytype == RiskFactorKey::KeyType::YoYInflationCurve) {
+        string idx = keylabel;
+        shiftSize = sensitivityData_->yoyInflationCurveShiftData()[idx].shiftSize;
+        if (boost::to_upper_copy(sensitivityData_->yoyInflationCurveShiftData()[idx].shiftType) == "RELATIVE") {
+            Size keyIdx = key.index;
+            Period p = sensitivityData_->yoyInflationCurveShiftData()[idx].shiftTenors[keyIdx];
+            Handle<YoYInflationTermStructure> yts =
+                simMarket_->yoyInflationIndex(idx, marketConfiguration_)->yoyInflationTermStructure();
+            Time t = yts->dayCounter().yearFraction(asof_, asof_ + p);
+            Real yoyRate = yts->yoyRate(t);
+            shiftMult = yoyRate;
+        }
     } else {
         QL_FAIL("KeyType not supported yet - " << keytype);
     }

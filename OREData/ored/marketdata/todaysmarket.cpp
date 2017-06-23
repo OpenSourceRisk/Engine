@@ -429,16 +429,11 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                         boost::shared_ptr<YoYInflationTermStructure> ts =
                             boost::dynamic_pointer_cast<YoYInflationTermStructure>(
                                 itr->second->inflationTermStructure());
-                        bool indexInterpolated = itr->second->interpolatedIndex();
                         QL_REQUIRE(ts, "expected yoy inflation term structure for index " << it.first
                                                                                           << ", but could not cast");
-                        yoyInflationIndices_[make_pair(configuration.first, make_pair(it.first, false))] =
+                        yoyInflationIndices_[make_pair(configuration.first, it.first)] =
                             Handle<YoYInflationIndex>(boost::make_shared<QuantExt::YoYInflationIndexWrapper>(
-                                parseZeroInflationIndex(it.first, indexInterpolated), false,
-                                Handle<YoYInflationTermStructure>(ts)));
-                        yoyInflationIndices_[make_pair(configuration.first, make_pair(it.first, true))] =
-                            Handle<YoYInflationIndex>(boost::make_shared<QuantExt::YoYInflationIndexWrapper>(
-                                parseZeroInflationIndex(it.first, indexInterpolated), true,
+                                parseZeroInflationIndex(it.first, false), false,
                                 Handle<YoYInflationTermStructure>(ts)));
                     }
                 }

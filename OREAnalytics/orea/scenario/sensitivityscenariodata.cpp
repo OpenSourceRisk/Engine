@@ -245,9 +245,9 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
 
 
     LOG("Get Zero Inflation sensitivity parameters");
-    XMLNode* zeroInflation = XMLUtils::getChildNode(node, "ZeroInflationIndices");
+    XMLNode* zeroInflation = XMLUtils::getChildNode(node, "ZeroInflationIndexCurves");
     if (zeroInflation) {
-        for (XMLNode* child = XMLUtils::getChildNode(zeroInflation, "ZeroInflationIndex"); child;
+        for (XMLNode* child = XMLUtils::getChildNode(zeroInflation, "ZeroInflationIndexCurve"); child;
             child = XMLUtils::getNextSibling(child)) {
             string index = XMLUtils::getAttribute(child, "index");
             CurveShiftData data;
@@ -256,6 +256,21 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             data.shiftTenors = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
             zeroInflationCurveShiftData_[index] = data;
             zeroInflationIndices_.push_back(index);
+        }
+    }
+
+    LOG("Get Yoy Inflation sensitivity parameters");
+    XMLNode* yoyInflation = XMLUtils::getChildNode(node, "YYInflationIndexCurves");
+    if (yoyInflation) {
+        for (XMLNode* child = XMLUtils::getChildNode(yoyInflation, "YYInflationIndexCurve"); child;
+            child = XMLUtils::getNextSibling(child)) {
+            string index = XMLUtils::getAttribute(child, "index");
+            CurveShiftData data;
+            data.shiftType = XMLUtils::getChildValue(child, "ShiftType");
+            data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
+            data.shiftTenors = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
+            yoyInflationCurveShiftData_[index] = data;
+            yoyInflationIndices_.push_back(index);
         }
     }
 

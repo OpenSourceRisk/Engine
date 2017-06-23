@@ -133,7 +133,7 @@
       <Security>SECURITY_1</Security>
     </Securities>
 
-    <ZeroInflationIndices>
+    <ZeroInflationIndexCurves>
         <Names>
 			<Name>EUHICP</Name>
 			<Name>EUHICPXT</Name>
@@ -143,14 +143,14 @@
 			<Name>ZACPI</Name>
 		</Names>
 		<Tenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</Tenors>
-    </ZeroInflationIndices>
+    </ZeroInflationIndexCurves>
 
-	<YoYInflationIndices>
+	<YYInflationIndexCurves>
 	    <Names>
 		    <Name>EUHICPXT</Name>
 		</Names>
 		<Tenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</Tenors>
-	</YoYInflationIndices>
+	</YYInflationIndexCurves>
 	
     <!-- Additional data that is recorded during simulation for later
 	   use in the post processor -->

@@ -153,9 +153,8 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             // legTypes_[i] = "INFLATION";
         } else if (legData_[i].legType() == "YY") {
             string inflationIndexName = legData_[i].yoyLegData().index();
-            bool inflationIndexInterpolated = legData_[i].yoyLegData().interpolated();
             boost::shared_ptr<YoYInflationIndex> index =
-                *market->yoyInflationIndex(inflationIndexName, inflationIndexInterpolated);
+                *market->yoyInflationIndex(inflationIndexName);
             legs_[i] = makeYoYLeg(legData_[i], index);
             // legTypes[i] = Inflation;
             // legTypes_[i] = "INFLATION_YOY";

@@ -109,6 +109,10 @@ void ShiftScenarioGenerator::clear() {
     cdsVolCache_.clear();
     baseCorrelationKeys_.clear();
     baseCorrelationCache_.clear();
+    zeroInfIndexKeys_.clear();
+    zeroInfIndexCache_.clear();
+    yoyInfIndexKeys_.clear();
+    yoyInfIndexKeys_.clear();
 }
 
 void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
@@ -345,6 +349,7 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
         }
     }
 
+    // Cache Zero Inflation keys
     Size n_zeroindices = simMarketData_->zeroInflationIndices().size();
     zeroInfIndexKeys_.reserve(n_zeroindices * simMarketData_->zeroInflationTenors("").size());
     count = 0;
@@ -358,6 +363,24 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
             Real disc = ts->zeroRate(today_ + simMarketData_->zeroInflationTenors(zeroIndexName)[k]);
             zeroInfIndexCache_[zeroInfIndexKeys_[count]] = disc;
             LOG("cache zero rate " << disc << " for key " << zeroInfIndexKeys_[count]);
+            count++;
+        }
+    }
+
+    // Cache YoY Inflation keys
+    Size n_yoyindices = simMarketData_->yoyInflationIndices().size();
+    yoyInfIndexKeys_.reserve(n_yoyindices * simMarketData_->yoyInflationTenors("").size());
+    count = 0;
+    for (Size j = 0; j < n_yoyindices; ++j) {
+        std::string yoyIndexName = simMarketData_->yoyInflationIndices()[j];
+        Size n_ten = simMarketData_->yoyInflationTenors(yoyIndexName).size();
+        Handle<YoYInflationIndex> index = market->yoyInflationIndex(yoyIndexName, configuration_);
+        Handle<YoYInflationTermStructure> ts = index->yoyInflationTermStructure();
+        for (Size k = 0; k < n_ten; ++k) {
+            yoyInfIndexKeys_.emplace_back(RiskFactorKey::KeyType::YoYInflationCurve, simMarketData_->yoyInflationIndices()[j], k);
+            Real disc = ts->yoyRate(today_ + simMarketData_->yoyInflationTenors(yoyIndexName)[k]);
+            yoyInfIndexCache_[yoyInfIndexKeys_[count]] = disc;
+            LOG("cache yoy rate " << disc << " for key " << yoyInfIndexKeys_[count]);
             count++;
         }
     }
@@ -414,6 +437,10 @@ void ShiftScenarioGenerator::addCacheTo(boost::shared_ptr<Scenario> scenario) {
     for (auto key : zeroInfIndexKeys_) {
         if (!scenario->has(key))
             scenario->add(key, zeroInfIndexCache_[key]);
+    }
+    for (auto key : yoyInfIndexKeys_) {
+        if (!scenario->has(key))
+            scenario->add(key, yoyInfIndexCache_[key]);
     }
     if (simMarketData_->simulateFXVols()) {
         for (auto key : fxVolKeys_) {
@@ -545,6 +572,14 @@ RiskFactorKey ShiftScenarioGenerator::getZeroInfIndexKey(const std::string& inde
             return zeroInfIndexKeys_[i];
     }
     QL_FAIL("error locating ZeroInflationIndex RiskFactorKey for " << indexName << ", index " << index);
+}
+
+RiskFactorKey ShiftScenarioGenerator::getYoYInfIndexKey(const std::string& indexName, Size index) {
+    for (Size i = 0; i < yoyInfIndexKeys_.size(); ++i) {
+        if (yoyInfIndexKeys_[i].name == indexName && yoyInfIndexKeys_[i].index == index)
+            return yoyInfIndexKeys_[i];
+    }
+    QL_FAIL("error locating YoYInflationIndex RiskFactorKey for " << indexName << ", index " << index);
 }
 
 RiskFactorKey ShiftScenarioGenerator::getCdsVolKey(const std::string& name, Size index) {

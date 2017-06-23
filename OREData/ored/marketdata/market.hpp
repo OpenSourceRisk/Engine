@@ -120,7 +120,7 @@ public:
     zeroInflationIndex(const string& indexName,
                        const string& configuration = Market::defaultConfiguration) const = 0;
     virtual Handle<YoYInflationIndex>
-    yoyInflationIndex(const string& indexName, const bool interpolated,
+    yoyInflationIndex(const string& indexName,
                       const string& configuration = Market::defaultConfiguration) const = 0;
 
     //! Inflation Cap Floor Price Surfaces
