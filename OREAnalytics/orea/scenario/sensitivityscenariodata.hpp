@@ -146,6 +146,9 @@ public:
     const vector<string>& equityNames() const { return equityNames_; }
     const map<string, SpotShiftData>& equityShiftData() const { return equityShiftData_; }
 
+    const vector<string>& dividendYieldNames() const { return dividendYieldNames_; }
+    const map<string, CurveShiftData>& dividendYieldShiftData() const { return dividendYieldShiftData_; }
+
     const vector<string>& equityVolNames() const { return equityVolNames_; }
     const map<string, VolShiftData>& equityVolShiftData() const { return equityVolShiftData_; }
 
@@ -198,6 +201,9 @@ public:
 
     vector<string>& equityNames() { return equityNames_; }
     map<string, SpotShiftData>& equityShiftData() { return equityShiftData_; }
+
+    vector<string>& dividendYieldNames() { return dividendYieldNames_; }
+    map<string, CurveShiftData>& dividendYieldShiftData() { return dividendYieldShiftData_; }
 
     vector<string>& equityVolNames() { return equityVolNames_; }
     map<string, VolShiftData>& equityVolShiftData() { return equityVolShiftData_; }
@@ -266,6 +272,9 @@ private:
 
     vector<string> equityForecastCurveNames_;
     map<string, CurveShiftData> equityForecastCurveShiftData_; // key: equity name
+
+    vector<string> dividendYieldNames_;
+    map<string, CurveShiftData> dividendYieldShiftData_; // key: equity name
 
     vector<string> baseCorrelationNames_;
     map<string, BaseCorrelationShiftData> baseCorrelationShiftData_;

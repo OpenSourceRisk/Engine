@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2017 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,35 +16,29 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file ored/marketdata/fxspot.hpp
-    \brief
-    \ingroup marketdata
+/*! \file test/fxvolsmile.hpp
+  \brief FX Vol smile tests
 */
 
-#pragma once
+#ifndef quantext_test_fx_vol_smile_hpp
+#define quantext_test_fx_vol_smile_hpp
 
-#include <ored/marketdata/curvespec.hpp>
-#include <ored/marketdata/loader.hpp>
-#include <ql/handle.hpp>
-#include <ql/quote.hpp>
+#include <boost/test/unit_test.hpp>
 
-namespace ore {
-namespace data {
+namespace testsuite {
 
-//! Wrapper class for holding FX (spot) quotes
+//! FX vol smile tests
 /*!
-  \ingroup marketdata
+  \ingroup tests
 */
-class FXSpot {
+class FxVolSmileTest {
 public:
-    //! Constructor
-    FXSpot(const Date& asof, FXSpotSpec spec, const Loader& loader);
-
-    //! Inspector
-    Handle<Quote> handle() const { return spot_; }
-
-private:
-    Handle<Quote> spot_;
+    static void testVannaVolgaFxSmileSection();
+    static void testVannaVolgaFxVolSurface();
+    static void testInvertedVolTermStructure();
+    static boost::unit_test_framework::test_suite* suite();
 };
-} // namespace data
-} // namespace ore
+
+} // namespace testsuite
+
+#endif

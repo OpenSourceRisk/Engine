@@ -57,6 +57,7 @@ public:
         EquitySpot,
         EquityForecastCurve,
         EquityVolatility,
+        DividendYield,
         SurvivalProbability,
         RecoveryRate,
         CDSVolatility,
