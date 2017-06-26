@@ -128,7 +128,7 @@ public:
                                    258.8, 260.0, 261.1, 261.4, 262.1, -999.0, -999.0};
 
         // build GBP discount curve
-        discountCurves_[make_pair(Market::defaultConfiguration, "GBP")] =
+        yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "GBP")] =
             intDiscCurve(datesGBP, dfsGBP, ActualActual(), UnitedKingdom());
 
         // build GBP Libor index

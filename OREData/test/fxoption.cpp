@@ -42,8 +42,8 @@ public:
         asof_ = Date(3, Feb, 2016);
 
         // build discount
-        discountCurves_[make_pair(Market::defaultConfiguration, "EUR")] = flatRateYts(0.025);
-        discountCurves_[make_pair(Market::defaultConfiguration, "USD")] = flatRateYts(0.03);
+        yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "EUR")] = flatRateYts(0.025);
+        yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "USD")] = flatRateYts(0.03);
 
         // add fx rates
         fxSpots_[Market::defaultConfiguration].addQuote("EURUSD", Handle<Quote>(boost::make_shared<SimpleQuote>(1.2)));

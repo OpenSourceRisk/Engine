@@ -104,11 +104,11 @@ public:
         conventions_.add(swapJPYConv);
 
         // build discount
-        discountCurves_[make_pair(Market::defaultConfiguration, "EUR")] = flatRateYts(0.02);
-        discountCurves_[make_pair(Market::defaultConfiguration, "USD")] = flatRateYts(0.03);
-        discountCurves_[make_pair(Market::defaultConfiguration, "GBP")] = flatRateYts(0.04);
-        discountCurves_[make_pair(Market::defaultConfiguration, "CHF")] = flatRateYts(0.01);
-        discountCurves_[make_pair(Market::defaultConfiguration, "JPY")] = flatRateYts(0.005);
+        yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "EUR")] = flatRateYts(0.02);
+        yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "USD")] = flatRateYts(0.03);
+        yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "GBP")] = flatRateYts(0.04);
+        yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "CHF")] = flatRateYts(0.01);
+        yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "JPY")] = flatRateYts(0.005);
 
         // build ibor indices
         vector<pair<string, Real>> indexData = {
@@ -161,11 +161,11 @@ public:
         equityVols_[make_pair(Market::defaultConfiguration, "SP5")] = flatRateFxv(0.2514);
         equityVols_[make_pair(Market::defaultConfiguration, "Lufthansa")] = flatRateFxv(0.30);
 
-        equityDividendCurves_[make_pair(Market::defaultConfiguration, "SP5")] = flatRateDiv(0.01);
-        equityDividendCurves_[make_pair(Market::defaultConfiguration, "Lufthansa")] = flatRateDiv(0.0);
+        yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::EquityDividend, "SP5")] = flatRateDiv(0.01);
+        yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::EquityDividend, "Lufthansa")] = flatRateDiv(0.0);
 
-        equityForecastCurves_[make_pair(Market::defaultConfiguration, "SP5")] = flatRateYts(0.03);
-        equityForecastCurves_[make_pair(Market::defaultConfiguration, "Lufthansa")] = flatRateYts(0.02);
+        yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::EquityForecast, "SP5")] = flatRateYts(0.03);
+        yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::EquityForecast, "Lufthansa")] = flatRateYts(0.02);
         // build swaption vols
         swaptionCurves_[make_pair(Market::defaultConfiguration, "EUR")] = flatRateSvs(0.20);
         swaptionCurves_[make_pair(Market::defaultConfiguration, "USD")] = flatRateSvs(0.30);
@@ -202,7 +202,7 @@ public:
         recoveryRates_[make_pair(Market::defaultConfiguration, "BondIssuer1")] =
             Handle<Quote>(boost::make_shared<SimpleQuote>(0.0));
 
-        yieldCurves_[make_pair(Market::defaultConfiguration, "BondCurve1")] = flatRateYts(0.05);
+        yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Yield, "BondCurve1")] = flatRateYts(0.05);
 
         securitySpreads_[make_pair(Market::defaultConfiguration, "Bond1")] =
             Handle<Quote>(boost::make_shared<SimpleQuote>(0.0));

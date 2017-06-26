@@ -61,6 +61,8 @@ public:
     const boost::shared_ptr<FixingManager>& fixingManager() const override { return fixingManager_; }
 
 private:
+    void addYieldCurve(boost::shared_ptr<Market>& initMarket, const std::string& configuration,  
+                    ore::data::YieldCurveType y, string key, vector<Period>& tenors);
     boost::shared_ptr<ScenarioGenerator> scenarioGenerator_;
     boost::shared_ptr<ScenarioSimMarketParameters> parameters_;
     boost::shared_ptr<AggregationScenarioData> asd_;

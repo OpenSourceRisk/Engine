@@ -44,6 +44,13 @@ typedef BaseCorrelationTermStructure<BilinearInterpolation> BilinearBaseCorrelat
 namespace ore {
 namespace data {
 
+enum class YieldCurveType {
+    Discount = 0, //Chosen to match MarketObject::DiscountCurve
+    Yield = 1, //Chosen to match MarketObject::YieldCurve
+    EquityDividend = 2,
+    EquityForecast = 3
+};
+
 //! Market
 /*!
   Base class for central repositories containing all term structure objects
@@ -61,6 +68,8 @@ public:
 
     //! \name Yield Curves
     //@{
+    virtual Handle<YieldTermStructure> yieldCurve(const YieldCurveType& type, const string& name,
+                                                  const string& configuration = Market::defaultConfiguration) const = 0;
     virtual Handle<YieldTermStructure>
     discountCurve(const string& ccy, const string& configuration = Market::defaultConfiguration) const = 0;
     virtual Handle<YieldTermStructure> yieldCurve(const string& name,

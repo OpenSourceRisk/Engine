@@ -45,8 +45,8 @@ public:
         asof_ = Date(3, Feb, 2016);
 
         // build discount
-        discountCurves_[make_pair(Market::defaultConfiguration, "EUR")] = flatRateYts(0.1);
-        discountCurves_[make_pair(Market::defaultConfiguration, "USD")] = flatRateYts(0.075);
+        yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "EUR")] = flatRateYts(0.1);
+        yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "USD")] = flatRateYts(0.075);
 
         // add fx rates
         fxSpots_[Market::defaultConfiguration].addQuote("EURUSD", Handle<Quote>(boost::make_shared<SimpleQuote>(1.2)));
@@ -59,10 +59,10 @@ public:
             Handle<Quote>(boost::make_shared<SimpleQuote>(100));
 
         // add dividend yield
-        equityDividendCurves_[make_pair(Market::defaultConfiguration, "zzzCorp")] = flatRateYts(0.05);
+        yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::EquityDividend, "zzzCorp")] = flatRateYts(0.05);
 
         // add forecast curve
-        equityForecastCurves_[make_pair(Market::defaultConfiguration, "zzzCorp")] = flatRateYts(0.1);
+        yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::EquityForecast, "zzzCorp")] = flatRateYts(0.1);
 
         // build equity vols
         equityVols_[make_pair(Market::defaultConfiguration, "zzzCorp")] = flatRateFxv(0.20);
