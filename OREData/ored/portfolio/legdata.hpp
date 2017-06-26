@@ -179,7 +179,7 @@ public:
     YoYLegData(string index, string observationLag, bool interpolated, Size fixingDays, 
                const vector<double>& gearings = std::vector<double>(), const vector<string>& gearingDates = std::vector<string>(), 
                const vector<double>& spreads = std::vector<double>(), const vector<string>& spreadDates = std::vector<string>())
-        : index_(index), interpolated_(interpolated), fixingDays_(fixingDays), gearings_(gearings),
+        : index_(index), interpolated_(interpolated), fixingDays_(fixingDays), gearings_(gearings), observationLag_(observationLag),
           gearingDates_(gearingDates), spreads_(spreads), spreadDates_(spreadDates) {}
 
     const string index() const { return index_; }
@@ -315,7 +315,7 @@ public:
             const vector<double> notionals, const vector<string>& notionalDates = vector<string>(),
             const string& paymentConvention = "F", bool notionalInitialExchange = false,
             bool notionalFinalExchange = false, bool notionalAmortizingExchange = false, bool isNotResetXCCY = true)
-        : isPayer_(isPayer), currency_(currency), legType_("YoY"), yoyLegData_(data), schedule_(schedule),
+        : isPayer_(isPayer), currency_(currency), legType_("YY"), yoyLegData_(data), schedule_(schedule),
           dayCounter_(dayCounter), notionals_(notionals), notionalDates_(notionalDates),
           paymentConvention_(paymentConvention), notionalInitialExchange_(notionalInitialExchange),
           notionalFinalExchange_(notionalFinalExchange), notionalAmortizingExchange_(notionalAmortizingExchange),

@@ -31,6 +31,7 @@
 #include <ql/time/calendars/nullcalendar.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 #include <ql/indexes/inflation/ukrpi.hpp>
+#include <qle/indexes/inflationindexwrapper.hpp>
 
 using namespace QuantLib;
 using namespace ore::data;
@@ -220,6 +221,9 @@ public:
 
         // build UKRPI index
         boost::shared_ptr<ZeroInflationIndex> ii = parseZeroInflationIndex("UKRPI");
+        boost::shared_ptr<YoYInflationIndex> yi =
+            boost::make_shared<QuantExt::YoYInflationIndexWrapper>(ii, false);
+
         RelinkableHandle<ZeroInflationTermStructure> hcpi;
         bool interp = false;
         ii = boost::shared_ptr<UKRPI>(new UKRPI(interp, hcpi));
@@ -246,7 +250,8 @@ public:
         vector<Rate> ratesZCII = { 2.825, 2.9425, 2.975,  2.983, 3.0,  3.01,  3.008,
             3.009, 3.013,  3.0445, 3.044, 3.09, 3.109, 3.108 };
 
-        zeroInflationIndices_[make_pair(Market::defaultConfiguration, "UKRPI")] = makeInflationIndex("UKRPI", datesZCII, ratesZCII, ii, discountCurves_[make_pair(Market::defaultConfiguration, "GBP")]);
+        zeroInflationIndices_[make_pair(Market::defaultConfiguration, "UKRPI")] = makeZeroInflationIndex("UKRPI", datesZCII, ratesZCII, ii, discountCurves_[make_pair(Market::defaultConfiguration, "GBP")]);
+        yoyInflationIndices_[make_pair(Market::defaultConfiguration, "UKRPI")] = makeYoYInflationIndex("UKRPI", datesZCII, ratesZCII, yi, discountCurves_[make_pair(Market::defaultConfiguration, "GBP")]);
     }
 
 private:
@@ -282,7 +287,8 @@ private:
                                                       ModifiedFollowing, vol, ActualActual(), type, shift));
         return Handle<OptionletVolatilityStructure>(ts);
     }
-    Handle<ZeroInflationIndex>  makeInflationIndex(string index, vector<Date> dates, vector<Rate> rates, boost::shared_ptr<ZeroInflationIndex> ii, Handle<YieldTermStructure> yts);
+    Handle<ZeroInflationIndex> makeZeroInflationIndex(string index, vector<Date> dates, vector<Rate> rates, boost::shared_ptr<ZeroInflationIndex> ii, Handle<YieldTermStructure> yts);
+    Handle<YoYInflationIndex> makeYoYInflationIndex(string index, vector<Date> dates, vector<Rate> rates, boost::shared_ptr<YoYInflationIndex> ii, Handle<YieldTermStructure> yts);
 };
 
 //! Static class to allow for easy construction of configuration objects for use within tests

@@ -16,15 +16,15 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/make_shared.hpp>
 #include <test/testmarket.hpp>
 #include <ql/termstructures/inflation/inflationhelpers.hpp>
 #include <ql/termstructures/inflation/piecewisezeroinflationcurve.hpp>
+#include <ql/termstructures/inflation/piecewiseyoyinflationcurve.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <iostream>
 namespace testsuite {
 
-Handle<ZeroInflationIndex>  TestMarket::makeInflationIndex(string index, vector<Date> dates, vector<Rate> rates, 
+Handle<ZeroInflationIndex> TestMarket::makeZeroInflationIndex(string index, vector<Date> dates, vector<Rate> rates, 
                                                            boost::shared_ptr<ZeroInflationIndex> ii, Handle<YieldTermStructure> yts) {
     // build UKRPI index
 
@@ -50,6 +50,31 @@ Handle<ZeroInflationIndex>  TestMarket::makeInflationIndex(string index, vector<
         parseZeroInflationIndex(index, false, Handle<ZeroInflationTermStructure>(cpiTS)));
 }
 
+Handle<YoYInflationIndex> TestMarket::makeYoYInflationIndex(string index, vector<Date> dates, vector<Rate> rates,
+    boost::shared_ptr<YoYInflationIndex> ii, Handle<YieldTermStructure> yts) {
+    // build UKRPI index
+
+    boost::shared_ptr<YoYInflationTermStructure> yoyTS;
+    // now build the helpers ...
+    vector<boost::shared_ptr<BootstrapHelper<YoYInflationTermStructure>>> instruments;
+    for (Size i = 0; i < dates.size(); i++) {
+        Handle<Quote> quote(boost::shared_ptr<Quote>(new SimpleQuote(rates[i] / 100.0)));
+        boost::shared_ptr<BootstrapHelper<YoYInflationTermStructure>> anInstrument(
+            new  YearOnYearInflationSwapHelper(quote, Period(2, Months), dates[i], TARGET(),
+                ModifiedFollowing, ActualActual(), ii));
+        instruments.push_back(anInstrument);
+    };
+    // we can use historical or first ZCIIS for this
+    // we know historical is WAY off market-implied, so use market implied flat.
+    Rate baseZeroRate = rates[0] / 100.0;
+    boost::shared_ptr<PiecewiseYoYInflationCurve<Linear>> pYoYts(new PiecewiseYoYInflationCurve<Linear>(
+        asof_, TARGET(), ActualActual(), Period(2, Months), ii->frequency(), ii->interpolated(),
+        baseZeroRate, yts, instruments));
+    pYoYts->recalculate();
+    yoyTS = boost::dynamic_pointer_cast<YoYInflationTermStructure>(pYoYts);
+    return Handle<YoYInflationIndex>(boost::make_shared<QuantExt::YoYInflationIndexWrapper>(
+        parseZeroInflationIndex(index, false), false, Handle<YoYInflationTermStructure>(pYoYts)));
+}
 
 boost::shared_ptr<ore::data::Conventions> TestConfigurationObjects::conv() {
     boost::shared_ptr<ore::data::Conventions> conventions(new ore::data::Conventions());
@@ -175,6 +200,10 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
 
     simMarketData->zeroInflationIndices() = { "UKRPI" };
     simMarketData->setZeroInflationTenors("UKRPI", {6 * Months, 1 * Years,  2 * Years,  3 * Years, 5 * Years,
+        7 * Years,  10 * Years, 15 * Years, 20 * Years });
+
+    simMarketData->yoyInflationIndices() = { "UKRPI" };
+    simMarketData->setYoyInflationTenors("UKRPI", { 6 * Months, 1 * Years,  2 * Years,  3 * Years, 5 * Years,
         7 * Years,  10 * Years, 15 * Years, 20 * Years });
 
     return simMarketData;
@@ -357,6 +386,9 @@ boost::shared_ptr<ore::analytics::SensitivityScenarioData> TestConfigurationObje
 
     sensiData->zeroInflationIndices() = { "UKRPI" };
     sensiData->zeroInflationCurveShiftData()["UKRPI"] = zinfData;
+
+    sensiData->yoyInflationIndices() = { "UKRPI" };
+    sensiData->yoyInflationCurveShiftData()["UKRPI"] = zinfData;
 
     return sensiData;
 }
