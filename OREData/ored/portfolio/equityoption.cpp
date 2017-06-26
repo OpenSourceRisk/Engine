@@ -16,14 +16,15 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ored/portfolio/equityoption.hpp>
+#include <boost/make_shared.hpp>
 #include <ored/portfolio/builders/equityoption.hpp>
 #include <ored/portfolio/enginefactory.hpp>
-#include <ql/exercise.hpp>
-#include <ql/instruments/vanillaoption.hpp>
-#include <ql/instruments/compositeinstrument.hpp>
+#include <ored/portfolio/equityoption.hpp>
+#include <ored/utilities/log.hpp>
 #include <ql/errors.hpp>
-#include <boost/make_shared.hpp>
+#include <ql/exercise.hpp>
+#include <ql/instruments/compositeinstrument.hpp>
+#include <ql/instruments/vanillaoption.hpp>
 
 using namespace QuantLib;
 
@@ -76,6 +77,9 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
     // Notional - we really need todays spot to get the correct notional.
     // But rather than having it move around we use strike * quantity
     notional_ = strike_ * quantity_;
+
+    Handle<BlackVolTermStructure> blackVol = engineFactory->market()->equityVol(eqName_);
+    LOG("Implied vol for EquityOption on " << eqName_ << " with maturity " << maturity_ << " and strike " << strike_ << " is " << blackVol->blackVol(maturity_, strike_));
 }
 
 void EquityOption::fromXML(XMLNode* node) {
@@ -102,5 +106,5 @@ XMLNode* EquityOption::toXML(XMLDocument& doc) {
 
     return node;
 }
-}
-}
+} // namespace data
+} // namespace ore

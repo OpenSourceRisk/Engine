@@ -26,9 +26,9 @@ namespace data {
 
 EquityVolatilityCurveConfig::EquityVolatilityCurveConfig(const string& curveID, const string& curveDescription,
                                                          const string& currency, const Dimension& dimension,
-                                                         const vector<string>& expiries)
+                                                         const vector<string>& expiries, const vector<string>& strikes)
     : curveID_(curveID), curveDescription_(curveDescription), ccy_(currency), dimension_(dimension),
-      expiries_(expiries) {}
+      expiries_(expiries), strikes_(strikes) {}
 
 void EquityVolatilityCurveConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "EquityVolatility");
@@ -37,10 +37,11 @@ void EquityVolatilityCurveConfig::fromXML(XMLNode* node) {
     curveDescription_ = XMLUtils::getChildValue(node, "CurveDescription", true);
     ccy_ = XMLUtils::getChildValue(node, "Currency", true);
     string dim = XMLUtils::getChildValue(node, "Dimension", true);
-    if (dim == "ATM")
+    if (dim == "ATM") {
         dimension_ = Dimension::ATM;
-    else {
-        QL_FAIL("Dimension " << dim << " not supported yet");
+    } else if (dim == "Smile") {
+        dimension_ = Dimension::Smile;
+        strikes_= XMLUtils::getChildrenValuesAsStrings(node, "Strikes", true);
     }
     expiries_ = XMLUtils::getChildrenValuesAsStrings(node, "Expiries", true);
 }
@@ -54,11 +55,12 @@ XMLNode* EquityVolatilityCurveConfig::toXML(XMLDocument& doc) {
     if (dimension_ == Dimension::ATM) {
         XMLUtils::addChild(doc, node, "Dimension", "ATM");
     } else {
-        QL_FAIL("Unkown Dimension in EquityVolatilityCurveConfig::toXML()");
+        XMLUtils::addChild(doc, node, "Dimension", "Smile");
+        XMLUtils::addGenericChildAsList(doc, node, "Strikes", strikes_);
     }
     XMLUtils::addGenericChildAsList(doc, node, "Expiries", expiries_);
 
     return node;
 }
-}
-}
+} // namespace data
+} // namespace ore

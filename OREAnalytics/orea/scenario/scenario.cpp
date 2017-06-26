@@ -16,11 +16,11 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/algorithm/string/split.hpp>
 #include <orea/scenario/scenario.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ql/errors.hpp>
 #include <vector>
-#include <boost/algorithm/string/split.hpp>
 
 using namespace ore::data;
 
@@ -47,6 +47,14 @@ std::ostream& operator<<(std::ostream& out, const RiskFactorKey::KeyType& type) 
         return out << "EQSpot";
     case RiskFactorKey::KeyType::EQVolatility:
         return out << "EQVolatility";
+    case RiskFactorKey::KeyType::SurvivalProbability:
+        return out << "SurvivalProbability";
+    case RiskFactorKey::KeyType::RecoveryRate:
+        return out << "RecoveryRate";
+    case RiskFactorKey::KeyType::CDSVolatility:
+        return out << "CDSVolatility";
+    case RiskFactorKey::KeyType::BaseCorrelation:
+        return out << "BaseCorrelation";
     default:
         return out << "?";
     }
@@ -73,6 +81,14 @@ RiskFactorKey::KeyType parseRiskFactorKeyType(const string& str) {
         return RiskFactorKey::KeyType::EQSpot;
     else if (str == "EQVolatility")
         return RiskFactorKey::KeyType::EQVolatility;
+    else if (str == "SurvivalProbability")
+        return RiskFactorKey::KeyType::SurvivalProbability;
+    else if (str == "RecoveryRate")
+        return RiskFactorKey::KeyType::RecoveryRate;
+    else if (str == "CDSVolatility")
+        return RiskFactorKey::KeyType::CDSVolatility;
+    else if (str == "BaseCorrelation")
+        return RiskFactorKey::KeyType::BaseCorrelation;
     QL_FAIL("RiskFactorKey " << str << " does not exist.");
 }
 
@@ -83,5 +99,5 @@ RiskFactorKey parseRiskFactorKey(const string& str) {
     RiskFactorKey rfk(parseRiskFactorKeyType(tokens[0]), tokens[1], parseInteger(tokens[2]));
     return rfk;
 }
-}
-}
+} // namespace analytics
+} // namespace ore

@@ -23,8 +23,8 @@
 
 #pragma once
 
-#include <ored/utilities/xmlutils.hpp>
 #include <map>
+#include <ored/utilities/xmlutils.hpp>
 
 using std::string;
 using std::map;
@@ -79,5 +79,5 @@ private:
     string nettingSetId_;
     map<string, string> additionalFields_;
 };
-}
-}
+} // namespace data
+} // namespace ore

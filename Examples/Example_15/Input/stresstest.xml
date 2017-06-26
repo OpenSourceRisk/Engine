@@ -19,26 +19,26 @@
 	<Shifts>0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01</Shifts>
       </DiscountCurve>
       <DiscountCurve ccy="JPY">
-	<ShiftType>Absolute</ShiftType>
-	<ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
-	<Shifts>0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01</Shifts>
+    <ShiftType>Absolute</ShiftType>
+    <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    <Shifts>0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01</Shifts>
       </DiscountCurve>
     </DiscountCurves>
     
     <IndexCurves>
       <IndexCurve index="EUR-EURIBOR-6M">
-	<ShiftType>Absolute</ShiftType>
-	<ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
-	<Shifts>0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01</Shifts>
+    <ShiftType>Absolute</ShiftType>
+    <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    <Shifts>0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01</Shifts>
       </IndexCurve>
       <IndexCurve index="EUR-EURIBOR-3M">
-	<ShiftType>Absolute</ShiftType>
-	<ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
-	<Shifts>0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01</Shifts>
+    <ShiftType>Absolute</ShiftType>
+    <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    <Shifts>0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01</Shifts>
       </IndexCurve>
       <IndexCurve index="EUR-EONIA">
-	<ShiftType>Absolute</ShiftType>
-	<ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    <ShiftType>Absolute</ShiftType>
+    <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
 	<Shifts>0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01</Shifts>
       </IndexCurve>
       <IndexCurve index="USD-LIBOR-3M">
@@ -117,6 +117,32 @@
 	<Shifts>0.1,0.1,0.1,0.1</Shifts>
       </FxVolatility>
     </FxVolatilities>
+	
+	<!-- Equity spot shifts -->
+    <EquitySpots>
+      <EquitySpot equity="SP5">
+    <ShiftType>Relative</ShiftType>
+    <ShiftSize>0.01</ShiftSize>
+      </EquitySpot>
+      <EquitySpot equity="Lufthansa">
+    <ShiftType>Relative</ShiftType>
+    <ShiftSize>0.01</ShiftSize>
+      </EquitySpot>
+    </EquitySpots>
+  
+    <!-- Equity ATM vol shifts -->
+    <EquityVolatilities>
+      <EquityVolatility equity="SP5">
+    <ShiftType>Relative</ShiftType>
+    <Shifts>0.01,0.01,0.01,0.01,0.01</Shifts>
+    <ShiftExpiries>6M,1Y,2Y,3Y,5Y</ShiftExpiries>
+      </EquityVolatility>
+      <EquityVolatility equity="Lufthansa">
+    <ShiftType>Relative</ShiftType>
+    <Shifts>0.01,0.01,0.01,0.01,0.01</Shifts>
+    <ShiftExpiries>6M,1Y,2Y,3Y,5Y</ShiftExpiries>
+      </EquityVolatility>
+    </EquityVolatilities>
   
     <!-- Swaption ATM vol shifts, strike dimension ignored -->
     <SwaptionVolatilities>
@@ -172,10 +198,25 @@
     </FxSpots>
     <FxVolatilities>
     </FxVolatilities>
+	<EquitySpots>
+	</EquitySpots>
+	<EquityVolatilities>
+	</EquityVolatilities>
     <SwaptionVolatilities>
+      <SwaptionVolatility ccy="EUR">
+	<ShiftType>Absolute</ShiftType>
+	<ShiftExpiries>1Y,5Y,10Y</ShiftExpiries>
+	<ShiftTerms>5Y</ShiftTerms>
+	<Shifts>
+	  <Shift>0.0020</Shift><!-- that's used as a default if pairs are not specified -->
+	  <Shift expiry="1Y" term="5Y">0.0040</Shift>
+	  <Shift expiry="5Y" term="5Y">0.0030</Shift>
+	  <Shift expiry="10Y" term="5Y">0.0010</Shift>
+	</Shifts>
+      </SwaptionVolatility>
     </SwaptionVolatilities>
     <CapFloorVolatilities>
     </CapFloorVolatilities>
   </StressTest>
-    
+
 </StressTesting>

@@ -366,5 +366,5 @@ Real eq_eq_covariance(const CrossAssetModel* x, const Size k, const Size l, cons
     return res;
 }
 
-} // namesapce crossassetanalytics
+} // namespace CrossAssetAnalytics
 } // namespace QuantExt

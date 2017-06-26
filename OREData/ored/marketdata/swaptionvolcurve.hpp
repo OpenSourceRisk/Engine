@@ -23,11 +23,11 @@
 
 #pragma once
 
-#include <ql/termstructures/volatility/swaption/swaptionvolmatrix.hpp>
-#include <ored/marketdata/loader.hpp>
-#include <ored/marketdata/curvespec.hpp>
 #include <ored/configuration/conventions.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
+#include <ored/marketdata/curvespec.hpp>
+#include <ored/marketdata/loader.hpp>
+#include <ql/termstructures/volatility/swaption/swaptionvolmatrix.hpp>
 
 using QuantLib::Date;
 using QuantLib::SwaptionVolatilityMatrix;
@@ -48,7 +48,9 @@ public:
     SwaptionVolCurve() {}
     //! Detailed constructor
     SwaptionVolCurve(Date asof, SwaptionVolatilityCurveSpec spec, const Loader& loader,
-                     const CurveConfigurations& curveConfigs);
+                     const CurveConfigurations& curveConfigs,
+                     const map<string, boost::shared_ptr<SwapIndex>>& requiredSwapIndices =
+                         map<string, boost::shared_ptr<SwapIndex>>());
     //@}
 
     //! \name Inspectors
@@ -61,5 +63,5 @@ private:
     SwaptionVolatilityCurveSpec spec_;
     boost::shared_ptr<SwaptionVolatilityStructure> vol_;
 };
-}
-}
+} // namespace data
+} // namespace ore

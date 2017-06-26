@@ -87,6 +87,6 @@ private:
     Date settlementDate_;
     Date npvDate_;
 };
-}
+} // namespace QuantExt
 
 #endif

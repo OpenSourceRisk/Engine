@@ -23,9 +23,9 @@
 
 #pragma once
 
-#include <vector>
-#include <ored/marketdata/curvespec.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
+#include <ored/marketdata/curvespec.hpp>
+#include <vector>
 
 using ore::data::CurveConfigurations;
 
@@ -43,5 +43,5 @@ namespace data {
   \ingroup marketdata
  */
 void order(vector<boost::shared_ptr<CurveSpec>>& curveSpecs, const CurveConfigurations& curveConfigs);
-}
-}
+} // namespace data
+} // namespace ore

@@ -21,16 +21,18 @@
     \ingroup utilities
 */
 
-#include <ored/utilities/parsers.hpp>
 #include <boost/algorithm/string.hpp>
-#include <ql/utilities/dataparsers.hpp>
+#include <map>
+#include <ored/utilities/log.hpp>
+#include <ored/utilities/parsers.hpp>
+#include <ql/currencies/all.hpp>
 #include <ql/errors.hpp>
+#include <ql/indexes/all.hpp>
 #include <ql/time/calendars/all.hpp>
 #include <ql/time/daycounters/all.hpp>
+#include <ql/utilities/dataparsers.hpp>
+#include <ql/version.hpp>
 #include <qle/currencies/all.hpp>
-#include <ql/currencies/all.hpp>
-#include <ql/indexes/all.hpp>
-#include <map>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -108,16 +110,8 @@ Real parseReal(const string& s) {
 Integer parseInteger(const string& s) { return io::to_integer(s); }
 
 bool parseBool(const string& s) {
-    static map<string, bool> b = {{"Y", true},
-                                  {"YES", true},
-                                  {"TRUE", true},
-                                  {"true", true},
-                                  {"1", true},
-                                  {"N", false},
-                                  {"NO", false},
-                                  {"FALSE", false},
-                                  {"false", false},
-                                  {"0", false}};
+    static map<string, bool> b = {{"Y", true},  {"YES", true}, {"TRUE", true},   {"true", true},   {"1", true},
+                                  {"N", false}, {"NO", false}, {"FALSE", false}, {"false", false}, {"0", false}};
 
     auto it = b.find(s);
     if (it != b.end()) {
@@ -133,6 +127,7 @@ Calendar parseCalendar(const string& s) {
                                       {"EUR", TARGET()},
                                       {"ZUB", Switzerland()},
                                       {"CHF", Switzerland()},
+                                      {"Switzerland", Switzerland()},
                                       {"US", UnitedStates()},
                                       {"USD", UnitedStates()},
                                       {"NYB", UnitedStates()},
@@ -149,12 +144,15 @@ Calendar parseCalendar(const string& s) {
                                       {"CA", Canada()},
                                       {"TRB", Canada()},
                                       {"CAD", Canada()},
+                                      {"Canada", Canada()},
                                       {"SYB", Australia()},
                                       {"AU", Australia()},
                                       {"AUD", Australia()},
+                                      {"Australia", Australia()},
                                       {"TKB", Japan()},
                                       {"JP", Japan()},
                                       {"JPY", Japan()},
+                                      {"Japan", Japan()},
                                       {"ZAR", SouthAfrica()},
                                       {"SA", SouthAfrica()},
                                       {"SS", Sweden()},
@@ -212,9 +210,14 @@ Calendar parseCalendar(const string& s) {
     } else {
         // Try to split them up
         vector<string> calendarNames;
-        split(calendarNames, s, boost::is_any_of(","));
+        split(calendarNames, s, boost::is_any_of(",()")); // , is delimiter, the brackets may arise if joint calendar
+        // now remove any leading strings indicating a joint calendar
+        calendarNames.erase(std::remove(calendarNames.begin(), calendarNames.end(), "JoinHolidays"),
+                            calendarNames.end());
+        calendarNames.erase(std::remove(calendarNames.begin(), calendarNames.end(), "JoinBusinessDays"),
+                            calendarNames.end());
+        calendarNames.erase(std::remove(calendarNames.begin(), calendarNames.end(), ""), calendarNames.end());
         QL_REQUIRE(calendarNames.size() > 1 && calendarNames.size() <= 4, "Cannot convert " << s << " to Calendar");
-
         // Populate a vector of calendars.
         vector<Calendar> calendars;
         for (Size i = 0; i < calendarNames.size(); i++) {
@@ -311,69 +314,23 @@ DayCounter parseDayCounter(const string& s) {
 }
 
 Currency parseCurrency(const string& s) {
-    static map<string, Currency> m = {{"ATS", ATSCurrency()},
-                                      {"AUD", AUDCurrency()},
-                                      {"BEF", BEFCurrency()},
-                                      {"BRL", BRLCurrency()},
-                                      {"CAD", CADCurrency()},
-                                      {"CHF", CHFCurrency()},
-                                      {"CNY", CNYCurrency()},
-                                      {"CZK", CZKCurrency()},
-                                      {"DEM", DEMCurrency()},
-                                      {"DKK", DKKCurrency()},
-                                      {"EUR", EURCurrency()},
-                                      {"ESP", ESPCurrency()},
-                                      {"FIM", FIMCurrency()},
-                                      {"FRF", FRFCurrency()},
-                                      {"GBP", GBPCurrency()},
-                                      {"GRD", GRDCurrency()},
-                                      {"HKD", HKDCurrency()},
-                                      {"HUF", HUFCurrency()},
-                                      {"IEP", IEPCurrency()},
-                                      {"ITL", ITLCurrency()},
-                                      {"INR", INRCurrency()},
-                                      {"ISK", ISKCurrency()},
-                                      {"JPY", JPYCurrency()},
-                                      {"KRW", KRWCurrency()},
-                                      {"LUF", LUFCurrency()},
-                                      {"NLG", NLGCurrency()},
-                                      {"NOK", NOKCurrency()},
-                                      {"NZD", NZDCurrency()},
-                                      {"PLN", PLNCurrency()},
-                                      {"PTE", PTECurrency()},
-                                      {"RON", RONCurrency()},
-                                      {"SEK", SEKCurrency()},
-                                      {"SGD", SGDCurrency()},
-                                      {"THB", THBCurrency()},
-                                      {"TRY", TRYCurrency()},
-                                      {"TWD", TWDCurrency()},
-                                      {"USD", USDCurrency()},
-                                      {"ZAR", ZARCurrency()},
-                                      {"ARS", ARSCurrency()},
-                                      {"CLP", CLPCurrency()},
-                                      {"COP", COPCurrency()},
-                                      {"IDR", IDRCurrency()},
-                                      {"ILS", ILSCurrency()},
-                                      {"KWD", KWDCurrency()},
-                                      {"PEN", PENCurrency()},
-                                      {"MXN", MXNCurrency()},
-                                      {"SAR", SARCurrency()},
-                                      {"RUB", RUBCurrency()},
-                                      {"TND", TNDCurrency()},
-                                      {"MYR", MYRCurrency()},
-                                      {"UAH", UAHCurrency()},
-                                      {"KZT", KZTCurrency()},
-                                      {"QAR", QARCurrency()},
-                                      {"MXV", MXVCurrency()},
-                                      {"CLF", CLFCurrency()},
-                                      {"EGP", EGPCurrency()},
-                                      {"BHD", BHDCurrency()},
-                                      {"OMR", OMRCurrency()},
-                                      {"VND", VNDCurrency()},
-                                      {"AED", AEDCurrency()},
-                                      {"PHP", PHPCurrency()},
-                                      {"NGN", NGNCurrency()},
-                                      {"MAD", MADCurrency()}};
+    static map<string, Currency> m = {
+        {"ATS", ATSCurrency()}, {"AUD", AUDCurrency()}, {"BEF", BEFCurrency()}, {"BRL", BRLCurrency()},
+        {"CAD", CADCurrency()}, {"CHF", CHFCurrency()}, {"CNY", CNYCurrency()}, {"CZK", CZKCurrency()},
+        {"DEM", DEMCurrency()}, {"DKK", DKKCurrency()}, {"EUR", EURCurrency()}, {"ESP", ESPCurrency()},
+        {"FIM", FIMCurrency()}, {"FRF", FRFCurrency()}, {"GBP", GBPCurrency()}, {"GRD", GRDCurrency()},
+        {"HKD", HKDCurrency()}, {"HUF", HUFCurrency()}, {"IEP", IEPCurrency()}, {"ITL", ITLCurrency()},
+        {"INR", INRCurrency()}, {"ISK", ISKCurrency()}, {"JPY", JPYCurrency()}, {"KRW", KRWCurrency()},
+        {"LUF", LUFCurrency()}, {"NLG", NLGCurrency()}, {"NOK", NOKCurrency()}, {"NZD", NZDCurrency()},
+        {"PLN", PLNCurrency()}, {"PTE", PTECurrency()}, {"RON", RONCurrency()}, {"SEK", SEKCurrency()},
+        {"SGD", SGDCurrency()}, {"THB", THBCurrency()}, {"TRY", TRYCurrency()}, {"TWD", TWDCurrency()},
+        {"USD", USDCurrency()}, {"ZAR", ZARCurrency()}, {"ARS", ARSCurrency()}, {"CLP", CLPCurrency()},
+        {"COP", COPCurrency()}, {"IDR", IDRCurrency()}, {"ILS", ILSCurrency()}, {"KWD", KWDCurrency()},
+        {"PEN", PENCurrency()}, {"MXN", MXNCurrency()}, {"SAR", SARCurrency()}, {"RUB", RUBCurrency()},
+        {"TND", TNDCurrency()}, {"MYR", MYRCurrency()}, {"UAH", UAHCurrency()}, {"KZT", KZTCurrency()},
+        {"QAR", QARCurrency()}, {"MXV", MXVCurrency()}, {"CLF", CLFCurrency()}, {"EGP", EGPCurrency()},
+        {"BHD", BHDCurrency()}, {"OMR", OMRCurrency()}, {"VND", VNDCurrency()}, {"AED", AEDCurrency()},
+        {"PHP", PHPCurrency()}, {"NGN", NGNCurrency()}, {"MAD", MADCurrency()}};
 
     auto it = m.find(s);
     if (it != m.end()) {
@@ -384,19 +341,29 @@ Currency parseCurrency(const string& s) {
 }
 
 DateGeneration::Rule parseDateGenerationRule(const string& s) {
-    static map<string, DateGeneration::Rule> m = {{"Backward", DateGeneration::Backward},
-                                                  {"Forward", DateGeneration::Forward},
-                                                  {"Zero", DateGeneration::Zero},
-                                                  {"ThirdWednesday", DateGeneration::ThirdWednesday},
-                                                  {"Twentieth", DateGeneration::Twentieth},
-                                                  {"TwentiethIMM", DateGeneration::TwentiethIMM},
-                                                  {"OldCDS", DateGeneration::OldCDS},
-                                                  {"CDS", DateGeneration::CDS}};
+    static map<string, DateGeneration::Rule> m = {
+        {"Backward", DateGeneration::Backward},
+        {"Forward", DateGeneration::Forward},
+        {"Zero", DateGeneration::Zero},
+        {"ThirdWednesday", DateGeneration::ThirdWednesday},
+        {"Twentieth", DateGeneration::Twentieth},
+        {"TwentiethIMM", DateGeneration::TwentiethIMM},
+        {"OldCDS", DateGeneration::OldCDS},
+#if QL_HEX_VERSION >= 0x011000f0
+        {"CDS2015", DateGeneration::CDS2015},
+#endif
+        {"CDS", DateGeneration::CDS}
+    };
 
     auto it = m.find(s);
     if (it != m.end()) {
         return it->second;
     } else {
+        // fall back for CDS2015
+        if (s == "CDS2015") {
+            ALOG("Date Generation Rule CDS2015 replaced with CDS because QuantLib Version is < 1.10");
+            return DateGeneration::CDS;
+        }
         QL_FAIL("Date Generation Rule " << s << " not recognized");
     }
 }

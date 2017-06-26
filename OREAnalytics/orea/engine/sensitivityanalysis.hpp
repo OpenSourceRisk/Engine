@@ -23,14 +23,14 @@
 
 #pragma once
 
-#include <ored/portfolio/portfolio.hpp>
-#include <ored/marketdata/market.hpp>
-#include <ored/report/report.hpp>
 #include <orea/cube/npvcube.hpp>
-#include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
+#include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/scenario/sensitivityscenariodata.hpp>
 #include <orea/scenario/sensitivityscenariogenerator.hpp>
+#include <ored/marketdata/market.hpp>
+#include <ored/portfolio/portfolio.hpp>
+#include <ored/report/report.hpp>
 
 #include <map>
 #include <set>
@@ -67,6 +67,8 @@ public:
                         const boost::shared_ptr<SensitivityScenarioData>& sensitivityData,
                         const Conventions& conventions, const bool recalibrateModels,
                         const bool nonShiftedBaseCurrencyConversion = false);
+
+    virtual ~SensitivityAnalysis() {}
 
     //! Generate the Sensitivities
     void generateSensitivities();
@@ -121,9 +123,12 @@ public:
     //! A getter for Conventions
     virtual const Conventions& conventions() const { return conventions_; }
 
+    //! override shift tenors with sim market tenors
+    void overrideTenors(const bool b) { overrideTenors_ = b; }
+
 protected:
     //! initialize the various components that will be passed to the sensitivities valuation engine
-    void initialize(boost::shared_ptr<NPVCube>& cube);
+    virtual void initialize(boost::shared_ptr<NPVCube>& cube);
     //! initialize the cube with the appropriate dimensions
     virtual void initializeCube(boost::shared_ptr<NPVCube>& cube) const;
     //! build engine factory
@@ -154,7 +159,7 @@ protected:
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketData_;
     boost::shared_ptr<SensitivityScenarioData> sensitivityData_;
     Conventions conventions_;
-    bool recalibrateModels_;
+    bool recalibrateModels_, overrideTenors_;
 
     // base NPV by trade
     std::map<std::string, Real> baseNPV_;
@@ -177,5 +182,5 @@ protected:
     //! model builders
     std::set<boost::shared_ptr<ModelBuilder>> modelBuilders_;
 };
-}
-}
+} // namespace analytics
+} // namespace ore

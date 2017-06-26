@@ -24,12 +24,12 @@
 
 #pragma once
 
+#include <ored/utilities/xmlutils.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/daycounter.hpp>
 #include <ql/time/frequency.hpp>
 #include <ql/time/period.hpp>
 #include <ql/types.hpp>
-#include <ored/utilities/xmlutils.hpp>
 
 using std::string;
 using std::vector;
@@ -116,5 +116,5 @@ private:
     Frequency seasonalityFrequency_;
     vector<string> seasonalityFactors_;
 };
-}
-}
+} // namespace data
+} // namespace ore

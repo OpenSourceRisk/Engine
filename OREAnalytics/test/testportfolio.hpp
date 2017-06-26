@@ -18,8 +18,8 @@
 
 #pragma once
 
-#include <ored/portfolio/trade.hpp>
 #include <boost/make_shared.hpp>
+#include <ored/portfolio/trade.hpp>
 
 using namespace QuantLib;
 using namespace ore::data;
@@ -53,6 +53,12 @@ boost::shared_ptr<Trade> buildBermudanSwaption(string id, string longShort, stri
 boost::shared_ptr<Trade> buildFxOption(string id, string longShort, string putCall, Size expiry, string boughtCcy,
                                        Real boughtAmount, string soldCcy, Real soldAmount);
 
+boost::shared_ptr<Trade> buildEquityOption(string id, string longShort, string putCall, Size expiry, string equityName,
+                                           string currency, Real strike, Real quantity);
+
+boost::shared_ptr<Trade> buildEquityForward(string id, string longShort, Size expiry, string equityName, string currency, 
+                                            Real strike, Real quantity);
+
 boost::shared_ptr<Trade> buildCap(string id, string ccy, string longShort, Real capRate, Real notional, int start,
                                   Size term, string floatFreq, string floatDC, string index);
 
@@ -64,4 +70,6 @@ boost::shared_ptr<Trade> buildCapFloor(string id, string ccy, string longShort, 
                                        string floatDC, string index);
 
 boost::shared_ptr<Trade> buildZeroBond(string id, string ccy, Real notional, Size term);
-}
+
+boost::shared_ptr<Trade> buildCdsOption(string id, string ccy, Real notional, Size term);
+} // namespace testsuite

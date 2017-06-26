@@ -23,13 +23,13 @@
 
 #pragma once
 
-#include <vector>
 #include <map>
+#include <vector>
 
+#include <boost/shared_ptr.hpp>
 #include <ored/utilities/serializationdate.hpp>
 #include <ql/time/date.hpp>
 #include <ql/types.hpp>
-#include <boost/shared_ptr.hpp>
 
 using QuantLib::Real;
 using QuantLib::Size;
@@ -41,7 +41,7 @@ namespace analytics {
 
 //! Data types stored in the scenario class
 /*! \ingroup scenario
-*/
+ */
 class RiskFactorKey {
 public:
     //! Risk Factor types
@@ -55,7 +55,11 @@ public:
         FXSpot,
         FXVolatility,
         EQSpot,
-        EQVolatility
+        EQVolatility,
+        SurvivalProbability,
+        RecoveryRate,
+	  CDSVolatility,
+	  BaseCorrelation
     };
 
     //! Constructor
@@ -146,5 +150,5 @@ private:
     friend class boost::serialization::access;
     template <class Archive> void serialize(Archive&, const unsigned int) {}
 };
-}
-}
+} // namespace analytics
+} // namespace ore

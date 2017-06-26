@@ -18,8 +18,8 @@
 
 #pragma once
 
-#include <ored/portfolio/trade.hpp>
 #include <ored/portfolio/legdata.hpp>
+#include <ored/portfolio/trade.hpp>
 
 namespace ore {
 namespace data {
@@ -77,5 +77,5 @@ private:
     string currency_;
     bool zeroBond_;
 };
-}
-}
+} // namespace data
+} // namespace ore

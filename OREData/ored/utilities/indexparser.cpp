@@ -21,17 +21,17 @@
     \ingroup utilities
 */
 
-#include <ored/utilities/parsers.hpp>
-#include <ored/utilities/indexparser.hpp>
-#include <ored/configuration/conventions.hpp>
-#include <ql/errors.hpp>
-#include <ql/indexes/all.hpp>
-#include <ql/time/daycounters/all.hpp>
-#include <ql/time/calendars/target.hpp>
-#include <qle/indexes/all.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/make_shared.hpp>
 #include <map>
+#include <ored/configuration/conventions.hpp>
+#include <ored/utilities/indexparser.hpp>
+#include <ored/utilities/parsers.hpp>
+#include <ql/errors.hpp>
+#include <ql/indexes/all.hpp>
+#include <ql/time/calendars/target.hpp>
+#include <ql/time/daycounters/all.hpp>
+#include <qle/indexes/all.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -45,6 +45,7 @@ namespace data {
 
 class IborIndexParser {
 public:
+    virtual ~IborIndexParser() {}
     virtual boost::shared_ptr<IborIndex> build(Period p, const Handle<YieldTermStructure>& h) const = 0;
 };
 
@@ -77,8 +78,8 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldT
     std::vector<string> tokens;
     split(tokens, s, boost::is_any_of("-"));
 
-    QL_REQUIRE(tokens.size() == 2 || tokens.size() == 3, "Two or three tokens required in "
-                                                             << s << ": CCY-INDEX or CCY-INDEX-TERM");
+    QL_REQUIRE(tokens.size() == 2 || tokens.size() == 3,
+               "Two or three tokens required in " << s << ": CCY-INDEX or CCY-INDEX-TERM");
 
     Period p;
     if (tokens.size() == 3)
@@ -138,6 +139,7 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldT
 // Swap Index Parser base
 class SwapIndexParser {
 public:
+    virtual ~SwapIndexParser() {}
     virtual boost::shared_ptr<SwapIndex> build(Period p, const Handle<YieldTermStructure>& f,
                                                const Handle<YieldTermStructure>& d) const = 0;
 };
@@ -187,6 +189,7 @@ boost::shared_ptr<SwapIndex> parseSwapIndex(const string& s, const Handle<YieldT
 // Zero Inflation Index Parser
 class ZeroInflationIndexParserBase {
 public:
+    virtual ~ZeroInflationIndexParserBase() {}
     virtual boost::shared_ptr<ZeroInflationIndex> build(bool isInterpolated,
                                                         const Handle<ZeroInflationTermStructure>& h) const = 0;
 };
@@ -245,5 +248,5 @@ boost::shared_ptr<Index> parseIndex(const string& s) {
     QL_REQUIRE(ret_idx, "parseIndex \"" << s << "\" not recognized");
     return ret_idx;
 }
-}
-}
+} // namespace data
+} // namespace ore

@@ -56,7 +56,7 @@
     <ClCompile Include="stabilisedglls.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="equitycrossassetmodel.cpp">
+    <ClCompile Include="survivalprobabilitycurve.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
@@ -132,7 +132,7 @@
     <ClInclude Include="stabilisedglls.hpp">
       <Filter>headers</Filter>
     </ClInclude>
-    <ClInclude Include="equitycrossassetmodel.hpp">
+    <ClInclude Include="survivalprobabilitycurve.hpp">
       <Filter>headers</Filter>
     </ClInclude>
   </ItemGroup>

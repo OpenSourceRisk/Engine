@@ -16,14 +16,16 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <algorithm>
 #include <ored/marketdata/equityvolcurve.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
-#include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
-#include <ql/time/daycounters/actual365fixed.hpp>
+#include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
+#include <ql/termstructures/volatility/equityfx/blackvariancesurface.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
-#include <algorithm>
+#include <ql/time/daycounters/actual365fixed.hpp>
+#include <ql/math/matrix.hpp>
 
 using namespace QuantLib;
 using namespace std;
@@ -37,70 +39,88 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
     try {
         const boost::shared_ptr<EquityVolatilityCurveConfig>& config =
             curveConfigs.equityVolCurveConfig(spec.curveConfigID());
-        QL_REQUIRE(config->dimension() == EquityVolatilityCurveConfig::Dimension::ATM,
+        QL_REQUIRE(config->dimension() == EquityVolatilityCurveConfig::Dimension::ATM ||
+                   config->dimension() == EquityVolatilityCurveConfig::Dimension::Smile,
                    "Unkown Equity curve building dimension");
-        // We loop over all market data, looking for quotes that match the configuration
-        // every time we find a matching expiry we remove it from the list
-        vector<boost::shared_ptr<EquityOptionQuote>> quotes;
+
+        // daycounter used for interpolation in time.
+        // TODO: push into conventions or config
+        DayCounter dc = Actual365Fixed();
+
+        bool isSurface = config->dimension() == EquityVolatilityCurveConfig::Dimension::Smile;
+
         vector<string> expiries = config->expiries();
+        vector<string> strikes ({ "ATMF" });
+        if (isSurface)
+            strikes = config->strikes();
+        QL_REQUIRE(expiries.size() > 0, "No expiries defined");
+        QL_REQUIRE(strikes.size() > 0, "No strikes defined");
+
+        // We store them all in a matrix, we start with all values negative and use
+        // this to check if they have been set.
+        Matrix vols(strikes.size(), expiries.size(), -1.0);
+
+        // We loop over all market data, looking for quotes that match the configuration
         for (auto& md : loader.loadQuotes(asof)) {
             // skip irrelevant data
             if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::EQUITY_OPTION) {
                 boost::shared_ptr<EquityOptionQuote> q = boost::dynamic_pointer_cast<EquityOptionQuote>(md);
-                if (q->eqName() == spec.curveConfigID() && q->ccy() == spec.ccy() && q->strike() == "ATMF") {
-                    auto it = std::find(expiries.begin(), expiries.end(), q->expiry());
-                    if (it != expiries.end()) {
-                        // we have a hit
-                        quotes.push_back(q);
-                        // remove it from the list
-                        expiries.erase(it);
-                        // check if we are done
-                        if (expiries.empty())
-                            break;
+                if (q->eqName() == spec.curveConfigID() && q->ccy() == spec.ccy()) {
+
+                    Size i = std::find(strikes.begin(), strikes.end(), q->strike()) - strikes.begin();
+                    Size j = std::find(expiries.begin(), expiries.end(), q->expiry()) - expiries.begin();
+
+                    if (i < strikes.size() && j < expiries.size()) {
+                        QL_REQUIRE(vols[i][j] < 0, "Error vol (" << spec << ") for " << strikes[i] <<", " << expiries[j] << " already set");
+                        vols[i][j] = q->quote()->value();
                     }
                 }
             }
         }
-        LOG("EquityVolCurve: read " << quotes.size() << " vols");
-        // Check that we have all the expiries we need
-        QL_REQUIRE(expiries.size() == 0, "No quote found for spec " << spec << " with expiry " << expiries.front());
-        QL_REQUIRE(quotes.size() > 0, "No quotes found for spec " << spec);
-        // daycounter used for interpolation in time.
-        // TODO: push into conventions or config
-        DayCounter dc = Actual365Fixed();
-        // build vol curve
-        if (quotes.size() == 1) {
+        // Check that we have all the quotes we need
+        for (Size i = 0; i < strikes.size(); i++) {
+            for (Size j = 0; j < strikes.size(); j++) {
+                QL_REQUIRE(vols[i][j] >= 0, "Error vol (" << spec << ") for " << strikes[i] <<", " << expiries[j] << " not set");
+            }
+        }
+
+        if (expiries.size() == 1 && strikes.size() == 1) {
+            LOG("EquityVolCurve: Building BlackConstantVol");
             vol_ = boost::shared_ptr<BlackVolTermStructure>(
-                new BlackConstantVol(asof, Calendar(), quotes.front()->quote()->value(), dc));
+                new BlackConstantVol(asof, Calendar(), vols[0][0], dc));
         } else {
-            vector<Date> dates(quotes.size());
-            vector<Volatility> atmVols(quotes.size());
-            std::sort(quotes.begin(), quotes.end(), [asof](const boost::shared_ptr<EquityOptionQuote>& a,
-                                                           const boost::shared_ptr<EquityOptionQuote>& b) -> bool {
-                Date a_tmp_date, b_tmp_date;
-                Period a_tmp_per, b_tmp_per;
-                bool a_tmp_isDate, b_tmp_isDate;
-                parseDateOrPeriod(a->expiry(), a_tmp_date, a_tmp_per, a_tmp_isDate);
-                if (!a_tmp_isDate)
-                    a_tmp_date = WeekendsOnly().adjust(asof + a_tmp_per);
-                parseDateOrPeriod(b->expiry(), b_tmp_date, b_tmp_per, b_tmp_isDate);
-                if (!b_tmp_isDate)
-                    b_tmp_date = WeekendsOnly().adjust(asof + b_tmp_per);
-                return a_tmp_date < b_tmp_date;
-            });
-            for (Size i = 0; i < quotes.size(); i++) {
+
+            // get dates
+            vector<Date> dates(expiries.size());
+            for (Size i = 0; i < expiries.size(); i++) {
                 Date tmpDate;
                 Period tmpPer;
                 bool tmpIsDate;
-                parseDateOrPeriod(quotes[i]->expiry(), tmpDate, tmpPer, tmpIsDate);
+                parseDateOrPeriod(expiries[i], tmpDate, tmpPer, tmpIsDate);
                 if (!tmpIsDate)
                     tmpDate = WeekendsOnly().adjust(asof + tmpPer);
                 QL_REQUIRE(tmpDate > asof, "Equity Vol Curve cannot contain a vol quote for a past date ("
                                                << io::iso_date(tmpDate) << ")");
                 dates[i] = tmpDate;
-                atmVols[i] = quotes[i]->quote()->value();
             }
-            vol_ = boost::shared_ptr<BlackVolTermStructure>(new BlackVarianceCurve(asof, dates, atmVols, dc));
+
+            if (!isSurface) {
+                LOG("EquityVolCurve: Building BlackVarianceCurve");
+                QL_REQUIRE(vols.rows() == 1, "Matrix error, should only have 1 row (ATMF)");
+                vector<Volatility> atmVols(vols.begin(), vols.end());
+                vol_ = boost::make_shared<BlackVarianceCurve>(asof, dates, atmVols, dc);
+            } else {
+                LOG("EquityVolCurve: Building BlackVarianceSurface");
+                // convert strike strings to Reals
+                vector<Real> strikesReal;
+                for (string k : strikes)
+                    strikesReal.push_back(parseReal(k));
+
+                Calendar cal = NullCalendar(); // why do we need this?
+
+                // This can get wrapped in a QuantExt::BlackVolatilityWithATM later on
+                vol_ = boost::make_shared<BlackVarianceSurface> (asof, cal, dates, strikesReal, vols, dc);
+            }
         }
         vol_->enableExtrapolation();
     } catch (std::exception& e) {
@@ -109,5 +129,5 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
         QL_FAIL("equity vol curve building failed: unknown error");
     }
 }
-}
-}
+} // namespace data
+} // namespace ore

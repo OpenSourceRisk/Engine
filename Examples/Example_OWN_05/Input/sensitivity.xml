@@ -1,0 +1,367 @@
+<SensitivityAnalysis>
+  
+  <!-- Discount curve shifts -->
+  <DiscountCurves>
+
+    <DiscountCurve ccy="EUR">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </DiscountCurve>
+    
+    <DiscountCurve ccy="USD">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </DiscountCurve>
+	
+    <DiscountCurve ccy="CAD">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </DiscountCurve>   
+	
+	<DiscountCurve ccy="DKK">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </DiscountCurve>
+	
+	    <DiscountCurve ccy="SEK">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </DiscountCurve>
+	
+	    <DiscountCurve ccy="NOK">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </DiscountCurve>
+	
+	    <DiscountCurve ccy="CZK">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </DiscountCurve>
+	
+	    <DiscountCurve ccy="GBP">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </DiscountCurve>
+	
+	    <DiscountCurve ccy="CHF">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </DiscountCurve>
+
+  </DiscountCurves>
+  
+  <!-- Index curve shifts -->
+  <IndexCurves>
+ <IndexCurve index="EUR-EURIBOR-1Y">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </IndexCurve>
+    <IndexCurve index="EUR-EURIBOR-6M">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </IndexCurve>
+    <IndexCurve index="EUR-EURIBOR-3M"> 
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </IndexCurve>
+    <IndexCurve index="EUR-EURIBOR-1M">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </IndexCurve>
+    <IndexCurve index="USD-LIBOR-3M">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </IndexCurve>
+	    <IndexCurve index="USD-LIBOR-1M">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </IndexCurve>
+	    <IndexCurve index="CHF-LIBOR-3M">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </IndexCurve>
+	    <IndexCurve index="SEK-STIBOR-3M">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </IndexCurve>
+	    <IndexCurve index="GBP-LIBOR-3M">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </IndexCurve>
+	    <IndexCurve index="NOK-NIBOR-3M">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </IndexCurve>
+	    <IndexCurve index="DKK-CIBOR-3M">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </IndexCurve>
+	    <IndexCurve index="DKK-CIBOR-6M">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </IndexCurve>
+	    <IndexCurve index="CAD-BA-3M">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </IndexCurve>
+	    <IndexCurve index="CZK-PRIBOR-3M">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </IndexCurve>
+ 
+  </IndexCurves>
+
+  <!-- Yield curve shifts -->
+  <YieldCurves>
+    <!-- <YieldCurve name="EUR-EURIBOR-1Y"> -->
+      <!-- <ShiftType>Absolute</ShiftType> -->
+      <!-- <ShiftSize>0.0001</ShiftSize> -->
+      <!-- <ShiftTenors>1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors> -->
+    <!-- </YieldCurve> -->
+    <!-- <YieldCurve name="EUR-EURIBOR-6M"> -->
+      <!-- <ShiftType>Absolute</ShiftType> -->
+      <!-- <ShiftSize>0.0001</ShiftSize> -->
+      <!-- <ShiftTenors>1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors> -->
+    <!-- </YieldCurve> -->
+    <!-- <YieldCurve name="EUR-EURIBOR-3M">  -->
+      <!-- <ShiftType>Absolute</ShiftType> -->
+      <!-- <ShiftSize>0.0001</ShiftSize> -->
+      <!-- <ShiftTenors>1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors> -->
+    <!-- </YieldCurve> -->
+    <!-- <YieldCurve name="EUR-EURIBOR-1M"> -->
+      <!-- <ShiftType>Absolute</ShiftType> -->
+      <!-- <ShiftSize>0.0001</ShiftSize> -->
+      <!-- <ShiftTenors>1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors> -->
+    <!-- </YieldCurve> -->
+    <!-- <YieldCurve name="USD-LIBOR-3M"> -->
+      <!-- <ShiftType>Absolute</ShiftType> -->
+      <!-- <ShiftSize>0.0001</ShiftSize> -->
+      <!-- <ShiftTenors>1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors> -->
+    <!-- </YieldCurve> -->
+	    <!-- <YieldCurve name="USD-LIBOR-1M"> -->
+      <!-- <ShiftType>Absolute</ShiftType> -->
+      <!-- <ShiftSize>0.0001</ShiftSize> -->
+      <!-- <ShiftTenors>1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors> -->
+    <!-- </YieldCurve> -->
+	    <!-- <YieldCurve name="CHF-LIBOR-3M"> -->
+      <!-- <ShiftType>Absolute</ShiftType> -->
+      <!-- <ShiftSize>0.0001</ShiftSize> -->
+      <!-- <ShiftTenors>1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors> -->
+    <!-- </YieldCurve> -->
+	    <!-- <YieldCurve name="SEK-STIBOR-3M"> -->
+      <!-- <ShiftType>Absolute</ShiftType> -->
+      <!-- <ShiftSize>0.0001</ShiftSize> -->
+      <!-- <ShiftTenors>1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors> -->
+    <!-- </YieldCurve> -->
+	    <!-- <YieldCurve name="GBP-LIBOR-3M"> -->
+      <!-- <ShiftType>Absolute</ShiftType> -->
+      <!-- <ShiftSize>0.0001</ShiftSize> -->
+      <!-- <ShiftTenors>1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors> -->
+    <!-- </YieldCurve> -->
+	    <!-- <YieldCurve name="NOK-NIBOR-3M"> -->
+      <!-- <ShiftType>Absolute</ShiftType> -->
+      <!-- <ShiftSize>0.0001</ShiftSize> -->
+      <!-- <ShiftTenors>1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors> -->
+    <!-- </YieldCurve> -->
+	    <!-- <YieldCurve name="DKK-CIBOR-3M"> -->
+      <!-- <ShiftType>Absolute</ShiftType> -->
+      <!-- <ShiftSize>0.0001</ShiftSize> -->
+      <!-- <ShiftTenors>1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors> -->
+    <!-- </YieldCurve> -->
+	    <!-- <YieldCurve name="DKK-CIBOR-6M"> -->
+      <!-- <ShiftType>Absolute</ShiftType> -->
+      <!-- <ShiftSize>0.0001</ShiftSize> -->
+      <!-- <ShiftTenors>1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors> -->
+    <!-- </YieldCurve> -->
+	    <!-- <YieldCurve name="CAD-BA-3M"> -->
+      <!-- <ShiftType>Absolute</ShiftType> -->
+      <!-- <ShiftSize>0.0001</ShiftSize> -->
+      <!-- <ShiftTenors>1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors> -->
+    <!-- </YieldCurve> -->
+	    <!-- <YieldCurve name="CZK-PRIBOR-3M"> -->
+      <!-- <ShiftType>Absolute</ShiftType> -->
+      <!-- <ShiftSize>0.0001</ShiftSize> -->
+      <!-- <ShiftTenors>1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors> -->
+    <!-- </YieldCurve> -->
+	    <YieldCurve name="EUR-DIS">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </YieldCurve>
+	    <YieldCurve name="USD-DIS">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </YieldCurve>
+	    <YieldCurve name="CHF-DIS">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </YieldCurve>
+	    <YieldCurve name="SEK-DIS">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </YieldCurve>
+		    <YieldCurve name="GBP-DIS">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </YieldCurve>
+	    <YieldCurve name="NOK-DIS">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </YieldCurve>
+		    <YieldCurve name="DKK-DIS">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </YieldCurve>
+	    <YieldCurve name="CAD-DIS">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </YieldCurve>
+	<YieldCurve name="CZK-DIS">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+    </YieldCurve>
+  </YieldCurves>
+  
+  
+  <!-- FX spot shifts -->
+  <FxSpots>
+  <FxSpot ccypair="USDEUR">
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.01</ShiftSize>
+    </FxSpot>
+    <FxSpot ccypair="GBPEUR">
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.01</ShiftSize>
+    </FxSpot>
+    <FxSpot ccypair="CHFEUR">
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.01</ShiftSize>
+    </FxSpot>
+    <FxSpot ccypair="CADEUR">
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.01</ShiftSize>
+    </FxSpot>
+    <FxSpot ccypair="CZKEUR">
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.01</ShiftSize>
+    </FxSpot>
+    <FxSpot ccypair="DKKEUR">
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.01</ShiftSize>
+    </FxSpot>
+    <FxSpot ccypair="NOKEUR">
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.01</ShiftSize>
+    </FxSpot>
+    <FxSpot ccypair="SEKEUR">
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.01</ShiftSize>
+    </FxSpot>
+  </FxSpots>
+  
+  <!-- FX ATM vol shifts -->
+  <FxVolatilities>
+    <!-- RL: Comment out -->
+    <!--
+    <FxVolatility ccypair="USDEUR">
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.01</ShiftSize>
+      <ShiftExpiries>1Y,2Y,3Y,5Y</ShiftExpiries>
+      <ShiftStrikes/>
+    </FxVolatility>
+    <FxVolatility ccypair="GBPEUR">
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.01</ShiftSize>
+      <ShiftExpiries>1Y,2Y,3Y,5Y</ShiftExpiries>
+      <ShiftStrikes/>
+    </FxVolatility>
+    <FxVolatility ccypair="JPYEUR">
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.01</ShiftSize>
+      <ShiftExpiries>1Y,2Y,3Y,5Y</ShiftExpiries>
+      <ShiftStrikes/>
+    </FxVolatility>
+    -->
+  </FxVolatilities>
+  
+  <!-- Swaption ATM vol shifts -->
+  <SwaptionVolatilities>
+    <!-- RL: Comment out -->
+    <!--
+    <SwaptionVolatility ccy="EUR">
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.01</ShiftSize>
+      <ShiftExpiries>1Y,5Y,7Y,10Y</ShiftExpiries>
+      <ShiftTerms>1Y,5Y,10Y</ShiftTerms>
+      <ShiftStrikes/>
+    </SwaptionVolatility>
+    -->
+  </SwaptionVolatilities>
+      
+  <!-- Cap/Floor (Optionlet or Flat) vol surface shifts -->
+  <CapFloorVolatilities>
+    <!-- RL: Comment out -->
+
+    <CapFloorVolatility ccy="SEK">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftExpiries>01M,03M,06M,09M,01Y,02Y,03Y,04Y,05Y,06Y,07Y,08Y,09Y,10Y,12Y,15Y,20Y,25Y,30Y</ShiftExpiries>
+      <ShiftStrikes>0</ShiftStrikes>
+      <Index>SEK-STIBOR-3M</Index>
+    </CapFloorVolatility>
+
+    <!-- <CapFloorVolatility ccy="USD"> -->
+      <!-- <ShiftType>Absolute</ShiftType> -->
+      <!-- <ShiftSize>0.0001</ShiftSize> -->
+      <!-- <ShiftExpiries>1Y,2Y,3Y,5Y,7Y,10Y</ShiftExpiries> -->
+      <!-- <ShiftStrikes>0.01,0.02,0.03,0.04,0.05</ShiftStrikes> -->
+      <!-- <Index>USD-LIBOR-3M</Index> -->
+    <!-- </CapFloorVolatility> -->
+   
+  </CapFloorVolatilities>
+
+  <CreditCurves/>
+  <CDSVolatilities/>
+  <BaseCorrelations/>
+  <EquitySpots/>
+  <EquityVolatilities/>
+  
+  <!-- Cross Gamma filter: Pairs of factor sub-strings -->
+  <CrossGammaFilter>
+    <!-- <Pair>DiscountCurve/EUR,DiscountCurve/EUR</Pair> -->
+    <!-- <Pair>IndexCurve/EUR,IndexCurve/EUR</Pair> -->
+    <!-- <Pair>DiscountCurve/EUR,IndexCurve/EUR</Pair> -->
+  </CrossGammaFilter>
+  
+</SensitivityAnalysis>

@@ -17,8 +17,8 @@
 */
 
 #include <ored/portfolio/enginedata.hpp>
-#include <ored/utilities/xmlutils.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/xmlutils.hpp>
 
 using namespace QuantLib;
 
@@ -99,5 +99,5 @@ XMLNode* EngineData::toXML(XMLDocument& doc) {
     }
     return pricingEnginesNode;
 }
-}
-}
+} // namespace data
+} // namespace ore

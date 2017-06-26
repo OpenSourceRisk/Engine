@@ -21,8 +21,8 @@
 
 #include <qle/models/fxbsconstantparametrization.hpp>
 #include <qle/models/fxbspiecewiseconstantparametrization.hpp>
-#include <qle/pricingengines/analyticcclgmfxoptionengine.hpp>
 #include <qle/models/fxeqoptionhelper.hpp>
+#include <qle/pricingengines/analyticcclgmfxoptionengine.hpp>
 
 #include <ored/model/fxbsbuilder.hpp>
 #include <ored/utilities/log.hpp>
@@ -126,5 +126,5 @@ void FxBsBuilder::buildOptionBasket() {
     for (Size j = 0; j < expiryTimes.size(); j++)
         optionExpiries_[j] = expiryTimes[j];
 }
-}
-}
+} // namespace data
+} // namespace ore

@@ -697,7 +697,7 @@
       </FloorRates>
     </CapFloorData>
   </Trade>
-  <Trade id="Bond">
+  <Trade id="BOND">
     <TradeType>Bond</TradeType>
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
@@ -743,105 +743,132 @@
       </LegData>
      </BondData>
   </Trade>
-  <Trade id="FloatingRateNote">
-    <TradeType>Bond</TradeType>
+  <Trade id="EQ_CALL_SP5">
+    <TradeType>EquityOption</TradeType>
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
       <NettingSetId>CPTY_A</NettingSetId>
       <AdditionalFields/>
     </Envelope>
-    <BondData>
-      <IssuerId>CPTY_C</IssuerId>
-      <CreditCurveId>CPTY_C</CreditCurveId>
-      <SecurityId>SECURITY_1</SecurityId>
-      <ReferenceCurveId>BENCHMARK_EUR</ReferenceCurveId>
-      <SettlementDays>2</SettlementDays>
-      <Calendar>TARGET</Calendar>
-      <IssueDate>20160203</IssueDate>
-      <LegData>
-        <LegType>Floating</LegType>
-        <Payer>false</Payer>
-        <Currency>EUR</Currency>
-        <Notionals>
-          <Notional>10000000.000000</Notional>
-        </Notionals>
-        <DayCounter>ACT/ACT</DayCounter>
-        <PaymentConvention>F</PaymentConvention>
-        <FloatingLegData>
-          <Index>EUR-EURIBOR-6M</Index>
-          <Spreads>
-            <Spread>0</Spread>
-          </Spreads>
-          <IsInArrears>false</IsInArrears>
-          <FixingDays>2</FixingDays>
-        </FloatingLegData>
-        <ScheduleData>
-          <Rules>
-            <StartDate>20160203</StartDate>
-            <EndDate>20210203</EndDate>
-            <Tenor>6M</Tenor>
-            <Calendar>TARGET</Calendar>
-            <Convention>F</Convention>
-            <TermConvention>F</TermConvention>
-            <Rule>Forward</Rule>
-            <EndOfMonth/>
-            <FirstDate/>
-            <LastDate/>
-          </Rules>
-        </ScheduleData>
-      </LegData>
-     </BondData>
+    <EquityOptionData>
+      <OptionData>
+        <LongShort>Long</LongShort>
+        <OptionType>Call</OptionType>
+        <Style>European</Style>
+        <Settlement>Cash</Settlement>
+        <PayOffAtExpiry>false</PayOffAtExpiry>
+        <ExerciseDates>
+          <ExerciseDate>2018-02-05</ExerciseDate>
+        </ExerciseDates>
+      </OptionData>
+      <Name>SP5</Name>
+      <Currency>USD</Currency>
+      <Strike>2147.56</Strike>
+      <Quantity>775</Quantity>
+    </EquityOptionData>
   </Trade>
-  <Trade id="FlooredFloatingRateNote">
-    <TradeType>Bond</TradeType>
+  <Trade id="EQ_PUT_SP5">
+    <TradeType>EquityOption</TradeType>
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
       <NettingSetId>CPTY_A</NettingSetId>
       <AdditionalFields/>
     </Envelope>
-    <BondData>
-      <IssuerId>CPTY_C</IssuerId>
-      <CreditCurveId>CPTY_C</CreditCurveId>
-      <SecurityId>SECURITY_1</SecurityId>
-      <ReferenceCurveId>BENCHMARK_EUR</ReferenceCurveId>
-      <SettlementDays>2</SettlementDays>
-      <Calendar>TARGET</Calendar>
-      <IssueDate>20160203</IssueDate>
-      <LegData>
-        <LegType>Floating</LegType>
-        <Payer>false</Payer>
-        <Currency>EUR</Currency>
-        <Notionals>
-          <Notional>10000000.000000</Notional>
-        </Notionals>
-        <DayCounter>ACT/ACT</DayCounter>
-        <PaymentConvention>F</PaymentConvention>
-        <FloatingLegData>
-          <Index>EUR-EURIBOR-6M</Index>
-          <Spreads>
-            <Spread>0</Spread>
-          </Spreads>
-          <Floors>
-            <Floor>0</Floor>
-          </Floors>
-          <IsInArrears>false</IsInArrears>
-          <FixingDays>2</FixingDays>
-        </FloatingLegData>
-        <ScheduleData>
-          <Rules>
-            <StartDate>20160203</StartDate>
-            <EndDate>20210203</EndDate>
-            <Tenor>6M</Tenor>
-            <Calendar>TARGET</Calendar>
-            <Convention>F</Convention>
-            <TermConvention>F</TermConvention>
-            <Rule>Forward</Rule>
-            <EndOfMonth/>
-            <FirstDate/>
-            <LastDate/>
-          </Rules>
-        </ScheduleData>
-      </LegData>
-     </BondData>
+    <EquityOptionData>
+      <OptionData>
+        <LongShort>Short</LongShort>
+        <OptionType>Put</OptionType>
+        <Style>European</Style>
+        <Settlement>Cash</Settlement>
+        <PayOffAtExpiry>false</PayOffAtExpiry>
+        <ExerciseDates>
+          <ExerciseDate>2018-02-05</ExerciseDate>
+        </ExerciseDates>
+      </OptionData>
+      <Name>SP5</Name>
+      <Currency>USD</Currency>
+      <Strike>2147.56</Strike>
+      <Quantity>775</Quantity>
+    </EquityOptionData>
   </Trade>
+  <Trade id="EQ_FWD_SP5">
+    <TradeType>EquityForward</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <EquityForwardData>
+      <LongShort>Short</LongShort>
+      <Maturity>2018-02-05</Maturity>
+      <Name>SP5</Name>
+      <Currency>USD</Currency>
+      <Strike>2147.56</Strike>
+      <Quantity>775</Quantity>
+    </EquityForwardData>
+  </Trade>
+  <Trade id="EQ_CALL_LUFT">
+    <TradeType>EquityOption</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <EquityOptionData>
+      <OptionData>
+        <LongShort>Long</LongShort>
+        <OptionType>Call</OptionType>
+        <Style>European</Style>
+        <Settlement>Cash</Settlement>
+        <PayOffAtExpiry>false</PayOffAtExpiry>
+        <ExerciseDates>
+          <ExerciseDate>2018-03-01</ExerciseDate>
+        </ExerciseDates>
+      </OptionData>
+      <Name>Lufthansa</Name>
+      <Currency>EUR</Currency>
+      <Strike>12.24</Strike>
+      <Quantity>775</Quantity>
+    </EquityOptionData>
+  </Trade>
+  <Trade id="EQ_PUT_LUFT">
+    <TradeType>EquityOption</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <EquityOptionData>
+      <OptionData>
+        <LongShort>Long</LongShort>
+        <OptionType>Put</OptionType>
+        <Style>European</Style>
+        <Settlement>Cash</Settlement>
+        <PayOffAtExpiry>false</PayOffAtExpiry>
+        <ExerciseDates>
+          <ExerciseDate>2018-03-01</ExerciseDate>
+        </ExerciseDates>
+      </OptionData>
+      <Name>Lufthansa</Name>
+      <Currency>EUR</Currency>
+      <Strike>12.24</Strike>
+      <Quantity>775</Quantity>
+    </EquityOptionData>
+  </Trade>
+  <Trade id="EQ_FWD_LUFT">
+    <TradeType>EquityForward</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <EquityForwardData>
+      <LongShort>Long</LongShort>
+      <Maturity>2018-03-01</Maturity>
+      <Name>Lufthansa</Name>
+      <Currency>EUR</Currency>
+      <Strike>12.24</Strike>
+      <Quantity>775</Quantity>
+    </EquityForwardData>
+ </Trade>
 </Portfolio>

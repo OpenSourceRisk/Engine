@@ -21,26 +21,27 @@
     \ingroup
 */
 
+#include <ored/marketdata/basecorrelationcurve.hpp>
 #include <ored/marketdata/capfloorvolcurve.hpp>
+#include <ored/marketdata/cdsvolcurve.hpp>
 #include <ored/marketdata/curveloader.hpp>
 #include <ored/marketdata/curvespecparser.hpp>
 #include <ored/marketdata/defaultcurve.hpp>
+#include <ored/marketdata/equitycurve.hpp>
+#include <ored/marketdata/equityvolcurve.hpp>
 #include <ored/marketdata/fxspot.hpp>
 #include <ored/marketdata/fxvolcurve.hpp>
 #include <ored/marketdata/inflationcapfloorpricesurface.hpp>
 #include <ored/marketdata/inflationcurve.hpp>
+#include <ored/marketdata/securityrecoveryrate.hpp>
+#include <ored/marketdata/securityspread.hpp>
 #include <ored/marketdata/swaptionvolcurve.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
-#include <qle/indexes/inflationindexwrapper.hpp>
-#include <ored/marketdata/securityspread.hpp>
-#include <ored/marketdata/securityrecoveryrate.hpp>
-#include <ored/marketdata/curveloader.hpp>
-#include <ored/utilities/log.hpp>
 #include <ored/utilities/indexparser.hpp>
-#include <ored/marketdata/capfloorvolcurve.hpp>
-#include <ored/marketdata/equitycurve.hpp>
-#include <ored/marketdata/equityvolcurve.hpp>
+#include <ored/utilities/log.hpp>
+#include <qle/indexes/inflationindexwrapper.hpp>
+#include <qle/termstructures/blackvolsurfacewithatm.hpp>
 
 using namespace std;
 using namespace QuantLib;
@@ -61,11 +62,14 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
     // store all curves built, since they might appear in several configurations
     // and might therefore be reused
     map<string, boost::shared_ptr<YieldCurve>> requiredYieldCurves;
+    map<string, boost::shared_ptr<SwapIndex>> requiredSwapIndices;
     map<string, boost::shared_ptr<FXSpot>> requiredFxSpots;
     map<string, boost::shared_ptr<FXVolCurve>> requiredFxVolCurves;
     map<string, boost::shared_ptr<SwaptionVolCurve>> requiredSwaptionVolCurves;
     map<string, boost::shared_ptr<CapFloorVolCurve>> requiredCapFloorVolCurves;
     map<string, boost::shared_ptr<DefaultCurve>> requiredDefaultCurves;
+    map<string, boost::shared_ptr<CDSVolCurve>> requiredCDSVolCurves;
+    map<string, boost::shared_ptr<BaseCorrelationCurve>> requiredBaseCorrelationCurves;
     map<string, boost::shared_ptr<InflationCurve>> requiredInflationCurves;
     map<string, boost::shared_ptr<InflationCapFloorPriceSurface>> requiredInflationCapFloorPriceSurfaces;
     map<string, boost::shared_ptr<EquityCurve>> requiredEquityCurves;
@@ -90,9 +94,26 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
 
         // order them
         order(specs, curveConfigs);
+        bool swapIndicesBuilt = false;
 
         // Loop over each spec, build the curve and add it to the MarketImpl container.
         for (const auto& spec : specs) {
+
+            // Swap Indices
+            // Assumes we build all yield curves before anything else (which order() does)
+            // Once we have a non-Yield curve spec, we make sure to build all swap indices
+            // add add them to requiredSwapIndices for later.
+            if (swapIndicesBuilt == false && spec->baseType() != CurveSpec::CurveType::Yield) {
+                for (const auto& it : params.swapIndices(configuration.first)) {
+                    const string& swapIndexName = it.first;
+                    const string& discountIndex = it.second;
+
+                    addSwapIndex(swapIndexName, discountIndex, configuration.first);
+                    LOG("Added SwapIndex " << swapIndexName << " with DiscountingIndex " << discountIndex);
+                    requiredSwapIndices[swapIndexName] = swapIndex(swapIndexName, configuration.first).currentLink();
+                }
+                swapIndicesBuilt = true;
+            }
 
             LOG("Loading spec " << *spec);
 
@@ -208,8 +229,8 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                 if (itr == requiredSwaptionVolCurves.end()) {
                     // build the curve
                     LOG("Building Swaption Volatility for asof " << asof);
-                    boost::shared_ptr<SwaptionVolCurve> swaptionVolCurve =
-                        boost::make_shared<SwaptionVolCurve>(asof, *swvolspec, loader, curveConfigs);
+                    boost::shared_ptr<SwaptionVolCurve> swaptionVolCurve = boost::make_shared<SwaptionVolCurve>(
+                        asof, *swvolspec, loader, curveConfigs, requiredSwapIndices);
                     itr = requiredSwaptionVolCurves.insert(make_pair(swvolspec->name(), swaptionVolCurve)).first;
                 }
 
@@ -300,6 +321,65 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                 break;
             }
 
+            case CurveSpec::CurveType::CDSVolatility: {
+                // convert to cds vol spec
+                boost::shared_ptr<CDSVolatilityCurveSpec> cdsvolspec =
+                    boost::dynamic_pointer_cast<CDSVolatilityCurveSpec>(spec);
+                QL_REQUIRE(cdsvolspec, "Failed to convert spec " << *spec);
+
+                // have we built the curve already ?
+                auto itr = requiredCDSVolCurves.find(cdsvolspec->name());
+                if (itr == requiredCDSVolCurves.end()) {
+                    // build the curve
+                    LOG("Building CDSVol for asof " << asof);
+                    boost::shared_ptr<CDSVolCurve> cdsVolCurve =
+                        boost::make_shared<CDSVolCurve>(asof, *cdsvolspec, loader, curveConfigs);
+                    itr = requiredCDSVolCurves.insert(make_pair(cdsvolspec->name(), cdsVolCurve)).first;
+                }
+
+                // add the handle to the Market Map (possible lots of times for proxies)
+                for (const auto& it : params.cdsVolatilities(configuration.first)) {
+                    if (it.second == spec->name()) {
+                        LOG("Adding CDSVol (" << it.first << ") with spec " << *cdsvolspec << " to configuration "
+                                              << configuration.first);
+                        cdsVols_[make_pair(configuration.first, it.first)] =
+                            Handle<BlackVolTermStructure>(itr->second->volTermStructure());
+                    }
+                }
+                break;
+            }
+
+            case CurveSpec::CurveType::BaseCorrelation: {
+                // convert to base correlation spec
+                boost::shared_ptr<BaseCorrelationCurveSpec> baseCorrelationSpec =
+                    boost::dynamic_pointer_cast<BaseCorrelationCurveSpec>(spec);
+                QL_REQUIRE(baseCorrelationSpec, "Failed to convert spec " << *spec);
+
+                // have we built the curve already ?
+                auto itr = requiredBaseCorrelationCurves.find(baseCorrelationSpec->name());
+                if (itr == requiredBaseCorrelationCurves.end()) {
+                    // build the curve
+                    LOG("Building BaseCorrelation for asof " << asof);
+                    boost::shared_ptr<BaseCorrelationCurve> baseCorrelationCurve =
+                        boost::make_shared<BaseCorrelationCurve>(asof, *baseCorrelationSpec, loader, curveConfigs);
+                    itr = requiredBaseCorrelationCurves
+                              .insert(make_pair(baseCorrelationSpec->name(), baseCorrelationCurve))
+                              .first;
+                }
+
+                // add the handle to the Market Map (possible lots of times for proxies)
+                for (const auto& it : params.baseCorrelations(configuration.first)) {
+                    if (it.second == spec->name()) {
+                        LOG("Adding Base Correlatin (" << it.first << ") with spec " << *baseCorrelationSpec
+                                                       << " to configuration " << configuration.first);
+                        baseCorrelations_[make_pair(configuration.first, it.first)] =
+                            Handle<BaseCorrelationTermStructure<BilinearInterpolation>>(
+                                itr->second->baseCorrelationTermStructure());
+                    }
+                }
+                break;
+            }
+
             case CurveSpec::CurveType::Inflation: {
                 boost::shared_ptr<InflationCurveSpec> inflationspec =
                     boost::dynamic_pointer_cast<InflationCurveSpec>(spec);
@@ -381,8 +461,8 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                     boost::shared_ptr<InflationCapFloorPriceSurface> inflationCapFloorPriceSurface =
                         boost::make_shared<InflationCapFloorPriceSurface>(asof, *infcapfloorspec, loader, curveConfigs,
                                                                           requiredYieldCurves, requiredInflationCurves);
-                    itr = requiredInflationCapFloorPriceSurfaces.insert(make_pair(infcapfloorspec->name(),
-                                                                                  inflationCapFloorPriceSurface))
+                    itr = requiredInflationCapFloorPriceSurfaces
+                              .insert(make_pair(infcapfloorspec->name(), inflationCapFloorPriceSurface))
                               .first;
                 }
                 for (const auto it : params.inflationCapFloorPriceSurfaces(configuration.first)) {
@@ -427,7 +507,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
             }
 
             case CurveSpec::CurveType::EquityVolatility: {
-                // convert to fxspec
+                // convert to eqvolspec
                 boost::shared_ptr<EquityVolatilityCurveSpec> eqvolspec =
                     boost::dynamic_pointer_cast<EquityVolatilityCurveSpec>(spec);
                 QL_REQUIRE(eqvolspec, "Failed to convert spec " << *spec);
@@ -437,6 +517,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                 if (itr == requiredEquityVolCurves.end()) {
                     // build the curve
                     LOG("Building EquityVol for asof " << asof);
+
                     boost::shared_ptr<EquityVolCurve> eqVolCurve =
                         boost::make_shared<EquityVolCurve>(asof, *eqvolspec, loader, curveConfigs);
                     itr = requiredEquityVolCurves.insert(make_pair(eqvolspec->name(), eqVolCurve)).first;
@@ -445,10 +526,23 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                 // add the handle to the Market Map (possible lots of times for proxies)
                 for (const auto& it : params.equityVolatilities(configuration.first)) {
                     if (it.second == spec->name()) {
-                        LOG("Adding EquityVol (" << it.first << ") with spec " << *eqvolspec << " to configuration "
+                        string eqName = it.first;
+                        LOG("Adding EquityVol (" << eqName << ") with spec " << *eqvolspec << " to configuration "
                                                  << configuration.first);
-                        equityVols_[make_pair(configuration.first, it.first)] =
-                            Handle<BlackVolTermStructure>(itr->second->volTermStructure());
+
+                        boost::shared_ptr<BlackVolTermStructure> bvts (itr->second->volTermStructure());
+                        // Wrap it in QuantExt::BlackVolatilityWithATM as TodaysMarket might be used
+                        // for model calibration. This is not the ideal place to put this logic but
+                        // it can't be in EquityVolCurve as there are implicit, configuration dependent,
+                        // choices made already (e.g. what discount curve to use).
+                        // We do this even if it is an ATM curve, it does no harm.
+                        Handle<Quote> spot = equitySpot(eqName, configuration.first);
+                        Handle<YieldTermStructure> yts = discountCurve(eqvolspec->ccy(), configuration.first);
+                        Handle<YieldTermStructure> divYts = equityDividendCurve(eqName, configuration.first);
+                        bvts = boost::make_shared<QuantExt::BlackVolatilityWithATM>(bvts, spot, yts, divYts);
+
+                        equityVols_[make_pair(configuration.first, it.first)] = 
+                            Handle<BlackVolTermStructure> (bvts);
                     }
                 }
                 break;
@@ -484,8 +578,8 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
             case CurveSpec::CurveType::SecurityRecoveryRate: {
                 boost::shared_ptr<SecurityRecoveryRateSpec> securityrecoveryratespec =
                     boost::dynamic_pointer_cast<SecurityRecoveryRateSpec>(spec);
-                QL_REQUIRE(securityrecoveryratespec, "Failed to convert spec " << *spec
-                                                                               << " to security recovery rate spec");
+                QL_REQUIRE(securityrecoveryratespec,
+                           "Failed to convert spec " << *spec << " to security recovery rate spec");
 
                 // have we built the curve already?
                 auto itr = requiredSecurityRecoveryRates.find(securityrecoveryratespec->securityID());
@@ -494,8 +588,8 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                     LOG("Building SecurityRecoveryRates for asof " << asof);
                     boost::shared_ptr<SecurityRecoveryRate> securityRecoveryRate =
                         boost::make_shared<SecurityRecoveryRate>(asof, *securityrecoveryratespec, loader);
-                    itr = requiredSecurityRecoveryRates.insert(make_pair(securityrecoveryratespec->securityID(),
-                                                                         securityRecoveryRate))
+                    itr = requiredSecurityRecoveryRates
+                              .insert(make_pair(securityrecoveryratespec->securityID(), securityRecoveryRate))
                               .first;
                 }
 
@@ -520,16 +614,8 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
         }
         LOG("Loading " << count << " CurveSpecs done.");
 
-        // Swap Indices
-        for (const auto& it : params.swapIndices(configuration.first)) {
-            const string& swapIndex = it.first;
-            const string& discountIndex = it.second;
-
-            addSwapIndex(swapIndex, discountIndex, configuration.first);
-            LOG("Added SwapIndex " << swapIndex << " with DiscountingIndex " << discountIndex);
-        }
     } // loop over configurations
 
 } // CTOR
-} // namesapce marketdata
+} // namespace data
 } // namespace ore

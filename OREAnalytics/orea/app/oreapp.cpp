@@ -162,6 +162,11 @@ void OREApp::run() {
             out_ << "SKIP" << endl;
         }
 
+        /*****************************
+         * Additional reports
+         */
+        writeAdditionalReports();
+
     } catch (std::exception& e) {
         ALOG("Error: " << e.what());
         out_ << "Error: " << e.what() << endl;
@@ -229,8 +234,8 @@ void OREApp::buildMarket() {
 
     if (params_->has("setup", "marketDataFile") && params_->get("setup", "marketDataFile") != "") {
         /*******************************
-        * Market and fixing data loader
-        */
+         * Market and fixing data loader
+         */
         out_ << endl << setw(tab_) << left << "Market data loader... " << flush;
         string inputPath = params_->get("setup", "inputPath");
         string marketFile = inputPath + "/" + params_->get("setup", "marketDataFile");
@@ -272,7 +277,8 @@ boost::shared_ptr<EngineFactory> OREApp::buildEngineFactory(const boost::shared_
     string inputPath = params_->get("setup", "inputPath");
     string pricingEnginesFile = inputPath + "/" + params_->get("setup", "pricingEnginesFile");
     boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
-    engineData->fromFile(pricingEnginesFile);
+    if (params_->get("setup", "pricingEnginesFile") != "")
+        engineData->fromFile(pricingEnginesFile);
 
     map<MarketContext, string> configurations;
     configurations[MarketContext::irCalibration] = params_->get("markets", "lgmcalibration");
@@ -288,6 +294,8 @@ boost::shared_ptr<Portfolio> OREApp::buildPortfolio(const boost::shared_ptr<Engi
     string inputPath = params_->get("setup", "inputPath");
     string portfolioFile = inputPath + "/" + params_->get("setup", "portfolioFile");
     boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
+    if (params_->get("setup", "portfolioFile") == "")
+        return portfolio;
     portfolio->load(portfolioFile, buildTradeFactory());
     portfolio->build(factory);
     return portfolio;
@@ -408,7 +416,7 @@ void OREApp::runSensitivityAnalysis() {
     boost::shared_ptr<SensitivityScenarioData> sensiData(new SensitivityScenarioData);
     boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
     boost::shared_ptr<Portfolio> sensiPortfolio = boost::make_shared<Portfolio>();
-    string marketConfiguration;
+    string marketConfiguration = params_->get("markets", "sensitivity");
 
     sensiInputInitialize(simMarketData, sensiData, engineData, sensiPortfolio, marketConfiguration);
 
@@ -449,7 +457,7 @@ void OREApp::sensiInputInitialize(boost::shared_ptr<ScenarioSimMarketParameters>
     LOG("Get Portfolio");
     string portfolioFile = inputPath + "/" + params_->get("setup", "portfolioFile");
     // Just load here. We build the portfolio in SensitivityAnalysis, after building SimMarket.
-    sensiPortfolio->load(portfolioFile);
+    sensiPortfolio->load(portfolioFile, buildTradeFactory());
 
     LOG("Build Sensitivity Analysis");
     marketConfiguration = params_->get("markets", "pricing");
@@ -761,5 +769,5 @@ void OREApp::writeDIMReport() {
         reportVec.push_back(boost::make_shared<ore::data::CSVFileReport>(dimFiles2[i]));
     postProcess_->exportDimRegression(nettingSet, dimOutputGridPoints, reportVec);
 }
-}
-}
+} // namespace analytics
+} // namespace ore

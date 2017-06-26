@@ -18,8 +18,8 @@
 
 #include <boost/timer.hpp>
 #include <orea/cube/inmemorycube.hpp>
-#include <orea/engine/valuationengine.hpp>
 #include <orea/engine/sensitivityanalysis.hpp>
+#include <orea/engine/valuationengine.hpp>
 #include <orea/scenario/clonescenariofactory.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
@@ -32,11 +32,11 @@
 #include <ql/pricingengines/capfloor/blackcapfloorengine.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
 #include <ql/termstructures/yield/oisratehelper.hpp>
-#include <qle/instruments/deposit.hpp>
-#include <qle/pricingengines/depositengine.hpp>
 #include <qle/instruments/crossccybasisswap.hpp>
-#include <qle/pricingengines/crossccyswapengine.hpp>
+#include <qle/instruments/deposit.hpp>
 #include <qle/instruments/fxforward.hpp>
+#include <qle/pricingengines/crossccyswapengine.hpp>
+#include <qle/pricingengines/depositengine.hpp>
 #include <qle/pricingengines/discountingfxforwardengine.hpp>
 
 using namespace QuantLib;
@@ -58,7 +58,7 @@ SensitivityAnalysis::SensitivityAnalysis(const boost::shared_ptr<ore::data::Port
     : market_(market), marketConfiguration_(marketConfiguration), asof_(market->asofDate()),
       simMarketData_(simMarketData), sensitivityData_(sensitivityData), conventions_(conventions),
       recalibrateModels_(recalibrateModels), nonShiftedBaseCurrencyConversion_(nonShiftedBaseCurrencyConversion),
-      engineData_(engineData), portfolio_(portfolio), initialized_(false), computed_(false) {}
+      engineData_(engineData), portfolio_(portfolio), initialized_(false), computed_(false), overrideTenors_(false) {}
 
 std::vector<boost::shared_ptr<ValuationCalculator>> SensitivityAnalysis::buildValuationCalculators() const {
     vector<boost::shared_ptr<ValuationCalculator>> calculators;
@@ -111,8 +111,8 @@ void SensitivityAnalysis::generateSensitivities() {
 }
 
 void SensitivityAnalysis::initializeSensitivityScenarioGenerator(boost::shared_ptr<ScenarioFactory> scenFact) {
-    scenarioGenerator_ =
-        boost::make_shared<SensitivityScenarioGenerator>(sensitivityData_, simMarketData_, asof_, market_);
+    scenarioGenerator_ = boost::make_shared<SensitivityScenarioGenerator>(sensitivityData_, simMarketData_, asof_,
+                                                                          market_, overrideTenors_);
     boost::shared_ptr<Scenario> baseScen = scenarioGenerator_->baseScenario();
     boost::shared_ptr<ScenarioFactory> scenFactory =
         (scenFact != NULL) ? scenFact
@@ -125,7 +125,8 @@ void SensitivityAnalysis::initializeSensitivityScenarioGenerator(boost::shared_p
 void SensitivityAnalysis::initializeSimMarket() {
     boost::shared_ptr<ScenarioGenerator> sgen =
         boost::static_pointer_cast<ScenarioGenerator, SensitivityScenarioGenerator>(scenarioGenerator_);
-    simMarket_ = boost::make_shared<ScenarioSimMarket>(sgen, market_, simMarketData_, conventions_);
+    simMarket_ =
+        boost::make_shared<ScenarioSimMarket>(sgen, market_, simMarketData_, conventions_, marketConfiguration_);
 }
 
 boost::shared_ptr<EngineFactory>
@@ -154,12 +155,12 @@ void SensitivityAnalysis::initializeCube(boost::shared_ptr<NPVCube>& cube) const
 void SensitivityAnalysis::collectResultsFromCube(const boost::shared_ptr<NPVCube>& cube) {
 
     /***********************************************
-    * Collect results
-    * - base NPVs,
-    * - NPVs after single factor up shifts,
-    * - NPVs after single factor down shifts
-    * - deltas, gammas and cross gammas
-    */
+     * Collect results
+     * - base NPVs,
+     * - NPVs after single factor up shifts,
+     * - NPVs after single factor down shifts
+     * - deltas, gammas and cross gammas
+     */
     baseNPV_.clear();
     vector<ShiftScenarioGenerator::ScenarioDescription> desc = scenarioGenerator_->scenarioDescriptions();
     QL_REQUIRE(desc.size() == scenarioGenerator_->samples(),
@@ -221,8 +222,8 @@ void SensitivityAnalysis::collectResultsFromCube(const boost::shared_ptr<NPVCube
         string factor = p.second;
         QL_REQUIRE(baseNPV_.find(id) != baseNPV_.end(), "base NPV not found for trade " << id);
         Real b = baseNPV_[id];
-        QL_REQUIRE(downNPV_.find(p) != downNPV_.end(), "down shift result not found for trade " << id << ", factor "
-                                                                                                << factor);
+        QL_REQUIRE(downNPV_.find(p) != downNPV_.end(),
+                   "down shift result not found for trade " << id << ", factor " << factor);
         Real d = downNPV_[p];
         // f_x(x) = (f(x+u) - f(x)) / u
         delta_[p] = u - b;           // = f_x(x) * u
@@ -394,6 +395,11 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
         if (boost::to_upper_copy(sensitivityData_->fxShiftData()[keylabel].shiftType) == "RELATIVE") {
             shiftMult = simMarket_->fxSpot(keylabel, marketConfiguration_)->value();
         }
+    } else if (keytype == RiskFactorKey::KeyType::EQSpot) {
+        shiftSize = sensitivityData_->equityShiftData()[keylabel].shiftSize;
+        if (boost::to_upper_copy(sensitivityData_->equityShiftData()[keylabel].shiftType) == "RELATIVE") {
+            shiftMult = simMarket_->equitySpot(keylabel, marketConfiguration_)->value();
+        }
     } else if (keytype == RiskFactorKey::KeyType::DiscountCurve) {
         string ccy = keylabel;
         shiftSize = sensitivityData_->discountCurveShiftData()[ccy].shiftSize;
@@ -442,6 +448,20 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
             Real atmVol = vts->blackVol(t, atmFwd);
             shiftMult = atmVol;
         }
+    } else if (keytype == RiskFactorKey::KeyType::EQVolatility) {
+        string pair = keylabel;
+        shiftSize = sensitivityData_->equityVolShiftData()[pair].shiftSize;
+        if (boost::to_upper_copy(sensitivityData_->equityVolShiftData()[pair].shiftType) == "RELATIVE") {
+            vector<Real> strikes = sensitivityData_->equityVolShiftData()[pair].shiftStrikes;
+            QL_REQUIRE(strikes.size() == 0, "Only ATM FX vols supported");
+            Real atmFwd = 0.0; // hardcoded, since only ATM supported
+            Size keyIdx = key.index;
+            Period p = sensitivityData_->equityVolShiftData()[pair].shiftExpiries[keyIdx];
+            Handle<BlackVolTermStructure> vts = simMarket_->equityVol(pair, marketConfiguration_);
+            Time t = vts->dayCounter().yearFraction(asof_, asof_ + p);
+            Real atmVol = vts->blackVol(t, atmFwd);
+            shiftMult = atmVol;
+        }
     } else if (keytype == RiskFactorKey::KeyType::SwaptionVolatility) {
         string ccy = keylabel;
         shiftSize = sensitivityData_->swaptionVolShiftData()[ccy].shiftSize;
@@ -479,6 +499,47 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
             Real vol = vts->volatility(t_exp, strike);
             shiftMult = vol;
         }
+    } else if (keytype == RiskFactorKey::KeyType::CDSVolatility) {
+        string name = keylabel;
+        shiftSize = sensitivityData_->cdsVolShiftData()[name].shiftSize;
+        if (boost::to_upper_copy(sensitivityData_->cdsVolShiftData()[name].shiftType) == "RELATIVE") {
+            vector<Period> expiries = sensitivityData_->cdsVolShiftData()[name].shiftExpiries;
+            Real atmFwd = 0.0; // hardcoded, since only ATM supported
+            Size keyIdx = key.index;
+            Size expIdx = keyIdx;
+            Period p_exp = expiries[expIdx];
+            Handle<BlackVolTermStructure> vts = simMarket_->cdsVol(name, marketConfiguration_);
+            Time t_exp = vts->dayCounter().yearFraction(asof_, asof_ + p_exp);
+            Real strike = 0.0; // FIXME
+            Real atmVol = vts->blackVol(t_exp, strike);
+            shiftMult = atmVol;
+        }
+    } else if (keytype == RiskFactorKey::KeyType::SurvivalProbability) {
+        string name = keylabel;
+        shiftSize = sensitivityData_->creditCurveShiftData()[name].shiftSize;
+        if (boost::to_upper_copy(sensitivityData_->creditCurveShiftData()[name].shiftType) == "RELATIVE") {
+            Size keyIdx = key.index;
+            Period p = sensitivityData_->creditCurveShiftData()[name].shiftTenors[keyIdx];
+            Handle<DefaultProbabilityTermStructure> ts = simMarket_->defaultCurve(name, marketConfiguration_);
+            Time t = ts->dayCounter().yearFraction(asof_, asof_ + p);
+            Real prob = ts->survivalProbability(t);
+            shiftMult = -std::log(prob) / t;
+        }
+    } else if (keytype == RiskFactorKey::KeyType::BaseCorrelation) {
+        string name = keylabel;
+        shiftSize = sensitivityData_->baseCorrelationShiftData()[name].shiftSize;
+        if (boost::to_upper_copy(sensitivityData_->baseCorrelationShiftData()[name].shiftType) == "RELATIVE") {
+            vector<Real> lossLevels = sensitivityData_->baseCorrelationShiftData()[name].shiftLossLevels;
+            vector<Period> terms = sensitivityData_->baseCorrelationShiftData()[name].shiftTerms;
+            Size keyIdx = key.index;
+            Size lossLevelIdx = keyIdx / terms.size();
+            Real lossLevel = lossLevels[lossLevelIdx];
+            Size termIdx = keyIdx % terms.size();
+            Period term = terms[termIdx];
+            Handle<BilinearBaseCorrelationTermStructure> ts = simMarket_->baseCorrelation(name, marketConfiguration_);
+            Real bc = ts->correlation(asof_ + term, lossLevel, true); // extrapolate
+            shiftMult = bc;
+        }
     } else {
         QL_FAIL("KeyType not supported yet - " << keytype);
     }
@@ -515,5 +576,5 @@ const std::map<std::tuple<std::string, std::string, std::string>, Real>& Sensiti
     QL_REQUIRE(computed_, "Sensitivities have not been successfully computed");
     return crossGamma_;
 }
-}
-}
+} // namespace analytics
+} // namespace ore

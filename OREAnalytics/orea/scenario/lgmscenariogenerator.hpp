@@ -23,12 +23,12 @@
 
 #pragma once
 
-#include <orea/scenario/scenariogenerator.hpp>
-#include <qle/models/lgm.hpp>
-#include <qle/methods/multipathgeneratorbase.hpp>
 #include <orea/scenario/scenariofactory.hpp>
+#include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/simulation/dategrid.hpp>
+#include <qle/methods/multipathgeneratorbase.hpp>
+#include <qle/models/lgm.hpp>
 
 using namespace QuantLib;
 
@@ -67,5 +67,5 @@ private:
     boost::shared_ptr<ScenarioFactory> scenarioFactory_;
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketConfig_;
 };
-}
-}
+} // namespace analytics
+} // namespace ore

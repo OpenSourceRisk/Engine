@@ -16,12 +16,12 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/algorithm/string.hpp>
 #include <orea/simulation/dategrid.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ql/settings.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
-#include <boost/algorithm/string.hpp>
 
 using namespace QuantLib;
 using namespace std;
@@ -156,5 +156,5 @@ void DateGrid::truncate(Size len) {
         DLOG("DateGrid size now " << dates_.size());
     }
 }
-}
-}
+} // namespace analytics
+} // namespace ore

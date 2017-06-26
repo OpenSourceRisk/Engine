@@ -17,8 +17,8 @@
 */
 
 #include <orea/scenario/stressscenariodata.hpp>
-#include <ored/utilities/xmlutils.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/xmlutils.hpp>
 
 using namespace QuantLib;
 
@@ -104,7 +104,7 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
              child = XMLUtils::getNextSibling(child)) {
             string ccypair = XMLUtils::getAttribute(child, "ccypair");
             LOG("Loading stress parameters for FX " << ccypair);
-            FxShiftData data;
+            SpotShiftData data;
             data.shiftType = XMLUtils::getChildValue(child, "ShiftType", true);
             data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
             test.fxShifts[ccypair] = data;
@@ -118,11 +118,40 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
              child = XMLUtils::getNextSibling(child)) {
             string ccypair = XMLUtils::getAttribute(child, "ccypair");
             LOG("Loading stress parameters for FX vols " << ccypair);
-            FxVolShiftData data;
+            VolShiftData data;
             data.shiftType = XMLUtils::getChildValue(child, "ShiftType");
             data.shifts = XMLUtils::getChildrenValuesAsDoublesCompact(child, "Shifts", true);
             data.shiftExpiries = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftExpiries", true);
             test.fxVolShifts[ccypair] = data;
+        }
+
+        LOG("Get Equity spot stress parameters");
+        XMLNode* equitySpots = XMLUtils::getChildNode(testCase, "EquitySpots");
+        QL_REQUIRE(equitySpots, "EquitySpots node not found");
+        test.equityShifts.clear();
+        for (XMLNode* child = XMLUtils::getChildNode(equitySpots, "EquitySpot"); child;
+            child = XMLUtils::getNextSibling(child)) {
+            string equity = XMLUtils::getAttribute(child, "equity");
+            LOG("Loading stress parameters for Equity " << equity);
+            SpotShiftData data;
+            data.shiftType = XMLUtils::getChildValue(child, "ShiftType", true);
+            data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
+            test.equityShifts[equity] = data;
+        }
+
+        LOG("Get equity vol stress parameters");
+        XMLNode* equityVols = XMLUtils::getChildNode(testCase, "EquityVolatilities");
+        QL_REQUIRE(equityVols, "FxVols node not found");
+        test.equityVolShifts.clear();
+        for (XMLNode* child = XMLUtils::getChildNode(equityVols, "EquityVolatility"); child;
+            child = XMLUtils::getNextSibling(child)) {
+            string equity = XMLUtils::getAttribute(child, "equity");
+            LOG("Loading stress parameters for Equity vols " << equity);
+            VolShiftData data;
+            data.shiftType = XMLUtils::getChildValue(child, "ShiftType");
+            data.shifts = XMLUtils::getChildrenValuesAsDoublesCompact(child, "Shifts", true);
+            data.shiftExpiries = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftExpiries", true);
+            test.equityVolShifts[equity] = data;
         }
 
         LOG("Get swaption vol stress parameters");
@@ -183,5 +212,5 @@ XMLNode* StressTestScenarioData::toXML(XMLDocument& doc) {
     QL_FAIL("toXML not implemented for stress testing data");
     return node;
 }
-}
-}
+} // namespace analytics
+} // namespace ore

@@ -16,18 +16,18 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ql/time/daycounters/actualactual.hpp>
-#include <ql/exercise.hpp>
 #include <ql/cashflows/coupon.hpp>
+#include <ql/exercise.hpp>
 #include <ql/instruments/compositeinstrument.hpp>
-#include <ql/instruments/swaption.hpp>
 #include <ql/instruments/nonstandardswaption.hpp>
+#include <ql/instruments/swaption.hpp>
+#include <ql/time/daycounters/actualactual.hpp>
 
-#include <ored/utilities/log.hpp>
-#include <ored/portfolio/swaption.hpp>
-#include <ored/portfolio/builders/swaption.hpp>
 #include <ored/portfolio/builders/swap.hpp>
+#include <ored/portfolio/builders/swaption.hpp>
 #include <ored/portfolio/optionwrapper.hpp>
+#include <ored/portfolio/swaption.hpp>
+#include <ored/utilities/log.hpp>
 
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/timer.hpp>
@@ -422,5 +422,5 @@ XMLNode* Swaption::toXML(XMLDocument& doc) {
 
     return node;
 }
-}
-}
+} // namespace data
+} // namespace ore

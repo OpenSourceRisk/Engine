@@ -23,11 +23,11 @@
 
 #pragma once
 
-#include <ql/indexes/swapindex.hpp>
+#include <ored/utilities/xmlutils.hpp>
 #include <ql/indexes/iborindex.hpp>
 #include <ql/indexes/inflationindex.hpp>
+#include <ql/indexes/swapindex.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp> // SubPeriodsCouponType
-#include <ored/utilities/xmlutils.hpp>
 
 using std::string;
 using std::map;
@@ -169,7 +169,7 @@ public:
     DepositConvention(const string& id, const string& index);
     //! Detailed constructor
     DepositConvention(const string& id, const string& calendar, const string& convention, const string& eom,
-                      const string& dayCounter);
+                      const string& dayCounter, const string& settlementDays);
     //@}
 
     //! \name Inspectors
@@ -179,6 +179,7 @@ public:
     BusinessDayConvention convention() const { return convention_; }
     bool eom() { return eom_; }
     const DayCounter& dayCounter() const { return dayCounter_; }
+    const Size settlementDays() const { return settlementDays_; }
     bool indexBased() { return indexBased_; }
     // @}
 
@@ -195,6 +196,7 @@ private:
     BusinessDayConvention convention_;
     bool eom_;
     DayCounter dayCounter_;
+    Size settlementDays_;
     bool indexBased_;
 
     // Strings to store the inputs
@@ -202,6 +204,7 @@ private:
     string strConvention_;
     string strEom_;
     string strDayCounter_;
+    string strSettlementDays_;
 };
 
 //! Container for storing Money Market Futures conventions
@@ -875,5 +878,5 @@ private:
     string strRollConvention_;
     string strEom_;
 };
-}
-}
+} // namespace data
+} // namespace ore

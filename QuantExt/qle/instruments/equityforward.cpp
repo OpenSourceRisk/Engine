@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/instruments/equityforward.hpp>
 #include <ql/event.hpp>
+#include <qle/instruments/equityforward.hpp>
 
 using namespace QuantLib;
 
@@ -45,4 +45,4 @@ void EquityForward::arguments::validate() const {
     QL_REQUIRE(quantity > 0, "quantity should be positive: " << quantity);
     QL_REQUIRE(strike > 0, "strike should be positive: " << strike);
 }
-}
+} // namespace QuantExt

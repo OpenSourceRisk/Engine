@@ -42,6 +42,6 @@ public:
 protected:
     Volatility volatilityImpl(Rate strike) const;
 };
-}
+} // namespace QuantExt
 
 #endif

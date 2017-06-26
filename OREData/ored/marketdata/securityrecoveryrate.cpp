@@ -21,8 +21,8 @@
     \ingroup
 */
 
-#include <ored/marketdata/securityrecoveryrate.hpp>
 #include <ored/marketdata/marketdatum.hpp>
+#include <ored/marketdata/securityrecoveryrate.hpp>
 
 namespace ore {
 namespace data {
@@ -43,5 +43,5 @@ SecurityRecoveryRate::SecurityRecoveryRate(const Date& asof, SecurityRecoveryRat
     }
     QL_FAIL("Failed to find a quote for " << spec);
 }
-}
-}
+} // namespace data
+} // namespace ore

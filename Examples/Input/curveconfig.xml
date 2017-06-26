@@ -283,6 +283,15 @@
       <Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
     </DefaultCurve>
   </DefaultCurves>
+  <CDSVolatilities>
+    <CDSVolatility>
+      <CurveId>CDXIG</CurveId>
+      <CurveDescription>Lognormal option implied vols for CDX IG</CurveDescription>
+      <Expiries>
+        1M,3M,6M
+      </Expiries>
+    </CDSVolatility>
+  </CDSVolatilities>
   <YieldCurves>
     <YieldCurve>
       <CurveId>CHF6M</CurveId>

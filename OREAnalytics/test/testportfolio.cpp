@@ -16,19 +16,21 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <test/testportfolio.hpp>
 #include <ored/portfolio/bond.hpp>
-#include <ored/portfolio/swap.hpp>
-#include <ored/portfolio/swaption.hpp>
-#include <ored/portfolio/fxoption.hpp>
-#include <ored/portfolio/capfloor.hpp>
 #include <ored/portfolio/builders/bond.hpp>
+#include <ored/portfolio/builders/capfloor.hpp>
+#include <ored/portfolio/builders/fxoption.hpp>
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/builders/swaption.hpp>
-#include <ored/portfolio/builders/fxoption.hpp>
-#include <ored/portfolio/builders/capfloor.hpp>
-#include <ql/time/calendars/all.hpp>
+#include <ored/portfolio/capfloor.hpp>
+#include <ored/portfolio/equityoption.hpp>
+#include <ored/portfolio/equityforward.hpp>
+#include <ored/portfolio/fxoption.hpp>
+#include <ored/portfolio/swap.hpp>
+#include <ored/portfolio/swaption.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ql/time/calendars/all.hpp>
+#include <test/testportfolio.hpp>
 
 namespace testsuite {
 
@@ -187,6 +189,45 @@ boost::shared_ptr<Trade> buildFxOption(string id, string longShort, string putCa
     return trade;
 }
 
+boost::shared_ptr<Trade> buildEquityOption(string id, string longShort, string putCall, Size expiry, string equityName,
+                                           string currency, Real strike, Real quantity) {
+    Date today = Settings::instance().evaluationDate();
+    Calendar calendar = TARGET();
+    string cal = "TARGET";
+    string conv = "MF";
+    string rule = "Forward";
+
+    Date qlExpiry = calendar.adjust(today + expiry * Years);
+    string expiryDate = ore::data::to_string(qlExpiry);
+
+    // envelope
+    Envelope env("CP");
+    // option data
+    OptionData option(longShort, putCall, "European", false, vector<string>(1, expiryDate), "Cash");
+    // trade
+    boost::shared_ptr<Trade> trade(new ore::data::EquityOption(env, option, equityName, currency, strike, quantity));
+    trade->id() = id;
+
+    return trade;
+}
+
+boost::shared_ptr<Trade> buildEquityForward(string id, string longShort, Size expiry, string equityName, string currency, 
+                                            Real strike, Real quantity) {
+    Date today = Settings::instance().evaluationDate();
+    Calendar calendar = TARGET();
+
+    Date qlExpiry = calendar.adjust(today + expiry * Years);
+    string expiryDate = ore::data::to_string(qlExpiry);
+
+    // envelope
+    Envelope env("CP");
+    // trade
+    boost::shared_ptr<Trade> trade(new ore::data::EquityForward(env, longShort, equityName, currency, quantity, expiryDate, strike));
+    trade->id() = id;
+
+    return trade;
+}
+
 boost::shared_ptr<Trade> buildCap(string id, string ccy, string longShort, Real capRate, Real notional, int start,
                                   Size term, string floatFreq, string floatDC, string index) {
     return buildCapFloor(id, ccy, longShort, vector<Real>(1, capRate), vector<Real>(), notional, start, term, floatFreq,
@@ -252,4 +293,4 @@ boost::shared_ptr<Trade> buildZeroBond(string id, string ccy, Real notional, Siz
 
     return trade;
 }
-}
+} // namespace testsuite

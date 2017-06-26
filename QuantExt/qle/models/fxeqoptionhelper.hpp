@@ -24,8 +24,8 @@
 #ifndef quantext_calibrationhelper_fxeqoption_hpp
 #define quantext_calibrationhelper_fxeqoption_hpp
 
-#include <ql/models/calibrationhelper.hpp>
 #include <ql/instruments/vanillaoption.hpp>
+#include <ql/models/calibrationhelper.hpp>
 
 using namespace QuantLib;
 
@@ -33,7 +33,7 @@ namespace QuantExt {
 
 //! FxEq Option Helper
 /*! \ingroup models
-*/
+ */
 class FxEqOptionHelper : public CalibrationHelper {
 public:
     /*! the spot is interpreted as of today (or discounted spot)
@@ -70,6 +70,6 @@ private:
     mutable Real effStrike_;
 };
 
-} // namespace QuantLib
+} // namespace QuantExt
 
 #endif

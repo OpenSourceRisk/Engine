@@ -16,9 +16,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ql/errors.hpp>
 #include <ored/configuration/inflationcurveconfig.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ql/errors.hpp>
 
 #include <iomanip>
 
@@ -137,5 +137,5 @@ XMLNode* InflationCurveConfig::toXML(XMLDocument& doc) {
 
     return node;
 }
-}
-}
+} // namespace data
+} // namespace ore

@@ -162,6 +162,16 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             // legTypes_[i] = "INFLATION_YOY";
         } else if (legData_[i].legType() == "Cashflow") {
             legs_[i] = makeSimpleLeg(legData_[i]);
+        } else if (legData_[i].legType() == "CMS") {
+            string swapIndexName = legData_[i].cmsLegData().swapIndex();
+
+            Handle<SwapIndex> hIndex =
+                engineFactory->market()->swapIndex(swapIndexName, builder->configuration(MarketContext::pricing));
+            QL_REQUIRE(!hIndex.empty(), "Could not find swap index " << swapIndexName << " in market.");
+
+            boost::shared_ptr<SwapIndex> index = hIndex.currentLink();
+            legs_[i] = makeCMSLeg(legData_[i], index, engineFactory);
+
         } else {
             QL_FAIL("Unknown leg type " << legData_[i].legType());
         }
@@ -282,5 +292,5 @@ XMLNode* Swap::toXML(XMLDocument& doc) {
         XMLUtils::appendNode(swapNode, legData_[i].toXML(doc));
     return node;
 }
-}
-}
+} // namespace data
+} // namespace ore

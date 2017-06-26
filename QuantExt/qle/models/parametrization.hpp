@@ -34,10 +34,11 @@ namespace QuantExt {
 
 //! Parametrization
 /*! \ingroup models
-*/
+ */
 class Parametrization {
 public:
     Parametrization(const Currency& currency);
+    virtual ~Parametrization() {}
 
     virtual const Currency currency() const;
 

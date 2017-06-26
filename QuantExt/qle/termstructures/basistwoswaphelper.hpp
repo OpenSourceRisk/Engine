@@ -91,6 +91,6 @@ protected:
 inline boost::shared_ptr<VanillaSwap> BasisTwoSwapHelper::shortSwap() const { return shortSwap_; }
 
 inline boost::shared_ptr<VanillaSwap> BasisTwoSwapHelper::longSwap() const { return longSwap_; }
-}
+} // namespace QuantExt
 
 #endif

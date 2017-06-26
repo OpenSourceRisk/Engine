@@ -16,9 +16,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/lexical_cast.hpp>
 #include <ored/marketdata/marketdatum.hpp>
 #include <ored/utilities/parsers.hpp>
-#include <boost/lexical_cast.hpp>
 
 using boost::lexical_cast;
 using boost::bad_lexical_cast;
@@ -31,7 +31,6 @@ EquityOptionQuote::EquityOptionQuote(Real value, Date asofDate, const string& na
     : MarketDatum(value, asofDate, name, quoteType, InstrumentType::EQUITY_OPTION), eqName_(equityName), ccy_(ccy),
       expiry_(expiry), strike_(strike) {
 
-    QL_REQUIRE(strike == "ATMF", "Invalid EquityOptionQuote strike (" << strike << ")");
     // we will call a parser on the expiry string, to ensure it is a correctly-formatted date or tenor
     Date tmpDate;
     Period tmpPeriod;
@@ -79,5 +78,5 @@ QuantLib::Size SeasonalityQuote::applyMonth() const {
     }
     return applyMonth;
 }
-}
-}
+} // namespace data
+} // namespace ore

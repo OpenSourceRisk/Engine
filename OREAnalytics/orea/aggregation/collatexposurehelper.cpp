@@ -226,5 +226,5 @@ boost::shared_ptr<vector<boost::shared_ptr<CollateralAccount>>> CollateralExposu
         QL_FAIL("CollateralExposureHelper - unknown error when generating collateralBalancePaths");
     }
 }
-}
-}
+} // namespace analytics
+} // namespace ore

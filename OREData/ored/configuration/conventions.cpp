@@ -25,10 +25,10 @@
 #include <boost/make_shared.hpp>
 
 #include <ored/configuration/conventions.hpp>
-#include <ored/utilities/parsers.hpp>
-#include <ored/utilities/log.hpp>
-#include <ored/utilities/xmlutils.hpp>
 #include <ored/utilities/indexparser.hpp>
+#include <ored/utilities/log.hpp>
+#include <ored/utilities/parsers.hpp>
+#include <ored/utilities/xmlutils.hpp>
 
 using namespace QuantLib;
 using namespace std;
@@ -46,7 +46,7 @@ QuantExt::SubPeriodsCoupon::Type parseSubPeriodsCouponType(const string& s) {
     else
         QL_FAIL("SubPeriodsCoupon type " << s << " not recognized");
 };
-}
+} // namespace
 
 namespace ore {
 namespace data {
@@ -127,9 +127,9 @@ DepositConvention::DepositConvention(const string& id, const string& index)
     : Convention(id, Type::Deposit), index_(index), indexBased_(true) {}
 
 DepositConvention::DepositConvention(const string& id, const string& calendar, const string& convention,
-                                     const string& eom, const string& dayCounter)
+                                     const string& eom, const string& dayCounter, const string& settlementDays)
     : Convention(id, Type::Deposit), indexBased_(false), strCalendar_(calendar), strConvention_(convention),
-      strEom_(eom), strDayCounter_(dayCounter) {
+      strEom_(eom), strDayCounter_(dayCounter), strSettlementDays_(settlementDays) {
     build();
 }
 
@@ -138,6 +138,7 @@ void DepositConvention::build() {
     convention_ = parseBusinessDayConvention(strConvention_);
     eom_ = parseBool(strEom_);
     dayCounter_ = parseDayCounter(strDayCounter_);
+    settlementDays_ = parseInteger(strSettlementDays_);
 }
 
 void DepositConvention::fromXML(XMLNode* node) {
@@ -155,6 +156,7 @@ void DepositConvention::fromXML(XMLNode* node) {
         strConvention_ = XMLUtils::getChildValue(node, "Convention", true);
         strEom_ = XMLUtils::getChildValue(node, "EOM", true);
         strDayCounter_ = XMLUtils::getChildValue(node, "DayCounter", true);
+        strSettlementDays_ = XMLUtils::getChildValue(node, "SettlementDays", true);
         build();
     }
 }
@@ -171,6 +173,7 @@ XMLNode* DepositConvention::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "Convention", strConvention_);
         XMLUtils::addChild(doc, node, "EOM", strEom_);
         XMLUtils::addChild(doc, node, "DayCounter", strDayCounter_);
+        XMLUtils::addChild(doc, node, "SettlementDays", strSettlementDays_);
     }
 
     return node;
@@ -907,5 +910,5 @@ void Conventions::add(const boost::shared_ptr<Convention>& convention) {
     QL_REQUIRE(data_.find(id) == data_.end(), "Convention already exists for id " << id);
     data_[id] = convention;
 }
-}
-}
+} // namespace data
+} // namespace ore

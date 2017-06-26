@@ -47,5 +47,5 @@ XMLNode* Envelope::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, additionalNode, it.first, it.second);
     return node;
 }
-}
-}
+} // namespace data
+} // namespace ore

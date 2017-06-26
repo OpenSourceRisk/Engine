@@ -23,15 +23,15 @@
 
 #pragma once
 
-#include <orea/app/parameters.hpp>
-#include <orea/scenario/scenariogeneratorbuilder.hpp>
-#include <orea/scenario/scenariogenerator.hpp>
-#include <orea/scenario/scenariosimmarket.hpp>
-#include <orea/scenario/scenariosimmarketparameters.hpp>
-#include <orea/aggregation/all.hpp>
-#include <ored/ored.hpp>
 #include <boost/make_shared.hpp>
 #include <iostream>
+#include <orea/aggregation/all.hpp>
+#include <orea/app/parameters.hpp>
+#include <orea/scenario/scenariogenerator.hpp>
+#include <orea/scenario/scenariogeneratorbuilder.hpp>
+#include <orea/scenario/scenariosimmarket.hpp>
+#include <orea/scenario/scenariosimmarketparameters.hpp>
+#include <ored/ored.hpp>
 
 using namespace ore::data;
 
@@ -49,6 +49,7 @@ public:
         asof_ = parseDate(params->get("setup", "asofDate"));
         Settings::instance().evaluationDate() = asof_;
     }
+    virtual ~OREApp() {}
     //! generates XVA reports for a given portfolio and market
     void run();
     //! read setup from params_
@@ -111,6 +112,9 @@ public:
     //! load in nettingSet data
     boost::shared_ptr<NettingSetManager> initNettingSetManager();
 
+    //! write out additional reports
+    virtual void writeAdditionalReports() {}
+
 protected:
     //! Initialize input parameters to the sensitivities analysis
     void sensiInputInitialize(boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
@@ -150,5 +154,5 @@ protected:
     boost::shared_ptr<AggregationScenarioData> scenarioData_;
     boost::shared_ptr<PostProcess> postProcess_;
 };
-}
-}
+} // namespace analytics
+} // namespace ore

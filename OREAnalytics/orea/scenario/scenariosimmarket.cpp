@@ -21,27 +21,30 @@
     \ingroup
 */
 
-#include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/engine/observationmode.hpp>
-#include <ql/termstructures/volatility/swaption/swaptionvolstructure.hpp>
-#include <ql/termstructures/volatility/swaption/swaptionvolmatrix.hpp>
+#include <orea/scenario/scenariosimmarket.hpp>
+#include <ql/experimental/credit/basecorrelationstructure.hpp>
+#include <ql/math/interpolations/loginterpolation.hpp>
+#include <ql/termstructures/credit/interpolatedsurvivalprobabilitycurve.hpp>
+#include <ql/termstructures/defaulttermstructure.hpp>
 #include <ql/termstructures/volatility/capfloor/capfloortermvolatilitystructure.hpp>
 #include <ql/termstructures/volatility/capfloor/capfloortermvolsurface.hpp>
+#include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
+#include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 #include <ql/termstructures/volatility/optionlet/strippedoptionlet.hpp>
 #include <ql/termstructures/volatility/optionlet/strippedoptionletadapter.hpp>
-#include <ql/termstructures/defaulttermstructure.hpp>
+#include <ql/termstructures/volatility/swaption/swaptionvolmatrix.hpp>
+#include <ql/termstructures/volatility/swaption/swaptionvolstructure.hpp>
 #include <ql/termstructures/yield/discountcurve.hpp>
-#include <ql/termstructures/credit/interpolatedsurvivalprobabilitycurve.hpp>
-#include <ql/math/interpolations/loginterpolation.hpp>
-#include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
-#include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
-#include <ql/time/daycounters/actualactual.hpp>
 #include <ql/time/calendars/target.hpp>
+#include <ql/time/daycounters/actualactual.hpp>
 
-#include <qle/termstructures/dynamicswaptionvolmatrix.hpp>
+#include <ql/experimental/credit/basecorrelationstructure.hpp>
 #include <qle/termstructures/dynamicblackvoltermstructure.hpp>
-#include <qle/termstructures/swaptionvolatilityconverter.hpp>
+#include <qle/termstructures/dynamicswaptionvolmatrix.hpp>
 #include <qle/termstructures/strippedoptionletadapter2.hpp>
+#include <qle/termstructures/survivalprobabilitycurve.hpp>
+#include <qle/termstructures/swaptionvolatilityconverter.hpp>
 
 #include <boost/timer.hpp>
 
@@ -50,6 +53,8 @@
 using namespace QuantLib;
 using namespace QuantExt;
 using namespace std;
+
+typedef QuantLib::BaseCorrelationTermStructure<QuantLib::BilinearInterpolation> BilinearBaseCorrelationTermStructure;
 
 namespace ore {
 namespace analytics {
@@ -92,17 +97,6 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
     LOG("FX triangulation done");
 
     // constructing discount yield curves
-    LOG("building discount yield curve times...");
-    DayCounter dc = ActualActual();       // used to convert YieldCurve Periods to Times
-    vector<Time> yieldCurveTimes(1, 0.0); // include today
-    vector<Date> yieldCurveDates(1, asof_);
-    QL_REQUIRE(parameters->yieldCurveTenors().front() > 0 * Days, "yield curve tenors must not include t=0");
-    for (auto& tenor : parameters->yieldCurveTenors()) {
-        LOG("Yield curve tenor " << tenor);
-        yieldCurveTimes.push_back(dc.yearFraction(asof_, asof_ + tenor));
-        yieldCurveDates.push_back(asof_ + tenor);
-    }
-
     LOG("building discount yield curves...");
     for (const auto& ccy : parameters->ccys()) {
         LOG("building " << ccy << " discount yield curve..");
@@ -114,8 +108,8 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         DayCounter dc = wrapper->dayCounter(); // used to convert YieldCurve Periods to Times
         vector<Time> yieldCurveTimes(1, 0.0);  // include today
         vector<Date> yieldCurveDates(1, asof_);
-        QL_REQUIRE(parameters->yieldCurveTenors().front() > 0 * Days, "yield curve tenors must not include t=0");
-        for (auto& tenor : parameters->yieldCurveTenors()) {
+        QL_REQUIRE(parameters->yieldCurveTenors(ccy).front() > 0 * Days, "yield curve tenors must not include t=0");
+        for (auto& tenor : parameters->yieldCurveTenors(ccy)) {
             yieldCurveTimes.push_back(dc.yearFraction(asof_, asof_ + tenor));
             yieldCurveDates.push_back(asof_ + tenor);
         }
@@ -164,8 +158,8 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         DayCounter dc = wrapper->dayCounter(); // used to convert YieldCurve Periods to Times
         vector<Time> yieldCurveTimes(1, 0.0);  // include today
         vector<Date> yieldCurveDates(1, asof_);
-        QL_REQUIRE(parameters->yieldCurveTenors().front() > 0 * Days, "yield curve tenors must not include t=0");
-        for (auto& tenor : parameters->yieldCurveTenors()) {
+        QL_REQUIRE(parameters->yieldCurveTenors(name).front() > 0 * Days, "yield curve tenors must not include t=0");
+        for (auto& tenor : parameters->yieldCurveTenors(name)) {
             yieldCurveTimes.push_back(dc.yearFraction(asof_, asof_ + tenor));
             yieldCurveDates.push_back(asof_ + tenor);
         }
@@ -222,13 +216,13 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         QL_REQUIRE(!index.empty(), "index object for " << ind << " not provided");
         Handle<YieldTermStructure> wrapperIndex = index->forwardingTermStructure();
         QL_REQUIRE(!wrapperIndex.empty(), "no termstructure for index " << ind);
-        vector<string> keys(parameters->yieldCurveTenors().size());
+        vector<string> keys(parameters->yieldCurveTenors(ind).size());
 
         DayCounter dc = wrapperIndex->dayCounter(); // used to convert YieldCurve Periods to Times
         vector<Time> yieldCurveTimes(1, 0.0);       // include today
         vector<Date> yieldCurveDates(1, asof_);
-        QL_REQUIRE(parameters->yieldCurveTenors().front() > 0 * Days, "yield curve tenors must not include t=0");
-        for (auto& tenor : parameters->yieldCurveTenors()) {
+        QL_REQUIRE(parameters->yieldCurveTenors(ind).front() > 0 * Days, "yield curve tenors must not include t=0");
+        for (auto& tenor : parameters->yieldCurveTenors(ind)) {
             yieldCurveTimes.push_back(dc.yearFraction(asof_, asof_ + tenor));
             yieldCurveDates.push_back(asof_ + tenor);
         }
@@ -382,7 +376,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
 
         if (parameters->simulateCapFloorVols()) {
             LOG("Simulating Cap/Floor Optionlet vols for ccy " << ccy);
-            vector<Period> optionTenors = parameters->capFloorVolExpiries();
+            vector<Period> optionTenors = parameters->capFloorVolExpiries(ccy);
             vector<Date> optionDates(optionTenors.size());
             vector<Real> strikes = parameters->capFloorVolStrikes();
             vector<vector<Handle<Quote>>> quotes(optionTenors.size(),
@@ -432,40 +426,96 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         LOG("building " << name << " default curve..");
         Handle<DefaultProbabilityTermStructure> wrapper = initMarket->defaultCurve(name, configuration);
         vector<Handle<Quote>> quotes;
-        vector<Probability> probs;
 
-        QL_REQUIRE(parameters->defaultTenors().front() > 0 * Days, "default curve tenors must not include t=0");
+        QL_REQUIRE(parameters->defaultTenors(name).front() > 0 * Days, "default curve tenors must not include t=0");
 
         vector<Date> dates(1, asof_);
-        for (Size i = 0; i < parameters->defaultTenors().size(); i++) {
-            dates.push_back(asof_ + parameters->defaultTenors()[i]);
+
+        for (Size i = 0; i < parameters->defaultTenors(name).size(); i++) {
+            dates.push_back(asof_ + parameters->defaultTenors(name)[i]);
         }
 
-        for (const auto& date : dates) {
-            Probability prob = wrapper->survivalProbability(date, true);
+        boost::shared_ptr<SimpleQuote> q(new SimpleQuote(1.0));
+        quotes.push_back(Handle<Quote>(q));
+        for (Size i = 0; i < dates.size() - 1; i++) {
+            Probability prob = wrapper->survivalProbability(dates[i + 1], true);
             boost::shared_ptr<SimpleQuote> q(new SimpleQuote(prob));
+            if (parameters->simulateSurvivalProbabilities()) {
+                simData_.emplace(std::piecewise_construct,
+                                 std::forward_as_tuple(RiskFactorKey::KeyType::SurvivalProbability, name, i),
+                                 std::forward_as_tuple(q));
+            }
             Handle<Quote> qh(q);
             quotes.push_back(qh);
-            probs.push_back(prob);
         }
 
         // FIXME riskmarket uses SurvivalProbabilityCurve but this isn't added to ore
         boost::shared_ptr<DefaultProbabilityTermStructure> defaultCurve(
-            new InterpolatedSurvivalProbabilityCurve<Linear>(dates, probs, wrapper->dayCounter(), wrapper->calendar()));
+            new QuantExt::SurvivalProbabilityCurve<Linear>(dates, quotes, wrapper->dayCounter(), wrapper->calendar()));
         Handle<DefaultProbabilityTermStructure> dch(defaultCurve);
-        if (wrapper->allowsExtrapolation())
-            dch->enableExtrapolation();
+            
+        dch->enableExtrapolation();
 
         defaultCurves_.insert(pair<pair<string, string>, Handle<DefaultProbabilityTermStructure>>(
             make_pair(Market::defaultConfiguration, name), dch));
 
         // add recovery rate
-        boost::shared_ptr<Quote> rrQuote(new SimpleQuote(initMarket->recoveryRate(name, configuration)->value()));
+        boost::shared_ptr<SimpleQuote> rrQuote(new SimpleQuote(initMarket->recoveryRate(name, configuration)->value()));
+        if (parameters->simulateRecoveryRates()) {
+            simData_.emplace(std::piecewise_construct,
+                             std::forward_as_tuple(RiskFactorKey::KeyType::RecoveryRate, name),
+                             std::forward_as_tuple(rrQuote));
+        }
         recoveryRates_.insert(pair<pair<string, string>, Handle<Quote>>(make_pair(Market::defaultConfiguration, name),
                                                                         Handle<Quote>(rrQuote)));
     }
     LOG("default curves done");
 
+    // building cds volatilities
+    LOG("building cds volatilities...");
+    for (const auto& name : parameters->cdsVolNames()) {
+        LOG("building " << name << "  cds vols..");
+        Handle<BlackVolTermStructure> wrapper = initMarket->cdsVol(name, configuration);
+        Handle<BlackVolTermStructure> cvh;
+        if (parameters->simulateCdsVols()) {
+            LOG("Simulating CDS Vols for " << name);
+            vector<Handle<Quote>> quotes;
+            vector<Time> times;
+            for (Size i = 0; i < parameters->cdsVolExpiries().size(); i++) {
+                Date date = asof_ + parameters->cdsVolExpiries()[i];
+                Volatility vol = wrapper->blackVol(date, Null<Real>(), true);
+                times.push_back(wrapper->timeFromReference(date));
+                boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
+                if (parameters->simulateCdsVols()) {
+                    simData_.emplace(std::piecewise_construct,
+                                     std::forward_as_tuple(RiskFactorKey::KeyType::CDSVolatility, name, i),
+                                     std::forward_as_tuple(q));
+                }
+                quotes.emplace_back(q);
+            }
+            boost::shared_ptr<BlackVolTermStructure> cdsVolCurve(new BlackVarianceCurve3(
+                0, NullCalendar(), wrapper->businessDayConvention(), wrapper->dayCounter(), times, quotes));
+
+            cvh = Handle<BlackVolTermStructure>(cdsVolCurve);
+        } else {
+            string decayModeString = parameters->cdsVolDecayMode();
+            LOG("Deterministic CDS Vols with decay mode " << decayModeString << " for " << name);
+            ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);
+
+            // currently only curves (i.e. strike indepdendent) CDS volatility structures are
+            // supported, so we use a) the more efficient curve tag and b) a hard coded sticky
+            // strike stickyness, since then no yield term structures and no fx spot are required
+            // that define the ATM level
+            cvh = Handle<BlackVolTermStructure>(boost::make_shared<QuantExt::DynamicBlackVolTermStructure<tag::curve>>(
+                wrapper, 0, NullCalendar(), decayMode, StickyStrike));
+        }
+
+        if (wrapper->allowsExtrapolation())
+            cvh->enableExtrapolation();
+        cdsVols_.insert(pair<pair<string, string>, Handle<BlackVolTermStructure>>(
+            make_pair(Market::defaultConfiguration, name), cvh));
+    }
+    LOG("cds volatilities done");
     // building fx volatilities
     LOG("building fx volatilities...");
     for (const auto& ccyPair : parameters->fxVolCcyPairs()) {
@@ -537,17 +587,6 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
     }
     LOG("equity spots done");
 
-    vector<Time> equityCurveTimes(1, 0.0);
-    vector<Date> equityCurveDates(1, asof_);
-    if (parameters->equityNames().size() > 0) {
-        QL_REQUIRE(parameters->equityTenors().size() > 0, "Equity curve tenor grid not defined");
-        QL_REQUIRE(parameters->equityTenors().front() > 0 * Days, "equity curve tenors must not include t=0");
-    }
-    for (auto& tenor : parameters->equityTenors()) {
-        equityCurveTimes.push_back(dc.yearFraction(asof_, asof_ + tenor));
-        equityCurveDates.push_back(asof_ + tenor);
-    }
-
     // building equity dividend yield curves
     LOG("building equity dividend yield curves...");
     for (const auto& eqName : parameters->equityNames()) {
@@ -557,6 +596,18 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         boost::shared_ptr<SimpleQuote> q(new SimpleQuote(1.0));
         quotes.push_back(Handle<Quote>(q));
 
+        DayCounter dc = wrapper->dayCounter();
+        vector<Time> equityCurveTimes(1, 0.0);
+        vector<Date> equityCurveDates(1, asof_);
+        if (parameters->equityNames().size() > 0) {
+            QL_REQUIRE(parameters->equityTenors(eqName).size() > 0, "Equity curve tenor grid not defined");
+            QL_REQUIRE(parameters->equityTenors(eqName).front() > 0 * Days, "equity curve tenors must not include t=0");
+            for (auto& tenor : parameters->equityTenors(eqName)) {
+                equityCurveTimes.push_back(dc.yearFraction(asof_, asof_ + tenor));
+                equityCurveDates.push_back(asof_ + tenor);
+            }
+        }
+
         for (Size i = 0; i < equityCurveTimes.size() - 1; i++) {
             boost::shared_ptr<SimpleQuote> q(new SimpleQuote(wrapper->discount(equityCurveTimes[i + 1])));
             Handle<Quote> qh(q);
@@ -564,8 +615,8 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         }
         boost::shared_ptr<YieldTermStructure> eqdivCurve;
         if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister) {
-            eqdivCurve = boost::shared_ptr<YieldTermStructure>(new QuantExt::InterpolatedDiscountCurve(
-                equityCurveTimes, quotes, 0, wrapper->calendar(), wrapper->dayCounter()));
+            eqdivCurve = boost::shared_ptr<YieldTermStructure>(
+                new QuantExt::InterpolatedDiscountCurve(equityCurveTimes, quotes, 0, TARGET(), wrapper->dayCounter()));
         } else {
             eqdivCurve = boost::shared_ptr<YieldTermStructure>(
                 new QuantExt::InterpolatedDiscountCurve2(equityCurveTimes, quotes, wrapper->dayCounter()));
@@ -582,22 +633,22 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
 
     // building eq volatilities
     LOG("building eq volatilities...");
-    for (const auto& eqName : parameters->eqVolNames()) {
-        Handle<BlackVolTermStructure> wrapper = initMarket->equityVol(eqName, configuration);
+    for (const auto& equityName : parameters->equityVolNames()) {
+        Handle<BlackVolTermStructure> wrapper = initMarket->equityVol(equityName, configuration);
 
         Handle<BlackVolTermStructure> evh;
 
         if (parameters->simulateEQVols()) {
-            LOG("Simulating EQ Vols (BlackVarianceCurve3) for " << eqName);
+            LOG("Simulating EQ Vols (BlackVarianceCurve3) for " << equityName);
             vector<Handle<Quote>> quotes;
             vector<Time> times;
-            for (Size i = 0; i < parameters->eqVolExpiries().size(); i++) {
-                Date date = asof_ + parameters->eqVolExpiries()[i];
+            for (Size i = 0; i < parameters->equityVolExpiries().size(); i++) {
+                Date date = asof_ + parameters->equityVolExpiries()[i];
                 Volatility vol = wrapper->blackVol(date, Null<Real>(), true);
                 times.push_back(wrapper->timeFromReference(date));
                 boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
                 simData_.emplace(std::piecewise_construct,
-                                 std::forward_as_tuple(RiskFactorKey::KeyType::EQVolatility, eqName, i),
+                                 std::forward_as_tuple(RiskFactorKey::KeyType::EQVolatility, equityName, i),
                                  std::forward_as_tuple(q));
                 quotes.emplace_back(q);
             }
@@ -605,8 +656,8 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
                 0, NullCalendar(), wrapper->businessDayConvention(), wrapper->dayCounter(), times, quotes));
             evh = Handle<BlackVolTermStructure>(eqVolCurve);
         } else {
-            string decayModeString = parameters->eqVolDecayMode();
-            DLOG("Deterministic EQ Vols with decay mode " << decayModeString << " for " << eqName);
+            string decayModeString = parameters->equityVolDecayMode();
+            DLOG("Deterministic EQ Vols with decay mode " << decayModeString << " for " << equityName);
             ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);
 
             // currently only curves (i.e. strike indepdendent) EQ volatility structures are
@@ -619,10 +670,62 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         if (wrapper->allowsExtrapolation())
             evh->enableExtrapolation();
         equityVols_.insert(pair<pair<string, string>, Handle<BlackVolTermStructure>>(
-            make_pair(Market::defaultConfiguration, eqName), evh));
-        DLOG("EQ volatility curve built for " << eqName);
+            make_pair(Market::defaultConfiguration, equityName), evh));
+        DLOG("EQ volatility curve built for " << equityName);
     }
     LOG("equity volatilities done");
+
+    // building base correlation structures
+    LOG("building base correlations...");
+    for (const auto& bcName : parameters->baseCorrelationNames()) {
+        Handle<BaseCorrelationTermStructure<BilinearInterpolation>> wrapper =
+            initMarket->baseCorrelation(bcName, configuration);
+        if (!parameters->simulateBaseCorrelations())
+            baseCorrelations_.insert(
+                pair<pair<string, string>, Handle<BaseCorrelationTermStructure<BilinearInterpolation>>>(
+                    make_pair(Market::defaultConfiguration, bcName), wrapper));
+        else {
+            Size nd = parameters->baseCorrelationDetachmentPoints().size();
+            Size nt = parameters->baseCorrelationTerms().size();
+            vector<vector<Handle<Quote>>> quotes(nd, vector<Handle<Quote>>(nt));
+            vector<Period> terms(nt);
+            for (Size i = 0; i < nd; ++i) {
+                Real lossLevel = parameters->baseCorrelationDetachmentPoints()[i];
+                for (Size j = 0; j < nt; ++j) {
+                    Period term = parameters->baseCorrelationTerms()[j];
+                    if (i == 0)
+                        terms[j] = term;
+                    Real bc = wrapper->correlation(asof_ + term, lossLevel, true); // extrapolate
+                    boost::shared_ptr<SimpleQuote> q(new SimpleQuote(bc));
+                    simData_.emplace(std::piecewise_construct,
+                                     std::forward_as_tuple(RiskFactorKey::KeyType::BaseCorrelation, bcName, i * nt + j),
+                                     std::forward_as_tuple(q));
+                    quotes[i][j] = Handle<Quote>(q);
+                }
+            }
+
+            // FIXME: Same change as in ored/market/basecorrelationcurve.cpp
+            if (nt == 1) {
+                terms.push_back(terms[0] + 1 * Days); // arbitrary, but larger than the first term
+                for (Size i = 0; i < nd; ++i)
+                    quotes[i].push_back(quotes[i][0]);
+            }
+
+            boost::shared_ptr<BilinearBaseCorrelationTermStructure> bcp =
+                boost::make_shared<BilinearBaseCorrelationTermStructure>(
+                    wrapper->settlementDays(), wrapper->calendar(), wrapper->businessDayConvention(),
+                    terms, parameters->baseCorrelationDetachmentPoints(), quotes,
+                    wrapper->dayCounter());
+
+            bcp->enableExtrapolation(wrapper->allowsExtrapolation());
+            Handle<BilinearBaseCorrelationTermStructure> bch(bcp);
+            baseCorrelations_.insert(
+                pair<pair<string, string>, Handle<BaseCorrelationTermStructure<BilinearInterpolation>>>(
+                    make_pair(Market::defaultConfiguration, bcName), bch));
+        }
+        DLOG("Base correlations built for " << bcName);
+    }
+    LOG("base correlations done");
 }
 
 void ScenarioSimMarket::update(const Date& d) {
@@ -706,5 +809,5 @@ void ScenarioSimMarket::update(const Date& d) {
 
     // DLOG("ScenarioSimMarket::update done");
 }
-}
-}
+} // namespace analytics
+} // namespace ore

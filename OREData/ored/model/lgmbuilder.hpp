@@ -23,9 +23,9 @@
 
 #pragma once
 
-#include <vector>
 #include <map>
 #include <ostream>
+#include <vector>
 
 #include <qle/models/lgm.hpp>
 
@@ -98,5 +98,5 @@ private:
     EndCriteria endCriteria_;
     CalibrationHelper::CalibrationErrorType calibrationErrorType_;
 };
-}
-}
+} // namespace data
+} // namespace ore

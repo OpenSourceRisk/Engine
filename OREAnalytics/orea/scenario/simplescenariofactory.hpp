@@ -25,13 +25,14 @@
 
 #include <orea/scenario/scenariofactory.hpp>
 #include <orea/scenario/simplescenario.hpp>
+#include <boost/make_shared.hpp>
 
 namespace ore {
 namespace analytics {
 
 //! Factory class for building simple scenario objects
 /*! \ingroup scenario
-*/
+ */
 class SimpleScenarioFactory : public ScenarioFactory {
 public:
     const boost::shared_ptr<Scenario> buildScenario(Date asof, const std::string& label = "",
@@ -40,5 +41,5 @@ public:
     }
 };
 
-} // namesapce scenario
+} // namespace analytics
 } // namespace ore

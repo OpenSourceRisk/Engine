@@ -29,8 +29,8 @@
 #include <qle/models/lgmimpliedyieldtermstructure.hpp>
 
 #include <ql/indexes/iborindex.hpp>
-#include <ql/instruments/swaption.hpp>
 #include <ql/instruments/nonstandardswaption.hpp>
+#include <ql/instruments/swaption.hpp>
 #include <ql/math/distributions/normaldistribution.hpp>
 #include <ql/pricingengines/genericmodelengine.hpp>
 
@@ -96,6 +96,8 @@ protected:
         }
     }
 
+    virtual ~NumericLgmSwaptionEngineBase() {}
+
     Real calculate() const;
 
     virtual Real conditionalSwapValue(Real x, Real t, const Date expiry0) const = 0;
@@ -112,7 +114,7 @@ protected:
 
 //! Engine for Swaption instrument
 /*! \ingroup engines
-*/
+ */
 class NumericLgmSwaptionEngine : public GenericEngine<Swaption::arguments, Swaption::results>,
                                  public NumericLgmSwaptionEngineBase {
 public:

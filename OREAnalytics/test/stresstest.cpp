@@ -16,34 +16,34 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/timer.hpp>
+#include <orea/cube/inmemorycube.hpp>
+#include <orea/cube/npvcube.hpp>
+#include <orea/engine/all.hpp>
+#include <orea/engine/observationmode.hpp>
+#include <orea/engine/sensitivityanalysis.hpp>
+#include <orea/scenario/clonescenariofactory.hpp>
+#include <orea/scenario/scenariosimmarket.hpp>
+#include <orea/scenario/scenariosimmarketparameters.hpp>
+#include <orea/scenario/stressscenariogenerator.hpp>
+#include <ored/model/lgmdata.hpp>
+#include <ored/portfolio/builders/capfloor.hpp>
+#include <ored/portfolio/builders/fxforward.hpp>
+#include <ored/portfolio/builders/fxoption.hpp>
+#include <ored/portfolio/builders/swap.hpp>
+#include <ored/portfolio/builders/swaption.hpp>
+#include <ored/portfolio/portfolio.hpp>
+#include <ored/portfolio/swap.hpp>
+#include <ored/portfolio/swaption.hpp>
+#include <ored/utilities/log.hpp>
+#include <ored/utilities/osutils.hpp>
+#include <ql/math/randomnumbers/mt19937uniformrng.hpp>
+#include <ql/time/calendars/target.hpp>
+#include <ql/time/date.hpp>
+#include <ql/time/daycounters/actualactual.hpp>
 #include <test/stresstest.hpp>
 #include <test/testmarket.hpp>
 #include <test/testportfolio.hpp>
-#include <ored/utilities/osutils.hpp>
-#include <ored/utilities/log.hpp>
-#include <orea/cube/npvcube.hpp>
-#include <orea/cube/inmemorycube.hpp>
-#include <ored/model/lgmdata.hpp>
-#include <orea/scenario/scenariosimmarketparameters.hpp>
-#include <orea/scenario/scenariosimmarket.hpp>
-#include <orea/scenario/clonescenariofactory.hpp>
-#include <orea/scenario/stressscenariogenerator.hpp>
-#include <orea/engine/observationmode.hpp>
-#include <orea/engine/sensitivityanalysis.hpp>
-#include <orea/engine/all.hpp>
-#include <ored/portfolio/swap.hpp>
-#include <ored/portfolio/swaption.hpp>
-#include <ored/portfolio/builders/swap.hpp>
-#include <ored/portfolio/builders/swaption.hpp>
-#include <ored/portfolio/builders/fxforward.hpp>
-#include <ored/portfolio/builders/fxoption.hpp>
-#include <ored/portfolio/builders/capfloor.hpp>
-#include <ored/portfolio/portfolio.hpp>
-#include <ql/time/date.hpp>
-#include <ql/math/randomnumbers/mt19937uniformrng.hpp>
-#include <ql/time/calendars/target.hpp>
-#include <ql/time/daycounters/actualactual.hpp>
-#include <boost/timer.hpp>
 
 using namespace std;
 using namespace QuantLib;
@@ -92,8 +92,8 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupStressSimMarketDa
 
     simMarketData->baseCcy() = "EUR";
     simMarketData->ccys() = {"EUR", "GBP", "USD", "CHF", "JPY"};
-    simMarketData->yieldCurveTenors() = {1 * Months, 6 * Months, 1 * Years,  2 * Years,  3 * Years,  4 * Years,
-                                         5 * Years,  7 * Years,  10 * Years, 15 * Years, 20 * Years, 30 * Years};
+    simMarketData->setYieldCurveTenors("", {1 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
+                                            5 * Years, 7 * Years, 10 * Years, 15 * Years, 20 * Years, 30 * Years});
     simMarketData->indices() = {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "USD-LIBOR-6M",
                                 "GBP-LIBOR-6M",   "CHF-LIBOR-6M", "JPY-LIBOR-6M"};
     simMarketData->interpolation() = "LogLinear";
@@ -116,8 +116,8 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupStressSimMarketDa
     simMarketData->simulateCapFloorVols() = true;
     simMarketData->capFloorVolDecayMode() = "ForwardVariance";
     simMarketData->capFloorVolCcys() = {"EUR", "USD"};
-    simMarketData->capFloorVolExpiries() = {6 * Months, 1 * Years,  2 * Years,  3 * Years, 5 * Years,
-                                            7 * Years,  10 * Years, 15 * Years, 20 * Years};
+    simMarketData->setCapFloorVolExpiries(
+        "", {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 15 * Years, 20 * Years});
     simMarketData->capFloorVolStrikes() = {0.00, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06};
 
     return simMarketData;
@@ -183,31 +183,31 @@ boost::shared_ptr<StressTestScenarioData> setupStressScenarioData() {
     data.indexCurveShifts["JPY-LIBOR-6M"].shiftTenors = {6 * Months, 1 * Years, 2 * Years, 3 * Years,
                                                          5 * Years,  7 * Years, 10 * Years};
     data.indexCurveShifts["JPY-LIBOR-6M"].shifts = {0.001, 0.002, 0.003, 0.004, 0.005, 0.006, 0.007};
-    data.fxShifts["EURUSD"] = StressTestScenarioData::FxShiftData();
+    data.fxShifts["EURUSD"] = StressTestScenarioData::SpotShiftData();
     data.fxShifts["EURUSD"].shiftType = "Relative";
     data.fxShifts["EURUSD"].shiftSize = 0.01;
-    data.fxShifts["EURGBP"] = StressTestScenarioData::FxShiftData();
+    data.fxShifts["EURGBP"] = StressTestScenarioData::SpotShiftData();
     data.fxShifts["EURGBP"].shiftType = "Relative";
     data.fxShifts["EURGBP"].shiftSize = 0.01;
-    data.fxShifts["EURJPY"] = StressTestScenarioData::FxShiftData();
+    data.fxShifts["EURJPY"] = StressTestScenarioData::SpotShiftData();
     data.fxShifts["EURJPY"].shiftType = "Relative";
     data.fxShifts["EURJPY"].shiftSize = 0.01;
-    data.fxShifts["EURCHF"] = StressTestScenarioData::FxShiftData();
+    data.fxShifts["EURCHF"] = StressTestScenarioData::SpotShiftData();
     data.fxShifts["EURCHF"].shiftType = "Relative";
     data.fxShifts["EURCHF"].shiftSize = 0.01;
-    data.fxVolShifts["EURUSD"] = StressTestScenarioData::FxVolShiftData();
+    data.fxVolShifts["EURUSD"] = StressTestScenarioData::VolShiftData();
     data.fxVolShifts["EURUSD"].shiftType = "Absolute";
     data.fxVolShifts["EURUSD"].shiftExpiries = {6 * Months, 2 * Years, 3 * Years, 5 * Years};
     data.fxVolShifts["EURUSD"].shifts = {0.10, 0.11, 0.13, 0.14};
-    data.fxVolShifts["EURGBP"] = StressTestScenarioData::FxVolShiftData();
+    data.fxVolShifts["EURGBP"] = StressTestScenarioData::VolShiftData();
     data.fxVolShifts["EURGBP"].shiftType = "Absolute";
     data.fxVolShifts["EURGBP"].shiftExpiries = {6 * Months, 2 * Years, 3 * Years, 5 * Years};
     data.fxVolShifts["EURGBP"].shifts = {0.10, 0.11, 0.13, 0.14};
-    data.fxVolShifts["EURJPY"] = StressTestScenarioData::FxVolShiftData();
+    data.fxVolShifts["EURJPY"] = StressTestScenarioData::VolShiftData();
     data.fxVolShifts["EURJPY"].shiftType = "Absolute";
     data.fxVolShifts["EURJPY"].shiftExpiries = {6 * Months, 2 * Years, 3 * Years, 5 * Years};
     data.fxVolShifts["EURJPY"].shifts = {0.10, 0.11, 0.13, 0.14};
-    data.fxVolShifts["EURCHF"] = StressTestScenarioData::FxVolShiftData();
+    data.fxVolShifts["EURCHF"] = StressTestScenarioData::VolShiftData();
     data.fxVolShifts["EURCHF"].shiftType = "Absolute";
     data.fxVolShifts["EURCHF"].shiftExpiries = {6 * Months, 2 * Years, 3 * Years, 5 * Years};
     data.fxVolShifts["EURCHF"].shifts = {0.10, 0.11, 0.13, 0.14};
@@ -346,8 +346,8 @@ void StressTestingTest::regression() {
         if (fabs(delta) > 0.0) {
             count++;
             // BOOST_TEST_MESSAGE("{ \"" << id << "\", \"" << label << "\", " << delta << " },");
-            QL_REQUIRE(stressMap.find(p) != stressMap.end(), "pair (" << p.first << ", " << p.second
-                                                                      << ") not found in sensi map");
+            QL_REQUIRE(stressMap.find(p) != stressMap.end(),
+                       "pair (" << p.first << ", " << p.second << ") not found in sensi map");
             BOOST_CHECK_MESSAGE(fabs(delta - stressMap[p]) < tolerance ||
                                     fabs((delta - stressMap[p]) / delta) < tolerance,
                                 "stress test regression failed for pair (" << p.first << ", " << p.second
@@ -375,4 +375,4 @@ test_suite* StressTestingTest::suite() {
     suite->add(BOOST_TEST_CASE(&StressTestingTest::regression));
     return suite;
 }
-}
+} // namespace testsuite

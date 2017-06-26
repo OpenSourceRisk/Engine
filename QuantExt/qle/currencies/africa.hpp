@@ -77,5 +77,5 @@ class MADCurrency : public Currency {
 public:
     MADCurrency();
 };
-}
+} // namespace QuantExt
 #endif
