@@ -52,6 +52,7 @@ using boost::unit_test::test_suite;
 #include "discountcurve.hpp"
 #include "dynamicblackvoltermstructure.hpp"
 #include "dynamicswaptionvolmatrix.hpp"
+#include "fxvolsmile.hpp"
 #include "index.hpp"
 #include "logquote.hpp"
 #include "optionletstripper.hpp"
@@ -112,7 +113,8 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(testsuite::StabilisedGLLSTest::suite());
     test->add(testsuite::SurvivalProbabilityCurveTest::suite());
     test->add(testsuite::SwaptionVolConstantSpreadTest::suite());
-    
+    test->add(testsuite::FxVolSmileTest::suite());
+
     test->add(BOOST_TEST_CASE(stopTimer));
 
     return test;

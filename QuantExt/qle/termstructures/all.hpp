@@ -36,4 +36,8 @@
 #include <qle/termstructures/swaptionvolcubewithatm.hpp>
 #include <qle/termstructures/blackvariancesurfacemoneyness.hpp>
 #include <qle/termstructures/equityvolconstantspread.hpp>
+#include <qle/termstructures/swaptionvolcube2.hpp>
+#include <qle/termstructures/fxvannavolgasmilesection.hpp>
+#include <qle/termstructures/fxblackvolsurface.hpp>
+#include <qle/termstructures/fxsmilesection.hpp>
 

@@ -44,6 +44,9 @@ namespace data {
 class FXVolatilityCurveConfig : public XMLSerializable {
 public:
     //! supported volatility structure types
+    /*! For ATM we will only load ATM quotes, for Smile we load ATM, 25RR, 25BF
+     *  TODO: Add more options (e.g. Delta)
+     */
     enum class Dimension { ATM, Smile };
 
     //! \name Constructors/Destructors
@@ -69,6 +72,10 @@ public:
     const string& curveDescription() const { return curveDescription_; }
     const Dimension& dimension() const { return dimension_; }
     const vector<Period>& expiries() const { return expiries_; }
+    // only required for Smile
+    const string& fxSpotID() const { return fxSpotID_; }
+    const string& fxForeignYieldCurveID() const { return fxForeignYieldCurveID_; }
+    const string& fxDomesticYieldCurveID() const { return fxDomesticYieldCurveID_; }
     //@}
 
     //! \name Setters
@@ -77,12 +84,18 @@ public:
     string& curveDescription() { return curveDescription_; }
     Dimension& dimension() { return dimension_; }
     vector<Period>& expiries() { return expiries_; }
+    string& fxSpotID() { return fxSpotID_; }
+    string& fxForeignYieldCurveID() { return fxForeignYieldCurveID_; }
+    string& fxDomesticYieldCurveID() { return fxDomesticYieldCurveID_; }
     //@}
 private:
     string curveID_;
     string curveDescription_;
     Dimension dimension_;
     vector<Period> expiries_;
+    string fxSpotID_;
+    string fxForeignYieldCurveID_;
+    string fxDomesticYieldCurveID_;
 };
 } // namespace data
 } // namespace ore
