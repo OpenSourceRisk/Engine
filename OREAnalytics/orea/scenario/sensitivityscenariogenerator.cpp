@@ -545,7 +545,7 @@ void SensitivityScenarioGenerator::generateDividendYieldScenarios(
     Size n_curves = dividendYieldNames_.size();
     for (Size i = 0; i < n_curves; ++i) {
         string name = dividendYieldNames_[i];
-        Size n_ten = simMarketData_->equityTenors(name).size();
+        Size n_ten = simMarketData_->equityDividendTenors(name).size();
         // original curves' buffer
         std::vector<Real> zeros(n_ten);
         std::vector<Real> times(n_ten);
@@ -556,13 +556,13 @@ void SensitivityScenarioGenerator::generateDividendYieldScenarios(
         Handle<YieldTermStructure> ts = initMarket_->equityDividendCurve(name, configuration_);
         DayCounter dc = ts->dayCounter();
         for (Size j = 0; j < n_ten; ++j) {
-            Date d = today_ + simMarketData_->equityTenors(name)[j];
+            Date d = today_ + simMarketData_->equityDividendTenors(name)[j];
             zeros[j] = ts->zeroRate(d, dc, Continuous);
             times[j] = dc.yearFraction(today_, d);
         }
 
-        const std::vector<Period>& shiftTenors = overrideTenors_ && simMarketData_->hasEquityTenors(name)
-                                                     ? simMarketData_->equityTenors(name)
+        const std::vector<Period>& shiftTenors = overrideTenors_ && simMarketData_->hasEquityDividendTenors(name)
+                                                     ? simMarketData_->equityDividendTenors(name)
                                                      : data.shiftTenors;
         QL_REQUIRE(shiftTenors.size() == data.shiftTenors.size(), "mismatch between effective shift tenors ("
                                                                       << shiftTenors.size() << ") and shift tenors ("

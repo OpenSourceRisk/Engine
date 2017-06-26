@@ -445,6 +445,8 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
             Handle<YieldTermStructure> yts = simMarket_->equityForecastCurve(ec, marketConfiguration_);
             Time t = yts->dayCounter().yearFraction(asof_, asof_ + p);
             Real zeroRate = yts->zeroRate(t, Continuous);
+            shiftMult = zeroRate;
+        }
     } else if (keytype == RiskFactorKey::KeyType::DividendYield) {
         string eq = keylabel;
         shiftSize = sensitivityData_->dividendYieldShiftData()[eq].shiftSize;

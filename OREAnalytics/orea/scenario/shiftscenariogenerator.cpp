@@ -217,11 +217,11 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
     count = 0;
     for (Size j = 0; j < n_eq_names; j++) {
         std::string name = simMarketData_->equityNames()[j];
-        Size n_eq_terms = simMarketData_->equityTenors(name).size();
+        Size n_eq_terms = simMarketData_->equityDividendTenors(name).size();
         Handle<YieldTermStructure> ts = market->equityDividendCurve(name, configuration_);
         for (Size k = 0; k < n_eq_terms; ++k) {
             dividendYieldKeys_.emplace_back(RiskFactorKey::KeyType::DividendYield, name, k);
-            Real disc = ts->discount(today_ + simMarketData_->equityTenors(name)[k]);
+            Real disc = ts->discount(today_ + simMarketData_->equityDividendTenors(name)[k]);
             dividendYieldCache_[dividendYieldKeys_[count]] = disc;
             LOG("cache discount " << disc << " for key " << dividendYieldKeys_[count]);
             count++;
