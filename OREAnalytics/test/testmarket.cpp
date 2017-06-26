@@ -141,6 +141,7 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
     simMarketData->equityVolNames() = { "SP5", "Lufthansa" };
     simMarketData->equityVolExpiries() = { 6 * Months, 1 * Years, 2 * Years,  3 * Years,
                                            5 * Years,  7 * Years, 10 * Years, 20 * Years };
+    simMarketData->equityVolMoneyness() = {0.0};
     simMarketData->equityVolIsSurface() = false;
 
     return simMarketData;
