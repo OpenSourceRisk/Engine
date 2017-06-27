@@ -17,8 +17,8 @@
 */
 
 #include <boost/make_shared.hpp>
-#include <test/testmarket.hpp>
 #include <iostream>
+#include <test/testmarket.hpp>
 namespace testsuite {
 
 boost::shared_ptr<ore::data::Conventions> TestConfigurationObjects::conv() {
@@ -62,8 +62,8 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
                                             12 * Years, 15 * Years, 20 * Years, 25 * Years, 30 * Years});
     simMarketData->indices() = {"EUR-EURIBOR-6M", "GBP-LIBOR-6M"};
     simMarketData->defaultNames() = {"BondIssuer1"};
-    simMarketData->setDefaultTenors("", {6 * Months, 1 * Years,  2 * Years,  3 * Years, 5 * Years,
-                           7 * Years,  10 * Years, 15 * Years, 20 * Years});
+    simMarketData->setDefaultTenors(
+        "", {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 15 * Years, 20 * Years});
     simMarketData->securities() = {"Bond1"};
     simMarketData->simulateSurvivalProbabilities() = true;
 
@@ -127,20 +127,20 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
     simMarketData->capFloorVolStrikes() = {0.00, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06};
 
     simMarketData->defaultNames() = {"BondIssuer1"};
-    simMarketData->setDefaultTenors("", {6 * Months, 1 * Years,  2 * Years,  3 * Years, 5 * Years,
-                           7 * Years,  10 * Years, 15 * Years, 20 * Years});
+    simMarketData->setDefaultTenors(
+        "", {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 15 * Years, 20 * Years});
     simMarketData->simulateSurvivalProbabilities() = true;
     simMarketData->securities() = {"Bond1"};
 
-    simMarketData->equityNames() = { "SP5", "Lufthansa" };
-    simMarketData->setEquityTenors("SP5", { 6 * Months, 1 * Years, 2 * Years });
-    simMarketData->setEquityTenors("Lufthansa", { 6 * Months, 1 * Years, 2 * Years });
+    simMarketData->equityNames() = {"SP5", "Lufthansa"};
+    simMarketData->setEquityTenors("SP5", {6 * Months, 1 * Years, 2 * Years});
+    simMarketData->setEquityTenors("Lufthansa", {6 * Months, 1 * Years, 2 * Years});
 
     simMarketData->simulateEQVols() = true;
     simMarketData->equityVolDecayMode() = "ForwardVariance";
-    simMarketData->equityVolNames() = { "SP5", "Lufthansa" };
-    simMarketData->equityVolExpiries() = { 6 * Months, 1 * Years, 2 * Years,  3 * Years,
-                                           5 * Years,  7 * Years, 10 * Years, 20 * Years };
+    simMarketData->equityVolNames() = {"SP5", "Lufthansa"};
+    simMarketData->equityVolExpiries() = {6 * Months, 1 * Years, 2 * Years,  3 * Years,
+                                          5 * Years,  7 * Years, 10 * Years, 20 * Years};
 
     return simMarketData;
 }
@@ -152,6 +152,76 @@ boost::shared_ptr<ore::analytics::SensitivityScenarioData> TestConfigurationObje
     ore::analytics::SensitivityScenarioData::CurveShiftData cvsData;
     cvsData.shiftTenors = {1 * Years, 2 * Years,  3 * Years,  5 * Years,
                            7 * Years, 10 * Years, 15 * Years, 20 * Years}; // multiple tenors: triangular shifts
+    cvsData.shiftType = "Absolute";
+    cvsData.shiftSize = 0.0001;
+
+    ore::analytics::SensitivityScenarioData::SpotShiftData fxsData;
+    fxsData.shiftType = "Relative";
+    fxsData.shiftSize = 0.01;
+
+    ore::analytics::SensitivityScenarioData::VolShiftData fxvsData;
+    fxvsData.shiftType = "Relative";
+    fxvsData.shiftSize = 1.0;
+    fxvsData.shiftExpiries = {2 * Years, 5 * Years};
+
+    ore::analytics::SensitivityScenarioData::CapFloorVolShiftData cfvsData;
+    cfvsData.shiftType = "Absolute";
+    cfvsData.shiftSize = 0.0001;
+    cfvsData.shiftExpiries = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
+    cfvsData.shiftStrikes = {0.05};
+
+    ore::analytics::SensitivityScenarioData::SwaptionVolShiftData swvsData;
+    swvsData.shiftType = "Relative";
+    swvsData.shiftSize = 0.01;
+    swvsData.shiftExpiries = {3 * Years, 5 * Years, 10 * Years};
+    swvsData.shiftTerms = {2 * Years, 5 * Years, 10 * Years};
+
+    sensiData->discountCurrencies() = {"EUR", "GBP"};
+    sensiData->discountCurveShiftData()["EUR"] = cvsData;
+
+    sensiData->discountCurveShiftData()["GBP"] = cvsData;
+
+    sensiData->indexNames() = {"EUR-EURIBOR-6M", "GBP-LIBOR-6M"};
+    sensiData->indexCurveShiftData()["EUR-EURIBOR-6M"] = cvsData;
+    sensiData->indexCurveShiftData()["GBP-LIBOR-6M"] = cvsData;
+
+    sensiData->yieldCurveNames() = {"BondCurve1"};
+    sensiData->yieldCurveShiftData()["BondCurve1"] = cvsData;
+
+    sensiData->fxCcyPairs() = {"EURGBP"};
+    sensiData->fxShiftData()["EURGBP"] = fxsData;
+
+    sensiData->fxVolCcyPairs() = {"EURGBP"};
+    sensiData->fxVolShiftData()["EURGBP"] = fxvsData;
+
+    sensiData->swaptionVolCurrencies() = {"EUR", "GBP"};
+    sensiData->swaptionVolShiftData()["EUR"] = swvsData;
+    sensiData->swaptionVolShiftData()["GBP"] = swvsData;
+
+    sensiData->creditNames() = {"BondIssuer1"};
+    sensiData->creditCurveShiftData()["BondIssuer1"] = cvsData;
+
+    // sensiData->capFloorVolLabel() = "VOL_CAPFLOOR";
+    // sensiData->capFloorVolCurrencies() = { "EUR", "GBP" };
+    // sensiData->capFloorVolShiftData()["EUR"] = cfvsData;
+    // sensiData->capFloorVolShiftData()["EUR"].indexName = "EUR-EURIBOR-6M";
+    // sensiData->capFloorVolShiftData()["GBP"] = cfvsData;
+    // sensiData->capFloorVolShiftData()["GBP"].indexName = "GBP-LIBOR-6M";
+
+    return sensiData;
+}
+
+boost::shared_ptr<ore::analytics::SensitivityScenarioData> TestConfigurationObjects::setupSensitivityScenarioData2b() {
+    boost::shared_ptr<ore::analytics::SensitivityScenarioData> sensiData =
+        boost::make_shared<ore::analytics::SensitivityScenarioData>();
+
+    // shift curve has more points than underlying curve, has tenor points where the underlying curve hasn't, skips some
+    // tenor points that occur in the underlying curve (e.g. 2Y, 3Y, 4Y)
+    ore::analytics::SensitivityScenarioData::CurveShiftData cvsData;
+    cvsData.shiftTenors = {1 * Years,   15 * Months, 18 * Months, 21 * Months, 27 * Months, 30 * Months, 33 * Months,
+                           42 * Months, 54 * Months, 5 * Years,   6 * Years,   7 * Years,   8 * Years,   9 * Years,
+                           10 * Years,  11 * Years,  12 * Years,  13 * Years,  14 * Years,  15 * Years,  16 * Years,
+                           17 * Years,  18 * Years,  19 * Years,  20 * Years};
     cvsData.shiftType = "Absolute";
     cvsData.shiftSize = 0.0001;
 
@@ -249,7 +319,7 @@ boost::shared_ptr<ore::analytics::SensitivityScenarioData> TestConfigurationObje
     ore::analytics::SensitivityScenarioData::VolShiftData eqvsData;
     eqvsData.shiftType = "Relative";
     eqvsData.shiftSize = 0.01;
-    eqvsData.shiftExpiries = { 5 * Years };
+    eqvsData.shiftExpiries = {5 * Years};
 
     sensiData->discountCurrencies() = {"EUR", "USD", "GBP", "CHF", "JPY"};
     sensiData->discountCurveShiftData()["EUR"] = cvsData;
@@ -275,7 +345,6 @@ boost::shared_ptr<ore::analytics::SensitivityScenarioData> TestConfigurationObje
 
     sensiData->yieldCurveNames() = {"BondCurve1"};
     sensiData->yieldCurveShiftData()["BondCurve1"] = cvsData;
-
 
     sensiData->creditNames() = {"BondIssuer1"};
     sensiData->creditCurveShiftData()["BondIssuer1"] = cvsData;
@@ -306,11 +375,11 @@ boost::shared_ptr<ore::analytics::SensitivityScenarioData> TestConfigurationObje
     sensiData->capFloorVolShiftData()["USD"] = cfvsData;
     sensiData->capFloorVolShiftData()["USD"].indexName = "USD-LIBOR-3M";
 
-    sensiData->equityNames() = { "SP5", "Lufthansa" };
+    sensiData->equityNames() = {"SP5", "Lufthansa"};
     sensiData->equityShiftData()["SP5"] = eqsData;
     sensiData->equityShiftData()["Lufthansa"] = eqsData;
 
-    sensiData->equityVolNames() = { "SP5", "Lufthansa" };
+    sensiData->equityVolNames() = {"SP5", "Lufthansa"};
     sensiData->equityVolShiftData()["SP5"] = eqvsData;
     sensiData->equityVolShiftData()["Lufthansa"] = eqvsData;
 
