@@ -95,6 +95,8 @@ void ShiftScenarioGenerator::clear() {
     fxCache_.clear();
     equityKeys_.clear();
     equityCache_.clear();
+    dividendYieldKeys_.clear();
+    dividendYieldCache_.clear();
     swaptionVolKeys_.clear();
     swaptionVolCache_.clear();
     fxVolKeys_.clear();
@@ -178,16 +180,32 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
         LOG("cache FX spot " << fx << " for key " << fxKeys_[k]);
     }
 
-    // Cache Equity rate keys
+    // Cache Equity spot keys
     equityKeys_.reserve(simMarketData_->equityNames().size());
     for (Size k = 0; k < simMarketData_->equityNames().size(); k++) {
         // const string& foreign = simMarketData_->ccys()[k + 1];
         // const string& domestic = simMarketData_->ccys()[0];
         string equity = simMarketData_->equityNames()[k];
-        equityKeys_.emplace_back(RiskFactorKey::KeyType::EQSpot, equity); // k
+        equityKeys_.emplace_back(RiskFactorKey::KeyType::EquitySpot, equity); // k
         Real eq = market->equitySpot(equity, configuration_)->value();
         equityCache_[equityKeys_[k]] = eq;
         LOG("cache Equity spot " << eq << " for key " << equityKeys_[k]);
+    }
+
+    // Cache Dividend Yields
+    Size n_eq_names = simMarketData_->equityNames().size();
+    count = 0;
+    for (Size j = 0; j < n_eq_names; j++) {
+        std::string name = simMarketData_->equityNames()[j];
+        Size n_eq_terms = simMarketData_->equityTenors(name).size();
+        Handle<YieldTermStructure> ts = market->equityDividendCurve(name, configuration_);
+        for (Size k = 0; k < n_eq_terms; ++k) {
+            dividendYieldKeys_.emplace_back(RiskFactorKey::KeyType::DividendYield, name, k);
+            Real disc = ts->discount(today_ + simMarketData_->equityTenors(name)[k]);
+            dividendYieldCache_[dividendYieldKeys_[count]] = disc;
+            LOG("cache discount " << disc << " for key " << dividendYieldKeys_[count]);
+            count++;
+        }
     }
 
     // Cache Swaption (ATM) vol keys
@@ -249,7 +267,7 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
     // Cache Equity vol keys
     Size n_equityvol_pairs = simMarketData_->equityVolNames().size();
     Size n_equityvol_exp = simMarketData_->equityVolExpiries().size();
-    Size n_equityvol_strikes = simMarketData_->eqVolIsSurface() ? simMarketData_->eqVolMoneyness().size() : 1;
+    Size n_equityvol_strikes = simMarketData_->equityVolIsSurface() ? simMarketData_->equityVolMoneyness().size() : 1;
     QL_REQUIRE(n_equityvol_strikes > 0, "No strikes defined for equity vol");
     equityVolKeys_.reserve(n_equityvol_pairs * n_equityvol_exp * n_equityvol_strikes);
     count = 0;
@@ -260,15 +278,15 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
         LOG("Eq spot for " << equity << " " << spot);
         for (Size k = 0; k < n_equityvol_strikes; ++k) {
             Real strike;
-            if (simMarketData_->eqVolIsSurface())
-                strike = spot * simMarketData_->eqVolMoneyness()[k];
+            if (simMarketData_->equityVolIsSurface())
+                strike = spot * simMarketData_->equityVolMoneyness()[k];
             else
                 strike = Null<Real>();
             LOG("Eq strike for " << equity << " " << strike);
             for (Size l = 0; l < n_equityvol_exp; ++l) {
                 // Index is expires then moneyness. TODO: is this the best?
                 Size idx = k * n_equityvol_exp + l;
-                equityVolKeys_.emplace_back(RiskFactorKey::KeyType::EQVolatility, equity, idx);
+                equityVolKeys_.emplace_back(RiskFactorKey::KeyType::EquityVolatility, equity, idx);
                 Period expiry = simMarketData_->equityVolExpiries()[l];
                 Real equityvol = ts->blackVol(today_ + expiry, strike);
                 equityVolCache_[equityVolKeys_[count]] = equityvol;
@@ -409,13 +427,17 @@ void ShiftScenarioGenerator::addCacheTo(boost::shared_ptr<Scenario> scenario) {
         if (!scenario->has(key))
             scenario->add(key, equityCache_[key]);
     }
+    for (auto key : dividendYieldKeys_) {
+        if (!scenario->has(key))
+            scenario->add(key, dividendYieldCache_[key]);
+    }
     if (simMarketData_->simulateFXVols()) {
         for (auto key : fxVolKeys_) {
             if (!scenario->has(key))
                 scenario->add(key, fxVolCache_[key]);
         }
     }
-    if (simMarketData_->simulateEQVols()) {
+    if (simMarketData_->simulateEquityVols()) {
         for (auto key : equityVolKeys_) {
             if (!scenario->has(key))
                 scenario->add(key, equityVolCache_[key]);
@@ -523,6 +545,14 @@ RiskFactorKey ShiftScenarioGenerator::getEquityVolKey(const std::string& equity,
             return equityVolKeys_[i];
     }
     QL_FAIL("error locating EquityVol RiskFactorKey for " << equity << ", index " << index);
+}
+
+RiskFactorKey ShiftScenarioGenerator::getDividendYieldKey(const std::string& equity, Size index) {
+    for (Size i = 0; i < dividendYieldKeys_.size(); ++i) {
+        if (dividendYieldKeys_[i].name == equity && dividendYieldKeys_[i].index == index)
+            return dividendYieldKeys_[i];
+    }
+    QL_FAIL("error locating DividendYield RiskFactorKey for " << equity << ", index " << index);
 }
 
 RiskFactorKey ShiftScenarioGenerator::getSurvivalProbabilityKey(const std::string& name, Size index) {

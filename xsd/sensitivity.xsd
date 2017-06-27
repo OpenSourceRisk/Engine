@@ -14,6 +14,7 @@
       <xs:element type="fxvolatilities" name="FxVolatilities"/>
       <xs:element type="swaptionvolatilities" name="SwaptionVolatilities"/>
       <xs:element type="capfloorvolatilities" name="CapFloorVolatilities"/>
+      <xs:element type="dividendyields" name="DividendYieldCurves"/>
       <xs:element type="crossgammafilter" name="CrossGammaFilter"/>
     </xs:sequence>
   </xs:complexType>
@@ -60,6 +61,12 @@
     </xs:sequence>
   </xs:complexType>
   
+  <xs:complexType name="dividendyields">
+    <xs:sequence>
+      <xs:element type="dividendyield" name="DividendYieldCurve" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
   <xs:complexType name="crossgammafilter">
     <xs:sequence>
       <xs:element type="xs:string" name="Pair" minOccurs="0" maxOccurs="unbounded"/>
@@ -133,6 +140,15 @@
     <xs:attribute type="currencyCode" name="ccy" use="required"/>
   </xs:complexType>
   
+  <xs:complexType name="dividendyield">
+    <xs:sequence>
+      <xs:element type="shifttype" name="ShiftType"/>
+      <xs:element type="xs:float" name="ShiftSize"/>
+      <xs:element type="xs:string" name="ShiftTenors"/>
+    </xs:sequence>
+    <xs:attribute type="currencyCode" name="ccy" use="required"/>
+  </xs:complexType>
+
   <xs:simpleType name="shifttype">
     <xs:restriction base="xs:string">
       <xs:enumeration value="Absolute"/>

@@ -633,7 +633,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         Handle<Quote> qh(q);
         equitySpots_.insert(
             pair<pair<string, string>, Handle<Quote>>(make_pair(Market::defaultConfiguration, eqName), qh));
-        simData_.emplace(std::piecewise_construct, std::forward_as_tuple(RiskFactorKey::KeyType::EQSpot, eqName),
+        simData_.emplace(std::piecewise_construct, std::forward_as_tuple(RiskFactorKey::KeyType::EquitySpot, eqName),
                          std::forward_as_tuple(q));
     }
     LOG("equity spots done");
@@ -663,6 +663,9 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
             boost::shared_ptr<SimpleQuote> q(new SimpleQuote(wrapper->discount(equityCurveTimes[i + 1])));
             Handle<Quote> qh(q);
             quotes.push_back(qh);
+            simData_.emplace(std::piecewise_construct,
+                             std::forward_as_tuple(RiskFactorKey::KeyType::DividendYield, eqName, i),
+                             std::forward_as_tuple(q));
         }
         boost::shared_ptr<YieldTermStructure> eqdivCurve;
         if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister) {
@@ -689,8 +692,8 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
 
         Handle<BlackVolTermStructure> evh;
 
-        if (parameters->simulateEQVols()) {
-            if (parameters->eqVolIsSurface() == false) {
+        if (parameters->simulateEquityVols()) {
+            if (parameters->equityVolIsSurface() == false) {
                 LOG("Simulating EQ Vols (BlackVarianceCurve3) for " << equityName);
                 vector<Handle<Quote>> quotes;
                 vector<Time> times;
@@ -700,7 +703,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
                     times.push_back(wrapper->timeFromReference(date));
                     boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
                     simData_.emplace(std::piecewise_construct,
-                                     std::forward_as_tuple(RiskFactorKey::KeyType::EQVolatility, equityName, i),
+                                     std::forward_as_tuple(RiskFactorKey::KeyType::EquityVolatility, equityName, i),
                                      std::forward_as_tuple(q));
                     quotes.emplace_back(q);
                 }
@@ -710,17 +713,17 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
             } else {
                 LOG("Simulating EQ Vols (BlackVarianceSurfaceMoneyness) for " << equityName);
                 Handle<Quote> spot = equitySpots_[make_pair(Market::defaultConfiguration, equityName)];
-                Size n = parameters->eqVolMoneyness().size();
-                Size m = parameters->eqVolExpiries().size();
+                Size n = parameters->equityVolMoneyness().size();
+                Size m = parameters->equityVolExpiries().size();
                 vector<vector<Handle<Quote>>> quotes(n, vector<Handle<Quote>>(m, Handle<Quote>()));
                 for (Size i = 0; i < n; i++) {
-                    Real mon = parameters->eqVolMoneyness()[i];
+                    Real mon = parameters->equityVolMoneyness()[i];
 
                     // strike
                     Real k = spot->value() * mon;
 
                     for (Size j = 0; j < m; j++) {
-                        Period p = parameters->eqVolExpiries()[j];
+                        Period p = parameters->equityVolExpiries()[j];
 
                         // Index is expires then moneyness. TODO: is this the best?
                         Size idx = i * m + j;
@@ -728,7 +731,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
                         Volatility vol = wrapper->blackVol(asof_ + p, k);
                         boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
                         simData_.emplace(std::piecewise_construct,
-                                         std::forward_as_tuple(RiskFactorKey::KeyType::EQVolatility, equityName, idx),
+                                         std::forward_as_tuple(RiskFactorKey::KeyType::EquityVolatility, equityName, idx),
                                          std::forward_as_tuple(q));
                         quotes[i][j] = Handle<Quote>(q);
                     }
@@ -745,7 +748,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
                 bool stickyStrike = true;
 
                 boost::shared_ptr<BlackVolTermStructure> eqVolCurve(
-                    new BlackVarianceSurfaceMoneyness(cal, spot, times, parameters->eqVolMoneyness(), quotes, dc, stickyStrike));
+                    new BlackVarianceSurfaceMoneyness(cal, spot, times, parameters->equityVolMoneyness(), quotes, dc, stickyStrike));
                 eqVolCurve->enableExtrapolation();
                 evh = Handle<BlackVolTermStructure>(eqVolCurve);
             }
