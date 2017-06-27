@@ -12,100 +12,101 @@
   
   
    <YieldCurves id="inccy_swap">
-		<YieldCurve name="EUR-EURIBOR-1Y">Yield/EUR/EUR1Y</YieldCurve>
-		<YieldCurve name="EUR-EURIBOR-6M">Yield/EUR/EUR6M</YieldCurve>
-		<YieldCurve name="EUR-EURIBOR-3M">Yield/EUR/EUR3M</YieldCurve>
-		<YieldCurve name="EUR-EURIBOR-1M">Yield/EUR/EUR1M</YieldCurve>
-		<YieldCurve name="USD-LIBOR-3M">Yield/USD/USD3M</YieldCurve>
-		<YieldCurve name="USD-LIBOR-1M">Yield/USD/USD1M</YieldCurve>
-		<YieldCurve name="CHF-LIBOR-3M">Yield/CHF/CHF3M</YieldCurve>
-		<YieldCurve name="SEK-STIBOR-3M">Yield/SEK/SEK3M</YieldCurve>
-		<YieldCurve name="GBP-LIBOR-3M">Yield/GBP/GBP3M</YieldCurve>
-		<YieldCurve name="NOK-NIBOR-3M">Yield/NOK/NOK3M</YieldCurve>
-		<YieldCurve name="DKK-CIBOR-3M">Yield/DKK/DKK3M</YieldCurve>
-		<YieldCurve name="DKK-CIBOR-6M">Yield/DKK/DKK6M</YieldCurve>
-		<YieldCurve name="CAD-BA-3M">Yield/CAD/CAD3M</YieldCurve>
-		<YieldCurve name="CZK-PRIBOR-3M">Yield/CZK/CZK3M</YieldCurve>
-		<YieldCurve name="EUR-DIS">Yield/EUR/EUR3M</YieldCurve>
-		<YieldCurve name="USD-DIS">Yield/USD/USD3M</YieldCurve>
-		<YieldCurve name="CHF-DIS">Yield/CHF/CHF3M</YieldCurve>
-		<YieldCurve name="SEK-DIS">Yield/SEK/SEK3M</YieldCurve>
-		<YieldCurve name="GBP-DIS">Yield/GBP/GBP3M</YieldCurve>
-		<YieldCurve name="NOK-DIS">Yield/NOK/NOK3M</YieldCurve>
-		<YieldCurve name="DKK-DIS">Yield/DKK/DKK3M</YieldCurve>
-		<YieldCurve name="CAD-DIS">Yield/CAD/CAD3M</YieldCurve>
-		<YieldCurve name="CZK-DIS">Yield/CZK/CZK3M</YieldCurve>
-	</YieldCurves>
-  
-  <IndexForwardingCurves id="default">
-	<Index name="EUR-EURIBOR-1Y">Yield/EUR/EUR1Y</Index>
-    <Index name="EUR-EURIBOR-6M">Yield/EUR/EUR6M</Index>
-    <Index name="EUR-EURIBOR-3M">Yield/EUR/EUR3M</Index>
-	<Index name="EUR-EURIBOR-1M">Yield/EUR/EUR1M</Index>
-    <Index name="USD-LIBOR-3M">Yield/USD/USD3M</Index>
-    <Index name="USD-LIBOR-1M">Yield/USD/USD1M</Index>
-    <Index name="CHF-LIBOR-3M">Yield/CHF/CHF3M</Index>
-	<Index name="SEK-STIBOR-3M">Yield/SEK/SEK3M</Index>
-	<Index name="GBP-LIBOR-3M">Yield/GBP/GBP3M</Index>
-	<Index name="NOK-NIBOR-3M">Yield/NOK/NOK3M</Index>
-	<Index name="DKK-CIBOR-3M">Yield/DKK/DKK3M</Index>
-	<Index name="DKK-CIBOR-6M">Yield/DKK/DKK6M</Index>
-	<Index name="CAD-BA-3M">Yield/CAD/CAD3M</Index>
-	<Index name="CZK-PRIBOR-3M">Yield/CZK/CZK3M</Index>
-  </IndexForwardingCurves>
-
-
-  <DiscountingCurves id="inccy_swap">
-    <DiscountingCurve currency="EUR">Yield/EUR/EUR-DIS</DiscountingCurve>
-    <DiscountingCurve currency="USD">Yield/USD/USD-DIS</DiscountingCurve>
-    <DiscountingCurve currency="GBP">Yield/GBP/GBP-DIS</DiscountingCurve>
-    <DiscountingCurve currency="CHF">Yield/CHF/CHF-DIS</DiscountingCurve>
-    <DiscountingCurve currency="SEK">Yield/SEK/SEK-DIS</DiscountingCurve>
-    <DiscountingCurve currency="NOK">Yield/NOK/NOK-DIS</DiscountingCurve>
-    <DiscountingCurve currency="DKK">Yield/DKK/DKK-DIS</DiscountingCurve>
-    <DiscountingCurve currency="CZK">Yield/CZK/CZK-DIS</DiscountingCurve>
-    <DiscountingCurve currency="CAD">Yield/CAD/CAD-DIS</DiscountingCurve>
-  </DiscountingCurves>
-  <FxSpots id="default">
-    <FxSpot pair="EURUSD">FX/USD/EUR</FxSpot>
-    <FxSpot pair="EURGBP">FX/GBP/EUR</FxSpot>
-    <FxSpot pair="EURCHF">FX/CHF/EUR</FxSpot>
-    <FxSpot pair="EURJPY">FX/JPY/EUR</FxSpot>
-	<FxSpot pair="EURZAR">FX/ZAR/EUR</FxSpot>
-	<FxSpot pair="EURAUD">FX/AUD/EUR</FxSpot>
-	<FxSpot pair="EURCAD">FX/CAD/EUR</FxSpot>
-	<FxSpot pair="EURCZK">FX/CZK/EUR</FxSpot>
-	<FxSpot pair="EURDKK">FX/DKK/EUR</FxSpot>
-	<FxSpot pair="EURHKD">FX/HKD/EUR</FxSpot>
-	<FxSpot pair="EURHUF">FX/HUF/EUR</FxSpot>
-	<FxSpot pair="EURNOK">FX/NOK/EUR</FxSpot>
-	<FxSpot pair="EURNZD">FX/NZD/EUR</FxSpot>
-	<FxSpot pair="EURPLN">FX/PLN/EUR</FxSpot>
-	<FxSpot pair="EURSEK">FX/SEK/EUR</FxSpot>
-	<FxSpot pair="EURSGD">FX/SGD/EUR</FxSpot>
-	<FxSpot pair="EURSKK">FX/SKK/EUR</FxSpot>
-	<FxSpot pair="EURTRY">FX/TRY/EUR</FxSpot>
-  </FxSpots>
-  <DefaultCurves id="default">
-    <DefaultCurve name="CPTY_C">Default/EUR/CPTY_C_SR_EUR</DefaultCurve>
-  </DefaultCurves>
-  <SecuritySpreads id="default">
-    <SecuritySpread name="SECURITY_1">SecuritySpread/SECURITY_1</SecuritySpread>
-  </SecuritySpreads>
-  <SecurityRecoveryRates id="default">
-    <SecurityRecoveryRate name="SECURITY_1">SecurityRecoveryRate/SECURITY_1</SecurityRecoveryRate>
-  </SecurityRecoveryRates>
-  <SwapIndexCurves id="default">
-  </SwapIndexCurves>
-  
-  <CapFloorVolatilities id="default">
-    <CapFloorVolatility currency="SEK">CapFloorVolatility/SEK/SEK_CF_N</CapFloorVolatility>
-    <!-- <CapFloorVolatility currency="EUR">CapFloorVolatility/EUR/EUR_CF_N</CapFloorVolatility> -->
-  </CapFloorVolatilities>
-
-  <!-- fx volatility definition -->
+     <YieldCurve name="EUR-EURIBOR-1Y">Yield/EUR/EUR1Y</YieldCurve>
+     <YieldCurve name="EUR-EURIBOR-6M">Yield/EUR/EUR6M</YieldCurve>
+     <YieldCurve name="EUR-EURIBOR-3M">Yield/EUR/EUR3M</YieldCurve>
+     <YieldCurve name="EUR-EURIBOR-1M">Yield/EUR/EUR1M</YieldCurve>
+     <YieldCurve name="USD-LIBOR-3M">Yield/USD/USD3M</YieldCurve>
+     <YieldCurve name="USD-LIBOR-1M">Yield/USD/USD1M</YieldCurve>
+     <YieldCurve name="CHF-LIBOR-3M">Yield/CHF/CHF3M</YieldCurve>
+     <YieldCurve name="SEK-STIBOR-3M">Yield/SEK/SEK3M</YieldCurve>
+     <YieldCurve name="GBP-LIBOR-3M">Yield/GBP/GBP3M</YieldCurve>
+     <YieldCurve name="NOK-NIBOR-3M">Yield/NOK/NOK3M</YieldCurve>
+     <YieldCurve name="DKK-CIBOR-3M">Yield/DKK/DKK3M</YieldCurve>
+     <YieldCurve name="DKK-CIBOR-6M">Yield/DKK/DKK6M</YieldCurve>
+     <YieldCurve name="CAD-BA-3M">Yield/CAD/CAD3M</YieldCurve>
+     <YieldCurve name="CZK-PRIBOR-3M">Yield/CZK/CZK3M</YieldCurve>
+     <YieldCurve name="EUR-DIS">Yield/EUR/EUR3M</YieldCurve>
+     <YieldCurve name="USD-DIS">Yield/USD/USD3M</YieldCurve>
+     <YieldCurve name="CHF-DIS">Yield/CHF/CHF3M</YieldCurve>
+     <YieldCurve name="SEK-DIS">Yield/SEK/SEK3M</YieldCurve>
+     <YieldCurve name="GBP-DIS">Yield/GBP/GBP3M</YieldCurve>
+     <YieldCurve name="NOK-DIS">Yield/NOK/NOK3M</YieldCurve>
+     <YieldCurve name="DKK-DIS">Yield/DKK/DKK3M</YieldCurve>
+     <YieldCurve name="CAD-DIS">Yield/CAD/CAD3M</YieldCurve>
+     <YieldCurve name="CZK-DIS">Yield/CZK/CZK3M</YieldCurve>
+   </YieldCurves>
+   
+   <IndexForwardingCurves id="default">
+     <Index name="EUR-EURIBOR-1Y">Yield/EUR/EUR1Y</Index>
+     <Index name="EUR-EURIBOR-6M">Yield/EUR/EUR6M</Index>
+     <Index name="EUR-EURIBOR-3M">Yield/EUR/EUR3M</Index>
+     <Index name="EUR-EURIBOR-1M">Yield/EUR/EUR1M</Index>
+     <Index name="USD-LIBOR-3M">Yield/USD/USD3M</Index>
+     <Index name="USD-LIBOR-1M">Yield/USD/USD1M</Index>
+     <Index name="CHF-LIBOR-3M">Yield/CHF/CHF3M</Index>
+     <Index name="SEK-STIBOR-3M">Yield/SEK/SEK3M</Index>
+     <Index name="GBP-LIBOR-3M">Yield/GBP/GBP3M</Index>
+     <Index name="NOK-NIBOR-3M">Yield/NOK/NOK3M</Index>
+     <Index name="DKK-CIBOR-3M">Yield/DKK/DKK3M</Index>
+     <Index name="DKK-CIBOR-6M">Yield/DKK/DKK6M</Index>
+     <Index name="CAD-BA-3M">Yield/CAD/CAD3M</Index>
+     <Index name="CZK-PRIBOR-3M">Yield/CZK/CZK3M</Index>
+   </IndexForwardingCurves>
+   
+   
+   <DiscountingCurves id="inccy_swap">
+     <DiscountingCurve currency="EUR">Yield/EUR/EUR-DIS</DiscountingCurve>
+     <DiscountingCurve currency="USD">Yield/USD/USD-DIS</DiscountingCurve>
+     <DiscountingCurve currency="GBP">Yield/GBP/GBP-DIS</DiscountingCurve>
+     <DiscountingCurve currency="CHF">Yield/CHF/CHF-DIS</DiscountingCurve>
+     <DiscountingCurve currency="SEK">Yield/SEK/SEK-DIS</DiscountingCurve>
+     <DiscountingCurve currency="NOK">Yield/NOK/NOK-DIS</DiscountingCurve>
+     <DiscountingCurve currency="DKK">Yield/DKK/DKK-DIS</DiscountingCurve>
+     <DiscountingCurve currency="CZK">Yield/CZK/CZK-DIS</DiscountingCurve>
+     <DiscountingCurve currency="CAD">Yield/CAD/CAD-DIS</DiscountingCurve>
+   </DiscountingCurves>
+   <FxSpots id="default">
+     <FxSpot pair="EURUSD">FX/USD/EUR</FxSpot>
+     <FxSpot pair="EURGBP">FX/GBP/EUR</FxSpot>
+     <FxSpot pair="EURCHF">FX/CHF/EUR</FxSpot>
+     <FxSpot pair="EURJPY">FX/JPY/EUR</FxSpot>
+     <FxSpot pair="EURZAR">FX/ZAR/EUR</FxSpot>
+     <FxSpot pair="EURAUD">FX/AUD/EUR</FxSpot>
+     <FxSpot pair="EURCAD">FX/CAD/EUR</FxSpot>
+     <FxSpot pair="EURCZK">FX/CZK/EUR</FxSpot>
+     <FxSpot pair="EURDKK">FX/DKK/EUR</FxSpot>
+     <FxSpot pair="EURHKD">FX/HKD/EUR</FxSpot>
+     <FxSpot pair="EURHUF">FX/HUF/EUR</FxSpot>
+     <FxSpot pair="EURNOK">FX/NOK/EUR</FxSpot>
+     <FxSpot pair="EURNZD">FX/NZD/EUR</FxSpot>
+     <FxSpot pair="EURPLN">FX/PLN/EUR</FxSpot>
+     <FxSpot pair="EURSEK">FX/SEK/EUR</FxSpot>
+     <FxSpot pair="EURSGD">FX/SGD/EUR</FxSpot>
+     <FxSpot pair="EURSKK">FX/SKK/EUR</FxSpot>
+     <FxSpot pair="EURTRY">FX/TRY/EUR</FxSpot>
+   </FxSpots>
+   <DefaultCurves id="default">
+     <DefaultCurve name="CPTY_C">Default/EUR/CPTY_C_SR_EUR</DefaultCurve>
+   </DefaultCurves>
+   <SecuritySpreads id="default">
+     <SecuritySpread name="SECURITY_1">SecuritySpread/SECURITY_1</SecuritySpread>
+   </SecuritySpreads>
+   <SecurityRecoveryRates id="default">
+     <SecurityRecoveryRate name="SECURITY_1">SecurityRecoveryRate/SECURITY_1</SecurityRecoveryRate>
+   </SecurityRecoveryRates>
+   <SwapIndexCurves id="default">
+   </SwapIndexCurves>
+   
+   <CapFloorVolatilities id="default">
+     <CapFloorVolatility currency="SEK">CapFloorVolatility/SEK/SEK_CF_N</CapFloorVolatility>
+     <!-- <CapFloorVolatility currency="EUR">CapFloorVolatility/EUR/EUR_CF_N</CapFloorVolatility> -->
+   </CapFloorVolatilities>
+   
+   <!-- fx volatility definition -->
    <ZeroInflationIndexCurves id="default">
-  </ZeroInflationIndexCurves>
-  <YYInflationIndexCurves id="default">
-  </YYInflationIndexCurves>
-</TodaysMarket>
+   </ZeroInflationIndexCurves>
+   <YYInflationIndexCurves id="default">
+   </YYInflationIndexCurves>
+ </TodaysMarket>
+ 

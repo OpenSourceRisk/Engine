@@ -1,16 +1,13 @@
 <?xml version="1.0"?>
 <Simulation>
-
   <Market>
-
     <BaseCurrency>EUR</BaseCurrency>
-
     <Currencies>
       <Currency>EUR</Currency>
       <Currency>GBP</Currency>
-      <Currency>CHF</Currency>	  
+      <Currency>CHF</Currency>
       <Currency>CAD</Currency>
-      <Currency>CZK</Currency>	  
+      <Currency>CZK</Currency>
       <Currency>DKK</Currency>
       <Currency>NOK</Currency>
       <Currency>SEK</Currency>
@@ -19,35 +16,34 @@
       <!-- <Currency>CHF</Currency> -->
       <!-- <Currency>JPY</Currency> -->
     </Currencies>
-
     <YieldCurves>
       <Configuration>
         <!-- <Tenors>1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y,30Y,40Y,50Y</Tenors> -->
         <!-- <Tenors>1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y</Tenors> -->
-        <Tenors>1M,3M,6M,9M,1Y,15M,18M,21M,2Y,27M,30M,33M,3Y,4Y,5Y,7Y,10Y,15Y,20Y</Tenors>
-        <Interpolation>LinearZero</Interpolation>
+        <!-- <Tenors>1M,3M,6M,9M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y</Tenors> -->
+        <Tenors>1D,2D,3D,4D,5D,6D,7D,14D,21D,28D,35D,42D,49D,56D,63D,70D,77D,84D,91D,122D,152D,183D,213D,243D,274D,304D,335D,365D,395D,426D,456D,487D,517D,548D,578D,608D,639D,669D,700D,730D,1095D,1460D,1825D,2190D,2555D,2920D,3285D,3650D,4015D,4380D,4745D,5110D,5475D,5840D,6205D,6570D,6935D,7300D,7665D,8030D,8395D,8760D,9125D,9490D,9855D,10220D,10585D,10950D</Tenors>
+        <Interpolation>LogLinear</Interpolation>
+        <!--<Interpolation>LinearZero</Interpolation>-->
         <!-- Alternative: LogLinear -->
         <Extrapolation>Y</Extrapolation>
       </Configuration>
     </YieldCurves>
-    
     <Indices>
-		<Index>EUR-EURIBOR-1Y</Index>
-		<Index>EUR-EURIBOR-6M</Index>
-		<Index>EUR-EURIBOR-3M</Index>
-		<Index>EUR-EURIBOR-1M</Index>
-		<Index>USD-LIBOR-3M</Index>
-		<Index>USD-LIBOR-1M</Index>
-		<Index>CHF-LIBOR-3M</Index>
-		<Index>SEK-STIBOR-3M</Index>
-		<Index>GBP-LIBOR-3M</Index>
-		<Index>NOK-NIBOR-3M</Index>
-		<Index>DKK-CIBOR-3M</Index>
-		<Index>DKK-CIBOR-6M</Index>
-		<Index>CAD-BA-3M</Index> 
-		<Index>CZK-PRIBOR-3M</Index>
+      <Index>EUR-EURIBOR-1Y</Index>
+      <Index>EUR-EURIBOR-6M</Index>
+      <Index>EUR-EURIBOR-3M</Index>
+      <Index>EUR-EURIBOR-1M</Index>
+      <Index>USD-LIBOR-3M</Index>
+      <Index>USD-LIBOR-1M</Index>
+      <Index>CHF-LIBOR-3M</Index>
+      <Index>SEK-STIBOR-3M</Index>
+      <Index>GBP-LIBOR-3M</Index>
+      <Index>NOK-NIBOR-3M</Index>
+      <Index>DKK-CIBOR-3M</Index>
+      <Index>DKK-CIBOR-6M</Index>
+      <Index>CAD-BA-3M</Index>
+      <Index>CZK-PRIBOR-3M</Index>
     </Indices>
-
     <SwapIndices>
       <!-- RL: commented out -->
       <!--
@@ -61,113 +57,107 @@
       </SwapIndex>
       -->
     </SwapIndices>
-
     <DefaultCurves>
       <Names>
-	<Name>CPTY_C</Name>
+        <Name>CPTY_C</Name>
       </Names>
       <Tenors>6M,1Y,2Y</Tenors>
     </DefaultCurves>
-
     <!-- Added -->
     <BenchmarkCurves>
-
-<!-- <BenchmarkCurve> -->
-        <!-- <Currency>EUR</Currency> -->
-        <!-- <Name>EUR-EURIBOR-1Y</Name> -->
+      <!-- <BenchmarkCurve> -->
+      <!-- <Currency>EUR</Currency> -->
+      <!-- <Name>EUR-EURIBOR-1Y</Name> -->
       <!-- </BenchmarkCurve> -->
-<!-- <BenchmarkCurve> -->
-        <!-- <Currency>EUR</Currency> -->
-        <!-- <Name>EUR-EURIBOR-6M</Name> -->
+      <!-- <BenchmarkCurve> -->
+      <!-- <Currency>EUR</Currency> -->
+      <!-- <Name>EUR-EURIBOR-6M</Name> -->
       <!-- </BenchmarkCurve> -->
-<!-- <BenchmarkCurve> -->
-        <!-- <Currency>EUR</Currency> -->
-        <!-- <Name>EUR-EURIBOR-3M</Name> -->
+      <!-- <BenchmarkCurve> -->
+      <!-- <Currency>EUR</Currency> -->
+      <!-- <Name>EUR-EURIBOR-3M</Name> -->
       <!-- </BenchmarkCurve> -->
-<!-- <BenchmarkCurve> -->
-        <!-- <Currency>EUR</Currency> -->
-        <!-- <Name>EUR-EURIBOR-1M</Name> -->
+      <!-- <BenchmarkCurve> -->
+      <!-- <Currency>EUR</Currency> -->
+      <!-- <Name>EUR-EURIBOR-1M</Name> -->
       <!-- </BenchmarkCurve> -->
-<!-- <BenchmarkCurve> -->
-        <!-- <Currency>USD</Currency> -->
-        <!-- <Name>USD-LIBOR-3M</Name> -->
+      <!-- <BenchmarkCurve> -->
+      <!-- <Currency>USD</Currency> -->
+      <!-- <Name>USD-LIBOR-3M</Name> -->
       <!-- </BenchmarkCurve> -->
-<!-- <BenchmarkCurve> -->
-        <!-- <Currency>USD</Currency> -->
-        <!-- <Name>USD-LIBOR-1M</Name> -->
+      <!-- <BenchmarkCurve> -->
+      <!-- <Currency>USD</Currency> -->
+      <!-- <Name>USD-LIBOR-1M</Name> -->
       <!-- </BenchmarkCurve> -->
-<!-- <BenchmarkCurve> -->
-        <!-- <Currency>CHF</Currency> -->
-        <!-- <Name>CHF-LIBOR-3M</Name> -->
+      <!-- <BenchmarkCurve> -->
+      <!-- <Currency>CHF</Currency> -->
+      <!-- <Name>CHF-LIBOR-3M</Name> -->
       <!-- </BenchmarkCurve> -->
-<!-- <BenchmarkCurve> -->
-        <!-- <Currency>SEK</Currency> -->
-        <!-- <Name>SEK-STIBOR-3M</Name> -->
+      <!-- <BenchmarkCurve> -->
+      <!-- <Currency>SEK</Currency> -->
+      <!-- <Name>SEK-STIBOR-3M</Name> -->
       <!-- </BenchmarkCurve> -->
-<!-- <BenchmarkCurve> -->
-        <!-- <Currency>GBP</Currency> -->
-        <!-- <Name>GBP-LIBOR-3M</Name> -->
+      <!-- <BenchmarkCurve> -->
+      <!-- <Currency>GBP</Currency> -->
+      <!-- <Name>GBP-LIBOR-3M</Name> -->
       <!-- </BenchmarkCurve> -->
-<!-- <BenchmarkCurve> -->
-        <!-- <Currency>NOK</Currency> -->
-        <!-- <Name>NOK-NIBOR-3M</Name> -->
+      <!-- <BenchmarkCurve> -->
+      <!-- <Currency>NOK</Currency> -->
+      <!-- <Name>NOK-NIBOR-3M</Name> -->
       <!-- </BenchmarkCurve> -->
-<!-- <BenchmarkCurve> -->
-        <!-- <Currency>DKK</Currency> -->
-        <!-- <Name>DKK-CIBOR-3M</Name> -->
+      <!-- <BenchmarkCurve> -->
+      <!-- <Currency>DKK</Currency> -->
+      <!-- <Name>DKK-CIBOR-3M</Name> -->
       <!-- </BenchmarkCurve> -->
-<!-- <BenchmarkCurve> -->
-        <!-- <Currency>DKK</Currency> -->
-        <!-- <Name>DKK-CIBOR-6M</Name> -->
+      <!-- <BenchmarkCurve> -->
+      <!-- <Currency>DKK</Currency> -->
+      <!-- <Name>DKK-CIBOR-6M</Name> -->
       <!-- </BenchmarkCurve> -->
-<!-- <BenchmarkCurve> -->
-        <!-- <Currency>CAD</Currency> -->
-        <!-- <Name>CAD-BA-3M</Name> -->
+      <!-- <BenchmarkCurve> -->
+      <!-- <Currency>CAD</Currency> -->
+      <!-- <Name>CAD-BA-3M</Name> -->
       <!-- </BenchmarkCurve> -->
-<!-- <BenchmarkCurve> -->
-        <!-- <Currency>CZK</Currency> -->
-        <!-- <Name>CZK-PRIBOR-3M</Name> -->
+      <!-- <BenchmarkCurve> -->
+      <!-- <Currency>CZK</Currency> -->
+      <!-- <Name>CZK-PRIBOR-3M</Name> -->
       <!-- </BenchmarkCurve> -->
-<BenchmarkCurve>
+      <BenchmarkCurve>
         <Currency>EUR</Currency>
         <Name>EUR-DIS</Name>
       </BenchmarkCurve>
-<BenchmarkCurve>
+      <BenchmarkCurve>
         <Currency>USD</Currency>
         <Name>USD-DIS</Name>
       </BenchmarkCurve>
-<BenchmarkCurve>
+      <BenchmarkCurve>
         <Currency>CHF</Currency>
         <Name>CHF-DIS</Name>
       </BenchmarkCurve>
-<BenchmarkCurve>
+      <BenchmarkCurve>
         <Currency>SEK</Currency>
         <Name>SEK-DIS</Name>
       </BenchmarkCurve>
-<BenchmarkCurve>
+      <BenchmarkCurve>
         <Currency>GBP</Currency>
         <Name>GBP-DIS</Name>
       </BenchmarkCurve>
-<BenchmarkCurve>
+      <BenchmarkCurve>
         <Currency>NOK</Currency>
         <Name>NOK-DIS</Name>
       </BenchmarkCurve>
-<BenchmarkCurve>
+      <BenchmarkCurve>
         <Currency>DKK</Currency>
         <Name>DKK-DIS</Name>
       </BenchmarkCurve>
-<BenchmarkCurve>
+      <BenchmarkCurve>
         <Currency>CAD</Currency>
         <Name>CAD-DIS</Name>
       </BenchmarkCurve>
-<BenchmarkCurve>
+      <BenchmarkCurve>
         <Currency>CZK</Currency>
         <Name>CZK-DIS</Name>
       </BenchmarkCurve>
-
-
     </BenchmarkCurves>
-
     <!-- Added -->
     <SwaptionVolatilities>
       <Simulate>false</Simulate>
@@ -178,24 +168,23 @@
       <Terms>1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,30Y</Terms>
       <Strikes/>
     </SwaptionVolatilities>
-
     <!-- Added -->
     <CapFloorVolatilities>
       <Simulate>true</Simulate>
       <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
       <Currencies>
-	<Currency>SEK</Currency>
-	<!-- <Currency>EUR</Currency> -->
-	<!-- <Currency>GBP</Currency> -->
-	<!-- <Currency>USD</Currency> -->
-	<!-- <Currency>DKK</Currency> -->
-	<!-- <Currency>NOK</Currency> -->
-	<!-- <Currency>CAD</Currency> -->
+        <Currency>SEK</Currency>
+        <!-- <Currency>EUR</Currency> -->
+        <!-- <Currency>GBP</Currency> -->
+        <!-- <Currency>USD</Currency> -->
+        <!-- <Currency>DKK</Currency> -->
+        <!-- <Currency>NOK</Currency> -->
+        <!-- <Currency>CAD</Currency> -->
       </Currencies>
-      <Expiries>01M,03M,06M,09M,01Y,15M,18M,21M,02Y,27M,30M,33M,03Y,39M,42M,45M,04Y,51M,54M,57M,05Y,06Y,07Y,08Y,09Y,10Y,12Y,15Y,20Y,25Y,30Y</Expiries>
+      <!-- <Expiries>01M,03M,06M,09M,01Y,02Y,03Y,04Y,05Y,06Y,07Y,08Y,09Y,10Y,12Y,15Y,20Y,25Y,30Y</Expiries> -->
+      <Expiries>01M,03M,06M,09M,12M,15M,18M,21M,24M,27M,30M,33M,36M,39M,42M,45M,48M,51M,54M,57M,60M,06Y,07Y,08Y,09Y,10Y,12Y,15Y,20Y,25Y,30Y</Expiries>
       <Strikes>0,0.01</Strikes>
     </CapFloorVolatilities>
-
     <!-- Added -->
     <FxVolatilities>
       <Simulate>true</Simulate>
@@ -205,7 +194,6 @@
       <Expiries>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</Expiries>
       <Strikes/>
     </FxVolatilities>
-
     <Securities>
       <Security>SECURITY_1</Security>
     </Securities>
@@ -215,12 +203,9 @@
       <Currency>EUR</Currency>
       <Currency>USD</Currency>
     </AggregationScenarioDataCurrencies>
-
     <AggregationScenarioDataIndices>
       <Index>EUR-EURIBOR-3M</Index>
       <Index>USD-LIBOR-3M</Index>
     </AggregationScenarioDataIndices>
-
   </Market>
-
 </Simulation>
