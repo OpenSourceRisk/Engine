@@ -748,7 +748,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
                 bool stickyStrike = true;
 
                 boost::shared_ptr<BlackVolTermStructure> eqVolCurve(
-                    new BlackVarianceSurfaceMoneyness(cal, spot, times, parameters->equityVolMoneyness(), quotes, dc, stickyStrike));
+                    new BlackVarianceSurfaceMoneynessSpot(cal, spot, times, parameters->equityVolMoneyness(), quotes, dc, stickyStrike));
                 eqVolCurve->enableExtrapolation();
                 evh = Handle<BlackVolTermStructure>(eqVolCurve);
             }

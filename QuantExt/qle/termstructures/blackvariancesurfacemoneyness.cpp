@@ -90,14 +90,9 @@ Real BlackVarianceSurfaceMoneyness::blackVarianceImpl(Time t, Real strike) const
     if (t == 0.0)
         return 0.0;
 
-    Real moneyness;
-    if (strike == Null<Real>() || strike == 0)
-        moneyness = 1.0;
-    else 
-        moneyness = strike / spot_->value();
-    
-    return blackVarianceMoneyness(t, moneyness);
+    return blackVarianceMoneyness(t, moneyness(t ,s));
 }
+
 
 Real BlackVarianceSurfaceMoneyness::blackVarianceMoneyness(Time t, Real m) const {
     if (t <= times_.back())
@@ -106,6 +101,18 @@ Real BlackVarianceSurfaceMoneyness::blackVarianceMoneyness(Time t, Real m) const
         return varianceSurface_(times_.back(), m, true) * t / times_.back();
 }
 
+BlackVarianceSurfaceMoneynessSpot::BlackVarianceSurfaceMoneynessSpot(
+    const Calendar& cal, const Handle<Quote>& spot, const std::vector<Time>& times,
+    const std::vector<Real>& moneyness, const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix,
+    const DayCounter& dayCounter, bool stickyStrike)
+    : BlackVarianceSurfaceMoneyness(cal, spot, times, moneyness, blackVolMatrix, dayCounter, stickyStrike) {}
+
+Real BlackVarianceSurfaceMoneynessSpot::moneyness(Time t, Real strike) const {
+    if (strike == Null<Real>() || strike == 0)
+        return 1.0;
+    else 
+        return strike / spot_->value();
+}
 
 BlackVarianceSurfaceMoneynessForward::BlackVarianceSurfaceMoneynessForward(
     const Calendar& cal, const Handle<Quote>& spot, const std::vector<Time>& times, const std::vector<Real>& moneyness,
@@ -114,37 +121,32 @@ BlackVarianceSurfaceMoneynessForward::BlackVarianceSurfaceMoneynessForward(
     : BlackVarianceSurfaceMoneyness(cal, spot, times, moneyness, blackVolMatrix, dayCounter, stickyStrike), 
         forTS_(forTS), domTS_(domTS) {
 
-    QL_REQUIRE(!forTS_.empty(), "foreign discount curve required for atmf surface");
-    QL_REQUIRE(!domTS_.empty(), "foreign discount curve required for atmf surface");
-    registerWith(forTS_);
-    registerWith(domTS_);
-    for(Size i = 0; i< times.size(); i++) {
+    if(!stickyStrike) {
+        QL_REQUIRE(!forTS_.empty(), "foreign discount curve required for atmf surface");
+        QL_REQUIRE(!domTS_.empty(), "foreign discount curve required for atmf surface");
+        registerWith(forTS_);
+        registerWith(domTS_);
+    } else {
+        for(Size i = 0; i< times.size(); i++) {
             Time t = times[i];
             Real fwd = spot_->value()*forTS_->discount(t)/domTS_->discount(t);
             forwards_.push_back(fwd);
+        }
+        forwardCurve_ = Linear().interpolate(times_.begin(), times_.end(), forwards_.begin());
     }
-
-    forwardCurve_ = Linear().interpolate(times_.begin(), times_.end(), forwards_.begin());
 }
 
-Real BlackVarianceSurfaceMoneynessForward::blackVarianceImpl(Time t, Real strike) const {
-
-    calculate();
-
-    if (t == 0.0)
-        return 0.0;
-
-    Real moneyness, fwd;
+Real BlackVarianceSurfaceMoneynessForward::moneyness(Time t, Real strike) const {
+    Real fwd;
     if (strike == Null<Real>() || strike == 0)
-        moneyness = 1.0;
+        return 1.0;
     else {
         if(stickyStrike_) 
             fwd = forwardCurve_(t, true);
         else 
             fwd = spot_->value()*forTS_->discount(t)/domTS_->discount(t);
-        moneyness = strike / fwd;
+        return strike / fwd;
     }
-    return blackVarianceMoneyness(t, moneyness);
 }
 
 } // namespace QuantExt

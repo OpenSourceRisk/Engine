@@ -64,8 +64,9 @@ public:
     virtual void accept(AcyclicVisitor&);
     //@}
 protected:
-    virtual Real blackVarianceImpl(Time t, Real strike) const;
     Real blackVarianceMoneyness(Time t, Real moneyness) const;
+    virtual Real blackVarianceImpl(Time t, Real strike) const;
+    virtual Real moneyness(Time t, Real strike) const;
     Handle<Quote> spot_;
     std::vector<Time> times_;
     DayCounter dayCounter_;
@@ -87,13 +88,29 @@ inline void BlackVarianceSurfaceMoneyness::accept(AcyclicVisitor& v) {
         BlackVarianceTermStructure::accept(v);
 }
 
+//! Black volatility surface based on spot moneyness
+class BlackVarianceSurfaceMoneynessSpot : public BlackVarianceSurfaceMoneyness {
+public:
+    /*! Moneyness is defined here as spot moneyness, i.e. K/S */
 
-//! Black volatility surface based on moneyness
+    BlackVarianceSurfaceMoneynessSpot(const Calendar& cal, const Handle<Quote>& spot, const std::vector<Time>& times,
+                                  const std::vector<Real>& moneyness,
+                                  const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix,
+                                  const DayCounter& dayCounter, bool stickyStrike = false);
+    
+
+private:
+    virtual Real moneyness(Time t, Real strike) const;
+    std::vector<Real> forwards_;
+    Handle<YieldTermStructure> forTS_;
+    Handle<YieldTermStructure> domTS_;
+    mutable Interpolation forwardCurve_;
+};
+
+//! Black volatility surface based on forward moneyness
 class BlackVarianceSurfaceMoneynessForward : public BlackVarianceSurfaceMoneyness {
 public:
-    /*! Moneyness can be defined here as spot moneyness, i.e. K/S
-    * or forward moneyness, ie F/S
-    */
+    /*! Moneyness is defined here as forward moneyness, ie F/S */
     BlackVarianceSurfaceMoneynessForward(const Calendar& cal, const Handle<Quote>& spot, const std::vector<Time>& times,
                                   const std::vector<Real>& moneyness,
                                   const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix,
@@ -102,13 +119,13 @@ public:
                                   const Handle<YieldTermStructure>& domTS,
                                   bool stickyStrike = false);
     
-    virtual Real blackVarianceImpl(Time t, Real strike) const;
 
 private:
+    virtual Real moneyness(Time t, Real strike) const;
     std::vector<Real> forwards_;
     Handle<YieldTermStructure> forTS_;
     Handle<YieldTermStructure> domTS_;
-    mutable Interpolation forwardCurve_;
+    Interpolation forwardCurve_;
 };
 
 } // namespace QuantExt
