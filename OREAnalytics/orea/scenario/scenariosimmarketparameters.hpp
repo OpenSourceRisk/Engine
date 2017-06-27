@@ -98,7 +98,6 @@ public:
     const string& cdsVolDecayMode() const { return cdsVolDecayMode_; }
 
     const vector<string>& equityNames() const { return equityNames_; }
-    const vector<string>& equityCurrencies() const { return equityCurrencies_; }
     const vector<Period>& equityDividendTenors(const string& key) const;
     bool hasEquityDividendTenors(const string& key) const { return equityDividendTenors_.count(key) > 0; }
     const vector<Period>& equityForecastTenors(const string& key) const;
@@ -164,7 +163,6 @@ public:
     string& cdsVolDecayMode() { return cdsVolDecayMode_; }
 
     vector<string>& equityNames() { return equityNames_; }
-    vector<string>& equityCurrencies() { return equityCurrencies_; }
     void setEquityDividendTenors(const string& key, const vector<Period>& p);
     void setEquityForecastTenors(const string& key, const vector<Period>& p);
     
@@ -240,7 +238,6 @@ private:
     string cdsVolDecayMode_;
 
     vector<string> equityNames_;
-    vector<string> equityCurrencies_;
     map<string, vector<Period>> equityDividendTenors_;
     map<string, vector<Period>> equityForecastTenors_;
 

@@ -207,13 +207,8 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
 
     nodeChild = XMLUtils::getChildNode(node, "Equities");
     equityNames_.clear();
-    equityCurrencies_.clear();
     if (nodeChild) {
-        for (XMLNode* n = XMLUtils::getChildNode(nodeChild, "Equity"); n != nullptr;
-             n = XMLUtils::getNextSibling(n, "Equity")) {
-            equityNames_.push_back(XMLUtils::getChildValue(n, "Name", true));
-            equityCurrencies_.push_back(XMLUtils::getChildValue(n, "Currency", true));
-        }
+        equityNames_ = XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true); 
         equityDividendTenors_[""] = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "DividendTenors", true);
         equityForecastTenors_[""] = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "ForecastTenors", true);
     } else {
