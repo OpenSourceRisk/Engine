@@ -202,7 +202,8 @@ Calendar parseCalendar(const string& s) {
                                       {"PHP", TARGET()},
                                       {"NGN", TARGET()},
                                       {"MAD", TARGET()},
-                                      {"WeekendsOnly", WeekendsOnly()}};
+                                      {"WeekendsOnly", WeekendsOnly()},
+				      {"NullCalendar", NullCalendar()}};
 
     auto it = m.find(s);
     if (it != m.end()) {

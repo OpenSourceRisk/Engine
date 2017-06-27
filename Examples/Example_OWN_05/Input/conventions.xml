@@ -20,6 +20,18 @@
     <EOM>false</EOM>
   </Zero>
   <Zero>
+    <Id>EUR-ZERO-CONVENTIONS-DAYS-BASED</Id>
+    <TenorBased>true</TenorBased>
+    <DayCounter>A365</DayCounter>
+    <Compounding>Continuous</Compounding>
+    <CompoundingFrequency>Daily</CompoundingFrequency>
+    <TenorCalendar>NullCalendar</TenorCalendar>
+    <SpotLag>0</SpotLag>
+    <SpotCalendar>NullCalendar</SpotCalendar>
+    <RollConvention>Following</RollConvention>
+    <EOM>false</EOM>
+  </Zero>
+  <Zero>
     <Id>CHF-ZERO-CONVENTIONS</Id>
     <TenorBased>false</TenorBased>
     <DayCounter>A365</DayCounter>

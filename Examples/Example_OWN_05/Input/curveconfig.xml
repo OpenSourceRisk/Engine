@@ -79,7 +79,7 @@
 <Quote>ZERO/RATE/AUD/AUD3M/A365/10585D</Quote>
 <Quote>ZERO/RATE/AUD/AUD3M/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -161,7 +161,7 @@
 <Quote>ZERO/RATE/AUD/AUD6M/A365/10585D</Quote>
 <Quote>ZERO/RATE/AUD/AUD6M/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -243,7 +243,7 @@
 <Quote>ZERO/RATE/CAD/CAD1M/A365/10585D</Quote>
 <Quote>ZERO/RATE/CAD/CAD1M/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -325,7 +325,7 @@
 <Quote>ZERO/RATE/CAD/CAD3M/A365/10585D</Quote>
 <Quote>ZERO/RATE/CAD/CAD3M/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -407,7 +407,7 @@
 <Quote>ZERO/RATE/CHF/CHF3M/A365/10585D</Quote>
 <Quote>ZERO/RATE/CHF/CHF3M/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -489,7 +489,7 @@
 <Quote>ZERO/RATE/CHF/CHF6M/A365/10585D</Quote>
 <Quote>ZERO/RATE/CHF/CHF6M/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -571,7 +571,7 @@
 <Quote>ZERO/RATE/CNY/CNY3M/A365/10585D</Quote>
 <Quote>ZERO/RATE/CNY/CNY3M/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -653,7 +653,7 @@
 <Quote>ZERO/RATE/CZK/CZK3M/A365/10585D</Quote>
 <Quote>ZERO/RATE/CZK/CZK3M/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -735,7 +735,7 @@
 <Quote>ZERO/RATE/CZK/CZK6M/A365/10585D</Quote>
 <Quote>ZERO/RATE/CZK/CZK6M/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -817,7 +817,7 @@
 <Quote>ZERO/RATE/AUD/DIS/A365/10585D</Quote>
 <Quote>ZERO/RATE/AUD/DIS/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -899,7 +899,7 @@
 <Quote>ZERO/RATE/CAD/DIS/A365/10585D</Quote>
 <Quote>ZERO/RATE/CAD/DIS/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -981,7 +981,7 @@
 <Quote>ZERO/RATE/CHF/DIS/A365/10585D</Quote>
 <Quote>ZERO/RATE/CHF/DIS/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -1063,7 +1063,7 @@
 <Quote>ZERO/RATE/CNY/DIS/A365/10585D</Quote>
 <Quote>ZERO/RATE/CNY/DIS/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -1145,7 +1145,7 @@
 <Quote>ZERO/RATE/CZK/DIS/A365/10585D</Quote>
 <Quote>ZERO/RATE/CZK/DIS/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -1227,7 +1227,7 @@
 <Quote>ZERO/RATE/DKK/DIS/A365/10585D</Quote>
 <Quote>ZERO/RATE/DKK/DIS/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -1309,7 +1309,7 @@
 <Quote>ZERO/RATE/EUR/DIS/A365/10585D</Quote>
 <Quote>ZERO/RATE/EUR/DIS/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -1391,7 +1391,7 @@
 <Quote>ZERO/RATE/GBP/DIS/A365/10585D</Quote>
 <Quote>ZERO/RATE/GBP/DIS/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -1473,7 +1473,7 @@
 <Quote>ZERO/RATE/HKD/DIS/A365/10585D</Quote>
 <Quote>ZERO/RATE/HKD/DIS/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -1555,7 +1555,7 @@
 <Quote>ZERO/RATE/HUF/DIS/A365/10585D</Quote>
 <Quote>ZERO/RATE/HUF/DIS/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -1637,7 +1637,7 @@
 <Quote>ZERO/RATE/JPY/DIS/A365/10585D</Quote>
 <Quote>ZERO/RATE/JPY/DIS/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -1719,7 +1719,7 @@
 <Quote>ZERO/RATE/NOK/DIS/A365/10585D</Quote>
 <Quote>ZERO/RATE/NOK/DIS/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -1801,7 +1801,7 @@
 <Quote>ZERO/RATE/PLN/DIS/A365/10585D</Quote>
 <Quote>ZERO/RATE/PLN/DIS/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -1883,7 +1883,7 @@
 <Quote>ZERO/RATE/RUB/DIS/A365/10585D</Quote>
 <Quote>ZERO/RATE/RUB/DIS/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -1965,7 +1965,7 @@
 <Quote>ZERO/RATE/SEK/DIS/A365/10585D</Quote>
 <Quote>ZERO/RATE/SEK/DIS/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -2047,7 +2047,7 @@
 <Quote>ZERO/RATE/SGD/DIS/A365/10585D</Quote>
 <Quote>ZERO/RATE/SGD/DIS/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -2129,7 +2129,7 @@
 <Quote>ZERO/RATE/USD/DIS/A365/10585D</Quote>
 <Quote>ZERO/RATE/USD/DIS/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -2211,7 +2211,7 @@
 <Quote>ZERO/RATE/AUD/DISON/A365/10585D</Quote>
 <Quote>ZERO/RATE/AUD/DISON/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -2293,7 +2293,7 @@
 <Quote>ZERO/RATE/CAD/DISON/A365/10585D</Quote>
 <Quote>ZERO/RATE/CAD/DISON/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -2375,7 +2375,7 @@
 <Quote>ZERO/RATE/CHF/DISON/A365/10585D</Quote>
 <Quote>ZERO/RATE/CHF/DISON/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -2457,7 +2457,7 @@
 <Quote>ZERO/RATE/CZK/DISON/A365/10585D</Quote>
 <Quote>ZERO/RATE/CZK/DISON/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -2539,7 +2539,7 @@
 <Quote>ZERO/RATE/DKK/DISON/A365/10585D</Quote>
 <Quote>ZERO/RATE/DKK/DISON/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -2621,7 +2621,7 @@
 <Quote>ZERO/RATE/EUR/DISON/A365/10585D</Quote>
 <Quote>ZERO/RATE/EUR/DISON/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -2703,7 +2703,7 @@
 <Quote>ZERO/RATE/GBP/DISON/A365/10585D</Quote>
 <Quote>ZERO/RATE/GBP/DISON/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -2785,7 +2785,7 @@
 <Quote>ZERO/RATE/HKD/DISON/A365/10585D</Quote>
 <Quote>ZERO/RATE/HKD/DISON/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -2867,7 +2867,7 @@
 <Quote>ZERO/RATE/HUF/DISON/A365/10585D</Quote>
 <Quote>ZERO/RATE/HUF/DISON/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -2949,7 +2949,7 @@
 <Quote>ZERO/RATE/JPY/DISON/A365/10585D</Quote>
 <Quote>ZERO/RATE/JPY/DISON/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -3031,7 +3031,7 @@
 <Quote>ZERO/RATE/PLN/DISON/A365/10585D</Quote>
 <Quote>ZERO/RATE/PLN/DISON/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -3113,7 +3113,7 @@
 <Quote>ZERO/RATE/SEK/DISON/A365/10585D</Quote>
 <Quote>ZERO/RATE/SEK/DISON/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -3195,7 +3195,7 @@
 <Quote>ZERO/RATE/SGD/DISON/A365/10585D</Quote>
 <Quote>ZERO/RATE/SGD/DISON/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -3277,7 +3277,7 @@
 <Quote>ZERO/RATE/USD/DISON/A365/10585D</Quote>
 <Quote>ZERO/RATE/USD/DISON/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -3359,7 +3359,7 @@
 <Quote>ZERO/RATE/DKK/DKK3M/A365/10585D</Quote>
 <Quote>ZERO/RATE/DKK/DKK3M/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -3441,7 +3441,7 @@
 <Quote>ZERO/RATE/DKK/DKK6M/A365/10585D</Quote>
 <Quote>ZERO/RATE/DKK/DKK6M/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -3523,7 +3523,7 @@
 <Quote>ZERO/RATE/EUR/EUR1M/A365/10585D</Quote>
 <Quote>ZERO/RATE/EUR/EUR1M/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -3605,7 +3605,7 @@
 <Quote>ZERO/RATE/EUR/EUR1Y/A365/10585D</Quote>
 <Quote>ZERO/RATE/EUR/EUR1Y/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -3687,7 +3687,7 @@
 <Quote>ZERO/RATE/EUR/EUR3M/A365/10585D</Quote>
 <Quote>ZERO/RATE/EUR/EUR3M/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -3769,7 +3769,7 @@
 <Quote>ZERO/RATE/EUR/EUR6M/A365/10585D</Quote>
 <Quote>ZERO/RATE/EUR/EUR6M/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -3851,7 +3851,7 @@
 <Quote>ZERO/RATE/EUR/EURIA/A365/10585D</Quote>
 <Quote>ZERO/RATE/EUR/EURIA/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -3933,7 +3933,7 @@
 <Quote>ZERO/RATE/GBP/GBP3M/A365/10585D</Quote>
 <Quote>ZERO/RATE/GBP/GBP3M/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -4015,7 +4015,7 @@
 <Quote>ZERO/RATE/GBP/GBP6M/A365/10585D</Quote>
 <Quote>ZERO/RATE/GBP/GBP6M/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -4097,7 +4097,7 @@
 <Quote>ZERO/RATE/HKD/HKD3M/A365/10585D</Quote>
 <Quote>ZERO/RATE/HKD/HKD3M/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -4179,7 +4179,7 @@
 <Quote>ZERO/RATE/HUF/HUF3M/A365/10585D</Quote>
 <Quote>ZERO/RATE/HUF/HUF3M/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -4261,7 +4261,7 @@
 <Quote>ZERO/RATE/HUF/HUF6M/A365/10585D</Quote>
 <Quote>ZERO/RATE/HUF/HUF6M/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -4343,7 +4343,7 @@
 <Quote>ZERO/RATE/JPY/JPY3M/A365/10585D</Quote>
 <Quote>ZERO/RATE/JPY/JPY3M/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -4425,7 +4425,7 @@
 <Quote>ZERO/RATE/JPY/JPY6M/A365/10585D</Quote>
 <Quote>ZERO/RATE/JPY/JPY6M/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -4507,7 +4507,7 @@
 <Quote>ZERO/RATE/NOK/NOK3M/A365/10585D</Quote>
 <Quote>ZERO/RATE/NOK/NOK3M/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -4589,7 +4589,7 @@
 <Quote>ZERO/RATE/NOK/NOK6M/A365/10585D</Quote>
 <Quote>ZERO/RATE/NOK/NOK6M/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -4671,7 +4671,7 @@
 <Quote>ZERO/RATE/NZD/NZDOR/A365/10585D</Quote>
 <Quote>ZERO/RATE/NZD/NZDOR/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -4753,7 +4753,7 @@
 <Quote>ZERO/RATE/PLN/PLN3M/A365/10585D</Quote>
 <Quote>ZERO/RATE/PLN/PLN3M/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -4835,7 +4835,7 @@
 <Quote>ZERO/RATE/PLN/PLN6M/A365/10585D</Quote>
 <Quote>ZERO/RATE/PLN/PLN6M/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -4917,7 +4917,7 @@
 <Quote>ZERO/RATE/SEK/SEK3M/A365/10585D</Quote>
 <Quote>ZERO/RATE/SEK/SEK3M/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -4999,7 +4999,7 @@
 <Quote>ZERO/RATE/SGD/SGD3M/A365/10585D</Quote>
 <Quote>ZERO/RATE/SGD/SGD3M/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -5081,7 +5081,7 @@
 <Quote>ZERO/RATE/SGD/SGD6M/A365/10585D</Quote>
 <Quote>ZERO/RATE/SGD/SGD6M/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -5163,7 +5163,7 @@
 <Quote>ZERO/RATE/USD/USD1M/A365/10585D</Quote>
 <Quote>ZERO/RATE/USD/USD1M/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -5245,7 +5245,7 @@
 <Quote>ZERO/RATE/USD/USD3M/A365/10585D</Quote>
 <Quote>ZERO/RATE/USD/USD3M/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
@@ -5327,7 +5327,7 @@
 <Quote>ZERO/RATE/ZAR/ZAROR/A365/10585D</Quote>
 <Quote>ZERO/RATE/ZAR/ZAROR/A365/10950D</Quote>
 </Quotes>
-<Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+<Conventions>EUR-ZERO-CONVENTIONS-DAYS-BASED</Conventions>
 </Direct>
 </Segments>
 </YieldCurve>
