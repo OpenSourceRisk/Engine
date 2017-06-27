@@ -382,7 +382,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
             vector<vector<Handle<Quote>>> quotes(optionTenors.size(),
                                                  vector<Handle<Quote>>(strikes.size(), Handle<Quote>()));
             for (Size i = 0; i < optionTenors.size(); ++i) {
-                optionDates[i] = asof_ + optionTenors[i];
+                optionDates[i] = wrapper->optionDateFromTenor(optionTenors[i]);
                 for (Size j = 0; j < strikes.size(); ++j) {
                     Real vol = wrapper->volatility(optionTenors[i], strikes[j], wrapper->allowsExtrapolation());
                     boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
@@ -453,7 +453,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         boost::shared_ptr<DefaultProbabilityTermStructure> defaultCurve(
             new QuantExt::SurvivalProbabilityCurve<Linear>(dates, quotes, wrapper->dayCounter(), wrapper->calendar()));
         Handle<DefaultProbabilityTermStructure> dch(defaultCurve);
-            
+
         dch->enableExtrapolation();
 
         defaultCurves_.insert(pair<pair<string, string>, Handle<DefaultProbabilityTermStructure>>(
@@ -713,9 +713,8 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
 
             boost::shared_ptr<BilinearBaseCorrelationTermStructure> bcp =
                 boost::make_shared<BilinearBaseCorrelationTermStructure>(
-                    wrapper->settlementDays(), wrapper->calendar(), wrapper->businessDayConvention(),
-                    terms, parameters->baseCorrelationDetachmentPoints(), quotes,
-                    wrapper->dayCounter());
+                    wrapper->settlementDays(), wrapper->calendar(), wrapper->businessDayConvention(), terms,
+                    parameters->baseCorrelationDetachmentPoints(), quotes, wrapper->dayCounter());
 
             bcp->enableExtrapolation(wrapper->allowsExtrapolation());
             Handle<BilinearBaseCorrelationTermStructure> bch(bcp);
