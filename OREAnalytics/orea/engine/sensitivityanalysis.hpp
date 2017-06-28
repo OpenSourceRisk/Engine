@@ -31,6 +31,7 @@
 #include <ored/marketdata/market.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/report/report.hpp>
+#include <ored/utilities/progressbar.hpp>
 
 #include <map>
 #include <set>
@@ -57,7 +58,7 @@ class ValuationCalculator;
   \ingroup simulation
 */
 
-class SensitivityAnalysis {
+class SensitivityAnalysis : public ore::data::ProgressReporter {
 public:
     //! Constructor
     SensitivityAnalysis(const boost::shared_ptr<ore::data::Portfolio>& portfolio,

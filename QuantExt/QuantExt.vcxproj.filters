@@ -279,6 +279,9 @@
     <ClInclude Include="qle\termstructures\blackvariancecurve3.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\blackvariancesurfacemoneyness.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
     <ClInclude Include="qle\pricingengines\discountingswapenginemulticurve.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
@@ -446,6 +449,15 @@
     </ClInclude>
     <ClInclude Include="qle\pricingengines\discountingriskybondengine.hpp">
       <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\swaptionvolcubewithatm.hpp">
+      <Filter>termstructures</Filters>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\swaptionvolcube2.hpp">
+      <Filter>termstructures</Filters>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\swaptionvolconstantspread.hpp">
+      <Filter>termstructures</Filters>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -637,6 +649,9 @@
     <ClCompile Include="qle\termstructures\blackvariancecurve3.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
+    <ClCompile Include="qle\termstructures\blackvariancesurfacemoneyness.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
     <ClCompile Include="qle\pricingengines\discountingswapenginemulticurve.cpp">
       <Filter>pricingengines</Filter>
     </ClCompile>
@@ -662,6 +677,9 @@
       <Filter>termstructures</Filter>
     </ClCompile>
     <ClCompile Include="qle\termstructures\swaptionvolatilityconverter.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\swaptionvolcube2.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
     <ClCompile Include="qle\termstructures\spreadedoptionletvolatility.cpp">

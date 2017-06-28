@@ -54,12 +54,13 @@ public:
         OptionletVolatility,
         FXSpot,
         FXVolatility,
-        EQSpot,
-        EQVolatility,
+        EquitySpot,
+        EquityVolatility,
+        DividendYield,
         SurvivalProbability,
         RecoveryRate,
-	  CDSVolatility,
-	  BaseCorrelation
+        CDSVolatility,
+        BaseCorrelation
     };
 
     //! Constructor

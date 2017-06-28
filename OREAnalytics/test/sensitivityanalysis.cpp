@@ -482,22 +482,28 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
         {"13_Swaption_EUR", "Down:IndexCurve/EUR-EURIBOR-6M/5/7Y", 5116.77, 47.2293},
         {"13_Swaption_EUR", "Down:IndexCurve/EUR-EURIBOR-6M/6/10Y", 5116.77, -170.339},
         {"13_Swaption_EUR", "Down:IndexCurve/EUR-EURIBOR-6M/7/15Y", 5116.77, -159.115},
-        {"13_Swaption_EUR", "Up:SwaptionVolatility/EUR/1/2Y/10Y/ATM", 5116.77, 17.1282},
-        {"13_Swaption_EUR", "Up:SwaptionVolatility/EUR/3/5Y/10Y/ATM", 5116.77, 118.487},
-        {"13_Swaption_EUR", "Up:SwaptionVolatility/EUR/5/10Y/10Y/ATM", 5116.77, 19.5026},
-        {"13_Swaption_EUR", "Down:SwaptionVolatility/EUR/1/2Y/10Y/ATM", 5116.77, -17.2771},
-        {"13_Swaption_EUR", "Down:SwaptionVolatility/EUR/3/5Y/10Y/ATM", 5116.77, -118.671},
-        {"13_Swaption_EUR", "Down:SwaptionVolatility/EUR/5/10Y/10Y/ATM", 5116.77, -19.5463},
-        {"14_EquityOption_SP5", "Up:DiscountCurve/USD/2/2Y", 216085, 123.022},
-        {"14_EquityOption_SP5", "Up:DiscountCurve/USD/3/3Y", 216085, 1.0169},
-        {"14_EquityOption_SP5", "Down:DiscountCurve/USD/2/2Y", 216085, -122.988},
-        {"14_EquityOption_SP5", "Down:DiscountCurve/USD/3/3Y", 216085, -1.0169},
-        {"14_EquityOption_SP5", "Up:EQSpot/SP5/0/spot", 216085, 8423.66},
-        {"14_EquityOption_SP5", "Down:EQSpot/SP5/0/spot", 216085, -8277.55},
-        {"14_EquityOption_SP5", "Up:FXSpot/EURUSD/0/spot", 216085, -2139.45},
-        {"14_EquityOption_SP5", "Down:FXSpot/EURUSD/0/spot", 216085, 2182.67},
-        {"14_EquityOption_SP5", "Up:EQVolatility/SP5/0/5Y/ATM", 216085, 1849.98},
-        {"14_EquityOption_SP5", "Down:EQVolatility/SP5/0/5Y/ATM", 216085, -1850.33}};
+        {"13_Swaption_EUR", "Up:SwaptionVolatility/EUR/0/2Y/5Y/ATM", 5116.77, 3.72696},
+        {"13_Swaption_EUR", "Up:SwaptionVolatility/EUR/1/2Y/10Y/ATM", 5116.77, 13.3968},
+        {"13_Swaption_EUR", "Up:SwaptionVolatility/EUR/2/5Y/5Y/ATM", 5116.77, 82.6808},
+        {"13_Swaption_EUR", "Up:SwaptionVolatility/EUR/3/5Y/10Y/ATM", 5116.77, 35.8265},
+        {"13_Swaption_EUR", "Up:SwaptionVolatility/EUR/4/10Y/5Y/ATM", 5116.77, 15.5766},
+        {"13_Swaption_EUR", "Up:SwaptionVolatility/EUR/5/10Y/10Y/ATM", 5116.77, 3.94306},
+        {"13_Swaption_EUR", "Down:SwaptionVolatility/EUR/0/2Y/5Y/ATM", 5116.77, -3.7499},
+        {"13_Swaption_EUR", "Down:SwaptionVolatility/EUR/1/2Y/10Y/ATM", 5116.77, -13.715},
+        {"13_Swaption_EUR", "Down:SwaptionVolatility/EUR/2/5Y/5Y/ATM", 5116.77, -82.6745},
+        {"13_Swaption_EUR", "Down:SwaptionVolatility/EUR/3/5Y/10Y/ATM", 5116.77, -36.0078},
+        {"13_Swaption_EUR", "Down:SwaptionVolatility/EUR/4/10Y/5Y/ATM", 5116.77, -15.602},
+        {"13_Swaption_EUR", "Down:SwaptionVolatility/EUR/5/10Y/10Y/ATM", 5116.77, -3.94141},
+        {"14_EquityOption_SP5", "Up:DiscountCurve/USD/2/2Y", 216085, 123.022 },
+        {"14_EquityOption_SP5", "Up:DiscountCurve/USD/3/3Y", 216085, 1.0169 },
+        {"14_EquityOption_SP5", "Down:DiscountCurve/USD/2/2Y", 216085, -122.988 },
+        {"14_EquityOption_SP5", "Down:DiscountCurve/USD/3/3Y", 216085, -1.0169 },
+        {"14_EquityOption_SP5", "Up:EquitySpot/SP5/0/spot", 216085, 8423.66 },
+        {"14_EquityOption_SP5", "Down:EquitySpot/SP5/0/spot", 216085, -8277.55 },
+        {"14_EquityOption_SP5", "Up:FXSpot/EURUSD/0/spot", 216085, -2139.45 },
+        {"14_EquityOption_SP5", "Down:FXSpot/EURUSD/0/spot", 216085, 2182.67 },
+        {"14_EquityOption_SP5", "Up:EquityVolatility/SP5/0/5Y/ATM", 216085, 1849.98 },
+        {"14_EquityOption_SP5", "Down:EquityVolatility/SP5/0/5Y/ATM", 216085, -1850.33 } };
 
     std::map<pair<string, string>, Real> npvMap, sensiMap;
     for (Size i = 0; i < cachedResults.size(); ++i) {
@@ -746,14 +752,13 @@ void SensitivityAnalysisTest::test2dShifts() {
     string ccy = simMarketData->ccys()[0];
     Handle<SwaptionVolatilityStructure> ts = initMarket->swaptionVol(ccy);
     DayCounter dc = ts->dayCounter();
-    Real strike = 0.0; // FIXME
     for (Size i = 0; i < expiries.size(); ++i)
         expiryTimes[i] = dc.yearFraction(today, today + expiries[i]);
     for (Size j = 0; j < terms.size(); ++j)
         termTimes[j] = dc.yearFraction(today, today + terms[j]);
     for (Size i = 0; i < expiries.size(); ++i) {
         for (Size j = 0; j < terms.size(); ++j)
-            initialData[i][j] = ts->volatility(expiries[i], terms[j], strike);
+            initialData[i][j] = ts->volatility(expiries[i], terms[j], Null<Real>()); // ATM
     }
 
     // apply shifts for tenors on the 2d shift grid
@@ -945,8 +950,8 @@ void SensitivityAnalysisTest::testEquityOptionDeltaGamma() {
     Real epsilon = 1.e-15; // a small number
     string discountCurveStr = "DiscountCurve";
     string yieldCurveStr = "YieldCurve";
-    string equitySpotStr = "EQSpot";
-    string equityVolStr = "EQVolatility";
+    string equitySpotStr = "EquitySpot";
+    string equityVolStr = "EquityVolatility";
 
     for (auto it : qlInfoMap) {
         string id = it.first;

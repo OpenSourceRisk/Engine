@@ -33,6 +33,8 @@
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 #include <ql/termstructures/volatility/optionlet/strippedoptionlet.hpp>
 #include <ql/termstructures/volatility/optionlet/strippedoptionletadapter.hpp>
+#include <ql/termstructures/volatility/swaption/swaptionconstantvol.hpp>
+#include <ql/termstructures/volatility/swaption/swaptionvolcube.hpp>
 #include <ql/termstructures/volatility/swaption/swaptionvolmatrix.hpp>
 #include <ql/termstructures/volatility/swaption/swaptionvolstructure.hpp>
 #include <ql/termstructures/yield/discountcurve.hpp>
@@ -40,11 +42,14 @@
 #include <ql/time/daycounters/actualactual.hpp>
 
 #include <ql/experimental/credit/basecorrelationstructure.hpp>
+
 #include <qle/termstructures/dynamicblackvoltermstructure.hpp>
 #include <qle/termstructures/dynamicswaptionvolmatrix.hpp>
 #include <qle/termstructures/strippedoptionletadapter2.hpp>
 #include <qle/termstructures/survivalprobabilitycurve.hpp>
 #include <qle/termstructures/swaptionvolatilityconverter.hpp>
+#include <qle/termstructures/swaptionvolconstantspread.hpp>
+#include <qle/termstructures/swaptionvolcubewithatm.hpp>
 
 #include <boost/timer.hpp>
 
@@ -291,11 +296,14 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
 
         LOG("Initial market " << ccy << " swaption volatility type = " << wrapper->volatilityType());
 
-        // Check that we have a swaption volatility matrix
         bool isMatrix = boost::dynamic_pointer_cast<SwaptionVolatilityMatrix>(*wrapper) != nullptr;
+        // bool isConstant = boost::dynamic_pointer_cast<ConstantSwaptionVolatility>(*wrapper) != nullptr;
+        bool isCube = boost::dynamic_pointer_cast<QuantExt::SwaptionVolCubeWithATM>(*wrapper) != nullptr;
 
         // If swaption volatility type is not Normal, convert to Normal for the simulation
         if (wrapper->volatilityType() != Normal) {
+            // FIXME we should support constant swaption vols here as well (or build a matrix
+            // always in todays market even if only one vol point is given?)
             if (isMatrix) {
                 // Get swap index associated with this volatility structure
                 string swapIndexName = initMarket->swapIndexBase(ccy, configuration);
@@ -309,13 +317,14 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
                                                                          << " to normal swaption volatilities");
             } else {
                 // Only support conversions for swaption volatility matrices
+                // FIXME we should also convert cubes
                 LOG("Swaption volatility for ccy " << ccy << " is not a matrix so it is not converted to Normal");
             }
         }
 
         Handle<SwaptionVolatilityStructure> svp;
         if (parameters->simulateSwapVols()) {
-            LOG("Simulating (normal) Swaption vols for ccy " << ccy);
+            LOG("Simulating (" << wrapper->volatilityType() << ") Swaption vols for ccy " << ccy);
             vector<Period> optionTenors = parameters->swapVolExpiries();
             vector<Period> swapTenors = parameters->swapVolTerms();
             vector<vector<Handle<Quote>>> quotes(optionTenors.size(),
@@ -323,26 +332,43 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
             vector<vector<Real>> shift(optionTenors.size(), vector<Real>(swapTenors.size(), 0.0));
             for (Size i = 0; i < optionTenors.size(); ++i) {
                 for (Size j = 0; j < swapTenors.size(); ++j) {
-                    Real strike = 0.0; // FIXME
-                    Real vol = wrapper->volatility(optionTenors[i], swapTenors[j], strike);
+                    Real vol = wrapper->volatility(optionTenors[i], swapTenors[j], Null<Real>()); // ATM
                     boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
                     Size index = i * swapTenors.size() + j;
                     simData_.emplace(std::piecewise_construct,
                                      std::forward_as_tuple(RiskFactorKey::KeyType::SwaptionVolatility, ccy, index),
                                      std::forward_as_tuple(q));
                     quotes[i][j] = Handle<Quote>(q);
-                    shift[i][j] = wrapper->shift(optionTenors[i], swapTenors[j]);
+                    shift[i][j] = wrapper->volatilityType() == ShiftedLognormal
+                                      ? wrapper->shift(optionTenors[i], swapTenors[j])
+                                      : 0.0;
                 }
             }
             bool flatExtrapolation = true; // FIXME: get this from curve configuration
             VolatilityType volType = wrapper->volatilityType();
+            // floating reference date matrix in sim market
             boost::shared_ptr<SwaptionVolatilityStructure> svolp(new SwaptionVolatilityMatrix(
-                asof_, wrapper->calendar(), wrapper->businessDayConvention(), optionTenors, swapTenors, quotes,
+                wrapper->calendar(), wrapper->businessDayConvention(), optionTenors, swapTenors, quotes,
                 wrapper->dayCounter(), flatExtrapolation, volType, shift));
-            svp = Handle<SwaptionVolatilityStructure>(svolp);
+            // if we have a cube, we keep the vol spreads constant under scenarios
+            // notice that cube is from todaysmarket, so it has a fixed reference date, which means that
+            // we keep the smiles constant in terms of vol spreads when moving forward in time;
+            // notice also that the volatility will be "sticky strike", i.e. it will not react to
+            // changes in the ATM level
+            if (isCube) {
+                svp = Handle<SwaptionVolatilityStructure>(boost::make_shared<SwaptionVolatilityConstantSpread>(
+                    Handle<SwaptionVolatilityStructure>(svolp), wrapper));
+            } else {
+                svp = Handle<SwaptionVolatilityStructure>(svolp);
+            }
+
         } else {
             string decayModeString = parameters->swapVolDecayMode();
             ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);
+            LOG("Dynamic (" << wrapper->volatilityType() << ") Swaption vols (" << decayModeString << ") for ccy "
+                            << ccy);
+            if (isCube)
+                WLOG("Only ATM slice is considered from init market's cube");
             boost::shared_ptr<QuantLib::SwaptionVolatilityStructure> svolp =
                 boost::make_shared<QuantExt::DynamicSwaptionVolatilityMatrix>(*wrapper, 0, NullCalendar(), decayMode);
             svp = Handle<SwaptionVolatilityStructure>(svolp);
@@ -582,7 +608,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         Handle<Quote> qh(q);
         equitySpots_.insert(
             pair<pair<string, string>, Handle<Quote>>(make_pair(Market::defaultConfiguration, eqName), qh));
-        simData_.emplace(std::piecewise_construct, std::forward_as_tuple(RiskFactorKey::KeyType::EQSpot, eqName),
+        simData_.emplace(std::piecewise_construct, std::forward_as_tuple(RiskFactorKey::KeyType::EquitySpot, eqName),
                          std::forward_as_tuple(q));
     }
     LOG("equity spots done");
@@ -612,6 +638,9 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
             boost::shared_ptr<SimpleQuote> q(new SimpleQuote(wrapper->discount(equityCurveTimes[i + 1])));
             Handle<Quote> qh(q);
             quotes.push_back(qh);
+            simData_.emplace(std::piecewise_construct,
+                             std::forward_as_tuple(RiskFactorKey::KeyType::DividendYield, eqName, i),
+                             std::forward_as_tuple(q));
         }
         boost::shared_ptr<YieldTermStructure> eqdivCurve;
         if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister) {
@@ -638,23 +667,66 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
 
         Handle<BlackVolTermStructure> evh;
 
-        if (parameters->simulateEQVols()) {
-            LOG("Simulating EQ Vols (BlackVarianceCurve3) for " << equityName);
-            vector<Handle<Quote>> quotes;
-            vector<Time> times;
-            for (Size i = 0; i < parameters->equityVolExpiries().size(); i++) {
-                Date date = asof_ + parameters->equityVolExpiries()[i];
-                Volatility vol = wrapper->blackVol(date, Null<Real>(), true);
-                times.push_back(wrapper->timeFromReference(date));
-                boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
-                simData_.emplace(std::piecewise_construct,
-                                 std::forward_as_tuple(RiskFactorKey::KeyType::EQVolatility, equityName, i),
-                                 std::forward_as_tuple(q));
-                quotes.emplace_back(q);
+        if (parameters->simulateEquityVols()) {
+            if (parameters->equityVolIsSurface() == false) {
+                LOG("Simulating EQ Vols (BlackVarianceCurve3) for " << equityName);
+                vector<Handle<Quote>> quotes;
+                vector<Time> times;
+                for (Size i = 0; i < parameters->equityVolExpiries().size(); i++) {
+                    Date date = asof_ + parameters->equityVolExpiries()[i];
+                    Volatility vol = wrapper->blackVol(date, Null<Real>(), true);
+                    times.push_back(wrapper->timeFromReference(date));
+                    boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
+                    simData_.emplace(std::piecewise_construct,
+                                     std::forward_as_tuple(RiskFactorKey::KeyType::EquityVolatility, equityName, i),
+                                     std::forward_as_tuple(q));
+                    quotes.emplace_back(q);
+                }
+                boost::shared_ptr<BlackVolTermStructure> eqVolCurve(new BlackVarianceCurve3(
+                    0, NullCalendar(), wrapper->businessDayConvention(), wrapper->dayCounter(), times, quotes));
+                evh = Handle<BlackVolTermStructure>(eqVolCurve);
+            } else {
+                LOG("Simulating EQ Vols (BlackVarianceSurfaceMoneyness) for " << equityName);
+                Handle<Quote> spot = equitySpots_[make_pair(Market::defaultConfiguration, equityName)];
+                Size n = parameters->equityVolMoneyness().size();
+                Size m = parameters->equityVolExpiries().size();
+                vector<vector<Handle<Quote>>> quotes(n, vector<Handle<Quote>>(m, Handle<Quote>()));
+                for (Size i = 0; i < n; i++) {
+                    Real mon = parameters->equityVolMoneyness()[i];
+
+                    // strike
+                    Real k = spot->value() * mon;
+
+                    for (Size j = 0; j < m; j++) {
+                        Period p = parameters->equityVolExpiries()[j];
+
+                        // Index is expires then moneyness. TODO: is this the best?
+                        Size idx = i * m + j;
+
+                        Volatility vol = wrapper->blackVol(asof_ + p, k);
+                        boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
+                        simData_.emplace(std::piecewise_construct,
+                                         std::forward_as_tuple(RiskFactorKey::KeyType::EquityVolatility, equityName, idx),
+                                         std::forward_as_tuple(q));
+                        quotes[i][j] = Handle<Quote>(q);
+                    }
+                }
+
+                Calendar cal = wrapper->calendar();
+                DayCounter dc = wrapper->dayCounter();
+                vector<Time> times;
+                for (Period p : parameters->equityVolExpiries())
+                    times.push_back(dc.yearFraction(asof_, asof_ + p));
+
+                // If true, the strikes are fixed, if false they move with the spot handle
+                // Should probably be false, but some people like true for sensi runs.
+                bool stickyStrike = true;
+
+                boost::shared_ptr<BlackVolTermStructure> eqVolCurve(
+                    new BlackVarianceSurfaceMoneyness(cal, spot, times, parameters->equityVolMoneyness(), quotes, dc, stickyStrike));
+                eqVolCurve->enableExtrapolation();
+                evh = Handle<BlackVolTermStructure>(eqVolCurve);
             }
-            boost::shared_ptr<BlackVolTermStructure> eqVolCurve(new BlackVarianceCurve3(
-                0, NullCalendar(), wrapper->businessDayConvention(), wrapper->dayCounter(), times, quotes));
-            evh = Handle<BlackVolTermStructure>(eqVolCurve);
         } else {
             string decayModeString = parameters->equityVolDecayMode();
             DLOG("Deterministic EQ Vols with decay mode " << decayModeString << " for " << equityName);

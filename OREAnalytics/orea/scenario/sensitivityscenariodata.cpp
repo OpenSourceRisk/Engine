@@ -108,6 +108,21 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
         yieldCurveNames_.push_back(curveName);
     }
 
+    LOG("Get dividend yield curve sensitivity parameters");
+    XMLNode* dividendYieldCurves = XMLUtils::getChildNode(node, "DividendYieldCurves");
+    for (XMLNode* child = XMLUtils::getChildNode(dividendYieldCurves, "DividendYieldCurve"); child;
+         child = XMLUtils::getNextSibling(child)) {
+        string curveName = XMLUtils::getAttribute(child, "equity");
+        LOG("Add dividend yield curve data for equity " << curveName);
+        // same as discount curve sensitivity loading from here ...
+        CurveShiftData data;
+        data.shiftType = XMLUtils::getChildValue(child, "ShiftType", true);
+        data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
+        data.shiftTenors = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
+        dividendYieldShiftData_[curveName] = data;
+        dividendYieldNames_.push_back(curveName);
+    }
+
     LOG("Get FX spot sensitivity parameters");
     XMLNode* fxSpots = XMLUtils::getChildNode(node, "FxSpots");
     for (XMLNode* child = XMLUtils::getChildNode(fxSpots, "FxSpot"); child; child = XMLUtils::getNextSibling(child)) {
@@ -168,7 +183,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
     for (XMLNode* child = XMLUtils::getChildNode(creditCurves, "CreditCurve"); child;
          child = XMLUtils::getNextSibling(child)) {
         string name = XMLUtils::getAttribute(child, "name");
-        string ccy = XMLUtils::getChildValue(child, "ShiftType", true);
+        string ccy = XMLUtils::getChildValue(child, "Currency", true);
         creditCcys_[name] = ccy;
         // same as discount curve sensitivity loading from here ...
         CurveShiftData data;
