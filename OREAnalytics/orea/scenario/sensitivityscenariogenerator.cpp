@@ -38,6 +38,7 @@ SensitivityScenarioGenerator::SensitivityScenarioGenerator(
 }
 
 void SensitivityScenarioGenerator::generateScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory) {
+
     generateDiscountCurveScenarios(sensiScenarioFactory, true);
     generateDiscountCurveScenarios(sensiScenarioFactory, false);
 
@@ -53,14 +54,14 @@ void SensitivityScenarioGenerator::generateScenarios(const boost::shared_ptr<Sce
     generateEquityScenarios(sensiScenarioFactory, true);
     generateEquityScenarios(sensiScenarioFactory, false);
 
+    generateDividendYieldScenarios(sensiScenarioFactory, true);
+    generateDividendYieldScenarios(sensiScenarioFactory, false);
+
     generateZeroInflationScenarios(sensiScenarioFactory, true);
     generateZeroInflationScenarios(sensiScenarioFactory, false);
 
     generateYoYInflationScenarios(sensiScenarioFactory, true);
     generateYoYInflationScenarios(sensiScenarioFactory, false);
-
-    generateDividendYieldScenarios(sensiScenarioFactory, true);
-    generateDividendYieldScenarios(sensiScenarioFactory, false);
 
     if (simMarketData_->simulateFXVols()) {
         generateFxVolScenarios(sensiScenarioFactory, true);
@@ -1029,6 +1030,7 @@ void SensitivityScenarioGenerator::generateZeroInflationScenarios(
         // buffer for shifted zero curves
         std::vector<Real> shiftedZeros(n_ten);
         SensitivityScenarioData::CurveShiftData data = sensitivityData_->zeroInflationCurveShiftData()[indexName];
+
         ShiftType shiftType = parseShiftType(data.shiftType);
         Handle<ZeroInflationIndex> inflationIndex = initMarket_->zeroInflationIndex(indexName, configuration_);
         Handle<ZeroInflationTermStructure> ts = inflationIndex->zeroInflationTermStructure();
@@ -1112,7 +1114,7 @@ void SensitivityScenarioGenerator::generateYoYInflationScenarios(
         }
 
         std::vector<Period> shiftTenors = overrideTenors_ && simMarketData_->hasYoyInflationTenors(indexName)
-            ? simMarketData_->zeroInflationTenors(indexName)
+            ? simMarketData_->yoyInflationTenors(indexName)
             : data.shiftTenors;
         QL_REQUIRE(shiftTenors.size() == data.shiftTenors.size(), "mismatch between effective shift tenors ("
             << shiftTenors.size() << ") and shift tenors ("
@@ -1134,7 +1136,6 @@ void SensitivityScenarioGenerator::generateYoYInflationScenarios(
 
             // store shifted discount curve for this index in the scenario
             for (Size k = 0; k < n_ten; ++k) {
-                // Real shiftedDiscount = exp(-shiftedYoys[k] * times[k]);
                 scenario->add(getYoYInfIndexKey(indexName, k), shiftedYoys[k]);
             }
             // add this scenario to the scenario vector

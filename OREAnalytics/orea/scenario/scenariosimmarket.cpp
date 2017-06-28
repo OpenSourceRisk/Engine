@@ -44,6 +44,8 @@
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 
+#include <ql/math/interpolation.hpp>
+
 #include <ql/experimental/credit/basecorrelationstructure.hpp>
 
 #include <qle/termstructures/dynamicblackvoltermstructure.hpp>
@@ -53,6 +55,8 @@
 #include <qle/termstructures/swaptionvolatilityconverter.hpp>
 #include <qle/termstructures/swaptionvolconstantspread.hpp>
 #include <qle/termstructures/swaptionvolcubewithatm.hpp>
+#include <qle/termstructures/zeroinflationcurveobserver.hpp>
+#include <qle/termstructures/yoyinflationcurveobserver.hpp>
 #include <qle/indexes/inflationindexwrapper.hpp>
 
 #include <boost/timer.hpp>
@@ -826,35 +830,43 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         vector<string> keys(parameters->zeroInflationTenors(zic).size());
         BusinessDayConvention bdc = ModifiedFollowing;
 
-        vector<Time> zeroCurveTimes(1, 0.0);       // include today
-        vector<Date> zeroCurveDates(1, asof_);
+       // vector<Time> zeroCurveTimes;       // include today
+        vector<Date> zeroCurveDates;
+        zeroCurveDates.push_back(asof_ - inflationTs->observationLag());
+        vector<Handle<Quote>> quotes;
         QL_REQUIRE(parameters->zeroInflationTenors(zic).front() > 0 * Days, "zero inflation tenors must not include t=0");
         for (auto& tenor : parameters->zeroInflationTenors(zic)) {
-            zeroCurveTimes.push_back(inflationTs->dayCounter().yearFraction(asof_, asof_ + tenor));
+           // zeroCurveTimes.push_back(inflationTs->dayCounter().yearFraction(asof_, asof_ + tenor));
             zeroCurveDates.push_back(asof_ + tenor);
         }
         
+        boost::shared_ptr<SimpleQuote> q0(new SimpleQuote(inflationTs->zeroRate(zeroCurveDates[1])));
+        Handle<Quote> qh0(q0);
+        quotes.push_back(qh0);
+
         std::vector<boost::shared_ptr<ZeroInflationTraits::helper>> instruments;
-        for (Size i = 0; i < zeroCurveTimes.size() - 1; i++) {
-            boost::shared_ptr<SimpleQuote> q(new SimpleQuote(inflationTs->zeroRate(zeroCurveDates[i + 1])));
+        for (Size i = 1; i < zeroCurveDates.size(); i++) {
+            boost::shared_ptr<SimpleQuote> q(new SimpleQuote(inflationTs->zeroRate(zeroCurveDates[i])));
             Handle<Quote> qh(q);
+            quotes.push_back(qh);
 
             simData_.emplace(std::piecewise_construct,
-                std::forward_as_tuple(RiskFactorKey::KeyType::ZeroInflationCurve, zic, i),
+                std::forward_as_tuple(RiskFactorKey::KeyType::ZeroInflationCurve, zic, i-1),
                 std::forward_as_tuple(q));
-
-            instruments.push_back(boost::make_shared<ZeroCouponInflationSwapHelper>(qh, inflationTs->observationLag(), zeroCurveDates[i + 1], 
-                inflationIndex->fixingCalendar(), bdc, inflationTs->dayCounter(), inflationIndex.currentLink()));
             LOG("SimMarket index curve " << zic << " zeroRate[" << i << "]=" << q->value());
         }
 
         boost::shared_ptr<ZeroInflationTermStructure> zeroCurve;
-        zeroCurve = boost::shared_ptr<PiecewiseZeroInflationCurve<Linear>>(new PiecewiseZeroInflationCurve<Linear>(
-            asof_, inflationIndex->fixingCalendar(), inflationTs->dayCounter(), inflationTs->observationLag(), inflationTs->frequency(), 
-            inflationTs->indexIsInterpolated(), inflationTs->baseRate(), inflationTs->nominalTermStructure(), instruments));
+        //zeroCurve = boost::shared_ptr<PiecewiseZeroInflationCurve<Linear>>(new PiecewiseZeroInflationCurve<Linear>(
+        //    asof_, inflationIndex->fixingCalendar(), inflationTs->dayCounter(), inflationTs->observationLag(), inflationTs->frequency(), 
+        //    inflationTs->indexIsInterpolated(), inflationTs->baseRate(), inflationTs->nominalTermStructure(), instruments));
+
+        zeroCurve = boost::shared_ptr<ZeroInflationCurveObserver<Linear>> (new ZeroInflationCurveObserver<Linear>(
+            asof_, inflationIndex->fixingCalendar(), inflationTs->dayCounter(), inflationTs->observationLag(), inflationTs->frequency(),
+            inflationTs->indexIsInterpolated(), inflationTs->nominalTermStructure(), zeroCurveDates, quotes, inflationTs->seasonality()));
 
         Handle<ZeroInflationTermStructure> its(zeroCurve);
-        boost::shared_ptr<ZeroInflationIndex> i(inflationIndex->clone(its));
+        boost::shared_ptr<ZeroInflationIndex> i = ore::data::parseZeroInflationIndex(zic, false, Handle<ZeroInflationTermStructure>(its));
         Handle<ZeroInflationIndex> zh(i);
         zeroInflationIndices_.insert(pair<pair<string, string>, Handle<ZeroInflationIndex>>
             (make_pair(Market::defaultConfiguration, zic), zh));
@@ -871,34 +883,43 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         vector<string> keys(parameters->yoyInflationTenors(yic).size());
         BusinessDayConvention bdc = ModifiedFollowing;
 
-        vector<Time> yoyCurveTimes(1, 0.0);       // include today
-        vector<Date> yoyCurveDates(1, asof_);
+        vector<Date> yoyCurveDates;
+        yoyCurveDates.push_back(asof_ - yoyInflationTs->observationLag());
+        vector<Handle<Quote>> quotes;
         QL_REQUIRE(parameters->yoyInflationTenors(yic).front() > 0 * Days, "yoy inflation tenors must not include t=0");
         for (auto& tenor : parameters->yoyInflationTenors(yic)) {
-            yoyCurveTimes.push_back(yoyInflationTs->dayCounter().yearFraction(asof_, asof_ + tenor));
             yoyCurveDates.push_back(asof_ + tenor);
         }
 
-        std::vector<boost::shared_ptr<YoYInflationTraits::helper>> instruments;
-        for (Size i = 0; i < yoyCurveTimes.size() - 1; i++) {
-            boost::shared_ptr<SimpleQuote> q(new SimpleQuote(yoyInflationTs->yoyRate(yoyCurveDates[i + 1])));
+        boost::shared_ptr<SimpleQuote> q0(new SimpleQuote(yoyInflationTs->yoyRate(yoyCurveDates[1])));
+        Handle<Quote> qh0(q0);
+        quotes.push_back(qh0);
+
+        //std::vector<boost::shared_ptr<YoYInflationTraits::helper>> instruments;
+        for (Size i = 1; i < yoyCurveDates.size(); i++) {
+            boost::shared_ptr<SimpleQuote> q(new SimpleQuote(yoyInflationTs->yoyRate(yoyCurveDates[i])));
             Handle<Quote> qh(q);
+            quotes.push_back(qh);
 
             simData_.emplace(std::piecewise_construct,
-                std::forward_as_tuple(RiskFactorKey::KeyType::YoYInflationCurve, yic, i),
+                std::forward_as_tuple(RiskFactorKey::KeyType::YoYInflationCurve, yic, i-1),
                 std::forward_as_tuple(q));
 
-            instruments.push_back(boost::make_shared<YearOnYearInflationSwapHelper>(qh, yoyInflationTs->observationLag(), yoyCurveDates[i + 1],
-                yoyInflationIndex->fixingCalendar(), bdc, yoyInflationTs->dayCounter(), yoyInflationIndex.currentLink()));
+            /*instruments.push_back(boost::make_shared<YearOnYearInflationSwapHelper>(qh, yoyInflationTs->observationLag(), yoyCurveDates[i + 1],
+                yoyInflationIndex->fixingCalendar(), bdc, yoyInflationTs->dayCounter(), yoyInflationIndex.currentLink()));*/
 
             LOG("SimMarket yoy inflation index curve " << yic << " yoyRate[" << i << "]=" << q->value());
         }
 
         boost::shared_ptr<YoYInflationTermStructure> yoyCurve;
 
-        yoyCurve = boost::shared_ptr<PiecewiseYoYInflationCurve<Linear>>(new PiecewiseYoYInflationCurve<Linear>(
+        /*yoyCurve = boost::shared_ptr<PiecewiseYoYInflationCurve<Linear>>(new PiecewiseYoYInflationCurve<Linear>(
             asof_, yoyInflationIndex->fixingCalendar(), yoyInflationTs->dayCounter(), yoyInflationTs->observationLag(), yoyInflationTs->frequency(),
-            yoyInflationTs->indexIsInterpolated(), yoyInflationTs->baseRate(), yoyInflationTs->nominalTermStructure(), instruments));
+            yoyInflationTs->indexIsInterpolated(), yoyInflationTs->baseRate(), yoyInflationTs->nominalTermStructure(), instruments));*/
+
+        yoyCurve = boost::shared_ptr<YoYInflationCurveObserver<Linear>>(new YoYInflationCurveObserver<Linear>(
+            asof_, yoyInflationIndex->fixingCalendar(), yoyInflationTs->dayCounter(), yoyInflationTs->observationLag(), yoyInflationTs->frequency(),
+            yoyInflationTs->indexIsInterpolated(), yoyInflationTs->nominalTermStructure(), yoyCurveDates, quotes, yoyInflationTs->seasonality()));
 
         Handle<YoYInflationTermStructure> its(yoyCurve);
         boost::shared_ptr<YoYInflationIndex> i(yoyInflationIndex->clone(its));
