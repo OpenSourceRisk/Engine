@@ -67,10 +67,10 @@ protected:
     virtual Real moneyness(Time t, Real strike) const = 0;
     bool stickyStrike_;
     Handle<Quote> spot_;
+    std::vector<Time> times_;
 private:
     Real blackVarianceMoneyness(Time t, Real moneyness) const;
     virtual Real blackVarianceImpl(Time t, Real strike) const;
-    std::vector<Time> times_;
     DayCounter dayCounter_;
     Date maxDate_;
     std::vector<Real> moneyness_;

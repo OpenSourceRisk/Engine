@@ -90,7 +90,7 @@ Real BlackVarianceSurfaceMoneyness::blackVarianceImpl(Time t, Real strike) const
     if (t == 0.0)
         return 0.0;
 
-    return blackVarianceMoneyness(t, moneyness(t ,s));
+    return blackVarianceMoneyness(t, moneyness(t ,strike));
 }
 
 
