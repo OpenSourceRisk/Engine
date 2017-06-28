@@ -2517,6 +2517,7 @@ following excerpt of the Example section's {\tt pricingengine.xml} shows the sel
       <Parameter name="ReversionType">HullWhite</Parameter>
       <Parameter name="Volatility">0.01</Parameter>
       <Parameter name="VolatilityType">Hagan</Parameter>
+      <Parameter name="ShiftHorizon">0.5</Parameter>
       <Parameter name="Tolerance">0.0001</Parameter>
     </ModelParameters>
     <Engine>Grid</Engine>
@@ -2544,6 +2545,10 @@ pricing model, calibrate it and construct the pricing engine for it:
     Hagan}. Calibration and BermudanStrategy can be set to {\em None} in order to skip model calibration. Alternatively,
   Calibration is set to {\em Bootstrap} and BermudanStrategy to {\em CoterminalATM} in order to calibrate to
   instrument-specific co-terminal ATM Swaptions, i.e. chosen to match the instruments first expiry and final maturity.
+  If {\em CoterminalDealStrike} is chosen, the co-terminal swaptions will match the fixed rate of the deal (if the deal
+  has changing fixed rates, the first rate is matched). Finally if the ShiftHorizon parameter is given, its value times
+  the remaining maturity time of the deal is chosen as the horizon shift parameter for the LGM model. If not given, this
+  parameter defaults to $0.5$.
 
 \item The second block of engine parameters specifies the Numerical Swaption engine parameters which determine the
   number of standard deviations covered in the probability density integrals (sy and sx), and the number of grid points

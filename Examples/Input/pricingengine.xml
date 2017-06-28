@@ -40,6 +40,8 @@
       <Parameter name="ReversionType">HullWhite</Parameter>
       <Parameter name="Volatility">0.01</Parameter>
       <Parameter name="VolatilityType">Hagan</Parameter>
+      <!-- shift horizon as ratio of maturity time -->
+      <Parameter name="ShiftHorizon">0.5</Parameter>
       <Parameter name="Tolerance">0.0001</Parameter>
     </ModelParameters>
     <Engine>Grid</Engine>
