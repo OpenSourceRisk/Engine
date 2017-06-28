@@ -133,14 +133,11 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         // token 5 can be a date, or tenor
         Date zeroDate = Date();
         Period tenor = Period();
-        //if (tokens[5].size() < 6) { // e.g. 3M, 50Y, 1Y6M
-	if (tokens[5].find("D") != std::string::npos ||
-	    tokens[5].find("M") != std::string::npos ||
-	    tokens[5].find("Y") != std::string::npos) {
+	string ending(1, tokens[5].back());
+        if (ending.find_first_of("DdWwMmYy") != string::npos)
             tenor = parsePeriod(tokens[5]);
-        } else {
+        else
             zeroDate = parseDate(tokens[5]);
-        }
         return boost::make_shared<ZeroQuote>(value, asof, datumName, quoteType, ccy, zeroDate, dc, tenor);
     }
 
@@ -151,7 +148,8 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         const string& ccy = tokens[2];
         // token 4 can be a date, or tenor
         Date discountDate;
-        if (tokens[4].size() < 6) { // e.g. 3M, 50Y, 1Y6M
+	string ending(1, tokens[5].back());
+        if (ending.find_first_of("DdWwMmYy") != string::npos) {
             // DiscountQuote takes a date.
             Period p = parsePeriod(tokens[4]);
             // we can't assume any calendar here, so we do the minimal adjustment
@@ -400,7 +398,7 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         return boost::make_shared<BaseCorrelationQuote>(value, asof, datumName, quoteType, cdsIndexName, term,
                                                         detachmentPoint);
     }
-            
+
     case MarketDatum::InstrumentType::INDEX_CDS_OPTION: {
         QL_REQUIRE(tokens.size() == 4, "4 tokens expected in " << datumName);
         QL_REQUIRE(quoteType == MarketDatum::QuoteType::RATE_LNVOL, "Invalid quote type for " << datumName);
@@ -411,7 +409,7 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
 
     default:
         QL_FAIL("Cannot convert \"" << datumName << "\" to MarketDatum");
-    }
-}
+    } // switch instrument type
+} // parseMarketDatum
 } // namespace data
 } // namespace ore
