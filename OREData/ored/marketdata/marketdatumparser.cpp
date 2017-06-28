@@ -131,14 +131,11 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         const string& ccy = tokens[2];
         DayCounter dc = parseDayCounter(tokens[4]);
         // token 5 can be a date, or tenor
-        Date zeroDate = Date();
+        Date date = Date();
         Period tenor = Period();
-	string ending(1, tokens[5].back());
-        if (ending.find_first_of("DdWwMmYy") != string::npos)
-            tenor = parsePeriod(tokens[5]);
-        else
-            zeroDate = parseDate(tokens[5]);
-        return boost::make_shared<ZeroQuote>(value, asof, datumName, quoteType, ccy, zeroDate, dc, tenor);
+        bool isDate;
+        parseDateOrPeriod(tokens[5], date, tenor, isDate);
+        return boost::make_shared<ZeroQuote>(value, asof, datumName, quoteType, ccy, date, dc, tenor);
     }
 
     case MarketDatum::InstrumentType::DISCOUNT: {
@@ -147,18 +144,16 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         QL_REQUIRE(tokens.size() == 5, "5 tokens expected in " << datumName);
         const string& ccy = tokens[2];
         // token 4 can be a date, or tenor
-        Date discountDate;
-	string ending(1, tokens[5].back());
-        if (ending.find_first_of("DdWwMmYy") != string::npos) {
-            // DiscountQuote takes a date.
-            Period p = parsePeriod(tokens[4]);
-            // we can't assume any calendar here, so we do the minimal adjustment
-            // Just weekends.
-            discountDate = WeekendsOnly().adjust(asof + p);
-        } else {
-            discountDate = parseDate(tokens[4]);
+        Date date = Date();
+        Period tenor = Period();
+        bool isDate;
+        parseDateOrPeriod(tokens[4], date, tenor, isDate);
+        if (!isDate) {
+            // we can't assume any calendar here, so we do the minimal adjustment with a weekend only calendar
+            QL_REQUIRE(tenor != Period(), "neither date nor tenor recognised");
+            date = WeekendsOnly().adjust(asof + tenor);
         }
-        return boost::make_shared<DiscountQuote>(value, asof, datumName, quoteType, ccy, discountDate);
+        return boost::make_shared<DiscountQuote>(value, asof, datumName, quoteType, ccy, date);
     }
 
     case MarketDatum::InstrumentType::MM: {
