@@ -203,7 +203,7 @@ Calendar parseCalendar(const string& s) {
                                       {"NGN", TARGET()},
                                       {"MAD", TARGET()},
                                       {"WeekendsOnly", WeekendsOnly()},
-				      {"NullCalendar", NullCalendar()}};
+                                      {"NullCalendar", NullCalendar()}};
 
     auto it = m.find(s);
     if (it != m.end()) {
@@ -467,16 +467,15 @@ Option::Type parseOptionType(const std::string& s) {
 }
 
 void parseDateOrPeriod(const string& s, Date& d, Period& p, bool& isDate) {
-    isDate = false;
-    try {
+    string c(1, s.back());
+    bool isPeriod = c.find_first_of("DdWwMmYy") != string::npos;
+    if (isPeriod) {
         p = ore::data::parsePeriod(s);
-    } catch (...) {
-        try {
-            d = ore::data::parseDate(s);
-            isDate = true;
-        } catch (...) {
-            QL_FAIL("could not parse " << s << " as date or period");
-        }
+	isDate = false;
+    }
+    else {
+        d = ore::data::parseDate(s);
+        isDate = true;
     }
 }
 
