@@ -107,7 +107,7 @@ BlackVarianceSurfaceMoneynessSpot::BlackVarianceSurfaceMoneynessSpot(
     const DayCounter& dayCounter, bool stickyStrike)
     : BlackVarianceSurfaceMoneyness(cal, spot, times, moneyness, blackVolMatrix, dayCounter, stickyStrike) {}
 
-Real BlackVarianceSurfaceMoneynessSpot::moneyness(Time t, Real strike) const {
+Real BlackVarianceSurfaceMoneynessSpot::moneyness(Time, Real strike) const {
     if (strike == Null<Real>() || strike == 0)
         return 1.0;
     else 
