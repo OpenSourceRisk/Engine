@@ -608,8 +608,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
                 wrapper, 0, NullCalendar(), decayMode, StickyStrike));
         }
 
-        if (wrapper->allowsExtrapolation())
-            fvh->enableExtrapolation();
+        fvh->enableExtrapolation();
         fxVols_.insert(pair<pair<string, string>, Handle<BlackVolTermStructure>>(
             make_pair(Market::defaultConfiguration, ccyPair), fvh));
 
@@ -617,8 +616,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         QL_REQUIRE(ccyPair.size() == 6, "Invalid Ccy pair " << ccyPair);
         string reverse = ccyPair.substr(3) + ccyPair.substr(0, 3);
         Handle<QuantLib::BlackVolTermStructure> ifvh(boost::make_shared<BlackInvertedVolTermStructure>(fvh));
-        if (fvh->allowsExtrapolation())
-            ifvh->enableExtrapolation();
+        ifvh->enableExtrapolation();
         fxVols_.insert(pair<pair<string, string>, Handle<BlackVolTermStructure>>(
             make_pair(Market::defaultConfiguration, reverse), ifvh));
     }

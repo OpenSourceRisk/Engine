@@ -101,7 +101,7 @@ public:
     bool hasEquityTenors(const string& key) const { return equityTenors_.count(key) > 0; }
 
     bool simulateFXVols() const { return fxVolSimulate_; }
-    bool fqVolIsSurface() const { return fxVolIsSurface_; }
+    bool fxVolIsSurface() const { return fxVolIsSurface_; }
     const vector<Period>& fxVolExpiries() const { return fxVolExpiries_; }
     const string& fxVolDecayMode() const { return fxVolDecayMode_; }
     const vector<string>& fxVolCcyPairs() const { return fxVolCcyPairs_; }

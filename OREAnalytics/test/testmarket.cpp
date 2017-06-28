@@ -82,6 +82,8 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
     simMarketData->fxVolDecayMode() = "ConstantVariance";
     simMarketData->simulateFXVols() = true;
     simMarketData->fxVolCcyPairs() = {"EURGBP"};
+    simMarketData->fxVolIsSurface() = true;
+    simMarketData->fxVolMoneyness() = {0.1, 0.2, 0.3, 0.5, 1, 2, 3};
 
     simMarketData->fxCcyPairs() = {"EURGBP"};
 
@@ -116,8 +118,8 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
     simMarketData->fxVolDecayMode() = "ConstantVariance";
     simMarketData->simulateFXVols() = true; // false;
     simMarketData->fxVolCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY", "GBPCHF"};
-    simMarketData->fxVolIsSurface() = false;
-    simMarketData->fxVolMoneyness() = {0};
+    simMarketData->fxVolIsSurface() = true;
+    simMarketData->fxVolMoneyness() = {0.1, 0.2, 0.3, 0.5, 1, 2, 3};
 
     simMarketData->fxCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY"};
 
