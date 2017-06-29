@@ -408,7 +408,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
             vector<vector<Handle<Quote>>> quotes(optionTenors.size(),
                                                  vector<Handle<Quote>>(strikes.size(), Handle<Quote>()));
             for (Size i = 0; i < optionTenors.size(); ++i) {
-                optionDates[i] = asof_ + optionTenors[i];
+                optionDates[i] = wrapper->optionDateFromTenor(optionTenors[i]);
                 for (Size j = 0; j < strikes.size(); ++j) {
                     Real vol = wrapper->volatility(optionTenors[i], strikes[j], wrapper->allowsExtrapolation());
                     boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));

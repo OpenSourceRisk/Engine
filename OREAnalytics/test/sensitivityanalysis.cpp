@@ -23,15 +23,15 @@
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/sensitivityscenariogenerator.hpp>
 #include <ored/portfolio/builders/capfloor.hpp>
+#include <ored/portfolio/builders/equityforward.hpp>
+#include <ored/portfolio/builders/equityoption.hpp>
 #include <ored/portfolio/builders/fxforward.hpp>
 #include <ored/portfolio/builders/fxoption.hpp>
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/builders/swaption.hpp>
-#include <ored/portfolio/builders/equityoption.hpp>
-#include <ored/portfolio/builders/equityforward.hpp>
-#include <ored/portfolio/fxoption.hpp>
-#include <ored/portfolio/equityoption.hpp>
 #include <ored/portfolio/equityforward.hpp>
+#include <ored/portfolio/equityoption.hpp>
+#include <ored/portfolio/fxoption.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/swap.hpp>
 #include <ored/portfolio/swaption.hpp>
@@ -152,7 +152,7 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     portfolio->add(buildFloor("10_Floor_USD", "USD", "Long", 0.01, 1000000.0, 0, 10, "3M", "A360", "USD-LIBOR-3M"));
     portfolio->add(buildZeroBond("11_ZeroBond_EUR", "EUR", 1.0, 10));
     portfolio->add(buildZeroBond("12_ZeroBond_USD", "USD", 1.0, 10));
-    portfolio->add(buildEquityOption("14_EquityOption_SP5", "Long", "Call", 2, "SP5", "USD", 2147.56, 775));    
+    portfolio->add(buildEquityOption("14_EquityOption_SP5", "Long", "Call", 2, "SP5", "USD", 2147.56, 775));
     portfolio->build(factory);
 
     BOOST_TEST_MESSAGE("Portfolio size after build: " << portfolio->size());
@@ -442,17 +442,17 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
         {"11_ZeroBond_EUR", "Up:YieldCurve/BondCurve1/6/10Y", 0.60659, -0.000606168}, // OK, diff 1e-9
         // sensi to down shift d=-1bp: 0.00060677354516836
         {"11_ZeroBond_EUR", "Down:YieldCurve/BondCurve1/6/10Y", 0.60659, 0.000606774}, // OK, diff < 1e-9
-        // A relative shift in yield curve is equivalent to a relative shift in default curve 
+        // A relative shift in yield curve is equivalent to a relative shift in default curve
         {"11_ZeroBond_EUR", "Up:SurvivalProbability/BondIssuer1/6/10Y", 0.60659, -0.000606168},
-        {"11_ZeroBond_EUR", "Down:SurvivalProbability/BondIssuer1/6/10Y", 0.60659, 0.000606774}, 
+        {"11_ZeroBond_EUR", "Down:SurvivalProbability/BondIssuer1/6/10Y", 0.60659, 0.000606774},
         // sensi to up shift d=+1bp: exp(-(z+d)*T)*USDEUR - exp(-z*T)*USDEUR
         // = -0.000505139329666004
         {"12_ZeroBond_USD", "Up:YieldCurve/BondCurve1/6/10Y", 0.505492, -0.00050514}, // OK, diff < 1e-8
         // sensi to down shit d=-1bp: 0.000505644620973689
         {"12_ZeroBond_USD", "Down:YieldCurve/BondCurve1/6/10Y", 0.505492, 0.000505645}, // OK, diff < 1e-9
-        // A relative shift in yield curve is equivalent to a relative shift in default curve 
-        {"12_ZeroBond_USD", "Up:SurvivalProbability/BondIssuer1/6/10Y", 0.505492,  -0.00050514},
-        {"12_ZeroBond_USD", "Down:SurvivalProbability/BondIssuer1/6/10Y", 0.505492, 0.000505645}, 
+        // A relative shift in yield curve is equivalent to a relative shift in default curve
+        {"12_ZeroBond_USD", "Up:SurvivalProbability/BondIssuer1/6/10Y", 0.505492, -0.00050514},
+        {"12_ZeroBond_USD", "Down:SurvivalProbability/BondIssuer1/6/10Y", 0.505492, 0.000505645},
         // sensi to EURUSD upshift d=+1%: exp(-z*T)*USDEUR/(1+d) - exp(-z*T)*USDEUR
         // = -0.00500487660122262
         {"12_ZeroBond_USD", "Up:FXSpot/EURUSD/0/spot", 0.505492, -0.00500487}, // OK, diff < 1e-8
@@ -612,8 +612,8 @@ void SensitivityAnalysisTest::testPortfolioSensitivityUnregisterObs() {
     testPortfolioSensitivity(ObservationMode::Mode::Unregister);
 }
 
-void SensitivityAnalysisTest::test1dShifts() {
-    BOOST_TEST_MESSAGE("Testing 1d shifts");
+void test1dShifts(bool granular) {
+    BOOST_TEST_MESSAGE("Testing 1d shifts " << (granular ? "granular" : "sparse"));
 
     SavedSettings backup;
 
@@ -639,7 +639,11 @@ void SensitivityAnalysisTest::test1dShifts() {
         TestConfigurationObjects::setupSimMarketData2();
 
     // sensitivity config
-    boost::shared_ptr<SensitivityScenarioData> sensiData = TestConfigurationObjects::setupSensitivityScenarioData2();
+    boost::shared_ptr<SensitivityScenarioData> sensiData;
+    if (granular)
+        sensiData = TestConfigurationObjects::setupSensitivityScenarioData2b();
+    else
+        sensiData = TestConfigurationObjects::setupSensitivityScenarioData2();
 
     // build scenario generator
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(
@@ -698,6 +702,10 @@ void SensitivityAnalysisTest::test1dShifts() {
     ObservationMode::instance().setMode(backupMode);
     IndexManager::instance().clearHistories();
 }
+
+void SensitivityAnalysisTest::test1dShiftsSparse() { test1dShifts(false); }
+
+void SensitivityAnalysisTest::test1dShiftsGranular() { test1dShifts(true); }
 
 void SensitivityAnalysisTest::test2dShifts() {
     BOOST_TEST_MESSAGE("Testing 2d shifts");
@@ -865,14 +873,14 @@ void SensitivityAnalysisTest::testEquityOptionDeltaGamma() {
     trnCount++;
     portfolio->add(buildEquityOption("Put_SP5", "Long", "Put", 2, "SP5", "USD", 2147.56, 1000));
     trnCount++;
-    //portfolio->add(buildEquityForward("Fwd_SP5", "Long", 2, "SP5", "USD", 2147.56, 1000));
-    //trnCount++;
+    // portfolio->add(buildEquityForward("Fwd_SP5", "Long", 2, "SP5", "USD", 2147.56, 1000));
+    // trnCount++;
     portfolio->add(buildEquityOption("Call_Luft", "Short", "Call", 2, "Lufthansa", "EUR", 12.75, 1000));
     trnCount++;
     portfolio->add(buildEquityOption("Put_Luft", "Short", "Put", 2, "Lufthansa", "EUR", 12.75, 1000));
     trnCount++;
-    //portfolio->add(buildEquityForward("Fwd_Luft", "Short", 2, "Lufthansa", "EUR", 12.75, 1000));
-    //trnCount++;
+    // portfolio->add(buildEquityForward("Fwd_Luft", "Short", 2, "Lufthansa", "EUR", 12.75, 1000));
+    // trnCount++;
     portfolio->build(factory);
     BOOST_CHECK_EQUAL(portfolio->size(), trnCount);
 
@@ -918,10 +926,10 @@ void SensitivityAnalysisTest::testEquityOptionDeltaGamma() {
         qlInfoMap[info.id] = info;
     }
 
-    bool recalibrateModels = true;           // nothing to calibrate here
-    boost::shared_ptr<SensitivityAnalysis> sa = boost::make_shared<SensitivityAnalysis>(
-        portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, conventions,
-        recalibrateModels);
+    bool recalibrateModels = true; // nothing to calibrate here
+    boost::shared_ptr<SensitivityAnalysis> sa =
+        boost::make_shared<SensitivityAnalysis>(portfolio, initMarket, Market::defaultConfiguration, data,
+                                                simMarketData, sensiData, conventions, recalibrateModels);
     sa->generateSensitivities();
 
     map<pair<string, string>, Real> deltaMap = sa->delta();
@@ -933,7 +941,7 @@ void SensitivityAnalysisTest::testEquityOptionDeltaGamma() {
         string id;
         Real baseNpv;
         Real discountDelta;
-        Real ycDelta; 
+        Real ycDelta;
         Real equitySpotDelta;
         Real equityVolDelta;
         Real equitySpotGamma;
@@ -949,7 +957,7 @@ void SensitivityAnalysisTest::testEquityOptionDeltaGamma() {
         string id = it.first;
         BOOST_CHECK(sensiTrades.find(id) != sensiTrades.end());
         AnalyticInfo qlInfo = it.second;
-        SensiResults res = { string(""), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+        SensiResults res = {string(""), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
         for (auto it2 : deltaMap) {
             pair<string, string> sensiKey = it2.first;
             string sensiTrnId = it2.first.first;
@@ -977,14 +985,12 @@ void SensitivityAnalysisTest::testEquityOptionDeltaGamma() {
                 res.equitySpotDelta += sensiVal;
                 res.equitySpotGamma += gammaVal;
                 continue;
-            }
-            else if (isEquityVol) {
+            } else if (isEquityVol) {
                 BOOST_CHECK(tokens.size() > 2);
                 string equity = tokens[1];
                 res.equityVolDelta += sensiVal;
                 continue;
-            }
-            else {
+            } else {
                 continue;
             }
         }
@@ -993,17 +999,19 @@ void SensitivityAnalysisTest::testEquityOptionDeltaGamma() {
         Real tol = 0.5; // % relative tolerance
 
         BOOST_TEST_MESSAGE("SA: id=" << res.id << ", npv=" << res.baseNpv << ", equitySpotDelta=" << res.equitySpotDelta
-            << ", equityVolDelta=" << res.equityVolDelta << ", equitySpotGamma=" << res.equitySpotGamma);
-        BOOST_TEST_MESSAGE("QL: id=" << qlInfo.id  << ", fx=" << qlInfo.fx << ", npv=" << qlInfo.baseNpv
-            << ", ccyNpv=" << qlInfo.qlNpv << ", delta=" << qlInfo.delta << ", gamma=" << qlInfo.gamma 
-            << ", vega=" << qlInfo.vega << ", spotDelta=" << (qlInfo.delta * qlInfo.fx * bp * qlInfo.spot));
-        
-        Real eqVol = initMarket->equityVol(qlInfo.name)->blackVol(1.0, 1.0, true); // TO-DO more appropriate vol extraction
+                                     << ", equityVolDelta=" << res.equityVolDelta
+                                     << ", equitySpotGamma=" << res.equitySpotGamma);
+        BOOST_TEST_MESSAGE("QL: id=" << qlInfo.id << ", fx=" << qlInfo.fx << ", npv=" << qlInfo.baseNpv
+                                     << ", ccyNpv=" << qlInfo.qlNpv << ", delta=" << qlInfo.delta
+                                     << ", gamma=" << qlInfo.gamma << ", vega=" << qlInfo.vega
+                                     << ", spotDelta=" << (qlInfo.delta * qlInfo.fx * bp * qlInfo.spot));
+
+        Real eqVol =
+            initMarket->equityVol(qlInfo.name)->blackVol(1.0, 1.0, true); // TO-DO more appropriate vol extraction
         BOOST_CHECK_CLOSE(res.equityVolDelta, qlInfo.vega * qlInfo.fx * (bp * eqVol), tol);
 
-        BOOST_CHECK_CLOSE(res.equitySpotDelta, qlInfo.delta * qlInfo.fx * (bp * qlInfo.spot) , tol);
+        BOOST_CHECK_CLOSE(res.equitySpotDelta, qlInfo.delta * qlInfo.fx * (bp * qlInfo.spot), tol);
         BOOST_CHECK_CLOSE(res.equitySpotGamma, qlInfo.gamma * qlInfo.fx * (pow(bp * qlInfo.spot, 2)), tol);
-
     }
 }
 
@@ -1751,7 +1759,8 @@ test_suite* SensitivityAnalysisTest::suite() {
 
     test_suite* suite = BOOST_TEST_SUITE("SensitivityAnalysisTest");
     // Set the Observation mode here
-    suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::test1dShifts));
+    suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::test1dShiftsSparse));
+    suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::test1dShiftsGranular));
     suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::test2dShifts));
     suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testPortfolioSensitivityNoneObs));
     suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testPortfolioSensitivityDisableObs));
