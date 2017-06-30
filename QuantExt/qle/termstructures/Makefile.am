@@ -73,6 +73,8 @@ this_include_HEADERS = \
 	swaptionvolcubewithatm.hpp \
 	blackvariancesurfacemoneyness.hpp \
 	swaptionvolcube2.hpp \
+	yoyinflationcurveobserver.hpp \
+	zeroinflationcurveobserver.hpp \
 	fxvannavolgasmilesection.hpp \
 	fxblackvolsurface.hpp \
 	fxsmilesection.hpp

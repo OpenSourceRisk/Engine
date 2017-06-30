@@ -212,7 +212,7 @@ void ReportWriter::writeCurves(ore::data::Report& report, const std::string& con
     for (auto it : zeroInflationIndices) {
         DLOG("inflation curve - " << it.first);
         report.addColumn(it.first, double(), 15);
-        zeroInflationFixings.push_back(market->zeroInflationIndex(it.first, true, configID));
+        zeroInflationFixings.push_back(market->zeroInflationIndex(it.first, configID));
     }
     for (auto it : defaultCurves) {
         DLOG("default curve - " << it.first);
