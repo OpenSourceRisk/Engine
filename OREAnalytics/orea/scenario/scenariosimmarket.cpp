@@ -37,14 +37,9 @@
 #include <ql/termstructures/volatility/swaption/swaptionvolcube.hpp>
 #include <ql/termstructures/volatility/swaption/swaptionvolmatrix.hpp>
 #include <ql/termstructures/volatility/swaption/swaptionvolstructure.hpp>
-#include <ql/termstructures/inflation/piecewiseyoyinflationcurve.hpp>
-#include <ql/termstructures/inflation/piecewisezeroinflationcurve.hpp>
-#include <ql/termstructures/inflation/inflationhelpers.hpp>
 #include <ql/termstructures/yield/discountcurve.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
-
-#include <ql/math/interpolation.hpp>
 
 #include <ql/experimental/credit/basecorrelationstructure.hpp>
 
@@ -141,7 +136,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
                              std::forward_as_tuple(RiskFactorKey::KeyType::DiscountCurve, ccy, i),
                              std::forward_as_tuple(q));
 
-            LOG("SimMarket yield curve " << ccy << " discount[" << i << "]=" << q->value());
+            LOG("ScenarioSimMarket yield curve " << ccy << " discount[" << i << "]=" << q->value());
         }
 
         boost::shared_ptr<YieldTermStructure> discountCurve;
@@ -192,7 +187,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
                              std::forward_as_tuple(RiskFactorKey::KeyType::YieldCurve, name, i),
                              std::forward_as_tuple(q));
 
-            LOG("SimMarket yield curve name " << name << " discount[" << i << "]=" << q->value());
+            LOG("ScenarioSimMarket yield curve name " << name << " discount[" << i << "]=" << q->value());
         }
 
         boost::shared_ptr<YieldTermStructure> yieldCurve;
@@ -255,7 +250,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
                              std::forward_as_tuple(RiskFactorKey::KeyType::IndexCurve, ind, i),
                              std::forward_as_tuple(q));
 
-            LOG("SimMarket index curve " << ind << " discount[" << i << "]=" << q->value());
+            LOG("ScenarioSimMarket index curve " << ind << " discount[" << i << "]=" << q->value());
         }
         // FIXME interpolation fixed to linear, added to xml??
         boost::shared_ptr<YieldTermStructure> indexCurve;
@@ -808,16 +803,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
     LOG("base correlations done");
 
     LOG("building CPI Indices...");
-    //for (const auto& inflationName : parameters->cpiIndices()) {
-    //    Real indexVal = initMarket->equitySpot(inflationName, configuration)->value();
-    //    DLOG("adding " << inflationName << " equity spot price");
-    //    boost::shared_ptr<SimpleQuote> q(new SimpleQuote(indexVal));
-    //    Handle<Quote> qh(q);
-    //    equitySpots_.insert(
-    //        pair<pair<string, string>, Handle<Quote>>(make_pair(Market::defaultConfiguration, inflationName), qh));
-    //    simData_.emplace(std::piecewise_construct, std::forward_as_tuple(RiskFactorKey::KeyType::CPIIndex, inflationName),
-    //        std::forward_as_tuple(q));
-    //}
+    //TODO: do we need anything here?
 
     LOG("CPI Indices done");
 
@@ -844,7 +830,6 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         Handle<Quote> qh0(q0);
         quotes.push_back(qh0);
 
-        std::vector<boost::shared_ptr<ZeroInflationTraits::helper>> instruments;
         for (Size i = 1; i < zeroCurveDates.size(); i++) {
             boost::shared_ptr<SimpleQuote> q(new SimpleQuote(inflationTs->zeroRate(zeroCurveDates[i])));
             Handle<Quote> qh(q);
@@ -853,14 +838,13 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
             simData_.emplace(std::piecewise_construct,
                 std::forward_as_tuple(RiskFactorKey::KeyType::ZeroInflationCurve, zic, i-1),
                 std::forward_as_tuple(q));
-            LOG("SimMarket index curve " << zic << " zeroRate[" << i << "]=" << q->value());
+            LOG("ScenarioSimMarket index curve " << zic << " zeroRate[" << i << "]=" << q->value());
         }
 
         boost::shared_ptr<ZeroInflationTermStructure> zeroCurve;
-        //zeroCurve = boost::shared_ptr<PiecewiseZeroInflationCurve<Linear>>(new PiecewiseZeroInflationCurve<Linear>(
-        //    asof_, inflationIndex->fixingCalendar(), inflationTs->dayCounter(), inflationTs->observationLag(), inflationTs->frequency(), 
-        //    inflationTs->indexIsInterpolated(), inflationTs->baseRate(), inflationTs->nominalTermStructure(), instruments));
 
+        // Note this is *not* a floating term structure, it is only suitable for sensi runs
+        // TODO: floating
         zeroCurve = boost::shared_ptr<ZeroInflationCurveObserver<Linear>> (new ZeroInflationCurveObserver<Linear>(
             asof_, inflationIndex->fixingCalendar(), inflationTs->dayCounter(), inflationTs->observationLag(), inflationTs->frequency(),
             inflationTs->indexIsInterpolated(), inflationTs->nominalTermStructure(), zeroCurveDates, quotes, inflationTs->seasonality()));
@@ -895,7 +879,6 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         Handle<Quote> qh0(q0);
         quotes.push_back(qh0);
 
-        //std::vector<boost::shared_ptr<YoYInflationTraits::helper>> instruments;
         for (Size i = 1; i < yoyCurveDates.size(); i++) {
             boost::shared_ptr<SimpleQuote> q(new SimpleQuote(yoyInflationTs->yoyRate(yoyCurveDates[i])));
             Handle<Quote> qh(q);
@@ -905,18 +888,13 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
                 std::forward_as_tuple(RiskFactorKey::KeyType::YoYInflationCurve, yic, i-1),
                 std::forward_as_tuple(q));
 
-            /*instruments.push_back(boost::make_shared<YearOnYearInflationSwapHelper>(qh, yoyInflationTs->observationLag(), yoyCurveDates[i + 1],
-                yoyInflationIndex->fixingCalendar(), bdc, yoyInflationTs->dayCounter(), yoyInflationIndex.currentLink()));*/
-
-            LOG("SimMarket yoy inflation index curve " << yic << " yoyRate[" << i << "]=" << q->value());
+            LOG("ScenarioSimMarket yoy inflation index curve " << yic << " yoyRate[" << i << "]=" << q->value());
         }
 
         boost::shared_ptr<YoYInflationTermStructure> yoyCurve;
 
-        /*yoyCurve = boost::shared_ptr<PiecewiseYoYInflationCurve<Linear>>(new PiecewiseYoYInflationCurve<Linear>(
-            asof_, yoyInflationIndex->fixingCalendar(), yoyInflationTs->dayCounter(), yoyInflationTs->observationLag(), yoyInflationTs->frequency(),
-            yoyInflationTs->indexIsInterpolated(), yoyInflationTs->baseRate(), yoyInflationTs->nominalTermStructure(), instruments));*/
-
+        // Note this is *not* a floating term structure, it is only suitable for sensi runs
+        // TODO: floating
         yoyCurve = boost::shared_ptr<YoYInflationCurveObserver<Linear>>(new YoYInflationCurveObserver<Linear>(
             asof_, yoyInflationIndex->fixingCalendar(), yoyInflationTs->dayCounter(), yoyInflationTs->observationLag(), yoyInflationTs->frequency(),
             yoyInflationTs->indexIsInterpolated(), yoyInflationTs->nominalTermStructure(), yoyCurveDates, quotes, yoyInflationTs->seasonality()));

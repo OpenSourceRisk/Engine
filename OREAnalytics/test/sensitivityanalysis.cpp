@@ -40,7 +40,6 @@
 #include <test/sensitivityanalysis.hpp>
 #include <test/testmarket.hpp>
 #include <test/testportfolio.hpp>
-#include <orea/scenario/scenariowriter.hpp>
 
 using namespace std;
 using namespace QuantLib;
@@ -603,7 +602,7 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
         sensiMap[p] = cachedResults[i].sensi;
     }
 
-    Real tiny = 1.0e-9;
+    Real tiny = 1.0e-10;
     Real tolerance = 0.01;
     Size count = 0;
     vector<ShiftScenarioGenerator::ScenarioDescription> desc = scenarioGenerator->scenarioDescriptions();
@@ -653,8 +652,6 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     // Validation of cached gammas:
     // gamma * (dx)^2 = \partial^2_x NPV(x) * (dx)^2
     //               \approx (NPV(x_up) - 2 NPV(x) + NPV(x_down)) = sensi(up) + sensi(down)
-    //+		[("15_CPIInflationSwap_UKRPI", "YoYInflationCurve/UKRPI/8/20Y")]	-7.2759576141834259e-12	std::pair<std::pair<std::basic_string<char,std::char_traits<char>,std::allocator<char> >,std::basic_string<char,std::char_traits<char>,std::allocator<char> > > const ,double>
-
     // Case 1: "11_ZeroBond_EUR", "YieldCurve/BondCurve1/6/10Y"
     // NPV(x_up) - NPV(x) = -0.000606168, NPV(x_down) - NPV(x) = 0.000606774
     // gamma * (dx)^2 = -0.000606168 + 0.000606774 = 0.000000606 = 6.06e-7

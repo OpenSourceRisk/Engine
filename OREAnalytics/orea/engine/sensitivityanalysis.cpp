@@ -577,6 +577,7 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
             shiftMult = yoyRate;
         }
     } else {
+        // KeyType::CPIIndex does not get shifted
         QL_FAIL("KeyType not supported yet - " << keytype);
     }
     Real realShift = shiftSize * shiftMult;
