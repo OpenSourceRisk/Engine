@@ -96,6 +96,8 @@ public:
     static boost::shared_ptr<ore::analytics::SensitivityScenarioData> setupSensitivityScenarioData2();
     //! SensitivityScenarioData instance, 5 currencies
     static boost::shared_ptr<ore::analytics::SensitivityScenarioData> setupSensitivityScenarioData5();
+    //! SensitivityScenarioData instance, 2 currencies, shifts more granular than base curve
+    static boost::shared_ptr<ore::analytics::SensitivityScenarioData> setupSensitivityScenarioData2b();
     //! Conventions instance
     static boost::shared_ptr<ore::data::Conventions> conv();
 };

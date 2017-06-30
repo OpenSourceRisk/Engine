@@ -638,22 +638,22 @@ void ShiftScenarioGenerator::applyShift(Size j, Real shiftSize, bool up, ShiftTy
 
     Time t1 = tenors[j];
     // FIXME: Handle case where the shift curve is more granular than the original
-    ostringstream o_tenors;
-    o_tenors << "{";
-    for (auto it_tenor : tenors)
-        o_tenors << it_tenor << ",";
-    o_tenors << "}";
-    ostringstream o_times;
-    o_times << "{";
-    for (auto it_time : times)
-        o_times << it_time << ",";
-    o_times << "}";
-    QL_REQUIRE(tenors.size() <= times.size(),
-               "shifted tenor vector " << o_tenors.str() << " cannot be more granular than the base curve tenor vector "
-                                       << o_times.str());
-    auto it = std::find(times.begin(), times.end(), t1);
-    QL_REQUIRE(it != times.end(),
-               "shifted tenor node (" << t1 << ") not found in base curve tenor vector " << o_times.str());
+    // ostringstream o_tenors;
+    // o_tenors << "{";
+    // for (auto it_tenor : tenors)
+    //     o_tenors << it_tenor << ",";
+    // o_tenors << "}";
+    // ostringstream o_times;
+    // o_times << "{";
+    // for (auto it_time : times)
+    //     o_times << it_time << ",";
+    // o_times << "}";
+    // QL_REQUIRE(tenors.size() <= times.size(),
+    //            "shifted tenor vector " << o_tenors.str() << " cannot be more granular than the base curve tenor vector "
+    //                                    << o_times.str());
+    // auto it = std::find(times.begin(), times.end(), t1);
+    // QL_REQUIRE(it != times.end(),
+    //            "shifted tenor node (" << t1 << ") not found in base curve tenor vector " << o_times.str());
 
     if (initialise) {
         for (Size i = 0; i < values.size(); ++i)

@@ -138,9 +138,14 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     ccys_ = XMLUtils::getChildrenValues(node, "Currencies", "Currency");
 
     XMLNode* nodeChild = XMLUtils::getChildNode(node, "BenchmarkCurves");
+    yieldCurveNames_.clear();
+    yieldCurveCurrencies_.clear();
     if (nodeChild) {
-        yieldCurveNames_ = XMLUtils::getChildrenValues(nodeChild, "BenchmarkCurve", "Name");
-        yieldCurveCurrencies_ = XMLUtils::getChildrenValues(nodeChild, "BenchmarkCurve", "Currency");
+        for (XMLNode* n = XMLUtils::getChildNode(nodeChild, "BenchmarkCurve"); n != nullptr;
+             n = XMLUtils::getNextSibling(n, "BenchmarkCurve")) {
+            yieldCurveNames_.push_back(XMLUtils::getChildValue(n, "Name", true));
+            yieldCurveCurrencies_.push_back(XMLUtils::getChildValue(n, "Currency", true));
+        }
     }
 
     nodeChild = XMLUtils::getChildNode(node, "YieldCurves");
