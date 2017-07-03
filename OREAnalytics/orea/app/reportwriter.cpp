@@ -134,7 +134,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Po
                         } else {
                             coupon = Null<Real>();
                             accrual = Null<Real>();
-                            flowType = "Nominal";
+                            flowType = "Notional";
                         }
                         boost::shared_ptr<QuantLib::FloatingRateCoupon> ptrFloat =
                             boost::dynamic_pointer_cast<QuantLib::FloatingRateCoupon>(ptrFlow);
