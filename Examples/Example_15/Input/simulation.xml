@@ -134,24 +134,24 @@
     </Securities>
 
     <ZeroInflationIndexCurves>
-        <Names>
-			<Name>EUHICP</Name>
-			<Name>EUHICPXT</Name>
-			<Name>FRHICP</Name>
-			<Name>UKRPI</Name>
-			<Name>USCPI</Name>
-			<Name>ZACPI</Name>
-		</Names>
-		<Tenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</Tenors>
+      <Names>
+      	<Name>EUHICP</Name>
+        <Name>EUHICPXT</Name>
+        <Name>FRHICP</Name>
+        <Name>UKRPI</Name>
+        <Name>USCPI</Name>
+        <Name>ZACPI</Name>
+      </Names>
+      <Tenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</Tenors>
     </ZeroInflationIndexCurves>
 
-	<YYInflationIndexCurves>
+    <YYInflationIndexCurves>
 	    <Names>
-		    <Name>EUHICPXT</Name>
+          <Name>EUHICPXT</Name>
 		</Names>
-		<Tenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</Tenors>
-	</YYInflationIndexCurves>
-	
+        <Tenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</Tenors>
+    </YYInflationIndexCurves>
+
     <!-- Additional data that is recorded during simulation for later
 	   use in the post processor -->
     <AggregationScenarioDataCurrencies>

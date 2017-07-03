@@ -176,7 +176,7 @@
   <!-- Credit Curve shifts -->
   <CreditCurves>
     <CreditCurve name="CPTY_C">
-	    <Currency>EUR</Currency>
+        <Currency>EUR</Currency>
         <ShiftType>Absolute</ShiftType>
         <ShiftSize>0.0001</ShiftSize>
         <ShiftTenors>6M,1Y,2Y</ShiftTenors>

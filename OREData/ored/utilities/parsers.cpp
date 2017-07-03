@@ -107,7 +107,13 @@ Real parseReal(const string& s) {
     return atof(s.c_str());
 }
 
-Integer parseInteger(const string& s) { return io::to_integer(s); }
+Integer parseInteger(const string& s) {
+    try {
+        return io::to_integer(s);
+    } catch (std::exception& ex) {
+        QL_FAIL("Failed to parseInteger(\"" << s << "\") " << ex.what());
+    }
+}
 
 bool parseBool(const string& s) {
     static map<string, bool> b = {{"Y", true},  {"YES", true}, {"TRUE", true},   {"true", true},   {"1", true},
@@ -467,14 +473,15 @@ Option::Type parseOptionType(const std::string& s) {
 }
 
 void parseDateOrPeriod(const string& s, Date& d, Period& p, bool& isDate) {
+    QL_REQUIRE(!s.empty(), "Cannot parse empty string as date or period");
     string c(1, s.back());
     bool isPeriod = c.find_first_of("DdWwMmYy") != string::npos;
     if (isPeriod) {
         p = ore::data::parsePeriod(s);
-	isDate = false;
-    }
-    else {
+        isDate = false;
+    } else {
         d = ore::data::parseDate(s);
+        QL_REQUIRE(d != Date(), "Cannot parse \"" << s << "\" as date");
         isDate = true;
     }
 }
