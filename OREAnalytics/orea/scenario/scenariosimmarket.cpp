@@ -550,28 +550,52 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
     LOG("building fx volatilities...");
     for (const auto& ccyPair : parameters->fxVolCcyPairs()) {
         Handle<BlackVolTermStructure> wrapper = initMarket->fxVol(ccyPair, configuration);
-
+        Handle<Quote> spot = fxSpot(ccyPair);
+        QL_REQUIRE(ccyPair.length() == 6, "invalid ccy pair length");
+        string forCcy = ccyPair.substr(0, 3);
+        string domCcy = ccyPair.substr(3, 3);
+        Handle<YieldTermStructure> forTS = discountCurve(forCcy);
+        Handle<YieldTermStructure> domTS = discountCurve(domCcy);
         Handle<BlackVolTermStructure> fvh;
 
         if (parameters->simulateFXVols()) {
             LOG("Simulating FX Vols (BlackVarianceCurve3) for " << ccyPair);
-
-            vector<Handle<Quote>> quotes;
+            Size n = parameters->fxVolExpiries().size();
+            Size m = parameters->fxVolMoneyness().size();
+            vector<vector<Handle<Quote>>> quotes(m, vector<Handle<Quote>>(n, Handle<Quote>()));
+            Calendar cal = wrapper->calendar();
+            DayCounter dc = wrapper->dayCounter();
             vector<Time> times;
-            for (Size i = 0; i < parameters->fxVolExpiries().size(); i++) {
+
+            for (Size i = 0; i < n; i++) {
                 Date date = asof_ + parameters->fxVolExpiries()[i];
-                Volatility vol = wrapper->blackVol(date, Null<Real>(), true);
+
                 times.push_back(wrapper->timeFromReference(date));
-                boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
-                simData_.emplace(std::piecewise_construct,
-                                 std::forward_as_tuple(RiskFactorKey::KeyType::FXVolatility, ccyPair, i),
-                                 std::forward_as_tuple(q));
-                quotes.emplace_back(q);
+
+                for (Size j = 0; j < m; j++) {
+                    Size idx = j * n + i;
+                    Real mon = parameters->fxVolMoneyness()[j]; //0 if ATM
+
+                    // strike (assuming forward prices)
+                    Real k = spot->value() * mon * forTS->discount(date)/domTS->discount(date);
+                    Volatility vol = wrapper->blackVol(date, k, true);
+                    boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
+                    simData_.emplace(std::piecewise_construct,
+                                    std::forward_as_tuple(RiskFactorKey::KeyType::FXVolatility, ccyPair, idx),
+                                    std::forward_as_tuple(q));
+                    quotes[j][i] = Handle<Quote>(q);
+                }
             }
 
-            boost::shared_ptr<BlackVolTermStructure> fxVolCurve(new BlackVarianceCurve3(
-                0, NullCalendar(), wrapper->businessDayConvention(), wrapper->dayCounter(), times, quotes));
-
+            boost::shared_ptr<BlackVolTermStructure> fxVolCurve;
+            if( parameters->fxVolIsSurface() ) {
+                bool stickyStrike = true;
+                fxVolCurve = boost::shared_ptr<BlackVolTermStructure>(new BlackVarianceSurfaceMoneynessForward(cal, spot, 
+                    times, parameters->fxVolMoneyness(), quotes, dc, forTS, domTS, stickyStrike));
+            } else {
+                fxVolCurve = boost::shared_ptr<BlackVolTermStructure>(new BlackVarianceCurve3(
+                    0, NullCalendar(), wrapper->businessDayConvention(), wrapper->dayCounter(), times, quotes[0]));
+            }
             fvh = Handle<BlackVolTermStructure>(fxVolCurve);
 
         } else {
@@ -587,8 +611,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
                 wrapper, 0, NullCalendar(), decayMode, StickyStrike));
         }
 
-        if (wrapper->allowsExtrapolation())
-            fvh->enableExtrapolation();
+        fvh->enableExtrapolation();
         fxVols_.insert(pair<pair<string, string>, Handle<BlackVolTermStructure>>(
             make_pair(Market::defaultConfiguration, ccyPair), fvh));
 
@@ -596,8 +619,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         QL_REQUIRE(ccyPair.size() == 6, "Invalid Ccy pair " << ccyPair);
         string reverse = ccyPair.substr(3) + ccyPair.substr(0, 3);
         Handle<QuantLib::BlackVolTermStructure> ifvh(boost::make_shared<BlackInvertedVolTermStructure>(fvh));
-        if (fvh->allowsExtrapolation())
-            ifvh->enableExtrapolation();
+        ifvh->enableExtrapolation();
         fxVols_.insert(pair<pair<string, string>, Handle<BlackVolTermStructure>>(
             make_pair(Market::defaultConfiguration, reverse), ifvh));
     }
@@ -704,8 +726,9 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
                 // If true, the strikes are fixed, if false they move with the spot handle
                 // Should probably be false, but some people like true for sensi runs.
                 bool stickyStrike = true;
-                eqVolCurve
-                =  boost::shared_ptr<BlackVolTermStructure> (new BlackVarianceSurfaceMoneyness(cal, spot, times, parameters->equityVolMoneyness(), quotes, dc, stickyStrike));
+
+                boost::shared_ptr<BlackVolTermStructure> eqVolCurve(
+                    new BlackVarianceSurfaceMoneynessSpot(cal, spot, times, parameters->equityVolMoneyness(), quotes, dc, stickyStrike));
                 eqVolCurve->enableExtrapolation();
             } else {
             LOG("Simulating EQ Vols (BlackVarianceCurve3) for " << equityName);
