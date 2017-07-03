@@ -106,11 +106,9 @@ public:
 
     //! Inflation Indexes
     virtual Handle<ZeroInflationIndex>
-    zeroInflationIndex(const string& indexName, const bool interpoated,
-                       const string& configuration = Market::defaultConfiguration) const;
+    zeroInflationIndex(const string& indexName, const string& configuration = Market::defaultConfiguration) const;
     virtual Handle<YoYInflationIndex>
-    yoyInflationIndex(const string& indexName, const bool interpoated,
-                      const string& configuration = Market::defaultConfiguration) const;
+    yoyInflationIndex(const string& indexName, const string& configuration = Market::defaultConfiguration) const;
 
     //! Inflation Cap Floor Price Surfaces
     virtual Handle<CPICapFloorTermPriceSurface>
@@ -159,8 +157,8 @@ protected:
     map<pair<string, string>, Handle<BaseCorrelationTermStructure<BilinearInterpolation>>> baseCorrelations_;
     map<pair<string, string>, Handle<Quote>> recoveryRates_;
     map<pair<string, string>, Handle<OptionletVolatilityStructure>> capFloorCurves_;
-    map<pair<string, pair<string, bool>>, Handle<ZeroInflationIndex>> zeroInflationIndices_;
-    map<pair<string, pair<string, bool>>, Handle<YoYInflationIndex>> yoyInflationIndices_;
+    map<pair<string, string>, Handle<ZeroInflationIndex>> zeroInflationIndices_;
+    map<pair<string, string>, Handle<YoYInflationIndex>> yoyInflationIndices_;
     map<pair<string, string>, Handle<CPICapFloorTermPriceSurface>> inflationCapFloorPriceSurfaces_;
     map<pair<string, string>, Handle<Quote>> equitySpots_;
     map<pair<string, string>, Handle<BlackVolTermStructure>> equityVols_;

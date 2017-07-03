@@ -631,6 +631,8 @@
     <ClInclude Include="qle\termstructures\swaptionvolcube2.hpp" />
     <ClInclude Include="qle\termstructures\swaptionvolcubewithatm.hpp" />
     <ClInclude Include="qle\termstructures\tenorbasisswaphelper.hpp" />
+    <ClInclude Include="qle\termstructures\yoyinflationcurveobserver.hpp" />
+    <ClInclude Include="qle\termstructures\zeroinflationcurveobserver.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="qle\cashflows\averageonindexedcoupon.cpp" />

@@ -477,13 +477,11 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
         shiftSize = sensitivityData_->equityVolShiftData()[pair].shiftSize;
         if (boost::to_upper_copy(sensitivityData_->equityVolShiftData()[pair].shiftType) == "RELATIVE") {
             vector<Real> strikes = sensitivityData_->equityVolShiftData()[pair].shiftStrikes;
-            QL_REQUIRE(strikes.size() == 0, "Only ATM FX vols supported");
-            Real atmFwd = 0.0; // hardcoded, since only ATM supported
             Size keyIdx = key.index;
             Period p = sensitivityData_->equityVolShiftData()[pair].shiftExpiries[keyIdx];
             Handle<BlackVolTermStructure> vts = simMarket_->equityVol(pair, marketConfiguration_);
             Time t = vts->dayCounter().yearFraction(asof_, asof_ + p);
-            Real atmVol = vts->blackVol(t, atmFwd);
+            Real atmVol = vts->blackVol(t, Null<Real>());
             shiftMult = atmVol;
         }
     } else if (keytype == RiskFactorKey::KeyType::SwaptionVolatility) {
@@ -563,7 +561,32 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
             Real bc = ts->correlation(asof_ + term, lossLevel, true); // extrapolate
             shiftMult = bc;
         }
+    } else if (keytype == RiskFactorKey::KeyType::ZeroInflationCurve) {
+        string idx = keylabel;
+        shiftSize = sensitivityData_->zeroInflationCurveShiftData()[idx].shiftSize;
+        if (boost::to_upper_copy(sensitivityData_->zeroInflationCurveShiftData()[idx].shiftType) == "RELATIVE") {
+            Size keyIdx = key.index;
+            Period p = sensitivityData_->zeroInflationCurveShiftData()[idx].shiftTenors[keyIdx];
+            Handle<ZeroInflationTermStructure> yts =
+                simMarket_->zeroInflationIndex(idx, marketConfiguration_)->zeroInflationTermStructure();
+            Time t = yts->dayCounter().yearFraction(asof_, asof_ + p);
+            Real zeroRate = yts->zeroRate(t);
+            shiftMult = zeroRate;
+        }
+    } else if (keytype == RiskFactorKey::KeyType::YoYInflationCurve) {
+        string idx = keylabel;
+        shiftSize = sensitivityData_->yoyInflationCurveShiftData()[idx].shiftSize;
+        if (boost::to_upper_copy(sensitivityData_->yoyInflationCurveShiftData()[idx].shiftType) == "RELATIVE") {
+            Size keyIdx = key.index;
+            Period p = sensitivityData_->yoyInflationCurveShiftData()[idx].shiftTenors[keyIdx];
+            Handle<YoYInflationTermStructure> yts =
+                simMarket_->yoyInflationIndex(idx, marketConfiguration_)->yoyInflationTermStructure();
+            Time t = yts->dayCounter().yearFraction(asof_, asof_ + p);
+            Real yoyRate = yts->yoyRate(t);
+            shiftMult = yoyRate;
+        }
     } else {
+        // KeyType::CPIIndex does not get shifted
         QL_FAIL("KeyType not supported yet - " << keytype);
     }
     Real realShift = shiftSize * shiftMult;

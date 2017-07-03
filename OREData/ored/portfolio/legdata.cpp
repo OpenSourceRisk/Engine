@@ -120,7 +120,7 @@ void YoYLegData::fromXML(XMLNode* node) {
 }
 
 XMLNode* YoYLegData::toXML(XMLDocument& doc) {
-    XMLNode* node = doc.allocNode("CPILegData");
+    XMLNode* node = doc.allocNode("YYLegData");
     XMLUtils::addChild(doc, node, "Index", index_);
     XMLUtils::addChild(doc, node, "ObservationLag", observationLag_);
     XMLUtils::addChild(doc, node, "FixingDays", static_cast<int>(fixingDays_));

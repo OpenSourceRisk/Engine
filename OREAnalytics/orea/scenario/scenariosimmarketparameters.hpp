@@ -50,12 +50,15 @@ public:
     ScenarioSimMarketParameters()
         : extrapolate_(false), swapVolSimulate_(false), capFloorVolSimulate_(false),
           survivalProbabilitySimulate_(false), recoveryRateSimulate_(false), cdsVolSimulate_(false),
-          fxVolSimulate_(false), equityVolSimulate_(false), equityIsSurface_(false), baseCorrelationSimulate_(false) {
+          fxVolSimulate_(false), equityVolSimulate_(false), equityIsSurface_(false), equityVolSimulateATMOnly_(true),
+          equityMoneyness_({1}), baseCorrelationSimulate_(false) {
         // set default tenors
         capFloorVolExpiries_[""];
         defaultTenors_[""];
         equityDividendTenors_[""];
         equityForecastTenors_[""];
+        zeroInflationTenors_[""];
+        yoyInflationTenors_[""];
     }
 
     //! \name Inspectors
@@ -110,10 +113,11 @@ public:
     const vector<string>& fxVolCcyPairs() const { return fxVolCcyPairs_; }
 
     bool simulateEquityVols() const { return equityVolSimulate_; }
+    bool equityVolIsSurface() const { return equityIsSurface_; }
+    bool simulateEquityVolATMOnly() const { return equityVolSimulateATMOnly_; }
     const vector<Period>& equityVolExpiries() const { return equityVolExpiries_; }
     const string& equityVolDecayMode() const { return equityVolDecayMode_; }
     const vector<string>& equityVolNames() const { return equityVolNames_; }
-    bool equityVolIsSurface() const { return equityIsSurface_; }
     const vector<Real>& equityVolMoneyness() const { return equityMoneyness_; }
 
     const vector<string>& additionalScenarioDataIndices() const { return additionalScenarioDataIndices_; }
@@ -125,6 +129,15 @@ public:
     const vector<Period>& baseCorrelationTerms() const { return baseCorrelationTerms_; }
     const vector<Real>& baseCorrelationDetachmentPoints() const { return baseCorrelationDetachmentPoints_; }
     const vector<string>& baseCorrelationNames() const { return baseCorrelationNames_; }
+
+    const vector<string>& cpiIndices() const { return cpiIndices_; }
+    const vector<string>& zeroInflationIndices() const { return zeroInflationIndices_; }
+    const vector<Period>& zeroInflationTenors(const string& key) const;
+    bool hasZeroInflationTenors(const string& key) const { return zeroInflationTenors_.count(key) > 0; }
+    const vector<string>& yoyInflationIndices() const { return yoyInflationIndices_; }
+    const vector<Period>& yoyInflationTenors(const string& key) const;
+    bool hasYoyInflationTenors(const string& key) const { return yoyInflationTenors_.count(key) > 0; }
+
     //@}
 
     //! \name Setters
@@ -174,10 +187,11 @@ public:
     vector<string>& fxVolCcyPairs() { return fxVolCcyPairs_; }
 
     bool& simulateEquityVols() { return equityVolSimulate_; }
+    bool& equityVolIsSurface() { return equityIsSurface_; }
+    bool& simulateEquityVolATMOnly() { return equityVolSimulateATMOnly_; }
     vector<Period>& equityVolExpiries() { return equityVolExpiries_; }
     string& equityVolDecayMode() { return equityVolDecayMode_; }
     vector<string>& equityVolNames() { return equityVolNames_; }
-    bool& equityVolIsSurface() { return equityIsSurface_; }
     vector<Real>& equityVolMoneyness() { return equityMoneyness_; }
 
     vector<string>& additionalScenarioDataIndices() { return additionalScenarioDataIndices_; }
@@ -189,6 +203,13 @@ public:
     vector<Period>& baseCorrelationTerms() { return baseCorrelationTerms_; }
     vector<Real>& baseCorrelationDetachmentPoints() { return baseCorrelationDetachmentPoints_; }
     vector<string>& baseCorrelationNames() { return baseCorrelationNames_; }
+
+    vector<string>& cpiIndices() { return cpiIndices_; }
+    vector<string>& zeroInflationIndices() { return zeroInflationIndices_; }
+    void setZeroInflationTenors(const string& key, const vector<Period>& p);
+    vector<string>& yoyInflationIndices() { return yoyInflationIndices_; }
+    void setYoyInflationTenors(const string& key, const vector<Period>& p);
+
 
     //@}
 
@@ -250,10 +271,11 @@ private:
     vector<string> fxVolCcyPairs_;
 
     bool equityVolSimulate_;
+    bool equityIsSurface_;
+    bool equityVolSimulateATMOnly_;
     vector<Period> equityVolExpiries_;
     string equityVolDecayMode_;
     vector<string> equityVolNames_;
-    bool equityIsSurface_;
     vector<Real> equityMoneyness_;
 
     vector<string> additionalScenarioDataIndices_;
@@ -265,6 +287,12 @@ private:
     vector<string> baseCorrelationNames_;
     vector<Period> baseCorrelationTerms_;
     vector<Real> baseCorrelationDetachmentPoints_;
+    
+    vector<string> cpiIndices_;
+    vector<string> zeroInflationIndices_;
+    map<string, vector<Period>> zeroInflationTenors_;
+    vector<string> yoyInflationIndices_;
+    map<string, vector<Period>> yoyInflationTenors_;
 };
 } // namespace analytics
 } // namespace ore

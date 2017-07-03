@@ -72,7 +72,10 @@ this_include_HEADERS = \
 	survivalprobabilitycurve.hpp \
 	swaptionvolcubewithatm.hpp \
 	blackvariancesurfacemoneyness.hpp \
+    equityvolconstantspread.hpp
 	swaptionvolcube2.hpp \
+	yoyinflationcurveobserver.hpp \
+	zeroinflationcurveobserver.hpp \
 	fxvannavolgasmilesection.hpp \
 	fxblackvolsurface.hpp \
 	fxsmilesection.hpp
