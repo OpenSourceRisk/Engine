@@ -134,11 +134,12 @@ public:
     const vector<string>& baseCorrelationNames() const { return baseCorrelationNames_; }
     const map<string, BaseCorrelationShiftData>& baseCorrelationShiftData() const { return baseCorrelationShiftData_; }
 
-    // todo
-    // const vector<string>& infIndices() const { return inflationIndices_; }
-    // const map<string, InflationCurveShiftData> inflationCurveShiftData() const { return inflationCurveShiftData_; }
+    const vector<string>& zeroInflationIndices() const { return zeroInflationIndices_; }
+    const map<string, CurveShiftData>& zeroInflationCurveShiftData() const { return zeroInflationCurveShiftData_; }
 
-    // todo
+    const vector<string>& yoyInflationIndices() const { return yoyInflationIndices_; }
+    const map<string, CurveShiftData>& yoyInflationCurveShiftData() const { return yoyInflationCurveShiftData_; }
+
     const vector<string>& creditNames() const { return creditNames_; }
     const map<string, string>& creditCcys() const { return creditCcys_; }
     const map<string, CurveShiftData>& creditCurveShiftData() const { return creditCurveShiftData_; }
@@ -190,11 +191,12 @@ public:
     vector<string>& baseCorrelationNames() { return baseCorrelationNames_; }
     map<string, BaseCorrelationShiftData>& baseCorrelationShiftData() { return baseCorrelationShiftData_; }
 
-    // todo
-    // vector<string>& infIndices() { return inflationIndices_; }
-    // map<string, InflationCurveShiftData> inflationCurveShiftData() { return inflationCurveShiftData_; }
+    vector<string>& zeroInflationIndices() { return zeroInflationIndices_; }
+    map<string, CurveShiftData>& zeroInflationCurveShiftData() { return zeroInflationCurveShiftData_; }
 
-    // todo
+    vector<string>& yoyInflationIndices() { return yoyInflationIndices_; }
+    map<string, CurveShiftData>& yoyInflationCurveShiftData() { return yoyInflationCurveShiftData_; }
+
     vector<string>& creditNames() { return creditNames_; }
     map<string, string>& creditCcys() { return creditCcys_; }
     map<string, CurveShiftData>& creditCurveShiftData() { return creditCurveShiftData_; }
@@ -256,9 +258,11 @@ private:
     vector<string> cdsVolNames_;
     map<string, CdsVolShiftData> cdsVolShiftData_; // key: ccy pair
 
-    // todo
-    vector<string> inflationIndices_;
-    map<string, CurveShiftData> inflationCurveShiftData_; // key: inflation index name
+    vector<string> zeroInflationIndices_;
+    map<string, CurveShiftData> zeroInflationCurveShiftData_; // key: inflation index name
+
+    vector<string> yoyInflationIndices_;
+    map<string, CurveShiftData> yoyInflationCurveShiftData_; // key: yoy inflation index name
 
     vector<string> creditNames_;
     map<string, string> creditCcys_;

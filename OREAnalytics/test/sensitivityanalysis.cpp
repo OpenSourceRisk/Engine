@@ -23,15 +23,15 @@
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/sensitivityscenariogenerator.hpp>
 #include <ored/portfolio/builders/capfloor.hpp>
+#include <ored/portfolio/builders/equityforward.hpp>
+#include <ored/portfolio/builders/equityoption.hpp>
 #include <ored/portfolio/builders/fxforward.hpp>
 #include <ored/portfolio/builders/fxoption.hpp>
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/builders/swaption.hpp>
-#include <ored/portfolio/builders/equityoption.hpp>
-#include <ored/portfolio/builders/equityforward.hpp>
-#include <ored/portfolio/fxoption.hpp>
-#include <ored/portfolio/equityoption.hpp>
 #include <ored/portfolio/equityforward.hpp>
+#include <ored/portfolio/equityoption.hpp>
+#include <ored/portfolio/fxoption.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/swap.hpp>
 #include <ored/portfolio/swaption.hpp>
@@ -80,7 +80,6 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     scenarioGenerator->generateScenarios(scenarioFactory);
 
     boost::shared_ptr<ScenarioGenerator> sgen(scenarioGenerator);
-
     // build scenario sim market
     Conventions conventions = *TestConfigurationObjects::conv();
     boost::shared_ptr<analytics::ScenarioSimMarket> simMarket =
@@ -152,7 +151,11 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     portfolio->add(buildFloor("10_Floor_USD", "USD", "Long", 0.01, 1000000.0, 0, 10, "3M", "A360", "USD-LIBOR-3M"));
     portfolio->add(buildZeroBond("11_ZeroBond_EUR", "EUR", 1.0, 10));
     portfolio->add(buildZeroBond("12_ZeroBond_USD", "USD", 1.0, 10));
-    portfolio->add(buildEquityOption("14_EquityOption_SP5", "Long", "Call", 2, "SP5", "USD", 2147.56, 775));    
+    portfolio->add(buildEquityOption("14_EquityOption_SP5", "Long", "Call", 2, "SP5", "USD", 2147.56, 775));
+    portfolio->add(buildCPIInflationSwap("15_CPIInflationSwap_UKRPI", "GBP", true, 100000.0, 0, 10, 0.0, "6M", "ACT/ACT", 
+                                         "GBP-LIBOR-6M", "1Y", "ACT/ACT", "UKRPI", 201.0, "2M", false, 0.005));
+    portfolio->add(buildYYInflationSwap("16_YoYInflationSwap_UKRPI", "GBP", true, 100000.0, 0, 10, 0.0, "1Y", "ACT/ACT",
+                                         "GBP-LIBOR-6M", "1Y", "ACT/ACT", "UKRPI", "2M", true, 2));
     portfolio->build(factory);
 
     BOOST_TEST_MESSAGE("Portfolio size after build: " << portfolio->size());
@@ -170,6 +173,7 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
         today, portfolio->ids(), vector<Date>(1, today), scenarioGenerator->samples());
     engine.buildCube(portfolio, cube, calculators);
     double elapsed = t.elapsed();
+
 
     struct Results {
         string id;
@@ -442,17 +446,17 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
         {"11_ZeroBond_EUR", "Up:YieldCurve/BondCurve1/6/10Y", 0.60659, -0.000606168}, // OK, diff 1e-9
         // sensi to down shift d=-1bp: 0.00060677354516836
         {"11_ZeroBond_EUR", "Down:YieldCurve/BondCurve1/6/10Y", 0.60659, 0.000606774}, // OK, diff < 1e-9
-        // A relative shift in yield curve is equivalent to a relative shift in default curve 
+        // A relative shift in yield curve is equivalent to a relative shift in default curve
         {"11_ZeroBond_EUR", "Up:SurvivalProbability/BondIssuer1/6/10Y", 0.60659, -0.000606168},
-        {"11_ZeroBond_EUR", "Down:SurvivalProbability/BondIssuer1/6/10Y", 0.60659, 0.000606774}, 
+        {"11_ZeroBond_EUR", "Down:SurvivalProbability/BondIssuer1/6/10Y", 0.60659, 0.000606774},
         // sensi to up shift d=+1bp: exp(-(z+d)*T)*USDEUR - exp(-z*T)*USDEUR
         // = -0.000505139329666004
         {"12_ZeroBond_USD", "Up:YieldCurve/BondCurve1/6/10Y", 0.505492, -0.00050514}, // OK, diff < 1e-8
         // sensi to down shit d=-1bp: 0.000505644620973689
         {"12_ZeroBond_USD", "Down:YieldCurve/BondCurve1/6/10Y", 0.505492, 0.000505645}, // OK, diff < 1e-9
-        // A relative shift in yield curve is equivalent to a relative shift in default curve 
-        {"12_ZeroBond_USD", "Up:SurvivalProbability/BondIssuer1/6/10Y", 0.505492,  -0.00050514},
-        {"12_ZeroBond_USD", "Down:SurvivalProbability/BondIssuer1/6/10Y", 0.505492, 0.000505645}, 
+        // A relative shift in yield curve is equivalent to a relative shift in default curve
+        {"12_ZeroBond_USD", "Up:SurvivalProbability/BondIssuer1/6/10Y", 0.505492, -0.00050514},
+        {"12_ZeroBond_USD", "Down:SurvivalProbability/BondIssuer1/6/10Y", 0.505492, 0.000505645},
         // sensi to EURUSD upshift d=+1%: exp(-z*T)*USDEUR/(1+d) - exp(-z*T)*USDEUR
         // = -0.00500487660122262
         {"12_ZeroBond_USD", "Up:FXSpot/EURUSD/0/spot", 0.505492, -0.00500487}, // OK, diff < 1e-8
@@ -507,7 +511,93 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
         {"14_EquityOption_SP5", "Up:FXSpot/EURUSD/0/spot", 216085, -2139.45 },
         {"14_EquityOption_SP5", "Down:FXSpot/EURUSD/0/spot", 216085, 2182.67 },
         {"14_EquityOption_SP5", "Up:EquityVolatility/SP5/0/5Y/ATM", 216085, 1849.98 },
-        {"14_EquityOption_SP5", "Down:EquityVolatility/SP5/0/5Y/ATM", 216085, -1850.33 } };
+        {"14_EquityOption_SP5", "Down:EquityVolatility/SP5/0/5Y/ATM", 216085, -1850.33 },
+        {"15_CPIInflationSwap_UKRPI", "Up:DiscountCurve/GBP/0/6M", -32068.5, -0.0306304 },
+        {"15_CPIInflationSwap_UKRPI", "Up:DiscountCurve/GBP/1/1Y", -32068.5, -0.279201 },
+        {"15_CPIInflationSwap_UKRPI", "Up:DiscountCurve/GBP/2/2Y", -32068.5, -0.772336 },
+        {"15_CPIInflationSwap_UKRPI", "Up:DiscountCurve/GBP/3/3Y", -32068.5, -1.80941 },
+        {"15_CPIInflationSwap_UKRPI", "Up:DiscountCurve/GBP/4/5Y", -32068.5, -3.18149 },
+        {"15_CPIInflationSwap_UKRPI", "Up:DiscountCurve/GBP/5/7Y", -32068.5, -5.26791 },
+        {"15_CPIInflationSwap_UKRPI", "Up:DiscountCurve/GBP/6/10Y", -32068.5, 58.9998 },
+        {"15_CPIInflationSwap_UKRPI", "Down:DiscountCurve/GBP/0/6M", -32068.5, 0.030632 },
+        {"15_CPIInflationSwap_UKRPI", "Down:DiscountCurve/GBP/1/1Y", -32068.5, 0.279223 },
+        {"15_CPIInflationSwap_UKRPI", "Down:DiscountCurve/GBP/2/2Y", -32068.5, 0.772443 },
+        {"15_CPIInflationSwap_UKRPI", "Down:DiscountCurve/GBP/3/3Y", -32068.5, 1.8098 },
+        {"15_CPIInflationSwap_UKRPI", "Down:DiscountCurve/GBP/4/5Y", -32068.5, 3.18254 },
+        {"15_CPIInflationSwap_UKRPI", "Down:DiscountCurve/GBP/5/7Y", -32068.5, 5.27039 },
+        {"15_CPIInflationSwap_UKRPI", "Down:DiscountCurve/GBP/6/10Y", -32068.5, -59.0602 },
+        {"15_CPIInflationSwap_UKRPI", "Up:IndexCurve/GBP-LIBOR-6M/0/6M", -32068.5, -6.17897 },
+        {"15_CPIInflationSwap_UKRPI", "Up:IndexCurve/GBP-LIBOR-6M/1/1Y", -32068.5, 0.672814 },
+        {"15_CPIInflationSwap_UKRPI", "Up:IndexCurve/GBP-LIBOR-6M/2/2Y", -32068.5, 0.804723 },
+        {"15_CPIInflationSwap_UKRPI", "Up:IndexCurve/GBP-LIBOR-6M/3/3Y", -32068.5, 2.4176 },
+        {"15_CPIInflationSwap_UKRPI", "Up:IndexCurve/GBP-LIBOR-6M/4/5Y", -32068.5, 3.61554 },
+        {"15_CPIInflationSwap_UKRPI", "Up:IndexCurve/GBP-LIBOR-6M/5/7Y", -32068.5, 6.77412 },
+        {"15_CPIInflationSwap_UKRPI", "Up:IndexCurve/GBP-LIBOR-6M/6/10Y", -32068.5, 89.6542 },
+        {"15_CPIInflationSwap_UKRPI", "Down:IndexCurve/GBP-LIBOR-6M/0/6M", -32068.5, 6.17927 },
+        {"15_CPIInflationSwap_UKRPI", "Down:IndexCurve/GBP-LIBOR-6M/1/1Y", -32068.5, -0.671026 },
+        {"15_CPIInflationSwap_UKRPI", "Down:IndexCurve/GBP-LIBOR-6M/2/2Y", -32068.5, -0.80017 },
+        {"15_CPIInflationSwap_UKRPI", "Down:IndexCurve/GBP-LIBOR-6M/3/3Y", -32068.5, -2.40996 },
+        {"15_CPIInflationSwap_UKRPI", "Down:IndexCurve/GBP-LIBOR-6M/4/5Y", -32068.5, -3.60255 },
+        {"15_CPIInflationSwap_UKRPI", "Down:IndexCurve/GBP-LIBOR-6M/5/7Y", -32068.5, -6.75478 },
+        {"15_CPIInflationSwap_UKRPI", "Down:IndexCurve/GBP-LIBOR-6M/6/10Y", -32068.5, -89.6393 },
+        {"15_CPIInflationSwap_UKRPI", "Up:FXSpot/EURGBP/0/spot", -32068.5, 317.51 },
+        {"15_CPIInflationSwap_UKRPI", "Down:FXSpot/EURGBP/0/spot", -32068.5, -323.924 },
+        {"15_CPIInflationSwap_UKRPI", "Up:ZeroInflationCurve/UKRPI/0/6M", -32068.5, -0.0256447 },
+        {"15_CPIInflationSwap_UKRPI", "Up:ZeroInflationCurve/UKRPI/1/1Y", -32068.5, -0.0782601 },
+        {"15_CPIInflationSwap_UKRPI", "Up:ZeroInflationCurve/UKRPI/2/2Y", -32068.5, -0.166256 },
+        {"15_CPIInflationSwap_UKRPI", "Up:ZeroInflationCurve/UKRPI/3/3Y", -32068.5, -0.398794 },
+        {"15_CPIInflationSwap_UKRPI", "Up:ZeroInflationCurve/UKRPI/4/5Y", -32068.5, -0.77261 },
+        {"15_CPIInflationSwap_UKRPI", "Up:ZeroInflationCurve/UKRPI/5/7Y", -32068.5, -9.08258 },
+        {"15_CPIInflationSwap_UKRPI", "Up:ZeroInflationCurve/UKRPI/6/10Y", -32068.5, -136.684 },
+        {"15_CPIInflationSwap_UKRPI", "Down:ZeroInflationCurve/UKRPI/0/6M", -32068.5, 0.0256447 },
+        {"15_CPIInflationSwap_UKRPI", "Down:ZeroInflationCurve/UKRPI/1/1Y", -32068.5, 0.0782597 },
+        {"15_CPIInflationSwap_UKRPI", "Down:ZeroInflationCurve/UKRPI/2/2Y", -32068.5, 0.166244 },
+        {"15_CPIInflationSwap_UKRPI", "Down:ZeroInflationCurve/UKRPI/3/3Y", -32068.5, 0.398732 },
+        {"15_CPIInflationSwap_UKRPI", "Down:ZeroInflationCurve/UKRPI/4/5Y", -32068.5, 0.772396 },
+        {"15_CPIInflationSwap_UKRPI", "Down:ZeroInflationCurve/UKRPI/5/7Y", -32068.5, 9.08164 },
+        {"15_CPIInflationSwap_UKRPI", "Down:ZeroInflationCurve/UKRPI/6/10Y", -32068.5, 136.571 },
+        {"16_YoYInflationSwap_UKRPI", "Up:DiscountCurve/GBP/1/1Y", 7046.27, 0.229966 },
+        {"16_YoYInflationSwap_UKRPI", "Up:DiscountCurve/GBP/2/2Y", 7046.27, -0.241807 },
+        {"16_YoYInflationSwap_UKRPI", "Up:DiscountCurve/GBP/3/3Y", 7046.27, -0.58353 },
+        {"16_YoYInflationSwap_UKRPI", "Up:DiscountCurve/GBP/4/5Y", 7046.27, -1.0044 },
+        {"16_YoYInflationSwap_UKRPI", "Up:DiscountCurve/GBP/5/7Y", 7046.27, -1.71982 },
+        {"16_YoYInflationSwap_UKRPI", "Up:DiscountCurve/GBP/6/10Y", 7046.27, -1.79953 },
+        {"16_YoYInflationSwap_UKRPI", "Down:DiscountCurve/GBP/1/1Y", 7046.27, -0.229989 },
+        {"16_YoYInflationSwap_UKRPI", "Down:DiscountCurve/GBP/2/2Y", 7046.27, 0.241856 },
+        {"16_YoYInflationSwap_UKRPI", "Down:DiscountCurve/GBP/3/3Y", 7046.27, 0.583682 },
+        {"16_YoYInflationSwap_UKRPI", "Down:DiscountCurve/GBP/4/5Y", 7046.27, 1.00478 },
+        {"16_YoYInflationSwap_UKRPI", "Down:DiscountCurve/GBP/5/7Y", 7046.27, 1.72069 },
+        {"16_YoYInflationSwap_UKRPI", "Down:DiscountCurve/GBP/6/10Y", 7046.27, 1.80091 },
+        {"16_YoYInflationSwap_UKRPI", "Up:IndexCurve/GBP-LIBOR-6M/0/6M", 7046.27, -0.0656954 },
+        {"16_YoYInflationSwap_UKRPI", "Up:IndexCurve/GBP-LIBOR-6M/1/1Y", 7046.27, -11.785 },
+        {"16_YoYInflationSwap_UKRPI", "Up:IndexCurve/GBP-LIBOR-6M/2/2Y", 7046.27, 0.816056 },
+        {"16_YoYInflationSwap_UKRPI", "Up:IndexCurve/GBP-LIBOR-6M/3/3Y", 7046.27, 2.44319 },
+        {"16_YoYInflationSwap_UKRPI", "Up:IndexCurve/GBP-LIBOR-6M/4/5Y", 7046.27, 3.66156 },
+        {"16_YoYInflationSwap_UKRPI", "Up:IndexCurve/GBP-LIBOR-6M/5/7Y", 7046.27, 6.85113 },
+        {"16_YoYInflationSwap_UKRPI", "Up:IndexCurve/GBP-LIBOR-6M/6/10Y", 7046.27, 90.5575 },
+        {"16_YoYInflationSwap_UKRPI", "Down:IndexCurve/GBP-LIBOR-6M/0/6M", 7046.27, 0.0656954 },
+        {"16_YoYInflationSwap_UKRPI", "Down:IndexCurve/GBP-LIBOR-6M/1/1Y", 7046.27, 11.7862 },
+        {"16_YoYInflationSwap_UKRPI", "Down:IndexCurve/GBP-LIBOR-6M/2/2Y", 7046.27, -0.80686 },
+        {"16_YoYInflationSwap_UKRPI", "Down:IndexCurve/GBP-LIBOR-6M/3/3Y", 7046.27, -2.42775 },
+        {"16_YoYInflationSwap_UKRPI", "Down:IndexCurve/GBP-LIBOR-6M/4/5Y", 7046.27, -3.63532 },
+        {"16_YoYInflationSwap_UKRPI", "Down:IndexCurve/GBP-LIBOR-6M/5/7Y", 7046.27, -6.81206 },
+        {"16_YoYInflationSwap_UKRPI", "Down:IndexCurve/GBP-LIBOR-6M/6/10Y", 7046.27, -90.5274 },
+        {"16_YoYInflationSwap_UKRPI", "Up:FXSpot/EURGBP/0/spot", 7046.27, -69.7651 },
+        {"16_YoYInflationSwap_UKRPI", "Down:FXSpot/EURGBP/0/spot", 7046.27, 71.1745 },
+        {"16_YoYInflationSwap_UKRPI", "Up:YoYInflationCurve/UKRPI/0/6M", 7046.27, -3.932357 },
+        {"16_YoYInflationSwap_UKRPI", "Up:YoYInflationCurve/UKRPI/1/1Y", 7046.27, -10.03593 },
+        {"16_YoYInflationSwap_UKRPI", "Up:YoYInflationCurve/UKRPI/2/2Y", 7046.27, -11.40649 },
+        {"16_YoYInflationSwap_UKRPI", "Up:YoYInflationCurve/UKRPI/3/3Y", 7046.27, -16.27749 },
+        {"16_YoYInflationSwap_UKRPI", "Up:YoYInflationCurve/UKRPI/4/5Y", 7046.27, -20.324759},
+        {"16_YoYInflationSwap_UKRPI", "Up:YoYInflationCurve/UKRPI/5/7Y", 7046.27, -23.190268 },
+        {"16_YoYInflationSwap_UKRPI", "Up:YoYInflationCurve/UKRPI/6/10Y", 7046.27, -15.795029 },
+        {"16_YoYInflationSwap_UKRPI", "Down:YoYInflationCurve/UKRPI/0/6M", 7046.27, 3.93236 },
+        {"16_YoYInflationSwap_UKRPI", "Down:YoYInflationCurve/UKRPI/1/1Y", 7046.27, 10.0359 },
+        {"16_YoYInflationSwap_UKRPI", "Down:YoYInflationCurve/UKRPI/2/2Y", 7046.27, 11.4065 },
+        {"16_YoYInflationSwap_UKRPI", "Down:YoYInflationCurve/UKRPI/3/3Y", 7046.27, 16.2775 },
+        {"16_YoYInflationSwap_UKRPI", "Down:YoYInflationCurve/UKRPI/4/5Y", 7046.27, 20.3248 },
+        {"16_YoYInflationSwap_UKRPI", "Down:YoYInflationCurve/UKRPI/5/7Y", 7046.27, 23.1903 },
+        {"16_YoYInflationSwap_UKRPI", "Down:YoYInflationCurve/UKRPI/6/10Y", 7046.27, 15.795 } };
 
     std::map<pair<string, string>, Real> npvMap, sensiMap;
     for (Size i = 0; i < cachedResults.size(); ++i) {
@@ -566,7 +656,6 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     // Validation of cached gammas:
     // gamma * (dx)^2 = \partial^2_x NPV(x) * (dx)^2
     //               \approx (NPV(x_up) - 2 NPV(x) + NPV(x_down)) = sensi(up) + sensi(down)
-    //
     // Case 1: "11_ZeroBond_EUR", "YieldCurve/BondCurve1/6/10Y"
     // NPV(x_up) - NPV(x) = -0.000606168, NPV(x_down) - NPV(x) = 0.000606774
     // gamma * (dx)^2 = -0.000606168 + 0.000606774 = 0.000000606 = 6.06e-7
@@ -616,8 +705,8 @@ void SensitivityAnalysisTest::testPortfolioSensitivityUnregisterObs() {
     testPortfolioSensitivity(ObservationMode::Mode::Unregister);
 }
 
-void SensitivityAnalysisTest::test1dShifts() {
-    BOOST_TEST_MESSAGE("Testing 1d shifts");
+void test1dShifts(bool granular) {
+    BOOST_TEST_MESSAGE("Testing 1d shifts " << (granular ? "granular" : "sparse"));
 
     SavedSettings backup;
 
@@ -643,7 +732,11 @@ void SensitivityAnalysisTest::test1dShifts() {
         TestConfigurationObjects::setupSimMarketData2();
 
     // sensitivity config
-    boost::shared_ptr<SensitivityScenarioData> sensiData = TestConfigurationObjects::setupSensitivityScenarioData2();
+    boost::shared_ptr<SensitivityScenarioData> sensiData;
+    if (granular)
+        sensiData = TestConfigurationObjects::setupSensitivityScenarioData2b();
+    else
+        sensiData = TestConfigurationObjects::setupSensitivityScenarioData2();
 
     // build scenario generator
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(
@@ -702,6 +795,10 @@ void SensitivityAnalysisTest::test1dShifts() {
     ObservationMode::instance().setMode(backupMode);
     IndexManager::instance().clearHistories();
 }
+
+void SensitivityAnalysisTest::test1dShiftsSparse() { test1dShifts(false); }
+
+void SensitivityAnalysisTest::test1dShiftsGranular() { test1dShifts(true); }
 
 void SensitivityAnalysisTest::test2dShifts() {
     BOOST_TEST_MESSAGE("Testing 2d shifts");
@@ -869,14 +966,14 @@ void SensitivityAnalysisTest::testEquityOptionDeltaGamma() {
     trnCount++;
     portfolio->add(buildEquityOption("Put_SP5", "Long", "Put", 2, "SP5", "USD", 2147.56, 1000));
     trnCount++;
-    //portfolio->add(buildEquityForward("Fwd_SP5", "Long", 2, "SP5", "USD", 2147.56, 1000));
-    //trnCount++;
+    // portfolio->add(buildEquityForward("Fwd_SP5", "Long", 2, "SP5", "USD", 2147.56, 1000));
+    // trnCount++;
     portfolio->add(buildEquityOption("Call_Luft", "Short", "Call", 2, "Lufthansa", "EUR", 12.75, 1000));
     trnCount++;
     portfolio->add(buildEquityOption("Put_Luft", "Short", "Put", 2, "Lufthansa", "EUR", 12.75, 1000));
     trnCount++;
-    //portfolio->add(buildEquityForward("Fwd_Luft", "Short", 2, "Lufthansa", "EUR", 12.75, 1000));
-    //trnCount++;
+    // portfolio->add(buildEquityForward("Fwd_Luft", "Short", 2, "Lufthansa", "EUR", 12.75, 1000));
+    // trnCount++;
     portfolio->build(factory);
     BOOST_CHECK_EQUAL(portfolio->size(), trnCount);
 
@@ -922,10 +1019,10 @@ void SensitivityAnalysisTest::testEquityOptionDeltaGamma() {
         qlInfoMap[info.id] = info;
     }
 
-    bool recalibrateModels = true;           // nothing to calibrate here
-    boost::shared_ptr<SensitivityAnalysis> sa = boost::make_shared<SensitivityAnalysis>(
-        portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, conventions,
-        recalibrateModels);
+    bool recalibrateModels = true; // nothing to calibrate here
+    boost::shared_ptr<SensitivityAnalysis> sa =
+        boost::make_shared<SensitivityAnalysis>(portfolio, initMarket, Market::defaultConfiguration, data,
+                                                simMarketData, sensiData, conventions, recalibrateModels);
     sa->generateSensitivities();
 
     map<pair<string, string>, Real> deltaMap = sa->delta();
@@ -937,7 +1034,7 @@ void SensitivityAnalysisTest::testEquityOptionDeltaGamma() {
         string id;
         Real baseNpv;
         Real discountDelta;
-        Real ycDelta; 
+        Real ycDelta;
         Real equitySpotDelta;
         Real equityVolDelta;
         Real equitySpotGamma;
@@ -953,7 +1050,7 @@ void SensitivityAnalysisTest::testEquityOptionDeltaGamma() {
         string id = it.first;
         BOOST_CHECK(sensiTrades.find(id) != sensiTrades.end());
         AnalyticInfo qlInfo = it.second;
-        SensiResults res = { string(""), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+        SensiResults res = {string(""), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
         for (auto it2 : deltaMap) {
             pair<string, string> sensiKey = it2.first;
             string sensiTrnId = it2.first.first;
@@ -981,14 +1078,12 @@ void SensitivityAnalysisTest::testEquityOptionDeltaGamma() {
                 res.equitySpotDelta += sensiVal;
                 res.equitySpotGamma += gammaVal;
                 continue;
-            }
-            else if (isEquityVol) {
+            } else if (isEquityVol) {
                 BOOST_CHECK(tokens.size() > 2);
                 string equity = tokens[1];
                 res.equityVolDelta += sensiVal;
                 continue;
-            }
-            else {
+            } else {
                 continue;
             }
         }
@@ -997,17 +1092,19 @@ void SensitivityAnalysisTest::testEquityOptionDeltaGamma() {
         Real tol = 0.5; // % relative tolerance
 
         BOOST_TEST_MESSAGE("SA: id=" << res.id << ", npv=" << res.baseNpv << ", equitySpotDelta=" << res.equitySpotDelta
-            << ", equityVolDelta=" << res.equityVolDelta << ", equitySpotGamma=" << res.equitySpotGamma);
-        BOOST_TEST_MESSAGE("QL: id=" << qlInfo.id  << ", fx=" << qlInfo.fx << ", npv=" << qlInfo.baseNpv
-            << ", ccyNpv=" << qlInfo.qlNpv << ", delta=" << qlInfo.delta << ", gamma=" << qlInfo.gamma 
-            << ", vega=" << qlInfo.vega << ", spotDelta=" << (qlInfo.delta * qlInfo.fx * bp * qlInfo.spot));
-        
-        Real eqVol = initMarket->equityVol(qlInfo.name)->blackVol(1.0, 1.0, true); // TO-DO more appropriate vol extraction
+                                     << ", equityVolDelta=" << res.equityVolDelta
+                                     << ", equitySpotGamma=" << res.equitySpotGamma);
+        BOOST_TEST_MESSAGE("QL: id=" << qlInfo.id << ", fx=" << qlInfo.fx << ", npv=" << qlInfo.baseNpv
+                                     << ", ccyNpv=" << qlInfo.qlNpv << ", delta=" << qlInfo.delta
+                                     << ", gamma=" << qlInfo.gamma << ", vega=" << qlInfo.vega
+                                     << ", spotDelta=" << (qlInfo.delta * qlInfo.fx * bp * qlInfo.spot));
+
+        Real eqVol =
+            initMarket->equityVol(qlInfo.name)->blackVol(1.0, 1.0, true); // TO-DO more appropriate vol extraction
         BOOST_CHECK_CLOSE(res.equityVolDelta, qlInfo.vega * qlInfo.fx * (bp * eqVol), tol);
 
-        BOOST_CHECK_CLOSE(res.equitySpotDelta, qlInfo.delta * qlInfo.fx * (bp * qlInfo.spot) , tol);
+        BOOST_CHECK_CLOSE(res.equitySpotDelta, qlInfo.delta * qlInfo.fx * (bp * qlInfo.spot), tol);
         BOOST_CHECK_CLOSE(res.equitySpotGamma, qlInfo.gamma * qlInfo.fx * (pow(bp * qlInfo.spot, 2)), tol);
-
     }
 }
 
@@ -1755,7 +1852,8 @@ test_suite* SensitivityAnalysisTest::suite() {
 
     test_suite* suite = BOOST_TEST_SUITE("SensitivityAnalysisTest");
     // Set the Observation mode here
-    suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::test1dShifts));
+    suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::test1dShiftsSparse));
+    suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::test1dShiftsGranular));
     suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::test2dShifts));
     suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testPortfolioSensitivityNoneObs));
     suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testPortfolioSensitivityDisableObs));

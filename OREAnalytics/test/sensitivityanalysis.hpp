@@ -35,7 +35,10 @@ class SensitivityAnalysisTest {
 public:
     //! Test that shifting all shift curve tenor points by DELTA yields DELTA shifts at all tenor points of the an
     // underlying curve
-    static void test1dShifts();
+    static void test1dShiftsSparse();
+    //! Test that shifting all shift curve tenor points by DELTA yields DELTA shifts at all tenor points of the an
+    // underlying curve, the shift curve is more granular here than the underlying curve
+    static void test1dShiftsGranular();
     //! Test that shifting all 2-d shift tenor points by DELTA yields DELTA shifts at all 2-d grid points of the
     // underlying data
     static void test2dShifts();

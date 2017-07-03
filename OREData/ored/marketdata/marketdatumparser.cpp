@@ -131,14 +131,11 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         const string& ccy = tokens[2];
         DayCounter dc = parseDayCounter(tokens[4]);
         // token 5 can be a date, or tenor
-        Date zeroDate = Date();
+        Date date = Date();
         Period tenor = Period();
-        if (tokens[5].size() < 6) { // e.g. 3M, 50Y, 1Y6M
-            tenor = parsePeriod(tokens[5]);
-        } else {
-            zeroDate = parseDate(tokens[5]);
-        }
-        return boost::make_shared<ZeroQuote>(value, asof, datumName, quoteType, ccy, zeroDate, dc, tenor);
+        bool isDate;
+        parseDateOrPeriod(tokens[5], date, tenor, isDate);
+        return boost::make_shared<ZeroQuote>(value, asof, datumName, quoteType, ccy, date, dc, tenor);
     }
 
     case MarketDatum::InstrumentType::DISCOUNT: {
@@ -147,17 +144,16 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         QL_REQUIRE(tokens.size() == 5, "5 tokens expected in " << datumName);
         const string& ccy = tokens[2];
         // token 4 can be a date, or tenor
-        Date discountDate;
-        if (tokens[4].size() < 6) { // e.g. 3M, 50Y, 1Y6M
-            // DiscountQuote takes a date.
-            Period p = parsePeriod(tokens[4]);
-            // we can't assume any calendar here, so we do the minimal adjustment
-            // Just weekends.
-            discountDate = WeekendsOnly().adjust(asof + p);
-        } else {
-            discountDate = parseDate(tokens[4]);
+        Date date = Date();
+        Period tenor = Period();
+        bool isDate;
+        parseDateOrPeriod(tokens[4], date, tenor, isDate);
+        if (!isDate) {
+            // we can't assume any calendar here, so we do the minimal adjustment with a weekend only calendar
+            QL_REQUIRE(tenor != Period(), "neither date nor tenor recognised");
+            date = WeekendsOnly().adjust(asof + tenor);
         }
-        return boost::make_shared<DiscountQuote>(value, asof, datumName, quoteType, ccy, discountDate);
+        return boost::make_shared<DiscountQuote>(value, asof, datumName, quoteType, ccy, date);
     }
 
     case MarketDatum::InstrumentType::MM: {
@@ -397,7 +393,7 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         return boost::make_shared<BaseCorrelationQuote>(value, asof, datumName, quoteType, cdsIndexName, term,
                                                         detachmentPoint);
     }
-            
+
     case MarketDatum::InstrumentType::INDEX_CDS_OPTION: {
         QL_REQUIRE(tokens.size() == 4, "4 tokens expected in " << datumName);
         QL_REQUIRE(quoteType == MarketDatum::QuoteType::RATE_LNVOL, "Invalid quote type for " << datumName);
@@ -408,7 +404,7 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
 
     default:
         QL_FAIL("Cannot convert \"" << datumName << "\" to MarketDatum");
-    }
-}
+    } // switch instrument type
+} // parseMarketDatum
 } // namespace data
 } // namespace ore

@@ -61,7 +61,10 @@ public:
         SurvivalProbability,
         RecoveryRate,
         CDSVolatility,
-        BaseCorrelation
+        BaseCorrelation,
+        CPIIndex,
+        ZeroInflationCurve,
+        YoYInflationCurve
     };
 
     //! Constructor

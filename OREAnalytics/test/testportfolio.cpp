@@ -293,4 +293,85 @@ boost::shared_ptr<Trade> buildZeroBond(string id, string ccy, Real notional, Siz
 
     return trade;
 }
+
+boost::shared_ptr<Trade> buildCPIInflationSwap(string id, string ccy, bool isPayer, Real notional, int start, Size term, 
+    Real spread, string floatFreq, string floatDC, string index, string cpiFreq, string cpiDC, string cpiIndex, Real baseRate, string observationLag,
+    bool interpolated, Real cpiRate) {
+
+    Date today = Settings::instance().evaluationDate();
+    Calendar calendar = TARGET();
+    Size days = 2;
+    string cal = "TARGET";
+    string conv = "MF";
+    string rule = "Forward";
+
+    vector<Real> notionals(1, notional);
+    vector<Real> cpiRates(1, cpiRate);
+    vector<Real> spreads(1, spread);
+
+    Date qlStartDate = calendar.adjust(today + start * Years);
+    Date qlEndDate = calendar.adjust(qlStartDate + term * Years);
+    string startDate = ore::data::to_string(qlStartDate);
+    string endDate = ore::data::to_string(qlEndDate);
+
+    // envelope
+    Envelope env("CP");
+    // schedules
+    ScheduleData floatSchedule(ScheduleRules(startDate, endDate, floatFreq, cal, conv, conv, rule));
+    ScheduleData cpiSchedule(ScheduleRules(startDate, endDate, cpiFreq, cal, conv, conv, rule));
+    // float leg
+    FloatingLegData floatingLegData(index, days, false, spreads);
+    LegData floatingLeg(!isPayer, ccy, floatingLegData, floatSchedule, floatDC, notionals);
+    // fixed leg
+    
+    CPILegData cpiLegData(cpiIndex, baseRate, observationLag, interpolated, cpiRates);
+    LegData cpiLeg(isPayer, ccy, cpiLegData, cpiSchedule, cpiDC, notionals);
+  
+    // trade
+    boost::shared_ptr<Trade> trade(new ore::data::Swap(env, floatingLeg, cpiLeg));
+    trade->id() = id;
+
+    return trade;
+}
+
+boost::shared_ptr<Trade> buildYYInflationSwap(string id, string ccy, bool isPayer, Real notional, int start, Size term,
+    Real spread, string floatFreq, string floatDC, string index, string yyFreq, string yyDC, string yyIndex, string observationLag,
+    bool interpolated, Size fixDays) {
+
+    Date today = Settings::instance().evaluationDate();
+    Calendar calendar = TARGET();
+    Size days = 2;
+    string cal = "TARGET";
+    string conv = "MF";
+    string rule = "Forward";
+
+    vector<Real> notionals(1, notional);
+    vector<Real> spreads(1, spread);
+
+    Date qlStartDate = calendar.adjust(today + start * Years);
+    Date qlEndDate = calendar.adjust(qlStartDate + term * Years);
+    string startDate = ore::data::to_string(qlStartDate);
+    string endDate = ore::data::to_string(qlEndDate);
+
+    // envelope
+    Envelope env("CP");
+    // schedules
+    ScheduleData floatSchedule(ScheduleRules(startDate, endDate, floatFreq, cal, conv, conv, rule));
+    ScheduleData yySchedule(ScheduleRules(startDate, endDate, yyFreq, cal, conv, conv, rule));
+    // float leg
+    FloatingLegData floatingLegData(index, days, false, spreads);
+    LegData floatingLeg(!isPayer, ccy, floatingLegData, floatSchedule, floatDC, notionals);
+    // fixed leg
+
+    YoYLegData yyLegData(yyIndex, observationLag, interpolated, fixDays);
+    LegData yyLeg(isPayer, ccy, yyLegData, yySchedule, yyDC, notionals);
+
+    // trade
+    boost::shared_ptr<Trade> trade(new ore::data::Swap(env, floatingLeg, yyLeg));
+    trade->id() = id;
+
+    return trade;
+}
+
+
 } // namespace testsuite
