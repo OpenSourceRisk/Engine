@@ -93,6 +93,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Po
         .addColumn("Type", string())
         .addColumn("LegNo", Size())
         .addColumn("PayDate", Date())
+        .addColumn("FlowType", string())
         .addColumn("Amount", double(), 4)
         .addColumn("Currency", string())
         .addColumn("Coupon", double(), 10)
@@ -118,6 +119,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Po
                     Date payDate = ptrFlow->date();
                     if (payDate >= asof) {
                         Real amount = ptrFlow->amount();
+                        string flowType = "";
                         if (payer)
                             amount *= -1.0;
                         std::string ccy = trades[k]->legCurrencies()[i];
@@ -128,9 +130,11 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Po
                         if (ptrCoupon) {
                             coupon = ptrCoupon->rate();
                             accrual = ptrCoupon->accrualPeriod();
+                            flowType = "Interest";
                         } else {
                             coupon = Null<Real>();
                             accrual = Null<Real>();
+                            flowType = "Nominal";
                         }
                         boost::shared_ptr<QuantLib::FloatingRateCoupon> ptrFloat =
                             boost::dynamic_pointer_cast<QuantLib::FloatingRateCoupon>(ptrFlow);
@@ -143,12 +147,15 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Po
                         if (ptrFloat) {
                             fixingDate = ptrFloat->fixingDate();
                             fixingValue = ptrFloat->index()->fixing(fixingDate);
+                            if (fixingDate > asof) flowType = "InterestProjected";
                         } else if (ptrInfl) {
                             fixingDate = ptrInfl->fixingDate();
                             fixingValue = ptrInfl->index()->fixing(fixingDate);
+                            flowType = "Inflation";
                         } else if (ptrIndCf) {
                             fixingDate = ptrIndCf->fixingDate();
                             fixingValue = ptrIndCf->index()->fixing(fixingDate);
+                            flowType = "Index";
                         } else {
                             fixingDate = Null<Date>();
                             fixingValue = Null<Real>();
@@ -158,6 +165,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Po
                             .add(trades[k]->tradeType())
                             .add(i)
                             .add(payDate)
+                            .add(flowType)
                             .add(amount)
                             .add(ccy)
                             .add(coupon)
