@@ -740,9 +740,18 @@ Allowable values: See \lstinline!Roll Convention! in Table \ref{tab:allow_stand_
   the number of coupons exceeds the number of notional values, the
   notional will be kept flat at the value of last entered notional for
   the remaining coupons.  The number of entered notional values cannot
-  exceed the number of coupons. 
+  exceed the number of coupons.
 
 Allowable values: Each child element can take any positive real number.
+
+In case of exchange of currencies an initial exchange, a final exchange
+and an amortising exchange can be specified using an \lstinline!Exchanges! child element with \break
+\lstinline!NotionalInitialExchange!, \lstinline!NotionalFinalExchange! and \break
+\lstinline!NotionalAmortizingExchange! as subelements.
+
+FX Resets can be specified using an \lstinline!FXReset! child element with subelements \break
+\lstinline!ForeignCurrency! (currencyCode), \lstinline!ForeignAmount! (double), \lstinline!FXIndex! and \break
+\lstinline!FixingDays! (integer) subelements.
 
 \vspace{1em}
 
@@ -779,6 +788,23 @@ The first notional must not have a start date, it will be associated
 with the schedule's start, The subsequent notionals can have a start
 date specified from which date onwards the new notional is applied. This allows
 specifying notionals only for dates where the notional changes.
+
+An example for a cross currency exchange leg is shown in Listing \ref{lst:notional_exchange}.
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+                <Notionals>
+                    <Notional>65000000</Notional>
+                    <Exchanges>
+                      <NotionalInitialExchange>true</NotionalInitialExchange>
+                      <NotionalFinalExchange>true</NotionalFinalExchange>
+                    </Exchanges>
+                </Notionals>
+\end{minted}
+\caption{Notional list with exchange}
+\label{lst:notional_exchange}
+\end{listing}
+
 
 \item ScheduleData: This is a trade component sub-node outlined in section \ref{ss:schedule_data} Schedule Data and
 Dates.

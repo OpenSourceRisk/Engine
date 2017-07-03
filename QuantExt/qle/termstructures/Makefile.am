@@ -74,6 +74,8 @@ this_include_HEADERS = \
 	blackvariancesurfacemoneyness.hpp \
     equityvolconstantspread.hpp
 	swaptionvolcube2.hpp \
+	yoyinflationcurveobserver.hpp \
+	zeroinflationcurveobserver.hpp \
 	fxvannavolgasmilesection.hpp \
 	fxblackvolsurface.hpp \
 	fxsmilesection.hpp

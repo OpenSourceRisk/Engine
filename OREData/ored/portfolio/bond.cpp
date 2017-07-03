@@ -53,6 +53,8 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         currency_ = coupons_.currency();
         Leg leg;
         Handle<IborIndex> hIndex;
+	// Added
+        Handle<OptionletVolatilityStructure> ovs;
         if (coupons_.legType() == "Fixed")
             leg = makeFixedLeg(coupons_);
         else if (coupons_.legType() == "Floating") {
@@ -61,6 +63,9 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             QL_REQUIRE(!hIndex.empty(), "Could not find ibor index " << indexName << " in market.");
             boost::shared_ptr<IborIndex> index = hIndex.currentLink();
             leg = makeIborLeg(coupons_, index, engineFactory);
+	    // Added
+            if (!coupons_.floatingLegData().floors().empty() || !coupons_.floatingLegData().caps().empty())
+                ovs = engineFactory->market()->capFloorVol(currency_, builder->configuration(MarketContext::pricing));
         } else {
             QL_FAIL("Unknown leg type " << coupons_.legType());
         }
@@ -70,6 +75,9 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         // workaround, QL doesn't register a bond with its leg's cashflows
         if (!hIndex.empty())
             bond->registerWith(hIndex);
+	// Added
+        if (!ovs.empty())
+            bond->registerWith(ovs);
     }
 
     Currency currency = parseCurrency(currency_);

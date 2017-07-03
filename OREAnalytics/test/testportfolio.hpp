@@ -71,5 +71,12 @@ boost::shared_ptr<Trade> buildCapFloor(string id, string ccy, string longShort, 
 
 boost::shared_ptr<Trade> buildZeroBond(string id, string ccy, Real notional, Size term);
 
-boost::shared_ptr<Trade> buildCdsOption(string id, string ccy, Real notional, Size term);
+boost::shared_ptr<Trade> buildCPIInflationSwap(string id, string ccy, bool isPayer, Real notional, int start, Size term,
+                                               Real spread, string floatFreq, string floatDC, string index, string cpiFreq, 
+                                               string cpiDC, string cpiIndex, Real baseRate, string observationLag, bool interpolated, 
+                                               Real cpiRate);
+
+boost::shared_ptr<Trade> buildYYInflationSwap(string id, string ccy, bool isPayer, Real notional, int start, Size term, Real spread,
+                                              string floatFreq, string floatDC, string index, string yyFreq, string yyDC, string yyIndex,
+                                              string observationLag, bool interpolated, Size fixDays);
 } // namespace testsuite

@@ -31,7 +31,7 @@ Allowable values: Any real number.
     \bfseries{Market Data Parameter} & \bfseries{Allowable Values} \\
     \hline
  Instrument Type & \emph{ZERO, DISCOUNT, MM, MM\_FUTURE, FRA,
-  IR\_SWAP,  BASIS\_SWAP, CC\_BASIS\_SWAP, CDS, FX\_SPOT, FX\_FWD,
+  IR\_SWAP,  BASIS\_SWAP, CC\_BASIS\_SWAP, CDS, FX, FX\_FWD,
   SWAPTION, CAPFLOOR, FX\_OPTION, HAZARD\_RATE, RECOVERY\_RATE,
   ZC\_INFLATIONSWAP, YY\_INFLATIONSWAP, ZC\_INFLATIONCAPFLOOR,
   SEASONALITY, EQUITY\_SPOT, EQUITY\_FWD, EQUITY\_DIVIDEND, 
@@ -90,16 +90,16 @@ The instrument specific information to be captured for quotes representing Zero 
 
 \begin{table}[H]
 \centering
-\begin{tabular}{|p{3.3cm}|p{5cm}|p{7cm}|}
-  \hline
-  {\bf Property} & {\bf Allowable values} & {\bf Description} \\
-  \hline
-  Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Currency of the Zero rate\\ \hline
-  CurveId& A CCY concatenated with a Tenor. Should match CurveIds in the {\tt yield-curves.xml} file & Unique identifier for the yield curve associated with the zero quote\\ \hline
-  DayCounter & See \lstinline!DayCount Convention! in Table \ref{tab:daycount} & The day count basis associated with the zero quote \\ \hline
-  Tenor or ZeroDate & Tenor: An integer followed by D, W, M or Y, ZeroDate: See \lstinline!Date! in Table \ref{tab:allow_stand_data} & Either a Tenor for tenor based zero quotes, or an explicit maturity date (ZeroDate)\\
-  \hline
-\end{tabular}
+  \begin{tabular}{|p{3.3cm}|p{5cm}|p{7cm}|}
+    \hline
+    {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+    Instrument Type & \emph{ZERO} & \\ \hline
+    Quote Type & \emph{RATE, YIELD\_SPREAD} & \\ \hline
+    Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Currency of the Zero rate\\ \hline
+    CurveId& A CCY concatenated with a Tenor. Should match CurveIds in the {\tt yield-curves.xml} file & Unique identifier for the yield curve associated with the zero quote\\ \hline
+    DayCounter & See \lstinline!DayCount Convention! in Table \ref{tab:daycount} & The day count basis associated with the zero quote \\ \hline
+    Tenor or ZeroDate & Tenor: An integer followed by D, W, M or Y, ZeroDate: See \lstinline!Date! in Table \ref{tab:allow_stand_data} & Either a Tenor for tenor based zero quotes, or an explicit maturity date (ZeroDate)\\ \hline
+  \end{tabular}
   \caption{Zero Rate}
   \label{tab:zero_quote}
 \end{table}
@@ -125,12 +125,12 @@ The instrument specific information to be captured for quotes representing Disco
 \centering
 \begin{tabular}{|p{3.3cm}|p{5cm}|p{7cm}|}
   \hline
-  {\bf Property} & {\bf Allowable values} & {\bf Description} \\
-  \hline
+  {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+  Instrument Type & \emph{DISCOUNT} & \\ \hline
+  Quote Type & \emph{RATE} & \\ \hline
   Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Currency of the Discount rate\\ \hline
   CurveId& A CCY concatenated with a Tenor. Should match CurveIds in the {\tt yield-curves.xml} file & Unique identifier for the yield curve associated with the discount quote\\ \hline
-  Term or DiscountDate & Term: An integer followed by D, W, M or Y, DiscountDate: See \lstinline!Date! in Table \ref{tab:allow_stand_data} & Either a Term is used to determine the maturity date, or an explicit maturity date (Discount Date) is given.\\
-  \hline
+  Term or DiscountDate & Term: An integer followed by D, W, M or Y, DiscountDate: See \lstinline!Date! in Table \ref{tab:allow_stand_data} & Either a Term is used to determine the maturity date, or an explicit maturity date (Discount Date) is given.\\ \hline
 \end{tabular}
   \caption{Discount Rate}
   \label{tab:discount_quote}
@@ -152,13 +152,14 @@ Examples with a Term and with a DiscountDate:
 
 \begin{table}[H]
 \centering
-\begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
-\hline
-{\bf Property} & {\bf Allowable values} & {\bf Description}\\
-\hline
-Unit currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Unit/Source currency\\ \hline
-Target currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Target currency\\ \hline
-\end{tabular}
+  \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+  \hline
+    {\bf Property} & {\bf Allowable values} & {\bf Description}\\ \hline
+    Instrument Type & \emph{FX} & \\ \hline
+    Quote Type & \emph{RATE} & \\ \hline
+    Unit currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Unit/Source currency\\ \hline
+    Target currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Target currency\\ \hline
+  \end{tabular}
   \caption{FX Spot Rate}
   \label{tab:fxspot_quote}
 \end{table}
@@ -174,14 +175,15 @@ Example:
 
 \begin{table}[H]
 \centering
-\begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
-\hline
-{\bf Property} & {\bf Allowable values} & {\bf Description} \\
-\hline
-Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Currency of the Deposit rate\\ \hline
-Forward start & An integer followed by D, W, M or Y.  & Period from today to start \\ \hline
-Term & An integer followed by D, W, M or Y. & Period from start to maturity\\ \hline
-\end{tabular}
+  \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+  \hline
+    {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+    Instrument Type & \emph{MM} & \\ \hline
+    Quote Type & \emph{RATE} & \\ \hline
+    Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Currency of the Deposit rate\\ \hline
+    Forward start & An integer followed by D, W, M or Y.  & Period from today to start \\ \hline
+    Term & An integer followed by D, W, M or Y. & Period from start to maturity\\ \hline
+  \end{tabular}
   \caption{Deposit Rate}
   \label{tab:deposit_quote}
 \end{table}
@@ -206,14 +208,15 @@ Example:
 
 \begin{table}[H]
 \centering
-\begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
-\hline
-{\bf Property} & {\bf Allowable values} & {\bf Description} \\
-\hline
-Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Currency of the FRA rate\\ \hline
-Forward start & An integer followed by D, W, M or Y  & Period from today to start \\ \hline
-Term & An integer followed by D, W, M or Y & Period from start to maturity\\ \hline
-\end{tabular}
+  \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+  \hline
+    {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+    Instrument Type & \emph{FRA} & \\ \hline
+    Quote Type & \emph{RATE} & \\ \hline
+    Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Currency of the FRA rate\\ \hline
+    Forward start & An integer followed by D, W, M or Y  & Period from today to start \\ \hline
+    Term & An integer followed by D, W, M or Y & Period from start to maturity\\ \hline
+  \end{tabular}
   \caption{FRA Rate}
   \label{tab:fra_quote}
 \end{table}
@@ -233,17 +236,17 @@ Example:
 
 \begin{table}[H]
 \centering
-\begin{tabular}{|p{3cm}|p{4.5cm}|p{7cm}|}
-\hline
-{\bf Property} & {\bf Allowable values} & {\bf Description} \\
-\hline
-Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}& Currency of the MM Future price\\ \hline
-Expiry & Alphanumeric string of the form YYYY-MM & Expiry month and year\\ \hline
-Contract & String & Contract name\\ \hline
-Term & An integer followed by D, W, M or Y & Underlying Term\\
-% date rule & {\tt string} &  \\
-\hline
-\end{tabular}
+  \begin{tabular}{|p{3cm}|p{4.5cm}|p{7cm}|}
+  \hline
+    {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+    Instrument Type & \emph{MM\_FUTURE} & \\ \hline
+    Quote Type & \emph{PRICE} & \\ \hline
+    Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}& Currency of the MM Future price\\ \hline
+    Expiry & Alphanumeric string of the form YYYY-MM & Expiry month and year\\ \hline
+    Contract & String & Contract name\\ \hline
+    Term & An integer followed by D, W, M or Y & Underlying Term\\ \hline
+  % date rule & {\tt string} &  \\
+  \end{tabular}
   \caption{Money Market Futures Price}
   \label{tab:mmfp_quote}
 \end{table}
@@ -266,8 +269,9 @@ Example:
 %\centering
 %\begin{tabular}{|p{3cm}|p{4.5cm}|p{7cm}|}
 %\hline
-%{\bf Property} & {\bf Allowable values} & {\bf Description} \\
-%\hline
+%{\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+%Instrument Type & \emph{EQUITY\_FUTURE} & \\ \hline
+%Quote Type & \emph{PRICE} & \\ \hline
 %Name & String & Name of the underlying equity \\ \hline
 %Expiry & Alphanumeric string on the form MMMYY & Expiry month\\ \hline
 %Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}& Currency of the Equity Future price\\ \hline
@@ -296,11 +300,11 @@ Example:
 %\centering
 %\begin{tabular}{|p{3cm}|p{4.5cm}|p{7cm}|}
 %\hline
-%{\bf Property} & {\bf Allowable values} & {\bf Description} \\
-%\hline
+%{\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+%Instrument Type & \emph{EQUITY} & \\ \hline
+%Quote Type & \emph{PRICE} & \\ \hline
 %Name & String & Name of the equity \\ \hline
-%Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}& Currency of the Equity price\\
-%\hline
+%Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}& Currency of the Equity price\\ \hline
 %\end{tabular}
 %  \caption{Equity  Price}
 %  \label{tab:equity_quote}
@@ -321,8 +325,9 @@ Example:
 %\centering
 %\begin{tabular}{|p{3cm}|p{4.5cm}|p{7cm}|}
 %\hline
-%{\bf Property} & {\bf Allowable values} & {\bf Description} \\
-%\hline
+%{\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+%Instrument Type & \emph{EQUITY\_FORWARD} & \\ \hline
+%Quote Type & \emph{PRICE} & \\ \hline
 %Name & String & Name of the equity \\ \hline
 %Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}& Currency of the Equity price\\ \hline
 %Term or ExpiryDate & Term: An integer followed by D, W, M or Y, ExpiryDate: See \lstinline!Date! in Table \ref{tab:allow_stand_data} & Either a Term is used to determine the maturity date, or an explicit maturity date (Expiry Date) is given.\\
@@ -348,13 +353,13 @@ Example:
 %\centering
 %\begin{tabular}{|p{3cm}|p{5cm}|p{7cm}|}
 %\hline
-%{\bf Property} & {\bf Allowable values} & {\bf Description} \\
-%\hline
-%Name & String & Name of the equity \\ \hline
+%{\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+%Name & String & Name of the equity & \\ \hline
+%Instrument Type & \emph{EQUITY\_DIVIDEND} & \\ \hline
+%Quote Type & \emph{RATE} \\ \hline
 %Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}& Currency of the Equity price\\ \hline
 %Term & An integer followed by D, W, M or Y & The frequency of dividend payments\\ \hline
-%DayCounter & See \lstinline!DayCount Convention! in Table \ref{tab:daycount} & The day count basis used to determine dividend period length  \\
-%\hline
+%DayCounter & See \lstinline!DayCount Convention! in Table \ref{tab:daycount} & The day count basis used to determine dividend period length  \\ \hline
 %\end{tabular}
 %  \caption{Equity Forward Price}
 %  \label{tab:equityf_quote}
@@ -375,13 +380,13 @@ Example:
 %\centering
 %\begin{tabular}{|p{3cm}|p{4.5cm}|p{7cm}|}
 %\hline
-%{\bf Property} & {\bf Allowable values} & {\bf Description} \\
-%\hline
+%{\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+%Instrument Type & \emph{EQUITY\_OPTION} & \\ \hline
+%Quote Type & \emph{PRICE} & \\ \hline
 %Name & String & Name of the equity \\
 %Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}& Currency of the Equity price\\
 %Term or ExpiryDate & Term: An integer followed by D, W, M or Y, ExpiryDate: See \lstinline!Date! in Table \ref{tab:allow_stand_data} & Either a Term is used to determine the maturity date, or an explicit maturity date (Expiry Date) is given.\\
-%Strike & A real number & The equity option strike price  \\
-%\hline
+%Strike & A real number & The equity option strike price  \\ \hline
 %\end{tabular}
 %  \caption{Equity Forward Price}
 %  \label{tab:equityf_quote}
@@ -402,16 +407,16 @@ Example:
 
 \begin{table}[H]
 \centering
-\begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
-\hline
-{\bf Property} & {\bf Allowable values} & {\bf Description} \\
-\hline
-Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Currency of the Swap rate\\ \hline
-Forward start & An integer followed by D, W, M or Y & Generic period from today to start\\ \hline
-Tenor & An integer followed by D, W, M or Y & Underlying index period \\ \hline
-Term & An integer followed by D, W, M or Y & Swap length from start to maturity\\
-\hline
-\end{tabular}
+  \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+    \hline
+    {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+    Instrument Type & \emph{IR\_SWAP} & \\ \hline
+    Quote Type & \emph{RATE} & \\ \hline
+    Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Currency of the Swap rate\\ \hline
+    Forward start & An integer followed by D, W, M or Y & Generic period from today to start\\ \hline
+    Tenor & An integer followed by D, W, M or Y & Underlying index period \\ \hline
+    Term & An integer followed by D, W, M or Y & Swap length from start to maturity\\ \hline
+  \end{tabular}
   \caption{Swap Rate}
   \label{tab:swaprate_quote}
 \end{table}
@@ -437,12 +442,12 @@ Example:
 % \centering
 % \begin{supertabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
 % \hline
-% {\bf Property} & {\bf Allowable values} & {\bf Description} \\
-% \hline
+% {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+% Instrument Type & \emph{BMA} & \\ \hline
+% Quote Type & \emph{RATIO} & \\ \hline
 % Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}& Currency underlying the BMA Swap ratio \\ \hline
 % Forward start & An integer followed by D, W, M or Y  & Generic period from today to start\\ \hline
-% Term & An integer followed by D, W, M or Y  & Swap length from start to maturity\\
-% \hline
+% Term & An integer followed by D, W, M or Y  & Swap length from start to maturity\\ \hline
 % \end{supertabular}
 %   \caption{BMA Swap Ratio}
 %   \label{tab:bmasratio_quote}
@@ -461,15 +466,16 @@ Example:
 
 \begin{table}[H]
 \centering
-\begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
-\hline
-{\bf Property} & {\bf Allowable values} & {\bf Description} \\
-\hline
-Flat tenor & An integer followed by D, W, M or Y & Zero spread leg's index tenor\\ \hline
-Tenor & An integer followed by D, W, M or Y & Non-zero spread leg's index tenor\\ \hline
-Term & An integer followed by D, W, M or Y & Swap length from start to maturity\\
-\hline
-\end{tabular}
+  \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+    \hline
+    {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+    Instrument Type & \emph{BASIS\_SWAP} & \\ \hline
+    Quote Type & \emph{BASIS\_SPREAD} & \\ \hline
+    Flat tenor & An integer followed by D, W, M or Y & Zero spread leg's index tenor\\ \hline
+    Tenor & An integer followed by D, W, M or Y & Non-zero spread leg's index tenor\\ \hline
+    Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}& Currency of the basis swap spread\\ \hline
+    Term & An integer followed by D, W, M or Y & Swap length from start to maturity\\ \hline
+  \end{tabular}
   \caption{Basis Swap Spread}
   \label{tab:basisspread_quote}
 \end{table}
@@ -478,7 +484,7 @@ Term & An integer followed by D, W, M or Y & Swap length from start to maturity\
 \medskip
 Example:
 \begin{itemize}
-\item {BASIS\_SWAP/BASIS\_SPREAD/6M/3M/10Y}
+\item {BASIS\_SWAP/BASIS\_SPREAD/6M/3M/CHF/10Y}
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -487,17 +493,17 @@ Example:
 
 \begin{table}[H]
 \centering
-\begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
-  \hline
-  {\bf Property} & {\bf Allowable values} & {\bf Description} \\
-  \hline
-  Flat currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Currency for zero spread leg\\  \hline
-  Flat tenor & An integer followed by D, W, M or Y & Zero spread leg's index tenor\\ \hline
-  Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}& Currency for non-zero spread leg\\ \hline
-  Tenor & An integer followed by D, W, M or Y & Non-zero spread leg's index tenor\\ \hline
-  Term & An integer followed by D, W, M or Y & Swap length from start to maturity\\
-  \hline
-\end{tabular}
+  \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+    \hline
+    {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+    Instrument Type & \emph{CC\_BASIS\_SWAP} & \\ \hline
+    Quote Type & \emph{BASIS\_SPREAD} & \\ \hline
+    Flat currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Currency for zero spread leg\\  \hline
+    Flat tenor & An integer followed by D, W, M or Y & Zero spread leg's index tenor\\ \hline
+    Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}& Currency for non-zero spread leg\\ \hline
+    Tenor & An integer followed by D, W, M or Y & Non-zero spread leg's index tenor\\ \hline
+    Term & An integer followed by D, W, M or Y & Swap length from start to maturity\\ \hline
+  \end{tabular}
   \caption{Cross Currency Basis Swap Spread}
   \label{tab:ccbasisspread_quote}
 \end{table}
@@ -515,16 +521,16 @@ Example:
 
 \begin{table}[H]
 \centering
-\begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
-  \hline
-  {\bf Property} & {\bf Allowable values} & {\bf Description} \\
-  \hline
-  Issuer & String &  Issuer name \\ \hline
-  Seniority & String &  Seniority status \\ \hline
-  Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & CDS Spread currency\\ \hline
-  Term & An integer followed by D, W, M or Y & Generic period from start to maturity\\
-  \hline
-\end{tabular}
+  \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+    \hline
+    {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+    Instrument Type & \emph{CDS} & \\ \hline
+    Quote Type & \emph{CREDIT\_SPREAD} & \\ \hline
+    Issuer & String &  Issuer name \\ \hline
+    Seniority & String &  Seniority status \\ \hline
+    Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & CDS Spread currency\\ \hline
+    Term & An integer followed by D, W, M or Y & Generic period from start to maturity\\ \hline
+  \end{tabular}
   \caption{CDS Spread}
   \label{tab:cdsspread_quote}
 \end{table}
@@ -540,15 +546,15 @@ Example:
 
 \begin{table}[H]
 \centering
-\begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
-\hline
-{\bf Property} & {\bf Allowable values} & {\bf Description} \\
-\hline
-Issuer & String &  Issuer name \\ \hline
-Seniority & String &  Seniority status \\ \hline
-Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & CDS Spread currency\\
-\hline
-\end{tabular}
+  \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+    \hline
+    {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+    Instrument Type & \emph{RECOVERY\_RATE} & \\ \hline
+    Quote Type & \emph{RATE} & \\ \hline
+    Issuer & String &  Issuer name \\ \hline
+    Seniority & String &  Seniority status \\ \hline
+    Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & CDS Spread currency\\ \hline
+  \end{tabular}
   \caption{CDS Recovery Rate}
   \label{tab:cdsrecovery_quote}
 \end{table}
@@ -566,13 +572,13 @@ Bond recovery rates can also be specified per security. This requires only one k
 
 \begin{table}[H]
 \centering
-\begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
-\hline
-{\bf Property} & {\bf Allowable values} & {\bf Description} \\
-\hline
-ID & String &  Security ID \\ 
-\hline
-\end{tabular}
+  \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+    \hline
+    {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+    Instrument Type & \emph{RECOVERY\_RATE} & \\ \hline
+    Quote Type & \emph{RATE} & \\ \hline
+    ID & String &  Security ID \\ \hline
+  \end{tabular}
   \caption{Security Recovery Rate}
   \label{tab:secrecrate_quote}
 \end{table}
@@ -593,8 +599,9 @@ Example:
 % \centering
 % \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
 % \hline
-% {\bf Property} & {\bf Allowable values} & {\bf Description} \\
-% \hline
+% {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+% Instrument Type & \emph{ASW} & \\ \hline
+% Quote Type & \emph{CREDIT\_SPREAD} & \\ \hline
 % Issuer & String &  Issuer name \\ \hline
 % Seniority & String &  Seniority status \\ \hline
 % Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Asset Swap Spread currency\\ \hline
@@ -619,8 +626,9 @@ Example:
 %\centering
 %\begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
 %\hline
-%{\bf Property} & {\bf Allowable values} & {\bf Description} \\
-%\hline
+%{\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+%Instrument Type & \emph{ZERO} & \\ \hline
+%Quote Type & \emph{CREDIT\_SPREAD} & \\ \hline
 %Issuer & String &  Issuer name \\ \hline
 %Seniority & String &  Seniority status \\ \hline
 %Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Asset Swap Spread currency\\ \hline
@@ -649,8 +657,9 @@ Example:
 %\centering
 %\begin{supertabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
 %\hline
-%{\bf Property} & {\bf Allowable values} & {\bf Description} \\
-%\hline
+%{\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+%Instrument Type & \emph{IR\_SWAP} & \\ \hline
+%Quote Type & \emph{CREDIT\_SPREAD} & \\ \hline
 %Issuer & String &  Issuer name \\ \hline
 %Seniority & String &  Seniority status \\ \hline
 %Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Par/Swap Spread currency\\ \hline
@@ -683,9 +692,10 @@ rating.
   \hline
   {\bf Property} & {\bf Allowable values} & {\bf Description} \\
   \hline
+  Instrument Type & \emph{NAME} & \\ \hline
+  Quote Type & \emph{PD, LGD} & \\ \hline
   Rating & String & Internal or external rating code \\ \hline
-  Term & An integer followed by D, W, M or Y & Generic period from start to maturity\\
-  \hline
+  Term & An integer followed by D, W, M or Y & Generic period from start to maturity\\ \hline
 \end{tabular}
   \caption{Probability of Default}
   \label{tab:pd_quote}
@@ -707,10 +717,12 @@ Example:
 \hline
 {\bf Property} & {\bf Allowable values} & {\bf Description} \\
 \hline
-Unit currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}& Unit/Source currency\\ \hline
-Target currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Target currency\\ \hline
-Expiry & An integer followed by D, W, M or Y & Period from today to expiry \\ \hline
-Strike & \emph{ATM, RR, BF} & ATM (Straddle), RR (Risk Reversal), BF (Butterfly) \\
+  Instrument Type & \emph{FX\_OPTION} & \\ \hline
+  Quote Type & \emph{RATE\_LNVOL} & \\ \hline
+  Unit currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}& Unit/Source currency\\ \hline
+  Target currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Target currency\\ \hline
+  Expiry & An integer followed by D, W, M or Y & Period from today to expiry \\ \hline
+  Strike & \emph{ATM, RR, BF} & ATM (Straddle), RR (Risk Reversal), BF (Butterfly) \\
 %strike & {\tt Real} & strike forward exchange rate \\
 \hline
 \end{tabular}
@@ -732,18 +744,18 @@ Example:
 
 \begin{table}[H]
 \centering
-\begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
-\hline
-{\bf Property} & {\bf Allowable values} & {\bf Description} \\
-\hline
-Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}&  Currency of the Cap/Floor volatility\\ \hline
-Term & An integer followed by D, W, M or Y & Period from start to expiry \\ \hline
-IndexTenor & An integer followed by D, W, M or Y & Underlying index tenor \\ \hline
-Atm & \emph{1, 0} & ATM volatility quote if true (1), otherwise (0) smile quote\\ \hline
-Relative & \emph{1, 0} & Relative quote (to be added to atm vol) if true (1), otherwise (0) absolute quote\\ \hline
-Strike & Real number & Strike rate\\
-\hline
-\end{tabular}
+  \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+    \hline
+    {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+    Instrument Type & \emph{CAPFLOOR} & \\ \hline
+    Quote Type & \emph{RATE\_LNVOL} & \\ \hline
+    Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}&  Currency of the Cap/Floor volatility\\ \hline
+    Term & An integer followed by D, W, M or Y & Period from start to expiry \\ \hline
+    IndexTenor & An integer followed by D, W, M or Y & Underlying index tenor \\ \hline
+    Atm & \emph{1, 0} & ATM volatility quote if true (1), otherwise (0) smile quote\\ \hline
+    Relative & \emph{1, 0} & Relative quote (to be added to atm vol) if true (1), otherwise (0) absolute quote\\ \hline
+    Strike & Real number & Strike rate\\ \hline
+  \end{tabular}
   \caption{Cap/Floor Implied Volatility}
   \label{tab:capfloor_implvol_quote}
 \end{table}
@@ -762,17 +774,17 @@ Examples:
 
 \begin{table}[H]
 \centering
-\begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
-\hline
-{\bf Property} & {\bf Allowable values} & {\bf Description} \\
-\hline
-Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}&  Currency of the Swaption volatility\\ \hline
-Term & An integer followed by D, W, M or Y & Period from start to expiry \\ \hline
-%IndexTenor & An integer followed by D, W, M or Y & Underlying index tenor \\
-Dimension & \emph{Smile, ATM}  & Whether volatility quote is a Smile or ATM \\ \hline
-Strike & Real number & Strike rate - (not required for ATM), as deviation from the ATM strike\\
-\hline
-\end{tabular}
+  \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+    \hline
+    {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+    Instrument Type & \emph{SWAPTION} & \\ \hline
+    Quote Type & \emph{RATE\_LNVOL, RATE\_NVOL, RATE\_SLNVOL} & Lognormal quoted volatility, Normal quoted volatility, shifted lognormal quoted volatility\\ \hline
+    Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}&  Currency of the Swaption volatility\\ \hline
+    Term & An integer followed by D, W, M or Y & Period from start to expiry \\ \hline
+    IndexTenor & An integer followed by D, W, M or Y & Underlying index tenor \\ \hline
+    Dimension & \emph{Smile, ATM}  & Whether volatility quote is a Smile or ATM \\ \hline
+    Strike & Real number & Strike rate - (not required for ATM), as deviation from the ATM strike\\ \hline
+  \end{tabular}
   \caption{Swaption Implied Volatility}
   \label{tab:swaptimplvol_quote}
 \end{table}
@@ -796,12 +808,11 @@ Examples:
     \centering
     \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
         \hline
-        {\bf Property} & {\bf Allowable values} & {\bf Description} \\
-        \hline
-        Name & String & Identifying name of the equity \\
-        \hline
-        Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}&  Currency of the equity \\
-        \hline
+        {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+        Instrument Type & \emph{EQUITY\_SPOT} & \\ \hline
+        Quote Type & \emph{PRICE} & \\ \hline
+        Name & String & Identifying name of the equity \\ \hline
+        Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}&  Currency of the equity \\ \hline
     \end{tabular}
     \caption{Equity Spot Price}
     \label{tab:eqspot_quote}
@@ -815,14 +826,12 @@ Examples:
     \centering
     \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
         \hline
-        {\bf Property} & {\bf Allowable values} & {\bf Description} \\
-        \hline
-        Name & String & Identifying name of the equity \\
-        \hline
-        Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}&  Currency of the equity \\
-        \hline
-        Maturity & Date string, or integer followed by D, W, M or Y & Maturity of the forward quote \\
-        \hline
+        {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+        Instrument Type & \emph{EQUITY\_FWD} & \\ \hline
+        Quote Type & \emph{PRICE} & \\ \hline
+        Name & String & Identifying name of the equity \\ \hline
+        Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}&  Currency of the equity \\ \hline
+        Maturity & Date string, or integer followed by D, W, M or Y & Maturity of the forward quote \\ \hline
     \end{tabular}
     \caption{Equity Forward Price}
     \label{tab:eqfwd_quote}
@@ -843,14 +852,12 @@ Examples:
     \centering
     \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
         \hline
-        {\bf Property} & {\bf Allowable values} & {\bf Description} \\
-        \hline
-        Name & String & Identifying name of the equity \\
-        \hline
-        Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}&  Currency of the equity \\
-        \hline
-        Maturity & Date string, or integer followed by D, W, M or Y & Maturity of the forward quote \\
-        \hline
+        {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+        Instrument Type & \emph{EQUITY\_DIVIDEND} & \\ \hline
+        Quote Type & \emph{RATE} & \\ \hline
+        Name & String & Identifying name of the equity \\ \hline
+        Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}&  Currency of the equity \\ \hline
+        Maturity & Date string, or integer followed by D, W, M or Y & Maturity of the forward quote \\ \hline
     \end{tabular}
     \caption{Equity Dividend Yield Rate}
     \label{tab:eqdiv_quote}
@@ -860,7 +867,7 @@ Examples:
 Examples:
 \begin{itemize}
     \item {EQUITY\_DIVIDEND/RATE/SP5/USD/2016-06-16}
-    \item {EQUITY\_DIVIDEND/RATE/PRICE/SP5/USD/2Y}
+    \item {EQUITY\_DIVIDEND/RATE/SP5/USD/2Y}
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -871,16 +878,13 @@ Examples:
 	\centering
 	\begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
 		\hline
-		{\bf Property} & {\bf Allowable values} & {\bf Description} \\
-		\hline
-        Name & String & Identifying name of the equity \\
-        \hline
-        Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}&  Currency of the equity \\
-        \hline
-        Expiry & Date string, or integer followed by D, W, M or Y & Maturity of the forward quote \\
-		\hline
-		Strike & {\tt ATMF}, or else any {\tt Real} & strike price \\
-		\hline
+		{\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+        Instrument Type & \emph{EQUITY\_OPTION} & \\ \hline
+        Quote Type & \emph{RATE\_LNVOL} & \\ \hline
+        Name & String & Identifying name of the equity \\ \hline
+        Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}&  Currency of the equity \\ \hline
+        Expiry & Date string, or integer followed by D, W, M or Y & Maturity of the forward quote \\ \hline
+        Strike & {\tt ATMF}, or else any {\tt Real} & strike price \\ \hline
 	\end{tabular}
 	\caption{Equity Option Implied Volatility}
 	\label{tab:eqimplvol_quote}
@@ -905,12 +909,11 @@ Example:
     \centering
     \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
       \hline
-      {\bf Property} & {\bf Allowable values} & {\bf Description} \\
-      \hline
-      Index & String & Identifying name of the inflation index \\
-      \hline
-      Maturity & integer followed by D, W, M or Y & Maturity of the swap quote \\
-      \hline
+      {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+      Instrument Type & \emph{ZC\_INFLATIONSWAP} & \\ \hline
+      Quote Type & \emph{RATE} & \\ \hline
+      Index & String & Identifying name of the inflation index \\ \hline
+      Maturity & integer followed by D, W, M or Y & Maturity of the swap quote \\ \hline
     \end{tabular}
     \caption{Zero Coupon Inflation Swap Rate}
     \label{tab:zcinflationswap_quote}
@@ -933,12 +936,11 @@ Examples for inflation index names include EUHICP, EUHICPXT,FRHICP, UKRPI, USCPI
     \centering
     \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
       \hline
-      {\bf Property} & {\bf Allowable values} & {\bf Description} \\
-      \hline
-      Index & String & Identifying name of the inflation index \\
-      \hline
-      Maturity & integer followed by D, W, M or Y & Maturity of the swap quote \\
-      \hline
+      {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+      Instrument Type & \emph{YY\_INFLATIONSWAP} & \\ \hline
+      Quote Type & \emph{RATE} & \\ \hline
+      Index & String & Identifying name of the inflation index \\ \hline
+      Maturity & integer followed by D, W, M or Y & Maturity of the swap quote \\ \hline
     \end{tabular}
     \caption{Year on Year Inflation Swap Rate}
     \label{tab:yyinflationswap_quote}
@@ -961,16 +963,13 @@ Examples for inflation index names include EUHICP, EUHICPXT,FRHICP, UKRPI, USCPI
     \centering
     \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
       \hline
-      {\bf Property} & {\bf Allowable values} & {\bf Description} \\
-      \hline
-      Index & String & Identifying name of the inflation index \\
-      \hline
-      Maturity & integer followed by D, W, M or Y & Maturity of the swap quote \\
-      \hline
-      Cap/Floor & C or F & Cap or Floor tag \\
-      \hline
-      Strike & Real number & Strike \\
-      \hline
+      {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+      Instrument Type & \emph{ZC\_INFLATIONCAPFLOOR} & \\ \hline
+      Quote Type & \emph{PRICE} & \\ \hline
+      Index & String & Identifying name of the inflation index \\ \hline
+      Maturity & integer followed by D, W, M or Y & Maturity of the swap quote \\ \hline
+      Cap/Floor & C or F & Cap or Floor tag \\ \hline
+      Strike & Real number & Strike \\ \hline
     \end{tabular}
     \caption{Zero Coupon Inflation Cap Floor Price}
     \label{tab:zcinflationcapfloorprice_quote}
@@ -993,14 +992,12 @@ Examples for inflation index names include EUHICP, EUHICPXT,FRHICP, UKRPI, USCPI
     \centering
     \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
       \hline
-      {\bf Property} & {\bf Allowable values} & {\bf Description} \\
-      \hline
-      Type & MULT & Type of the correction factor \\
-      \hline
-      Index & String & Identifying name of the inflation index \\
-      \hline
-      Month & JAN, ..., DEC & Month of the correction factor \\
-      \hline
+      {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+      Instrument Type & \emph{SEASONALITY} & \\ \hline
+      Quote Type & \emph{RATE} & \\ \hline
+      Type & MULT & Type of the correction factor \\ \hline
+      Index & String & Identifying name of the inflation index \\ \hline
+      Month & JAN, ..., DEC & Month of the correction factor \\ \hline
     \end{tabular}
     \caption{Inflation Seasonality Correction Factors}
     \label{tab:inflationseasonality_quote}
@@ -1021,16 +1018,16 @@ Examples for inflation index names include EUHICP, EUHICPXT,FRHICP, UKRPI, USCPI
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 \begin{table}[H]
-	\centering
-	\begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
-		\hline
-		{\bf Property} & {\bf Allowable values} & {\bf Description} \\
-		\hline
-		Name & String & Identifying name of the bond \\
-		\hline
-	\end{tabular}
-	\caption{Bond Yield Spreads}
-	\label{tab:bondyieldspread_quote}
+\centering
+  \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+  \hline
+  {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+    Instrument Type & \emph{BOND} & \\ \hline
+    Quote Type & \emph{YIELD\_SPREAD} & \\ \hline
+    Name & String & Identifying name of the bond \\ \hline
+  \end{tabular}
+  \caption{Bond Yield Spreads}
+  \label{tab:bondyieldspread_quote}
 \end{table}
 
 This quote provides the spread for a specified bond over the benchmark rate.
@@ -1038,7 +1035,7 @@ This quote provides the spread for a specified bond over the benchmark rate.
 \medskip
 Examples:
 \begin{itemize}
-	\item {\tt BOND/YIELD\_SPREAD/SECURITY\_1}
+	\item BOND/YIELD\_SPREAD/SECURITY\_1
 \end{itemize}
 
 % %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1049,8 +1046,9 @@ Examples:
 % \centering
 % \begin{tabular}{|p{3cm}|p{5cm}|p{7cm}|}
 % \hline
-% {\bf Property} & {\bf Allowable values} & {\bf Description} \\
-% \hline
+% {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+% Instrument Type & \emph{YY\_INFLATION\_CAP} & \\ \hline
+% Quote Type & \emph{PRICE} & \\ \hline
 % Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}&  Currency of the Inflation Cap/Floor volatility\\ \hline
 % Region & A string that matches inflation Region codes in the {\tt config-scenario.xml} file & Region code for the inflation index\\  \hline
 % Expiry & An integer followed by D, W, M or Y & Period from today to expiry \\ \hline

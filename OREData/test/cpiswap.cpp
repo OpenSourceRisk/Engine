@@ -136,7 +136,7 @@ public:
             parseIborIndex("GBP-LIBOR-6M", intDiscCurve(datesGBP, dfsGBP, ActualActual(), UnitedKingdom())));
         iborIndices_[make_pair(Market::defaultConfiguration, "GBP-LIBOR-6M")] = hGBP;
 
-        // add Libor 6M fixing (lag for GBP id 0d)
+        // add Libor 6M fixing (lag for GBP is 0d)
         hGBP->addFixing(Date(18, July, 2016), 0.0061731);
 
         // build UKRPI index
@@ -168,7 +168,7 @@ public:
         cpiTS = boost::dynamic_pointer_cast<ZeroInflationTermStructure>(pCPIts);
         hUKRPI = Handle<ZeroInflationIndex>(
             parseZeroInflationIndex("UKRPI", interp, Handle<ZeroInflationTermStructure>(cpiTS)));
-        zeroInflationIndices_[make_pair(Market::defaultConfiguration, std::make_pair("UKRPI", interp))] = hUKRPI;
+        zeroInflationIndices_[make_pair(Market::defaultConfiguration, "UKRPI")] = hUKRPI;
     }
 
     Handle<IborIndex> hGBP;
@@ -216,7 +216,7 @@ void CPISwapTest::testCPISwapPrice() {
         "CPISwap: Projected Libor fixing: " << market->iborIndex("GBP-LIBOR-6M")->forecastFixing(today + 1 * Years));
 
     // Test if GBP discount curve is empty
-    Handle<ZeroInflationIndex> infidx = market->zeroInflationIndex("UKRPI", false);
+    Handle<ZeroInflationIndex> infidx = market->zeroInflationIndex("UKRPI");
     QL_REQUIRE(!infidx.empty(), "UKRPI inflation index not found");
     BOOST_TEST_MESSAGE("CPISwap: Projected UKRPI rate: " << infidx->fixing(today + 1 * Years));
 
