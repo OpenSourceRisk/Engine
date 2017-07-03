@@ -457,13 +457,22 @@
       <Filter>pricingengines</Filter>
     </ClInclude>
     <ClInclude Include="qle\termstructures\swaptionvolcubewithatm.hpp">
-      <Filter>termstructures</Filters>
+      <Filter>termstructures</Filter>
     </ClInclude>
     <ClInclude Include="qle\termstructures\swaptionvolcube2.hpp">
-      <Filter>termstructures</Filters>
+      <Filter>termstructures</Filter>
     </ClInclude>
     <ClInclude Include="qle\termstructures\swaptionvolconstantspread.hpp">
-      <Filter>termstructures</Filters>
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\fxblackvolsurface.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\fxsmilesection.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\fxvannavolgasmilesection.hpp">
+      <Filter>termstructures</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -785,6 +794,12 @@
       <Filter>termstructures</Filter>
     </ClCompile>
     <ClCompile Include="qle\termstructures\yoyinflationcurveobserver.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\fxblackvolsurface.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\fxvannavolgasmilesection.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
   </ItemGroup>
