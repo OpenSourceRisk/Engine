@@ -549,32 +549,49 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(
 
     Size n_fxvol_pairs = fxVolCcyPairs_.size();
     Size n_fxvol_exp = simMarketData_->fxVolExpiries().size();
+    Size n_fxvol_strikes = simMarketData_->fxVolMoneyness().size();
 
-    std::vector<Real> values(n_fxvol_exp);
+    vector<vector<Real>> values(n_fxvol_strikes, vector<Real>(n_fxvol_exp, 0.0));
     std::vector<Real> times(n_fxvol_exp);
 
     // buffer for shifted zero curves
-    std::vector<Real> shiftedValues(n_fxvol_exp);
+    vector<vector<Real>> shiftedValues(n_fxvol_strikes, vector<Real>(n_fxvol_exp, 0.0));
 
     map<string, SensitivityScenarioData::VolShiftData> shiftDataMap = sensitivityData_->fxVolShiftData();
     for (Size i = 0; i < n_fxvol_pairs; ++i) {
-        string ccypair = fxVolCcyPairs_[i];
-        QL_REQUIRE(shiftDataMap.find(ccypair) != shiftDataMap.end(),
-                   "ccy pair " << ccypair << " not found in VolShiftData");
-        SensitivityScenarioData::VolShiftData data = shiftDataMap[ccypair];
+        string ccyPair = fxVolCcyPairs_[i];
+        Real spot = initMarket_->fxSpot(ccyPair, configuration_)->value();
+        QL_REQUIRE(ccyPair.length() == 6, "invalid ccy pair length");
+        string forCcy = ccyPair.substr(0, 3);
+        string domCcy = ccyPair.substr(3, 3);
+        Handle<YieldTermStructure> forTS = initMarket_->discountCurve(forCcy, configuration_); 
+        Handle<YieldTermStructure> domTS = initMarket_->discountCurve(domCcy, configuration_); 
+
+        QL_REQUIRE(shiftDataMap.find(ccyPair) != shiftDataMap.end(),
+                   "ccy pair " << ccyPair << " not found in VolShiftData");
+        SensitivityScenarioData::VolShiftData data = shiftDataMap[ccyPair];
         ShiftType shiftType = parseShiftType(data.shiftType);
         std::vector<Period> shiftTenors = data.shiftExpiries;
         std::vector<Time> shiftTimes(shiftTenors.size());
         Real shiftSize = data.shiftSize;
         QL_REQUIRE(shiftTenors.size() > 0, "FX vol shift tenors not specified");
 
-        Handle<BlackVolTermStructure> ts = initMarket_->fxVol(ccypair, configuration_);
+        Handle<BlackVolTermStructure> ts = initMarket_->fxVol(ccyPair, configuration_);
         DayCounter dc = ts->dayCounter();
         Real strike = 0.0; // FIXME
         for (Size j = 0; j < n_fxvol_exp; ++j) {
             Date d = today_ + simMarketData_->fxVolExpiries()[j];
-            values[j] = ts->blackVol(d, strike);
             times[j] = dc.yearFraction(today_, d);
+
+            for (Size k = 0; k < n_fxvol_strikes; k++) {
+                Real strike;
+                if (simMarketData_->fxVolIsSurface()) {
+                    strike = spot * simMarketData_->fxVolMoneyness()[k]*forTS->discount(times[j] )/domTS->discount(times[j]);
+                } else {
+                    strike = Null<Real>();
+                }
+                values[k][j] = ts->blackVol(d, strike);
+            }
         }
 
         for (Size j = 0; j < shiftTenors.size(); ++j)
@@ -584,12 +601,19 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(
             Size strikeBucket = 0; // FIXME
             boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(today_);
 
-            scenarioDescriptions_.push_back(fxVolScenarioDescription(ccypair, j, strikeBucket, up));
+            scenarioDescriptions_.push_back(fxVolScenarioDescription(ccyPair, j, strikeBucket, up));
 
             // apply shift at tenor point j
-            applyShift(j, shiftSize, up, shiftType, shiftTimes, values, times, shiftedValues, true);
-            for (Size k = 0; k < n_fxvol_exp; ++k)
-                scenario->add(getFxVolKey(ccypair, k), shiftedValues[k]);
+            for (Size k = 0; k < n_fxvol_strikes; ++k) {
+                applyShift(j, shiftSize, up, shiftType, shiftTimes, values[k], times, shiftedValues[k], true);
+            }
+
+            for (Size k = 0; k < n_fxvol_strikes; ++k) {
+                for (Size l = 0; l < n_fxvol_exp; ++l) {
+                    Size idx = k * n_fxvol_exp + l;
+                    scenario->add(getFxVolKey(ccyPair, idx), shiftedValues[k][l]);
+                }
+            }
             // add this scenario to the scenario vector
             scenarios_.push_back(scenario);
             DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");

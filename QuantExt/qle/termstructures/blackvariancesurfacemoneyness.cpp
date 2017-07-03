@@ -15,19 +15,22 @@
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
-
+#include <ql/math/interpolations/linearinterpolation.hpp>
 #include <ql/math/interpolations/bilinearinterpolation.hpp>
 #include <ql/quotes/simplequote.hpp>
+#include <ql/termstructures/yield/forwardcurve.hpp>
 #include <qle/termstructures/blackvariancesurfacemoneyness.hpp>
 #include <boost/make_shared.hpp>
+
+using namespace std;
 
 namespace QuantExt {
 
 BlackVarianceSurfaceMoneyness::BlackVarianceSurfaceMoneyness(
     const Calendar& cal, const Handle<Quote>& spot, const std::vector<Time>& times, const std::vector<Real>& moneyness,
-    const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix, const DayCounter& dayCounter, bool sticyStrike)
+    const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix, const DayCounter& dayCounter, bool stickyStrike)
     : BlackVarianceTermStructure(0, cal), spot_(spot), dayCounter_(dayCounter), moneyness_(moneyness),
-      quotes_(blackVolMatrix) {
+      quotes_(blackVolMatrix), stickyStrike_(stickyStrike) {
 
     QL_REQUIRE(times.size() == blackVolMatrix.front().size(), "mismatch between times vector and vol matrix colums");
     QL_REQUIRE(moneyness_.size() == blackVolMatrix.size(),
@@ -35,7 +38,7 @@ BlackVarianceSurfaceMoneyness::BlackVarianceSurfaceMoneyness(
 
     QL_REQUIRE(times[0] >= 0, "cannot have times[0] < 0");
 
-    if (sticyStrike) {
+    if (stickyStrike) {
         // we don't want to know if the spot has changed - we take a copy here
         spot_ = Handle<Quote>(boost::make_shared<SimpleQuote>(spot->value()));
     } else {
@@ -62,6 +65,7 @@ BlackVarianceSurfaceMoneyness::BlackVarianceSurfaceMoneyness(
     varianceSurface_ =
         Bilinear().interpolate(times_.begin(), times_.end(), moneyness_.begin(), moneyness_.end(), variances_);
     notifyObservers();
+
 }
 
 void BlackVarianceSurfaceMoneyness::update() {
@@ -86,19 +90,63 @@ Real BlackVarianceSurfaceMoneyness::blackVarianceImpl(Time t, Real strike) const
     if (t == 0.0)
         return 0.0;
 
-    Real moneyness;
-    if (strike == Null<Real>() || strike == 0)
-        moneyness = 1.0;
-    else
-        moneyness = strike / spot_->value();
-    return blackVarianceMoneyness(t, moneyness);
+    return blackVarianceMoneyness(t, moneyness(t ,strike));
 }
+
 
 Real BlackVarianceSurfaceMoneyness::blackVarianceMoneyness(Time t, Real m) const {
     if (t <= times_.back())
         return varianceSurface_(t, m, true);
     else
         return varianceSurface_(times_.back(), m, true) * t / times_.back();
+}
+
+BlackVarianceSurfaceMoneynessSpot::BlackVarianceSurfaceMoneynessSpot(
+    const Calendar& cal, const Handle<Quote>& spot, const std::vector<Time>& times,
+    const std::vector<Real>& moneyness, const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix,
+    const DayCounter& dayCounter, bool stickyStrike)
+    : BlackVarianceSurfaceMoneyness(cal, spot, times, moneyness, blackVolMatrix, dayCounter, stickyStrike) {}
+
+Real BlackVarianceSurfaceMoneynessSpot::moneyness(Time, Real strike) const {
+    if (strike == Null<Real>() || strike == 0)
+        return 1.0;
+    else 
+        return strike / spot_->value();
+}
+
+BlackVarianceSurfaceMoneynessForward::BlackVarianceSurfaceMoneynessForward(
+    const Calendar& cal, const Handle<Quote>& spot, const std::vector<Time>& times, const std::vector<Real>& moneyness,
+    const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix, const DayCounter& dayCounter, 
+    const Handle<YieldTermStructure>& forTS, const Handle<YieldTermStructure>& domTS, bool stickyStrike)
+    : BlackVarianceSurfaceMoneyness(cal, spot, times, moneyness, blackVolMatrix, dayCounter, stickyStrike), 
+        forTS_(forTS), domTS_(domTS) {
+
+    if(!stickyStrike) {
+        QL_REQUIRE(!forTS_.empty(), "foreign discount curve required for atmf surface");
+        QL_REQUIRE(!domTS_.empty(), "foreign discount curve required for atmf surface");
+        registerWith(forTS_);
+        registerWith(domTS_);
+    } else {
+        for(Size i = 0; i< times.size(); i++) {
+            Time t = times[i];
+            Real fwd = spot_->value()*forTS_->discount(t)/domTS_->discount(t);
+            forwards_.push_back(fwd);
+        }
+        forwardCurve_ = Linear().interpolate(times_.begin(), times_.end(), forwards_.begin());
+    }
+}
+
+Real BlackVarianceSurfaceMoneynessForward::moneyness(Time t, Real strike) const {
+    Real fwd;
+    if (strike == Null<Real>() || strike == 0)
+        return 1.0;
+    else {
+        if(stickyStrike_) 
+            fwd = forwardCurve_(t, true);
+        else 
+            fwd = spot_->value()*forTS_->discount(t)/domTS_->discount(t);
+        return strike / fwd;
+    }
 }
 
 } // namespace QuantExt

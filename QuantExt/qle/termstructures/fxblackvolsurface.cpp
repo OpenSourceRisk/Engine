@@ -28,10 +28,10 @@ FxBlackVolatilitySurface::FxBlackVolatilitySurface(const Date& referenceDate, co
                                                    const std::vector<Volatility>& atmVols,
                                                    const std::vector<Volatility>& rr25d,
                                                    const std::vector<Volatility>& bf25d, const DayCounter& dayCounter,
-                                                   const Handle<Quote>& fxSpot,
+                                                   const Calendar& cal, const Handle<Quote>& fxSpot,
                                                    const Handle<YieldTermStructure>& domesticTS,
                                                    const Handle<YieldTermStructure>& foreignTS)
-    : BlackVolatilityTermStructure(referenceDate), times_(dates.size()), dayCounter_(dayCounter), fxSpot_(fxSpot),
+    : BlackVolatilityTermStructure(referenceDate, cal), times_(dates.size()), dayCounter_(dayCounter), fxSpot_(fxSpot),
       domesticTS_(domesticTS), foreignTS_(foreignTS), atmCurve_(referenceDate, dates, atmVols, dayCounter),
       rr25d_(rr25d), bf25d_(bf25d) {
 
