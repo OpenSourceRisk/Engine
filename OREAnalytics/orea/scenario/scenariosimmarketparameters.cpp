@@ -54,6 +54,14 @@ const vector<Period>& ScenarioSimMarketParameters::equityTenors(const string& ke
     return returnTenors(equityTenors_, key);
 }
 
+const vector<Period>& ScenarioSimMarketParameters::zeroInflationTenors(const string& key) const {
+    return returnTenors(zeroInflationTenors_, key);
+}
+
+const vector<Period>& ScenarioSimMarketParameters::yoyInflationTenors(const string& key) const {
+    return returnTenors(yoyInflationTenors_, key);
+}
+
 void ScenarioSimMarketParameters::setYieldCurveTenors(const string& key, const std::vector<Period>& p) {
     yieldCurveTenors_[key] = p;
 }
@@ -68,6 +76,14 @@ void ScenarioSimMarketParameters::setDefaultTenors(const string& key, const std:
 
 void ScenarioSimMarketParameters::setEquityTenors(const string& key, const std::vector<Period>& p) {
     equityTenors_[key] = p;
+}
+
+void ScenarioSimMarketParameters::setZeroInflationTenors(const string& key, const std::vector<Period>& p) {
+    zeroInflationTenors_[key] = p;
+}
+
+void ScenarioSimMarketParameters::setYoyInflationTenors(const string& key, const std::vector<Period>& p) {
+    yoyInflationTenors_[key] = p;
 }
 
 bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& rhs) {
@@ -94,7 +110,9 @@ bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& 
         additionalScenarioDataCcys_ != rhs.additionalScenarioDataCcys_ || securities_ != rhs.securities_ ||
         baseCorrelationSimulate_ != rhs.baseCorrelationSimulate_ ||
         baseCorrelationNames_ != rhs.baseCorrelationNames_ || baseCorrelationTerms_ != rhs.baseCorrelationTerms_ ||
-        baseCorrelationDetachmentPoints_ != rhs.baseCorrelationDetachmentPoints_) {
+        baseCorrelationDetachmentPoints_ != rhs.baseCorrelationDetachmentPoints_ ||
+        zeroInflationIndices_ != rhs.zeroInflationIndices_ || zeroInflationTenors_ != rhs.zeroInflationTenors_ || 
+        yoyInflationIndices_ != rhs.yoyInflationIndices_ || yoyInflationTenors_ != rhs.yoyInflationTenors_ ) {
         return false;
     } else {
         return true;
@@ -120,9 +138,14 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     ccys_ = XMLUtils::getChildrenValues(node, "Currencies", "Currency");
 
     XMLNode* nodeChild = XMLUtils::getChildNode(node, "BenchmarkCurves");
+    yieldCurveNames_.clear();
+    yieldCurveCurrencies_.clear();
     if (nodeChild) {
-        yieldCurveNames_ = XMLUtils::getChildrenValues(nodeChild, "BenchmarkCurve", "Name");
-        yieldCurveCurrencies_ = XMLUtils::getChildrenValues(nodeChild, "BenchmarkCurve", "Currency");
+        for (XMLNode* n = XMLUtils::getChildNode(nodeChild, "BenchmarkCurve"); n != nullptr;
+             n = XMLUtils::getNextSibling(n, "BenchmarkCurve")) {
+            yieldCurveNames_.push_back(XMLUtils::getChildValue(n, "Name", true));
+            yieldCurveCurrencies_.push_back(XMLUtils::getChildValue(n, "Currency", true));
+        }
     }
 
     nodeChild = XMLUtils::getChildNode(node, "YieldCurves");
@@ -245,6 +268,26 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         equityVolSimulate_ = false;
         equityVolExpiries_.clear();
         equityVolNames_.clear();
+    }
+
+    nodeChild = XMLUtils::getChildNode(node, "ZeroInflationIndexCurves");
+    if (nodeChild) {
+        zeroInflationIndices_ = XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true);
+        zeroInflationTenors_[""] = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Tenors", true);
+    }
+    else {
+        zeroInflationIndices_.clear();
+        zeroInflationTenors_.clear();
+    }
+
+    nodeChild = XMLUtils::getChildNode(node, "YYInflationIndexCurves");
+    if (nodeChild) {
+        yoyInflationIndices_ = XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true);
+        yoyInflationTenors_[""] = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Tenors", true);
+    }
+    else {
+        yoyInflationIndices_.clear();
+        yoyInflationTenors_.clear();
     }
 
     additionalScenarioDataIndices_ = XMLUtils::getChildrenValues(node, "AggregationScenarioDataIndices", "Index");
@@ -374,6 +417,16 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
     XMLUtils::addChildren(doc, bcNode, "IndexNames", "IndexName", baseCorrelationNames_);
     XMLUtils::addGenericChildAsList(doc, bcNode, "Terms", baseCorrelationTerms_);
     XMLUtils::addGenericChildAsList(doc, bcNode, "DetachmentPoints", baseCorrelationDetachmentPoints_);
+
+    // zero inflation
+    XMLNode* zeroNode = XMLUtils::addChild(doc, marketNode, "ZeroInflationIndexCurves");
+    XMLUtils::addChildren(doc, zeroNode, "Names", "Name", zeroInflationIndices_);
+    XMLUtils::addGenericChildAsList(doc, zeroNode, "Tenors", returnTenors(zeroInflationTenors_, ""));
+
+    // yoy inflation
+    XMLNode* yoyNode = XMLUtils::addChild(doc, marketNode, "YYInflationIndexCurves");
+    XMLUtils::addChildren(doc, yoyNode, "Names", "Name", yoyInflationIndices_);
+    XMLUtils::addGenericChildAsList(doc, yoyNode, "Tenors", returnTenors(yoyInflationTenors_, ""));
 
     return marketNode;
 }

@@ -32,7 +32,7 @@ namespace {
 
 // utility to get a handle out of a Curve object
 template<class T, class K>
-Handle<T> get(const string& spec, const map<string, boost::shared_ptr<K>>& m) {
+Handle<T> getHandle(const string& spec, const map<string, boost::shared_ptr<K>>& m) {
     auto it = m.find(spec);
     QL_REQUIRE(it != m.end(), "FXVolCurve: Can't find spec " << spec);
     return it->second->handle();
@@ -148,9 +148,9 @@ FXVolCurve::FXVolCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& load
                 vol_ = boost::shared_ptr<BlackVolTermStructure>(new BlackVarianceCurve(asof, dates, vols[0], dc));
             } else {
                 // Smile
-                auto fxSpot = get<Quote>(config->fxSpotID(), fxSpots);
-                auto domYTS = get<YieldTermStructure>(config->fxDomesticYieldCurveID(), yieldCurves);
-                auto forYTS = get<YieldTermStructure>(config->fxForeignYieldCurveID(), yieldCurves);
+                auto fxSpot = getHandle<Quote>(config->fxSpotID(), fxSpots);
+                auto domYTS = getHandle<YieldTermStructure>(config->fxDomesticYieldCurveID(), yieldCurves);
+                auto forYTS = getHandle<YieldTermStructure>(config->fxForeignYieldCurveID(), yieldCurves);
 
                 vol_ = boost::shared_ptr<BlackVolTermStructure>(
                     new QuantExt::FxBlackVannaVolgaVolatilitySurface(
