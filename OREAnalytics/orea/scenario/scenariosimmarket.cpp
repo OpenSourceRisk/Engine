@@ -672,63 +672,53 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         Handle<BlackVolTermStructure> evh;
 
         if (parameters->simulateEquityVols()) {
-            if (parameters->equityVolIsSurface() == false) {
-                LOG("Simulating EQ Vols (BlackVarianceCurve3) for " << equityName);
-                vector<Handle<Quote>> quotes;
-                vector<Time> times;
-                for (Size i = 0; i < parameters->equityVolExpiries().size(); i++) {
-                    Date date = asof_ + parameters->equityVolExpiries()[i];
-                    Volatility vol = wrapper->blackVol(date, Null<Real>(), true);
-                    times.push_back(wrapper->timeFromReference(date));
+            Handle<Quote> spot = equitySpots_[make_pair(Market::defaultConfiguration, equityName)];
+            Size n = parameters->equityVolMoneyness().size();
+            Size m = parameters->equityVolExpiries().size();
+            vector<vector<Handle<Quote>>> quotes(n, vector<Handle<Quote>>(m, Handle<Quote>()));
+            vector<Time> times(m);
+            Calendar cal = wrapper->calendar();
+            DayCounter dc = wrapper->dayCounter();
+            bool atmOnly = parameters->simulateEquityVolATMOnly();
+
+            for (Size i = 0; i < n; i++) {
+                Real mon = parameters->equityVolMoneyness()[i];
+                // strike
+                Real k = atmOnly ? Null<Real>() : spot->value() * mon; 
+
+                for (Size j = 0; j < m; j++) {
+                    // Index is expires then moneyness. TODO: is this the best?
+                    Size idx = i * m + j;
+                    times[j] = dc.yearFraction(asof_, asof_ + parameters->equityVolExpiries()[j]);
+                    Volatility vol = wrapper->blackVol(asof_ + parameters->equityVolExpiries()[j], k);
                     boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
                     simData_.emplace(std::piecewise_construct,
-                                     std::forward_as_tuple(RiskFactorKey::KeyType::EquityVolatility, equityName, i),
+                                     std::forward_as_tuple(RiskFactorKey::KeyType::EquityVolatility, equityName, idx),
                                      std::forward_as_tuple(q));
-                    quotes.emplace_back(q);
+                    quotes[i][j] = Handle<Quote>(q);
                 }
-                boost::shared_ptr<BlackVolTermStructure> eqVolCurve(new BlackVarianceCurve3(
-                    0, NullCalendar(), wrapper->businessDayConvention(), wrapper->dayCounter(), times, quotes));
-                evh = Handle<BlackVolTermStructure>(eqVolCurve);
-            } else {
+            }
+            boost::shared_ptr<BlackVolTermStructure> eqVolCurve;
+            if(!parameters->simulateEquityVolATMOnly()) {
                 LOG("Simulating EQ Vols (BlackVarianceSurfaceMoneyness) for " << equityName);
-                Handle<Quote> spot = equitySpots_[make_pair(Market::defaultConfiguration, equityName)];
-                Size n = parameters->equityVolMoneyness().size();
-                Size m = parameters->equityVolExpiries().size();
-                vector<vector<Handle<Quote>>> quotes(n, vector<Handle<Quote>>(m, Handle<Quote>()));
-                for (Size i = 0; i < n; i++) {
-                    Real mon = parameters->equityVolMoneyness()[i];
-
-                    // strike
-                    Real k = spot->value() * mon;
-
-                    for (Size j = 0; j < m; j++) {
-                        Period p = parameters->equityVolExpiries()[j];
-
-                        // Index is expires then moneyness. TODO: is this the best?
-                        Size idx = i * m + j;
-
-                        Volatility vol = wrapper->blackVol(asof_ + p, k);
-                        boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
-                        simData_.emplace(std::piecewise_construct,
-                                         std::forward_as_tuple(RiskFactorKey::KeyType::EquityVolatility, equityName, idx),
-                                         std::forward_as_tuple(q));
-                        quotes[i][j] = Handle<Quote>(q);
-                    }
-                }
-
-                Calendar cal = wrapper->calendar();
-                DayCounter dc = wrapper->dayCounter();
-                vector<Time> times;
-                for (Period p : parameters->equityVolExpiries())
-                    times.push_back(dc.yearFraction(asof_, asof_ + p));
-
                 // If true, the strikes are fixed, if false they move with the spot handle
                 // Should probably be false, but some people like true for sensi runs.
                 bool stickyStrike = true;
-
-                boost::shared_ptr<BlackVolTermStructure> eqVolCurve(
-                    new BlackVarianceSurfaceMoneyness(cal, spot, times, parameters->equityVolMoneyness(), quotes, dc, stickyStrike));
+                eqVolCurve
+                =  boost::shared_ptr<BlackVolTermStructure> (new BlackVarianceSurfaceMoneyness(cal, spot, times, parameters->equityVolMoneyness(), quotes, dc, stickyStrike));
                 eqVolCurve->enableExtrapolation();
+            } else {
+            LOG("Simulating EQ Vols (BlackVarianceCurve3) for " << equityName);
+                eqVolCurve =  boost::shared_ptr<BlackVolTermStructure> (new BlackVarianceCurve3(
+                    0, NullCalendar(), wrapper->businessDayConvention(), wrapper->dayCounter(), times, quotes[0]));
+            }
+
+            //if we have a surface but are only simulating atm vols we wrap the atm curve and the full t0 surface
+            if( parameters->equityVolIsSurface() && parameters->simulateEquityVolATMOnly()) {
+                LOG("Simulating EQ Vols (EquityVolatilityConstantSpread) for " << equityName);
+                evh = Handle<BlackVolTermStructure>(boost::make_shared<EquityVolatilityConstantSpread>(
+                       Handle<BlackVolTermStructure>(eqVolCurve), wrapper) );
+            } else {
                 evh = Handle<BlackVolTermStructure>(eqVolCurve);
             }
         } else {
