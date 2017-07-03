@@ -56,7 +56,6 @@ public:
         defaultTenors_[""];
         equityDividendTenors_[""];
         equityForecastTenors_[""];
-        equityTenors_[""];
         zeroInflationTenors_[""];
         yoyInflationTenors_[""];
     }
