@@ -705,7 +705,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
                 // Should probably be false, but some people like true for sensi runs.
                 bool stickyStrike = true;
                 eqVolCurve
-                =  boost::shared_ptr<BlackVolTermStructure> (new BlackVarianceSurfaceMoneyness(cal, spot, times, parameters->equityVolMoneyness(), quotes, dc, stickyStrike));
+                =  boost::shared_ptr<BlackVolTermStructure> (new BlackVarianceSurfaceMoneyness(NullCalendar(), spot, times, parameters->equityVolMoneyness(), quotes, dc, stickyStrike));
                 eqVolCurve->enableExtrapolation();
             } else {
             LOG("Simulating EQ Vols (BlackVarianceCurve3) for " << equityName);
