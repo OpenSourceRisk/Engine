@@ -252,10 +252,9 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         XMLNode* eqSurfaceNode = XMLUtils::getChildNode(nodeChild, "Surface");
         if (eqSurfaceNode) {
             equityIsSurface_ = true;
-            string moneyness =  XMLUtils::getChildValue(eqSurfaceNode, "Moneyness", true);
-            if(moneyness == "ATM") {
-                equityVolSimulateATMOnly_ = true;
-                equityMoneyness_ = {0.0};
+            XMLNode* atmOnlyNode = XMLUtils::getChildNode(nodeChild, "SimulateATMOnly");
+            if(atmOnlyNode) {
+                equityVolSimulateATMOnly_ = XMLUtils::getChildValueAsBool(atmOnlyNode, "SimulateATMOnly", true);
             } else {
                 equityVolSimulateATMOnly_ = false;
                 equityMoneyness_ = XMLUtils::getChildrenValuesAsDoublesCompact(eqSurfaceNode, "Moneyness", true);

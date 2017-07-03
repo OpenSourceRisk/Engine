@@ -673,18 +673,18 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
 
         if (parameters->simulateEquityVols()) {
             Handle<Quote> spot = equitySpots_[make_pair(Market::defaultConfiguration, equityName)];
-            Size n = parameters->equityVolMoneyness().size(); //1 if ATM
+            Size n = parameters->equityVolMoneyness().size();
             Size m = parameters->equityVolExpiries().size();
             vector<vector<Handle<Quote>>> quotes(n, vector<Handle<Quote>>(m, Handle<Quote>()));
             vector<Time> times(m);
             Calendar cal = wrapper->calendar();
             DayCounter dc = wrapper->dayCounter();
+            bool atmOnly = parameters->simulateEquityVolATMOnly();
 
             for (Size i = 0; i < n; i++) {
-                Real mon = parameters->equityVolMoneyness()[i]; //0 if ATM
-
+                Real mon = parameters->equityVolMoneyness()[i];
                 // strike
-                Real k = spot->value() * mon; 
+                Real k = atmOnly ? Null<Real>() : spot->value() * mon; 
 
                 for (Size j = 0; j < m; j++) {
                     // Index is expires then moneyness. TODO: is this the best?
