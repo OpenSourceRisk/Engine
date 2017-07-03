@@ -1487,6 +1487,20 @@ After running the example, the results of the computation can be found in the ou
   flows.csv}, respectively.
 
 %--------------------------------------------------------
+ 
+%--------------------------------------------------------
+\subsection{Sensitivity using Equity Volatility}
+%--------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_22} demonstrates the calculation of sensitivities for equity options where the equity volatility has a smile. ORE supports two methods of simulating equity volatility smile. The first method simulates the entire surface using specific moneyness levels configured in simulation.xml.
+The second method simulates only the ATM equity volatilities, the other strikes are shifted relative to this new ATM using the $t_{0}$ smile. 
+This example compares both methods using the same sensitivity configuration as in {\tt Examples/Example\_15}. For the first method {\tt simulation\_fullSurface.xml} is used and all output files are appended with ``\_fullSurface'', for the second method {\tt simulation\_atmOnly.xml} is used and all output files are appended with ``\_atmOnly''.
+The portfolio used in this example consists of:
+\begin{itemize}
+	\item an equity call option denominated in USD (``SP5'')
+	\item an equity put option denominated in USD (``SP5'')
+\end{itemize}
+
 
 \clearpage
 %========================================================

@@ -1,6 +1,6 @@
 1) Portfolio
 
-   European Swaption
+   European Option
 
 
 2) Market
