@@ -272,6 +272,7 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
     Size n_equityvol_pairs = simMarketData_->equityVolNames().size();
     Size n_equityvol_exp = simMarketData_->equityVolExpiries().size();
     Size n_equityvol_strikes = simMarketData_->equityVolIsSurface() ? simMarketData_->equityVolMoneyness().size() : 1;
+    bool atmOnly = simMarketData_->simulateEquityVolATMOnly();
     QL_REQUIRE(n_equityvol_strikes > 0, "No strikes defined for equity vol");
     equityVolKeys_.reserve(n_equityvol_pairs * n_equityvol_exp * n_equityvol_strikes);
     count = 0;
@@ -281,11 +282,7 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
         Real spot = market->equitySpot(equity, configuration_)->value();
         LOG("Eq spot for " << equity << " " << spot);
         for (Size k = 0; k < n_equityvol_strikes; ++k) {
-            Real strike;
-            if (simMarketData_->equityVolIsSurface())
-                strike = spot * simMarketData_->equityVolMoneyness()[k];
-            else
-                strike = Null<Real>();
+            Real strike = atmOnly ? Null<Real>() : spot * simMarketData_->equityVolMoneyness()[k];
             LOG("Eq strike for " << equity << " " << strike);
             for (Size l = 0; l < n_equityvol_exp; ++l) {
                 // Index is expires then moneyness. TODO: is this the best?

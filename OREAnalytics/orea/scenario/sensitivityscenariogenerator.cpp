@@ -642,6 +642,7 @@ void SensitivityScenarioGenerator::generateEquityVolScenarios(
     Size n_eqvol_names = equityVolNames_.size();
     Size n_eqvol_exp = simMarketData_->equityVolExpiries().size();
     Size n_eqvol_strikes = simMarketData_->equityVolIsSurface() ? simMarketData_->equityVolMoneyness().size() : 1;
+    bool atmOnly = simMarketData_->simulateEquityVolATMOnly();
 
     // [strike] x [expiry]
     vector<vector<Real>> values(n_eqvol_strikes, vector<Real>(n_eqvol_exp, 0.0));
@@ -669,12 +670,7 @@ void SensitivityScenarioGenerator::generateEquityVolScenarios(
             Date d = today_ + simMarketData_->equityVolExpiries()[j];
             times[j] = dc.yearFraction(today_, d);
             for (Size k = 0; k < n_eqvol_strikes; k++) {
-                Real strike;
-                if (simMarketData_->equityVolIsSurface()) {
-                    strike = spot * simMarketData_->equityVolMoneyness()[k];
-                } else {
-                    strike = Null<Real>();
-                }
+                Real strike = atmOnly ? Null<Real>() : spot * simMarketData_->equityVolMoneyness()[k];
                 values[k][j] = ts->blackVol(d, strike);
             }
         }
