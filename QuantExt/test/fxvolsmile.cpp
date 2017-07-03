@@ -207,6 +207,7 @@ void FxVolSmileTest::testVannaVolgaFxVolSurface() {
 
     // Assume act/act
     DayCounter dc = ActualActual();
+    Calendar cal = TARGET();
 
     // set up vectors
     Size len = sizeof(volData) / sizeof(volData[0]);
@@ -248,7 +249,7 @@ void FxVolSmileTest::testVannaVolgaFxVolSurface() {
         boost::shared_ptr<YieldTermStructure>(new DiscountCurve(discountDates, dfFor, dc)));
 
     // build surface
-    FxBlackVannaVolgaVolatilitySurface volSurface(asof, dates, atm, rr, bf, dc, fxSpot, domYTS, forYTS);
+    FxBlackVannaVolgaVolatilitySurface volSurface(asof, dates, atm, rr, bf, dc, cal, fxSpot, domYTS, forYTS);
 
     // 1.55,1.75,0.121507
     Real vol = volSurface.blackVol(1.75, 1.55);

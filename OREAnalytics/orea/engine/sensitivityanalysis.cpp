@@ -466,13 +466,11 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
         shiftSize = sensitivityData_->equityVolShiftData()[pair].shiftSize;
         if (boost::to_upper_copy(sensitivityData_->equityVolShiftData()[pair].shiftType) == "RELATIVE") {
             vector<Real> strikes = sensitivityData_->equityVolShiftData()[pair].shiftStrikes;
-            QL_REQUIRE(strikes.size() == 0, "Only ATM FX vols supported");
-            Real atmFwd = 0.0; // hardcoded, since only ATM supported
             Size keyIdx = key.index;
             Period p = sensitivityData_->equityVolShiftData()[pair].shiftExpiries[keyIdx];
             Handle<BlackVolTermStructure> vts = simMarket_->equityVol(pair, marketConfiguration_);
             Time t = vts->dayCounter().yearFraction(asof_, asof_ + p);
-            Real atmVol = vts->blackVol(t, atmFwd);
+            Real atmVol = vts->blackVol(t, Null<Real>());
             shiftMult = atmVol;
         }
     } else if (keytype == RiskFactorKey::KeyType::SwaptionVolatility) {
