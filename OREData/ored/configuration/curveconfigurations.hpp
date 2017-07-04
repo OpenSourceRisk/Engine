@@ -75,23 +75,29 @@ public:
 
     boost::shared_ptr<DefaultCurveConfig>& defaultCurveConfig(const string& curveID) {
         return defaultCurveConfigs_[curveID];
-    };
+    }
     const boost::shared_ptr<DefaultCurveConfig>& defaultCurveConfig(const string& curveID) const;
-    const boost::shared_ptr<CDSVolatilityCurveConfig>& cdsVolCurveConfig(const string& curveID) const;
-    const boost::shared_ptr<BaseCorrelationCurveConfig>& baseCorrelationCurveConfig(const string& curveID) const;
 
-    const boost::shared_ptr<InflationCurveConfig>& inflationCurveConfig(const string& curveID) const;
+    boost::shared_ptr<CDSVolatilityCurveConfig>& cdsVolCurveConfig(const string& curveID) {
+        return cdsVolCurveConfigs_[curveID];
+    }
+    const boost::shared_ptr<CDSVolatilityCurveConfig>& cdsVolCurveConfig(const string& curveID) const;
+
+    boost::shared_ptr<BaseCorrelationCurveConfig>& baseCorrelationCurveConfig(const string& curveID) {
+        return baseCorrelationCurveConfigs_[curveID];
+    }
+    const boost::shared_ptr<BaseCorrelationCurveConfig>& baseCorrelationCurveConfig(const string& curveID) const;
 
     boost::shared_ptr<InflationCurveConfig>& inflationCurveConfig(const string& curveID) {
         return inflationCurveConfigs_[curveID];
     };
-
-    const boost::shared_ptr<InflationCapFloorPriceSurfaceConfig>&
-    inflationCapFloorPriceSurfaceConfig(const string& curveID) const;
+    const boost::shared_ptr<InflationCurveConfig>& inflationCurveConfig(const string& curveID) const;
 
     boost::shared_ptr<InflationCapFloorPriceSurfaceConfig>& inflationCapFloorPriceSurfaceConfig(const string& curveID) {
         return inflationCapFloorPriceSurfaceConfigs_[curveID];
     };
+    const boost::shared_ptr<InflationCapFloorPriceSurfaceConfig>&
+    inflationCapFloorPriceSurfaceConfig(const string& curveID) const;
 
     boost::shared_ptr<EquityCurveConfig>& equityCurveConfig(const string& curveID) {
         return equityCurveConfigs_[curveID];
