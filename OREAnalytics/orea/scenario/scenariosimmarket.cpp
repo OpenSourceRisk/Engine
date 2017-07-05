@@ -829,6 +829,9 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         vector<string> keys(parameters->zeroInflationTenors(zic).size());
         BusinessDayConvention bdc = ModifiedFollowing;
 
+        string ccy = inflationIndex->currency().code();
+        Handle<YieldTermStructure> yts = discountCurve(ccy, Market::defaultConfiguration);
+
        // vector<Time> zeroCurveTimes;       // include today
         vector<Date> zeroCurveDates;
         zeroCurveDates.push_back(asof_ - inflationTs->observationLag());
@@ -860,7 +863,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         // TODO: floating
         zeroCurve = boost::shared_ptr<ZeroInflationCurveObserver<Linear>> (new ZeroInflationCurveObserver<Linear>(
             asof_, inflationIndex->fixingCalendar(), inflationTs->dayCounter(), inflationTs->observationLag(), inflationTs->frequency(),
-            inflationTs->indexIsInterpolated(), inflationTs->nominalTermStructure(), zeroCurveDates, quotes, inflationTs->seasonality()));
+            inflationTs->indexIsInterpolated(), yts, zeroCurveDates, quotes, inflationTs->seasonality()));
 
         Handle<ZeroInflationTermStructure> its(zeroCurve);
         boost::shared_ptr<ZeroInflationIndex> i = ore::data::parseZeroInflationIndex(zic, false, Handle<ZeroInflationTermStructure>(its));
