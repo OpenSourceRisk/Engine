@@ -41,7 +41,7 @@ class FxBlackVolatilitySurface : public BlackVolatilityTermStructure {
 public:
     FxBlackVolatilitySurface(const Date& referenceDate, const std::vector<Date>& dates,
                              const std::vector<Volatility>& atmVols, const std::vector<Volatility>& rr25d,
-                             const std::vector<Volatility>& bf25d, const DayCounter& dayCounter,
+                             const std::vector<Volatility>& bf25d, const DayCounter& dayCounter, const Calendar& cal,
                              const Handle<Quote>& fxSpot, const Handle<YieldTermStructure>& domesticTS,
                              const Handle<YieldTermStructure>& foreignTS);
     //! \name TermStructure interface
@@ -98,10 +98,10 @@ class FxBlackVannaVolgaVolatilitySurface : public FxBlackVolatilitySurface {
 public:
     FxBlackVannaVolgaVolatilitySurface(const Date& refDate, const std::vector<Date>& dates,
                                        const std::vector<Volatility>& atmVols, const std::vector<Volatility>& rr25d,
-                                       const std::vector<Volatility>& bf25d, const DayCounter& dc,
+                                       const std::vector<Volatility>& bf25d, const DayCounter& dc, const Calendar& cal,
                                        const Handle<Quote>& fx, const Handle<YieldTermStructure>& dom,
                                        const Handle<YieldTermStructure>& fore)
-        : FxBlackVolatilitySurface(refDate, dates, atmVols, rr25d, bf25d, dc, fx, dom, fore) {}
+        : FxBlackVolatilitySurface(refDate, dates, atmVols, rr25d, bf25d, dc, cal, fx, dom, fore) {}
 
 protected:
     virtual boost::shared_ptr<FxSmileSection> blackVolSmileImpl(Real spot, Real rd, Real rf, Time t, Volatility atm,

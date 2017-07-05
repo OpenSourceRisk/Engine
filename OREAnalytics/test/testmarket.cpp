@@ -144,6 +144,8 @@ TestMarket::TestMarket(Date asof) {
     equityDividendCurves_[make_pair(Market::defaultConfiguration, "SP5")] = flatRateDiv(0.01);
     equityDividendCurves_[make_pair(Market::defaultConfiguration, "Lufthansa")] = flatRateDiv(0.0);
 
+    equityForecastCurves_[make_pair(Market::defaultConfiguration, "SP5")] = flatRateYts(0.03);
+    equityForecastCurves_[make_pair(Market::defaultConfiguration, "Lufthansa")] = flatRateYts(0.02);
     // build swaption vols
     swaptionCurves_[make_pair(Market::defaultConfiguration, "EUR")] = flatRateSvs(0.20);
     swaptionCurves_[make_pair(Market::defaultConfiguration, "USD")] = flatRateSvs(0.30);
@@ -345,6 +347,8 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
     simMarketData->fxVolDecayMode() = "ConstantVariance";
     simMarketData->simulateFXVols() = true;
     simMarketData->fxVolCcyPairs() = {"EURGBP"};
+    simMarketData->fxVolIsSurface() = true;
+    simMarketData->fxVolMoneyness() = {0.1, 0.2, 0.3, 0.5, 1, 2, 3};
 
     simMarketData->fxCcyPairs() = {"EURGBP"};
 
@@ -379,6 +383,8 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
     simMarketData->fxVolDecayMode() = "ConstantVariance";
     simMarketData->simulateFXVols() = true; // false;
     simMarketData->fxVolCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY", "GBPCHF"};
+    simMarketData->fxVolIsSurface() = true;
+    simMarketData->fxVolMoneyness() = {0.1, 0.2, 0.3, 0.5, 1, 2, 3};
 
     simMarketData->fxCcyPairs() = { "EURUSD", "EURGBP", "EURCHF", "EURJPY" };
 
@@ -409,6 +415,8 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
     simMarketData->equityVolExpiries() = { 6 * Months, 1 * Years, 2 * Years,  3 * Years,
                                            5 * Years,  7 * Years, 10 * Years, 20 * Years };
     simMarketData->equityVolIsSurface() = false;
+    simMarketData->simulateEquityVolATMOnly() = true;
+    simMarketData->equityVolMoneyness() = {1};
 
     simMarketData->zeroInflationIndices() = { "UKRPI" };
     simMarketData->setZeroInflationTenors("UKRPI", {6 * Months, 1 * Years,  2 * Years,  3 * Years, 5 * Years,

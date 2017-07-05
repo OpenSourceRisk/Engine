@@ -112,8 +112,8 @@ bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& 
         fxVolDecayMode_ != rhs.fxVolDecayMode_ || fxVolCcyPairs_ != rhs.fxVolCcyPairs_ ||
         fxCcyPairs_ != rhs.fxCcyPairs_ || equityVolSimulate_ != rhs.equityVolSimulate_ ||
         equityVolExpiries_ != rhs.equityVolExpiries_ || equityVolDecayMode_ != rhs.equityVolDecayMode_ ||
-        equityVolNames_ != rhs.equityVolNames_ || equityIsSurface_ != rhs.equityIsSurface_ ||
-        equityMoneyness_ != rhs.equityMoneyness_ ||
+        equityVolNames_ != rhs.equityVolNames_ || equityIsSurface_ != rhs.equityIsSurface_ || 
+        equityVolSimulateATMOnly_ != rhs.equityVolSimulateATMOnly_ || equityMoneyness_ != rhs.equityMoneyness_ ||
         additionalScenarioDataIndices_ != rhs.additionalScenarioDataIndices_ ||
         additionalScenarioDataCcys_ != rhs.additionalScenarioDataCcys_ || securities_ != rhs.securities_ ||
         baseCorrelationSimulate_ != rhs.baseCorrelationSimulate_ ||
@@ -255,6 +255,14 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     fxVolExpiries_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Expiries", true);
     fxVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
     fxVolCcyPairs_ = XMLUtils::getChildrenValues(nodeChild, "CurrencyPairs", "CurrencyPair", true);
+    XMLNode* fxSurfaceNode = XMLUtils::getChildNode(nodeChild, "Surface");
+    if (fxSurfaceNode) {
+        fxVolIsSurface_ = true;
+        fxMoneyness_ = XMLUtils::getChildrenValuesAsDoublesCompact(fxSurfaceNode, "Moneyness", true);
+    } else {
+        fxVolIsSurface_ = false;
+        fxMoneyness_ = {0.0};
+    }
 
     nodeChild = XMLUtils::getChildNode(node, "EquityVolatilities");
     if (nodeChild) {
@@ -265,7 +273,14 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         XMLNode* eqSurfaceNode = XMLUtils::getChildNode(nodeChild, "Surface");
         if (eqSurfaceNode) {
             equityIsSurface_ = true;
-            equityMoneyness_ = XMLUtils::getChildrenValuesAsDoublesCompact(eqSurfaceNode, "Moneyness", true);
+            XMLNode* atmOnlyNode = XMLUtils::getChildNode(nodeChild, "SimulateATMOnly");
+            if(atmOnlyNode) {
+                equityVolSimulateATMOnly_ = XMLUtils::getChildValueAsBool(atmOnlyNode, "SimulateATMOnly", true);
+            } else {
+                equityVolSimulateATMOnly_ = false;
+            }
+            if(!equityVolSimulateATMOnly_) 
+                equityMoneyness_ = XMLUtils::getChildrenValuesAsDoublesCompact(eqSurfaceNode, "Moneyness", true);
         } else {
             equityIsSurface_ = false;
         }
