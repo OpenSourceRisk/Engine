@@ -97,24 +97,9 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
         bool swapIndicesBuilt = false;
 
         // Loop over each spec, build the curve and add it to the MarketImpl container.
-        for (const auto& spec : specs) {
+        for (Size count = 0; count < specs.size(); ++count) {
 
-            // Swap Indices
-            // Assumes we build all yield curves before anything else (which order() does)
-            // Once we have a non-Yield curve spec, we make sure to build all swap indices
-            // add add them to requiredSwapIndices for later.
-            if (swapIndicesBuilt == false && spec->baseType() != CurveSpec::CurveType::Yield) {
-                for (const auto& it : params.mapping(MarketObject::SwapIndexCurve, configuration.first)) {
-                    const string& swapIndexName = it.first;
-                    const string& discountIndex = it.second;
-
-                    addSwapIndex(swapIndexName, discountIndex, configuration.first);
-                    LOG("Added SwapIndex " << swapIndexName << " with DiscountingIndex " << discountIndex);
-                    requiredSwapIndices[swapIndexName] = swapIndex(swapIndexName, configuration.first).currentLink();
-                }
-                swapIndicesBuilt = true;
-            }
-
+            auto spec = specs[count];
             LOG("Loading spec " << *spec);
 
             switch (spec->baseType()) {
@@ -407,12 +392,16 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                         boost::shared_ptr<ZeroInflationTermStructure> ts =
                             boost::dynamic_pointer_cast<ZeroInflationTermStructure>(
                                 itr->second->inflationTermStructure());
+                        bool indexInterpolated = itr->second->interpolatedIndex();
                         QL_REQUIRE(ts, "expected zero inflation term structure for index " << it.first
                                                                                            << ", but could not cast");
-                        // index is not interpolated
-                        auto tmp = parseZeroInflationIndex(it.first, false,
+                        auto tmp = parseZeroInflationIndex(it.first, indexInterpolated,
                                                            Handle<ZeroInflationTermStructure>(ts));
-                        zeroInflationIndices_[make_pair(configuration.first, it.first)] = Handle<ZeroInflationIndex>(tmp);
+                        zeroInflationIndices_[make_pair(configuration.first, make_pair(it.first, indexInterpolated))] =
+                            Handle<ZeroInflationIndex>(tmp);
+                        zeroInflationIndices_[make_pair(configuration.first, make_pair(it.first, !indexInterpolated))] =
+                            Handle<ZeroInflationIndex>(boost::make_shared<QuantExt::ZeroInflationIndexWrapper>(
+                                tmp, indexInterpolated ? CPI::Flat : CPI::Linear));
                     }
                 }
                 // this try-catch is necessary to handle cases where no YoY inflation index curves exist in scope
@@ -429,11 +418,16 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                         boost::shared_ptr<YoYInflationTermStructure> ts =
                             boost::dynamic_pointer_cast<YoYInflationTermStructure>(
                                 itr->second->inflationTermStructure());
+                        bool indexInterpolated = itr->second->interpolatedIndex();
                         QL_REQUIRE(ts, "expected yoy inflation term structure for index " << it.first
                                                                                           << ", but could not cast");
-                        yoyInflationIndices_[make_pair(configuration.first, it.first)] =
+                        yoyInflationIndices_[make_pair(configuration.first, make_pair(it.first, false))] =
                             Handle<YoYInflationIndex>(boost::make_shared<QuantExt::YoYInflationIndexWrapper>(
-                                parseZeroInflationIndex(it.first, false), false,
+                                parseZeroInflationIndex(it.first, indexInterpolated), false,
+                                Handle<YoYInflationTermStructure>(ts)));
+                        yoyInflationIndices_[make_pair(configuration.first, make_pair(it.first, true))] =
+                            Handle<YoYInflationIndex>(boost::make_shared<QuantExt::YoYInflationIndexWrapper>(
+                                parseZeroInflationIndex(it.first, indexInterpolated), true,
                                 Handle<YoYInflationTermStructure>(ts)));
                     }
                 }
@@ -599,8 +593,26 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                 QL_FAIL("Unhandled spec " << *spec);
             }
             }
+
+            // Swap Indices
+            // Assumes we build all yield curves before anything else (which order() does)
+            // Once we have a non-Yield curve spec, we make sure to build all swap indices
+            // add add them to requiredSwapIndices for later.
+            if (swapIndicesBuilt == false &&
+                (count == specs.size() - 1 || specs[count + 1]->baseType() != CurveSpec::CurveType::Yield)) {
+                std::clog << "building swap indices..." << std::endl;
+                for (const auto& it : params.mapping(MarketObject::SwapIndexCurve, configuration.first)) {
+                    const string& swapIndexName = it.first;
+                    const string& discountIndex = it.second;
+
+                    addSwapIndex(swapIndexName, discountIndex, configuration.first);
+                    LOG("Added SwapIndex " << swapIndexName << " with DiscountingIndex " << discountIndex);
+                    requiredSwapIndices[swapIndexName] = swapIndex(swapIndexName, configuration.first).currentLink();
+                }
+                swapIndicesBuilt = true;
+            }
+
             LOG("Loading spec " << *spec << " done.");
-            count++;
         }
         LOG("Loading " << count << " CurveSpecs done.");
 
