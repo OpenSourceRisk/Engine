@@ -191,6 +191,12 @@ SwaptionVolCurve::SwaptionVolCurve(Date asof, SwaptionVolatilityCurveSpec spec, 
             vector<Period> smileSwapTenors = config->smileSwapTenors();
             vector<Spread> spreads = config->smileSpreads();
 
+            // add smile spread 0, if not already existent
+            auto spr = std::upper_bound(spreads.begin(), spreads.end(), 0.0);
+            if (!close_enough(*spr, 0.0)) {
+                spreads.insert(spr, 0.0);
+            }
+
             if (smileOptionTenors.size() == 0)
                 smileOptionTenors = optionTenors;
             if (smileSwapTenors.size() == 0)
@@ -198,14 +204,15 @@ SwaptionVolCurve::SwaptionVolCurve(Date asof, SwaptionVolatilityCurveSpec spec, 
             QL_REQUIRE(spreads.size() > 0, "Need at least 1 strike spread for a SwaptionVolCube");
 
             Size n = smileOptionTenors.size() * smileSwapTenors.size();
-            vector<vector<Handle<Quote>>> volSpreadHandles(n, vector<Handle<Quote>>(spreads.size()));
+            vector<vector<Handle<Quote>>> volSpreadHandles(
+                n, vector<Handle<Quote>>(spreads.size(), Handle<Quote>(boost::make_shared<SimpleQuote>(0.0))));
 
             LOG("vol cube smile option tenors " << smileOptionTenors.size());
             LOG("vol cube smile swap tenors " << smileSwapTenors.size());
             LOG("vol cube strike spreads " << spreads.size());
 
             Size spreadQuotesRead = 0;
-            Size expectedSpreadQuotes = n * spreads.size();
+            Size expectedSpreadQuotes = n * (spreads.size() - 1); // no quote for zero strike spread
             vector<vector<bool>> found(smileOptionTenors.size() * smileSwapTenors.size(),
                                        std::vector<bool>(spreads.size(), false)),
                 zero(smileOptionTenors.size() * smileSwapTenors.size(), std::vector<bool>(spreads.size(), false));
@@ -224,15 +231,14 @@ SwaptionVolCurve::SwaptionVolCurve(Date asof, SwaptionVolatilityCurveSpec spec, 
                         Size k = std::find(spreads.begin(), spreads.end(), q->strike()) - spreads.begin();
 
                         if (i < smileOptionTenors.size() && j < smileSwapTenors.size() && k < spreads.size()) {
-                            QL_REQUIRE(volSpreadHandles[i * smileSwapTenors.size() + j][k].empty(),
+                            QL_REQUIRE(!found[i * smileSwapTenors.size() + j][k],
                                        "VolSpreadQuote already found for " << smileOptionTenors[i] << ", "
                                                                            << smileSwapTenors[j] << ", " << spreads[k]);
-
                             spreadQuotesRead++;
                             // Assume quotes are absolute vols by strike so construct the vol spreads here
                             Volatility atmVol = atm->volatility(smileOptionTenors[i], smileSwapTenors[j], 0.0);
-                            boost::shared_ptr<Quote> spreadQuote(new SimpleQuote(q->quote()->value() - atmVol));
-                            volSpreadHandles[i * smileSwapTenors.size() + j][k] = Handle<Quote>(spreadQuote);
+                            volSpreadHandles[i * smileSwapTenors.size() + j][k] = Handle<Quote>(
+                                boost::make_shared<SimpleQuote>(q->quote()->value() - atmVol));
                             found[i * smileSwapTenors.size() + j][k] = true;
                             zero[i * smileSwapTenors.size() + j][k] = close_enough(q->quote()->value(), 0.0);
                         }
@@ -244,7 +250,7 @@ SwaptionVolCurve::SwaptionVolCurve(Date asof, SwaptionVolatilityCurveSpec spec, 
                 for (Size i = 0; i < smileOptionTenors.size(); ++i) {
                     for (Size j = 0; j < smileSwapTenors.size(); ++j) {
                         for (Size k = 0; k < spreads.size(); ++k) {
-                            if (!found[i * smileSwapTenors.size() + j][k]) {
+                            if (!close_enough(spreads[k], 0.0) && !found[i * smileSwapTenors.size() + j][k]) {
                                 WLOG("Missing market quote for " << smileOptionTenors[i] << "/" << smileSwapTenors[j]
                                                                  << "/" << spreads[k]);
                             }
