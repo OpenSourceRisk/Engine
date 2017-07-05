@@ -401,7 +401,8 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
 
     // Cache Zero Inflation keys
     Size n_zeroindices = simMarketData_->zeroInflationIndices().size();
-    zeroInfIndexKeys_.reserve(n_zeroindices * simMarketData_->zeroInflationTenors("").size());
+    if( n_zeroindices > 0 )
+        zeroInfIndexKeys_.reserve(n_zeroindices * simMarketData_->zeroInflationTenors("").size());
     count = 0;
     for (Size j = 0; j < n_zeroindices; ++j) {
         std::string zeroIndexName = simMarketData_->zeroInflationIndices()[j];
@@ -419,7 +420,8 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
 
     // Cache YoY Inflation keys
     Size n_yoyindices = simMarketData_->yoyInflationIndices().size();
-    yoyInfIndexKeys_.reserve(n_yoyindices * simMarketData_->yoyInflationTenors("").size());
+    if(n_yoyindices > 0)
+        yoyInfIndexKeys_.reserve(n_yoyindices * simMarketData_->yoyInflationTenors("").size());
     count = 0;
     for (Size j = 0; j < n_yoyindices; ++j) {
         std::string yoyIndexName = simMarketData_->yoyInflationIndices()[j];
