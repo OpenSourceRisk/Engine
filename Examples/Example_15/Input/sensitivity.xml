@@ -1,5 +1,5 @@
+<?xml version="1.0"?>
 <SensitivityAnalysis>
-  
   <!-- Discount curve shifts -->
   <DiscountCurves>
     <DiscountCurve ccy="EUR">
@@ -7,90 +7,75 @@
       <ShiftSize>0.0001</ShiftSize>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
     </DiscountCurve>
-    
     <DiscountCurve ccy="USD">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
     </DiscountCurve>
-    
     <DiscountCurve ccy="GBP">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
     </DiscountCurve>
-    
     <DiscountCurve ccy="CHF">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
     </DiscountCurve>
-    
     <DiscountCurve ccy="JPY">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
     </DiscountCurve>
   </DiscountCurves>
-  
   <!-- Index curve shifts -->
   <IndexCurves>
-  
     <IndexCurve index="EUR-EURIBOR-6M">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
     </IndexCurve>
-    
     <IndexCurve index="EUR-EURIBOR-3M">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
     </IndexCurve>
-    
     <IndexCurve index="EUR-EONIA">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
     </IndexCurve>
-    
     <IndexCurve index="USD-LIBOR-3M">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
     </IndexCurve>
-    
     <IndexCurve index="USD-LIBOR-6M">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
     </IndexCurve>
-    
     <IndexCurve index="GBP-LIBOR-3M">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
     </IndexCurve>
-    
     <IndexCurve index="GBP-LIBOR-6M">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
     </IndexCurve>
-    
     <IndexCurve index="CHF-LIBOR-6M">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
     </IndexCurve>
-    
     <IndexCurve index="JPY-LIBOR-6M">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
-    </IndexCurve>    
+    </IndexCurve>
   </IndexCurves>
-
   <!-- Yield curve shifts -->
   <YieldCurves>
     <YieldCurve name="BENCHMARK_EUR">
@@ -98,8 +83,41 @@
       <ShiftSize>0.0001</ShiftSize>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
     </YieldCurve>
+    <YieldCurve name="SP5">
+      <CurveType>EquityForecast</CurveType>
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</ShiftTenors>
+      <ParConversion>
+        <Instruments>DEP,OIS,OIS,OIS,OIS,OIS,OIS,OIS</Instruments>
+        <SingleCurve>true</SingleCurve>
+        <Conventions>
+          <Convention id="DEP">EUR-EURIBOR-CONVENTIONS</Convention>
+          <Convention id="IRS">EUR-3M-SWAP-CONVENTIONS</Convention>
+          <Convention id="OIS">EUR-OIS-CONVENTIONS</Convention>
+          <Convention id="XBS">EUR-USD-XCCY-BASIS-CONVENTIONS</Convention>
+          <Convention id="FXF">USD-EUR-FX-CONVENTIONS</Convention>
+        </Conventions>
+      </ParConversion>
+    </YieldCurve>
+    <YieldCurve name="Lufthansa">
+      <CurveType>EquityForecast</CurveType>
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</ShiftTenors>
+      <ParConversion>
+        <Instruments>DEP,OIS,OIS,OIS,OIS,OIS,OIS,OIS</Instruments>
+        <SingleCurve>true</SingleCurve>
+        <Conventions>
+          <Convention id="DEP">EUR-EURIBOR-CONVENTIONS</Convention>
+          <Convention id="IRS">EUR-3M-SWAP-CONVENTIONS</Convention>
+          <Convention id="OIS">EUR-OIS-CONVENTIONS</Convention>
+          <Convention id="XBS">EUR-USD-XCCY-BASIS-CONVENTIONS</Convention>
+          <Convention id="FXF">USD-EUR-FX-CONVENTIONS</Convention>
+        </Conventions>
+      </ParConversion>
+    </YieldCurve>
   </YieldCurves>
-  
   <!-- FX spot shifts -->
   <FxSpots>
     <FxSpot ccypair="USDEUR">
@@ -119,7 +137,6 @@
       <ShiftSize>0.01</ShiftSize>
     </FxSpot>
   </FxSpots>
-  
   <!-- FX ATM vol shifts -->
   <FxVolatilities>
     <FxVolatility ccypair="USDEUR">
@@ -141,7 +158,6 @@
       <ShiftStrikes/>
     </FxVolatility>
   </FxVolatilities>
-  
   <!-- Swaption ATM vol shifts -->
   <SwaptionVolatilities>
     <SwaptionVolatility ccy="EUR">
@@ -152,7 +168,6 @@
       <ShiftStrikes/>
     </SwaptionVolatility>
   </SwaptionVolatilities>
-  
   <CDSVolatilities>
   </CDSVolatilities>
   <!-- Cap/Floor (Optionlet or Flat) vol surface shifts -->
@@ -172,17 +187,15 @@
       <Index>USD-LIBOR-3M</Index>
     </CapFloorVolatility>
   </CapFloorVolatilities>
-   
   <!-- Credit Curve shifts -->
   <CreditCurves>
     <CreditCurve name="CPTY_C">
-        <Currency>EUR</Currency>
-        <ShiftType>Absolute</ShiftType>
-        <ShiftSize>0.0001</ShiftSize>
-        <ShiftTenors>6M,1Y,2Y</ShiftTenors>
+      <Currency>EUR</Currency>
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>6M,1Y,2Y</ShiftTenors>
     </CreditCurve>
   </CreditCurves>
-  
   <!-- Equity spot shifts -->
   <EquitySpots>
     <EquitySpot equity="SP5">
@@ -194,7 +207,6 @@
       <ShiftSize>0.01</ShiftSize>
     </EquitySpot>
   </EquitySpots>
-  
   <!-- Equity ATM vol shifts -->
   <EquityVolatilities>
     <EquityVolatility equity="SP5">
@@ -210,40 +222,38 @@
       <ShiftStrikes/>
     </EquityVolatility>
   </EquityVolatilities>
- 
   <ZeroInflationIndexCurves>
     <ZeroInflationIndexCurve index="EUHICP">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
     </ZeroInflationIndexCurve>
-	<ZeroInflationIndexCurve index="EUHICPXT">
+    <ZeroInflationIndexCurve index="EUHICPXT">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
     </ZeroInflationIndexCurve>
-	<ZeroInflationIndexCurve index="FRHICP">
+    <ZeroInflationIndexCurve index="FRHICP">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
     </ZeroInflationIndexCurve>
-	<ZeroInflationIndexCurve index="UKRPI">
+    <ZeroInflationIndexCurve index="UKRPI">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
     </ZeroInflationIndexCurve>
-	<ZeroInflationIndexCurve index="USCPI">
+    <ZeroInflationIndexCurve index="USCPI">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
     </ZeroInflationIndexCurve>
-	<ZeroInflationIndexCurve index="ZACPI">
+    <ZeroInflationIndexCurve index="ZACPI">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
     </ZeroInflationIndexCurve>
   </ZeroInflationIndexCurves>
-  
   <YYInflationIndexCurves>
     <YYInflationIndexCurve index="EUHICPXT">
       <ShiftType>Absolute</ShiftType>
@@ -251,14 +261,11 @@
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
     </YYInflationIndexCurve>
   </YYInflationIndexCurves>
-  
   <!-- Cross Gamma filter: Pairs of factor sub-strings -->
   <CrossGammaFilter>
     <Pair>DiscountCurve/EUR,DiscountCurve/EUR</Pair>
     <Pair>IndexCurve/EUR,IndexCurve/EUR</Pair>
     <Pair>DiscountCurve/EUR,IndexCurve/EUR</Pair>
   </CrossGammaFilter>
-  
   <BaseCorrelations/>
-  
 </SensitivityAnalysis>

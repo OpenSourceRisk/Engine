@@ -28,6 +28,8 @@
 #include <ored/portfolio/enginefactory.hpp>
 #include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
 #include <ql/processes/blackscholesprocess.hpp>
+#include <ql/version.hpp>
+#include <ored/utilities/log.hpp>
 
 namespace ore {
 namespace data {
@@ -52,16 +54,19 @@ protected:
             market_->equitySpot(equityName, configuration(MarketContext::pricing)),
             market_->equityDividendCurve(equityName,
                                          configuration(MarketContext::pricing)), // dividend yield ~ foreign yield
-            market_->discountCurve(ccy.code(), configuration(MarketContext::pricing)),
+            market_->equityForecastCurve(equityName,configuration(MarketContext::pricing)),
             market_->equityVol(equityName, configuration(MarketContext::pricing)));
         // separate IR curves required for "discounting" and "forward price estimation"
         Handle<YieldTermStructure> discountCurve =
             market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
-        //! TODO: This pricing engine only takes a single rate curve as input - hence multi-curve discounting is not
-        // supported.
-        //! - for now we pass the curve required to retrieve equity forward quotes. This means the specified CSA
-        // discount curve is not used in pricing.
-        return boost::make_shared<QuantLib::AnalyticEuropeanEngine>(gbsp);
+
+#if QL_HEX_VERSION < 0x011000f0
+        //The analyticEuropean engine in earlier QL versions does not support a seperate discount curve
+        QL_FAIL("ORE does not support EquityOptions with QL 1.8 or 1.9. Please upgrade to 1.10");
+#else
+        return boost::make_shared<QuantLib::AnalyticEuropeanEngine>(gbsp, discountCurve);
+#endif
+        
     }
 };
 

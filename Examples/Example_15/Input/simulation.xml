@@ -55,7 +55,8 @@
         <Name>SP5</Name>
         <Name>Lufthansa</Name>
       </Names>
-      <Tenors>6M,1Y,2Y</Tenors> <!-- for dividend only -->
+      <DividendTenors>6M,1Y,2Y</ForecastTenors>
+      <ForecastTenors>6M,1Y,2Y</ForecastTenors>
     </Equities>   
 	
     <DefaultCurves>

@@ -142,6 +142,12 @@ public:
     equityVol(const string& eqName, const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 
+    //! \name Equity volatilities
+    //@{
+    virtual Handle<YieldTermStructure>
+    equityForecastCurve(const string& eqName, const string& configuration = Market::defaultConfiguration) const = 0;
+    //@}
+
     //! Refresh term structures for a given configuration
     virtual void refresh(const string&) {}
 
