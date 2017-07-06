@@ -26,6 +26,8 @@
 #include <ored/report/report.hpp>
 #include <ql/errors.hpp>
 
+using std::vector;
+
 namespace ore {
 namespace data {
 
