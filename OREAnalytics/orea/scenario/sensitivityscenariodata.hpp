@@ -170,6 +170,9 @@ public:
     vector<string>& yieldCurveNames() { return yieldCurveNames_; }
     map<string, CurveShiftData>& yieldCurveShiftData() { return yieldCurveShiftData_; }
 
+    vector<string>& equityForecastCurveNames() { return equityForecastCurveNames_; }
+    map<string, CurveShiftData>& equityForecastCurveShiftData() { return equityForecastCurveShiftData_; }
+
     vector<string>& fxCcyPairs() { return fxCcyPairs_; }
     map<string, SpotShiftData>& fxShiftData() { return fxShiftData_; }
 
@@ -266,10 +269,13 @@ private:
     map<string, CurveShiftData> creditCurveShiftData_; // key: credit name
 
     vector<string> equityVolNames_;
-    map<string, VolShiftData> equityVolShiftData_;
+    map<string, VolShiftData> equityVolShiftData_; // key: equity name
 
     vector<string> equityNames_;
-    map<string, SpotShiftData> equityShiftData_;
+    map<string, SpotShiftData> equityShiftData_; // key: equity name
+
+    vector<string> equityForecastCurveNames_;
+    map<string, CurveShiftData> equityForecastCurveShiftData_; // key: equity name
 
     vector<string> dividendYieldNames_;
     map<string, CurveShiftData> dividendYieldShiftData_; // key: equity name

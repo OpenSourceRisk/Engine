@@ -50,8 +50,12 @@ const vector<Period>& ScenarioSimMarketParameters::defaultTenors(const string& k
     return returnTenors(defaultTenors_, key);
 }
 
-const vector<Period>& ScenarioSimMarketParameters::equityTenors(const string& key) const {
-    return returnTenors(equityTenors_, key);
+const vector<Period>& ScenarioSimMarketParameters::equityDividendTenors(const string& key) const {
+    return returnTenors(equityDividendTenors_, key);
+}
+    
+const vector<Period>& ScenarioSimMarketParameters::equityForecastTenors(const string& key) const {
+        return returnTenors(equityForecastTenors_, key);
 }
 
 const vector<Period>& ScenarioSimMarketParameters::zeroInflationTenors(const string& key) const {
@@ -74,8 +78,12 @@ void ScenarioSimMarketParameters::setDefaultTenors(const string& key, const std:
     defaultTenors_[key] = p;
 }
 
-void ScenarioSimMarketParameters::setEquityTenors(const string& key, const std::vector<Period>& p) {
-    equityTenors_[key] = p;
+void ScenarioSimMarketParameters::setEquityDividendTenors(const string& key, const std::vector<Period>& p) {
+    equityDividendTenors_[key] = p;
+}
+    
+void ScenarioSimMarketParameters::setEquityForecastTenors(const string& key, const std::vector<Period>& p) {
+    equityForecastTenors_[key] = p;
 }
 
 void ScenarioSimMarketParameters::setZeroInflationTenors(const string& key, const std::vector<Period>& p) {
@@ -99,7 +107,7 @@ bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& 
         defaultNames_ != rhs.defaultNames_ || defaultTenors_ != rhs.defaultTenors_ ||
         cdsVolSimulate_ != rhs.cdsVolSimulate_ || cdsVolNames_ != rhs.cdsVolNames_ ||
         cdsVolExpiries_ != rhs.cdsVolExpiries_ || cdsVolDecayMode_ != rhs.cdsVolDecayMode_ ||
-        equityNames_ != rhs.equityNames_ || equityTenors_ != rhs.equityTenors_ ||
+        equityNames_ != rhs.equityNames_ || equityDividendTenors_ != rhs.equityDividendTenors_ || equityForecastTenors_ != rhs.equityForecastTenors_ ||
         fxVolSimulate_ != rhs.fxVolSimulate_ || fxVolExpiries_ != rhs.fxVolExpiries_ ||
         fxVolDecayMode_ != rhs.fxVolDecayMode_ || fxVolCcyPairs_ != rhs.fxVolCcyPairs_ ||
         fxCcyPairs_ != rhs.fxCcyPairs_ || equityVolSimulate_ != rhs.equityVolSimulate_ ||
@@ -129,7 +137,8 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     yieldCurveTenors_.clear();
     capFloorVolExpiries_.clear();
     defaultTenors_.clear();
-    equityTenors_.clear();
+    equityDividendTenors_.clear();
+    equityForecastTenors_.clear();
     swapIndices_.clear();
 
     // TODO: add in checks (checkNode or QL_REQUIRE) on mandatory nodes
@@ -215,13 +224,17 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         recoveryRateSimulate_ = ore::data::parseBool(XMLUtils::getNodeValue(recoveryRateSimNode));
 
     nodeChild = XMLUtils::getChildNode(node, "Equities");
+    equityNames_.clear();
     if (nodeChild) {
-        equityNames_ = XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true);
-        equityTenors_[""] = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Tenors", true);
+        equityNames_ = XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true); 
+        equityDividendTenors_[""] = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "DividendTenors", true);
+        equityForecastTenors_[""] = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "ForecastTenors", true);
     } else {
         equityNames_.clear();
-        equityTenors_.clear();
+        equityDividendTenors_.clear();
+        equityForecastTenors_.clear();
     }
+    
 
     nodeChild = XMLUtils::getChildNode(node, "CDSVolatilities");
     cdsVolSimulate_ = false;
@@ -367,8 +380,8 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
     // equities
     XMLNode* equitiesNode = XMLUtils::addChild(doc, marketNode, "Equities");
     XMLUtils::addChildren(doc, equitiesNode, "Names", "Name", equityNames_);
-    XMLUtils::addGenericChildAsList(doc, equitiesNode, "Tenors", returnTenors(equityTenors_, ""));
-
+    XMLUtils::addGenericChildAsList(doc, equitiesNode, "DividendTenors", returnTenors(equityDividendTenors_, ""));
+    XMLUtils::addGenericChildAsList(doc, equitiesNode, "ForecastTenors", returnTenors(equityForecastTenors_, ""));
     // swaption volatilities
     XMLNode* swaptionVolatilitiesNode = XMLUtils::addChild(doc, marketNode, "SwaptionVolatilities");
     XMLUtils::addChild(doc, swaptionVolatilitiesNode, "Simulate", swapVolSimulate_);
