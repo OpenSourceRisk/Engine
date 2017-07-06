@@ -29,7 +29,7 @@ namespace data {
 BaseCorrelationCurveConfig::BaseCorrelationCurveConfig(const string& curveID, const string& curveDescription,
                                                        const vector<Real>& detachmentPoints,
                                                        const vector<Period>& terms)
-    : curveID_(curveID), curveDescription_(curveDescription), detachmentPoints_(detachmentPoints), terms_(terms) {}
+    : CurveConfig(curveID, curveDescription), detachmentPoints_(detachmentPoints), terms_(terms) {}
 
 void BaseCorrelationCurveConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "BaseCorrelation");

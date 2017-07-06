@@ -27,7 +27,7 @@ namespace data {
 EquityVolatilityCurveConfig::EquityVolatilityCurveConfig(const string& curveID, const string& curveDescription,
                                                          const string& currency, const Dimension& dimension,
                                                          const vector<string>& expiries, const vector<string>& strikes)
-    : curveID_(curveID), curveDescription_(curveDescription), ccy_(currency), dimension_(dimension),
+    : CurveConfig(curveID, curveDescription), ccy_(currency), dimension_(dimension),
       expiries_(expiries), strikes_(strikes) {}
 
 void EquityVolatilityCurveConfig::fromXML(XMLNode* node) {

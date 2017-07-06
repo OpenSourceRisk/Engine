@@ -24,7 +24,7 @@
 
 #pragma once
 
-#include <ored/utilities/xmlutils.hpp>
+#include <ored/configuration/curveconfig.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/daycounter.hpp>
 #include <ql/time/frequency.hpp>
@@ -33,7 +33,6 @@
 
 using std::string;
 using std::vector;
-using ore::data::XMLSerializable;
 using ore::data::XMLNode;
 using ore::data::XMLDocument;
 using QuantLib::Period;
@@ -45,7 +44,7 @@ using QuantLib::Frequency;
 namespace ore {
 namespace data {
 
-class InflationCurveConfig : public XMLSerializable {
+class InflationCurveConfig : public CurveConfig {
 public:
     enum class Type { ZC, YY };
 
@@ -62,8 +61,6 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc);
 
     // Inspectors
-    const string& curveID() const { return curveID_; }
-    const string& curveDescription() const { return curveDescription_; }
     const string& nominalTermStructure() const { return nominalTermStructure_; }
     const Type& type() const { return type_; }
     const vector<string>& quotes() const { return quotes_; }
@@ -80,8 +77,6 @@ public:
     const vector<string>& seasonalityFactors() const { return seasonalityFactors_; }
 
     // Setters
-    string& curveID() { return curveID_; }
-    string& curveDescription() { return curveDescription_; }
     string& nominalTermStructure() { return nominalTermStructure_; }
     Type& type() { return type_; }
     vector<string>& quotes() { return quotes_; }
@@ -98,8 +93,6 @@ public:
     vector<string>& seasonalityFactors() { return seasonalityFactors_; }
 
 private:
-    string curveID_;
-    string curveDescription_;
     string nominalTermStructure_;
     Type type_;
     vector<string> quotes_;

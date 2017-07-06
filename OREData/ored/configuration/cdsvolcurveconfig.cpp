@@ -26,7 +26,7 @@ namespace data {
 
 CDSVolatilityCurveConfig::CDSVolatilityCurveConfig(const string& curveID, const string& curveDescription,
                                                    const vector<string>& expiries)
-    : curveID_(curveID), curveDescription_(curveDescription), expiries_(expiries) {}
+    : CurveConfig(curveID, curveDescription), expiries_(expiries) {}
 
 void CDSVolatilityCurveConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "CDSVolatility");

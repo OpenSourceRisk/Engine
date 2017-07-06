@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <ored/utilities/xmlutils.hpp>
+#include <ored/configuration/curveconfig.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/daycounter.hpp>
 #include <ql/time/period.hpp>
@@ -31,7 +31,6 @@
 
 using std::string;
 using std::vector;
-using ore::data::XMLSerializable;
 using ore::data::XMLNode;
 using ore::data::XMLDocument;
 using QuantLib::Period;
@@ -47,7 +46,7 @@ namespace data {
 /*!
   \ingroup configuration
 */
-class SwaptionVolatilityCurveConfig : public XMLSerializable {
+class SwaptionVolatilityCurveConfig : public CurveConfig {
 public:
     //! supported volatility dimensions
     enum class Dimension { ATM, Smile };
@@ -81,8 +80,6 @@ public:
 
     //! \name Inspectors
     //@{
-    const string& curveID() const { return curveID_; }
-    const string& curveDescription() const { return curveDescription_; }
     const Dimension& dimension() const { return dimension_; }
     const VolatilityType& volatilityType() const { return volatilityType_; }
     const bool& extrapolate() const { return extrapolate_; }
@@ -102,8 +99,6 @@ public:
 
     //! \name Setters
     //@{
-    string& curveID() { return curveID_; }
-    string& curveDescription() { return curveDescription_; }
     Dimension& dimension() { return dimension_; }
     VolatilityType& volatilityType() { return volatilityType_; }
     bool& flatExtrapolation() { return flatExtrapolation_; }
