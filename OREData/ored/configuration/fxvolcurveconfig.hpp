@@ -23,13 +23,12 @@
 
 #pragma once
 
-#include <ored/utilities/xmlutils.hpp>
+#include <ored/configuration/curveconfig.hpp>
 #include <ql/time/period.hpp>
 #include <ql/types.hpp>
 
 using std::string;
 using std::vector;
-using ore::data::XMLSerializable;
 using ore::data::XMLNode;
 using ore::data::XMLDocument;
 using QuantLib::Period;
@@ -41,7 +40,7 @@ namespace data {
 /*!
   \ingroup configuration
 */
-class FXVolatilityCurveConfig : public XMLSerializable {
+class FXVolatilityCurveConfig : public CurveConfig {
 public:
     //! supported volatility structure types
     /*! For ATM we will only load ATM quotes, for Smile we load ATM, 25RR, 25BF
@@ -68,8 +67,6 @@ public:
 
     //! \name Inspectors
     //@{
-    const string& curveID() const { return curveID_; }
-    const string& curveDescription() const { return curveDescription_; }
     const Dimension& dimension() const { return dimension_; }
     const vector<Period>& expiries() const { return expiries_; }
     // only required for Smile
@@ -80,8 +77,6 @@ public:
 
     //! \name Setters
     //@{
-    string& curveID() { return curveID_; }
-    string& curveDescription() { return curveDescription_; }
     Dimension& dimension() { return dimension_; }
     vector<Period>& expiries() { return expiries_; }
     string& fxSpotID() { return fxSpotID_; }
@@ -89,8 +84,6 @@ public:
     string& fxDomesticYieldCurveID() { return fxDomesticYieldCurveID_; }
     //@}
 private:
-    string curveID_;
-    string curveDescription_;
     Dimension dimension_;
     vector<Period> expiries_;
     string fxSpotID_;

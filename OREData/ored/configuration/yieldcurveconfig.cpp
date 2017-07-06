@@ -142,7 +142,7 @@ YieldCurveConfig::YieldCurveConfig(const string& curveID, const string& curveDes
                                    const vector<boost::shared_ptr<YieldCurveSegment>>& curveSegments,
                                    const string& interpolationVariable, const string& interpolationMethod,
                                    const string& zeroDayCounter, bool extrapolation, Real tolerance)
-    : curveID_(curveID), curveDescription_(curveDescription), currency_(currency), discountCurveID_(discountCurveID),
+    : CurveConfig(curveID, curveDescription), currency_(currency), discountCurveID_(discountCurveID),
       curveSegments_(curveSegments), interpolationVariable_(interpolationVariable),
       interpolationMethod_(interpolationMethod), zeroDayCounter_(zeroDayCounter), extrapolation_(extrapolation),
       tolerance_(tolerance) {

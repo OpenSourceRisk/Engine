@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <ored/utilities/xmlutils.hpp>
+#include <ored/configuration/curveconfig.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/daycounter.hpp>
 #include <ql/time/period.hpp>
@@ -31,7 +31,6 @@
 
 using std::string;
 using std::vector;
-using ore::data::XMLSerializable;
 using ore::data::XMLNode;
 using ore::data::XMLDocument;
 using QuantLib::Period;
@@ -46,7 +45,7 @@ namespace data {
 /*!
   \ingroup configuration
 */
-class DefaultCurveConfig : public XMLSerializable {
+class DefaultCurveConfig : public CurveConfig {
 public:
     //! Supported default curve types
     enum class Type { SpreadCDS, HazardRate, Yield };
@@ -70,8 +69,6 @@ public:
 
     //! \name Inspectors
     //@{
-    const string& curveID() const { return curveID_; }
-    const string& curveDescription() const { return curveDescription_; }
     const string& currency() const { return currency_; }
     const Type& type() const { return type_; }
     const string& discountCurveID() const { return discountCurveID_; }
@@ -85,8 +82,6 @@ public:
 
     //! \name Setters
     //@{
-    string& curveID() { return curveID_; }
-    string& curveDescription() { return curveDescription_; }
     string& currency() { return currency_; }
     Type& type() { return type_; }
     string& discountCurveID() { return discountCurveID_; }
@@ -99,8 +94,6 @@ public:
     //@}
 
 private:
-    string curveID_;
-    string curveDescription_;
     string currency_;
     Type type_;
     string discountCurveID_;

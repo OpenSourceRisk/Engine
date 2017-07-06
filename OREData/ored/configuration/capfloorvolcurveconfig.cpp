@@ -30,7 +30,7 @@ CapFloorVolatilityCurveConfig::CapFloorVolatilityCurveConfig(
     bool inlcudeAtm, const vector<Period>& tenors, const vector<double>& strikes, const DayCounter& dayCounter,
     Natural settleDays, const Calendar& calendar, const BusinessDayConvention& businessDayConvention,
     const string& iborIndex, const string& discountCurve)
-    : curveID_(curveID), curveDescription_(curveDescription), volatilityType_(volatilityType),
+    : CurveConfig(curveID, curveDescription), volatilityType_(volatilityType),
       extrapolate_(extrapolate), includeAtm_(inlcudeAtm), tenors_(tenors), strikes_(strikes), dayCounter_(dayCounter),
       settleDays_(settleDays), calendar_(calendar), businessDayConvention_(businessDayConvention),
       iborIndex_(iborIndex), discountCurve_(discountCurve) {}
