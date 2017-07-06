@@ -35,7 +35,7 @@ InflationCurveConfig::InflationCurveConfig(const string& curveID, const string& 
                                            const Real baseRate, const Real tolerance, const Date& seasonalityBaseDate,
                                            const Frequency& seasonalityFrequency,
                                            const vector<string>& seasonalityFactors)
-    : curveID_(curveID), curveDescription_(curveDescription), nominalTermStructure_(nominalTermStructure), type_(type),
+    : CurveConfig(curveID, curveDescription), nominalTermStructure_(nominalTermStructure), type_(type),
       quotes_(quotes), conventions_(conventions), extrapolate_(extrapolate), calendar_(calendar),
       dayCounter_(dayCounter), lag_(lag), frequency_(frequency), baseRate_(baseRate), tolerance_(tolerance),
       seasonalityBaseDate_(seasonalityBaseDate), seasonalityFrequency_(seasonalityFrequency),

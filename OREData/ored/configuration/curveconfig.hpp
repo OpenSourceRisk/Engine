@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2017 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,58 +16,58 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file ored/configuration/cdsvolcurveconfig.hpp
-    \brief CDS volatility curve configuration classes
+/*! \file ored/configuration/curveconfig.hpp
+    \brief Base curve configuration classes
     \ingroup configuration
 */
 
 #pragma once
 
-#include <ored/configuration/curveconfig.hpp>
-#include <ql/types.hpp>
+#include <ored/utilities/xmlutils.hpp>
 
 using std::string;
-using std::vector;
-using ore::data::XMLNode;
-using ore::data::XMLDocument;
-using QuantLib::Period;
+using ore::data::XMLSerializable;
 
 namespace ore {
 namespace data {
 
-//! CDS volatility structure configuration
+//! Base curve configuration
 /*!
   \ingroup configuration
 */
-class CDSVolatilityCurveConfig : public CurveConfig {
+class CurveConfig : public XMLSerializable {
 public:
+    //! Supported equity curve types
     //! \name Constructors/Destructors
     //@{
-    //! Default constructor
-    CDSVolatilityCurveConfig() {}
     //! Detailed constructor
-    CDSVolatilityCurveConfig(const string& curveID, const string& curveDescription, const vector<string>& expiries);
+    CurveConfig(const string& curveID, const string& curveDescription)
+    : curveID_(curveID), curveDescription_(curveDescription) {}
+    //! Default constructor
+    CurveConfig() {}
     //! Default destructor
-    virtual ~CDSVolatilityCurveConfig() {}
-    //@}
-
-    //! \name Serialisation
-    //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    virtual ~CurveConfig() {}
     //@}
 
     //! \name Inspectors
     //@{
-    const vector<string>& expiries() const { return expiries_; }
+    const string& curveID() const { return curveID_; }
+    const string& curveDescription() const { return curveDescription_; }
     //@}
 
     //! \name Setters
     //@{
-    vector<string>& expiries() { return expiries_; }
+    string& curveID() { return curveID_; }
+    string& curveDescription() { return curveDescription_; }
     //@}
-private:
-    vector<string> expiries_;
+
+    //! Return all the market quotes required for this config
+    // TODO: vector<string> quotes() const = 0;
+
+protected:
+    string curveID_;
+    string curveDescription_;
 };
+
 } // namespace data
 } // namespace ore

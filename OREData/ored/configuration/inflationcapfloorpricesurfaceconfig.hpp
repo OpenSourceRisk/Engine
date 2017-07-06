@@ -24,7 +24,7 @@
 
 #pragma once
 
-#include <ored/utilities/xmlutils.hpp>
+#include <ored/configuration/curveconfig.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/daycounter.hpp>
 #include <ql/time/period.hpp>
@@ -32,7 +32,6 @@
 
 using std::string;
 using std::vector;
-using ore::data::XMLSerializable;
 using ore::data::XMLNode;
 using ore::data::XMLDocument;
 using QuantLib::Period;
@@ -43,7 +42,7 @@ using QuantLib::BusinessDayConvention;
 namespace ore {
 namespace data {
 
-class InflationCapFloorPriceSurfaceConfig : public XMLSerializable {
+class InflationCapFloorPriceSurfaceConfig : public CurveConfig {
 public:
     enum class Type { ZC, YY };
 
@@ -60,8 +59,6 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc);
 
     // Inspectors
-    const string& curveID() const { return curveID_; }
-    const string& curveDescription() const { return curveDescription_; }
     const Type& type() const { return type_; }
     const Real& startRate() const { return startRate_; }
     const Period& observationLag() const { return observationLag_; }
@@ -76,8 +73,6 @@ public:
     const vector<Period>& maturities() const { return maturities_; }
 
     // Setters
-    string& curveID() { return curveID_; }
-    string& curveDescription() { return curveDescription_; }
     Type& type() { return type_; }
     Real& startRate() { return startRate_; }
     Period& observationLag() { return observationLag_; }
@@ -92,8 +87,6 @@ public:
     vector<Period>& maturities() { return maturities_; }
 
 private:
-    string curveID_;
-    string curveDescription_;
     Type type_;
     Real startRate_;
     Period observationLag_;

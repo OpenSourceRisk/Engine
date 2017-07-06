@@ -26,7 +26,7 @@ namespace data {
 
 FXVolatilityCurveConfig::FXVolatilityCurveConfig(const string& curveID, const string& curveDescription,
                                                  const Dimension& dimension, const vector<Period>& expiries)
-    : curveID_(curveID), curveDescription_(curveDescription), dimension_(dimension), expiries_(expiries) {}
+    : CurveConfig(curveID, curveDescription), dimension_(dimension), expiries_(expiries) {}
 
 void FXVolatilityCurveConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "FXVolatility");

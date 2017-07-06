@@ -26,6 +26,7 @@ this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \
 	all.hpp \
 	capfloorvolcurveconfig.hpp \
+	curveconfig.hpp \
 	curveconfigurations.hpp \
 	conventions.hpp \
     cdsvolcurveconfig.hpp \
