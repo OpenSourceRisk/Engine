@@ -50,20 +50,22 @@ protected:
 
     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& equityName, const Currency& ccy) override {
         string key = keyImpl(equityName, ccy);
-        if( QL_VERSION >= "1.10") {
-            boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = boost::make_shared<GeneralizedBlackScholesProcess>(
-                market_->equitySpot(equityName, configuration(MarketContext::pricing)),
-                market_->equityDividendCurve(equityName,
+        boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = boost::make_shared<GeneralizedBlackScholesProcess>(
+            market_->equitySpot(equityName, configuration(MarketContext::pricing)),
+            market_->equityDividendCurve(equityName,
                                          configuration(MarketContext::pricing)), // dividend yield ~ foreign yield
-                market_->equityForecastCurve(equityName,configuration(MarketContext::pricing)),
-                market_->equityVol(equityName, configuration(MarketContext::pricing)));
+            market_->equityForecastCurve(equityName,configuration(MarketContext::pricing)),
+            market_->equityVol(equityName, configuration(MarketContext::pricing)));
         // separate IR curves required for "discounting" and "forward price estimation"
-            Handle<YieldTermStructure> discountCurve =
-                market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
-            return boost::make_shared<QuantLib::AnalyticEuropeanEngine>(gbsp, discountCurve);
-        } else 
-            QL_FAIL("ORE does not support EquityOptionswith QL 1.8 or 1.9. Please upgrade to 1.10");
-        
+        Handle<YieldTermStructure> discountCurve =
+            market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
+
+#if QL_HEX_VERSION < 0x011000f0
+        //The analyticEuropean engine in earlier QL versions does not support a seperate discount curve
+        QL_FAIL("ORE does not support EquityOptions with QL 1.8 or 1.9. Please upgrade to 1.10");
+#else
+        return boost::make_shared<QuantLib::AnalyticEuropeanEngine>(gbsp, discountCurve);
+#endif
         
     }
 };
