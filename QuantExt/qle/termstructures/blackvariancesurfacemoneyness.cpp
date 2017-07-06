@@ -127,8 +127,8 @@ BlackVarianceSurfaceMoneynessForward::BlackVarianceSurfaceMoneynessForward(
         registerWith(forTS_);
         registerWith(domTS_);
     } else {
-        for(Size i = 0; i< times.size(); i++) {
-            Time t = times[i];
+        for(Size i = 0; i< times_.size(); i++) {
+            Time t = times_[i];
             Real fwd = spot_->value()*forTS_->discount(t)/domTS_->discount(t);
             forwards_.push_back(fwd);
         }
