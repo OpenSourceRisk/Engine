@@ -41,6 +41,19 @@ using std::string;
 namespace ore {
 namespace analytics {
 
+//! A scenario filter can exclude certain key from updating the scenario
+/*! Override this class with to provide custom filtering, by default all keys
+ *  are allowed.
+ */
+class ScenarioFilter {
+public:
+    ScenarioFilter() {}
+    virtual ~ScenarioFilter() {}
+
+    //! Allow this key to be updated
+    virtual bool allow(const RiskFactorKey& key) const { return true; }
+};
+
 //! Simulation Market updated with discrete scenarios
 class ScenarioSimMarket : public analytics::SimMarket {
 public:
@@ -53,6 +66,11 @@ public:
     boost::shared_ptr<AggregationScenarioData>& aggregationScenarioData() { return asd_; }
     //! Get aggregation data
     const boost::shared_ptr<AggregationScenarioData>& aggregationScenarioData() const { return asd_; }
+
+    //! Set scenarioFilter
+    boost::shared_ptr<ScenarioFilter>& filter() { return filter_; }
+    //! Get scenarioFilter
+    const boost::shared_ptr<ScenarioFilter>& filter() const { return filter_; }
 
     //! Update market snapshot and relevant fixing history
     void update(const Date& d) override;
@@ -67,6 +85,7 @@ private:
     boost::shared_ptr<ScenarioSimMarketParameters> parameters_;
     boost::shared_ptr<AggregationScenarioData> asd_;
     boost::shared_ptr<FixingManager> fixingManager_;
+    boost::shared_ptr<ScenarioFilter> filter_;
 
     std::map<RiskFactorKey, boost::shared_ptr<SimpleQuote>> simData_;
 };

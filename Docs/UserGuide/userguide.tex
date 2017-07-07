@@ -49,6 +49,7 @@
 
 \usepackage{siunitx}
 
+\newenvironment{longlisting}{\captionsetup{type=listing}}{}
 %\usepackage[colorlinks=true]{hyperref}
 
 \renewcommand\P{\ensuremath{\mathbb{P}}}
@@ -1487,6 +1488,20 @@ After running the example, the results of the computation can be found in the ou
   flows.csv}, respectively.
 
 %--------------------------------------------------------
+ 
+%--------------------------------------------------------
+\subsection{Sensitivity using Equity Volatility}
+%--------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_22} demonstrates the calculation of sensitivities for equity options where the equity volatility has a smile. ORE supports two methods of simulating equity volatility smile. The first method simulates the entire surface using specific moneyness levels configured in simulation.xml.
+The second method simulates only the ATM equity volatilities, the other strikes are shifted relative to this new ATM using the $t_{0}$ smile. 
+This example compares both methods using the same sensitivity configuration as in {\tt Examples/Example\_15}. For the first method {\tt simulation\_fullSurface.xml} is used and all output files are appended with ``\_fullSurface'', for the second method {\tt simulation\_atmOnly.xml} is used and all output files are appended with ``\_atmOnly''.
+The portfolio used in this example consists of:
+\begin{itemize}
+	\item an equity call option denominated in USD (``SP5'')
+	\item an equity put option denominated in USD (``SP5'')
+\end{itemize}
+
 
 \clearpage
 %========================================================
@@ -2855,9 +2870,15 @@ yield curves that can be 'understood' by the instruments which we want to price 
 
 Moreover we need to specify how volatility structures evolve even if we do not explicitly simulate volatility. This 
 translation happens based on the information in the {\em simulation market} object, which is configured in the section 
-within the enclosing tags {\tt <Market>} and {\tt </Market}, as shown in the following small example.
+within the enclosing tags {\tt <Market>} and {\tt </Market>}, as shown in the following small example.
 
-\begin{listing}[H]
+It should be noted that equity volatilities are taken to be a curve by default, to simulate an equity volatility surface with smile the xml node {\tt <Surface> } must be supplied.
+There are two methods in ORE for equity volatility simulation: 
+\begin{itemize}
+\item Simulating ATM volatilities only (and shifting other strikes relative to this using the $T_{0}$ smile). In this case set {\tt <SimulateATMOnly>} to true.
+\item Simulating the full volatility surface. The node {\tt <SimulateATMOnly>} should be omitted or set to false, and explicit moneyness levels for simulation should be provided.
+\end{itemize}
+\begin{longlisting}
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
 <Market>
@@ -2911,6 +2932,20 @@ within the enclosing tags {\tt <Market>} and {\tt </Market}, as shown in the fol
     <Expiries>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</Expiries>
     <Strikes/>
   </FxVolatilities>
+  <EquityVolatilities>
+      <Simulate>true</Simulate>
+      <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
+      <!-- Alternative: ConstantVariance -->
+      <Names>
+        <Name>SP5</Name>
+        <Name>Lufthansa</Name>
+      </Names>
+      <Expiries>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</Expiries>
+      <Surface>
+        <SimulateATMOnly>false</SimulateATMOnly><!-- false -->
+        <Moneyness>0.1,0.5,1.0,1.5,2.0,3.0</Moneyness><!-- omitted if SimulateATMOnly true -->
+      </Surface>
+ </EquityVolatilities>
   <AdditionalScenarioDataCurrencies>
     <Currency>EUR</Currency>
     <Currency>USD</Currency>
@@ -2924,7 +2959,7 @@ within the enclosing tags {\tt <Market>} and {\tt </Market}, as shown in the fol
 \end{minted}
 \caption{Simulation market configuration}
 \label{lst:simulation_market_configuration}
-\end{listing}
+\end{longlisting}
 
 \todo[inline]{Comment on cap/floor surface structure and reaction to time decay}
 \todo[inline]{Remove DefaultCurves from SimMarket constructor and configuration section}

@@ -149,7 +149,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
                                      boost::shared_ptr<Market>& initMarket,
                                      boost::shared_ptr<ScenarioSimMarketParameters>& parameters,
                                      Conventions conventions, const std::string& configuration)
-    : SimMarket(conventions), scenarioGenerator_(scenarioGenerator), parameters_(parameters) {
+    : SimMarket(conventions), scenarioGenerator_(scenarioGenerator), parameters_(parameters), filter_(new ScenarioFilter()) {
 
     LOG("building ScenarioSimMarket...");
     asof_ = initMarket->asofDate();
@@ -909,7 +909,8 @@ void ScenarioSimMarket::update(const Date& d) {
             missingPoint = true;
         } else {
             // LOG("simulation data point found for key " << key);
-            it->second->setValue(scenario->get(key));
+            if (filter_->allow(key))
+                it->second->setValue(scenario->get(key));
             count++;
         }
     }
