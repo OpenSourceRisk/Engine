@@ -184,6 +184,11 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
             boost::shared_ptr<DefaultProbabilityTermStructure> tmp =
                 boost::make_shared<PiecewiseDefaultCurve<SurvivalProbability, LogLinear>>(asof, helper,
                                                                                           config->dayCounter());
+            
+            // Helpers may still be unsorted at this point
+            // Sort before the copy below => 'dates' vector will be ordered correctly 
+            std::sort(helper.begin(), helper.end(), detail::BootstrapHelperSorter());
+            
             // like for yield curves we need to copy the piecewise curve because
             // on eval date changes the relative date helpers with trigger a
             // bootstrap.
