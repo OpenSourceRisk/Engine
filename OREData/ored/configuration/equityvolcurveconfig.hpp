@@ -23,12 +23,11 @@
 
 #pragma once
 
-#include <ored/utilities/xmlutils.hpp>
+#include <ored/configuration/curveconfig.hpp>
 #include <ql/types.hpp>
 
 using std::string;
 using std::vector;
-using ore::data::XMLSerializable;
 using ore::data::XMLNode;
 using ore::data::XMLDocument;
 using QuantLib::Period;
@@ -40,7 +39,7 @@ namespace data {
 /*!
   \ingroup configuration
 */
-class EquityVolatilityCurveConfig : public XMLSerializable {
+class EquityVolatilityCurveConfig : public CurveConfig {
 public:
     //! supported volatility structure types
     enum class Dimension { ATM, Smile };
@@ -65,8 +64,6 @@ public:
 
     //! \name Inspectors
     //@{
-    const string& curveID() const { return curveID_; }
-    const string& curveDescription() const { return curveDescription_; }
     const string& ccy() const { return ccy_; }
     const Dimension& dimension() const { return dimension_; }
     const vector<string>& expiries() const { return expiries_; }
@@ -76,16 +73,12 @@ public:
 
     //! \name Setters
     //@{
-    string& curveID() { return curveID_; }
-    string& curveDescription() { return curveDescription_; }
     string& ccy() { return ccy_; }
     Dimension& dimension() { return dimension_; }
     vector<string>& expiries() { return expiries_; }
     vector<string>& strikes() { return strikes_; }
     //@}
 private:
-    string curveID_;
-    string curveDescription_;
     string ccy_;
     Dimension dimension_;
     vector<string> expiries_;

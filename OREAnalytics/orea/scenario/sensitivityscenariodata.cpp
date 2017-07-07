@@ -277,6 +277,17 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             data.shiftType = XMLUtils::getChildValue(child, "ShiftType");
             data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
             data.shiftTenors = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
+            XMLNode* par = XMLUtils::getChildNode(child, "ParConversion");
+            if (par) {
+                data.parInstruments = XMLUtils::getChildrenValuesAsStrings(par, "Instruments", true);
+                data.parInstrumentSingleCurve = XMLUtils::getChildValueAsBool(par, "SingleCurve", true);
+                XMLNode* conventionsNode = XMLUtils::getChildNode(par, "Conventions");
+                data.parInstrumentConventions =
+                    XMLUtils::getChildrenAttributesAndValues(conventionsNode, "Convention", "id", true);
+            }
+            else if (parConversion_) {
+                QL_FAIL("par conversion data not provided for zero inflation curve " << index);
+            }
             zeroInflationCurveShiftData_[index] = data;
             zeroInflationIndices_.push_back(index);
         }
@@ -292,6 +303,17 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             data.shiftType = XMLUtils::getChildValue(child, "ShiftType");
             data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
             data.shiftTenors = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
+            XMLNode* par = XMLUtils::getChildNode(child, "ParConversion");
+            if (par) {
+                data.parInstruments = XMLUtils::getChildrenValuesAsStrings(par, "Instruments", true);
+                data.parInstrumentSingleCurve = XMLUtils::getChildValueAsBool(par, "SingleCurve", true);
+                XMLNode* conventionsNode = XMLUtils::getChildNode(par, "Conventions");
+                data.parInstrumentConventions =
+                    XMLUtils::getChildrenAttributesAndValues(conventionsNode, "Convention", "id", true);
+            }
+            else if (parConversion_) {
+                QL_FAIL("par conversion data not provided for yoy inflation curve " << index);
+            }
             yoyInflationCurveShiftData_[index] = data;
             yoyInflationIndices_.push_back(index);
         }

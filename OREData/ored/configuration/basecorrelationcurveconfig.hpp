@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <ored/utilities/xmlutils.hpp>
+#include <ored/configuration/curveconfig.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/daycounter.hpp>
 #include <ql/time/period.hpp>
@@ -31,7 +31,6 @@
 
 using std::string;
 using std::vector;
-using ore::data::XMLSerializable;
 using ore::data::XMLNode;
 using ore::data::XMLDocument;
 using QuantLib::Period;
@@ -47,7 +46,7 @@ namespace data {
 /*!
   \ingroup configuration
 */
-class BaseCorrelationCurveConfig : public XMLSerializable {
+class BaseCorrelationCurveConfig : public CurveConfig {
 public:
     //! \name Constructors/Destructors
     //@{
@@ -68,8 +67,6 @@ public:
 
     //! \name Inspectors
     //@{
-    const string& curveID() const { return curveID_; }
-    const string& curveDescription() const { return curveDescription_; }
     const vector<Period>& terms() const { return terms_; }
     const vector<Real>& detachmentPoints() const { return detachmentPoints_; }
     const Size& settlementDays() const { return settlementDays_; }
@@ -81,8 +78,6 @@ public:
 
     //! \name Setters
     //@{
-    string& curveID() { return curveID_; }
-    string& curveDescription() { return curveDescription_; }
     vector<Period>& terms() { return terms_; }
     vector<Real>& detachmentPoints() { return detachmentPoints_; }
     Size& settlementDays() { return settlementDays_; }
@@ -92,8 +87,6 @@ public:
     bool& extrapolate() { return extrapolate_; }
     //@}
 private:
-    string curveID_;
-    string curveDescription_;
     vector<Real> detachmentPoints_;
     vector<Period> terms_;
     Size settlementDays_;

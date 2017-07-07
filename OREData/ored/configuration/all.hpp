@@ -2,6 +2,7 @@
 /* Add the files to be included into Makefile.am instead. */
 
 #include <ored/configuration/capfloorvolcurveconfig.hpp>
+#include <ored/configuration/curveconfig.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/configuration/conventions.hpp>
 #include <ored/configuration/cdsvolcurveconfig.hpp>

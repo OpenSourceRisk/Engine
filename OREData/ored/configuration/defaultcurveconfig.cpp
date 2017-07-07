@@ -28,7 +28,7 @@ DefaultCurveConfig::DefaultCurveConfig(const string& curveID, const string& curv
                                        const Type& type, const string& discountCurveID, const string& recoveryRateQuote,
                                        const DayCounter& dayCounter, const string& conventionID,
                                        const vector<string>& quotes, bool extrapolation)
-    : curveID_(curveID), curveDescription_(curveDescription), currency_(currency), type_(type),
+    : CurveConfig(curveID, curveDescription), currency_(currency), type_(type),
       discountCurveID_(discountCurveID), recoveryRateQuote_(recoveryRateQuote), dayCounter_(dayCounter),
       conventionID_(conventionID), quotes_(quotes), extrapolation_(extrapolation) {}
 

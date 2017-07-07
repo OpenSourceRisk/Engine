@@ -28,6 +28,7 @@
 #include <ored/portfolio/enginefactory.hpp>
 #include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
 #include <ql/processes/blackscholesprocess.hpp>
+#include <ql/version.hpp>
 #include <ored/utilities/log.hpp>
 
 namespace ore {
@@ -49,7 +50,6 @@ protected:
 
     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& equityName, const Currency& ccy) override {
         string key = keyImpl(equityName, ccy);
-        
         boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = boost::make_shared<GeneralizedBlackScholesProcess>(
             market_->equitySpot(equityName, configuration(MarketContext::pricing)),
             market_->equityDividendCurve(equityName,
@@ -59,8 +59,14 @@ protected:
         // separate IR curves required for "discounting" and "forward price estimation"
         Handle<YieldTermStructure> discountCurve =
             market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
-        
+
+#if QL_HEX_VERSION < 0x011000f0
+        //The analyticEuropean engine in earlier QL versions does not support a seperate discount curve
+        QL_FAIL("ORE does not support EquityOptions with QL 1.8 or 1.9. Please upgrade to 1.10");
+#else
         return boost::make_shared<QuantLib::AnalyticEuropeanEngine>(gbsp, discountCurve);
+#endif
+        
     }
 };
 

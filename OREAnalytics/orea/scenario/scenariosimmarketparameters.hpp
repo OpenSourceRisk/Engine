@@ -50,7 +50,7 @@ public:
     ScenarioSimMarketParameters()
         : extrapolate_(false), swapVolSimulate_(false), capFloorVolSimulate_(false),
           survivalProbabilitySimulate_(false), recoveryRateSimulate_(false), cdsVolSimulate_(false),
-          fxVolSimulate_(false), equityVolSimulate_(false), equityIsSurface_(false), equityVolSimulateATMOnly_(true),
+          fxVolSimulate_(false), fxVolIsSurface_(false), equityVolSimulate_(false), equityIsSurface_(false), equityVolSimulateATMOnly_(true),
           equityMoneyness_({1}), baseCorrelationSimulate_(false) {
         // set default tenors
         capFloorVolExpiries_[""];
@@ -101,16 +101,17 @@ public:
     const string& cdsVolDecayMode() const { return cdsVolDecayMode_; }
 
     const vector<string>& equityNames() const { return equityNames_; }
-    const vector<string>& equityCurrencies() const { return equityCurrencies_; }
     const vector<Period>& equityDividendTenors(const string& key) const;
     bool hasEquityDividendTenors(const string& key) const { return equityDividendTenors_.count(key) > 0; }
     const vector<Period>& equityForecastTenors(const string& key) const;
     bool hasEquityForecastTenors(const string& key) const { return equityForecastTenors_.count(key) > 0; }
 
     bool simulateFXVols() const { return fxVolSimulate_; }
+    bool fxVolIsSurface() const { return fxVolIsSurface_; }
     const vector<Period>& fxVolExpiries() const { return fxVolExpiries_; }
     const string& fxVolDecayMode() const { return fxVolDecayMode_; }
     const vector<string>& fxVolCcyPairs() const { return fxVolCcyPairs_; }
+    const vector<Real>& fxVolMoneyness() const { return fxMoneyness_; }
 
     bool simulateEquityVols() const { return equityVolSimulate_; }
     bool equityVolIsSurface() const { return equityIsSurface_; }
@@ -177,14 +178,15 @@ public:
     string& cdsVolDecayMode() { return cdsVolDecayMode_; }
 
     vector<string>& equityNames() { return equityNames_; }
-    vector<string>& equityCurrencies() { return equityCurrencies_; }
     void setEquityDividendTenors(const string& key, const vector<Period>& p);
     void setEquityForecastTenors(const string& key, const vector<Period>& p);
     
     bool& simulateFXVols() { return fxVolSimulate_; }
+    bool& fxVolIsSurface() { return fxVolIsSurface_; }
     vector<Period>& fxVolExpiries() { return fxVolExpiries_; }
     string& fxVolDecayMode() { return fxVolDecayMode_; }
     vector<string>& fxVolCcyPairs() { return fxVolCcyPairs_; }
+    vector<Real>& fxVolMoneyness() { return fxMoneyness_; }
 
     bool& simulateEquityVols() { return equityVolSimulate_; }
     bool& equityVolIsSurface() { return equityIsSurface_; }
@@ -261,14 +263,15 @@ private:
     string cdsVolDecayMode_;
 
     vector<string> equityNames_;
-    vector<string> equityCurrencies_;
     map<string, vector<Period>> equityDividendTenors_;
     map<string, vector<Period>> equityForecastTenors_;
 
     bool fxVolSimulate_;
+    bool fxVolIsSurface_;
     vector<Period> fxVolExpiries_;
     string fxVolDecayMode_;
     vector<string> fxVolCcyPairs_;
+    vector<Real> fxMoneyness_;
 
     bool equityVolSimulate_;
     bool equityIsSurface_;

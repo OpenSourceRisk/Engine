@@ -32,7 +32,7 @@ InflationCapFloorPriceSurfaceConfig::InflationCapFloorPriceSurfaceConfig(
     const Calendar& calendar, const BusinessDayConvention& businessDayConvention, const DayCounter& dayCounter,
     const string& index, const string& indexCurve, const string& yieldTermStructure, const vector<Real>& capStrikes,
     const vector<Real>& floorStrikes, const vector<Period>& maturities)
-    : curveID_(curveID), curveDescription_(curveDescription), type_(type), observationLag_(observationLag),
+    : CurveConfig(curveID, curveDescription), type_(type), observationLag_(observationLag),
       calendar_(calendar), businessDayConvention_(businessDayConvention), dayCounter_(dayCounter), index_(index),
       indexCurve_(indexCurve), yieldTermStructure_(yieldTermStructure), capStrikes_(capStrikes),
       floorStrikes_(floorStrikes), maturities_(maturities) {}

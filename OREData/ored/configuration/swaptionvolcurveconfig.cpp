@@ -31,7 +31,7 @@ SwaptionVolatilityCurveConfig::SwaptionVolatilityCurveConfig(
     const Calendar& calendar, const BusinessDayConvention& businessDayConvention, const string& shortSwapIndexBase,
     const string& swapIndexBase, const vector<Period>& smileOptionTenors, const vector<Period>& smileSwapTenors,
     const vector<Real>& smileSpreads)
-    : curveID_(curveID), curveDescription_(curveDescription), dimension_(dimension), volatilityType_(volatilityType),
+    : CurveConfig(curveID, curveDescription), dimension_(dimension), volatilityType_(volatilityType),
       extrapolate_(extrapolate), flatExtrapolation_(flatExtrapolation), optionTenors_(optionTenors),
       swapTenors_(swapTenors), dayCounter_(dayCounter), calendar_(calendar),
       businessDayConvention_(businessDayConvention), shortSwapIndexBase_(shortSwapIndexBase),

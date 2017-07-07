@@ -27,7 +27,7 @@ namespace data {
 EquityCurveConfig::EquityCurveConfig(const string& curveID, const string& curveDescription, const string& forecastingCurve, 
                                      const string& currency, const EquityCurveConfig::Type& type, const string& equitySpotQuote,
                                      const vector<string>& quotes, const string& dayCountID, bool extrapolation)
-    : curveID_(curveID), curveDescription_(curveDescription), currency_(currency), type_(type),
+    : CurveConfig(curveID, curveDescription), currency_(currency), type_(type),
       equitySpotQuoteID_(equitySpotQuote), quotes_(quotes), dayCountID_(dayCountID), extrapolation_(extrapolation), forecastingCurve_(forecastingCurve) {}
 
 void EquityCurveConfig::fromXML(XMLNode* node) {

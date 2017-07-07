@@ -225,13 +225,8 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
 
     nodeChild = XMLUtils::getChildNode(node, "Equities");
     equityNames_.clear();
-    equityCurrencies_.clear();
     if (nodeChild) {
-        for (XMLNode* n = XMLUtils::getChildNode(nodeChild, "Equity"); n != nullptr;
-             n = XMLUtils::getNextSibling(n, "Equity")) {
-            equityNames_.push_back(XMLUtils::getChildValue(n, "Name", true));
-            equityCurrencies_.push_back(XMLUtils::getChildValue(n, "Currency", true));
-        }
+        equityNames_ = XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true); 
         equityDividendTenors_[""] = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "DividendTenors", true);
         equityForecastTenors_[""] = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "ForecastTenors", true);
     } else {
@@ -260,6 +255,14 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     fxVolExpiries_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Expiries", true);
     fxVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
     fxVolCcyPairs_ = XMLUtils::getChildrenValues(nodeChild, "CurrencyPairs", "CurrencyPair", true);
+    XMLNode* fxSurfaceNode = XMLUtils::getChildNode(nodeChild, "Surface");
+    if (fxSurfaceNode) {
+        fxVolIsSurface_ = true;
+        fxMoneyness_ = XMLUtils::getChildrenValuesAsDoublesCompact(fxSurfaceNode, "Moneyness", true);
+    } else {
+        fxVolIsSurface_ = false;
+        fxMoneyness_ = {0.0};
+    }
 
     nodeChild = XMLUtils::getChildNode(node, "EquityVolatilities");
     if (nodeChild) {

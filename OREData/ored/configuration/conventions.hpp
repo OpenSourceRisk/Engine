@@ -749,6 +749,7 @@ public:
     BusinessDayConvention fixConvention() const { return fixConvention_; }
     const DayCounter& dayCounter() const { return dayCounter_; }
     const boost::shared_ptr<ZeroInflationIndex> index() const { return index_; }
+    const string& indexName() const { return strIndex_; }
     bool interpolated() const { return interpolated_; }
     Period observationLag() const { return observationLag_; }
     bool adjustInfObsDates() const { return adjustInfObsDates_; }
