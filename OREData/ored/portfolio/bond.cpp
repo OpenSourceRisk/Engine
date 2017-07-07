@@ -1,5 +1,7 @@
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2017 Aareal Bank AG
+
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -53,8 +55,6 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         currency_ = coupons_.currency();
         Leg leg;
         Handle<IborIndex> hIndex;
-
-        //bmayer@AareaL
         Handle<OptionletVolatilityStructure> ovs;
 
         if (coupons_.legType() == "Fixed")
@@ -66,8 +66,6 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             QL_REQUIRE(!hIndex.empty(), "Could not find ibor index " << indexName << " in market.");
             boost::shared_ptr<IborIndex> index = hIndex.currentLink();
             leg = makeIborLeg(coupons_, index, engineFactory);
-
-            //bmayer@AareaL
             if (!coupons_.floatingLegData().floors().empty() || !coupons_.floatingLegData().caps().empty())
                 ovs = engineFactory->market()->capFloorVol(currency_, builder->configuration(MarketContext::pricing));
 
@@ -80,8 +78,6 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         // workaround, QL doesn't register a bond with its leg's cashflows
         if(!hIndex.empty())
             bond->registerWith(hIndex);
-
-        //bmayer@AareaL
         if (!ovs.empty())
             bond->registerWith(ovs);
     }

@@ -1,6 +1,8 @@
 
 /*
  Copyright (C) 2017 Quaternion Risk Management Ltd
+ Copyright (C) 2017 Aareal Bank AG
+
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
