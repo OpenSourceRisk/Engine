@@ -594,7 +594,6 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
             // add add them to requiredSwapIndices for later.
             if (swapIndicesBuilt == false &&
                 (count == specs.size() - 1 || specs[count + 1]->baseType() != CurveSpec::CurveType::Yield)) {
-                std::clog << "building swap indices..." << std::endl;
                 for (const auto& it : params.mapping(MarketObject::SwapIndexCurve, configuration.first)) {
                     const string& swapIndexName = it.first;
                     const string& discountIndex = it.second;
