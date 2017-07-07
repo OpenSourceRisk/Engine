@@ -114,8 +114,6 @@ public:
     //@}
 
 private:
-    string curveID_;
-    string curveDescription_;
     Dimension dimension_;
     VolatilityType volatilityType_;
     bool extrapolate_, flatExtrapolation_;
