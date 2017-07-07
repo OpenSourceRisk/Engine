@@ -778,9 +778,8 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
                 // If true, the strikes are fixed, if false they move with the spot handle
                 // Should probably be false, but some people like true for sensi runs.
                 bool stickyStrike = true;
-
                 eqVolCurve = boost::shared_ptr<BlackVolTermStructure> (
-                    new BlackVarianceSurfaceMoneynessSpot(cal, spot, times, parameters->equityVolMoneyness(), quotes, dc, stickyStrike));
+                    new BlackVarianceSurfaceMoneynessSpot(NullCalendar(), spot, times, parameters->equityVolMoneyness(), quotes, dc, stickyStrike));
                 eqVolCurve->enableExtrapolation();
             } else {
             LOG("Simulating EQ Vols (BlackVarianceCurve3) for " << equityName);
