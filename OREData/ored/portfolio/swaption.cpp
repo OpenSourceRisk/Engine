@@ -29,9 +29,6 @@
 #include <ored/portfolio/swaption.hpp>
 #include <ored/utilities/log.hpp>
 
-#include <qle/instruments/payment.hpp>
-#include <qle/pricingengines/paymentdiscountingengine.hpp>
-
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/timer.hpp>
 
