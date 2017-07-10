@@ -108,8 +108,13 @@ void Swaption::buildEuropean(const boost::shared_ptr<EngineFactory>& engineFacto
     // 2) add fee payment as additional trade leg for cash flow reporting
     std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
-    addFeeInstrument(additionalInstruments, additionalMultipliers, positionType, currency, engineFactory,
-                     swaptionBuilder);
+    if (option_.premiumPayDate() != "" && option_.premiumCcy() != "") {
+        Real premiumAmount = -multiplier * option_.premium(); // pay if long, receive if short
+        Currency premiumCurrency = parseCurrency(option_.premiumCcy());
+        Date premiumDate = parseDate(option_.premiumPayDate());
+        addPayment(additionalInstruments, additionalMultipliers, premiumDate, premiumAmount, premiumCurrency, currency,
+                   engineFactory, swaptionBuilder->configuration(MarketContext::pricing));
+    }
 
     // Now set the instrument wrapper, depending on delivery
     if (settleType == Settlement::Physical) {
@@ -224,8 +229,13 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
     // 2) add fee payment as additional trade leg for cash flow reporting
     std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
-    addFeeInstrument(additionalInstruments, additionalMultipliers, positionType, currency, engineFactory,
-                     swaptionBuilder);
+    if (option_.premiumPayDate() != "" && option_.premiumCcy() != "") {
+        Real premiumAmount = -multiplier * option_.premium(); // pay if long, receive if short
+        Currency premiumCurrency = parseCurrency(option_.premiumCcy());
+        Date premiumDate = parseDate(option_.premiumPayDate());
+        addPayment(additionalInstruments, additionalMultipliers, premiumDate, premiumAmount, premiumCurrency, currency,
+                   engineFactory, swaptionBuilder->configuration(MarketContext::pricing));
+    }
 
     // instrument_ = boost::shared_ptr<InstrumentWrapper> (new VanillaInstrument (swaption, multiplier));
     instrument_ = boost::shared_ptr<InstrumentWrapper>(
@@ -418,42 +428,6 @@ Swaption::buildUnderlyingSwaps(const boost::shared_ptr<PricingEngine>& swapEngin
         }
     }
     return swaps;
-}
-
-void Swaption::addFeeInstrument(std::vector<boost::shared_ptr<Instrument>>& additionalInstruments,
-                                std::vector<Real>& additionalMultipliers, const Position::Type& positionType,
-                                const Currency& tradeCurrency, const boost::shared_ptr<EngineFactory>& factory,
-                                const boost::shared_ptr<EngineBuilder>& builder) {
-    if (option_.premiumPayDate() != "" && option_.premiumCcy() != "") {
-        Real premium = option_.premium();
-        Currency ccy = parseCurrency(option_.premiumCcy());
-        Date date = parseDate(option_.premiumPayDate());
-        boost::shared_ptr<QuantExt::Payment> fee(new QuantExt::Payment(premium, ccy, date));
-
-        if (positionType == Position::Long)
-            additionalMultipliers.push_back(-1.0); // long option: pay the premium
-        else
-            additionalMultipliers.push_back(+1.0); // short option: receive the premium
-
-        // build discounting engine, discount in fee currency, convert into trade currency if different
-        Handle<YieldTermStructure> yts =
-            factory->market()->discountCurve(fee->currency().code(), builder->configuration(MarketContext::pricing));
-        Handle<Quote> fx;
-        if (tradeCurrency != fee->currency()) {
-            // FX quote for converting the fee NPV into trade currency
-            string ccypair = fee->currency().code() + tradeCurrency.code();
-            fx = factory->market()->fxSpot(ccypair, builder->configuration(MarketContext::pricing));
-        }
-        boost::shared_ptr<PricingEngine> discountingEngine(new QuantExt::PaymentDiscountingEngine(yts, fx));
-        fee->setPricingEngine(discountingEngine);
-
-        // 1) Add to additional instruments (trade wrapper) for pricing
-        additionalInstruments.push_back(fee);
-
-        // 2) Add a trade leg for cash flow reporting
-        legs_.push_back(Leg(1, fee->cashFlow()));
-        legCurrencies_.push_back(fee->currency().code());
-    }
 }
 
 void Swaption::fromXML(XMLNode* node) {

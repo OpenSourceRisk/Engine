@@ -62,11 +62,6 @@ private:
     OptionData option_;
     vector<LegData> swap_;
 
-    void addFeeInstrument(std::vector<boost::shared_ptr<Instrument>>& inst, std::vector<Real>& mult,
-                          const Position::Type& positionType, const Currency& tradeCurrency,
-			  const boost::shared_ptr<EngineFactory>& factory,
-                          const boost::shared_ptr<EngineBuilder>& builder);
-
     boost::shared_ptr<VanillaSwap> buildVanillaSwap(const boost::shared_ptr<EngineFactory>&,
                                                     const Date& firstExerciseDate = Null<Date>());
     boost::shared_ptr<NonstandardSwap> buildNonStandardSwap(const boost::shared_ptr<EngineFactory>&);

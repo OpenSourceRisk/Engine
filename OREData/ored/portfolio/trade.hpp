@@ -123,6 +123,11 @@ protected:
     QuantLib::Real notional_;
     Date maturity_;
 
+    void addPayment(std::vector<boost::shared_ptr<Instrument>>& instruments, std::vector<Real>& multipliers,
+                    const Date& paymentDate, const Real& paymentAmount, const Currency& paymentCurrency,
+                    const Currency& tradeCurrency, const boost::shared_ptr<EngineFactory>& factory,
+                    const string& configuration);
+
 private:
     string id_;
     Envelope envelope_;
