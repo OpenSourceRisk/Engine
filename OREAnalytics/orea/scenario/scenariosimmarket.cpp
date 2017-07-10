@@ -830,27 +830,27 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         BusinessDayConvention bdc = ModifiedFollowing;
 
         string ccy = inflationIndex->currency().code();
-        Handle<YieldTermStructure> yts = discountCurve(ccy, Market::defaultConfiguration);
+        Handle<YieldTermStructure> yts = discountCurve(ccy, configuration);
 
-       // vector<Time> zeroCurveTimes;       // include today
-        vector<Date> zeroCurveDates;
-        zeroCurveDates.push_back(asof_ - inflationTs->observationLag());
+        Date date0 = asof_ - inflationTs->observationLag();
+        vector<Date> zeroCurveDates, quoteDates;
+        zeroCurveDates.push_back(date0);
         vector<Handle<Quote>> quotes;
         QL_REQUIRE(parameters->zeroInflationTenors(zic).front() > 0 * Days, "zero inflation tenors must not include t=0");
         for (auto& tenor : parameters->zeroInflationTenors(zic)) {
-           // zeroCurveTimes.push_back(inflationTs->dayCounter().yearFraction(asof_, asof_ + tenor));
-            zeroCurveDates.push_back(asof_ + tenor);
+            zeroCurveDates.push_back(date0 + tenor);
+            quoteDates.push_back(asof_ + tenor);
         }
-        
-        boost::shared_ptr<SimpleQuote> q0(new SimpleQuote(inflationTs->zeroRate(zeroCurveDates[1])));
-        Handle<Quote> qh0(q0);
-        quotes.push_back(qh0);
 
         for (Size i = 1; i < zeroCurveDates.size(); i++) {
-            boost::shared_ptr<SimpleQuote> q(new SimpleQuote(inflationTs->zeroRate(zeroCurveDates[i])));
+            boost::shared_ptr<SimpleQuote> q(new SimpleQuote(inflationTs->zeroRate(quoteDates[i-1])));
             Handle<Quote> qh(q);
+            if (i == 1) {
+                // add the zero rate at first tenor to the T0 time, to ensure flat interpolation of T1 rate
+                // for time t T0 < t < T1
+                quotes.push_back(qh);
+            }
             quotes.push_back(qh);
-
             simData_.emplace(std::piecewise_construct,
                 std::forward_as_tuple(RiskFactorKey::KeyType::ZeroInflationCurve, zic, i-1),
                 std::forward_as_tuple(q));
@@ -864,12 +864,21 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         zeroCurve = boost::shared_ptr<ZeroInflationCurveObserver<Linear>> (new ZeroInflationCurveObserver<Linear>(
             asof_, inflationIndex->fixingCalendar(), inflationTs->dayCounter(), inflationTs->observationLag(), inflationTs->frequency(),
             inflationTs->indexIsInterpolated(), yts, zeroCurveDates, quotes, inflationTs->seasonality()));
-
+        
         Handle<ZeroInflationTermStructure> its(zeroCurve);
+        its->enableExtrapolation();
         boost::shared_ptr<ZeroInflationIndex> i = ore::data::parseZeroInflationIndex(zic, false, Handle<ZeroInflationTermStructure>(its));
         Handle<ZeroInflationIndex> zh(i);
         zeroInflationIndices_.insert(pair<pair<string, string>, Handle<ZeroInflationIndex>>
             (make_pair(Market::defaultConfiguration, zic), zh));
+
+
+
+
+
+
+
+
 
         LOG("building " << zic << " zero inflation curve done");   
     }
@@ -883,23 +892,28 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         vector<string> keys(parameters->yoyInflationTenors(yic).size());
         BusinessDayConvention bdc = ModifiedFollowing;
 
-        vector<Date> yoyCurveDates;
-        yoyCurveDates.push_back(asof_ - yoyInflationTs->observationLag());
+        string ccy = yoyInflationIndex->currency().code();
+        Handle<YieldTermStructure> yts = initMarket->discountCurve(ccy, configuration);
+
+        Date date0 = asof_ - yoyInflationTs->observationLag();
+        vector<Date> yoyCurveDates, quoteDates;
+        yoyCurveDates.push_back(date0);
         vector<Handle<Quote>> quotes;
-        QL_REQUIRE(parameters->yoyInflationTenors(yic).front() > 0 * Days, "yoy inflation tenors must not include t=0");
+        QL_REQUIRE(parameters->yoyInflationTenors(yic).front() >= 1 * Years, "yoy inflation tenors must be greater than 1Y");
         for (auto& tenor : parameters->yoyInflationTenors(yic)) {
-            yoyCurveDates.push_back(asof_ + tenor);
+            yoyCurveDates.push_back(date0 + tenor);
+            quoteDates.push_back(asof_ + tenor);
         }
 
-        boost::shared_ptr<SimpleQuote> q0(new SimpleQuote(yoyInflationTs->yoyRate(yoyCurveDates[1])));
-        Handle<Quote> qh0(q0);
-        quotes.push_back(qh0);
-
         for (Size i = 1; i < yoyCurveDates.size(); i++) {
-            boost::shared_ptr<SimpleQuote> q(new SimpleQuote(yoyInflationTs->yoyRate(yoyCurveDates[i])));
+            boost::shared_ptr<SimpleQuote> q(new SimpleQuote(yoyInflationTs->yoyRate(quoteDates[i-1])));
             Handle<Quote> qh(q);
+            if (i == 1) {
+                // add the zero rate at first tenor to the T0 time, to ensure flat interpolation of T1 rate
+                // for time t T0 < t < T1
+                quotes.push_back(qh);
+            }
             quotes.push_back(qh);
-
             simData_.emplace(std::piecewise_construct,
                 std::forward_as_tuple(RiskFactorKey::KeyType::YoYInflationCurve, yic, i-1),
                 std::forward_as_tuple(q));
@@ -913,9 +927,10 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         // TODO: floating
         yoyCurve = boost::shared_ptr<YoYInflationCurveObserver<Linear>>(new YoYInflationCurveObserver<Linear>(
             asof_, yoyInflationIndex->fixingCalendar(), yoyInflationTs->dayCounter(), yoyInflationTs->observationLag(), yoyInflationTs->frequency(),
-            yoyInflationTs->indexIsInterpolated(), yoyInflationTs->nominalTermStructure(), yoyCurveDates, quotes, yoyInflationTs->seasonality()));
+            yoyInflationTs->indexIsInterpolated(), yts, yoyCurveDates, quotes, yoyInflationTs->seasonality()));
 
         Handle<YoYInflationTermStructure> its(yoyCurve);
+        its->enableExtrapolation();
         boost::shared_ptr<YoYInflationIndex> i(yoyInflationIndex->clone(its));
         Handle<YoYInflationIndex> zh(i);
         yoyInflationIndices_.insert(pair<pair<string, string>, Handle<YoYInflationIndex>>
