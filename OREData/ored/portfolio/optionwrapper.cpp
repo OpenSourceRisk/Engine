@@ -29,9 +29,12 @@ namespace data {
 OptionWrapper::OptionWrapper(const boost::shared_ptr<Instrument>& inst, const bool isLongOption,
                              const std::vector<Date>& exerciseDate, const bool isPhysicalDelivery,
                              const std::vector<boost::shared_ptr<Instrument>>& undInst, const Real multiplier,
-                             const Real undMultiplier)
-    : InstrumentWrapper(inst, multiplier), isLong_(isLongOption), isPhysicalDelivery_(isPhysicalDelivery),
-      contractExerciseDates_(exerciseDate), effectiveExerciseDates_(exerciseDate), underlyingInstruments_(undInst),
+                             const Real undMultiplier,
+                             const std::vector<boost::shared_ptr<QuantLib::Instrument>>& additionalInstruments,
+                             const std::vector<Real>& additionalMultipliers)
+    : InstrumentWrapper(inst, multiplier, additionalInstruments, additionalMultipliers), isLong_(isLongOption),
+      isPhysicalDelivery_(isPhysicalDelivery), contractExerciseDates_(exerciseDate),
+      effectiveExerciseDates_(exerciseDate), underlyingInstruments_(undInst),
       activeUnderlyingInstrument_(undInst.at(0)), undMultiplier_(undMultiplier), exercised_(false) {
     QL_REQUIRE(exerciseDate.size() == undInst.size(), "number of exercise dates ("
                                                           << exerciseDate.size()
@@ -64,6 +67,8 @@ void OptionWrapper::reset() {
 }
 
 Real OptionWrapper::NPV() const {
+    Real addNPV = additionalInstrumentsNPV();
+
     Date today = Settings::instance().evaluationDate();
     if (!exercised_) {
         for (Size i = 0; i < effectiveExerciseDates_.size(); ++i) {
@@ -84,12 +89,14 @@ Real OptionWrapper::NPV() const {
         // by introducing the cash settlement date into the option wrapper (note
         // that we will probably need an effective cash settlement date then to
         // maintain the relative position to the effective exercise date).
-        return (isPhysicalDelivery_ || today == exerciseDate_)
-                   ? (isLong_ ? 1.0 : -1.0) * activeUnderlyingInstrument_->NPV() * undMultiplier_
-                   : 0.0;
+        Real npv = (isPhysicalDelivery_ || today == exerciseDate_)
+                       ? (isLong_ ? 1.0 : -1.0) * activeUnderlyingInstrument_->NPV() * undMultiplier_
+                       : 0.0;
+        return npv + addNPV;
     } else {
         // if not exercised we just return the original option's NPV
-        return (isLong_ ? 1.0 : -1.0) * instrument_->NPV() * multiplier_;
+        Real npv = (isLong_ ? 1.0 : -1.0) * instrument_->NPV() * multiplier_;
+        return npv + addNPV;
     }
 }
 
