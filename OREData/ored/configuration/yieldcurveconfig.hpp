@@ -28,6 +28,7 @@
 #include <boost/shared_ptr.hpp>
 #include <map>
 #include <ored/utilities/xmlutils.hpp>
+#include <ored/configuration/curveconfig.hpp>
 #include <ql/patterns/visitor.hpp>
 #include <ql/types.hpp>
 #include <set>
@@ -38,7 +39,6 @@ using std::set;
 using std::pair;
 using std::map;
 using boost::optional;
-using ore::data::XMLSerializable;
 using ore::data::XMLNode;
 using ore::data::XMLDocument;
 using QuantLib::AcyclicVisitor;
@@ -378,7 +378,7 @@ private:
 
   \ingroup configuration
  */
-class YieldCurveConfig : public XMLSerializable {
+class YieldCurveConfig : public CurveConfig {
 public:
     //! \name Constructors/Destructurs
     //@{
@@ -401,8 +401,6 @@ public:
 
     //! \name Inspectors
     //@{
-    const string& curveID() const { return curveID_; }
-    const string& curveDescription() const { return curveDescription_; }
     const string& currency() const { return currency_; }
     const string& discountCurveID() const { return discountCurveID_; }
     const vector<boost::shared_ptr<YieldCurveSegment>>& curveSegments() const { return curveSegments_; }
@@ -427,8 +425,6 @@ private:
     void populateRequiredYieldCurveIDs();
 
     // Mandatory members
-    string curveID_;
-    string curveDescription_;
     string currency_;
     string discountCurveID_;
     vector<boost::shared_ptr<YieldCurveSegment>> curveSegments_;

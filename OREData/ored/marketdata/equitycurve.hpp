@@ -53,8 +53,8 @@ public:
     //! \name Inspectors
     //@{
     const EquityCurveSpec& spec() const { return spec_; }
-    boost::shared_ptr<YieldTermStructure> divYieldTermStructure(const Date& asof,
-                                                                const Handle<YieldTermStructure>& equityIrCurve) const;
+    boost::shared_ptr<YieldTermStructure> divYieldTermStructure(const Date& asof) const;
+    Handle<YieldTermStructure> forecastingYieldTermStructure() const { return forecastYieldTermStructure_; };
     const Real equitySpot() const { return equitySpot_; }
     //@}
 private:
@@ -64,6 +64,7 @@ private:
     vector<Real> quotes_;
     vector<Date> terms_;
     DayCounter dc_;
+    Handle<YieldTermStructure> forecastYieldTermStructure_;
 };
 } // namespace data
 } // namespace ore

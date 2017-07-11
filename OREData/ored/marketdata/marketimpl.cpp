@@ -50,14 +50,30 @@ A lookup(const B& map, const C& key, const string& configuration, const string& 
     }
     return it->second;
 }
+
+template <class A, class B, class C>
+A lookup(const B& map, const C& key, const YieldCurveType y ,const string& configuration, const string& type) {
+    auto it = map.find(make_tuple(configuration, y, key));
+    if (it == map.end()) {
+        // fall back to default configuration
+        it = map.find(make_tuple(Market::defaultConfiguration, y, key));
+        QL_REQUIRE(it != map.end(),
+                   "did not find object " << key << " of type " << type << " under configuration " << configuration << " in YieldCurves");
+    }
+    return it->second;
+}
+
 } // anonymous namespace
+Handle<YieldTermStructure> MarketImpl::yieldCurve(const YieldCurveType& type, const string& key, const string& configuration) const {
+    return lookup<Handle<YieldTermStructure>>(yieldCurves_, key, type, configuration, "yield curve");
+}
 
 Handle<YieldTermStructure> MarketImpl::discountCurve(const string& key, const string& configuration) const {
-    return lookup<Handle<YieldTermStructure>>(discountCurves_, key, configuration, "discount curve");
+    return lookup<Handle<YieldTermStructure>>(yieldCurves_, key, YieldCurveType::Discount, configuration, "discount curve");
 }
 
 Handle<YieldTermStructure> MarketImpl::yieldCurve(const string& key, const string& configuration) const {
-    return lookup<Handle<YieldTermStructure>>(yieldCurves_, key, configuration, "yield curve");
+    return lookup<Handle<YieldTermStructure>>(yieldCurves_, key, YieldCurveType::Yield, configuration, "yield curve");
 }
 
 Handle<IborIndex> MarketImpl::iborIndex(const string& key, const string& configuration) const {
@@ -154,11 +170,15 @@ Handle<Quote> MarketImpl::equitySpot(const string& key, const string& configurat
 }
 
 Handle<YieldTermStructure> MarketImpl::equityDividendCurve(const string& key, const string& configuration) const {
-    return lookup<Handle<YieldTermStructure>>(equityDividendCurves_, key, configuration, "dividend yield curve");
+    return lookup<Handle<YieldTermStructure>>(yieldCurves_, key, YieldCurveType::EquityDividend, configuration, "dividend yield curve");
 }
 
 Handle<BlackVolTermStructure> MarketImpl::equityVol(const string& key, const string& configuration) const {
     return lookup<Handle<BlackVolTermStructure>>(equityVols_, key, configuration, "equity vol curve");
+}
+
+Handle<YieldTermStructure> MarketImpl::equityForecastCurve(const string& eqName, const string& configuration) const {
+    return lookup<Handle<YieldTermStructure>>(yieldCurves_, eqName, YieldCurveType::EquityForecast, configuration, "equity forecast yield curve");
 }
 
 Handle<Quote> MarketImpl::securitySpread(const string& key, const string& configuration) const {
@@ -201,12 +221,8 @@ void MarketImpl::refresh(const string& configuration) {
     }
 
     if (it->second.empty()) {
-        for (auto& x : discountCurves_) {
-            if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
-                it->second.insert(*x.second);
-        }
         for (auto& x : yieldCurves_) {
-            if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
+            if (get<0>(x.first) == configuration || get<0>(x.first) == Market::defaultConfiguration)
                 it->second.insert(*x.second);
         }
         for (auto& x : iborIndices_) {
@@ -264,14 +280,11 @@ void MarketImpl::refresh(const string& configuration) {
             if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
                 it->second.insert(*x.second);
         }
-        for (auto& x : equityDividendCurves_) {
-            if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
-                it->second.insert(*x.second);
-        }
         for (auto& x : equityVols_) {
             if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
                 it->second.insert(*x.second);
         }
+
     }
 
     for (auto& x : it->second)

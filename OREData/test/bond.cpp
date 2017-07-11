@@ -50,7 +50,7 @@ public:
     TestMarket() {
         asof_ = Date(3, Feb, 2016);
         // build discount
-        yieldCurves_[make_pair(Market::defaultConfiguration, "BANK_EUR_LEND")] = flatRateYts(0.02);
+        yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Yield, "BANK_EUR_LEND")] = flatRateYts(0.02);
         defaultCurves_[make_pair(Market::defaultConfiguration, "CreditCurve_A")] = flatRateDcs(0.0);
         // recoveryRates_[make_pair(Market::defaultConfiguration, "CreditCurve_A")] =
         //     Handle<Quote>(boost::make_shared<SimpleQuote>(0.00));
@@ -63,7 +63,7 @@ public:
     TestMarket(Real defaultFlatRate) {
         asof_ = Date(3, Feb, 2016);
         // build discount
-        yieldCurves_[make_pair(Market::defaultConfiguration, "BANK_EUR_LEND")] = flatRateYts(0.02);
+        yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Yield, "BANK_EUR_LEND")] = flatRateYts(0.02);
         defaultCurves_[make_pair(Market::defaultConfiguration, "CreditCurve_A")] = flatRateDcs(defaultFlatRate);
         // recoveryRates_[make_pair(Market::defaultConfiguration, "CreditCurve_A")] =
         //     Handle<Quote>(boost::make_shared<SimpleQuote>(0.00));

@@ -36,6 +36,7 @@ using ore::data::Conventions;
 using std::string;
 using std::map;
 using std::pair;
+using std::tuple;
 
 namespace ore {
 namespace data {
@@ -63,6 +64,8 @@ public:
     Date asofDate() const { return asof_; }
 
     //! Yield Curves
+    Handle<YieldTermStructure> yieldCurve(const YieldCurveType& type, const string& ccy,
+                                             const string& configuration = Market::defaultConfiguration) const;
     Handle<YieldTermStructure> discountCurve(const string& ccy,
                                              const string& configuration = Market::defaultConfiguration) const;
     Handle<YieldTermStructure> yieldCurve(const string& name,
@@ -120,6 +123,11 @@ public:
     //! Equity volatilities
     Handle<BlackVolTermStructure> equityVol(const string& eqName,
                                             const string& configuration = Market::defaultConfiguration) const;
+    
+    //! Equity forecasting curves
+    Handle<YieldTermStructure> equityForecastCurve(const string& eqName, 
+                                                   const string& configuration = Market::defaultConfiguration) const;
+
     //! Bond Spreads
     Handle<Quote> securitySpread(const string& securityID,
                                  const string& configuration = Market::defaultConfiguration) const;
@@ -137,8 +145,7 @@ public:
 protected:
     Date asof_;
     // maps (configuration, key) => term structure
-    map<pair<string, string>, Handle<YieldTermStructure>> discountCurves_;
-    map<pair<string, string>, Handle<YieldTermStructure>> yieldCurves_;
+    map<tuple<string, YieldCurveType, string>, Handle<YieldTermStructure>> yieldCurves_;
     map<pair<string, string>, Handle<IborIndex>> iborIndices_;
     map<pair<string, string>, Handle<SwapIndex>> swapIndices_;
     map<pair<string, string>, Handle<QuantLib::SwaptionVolatilityStructure>> swaptionCurves_;
@@ -154,7 +161,6 @@ protected:
     map<pair<string, string>, Handle<YoYInflationIndex>> yoyInflationIndices_;
     map<pair<string, string>, Handle<CPICapFloorTermPriceSurface>> inflationCapFloorPriceSurfaces_;
     map<pair<string, string>, Handle<Quote>> equitySpots_;
-    map<pair<string, string>, Handle<YieldTermStructure>> equityDividendCurves_;
     map<pair<string, string>, Handle<BlackVolTermStructure>> equityVols_;
     map<pair<string, string>, Handle<Quote>> securitySpreads_;
     Conventions conventions_;

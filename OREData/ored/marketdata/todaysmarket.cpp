@@ -97,24 +97,9 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
         bool swapIndicesBuilt = false;
 
         // Loop over each spec, build the curve and add it to the MarketImpl container.
-        for (const auto& spec : specs) {
+        for (Size count = 0; count < specs.size(); ++count) {
 
-            // Swap Indices
-            // Assumes we build all yield curves before anything else (which order() does)
-            // Once we have a non-Yield curve spec, we make sure to build all swap indices
-            // add add them to requiredSwapIndices for later.
-            if (swapIndicesBuilt == false && spec->baseType() != CurveSpec::CurveType::Yield) {
-                for (const auto& it : params.mapping(MarketObject::SwapIndexCurve, configuration.first)) {
-                    const string& swapIndexName = it.first;
-                    const string& discountIndex = it.second;
-
-                    addSwapIndex(swapIndexName, discountIndex, configuration.first);
-                    LOG("Added SwapIndex " << swapIndexName << " with DiscountingIndex " << discountIndex);
-                    requiredSwapIndices[swapIndexName] = swapIndex(swapIndexName, configuration.first).currentLink();
-                }
-                swapIndicesBuilt = true;
-            }
-
+            auto spec = specs[count];
             LOG("Loading spec " << *spec);
 
             switch (spec->baseType()) {
@@ -141,20 +126,18 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                 }
 
                 // We may have to add this spec multiple times (for discounting, yield and forwarding curves)
-                for (auto& it : params.mapping(MarketObject::DiscountCurve, configuration.first)) {
-                    if (it.second == spec->name()) {
-                        LOG("Adding DiscountCurve(" << it.first << ") with spec " << *ycspec << " to configuration "
-                                                    << configuration.first);
-                        discountCurves_[make_pair(configuration.first, it.first)] = itr->second->handle();
+                vector<YieldCurveType> yieldCurveTypes = {YieldCurveType::Discount, YieldCurveType::Yield};
+                for(auto& y : yieldCurveTypes) {
+                    MarketObject o = static_cast<MarketObject>(y);
+                    for (auto& it : params.mapping(o, configuration.first)) {
+                        if (it.second == spec->name()) {
+                            LOG("Adding YieldCurve(" << it.first << ") with spec " << *ycspec << " to configuration "
+                                                        << configuration.first);
+                            yieldCurves_[make_tuple(configuration.first, y, it.first)] = itr->second->handle();
+                        }
                     }
                 }
-                for (auto& it : params.mapping(MarketObject::YieldCurve, configuration.first)) {
-                    if (it.second == spec->name()) {
-                        LOG("Adding YieldCurve(" << it.first << ") with spec " << *ycspec << " to configuration "
-                                                 << configuration.first);
-                        yieldCurves_[make_pair(configuration.first, it.first)] = itr->second->handle();
-                    }
-                }
+                
                 for (const auto& it : params.mapping(MarketObject::IndexCurve, configuration.first)) {
                     if (it.second == spec->name()) {
                         LOG("Adding Index(" << it.first << ") with spec " << *ycspec << " to configuration "
@@ -485,11 +468,14 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                     if (it.second == spec->name()) {
                         LOG("Adding EquityCurve (" << it.first << ") with spec " << *equityspec << " to configuration "
                                                    << configuration.first);
-                        Handle<YieldTermStructure> discYts = discountCurve(equityspec->ccy(), configuration.first);
+                        Handle<YieldTermStructure> yts;
+                        boost::shared_ptr<EquityCurveConfig> equityConfig = curveConfigs.equityCurveConfig(equityspec->curveConfigID());
                         boost::shared_ptr<YieldTermStructure> divYield =
-                            itr->second->divYieldTermStructure(asof, discYts);
+                            itr->second->divYieldTermStructure(asof);
                         Handle<YieldTermStructure> div_h(divYield);
-                        equityDividendCurves_[make_pair(configuration.first, it.first)] = div_h;
+                        yieldCurves_[make_tuple(configuration.first, YieldCurveType::EquityDividend, it.first)] = div_h;
+                        yieldCurves_[make_tuple(configuration.first, YieldCurveType::EquityForecast, it.first)] = 
+                            itr->second->forecastingYieldTermStructure();
                         equitySpots_[make_pair(configuration.first, it.first)] =
                             Handle<Quote>(boost::make_shared<SimpleQuote>(itr->second->equitySpot()));
                     }
@@ -599,8 +585,26 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                 QL_FAIL("Unhandled spec " << *spec);
             }
             }
+
+            // Swap Indices
+            // Assumes we build all yield curves before anything else (which order() does)
+            // Once we have a non-Yield curve spec, we make sure to build all swap indices
+            // add add them to requiredSwapIndices for later.
+            if (swapIndicesBuilt == false &&
+                (count == specs.size() - 1 || specs[count + 1]->baseType() != CurveSpec::CurveType::Yield)) {
+                std::clog << "building swap indices..." << std::endl;
+                for (const auto& it : params.mapping(MarketObject::SwapIndexCurve, configuration.first)) {
+                    const string& swapIndexName = it.first;
+                    const string& discountIndex = it.second;
+
+                    addSwapIndex(swapIndexName, discountIndex, configuration.first);
+                    LOG("Added SwapIndex " << swapIndexName << " with DiscountingIndex " << discountIndex);
+                    requiredSwapIndices[swapIndexName] = swapIndex(swapIndexName, configuration.first).currentLink();
+                }
+                swapIndicesBuilt = true;
+            }
+
             LOG("Loading spec " << *spec << " done.");
-            count++;
         }
         LOG("Loading " << count << " CurveSpecs done.");
 

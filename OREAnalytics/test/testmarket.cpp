@@ -86,11 +86,11 @@ TestMarket::TestMarket(Date asof) {
     conventions_.add(swapJPYConv);
 
     // build discount
-    discountCurves_[make_pair(Market::defaultConfiguration, "EUR")] = flatRateYts(0.02);
-    discountCurves_[make_pair(Market::defaultConfiguration, "USD")] = flatRateYts(0.03);
-    discountCurves_[make_pair(Market::defaultConfiguration, "GBP")] = flatRateYts(0.04);
-    discountCurves_[make_pair(Market::defaultConfiguration, "CHF")] = flatRateYts(0.01);
-    discountCurves_[make_pair(Market::defaultConfiguration, "JPY")] = flatRateYts(0.005);
+    yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "EUR")] = flatRateYts(0.02);
+    yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "USD")] = flatRateYts(0.03);
+    yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "GBP")] = flatRateYts(0.04);
+    yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "CHF")] = flatRateYts(0.01);
+    yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "JPY")] = flatRateYts(0.005);
 
     // build ibor indices
     vector<pair<string, Real>> indexData = {
@@ -143,9 +143,11 @@ TestMarket::TestMarket(Date asof) {
     equityVols_[make_pair(Market::defaultConfiguration, "SP5")] = flatRateFxv(0.2514);
     equityVols_[make_pair(Market::defaultConfiguration, "Lufthansa")] = flatRateFxv(0.30);
 
-    equityDividendCurves_[make_pair(Market::defaultConfiguration, "SP5")] = flatRateDiv(0.01);
-    equityDividendCurves_[make_pair(Market::defaultConfiguration, "Lufthansa")] = flatRateDiv(0.0);
+    yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::EquityDividend, "SP5")] = flatRateDiv(0.01);
+    yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::EquityDividend, "Lufthansa")] = flatRateDiv(0.0);
 
+    yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::EquityForecast, "SP5")] = flatRateYts(0.03);
+    yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::EquityForecast, "Lufthansa")] = flatRateYts(0.02);
     // build swaption vols
     swaptionCurves_[make_pair(Market::defaultConfiguration, "EUR")] = flatRateSvs(0.20);
     swaptionCurves_[make_pair(Market::defaultConfiguration, "USD")] = flatRateSvs(0.30);
@@ -182,13 +184,13 @@ TestMarket::TestMarket(Date asof) {
     recoveryRates_[make_pair(Market::defaultConfiguration, "BondIssuer1")] =
         Handle<Quote>(boost::make_shared<SimpleQuote>(0.0));
 
-    yieldCurves_[make_pair(Market::defaultConfiguration, "BondCurve1")] = flatRateYts(0.05);
+    yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Yield, "BondCurve1")] = flatRateYts(0.05);
 
     securitySpreads_[make_pair(Market::defaultConfiguration, "Bond1")] =
         Handle<Quote>(boost::make_shared<SimpleQuote>(0.0));
 
     Handle<IborIndex> hGBP(ore::data::parseIborIndex(
-        "GBP-LIBOR-6M", discountCurves_[make_pair(Market::defaultConfiguration, "GBP")]));
+        "GBP-LIBOR-6M", yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "GBP")]));
     iborIndices_[make_pair(Market::defaultConfiguration, "GBP-LIBOR-6M")] = hGBP;
 
     // build UKRPI fixing history
@@ -230,8 +232,8 @@ TestMarket::TestMarket(Date asof) {
     vector<Rate> ratesZCII = { 2.825, 2.9425, 2.975,  2.983, 3.0,  3.01,  3.008,
         3.009, 3.013,  3.0445, 3.044, 3.09, 3.109, 3.108 };
 
-    zeroInflationIndices_[make_pair(Market::defaultConfiguration, "UKRPI")] = makeZeroInflationIndex("UKRPI", datesZCII, ratesZCII, ii, discountCurves_[make_pair(Market::defaultConfiguration, "GBP")]);
-    yoyInflationIndices_[make_pair(Market::defaultConfiguration, "UKRPI")] = makeYoYInflationIndex("UKRPI", datesZCII, ratesZCII, yi, discountCurves_[make_pair(Market::defaultConfiguration, "GBP")]);
+    zeroInflationIndices_[make_pair(Market::defaultConfiguration, "UKRPI")] = makeZeroInflationIndex("UKRPI", datesZCII, ratesZCII, ii, yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "GBP")]);
+    yoyInflationIndices_[make_pair(Market::defaultConfiguration, "UKRPI")] = makeYoYInflationIndex("UKRPI", datesZCII, ratesZCII, yi, yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount,"GBP")]);
 }
 
 Handle<ZeroInflationIndex> TestMarket::makeZeroInflationIndex(string index, vector<Date> dates, vector<Rate> rates, 
@@ -401,9 +403,13 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
     simMarketData->simulateSurvivalProbabilities() = true;
     simMarketData->securities() = {"Bond1"};
 
-    simMarketData->equityNames() = {"SP5", "Lufthansa"};
-    simMarketData->setEquityTenors("SP5", {6 * Months, 1 * Years, 2 * Years});
-    simMarketData->setEquityTenors("Lufthansa", {6 * Months, 1 * Years, 2 * Years});
+    simMarketData->equityNames() = { "SP5", "Lufthansa" };
+    simMarketData->setEquityDividendTenors("SP5", { 6 * Months, 1 * Years, 2 * Years });
+    simMarketData->setEquityDividendTenors("Lufthansa", { 6 * Months, 1 * Years, 2 * Years });
+    simMarketData->setEquityForecastTenors("SP5", {1 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
+                                            5 * Years, 7 * Years, 10 * Years, 15 * Years, 20 * Years, 30 * Years });
+    simMarketData->setEquityForecastTenors("Lufthansa", {1 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 
+                                        4 * Years, 5 * Years, 7 * Years, 10 * Years, 15 * Years, 20 * Years, 30 * Years});
 
     simMarketData->simulateEquityVols() = true;
     simMarketData->equityVolDecayMode() = "ForwardVariance";
@@ -411,6 +417,8 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
     simMarketData->equityVolExpiries() = { 6 * Months, 1 * Years, 2 * Years,  3 * Years,
                                            5 * Years,  7 * Years, 10 * Years, 20 * Years };
     simMarketData->equityVolIsSurface() = false;
+    simMarketData->simulateEquityVolATMOnly() = true;
+    simMarketData->equityVolMoneyness() = {1};
 
     simMarketData->zeroInflationIndices() = { "UKRPI" };
     simMarketData->setZeroInflationTenors("UKRPI", {6 * Months, 1 * Years,  2 * Years,  3 * Years, 5 * Years,
@@ -667,6 +675,9 @@ boost::shared_ptr<ore::analytics::SensitivityScenarioData> TestConfigurationObje
     sensiData->equityVolShiftData()["SP5"] = eqvsData;
     sensiData->equityVolShiftData()["Lufthansa"] = eqvsData;
 
+    sensiData->equityForecastCurveNames() = { "SP5", "Lufthansa" };
+    sensiData->equityForecastCurveShiftData()["SP5"] = cvsData;
+    sensiData->equityForecastCurveShiftData()["Lufthansa"] = cvsData;
     sensiData->zeroInflationIndices() = { "UKRPI" };
     sensiData->zeroInflationCurveShiftData()["UKRPI"] = zinfData;
 

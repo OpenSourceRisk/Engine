@@ -23,12 +23,11 @@
 
 #pragma once
 
-#include <ored/utilities/xmlutils.hpp>
+#include <ored/configuration/curveconfig.hpp>
 #include <ql/types.hpp>
 
 using std::string;
 using std::vector;
-using ore::data::XMLSerializable;
 using ore::data::XMLNode;
 using ore::data::XMLDocument;
 using QuantLib::Period;
@@ -40,7 +39,7 @@ namespace data {
 /*!
   \ingroup configuration
 */
-class CDSVolatilityCurveConfig : public XMLSerializable {
+class CDSVolatilityCurveConfig : public CurveConfig {
 public:
     //! \name Constructors/Destructors
     //@{
@@ -60,20 +59,14 @@ public:
 
     //! \name Inspectors
     //@{
-    const string& curveID() const { return curveID_; }
-    const string& curveDescription() const { return curveDescription_; }
     const vector<string>& expiries() const { return expiries_; }
     //@}
 
     //! \name Setters
     //@{
-    string& curveID() { return curveID_; }
-    string& curveDescription() { return curveDescription_; }
     vector<string>& expiries() { return expiries_; }
     //@}
 private:
-    string curveID_;
-    string curveDescription_;
     vector<string> expiries_;
 };
 } // namespace data

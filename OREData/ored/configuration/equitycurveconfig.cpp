@@ -24,17 +24,18 @@
 namespace ore {
 namespace data {
 
-EquityCurveConfig::EquityCurveConfig(const string& curveID, const string& curveDescription, const string& currency,
-                                     const EquityCurveConfig::Type& type, const string& equitySpotQuote,
+EquityCurveConfig::EquityCurveConfig(const string& curveID, const string& curveDescription, const string& forecastingCurve, 
+                                     const string& currency, const EquityCurveConfig::Type& type, const string& equitySpotQuote,
                                      const vector<string>& quotes, const string& dayCountID, bool extrapolation)
-    : curveID_(curveID), curveDescription_(curveDescription), currency_(currency), type_(type),
-      equitySpotQuoteID_(equitySpotQuote), quotes_(quotes), dayCountID_(dayCountID), extrapolation_(extrapolation) {}
+    : CurveConfig(curveID, curveDescription), currency_(currency), type_(type),
+      equitySpotQuoteID_(equitySpotQuote), quotes_(quotes), dayCountID_(dayCountID), extrapolation_(extrapolation), forecastingCurve_(forecastingCurve) {}
 
 void EquityCurveConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "EquityCurve");
 
     curveID_ = XMLUtils::getChildValue(node, "CurveId", true);
     curveDescription_ = XMLUtils::getChildValue(node, "CurveDescription", true);
+    forecastingCurve_ = XMLUtils::getChildValue(node, "ForecastingCurve", true);
     currency_ = XMLUtils::getChildValue(node, "Currency", true);
 
     string type = XMLUtils::getChildValue(node, "Type", true);
@@ -57,6 +58,7 @@ XMLNode* EquityCurveConfig::toXML(XMLDocument& doc) {
 
     XMLUtils::addChild(doc, node, "CurveId", curveID_);
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
+    XMLUtils::addChild(doc, node, "ForecastingCurve", forecastingCurve_);
     XMLUtils::addChild(doc, node, "Currency", currency_);
 
     if (type_ == Type::DividendYield)
