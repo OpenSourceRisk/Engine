@@ -29,7 +29,7 @@ PaymentDiscountingEngine::PaymentDiscountingEngine(const Handle<YieldTermStructu
       settlementDate_(settlementDate), npvDate_(npvDate) {
     QL_REQUIRE(!discountCurve_.empty(), "empty discount curve");
     registerWith(discountCurve_);
-    if (!spotFXempty())
+    if (!spotFX.empty())
         registerWith(spotFX);
 }
 
@@ -62,7 +62,7 @@ void PaymentDiscountingEngine::calculate() const {
         includeSettlementDateFlows_ ? *includeSettlementDateFlows_ : Settings::instance().includeReferenceDateEvents();
 
     Real NPV = 0.0;
-    if (arguments_.cashflow->hasOccurred(settlementDate, includeSettlementDateFlows_))
+    if (!arguments_.cashflow->hasOccurred(settlementDate, includeRefDateFlows))
         NPV = arguments_.cashflow->amount() * discountCurve_->discount(arguments_.cashflow->date());
 
     if (!spotFX_.empty())

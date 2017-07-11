@@ -227,6 +227,7 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
     std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
     if (option_.premiumPayDate() != "" && option_.premiumCcy() != "") {
+        Real multiplier = positionType == Position::Long ? multiplier = 1.0 : -1.0;
         Real premiumAmount = -multiplier * option_.premium(); // pay if long, receive if short
         Currency premiumCurrency = parseCurrency(option_.premiumCcy());
         Date premiumDate = parseDate(option_.premiumPayDate());

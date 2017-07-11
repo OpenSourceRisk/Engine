@@ -69,7 +69,22 @@ void FxOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
     Real mult = boughtAmount_ * bsInd;
 
-    instrument_ = boost::shared_ptr<InstrumentWrapper>(new VanillaInstrument(vanilla, mult));
+    // If premium data is provided
+    // 1) build the fee trade and pass it to the instrument wrapper for pricing
+    // 2) add fee payment as additional trade leg for cash flow reporting
+    std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
+    std::vector<Real> additionalMultipliers;
+    if (option_.premiumPayDate() != "" && option_.premiumCcy() != "") {
+        Real premiumAmount = -bsInd * option_.premium(); // pay if long, receive if short
+        Currency premiumCurrency = parseCurrency(option_.premiumCcy());
+        Date premiumDate = parseDate(option_.premiumPayDate());
+	// soldCcy is the NpvCcy, see below
+        addPayment(additionalInstruments, additionalMultipliers, premiumDate, premiumAmount, premiumCurrency, soldCcy,
+                   engineFactory, fxOptBuilder->configuration(MarketContext::pricing));
+    }
+
+    instrument_ = boost::shared_ptr<InstrumentWrapper>(
+        new VanillaInstrument(vanilla, mult, additionalInstruments, additionalMultipliers));
 
     npvCurrency_ = soldCurrency_; // sold is the domestic
     notional_ = soldAmount_;
