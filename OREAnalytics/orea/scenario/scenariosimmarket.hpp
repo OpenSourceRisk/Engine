@@ -58,7 +58,8 @@ public:
 class ScenarioSimMarket : public analytics::SimMarket {
 public:
     //! Constructor
-    ScenarioSimMarket(const boost::shared_ptr<ScenarioGenerator>& scenarioGenerator, const boost::shared_ptr<Market>& initMarket,
+    ScenarioSimMarket(const boost::shared_ptr<ScenarioGenerator>& scenarioGenerator,
+                      const boost::shared_ptr<Market>& initMarket,
                       const boost::shared_ptr<ScenarioSimMarketParameters>& parameters, const Conventions& conventions,
                       const std::string& configuration = Market::defaultConfiguration);
 
@@ -79,6 +80,9 @@ public:
     const boost::shared_ptr<FixingManager>& fixingManager() const override { return fixingManager_; }
 
 private:
+    void addYieldCurve(const boost::shared_ptr<Market>& initMarket, const std::string& configuration,
+                       const ore::data::YieldCurveType y, const string& key, const
+                       vector<Period>& tenors);
     const boost::shared_ptr<ScenarioGenerator> scenarioGenerator_;
     const boost::shared_ptr<ScenarioSimMarketParameters> parameters_;
     boost::shared_ptr<AggregationScenarioData> asd_;
