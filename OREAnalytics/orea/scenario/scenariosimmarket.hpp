@@ -58,8 +58,8 @@ public:
 class ScenarioSimMarket : public analytics::SimMarket {
 public:
     //! Constructor
-    ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scenarioGenerator, boost::shared_ptr<Market>& initMarket,
-                      boost::shared_ptr<ScenarioSimMarketParameters>& parameters, Conventions conventions,
+    ScenarioSimMarket(const boost::shared_ptr<ScenarioGenerator>& scenarioGenerator, const boost::shared_ptr<Market>& initMarket,
+                      const boost::shared_ptr<ScenarioSimMarketParameters>& parameters, const Conventions& conventions,
                       const std::string& configuration = Market::defaultConfiguration);
 
     //! Set aggregation data
@@ -79,8 +79,8 @@ public:
     const boost::shared_ptr<FixingManager>& fixingManager() const override { return fixingManager_; }
 
 private:
-    boost::shared_ptr<ScenarioGenerator> scenarioGenerator_;
-    boost::shared_ptr<ScenarioSimMarketParameters> parameters_;
+    const boost::shared_ptr<ScenarioGenerator> scenarioGenerator_;
+    const boost::shared_ptr<ScenarioSimMarketParameters> parameters_;
     boost::shared_ptr<AggregationScenarioData> asd_;
     boost::shared_ptr<FixingManager> fixingManager_;
     boost::shared_ptr<ScenarioFilter> filter_;
