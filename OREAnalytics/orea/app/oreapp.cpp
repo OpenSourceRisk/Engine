@@ -556,7 +556,7 @@ void OREApp::writeBaseScenario() {
 
     boost::shared_ptr<Scenario> scenario = shiftGenerator->baseScenario();
     QL_REQUIRE(scenario->asof() == today, "dates do not match");
-    
+
     string outputPath = params_->get("setup", "outputPath");
     string outputFile = outputPath + "/" + params_->get("baseScenario", "outputFileName");
 
@@ -569,21 +569,27 @@ void OREApp::writeBaseScenario() {
     std::vector<RiskFactorKey> keys = scenario->keys();
     std::sort(keys.begin(), keys.end());
 
-    FILE* f = fopen(outputFile.c_str(), "w+");
+    bool append = parseBool(params_->get("baseScenario", "append"));
+    string mode = append ? "a+" : "w+";
+    FILE* f = fopen(outputFile.c_str(), mode.c_str());
     QL_REQUIRE(f, "error opening file " << outputFile);
 
-    // write header
     QL_REQUIRE(keys.size() > 0, "No keys in scenario");
-    fprintf(f, "Date%cScenario%cNumeraire%c%s", sep, sep, sep, to_string(keys[0]).c_str());
-    for (Size i = 1; i < keys.size(); i++)
-        fprintf(f, "%c%s", sep, to_string(keys[i]).c_str());
-    fprintf(f, "\n");
+
+    // write header
+    bool header = parseBool(params_->get("baseScenario", "header"));
+    if (header) {
+        fprintf(f, "Date%cScenario%cNumeraire%c%s", sep, sep, sep, to_string(keys[0]).c_str());
+        for (Size i = 1; i < keys.size(); i++)
+            fprintf(f, "%c%s", sep, to_string(keys[i]).c_str());
+        fprintf(f, "\n");
+    }
 
     // write data
     Size i = 1;
     fprintf(f, "%s%c%zu%c%.8f", to_string(today).c_str(), sep, i, sep, scenario->getNumeraire());
     for (auto k : keys)
-      fprintf(f, "%c%.8f", sep, scenario->get(k));
+        fprintf(f, "%c%.8f", sep, scenario->get(k));
     fprintf(f, "\n");
     fflush(f);
 
