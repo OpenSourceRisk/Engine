@@ -592,6 +592,7 @@ void OREApp::writeBaseScenario() {
         fprintf(f, "%c%.8f", sep, scenario->get(k));
     fprintf(f, "\n");
     fflush(f);
+    fclose(f);
 
     DLOG("Base scenario written to file " << outputFile);
 }
