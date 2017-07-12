@@ -30,8 +30,6 @@
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
-#include <ql/indexes/inflation/ukrpi.hpp>
-#include <qle/indexes/inflationindexwrapper.hpp>
 
 using namespace QuantLib;
 using namespace ore::data;

@@ -21,6 +21,8 @@
 #include <ql/termstructures/inflation/piecewisezeroinflationcurve.hpp>
 #include <ql/termstructures/inflation/piecewiseyoyinflationcurve.hpp>
 #include <ql/time/calendars/target.hpp>
+#include <ql/indexes/inflation/ukrpi.hpp>
+#include <qle/indexes/inflationindexwrapper.hpp>
 #include <boost/make_shared.hpp>
 namespace testsuite {
 
