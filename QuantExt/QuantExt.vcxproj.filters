@@ -474,7 +474,9 @@
     <ClInclude Include="qle\math\stabilisedglls.hpp">
       <Filter>math</Filter>
     </ClInclude>
-    <ClInclude Include="qle\termstructures\equityvolconstantspread.hpp" />
+    <ClInclude Include="qle\termstructures\equityvolconstantspread.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">

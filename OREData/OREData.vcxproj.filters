@@ -357,7 +357,12 @@
     <ClInclude Include="ored\model\modelbuilder.hpp">
       <Filter>model</Filter>
     </ClInclude>
-    <ClInclude Include="ored\utilities\csvfilereader.hpp" />
+    <ClInclude Include="ored\configuration\curveconfig.hpp">
+      <Filter>configuration</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\utilities\csvfilereader.hpp">
+      <Filter>utilities</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp">
@@ -624,6 +629,8 @@
     <ClCompile Include="ored\portfolio\creditdefaultswapdata.cpp">
       <Filter>portfolio</Filter>
     </ClCompile>
-    <ClCompile Include="ored\utilities\csvfilereader.cpp" />
+    <ClCompile Include="ored\utilities\csvfilereader.cpp">
+      <Filter>utilities</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
