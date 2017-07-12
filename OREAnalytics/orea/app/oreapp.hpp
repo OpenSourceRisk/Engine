@@ -111,6 +111,8 @@ public:
     void writeCube();
     //! write out scenarioData
     void writeScenarioData();
+    //! write out base scenario
+    void writeBaseScenario();
     //! load in nettingSet data
     boost::shared_ptr<NettingSetManager> initNettingSetManager();
 
@@ -139,6 +141,7 @@ protected:
     bool writeDIMReport_;
     bool sensitivity_;
     bool stress_;
+    bool writeBaseScenario_;
 
     boost::shared_ptr<Market> market_;
     boost::shared_ptr<Portfolio> portfolio_;
