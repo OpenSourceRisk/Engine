@@ -41,6 +41,7 @@
     <ClInclude Include="ored\configuration\capfloorvolcurveconfig.hpp" />
     <ClInclude Include="ored\configuration\cdsvolcurveconfig.hpp" />
     <ClInclude Include="ored\configuration\conventions.hpp" />
+    <ClInclude Include="ored\configuration\curveconfig.hpp" />
     <ClInclude Include="ored\configuration\curveconfigurations.hpp" />
     <ClInclude Include="ored\configuration\defaultcurveconfig.hpp" />
     <ClInclude Include="ored\configuration\equitycurveconfig.hpp" />

@@ -613,6 +613,7 @@
     <ClInclude Include="qle\termstructures\dynamicoptionletvolatilitystructure.hpp" />
     <ClInclude Include="qle\termstructures\dynamicstype.hpp" />
     <ClInclude Include="qle\termstructures\dynamicswaptionvolmatrix.hpp" />
+    <ClInclude Include="qle\termstructures\equityvolconstantspread.hpp" />
     <ClInclude Include="qle\termstructures\fxblackvolsurface.hpp" />
     <ClInclude Include="qle\termstructures\fxsmilesection.hpp" />
     <ClInclude Include="qle\termstructures\fxvannavolgasmilesection.hpp" />

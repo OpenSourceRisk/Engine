@@ -357,6 +357,9 @@
     <ClInclude Include="ored\model\modelbuilder.hpp">
       <Filter>model</Filter>
     </ClInclude>
+    <ClInclude Include="ored\configuration\curveconfig.hpp">
+      <Filter>configuration</Filter>
+    </ClInclude>
     <ClInclude Include="ored\utilities\csvfilereader.hpp">
       <Filter>utilities</Filter>
     </ClInclude>

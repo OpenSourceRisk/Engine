@@ -480,6 +480,9 @@
     <ClInclude Include="qle\pricingengines\paymentdiscountingengine.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\equityvolconstantspread.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
