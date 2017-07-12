@@ -135,6 +135,7 @@
     <ClInclude Include="ored\report\report.hpp" />
     <ClInclude Include="ored\utilities\all.hpp" />
     <ClInclude Include="ored\utilities\correlationmatrix.hpp" />
+    <ClInclude Include="ored\utilities\csvfilereader.hpp" />
     <ClInclude Include="ored\utilities\currencycheck.hpp" />
     <ClInclude Include="ored\utilities\flowanalysis.hpp" />
     <ClInclude Include="ored\utilities\indexparser.hpp" />
@@ -228,6 +229,7 @@
     <ClCompile Include="ored\portfolio\tradefactory.cpp" />
     <ClCompile Include="ored\report\csvreport.cpp" />
     <ClCompile Include="ored\utilities\correlationmatrix.cpp" />
+    <ClCompile Include="ored\utilities\csvfilereader.cpp" />
     <ClCompile Include="ored\utilities\currencycheck.cpp" />
     <ClCompile Include="ored\utilities\flowanalysis.cpp" />
     <ClCompile Include="ored\utilities\indexparser.cpp" />

@@ -474,6 +474,12 @@
     <ClInclude Include="qle\termstructures\fxvannavolgasmilesection.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
+    <ClInclude Include="qle\instruments\payment.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\paymentdiscountingengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -790,17 +796,17 @@
     <ClCompile Include="qle\termstructures\defaultprobabilityhelpers.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
-    <ClCompile Include="qle\termstructures\zeroinflationcurveobserver.cpp">
-      <Filter>termstructures</Filter>
-    </ClCompile>
-    <ClCompile Include="qle\termstructures\yoyinflationcurveobserver.cpp">
-      <Filter>termstructures</Filter>
-    </ClCompile>
     <ClCompile Include="qle\termstructures\fxblackvolsurface.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
     <ClCompile Include="qle\termstructures\fxvannavolgasmilesection.cpp">
       <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\payment.cpp">
+      <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\paymentdiscountingengine.cpp">
+      <Filter>pricingengines</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
