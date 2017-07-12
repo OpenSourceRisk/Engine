@@ -20,6 +20,7 @@
 #include <ored/portfolio/builders/fxoption.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/fxoption.hpp>
+#include <ored/utilities/log.hpp>
 #include <ql/errors.hpp>
 #include <ql/exercise.hpp>
 #include <ql/instruments/compositeinstrument.hpp>
@@ -81,6 +82,7 @@ void FxOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 	// soldCcy is the NpvCcy, see below
         addPayment(additionalInstruments, additionalMultipliers, premiumDate, premiumAmount, premiumCurrency, soldCcy,
                    engineFactory, fxOptBuilder->configuration(MarketContext::pricing));
+	DLOG("option premium added for fx option " << id()); 
     }
 
     instrument_ = boost::shared_ptr<InstrumentWrapper>(

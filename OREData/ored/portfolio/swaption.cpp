@@ -111,6 +111,7 @@ void Swaption::buildEuropean(const boost::shared_ptr<EngineFactory>& engineFacto
         Date premiumDate = parseDate(option_.premiumPayDate());
         addPayment(additionalInstruments, additionalMultipliers, premiumDate, premiumAmount, premiumCurrency, currency,
                    engineFactory, swaptionBuilder->configuration(MarketContext::pricing));
+	DLOG("option premium added for european swaption " << id()); 
     }
 
     // Now set the instrument wrapper, depending on delivery
@@ -233,6 +234,7 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
         Date premiumDate = parseDate(option_.premiumPayDate());
         addPayment(additionalInstruments, additionalMultipliers, premiumDate, premiumAmount, premiumCurrency, currency,
                    engineFactory, swaptionBuilder->configuration(MarketContext::pricing));
+	DLOG("option premium added for bermudan swaption " << id()); 
     }
 
     // instrument_ = boost::shared_ptr<InstrumentWrapper> (new VanillaInstrument (swaption, multiplier));

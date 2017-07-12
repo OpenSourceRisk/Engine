@@ -80,6 +80,7 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
         Date premiumDate = parseDate(option_.premiumPayDate());
         addPayment(additionalInstruments, additionalMultipliers, premiumDate, premiumAmount, premiumCurrency, ccy,
                    engineFactory, eqOptBuilder->configuration(MarketContext::pricing));
+	DLOG("option premium added for eq option " << id()); 
     }
 
     instrument_ = boost::shared_ptr<InstrumentWrapper>(new VanillaInstrument(vanilla, mult, additionalInstruments, additionalMultipliers));
