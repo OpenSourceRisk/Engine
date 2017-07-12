@@ -23,6 +23,7 @@
 
 #include <orea/engine/observationmode.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
+#include <orea/scenario/simplescenario.hpp>
 #include <ql/experimental/credit/basecorrelationstructure.hpp>
 #include <ql/math/interpolations/loginterpolation.hpp>
 #include <ql/termstructures/credit/interpolatedsurvivalprobabilitycurve.hpp>
@@ -870,8 +871,45 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<ScenarioGenerator>&
         yoyInflationIndices_.insert(
             pair<pair<string, string>, Handle<YoYInflationIndex>>(make_pair(Market::defaultConfiguration, yic), zh));
     }
-
     LOG("yoy inflation curves done");
+
+    LOG("building base scenario");
+    baseScenario_ = boost::make_shared<SimpleScenario>(initMarket->asofDate());
+    baseScenario_->setNumeraire(1.0);
+    for (auto const& data : simData_) {
+        baseScenario_->add(data.first, data.second->value());
+    }
+    LOG("building base scenario done");
+}
+
+void ScenarioSimMarket::applyScenario(const boost::shared_ptr<Scenario>& scenario) {
+    const vector<RiskFactorKey>& keys = scenario->keys();
+
+    Size count = 0;
+    bool missingPoint = false;
+    for (const auto& key : keys) {
+        // TODO: Is this really an error?
+        auto it = simData_.find(key);
+        if (it == simData_.end()) {
+            ALOG("simulation data point missing for key " << key);
+            missingPoint = true;
+        } else {
+            // LOG("simulation data point found for key " << key);
+            if (filter_->allow(key))
+                it->second->setValue(scenario->get(key));
+            count++;
+        }
+    }
+    QL_REQUIRE(!missingPoint, "simulation data points missing from scenario, exit.");
+
+    if (count != simData_.size()) {
+        ALOG("mismatch between scenario and sim data size, " << count << " vs " << simData_.size());
+        for (auto it : simData_) {
+            if (!scenario->has(it.first))
+                ALOG("Key " << it.first << " missing in scenario");
+        }
+        QL_FAIL("mismatch between scenario and sim data size, exit.");
+    }
 }
 
 void ScenarioSimMarket::update(const Date& d) {
@@ -900,33 +938,7 @@ void ScenarioSimMarket::update(const Date& d) {
         obs->notifyObservers();
     }
 
-    const vector<RiskFactorKey>& keys = scenario->keys();
-
-    Size count = 0;
-    bool missingPoint = false;
-    for (const auto& key : keys) {
-        // TODO: Is this really an error?
-        auto it = simData_.find(key);
-        if (it == simData_.end()) {
-            ALOG("simulation data point missing for key " << key);
-            missingPoint = true;
-        } else {
-            // LOG("simulation data point found for key " << key);
-            if (filter_->allow(key))
-                it->second->setValue(scenario->get(key));
-            count++;
-        }
-    }
-    QL_REQUIRE(!missingPoint, "simulation data points missing from scenario, exit.");
-
-    if (count != simData_.size()) {
-        ALOG("mismatch between scenario and sim data size, " << count << " vs " << simData_.size());
-        for (auto it : simData_) {
-            if (!scenario->has(it.first))
-                ALOG("Key " << it.first << " missing in scenario");
-        }
-        QL_FAIL("mismatch between scenario and sim data size, exit.");
-    }
+    applyScenario(scenario);
 
     // Observation Mode - key to update these before fixings are set
     if (om == ObservationMode::Mode::Disable) {
@@ -956,5 +968,6 @@ void ScenarioSimMarket::update(const Date& d) {
 
     // DLOG("ScenarioSimMarket::update done");
 }
+
 } // namespace analytics
 } // namespace ore
