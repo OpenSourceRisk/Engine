@@ -829,7 +829,6 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<ScenarioGenerator>&
         Handle<YoYInflationIndex> yoyInflationIndex = initMarket->yoyInflationIndex(yic, configuration);
         Handle<YoYInflationTermStructure> yoyInflationTs = yoyInflationIndex->yoyInflationTermStructure();
         vector<string> keys(parameters->yoyInflationTenors(yic).size());
-        BusinessDayConvention bdc = ModifiedFollowing;
 
         vector<Date> yoyCurveDates;
         yoyCurveDates.push_back(asof_ - yoyInflationTs->observationLag());
@@ -873,8 +872,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<ScenarioGenerator>&
     LOG("yoy inflation curves done");
 
     LOG("building base scenario");
-    baseScenario_ = boost::make_shared<SimpleScenario>(initMarket->asofDate());
-    baseScenario_->setNumeraire(1.0);
+    baseScenario_ = boost::make_shared<SimpleScenario>(initMarket->asofDate(), "BASE", 1.0);
     for (auto const& data : simData_) {
         baseScenario_->add(data.first, data.second->value());
     }
@@ -917,6 +915,8 @@ void ScenarioSimMarket::reset() {
     filter_ = boost::make_shared<ScenarioFilter>();
     // reset eval date
     Settings::instance().evaluationDate() = baseScenario_->asof();
+    // reset numeraire
+    numeraire_ = baseScenario_->getNumeraire();
     // reset term structures
     applyScenario(baseScenario_);
     // see the comment in update() for why this is necessary...
