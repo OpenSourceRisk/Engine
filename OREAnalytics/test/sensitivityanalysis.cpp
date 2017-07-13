@@ -143,6 +143,8 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
                                          "30/360", "6M", "A360", "EUR-EURIBOR-6M", "Physical"));
     portfolio->add(buildEuropeanSwaption("6_Swaption_EUR", "Long", "EUR", true, 1000000.0, 2, 5, 0.03, 0.00, "1Y",
                                          "30/360", "6M", "A360", "EUR-EURIBOR-6M", "Physical"));
+    portfolio->add(buildEuropeanSwaption("17_Swaption_EUR", "Long", "EUR", true, 1000000.0, 2, 5, 0.03, 0.00, "1Y",
+                                         "30/360", "6M", "A360", "EUR-EURIBOR-6M", "Physical", 1200.0, "EUR", "2016-04-14"));
     portfolio->add(buildBermudanSwaption("13_Swaption_EUR", "Long", "EUR", true, 1000000.0, 5, 2, 10, 0.03, 0.00, "1Y",
                                          "30/360", "6M", "A360", "EUR-EURIBOR-6M"));
     portfolio->add(buildFxOption("7_FxOption_EUR_USD", "Long", "Call", 3, "EUR", 10000000.0, "USD", 11000000.0));
@@ -1844,24 +1846,24 @@ void SensitivityAnalysisTest::testCrossGamma() {
 
 test_suite* SensitivityAnalysisTest::suite() {
     // Uncomment the below to get detailed output TODO: custom logger that uses BOOST_MESSAGE
-    // boost::shared_ptr<ore::data::FileLogger> logger = boost::make_shared<ore::data::FileLogger>("sensitivity.log");
-    // ore::data::Log::instance().removeAllLoggers();
-    // ore::data::Log::instance().registerLogger(logger);
-    // ore::data::Log::instance().switchOn();
-    // ore::data::Log::instance().setMask(255);
+    boost::shared_ptr<ore::data::FileLogger> logger = boost::make_shared<ore::data::FileLogger>("sensitivity.log");
+    ore::data::Log::instance().removeAllLoggers();
+    ore::data::Log::instance().registerLogger(logger);
+    ore::data::Log::instance().switchOn();
+    ore::data::Log::instance().setMask(255);
 
     test_suite* suite = BOOST_TEST_SUITE("SensitivityAnalysisTest");
     // Set the Observation mode here
-    suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::test1dShiftsSparse));
-    suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::test1dShiftsGranular));
-    suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::test2dShifts));
+    // suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::test1dShiftsSparse));
+    // suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::test1dShiftsGranular));
+    // suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::test2dShifts));
     suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testPortfolioSensitivityNoneObs));
-    suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testPortfolioSensitivityDisableObs));
-    suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testPortfolioSensitivityDeferObs));
-    suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testPortfolioSensitivityUnregisterObs));
-    suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testFxOptionDeltaGamma));
-    suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testEquityOptionDeltaGamma));
-    suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testCrossGamma));
+    // suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testPortfolioSensitivityDisableObs));
+    // suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testPortfolioSensitivityDeferObs));
+    // suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testPortfolioSensitivityUnregisterObs));
+    // suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testFxOptionDeltaGamma));
+    // suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testEquityOptionDeltaGamma));
+    // suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testCrossGamma));
     return suite;
 }
 } // namespace testsuite
