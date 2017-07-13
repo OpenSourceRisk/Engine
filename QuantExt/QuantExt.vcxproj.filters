@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClInclude Include="qle\quantext.hpp" />
@@ -158,12 +158,6 @@
     </ClInclude>
     <ClInclude Include="qle\instruments\oiccbasisswap.hpp">
       <Filter>instruments</Filter>
-    </ClInclude>
-    <ClInclude Include="qle\math\all.hpp">
-      <Filter>math</Filter>
-    </ClInclude>
-    <ClInclude Include="qle\math\flatextrapolation.hpp">
-      <Filter>math</Filter>
     </ClInclude>
     <ClInclude Include="qle\models\all.hpp">
       <Filter>models</Filter>
@@ -333,12 +327,6 @@
     <ClInclude Include="qle\termstructures\spreadedswaptionvolatility.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
-    <ClInclude Include="qle\math\nadarayawatson.hpp">
-      <Filter>math</Filter>
-    </ClInclude>
-    <ClInclude Include="qle\math\cumulativenormaldistribution.hpp">
-      <Filter>math</Filter>
-    </ClInclude>
     <ClInclude Include="qle\termstructures\dynamicstype.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
@@ -386,9 +374,6 @@
     </ClInclude>
     <ClInclude Include="qle\pricingengines\analyticxassetlgmeqoptionengine.hpp">
       <Filter>pricingengines</Filter>
-    </ClInclude>
-    <ClInclude Include="qle\math\stabilisedglls.hpp">
-      <Filter>math</Filter>
     </ClInclude>
     <ClInclude Include="qle\models\fxeqoptionhelper.hpp">
       <Filter>models</Filter>
@@ -473,6 +458,27 @@
     </ClInclude>
     <ClInclude Include="qle\termstructures\fxvannavolgasmilesection.hpp">
       <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\instruments\payment.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\paymentdiscountingengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\math\all.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\math\cumulativenormaldistribution.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\math\flatextrapolation.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\math\nadarayawatson.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\math\stabilisedglls.hpp">
+      <Filter>math</Filter>
     </ClInclude>
     <ClInclude Include="qle\termstructures\equityvolconstantspread.hpp">
       <Filter>termstructures</Filter>
@@ -798,6 +804,12 @@
     </ClCompile>
     <ClCompile Include="qle\termstructures\fxvannavolgasmilesection.cpp">
       <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\payment.cpp">
+      <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\paymentdiscountingengine.cpp">
+      <Filter>pricingengines</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

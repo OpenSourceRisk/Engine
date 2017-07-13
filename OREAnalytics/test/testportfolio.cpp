@@ -74,7 +74,7 @@ boost::shared_ptr<Trade> buildSwap(string id, string ccy, bool isPayer, Real not
 boost::shared_ptr<Trade> buildEuropeanSwaption(string id, string longShort, string ccy, bool isPayer, Real notional,
                                                int start, Size term, Real rate, Real spread, string fixedFreq,
                                                string fixedDC, string floatFreq, string floatDC, string index,
-                                               string cashPhysical) {
+                                               string cashPhysical, Real premium, string premiumCcy, string premiumDate) {
 
     Date today = Settings::instance().evaluationDate();
     Calendar calendar = TARGET();
@@ -108,7 +108,7 @@ boost::shared_ptr<Trade> buildEuropeanSwaption(string id, string longShort, stri
     legs.push_back(fixedLeg);
     legs.push_back(floatingLeg);
     // option data
-    OptionData option(longShort, "Call", "European", false, vector<string>(1, startDate), cashPhysical);
+    OptionData option(longShort, "Call", "European", false, vector<string>(1, startDate), cashPhysical, premium, premiumCcy, premiumDate);
     // trade
     boost::shared_ptr<Trade> trade(new ore::data::Swaption(env, option, legs));
     trade->id() = id;
@@ -119,7 +119,7 @@ boost::shared_ptr<Trade> buildEuropeanSwaption(string id, string longShort, stri
 boost::shared_ptr<Trade> buildBermudanSwaption(string id, string longShort, string ccy, bool isPayer, Real notional,
                                                Size exercises, int start, Size term, Real rate, Real spread,
                                                string fixedFreq, string fixedDC, string floatFreq, string floatDC,
-                                               string index, string cashPhysical) {
+                                               string index, string cashPhysical, Real premium, string premiumCcy, string premiumDate) {
 
     Date today = Settings::instance().evaluationDate();
     Calendar calendar = TARGET();
@@ -159,7 +159,7 @@ boost::shared_ptr<Trade> buildBermudanSwaption(string id, string longShort, stri
     legs.push_back(fixedLeg);
     legs.push_back(floatingLeg);
     // option data
-    OptionData option(longShort, "Call", "Bermudan", false, exerciseDates, cashPhysical);
+    OptionData option(longShort, "Call", "Bermudan", false, exerciseDates, cashPhysical, premium, premiumCcy, premiumDate);
     // trade
     boost::shared_ptr<Trade> trade(new ore::data::Swaption(env, option, legs));
     trade->id() = id;
@@ -168,7 +168,7 @@ boost::shared_ptr<Trade> buildBermudanSwaption(string id, string longShort, stri
 }
 
 boost::shared_ptr<Trade> buildFxOption(string id, string longShort, string putCall, Size expiry, string boughtCcy,
-                                       Real boughtAmount, string soldCcy, Real soldAmount) {
+                                       Real boughtAmount, string soldCcy, Real soldAmount, Real premium, string premiumCcy, string premiumDate) {
     Date today = Settings::instance().evaluationDate();
     Calendar calendar = TARGET();
     string cal = "TARGET";
@@ -181,7 +181,7 @@ boost::shared_ptr<Trade> buildFxOption(string id, string longShort, string putCa
     // envelope
     Envelope env("CP");
     // option data
-    OptionData option(longShort, putCall, "European", false, vector<string>(1, expiryDate), "Cash");
+    OptionData option(longShort, putCall, "European", false, vector<string>(1, expiryDate), "Cash", premium, premiumCcy, premiumDate);
     // trade
     boost::shared_ptr<Trade> trade(new ore::data::FxOption(env, option, boughtCcy, boughtAmount, soldCcy, soldAmount));
     trade->id() = id;
@@ -190,7 +190,7 @@ boost::shared_ptr<Trade> buildFxOption(string id, string longShort, string putCa
 }
 
 boost::shared_ptr<Trade> buildEquityOption(string id, string longShort, string putCall, Size expiry, string equityName,
-                                           string currency, Real strike, Real quantity) {
+                                           string currency, Real strike, Real quantity, Real premium, string premiumCcy, string premiumDate) {
     Date today = Settings::instance().evaluationDate();
     Calendar calendar = TARGET();
     string cal = "TARGET";
@@ -203,7 +203,7 @@ boost::shared_ptr<Trade> buildEquityOption(string id, string longShort, string p
     // envelope
     Envelope env("CP");
     // option data
-    OptionData option(longShort, putCall, "European", false, vector<string>(1, expiryDate), "Cash");
+    OptionData option(longShort, putCall, "European", false, vector<string>(1, expiryDate), "Cash", premium, premiumCcy, premiumDate);
     // trade
     boost::shared_ptr<Trade> trade(new ore::data::EquityOption(env, option, equityName, currency, strike, quantity));
     trade->id() = id;

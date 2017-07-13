@@ -256,6 +256,10 @@
     <Id>SEK-3M-FRA</Id>
     <Index>SEK-STIBOR-3M</Index>
   </FRA>
+  <FRA>
+    <Id>JPY-6M-FRA-CONVENTIONS</Id>
+    <Index>JPY-LIBOR-6M</Index>
+  </FRA>
   <!-- Interest Rate Swaps -->
   <SwapIndex>
     <Id>EUR-CMS-1Y</Id>

@@ -123,6 +123,16 @@ protected:
     QuantLib::Real notional_;
     Date maturity_;
 
+    // Utility to add a single (fee, option premium, etc.) payment such that it is taken into account in pricing and
+    // cash flow projection. For example, an option premium flow is not covered by the underlying option instrument in
+    // QuantLib and needs to be represented separately. This is done by inserting it as an additional instrument
+    // into the InstrumentWrapper. This utility creates the additional instrument. The actual insertion into the
+    // instrument wrapper is done in the individual trade builders when they instantiate the InstrumentWrapper.
+    void addPayment(std::vector<boost::shared_ptr<Instrument>>& instruments, std::vector<Real>& multipliers,
+                    const Date& paymentDate, const Real& paymentAmount, const Currency& paymentCurrency,
+                    const Currency& tradeCurrency, const boost::shared_ptr<EngineFactory>& factory,
+                    const string& configuration);
+
 private:
     string id_;
     Envelope envelope_;

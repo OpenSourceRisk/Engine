@@ -179,7 +179,7 @@ public:
     YoYLegData(string index, string observationLag, bool interpolated, Size fixingDays, 
                const vector<double>& gearings = std::vector<double>(), const vector<string>& gearingDates = std::vector<string>(), 
                const vector<double>& spreads = std::vector<double>(), const vector<string>& spreadDates = std::vector<string>())
-        : index_(index), interpolated_(interpolated), fixingDays_(fixingDays), gearings_(gearings), observationLag_(observationLag),
+        : index_(index), observationLag_(observationLag), interpolated_(interpolated), fixingDays_(fixingDays), gearings_(gearings), 
           gearingDates_(gearingDates), spreads_(spreads), spreadDates_(spreadDates) {}
 
     const string index() const { return index_; }

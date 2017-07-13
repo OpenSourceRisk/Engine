@@ -62,6 +62,7 @@ using boost::unit_test::test_suite;
 #include "survivalprobabilitycurve.hpp"
 #include "swaptionvolatilityconverter.hpp"
 #include "swaptionvolconstantspread.hpp"
+#include "payment.hpp"
 
 namespace {
 
@@ -114,6 +115,7 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(testsuite::SurvivalProbabilityCurveTest::suite());
     test->add(testsuite::SwaptionVolConstantSpreadTest::suite());
     test->add(testsuite::FxVolSmileTest::suite());
+    test->add(testsuite::PaymentTest::suite());
 
     test->add(BOOST_TEST_CASE(stopTimer));
 

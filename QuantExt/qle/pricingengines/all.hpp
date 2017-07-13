@@ -17,4 +17,5 @@
 #include <qle/pricingengines/discountingriskybondengine.hpp>
 #include <qle/pricingengines/midpointcdsengine.hpp>
 #include <qle/pricingengines/blackcdsoptionengine.hpp>
+#include <qle/pricingengines/paymentdiscountingengine.hpp>
 

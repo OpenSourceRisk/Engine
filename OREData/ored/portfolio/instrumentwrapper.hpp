@@ -43,8 +43,17 @@ namespace data {
 */
 class InstrumentWrapper {
 public:
-    InstrumentWrapper(const boost::shared_ptr<QuantLib::Instrument>& inst, const Real multiplier = 1.0)
-        : instrument_(inst), multiplier_(multiplier) {}
+    InstrumentWrapper(const boost::shared_ptr<QuantLib::Instrument>& inst, const Real multiplier = 1.0,
+                      const std::vector<boost::shared_ptr<QuantLib::Instrument>>& additionalInstruments =
+                          std::vector<boost::shared_ptr<QuantLib::Instrument>>(),
+                      const std::vector<Real>& additionalMultipliers = std::vector<Real>())
+        : instrument_(inst), multiplier_(multiplier), additionalInstruments_(additionalInstruments),
+          additionalMultipliers_(additionalMultipliers) {
+        QL_REQUIRE(additionalInstruments_.size() == additionalMultipliers_.size(),
+                   "vector size mismatch, instruments (" << additionalInstruments_.size() << ") vs multipliers ("
+                                                         << additionalMultipliers_.size() << ")");
+    }
+
     virtual ~InstrumentWrapper() {}
 
     //! Initialise with the given date grid
@@ -58,8 +67,19 @@ public:
     //! Return the NPV of this instrument
     virtual QuantLib::Real NPV() const = 0;
 
+    QuantLib::Real additionalInstrumentsNPV() const {
+        Real npv = 0.0;
+        for (QuantLib::Size i = 0; i < additionalInstruments_.size(); ++i)
+            npv += additionalInstruments_[i]->NPV() * additionalMultipliers_[i];
+        return npv;
+    }
+
     //! call update on enclosed instrument(s)
-    virtual void updateQlInstruments() { instrument_->update(); }
+    virtual void updateQlInstruments() {
+        instrument_->update();
+        for (QuantLib::Size i = 0; i < additionalInstruments_.size(); ++i)
+            additionalInstruments_[i]->update();
+    }
 
     //! is it an Option?
     virtual bool isOption() { return false; }
@@ -75,6 +95,8 @@ public:
 protected:
     boost::shared_ptr<QuantLib::Instrument> instrument_;
     Real multiplier_;
+    std::vector<boost::shared_ptr<QuantLib::Instrument>> additionalInstruments_;
+    std::vector<Real> additionalMultipliers_;
 };
 
 //! Vanilla Instrument Wrapper
@@ -86,13 +108,16 @@ protected:
 */
 class VanillaInstrument : public InstrumentWrapper {
 public:
-    VanillaInstrument(const boost::shared_ptr<QuantLib::Instrument>& inst, const Real multiplier = 1.0)
-        : InstrumentWrapper(inst, multiplier) {}
+    VanillaInstrument(const boost::shared_ptr<QuantLib::Instrument>& inst, const Real multiplier = 1.0,
+                      const std::vector<boost::shared_ptr<QuantLib::Instrument>>& additionalInstruments =
+                          std::vector<boost::shared_ptr<QuantLib::Instrument>>(),
+                      const std::vector<Real>& additionalMultipliers = std::vector<Real>())
+        : InstrumentWrapper(inst, multiplier, additionalInstruments, additionalMultipliers) {}
 
     void initialise(const std::vector<QuantLib::Date>&) override{};
     void reset() override {}
 
-    QuantLib::Real NPV() const override { return instrument_->NPV() * multiplier_; }
+    QuantLib::Real NPV() const override { return instrument_->NPV() * multiplier_ + additionalInstrumentsNPV(); }
 };
 } // namespace data
 } // namespace ore
