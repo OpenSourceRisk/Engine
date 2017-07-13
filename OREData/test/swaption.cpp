@@ -102,16 +102,19 @@ void SwaptionTest::testEuropeanSwaptionPrice() {
     legs.push_back(floatingLeg);
 
     Envelope env("CP1");
-    OptionData optionData("Long", "Call", "European", true, vector<string>(1, startDate));
+    OptionData optionData("Long", "Call", "European", true, vector<string>(1, startDate), "Cash");
+    OptionData optionDataPhysical("Long", "Call", "European", true, vector<string>(1, startDate), "Physical");
     Real premium = 700.0;
     OptionData optionDataPremium("Long", "Call", "European", true, vector<string>(1, startDate), "Cash", premium, "EUR",
                                  startDate);
-    ore::data::Swaption swaption(env, optionData, legs);
+    ore::data::Swaption swaptionCash(env, optionData, legs);
+    ore::data::Swaption swaptionPhysical(env, optionDataPhysical, legs);
     ore::data::Swaption swaptionPremium(env, optionDataPremium, legs);
 
-    Real expectedNpv = 615.03;
+    Real expectedNpvCash = 615.03;
+    Real expectedNpvPhysical = 615.03;
     Real premiumNpv = premium * market->discountCurve("EUR")->discount(calendar.adjust(qlStartDate));    
-    Real expectedNpvPremium = expectedNpv - premiumNpv;
+    Real expectedNpvPremium = expectedNpvCash - premiumNpv;
 
     // Build and price
     boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
@@ -123,17 +126,20 @@ void SwaptionTest::testEuropeanSwaptionPrice() {
     engineFactory->registerBuilder(boost::make_shared<EuropeanSwaptionEngineBuilder>());
     engineFactory->registerBuilder(boost::make_shared<SwapEngineBuilder>());
 
-    swaption.build(engineFactory);
+    swaptionCash.build(engineFactory);
+    swaptionPhysical.build(engineFactory);
     swaptionPremium.build(engineFactory);
 
-    Real npv = swaption.instrument()->NPV();
+    Real npvCash = swaptionCash.instrument()->NPV();
+    Real npvPhysical = swaptionPhysical.instrument()->NPV();
     Real npvPremium = swaptionPremium.instrument()->NPV();
 
-    BOOST_TEST_MESSAGE("Swaption, NPV Currency " << swaption.npvCurrency());
-    BOOST_TEST_MESSAGE("NPV              = " << npv);
-    BOOST_TEST_MESSAGE("NPV with premium = " << npvPremium);
+    BOOST_TEST_MESSAGE("Swaption, NPV Currency " << swaptionCash.npvCurrency());
+    BOOST_TEST_MESSAGE("NPV Cash              = " << npvCash);
+    BOOST_TEST_MESSAGE("NPV Physical          = " << npvPhysical);
+    BOOST_TEST_MESSAGE("NPV Cash with premium = " << npvPremium);
 
-    BOOST_CHECK_SMALL(npv - expectedNpv, 0.01);
+    BOOST_CHECK_SMALL(npvCash - expectedNpvCash, 0.01);
     BOOST_CHECK_SMALL(npvPremium - expectedNpvPremium, 0.01);
 
     Settings::instance().evaluationDate() = today; // reset
