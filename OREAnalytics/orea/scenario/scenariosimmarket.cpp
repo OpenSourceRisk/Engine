@@ -913,8 +913,18 @@ void ScenarioSimMarket::applyScenario(const boost::shared_ptr<Scenario>& scenari
 
 void ScenarioSimMarket::reset() {
     auto filterBackup = filter_;
+    // no filter
     filter_ = boost::make_shared<ScenarioFilter>();
+    // reset eval date
+    Settings::instance().evaluationDate() = baseScenario_->asof();
+    // reset term structures
     applyScenario(baseScenario_);
+    // see the comment in update() for why this is necessary...
+    if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister) {
+        boost::shared_ptr<QuantLib::Observable> obs = QuantLib::Settings::instance().evaluationDate();
+        obs->notifyObservers();
+    }
+    // restore the filter
     filter_ = filterBackup;
 }
 
