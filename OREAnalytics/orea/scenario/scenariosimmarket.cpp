@@ -931,6 +931,8 @@ void ScenarioSimMarket::reset() {
         boost::shared_ptr<QuantLib::Observable> obs = QuantLib::Settings::instance().evaluationDate();
         obs->notifyObservers();
     }
+    // reset fixing manager
+    fixingManager_->reset();
     // restore the filter
     filter_ = filterBackup;
 }
