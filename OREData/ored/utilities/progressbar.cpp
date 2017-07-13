@@ -33,8 +33,13 @@ void ProgressReporter::unregisterProgressIndicator(const boost::shared_ptr<Progr
 }
 
 void ProgressReporter::updateProgress(const unsigned long progress, const unsigned long total) {
-    for (auto i : indicators_)
+    for (const auto& i : indicators_)
         i->updateProgress(progress, total);
+}
+
+void ProgressReporter::resetProgress() {
+    for (const auto& i : indicators_)
+        i->reset();
 }
 
 SimpleProgressBar::SimpleProgressBar(const std::string& message, const unsigned int messageWidth,
@@ -77,6 +82,11 @@ void SimpleProgressBar::updateProgress(const unsigned long progress, const unsig
     updateCounter_++;
 }
 
+void SimpleProgressBar::reset() {
+    updateCounter_ = 0;
+    finalized_ = false;
+}
+
 ProgressLog::ProgressLog(const std::string& message, const unsigned int numberOfMessages)
     : message_(message), numberOfMessages_(numberOfMessages), messageCounter_(0) {}
 
@@ -89,6 +99,8 @@ void ProgressLog::updateProgress(const unsigned long progress, const unsigned lo
                  << "%) completed");
     messageCounter_++;
 }
+
+void ProgressLog::reset() { messageCounter_ = 0; }
 
 NoProgressBar::NoProgressBar(const std::string& message, const unsigned int messageWidth) {
     std::cout << std::setw(messageWidth) << message << std::flush;
