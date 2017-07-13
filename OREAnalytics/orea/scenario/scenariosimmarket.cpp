@@ -151,7 +151,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<ScenarioGenerator>&
                                      const boost::shared_ptr<ScenarioSimMarketParameters>& parameters,
                                      const Conventions& conventions, const std::string& configuration)
     : SimMarket(conventions), scenarioGenerator_(scenarioGenerator), parameters_(parameters),
-      filter_(new ScenarioFilter()) {
+      filter_(boost::make_shared<ScenarioFilter>()) {
 
     LOG("building ScenarioSimMarket...");
     asof_ = initMarket->asofDate();
@@ -910,6 +910,13 @@ void ScenarioSimMarket::applyScenario(const boost::shared_ptr<Scenario>& scenari
         }
         QL_FAIL("mismatch between scenario and sim data size, exit.");
     }
+}
+
+virtual void ScenarioSimMarket::reset() {
+    auto filterBackup = filter_;
+    filter_ = boost::make_shared<ScenarioFilter>();
+    applyScenario(baseScenario_);
+    filter_ = filterBackup;
 }
 
 void ScenarioSimMarket::update(const Date& d) {

@@ -77,7 +77,7 @@ public:
     void update(const Date& d) override;
 
     //! Reset sim market to initial state
-    virtual void reset() override { applyScenario(baseScenario_); }
+    virtual void reset() override;
 
     //! Scenario representing the initial state of the market
     boost::shared_ptr<Scenario> baseScenario() const { return baseScenario_; }
