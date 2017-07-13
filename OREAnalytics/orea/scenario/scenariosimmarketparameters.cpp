@@ -190,12 +190,27 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     nodeChild = XMLUtils::getChildNode(node, "SwaptionVolatilities");
     swapVolSimulate_ = false;
     XMLNode* swapVolSimNode = XMLUtils::getChildNode(nodeChild, "Simulate");
-    if (swapVolSimNode)
+    if (swapVolSimNode) {
         swapVolSimulate_ = ore::data::parseBool(XMLUtils::getNodeValue(swapVolSimNode));
-    swapVolTerms_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Terms", true);
-    swapVolExpiries_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Expiries", true);
-    swapVolCcys_ = XMLUtils::getChildrenValues(nodeChild, "Currencies", "Currency", true);
-    swapVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
+        swapVolTerms_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Terms", true);
+        swapVolExpiries_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Expiries", true);
+        swapVolCcys_ = XMLUtils::getChildrenValues(nodeChild, "Currencies", "Currency", true);
+        swapVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
+        XMLNode* cubeNode = XMLUtils::getChildNode(nodeChild, "Cube");
+        if (cubeNode) {
+            swapVolIsCube_ = true;
+            XMLNode* atmOnlyNode = XMLUtils::getChildNode(cubeNode, "SimulateATMOnly");
+            if(atmOnlyNode) {
+                swapVolSimulateATMOnly_ = XMLUtils::getChildValueAsBool(cubeNode, "SimulateATMOnly", true);
+            } else {
+                swapVolSimulateATMOnly_ = false;
+            }
+            if(!swapVolSimulateATMOnly_) 
+                swapVolStrikeSpreads_ = XMLUtils::getChildrenValuesAsDoublesCompact(cubeNode, "StrikeSpreads", true);
+        } else {
+            swapVolIsCube_ = false;
+        }
+    }
 
     nodeChild = XMLUtils::getChildNode(node, "CapFloorVolatilities");
     if (nodeChild) {

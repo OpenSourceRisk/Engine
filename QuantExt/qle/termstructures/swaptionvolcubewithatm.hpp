@@ -69,6 +69,7 @@ public:
     VolatilityType volatilityType() const { return cube_->volatilityType(); }
     //@}
 
+    boost::shared_ptr<SwaptionVolatilityCube> cube() const { return cube_; }
 protected:
     // Nothing to do here, just ask the cube
     boost::shared_ptr<SmileSection> smileSectionImpl(Time optionTime, Time swapLength) const {

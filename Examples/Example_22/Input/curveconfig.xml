@@ -1,5 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
 <CurveConfiguration>
+  <SwaptionVolatilities>
+
+    <SwaptionVolatility>
+      <CurveId>EUR_SW_SMILE</CurveId>
+      <CurveDescription>EUR normal swaption volatilities</CurveDescription>
+      <Dimension>Smile</Dimension>
+      <VolatilityType>Normal</VolatilityType>
+      <Extrapolation>Flat</Extrapolation>
+      <DayCounter>Actual/365 (Fixed)</DayCounter>
+      <Calendar>TARGET</Calendar>
+      <BusinessDayConvention>Following</BusinessDayConvention>
+      <OptionTenors>
+	1M,3M,6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y
+      </OptionTenors>
+      <SwapTenors>
+	1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y
+      </SwapTenors>
+      <ShortSwapIndexBase>EUR-CMS-1Y</ShortSwapIndexBase>
+      <SwapIndexBase>EUR-CMS-30Y</SwapIndexBase>
+      <!-- Smile stuff -->
+      <SmileOptionTenors>
+      6M,1Y,10Y
+      </SmileOptionTenors>
+      <SmileSwapTenors>
+      2Y,5Y
+      </SmileSwapTenors>
+      <SmileSpreads>
+      -0.02,-0.01,0.01,0.02
+      </SmileSpreads>
+
+    </SwaptionVolatility>
+  </SwaptionVolatilities>
   <FXVolatilities>
     <FXVolatility>
       <CurveId>EURUSD</CurveId>
@@ -42,123 +74,6 @@
       </Expiries>
     </FXVolatility>
   </FXVolatilities>
-  <SwaptionVolatilities>
-    <SwaptionVolatility>
-      <CurveId>EUR_SW_N</CurveId>
-      <CurveDescription>EUR normal swaption volatilities</CurveDescription>
-      <!-- ATM (Smile not yet supported) -->
-      <Dimension>ATM</Dimension>
-      <!-- Normal or Lognormal or ShiftedLognormal -->
-      <VolatilityType>Normal</VolatilityType>
-      <!-- Flat or Linear -->
-      <Extrapolation>Flat</Extrapolation>
-      <!-- Day counter for date to time conversion -->
-      <DayCounter>Actual/365 (Fixed)</DayCounter>
-      <!--Ccalendar and Business day convention for option tenor to date conversion -->
-      <Calendar>TARGET</Calendar>
-      <BusinessDayConvention>Following</BusinessDayConvention>
-      <OptionTenors>
-	1M,3M,6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y
-      </OptionTenors>
-      <SwapTenors>
-	1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y
-      </SwapTenors>
-      <ShortSwapIndexBase>EUR-CMS-1Y</ShortSwapIndexBase>
-      <SwapIndexBase>EUR-CMS-30Y</SwapIndexBase>
-    </SwaptionVolatility>
-    <SwaptionVolatility>
-      <CurveId>USD_SW_N</CurveId>
-      <CurveDescription>USD normal swaption volatilities</CurveDescription>
-      <!-- ATM (Smile not yet supported) -->
-      <Dimension>ATM</Dimension>
-      <!-- Normal or Lognormal or ShiftedLognormal -->
-      <VolatilityType>Lognormal</VolatilityType>
-      <!-- Flat or Linear -->
-      <Extrapolation>Flat</Extrapolation>
-      <!-- Day counter for date to time conversion -->
-      <DayCounter>Actual/365 (Fixed)</DayCounter>
-      <!--Ccalendar and Business day convention for option tenor to date conversion -->
-      <Calendar>TARGET</Calendar>
-      <BusinessDayConvention>Following</BusinessDayConvention>
-      <OptionTenors>
-	1M,3M,6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y
-      </OptionTenors>
-      <SwapTenors>
-	1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y
-      </SwapTenors>
-      <ShortSwapIndexBase>USD-CMS-1Y</ShortSwapIndexBase>
-      <SwapIndexBase>USD-CMS-30Y</SwapIndexBase>
-    </SwaptionVolatility>
-    <SwaptionVolatility>
-      <CurveId>GBP_SW_N</CurveId>
-      <CurveDescription>GBP normal swaption volatilities</CurveDescription>
-      <!-- ATM (Smile not yet supported) -->
-      <Dimension>ATM</Dimension>
-      <!-- Normal or Lognormal or ShiftedLognormal -->
-      <VolatilityType>Lognormal</VolatilityType>
-      <!-- Flat or Linear -->
-      <Extrapolation>Flat</Extrapolation>
-      <!-- Day counter for date to time conversion -->
-      <DayCounter>Actual/365 (Fixed)</DayCounter>
-      <!--Ccalendar and Business day convention for option tenor to date conversion -->
-      <Calendar>TARGET</Calendar>
-      <BusinessDayConvention>Following</BusinessDayConvention>
-      <OptionTenors>
-	1M,3M,6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y
-      </OptionTenors>
-      <SwapTenors>
-	1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y
-      </SwapTenors>
-      <ShortSwapIndexBase>GBP-CMS-1Y</ShortSwapIndexBase>
-      <SwapIndexBase>GBP-CMS-30Y</SwapIndexBase>
-    </SwaptionVolatility>
-    <SwaptionVolatility>
-      <CurveId>CHF_SW_N</CurveId>
-      <CurveDescription>CHF normal swaption volatilities</CurveDescription>
-      <!-- ATM (Smile not yet supported) -->
-      <Dimension>ATM</Dimension>
-      <!-- Normal or Lognormal or ShiftedLognormal -->
-      <VolatilityType>Normal</VolatilityType>
-      <!-- Flat or Linear -->
-      <Extrapolation>Flat</Extrapolation>
-      <!-- Day counter for date to time conversion -->
-      <DayCounter>Actual/365 (Fixed)</DayCounter>
-      <!--Ccalendar and Business day convention for option tenor to date conversion -->
-      <Calendar>TARGET</Calendar>
-      <BusinessDayConvention>Following</BusinessDayConvention>
-      <OptionTenors>
-	1M,3M,6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y
-      </OptionTenors>
-      <SwapTenors>
-	1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y
-      </SwapTenors>
-      <ShortSwapIndexBase>CHF-CMS-1Y</ShortSwapIndexBase>
-      <SwapIndexBase>CHF-CMS-30Y</SwapIndexBase>
-    </SwaptionVolatility>
-    <SwaptionVolatility>
-      <CurveId>JPY_SW_N</CurveId>
-      <CurveDescription>JPY normal swaption volatilities</CurveDescription>
-      <!-- ATM (Smile not yet supported) -->
-      <Dimension>ATM</Dimension>
-      <!-- Normal or Lognormal or ShiftedLognormal -->
-      <VolatilityType>Normal</VolatilityType>
-      <!-- Flat or Linear -->
-      <Extrapolation>Flat</Extrapolation>
-      <!-- Day counter for date to time conversion -->
-      <DayCounter>Actual/365 (Fixed)</DayCounter>
-      <!--Ccalendar and Business day convention for option tenor to date conversion -->
-      <Calendar>TARGET</Calendar>
-      <BusinessDayConvention>Following</BusinessDayConvention>
-      <OptionTenors>
-	1M,3M,6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y
-      </OptionTenors>
-      <SwapTenors>
-	1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y
-      </SwapTenors>
-      <ShortSwapIndexBase>JPY-CMS-1Y</ShortSwapIndexBase>
-      <SwapIndexBase>JPY-CMS-30Y</SwapIndexBase>
-    </SwaptionVolatility>
-  </SwaptionVolatilities>
   <CapFloorVolatilities>
     <CapFloorVolatility>
       <CurveId>EUR_CF_N</CurveId>
@@ -2140,6 +2055,7 @@
         <EquityCurve>
             <CurveId>SP5</CurveId>
             <CurveDescription>SP 500 equity price projection curve</CurveDescription>
+            <ForecastingCurve>USD1D</ForecastingCurve>
             <Currency>USD</Currency>
             <Type>DividendYield</Type> <!-- {DividendYield, ForwardPrice} -->
             <SpotQuote>EQUITY/PRICE/SP5/USD</SpotQuote> <!--  the spot quote from the market data file -->
@@ -2155,6 +2071,7 @@
             <CurveId>Lufthansa</CurveId>
             <CurveDescription>Lufthansa equity price projection curve</CurveDescription>
             <Currency>EUR</Currency>
+            <ForecastingCurve>EUR1D</ForecastingCurve>
             <Type>ForwardPrice</Type> <!-- {DividendYield, ForwardPrice} -->
             <SpotQuote>EQUITY/PRICE/Lufthansa/EUR</SpotQuote> <!--  the spot quote from the market data file -->
             <Quotes>
