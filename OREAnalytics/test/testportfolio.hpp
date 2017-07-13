@@ -43,21 +43,25 @@ boost::shared_ptr<Trade> buildSwap(string id, string ccy, bool isPayer, Real not
 boost::shared_ptr<Trade> buildEuropeanSwaption(string id, string longShort, string ccy, bool isPayer, Real notional,
                                                int start, Size term, Real rate, Real spread, string fixedFreq,
                                                string fixedDC, string floatFreq, string floatDC, string index,
-                                               string cashPhysical = "Cash");
+                                               string cashPhysical = "Cash", Real premium = 0.0, string premiumCcy = "",
+                                               string premiumDate = "");
 
 boost::shared_ptr<Trade> buildBermudanSwaption(string id, string longShort, string ccy, bool isPayer, Real notional,
                                                Size exercises, int start, Size term, Real rate, Real spread,
                                                string fixedFreq, string fixedDC, string floatFreq, string floatDC,
-                                               string index, string cashPhysical = "Cash");
+                                               string index, string cashPhysical = "Cash", Real premium = 0.0,
+                                               string premiumCcy = "", string premiumDate = "");
 
 boost::shared_ptr<Trade> buildFxOption(string id, string longShort, string putCall, Size expiry, string boughtCcy,
-                                       Real boughtAmount, string soldCcy, Real soldAmount);
+                                       Real boughtAmount, string soldCcy, Real soldAmount, Real premium = 0.0,
+                                       string premiumCcy = "", string premiumDate = "");
 
 boost::shared_ptr<Trade> buildEquityOption(string id, string longShort, string putCall, Size expiry, string equityName,
-                                           string currency, Real strike, Real quantity);
+                                           string currency, Real strike, Real quantity, Real premium = 0.0,
+                                           string premiumCcy = "", string premiumDate = "");
 
-boost::shared_ptr<Trade> buildEquityForward(string id, string longShort, Size expiry, string equityName, string currency, 
-                                            Real strike, Real quantity);
+boost::shared_ptr<Trade> buildEquityForward(string id, string longShort, Size expiry, string equityName,
+                                            string currency, Real strike, Real quantity);
 
 boost::shared_ptr<Trade> buildCap(string id, string ccy, string longShort, Real capRate, Real notional, int start,
                                   Size term, string floatFreq, string floatDC, string index);
@@ -72,11 +76,12 @@ boost::shared_ptr<Trade> buildCapFloor(string id, string ccy, string longShort, 
 boost::shared_ptr<Trade> buildZeroBond(string id, string ccy, Real notional, Size term);
 
 boost::shared_ptr<Trade> buildCPIInflationSwap(string id, string ccy, bool isPayer, Real notional, int start, Size term,
-                                               Real spread, string floatFreq, string floatDC, string index, string cpiFreq, 
-                                               string cpiDC, string cpiIndex, Real baseRate, string observationLag, bool interpolated, 
-                                               Real cpiRate);
+                                               Real spread, string floatFreq, string floatDC, string index,
+                                               string cpiFreq, string cpiDC, string cpiIndex, Real baseRate,
+                                               string observationLag, bool interpolated, Real cpiRate);
 
-boost::shared_ptr<Trade> buildYYInflationSwap(string id, string ccy, bool isPayer, Real notional, int start, Size term, Real spread,
-                                              string floatFreq, string floatDC, string index, string yyFreq, string yyDC, string yyIndex,
-                                              string observationLag, bool interpolated, Size fixDays);
+boost::shared_ptr<Trade> buildYYInflationSwap(string id, string ccy, bool isPayer, Real notional, int start, Size term,
+                                              Real spread, string floatFreq, string floatDC, string index,
+                                              string yyFreq, string yyDC, string yyIndex, string observationLag,
+                                              bool interpolated, Size fixDays);
 } // namespace testsuite
