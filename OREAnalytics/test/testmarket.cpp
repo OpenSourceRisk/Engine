@@ -421,11 +421,11 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
     simMarketData->equityVolMoneyness() = {1};
 
     simMarketData->zeroInflationIndices() = { "UKRPI" };
-    simMarketData->setZeroInflationTenors("UKRPI", {6 * Months, 1 * Years,  2 * Years,  3 * Years, 5 * Years,
+    simMarketData->setZeroInflationTenors("UKRPI", { 1 * Years,  2 * Years,  3 * Years, 5 * Years,
         7 * Years,  10 * Years, 15 * Years, 20 * Years });
 
     simMarketData->yoyInflationIndices() = { "UKRPI" };
-    simMarketData->setYoyInflationTenors("UKRPI", { 6 * Months, 1 * Years,  2 * Years,  3 * Years, 5 * Years,
+    simMarketData->setYoyInflationTenors("UKRPI", { 1 * Years,  2 * Years,  3 * Years, 5 * Years,
         7 * Years,  10 * Years, 15 * Years, 20 * Years });
 
     return simMarketData;
@@ -610,7 +610,7 @@ boost::shared_ptr<ore::analytics::SensitivityScenarioData> TestConfigurationObje
     ore::analytics::SensitivityScenarioData::CurveShiftData zinfData;
     zinfData.shiftType = "Absolute";
     zinfData.shiftSize = 0.0001;
-    zinfData.shiftTenors = { 6 * Months, 1 * Years,  2 * Years,  3 * Years, 5 * Years,
+    zinfData.shiftTenors = { 1 * Years,  2 * Years,  3 * Years, 5 * Years,
         7 * Years,  10 * Years, 15 * Years, 20 * Years };
 
     sensiData->discountCurrencies() = {"EUR", "USD", "GBP", "CHF", "JPY"};
