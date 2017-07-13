@@ -357,12 +357,9 @@
     <ClInclude Include="ored\model\modelbuilder.hpp">
       <Filter>model</Filter>
     </ClInclude>
-<<<<<<< HEAD
-=======
     <ClInclude Include="ored\configuration\curveconfig.hpp">
       <Filter>configuration</Filter>
     </ClInclude>
->>>>>>> origin/roland_single_payment
     <ClInclude Include="ored\utilities\csvfilereader.hpp">
       <Filter>utilities</Filter>
     </ClInclude>
