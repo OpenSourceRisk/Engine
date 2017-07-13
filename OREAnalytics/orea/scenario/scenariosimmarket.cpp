@@ -912,7 +912,7 @@ void ScenarioSimMarket::applyScenario(const boost::shared_ptr<Scenario>& scenari
     }
 }
 
-virtual void ScenarioSimMarket::reset() {
+void ScenarioSimMarket::reset() {
     auto filterBackup = filter_;
     filter_ = boost::make_shared<ScenarioFilter>();
     applyScenario(baseScenario_);
