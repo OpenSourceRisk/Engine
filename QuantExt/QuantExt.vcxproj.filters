@@ -464,6 +464,7 @@
     </ClInclude>
     <ClInclude Include="qle\pricingengines\paymentdiscountingengine.hpp">
       <Filter>pricingengines</Filter>
+    </ClInclude>
     <ClInclude Include="qle\math\all.hpp">
       <Filter>math</Filter>
     </ClInclude>
