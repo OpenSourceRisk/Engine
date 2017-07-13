@@ -776,7 +776,6 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<ScenarioGenerator>&
         Handle<ZeroInflationIndex> inflationIndex = initMarket->zeroInflationIndex(zic, configuration);
         Handle<ZeroInflationTermStructure> inflationTs = inflationIndex->zeroInflationTermStructure();
         vector<string> keys(parameters->zeroInflationTenors(zic).size());
-        BusinessDayConvention bdc = ModifiedFollowing;
 
         // vector<Time> zeroCurveTimes;       // include today
         vector<Date> zeroCurveDates;
