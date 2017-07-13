@@ -63,6 +63,9 @@
     <ClInclude Include="cms.hpp">
       <Filter>headers</Filter>
     </ClInclude>
+    <ClInclude Include="swaption.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="calendars.cpp">
@@ -118,6 +121,9 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="cms.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="swaption.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>

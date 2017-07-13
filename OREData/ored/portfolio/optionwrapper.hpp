@@ -45,7 +45,10 @@ public:
                   // multiplier as seen from the option holder
                   const Real multiplier = 1.0,
                   // undMultiplier w.r.t. underlying as seen from the option holder
-                  const Real undMultiplier = 1.0);
+                  const Real undMultiplier = 1.0,
+                  const std::vector<boost::shared_ptr<QuantLib::Instrument>>& additionalInstruments =
+                      std::vector<boost::shared_ptr<QuantLib::Instrument>>(),
+                  const std::vector<Real>& additionalMultipliers = std::vector<Real>());
     //! \name InstrumentWrapper interface
     //@{
     void initialise(const std::vector<QuantLib::Date>& dates) override;
@@ -106,9 +109,13 @@ public:
                           // multiplier as seen from the option holder
                           const Real multiplier = 1.0,
                           // undMultiplier w.r.t. underlying as seen from the option holder
-                          const Real undMultiplier = 1.0)
+                          const Real undMultiplier = 1.0,
+                          const std::vector<boost::shared_ptr<QuantLib::Instrument>>& additionalInstruments =
+                              std::vector<boost::shared_ptr<QuantLib::Instrument>>(),
+                          const std::vector<Real>& additionalMultipliers = std::vector<Real>())
         : OptionWrapper(inst, isLongOption, std::vector<QuantLib::Date>(1, exerciseDate), isPhysicalDelivery,
-                        std::vector<boost::shared_ptr<QuantLib::Instrument>>(1, undInst), multiplier, undMultiplier) {}
+                        std::vector<boost::shared_ptr<QuantLib::Instrument>>(1, undInst), multiplier, undMultiplier,
+                        additionalInstruments, additionalMultipliers) {}
 
 protected:
     bool exercise() const override;
@@ -126,9 +133,13 @@ public:
                           // multiplier as seen from the option holder
                           const Real multiplier = 1.0,
                           // undMultiplier w.r.t. underlying as seen from the option holder
-                          const Real undMultiplier = 1.0)
+                          const Real undMultiplier = 1.0,
+                          const std::vector<boost::shared_ptr<QuantLib::Instrument>>& additionalInstruments =
+                              std::vector<boost::shared_ptr<QuantLib::Instrument>>(),
+                          const std::vector<Real>& additionalMultipliers = std::vector<Real>())
         : OptionWrapper(inst, isLongOption, std::vector<QuantLib::Date>(1, exerciseDate), isPhysicalDelivery,
-                        std::vector<boost::shared_ptr<QuantLib::Instrument>>(1, undInst), multiplier, undMultiplier) {}
+                        std::vector<boost::shared_ptr<QuantLib::Instrument>>(1, undInst), multiplier, undMultiplier,
+                        additionalInstruments, additionalMultipliers) {}
 
 protected:
     bool exercise() const override;
@@ -146,8 +157,12 @@ public:
                           // multiplier as seen from the option holder
                           const Real multiplier = 1.0,
                           // undMultiplier w.r.t. underlying as seen from the option holder
-                          const Real undMultiplier = 1.0)
-        : OptionWrapper(inst, isLongOption, exerciseDates, isPhysicalDelivery, undInsts, multiplier, undMultiplier) {
+                          const Real undMultiplier = 1.0,
+                          const std::vector<boost::shared_ptr<QuantLib::Instrument>>& additionalInstruments =
+                              std::vector<boost::shared_ptr<QuantLib::Instrument>>(),
+                          const std::vector<Real>& additionalMultipliers = std::vector<Real>())
+        : OptionWrapper(inst, isLongOption, exerciseDates, isPhysicalDelivery, undInsts, multiplier, undMultiplier,
+                        additionalInstruments, additionalMultipliers) {
         QL_REQUIRE(exerciseDates.size() == undInsts.size(),
                    "sizes of exercise date and underlying instrument vectors do not match");
     }
