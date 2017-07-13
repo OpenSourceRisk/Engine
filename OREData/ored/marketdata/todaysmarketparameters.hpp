@@ -111,6 +111,7 @@ public:
     //@{
     const map<string, MarketConfiguration>& configurations() const;
     bool hasConfiguration(const string& configuration) const;
+    bool hasMarketObject(const MarketObject& o) const;
 
     //! EUR => Yield/EUR/EUR6M, USD => Yield/USD/USD3M etc.
     const map<string, string>& mapping(const MarketObject o, const string& configuration) const;
@@ -152,6 +153,11 @@ inline const map<string, MarketConfiguration>& TodaysMarketParameters::configura
 inline bool TodaysMarketParameters::hasConfiguration(const string& configuration) const {
     auto it = configurations_.find(configuration);
     return it != configurations_.end();
+}
+
+inline bool TodaysMarketParameters::hasMarketObject(const MarketObject& o) const {
+    auto it = marketObjects_.find(o);
+    return it != marketObjects_.end();
 }
 
 inline string TodaysMarketParameters::marketObjectId(const MarketObject o, const string& configuration) const {
