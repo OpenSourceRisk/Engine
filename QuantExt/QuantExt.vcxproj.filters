@@ -159,12 +159,6 @@
     <ClInclude Include="qle\instruments\oiccbasisswap.hpp">
       <Filter>instruments</Filter>
     </ClInclude>
-    <ClInclude Include="qle\math\all.hpp">
-      <Filter>math</Filter>
-    </ClInclude>
-    <ClInclude Include="qle\math\flatextrapolation.hpp">
-      <Filter>math</Filter>
-    </ClInclude>
     <ClInclude Include="qle\models\all.hpp">
       <Filter>models</Filter>
     </ClInclude>
@@ -333,12 +327,6 @@
     <ClInclude Include="qle\termstructures\spreadedswaptionvolatility.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
-    <ClInclude Include="qle\math\nadarayawatson.hpp">
-      <Filter>math</Filter>
-    </ClInclude>
-    <ClInclude Include="qle\math\cumulativenormaldistribution.hpp">
-      <Filter>math</Filter>
-    </ClInclude>
     <ClInclude Include="qle\termstructures\dynamicstype.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
@@ -386,9 +374,6 @@
     </ClInclude>
     <ClInclude Include="qle\pricingengines\analyticxassetlgmeqoptionengine.hpp">
       <Filter>pricingengines</Filter>
-    </ClInclude>
-    <ClInclude Include="qle\math\stabilisedglls.hpp">
-      <Filter>math</Filter>
     </ClInclude>
     <ClInclude Include="qle\models\fxeqoptionhelper.hpp">
       <Filter>models</Filter>
@@ -479,6 +464,23 @@
     </ClInclude>
     <ClInclude Include="qle\pricingengines\paymentdiscountingengine.hpp">
       <Filter>pricingengines</Filter>
+    <ClInclude Include="qle\math\all.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\math\cumulativenormaldistribution.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\math\flatextrapolation.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\math\nadarayawatson.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\math\stabilisedglls.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\equityvolconstantspread.hpp">
+      <Filter>termstructures</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
