@@ -23,6 +23,7 @@
 
 #include <orea/engine/observationmode.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
+#include <orea/scenario/simplescenario.hpp>
 #include <ql/experimental/credit/basecorrelationstructure.hpp>
 #include <ql/math/interpolations/loginterpolation.hpp>
 #include <ql/termstructures/credit/interpolatedsurvivalprobabilitycurve.hpp>
@@ -150,7 +151,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<ScenarioGenerator>&
                                      const boost::shared_ptr<ScenarioSimMarketParameters>& parameters,
                                      const Conventions& conventions, const std::string& configuration)
     : SimMarket(conventions), scenarioGenerator_(scenarioGenerator), parameters_(parameters),
-      filter_(new ScenarioFilter()) {
+      filter_(boost::make_shared<ScenarioFilter>()) {
 
     LOG("building ScenarioSimMarket...");
     asof_ = initMarket->asofDate();
@@ -775,7 +776,6 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<ScenarioGenerator>&
         Handle<ZeroInflationIndex> inflationIndex = initMarket->zeroInflationIndex(zic, configuration);
         Handle<ZeroInflationTermStructure> inflationTs = inflationIndex->zeroInflationTermStructure();
         vector<string> keys(parameters->zeroInflationTenors(zic).size());
-        BusinessDayConvention bdc = ModifiedFollowing;
 
         string ccy = inflationIndex->currency().code();
         Handle<YieldTermStructure> yts = discountCurve(ccy, configuration);
@@ -831,7 +831,6 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<ScenarioGenerator>&
         Handle<YoYInflationIndex> yoyInflationIndex = initMarket->yoyInflationIndex(yic, configuration);
         Handle<YoYInflationTermStructure> yoyInflationTs = yoyInflationIndex->yoyInflationTermStructure();
         vector<string> keys(parameters->yoyInflationTenors(yic).size());
-        BusinessDayConvention bdc = ModifiedFollowing;
 
         string ccy = yoyInflationIndex->currency().code();
         Handle<YieldTermStructure> yts = initMarket->discountCurve(ccy, configuration);
@@ -877,8 +876,63 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<ScenarioGenerator>&
         yoyInflationIndices_.insert(
             pair<pair<string, string>, Handle<YoYInflationIndex>>(make_pair(Market::defaultConfiguration, yic), zh));
     }
-
     LOG("yoy inflation curves done");
+
+    LOG("building base scenario");
+    baseScenario_ = boost::make_shared<SimpleScenario>(initMarket->asofDate(), "BASE", 1.0);
+    for (auto const& data : simData_) {
+        baseScenario_->add(data.first, data.second->value());
+    }
+    LOG("building base scenario done");
+}
+
+void ScenarioSimMarket::applyScenario(const boost::shared_ptr<Scenario>& scenario) {
+    const vector<RiskFactorKey>& keys = scenario->keys();
+
+    Size count = 0;
+    bool missingPoint = false;
+    for (const auto& key : keys) {
+        // TODO: Is this really an error?
+        auto it = simData_.find(key);
+        if (it == simData_.end()) {
+            ALOG("simulation data point missing for key " << key);
+            missingPoint = true;
+        } else {
+            // LOG("simulation data point found for key " << key);
+            if (filter_->allow(key))
+                it->second->setValue(scenario->get(key));
+            count++;
+        }
+    }
+    QL_REQUIRE(!missingPoint, "simulation data points missing from scenario, exit.");
+
+    if (count != simData_.size()) {
+        ALOG("mismatch between scenario and sim data size, " << count << " vs " << simData_.size());
+        for (auto it : simData_) {
+            if (!scenario->has(it.first))
+                ALOG("Key " << it.first << " missing in scenario");
+        }
+        QL_FAIL("mismatch between scenario and sim data size, exit.");
+    }
+}
+
+void ScenarioSimMarket::reset() {
+    auto filterBackup = filter_;
+    // no filter
+    filter_ = boost::make_shared<ScenarioFilter>();
+    // reset eval date
+    Settings::instance().evaluationDate() = baseScenario_->asof();
+    // reset numeraire
+    numeraire_ = baseScenario_->getNumeraire();
+    // reset term structures
+    applyScenario(baseScenario_);
+    // see the comment in update() for why this is necessary...
+    if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister) {
+        boost::shared_ptr<QuantLib::Observable> obs = QuantLib::Settings::instance().evaluationDate();
+        obs->notifyObservers();
+    }
+    // restore the filter
+    filter_ = filterBackup;
 }
 
 void ScenarioSimMarket::update(const Date& d) {
@@ -907,33 +961,7 @@ void ScenarioSimMarket::update(const Date& d) {
         obs->notifyObservers();
     }
 
-    const vector<RiskFactorKey>& keys = scenario->keys();
-
-    Size count = 0;
-    bool missingPoint = false;
-    for (const auto& key : keys) {
-        // TODO: Is this really an error?
-        auto it = simData_.find(key);
-        if (it == simData_.end()) {
-            ALOG("simulation data point missing for key " << key);
-            missingPoint = true;
-        } else {
-            // LOG("simulation data point found for key " << key);
-            if (filter_->allow(key))
-                it->second->setValue(scenario->get(key));
-            count++;
-        }
-    }
-    QL_REQUIRE(!missingPoint, "simulation data points missing from scenario, exit.");
-
-    if (count != simData_.size()) {
-        ALOG("mismatch between scenario and sim data size, " << count << " vs " << simData_.size());
-        for (auto it : simData_) {
-            if (!scenario->has(it.first))
-                ALOG("Key " << it.first << " missing in scenario");
-        }
-        QL_FAIL("mismatch between scenario and sim data size, exit.");
-    }
+    applyScenario(scenario);
 
     // Observation Mode - key to update these before fixings are set
     if (om == ObservationMode::Mode::Disable) {
@@ -963,5 +991,6 @@ void ScenarioSimMarket::update(const Date& d) {
 
     // DLOG("ScenarioSimMarket::update done");
 }
+
 } // namespace analytics
 } // namespace ore
