@@ -23,7 +23,7 @@
 #include <ql/math/interpolations/bilinearinterpolation.hpp>
 #include <ql/termstructures/volatility/interpolatedsmilesection.hpp>
 #include <qle/math/flatextrapolation.hpp>
-
+#include <ql/math/interpolations/flatextrapolation2d.hpp>
 
 
 namespace QuantExt {
@@ -36,7 +36,7 @@ namespace QuantExt {
             const boost::shared_ptr<QuantLib::SwapIndex>& swapIndexBase,
             const boost::shared_ptr<QuantLib::SwapIndex>& shortSwapIndexBase,
             bool flatExtrapolation,
-            VolatilityType volatilityType_,
+            VolatilityType volatilityType,
             BusinessDayConvention businessDayConvention,
             const DayCounter& dayCounter,
             const Calendar& calendar,
@@ -58,8 +58,10 @@ namespace QuantExt {
       flatExtrapolation_(flatExtrapolation),
       calendar_(calendar),
       settlementDays_(settlementDays),
+      maxTenor_(100*Years),
       shifts_(optionTenors.size(), swapTenors.size(), 0.0),
       volsInterpolator_(nStrikes_),
+      volatilityType_(volatilityType),
       volsMatrix_(nStrikes_, Matrix(optionTenors.size(), swapTenors.size(), 0.0))
     {
         QL_REQUIRE(swapIndexBase,"swapIndex empty");
@@ -106,9 +108,17 @@ namespace QuantExt {
         
         QL_REQUIRE(optionTimes_.size()>0,"optionTimes empty");
         QL_REQUIRE(swapLengths_.size()>0,"swapLengths empty");
-        interpolationShifts_ = BilinearInterpolation(
+        if (flatExtrapolation) {
+            interpolationShifts_ =
+                FlatExtrapolator2D(boost::make_shared<BilinearInterpolation>(
+                    swapLengths_.begin(), swapLengths_.end(),
+                    optionTimes_.begin(), optionTimes_.end(), shifts_));
+        } else {
+            interpolationShifts_ = BilinearInterpolation(
                 swapLengths_.begin(), swapLengths_.end(), optionTimes_.begin(),
                 optionTimes_.end(), shifts_);
+        }        
+        
     }
 
     void SwaptionVolatilityCube::performCalculations() const {
@@ -130,7 +140,6 @@ namespace QuantExt {
                 swapLengths_.begin(), swapLengths_.end(), optionTimes_.begin(), optionTimes_.end(), volsMatrix_[i]);
             volsInterpolator_[i].enableExtrapolation();
         }
-
     }
     
     void SwaptionVolatilityCube::registerWithVolatility()
@@ -143,7 +152,6 @@ namespace QuantExt {
 
     Rate SwaptionVolatilityCube::atmStrike(const Date& optionD,
                                            const Period& swapTenor) const {
-
         // FIXME use a familyName-based index factory
         if (swapTenor > shortSwapIndexBase_->tenor()) {
             if (swapIndexBase_->exogenousDiscount()) {
@@ -198,7 +206,6 @@ namespace QuantExt {
         }
     }
     boost::shared_ptr<SmileSection> SwaptionVolatilityCube::smileSectionImpl(Time optionTime, Time swapLength) const {
-
         calculate();
         Date optionDate = optionDateFromTime(optionTime);
         Rounding rounder(0);
@@ -213,7 +220,6 @@ namespace QuantExt {
     boost::shared_ptr<SmileSection> SwaptionVolatilityCube::smileSectionImpl(const Date& optionDate,
                                                                    const Period& swapTenor) const {
 
-        std::cout<<"smile start"<<std::endl;
         calculate();
         Rate atmForward = atmStrike(optionDate, swapTenor);
         Time optionTime = timeFromReference(optionDate);
@@ -227,16 +233,16 @@ namespace QuantExt {
             stdDevs.push_back(exerciseTimeSqrt * (volsInterpolator_[i](length, optionTime)));
         }
 
+        Real shift = interpolationShifts_(optionTime, length, true);
         boost::shared_ptr<SmileSection> tmp;
         if (!flatExtrapolation_)
             tmp = boost::shared_ptr<SmileSection>(new InterpolatedSmileSection<Linear>(
-                optionTime, strikes, stdDevs, atmForward, Linear(), Actual365Fixed(), volatilityType()));
+                optionTime, strikes, stdDevs, atmForward, Linear(), Actual365Fixed(), volatilityType(), shift));
         else
             tmp = boost::shared_ptr<SmileSection>(new InterpolatedSmileSection<LinearFlat>(
-                optionTime, strikes, stdDevs, atmForward, LinearFlat(), Actual365Fixed(), volatilityType()));
+                optionTime, strikes, stdDevs, atmForward, LinearFlat(), Actual365Fixed(), volatilityType(), shift));
 
         QL_REQUIRE(tmp, "smile building failed");
-        std::cout<<"smile end"<<std::endl;
 
         return tmp;
 }

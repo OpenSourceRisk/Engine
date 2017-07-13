@@ -48,7 +48,7 @@ namespace QuantExt {
             const boost::shared_ptr<QuantLib::SwapIndex>& swapIndexBase,
             const boost::shared_ptr<QuantLib::SwapIndex>& shortSwapIndexBase,
             bool flatExtrapolation,
-            VolatilityType volatilityType_,
+            VolatilityType volatilityType,
             BusinessDayConvention bdc,
             const DayCounter& dc,
             const Calendar& cal,
@@ -70,7 +70,7 @@ namespace QuantExt {
         Natural settlementDays() const { return settlementDays_; }
         //! \name SwaptionVolatilityStructure interface
         //@{
-        const Period& maxSwapTenor() const { return 100*Years; }
+        const Period& maxSwapTenor() const { return maxTenor_; }
         //@}
         //! \name Other inspectors
         //@{
@@ -117,6 +117,7 @@ namespace QuantExt {
         Interpolation2D interpolation_, interpolationShifts_;
         Calendar calendar_;
         Natural settlementDays_;
+        Period maxTenor_;
         };
 
     // inline

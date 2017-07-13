@@ -330,8 +330,9 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
             vector<Real> strikeSpreads = parameters->swapVolStrikeSpreads();
             LOG("Simulating "<<optionTenors.size()<<" optionTenors, "<<swapTenors.size()<<" swapTenors & "<<strikeSpreads.size()<<" strikeSpreads");
             bool atmOnly = parameters->simulateSwapVolATMOnly();
-            if (atmOnly) 
+            if (atmOnly) {
                 QL_REQUIRE(strikeSpreads.size() == 1 && strikeSpreads[0] == 0, "for atmOnly strikeSpreads must be {0.0}");
+            }
             boost::shared_ptr<QuantLib::SwaptionVolatilityCube> cube;
             if (isCube) {
                 boost::shared_ptr<SwaptionVolCubeWithATM> tmp = boost::dynamic_pointer_cast<SwaptionVolCubeWithATM>(*wrapper);
@@ -382,7 +383,7 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
                 }
             } else {
                 QL_REQUIRE(isCube, "Only atmOnly simulation supported for swaption vol surfaces");
-                boost::shared_ptr<QuantExt::SwaptionVolatilityCube> tmp( new QuantExt::SwaptionVolatilityCube(                                          
+                 boost::shared_ptr<SwaptionVolatilityStructure> tmp( new QuantExt::SwaptionVolatilityCube(                                          
                                             optionTenors, swapTenors, strikeSpreads, quotes, *initMarket->swapIndex(swapIndexBase, configuration), 
                                             *initMarket->swapIndex(shortSwapIndexBase, configuration), flatExtrapolation, volType, 
                                             wrapper->businessDayConvention(), wrapper->dayCounter(), wrapper->calendar(), 0, shift));
@@ -402,11 +403,12 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
                 boost::make_shared<QuantExt::DynamicSwaptionVolatilityMatrix>(*wrapper, 0, NullCalendar(), decayMode);
             svp = Handle<SwaptionVolatilityStructure>(svolp);
         }
-        svp->enableExtrapolation(); // FIXME
 
+        svp->enableExtrapolation(); // FIXME
         swaptionCurves_.insert(pair<pair<string, string>, Handle<SwaptionVolatilityStructure>>(
             make_pair(Market::defaultConfiguration, ccy), svp));
 
+        
         LOG("Simulaton market " << ccy << " swaption volatility type = " << svp->volatilityType());
 
         swaptionIndexBases_.insert(pair<pair<string, string>, pair<string, string>>(
