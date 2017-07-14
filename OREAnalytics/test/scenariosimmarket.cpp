@@ -233,8 +233,9 @@ void ScenarioSimMarketTest::testScenarioSimMarket() {
     Conventions conventions = *convs();
     // build scenario sim market
     boost::shared_ptr<analytics::ScenarioSimMarket> simMarket(
-        new analytics::ScenarioSimMarket(scenarioGenerator, initMarket, parameters, conventions));
-
+        new analytics::ScenarioSimMarket(initMarket, parameters, conventions));
+    simMarket->scenarioGenerator() = scenarioGenerator;
+    
     // test
     testFxSpot(initMarket, simMarket, parameters);
     testDiscountCurve(initMarket, simMarket, parameters);

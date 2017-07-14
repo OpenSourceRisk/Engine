@@ -146,16 +146,30 @@ void ScenarioSimMarket::addYieldCurve(const boost::shared_ptr<Market>& initMarke
         make_tuple(Market::defaultConfiguration, y, key), ych));
 }
 
-ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<ScenarioGenerator>& scenarioGenerator,
-                                     const boost::shared_ptr<Market>& initMarket,
+ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket,
                                      const boost::shared_ptr<ScenarioSimMarketParameters>& parameters,
                                      const Conventions& conventions, const std::string& configuration)
-    : SimMarket(conventions), scenarioGenerator_(scenarioGenerator), parameters_(parameters),
-      filter_(boost::make_shared<ScenarioFilter>()) {
+    : SimMarket(conventions), parameters_(parameters), filter_(boost::make_shared<ScenarioFilter>()) {
 
     LOG("building ScenarioSimMarket...");
     asof_ = initMarket->asofDate();
     LOG("AsOf " << QuantLib::io::iso_date(asof_));
+
+    // Set non simulated risk factor key types
+    if (!parameters->simulateSwapVols())
+        nonSimulatedFactors_.insert(RiskFactorKey::KeyType::SwaptionVolatility);
+    if (!parameters->simulateCapFloorVols())
+        nonSimulatedFactors_.insert(RiskFactorKey::KeyType::OptionletVolatility);
+    if (!parameters->simulateSurvivalProbabilities())
+        nonSimulatedFactors_.insert(RiskFactorKey::KeyType::SurvivalProbability);
+    if (!parameters->simulateCdsVols())
+        nonSimulatedFactors_.insert(RiskFactorKey::KeyType::CDSVolatility);
+    if (!parameters->simulateFXVols())
+        nonSimulatedFactors_.insert(RiskFactorKey::KeyType::FXVolatility);
+    if (!parameters->simulateEquityVols())
+        nonSimulatedFactors_.insert(RiskFactorKey::KeyType::EquityVolatility);
+    if (!parameters->simulateBaseCorrelations())
+        nonSimulatedFactors_.insert(RiskFactorKey::KeyType::BaseCorrelation);
 
     // Build fixing manager
     fixingManager_ = boost::make_shared<FixingManager>(asof_);
@@ -792,7 +806,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<ScenarioGenerator>&
         }
 
         for (Size i = 1; i < zeroCurveDates.size(); i++) {
-            boost::shared_ptr<SimpleQuote> q(new SimpleQuote(inflationTs->zeroRate(quoteDates[i-1])));
+            boost::shared_ptr<SimpleQuote> q(new SimpleQuote(inflationTs->zeroRate(quoteDates[i - 1])));
             Handle<Quote> qh(q);
             if (i == 1) {
                 // add the zero rate at first tenor to the T0 time, to ensure flat interpolation of T1 rate
@@ -810,18 +824,20 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<ScenarioGenerator>&
 
         // Note this is *not* a floating term structure, it is only suitable for sensi runs
         // TODO: floating
-        zeroCurve = boost::shared_ptr<ZeroInflationCurveObserver<Linear>> (new ZeroInflationCurveObserver<Linear>(
-            asof_, inflationIndex->fixingCalendar(), inflationTs->dayCounter(), inflationTs->observationLag(), inflationTs->frequency(),
-            inflationTs->indexIsInterpolated(), yts, zeroCurveDates, quotes, inflationTs->seasonality()));
-        
+        zeroCurve = boost::shared_ptr<ZeroInflationCurveObserver<Linear>>(new ZeroInflationCurveObserver<Linear>(
+            asof_, inflationIndex->fixingCalendar(), inflationTs->dayCounter(), inflationTs->observationLag(),
+            inflationTs->frequency(), inflationTs->indexIsInterpolated(), yts, zeroCurveDates, quotes,
+            inflationTs->seasonality()));
+
         Handle<ZeroInflationTermStructure> its(zeroCurve);
         its->enableExtrapolation();
-        boost::shared_ptr<ZeroInflationIndex> i = ore::data::parseZeroInflationIndex(zic, false, Handle<ZeroInflationTermStructure>(its));
+        boost::shared_ptr<ZeroInflationIndex> i =
+            ore::data::parseZeroInflationIndex(zic, false, Handle<ZeroInflationTermStructure>(its));
         Handle<ZeroInflationIndex> zh(i);
         zeroInflationIndices_.insert(
             pair<pair<string, string>, Handle<ZeroInflationIndex>>(make_pair(Market::defaultConfiguration, zic), zh));
 
-        LOG("building " << zic << " zero inflation curve done");   
+        LOG("building " << zic << " zero inflation curve done");
     }
     LOG("zero inflation curves done");
 
@@ -839,14 +855,15 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<ScenarioGenerator>&
         vector<Date> yoyCurveDates, quoteDates;
         yoyCurveDates.push_back(date0);
         vector<Handle<Quote>> quotes;
-        QL_REQUIRE(parameters->yoyInflationTenors(yic).front() >= 1 * Years, "yoy inflation tenors must be greater than 1Y");
+        QL_REQUIRE(parameters->yoyInflationTenors(yic).front() >= 1 * Years,
+                   "yoy inflation tenors must be greater than 1Y");
         for (auto& tenor : parameters->yoyInflationTenors(yic)) {
             yoyCurveDates.push_back(date0 + tenor);
             quoteDates.push_back(asof_ + tenor);
         }
 
         for (Size i = 1; i < yoyCurveDates.size(); i++) {
-            boost::shared_ptr<SimpleQuote> q(new SimpleQuote(yoyInflationTs->yoyRate(quoteDates[i-1])));
+            boost::shared_ptr<SimpleQuote> q(new SimpleQuote(yoyInflationTs->yoyRate(quoteDates[i - 1])));
             Handle<Quote> qh(q);
             if (i == 1) {
                 // add the zero rate at first tenor to the T0 time, to ensure flat interpolation of T1 rate
@@ -866,8 +883,9 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<ScenarioGenerator>&
         // Note this is *not* a floating term structure, it is only suitable for sensi runs
         // TODO: floating
         yoyCurve = boost::shared_ptr<YoYInflationCurveObserver<Linear>>(new YoYInflationCurveObserver<Linear>(
-            asof_, yoyInflationIndex->fixingCalendar(), yoyInflationTs->dayCounter(), yoyInflationTs->observationLag(), yoyInflationTs->frequency(),
-            yoyInflationTs->indexIsInterpolated(), yts, yoyCurveDates, quotes, yoyInflationTs->seasonality()));
+            asof_, yoyInflationIndex->fixingCalendar(), yoyInflationTs->dayCounter(), yoyInflationTs->observationLag(),
+            yoyInflationTs->frequency(), yoyInflationTs->indexIsInterpolated(), yts, yoyCurveDates, quotes,
+            yoyInflationTs->seasonality()));
 
         Handle<YoYInflationTermStructure> its(yoyCurve);
         its->enableExtrapolation();
@@ -939,6 +957,7 @@ void ScenarioSimMarket::reset() {
 
 void ScenarioSimMarket::update(const Date& d) {
     // DLOG("ScenarioSimMarket::update called with Date " << QuantLib::io::iso_date(d));
+    QL_REQUIRE(scenarioGenerator_ != nullptr, "ScenarioSimMarket::update: no scenario generator set");
 
     ObservationMode::Mode om = ObservationMode::instance().mode();
     if (om == ObservationMode::Mode::Disable)
@@ -992,6 +1011,10 @@ void ScenarioSimMarket::update(const Date& d) {
     }
 
     // DLOG("ScenarioSimMarket::update done");
+}
+
+bool ScenarioSimMarket::isSimulated(const RiskFactorKey::KeyType& factor) const {
+    return std::find(nonSimulatedFactors_.begin(), nonSimulatedFactors_.end(), factor) == nonSimulatedFactors_.end();
 }
 
 } // namespace analytics

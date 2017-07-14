@@ -58,10 +58,14 @@ public:
 class ScenarioSimMarket : public analytics::SimMarket {
 public:
     //! Constructor
-    ScenarioSimMarket(const boost::shared_ptr<ScenarioGenerator>& scenarioGenerator,
-                      const boost::shared_ptr<Market>& initMarket,
+    ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket,
                       const boost::shared_ptr<ScenarioSimMarketParameters>& parameters, const Conventions& conventions,
                       const std::string& configuration = Market::defaultConfiguration);
+
+    //! Set scenario generator
+    boost::shared_ptr<ScenarioGenerator>& scenarioGenerator() { return scenarioGenerator_; }
+    //! Get scenario generator
+    const boost::shared_ptr<ScenarioGenerator>& scnearioGenerator() const { return scenarioGenerator_; }
 
     //! Set aggregation data
     boost::shared_ptr<AggregationScenarioData>& aggregationScenarioData() { return asd_; }
@@ -85,18 +89,23 @@ public:
     //! Return the fixing manager
     const boost::shared_ptr<FixingManager>& fixingManager() const override { return fixingManager_; }
 
+    //! is risk factor key simulated by this sim market instance?
+    bool isSimulated(const RiskFactorKey::KeyType& factor) const;
+
 private:
     void applyScenario(const boost::shared_ptr<Scenario>& scenario);
     void addYieldCurve(const boost::shared_ptr<Market>& initMarket, const std::string& configuration,
                        const ore::data::YieldCurveType y, const string& key, const vector<Period>& tenors);
-    const boost::shared_ptr<ScenarioGenerator> scenarioGenerator_;
     const boost::shared_ptr<ScenarioSimMarketParameters> parameters_;
+    boost::shared_ptr<ScenarioGenerator> scenarioGenerator_;
     boost::shared_ptr<AggregationScenarioData> asd_;
     boost::shared_ptr<FixingManager> fixingManager_;
     boost::shared_ptr<ScenarioFilter> filter_;
 
     std::map<RiskFactorKey, boost::shared_ptr<SimpleQuote>> simData_;
     boost::shared_ptr<Scenario> baseScenario_;
+
+    std::set<RiskFactorKey::KeyType> nonSimulatedFactors_;
 };
 } // namespace analytics
 } // namespace ore

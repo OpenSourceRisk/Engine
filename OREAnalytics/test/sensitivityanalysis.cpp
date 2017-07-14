@@ -72,18 +72,18 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     // sensitivity config
     boost::shared_ptr<SensitivityScenarioData> sensiData = TestConfigurationObjects::setupSensitivityScenarioData5();
 
-    // build scenario generator
-    boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(
-        new SensitivityScenarioGenerator(sensiData, simMarketData, today, initMarket, false));
-    boost::shared_ptr<Scenario> baseScen = scenarioGenerator->baseScenario();
-    boost::shared_ptr<ScenarioFactory> scenarioFactory(new CloneScenarioFactory(baseScen));
-    scenarioGenerator->generateScenarios(scenarioFactory);
-
-    boost::shared_ptr<ScenarioGenerator> sgen(scenarioGenerator);
     // build scenario sim market
     Conventions conventions = *TestConfigurationObjects::conv();
     boost::shared_ptr<analytics::ScenarioSimMarket> simMarket =
-        boost::make_shared<analytics::ScenarioSimMarket>(sgen, initMarket, simMarketData, conventions);
+        boost::make_shared<analytics::ScenarioSimMarket>(initMarket, simMarketData, conventions);
+
+    // build scenario generator
+    boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(
+        new SensitivityScenarioGenerator(sensiData, simMarket, simMarketData, false));
+    boost::shared_ptr<Scenario> baseScen = scenarioGenerator->baseScenario();
+    boost::shared_ptr<ScenarioFactory> scenarioFactory(new CloneScenarioFactory(baseScen));
+    scenarioGenerator->generateScenarios(scenarioFactory);
+    simMarket->scenarioGenerator() = scenarioGenerator;
 
     // build porfolio
     boost::shared_ptr<EngineData> data = boost::make_shared<EngineData>();
@@ -649,10 +649,8 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
                            "pair (" << p.first << ", " << p.second << ") not found in npv map");
                 QL_REQUIRE(sensiMap.find(p) != sensiMap.end(),
                            "pair (" << p.first << ", " << p.second << ") not found in sensi map");
-                BOOST_CHECK_MESSAGE(fabs(npv0 - npvMap[p]) < tolerance || fabs((npv0 - npvMap[p]) / npv0) <
-                tolerance,
-                                    "npv regression failed for pair (" << p.first << ", " << p.second << "): " <<
-                                    npv0
+                BOOST_CHECK_MESSAGE(fabs(npv0 - npvMap[p]) < tolerance || fabs((npv0 - npvMap[p]) / npv0) < tolerance,
+                                    "npv regression failed for pair (" << p.first << ", " << p.second << "): " << npv0
                                                                        << " vs " << npvMap[p]);
                 BOOST_CHECK_MESSAGE(fabs(sensi - sensiMap[p]) < tolerance ||
                                         fabs((sensi - sensiMap[p]) / sensi) < tolerance,
@@ -764,9 +762,13 @@ void test1dShifts(bool granular) {
     else
         sensiData = TestConfigurationObjects::setupSensitivityScenarioData2();
 
+    // build sim market
+    Conventions conventions = *TestConfigurationObjects::conv();
+    auto simMarket = boost::make_shared<ScenarioSimMarket>(initMarket, simMarketData, conventions);
+
     // build scenario generator
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(
-        new SensitivityScenarioGenerator(sensiData, simMarketData, today, initMarket, false));
+        new SensitivityScenarioGenerator(sensiData, simMarket, simMarketData, false));
     boost::shared_ptr<Scenario> baseScen = scenarioGenerator->baseScenario();
     boost::shared_ptr<ScenarioFactory> scenarioFactory(new CloneScenarioFactory(baseScen));
     scenarioGenerator->generateScenarios(scenarioFactory);
@@ -855,9 +857,13 @@ void SensitivityAnalysisTest::test2dShifts() {
     // sensitivity config
     boost::shared_ptr<SensitivityScenarioData> sensiData = TestConfigurationObjects::setupSensitivityScenarioData2();
 
+    // build sim market
+    Conventions conventions = *TestConfigurationObjects::conv();
+    auto simMarket = boost::make_shared<ScenarioSimMarket>(initMarket, simMarketData, conventions);
+
     // build scenario generator
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(
-        new SensitivityScenarioGenerator(sensiData, simMarketData, today, initMarket, false));
+        new SensitivityScenarioGenerator(sensiData, simMarket, simMarketData, false));
     boost::shared_ptr<Scenario> baseScen = scenarioGenerator->baseScenario();
     boost::shared_ptr<ScenarioFactory> scenarioFactory(new CloneScenarioFactory(baseScen));
     scenarioGenerator->generateScenarios(scenarioFactory);
@@ -962,19 +968,18 @@ void SensitivityAnalysisTest::testEquityOptionDeltaGamma() {
     for (auto& it : eqs) {
         it.second.shiftSize = 0.0001; // want a smaller shift size to test the analytic sensitivities
     }
+
+    // build sim market
+    Conventions conventions = *TestConfigurationObjects::conv();
+    auto simMarket = boost::make_shared<ScenarioSimMarket>(initMarket, simMarketData, conventions);
+
     // build scenario generator
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(
-        new SensitivityScenarioGenerator(sensiData, simMarketData, today, initMarket, false));
+        new SensitivityScenarioGenerator(sensiData, simMarket, simMarketData, false));
     boost::shared_ptr<Scenario> baseScen = scenarioGenerator->baseScenario();
     boost::shared_ptr<ScenarioFactory> scenarioFactory(new CloneScenarioFactory(baseScen));
     scenarioGenerator->generateScenarios(scenarioFactory);
-
-    boost::shared_ptr<ScenarioGenerator> sgen(scenarioGenerator);
-
-    // build scenario sim market
-    Conventions conventions = *TestConfigurationObjects::conv();
-    boost::shared_ptr<analytics::ScenarioSimMarket> simMarket =
-        boost::make_shared<analytics::ScenarioSimMarket>(sgen, initMarket, simMarketData, conventions);
+    simMarket->scenarioGenerator() = scenarioGenerator;
 
     // build porfolio
     boost::shared_ptr<EngineData> data = boost::make_shared<EngineData>();
@@ -1166,19 +1171,18 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
     for (auto& it : fxs) {
         it.second.shiftSize = 0.0001; // want a smaller shift size to test the analytic sensitivities
     }
+
+    // build sim market
+    Conventions conventions = *TestConfigurationObjects::conv();
+    auto simMarket = boost::make_shared<ScenarioSimMarket>(initMarket, simMarketData, conventions);
+
     // build scenario generator
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(
-        new SensitivityScenarioGenerator(sensiData, simMarketData, today, initMarket, false));
+        new SensitivityScenarioGenerator(sensiData, simMarket, simMarketData, false));
     boost::shared_ptr<Scenario> baseScen = scenarioGenerator->baseScenario();
     boost::shared_ptr<ScenarioFactory> scenarioFactory(new CloneScenarioFactory(baseScen));
     scenarioGenerator->generateScenarios(scenarioFactory);
-
-    boost::shared_ptr<ScenarioGenerator> sgen(scenarioGenerator);
-
-    // build scenario sim market
-    Conventions conventions = *TestConfigurationObjects::conv();
-    boost::shared_ptr<analytics::ScenarioSimMarket> simMarket =
-        boost::make_shared<analytics::ScenarioSimMarket>(sgen, initMarket, simMarketData, conventions);
+    simMarket->scenarioGenerator() = scenarioGenerator;
 
     // build porfolio
     boost::shared_ptr<EngineData> data = boost::make_shared<EngineData>();
@@ -1509,19 +1513,19 @@ void SensitivityAnalysisTest::testCrossGamma() {
     cgFilter.push_back(pair<string, string>("FXSpot/EURUSD", "DiscountCurve/EUR"));
     cgFilter.push_back(pair<string, string>("FXSpot/EURUSD", "IndexCurve/EUR"));
     cgFilter.push_back(pair<string, string>("FXSpot/EURGBP", "DiscountCurve/GBP"));
-    // build scenario generator
-    boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(
-        new SensitivityScenarioGenerator(sensiData, simMarketData, today, initMarket, false));
-    boost::shared_ptr<Scenario> baseScen = scenarioGenerator->baseScenario();
-    boost::shared_ptr<ScenarioFactory> scenarioFactory(new CloneScenarioFactory(baseScen));
-    scenarioGenerator->generateScenarios(scenarioFactory);
-
-    boost::shared_ptr<ScenarioGenerator> sgen(scenarioGenerator);
 
     // build scenario sim market
     Conventions conventions = *TestConfigurationObjects::conv();
     boost::shared_ptr<analytics::ScenarioSimMarket> simMarket =
-        boost::make_shared<analytics::ScenarioSimMarket>(sgen, initMarket, simMarketData, conventions);
+        boost::make_shared<analytics::ScenarioSimMarket>(initMarket, simMarketData, conventions);
+
+    // build scenario generator
+    boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(
+        new SensitivityScenarioGenerator(sensiData, simMarket, simMarketData, false));
+    boost::shared_ptr<Scenario> baseScen = scenarioGenerator->baseScenario();
+    boost::shared_ptr<ScenarioFactory> scenarioFactory(new CloneScenarioFactory(baseScen));
+    scenarioGenerator->generateScenarios(scenarioFactory);
+    simMarket->scenarioGenerator() = scenarioGenerator;
 
     // build porfolio
     boost::shared_ptr<EngineData> data = boost::make_shared<EngineData>();
