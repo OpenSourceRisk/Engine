@@ -843,6 +843,14 @@
     <FlatIndex>USD-LIBOR-3M</FlatIndex>
     <SpreadIndex>MXN-TIIE-3M</SpreadIndex>
   </CrossCurrencyBasis>
+  <CrossCurrencyBasis>
+    <Id>USD-JPY-XCCY-BASIS-CONVENTIONS</Id>
+    <SettlementDays>2</SettlementDays>
+    <SettlementCalendar>JP,US,UK</SettlementCalendar>
+    <RollConvention>MF</RollConvention>
+    <FlatIndex>USD-LIBOR-3M</FlatIndex>
+    <SpreadIndex>JPY-LIBOR-3M</SpreadIndex>
+  </CrossCurrencyBasis>
   <!-- Inflation Swaps -->
   <InflationSwap>
       <Id>EUHICP_INFLATIONSWAP</Id>
