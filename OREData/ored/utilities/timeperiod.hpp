@@ -71,9 +71,9 @@ inline bool TimePeriod::contains(const Date& d) const {
 
 inline std::ostream& operator<<(std::ostream& out, const TimePeriod& t) {
     for (Size i = 0; i < t.numberOfContiguousParts(); ++i) {
-        out << QuantLib::io::iso_date(t.startDates()[i]) << "-" << QuantLib::io::iso_date(t.endDates()[i]);
+        out << QuantLib::io::iso_date(t.startDates()[i]) << " to " << QuantLib::io::iso_date(t.endDates()[i]);
         if (i < t.numberOfContiguousParts() - 1)
-            out << ",";
+            out << " + ";
     }
     return out;
 }
