@@ -444,6 +444,14 @@
     <Index>JPY-LIBOR-6M</Index>
   </Swap>
   <Swap>
+    <Id>JPY-LIBOR-3M-SWAP-CONVENTIONS</Id>
+    <FixedCalendar>JP,UK</FixedCalendar>
+    <FixedFrequency>Semiannual</FixedFrequency>
+    <FixedConvention>MF</FixedConvention>
+    <FixedDayCounter>A365</FixedDayCounter>
+    <Index>JPY-LIBOR-3M</Index>
+  </Swap>
+  <Swap>
     <Id>JPY-TIBOR-3M-SWAP-CONVENTIONS</Id>
     <FixedCalendar>JP</FixedCalendar>
     <FixedFrequency>Semiannual</FixedFrequency>
