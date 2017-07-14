@@ -1234,7 +1234,7 @@ void SensitivityScenarioGenerator::generateYoYInflationScenarios(
 
             // store shifted discount curve for this index in the scenario
             for (Size k = 0; k < n_ten; ++k) {
-                scenario->add(RiskFactorKey(RiskFactorKey::KeyType::ZeroInflationCurve, indexName, k), shiftedYoys[k]);
+                scenario->add(RiskFactorKey(RiskFactorKey::KeyType::YoYInflationCurve, indexName, k), shiftedYoys[k]);
             }
             // add this scenario to the scenario vector
             scenarios_.push_back(scenario);
