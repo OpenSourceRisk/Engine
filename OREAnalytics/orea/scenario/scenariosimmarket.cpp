@@ -298,14 +298,14 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
         string shortSwapIndexBase = initMarket->shortSwapIndexBase(ccy, configuration);
         string swapIndexBase = initMarket->swapIndexBase(ccy, configuration);
 
-
+        bool isMatrix = boost::dynamic_pointer_cast<SwaptionVolatilityMatrix>(*wrapper) != nullptr;
         bool isCube = parameters->swapVolIsCube();
 
         // If swaption volatility type is not Normal, convert to Normal for the simulation
         if (wrapper->volatilityType() != Normal) {
             // FIXME we should support constant swaption vols here as well (or build a matrix
             // always in todays market even if only one vol point is given?)
-            if (!isCube) {
+            if (isMatrix) {
                 // Get swap index associated with this volatility structure
                 string swapIndexName = initMarket->swapIndexBase(ccy, configuration);
                 Handle<SwapIndex> swapIndex = initMarket->swapIndex(swapIndexName, configuration);
