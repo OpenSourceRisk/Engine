@@ -332,7 +332,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<ScenarioGenerator>&
             vector<Real> strikeSpreads = parameters->swapVolStrikeSpreads();
             bool atmOnly = parameters->simulateSwapVolATMOnly();
             if (atmOnly) {
-                QL_REQUIRE(strikeSpreads.size() == 1 && strikeSpreads[0] == 0, "for atmOnly strikeSpreads must be {0.0}");
+                QL_REQUIRE(strikeSpreads.size() == 1 && close_enough(strikeSpreads[0],0), "for atmOnly strikeSpreads must be {0.0}");
             }
             boost::shared_ptr<QuantLib::SwaptionVolatilityCube> cube;
             if (isCube) {

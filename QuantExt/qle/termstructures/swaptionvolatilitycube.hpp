@@ -1,5 +1,21 @@
 /* -*- mode: c++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/*
+ Copyright (C) 2017 Quaternion Risk Management Ltd
+ All rights reserved.
 
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
+
+ ORE is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
+
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
+*/
 /*
  Copyright (C) 2006 Ferdinando Ametrano
  Copyright (C) 2015 Peter Caspers
@@ -18,7 +34,7 @@
  FOR A PARTICULAR PURPOSE.  See the license for more details.
 */
 
-/*! \file swaptionvolcube.hpp
+/*! \file swaptionvolatilitycube.hpp
     \brief Swaption volatility cube
 */
 
@@ -34,9 +50,10 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-    //! swaption-volatility cube
+    //! swaption volatility cube
     /*! 
-    
+        This cube mimics QuantExt::swaptionVolCube2, but takes a cube of swaption volatility quotes 
+        rather than a cube of volatility spreads and an atm surface.
     */
     class SwaptionVolatilityCube : public QuantLib::SwaptionVolatilityDiscrete {
       public:
