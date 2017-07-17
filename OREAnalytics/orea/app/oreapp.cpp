@@ -690,14 +690,37 @@ void OREApp::writeCube() {
 void OREApp::writeScenarioData() {
     out_ << endl << setw(tab_) << left << "Write Aggregation Scenario Data... " << flush;
     LOG("Write scenario data");
+    string outputPath = params_->get("setup", "outputPath");
     if (params_->has("simulation", "additionalScenarioDataFileName")) {
-        string outputPath = params_->get("setup", "outputPath");
+        // binary output
         string outputFileNameAddScenData =
             outputPath + "/" + params_->get("simulation", "additionalScenarioDataFileName");
         scenarioData_->save(outputFileNameAddScenData);
         out_ << "OK" << endl;
-    } else
+    } else if (params_->has("simulation", "addtionalScenarioDataDump")) {
+        // csv output
+        string outputFileNameAddScenData = outputPath + "/" + params_->get("simulation", "additionalScenarioDataDump");
+        FILE* f = fopen(outputFileNameAddScenData.c_str(), "w");
+        QL_REQUIRE(f, "error opening file " << outputFileNameAddScenData);
+        fprintf(f, "Date,Scenario");
+        for (auto const& k : scenarioData_->keys()) {
+            std::string tmp = ore::data::to_string(k.first) + "_" + k.second;
+            fprintf(f, ",%s", tmp.c_str());
+        }
+        fprintf(f, "\n");
+        for (Size d = 0; d < scenarioData_->dimDates(); ++d) {
+            for (Size s = 0; s < scenarioData_->dimSamples(); ++s) {
+                fprintf(f, "%zu,%zu", d, s);
+                for (auto const& k : scenarioData_->keys()) {
+                    fprintf(f, ",%.8f", scenarioData_->get(d, s, k.first, k.second));
+                }
+            }
+            fprintf(f, "\n");
+        }
+        fclose(f);
+    } else {
         out_ << "SKIP" << endl;
+    }
 }
 
 void OREApp::loadScenarioData() {
