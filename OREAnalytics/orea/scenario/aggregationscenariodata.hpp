@@ -77,6 +77,9 @@ public:
     virtual void set(Size dateIndex, Size sampleIndex, Real value, const AggregationScenarioDataType& type,
                      const string& qualifier = "") = 0;
 
+    // Get available keys (type, qualifier)
+    virtual std::vector<std::pair<AggregationScenarioDataType, std::string>> keys() const = 0;
+
     //! Load cube contents from disk
     virtual void load(const std::string&) {}
     //! Persist cube contents to disk
@@ -123,6 +126,13 @@ public:
         return data_.at(std::make_pair(type, qualifier))[dateIndex][sampleIndex];
     }
 
+    std::vector<std::pair<AggregationScenarioDataType, std::string>> keys() const override {
+        std::vector<std::pair<AggregationScenarioDataType, std::string>> res;
+        for (auto const& k : data_)
+            res.push_back(k.first);
+        return res;
+    }
+
     void set(Size dateIndex, Size sampleIndex, Real value, const AggregationScenarioDataType& type,
              const string& qualifier = "") override {
         check(dateIndex, sampleIndex, type, qualifier);
@@ -166,6 +176,21 @@ private:
     Size dimDates_, dimSamples_;
     map<std::pair<AggregationScenarioDataType, string>, vector<vector<Real>>> data_;
 };
+
+inline std::ostream& operator<<(std::ostream& out, const AggregationScenarioDataType& t) {
+    switch (t) {
+    case AggregationScenarioDataType::IndexFixing:
+        return out << "IndexFixing";
+    case AggregationScenarioDataType::FXSpot:
+        return out << "FXSpot";
+    case AggregationScenarioDataType::Numeraire:
+        return out << "Numeraire";
+    case AggregationScenarioDataType::Generic:
+        return out << "Generic";
+    default:
+        return out << "Unknown aggregation scenario data type";
+    }
+}
 
 } // namespace analytics
 } // namespace ore
