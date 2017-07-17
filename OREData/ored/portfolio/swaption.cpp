@@ -100,16 +100,32 @@ void Swaption::buildEuropean(const boost::shared_ptr<EngineFactory>& engineFacto
     Position::Type positionType = parsePositionType(option_.longShort());
     Real multiplier = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
 
+    // If premium data is provided
+    // 1) build the fee trade and pass it to the instrument wrapper for pricing
+    // 2) add fee payment as additional trade leg for cash flow reporting
+    std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
+    std::vector<Real> additionalMultipliers;
+    if (option_.premiumPayDate() != "" && option_.premiumCcy() != "") {
+        Real premiumAmount = -multiplier * option_.premium(); // pay if long, receive if short
+        Currency premiumCurrency = parseCurrency(option_.premiumCcy());
+        Date premiumDate = parseDate(option_.premiumPayDate());
+        addPayment(additionalInstruments, additionalMultipliers, premiumDate, premiumAmount, premiumCurrency, currency,
+                   engineFactory, swaptionBuilder->configuration(MarketContext::pricing));
+	DLOG("option premium added for european swaption " << id()); 
+    }
+
     // Now set the instrument wrapper, depending on delivery
     if (settleType == Settlement::Physical) {
         // tracks state for any option flavour, including physical delivery
         instrument_ = boost::shared_ptr<InstrumentWrapper>(
             new EuropeanOptionWrapper(swaption, positionType == Position::Long ? true : false, exDate,
-                                      settleType == Settlement::Physical ? true : false, swap));
+                                      settleType == Settlement::Physical ? true : false, swap, 1.0, 1.0,
+                                      additionalInstruments, additionalMultipliers));
         // maturity of underlying
         maturity_ = std::max(swap->fixedSchedule().dates().back(), swap->floatingSchedule().dates().back());
     } else {
-        instrument_ = boost::shared_ptr<InstrumentWrapper>(new VanillaInstrument(swaption, multiplier));
+        instrument_ = boost::shared_ptr<InstrumentWrapper>(
+            new VanillaInstrument(swaption, multiplier, additionalInstruments, additionalMultipliers));
         maturity_ = exDate;
     }
 
@@ -206,10 +222,26 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
 
     std::vector<boost::shared_ptr<Instrument>> underlyingSwaps = buildUnderlyingSwaps(swapEngine, swap, exDates);
 
+    // If premium data is provided
+    // 1) build the fee trade and pass it to the instrument wrapper for pricing
+    // 2) add fee payment as additional trade leg for cash flow reporting
+    std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
+    std::vector<Real> additionalMultipliers;
+    if (option_.premiumPayDate() != "" && option_.premiumCcy() != "") {
+        Real multiplier = positionType == Position::Long ? multiplier = 1.0 : -1.0;
+        Real premiumAmount = -multiplier * option_.premium(); // pay if long, receive if short
+        Currency premiumCurrency = parseCurrency(option_.premiumCcy());
+        Date premiumDate = parseDate(option_.premiumPayDate());
+        addPayment(additionalInstruments, additionalMultipliers, premiumDate, premiumAmount, premiumCurrency, currency,
+                   engineFactory, swaptionBuilder->configuration(MarketContext::pricing));
+	DLOG("option premium added for bermudan swaption " << id()); 
+    }
+
     // instrument_ = boost::shared_ptr<InstrumentWrapper> (new VanillaInstrument (swaption, multiplier));
     instrument_ = boost::shared_ptr<InstrumentWrapper>(
         new BermudanOptionWrapper(swaption, positionType == Position::Long ? true : false, exDates,
-                                  delivery == Settlement::Physical ? true : false, underlyingSwaps));
+                                  delivery == Settlement::Physical ? true : false, underlyingSwaps, 1.0, 1.0,
+                                  additionalInstruments, additionalMultipliers));
 
     DLOG("Building Bermudan Swaption done");
 }

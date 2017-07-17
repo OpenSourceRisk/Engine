@@ -256,6 +256,10 @@
     <Id>SEK-3M-FRA</Id>
     <Index>SEK-STIBOR-3M</Index>
   </FRA>
+  <FRA>
+    <Id>JPY-6M-FRA-CONVENTIONS</Id>
+    <Index>JPY-LIBOR-6M</Index>
+  </FRA>
   <!-- Interest Rate Swaps -->
   <SwapIndex>
     <Id>EUR-CMS-1Y</Id>
@@ -438,6 +442,14 @@
     <FixedConvention>MF</FixedConvention>
     <FixedDayCounter>A365</FixedDayCounter>
     <Index>JPY-LIBOR-6M</Index>
+  </Swap>
+  <Swap>
+    <Id>JPY-LIBOR-3M-SWAP-CONVENTIONS</Id>
+    <FixedCalendar>JP,UK</FixedCalendar>
+    <FixedFrequency>Semiannual</FixedFrequency>
+    <FixedConvention>MF</FixedConvention>
+    <FixedDayCounter>A365</FixedDayCounter>
+    <Index>JPY-LIBOR-3M</Index>
   </Swap>
   <Swap>
     <Id>JPY-TIBOR-3M-SWAP-CONVENTIONS</Id>
@@ -838,6 +850,14 @@
     <RollConvention>MF</RollConvention>
     <FlatIndex>USD-LIBOR-3M</FlatIndex>
     <SpreadIndex>MXN-TIIE-3M</SpreadIndex>
+  </CrossCurrencyBasis>
+  <CrossCurrencyBasis>
+    <Id>USD-JPY-XCCY-BASIS-CONVENTIONS</Id>
+    <SettlementDays>2</SettlementDays>
+    <SettlementCalendar>JP,US,UK</SettlementCalendar>
+    <RollConvention>MF</RollConvention>
+    <FlatIndex>USD-LIBOR-3M</FlatIndex>
+    <SpreadIndex>JPY-LIBOR-3M</SpreadIndex>
   </CrossCurrencyBasis>
   <!-- Inflation Swaps -->
   <InflationSwap>

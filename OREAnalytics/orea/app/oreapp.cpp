@@ -90,6 +90,18 @@ void OREApp::run() {
         writeInitialReports();
         out_ << "OK" << endl;
 
+        /**************************
+         * Write base scenario file
+         */
+        out_ << setw(tab_) << left << "Write Base Scenario... " << flush;
+        if (writeBaseScenario_) {
+            writeBaseScenario();
+            out_ << "OK" << endl;
+        } else {
+            LOG("skip base scenario");
+            out_ << "SKIP" << endl;
+        }
+
         /**********************
          * Sensitivity analysis
          */
@@ -197,6 +209,8 @@ void OREApp::readSetup() {
                           : false;
     sensitivity_ = (params_->hasGroup("sensitivity") && params_->get("sensitivity", "active") == "Y") ? true : false;
     stress_ = (params_->hasGroup("stress") && params_->get("stress", "active") == "Y") ? true : false;
+    writeBaseScenario_ =
+        (params_->hasGroup("baseScenario") && params_->get("baseScenario", "active") == "Y") ? true : false;
 }
 
 void OREApp::setupLog() {
@@ -522,6 +536,65 @@ void OREApp::runStressTest() {
     stressTest->writeReport(stressReport, threshold);
 
     out_ << "OK" << endl;
+}
+
+void OREApp::writeBaseScenario() {
+
+    Date today = Settings::instance().evaluationDate();
+
+    LOG("Get Market Configuration");
+    string marketConfiguration = params_->get("baseScenario", "marketConfiguration");
+
+    LOG("Get Simulation Market Parameters");
+    string inputPath = params_->get("setup", "inputPath");
+    string marketConfigFile = inputPath + "/" + params_->get("baseScenario", "marketConfigFile");
+    boost::shared_ptr<ScenarioSimMarketParameters> simMarketData(new ScenarioSimMarketParameters);
+    simMarketData->fromFile(marketConfigFile);
+
+    boost::shared_ptr<ShiftScenarioGenerator> shiftGenerator =
+        boost::make_shared<ShiftScenarioGenerator>(simMarketData, today, market_, marketConfiguration);
+
+    boost::shared_ptr<Scenario> scenario = shiftGenerator->baseScenario();
+    QL_REQUIRE(scenario->asof() == today, "dates do not match");
+
+    string outputPath = params_->get("setup", "outputPath");
+    string outputFile = outputPath + "/" + params_->get("baseScenario", "outputFileName");
+
+    // FIXME: Do we want binary format or human readable csv like the following, consistent with ScenarioWriter?
+    // FIXME: Reuse ScenarioWriter?
+
+    string separator = params_->get("baseScenario", "separator");
+    QL_REQUIRE(separator.length() == 1, "separator needs length 1: " << separator);
+    const char sep = separator.c_str()[0];
+    std::vector<RiskFactorKey> keys = scenario->keys();
+    std::sort(keys.begin(), keys.end());
+
+    bool append = parseBool(params_->get("baseScenario", "append"));
+    string mode = append ? "a+" : "w+";
+    FILE* f = fopen(outputFile.c_str(), mode.c_str());
+    QL_REQUIRE(f, "error opening file " << outputFile);
+
+    QL_REQUIRE(keys.size() > 0, "No keys in scenario");
+
+    // write header
+    bool header = parseBool(params_->get("baseScenario", "header"));
+    if (header) {
+        fprintf(f, "Date%cScenario%cNumeraire%c%s", sep, sep, sep, to_string(keys[0]).c_str());
+        for (Size i = 1; i < keys.size(); i++)
+            fprintf(f, "%c%s", sep, to_string(keys[i]).c_str());
+        fprintf(f, "\n");
+    }
+
+    // write data
+    Size i = 1;
+    fprintf(f, "%s%c%zu%c%.8f", to_string(today).c_str(), sep, i, sep, scenario->getNumeraire());
+    for (auto k : keys)
+        fprintf(f, "%c%.8f", sep, scenario->get(k));
+    fprintf(f, "\n");
+    fflush(f);
+    fclose(f);
+
+    DLOG("Base scenario written to file " << outputFile);
 }
 
 void OREApp::initAggregationScenarioData() {

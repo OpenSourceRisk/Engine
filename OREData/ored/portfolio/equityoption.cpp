@@ -69,7 +69,21 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
     Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
     Real mult = quantity_ * bsInd;
 
-    instrument_ = boost::shared_ptr<InstrumentWrapper>(new VanillaInstrument(vanilla, mult));
+    // If premium data is provided
+    // 1) build the fee trade and pass it to the instrument wrapper for pricing
+    // 2) add fee payment as additional trade leg for cash flow reporting
+    std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
+    std::vector<Real> additionalMultipliers;
+    if (option_.premiumPayDate() != "" && option_.premiumCcy() != "") {
+        Real premiumAmount = -bsInd * option_.premium(); // pay if long, receive if short
+        Currency premiumCurrency = parseCurrency(option_.premiumCcy());
+        Date premiumDate = parseDate(option_.premiumPayDate());
+        addPayment(additionalInstruments, additionalMultipliers, premiumDate, premiumAmount, premiumCurrency, ccy,
+                   engineFactory, eqOptBuilder->configuration(MarketContext::pricing));
+	DLOG("option premium added for eq option " << id()); 
+    }
+
+    instrument_ = boost::shared_ptr<InstrumentWrapper>(new VanillaInstrument(vanilla, mult, additionalInstruments, additionalMultipliers));
 
     npvCurrency_ = currency_;
     maturity_ = expiryDate;

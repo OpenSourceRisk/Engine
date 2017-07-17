@@ -336,7 +336,9 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
     // Cache CapFloor (Optionlet) vol keys
     Size n_cfvol_ccy = simMarketData_->capFloorVolCcys().size();
     Size n_cfvol_strikes = simMarketData_->capFloorVolStrikes().size();
-    optionletVolKeys_.reserve(n_cfvol_ccy * n_cfvol_strikes * simMarketData_->capFloorVolExpiries("").size());
+    if(n_cfvol_ccy > 0) {
+        optionletVolKeys_.reserve(n_cfvol_ccy * n_cfvol_strikes * simMarketData_->capFloorVolExpiries("").size());
+    }
     count = 0;
     for (Size i = 0; i < n_cfvol_ccy; ++i) {
         std::string ccy = simMarketData_->capFloorVolCcys()[i];

@@ -19,7 +19,8 @@ libInstruments_la_SOURCES = \
 	subperiodsswap.cpp \
 	creditdefaultswap.cpp \
 	makecds.cpp \
-	cdsoption.cpp
+	cdsoption.cpp \
+	payment.cpp
 
 this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \
@@ -38,7 +39,8 @@ this_include_HEADERS = \
 	subperiodsswap.hpp \
 	creditdefaultswap.hpp \
 	makecds.hpp \
-	cdsoption.hpp
+	cdsoption.hpp \
+	payment.hpp
 
 noinst_LTLIBRARIES = libInstruments.la
 

@@ -58,8 +58,9 @@ public:
 class ScenarioSimMarket : public analytics::SimMarket {
 public:
     //! Constructor
-    ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scenarioGenerator, boost::shared_ptr<Market>& initMarket,
-                      boost::shared_ptr<ScenarioSimMarketParameters>& parameters, Conventions conventions,
+    ScenarioSimMarket(const boost::shared_ptr<ScenarioGenerator>& scenarioGenerator,
+                      const boost::shared_ptr<Market>& initMarket,
+                      const boost::shared_ptr<ScenarioSimMarketParameters>& parameters, const Conventions& conventions,
                       const std::string& configuration = Market::defaultConfiguration);
 
     //! Set aggregation data
@@ -75,19 +76,27 @@ public:
     //! Update market snapshot and relevant fixing history
     void update(const Date& d) override;
 
+    //! Reset sim market to initial state
+    virtual void reset() override;
+
+    //! Scenario representing the initial state of the market
+    boost::shared_ptr<Scenario> baseScenario() const { return baseScenario_; }
+
     //! Return the fixing manager
     const boost::shared_ptr<FixingManager>& fixingManager() const override { return fixingManager_; }
 
 private:
-    void addYieldCurve(boost::shared_ptr<Market>& initMarket, const std::string& configuration,  
-                    ore::data::YieldCurveType y, string key, vector<Period>& tenors);
-    boost::shared_ptr<ScenarioGenerator> scenarioGenerator_;
-    boost::shared_ptr<ScenarioSimMarketParameters> parameters_;
+    void applyScenario(const boost::shared_ptr<Scenario>& scenario);
+    void addYieldCurve(const boost::shared_ptr<Market>& initMarket, const std::string& configuration,
+                       const ore::data::YieldCurveType y, const string& key, const vector<Period>& tenors);
+    const boost::shared_ptr<ScenarioGenerator> scenarioGenerator_;
+    const boost::shared_ptr<ScenarioSimMarketParameters> parameters_;
     boost::shared_ptr<AggregationScenarioData> asd_;
     boost::shared_ptr<FixingManager> fixingManager_;
     boost::shared_ptr<ScenarioFilter> filter_;
 
     std::map<RiskFactorKey, boost::shared_ptr<SimpleQuote>> simData_;
+    boost::shared_ptr<Scenario> baseScenario_;
 };
 } // namespace analytics
 } // namespace ore

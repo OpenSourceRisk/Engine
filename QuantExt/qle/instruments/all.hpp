@@ -16,4 +16,5 @@
 #include <qle/instruments/creditdefaultswap.hpp>
 #include <qle/instruments/makecds.hpp>
 #include <qle/instruments/cdsoption.hpp>
+#include <qle/instruments/payment.hpp>
 
