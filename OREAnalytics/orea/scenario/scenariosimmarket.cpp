@@ -328,7 +328,6 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
             vector<Period> optionTenors = parameters->swapVolExpiries();
             vector<Period> swapTenors = parameters->swapVolTerms();
             vector<Real> strikeSpreads = parameters->swapVolStrikeSpreads();
-            LOG("Simulating "<<optionTenors.size()<<" optionTenors, "<<swapTenors.size()<<" swapTenors & "<<strikeSpreads.size()<<" strikeSpreads");
             bool atmOnly = parameters->simulateSwapVolATMOnly();
             if (atmOnly) {
                 QL_REQUIRE(strikeSpreads.size() == 1 && strikeSpreads[0] == 0, "for atmOnly strikeSpreads must be {0.0}");

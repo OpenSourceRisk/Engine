@@ -257,10 +257,8 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
                     Size index = j * n_swvol_term * n_swvol_strike+ k * n_swvol_strike + l;
                     Real strike;
                     if (atmOnly_swvol) {
-                        LOG("atm");
                         strike = Null<Real>(); //ATM
                     } else {
-                        LOG("fullsurface "<<j<<" "<<k<<" "<<l);
                         strike = cube->atmStrike(expiry, term) + simMarketData_->swapVolStrikeSpreads()[l];
                     }
                     swaptionVolKeys_.emplace_back(RiskFactorKey::KeyType::SwaptionVolatility, ccy, index);
