@@ -17,23 +17,6 @@
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
     </DiscountCurve>
     
-    <DiscountCurve ccy="GBP">
-      <ShiftType>Absolute</ShiftType>
-      <ShiftSize>0.0001</ShiftSize>
-      <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
-    </DiscountCurve>
-    
-    <DiscountCurve ccy="CHF">
-      <ShiftType>Absolute</ShiftType>
-      <ShiftSize>0.0001</ShiftSize>
-      <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
-    </DiscountCurve>
-    
-    <DiscountCurve ccy="JPY">
-      <ShiftType>Absolute</ShiftType>
-      <ShiftSize>0.0001</ShiftSize>
-      <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
-    </DiscountCurve>
   </DiscountCurves>
   
   <!-- Index curve shifts -->
@@ -69,29 +52,6 @@
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
     </IndexCurve>
     
-    <IndexCurve index="GBP-LIBOR-3M">
-      <ShiftType>Absolute</ShiftType>
-      <ShiftSize>0.0001</ShiftSize>
-      <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
-    </IndexCurve>
-    
-    <IndexCurve index="GBP-LIBOR-6M">
-      <ShiftType>Absolute</ShiftType>
-      <ShiftSize>0.0001</ShiftSize>
-      <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
-    </IndexCurve>
-    
-    <IndexCurve index="CHF-LIBOR-6M">
-      <ShiftType>Absolute</ShiftType>
-      <ShiftSize>0.0001</ShiftSize>
-      <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
-    </IndexCurve>
-    
-    <IndexCurve index="JPY-LIBOR-6M">
-      <ShiftType>Absolute</ShiftType>
-      <ShiftSize>0.0001</ShiftSize>
-      <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
-    </IndexCurve>    
   </IndexCurves>
 
   <!-- Yield curve shifts -->
@@ -101,6 +61,40 @@
       <ShiftSize>0.0001</ShiftSize>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
     </YieldCurve>
+        <YieldCurve name="SP5">
+      <CurveType>EquityForecast</CurveType>
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</ShiftTenors>
+      <ParConversion>
+        <Instruments>DEP,OIS,OIS,OIS,OIS,OIS,OIS,OIS</Instruments>
+        <SingleCurve>true</SingleCurve>
+        <Conventions>
+          <Convention id="DEP">EUR-EURIBOR-CONVENTIONS</Convention>
+          <Convention id="IRS">EUR-3M-SWAP-CONVENTIONS</Convention>
+          <Convention id="OIS">EUR-OIS-CONVENTIONS</Convention>
+          <Convention id="XBS">EUR-USD-XCCY-BASIS-CONVENTIONS</Convention>
+          <Convention id="FXF">USD-EUR-FX-CONVENTIONS</Convention>
+        </Conventions>
+      </ParConversion>
+    </YieldCurve>
+    <YieldCurve name="Lufthansa">
+      <CurveType>EquityForecast</CurveType>
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</ShiftTenors>
+      <ParConversion>
+        <Instruments>DEP,OIS,OIS,OIS,OIS,OIS,OIS,OIS</Instruments>
+        <SingleCurve>true</SingleCurve>
+        <Conventions>
+          <Convention id="DEP">EUR-EURIBOR-CONVENTIONS</Convention>
+          <Convention id="IRS">EUR-3M-SWAP-CONVENTIONS</Convention>
+          <Convention id="OIS">EUR-OIS-CONVENTIONS</Convention>
+          <Convention id="XBS">EUR-USD-XCCY-BASIS-CONVENTIONS</Convention>
+          <Convention id="FXF">USD-EUR-FX-CONVENTIONS</Convention>
+        </Conventions>
+      </ParConversion>
+    </YieldCurve>
   </YieldCurves>
   
   <!-- FX spot shifts -->
@@ -109,35 +103,11 @@
       <ShiftType>Relative</ShiftType>
       <ShiftSize>0.01</ShiftSize>
     </FxSpot>
-    <FxSpot ccypair="GBPEUR">
-      <ShiftType>Relative</ShiftType>
-      <ShiftSize>0.01</ShiftSize>
-    </FxSpot>
-    <FxSpot ccypair="CHFEUR">
-      <ShiftType>Relative</ShiftType>
-      <ShiftSize>0.01</ShiftSize>
-    </FxSpot>
-    <FxSpot ccypair="JPYEUR">
-      <ShiftType>Relative</ShiftType>
-      <ShiftSize>0.01</ShiftSize>
-    </FxSpot>
   </FxSpots>
   
   <!-- FX ATM vol shifts -->
   <FxVolatilities>
     <FxVolatility ccypair="USDEUR">
-      <ShiftType>Relative</ShiftType>
-      <ShiftSize>0.01</ShiftSize>
-      <ShiftExpiries>1Y,2Y,3Y,5Y</ShiftExpiries>
-      <ShiftStrikes/>
-    </FxVolatility>
-    <FxVolatility ccypair="GBPEUR">
-      <ShiftType>Relative</ShiftType>
-      <ShiftSize>0.01</ShiftSize>
-      <ShiftExpiries>1Y,2Y,3Y,5Y</ShiftExpiries>
-      <ShiftStrikes/>
-    </FxVolatility>
-    <FxVolatility ccypair="JPYEUR">
       <ShiftType>Relative</ShiftType>
       <ShiftSize>0.01</ShiftSize>
       <ShiftExpiries>1Y,2Y,3Y,5Y</ShiftExpiries>

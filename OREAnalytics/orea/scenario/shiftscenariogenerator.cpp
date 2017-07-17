@@ -236,20 +236,37 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
     Size n_swvol_ccy = simMarketData_->swapVolCcys().size();
     Size n_swvol_term = simMarketData_->swapVolTerms().size();
     Size n_swvol_exp = simMarketData_->swapVolExpiries().size();
-    swaptionVolKeys_.reserve(n_swvol_ccy * n_swvol_term * n_swvol_exp);
+    Size n_swvol_strike = simMarketData_->swapVolStrikeSpreads().size();
+    bool atmOnly_swvol = simMarketData_->simulateSwapVolATMOnly();
+    swaptionVolKeys_.reserve(n_swvol_ccy * n_swvol_term * n_swvol_exp * n_swvol_strike);
     count = 0;
     for (Size i = 0; i < n_swvol_ccy; ++i) {
         std::string ccy = simMarketData_->swapVolCcys()[i];
         Handle<SwaptionVolatilityStructure> ts = market->swaptionVol(ccy, configuration_);
+        boost::shared_ptr<SwaptionVolatilityCube> cube;
+        if(!atmOnly_swvol) {
+            boost::shared_ptr<SwaptionVolCubeWithATM> tmp =  boost::dynamic_pointer_cast<SwaptionVolCubeWithATM>(*ts);
+            QL_REQUIRE(tmp, "swaption cube missing");
+            cube = tmp->cube();
+        }
         for (Size j = 0; j < n_swvol_exp; ++j) {
             Period expiry = simMarketData_->swapVolExpiries()[j];
             for (Size k = 0; k < n_swvol_term; ++k) {
-                swaptionVolKeys_.emplace_back(RiskFactorKey::KeyType::SwaptionVolatility, ccy, j * n_swvol_term + k);
                 Period term = simMarketData_->swapVolTerms()[k];
-                Real swvol = ts->volatility(expiry, term, Null<Real>()); // ATM
-                swaptionVolCache_[swaptionVolKeys_[count]] = swvol;
-                LOG("cache swaption vol " << swvol << " for key " << swaptionVolKeys_[count]);
-                count++;
+                for (Size l = 0; l < n_swvol_strike; ++l) {
+                    Size index = j * n_swvol_term * n_swvol_strike+ k * n_swvol_strike + l;
+                    Real strike;
+                    if (atmOnly_swvol) {
+                        strike = Null<Real>(); //ATM
+                    } else {
+                        strike = cube->atmStrike(expiry, term) + simMarketData_->swapVolStrikeSpreads()[l];
+                    }
+                    swaptionVolKeys_.emplace_back(RiskFactorKey::KeyType::SwaptionVolatility, ccy, index);
+                    Real swvol = ts->volatility(expiry, term, strike);
+                    swaptionVolCache_[swaptionVolKeys_[count]] = swvol;
+                    LOG("cache swaption vol " << swvol << " for key " << swaptionVolKeys_[count]);
+                    count++;
+                }
             }
         }
     }
@@ -284,7 +301,6 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
                 fxVolCache_[fxVolKeys_[count]] = fxvol;
                 count++;
             }
-            LOG("fx strike for " << ccyPair << " " << strike);
         }
     }
 
