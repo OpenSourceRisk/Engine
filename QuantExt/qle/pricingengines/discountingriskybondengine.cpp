@@ -31,9 +31,8 @@ namespace QuantExt {
 
 DiscountingRiskyBondEngine::DiscountingRiskyBondEngine(const Handle<YieldTermStructure>& discountCurve,
                                                        const Handle<DefaultProbabilityTermStructure>& defaultCurve,
-                                                       const Handle<Quote>& securitySpread,
-                                                       const Handle<Quote>& recoveryRate, Period timestepPeriod,
-                                                       boost::optional<bool> includeSettlementDateFlows)
+						       const Handle<Quote>& recoveryRate, const Handle<Quote>& securitySpread,
+						       Period timestepPeriod, boost::optional<bool> includeSettlementDateFlows)
     : defaultCurve_(defaultCurve), recoveryRate_(recoveryRate), securitySpread_(securitySpread),
       timestepPeriod_(timestepPeriod), includeSettlementDateFlows_(includeSettlementDateFlows) {
     discountCurve_ =
