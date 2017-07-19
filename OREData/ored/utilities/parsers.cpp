@@ -208,6 +208,9 @@ Calendar parseCalendar(const string& s) {
                                       {"PHP", TARGET()},
                                       {"NGN", TARGET()},
                                       {"MAD", TARGET()},
+                                        //ISDA http://www.fpml.org/coding-scheme/business-center-7-15.xml
+                                      {"GBLO", UnitedKingdom()},
+                                      {"EUTA", TARGET()},
                                       {"WeekendsOnly", WeekendsOnly()},
                                       {"NullCalendar", NullCalendar()}};
 
@@ -261,6 +264,7 @@ BusinessDayConvention parseBusinessDayConvention(const string& s) {
                                                    {"ModifiedFollowing", ModifiedFollowing},
                                                    {"Modified Following", ModifiedFollowing},
                                                    {"MODIFIEDF", ModifiedFollowing},
+                                                   {"MODFOLLOWING", ModifiedFollowing},
                                                    {"P", Preceding},
                                                    {"Preceding", Preceding},
                                                    {"PRECEDING", Preceding},
@@ -270,7 +274,10 @@ BusinessDayConvention parseBusinessDayConvention(const string& s) {
                                                    {"MODIFIEDP", ModifiedPreceding},
                                                    {"U", Unadjusted},
                                                    {"Unadjusted", Unadjusted},
-                                                   {"INDIFF", Unadjusted}};
+                                                   {"INDIFF", Unadjusted},
+                                                   {"NEAREST", Nearest},
+                                                   {"NONE", Unadjusted},
+                                                   {"NotApplicable", Unadjusted}};
 
     auto it = m.find(s);
     if (it != m.end()) {
@@ -287,6 +294,7 @@ DayCounter parseDayCounter(const string& s) {
                                         {"A365", Actual365Fixed()},
                                         {"A365F", Actual365Fixed()},
                                         {"Actual/365 (Fixed)", Actual365Fixed()},
+                                        {"ACT/365.FIXED", Actual365Fixed()},
                                         {"ACT/365", Actual365Fixed()},
                                         {"T360", Thirty360(Thirty360::USA)},
                                         {"30/360", Thirty360(Thirty360::USA)},

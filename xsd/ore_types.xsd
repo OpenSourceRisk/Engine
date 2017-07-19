@@ -14,13 +14,13 @@
   <xs:simpleType name="indexNameType">
     <!-- Index name is of form CCY-NAME or CCY-NAME-TENOR max length is EUR-EURIBOR-12M -->
     <xs:restriction base="xs:string">
-      <xs:maxLength value="15"/>
+      <xs:maxLength value="30"/>
       <!-- This is not strict.
            - CCY is any 3 uppercase character string (can we use the below currencyCode list?)
            - NAME is any 3 to 8 character string ("CMS" up to "FedFunds")
            - TENOR is any 1 to 3 digit followed by one of YMWD (99M would pass)
         -->
-      <xs:pattern value="\p{Lu}{3}-\c{3,8}|\p{Lu}{3}-\c{3,8}-\d{1,3}[YMWD]"/>
+      <!--xs:pattern value="\p{Lu}{3}-\c{3,8}|\p{Lu}{3}-\c{3,8}-\d{1,3}[YMWD]"/-->
     </xs:restriction>
   </xs:simpleType>
 
@@ -123,6 +123,7 @@
       <xs:enumeration value="ModifiedFollowing"/>
       <xs:enumeration value="Modified Following"/>
       <xs:enumeration value="MODIFIEDF"/>
+      <xs:enumeration value="MODFOLLOWING"/>
       <xs:enumeration value="P"/>
       <xs:enumeration value="Preceding"/>
       <xs:enumeration value="PRECEDING"/>
@@ -133,12 +134,15 @@
       <xs:enumeration value="U"/>
       <xs:enumeration value="Unadjusted"/>
       <xs:enumeration value="INDIFF"/>
+      <xs:enumeration value="NEAREST"/>
+      <xs:enumeration value="NONE"/>
+      <xs:enumeration value="NotApplicable"/>
     </xs:restriction>
   </xs:simpleType>
 
   <xs:simpleType name="calendar">
-    <xs:restriction base="xs:string">
-      <xs:enumeration value="TGT"/>
+    <xs:restriction base="xs:string"/>
+      <!--xs:enumeration value="TGT"/>
       <xs:enumeration value="TARGET"/>
       <xs:enumeration value="EUR"/>
       <xs:enumeration value="ZUB"/>
@@ -213,8 +217,10 @@
       <xs:enumeration value="PHP"/>
       <xs:enumeration value="NGN"/>
       <xs:enumeration value="MAD"/>
+      <xs:enumeration value="GBLO"/>
+      <xs:enumeration value="EUTA"/>
       <xs:enumeration value="WeekendsOnly"/>
-    </xs:restriction>
+    </xs:restriction-->
   </xs:simpleType>
 
   <xs:simpleType name="dayCounter">
@@ -225,6 +231,7 @@
       <xs:enumeration value="A365"/>
       <xs:enumeration value="A365F"/>
       <xs:enumeration value="Actual/365 (Fixed)"/>
+      <xs:enumeration value="ACT/365.FIXED"/>
       <xs:enumeration value="ACT/365"/>
       <xs:enumeration value="T360"/>
       <xs:enumeration value="30/360"/>
