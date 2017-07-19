@@ -92,10 +92,10 @@ bool scenarioFilter(const RiskFactorKey& riskFactorKey, const RiskFactorKey::Key
 vector<RiskFactorKey> getKeys(const vector<RiskFactorKey>& riskFactorKeys, 
     const RiskFactorKey::KeyType& keyType, const string& key) {
     
-    function<bool(RiskFactorKey)> filter = bind(scenarioFilter, _1, keyType, key);
+    function<bool(const RiskFactorKey&)> filter = bind(scenarioFilter, _1, keyType, key);
     
-    auto start = boost::make_filter_iterator(filter, riskFactorKeys.begin());
-    auto end = boost::make_filter_iterator(filter, riskFactorKeys.end());
+    auto start = boost::make_filter_iterator(filter, riskFactorKeys.begin(), riskFactorKeys.end());
+    auto end = boost::make_filter_iterator(filter, riskFactorKeys.end(), riskFactorKeys.end());
     vector<RiskFactorKey> keys(start, end);
     return keys;
 }
@@ -996,8 +996,9 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
 }
 
 ScenarioSimMarket::ScenarioSimMarket(const Date& asof, const boost::shared_ptr<ScenarioGenerator>& scenarioGenerator,
-    boost::shared_ptr<Scenario> baseScenario, const boost::shared_ptr<ScenarioSimMarketParameters>& parameters)
-    : SimMarket(asof, Conventions()), scenarioGenerator_(scenarioGenerator), parameters_(parameters) {
+    boost::shared_ptr<Scenario> baseScenario, const boost::shared_ptr<ScenarioSimMarketParameters>& parameters, 
+    const Conventions& conventions)
+    : SimMarket(asof, conventions), scenarioGenerator_(scenarioGenerator), parameters_(parameters) {
 
     LOG("building ScenarioSimMarket for " << QuantLib::io::iso_date(asof_) << " ...");
 
