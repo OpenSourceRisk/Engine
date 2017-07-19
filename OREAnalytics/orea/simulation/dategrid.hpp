@@ -48,6 +48,10 @@ public:
              const QuantLib::Calendar& gridCalendar = QuantLib::TARGET(),
              const QuantLib::DayCounter& dayCounter = QuantLib::ActualActual());
 
+    //! Build a date grid from an explicit set of dates, sorted in ascending order.
+    DateGrid(const std::vector<QuantLib::Date>& dates, 
+        const QuantLib::DayCounter& dayCounter = QuantLib::ActualActual());
+
     //! The size of the date grid
     QuantLib::Size size() const { return dates_.size(); }
 
@@ -80,6 +84,8 @@ public:
 
 private:
     void buildDates(const QuantLib::Calendar& cal, const QuantLib::DayCounter& dc);
+    // Log the constructed DateGrid
+    void log();
 
     std::vector<QuantLib::Date> dates_;
     std::vector<QuantLib::Period> tenors_;

@@ -43,6 +43,7 @@ namespace analytics {
 class SimMarket : public data::MarketImpl {
 public:
     SimMarket(const Conventions& conventions) : MarketImpl(conventions), numeraire_(1.0) {}
+    SimMarket(const Date& asof, const Conventions& conventions) : MarketImpl(asof, conventions), numeraire_(1.0) {}
 
     //! Generate or retrieve market scenario, update market, notify termstructures and update fixings
     virtual void update(const Date&) = 0;

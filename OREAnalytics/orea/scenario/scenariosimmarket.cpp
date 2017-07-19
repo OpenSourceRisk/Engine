@@ -55,6 +55,8 @@
 #include <qle/indexes/inflationindexwrapper.hpp>
 
 #include <boost/timer.hpp>
+#include <boost/iterator/filter_iterator.hpp>
+#include <boost/make_shared.hpp>
 
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
@@ -62,6 +64,8 @@
 using namespace QuantLib;
 using namespace QuantExt;
 using namespace std;
+using namespace std::placeholders;
+using namespace ore::data;
 
 typedef QuantLib::BaseCorrelationTermStructure<QuantLib::BilinearInterpolation> BilinearBaseCorrelationTermStructure;
 
@@ -78,6 +82,22 @@ ReactionToTimeDecay parseDecayMode(const string& s) {
     } else {
         QL_FAIL("Decay mode \"" << s << "\" not recognized");
     }
+}
+
+bool scenarioFilter(const RiskFactorKey& riskFactorKey, const RiskFactorKey::KeyType& keyType, const string& name) {
+    return (riskFactorKey.keytype == keyType && riskFactorKey.name == name);
+}
+
+// Function to filter a particular key type and key from all risk factor keys
+vector<RiskFactorKey> getKeys(const vector<RiskFactorKey>& riskFactorKeys, 
+    const RiskFactorKey::KeyType& keyType, const string& key) {
+    
+    function<bool(RiskFactorKey)> filter = bind(scenarioFilter, _1, keyType, key);
+    
+    auto start = boost::make_filter_iterator(filter, riskFactorKeys.begin());
+    auto end = boost::make_filter_iterator(filter, riskFactorKeys.end());
+    vector<RiskFactorKey> keys(start, end);
+    return keys;
 }
 
 ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scenarioGenerator,
@@ -975,6 +995,235 @@ ScenarioSimMarket::ScenarioSimMarket(boost::shared_ptr<ScenarioGenerator>& scena
     LOG("yoy inflation curves done");
 }
 
+ScenarioSimMarket::ScenarioSimMarket(const Date& asof, const boost::shared_ptr<ScenarioGenerator>& scenarioGenerator,
+    boost::shared_ptr<Scenario> baseScenario, const boost::shared_ptr<ScenarioSimMarketParameters>& parameters)
+    : SimMarket(asof, Conventions()), scenarioGenerator_(scenarioGenerator), parameters_(parameters) {
+
+    LOG("building ScenarioSimMarket for " << QuantLib::io::iso_date(asof_) << " ...");
+
+    // Sorted scenario keys from the base scenario
+    vector<RiskFactorKey> riskFactorKeys = baseScenario->keys();
+    sort(riskFactorKeys.begin(), riskFactorKeys.end());
+
+    // Build fixing manager
+    fixingManager_ = boost::make_shared<FixingManager>(asof_);
+
+    // Constructing FX spots
+    LOG("building FX triangulation..");
+    for (const auto& ccyPair : parameters->fxCcyPairs()) {
+        LOG("adding " << ccyPair << " FX rates");
+
+        // Get the risk factor key for this currency pair
+        vector<RiskFactorKey> fxKeys = getKeys(riskFactorKeys, RiskFactorKey::KeyType::FXSpot, ccyPair);
+        QL_REQUIRE(fxKeys.size() == 1, "Expected exactly 1 scenario for fx pair " << ccyPair << " in scenario");
+
+        Real fxSpot = baseScenario->get(fxKeys[0]);
+        boost::shared_ptr<SimpleQuote> q = boost::make_shared<SimpleQuote>(fxSpot);
+        fxSpots_[Market::defaultConfiguration].addQuote(ccyPair, Handle<Quote>(q));
+        simData_.emplace(fxKeys[0], q);
+    }
+    LOG("FX triangulation done");
+
+    // All yield/discount/index curves
+    map<RiskFactorKey::KeyType, vector<string>> yieldCurvesContainer;
+    yieldCurvesContainer[RiskFactorKey::KeyType::DiscountCurve] = parameters->ccys();
+    yieldCurvesContainer[RiskFactorKey::KeyType::YieldCurve] = parameters->yieldCurveNames();
+    yieldCurvesContainer[RiskFactorKey::KeyType::IndexCurve] = parameters->indices();
+
+    // Set up yield curves using base scenario and scenario parameters
+    LOG("building yield curves...");
+    for (const auto& element : yieldCurvesContainer) {
+        RiskFactorKey::KeyType curveType = element.first;
+        const vector<string>& curves = element.second;
+        
+        for (const auto& curve : curves) {
+            LOG("building " << curve << " yield curve of type " << curveType);
+
+            // Get the curve keys (i.e. names) for this curve
+            vector<RiskFactorKey> keys = getKeys(riskFactorKeys, curveType, curve);
+
+            // Some consistency checks
+            vector<Period> yieldCurveTenors = parameters->yieldCurveTenors(curve);
+            Size numberPoints = yieldCurveTenors.size();
+            QL_REQUIRE(numberPoints == keys.size(), "Mismatch between number of points for curve "
+                << curve << " and number of tenors in scenario sim parameters");
+            QL_REQUIRE(yieldCurveTenors.front() > 0 * Days, "yield curve tenors must not include t=0");
+
+            // Get the quotes from the base scenario
+            DayCounter dc = parameters->yieldCurveDayCounter();
+            vector<Time> yieldCurveTimes(numberPoints + 1, 0.0);
+            vector<Handle<Quote>> quotes(numberPoints + 1);
+            quotes[0] = Handle<Quote>(boost::make_shared<SimpleQuote>(1.0));
+            for (Size i = 0; i < numberPoints; i++) {
+                yieldCurveTimes[i + 1] = dc.yearFraction(asof_, asof_ + yieldCurveTenors[i]);
+                Real discount = baseScenario->get(keys[i]);
+                boost::shared_ptr<SimpleQuote> q = boost::make_shared<SimpleQuote>(discount);
+                quotes[i + 1] = Handle<Quote>(q);
+                simData_.emplace(keys[i], q);
+                LOG("ScenarioSimMarket yield curve " << curve << " discount[" << i << "]=" << discount);
+            }
+
+            // If the curve is an index curve, get index object now
+            Calendar fixingCalendar = NullCalendar();
+            boost::shared_ptr<IborIndex> index;
+            if (curveType == RiskFactorKey::KeyType::IndexCurve) {
+                index = parseIborIndex(curve);
+                fixingCalendar = index->fixingCalendar();
+            }
+
+            // Create the discount curve object from quotes and times
+            boost::shared_ptr<YieldTermStructure> discountCurve;
+            if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister) {
+                discountCurve = boost::shared_ptr<YieldTermStructure>(
+                    boost::make_shared<QuantExt::InterpolatedDiscountCurve>(yieldCurveTimes, quotes, 0, fixingCalendar, dc));
+            } else {
+                discountCurve = boost::shared_ptr<YieldTermStructure>(
+                    boost::make_shared<QuantExt::InterpolatedDiscountCurve2>(yieldCurveTimes, quotes, dc));
+            }
+
+            // Extrapolation
+            Handle<YieldTermStructure> dch(discountCurve);
+            dch->enableExtrapolation(parameters->extrapolate());
+
+            // Add to the market
+            // Check the emplace statements below on gcc
+            if (curveType == RiskFactorKey::KeyType::DiscountCurve) {
+                discountCurves_.emplace(make_pair(Market::defaultConfiguration, curve), dch);
+            } else if (curveType == RiskFactorKey::KeyType::YieldCurve) {
+                yieldCurves_.emplace(make_pair(Market::defaultConfiguration, curve), dch);
+            } else if (curveType == RiskFactorKey::KeyType::IndexCurve) {
+                Handle<IborIndex> hIndex(index->clone(dch));
+                iborIndices_.emplace(make_pair(Market::defaultConfiguration, curve), hIndex);
+            } else {
+                QL_FAIL("Did not expect a curve type of " << curveType << " at this point");
+            }
+
+            LOG("building " << curve << " yield curve done");
+        }
+    }
+    LOG("yield curves done");
+
+    // building security spreads
+    // TODO: add security spreads to the scenarios
+    LOG("building security spreads...");
+    for (const auto& name : parameters->securities()) {
+        boost::shared_ptr<Quote> spreadQuote = boost::make_shared<SimpleQuote>(0.0);
+        securitySpreads_.emplace(make_pair(Market::defaultConfiguration, name), Handle<Quote>(spreadQuote));
+    }
+    LOG("security spreads done");
+
+    // swap indices
+    LOG("building swap indices...");
+    for (const auto& it : parameters->swapIndices()) {
+        const string& indexName = it.first;
+        const string& discounting = it.second;
+        LOG("Adding swap index " << indexName << " with discounting index " << discounting);
+
+        addSwapIndex(indexName, discounting, Market::defaultConfiguration);
+        LOG("Adding swap index " << indexName << " done.");
+    }
+    LOG("swap indices done");
+
+    // constructing swaption volatility curves
+    LOG("building swaption volatility curves...");
+    for (const auto& ccy : parameters->swapVolCcys()) {
+        LOG("building " << ccy << " swaption volatility curve...");
+
+        // Get the swaption volatility keys for this currency
+        vector<RiskFactorKey> keys = getKeys(riskFactorKeys, RiskFactorKey::KeyType::SwaptionVolatility, ccy);
+
+        // TODO: For now, in below, assuming that we have ATM Normal vol matrix with flat extrapolation in scenarios
+        vector<Period> optionTenors = parameters->swapVolExpiries();
+        vector<Period> swapTenors = parameters->swapVolTerms();
+        vector<vector<Handle<Quote>>> quotes(optionTenors.size(),
+            vector<Handle<Quote>>(swapTenors.size(), Handle<Quote>()));
+        vector<vector<Real>> shift(optionTenors.size(), vector<Real>(swapTenors.size(), 0.0));
+        
+        for (Size i = 0; i < optionTenors.size(); ++i) {
+            for (Size j = 0; j < swapTenors.size(); ++j) {
+                Size index = i * swapTenors.size() + j;
+                Real vol = baseScenario->get(keys[index]);
+                boost::shared_ptr<SimpleQuote> q = boost::make_shared<SimpleQuote>(vol);
+                simData_.emplace(keys[index], q);
+                quotes[i][j] = Handle<Quote>(q);
+            }
+        }
+
+        // TODO: should these be in simulation market XML file if we want to avoid init market?
+        bool flatExtrapolation = true;
+        VolatilityType volType = Normal;
+        TARGET calendar;
+        BusinessDayConvention bdc = Following;
+        Actual365Fixed dc;
+
+        // floating reference date matrix in sim market
+        boost::shared_ptr<SwaptionVolatilityStructure> svolp = boost::make_shared<SwaptionVolatilityMatrix>(
+            calendar, bdc, optionTenors, swapTenors, quotes, dc, flatExtrapolation, volType, shift);
+            
+        Handle<SwaptionVolatilityStructure> svp(svolp);
+        svp->enableExtrapolation(); // FIXME
+
+        swaptionCurves_.emplace(make_pair(Market::defaultConfiguration, ccy), svp);
+
+        LOG("building " << ccy << " swaption volatility curve done.");
+    }
+    LOG("swaption volatility curves done");
+
+    // Constructing caplet/floorlet volatility surfaces
+    LOG("building cap/floor volatility curves...");
+    for (const auto& ccy : parameters->capFloorVolCcys()) {
+        LOG("building " << ccy << " cap/floor volatility curve...");
+        
+        // Get the swaption volatility keys for this currency
+        vector<RiskFactorKey> keys = getKeys(riskFactorKeys, RiskFactorKey::KeyType::OptionletVolatility, ccy);
+
+        // TODO: should these be in simulation market XML file if we want to avoid init market?
+        VolatilityType volType = Normal;
+        TARGET calendar;
+        BusinessDayConvention bdc = Following;
+        Actual365Fixed dc;
+        Real shift = 0.0;
+        Natural settlementDays = 2;
+        bool eom = false;
+
+        // TODO: For now, in below, assuming that we have Normal vol matrix with flat extrapolation in scenarios
+        vector<Period> optionTenors = parameters->capFloorVolExpiries(ccy);
+        vector<Date> optionDates(optionTenors.size());
+        vector<Real> strikes = parameters->capFloorVolStrikes();
+        vector<vector<Handle<Quote>>> quotes(optionTenors.size(), 
+            vector<Handle<Quote>>(strikes.size(), Handle<Quote>()));
+        
+        for (Size i = 0; i < optionTenors.size(); ++i) {
+            Date spotDate = calendar.advance(asof_, settlementDays, Days);
+            optionDates[i] = calendar.advance(spotDate, optionTenors[i], bdc, eom);
+            for (Size j = 0; j < strikes.size(); ++j) {
+                Size index = i * strikes.size() + j;
+                Real vol = baseScenario->get(keys[index]);
+                boost::shared_ptr<SimpleQuote> q = boost::make_shared<SimpleQuote>(vol);
+                simData_.emplace(keys[index], q);
+                quotes[i][j] = Handle<Quote>(q);
+            }
+        }
+
+        // FIXME: need to be able to look up the correct ibor index like:
+        // boost::shared_ptr<IborIndex> iborIndex = MarketImpl::iborIndex(index_string_here).currentLink();
+        boost::shared_ptr<IborIndex> iborIndex;
+
+        // FIXME: Works as of today only, i.e. for sensitivity/scenario analysis.
+        // TODO: Build floating reference date StrippedOptionlet class for MC path generators
+        boost::shared_ptr<StrippedOptionlet> optionlet = boost::make_shared<StrippedOptionlet>(
+            settlementDays, calendar, bdc, iborIndex, optionDates, strikes, quotes, dc, volType, shift);
+        boost::shared_ptr<StrippedOptionletAdapter2> adapter =
+            boost::make_shared<StrippedOptionletAdapter2>(optionlet);
+        
+        Handle<OptionletVolatilityStructure> hCapletVol(adapter);
+
+        capFloorCurves_.emplace(make_pair(Market::defaultConfiguration, ccy), hCapletVol);
+
+        LOG("building " << ccy << " cap / floor volatility curve done.");
+    }
+    LOG("cap/floor volatility curves done");
+}
 void ScenarioSimMarket::update(const Date& d) {
     // DLOG("ScenarioSimMarket::update called with Date " << QuantLib::io::iso_date(d));
 

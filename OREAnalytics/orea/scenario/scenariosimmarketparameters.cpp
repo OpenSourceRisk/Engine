@@ -19,10 +19,12 @@
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/xmlutils.hpp>
+#include <ored/utilities/to_string.hpp>
 
 #include <boost/lexical_cast.hpp>
 
 using namespace QuantLib;
+using namespace ore::data;
 
 namespace ore {
 namespace analytics {
@@ -98,7 +100,8 @@ bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& 
 
     if (baseCcy_ != rhs.baseCcy_ || ccys_ != rhs.ccys_ || yieldCurveNames_ != rhs.yieldCurveNames_ ||
         yieldCurveCurrencies_ != rhs.yieldCurveCurrencies_ || yieldCurveTenors_ != rhs.yieldCurveTenors_ ||
-        indices_ != rhs.indices_ || swapIndices_ != rhs.swapIndices_ || interpolation_ != rhs.interpolation_ ||
+        indices_ != rhs.indices_ || swapIndices_ != rhs.swapIndices_ || 
+        yieldCurveDayCounter_ != rhs.yieldCurveDayCounter_ || interpolation_ != rhs.interpolation_ ||
         extrapolate_ != rhs.extrapolate_ || swapVolTerms_ != rhs.swapVolTerms_ || swapVolCcys_ != rhs.swapVolCcys_ ||
         swapVolSimulate_ != rhs.swapVolSimulate_ || swapVolExpiries_ != rhs.swapVolExpiries_ ||
         swapVolDecayMode_ != rhs.swapVolDecayMode_ || capFloorVolSimulate_ != rhs.capFloorVolSimulate_ ||
@@ -162,6 +165,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     yieldCurveTenors_[""] = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Tenors", true);
     // TODO read other keys
     interpolation_ = XMLUtils::getChildValue(nodeChild, "Interpolation", true);
+    yieldCurveDayCounter_ = parseDayCounter(XMLUtils::getChildValue(nodeChild, "DayCounter", true));
     extrapolate_ = XMLUtils::getChildValueAsBool(nodeChild, "Extrapolate");
 
     indices_ = XMLUtils::getChildrenValues(node, "Indices", "Index");
@@ -355,6 +359,7 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
     XMLUtils::addGenericChildAsList(doc, configurationNode, "Tenors", returnTenors(yieldCurveTenors_, ""));
     // TODO write other keys
     XMLUtils::addChild(doc, configurationNode, "Interpolation", interpolation_);
+    XMLUtils::addChild(doc, configurationNode, "DayCounter", to_string(yieldCurveDayCounter_));
     XMLUtils::addChild(doc, configurationNode, "Extrapolation", extrapolate_);
 
     // indices
