@@ -73,7 +73,6 @@
           <SimulateATMOnly>false</SimulateATMOnly>
           <StrikeSpreads>-0.02,-0.01,0.0,0.01,0.02</StrikeSpreads>
       </Cube>
-      <Strikes/>
     </SwaptionVolatilities>
     
     <CapFloorVolatilities>
