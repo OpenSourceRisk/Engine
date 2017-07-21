@@ -817,7 +817,7 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(
         vector<Real> shiftTermTimes(data.shiftTerms.size(), 0.0);
         vector<Real> shiftStrikes;
         if (!atmOnly_swvol) {
-            shiftStrikes.resize(data.shiftStrikes.size(), 0.0);
+            shiftStrikes = data.shiftStrikes;
             QL_REQUIRE(data.shiftStrikes.size() == n_swvol_strike, "number of simulated strikes must equal number of sensitivity strikes");
         } else {
             shiftStrikes = {0.0};
@@ -870,27 +870,34 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(
                     scenarioDescriptions_.push_back(swaptionVolScenarioDescription(ccy, j, k, strikeBucket, up));
 
                     //if simulating atm only we shift all strikes otherwise we shift each strike individually
-                    Size loopStart = atmOnly_swvol ? 0 : l;
-                    Size loopEnd = atmOnly_swvol ? n_swvol_strike : l+1;
-
+                    Size loopStart;
+                    if (!atmOnly_swvol) {
+                        Real strike = shiftStrikes[l];
+                        vector<Real> strikes = simMarketData_->swapVolStrikeSpreads();
+                        for (Size s = 0; s < shiftStrikes.size(); s++)
+                            if (strike == strikes[s])
+                                loopStart = s;
+                    } else {
+                        loopStart = 0;
+                    }
+                    Size loopEnd = atmOnly_swvol ? n_swvol_strike : loopStart+1;
+                    LOG("Swap vol looping over "<<loopStart<<" to "<<loopEnd <<" for strike "<<shiftStrikes[l]);
                     for (Size ll=loopStart; ll < loopEnd; ++ll){
                         applyShift(j, k, shiftSize, up, shiftType, shiftExpiryTimes, shiftTermTimes, volExpiryTimes,
                                 volTermTimes, volData[ll], shiftedVolData[ll], true);
                     }
-                    
                     // add shifted vol data to the scenario
-                    for (Size ll = 0; ll < n_swvol_strike; ++ll) {
-                        for (Size jj = 0; jj < n_swvol_exp; ++jj) {
-                            for (Size kk = 0; kk < n_swvol_term; ++kk) {
+                    for (Size jj = 0; jj < n_swvol_exp; ++jj) {
+                        for (Size kk = 0; kk < n_swvol_term; ++kk) {
+                            for (Size ll = 0; ll < n_swvol_strike; ++ll) {
                                 Size idx = jj *  n_swvol_term * n_swvol_strike + kk * n_swvol_strike + ll;
-
                                 scenario->add(getSwaptionVolKey(ccy, idx), shiftedVolData[ll][jj][kk]);
                             }
                         }
                     }
                     // add this scenario to the scenario vector
                     scenarios_.push_back(scenario);
-                    DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
+                    DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created for swaption vol "<<ccy);
                 }
             }
         }
@@ -1515,8 +1522,8 @@ SensitivityScenarioGenerator::swaptionVolScenarioDescription(string ccy, Size ex
     QL_REQUIRE(expiryBucket < data.shiftExpiries.size(), "expiry bucket " << expiryBucket << " out of range");
     QL_REQUIRE(termBucket < data.shiftTerms.size(), "term bucket " << termBucket << " out of range");
     QL_REQUIRE(strikeBucket < data.shiftStrikes.size() , "strike bucket " << strikeBucket << " out of range");
-    Size index = strikeBucket * data.shiftExpiries.size() * data.shiftTerms.size() +
-                 expiryBucket * data.shiftTerms.size() + termBucket;
+    Size index = expiryBucket * data.shiftStrikes.size() * data.shiftTerms.size() +
+                 termBucket * data.shiftStrikes.size() + strikeBucket;
     RiskFactorKey key(RiskFactorKey::KeyType::SwaptionVolatility, ccy, index);
     std::ostringstream o;
     if (data.shiftStrikes.size() == 0 || data.shiftStrikes[strikeBucket] == 0) {
