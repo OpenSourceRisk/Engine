@@ -1,4 +1,4 @@
-/*
+waptionVolatilityCube
  Copyright (C) 2016 Quaternion Risk Management Ltd
  All rights reserved.
 
@@ -47,7 +47,7 @@ namespace testsuite {
 */
 void SwaptionVolatilityCubeTest::testSwaptionVolatilityCube() {
 
-    BOOST_TEST_MESSAGE("Testing QuantExt::BlackVarianceCurve3...");
+    BOOST_TEST_MESSAGE("Testing QuantExt::SwaptionVolatilityCube...");
 
     SavedSettings backup;
     Settings::instance().evaluationDate() = Date(1, Dec, 2015);
@@ -92,7 +92,7 @@ void SwaptionVolatilityCubeTest::testSwaptionVolatilityCube() {
 
     std::vector<std::vector<std::vector<Real> > > vols(strikeSpreads.size(), std::vector<std::vector<Real> >
                 (optionTenors.size(), std::vector<Real>(swapTenors.size(),0)));
-
+            // clang-format off
             //strikeSpread -0.02
             vols[0][0][0]=0.1320; vols[0][0][1]=0.1580; vols[0][0][2]=0.1410; vols[0][0][3]=0.1240;
             vols[0][1][0]=0.1460; vols[0][1][1]=0.1600; vols[0][1][2]=0.1480; vols[0][1][3]=0.1280;
@@ -133,6 +133,7 @@ void SwaptionVolatilityCubeTest::testSwaptionVolatilityCube() {
             vols[4][3][0]=0.1620; vols[4][3][1]=0.1450; vols[4][3][2]=0.1350; vols[4][3][3]=0.1200;
             vols[4][4][0]=0.1380; vols[4][4][1]=0.1280; vols[4][4][2]=0.1230; vols[4][4][3]=0.1080;
             vols[4][5][0]=0.1110; vols[4][5][1]=0.1070; vols[4][5][2]=0.1050; vols[4][5][3]=0.0910;
+            // clang-format on
 
     for (Size i = 0; i < strikeSpreads.size(); i++) {
         for (Size j = 0; j < optionTenors.size(); j++) {
