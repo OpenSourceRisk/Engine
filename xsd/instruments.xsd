@@ -194,6 +194,16 @@
     </xs:complexType>
   </xs:element>
 
+  <xs:complexType name="amortizationData">
+    <xs:sequence>
+      <xs:element type="xs:string" name="Type" maxOccurs="unbounded" minOccurs="1"/>
+      <xs:element type="xs:float" name="Amount" maxOccurs="unbounded" minOccurs="1"/>
+      <xs:element type="xs:string" name="StartDate" maxOccurs="unbounded" minOccurs="1"/>
+      <xs:element type="xs:string" name="Frequency" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="xs:boolean" name="Underflow" maxOccurs="unbounded" minOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+
   <xs:complexType name="legData">
     <xs:all>
       <xs:element type="xs:boolean" name="Payer"/>
@@ -201,6 +211,7 @@
       <xs:element type="currencyCode" name="Currency"/>
       <xs:element type="businessDayConvention" name="PaymentConvention"/>
       <xs:element type="dayCounter" name="DayCounter"/>
+      <xs:element type="amortizationData" name="AmortizationData" minOccurs="0" maxOccurs="1"/>
       <xs:element name="Notionals">
         <xs:complexType>
           <xs:sequence>
@@ -212,7 +223,7 @@
       </xs:element>
       <xs:element type="scheduleData" name="ScheduleData">
      </xs:element>
-      <xs:element ref="legDataType"/>
+     <xs:element ref="legDataType"/>
     </xs:all>
   </xs:complexType>
   
