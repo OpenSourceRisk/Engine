@@ -16,6 +16,7 @@
                 <xs:element type="swaptionData" name="SwaptionData"/>
                 <xs:element type="fxForwardData" name="FxForwardData"/>
                 <xs:element type="fxOptionData" name="FxOptionData"/>
+                <xs:element type="fxSwapData" name="FxSwapData"/>
                 <xs:element type="capFloorData" name="CapFloorData"/>
                 <xs:element type="equityOptionData" name="EquityOptionData"/>
                 <xs:element type="equityForwardData" name="EquityForwardData"/>
@@ -270,6 +271,7 @@
       <xs:enumeration value="Swaption"/>
       <xs:enumeration value="FxForward"/>
       <xs:enumeration value="FxOption"/>
+      <xs:enumeration value="FxSwap"/>
       <xs:enumeration value="CapFloor"/>
       <xs:enumeration value="EquityOption"/>
       <xs:enumeration value="EquityForward"/>
@@ -300,6 +302,19 @@
       <xs:element type="currencyCode" name="SoldCurrency"/>
       <xs:element type="xs:float" name="SoldAmount"/>
     </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="fxSwapData">
+    <xs:all>
+      <xs:element type="date" name="NearDate"/>
+      <xs:element type="currencyCode" name="NearBoughtCurrency"/>
+      <xs:element type="xs:float" name="NearBoughtAmount"/>
+      <xs:element type="currencyCode" name="NearSoldCurrency"/>
+      <xs:element type="xs:float" name="NearSoldAmount"/>
+      <xs:element type="date" name="FarDate"/>
+      <xs:element type="xs:float" name="FarBoughtAmount"/>
+      <xs:element type="xs:float" name="FarSoldAmount"/>
+    </xs:all>
   </xs:complexType>
 
   <xs:complexType name="fxOptionData">
