@@ -52,8 +52,9 @@
 #include <qle/termstructures/swaptionvolatilityconverter.hpp>
 #include <qle/termstructures/swaptionvolconstantspread.hpp>
 #include <qle/termstructures/swaptionvolcubewithatm.hpp>
-#include <qle/termstructures/yoyinflationcurveobserver.hpp>
+#include <qle/termstructures/swaptionvolatilitycube.hpp>
 #include <qle/termstructures/zeroinflationcurveobserver.hpp>
+#include <qle/termstructures/yoyinflationcurveobserver.hpp>
 
 #include <boost/timer.hpp>
 
@@ -309,10 +310,12 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
         RelinkableHandle<SwaptionVolatilityStructure> wrapper(*initMarket->swaptionVol(ccy, configuration));
 
         LOG("Initial market " << ccy << " swaption volatility type = " << wrapper->volatilityType());
+        
+        string shortSwapIndexBase = initMarket->shortSwapIndexBase(ccy, configuration);
+        string swapIndexBase = initMarket->swapIndexBase(ccy, configuration);
 
         bool isMatrix = boost::dynamic_pointer_cast<SwaptionVolatilityMatrix>(*wrapper) != nullptr;
-        // bool isConstant = boost::dynamic_pointer_cast<ConstantSwaptionVolatility>(*wrapper) != nullptr;
-        bool isCube = boost::dynamic_pointer_cast<QuantExt::SwaptionVolCubeWithATM>(*wrapper) != nullptr;
+        bool isCube = parameters->swapVolIsCube();
 
         // If swaption volatility type is not Normal, convert to Normal for the simulation
         if (wrapper->volatilityType() != Normal) {
@@ -335,45 +338,73 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                 LOG("Swaption volatility for ccy " << ccy << " is not a matrix so it is not converted to Normal");
             }
         }
-
         Handle<SwaptionVolatilityStructure> svp;
         if (parameters->simulateSwapVols()) {
             LOG("Simulating (" << wrapper->volatilityType() << ") Swaption vols for ccy " << ccy);
             vector<Period> optionTenors = parameters->swapVolExpiries();
             vector<Period> swapTenors = parameters->swapVolTerms();
-            vector<vector<Handle<Quote>>> quotes(optionTenors.size(),
-                                                 vector<Handle<Quote>>(swapTenors.size(), Handle<Quote>()));
+            vector<Real> strikeSpreads = parameters->swapVolStrikeSpreads();
+            bool atmOnly = parameters->simulateSwapVolATMOnly();
+            if (atmOnly) {
+                QL_REQUIRE(strikeSpreads.size() == 1 && close_enough(strikeSpreads[0],0), "for atmOnly strikeSpreads must be {0.0}");
+            }
+            boost::shared_ptr<QuantLib::SwaptionVolatilityCube> cube;
+            if (isCube) {
+                boost::shared_ptr<SwaptionVolCubeWithATM> tmp = boost::dynamic_pointer_cast<SwaptionVolCubeWithATM>(*wrapper);
+                QL_REQUIRE(tmp, "swaption cube missing")
+                cube = tmp->cube();
+            }
+            vector<vector<vector<Handle<Quote>>>> quotes;
+            quotes.resize(strikeSpreads.size(),vector<vector<Handle<Quote>>>(optionTenors.size(), vector<Handle<Quote>>(swapTenors.size(), Handle<Quote>())));
+
             vector<vector<Real>> shift(optionTenors.size(), vector<Real>(swapTenors.size(), 0.0));
-            for (Size i = 0; i < optionTenors.size(); ++i) {
-                for (Size j = 0; j < swapTenors.size(); ++j) {
-                    Real vol = wrapper->volatility(optionTenors[i], swapTenors[j], Null<Real>()); // ATM
-                    boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
-                    Size index = i * swapTenors.size() + j;
-                    simData_.emplace(std::piecewise_construct,
-                                     std::forward_as_tuple(RiskFactorKey::KeyType::SwaptionVolatility, ccy, index),
-                                     std::forward_as_tuple(q));
-                    quotes[i][j] = Handle<Quote>(q);
-                    shift[i][j] = wrapper->volatilityType() == ShiftedLognormal
-                                      ? wrapper->shift(optionTenors[i], swapTenors[j])
-                                      : 0.0;
+            for (Size k = 0; k < strikeSpreads.size(); ++k) {
+                for (Size i = 0; i < optionTenors.size(); ++i) {
+                    for (Size j = 0; j < swapTenors.size(); ++j) {
+                        Real strike = atmOnly ? Null<Real>() : cube->atmStrike(optionTenors[i], swapTenors[j]) + strikeSpreads[k]; 
+                        Real vol = wrapper->volatility(optionTenors[i], swapTenors[j], strike);
+                        boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
+                        
+                        Size index = i * swapTenors.size() * strikeSpreads.size() + j * strikeSpreads.size() + k;
+                        
+                        simData_.emplace(std::piecewise_construct,
+                                        std::forward_as_tuple(RiskFactorKey::KeyType::SwaptionVolatility, ccy, index),
+                                        std::forward_as_tuple(q));
+                        quotes[k][i][j] = Handle<Quote>(q);
+                        if (k == 0) {
+                            shift[i][j] = wrapper->volatilityType() == ShiftedLognormal
+                                ? wrapper->shift(optionTenors[i], swapTenors[j]): 0.0;
+                        }
+                    }
                 }
             }
             bool flatExtrapolation = true; // FIXME: get this from curve configuration
             VolatilityType volType = wrapper->volatilityType();
-            // floating reference date matrix in sim market
-            boost::shared_ptr<SwaptionVolatilityStructure> svolp(new SwaptionVolatilityMatrix(
-                wrapper->calendar(), wrapper->businessDayConvention(), optionTenors, swapTenors, quotes,
-                wrapper->dayCounter(), flatExtrapolation, volType, shift));
-            // if we have a cube, we keep the vol spreads constant under scenarios
-            // notice that cube is from todaysmarket, so it has a fixed reference date, which means that
-            // we keep the smiles constant in terms of vol spreads when moving forward in time;
-            // notice also that the volatility will be "sticky strike", i.e. it will not react to
-            // changes in the ATM level
-            if (isCube) {
-                svp = Handle<SwaptionVolatilityStructure>(boost::make_shared<SwaptionVolatilityConstantSpread>(
-                    Handle<SwaptionVolatilityStructure>(svolp), wrapper));
+            if( atmOnly ) {
+                // floating reference date matrix in sim market
+                boost::shared_ptr<SwaptionVolatilityStructure> svolp(new SwaptionVolatilityMatrix(
+                    wrapper->calendar(), wrapper->businessDayConvention(), optionTenors, swapTenors, quotes[0],
+                    wrapper->dayCounter(), flatExtrapolation, volType, shift));
+                // if we have a cube, we keep the vol spreads constant under scenarios
+                // notice that cube is from todaysmarket, so it has a fixed reference date, which means that
+                // we keep the smiles constant in terms of vol spreads when moving forward in time;
+                // notice also that the volatility will be "sticky strike", i.e. it will not react to
+                // changes in the ATM level
+                if (isCube) {
+                    svp = Handle<SwaptionVolatilityStructure>(boost::make_shared<SwaptionVolatilityConstantSpread>(
+                        Handle<SwaptionVolatilityStructure>(svolp), wrapper));
+                } else {
+                    svp = Handle<SwaptionVolatilityStructure>(svolp);
+                }
             } else {
-                svp = Handle<SwaptionVolatilityStructure>(svolp);
+                QL_REQUIRE(isCube, "Only atmOnly simulation supported for swaption vol surfaces");
+                 boost::shared_ptr<SwaptionVolatilityStructure> tmp( new QuantExt::SwaptionVolatilityCube(                                          
+                                            optionTenors, swapTenors, strikeSpreads, quotes, *initMarket->swapIndex(swapIndexBase, configuration), 
+                                            *initMarket->swapIndex(shortSwapIndexBase, configuration), flatExtrapolation, volType, 
+                                            wrapper->businessDayConvention(), wrapper->dayCounter(), wrapper->calendar(), 0, shift));
+                QL_REQUIRE(tmp, "swaption vol cube building failed");
+
+                svp = Handle<SwaptionVolatilityStructure>(tmp); 
             }
 
         } else {
@@ -387,15 +418,14 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                 boost::make_shared<QuantExt::DynamicSwaptionVolatilityMatrix>(*wrapper, 0, NullCalendar(), decayMode);
             svp = Handle<SwaptionVolatilityStructure>(svolp);
         }
-        svp->enableExtrapolation(); // FIXME
 
+        svp->enableExtrapolation(); // FIXME
         swaptionCurves_.insert(pair<pair<string, string>, Handle<SwaptionVolatilityStructure>>(
             make_pair(Market::defaultConfiguration, ccy), svp));
 
+        
         LOG("Simulaton market " << ccy << " swaption volatility type = " << svp->volatilityType());
 
-        string shortSwapIndexBase = initMarket->shortSwapIndexBase(ccy, configuration);
-        string swapIndexBase = initMarket->swapIndexBase(ccy, configuration);
         swaptionIndexBases_.insert(pair<pair<string, string>, pair<string, string>>(
             make_pair(Market::defaultConfiguration, ccy), make_pair(shortSwapIndexBase, swapIndexBase)));
         swaptionIndexBases_.insert(pair<pair<string, string>, pair<string, string>>(

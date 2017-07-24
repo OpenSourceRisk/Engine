@@ -38,6 +38,7 @@
 #include <qle/pricingengines/crossccyswapengine.hpp>
 #include <qle/pricingengines/depositengine.hpp>
 #include <qle/pricingengines/discountingfxforwardengine.hpp>
+#include <qle/termstructures/swaptionvolatilitycube.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -484,17 +485,25 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
             vector<Real> strikes = sensitivityData_->swaptionVolShiftData()[ccy].shiftStrikes;
             vector<Period> tenors = sensitivityData_->swaptionVolShiftData()[ccy].shiftTerms;
             vector<Period> expiries = sensitivityData_->swaptionVolShiftData()[ccy].shiftExpiries;
-            QL_REQUIRE(strikes.size() == 0, "Only ATM Swaption vols supported");
             Size keyIdx = key.index;
-            Size expIdx = keyIdx / tenors.size();
+            Size strikeIdx = keyIdx % strikes.size();
+            Real p_strikeSpread = strikes[strikeIdx];
+            Size expIdx = keyIdx / (tenors.size()*strikes.size());
             Period p_exp = expiries[expIdx];
             Size tenIdx = keyIdx % tenors.size();
             Period p_ten = tenors[tenIdx];
+            Real strike;
             Handle<SwaptionVolatilityStructure> vts = simMarket_->swaptionVol(ccy, marketConfiguration_);
+            boost::shared_ptr<QuantExt::SwaptionVolatilityCube> cube = boost::dynamic_pointer_cast<QuantExt::SwaptionVolatilityCube>(*vts);
+            if (cube ) {
+                strike = cube->atmStrike(p_exp, p_ten) + strikes[p_strikeSpread];
+            } else {
+                strike = Null<Real>();
+            }
             // Time t_exp = vts->dayCounter().yearFraction(asof_, asof_ + p_exp);
             // Time t_ten = vts->dayCounter().yearFraction(asof_, asof_ + p_ten);
             // Real atmVol = vts->volatility(t_exp, t_ten, Null<Real>());
-            Real atmVol = vts->volatility(p_exp, p_ten, Null<Real>());
+            Real atmVol = vts->volatility(p_exp, p_ten, strike);
             shiftMult = atmVol;
         }
     } else if (keytype == RiskFactorKey::KeyType::OptionletVolatility) {

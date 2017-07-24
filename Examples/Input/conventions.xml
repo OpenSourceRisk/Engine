@@ -444,6 +444,14 @@
     <Index>JPY-LIBOR-6M</Index>
   </Swap>
   <Swap>
+    <Id>JPY-LIBOR-3M-SWAP-CONVENTIONS</Id>
+    <FixedCalendar>JP,UK</FixedCalendar>
+    <FixedFrequency>Semiannual</FixedFrequency>
+    <FixedConvention>MF</FixedConvention>
+    <FixedDayCounter>A365</FixedDayCounter>
+    <Index>JPY-LIBOR-3M</Index>
+  </Swap>
+  <Swap>
     <Id>JPY-TIBOR-3M-SWAP-CONVENTIONS</Id>
     <FixedCalendar>JP</FixedCalendar>
     <FixedFrequency>Semiannual</FixedFrequency>
@@ -842,6 +850,14 @@
     <RollConvention>MF</RollConvention>
     <FlatIndex>USD-LIBOR-3M</FlatIndex>
     <SpreadIndex>MXN-TIIE-3M</SpreadIndex>
+  </CrossCurrencyBasis>
+  <CrossCurrencyBasis>
+    <Id>USD-JPY-XCCY-BASIS-CONVENTIONS</Id>
+    <SettlementDays>2</SettlementDays>
+    <SettlementCalendar>JP,US,UK</SettlementCalendar>
+    <RollConvention>MF</RollConvention>
+    <FlatIndex>USD-LIBOR-3M</FlatIndex>
+    <SpreadIndex>JPY-LIBOR-3M</SpreadIndex>
   </CrossCurrencyBasis>
   <!-- Inflation Swaps -->
   <InflationSwap>

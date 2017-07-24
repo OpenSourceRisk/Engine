@@ -778,6 +778,7 @@ void SensitivityScenarioGenerator::generateEquityVolScenarios(
 
 void SensitivityScenarioGenerator::generateSwaptionVolScenarios(
     const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up) {
+    LOG("starting swapVol sgen");
     // We can choose to shift fewer discount curves than listed in the market
     std::vector<string> swaptionVolCurrencies;
     if (sensitivityData_->swaptionVolCurrencies().size() > 0)
@@ -795,12 +796,18 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(
     Size n_swvol_ccy = swaptionVolCurrencies.size();
     Size n_swvol_term = simMarketData_->swapVolTerms().size();
     Size n_swvol_exp = simMarketData_->swapVolExpiries().size();
+    Size n_swvol_strike = simMarketData_->swapVolStrikeSpreads().size();
 
-    vector<vector<Real>> volData(n_swvol_exp, vector<Real>(n_swvol_term, 0.0));
+    bool atmOnly_swvol = simMarketData_->simulateSwapVolATMOnly();
+
     vector<Real> volExpiryTimes(n_swvol_exp, 0.0);
     vector<Real> volTermTimes(n_swvol_term, 0.0);
-    vector<vector<Real>> shiftedVolData(n_swvol_exp, vector<Real>(n_swvol_term, 0.0));
+    vector<vector<vector<Real>>> volData;
+    vector<vector<vector<Real>>> shiftedVolData;
 
+    volData.resize(n_swvol_strike, vector<vector<Real>>(n_swvol_exp, vector<Real>(n_swvol_term, 0.0)));
+    shiftedVolData.resize(n_swvol_strike, vector<vector<Real>>(n_swvol_exp, vector<Real>(n_swvol_term, 0.0)));
+    
     for (Size i = 0; i < n_swvol_ccy; ++i) {
         std::string ccy = swaptionVolCurrencies[i];
         SensitivityScenarioData::SwaptionVolShiftData data = sensitivityData_->swaptionVolShiftData()[ccy];
@@ -811,8 +818,22 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(
         vector<Real> shiftTermTimes(data.shiftTerms.size(), 0.0);
 
         Handle<SwaptionVolatilityStructure> ts = simMarket_->swaptionVol(ccy);
-        DayCounter dc = ts->dayCounter();
 
+        vector<Real> shiftStrikes;
+        if (!atmOnly_swvol) {
+            shiftStrikes = data.shiftStrikes;
+            QL_REQUIRE(data.shiftStrikes.size() == n_swvol_strike, "number of simulated strikes must equal number of sensitivity strikes");
+        } else {
+            shiftStrikes = {0.0};
+        }
+
+        DayCounter dc = ts->dayCounter();
+        boost::shared_ptr<SwaptionVolatilityCube> cube;
+        if(!atmOnly_swvol) {
+            boost::shared_ptr<SwaptionVolCubeWithATM> tmp = boost::dynamic_pointer_cast<SwaptionVolCubeWithATM>(*ts);
+            QL_REQUIRE(tmp, "swaption cube missing")
+            cube = tmp->cube();
+        }
         // cache original vol data
         for (Size j = 0; j < n_swvol_exp; ++j) {
             Date expiry = simMarket_->asofDate() + simMarketData_->swapVolExpiries()[j];
@@ -822,43 +843,66 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(
             Date term = simMarket_->asofDate() + simMarketData_->swapVolTerms()[j];
             volTermTimes[j] = dc.yearFraction(simMarket_->asofDate(), term);
         }
+
+            
         for (Size j = 0; j < n_swvol_exp; ++j) {
             Period expiry = simMarketData_->swapVolExpiries()[j];
             for (Size k = 0; k < n_swvol_term; ++k) {
                 Period term = simMarketData_->swapVolTerms()[k];
-                Real swvol = ts->volatility(expiry, term, Null<Real>()); // ATM
-                volData[j][k] = swvol;
+                for (Size l = 0; l < n_swvol_strike; ++l) {
+                    Real strike = atmOnly_swvol ? Null<Real>() : cube->atmStrike(expiry, term) + simMarketData_->swapVolStrikeSpreads()[l]; 
+                    Real swvol = ts->volatility(expiry, term, strike);
+                    volData[l][j][k] = swvol;
+                }
             }
         }
 
-        // cache tenor times
+            // cache tenor times
         for (Size j = 0; j < shiftExpiryTimes.size(); ++j)
             shiftExpiryTimes[j] =
                 dc.yearFraction(simMarket_->asofDate(), simMarket_->asofDate() + data.shiftExpiries[j]);
         for (Size j = 0; j < shiftTermTimes.size(); ++j)
             shiftTermTimes[j] = dc.yearFraction(simMarket_->asofDate(), simMarket_->asofDate() + data.shiftTerms[j]);
 
-        // loop over shift expiries and terms
+        // loop over shift expiries, terms and strikes
         for (Size j = 0; j < shiftExpiryTimes.size(); ++j) {
             for (Size k = 0; k < shiftTermTimes.size(); ++k) {
-                Size strikeBucket = 0; // FIXME
-                boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(simMarket_->asofDate());
+                for (Size l = 0; l < shiftStrikes.size(); ++l) {
+                    Size strikeBucket = l;
+                    boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(simMarket_->asofDate());
 
-                scenarioDescriptions_.push_back(swaptionVolScenarioDescription(ccy, j, k, strikeBucket, up));
+                    scenarioDescriptions_.push_back(swaptionVolScenarioDescription(ccy, j, k, strikeBucket, up));
 
-                applyShift(j, k, shiftSize, up, shiftType, shiftExpiryTimes, shiftTermTimes, volExpiryTimes,
-                           volTermTimes, volData, shiftedVolData, true);
-                // add shifted vol data to the scenario
-                for (Size jj = 0; jj < n_swvol_exp; ++jj) {
-                    for (Size kk = 0; kk < n_swvol_term; ++kk) {
-                        Size idx = jj * n_swvol_term + kk;
-                        scenario->add(RiskFactorKey(RiskFactorKey::KeyType::SwaptionVolatility, ccy, idx),
-                                      shiftedVolData[jj][kk]);
+                    //if simulating atm only we shift all strikes otherwise we shift each strike individually
+                    Size loopStart;
+                    if (!atmOnly_swvol) {
+                        Real strike = shiftStrikes[l];
+                        vector<Real> strikes = simMarketData_->swapVolStrikeSpreads();
+                        for (Size s = 0; s < shiftStrikes.size(); s++)
+                            if (strike == strikes[s])
+                                loopStart = s;
+                    } else {
+                        loopStart = 0;
                     }
+                    Size loopEnd = atmOnly_swvol ? n_swvol_strike : loopStart+1;
+                    LOG("Swap vol looping over "<<loopStart<<" to "<<loopEnd <<" for strike "<<shiftStrikes[l]);
+                    for (Size ll=loopStart; ll < loopEnd; ++ll){
+                        applyShift(j, k, shiftSize, up, shiftType, shiftExpiryTimes, shiftTermTimes, volExpiryTimes,
+                                volTermTimes, volData[ll], shiftedVolData[ll], true);
+                    }
+                    // add shifted vol data to the scenario
+                    for (Size jj = 0; jj < n_swvol_exp; ++jj) {
+                        for (Size kk = 0; kk < n_swvol_term; ++kk) {
+                            for (Size ll = 0; ll < n_swvol_strike; ++ll) {
+                                Size idx = jj *  n_swvol_term * n_swvol_strike + kk * n_swvol_strike + ll;
+                                scenario->add(RiskFactorKey(RiskFactorKey::KeyType::SwaptionVolatility, ccy, idx), shiftedVolData[ll][jj][kk]);
+                            }
+                        }
+                    }
+                    // add this scenario to the scenario vector
+                    scenarios_.push_back(scenario);
+                    DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created for swaption vol "<<ccy);
                 }
-                // add this scenario to the scenario vector
-                scenarios_.push_back(scenario);
-                DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
             }
         }
     }
@@ -1484,12 +1528,12 @@ SensitivityScenarioGenerator::swaptionVolScenarioDescription(string ccy, Size ex
     SensitivityScenarioData::SwaptionVolShiftData data = sensitivityData_->swaptionVolShiftData()[ccy];
     QL_REQUIRE(expiryBucket < data.shiftExpiries.size(), "expiry bucket " << expiryBucket << " out of range");
     QL_REQUIRE(termBucket < data.shiftTerms.size(), "term bucket " << termBucket << " out of range");
-    QL_REQUIRE(data.shiftStrikes.size() == 0, "empty Swaption strike vector expected");
-    Size index = strikeBucket * data.shiftExpiries.size() * data.shiftTerms.size() +
-                 expiryBucket * data.shiftTerms.size() + termBucket;
+    QL_REQUIRE(strikeBucket < data.shiftStrikes.size() , "strike bucket " << strikeBucket << " out of range");
+    Size index = expiryBucket * data.shiftStrikes.size() * data.shiftTerms.size() +
+                 termBucket * data.shiftStrikes.size() + strikeBucket;
     RiskFactorKey key(RiskFactorKey::KeyType::SwaptionVolatility, ccy, index);
     std::ostringstream o;
-    if (data.shiftStrikes.size() == 0) {
+    if (data.shiftStrikes.size() == 0 || data.shiftStrikes[strikeBucket] == 0) {
         o << data.shiftExpiries[expiryBucket] << "/" << data.shiftTerms[termBucket] << "/ATM";
     } else {
         o << data.shiftExpiries[expiryBucket] << "/" << data.shiftTerms[termBucket] << "/" << std::setprecision(4)

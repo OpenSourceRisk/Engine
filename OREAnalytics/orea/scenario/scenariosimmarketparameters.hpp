@@ -48,8 +48,8 @@ class ScenarioSimMarketParameters : public XMLSerializable {
 public:
     //! Default constructor
     ScenarioSimMarketParameters()
-        : extrapolate_(false), swapVolSimulate_(false), capFloorVolSimulate_(false),
-          survivalProbabilitySimulate_(false), recoveryRateSimulate_(false), cdsVolSimulate_(false),
+        : extrapolate_(false), swapVolSimulate_(false), swapVolIsCube_(false), swapVolSimulateATMOnly_(true), swapVolStrikeSpreads_({0}), 
+          capFloorVolSimulate_(false),  survivalProbabilitySimulate_(false), recoveryRateSimulate_(false), cdsVolSimulate_(false),
           fxVolSimulate_(false), fxVolIsSurface_(false), equityVolSimulate_(false), equityIsSurface_(false), equityVolSimulateATMOnly_(true),
           equityMoneyness_({1}), baseCorrelationSimulate_(false) {
         // set default tenors
@@ -77,10 +77,13 @@ public:
     const vector<string>& fxCcyPairs() const { return fxCcyPairs_; }
 
     bool simulateSwapVols() const { return swapVolSimulate_; }
+    bool swapVolIsCube() const { return swapVolIsCube_; }
+    bool simulateSwapVolATMOnly() const { return swapVolSimulateATMOnly_; }
     const vector<Period>& swapVolTerms() const { return swapVolTerms_; }
     const vector<Period>& swapVolExpiries() const { return swapVolExpiries_; }
     const vector<string>& swapVolCcys() const { return swapVolCcys_; }
     const string& swapVolDecayMode() const { return swapVolDecayMode_; }
+    const vector<Real>& swapVolStrikeSpreads() const { return swapVolStrikeSpreads_; }
 
     bool simulateCapFloorVols() const { return capFloorVolSimulate_; }
     const vector<string>& capFloorVolCcys() const { return capFloorVolCcys_; }
@@ -156,9 +159,12 @@ public:
     vector<string>& fxCcyPairs() { return fxCcyPairs_; }
 
     bool& simulateSwapVols() { return swapVolSimulate_; }
+    bool& swapVolIsCube() { return swapVolIsCube_; }
+    bool& simulateSwapVolATMOnly() { return swapVolSimulateATMOnly_; }
     vector<Period>& swapVolTerms() { return swapVolTerms_; }
     vector<string>& swapVolCcys() { return swapVolCcys_; }
     vector<Period>& swapVolExpiries() { return swapVolExpiries_; }
+    vector<Real>& swapVolStrikeSpreads() { return swapVolStrikeSpreads_; }
     string& swapVolDecayMode() { return swapVolDecayMode_; }
 
     bool& simulateCapFloorVols() { return capFloorVolSimulate_; }
@@ -241,9 +247,12 @@ private:
     vector<string> fxCcyPairs_;
 
     bool swapVolSimulate_;
+    bool swapVolIsCube_;
+    bool swapVolSimulateATMOnly_;
     vector<Period> swapVolTerms_;
     vector<string> swapVolCcys_;
     vector<Period> swapVolExpiries_;
+    vector<Real> swapVolStrikeSpreads_;
     string swapVolDecayMode_;
 
     bool capFloorVolSimulate_;
