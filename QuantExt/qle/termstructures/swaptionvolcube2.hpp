@@ -64,13 +64,15 @@ public:
         If flatExtrapolation is true the implied volatility is
         extrapolated flat in strike direction.
   */
+    /*! in case volsAreSpreads is false the given volSpreads are interpreted as absolute vols,
+      in this case the volSpreads inspectors also return absolute vols */
     SwaptionVolCube2(const Handle<SwaptionVolatilityStructure>& atmVolStructure,
                      const std::vector<Period>& optionTenors, const std::vector<Period>& swapTenors,
                      const std::vector<Spread>& strikeSpreads,
                      const std::vector<std::vector<Handle<Quote> > >& volSpreads,
                      const boost::shared_ptr<SwapIndex>& swapIndexBase,
                      const boost::shared_ptr<SwapIndex>& shortSwapIndexBase, bool vegaWeightedSmileFit,
-                     bool flatExtrapolation);
+                     bool flatExtrapolation, bool volsAreSpreads = true);
     //! \name LazyObject interface
     //@{
     void performCalculations() const;
@@ -82,7 +84,7 @@ public:
     boost::shared_ptr<SmileSection> smileSectionImpl(Time optionTime, Time swapLength) const;
     //@}
 private:
-    const bool flatExtrapolation_;
+    const bool flatExtrapolation_, volsAreSpreads_;
     mutable std::vector<Interpolation2D> volSpreadsInterpolator_;
     mutable std::vector<Matrix> volSpreadsMatrix_;
 };

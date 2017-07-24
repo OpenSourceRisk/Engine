@@ -38,7 +38,6 @@
 #include <qle/pricingengines/crossccyswapengine.hpp>
 #include <qle/pricingengines/depositengine.hpp>
 #include <qle/pricingengines/discountingfxforwardengine.hpp>
-#include <qle/termstructures/swaptionvolatilitycube.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -488,18 +487,12 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
             Size keyIdx = key.index;
             Size strikeIdx = keyIdx % strikes.size();
             Real p_strikeSpread = strikes[strikeIdx];
-            Size expIdx = keyIdx / (tenors.size()*strikes.size());
+            Size expIdx = keyIdx / (tenors.size() * strikes.size());
             Period p_exp = expiries[expIdx];
             Size tenIdx = keyIdx % tenors.size();
             Period p_ten = tenors[tenIdx];
-            Real strike;
+            Real strike = Null<Real>(); // for cubes this will be ATM
             Handle<SwaptionVolatilityStructure> vts = simMarket_->swaptionVol(ccy, marketConfiguration_);
-            boost::shared_ptr<QuantExt::SwaptionVolatilityCube> cube = boost::dynamic_pointer_cast<QuantExt::SwaptionVolatilityCube>(*vts);
-            if (cube ) {
-                strike = cube->atmStrike(p_exp, p_ten) + strikes[p_strikeSpread];
-            } else {
-                strike = Null<Real>();
-            }
             // Time t_exp = vts->dayCounter().yearFraction(asof_, asof_ + p_exp);
             // Time t_ten = vts->dayCounter().yearFraction(asof_, asof_ + p_ten);
             // Real atmVol = vts->volatility(t_exp, t_ten, Null<Real>());
