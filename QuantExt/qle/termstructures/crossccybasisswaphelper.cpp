@@ -16,13 +16,13 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#ifdef QL_USE_INDEXED_COUPON
-#include <ql/cashflows/floatingratecoupon.hpp>
-#endif
 
 #include <qle/termstructures/crossccybasisswaphelper.hpp>
 #include <qle/pricingengines/crossccyswapengine.hpp>
 
+#ifdef QL_USE_INDEXED_COUPON
+#include <ql/cashflows/floatingratecoupon.hpp>
+#endif
 namespace QuantExt {
 
 namespace {

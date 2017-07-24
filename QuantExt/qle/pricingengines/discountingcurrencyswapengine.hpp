@@ -43,7 +43,7 @@ namespace QuantExt {
 
             \ingroup engines
 */
-class DiscountingCurrencySwapEngine : public CurrencySwap::engine {
+class DiscountingCurrencySwapEngine : public GenericEngine<CurrencySwap::arguments, CurrencySwap::results> {
 public:
     /*! The FX spots must be given as units of npvCurrency per respective
       currency. The spots must be given w.r.t. a settlement date equal

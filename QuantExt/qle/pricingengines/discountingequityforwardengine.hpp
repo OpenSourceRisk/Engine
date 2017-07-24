@@ -40,7 +40,7 @@ namespace QuantExt {
 
             \ingroup engines
 */
-class DiscountingEquityForwardEngine : public EquityForward::engine {
+class DiscountingEquityForwardEngine : public GenericEngine<EquityForward::arguments, Instrument::results> {
 public:
     /*! \param equityInterestRateCurve
                The IR rate curve for estimating forward price.
