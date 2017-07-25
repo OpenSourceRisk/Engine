@@ -109,7 +109,6 @@ public:
     }
     std::vector<Leg> legs() { return legs_; }
     std::vector<Currency> currencies() { return currency_; }
-    boost::shared_ptr<PricingEngine> engine() { return engine_; }
     //@}
 protected:
     //! \name Constructors

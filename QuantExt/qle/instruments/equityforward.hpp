@@ -72,7 +72,6 @@ public:
     Real quantity() const { return quantity_; }
     Date maturityDate() const { return maturityDate_; }
     Real strike() const { return strike_; }
-    boost::shared_ptr<PricingEngine> engine() { return engine_; }
     //@}
 private:
     // data members
