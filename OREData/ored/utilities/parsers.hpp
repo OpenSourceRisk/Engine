@@ -173,5 +173,9 @@ template <class T> std::vector<T> parseListOfValues(string s, std::function<T(st
 }
 
 std::vector<string> parseListOfValues(string s);
+
+enum class AmortizationType { None, FixedAmount, RelativeToInitialNotional, RelativeToPreviousNotional, Annuity };
+AmortizationType parseAmortizationType(const std::string& s);
+
 } // namespace data
 } // namespace ore

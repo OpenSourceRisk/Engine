@@ -58,11 +58,15 @@ namespace QuantExt {
     void FloatingAnnuityCoupon::performCalculations() const {
         // If the previous coupon was a FloatingAnnuityCoupon we need to cast here in order to get its mutable nominal.
         // Using the Coupon interface previousCoupon_->nominal() would return zero. 
-        boost::shared_ptr<FloatingAnnuityCoupon> c = boost::dynamic_pointer_cast<FloatingAnnuityCoupon>(previousCoupon_);
-	if (c)
-	    this->nominal_ = c->nominal() + c->amount() - annuity_;
-	else
-	    this->nominal_ = previousCoupon_->nominal() + previousCoupon_->amount() - annuity_;
+        // boost::shared_ptr<FloatingAnnuityCoupon> c = boost::dynamic_pointer_cast<FloatingAnnuityCoupon>(previousCoupon_);
+	// if (c)
+	//     this->nominal_ = c->nominal() + c->amount() - annuity_;
+	// else
+        //     this->nominal_ = previousCoupon_->nominal() + previousCoupon_->amount() - annuity_;
+
+        // The following requires a QuantLib change (expected in 1.11), making the Coupon nominal() interface virtual
+        // so that it can be overridden by this class.
+        this->nominal_ = previousCoupon_->nominal() + previousCoupon_->amount() - annuity_;
         if (this->nominal_ < 0.0 && underflow_ == false)
             this->nominal_ = 0.0;
         // std::cout << "FloatingAnnuityCoupon called() for startDate " << QuantLib::io::iso_date(accrualStartDate_) << " "

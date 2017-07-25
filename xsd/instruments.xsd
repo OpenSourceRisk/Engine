@@ -196,11 +196,12 @@
 
   <xs:complexType name="amortizationData">
     <xs:sequence>
-      <xs:element type="xs:string" name="Type" maxOccurs="unbounded" minOccurs="1"/>
-      <xs:element type="xs:float" name="Amount" maxOccurs="unbounded" minOccurs="1"/>
-      <xs:element type="xs:string" name="StartDate" maxOccurs="unbounded" minOccurs="1"/>
-      <xs:element type="xs:string" name="Frequency" maxOccurs="unbounded" minOccurs="0"/>
-      <xs:element type="xs:boolean" name="Underflow" maxOccurs="unbounded" minOccurs="1"/>
+      <xs:element type="amortizationType" name="Type" maxOccurs="unbounded" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:float" name="Value" maxOccurs="unbounded" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="StartDate" maxOccurs="unbounded" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="EndDate" maxOccurs="unbounded" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="Frequency" maxOccurs="unbounded" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:boolean" name="Underflow" maxOccurs="unbounded" minOccurs="1" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 

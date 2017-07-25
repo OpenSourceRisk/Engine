@@ -260,24 +260,32 @@ class AmortizationData : public XMLSerializable {
 public:
     AmortizationData() : initialized_(false) {}
 
-    AmortizationData(string type, double amount, string startDate, string frequency, bool underflow)
-        : type_(type), amount_(amount), startDate_(startDate), frequency_(frequency), underflow_(underflow),
-          initialized_(true) {}
+    AmortizationData(string type, double value, string startDate, string endDate, string frequency, bool underflow)
+        : type_(type), value_(value), startDate_(startDate), endDate_(endDate), frequency_(frequency),
+          underflow_(underflow), initialized_(true) {}
 
     virtual void fromXML(XMLNode* node);
     virtual XMLNode* toXML(XMLDocument& doc);
 
+    //! FixedAmount, RelativeToInitialNotional, RelativeToPreviousNotional, Annuity
     string type() { return type_; }
-    double amount() { return amount_; }
+    //! Interpretation depending on type()
+    double value() { return value_; }
+    //! Amortization start date
     string startDate() { return startDate_; }
+    //! Amortization end date
+    string endDate() { return endDate_; }
+    //! Amortization frequency
     string frequency() { return frequency_; }
+    //! Allow amortization below zero notional if true
     bool underflow() { return underflow_; }
     bool initialized() const { return initialized_; }
 
 private:
     string type_;
-    double amount_;
+    double value_;
     string startDate_;
+    string endDate_;
     string frequency_;
     bool underflow_;
     bool initialized_;
@@ -458,10 +466,19 @@ vector<double> buildScheduledVectorNormalised(const vector<double>& values, cons
                                               const Schedule& schedule, const Real defaultValue = Null<Real>());
 
 // notional vector derived from a fixed amortisation amount
-vector<double> buildFixedAmortizationSchedule(const vector<double>& notionals, const Schedule& schedule, LegData& data);
+vector<double> buildAmortizationScheduleFixedAmount(const vector<double>& notionals, const Schedule& schedule,
+                                                    LegData& data);
+
+// notional vector with amortizations expressed as a percentage of initial notional
+vector<double> buildAmortizationScheduleRelativeToInitialNotional(const vector<double>& notionals,
+                                                                  const Schedule& schedule, LegData& data);
+
+// notional vector with amortizations expressed as a percentage of the respective previous notional
+vector<double> buildAmortizationScheduleRelativeToPreviousNotional(const vector<double>& notionals,
+                                                                   const Schedule& schedule, LegData& data);
 
 // notional vector derived from a fixed annuity amount
-vector<double> buildFixedAnnuityAmortizationSchedule(const vector<double>& notionals, const vector<double>& rates,
+vector<double> buildAmortizationScheduleFixedAnnuity(const vector<double>& notionals, const vector<double>& rates,
                                                      const Schedule& schedule, LegData& data);
 } // namespace data
 } // namespace ore
