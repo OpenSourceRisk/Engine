@@ -41,7 +41,7 @@ namespace QuantExt {
 
             \ingroup engines
 */
-class DiscountingFxForwardEngine : public GenericEngine<FxForward::arguments, FxForward::results> {
+class DiscountingFxForwardEngine : public FxForward::engine {
 public:
     /*! \param ccy1, currency1Discountcurve
                Currency 1 and its discount curve.

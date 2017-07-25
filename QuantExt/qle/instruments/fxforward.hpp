@@ -116,7 +116,6 @@ public:
     Currency currency2() const { return currency2_; }
     Date maturityDate() const { return maturityDate_; }
     bool payCurrency1() const { return payCurrency1_; }
-    boost::shared_ptr<PricingEngine> engine() const { return engine_; }
     //@}
 
 private:

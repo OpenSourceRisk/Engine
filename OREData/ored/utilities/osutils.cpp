@@ -29,6 +29,7 @@
 #if defined(_WIN32) || defined(_WIN64)
 #include <windows.h>
 #include <psapi.h>
+#include <intrin.h>
 #elif __APPLE__
 #include <unistd.h>
 #include <sys/sysctl.h>
