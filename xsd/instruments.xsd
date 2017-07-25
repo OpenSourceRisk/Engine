@@ -408,7 +408,7 @@
       <xs:element type="date" name="UpfrontDate"/>
       <xs:element type="xs:float" name="UpfrontFee"/>
       <xs:element type="legData" name="LegData"/>
-      <xs:element type="basketData" name="BasketData"/>
+      <xs:element type="basketData" name="BasketData" maxOccurs="1" minOccurs="0"/>
     </xs:all>
   </xs:complexType>
 
