@@ -530,5 +530,22 @@ std::vector<string> parseListOfValues(string s) {
     return vec;
 }
 
+AmortizationType parseAmortizationType(const std::string& s) {
+    static map<string, AmortizationType> type = {
+        {"None", AmortizationType::None},
+        {"", AmortizationType::None},
+        {"FixedAmount", AmortizationType::FixedAmount},
+        {"RelativeToInitialNotional", AmortizationType::RelativeToInitialNotional},
+        {"RelativeToPreviousNotional", AmortizationType::RelativeToPreviousNotional},
+        {"Annuity", AmortizationType::Annuity}};
+
+    auto it = type.find(s);
+    if (it != type.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("Amortitazion type \"" << s << "\" not recognized");
+    }
+}
+
 } // namespace data
 } // namespace ore

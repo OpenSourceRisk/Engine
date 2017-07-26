@@ -67,12 +67,12 @@ public:
     };
 
     struct SwaptionVolShiftData {
-        SwaptionVolShiftData() : shiftSize(0.0) {}
+        SwaptionVolShiftData() : shiftSize(0.0), shiftStrikes({0.0}) {}
         string shiftType;
         Real shiftSize;
         vector<Period> shiftExpiries;
         vector<Period> shiftTerms;
-        vector<Real> shiftStrikes; // FIXME: absolute or relative to ATM ?
+        vector<Real> shiftStrikes; // strikeSpreads
         string indexName;
     };
 

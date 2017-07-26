@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2017 Quaternion Risk Management Ltd
+ Copyright (C) 2017 Aareal Bank AG
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -31,9 +32,8 @@ namespace QuantExt {
 
 DiscountingRiskyBondEngine::DiscountingRiskyBondEngine(const Handle<YieldTermStructure>& discountCurve,
                                                        const Handle<DefaultProbabilityTermStructure>& defaultCurve,
-                                                       const Handle<Quote>& securitySpread,
-                                                       const Handle<Quote>& recoveryRate, Period timestepPeriod,
-                                                       boost::optional<bool> includeSettlementDateFlows)
+						       const Handle<Quote>& recoveryRate, const Handle<Quote>& securitySpread,
+						       Period timestepPeriod, boost::optional<bool> includeSettlementDateFlows)
     : defaultCurve_(defaultCurve), recoveryRate_(recoveryRate), securitySpread_(securitySpread),
       timestepPeriod_(timestepPeriod), includeSettlementDateFlows_(includeSettlementDateFlows) {
     discountCurve_ =
