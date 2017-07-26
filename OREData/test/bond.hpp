@@ -37,6 +37,7 @@ public:
     static void testZeroBond();
     static void testBondZeroSpreadDefault();
     static void testBondCompareDefault();
+    static void testAmortizingBond();
     static boost::unit_test_framework::test_suite* suite();
 };
 } // namespace testsuite
