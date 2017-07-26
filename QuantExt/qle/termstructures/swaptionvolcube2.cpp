@@ -52,11 +52,14 @@ SwaptionVolCube2::SwaptionVolCube2(const Handle<SwaptionVolatilityStructure>& at
                                    const std::vector<std::vector<Handle<Quote> > >& volSpreads,
                                    const boost::shared_ptr<SwapIndex>& swapIndexBase,
                                    const boost::shared_ptr<SwapIndex>& shortSwapIndexBase, bool vegaWeightedSmileFit,
-                                   bool flatExtrapolation)
+                                   bool flatExtrapolation, bool volsAreSpreads)
     : SwaptionVolatilityCube(atmVolStructure, optionTenors, swapTenors, strikeSpreads, volSpreads, swapIndexBase,
                              shortSwapIndexBase, vegaWeightedSmileFit),
-      flatExtrapolation_(flatExtrapolation), volSpreadsInterpolator_(nStrikes_),
-      volSpreadsMatrix_(nStrikes_, Matrix(optionTenors.size(), swapTenors.size(), 0.0)) {}
+      flatExtrapolation_(flatExtrapolation), volsAreSpreads_(volsAreSpreads), volSpreadsInterpolator_(nStrikes_),
+      volSpreadsMatrix_(nStrikes_, Matrix(optionTenors.size(), swapTenors.size(), 0.0)) {
+    QL_REQUIRE(std::find(strikeSpreads_.begin(), strikeSpreads_.end(), 0.0) != strikeSpreads_.end(),
+               "SwaptionVolCube2: strikeSpreads must contain 0.0 for atm vols");
+}
 
 void SwaptionVolCube2::performCalculations() const {
 
@@ -92,7 +95,7 @@ boost::shared_ptr<SmileSection> SwaptionVolCube2::smileSectionImpl(const Date& o
                                                                    const Period& swapTenor) const {
     calculate();
     Rate atmForward = atmStrike(optionDate, swapTenor);
-    Volatility atmVol = atmVol_->volatility(optionDate, swapTenor, atmForward);
+    Volatility referenceVol = volsAreSpreads_ ? atmVol_->volatility(optionDate, swapTenor, atmForward) : 0.0;
     Time optionTime = timeFromReference(optionDate);
     Real exerciseTimeSqrt = std::sqrt(optionTime);
     std::vector<Real> strikes, stdDevs;
@@ -101,7 +104,7 @@ boost::shared_ptr<SmileSection> SwaptionVolCube2::smileSectionImpl(const Date& o
     Time length = swapLength(swapTenor);
     for (Size i = 0; i < nStrikes_; ++i) {
         strikes.push_back(atmForward + strikeSpreads_[i]);
-        stdDevs.push_back(exerciseTimeSqrt * (atmVol + volSpreadsInterpolator_[i](length, optionTime)));
+        stdDevs.push_back(exerciseTimeSqrt * (referenceVol + volSpreadsInterpolator_[i](length, optionTime)));
     }
     Real shift = atmVol_->shift(optionTime, length);
     if (!flatExtrapolation_)
