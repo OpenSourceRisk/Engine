@@ -380,8 +380,8 @@ SwapResults test_performance(Size portfolioSize, ObservationMode::Mode om) {
 
     // build scenario sim market
     Conventions conventions = *convs();
-    boost::shared_ptr<analytics::SimMarket> simMarket =
-        boost::make_shared<analytics::ScenarioSimMarket>(scenarioGenerator, initMarket, parameters, conventions);
+    auto simMarket = boost::make_shared<analytics::ScenarioSimMarket>(initMarket, parameters, conventions);
+    simMarket->scenarioGenerator() = scenarioGenerator;
 
     // Build Porfolio
     boost::shared_ptr<EngineData> data = boost::make_shared<EngineData>();
