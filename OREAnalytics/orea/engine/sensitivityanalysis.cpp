@@ -510,8 +510,8 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
             // Time t_exp = vts->dayCounter().yearFraction(asof_, asof_ + p_exp);
             // Time t_ten = vts->dayCounter().yearFraction(asof_, asof_ + p_ten);
             // Real atmVol = vts->volatility(t_exp, t_ten, Null<Real>());
-            Real atmVol = vts->volatility(p_exp, p_ten, strike);
-            shiftMult = atmVol;
+            Real vol = vts->volatility(p_exp, p_ten, strike);
+            shiftMult = vol;
         }
     } else if (keytype == RiskFactorKey::KeyType::OptionletVolatility) {
         string ccy = keylabel;

@@ -841,7 +841,6 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(
             volTermTimes[j] = dc.yearFraction(today_, term);
         }
 
-            
         for (Size j = 0; j < n_swvol_exp; ++j) {
             Period expiry = simMarketData_->swapVolExpiries()[j];
             for (Size k = 0; k < n_swvol_term; ++k) {
@@ -886,12 +885,16 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(
                         applyShift(j, k, shiftSize, up, shiftType, shiftExpiryTimes, shiftTermTimes, volExpiryTimes,
                                 volTermTimes, volData[ll], shiftedVolData[ll], true);
                     }
-                    // add shifted vol data to the scenario
+                    
                     for (Size jj = 0; jj < n_swvol_exp; ++jj) {
                         for (Size kk = 0; kk < n_swvol_term; ++kk) {
                             for (Size ll = 0; ll < n_swvol_strike; ++ll) {
                                 Size idx = jj *  n_swvol_term * n_swvol_strike + kk * n_swvol_strike + ll;
-                                scenario->add(getSwaptionVolKey(ccy, idx), shiftedVolData[ll][jj][kk]);
+                                if( ll >= loopStart && ll < loopEnd) {
+                                    scenario->add(getSwaptionVolKey(ccy, idx), shiftedVolData[ll][jj][kk]);
+                                } else {
+                                    scenario->add(getSwaptionVolKey(ccy, idx), volData[ll][jj][kk]);
+                                }
                             }
                         }
                     }
