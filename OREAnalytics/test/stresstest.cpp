@@ -247,18 +247,19 @@ void StressTestingTest::regression() {
     // sensitivity config
     boost::shared_ptr<StressTestScenarioData> stressData = setupStressScenarioData();
 
+    // build scenario sim market
+    Conventions conventions = *stressConv();
+    boost::shared_ptr<analytics::ScenarioSimMarket> simMarket =
+        boost::make_shared<analytics::ScenarioSimMarket>(initMarket, simMarketData, conventions);
+
     // build scenario generator
     boost::shared_ptr<StressScenarioGenerator> scenarioGenerator(
-        new StressScenarioGenerator(stressData, simMarketData, today, initMarket));
+        new StressScenarioGenerator(stressData, simMarket, simMarketData));
     boost::shared_ptr<Scenario> baseScen = scenarioGenerator->baseScenario();
     boost::shared_ptr<ScenarioFactory> scenarioFactory(new CloneScenarioFactory(baseScen));
     scenarioGenerator->generateScenarios(scenarioFactory);
     boost::shared_ptr<ScenarioGenerator> sgen(scenarioGenerator);
-
-    // build scenario sim market
-    Conventions conventions = *stressConv();
-    boost::shared_ptr<analytics::ScenarioSimMarket> simMarket =
-        boost::make_shared<analytics::ScenarioSimMarket>(sgen, initMarket, simMarketData, conventions);
+    simMarket->scenarioGenerator() = sgen;
 
     // build porfolio
     boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();

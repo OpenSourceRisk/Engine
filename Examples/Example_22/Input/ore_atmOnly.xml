@@ -79,7 +79,7 @@
     <Analytic type="sensitivity">
       <Parameter name="active">Y</Parameter>
       <Parameter name="marketConfigFile">simulation_atmOnly.xml</Parameter>
-      <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
+      <Parameter name="sensitivityConfigFile">sensitivity_atmOnly.xml</Parameter>
       <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
       <Parameter name="scenarioOutputFile">scenario.csv</Parameter>
       <Parameter name="sensitivityOutputFile">sensitivity_atmOnly.csv</Parameter>

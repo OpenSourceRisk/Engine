@@ -70,10 +70,8 @@ class StressScenarioGenerator : public ShiftScenarioGenerator {
 public:
     //! Constructor
     StressScenarioGenerator(const boost::shared_ptr<StressTestScenarioData>& stressData,
-                            const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
-                            const QuantLib::Date& today, const boost::shared_ptr<ore::data::Market>& initMarket,
-                            const std::string& configuration = Market::defaultConfiguration,
-                            boost::shared_ptr<ScenarioFactory> baseScenarioFactory = {});
+                            const boost::shared_ptr<ScenarioSimMarket>& scenarioSimMarket,
+                            const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData);
     //! Default destructor
     ~StressScenarioGenerator(){};
 
@@ -91,7 +89,7 @@ private:
     void addSwaptionVolShifts(StressTestScenarioData::StressTestData& data, boost::shared_ptr<Scenario>& scenario);
     void addCapFloorVolShifts(StressTestScenarioData::StressTestData& data, boost::shared_ptr<Scenario>& scenario);
 
-    boost::shared_ptr<StressTestScenarioData> stressData_;
+    const boost::shared_ptr<StressTestScenarioData> stressData_;
 };
 } // namespace analytics
 } // namespace ore

@@ -57,20 +57,20 @@ StressTest::StressTest(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
                        const boost::shared_ptr<StressTestScenarioData>& stressData, const Conventions& conventions,
                        boost::shared_ptr<ScenarioFactory> scenarioFactory) {
 
+    LOG("Build Simulation Market");
+    boost::shared_ptr<ScenarioSimMarket> simMarket =
+        boost::make_shared<ScenarioSimMarket>(market, simMarketData, conventions);
+
     LOG("Build Stress Scenario Generator");
     Date asof = market->asofDate();
     boost::shared_ptr<StressScenarioGenerator> scenarioGenerator =
-        boost::make_shared<StressScenarioGenerator>(stressData, simMarketData, asof, market);
+        boost::make_shared<StressScenarioGenerator>(stressData, simMarket, simMarketData);
     boost::shared_ptr<Scenario> baseScenario = scenarioGenerator->baseScenario();
     if (scenarioFactory == NULL) {
         scenarioFactory = boost::make_shared<CloneScenarioFactory>(baseScenario);
     }
     scenarioGenerator->generateScenarios(scenarioFactory);
-
-    LOG("Build Simulation Market");
-    boost::shared_ptr<ScenarioGenerator> sgen(scenarioGenerator);
-    boost::shared_ptr<ScenarioSimMarket> simMarket =
-        boost::make_shared<ScenarioSimMarket>(sgen, market, simMarketData, conventions);
+    simMarket->scenarioGenerator() = scenarioGenerator;
 
     LOG("Build Engine Factory");
     map<MarketContext, string> configurations;
