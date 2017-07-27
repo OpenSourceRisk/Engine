@@ -49,6 +49,8 @@ public:
         asof_ = Date(3, Feb, 2016);
         // build discount
         yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Yield, "BANK_EUR_LEND")] = flatRateYts(0.02);
+        yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "EUR")] =
+            flatRateYts(0.02);
         defaultCurves_[make_pair(Market::defaultConfiguration, "CreditCurve_A")] = flatRateDcs(0.0);
         // recoveryRates_[make_pair(Market::defaultConfiguration, "CreditCurve_A")] =
         //     Handle<Quote>(boost::make_shared<SimpleQuote>(0.00));
@@ -60,6 +62,14 @@ public:
         Handle<IborIndex> hEUR(ore::data::parseIborIndex(
             "EUR-EURIBOR-6M", yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "EUR")]));
         iborIndices_[make_pair(Market::defaultConfiguration, "EUR-EURIBOR-6M")] = hEUR;
+
+        // add Eurib 6M fixing
+        hEUR->addFixing(Date(1, Feb, 2016), -0.00191);
+        hEUR->addFixing(Date(1, Feb, 2017), -0.00191);
+        hEUR->addFixing(Date(1, Feb, 2018), -0.00191);
+        hEUR->addFixing(Date(1, Feb, 2019), -0.00191);
+        hEUR->addFixing(Date(31, Jan, 2019), -0.00191);
+        hEUR->addFixing(Date(30, Jan, 2020), -0.00191);
     }
 
     TestMarket(Real defaultFlatRate) {
@@ -78,6 +88,7 @@ public:
 private:
     Handle<YieldTermStructure> flatRateYts(Real forward) {
         boost::shared_ptr<YieldTermStructure> yts(new FlatForward(0, NullCalendar(), forward, ActualActual()));
+        yts->enableExtrapolation();
         return Handle<YieldTermStructure>(yts);
     }
     Handle<DefaultProbabilityTermStructure> flatRateDcs(Real forward) {
@@ -239,11 +250,7 @@ void BondTest::testAmortizingBond() {
     boost::shared_ptr<ore::data::Bond> bondRelativeInitial = vars.makeAmortizingFixedBond("RelativeToInitialNotional", 0.25, true);
     bonds.push_back(bondRelativeInitial);
 
-    boost::shared_ptr<ore::data::Bond> bondFixedAnnuity = vars.makeAmortizingFixedBond("Annuity", 2820421.51, true);
-    bonds.push_back(bondFixedAnnuity);
 
-    boost::shared_ptr<ore::data::Bond> bondFloatingAnnuity = vars.makeAmortizingFloatingBond("Annuity", 2820421.51, true);
-    bonds.push_back(bondFixedAnnuity);
 
 
     
@@ -266,7 +273,6 @@ void BondTest::testAmortizingBond() {
         Real npv = b->instrument()->NPV();
         Real expectedNpv = 0.0;
 
-        std::cout<<npv<<" "<<expectedNpv<<std::endl;
         BOOST_CHECK(std::fabs(npv - expectedNpv) < npvTol);
     }
 
@@ -274,13 +280,38 @@ void BondTest::testAmortizingBond() {
     boost::shared_ptr<ore::data::Bond> bondRelativePrevious = vars.makeAmortizingFixedBond("RelativeToPreviousNotional", 0.25, true);
     bondRelativePrevious->build(engineFactory);
 
-    boost::shared_ptr<QuantLib::Instrument> inst = bondRelativePrevious->instrument()->qlInstrument();
-    boost::shared_ptr<QuantLib::Bond> qlBond = boost::dynamic_pointer_cast<QuantLib::Bond>(inst);
+    boost::shared_ptr<QuantLib::Instrument> inst1 = bondRelativePrevious->instrument()->qlInstrument();
+    boost::shared_ptr<QuantLib::Bond> qlBond1 = boost::dynamic_pointer_cast<QuantLib::Bond>(inst1);
     Real expectedNotional = 3164062.5;
 
-    Real notional = qlBond->notionals()[qlBond->notionals().size()-2];
+    Real notional = qlBond1->notionals()[qlBond1->notionals().size()-2];
     
     BOOST_CHECK_CLOSE(notional, expectedNotional, 1);
+
+    boost::shared_ptr<ore::data::Bond> bondFixedAnnuity = vars.makeAmortizingFixedBond("Annuity", 2500000, true);
+    bondFixedAnnuity->build(engineFactory);
+
+    boost::shared_ptr<QuantLib::Instrument> inst2 = bondFixedAnnuity->instrument()->qlInstrument();
+    boost::shared_ptr<QuantLib::Bond> qlBond2 = boost::dynamic_pointer_cast<QuantLib::Bond>(inst2);
+    expectedNotional = 1380910.2798667;
+
+    notional = qlBond2->notionals()[qlBond2->notionals().size()-2];
+    
+    BOOST_CHECK(std::fabs(notional - expectedExpected) < npvTol);
+
+    boost::shared_ptr<ore::data::Bond> bondFloatingAnnuity = vars.makeAmortizingFloatingBond("Annuity", 2500000, true);
+    bondFloatingAnnuity->build(engineFactory);
+
+    boost::shared_ptr<QuantLib::Instrument> inst3 = bondFloatingAnnuity->instrument()->qlInstrument();
+    boost::shared_ptr<QuantLib::Bond> qlBond3 = boost::dynamic_pointer_cast<QuantLib::Bond>(inst3);
+    Real expectedAmount = 93.41;
+
+    Real amount = qlBond3->cashflows()[qlBond3->cashflows().size()-2]->amount();
+    
+    BOOST_CHECK(std::fabs(amount - expectedAmount) < npvTol);
+
+
+
 }
 
 
