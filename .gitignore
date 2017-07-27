@@ -211,6 +211,9 @@ config/
 # DS_Store files
 *.DS_Store
 
+# .vs folders
+.vs/
+
 #########################
 # global files
 #########################
