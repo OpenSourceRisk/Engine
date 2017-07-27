@@ -19,7 +19,6 @@
 #include <orea/scenario/sensitivityscenariogenerator.hpp>
 #include <ored/utilities/log.hpp>
 #include <ostream>
-
 using namespace QuantLib;
 using namespace QuantExt;
 using namespace std;
@@ -873,17 +872,9 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(
                     scenarioDescriptions_.push_back(swaptionVolScenarioDescription(ccy, j, k, strikeBucket, up));
 
                     //if simulating atm only we shift all strikes otherwise we shift each strike individually
-                    Size loopStart;
-                    if (!atmOnly_swvol) {
-                        Real strike = shiftStrikes[l];
-                        vector<Real> strikes = simMarketData_->swapVolStrikeSpreads();
-                        for (Size s = 0; s < shiftStrikes.size(); s++)
-                            if (strike == strikes[s])
-                                loopStart = s;
-                    } else {
-                        loopStart = 0;
-                    }
+                    Size loopStart = atmOnly_swvol ? 0 : l;
                     Size loopEnd = atmOnly_swvol ? n_swvol_strike : loopStart+1;
+                    
                     LOG("Swap vol looping over "<<loopStart<<" to "<<loopEnd <<" for strike "<<shiftStrikes[l]);
                     for (Size ll=loopStart; ll < loopEnd; ++ll){
                         applyShift(j, k, shiftSize, up, shiftType, shiftExpiryTimes, shiftTermTimes, volExpiryTimes,
@@ -894,15 +885,11 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(
                         for (Size kk = 0; kk < n_swvol_term; ++kk) {
                             for (Size ll = 0; ll < n_swvol_strike; ++ll) {
                                 Size idx = jj *  n_swvol_term * n_swvol_strike + kk * n_swvol_strike + ll;
-<<<<<<< HEAD
                                 if( ll >= loopStart && ll < loopEnd) {
-                                    scenario->add(getSwaptionVolKey(ccy, idx), shiftedVolData[ll][jj][kk]);
+                                    scenario->add(RiskFactorKey(RiskFactorKey::KeyType::SwaptionVolatility, ccy, idx), shiftedVolData[ll][jj][kk]);
                                 } else {
-                                    scenario->add(getSwaptionVolKey(ccy, idx), volData[ll][jj][kk]);
+                                    scenario->add(RiskFactorKey(RiskFactorKey::KeyType::SwaptionVolatility, ccy, idx), volData[ll][jj][kk]);
                                 }
-=======
-                                scenario->add(RiskFactorKey(RiskFactorKey::KeyType::SwaptionVolatility, ccy, idx), shiftedVolData[ll][jj][kk]);
->>>>>>> origin/master
                             }
                         }
                     }
@@ -1540,7 +1527,7 @@ SensitivityScenarioGenerator::swaptionVolScenarioDescription(string ccy, Size ex
                  termBucket * data.shiftStrikes.size() + strikeBucket;
     RiskFactorKey key(RiskFactorKey::KeyType::SwaptionVolatility, ccy, index);
     std::ostringstream o;
-    if (data.shiftStrikes.size() == 0 || data.shiftStrikes[strikeBucket] == 0) {
+    if (data.shiftStrikes.size() == 0 || close_enough(data.shiftStrikes[strikeBucket], 0)) {
         o << data.shiftExpiries[expiryBucket] << "/" << data.shiftTerms[termBucket] << "/ATM";
     } else {
         o << data.shiftExpiries[expiryBucket] << "/" << data.shiftTerms[termBucket] << "/" << std::setprecision(4)
