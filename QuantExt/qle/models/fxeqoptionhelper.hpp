@@ -54,6 +54,10 @@ public:
     Real modelValue() const;
     Real blackPrice(Real volatility) const;
     boost::shared_ptr<VanillaOption> option() const { return option_; }
+    Real strike() const {
+        calculate();
+        return effStrike_;
+    }
 
 private:
     const bool hasMaturity_;
