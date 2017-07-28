@@ -25,14 +25,14 @@
 #ifndef quantext_currencyswap_hpp
 #define quantext_currencyswap_hpp
 
-#include <ql/cashflows/cashflows.hpp>
-#include <ql/currencies/europe.hpp>
-#include <ql/currency.hpp>
-#include <ql/indexes/iborindex.hpp>
 #include <ql/instruments/swap.hpp>
-#include <ql/money.hpp>
 #include <ql/time/daycounter.hpp>
 #include <ql/time/schedule.hpp>
+#include <ql/cashflows/cashflows.hpp>
+#include <ql/indexes/iborindex.hpp>
+#include <ql/currency.hpp>
+#include <ql/currencies/europe.hpp>
+#include <ql/money.hpp>
 
 using namespace QuantLib;
 
@@ -109,7 +109,6 @@ public:
     }
     std::vector<Leg> legs() { return legs_; }
     std::vector<Currency> currencies() { return currency_; }
-    boost::shared_ptr<PricingEngine> engine() { return engine_; }
     //@}
 protected:
     //! \name Constructors
@@ -194,6 +193,6 @@ public:
                       const boost::shared_ptr<IborIndex>& iborIndex2, std::vector<Rate> spreads2,
                       boost::optional<BusinessDayConvention> paymentConvention = boost::none);
 };
-} // namespace QuantExt
+}
 
 #endif
