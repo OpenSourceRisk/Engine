@@ -483,9 +483,6 @@
     <ClInclude Include="qle\termstructures\equityvolconstantspread.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
-    <ClInclude Include="qle\termstructures\swaptionvolatilitycube.hpp">
-      <Filter>termstructures</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -813,9 +810,6 @@
     </ClCompile>
     <ClCompile Include="qle\pricingengines\paymentdiscountingengine.cpp">
       <Filter>pricingengines</Filter>
-    </ClCompile>
-    <ClCompile Include="qle\termstructures\swaptionvolatilitycube.cpp">
-      <Filter>termstructures</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
