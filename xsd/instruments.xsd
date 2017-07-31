@@ -14,6 +14,7 @@
               <xs:choice>
                 <xs:element type="swapData" name="SwapData"/>
                 <xs:element type="swaptionData" name="SwaptionData"/>
+                <xs:element type="forwardRateAgreementData" name="ForwardRateAgreementData"/>
                 <xs:element type="fxForwardData" name="FxForwardData"/>
                 <xs:element type="fxOptionData" name="FxOptionData"/>
                 <xs:element type="capFloorData" name="CapFloorData"/>
@@ -291,6 +292,18 @@
 	  <xs:enumeration value="CMS"/>
     </xs:restriction>
   </xs:simpleType>
+  
+  <xs:complexType name="forwardRateAgreementData">
+    <xs:sequence>
+      <xs:element type="date" name="StartDate"/>
+      <xs:element type="date" name="EndDate"/>
+      <xs:element type="currencyCode" name="Currency"/>
+      <xs:element type="xs:string" name="Index"/>
+      <xs:element type="longShort" name="LongShort"/>
+      <xs:element type="xs:float" name="Strike"/>
+      <xs:element type="xs:float" name="Notional"/>
+    </xs:sequence>
+  </xs:complexType>
 
   <xs:complexType name="fxForwardData">
     <xs:sequence>
