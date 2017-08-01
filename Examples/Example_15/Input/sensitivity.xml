@@ -248,11 +248,6 @@
       <ShiftSize>0.0001</ShiftSize>
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
     </ZeroInflationIndexCurve>
-    <ZeroInflationIndexCurve index="ZACPI">
-      <ShiftType>Absolute</ShiftType>
-      <ShiftSize>0.0001</ShiftSize>
-      <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
-    </ZeroInflationIndexCurve>
   </ZeroInflationIndexCurves>
   <YYInflationIndexCurves>
     <YYInflationIndexCurve index="EUHICPXT">
