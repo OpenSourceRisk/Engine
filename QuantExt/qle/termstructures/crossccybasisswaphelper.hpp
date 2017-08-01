@@ -94,6 +94,6 @@ protected:
     RelinkableHandle<YieldTermStructure> flatDiscountRLH_;
     RelinkableHandle<YieldTermStructure> spreadDiscountRLH_;
 };
-} // namespace QuantExt
+}
 
 #endif
