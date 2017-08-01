@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2017 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -32,37 +32,26 @@ namespace data {
 /*!
   \ingroup tradedata
 */
-    class ForwardRateAgreement : public Trade { 
-    public:
-        ForwardRateAgreement () : Trade("ForwardRateAgreement") {}
-        ForwardRateAgreement (Envelope& env,
-             string longShort,
-             string currency,
-             string startDate,
-             string endDate,
-             string index,
-             double strike,
-             double notional)
-            : Trade("ForwardRateAgreement", env),
-              longShort_(longShort),
-              currency_(currency),
-              startDate_(startDate),
-              endDate_(endDate),
-              index_(index),
-              strike_(strike),
-              notional_(notional) {}
-        void build(const boost::shared_ptr<EngineFactory>& engineFactory);
+class ForwardRateAgreement : public Trade {
+public:
+    ForwardRateAgreement() : Trade("ForwardRateAgreement") {}
+    ForwardRateAgreement(Envelope& env, string longShort, string currency, string startDate, string endDate,
+                         string index, double strike, double notional)
+        : Trade("ForwardRateAgreement", env), longShort_(longShort), currency_(currency), startDate_(startDate),
+          endDate_(endDate), index_(index), strike_(strike), notional_(notional) {}
+    void build(const boost::shared_ptr<EngineFactory>& engineFactory);
 
-        virtual void fromXML(XMLNode *node);
-        virtual XMLNode* toXML (XMLDocument& doc);
-    private:
-        string longShort_;
-        string currency_;
-        string startDate_;
-        string endDate_;
-        string index_;
-        double strike_;
-        double notional_;
+    virtual void fromXML(XMLNode* node);
+    virtual XMLNode* toXML(XMLDocument& doc);
+
+private:
+    string longShort_;
+    string currency_;
+    string startDate_;
+    string endDate_;
+    string index_;
+    double strike_;
+    double notional_;
 };
 } // namespace data
 } // namespace ore

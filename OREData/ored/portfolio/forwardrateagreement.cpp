@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2017 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,65 +16,59 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <iostream>
 #include <ored/portfolio/forwardrateagreement.hpp>
 #include <ql/instruments/forwardrateagreement.hpp>
-#include <iostream>
 using namespace QuantLib;
 using namespace std;
 
 namespace ore {
 namespace data {
 
-    //--------------------------------------------------------------------------
-    void ForwardRateAgreement::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
-    //--------------------------------------------------------------------------
-        const boost::shared_ptr<Market> market = engineFactory->market();
+void ForwardRateAgreement::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+    const boost::shared_ptr<Market> market = engineFactory->market();
 
-        Date startDate = parseDate (startDate_);
-        Date endDate = parseDate (endDate_);
-        Position::Type positionType = parsePositionType(longShort_);
+    Date startDate = parseDate(startDate_);
+    Date endDate = parseDate(endDate_);
+    Position::Type positionType = parsePositionType(longShort_);
 
-		Handle<YieldTermStructure> discountTS = market->discountCurve(currency_);
-        Handle<QuantLib::IborIndex> index = market->iborIndex(index_);
- 
-        boost::shared_ptr< QuantLib::ForwardRateAgreement> fra(new QuantLib::ForwardRateAgreement(startDate,
-            endDate, positionType, strike_, notional_, *index, discountTS));
-        instrument_.reset(new VanillaInstrument(fra));
-        npvCurrency_ = currency_;
-        maturity_ = endDate;
-        instrument_->qlInstrument()->update();
-    }
+    Handle<YieldTermStructure> discountTS = market->discountCurve(currency_);
+    Handle<QuantLib::IborIndex> index = market->iborIndex(index_);
 
-    //--------------------------------------------------------------------------
-    void ForwardRateAgreement::fromXML (XMLNode *node) {
-    //--------------------------------------------------------------------------
-        Trade::fromXML (node);
-        XMLNode* fNode = XMLUtils::getChildNode(node, "ForwardRateAgreementData");
-        
-        currency_ = XMLUtils::getChildValue(fNode, "Currency", true);
-        startDate_ = XMLUtils::getChildValue(fNode, "StartDate", true);
-        endDate_ = XMLUtils::getChildValue(fNode, "EndDate", true);
-        longShort_ = XMLUtils::getChildValue(fNode, "LongShort", true);
-        strike_ = XMLUtils::getChildValueAsDouble(fNode, "Strike", true);
-        notional_= XMLUtils::getChildValueAsDouble(fNode, "Notional", true);
-        index_ = XMLUtils::getChildValue(fNode, "Index", true);
-    }
+    boost::shared_ptr<QuantLib::ForwardRateAgreement> fra(
+        new QuantLib::ForwardRateAgreement(startDate, endDate, positionType, strike_, notional_, *index, discountTS));
+    instrument_.reset(new VanillaInstrument(fra));
+    npvCurrency_ = currency_;
+    maturity_ = endDate;
+    instrument_->qlInstrument()->update();
+}
 
-    //--------------------------------------------------------------------------
-    XMLNode* ForwardRateAgreement::toXML (XMLDocument& doc) {
-    //--------------------------------------------------------------------------
-        XMLNode* node = Trade::toXML (doc);
-        XMLNode* fNode= doc.allocNode("ForwardRateAgreementData");
-        XMLUtils::appendNode (node, fNode);
+void ForwardRateAgreement::fromXML(XMLNode* node) {
+    Trade::fromXML(node);
+    XMLNode* fNode = XMLUtils::getChildNode(node, "ForwardRateAgreementData");
 
-        XMLUtils::addChild(doc, fNode, "Currency", currency_);
-        XMLUtils::addChild(doc, fNode, "StartDate", startDate_);
-        XMLUtils::addChild(doc, fNode, "EndDate", endDate_);
-        XMLUtils::addChild(doc, fNode, "LongShort", longShort_);
-        XMLUtils::addChild(doc, fNode, "Strike", strike_);
-        XMLUtils::addChild(doc, fNode, "Notional", notional_);
-        XMLUtils::addChild(doc, fNode, "Index", index_);
-        return node;
+    currency_ = XMLUtils::getChildValue(fNode, "Currency", true);
+    startDate_ = XMLUtils::getChildValue(fNode, "StartDate", true);
+    endDate_ = XMLUtils::getChildValue(fNode, "EndDate", true);
+    longShort_ = XMLUtils::getChildValue(fNode, "LongShort", true);
+    strike_ = XMLUtils::getChildValueAsDouble(fNode, "Strike", true);
+    notional_ = XMLUtils::getChildValueAsDouble(fNode, "Notional", true);
+    index_ = XMLUtils::getChildValue(fNode, "Index", true);
+}
+
+XMLNode* ForwardRateAgreement::toXML(XMLDocument& doc) {
+    XMLNode* node = Trade::toXML(doc);
+    XMLNode* fNode = doc.allocNode("ForwardRateAgreementData");
+    XMLUtils::appendNode(node, fNode);
+
+    XMLUtils::addChild(doc, fNode, "Currency", currency_);
+    XMLUtils::addChild(doc, fNode, "StartDate", startDate_);
+    XMLUtils::addChild(doc, fNode, "EndDate", endDate_);
+    XMLUtils::addChild(doc, fNode, "LongShort", longShort_);
+    XMLUtils::addChild(doc, fNode, "Strike", strike_);
+    XMLUtils::addChild(doc, fNode, "Notional", notional_);
+    XMLUtils::addChild(doc, fNode, "Index", index_);
+    return node;
 }
 } // namespace data
 } // namespace ore
