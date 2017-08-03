@@ -133,6 +133,7 @@ Calendar parseCalendar(const string& s) {
                                       {"EUR", TARGET()},
                                       {"ZUB", Switzerland()},
                                       {"CHF", Switzerland()},
+                                      {"CHZU", Switzerland()},
                                       {"Switzerland", Switzerland()},
                                       {"US", UnitedStates()},
                                       {"USD", UnitedStates()},
@@ -150,6 +151,7 @@ Calendar parseCalendar(const string& s) {
                                       {"CA", Canada()},
                                       {"TRB", Canada()},
                                       {"CAD", Canada()},
+                                      {"CATO", Canada()},
                                       {"Canada", Canada()},
                                       {"SYB", Australia()},
                                       {"AU", Australia()},
@@ -157,12 +159,14 @@ Calendar parseCalendar(const string& s) {
                                       {"Australia", Australia()},
                                       {"TKB", Japan()},
                                       {"JP", Japan()},
+                                      {"JPTO", Japan()},
                                       {"JPY", Japan()},
                                       {"Japan", Japan()},
                                       {"ZAR", SouthAfrica()},
                                       {"SA", SouthAfrica()},
                                       {"SS", Sweden()},
                                       {"SEK", Sweden()},
+                                      {"SEST", Sweden()},
                                       {"ARS", Argentina()},
                                       {"BRL", Brazil()},
                                       {"CNY", China()},
@@ -184,8 +188,10 @@ Calendar parseCalendar(const string& s) {
                                       {"KRW", SouthKorea()},
                                       {"TWD", Taiwan()},
                                       {"TRY", Turkey()},
+                                      {"TRIS", Turkey()},
                                       {"UAH", Ukraine()},
                                       {"HUF", Hungary()},
+                                      {"GBLO", UnitedKingdom()},
                                       // fallback to TARGET for these emerging ccys
                                       {"CLP", TARGET()},
                                       {"RON", TARGET()},
@@ -209,9 +215,10 @@ Calendar parseCalendar(const string& s) {
                                       {"NGN", TARGET()},
                                       {"MAD", TARGET()},
                                         //ISDA http://www.fpml.org/coding-scheme/business-center-7-15.xml
-                                      {"GBLO", UnitedKingdom()},
                                       {"EUTA", TARGET()},
+                                      {"BEBR", TARGET()}, //Belgium, Brussels not in QL
                                       {"WeekendsOnly", WeekendsOnly()},
+                                      {"UNMAPPED", WeekendsOnly()},
                                       {"NullCalendar", NullCalendar()}};
 
     auto it = m.find(s);

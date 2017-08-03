@@ -115,6 +115,20 @@
   </xs:complexType>
   
   <xs:element name="legDataType" abstract="true"/>
+  <xs:element name="CashflowData" substitutionGroup="legDataType">
+    <xs:complexType>
+      <xs:all>
+        <xs:element name="Cashflow">
+          <xs:complexType>
+            <xs:all>
+              <xs:element type="xs:string" name="Amount"/>
+              <xs:element type="xs:string" name="Date"/>
+            </xs:all>
+          </xs:complexType>
+        </xs:element>
+      </xs:all>
+    </xs:complexType>
+  </xs:element>
   <xs:element name="FixedLegData" substitutionGroup="legDataType">
     <xs:complexType>
       <xs:sequence>
@@ -315,6 +329,7 @@
       <xs:enumeration value="CPI"/>
       <xs:enumeration value="YY"/>
 	  <xs:enumeration value="CMS"/>
+	  <xs:enumeration value="Cashflow"/>
     </xs:restriction>
   </xs:simpleType>
 

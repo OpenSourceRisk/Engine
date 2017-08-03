@@ -219,6 +219,13 @@
       <xs:enumeration value="MAD"/>
       <xs:enumeration value="GBLO"/>
       <xs:enumeration value="EUTA"/>
+      <xs:enumeration value="CHZU"/>
+      <xs:enumeration value="CATO"/>
+      <xs:enumeration value="JPTO"/>
+      <xs:enumeration value="SEST"/>
+      <xs:enumeration value="TRIS"/>
+      <xs:enumeration value="BEBR"/>
+      <xs:enumeration value="UNMAPPED"/>
       <xs:enumeration value="WeekendsOnly"/>
     </xs:restriction-->
   </xs:simpleType>
