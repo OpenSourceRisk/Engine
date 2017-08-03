@@ -136,6 +136,7 @@ Calendar parseCalendar(const string& s) {
                                       {"CHZU", Switzerland()},
                                       {"Switzerland", Switzerland()},
                                       {"US", UnitedStates()},
+                                      {"USNY", UnitedStates()},
                                       {"USD", UnitedStates()},
                                       {"NYB", UnitedStates()},
                                       {"US-SET", UnitedStates(UnitedStates::Settlement)},
