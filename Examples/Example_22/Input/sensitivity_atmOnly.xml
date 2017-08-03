@@ -122,7 +122,7 @@
       <ShiftSize>0.01</ShiftSize>
       <ShiftExpiries>1Y,5Y,7Y,10Y</ShiftExpiries>
       <ShiftTerms>1Y,5Y,10Y</ShiftTerms>
-      <ShiftStrikes/>
+      <ShiftStrikes>0.0</ShiftStrikes>
     </SwaptionVolatility>
   </SwaptionVolatilities>
   
