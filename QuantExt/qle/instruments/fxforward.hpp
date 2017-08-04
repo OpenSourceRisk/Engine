@@ -26,9 +26,9 @@
 #define quantext_fxforward_hpp
 
 #include <ql/currency.hpp>
+#include <ql/money.hpp>
 #include <ql/exchangerate.hpp>
 #include <ql/instrument.hpp>
-#include <ql/money.hpp>
 #include <ql/quote.hpp>
 
 using namespace QuantLib;
@@ -116,7 +116,6 @@ public:
     Currency currency2() const { return currency2_; }
     Date maturityDate() const { return maturityDate_; }
     bool payCurrency1() const { return payCurrency1_; }
-    boost::shared_ptr<PricingEngine> engine() const { return engine_; }
     //@}
 
 private:
@@ -156,6 +155,6 @@ public:
 };
 
 class FxForward::engine : public GenericEngine<FxForward::arguments, FxForward::results> {};
-} // namespace QuantExt
+}
 
 #endif

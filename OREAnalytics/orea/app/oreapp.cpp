@@ -551,10 +551,8 @@ void OREApp::writeBaseScenario() {
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketData(new ScenarioSimMarketParameters);
     simMarketData->fromFile(marketConfigFile);
 
-    boost::shared_ptr<ShiftScenarioGenerator> shiftGenerator =
-        boost::make_shared<ShiftScenarioGenerator>(simMarketData, today, market_, marketConfiguration);
-
-    boost::shared_ptr<Scenario> scenario = shiftGenerator->baseScenario();
+    auto simMarket = boost::make_shared<ScenarioSimMarket>(market_, simMarketData, conventions_, marketConfiguration);
+    boost::shared_ptr<Scenario> scenario = simMarket->baseScenario();
     QL_REQUIRE(scenario->asof() == today, "dates do not match");
 
     string outputPath = params_->get("setup", "outputPath");
@@ -645,8 +643,9 @@ void OREApp::generateNPVCube() {
 
     if (buildSimMarket_) {
         LOG("Build Simulation Market");
-        simMarket_ = boost::make_shared<ScenarioSimMarket>(sg, market_, simMarketData, conventions_,
+        simMarket_ = boost::make_shared<ScenarioSimMarket>(market_, simMarketData, conventions_,
                                                            params_->get("markets", "simulation"));
+        simMarket_->scenarioGenerator() = sg;
         boost::shared_ptr<EngineFactory> simFactory = buildEngineFactory(simMarket_);
 
         LOG("Build portfolio linked to sim market");

@@ -38,7 +38,6 @@
 #include <qle/pricingengines/crossccyswapengine.hpp>
 #include <qle/pricingengines/depositengine.hpp>
 #include <qle/pricingengines/discountingfxforwardengine.hpp>
-#include <qle/termstructures/swaptionvolatilitycube.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -59,7 +58,7 @@ SensitivityAnalysis::SensitivityAnalysis(const boost::shared_ptr<ore::data::Port
     : market_(market), marketConfiguration_(marketConfiguration), asof_(market->asofDate()),
       simMarketData_(simMarketData), sensitivityData_(sensitivityData), conventions_(conventions),
       recalibrateModels_(recalibrateModels), nonShiftedBaseCurrencyConversion_(nonShiftedBaseCurrencyConversion),
-      engineData_(engineData), portfolio_(portfolio), initialized_(false), computed_(false), overrideTenors_(false) {}
+      overrideTenors_(false), initialized_(false), engineData_(engineData), portfolio_(portfolio), computed_(false) {}
 
 std::vector<boost::shared_ptr<ValuationCalculator>> SensitivityAnalysis::buildValuationCalculators() const {
     vector<boost::shared_ptr<ValuationCalculator>> calculators;
@@ -71,10 +70,7 @@ std::vector<boost::shared_ptr<ValuationCalculator>> SensitivityAnalysis::buildVa
 }
 
 void SensitivityAnalysis::initialize(boost::shared_ptr<NPVCube>& cube) {
-    LOG("Build Sensitivity Scenario Generator");
-    initializeSensitivityScenarioGenerator();
-
-    LOG("Build Simulation Market");
+    LOG("Build Sensitivity Scenario Generator and Simulation Market");
     initializeSimMarket();
 
     LOG("Build Engine Factory and rebuild portfolio");
@@ -113,9 +109,12 @@ void SensitivityAnalysis::generateSensitivities() {
     LOG("Sensitivity analysis completed");
 }
 
-void SensitivityAnalysis::initializeSensitivityScenarioGenerator(boost::shared_ptr<ScenarioFactory> scenFact) {
-    scenarioGenerator_ = boost::make_shared<SensitivityScenarioGenerator>(sensitivityData_, simMarketData_, asof_,
-                                                                          market_, overrideTenors_);
+void SensitivityAnalysis::initializeSimMarket(boost::shared_ptr<ScenarioFactory> scenFact) {
+    LOG("Initialise sim market for sensitivity analysis");
+    simMarket_ = boost::make_shared<ScenarioSimMarket>(market_, simMarketData_, conventions_, marketConfiguration_);
+    scenarioGenerator_ =
+        boost::make_shared<SensitivityScenarioGenerator>(sensitivityData_, simMarket_, simMarketData_, overrideTenors_);
+    simMarket_->scenarioGenerator() = scenarioGenerator_;
     boost::shared_ptr<Scenario> baseScen = scenarioGenerator_->baseScenario();
     boost::shared_ptr<ScenarioFactory> scenFactory =
         (scenFact != NULL) ? scenFact
@@ -123,13 +122,6 @@ void SensitivityAnalysis::initializeSensitivityScenarioGenerator(boost::shared_p
                                  baseScen); // needed so that sensi scenarios are consistent with base scenario
     LOG("Generating sensitivity scenarios");
     scenarioGenerator_->generateScenarios(scenFactory);
-}
-
-void SensitivityAnalysis::initializeSimMarket() {
-    boost::shared_ptr<ScenarioGenerator> sgen =
-        boost::static_pointer_cast<ScenarioGenerator, SensitivityScenarioGenerator>(scenarioGenerator_);
-    simMarket_ =
-        boost::make_shared<ScenarioSimMarket>(sgen, market_, simMarketData_, conventions_, marketConfiguration_);
 }
 
 boost::shared_ptr<EngineFactory>
@@ -495,23 +487,17 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
             Size keyIdx = key.index;
             Size strikeIdx = keyIdx % strikes.size();
             Real p_strikeSpread = strikes[strikeIdx];
-            Size expIdx = keyIdx / (tenors.size()*strikes.size());
+            Size expIdx = keyIdx / (tenors.size() * strikes.size());
             Period p_exp = expiries[expIdx];
             Size tenIdx = keyIdx % tenors.size();
             Period p_ten = tenors[tenIdx];
-            Real strike;
+            Real strike = Null<Real>(); // for cubes this will be ATM
             Handle<SwaptionVolatilityStructure> vts = simMarket_->swaptionVol(ccy, marketConfiguration_);
-            boost::shared_ptr<QuantExt::SwaptionVolatilityCube> cube = boost::dynamic_pointer_cast<QuantExt::SwaptionVolatilityCube>(*vts);
-            if (cube ) {
-                strike = cube->atmStrike(p_exp, p_ten) + strikes[p_strikeSpread];
-            } else {
-                strike = Null<Real>();
-            }
             // Time t_exp = vts->dayCounter().yearFraction(asof_, asof_ + p_exp);
             // Time t_ten = vts->dayCounter().yearFraction(asof_, asof_ + p_ten);
             // Real atmVol = vts->volatility(t_exp, t_ten, Null<Real>());
-            Real atmVol = vts->volatility(p_exp, p_ten, strike);
-            shiftMult = atmVol;
+            Real vol = vts->volatility(p_exp, p_ten, strike);
+            shiftMult = vol;
         }
     } else if (keytype == RiskFactorKey::KeyType::OptionletVolatility) {
         string ccy = keylabel;

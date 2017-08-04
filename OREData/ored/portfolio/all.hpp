@@ -26,5 +26,6 @@
 #include <ored/portfolio/bond.hpp>
 #include <ored/portfolio/creditdefaultswap.hpp>
 #include <ored/portfolio/creditdefaultswapdata.hpp>
+#include <ored/portfolio/forwardrateagreement.hpp>
 
 #include <ored/portfolio/builders/all.hpp>
