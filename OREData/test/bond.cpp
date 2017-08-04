@@ -297,7 +297,7 @@ void BondTest::testAmortizingBond() {
 
     notional = qlBond2->notionals()[qlBond2->notionals().size()-2];
     
-    BOOST_CHECK(std::fabs(notional - expectedExpected) < npvTol);
+    BOOST_CHECK(std::fabs(notional - expectedNotional) < npvTol);
 
     boost::shared_ptr<ore::data::Bond> bondFloatingAnnuity = vars.makeAmortizingFloatingBond("Annuity", 2500000, true);
     bondFloatingAnnuity->build(engineFactory);
