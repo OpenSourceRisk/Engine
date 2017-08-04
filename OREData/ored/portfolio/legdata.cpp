@@ -30,7 +30,7 @@
 #include <ql/cashflows/overnightindexedcoupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
 #include <ql/errors.hpp>
-
+#include <iostream>
 #include <boost/make_shared.hpp>
 
 using namespace QuantLib;
@@ -276,12 +276,13 @@ Leg makeIborLeg(LegData& data, boost::shared_ptr<IborIndex> index,
     Schedule schedule = makeSchedule(data.schedule());
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
+    
     FloatingLegData floatData = data.floatingLegData();
     bool hasCapsFloors = floatData.caps().size() > 0 || floatData.floors().size() > 0;
 
     vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
     vector<double> spreads = buildScheduledVector(floatData.spreads(), floatData.spreadDates(), schedule);
-
+    
     IborLeg iborLeg = IborLeg(schedule, index)
                           .withNotionals(notionals)
                           .withSpreads(spreads)
@@ -314,9 +315,9 @@ Leg makeIborLeg(LegData& data, boost::shared_ptr<IborIndex> index,
     // Loop over the coupons in the leg and set pricer
     Leg leg = iborLeg;
     for (const auto& cashflow : leg) {
-        boost::shared_ptr<CappedFlooredIborCoupon> coupon =
-            boost::dynamic_pointer_cast<CappedFlooredIborCoupon>(cashflow);
-        QL_REQUIRE(coupon, "Expected a leg of coupons of type CappedFlooredIborCoupon");
+        boost::shared_ptr<FloatingRateCoupon> coupon =
+            boost::dynamic_pointer_cast<FloatingRateCoupon>(cashflow);
+        QL_REQUIRE(coupon, "Expected a leg of coupons of type FloatingRateCoupon");
         coupon->setPricer(couponPricer);
     }
 
