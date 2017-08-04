@@ -268,17 +268,17 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc);
 
     //! FixedAmount, RelativeToInitialNotional, RelativeToPreviousNotional, Annuity
-    string type() { return type_; }
+    const string& type() const { return type_; }
     //! Interpretation depending on type()
-    double value() { return value_; }
+    double value() const { return value_; }
     //! Amortization start date
-    string startDate() { return startDate_; }
+    const string& startDate() const { return startDate_; }
     //! Amortization end date
-    string endDate() { return endDate_; }
+    const string& endDate() const { return endDate_; }
     //! Amortization frequency
-    string frequency() { return frequency_; }
+    const string& frequency() const { return frequency_; }
     //! Allow amortization below zero notional if true
-    bool underflow() { return underflow_; }
+    bool underflow() const { return underflow_; }
     bool initialized() const { return initialized_; }
 
 private:
