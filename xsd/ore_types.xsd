@@ -14,7 +14,7 @@
   <xs:simpleType name="indexNameType">
     <!-- Index name is of form CCY-NAME or CCY-NAME-TENOR max length is EUR-EURIBOR-12M -->
     <xs:restriction base="xs:string">
-      <xs:maxLength value="30"/>
+      <xs:maxLength value="15"/>
       <!-- This is not strict.
            - CCY is any 3 uppercase character string (can we use the below currencyCode list?)
            - NAME is any 3 to 8 character string ("CMS" up to "FedFunds")
@@ -142,6 +142,7 @@
 
   <xs:simpleType name="calendar">
     <xs:restriction base="xs:string"/>
+      <!-- Removing these for now while we think about Joint Calendars, we allow any string for now -->
       <!--xs:enumeration value="TGT"/>
       <xs:enumeration value="TARGET"/>
       <xs:enumeration value="EUR"/>
