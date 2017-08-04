@@ -133,6 +133,7 @@ Calendar parseCalendar(const string& s) {
                                       {"EUR", TARGET()},
                                       {"ZUB", Switzerland()},
                                       {"CHF", Switzerland()},
+                                      {"CHZU", Switzerland()},
                                       {"Switzerland", Switzerland()},
                                       {"US", UnitedStates()},
                                       {"USD", UnitedStates()},
@@ -150,6 +151,7 @@ Calendar parseCalendar(const string& s) {
                                       {"CA", Canada()},
                                       {"TRB", Canada()},
                                       {"CAD", Canada()},
+                                      {"CATO", Canada()},
                                       {"Canada", Canada()},
                                       {"SYB", Australia()},
                                       {"AU", Australia()},
@@ -157,12 +159,14 @@ Calendar parseCalendar(const string& s) {
                                       {"Australia", Australia()},
                                       {"TKB", Japan()},
                                       {"JP", Japan()},
+                                      {"JPTO", Japan()},
                                       {"JPY", Japan()},
                                       {"Japan", Japan()},
                                       {"ZAR", SouthAfrica()},
                                       {"SA", SouthAfrica()},
                                       {"SS", Sweden()},
                                       {"SEK", Sweden()},
+                                      {"SEST", Sweden()},
                                       {"ARS", Argentina()},
                                       {"BRL", Brazil()},
                                       {"CNY", China()},
@@ -184,8 +188,10 @@ Calendar parseCalendar(const string& s) {
                                       {"KRW", SouthKorea()},
                                       {"TWD", Taiwan()},
                                       {"TRY", Turkey()},
+                                      {"TRIS", Turkey()},
                                       {"UAH", Ukraine()},
                                       {"HUF", Hungary()},
+                                      {"GBLO", UnitedKingdom()},
                                       // fallback to TARGET for these emerging ccys
                                       {"CLP", TARGET()},
                                       {"RON", TARGET()},
@@ -208,7 +214,11 @@ Calendar parseCalendar(const string& s) {
                                       {"PHP", TARGET()},
                                       {"NGN", TARGET()},
                                       {"MAD", TARGET()},
+                                        //ISDA http://www.fpml.org/coding-scheme/business-center-7-15.xml
+                                      {"EUTA", TARGET()},
+                                      {"BEBR", TARGET()}, //Belgium, Brussels not in QL
                                       {"WeekendsOnly", WeekendsOnly()},
+                                      {"UNMAPPED", WeekendsOnly()},
                                       {"NullCalendar", NullCalendar()}};
 
     auto it = m.find(s);
@@ -261,6 +271,7 @@ BusinessDayConvention parseBusinessDayConvention(const string& s) {
                                                    {"ModifiedFollowing", ModifiedFollowing},
                                                    {"Modified Following", ModifiedFollowing},
                                                    {"MODIFIEDF", ModifiedFollowing},
+                                                   {"MODFOLLOWING", ModifiedFollowing},
                                                    {"P", Preceding},
                                                    {"Preceding", Preceding},
                                                    {"PRECEDING", Preceding},
@@ -270,7 +281,10 @@ BusinessDayConvention parseBusinessDayConvention(const string& s) {
                                                    {"MODIFIEDP", ModifiedPreceding},
                                                    {"U", Unadjusted},
                                                    {"Unadjusted", Unadjusted},
-                                                   {"INDIFF", Unadjusted}};
+                                                   {"INDIFF", Unadjusted},
+                                                   {"NEAREST", Nearest},
+                                                   {"NONE", Unadjusted},
+                                                   {"NotApplicable", Unadjusted}};
 
     auto it = m.find(s);
     if (it != m.end()) {
@@ -287,15 +301,19 @@ DayCounter parseDayCounter(const string& s) {
                                         {"A365", Actual365Fixed()},
                                         {"A365F", Actual365Fixed()},
                                         {"Actual/365 (Fixed)", Actual365Fixed()},
+                                        {"ACT/365.FIXED", Actual365Fixed()},
                                         {"ACT/365", Actual365Fixed()},
+                                        {"ACT/365L", Actual365Fixed()},
                                         {"T360", Thirty360(Thirty360::USA)},
                                         {"30/360", Thirty360(Thirty360::USA)},
                                         {"30/360 (Bond Basis)", Thirty360(Thirty360::USA)},
                                         {"ACT/nACT", Thirty360(Thirty360::USA)},
                                         {"30E/360 (Eurobond Basis)", Thirty360(Thirty360::European)},
                                         {"30E/360", Thirty360(Thirty360::European)},
+                                        {"30E/360.ISDA", Thirty360(Thirty360::European)},
                                         {"30/360 (Italian)", Thirty360(Thirty360::Italian)},
                                         {"ActActISDA", ActualActual(ActualActual::ISDA)},
+                                        {"ACT/ACT.ISDA", ActualActual(ActualActual::ISDA)},
                                         {"Actual/Actual (ISDA)", ActualActual(ActualActual::ISDA)},
                                         {"ACT/ACT", ActualActual(ActualActual::ISDA)},
                                         {"ACT29", ActualActual(ActualActual::ISDA)},
@@ -303,6 +321,8 @@ DayCounter parseDayCounter(const string& s) {
                                         {"ActActISMA", ActualActual(ActualActual::ISMA)},
                                         {"Actual/Actual (ISMA)", ActualActual(ActualActual::ISMA)},
                                         {"ActActAFB", ActualActual(ActualActual::AFB)},
+                                        {"ACT/ACT.AFB", ActualActual(ActualActual::AFB)},
+                                        {"ACT/ACT.ISMA", ActualActual(ActualActual::ISMA)},
                                         {"Actual/Actual (AFB)", ActualActual(ActualActual::AFB)},
                                         {"1/1", OneDayCounter()},
                                         {"BUS/252", Business252()},
