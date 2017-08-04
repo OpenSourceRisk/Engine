@@ -30,7 +30,6 @@
 #include <ql/cashflows/overnightindexedcoupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
 #include <ql/errors.hpp>
-#include <iostream>
 #include <boost/make_shared.hpp>
 
 using namespace QuantLib;
