@@ -16,28 +16,19 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file test/bond.hpp
-    \brief bond test
-    \ingroup tests
-*/
+#include <qle/cashflows/floatingannuitynominal.hpp>
+ 
+namespace QuantExt {
 
-#pragma once
-
-#include <boost/test/unit_test.hpp>
-
-namespace testsuite {
-
-//! Test Bond pricing
-/*!
-    \ingroup tests
-*/
-class BondTest {
-public:
-    //! Test Bond pricing
-    static void testZeroBond();
-    static void testBondZeroSpreadDefault();
-    static void testBondCompareDefault();
-    static void testAmortizingBond();
-    static boost::unit_test_framework::test_suite* suite();
-};
-} // namespace testsuite
+    Leg makeFloatingAnnuityNominalLeg(const Leg& floatingAnnuityLeg) {
+        Leg leg;
+        for (Size i = 0; i < floatingAnnuityLeg.size(); i++) {
+            boost::shared_ptr<FloatingAnnuityCoupon> 
+                coupon = boost::dynamic_pointer_cast<FloatingAnnuityCoupon>(floatingAnnuityLeg[i]);
+            if (coupon)
+                leg.push_back(boost::shared_ptr<CashFlow>(new FloatingAnnuityNominal(coupon)));
+        }
+        return leg;
+    }
+    
+}
