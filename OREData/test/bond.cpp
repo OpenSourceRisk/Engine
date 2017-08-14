@@ -293,10 +293,10 @@ void BondTest::testAmortizingBond() {
 
     boost::shared_ptr<QuantLib::Instrument> inst2 = bondFixedAnnuity->instrument()->qlInstrument();
     boost::shared_ptr<QuantLib::Bond> qlBond2 = boost::dynamic_pointer_cast<QuantLib::Bond>(inst2);
-    expectedNotional = 1380910.2798667;
+    expectedNotional = 1380908.447;
 
     notional = qlBond2->notionals()[qlBond2->notionals().size()-2];
-    
+
     BOOST_CHECK(std::fabs(notional - expectedNotional) < npvTol);
 
     boost::shared_ptr<ore::data::Bond> bondFloatingAnnuity = vars.makeAmortizingFloatingBond("Annuity", 2500000, true);
