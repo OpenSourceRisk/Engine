@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="configuration">
@@ -363,6 +363,12 @@
     <ClInclude Include="ored\utilities\csvfilereader.hpp">
       <Filter>utilities</Filter>
     </ClInclude>
+    <ClInclude Include="ored\utilities\timeperiod.hpp" >
+      <Filter>utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\forwardrateagreement.hpp" >
+      <Filter>portfolio</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp">
@@ -631,6 +637,9 @@
     </ClCompile>
     <ClCompile Include="ored\utilities\csvfilereader.cpp">
       <Filter>utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\forwardrateagreement.cpp" >
+      <Filter>portfolio</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

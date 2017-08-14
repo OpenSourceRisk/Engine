@@ -350,6 +350,14 @@
     <Index>USD-LIBOR-3M</Index>
   </Swap>
   <Swap>
+    <Id>USD-3M-SWAP-ANNUAL-CONVENTIONS</Id>
+    <FixedCalendar>US,UK</FixedCalendar>
+    <FixedFrequency>Annual</FixedFrequency>
+    <FixedConvention>MF</FixedConvention>
+    <FixedDayCounter>ACT/360</FixedDayCounter>
+    <Index>USD-LIBOR-3M</Index>
+  </Swap>
+  <Swap>
     <Id>USD-6M-SWAP-CONVENTIONS</Id>
     <FixedCalendar>US,UK</FixedCalendar>
     <FixedFrequency>Semiannual</FixedFrequency>
@@ -775,6 +783,16 @@
     <TargetCurrency>MXN</TargetCurrency>
     <PointsFactor>1</PointsFactor>
     <AdvanceCalendar>US</AdvanceCalendar>
+    <SpotRelative>true</SpotRelative>
+    <AdditionalSettleCalendar/>
+  </FX>
+  <FX>
+    <Id>USD-JPY-FX-CONVENTIONS</Id>
+    <SpotDays>2</SpotDays>
+    <SourceCurrency>USD</SourceCurrency>
+    <TargetCurrency>JPY</TargetCurrency>
+    <PointsFactor>100</PointsFactor>
+    <AdvanceCalendar>US,JP</AdvanceCalendar>
     <SpotRelative>true</SpotRelative>
     <AdditionalSettleCalendar/>
   </FX>
