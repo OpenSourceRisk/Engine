@@ -8,13 +8,88 @@
       <AdditionalFields/>
     </Envelope>
     <ForwardRateAgreementData>
-            <StartDate>20161028</StartDate>
-            <EndDate>20351028</EndDate>
+            <StartDate>2016-10-28</StartDate>
+            <EndDate>2035-10-28</EndDate>
             <Currency>EUR</Currency>
             <Index>EUR-EURIBOR-6M</Index>
             <LongShort>Long</LongShort>
             <Strike>0.00001</Strike>
             <Notional>1000000000</Notional>
     </ForwardRateAgreementData>
+  </Trade>
+  <Trade id="averageOIS1">
+    <TradeType>Swap</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <SwapData>
+      <LegData>
+        <Payer>false</Payer>
+        <Currency>USD</Currency>
+        <Notionals>
+          <Notional>100000000</Notional>
+        </Notionals>
+        <DayCounter>ACT/360</DayCounter>
+        <PaymentConvention>MODFOLLOWING</PaymentConvention>
+        <LegType>Floating</LegType>
+        <FloatingLegData>
+           <Index>USD-FedFunds</Index>
+          <IsAveraged>true</IsAveraged>
+          <Spreads>
+            <Spread>0.003</Spread>
+          </Spreads>
+          <IsInArrears>true</IsInArrears>
+          <FixingDays>2</FixingDays>
+        </FloatingLegData>
+        <ScheduleData>
+          <Rules>
+            <StartDate>2016-10-28</StartDate>
+            <EndDate>2021-10-28</EndDate>
+            <Tenor>3M</Tenor>
+            <Calendar>TARGET</Calendar>
+            <Convention>MODFOLLOWING</Convention>
+            <TermConvention>MODFOLLOWING</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+      </LegData>
+      <LegData>
+        <Payer>true</Payer>
+        <Currency>USD</Currency>
+        <Notionals>
+          <Notional>100000000</Notional>
+        </Notionals>
+        <DayCounter>ACT/360</DayCounter>
+        <PaymentConvention>MODFOLLOWING</PaymentConvention>
+        <LegType>Floating</LegType>
+        <FloatingLegData>
+          <Index>USD-LIBOR-3M</Index>
+          <Spreads>
+            <Spread>0.0</Spread>
+          </Spreads>
+          <IsInArrears>false</IsInArrears>
+          <FixingDays>2</FixingDays>
+        </FloatingLegData>
+        <ScheduleData>
+          <Rules>
+            <StartDate>2016-10-28</StartDate>
+            <EndDate>2021-10-28</EndDate>
+            <Tenor>3M</Tenor>
+            <Calendar>TARGET</Calendar>
+            <Convention>MODFOLLOWING</Convention>
+            <TermConvention>MODFOLLOWING</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+      </LegData>
+    </SwapData>
   </Trade>
 </Portfolio>

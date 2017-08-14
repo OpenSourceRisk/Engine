@@ -196,6 +196,7 @@
       <Index>EUR-EURIBOR-3M</Index>
       <Index>EUR-EONIA</Index>
       <Index>USD-LIBOR-3M</Index>
+      <Index>USD-FedFunds</Index>
       <Index>GBP-LIBOR-6M</Index>
       <Index>GBP-LIBOR-3M</Index>
       <Index>CHF-LIBOR-6M</Index>
