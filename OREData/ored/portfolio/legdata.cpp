@@ -461,7 +461,7 @@ Leg makeOISLeg(LegData& data, boost::shared_ptr<OvernightIndex> index) {
                                .withSpreads(spreads)
                                .withPaymentDayCounter(dc)
                                .withPaymentAdjustment(bdc)
-                               .withRateCutoff(0.0)
+                               .withRateCutoff(2)
                                .withAverageONIndexedCouponPricer(couponPricer);
 
         if (floatData.gearings().size() > 0)

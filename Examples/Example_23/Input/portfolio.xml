@@ -17,6 +17,79 @@
             <Notional>1000000000</Notional>
     </ForwardRateAgreementData>
   </Trade>
+    <Trade id="averageOIS">
+    <TradeType>Swap</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <SwapData>
+      <LegData>
+        <Payer>false</Payer>
+        <Currency>USD</Currency>
+        <Notionals>
+          <Notional>1</Notional>
+        </Notionals>
+        <DayCounter>30/360</DayCounter>
+        <PaymentConvention>MF</PaymentConvention>
+        <LegType>Floating</LegType>
+        <FloatingLegData>
+          <Index>USD-FedFunds</Index>
+          <Spreads>
+            <Spread>0.000188</Spread>
+          </Spreads>
+          <IsAveraged>true</IsAveraged>
+          <IsInArrears>false</IsInArrears>
+          <FixingDays>2</FixingDays>
+        </FloatingLegData>
+        <ScheduleData>
+          <Rules>
+            <StartDate>20160209</StartDate>
+            <EndDate>20210209</EndDate>
+            <Tenor>3M</Tenor>
+            <Calendar>US</Calendar>
+            <Convention>MF</Convention>
+            <TermConvention>MF</TermConvention>
+            <Rule>Backward</Rule>
+            <EndOfMonth>false</EndOfMonth>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+      </LegData>
+     <LegData>
+        <LegType>Fixed</LegType>
+        <Payer>true</Payer>
+        <Currency>USD</Currency>
+        <Notionals>
+          <Notional>1</Notional>
+        </Notionals>
+        <DayCounter>30/360</DayCounter>
+        <PaymentConvention>MF</PaymentConvention>
+        <FixedLegData>
+          <Rates>
+            <Rate>0.012404</Rate>
+          </Rates>
+        </FixedLegData>
+        <ScheduleData>
+          <Rules>
+            <StartDate>20160209</StartDate>
+            <EndDate>20210209</EndDate>
+            <Tenor>6M</Tenor>
+            <Calendar>US</Calendar>
+            <Convention>MF</Convention>
+            <TermConvention>MF</TermConvention>
+            <Rule>Backward</Rule>
+            <EndOfMonth>false</EndOfMonth>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+      </LegData>
+    </SwapData>
+  </Trade>
+
   <Trade id="averageOIS1">
     <TradeType>Swap</TradeType>
     <Envelope>
@@ -29,62 +102,30 @@
         <Payer>false</Payer>
         <Currency>USD</Currency>
         <Notionals>
-          <Notional>100000000</Notional>
+          <Notional>1</Notional>
         </Notionals>
-        <DayCounter>ACT/360</DayCounter>
-        <PaymentConvention>MODFOLLOWING</PaymentConvention>
+        <DayCounter>30/360</DayCounter>
+        <PaymentConvention>MF</PaymentConvention>
         <LegType>Floating</LegType>
         <FloatingLegData>
-           <Index>USD-FedFunds</Index>
+          <Index>USD-FedFunds</Index>
+          <Spreads>
+            <Spread>0.000188</Spread>
+          </Spreads>
           <IsAveraged>true</IsAveraged>
-          <Spreads>
-            <Spread>0.003</Spread>
-          </Spreads>
-          <IsInArrears>true</IsInArrears>
-          <FixingDays>2</FixingDays>
-        </FloatingLegData>
-        <ScheduleData>
-          <Rules>
-            <StartDate>2016-10-28</StartDate>
-            <EndDate>2021-10-28</EndDate>
-            <Tenor>3M</Tenor>
-            <Calendar>TARGET</Calendar>
-            <Convention>MODFOLLOWING</Convention>
-            <TermConvention>MODFOLLOWING</TermConvention>
-            <Rule>Forward</Rule>
-            <EndOfMonth/>
-            <FirstDate/>
-            <LastDate/>
-          </Rules>
-        </ScheduleData>
-      </LegData>
-      <LegData>
-        <Payer>true</Payer>
-        <Currency>USD</Currency>
-        <Notionals>
-          <Notional>100000000</Notional>
-        </Notionals>
-        <DayCounter>ACT/360</DayCounter>
-        <PaymentConvention>MODFOLLOWING</PaymentConvention>
-        <LegType>Floating</LegType>
-        <FloatingLegData>
-          <Index>USD-LIBOR-3M</Index>
-          <Spreads>
-            <Spread>0.0</Spread>
-          </Spreads>
           <IsInArrears>false</IsInArrears>
           <FixingDays>2</FixingDays>
         </FloatingLegData>
         <ScheduleData>
           <Rules>
-            <StartDate>2016-10-28</StartDate>
-            <EndDate>2021-10-28</EndDate>
+            <StartDate>20160209</StartDate>
+            <EndDate>20210209</EndDate>
             <Tenor>3M</Tenor>
-            <Calendar>TARGET</Calendar>
-            <Convention>MODFOLLOWING</Convention>
-            <TermConvention>MODFOLLOWING</TermConvention>
-            <Rule>Forward</Rule>
-            <EndOfMonth/>
+            <Calendar>US</Calendar>
+            <Convention>MF</Convention>
+            <TermConvention>MF</TermConvention>
+            <Rule>Backward</Rule>
+            <EndOfMonth>false</EndOfMonth>
             <FirstDate/>
             <LastDate/>
           </Rules>
@@ -92,4 +133,44 @@
       </LegData>
     </SwapData>
   </Trade>
+  <Trade id="averageOIS2">
+    <TradeType>Swap</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <SwapData>
+    <LegData>
+        <LegType>Fixed</LegType>
+        <Payer>true</Payer>
+        <Currency>USD</Currency>
+        <Notionals>
+          <Notional>1</Notional>
+        </Notionals>
+        <DayCounter>30/360</DayCounter>
+        <PaymentConvention>MF</PaymentConvention>
+        <FixedLegData>
+          <Rates>
+            <Rate>0.012404</Rate>
+          </Rates>
+        </FixedLegData>
+        <ScheduleData>
+          <Rules>
+            <StartDate>20160209</StartDate>
+            <EndDate>20210209</EndDate>
+            <Tenor>6M</Tenor>
+            <Calendar>US</Calendar>
+            <Convention>MF</Convention>
+            <TermConvention>MF</TermConvention>
+            <Rule>Backward</Rule>
+            <EndOfMonth>false</EndOfMonth>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+      </LegData>
+    </SwapData>
+  </Trade>
+
 </Portfolio>

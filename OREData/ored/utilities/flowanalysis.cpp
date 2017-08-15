@@ -27,7 +27,8 @@
 #include <ql/indexes/interestrateindex.hpp>
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
-
+#include <qle/cashflows/averageonindexedcoupon.hpp>
+#include <iostream>
 using namespace std;
 using QuantLib::Real;
 using QuantLib::Date;
@@ -39,6 +40,7 @@ class AnalysisGenerator : public QuantLib::AcyclicVisitor,
                           public QuantLib::Visitor<QuantLib::CashFlow>,
                           public QuantLib::Visitor<QuantLib::Coupon>,
                           public QuantLib::Visitor<QuantLib::FloatingRateCoupon>,
+                          public QuantLib::Visitor<QuantExt::AverageONIndexedCoupon>,
                           public QuantLib::Visitor<QuantExt::FXLinkedCashFlow>,
                           public QuantLib::Visitor<QuantExt::FloatingRateFXLinkedNotionalCoupon> {
 private:
@@ -51,6 +53,7 @@ public:
     void visit(QuantLib::CashFlow& c);
     void visit(QuantLib::Coupon& c);
     void visit(QuantLib::FloatingRateCoupon& c);
+    void visit(QuantExt::AverageONIndexedCoupon& c);
     void visit(QuantExt::FXLinkedCashFlow& c);
     void visit(QuantExt::FloatingRateFXLinkedNotionalCoupon& c);
     const vector<vector<string>>& analysis() const;
@@ -93,6 +96,14 @@ void AnalysisGenerator::visit(QuantLib::FloatingRateCoupon& c) {
     visit(static_cast<QuantLib::Coupon&>(c));
     flowAnalysis_.back()[FIXING_DATE] = to_string(c.fixingDate());
     flowAnalysis_.back()[INDEX] = c.index()->name();
+}
+    
+void AnalysisGenerator::visit(QuantExt::AverageONIndexedCoupon& c) {
+    for (auto& d : c.fixingDates()) {
+        visit(static_cast<QuantLib::Coupon&>(c));
+        flowAnalysis_.back()[FIXING_DATE] = to_string(d);
+        flowAnalysis_.back()[INDEX] = c.index()->name();
+    }
 }
 
 void AnalysisGenerator::visit(QuantExt::FXLinkedCashFlow& c) {
