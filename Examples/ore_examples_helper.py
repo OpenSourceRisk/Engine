@@ -13,6 +13,27 @@ import pandas as pd
 from datetime import datetime
 from math import log
 
+examples = [
+        "Example_1",
+        "Example_2",
+        "Example_3",
+        "Example_4",
+        "Example_5",
+        "Example_6",
+        "Example_7",
+        "Example_8",
+        "Example_9",
+        "Example_10",
+        "Example_11",
+        "Example_12",
+        "Example_13",
+        "Example_14",
+        "Example_15",
+        "Example_16",
+        "Example_17",
+        "Example_18"
+    ]
+
 class OreExample(object):
 
     def __init__(self, dry=False):
@@ -183,35 +204,21 @@ class OreExample(object):
         if not self.dry:
             subprocess.call([self.ore_exe, xml])
 
-if __name__ == "__main__":
-    examples = [
-        "Example_1",
-        "Example_2",
-        "Example_3",
-        "Example_4",
-        "Example_5",
-        "Example_6",
-        "Example_7",
-        "Example_8",
-        "Example_9",
-        "Example_10",
-        "Example_11",
-        "Example_12",
-        "Example_13",
-        "Example_14",
-        "Example_15",
-        "Example_16",
-        "Example_17",
-        "Example_18"
-    ]
+			
+def run_example(example):
+	current_dir = os.getcwd()
+	try:
+		print("Running: " + example)
+		os.chdir(os.path.join(os.getcwd(), example))
+		filename = "run.py"
+		sys.argv = [filename, 0]
+		exec(compile(open(filename, "rb").read(), filename, 'exec'))
+		os.chdir(os.path.dirname(os.getcwd()))
+	except:
+		print("Error running " + example)
+	os.chdir(current_dir)
 
+
+if __name__ == "__main__":
     for example in examples:
-        try:
-            print("Running: " + example)
-            os.chdir(os.path.join(os.getcwd(), example))
-            filename = os.path.join("run.py")
-            sys.argv = ["run.py", 0]
-            exec(compile(open(filename, "rb").read(), filename, 'exec'))
-            os.chdir(os.path.dirname(os.getcwd()))
-        except:
-            print("Error running " + example)
+        run_example(example)
