@@ -260,6 +260,10 @@
     <Id>JPY-6M-FRA-CONVENTIONS</Id>
     <Index>JPY-LIBOR-6M</Index>
   </FRA>
+  <FRA>
+    <Id>JPY-3M-FRA-CONVENTIONS</Id>
+    <Index>JPY-LIBOR-3M</Index>
+  </FRA>
   <!-- Interest Rate Swaps -->
   <SwapIndex>
     <Id>EUR-CMS-1Y</Id>
@@ -348,6 +352,14 @@
     <FixedConvention>MF</FixedConvention>
     <FixedDayCounter>30/360</FixedDayCounter>
     <Index>USD-LIBOR-3M</Index>
+  </Swap>
+  <Swap>
+    <Id>USD-1M-SWAP-ANNUAL-CONVENTIONS</Id>
+    <FixedCalendar>US,UK</FixedCalendar>
+    <FixedFrequency>Annual</FixedFrequency>
+    <FixedConvention>MF</FixedConvention>
+    <FixedDayCounter>ACT/360</FixedDayCounter>
+    <Index>USD-LIBOR-1M</Index>
   </Swap>
   <Swap>
     <Id>USD-3M-SWAP-ANNUAL-CONVENTIONS</Id>
