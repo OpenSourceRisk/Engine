@@ -114,6 +114,7 @@
     <ClInclude Include="ored\portfolio\envelope.hpp" />
     <ClInclude Include="ored\portfolio\equityforward.hpp" />
     <ClInclude Include="ored\portfolio\equityoption.hpp" />
+    <ClInclude Include="ored\portfolio\forwardrateagreement.hpp" />
     <ClInclude Include="ored\portfolio\fxforward.hpp" />
     <ClInclude Include="ored\portfolio\fxoption.hpp" />
     <ClInclude Include="ored\portfolio\fxswap.hpp" />
@@ -213,6 +214,7 @@
     <ClCompile Include="ored\portfolio\envelope.cpp" />
     <ClCompile Include="ored\portfolio\equityforward.cpp" />
     <ClCompile Include="ored\portfolio\equityoption.cpp" />
+    <ClCompile Include="ored\portfolio\forwardrateagreement.cpp" />
     <ClCompile Include="ored\portfolio\fxforward.cpp" />
     <ClCompile Include="ored\portfolio\fxoption.cpp" />
     <ClCompile Include="ored\portfolio\fxswap.cpp" />
