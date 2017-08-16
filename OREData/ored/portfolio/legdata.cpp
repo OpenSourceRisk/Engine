@@ -410,8 +410,7 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
     // Loop over the coupons in the leg and set pricer
     Leg leg = iborLeg;
     for (const auto& cashflow : leg) {
-        boost::shared_ptr<FloatingRateCoupon> coupon =
-            boost::dynamic_pointer_cast<FloatingRateCoupon>(cashflow);
+        boost::shared_ptr<FloatingRateCoupon> coupon = boost::dynamic_pointer_cast<FloatingRateCoupon>(cashflow);
         QL_REQUIRE(coupon, "Expected a leg of coupons of type FloatingRateCoupon");
         coupon->setPricer(couponPricer);
     }
@@ -554,7 +553,8 @@ Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>
                         .withSpreads(spreads)
                         .withPaymentDayCounter(dc)
                         .withPaymentAdjustment(bdc)
-                        .withFixingDays(cmsData.fixingDays());
+                        .withFixingDays(cmsData.fixingDays())
+                        .inArrears(cmsData.isInArrears());
 
     if (cmsData.gearings().size() > 0)
         cmsLeg.withGearings(buildScheduledVector(cmsData.gearings(), cmsData.gearingDates(), schedule));
@@ -585,16 +585,9 @@ Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>
     // Loop over the coupons in the leg and set pricer
     Leg leg = cmsLeg;
     for (const auto& cashflow : leg) {
-        if (!couponCapFloor && !nakedCapFloor) {
-            boost::shared_ptr<CmsCoupon> coupon = boost::dynamic_pointer_cast<CmsCoupon>(cashflow);
-            QL_REQUIRE(coupon, "Expected a leg of coupons of type CmsCoupon");
-            coupon->setPricer(couponPricer);
-        } else {
-            boost::shared_ptr<CappedFlooredCmsCoupon> coupon =
-                boost::dynamic_pointer_cast<CappedFlooredCmsCoupon>(cashflow);
-            QL_REQUIRE(coupon, "Expected a leg of coupons of type CappedFlooredCmsCoupon");
-            coupon->setPricer(couponPricer);
-        }
+        boost::shared_ptr<FloatingRateCoupon> coupon = boost::dynamic_pointer_cast<FloatingRateCoupon>(cashflow);
+        QL_REQUIRE(coupon, "Expected a leg of coupons of type FloatingRateCoupon");
+        coupon->setPricer(couponPricer);
     }
     return leg;
 }
