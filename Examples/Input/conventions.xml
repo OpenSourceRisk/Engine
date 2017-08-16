@@ -808,6 +808,16 @@
     <SpotRelative>true</SpotRelative>
     <AdditionalSettleCalendar/>
   </FX>
+  <FX>  
+    <Id>USD-CAD-FX-CONVENTIONS</Id>
+    <SpotDays>2</SpotDays>
+    <SourceCurrency>USD</SourceCurrency>
+    <TargetCurrency>CAD</TargetCurrency>
+    <PointsFactor>10000</PointsFactor>
+    <AdvanceCalendar>US,CA</AdvanceCalendar>
+    <SpotRelative>true</SpotRelative>
+    <AdditionalSettleCalendar/>
+  </FX>
   <!-- Cross Currency Basis Swaps -->
   <CrossCurrencyBasis>
     <Id>EUR-USD-XCCY-BASIS-CONVENTIONS</Id>
@@ -888,6 +898,14 @@
     <RollConvention>MF</RollConvention>
     <FlatIndex>USD-LIBOR-3M</FlatIndex>
     <SpreadIndex>JPY-LIBOR-3M</SpreadIndex>
+  </CrossCurrencyBasis>
+  <CrossCurrencyBasis>
+    <Id>USD-CAD-XCCY-BASIS-CONVENTIONS</Id>
+    <SettlementDays>2</SettlementDays>
+    <SettlementCalendar>CA,US,UK</SettlementCalendar>
+    <RollConvention>MF</RollConvention>
+    <FlatIndex>USD-LIBOR-3M</FlatIndex>
+    <SpreadIndex>CAD-CDOR-3M</SpreadIndex>
   </CrossCurrencyBasis>
   <!-- Inflation Swaps -->
   <InflationSwap>
