@@ -52,9 +52,6 @@ namespace analytics {
  */
 class ScenarioGeneratorData : public XMLSerializable {
 public:
-    //! Supported sequence types
-    enum class SequenceType { MersenneTwister, MersenneTwisterAntithetic, Sobol, SobolBrownianBridge };
-
     ScenarioGeneratorData() {}
 
     //! Constructor
@@ -98,11 +95,10 @@ private:
 };
 
 //! Enum parsers used in ScenarioGeneratorBuilder's fromXML
-ScenarioGeneratorData::SequenceType parseSequenceType(const string& s);
 CrossAssetStateProcess::discretization parseDiscretization(const string& s);
 
 //! Enum to string used in ScenarioGeneratorData's toXML
-std::ostream& operator<<(std::ostream& out, const ScenarioGeneratorData::SequenceType& type);
 std::ostream& operator<<(std::ostream& out, const CrossAssetStateProcess::discretization& type);
+
 } // namespace analytics
 } // namespace ore
