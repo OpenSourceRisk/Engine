@@ -77,6 +77,6 @@ parseZeroInflationIndex(const string& s, bool isInterpolated = false,
 /*!
     \ingroup utilities
 */
-boost::shared_ptr<Index> parseIndex(const string& s);
+boost::shared_ptr<Index> parseIndex(const string& s, const Conventions& conventions = Conventions());
 } // namespace data
 } // namespace ore
