@@ -6,6 +6,7 @@ import shutil
 
 import matplotlib
 import imp
+import os
 
 matplotlib.use('Agg')
 
@@ -14,6 +15,9 @@ import matplotlib.ticker
 import pandas as pd
 from datetime import datetime
 from math import log
+
+def _produce_list_of_examples():
+    os.walk(os.getcwd())
 
 examples = [
     "Example_1",
