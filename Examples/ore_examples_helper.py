@@ -16,34 +16,11 @@ import pandas as pd
 from datetime import datetime
 from math import log
 
-def _produce_list_of_examples():
-    os.walk(os.getcwd())
 
-examples = [
-    "Example_1",
-    "Example_2",
-    "Example_3",
-    "Example_4",
-    "Example_5",
-    "Example_6",
-    "Example_7",
-    "Example_8",
-    "Example_9",
-    "Example_10",
-    "Example_11",
-    "Example_12",
-    "Example_13",
-    "Example_14",
-    "Example_15",
-    "Example_16",
-    "Example_17",
-    "Example_18"
-    "Example_19"
-    "Example_20"
-    "Example_21"
-    "Example_22"
-    "Example_23"
-]
+def _produce_list_of_examples():
+    return [e for e in os.listdir(os.getcwd()) if e[:8] == 'Example_']
+
+examples = _produce_list_of_examples()
 
 
 class OreExample(object):

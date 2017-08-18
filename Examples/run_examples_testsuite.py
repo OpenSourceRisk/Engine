@@ -1,4 +1,3 @@
-import unittest
 import os
 
 import shutil
@@ -16,7 +15,6 @@ class TestExamples(object):
         example_output_dir = os.path.join(example_dir, output_directory)
         try:
             shutil.rmtree(example_output_dir)
-            pass
         except OSError:
             pass
 
@@ -39,7 +37,7 @@ class TestExamples(object):
         assert len([f for f in produced_output_files if ".pdf" in f]) > 0
 
     def test_examples(self):
-        for example in examples[:1]:
+        for example in examples:
             yield self.check_example, example
 
     def check_example(self, example_subdir):
@@ -47,4 +45,3 @@ class TestExamples(object):
         oreex = run_example(example_subdir)
         #self._check_output(example_subdir)
         assert np.all(np.array(oreex.return_codes, dtype=int)) == 0
-
