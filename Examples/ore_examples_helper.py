@@ -5,6 +5,8 @@ import subprocess
 import shutil
 
 import matplotlib
+import imp
+
 matplotlib.use('Agg')
 
 import matplotlib.pyplot as plt
@@ -14,39 +16,45 @@ from datetime import datetime
 from math import log
 
 examples = [
-        "Example_1",
-        "Example_2",
-        "Example_3",
-        "Example_4",
-        "Example_5",
-        "Example_6",
-        "Example_7",
-        "Example_8",
-        "Example_9",
-        "Example_10",
-        "Example_11",
-        "Example_12",
-        "Example_13",
-        "Example_14",
-        "Example_15",
-        "Example_16",
-        "Example_17",
-        "Example_18"
-    ]
+    "Example_1",
+    "Example_2",
+    "Example_3",
+    "Example_4",
+    "Example_5",
+    "Example_6",
+    "Example_7",
+    "Example_8",
+    "Example_9",
+    "Example_10",
+    "Example_11",
+    "Example_12",
+    "Example_13",
+    "Example_14",
+    "Example_15",
+    "Example_16",
+    "Example_17",
+    "Example_18"
+    "Example_19"
+    "Example_20"
+    "Example_21"
+    "Example_22"
+    "Example_23"
+]
+
 
 class OreExample(object):
-
     def __init__(self, dry=False):
         self.ore_exe = ""
         self.headlinecounter = 0
         self.dry = dry
         self.ax = None
-        self.plot_name=""
+        self.plot_name = ""
         self._locate_ore_exe()
+        self.return_codes = []
 
     def _locate_ore_exe(self):
         if os.name == 'nt':
-            if  platform.machine()[-2:] == "64":
+            if platform.machine()[-2:] == "64":
                 self.ore_exe = "..\\..\\App\\bin\\x64\\Release\\ore.exe"
             else:
                 self.ore_exe = "..\\..\\App\\bin\\Win32\\Release\\ore.exe"
@@ -85,28 +93,29 @@ class OreExample(object):
 
     def plot(self, filename, colIdxTime, colIdxVal, color, label, offset=1, marker='', linestyle='-'):
         self.ax.plot(self.get_output_data_from_column(filename, colIdxTime, offset),
-                self.get_output_data_from_column(filename, colIdxVal, offset),
-                linewidth=2,
-                linestyle=linestyle,
-                color=color,
-                label=label,
-                marker=marker)
-        
-    def plotSq(self, filename, colIdxTime, colIdxVal, color, label, offset=1, marker='', linestyle='-', title='', xlabel='', ylabel='', rescale=False, zoom=1):
+                     self.get_output_data_from_column(filename, colIdxVal, offset),
+                     linewidth=2,
+                     linestyle=linestyle,
+                     color=color,
+                     label=label,
+                     marker=marker)
+
+    def plotSq(self, filename, colIdxTime, colIdxVal, color, label, offset=1, marker='', linestyle='-', title='',
+               xlabel='', ylabel='', rescale=False, zoom=1):
         xTmp = self.get_output_data_from_column(filename, colIdxTime, offset)
         yTmp = self.get_output_data_from_column(filename, colIdxVal, offset)
         x = []
         y2 = []
         yMax = 0.0
-        for i in range(0, len(xTmp)-1):
-            try :
-                tmp = float(yTmp[i])*float(yTmp[i]);
+        for i in range(0, len(xTmp) - 1):
+            try:
+                tmp = float(yTmp[i]) * float(yTmp[i])
                 y2.append(tmp)
                 yMax = max(tmp, yMax)
                 x.append(float(xTmp[i]))
             except TypeError:
                 pass
-        y2n = [ u / yMax for u in y2 ]
+        y2n = [u / yMax for u in y2]
         self.ax.plot(x,
                      y2,
                      linewidth=2,
@@ -114,8 +123,8 @@ class OreExample(object):
                      color=color,
                      label=label,
                      marker=marker)
-        if rescale:            
-            self.ax.set_ylim([0, yMax/zoom])
+        if rescale:
+            self.ax.set_ylim([0, yMax / zoom])
         self.ax.set_title(title)
         self.ax.set_xlabel(xlabel)
         self.ax.set_ylabel(ylabel)
@@ -126,18 +135,19 @@ class OreExample(object):
     def plot_npv(self, filename, colIdx, color, label, marker=''):
         data = self.get_output_data_from_column(filename, colIdx)
         self.ax.plot(range(1, len(data) + 1),
-                data,
-                color=color,
-                label=label,
-                linewidth=2,
-                marker=marker)
+                     data,
+                     color=color,
+                     label=label,
+                     linewidth=2,
+                     marker=marker)
 
-    def plot_zeroratedist(self, filename, colIdxTime, colIdxVal, maturity, color, label, title='Zero Rate Distribution'):
+    def plot_zeroratedist(self, filename, colIdxTime, colIdxVal, maturity, color, label,
+                          title='Zero Rate Distribution'):
         f = open(os.path.join(os.path.join(os.getcwd(), "Output"), filename))
         xdata = []
         ydata = []
         for line in f:
-            try :
+            try:
                 xtmp = datetime.strptime(line.split(',')[colIdxTime], '%Y-%m-%d')
                 ytmp = -log(float(line.split(',')[colIdxVal])) / float(maturity)
                 xdata.append(xtmp)
@@ -146,7 +156,7 @@ class OreExample(object):
                 pass
             except TypeError:
                 pass
-        d = pd.DataFrame({ 'x': xdata, 'y': ydata })
+        d = pd.DataFrame({'x': xdata, 'y': ydata})
         grouped = d.groupby('x')
         mdata = grouped.mean()['y']
         sdata = grouped.std()['y']
@@ -155,15 +165,15 @@ class OreExample(object):
                      linewidth=3,
                      linestyle='-',
                      color=color,
-                     label=label+' (mean)')
+                     label=label + ' (mean)')
         self.ax.plot(list(mdata.index.values),
-                     list(mdata-sdata),
+                     list(mdata - sdata),
                      linewidth=1,
                      linestyle='-',
                      color=color,
-                     label=label+' (mean +/- std)')
+                     label=label + ' (mean +/- std)')
         self.ax.plot(list(mdata.index.values),
-                     list(mdata+sdata),
+                     list(mdata + sdata),
                      linewidth=1,
                      linestyle='-',
                      color=color,
@@ -185,9 +195,9 @@ class OreExample(object):
 
     def plot_line(self, xvals, yvals, color, label):
         self.ax.plot(xvals, yvals, color=color, label=label, linewidth=2)
-    
+
     def plot_hline(self, yval, color, label):
-        plt.axhline(yval, xmin=0, xmax=1, color=color, label=label, linewidth=2 )
+        plt.axhline(yval, xmin=0, xmax=1, color=color, label=label, linewidth=2)
 
     def setup_plot(self, filename):
         self.fig = plt.figure(figsize=plt.figaspect(0.4))
@@ -195,28 +205,34 @@ class OreExample(object):
         self.plot_name = "mpl_" + filename
 
     def save_plot_to_file(self, subdir="Output"):
-        file = os.path.join(subdir,self.plot_name+".pdf")
+        file = os.path.join(subdir, self.plot_name + ".pdf")
         plt.savefig(file)
         print("Saving plot...." + file)
         plt.close()
 
     def run(self, xml):
         if not self.dry:
-            subprocess.call([self.ore_exe, xml])
+            self.return_codes.append(subprocess.call([self.ore_exe, xml]))
 
-			
+
 def run_example(example):
-	current_dir = os.getcwd()
-	try:
-		print("Running: " + example)
-		os.chdir(os.path.join(os.getcwd(), example))
-		filename = "run.py"
-		sys.argv = [filename, 0]
-		exec(compile(open(filename, "rb").read(), filename, 'exec'))
-		os.chdir(os.path.dirname(os.getcwd()))
-	except:
-		print("Error running " + example)
-	os.chdir(current_dir)
+    current_dir = os.getcwd()
+    oreex = None
+    print("Running: " + example)
+    try:
+        os.chdir(os.path.join(os.getcwd(), example))
+        filename = "run.py"
+        sys.argv = [filename, 0]
+        current_run = imp.load_source('current_run', filename)
+        oreex = current_run.run_example()
+        os.chdir(os.path.dirname(os.getcwd()))
+        print('-' * 50)
+        print()
+    except:
+        print("Error running " + example)
+    finally:
+        os.chdir(current_dir)
+    return oreex
 
 
 if __name__ == "__main__":
