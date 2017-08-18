@@ -18,7 +18,7 @@ from math import log
 
 
 def _produce_list_of_examples():
-    return [e for e in os.listdir(os.getcwd()) if e[:8] == 'Example_']
+    return sorted([e for e in os.listdir(os.getcwd()) if e[:8] == 'Example_'])
 
 examples = _produce_list_of_examples()
 

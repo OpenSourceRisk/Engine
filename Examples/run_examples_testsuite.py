@@ -37,7 +37,7 @@ class TestExamples(object):
         assert len([f for f in produced_output_files if ".pdf" in f]) > 0
 
     def test_examples(self):
-        for example in examples:
+        for example in examples[:3]:
             yield self.check_example, example
 
     def check_example(self, example_subdir):
