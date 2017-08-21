@@ -71,7 +71,7 @@ public:
     bool hasYieldCurveTenors(const string& key) const { return yieldCurveTenors_.count(key) > 0; }
     const vector<string>& indices() const { return indices_; }
     const map<string, string>& swapIndices() const { return swapIndices_; }
-    const DayCounter& yieldCurveDayCounter() const { return yieldCurveDayCounter_; }
+    //const DayCounter& yieldCurveDayCounter() const { return yieldCurveDayCounter_; }
     const string& interpolation() const { return interpolation_; }
     const bool& extrapolate() const { return extrapolate_; }
 
@@ -151,7 +151,7 @@ public:
     void setYieldCurveTenors(const string& key, const vector<Period>& p);
     vector<string>& indices() { return indices_; }
     map<string, string>& swapIndices() { return swapIndices_; }
-    DayCounter& yieldCurveDayCounter() { return yieldCurveDayCounter_; }
+    //DayCounter& yieldCurveDayCounter() { return yieldCurveDayCounter_; }
     string& interpolation() { return interpolation_; }
     bool& extrapolate() { return extrapolate_; }
 
@@ -238,7 +238,7 @@ private:
     vector<string> indices_;
     map<string, string> swapIndices_;
     string interpolation_;
-    DayCounter yieldCurveDayCounter_;
+    //DayCounter yieldCurveDayCounter_;
     bool extrapolate_;
 
     vector<string> fxCcyPairs_;

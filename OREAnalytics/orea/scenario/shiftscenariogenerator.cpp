@@ -317,6 +317,7 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
         }
     }
 
+/*
     // Cache CapFloor (Optionlet) vol keys
     Size n_cfvol_ccy = simMarketData_->capFloorVolCcys().size();
     Size n_cfvol_strikes = simMarketData_->capFloorVolStrikes().size();
@@ -436,6 +437,7 @@ void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
             count++;
         }
     }
+    */
 
     LOG("generate base scenario");
     baseScenario_ = baseScenarioFactory_->buildScenario(today_, "BASE");

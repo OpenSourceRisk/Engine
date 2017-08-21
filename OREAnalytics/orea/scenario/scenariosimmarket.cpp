@@ -1051,7 +1051,8 @@ ScenarioSimMarket::ScenarioSimMarket(const Date& asof, const boost::shared_ptr<S
             QL_REQUIRE(yieldCurveTenors.front() > 0 * Days, "yield curve tenors must not include t=0");
 
             // Get the quotes from the base scenario
-            DayCounter dc = parameters->yieldCurveDayCounter();
+            //DayCounter dc = parameters->yieldCurveDayCounter();
+            DayCounter dc = ActualActual(); // TODO
             vector<Time> yieldCurveTimes(numberPoints + 1, 0.0);
             vector<Handle<Quote>> quotes(numberPoints + 1);
             quotes[0] = Handle<Quote>(boost::make_shared<SimpleQuote>(1.0));

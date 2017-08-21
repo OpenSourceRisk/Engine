@@ -188,6 +188,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
 
     LOG("Get credit curve sensitivity parameters");
     XMLNode* creditCurves = XMLUtils::getChildNode(node, "CreditCurves");
+    if (creditCurves) {
     for (XMLNode* child = XMLUtils::getChildNode(creditCurves, "CreditCurve"); child;
          child = XMLUtils::getNextSibling(child)) {
         string name = XMLUtils::getAttribute(child, "name");
@@ -212,6 +213,9 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
         creditCurveShiftData_[name] = data;
         creditNames_.push_back(name);
     }
+    }
+
+    /*
 
     LOG("Get cds vol sensitivity parameters");
     XMLNode* cdsVols = XMLUtils::getChildNode(node, "CDSVolatilities");
@@ -328,6 +332,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
         crossGammaFilter_.push_back(pair<string, string>(tokens[0], tokens[1]));
         crossGammaFilter_.push_back(pair<string, string>(tokens[1], tokens[0]));
     }
+    */
 }
 
 XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
