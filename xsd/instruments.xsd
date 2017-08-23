@@ -122,8 +122,15 @@
         <xs:element name="Cashflow">
           <xs:complexType>
             <xs:all>
-              <xs:element type="xs:string" name="Amount"/>
-              <xs:element type="xs:string" name="Date"/>
+                <xs:element name="Amount">
+                <xs:complexType>
+                    <xs:simpleContent>
+                        <xs:extension base="xs:float">
+                            <xs:attribute name="Date" type="xs:string" />
+                        </xs:extension>
+                    </xs:simpleContent>
+                </xs:complexType>
+              </xs:element>
             </xs:all>
           </xs:complexType>
         </xs:element>
