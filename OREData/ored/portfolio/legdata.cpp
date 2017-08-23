@@ -585,9 +585,16 @@ Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>
     // Loop over the coupons in the leg and set pricer
     Leg leg = cmsLeg;
     for (const auto& cashflow : leg) {
-        boost::shared_ptr<FloatingRateCoupon> coupon = boost::dynamic_pointer_cast<FloatingRateCoupon>(cashflow);
-        QL_REQUIRE(coupon, "Expected a leg of coupons of type FloatingRateCoupon");
-        coupon->setPricer(couponPricer);
+        if (!couponCapFloor && !nakedCapFloor) {
+            boost::shared_ptr<FloatingRateCoupon> coupon = boost::dynamic_pointer_cast<FloatingRateCoupon>(cashflow);
+            QL_REQUIRE(coupon, "Expected a leg of coupons of type FloatingRateCoupon");
+            coupon->setPricer(couponPricer);
+        } else {
+            boost::shared_ptr<CappedFlooredCmsCoupon> coupon =
+            boost::dynamic_pointer_cast<CappedFlooredCmsCoupon>(cashflow); 
+            QL_REQUIRE(coupon, "Expected a leg of coupons of type CappedFlooredCmsCoupon"); 
+            coupon->setPricer(couponPricer); 
+        }
     }
     return leg;
 }
