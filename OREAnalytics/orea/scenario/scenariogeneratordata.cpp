@@ -40,36 +40,6 @@ void ScenarioGeneratorData::clear() {
         grid_->truncate(0);
 }
 
-ScenarioGeneratorData::SequenceType parseSequenceType(const string& s) {
-    static map<string, ScenarioGeneratorData::SequenceType> m = {
-        {"MersenneTwister", ScenarioGeneratorData::SequenceType::MersenneTwister},
-        {"MersenneTwisterAntithetic", ScenarioGeneratorData::SequenceType::MersenneTwisterAntithetic},
-        {"Sobol", ScenarioGeneratorData::SequenceType::Sobol},
-        {"SobolBrownianBridge", ScenarioGeneratorData::SequenceType::SobolBrownianBridge}};
-
-    auto it = m.find(s);
-    if (it != m.end()) {
-        return it->second;
-    } else {
-        QL_FAIL("Cannot convert " << s << " to ScenarioGeneratorData::SequenceType");
-    }
-}
-
-std::ostream& operator<<(std::ostream& out, const ScenarioGeneratorData::SequenceType& type) {
-    switch (type) {
-    case ScenarioGeneratorData::SequenceType::MersenneTwister:
-        return out << "MersenneTwister";
-    case ScenarioGeneratorData::SequenceType::MersenneTwisterAntithetic:
-        return out << "MersenneTwisterAntithetic";
-    case ScenarioGeneratorData::SequenceType::Sobol:
-        return out << "Sobol";
-    case ScenarioGeneratorData::SequenceType::SobolBrownianBridge:
-        return out << "SobolBrownianBridge";
-    default:
-        return out << "?";
-    }
-}
-
 CrossAssetStateProcess::discretization parseDiscretization(const string& s) {
     static map<string, QuantExt::CrossAssetStateProcess::discretization> m = {
         {"Exact", QuantExt::CrossAssetStateProcess::exact}, {"Euler", QuantExt::CrossAssetStateProcess::euler}};

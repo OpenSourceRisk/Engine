@@ -141,7 +141,10 @@ inline void LgmImpliedYieldTermStructure::referenceTime(const Time t) {
     relativeTime_ = t;
 }
 
-inline void LgmImpliedYieldTermStructure::state(const Real s) { state_ = s; }
+inline void LgmImpliedYieldTermStructure::state(const Real s) {
+    state_ = s;
+    notifyObservers();
+}
 
 inline void LgmImpliedYieldTermStructure::move(const Date& d, const Real s) {
     state(s);

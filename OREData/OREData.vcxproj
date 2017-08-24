@@ -114,6 +114,7 @@
     <ClInclude Include="ored\portfolio\envelope.hpp" />
     <ClInclude Include="ored\portfolio\equityforward.hpp" />
     <ClInclude Include="ored\portfolio\equityoption.hpp" />
+    <ClInclude Include="ored\portfolio\forwardrateagreement.hpp" />
     <ClInclude Include="ored\portfolio\fxforward.hpp" />
     <ClInclude Include="ored\portfolio\fxoption.hpp" />
     <ClInclude Include="ored\portfolio\fxswap.hpp" />
@@ -146,6 +147,7 @@
     <ClInclude Include="ored\utilities\progressbar.hpp" />
     <ClInclude Include="ored\utilities\serializationdate.hpp" />
     <ClInclude Include="ored\utilities\strike.hpp" />
+    <ClInclude Include="ored\utilities\timeperiod.hpp" />
     <ClInclude Include="ored\utilities\to_string.hpp" />
     <ClInclude Include="ored\utilities\vectorutils.hpp" />
     <ClInclude Include="ored\utilities\xmlutils.hpp" />
@@ -213,6 +215,7 @@
     <ClCompile Include="ored\portfolio\envelope.cpp" />
     <ClCompile Include="ored\portfolio\equityforward.cpp" />
     <ClCompile Include="ored\portfolio\equityoption.cpp" />
+    <ClCompile Include="ored\portfolio\forwardrateagreement.cpp" />
     <ClCompile Include="ored\portfolio\fxforward.cpp" />
     <ClCompile Include="ored\portfolio\fxoption.cpp" />
     <ClCompile Include="ored\portfolio\fxswap.cpp" />

@@ -555,5 +555,17 @@ AmortizationType parseAmortizationType(const std::string& s) {
     }
 }
 
+SequenceType parseSequenceType(const std::string& s) {
+    static map<string, SequenceType> seq = {{"MersenneTwister", SequenceType::MersenneTwister},
+                                            {"MersenneTwisterAntithetic", SequenceType::MersenneTwisterAntithetic},
+                                            {"Sobol", SequenceType::Sobol},
+                                            {"SobolBrownianBridge", SequenceType::SobolBrownianBridge}};
+    auto it = seq.find(s);
+    if (it != seq.end())
+        return it->second;
+    else
+        QL_FAIL("sequence type \"" << s << "\" not recognised");
+}
+
 } // namespace data
 } // namespace ore

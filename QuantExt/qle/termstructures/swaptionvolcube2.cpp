@@ -39,6 +39,7 @@
 #include <qle/termstructures/swaptionvolcube2.hpp>
 
 #include <ql/math/interpolations/bilinearinterpolation.hpp>
+#include <ql/math/interpolations/flatextrapolation2d.hpp>
 #include <ql/termstructures/volatility/interpolatedsmilesection.hpp>
 
 #include <ql/indexes/swapindex.hpp>
@@ -72,8 +73,14 @@ void SwaptionVolCube2::performCalculations() const {
             }
     //! create volSpreadsInterpolator_
     for (Size i = 0; i < nStrikes_; i++) {
-        volSpreadsInterpolator_[i] = BilinearInterpolation(
-            swapLengths_.begin(), swapLengths_.end(), optionTimes_.begin(), optionTimes_.end(), volSpreadsMatrix_[i]);
+        if (!flatExtrapolation_)
+            volSpreadsInterpolator_[i] =
+                BilinearInterpolation(swapLengths_.begin(), swapLengths_.end(), optionTimes_.begin(),
+                                      optionTimes_.end(), volSpreadsMatrix_[i]);
+        else
+            volSpreadsInterpolator_[i] = FlatExtrapolator2D(boost::make_shared<BilinearInterpolation>(
+                swapLengths_.begin(), swapLengths_.end(), optionTimes_.begin(), optionTimes_.end(),
+                volSpreadsMatrix_[i]));
         volSpreadsInterpolator_[i].enableExtrapolation();
     }
 }

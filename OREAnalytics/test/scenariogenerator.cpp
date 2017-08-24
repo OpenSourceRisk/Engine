@@ -448,7 +448,7 @@ void ScenarioGeneratorTest::testCrossAssetSimMarket() {
     BOOST_TEST_MESSAGE("set up scenario generator builder");
     boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
     sgd->discretization() = QuantExt::CrossAssetStateProcess::exact;
-    sgd->sequenceType() = ScenarioGeneratorData::SequenceType::Sobol;
+    sgd->sequenceType() = Sobol;
     sgd->seed() = 42;
     sgd->grid() = grid;
 
@@ -592,7 +592,7 @@ void ScenarioGeneratorTest::testCrossAssetSimMarket2() {
     BOOST_TEST_MESSAGE("set up scenario generator builder");
     boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
     sgd->discretization() = QuantExt::CrossAssetStateProcess::exact;
-    sgd->sequenceType() = ScenarioGeneratorData::SequenceType::Sobol;
+    sgd->sequenceType() = Sobol;
     sgd->seed() = 42;
     sgd->grid() = grid;
 
@@ -733,7 +733,7 @@ void ScenarioGeneratorTest::testVanillaSwapExposure() {
     BOOST_TEST_MESSAGE("set up scenario generator builder");
     boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
     sgd->discretization() = QuantExt::CrossAssetStateProcess::exact;
-    sgd->sequenceType() = ScenarioGeneratorData::SequenceType::SobolBrownianBridge;
+    sgd->sequenceType() = SobolBrownianBridge;
     sgd->seed() = 42;
     sgd->grid() = grid;
 
@@ -875,7 +875,7 @@ void ScenarioGeneratorTest::testFxForwardExposure() {
     BOOST_TEST_MESSAGE("set up scenario generator builder");
     boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
     sgd->discretization() = QuantExt::CrossAssetStateProcess::exact;
-    sgd->sequenceType() = ScenarioGeneratorData::SequenceType::SobolBrownianBridge;
+    sgd->sequenceType() = SobolBrownianBridge;
     sgd->seed() = 42;
     sgd->grid() = grid;
 
@@ -1001,7 +1001,7 @@ void ScenarioGeneratorTest::testFxForwardExposureZeroIrVol() {
     BOOST_TEST_MESSAGE("set up scenario generator builder");
     boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
     sgd->discretization() = QuantExt::CrossAssetStateProcess::exact;
-    sgd->sequenceType() = ScenarioGeneratorData::SequenceType::SobolBrownianBridge;
+    sgd->sequenceType() = SobolBrownianBridge;
     sgd->seed() = 42;
     sgd->grid() = grid;
 
