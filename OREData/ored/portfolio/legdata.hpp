@@ -107,8 +107,9 @@ public:
                     const vector<string>& capDates = vector<string>(), const vector<double>& floors = vector<double>(),
                     const vector<string>& floorDates = vector<string>(),
                     const vector<double>& gearings = vector<double>(),
-                    const vector<string>& gearingDates = vector<string>())
-        : index_(index), fixingDays_(fixingDays), isInArrears_(isInArrears), spreads_(spreads),
+                    const vector<string>& gearingDates = vector<string>(),
+                    bool isAveraged = false)
+        : index_(index), fixingDays_(fixingDays), isInArrears_(isInArrears), isAveraged_(isAveraged), spreads_(spreads),
           spreadDates_(spreadDates), caps_(caps), capDates_(capDates), floors_(floors), floorDates_(floorDates),
           gearings_(gearings), gearingDates_(gearingDates) {}
 
@@ -117,6 +118,7 @@ public:
     const string& index() const { return index_; }
     int fixingDays() const { return fixingDays_; }
     bool isInArrears() const { return isInArrears_; }
+    bool isAveraged() const { return isAveraged_; }
     const vector<double>& spreads() const { return spreads_; }
     const vector<string>& spreadDates() const { return spreadDates_; }
     const vector<double>& caps() const { return caps_; }
@@ -136,6 +138,7 @@ private:
     string index_;
     int fixingDays_;
     bool isInArrears_;
+    bool isAveraged_;
     vector<double> spreads_;
     vector<string> spreadDates_;
     vector<double> caps_;

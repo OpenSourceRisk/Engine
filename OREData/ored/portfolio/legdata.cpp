@@ -30,6 +30,8 @@
 #include <ql/cashflows/overnightindexedcoupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
 #include <ql/errors.hpp>
+#include <qle/cashflows/averageonindexedcoupon.hpp>
+#include <qle/cashflows/averageonindexedcouponpricer.hpp>
 #include <qle/cashflows/floatingannuitycoupon.hpp>
 #include <boost/make_shared.hpp>
 
@@ -70,6 +72,11 @@ void FloatingLegData::fromXML(XMLNode* node) {
         isInArrears_ = XMLUtils::getChildValueAsBool(node, "IsInArrears", true);
     else
         isInArrears_ = false;                                       // default to fixing-in-advance
+    XMLNode* avgNode = XMLUtils::getChildNode(node, "IsAveraged");
+    if (avgNode)
+        isAveraged_ = XMLUtils::getChildValueAsBool(node, "IsAveraged", true);
+    else
+        isAveraged_ = false; 
     fixingDays_ = XMLUtils::getChildValueAsInt(node, "FixingDays"); // defaults to 0
     caps_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Caps", "Cap", "startDate", capDates_);
     floors_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Floors", "Floor", "startDate", floorDates_);
@@ -82,6 +89,7 @@ XMLNode* FloatingLegData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "Index", index_);
     XMLUtils::addChildren(doc, node, "Spreads", "Spread", spreads_);
     XMLUtils::addChild(doc, node, "IsInArrears", isInArrears_);
+    XMLUtils::addChild(doc, node, "IsAveraged", isAveraged_);
     XMLUtils::addChild(doc, node, "FixingDays", fixingDays_);
     XMLUtils::addChildrenWithAttributes(doc, node, "Caps", "Cap", caps_, "startDate", capDates_);
     XMLUtils::addChildrenWithAttributes(doc, node, "Floors", "Floor", floors_, "startDate", floorDates_);
@@ -444,16 +452,35 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
     else
         QL_FAIL("AmortizationType " << data.amortizationData().type() << " not supported for OIS legs");
 
-    OvernightLeg leg = OvernightLeg(schedule, index)
-                           .withNotionals(nominals)
-                           .withSpreads(spreads)
-                           .withPaymentDayCounter(dc)
-                           .withPaymentAdjustment(bdc);
+    if (floatData.isAveraged()) {
+        
+        boost::shared_ptr<QuantExt::AverageONIndexedCouponPricer> couponPricer = boost::make_shared<QuantExt::AverageONIndexedCouponPricer>();
+        QuantExt::AverageONLeg leg = QuantExt::AverageONLeg(schedule, index)
+                               .withNotionals(nominals)
+                               .withSpreads(spreads)
+                               .withPaymentDayCounter(dc)
+                               .withPaymentAdjustment(bdc)
+                               .withRateCutoff(2)
+                               .withAverageONIndexedCouponPricer(couponPricer);
 
-    if (floatData.gearings().size() > 0)
-        leg.withGearings(buildScheduledVector(floatData.gearings(), floatData.gearingDates(), schedule));
+        if (floatData.gearings().size() > 0)
+            leg.withGearings(buildScheduledVector(floatData.gearings(), floatData.gearingDates(), schedule));
 
-    return leg;
+        return leg;
+
+    } else {
+        
+        OvernightLeg leg = OvernightLeg(schedule, index)
+                               .withNotionals(nominals)
+                               .withSpreads(spreads)
+                               .withPaymentDayCounter(dc)
+                               .withPaymentAdjustment(bdc);
+
+        if (floatData.gearings().size() > 0)
+            leg.withGearings(buildScheduledVector(floatData.gearings(), floatData.gearingDates(), schedule));
+
+        return leg;
+    }
 }
 
 Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalNomFlow, const bool amortNomFlow) {
