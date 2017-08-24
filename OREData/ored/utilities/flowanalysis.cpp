@@ -28,7 +28,6 @@
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <qle/cashflows/averageonindexedcoupon.hpp>
-#include <iostream>
 using namespace std;
 using QuantLib::Real;
 using QuantLib::Date;
