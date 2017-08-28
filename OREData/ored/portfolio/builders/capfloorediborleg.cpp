@@ -31,7 +31,7 @@ boost::shared_ptr<FloatingRateCouponPricer> CapFlooredIborLegEngineBuilder::engi
     if (engines_.find(ccyCode) == engines_.end()) {
         Handle<YieldTermStructure> yts = market_->discountCurve(ccyCode, configuration(MarketContext::pricing));
         QL_REQUIRE(!yts.empty(), "engineFactory error: yield term structure not found for currency " << ccyCode);
-        Handle<OptionletVolatilityStructure> ovs;
+        Handle<OptionletVolatilityStructure> ovs = market_->capFloorVol(ccyCode, configuration(MarketContext::pricing));
         boost::shared_ptr<FloatingRateCouponPricer> pricer = boost::make_shared<BlackIborCouponPricer>(ovs);
         engines_[ccyCode] = pricer;
     }
