@@ -692,35 +692,19 @@ void OREApp::writeScenarioData() {
     LOG("Write scenario data");
     bool skipped = true;
     string outputPath = params_->get("setup", "outputPath");
-    if (params_->has("simulation", "additionalScenarioDataFileName")) {
+    if (params_->has("simulation", "aggregationScenarioDataFileName")) {
         // binary output
         string outputFileNameAddScenData =
-            outputPath + "/" + params_->get("simulation", "additionalScenarioDataFileName");
+            outputPath + "/" + params_->get("simulation", "aggregationScenarioDataFileName");
         scenarioData_->save(outputFileNameAddScenData);
         out_ << "OK" << endl;
         skipped = false;
     }
-    if (params_->has("simulation", "additionalScenarioDataDump")) {
+    if (params_->has("simulation", "aggregationScenarioDataDump")) {
         // csv output
-        string outputFileNameAddScenData = outputPath + "/" + params_->get("simulation", "additionalScenarioDataDump");
-        FILE* f = fopen(outputFileNameAddScenData.c_str(), "w");
-        QL_REQUIRE(f, "error opening file " << outputFileNameAddScenData);
-        fprintf(f, "Date,Scenario");
-        for (auto const& k : scenarioData_->keys()) {
-            std::string tmp = ore::data::to_string(k.first) + k.second;
-            fprintf(f, ",%s", tmp.c_str());
-        }
-        fprintf(f, "\n");
-        for (Size d = 0; d < scenarioData_->dimDates(); ++d) {
-            for (Size s = 0; s < scenarioData_->dimSamples(); ++s) {
-                fprintf(f, "%zu,%zu", d, s);
-                for (auto const& k : scenarioData_->keys()) {
-                    fprintf(f, ",%.8f", scenarioData_->get(d, s, k.first, k.second));
-                }
-                fprintf(f, "\n");
-            }
-        }
-        fclose(f);
+        string outputFileNameAddScenData = outputPath + "/" + params_->get("simulation", "aggregationScenarioDataDump");
+        CSVFileReport report(outputFileNameAddScenData);
+        ReportWriter::writeAggregationScenarioData(report, *scenarioData_);
         skipped = false;
     }
     if (skipped)
