@@ -80,7 +80,7 @@ const std::vector<Rate>& AverageONIndexedCoupon::indexFixings() const {
     return fixings_;
 }
 
-Date AverageONIndexedCoupon::fixingDate() const { return fixingDates_[fixingDates_.size() - rateCutoff_]; }
+Date AverageONIndexedCoupon::fixingDate() const { return fixingDates_[fixingDates_.size() - 1 - rateCutoff_]; }
 
 void AverageONIndexedCoupon::accept(AcyclicVisitor& v) {
     Visitor<AverageONIndexedCoupon>* v1 = dynamic_cast<Visitor<AverageONIndexedCoupon>*>(&v);

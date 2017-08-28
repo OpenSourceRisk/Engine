@@ -201,9 +201,10 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
     boost::shared_ptr<BermudanSwaptionEngineBuilder> swaptionBuilder =
         boost::dynamic_pointer_cast<BermudanSwaptionEngineBuilder>(builder);
 
+    // TODO use more intelligent strikes for calibration if fixed rate of underlying is not constant
     boost::shared_ptr<PricingEngine> engine =
         swaptionBuilder->engine(id(), isNonStandard, ccy_str, exDates, swap->maturityDate(),
-                                isNonStandard ? 0.0 : vanillaSwap->fixedRate()); // FIXME
+                                isNonStandard ? nonstandardSwap->fixedRate().front() : vanillaSwap->fixedRate());
 
     Real ct = timer.elapsed();
     DLOG("Swaption model calibration time: " << ct * 1000 << " ms");

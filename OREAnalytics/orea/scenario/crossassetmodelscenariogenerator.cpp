@@ -189,7 +189,7 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
             for (Size k = 0; k < ten_dsc_[j].size(); k++) {
                 Date d = dates_[i] + ten_dsc_[j][k];
                 Time T = dc.yearFraction(dates_[i], d);
-                Real discount = curves[j]->discount(T);
+                Real discount = std::max(curves[j]->discount(T), 0.00001);
                 scenarios[i]->add(discountCurveKeys_[j * ten_dsc_[j].size() + k], discount);
             }
         }
@@ -201,7 +201,7 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
             for (Size k = 0; k < ten_idx_[j].size(); ++k) {
                 Date d = dates_[i] + ten_idx_[j][k];
                 Time T = dc.yearFraction(dates_[i], d);
-                Real discount = fwdCurves[j]->discount(T);
+                Real discount = std::max(fwdCurves[j]->discount(T), 0.00001);
                 scenarios[i]->add(indexCurveKeys_[j * ten_idx_[j].size() + k], discount);
             }
         }
@@ -213,7 +213,7 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
             for (Size k = 0; k < ten_yc_[j].size(); ++k) {
                 Date d = dates_[i] + ten_yc_[j][k];
                 Time T = dc.yearFraction(dates_[i], d);
-                Real discount = yieldCurves[j]->discount(T);
+                Real discount = std::max(yieldCurves[j]->discount(T), 0.00001);
                 scenarios[i]->add(yieldCurveKeys_[j * ten_yc_[j].size() + k], discount);
             }
         }

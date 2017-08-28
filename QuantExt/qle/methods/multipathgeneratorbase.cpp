@@ -81,4 +81,39 @@ const Sample<MultiPath>& MultiPathGeneratorSobolBrownianBridge::next() const {
     return next_;
 }
 
+boost::shared_ptr<MultiPathGeneratorBase> makeMultiPathGenerator(const SequenceType s,
+                                                                 const boost::shared_ptr<StochasticProcess>& process,
+                                                                 const TimeGrid& timeGrid, const BigNatural seed,
+                                                                 const SobolBrownianGenerator::Ordering ordering,
+                                                                 const SobolRsg::DirectionIntegers directionIntegers) {
+    switch (s) {
+    case MersenneTwister:
+        return boost::make_shared<QuantExt::MultiPathGeneratorMersenneTwister>(process, timeGrid, seed, false);
+    case MersenneTwisterAntithetic:
+        return boost::make_shared<QuantExt::MultiPathGeneratorMersenneTwister>(process, timeGrid, seed, true);
+    case Sobol:
+        return boost::make_shared<QuantExt::MultiPathGeneratorSobol>(process, timeGrid, seed);
+    case SobolBrownianBridge:
+        return boost::make_shared<QuantExt::MultiPathGeneratorSobolBrownianBridge>(process, timeGrid, ordering, seed,
+                                                                                   directionIntegers);
+    default:
+        QL_FAIL("Unknown sequence type");
+    }
+}
+
+std::ostream& operator<<(std::ostream& out, const SequenceType s) {
+    switch (s) {
+    case MersenneTwister:
+        return out << "MersenneTwister";
+    case MersenneTwisterAntithetic:
+        return out << "MersenneTwisterAntithetic";
+    case Sobol:
+        return out << "Sobol";
+    case SobolBrownianBridge:
+        return out << "SobolBrownianBridge";
+    default:
+        return out << "Unknown sequence type";
+    }
+}
+
 } // namespace QuantExt

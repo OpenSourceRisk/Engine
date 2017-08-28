@@ -107,8 +107,8 @@ public:
                     const vector<string>& capDates = vector<string>(), const vector<double>& floors = vector<double>(),
                     const vector<string>& floorDates = vector<string>(),
                     const vector<double>& gearings = vector<double>(),
-                    const vector<string>& gearingDates = vector<string>())
-        : index_(index), fixingDays_(fixingDays), isInArrears_(isInArrears), spreads_(spreads),
+                    const vector<string>& gearingDates = vector<string>(), bool isAveraged = false)
+        : index_(index), fixingDays_(fixingDays), isInArrears_(isInArrears), isAveraged_(isAveraged), spreads_(spreads),
           spreadDates_(spreadDates), caps_(caps), capDates_(capDates), floors_(floors), floorDates_(floorDates),
           gearings_(gearings), gearingDates_(gearingDates) {}
 
@@ -117,6 +117,7 @@ public:
     const string& index() const { return index_; }
     int fixingDays() const { return fixingDays_; }
     bool isInArrears() const { return isInArrears_; }
+    bool isAveraged() const { return isAveraged_; }
     const vector<double>& spreads() const { return spreads_; }
     const vector<string>& spreadDates() const { return spreadDates_; }
     const vector<double>& caps() const { return caps_; }
@@ -136,6 +137,7 @@ private:
     string index_;
     int fixingDays_;
     bool isInArrears_;
+    bool isAveraged_;
     vector<double> spreads_;
     vector<string> spreadDates_;
     vector<double> caps_;
@@ -406,7 +408,7 @@ public:
     double foreignAmount() const { return foreignAmount_; }
     const string& fxIndex() const { return fxIndex_; }
     int fixingDays() const { return fixingDays_; }
-    AmortizationData& amortizationData() { return amortizationData_; }
+    const AmortizationData& amortizationData() const { return amortizationData_; }
     //@}
 private:
     bool isPayer_;
@@ -436,15 +438,15 @@ private:
 
 //! \name Utilities for building QuantLib Legs
 //@{
-Leg makeFixedLeg(LegData& data);
-Leg makeIborLeg(LegData& data, boost::shared_ptr<IborIndex> index,
+Leg makeFixedLeg(const LegData& data);
+Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
                 const boost::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer = true);
-Leg makeOISLeg(LegData& data, boost::shared_ptr<OvernightIndex> index);
-Leg makeSimpleLeg(LegData& data);
-Leg makeNotionalLeg(const Leg& refLeg, bool initNomFlow, bool finalNomFlow, bool amortNomFlow = true);
-Leg makeCPILeg(LegData& data, boost::shared_ptr<ZeroInflationIndex> index);
-Leg makeYoYLeg(LegData& data, boost::shared_ptr<YoYInflationIndex> index);
-Leg makeCMSLeg(LegData& data, boost::shared_ptr<QuantLib::SwapIndex> swapindex,
+Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& index);
+Leg makeSimpleLeg(const LegData& data);
+Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalNomFlow, const bool amortNomFlow = true);
+Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>& index);
+Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<YoYInflationIndex>& index);
+Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>& swapindex,
                const boost::shared_ptr<EngineFactory>& engineFactory, const vector<double>& caps = vector<double>(),
                const vector<double>& floors = vector<double>(), const bool attachPricer = true);
 Real currentNotional(const Leg& leg);
@@ -467,18 +469,18 @@ vector<double> buildScheduledVectorNormalised(const vector<double>& values, cons
 
 // notional vector derived from a fixed amortisation amount
 vector<double> buildAmortizationScheduleFixedAmount(const vector<double>& notionals, const Schedule& schedule,
-                                                    LegData& data);
+                                                    const LegData& data);
 
 // notional vector with amortizations expressed as a percentage of initial notional
 vector<double> buildAmortizationScheduleRelativeToInitialNotional(const vector<double>& notionals,
-                                                                  const Schedule& schedule, LegData& data);
+                                                                  const Schedule& schedule, const LegData& data);
 
 // notional vector with amortizations expressed as a percentage of the respective previous notional
 vector<double> buildAmortizationScheduleRelativeToPreviousNotional(const vector<double>& notionals,
-                                                                   const Schedule& schedule, LegData& data);
+                                                                   const Schedule& schedule, const LegData& data);
 
 // notional vector derived from a fixed annuity amount
 vector<double> buildAmortizationScheduleFixedAnnuity(const vector<double>& notionals, const vector<double>& rates,
-                                                     const Schedule& schedule, LegData& data);
+                                                     const Schedule& schedule, const LegData& data);
 } // namespace data
 } // namespace ore
