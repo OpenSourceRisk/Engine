@@ -215,59 +215,66 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
     }
     }
 
-    /*
 
     LOG("Get cds vol sensitivity parameters");
     XMLNode* cdsVols = XMLUtils::getChildNode(node, "CDSVolatilities");
-    for (XMLNode* child = XMLUtils::getChildNode(cdsVols, "CDSVolatility"); child;
-         child = XMLUtils::getNextSibling(child)) {
-        string name = XMLUtils::getAttribute(child, "name");
-        CdsVolShiftData data;
-        data.shiftType = XMLUtils::getChildValue(child, "ShiftType", true);
-        data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
-        data.shiftExpiries = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftExpiries", true);
-        cdsVolShiftData_[name] = data;
-        cdsVolNames_.push_back(name);
+    if (cdsVols) {
+        for (XMLNode* child = XMLUtils::getChildNode(cdsVols, "CDSVolatility"); child;
+            child = XMLUtils::getNextSibling(child)) {
+            string name = XMLUtils::getAttribute(child, "name");
+            CdsVolShiftData data;
+            data.shiftType = XMLUtils::getChildValue(child, "ShiftType", true);
+            data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
+            data.shiftExpiries = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftExpiries", true);
+            cdsVolShiftData_[name] = data;
+            cdsVolNames_.push_back(name);
+        }
     }
 
     LOG("Get Base Correlation sensitivity parameters");
     XMLNode* bcNode = XMLUtils::getChildNode(node, "BaseCorrelations");
-    for (XMLNode* child = XMLUtils::getChildNode(bcNode, "BaseCorrelation"); child;
-         child = XMLUtils::getNextSibling(child)) {
-        string name = XMLUtils::getAttribute(child, "indexName");
-        BaseCorrelationShiftData data;
-        data.shiftType = XMLUtils::getChildValue(child, "ShiftType");
-        data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
-        data.shiftTerms = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTerms", true);
-        data.shiftLossLevels = XMLUtils::getChildrenValuesAsDoublesCompact(child, "ShiftLossLevels", true);
-        baseCorrelationShiftData_[name] = data;
-        baseCorrelationNames_.push_back(name);
+    if (bcNode) {
+        for (XMLNode* child = XMLUtils::getChildNode(bcNode, "BaseCorrelation"); child;
+            child = XMLUtils::getNextSibling(child)) {
+            string name = XMLUtils::getAttribute(child, "indexName");
+            BaseCorrelationShiftData data;
+            data.shiftType = XMLUtils::getChildValue(child, "ShiftType");
+            data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
+            data.shiftTerms = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTerms", true);
+            data.shiftLossLevels = XMLUtils::getChildrenValuesAsDoublesCompact(child, "ShiftLossLevels", true);
+            baseCorrelationShiftData_[name] = data;
+            baseCorrelationNames_.push_back(name);
+        }
     }
 
     LOG("Get Equity spot sensitivity parameters");
     XMLNode* equitySpots = XMLUtils::getChildNode(node, "EquitySpots");
-    for (XMLNode* child = XMLUtils::getChildNode(equitySpots, "EquitySpot"); child;
-         child = XMLUtils::getNextSibling(child)) {
-        string equity = XMLUtils::getAttribute(child, "equity");
-        SpotShiftData data;
-        data.shiftType = XMLUtils::getChildValue(child, "ShiftType", true);
-        data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
-        equityShiftData_[equity] = data;
-        equityNames_.push_back(equity);
+    if (equitySpots) {
+        for (XMLNode* child = XMLUtils::getChildNode(equitySpots, "EquitySpot"); child;
+            child = XMLUtils::getNextSibling(child)) {
+            string equity = XMLUtils::getAttribute(child, "equity");
+            SpotShiftData data;
+            data.shiftType = XMLUtils::getChildValue(child, "ShiftType", true);
+            data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
+            equityShiftData_[equity] = data;
+            equityNames_.push_back(equity);
+        }
     }
 
     LOG("Get Equity vol sensitivity parameters");
     XMLNode* equityVols = XMLUtils::getChildNode(node, "EquityVolatilities");
-    for (XMLNode* child = XMLUtils::getChildNode(equityVols, "EquityVolatility"); child;
-         child = XMLUtils::getNextSibling(child)) {
-        string equity = XMLUtils::getAttribute(child, "equity");
-        VolShiftData data;
-        data.shiftType = XMLUtils::getChildValue(child, "ShiftType");
-        data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
-        data.shiftExpiries = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftExpiries", true);
-        data.shiftStrikes = XMLUtils::getChildrenValuesAsDoubles(child, "ShiftStrikes", "Strike", true);
-        equityVolShiftData_[equity] = data;
-        equityVolNames_.push_back(equity);
+    if (equityVols) {
+        for (XMLNode* child = XMLUtils::getChildNode(equityVols, "EquityVolatility"); child;
+            child = XMLUtils::getNextSibling(child)) {
+            string equity = XMLUtils::getAttribute(child, "equity");
+            VolShiftData data;
+            data.shiftType = XMLUtils::getChildValue(child, "ShiftType");
+            data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
+            data.shiftExpiries = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftExpiries", true);
+            data.shiftStrikes = XMLUtils::getChildrenValuesAsDoubles(child, "ShiftStrikes", "Strike", true);
+            equityVolShiftData_[equity] = data;
+            equityVolNames_.push_back(equity);
+        }
     }
 
 
@@ -332,7 +339,6 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
         crossGammaFilter_.push_back(pair<string, string>(tokens[0], tokens[1]));
         crossGammaFilter_.push_back(pair<string, string>(tokens[1], tokens[0]));
     }
-    */
 }
 
 XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
