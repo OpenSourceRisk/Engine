@@ -278,7 +278,7 @@ XMLNode* LegData::toXML(XMLDocument& doc) {
 }
 
 // Functions
-Leg makeSimpleLeg(LegData& data) {
+Leg makeSimpleLeg(const LegData& data) {
     const vector<double>& amounts = data.cashflowData().amounts();
     const vector<string>& dates = data.cashflowData().dates();
     QL_REQUIRE(amounts.size() == dates.size(), "Amounts / Date size mismatch in makeSimpleLeg."
@@ -291,7 +291,7 @@ Leg makeSimpleLeg(LegData& data) {
     return leg;
 }
 
-Leg makeFixedLeg(LegData& data) {
+Leg makeFixedLeg(const LegData& data) {
     Schedule schedule = makeSchedule(data.schedule());
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
@@ -317,7 +317,7 @@ Leg makeFixedLeg(LegData& data) {
     return leg;
 }
 
-Leg makeIborLeg(LegData& data, boost::shared_ptr<IborIndex> index,
+Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
                 const boost::shared_ptr<EngineFactory>& engineFactory) {
     Schedule schedule = makeSchedule(data.schedule());
     DayCounter dc = parseDayCounter(data.dayCounter());
@@ -410,8 +410,7 @@ Leg makeIborLeg(LegData& data, boost::shared_ptr<IborIndex> index,
     // Loop over the coupons in the leg and set pricer
     Leg leg = iborLeg;
     for (const auto& cashflow : leg) {
-        boost::shared_ptr<FloatingRateCoupon> coupon =
-            boost::dynamic_pointer_cast<FloatingRateCoupon>(cashflow);
+        boost::shared_ptr<FloatingRateCoupon> coupon = boost::dynamic_pointer_cast<FloatingRateCoupon>(cashflow);
         QL_REQUIRE(coupon, "Expected a leg of coupons of type FloatingRateCoupon");
         coupon->setPricer(couponPricer);
     }
@@ -419,7 +418,7 @@ Leg makeIborLeg(LegData& data, boost::shared_ptr<IborIndex> index,
     return leg;
 } // namespace data
 
-Leg makeOISLeg(LegData& data, boost::shared_ptr<OvernightIndex> index) {
+Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& index) {
 
     FloatingLegData floatData = data.floatingLegData();
     if (floatData.caps().size() > 0 || floatData.floors().size() > 0)
@@ -457,15 +456,15 @@ Leg makeOISLeg(LegData& data, boost::shared_ptr<OvernightIndex> index) {
     return leg;
 }
 
-Leg makeNotionalLeg(const Leg& refLeg, bool initNomFlow, bool finalNomFlow, bool amortNomFlow) {
+Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalNomFlow, const bool amortNomFlow) {
 
-    // Assumption - Cashflows on Input Leg are all coupons or FloatingAnnuity coupons
+    // Assumption - Cashflows on Input Leg are all coupons
     // This is the Leg to be populated
     Leg leg;
 
     // Initial Flow Amount
     if (initNomFlow) {
-        Real initFlowAmt = boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg[0])->nominal();
+        double initFlowAmt = boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg[0])->nominal();
         Date initDate = boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg[0])->accrualStartDate();
         if (initFlowAmt != 0)
             leg.push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(-initFlowAmt, initDate)));
@@ -485,7 +484,7 @@ Leg makeNotionalLeg(const Leg& refLeg, bool initNomFlow, bool finalNomFlow, bool
 
     // Final Nominal Return at Maturity
     if (finalNomFlow) {
-        Real finalNomFlow = boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg.back())->nominal();
+        double finalNomFlow = boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg.back())->nominal();
         Date finalDate = boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg.back())->date();
         if (finalNomFlow != 0)
             leg.push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(finalNomFlow, finalDate)));
@@ -494,7 +493,7 @@ Leg makeNotionalLeg(const Leg& refLeg, bool initNomFlow, bool finalNomFlow, bool
     return leg;
 }
 
-Leg makeCPILeg(LegData& data, boost::shared_ptr<ZeroInflationIndex> index) {
+Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>& index) {
     Schedule schedule = makeSchedule(data.schedule());
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
@@ -515,7 +514,7 @@ Leg makeCPILeg(LegData& data, boost::shared_ptr<ZeroInflationIndex> index) {
     return leg;
 }
 
-Leg makeYoYLeg(LegData& data, boost::shared_ptr<YoYInflationIndex> index) {
+Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<YoYInflationIndex>& index) {
     Schedule schedule = makeSchedule(data.schedule());
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
@@ -537,7 +536,7 @@ Leg makeYoYLeg(LegData& data, boost::shared_ptr<YoYInflationIndex> index) {
     return leg;
 }
 
-Leg makeCMSLeg(LegData& data, boost::shared_ptr<QuantLib::SwapIndex> swapIndex,
+Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>& swapIndex,
                const boost::shared_ptr<EngineFactory>& engineFactory, const vector<double>& caps,
                const vector<double>& floors) {
     Schedule schedule = makeSchedule(data.schedule());
@@ -554,7 +553,8 @@ Leg makeCMSLeg(LegData& data, boost::shared_ptr<QuantLib::SwapIndex> swapIndex,
                         .withSpreads(spreads)
                         .withPaymentDayCounter(dc)
                         .withPaymentAdjustment(bdc)
-                        .withFixingDays(cmsData.fixingDays());
+                        .withFixingDays(cmsData.fixingDays())
+                        .inArrears(cmsData.isInArrears());
 
     if (cmsData.gearings().size() > 0)
         cmsLeg.withGearings(buildScheduledVector(cmsData.gearings(), cmsData.gearingDates(), schedule));
@@ -586,14 +586,14 @@ Leg makeCMSLeg(LegData& data, boost::shared_ptr<QuantLib::SwapIndex> swapIndex,
     Leg leg = cmsLeg;
     for (const auto& cashflow : leg) {
         if (!couponCapFloor && !nakedCapFloor) {
-            boost::shared_ptr<CmsCoupon> coupon = boost::dynamic_pointer_cast<CmsCoupon>(cashflow);
-            QL_REQUIRE(coupon, "Expected a leg of coupons of type CmsCoupon");
+            boost::shared_ptr<FloatingRateCoupon> coupon = boost::dynamic_pointer_cast<FloatingRateCoupon>(cashflow);
+            QL_REQUIRE(coupon, "Expected a leg of coupons of type FloatingRateCoupon");
             coupon->setPricer(couponPricer);
         } else {
             boost::shared_ptr<CappedFlooredCmsCoupon> coupon =
-                boost::dynamic_pointer_cast<CappedFlooredCmsCoupon>(cashflow);
-            QL_REQUIRE(coupon, "Expected a leg of coupons of type CappedFlooredCmsCoupon");
-            coupon->setPricer(couponPricer);
+            boost::dynamic_pointer_cast<CappedFlooredCmsCoupon>(cashflow); 
+            QL_REQUIRE(coupon, "Expected a leg of coupons of type CappedFlooredCmsCoupon"); 
+            coupon->setPricer(couponPricer); 
         }
     }
     return leg;
@@ -679,7 +679,7 @@ vector<double> buildScheduledVectorNormalised(const vector<double>& values, cons
 }
 
 vector<double> buildAmortizationScheduleFixedAmount(const vector<double>& notionals, const Schedule& schedule,
-                                                    LegData& data) {
+                                                    const LegData& data) {
     LOG("Build fixed amortization notional schedule");
     vector<double> nominals;
     Date startDate = parseDate(data.amortizationData().startDate());
@@ -712,7 +712,7 @@ vector<double> buildAmortizationScheduleFixedAmount(const vector<double>& notion
 }
 
 vector<double> buildAmortizationScheduleRelativeToInitialNotional(const vector<double>& notionals,
-                                                                  const Schedule& schedule, LegData& data) {
+                                                                  const Schedule& schedule, const LegData& data) {
     LOG("Build notional schedule with amortizations expressed as percentages of initial notional");
     vector<double> nominals;
     Date startDate = parseDate(data.amortizationData().startDate());
@@ -748,7 +748,7 @@ vector<double> buildAmortizationScheduleRelativeToInitialNotional(const vector<d
 }
 
 vector<double> buildAmortizationScheduleRelativeToPreviousNotional(const vector<double>& notionals,
-                                                                   const Schedule& schedule, LegData& data) {
+                                                                   const Schedule& schedule, const LegData& data) {
     LOG("Build notional schedule with amortizations expressed as percentages of previous notionals");
     vector<double> nominals;
     Date startDate = parseDate(data.amortizationData().startDate());
@@ -775,7 +775,7 @@ vector<double> buildAmortizationScheduleRelativeToPreviousNotional(const vector<
 }
 
 vector<double> buildAmortizationScheduleFixedAnnuity(const vector<double>& notionals, const vector<double>& rates,
-                                                     const Schedule& schedule, LegData& data) {
+                                                     const Schedule& schedule, const LegData& data) {
     LOG("Build fixed annuity notional schedule");
     vector<double> nominals;
     Date startDate = parseDate(data.amortizationData().startDate());

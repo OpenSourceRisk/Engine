@@ -25,6 +25,18 @@
     <DayCounter>A365</DayCounter>
     <CompoundingFrequency>Daily</CompoundingFrequency>
   </Zero>
+  <Zero>
+    <Id>GBP-ZERO-CONVENTIONS</Id>
+    <TenorBased>false</TenorBased>
+    <DayCounter>A365</DayCounter>
+    <CompoundingFrequency>Daily</CompoundingFrequency>
+  </Zero>
+  <Zero>
+    <Id>USD-ZERO-CONVENTIONS</Id>
+    <TenorBased>false</TenorBased>
+    <DayCounter>A365</DayCounter>
+    <CompoundingFrequency>Daily</CompoundingFrequency>
+  </Zero>
   <!-- CDS -->
   <CDS>
     <Id>CDS-STANDARD-CONVENTIONS</Id>
@@ -270,11 +282,43 @@
     <Conventions>EUR-3M-SWAP-CONVENTIONS</Conventions>
   </SwapIndex>
   <SwapIndex>
+    <Id>EUR-CMS-2Y</Id>
+    <Conventions>EUR-6M-SWAP-CONVENTIONS</Conventions>
+  </SwapIndex>
+  <SwapIndex>
+    <Id>EUR-CMS-5Y</Id>
+    <Conventions>EUR-6M-SWAP-CONVENTIONS</Conventions>
+  </SwapIndex>
+  <SwapIndex>
+    <Id>EUR-CMS-10Y</Id>
+    <Conventions>EUR-6M-SWAP-CONVENTIONS</Conventions>
+  </SwapIndex>
+  <SwapIndex>
+    <Id>EUR-CMS-20Y</Id>
+    <Conventions>EUR-6M-SWAP-CONVENTIONS</Conventions>
+  </SwapIndex>
+  <SwapIndex>
     <Id>EUR-CMS-30Y</Id>
     <Conventions>EUR-6M-SWAP-CONVENTIONS</Conventions>
   </SwapIndex>
   <SwapIndex>
     <Id>USD-CMS-1Y</Id>
+    <Conventions>USD-3M-SWAP-CONVENTIONS</Conventions>
+  </SwapIndex>
+  <SwapIndex>
+    <Id>USD-CMS-2Y</Id>
+    <Conventions>USD-3M-SWAP-CONVENTIONS</Conventions>
+  </SwapIndex>
+  <SwapIndex>
+    <Id>USD-CMS-5Y</Id>
+    <Conventions>USD-3M-SWAP-CONVENTIONS</Conventions>
+  </SwapIndex>
+  <SwapIndex>
+    <Id>USD-CMS-10Y</Id>
+    <Conventions>USD-3M-SWAP-CONVENTIONS</Conventions>
+  </SwapIndex>
+  <SwapIndex>
+    <Id>USD-CMS-20Y</Id>
     <Conventions>USD-3M-SWAP-CONVENTIONS</Conventions>
   </SwapIndex>
   <SwapIndex>
@@ -284,6 +328,22 @@
   <SwapIndex>
     <Id>GBP-CMS-1Y</Id>
     <Conventions>GBP-3M-SWAP-CONVENTIONS</Conventions>
+  </SwapIndex>
+  <SwapIndex>
+    <Id>GBP-CMS-2Y</Id>
+    <Conventions>GBP-6M-SWAP-CONVENTIONS</Conventions>
+  </SwapIndex>
+  <SwapIndex>
+    <Id>GBP-CMS-5Y</Id>
+    <Conventions>GBP-6M-SWAP-CONVENTIONS</Conventions>
+  </SwapIndex>
+  <SwapIndex>
+    <Id>GBP-CMS-10Y</Id>
+    <Conventions>GBP-6M-SWAP-CONVENTIONS</Conventions>
+  </SwapIndex>
+  <SwapIndex>
+    <Id>GBP-CMS-20Y</Id>
+    <Conventions>GBP-6M-SWAP-CONVENTIONS</Conventions>
   </SwapIndex>
   <SwapIndex>
     <Id>GBP-CMS-30Y</Id>
