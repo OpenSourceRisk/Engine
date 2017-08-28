@@ -438,7 +438,7 @@ private:
 //@{
 Leg makeFixedLeg(LegData& data);
 Leg makeIborLeg(LegData& data, boost::shared_ptr<IborIndex> index,
-                const boost::shared_ptr<EngineFactory>& engineFactory);
+                const boost::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer = true);
 Leg makeOISLeg(LegData& data, boost::shared_ptr<OvernightIndex> index);
 Leg makeSimpleLeg(LegData& data);
 Leg makeNotionalLeg(const Leg& refLeg, bool initNomFlow, bool finalNomFlow, bool amortNomFlow = true);
@@ -446,7 +446,7 @@ Leg makeCPILeg(LegData& data, boost::shared_ptr<ZeroInflationIndex> index);
 Leg makeYoYLeg(LegData& data, boost::shared_ptr<YoYInflationIndex> index);
 Leg makeCMSLeg(LegData& data, boost::shared_ptr<QuantLib::SwapIndex> swapindex,
                const boost::shared_ptr<EngineFactory>& engineFactory, const vector<double>& caps = vector<double>(),
-               const vector<double>& floors = vector<double>());
+               const vector<double>& floors = vector<double>(), const bool attachPricer = true);
 Real currentNotional(const Leg& leg);
 
 //@}

@@ -318,11 +318,11 @@ Leg makeFixedLeg(LegData& data) {
 }
 
 Leg makeIborLeg(LegData& data, boost::shared_ptr<IborIndex> index,
-                const boost::shared_ptr<EngineFactory>& engineFactory) {
+                const boost::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer) {
     Schedule schedule = makeSchedule(data.schedule());
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
-    
+
     FloatingLegData floatData = data.floatingLegData();
     bool hasCapsFloors = floatData.caps().size() > 0 || floatData.floors().size() > 0;
     vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
@@ -400,6 +400,9 @@ Leg makeIborLeg(LegData& data, boost::shared_ptr<IborIndex> index,
     if (floatData.floors().size() > 0)
         iborLeg.withFloors(buildScheduledVector(floatData.floors(), floatData.floorDates(), schedule));
 
+    if (!attachPricer)
+        return iborLeg;
+
     // Get a coupon pricer for the leg
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("CapFlooredIborLeg");
     QL_REQUIRE(builder, "No builder found for CapFlooredIborLeg");
@@ -408,15 +411,13 @@ Leg makeIborLeg(LegData& data, boost::shared_ptr<IborIndex> index,
     boost::shared_ptr<FloatingRateCouponPricer> couponPricer = cappedFlooredIborBuilder->engine(index->currency());
 
     // Loop over the coupons in the leg and set pricer
-    Leg leg = iborLeg;
-    for (const auto& cashflow : leg) {
-        boost::shared_ptr<FloatingRateCoupon> coupon =
-            boost::dynamic_pointer_cast<FloatingRateCoupon>(cashflow);
+    for (const auto& cashflow : (Leg)iborLeg) {
+        boost::shared_ptr<FloatingRateCoupon> coupon = boost::dynamic_pointer_cast<FloatingRateCoupon>(cashflow);
         QL_REQUIRE(coupon, "Expected a leg of coupons of type FloatingRateCoupon");
         coupon->setPricer(couponPricer);
     }
 
-    return leg;
+    return iborLeg;
 } // namespace data
 
 Leg makeOISLeg(LegData& data, boost::shared_ptr<OvernightIndex> index) {
@@ -539,7 +540,7 @@ Leg makeYoYLeg(LegData& data, boost::shared_ptr<YoYInflationIndex> index) {
 
 Leg makeCMSLeg(LegData& data, boost::shared_ptr<QuantLib::SwapIndex> swapIndex,
                const boost::shared_ptr<EngineFactory>& engineFactory, const vector<double>& caps,
-               const vector<double>& floors) {
+               const vector<double>& floors, const bool attachPricer) {
     Schedule schedule = makeSchedule(data.schedule());
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
@@ -575,6 +576,9 @@ Leg makeCMSLeg(LegData& data, boost::shared_ptr<QuantLib::SwapIndex> swapIndex,
             cmsLeg.withFloors(buildScheduledVector(cmsData.floors(), cmsData.floorDates(), schedule));
     }
 
+    if (!attachPricer)
+        return cmsLeg;
+
     // Get a coupon pricer for the leg
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("CMS");
     QL_REQUIRE(builder, "No builder found for CmsLeg");
@@ -583,8 +587,7 @@ Leg makeCMSLeg(LegData& data, boost::shared_ptr<QuantLib::SwapIndex> swapIndex,
     boost::shared_ptr<FloatingRateCouponPricer> couponPricer = cmsSwapBuilder->engine(swapIndex->currency());
 
     // Loop over the coupons in the leg and set pricer
-    Leg leg = cmsLeg;
-    for (const auto& cashflow : leg) {
+    for (const auto& cashflow : (Leg)cmsLeg) {
         if (!couponCapFloor && !nakedCapFloor) {
             boost::shared_ptr<CmsCoupon> coupon = boost::dynamic_pointer_cast<CmsCoupon>(cashflow);
             QL_REQUIRE(coupon, "Expected a leg of coupons of type CmsCoupon");
@@ -596,7 +599,7 @@ Leg makeCMSLeg(LegData& data, boost::shared_ptr<QuantLib::SwapIndex> swapIndex,
             coupon->setPricer(couponPricer);
         }
     }
-    return leg;
+    return cmsLeg;
 }
 
 Real currentNotional(const Leg& leg) {
