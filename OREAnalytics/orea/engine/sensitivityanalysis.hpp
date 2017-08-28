@@ -180,7 +180,7 @@ protected:
     //! initializationFlag
     bool initialized_, computed_;
     //! model builders
-    std::set<boost::shared_ptr<ModelBuilder>> modelBuilders_;
+    std::set<std::pair<string, boost::shared_ptr<ModelBuilder>>> modelBuilders_;
 };
 } // namespace analytics
 } // namespace ore
