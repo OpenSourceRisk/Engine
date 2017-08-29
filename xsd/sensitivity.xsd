@@ -2,9 +2,6 @@
 
 <xs:include schemaLocation="ore_types.xsd"/>
 
-  <xs:element type="sensitivityanalysis" name="SensitivityAnalysis">
-  </xs:element>
-
   <xs:complexType name="sensitivityanalysis">
     <xs:sequence>
       <xs:element type="discountcurves" name="DiscountCurves"/>

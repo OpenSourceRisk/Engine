@@ -2,8 +2,7 @@
 
 <xs:include schemaLocation="ore_types.xsd"/>
 
-  <xs:element name="CurveConfiguration">
-    <xs:complexType>
+  <xs:complexType name="curveconfiguration">
       <xs:sequence>
         <xs:element type="fxVolatilities" name="FXVolatilities" minOccurs="0" />
         <xs:element type="swaptionVolatilities" name="SwaptionVolatilities" minOccurs="0" />
@@ -17,8 +16,7 @@
         <xs:element type="equityVolatilities" name="EquityVolatilities" minOccurs="0" />
         <xs:element type="securitySpreads" name="SecuritySpreads" minOccurs="0" />
       </xs:sequence>
-    </xs:complexType>
-  </xs:element>
+  </xs:complexType>
 
   <xs:complexType name="fxVolatilities">
     <xs:sequence>

@@ -2,11 +2,10 @@
 
 <xs:include schemaLocation="ore_types.xsd"/>
 
-  <xs:element name="TodaysMarket">
-    <xs:complexType>
+  <xs:complexType name="todaysmarket">
       <xs:sequence>
         <xs:element type="configurationType" name="Configuration" maxOccurs="unbounded" minOccurs="1"/>
-        <xs:element type="yieldCurves"  name= "YieldCurves" minOccurs="0" maxOccurs="unbounded"/>
+        <xs:element type="yieldCurvesType"  name= "YieldCurves" minOccurs="0" maxOccurs="unbounded"/>
         <xs:element type="discountCurvesType" name="DiscountingCurves" maxOccurs="unbounded" minOccurs="1"/>
         <xs:element type="indexForwardingCurvesType" name="IndexForwardingCurves" maxOccurs="unbounded" minOccurs="1"/>
         <xs:element type="swapIndexCurvesType" name="SwapIndexCurves" maxOccurs="unbounded" minOccurs="1"/>
@@ -25,7 +24,6 @@
         <xs:element type="securityRecoveryRatesType" name="SecurityRecoveryRates" maxOccurs="unbounded" minOccurs="0"/>
      </xs:sequence>
     </xs:complexType>
-  </xs:element>
 
   <xs:complexType name="configurationType">
     <xs:all>
@@ -50,7 +48,7 @@
     <xs:attribute type="xs:string" name="id" use="required"/>
   </xs:complexType>
 
-  <xs:complexType name="yieldCurves">
+  <xs:complexType name="yieldCurvesType">
     <xs:sequence>
       <xs:element name="YieldCurve" maxOccurs="unbounded" minOccurs="0">
         <xs:complexType>

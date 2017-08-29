@@ -2,8 +2,6 @@
 
 <xs:include schemaLocation="ore_types.xsd"/>
 
-  <xs:element type="simulation" name="Simulation">
-  </xs:element>
 
   <xs:complexType name="simulation">
     <xs:sequence>
@@ -477,6 +475,27 @@
           <xs:sequence>
             <xs:element type="indexNameType" name="Index" maxOccurs="unbounded" minOccurs="0"/>
           </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="BenchmarkCurves" minOccurs="0">
+       <xs:complexType>
+        <xs:sequence>
+         <xs:element name="BenchmarkCurve" maxOccurs="unbounded" minOccurs="0">
+          <xs:complexType>
+           <xs:sequence>
+            <xs:element type="currencyCode" name="Currency"/>
+            <xs:element type="xs:string" name="Name"/>
+           </xs:sequence>
+          </xs:complexType>
+         </xs:element>
+        </xs:sequence>
+       </xs:complexType>
+      </xs:element>
+      <xs:element name="Securities" minOccurs="0">
+       <xs:complexType>
+         <xs:sequence>
+          <xs:element type="xs:string" name="Security" maxOccurs="unbounded" minOccurs="0"/>
+         </xs:sequence>
         </xs:complexType>
       </xs:element>
     </xs:sequence>

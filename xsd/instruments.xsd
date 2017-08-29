@@ -2,38 +2,25 @@
 
 <xs:include schemaLocation="ore_types.xsd"/>
 
-  <xs:element name="Portfolio">
-    <xs:complexType>
-      <xs:sequence>
-        <xs:element name="Trade" maxOccurs="unbounded" minOccurs="0">
-          <xs:complexType>
-            <xs:sequence>
-              <xs:element type="tradeType" name="TradeType"/>
-              <xs:element type="envelope" name="Envelope"/>
-              <xs:element type="tradeActions" name="TradeActions" minOccurs="0"/>
-              <xs:choice>
-                <xs:element type="swapData" name="SwapData"/>
-                <xs:element type="swaptionData" name="SwaptionData"/>
-                <xs:element type="forwardRateAgreementData" name="ForwardRateAgreementData"/>
-                <xs:element type="fxForwardData" name="FxForwardData"/>
-                <xs:element type="fxOptionData" name="FxOptionData"/>
-                <xs:element type="fxSwapData" name="FxSwapData"/>
-                <xs:element type="capFloorData" name="CapFloorData"/>
-                <xs:element type="equityOptionData" name="EquityOptionData"/>
-                <xs:element type="equityForwardData" name="EquityForwardData"/>
-                <xs:element type="bondData" name="BondData"/>
-                <xs:element type="creditDefaultSwapData" name="CreditDefaultSwapData"/>
-                <xs:element type="indexCreditDefaultSwapData" name="IndexCreditDefaultSwapData"/>
-                <xs:element type="indexCreditDefaultSwapOptionData" name="IndexCreditDefaultSwapOptionData"/>
-                <xs:element type="cdoData" name="CdoData"/>
-              </xs:choice>
-            </xs:sequence>
-            <xs:attribute type="xs:string" name="id" use="required"/>
-          </xs:complexType>
-        </xs:element>
-      </xs:sequence>
-    </xs:complexType>
-  </xs:element>
+<xs:group name="orePlusTradeData">
+  <xs:choice>
+   <xs:element type="swapData" name="SwapData"/>
+   <xs:element type="swaptionData" name="SwaptionData"/>
+   <xs:element type="forwardRateAgreementData" name="ForwardRateAgreementData"/>
+   <xs:element type="fxForwardData" name="FxForwardData"/>
+   <xs:element type="fxOptionData" name="FxOptionData"/>
+   <xs:element type="fxSwapData" name="FxSwapData"/>
+   <xs:element type="capFloorData" name="CapFloorData"/>
+   <xs:element type="equityOptionData" name="EquityOptionData"/>
+   <xs:element type="equityForwardData" name="EquityForwardData"/>
+   <xs:element type="bondData" name="BondData"/>
+   <xs:element type="creditDefaultSwapData" name="CreditDefaultSwapData"/>
+   <xs:element type="indexCreditDefaultSwapData" name="IndexCreditDefaultSwapData"/>
+   <xs:element type="indexCreditDefaultSwapOptionData" name="IndexCreditDefaultSwapOptionData"/>
+   <xs:element type="cdoData" name="CdoData"/>
+  </xs:choice>
+</xs:group>
+
 
   <xs:complexType name="envelope">
     <xs:all>
