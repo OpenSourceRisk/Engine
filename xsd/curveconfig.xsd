@@ -5,17 +5,17 @@
   <xs:element name="CurveConfiguration">
     <xs:complexType>
       <xs:sequence>
-        <xs:element type="fxVolatilities" name="FXVolatilities"/>
-        <xs:element type="swaptionVolatilities" name="SwaptionVolatilities"/>
-        <xs:element type="capFloorVolatilities" name="CapFloorVolatilities"/>
-        <xs:element type="cdsVolatilities" name="CDSVolatilities"/>
-        <xs:element type="defaultCurves" name="DefaultCurves"/>
-        <xs:element type="yieldCurves" name="YieldCurves"/>
-        <xs:element type="inflationCurves" name="InflationCurves"/>
-        <xs:element type="inflationCapFloorPriceSurfaces" name="InflationCapFloorPriceSurfaces"/>
-        <xs:element type="equityCurves" name="EquityCurves"/>
-        <xs:element type="equityVolatilities" name="EquityVolatilities"/>
-        <xs:element type="securitySpreads" name="SecuritySpreads"/>
+        <xs:element type="fxVolatilities" name="FXVolatilities" minOccurs="0" />
+        <xs:element type="swaptionVolatilities" name="SwaptionVolatilities" minOccurs="0" />
+        <xs:element type="capFloorVolatilities" name="CapFloorVolatilities" minOccurs="0" />
+        <xs:element type="cdsVolatilities" name="CDSVolatilities" minOccurs="0" />
+        <xs:element type="defaultCurves" name="DefaultCurves" minOccurs="0" />
+        <xs:element type="yieldCurves" name="YieldCurves" minOccurs="0" />
+        <xs:element type="inflationCurves" name="InflationCurves" minOccurs="0" />
+        <xs:element type="inflationCapFloorPriceSurfaces" name="InflationCapFloorPriceSurfaces" minOccurs="0" />
+        <xs:element type="equityCurves" name="EquityCurves" minOccurs="0" />
+        <xs:element type="equityVolatilities" name="EquityVolatilities" minOccurs="0" />
+        <xs:element type="securitySpreads" name="SecuritySpreads" minOccurs="0" />
       </xs:sequence>
     </xs:complexType>
   </xs:element>
@@ -48,6 +48,7 @@
       <xs:element type="currencyCode" name="Currency"/>
       <xs:element type="dimensionType" name="Dimension"/>
       <xs:element type="xs:string" name="Expiries"/>
+      <xs:element type="xs:string" name="Strikes" minOccurs="0" />
     </xs:sequence>
   </xs:complexType>
 
@@ -73,7 +74,7 @@
       <xs:element type="xs:string" name="SwapIndexBase"/>
       <xs:element type="xs:string" name="SmileOptionTenors" minOccurs="0"/>
       <xs:element type="xs:string" name="SmileSwapTenors" minOccurs="0"/>
-      <xs:element type="xs:string" name="SmileStrikes" minOccurs="0"/>
+      <xs:element type="xs:string" name="SmileSpreads" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 

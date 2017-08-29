@@ -359,6 +359,7 @@
    <xs:simpleType name="dimensionType">
      <xs:restriction base="xs:string">
        <xs:enumeration value="ATM"/>
+       <xs:enumeration value="Smile"/>
      </xs:restriction>
    </xs:simpleType>
 
