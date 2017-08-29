@@ -638,7 +638,7 @@
     <ClCompile Include="ored\utilities\csvfilereader.cpp">
       <Filter>utilities</Filter>
     </ClCompile>
-    <ClCompile Include="ored\portfolio\forwardrateagreement.cpp" >
+    <ClCompile Include="ored\portfolio\forwardrateagreement.cpp">
       <Filter>portfolio</Filter>
     </ClCompile>
   </ItemGroup>

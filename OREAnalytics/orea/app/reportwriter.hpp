@@ -62,6 +62,8 @@ public:
     static void writeXVA(ore::data::Report& report, const string& allocationMethod,
                          boost::shared_ptr<Portfolio> portfolio, boost::shared_ptr<PostProcess> postProcess);
 
+    static void writeAggregationScenarioData(ore::data::Report& report, const AggregationScenarioData& data);
+
 private:
     //! ctor
     ReportWriter(){};

@@ -690,13 +690,24 @@ void OREApp::writeCube() {
 void OREApp::writeScenarioData() {
     out_ << endl << setw(tab_) << left << "Write Aggregation Scenario Data... " << flush;
     LOG("Write scenario data");
-    if (params_->has("simulation", "additionalScenarioDataFileName")) {
-        string outputPath = params_->get("setup", "outputPath");
+    bool skipped = true;
+    string outputPath = params_->get("setup", "outputPath");
+    if (params_->has("simulation", "aggregationScenarioDataFileName")) {
+        // binary output
         string outputFileNameAddScenData =
-            outputPath + "/" + params_->get("simulation", "additionalScenarioDataFileName");
+            outputPath + "/" + params_->get("simulation", "aggregationScenarioDataFileName");
         scenarioData_->save(outputFileNameAddScenData);
         out_ << "OK" << endl;
-    } else
+        skipped = false;
+    }
+    if (params_->has("simulation", "aggregationScenarioDataDump")) {
+        // csv output
+        string outputFileNameAddScenData = outputPath + "/" + params_->get("simulation", "aggregationScenarioDataDump");
+        CSVFileReport report(outputFileNameAddScenData);
+        ReportWriter::writeAggregationScenarioData(report, *scenarioData_);
+        skipped = false;
+    }
+    if (skipped)
         out_ << "SKIP" << endl;
 }
 

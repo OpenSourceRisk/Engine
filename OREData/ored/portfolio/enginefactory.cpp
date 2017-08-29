@@ -58,8 +58,8 @@ boost::shared_ptr<EngineBuilder> EngineFactory::builder(const string& tradeType)
     return builder;
 }
 
-Disposable<set<boost::shared_ptr<ModelBuilder>>> EngineFactory::modelBuilders() const {
-    set<boost::shared_ptr<ModelBuilder>> res;
+Disposable<set<std::pair<string, boost::shared_ptr<ModelBuilder>>>> EngineFactory::modelBuilders() const {
+    set<std::pair<string, boost::shared_ptr<ModelBuilder>>> res; 
     for (auto const& b : builders_) {
         res.insert(b.second->modelBuilders().begin(), b.second->modelBuilders().end());
     }

@@ -141,6 +141,8 @@ std::ostream& operator<<(std::ostream& oss, const LgmData::VolatilityType& type)
 LgmData::CalibrationStrategy parseCalibrationStrategy(const string& s) {
     if (boost::algorithm::to_upper_copy(s) == "COTERMINALATM")
         return LgmData::CalibrationStrategy::CoterminalATM;
+    else if (boost::algorithm::to_upper_copy(s) == "COTERMINALDEALSTRIKE")
+        return LgmData::CalibrationStrategy::CoterminalDealStrike;
     else if (boost::algorithm::to_upper_copy(s) == "NONE")
         return LgmData::CalibrationStrategy::None;
     else
