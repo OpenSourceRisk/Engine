@@ -314,6 +314,7 @@
               </xs:complexType>
             </xs:element>
             <xs:element type="xs:string" name="Tenors"/>
+            <xs:element type="xs:boolean" name="SimulateSurvivalProbabilities" minOccurs="0"/>
           </xs:sequence>
         </xs:complexType>
       </xs:element>
@@ -327,7 +328,8 @@
                 </xs:sequence>
               </xs:complexType>
             </xs:element>
-            <xs:element type="xs:string" name="Tenors"/>
+            <xs:element type="xs:string" name="DividendTenors"/>
+            <xs:element type="xs:string" name="ForecastTenors"/>
           </xs:sequence>
         </xs:complexType>
       </xs:element>
@@ -345,7 +347,14 @@
             </xs:element>
             <xs:element type="xs:string" name="Expiries"/>
             <xs:element type="xs:string" name="Terms"/>
-            <xs:element type="xs:string" name="Strikes"/>
+            <xs:element name="Cube" minOccurs="0">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element type="xs:boolean" name="SimulateATMOnly" maxOccurs="1" minOccurs="0"/>
+                  <xs:element type="xs:string" name="StrikeSpreads" maxOccurs="1" minOccurs="0"/>
+                </xs:sequence>
+              </xs:complexType>
+            </xs:element>
           </xs:sequence>
         </xs:complexType>
       </xs:element>
@@ -396,7 +405,14 @@
               </xs:complexType>
             </xs:element>
             <xs:element type="xs:string" name="Expiries"/>
-            <xs:element type="xs:string" name="Strikes"/>
+            <xs:element name="Surface" minOccurs="0">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element type="xs:boolean" name="SimulateATMOnly" maxOccurs="1" minOccurs="0"/>
+                  <xs:element type="xs:string" name="Moneyness" maxOccurs="1" minOccurs="0"/>
+                </xs:sequence>
+              </xs:complexType>
+            </xs:element>
           </xs:sequence>
         </xs:complexType>
       </xs:element>
@@ -420,7 +436,35 @@
             <xs:element type="xs:string" name="Security" minOccurs="0" maxOccurs="unbounded" />
           </xs:sequence>
         </xs:complexType>
-      </xs:element>     
+      </xs:element>
+      <xs:element name="ZeroInflationIndexCurves" maxOccurs="1" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="Names">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element type="xs:string" name="Name" maxOccurs="unbounded" minOccurs="0"/>
+                </xs:sequence>
+              </xs:complexType>
+            </xs:element>
+            <xs:element type="xs:string" name="Tenors"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="YYInflationIndexCurves" maxOccurs="1" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="Names">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element type="xs:string" name="Name" maxOccurs="unbounded" minOccurs="0"/>
+                </xs:sequence>
+              </xs:complexType>
+            </xs:element>
+            <xs:element type="xs:string" name="Tenors"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
       <xs:element name="AggregationScenarioDataCurrencies">
         <xs:complexType>
           <xs:sequence>

@@ -122,7 +122,7 @@
 	  <Value>1000000</Value>
 	  <StartDate>20170203</StartDate>
 	  <Frequency>1Y</Frequency>
-	  <Underflow>N</Underflow>
+	  <Underflow>false</Underflow>
 	</AmortizationData>
 	<DayCounter>ACT/ACT</DayCounter>
         <PaymentConvention>F</PaymentConvention>
@@ -175,7 +175,7 @@
 	  <Value>0.05</Value>
 	  <StartDate>20170203</StartDate>
 	  <Frequency>1Y</Frequency>
-	  <Underflow>N</Underflow>
+	  <Underflow>false</Underflow>
 	</AmortizationData>
 	<DayCounter>ACT/ACT</DayCounter>
         <PaymentConvention>F</PaymentConvention>
@@ -228,7 +228,7 @@
 	  <Value>0.05</Value>
 	  <StartDate>20170203</StartDate>
 	  <Frequency>1Y</Frequency>
-	  <Underflow>N</Underflow>
+	  <Underflow>false</Underflow>
 	</AmortizationData>
 	<DayCounter>ACT/ACT</DayCounter>
         <PaymentConvention>F</PaymentConvention>
@@ -280,7 +280,7 @@
 	  <Type>Annuity</Type>
 	  <Value>1000000</Value>
 	  <StartDate>20170203</StartDate>
-	  <Underflow>N</Underflow>
+	  <Underflow>false</Underflow>
 	</AmortizationData>
         <DayCounter>ACT/ACT</DayCounter>
         <PaymentConvention>F</PaymentConvention>
@@ -332,7 +332,7 @@
 	  <Type>Annuity</Type>
 	  <Value>1000000</Value>
 	  <StartDate>20170203</StartDate>
-	  <Underflow>N</Underflow>
+	  <Underflow>false</Underflow>
 	</AmortizationData>
         <DayCounter>ACT/ACT</DayCounter>
         <PaymentConvention>F</PaymentConvention>

@@ -395,8 +395,8 @@
    <xs:simpleType name="amortizationType">
      <xs:restriction base="xs:string">
        <xs:enumeration value="FixedAmount"/>
-       <xs:enumeration value="RelativeToInitial"/>
-       <xs:enumeration value="RelativeToPrevious"/>
+       <xs:enumeration value="RelativeToInitialNotional"/>
+       <xs:enumeration value="RelativeToPreviousNotional"/>
        <xs:enumeration value="Annuity"/>
      </xs:restriction>
    </xs:simpleType>

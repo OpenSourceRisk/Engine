@@ -39,24 +39,24 @@
         <DiscountingIndex>EUR-EONIA</DiscountingIndex>
       </SwapIndex>
     </SwapIndices>
-		
-	<Equities>
-      <Names>
-        <Name>SP5</Name>
-        <Name>Lufthansa</Name>
-      </Names>
-      <DividendTenors>6M,1Y,2Y</ForecastTenors>
-      <ForecastTenors>6M,1Y,2Y</ForecastTenors>
-    </Equities>   
+
 	
     <DefaultCurves>
       <Names>
 	<Name>CPTY_C</Name>
       </Names>
       <Tenors>6M,1Y,2Y</Tenors>
-      <SimulateSurvivalProbabilities>true</SimulateSurivalProbabilities>
+      <SimulateSurvivalProbabilities>true</SimulateSurvivalProbabilities>
     </DefaultCurves>
-
+		
+	<Equities>
+      <Names>
+        <Name>SP5</Name>
+        <Name>Lufthansa</Name>
+      </Names>
+      <DividendTenors>6M,1Y,2Y</DividendTenors>
+      <ForecastTenors>6M,1Y,2Y</ForecastTenors>
+    </Equities>   
     <!-- Even if we do not simulate them - option pricing needs vol
 	   surfaces, so we need to specify here how we propagate the
 	   vol structure and what its composition will be -->

@@ -83,15 +83,9 @@
       <xs:element type="xs:string" name="Style"/>
       <xs:element type="xs:string" name="Settlement"/>
       <xs:element type="xs:string" name="PayOffAtExpiry"/>
-      <xs:element name="Premium" minOccurs="0">
-        <xs:complexType>
-          <xs:all>
-            <xs:element type="xs:string" name="Amount"/>
-            <xs:element type="xs:string" name="Currency"/>
-            <xs:element type="xs:string" name="Date"/>
-          </xs:all>
-        </xs:complexType>
-      </xs:element>
+      <xs:element type="xs:string" name="PremiumAmount" minOccurs="0"/>
+      <xs:element type="xs:string" name="PremiumCurrency" minOccurs="0"/>
+      <xs:element type="xs:string" name="PremiumPayDate" minOccurs="0"/>
       <xs:element name="ExerciseDates">
         <xs:complexType>
           <xs:sequence>
@@ -328,6 +322,7 @@
     <xs:restriction base="xs:string">
       <xs:enumeration value="Swap"/>
       <xs:enumeration value="Swaption"/>
+      <xs:enumeration value="ForwardRateAgreement"/>
       <xs:enumeration value="FxForward"/>
       <xs:enumeration value="FxOption"/>
       <xs:enumeration value="FxSwap"/>

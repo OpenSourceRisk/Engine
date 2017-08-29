@@ -157,6 +157,10 @@
     <CapFloorVolatility currency="USD">CapFloorVolatility/USD/USD_CF_N</CapFloorVolatility>
     <CapFloorVolatility currency="GBP">CapFloorVolatility/GBP/GBP_CF_N</CapFloorVolatility>
   </CapFloorVolatilities>
+  <!-- cds vol definition -->
+  <CDSVolatilities id="default">
+   <CDSVolatility name="BANK">CDSVolatility/CDXIG</CDSVolatility>
+  </CDSVolatilities>
   <!-- default curves definition -->
   <DefaultCurves id="default">
     <DefaultCurve name="BANK">Default/USD/BANK_SR_USD</DefaultCurve>
@@ -164,10 +168,6 @@
     <DefaultCurve name="CPTY_B">Default/USD/CPTY_A_SR_USD</DefaultCurve>
     <DefaultCurve name="CPTY_C">Default/EUR/CPTY_C_SR_EUR</DefaultCurve>
   </DefaultCurves>
-  <!-- cds vol definition -->
-  <CDSVolatilities id="default">
-   <CDSVolatility name="BANK">CDSVolatility/CDXIG</CDSVolatility>
-  </CDSVolatilities>
   <!-- inflation price surface definition -->
   <InflationCapFloorPriceSurfaces id="default">
       <InflationCapFloorPriceSurface name="EUHICPXT">InflationCapFloorPrice/EUHICPXT/EUHICPXT_ZC_CF</InflationCapFloorPriceSurface>
