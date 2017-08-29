@@ -453,7 +453,7 @@ void ReportWriter::writeNettingSetColva(ore::data::Report& report, boost::shared
     report.end();
 }
 
-void writeAggregationScenarioData(ore::data::Report& report, const AggregationScenarioData& data) {
+void ReportWriter::writeAggregationScenarioData(ore::data::Report& report, const AggregationScenarioData& data) {
     report.addColumn("Date", Size()).addColumn("Scenario", Size());
     for (auto const& k : data.keys()) {
         std::string tmp = ore::data::to_string(k.first) + k.second;
